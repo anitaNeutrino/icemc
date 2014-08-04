@@ -1,0 +1,51 @@
+/Makefile/1.24/Thu May  6 21:49:28 2010//
+/altitudes.txt/1.2/Fri Jul  1 22:57:57 2005//
+/anita.cc/1.73/Mon Jun 21 21:02:38 2010//
+/anita.hh/1.46/Tue May 25 10:57:30 2010//
+/balloon.cc/1.26/Mon Jun 21 21:02:38 2010//
+/balloon.hh/1.16/Tue May  4 14:48:12 2010//
+/counting.cc/1.1/Tue May 25 14:37:26 2010//
+/counting.hh/1.1/Tue May 25 14:37:26 2010//
+/earthmodel.cc/1.16/Wed Jul  8 14:37:55 2009//
+/earthmodel.hh/1.8/Wed Jul  8 14:37:56 2009//
+/icemc.cc/1.192/Thu Jun 24 19:23:19 2010//
+/icemc.ps/1.1.1.1/Mon Jul 12 20:44:34 2004//
+/icemodel.cc/1.37/Mon Apr 26 13:26:08 2010//
+/icemodel.hh/1.16/Wed Jul  8 14:37:56 2009//
+/inputs.txt/1.136/Tue May 25 14:37:26 2010//
+/inputs.txt.anita1/1.13/Tue May 25 10:57:30 2010//
+/inputs.txt.anita1.freqdomain/1.7/Tue May 25 10:57:30 2010//
+/inputs.txt.anita2/1.21/Tue May 25 10:57:30 2010//
+/inputs.txt.anita3/1.1/Mon Mar 15 10:43:05 2010//
+/inputs.txt.anitahill/1.7/Mon May 19 14:57:16 2008//
+/inputs.txt.default/1.4/Mon May 19 14:57:16 2008//
+/inputs.txt.eeva/1.5/Thu Mar 26 19:13:34 2009//
+/inputs.txt.fullbandonly/1.1/Mon Mar 15 10:43:05 2010//
+/inputs.txt.roughness/1.7/Mon May 19 14:57:16 2008//
+/inputs.txt.roughness_singleray/1.4/Mon May 19 14:57:16 2008//
+/inputs.txt.slac/1.6/Mon May 19 14:57:16 2008//
+/log.txt/1.57/Mon Jun 21 21:02:38 2010//
+/position.cc/1.5/Wed Jul  8 14:37:56 2009//
+/position.hh/1.1/Fri Jan 13 01:15:16 2006//
+/ray.cc/1.8/Thu Oct 16 11:14:46 2008//
+/ray.hh/1.10/Tue Feb 24 11:03:22 2009//
+/roughness.cc/1.6/Thu Oct 16 11:14:46 2008//
+/roughness.hh/1.1/Wed Dec  5 18:13:03 2007//
+/secondaries.cc/1.6/Wed Jul  8 14:37:56 2009//
+/secondaries.hh/1.4/Wed Jul  8 14:37:56 2009//
+/shared.cc/1.51/Tue May 25 10:57:30 2010//
+/shared.hh/1.36/Tue May 25 10:57:30 2010//
+/signal.cc/1.20/Wed Jul  8 14:37:56 2009//
+/signal.hh/1.10/Tue Mar  2 14:09:05 2010//
+/spectra.cc/1.6/Tue May 25 10:57:30 2010//
+/spectra.hh/1.3/Mon Sep 15 15:45:11 2008//
+/tools.cc/1.4/Thu Dec 17 12:26:31 2009//
+/tools.hh/1.3/Tue May 25 10:57:30 2010//
+/trigger.cc/1.83/Sun Jun 27 15:38:45 2010//
+/trigger.hh/1.40/Tue May 25 10:57:30 2010//
+/vector.cc/1.10/Thu Feb 25 21:38:29 2010//
+/vector.hh/1.4/Thu Feb 25 21:38:29 2010//
+D/data////
+D/fluxes////
+D/outputs////
+D/secondary////

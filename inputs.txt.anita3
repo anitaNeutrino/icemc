@@ -1,0 +1,120 @@
+# This is a card file containing inputs for the UCLA-based ANITA simulation
+### Event input output
+2000000 # How many neutrinos to generate
+19     # Select energy (just enter the exponent) or (0) for baseline ES&S (1) for E^-1 (2) for E^-2 (3) for E^-3 (4) for E^-4 (5) for ES&S flux with cosmological constant (6) for neutrino GZK flux from Iron nucleii (16-22)not using spectrum but just for a single energy (101-114)use all kinds of theoretical flux models 
+0  # (0) Pick neutrino position in the ice within the horizon of the balloon and neutrino direction such that the specular ray hitting the balloon sits on the Cerenkov cone or (1) Pick neutrino interaction point from anywhere in the ice and neutrino direction from all directions equally
+1      # 1=write to histograms and trees, 0=don't write to histograms & trees
+0      # 1=write to ray tree (for roughness study), 0 don't write
+1     # 1=only write to final tree (for events that pass)
+10000  # Maximum number of entries to store in histograms (10000=default).
+65546  # Random number seed
+0      # Write neutrino position info to file
+0	#EVENTSMAP (1)draw the events distribution map or (0) not
+### Balloon and payload
+9      # Which payload:  ANITA-lite (0), Ross Payload (1), 2006-2007 flight with simple settings, Make Your Own (3), Ant Hill (4), 2006-2007 flight with Kurt measurements(6), EeVEX (one layer of antennas) (7), ANITA-II (8), ANITA-III (9), (SWORD) Satellite (10) 
+4      # How many physical layers of antennas to include.  If you indicate N, it will consider the top N layers and ignore the rest.  Useful for turning off the nadirs.  4=default
+10     # Inclination angle in degrees for top three antenna layers 10=default
+10     # Inclination angle in degrees for fourth layer of antennas 10=default
+7      # (0) fixed balloon position (1) randomized at 80deg S (2) anita-lite flight. (3) banana plot (note: banana plot forces energy, turns off noise and turns off slopyness.  "How many neutrinos to generate" is not used, nor are any inputs relating to a detection system. Also, constant crust density, ice thickness, and elevation are set.) (4) for comparison with Peter (5) Pick your own altitude, phi and theta 2=default (6) Anita 1 flight (7) Anita 2 flight
+999  # fixed balloon latitude (degrees south) (999 is default position)
+999 # fixed balloon longitude (degrees east) (999 is default position) longitude is between -180 and 180
+0      # Fixed (0) or randomized (1) balloon orientation.  1=default
+120000. # Pick balloon altitude in ft. (0) 120000 ft. or whatever you choose.
+1 # Constant gains (0) or Ped's measured gains (1)
+### Trigger 
+2	# Trigger:  frequency domain voltage (0) frequency domain energy (1) timedomain diode integration (2) coherent sum trigger (3) summed power trigger (4)
+2.3	2.3	 2.3	     2.3	2.3	#thresholds for each band- this is only for the frequency domain voltage trigger.  If using a different trigger scheme then keep these at the default values of 2.3 because the max among them is used for the chance in hell cuts
+2	#Banding (0) as in Anita 1 or (1) choose your own in the next lines or (2) Anita 2 or (3) satellite - indicate # of bands and % bandwidth below
+200	400	 600	     600	200	#lower edge of each band
+400	750	 1100	     600	1100	#upper edge of each band
+0	0	 0	     0		1	#these bands are REQUIRED to be one of the channels that passes
+1	1	 1	     0		1	#these bands are ALLOWED to contribute to the trigger requirement
+7 # number of bands (for option 3 trigger above for satellite)
+10. # percent bandwidth (for option 3 trigger above for satellite)
+0	0	#notch filter lower and upper limits (for no filter, default is 0      0)
+3       # number of channels on antenna to pass L1 trigger 
+2	# number of L1 hits in a 'clump' to pass L2 trigger
+3	# number of antenna in 'clump' for L2 trigger
+0 	# require centre antenna in clump is one of those hit
+1	# (1) for L3 trigger or (0) no L3 trigger requirement 
+0	# 1 for LCP and RCP, 0 for V and H 
+1	# 0 for both polarizations or 1 for just vertical polarization
+0      # 2=use nadirs, 1= use discones or 0= do not use discones or nadirs in the trigger
+0      # Implement the nadir-only trigger (require 3/3 antennas in nadir layer pass)
+0	# implement channel masking as in anita 1 flight (1) yes or (0) no
+1	# implement phi masking as in anita 2 flight (1) yes or (0) no
+### Modifications to the trigger that have been used for modeling anita-lite
+0      # scale down lcp voltage of 1st antenna for anita-lite
+0      # scale down e pol. of 1st antenna for anita-lite
+0      # scale down h pol. of 1st antenna for anita-lite
+0      # scale down e pol. of 2nd antenna for anita-lite - factor given by the next input
+0.05   # factor by which to scale down the power of the e pol. of 2nd antenna (default is 0.05)
+0      # scale down h pol. of 2nd antenna for anita-lite - factor of 2 in power
+0      # E polarization of 2nd antenna is dead
+0      # H polarization of 2nd antenna is dead
+0      # RCP of 2nd antenna is dead
+0      # LCP of 2nd antenna is dead
+### Modifications to signal and noise for testing
+1      # Add noise fluctuations to the signal. 0=no or 1=yes=default
+0	# zero the signal to measure noise hits
+0	# randomize rotation of polarization around ray arrival direction at thepayload by a gaussian with width x degrees (0 = no randomisation)
+1      # Turn on (1) and off (0) the LPM effect 1=default
+1.     # For systematics studies:  multiply Jaime's E-field by this factor.  1=default
+1.     # For systematics studies:  multiply the thermal noise by this factor.  1=default
+0      # Disable use of polarization vectors.  (For debugging purposes.)
+0      # (1) use pulser spectrum instead of signal spectrum or (0) use signal spectra as normal - this is more making signal efficiency curves only!
+0      # (0) normal or (1) centre one phi sector of the payload on the incoming signal
+0      # (0) normal or (1) force signal to hit payload with vertical polarisation
+### ice properties
+0.012  # This determines size of the slopeyness (0.10=5.4, 0.20=7.4 deg mean, 0.012=default)
+1      # Turn on (1) and off (0) surface slopeyness.  1=default
+1      # Turn on (1) and off (0) depth-dependent index of refraction.  1=default
+0      # Use constant (1) or variable (0) attenuation length in the ice. 0=default
+0      # Constant ice thickness (3 km)
+0      # Which model of the Antarctic ice to use.(0) Crust 2.0  (1) BEDMAP   (BEDMAP is much more finely binned, but will run more slowly.)
+0      # Set the normal to the surface to always be straight up. (1)  Setting to (0) is default.
+0      # Fixed ice elevation
+0      # ice (0) or salt(1)
+0      # Include effects of surface roughness (1) or not (0)  For this, should also have the option "Skip making cuts on neutrinos we couldn't see anyway" set to 1
+0.025      # level of surface roughness: for ROUGHNESS==2, this setting is \sigma in note #375.  For ROUGHNESS==1, flatglass (0), 500 grit (1), 1000 grit (2), 1500 grit (3)
+1	# FIRN (1) yes or (0) no
+0	#MOOREBAY (1)use Moore's Bay measured field attenuation length or (0)use South Pole measured data
+### For testing
+1.     # For systematics studies:  multiply cross section by this factor. 1=default
+1.     # For checking code is working:  multiply theta_th by this factor to make sure you get the same answer.  1=default
+1.     # For checking code is working:  loosen the chance in hell cut by this much.  1=default
+0      # Skip making cuts on neutrinos we couldn't see anyway.  (Will slow down program, used for generating plots or debugging.)
+0      # (1) restrict or (0) do not restrict neutrino directions to giving viewing angle close to cerenkov angle   0=default.
+1      # (1) restrict or (0) do not restrict neutrino positions to be within the horizon of the balloon   1=default.
+1      # 1=use weight on absorption, 0=not use weight on absorption
+720    # Number of points scanned across the "phi" (azimuthal) coordinate for a banana plot. (only used with "balloon position" 3)
+180    # Number of points scanned across the "theta" (polar) coordinate for a banana plot. (only used with "balloon position" 3)
+0      # Make signal across frequencies for different viewing angles
+1      # Type of shower for the previous option (1=em, 0=had)
+1	# loop over boresights	
+#### Interactions
+0 # Which parameterization (0) Jaime's older papers or (1) Jaime's Dec. 2006 paper
+0 # Which cross section parametrizations (0) Mary Hall Reno, (1) Connolly et al. 2011
+0 # Which inelasticity parametrizations (0) rough param of Gandhi et al., (1) Connolly et al. 2011
+1      # secondary interactions
+1      # tau decay counted as a secondary interaction
+1      # include the atmosphere.  1=default
+0      # Constant crust density (2.9 g/cm^3) and thickness (40 km) (default=0)
+0      # whether to use constant y at 0.2 (1) yes or (0) no
+800000.      # max distance the interaction can be from the balloon, so that it is within the horizon
+0	     # set taumodes (tau created in rock)
+### General simulation settings
+1      # which rays to look at for each neutrino (1) direct only or (2) direct and down-going or (3) down-going only
+1      # Select whether or not to write a new datafile for CreateHorizons.  Note: Creating the datafile takes a long time, and the files themselves are approx. 120, 120, and 170 MB, respectively.
+0.5    # resolution on the polar angle of the signal, in degrees
+200.E6 # low frequency
+1200.E6 # high frequency
+### Slac test - this hasn't been touched in a while so probably doesn't work
+0	# SLAC run (1) yes or (0) no
+13.	# horizontal distance from interaction to center of payload (meters)
+5.8 # slope of the surface of the ice at slac, in degrees
+5.02 # length of the block of ice in meters
+0.7966	# depth of interaction at slac beam test (meters)
+# Coherent Sum Trigger settings
+300	# power threshold (arbitrary units) for coherent sum trigger and summed power trigger
+

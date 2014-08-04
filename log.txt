@@ -1,0 +1,604 @@
+Date		Action				V.*Str @ 19.5	% change
+12/14/04	Bug fix:  Fresnel factor at	1700		-90%
+		the surface was not being 
+		accounted for because on 2nd
+		use of GetFresnel should use
+		vmmhz1m_fresneledonce as input
+		instead of vmmhz1m_max.
+12/14/04	Version 1.18 committed          1700
+12/15/04	Bug fix:  In GetPolarization,			+20.4%
+		npol vector was not being
+		normalized.
+12/15/04	New feature:  Rotate the			+2.7% 
+		polarization vector within the
+		firn and at the surface  
+12/15/04	Bug fix:  Use nexit2bn[2]			negligible
+		instead of nexit2bn[1] where
+		appropriate
+12/15/04	New feature:  Improved modeling			+6%
+		of Ross Ice Shelf inside
+		ReadCrust51 -> at 78-80S,
+		from 172E to 168W, make ice
+		depth 500m.
+12/15/04	New feature:  Added option to			-15% 
+		use pick balloon position from			when Anita-lite
+		real Anita-lite flight path			option chosen
+12/15/04	Bug fix:  Fresnel factor within			+40%
+		firn removed- assumed adiabatic
+12/15/04	New feature:  Use LCP, RCP			+7.5% 
+		polarizations for Anita-lite as			for Anita-lite
+		is already done for Anita		
+12/15/04	Bug fix:  Was not using entire			-50%
+		bandwidth to find expected noise		for Anita-lite
+		for Anita-lite						
+12/27/04	New feature:  Use measured			-9.9% 
+		antenna gains instead of 
+		interpolating from specs
+12/27/04	New feature:  Cut off backlobes			for Anita-lite
+		of the antenna; ray is not detected		@19.5: neglig.
+		if hitangle>90 degrees				@22.5: -20%
+Net change since 1.18:  +40%			2900
+1/24/05		Added secondary interactions	3480	        @19:  +20%
+1/24/05		Stylistic change: Per D. Goldstein's
+                suggestions.  Count number of                   no change
+                each neutrino flavor for calculating
+                effective areas instead of assuming
+		it's 1/3 each.  Only affects 
+		low-statistics runs. 				
+1/27/05        	New feature:  Incorporated	                @19:  +11%  
+                Fenfang's code for including downward rays that @22.5: +82%
+                reflect off the ice-rock interface.	
+1/31/05         Stylistic change:  Changed name of input 
+                file math.txt.processed to	
+        	atmosphere.dat so it is more clear
+2/9/05          Bug fix: noise fluctuations were not being	@19: no change
+		properly added in for Anita-lite, David
+		G. noticed this.
+2/9/05		Stylistic change:  Changed variable names
+		in GetFresnel so it is more clear
+2/18/05		Bug fix:  balloon's tilt was off   		@19: -4.4%
+		Stephen found
+2/18/05		Bug fix:  error in SmearTheta that		@19: +2.5%
+		Fenfang found
+2/18/05		New feature:  Use TRandom3 instead		no change
+                of TRandom for a longer periodicity
+		David G. was finding that the numbers
+		were cycling after 10^8 events.
+2/18/05		Stylistic change:  changed any remaining	no change 
+		floats to doubles
+2/18/05		Bug fix:  error in finding depth of the		+2.6%
+		interaction (was using ray's exit point
+		instead of point at surface just above	
+		interaction).	
+Net change since version 1.19:  +32.9%		3855
+2/25/05		Bug fix:  David G. pointed out error in lines 
+		where voltages were being printed out for work 
+		at UCI					       no change
+3/3/05		Bug fix:  Stephen pointed out bug in
+		GetDirection where a negative sign
+		appeared inside a sqrt in 10^-6 events
+3/3/05		Improvement:  neutrino direction picked
+		uniformly in cos(theta) instead of theta
+		within narrow Cerenkov cone			~no change
+3/4/05		Bug fix:  In WhereDoesItEnter, was getting
+		- sign inside of sqrt for interaction
+		positions above sea level.			~no change
+3/4/05		Bug fix:  We were cutting out too many
+		low weight events, especially at high
+		cross sections.  Now, it samples the first
+		1000 events that pass and finds the 
+		appropriate place to cut out low weight
+		events						~no change
+                                                                at SM cross section.
+3/4/05		New feature:  Added index of refraction 
+		dependence on cone width in the firn		~no change
+3/4/05		Bug fix:  was using neutrino energy
+		instead of shower energy for width of
+		Cerenkov cone					~no change
+3/4/05		Bug fix:  Stephen fixed problems with
+		finding polarization vector		4472	@10^19: +16%
+3/4/05		Fenfand and Amy fixed some problems with        
+		WhereDoesItEnter and Getchord		3577	@10^19: -20%
+3/28/05		Bug fix:  Fixed GetRayIceSide so that
+		ray is being traced properly through
+		the firn.					~no change
+3/25/05		New feature:  Stephen added his
+		banana plot maker				no change
+3/28/05		Bug fix:  Fixed dGetPhi, dGetTheta,
+		SmearPhi, SmearTheta so their bin centers
+		are consistent					~no change
+3/28/05		Bug fix:  CreateHorizons was not using
+		proper ice volumes for points along
+		Anita-lite path					
+3/28/05		Bug fix:  Fenfang pointed out error in
+		weight calculation for events where
+		neutrino goes through mantle			~no change
+3/28/05		Improvement:  using proper noise 
+		temperatures for Anita-lite			Anita-lite, 10^21:
+								-27.7%
+4/11/05		Improvement?  Using Fresnel coefficient		@10^19:  +100%
+		consistent with what Peter is using
+		for comparison purposes.
+		In my opinion, the jury is still out
+		regarding which formulas are best for
+		fresnel coefficients for Anita.
+		Please see my recent note on this.
+4/11/05		Changed default to *no* reflected rays.		@10^19 with SM 
+								cross section,
+								negligible change
+4/11/05		Bug fix:  Fenfang pointed out that we were
+		picking neutrino direction based on
+		only the 2nd iteration of ray tracing, not
+		the 3rd and final				~no change
+4/11/05		New feature:  added capability to use
+		constant crust density and thickness for
+		comparison with UH				no change for
+								default settings
+4/11/05		Bug fix:  Was including secondary 
+		interactions for NC events.			
+5/9/05		Fenfang	fixed a bug in her attenuation
+		function					@10^19:	-24%							               
+5/15/05		Bug fix: Stephen found bug in GetSecondaries 
+		in calculating shower energy from tau decays 	@10^19: 
+								no change
+5/15/05		New feature:  By entering "0" for neutrino      @10^19:
+		energy, the "baseline" ES&S neutrino spectrum   no change
+		is used.  When the program is finished, it
+		spits out how many neutrinos you would expect
+		to see with Anita in 45 days of livetime.		
+5/24/05		Bug fix:  Brian Mercurio pointed out that	@10^19:	
+		in PickDownwardInteractionPoint, random number  +8.7%
+		was being generated in the wrong spot			
+5/31/05		New features:  Can set in the input file the n  
+		maximum number of entries to be filled in 
+		histograms, can disable use of polarization
+		vectors (for debugging), can turn off
+		cuts that select for detectable events,
+		i.e., the "chance in hell" cuts (at
+		the expense of slowing down the code)		no change
+5/31/05		Bug fix:  The array "surfacer" was		
+		putting the water layer above the ice
+		layer instead of the other way around.
+		Only was impacting ice shelves.			
+5/31/05		Bug fix: In defining				
+		RonneIceShelf and RonneIceShelf			@10^19 (with
+								no reflected
+								rays):
+								no change
+6/7/05		Bug fix:  Peter pointed out coefficient
+		in front of equation used in GetSpread
+		was not consistent with reference		@10^18.5:
+								+7.7%
+6/28/05		Bug fix: Found by Brian Mercurio, in 
+		GetSecondaries, few places where array for 
+		muons was being filled 
+		instead of the one for "tauons"			@10^19:
+								no change
+6/28/05		Bug fix: Found by Brian Mercurio, in		
+		GetSpread, pnu<elpm should be pnu<eshower.	@10^19:
+								no change
+Net change since version 1.20:  +46.0%				5630
+9/1/05	        New feature:  (Stephen and Fenfang)
+		Option to use Bedmap ice
+		model instead of Crust 2.0.  Finer
+		resolution but slower.
+		Crust 2.0 is still the default.
+10/10/05	New feature:  Was using GZK flux from		no change to
+		upper curve of SMEX proposal.  This		Vol*sr but
+		looks like an optimistic curve,			# events from
+		rather use upper curve of Fig. 9 from		ES&S decreases
+		astro-ph/0101216 for muon component		by 74%
+		and the electron component from Fig. 4
+		of the same paper.
+11/2/05		Bug fix:  (Stephen) Properly rotate
+		polarization vector through ice-air
+		interface
+11/2/05		Bug fix:  (Stephen) Had pokey and slappy	For ES&S flux,
+		backwards in GetFresnel				+10%
+11/7/05		Bug fix: (Stephen) In ReadSecondaries,		@10^20
+		y_cumulative was only being normalized to	+20%
+		unity for mu brems, not the others
+11/29/05	Bug fix:  Cross-polarizations were not		@10^19.5,
+		being attenuated compared to co-polarizations	
+11/29/05	Bug fix:  hitangle_e and hitangle_h were	-45% 
+		reversed in term_e and term_h			
+11/30/05	New feature:  Added option to remove weights    For ES&S flux,
+		as a check.  This is not the default.		-20% (this 
+								should not
+								change the
+								answer, so this
+								is being
+								investigated)
+12/1/05		New feature:  Added option to include		@10^18.5
+		discones where nadirs used to be.		+50% when
+		Not the default.				discones are
+								included
+12/8/05		Bug fixes, new features:  Updated 
+		signal simulation to be consistent 
+		with Seckel's scaling note
+		Had extraneous factor of nsin^2(theta)		no change for
+								ice
+		1/sin(theta_c) in front always uses		no change for
+		theta_c for ice					ice
+		added a_ex in front per seckel's note		no change for
+								ice
+There is some object orientedness creeping into the code so be careful
+that some arrays have become instances of the Vector class, defined
+in vector.cc.
+Also, we have the code separated into more files so the code is more
+organized and easier to find particular functions.
+Net change since version 1.21:		-36% @10^19.5	3600 +/- 150 km^3 sr
+
+01/19/06   	 (Connolly) Bug fix:  When seeing		@10^19.5  
+		 if a signal passes				negligible
+		 the trigger, now compare absolute		change
+		 value of signal to rms noise instead
+		 of signed value
+01/30/06	 (Connolly, per Mercurio's request) Bug 
+		 fix:  Inside GetSpread, no change,
+		 pnu<eshower should have been eshower<		affects
+		 elpm, right below it 10^15 changed		energies
+		 to elpm					near 10^15 eV
+								      
+01/30/06	 (Connolly, per Mercurio's request) 
+		 Commit the water.asc data file, needed
+		 for Bedmap 					  
+01/30/06	 (Connolly, per Mercurio's request)	   no change for  
+		 Fixed a problem with counting neutrinoo   default direct
+		 of each flavor for reflected rays.        rays, for reflected
+							   rays, only affects
+							   sensitivity per
+							   flavor
+02/10/06	 (Mercurio) GetSigma and GetCurrent           @10^19.5 eV +1%
+		 assume an energy range of 10^18-10^21        (because cross
+		 eV instead of 10^16-10^21 eV                 section increased
+							      by about 1%)
+03/21/06         (Connolly) Beginnings of roughness	   Still runs too 
+                 Run with roughness by using		   slowly to give a 
+		 inputs.txt.roughness                      result for Vol*sr
+		 For default inputs, GZK flux,
+		 vol*str=133+/-13 km^3 sr and takes 7:52 to get 10% errors
+03/31/06	 (Connolly, from Mercurio's suggestion)   Not a significant
+		 In vector.cc, Vector function should     change
+		 only go from 0 to pi, not -pi to pi
+
+06/07/06         (Mercurio) cross sections updated for
+		 the CTEQ6-DIS parton distributions         @10^20 eV -18%
+		 For default inputs, GZK flux,
+		 vol*str=138+/- 12.8 km^3 sr and takes 7:54 to get 10% errors
+
+08/07/06	 (Connolly) Bug fix:  In GaintoHeight,	    With ES&S spectrum,
+		 the gain is in dB.  Not much of a	    no significnt change
+		 change though since the gain is around
+		 10.
+		 Changed NFREQ from 100 to 2048, this makes it slower
+		 Added Jaime's new parameterisation from
+		 astro-ph/0512337
+		 W/ old parameterisation, GZK flux,
+		 vol*str=129+/-22 and takes 27:30 to get 10% errs w/ 10^7 events
+		 W/ new paremerisation, GZK flux,
+		 vol*str=357+/-38 and takes 19:27 - 10% errors w/ 5E6 events
+		 The new parameterization is now the default.
+		 (If we change NFREQ=128 it only takes 7:55.)
+
+08/08/06	 Added option to set the altitude of	    no change for standard
+		 the balloon.  Made some changes in	    inputs.
+		 PickDownwardInteractionPoint and
+		 PickInteractionLocation to allow for
+		 altitudes below about 2000 ft.
+		 
+08/11/06	 (Mercurio) switched to the antenna gains
+		 from Ped's anita_notes post #71
+		 With default settings, GZK flux:
+		 vol*str=412+/- 40 km^3 sr
+
+08/14/06	 (Mercurio) finished the gains update        @10^20 eV +12%
+		 from last Friday
+		 With default settings, GZK flux
+		 vol*str=407+/-40 km^3 sr
+
+08/29/06	 Added options for SLAC configuration
+		 With default settings (not SLAC), GZK flux
+		 336 +/- 25 km^3 sr
+
+12/11/06	 In new signal parameterisation (from Jaime's
+		 2005 paper) add necessary factor of 1/sqrt(n_ice^2-1)
+		 to delthetaem_max.
+		 With default settings, GZK flux:
+		 285 +/- 23 km^3 sr
+
+01/07/07	 Added functions PickBalloonPosition,
+		 SetDefaultBalloonPosition, GetAir,
+		 GetThisAirColumn for tidying up
+		 With default settings, GZK flux:
+		 285 +/- 23 km^3 sr
+
+03/24/06	 Added Anita flight.  Anita flight is new default.
+		 Updated flight data information with new root files
+		 With default settings, GZK flux:
+		 163 +/- 30
+		 (but this contains a bug in setting altitude_bn,
+		 which is fixed in version 1.62
+		 so it should be 242 +/- 32 )
+
+05/24/07	 1.51 Updated data files from Ryan's new root    w/ ES&S flux,
+		 files 	      	    	 	    	    292 +/-100 km^3sr 
+		 					    (time domain)
+04/23/07         1.57 Time domain option added,trees added, 282 +/- 100 
+		 memory leak fixed, added Minna bluff (Anita Hill)
+		 options, attempts to speed up the code
+04/25/07	 1.58 more Anita Hill work		    282 +/- 100
+		 This version has a memory leak.
+
+05/01/07	 1.59 work on Get_gain_angle so it runs	    1998 +/- 200
+		 faster (I introduced a bug in get_gain_angle, 
+		 but did not realize it until later).
+		 Also removed usage of surfhktree, which
+		 should have stayed.
+05/01/07	 1.60 work on speeding up the code          1998 +/- 200
+05/01/07	 1.61 in ReadFlight, added ft-> meters      1998 +/- 200
+		 conversion for anita-lite flight
+05/05/07	 1.62 removed previous ft->meters conversion 1998 +/- 200
+		 in ReadFlight, instead added conversion
+		 in PickBalloonPosition
+05/05/07	 1.63 protection against memory leak	     1998 +/- 200
+05/07/07	 1.64 fixed vnoise_anitalite to allow for    1998 +/- 200
+		 more channels than anitalite (for Anita
+		 Hill)
+05/11/07	 1.65 fixed r_bn so that it's wrt geoid	     863 +/- 150
+		 instead of the surface, as Brian M.
+		 suggests
+		 Also put usage of surfhktree back in.
+		 By now the get_gain_angle problem is fixed
+		 too.
+		 
+05/17/07	 (Goodhue) Merged some changes for "Anthill" experiment.  
+                 Amy added noise and I added phi orientations.
+		 
+05/19/07	 (Fenfang) Redefine the iceshelves,          
+		 no change for standard input
+		 but affects sensitivity for reflected rays.  
+		 making sure that there is water under       
+		 the iceshelves and include the -20dB	     
+		 band at the bottome of Ross Iceshelf. 
+		 Add an option for using Moore's Bay 
+		 data for the field attenuation length 
+		 for the west land.  
+		 Drew the map for the events distribution 
+		  over the Antarctica.
+08/23/07	 (Connolly) In GetNoise, changed theta_horizon 165 +/- 80
+		 so it's no longer just an approximation.
+		 Also, changed some variable names and added
+		 some comments so it's more clear
+08/23/07	 (Connolly implementing Fenfang's suggestions)
+		 RANDOMIZE_BN_ORIENTATION: Set default in input
+		 file to 0. Also, when the flight path is set to
+		 ANITA or ANITA-lite, override the request that
+		 the balloon orientation be randomized.  The
+		 user gets a warning at the beginning if this
+		 happens.
+		 All layers were being set to the same vertical
+		 position in GetPayload.  Those lines are removed.
+		 This affects arrival times.
+		 Fenfang argues convincingly that powerterm_e and
+		 powerterm_h need another factor of df, so that is
+		 added.
+		 In icemodel.cc, in CreateHorizons, altitude_bn 
+		 should not have been converted to meters for
+		 the anita flight.
+09/05/07	 (Connolly implementing Fenfang's suggestions)
+		 Use livetime of 34.78 days * 0.75 efficiency
+		 for anita 
+		 Set default masks (off) and thresholds (2700 adc's)
+		 when the flight is not anita, so that time domain
+		 works for flight paths that are not anita.
+		 (Hoover's suggestion) Now have NMEDIUM_INTERACTION
+		 and NMEDIUM_RECEIVER.  Was mistakenly using 
+		 index of refraction of ice at receiver.  This
+		 Could be nearly a factor of 2 reduction.  
+09/06/07	 Added the option to trigger using just V
+		 polarization. I only put it there so we can get a
+		 rough estimate of the change. It should be updated
+		 or replaced when we know more about a V pol
+		 trigger, especially its efficiency curves. I also
+		 rotated the nadirs 11.25 degrees.
+10/9/07		 Added option to rotate the polarisation vector about the direction of the neutrino (this is for V-pol trigger studies).
+10/10/07	 Fixed error in previous submission
+10/16/07	 Added option to change inclination angle of the 4th layer of antennas (in input file, it's called Inclination angle of "nadir" antennas)
+10/29/07	 Divide signal parameterisation by factor of sqrt(2).  This is because of two effects.  There is a factor of 2 reduction because of the way that Zas, Halzen and Stanev defined their Fourier transform, which seems to propagate through to Jaime's papers.  Second, the parameterisation seems to give an E-field that is double-sided (defined for pos and neg frequencies) and we are using it as a single-sided function, so to keep the total power the same we multiply the E-field by sqrt(2).  By combining these two effects we get a net factor of 1/sqrt(2).
+		 Also added Spectra class and allow the user to pick either ES&S with no cosmological constant (0), E^-1 (1), E^-2 (2), E^-3 (3), E^-4 (4), ES&S with cosmological constant (5), or neutrino flux from Iron nucleii.  For the spectra with fixed index 1-4, the normalisation is arbitrary at the moment.
+11/1/07		 Per Fenfang's suggestion, instead of taking the power in each channel to be the Sum(voltage_i^2) where i denotes a frequency bin, instead take (Sum(voltage_i))^2 as you should for a coherent signal.  I need to modify my efficiency curves so that I'm using the same definition.
+		 Replaced Effiencies class with Trigger class.  Read in surf threshold scans from Ryan's Elog #133 and also use Stephen's rateToThreshold to convert thresholds in ADC Counts to thresholds in power/<power>.  Please take the current time domain simulation with a grain of salt because I still need to generate new single-channel efficiency curves before it gives a sensible answer.
+
+11/14/07  Fixed bug in previous version which was giving low sensitivities for Anita-lite.
+For ES&S flux with cosmological constant, V_eff*str=73+/-13 km^3 sr
+@ 10^19, V_eff*str=335+/-24 km^3 sr
+
+11/14/07 Added option to use masking as in the anita flight or not
+
+12/5/07 Use Kim's livetime of 17 days for ANITA
+
+12/7/07 Using a smaller flightdatafile.root (formerly called flightdatafile_foricemc.root and before that surfhkfile_foricemc.root).  This one contains flight data from every thousanth event during the flight.  For a larger file that contains data from every tenth event (300 MB), please download it from
+http://www.hep.ucl.ac.uk/uhen/anita/private/simulation/flightdatafile.root
+	New input file inputs.txt.roughness_singleray for inplementing roughness based on a single ray.
+	Also reorganized the input file so that inputs are arranged in sections according to topic.  I also modified inputs.txt.standard, inputs.txt.slac, inputs.txt.anitahill, inputs.txt.roughness and inputs.txt.roughness_singleray accordingly. (The middle three have not been maintained much so I can't guarantee that they give a sensible result).
+
+12/11/07     (Bug fix) In new parameterization, was missing a factor of 1/sin(changle).  1/sin(changle)=1.2 in ice.
+
+12/11/07 Added inputs.txt.default which you can copy to inputs.txt for the default settings
+
+12/21/07 Added many neutrino flux models to the code so that you can choose which you would like to use by setting EXPONENT value. For detailed information of the flux, check the file called "README" in the directory "fluxes".
+
+1/08 Added options in input file to change boundaries of trigger bands and also you can require individual bands to pass and allow only certain ones to pass
+
+2/20/08 Fixed bug pointed out by Brian M. in declaration of bwslice_min,max,center,width.  Sensitivity for default gzk flux increases compared with previous version from 30+/-9 to 55+/-12.
+
+4/2/08 Now have a time domain simulation of noise and signal that includes a diode integration.  It is now the default, set with the following line in the input file: 
+2	# Trigger:  frequency domain voltage (0) frequency domain energy (1) timedomain diode integration (2)
+
+5/19/08 Since 2/2/08, chance in hell cuts were found to be too weak.  They have been loosened again to bring the effective volumes consistent with 2/20/08 version.  50 +/- 7 with spectrum set to 5.
+
+
+27/8/08 The time domain simulation is now the default.  Please see Elog #411 for details.
+	Also, fixed the calculation of average ice depth, only used for writing to output file.
+15/9/08  Fixed bug in trigger.cc found by Brian M.  Bug in implementing L1 trigger coincidence window (flag_e and flag_h).  Fix will make the vol*str higher, but exact increase not assessed yet.
+18/9/08  Had introduced bug when moving secondaries code over to its own class.  Was using NPROB_MAX as input to Picky instead of NPROB.  Fixed this so NPROB is the input.
+22/9/08  For ANITA1, rejects signals coming from most of the stations and applies a simple diffraction estimate to very upgoing signals at antennas 1-16.
+23/10/08 Fixed bug that was making full band noise too high for ANITA II.  
+11/5/08 Replaced integral of radio attenuation length with 1 / (integral of (1 / attenuation length))
+
+11/12/08 
+Fixed bugs in calculating attenuation length (the old version gives attenuation length for interactions near ice surface wrongly due to the large integration step and the scale process), create data files for standard attenuation length (420m for west antarctica, 2810m for east antarctica). Read in the standard attenuation length from data files instead of doing integration in the code. Squeeze or stretch the local maximum ice thickness of the interaction position to get the corresponding attenuation length.  The newly calculated attenuation length decreases the Veff of direct events at 10^19 eV by about 5% to 10%.
+
+Set a viewangle cut right after get the neutrino direction. 
+
+Cleaned a little bit on secondaries.cc
+
+Dec. 17 2008
+A. Connolly:  Fixed simulation of the L2 trigger so that it requires the middle antenna fires.  Could have decreased the effective volume by about 20%.  (Get 20% decrease with uncertainties the size of the difference.)
+
+May 26 2009
+A. Connolly:  Modified selection of phases for time domain waveforms.  Pick a set of phases for e-pol and h-pol rfcm's separately.  In each band in each frequency bin, the component of the phase that is correlated with the rfcm phase is determined by how much power has been attenuated in that bin relative to the rfcm output.  Previously, the phases in each band were only correlated with the full band, and we did not generate waveforms at the output of the rfcm's.  This is now a more full simulation of the system. @ 10^19 eV, the Vol*Str seems to drop by about 25%.
+
+May 27 2009
+A. Connolly: Modified banding attenuation.  I don't have a normalisation for the band measurements that Abby performed, so I normalize them so that the least attenuation is no attenation.  With the raw data, I was normalising to a high statistical fluctuation.  I modified it so that I perform a moving average on the measurements before normalising.  This changes the V_eff significantly, from 180 +/- 50 to 325 +/- 60 at 10^19 for Anita 2.
+
+June 2 2009
+A. Connolly:  Fixed a couple bugs in anita.cc, anita.hh.  f_pulser, v_pulser, etc. should have been with length NFOUR/4 not NFOUR/2, so some arrays were being written out of bounds.  This increased the vol*str and for Anita 2 @10^19 we're at 528 +/- 70 km^3 str.
+
+JUne 4 2009
+A. Connolly: Modified diode_anita2.root so that the frequency domain noise just after the rfcm does not blow up at extreme frequencies due to the deconvolution that we are doing from the lab.  This brings the vol*str back down to 415 +/- 70.
+
+July 20th 2009
+A. Connolly: Now we are using the full Anita flight path.  For Anita 2, @10^19 -> 496 +/- 80 km^3 str.
+
+August 10th 2009
+S. Hoover: Bugfix - in AntTrigger::addToChannelSums, changed "vm_banding_rfcm_*" to "v_banding_rfcm_*" in all four of term_e, term_h, energyterm_e, and energyterm_h.  Use of the "vm_banding" variables had the effect of skipping icemc.cc's call of Anita::AntennaGain for the frequency domain trigger.  I think that the time domain trigger was unaffected, but I'm not certain.  The effect of the bug was to make the frequency domain trigger turn on and reach 100% efficiency at an SNR < 1. 
+
+7 Oct. 2009
+A. Connolly: Fix sum_events calculation for spectra under suggestion by Taylor at UCLA: "Though the integrated term has 1/d(lnE), it seems like it should have 1/d(logE) = 1/d(lnE / ln10) = ln10 / d(lnE), because of the way the energies were chosen. It's also missing a bin width of 0.5, so the events per year should be multiplied by a total of 0.5 ln 10 = 1.1513."  So added factor of 0.5 ln 10
+
+19 Oct. 2009
+A. Connolly
+Added new tree tdata in Anita class for analyzers to play with.
+
+20 Oct. 2009
+A. Connolly
+Modified input file so that nadirs are included in Anita 2.  This increases the vol*str at 10^19 from 500 +/- 80 km^3 str to 720 +/- 80 km^3 str, but this is not a true increase because the thresholds have not been appropriately adjusted.  Still need to modify the global trigger so that it is the same as what was actually used in Anita 2.
+
+Abby added actual antenna measured positions for Anita 2 which WHICH==8.  This brings effective volume down by factor of 2 or so but don't know why.
+
+26 Jan. 2010
+Fixed problem with implementing trigger with option WHICH==8.  Vol*str went back up to 930 +/- 90 @ 10^19 so the bug introduced by the previous item is fixed.
+
+29 Jan 2010
+Changed ReadFlight to ReadAnitaliteFlight and moved it to Balloon::InitializeBalloon for a little better clarity.  No change to sensitivity.
+ 
+16 Feb 2010
+Replaced ChangeCoord with some vector manipulation where I rotate the payload to the balloon position in GetArrivalTimes.  Hopefully this helps Matt reconstruct events.
+
+25 Feb 2010
+Fixed ChangeCoord where it is used in balloon.cc as well.
+
+15 March 2010
+Put more reasonable thresholds for Anita 2 based on Ryan's plot of measured rates vs. threshold that appears on p. 9 of his talk at the Anita meeting 19th Feb 2009, using 14 MHz, 8 MHz, 8MHz and 1 MHz for L, M, H and full bands.  @10^19 get 723 +/- 78 km^3 str
+
+4 May 2010
+A. Connolly:  Fixed phi masking for Anita 2.  Brian M. pointed out to me that this wasn't being implemented properly.
+
+25 May 2010
+A. Connolly:  Fixed a memory leak.
+
+June 21 2010
+Brian M.: Fixed several bugs. About a 15% decrease in aperture at 10^20 eV for WHICH==8 and WHICHPATH==1
+
+08/01/11
+A. Connolly Fixed a bug in GetNuEnergy which was giving high effective volumes for flux models
+
+08/04/11
+A. Connolly - major revision so that the same style of Makefile can be used for AraSim and analysis software.  No longer makes a tmp.cc but instead makes a different .o file for each cc file.
+
+08/29/11
+E. Hong - added more heavy nuclear/Iron models in Spectra class. More detail is in README_EXPONENT on /icemc and README on /icemc/fluxes. Also changed terms "if (EXPONENT<10||EXPONENT>100) " in icemc to "if (spectra1->IsSpectrumi())"
+
+08/30/11
+E. Hong - moved EXPONENT from icemc.cc to Settings.h. Now read EXPONENT by settings1->EXPONENT.
+
+09/01/11
+A. Connolly - Fixed a bug found my Amir where the same index was used twice in nested loops in GlobalTrigger.  At 10^19, reduces the effective volume from 388.194 + 41.5501 - 41.5501 km^3 str to 323.316 + 38.2602 - 38.2602 km^3 str.
+
+09/02/11
+A. Connolly - Combining previous versions.  Should have new Gety, GetSigma functions, Eugene's fixes with EXPONENT.
+Included a fix in GetSecondaries <=plepton -> <=plepton(1.+1.E-5).  
+
+09/06/11
+P. Schellin - Reimplemented rewrite of Anita::GetNoiseWaveforms and supporting functions, including Tools::get_random_rician(). Also commented out the --nostubs parameter from Makefile.arch, as it is no longer included in Root.
+
+09/07/11 A. Connolly - Fixed WhereDoesItLeave so that the event is thrown out if we do not get a real solution for the exit point.
+
+09/09/11 A. Connolly - Adding option to pick neutrino from any direction with entrance points evenly distributed on earth's surface.
+	 Add a continue when WhereDoesItLeave does not give a real solution.  This increases the effective volume slightly from ~300 o ~400 but not clear if it is significant.
+
+10/02/11 A. Connolly - Before I was only setting the surface normal nsurf_rfexit once on the 0th iteration of the ray tracing algorithm.  Now I find the surface normal after the 1st and 2nd interations too.  However, only find slopeyness at the surface once, at the 0th iteration, then use the same slopeyness for every iteration.  This is so that the iterative procedure is not trying to catch a moving target.
+
+12/13/11
+P. Schellin - Big changes:
+1: Added a third option for TRIGGERSCHEME == 3, which uses a coherent sum trigger. This option is specific to ANITA-III as of this revision, and more information can be found as a comment within GlobalTrigger::PassesTrigger(…).
+2: Added pseudo-ANITA-III antenna geometry, which is simply an extension of the existing ANITA-II geometry. This should be modified once a better estimate is established.
+3: Modified makefile to more easily debug - simply type 'make debug' or 'make clean debug' for compilation with GDB information, no inlining, and no optimizations.
+4: Fixed a bug where the noise for a given time step for every antenna was the same.
+
+12/21/11
+P. Schellin - Global Changes:
+1. SIGINT is now caught during the inu loop: When you press Control-C, icemc will finish its current event then continue to output all files. The graceful shutdown will be noted in output.txt. Please note that when aborted early, anything which relies on NNU may be unreliable.
+2. Removed shared.cc and shared.hh, and moved their global variables to icemc.cc or where appropriate. Those moved to icemc.cc should be moved again to somewhere else.
+3. Changed small things to reduce the number of warnings while compiling.
+4. Removed all "if (inu == …)" statements from all cc files as they are only valid for a specific seed. GDB can allow quicker debugging by setting conditional breakpoints and can automatically cout things as well, so I recommend debugging that way.
+
+Local Changes:
+1. Modified the coherent sum trigger's input waveforms to that of the trigger path, and added an RMS for a single event which it now uses.
+2. Added a few branches to the coherent_waveform_sum_tree which help analysis.
+3. Changed output of coherent_sum_data.root to outputs folder (no errors now if directory doesn't exist).
+4. Moved the coherent sum trigger's power threshold setting to the inputs.txt file.
+
+2/23/12 B. Dailey- Added new function for help find binnumbers for an array to help compute Aeff. This Aeff will be used to in conjuction with taumodes being on, where taus will interact in the earth and we see the decay at posnu.
+
+
+4/4/12 E. Hong - only some comments added to anita class and trigger class. The functionality should not changed at all.
+Comments are explaining doubling the size of array for convolution and asking the bug in trigger system. In trigger.cc -> WhichBandsPass, it will check the array (timedomain_output_1 and timedomain_output_2) where the peak should be located. However the code don't account for the time delay between antennas. And this can cause serious bug for FULL BAND channel as the code only looks at 4ns short window if it passs the trigger or not. Hope someone can check if it is fine for not.
+
+
+11/21/12 B.Dailey- In settings.h, changed EXPONENT from an int to a double.
+
+2/25/13 P. Schellin:
+Made additions and changes relating to the implementation of the Summed Power Trigger (TRIGGERSCHEME == 4).
+Added rx.hpp (the RX class declaration and implementation file), LinkDef.h, updated the makefile to generate the appropriate ROOT TTree dictionary, and made changes to trigger.cc, trigger.hh, anita.cc, anita.hh in order to use the new trigger. 
+
+3/24/13  A. Connolly: Added some comments for Doxygen, and did some cleanup in Primaries.hh and Primaries.cc
+
+5/07/13	P. Schellin:
+Fixed where globaltrig1 is instantiated in icemc.cc so that instantiation occurs before finaltree takes the reference of globaltrig1->rx_minarrivaltime and globaltrig1->arrival_times (this was causing a runtime error when compiled using GCC 4.xx, etc., despite no error when using clang or the g++ frontend for LLVM (such as on OS X)). Also fixed indicies within trigger.cc.
+
+10/2/13 B.Dailey: Updated the taumodes code to its own class (Taumodel). Updated the function Where DoesItEnter, and moved it to earthmodel.cc. Cleaned out useless code that was supporting the older version of taumodes. 
+
+10/8/13 B. Dailey: Updated Primaries to be consistent with charged current and neutral current integers. kcc =0, knc=1; used consitently through the program.
+
+2/10/14 B. Dailey: Added pitch and roll to balloon class. Pitch and roll were added into the data file "anita2gps_pitchandroll.root". This new file as slimmed down the number of events to correspond to when the balloon was in the air (runs 12-262, rather than from run 1). Other file was left unmodified. Added in a couple of trees used for outputting events in data format and agreement with Abby's analysis code. 
+
+3/28/14 P. Schellin:
+Updated icemc to be both C++03 and C++11 standards conforming:
+	Fixed typetraits include
+	Fixed in-class static const initialization with constexpr and macro to convert constexpr with const (for C++03 compliance)
+	Updated Makefile to include -std=c++11 if CPPSTD is set to c++11 (which, at the moment, it defaults to)
+Fixes:
+	Fixed the assignment of Etau_now to the uninitialized Etau_final in Taumodel.cc
+	Fixed signed-to-unsigned comparison in for loop in Taumodel.cc
+	Fixed the zeroing of an array which didn't exist in memory ("eventsfound_binned_distance_forerror[NBINS_DISTANCE]" isn't an element of the array!)
+	Switched several global arrays in icemc.cc to be initialized to zero automatically, and removed the associated call to "Tools::Zero()"
+	Changed floating point assignment to "0" to be to "0." explicitly instead in several places.
+	Fixed the GlobalTrigger::FillInNadir() missing declaration of ileft and iright.
+Improvements:
+	Added some documentation in anita/trigger files
+07/07/14      Moved antenna_positions, calculate_antenna_positions to Anita class there they probably should have been.  Also, calculate_single_offset used antenna_positions instead of ANTENNA_POSITION_START which is more general.  Also added ANITA 3 payload dimensions that I got from a set of slides that Harm sent me.
+07/07/14      commented out the line CPPSTD = c++11 in the makefile so that it compiles on machines that don't have the newest version of c++
+
