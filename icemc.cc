@@ -685,12 +685,7 @@ int main(int argc, char **argv) {
     // 12/01/03
     //
     //--------------------------------------------------------------
-    
-  TRandom *rsave = gRandom;
-  TRandom3 *Rand3 = new TRandom3(65546); // for generating random numbers
-  
-  gRandom=Rand3;
-  
+
   // for comparing with peter
   double sumsignal[5]={0.};
   double sumsignal_aftertaper[5]={0.};
@@ -700,21 +695,23 @@ int main(int argc, char **argv) {
   Settings* settings1 = new Settings();
   
   string input="inputs.txt";
-  
+  string run_num;//current run number as string
+  int run_no;//current run number as integer
+
   ifstream inputsfile(input.c_str());
   if (!inputsfile.good()) {
     cout << "Can't find inputs file.\n";
     exit(1);
   }
   
-  if (argc%2!=1) {
-    cout << "Syntax for options: -i inputfile -o outputdir\n";
+  if( (argc%3!=1)&&(argc%2!=1)) {
+    cout << "Syntax for options: -i inputfile -o outputdir -r run_number\n";
     return 0;
   }
   
   char clswitch; // command line switch
   if (argc>1) {
-    while ((clswitch = getopt(argc,argv,"i:o:")) != EOF) {
+    while ((clswitch = getopt(argc,argv,"i:o:r:")) != EOF) {
       switch(clswitch) {
       case 'i':
 	input=optarg;
@@ -725,48 +722,59 @@ int main(int argc, char **argv) {
       case 'o':
 	settings1->outputdir=optarg;
 	cout << "Changed output directory to: " << settings1->outputdir << endl;
-	ofstream ftemp(settings1->outputdir.c_str());
+	//ofstream ftemp(settings1->outputdir.c_str());
 	stemp="mkdir " + settings1->outputdir;
 	system(stemp.c_str());
+	break;
+      case 'r':
+	run_num=optarg;
+	stringstream convert(run_num);
+	convert>>run_no;
 	break;
       } // end switch
     } // end while
   } // end if arg>1
   
-  stemp=settings1->outputdir+"/nu_position.txt";
+  cout << settings1->SEED << endl;
+  TRandom *rsave = gRandom;
+  TRandom3 *Rand3 = new TRandom3(settings1->SEED);//for generating random numbers
+
+  gRandom=Rand3;
+
+  stemp=settings1->outputdir+"/nu_position"+run_num+".txt";
   ofstream nu_out(stemp.c_str(), ios::app); //Positions, direction of momentum, and neutrino type for Ryan.
   
-  stemp=settings1->outputdir+"/veff.txt";
+  stemp=settings1->outputdir+"/veff"+run_num+".txt";
   ofstream veff_out(stemp.c_str(), ios::app);//to output only energy and effective volume to veff.txt
   
-  stemp=settings1->outputdir+"/distance.txt";
+  stemp=settings1->outputdir+"/distance"+run_num+".txt";
   ofstream distanceout(stemp.c_str());
   
-  stemp=settings1->outputdir+"/debug.txt";
+  stemp=settings1->outputdir+"/debug"+run_num+".txt";
   fstream outfile(stemp.c_str(),ios::out);
   
-  stemp=settings1->outputdir+"/forbrian.txt";
+  stemp=settings1->outputdir+"/forbrian"+run_num+".txt";
   fstream forbrian(stemp.c_str(),ios::out);
   
-  stemp=settings1->outputdir+"/al_voltages_direct.dat";
+  stemp=settings1->outputdir+"/al_voltages_direct"+run_num+".dat";
   fstream al_voltages_direct(stemp.c_str(),ios::out); //added djg ------provide anita-lite voltages and noise from MC for anita-lite analysis
   
-  stemp=settings1->outputdir+"/events.txt";
+  stemp=settings1->outputdir+"/events"+run_num+".txt";
   ofstream eventsthatpassfile(stemp.c_str());
   
-  stemp=settings1->outputdir+"/numbers.txt";
+  stemp=settings1->outputdir+"/numbers"+run_num+".txt";
   ofstream fnumbers(stemp.c_str()); // debugging
   
-  stemp=settings1->outputdir+"/output.txt";
+  stemp=settings1->outputdir+"/output"+run_num+".txt";
   ofstream foutput(stemp.c_str(), ios::app);
   
-  stemp=settings1->outputdir+"/slacviewangles.dat";
+  stemp=settings1->outputdir+"/slacviewangles"+run_num+".dat";
   ofstream fslac_viewangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
   
-  stemp=settings1->outputdir+"/slac_hitangles.dat";
+  stemp=settings1->outputdir+"/slac_hitangles"+run_num+".dat";
   ofstream fslac_hitangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
   
-  stemp=settings1->outputdir+"/outseckel.txt";
+  stemp=settings1->outputdir+"/outseckel"+run_num+".txt";
   ofstream foutseckel(stemp.c_str());
   
   Balloon *bn1=new Balloon(); // instance of the balloon
@@ -782,6 +790,9 @@ int main(int argc, char **argv) {
   // input parameters
   settings1->ReadInputs(inputsfile, foutput, anita1, sec1, sig1, bn1, ray1);
   
+  settings1->SEED=settings1->SEED + run_no;
+  gRandom->SetSeed(settings1->SEED);
+
   bn1->InitializeBalloon();
   anita1->Initialize(settings1,foutput,inu);
   
@@ -1061,7 +1072,7 @@ int main(int argc, char **argv) {
   //them in this histogram,
   
   //to determine where the cut should be.
-  stemp=settings1->outputdir+"/icefinal.root";
+  stemp=settings1->outputdir+"/icefinal"+run_num+".root";
   TFile *hfile = new TFile(stemp.c_str(),"RECREATE","ice");
   TTree *tree2 = new TTree("h2000","h2000"); // tree2 filled for each event that is beyond the horizon.
   
