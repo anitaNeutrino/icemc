@@ -4208,7 +4208,7 @@ void Summarize(Settings *settings1, Anita* anita1, Counting *count1,Spectra *spe
 			km2sr=ice_area/(1.E6)*PI*eventsfound_prob/(double)NNU;
 			
 			foutput << "Total area x steradians using 4*PI*R_EARTH^2*eff. is \t" << km2sr << " km^2 str\n\n";
-			foutput << "These are not the same because we are not throwing all directions on all points of the surface.  Believe the first one as an approximation, we are working on this for high cross sections.\n";
+			foutput << "These are not the same because we are not throwing all directions on all points of the surface. You should believe the first one and understand that it is approximation.  We are working on improving our calculation of effective areas for high cross sections.\n";
 			ses=(pnu/1.E9)/(km2sr*3.16E7);
 		}
 		
