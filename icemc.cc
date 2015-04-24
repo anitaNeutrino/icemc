@@ -1763,7 +1763,8 @@ int main(int argc, char **argv) {
   cout << "Done with CreateHorizons.\n";
   
   // get energy at which LPM effect turns on.
-  elpm=sig1->GetLPM();
+  //elpm=sig1->GetLPM();
+  elpm=sig1->GetELPM();
   
   // sets neutrino energy
   //  if(EXPONENT>15&&EXPONENT<25)//if EXPONENT is set to be a standard energy within ANITA's energy sensitivity

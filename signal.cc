@@ -235,7 +235,8 @@ void Signal::GetSpread(double pnu,
 //   cout << RHOSALT << " " << RHOICE << " " << RM_ICE << " " << RM_SALT << " " << KR_SALT << " " << KR_ICE << " " << X0SALT << " " << ECSALT << " " << X0ICE << " " << ECICE << " " << AEX_ICE << "\n";  
 //   cout << ALPHAICE << " " << AEX_SALT << " " << ALPHASALT << " " << KE_SALT << " " << KL_SALT << " " << KDELTA_SALT << " " << KE_ICE << " " << KL_ICE << " " << KDELTA_ICE << " " << KELVINS_SALT << " " << BETAICE << " " << BETASALT << "\n";
 
-  double elpm=GetLPM();
+  //double elpm=GetLPM();
+  double elpm=GetELPM();
 
   //  cout << "elpm is " << elpm << "\n";
 

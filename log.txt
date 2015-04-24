@@ -602,3 +602,11 @@ Improvements:
 07/07/14      Moved antenna_positions, calculate_antenna_positions to Anita class there they probably should have been.  Also, calculate_single_offset used antenna_positions instead of ANTENNA_POSITION_START which is more general.  Also added ANITA 3 payload dimensions that I got from a set of slides that Harm sent me.
 07/07/14      commented out the line CPPSTD = c++11 in the makefile so that it compiles on machines that don't have the newest version of c++
 
+
+04/24/15 E. Hong:
+Quick bug fix. In icemc.cc and signal.cc they used to have
+elpm=GetLPM()
+where it should be
+elpm=GetELPM()
+They are fixed. Someone need to check how much this fix affects overall results.
+
