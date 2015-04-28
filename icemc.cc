@@ -1963,7 +1963,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	delete taus1;
       taus1 = new Taumodel();
 	  
-      pnu=pow(10.,settings1->EXPONENT); 
+      //pnu=pow(10.,settings1->EXPONENT); // pnu already obtained above
  
       taumodes1=0;
       int taumodes = settings1->taumodes;

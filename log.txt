@@ -610,3 +610,10 @@ where it should be
 elpm=GetELPM()
 They are fixed. Someone need to check how much this fix affects overall results.
 
+04/27/15 E. Hong:
+Quick bug fix. In icemc.cc, when neutrino energy is chosen from a spectrum model, it didn't properly choose pnu as pnu was obtained with
+pnu=pow(10.,settings1->EXPONENT)
+which is not correct when using a spectrum.
+This is now fixed.
+
+
