@@ -215,11 +215,11 @@ double myfunction_eachray[NRAYS];
 double myfunction_fortree;
 double theta_inc_specular,theta_trans_specular;
 double theta_trans_eachray[NRAYS];
-
 double distance_fortree;
 double theta_rfexit,theta_specular,theta_perptoplane,theta_iceside;
 double duh;
 double theta_fromtir;
+
 
 Vector vector_temp; // a temporary vector for calculating angles
 Vector plusz=Vector(0.,0.,1.);// points in the +z direction
@@ -734,11 +734,10 @@ int main(int argc, char **argv) {
       } // end switch
     } // end while
   } // end if arg>1
-  
-  cout << settings1->SEED << endl;
+  settings1->SEED=settings1->SEED +run_no;
+  cout <<"seed is " << settings1->SEED << endl;
   TRandom *rsave = gRandom;
   TRandom3 *Rand3 = new TRandom3(settings1->SEED);//for generating random numbers
-
   gRandom=Rand3;
 
   stemp=settings1->outputdir+"/nu_position"+run_num+".txt";
@@ -792,14 +791,13 @@ int main(int argc, char **argv) {
   
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);
-
+  
   bn1->InitializeBalloon();
   anita1->Initialize(settings1,foutput,inu);
   
   Spectra *spectra1 = new Spectra((int)settings1->EXPONENT);
-  Interaction *interaction1=new Interaction("banana",primary1,settings1,0,count1);
+  Interaction *interaction1=new Interaction("nu",primary1,settings1,0,count1);
   Interaction *int_banana=new Interaction("banana",primary1,settings1,0,count1);
-  
   if (settings1->ROUGHNESS==1)
     ReadRoughnessData(settings1,trans_angle,transmission,minangle_roughness,maxangle_roughness,npoints_roughness,max_angles_backplane);
   
@@ -900,7 +898,22 @@ int main(int argc, char **argv) {
   int n_interactions=1;            // count number of interactions for this event, including secondaries.
   double emfrac_db,hadfrac_db;
   //double sumfrac_db;      // em and had fractions for double bangs
-  
+  int nuflavorint2=interaction1->nuflavorint;
+  double costheta_nutraject2=interaction1->costheta_nutraject;
+  double phi_nutraject2=interaction1->phi_nutraject;
+  double altitude_int2=interaction1->altitude_int;
+  int currentint2=interaction1->currentint;
+  double d12=interaction1->d1;
+  double d22=interaction1->d2;
+  double dtryingdirection2=interaction1->dtryingdirection;
+  double logchord2=interaction1->logchord;
+  double r_fromballoon2=interaction1->r_fromballoon[0];
+  double chord_kgm2_bestcase2=interaction1->chord_kgm2_bestcase;
+  double chord_kgm2_ice2=interaction1->chord_kgm2_ice;
+  double weight_bestcase2=interaction1->weight_bestcase;
+  double r_exit2bn2=interaction1->r_exit2bn;
+  double r_exit2bn_measured2=interaction1->r_exit2bn_measured;
+
   string taudecay;                   // tau decay type: e,m,h
   
   double elast_y=0;                   // inelasticity
@@ -952,6 +965,7 @@ int main(int argc, char **argv) {
   double cosbeta0; // angle between nu momentum and surface normal at interaction point.
   double mybeta; // beta minus 90 degrees
   double nuexitlength=0; // distance from interaction to where neutrino would leave
+  double nuexitice=0; 
   double nuentrancelength=0; // for taus
   double taulength=0;  // distance tau travels in ice before decaying
   double icethickness=0; // for taus
@@ -1100,11 +1114,11 @@ int main(int argc, char **argv) {
   tree3->Branch("emfrac",&emfrac,"emfrac/D");
   tree3->Branch("hadfrac",&hadfrac,"hadfrac/D");
   //tree3->Branch("current",&currentint,"currentint/I");
-  //tree3->Branch("nuflavor",&nuflavorint,"nuflavorint/I");
+  //tree3->Branch("nuflavor",&nuflavorint,"nuflavorint/I");//was commented
   
   TTree *tree4 = new TTree("h4000","h4000"); // tree4 is signal is detectable
   tree4->Branch("dnutries",&interaction1->dnutries,"dnutries/D");
-  tree4->Branch("dtryingdirection",&interaction1->dtryingdirection,"dtryingdirection/D");
+  tree4->Branch("dtryingdirection",&dtryingdirection2,"dtryingdirection/D");
   tree4->Branch("bn1->dtryingposition",&bn1->dtryingposition,"bn1->dtryingposition/D");
   tree4->Branch("horizcoord",&horizcoord,"horizcoord/D");
   tree4->Branch("vertcoord",&vertcoord,"vertcoord/D");
@@ -1115,6 +1129,7 @@ int main(int argc, char **argv) {
   tree5->Branch("vmmhz1m_max",&vmmhz1m_max,"vmmhz1m_max/D");
   tree5->Branch("inu",&inu,"inu/I");
   tree5->Branch("nuexitlength",&nuexitlength,"nuexitlength/D");
+  tree5->Branch("nuexitice", &nuexitice, "nuexitice");
   tree5->Branch("diff_angle_db",&diff_angle_db,"diff_angle_db");
   tree5->Branch("vmmhz_max",&vmmhz_max,"vmmhz_max");
   tree5->Branch("maxtaper",&maxtaper,"maxtaper");
@@ -1132,7 +1147,7 @@ int main(int argc, char **argv) {
   tree5->Branch("vertcoord",&vertcoord,"vertcoord/D");
   tree5->Branch("weight1",&weight1,"weight1/D");
   tree5->Branch("nearthlayers",&nearthlayers,"nearthlayers/D");
-  tree5->Branch("interaction1->logchord",&interaction1->logchord,"interaction1->logchord/D");
+  tree5->Branch("logchord",&logchord2,"interaction1->logchord/D");
   tree5->Branch("diff_2tries",&diff_2tries,"diff_2tries/D");
   tree5->Branch("diff_3tries",&diff_3tries,"diff_3tries/D");
   tree5->Branch("fresnel2",&fresnel2,"fresnel2/D");
@@ -1152,10 +1167,11 @@ int main(int argc, char **argv) {
   tree6->Branch("horizcoord",&horizcoord,"horizcoord/D");
   tree6->Branch("vertcoord",&vertcoord,"vertcoord/D");
   tree6->Branch("theta_in",&theta_in,"theta_in/D");
-  tree6->Branch("chord_kgm2_bestcase",&interaction1->chord_kgm2_bestcase,"chord_kgm2_bestcase/D");
+  tree6->Branch("chord_kgm2_bestcase",&chord_kgm2_bestcase2,"chord_kgm2_bestcase/D");
+  tree6->Branch("chord_kgm2_ice",&interaction1->chord_kgm2_ice,"chord_kgm2_ice/D");
   tree6->Branch("costheta_nutraject",&interaction1->costheta_nutraject,"costheta_nutraject/D");
   tree6->Branch("weight1",&weight1,"weight1/D");
-  tree6->Branch("weight_bestcase",&interaction1->weight_bestcase,"weight_bestcase/D");
+  tree6->Branch("weight_bestcase",&weight_bestcase2,"weight_bestcase/D");
   tree6->Branch("whichray",&whichray,"whichray/I");
   tree6->Branch("mybeta",&mybeta,"mybeta/D");
   tree6->Branch("longitude",&longitude_this,"longitude/D");
@@ -1232,11 +1248,12 @@ int main(int argc, char **argv) {
   // this is the total weight - the one you want to use!
   finaltree->Branch("weight",&weight,"weight/D");
   finaltree->Branch("logweight",&logweight,"logweight/D");
-  //finaltree->Branch("posnu",&posnu_array,"posnu_array[3]/D");
+  finaltree->Branch("posnu",&posnu_array,"posnu_array[3]/D");
   finaltree->Branch("posnu2",&posnu2_array,"posnu2_array[3]/D");
-  finaltree->Branch("costheta_nutraject",&interaction1->costheta_nutraject,"costheta_nutraject/D");
-  finaltree->Branch("phi_nutraject",&interaction1->phi_nutraject,"phi_nutraject/D");
-  finaltree->Branch("altitude_int",&interaction1->altitude_int,"altitude_int/D");
+  finaltree->Branch("costheta_nutraject",&costheta_nutraject2,"costheta_nutraject/D");
+  finaltree->Branch("chord_kgm2_ice", &chord_kgm2_ice2,"chord_kgm2_ice/D");
+  finaltree->Branch("phi_nutraject",&phi_nutraject2,"phi_nutraject/D");
+  finaltree->Branch("altitude_int",&altitude_int2,"altitude_int/D");
   finaltree->Branch("nnu",&nnu_array,"nnu_array[3]/D");
   finaltree->Branch("n_exit2bn",&n_exit2bn_array,"n_exit2bn_array[5][3]/D");
   finaltree->Branch("n_exit_phi",&n_exit_phi,"n_exit_phi/D");
@@ -1247,9 +1264,13 @@ int main(int argc, char **argv) {
   finaltree->Branch("emfrac",&emfrac,"emfrac/D");
   finaltree->Branch("hadfrac",&hadfrac,"hadfrac/D");
   finaltree->Branch("sumfrac",&sumfrac,"sumfrac/D");
-  finaltree->Branch("nuflavor",&interaction1->nuflavorint,"nuflavorint/I");//1=electron, 2=muon, 3=tau
-  finaltree->Branch("current",&interaction1->currentint,"currentint/I");//0=charged current, 1=neutral current
-  
+  finaltree->Branch("nuflavor",&nuflavorint2,"nuflavorint/I");//1=electron, 2=muon, 3=tau
+  finaltree->Branch("current",&currentint2,"currentint/I");//0=charged current, 1=neutral current
+  finaltree->Branch("logchord", &logchord2, "logchord/D");
+  finaltree->Branch("nuexitice", &nuexitice, "nuexitice/D");
+  finaltree->Branch("weight_bestcase", &weight_bestcase2, "weight_bestcase/D");
+  finaltree->Branch("chord_kgm2_bestcase", &chord_kgm2_bestcase2, "chord_kgm2_bestcase/D");
+  finaltree->Branch("dtryingdirection", &dtryingdirection2, "dtryingdirection/D");
   finaltree->Branch("l3trig",&l3trig,"l3trig/I");
   finaltree->Branch("l2trig",&l2trig,"l2trig[3]/I");
   finaltree->Branch("l1trig",&l1trig,"l1trig[3]/I");
@@ -1270,14 +1291,14 @@ int main(int argc, char **argv) {
   finaltree->Branch("e_component",&e_component,"e_component/D");
   finaltree->Branch("h_component",&h_component,"h_component/D");
   finaltree->Branch("dist_int_bn_2d",&dist_int_bn_2d,"dist_int_bn_2d/D");
-  finaltree->Branch("d1",&interaction1->d1,"d1/D");
+  finaltree->Branch("d1",&d12,"d1/D");
   
   finaltree->Branch("cosalpha",&cosalpha,"cosalpha/D");
   finaltree->Branch("mytheta",&mytheta,"mytheta/D");
   finaltree->Branch("cosbeta0",&cosbeta0,"cosbeta0/D");
   finaltree->Branch("mybeta",&mybeta,"mybeta/D");
-  finaltree->Branch("d1",&interaction1->d1,"d1/D");
-  finaltree->Branch("d2",&interaction1->d2,"d2/D");
+  finaltree->Branch("d1",&d12,"d1/D");
+  finaltree->Branch("d2",&d22,"d2/D");
   
   //Begin block added by Stephen for verification plots
   finaltree->Branch("fresnel1",&fresnel1,"fresnel1/D");
@@ -1330,7 +1351,7 @@ int main(int argc, char **argv) {
   //finaltree->Branch("n_out_surf",&n_out_surf_array,"n_out_surf_array[3]/D");
   finaltree->Branch("nsurf_rfexit",&nsurf_rfexit_array,"nsurf_rfexit_array[3]/D");
   finaltree->Branch("nsurf_rfexit_db",&nsurf_rfexit_db_array,"nsurf_rfexit_db_array[3]/D");
-  finaltree->Branch("r_fromballoon",&interaction1->r_fromballoon[0],"r_fromballoon/D");
+  finaltree->Branch("r_fromballoon",&r_fromballoon2,"r_fromballoon/D");
   finaltree->Branch("r_fromballoon_db",&interaction1->r_fromballoon_db,"r_fromballoon_db/D");
   
   finaltree->Branch("nuexitlength",&nuexitlength,"nuexitlength/D");
@@ -1363,8 +1384,8 @@ int main(int argc, char **argv) {
   finaltree->Branch("pieceofkm2sr",&pieceofkm2sr,"pieceofkm2sr/D");
   //finaltree->Branch("volts_original",&volts_original,"volts_original[10][20][2]/D");
   finaltree->Branch("theta_fromtir",&theta_fromtir,"theta_fromtir/D");
-  finaltree->Branch("r_exit2bn",&interaction1->r_exit2bn,"r_exit2bn/D");
-  finaltree->Branch("r_exit2bn_measured",&interaction1->r_exit2bn_measured,"r_exit2bn_measured/D");
+  finaltree->Branch("r_exit2bn",&r_exit2bn2,"r_exit2bn/D");
+  finaltree->Branch("r_exit2bn_measured",&r_exit2bn_measured2,"r_exit2bn_measured/D");
   finaltree->Branch("scalefactor_attenuation",&scalefactor_attenuation,"scalefactor_attenuation/D");
   finaltree->Branch("anita1->PHI_OFFSET",&anita1->PHI_OFFSET,"anita1->PHI_OFFSET/D");
   //finaltree->Branch("globtrig1->triggerbits",&globtrig1->triggerbits,"globtrig1->triggerbits[4]/I");
@@ -1763,8 +1784,7 @@ int main(int argc, char **argv) {
   cout << "Done with CreateHorizons.\n";
   
   // get energy at which LPM effect turns on.
-  //elpm=sig1->GetLPM();
-  elpm=sig1->GetELPM();
+  elpm=sig1->GetLPM();
   
   // sets neutrino energy
   //  if(EXPONENT>15&&EXPONENT<25)//if EXPONENT is set to be a standard energy within ANITA's energy sensitivity
@@ -1963,7 +1983,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	delete taus1;
       taus1 = new Taumodel();
 	  
-      //pnu=pow(10.,settings1->EXPONENT); // pnu already obtained above
+      pnu=pow(10.,settings1->EXPONENT); 
  
       taumodes1=0;
       int taumodes = settings1->taumodes;
@@ -2236,7 +2256,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       
       // for plotting
       sumfrac=emfrac+hadfrac;
-      
+      //cout << "tree7 check" <<interaction1->nuflavorint << endl;
       if (tree7->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
 	tree7->Fill();
       
@@ -2405,7 +2425,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       nuexitlength=interaction1->posnu.Distance(interaction1->nuexit);
       // probability a tau would decay within this length at this
       // energy
-      
+      nuexitice=interaction1->posnu.Distance(interaction1->nuexitice);
       theta_threshold_deg=theta_threshold*DEGRAD;
       
       // neutrino direction in frame where balloon is up, 0=east,1=north,2=up
@@ -2520,6 +2540,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       interaction1->d1=interaction1->r_enterice.Distance(interaction1->r_in);
       interaction1->d2=interaction1->r_enterice.Distance(interaction1->posnu);
       
+
       // get a lower limit on the chord that the neutrino traverses,
       // so that later we can see if the signal is detectable in
       // the best case scenario.
@@ -3599,7 +3620,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 		r_bn_array[i] = bn1->r_bn[i];
 		n_bn_array[i] = bn1->n_bn[i];
 		posnu_array[i] = interaction1->posnu[i];
-		//       interaction1->posnu2_array[i] = interaction1->posnu2[i];
+		//interaction1->posnu2_array[i] = interaction1->posnu2[i];
 		ant_max_normal0_array[i] = ant_max_normal0[i];
 		ant_max_normal1_array[i] = ant_max_normal1[i];
 		ant_max_normal2_array[i] = ant_max_normal2[i];
@@ -3622,8 +3643,24 @@ cout << "reminder that I took out ChangeCoord.\n";
 	      if (vmmhz_tree->GetEntries()<20) {
 		vmmhz_tree->Fill();
 	      }
-	     	     
-	      finaltree->Fill();
+
+      nuflavorint2 = interaction1->nuflavorint;
+      costheta_nutraject2=interaction1->costheta_nutraject;
+      phi_nutraject2=interaction1->phi_nutraject;
+      altitude_int2=interaction1->altitude_int;
+      currentint2=interaction1->currentint;
+      d12=interaction1->d1;
+      d22=interaction1->d2;
+      dtryingdirection2=interaction1->dtryingdirection;
+      logchord2=interaction1->logchord;
+      r_fromballoon2=interaction1->r_fromballoon[0];
+      chord_kgm2_bestcase2=interaction1->chord_kgm2_bestcase;
+      chord_kgm2_ice2=interaction1->chord_kgm2_ice;
+      weight_bestcase2=interaction1->weight_bestcase;
+      r_exit2bn2=interaction1->r_exit2bn;
+      r_exit2bn_measured2=interaction1->r_exit2bn_measured;
+
+	       finaltree->Fill();
 	      //			    cout <<"ptauf is "<<ptauf<<endl;
 	      
 #ifdef ANITA_UTIL_EXISTS
@@ -3694,17 +3731,20 @@ cout << "reminder that I took out ChangeCoord.\n";
 
 	      }//int i
               
-	      sourceLon = interaction1->nuexit.Lon() - 180;
-	      sourceLat = interaction1->nuexit.Lat();
-
-	      eventTree->Fill();
-	      adu5PatTree->Fill();
-	      finaltree->Fill();
-
 	      delete realEvPtr;
 	      delete rawHeaderPtr;
 	      delete Adu5PatPtr;
+
+	      eventTree->Fill();
+	      adu5PatTree->Fill();
+
 #endif // #ifdef ANITA_UTIL_EXISTS
+
+
+	      sourceLon = interaction1->nuexit.Lon() - 180;
+	      sourceLat = interaction1->nuexit.Lat();
+
+	      finaltree->Fill();
 	      
 	      count1->IncrementWeights_r_in(interaction1->r_in,weight);
 	    } //if we want to put data in finaltree for readout
@@ -4209,7 +4249,7 @@ void Summarize(Settings *settings1, Anita* anita1, Counting *count1,Spectra *spe
 			km2sr=ice_area/(1.E6)*PI*eventsfound_prob/(double)NNU;
 			
 			foutput << "Total area x steradians using 4*PI*R_EARTH^2*eff. is \t" << km2sr << " km^2 str\n\n";
-			foutput << "These are not the same because we are not throwing all directions on all points of the surface. You should believe the first one and understand that it is approximation.  We are working on improving our calculation of effective areas for high cross sections.\n";
+			foutput << "These are not the same because we are not throwing all directions on all points of the surface.  Believe the first one as an approximation, we are working on this for high cross sections.\n";
 			ses=(pnu/1.E9)/(km2sr*3.16E7);
 		}
 		
