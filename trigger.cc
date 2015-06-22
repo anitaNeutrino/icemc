@@ -815,7 +815,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     // vmmhz_rx_e,h are going to be the V/m/MHz received by the rx (after gains)
     for (int k=0;k<Anita::NFREQ;k++) {
 		// Convert V/m/MHz to V/m/Hz and divide by dt to prepare for fft
-		vhz_rx_e[k]=vmmhz[k]/sqrt(2.)/(anita1->TIMESTEP*1.E6);
+		vhz_rx_e[k]=vmmhz[k]/sqrt(2.)/(anita1->TIMESTEP*1.E6); // EH, 1/sqrt(2) for dividing power in half for TDA and DDA?
 		vhz_rx_h[k]=vmmhz[k]/sqrt(2.)/(anita1->TIMESTEP*1.E6);
 		
 		// let's find the peak voltage just after the antenna, with no banding
@@ -828,7 +828,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
     // now the last two are in the frequency domain
     // convert to the time domain
-    Tools::realft(volts_rx_e_forfft,1,anita1->HALFNFOUR);
+    Tools::realft(volts_rx_e_forfft,1,anita1->HALFNFOUR); // EH, I believe this has to the -1 for inverse FFT (1 for forward FFT which is t-domain to f-domain)
     Tools::realft(volts_rx_h_forfft,1,anita1->HALFNFOUR);
     
     // now volts_rx_e,h_forfft are the time domain signals on the back end of the antenna
@@ -900,7 +900,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     // convert to the time domain
     // still don't have any noise
     
-    Tools::realft(anita1->volts_rx_rfcm_e,1,anita1->HALFNFOUR);
+    Tools::realft(anita1->volts_rx_rfcm_e,1,anita1->HALFNFOUR); // EH, again, I think this has to be -1 for invFFT
     Tools::realft(anita1->volts_rx_rfcm_h,1,anita1->HALFNFOUR);
     
     anita1->GetNoiseWaveforms(); // get noise waveforms
@@ -919,7 +919,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
     
     
-    anita1->peak_e_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR); // with no noise
+    anita1->peak_e_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR); // with no noise // EH, I think this supposed to be WITH noise
     anita1->peak_h_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR); // with no noise
     
     
@@ -953,7 +953,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     // now the last two are in the frequency domain
     // convert to the time domain
     // still don't have any noise
-    Tools::realft(anita1->volts_rx_rfcm_lab_e,1,anita1->HALFNFOUR);
+    Tools::realft(anita1->volts_rx_rfcm_lab_e,1,anita1->HALFNFOUR); // EH, again, I think this has to be -1 for invFFT
     Tools::realft(anita1->volts_rx_rfcm_lab_h,1,anita1->HALFNFOUR);
     
     // matt- end of section to be replaced
@@ -961,7 +961,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
     // put it in normal time ording -T to T
     // instead of 0 to T, -T to 0
-    Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab_e);
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab_e); // EH, why only this has NormalTimeOrdering applied? Why not before?
     Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab_h);
     
     
@@ -975,7 +975,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
     if (settings1->SIGNAL_FLUCT) {
       for (int i=0;i<anita1->NFOUR/2;i++) {
-	anita1->volts_rx_rfcm_lab_e[i]+=anita1->timedomainnoise_lab_e[i];
+	anita1->volts_rx_rfcm_lab_e[i]+=anita1->timedomainnoise_lab_e[i]; // add noise
 	anita1->volts_rx_rfcm_lab_h[i]+=anita1->timedomainnoise_lab_h[i];
       }
     }
@@ -992,10 +992,10 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     // still no noise
     anita1->peak_e_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_e,anita1->HALFNFOUR);
     
-    anita1->peak_h_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_h,anita1->HALFNFOUR); // with no noise
+    anita1->peak_h_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_h,anita1->HALFNFOUR); // with no noise // EH, again I think this is WITH noise
     
     
-    for (int j=0;j<5;j++) {
+    for (int j=0;j<5;j++) { // loop over bands
 		
 		for (int i=0;i<Anita::NFREQ;i++) {
 			anita1->vmmhz_banding[i]=vmmhz[i]; // now copy vmmhz to vmmhz_bak instead, which we now play with to get the time domain waveforms for each subband

@@ -1784,7 +1784,8 @@ int main(int argc, char **argv) {
   cout << "Done with CreateHorizons.\n";
   
   // get energy at which LPM effect turns on.
-  elpm=sig1->GetLPM();
+  //elpm=sig1->GetLPM();
+  elpm=sig1->GetELPM();
   
   // sets neutrino energy
   //  if(EXPONENT>15&&EXPONENT<25)//if EXPONENT is set to be a standard energy within ANITA's energy sensitivity
@@ -1916,7 +1917,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	  ierr=primary1->GetSigma(pnu,sigma,len_int_kgm2,settings1,0,0);	// given neutrino momentum, cross section and interaction length of neutrino.
 	  // ierr=0 if the energy is too low for the parameterization
 	      // ierr=1 otherwise
-	  len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000);
+	  len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
 	}
       
       
@@ -1983,7 +1984,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	delete taus1;
       taus1 = new Taumodel();
 	  
-      pnu=pow(10.,settings1->EXPONENT); 
+      //pnu=pow(10.,settings1->EXPONENT); // pnu already obtained above
  
       taumodes1=0;
       int taumodes = settings1->taumodes;
@@ -2140,6 +2141,8 @@ cout << "reminder that I took out ChangeCoord.\n";
       
       // pick elasticity
         
+      // EH check
+      //cout<<"pnu right before it first used: "<<pnu<<endl;
 
       elast_y=primary1->pickY(settings1,pnu,0,0);
       if (settings1->CONSTANTY==1) { // if we ask to make y a constant=0.2
@@ -2260,6 +2263,9 @@ cout << "reminder that I took out ChangeCoord.\n";
       if (tree7->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
 	tree7->Fill();
       
+      // EH check
+      //cout<<"vmmhz1m_max : "<<vmmhz1m_max<<endl; // why vmmhz1m_max is always 1.0909? any meaning?
+
       vmmhz1m_visible = (emfrac+hadfrac)*vmmhz1m_max; //Stephen - Record actual V/m/Mhz for display
       
       // plots for debugging.
@@ -2292,6 +2298,8 @@ cout << "reminder that I took out ChangeCoord.\n";
 	vmmhz1m_max=sig1->GetVmMHz1m(ptau,anita1->FREQ_HIGH);
 	sig1->GetSpread(ptau,emfrac,hadfrac,anita1->FREQ_LOW,
 			deltheta_em_max,deltheta_had_max);
+        //EH check
+        //cout<<"tau case ";
 	
       } //if (secondbang && interestedintaus)
       else {
@@ -2304,6 +2312,9 @@ cout << "reminder that I took out ChangeCoord.\n";
 	//      cout << "pnu, emfrac, hadfrac, deltheta_em_max, deltheta_had_max are " << pnu << " " << emfrac << " " << hadfrac << " " << deltheta_em_max*DEGRAD << " " << deltheta_had_max*DEGRAD << "\n";
 	
       } //else (not secondbang or not interested in taus)
+
+      // EH check
+      //cout<<"vmmhz1m_max after GetVmMHz1m : "<<vmmhz1m_max<<endl;
       
       if (jaimetree->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
 	jaimetree->Fill();
@@ -2786,6 +2797,9 @@ cout << "reminder that I took out ChangeCoord.\n";
 	  vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice,interaction1->posnu,bn1->r_bn);
 	if (whichray==1)
 	  vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice,interaction1->posnu_down,bn1->r_bn);//use the mirror point
+
+        // EH
+        //cout<<"after applying ScaleVmMHz, vmmhz_max: "<<vmmhz_max<<", vmmhz1m_fresneledtwice: "<<vmmhz1m_fresneledtwice<<endl;
       }
       else
 	vmmhz_max=vmmhz1m_max;
@@ -2822,6 +2836,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       if (bn1->WHICHPATH==4)
 	cout << "rflength is " << rflength << "\n";
       
+      // applying ice attenuation factor
       if (whichray==0)
 	Attenuate(antarctica,settings1,vmmhz_max, rflength, interaction1->posnu);
       if (whichray==1)
@@ -2915,7 +2930,9 @@ cout << "reminder that I took out ChangeCoord.\n";
 	  for (int iviewangle=0;iviewangle<NVIEWANGLE;iviewangle++) {// loop over viewing angles
 	    
 	    // remove the 1/r and attenuation factors that are contained in the ratio vmmhz1m_max/vmmhz_max
-	    vmmhz_temp=vmmhz[k]*vmmhz1m_max/vmmhz_max;
+            //
+	    vmmhz_temp=vmmhz[k]*vmmhz1m_max/vmmhz_max; // EH, I guess temporally remove 1/r and attenuation factors, not for general use?
+
 	    viewangle_temp=viewangles[iviewangle]; //grab the viewing angle from this array
 	    //apply the gaussian dependence away from the cerenkov angle.  vmmhz_temp is both an input and an output.
 	    //vmmhz_temp as an output is the signal with the angular dependence applied.
@@ -2950,6 +2967,10 @@ cout << "reminder that I took out ChangeCoord.\n";
 	
 	vmmhz_lowfreq=vmmhz[0]; // for plotting, vmmhz at the lowest frequency
 	
+
+        // EH, now here, vmmhz array is the spectrum right infront of antennas (so not yet any detector properties are applied)
+
+
 	
 	//	 GetVmMHz(vmmhz1m_max,vmmhz1m_max,pnu,vmmhz); //Get vmmhz in frequency domain before the antenna response, for modeling time dependent pulses
 	
@@ -3128,7 +3149,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	      
 	      for (int ibw=0;ibw<5;ibw++) {
 		
-		anttrig1->v_banding_rfcm_e[ibw][k]=anttrig1->vm_banding_rfcm_e[ibw][k];
+		anttrig1->v_banding_rfcm_e[ibw][k]=anttrig1->vm_banding_rfcm_e[ibw][k]; // EH, HERE! this v_banding_rfcm_e array will be used for trigger analysis later! in WhichBandsPass function! Why this is located in this weird place!!!
 		anttrig1->v_banding_rfcm_h[ibw][k]=anttrig1->vm_banding_rfcm_h[ibw][k];
 		//cout << "v_banding before is " << anttrig1->v_banding_rfcm_e[ibw][k] << "\n";
 		anita1->AntennaGain(settings1,hitangle_e,hitangle_h,e_component,h_component,k,anttrig1->v_banding_rfcm_e[ibw][k],anttrig1->v_banding_rfcm_h[ibw][k]);
