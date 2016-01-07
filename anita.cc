@@ -2656,6 +2656,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     const double phase_center_anita2=0.17;
     //const double gps_offset_anita2=atan2(0.89,-0.29);
     const double gps_offset_anita2=atan2(-0.7085,0.7056); // from elog 473
+    const double gps_offset_anita3=45*RADDEG; // Linda - 45 degrees from EventReader
     const double phase_center_anita3=0.20; // Linda - phase-centers are around 20 cm inwards of antennas face-end
 
 
@@ -3268,13 +3269,13 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       }
 
       //Array with photogrammetry values
-      Double_t xAntPhoto[48]; //m
-      Double_t yAntPhoto[48]; //m
-      Double_t zAntPhoto[48]; //m
-      Double_t rAntPhoto[48]; //m
-      Double_t azCentrePhoto[48]; //radians
-      Double_t apertureAzPhoto[48]; //radians
-      Double_t apertureElPhoto[48]; //radians  
+      Double_t xAntPhoto[48]; //inch
+      Double_t yAntPhoto[48]; //inch
+      Double_t zAntPhoto[48]; //inch
+      Double_t rAntPhoto[48]; //inch
+      Double_t azCentrePhoto[48]; //deg
+      Double_t apertureAzPhoto[48]; //deg
+      Double_t apertureElPhoto[48]; //deg  
 
       for(int ant=0;ant<48;ant++) {
 	line.ReadLine(Anita3PhotoFile);
@@ -3323,11 +3324,11 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 
       // Fill photogrammetry position for top rings
       for (int iant=0; iant<8;iant++){
-	ANTENNA_POSITION_START[0][iant] = MINCH * Vector(xAntPhoto[iant*2], yAntPhoto[iant*2], zAntPhoto[iant*2]).RotateZ(-gps_offset_anita2);	    // top ring top antennas
-	ANTENNA_POSITION_START[1][iant] = MINCH * Vector(xAntPhoto[iant*2+1], yAntPhoto[iant*2+1], zAntPhoto[iant*2+1]).RotateZ(-gps_offset_anita2);  // top ring bottom antennas
+	ANTENNA_POSITION_START[0][iant] = MINCH * Vector(xAntPhoto[iant*2], yAntPhoto[iant*2], zAntPhoto[iant*2]).RotateZ(-gps_offset_anita3);	    // top ring top antennas
+	ANTENNA_POSITION_START[1][iant] = MINCH * Vector(xAntPhoto[iant*2+1], yAntPhoto[iant*2+1], zAntPhoto[iant*2+1]).RotateZ(-gps_offset_anita3);  // top ring bottom antennas
 
-	PHI_EACHLAYER[0][iant] = azCentrePhoto[iant*2] * RADDEG - gps_offset_anita2;
-	PHI_EACHLAYER[1][iant] = azCentrePhoto[iant*2+1] * RADDEG - gps_offset_anita2;
+	PHI_EACHLAYER[0][iant] = azCentrePhoto[iant*2] * RADDEG - gps_offset_anita3;
+	PHI_EACHLAYER[1][iant] = azCentrePhoto[iant*2+1] * RADDEG - gps_offset_anita3;
 	ANTENNA_DOWN[0][iant] = apertureElPhoto[iant*2] * RADDEG; 
 	ANTENNA_DOWN[1][iant] = apertureElPhoto[iant*2+1] * RADDEG; 
  
@@ -3335,13 +3336,13 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 
       // Fill photogrammetry position for middle and bottom rings
       for (int iant=0; iant<16;iant++){
-	ANTENNA_POSITION_START[2][iant] = MINCH * Vector(xAntPhoto[iant+16], yAntPhoto[iant+16], zAntPhoto[iant+16]).RotateZ(-gps_offset_anita2);	    // middle ring antennas
-	ANTENNA_POSITION_START[3][iant] = MINCH * Vector(xAntPhoto[iant+32], yAntPhoto[iant+32], zAntPhoto[iant+32]).RotateZ(-gps_offset_anita2);  // bottom ring antennas
+	ANTENNA_POSITION_START[2][iant] = MINCH * Vector(xAntPhoto[iant+16], yAntPhoto[iant+16], zAntPhoto[iant+16]).RotateZ(-gps_offset_anita3);	    // middle ring antennas
+	ANTENNA_POSITION_START[3][iant] = MINCH * Vector(xAntPhoto[iant+32], yAntPhoto[iant+32], zAntPhoto[iant+32]).RotateZ(-gps_offset_anita3);  // bottom ring antennas
 
-	PHI_EACHLAYER[2][iant] = azCentrePhoto[iant+16] * RADDEG - gps_offset_anita2;
+	PHI_EACHLAYER[2][iant] = azCentrePhoto[iant+16] * RADDEG - gps_offset_anita3;
 	ANTENNA_DOWN[2][iant] = apertureElPhoto[iant+16] * RADDEG; 
 
-	PHI_EACHLAYER[3][iant] = azCentrePhoto[iant+32] * RADDEG - gps_offset_anita2;
+	PHI_EACHLAYER[3][iant] = azCentrePhoto[iant+32] * RADDEG - gps_offset_anita3;
 	ANTENNA_DOWN[3][iant] = apertureElPhoto[iant+32] * RADDEG; 
 
       }
