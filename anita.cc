@@ -3216,7 +3216,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 		
 		
 		
-    } //else if (ANITA-II), WHICH==8
+    } 
     else if (settings1->WHICH==9) { // ANITA-III
       cout<<"initializing and using ANITA-III payload geometry"<<endl;
       // layer 0 is antennas 1-8 on the payload
@@ -3227,7 +3227,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       //settings1->NFOLD=8;   ??oindree
       //maxthreshold=2.3;     ??oindree
       
-      settings1->CYLINDRICALSYMMETRY=1;
+      settings1->CYLINDRICALSYMMETRY=0;
       
       //these are physical layers
       NRX_PHI[0]=8;
@@ -3242,7 +3242,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       //these are physical layers again
       PHI_OFFSET[0]=0.; // antenna 1 on 0th layer is rotated in phi wrt antenna 9 and antenna 17
       // it's rotated by 1/2 the azimuth that separates two antennas on the 0th layer
-      PHI_OFFSET[1]=2.*PI/(double)NRX_PHI[0]/2.;
+      PHI_OFFSET[1]=2.*PI/(double)NRX_PHI[0]/2.; // Linda: why do we need this offset if position is defined by photogrammetry? 
       PHI_OFFSET[2]=0.;
       PHI_OFFSET[3]=0.;
       
@@ -3311,7 +3311,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 	    break;
 	  case 7:	   
 	    apertureElPhoto[ant]=subString.Atof()*(-1); //deg // photogrammetry elevation defined as negative, here positive
-	break;
+	    break;
 	  default:	   
 	    break;
 	  }
@@ -3506,22 +3506,22 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
  	  ANTENNA_POSITION_START[iii][jjj] = ANTENNA_POSITION_START[iii][jjj] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), sin(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), cos(90.*RADDEG+ANTENNA_DOWN[iii][jjj]));
       
       
-      // radius from center axis of the payload
-      RRX[0] = 1.44;
-      RRX[1] = 1.27;
-      RRX[2] = 2.64;
-      RRX[3] = 2.64;
+      // // radius from center axis of the payload
+      // RRX[0] = 1.44;
+      // RRX[1] = 1.27;
+      // RRX[2] = 2.64;
+      // RRX[3] = 2.64;
       
-      // vertical separation between layers.
-      LAYER_VPOSITION[0] = 0;
-      LAYER_VPOSITION[1] = -1.0;
-      LAYER_VPOSITION[2] = -3.7;
-      LAYER_VPOSITION[3] = -5.7; // this is wrong too, but nadirs are probably gone so doesn't matter.
+      // // vertical separation between layers.
+      // LAYER_VPOSITION[0] = 0;
+      // LAYER_VPOSITION[1] = -1.0;
+      // LAYER_VPOSITION[2] = -3.7;
+      // LAYER_VPOSITION[3] = -5.7; // this is wrong too, but nadirs are probably gone so doesn't matter.
       
-      LAYER_HPOSITION[0] = 0.;
-      LAYER_HPOSITION[1] = 0.;
-      LAYER_HPOSITION[2] = 0.;
-      LAYER_HPOSITION[3] = 0.;
+      // LAYER_HPOSITION[0] = 0.;
+      // LAYER_HPOSITION[1] = 0.;
+      // LAYER_HPOSITION[2] = 0.;
+      // LAYER_HPOSITION[3] = 0.;
     }
     
     
