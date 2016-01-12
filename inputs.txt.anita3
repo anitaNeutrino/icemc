@@ -15,7 +15,7 @@
 4      # How many physical layers of antennas to include.  If you indicate N, it will consider the top N layers and ignore the rest.  Useful for turning off the nadirs.  4=default
 10     # Inclination angle in degrees for top three antenna layers 10=default
 10     # Inclination angle in degrees for fourth layer of antennas 10=default
-7      # (0) fixed balloon position (1) randomized at 80deg S (2) anita-lite flight. (3) banana plot (note: banana plot forces energy, turns off noise and turns off slopyness.  "How many neutrinos to generate" is not used, nor are any inputs relating to a detection system. Also, constant crust density, ice thickness, and elevation are set.) (4) for comparison with Peter (5) Pick your own altitude, phi and theta 2=default (6) Anita 1 flight (7) Anita 2 flight
+8      # (0) fixed balloon position (1) randomized at 80deg S (2) anita-lite flight. (3) banana plot (note: banana plot forces energy, turns off noise and turns off slopyness.  "How many neutrinos to generate" is not used, nor are any inputs relating to a detection system. Also, constant crust density, ice thickness, and elevation are set.) (4) for comparison with Peter (5) Pick your own altitude, phi and theta 2=default (6) Anita 1 flight (7) Anita 2 flight (8) Anita 3 flight
 999  # fixed balloon latitude (degrees south) (999 is default position)
 999 # fixed balloon longitude (degrees east) (999 is default position) longitude is between -180 and 180
 0      # Fixed (0) or randomized (1) balloon orientation.  1=default
@@ -24,11 +24,11 @@
 ### Trigger 
 2	# Trigger:  frequency domain voltage (0) frequency domain energy (1) timedomain diode integration (2) coherent sum trigger (3) summed power trigger (4)
 2.3	2.3	 2.3	     2.3	2.3	#thresholds for each band- this is only for the frequency domain voltage trigger.  If using a different trigger scheme then keep these at the default values of 2.3 because the max among them is used for the chance in hell cuts
-2	#Banding (0) as in Anita 1 or (1) choose your own in the next lines or (2) Anita 2 or (3) satellite - indicate # of bands and % bandwidth below
+1	#Banding (0) as in Anita 1 or (1) choose your own in the next lines or (2) Anita 2 or (3) satellite - indicate # of bands and % bandwidth below
 200	400	 600	     600	200	#lower edge of each band
-400	750	 1100	     600	1100	#upper edge of each band
+400	750	 1100	     600	1200	#upper edge of each band
 0	0	 0	     0		1	#these bands are REQUIRED to be one of the channels that passes
-1	1	 1	     0		1	#these bands are ALLOWED to contribute to the trigger requirement
+0	0	 0	     0		1	#these bands are ALLOWED to contribute to the trigger requirement
 7 # number of bands (for option 3 trigger above for satellite)
 10. # percent bandwidth (for option 3 trigger above for satellite)
 0	0	#notch filter lower and upper limits (for no filter, default is 0      0)
@@ -38,7 +38,7 @@
 0 	# require centre antenna in clump is one of those hit
 1	# (1) for L3 trigger or (0) no L3 trigger requirement 
 0	# 1 for LCP and RCP, 0 for V and H 
-1	# 0 for both polarizations or 1 for just vertical polarization
+0	# 0 for both polarizations or 1 for just vertical polarization
 0      # 2=use nadirs, 1= use discones or 0= do not use discones or nadirs in the trigger
 0      # Implement the nadir-only trigger (require 3/3 antennas in nadir layer pass)
 0	# implement channel masking as in anita 1 flight (1) yes or (0) no

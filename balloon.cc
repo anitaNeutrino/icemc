@@ -242,10 +242,39 @@ void Balloon::InitializeBalloon() {
 		turfratechain->GetEvent(turfratechain->GetEntries()-1);
 		realTime_tr_max=realTime_turfrate; // realTime of last event in file
 		
+    } else if (WHICHPATH==8) { // for anita-3 flight
+		
+		flightdatachain = new TChain("adu5PatTree");
+		flightdatachain->SetMakeClass(1);
+		flightdatachain->Add("data/anita3gps_pitchroll.root");//created to include pitch and roll.
+		flightdatachain->SetBranchAddress("longitude",&flongitude);
+		flightdatachain->SetBranchAddress("latitude",&flatitude);
+		flightdatachain->SetBranchAddress("altitude",&faltitude);
+		flightdatachain->SetBranchAddress("heading",&fheading);
+		flightdatachain->SetBranchAddress("realTime",&realTime_flightdata);
+		flightdatachain->SetBranchAddress("pitch",&fpitch);
+		flightdatachain->SetBranchAddress("roll",&froll);
+		
+		fturf=new TFile("data/turfrate_icemc_anita3.root");
+
+		turfratechain=(TTree*)fturf->Get("turfrate_icemc");
+		turfratechain->SetMakeClass(1);
+		turfratechain->SetBranchAddress("phiTrigMask",&phiTrigMask);
+		turfratechain->SetBranchAddress("realTime",&realTime_turfrate);
+		turfratechain->BuildIndex("realTime");
+
+		turfratechain->GetEvent(0);
+		realTime_tr_min=realTime_turfrate; // realTime of first event in the file
+		turfratechain->GetEvent(turfratechain->GetEntries()-1);
+		realTime_tr_max=realTime_turfrate; // realTime of last event in file
+
     }
     
     
     
+
+
+
     
     for (int i=0;i<10000;i++) {
 		latitude_bn_anitalite[i]=0;
@@ -388,7 +417,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 			
 			
 		}
-		else if (WHICHPATH==6 || WHICHPATH==7) {  // For Anita 1 and Anita 2:
+		else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8) {  // For Anita 1 and Anita 2 and Anita 3:
 			
 			igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
 			
@@ -422,7 +451,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		
 		if (WHICHPATH==2)
 			altitude_bn=altitude*12.*CMINCH/100.;
-		else if (WHICHPATH==6 || WHICHPATH==7)
+		else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8)
 			altitude_bn=altitude; // get the altitude of the balloon in the right units
 		
 		surface_under_balloon = antarctica1->Surface(r_bn); // get altitude of the surface under the balloon

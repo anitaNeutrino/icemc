@@ -3240,9 +3240,8 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       PHITRIG[2]=16;
       
       //these are physical layers again
-      PHI_OFFSET[0]=0.; // antenna 1 on 0th layer is rotated in phi wrt antenna 9 and antenna 17
-      // it's rotated by 1/2 the azimuth that separates two antennas on the 0th layer
-      PHI_OFFSET[1]=2.*PI/(double)NRX_PHI[0]/2.; // Linda: why do we need this offset if position is defined by photogrammetry? 
+      PHI_OFFSET[0]=0.; 
+      PHI_OFFSET[1]=0.; // 2.*PI/(double)NRX_PHI[0]/2.; // Linda: changed this offset to 0 as  it shouldn't be needed
       PHI_OFFSET[2]=0.;
       PHI_OFFSET[3]=0.;
       
@@ -3347,181 +3346,12 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 
       }
 
-
-//       // The following antennas are in two physical layers but represent one triggering layer. Comments to the right indicate the phi sector to which it belongs.
-//        ANTENNA_POSITION_START[0][0] = MINCH * Vector(40.438,-36.958,147.227).RotateZ(-gps_offset_anita2);	    // 0
-//        ANTENNA_POSITION_START[0][1] = MINCH * Vector(57.134,3.109,146.476).RotateZ(-gps_offset_anita2);	    // 2
-//        ANTENNA_POSITION_START[0][2] = MINCH * Vector(40.549,43.106,145.871).RotateZ(-gps_offset_anita2);	    // 4
-//        ANTENNA_POSITION_START[0][3] = MINCH * Vector(0.624,59.688,145.361).RotateZ(-gps_offset_anita2);	    // 6
-//        ANTENNA_POSITION_START[0][4] = MINCH * Vector(-39.455,43.147,145.928).RotateZ(-gps_offset_anita2);	    // 8
-//        ANTENNA_POSITION_START[0][5] = MINCH * Vector(-56.096,3.177,146.894).RotateZ(-gps_offset_anita2);	    // 10
-//        ANTENNA_POSITION_START[0][6] = MINCH * Vector(-39.355,-36.753,147.757).RotateZ(-gps_offset_anita2);    // 12
-//        ANTENNA_POSITION_START[0][7] = MINCH * Vector(0.645,-53.539,147.876).RotateZ(-gps_offset_anita2);	    // 14
-//        ANTENNA_POSITION_START[1][0] = MINCH * Vector(19.554,-43.890,109.531).RotateZ(-gps_offset_anita2);	    // 1
-//        ANTENNA_POSITION_START[1][1] = MINCH * Vector(46.600,-16.625,108.889).RotateZ(-gps_offset_anita2);	    // 3
-//        ANTENNA_POSITION_START[1][2] = MINCH * Vector(46.587,21.659,108.220).RotateZ(-gps_offset_anita2);	    // 5
-//        ANTENNA_POSITION_START[1][3] = MINCH * Vector(19.476,48.539,107.671).RotateZ(-gps_offset_anita2);	    // 7
-//        ANTENNA_POSITION_START[1][4] = MINCH * Vector(-18.798,48.502,107.852).RotateZ(-gps_offset_anita2);	    // 9
-//        ANTENNA_POSITION_START[1][5] = MINCH * Vector(-45.899,21.424,108.516).RotateZ(-gps_offset_anita2);	    // 11
-//        ANTENNA_POSITION_START[1][6] = MINCH * Vector(-45.895,-16.821,109.354).RotateZ(-gps_offset_anita2);    // 13
-//        ANTENNA_POSITION_START[1][7] = MINCH * Vector(-18.691,-43.864,109.843).RotateZ(-gps_offset_anita2);    // 15
-      
-//        ANTENNA_POSITION_START[2][0] = MINCH * Vector(38.636,-93.988,2.636).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][1] = MINCH * Vector(71.690,-72.108,1.953).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][2] = MINCH * Vector(93.897,-39.211,0.498).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][3] = MINCH * Vector(101.790,-0.212,-0.661).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][4] = MINCH * Vector(94.047,38.773,-1.788).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][5] = MINCH * Vector(72.080,71.816,-2.223).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][6] = MINCH * Vector(39.065,93.999,-2.561).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][7] = MINCH * Vector(0.121,101.815,-2.314).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][8] = MINCH * Vector(-38.815,94.002,-2.034).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][9] = MINCH * Vector(-71.809,71.912,-1.102).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][10] = MINCH * Vector(-93.886,39.000,-0.673).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][11] = MINCH * Vector(-101.885,0.048,0.102).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][12] = MINCH * Vector(-94.017,-38.841,0.865).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][13] = MINCH * Vector(-72.079,-71.902,1.864).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][14] = MINCH * Vector(-39.152,-93.935,2.464).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[2][15] = MINCH * Vector(-0.290,-101.771,2.991).RotateZ(-gps_offset_anita2);
-      
-//        // The following 16 antennas are from ANITA-II's geometry, and just shifted down to the Z of where the nadir antennas were.
-//        ANTENNA_POSITION_START[3][0] = MINCH * Vector(38.636,-93.988, -71.140).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][1] = MINCH * Vector(71.690,-72.108, -71.140).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][2] = MINCH * Vector(93.897,-39.211, -72.809).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][3] = MINCH * Vector(101.790,-0.212, -72.809).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][4] = MINCH * Vector(94.047,38.773,-74.893).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][5] = MINCH * Vector(72.080,71.816,-74.893).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][6] = MINCH * Vector(39.065,93.999,-75.342).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][7] = MINCH * Vector(0.121,101.815,-75.342).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][8] = MINCH * Vector(-38.815,94.002,-74.957).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][9] = MINCH * Vector(-71.809,71.912,-74.957).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][10] = MINCH * Vector(-93.886,39.000,-73.922).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][11] = MINCH * Vector(-101.885,0.048,-73.922).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][12] = MINCH * Vector(-94.017,-38.841, -72.645).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][13] = MINCH * Vector(-72.079,-71.902, -72.645).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][14] = MINCH * Vector(-39.152,-93.935, -70.907).RotateZ(-gps_offset_anita2);
-//        ANTENNA_POSITION_START[3][15] = MINCH * Vector(-0.290,-101.771, -70.907).RotateZ(-gps_offset_anita2);
-      
-//        PHI_EACHLAYER[0][0] = -45.012 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[0][1] = -0.588 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[0][2] = 45.694 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[0][3] = 90.310 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[0][4] = 135.161 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[0][5] = 179.861 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[0][6] = -134.930 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[0][7] = -90.638 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[1][0] = -67.412 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[1][1] = -23.005 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[1][2] = 22.503 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[1][3] = 67.722 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[1][4] = 112.614 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[1][5] = 157.685 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[1][6] = -156.639 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[1][7] = -112.587 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][0] = -67.365 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][1] = -45.135 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][2] = -23.002 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][3] = -1.013 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][4] = 21.934 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][5] = 44.467 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][6] = 67.288 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][7] = 89.971 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][8] = 112.390 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][9] = 134.988 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][10] = 157.387 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][11] = 179.843 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][12] = -157.444 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][13] = -134.877 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][14] = -112.406 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[2][15] = -90.081 * RADDEG - gps_offset_anita2;
-      
-// //       // The following 16 antennas we copied from ANITA-II antenna geometry.
-//        PHI_EACHLAYER[3][0] = -67.365 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][1] = -45.135 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][2] = -23.002 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][3] = -1.013 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][4] = 21.934 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][5] = 44.467 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][6] = 67.288 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][7] = 89.971 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][8] = 112.390 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][9] = 134.988 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][10] = 157.387 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][11] = 179.843 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][12] = -157.444 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][13] = -134.877 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][14] = -112.406 * RADDEG - gps_offset_anita2;
-//        PHI_EACHLAYER[3][15] = -90.081 * RADDEG - gps_offset_anita2;
-      
-//        ANTENNA_DOWN[0][0] = 9.637 * RADDEG;
-//        ANTENNA_DOWN[0][1] = 10.108 * RADDEG;
-//        ANTENNA_DOWN[0][2] = 11.245 * RADDEG;
-//        ANTENNA_DOWN[0][3] = 11.291 * RADDEG;
-//        ANTENNA_DOWN[0][4] = 10.988 * RADDEG;
-//        ANTENNA_DOWN[0][5] = 9.491 * RADDEG;
-//        ANTENNA_DOWN[0][6] = 9.027 * RADDEG;
-//        ANTENNA_DOWN[0][7] = 8.743 * RADDEG;
-//        ANTENNA_DOWN[1][0] = 9.445 * RADDEG;
-//        ANTENNA_DOWN[1][1] = 10.061 * RADDEG;
-//        ANTENNA_DOWN[1][2] = 10.772 * RADDEG;
-//        ANTENNA_DOWN[1][3] = 11.484 * RADDEG;
-//        ANTENNA_DOWN[1][4] = 11.122 * RADDEG;
-//        ANTENNA_DOWN[1][5] = 10.376 * RADDEG;
-//        ANTENNA_DOWN[1][6] = 9.410 * RADDEG;
-//        ANTENNA_DOWN[1][7] = 9.039 * RADDEG;
-//        ANTENNA_DOWN[2][0] = 8.233 * RADDEG;
-//        ANTENNA_DOWN[2][1] = 8.807 * RADDEG;
-//        ANTENNA_DOWN[2][2] = 9.120 * RADDEG;
-//        ANTENNA_DOWN[2][3] = 10.352 * RADDEG;
-//        ANTENNA_DOWN[2][4] = 10.889 * RADDEG;
-//        ANTENNA_DOWN[2][5] = 11.315 * RADDEG;
-//        ANTENNA_DOWN[2][6] = 11.402 * RADDEG;
-//        ANTENNA_DOWN[2][7] = 11.379 * RADDEG;
-//        ANTENNA_DOWN[2][8] = 10.842 * RADDEG;
-//        ANTENNA_DOWN[2][9] = 10.725 * RADDEG;
-//        ANTENNA_DOWN[2][10] = 10.143 * RADDEG;
-//        ANTENNA_DOWN[2][11] = 10.067 * RADDEG;
-//        ANTENNA_DOWN[2][12] = 9.503 * RADDEG;
-//        ANTENNA_DOWN[2][13] = 9.021 * RADDEG;
-//        ANTENNA_DOWN[2][14] = 8.453 * RADDEG;
-//        ANTENNA_DOWN[2][15] = 8.268 * RADDEG;
-//        ANTENNA_DOWN[3][0] = 8.233 * RADDEG;
-//        ANTENNA_DOWN[3][1] = 8.807 * RADDEG;
-//        ANTENNA_DOWN[3][2] = 9.120 * RADDEG;
-//        ANTENNA_DOWN[3][3] = 10.352 * RADDEG;
-//        ANTENNA_DOWN[3][4] = 10.889 * RADDEG;
-//        ANTENNA_DOWN[3][5] = 11.315 * RADDEG;
-//        ANTENNA_DOWN[3][6] = 11.402 * RADDEG;
-//        ANTENNA_DOWN[3][7] = 11.379 * RADDEG;
-//        ANTENNA_DOWN[3][8] = 10.842 * RADDEG;
-//        ANTENNA_DOWN[3][9] = 10.725 * RADDEG;
-//        ANTENNA_DOWN[3][10] = 10.143 * RADDEG;
-//        ANTENNA_DOWN[3][11] = 10.067 * RADDEG;
-//        ANTENNA_DOWN[3][12] = 9.503 * RADDEG;
-//        ANTENNA_DOWN[3][13] = 9.021 * RADDEG;
-//        ANTENNA_DOWN[3][14] = 8.453 * RADDEG;
-//        ANTENNA_DOWN[3][15] = 8.268 * RADDEG;
       
        for(int iii = 0; iii < 4; iii++) // move from the square centers to the phase centers
  	for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++)
  	  ANTENNA_POSITION_START[iii][jjj] = ANTENNA_POSITION_START[iii][jjj] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), sin(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), cos(90.*RADDEG+ANTENNA_DOWN[iii][jjj]));
       
       
-      // // radius from center axis of the payload
-      // RRX[0] = 1.44;
-      // RRX[1] = 1.27;
-      // RRX[2] = 2.64;
-      // RRX[3] = 2.64;
-      
-      // // vertical separation between layers.
-      // LAYER_VPOSITION[0] = 0;
-      // LAYER_VPOSITION[1] = -1.0;
-      // LAYER_VPOSITION[2] = -3.7;
-      // LAYER_VPOSITION[3] = -5.7; // this is wrong too, but nadirs are probably gone so doesn't matter.
-      
-      // LAYER_HPOSITION[0] = 0.;
-      // LAYER_HPOSITION[1] = 0.;
-      // LAYER_HPOSITION[2] = 0.;
-      // LAYER_HPOSITION[3] = 0.;
     }
     
     
