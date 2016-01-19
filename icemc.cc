@@ -1011,6 +1011,7 @@ int main(int argc, char **argv) {
   int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement
   int loctrig_nadironly[Anita::NPHI_MAX]; //counting how many pass trigger requirement
   UShort_t phiTrigMask;
+  UShort_t phiTrigMaskH;
   
   int nchannels_triggered = 0; // total number of channels triggered
   int nchannels_perrx_triggered[48]; // total number of channels triggered
@@ -1275,6 +1276,7 @@ int main(int argc, char **argv) {
   finaltree->Branch("l2trig",&l2trig,"l2trig[3]/I");
   finaltree->Branch("l1trig",&l1trig,"l1trig[3]/I");
   finaltree->Branch("phiTrigMask",&phiTrigMask,"phiTrigMask/S");
+  finaltree->Branch("phiTrigMaskH",&phiTrigMaskH,"phiTrigMaskH/S");
   //finaltree->Branch("arrival_times",&(globaltrig1->arrival_times),"arrival_times[Anita::NLAYERS_MAX*Anita::NPHI_MAX]/D");
   //finaltree->Branch("rx_minarrivaltime",&(globaltrig1->rx_minarrivaltime),"rx_minarrivaltime/I");
   finaltree->Branch("max_antenna0",&max_antenna0,"max_antenna0/I");
@@ -1941,6 +1943,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       bn1->PickBalloonPosition(antarctica, settings1, inu, anita1);
       // also sets phiTrigMask
       phiTrigMask=bn1->phiTrigMask;
+      phiTrigMaskH=bn1->phiTrigMaskH;
       
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter

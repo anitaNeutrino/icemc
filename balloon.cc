@@ -181,6 +181,7 @@ void Balloon::InitializeBalloon() {
     
     MINALTITUDE=30000; // balloon has to be 30 km altitude at least for us to read the event from the flight data file
     phiTrigMask=0;
+    phiTrigMaskH=0;
     
     // initialisation of igps_previous
     if (WHICHPATH==6 || WHICHPATH==7)
@@ -260,6 +261,7 @@ void Balloon::InitializeBalloon() {
 		turfratechain=(TTree*)fturf->Get("turfrate_icemc");
 		turfratechain->SetMakeClass(1);
 		turfratechain->SetBranchAddress("phiTrigMask",&phiTrigMask);
+		turfratechain->SetBranchAddress("phiTrigMaskH",&phiTrigMaskH);
 		turfratechain->SetBranchAddress("realTime",&realTime_turfrate);
 		turfratechain->BuildIndex("realTime");
 
@@ -406,7 +408,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     
     //  cout << "I'm in pickballoonposition. whichpath is " << WHICHPATH << "\n";
     //Pick balloon position
-    if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7) { // anita-lite or anita-I or -II path
+    if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8) { // anita-lite or anita-I or -II path
         
 		if (WHICHPATH==2) {
 			igps=NPOINTS_MIN+(igps_previous+1-NPOINTS_MIN)%(NPOINTS_MAX-NPOINTS_MIN); //Note: ignore last 140 points, where balloon is falling - Stephen
@@ -676,7 +678,6 @@ void Balloon::setphiTrigMask() {
 		
 		iturf=turfratechain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in turfratechain that is closest to this realTime_flightdata
 		
-		
 		if (iturf<0) // if it didn't find one
 			phiTrigMask=0; // set to zero
 		
@@ -685,6 +686,27 @@ void Balloon::setphiTrigMask() {
 		
 		
     } // end if it's in range
+    
+}
+
+void Balloon::setphiTrigMaskAnita3() {
+  if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
+    phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
+    phiTrigMaskH=0;
+  }
+  else { // if it's in range
+		
+		
+    iturf=turfratechain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in turfratechain that is closest to this realTime_flightdata
+		
+    if (iturf<0){ // if it didn't find one
+      phiTrigMask=0; // set to zero
+      phiTrigMaskH=0;
+    }else{
+      turfratechain->GetEvent(iturf);
+    }
+		
+  } // end if it's in range
     
 }
 

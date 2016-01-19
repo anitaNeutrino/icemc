@@ -82,6 +82,7 @@ void ReadAnitaliteFlight();
 
 
   void setphiTrigMask();  // this sets phiTrigMask
+  void setphiTrigMaskAnita3();  // this sets phiTrigMask
   void setr_bn(double latitude,double longitude);
 
 
@@ -109,6 +110,7 @@ void GetSlacPositions(Anita *anita1);
   TTreeIndex *tindex;
   //  double longitude,latitude,altitude
   UShort_t phiTrigMask;
+  UShort_t phiTrigMaskH;
   
   unsigned int realTime_flightdata; // realtime from the flight data file
   unsigned int realTime_turfrate; // realtime from the turf rate file

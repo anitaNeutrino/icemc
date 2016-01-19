@@ -26,45 +26,43 @@ using std::cout;
 
 GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn){
     
-
     Tools::Zero(triggerbits,Anita::NTRIG);
     
     phiTrigMask=phiTrigMask_bn; // set the phi mask to the input value which comes from the balloon class
     
     for (int i=0;i<Anita::NLAYERS_MAX;i++) {
-		for (int j=0;j<Anita::NPHI_MAX;j++) {
-			for (int k=0;k<2;k++) {
-				for (int p=0;p<anita1->NBANDS+1;p++) {
-					//	for (int p=0;p<5;p++) {
-					channels_passing[i][j][k][p]=0;
-					// make vchannels_passing the proper length.
-					vchannels_passing[i][j][k].push_back(0);
-				}
-			}
-		}
+      for (int j=0;j<Anita::NPHI_MAX;j++) {
+	for (int k=0;k<2;k++) {
+	  for (int p=0;p<anita1->NBANDS+1;p++) {
+	    //	for (int p=0;p<5;p++) {
+	    channels_passing[i][j][k][p]=0;
+	    // make vchannels_passing the proper length.
+	    vchannels_passing[i][j][k].push_back(0);
+	  }
+	}
+      }
     }
     
     
     
-    for (int k=0;k<2;k++) {
-		
-		for (int i=0;i<Anita::NLAYERS_MAX;i++) {
-			for (int j=0;j<Anita::NPHI_MAX;j++) {
-				volts[k][i][j]=0.;
-				volts_em[k][i][j]=0.;
-				volts_original[k][i][j]=0.; //added djg
-			}
-		}
+    for (int k=0;k<2;k++) {		
+      for (int i=0;i<Anita::NLAYERS_MAX;i++) {
+	for (int j=0;j<Anita::NPHI_MAX;j++) {
+	  volts[k][i][j]=0.;
+	  volts_em[k][i][j]=0.;
+	  volts_original[k][i][j]=0.; //added djg
+	}
+      }
     }
     
     
     
     //Zeroing
     for (int i=0;i<settings1->NANTENNAS;i++) {
-		nchannels_perrx_triggered[i] = 0;
-		for (int j=0;j<8;j++) {
-			nchannels_perband_triggered[i][j]=0;
-		}
+      nchannels_perrx_triggered[i] = 0;
+      for (int j=0;j<8;j++) {
+	nchannels_perband_triggered[i][j]=0;
+      }
     } //Zero the trigger array
     
     

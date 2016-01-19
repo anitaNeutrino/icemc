@@ -19,16 +19,16 @@ class GlobalTrigger {
 private:
     
 public:
-    GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn); // constructor
-    void GetArrivalTimes(int inu,Anita *anita1, const Vector &rf_direction);
-    
-    // these are not really used now that we bin in frequency, but we keep them anyway.
-    
+  GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn); // constructor
+  void GetArrivalTimes(int inu,Anita *anita1, const Vector &rf_direction);
+  
+  // these are not really used now that we bin in frequency, but we keep them anyway.
+  
   vector<int> flag_e_L1[Anita::NPHI_MAX];
   vector<int> flag_h_L1[Anita::NPHI_MAX];
-
-
-    UShort_t phiTrigMask; // which phi sector is masked for Anita 2
+  
+  UShort_t phiTrigMask; // which phi sector is masked for Anita 2 or Anita-3 (V-POL)
+  UShort_t phiTrigMaskH; // which phi sector is masked for Anita 3 (H-POL)
     
     double volts[2][Anita::NLAYERS_MAX][Anita::NPHI_MAX];                        // voltage (1st index=antenna,2nd index=pol., lcp=0. rcp=1)
     double volts_em[2][Anita::NLAYERS_MAX][Anita::NPHI_MAX];                        // component of voltage from em shower (1st index=antenna,2nd index=pol., lcp=0. rcp=1)
