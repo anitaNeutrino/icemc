@@ -617,3 +617,4 @@ which is not correct when using a spectrum.
 This is now fixed.
 
 
+01/12/16 L. Cremonesi:

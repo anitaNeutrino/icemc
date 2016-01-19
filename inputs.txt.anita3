@@ -32,7 +32,7 @@
 7 # number of bands (for option 3 trigger above for satellite)
 10. # percent bandwidth (for option 3 trigger above for satellite)
 0	0	#notch filter lower and upper limits (for no filter, default is 0      0)
-3       # number of channels on antenna to pass L1 trigger 
+1       # number of channels on antenna to pass L1 trigger 
 2	# number of L1 hits in a 'clump' to pass L2 trigger
 3	# number of antenna in 'clump' for L2 trigger
 0 	# require centre antenna in clump is one of those hit
