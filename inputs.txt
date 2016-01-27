@@ -1,6 +1,6 @@
 # This is a card file containing inputs for the UCLA-based ANITA simulation
 ### Event input output
-10000 # How many neutrinos to generate
+100000 # How many neutrinos to generate
 19    # Select energy (just enter the exponent) or (0) for baseline ES&S (1) for E^-1 (2) for E^-2 (3) for E^-3 (4) for E^-4 (5) for ES&S flux with cosmological constant (6) for neutrino GZK flux from Iron nucleii (16-22)not using spectrum but just for a single energy (101-114)use all kinds of theoretical flux models 
 0  # (0) Pick neutrino position in the ice within the horizon of the balloon and neutrino direction such that the specular ray hitting the balloon sits on the Cerenkov cone or (1) Pick neutrino interaction point from anywhere in the ice and neutrino direction from all directions equally
 1      # 1=write to histograms and trees, 0=don't write to histograms & trees
@@ -11,7 +11,7 @@
 0      # Write neutrino position info to file
 0	#EVENTSMAP (1)draw the events distribution map or (0) not
 ### Balloon and payload
-9      # Which payload:  ANITA-lite (0), Ross Payload (1), 2006-2007 flight with simple settings, Make Your Own (3), Ant Hill (4), 2006-2007 flight with Kurt measurements(6), EeVEX (one layer of antennas) (7), ANITA-II (8), ANITA-III (9), (SWORD) Satellite (10) 
+8      # Which payload:  ANITA-lite (0), Ross Payload (1), 2006-2007 flight with simple settings, Make Your Own (3), Ant Hill (4), 2006-2007 flight with Kurt measurements(6), EeVEX (one layer of antennas) (7), ANITA-II (8), ANITA-III (9), (SWORD) Satellite (10) 
 4      # How many physical layers of antennas to include.  If you indicate N, it will consider the top N layers and ignore the rest.  Useful for turning off the nadirs.  4=default
 10     # Inclination angle in degrees for top three antenna layers 10=default
 10     # Inclination angle in degrees for fourth layer of antennas 10=default
@@ -59,7 +59,7 @@
 0	# zero the signal to measure noise hits
 0	# randomize rotation of polarization around ray arrival direction at thepayload by a gaussian with width x degrees (0 = no randomisation)
 1      # Turn on (1) and off (0) the LPM effect 1=default
-1000.     # For systematics studies:  multiply Jaime's E-field by this factor.  1=default
+1.     # For systematics studies:  multiply Jaime's E-field by this factor.  1=default
 1.     # For systematics studies:  multiply the thermal noise by this factor.  1=default
 0      # Disable use of polarization vectors.  (For debugging purposes.)
 0      # (1) use pulser spectrum instead of signal spectrum or (0) use signal spectra as normal - this is more making signal efficiency curves only!
@@ -80,7 +80,7 @@
 1	# FIRN (1) yes or (0) no
 0	#MOOREBAY (1)use Moore's Bay measured field attenuation length or (0)use South Pole measured data
 ### For testing
-1.     # For systematics studies:  multiply cross section by this factor. 1=default
+1.0     # For systematics studies:  multiply cross section by this factor. 1=default
 1.     # For checking code is working:  multiply theta_th by this factor to make sure you get the same answer.  1=default
 1.     # For checking code is working:  loosen the chance in hell cut by this much.  1=default
 0      # Skip making cuts on neutrinos we couldn't see anyway.  (Will slow down program, used for generating plots or debugging.)
@@ -94,8 +94,8 @@
 0	# loop over boresights	
 #### Interactions
 0 # Which parameterization (0) Jaime's older papers or (1) Jaime's Dec. 2006 paper
-0 # Which cross section parametrizations (0) Mary Hall Reno, (1) Connolly et al. 2011
-0 # Which inelasticity parametrizations (0) rough param of Gandhi et al., (1) Connolly et al. 2011
+1 # Which cross section parametrizations (0) Mary Hall Reno, (1) Connolly et al. 2011
+1 # Which inelasticity parametrizations (0) rough param of Gandhi et al., (1) Connolly et al. 2011
 1      # secondary interactions
 1      # tau decay counted as a secondary interaction
 1      # include the atmosphere.  1=default
