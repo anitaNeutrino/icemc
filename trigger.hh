@@ -29,6 +29,8 @@ public:
   
   UShort_t phiTrigMask; // which phi sector is masked for Anita 2 or Anita-3 (V-POL)
   UShort_t phiTrigMaskH; // which phi sector is masked for Anita 3 (H-POL)
+  UShort_t l1TrigMask; // which channel is masked for Anita-3 (V-POL)
+  UShort_t l1TrigMaskH; // which channel is masked for Anita 3 (H-POL)
     
     double volts[2][Anita::NLAYERS_MAX][Anita::NPHI_MAX];                        // voltage (1st index=antenna,2nd index=pol., lcp=0. rcp=1)
     double volts_em[2][Anita::NLAYERS_MAX][Anita::NPHI_MAX];                        // component of voltage from em shower (1st index=antenna,2nd index=pol., lcp=0. rcp=1)

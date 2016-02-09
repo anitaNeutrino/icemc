@@ -619,7 +619,7 @@ This is now fixed.
 
 01/12/16 L. Cremonesi:
 
-
+Committed ANITA-3 photogrammetry and flightpath
 
 01/27/2016 O. Banerjee:
 
@@ -639,3 +639,7 @@ theta here is the angle that r_in makes with the vertical and should go from 0 t
 This way neutrinos coming all the way through the Earth, that is, they first touched Earth surface in the Northern Hemisphere are allowed 
 
 This makes sure that we accomodate neutrinos of cross section less than 1 that might be able to come all the way through from the other side of the Earth
+
+01/12/16 L. Cremonesi:
+
+Adding phi masking (not read yet by trigger)

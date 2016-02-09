@@ -111,6 +111,8 @@ void GetSlacPositions(Anita *anita1);
   //  double longitude,latitude,altitude
   UShort_t phiTrigMask;
   UShort_t phiTrigMaskH;
+  UShort_t l1TrigMask;
+  UShort_t l1TrigMaskH;
   
   unsigned int realTime_flightdata; // realtime from the flight data file
   unsigned int realTime_turfrate; // realtime from the turf rate file

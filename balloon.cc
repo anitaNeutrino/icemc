@@ -182,6 +182,8 @@ void Balloon::InitializeBalloon() {
     MINALTITUDE=30000; // balloon has to be 30 km altitude at least for us to read the event from the flight data file
     phiTrigMask=0;
     phiTrigMaskH=0;
+    l1TrigMask=0;
+    l1TrigMaskH=0;
     
     // initialisation of igps_previous
     if (WHICHPATH==6 || WHICHPATH==7)
@@ -262,6 +264,8 @@ void Balloon::InitializeBalloon() {
 		turfratechain->SetMakeClass(1);
 		turfratechain->SetBranchAddress("phiTrigMask",&phiTrigMask);
 		turfratechain->SetBranchAddress("phiTrigMaskH",&phiTrigMaskH);
+		turfratechain->SetBranchAddress("l1TrigMask",&l1TrigMask);
+		turfratechain->SetBranchAddress("l1TrigMaskH",&l1TrigMaskH);
 		turfratechain->SetBranchAddress("realTime",&realTime_turfrate);
 		turfratechain->BuildIndex("realTime");
 
@@ -436,7 +440,9 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 			if (WHICHPATH==7)  // this is for Anita 2
 				// get phi masking
 				setphiTrigMask();// set phiTrigMask, and public variable of Balloon class
-			
+			else if (WHICHPATH==8)  // this is for Anita 3
+			  // get phi masking
+			  setphiTrigMaskAnita3();// set phiTrigMask, phiTrigMaskH, l1TrigMask and l1TrigMaskH and public variable of Balloon class
 		}
 		igps_previous=igps;
 		
@@ -693,6 +699,8 @@ void Balloon::setphiTrigMaskAnita3() {
   if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
     phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
     phiTrigMaskH=0;
+    l1TrigMask=0;
+    l1TrigMaskH=0;
   }
   else { // if it's in range
 		
@@ -702,6 +710,8 @@ void Balloon::setphiTrigMaskAnita3() {
     if (iturf<0){ // if it didn't find one
       phiTrigMask=0; // set to zero
       phiTrigMaskH=0;
+      l1TrigMask=0;
+      l1TrigMaskH=0;
     }else{
       turfratechain->GetEvent(iturf);
     }
