@@ -3633,6 +3633,7 @@ void Anita::calculate_single_offset(const unsigned center_phi_sector_index, cons
     // This should be implemented shortly.
     return;
 }
+/*
 void Anita::calculate_antenna_positions(Settings *settings1,double pitch, double roll, double phi_spin,Vector n_north,Vector n_east){
     number_all_antennas = 0;
     Vector antenna_position;
@@ -3697,7 +3698,7 @@ void Anita::calculate_antenna_positions(Settings *settings1,double pitch, double
     }
     return;
 }
-
+*/
 void Anita::GetArrivalTimes(int inu, const Vector& rf_direction) {
   
   

@@ -643,3 +643,6 @@ This makes sure that we accomodate neutrinos of cross section less than 1 that m
 01/12/16 L. Cremonesi:
 
 Adding phi masking (not read yet by trigger)
+
+02/23/16 B. Dailey:
+Added a new version of calculate antenna positions (which was moved back to balloon class) and getboresight. The new functions depend on RotatePayload which put the antennas in the correct position as they were during flight so simulated data and be reconstructed correctly.

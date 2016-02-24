@@ -143,6 +143,8 @@ void GetSlacPositions(Anita *anita1);
   Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //position of antenna boresights
 
   void GetBoresights(Settings *settings1,Anita *anita1);
+  Vector RotatePayload(Settings *settings1,Anita *anita1,Vector ant_pos);
+  void calculate_antenna_positions(Settings *settings1,Anita *anita1);// this calculates the above 
 
 
   Vector n_bn; // normalized r_bn
