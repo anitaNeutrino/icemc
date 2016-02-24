@@ -734,8 +734,10 @@ int main(int argc, char **argv) {
       } // end switch
     } // end while
   } // end if arg>1
+  
   settings1->SEED=settings1->SEED +run_no;
   cout <<"seed is " << settings1->SEED << endl;
+
   TRandom *rsave = gRandom;
   TRandom3 *Rand3 = new TRandom3(settings1->SEED);//for generating random numbers
   gRandom=Rand3;
@@ -1002,14 +1004,20 @@ int main(int argc, char **argv) {
   
   
   //  int iphisector; //phi sector trigger test (L3)
-  int l3trig; // 16 bit number which says which phi sectors pass L3
-  // For each trigger layer, which "clumps" pass L2.  16 bit, 16 bit and 8 bit for layers 1 & 2 and nadirs
+  int l3trig;  // 16 bit number which says which phi sectors pass L3 V-POL
+  int l3trigH; // 16 bit number which says which phi sectors pass L3 H-POL
+  // For each trigger layer, which "clumps" pass L2.  16 bit, 16 bit and 8 bit for layers 1 & 2 and nadirs  
   int l2trig[Anita::NTRIGGERLAYERS_MAX];
-  //For each trigger layer, which antennas pass L1.  16 bit, 16 bit and 8 bit and layers 1, 2 and nadirs
+  int l2trigH[Anita::NTRIGGERLAYERS_MAX];
+  //For each trigger layer, which antennas pass L1.  16 bit, 16 bit and 8 bit and layers 1, 2 and nadirs  
   int l1trig[Anita::NTRIGGERLAYERS_MAX];
+  int l1trigH[Anita::NTRIGGERLAYERS_MAX];
   // these are declared here so that they can be stuck into trees
-  int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement
-  int loctrig_nadironly[Anita::NPHI_MAX]; //counting how many pass trigger requirement
+  int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement  
+  int loctrigH[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement  
+  int loctrig_nadironly[Anita::NPHI_MAX]; //counting how many pass trigger requirement  
+  int loctrigH_nadironly[Anita::NPHI_MAX]; //counting how many pass trigger requirement
+ 
   UShort_t phiTrigMask;
   UShort_t phiTrigMaskH;
   UShort_t l1TrigMask;
@@ -1277,10 +1285,13 @@ int main(int argc, char **argv) {
   finaltree->Branch("l3trig",&l3trig,"l3trig/I");
   finaltree->Branch("l2trig",&l2trig,"l2trig[3]/I");
   finaltree->Branch("l1trig",&l1trig,"l1trig[3]/I");
-  finaltree->Branch("phiTrigMask",&phiTrigMask,"phiTrigMask/S");
-  finaltree->Branch("phiTrigMaskH",&phiTrigMaskH,"phiTrigMaskH/S");
-  finaltree->Branch("l1TrigMask",&l1TrigMask,"l1TrigMask/S");
-  finaltree->Branch("l1TrigMaskH",&l1TrigMaskH,"l1TrigMaskH/S");
+  finaltree->Branch("l3trigH",&l3trigH,"l3trigH/I");
+  finaltree->Branch("l2trigH",&l2trigH,"l2trigH[3]/I");
+  finaltree->Branch("l1trigH",&l1trigH,"l1trigH[3]/I");
+  finaltree->Branch("phiTrigMask",&phiTrigMask,"phiTrigMask/s");
+  finaltree->Branch("phiTrigMaskH",&phiTrigMaskH,"phiTrigMaskH/s");
+  finaltree->Branch("l1TrigMask",&l1TrigMask,"l1TrigMask/s");
+  finaltree->Branch("l1TrigMaskH",&l1TrigMaskH,"l1TrigMaskH/s");
   //finaltree->Branch("arrival_times",&(globaltrig1->arrival_times),"arrival_times[Anita::NLAYERS_MAX*Anita::NPHI_MAX]/D");
   //finaltree->Branch("rx_minarrivaltime",&(globaltrig1->rx_minarrivaltime),"rx_minarrivaltime/I");
   finaltree->Branch("max_antenna0",&max_antenna0,"max_antenna0/I");
@@ -1685,6 +1696,21 @@ int main(int argc, char **argv) {
   tree1b->Branch("passes_thisevent",&passes_thisevent,"passes_thisevent/I");
   tree1->Branch("bn1->igps",&bn1->igps,"bn1->igps/I");
   
+
+
+  // set up balloontree 
+
+   TTree *balloontree = new TTree("balloon","balloon"); //filled for all events
+   balloontree->Branch("heading",&bn1->heading,"heading/D");
+   balloontree->Branch("pitch",&bn1->pitch,"pitch/D");
+   balloontree->Branch("roll",&bn1->roll,"roll/D"); 
+   balloontree->Branch("realTime_flightdata",&bn1->realTime_flightdata,"realTime_flightdata/D"); 
+   balloontree->Branch("latitude",&bn1->latitude,"latitude/D");
+   balloontree->Branch("longitude",&bn1->longitude,"longitude/D");
+   balloontree->Branch("altitude",&bn1->altitude,"altitude/D"); 
+   balloontree->Branch("horizcoord_bn",&bn1->horizcoord_bn,"horizcoord_bn/D"); 
+   balloontree->Branch("vertcoord_bn",&bn1->vertcoord_bn,"vertcoord_bn/D"); 
+
   
   // these variables are for energy reconstruction studies
   double undogaintoheight_e=0;
@@ -1895,7 +1921,9 @@ cout << "reminder that I took out ChangeCoord.\n";
   // for comparing with Peter
   double average_altitude=0.;
   double average_rbn=0.;
-  
+
+  TRandom r(0); // use a seed generated using machine clock (different every second)
+
   // loop over neutrinos.
   signal(SIGINT, interrupt_signal_handler);	    // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
   for (inu = 0; inu < NNU; inu++) {
@@ -1942,15 +1970,15 @@ cout << "reminder that I took out ChangeCoord.\n";
 	vmmhz[i] = 0.; // the full signal with all factors accounted for (1/r, atten. etc.)
 	vmmhz_em[i]=0.; // for keeping track of just the em component of the shower
       } //Zero the vmmhz array - helpful for banana plots, shouldn't affect anything else - Stephen
-      
+
       // Picks the balloon position and at the same time sets the masks and thresholds
-      bn1->PickBalloonPosition(antarctica, settings1, inu, anita1);
+      bn1->PickBalloonPosition(antarctica, settings1, inu, anita1, r.Rndm());
       // also sets phiTrigMask
       phiTrigMask=bn1->phiTrigMask;
       phiTrigMaskH=bn1->phiTrigMaskH;
       l1TrigMask=bn1->l1TrigMask;
       l1TrigMaskH=bn1->l1TrigMaskH;
-      
+
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter
       average_altitude+=bn1->altitude_bn/(double)NNU;
@@ -1973,10 +2001,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	
       } //End else if (WHICHPATH==3) : Banana plot locations
       
-      
-      
-      
-      
+      balloontree->Fill();
       
       // pick random point in ice.
       // also get initial guess shower exit position
@@ -2044,7 +2069,8 @@ cout << "reminder that I took out ChangeCoord.\n";
       if (!interaction1->iceinteraction)
 	continue;
       count1->iceinteraction[whichray]++;
-     
+
+      
       if (beyondhorizon) {
 	
 	//delete ray1;
@@ -2053,7 +2079,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       }
       count1->inhorizon[whichray]++;
       
-           
+      
       // cerenkov angle depends on depth because index of refraction depends on depth.
        
       if (settings1->FIRN) {
@@ -2065,7 +2091,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       if (settings1->FORSECKEL==1)
 	sig1->SetChangle(acos(1/sig1->NICE));
       
-      //    cout << "altitude_int, n_depth are " << altitude_int << " " << sig1->N_DEPTH << "\n";
+      //      cout << "altitude_int, n_depth are " << altitude_this << " " << latitude_this << " " << longitude_this << " " << sig1->N_DEPTH << "\n";
       
       // x and y components of interaction in km.
       
@@ -2074,17 +2100,15 @@ cout << "reminder that I took out ChangeCoord.\n";
       
             
       ray1->GetSurfaceNormal(settings1,antarctica,interaction1->posnu,slopeyangle,0);
-      
+
       // *** warning **** for Snell's law, I call the ray on the air-side
       // the incident angle and the ice-side ray the refracted
       
       // ray's angle of incidence (in the air) onto ice
       costheta_inc=ray1->n_exit2bn[0]*ray1->nsurf_rfexit;    // just for plotting
-      
-      // just for plotting
-      
+
+      // just for plotting     
       costheta_exit=cos(ray1->rfexit[0].Theta()); // just for plotting
-      
        
       //     if (settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2) {
       
@@ -2101,7 +2125,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       
       // fills ray1->n_exit2bn[1]
       ray1->GetRFExit(settings1,anita1,whichray,interaction1->posnu,interaction1->posnu_down,bn1->r_bn,bn1->r_boresights,1,antarctica);
-      
+            
       ray1->GetSurfaceNormal(settings1,antarctica,interaction1->posnu,slopeyangle,1);
       
       if (!ray1->TraceRay(settings1,anita1,2,sig1->N_DEPTH,inu)) {; // trace ray, 2nd iteration.
@@ -2113,8 +2137,10 @@ cout << "reminder that I took out ChangeCoord.\n";
       // fills ray1->n_exit2bn[2] ?
       ray1->GetRFExit(settings1,anita1,whichray,interaction1->posnu,interaction1->posnu_down,bn1->r_bn,bn1->r_boresights,2,antarctica);
       
+	    
       ray1->GetSurfaceNormal(settings1,antarctica,interaction1->posnu,slopeyangle,2);
-	  
+     
+      
       //       } else if (settings1->ROUGHNESS==1||settings1->ROUGHNESS==2) {
       //      	//
       // 	// Added 7/14/2011 by EWG
@@ -3033,7 +3059,8 @@ cout << "reminder that I took out ChangeCoord.\n";
       chanceinhell2=1;
       
       
-      globaltrig1 = new GlobalTrigger(settings1,anita1,bn1->phiTrigMask);
+      if (settings1->WHICH==9) globaltrig1 = new GlobalTrigger(settings1,anita1,bn1->phiTrigMask,bn1->phiTrigMaskH,bn1->l1TrigMask,bn1->l1TrigMaskH ); // Anita-3 phi and l1 masking for V and H pol
+      else globaltrig1 = new GlobalTrigger(settings1,anita1,bn1->phiTrigMask);
       Tools::Zero(anita1->arrival_times,Anita::NLAYERS_MAX*Anita::NPHI_MAX);
       anita1->GetArrivalTimes(inu,ray1->n_exit2bn[2]);
       
@@ -3410,26 +3437,23 @@ cout << "reminder that I took out ChangeCoord.\n";
       eventsfound_beforetrigger+=weight;
       
  
-
-     for (int i=0;i<NTHRESHOLDS;i++) {
-       double this_threshold=  threshold_start+(double)i*threshold_step;
-       thresholds[i]=fabs(this_threshold);
-
-       if (globaltrig1->PassesTrigger(settings1,anita1,discones_passing,2,l3trig,l2trig,l1trig,settings1->antennaclump,loctrig,loctrig_nadironly,inu,this_threshold)) {
-	 npass_v_thresh[i]+=1.;
-	 
-
-
-       }
-
-       denom_v_thresh[i]+=1.E-7;
-       //cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime],anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
-
-     }
-
-
+      bool hpol = false;
+      for (int i=0;i<NTHRESHOLDS;i++) {
+	double this_threshold=  threshold_start+(double)i*threshold_step;
+	thresholds[i]=fabs(this_threshold);
+	if (globaltrig1->PassesTrigger(settings1,anita1,discones_passing,2,l3trig,l2trig,l1trig,settings1->antennaclump,loctrig,loctrig_nadironly,inu,this_threshold, hpol)) {
+	  npass_v_thresh[i]+=1.;
+	  
+	}
+	
+	denom_v_thresh[i]+=1.E-7;
+	//cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime],anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
+	
+      }
+      
+      
       // now ask if global trigger passes
-      if ((settings1->TRIGTYPE==1 && globaltrig1->PassesTrigger(settings1,anita1,discones_passing,2,l3trig,l2trig,l1trig,settings1->antennaclump,loctrig,loctrig_nadironly,inu)) || // for Anita
+      if ((settings1->TRIGTYPE==1 && globaltrig1->PassesTrigger(settings1,anita1,discones_passing,2,l3trig,l2trig,l1trig,settings1->antennaclump,loctrig,loctrig_nadironly,inu, hpol)) || // for Anita
 	  (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD) // for Anita-lite, Anita Hill.  This option is currently disabled
 	  // just L1 requirement on 2 antennas
 	  ) {

@@ -58,7 +58,7 @@ void ReadAnitaliteFlight();
   void CenterPayload(Settings *settings1,Anita *anita1,Vector n_exit2bn,Vector n_pol,int whichlayer,int centerphi);
 
   void PickBalloonPosition(Vector straightup,IceModel *antarctica,Settings *settings1, Anita *anita1);
-  void PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int inu,Anita *anita1); // position of spot under balloon
+  void PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int inu,Anita *anita1, double randomNumber); // position of spot under balloon
 
   int Getibnposition();
 

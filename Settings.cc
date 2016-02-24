@@ -237,8 +237,8 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     anita1->BANDING=atoi(number.c_str()); // whether you use anita-1 banding (0) or choose-your-own
     
-    if (anita1->BANDING !=0 && anita1->BANDING!= 1 && anita1->BANDING!=2) {
-	cout << "Banding should be set to 0, 1 or 2.\n";
+    if (anita1->BANDING !=0 && anita1->BANDING!= 1 && anita1->BANDING!=2 && anita1->BANDING!=4) {
+	cout << "Banding should be set to 0, 1, 2 or 4.\n";
 	exit(1);
     }
     
@@ -247,10 +247,10 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
 	exit(1);
     }
     
-    if (TRIGGERSCHEME==2 && anita1->BANDING==1) {
-	cout << "Time domain trigger scheme only works with Anita 1 and Anita 2 banding data, you can't set your own bands.\n";
-	exit(1);
-    }
+    // if (TRIGGERSCHEME==2 && anita1->BANDING==1) {   // Linda temporarely turned this off
+    // 	cout << "Time domain trigger scheme only works with Anita 1 and Anita 2 banding data, you can't set your own bands.\n";
+    // 	exit(1);
+    // }
     
     
     Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,5);

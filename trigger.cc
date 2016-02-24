@@ -29,6 +29,9 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigM
     Tools::Zero(triggerbits,Anita::NTRIG);
     
     phiTrigMask=phiTrigMask_bn; // set the phi mask to the input value which comes from the balloon class
+    phiTrigMaskH=0; // set other variables to 0 
+    l1TrigMask  =0; 
+    l1TrigMaskH =0;
     
     for (int i=0;i<Anita::NLAYERS_MAX;i++) {
       for (int j=0;j<Anita::NPHI_MAX;j++) {
@@ -69,6 +72,56 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigM
     
     
 }
+
+GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn,UShort_t phiTrigMaskH_bn,UShort_t l1TrigMask_bn,UShort_t l1TrigMaskH_bn){
+    
+    Tools::Zero(triggerbits,Anita::NTRIG);
+    
+    phiTrigMask=phiTrigMask_bn; // set the phi mask to the input value which comes from the balloon class
+    phiTrigMaskH=phiTrigMaskH_bn; // set the phi mask to the input value which comes from the balloon class
+    l1TrigMask=l1TrigMask_bn; // set the phi mask to the input value which comes from the balloon class
+    l1TrigMask=l1TrigMaskH_bn; // set the phi mask to the input value which comes from the balloon class
+    
+    for (int i=0;i<Anita::NLAYERS_MAX;i++) {
+      for (int j=0;j<Anita::NPHI_MAX;j++) {
+	for (int k=0;k<2;k++) {
+	  for (int p=0;p<anita1->NBANDS+1;p++) {
+	    //	for (int p=0;p<5;p++) {
+	    channels_passing[i][j][k][p]=0;
+	    // make vchannels_passing the proper length.
+	    vchannels_passing[i][j][k].push_back(0);
+	  }
+	}
+      }
+    }
+    
+    
+    
+    for (int k=0;k<2;k++) {		
+      for (int i=0;i<Anita::NLAYERS_MAX;i++) {
+	for (int j=0;j<Anita::NPHI_MAX;j++) {
+	  volts[k][i][j]=0.;
+	  volts_em[k][i][j]=0.;
+	  volts_original[k][i][j]=0.; //added djg
+	}
+      }
+    }
+    
+    
+    
+    //Zeroing
+    for (int i=0;i<settings1->NANTENNAS;i++) {
+      nchannels_perrx_triggered[i] = 0;
+      for (int j=0;j<8;j++) {
+	nchannels_perband_triggered[i][j]=0;
+      }
+    } //Zero the trigger array
+    
+    
+    
+    
+}
+
 
 void AntTrigger::ConvertEHtoLREfield(double e_component,double h_component,double& lcp_component,double& rcp_component) {
     
@@ -1563,13 +1616,15 @@ void AntTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,doub
  *			There is a decent amount of dead code which should be pruned, as well.
  */
 
-int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu) {
+int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu, bool ishpol=false) {
   double this_threshold= -4.34495;
-  PassesTrigger(settings1,anita1,discones_passing,mode,l3trig,l2trig,l1trig,antennaclump,loctrig,loctrig_nadironly,inu,this_threshold);   
+  PassesTrigger(settings1,anita1,discones_passing,mode,l3trig,l2trig,l1trig,antennaclump,loctrig,loctrig_nadironly,inu,this_threshold, ishpol);   
 
 }
-  int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu,double this_threshold) {
-    
+int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu,double this_threshold, bool ishpol=false) {
+
+  //bool ishpol should only be used for anita3, by default do vpol
+  
   int ltsum=0;
   int channsum=0;
   int ihit=0;
@@ -1666,17 +1721,24 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	iphitrig=GetPhiSector(settings1,iloc,iphi); // get trigger phi sector
 	// counts from 0
 	antsum = 0; // start antenna sum
-	
+
 	for(int ipolar=0;ipolar<2;ipolar++) {
+	  if (settings1->WHICH==9 && ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
+	  else if (settings1->WHICH==9 && !ishpol && ipolar==1) continue; // Anita3 : only do the polarisation required
 	  for(int iband=0;iband<NBAND;iband++) {
 	    if(channels_compacted_passing[iloc][iphitrig][ipolar][iband] == 1
 	       && anita1->bwslice_allowed[iband]==1 && anita1->pol_allowed[ipolar]==1) { // only increment if it's one of the allowed bands.
 	      
+	      if (settings1->PHIMASKING && settings1->WHICH==9) // only applying channel masking like this if it's 
+		if ((ipolar==0 && (1<<iphitrig & l1TrigMask)) || (ipolar==1 && (1<<iphitrig & l1TrigMaskH)) )
+		  continue; // was this channel masked?
+		
 	      antsum = antsum +1; // sum channels that pass for this antenna
-	      
+
 	    }
 	  } // loop over bands
 	} // end loop over polarizations
+	
 	for (int ipolar=0;ipolar<2;ipolar++) {
 	  for (int iband=0;iband<NBAND;iband++) { // notice sum over 5 bands now
 	    if(channels_compacted_passing[iloc][iphitrig][ipolar][iband] == 0
@@ -1686,14 +1748,14 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	  }
 	}
 	
-	// if the required bands didn't pass then set antsum=0 so the antenna doesn't pass
-	
+	// if the required bands didn't pass then set antsum=0 so the antenna doesn't pass	  
 	if(antsum >= anita1->trigRequirements[0])  { // do more than 3 channels out of 8 pass?
-	  
 	  ant[iloc][iphitrig] = 1; // then this antenna passes L1.
 	  antpass++;
-	  
 	} //if
+	
+      
+
       } //for (phi position)
     } //for (layers)
     
@@ -1768,7 +1830,7 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
       if (settings1->DISCONES==2)
 	FillInNadir(settings1,anita1,l2trig[2]);
       
-      if (settings1->PHIMASKING) {
+      if (settings1->PHIMASKING && settings1->WHICH!=9) { // not for Anita3
 	// nadir antennas are aligned with the second physical layer of antennas
 	for (int iphi=0;iphi<anita1->NTRIGPHISECTORS;iphi++) { // loop over phi sectors
 	  if ((1<<iphi) & phiTrigMask) { // if this phi sector is masked
@@ -1777,6 +1839,16 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	      if(l2trig[iloc] & (1<<iphi)) l2trig[iloc] -= (1<<iphi);
 	    }
 	  } // if this phi sector is masked
+	}
+      } else if (settings1->PHIMASKING && settings1->WHICH==9) { // only for Anita3
+	// nadir antennas are aligned with the second physical layer of antennas
+	for (int iphi=0;iphi<anita1->NTRIGPHISECTORS;iphi++) { // loop over phi sectors
+	  if ((((1<<iphi) & phiTrigMask) && !ishpol) || (((1<<iphi) & phiTrigMaskH) && ishpol))  { // if this phi sector is masked
+	    for (int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++) {
+	      loctrig[iloc][iphi] = 0;
+	      if(l2trig[iloc] & (1<<iphi)) l2trig[iloc] -= (1<<iphi);
+	    }
+	  }// if this phi sector is masked
 	}
       }
       
@@ -2350,14 +2422,14 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 
 	
     // now find the sample with the highest number of bands that pass
-  int maxbands=0;
-  int nbands_pass=0;
+  // int maxbands=0;
+  // int nbands_pass=0;
   
     
     for (int i=minsample;i<maxsample;i++) { 
       
-      int nbands_pass[2]={0.};
-      int maxbands[2]={0.};
+      int nbands_pass[2]={0};
+      int maxbands[2]={0};
       
       for (unsigned i_layer = 0; i_layer < anita1->N_SUMMED_LAYERS; ++i_layer) {
 	for (unsigned i_sector = 0; i_sector < anita1->N_SUMMED_PHI_SECTORS; ++i_sector) {
@@ -2683,7 +2755,7 @@ int GlobalTrigger::L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anita
 		
 		
 		if (whichphipass[i])
-			l3trig+=(1<<i);
+		  l3trig+=(1<<i);
 		
     } // end looping over phi
     

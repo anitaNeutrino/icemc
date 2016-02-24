@@ -1225,7 +1225,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
     int NBALLOONPOSITIONS; // number of balloon positions considered here
     if (bn1->WHICHPATH==2) // if anita-lite
 	NBALLOONPOSITIONS=(int)((double)bn1->NPOINTS/(double)bn1->REDUCEBALLOONPOSITIONS); //only take 1/100 of the total balloon positions that we have because otherwise it's overkill.
-    else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7) {
+    else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8) {
 	NBALLOONPOSITIONS=(int)((double)bn1->flightdatachain->GetEntries()/(double)bn1->REDUCEBALLOONPOSITIONS)+1;
     }
     else if (bn1->WHICHPATH==1) // for picking random point along 80 deg south
@@ -1297,7 +1297,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	
 	
 	
-	else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7) {
+	else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8) {
 	    
 	    bn1->flightdatachain->GetEvent(i*100);
 	    

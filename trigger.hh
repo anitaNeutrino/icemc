@@ -20,6 +20,7 @@ private:
     
 public:
   GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn); // constructor
+  GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn,UShort_t phiTrigMaskH_bn,UShort_t l1TrigMask_bn,UShort_t l1TrigMaskH_bn); // constructor for Anita-3
   void GetArrivalTimes(int inu,Anita *anita1, const Vector &rf_direction);
   
   // these are not really used now that we bin in frequency, but we keep them anyway.
@@ -59,8 +60,8 @@ public:
     // for the nadir studies
     
     // this is L2 and L3 triggers
-    int PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int &l3trig,int *l2trig,int *l1trig,int antennaclump,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int inu);
-  int PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int &l3trig,int *l2trig,int *l1trig,int antennaclump,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int inu,double this_threshold);
+  int PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int &l3trig,int *l2trig,int *l1trig,int antennaclump,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int inu, bool ishpol);
+  int PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int &l3trig,int *l2trig,int *l1trig,int antennaclump,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int inu,double this_threshold, bool ishpol);
     int L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int discones_passing,int &l3trigy);
     
     

@@ -641,8 +641,10 @@ This way neutrinos coming all the way through the Earth, that is, they first tou
 This makes sure that we accomodate neutrinos of cross section less than 1 that might be able to come all the way through from the other side of the Earth
 
 01/12/16 L. Cremonesi:
-
 Adding phi masking (not read yet by trigger)
 
 02/23/16 B. Dailey:
 Added a new version of calculate antenna positions (which was moved back to balloon class) and getboresight. The new functions depend on RotatePayload which put the antennas in the correct position as they were during flight so simulated data and be reconstructed correctly.
+
+02/24/16 L. Cremonesi
+Corrected a bug when evaluating the horizon with the anita3 flight path. V-POL phi-masking should work now, but since H-POL doesn't work yet the phi-masking flag for anita3 should still be kept off.

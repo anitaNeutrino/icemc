@@ -186,7 +186,7 @@ void Balloon::InitializeBalloon() {
     l1TrigMaskH=0;
     
     // initialisation of igps_previous
-    if (WHICHPATH==6 || WHICHPATH==7)
+    if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8)
 		igps_previous=0; // which entry from the flight data file the previous event was
     if (WHICHPATH==2)
 		igps_previous=NPOINTS_MIN; // initialise here to avoid times during launch
@@ -273,15 +273,11 @@ void Balloon::InitializeBalloon() {
 		realTime_tr_min=realTime_turfrate; // realTime of first event in the file
 		turfratechain->GetEvent(turfratechain->GetEntries()-1);
 		realTime_tr_max=realTime_turfrate; // realTime of last event in file
-
+		
     }
     
     
-    
-
-
-
-    
+        
     for (int i=0;i<10000;i++) {
 		latitude_bn_anitalite[i]=0;
 		longitude_bn_anitalite[i]=0;
@@ -312,7 +308,7 @@ double Balloon::GetBalloonSpin(double heading) { // get the azimuth of the ballo
     
     
   double phi_spin;
-  if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7)
+  if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8)
     phi_spin=heading*RADDEG;
   else {
     if (RANDOMIZE_BN_ORIENTATION==1)
@@ -329,11 +325,12 @@ double Balloon::GetBalloonSpin(double heading) { // get the azimuth of the ballo
 int Balloon::Getibnposition() {
     int ibnposition_tmp;
     if (WHICHPATH==1)
-		ibnposition_tmp = (int)(r_bn.Lon() / 2);
-    else if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7)
-		ibnposition_tmp=(int)((double)igps/(double)REDUCEBALLOONPOSITIONS);
-    else
-		ibnposition_tmp=0;
+      ibnposition_tmp = (int)(r_bn.Lon() / 2);
+    else if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8){
+      ibnposition_tmp=(int)((double)igps/(double)REDUCEBALLOONPOSITIONS);
+      //      std::cout << igps << " " << REDUCEBALLOONPOSITIONS << " " << ibnposition_tmp << std::endl;
+    } else
+      ibnposition_tmp=0;
     
     return ibnposition_tmp;
     
@@ -398,7 +395,7 @@ void Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,Settin
 }
 
 // this is called for each neutrino
-void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int inu,Anita *anita1) { // r_bn_shadow=position of spot under the balloon on earth's surface
+void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int inu,Anita *anita1, double randomNumber) { // r_bn_shadow=position of spot under the balloon on earth's surface
   //cout << "calling pickballoonposition.\n";
   pitch=0.;
   roll=0.;
@@ -424,25 +421,25 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 			
 		}
 		else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8) {  // For Anita 1 and Anita 2 and Anita 3:
-			
-			igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
-			
-			
-			flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
-			
-			
-			while (faltitude<MINALTITUDE || fheading<0) { // if the altitude is too low, pick another event.
-				igps++; // increment by 1
-				igps=igps%flightdatachain->GetEntries(); // make sure it's not beyond the maximum entry number
-				
-				flightdatachain->GetEvent(igps);	  // get new event
-			}
-			if (WHICHPATH==7)  // this is for Anita 2
-				// get phi masking
-				setphiTrigMask();// set phiTrigMask, and public variable of Balloon class
-			else if (WHICHPATH==8)  // this is for Anita 3
-			  // get phi masking
-			  setphiTrigMaskAnita3();// set phiTrigMask, phiTrigMaskH, l1TrigMask and l1TrigMaskH and public variable of Balloon class
+
+		  // igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
+		  igps = int(randomNumber*flightdatachain->GetEntries());
+		  flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
+		  
+		  
+		  while (faltitude<MINALTITUDE || fheading<0 || isnan(fheading)) { // if the altitude is too low, pick another event.
+
+		    igps++; // increment by 1
+		    igps=igps%flightdatachain->GetEntries(); // make sure it's not beyond the maximum entry number
+		    
+		    flightdatachain->GetEvent(igps);	  // get new event
+		  }
+		  if (WHICHPATH==7)  // this is for Anita 2
+		    // get phi masking
+		    setphiTrigMask();// set phiTrigMask, and public variable of Balloon class
+		  else if (WHICHPATH==8)  // this is for Anita 3
+		    // get phi masking
+		    setphiTrigMaskAnita3();// set phiTrigMask, phiTrigMaskH, l1TrigMask and l1TrigMaskH and public variable of Balloon class
 		}
 		igps_previous=igps;
 		
@@ -704,7 +701,6 @@ void Balloon::setphiTrigMaskAnita3() {
   }
   else { // if it's in range
 		
-		
     iturf=turfratechain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in turfratechain that is closest to this realTime_flightdata
 		
     if (iturf<0){ // if it didn't find one
@@ -739,138 +735,132 @@ void Balloon::setr_bn(double latitude,double longitude) {
     r_bn = Position(theta_bn,phi_bn);  //r_bn is a unit vector pointing in the right direction
 }
 
-void Balloon::PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,Settings *settings1,IceModel *antarctica1,int inu,
-										   
-										   
-										   Ray *ray1,
-										   TH1F *prob_eachbin, TH1F *vol_eachbin, TH1F *prob_eachbin_weighted, TH1F *prob_eachbnposition,
-										   TH1F *diff_ilon_bn_ibnposition, int &beyondhorizon) {
+void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, Settings *settings1, IceModel *antarctica1, int inu,								        Ray *ray1, TH1F *prob_eachbin, TH1F *vol_eachbin, TH1F *prob_eachbin_weighted, TH1F *prob_eachbnposition,
+					   TH1F *diff_ilon_bn_ibnposition, int &beyondhorizon) {
     
-    double distance=1.E7;
-    double phi=0,theta=0;
-    double lon=0;
-    double latfromSP=0;
-    
-    
-    if (settings1->UNBIASED_SELECTION==1) {
-		
-		if (antarctica1->PickUnbiased(inu,interaction1,antarctica1)) { // pick neutrino direction and interaction point
-			interaction1->dtryingdirection=1.;
-			interaction1->iceinteraction=1;
-		}
-		else
-			interaction1->iceinteraction=0;
+  double distance=1.E7;
+  double phi=0,theta=0;
+  double lon=0;
+  double latfromSP=0;
+  
+  
+  if (settings1->UNBIASED_SELECTION==1) {
+
+    if (antarctica1->PickUnbiased(inu,interaction1,antarctica1)) { // pick neutrino direction and interaction point
+      interaction1->dtryingdirection=1.;
+      interaction1->iceinteraction=1;
     }
-    else {
-		interaction1->iceinteraction=1;
-		if (WHICHPATH==3) { //Force interaction point if we want to make a banana plot
-			interaction1->posnu = interaction1->nu_banana;
-		} //if (making banana plot)
-		else if (WHICHPATH==4) {// Force interaction point for comparison with Peter.
+    else
+      interaction1->iceinteraction=0;
+  } else {
+    interaction1->iceinteraction=1;
+    if (WHICHPATH==3) { //Force interaction point if we want to make a banana plot
+      interaction1->posnu = interaction1->nu_banana;
+    } //if (making banana plot)
+    else if (WHICHPATH==4) {// Force interaction point for comparison with Peter.
+      
+      // want interaction location at Taylor Dome
+      // According to lab book it's 77 deg, 52.818' S=77.8803
+      // 158 deg, 27.555' east=158.45925
+      latfromSP=12.1197; // this is degrees latitude from the south pole
+      //lon=180.+166.73;
+      lon=180.+158.45925;
+      //lon=180.+120.
+      phi=EarthModel::LongtoPhi_0is180thMeridian(lon);
+      
+      theta = latfromSP*RADDEG;
+      
+      double elevation=antarctica1->SurfaceAboveGeoid(lon,latfromSP)-500.;
+      
+      interaction1->posnu = Vector((elevation+antarctica1->Geoid(latfromSP))*sin(theta)*cos(phi),(elevation+antarctica1->Geoid(latfromSP))*sin(theta)*sin(phi),(elevation+antarctica1->Geoid(latfromSP))*cos(theta));
 			
-			// want interaction location at Taylor Dome
-			// According to lab book it's 77 deg, 52.818' S=77.8803
-			// 158 deg, 27.555' east=158.45925
-			latfromSP=12.1197; // this is degrees latitude from the south pole
-			//lon=180.+166.73;
-			lon=180.+158.45925;
-			//lon=180.+120.20;
-			
-			phi=EarthModel::LongtoPhi_0is180thMeridian(lon);
-			
-			theta = latfromSP*RADDEG;
-			
-			
-			
-			double elevation=antarctica1->SurfaceAboveGeoid(lon,latfromSP)-500.;
-			
-			interaction1->posnu = Vector((elevation+antarctica1->Geoid(latfromSP))*sin(theta)*cos(phi),(elevation+antarctica1->Geoid(latfromSP))*sin(theta)*sin(phi),(elevation+antarctica1->Geoid(latfromSP))*cos(theta));
-			
-			
-			
-		} //if (WHICHPATH==4)
-		
-		else if (settings1->SLAC) {
-			
-			Vector zaxis(0.,0.,1.); // start with vector pointing in the +z direction
-			
-			interaction1->posnu=zaxis.RotateY(r_bn.Theta()-settings1->SLAC_HORIZDIST/EarthModel::R_EARTH); // rotate to theta of balloon, less the distance from the interaction to the balloon
-			
-			interaction1->posnu=interaction1->posnu.RotateZ(r_bn.Phi()); // rotate to phi of the balloon
-			
-			interaction1->posnu=(antarctica1->Surface(interaction1->posnu)-settings1->SLAC_DEPTH)*interaction1->posnu; // put the interaction position at depth settings1->SLAC_DEPTH in the ice
-			
-		}
-		else
-			interaction1->posnu = antarctica1->PickInteractionLocation(ibnposition,inu);
+      
+      
+    } //if (WHICHPATH==4)
+    
+    else if (settings1->SLAC) {
+      
+      Vector zaxis(0.,0.,1.); // start with vector pointing in the +z direction
+      
+      interaction1->posnu=zaxis.RotateY(r_bn.Theta()-settings1->SLAC_HORIZDIST/EarthModel::R_EARTH); // rotate to theta of balloon, less the distance from the interaction to the balloon
+      
+      interaction1->posnu=interaction1->posnu.RotateZ(r_bn.Phi()); // rotate to phi of the balloon
+      
+      interaction1->posnu=(antarctica1->Surface(interaction1->posnu)-settings1->SLAC_DEPTH)*interaction1->posnu; // put the interaction position at depth settings1->SLAC_DEPTH in the ice
+      
     }
-    if (interaction1->iceinteraction) {
-		//cout << "posnu is ";interaction1->posnu.Print();
+    else{
+      interaction1->posnu = antarctica1->PickInteractionLocation(ibnposition,inu);
     }
-    // first guess at the rf exit point is just the point on the surface directly above the interaction
-    ray1->rfexit[0] = antarctica1->Surface(interaction1->posnu) * interaction1->posnu.Unit();
-    
-    
-    // unit vector pointing to antenna from exit point.
-    ray1->n_exit2bn[0] = (r_bn - ray1->rfexit[0]).Unit();
-    
-    if (settings1->BORESIGHTS) {
-		for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
-			for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-				ray1->rfexit_eachboresight[0][ilayer][ifold]=antarctica1->Surface(interaction1->posnu) * interaction1->posnu.Unit();// this first guess rfexit is the same for all antennas too
-				ray1->n_exit2bn_eachboresight[0][ilayer][ifold]=(r_boresights[ilayer][ifold]- ray1->rfexit_eachboresight[0][ilayer][ifold]).Unit();
-				//cout << "ilayer, ifold, n_exit2bn are " << ilayer << "\t" << ifold << " ";
-			}
-		}
+  }
+  
+  
+  // if (interaction1->iceinteraction) {
+  //   //cout << "posnu is ";interaction1->posnu.Print();
+  // }
+  // first guess at the rf exit point is just the point on the surface directly above the interaction
+  ray1->rfexit[0] = antarctica1->Surface(interaction1->posnu) * interaction1->posnu.Unit();  
+  
+  // unit vector pointing to antenna from exit point.
+  ray1->n_exit2bn[0] = (r_bn - ray1->rfexit[0]).Unit();
+  
+  if (settings1->BORESIGHTS) {
+    for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
+      for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+	ray1->rfexit_eachboresight[0][ilayer][ifold]=antarctica1->Surface(interaction1->posnu) * interaction1->posnu.Unit();// this first guess rfexit is the same for all antennas too
+	ray1->n_exit2bn_eachboresight[0][ilayer][ifold]=(r_boresights[ilayer][ifold]- ray1->rfexit_eachboresight[0][ilayer][ifold]).Unit();
+	//cout << "ilayer, ifold, n_exit2bn are " << ilayer << "\t" << ifold << " ";
+      }
     }
-    
-    // first pass at direction of vector from interaction to exit point
-    // just make the ray go radially outward away from center of earth.
-    // still for first guess
-    // should incorporate this into PickInteractionPoint
-    ray1->nrf_iceside[0] = interaction1->posnu.Unit();
-    
-    if (settings1->BORESIGHTS) {
-		// this is the same for all of the antennas too
-		for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
-			for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-				
-				ray1->nrf_iceside_eachboresight[0][ilayer][ifold]=interaction1->posnu.Unit();
-			} // end loop over fold
-		} // end loop over payload layers
-    } // end if boresights
-    
-    
-    
-    
-    double r_down = 2*(antarctica1->Surface(interaction1->posnu)-antarctica1->IceThickness(interaction1->posnu))-interaction1->posnu.Mag();
-    interaction1->posnu_down = r_down * interaction1->posnu.Unit();
-    //position of the mirror point of interaction
-    
-    //interaction1->posnu is downward interaction1->posnu.
-    distance=interaction1->posnu.Distance(r_bn);
-    
-    
-    // depth of interaction
-    // gets distance between interaction and exit point, this time it's same as depth
-    // because our first guess at exit point is radially outward from interaction.
-    // negative means below surface
-    interaction1->altitude_int=-1*ray1->rfexit[0].Distance(interaction1->posnu);
-    interaction1->altitude_int_mirror=-1*ray1->rfexit[0].Distance(interaction1->posnu_down);//get depth of mirror point
-    
-    
-    interaction1->r_fromballoon[0]=r_bn.Distance(interaction1->posnu);
-    
-    //distance from the mirror point to the balloon because it is equal to the path that signals pass
-    interaction1->r_fromballoon[1]=r_bn.Distance(interaction1->posnu_down);
-    
-    
-    
-    if (ray1->n_exit2bn[0].Angle(interaction1->posnu) > PI/2  && !(WHICHPATH==3 || WHICHPATH==4))
-		beyondhorizon = 1;
-    
-    
-    return;
+  }
+  
+  // first pass at direction of vector from interaction to exit point
+  // just make the ray go radially outward away from center of earth.
+  // still for first guess
+  // should incorporate this into PickInteractionPoint
+  ray1->nrf_iceside[0] = interaction1->posnu.Unit();
+  
+  if (settings1->BORESIGHTS) {
+    // this is the same for all of the antennas too
+    for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
+      for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+	
+	ray1->nrf_iceside_eachboresight[0][ilayer][ifold]=interaction1->posnu.Unit();
+      } // end loop over fold
+    } // end loop over payload layers
+  } // end if boresights
+  
+  
+  
+  
+  double r_down = 2*(antarctica1->Surface(interaction1->posnu)-antarctica1->IceThickness(interaction1->posnu))-interaction1->posnu.Mag();
+  interaction1->posnu_down = r_down * interaction1->posnu.Unit();
+  //position of the mirror point of interaction
+  
+  //interaction1->posnu is downward interaction1->posnu.
+  distance=interaction1->posnu.Distance(r_bn);
+  
+  
+  // depth of interaction
+  // gets distance between interaction and exit point, this time it's same as depth
+  // because our first guess at exit point is radially outward from interaction.
+  // negative means below surface
+  interaction1->altitude_int=-1*ray1->rfexit[0].Distance(interaction1->posnu);
+  interaction1->altitude_int_mirror=-1*ray1->rfexit[0].Distance(interaction1->posnu_down);//get depth of mirror point
+  
+  
+  interaction1->r_fromballoon[0]=r_bn.Distance(interaction1->posnu);
+  
+  //distance from the mirror point to the balloon because it is equal to the path that signals pass
+  interaction1->r_fromballoon[1]=r_bn.Distance(interaction1->posnu_down);
+  
+  
+  
+  if (ray1->n_exit2bn[0].Angle(interaction1->posnu) > PI/2  && !(WHICHPATH==3 || WHICHPATH==4))
+    beyondhorizon = 1;
+  
+  
+  return;
 }//PickDownwardInteractionPoint
 
 
@@ -1078,7 +1068,6 @@ void Balloon::GetBoresights(Settings *settings1,Anita *anita1) {
   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
       ant_pos=RotatePayload(settings1,anita1,ant_pos);
-
       r_boresights[ilayer][ifold] = ant_pos+r_bn;
     }
   }
@@ -1146,7 +1135,6 @@ Vector Balloon::RotatePayload(Settings *settings1,Anita *anita1,Vector ant_pos_p
   double angle;
   Vector ant_pos = ant_pos_pre;
   double cos_angle;
-  //cout<<"Balloon phi theta are "<<BalloonPhi<<" "<<BalloonTheta<<"\n";
   int ant=0;
 
   Vector zaxis(0.,0.,-1.);
@@ -1156,16 +1144,16 @@ Vector Balloon::RotatePayload(Settings *settings1,Anita *anita1,Vector ant_pos_p
   Vector northaxis(1,0,0);
   Vector eastaxis(0,-1,0);
   //rotate to correct heading, roll and pitch
-  
-   ant_pos=ant_pos.Rotate(heading*RADDEG,zaxis);
+
+  ant_pos=ant_pos.Rotate(heading*RADDEG,zaxis);
   xaxis=xaxis.Rotate(heading*RADDEG,zaxis);
   yaxis=yaxis.Rotate(heading*RADDEG,zaxis);
-  
+
   ant_pos=ant_pos.Rotate(pitch*RADDEG,yaxis);
   xaxis=xaxis.Rotate(pitch*RADDEG,yaxis);
-  
+
   ant_pos=ant_pos.Rotate(roll*RADDEG,xaxis);//roll and pitch
-  
+
   ////now place balloon at proper lat and lon
   // BalloonPhi =latitude*RADDEG;
   ant_pos=ant_pos.RotateY(BalloonTheta);
@@ -1175,7 +1163,7 @@ Vector Balloon::RotatePayload(Settings *settings1,Anita *anita1,Vector ant_pos_p
   ant_pos=ant_pos.RotateZ(BalloonPhi);
   northaxis = northaxis.RotateZ(BalloonPhi);
   eastaxis = eastaxis.RotateZ(BalloonPhi);
-  //cout<<"northaxis is "<<northaxis<<" n_north is "<<n_north<<"\n";
-  //cout<<"eastaxis is "<<eastaxis<<" n_east is "<<n_east<<"\n";
+  // cout<<"northaxis is "<<northaxis<<" n_north is "<<n_north<<"\n";
+  // cout<<"eastaxis is "<<eastaxis<<" n_east is "<<n_east<<"\n";
   return ant_pos;
 }  
