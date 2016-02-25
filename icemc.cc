@@ -1704,7 +1704,7 @@ int main(int argc, char **argv) {
    balloontree->Branch("heading",&bn1->heading,"heading/D");
    balloontree->Branch("pitch",&bn1->pitch,"pitch/D");
    balloontree->Branch("roll",&bn1->roll,"roll/D"); 
-   balloontree->Branch("realTime_flightdata",&bn1->realTime_flightdata,"realTime_flightdata/D"); 
+   balloontree->Branch("realTime_flightdata",&bn1->realTime_flightdata,"realTime_flightdata/I"); 
    balloontree->Branch("latitude",&bn1->latitude,"latitude/D");
    balloontree->Branch("longitude",&bn1->longitude,"longitude/D");
    balloontree->Branch("altitude",&bn1->altitude,"altitude/D"); 
@@ -2000,7 +2000,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	bn1->setObservationLocation(int_banana,inu,antarctica,settings1);
 	
       } //End else if (WHICHPATH==3) : Banana plot locations
-      
+
       balloontree->Fill();
       
       // pick random point in ice.

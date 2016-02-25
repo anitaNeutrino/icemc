@@ -219,7 +219,7 @@ void Balloon::InitializeBalloon() {
 		flightdatachain->SetBranchAddress("latitude",&flatitude);
 		flightdatachain->SetBranchAddress("altitude",&faltitude);
 		flightdatachain->SetBranchAddress("heading",&fheading);
-		flightdatachain->SetBranchAddress("realTime",&realTime_flightdata);
+		flightdatachain->SetBranchAddress("realTime",&realTime_flightdata_temp);
 		flightdatachain->SetBranchAddress("pitch",&fpitch);
 		flightdatachain->SetBranchAddress("roll",&froll);
 		//cout << "Loading file.  n events is " << flightdatachain->GetEntries() << "\n";
@@ -246,15 +246,15 @@ void Balloon::InitializeBalloon() {
 		realTime_tr_max=realTime_turfrate; // realTime of last event in file
 		
     } else if (WHICHPATH==8) { // for anita-3 flight
-		
-		flightdatachain = new TChain("adu5PatTree");
+		      
+                flightdatachain = new TChain("adu5PatTree");
 		flightdatachain->SetMakeClass(1);
 		flightdatachain->Add("data/anita3gps_pitchroll.root");//created to include pitch and roll.
 		flightdatachain->SetBranchAddress("longitude",&flongitude);
 		flightdatachain->SetBranchAddress("latitude",&flatitude);
 		flightdatachain->SetBranchAddress("altitude",&faltitude);
 		flightdatachain->SetBranchAddress("heading",&fheading);
-		flightdatachain->SetBranchAddress("realTime",&realTime_flightdata);
+		flightdatachain->SetBranchAddress("realTime",&realTime_flightdata_temp);
 		flightdatachain->SetBranchAddress("pitch",&fpitch);
 		flightdatachain->SetBranchAddress("roll",&froll);
 		
@@ -425,10 +425,9 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		  // igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
 		  igps = int(randomNumber*flightdatachain->GetEntries());
 		  flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
-		  
-		  
-		  while (faltitude<MINALTITUDE || fheading<0 || isnan(fheading)) { // if the altitude is too low, pick another event.
-
+		  realTime_flightdata = realTime_flightdata_temp;
+		  while (faltitude<MINALTITUDE || fheading<0) { // if the altitude is too low, pick another event.
+		    
 		    igps++; // increment by 1
 		    igps=igps%flightdatachain->GetEntries(); // make sure it's not beyond the maximum entry number
 		    
@@ -442,14 +441,13 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		    setphiTrigMaskAnita3();// set phiTrigMask, phiTrigMaskH, l1TrigMask and l1TrigMaskH and public variable of Balloon class
 		}
 		igps_previous=igps;
-		
 		latitude=(double)flatitude;
 		longitude=(double)flongitude;
 		altitude=(double)faltitude;
 		heading=(double)fheading;
 		roll=(double)froll;
 		pitch=(double)fpitch;
-		
+
 		setr_bn(latitude,longitude); // sets theta_bn, phi_bn and r_bn.  r_bn is a unit vector pointing in the right direction
 		
 		
@@ -693,6 +691,7 @@ void Balloon::setphiTrigMask() {
 }
 
 void Balloon::setphiTrigMaskAnita3() {
+
   if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
     phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
     phiTrigMaskH=0;
@@ -702,18 +701,18 @@ void Balloon::setphiTrigMaskAnita3() {
   else { // if it's in range
 		
     iturf=turfratechain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in turfratechain that is closest to this realTime_flightdata
-		
     if (iturf<0){ // if it didn't find one
       phiTrigMask=0; // set to zero
       phiTrigMaskH=0;
       l1TrigMask=0;
       l1TrigMaskH=0;
+
     }else{
       turfratechain->GetEvent(iturf);
     }
-		
   } // end if it's in range
-    
+
+  
 }
 
 void Balloon::setr_bn(double latitude,double longitude) {
