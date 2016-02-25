@@ -117,7 +117,7 @@ private:
 public:
     
     AntTrigger(); // constructor
-    AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,int rx_minarrivaltime_temp,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512],int inu); 
+    AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512]); 
     //AntTrigger(int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,int rx_minarrivaltime_temp); 
     static void ConvertEHtoLREfield(double,double,double&,double&);
     static void ConvertEHtoLREnergy(double,double,double&,double&);
@@ -125,7 +125,7 @@ public:
 				 double *hvolts,
 				 double *left,double *right);
     //int Passes(double strength,double angle,int trigger_band); // whether a particular channel passes or not
-  void L1Trigger(Anita *anita1,Settings *settings1,int ilayer, int ifold,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double *powerthreshold,int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass);    
+  void L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double *powerthreshold,int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass);    
 
     vector<int> flag_e[5];
     vector<int> flag_h[5];
@@ -135,7 +135,7 @@ public:
     double getRate();
     double rateToThreshold(double rate, int band); // converts a single channel rate to threshold in p/<p>
     static double GetNoise(Settings *settings1,double altitude_bn,double geoid,double theta,double bw,double temp);
-    void WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold,int inu, double dangle, double emfrac, double hadfrac);
+    void WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac);
     static double FindPeak(double *waveform,int n); // find peak voltage of a waveform
     void GetThresholds(Settings *settings1,Anita *anita1,int ilayer,double *thresholds); // get thresholds for this layer
     

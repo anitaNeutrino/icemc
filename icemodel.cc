@@ -164,7 +164,7 @@ Position IceModel::PickBalloonPosition() {
     
 }
 
-Position IceModel::PickInteractionLocation(int ibnposition,int inu) {
+Position IceModel::PickInteractionLocation(int ibnposition) {
     
     // random numbers used
     double rnd1=0;
@@ -243,7 +243,7 @@ Position IceModel::PickInteractionLocation(int ibnposition,int inu) {
 } //PickInteractionLocation
 
 
-int IceModel::PickUnbiased(int inu,Interaction *interaction1,IceModel *antarctica) {
+int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica) {
     
     interaction1->PickAnyDirection(); // first pick the neutrino direction
     
@@ -252,16 +252,7 @@ int IceModel::PickUnbiased(int inu,Interaction *interaction1,IceModel *antarctic
     double minphi=0.;
     double maxphi=2.*PI;
     double thisphi,thiscos,thissin;
-    double theta=0.;
-    double phi=0.;
-    
-    int ilon,ilat;    
-    int e_coord,n_coord;
-    double vol_thisbin=0.;
-    double lon=0.;
-    double lat=0.;
-    
-    
+        
     thisphi=gRandom->Rndm()*(maxphi-minphi)+minphi;
     thiscos=gRandom->Rndm()*(maxcos-mincos)+mincos;
     thissin=sqrt(1.-thiscos*thiscos);
@@ -295,9 +286,8 @@ int IceModel::PickUnbiased(int inu,Interaction *interaction1,IceModel *antarctic
     int count2=0;
     
     
-    if (Ray::WhereDoesItLeave(0,thisr_in,interaction1->nnu,antarctica,thisnuexitearth)) { // where does it leave Earth
+    if (Ray::WhereDoesItLeave(thisr_in,interaction1->nnu,antarctica,thisnuexitearth)) { // where does it leave Earth
 	// really want to find where it leaves ice
-	int err;
 	// Does it leave in an ice bin
 	if (IceThickness(thisnuexitearth) && thisnuexitearth.Lat()<COASTLINE) { // if this is an ice bin in the Antarctic
 	    //cout << "inu is " << inu << " it's in ice.\n";
@@ -306,7 +296,7 @@ int IceModel::PickUnbiased(int inu,Interaction *interaction1,IceModel *antarctic
 	    thisr_exitice=thisnuexitearth;
 	    if (thisnuexitice.Mag()>Surface(thisnuexitice)) { // if the exit point is above the surface
 		if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>5.E3) { 
-		    WhereDoesItExitIce(inu,thisnuexitearth,interaction1->nnu,5.E3, // then back up and find it more precisely
+		    WhereDoesItExitIce(thisnuexitearth,interaction1->nnu,5.E3, // then back up and find it more precisely
 				       thisr_exitice);
 		    thisnuexitice=(5000.)*interaction1->nnu;
 		    thisnuexitice+=thisr_exitice;
@@ -314,7 +304,7 @@ int IceModel::PickUnbiased(int inu,Interaction *interaction1,IceModel *antarctic
 		}
 		if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>5.E2) {
 		    
-		    WhereDoesItExitIce(inu,thisnuexitice,interaction1->nnu,5.E2, // then back up and find it more precisely
+		    WhereDoesItExitIce(thisnuexitice,interaction1->nnu,5.E2, // then back up and find it more precisely
 				       thisr_exitice);
 		    thisnuexitice=5.E2*interaction1->nnu;
 		    thisnuexitice+=thisr_exitice;
@@ -322,7 +312,7 @@ int IceModel::PickUnbiased(int inu,Interaction *interaction1,IceModel *antarctic
 		}
 		if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>50.) {
 		    
-		    WhereDoesItExitIce(inu,thisnuexitice,interaction1->nnu,50., // then back up and find it more precisely
+		    WhereDoesItExitIce(thisnuexitice,interaction1->nnu,50., // then back up and find it more precisely
 				       thisr_exitice);
 		    count1++;
 		} // end third wheredoesitexit
@@ -339,7 +329,7 @@ int IceModel::PickUnbiased(int inu,Interaction *interaction1,IceModel *antarctic
 	    //cout << "inu is " << inu << " it's in rock.\n";
 	    if (thisr_in.Distance(thisnuexitearth)>5.E4) {
 		count2++;
-		if (WhereDoesItExitIce(inu,thisnuexitearth,interaction1->nnu,5.E4, // then back up and find it more precisely
+		if (WhereDoesItExitIce(thisnuexitearth,interaction1->nnu,5.E4, // then back up and find it more precisely
 				       thisr_exitice)) {
 		    
 		    thisnuexitice=(5.E4)*interaction1->nnu;
@@ -354,14 +344,14 @@ int IceModel::PickUnbiased(int inu,Interaction *interaction1,IceModel *antarctic
 	    }
 	    else
 		thisnuexitice=thisnuexitearth;
-	    //   WhereDoesItExitIce(inu,thisnuexit,interaction1->nnu,5.E4, // then back up and find it more precisely
+	    //   WhereDoesItExitIce(thisnuexit,interaction1->nnu,5.E4, // then back up and find it more precisely
 	    // 			     thisr_exitice);
 	    // 	  thisnuexit=5.E4*interaction1->nnu;
 	    // 	  thisnuexit+=thisr_exitice;
 	    if (thisr_in.Distance(thisnuexitice)>5.E3) {
 		
 		
-		if (WhereDoesItExitIce(inu,thisnuexitice,interaction1->nnu,5.E3, // then back up and find it more precisely
+		if (WhereDoesItExitIce(thisnuexitice,interaction1->nnu,5.E3, // then back up and find it more precisely
 				       thisr_exitice)) {
 		    count2++;
 		    //interaction1->neverseesice=1;
@@ -375,7 +365,7 @@ int IceModel::PickUnbiased(int inu,Interaction *interaction1,IceModel *antarctic
 	    if (thisr_in.Distance(thisnuexitice)>5.E2) {
 		
 		
-		if (WhereDoesItExitIce(inu,thisnuexitice,interaction1->nnu,5.E2, // then back up and find it more precisely
+		if (WhereDoesItExitIce(thisnuexitice,interaction1->nnu,5.E2, // then back up and find it more precisely
 				       thisr_exitice)) {
 		    count2++;
 		    //interaction1->neverseesice=1;
@@ -390,7 +380,7 @@ int IceModel::PickUnbiased(int inu,Interaction *interaction1,IceModel *antarctic
 	    if (thisr_in.Distance(thisnuexitice)>50.) {
 		
 		
-		if (WhereDoesItExitIce(inu,thisnuexitice,interaction1->nnu,50., // then back up and find it more precisely
+		if (WhereDoesItExitIce(thisnuexitice,interaction1->nnu,50., // then back up and find it more precisely
 				       thisr_exitice)) {
 		    //interaction1->neverseesice=1;
 		    count2++;
@@ -648,7 +638,7 @@ int IceModel::WhereDoesItEnterIce(const Position &posnu,
     return foundit;
 }//WhereDoesItEnterIce
 
-int IceModel::WhereDoesItExitIce(int inu,const Position &posnu,
+int IceModel::WhereDoesItExitIce(const Position &posnu,
 				 const Vector &nnu,
 				 double stepsize,
 				 Position &r_enterice) {
@@ -1295,7 +1285,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	    
 	} // end if anita-lite
 	
-	
+       
 	
 	else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8) {
 	    
@@ -1684,35 +1674,32 @@ void IceModel::ReadWaterDepth() {
     return;
 } //method ReadWaterDepth
 
-//void IceModel::FillArraysforTree(double icethck[1200][1000],double elev[1068][869],double lon_ground[1068][869],double lat_ground[1068][869],double lon_ice[1200][1000],double lat_ice[1200][1000],double h20_depth[1200][1000],double lon_water[1200][1000],double lat_water[1200][1000]) {
-void IceModel::FillArraysforTree(double lon_ground[1068][869],double lat_ground[1068][869],double lon_ice[1200][1000],double lat_ice[1200][1000],double lon_water[1200][1000],double lat_water[1200][1000]) {
+// //void IceModel::FillArraysforTree(double icethck[1200][1000],double elev[1068][869],double lon_ground[1068][869],double lat_ground[1068][869],double lon_ice[1200][1000],double lat_ice[1200][1000],double h20_depth[1200][1000],double lon_water[1200][1000],double lat_water[1200][1000]) {
+// void IceModel::FillArraysforTree(double lon_ground[1068][869],double lat_ground[1068][869],double lon_ice[1200][1000],double lat_ice[1200][1000],double lon_water[1200][1000],double lat_water[1200][1000]) {
     
-    //  for (int rowNum=0;rowNum<nRows_ice;rowNum++) {
-    //for (int colNum=0;colNum<nCols_ice;colNum++) {
-    //   for (int i=0;i<nRows_ice;i++) {
-    //     for (int j=0;j<nCols_ice;j++) {
-    //       //     this->IceENtoLonLat(colNum,rowNum,lon_ice[colNum][rowNum],lat_ice[colNum][rowNum]); //Recall that the e / n coordinates in horizon were picked from the ground bed array.
-    //       double test1,test2;
-    //       cout << "rowNum, colNum are " << i << " " << j << "\n";
-    //       //      cout << "lon_ice is " << rowNum << " " << colNum << " " << lon_ice[rowNum][colNum] << "\n";
-    //       //this->IceENtoLonLat(i,j,test1,test2); //Recall that the e / n coordinates in horizon were picked from the ground bed array.
-    //       //icethck[colNum][rowNum]=IceThickness(lon_ice[colNum][rowNum],lat_ice[colNum][rowNum]);
+//     //  for (int rowNum=0;rowNum<nRows_ice;rowNum++) {
+//     //for (int colNum=0;colNum<nCols_ice;colNum++) {
+//     //   for (int i=0;i<nRows_ice;i++) {
+//     //     for (int j=0;j<nCols_ice;j++) {
+//     //       //     this->IceENtoLonLat(colNum,rowNum,lon_ice[colNum][rowNum],lat_ice[colNum][rowNum]); //Recall that the e / n coordinates in horizon were picked from the ground bed array.
+//     //       double test1,test2;
+//     //       cout << "rowNum, colNum are " << i << " " << j << "\n";
+//     //       //      cout << "lon_ice is " << rowNum << " " << colNum << " " << lon_ice[rowNum][colNum] << "\n";
+//     //       //this->IceENtoLonLat(i,j,test1,test2); //Recall that the e / n coordinates in horizon were picked from the ground bed array.
+//     //       //icethck[colNum][rowNum]=IceThickness(lon_ice[colNum][rowNum],lat_ice[colNum][rowNum]);
     
-    //       //      WaterENtoLonLat(colNum,rowNum,lon_water[colNum][rowNum],lat_water[colNum][rowNum]);
-    //       //h20_depth[colNum][rowNum]=WaterDepth(lon_water[colNum][rowNum],lat_water[colNum][rowNum]);
+//     //       //      WaterENtoLonLat(colNum,rowNum,lon_water[colNum][rowNum],lat_water[colNum][rowNum]);
+//     //       //h20_depth[colNum][rowNum]=WaterDepth(lon_water[colNum][rowNum],lat_water[colNum][rowNum]);
     
-    //     }
-    //   }h
-    //   for (int n_coord=0;n_coord<nRows_ground;n_coord++) {
-    //     for (int e_coord=0;e_coord<nCols_ground;e_coord++) {
-    //       GroundENtoLonLat(e_coord,n_coord,lon_ground[e_coord][n_coord],lat_ground[e_coord][n_coord]);
-    //       //     elev[e_coord][n_coord] = SurfaceAboveGeoid(lon_ice[e_coord][n_coord],lat_ice[e_coord][n_coord]);
+//     //     }
+//     //   }h
+//     //   for (int n_coord=0;n_coord<nRows_ground;n_coord++) {
+//     //     for (int e_coord=0;e_coord<nCols_ground;e_coord++) {
+//     //       GroundENtoLonLat(e_coord,n_coord,lon_ground[e_coord][n_coord],lat_ground[e_coord][n_coord]);
+//     //       //     elev[e_coord][n_coord] = SurfaceAboveGeoid(lon_ice[e_coord][n_coord],lat_ice[e_coord][n_coord]);
     
-    //     }
-    //   }
+//     //     }
+//     //   }
+  
     
-    
-    
-    
-    
-}
+// }

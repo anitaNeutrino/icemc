@@ -194,7 +194,7 @@ void AntTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
  *
  *
  */
-void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, int inu, double dangle, double emfrac, double hadfrac){
+void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac){
     
     double thresholds[5];
     GetThresholds(settings1,anita1,ilayer,thresholds); // get the right thresholds for this layer
@@ -678,7 +678,7 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
       // then fills channels_passing
       int npass;
 
-      L1Trigger(anita1,settings1,ilayer,ifold,timedomain_output_1,timedomain_output_2,thresholds,globaltrig1->channels_passing[ilayer][ifold][0],globaltrig1->channels_passing[ilayer][ifold][1],npass);
+      L1Trigger(anita1,timedomain_output_1,timedomain_output_2,thresholds,globaltrig1->channels_passing[ilayer][ifold][0],globaltrig1->channels_passing[ilayer][ifold][1],npass);
 
       
       // if it's the closest antenna,
@@ -815,7 +815,7 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
  *
  *
  */
-AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,int rx_minarrivaltime_temp,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512],int inu)
+AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
 //inline AntTrigger::AntTrigger(int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,int globaltrig1->rx_minarrivaltime)
 {
     unwarned=1;
@@ -914,8 +914,8 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
     // apply rfcm's
     if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5) {
-		anita1->RFCMs(1,1,anita1->freq,vhz_rx_rfcm_e,Anita::NFREQ);
-		anita1->RFCMs(1,1,anita1->freq,vhz_rx_rfcm_h,Anita::NFREQ);
+		anita1->RFCMs(1,1,vhz_rx_rfcm_e);
+		anita1->RFCMs(1,1,vhz_rx_rfcm_h);
     }
     
     double scale;
@@ -1065,7 +1065,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
 		// we do not apply rfcm's
 		// for other trigger types we do
 		if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5)
-			anita1->RFCMs(1,1,anita1->freq,anita1->vmmhz_banding_rfcm,Anita::NFREQ);
+			anita1->RFCMs(1,1,anita1->vmmhz_banding_rfcm);
 		
 		
 		if (settings1->TRIGGERSCHEME >=2) { // we need to prepar the signal for the diode integration
@@ -1387,7 +1387,7 @@ int AntTrigger::IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int i
 
 
 
-void AntTrigger::L1Trigger(Anita *anita1,Settings *settings1,int ilayer, int ifold,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double *powerthreshold,int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass) {
+void AntTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double *powerthreshold,int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass) {
    
   int maxsample=TMath::MaxElement(5,anita1->imaxbin);
   int minsample=TMath::MinElement(5,anita1->iminbin);
@@ -1779,7 +1779,7 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
       thispasses = 1;
     } else if (mode == 2) { // TRIGTYPE=1 ->
       
-      int iloc=0; // top array
+      // int iloc=0; // top array
       //int inad=0;  // phi position for nadir antennas,
       //only goes to 8, wheras iphi goes to 16
       int x;//for number of antenna in clump
@@ -2111,14 +2111,14 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
     double		SummedPowerThetaMax		= +25.;		// DEGREE!	The maximum theta (elevation) angle to try in the hypotheses.
     double		SummedPowerThetaStep	= 1.;		// DEGREE!	The angle to advance from minimum theta to maximum theta.
     
-    unsigned	N_STEP_THETA			= 81;		// The number of different theta hypotheses for a given center phi sector
-    unsigned	N_PHI_SECTORS			= 16;		// The number of phi sectors
-    unsigned	N_LAYERS_TRIGGER		= 3;		// The number of layers as seen by the trigger
+    // unsigned	N_STEP_THETA			= 81;		// The number of different theta hypotheses for a given center phi sector
+    // unsigned	N_PHI_SECTORS			= 16;		// The number of phi sectors
+    // unsigned	N_LAYERS_TRIGGER		= 3;		// The number of layers as seen by the trigger
     
-    double		highest_power			= 0.;
-    unsigned	hi_pow_center			= 0;
-    unsigned	hi_pow_phi_index		= 0;
-    unsigned	hi_pow_theta_index		= 0;
+    // double		highest_power			= 0.;
+    // unsigned	hi_pow_center			= 0;
+    // unsigned	hi_pow_phi_index		= 0;
+    // unsigned	hi_pow_theta_index		= 0;
     
     // Here the 48 antennas are filled according to the waveforms passed to PassesTrigger(...).
     unsigned	fill_index				= 0;
@@ -2463,14 +2463,14 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
     
 	}
 
-    } // end loop over center phi sectors    
+	} // end loop over center phi sectors    
 
     
-  
-    //    }
-  return 0;
+	
+	//    }
+	return 0;
   }
-return thispasses;
+  return thispasses;
 }//PassesTrigger
 
 

@@ -66,9 +66,8 @@ public:
   virtual double WaterDepth(const Position& pos) ;
   virtual double RockSurface(double lon,double lat) ;
   virtual double RockSurface(const Position& pos) ;
-double GetDensity(double altitude, const Position earth_in, const Position posnu, int& crust_entered, 
-			      int& mantle_entered, int& core_entered);
-  int Getchord(Primaries *primary1, Settings *settings1,IceModel *antarctica1, Secondaries *sec1,
+  double GetDensity(double altitude, const Position earth_in, int& crust_entered);
+  int Getchord(Settings *settings1,
 			 double len_int_kgm2,
 			 const Position &earth_in, // place where neutrino entered the earth
 			 const Position &r_enterice,

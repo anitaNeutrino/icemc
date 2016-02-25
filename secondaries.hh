@@ -135,7 +135,7 @@ private:
 	               //for B, the tau elecromagnetic energy loss parameter. 
 	double mT;//mass of the Tau in Gev
 	double cT;//Tau Decay length in cm
-	double p;//Density of Standard Rock. g/cm^3
+	// double p;//Density of Standard Rock. g/cm^3
 
 	//Used in Connolly Calc 2011.(d_dzPsurvNu())
 		//p, the Density of Standard Rock. g/cm^3
@@ -174,7 +174,7 @@ public:
 
 		double& emfrac,
 		double& hadfrac,
-		int& n_interactions, int taumodes1,double ptauf);
+		int& n_interactions, int taumodes1);
 
   bool secondbang;
   static const bool interestedintaus=false;

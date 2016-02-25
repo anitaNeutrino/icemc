@@ -94,7 +94,7 @@ int NODATA;
   double SurfaceAboveGeoid(const Position& pos) ;
   double WaterDepth(double lon,double lat);
   double WaterDepth(const Position& pos);
-  Position PickInteractionLocation(int ibnposition,int inu);
+  Position PickInteractionLocation(int ibnposition);
   Position PickBalloonPosition();
   void GetMAXHORIZON(Balloon *bn1); // get upper limit on the horizon wrt the balloon.
   int RossIceShelf(const Position &position); 
@@ -111,7 +111,7 @@ int NODATA;
 			       double stepsize,
 			       Position &r_enterice);
 
-  int WhereDoesItExitIce(int inu,const Position &posnu,
+  int WhereDoesItExitIce(const Position &posnu,
 			 const Vector &nnu,
 			 double stepsize,
 			 Position &r_enterice);
@@ -132,7 +132,7 @@ int NODATA;
 		     int& n_coord);
 
   void FillArraysforTree(double lon_ground[1068][869],double lat_ground[1068][869],double lon_ice[1200][1000],double lat_ice[1200][1000],double lon_water[1200][1000],double lat_water[1200][1000]);
-  int PickUnbiased(int inu,Interaction *interaction1,IceModel *antarctica);
+  int PickUnbiased(Interaction *interaction1,IceModel *antarctica);
 
 
 protected:

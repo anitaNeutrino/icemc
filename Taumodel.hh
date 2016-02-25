@@ -39,7 +39,7 @@ private: //stuff other programs arent allowed to touch
   ///for B, the tau elecromagnetic energy loss parameter. 
   double mT;/*!<mass of the Tau in Gev> */
   double cT;/*!<Tau Decay length in cm> */
-  double p;/*!<Density of Standard Rock. g/cm^3> */
+  // double p;/*!<Density of Standard Rock. g/cm^3> */
   
   ///Used in Connolly Calc 2011.(d_dzPsurvNu())
   //p, the Density of Standard Rock. g/cm^3
@@ -57,7 +57,7 @@ private: //stuff other programs arent allowed to touch
   
   /** \brief  Get Density Vectors sets two density vectors. One has the density at each step along the path, the other has an average density from the starting point to the current step.
   */
-  void GetDensityVectors(IceModel *antarctica1,Interaction *interaction1, Vector nchord, double step, double Distance,int &totalnusteps,int &crust_entered, int &mantle_entered, int &core_entered);
+  void GetDensityVectors(IceModel *antarctica1,Interaction *interaction1, Vector nchord, double step, double Distance,int &totalnusteps,int &crust_entered);
 /** \brief   Get Energy Vector sets the energy of tau particle at every step along the path. It starts from the final energy and works back towards the nuetrino interaction point.
  */
   void GetEnergyVector(double Etau_final, double step,int totalnusteps, int &totalsteps, double &totaltaudistance, double pnu);
@@ -78,9 +78,9 @@ public:
  double GetTauWeight(Primaries *primary1, Settings *settings1,IceModel*antarctica1,Interaction *interaction1,
 		     double pnu, int nu_nubar, 
 		     double& ptauf,
-		     int& crust_entered, // 1 or 0
-		     int& mantle_entered, // 1 or 0
-		     int& core_entered);//include secondaries?
+		     int& crust_entered); // 1 or 0
+		     // int& mantle_entered, // 1 or 0
+		     // int& core_entered);//include secondaries?
  
   
 }; //class Taumodel

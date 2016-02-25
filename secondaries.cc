@@ -749,7 +749,7 @@ using std::max;
 
 		     double& emfrac,
 		     double& hadfrac,
-			    int& n_interactions, int taumodes1,double ptauf) {
+			    int& n_interactions, int taumodes1) {
 
 
 

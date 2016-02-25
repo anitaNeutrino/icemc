@@ -22,29 +22,6 @@ class Roughness {
 
 private:
 
-
-
-
-
-  double minfunc;
-  double maxfunc;
-
-  double minfuncy;
-  double maxfuncy;
-
-
- int nbinsx;
- int nbinsy;
-
- double minhist;
- double maxhist;
-
-  TH2D *h2_pokey;
-  TH2D *h2_pokey_smeared;
-
-  TH2D *h2_slappy;
-  TH2D *h2_slappy_smeared;
-
   TF2 *fpokey2;
   TF2 *fslappy2;
 
@@ -58,7 +35,7 @@ public:
   double balloondist;
 
   double rough_sigma;
-  Roughness(Settings *settings1);
+  Roughness();
   void GetExitforRoughness(Settings *settings1,IceModel *antarctica,double emfrac,double hadfrac,double deltheta_em_max,double deltheta_had_max,Ray *ray1,Vector &nnu,Vector &r_bn,Vector &posnu);
   double GetPokey(double incident_angle,double transmitted_angle,
 		  double emfrac,double hadfrac,double deltheta_em,double deltheta_had);

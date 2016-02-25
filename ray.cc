@@ -57,13 +57,13 @@ void Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posn
 
 
   if (whichray==0)
-    WhereDoesItLeave(0,posnu,nrf_iceside[2*whichtry],antarctica, // inputs
+    WhereDoesItLeave(posnu,nrf_iceside[2*whichtry],antarctica, // inputs
 		     rfexit[whichtry]); // output
   
   
   //******wufan******
   if (whichray==1) // reflected rays
-    WhereDoesItLeave(0,posnu_down,nrf_iceside[2*whichtry],antarctica,rfexit[whichtry]);  //from mirror point position and the direction of signals to the ice 
+    WhereDoesItLeave(posnu_down,nrf_iceside[2*whichtry],antarctica,rfexit[whichtry]);  //from mirror point position and the direction of signals to the ice 
   //to find the exit point at the surface of the Earth.wufan 
   
   n_exit2bn[whichtry] = (r_bn - rfexit[whichtry]).Unit();
@@ -72,7 +72,7 @@ void Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posn
     //cout << "first iteration.\n";
     for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
       for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-	WhereDoesItLeave(0,posnu,nrf_iceside_eachboresight[2*whichtry][ilayer][ifold],antarctica,
+	WhereDoesItLeave(posnu,nrf_iceside_eachboresight[2*whichtry][ilayer][ifold],antarctica,
 	rfexit_eachboresight[whichtry][ilayer][ifold]);	
       }
     }
@@ -248,7 +248,7 @@ int Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,
 }
 
 
-int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth,int inu) { // iter is which iteration (1 or 2)
+int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth) { // iter is which iteration (1 or 2)
 
   if (settings1->ROUGHNESS!=1) {    
     // use snell's law to get the first guess at the 
@@ -259,7 +259,7 @@ int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth,int 
     if (settings1->FIRN) {
 
     
-      if (!GetRayIceSide(n_exit2bn[iter-1],nsurf_rfexit,Signal::N_AIR,NFIRN,inu,
+      if (!GetRayIceSide(n_exit2bn[iter-1],nsurf_rfexit,Signal::N_AIR,NFIRN,
 			 nrf_iceside[2*iter-1])) { // nrf_iceside[1] is the rf direction in the firn
 
 	return 0; // reject if TIR.
@@ -271,7 +271,7 @@ int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth,int 
       // interaction point.  Physically, it is a continuous bending
       // through the firn but it turns out it obeys Snell's law (Seckel)
             
-      if (!GetRayIceSide(nrf_iceside[2*iter-1],nsurf_rfexit,NFIRN,n_depth,inu,
+      if (!GetRayIceSide(nrf_iceside[2*iter-1],nsurf_rfexit,NFIRN,n_depth,
 			 nrf_iceside[2*iter])) { // nrf_iceside[2] is the rf direction in the ice
 
 	return 0;   // note to self:  need to check whether rays are totally internally reflected within ice   
@@ -289,7 +289,7 @@ int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth,int 
 	for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
 	  for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
 	    
-	    if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,Signal::N_AIR,NFIRN,inu,
+	    if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,Signal::N_AIR,NFIRN,
 			       nrf_iceside_eachboresight[2*iter-1][ilayer][ifold])) // nrf_iceside[1] is the rf direction in the firn
 	      return 0; // reject if TIR.  
 	    // This could be throwing away events that the final guess would have kept
@@ -300,7 +300,7 @@ int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth,int 
 	    // through the firn but it turns out it obeys Snell's law (Seckel)
 	    
 	    
-	    if (!GetRayIceSide(nrf_iceside_eachboresight[2*iter-1][ilayer][ifold],nsurf_rfexit,NFIRN,n_depth,inu,
+	    if (!GetRayIceSide(nrf_iceside_eachboresight[2*iter-1][ilayer][ifold],nsurf_rfexit,NFIRN,n_depth,
 			       nrf_iceside_eachboresight[2*iter][ilayer][ifold])) // nrf_iceside[2] is the rf direction in the ice
 	      return 0;   // note to self:  need to check whether rays are totally internally reflected within ice   
 	    
@@ -316,7 +316,7 @@ int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth,int 
     
     else { // no firn
 
-      if (!GetRayIceSide(n_exit2bn[iter-1],nsurf_rfexit,Signal::N_AIR,Signal::NICE,inu,
+      if (!GetRayIceSide(n_exit2bn[iter-1],nsurf_rfexit,Signal::N_AIR,Signal::NICE,
 			 nrf_iceside[2*iter-1])) // nrf_iceside[1] is the rf direction in the ice
 	return 0; // reject if TIR.  
       nrf_iceside[2*iter]=nrf_iceside[2*iter-1]; // no firn so the next element is the same
@@ -326,7 +326,7 @@ int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth,int 
 	for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
 	  for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
 	    
-	    if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,Signal::N_AIR,Signal::NICE,inu,
+	    if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,Signal::N_AIR,Signal::NICE,
 			       nrf_iceside_eachboresight[2*iter-1][ilayer][ifold])) // nrf_iceside[1] is the rf direction in the ice
 	      return 0; // reject if TIR.  
 	    nrf_iceside_eachboresight[2*iter][ilayer][ifold]=nrf_iceside_eachboresight[2*iter-1][ilayer][ifold]; // no firn so the next element is the same
@@ -348,9 +348,7 @@ int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth,int 
  int Ray::GetRayIceSide(const Vector &n_exit2bn,
 			const Vector &nsurf_rfexit,
 			double nexit,
-			double nenter,
-			int inu,
-			 
+			double nenter, 
 			Vector &nrf2_iceside) {
 
   // this function performs snell's law in three dimensions

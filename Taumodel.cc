@@ -85,9 +85,9 @@ using std::max;
 double Taumodel::GetTauWeight(Primaries *primary1, Settings *settings1,IceModel *antarctica1,Interaction *interaction1,
 			      double pnu, int nu_nubar, 
 			      double& ptauf,
-			      int& crust_entered, // 1 or 0
-			      int& mantle_entered, // 1 or 0
-			      int& core_entered){//add secondaries?
+			      int& crust_entered){ // 1 or 0 
+			      // int& mantle_entered, // 1 or 0
+			      // int& core_entered){//add secondaries?
 
   Vector chord3;///vector from earth_in to "interaction point". Sets the path direction
   Vector nchord;///normalized chord3
@@ -95,7 +95,6 @@ double Taumodel::GetTauWeight(Primaries *primary1, Settings *settings1,IceModel 
   
   /** Bring in useful variables from other classes */
   int currentint = interaction1->currentint;
-  const Position posnu = interaction1->posnu;
   const Position earth_in = interaction1->r_in;
   double TauWeight = 0;
   const Position r_enterice = interaction1->r_enterice;
@@ -152,7 +151,7 @@ double Taumodel::GetTauWeight(Primaries *primary1, Settings *settings1,IceModel 
   
   mydensityvector.clear();
   myavgdensityvector.clear();
-  this->GetDensityVectors(antarctica1,interaction1,nchord,step,Distance,totalnusteps, crust_entered,mantle_entered,core_entered);///Get the density vectors this function needs
+  this->GetDensityVectors(antarctica1,interaction1,nchord,step,Distance,totalnusteps, crust_entered);///Get the density vectors this function needs
   
   
   for(double logEtau_final=log10(Emin);logEtau_final<=log10(pnu);logEtau_final+=.01){//integral over energy (in log space?)
@@ -270,7 +269,7 @@ Get Density Vectors sets two density vectors. One has the density at each step a
  */
 
 void Taumodel::GetDensityVectors(IceModel *antarctica1,Interaction *interaction1, Vector nchord, double step, double Distance, 
-				 int &totalnusteps,int &crust_entered,int &mantle_entered, int &core_entered){
+				 int &totalnusteps,int &crust_entered){
    
     Vector nchord1;
     double avgdensity =0;//initilize average density.
@@ -280,7 +279,6 @@ void Taumodel::GetDensityVectors(IceModel *antarctica1,Interaction *interaction1
     Position postaunow;
     double altitude_tau;
     double lat_tau;
-    const Position posnu = interaction1->posnu;
     const Position earth_in = interaction1->r_in;
     ofstream myNewFile;
     
@@ -290,7 +288,7 @@ void Taumodel::GetDensityVectors(IceModel *antarctica1,Interaction *interaction1
      postaunow=earth_in+nchord1;
      lat_tau=postaunow.Lat();
      altitude_tau = postaunow.Mag()-antarctica1->Geoid(lat_tau);
-     density_now=antarctica1->GetDensity(altitude_tau,postaunow,posnu,crust_entered,mantle_entered,core_entered);
+     density_now=antarctica1->GetDensity(altitude_tau,postaunow,crust_entered);
      mydensityvector.push_back(density_now);///filled with density at that step
      
      density_total+=density_now;

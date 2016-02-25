@@ -277,7 +277,7 @@ public:
     
     void myconvlv(double *timedomain_forconvl,const int NFOUR,double *fdiode,double &maxdiodeconvl,double &onediodeconvl,double *power_noise,double *diodeconv);
     
-  void GetArrivalTimes(int inu, const Vector& rf_direction);
+  void GetArrivalTimes(const Vector& rf_direction);
   int rx_minarrivaltime;
   double arrival_times[NLAYERS_MAX*NPHI_MAX];
 
@@ -291,7 +291,7 @@ public:
     static int WhichBand(int ibw,int ipol); // which band, 1-8, in order as they are on the surf
     void Banding(int j,double *freq_noise,double *powerperfreq,int NPOINTS_NOISE);
     void Banding(int iband,double *vmmhz);
-    void RFCMs(int ilayer,int ifold,double *freq_noise,double *vmmhz,int NPOINTS_NOISE);
+    void RFCMs(int ilayer,int ifold,double *vmmhz);
     void normalize_for_nsamples(double *spectrum, double nsamples, double nsamp);
     void convert_power_spectrum_to_voltage_spectrum_for_fft(double *spectrum, double domain[], double phase[]);
     void GetNoiseWaveforms(); // make time domain noise waveform based on avgnoise being the v^2

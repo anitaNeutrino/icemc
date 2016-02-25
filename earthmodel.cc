@@ -209,10 +209,9 @@ double EarthModel::GetLon(double phi) {
     return (360.*3./4. - phi_deg); // returns 0 to 360 degrees (going from -180 to 180 deg longitude like Crust 2.0 does)
 } //GetLon
 
-double EarthModel::GetDensity(double altitude, const Position earth_in, const Position posnu,
-			      int& crust_entered, // 1 or 0
-			      int& mantle_entered, // 1 or 0
-			      int& core_entered){
+double EarthModel::GetDensity(double altitude, const Position earth_in,
+			      int& crust_entered // 1 or 0
+			      ){
   
         Position where = earth_in;
 	
@@ -265,7 +264,7 @@ double EarthModel::GetDensity(double altitude, const Position earth_in, const Po
 
 
 
-int EarthModel::Getchord(Primaries *primary1, Settings *settings1,IceModel *antarctica1, Secondaries *sec1,
+int EarthModel::Getchord(Settings *settings1,
 			 double len_int_kgm2,
 			 const Position &earth_in, // place where neutrino entered the earth
 			 const Position &r_enterice,
@@ -452,7 +451,7 @@ int EarthModel::Getchord(Primaries *primary1, Settings *settings1,IceModel *anta
 	while(altitude>MIN_ALTITUDE_CRUST && x<posnu.Distance(earth_in)) { // starting at earth entrance point, step toward interaction position until you've reached the interaction or you are below the crust.
 	    //    while(altitude>MIN_ALTITUDE_CRUST && x<dDistance(enterice,earth_in)) {
 	  
-	  ddensity = this->GetDensity(altitude,where,posnu,crust_entered,mantle_entered,core_entered);
+	  ddensity = this->GetDensity(altitude,where,crust_entered);
 	 
 	    L=len_int_kgm2/ddensity; // get the interaction length for that density
 	    weight1_tmp*=exp(-step/L);  // adjust the weight accordingly
@@ -542,7 +541,7 @@ int EarthModel::Getchord(Primaries *primary1, Settings *settings1,IceModel *anta
 	x=0; // this keeps track of how far you've stepped along the neutrino path, starting at the crust entrance.
 	while(x<=distance_remaining) { // keep going until you have reached the interaction position
 	    
-	  ddensity=this->GetDensity(altitude,where,posnu,crust_entered,mantle_entered,core_entered);
+	  ddensity=this->GetDensity(altitude,where,crust_entered);
 	  
 	    L=len_int_kgm2/ddensity; // get the interaction length for that density
 	    weight1_tmp*=exp(-step/L);  // adjust the weight accordingly
@@ -929,7 +928,7 @@ Vector EarthModel::PickPosnuForaLonLat(double lon,double lat,double theta,double
     
     double rnd3=gRandom->Rndm();
     
-    
+   
     
     double elevation = surface_above_geoid - rnd3*local_ice_thickness; // elevation of interaction
     

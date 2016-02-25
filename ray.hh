@@ -55,11 +55,9 @@ public:
 		      const Vector &nsurf_rfexit,
 		      double nexit,
 		      double nenter,
-		      int inu,
-		      
 		      Vector &nrf2_iceside);
     
-    int TraceRay(Settings *settings1,Anita *anita1,int whichiteration,double n_depth,int inu);
+    int TraceRay(Settings *settings1,Anita *anita1,int whichiteration,double n_depth);
     
     
     int GetSurfaceNormal(Settings *settings1,IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry);
@@ -75,7 +73,7 @@ public:
     //  static void WhereDoesItLeave(const Position &posnu,
     //		       const Vector &nnu,Position &r_out);
     
-    static int WhereDoesItLeave(int inu,const Position &posnu,
+    static int WhereDoesItLeave(const Position &posnu,
 				const Vector &ntemp,IceModel *antarctica,
 				Position &r_out) {
 	

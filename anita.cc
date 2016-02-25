@@ -1483,7 +1483,7 @@ void Anita::Banding(int j,double *freq_noise,double *vmmhz,int NPOINTS_NOISE) {
 		
     } // if it's choose-your-own banding
 }
-void Anita::RFCMs(int ilayer,int ifold,double *freq_noise,double *vmmhz,int NPOINTS_NOISE) {
+void Anita::RFCMs(int ilayer,int ifold,double *vmmhz) {
     
     int irx=Anita::GetAntennaNumber(ilayer,ifold)-1; // want this to be 0-31
     
@@ -3579,7 +3579,7 @@ void Anita::getDifferentOffsets() {
 }
 void Anita::calculate_single_offset(const unsigned center_phi_sector_index, const double angle_phi, const double angle_theta, double hypothesis_offset[][3]) {
     double maximum_time = -2000E-9;
-    
+   
     double to_center_of_summed_phi_sectors=((double)N_SUMMED_PHI_SECTORS/2.)*22.5-11.25;
     cout << "to_center_of_summed_phi_sectors is " << to_center_of_summed_phi_sectors << "\n";
    Vector normal_vector = Vector(cos(angle_theta * RADDEG) * cos((angle_phi+to_center_of_summed_phi_sectors) * RADDEG), cos(angle_theta * RADDEG) * sin((angle_phi+to_center_of_summed_phi_sectors) * RADDEG), sin(angle_theta * RADDEG));
@@ -3644,10 +3644,6 @@ void Anita::calculate_single_offset(const unsigned center_phi_sector_index, cons
     return;
 }
 
-void Anita::calculate_single_offset(const unsigned center_phi_sector_index, const unsigned index_phi, const unsigned index_theta, double hypothesis_offset[][3]) {
-    // This should be implemented shortly.
-    return;
-}
 /*
 void Anita::calculate_antenna_positions(Settings *settings1,double pitch, double roll, double phi_spin,Vector n_north,Vector n_east){
     number_all_antennas = 0;
@@ -3714,7 +3710,7 @@ void Anita::calculate_antenna_positions(Settings *settings1,double pitch, double
     return;
 }
 */
-void Anita::GetArrivalTimes(int inu, const Vector& rf_direction) {
+void Anita::GetArrivalTimes(const Vector& rf_direction) {
   
   
   // cout << "rf_direction is ";

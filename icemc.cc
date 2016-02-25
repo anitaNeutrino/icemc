@@ -72,16 +72,12 @@
 #include "AnitaConventions.h"
 #include "RawAnitaHeader.h"
 #include "Adu5Pat.h"
-UsefulAnitaEvent* 	realEvPtr 	 = NULL;
-RawAnitaHeader* 	rawHeaderPtr = NULL;
-Adu5Pat* 			Adu5PatPtr 	 = NULL;
+UsefulAnitaEvent*     realEvPtr    = NULL;
+RawAnitaHeader*       rawHeaderPtr = NULL;
+Adu5Pat* 	      Adu5PatPtr   = NULL;
 #endif
 
 Taumodel* TauPtr = NULL;
-
-//#ifdef ARA_UTIL_INSTALL_DIR
-//#endif
-
 
 ClassImp(RX);
 
@@ -145,14 +141,6 @@ double RANDOMISEPOL=0.;
 //TStyle* RootStyle();
 //TStyle *color=RootStyle();
 
-// properties of the detection system/medium
-const double H_RX = 37.62 * CMINCH/100.;  // physical height of antennas in meters
-const double W_RX = 37.62 * CMINCH/100.;  // physical width of antennas in meters
-const double L_RX = 22.63 * CMINCH/100.;  // physical length of antennas in meters
-const double Z_RX = 50;   // antenna resistance
-
-
-
 double volume_thishorizon; // for plotting volume within the horizon of the balloon
 int realtime_this;  // for plotting real unix time
 double longitude_this; // for plotting longitude
@@ -166,11 +154,6 @@ double heading_this=0.;// for plotting heading
 //double EXPONENT=20.; // energy exponent
 //double pnu=pow(10.,EXPONENT);   // energy of neutrinos
 double pnu=pow(10.,20);   // energy of neutrinos
-
-
-
-const bool SANITY = true;           // do sanity checks
-
 
 
 //int ANTtrig; // number of channels on an antenna that
@@ -271,7 +254,7 @@ double contribution_total; // total
 double normalization; // normalization of transmission curve
 double contribution_max; // if you read all of the emitted power, approx
 double contribution_fortree; // for the tree
-double myfunction(double theta_inc,double theta_trans_perp,double theta_trans_par,double& norm); // function that describes the transmission vs angle, from fits to mark and martin's measurements.
+double myfunction(double theta_trans_perp,double theta_trans_par,double& norm); // function that describes the transmission vs angle, from fits to mark and martin's measurements.
 double integratemyfunction(double theta_perp,double theta_par);
 double integralmyfunction;
 double SIGMA_POSX=0.1;
@@ -300,7 +283,6 @@ double bwslice_volts_db_pol1[4];
 double bwslice_vnoise_thislayer[4];// for filling tree6b, noise for each bandwidth on each layer
 double powerthresh_thischannel=0.;// threshold in power for this channel
 
-const double INTEGRATION_TIME=3.75E-9; // integration time in ns
 //int passes_thischannel=0; // this channel passes
 int unmasked_thischannel=0; // this channel masked
 int passes_thisevent=0; // this event passes
@@ -373,7 +355,7 @@ int undetectable_counter=0;
 
 // roughness - will be commented later
 const int NTHETA_ROUGH=100; // bins in theta
-const int NPHI_ROUGH=100;
+
 double nrf_neighbors[10000];
 int maxarray[NTHETA_ROUGH];
 double SIGMA_HEIGHT=10.;
@@ -589,7 +571,7 @@ void SetupViewangles(Signal *sig1);
 void ReadRoughnessData(Settings *settings1,double trans_angle[9][1000],double transmission[9][1000],
 					   double *minangle,double *maxangle,int *npoints,int &max_angles_backplane);
 double GetTransmission(double inc_angle,double trans_angle_par,double trans_angle_perp,
-					   double trans_angle[9][1000],double transmission[9][1000],double *min_angle,
+					   double transmission[9][1000],double *min_angle,
 					   double *max_angle,int *npoints,int max_angles_backplane);
 
 void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
@@ -621,16 +603,16 @@ int GetRayIceSide(const Vector &n_exit2rx, const Vector &nsurf_rfexit,
 				  double nexit, double nenter, Vector &nrf2_iceside);
 
 int GetDirection(Settings *settings1,Interaction *interaction1,const Vector &refr, double deltheta_em, double deltheta_had,
-				 double emfrac, double hadfrac, double pnu, double vmmhz1m_max,
+				 double emfrac, double hadfrac, double vmmhz1m_max,
 				 double r_fromballoon, double rough_sigma, Ray *ray1,
 				 Signal *sig1, Position posnu, Anita *anita1, Balloon *bn1,
 				 Vector &nnu, double& costhetanu, double& theta_threshold);
 
-int GetDirectionRough(Settings *settings1,const Vector &refr, double deltheta_em, double deltheta_had,
-					  double emfrac, double hadfrac, double pnu, double vmmhz1m_max,
-					  double r_fromballoon, double rough_sigma, Ray *ray1,
-					  Signal *sig1, Position posnu, Anita *anita1, Balloon *bn1,
-					  Vector &nnu, double& costhetanu, double& theta_threshold);
+// int GetDirectionRough(Settings *settings1,const Vector &refr, double deltheta_em, double deltheta_had,
+// 					  double emfrac, double hadfrac, double pnu, double vmmhz1m_max,
+// 					  double r_fromballoon, double rough_sigma, Ray *ray1,
+// 					  Signal *sig1, Position posnu, Anita *anita1, Balloon *bn1,
+// 					  Vector &nnu, double& costhetanu, double& theta_threshold);
 
 void GetFresnel(Roughness *rough1,int ROUGHNESS_SETTING,const Vector &nsurf_rfexit,
 				const Vector &n_exit2rx,
@@ -696,7 +678,7 @@ int main(int argc, char **argv) {
   
   string input="inputs.txt";
   string run_num;//current run number as string
-  int run_no;//current run number as integer
+  int run_no = 0;//current run number as integer
 
   ifstream inputsfile(input.c_str());
   if (!inputsfile.good()) {
@@ -775,8 +757,8 @@ int main(int argc, char **argv) {
   stemp=settings1->outputdir+"/slac_hitangles"+run_num+".dat";
   ofstream fslac_hitangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
   
-  stemp=settings1->outputdir+"/outseckel"+run_num+".txt";
-  ofstream foutseckel(stemp.c_str());
+  // stemp=settings1->outputdir+"/outseckel"+run_num+".txt";
+  // ofstream foutseckel(stemp.c_str());
   
   Balloon *bn1=new Balloon(); // instance of the balloon
   Anita *anita1=new Anita();// right now this constructor gets banding info
@@ -786,7 +768,7 @@ int main(int argc, char **argv) {
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();
   GlobalTrigger *globaltrig1;
-  Roughness *rough1=new Roughness(settings1); // create new instance of the roughness class
+  Roughness *rough1=new Roughness(); // create new instance of the roughness class
   Taumodel *taus1 = new Taumodel();
   // input parameters
   settings1->ReadInputs(inputsfile, foutput, anita1, sec1, sig1, bn1, ray1);
@@ -1058,10 +1040,10 @@ int main(int argc, char **argv) {
   //  void Summarize(Settings *settings1,Spectra *spectra1,Signal *sig1,Counting *count1,double,double eventsfound,double,double,double,double*,double,
   //		 double&,double&,double&,double&,ofstream&,ofstream&,ofstream&);
   void Summarize(Settings *settings1, Anita* anita1, Counting *count1,Spectra *spectra1,Signal *sig1,Primaries *primary1,double,double eventsfound,double,double,double,double*,double,double,
-		 double&,double&,double&,double&,ofstream&,ofstream&,ofstream&);
+		 double&,double&,double&,double&,ofstream&,ofstream&);
   
   
-  void WriteNeutrinoInfo(Position&,Vector&,Position&,double,double,string,string,double,ofstream &nu_out);
+  void WriteNeutrinoInfo(Position&,Vector&,Position&,double,string,string,double,ofstream &nu_out);
   void CloseTFile(TFile *hfile);
     
   int Getmine(double*,double*, double*, double*);
@@ -1074,18 +1056,13 @@ int main(int argc, char **argv) {
   ref_int_coord->SetMarkerSize(0.7);;
   ref_int_coord->SetMarkerStyle(30);
   ref_int_coord->SetMarkerColor(kBlue);
-  
+
   TH2F *dir_int_coord=new TH2F("dir_int_coord","",600,-3000,3000,500,-2500,2500);
   dir_int_coord->SetMarkerSize(0.7);
   dir_int_coord->SetMarkerStyle(30);
   
-  TH1F *prob_eachbin = new TH1F("prob_eachbin","prob_eachbin",180,0.,180.);
-  TH1F *prob_eachbnposition=new TH1F("prob_eachbnposition","prob_eachbnposition",180,0.,180.);
   TH1F *prob_eachphi_bn=new TH1F("prob_eachphi_bn","prob_eachphi_bn",100,0.,6.3);
   TH1F *prob_eachilon_bn=new TH1F("prob_eachilon_bn","prob_eachilon_bn",180,0.,180.);
-  TH1F *vol_eachbin=new TH1F("vol_eachbin","vol_eachbin",180,0.,180.);
-  TH1F *prob_eachbin_weighted = new TH1F("prob_eachbin_weighted","prob_eachbin_weighted",180,0.,180.);
-  TH1F *diff_ilon_bn_ibnposition=new TH1F("diff_ilon_bn_ibnposition","diff_ilon_bn_ibnposition",10,-5.,5.);
   TH2F *h6=new TH2F("theta_vs_hitangle_h","theta_vs_hitangle_h",100,-3.14,3.14,100,-1.1,1.1);
   TH1F *h10=new TH1F("hitangle_e","hitangle_e",20,-1.6,1.6);
   TH1F *hy=new TH1F("hy","hy",100,0.,1.);
@@ -1865,7 +1842,7 @@ cout << "reminder that I took out ChangeCoord.\n";
   double angle_phi=0.;
 
     Vector x = Vector(cos(angle_theta * RADDEG) * cos((angle_phi+11.25) * RADDEG), cos(angle_theta * RADDEG) * sin((angle_phi+11.25) * RADDEG), sin(angle_theta * RADDEG));  
-    anita1->GetArrivalTimes(inu,x);
+    anita1->GetArrivalTimes(x);
     cout << "end of getarrivaltimes\n";
   }
   // comment this out for running on auger cluster
@@ -2033,7 +2010,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	tautrigger=0;
       
       
-      bn1->PickDownwardInteractionPoint(interaction1, anita1, settings1, antarctica, inu, ray1, prob_eachbin, vol_eachbin, prob_eachbin_weighted, prob_eachbnposition, diff_ilon_bn_ibnposition, beyondhorizon);
+      bn1->PickDownwardInteractionPoint(interaction1, anita1, settings1, antarctica, ray1, beyondhorizon);
            
       if (interaction1->noway)
 	continue;
@@ -2112,7 +2089,7 @@ cout << "reminder that I took out ChangeCoord.\n";
        
       //     if (settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2) {
       
-      if (!ray1->TraceRay(settings1,anita1,1,sig1->N_DEPTH,inu)) {
+      if (!ray1->TraceRay(settings1,anita1,1,sig1->N_DEPTH)) {
 	//delete ray1;
 	//delete interaction1;
 	continue;
@@ -2128,7 +2105,7 @@ cout << "reminder that I took out ChangeCoord.\n";
             
       ray1->GetSurfaceNormal(settings1,antarctica,interaction1->posnu,slopeyangle,1);
       
-      if (!ray1->TraceRay(settings1,anita1,2,sig1->N_DEPTH,inu)) {; // trace ray, 2nd iteration.
+      if (!ray1->TraceRay(settings1,anita1,2,sig1->N_DEPTH)) {; // trace ray, 2nd iteration.
 	//delete ray1;
 	//delete interaction1;
 	continue;
@@ -2206,7 +2183,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 
 	if ((settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2 || !settings1->UNBIASED_SELECTION) && !settings1->SLAC ) {
 	  err=GetDirection(settings1,interaction1,ray1->nrf_iceside[4],deltheta_em_max,deltheta_had_max,
-			   emfrac,hadfrac,pnu,vmmhz1m_max*bestcase_atten,interaction1->r_fromballoon[whichray],
+			   emfrac,hadfrac,vmmhz1m_max*bestcase_atten,interaction1->r_fromballoon[whichray],
 			   rough1->rough_sigma,ray1,sig1,interaction1->posnu,anita1,bn1,
 			   interaction1->nnu,costhetanu,theta_threshold);
 	  //cout<<"UNBIASED_SELECTION IS "<<settings1->UNBIASED_SELECTION<<"\n";
@@ -2244,9 +2221,9 @@ cout << "reminder that I took out ChangeCoord.\n";
 	
 	
 	taus1->GetTauWeight(primary1, settings1, antarctica, interaction1, pnu, 1, ptauf,
-			    crust_entered,mantle_entered,core_entered);
+			    crust_entered);
 	
-	antarctica->Getchord(primary1,settings1,antarctica,sec1,len_int_kgm2,interaction1->r_in,interaction1->r_enterice,
+	antarctica->Getchord(settings1,len_int_kgm2,interaction1->r_in,interaction1->r_enterice,
 			     interaction1->nuexitice,interaction1->posnu,inu,
 			     interaction1->chord,interaction1->weight_nu_prob,interaction1->weight_nu,nearthlayers,myair,
 			     total_kgm2,crust_entered, mantle_entered,core_entered);
@@ -2285,7 +2262,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       // pi^0's are counted as hadronic.
       
       sec1->GetEMFrac(settings1,interaction1->nuflavor,interaction1->current,taudecay,elast_y,hy,pnu,inu,
-		      emfrac,hadfrac,n_interactions,tauweighttrigger,ptauf);
+		      emfrac,hadfrac,n_interactions,tauweighttrigger);
       
             
       if (emfrac+hadfrac>1.000001) {
@@ -2403,7 +2380,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       if(tautrigger==0){//did this for cc- taus already, do again for all other particles
       if ((settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2 || !settings1->UNBIASED_SELECTION) && !settings1->SLAC )
 	err=GetDirection(settings1,interaction1,ray1->nrf_iceside[4],deltheta_em_max,deltheta_had_max,
-			   emfrac,hadfrac,pnu,vmmhz1m_max*bestcase_atten,interaction1->r_fromballoon[whichray],
+			   emfrac,hadfrac,vmmhz1m_max*bestcase_atten,interaction1->r_fromballoon[whichray],
 			 rough1->rough_sigma,ray1,sig1,interaction1->posnu,anita1,bn1,
 			 interaction1->nnu,costhetanu,theta_threshold);
       else if (settings1->SLAC) {
@@ -2460,7 +2437,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       count1->nviewangle_lt_90[whichray]++; // add to counter
       
       
-      if (!Ray::WhereDoesItLeave(inu,interaction1->posnu,interaction1->nnu,antarctica,interaction1->nuexit))
+      if (!Ray::WhereDoesItLeave(interaction1->posnu,interaction1->nnu,antarctica,interaction1->nuexit))
 	continue; // doesn't give a real value from quadratic formula
       
       
@@ -3062,9 +3039,8 @@ cout << "reminder that I took out ChangeCoord.\n";
       if (settings1->WHICH==9) globaltrig1 = new GlobalTrigger(settings1,anita1,bn1->phiTrigMask,bn1->phiTrigMaskH,bn1->l1TrigMask,bn1->l1TrigMaskH ); // Anita-3 phi and l1 masking for V and H pol
       else globaltrig1 = new GlobalTrigger(settings1,anita1,bn1->phiTrigMask);
       Tools::Zero(anita1->arrival_times,Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-      anita1->GetArrivalTimes(inu,ray1->n_exit2bn[2]);
+      anita1->GetArrivalTimes(ray1->n_exit2bn[2]);
       
-      //     GetArrivalTimes(settings1,anita1,ray1->n_exit2bn[2],bn1->r_bn,bn1->n_north,bn1->n_east,bn1->phi_spin,arrival_times);
       anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times,settings1->NANTENNAS);
       
       //Zeroing
@@ -3138,11 +3114,11 @@ cout << "reminder that I took out ChangeCoord.\n";
 	  // get the angle ray makes with e-plane,h-plane
 	  // and component of polarization along e-plane and h-plane
 	  if (!settings1->BORESIGHTS)
-	    bn1->GetHitAngles(settings1,anita1,inu,ray1->n_exit2bn[2],n_pol,ilayer,ifold,
+	    bn1->GetHitAngles(settings1,anita1,ray1->n_exit2bn[2],n_pol,ilayer,ifold,
 			      hitangle_e,hitangle_h,e_component,h_component,ant_normal);
 	  if (settings1->BORESIGHTS) {
 	    
-	    bn1->GetHitAngles(settings1,anita1,inu,ray1->n_exit2bn_eachboresight[2][ilayer][ifold],n_pol_eachboresight[ilayer][ifold],ilayer,ifold,
+	    bn1->GetHitAngles(settings1,anita1,ray1->n_exit2bn_eachboresight[2][ilayer][ifold],n_pol_eachboresight[ilayer][ifold],ilayer,ifold,
 			      hitangle_e,hitangle_h,e_component,h_component,ant_normal);
 	    fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component << "\t" << h_component << "\t" << fresnel1_eachboresight[ilayer][ifold]*mag1_eachboresight[ilayer][ifold] << "\n";
 	  }
@@ -3161,7 +3137,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	    }
 	  }
 	  
-	  AntTrigger *anttrig1 = new AntTrigger(settings1, ilayer, ifold, vmmhz, anita1, hitangle_e, hitangle_h, e_component, h_component, anita1->arrival_times, anita1->rx_minarrivaltime, volts_rx_rfcm_lab_e_all, volts_rx_rfcm_lab_h_all, inu);
+	  AntTrigger *anttrig1 = new AntTrigger(settings1, ilayer, ifold, vmmhz, anita1, hitangle_e, hitangle_h, e_component, h_component, anita1->arrival_times, volts_rx_rfcm_lab_e_all, volts_rx_rfcm_lab_h_all);
 	  
 	  //AntTrigger *anttrig1=new AntTrigger(ilayer,ifold,vmmhz,anita1,hitangle_e,hitangle_h,e_component,h_component,arrival_times,rx_minarrivaltime);
 	  
@@ -3287,7 +3263,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 // 	    anita1->ston[iston]=0.;
 // 	  }
 
-	  anttrig1->WhichBandsPass(settings1,anita1,globaltrig1,bn1,ilayer,ifold,inu, viewangle-sig1->changle,emfrac,hadfrac);
+	  anttrig1->WhichBandsPass(settings1,anita1,globaltrig1,bn1,ilayer,ifold, viewangle-sig1->changle,emfrac,hadfrac);
 	  
 	  
 	  if (Anita::GetAntennaNumber(ilayer,ifold)==anita1->rx_minarrivaltime) {
@@ -3412,7 +3388,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       //returns 0 if chord<1m
       
       
-      if (!antarctica->Getchord(primary1,settings1,antarctica,sec1,len_int_kgm2,interaction1->r_in,
+      if (!antarctica->Getchord(settings1,len_int_kgm2,interaction1->r_in,
 				interaction1->r_enterice,interaction1->nuexitice,interaction1->posnu,inu,
 				interaction1->chord,interaction1->weight_nu_prob,interaction1->weight_nu,nearthlayers,myair,
 				total_kgm2,crust_entered, mantle_entered,core_entered))
@@ -3486,7 +3462,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	// this gets the weight due to stopping in earth
 	// returns 0 if chord<1m
 	//cout << "inu is " << inu << "\n";
-	if (tautrigger==1 || antarctica->Getchord(primary1,settings1,antarctica,sec1,len_int_kgm2,interaction1->r_in,
+	if (tautrigger==1 || antarctica->Getchord(settings1,len_int_kgm2,interaction1->r_in,
 						  interaction1->r_enterice,interaction1->nuexitice,interaction1->posnu,inu,
 						  interaction1->chord,interaction1->weight_nu_prob,interaction1->weight_nu,
 						  nearthlayers,myair,total_kgm2,crust_entered,mantle_entered,core_entered)) {
@@ -3812,7 +3788,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	    times_core_entered_det+=core_entered;
 	    
 	    if (settings1->WRITEPOSFILE==1)
-	      WriteNeutrinoInfo(interaction1->posnu,interaction1->nnu,bn1->r_bn,interaction1->altitude_int,pnu,interaction1->nuflavor,interaction1->current,elast_y,nu_out);
+	      WriteNeutrinoInfo(interaction1->posnu,interaction1->nnu,bn1->r_bn,interaction1->altitude_int,interaction1->nuflavor,interaction1->current,elast_y,nu_out);
 	    
 	    // sample first 1000 events that pass to see the distribution of weights
 	    if (settings1->HIST && !settings1->ONLYFINAL && sampleweights->GetEntries()<settings1->HIST_MAX_ENTRIES) {
@@ -4005,7 +3981,7 @@ cout << "reminder that I took out ChangeCoord.\n";
   
   // maks the output file
   Summarize(settings1,anita1,count1,spectra1,sig1,primary1,pnu,eventsfound,eventsfound_db,eventsfound_nfb,sigma,sum,antarctica->volume,antarctica->ice_area,
-	    km3sr,km3sr_e,km3sr_mu,km3sr_tau,foutput,distanceout,foutseckel);
+	    km3sr,km3sr_e,km3sr_mu,km3sr_tau,foutput,distanceout);
   
   
   veff_out << settings1->EXPONENT << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << settings1->SIGMA_FACTOR << endl;//this is for my convenience
@@ -4057,7 +4033,7 @@ void Integrate(Anita *anita1,int j,int k,double *vmmhz,double *freq,double scale
 		sumsignal+=vmmhz[k]*(freq[k+1]-freq[k])*scalefactor;
 }
 
-void WriteNeutrinoInfo(Position &posnu, Vector &nnu, Position &r_bn, double altitude_int, double pnu, string nuflavor, string current, double elast_y, ofstream &nu_out) {
+void WriteNeutrinoInfo(Position &posnu, Vector &nnu, Position &r_bn, double altitude_int, string nuflavor, string current, double elast_y, ofstream &nu_out) {
     
     nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
     
@@ -4067,7 +4043,7 @@ void WriteNeutrinoInfo(Position &posnu, Vector &nnu, Position &r_bn, double alti
 //	       double& km3sr,double& km3sr_e,double& km3sr_mu,double& km3sr_tau,ofstream &foutput,ofstream &distanceout,ofstream &foutseckel) {
 
 void Summarize(Settings *settings1, Anita* anita1, Counting *count1,Spectra *spectra1,Signal *sig1,Primaries *primary1,double pnu,double eventsfound,double eventsfound_db,double eventsfound_nfb,double sigma,double* sum,double volume,double ice_area,
-			   double& km3sr,double& km3sr_e,double& km3sr_mu,double& km3sr_tau,ofstream &foutput,ofstream &distanceout,ofstream &foutseckel) {
+			   double& km3sr,double& km3sr_e,double& km3sr_mu,double& km3sr_tau,ofstream &foutput,ofstream &distanceout) {
     
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
@@ -4801,7 +4777,7 @@ int GetRayIceSide(const Vector &n_exit2rx, const Vector &nsurf_rfexit,
 }//GetRayIceSide
 
 int GetDirection(Settings *settings1,Interaction *interaction1,const Vector &refr, double deltheta_em, double deltheta_had,
-				 double emfrac, double hadfrac, double pnu, double vmmhz1m_max, double r_fromballoon,
+				 double emfrac, double hadfrac, double vmmhz1m_max, double r_fromballoon,
 				 double rough_sigma, Ray *ray1, Signal *sig1, Position posnu, Anita *anita1, Balloon *bn1,
 				 Vector &nnu, double& costhetanu, double& theta_threshold) {
     
@@ -4997,18 +4973,18 @@ double ScaleVmMHz(double vmmhz1m_max,const Position &posnu1,const Position &r_bn
 
 
 
-int GetDirectionRough(Settings *settings1,const Vector &refr, double deltheta_em, double deltheta_had,
-					  double emfrac, double hadfrac, double pnu, double vmmhz1m_max, double r_fromballoon,
-					  double rough_sigma, Ray *ray1, Signal *sig1, Position posnu, Anita *anita1, Balloon *bn1,
-					  Vector &nnu, double& costhetanu, double& theta_threshold) {
+// int GetDirectionRough(Settings *settings1,const Vector &refr, double deltheta_em, double deltheta_had,
+// 					  double emfrac, double hadfrac, double pnu, double vmmhz1m_max, double r_fromballoon,
+// 					  double rough_sigma, Ray *ray1, Signal *sig1, Position posnu, Anita *anita1, Balloon *bn1,
+// 					  Vector &nnu, double& costhetanu, double& theta_threshold) {
     
-    return 0;
-}
+//     return 0;
+// }
 
 
 
 
-double GetTransmission(double inc_angle,double trans_angle_par,double trans_angle_perp,double trans_angle[9][1000],
+double GetTransmission(double inc_angle,double trans_angle_par,double trans_angle_perp,
 					   double transmission[9][1000],double *min_angle,double *max_angle,int *npoints,int max_angles_backplane) {
     
     int i_inc_angle; // index of the incident angle for picking out transmission function
@@ -5293,7 +5269,7 @@ TStyle* RootStyle() {
     return RootStyle;
 }
 
-double myfunction(double theta_inc,double theta_trans_par,double theta_trans_perp,double& norm) { // for roughness studies, describes the power as a function of transmission angle, from fits to mark and martin's measurements
+double myfunction(double theta_trans_par,double theta_trans_perp,double& norm) { // for roughness studies, describes the power as a function of transmission angle, from fits to mark and martin's measurements
     
     
     norm=1/(4*PI*(SIGMA_POSX*SIGMA_POSX+SIGMA_POSY*SIGMA_POSY)/2.);
@@ -5331,7 +5307,7 @@ double integratemyfunction(double posx,double posy) {
 			posy=MINY+stepy*(double)j;
 			
 			// the zero is a placeholder- fill it in with incident angle later
-			integral+=myfunction(0.,posx,posy,norm)*stepx*stepy;
+			integral+=myfunction(posx,posy,norm)*stepx*stepy;
 			sumarea+=stepx*stepy;
 		}
     }

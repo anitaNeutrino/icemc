@@ -1,4 +1,3 @@
-
 #include "TRandom3.h"
 #include "Constants.h"
 #include "vector.hh"
@@ -498,7 +497,7 @@ double Y::Getyweight(double pnu, double y, int nu_nubar, int currentint){
   double C0_highbar, C0_lowbar,C0_high, C0_low;//these C0's are normalization factors.
   double dNdy=0.;//default
   double U, W, B, T;//are added in to help with readability of equations.
-  double C1_low, C2, C1_high, C1_highbar;
+  double C1_low, C2, C1_high;
   double weighty;
   double epsilon=log10(pnu/1.E9);
   

@@ -17,7 +17,7 @@
 
 #include "ray.hh"
 
-Roughness::Roughness(Settings *settings1) {
+Roughness::Roughness() {
     
 }
 
@@ -49,7 +49,7 @@ void Roughness::GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *
     Vector zcoordvector = ray1->nsurf_rfexit;
     zcoordvector=zcoordvector.Unit();
     
-    double thetainc =acos(zcoordvector.Dot(nuvector))*180/PI;
+    // double thetainc =acos(zcoordvector.Dot(nuvector))*180/PI;
     //nsurf_rfexit is z direction for new coordinate system. Need to make sure the n-vector is in x-z plane.
     
     Vector xcoordvector = nuvector-(zcoordvector.Dot(nuvector))*zcoordvector;//xcoordvector is such that nnu lies in the x-z plane
@@ -66,7 +66,7 @@ void Roughness::GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *
 	nnu_flipped=nnu_flipped-2.*nnu_flipped.Dot(zcoordvector)*zcoordvector; // take it's upgoing reflection from surface
 	
 	Position nuexit_flipped;
-	if (Ray::WhereDoesItLeave(0,interaction1->posnu,nnu_flipped,antarctica,nuexit_flipped))
+	if (Ray::WhereDoesItLeave(interaction1->posnu,nnu_flipped,antarctica,nuexit_flipped))
 	    origin_brian_tmp=nuexit_flipped;
 	
 	
@@ -240,7 +240,7 @@ void Roughness::GetExitforRoughness(Settings *settings1,IceModel *antarctica,dou
     }
     
     // here is the position of the exit point
-    Ray::WhereDoesItLeave(0,posnu,referenceray_iceside_specular,antarctica,
+    Ray::WhereDoesItLeave(posnu,referenceray_iceside_specular,antarctica,
 			  referenceray_rfexit);
     
     // the exit point, specular ray and the ray from the exit to the balloon are here defined by the "reference ray"

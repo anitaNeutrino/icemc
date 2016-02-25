@@ -47,11 +47,8 @@ public:
   int ibnposition;
   double dtryingposition; // weighting factor: how many equivalent tries each neutrino counts for after having reduced possible interaction positions to within horizon
   
-  void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,Settings *settings1,IceModel *antarctica1, int inu,
-				    Ray *ray1,
-				    
-				    TH1F *h1, TH1F *h2, TH1F *h3, TH1F *h4,
-				    TH1F *h5, int &beyondhorizon); 
+  void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,Settings *settings1,IceModel *antarctica1,
+				    Ray *ray1, int &beyondhorizon); 
   
   void InitializeBalloon();
   void ReadAnitaliteFlight();
@@ -65,7 +62,6 @@ public:
   double GetBalloonSpin(double heading); // get the azimuth of the balloon
   void GetHitAngles(Settings *settings1,
 		    Anita *anita1,
-		    int inu,
 		    const Vector &n_exit2bn,
 		    const Vector &n_pol,
 		    int ilayer,
@@ -144,7 +140,7 @@ public:
   Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //position of antenna boresights
 
   void GetBoresights(Settings *settings1,Anita *anita1);
-  Vector RotatePayload(Settings *settings1,Anita *anita1,Vector ant_pos);
+  Vector RotatePayload(Vector ant_pos);
   void calculate_antenna_positions(Settings *settings1,Anita *anita1);// this calculates the above 
 
 

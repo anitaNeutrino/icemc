@@ -406,7 +406,6 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     
     //double latitude,longitude,altitude;
     
-    
     //  cout << "I'm in pickballoonposition. whichpath is " << WHICHPATH << "\n";
     //Pick balloon position
     if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8) { // anita-lite or anita-I or -II path
@@ -575,13 +574,13 @@ void Balloon::CenterPayload(Settings *settings1,Anita *anita1,Vector n_exit2bn,V
     
     // allow an option to rotate the payload so the signal is
     // always on the boresight of one phi sector
-    GetHitAngles(settings1,anita1,0,n_exit2bn,n_pol,whichlayer,centerphi,
+    GetHitAngles(settings1,anita1,n_exit2bn,n_pol,whichlayer,centerphi,
 				 hitangle_e,hitangle_h,e_component,h_component,ant_normal);
     phi_spin-=hitangle_e;
     
 }
 
-void Balloon::GetHitAngles(Settings *settings1,Anita *anita1,int inu,const Vector &n_exit2bn,const Vector &n_pol,int ilayer,int ifold,
+void Balloon::GetHitAngles(Settings *settings1,Anita *anita1,const Vector &n_exit2bn,const Vector &n_pol,int ilayer,int ifold,
 						   double& hitangle_e,double& hitangle_h,double& e_component,double& h_component,Vector &ant_normal) {
     
     // this find the angles that the signal hits the antenna relative to the e and h polarizations
@@ -734,8 +733,7 @@ void Balloon::setr_bn(double latitude,double longitude) {
     r_bn = Position(theta_bn,phi_bn);  //r_bn is a unit vector pointing in the right direction
 }
 
-void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, Settings *settings1, IceModel *antarctica1, int inu,								        Ray *ray1, TH1F *prob_eachbin, TH1F *vol_eachbin, TH1F *prob_eachbin_weighted, TH1F *prob_eachbnposition,
-					   TH1F *diff_ilon_bn_ibnposition, int &beyondhorizon) {
+void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, Settings *settings1, IceModel *antarctica1,								        Ray *ray1, int &beyondhorizon) {
     
   double distance=1.E7;
   double phi=0,theta=0;
@@ -745,7 +743,7 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
   
   if (settings1->UNBIASED_SELECTION==1) {
 
-    if (antarctica1->PickUnbiased(inu,interaction1,antarctica1)) { // pick neutrino direction and interaction point
+    if (antarctica1->PickUnbiased(interaction1,antarctica1)) { // pick neutrino direction and interaction point
       interaction1->dtryingdirection=1.;
       interaction1->iceinteraction=1;
     }
@@ -789,7 +787,7 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
       
     }
     else{
-      interaction1->posnu = antarctica1->PickInteractionLocation(ibnposition,inu);
+      interaction1->posnu = antarctica1->PickInteractionLocation(ibnposition);
     }
   }
   
@@ -1066,7 +1064,7 @@ void Balloon::GetBoresights(Settings *settings1,Anita *anita1) {
   Vector ant_pos;
   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-      ant_pos=RotatePayload(settings1,anita1,ant_pos);
+      ant_pos=RotatePayload(ant_pos);
       r_boresights[ilayer][ifold] = ant_pos+r_bn;
     }
   }
@@ -1097,7 +1095,7 @@ void Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
 			}//else
 			
 			
-			antenna_position=RotatePayload(settings1,anita1,antenna_position);
+			antenna_position=RotatePayload(antenna_position);
 		
 			anita1->antenna_positions[number_all_antennas] = antenna_position;
 			number_all_antennas++;
@@ -1106,21 +1104,16 @@ void Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
    
     return;
 }
-Vector Balloon::RotatePayload(Settings *settings1,Anita *anita1,Vector ant_pos_pre) {
+
+Vector Balloon::RotatePayload(Vector ant_pos_pre) {
   if(WHICHPATH==7){
     pitch=-0.29; //ANITA-2 settings in ANALYSIS
     roll=0.89; //ANITA-2 settings in ANALYSIS
   }
   
   //double TWOPI = 6.283;
-  double anitaLatitude=latitude;
-  double anitaLongitude=longitude;
-  double anitaAltitude=altitude;
-
  
   Vector BalloonPos;
-  double tempThetaWave;
-  double tempPhiWave;
 
   BalloonPos=r_bn;
   double BalloonTheta = BalloonPos.Theta();
@@ -1130,11 +1123,7 @@ Vector Balloon::RotatePayload(Settings *settings1,Anita *anita1,Vector ant_pos_p
     BalloonPhi =BalloonPhi-TWOPI;
   }
   
- 
-  double angle;
   Vector ant_pos = ant_pos_pre;
-  double cos_angle;
-  int ant=0;
 
   Vector zaxis(0.,0.,-1.);
   Vector xaxis(1.,0.,0.);//roll axis
