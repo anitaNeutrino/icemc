@@ -649,5 +649,8 @@ Added a new version of calculate antenna positions (which was moved back to ball
 02/24/16 L. Cremonesi
 Corrected a bug when evaluating the horizon with the anita3 flight path. V-POL phi-masking should work now, but since H-POL doesn't work yet the phi-masking flag for anita3 should still be kept off.
 
-02/25/16 L.Cremonesi
+02/25/16 L. Cremonesi
 Fixed a bug with realTime_flightdata and committed a few changes to solve the "warnings" appearing during compilation
+
+03/04/16 L. Cremonesi
+Fixed a bug that was causing all the antennas to trigger all the time and adjusted the structure to save simulated anita events, headers, and gps files.

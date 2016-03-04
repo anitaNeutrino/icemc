@@ -422,7 +422,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8) {  // For Anita 1 and Anita 2 and Anita 3:
 
 		  // igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
-		  igps = int(randomNumber*flightdatachain->GetEntries());
+		  igps = int(randomNumber*flightdatachain->GetEntries()); // pick random event in the tree
 		  flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
 		  realTime_flightdata = realTime_flightdata_temp;
 		  while (faltitude<MINALTITUDE || fheading<0) { // if the altitude is too low, pick another event.

@@ -66,6 +66,8 @@
 
 #include <typeinfo>
 
+//#define ANITA_UTIL_EXISTS
+
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
 #include "AnitaGeomTool.h"
@@ -1230,7 +1232,8 @@ int main(int argc, char **argv) {
   finaltree->Branch("vertcoord_bn",&bn1->vertcoord_bn,"vertcoord_bn/D");
   finaltree->Branch("r_bn",&r_bn_array,"r_bn_array[3]/D");
   finaltree->Branch("n_bn",&n_bn_array,"n_bn_array[3]/D");
-  finaltree->Branch("lomgitude_bn",&longitude_this,"lomgitude_bn/D");
+  finaltree->Branch("longitude_bn",&longitude_this,"longitude_bn/D");
+  finaltree->Branch("heading_bn",&heading_this,"heading_bn/D");
   // this one is just weight due to earth absorption
   finaltree->Branch("weight1",&weight1,"weight1/D");
   // this is the total weight - the one you want to use!
@@ -1705,17 +1708,29 @@ int main(int argc, char **argv) {
   double true_efield_array[4];
   // end energy reconstruction variables
   
-  TTree *eventTree = 0;
-  TTree *adu5PatTree = 0;
 #ifdef ANITA_UTIL_EXISTS
-  eventTree = new TTree("eventTree","eventTree");
-  eventTree->Branch("UsefulAnitaEvent", &realEvPtr);
-  eventTree->Branch("header", &rawHeaderPtr);
-  
-  
-  adu5PatTree = new TTree("adu5PatTree","adu5PatTree");
-  adu5PatTree->Branch("pat",&Adu5PatPtr);
 
+  string outputAnitaFile =settings1->outputdir+"/SimulatedAnitaEventFile"+run_num+".root";
+  TFile *anitafileEvent = new TFile(outputAnitaFile.c_str(),"RECREATE");
+
+  TTree *eventTree = new TTree("eventTree","eventTree");
+  eventTree->Branch("UsefulAnitaEvent", &realEvPtr);
+  eventTree->Branch("run", &run_no, "run/I");
+  
+  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaHeadFile"+run_num+".root";
+  TFile *anitafileHead = new TFile(outputAnitaFile.c_str(),"RECREATE");
+  
+  TTree *headTree = new TTree("headTree","headTree");
+  headTree->Branch("header", &rawHeaderPtr);
+
+  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaGpsFile"+run_num+".root";
+  TFile *anitafileGps = new TFile(outputAnitaFile.c_str(),"RECREATE");
+
+  UInt_t eventNumber;
+  TTree *adu5PatTree = new TTree("adu5PatTree","adu5PatTree");
+  adu5PatTree->Branch("pat",&Adu5PatPtr);
+  adu5PatTree->Branch("eventNumber", &eventNumber, "eventNumber/I");
+  
   AnitaGeomTool *AnitaGeom1 = new AnitaGeomTool();
   
 #endif
@@ -3694,79 +3709,98 @@ cout << "reminder that I took out ChangeCoord.\n";
 	      //			    cout <<"ptauf is "<<ptauf<<endl;
 	      
 #ifdef ANITA_UTIL_EXISTS
-	      realEvPtr 	= new UsefulAnitaEvent();
-	      rawHeaderPtr	= new RawAnitaHeader();
-	      Adu5PatPtr	= new Adu5Pat();
+	       realEvPtr 	= new UsefulAnitaEvent();
+	       rawHeaderPtr	= new RawAnitaHeader();
+	       Adu5PatPtr	= new Adu5Pat();
 	      
-		  const int numAnts_temp = 40;
+	       // const int numAnts_temp = 40;
+	       // Total number of antennas
+	       int numAnts_temp = anita1->PHITRIG[0] + anita1->PHITRIG[1] + anita1->PHITRIG[2] ;
+	       int fNumPoints = 260;
+	       for (int i = 0; i < 90; i++){
+		 for (int j = 0; j < 260; j++){
+		   realEvPtr->fVolts[i][j] = 0.;
+		   realEvPtr->fTimes[i][j] = 0.;
+		 }
+	       }
 	      
-		  for (int i = 0; i < 90; i++){
-		  	for (int j = 0; j < 260; j++){
-		  		realEvPtr->fVolts[i][j] = 0.;
-		  		realEvPtr->fTimes[i][j] = 0.;
-			}
-	      }
-	      
-	      for (int i = 0; i < numAnts_temp; i++){
-			int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1, AnitaGeom1, i);
+	       for (int iant = 0; iant < numAnts_temp; iant++){
+		 int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1, AnitaGeom1, iant);
 			
-			int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(i, AnitaPol::kHorizontal);
-			int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(i, AnitaPol::kVertical);
+		 int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant, AnitaPol::kHorizontal);
+		 int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant, AnitaPol::kVertical);
 		
-			realEvPtr->fNumPoints[UsefulChanIndexV] = 260;
-			realEvPtr->fNumPoints[UsefulChanIndexH] = 260;
-	                
-			for (int j = 0; j < realEvPtr->fNumPoints[i]; j++) {
+		 realEvPtr->fNumPoints[UsefulChanIndexV] = fNumPoints;
+		 realEvPtr->fNumPoints[UsefulChanIndexH] = fNumPoints;
+
+		 realEvPtr->chanId[UsefulChanIndexV] = UsefulChanIndexV;
+		 realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
+
+		 for (int j = 0; j < fNumPoints; j++) {
 		  
-		  		realEvPtr->fVolts[UsefulChanIndexH][j] = volts_rx_rfcm_lab_h_all[IceMCAnt][j + 128] * 1000.;
-		  		realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
-		  		realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
+		   realEvPtr->fVolts[UsefulChanIndexH][j] = volts_rx_rfcm_lab_h_all[IceMCAnt][j + 128] * 1000.;
+		   realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
+		   realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
 		  		
-				//if (realEvPtr->fVolts[UsefulChanIndexH][j] != realEvPtr->fVolts[UsefulChanIndexH][j])
-		     	//	cout << "Nan/inf" << endl;
+		   //if (realEvPtr->fVolts[UsefulChanIndexH][j] != realEvPtr->fVolts[UsefulChanIndexH][j])
+		   //	cout << "Nan/inf" << endl;
 		     	
-		     	//if (realEvPtr->fVolts[UsefulChanIndexH][j] > 0.1)
-		     	//	cout << "fvolts: " << realEvPtr->fVolts[UsefulChanIndexH][j] << ", volts_rx: " << volts_rx_rfcm_lab_h_all[IceMCAnt][j+128] << endl;
+		   //if (realEvPtr->fVolts[UsefulChanIndexH][j] > 0.1)
+		   //	cout << "fvolts: " << realEvPtr->fVolts[UsefulChanIndexH][j] << ", volts_rx: " << volts_rx_rfcm_lab_h_all[IceMCAnt][j+128] << endl;
 		  		
-		  		realEvPtr->fVolts[UsefulChanIndexV][j] = volts_rx_rfcm_lab_e_all[IceMCAnt][j + 128] * 1000.;
-		  		realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
-		  		realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
-			}//int j
-		
-			rawHeaderPtr->eventNumber = inu;
-			rawHeaderPtr->surfSlipFlag = 0;
-			rawHeaderPtr->errorFlag = 0;
-			rawHeaderPtr->trigType = 1;//wrong?!
+		   realEvPtr->fVolts[UsefulChanIndexV][j] = volts_rx_rfcm_lab_e_all[IceMCAnt][j + 128] * 1000.;
+		   realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
+		   realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
+		 }//int j
+
+	       }// int iant
+
+	       realEvPtr->eventNumber = inu;
+	       
+	       rawHeaderPtr->eventNumber = inu;
+	       rawHeaderPtr->surfSlipFlag = 0;
+	       rawHeaderPtr->errorFlag = 0;
+	       rawHeaderPtr->trigType = 1;//wrong?!
+	       rawHeaderPtr->run = run_no;
 	
-			rawHeaderPtr->upperL1TrigPattern = l1trig[0];
-			rawHeaderPtr->lowerL1TrigPattern = l1trig[1];
-			rawHeaderPtr->nadirL1TrigPattern = l1trig[2];
+	       rawHeaderPtr->upperL1TrigPattern = l1trig[0];
+	       rawHeaderPtr->lowerL1TrigPattern = l1trig[1];
+	       rawHeaderPtr->nadirL1TrigPattern = l1trig[2];
 
-			rawHeaderPtr->upperL2TrigPattern = l2trig[0];
-			rawHeaderPtr->lowerL2TrigPattern = l2trig[1];
-			rawHeaderPtr->nadirL2TrigPattern = l2trig[2];
+	       rawHeaderPtr->upperL2TrigPattern = l2trig[0];
+	       rawHeaderPtr->lowerL2TrigPattern = l2trig[1];
+	       rawHeaderPtr->nadirL2TrigPattern = l2trig[2];
 
-			rawHeaderPtr->l3TrigPattern = l3trig;
+	       rawHeaderPtr->l3TrigPattern = l3trig;
+	       if (settings1->WHICH==9) { // anita-3
+		 rawHeaderPtr->l3TrigPatternH = l3trigH;
+		 rawHeaderPtr->l1TrigMask   = l1TrigMask;
+		 rawHeaderPtr->phiTrigMask  = phiTrigMask;
+		 rawHeaderPtr->l1TrigMaskH  = l1TrigMaskH;
+		 rawHeaderPtr->phiTrigMaskH = phiTrigMaskH;
+	       }
 
+	       rawHeaderPtr->calibStatus = 15;
+	       rawHeaderPtr->realTime = bn1->realTime_flightdata;
+			
+	       Adu5PatPtr->latitude= bn1->latitude;
+	       Adu5PatPtr->longitude=bn1->longitude;
+	       Adu5PatPtr->altitude=bn1->altitude;
+	       Adu5PatPtr->realTime=bn1->realTime_flightdata;
+	       Adu5PatPtr->heading = bn1->heading;
+	       Adu5PatPtr->pitch = bn1->pitch;
+	       Adu5PatPtr->roll = bn1->roll;
+	       Adu5PatPtr->run = run_no;
+	       eventNumber = inu;
+	      			
+	       headTree->Fill();
+	       eventTree->Fill();
+	       adu5PatTree->Fill();
 
-			rawHeaderPtr->calibStatus = 15;
-			rawHeaderPtr->realTime = bn1->realTime_flightdata;
+	       delete realEvPtr;
+	       delete rawHeaderPtr;
+	       delete Adu5PatPtr;
 
-
-			Adu5PatPtr->latitude= bn1->latitude;
-			Adu5PatPtr->longitude=bn1->longitude;
-			Adu5PatPtr->altitude=bn1->altitude;
-			Adu5PatPtr->realTime=bn1->realTime_flightdata;
-			Adu5PatPtr->heading = bn1->heading;
-
-	      }//int i
-              
-	      delete realEvPtr;
-	      delete rawHeaderPtr;
-	      delete Adu5PatPtr;
-
-	      eventTree->Fill();
-	      adu5PatTree->Fill();
 
 #endif // #ifdef ANITA_UTIL_EXISTS
 
@@ -3904,6 +3938,27 @@ cout << "reminder that I took out ChangeCoord.\n";
   }  // end loop over neutrinos
   gRandom=rsave;
   delete Rand3;
+
+
+#ifdef ANITA_UTIL_EXISTS
+
+  anitafileEvent->cd();
+  eventTree->Write("eventTree");
+  anitafileEvent->Close();
+  delete anitafileEvent;
+  
+  anitafileHead->cd();
+  headTree->Write("headTree");
+  anitafileHead->Close();
+  delete anitafileHead;
+  
+  anitafileGps->cd();
+  adu5PatTree->Write("adu5PatTree");
+  anitafileGps->Close();
+  delete anitafileGps;
+  
+#endif  
+
   
   
   cout << "about to close tsignals tree.\n";
@@ -3998,10 +4053,11 @@ cout << "reminder that I took out ChangeCoord.\n";
   //if (tree17->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && HIST==1)
   //tree17->Fill();
   
-  
+
   cout << "closing file.\n";
   
   CloseTFile(hfile);
+
   
   time_t raw_end_time = time(NULL);
   struct tm * end_time = localtime(&raw_end_time);

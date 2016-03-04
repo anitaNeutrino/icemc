@@ -320,7 +320,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		powerthreshold[3] << " (H)\t" <<
 		powerthreshold[4] << " \n";
 		
-    } else if (BANDING==3){ // anita-3
+    } else if (BANDING==4){ // anita-3
       powerthreshold[0]=-1; // not used 
       powerthreshold[1]=-1; // not used 
       powerthreshold[2]=-1; // not used 
@@ -429,8 +429,10 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		sdiode="data/diode_anita1.root";
     else if (BANDING==1) 
 		sdiode="data/diode_nobanding.root";
-    else if (BANDING==2 || BANDING==4) // Linda for the moment use anita-2 banding diode data for anita3 and only look at full band 
+    else if (BANDING==2)
 		sdiode="data/diode_anita2.root";
+    else if (BANDING==4) // Linda
+		sdiode="data/diode_anita3.root";
     
     fnoise=new TFile(sdiode.c_str());
     tdiode=(TTree*)fnoise->Get("diodeoutputtree");
@@ -442,8 +444,10 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		sbands="data/bands_anita1.root";
     else if (BANDING==1)   
 		sbands="data/bands_nobanding.root";
-    else if (BANDING==2 || BANDING==4) // Linda for the moment use anita-2 banding diode data for anita3 and only look at full band 
-		sbands="data/bands_anita2.root";
+    else if (BANDING==2)
+      sbands="data/bands_anita2.root";
+    else if (BANDING==4) // Linda 
+      sbands="data/bands_anita2.root";
     
     TFile *fbands=new TFile(sbands.c_str());
     TTree *tbands=(TTree*)fbands->Get("bandstree");
