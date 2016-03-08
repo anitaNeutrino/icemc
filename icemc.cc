@@ -66,7 +66,7 @@
 
 #include <typeinfo>
 
-//#define ANITA_UTIL_EXISTS
+// #define ANITA_UTIL_EXISTS
 
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
@@ -655,10 +655,11 @@ int GetIceMCAntfromUsefulEventAnt(Anita *anita1, AnitaGeomTool *AnitaGeom1, int 
   double threshold_end=-6.;
   const int NTHRESHOLDS=20;
   double threshold_step=(threshold_end-threshold_start)/(double)NTHRESHOLDS;
-  
+
 double npass_v_thresh[NTHRESHOLDS]={0.};
-  
 double denom_v_thresh[NTHRESHOLDS]={0.};
+double npass_h_thresh[NTHRESHOLDS]={0.};
+double denom_h_thresh[NTHRESHOLDS]={0.};
   double thresholds[NTHRESHOLDS];
 
 
@@ -1307,8 +1308,8 @@ int main(int argc, char **argv) {
   //  finaltree->Branch("exponent",&EXPONENT,"EXPONENT/D");
   finaltree->Branch("exponent",&settings1->EXPONENT,"EXPONENT/D");
   
-  finaltree->Branch("hitangle_e_all",&hitangle_e_all,"hitangle_e_all[Anita::NANTENNAS_MAX]/D");
-  finaltree->Branch("hitangle_h_all",&hitangle_h_all,"hitangle_h_all[Anita::NANTENNAS_MAX]/D");
+  finaltree->Branch("hitangle_e_all",&hitangle_e_all,"hitangle_e_all[48]/D");
+  finaltree->Branch("hitangle_h_all",&hitangle_h_all,"hitangle_h_all[48]/D");
   
   finaltree->Branch("e_comp_max1",&e_comp_max1,"e_comp_max1/D");
   finaltree->Branch("h_comp_max1",&h_comp_max1,"h_comp_max1/D");
@@ -1331,7 +1332,7 @@ int main(int argc, char **argv) {
   finaltree->Branch("theta_pol_measured",&theta_pol_measured,"theta_pol_measured/D");
   finaltree->Branch("theta_rf_atbn",&theta_rf_atbn,"theta_rf_atbn/D");
   finaltree->Branch("theta_rf_atbn_measured",&theta_rf_atbn_measured,"theta_rf_atbn_measured/D");
-  finaltree->Branch("voltage",&voltagearray,"voltagearray[Anita::NANTENNAS_MAX]/D");
+  finaltree->Branch("voltage",&voltagearray,"voltagearray[48]/D");
   finaltree->Branch("nlayers",&settings1->NLAYERS,"settings1->NLAYERS/I");
   
   //finaltree->Branch("taudecay",&taudecayint,"taudecayint/I");//1=m, 2=e, 3=h
@@ -1884,7 +1885,7 @@ cout << "reminder that I took out ChangeCoord.\n";
   } //if (settings1->WHICHRAYS==3)
   
   time_t raw_loop_start_time = time(NULL);
-  cout<<"Starting loop over events.  Time required for setup is "<<(int)((raw_loop_start_time - raw_start_time)/60)<<":"<< ((raw_loop_start_time - raw_start_time)%60)<<endl<<endl;
+  cout<<"Starting loop over events.  Time required for setup is "<<(int)((raw_loop_start_time - raw_start_time)/60)<<":"<< ((raw_loop_start_time - raw_start_time)%60)<<endl;
   
   // Spectra *spectra1 = new Spectra((int)EXPONENT);
   //   TGraph *gE2=new TGraph(10,spectra1->energy,spectra1->E2dNdEdAdt);
@@ -3428,15 +3429,21 @@ cout << "reminder that I took out ChangeCoord.\n";
       eventsfound_beforetrigger+=weight;
       
  
-      bool hpol = false;
       for (int i=0;i<NTHRESHOLDS;i++) {
 	double this_threshold=  threshold_start+(double)i*threshold_step;
 	thresholds[i]=fabs(this_threshold);
-	if (globaltrig1->PassesTrigger(settings1,anita1,discones_passing,2,l3trig,l2trig,l1trig,settings1->antennaclump,loctrig,loctrig_nadironly,inu,this_threshold, hpol)) {
+	if (globaltrig1->PassesTrigger(settings1,anita1,discones_passing,2,l3trig,l2trig,l1trig,settings1->antennaclump,loctrig,loctrig_nadironly,inu,this_threshold)) {
 	  npass_v_thresh[i]+=1.;
 	  
 	}
+
+	// for anita-3 also trigger on HPOL
+	if (settings1->WHICH==9 && globaltrig1->PassesTrigger(settings1,anita1,discones_passing,2,l3trigH,l2trigH,l1trigH,settings1->antennaclump,loctrigH,loctrigH_nadironly,inu,this_threshold, true)) {
+	  npass_h_thresh[i]+=1.;
+	  
+	}
 	
+	denom_h_thresh[i]+=1.E-7;	
 	denom_v_thresh[i]+=1.E-7;
 	//cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime],anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
 	
@@ -3444,9 +3451,11 @@ cout << "reminder that I took out ChangeCoord.\n";
       
       
       // now ask if global trigger passes
-      if ((settings1->TRIGTYPE==1 && globaltrig1->PassesTrigger(settings1,anita1,discones_passing,2,l3trig,l2trig,l1trig,settings1->antennaclump,loctrig,loctrig_nadironly,inu, hpol)) || // for Anita
-	  (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD) // for Anita-lite, Anita Hill.  This option is currently disabled
+      if ((settings1->TRIGTYPE==1 && globaltrig1->PassesTrigger(settings1,anita1,discones_passing,2,l3trig,l2trig,l1trig,settings1->antennaclump,loctrig,loctrig_nadironly,inu)) || // for Anita
+	  (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD)// for Anita-lite, Anita Hill.  This option is currently disabled
 	  // just L1 requirement on 2 antennas
+	  // For anita-3 also trigger on HPOL
+	  || (settings1->WHICH==9 && settings1->TRIGTYPE==1 && globaltrig1->PassesTrigger(settings1,anita1,discones_passing,2,l3trigH,l2trigH,l1trigH,settings1->antennaclump,loctrigH,loctrigH_nadironly,inu, true))
 	  ) {
 	
 	if (bn1->WHICHPATH==4)
@@ -4104,16 +4113,27 @@ void Summarize(Settings *settings1, Anita* anita1, Counting *count1,Spectra *spe
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
   double errordown_v_thresh[NTHRESHOLDS];
+  double rate_h_thresh[NTHRESHOLDS];
+  double errorup_h_thresh[NTHRESHOLDS];
+  double errordown_h_thresh[NTHRESHOLDS];
   double zeroes[NTHRESHOLDS];
   Tools::Zero(zeroes,NTHRESHOLDS);
 
   // plot result of threshold scan
   for (int i=0;i<NTHRESHOLDS;i++) {
-    //cout << "i, npass_v_thresh are " << i << "\t" << npass_v_thresh[i] << "\n";
     rate_v_thresh[i]=npass_v_thresh[i]/denom_v_thresh[i];
+    // cout << "i, npass_v_thresh are " << i << "\t" << npass_v_thresh[i] << " " << denom_v_thresh[i] << " " << rate_v_thresh[i] << "\n";
     if (npass_v_thresh[i]<=20) {
       errorup_v_thresh[i]=poissonerror_plus[(int)npass_v_thresh[i]]/denom_v_thresh[i];
       errordown_v_thresh[i]=poissonerror_minus[(int)npass_v_thresh[i]]/denom_v_thresh[i];
+      // cout << errorup_v_thresh[i] << " " << errordown_v_thresh[i] << endl;
+    }
+    if (settings1->WHICH==9){ // Anita-3
+    rate_h_thresh[i]=npass_h_thresh[i]/denom_h_thresh[i];
+    if (npass_h_thresh[i]<=20) {
+      errorup_h_thresh[i]=poissonerror_plus[(int)npass_h_thresh[i]]/denom_h_thresh[i];
+      errordown_h_thresh[i]=poissonerror_minus[(int)npass_h_thresh[i]]/denom_h_thresh[i];
+    }      
     }
   }
   string stemp=settings1->outputdir+"/thresholds.root";
@@ -4137,9 +4157,34 @@ void Summarize(Settings *settings1, Anita* anita1, Counting *count1,Spectra *spe
   g->Write();
   gdenom->Write();
   gnpass->Write();
-  fthresholds->Write();
+
+
+  if (settings1->WHICH==9){ // Anita-3
+    TGraph *gnpassH=new TGraph(NTHRESHOLDS,thresholds,npass_h_thresh);
+    gnpassH->SetName("npassH");
+    TGraph *gdenomH=new TGraph(NTHRESHOLDS,thresholds,denom_h_thresh);
+    gdenomH->SetName("denomH");
+    
+    TGraphAsymmErrors *gH=new TGraphAsymmErrors(NTHRESHOLDS,thresholds,rate_h_thresh,zeroes,zeroes,errorup_h_thresh,errordown_h_thresh);
+    gH->SetName("rate");
+
+    gH->SetLineWidth(2);
+    gH->SetMarkerStyle(21);
+    gH->Draw("ape");
+
+    cthresh->Print("thresholds_HPOL.eps");
+    gH->Write();
+    gdenomH->Write();
+    gnpassH->Write();
+
+
+  }
+
+  fthresholds->Write();  
   fthresholds->Close();
 
+
+  
 
     double ses;                          // single-event sensitivity
     double km2sr;                        // aperture km**2-sr
@@ -5455,7 +5500,7 @@ int GetIceMCAntfromUsefulEventAnt(Anita *anita1, AnitaGeomTool *AnitaGeom1, int 
     //    int layer_temp = IceMCLayerPosition[UsefulEventIndex][0];
     //    int position_temp = IceMCLayerPosition[UsefulEventIndex][1];
     //    int IceMCIndex = anita1->GetRx(layer_temp, position_temp);
-    int IceMCAnt = UsefulEventAnt;
-    return IceMCAnt;
+  int IceMCAnt = UsefulEventAnt;
+  return IceMCAnt;
 }
 #endif

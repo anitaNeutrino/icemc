@@ -80,7 +80,7 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigM
     phiTrigMask=phiTrigMask_bn; // set the phi mask to the input value which comes from the balloon class
     phiTrigMaskH=phiTrigMaskH_bn; // set the phi mask to the input value which comes from the balloon class
     l1TrigMask=l1TrigMask_bn; // set the phi mask to the input value which comes from the balloon class
-    l1TrigMask=l1TrigMaskH_bn; // set the phi mask to the input value which comes from the balloon class
+    l1TrigMaskH=l1TrigMaskH_bn; // set the phi mask to the input value which comes from the balloon class
     
     for (int i=0;i<Anita::NLAYERS_MAX;i++) {
       for (int j=0;j<Anita::NPHI_MAX;j++) {
@@ -381,7 +381,7 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
 	      noise_eachband[1][ibw]=anita1->bwslice_enoise[ibw];
 	    }
 	    
-	    
+
 	    // compare the signal to noise and see if it passes
 	    if (signal_eachband[1][ibw]/noise_eachband[1][ibw]>=threshold_eachband[1][ibw]) {
 	      if (anita1->pol_allowed[1] && anita1->bwslice_allowed[ibw]) {
@@ -615,6 +615,7 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
 	for (int ibin = anita1->iminbin[j]; ibin < anita1->imaxbin[j]; ibin++) {
 	  if (timedomain_output_1[j][ibin] < thresholds[j] * anita1->bwslice_rmsdiode[j]) {
 	    if (anita1->pol_allowed[0] && anita1->bwslice_allowed[j]) { // is this polarization and bw slice allowed to pass
+	      //	      std::cout << j << " " << timedomain_output_1[j][ibin]  << " " <<  thresholds[j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
 	      anita1->channels_passing_e[j] = 1;// channel passes
 	    }
 	  }
@@ -1616,12 +1617,12 @@ void AntTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,doub
  *			There is a decent amount of dead code which should be pruned, as well.
  */
 
-int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu, bool ishpol=false) {
+int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu, bool ishpol) {
   double this_threshold= -4.34495;
   PassesTrigger(settings1,anita1,discones_passing,mode,l3trig,l2trig,l1trig,antennaclump,loctrig,loctrig_nadironly,inu,this_threshold, ishpol);   
 
 }
-int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu,double this_threshold, bool ishpol=false) {
+int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu,double this_threshold, bool ishpol) {
 
   //bool ishpol should only be used for anita3, by default do vpol
   
@@ -1732,12 +1733,12 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	      if (settings1->PHIMASKING && settings1->WHICH==9) // only applying channel masking like this if it's 
 		if ((ipolar==0 && (1<<iphitrig & l1TrigMask)) || (ipolar==1 && (1<<iphitrig & l1TrigMaskH)) )
 		  continue; // was this channel masked?
-		
 	      antsum = antsum +1; // sum channels that pass for this antenna
 
 	    }
 	  } // loop over bands
 	} // end loop over polarizations
+	
 	
 	for (int ipolar=0;ipolar<2;ipolar++) {
 	  for (int iband=0;iband<NBAND;iband++) { // notice sum over 5 bands now
@@ -1747,14 +1748,12 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	    }
 	  }
 	}
-	
+
 	// if the required bands didn't pass then set antsum=0 so the antenna doesn't pass	  
 	if(antsum >= anita1->trigRequirements[0])  { // do more than 3 channels out of 8 pass?
 	  ant[iloc][iphitrig] = 1; // then this antenna passes L1.
 	  antpass++;
-	} //if
-	
-      
+	} //if      
 
       } //for (phi position)
     } //for (layers)

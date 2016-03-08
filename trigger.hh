@@ -60,8 +60,8 @@ public:
     // for the nadir studies
     
     // this is L2 and L3 triggers
-  int PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int &l3trig,int *l2trig,int *l1trig,int antennaclump,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int inu, bool ishpol);
-  int PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int &l3trig,int *l2trig,int *l1trig,int antennaclump,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int inu,double this_threshold, bool ishpol);
+  int PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int &l3trig,int *l2trig,int *l1trig,int antennaclump,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int inu, bool ishpol=false);
+  int PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int &l3trig,int *l2trig,int *l1trig,int antennaclump,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int inu,double this_threshold, bool ishpol=false);
     int L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int discones_passing,int &l3trigy);
     
     

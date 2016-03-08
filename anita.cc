@@ -1067,7 +1067,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 	
 	if ((BANDING==2 && j!=3) ||
 	    //	(BANDING!=2 && j!=4)) {
-	    (BANDING!=2)) {
+	    (BANDING!=2 && BANDING!=4) ||
+	    (BANDING==4 && j==4) ){
 	    c4->cd(jplot+1);
 	    
 	    if (j==0 && BANDING==2)
@@ -1076,7 +1077,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		hnoise[j]->Fit(frice[j],"Q","",-20.,2.);
 	    if (j==2 && BANDING==2)
 		hnoise[j]->Fit(frice[j],"Q","",-20.,10.);
-	    if (j==4 && BANDING==2)
+	    if (j==4 && (BANDING==2 || BANDING==4))
 		hnoise[j]->Fit(frice[j],"Q","",-15.,15.);
 	    
 	    if (j==0 && BANDING==0)
