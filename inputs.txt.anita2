@@ -11,7 +11,7 @@
 0      # Write neutrino position info to file
 0	#EVENTSMAP (1)draw the events distribution map or (0) not
 ### Balloon and payload
-9      # Which payload:  ANITA-lite (0), Ross Payload (1), 2006-2007 flight with simple settings, Make Your Own (3), Ant Hill (4), 2006-2007 flight with Kurt measurements(6), EeVEX (one layer of antennas) (7), ANITA-II (8), ANITA-III (9), (SWORD) Satellite (10) 
+8      # Which payload:  ANITA-lite (0), Ross Payload (1), 2006-2007 flight with simple settings, Make Your Own (3), Ant Hill (4), 2006-2007 flight with Kurt measurements(6), EeVEX (one layer of antennas) (7), ANITA-II (8), ANITA-III (9), (SWORD) Satellite (10) 
 4      # How many physical layers of antennas to include.  If you indicate N, it will consider the top N layers and ignore the rest.  Useful for turning off the nadirs.  4=default
 10     # Inclination angle in degrees for top three antenna layers 10=default
 10     # Inclination angle in degrees for fourth layer of antennas 10=default
@@ -22,7 +22,7 @@
 120000. # Pick balloon altitude in ft. (0) 120000 ft. or whatever you choose.
 1 # Constant gains (0) or Ped's measured gains (1)
 ### Trigger 
-3	# Trigger:  frequency domain voltage (0) frequency domain energy (1) timedomain diode integration (2) coherent sum trigger (3)
+2	# Trigger:  frequency domain voltage (0) frequency domain energy (1) timedomain diode integration (2) coherent sum trigger (3)
 2.3	2.3	 2.3	     2.3	2.3	#thresholds for each band- this is only for the frequency domain voltage trigger.  If using a different trigger scheme then keep these at the default values of 2.3 because the max among them is used for the chance in hell cuts
 2	#Banding (0) as in Anita 1 or (1) choose your own in the next lines or (2) Anita 2 or (3) satellite - indicate # of bands and % bandwidth below
 200	400	 600	     600	200	#lower edge of each band
