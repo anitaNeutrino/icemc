@@ -590,7 +590,7 @@ void Balloon::GetHitAngles(Settings *settings1,Anita *anita1,const Vector &n_exi
     
     // now rotate for antenna's orientation on the payload.
     
-    if(settings1->WHICH==6 || settings1->WHICH==8) {
+    if(settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH==9) {
 		n_eplane = n_eplane.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
 		n_hplane = n_hplane.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
 		n_normal = n_normal.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
@@ -1080,7 +1080,6 @@ void Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
 			double phi = 0;
 			if (settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH == 9){ //If payload is either
 				antenna_position = anita1->ANTENNA_POSITION_START[ilayer][ifold];
-				
 			}
 			else {
 				if (settings1->CYLINDRICALSYMMETRY==1){ // for timing code

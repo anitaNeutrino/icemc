@@ -654,3 +654,9 @@ Fixed a bug with realTime_flightdata and committed a few changes to solve the "w
 
 03/04/16 L. Cremonesi
 Fixed a bug that was causing all the antennas to trigger all the time and adjusted the structure to save simulated anita events, headers, and gps files.
+
+03/08/16 L. Cremonesi
+First commit of the HPOL trigger for Anita-3. Doesn't work properly yet.
+
+03/17/16 L. Cremonesi
+Fixed antenna time delays and channel mapping for Anita-3. Fixed more warnings.

@@ -272,6 +272,7 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
 	  else {// if we're considering v and h pol
 	    volts_thischannel=bwslice_volts_pole[ibw];
 	    energy_thischannel=bwslice_energy_pole[ibw];
+
 	  }
 	  
 	  
@@ -780,7 +781,6 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
       
       if (settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
 	// If TRIGGERSCHEME == 3, allow all bands to pass here. This allows the coherent waveform sum trigger scheme to be used.
-	
 	for (unsigned int ichannel = 0; ichannel < 5; ichannel++){
 	  globaltrig1->channels_passing[ilayer][ifold][0][ichannel] = 1;
 	  globaltrig1->channels_passing[ilayer][ifold][1][ichannel] = 1;
@@ -820,20 +820,20 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
 //inline AntTrigger::AntTrigger(int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,int globaltrig1->rx_minarrivaltime)
 {
     unwarned=1;
-    for (int i=0;i<2;i++) {
+    for (int ipol=0;ipol<2;ipol++) {
 		
-		for (int j=0;j<anita1->NBANDS+1;j++) {
+		for (int iband=0;iband<anita1->NBANDS+1;iband++) {
 			
 			
-			vsignal_eachband[i].push_back(0.);
-			vthreshold_eachband[i].push_back(0.);
-			vnoise_eachband[i].push_back(0.);
-			vpasses_eachband[i].push_back(0);
+			vsignal_eachband[ipol].push_back(0.);
+			vthreshold_eachband[ipol].push_back(0.);
+			vnoise_eachband[ipol].push_back(0.);
+			vpasses_eachband[ipol].push_back(0);
 			
-			signal_eachband[i][j]=0.;
-			threshold_eachband[i][j]=0.;
-			noise_eachband[i][j]=0.;
-			passes_eachband[i][j]=0;
+			signal_eachband[ipol][iband]=0.;
+			threshold_eachband[ipol][iband]=0.;
+			noise_eachband[ipol][iband]=0.;
+			passes_eachband[ipol][iband]=0;
 		}
     }
     
@@ -853,8 +853,8 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     // this gets written to a tree because it is a measure of signal strength in the frequency domain
     integral_vmmhz=0.;
     
-    for (int i=0;i<Anita::NFREQ;i++) {
-		integral_vmmhz+=vmmhz[i]*(anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+		integral_vmmhz+=vmmhz[ifreq]*(anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
     }
     
     
@@ -865,13 +865,13 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     double volts_rx_h_forfft[Anita::HALFNFOUR]={0.};
     
     // vmmhz_rx_e,h are going to be the V/m/MHz received by the rx (after gains)
-    for (int k=0;k<Anita::NFREQ;k++) {
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
 		// Convert V/m/MHz to V/m/Hz and divide by dt to prepare for fft
-		vhz_rx_e[k]=vmmhz[k]/sqrt(2.)/(anita1->TIMESTEP*1.E6); // EH, 1/sqrt(2) for dividing power in half for TDA and DDA?
-		vhz_rx_h[k]=vmmhz[k]/sqrt(2.)/(anita1->TIMESTEP*1.E6);
+		vhz_rx_e[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); // EH, 1/sqrt(2) for dividing power in half for TDA and DDA?
+		vhz_rx_h[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); 
 		
 		// let's find the peak voltage just after the antenna, with no banding
-		anita1->AntennaGain(settings1,hitangle_e,hitangle_h,e_component,h_component,k,vhz_rx_e[k],vhz_rx_h[k]);
+		anita1->AntennaGain(settings1,hitangle_e,hitangle_h,e_component,h_component,ifreq,vhz_rx_e[ifreq],vhz_rx_h[ifreq]);
 		
     }
     
@@ -904,9 +904,9 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     Tools::Zero(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR);
     
     
-    for (int i=0;i<Anita::NFREQ;i++) {
-		vhz_rx_rfcm_e[i]=vhz_rx_e[i]; // start with V/Hz after rx
-		vhz_rx_rfcm_h[i]=vhz_rx_h[i];
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+		vhz_rx_rfcm_e[ifreq]=vhz_rx_e[ifreq]; // start with V/Hz after rx
+		vhz_rx_rfcm_h[ifreq]=vhz_rx_h[ifreq];
     }
     
     // for frequency-domain voltage-based trigger (triggerscheme==0)
@@ -935,19 +935,18 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     } // end if we are just using the pulser spectrum
     
     
-    for (int i=0;i<Anita::NFREQ;i++) {
-		anita1->avgfreq_rfcm[i]+=vhz_rx_rfcm_e[i];
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+		anita1->avgfreq_rfcm[ifreq]+=vhz_rx_rfcm_e[ifreq];
     }
     
     // change their length from Anita::NFREQ to HALFNFOUR
     anita1->MakeArraysforFFT(vhz_rx_rfcm_e,vhz_rx_rfcm_h,anita1->volts_rx_rfcm_e,anita1->volts_rx_rfcm_h);
     
-    double volts_rx_rfcm_e_freq[anita1->HALFNFOUR];
-    for (int i=0;i<anita1->HALFNFOUR;i++) {
-      volts_rx_rfcm_e_freq[i]=anita1->volts_rx_rfcm_e[i];
-    }
-    
-    
+    // double volts_rx_rfcm_e_freq[anita1->HALFNFOUR];
+    // for (int i=0;i<anita1->HALFNFOUR;i++) {
+    //   volts_rx_rfcm_e_freq[i]=anita1->volts_rx_rfcm_e[i];
+    // }
+        
     // now the last two are in the frequency domain
     // convert to the time domain
     // still don't have any noise
@@ -971,8 +970,8 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
     
     
-    anita1->peak_e_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR); // with no noise // EH, I think this supposed to be WITH noise
-    anita1->peak_h_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR); // with no noise
+    anita1->peak_e_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR); // with noise 
+    anita1->peak_h_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR); // with noise
     
     
     
@@ -1018,6 +1017,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
     
     // now shift right to account for arrival times
+    // for (int i=0;i<48;i++) std::cout << arrival_times[i] << std::endl;
     Tools::ShiftRight(anita1->volts_rx_rfcm_lab_e,anita1->NFOUR/2, int(arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
     Tools::ShiftRight(anita1->volts_rx_rfcm_lab_h,anita1->NFOUR/2, int(arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
     
@@ -1884,10 +1884,11 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
     //		There will be several things hardcoded into the following method, feel free to change these to be variables within the Settings class, but for the sake of sanity, PLEASE no more global variables!
     //		This will be made to implement all types of payloads shortly, what exists below is only a temporary specialization for ANITA III.
     double timesteps[anita1->HALFNFOUR];
+
     for (unsigned int i = 0; i < anita1->HALFNFOUR; i++){
       timesteps[i] = i;
     }
-    
+
     for (int center_phi_sector_offset = -1; center_phi_sector_offset <= 1; center_phi_sector_offset++){
       int center_phi_sector_index = first_phi_sector_hit + center_phi_sector_offset;
       if (center_phi_sector_index > 15){center_phi_sector_index = 0;}
@@ -1921,6 +1922,7 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
       unsigned hi_pow_center = 0;
       unsigned hi_pow_phi_index = 0;
       unsigned hi_pow_theta_index = 0;
+     
       
       // Here the 48 antennas are filled according to the waveforms passed to PassesTrigger(...).
       unsigned fill_index = 0;
@@ -1941,7 +1943,7 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	  anita1->cwst_RXs[fill_index].x = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][0];
 	  anita1->cwst_RXs[fill_index].y = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][1];
 	  anita1->cwst_RXs[fill_index].z = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][2];
-	  
+	    
 	  anita1->cwst_RXs[fill_index].waveform->assign(volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].begin(),volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].end());
 	  
 	  for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR; ++fill_index_timestep) {
@@ -2037,7 +2039,7 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 		anita1->cwst_aligned_wfms[fill_index].x = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][0];
 		anita1->cwst_aligned_wfms[fill_index].y = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][1];
 		anita1->cwst_aligned_wfms[fill_index].z = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][2];
-		
+			  
 		unsigned time_offset = anita1->hypothesis_offsets[center_phi_sector_index][index_phi][index_theta][fill_index_phi_sector_offset + 1][fill_index_layer];
 		
 		for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR - time_offset; ++fill_index_timestep) {
@@ -2154,7 +2156,7 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	anita1->cwst_RXs[fill_index].x = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][0];
 	anita1->cwst_RXs[fill_index].y = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][1];
 	anita1->cwst_RXs[fill_index].z = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][2];
-	
+		  
 	//	Fill the waveforms
 	anita1->cwst_RXs[fill_index].waveform->assign(volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].begin(),volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].end());
 	
@@ -2292,16 +2294,16 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
   }
   else if (settings1->TRIGGERSCHEME == 5) {
     
-   
-
-
+    
+    
+    
     double threshold=this_threshold;
     
     // need to find how many in a set of 6 pass
     
     int maxsample=TMath::MaxElement(5,anita1->imaxbin);
     int minsample=TMath::MinElement(5,anita1->iminbin);
-
+    
     int nstayhigh=(int)(anita1->l1window/anita1->TIMESTEP);
     // now make each flag stay high for the required amount of time
     
@@ -2318,7 +2320,7 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
     // for (unsigned center_phi_sector_index = 0; center_phi_sector_index < 16; center_phi_sector_index+=2) {
       
 
-      for (int index_hyp=0;index_hyp<anita1->vdifferent_offsets.size();index_hyp++) {
+      for (unsigned int index_hyp=0;index_hyp<anita1->vdifferent_offsets.size();index_hyp++) {
 
 
       for (unsigned i_layer = 0; i_layer < anita1->N_SUMMED_LAYERS; ++i_layer) {
@@ -2455,13 +2457,13 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 
 	return 1;	
       }
-
+      
 
       
     } // end loop over layers
     
-	}
-
+      }
+      
 	} // end loop over center phi sectors    
 
     

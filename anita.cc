@@ -277,7 +277,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		
 		// I derive these thresholds from Ryan's plot
 		//of measured rates vs. threshold
-		// that appears on p. 9 of his talk at the Anita meeting 19th Feb 2009
+		// that appears on p. 9 of his talk at the Anita meeting 19th Feb 2008
 		//  Using 14 MHz, 8 MHz, 8MHz and 1 MHz for L, M, H and full bands
 		powerthreshold[0]=-1.87; // low band
 		powerthreshold[1]=-2.53; // middle band
@@ -325,7 +325,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
       powerthreshold[1]=-1; // not used 
       powerthreshold[2]=-1; // not used 
       powerthreshold[3]=-1; // not used
-      powerthreshold[4]=-5.3; // Linda: Taken from ANITA-2 for the moment, this number will need to be updated
+      powerthreshold[4]=-5.; // Linda: Average Anita-3 scaler is 500kHz, which corresponds to this threshold as seen in
+                             // p. 9 of Ryan's talk at the Anita meeting 19th Feb 2008
 		
       foutput << "Thresholds are (in p/<p>):  " <<
 	powerthreshold[0] << " (L)\t" <<
@@ -343,12 +344,6 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
       l1window=11.19E-9; // l1 coincidence window
     
     minsignalstrength=0.1;
-    
-    //  powerthreshold[0]=3.;
-    //   powerthreshold[1]=3.;
-    //   powerthreshold[2]=3.;
-    //   powerthreshold[3]=3.;
-    //   powerthreshold[4]=3.;
     
     impedence=50.;
     phase=90.; // phase for positive frequencies
@@ -401,18 +396,18 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     tgain->SetBranchAddress("ampl",ampl_eachantenna);
     tgain->SetBranchAddress("noisetemp",noisetemp_eachantenna);
     
-    for (int i=0;i<32;i++) {
-		tgain->GetEvent(i);
+    for (int iant=0;iant<48;iant++) {
+		tgain->GetEvent(iant);
 		for (int j=0;j<NPOINTS_AMPL;j++) {
 			
-			freq_ampl[i][j]=(double)freq_ampl_eachantenna[j];
+			freq_ampl[iant][j]=(double)freq_ampl_eachantenna[j];
 			
-			ampl[i][j]=(double)ampl_eachantenna[j];
+			ampl[iant][j]=(double)ampl_eachantenna[j];
 			
-			ampl[i][j]+=32.; // add 32 dB to correct for attenuation that was used during the test
-			ampl_notdb[i][j]=pow(10.,ampl[i][j]/10.); // convert to regular fraction
+			ampl[iant][j]+=32.; // add 32 dB to correct for attenuation that was used during the test
+			ampl_notdb[iant][j]=pow(10.,ampl[iant][j]/10.); // convert to regular fraction
 			
-			noisetemp[i][j]=(double)noisetemp_eachantenna[j]; // so far we don't use this for anything
+			noisetemp[iant][j]=(double)noisetemp_eachantenna[j]; // so far we don't use this for anything
 		}
     }
     f2->Close();
@@ -3417,7 +3412,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 		settings1->NANTENNAS+=NRX_PHI[i];
     
     cout << "nantennas is " << settings1->NANTENNAS << "\n";
-    
+    number_all_antennas=settings1->NANTENNAS;
     
     // gets noise (vrms) for each bandwidth slice and antenna layer according to antenna theta
     
@@ -3514,12 +3509,12 @@ void Anita::printDifferentOffsets() {
   ofile << "number of offsets is " << vdifferent_offsets.size() << "\n";
   
 
-  for (int i=0;i<vdifferent_offsets.size();i++) {
+  for (unsigned int i=0;i<vdifferent_offsets.size();i++) {
     for (int j=0;j<2;j++) {
       ofile << vdifferent_angles[i][j] << "\t";
     }
-    for (int j=0;j<N_SUMMED_PHI_SECTORS;j++) {
-      for (int k=0;k<N_SUMMED_LAYERS;k++) {
+    for (unsigned int j=0;j<N_SUMMED_PHI_SECTORS;j++) {
+      for (unsigned int k=0;k<N_SUMMED_LAYERS;k++) {
       //    for (int j=0;j<vdifferent_offsets[i].size();j++) {
 	ofile << vdifferent_offsets[i][N_SUMMED_LAYERS*j+k] << " ";
       //}
@@ -3562,7 +3557,7 @@ void Anita::getDifferentOffsets() {
 	int foundone=0;
 
 
-	for (int i=0;i<vdifferent_offsets.size();i++) {
+	for (unsigned int i=0;i<vdifferent_offsets.size();i++) {
 	  if (vtmp==vdifferent_offsets[i]) {
 	    foundone++;
 	    //if (hypothesis_angles[index_phi][index_theta][0]<-21 && hypothesis_angles[index_phi][index_theta][1] >-29 && hypothesis_angles[index_phi][index_theta][1]<-27)
@@ -3586,7 +3581,7 @@ void Anita::calculate_single_offset(const unsigned center_phi_sector_index, cons
     double maximum_time = -2000E-9;
    
     double to_center_of_summed_phi_sectors=((double)N_SUMMED_PHI_SECTORS/2.)*22.5-11.25;
-    cout << "to_center_of_summed_phi_sectors is " << to_center_of_summed_phi_sectors << "\n";
+    //    cout << "to_center_of_summed_phi_sectors is " << to_center_of_summed_phi_sectors << "\n";
    Vector normal_vector = Vector(cos(angle_theta * RADDEG) * cos((angle_phi+to_center_of_summed_phi_sectors) * RADDEG), cos(angle_theta * RADDEG) * sin((angle_phi+to_center_of_summed_phi_sectors) * RADDEG), sin(angle_theta * RADDEG));
     
     //    cout << "normal vector is ";
@@ -3719,16 +3714,16 @@ void Anita::GetArrivalTimes(const Vector& rf_direction) {
   
   
   // cout << "rf_direction is ";
-//   rf_direction.Print();
-  Vector one_antenna_position=antenna_positions[2*16];
+  // rf_direction.Print();
+  //Vector one_antenna_position=antenna_positions[2*16];
   // cout << "one_antenna_position is ";
-//   one_antenna_position.Print();
-
+  //   one_antenna_position.Print();
+   
     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
-      //arrival_times[antenna_index] = (antenna_positions[antenna_index] * rf_direction) / CLIGHT;
-      arrival_times[antenna_index] = ((antenna_positions[antenna_index]-one_antenna_position) * rf_direction) / CLIGHT;
+      arrival_times[antenna_index] = (antenna_positions[antenna_index] * rf_direction) / CLIGHT;
+      //      arrival_times[antenna_index] = ((antenna_positions[antenna_index]-one_antenna_position) * rf_direction) / CLIGHT;
       
-      //     cout << "index is " << antenna_index << "\n";
+           // cout << "index is " << antenna_index << "\n";
 
     } // for: loop over antenna layers
     
@@ -3738,13 +3733,14 @@ void Anita::GetArrivalTimes(const Vector& rf_direction) {
     //cout << "last_trigger_time is " << last_trigger_time << "\n";
     double first_trigger_time = Tools::dMin(arrival_times,(number_all_antennas));
      for (int i=0;i<(number_all_antennas);i++){
-      //  cout << "antenna_positions is ";
-//        antenna_positions[i].Print();
-//        cout << "diff is ";
-//       (antenna_positions[i]-one_antenna_position).Print();
-//        cout << "arrivaltimes is " << arrival_times[i] << "\n";
+        // cout << "antenna_positions is ";
+        // antenna_positions[i].Print();
+        // cout << "diff is ";
+       //       (antenna_positions[i]-one_antenna_position).Print();
+
        arrival_times[i] -= first_trigger_time;
-       //   arrival_times[i] -= last_trigger_time;
+        // cout << "arrivaltimes is " << arrival_times[i] << "\n";
+	//   arrival_times[i] -= last_trigger_time;
 
        // if (arrival_times[i] == 0){
 // 	 first_phi_sector_hit = (int)((double)i/16.);

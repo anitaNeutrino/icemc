@@ -66,7 +66,7 @@
 
 #include <typeinfo>
 
-// #define ANITA_UTIL_EXISTS
+//#define ANITA_UTIL_EXISTS
 
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
@@ -642,7 +642,8 @@ void interrupt_signal_handler(int);	// This catches the Control-C interrupt, SIG
 bool ABORT_EARLY = false;		// This flag is set to true when interrupt_signal_handler() is called
 
 #ifdef ANITA_UTIL_EXISTS
-int GetIceMCAntfromUsefulEventAnt(Anita *anita1, AnitaGeomTool *AnitaGeom1, int UsefulEventAnt);
+//int GetIceMCAntfromUsefulEventAnt(Anita *anita1, AnitaGeomTool *AnitaGeom1, int UsefulEventAnt);
+int GetIceMCAntfromUsefulEventAnt(Settings *settings1, int UsefulEventAnt);
 #ifdef R_EARTH
 #undef R_EARTH
 #endif
@@ -1732,7 +1733,7 @@ int main(int argc, char **argv) {
   adu5PatTree->Branch("pat",&Adu5PatPtr);
   adu5PatTree->Branch("eventNumber", &eventNumber, "eventNumber/I");
   
-  AnitaGeomTool *AnitaGeom1 = new AnitaGeomTool();
+  AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();// new AnitaGeomTool();
   
 #endif
   
@@ -1854,8 +1855,8 @@ cout << "reminder that I took out ChangeCoord.\n";
 
     bn1->PickBalloonPosition(plusz,antarctica,settings1,anita1);
     anita1->calculate_all_offsets();
-  double angle_theta=16.;
-  double angle_phi=0.;
+    double angle_theta=16.;
+    double angle_phi=0.;
 
     Vector x = Vector(cos(angle_theta * RADDEG) * cos((angle_phi+11.25) * RADDEG), cos(angle_theta * RADDEG) * sin((angle_phi+11.25) * RADDEG), sin(angle_theta * RADDEG));  
     anita1->GetArrivalTimes(x);
@@ -3058,7 +3059,8 @@ cout << "reminder that I took out ChangeCoord.\n";
       anita1->GetArrivalTimes(ray1->n_exit2bn[2]);
       
       anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times,settings1->NANTENNAS);
-      
+
+    
       //Zeroing
       for (int i=0;i<settings1->NANTENNAS;i++) {
 	
@@ -3104,17 +3106,28 @@ cout << "reminder that I took out ChangeCoord.\n";
       
       if (bn1->CENTER)
 	bn1->CenterPayload(settings1,anita1,ray1->n_exit2bn[2],n_pol,anita1->GetLayer(anita1->rx_minarrivaltime),anita1->GetIfold(anita1->rx_minarrivaltime));
-      
+
       if (ray1->MAKEVERTICAL) {
-	
+	//	cout << n_pol << " before and after "; 
 	n_pol=bn1->n_bn;
+	//	cout << n_pol << endl;
 	  // rotate n_exit2bn too
 	  // rotation axis n_bn crossed with n_exit2bn
 	Vector rotationaxis=ray1->n_exit2bn[2].Cross(bn1->n_bn);
 	double rotateangle=PI/2.-ray1->n_exit2bn[2].Dot(bn1->n_bn);
-	//cout << "Before rotating, " << ray1->n_exit2bn[2].Dot(n_bn) << "\n";
+	// cout << "Before rotating, " << ray1->n_exit2bn[2].Dot(bn1->n_bn) << "\n";
 	ray1->n_exit2bn[2]=ray1->n_exit2bn[2].Rotate(rotateangle,rotationaxis);
-	//cout << "After rotating, " << ray1->n_exit2bn[2].Dot(n_bn) << "\n";
+	// cout << "After rotating, " << ray1->n_exit2bn[2].Dot(bn1->n_bn) << "\n";
+	
+	// for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
+	//   // ifold loops over phi
+	//   for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+
+	//     Vector rotationaxis2=ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Cross(bn1->n_bn);
+	//     double rotateangle2=PI/2.-ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Dot(bn1->n_bn);
+	//     ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Rotate(rotateangle2,rotationaxis2);
+	//   } // end loop over phi
+	// } // end loop over layers
 	
       }
       
@@ -3724,7 +3737,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	      
 	       // const int numAnts_temp = 40;
 	       // Total number of antennas
-	       int numAnts_temp = anita1->PHITRIG[0] + anita1->PHITRIG[1] + anita1->PHITRIG[2] ;
+	       // int numAnts_temp = anita1->PHITRIG[0] + anita1->PHITRIG[1] + anita1->PHITRIG[2] ;
 	       int fNumPoints = 260;
 	       for (int i = 0; i < 90; i++){
 		 for (int j = 0; j < 260; j++){
@@ -3733,8 +3746,9 @@ cout << "reminder that I took out ChangeCoord.\n";
 		 }
 	       }
 	      
-	       for (int iant = 0; iant < numAnts_temp; iant++){
-		 int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1, AnitaGeom1, iant);
+	       for (int iant = 0; iant < settings1->NANTENNAS; iant++){
+		 //		 int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1, AnitaGeom1, iant);
+		 int IceMCAnt = GetIceMCAntfromUsefulEventAnt(settings1, iant);
 			
 		 int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant, AnitaPol::kHorizontal);
 		 int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant, AnitaPol::kVertical);
@@ -5496,11 +5510,16 @@ void interrupt_signal_handler(int sig){
 
 
 #ifdef ANITA_UTIL_EXISTS
-int GetIceMCAntfromUsefulEventAnt(Anita *anita1, AnitaGeomTool *AnitaGeom1, int UsefulEventAnt){
+//int GetIceMCAntfromUsefulEventAnt(Anita *anita1, AnitaGeomTool *AnitaGeom1, int UsefulEventAnt){
+int GetIceMCAntfromUsefulEventAnt(Settings *settings1, int UsefulEventAnt){
     //    int layer_temp = IceMCLayerPosition[UsefulEventIndex][0];
     //    int position_temp = IceMCLayerPosition[UsefulEventIndex][1];
     //    int IceMCIndex = anita1->GetRx(layer_temp, position_temp);
   int IceMCAnt = UsefulEventAnt;
+  if (settings1->WHICH==9 && UsefulEventAnt<16) {
+    IceMCAnt = (UsefulEventAnt%2==0)*UsefulEventAnt/2 + (UsefulEventAnt%2==1)*(UsefulEventAnt/2+8);
+  }
+  
   return IceMCAnt;
 }
 #endif
