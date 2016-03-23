@@ -38,14 +38,14 @@ Ray::Ray() {
     rfexit_db[i]=Vector(0.,0.,0.);
     rfexit[i]=Vector(0.,0.,0.); // position where the rf exits the ice- 5 iterations, 3 dimensions eac
     
-  //for (int j=0;j<NPHI_MAX;j++) {
-  //  for (int k=0;k<NLAYERS_MAX;k++) {
-  //n_exit2bn_eachboresight[i][k][j]=Vector(0.,0.,0.); // normal vector in direction of exit point to each antenna boresight - 5 iterations
-  //nrf_iceside_eachboresight[i][k][j]=Vector(0.,0.,0.);  // direction of rf [tries][3d]
-	
-  //rfexit_eachboresight[i][k][j]=Vector(0.,0.,0.);
-  //  }
-  //}
+    for (int j=0;j<Anita::NPHI_MAX;j++) {
+      for (int k=0;k<Anita::NLAYERS_MAX;k++) {
+	n_exit2bn_eachboresight[i][k][j]=Vector(0.,0.,0.); // normal vector in direction of exit point to each antenna boresight - 5 iterations
+	nrf_iceside_eachboresight[i][k][j]=Vector(0.,0.,0.);  // direction of rf [tries][3d]
+  	
+	rfexit_eachboresight[i][k][j]=Vector(0.,0.,0.);
+      }
+    }
     
   }
     nsurf_rfexit=Vector(0.,0.,0.); // normal of the surface at the place where the rf leaves
@@ -73,12 +73,13 @@ void Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posn
     for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
       for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
 	WhereDoesItLeave(posnu,nrf_iceside_eachboresight[2*whichtry][ilayer][ifold],antarctica,
-	rfexit_eachboresight[whichtry][ilayer][ifold]);	
+	rfexit_eachboresight[whichtry][ilayer][ifold]);
+	n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit(); // Linda added this line
       }
     }
   } // end if we are doing this for each boresight
   
-  if (settings1->SLAC) {
+    if (settings1->SLAC) {
     // ray comes out a little earlier because of the slope of the surface.
     // use law of cosines the get how much "distance" should be cut short
     
@@ -107,7 +108,7 @@ void Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posn
     
     
     
-  } // end if we're modeling the slac run
+    } // end if we're modeling the slac run
 
 }
 
@@ -292,6 +293,10 @@ int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth) { /
 	    if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,Signal::N_AIR,NFIRN,
 			       nrf_iceside_eachboresight[2*iter-1][ilayer][ifold])) // nrf_iceside[1] is the rf direction in the firn
 	      return 0; // reject if TIR.  
+
+
+	    //	    std::cout << "ITER " << iter-1 << " " << (n_exit2bn_eachboresight[iter-1][ilayer][ifold]) << std::endl;
+
 	    // This could be throwing away events that the final guess would have kept
 	    //  Need to look into this and update in the future
 	    
@@ -353,28 +358,29 @@ int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth) { /
 
   // this function performs snell's law in three dimensions
 
-
   double costh=0;
 
   double NRATIO=nexit/nenter;
 
+  //  cout << " INPUT " << n_exit2bn << " " << nsurf_rfexit << " " << nexit << " " << nenter << endl;
+  
   costh=(n_exit2bn*nsurf_rfexit)/(n_exit2bn.Mag() * nsurf_rfexit.Mag()); // cos(theta) of the transmission angle
 
   if (costh<0) {
-    //cout << "returning 0.  inu is " << inu << "\n";
+    //    cout << "returning 0.  inu is " << inu << "\n";
     return 0;
   
   }
   double sinth=sqrt(1 - costh*costh);
   
-  //double sinth_i=nexit*sinth/nenter;
+  //  double sinth_i=nexit*sinth/nenter;
   
-  //double angle=asin(sinth)-asin(sinth_i);
+  //  double angle=asin(sinth)-asin(sinth_i);
   
   
-  //cout << "sinth, sinth_i are " << sinth << " " << sinth_i << "\n";
-  //cout << "th, th_i are " << asin(sinth)*DEGRAD << " " << asin(sinth_i)*DEGRAD << "\n";
-  ///cout << "angle is " << angle*DEGRAD << "\n";
+  // cout << "sinth, sinth_i are " << sinth << " " << sinth_i << "\n";
+  // cout << "th, th_i are " << asin(sinth)*DEGRAD << " " << asin(sinth_i)*DEGRAD << "\n";
+  // cout << "angle is " << angle*DEGRAD << "\n";
   
   //  nrf2_iceside=n_exit2rx.Rotate(angle,n_exit2rx.Cross(nsurf_rfexit));
 

@@ -660,3 +660,6 @@ First commit of the HPOL trigger for Anita-3. Doesn't work properly yet.
 
 03/17/16 L. Cremonesi
 Fixed antenna time delays and channel mapping for Anita-3. Fixed more warnings.
+
+03/23/16 L. Cremonesi
+Updated Ray::GetRFExit to calculate n_exit2bn_eachboresight as well
