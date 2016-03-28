@@ -663,3 +663,6 @@ Fixed antenna time delays and channel mapping for Anita-3. Fixed more warnings.
 
 03/23/16 L. Cremonesi
 Updated Ray::GetRFExit to calculate n_exit2bn_eachboresight as well
+
+03/28/16 B. Dailey
+Updated Balloon::GetBoresights, antenna positions were not being set correctly before being rotated.

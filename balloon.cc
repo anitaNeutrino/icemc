@@ -1064,6 +1064,7 @@ void Balloon::GetBoresights(Settings *settings1,Anita *anita1) {
   Vector ant_pos;
   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+      ant_pos=anita1->ANTENNA_POSITION_START[ilayer][ifold];
       ant_pos=RotatePayload(ant_pos);
       r_boresights[ilayer][ifold] = ant_pos+r_bn;
     }

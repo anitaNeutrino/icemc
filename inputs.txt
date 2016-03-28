@@ -1,6 +1,6 @@
 # This is a card file containing inputs for the UCLA-based ANITA simulation
 ### Event input output
-10000000 # How many neutrinos to generate
+100000 # How many neutrinos to generate
 19    # Select energy (just enter the exponent) or (0) for baseline ES&S (1) for E^-1 (2) for E^-2 (3) for E^-3 (4) for E^-4 (5) for ES&S flux with cosmological constant (6) for neutrino GZK flux from Iron nucleii (16-22)not using spectrum but just for a single energy (101-114)use all kinds of theoretical flux models 
 0  # (0) Pick neutrino position in the ice within the horizon of the balloon and neutrino direction such that the specular ray hitting the balloon sits on the Cerenkov cone or (1) Pick neutrino interaction point from anywhere in the ice and neutrino direction from all directions equally
 1      # 1=write to histograms and trees, 0=don't write to histograms & trees
@@ -91,7 +91,7 @@
 180    # Number of points scanned across the "theta" (polar) coordinate for a banana plot. (only used with "balloon position" 3)
 0      # Make signal across frequencies for different viewing angles
 1      # Type of shower for the previous option (1=em, 0=had)
-0	# loop over boresights	
+1	# loop over boresights	
 #### Interactions
 0 # Which parameterization (0) Jaime's older papers or (1) Jaime's Dec. 2006 paper
 1 # Which cross section parametrizations (0) Mary Hall Reno, (1) Connolly et al. 2011
