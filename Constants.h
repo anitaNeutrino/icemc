@@ -1,5 +1,6 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
+#include "vector.hh"
 
 
 // constants in math
@@ -38,6 +39,14 @@ const double Z_AIR=377;            // resistance of air = sqrt(epsilon/mu)
 
 const double NFIRN=1.3250;                   // index of refraction at the very surface - Peter
 const double NICE=1.79;                      // index of refraction of ice
+
+
+
+// constant vectors used in balloon class - oindree 
+
+const Vector const_z(0,0,1);
+const Vector const_y(0,1,0);
+const Vector const_x(1,0,0);
 
 
 

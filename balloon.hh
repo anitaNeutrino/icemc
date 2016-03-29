@@ -52,7 +52,7 @@ public:
   
   void InitializeBalloon();
   void ReadAnitaliteFlight();
-  void CenterPayload(Settings *settings1,Anita *anita1,Vector n_exit2bn,Vector n_pol,int whichlayer,int centerphi);
+  void CenterPayload(double& hitangle_e);
 
   void PickBalloonPosition(Vector straightup,IceModel *antarctica,Settings *settings1, Anita *anita1);
   void PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int inu,Anita *anita1, double randomNumber); // position of spot under balloon
@@ -60,18 +60,45 @@ public:
   int Getibnposition();
 
   double GetBalloonSpin(double heading); // get the azimuth of the balloon
-  void GetHitAngles(Settings *settings1,
-		    Anita *anita1,
-		    const Vector &n_exit2bn,
-		    const Vector &n_pol,
-		    int ilayer,
-		    int ifold,
 
+  void GetAntennaOrientation(Settings *settings1, 
+			     Anita *anita1, 
+			     const Vector const_x, 
+			     const Vector const_y, 
+			     const Vector const_z, 
+			     int ilayer, int ifold, 
+			     Vector& n_eplane, 
+			     Vector& n_hplane, 
+			     Vector& n_normal); 
+
+
+  void GetEcompHcompEvector(Settings *settings1, 
+			    int ilayer, 
+			    int ifold, 
+			    Vector n_eplane, 
+			    Vector n_hplane, 
+			    const Vector n_pol, 
+			    double& e_component, 
+			    double& h_component, 
+			    double& n_component);
+
+		
+  void GetEcompHcompkvector(int ilayer, 
+			    int ifold, 
+			    Vector n_eplane, 
+			    Vector n_hplane, 
+			    Vector n_normal, 
+			    const Vector n_exit2bn, 
+			    double& e_component_kvector, 
+			    double& h_component_kvector, 
+			    double& n_component_kvector);
+
+  void GetHitAngles(
+		    double e_component_kvector,
+		    double h_component_kvector,
+		    double n_component_kvector, 
 		    double& hitangle_e,
-		    double& hitangle_h,
-		    double& e_component,
-		    double& h_component,
-		    Vector &ant_normal);
+		    double& hitangle_h); 
  
   void SetDefaultBalloonPosition(IceModel *antarctica1);
 

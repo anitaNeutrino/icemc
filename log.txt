@@ -666,3 +666,19 @@ Updated Ray::GetRFExit to calculate n_exit2bn_eachboresight as well
 
 03/28/16 B. Dailey
 Updated Balloon::GetBoresights, antenna positions were not being set correctly before being rotated.
+
+03/29/16 5:47 PM EST O. Banerjee
+Clean up of balloon.cc
+      Used to have one function GetHitAngles doing a number of things. Quite confusing. 
+
+      Now have four functions total doing everything that only GetHitAngles was doing. 
+      	  GetAntennaOrientation does the necessary rotations for antenna's orientation on payload 
+      	  GetEcompHcompEvector finds the components along E plane and H plane of antenna along direction of polarization
+      	  GetEcompHcompkvector finds the components along E plane and H plane of antenna along direction of propagation of radio wave, that is the k vector we learn about in E&M
+      	  GetHitAngles just finds the "hit angles"
+
+      Also modified the function CenterPayload to properly use the result of GetHitAngles
+
+Updated balloon.hh to be consistent with the changes in balloon.cc
+
+Put three constant vector definitions in Constants.h that are used in balloon.cc 

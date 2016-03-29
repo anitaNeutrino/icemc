@@ -421,7 +421,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		}
 		else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8) {  // For Anita 1 and Anita 2 and Anita 3:
 
-		  // igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
+		  //igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
 		  igps = int(randomNumber*flightdatachain->GetEntries()); // pick random event in the tree
 		  flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
 		  realTime_flightdata = realTime_flightdata_temp;
@@ -567,40 +567,36 @@ void Balloon::AdjustSlacBalloonPosition(int inu) { // move payload around like w
     +slacpositions[islacposition].GetY()*n_bn;
     
 }
-void Balloon::CenterPayload(Settings *settings1,Anita *anita1,Vector n_exit2bn,Vector n_pol,int whichlayer,int centerphi) {
-    
-    double hitangle_e,hitangle_h,e_component,h_component;
-    Vector ant_normal;
+
+void Balloon::CenterPayload(double& hitangle_e) {
     
     // allow an option to rotate the payload so the signal is
     // always on the boresight of one phi sector
-    GetHitAngles(settings1,anita1,n_exit2bn,n_pol,whichlayer,centerphi,
-				 hitangle_e,hitangle_h,e_component,h_component,ant_normal);
+    
     phi_spin-=hitangle_e;
     
 }
 
-void Balloon::GetHitAngles(Settings *settings1,Anita *anita1,const Vector &n_exit2bn,const Vector &n_pol,int ilayer,int ifold,
-						   double& hitangle_e,double& hitangle_h,double& e_component,double& h_component,Vector &ant_normal) {
-    
-    // this find the angles that the signal hits the antenna relative to the e and h polarizations
-    Vector n_eplane(0,0,1);
-    Vector n_hplane(0,-1,0);
-    Vector n_normal(1,0,0); // face of antenna starts out relative to +x because phi is relative to +x
-    
-    // now rotate for antenna's orientation on the payload.
-    
-    if(settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH==9) {
-		n_eplane = n_eplane.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
-		n_hplane = n_hplane.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
-		n_normal = n_normal.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
+
+void Balloon::GetAntennaOrientation(Settings *settings1, Anita *anita1, const Vector const_x, const Vector const_y, const Vector const_z, int ilayer, int ifold, Vector& n_eplane, Vector& n_hplane, Vector& n_normal){
+
+// rotate for antenna's orientation on payload
+// face of antenna starts out relative to +x because phi is relative to +x
+// n_normal points northwards for antenna 0 (0-31)
+// const vectors const_z (n_eplane), const_y (-n_hplane), const_x (n_normal) defined under Constants.h   -- oindree
+
+
+if(settings1->WHICH==6 || settings1->WHICH==8) {
+		n_eplane = const_z.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
+		n_hplane = (-const_y).RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
+		n_normal = const_x.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
     }
     else {
-		n_eplane = n_eplane.RotateY(anita1->THETA_ZENITH[ilayer] - PI/2);
-		n_hplane = n_hplane.RotateY(anita1->THETA_ZENITH[ilayer] - PI/2);
-		n_normal = n_normal.RotateY(anita1->THETA_ZENITH[ilayer] - PI/2);
+		n_eplane = const_z.RotateY(anita1->THETA_ZENITH[ilayer] - PI/2);
+		n_hplane = (-const_y).RotateY(anita1->THETA_ZENITH[ilayer] - PI/2);
+		n_normal = const_x.RotateY(anita1->THETA_ZENITH[ilayer] - PI/2);
     }
-    
+     
     
     double phi;
     // rotate about z axis for phi
@@ -609,62 +605,69 @@ void Balloon::GetHitAngles(Settings *settings1,Anita *anita1,const Vector &n_exi
     }
     else
 		phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer]+phi_spin;
-    
-    
-    
+        
     n_eplane = n_eplane.RotateZ(phi);
     n_hplane = n_hplane.RotateZ(phi);
     n_normal = n_normal.RotateZ(phi);
-    //when phi_spin=0, n_normal is in the x-z plane for antenna 0 (0-31)
-    
-    //   now rotate to balloon's position on the continent
-    //n_eplane = n_eplane.ChangeCoord(r_bn);
-    //n_hplane = n_hplane.ChangeCoord(r_bn);
-    //n_normal = n_normal.ChangeCoord(r_bn); // These two versions of ChangeCoord gave different results. ChangeCoord(balloon_pos) is simpler and I didn't find any mistakes with it so I'll continue to use it for the ANITA Monte Carlo at OSU. We should make the two simulations use the same version of ChangeCoord after someone finds the bug in one of them. ---Brian
+   
     n_eplane = n_eplane.ChangeCoord(n_north,-1.*n_east);
     n_hplane = n_hplane.ChangeCoord(n_north,-1.*n_east);
     n_normal = n_normal.ChangeCoord(n_north,-1.*n_east);
-    // n_normal points northwards for antenna 0 (0-31)
+
+} //end void GetAntennaOrientation
+
+
+void Balloon::GetEcompHcompkvector(int ilayer, int ifold, Vector n_eplane, Vector n_hplane, Vector n_normal, const Vector n_exit2bn, double& e_component_kvector, double& h_component_kvector, double& n_component_kvector){
     
-    // find component along the e-plane for the purpose of finding hit angles
-    e_component = -(n_exit2bn*n_eplane);
-    // find component along the h-plane for the purpose of finding hit angles
-    h_component = -(n_exit2bn*n_hplane);
+     
+    // find component along e-plane for the purpose of finding hit angles, that is, in direction of k vector, direction of radio wave)
+    e_component_kvector = -(n_exit2bn * n_eplane);
+    // find component along h-plane for the purpose of finding hit angles, that is, in direction of k vector, direction of radio wave)
+    h_component_kvector = -(n_exit2bn * n_hplane);
     // find the component normal
-    double n_component = -(n_exit2bn * n_normal);
-    
-    
-    
-    hitangle_e=atan(h_component/n_component);
-    
-    if (n_component<0 && h_component<0)
-		hitangle_e-=PI;
-    if (n_component<0 && h_component>0)
-		hitangle_e+=PI;
-    
-    hitangle_h=atan(e_component/n_component);
-    
-    if (n_component<0 && e_component<0)
-		hitangle_h-=PI;
-    if (n_component<0 && e_component>0)
-		hitangle_h+=PI;
-    
-    //Record antenna normal for plotting - Stephen
-    ant_normal = n_normal;
-    
+    n_component_kvector = -(n_exit2bn * n_normal);
+
+} // end GetEcompHcompkvector
+
+
+
+void Balloon::GetEcompHcompEvector(Settings *settings1, int ilayer, int ifold, Vector n_eplane, Vector n_hplane, const Vector n_pol, double& e_component, double& h_component, double& n_component){
+
+    // find component along e-plane in direction of polarization, that is in direction of the E field   
     e_component = n_pol*n_eplane;
     
-    // find component along the h-plane
+    // find component along h-plane in direction of polarization, that is in direction of the E field 
     h_component = n_pol*n_hplane;
-    
-    
+
+
     if (settings1->REMOVEPOLARIZATION) {
-		//Trying to remove effects of polarization at antenna. Stephen
-		e_component = n_pol*n_pol;
-		h_component = 0.001;
-		n_component = 0.001;
+    //Trying to remove effects of polarization at antenna. Stephen
+      e_component = n_pol * n_pol;
+      h_component = 0.001;
+      n_component = 0.001;
     } //if
+
+
+    } // end GetEcompHcompEvector
+
+
+
+void Balloon::GetHitAngles(double e_component_kvector, double h_component_kvector, double n_component_kvector, double& hitangle_e, double& hitangle_h) {
+        
+    hitangle_e=atan(h_component_kvector/n_component_kvector);
     
+    if (n_component_kvector<0 && h_component_kvector<0)
+		hitangle_e-=PI;
+    if (n_component_kvector<0 && h_component_kvector>0)
+		hitangle_e+=PI;
+    
+    hitangle_h=atan(e_component_kvector/n_component_kvector);
+    
+    if (n_component_kvector<0 && e_component_kvector<0)
+		hitangle_h-=PI;
+    if (n_component_kvector<0 && e_component_kvector>0)
+		hitangle_h+=PI;
+        
 } //end void GetHitAngles
 
 

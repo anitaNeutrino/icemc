@@ -924,10 +924,23 @@ int main(int argc, char **argv) {
   // miscellaneous
   //double dtemp;                       // another temp variable
   
+ // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
+  double e_component=0; // E comp along polarization
+  double h_component=0; // H comp along polarization
+  double n_component=0; // normal comp along polarization
+
+  double e_component_kvector=0; // component of e-field along the rx e-plane
+  double h_component_kvector=0; // component of the e-field along the rx h-plane
+  double n_component_kvector=0; // component of the e-field along the normal 
+
+ 
+  Vector n_eplane = const_z; 
+  Vector n_hplane = -const_y;
+  Vector n_normal = const_x;
+
   double chengji = 0;
   Vector ant_normal; //Vector normal to the face of the antenna
-  double e_component=0; // component of e-field along the rx e-plane
-  double h_component=0; // component of the e-field along the rx h-plane
+  
   double hitangle_e,hitangle_h;       // angle the ray hits the antenna wrt e-plane,h-plane
   double hitangle_e_all[Anita::NANTENNAS_MAX];         // hit angles rel. to e plane stored for each antenna
   double hitangle_h_all[Anita::NANTENNAS_MAX];         // hit angles rel. to h plane stored for each antenna
@@ -3105,7 +3118,8 @@ cout << "reminder that I took out ChangeCoord.\n";
       
       
       if (bn1->CENTER)
-	bn1->CenterPayload(settings1,anita1,ray1->n_exit2bn[2],n_pol,anita1->GetLayer(anita1->rx_minarrivaltime),anita1->GetIfold(anita1->rx_minarrivaltime));
+	//bn1->CenterPayload(settings1,anita1,ray1->n_exit2bn[2],n_pol,anita1->GetLayer(anita1->rx_minarrivaltime),anita1->GetIfold(anita1->rx_minarrivaltime));
+	bn1->CenterPayload(hitangle_e);
 
       if (ray1->MAKEVERTICAL) {
 	//	cout << n_pol << " before and after "; 
@@ -3138,23 +3152,43 @@ cout << "reminder that I took out ChangeCoord.\n";
       for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
 	
 	// ifold loops over phi
+
 	for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
 	  
 	  // get the angle ray makes with e-plane,h-plane
 	  // and component of polarization along e-plane and h-plane
-	  if (!settings1->BORESIGHTS)
-	    bn1->GetHitAngles(settings1,anita1,ray1->n_exit2bn[2],n_pol,ilayer,ifold,
-			      hitangle_e,hitangle_h,e_component,h_component,ant_normal);
-	  if (settings1->BORESIGHTS) {
-	    
-	    bn1->GetHitAngles(settings1,anita1,ray1->n_exit2bn_eachboresight[2][ilayer][ifold],n_pol_eachboresight[ilayer][ifold],ilayer,ifold,
-			      hitangle_e,hitangle_h,e_component,h_component,ant_normal);
-	    fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component << "\t" << h_component << "\t" << fresnel1_eachboresight[ilayer][ifold]*mag1_eachboresight[ilayer][ifold] << "\n";
+
+	  bn1->GetAntennaOrientation(settings1, anita1, const_x, const_y, const_z, ilayer, ifold, 
+				     n_eplane, n_hplane, n_normal);
+
+
+	  if (!settings1->BORESIGHTS) {
+	    bn1->GetEcompHcompkvector(ilayer, ifold, n_eplane, n_hplane, n_normal, ray1->n_exit2bn[2], 
+				      e_component_kvector, h_component_kvector, n_component_kvector);
+
+	    bn1->GetEcompHcompEvector(settings1, ilayer, ifold, n_eplane, n_hplane, n_pol, 
+				      e_component, h_component, n_component);
 	  }
+	    
+	  if (settings1->BORESIGHTS) {
+	    bn1->GetEcompHcompkvector(ilayer, ifold, n_eplane, n_hplane, n_normal, ray1->n_exit2bn_eachboresight[2][ilayer][ifold], 
+				      e_component_kvector, h_component_kvector, n_component_kvector);
+	    bn1->GetEcompHcompEvector(settings1, ilayer, ifold, n_eplane, n_hplane, n_pol_eachboresight[ilayer][ifold], 
+				      e_component, h_component, n_component);
+
+	   
+	    fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold]*mag1_eachboresight[ilayer][ifold] << "\n";
+	  }
+
+	  bn1->GetHitAngles(e_component_kvector,h_component_kvector,n_component_kvector,
+			    hitangle_e,hitangle_h);
+
 	  
 	  // store hitangles for plotting
 	  hitangle_h_all[count_rx]=hitangle_h;
 	  hitangle_e_all[count_rx]=hitangle_e;
+	
+
 	  
 	  // for debugging
 	  if (h6->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
