@@ -66,7 +66,7 @@
 
 #include <typeinfo>
 
-//#define ANITA_UTIL_EXISTS
+#define ANITA_UTIL_EXISTS
 
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
@@ -1929,7 +1929,8 @@ cout << "reminder that I took out ChangeCoord.\n";
   double average_altitude=0.;
   double average_rbn=0.;
 
-  TRandom r(0); // use a seed generated using machine clock (different every second)
+  //  TRandom r(0); // use a seed generated using machine clock (different every second)
+  TRandom r(settings1->SEED); // use a seed generated using machine clock (different every second)
 
   // loop over neutrinos.
   signal(SIGINT, interrupt_signal_handler);	    // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
@@ -2785,7 +2786,19 @@ cout << "reminder that I took out ChangeCoord.\n";
 	  // use both fresnel and magnification factors at firn-air interface.  Notice that magnification factor is
 	  //upside-down compared to what it is in the firn.
 	  vmmhz1m_fresneledtwice=vmmhz1m_fresneledonce*fresnel2*mag2;
-	  
+
+	  // if (settings1->BORESIGHTS) { // Linda added this bit
+	  //   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
+	  //     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+	  // 	GetFresnel(rough1,settings1->ROUGHNESS,ray1->nsurf_rfexit,ray1->n_exit2bn_eachboresight[2][ilayer][ifold],
+	  // 		   n_pol_eachboresight[ilayer][ifold],ray1->nrf_iceside_eachboresight[4][ilayer][ifold],
+	  // 		   vmmhz1m_max,emfrac,hadfrac,deltheta_em_max,deltheta_had_max,t_coeff_pokey,t_coeff_slappy,
+	  // 		   fresnel1_eachboresight[ilayer][ifold],mag1_eachboresight[ilayer][ifold]);
+	  // 	//		std::cout << fresnel1_eachboresight[ilayer][ifold] << std::endl;
+	  //     } // end looping over phi sectors
+	  //   } // end looping over layers
+	  // } // end if we are calculating for all boresights
+
 	  
 	  if (bn1->WHICHPATH==4)
 	    cout << "firn-air interface:  fresnel2, mag2 are " << fresnel2 << " " << mag2 << "\n";
@@ -3129,19 +3142,17 @@ cout << "reminder that I took out ChangeCoord.\n";
 	  // rotation axis n_bn crossed with n_exit2bn
 	Vector rotationaxis=ray1->n_exit2bn[2].Cross(bn1->n_bn);
 	double rotateangle=PI/2.-ray1->n_exit2bn[2].Dot(bn1->n_bn);
-	// cout << "Before rotating, " << ray1->n_exit2bn[2].Dot(bn1->n_bn) << "\n";
 	ray1->n_exit2bn[2]=ray1->n_exit2bn[2].Rotate(rotateangle,rotationaxis);
-	// cout << "After rotating, " << ray1->n_exit2bn[2].Dot(bn1->n_bn) << "\n";
 	
-	// for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
-	//   // ifold loops over phi
-	//   for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+	for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
+	  // ifold loops over phi
+	  for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
 
-	//     Vector rotationaxis2=ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Cross(bn1->n_bn);
-	//     double rotateangle2=PI/2.-ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Dot(bn1->n_bn);
-	//     ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Rotate(rotateangle2,rotationaxis2);
-	//   } // end loop over phi
-	// } // end loop over layers
+	    Vector rotationaxis2=ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Cross(n_pol_eachboresight[ilayer][ifold]);
+	    double rotateangle2=PI/2.-ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Dot(n_pol_eachboresight[ilayer][ifold]);
+	    ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Rotate(rotateangle2,rotationaxis2);
+	  } // end loop over phi
+	} // end loop over layers
 	
       }
       
@@ -3163,19 +3174,16 @@ cout << "reminder that I took out ChangeCoord.\n";
 
 
 	  if (!settings1->BORESIGHTS) {
-	    bn1->GetEcompHcompkvector(ilayer, ifold, n_eplane, n_hplane, n_normal, ray1->n_exit2bn[2], 
+	    bn1->GetEcompHcompkvector(n_eplane, n_hplane, n_normal, ray1->n_exit2bn[2], 
 				      e_component_kvector, h_component_kvector, n_component_kvector);
 
-	    bn1->GetEcompHcompEvector(settings1, ilayer, ifold, n_eplane, n_hplane, n_pol, 
+	    bn1->GetEcompHcompEvector(settings1, n_eplane, n_hplane, n_pol, 
 				      e_component, h_component, n_component);
-	  }
-	    
-	  if (settings1->BORESIGHTS) {
-	    bn1->GetEcompHcompkvector(ilayer, ifold, n_eplane, n_hplane, n_normal, ray1->n_exit2bn_eachboresight[2][ilayer][ifold], 
+	  } else { // i.e. if BORESIGHTS is true
+	    bn1->GetEcompHcompkvector(n_eplane, n_hplane, n_normal, ray1->n_exit2bn_eachboresight[2][ilayer][ifold], 
 				      e_component_kvector, h_component_kvector, n_component_kvector);
-	    bn1->GetEcompHcompEvector(settings1, ilayer, ifold, n_eplane, n_hplane, n_pol_eachboresight[ilayer][ifold], 
+	    bn1->GetEcompHcompEvector(settings1, n_eplane, n_hplane, n_pol_eachboresight[ilayer][ifold], 
 				      e_component, h_component, n_component);
-
 	   
 	    fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold]*mag1_eachboresight[ilayer][ifold] << "\n";
 	  }
@@ -3227,9 +3235,14 @@ cout << "reminder that I took out ChangeCoord.\n";
 		anttrig1->v_banding_rfcm_e[ibw][k]=anttrig1->vm_banding_rfcm_e[ibw][k]; // EH, HERE! this v_banding_rfcm_e array will be used for trigger analysis later! in WhichBandsPass function! Why this is located in this weird place!!!
 		anttrig1->v_banding_rfcm_h[ibw][k]=anttrig1->vm_banding_rfcm_h[ibw][k];
 		//cout << "v_banding before is " << anttrig1->v_banding_rfcm_e[ibw][k] << "\n";
-		anita1->AntennaGain(settings1,hitangle_e,hitangle_h,e_component,h_component,k,anttrig1->v_banding_rfcm_e[ibw][k],anttrig1->v_banding_rfcm_h[ibw][k]);
+		//anita1->AntennaGain(settings1,hitangle_e,hitangle_h,e_component,h_component,k,anttrig1->v_banding_rfcm_e[ibw][k],anttrig1->v_banding_rfcm_h[ibw][k]);
 		// now it is in units of V/s
-		
+
+		// double relativegain[4];
+		// anita1->AntennaGain(settings1,hitangle_e,hitangle_h,k,relativegain);
+		// anita1->ApplyPol(settings1,e_component,h_component,k,anttrig1->v_banding_rfcm_e[ibw][k],anttrig1->v_banding_rfcm_h[ibw][k], relativegain);
+		anita1->AntennaGain(settings1,hitangle_e,hitangle_h,e_component,h_component,k,anttrig1->v_banding_rfcm_e[ibw][k],anttrig1->v_banding_rfcm_h[ibw][k]);
+	
 		if (bn1->WHICHPATH==4 && anita1->Match(ilayer,ifold,anita1->rx_minarrivaltime)) {
 		  
 		  Integrate(anita1,ibw,k,anttrig1->v_banding_rfcm_e[ibw],anita1->freq,1./1.E6,sumsignal[ibw]);
@@ -3606,7 +3619,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	  // log of weight and chord for plotting
 	  logweight=log10(weight);
 	  interaction1->logchord=log10(interaction1->chord);
-	  
+
 	  // if neutrino travels more than one meter in ice
 	  if (interaction1->d2>1) {
 	    
@@ -3678,7 +3691,6 @@ cout << "reminder that I took out ChangeCoord.\n";
 	      }
 	    }
 	    
-	    
 	    //for plotting events distribution map only
 	    if(weight>0.0001)
 	      {double int_lon,int_lat;
@@ -3711,7 +3723,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	    rec_diff2->Fill((rec_efield_array[2]-true_efield_array[2])/true_efield_array[2],weight);
 	    rec_diff3->Fill((rec_efield_array[3]-true_efield_array[3])/true_efield_array[3],weight);
 	    recsum_diff->Fill((rec_efield_array[0]+rec_efield_array[1]+rec_efield_array[2]+rec_efield_array[3]-true_efield)/true_efield,weight);
-	    
+
 	    //Now put data in Vectors and Positions into arrays for output to the ROOT file.
 	    if (settings1->HIST && finaltree->GetEntries()<settings1->HIST_MAX_ENTRIES) {
 	      //Now put data in Vectors and Positions into arrays for output to the ROOT file.
@@ -3761,6 +3773,7 @@ cout << "reminder that I took out ChangeCoord.\n";
       r_exit2bn2=interaction1->r_exit2bn;
       r_exit2bn_measured2=interaction1->r_exit2bn_measured;
 
+	      
 	       finaltree->Fill();
 	      //			    cout <<"ptauf is "<<ptauf<<endl;
 	      
@@ -3864,6 +3877,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 
 	      sourceLon = interaction1->nuexit.Lon() - 180;
 	      sourceLat = interaction1->nuexit.Lat();
+
 
 	      finaltree->Fill();
 	      
@@ -5532,7 +5546,8 @@ void GetFresnel(Roughness *rough1,int ROUGHNESS_SETTING,const Vector &surface_no
 		
 		
     }
-    
+
+    //    std::cout << "In fren : " << fresnel << std::endl;
     pol = (pol_perp_air * perp + pol_parallel_air * air_parallel).Unit();
 } //GetFresnel
 

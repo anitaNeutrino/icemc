@@ -586,7 +586,7 @@ void Balloon::GetAntennaOrientation(Settings *settings1, Anita *anita1, const Ve
 // const vectors const_z (n_eplane), const_y (-n_hplane), const_x (n_normal) defined under Constants.h   -- oindree
 
 
-if(settings1->WHICH==6 || settings1->WHICH==8) {
+    if(settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH==9) {
 		n_eplane = const_z.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
 		n_hplane = (-const_y).RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
 		n_normal = const_x.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
@@ -617,7 +617,7 @@ if(settings1->WHICH==6 || settings1->WHICH==8) {
 } //end void GetAntennaOrientation
 
 
-void Balloon::GetEcompHcompkvector(int ilayer, int ifold, Vector n_eplane, Vector n_hplane, Vector n_normal, const Vector n_exit2bn, double& e_component_kvector, double& h_component_kvector, double& n_component_kvector){
+void Balloon::GetEcompHcompkvector(Vector n_eplane, Vector n_hplane, Vector n_normal, const Vector n_exit2bn, double& e_component_kvector, double& h_component_kvector, double& n_component_kvector){
     
      
     // find component along e-plane for the purpose of finding hit angles, that is, in direction of k vector, direction of radio wave)
@@ -631,10 +631,11 @@ void Balloon::GetEcompHcompkvector(int ilayer, int ifold, Vector n_eplane, Vecto
 
 
 
-void Balloon::GetEcompHcompEvector(Settings *settings1, int ilayer, int ifold, Vector n_eplane, Vector n_hplane, const Vector n_pol, double& e_component, double& h_component, double& n_component){
+void Balloon::GetEcompHcompEvector(Settings *settings1, Vector n_eplane, Vector n_hplane, const Vector n_pol, double& e_component, double& h_component, double& n_component){
 
     // find component along e-plane in direction of polarization, that is in direction of the E field   
     e_component = n_pol*n_eplane;
+    //    std::cout << "n_component : " << n_exit2bn << " " << n_normal << " " << n_component << std::endl;
     
     // find component along h-plane in direction of polarization, that is in direction of the E field 
     h_component = n_pol*n_hplane;

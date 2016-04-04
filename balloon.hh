@@ -73,8 +73,8 @@ public:
 
 
   void GetEcompHcompEvector(Settings *settings1, 
-			    int ilayer, 
-			    int ifold, 
+			    // int ilayer, 
+			    // int ifold, 
 			    Vector n_eplane, 
 			    Vector n_hplane, 
 			    const Vector n_pol, 
@@ -83,8 +83,8 @@ public:
 			    double& n_component);
 
 		
-  void GetEcompHcompkvector(int ilayer, 
-			    int ifold, 
+  void GetEcompHcompkvector(// int ilayer, 
+			    // int ifold, 
 			    Vector n_eplane, 
 			    Vector n_hplane, 
 			    Vector n_normal, 

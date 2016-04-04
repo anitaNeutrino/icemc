@@ -406,11 +406,11 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
       
       
       double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
-      for (int j=0;j<5;j++) {
+      for (int iband=0;iband<5;iband++) {
 	//cout << "arrival time is " << globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP << "\n";
 	//anita1->iminbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]+globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP; // we start to look for single channel triggers firing
 	//anita1->iminbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]; // we start to look for single channel triggers firing
-	anita1->iminbin[j]=0.; // we start to look for single channel triggers firing
+	anita1->iminbin[iband]=0.; // we start to look for single channel triggers firing
 	// starting with the first bin where the diode function is completely
 	// overlapping plus a delay that is brought about by the diode
 	// idelaybeforepeak is the bin number in the diode response function
@@ -427,82 +427,83 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
 		  //
 	//anita1->imaxbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]+anita1->iwindow[j];
 	//anita1->imaxbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]+anita1->iwindow[j]+(globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP);
-	anita1->imaxbin[j]=anita1->NFOUR/2;
+	anita1->imaxbin[iband]=anita1->NFOUR/2;
 	
 	//Matt's plot:  horiz. axis:  peak_signal_rfcm/rms_rfcm
 	// vert. axis:  peak_signal_lab/rms_lab
-	Tools::Zero(v_banding_rfcm_e_forfft[j],anita1->NFOUR/2);
-	Tools::Zero(v_banding_rfcm_h_forfft[j],anita1->NFOUR/2);
+	Tools::Zero(v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
+	Tools::Zero(v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
 	
-	anita1->MakeArraysforFFT(v_banding_rfcm_e[j],v_banding_rfcm_h[j],v_banding_rfcm_e_forfft[j],v_banding_rfcm_h_forfft[j]);
+	anita1->MakeArraysforFFT(v_banding_rfcm_e[iband],v_banding_rfcm_h[iband],v_banding_rfcm_e_forfft[iband],v_banding_rfcm_h_forfft[iband]);
 	
 	// for some reason I'm averaging over 10 neighboring bins
 	// to get rid of the zero bins
 	for (int i=0;i<anita1->NFOUR/4;i++) {
 	  
-	  v_banding_rfcm_e_forfft_temp[j][2*i]=0.;
-	  v_banding_rfcm_e_forfft_temp[j][2*i+1]=0.;
-	  v_banding_rfcm_h_forfft_temp[j][2*i]=0.;
-	  v_banding_rfcm_h_forfft_temp[j][2*i+1]=0.;
+	  v_banding_rfcm_e_forfft_temp[iband][2*i]=0.;
+	  v_banding_rfcm_e_forfft_temp[iband][2*i+1]=0.;
+	  v_banding_rfcm_h_forfft_temp[iband][2*i]=0.;
+	  v_banding_rfcm_h_forfft_temp[iband][2*i+1]=0.;
 	  
 	  for (int k=i;k<i+10;k++) {
 	    if (k<anita1->NFOUR/4) {
-	      v_banding_rfcm_e_forfft_temp[j][2*i]+=v_banding_rfcm_e_forfft[j][2*k];
-	      v_banding_rfcm_e_forfft_temp[j][2*i+1]+=v_banding_rfcm_e_forfft[j][2*k+1];
-	      v_banding_rfcm_h_forfft_temp[j][2*i]+=v_banding_rfcm_h_forfft[j][2*k];
-	      v_banding_rfcm_h_forfft_temp[j][2*i+1]+=v_banding_rfcm_h_forfft[j][2*k+1];
+	      v_banding_rfcm_e_forfft_temp[iband][2*i]+=v_banding_rfcm_e_forfft[iband][2*k];
+	      v_banding_rfcm_e_forfft_temp[iband][2*i+1]+=v_banding_rfcm_e_forfft[iband][2*k+1];
+	      v_banding_rfcm_h_forfft_temp[iband][2*i]+=v_banding_rfcm_h_forfft[iband][2*k];
+	      v_banding_rfcm_h_forfft_temp[iband][2*i+1]+=v_banding_rfcm_h_forfft[iband][2*k+1];
 	    }
 	  }
 	  
-	  v_banding_rfcm_e_forfft[j][2*i]=v_banding_rfcm_e_forfft_temp[j][2*i]/10.;
-	  v_banding_rfcm_e_forfft[j][2*i+1]=v_banding_rfcm_e_forfft_temp[j][2*i+1]/10.;
-	  v_banding_rfcm_h_forfft[j][2*i]=v_banding_rfcm_h_forfft_temp[j][2*i]/10.;
-	  v_banding_rfcm_h_forfft[j][2*i+1]=v_banding_rfcm_h_forfft_temp[j][2*i+1]/10.;
+	  v_banding_rfcm_e_forfft[iband][2*i]=v_banding_rfcm_e_forfft_temp[iband][2*i]/10.;
+	  v_banding_rfcm_e_forfft[iband][2*i+1]=v_banding_rfcm_e_forfft_temp[iband][2*i+1]/10.;
+	  v_banding_rfcm_h_forfft[iband][2*i]=v_banding_rfcm_h_forfft_temp[iband][2*i]/10.;
+	  v_banding_rfcm_h_forfft[iband][2*i+1]=v_banding_rfcm_h_forfft_temp[iband][2*i+1]/10.;
 	  
-	  v_banding_rfcm_e_forfft_temp[j][2*i]=v_banding_rfcm_e_forfft[j][2*i];
-	  v_banding_rfcm_e_forfft_temp[j][2*i+1]=v_banding_rfcm_e_forfft[j][2*i+1];
-	  v_banding_rfcm_h_forfft_temp[j][2*i]=v_banding_rfcm_h_forfft[j][2*i];
-	  v_banding_rfcm_h_forfft_temp[j][2*i+1]=v_banding_rfcm_h_forfft[j][2*i+1];
+	  v_banding_rfcm_e_forfft_temp[iband][2*i]=v_banding_rfcm_e_forfft[iband][2*i];
+	  v_banding_rfcm_e_forfft_temp[iband][2*i+1]=v_banding_rfcm_e_forfft[iband][2*i+1];
+	  v_banding_rfcm_h_forfft_temp[iband][2*i]=v_banding_rfcm_h_forfft[iband][2*i];
+	  v_banding_rfcm_h_forfft_temp[iband][2*i+1]=v_banding_rfcm_h_forfft[iband][2*i+1];
 	}
 	
-	Tools::realft(v_banding_rfcm_e_forfft[j],-1,anita1->NFOUR/2);
+	Tools::realft(v_banding_rfcm_e_forfft[iband],-1,anita1->NFOUR/2);
 	// now v_banding_rfcm_e_forfft is in the time domain
 	// and now it is really in units of V
 	
 	
-	Tools::realft(v_banding_rfcm_h_forfft[j],-1,anita1->NFOUR/2);
+	Tools::realft(v_banding_rfcm_h_forfft[iband],-1,anita1->NFOUR/2);
 	// now v_banding_rfcm_h_forfft is in the time domain
 	// and now it is really in units of V
 	
 	// put it in normal time ording -T to T
 	// instead of 0 to T, -T to 0
-	Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_e_forfft[j]);
-	Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_h_forfft[j]);
+	Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_e_forfft[iband]);
+	Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_h_forfft[iband]);
 	
 	if (settings1->ZEROSIGNAL) {
 	 
-	  Tools::Zero(v_banding_rfcm_e_forfft[j],anita1->NFOUR/2);
-	  Tools::Zero(v_banding_rfcm_h_forfft[j],anita1->NFOUR/2);
+	  Tools::Zero(v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
+	  Tools::Zero(v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
 	  
 	}
 
 // 	  for (int i=0;i<anita1->NFOUR/4;i++) {
-// 	    cout << "v_banding is " << v_banding_rfcm_e_forfft[j][i] << "\n";
+// 	    cout << "v_banding is " << v_banding_rfcm_e_forfft[iband][i] << "\n";
 // 	  }
 	
 	
 	for (int i=0;i<anita1->NFOUR/4;i++) {
-	  integrate_energy_freq[j]+=v_banding_rfcm_e_forfft[j][2*i]*v_banding_rfcm_e_forfft[j][2*i]+v_banding_rfcm_e_forfft[j][2*i+1]*v_banding_rfcm_e_forfft[j][2*i+1];
+	  integrate_energy_freq[iband]+=v_banding_rfcm_e_forfft[iband][2*i]*v_banding_rfcm_e_forfft[iband][2*i]+v_banding_rfcm_e_forfft[iband][2*i+1]*v_banding_rfcm_e_forfft[iband][2*i+1];
 	}
 	
 	// write the signal events to a tree
 	for (int k=0;k<anita1->NFOUR/2;k++) {
-	  anita1->signal_vpol_inanita[j][k]=v_banding_rfcm_e_forfft[j][k];
+	  anita1->signal_vpol_inanita[iband][k]=v_banding_rfcm_e_forfft[iband][k];
 	}
 	anita1->integral_vmmhz_foranita=integral_vmmhz;
 	
 	// Find the p2p value before adding noise
-	anita1->peak_v_banding_rfcm_e[j]=FindPeak(v_banding_rfcm_e_forfft[j],anita1->NFOUR/2);
+	anita1->peak_v_banding_rfcm_e[iband]=FindPeak(v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
+	anita1->peak_v_banding_rfcm_h[iband]=FindPeak(v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
 	
       } // loop over bands
       // now we have converted the signal to time domain waveforms for all the bands of the antenna
@@ -511,64 +512,64 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
       
       if (settings1->SIGNAL_FLUCT) {
 	
-	for (int j=0;j<5;j++) {
+	for (int iband=0;iband<5;iband++) {
 	  if (settings1->TRIGGERSCHEME == 2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
 	    for (int k=0;k<anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);k++) {
-	      anita1->maxbin_fortotal[j]=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);
+	      anita1->maxbin_fortotal[iband]=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);
 	      
 	      // The below line seems to shorten the length of the waveform to less than HALFNFOUR
 	      int knoisebin=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)-k;
 	      
 	      // this is just the straight sum of the two
-	      anita1->total_vpol_inanita[j][k]=anita1->timedomainnoise_rfcm_banding_e[j][k]+anita1->signal_vpol_inanita[j][k];
+	      anita1->total_vpol_inanita[iband][k]=anita1->timedomainnoise_rfcm_banding_e[iband][k]+anita1->signal_vpol_inanita[iband][k];
 	      
-	      integrateenergy[j]+=anita1->timedomainnoise_rfcm_banding_e[j][k]*anita1->timedomainnoise_rfcm_banding_e[j][k]*anita1->TIMESTEP;
+	      integrateenergy[iband]+=anita1->timedomainnoise_rfcm_banding_e[iband][k]*anita1->timedomainnoise_rfcm_banding_e[iband][k]*anita1->TIMESTEP;
 	      // this reverses the noise is time, and starts with bin anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)
-	      v_banding_rfcm_e_forfft[j][k]=v_banding_rfcm_e_forfft[j][k]+anita1->timedomainnoise_rfcm_banding_e[j][knoisebin];
+	      v_banding_rfcm_e_forfft[iband][k]=v_banding_rfcm_e_forfft[iband][k]+anita1->timedomainnoise_rfcm_banding_e[iband][knoisebin];
 	    }
 	    for (int k=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);k<anita1->NFOUR/2;k++) {
-	      anita1->total_vpol_inanita[j][k]=0.;
-	      v_banding_rfcm_e_forfft[j][k]=0.;
+	      anita1->total_vpol_inanita[iband][k]=0.;
+	      v_banding_rfcm_e_forfft[iband][k]=0.;
 	    }
 	  }
 	  else {
 	    for (unsigned k = 0; k < anita1->HALFNFOUR; ++k){
 	      // this is just a straight sum
-	      anita1->total_vpol_inanita[j][k]=anita1->timedomainnoise_rfcm_banding_e[j][k]+anita1->signal_vpol_inanita[j][k];
-	      integrateenergy[j]+=anita1->timedomainnoise_rfcm_banding_e[j][k]*anita1->timedomainnoise_rfcm_banding_e[j][k]*anita1->TIMESTEP;
+	      anita1->total_vpol_inanita[iband][k]=anita1->timedomainnoise_rfcm_banding_e[iband][k]+anita1->signal_vpol_inanita[iband][k];
+	      integrateenergy[iband]+=anita1->timedomainnoise_rfcm_banding_e[iband][k]*anita1->timedomainnoise_rfcm_banding_e[iband][k]*anita1->TIMESTEP;
 	      // this one is the one actually used by the diode
-	      v_banding_rfcm_e_forfft[j][k] += anita1->timedomainnoise_rfcm_banding_e[j][k];
+	      v_banding_rfcm_e_forfft[iband][k] += anita1->timedomainnoise_rfcm_banding_e[iband][k];
 	    }
 	  }
 	} // end loop over bands
 	
-	for (int j=0;j<5;j++) { // loop over bands
+	for (int iband=0;iband<5;iband++) { // loop over bands
 	  for (int k=0;k<anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);k++) {
 	    int knoisebin=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)-k;
 	    //	  cout << "before adding noise, p2p is " << FindPeak(v_banding_rfcm_h_forfft[j],anita1->NFOUR/2) << "\n";
-	    v_banding_rfcm_h_forfft[j][k]=v_banding_rfcm_h_forfft[j][k]+anita1->timedomainnoise_rfcm_banding_h[j][knoisebin];
+	    v_banding_rfcm_h_forfft[iband][k]=v_banding_rfcm_h_forfft[iband][k]+anita1->timedomainnoise_rfcm_banding_h[iband][knoisebin];
 	  }
 	  for (int k=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);k<anita1->NFOUR/2;k++) {
-	    v_banding_rfcm_h_forfft[j][k]=0.;
+	    v_banding_rfcm_h_forfft[iband][k]=0.;
 	  }
 	  
 	} // loop over 5 bands
       } // if we require signal fluctuations
       
-      for (int j=0;j<5;j++) {
+      for (int iband=0;iband<5;iband++) {
 	if (settings1->LCPRCP) {
-	  ConvertHVtoLRTimedomain(anita1->NFOUR, v_banding_rfcm_e_forfft[j], v_banding_rfcm_h_forfft[j], vm_banding_rfcm_1_forfft[j], vm_banding_rfcm_2_forfft[j]);
+	  ConvertHVtoLRTimedomain(anita1->NFOUR, v_banding_rfcm_e_forfft[iband], v_banding_rfcm_h_forfft[iband], vm_banding_rfcm_1_forfft[iband], vm_banding_rfcm_2_forfft[iband]);
 	} else {
 	  for (int i=0;i<anita1->NFOUR/2;i++) {
 	    
-	    vm_banding_rfcm_1_forfft[j][i] = v_banding_rfcm_e_forfft[j][i];
-	    vm_banding_rfcm_2_forfft[j][i] = v_banding_rfcm_h_forfft[j][i];
+	    vm_banding_rfcm_1_forfft[iband][i] = v_banding_rfcm_e_forfft[iband][i];
+	    vm_banding_rfcm_2_forfft[iband][i] = v_banding_rfcm_h_forfft[iband][i];
 	    
 	  }
 	}
 	for (int i=0;i<anita1->NFOUR/2;i++) {
-	  anita1->total_diodeinput_1_inanita[j][i] = vm_banding_rfcm_1_forfft[j][i];
-	  anita1->total_diodeinput_2_inanita[j][i] = vm_banding_rfcm_2_forfft[j][i];
+	  anita1->total_diodeinput_1_inanita[iband][i] = vm_banding_rfcm_1_forfft[iband][i];
+	  anita1->total_diodeinput_2_inanita[iband][i] = vm_banding_rfcm_2_forfft[iband][i];
 	  
 	}
 	//volts_fullband_trigger_path_e.push_back(;
@@ -819,7 +820,7 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
 AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
 //inline AntTrigger::AntTrigger(int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,int globaltrig1->rx_minarrivaltime)
 {
-    unwarned=1;
+  unwarned=1;
     for (int ipol=0;ipol<2;ipol++) {
 		
 		for (int iband=0;iband<anita1->NBANDS+1;iband++) {
@@ -867,11 +868,15 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     // vmmhz_rx_e,h are going to be the V/m/MHz received by the rx (after gains)
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
 		// Convert V/m/MHz to V/m/Hz and divide by dt to prepare for fft
-		vhz_rx_e[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); // EH, 1/sqrt(2) for dividing power in half for TDA and DDA?
+                vhz_rx_e[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); // EH, 1/sqrt(2) for dividing power in half for TDA and DDA?
 		vhz_rx_h[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); 
 		
 		// let's find the peak voltage just after the antenna, with no banding
 		anita1->AntennaGain(settings1,hitangle_e,hitangle_h,e_component,h_component,ifreq,vhz_rx_e[ifreq],vhz_rx_h[ifreq]);
+		// double relativegain[4];
+		// anita1->AntennaGain(settings1,hitangle_e,hitangle_h,ifreq, relativegain);
+		// anita1->ApplyPol(settings1,e_component,h_component,ifreq,vhz_rx_e[ifreq],vhz_rx_h[ifreq], relativegain);
+
 		
     }
     
@@ -915,8 +920,12 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
     // apply rfcm's
     if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5) {
-		anita1->RFCMs(1,1,vhz_rx_rfcm_e);
-		anita1->RFCMs(1,1,vhz_rx_rfcm_h);
+
+		 anita1->RFCMs(1,1,vhz_rx_rfcm_e);
+		 anita1->RFCMs(1,1,vhz_rx_rfcm_h);
+		
+      // anita1->RFCMs(ilayer,ifold,vhz_rx_rfcm_e); // Linda changed
+      // anita1->RFCMs(ilayer,ifold,vhz_rx_rfcm_h);
     }
     
     double scale;
@@ -1649,25 +1658,28 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
     // 2nd and 3rd element=next antenna, etc.
     
     
-    for (int i=0;i<settings1->NLAYERS;i++) {
+    for (int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
       
-      for (int j=0;j<Anita::NPHI_MAX;j++) {
-	Tools::Zero(loctrig[i],Anita::NPHI_MAX);
+      // for (int j=0;j<Anita::NPHI_MAX;j++) {
+	Tools::Zero(loctrig[ilayer],Anita::NPHI_MAX);
 	// which clumps of 3 antennas
 	//within each trigger layer pass L2 trigger
 	// layer, phi location
-      } //for
+      // } //for
     } // end of initializing to zero
     
     int whichlayer=0;
     int whichphisector=0;
-    for (int i=0;i<settings1->NLAYERS;i++) {
-      for (int j=0;j<anita1->NRX_PHI[i];j++) {
-	for (int k=0;k<2;k++) {
-	  for (int n=0;n<5;n++) {
+    for (int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
+      for (int iphi=0;iphi<anita1->NRX_PHI[ilayer];iphi++) {
+	for (int ipolar=0;ipolar<2;ipolar++) {
+
+	  if (settings1->WHICH==9 && ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
+	  else if (settings1->WHICH==9 && !ishpol && ipolar==1) continue; // Anita3 : only do the polarisation required
+	  
+	  for (int iband=0;iband<5;iband++) {
 	    
-	    
-	    GetAnitaLayerPhiSector(settings1,i,j,whichlayer,whichphisector); // Translate Anita physical layer to Anita trigger layer and phi sector (4 layers with 8,8,16,8 phi sector to 3 layers with 16 phi sectors each.  In the nadir layer, 8 of the 16 slots are empty on the trigger layer.)
+	    GetAnitaLayerPhiSector(settings1,ilayer,iphi,whichlayer,whichphisector); // Translate Anita physical layer to Anita trigger layer and phi sector (4 layers with 8,8,16,8 phi sector to 3 layers with 16 phi sectors each.  In the nadir layer, 8 of the 16 slots are empty on the trigger layer.)
 	    
 	    
 	    
@@ -1676,15 +1688,13 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	    // physically higher than the 1st antenna in the first trigger layer
 	    // which means that the nadirs are aligned with the antennas with indices 1,3,5 etc.
 	    // we will still use indices 0-7 for them though
-	    //	  channels_compacted_passing[0][2*j+i][k][n]+=channels_passing[i][j][k][n];
-	    channels_compacted_passing[whichlayer][whichphisector][k][n]+=channels_passing[i][j][k][n];
+	    //	  channels_compacted_passing[0][2*iphi+ilayer][ipolar][iband]+=channels_passing[ilayer][iphi][ipolar][iband];
+	    channels_compacted_passing[whichlayer][whichphisector][ipolar][iband]+=channels_passing[ilayer][iphi][ipolar][iband];
 	  } //for
 	} //for
       } //for
     } //for
     
-    // layer number, antenna, polarization, bandwidth slice
-    //  int channels_compacted_passing[3][16][2][5];
     int antsum=0; // counter for how many channels on an antenna pass
     /* antenna triggers */
     
@@ -1724,8 +1734,10 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	antsum = 0; // start antenna sum
 
 	for(int ipolar=0;ipolar<2;ipolar++) {
+
 	  if (settings1->WHICH==9 && ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
 	  else if (settings1->WHICH==9 && !ishpol && ipolar==1) continue; // Anita3 : only do the polarisation required
+
 	  for(int iband=0;iband<NBAND;iband++) {
 	    if(channels_compacted_passing[iloc][iphitrig][ipolar][iband] == 1
 	       && anita1->bwslice_allowed[iband]==1 && anita1->pol_allowed[ipolar]==1) { // only increment if it's one of the allowed bands.
@@ -1741,6 +1753,8 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	
 	
 	for (int ipolar=0;ipolar<2;ipolar++) {
+	  if (settings1->WHICH==9 && ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
+	  else if (settings1->WHICH==9 && !ishpol && ipolar==1) continue; // Anita3 : only do the polarisation required
 	  for (int iband=0;iband<NBAND;iband++) { // notice sum over 5 bands now
 	    if(channels_compacted_passing[iloc][iphitrig][ipolar][iband] == 0
 	       && anita1->bwslice_required[iband]==1 && anita1->pol_allowed[ipolar]==1) { // if this band was required to pass and it didn't,
@@ -1810,9 +1824,11 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	    else
 	      ltsum+=ant[iloc][ihittrig];
 	    
-	    for (int k=0;k<2;k++) {
-	      for (int p=0;p<4;p++) {
-		channsum+=channels_compacted_passing[iloc][ihittrig][k][p]; // increment if this channel passes
+	    for (int ipolar=0;ipolar<2;ipolar++) {
+	      if (settings1->WHICH==9 && ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
+	      else if (settings1->WHICH==9 && !ishpol && ipolar==1) continue; // Anita3 : only do the polarisation required
+	      for (int iband=0;iband<4;iband++) {
+		channsum+=channels_compacted_passing[iloc][ihittrig][ipolar][iband]; // increment if this channel passes
 	      } //for
 	    } //for
 	  } //for
