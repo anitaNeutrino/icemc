@@ -66,7 +66,7 @@
 
 #include <typeinfo>
 
-#define ANITA_UTIL_EXISTS
+//#define ANITA_UTIL_EXISTS
 
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
