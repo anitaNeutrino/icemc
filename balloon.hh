@@ -63,9 +63,6 @@ public:
 
   void GetAntennaOrientation(Settings *settings1, 
 			     Anita *anita1, 
-			     const Vector const_x, 
-			     const Vector const_y, 
-			     const Vector const_z, 
 			     int ilayer, int ifold, 
 			     Vector& n_eplane, 
 			     Vector& n_hplane, 
@@ -73,8 +70,6 @@ public:
 
 
   void GetEcompHcompEvector(Settings *settings1, 
-			    // int ilayer, 
-			    // int ifold, 
 			    Vector n_eplane, 
 			    Vector n_hplane, 
 			    const Vector n_pol, 
@@ -83,9 +78,7 @@ public:
 			    double& n_component);
 
 		
-  void GetEcompHcompkvector(// int ilayer, 
-			    // int ifold, 
-			    Vector n_eplane, 
+  void GetEcompHcompkvector(Vector n_eplane, 
 			    Vector n_hplane, 
 			    Vector n_normal, 
 			    const Vector n_exit2bn, 

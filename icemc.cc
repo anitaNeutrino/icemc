@@ -3169,7 +3169,7 @@ cout << "reminder that I took out ChangeCoord.\n";
 	  // get the angle ray makes with e-plane,h-plane
 	  // and component of polarization along e-plane and h-plane
 
-	  bn1->GetAntennaOrientation(settings1, anita1, const_x, const_y, const_z, ilayer, ifold, 
+	  bn1->GetAntennaOrientation(settings1, anita1, ilayer, ifold, 
 				     n_eplane, n_hplane, n_normal);
 
 

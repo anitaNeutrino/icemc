@@ -578,7 +578,7 @@ void Balloon::CenterPayload(double& hitangle_e) {
 }
 
 
-void Balloon::GetAntennaOrientation(Settings *settings1, Anita *anita1, const Vector const_x, const Vector const_y, const Vector const_z, int ilayer, int ifold, Vector& n_eplane, Vector& n_hplane, Vector& n_normal){
+void Balloon::GetAntennaOrientation(Settings *settings1, Anita *anita1, int ilayer, int ifold, Vector& n_eplane, Vector& n_hplane, Vector& n_normal){
 
 // rotate for antenna's orientation on payload
 // face of antenna starts out relative to +x because phi is relative to +x
