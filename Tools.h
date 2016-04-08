@@ -33,17 +33,17 @@ namespace Tools {
     int Getifreq(double freq,double freq_low,double freq_high,int n);
     void InterpolateReal(double* array, const unsigned n);
     void InterpolateComplex(double *array, const unsigned n);
-    
+
     void four1(double *data, const int isign,int nsize);
     void realft(double *data, const int isign, int nsize);
-    
+
     void SWAP(double &a, double &b);// swaps two numbers
     void NormalTimeOrdering(const int n,double *volts);
     void ShiftLeft(double *x,const int n,int ishift);  
     void ShiftRight(double *x,const int n,int ishift);  
     double GetFWHM(TH1 *h1);
     void  MakeGraph(int index, int n,double *time,double *volts,TGraph *&mygraph,TH2F *&h2, double scalex,double scaley,string xaxistitle,string yaxistitle);
-    
+
     double dDot(double*,double*,int);
     void dCross(double*,double*,double*);
     double dSquare(double*);
@@ -52,7 +52,7 @@ namespace Tools {
     double dGetPhi(double*);
     int WhichIsMax(double *x,int n);
     int WhichIsMin(double *x,int n);
-    
+
     double dSum(double*,int);
     int iSum(int*,int);
     void Print(double*,int);
@@ -63,28 +63,28 @@ namespace Tools {
     void GetNumbersAsStringArray(ifstream& fin, ofstream& fout,vector<string>& vnumbers, int nelements);
     void GetNext2NumbersAsString(ifstream& fin,ofstream& fout,string& number1,string& number2, string& stherest);
     void GetNextNumberAsString(ifstream& fin,ofstream& fout,string& number);
-    
+
     int findIndex(double *freqlab,double freq,int npoints,double min,double max); // this is the same thing but more general
     void get_random_rician(double signal, double signal_phase, double sigma, double& amplitude, double &phase);
     void get_circular_bivariate_normal_random_variable(double& rand_gauss_a, double& rand_gauss_b);
     int round(double number);
-    
+
     double AbbyPhiCalc(double x_abby, double y_abby);
-    
+
     template <class T, class U> void vector_element_convert(const vector<T>& input, vector<U>& output){
-	output.clear();
-	for (unsigned int index = 0; index < input.size(); index++){
-	    output.push_back(U (input[index]));
-	}
+    output.clear();
+        for (unsigned int index = 0; index < input.size(); index++){
+            output.push_back(U (input[index]));
+        }
     }
-    
+
     template <class T, class U> void nested_vector_element_convert(const vector< vector<T> >& input, vector< vector<U> >& output){
-	output.clear();
-	for (unsigned int index = 0; index < input.size(); index++){
-	    vector<U> temp;
-	    vector_element_convert<T,U>(input[index], temp);
-	    output.push_back(temp);
-	}
+    output.clear();
+        for (unsigned int index = 0; index < input.size(); index++){
+            vector<U> temp;
+            vector_element_convert<T,U>(input[index], temp);
+            output.push_back(temp);
+        }
     }
 };
 #endif

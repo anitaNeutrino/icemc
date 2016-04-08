@@ -120,7 +120,6 @@ Primaries::Primaries(){//constructor
   b0=2.55;
   b1=-0.0949; //C2_low=b0+b1*epsilon;
   
-  
   run_old_code=0;//for GetSigma() & Gety() runs of the old code if 1, else runs current code.
 
   // 0=Reno
@@ -129,17 +128,18 @@ Primaries::Primaries(){//constructor
   mine[1]=1.E4;// minimum energy for cross section parametrizations
   maxe[0]=1.E21;
   maxe[1]=1.E21; // use the same upper limit for reno as for connolly et al.
-
-  
 }
+
+
 double Primaries::Getyweight(double pnu,double y,int nu_nubar,int currentint) {
-  
   return m_myY->Getyweight(pnu,y,nu_nubar,currentint);
-
 }
+
+
 double Primaries::pickY(Settings *settings1,double pnu,int nu_nubar,int currentint) {
   return m_myY->pickY(settings1,pnu,nu_nubar,currentint);
 }
+
 
 Primaries::~Primaries(){//default deconstructor
   m_hsigma->Draw("same");
@@ -151,9 +151,6 @@ Primaries::~Primaries(){//default deconstructor
       delete m_fsigma[i][j];
     }
   }
-
-
-
 }//deconstructor
 
 
@@ -186,9 +183,8 @@ int Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *
       double epsilon=log10(pnuGeV);
       sigma=settings1->SIGMA_FACTOR*(m_fsigma[nu_nubar][currentint]->Eval(epsilon))/1.E4;//convert cm to meters. multiply by (1m^2/10^4 cm^2).
       
-      
       if(m_hsigma->GetEntries()<2000){
-	m_hsigma->Fill(epsilon, log10(sigma));
+        m_hsigma->Fill(epsilon, log10(sigma));
       }
     }//else current code
   }//if
@@ -199,11 +195,8 @@ int Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *
 } //GetSigma
 
 
-
 //! pick a neutrino type, flavor ratio 1:1:1
 string Primaries::GetNuFlavor() {
-    
-  
   string nuflavor;
 
   double rnd=gRandom->Rndm();
@@ -222,15 +215,16 @@ string Primaries::GetNuFlavor() {
   return nuflavor;
 } //GetNuFlavor
 
+
 Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,int whichray,Counting *count1) : banana_flavor("numu"), banana_current("nc"),  nu_banana(Position(theta_nu_banana,phi_nu_banana)) {
 
   noway=0;
   wheredoesitleave_err=0;
   neverseesice=0;
 
-    wheredoesitenterice_err=0;
-    toohigh=0;
-    toolow=0;
+  wheredoesitenterice_err=0;
+  toohigh=0;
+  toolow=0;
 
   iceinteraction=0;
   dtryingdirection=0.;
@@ -239,36 +233,33 @@ Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,
   weight_nu=0;
   weight_nu_prob=0;
 
-    if (inttype=="banana") {
-      nu_banana = (surface_over_banana_nu+altitude_nu_banana) * nu_banana;
+  if (inttype=="banana") {
+    nu_banana = (surface_over_banana_nu+altitude_nu_banana) * nu_banana;
 
-      //Set neutrino direction
-      nnu_banana = Vector(nu_banana_theta_angle + PI,nu_banana_phi_angle);
-      nnu_banana = nnu_banana.ChangeCoord(nu_banana);
-           
-      current = banana_current;
+    //Set neutrino direction
+    nnu_banana = Vector(nu_banana_theta_angle + PI,nu_banana_phi_angle);
+    nnu_banana = nnu_banana.ChangeCoord(nu_banana);
+         
+    current = banana_current;
 
-      nuflavor = banana_flavor;
+    nuflavor = banana_flavor;
 
 
-    }
-    else {
-    setNuFlavor(primary1,settings1,whichray,count1);
-    setCurrent();
-    //    setnu_nubar(primary1);//same function for inttype "banna" or otherwise.
-    }
+  }
+  else {
+  setNuFlavor(primary1,settings1,whichray,count1);
+  setCurrent();
+  //    setnu_nubar(primary1);//same function for inttype "banna" or otherwise.
+  }
 }
 
 
-
-     
 void Interaction::PickAnyDirection() {
   double rndlist[2];
   gRandom->RndmArray(2,rndlist);
   
   costheta_nutraject=2*rndlist[0]-1;
 
- 
   // pick a neutrino azimuthal angle
   phi_nutraject=2*PI*rndlist[1];
   
@@ -282,42 +273,39 @@ void Interaction::PickAnyDirection() {
   nnu.SetX(sinthetanu*cos(phi_nutraject));
   nnu.SetY(sinthetanu*sin(phi_nutraject));
   nnu.SetZ(costheta_nutraject);
-
-
 }
 
 
 void  Interaction::setNuFlavor(Primaries *primary1,Settings *settings1,int whichray,Counting *counting1) {
-     // pick the neutrino flavor,  type of tau decay when relevant,
-      //  lpm energy.
-      nuflavor=primary1->GetNuFlavor();
-      
-      if (settings1->MINRAY==whichray) {// only increment neutrino flavor on first ray so you don't count twice
-      
-	if (nuflavor=="nue")
-	  counting1->nnu_e++;      
-	if (nuflavor=="numu")
-	  counting1->nnu_mu++;      
-	if (nuflavor=="nutau")
-	  counting1->nnu_tau++;      
-      }
-      
-      if (settings1->FORSECKEL==1) // For making array of signal vs. freq, viewangle, just use muon neutrinos
-	nuflavor="nue";
-      if (nuflavor=="nue")  //For outputting to file
-	nuflavorint=1;
-      else if (nuflavor=="numu")
-	nuflavorint=2;
-      else if (nuflavor=="nutau")
-	nuflavorint=3;
-      else 
-	cout<<"nuflavor is "<<nuflavor<<"\n";
+  // pick the neutrino flavor,  type of tau decay when relevant,
+  //  lpm energy.
+  nuflavor=primary1->GetNuFlavor();
 
+  if (settings1->MINRAY==whichray) {
+    // only increment neutrino flavor on first ray so you don't count twice
+    if (nuflavor=="nue")
+      counting1->nnu_e++;      
+    if (nuflavor=="numu")
+      counting1->nnu_mu++;      
+    if (nuflavor=="nutau")
+      counting1->nnu_tau++;      
+  }
+      
+  if (settings1->FORSECKEL==1) // For making array of signal vs. freq, viewangle, just use muon neutrinos
+    nuflavor="nue";
+  if (nuflavor=="nue")  //For outputting to file
+    nuflavorint=1;
+  else if (nuflavor=="numu")
+    nuflavorint=2;
+  else if (nuflavor=="nutau")
+    nuflavorint=3;
+  else 
+    cout<<"nuflavor is "<<nuflavor<<"\n";
 }
+
 
 //! choose CC or NC: get from ratios in Ghandi etal paper, updated for the CTEQ6-DIS parton distribution functions (M.H. Reno, personal communication).  Need to add capability of using ratios from Connolly et al.
 string Interaction::GetCurrent() {
-
   string current;
   double rnd=gRandom->Rndm();
   if (rnd<=0.6865254) // 10^18 eV - 10^21 eV (use this one for ANITA)
@@ -329,16 +317,15 @@ string Interaction::GetCurrent() {
 } //GetCurrent
 
 void  Interaction::setCurrent() {
-     // pick whether it is neutral current
-      // or charged current
-      current=this->GetCurrent();
+  // pick whether it is neutral current
+  // or charged current
+  current=this->GetCurrent();
+  if (current=="cc")   //For outputting to file
+    currentint=kcc;
+  else if(current=="nc")
+    currentint=knc;   
+}//setCurrent
 
-
-      if (current=="cc")   //For outputting to file
-	currentint=kcc;
-      else if(current=="nc")
-	currentint=knc;   
-  }//setCurrent
 
 ///////////////// Y //////////////
 Y::Y() { // Constructor
@@ -367,7 +354,7 @@ Y::Y() { // Constructor
   int kcc = Interaction::kcc;
   int knc = Interaction::knc;
 
-// parameter A_0 in Table V for the high y region
+  // parameter A_0 in Table V for the high y region
   fC1_high[1][kcc]->FixParameter(0,-0.0026);//nubar, CC
   fC1_high[0][kcc]->FixParameter(0,-0.008); //nu,    CC
   fC1_high[1][knc]->FixParameter(0,-0.005); //nubar, NC
@@ -407,59 +394,47 @@ Y::Y() { // Constructor
   fC2->FixParameter(1,-9.49E-2);
 
   // For picking inelasticity in low y region according to Equation 14.
-   fy0_low=new TF3("fy0_low","x+(z*([1]-x)^(-1./y+1)+(1-z)*([0]-x)^(-1./y+1))^(y/(y-1))"); // x=C_1, y=C_2, z=R
-   fy0_low->SetParameter(0,ymin_low);  // y_min
-   fy0_low->SetParameter(1,ymax_low); // y_max
-   
-   // For picking inelasticity in high y region according to Equation 15.
-   fy0_high=new TF2("fy0_high","([1]-x)^y/([0]-x)^(y-1.)+x"); // x=C_1, y=R
-   fy0_high->SetParameter(0,ymin_high); // y_min
-   fy0_high->SetParameter(1,ymax_high); // y_max
+  fy0_low=new TF3("fy0_low","x+(z*([1]-x)^(-1./y+1)+(1-z)*([0]-x)^(-1./y+1))^(y/(y-1))"); // x=C_1, y=C_2, z=R
+  fy0_low->SetParameter(0,ymin_low);  // y_min
+  fy0_low->SetParameter(1,ymax_low); // y_max
 
+  // For picking inelasticity in high y region according to Equation 15.
+  fy0_high=new TF2("fy0_high","([1]-x)^y/([0]-x)^(y-1.)+x"); // x=C_1, y=R
+  fy0_high->SetParameter(0,ymin_high); // y_min
+  fy0_high->SetParameter(1,ymax_high); // y_max
 }//Y Constructor
 
 
 //! Pick an inelasticity y according to the model chosen
 double Y::pickY(Settings *settings1,double pnu,int nu_nubar,int currentint) {
- 
- 
   if(settings1->YPARAM==0){
     return pickYGandhietal();
- 
   }//old Gety
-
   else { //use prescription in Connolly et al.2011
-  	nu_nubar=0;
-	
-	double elast_y=pickYConnollyetal2011(nu_nubar,currentint,pnu);
-	return elast_y;   
+    nu_nubar=0;
+    double elast_y=pickYConnollyetal2011(nu_nubar,currentint,pnu);
+    return elast_y;   
   }//current Gety
-
 } //Gety
+
+
 //! THIS IS A ROUGH PARAMETRIZATION OF PLOT 6 FROM Ghandhi,Reno,Quigg,Sarcevic  hep-ph/9512364 (the curves are not in their later article).  There is also a slow energy dependence.
 double Y::pickYGandhietal() {
-  
- 
   double rnd;
   double x = 0;
-  
   // generate according to Ghandi fig. 6 
   	// adjust exponent until looks like the curve
   	//  and has right mean.
   	//  (Note this is not the fcn, but the inverse of the integral...)
-  
   rnd = gRandom->Rndm(1); // (0,1)
   //  cout << "R1, R2, rnd are " << R1 << " " << R2 << " " << rnd << "\n";
-  
   x=pow(-log(R1+rnd*R2),2.5); 
-	
- 
   return x;   
 }
-double Y::pickYConnollyetal2011(int NU,int CURRENT,double pnu) {
-  
-  // Select a y according to recipe in Connolly et al. (2011)
 
+
+double Y::pickYConnollyetal2011(int NU,int CURRENT,double pnu) {
+  // Select a y according to recipe in Connolly et al. (2011)
   //pnu is in eV.
   double epsilon=log10(pnu/1.E9);
   // pick a y region 
@@ -489,6 +464,8 @@ double Y::pickYConnollyetal2011(int NU,int CURRENT,double pnu) {
 
   return y0;
 }//pickY
+
+
 double Y::Getyweight(double pnu, double y, int nu_nubar, int currentint){
   //from Connolly Calc 2011, Equations 9, 10, 11, 16, and 17.
   double dy=0.;//default

@@ -1,8 +1,8 @@
 %!PS-Adobe-2.0 EPSF-2.0
 %%BoundingBox:  0 0 567 500
 %%Title: freqdomainplots.eps: cfreq
-%%Creator: ROOT Version 5.34/18
-%%CreationDate: Wed Apr  6 12:28:57 2016
+%%Creator: ROOT Version 5.34/34
+%%CreationDate: Fri Apr  8 13:53:54 2016
 %%EndComments
 %%BeginProlog
 80 dict begin
@@ -13,7 +13,7 @@
 /cl {closepath} def /sf {scalefont setfont} def /lw {setlinewidth} def
 /box {m dup 0 exch d exch 0 d 0 exch neg d cl} def
 /NC{systemdict begin initclip end}def/C{NC box clip newpath}def
-/bl {box s} def /bf {box f} def /Y { 0 exch d} def /X { 0 d} def 
+/bl {box s} def /bf {gsave box gsave f grestore 1 lw [] 0 sd s grestore} def /Y { 0 exch d} def /X { 0 d} def 
 /K {{pop pop 0 moveto} exch kshow} bind def
 /ita {/ang 15 def gsave [1 0 ang dup sin exch cos div 1 0 0] concat} def 
 /mp {newpath /y exch def /x exch def} def

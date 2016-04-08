@@ -37,18 +37,16 @@ public:
   double rough_sigma;
   Roughness();
   void GetExitforRoughness(Settings *settings1,IceModel *antarctica,double emfrac,double hadfrac,double deltheta_em_max,double deltheta_had_max,Ray *ray1,Vector &nnu,Vector &r_bn,Vector &posnu);
-  double GetPokey(double incident_angle,double transmitted_angle,
-		  double emfrac,double hadfrac,double deltheta_em,double deltheta_had);
-  double GetSlappy(double incident_angle,double transmitted_angle,
-		  double emfrac,double hadfrac,double deltheta_em,double deltheta_had);
+  
+  double GetPokey(double incident_angle,double transmitted_angle, double emfrac,double hadfrac,double deltheta_em,double deltheta_had);
+  
+  double GetSlappy(double incident_angle,double transmitted_angle, double emfrac,double hadfrac,double deltheta_em,double deltheta_had);
+  
   double GetCombinedDeltheta(double emfrac,double hadrac,double deltheta_em_max,double deltheta_had_max);
+
   void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceModel *antarctica);
 
   Vector nrf_iceside_specular; // ice side "specular" ray - for now, this is just a line from the interaction to the specular exit point, since we are still working on the formula to trace the ray back to the interaction through the firn.  For interactions within the firn, this will be equal to nrf_iceside[3]
-
-
-
-
 
 };
 //double rough_sigma_0=0.002;

@@ -18,7 +18,7 @@
 #include "Primaries.h"
 
 Settings::Settings() {
-  Initialize();
+    Initialize();
 
     // Bunch of variables which were global in icemc.cc but are settings:
     FILLRAYTREES=1; // fill tree for each ray in roughness simulation
@@ -46,23 +46,19 @@ Settings::Settings() {
     SHOWERTYPE=0; // Type of shower for previous option
     // End of the once-global varibles.
     taumodes = 1; //Taumodes =1, taucreated in the rock.
-    
 }
 
 void Settings::Initialize() {
-
-
-  NDISCONES_PASS=3;
-
-  DEBUG=false;                   // debugging option
-outputdir="outputs"; // directory where outputs go
- FREQ_LOW_SEAVEYS=200.E6;
- FREQ_HIGH_SEAVEYS=1200.E6;
- BW_SEAVEYS=FREQ_HIGH_SEAVEYS-FREQ_LOW_SEAVEYS;
- SIGMAPARAM=1;  // Connolly et al. 2011 default cross section parametrization
- YPARAM=1;  // Connolly et al. 2011 default y parametrization
- UNBIASED_SELECTION=1.; // (0) pick neutrino interaction in the ice and neutrino from any direction or (1) choose neutrino interaction point in the horizon on the balloon in the ice and neutrino direction on the cerenkov cone
- SIGMA_FACTOR=1;
+    NDISCONES_PASS=3;
+    DEBUG=false;                   // debugging option
+    outputdir="outputs"; // directory where outputs go
+    FREQ_LOW_SEAVEYS=200.E6;
+    FREQ_HIGH_SEAVEYS=1200.E6;
+    BW_SEAVEYS=FREQ_HIGH_SEAVEYS-FREQ_LOW_SEAVEYS;
+    SIGMAPARAM=1;  // Connolly et al. 2011 default cross section parametrization
+    YPARAM=1;  // Connolly et al. 2011 default y parametrization
+    UNBIASED_SELECTION=1.; // (0) pick neutrino interaction in the ice and neutrino from any direction or (1) choose neutrino interaction point in the horizon on the balloon in the ice and neutrino direction on the cerenkov cone
+    SIGMA_FACTOR=1;
 }
 
 void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1) {
@@ -120,7 +116,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     WRITEPOSFILE=(int)atof(number.c_str());
     
     if (WRITEPOSFILE==1)
-	cout << "Non-default setting:  WRITEPOSFILE= " << WRITEPOSFILE << "\n";
+        cout << "Non-default setting:  WRITEPOSFILE= " << WRITEPOSFILE << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     EVENTSMAP=atoi(number.c_str());//draw the events map or not
@@ -139,56 +135,50 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     NLAYERS=(int)atoi(number.c_str()); // this is number of layers, counting the upper 16 as 2 layers
     
     if (((WHICH==1 || WHICH==6) && NLAYERS!=4) ||
-	(WHICH==0 && NLAYERS!=1) ||
-	(WHICH==7 && NLAYERS!=1))
-	cout << "Non-default setting:  WHICH= " << WHICH << " and NLAYERS= " << NLAYERS << "\n";
+    (WHICH==0 && NLAYERS!=1) ||
+    (WHICH==7 && NLAYERS!=1))
+       cout << "Non-default setting:  WHICH= " << WHICH << " and NLAYERS= " << NLAYERS << "\n";
     
     //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas.  So that means for Anita 1 and Anita 2, there are one fewer trigger layers than physical layers. 
     // anything anita like
     // anita 1 simple, anita 1 kurt, anita 2 kurt, anita 3, satellite
     if (WHICH==2 || WHICH==6 || WHICH==8 || WHICH==9)
-	anita1->NTRIGGERLAYERS = NLAYERS - 1;
+        anita1->NTRIGGERLAYERS = NLAYERS - 1;
     else
-	anita1->NTRIGGERLAYERS=NLAYERS;
-    
-    
-    
+        anita1->NTRIGGERLAYERS=NLAYERS;
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    
     
     anita1->INCLINE_TOPTHREE=(double)atof(number.c_str());
     
     if (anita1->INCLINE_TOPTHREE!=10)
-	cout << "Non-default setting:  INCLINE_TOPTHREE= " << anita1->INCLINE_TOPTHREE << "\n";
+        cout << "Non-default setting:  INCLINE_TOPTHREE= " << anita1->INCLINE_TOPTHREE << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     
     anita1->INCLINE_NADIR=(double)atof(number.c_str());
     
     if (anita1->INCLINE_NADIR!=10)
-	cout << "Non-default setting:  INCLINE_NADIR= " << anita1->INCLINE_NADIR << "\n";
-    
+        cout << "Non-default setting:  INCLINE_NADIR= " << anita1->INCLINE_NADIR << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     
     bn1->WHICHPATH=(int)atoi(number.c_str());
     
-    
     if ((WHICH==0 && bn1->WHICHPATH!=2) || (WHICH==2 && bn1->WHICHPATH!=6))
-	cout << "Non-default setting:  bn1->WHICHPATH= " << bn1->WHICHPATH << " and WHICH=" << WHICH << "\n";
+        cout << "Non-default setting:  bn1->WHICHPATH= " << bn1->WHICHPATH << " and WHICH=" << WHICH << "\n";
     
     if (bn1->WHICHPATH==2)
-	anita1->LIVETIME=45.*24.*3600.*0.75; // 45 days for anita-lite
+        anita1->LIVETIME=45.*24.*3600.*0.75; // 45 days for anita-lite
     else if (bn1->WHICHPATH==0)
-	anita1->LIVETIME=6.02*24.*3600.; // anita-lite
+        anita1->LIVETIME=6.02*24.*3600.; // anita-lite
     else if (bn1->WHICHPATH==6) // kim's livetime for anita
-	anita1->LIVETIME=17.*24.*3600.; // for anita, take 34.78 days * 0.75 efficiency
+        anita1->LIVETIME=17.*24.*3600.; // for anita, take 34.78 days * 0.75 efficiency
     else
-	anita1->LIVETIME=14.*24.*3600.; // otherwise use 2 weeks by default
+        anita1->LIVETIME=14.*24.*3600.; // otherwise use 2 weeks by default
     
     if (WHICH==7) // EeVEX
-	anita1->LIVETIME=100.*24.*3600.; // ultra-long duration balloon flight of 100 days
+        anita1->LIVETIME=100.*24.*3600.; // ultra-long duration balloon flight of 100 days
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     
@@ -199,17 +189,17 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     bn1->BN_LONGITUDE=(double)atof(number.c_str());
     
     if((bn1->BN_LONGITUDE!=999 || bn1->BN_LATITUDE!=999) && bn1->WHICHPATH==0)
-	cout<<"BN_LATITUDE: "<<bn1->BN_LATITUDE<<", BN_LONGITUDE: "<<bn1->BN_LONGITUDE<<endl;
+        cout<<"BN_LATITUDE: "<<bn1->BN_LATITUDE<<", BN_LONGITUDE: "<<bn1->BN_LONGITUDE<<endl;
     
     if (bn1->BN_LONGITUDE>180. && bn1->BN_LONGITUDE!=999)
-	cout << "Entered balloon longitude wrong!  Should be between -180 and 180 degrees.\n";
+        cout << "Entered balloon longitude wrong!  Should be between -180 and 180 degrees.\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     
     bn1->RANDOMIZE_BN_ORIENTATION=(int)atoi(number.c_str());
     
     if (bn1->RANDOMIZE_BN_ORIENTATION==1 && (bn1->WHICHPATH==2 || bn1->WHICHPATH==6))
-	cout << "Warning:: Strangely you asked for a real flight path but a randomized balloon orientation.  WILL BE OVERRIDDEN.\n";
+        cout << "Warning:: Strangely you asked for a real flight path but a randomized balloon orientation.  WILL BE OVERRIDDEN.\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     
@@ -232,24 +222,24 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,5);
     
     for (int n=0;n<5;n++) {
-	anita1->bwslice_thresholds[n]=(double)atof(vnumber[n].c_str());
+        anita1->bwslice_thresholds[n]=(double)atof(vnumber[n].c_str());
     }
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     anita1->BANDING=atoi(number.c_str()); // whether you use anita-1 banding (0) or choose-your-own
     
     if (anita1->BANDING !=0 && anita1->BANDING!= 1 && anita1->BANDING!=2 && anita1->BANDING!=4) {
-	cout << "Banding should be set to 0 (Anita 1), 1 (custum), 2 (Anita 2), 3 (Satellite) or 4 (Anita 3).\n";
-	exit(1);
+        cout << "Banding should be set to 0 (Anita 1), 1 (custum), 2 (Anita 2), 3 (Satellite) or 4 (Anita 3).\n";
+        exit(1);
     }
     
     if ((TRIGGERSCHEME==0 || TRIGGERSCHEME==1) && anita1->BANDING!=1) {
-	cout << "Frequency domain trigger schemes can only be used with user-set sub-bands.\n";
-	exit(1);
+        cout << "Frequency domain trigger schemes can only be used with user-set sub-bands.\n";
+        exit(1);
     }
     
     if (TRIGGERSCHEME==2 && anita1->BANDING==1) {
-    	cout << "Time domain trigger scheme only works with Anita 1, Anita 2 or Anita 3 banding data, you can't set your own bands.\n";
-    	exit(1);
+        cout << "Time domain trigger scheme only works with Anita 1, Anita 2 or Anita 3 banding data, you can't set your own bands.\n";
+        exit(1);
     }
     
     
@@ -259,40 +249,40 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     
     //  double mintemp,maxtemp;
     for (int n=0;n<5;n++) {
-	anita1->bwslice_min[n]=(double)atof(vnumber[n].c_str())*1.E6;
-	anita1->bwslice_max[n]=(double)atof(vnumber2[n].c_str())*1.E6;
-	anita1->bwslice_center[n]=(anita1->bwslice_min[n]+anita1->bwslice_max[n])/2.;
-	anita1->bwslice_width[n]=(anita1->bwslice_max[n]-anita1->bwslice_min[n]);
-	//cout << "center, width are " << anita1->bwslice_center[n] << " " << anita1->bwslice_width[n] << "\n";
+        anita1->bwslice_min[n]=(double)atof(vnumber[n].c_str())*1.E6;
+        anita1->bwslice_max[n]=(double)atof(vnumber2[n].c_str())*1.E6;
+        anita1->bwslice_center[n]=(anita1->bwslice_min[n]+anita1->bwslice_max[n])/2.;
+        anita1->bwslice_width[n]=(anita1->bwslice_max[n]-anita1->bwslice_min[n]);
+        //cout << "center, width are " << anita1->bwslice_center[n] << " " << anita1->bwslice_width[n] << "\n";
     }
     
     Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,5);
     
     for (int n=0;n<5;n++) {
-	//anita1->bwslice is actaully an int
-	anita1->bwslice_required[n]=(int)atof(vnumber[n].c_str());
+        //anita1->bwslice is actaully an int
+        anita1->bwslice_required[n]=(int)atof(vnumber[n].c_str());
     }
     
     Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,5);
     
     for (int n=0;n<5;n++) {
-	//anita1->bwslice_allowed[n] is still an int, not a double
-	anita1->bwslice_allowed[n]=(int)atof(vnumber[n].c_str());
+        //anita1->bwslice_allowed[n] is still an int, not a double
+        anita1->bwslice_allowed[n]=(int)atof(vnumber[n].c_str());
     }
     
     anita1->maxthreshold=0.;
     anita1->bwmin=1.E10;
     if (anita1->BANDING!=1)
-	anita1->bwmin=200.E6;
+        anita1->bwmin=200.E6;
     
     for (int n=0;n<5;n++) {
-	if (anita1->bwslice_thresholds[n]>anita1->maxthreshold && anita1->bwslice_allowed[n]==1)
-	    anita1->maxthreshold=anita1->bwslice_thresholds[n];
-	
-	if (anita1->BANDING==1) {
-	    if ((anita1->bwslice_max[n]-anita1->bwslice_min[n])<anita1->bwmin && anita1->bwslice_allowed[n]==1)
-		anita1->bwmin=anita1->bwslice_max[n]-anita1->bwslice_min[n];
-	}
+        if (anita1->bwslice_thresholds[n]>anita1->maxthreshold && anita1->bwslice_allowed[n]==1)
+            anita1->maxthreshold=anita1->bwslice_thresholds[n];
+
+        if (anita1->BANDING==1) {
+            if ((anita1->bwslice_max[n]-anita1->bwslice_min[n])<anita1->bwmin && anita1->bwslice_allowed[n]==1)
+                anita1->bwmin=anita1->bwslice_max[n]-anita1->bwslice_min[n];
+        }
     }
     
     // now get number of bands for banding option 3 (satellite)
@@ -306,10 +296,10 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     anita1->NOTCH_MAX=(double)atof(vnumber[1].c_str())*1.E6;
     
     if (anita1->NOTCH_MIN>anita1->NOTCH_MAX) {
-	cout << "Min of notch filter is greater than max.  Try again.\n";
+        cout << "Min of notch filter is greater than max.  Try again.\n";
     }
     if (anita1->NOTCH_MIN!=0 || anita1->NOTCH_MAX!=0)
-	cout << "Applying a notch filter from " << anita1->NOTCH_MIN << " Hz to " << anita1->NOTCH_MAX << " Hz\n";
+        cout << "Applying a notch filter from " << anita1->NOTCH_MIN << " Hz to " << anita1->NOTCH_MAX << " Hz\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     anita1->trigRequirements[0]=atoi(number.c_str()); 
@@ -327,17 +317,17 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     JUSTVPOL=atoi(number.c_str());
     
     if (JUSTVPOL && LCPRCP) {
-	cout << "Requested LCP, RCP trigger and just vertical polarization.  Contradiction.\n";
-	exit(1);
+        cout << "Requested LCP, RCP trigger and just vertical polarization.  Contradiction.\n";
+        exit(1);
     }
     
     if (JUSTVPOL) {
-	anita1->pol_allowed[0]=1;
-	anita1->pol_allowed[1]=0;
+        anita1->pol_allowed[0]=1;
+        anita1->pol_allowed[1]=0;
     }
     else {
-	anita1->pol_allowed[0]=1;
-	anita1->pol_allowed[1]=1;
+        anita1->pol_allowed[0]=1;
+        anita1->pol_allowed[1]=1;
     }
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
@@ -346,14 +336,14 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     anita1->INCLUDE_NADIRONLY=(double)atof(number.c_str());
     
     if (anita1->INCLUDE_NADIRONLY!=0)
-	cout << "Non-default setting:  INCLUDE_NADIRONLY= " << anita1->INCLUDE_NADIRONLY << "\n";
+        cout << "Non-default setting:  INCLUDE_NADIRONLY= " << anita1->INCLUDE_NADIRONLY << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     CHMASKING=atoi(number.c_str());
     
     if (bn1->WHICHPATH!=6 && CHMASKING==1) {
-	cout << "Cannot include masking for flights other than the ANITA-1 flight. For the ANITA-3 channel masking, it is implemented together with the phi masking and it's turned on whenever the PHIMASKING is ON. CHMASKING set to 0.\n";
-	CHMASKING=0;
+        cout << "Cannot include masking for flights other than the ANITA-1 flight. For the ANITA-3 channel masking, it is implemented together with the phi masking and it's turned on whenever the PHIMASKING is ON. CHMASKING set to 0.\n";
+        CHMASKING=0;
     } 
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
@@ -385,8 +375,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     LCPRX2ZERO=(int)atoi(number.c_str());
     
     if (WHICH==0 && !(SCALEDOWNEPOLRX1==1 && RCPRX2ZERO==1))
-	cout << "Non-default setting:  WHICH= " << WHICH << " and EPOLRX2ZERO= " << EPOLRX2ZERO << "\n";
-    
+        cout << "Non-default setting:  WHICH= " << WHICH << " and EPOLRX2ZERO= " << EPOLRX2ZERO << "\n";
     
     getline(inputsfile,junk);
     foutput << junk << "\n";
@@ -397,7 +386,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     SIGNAL_FLUCT=(int)atoi(number.c_str());
     
     if (SIGNAL_FLUCT!=1)
-	cout << "Non-default setting:  SIGNAL_FLUCT= " << SIGNAL_FLUCT << "\n";
+        cout << "Non-default setting:  SIGNAL_FLUCT= " << SIGNAL_FLUCT << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     ZEROSIGNAL=atoi(number.c_str()); // whether it's frequency domain (0) or time domain
@@ -409,7 +398,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     sig1->SetLPM((int)atoi(number.c_str()));
     
     if (sig1->GetLPM()!=1)
-	cout << "Non-default setting:  LPM= " << sig1->GetLPM() << "\n";
+        cout << "Non-default setting:  LPM= " << sig1->GetLPM() << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     sig1->SetJaime_Factor((double)atof(number.c_str()));
@@ -419,33 +408,33 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     THERMALNOISE_FACTOR=(double)atof(number.c_str());
     
     if (THERMALNOISE_FACTOR!=1)
-	cout << "Non-default setting:  THERMALNOISE_FACTOR= " << THERMALNOISE_FACTOR << "\n";
+        cout << "Non-default setting:  THERMALNOISE_FACTOR= " << THERMALNOISE_FACTOR << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     
     REMOVEPOLARIZATION=(int)atof(number.c_str());
     
     if (REMOVEPOLARIZATION==1)
-	cout << "Non-default setting:  Polarizations turned off!\n";
+        cout << "Non-default setting:  Polarizations turned off!\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     anita1->PULSER=atoi(number.c_str()); 
     
     if (anita1->PULSER!=0)
-	cout << "Warning!  Injecting a pulser spectrum- not simulating neutrinos!  PULSER = " << anita1->PULSER << "\n";
+        cout << "Warning!  Injecting a pulser spectrum- not simulating neutrinos!  PULSER = " << anita1->PULSER << "\n";
     
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     bn1->CENTER=atoi(number.c_str()); 
     
     if (bn1->CENTER!=0)
-	cout << "WARNING!!  Rotating payload to center one phi sector on the incoming signal for each event.\n";
+        cout << "WARNING!!  Rotating payload to center one phi sector on the incoming signal for each event.\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     ray1->MAKEVERTICAL=atoi(number.c_str()); 
     
     if (ray1->MAKEVERTICAL!=0)
-	cout << "WARNING!!  Rotating polarization so it is always vertical approaching the payload.\n";
+        cout << "WARNING!!  Rotating polarization so it is always vertical approaching the payload.\n";
     
     getline(inputsfile,junk);
     foutput << junk << "\n";
@@ -455,56 +444,56 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     SLOPEYSIZE=(double)atof(number.c_str());
     
     if (SLOPEYSIZE!=0.012)
-	cout << "Non-default setting:  SLOPEYSIZE= " << SLOPEYSIZE << "\n";
+        cout << "Non-default setting:  SLOPEYSIZE= " << SLOPEYSIZE << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     SLOPEY=(int)atoi(number.c_str());
     
     if (SLOPEY!=1)
-	cout << "Non-default setting:  SLOPEY= " << SLOPEY << "\n";
+        cout << "Non-default setting:  SLOPEY= " << SLOPEY << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     NOFZ=(int)atoi(number.c_str());
     
     if (NOFZ!=1)
-	cout << "Non-default setting:  NOFZ= " << NOFZ << "\n";
+        cout << "Non-default setting:  NOFZ= " << NOFZ << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     VARIABLE_ATTEN=(int)atoi(number.c_str());
     
     if (VARIABLE_ATTEN!=0)
-	cout << "Non-default setting:  VARIABLE_ATTEN= " << VARIABLE_ATTEN << "\n";
+        cout << "Non-default setting:  VARIABLE_ATTEN= " << VARIABLE_ATTEN << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     CONSTANTICETHICKNESS=(int)atof(number.c_str());
     
     if (CONSTANTICETHICKNESS==1)
-	cout << "Non-default setting:  CONSTANTICETHICKNESS= " << CONSTANTICETHICKNESS << "\n";
+        cout << "Non-default setting:  CONSTANTICETHICKNESS= " << CONSTANTICETHICKNESS << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     ICE_MODEL=(int)atof(number.c_str());
     
     if ((CONSTANTICETHICKNESS || FIXEDELEVATION) && ICE_MODEL != 0) {
-	ICE_MODEL=0;
-	cout<<"Constant ice thickness and/or fixed elevation requested.  Using Crust 2.0 ice model.\n";
+        ICE_MODEL=0;
+        cout<<"Constant ice thickness and/or fixed elevation requested.  Using Crust 2.0 ice model.\n";
     } //use the Crust 2.0 data if set to constant icethickness or ground elevation
     
     if (ICE_MODEL==0)
-	cout << "Using Crust 2.0 ice model.\n";
+        cout << "Using Crust 2.0 ice model.\n";
     else if (ICE_MODEL==1)
-	cout << "Using BEDMAP ice model.\n";
+        cout << "Using BEDMAP ice model.\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     FLATSURFACE=(int)atof(number.c_str());
     
     if (FLATSURFACE==1)
-	cout << "Non-default setting: all surface segments are flat.\n";
+        cout << "Non-default setting: all surface segments are flat.\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     FIXEDELEVATION=(int)atof(number.c_str());
     
     if (FIXEDELEVATION==1)
-	cout << "Non-default setting:  FIXEDELEVATION= " << FIXEDELEVATION << "\n";
+        cout << "Non-default setting:  FIXEDELEVATION= " << FIXEDELEVATION << "\n";
     
     //ice or salt
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
@@ -517,7 +506,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     FIRN=atoi(number.c_str()); 
     if (FIRN==0)
-	cout << "Warning!  Non-standard parameter setting.  FIRN = " << FIRN << "\n";
+        cout << "Warning!  Non-standard parameter setting.  FIRN = " << FIRN << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     MOOREBAY=atoi(number.c_str());
@@ -530,26 +519,26 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     SIGMA_FACTOR=(double)atof(number.c_str());
     
     if (SIGMA_FACTOR!=1)
-	cout << "Non-default setting:  settings->SIGMA_FACTOR= " << SIGMA_FACTOR << "\n";
+        cout << "Non-default setting:  settings->SIGMA_FACTOR= " << SIGMA_FACTOR << "\n";
     
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     THETA_TH_FACTOR=(double)atof(number.c_str());
     
     if (THETA_TH_FACTOR!=1)
-	cout << "Non-default setting:  THETA_TH_FACTOR= " << THETA_TH_FACTOR << "\n";
+        cout << "Non-default setting:  THETA_TH_FACTOR= " << THETA_TH_FACTOR << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     CHANCEINHELL_FACTOR=(double)atof(number.c_str());
     
     if (CHANCEINHELL_FACTOR!=1)
-	cout << "Non-default setting:  CHANCEINHELL_FACTOR= " << CHANCEINHELL_FACTOR << "\n";
+        cout << "Non-default setting:  CHANCEINHELL_FACTOR= " << CHANCEINHELL_FACTOR << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     SKIPCUTS=(int)atof(number.c_str());
     
     if (SKIPCUTS==1)
-	cout << "Non-default setting:  Skipping all cuts!\n";
+        cout << "Non-default setting:  Skipping all cuts!\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     USEDIRECTIONWEIGHTS=(int)atof(number.c_str()); 
@@ -557,7 +546,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     USEPOSITIONWEIGHTS=(int)atof(number.c_str()); 
     
     if (USEPOSITIONWEIGHTS==0)
-	cout << "Non-default setting:  Not selecting events within the horizon.\n";
+        cout << "Non-default setting:  Not selecting events within the horizon.\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     WEIGHTABSORPTION=(int)atoi(number.c_str()); 
@@ -573,9 +562,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     BORESIGHTS=atoi(number.c_str()); 
     
     if (BORESIGHTS==0)
-	cout << "Warning!  Non-standard parameter setting.  BORESIGHTS = " << BORESIGHTS << "\n";
-    
-    
+        cout << "Warning!  Non-standard parameter setting.  BORESIGHTS = " << BORESIGHTS << "\n";
     
     getline(inputsfile,junk);
     foutput << junk << "\n";
@@ -594,25 +581,25 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     sec1->SECONDARIES=(int)atoi(number.c_str());
     
     if (sec1->SECONDARIES!=1)
-	cout << "Non-default setting:  SECONDARIES= " << sec1->SECONDARIES << "\n";
+        cout << "Non-default setting:  SECONDARIES= " << sec1->SECONDARIES << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     sec1->TAUDECAY=(int)atoi(number.c_str());
     
     if (sec1->TAUDECAY!=1)
-	cout << "Non-default setting:  TAUDECAY= " << sec1->TAUDECAY << "\n";
+        cout << "Non-default setting:  TAUDECAY= " << sec1->TAUDECAY << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     ATMOSPHERE=(int)atoi(number.c_str());
     
     if (ATMOSPHERE!=1)
-	cout << "Non-default setting:  ATMOSPHERE= " << ATMOSPHERE << "\n";
+        cout << "Non-default setting:  ATMOSPHERE= " << ATMOSPHERE << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     CONSTANTCRUST=(int)atof(number.c_str());
     
     if (CONSTANTCRUST==1)
-	cout << "Non-default setting:  CONSTANTCRUST= " << CONSTANTCRUST << "\n";
+        cout << "Non-default setting:  CONSTANTCRUST= " << CONSTANTCRUST << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     CONSTANTY=(int)atoi(number.c_str()); // whether to use contant of 0.2 for y (1) yes or (0) no
@@ -630,7 +617,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     WHICHRAYS=(int)atoi(number.c_str());
     
     if (WHICHRAYS!=1)
-	cout << "Non-default setting:  WHICHRAYS= " << WHICHRAYS << "\n";
+        cout << "Non-default setting:  WHICHRAYS= " << WHICHRAYS << "\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     WRITE_FILE=(int)atof(number.c_str());
@@ -643,14 +630,14 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     anita1->SIGMA_THETA=(double)atof(number.c_str());
     
     if (anita1->SIGMA_THETA==1)
-	cout << "Non-default setting:  SIGMA_THETA = 1\n";
+        cout << "Non-default setting:  SIGMA_THETA = 1\n";
     
     anita1->SIGMA_THETA*=RADDEG; // immediately convert degrees to radians
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     anita1->FREQ_LOW=(double)atof(number.c_str()); 
     
     if (FREQ_LOW_SEAVEYS>anita1->FREQ_LOW)
-	FREQ_LOW_SEAVEYS=anita1->FREQ_LOW;
+        FREQ_LOW_SEAVEYS=anita1->FREQ_LOW;
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     anita1->FREQ_HIGH=(double)atof(number.c_str());
@@ -664,26 +651,26 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     // this rotates surface slope 10 degrees away from south pole
     
     if (SLAC==1)
-	cout << "Warning!  Non-standard parameter setting.  SLAC = " << SLAC << "\n";
+        cout << "Warning!  Non-standard parameter setting.  SLAC = " << SLAC << "\n";
     
     if (SLAC) {
-	foutput << "!!!!SLAC setting causes some settings to be superseded:\n";
-	FIRN=0; // no firn
-	foutput << "FIRN=0\n";
-	SLOPEY=0; // slopeyness off
-	foutput << "SLOPEY=0\n";
-	BORESIGHTS=1; // loop over boresights
-	foutput << "BORESIGHTS=1\n";
-	bn1->BN_ALTITUDE=4.22/0.3; // balloon altitude in ft.!!
-	foutput << "BN_ALTITUDE=4.22/0.3\n";
-	bn1->RANDOMIZE_BN_ORIENTATION=0; // don't randomize the balloon orientation
-	foutput << "RANDOMIZE_BN_ORIENTATION=0\n";
-	SKIPCUTS=1; // don't make chance in hell cuts
-	foutput << "SKIPCUTS=1\n";
-	SLACSLOPE=5.8; // slope of the ice in degrees
-	foutput << "SLACSLOPE=5.8\n";
-	SLACICELENGTH=5.02; // length of the block of ice
-	foutput << "SLACICELENGTH=5.02\n";
+        foutput << "!!!!SLAC setting causes some settings to be superseded:\n";
+        FIRN=0; // no firn
+        foutput << "FIRN=0\n";
+        SLOPEY=0; // slopeyness off
+        foutput << "SLOPEY=0\n";
+        BORESIGHTS=1; // loop over boresights
+        foutput << "BORESIGHTS=1\n";
+        bn1->BN_ALTITUDE=4.22/0.3; // balloon altitude in ft.!!
+        foutput << "BN_ALTITUDE=4.22/0.3\n";
+        bn1->RANDOMIZE_BN_ORIENTATION=0; // don't randomize the balloon orientation
+        foutput << "RANDOMIZE_BN_ORIENTATION=0\n";
+        SKIPCUTS=1; // don't make chance in hell cuts
+        foutput << "SKIPCUTS=1\n";
+        SLACSLOPE=5.8; // slope of the ice in degrees
+        foutput << "SLACSLOPE=5.8\n";
+        SLACICELENGTH=5.02; // length of the block of ice
+        foutput << "SLACICELENGTH=5.02\n";
     }
     
     

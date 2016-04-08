@@ -33,7 +33,7 @@ const double X0H20=0.361;          // radiation length of water (meters)
 
 
 const double Z_AIR=377;            // resistance of air = sqrt(epsilon/mu)
-  const double RHOAIR=1.25;          // density of air (kg/m**3)
+const double RHOAIR=1.25;          // density of air (kg/m**3)
 // // properties of ice
 
 

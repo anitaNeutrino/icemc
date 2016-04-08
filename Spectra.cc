@@ -16,7 +16,7 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   EXPONENT=EXPONENT_fromsettings;
   // initialize parameters!!
 
-    E_bin = 12;
+  E_bin = 12;
 
   double Emuons[E_bin]; // E dN/dE/dA/dt for neutrinos that are produced as muon neutrinos or muon antineutrinos.
   double Eelectrons[E_bin];// E dN/dE/dA/dt for neutrinos that are produced as electron neutrinos or muon antineutrinos.
@@ -28,8 +28,6 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   } //for
 
   // end of initialization!!
-
-
   if (EXPONENT==1)  // dNdEdAdt ~ E^-1
   {
       E_bin = 12;
@@ -91,18 +89,18 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   
     // lower curve of Figure 9 of ES&S
     // astro-ph/0101216
-       Emuons[0]=-17.1;  //16.
-       Emuons[1]=-16.6;  //16.5
-       Emuons[2]=-16.3;  //17.
-       Emuons[3]=-16.2; // 17.5
-       Emuons[4]=-16.4; // 18.
-       Emuons[5]=-16.7; // 18.5
-       Emuons[6]=-17.3; // 19
-       Emuons[7]=-17.95; // 19.5
-       Emuons[8]=-18.85; // 20.
-       Emuons[9]=-19.9; // 20.5 punt------not using above here
-       Emuons[10]=-30.; // 21.0 punt
-       Emuons[11]=-30.; // 21.5 punt
+    Emuons[0]=-17.1;  //16.
+    Emuons[1]=-16.6;  //16.5
+    Emuons[2]=-16.3;  //17.
+    Emuons[3]=-16.2; // 17.5
+    Emuons[4]=-16.4; // 18.
+    Emuons[5]=-16.7; // 18.5
+    Emuons[6]=-17.3; // 19
+    Emuons[7]=-17.95; // 19.5
+    Emuons[8]=-18.85; // 20.
+    Emuons[9]=-19.9; // 20.5 punt------not using above here
+    Emuons[10]=-30.; // 21.0 punt
+    Emuons[11]=-30.; // 21.5 punt
   
     for (int i=0;i<E_bin;i++) {
         energy[i] = 16.+((double)i)/2.;   // in log, in eV
@@ -179,7 +177,6 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
     }
     
   } // end if ESS-cosmological constant
-
 
   else if (EXPONENT>31 && EXPONENT<200)  // use digitized flux from different models
   {
@@ -284,12 +281,6 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   {
       GetFlux("Kotera2010_mix_min.dat");
   }
-
-
-
-
-
-
     //
     // End of selecting the Model!!!
     //
@@ -327,13 +318,10 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   sE2dNdEdAdt = new TSpline3("sE2dNdEdAdt", gE2dNdEdAdt);
 
   maxflux=Tools::dMax(EdNdEdAdt,E_bin);
-
-
- 
 }
 
+
 double  Spectra::GetNuEnergy() {
-  
   double thisenergy=16.; // arbitrary initialisation
   double thisflux=2.; // initialise higher than max
   double max=1.;
@@ -342,7 +330,6 @@ double  Spectra::GetNuEnergy() {
   double minenergy=Tools::dMin(energy,E_bin);
   // this uses the dartboard approach
   //cout << "minenergy, maxenergy are " << minenergy << " " << maxenergy << "\n";
-  
   while(thisflux>max) {
     // pick an energy  
     thisenergy=Rand3.Rndm()*(maxenergy-minenergy)+minenergy; // pick energy at random between the highest and lowest
@@ -355,9 +342,7 @@ double  Spectra::GetNuEnergy() {
     thisflux=Rand3.Rndm(); // pick the flux at random between 0 and 1, if it's less than max it's a winner
   } //while
   return pow(10.,thisenergy);
-	
 } //Pick Neutrino Energy
-
 
 
 inline void Spectra::GetFlux(string filename)
@@ -388,65 +373,74 @@ TGraph *Spectra::GetGEdNdEdAdt() {
     return gEdNdEdAdt;
 }
 
+
 TGraph *Spectra::GetGE2dNdEdAdt() {
     return gE2dNdEdAdt;
 }
+
 
 TSpline3 *Spectra::GetSEdNdEdAdt() {
     return sEdNdEdAdt;
 }
 
+
 TSpline3 *Spectra::GetSE2dNdEdAdt() {
     return sE2dNdEdAdt;
 }
+
 
 double *Spectra::Getenergy() {
     return energy;
 }
 
+
 double *Spectra::GetEdNdEdAdt() {
     return EdNdEdAdt;
 }
+
 
 double *Spectra::GetE2dNdEdAdt() {
     return E2dNdEdAdt;
 }
 
+
 double Spectra::GetEdNdEdAdt(double E_val) {
-    double tmp_Get;
-    if (E_val < energy[0]) {
-        cout<<"Energy value is smaller than the energy boundary!\n";
-        cout<<"Energy value is replaced to minimum value of energy bound : "<<energy[0]<<"\n";
-        tmp_Get = sEdNdEdAdt->Eval(energy[0]);
-    }
-    else if (E_val > energy[E_bin-1]) {
-        cout<<"Energy value is bigger than the energy boundary!\n";
-        cout<<"Energy value is replaced to maximum value of energy bound : "<<energy[E_bin-1]<<"\n";
-        tmp_Get = sEdNdEdAdt->Eval(energy[E_bin-1]);
-    }
-    else {
-        tmp_Get = sEdNdEdAdt->Eval(E_val);
-    }
-    return tmp_Get;
+  double tmp_Get;
+  if (E_val < energy[0]) {
+      cout<<"Energy value is smaller than the energy boundary!\n";
+      cout<<"Energy value is replaced to minimum value of energy bound : "<<energy[0]<<"\n";
+      tmp_Get = sEdNdEdAdt->Eval(energy[0]);
+  }
+  else if (E_val > energy[E_bin-1]) {
+      cout<<"Energy value is bigger than the energy boundary!\n";
+      cout<<"Energy value is replaced to maximum value of energy bound : "<<energy[E_bin-1]<<"\n";
+      tmp_Get = sEdNdEdAdt->Eval(energy[E_bin-1]);
+  }
+  else {
+      tmp_Get = sEdNdEdAdt->Eval(E_val);
+  }
+  return tmp_Get;
 }
 
+
 double Spectra::GetE2dNdEdAdt(double E_val) {
-    double tmp_Get;
-    if (E_val < energy[0]) {
-        cout<<"Energy value is smaller than the energy boundary!\n";
-        cout<<"Energy value is replaced to minimum value of energy bound : "<<energy[0]<<"\n";
-        tmp_Get = sE2dNdEdAdt->Eval(energy[0]);
-    }
-    else if (E_val > energy[E_bin-1]) {
-        cout<<"Energy value is bigger than the energy boundary!\n";
-        cout<<"Energy value is replaced to maximum value of energy bound : "<<energy[E_bin-1]<<"\n";
-        tmp_Get = sE2dNdEdAdt->Eval(energy[E_bin-1]);
-    }
-    else {
-        tmp_Get = sE2dNdEdAdt->Eval(E_val);
-    }
-    return tmp_Get;
+  double tmp_Get;
+  if (E_val < energy[0]) {
+      cout<<"Energy value is smaller than the energy boundary!\n";
+      cout<<"Energy value is replaced to minimum value of energy bound : "<<energy[0]<<"\n";
+      tmp_Get = sE2dNdEdAdt->Eval(energy[0]);
+  }
+  else if (E_val > energy[E_bin-1]) {
+      cout<<"Energy value is bigger than the energy boundary!\n";
+      cout<<"Energy value is replaced to maximum value of energy bound : "<<energy[E_bin-1]<<"\n";
+      tmp_Get = sE2dNdEdAdt->Eval(energy[E_bin-1]);
+  }
+  else {
+      tmp_Get = sE2dNdEdAdt->Eval(E_val);
+  }
+  return tmp_Get;
 }
+
 
 double Spectra::Getmaxflux() {
     return maxflux;
@@ -456,24 +450,27 @@ double Spectra::Getmaxflux() {
 int Spectra::GetE_bin() {
     return E_bin;
 }
+
+
 int Spectra::IsSpectrum() {
-    int out;
-    if (EXPONENT<=10||EXPONENT>=30) {
-        out = 1;
-    }
-    else {
-        out = 0;
-    }
-    return out;
+  int out;
+  if (EXPONENT<=10||EXPONENT>=30) {
+      out = 1;
+  }
+  else {
+      out = 0;
+  }
+  return out;
 }
 
+
 int Spectra::IsMonoenergetic() {
-    int out;
-    if (EXPONENT>10&&EXPONENT<30) {
-        out = 1;
-    }
-    else {
-        out = 0;
-    }
-    return out;
+  int out;
+  if (EXPONENT>10&&EXPONENT<30) {
+      out = 1;
+  }
+  else {
+      out = 0;
+  }
+  return out;
 }
