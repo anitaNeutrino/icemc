@@ -689,3 +689,6 @@ Randomasation of flight path using input seed, fixed some compilation warnings.
 
 04/06/2016 12:35 PM EST O. Banerjee
 Removed unnecessary arguments const_x, const_y, const_z from function GetAntennaOrientation
+
+04/21/2016 11:15 AM EST B. Dailey
+Output to real data format wasn't working as originally intended. Fixed. Icemc should now recognize if you have ANITA_UTIL_INSTALL_DIR and if so, output to real data format as well as normal format. 
