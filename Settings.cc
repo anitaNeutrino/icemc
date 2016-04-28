@@ -198,7 +198,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     
     bn1->RANDOMIZE_BN_ORIENTATION=(int)atoi(number.c_str());
     
-    if (bn1->RANDOMIZE_BN_ORIENTATION==1 && (bn1->WHICHPATH==2 || bn1->WHICHPATH==6))
+    if (bn1->RANDOMIZE_BN_ORIENTATION==1 && (bn1->WHICHPATH==2 || bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8))
         cout << "Warning:: Strangely you asked for a real flight path but a randomized balloon orientation.  WILL BE OVERRIDDEN.\n";
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);

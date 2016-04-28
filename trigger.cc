@@ -1742,9 +1742,11 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	    if(channels_compacted_passing[iloc][iphitrig][ipolar][iband] == 1
 	       && anita1->bwslice_allowed[iband]==1 && anita1->pol_allowed[ipolar]==1) { // only increment if it's one of the allowed bands.
 	      
-	      if (settings1->PHIMASKING && settings1->WHICH==9) // only applying channel masking like this if it's 
-		if ((ipolar==0 && (1<<iphitrig & l1TrigMask)) || (ipolar==1 && (1<<iphitrig & l1TrigMaskH)) )
+	      if (settings1->PHIMASKING && settings1->WHICH==9){ // only applying channel masking like this if it's 
+		if ((ipolar==0 && (1<<iphitrig & l1TrigMask)) || (ipolar==1 && (1<<iphitrig & l1TrigMaskH)) ){
 		  continue; // was this channel masked?
+		}
+	      }
 	      antsum = antsum +1; // sum channels that pass for this antenna
 
 	    }

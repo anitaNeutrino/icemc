@@ -395,20 +395,21 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     tgain->SetBranchAddress("freq",freq_ampl_eachantenna);
     tgain->SetBranchAddress("ampl",ampl_eachantenna);
     tgain->SetBranchAddress("noisetemp",noisetemp_eachantenna);
-    
+
+    int ientry=0;
     for (int iant=0;iant<48;iant++) {
-		tgain->GetEvent(iant);
-		for (int j=0;j<NPOINTS_AMPL;j++) {
-			
-			freq_ampl[iant][j]=(double)freq_ampl_eachantenna[j];
-			
-			ampl[iant][j]=(double)ampl_eachantenna[j];
-			
-			ampl[iant][j]+=32.; // add 32 dB to correct for attenuation that was used during the test
-			ampl_notdb[iant][j]=pow(10.,ampl[iant][j]/10.); // convert to regular fraction
-			
-			noisetemp[iant][j]=(double)noisetemp_eachantenna[j]; // so far we don't use this for anything
-		}
+      tgain->GetEvent(iant);
+      for (int j=0;j<NPOINTS_AMPL;j++) {
+	
+	freq_ampl[iant][j]=(double)freq_ampl_eachantenna[j];
+	
+	ampl[iant][j]=(double)ampl_eachantenna[j];
+	
+	ampl[iant][j]+=32.; // add 32 dB to correct for attenuation that was used during the test
+	ampl_notdb[iant][j]=pow(10.,ampl[iant][j]/10.); // convert to regular fraction
+	
+	noisetemp[iant][j]=(double)noisetemp_eachantenna[j]; // so far we don't use this for anything
+      }
     }
     f2->Close();
     
@@ -1296,6 +1297,7 @@ void Anita::ReadGains(void) {
 
 
 
+
 void Anita::AntennaGain(Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h) {
     
     if (freq[k]>=settings1->FREQ_LOW_SEAVEYS && freq[k]<=settings1->FREQ_HIGH_SEAVEYS) {
@@ -1342,9 +1344,6 @@ void Anita::AntennaGain(Settings *settings1,double hitangle_e,double hitangle_h,
     }
 }
 
-
-
-// }
 
 // The deck affects signals reaching the upper ring. These equations are for Fresnel diffraction around a half plane. The edge of the half plane passes just over and in front of the lower ring antenna that's facing the radio pulse. This assumption should be okay for the three upper ring antenns in the phi sector facing the pulse and should underestimate the effect of diffraction for the other upper ring antennas.
 // This only corrects for signal strength, not for changes in polarization and signal direction.
@@ -2671,8 +2670,8 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     const double phase_center_anita2=0.17;
     //const double gps_offset_anita2=atan2(0.89,-0.29);
     const double gps_offset_anita2=atan2(-0.7085,0.7056); // from elog 473
-    const double gps_offset_anita3=45*RADDEG; // Linda - 45 degrees from EventReader
-    const double phase_center_anita3=0.20; // Linda - phase-centers are around 20 cm inwards of antennas face-end
+    const double gps_offset_anita3= 45*RADDEG; // Linda: 45 degrees from EventReader
+    const double phase_center_anita3=0.20; // Linda: phase-centers are around 20 cm inwards of antennas face-end
 
 
     if (settings1->WHICH==0) { // anita-lite

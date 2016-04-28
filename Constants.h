@@ -40,8 +40,6 @@ const double RHOAIR=1.25;          // density of air (kg/m**3)
 const double NFIRN=1.3250;                   // index of refraction at the very surface - Peter
 const double NICE=1.79;                      // index of refraction of ice
 
-
-
 // constant vectors used in balloon class - oindree 
 
 const Vector const_z(0,0,1);

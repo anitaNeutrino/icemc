@@ -66,8 +66,6 @@
 
 #include <typeinfo>
 
-
-
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
 #include "AnitaGeomTool.h"
@@ -614,12 +612,21 @@ int TIR(const Vector &n_surf,  const Vector &nrf2_iceside,  double N_IN,  double
 
 // int IsDoubleBang(Ray *ray1, double pnu, double elast_y, double elpm, double hadfrac_db, double emfrac_db, string taudecay, double theta_bn, double phi_bn, double phi_spin, const Position &posnu, Position &posnu2, const Vector &nnu, double *deltheta_em_db, double *deltheta_had_db, double *vmmhz_db, double volts_db[][Anita::NPHI_MAX][2], double gain[][Anita::NFREQ], double *freq, double flare[][Anita::NFREQ], Vector &n_pol_db, Position &nuexit, Position *rfexit_db,  const Position &r_bn, Vector *n_exit2bn_db, Vector *nrf_iceside_db, double altitude_int, Vector nsurf_rfexit_db, const Vector *nrf_iceside, double &ptau, double &deltheta_em_max_db, double &deltheta_had_max_db, double &vmmhz1m_max_db, double &vmmhz1m_max_db, double &volts_rx_db, double &volts_rx_max_db, double &viewangle_db, double &nuexitlength, double &r_fromballoon_db, double &ddistance_db, double &theta_db, double &phi_db, double &costheta_inc_db, double &costheta_exit_db, double &dtemp, double &diff_angle_db, double &e_component_db, double &h_component_db, double &sumfrac_db, double &hitangle_e_db, double &hitangle_h_db, Signal *Sig1);
 
-int Getibnposition();
+//int Getibnposition();
 
 void IntegrateBands(Anita *anita1,  int k,  double *vmmhz,  double *freq,  double scalefactor,  double *sumsignal);
 void Integrate(Anita *anita1,  int j,  int k,  double *vmmhz,  double *freq,  double scalefactor,  double sumsignal);
 void interrupt_signal_handler(int);	// This catches the Control-C interrupt,  SIGINT
 bool ABORT_EARLY = false;		// This flag is set to true when interrupt_signal_handler() is called
+
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&);
+    
+void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  string,  string,  double,  ofstream &nu_out);
+void CloseTFile(TFile *hfile);
+
+int Getmine(double*,  double*,  double*,  double*);
+void Getearth(double*,  double*,  double*,  double*);
+
 
 #ifdef ANITA_UTIL_EXISTS
 //int GetIceMCAntfromUsefulEventAnt(Anita *anita1,  AnitaGeomTool *AnitaGeom1,  int UsefulEventAnt);
@@ -642,7 +649,6 @@ double denom_v_thresh[NTHRESHOLDS]={0.};
 double npass_h_thresh[NTHRESHOLDS]={0.};
 double denom_h_thresh[NTHRESHOLDS]={0.};
 double thresholds[NTHRESHOLDS];
-
 
 int main(int argc,  char **argv) {
   //--------------------------------------------------------------
@@ -1029,23 +1035,7 @@ int main(int argc,  char **argv) {
 
   Tools::Zero(eventsfound_binned_distance_forerror[NBINS_DISTANCE], NBINS);
 */  
-  
-  
-  // defining functions: input variables then output variables,  separated by a space.
-  
-  //  double GetVmMHz(double, double, double, double*);
-  
-  //  void Summarize(Settings *settings1, Spectra *spectra1, Signal *sig1, Counting *count1, double, double eventsfound, double, double, double, double*, double, 
-  //		 double&, double&, double&, double&, ofstream&, ofstream&, ofstream&);
-  void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&);
-  
-  
-  void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  string,  string,  double,  ofstream &nu_out);
-  void CloseTFile(TFile *hfile);
     
-  int Getmine(double*,  double*,  double*,  double*);
-  void Getearth(double*,  double*,  double*,  double*);
-  
   //we pick both the interaction point and its corresponding mirror point
   
   //for drawing the events on the events map
@@ -1900,7 +1890,7 @@ int main(int argc,  char **argv) {
   double average_rbn=0.;
 
   //  TRandom r(0); // use a seed generated using machine clock (different every second)
-  TRandom r(settings1->SEED); // use a seed generated using machine clock (different every second)
+  TRandom r(settings1->SEED); // use seed set as input
 
   signal(SIGINT,  interrupt_signal_handler);     // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
 
@@ -3290,7 +3280,7 @@ int main(int argc,  char **argv) {
         if (globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold)) {
           npass_v_thresh[i]+=1.;
         }
-
+	
         // for anita-3 also trigger on HPOL
         if (settings1->WHICH==9 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu, this_threshold,  true)) {
           npass_h_thresh[i]+=1.;
@@ -3300,8 +3290,6 @@ int main(int argc,  char **argv) {
         denom_v_thresh[i]+=1.E-7;
         //cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
       }//end if nthresholds
-    
-    
 
       ///////////////////////////////////////
       //
@@ -3552,7 +3540,6 @@ int main(int argc,  char **argv) {
               r_exit2bn2=interaction1->r_exit2bn;
               r_exit2bn_measured2=interaction1->r_exit2bn_measured;
 
-              finaltree->Fill();
 
 #ifdef ANITA_UTIL_EXISTS
               realEvPtr 	= new UsefulAnitaEvent();
@@ -3643,10 +3630,8 @@ int main(int argc,  char **argv) {
               delete Adu5PatPtr;
 #endif
 
-
               sourceLon = interaction1->nuexit.Lon() - 180;
               sourceLat = interaction1->nuexit.Lat();
-
 
               finaltree->Fill();
               count1->IncrementWeights_r_in(interaction1->r_in, weight);

@@ -304,9 +304,9 @@ void Balloon::InitializeBalloon() {
 		
     }
 }
+
 double Balloon::GetBalloonSpin(double heading) { // get the azimuth of the balloon
-    
-    
+      
   double phi_spin;
   if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8)
     phi_spin=heading*RADDEG;
@@ -316,7 +316,6 @@ double Balloon::GetBalloonSpin(double heading) { // get the azimuth of the ballo
     else
       phi_spin=0.;
   }
-  
   
   return phi_spin;
 }
@@ -603,8 +602,9 @@ void Balloon::GetAntennaOrientation(Settings *settings1, Anita *anita1, int ilay
     if (settings1->CYLINDRICALSYMMETRY==1) {
 		phi=(double)ifold/(double)anita1->NRX_PHI[ilayer]*2*PI + anita1->PHI_OFFSET[ilayer] + phi_spin;
     }
-    else
-		phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer]+phi_spin;
+    else{
+	phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer] +phi_spin;
+    }
         
     n_eplane = n_eplane.RotateZ(phi);
     n_hplane = n_hplane.RotateZ(phi);
@@ -989,8 +989,9 @@ void GetBoresights(Settings *settings1,Anita *anita1,Position r_bn,double phi_sp
       if (settings1->CYLINDRICALSYMMETRY==1) {
 	phi=(double)ifold/(double)anita1->NRX_PHI[ilayer]*2*PI + anita1->PHI_OFFSET[ilayer]+phi_spin;
       }
-      else
-	phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer]+phi_spin;
+      else{
+	  phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer] +phi_spin;
+      }
       
       
       n_boresight = n_boresight.RotateZ(phi);

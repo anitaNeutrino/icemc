@@ -684,7 +684,7 @@ Updated balloon.hh to be consistent with the changes in balloon.cc
 Put three constant vector definitions in Constants.h that are used in balloon.cc 
 
 
-04/04/2016 11.36 am CST L.Cremonesi
+04/04/2016 11.36 am CST L. Cremonesi
 Randomasation of flight path using input seed, fixed some compilation warnings.
 
 04/06/2016 12:35 PM EST O. Banerjee
@@ -692,3 +692,6 @@ Removed unnecessary arguments const_x, const_y, const_z from function GetAntenna
 
 04/21/2016 11:15 AM EST B. Dailey
 Output to real data format wasn't working as originally intended. Fixed. Icemc should now recognize if you have ANITA_UTIL_INSTALL_DIR and if so, output to real data format as well as normal format. 
+
+04/28/2016 03:15 PM BST L. Cremonesi
+Updated warning on randomising balloon orientation and setting a flight path. Moved some function definitions outside of int main. Removed double finaltree->Fill(). Added comments and improved readability of some bits of code
