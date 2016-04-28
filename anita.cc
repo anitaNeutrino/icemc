@@ -3360,12 +3360,28 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 
       }
 
+      std::ifstream PhaseCenterFile("data/phaseCenterPositionsRelativeToPhotogrammetryAnita3.dat");
+      Int_t antNum, pol;
+      Double_t deltaR,deltaPhi,deltaZ;
+      char firstLine[180];
+      Double_t deltaRPhaseCentre[48][2]; //Relative to photogrammetry + ring offset
+      Double_t deltaZPhaseCentre[48][2]; //Relative to photogrammetry + ring offset
+      Double_t deltaPhiPhaseCentre[48][2]; //Relative to photogrammetry + ring offset
       
-       for(int iii = 0; iii < 4; iii++) // move from the square centers to the phase centers
- 	for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++)
- 	  ANTENNA_POSITION_START[iii][jjj] = ANTENNA_POSITION_START[iii][jjj] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), sin(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), cos(90.*RADDEG+ANTENNA_DOWN[iii][jjj]));
-      
-      
+      PhaseCenterFile.getline(firstLine,179);
+      while(PhaseCenterFile >> antNum >> pol >> deltaR >> deltaPhi >> deltaZ) {
+	deltaRPhaseCentre[antNum][pol]=deltaR;
+	deltaPhiPhaseCentre[antNum][pol]=deltaPhi*TMath::DegToRad();
+	deltaZPhaseCentre[antNum][pol]=deltaZ;
+      } 
+
+      for(int ilayer = 0; ilayer < 4; ilayer++){ 
+ 	for(int iphi = 0; iphi < NRX_PHI[ilayer]; iphi++){
+	  // move from the square centers to the phase centers
+ 	  ANTENNA_POSITION_START[ilayer][iphi] = ANTENNA_POSITION_START[ilayer][iphi] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[ilayer][iphi])*sin(90.*RADDEG+ANTENNA_DOWN[ilayer][iphi]), sin(PHI_EACHLAYER[ilayer][iphi])*sin(90.*RADDEG+ANTENNA_DOWN[ilayer][iphi]), cos(90.*RADDEG+ANTENNA_DOWN[ilayer][iphi]));
+	  // apply phase centers calibration (applying HPOL now)
+	}
+      }
     }
     
     

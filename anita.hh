@@ -396,10 +396,8 @@ public:
     int GetBeamWidths(Settings *settings1); // for getting beam widths using coarse models (horn specs or simple model for EeVA)
     void Set_gain_angle(Settings *settings1,double nmedium_receiver);
     double Get_gain_angle(int gain_type, int k, double hitangle);
-    void ReadGains();
-    
-    void AntennaGain(Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h);
-    
+  void ReadGains();
+  void AntennaGain(Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h);  
     
     
     double reference_angle[7]; // reference angles for finding gains of antenna

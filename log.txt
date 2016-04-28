@@ -695,3 +695,7 @@ Output to real data format wasn't working as originally intended. Fixed. Icemc s
 
 04/28/2016 03:15 PM BST L. Cremonesi
 Updated warning on randomising balloon orientation and setting a flight path. Moved some function definitions outside of int main. Removed double finaltree->Fill(). Added comments and improved readability of some bits of code
+
+04/28/2016 03:45 PM BST L. Cremonesi
+First commit of Anita-3 phase-centers. For the moment the numbers are read in but not used, because the antenna positions are common to both polarisation whereas the phase-centers are different for HPOL and VPOL.
+
