@@ -704,3 +704,6 @@ Added the gps_offset variable to the passing_tree tree so that we can produce th
 
 05/12/2016 11.07 AM ET M. Sutherland
 Added data/roughness directory and files. Added spline.h for interpolations.
+
+05/12/2016 12.51 PM ET M. Sutherland
+Changed ROUGHSIZE in Settings.cc/.hh to (int) not (float) in prep for new roughness modeling. Commented pre-existing functions in roughness.cc/.hh and their uses in icemc.cc. Commented if statements in icemc.cc using ROUGHNESS > 0 except where ROUGHNESS==0 was specified. Removed rough_sigma from GetDirection() function in icemc.cc.

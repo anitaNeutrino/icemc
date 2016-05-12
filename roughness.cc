@@ -24,7 +24,7 @@ Roughness::Roughness() {
 
 
 
-
+/*
 void Roughness::GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceModel *antarctica) {
     // brian enter function to calculate balloon position on your map.
     // use interaction1->posnu // location of neutrino interaction
@@ -255,3 +255,4 @@ double Roughness::GetCombinedDeltheta(double emfrac,double hadfrac,double delthe
     return (emfrac*deltheta_em_max+hadfrac*deltheta_had_max)/(emfrac+hadfrac);
     
 }
+*/
