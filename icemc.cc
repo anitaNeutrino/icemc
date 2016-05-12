@@ -147,7 +147,7 @@ double longitude_this; // for plotting longitude
 double latitude_this; // for plotting latitude
 double altitude_this; // for plotting altitude
 double heading_this=0.;// for plotting heading
-
+double gps_offset=0;
 
 // inputs
 
@@ -1219,6 +1219,7 @@ int main(int argc,  char **argv) {
   finaltree->Branch("n_bn", &n_bn_array, "n_bn_array[3]/D");
   finaltree->Branch("longitude_bn", &longitude_this, "longitude_bn/D");
   finaltree->Branch("heading_bn", &heading_this, "heading_bn/D");
+  finaltree->Branch("gps_offset", &gps_offset, "gps_offset/D");
   // this one is just weight due to earth absorption
   finaltree->Branch("weight1", &weight1, "weight1/D");
   // this is the total weight - the one you want to use!
@@ -1894,8 +1895,16 @@ int main(int argc,  char **argv) {
 
   signal(SIGINT,  interrupt_signal_handler);     // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
 
+  // Setting gps offset for plotting direction wrt north
+  if (settings1->WHICH==7){
+    gps_offset=atan2(-0.7042,0.71)*DEGRAD;
+  } else if(settings1->WHICH==8){
+    gps_offset=atan2(-0.7085,0.7056)*DEGRAD;
+  } else if (settings1->WHICH==9){
+    gps_offset=45;
+  } else gps_offset=0;
 
-
+  
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
     if (NNU >= 100) {
@@ -5255,4 +5264,5 @@ int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt){
   return IceMCAnt;
 }
 //end GetIceMCAntfromUsefulEventAnt()
+
 #endif

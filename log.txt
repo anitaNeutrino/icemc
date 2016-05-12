@@ -699,3 +699,5 @@ Updated warning on randomising balloon orientation and setting a flight path. Mo
 04/28/2016 03:45 PM BST L. Cremonesi
 First commit of Anita-3 phase-centers. For the moment the numbers are read in but not used, because the antenna positions are common to both polarisation whereas the phase-centers are different for HPOL and VPOL.
 
+05/12/2016 05:26 AM CT L. Cremonesi
+Added the gps_offset variable to the passing_tree tree so that we can produce the icemcQC trigger plots for anita 1 2 and 3
