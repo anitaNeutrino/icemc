@@ -701,3 +701,6 @@ First commit of Anita-3 phase-centers. For the moment the numbers are read in bu
 
 05/12/2016 05:26 AM CT L. Cremonesi
 Added the gps_offset variable to the passing_tree tree so that we can produce the icemcQC trigger plots for anita 1 2 and 3
+
+05/12/2016 11.07 AM ET M. Sutherland
+Added data/roughness directory and files. Added spline.h for interpolations.
