@@ -568,7 +568,7 @@ double sum_weights=0;
 // set up array of viewing angles for making plots for seckel
 void SetupViewangles(Signal *sig1);
 // read in the data on surface roughness
-void ReadRoughnessData(Settings *settings1,  double trans_angle[9][1000],  double transmission[9][1000],  double *minangle,  double *maxangle,  int *npoints,  int &max_angles_backplane);
+
 double GetTransmission(double inc_angle,  double trans_angle_par,  double trans_angle_perp,  double transmission[9][1000],  double *min_angle,  double *max_angle, int *npoints, int max_angles_backplane);
 
 void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
@@ -767,9 +767,6 @@ int main(int argc,  char **argv) {
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
 
-  //if (settings1->ROUGHNESS==1)
-  //  ReadRoughnessData(settings1, trans_angle, transmission, minangle_roughness, maxangle_roughness, npoints_roughness, max_angles_backplane);
-  
   
   // declare instance of trigger class.
   // this constructor reads from files with info to parameterize the
@@ -4855,57 +4852,6 @@ double GetTransmission(double inc_angle, double trans_angle_par, double trans_an
     return transmission[i_inc_angle][i_trans_par]*transmission[0][i_trans_perp];
 }
 //end GetTransmission()
-
-
-void ReadRoughnessData(Settings *settings1, double trans_angle[9][1000], double transmission[9][1000], double *minangle, double *maxangle, int *npoints, int &max_angles_backplane) {
-  TFile *froughness=new TFile("data/roughness_data.root");
-  string sdirectory;
-  
-  if (settings1->ROUGHSIZE==0)
-    sdirectory="flatglass";
-  if (settings1->ROUGHSIZE==1)
-    sdirectory="400grit_s_pol";
-  if (settings1->ROUGHSIZE==2)
-    sdirectory="1000grit_s_pol";
-  if (settings1->ROUGHSIZE==3)
-    sdirectory="1500grit_s_pol";
-  
-  if (settings1->ROUGHSIZE==0 || settings1->ROUGHSIZE==1)
-    max_angles_backplane=8;
-  else if (settings1->ROUGHSIZE==2 || settings1->ROUGHSIZE==3)
-    max_angles_backplane=9;
-  
-  TDirectory *dir=(TDirectory*)froughness->Get(sdirectory.c_str());
-  dir->cd();
-  dir->ls();
-  
-  int angle_backplane;
-  char treename[50];
-  string streename;
-  int n;
-  
-  for (int i=0;i<max_angles_backplane;i++) {
-    if (i==8)
-      angle_backplane=75;
-    else
-      angle_backplane=10*i;
-
-    n=sprintf(treename, "t_inc_angle_backplane_%d", angle_backplane);
-    streename=treename;
-    TTree *t1=(TTree*)dir->Get(streename.c_str());
-    t1->SetBranchAddress("trans_angle_out", &trans_angle[i][0]);
-    t1->SetBranchAddress("transmission_out", &transmission[i][0]);
-    t1->SetBranchAddress("npoints", &npoints[i]);
-    t1->SetBranchAddress("minangle", &minangle[i]);
-      t1->SetBranchAddress("maxangle", &maxangle[i]);
-    t1->GetEvent(0);
-  }//end for i
-
-  froughness->Close();
-  froughness->Delete();
-  delete settings1;
-}
-//end ReadRoughnessData()
 
 
 void SetupViewangles(Signal *sig1) {

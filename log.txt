@@ -707,3 +707,6 @@ Added data/roughness directory and files. Added spline.h for interpolations.
 
 05/12/2016 12.51 PM ET M. Sutherland
 Changed ROUGHSIZE in Settings.cc/.hh to (int) not (float) in prep for new roughness modeling. Commented pre-existing functions in roughness.cc/.hh and their uses in icemc.cc. Commented if statements in icemc.cc using ROUGHNESS > 0 except where ROUGHNESS==0 was specified. Removed rough_sigma from GetDirection() function in icemc.cc.
+
+05/12/2016 13.19 PM ET M. Sutherland
+Actually changed ROUGHSIZE to int. Added icemc and classdict.* to Makefile's clean and distclean commands. Removed ReadRoughnessData() in icemc.cc.

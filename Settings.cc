@@ -502,7 +502,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     ROUGHNESS=(int)atoi(number.c_str()); 
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    ROUGHSIZE=(double)atoi(number.c_str()); 
+    ROUGHSIZE=(int)atoi(number.c_str()); 
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     FIRN=atoi(number.c_str()); 
     if (FIRN==0)

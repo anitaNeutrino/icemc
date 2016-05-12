@@ -97,12 +97,12 @@ $(ICEMC):       $(ICEMCO)
 
 .PHONY: clean
 clean:
-		@rm -f $(OBJS) core
+		@rm -f $(OBJS) core classdict.* icemc
 ##@cd anita_data_format; make clean
 
 distclean:      clean
 		@rm -f $(PROGRAMS) $(ICEMCSO) $(ICEMCLIB) *dict.* *.def *.exp \
-		   *.ps *.so *.lib *.dll *.d *.log .def so_locations
+		   *.ps *.so *.lib *.dll *.d *.log .def so_locations icemc classdict.*
 		@rm -rf cxx_repository core*
 
 .PHONY: debug
