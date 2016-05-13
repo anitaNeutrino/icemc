@@ -752,10 +752,12 @@ int main(int argc,  char **argv) {
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();
   GlobalTrigger *globaltrig1;
-  Roughness *rough1=new Roughness(); // create new instance of the roughness class
   Taumodel *taus1 = new Taumodel();
   // input parameters
   settings1->ReadInputs(inputsfile,  foutput,  anita1,  sec1,  sig1,  bn1,  ray1);
+  
+  Roughness *rough1=new Roughness(settings1->ROUGHSIZE); // create new instance of the roughness class
+
   
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);

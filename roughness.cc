@@ -1,7 +1,9 @@
+#include <cmath>
+#include <algorithm>
+
 #include "vector.hh"
 #include "position.hh"
 #include "roughness.hh"
-#include <cmath>
 #include "Constants.h"
 #include "TF2.h"
 #include "TCanvas.h"
@@ -16,10 +18,127 @@
 
 
 #include "ray.hh"
+#include "spline.h"
 
-Roughness::Roughness() {
+Roughness::Roughness(int a){
+  froughsetting = a;
+
+  if (froughsetting==0){
+    gritvalue = -1;
+    Ntheta0 = 8;
+  }
+  else if (froughsetting==1){
+    gritvalue = 400;
+    Ntheta0 = 8;
+  }
+  else if (froughsetting==2){
+    gritvalue = 1000;
+    Ntheta0 = 9;
+  }
+  else if (froughsetting==3){
+    gritvalue = 1500;
+    Ntheta0 = 9;
+  }
+  else{
+    froughsetting = 0;  //default to flat glass
+    gritvalue = -1;
+    Ntheta0 = 8;
+  }
+
+  ReadDataFile();
+
+  ConstructTheta0Splines();
+};
+
+
+void Roughness::ReadDataFile(void){
+  std::ifstream in;
+  std::string line = "";
+
+  in.open(file_roughness.c_str());
+  // read the header
+  getline(in, line);
+
+  double pG, pT0, pT, pP;
+  for (int i = 0; i < 648; i++){
+    in >> pG >> pT0 >> pT >> pP;
+    if (pG != gritvalue)
+      continue;
+    theta_0.push_back(pT0);  //stores only those lines for specified grit value
+    theta.push_back(pT);
+    power.push_back(pP);
+    //std::cerr<<pT0<<"  "<<pT<<"  "<<pP<<std::endl;
+  }
+
+  for(int i=0; i<theta_0.size()-1; i++){
+    if(theta_0[i]!=theta_0[i+1])
+      theta_0_unique.push_back(theta_0[i]);
+  }
+
+};
+
+
+void Roughness::ConstructTheta0Splines(void){
+// make a spline for each theta0 and push it back onto 'spline_theta0'
+// read the theta and power vector by Ntheta, make a spline and push, then repeat
+  tk::spline *spl_ptr;
+
+  for (int j=0; j<Ntheta0; j++){
+    std::vector<double> X;
+    std::vector<double> Y;
+
     
-}
+    spl_ptr = new tk::spline;
+
+    for (int i=0; i<Ntheta; i++){
+      X.push_back( theta[ j*19 + i ] );
+      Y.push_back( power[ j*19 + i ] );
+      //std::cerr<<theta[ j*19 + i ]<<"  "<<power[ j*19 + i ]<<std::endl;
+    }
+
+    // simple check that X is in increasing order (which it's not in the file),
+    //  which is required for tk::spline
+    if (X[1]<X[0]){
+      std::reverse(X.begin(), X.end());
+      std::reverse(Y.begin(), Y.end());
+    }
+
+ 
+    spl_ptr->set_points(X,Y);
+
+    //std::cerr << j<<"  "<<(*spl_ptr)(10) << std::endl;
+    //now push onto stack
+    spline_theta0.push_back( spl_ptr );
+  }
+
+  //for (int j=0; j<Ntheta0; j++){
+  //  std::cerr << j<<"  "<<(*(spline_theta0[j]))(10) << std::endl;
+  //}
+
+};
+
+
+
+
+
+double Roughness::InterpolatePowerValue(double T0, double T){
+  // T0 [degrees] is the incident angle of the ray-in-ice with respect the the surface normal pointed into the ice
+  // theta [degrees] is the exiting angle from the surface towards the balloon, measured with respect to the surface normal pointing into the air
+  //
+  // procedure: for theta, go through spline vector and get that value. write to a vector, then spline that and get value for the T0
+
+  // use Roughness::T0 for X proxy
+  std::vector<double> spl_values; // Y proxy
+
+  for (int j=0; j<Ntheta0; j++){
+    spl_values.push_back(  (*(spline_theta0[j]))(T)  );
+  }
+
+  tk::spline s;
+  s.set_points(theta_0_unique, spl_values);
+  return s(T0);
+};
+
 
 
 

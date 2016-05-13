@@ -713,3 +713,6 @@ Actually changed ROUGHSIZE to int. Added icemc and classdict.* to Makefile's cle
 
 05/13/2016 8.01 AM ET M. Sutherland
 Deleted freqdomainplots.eps and moved [thresholds, test, hnoise, gains, diode, bands].eps, GetG_test1.pdf, and forandres.txt to the user-specified output directory.
+
+05/13/2016 11.20 AM ET M. Sutherland
+Changed roughness settings in input.txt and Roughness() constructor. Deleted cE2.pdf from repository (Print() is commented anyway ). Edited anita.cc to put freqdomainplots.eps in output directory. Continuing edits in roughness.cc/.hh.

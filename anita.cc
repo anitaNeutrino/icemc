@@ -761,7 +761,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     for (int i=0;i<5;i++) {
       gfreqdomain_rfcm_banding[i]->Draw("l");
     }
-    cfreq->Print("freqdomainplots.eps");
+    stemp = settings1->outputdir + "freqdomainplots.eps";
+    cfreq->Print((TString)stemp);
     
     
     
