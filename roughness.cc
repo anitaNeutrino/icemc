@@ -21,8 +21,9 @@
 #include "spline.h"
 
 Roughness::Roughness(int a){
+  file_roughness = "data/roughness/masterfile.txt";
   froughsetting = a;
-
+  Ntheta = 19;
   if (froughsetting==0){
     gritvalue = -1;
     Ntheta0 = 8;

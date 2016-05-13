@@ -1,3 +1,4 @@
+#include <fstream>
 
 #include "vector.hh"
 #include "position.hh"
@@ -781,7 +782,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     
     double sumpower=0.;
     stemp = settings1->outputdir + "forandres.txt";
-    ofstream fforandres(stemp);
+    ofstream fforandres((TString)stemp);
     for (int j=0;j<5;j++) {
       sumpower=0.;
       fforandres << "Freq. (Hz) \t V/sqrt(Hz) \n";

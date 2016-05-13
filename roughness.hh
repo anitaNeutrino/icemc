@@ -35,13 +35,13 @@ private:
   //TF2 *fpokey2;
   //TF2 *fslappy2;
 
-  std::string file_roughness = "data/roughness/masterfile.txt";
+  std::string file_roughness;
 
-  int froughsetting = 0;  // default to flat glass
+  int froughsetting;  // default to flat glass
   // other options 400 grit (1), 1000 grit (2), 1500 grit (3), otherwise switch to default
-  int gritvalue = -1;  // [-1, 400, 1000, 1500]
-  int Ntheta0 = 0;
-  int Ntheta = 19;
+  int gritvalue;  // [-1, 400, 1000, 1500]
+  int Ntheta0;
+  int Ntheta;
 
   std::vector<double> theta_0;
   std::vector<double> theta_0_unique;
