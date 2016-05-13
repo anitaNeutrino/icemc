@@ -710,3 +710,6 @@ Changed ROUGHSIZE in Settings.cc/.hh to (int) not (float) in prep for new roughn
 
 05/12/2016 13.19 PM ET M. Sutherland
 Actually changed ROUGHSIZE to int. Added icemc and classdict.* to Makefile's clean and distclean commands. Removed ReadRoughnessData() in icemc.cc.
+
+05/13/2016 8.01 AM ET M. Sutherland
+Deleted freqdomainplots.eps and moved [thresholds, test, hnoise, gains, diode, bands].eps, GetG_test1.pdf, and forandres.txt to the user-specified output directory.

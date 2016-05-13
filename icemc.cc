@@ -1752,7 +1752,8 @@ int main(int argc,  char **argv) {
   TCanvas *cgains=new TCanvas("cgains", "cgains", 880, 800);
   TGraph *ggains=new TGraph(anita1->NPOINTS_GAIN, anita1->frequency_forgain_measured, anita1->vvGaintoHeight);
   ggains->Draw("al");
-  cgains->Print("gains.eps");
+  stemp = settings1->outputdir + "gains.eps";
+  cgains->Print((TString)stemp);
   
   
   
@@ -1867,7 +1868,8 @@ int main(int argc,  char **argv) {
   spectra1->GetSEdNdEdAdt()->SetLineColor(2);
   spectra1->GetSEdNdEdAdt()->Draw("l same");
     
-  ctest1->Print("GetG_test1.pdf");
+  stemp = settings1->outputdir + "GetG_test1.pdf";
+  ctest1->Print((TString)stemp);
   
   //   gE2->Draw("al");
   //   //  spectra1->gspectrum[(int)EXPONENT]->Draw("al");
@@ -3968,7 +3970,8 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   g->SetMarkerStyle(21);
   g->Draw("ape");
 
-  cthresh->Print("thresholds.eps");
+  stemp = settings1->outputdir + "thresholds.eps";
+  cthresh->Print((TString)stemp);
   g->Write();
   gdenom->Write();
   gnpass->Write();
