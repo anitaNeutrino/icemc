@@ -25,8 +25,6 @@ class Anita {
     
 private:
     
-    std::string stemp;
-
     TRandom Rand3;
     
     double GaintoHeight(double gain,double freq,double nmedium_receiver);

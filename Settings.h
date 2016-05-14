@@ -87,7 +87,6 @@ public:
     double SLAC_HORIZ_DEPTH; // horizontal depth of interaction at slac
     
     int ROUGHNESS; // include effects of surface roughness
-    int ROUGHSIZE; // roughness size
     int FIRN; // whether or not to include the firn
     
     //int SLOPEY=1; // 1=slopeyness on, 0=slopeyness off
@@ -110,6 +109,8 @@ public:
     double BW_SEAVEYS;
     //int FORSECKEL=1; // Make array of strength of signal across frequencies for different viewing angles.
     int FORSECKEL; // Make array of strength of signal across frequencies for different viewing angles.
+    
+    double ROUGHSIZE; // roughness size
     
     
     /* int ICE_MODEL=0; //Select ice model to be used.  0 = Crust 2.0 , 1 = BEDMAP. */
