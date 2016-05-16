@@ -17,6 +17,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <string>
 
 #include "Tools.h"
 
@@ -40,7 +41,7 @@ using std::vector;
 
 Anita::Anita() {
 
-  
+  stemp = "";
 
   for (int irx=0;irx<Anita::NLAYERS_MAX*Anita::NPHI_MAX;irx++) {
     arrival_times[irx]=0.;
@@ -504,7 +505,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     cdiode->cd(2);
     gdiode->Draw("al");
     
-    cdiode->Print("diode.eps");
+    stemp=settings1->outputdir+"diode.eps";
+    cdiode->Print((TString)stemp);
     
     double onediodeconvl[5];
     //   tdiode->SetBranchAddress("timedomainnoise_rfcm_banding_e",timedomainnoise_rfcm_banding_e);
@@ -563,7 +565,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     for (int i=0;i<5;i++) {
 		gcorr[i]->Draw("l");
     }
-    cbands->Print("bands.eps");
+    stemp=settings1->outputdir+"bands.eps";
+    cbands->Print((TString)stemp);
     
     
     
@@ -759,7 +762,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     for (int i=0;i<5;i++) {
       gfreqdomain_rfcm_banding[i]->Draw("l");
     }
-    cfreq->Print("freqdomainplots.eps");
+    stemp=settings1->outputdir+"freqdomainplots.eps";
+    cfreq->Print((TString)stemp);
     
     
     
@@ -777,7 +781,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     }
     
     double sumpower=0.;
-    ofstream fforandres("forandres.txt");
+    ofstream fforandres(settings1->outputdir+"forandres.txt");
     for (int j=0;j<5;j++) {
       sumpower=0.;
       fforandres << "Freq. (Hz) \t V/sqrt(Hz) \n";
@@ -888,7 +892,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
       gtest[i]=new TGraph(NFOUR,time_long,timedomain_output_e[i]);
       gtest[i]->Draw("al");
     }
-    ctest->Print("test.eps");
+    stemp = settings1->outputdir+"test.eps";
+    ctest->Print((TString)stemp);
     
     for (int j=0;j<5;j++) {
       
@@ -1099,7 +1104,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 	}
 	
     }
-    c4->Print("hnoise.eps");
+    stemp=settings1->outputdir+"hnoise.eps";
+    c4->Print((TString)stemp);
     
     string stemp=settings1->outputdir+"/signals.root";
     fsignals=new TFile(stemp.c_str(),"RECREATE");
