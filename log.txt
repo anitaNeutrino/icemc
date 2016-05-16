@@ -704,3 +704,6 @@ Added the gps_offset variable to the passing_tree tree so that we can produce th
 
 05/12/2016 11.07 AM ET M. Sutherland
 Added data/roughness directory and files. Added spline.h for interpolations.
+
+05/16/2016 10.30 AM ET M. Sutherland
+SVN-deleted freqdomainplots.eps and cE2.pdf, and moved [freqdomainplots, thresholds, test, hnoise, gains, diode, bands].eps, [cE2, GetG_test1].pdf, and forandres.txt to the user-specified output directory. Added icemc and classdict.* to Makefile's clean and distclean commands.
