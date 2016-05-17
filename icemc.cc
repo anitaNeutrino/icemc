@@ -161,7 +161,7 @@ double pnu=pow(10., 20);   // energy of neutrinos
 //int antennanumber; //number of L1 hits to pass L2 trigger
 
 
-
+/*
 // for roughness studies
 double trans_angle[9][1000];
 double transmission[9][1000];
@@ -261,14 +261,14 @@ double SIGMA_POSX=0.1;
 double SIGMA_NEGX=0.1;
 double SIGMA_POSY=0.1;
 double SIGMA_NEGY=0.1;
-
+*/
 
 
 double MEANX=0;
 double MEANY=0.;
 
 double SIGNALRADIUS=2.; // in degrees
-double relativetaper_eachray[NRAYS]; // taper relative to specular for each ray
+//double relativetaper_eachray[NRAYS]; // taper relative to specular for each ray
 double relativetaper_fortree;
 double relativetaper_specular;
 
@@ -567,8 +567,7 @@ double sum_weights=0;
 
 // set up array of viewing angles for making plots for seckel
 void SetupViewangles(Signal *sig1);
-// read in the data on surface roughness
-void ReadRoughnessData(Settings *settings1,  double trans_angle[9][1000],  double transmission[9][1000],  double *minangle,  double *maxangle,  int *npoints,  int &max_angles_backplane);
+
 double GetTransmission(double inc_angle,  double trans_angle_par,  double trans_angle_perp,  double transmission[9][1000],  double *min_angle,  double *max_angle, int *npoints, int max_angles_backplane);
 
 void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
@@ -595,11 +594,11 @@ void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight);
 
 int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside);
 
-int GetDirection(Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  double rough_sigma,  Ray *ray1,  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
+int GetDirection(Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
 
 // int GetDirectionRough(Settings *settings1, const Vector &refr,  double deltheta_em,  double deltheta_had, 
 // 					  double emfrac,  double hadfrac,  double pnu,  double vmmhz1m_max, 
-// 					  double r_fromballoon,  double rough_sigma,  Ray *ray1, 
+// 					  double r_fromballoon,  Ray *ray1, 
 // 					  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1, 
 // 					  Vector &nnu,  double& costhetanu,  double& theta_threshold);
 
@@ -758,7 +757,6 @@ int main(int argc,  char **argv) {
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();
   GlobalTrigger *globaltrig1;
-  Roughness *rough1=new Roughness(); // create new instance of the roughness class
   Taumodel *taus1 = new Taumodel();
   // input parameters
   settings1->ReadInputs(inputsfile,  foutput,  anita1,  sec1,  sig1,  bn1,  ray1);
@@ -773,10 +771,8 @@ int main(int argc,  char **argv) {
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
 
-  if (settings1->ROUGHNESS==1)
-    ReadRoughnessData(settings1, trans_angle, transmission, minangle_roughness, maxangle_roughness, npoints_roughness, max_angles_backplane);
-  
-  
+  Roughness *rough1=new Roughness(settings1->ROUGHSIZE); // create new instance of the roughness class
+
   // declare instance of trigger class.
   // this constructor reads from files with info to parameterize the
   // signal efficiency curves.
@@ -1366,7 +1362,7 @@ int main(int argc,  char **argv) {
   
   finaltree->Branch("pieceofkm2sr", &pieceofkm2sr, "pieceofkm2sr/D");
   //finaltree->Branch("volts_original", &volts_original, "volts_original[10][20][2]/D");
-  finaltree->Branch("theta_fromtir", &theta_fromtir, "theta_fromtir/D");
+  //finaltree->Branch("theta_fromtir", &theta_fromtir, "theta_fromtir/D");
   finaltree->Branch("r_exit2bn", &r_exit2bn2, "r_exit2bn/D");
   finaltree->Branch("r_exit2bn_measured", &r_exit2bn_measured2, "r_exit2bn_measured/D");
   finaltree->Branch("scalefactor_attenuation", &scalefactor_attenuation, "scalefactor_attenuation/D");
@@ -1547,6 +1543,7 @@ int main(int argc,  char **argv) {
   tree20->Branch("emfrac", &emfrac, "emfrac/D");
   tree20->Branch("hadfrac", &hadfrac, "hadfrac/D");
   
+  /*
   TTree *raytree1=new TTree("raytree1", "raytree1");
   raytree1->Branch("irays", &irays, "irays/I");
   raytree1->Branch("inu", &inu, "inu/I");
@@ -1604,7 +1601,7 @@ int main(int argc,  char **argv) {
   //   raytree2->Branch("changle", &changle, "changle/D");
   raytree2->Branch("time_specular", &time_specular, "time_specular/D");
   raytree2->Branch("time_eachray", &time_eachray_fortree, "time_eachray/D");
-    
+    */
     
   TH1D *h1mybeta = new TH1D("betaforall", "betaforall(deg)", 180, -15, 15);
   TH1D *h1mytheta= new TH1D("mytheta", "mytheta(deg)", 180, -90, 90);//90-incidentangle when neutrinos enter the Earth.
@@ -1700,22 +1697,25 @@ int main(int argc,  char **argv) {
   TFile *anitafileEvent = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *eventTree = new TTree("eventTree", "eventTree");
-  eventTree->Branch("UsefulAnitaEvent",  &realEvPtr);
-  eventTree->Branch("run",  &run_no,  "run/I");
-  
+  eventTree->Branch("UsefulAnitaEvent",  &realEvPtr           );
+  eventTree->Branch("run",               &run_no,   "run/I"   );
+  eventTree->Branch("weight",            &weight,   "weight/D");
+
   outputAnitaFile =settings1->outputdir+"/SimulatedAnitaHeadFile"+run_num+".root";
   TFile *anitafileHead = new TFile(outputAnitaFile.c_str(), "RECREATE");
   
   TTree *headTree = new TTree("headTree", "headTree");
-  headTree->Branch("header",  &rawHeaderPtr);
+  headTree->Branch("header",  &rawHeaderPtr           );
+  headTree->Branch("weight",  &weight,      "weight/D");
 
   outputAnitaFile =settings1->outputdir+"/SimulatedAnitaGpsFile"+run_num+".root";
   TFile *anitafileGps = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   UInt_t eventNumber;
   TTree *adu5PatTree = new TTree("adu5PatTree", "adu5PatTree");
-  adu5PatTree->Branch("pat", &Adu5PatPtr);
+  adu5PatTree->Branch("pat",          &Adu5PatPtr                   );
   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
+  adu5PatTree->Branch("weight",       &weight,       "weight/D"     );
   
   AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();// new AnitaGeomTool();
   
@@ -1768,13 +1768,13 @@ int main(int argc,  char **argv) {
   
   // for roughness,  make a square screen in x-y.  This will be rotated for each event to be perpendicular to the
   // specular ray from the exit point to the balloon.
-  if (settings1->ROUGHNESS==1) { // if we are modeling roughness,  then create screen
-    // with multiple rays
-    //GetScreenXY(NRAYS, SCREENSIZE, position_on_screen_vector, nx);
-    integralmyfunction=integratemyfunction(1., 1.);
-    cout << "integral is " << integralmyfunction << "\n";
-    CUTONWEIGHTS=0.0001;
-  }
+  //if (settings1->ROUGHNESS==1) { // if we are modeling roughness,  then create screen
+  //  // with multiple rays
+  //  //GetScreenXY(NRAYS, SCREENSIZE, position_on_screen_vector, nx);
+  //  integralmyfunction=integratemyfunction(1., 1.);
+  //  cout << "integral is " << integralmyfunction << "\n";
+  //  CUTONWEIGHTS=0.0001;
+  //}
   
   
   // sets position of balloon and related quantities
@@ -2077,8 +2077,6 @@ int main(int argc,  char **argv) {
 
       // just for plotting     
       costheta_exit=cos(ray1->rfexit[0].Theta()); // just for plotting
-       
-      //     if (settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2) {
       
       if (!ray1->TraceRay(settings1, anita1, 1, sig1->N_DEPTH)) {
         //delete ray1;
@@ -2106,28 +2104,6 @@ int main(int argc,  char **argv) {
       ray1->GetRFExit(settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, bn1->r_bn, bn1->r_boresights, 2, antarctica);
       
       ray1->GetSurfaceNormal(settings1, antarctica, interaction1->posnu, slopeyangle, 2);
-     
-      
-      //       } else if (settings1->ROUGHNESS==1||settings1->ROUGHNESS==2) {
-      //      	//
-      // 	// Added 7/14/2011 by EWG
-      // 	//
-      // 	//This is the new part of the code where nnu is selected first in the case
-      // 	//of roughness,  nrf_iceside[3, 4] are calculated,  and the roughness scaling factor
-      // 	//is determined
-      
-      // 	err=GetDirectionRough(settings1, rough1->nrf_iceside_specular, deltheta_em_max, deltheta_had_max, 
-      // 			      emfrac, hadfrac, pnu, vmmhz1m_max*bestcase_atten, r_fromballoon, 
-      // 			      rough1->rough_sigma, ray1, sig1, interaction1->posnu, anita1, bn1, 
-      // 			      nnu, costhetanu, theta_threshold);
-      
-      // 	//This function modifies rfexit[1],  n_exit2bn[2]
-      
-      // 	rough1->GetExitforRoughness(settings1, antarctica,  emfrac, hadfrac, deltheta_em_mid2, deltheta_had_mid2, 
-      // 				    ray1,  // this is modified in the function
-      // 				    nnu,  bn1->r_bn, interaction1->posnu); // inputs
-      
-      //       }
       
       //cout<<" four "<<ray1->nrf_iceside[3]<<"\t"<<ray1->nrf_iceside[4]<<endl;
       
@@ -2169,7 +2145,7 @@ int main(int argc,  char **argv) {
       //TAU STUFF. Pick whether it will stay as a neutrino or create tau
       if(tautrigger==1){
         if ((settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2 || !settings1->UNBIASED_SELECTION) && !settings1->SLAC ) {
-          err=GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], rough1->rough_sigma, ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
+          err=GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
           //cout<<"UNBIASED_SELECTION IS "<<settings1->UNBIASED_SELECTION<<"\n";
         }
         else if (settings1->SLAC) {
@@ -2336,7 +2312,7 @@ int main(int argc,  char **argv) {
       
       if(tautrigger==0){//did this for cc- taus already,  do again for all other particles
         if ((settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2 || !settings1->UNBIASED_SELECTION) && !settings1->SLAC )
-          err=GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], rough1->rough_sigma, ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
+          err=GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
         else if (settings1->SLAC) {
           Vector xaxis(1., 0., 0.);
           //nnu=(rfexit[0].Unit()).Rotate(-10.*RADDEG, interaction1->posnu.Cross(zaxis));
@@ -2357,9 +2333,9 @@ int main(int argc,  char **argv) {
         }//end else if slac
       }//end tau trigger ==0
       
-      if (settings1->ROUGHNESS==1 || settings1->ROUGHNESS==2)
-        rough1->GetExitforRoughness(settings1, antarctica, emfrac, hadfrac, deltheta_em_mid2, deltheta_had_mid2, ray1,  // this is modified in the function
-          interaction1->nnu, bn1->r_bn, interaction1->posnu); // inputs
+      //if (settings1->ROUGHNESS==1 || settings1->ROUGHNESS==2)
+      //  rough1->GetExitforRoughness(settings1, antarctica, emfrac, hadfrac, deltheta_em_mid2, deltheta_had_mid2, ray1, interaction1->nnu, bn1->r_bn, interaction1->posnu); // inputs
+      //ray1 is modified in function
 
         // gets angle between ray and neutrino direction
       viewangle = GetViewAngle(ray1->nrf_iceside[4], interaction1->nnu);
@@ -2564,13 +2540,13 @@ int main(int argc,  char **argv) {
       count1->nraypointsup2[whichray]++;
       
       double nbelowsurface;
-      // reject if it is totally internally reflected at the surface.
+      // reject if it is totally internally reflected at the surface
+      // !!  AND NOT CONSIDERING ROUGHNESS
       if (!settings1->ROUGHNESS) {
         if (settings1->FIRN)
           nbelowsurface=NFIRN;
         else
           nbelowsurface=sig1->NICE;
-
         // this is purely a sanity check.
         // if everything is working,  events should pass with 100% efficiency
         if (TIR(ray1->nsurf_rfexit, ray1->nrf_iceside[3], nbelowsurface, sig1->N_AIR)) {
@@ -2579,7 +2555,6 @@ int main(int argc,  char **argv) {
         }
       }// end !settings roughness
       
-      // if we're modelling roughness,  reject if the incident angle what was measured in the lab
       count1->nnottir[whichray]++;
       
       // this sets n_exit2bn[2] to the ray from the exit point to the balloon, 
@@ -2802,13 +2777,7 @@ int main(int argc,  char **argv) {
         continue;
       } //if
       
-      
       count1->nchanceinhell[whichray]++;
-      
-      //Removed *LARGE* instance of roughness calculation that used to be here (lines 3163-3673)
-      //Began with if (settings1->ROUGHNESS==1),  look back to previous revisions if you really want to
-      //see this.
-      //  EWG 6/27/11
       
       // for plotting
       if (tree3->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1 && bn1->WHICHPATH != 3)
@@ -2895,9 +2864,9 @@ int main(int argc,  char **argv) {
             IntegrateBands(anita1, k, vmmhz, anita1->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
           
         }
-        else{
-          vmmhz[k]*=roughnessfactor;// if we are dealing with roughness then instead apply roughness factor
-        }
+        //else{
+        //  vmmhz[k]*=roughnessfactor;// if we are dealing with roughness then instead apply roughness factor
+        //}
 
         vmmhz_lowfreq=vmmhz[0]; // for plotting,  vmmhz at the lowest frequency
           // EH,  now here,  vmmhz array is the spectrum right infront of antennas (so not yet any detector properties are applied)
@@ -3313,7 +3282,7 @@ int main(int argc,  char **argv) {
         || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD)// for Anita-lite,  Anita Hill.  This option is currently disabled
         // just L1 requirement on 2 antennas
         // For anita-3 also trigger on HPOL
-        || (settings1->WHICH==9 && settings1->TRIGTYPE==1 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu,  true))) {
+	  || (settings1->WHICH==9 && settings1->TRIGTYPE==1 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu,  true))) {
         if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 
@@ -4673,7 +4642,7 @@ int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit, double n
 //end GetRayIceSide()
 
 
-int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &refr,  double deltheta_em,  double deltheta_had, double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon, double rough_sigma,  Ray *ray1,  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) {
+int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &refr,  double deltheta_em,  double deltheta_had, double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) {
   int dont_count=0;
   double theta_test=0;
   double vmmhz1m_test=0;
@@ -4784,14 +4753,6 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
     } // end if both the em and hadronic components are non-negligible.
     //end big code block of ifs/elses
 
-
-    if (settings1->ROUGHNESS==1) {
-      theta_threshold=10.*RADDEG;
-    }
-
-    if (settings1->ROUGHNESS==2) {
-      theta_threshold+=sig1->changle*rough_sigma*rough_sigma/(rough_sigma*rough_sigma+theta_threshold*theta_threshold);
-    }
         
     theta_threshold*=settings1->THETA_TH_FACTOR; // multiply theta_threshold by scale factor if requested,  for testing purposes.
     if (theta_threshold>0) { // we only pick the angle between 0 and pi so set the upper and lower limits accordingly.
@@ -4868,7 +4829,7 @@ double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_
 //end ScaleVmMHz()
 
 
-// int GetDirectionRough(Settings *settings1, const Vector &refr,  double deltheta_em,  double deltheta_had, double emfrac,  double hadfrac,  double pnu,  double vmmhz1m_max,  double r_fromballoon, double rough_sigma,  Ray *ray1,  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) {
+// int GetDirectionRough(Settings *settings1, const Vector &refr,  double deltheta_em,  double deltheta_had, double emfrac,  double hadfrac,  double pnu,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) {
 //     return 0;
 // }
 //end GetDirectionRough()
@@ -4913,57 +4874,6 @@ double GetTransmission(double inc_angle, double trans_angle_par, double trans_an
     return transmission[i_inc_angle][i_trans_par]*transmission[0][i_trans_perp];
 }
 //end GetTransmission()
-
-
-void ReadRoughnessData(Settings *settings1, double trans_angle[9][1000], double transmission[9][1000], double *minangle, double *maxangle, int *npoints, int &max_angles_backplane) {
-  TFile *froughness=new TFile("data/roughness_data.root");
-  string sdirectory;
-  
-  if (settings1->ROUGHSIZE==0)
-    sdirectory="flatglass";
-  if (settings1->ROUGHSIZE==1)
-    sdirectory="400grit_s_pol";
-  if (settings1->ROUGHSIZE==2)
-    sdirectory="1000grit_s_pol";
-  if (settings1->ROUGHSIZE==3)
-    sdirectory="1500grit_s_pol";
-  
-  if (settings1->ROUGHSIZE==0 || settings1->ROUGHSIZE==1)
-    max_angles_backplane=8;
-  else if (settings1->ROUGHSIZE==2 || settings1->ROUGHSIZE==3)
-    max_angles_backplane=9;
-  
-  TDirectory *dir=(TDirectory*)froughness->Get(sdirectory.c_str());
-  dir->cd();
-  dir->ls();
-  
-  int angle_backplane;
-  char treename[50];
-  string streename;
-  int n;
-  
-  for (int i=0;i<max_angles_backplane;i++) {
-    if (i==8)
-      angle_backplane=75;
-    else
-      angle_backplane=10*i;
-
-    n=sprintf(treename, "t_inc_angle_backplane_%d", angle_backplane);
-    streename=treename;
-    TTree *t1=(TTree*)dir->Get(streename.c_str());
-    t1->SetBranchAddress("trans_angle_out", &trans_angle[i][0]);
-    t1->SetBranchAddress("transmission_out", &transmission[i][0]);
-    t1->SetBranchAddress("npoints", &npoints[i]);
-    t1->SetBranchAddress("minangle", &minangle[i]);
-      t1->SetBranchAddress("maxangle", &maxangle[i]);
-    t1->GetEvent(0);
-  }//end for i
-
-  froughness->Close();
-  froughness->Delete();
-  delete settings1;
-}
-//end ReadRoughnessData()
 
 
 void SetupViewangles(Signal *sig1) {
@@ -5139,7 +5049,7 @@ TStyle* RootStyle() {
 }
 //end RootStyle()
 
-
+/*
 double myfunction(double theta_trans_par, double theta_trans_perp, double& norm) { // for roughness studies,  describes the power as a function of transmission angle,  from fits to mark and martin's measurements
   norm=1/(4*PI*(SIGMA_POSX*SIGMA_POSX+SIGMA_POSY*SIGMA_POSY)/2.);
   return exp(-1.*((theta_trans_par-MEANX)*(theta_trans_par-MEANX)/(2*SIGMA_POSX*SIGMA_POSX) + ((theta_trans_perp-MEANY)*(theta_trans_perp-MEANY)/(2*SIGMA_POSY*SIGMA_POSY))));
@@ -5178,7 +5088,7 @@ double integratemyfunction(double posx, double posy) {
   return integral;
 }
 //end integratemyfunction()
-
+*/
 
 void GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING, const Vector &surface_normal, 
   const Vector &air_rf, 
@@ -5229,17 +5139,14 @@ void GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING, const Vector &surface_
     //  cout << "t_coeff_slappy*mag is " << t_coeff_slappy*mag << "\n";
     //       }
   }//end roughness setting==0
-  else if (ROUGHNESS_SETTING==2) {
-    mag=sqrt(tan(asin(sin(transmitted_angle)/Signal::NICE))/tan(transmitted_angle));
-
-    t_coeff_pokey=rough1->GetPokey(incident_angle, transmitted_angle, emfrac, hadfrac, deltheta_em_max, deltheta_had_max);
-    pol_parallel_air = t_coeff_pokey * pol_parallel_firn; // find pokey component in the air
-
-    t_coeff_slappy=rough1->GetSlappy(incident_angle, transmitted_angle, emfrac, hadfrac, deltheta_em_max, deltheta_had_max);
-    pol_perp_air = t_coeff_slappy * pol_perp_firn; // find slappy component in the firn
-
-    fresnel = sqrt( pow(efield * pol_perp_air, 2) + pow(efield * pol_parallel_air, 2)) / efield;
-  }
+  //else if (ROUGHNESS_SETTING==2) {
+  //  mag=sqrt(tan(asin(sin(transmitted_angle)/Signal::NICE))/tan(transmitted_angle));
+  //  t_coeff_pokey=rough1->GetPokey(incident_angle, transmitted_angle, emfrac, hadfrac, deltheta_em_max, deltheta_had_max);
+  //  pol_parallel_air = t_coeff_pokey * pol_parallel_firn; // find pokey component in the air
+  //  t_coeff_slappy=rough1->GetSlappy(incident_angle, transmitted_angle, emfrac, hadfrac, deltheta_em_max, deltheta_had_max);
+  //  pol_perp_air = t_coeff_slappy * pol_perp_firn; // find slappy component in the firn
+  //  fresnel = sqrt( pow(efield * pol_perp_air, 2) + pow(efield * pol_parallel_air, 2)) / efield;
+  //}
   //std::cout << "In fren : " << fresnel << std::endl;
   pol = (pol_perp_air * perp + pol_parallel_air * air_parallel).Unit();
 }
