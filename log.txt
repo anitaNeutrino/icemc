@@ -707,3 +707,6 @@ Added data/roughness directory and files. Added spline.h for interpolations.
 
 05/16/2016 10.30 AM ET M. Sutherland
 SVN-deleted freqdomainplots.eps and cE2.pdf, and moved [freqdomainplots, thresholds, test, hnoise, gains, diode, bands].eps, [cE2, GetG_test1].pdf, and forandres.txt to the user-specified output directory. Added icemc and classdict.* to Makefile's clean and distclean commands.
+
+05/17/2016 05.08 PM BST L. Cremonesi
+Added condition to get out of passing trigger if trying to calculate hpol trigger on payload other than anita-3 or when requesting only vpol triggers. Added weights to the output in the standard anita data format. Made formatting easier to read

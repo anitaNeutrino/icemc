@@ -1700,22 +1700,25 @@ int main(int argc,  char **argv) {
   TFile *anitafileEvent = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *eventTree = new TTree("eventTree", "eventTree");
-  eventTree->Branch("UsefulAnitaEvent",  &realEvPtr);
-  eventTree->Branch("run",  &run_no,  "run/I");
-  
+  eventTree->Branch("UsefulAnitaEvent",  &realEvPtr           );
+  eventTree->Branch("run",               &run_no,   "run/I"   );
+  eventTree->Branch("weight",            &weight,   "weight/D");
+
   outputAnitaFile =settings1->outputdir+"/SimulatedAnitaHeadFile"+run_num+".root";
   TFile *anitafileHead = new TFile(outputAnitaFile.c_str(), "RECREATE");
   
   TTree *headTree = new TTree("headTree", "headTree");
-  headTree->Branch("header",  &rawHeaderPtr);
+  headTree->Branch("header",  &rawHeaderPtr           );
+  headTree->Branch("weight",  &weight,      "weight/D");
 
   outputAnitaFile =settings1->outputdir+"/SimulatedAnitaGpsFile"+run_num+".root";
   TFile *anitafileGps = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   UInt_t eventNumber;
   TTree *adu5PatTree = new TTree("adu5PatTree", "adu5PatTree");
-  adu5PatTree->Branch("pat", &Adu5PatPtr);
+  adu5PatTree->Branch("pat",          &Adu5PatPtr                   );
   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
+  adu5PatTree->Branch("weight",       &weight,       "weight/D"     );
   
   AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();// new AnitaGeomTool();
   
@@ -3313,7 +3316,7 @@ int main(int argc,  char **argv) {
         || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD)// for Anita-lite,  Anita Hill.  This option is currently disabled
         // just L1 requirement on 2 antennas
         // For anita-3 also trigger on HPOL
-        || (settings1->WHICH==9 && settings1->TRIGTYPE==1 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu,  true))) {
+	  || (settings1->WHICH==9 && settings1->TRIGTYPE==1 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu,  true))) {
         if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 

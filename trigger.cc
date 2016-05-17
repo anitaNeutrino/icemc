@@ -1633,7 +1633,8 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 }
 int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu,double this_threshold, bool ishpol) {
 
-  //bool ishpol should only be used for anita3, by default do vpol
+  //bool ishpol should only be used for anita3, by default do only vpol
+  if (ishpol && ((settings1->JUSTVPOL)||(settings1->WHICH=!9))) return 0;
   
   int ltsum=0;
   int channsum=0;
@@ -1674,8 +1675,8 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
       for (int iphi=0;iphi<anita1->NRX_PHI[ilayer];iphi++) {
 	for (int ipolar=0;ipolar<2;ipolar++) {
 
-	  if (settings1->WHICH==9 && ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
-	  else if (settings1->WHICH==9 && !ishpol && ipolar==1) continue; // Anita3 : only do the polarisation required
+	  if (ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
+	  else if ((!ishpol) && ipolar==1) continue; // Anita3 : only do the polarisation required
 	  
 	  for (int iband=0;iband<5;iband++) {
 	    
@@ -1735,8 +1736,8 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 
 	for(int ipolar=0;ipolar<2;ipolar++) {
 
-	  if (settings1->WHICH==9 && ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
-	  else if (settings1->WHICH==9 && !ishpol && ipolar==1) continue; // Anita3 : only do the polarisation required
+	  if (ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
+	  else if ((!ishpol) && ipolar==1) continue; // Anita3 : only do the polarisation required
 
 	  for(int iband=0;iband<NBAND;iband++) {
 	    if(channels_compacted_passing[iloc][iphitrig][ipolar][iband] == 1
@@ -1755,15 +1756,15 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	
 	
 	for (int ipolar=0;ipolar<2;ipolar++) {
-	  if (settings1->WHICH==9 && ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
-	  else if (settings1->WHICH==9 && !ishpol && ipolar==1) continue; // Anita3 : only do the polarisation required
+	  if (ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
+	  else if ((!ishpol) && ipolar==1) continue; // Anita3 : only do the polarisation required
 	  for (int iband=0;iband<NBAND;iband++) { // notice sum over 5 bands now
 	    if(channels_compacted_passing[iloc][iphitrig][ipolar][iband] == 0
 	       && anita1->bwslice_required[iband]==1 && anita1->pol_allowed[ipolar]==1) { // if this band was required to pass and it didn't,
 	      antsum = 0; // fatal for this antenna
 	    }
-	  }
-	}
+	  } // end loop over bands
+	} // end loop over polarizations
 
 	// if the required bands didn't pass then set antsum=0 so the antenna doesn't pass	  
 	if(antsum >= anita1->trigRequirements[0])  { // do more than 3 channels out of 8 pass?
@@ -1827,8 +1828,8 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	      ltsum+=ant[iloc][ihittrig];
 	    
 	    for (int ipolar=0;ipolar<2;ipolar++) {
-	      if (settings1->WHICH==9 && ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
-	      else if (settings1->WHICH==9 && !ishpol && ipolar==1) continue; // Anita3 : only do the polarisation required
+	      if (ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
+	      else if ((!ishpol) && ipolar==1) continue; // Anita3 : only do the polarisation required
 	      for (int iband=0;iband<4;iband++) {
 		channsum+=channels_compacted_passing[iloc][ihittrig][ipolar][iband]; // increment if this channel passes
 	      } //for
