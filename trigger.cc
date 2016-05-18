@@ -1634,13 +1634,12 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu,double this_threshold, bool ishpol) {
 
   //bool ishpol should only be used for anita3, by default do only vpol
-  if (ishpol && ((settings1->JUSTVPOL)||(settings1->WHICH=!9))) return 0;
+  if (ishpol && ((settings1->JUSTVPOL)||(settings1->WHICH!=9))) return 0;
   
   int ltsum=0;
   int channsum=0;
   int ihit=0;
   int thispasses=0;
-  
   
   if (settings1->TRIGGERSCHEME < 3) {
     // this is an array with 1=pass and 0=fail for each channel
@@ -1658,7 +1657,6 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
     // 0th and 1st element= antenna at phi=0,
     // 2nd and 3rd element=next antenna, etc.
     
-    
     for (int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
       
       // for (int j=0;j<Anita::NPHI_MAX;j++) {
@@ -1668,7 +1666,7 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	// layer, phi location
       // } //for
     } // end of initializing to zero
-    
+      
     int whichlayer=0;
     int whichphisector=0;
     for (int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
@@ -1695,7 +1693,6 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	} //for
       } //for
     } //for
-    
     int antsum=0; // counter for how many channels on an antenna pass
     /* antenna triggers */
     
@@ -2699,7 +2696,7 @@ void GlobalTrigger::GetAnitaLayerPhiSector(Settings *settings1,int i,int j,int &
 int GlobalTrigger::L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPHI_MAX],int discones_passing,int &l3trig) {
     int thispasses=0;
     int whichphipass[Anita::NPHI_MAX]={0};
-    
+   
     for (int i=0;i<Anita::NTRIG;i++)
 		triggerbits[i]=0;
     

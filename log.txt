@@ -710,3 +710,6 @@ SVN-deleted freqdomainplots.eps and cE2.pdf, and moved [freqdomainplots, thresho
 
 05/17/2016 05.08 PM BST L. Cremonesi
 Added condition to get out of passing trigger if trying to calculate hpol trigger on payload other than anita-3 or when requesting only vpol triggers. Added weights to the output in the standard anita data format. Made formatting easier to read
+
+05/18/2016 02.16 PM BST L. Cremonesi
+Corrected a bug inserted with the previous commit

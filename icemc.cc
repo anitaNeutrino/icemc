@@ -3058,7 +3058,7 @@ int main(int argc,  char **argv) {
               Tools::Zero(volts_db[i][j], 2);
             }
           }
-
+	  
           AntTrigger *anttrig1 = new AntTrigger(settings1,  ilayer,  ifold,  vmmhz,  anita1,  hitangle_e,  hitangle_h,  e_component,  h_component,  anita1->arrival_times,  volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
           //AntTrigger *anttrig1=new AntTrigger(ilayer, ifold, vmmhz, anita1, hitangle_e, hitangle_h, e_component, h_component, arrival_times, rx_minarrivaltime);
 
@@ -3114,7 +3114,6 @@ int main(int argc,  char **argv) {
               //tree6->Fill();
             } // end if (seavey frequencies)
           } // end looping over frequencies.
-  
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
             for (int ibw=0;ibw<5;ibw++) {
               cout << "Just after Taper,  sumsignal is " << sumsignal_aftertaper[ibw] << "\n";
@@ -3217,7 +3216,7 @@ int main(int argc,  char **argv) {
       }  //loop through the layers of antennas
 
       anita1->rms_rfcm_e_single_event = sqrt(anita1->rms_rfcm_e_single_event / (anita1->HALFNFOUR * settings1->NANTENNAS));
-    
+
       if (settings1->DISCONES==1) {
         // loop through discones
         for (int idiscone=0;NDISCONES;idiscone++) {
@@ -3295,12 +3294,11 @@ int main(int argc,  char **argv) {
         if (globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold)) {
           npass_v_thresh[i]+=1.;
         }
-	
+
         // for anita-3 also trigger on HPOL
         if (settings1->WHICH==9 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu, this_threshold,  true)) {
           npass_h_thresh[i]+=1.;
         }
-
         denom_h_thresh[i]+=1.E-7;	
         denom_v_thresh[i]+=1.E-7;
         //cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
@@ -3367,9 +3365,6 @@ int main(int argc,  char **argv) {
           pieceofkm2sr=weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr/(double)NNU/len_int;
           if (h10->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST)
             h10->Fill(hitangle_e_all[0], weight);
-
-
-
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -3462,7 +3457,6 @@ int main(int argc,  char **argv) {
               // same,  now binned in weight,  for calculating errors
               if (index_distance<NBINS_DISTANCE && index_weights<NBINS)
                 eventsfound_binned_distance_forerror[index_distance][index_weights]++;
-              
               // for debugging
               if (logweight>-3)
                 eventsfound_weightgt01+=weight;
@@ -3498,7 +3492,7 @@ int main(int argc,  char **argv) {
             // just for plotting.
             offaxis=(double)fabs(viewangle-sig1->changle);
             nsigma_offaxis=offaxis/deltheta_had_max;
-            
+            	      
             hundogaintoheight_e->Fill(undogaintoheight_e, weight);
             hundogaintoheight_h->Fill(undogaintoheight_h, weight);
             rec_diff->Fill((rec_efield-true_efield)/true_efield, weight);
@@ -3554,7 +3548,6 @@ int main(int argc,  char **argv) {
               weight_bestcase2=interaction1->weight_bestcase;
               r_exit2bn2=interaction1->r_exit2bn;
               r_exit2bn_measured2=interaction1->r_exit2bn_measured;
-
 
 #ifdef ANITA_UTIL_EXISTS
               realEvPtr 	= new UsefulAnitaEvent();
@@ -3615,13 +3608,13 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->lowerL2TrigPattern = l2trig[1];
               rawHeaderPtr->nadirL2TrigPattern = l2trig[2];
 
-              rawHeaderPtr->l3TrigPattern = l3trig;
+              rawHeaderPtr->l3TrigPattern = (short) l3trig;
               if (settings1->WHICH==9) { // anita-3
-                rawHeaderPtr->l3TrigPatternH = l3trigH;
-                rawHeaderPtr->l1TrigMask   = l1TrigMask;
-                rawHeaderPtr->phiTrigMask  = phiTrigMask;
-                rawHeaderPtr->l1TrigMaskH  = l1TrigMaskH;
-                rawHeaderPtr->phiTrigMaskH = phiTrigMaskH;
+                rawHeaderPtr->l3TrigPatternH = (short) l3trigH;
+                rawHeaderPtr->l1TrigMask   = (short) l1TrigMask;
+                rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
+                rawHeaderPtr->l1TrigMaskH  = (short) l1TrigMaskH;
+                rawHeaderPtr->phiTrigMaskH = (short) phiTrigMaskH;
               }
 
               rawHeaderPtr->calibStatus = 15;
