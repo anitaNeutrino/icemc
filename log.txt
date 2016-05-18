@@ -713,3 +713,6 @@ Added condition to get out of passing trigger if trying to calculate hpol trigge
 
 05/18/2016 02.16 PM BST L. Cremonesi
 Corrected a bug inserted with the previous commit
+
+05/18/2016 02.16 PM BST L. Cremonesi
+Corrected bug introduced in a few commits ago, that was causing icemc not to compile on some systems.
