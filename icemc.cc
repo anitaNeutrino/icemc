@@ -389,7 +389,7 @@ int passestrigger=0; // 1=this event passes trigger, 0=does not
 int allcuts[2]={0, 0}; // index is which ray (upward or downward)
 // 1=this ray for this event passes all cuts,  0=does not
 double allcuts_weighted[2]={0, 0}; // same as above but weighted
-
+double allcuts_weighted_polarization[3]={0, 0, 0}; // same as above but divided into [0] vpol, [1] hpol, [2] both vpol and hpol
 
 
 //signal has a chance to pass after accounting for 1/r
@@ -894,7 +894,7 @@ int main(int argc,  char **argv) {
   double elast_y=0;                   // inelasticity
   double elpm;                        // LPM energy
   
-  double volts_db[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2];                   // same,  for double bangs
+  // double volts_db[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2];                   // same,  for double bangs
   double volts_rx_0=0;              // voltage on an individual antenna,  lc polarization
   double volts_rx_1=0;              // voltage on an individual antenna,  rc polarization
   //double volts_rx_db=0;           // same,  for double bangs
@@ -3053,14 +3053,13 @@ int main(int argc,  char **argv) {
           if (h6->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
             h6->Fill(hitangle_h, ray1->n_exit2bn[2]*bn1->n_bn);
           
-          for (int i=0;i<Anita::NLAYERS_MAX;i++) {
-            for (int j=0;j<Anita::NPHI_MAX;j++) {
-              Tools::Zero(volts_db[i][j], 2);
-            }
-          }
+          // for (int i=0;i<Anita::NLAYERS_MAX;i++) { This variable is currently not used LC
+          //   for (int j=0;j<Anita::NPHI_MAX;j++) {
+          //     Tools::Zero(volts_db[i][j], 2);
+          //   }
+          // }
 	  
           AntTrigger *anttrig1 = new AntTrigger(settings1,  ilayer,  ifold,  vmmhz,  anita1,  hitangle_e,  hitangle_h,  e_component,  h_component,  anita1->arrival_times,  volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
-          //AntTrigger *anttrig1=new AntTrigger(ilayer, ifold, vmmhz, anita1, hitangle_e, hitangle_h, e_component, h_component, arrival_times, rx_minarrivaltime);
 
           Tools::Zero(sumsignal, 5);
 
@@ -3289,21 +3288,23 @@ int main(int argc,  char **argv) {
       eventsfound_beforetrigger+=weight;
 
       for (int i=0;i<NTHRESHOLDS;i++) {
-        double this_threshold=  threshold_start+(double)i*threshold_step;
-        thresholds[i]=fabs(this_threshold);
-        if (globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold)) {
-          npass_v_thresh[i]+=1.;
-        }
+	double this_threshold=  threshold_start+(double)i*threshold_step;
+	thresholds[i]=fabs(this_threshold);
+	if (globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold)) {
+	  npass_v_thresh[i]+=1.;
+	}
 
-        // for anita-3 also trigger on HPOL
-        if (settings1->WHICH==9 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu, this_threshold,  true)) {
-          npass_h_thresh[i]+=1.;
-        }
-        denom_h_thresh[i]+=1.E-7;	
-        denom_v_thresh[i]+=1.E-7;
-        //cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
+	// for anita-3 also trigger on HPOL
+	if (settings1->WHICH==9 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu, this_threshold,  true)) {
+	  npass_h_thresh[i]+=1.;
+	}
+	denom_h_thresh[i]+=1.E-7;	
+	denom_v_thresh[i]+=1.E-7;
+	//cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
       }//end if nthresholds
 
+      l3trig=l3trigH=0;
+      
       ///////////////////////////////////////
       //
       //  THIS IS THE GLOBAL TRIGGER
@@ -3426,6 +3427,14 @@ int main(int argc,  char **argv) {
             else {
               allcuts[whichray]++;
               allcuts_weighted[whichray]+=weight;
+	      if (l3trig>0 && l3trigH>0) {
+		allcuts_weighted_polarization[2]+=weight;
+	      } else if (l3trig>0){
+		allcuts_weighted_polarization[0]+=weight;
+	      } else if (l3trigH>0){
+		allcuts_weighted_polarization[1]+=weight;
+	      }
+	      
               if (h1mybeta->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
                 h1mybeta -> Fill(mybeta, weight); //get the angle distribution of mybeta
               
@@ -4048,6 +4057,10 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput << "Number of weighted direct,  reflected that pass is: " << allcuts_weighted[0] << "\t" << allcuts_weighted[1] << "\n";
   foutput << "Number of (weighted) neutrinos that pass (with weight>0.001) is: " << eventsfound_weightgt01 << "\n";
   foutput << "Number of (weighted) neutrinos that only traverse the crust is " << eventsfound_crust << " -> " << eventsfound_crust/eventsfound*100 << "%\n\n";
+  foutput << "Number of (weighted) neutrinos that pass VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
+  foutput << "Number of (weighted) neutrinos that pass HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
+  foutput << "Number of (weighted) neutrinos that pass both pol triggers is: " << allcuts_weighted_polarization[2] << "\n\n";
+	       
   foutput << "Volume of ice is " << volume << "\n";
   foutput << "Value of 4*pi*pi*r_earth*r_earth in km^2 " << 4*PI*PI*(EarthModel::R_EARTH*EarthModel::R_EARTH/1.E6) << "\n";
   

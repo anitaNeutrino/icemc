@@ -716,3 +716,6 @@ Corrected a bug inserted with the previous commit
 
 05/18/2016 02.16 PM BST L. Cremonesi
 Corrected bug introduced in a few commits ago, that was causing icemc not to compile on some systems.
+
+05/19/2016 06.20 PM BST L. Cremonesi
+Clean up of l3Trig(H) after use, that was causing anita-3 trigger to trigger too much, added statements on the weighted vpol/hpol triggers in the summarise function and commented out some unused variables.
