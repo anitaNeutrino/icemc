@@ -155,120 +155,14 @@ double gps_offset=0;
 //double pnu=pow(10., EXPONENT);   // energy of neutrinos
 double pnu=pow(10., 20);   // energy of neutrinos
 
-
 //int ANTtrig; // number of channels on an antenna that
 //need to pass for antenna to fire at L1.
 //int antennanumber; //number of L1 hits to pass L2 trigger
-
-
-/*
-// for roughness studies
-double trans_angle[9][1000];
-double transmission[9][1000];
-double minangle_roughness[9];
-double maxangle_roughness[9];
-int npoints_roughness[9];
-int max_angles_backplane;
-double MAXMEASUREDANGLE=75.;
-
-
-Vector specular_vector; // the specular angle (the direction the signal would be transmitted if it purely obeyed Snell's law
-Vector reference_vector; // direction that theta_trans_par and theta_trans_perp are measured with respect to.
-Vector aimthescreen_vector; // direction to aim the screen
-void GetSmearedIncidentAngle(Vector &specular,  Vector &nsurf_rfexit,  Vector &nrf_iceside,  Vector &n_exit2bn,  double SMEARINCIDENTANGLE,  double theta_inc_smeared); // Smear the incident angle for roughness studies
-double SMEARINCIDENTANGLE=40.*RADDEG; // how much to smear the incident angle by
-double theta_inc_smeared;// smeared angle of incidence
-const int NRAYS=40000;  // number of rays around the specular that we sum to get the signal at the balloon
-int nrays=NRAYS;// for tree
-
-
-Vector diffx_on_screen_vector; // dx on the screen.  set to be the same as plusx
-// the screen is a section of the solid angle surrounding the balloon
-// the specular ray goes through the center of the screen
-Vector diffy_on_screen_vector; // dz on the screen.
-double posx_on_screen, posy_on_screen, posz_on_screen;  // for writing into trees
-double coordx_on_screen, coordy_on_screen, coordz_on_screen; // coordinate on the screen (from -sqrt(nrays) to sqrt(nrays) in each dimension.
-// coordz_on_screen should always be zero.
-double theta_inc_eachray[NRAYS];
-double distance_eachray[NRAYS]; // distance traveled by ray from interaction to exit point to screen
-double time_eachray[NRAYS]; // time is takes for each ray to travel from the interaction to exit point to balloon,  in nanoseconds
-double time_eachray_fortree;
-double time_specular; // time it takes the specular ray to travel from the interaction to exit point to balloon,  in nanoseconds.
-double myfunction_eachray[NRAYS];
-double myfunction_fortree;
-double theta_inc_specular, theta_trans_specular;
-double theta_trans_eachray[NRAYS];
-double distance_fortree;
-double theta_rfexit, theta_specular, theta_perptoplane, theta_iceside;
-double duh;
-double theta_fromtir;
-
-
-Vector vector_temp; // a temporary vector for calculating angles
-Vector plusz=Vector(0., 0., 1.);// points in the +z direction
-Vector plusy=Vector(0., 1., 0.); // +y
-double phi_temp; // temporary phi
-Vector position_on_screen_vector[NRAYS]; // this vector is used to make rotations
-Vector coord_on_screen_vector[NRAYS]; // coordinates of the ray on the screen
-Vector rotation_axis_vector1[NRAYS];
-Vector rotation_axis_vector2[NRAYS];
-const double SCREENSIZE=100000.0; // size of the screen on an edge,  in meters
-double screensize_fortree=SCREENSIZE;// for tree
-// we consider a square screen (no that areas are easy)
-void GetScreenXY(int nrays,  double screensize,  Vector plusx_onscreen,  Vector plusy_onscreen,  Vector *position_on_screen,  int& nx, Vector *coord_on_screen_vector);
-//void GetScreenXY(int nrays, double screensize, Vector *position_on_screen,  int& nx);
-int nx; // number of rays in x direction
-double rtemp, Rtemp;
-double theta_temp, sign_temp;
-double sintheta1, costheta1, sintheta2, costheta2, theta2; // angles that we need for geometry calculations
-Vector n_exit2bn_eachray[NRAYS]; // direction from exit point to balloon for each ray
-Vector rfexit_eachray[NRAYS]; // position of ray's exit point.
-double diffx_rfexit, diffy_rfexit, diffz_rfexit; // for writing into trees
-double theta_trans_perp_fortree, theta_trans_par_fortree;
-double dtheta_trans_perp_fortree, dtheta_trans_par_fortree;
-double min_position=-SCREENSIZE/2.;
-double viewangle_eachray[NRAYS]; // view angle for each ray
-double viewangle_fortree;
-
-double theta_inc_fortree, theta_trans_fortree;
-
-Vector nrf_iceside_eachray[NRAYS]; // ice side ray (for now,  just line from interaction to exit point)
-Vector component_perp_eachray[NRAYS]; // component of each ray perp to specular plane
-Vector component_par_eachray[NRAYS]; // component of each ray perp to specular plane
-Vector perp_to_plane_thisray; // unit vector that points perp to specular plane
-Vector perp_to_plane_specular; // unit vector perp to bending plane for specular ray (center of screen)
-Vector plusx_onscreen; // direction of +x on the screen,  in coordinates where z is up
-Vector plusy_onscreen; // direction of +z on the screen
-Vector temp_vector; // is equal to perp_to_plane when incident ray is pointed towards the balloon
-Vector perp_to_nrf_iceside_specular_in_plane; // unit vector that points perp to specular ray in specular plane
-Vector component_perp_to_nrf_iceside_specular_in_plane;// component of ray along the previous vector
-double theta_trans_perp[NRAYS]; // angle away from specular plane
-double theta_trans_par[NRAYS]; // angle from specular ray in specular plane
-double cosine_temp; // temporary variable to avoid nan's
-double dtheta_trans_perp[NRAYS]; // differential angle away from specular plane
-double dtheta_trans_par[NRAYS]; // differential angle from specular ray in specular plane
-double contribution_eachray[NRAYS]; // E^2 for each ray
-double sumcontribution=0;
-double roughnessfactor=0;
-double contribution_total; // total
-double normalization; // normalization of transmission curve
-double contribution_max; // if you read all of the emitted power,  approx
-double contribution_fortree; // for the tree
-double myfunction(double theta_trans_perp,  double theta_trans_par,  double& norm); // function that describes the transmission vs angle,  from fits to mark and martin's measurements.
-double integratemyfunction(double theta_perp,  double theta_par);
-double integralmyfunction;
-double SIGMA_POSX=0.1;
-double SIGMA_NEGX=0.1;
-double SIGMA_POSY=0.1;
-double SIGMA_NEGY=0.1;
-*/
-
 
 double MEANX=0;
 double MEANY=0.;
 
 double SIGNALRADIUS=2.; // in degrees
-//double relativetaper_eachray[NRAYS]; // taper relative to specular for each ray
 double relativetaper_fortree;
 double relativetaper_specular;
 
@@ -389,7 +283,7 @@ int passestrigger=0; // 1=this event passes trigger, 0=does not
 int allcuts[2]={0, 0}; // index is which ray (upward or downward)
 // 1=this ray for this event passes all cuts,  0=does not
 double allcuts_weighted[2]={0, 0}; // same as above but weighted
-
+double allcuts_weighted_polarization[3]={0, 0, 0}; // same as above but divided into [0] vpol, [1] hpol, [2] both vpol and hpol
 
 
 //signal has a chance to pass after accounting for 1/r
@@ -890,7 +784,7 @@ int main(int argc,  char **argv) {
   double elast_y=0;                   // inelasticity
   double elpm;                        // LPM energy
   
-  double volts_db[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2];                   // same,  for double bangs
+  // double volts_db[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2];                   // same,  for double bangs
   double volts_rx_0=0;              // voltage on an individual antenna,  lc polarization
   double volts_rx_1=0;              // voltage on an individual antenna,  rc polarization
   //double volts_rx_db=0;           // same,  for double bangs
@@ -1542,66 +1436,6 @@ int main(int argc,  char **argv) {
   //tree20->Branch("vmmhz1m_had", &vmmhz1m_had, "vmmhz1m_had/D");
   tree20->Branch("emfrac", &emfrac, "emfrac/D");
   tree20->Branch("hadfrac", &hadfrac, "hadfrac/D");
-  
-  /*
-  TTree *raytree1=new TTree("raytree1", "raytree1");
-  raytree1->Branch("irays", &irays, "irays/I");
-  raytree1->Branch("inu", &inu, "inu/I");
-  raytree1->Branch("posx_on_screen", &posx_on_screen, "posx_on_screen/D");
-  raytree1->Branch("posy_on_screen", &posy_on_screen, "posy_on_screen/D");
-  raytree1->Branch("posz_on_screen", &posz_on_screen, "posz_on_screen/D");
-  raytree1->Branch("coordx_on_screen", &coordx_on_screen, "coordx_on_screen/D");
-  raytree1->Branch("coordy_on_screen", &coordy_on_screen, "coordy_on_screen/D");
-  raytree1->Branch("coordz_on_screen", &coordz_on_screen, "coordz_on_screen/D");
-  raytree1->Branch("theta_temp", &theta_temp, "theta_temp/D");
-  raytree1->Branch("sign_temp", &sign_temp, "sign_temp/D");
-  raytree1->Branch("costheta1", &costheta1, "costheta1/D");
-  raytree1->Branch("sintheta1", &sintheta1, "sintheta1/D");
-  raytree1->Branch("costheta2", &costheta2, "costheta2/D");
-  raytree1->Branch("theta2", &theta2, "theta2/D");
-  raytree1->Branch("diffx_rfexit", &diffx_rfexit, "diffx_rfexit/D");
-  raytree1->Branch("diffy_rfexit", &diffy_rfexit, "diffy_rfexit/D");
-  raytree1->Branch("diffz_rfexit", &diffz_rfexit, "diffz_rfexit/D");
-  raytree1->Branch("theta_fromtir", &theta_fromtir, "theta_fromtir/D");
-  //  raytree1->Branch("contribution_total", &contribution_total, "contribution_total/D");
-  raytree1->Branch("contribution_max", &contribution_max, "contribution_max/D");
-  raytree1->Branch("theta_inc", &theta_inc_fortree, "theta_inc/D");
-  raytree1->Branch("theta_inc_specular", &theta_inc_specular, "theta_inc_specular/D");
-  raytree1->Branch("theta_trans", &theta_trans_fortree, "theta_trans/D");
-  raytree1->Branch("theta_trans_specular", &theta_trans_specular, "theta_trans_specular/D");
-  raytree1->Branch("theta_rfexit", &theta_rfexit, "theta_rfexit/D");
-  raytree1->Branch("theta_specular", &theta_specular, "theta_specular/D");
-  raytree1->Branch("theta_perptoplane", &theta_perptoplane, "theta_perptoplane/D");
-  raytree1->Branch("theta_iceside", &theta_iceside, "theta_iceside/D");
-  
-  TTree *raytree2=new TTree("raytree2", "raytree2");
-  raytree2->Branch("posx_on_screen", &posx_on_screen, "posx_on_screen/D");
-  raytree2->Branch("posy_on_screen", &posy_on_screen, "posy_on_screen/D");
-  raytree2->Branch("posz_on_screen", &posz_on_screen, "posz_on_screen/D");
-  raytree2->Branch("coordx_on_screen", &coordx_on_screen, "coordx_on_screen/D");
-  raytree2->Branch("coordy_on_screen", &coordy_on_screen, "coordy_on_screen/D");
-  raytree2->Branch("coordz_on_screen", &coordz_on_screen, "coordz_on_screen/D");
-  raytree2->Branch("irays", &irays, "irays/I");
-  raytree2->Branch("inu", &inu, "inu/I");
-  raytree2->Branch("theta_inc", &theta_inc_fortree, "theta_inc/D");
-  raytree2->Branch("theta_trans_par", &theta_trans_par_fortree, "theta_trans_par/D");
-  raytree2->Branch("theta_trans_perp", &theta_trans_perp_fortree, "theta_trans_perp/D");
-  raytree2->Branch("dtheta_trans_par", &dtheta_trans_par_fortree, "dtheta_trans_par/D");
-  raytree2->Branch("dtheta_trans_perp", &dtheta_trans_perp_fortree, "dtheta_trans_perp/D");
-  raytree2->Branch("nrays", &nrays, "nrays/I");
-  raytree2->Branch("myfunction", &myfunction_fortree, "myfunction/D");
-  raytree2->Branch("distance", &distance_fortree, "distance/D");
-  raytree2->Branch("contribution", &contribution_fortree, "contribution/D");
-  raytree2->Branch("normalization", &normalization, "normalization/D");
-  raytree2->Branch("duh", &duh, "duh/D");
-  raytree2->Branch("screensize", &screensize_fortree, "screensize/D");
-  raytree2->Branch("relativetaper", &relativetaper_fortree, "relativetaper/D");
-  raytree2->Branch("relativetaper_specular", &relativetaper_specular, "relativetaper_specular/D");
-  raytree2->Branch("viewangle", &viewangle_fortree, "viewangle/D");
-  //   raytree2->Branch("changle", &changle, "changle/D");
-  raytree2->Branch("time_specular", &time_specular, "time_specular/D");
-  raytree2->Branch("time_eachray", &time_eachray_fortree, "time_eachray/D");
-    */
     
   TH1D *h1mybeta = new TH1D("betaforall", "betaforall(deg)", 180, -15, 15);
   TH1D *h1mytheta= new TH1D("mytheta", "mytheta(deg)", 180, -90, 90);//90-incidentangle when neutrinos enter the Earth.
@@ -1762,20 +1596,7 @@ int main(int argc,  char **argv) {
   TGraph *ggains=new TGraph(anita1->NPOINTS_GAIN, anita1->frequency_forgain_measured, anita1->vvGaintoHeight);
   ggains->Draw("al");
   stemp=settings1->outputdir+"gains.eps";
-  cgains->Print((TString)stemp);
-  
-  
-  
-  // for roughness,  make a square screen in x-y.  This will be rotated for each event to be perpendicular to the
-  // specular ray from the exit point to the balloon.
-  //if (settings1->ROUGHNESS==1) { // if we are modeling roughness,  then create screen
-  //  // with multiple rays
-  //  //GetScreenXY(NRAYS, SCREENSIZE, position_on_screen_vector, nx);
-  //  integralmyfunction=integratemyfunction(1., 1.);
-  //  cout << "integral is " << integralmyfunction << "\n";
-  //  CUTONWEIGHTS=0.0001;
-  //}
-  
+  cgains->Print((TString)stemp);  
   
   // sets position of balloon and related quantities
   // these are all passed as pointers
@@ -3019,14 +2840,13 @@ int main(int argc,  char **argv) {
           if (h6->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
             h6->Fill(hitangle_h, ray1->n_exit2bn[2]*bn1->n_bn);
           
-          for (int i=0;i<Anita::NLAYERS_MAX;i++) {
-            for (int j=0;j<Anita::NPHI_MAX;j++) {
-              Tools::Zero(volts_db[i][j], 2);
-            }
-          }
-
+          // for (int i=0;i<Anita::NLAYERS_MAX;i++) { This variable is currently not used LC
+          //   for (int j=0;j<Anita::NPHI_MAX;j++) {
+          //     Tools::Zero(volts_db[i][j], 2);
+          //   }
+          // }
+	  
           AntTrigger *anttrig1 = new AntTrigger(settings1,  ilayer,  ifold,  vmmhz,  anita1,  hitangle_e,  hitangle_h,  e_component,  h_component,  anita1->arrival_times,  volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
-          //AntTrigger *anttrig1=new AntTrigger(ilayer, ifold, vmmhz, anita1, hitangle_e, hitangle_h, e_component, h_component, arrival_times, rx_minarrivaltime);
 
           Tools::Zero(sumsignal, 5);
 
@@ -3080,7 +2900,6 @@ int main(int argc,  char **argv) {
               //tree6->Fill();
             } // end if (seavey frequencies)
           } // end looping over frequencies.
-  
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
             for (int ibw=0;ibw<5;ibw++) {
               cout << "Just after Taper,  sumsignal is " << sumsignal_aftertaper[ibw] << "\n";
@@ -3183,7 +3002,7 @@ int main(int argc,  char **argv) {
       }  //loop through the layers of antennas
 
       anita1->rms_rfcm_e_single_event = sqrt(anita1->rms_rfcm_e_single_event / (anita1->HALFNFOUR * settings1->NANTENNAS));
-    
+
       if (settings1->DISCONES==1) {
         // loop through discones
         for (int idiscone=0;NDISCONES;idiscone++) {
@@ -3255,34 +3074,45 @@ int main(int argc,  char **argv) {
 
       eventsfound_beforetrigger+=weight;
 
+      /////////////////////////////////////////////
+      //             EVALUATE TRIGGER            //
+      //         FOR EACH BAND THRESHOLD         //
+      /////////////////////////////////////////////
       for (int i=0;i<NTHRESHOLDS;i++) {
-        double this_threshold=  threshold_start+(double)i*threshold_step;
-        thresholds[i]=fabs(this_threshold);
-        if (globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold)) {
-          npass_v_thresh[i]+=1.;
-        }
+	double this_threshold=  threshold_start+(double)i*threshold_step;
+	thresholds[i]=fabs(this_threshold);
+	if (globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold)) {
+	  npass_v_thresh[i]+=1.;
+	}
 	
-        // for anita-3 also trigger on HPOL
-        if (settings1->WHICH==9 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu, this_threshold,  true)) {
-          npass_h_thresh[i]+=1.;
-        }
-
-        denom_h_thresh[i]+=1.E-7;	
-        denom_v_thresh[i]+=1.E-7;
-        //cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
+	// for anita-3 also trigger on HPOL
+	if (settings1->WHICH==9 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu, this_threshold,  true)) {
+	  npass_h_thresh[i]+=1.;
+	}
+	denom_h_thresh[i]+=1.E-7;	
+	denom_v_thresh[i]+=1.E-7;
+	//cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
       }//end if nthresholds
 
+      //////////////////////////////////////
+      //       EVALUATE GLOBAL TRIGGER    //
+      //          FOR VPOL AND HPOL       //
+      //////////////////////////////////////
+      
+      bool passVPOL = false;
+      bool passHPOL = false;
+      if (settings1->TRIGTYPE==1){
+	passVPOL = globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, false);
+	if (settings1->WHICH==9 && !settings1->JUSTVPOL) passHPOL = globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu,  true);
+      }
+      
       ///////////////////////////////////////
-      //
-      //  THIS IS THE GLOBAL TRIGGER
-      //  (ask if it passes)
-      // 
-      if ((settings1->TRIGTYPE==1
-        && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu)) // for Anita
-        || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD)// for Anita-lite,  Anita Hill.  This option is currently disabled
-        // just L1 requirement on 2 antennas
-        // For anita-3 also trigger on HPOL
-	  || (settings1->WHICH==9 && settings1->TRIGTYPE==1 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu,  true))) {
+      //       Require that it passes      //
+      //            global trigger         //
+      ///////////////////////////////////////
+      // for Anita-lite,  Anita Hill, just L1 requirement on 2 antennas. This option is currently disabled
+      if ( passVPOL || passHPOL || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD) ) {
+
         if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 
@@ -3333,9 +3163,6 @@ int main(int argc,  char **argv) {
           pieceofkm2sr=weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr/(double)NNU/len_int;
           if (h10->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST)
             h10->Fill(hitangle_e_all[0], weight);
-
-
-
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -3397,6 +3224,14 @@ int main(int argc,  char **argv) {
             else {
               allcuts[whichray]++;
               allcuts_weighted[whichray]+=weight;
+	      if (passVPOL && passHPOL) {
+		allcuts_weighted_polarization[2]+=weight;
+	      } else if (passVPOL){
+		allcuts_weighted_polarization[0]+=weight;
+	      } else if (passHPOL){
+		allcuts_weighted_polarization[1]+=weight;
+	      }
+	      
               if (h1mybeta->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
                 h1mybeta -> Fill(mybeta, weight); //get the angle distribution of mybeta
               
@@ -3428,7 +3263,6 @@ int main(int argc,  char **argv) {
               // same,  now binned in weight,  for calculating errors
               if (index_distance<NBINS_DISTANCE && index_weights<NBINS)
                 eventsfound_binned_distance_forerror[index_distance][index_weights]++;
-              
               // for debugging
               if (logweight>-3)
                 eventsfound_weightgt01+=weight;
@@ -3464,7 +3298,7 @@ int main(int argc,  char **argv) {
             // just for plotting.
             offaxis=(double)fabs(viewangle-sig1->changle);
             nsigma_offaxis=offaxis/deltheta_had_max;
-            
+            	      
             hundogaintoheight_e->Fill(undogaintoheight_e, weight);
             hundogaintoheight_h->Fill(undogaintoheight_h, weight);
             rec_diff->Fill((rec_efield-true_efield)/true_efield, weight);
@@ -3520,7 +3354,6 @@ int main(int argc,  char **argv) {
               weight_bestcase2=interaction1->weight_bestcase;
               r_exit2bn2=interaction1->r_exit2bn;
               r_exit2bn_measured2=interaction1->r_exit2bn_measured;
-
 
 #ifdef ANITA_UTIL_EXISTS
               realEvPtr 	= new UsefulAnitaEvent();
@@ -3581,13 +3414,13 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->lowerL2TrigPattern = l2trig[1];
               rawHeaderPtr->nadirL2TrigPattern = l2trig[2];
 
-              rawHeaderPtr->l3TrigPattern = l3trig;
+              rawHeaderPtr->l3TrigPattern = (short) l3trig;
               if (settings1->WHICH==9) { // anita-3
-                rawHeaderPtr->l3TrigPatternH = l3trigH;
-                rawHeaderPtr->l1TrigMask   = l1TrigMask;
-                rawHeaderPtr->phiTrigMask  = phiTrigMask;
-                rawHeaderPtr->l1TrigMaskH  = l1TrigMaskH;
-                rawHeaderPtr->phiTrigMaskH = phiTrigMaskH;
+                rawHeaderPtr->l3TrigPatternH = (short) l3trigH;
+                rawHeaderPtr->l1TrigMask   = (short) l1TrigMask;
+                rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
+                rawHeaderPtr->l1TrigMaskH  = (short) l1TrigMaskH;
+                rawHeaderPtr->phiTrigMaskH = (short) phiTrigMaskH;
               }
 
               rawHeaderPtr->calibStatus = 15;
@@ -4021,6 +3854,10 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput << "Number of weighted direct,  reflected that pass is: " << allcuts_weighted[0] << "\t" << allcuts_weighted[1] << "\n";
   foutput << "Number of (weighted) neutrinos that pass (with weight>0.001) is: " << eventsfound_weightgt01 << "\n";
   foutput << "Number of (weighted) neutrinos that only traverse the crust is " << eventsfound_crust << " -> " << eventsfound_crust/eventsfound*100 << "%\n\n";
+  foutput << "Number of (weighted) neutrinos that pass VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
+  foutput << "Number of (weighted) neutrinos that pass HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
+  foutput << "Number of (weighted) neutrinos that pass both pol triggers is: " << allcuts_weighted_polarization[2] << "\n\n";
+	       
   foutput << "Volume of ice is " << volume << "\n";
   foutput << "Value of 4*pi*pi*r_earth*r_earth in km^2 " << 4*PI*PI*(EarthModel::R_EARTH*EarthModel::R_EARTH/1.E6) << "\n";
   
@@ -4587,30 +4424,6 @@ void IsAbsorbed(double chord_kgm2, double len_int_kgm2, double &weight1) {
 */
 
 
-void GetScreenXY(int nrays, double screensize, Vector plusx_onscreen, Vector plusy_onscreen, Vector *position_on_screen_vector, int& nx, Vector *coord_on_screen_vector) {
-    // This is to make a "screen" through which rays surrounding the specular point pass.
-    // It is supposed to be a small section of the solid angle surrounding the balloon
-    // Since it is a small section (~100 m on a side in the air near the ice surface),  we consider it to be flat.
-    // Here,  it is a flat square
-    // We first construct it in the x-y plane.
-    // For each event,  we are going to rotate it so that it is perpendicular
-    // to the specular ray that goes from the surface to the balloon.
-    
-    nx=(int)(sqrt((double)nrays)); // number of rays along x direction on the screen
-    double step=screensize/(double)nx;
-    
-    cout << "nx,  step are " << nx << " " << step << "\n";
-    
-    for (int i=0;i<nrays;i++) {
-      position_on_screen_vector[i]=-screensize/2.*plusx_onscreen -screensize/2.*plusy_onscreen+ (double)(i%nx)*step*plusx_onscreen + (double)((int)((double)i/(double)nx))*step*plusy_onscreen;
-      coord_on_screen_vector[i].SetX((double)(i%nx));
-      coord_on_screen_vector[i].SetY((double)i/(double)nx);
-      coord_on_screen_vector[i].SetZ(0.);
-    }
-}
-//end GetScreenXY()
-
-
 void GetSmearedIncidentAngle(Vector &specular, Vector &nsurf_rfexit, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE, double theta_inc_smeared) {
     // Smear the incident angle for roughness studies
     specular+=nrf_iceside; // specular is the ray that we got from Snell's law
@@ -5049,46 +4862,6 @@ TStyle* RootStyle() {
 }
 //end RootStyle()
 
-/*
-double myfunction(double theta_trans_par, double theta_trans_perp, double& norm) { // for roughness studies,  describes the power as a function of transmission angle,  from fits to mark and martin's measurements
-  norm=1/(4*PI*(SIGMA_POSX*SIGMA_POSX+SIGMA_POSY*SIGMA_POSY)/2.);
-  return exp(-1.*((theta_trans_par-MEANX)*(theta_trans_par-MEANX)/(2*SIGMA_POSX*SIGMA_POSX) + ((theta_trans_perp-MEANY)*(theta_trans_perp-MEANY)/(2*SIGMA_POSY*SIGMA_POSY))));
-}
-//end myfunction()
-
-
-double integratemyfunction(double posx, double posy) {
-  double MINX, MAXX, MINY, MAXY;
-  MINX=-50.;
-  MAXX=50.;
-  MINY=-50.;
-  MAXY=50.;
-  
-  //  double area=(MAXX-MINX)*(MAXY-MINY);
-  
-  int NSTEPSX=1000;
-  int NSTEPSY=1000;
-  
-  double integral=0.;
-  double sumarea=0.;
-  double stepx=(MAXX-MINX)/(double)NSTEPSX;
-  double stepy=(MAXY-MINY)/(double)NSTEPSY;
-  
-  double norm;
-  for (int i=0;i<NSTEPSX;i++) {
-    for (int j=0;j<NSTEPSY;j++) {
-      posx=MINX+stepx*(double)i;
-      posy=MINY+stepy*(double)j;
-      // the zero is a placeholder- fill it in with incident angle later
-      integral+=myfunction(posx, posy, norm)*stepx*stepy;
-      sumarea+=stepx*stepy;
-    }
-  }
-  cout << "integral,  norm are " << integral << " " << norm << "\n";
-  return integral;
-}
-//end integratemyfunction()
-*/
 
 void GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING, const Vector &surface_normal, 
   const Vector &air_rf, 

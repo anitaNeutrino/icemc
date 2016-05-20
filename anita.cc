@@ -397,7 +397,6 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     tgain->SetBranchAddress("ampl",ampl_eachantenna);
     tgain->SetBranchAddress("noisetemp",noisetemp_eachantenna);
 
-    int ientry=0;
     for (int iant=0;iant<48;iant++) {
       tgain->GetEvent(iant);
       for (int j=0;j<NPOINTS_AMPL;j++) {
@@ -505,7 +504,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     cdiode->cd(2);
     gdiode->Draw("al");
     
-    stemp=settings1->outputdir+"diode.eps";
+    stemp=settings1->outputdir+"/diode.eps";
     cdiode->Print((TString)stemp);
     
     double onediodeconvl[5];
@@ -565,7 +564,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     for (int i=0;i<5;i++) {
 		gcorr[i]->Draw("l");
     }
-    stemp=settings1->outputdir+"bands.eps";
+    stemp=settings1->outputdir+"/bands.eps";
     cbands->Print((TString)stemp);
     
     
@@ -762,7 +761,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     for (int i=0;i<5;i++) {
       gfreqdomain_rfcm_banding[i]->Draw("l");
     }
-    stemp=settings1->outputdir+"freqdomainplots.eps";
+    stemp=settings1->outputdir+"/freqdomainplots.eps";
     cfreq->Print((TString)stemp);
     
     
@@ -781,7 +780,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     }
     
     double sumpower=0.;
-    ofstream fforandres(settings1->outputdir+"forandres.txt");
+    stemp=settings1->outputdir+"/forandres.txt";
+    ofstream fforandres(stemp.c_str());
     for (int j=0;j<5;j++) {
       sumpower=0.;
       fforandres << "Freq. (Hz) \t V/sqrt(Hz) \n";
@@ -892,7 +892,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
       gtest[i]=new TGraph(NFOUR,time_long,timedomain_output_e[i]);
       gtest[i]->Draw("al");
     }
-    stemp = settings1->outputdir+"test.eps";
+    stemp = settings1->outputdir+"/test.eps";
     ctest->Print((TString)stemp);
     
     for (int j=0;j<5;j++) {
@@ -1104,7 +1104,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 	}
 	
     }
-    stemp=settings1->outputdir+"hnoise.eps";
+    stemp=settings1->outputdir+"/hnoise.eps";
     c4->Print((TString)stemp);
     
     string stemp=settings1->outputdir+"/signals.root";
