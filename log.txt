@@ -719,3 +719,6 @@ Corrected bug introduced in a few commits ago, that was causing icemc not to com
 
 05/19/2016 06.20 PM BST L. Cremonesi
 Clean up of l3Trig(H) after use, that was causing anita-3 trigger to trigger too much, added statements on the weighted vpol/hpol triggers in the summarise function and commented out some unused variables.
+
+05/19/2016 11.37 AM BST L. Cremonesi
+Fixed bug related to HPOL triggers not being filled properly. Anita-3 trigger still shows too much HPOL.

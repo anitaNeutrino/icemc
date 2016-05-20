@@ -3287,13 +3287,17 @@ int main(int argc,  char **argv) {
 
       eventsfound_beforetrigger+=weight;
 
+      /////////////////////////////////////////////
+      //             EVALUATE TRIGGER            //
+      //         FOR EACH BAND THRESHOLD         //
+      /////////////////////////////////////////////
       for (int i=0;i<NTHRESHOLDS;i++) {
 	double this_threshold=  threshold_start+(double)i*threshold_step;
 	thresholds[i]=fabs(this_threshold);
 	if (globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold)) {
 	  npass_v_thresh[i]+=1.;
 	}
-
+	
 	// for anita-3 also trigger on HPOL
 	if (settings1->WHICH==9 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu, this_threshold,  true)) {
 	  npass_h_thresh[i]+=1.;
@@ -3303,19 +3307,25 @@ int main(int argc,  char **argv) {
 	//cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
       }//end if nthresholds
 
-      l3trig=l3trigH=0;
+      //////////////////////////////////////
+      //       EVALUATE GLOBAL TRIGGER    //
+      //          FOR VPOL AND HPOL       //
+      //////////////////////////////////////
+      
+      bool passVPOL = false;
+      bool passHPOL = false;
+      if (settings1->TRIGTYPE==1){
+	passVPOL = globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, false);
+	if (settings1->WHICH==9 && !settings1->JUSTVPOL) passHPOL = globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu,  true);
+      }
       
       ///////////////////////////////////////
-      //
-      //  THIS IS THE GLOBAL TRIGGER
-      //  (ask if it passes)
-      // 
-      if ((settings1->TRIGTYPE==1
-        && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu)) // for Anita
-        || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD)// for Anita-lite,  Anita Hill.  This option is currently disabled
-        // just L1 requirement on 2 antennas
-        // For anita-3 also trigger on HPOL
-	  || (settings1->WHICH==9 && settings1->TRIGTYPE==1 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu,  true))) {
+      //       Require that it passes      //
+      //            global trigger         //
+      ///////////////////////////////////////
+      // for Anita-lite,  Anita Hill, just L1 requirement on 2 antennas. This option is currently disabled
+      if ( passVPOL || passHPOL || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD) ) {
+
         if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 
@@ -3427,11 +3437,11 @@ int main(int argc,  char **argv) {
             else {
               allcuts[whichray]++;
               allcuts_weighted[whichray]+=weight;
-	      if (l3trig>0 && l3trigH>0) {
+	      if (passVPOL && passHPOL) {
 		allcuts_weighted_polarization[2]+=weight;
-	      } else if (l3trig>0){
+	      } else if (passVPOL){
 		allcuts_weighted_polarization[0]+=weight;
-	      } else if (l3trigH>0){
+	      } else if (passHPOL){
 		allcuts_weighted_polarization[1]+=weight;
 	      }
 	      
