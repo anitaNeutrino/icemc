@@ -10,6 +10,7 @@
 #include <stddef.h>
 #include <math.h>
 
+#include "Constants.h"
 #include "spline.h"
 
 //class Signal;
@@ -38,7 +39,6 @@ private:
   // other options 400 grit (1), 1000 grit (2), 1500 grit (3), otherwise switch to default
   int gritvalue;  // [-1, 400, 1000, 1500]
   int Ntheta0;
-  int Ntheta;
 
   std::vector<double> theta_0;
   std::vector<double> theta_0_unique;
@@ -52,10 +52,6 @@ private:
   void ConstructTheta0Splines(void);
 
 
-protected:
-
-
-
 public:
 
   Roughness(int a);
@@ -63,13 +59,9 @@ public:
   double InterpolatePowerValue(double T0, double T);
 
   // 
-  struct Screen {
-    double fedgeLength;     // the full length of one side
-    Vector fcentralPoint;   // coordinates of screen center
-    Vector fnormal;            // screen orientation, '+' = pointing back to balloon
-  };
 
 
+  
 
 
 

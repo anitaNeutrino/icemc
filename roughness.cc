@@ -23,7 +23,6 @@
 Roughness::Roughness(int a){
   file_roughness = "data/roughness/masterfile.txt";
   froughsetting = a;
-  Ntheta = 19;
   if (froughsetting==0){
     gritvalue = -1;
     Ntheta0 = 8;
@@ -46,16 +45,11 @@ Roughness::Roughness(int a){
     Ntheta0 = 8;
   }
 
-  std::cerr<<"Reading Rough File"<<std::endl;
+  std::cerr<<"Reading roughness data file:  "<< file_roughness<<std::endl;
   ReadDataFile();
-  std::cerr<<"Constructing splines"<<std::endl;
+  std::cerr<<"Constructing roughness splines"<<std::endl;
   ConstructTheta0Splines();
   
-  // create a generic screen whose properties will be re-set for each event
-  Roughness::Screen panel;
-  panel.fedgeLength = 1.;
-  panel.fcentralPoint = Vector(1.,1.,1.);
-  panel.fnormal = Vector(1.,1.,1.);
 
 };
 
@@ -69,6 +63,7 @@ void Roughness::ReadDataFile(void){
   getline(in, line);
 
   double pG, pT0, pT, pP;
+
   for (int i = 0; i < 648; i++){
     in >> pG >> pT0 >> pT >> pP;
     if (pG != gritvalue)
@@ -99,11 +94,48 @@ void Roughness::ConstructTheta0Splines(void){
     
     spl_ptr = new tk::spline;
 
-    for (int i=0; i<Ntheta; i++){
-      X.push_back( theta[ j*19 + i ] );
-      Y.push_back( power[ j*19 + i ] );
-      std::cerr<<theta[ j*19 + i ]<<"  "<<power[ j*19 + i ]<<std::endl;
+    if(froughsetting>0){
+      for (int i=0; i<19; i++){
+        X.push_back( theta[ j*19 + i ] );
+        Y.push_back( power[ j*19 + i ] );
+        //std::cerr<<theta[ j*19 + i ]<<"  "<<power[ j*19 + i ]<<std::endl;
+      }
     }
+    else{  //need to treat flat glass separately since some theta_0 have more than 19 measurements
+      if(j<2){
+        for (int i=0; i<19; i++){
+          X.push_back( theta[ j*19 + i ] );
+          Y.push_back( power[ j*19 + i ] );
+        }
+      }
+      if(j==2){
+        for (int i=0; i<20; i++){
+          X.push_back( theta[ j*19 + i ] );
+          Y.push_back( power[ j*19 + i ] );
+        }
+      }
+      if(j==3){
+        for (int i=0; i<19; i++){
+          X.push_back( theta[ 2*19 + 20 + i ] );
+          Y.push_back( power[ 2*19 + 20 + i ] );
+        }
+      }
+      if(j==4){
+        for (int i=0; i<20; i++){
+          X.push_back( theta[ 3*19 + 20 + i ] );
+          Y.push_back( power[ 3*19 + 20 + i ] );
+        }
+      }
+      if(j>4){
+        for (int i=0; i<19; i++){
+          X.push_back( theta[ (j-2)*19 + 2*20 + i ] );
+          Y.push_back( power[ (j-2)*19 + 2*20 + i ] );
+        }
+      }
+    }
+    //for(int k=0;k<X.size();k++)
+    //  std::cerr<<X[k]<<"  "<<Y[k]<<std::endl;
+    //std::cerr<<"--"<<std::endl;
 
     // simple check that X is in increasing order (which it's not in the file),
     //  which is required for tk::spline
@@ -143,9 +175,6 @@ double Roughness::InterpolatePowerValue(double T0, double T){
   s.set_points(theta_0_unique, spl_values);
   return s(T0);
 };
-
-
-
 
 
 

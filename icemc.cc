@@ -56,6 +56,7 @@
 #include "counting.hh"
 #include "Primaries.h"
 #include "Taumodel.hh"
+#include "screen.hh"
 
 #include <string>
 #include <sstream>
@@ -664,8 +665,20 @@ int main(int argc,  char **argv) {
   Spectra *spectra1 = new Spectra((int)settings1->EXPONENT);
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
-
+  
   Roughness *rough1=new Roughness(settings1->ROUGHSIZE); // create new instance of the roughness class
+  int fSCREENSIZE = 11;
+  Screen *panel1 = new Screen(fSCREENSIZE);              // create new instance of the screen class
+
+  // screen testing
+  //panel1->SetEdgeLength(20.);
+  //panel1->SetCentralPoint(Vector(1,2,3));
+  //panel1->SetNormal(Vector(1,1,1));
+  //panel1->SetCornerPosition();
+  //Vector startpos;
+  //for (int ii=0; ii<fSCREENSIZE*fSCREENSIZE; ii++){
+  //  startpos = panel1->GetNextPosition();
+  //}
 
   // declare instance of trigger class.
   // this constructor reads from files with info to parameterize the
@@ -1925,9 +1938,7 @@ int main(int argc,  char **argv) {
       ray1->GetRFExit(settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, bn1->r_bn, bn1->r_boresights, 2, antarctica);
       
       ray1->GetSurfaceNormal(settings1, antarctica, interaction1->posnu, slopeyangle, 2);
-      
-      //cout<<" four "<<ray1->nrf_iceside[3]<<"\t"<<ray1->nrf_iceside[4]<<endl;
-      
+            
       if (bn1->WHICHPATH==4)  // if this is for comparison with Peter,  print angles of incidence
         ray1->PrintAnglesofIncidence();
       

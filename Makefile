@@ -69,8 +69,8 @@ LIBS +=
 
 HEADERS	  = rx.hpp Taumodel.hh
 ##ANITA_DATA_HEADERS = include/RawAnitaEvent.h include/UsefulAnitaEvent.h include/RawAnitaHeader.h include/AnitaConventions.h include/AnitaGeomTool.h include/AnitaPacketUtil.h include/simpleStructs.h
-ICEMCO    = icemc.o vector.o position.o earthmodel.o balloon.o icemodel.o trigger.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o Settings.o classdict.o Taumodel.o
-ICEMCS    = icemc.cc vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc trigger.cc signal.cc ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc counting.cc Settings.cc classdict.C Taumodel.cc
+ICEMCO    = icemc.o vector.o position.o earthmodel.o balloon.o icemodel.o trigger.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o Settings.o classdict.o Taumodel.o screen.o
+ICEMCS    = icemc.cc vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc trigger.cc signal.cc ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc counting.cc Settings.cc classdict.C Taumodel.cc screen.cc
 
 ICEMC     = icemc$(ExeSuf)
 
