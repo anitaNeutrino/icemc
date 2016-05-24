@@ -2684,17 +2684,17 @@ int main(int argc,  char **argv) {
           //upside-down compared to what it is in the firn.
           vmmhz1m_fresneledtwice=vmmhz1m_fresneledonce*fresnel2*mag2;
 
-          // if (settings1->BORESIGHTS) { // Linda added this bit
-          //   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
-          //     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-          // 	GetFresnel(rough1, settings1->ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold], 
-          // 		   n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[4][ilayer][ifold], 
-          // 		   vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, 
-          // 		   fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
-          // 	//		std::cout << fresnel1_eachboresight[ilayer][ifold] << std::endl;
-          //     } // end looping over phi sectors
-          //   } // end looping over layers
-          // } // end if we are calculating for all boresights
+          if (settings1->BORESIGHTS) { 
+            for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
+              for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+          	GetFresnel(rough1, settings1->ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold], 
+          		   n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[3][ilayer][ifold], 
+          		   vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, 
+          		   fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
+          	//		std::cout << fresnel1_eachboresight[ilayer][ifold] << std::endl;
+              } // end looping over phi sectors
+            } // end looping over layers
+          } // end if we are calculating for all boresights
 
           
           if (bn1->WHICHPATH==4)
@@ -3037,12 +3037,12 @@ int main(int argc,  char **argv) {
           bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
           if (!settings1->BORESIGHTS) {
             bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
-          bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
+	    bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
           }
           else{ // i.e. if BORESIGHTS is true
             bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector,  h_component_kvector,  n_component_kvector);
             bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol_eachboresight[ilayer][ifold], e_component,  h_component,  n_component);
-            fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold]*mag1_eachboresight[ilayer][ifold] << "\n";
+            fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold] << " " << mag1_eachboresight[ilayer][ifold] << "\n";
           }
           bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
           // store hitangles for plotting
@@ -3078,7 +3078,7 @@ int main(int argc,  char **argv) {
 
                 anttrig1->v_banding_rfcm_e[ibw][k]=anttrig1->vm_banding_rfcm_e[ibw][k]; // EH,  HERE! this v_banding_rfcm_e array will be used for trigger analysis later! in WhichBandsPass function! Why this is located in this weird place!!!
                 anttrig1->v_banding_rfcm_h[ibw][k]=anttrig1->vm_banding_rfcm_h[ibw][k];
-                //cout << "v_banding before is " << anttrig1->v_banding_rfcm_e[ibw][k] << "\n";
+		//              cout << "v_banding before is " << anttrig1->v_banding_rfcm_e[ibw][k] << " " << anttrig1->vm_banding_rfcm_h[ibw][k] << "\n";
                 //anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, anttrig1->v_banding_rfcm_e[ibw][k], anttrig1->v_banding_rfcm_h[ibw][k]);
                 // now it is in units of V/s
 
@@ -4067,8 +4067,8 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput << "Number of weighted direct,  reflected that pass is: " << allcuts_weighted[0] << "\t" << allcuts_weighted[1] << "\n";
   foutput << "Number of (weighted) neutrinos that pass (with weight>0.001) is: " << eventsfound_weightgt01 << "\n";
   foutput << "Number of (weighted) neutrinos that only traverse the crust is " << eventsfound_crust << " -> " << eventsfound_crust/eventsfound*100 << "%\n\n";
-  foutput << "Number of (weighted) neutrinos that pass VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
-  foutput << "Number of (weighted) neutrinos that pass HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
+  foutput << "Number of (weighted) neutrinos that pass only VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
+  foutput << "Number of (weighted) neutrinos that pass only HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
   foutput << "Number of (weighted) neutrinos that pass both pol triggers is: " << allcuts_weighted_polarization[2] << "\n\n";
 	       
   foutput << "Volume of ice is " << volume << "\n";

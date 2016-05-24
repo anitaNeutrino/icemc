@@ -722,3 +722,6 @@ Clean up of l3Trig(H) after use, that was causing anita-3 trigger to trigger too
 
 05/19/2016 11.37 AM BST L. Cremonesi
 Fixed bug related to HPOL triggers not being filled properly. Anita-3 trigger still shows too much HPOL.
+
+05/24/2016 04.00 PM BST L. Cremonesi
+Updated power threshold for global trigger to be flight-dependent. Evaluate GetFresnel function for boresight option as well. Some minor format changes. 

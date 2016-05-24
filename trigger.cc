@@ -404,7 +404,6 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
       int ibinshift=(anita1->NFOUR/4-(int)(anita1->maxt_diode/anita1->TIMESTEP));
       
       
-      
       double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
       for (int iband=0;iband<5;iband++) {
 	//cout << "arrival time is " << globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP << "\n";
@@ -440,28 +439,30 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
 	// to get rid of the zero bins
 	for (int i=0;i<anita1->NFOUR/4;i++) {
 	  
-	  v_banding_rfcm_e_forfft_temp[iband][2*i]=0.;
+	  v_banding_rfcm_e_forfft_temp[iband][2*i]  =0.;
 	  v_banding_rfcm_e_forfft_temp[iband][2*i+1]=0.;
-	  v_banding_rfcm_h_forfft_temp[iband][2*i]=0.;
+	  v_banding_rfcm_h_forfft_temp[iband][2*i]  =0.;
 	  v_banding_rfcm_h_forfft_temp[iband][2*i+1]=0.;
-	  
+
+	  int tempcount = 0;
 	  for (int k=i;k<i+10;k++) {
 	    if (k<anita1->NFOUR/4) {
-	      v_banding_rfcm_e_forfft_temp[iband][2*i]+=v_banding_rfcm_e_forfft[iband][2*k];
+	      v_banding_rfcm_e_forfft_temp[iband][2*i]  +=v_banding_rfcm_e_forfft[iband][2*k];
 	      v_banding_rfcm_e_forfft_temp[iband][2*i+1]+=v_banding_rfcm_e_forfft[iband][2*k+1];
-	      v_banding_rfcm_h_forfft_temp[iband][2*i]+=v_banding_rfcm_h_forfft[iband][2*k];
+	      v_banding_rfcm_h_forfft_temp[iband][2*i]  +=v_banding_rfcm_h_forfft[iband][2*k];
 	      v_banding_rfcm_h_forfft_temp[iband][2*i+1]+=v_banding_rfcm_h_forfft[iband][2*k+1];
+	      tempcount++;
 	    }
 	  }
 	  
-	  v_banding_rfcm_e_forfft[iband][2*i]=v_banding_rfcm_e_forfft_temp[iband][2*i]/10.;
-	  v_banding_rfcm_e_forfft[iband][2*i+1]=v_banding_rfcm_e_forfft_temp[iband][2*i+1]/10.;
-	  v_banding_rfcm_h_forfft[iband][2*i]=v_banding_rfcm_h_forfft_temp[iband][2*i]/10.;
-	  v_banding_rfcm_h_forfft[iband][2*i+1]=v_banding_rfcm_h_forfft_temp[iband][2*i+1]/10.;
+	  v_banding_rfcm_e_forfft[iband][2*i]  =v_banding_rfcm_e_forfft_temp[iband][2*i]/tempcount;
+	  v_banding_rfcm_e_forfft[iband][2*i+1]=v_banding_rfcm_e_forfft_temp[iband][2*i+1]/tempcount;
+	  v_banding_rfcm_h_forfft[iband][2*i]  =v_banding_rfcm_h_forfft_temp[iband][2*i]/tempcount;
+	  v_banding_rfcm_h_forfft[iband][2*i+1]=v_banding_rfcm_h_forfft_temp[iband][2*i+1]/tempcount;
 	  
-	  v_banding_rfcm_e_forfft_temp[iband][2*i]=v_banding_rfcm_e_forfft[iband][2*i];
+	  v_banding_rfcm_e_forfft_temp[iband][2*i]  =v_banding_rfcm_e_forfft[iband][2*i];
 	  v_banding_rfcm_e_forfft_temp[iband][2*i+1]=v_banding_rfcm_e_forfft[iband][2*i+1];
-	  v_banding_rfcm_h_forfft_temp[iband][2*i]=v_banding_rfcm_h_forfft[iband][2*i];
+	  v_banding_rfcm_h_forfft_temp[iband][2*i]  =v_banding_rfcm_h_forfft[iband][2*i];
 	  v_banding_rfcm_h_forfft_temp[iband][2*i+1]=v_banding_rfcm_h_forfft[iband][2*i+1];
 	}
 	
@@ -604,7 +605,6 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
 	
 	if (settings1->TRIGGERSCHEME == 2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
 	  Tools::ShiftLeft(timedomain_output_1[j],anita1->NFOUR,ibinshift);
-	  
 	}
 
 	
@@ -617,7 +617,7 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
 	for (int ibin = anita1->iminbin[j]; ibin < anita1->imaxbin[j]; ibin++) {
 	  if (timedomain_output_1[j][ibin] < thresholds[j] * anita1->bwslice_rmsdiode[j]) {
 	    if (anita1->pol_allowed[0] && anita1->bwslice_allowed[j]) { // is this polarization and bw slice allowed to pass
-	      //	      std::cout << j << " " << timedomain_output_1[j][ibin]  << " " <<  thresholds[j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
+	      //	      std::cout << "VPOL : " << j << " " << timedomain_output_1[j][ibin]  << " " <<  thresholds[j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
 	      anita1->channels_passing_e[j] = 1;// channel passes
 	    }
 	  }
@@ -635,18 +635,14 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
       }
       
       for (int j=0;j<5;j++) {
-	anita1->myconvlv(vm_banding_rfcm_2_forfft[j],anita1->NFOUR/2,anita1->fdiode_real[j],mindiodeconvl_h[j],onediodeconvl_h[j],psignal_h[j],timedomain_output_2[j]);
-
-
+	anita1->myconvlv(vm_banding_rfcm_2_forfft[j],anita1->NFOUR,anita1->fdiode_real[j],mindiodeconvl_h[j],onediodeconvl_h[j],psignal_h[j],timedomain_output_2[j]);
 	
 	// now shift right to account for arrival times
+	Tools::ShiftRight(timedomain_output_2[j],anita1->NFOUR,(int)(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
 
-
- 	Tools::ShiftRight(timedomain_output_2[j],anita1->NFOUR/2,(int)(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-	
 	
  	if (settings1->TRIGGERSCHEME == 2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
- 	  Tools::ShiftLeft(timedomain_output_2[j],anita1->NFOUR/2,ibinshift);
+	  Tools::ShiftLeft(timedomain_output_2[j],anita1->NFOUR,ibinshift); 
  	}
 
 
@@ -659,20 +655,19 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
 
 	anita1->channels_passing_h[j]=0;
 	for (int ibin=anita1->iminbin[j];ibin<anita1->imaxbin[j];ibin++) {
-	  
 	  if (timedomain_output_2[j][ibin]<thresholds[j]*anita1->bwslice_rmsdiode[j]) {
 	    if (anita1->pol_allowed[1] && anita1->bwslice_allowed[j]) { // if this pol and band are allowed to pass
+	      //	      std::cout << "HPOL : " << j << " " << timedomain_output_2[j][ibin]  << " " << timedomain_output_1[j][ibin] << " " <<  thresholds[j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
 	      anita1->channels_passing_h[j]=1;
 	    }
 	  } // if it's over threshold for this time step
 	  
 	}
 	
-	
 	if (anita1->channels_passing_h[j])
 	  globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]++; //Records number of first level triggers on each antenna for a single neutrino
       } // end loop over bands
-      
+
       // fill channels_passing
       //  } // end if the signal is big enough the be considered
       // now we've made the diode outputs
@@ -818,25 +813,21 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
  *
  */
 AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
-//inline AntTrigger::AntTrigger(int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,int globaltrig1->rx_minarrivaltime)
 {
   unwarned=1;
-    for (int ipol=0;ipol<2;ipol++) {
-		
-		for (int iband=0;iband<anita1->NBANDS+1;iband++) {
+  for (int ipol=0;ipol<2;ipol++) {
+    for (int iband=0;iband<anita1->NBANDS+1;iband++) {						
+      vsignal_eachband[ipol].push_back(0.);
+      vthreshold_eachband[ipol].push_back(0.);
+      vnoise_eachband[ipol].push_back(0.);
+      vpasses_eachband[ipol].push_back(0);
 			
-			
-			vsignal_eachband[ipol].push_back(0.);
-			vthreshold_eachband[ipol].push_back(0.);
-			vnoise_eachband[ipol].push_back(0.);
-			vpasses_eachband[ipol].push_back(0);
-			
-			signal_eachband[ipol][iband]=0.;
-			threshold_eachband[ipol][iband]=0.;
-			noise_eachband[ipol][iband]=0.;
-			passes_eachband[ipol][iband]=0;
-		}
+      signal_eachband[ipol][iband]=0.;
+      threshold_eachband[ipol][iband]=0.;
+      noise_eachband[ipol][iband]=0.;
+      passes_eachband[ipol][iband]=0;
     }
+  }
     
     Tools::Zero(bwslice_volts_pol0,5);
     Tools::Zero(bwslice_volts_pol1,5);
@@ -855,7 +846,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     integral_vmmhz=0.;
     
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-		integral_vmmhz+=vmmhz[ifreq]*(anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
+      integral_vmmhz+=vmmhz[ifreq]*(anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
     }
     
     
@@ -867,17 +858,12 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
     // vmmhz_rx_e,h are going to be the V/m/MHz received by the rx (after gains)
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-		// Convert V/m/MHz to V/m/Hz and divide by dt to prepare for fft
-                vhz_rx_e[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); // EH, 1/sqrt(2) for dividing power in half for TDA and DDA?
-		vhz_rx_h[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); 
-		
-		// let's find the peak voltage just after the antenna, with no banding
-		anita1->AntennaGain(settings1,hitangle_e,hitangle_h,e_component,h_component,ifreq,vhz_rx_e[ifreq],vhz_rx_h[ifreq]);
-		// double relativegain[4];
-		// anita1->AntennaGain(settings1,hitangle_e,hitangle_h,ifreq, relativegain);
-		// anita1->ApplyPol(settings1,e_component,h_component,ifreq,vhz_rx_e[ifreq],vhz_rx_h[ifreq], relativegain);
-
-		
+      // Convert V/m/MHz to V/m/Hz and divide by dt to prepare for fft
+      vhz_rx_e[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); // EH, 1/sqrt(2) for dividing power in half for TDA and DDA?
+      vhz_rx_h[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); 
+      
+      // let's find the peak voltage just after the antenna, with no banding
+      anita1->AntennaGain(settings1,hitangle_e,hitangle_h,e_component,h_component,ifreq,vhz_rx_e[ifreq],vhz_rx_h[ifreq]);
     }
     
     // change their length from Anita::NFREQ to HALFNFOUR
@@ -900,18 +886,16 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
     // matt - beginning of section to be replaced
     
-    
     double vhz_rx_rfcm_e[Anita::NFREQ]; // V/Hz after rx, rfcm
     double vhz_rx_rfcm_h[Anita::NFREQ];
-    
     
     Tools::Zero(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR);// will be volts vs. time after rx, rfcm
     Tools::Zero(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR);
     
     
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-		vhz_rx_rfcm_e[ifreq]=vhz_rx_e[ifreq]; // start with V/Hz after rx
-		vhz_rx_rfcm_h[ifreq]=vhz_rx_h[ifreq];
+      vhz_rx_rfcm_e[ifreq]=vhz_rx_e[ifreq]; // start with V/Hz after rx
+      vhz_rx_rfcm_h[ifreq]=vhz_rx_h[ifreq];
     }
     
     // for frequency-domain voltage-based trigger (triggerscheme==0)
@@ -921,31 +905,29 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     // apply rfcm's
     if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5) {
 
-		 anita1->RFCMs(1,1,vhz_rx_rfcm_e);
-		 anita1->RFCMs(1,1,vhz_rx_rfcm_h);
+      anita1->RFCMs(1,1,vhz_rx_rfcm_e);
+      anita1->RFCMs(1,1,vhz_rx_rfcm_h);
 		
-      // anita1->RFCMs(ilayer,ifold,vhz_rx_rfcm_e); // Linda changed
-      // anita1->RFCMs(ilayer,ifold,vhz_rx_rfcm_h);
     }
     
     double scale;
     double sumpower=0.;
     if (anita1->PULSER) { // if we are using the pulser spectrum instead of simulating neutrinos
-		scale=Tools::dMax(vhz_rx_rfcm_e,Anita::NFREQ)/Tools::dMax(anita1->v_pulser,anita1->NFOUR/4);
-		sumpower=0.;
-		int ifour;// index for fourier transform
-		for (int i=0;i<Anita::NFREQ;i++) {
-			ifour=Tools::Getifreq(anita1->freq[i],anita1->freq_forfft[0],anita1->freq_forfft[anita1->NFOUR/2-1],anita1->NFOUR/4);
-			vhz_rx_rfcm_e[i]=scale*anita1->v_pulser[ifour];
-			vhz_rx_rfcm_h[i]=0.;
-			sumpower+=vhz_rx_rfcm_e[i]*vhz_rx_rfcm_e[i];
-			
-		}
+      scale=Tools::dMax(vhz_rx_rfcm_e,Anita::NFREQ)/Tools::dMax(anita1->v_pulser,anita1->NFOUR/4);
+      sumpower=0.;
+      int ifour;// index for fourier transform
+      for (int i=0;i<Anita::NFREQ;i++) {
+	ifour=Tools::Getifreq(anita1->freq[i],anita1->freq_forfft[0],anita1->freq_forfft[anita1->NFOUR/2-1],anita1->NFOUR/4);
+	vhz_rx_rfcm_e[i]=scale*anita1->v_pulser[ifour];
+	vhz_rx_rfcm_h[i]=0.;
+	sumpower+=vhz_rx_rfcm_e[i]*vhz_rx_rfcm_e[i];
+	
+      }
     } // end if we are just using the pulser spectrum
     
     
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-		anita1->avgfreq_rfcm[ifreq]+=vhz_rx_rfcm_e[ifreq];
+      anita1->avgfreq_rfcm[ifreq]+=vhz_rx_rfcm_e[ifreq];
     }
     
     // change their length from Anita::NFREQ to HALFNFOUR
@@ -1002,7 +984,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
     
     for (int i=0;i<Anita::NFREQ;i++) {
-		anita1->avgfreq_rfcm_lab[i]+=vhz_rx_rfcm_lab_e[i];
+      anita1->avgfreq_rfcm_lab[i]+=vhz_rx_rfcm_lab_e[i];
     }
     
     
@@ -1056,50 +1038,48 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     anita1->peak_h_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_h,anita1->HALFNFOUR); // with no noise // EH, again I think this is WITH noise
     
     
-    for (int j=0;j<5;j++) { // loop over bands
+    for (int iband=0;iband<5;iband++) { // loop over bands
 		
-		for (int i=0;i<Anita::NFREQ;i++) {
-			anita1->vmmhz_banding[i]=vmmhz[i]; // now copy vmmhz to vmmhz_bak instead, which we now play with to get the time domain waveforms for each subband
-			// remember vmmhz is V/m/MHz at the face of the antenna
-		}
-		// Don't we need to apply antenna gains here?
-		
-		// impose banding on the incident signal
-		anita1->Banding(j,anita1->freq,anita1->vmmhz_banding,Anita::NFREQ); // impose banding whatever the trigger scheme
-		
-		for (int i=0;i<Anita::NFREQ;i++) {
-			anita1->vmmhz_banding_rfcm[i]=anita1->vmmhz_banding[i];
-		}
-		
-		// for frequency-domain voltage-based trigger (triggerscheme==0)
-		// we do not apply rfcm's
-		// for other trigger types we do
-		if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5)
-			anita1->RFCMs(1,1,anita1->vmmhz_banding_rfcm);
-		
-		
-		if (settings1->TRIGGERSCHEME >=2) { // we need to prepar the signal for the diode integration
-			
-			
-			
-			for (int i=0;i<Anita::NFREQ;i++) {
-				
-				
-				anita1->vmmhz_banding_rfcm[i]=anita1->vmmhz_banding_rfcm[i]/sqrt(2.)/(anita1->TIMESTEP*1.E6); // vmmhz was set to account for both negative and positive frequencies
-				// now it has units of volts/(meter*s) so below we copy it to vm_banding_rfcm_e,h
-				
-				// here let's treat it as just one side of a double sided function though
-				// divide by timestep so that we can use it for discrete fourier transform.
-				// as in numerical recipes, F = (Delta t) * H
-			}
-		}
-		double integral=0.;
-		for (int i=0;i<Anita::NFREQ;i++) {
-			vm_banding_rfcm_e[j][i]=anita1->vmmhz_banding_rfcm[i]; // this is now Volts/(m*s) vs. frequency with banding and rfcm's applied
-			vm_banding_rfcm_h[j][i]=anita1->vmmhz_banding_rfcm[i];
-			integral+=vm_banding_rfcm_e[j][i]*vm_banding_rfcm_e[j][i];
-		} // end loop over nfreq
-		
+      for (int i=0;i<Anita::NFREQ;i++) {
+	anita1->vmmhz_banding[i]=vmmhz[i]; // now copy vmmhz to vmmhz_bak instead, which we now play with to get the time domain waveforms for each subband
+	// remember vmmhz is V/m/MHz at the face of the antenna
+      }
+      // Don't we need to apply antenna gains here?
+      
+      // impose banding on the incident signal
+      anita1->Banding(iband,anita1->freq,anita1->vmmhz_banding,Anita::NFREQ); // impose banding whatever the trigger scheme
+      
+      for (int i=0;i<Anita::NFREQ;i++) {
+	anita1->vmmhz_banding_rfcm[i]=anita1->vmmhz_banding[i];
+      }
+      
+      // for frequency-domain voltage-based trigger (triggerscheme==0)
+      // we do not apply rfcm's
+      // for other trigger types we do
+      if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5)
+	anita1->RFCMs(1,1,anita1->vmmhz_banding_rfcm);
+      
+      
+      if (settings1->TRIGGERSCHEME >=2) { // we need to prepar the signal for the diode integration
+	
+	for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+	  
+	  anita1->vmmhz_banding_rfcm[ifreq]=anita1->vmmhz_banding_rfcm[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6);
+	  // vmmhz was set to account for both negative and positive frequencies
+	  // now it has units of volts/(meter*s) so below we copy it to vm_banding_rfcm_e,h
+	  
+	  // here let's treat it as just one side of a double sided function though
+	  // divide by timestep so that we can use it for discrete fourier transform.
+	  // as in numerical recipes, F = (Delta t) * H
+	}
+      }
+      double integral=0.;
+      for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+	vm_banding_rfcm_e[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq]; // this is now Volts/(m*s) vs. frequency with banding and rfcm's applied
+	vm_banding_rfcm_h[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq];
+	integral+=vm_banding_rfcm_e[iband][ifreq]*vm_banding_rfcm_e[iband][ifreq];
+      } // end loop over nfreq
+      
     } // end loop over bands
     
 } //AntTrigger constructor
@@ -1627,7 +1607,7 @@ void AntTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,doub
  */
 
 int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu, bool ishpol) {
-  double this_threshold= -4.34495;
+  double this_threshold= anita1->powerthreshold[4]; //-4.34495;
   PassesTrigger(settings1,anita1,discones_passing,mode,l3trig,l2trig,l1trig,antennaclump,loctrig,loctrig_nadironly,inu,this_threshold, ishpol);   
 
 }
@@ -2487,6 +2467,7 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	//    }
 	return 0;
   }
+
   return thispasses;
 }//PassesTrigger
 
