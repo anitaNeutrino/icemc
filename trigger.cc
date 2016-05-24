@@ -198,41 +198,39 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
     
   double thresholds[5];
   GetThresholds(settings1,anita1,ilayer,thresholds); // get the right thresholds for this layer
-    
-    
-  double volts_thischannel;
-  double energy_thischannel;
-  double voltagethresh_thischannel,energythresh_thischannel;
-    
-  double v_banding_rfcm_e_forfft[5][anita1->HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
-  double v_banding_rfcm_h_forfft[5][anita1->HALFNFOUR];
-  double vm_banding_rfcm_1_forfft[5][anita1->HALFNFOUR];
-  double vm_banding_rfcm_2_forfft[5][anita1->HALFNFOUR];
-    
-  double v_banding_rfcm_e_forfft_temp[5][anita1->HALFNFOUR];
-    
-  double v_banding_rfcm_h_forfft_temp[5][anita1->HALFNFOUR];
-    
-    
-  double psignal_e[5][anita1->NFOUR];
-  double psignal_h[5][anita1->NFOUR];
-    
-  double mindiodeconvl_e[5];
-  double mindiodeconvl_h[5];
-  double onediodeconvl_e[5];
-  double onediodeconvl_h[5];
-    
-  double timedomain_output_1[5][Anita::NFOUR];
-  double timedomain_output_2[5][Anita::NFOUR];
-    
+            
   globaltrig1->volts[0][ilayer][ifold]=0.;
   globaltrig1->volts[1][ilayer][ifold]=0.;
     
   //  TRandom3 Rand3;
     
   if (settings1->TRIGGERSCHEME <= 1){
-		
-    // add noise, then find lcp, rcp components
+    WhichBandsPassTrigger1(settings1, anita1, globaltrig1, bn1, ilayer, ifold, thresholds);
+    
+  } else  if (settings1->TRIGGERSCHEME >= 2){
+
+    WhichBandsPassTrigger2(settings1, anita1, globaltrig1, bn1, ilayer, ifold, dangle, emfrac, hadfrac, thresholds);
+
+  }
+} // end which bands pass
+
+
+//!
+/*!
+ *
+ *
+ *
+ *
+ *
+ */
+void AntTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[5]){
+
+  double volts_thischannel;
+  double energy_thischannel;
+  double voltagethresh_thischannel,energythresh_thischannel;
+    
+
+  // add noise, then find lcp, rcp components
     for (int ibw=0;ibw<anita1->NBANDS+1;ibw++) {
 	
       //     cout << "ibw, bwslice_volts_pole are " << ibw << " " << bwslice_volts_pole[ibw] << "\n";
@@ -397,9 +395,43 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
 	  
       } // if not justvpol
     } // end loop over bands
-  } // end if settings1->TRIGGERSCHEME!=2
-    // settings1->TRIGGERSCHEME==2
-  else  if (settings1->TRIGGERSCHEME >= 2){ // if we use the diode to perform an integral
+
+} // end WhichBandsPassTrigger1
+
+//!
+/*!
+ *
+ *
+ *
+ *
+ *
+ */
+void AntTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[5]){
+
+    double v_banding_rfcm_e_forfft[5][anita1->HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
+  double v_banding_rfcm_h_forfft[5][anita1->HALFNFOUR];
+  double vm_banding_rfcm_1_forfft[5][anita1->HALFNFOUR];
+  double vm_banding_rfcm_2_forfft[5][anita1->HALFNFOUR];
+    
+  double v_banding_rfcm_e_forfft_temp[5][anita1->HALFNFOUR];
+    
+  double v_banding_rfcm_h_forfft_temp[5][anita1->HALFNFOUR];
+    
+    
+  double psignal_e[5][anita1->NFOUR];
+  double psignal_h[5][anita1->NFOUR];
+    
+  double mindiodeconvl_e[5];
+  double mindiodeconvl_h[5];
+  double onediodeconvl_e[5];
+  double onediodeconvl_h[5];
+    
+  double timedomain_output_1[5][Anita::NFOUR];
+  double timedomain_output_2[5][Anita::NFOUR];
+
+  
+
+      // if we use the diode to perform an integral
     // this is the number of bins to the left of center where the diode function starts to be completely overlapping with the waveform in the convolution.
     int ibinshift=(anita1->NFOUR/4-(int)(anita1->maxt_diode/anita1->TIMESTEP));
       
@@ -796,13 +828,9 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
       }
       globaltrig1->volts_rx_rfcm_trigger[iphisector_trigger][ilayer_trigger].assign(anita1->total_diodeinput_1_inanita[4], anita1->total_diodeinput_1_inanita[4] + 512);
     }
-  }
-} // end which bands pass
 
 
-
-
-
+}// end WhichBandsPassTrigger2
 
 //!
 /*!
@@ -1608,9 +1636,9 @@ void AntTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,doub
 
 int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu, bool ishpol) {
   double this_threshold= anita1->powerthreshold[4]; //-4.34495;
-  PassesTrigger(settings1,anita1,discones_passing,mode,l3trig,l2trig,l1trig,antennaclump,loctrig,loctrig_nadironly,inu,this_threshold, ishpol);   
-
+  return PassesTrigger(settings1,anita1,discones_passing,mode,l3trig,l2trig,l1trig,antennaclump,loctrig,loctrig_nadironly,inu,this_threshold, ishpol);   
 }
+
 int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discones_passing, int mode, int &l3trig, int *l2trig, int *l1trig, int antennaclump, int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int *loctrig_nadironly, int inu,double this_threshold, bool ishpol) {
 
   //bool ishpol should only be used for anita3, by default do only vpol
