@@ -28,11 +28,11 @@ Counting::Counting() {
   Tools::Zero(noway,2); // same, after next iteration.
   Tools::Zero(wheredoesitleave_err,2); // same, after next iteration.
   Tools::Zero(neverseesice,2); // same, after next iteration.
-Tools::Zero(iceinteraction,2); // same, after next iteration.
-Tools::Zero(inhorizon,2); // same, after next iteration.
- Tools::Zero(wheredoesitenterice_err,2); // same, after next iteration.
-Tools::Zero(toohigh,2); // same, after next iteration.
-Tools::Zero(toolow,2); // same, after next iteration.
+  Tools::Zero(iceinteraction,2); // same, after next iteration.
+  Tools::Zero(inhorizon,2); // same, after next iteration.
+  Tools::Zero(wheredoesitenterice_err,2); // same, after next iteration.
+  Tools::Zero(toohigh,2); // same, after next iteration.
+  Tools::Zero(toolow,2); // same, after next iteration.
   for (int i=0;i<NCOSTHETA;i++) {
     Tools::Zero(weights_rin[i],NPHI); // same, after next iteration.
   }

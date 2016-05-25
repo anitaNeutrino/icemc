@@ -6,7 +6,7 @@
 1      # 1=write to histograms and trees, 0=don't write to histograms & trees
 0      # 1=write to ray tree (for roughness study), 0 don't write
 0     # 1=only write to final tree (for events that pass)
-100000  # Maximum number of entries to store in histograms (10000=default).
+10000  # Maximum number of entries to store in histograms (10000=default).
 65546  # Random number seed
 0      # Write neutrino position info to file
 0	#EVENTSMAP (1)draw the events distribution map or (0) not
@@ -18,7 +18,7 @@
 8      # (0) fixed balloon position (1) randomized at 80deg S (2) anita-lite flight. (3) banana plot (note: banana plot forces energy, turns off noise and turns off slopyness.  "How many neutrinos to generate" is not used, nor are any inputs relating to a detection system. Also, constant crust density, ice thickness, and elevation are set.) (4) for comparison with Peter (5) Pick your own altitude, phi and theta 2=default (6) Anita 1 flight (7) Anita 2 flight (8) Anita 3 flight
 999  # fixed balloon latitude (degrees south) (999 is default position)
 999 # fixed balloon longitude (degrees east) (999 is default position) longitude is between -180 and 180
-0      # Fixed (0) or randomized (1) balloon orientation.  1=default
+0      # Fixed (0) or randomized (1) balloon orientation.  0=default
 120000. # Pick balloon altitude in ft. (0) 120000 ft. or whatever you choose.
 1 # Constant gains (0) or Ped's measured gains (1)
 ### Trigger 
@@ -35,7 +35,7 @@
 1       # number of channels on antenna to pass L1 trigger 
 2	# number of L1 hits in a 'clump' to pass L2 trigger
 3	# number of antenna in 'clump' for L2 trigger
-0 	# require centre antenna in clump is one of those hit
+1 	# require centre antenna in clump is one of those hit
 1	# (1) for L3 trigger or (0) no L3 trigger requirement 
 0	# 1 for LCP and RCP, 0 for V and H 
 0	# 0 for both polarizations or 1 for just vertical polarization
@@ -91,7 +91,7 @@
 180    # Number of points scanned across the "theta" (polar) coordinate for a banana plot. (only used with "balloon position" 3)
 0      # Make signal across frequencies for different viewing angles
 1      # Type of shower for the previous option (1=em, 0=had)
-1	# loop over boresights	
+1      # loop over boresights	
 #### Interactions
 0 # Which parameterization (0) Jaime's older papers or (1) Jaime's Dec. 2006 paper
 1 # Which cross section parametrizations (0) Mary Hall Reno, (1) Connolly et al. 2011

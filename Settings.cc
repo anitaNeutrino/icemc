@@ -21,7 +21,6 @@ Settings::Settings() {
     Initialize();
 
     // Bunch of variables which were global in icemc.cc but are settings:
-    FILLRAYTREES=1; // fill tree for each ray in roughness simulation
     SEED=65540;      // random number seed.
     THETA_TH_FACTOR=1.0; // factor to multiply theta_th to check code is working properly
     CHANCEINHELL_FACTOR=1.0; // loosen chance in hell cuts to check code is working properly
@@ -101,8 +100,6 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     HIST=(int)atoi(number.c_str());
-    Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    FILLRAYTREES=(int)atoi(number.c_str());
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     ONLYFINAL=(int)atoi(number.c_str());
     Tools::GetNextNumberAsString(inputsfile,foutput,number);

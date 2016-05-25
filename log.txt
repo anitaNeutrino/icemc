@@ -726,7 +726,17 @@ Clean up of l3Trig(H) after use, that was causing anita-3 trigger to trigger too
 05/19/2016 11.37 AM BST L. Cremonesi
 Fixed bug related to HPOL triggers not being filled properly. Anita-3 trigger still shows too much HPOL.
 
-05/23/2016 13.33 PM ET M. Sutherland
-Implemented Screen class in its own .cc/.hh files with initial member data and functions. Added screen.cc/.hh to Makefile. Fixed reading/splining of flat glass data. 
 05/19/2016 10.14 AM ET M. Sutherland   [in branches/roughness]
 Merged over trunk's last few updates. Removed GetScreenXY(). Removed TTree raytree and raytree2. Removed myfunction() and integratemyfunction(). Removed roughness parameter declarations from roughly line 165-235. Saving to keep step with trunk.
+
+05/23/2016 13.33 PM ET M. Sutherland   [in branches/roughness]
+Implemented Screen class in its own .cc/.hh files with initial member data and functions. Added screen.cc/.hh to Makefile. Fixed reading/splining of flat glass data.
+
+05/24/2016 04.00 PM BST L. Cremonesi 
+Updated power threshold for global trigger to be flight-dependent. Evaluate GetFresnel function for boresight option as well. Some minor format changes.
+
+05/24/2016 04.30 PM BST L. Cremonesi 
+Split the function WhichBandsPass in two.
+
+05/25/2016 15.27 PM ET M. Sutherland
+Removing some previous roughness work in icemc.cc. Added fresnel and loss correction factors from Table 4 ELOG 077 to roughness. Renamed Roughness::ConstructTheta0Splines() to Roughness::ConstructSplines(). Removed FILLRAYTREES in Settings.cc/h and input.txt.roughness.

@@ -140,7 +140,6 @@ public:
     
     
     // Bunch of variables which were global in icemc.cc but are settings:
-    int FILLRAYTREES; // fill tree for each ray in roughness simulation
     int SEED;      // random number seed.
     double THETA_TH_FACTOR; // factor to multiply theta_th to check code is working properly
     double CHANCEINHELL_FACTOR; // loosen chance in hell cuts to check code is working properly

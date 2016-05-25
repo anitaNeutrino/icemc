@@ -45,11 +45,38 @@ Roughness::Roughness(int a){
     Ntheta0 = 8;
   }
 
+  for (int ii=0; ii<8; ii++){
+    if(ii==0){
+      corrfactor_thetas.push_back(0.); corrfactor_fresnel.push_back(0.92); corrfactor_loss.push_back(0.91); theta_g2a.push_back(0.);
+    }
+    if(ii==1){
+      corrfactor_thetas.push_back(10.); corrfactor_fresnel.push_back(0.92); corrfactor_loss.push_back(0.91); theta_g2a.push_back(6.6);
+    }
+    if(ii==2){
+      corrfactor_thetas.push_back(20.); corrfactor_fresnel.push_back(0.92); corrfactor_loss.push_back(0.91); theta_g2a.push_back(13.2);
+    }
+    if(ii==3){
+      corrfactor_thetas.push_back(30.); corrfactor_fresnel.push_back(0.91); corrfactor_loss.push_back(0.91); theta_g2a.push_back(19.5);
+    }
+    if(ii==4){
+      corrfactor_thetas.push_back(40.); corrfactor_fresnel.push_back(0.90); corrfactor_loss.push_back(0.90); theta_g2a.push_back(25.4);
+    }
+    if(ii==5){
+      corrfactor_thetas.push_back(50.); corrfactor_fresnel.push_back(0.87); corrfactor_loss.push_back(0.90); theta_g2a.push_back(30.7);
+    }
+    if(ii==6){
+      corrfactor_thetas.push_back(60.); corrfactor_fresnel.push_back(0.80); corrfactor_loss.push_back(0.89); theta_g2a.push_back(35.3);
+    }
+    if(ii==7){
+      corrfactor_thetas.push_back(70.); corrfactor_fresnel.push_back(0.65); corrfactor_loss.push_back(0.89); theta_g2a.push_back(38.8);
+    }
+  }
+
+
   std::cerr<<"Reading roughness data file:  "<< file_roughness<<std::endl;
   ReadDataFile();
   std::cerr<<"Constructing roughness splines"<<std::endl;
-  ConstructTheta0Splines();
-  
+  ConstructSplines();
 
 };
 
@@ -82,7 +109,7 @@ void Roughness::ReadDataFile(void){
 };
 
 
-void Roughness::ConstructTheta0Splines(void){
+void Roughness::ConstructSplines(void){
 // make a spline for each theta0 and push it back onto 'spline_theta0'
 // read the theta and power vector by Ntheta, make a spline and push, then repeat
   tk::spline *spl_ptr;
@@ -133,9 +160,6 @@ void Roughness::ConstructTheta0Splines(void){
         }
       }
     }
-    //for(int k=0;k<X.size();k++)
-    //  std::cerr<<X[k]<<"  "<<Y[k]<<std::endl;
-    //std::cerr<<"--"<<std::endl;
 
     // simple check that X is in increasing order (which it's not in the file),
     //  which is required for tk::spline
@@ -145,15 +169,27 @@ void Roughness::ConstructTheta0Splines(void){
     }
 
     spl_ptr->set_points(X,Y);
-
-    //std::cerr << j<<"  "<<(*spl_ptr)(10) << std::endl;
     //now push onto stack
     spline_theta0.push_back( spl_ptr );
   }
 
-  //for (int j=0; j<Ntheta0; j++){
-  //  std::cerr << j<<"  "<<(*(spline_theta0[j]))(10) << std::endl;
-  //}
+
+
+  // generate the splines for the frensel and loss correction factors
+  spl_cf_fresnel_ptr = new tk::spline;
+  spl_cf_fresnel_ptr->set_points(corrfactor_thetas, corrfactor_fresnel);
+  //
+  spl_cf_loss_ptr = new tk::spline;
+  spl_cf_loss_ptr->set_points(corrfactor_thetas, corrfactor_loss);
+
+
+  //generate splines for converting incidence angle for air->glass interface of measurements, and back
+  // these values taken from Table 5 ELOG #077
+  spl_ag2ga_ptr = new tk::spline;
+  spl_ag2ga_ptr->set_points(corrfactor_thetas, theta_g2a);
+
+  spl_ga2ag_ptr = new tk::spline;
+  spl_ga2ag_ptr->set_points(theta_g2a, corrfactor_thetas);
 
 };
 
@@ -177,11 +213,24 @@ double Roughness::InterpolatePowerValue(double T0, double T){
 };
 
 
+double Roughness::GetFresnelCorrectionFactor(double T0){
+   return (*spl_cf_fresnel_ptr)(T0);
+};
 
 
+double Roughness::GetLossCorrectionFactor(double T0){
+   return (*spl_cf_loss_ptr)(T0);
+};
 
 
+double Roughness::ConvertTheta0AirGlass_to_GlassAir(double T0){
+  return (*spl_ag2ga_ptr)(T0);
+};
 
+
+double Roughness::ConvertTheta0GlassAir_to_AirGlass(double T1){
+  return (*spl_ga2ag_ptr)(T1);
+};
 
 
 

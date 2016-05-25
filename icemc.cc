@@ -248,19 +248,6 @@ double CUTONWEIGHTS=1.E-10; // cut out events with small enough weight that they
 int undetectable_counter=0;
 
 
-// roughness - will be commented later
-const int NTHETA_ROUGH=100; // bins in theta
-
-double nrf_neighbors[10000];
-int maxarray[NTHETA_ROUGH];
-double SIGMA_HEIGHT=10.;
-double FEATURE_LENGTH=100.;
-double NEIGHBORS_RADIUS=1000.;
-
-
-
-
-
 // counting variables
 int count_inthisloop1=0; // for debugging
 int count_inthisloop2=0;
@@ -670,6 +657,11 @@ int main(int argc,  char **argv) {
   int fSCREENSIZE = 11;
   Screen *panel1 = new Screen(fSCREENSIZE);              // create new instance of the screen class
 
+  // roughness testing
+  //for (int ii=0; ii<90; ii++){
+  //  std::cerr<<ii<<"  "<<rough1->ConvertTheta0AirGlass_to_GlassAir(ii)<<"  "<<rough1->ConvertTheta0GlassAir_to_AirGlass(ii)<<std::endl;
+  //}
+
   // screen testing
   //panel1->SetEdgeLength(20.);
   //panel1->SetCentralPoint(Vector(1,2,3));
@@ -711,7 +703,6 @@ int main(int argc,  char **argv) {
   Tools::Zero(anita1->LAYER_VPOSITION, Anita::NLAYERS_MAX);
   Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
   
-  Tools::Zero(maxarray, NTHETA_ROUGH);
   
   //added djg ////////////////////////////////////////////////////////
   al_voltages_direct<<"antenna #"<<"   "<<"volts chan 1"<<"   "<<"volts chan 2"<<"    "<<"volts chan 3"<<"    "<<"volts chan 4"<<"    "<<"noise chan 1"<<"    "<<"noise chan 2"<<"    "<<"noise chan 3"<<"   "<<"noise chan 4"<<"  "<<"weight"<<endl;
@@ -1976,7 +1967,7 @@ int main(int argc,  char **argv) {
       
       //TAU STUFF. Pick whether it will stay as a neutrino or create tau
       if(tautrigger==1){
-        if ((settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2 || !settings1->UNBIASED_SELECTION) && !settings1->SLAC ) {
+        if ((settings1->ROUGHNESS==0 || !settings1->UNBIASED_SELECTION) && !settings1->SLAC ) {
           err=GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
           //cout<<"UNBIASED_SELECTION IS "<<settings1->UNBIASED_SELECTION<<"\n";
         }
@@ -2143,7 +2134,7 @@ int main(int argc,  char **argv) {
       } //if whichray==1
       
       if(tautrigger==0){//did this for cc- taus already,  do again for all other particles
-        if ((settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2 || !settings1->UNBIASED_SELECTION) && !settings1->SLAC )
+        if ((settings1->ROUGHNESS==0 || !settings1->UNBIASED_SELECTION) && !settings1->SLAC )
           err=GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
         else if (settings1->SLAC) {
           Vector xaxis(1., 0., 0.);
@@ -2165,7 +2156,7 @@ int main(int argc,  char **argv) {
         }//end else if slac
       }//end tau trigger ==0
       
-      //if (settings1->ROUGHNESS==1 || settings1->ROUGHNESS==2)
+      //if (settings1->ROUGHNESS==1)
       //  rough1->GetExitforRoughness(settings1, antarctica, emfrac, hadfrac, deltheta_em_mid2, deltheta_had_mid2, ray1, interaction1->nnu, bn1->r_bn, interaction1->posnu); // inputs
       //ray1 is modified in function
 
@@ -2346,7 +2337,7 @@ int main(int argc,  char **argv) {
       // pretty close to the right answer.
       // now get our best case attenuation again, 
       // and see if we can reject the event.
-      if (settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2) {
+      if (settings1->ROUGHNESS==0) {
         if (whichray==0)
           bestcase_atten=exp(-1*ray1->rfexit[1].Distance(interaction1->posnu)/MAX_ATTENLENGTH);
         if (whichray==1)
@@ -2432,7 +2423,7 @@ int main(int argc,  char **argv) {
       
       // reject if 2nd and 3rd tries
       // don't converge within 10m.
-      if (settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2) {
+      if (settings1->ROUGHNESS==0) {
         if (diff_3tries>10) {
           //delete ray1;
           //delete interaction1;
@@ -2488,17 +2479,17 @@ int main(int argc,  char **argv) {
           //upside-down compared to what it is in the firn.
           vmmhz1m_fresneledtwice=vmmhz1m_fresneledonce*fresnel2*mag2;
 
-          // if (settings1->BORESIGHTS) { // Linda added this bit
-          //   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
-          //     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-          // 	GetFresnel(rough1, settings1->ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold], 
-          // 		   n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[4][ilayer][ifold], 
-          // 		   vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, 
-          // 		   fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
-          // 	//		std::cout << fresnel1_eachboresight[ilayer][ifold] << std::endl;
-          //     } // end looping over phi sectors
-          //   } // end looping over layers
-          // } // end if we are calculating for all boresights
+          if (settings1->BORESIGHTS) { 
+            for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
+              for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+          	GetFresnel(rough1, settings1->ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold], 
+          		   n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[3][ilayer][ifold], 
+          		   vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, 
+          		   fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
+          	//		std::cout << fresnel1_eachboresight[ilayer][ifold] << std::endl;
+              } // end looping over phi sectors
+            } // end looping over layers
+          } // end if we are calculating for all boresights
 
           
           if (bn1->WHICHPATH==4)
@@ -2543,7 +2534,7 @@ int main(int argc,  char **argv) {
       diffrefr=acos(ray1->nrf_iceside[4]*ray1->nrf_iceside[0]);
       
       // scale by 1/r once you've found the 3rd iteration exit point
-      if (settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2) {
+      if (settings1->ROUGHNESS==0) {
         if (whichray==0)
           vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice, interaction1->posnu, bn1->r_bn);
         if (whichray==1)
@@ -2569,7 +2560,7 @@ int main(int argc,  char **argv) {
       
       
       // distance ray travels through ice.
-      if (settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2) {
+      if (settings1->ROUGHNESS==0) {
         if (whichray==0) {
           rflength=interaction1->posnu.Distance(ray1->rfexit[2]);
         }
@@ -2683,7 +2674,7 @@ int main(int argc,  char **argv) {
           } //for (loop over viewing angles)
         } //if (settings1->FORSECKEL==1)
 
-        if (settings1->ROUGHNESS==0 || settings1->ROUGHNESS==2) {// we apply this normal angular dependence if we are not dealing with roughness here
+        if (settings1->ROUGHNESS==0) {// we apply this normal angular dependence if we are not dealing with roughness here
           sig1->TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz[k], vmmhz_em[k]);// this applies the angular dependence.
           // viewangle is which viewing angle we are at
           // deltheta_em is the width of the em component at this frequency
@@ -2835,12 +2826,12 @@ int main(int argc,  char **argv) {
           bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
           if (!settings1->BORESIGHTS) {
             bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
-          bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
+	    bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
           }
           else{ // i.e. if BORESIGHTS is true
             bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector,  h_component_kvector,  n_component_kvector);
             bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol_eachboresight[ilayer][ifold], e_component,  h_component,  n_component);
-            fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold]*mag1_eachboresight[ilayer][ifold] << "\n";
+            fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold] << " " << mag1_eachboresight[ilayer][ifold] << "\n";
           }
           bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
           // store hitangles for plotting
@@ -2876,7 +2867,7 @@ int main(int argc,  char **argv) {
 
                 anttrig1->v_banding_rfcm_e[ibw][k]=anttrig1->vm_banding_rfcm_e[ibw][k]; // EH,  HERE! this v_banding_rfcm_e array will be used for trigger analysis later! in WhichBandsPass function! Why this is located in this weird place!!!
                 anttrig1->v_banding_rfcm_h[ibw][k]=anttrig1->vm_banding_rfcm_h[ibw][k];
-                //cout << "v_banding before is " << anttrig1->v_banding_rfcm_e[ibw][k] << "\n";
+		//              cout << "v_banding before is " << anttrig1->v_banding_rfcm_e[ibw][k] << " " << anttrig1->vm_banding_rfcm_h[ibw][k] << "\n";
                 //anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, anttrig1->v_banding_rfcm_e[ibw][k], anttrig1->v_banding_rfcm_h[ibw][k]);
                 // now it is in units of V/s
 
@@ -3865,8 +3856,8 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput << "Number of weighted direct,  reflected that pass is: " << allcuts_weighted[0] << "\t" << allcuts_weighted[1] << "\n";
   foutput << "Number of (weighted) neutrinos that pass (with weight>0.001) is: " << eventsfound_weightgt01 << "\n";
   foutput << "Number of (weighted) neutrinos that only traverse the crust is " << eventsfound_crust << " -> " << eventsfound_crust/eventsfound*100 << "%\n\n";
-  foutput << "Number of (weighted) neutrinos that pass VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
-  foutput << "Number of (weighted) neutrinos that pass HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
+  foutput << "Number of (weighted) neutrinos that pass only VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
+  foutput << "Number of (weighted) neutrinos that pass only HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
   foutput << "Number of (weighted) neutrinos that pass both pol triggers is: " << allcuts_weighted_polarization[2] << "\n\n";
 	       
   foutput << "Volume of ice is " << volume << "\n";

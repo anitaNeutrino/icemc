@@ -47,9 +47,21 @@ private:
 
   std::vector<tk::spline*> spline_theta0;
 
+  std::vector<double> corrfactor_thetas;      // both fresnel and loss taken directly from Table 4 ELOG #077
+  std::vector<double> corrfactor_fresnel;
+  std::vector<double> corrfactor_loss;
+
+  tk::spline *spl_cf_fresnel_ptr;
+  tk::spline *spl_cf_loss_ptr;
+
+  tk::spline *spl_ag2ga_ptr;   // spline ptr for air-glass incidence angle value to glass-air value
+  tk::spline *spl_ga2ag_ptr;   // spline ptr for opposite
+
+  std::vector<double> theta_g2a;
+
   void ReadDataFile(void);
   
-  void ConstructTheta0Splines(void);
+  void ConstructSplines(void);
 
 
 public:
@@ -58,6 +70,13 @@ public:
 
   double InterpolatePowerValue(double T0, double T);
 
+  double GetFresnelCorrectionFactor(double T0);
+
+  double GetLossCorrectionFactor(double T0);
+
+  double ConvertTheta0AirGlass_to_GlassAir(double T0);
+
+  double ConvertTheta0GlassAir_to_AirGlass(double T1);
   // 
 
 
