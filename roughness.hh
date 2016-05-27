@@ -13,8 +13,7 @@
 #include "Constants.h"
 #include "spline.h"
 
-//class Signal;
-//class TH2D;
+
 class TF2;
 class Ray;
 class Vector;
@@ -22,6 +21,7 @@ class Settings;
 class IceModel;
 class Balloon;
 class Interaction;
+class Screen;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //class Roughness:
@@ -39,6 +39,8 @@ private:
   // other options 400 grit (1), 1000 grit (2), 1500 grit (3), otherwise switch to default
   int gritvalue;  // [-1, 400, 1000, 1500]
   int Ntheta0;
+
+  double laserPower;
 
   std::vector<double> theta_0;
   std::vector<double> theta_0_unique;
@@ -68,6 +70,8 @@ public:
 
   Roughness(int a);
 
+  double GetLaserPower();
+
   double InterpolatePowerValue(double T0, double T);
 
   double GetFresnelCorrectionFactor(double T0);
@@ -77,6 +81,9 @@ public:
   double ConvertTheta0AirGlass_to_GlassAir(double T0);
 
   double ConvertTheta0GlassAir_to_AirGlass(double T1);
+  
+  void GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag);
+
   // 
 
 

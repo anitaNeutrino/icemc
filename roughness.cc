@@ -194,6 +194,11 @@ void Roughness::ConstructSplines(void){
 };
 
 
+double Roughness::GetLaserPower(){
+  return 580.; // \muW, taken from ELOG 077
+};
+
+
 double Roughness::InterpolatePowerValue(double T0, double T){
   // T0 [degrees] is the incident angle of the ray-in-ice with respect the the surface normal pointed into the ice
   // theta [degrees] is the exiting angle from the surface towards the balloon, measured with respect to the surface normal pointing into the air
@@ -231,6 +236,60 @@ double Roughness::ConvertTheta0AirGlass_to_GlassAir(double T0){
 double Roughness::ConvertTheta0GlassAir_to_AirGlass(double T1){
   return (*spl_ga2ag_ptr)(T1);
 };
+
+
+// taken from icemc::GetFresnel and modified for this case use
+void Roughness::GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag) {
+  // find angle of incidence and angle of transmission
+  double incident_angle = surface_normal.Angle(ice_rf);
+  double transmitted_angle = surface_normal.Angle(air_rf);
+  double t_coeff_pokey; double t_coeff_slappy;
+  double r_coeff_pokey; double r_coeff_slappy;
+  
+  //  double t_coeff_pokey, t_coeff_slappy;
+  
+  // this is perp the surface normal and transmitted ray,  parallel to surface
+  Vector perp = air_rf.Cross(surface_normal).Unit();
+  // this is in the bending plane
+  Vector air_parallel = perp.Cross(air_rf).Unit();
+  // this is in the bending plane
+  Vector ice_parallel = perp.Cross(ice_rf).Unit();
+  
+  // component of polarization (in the air) perp to surface normal
+  double pol_perp_ice = pol*perp; // this is the slappy component in the firn
+  double pol_parallel_ice = pol*ice_parallel; // this is the pokey component in the firn
+  double pol_perp_air=0, pol_parallel_air=0;
+
+  r_coeff_pokey =  tan(incident_angle - transmitted_angle) / tan(incident_angle + transmitted_angle);
+  t_coeff_pokey = sqrt((1. - r_coeff_pokey*r_coeff_pokey));
+  pol_parallel_air = t_coeff_pokey * pol_parallel_ice; // find pokey component in the air
+
+  r_coeff_slappy = sin(incident_angle - transmitted_angle) / sin(incident_angle + transmitted_angle);
+  t_coeff_slappy = sqrt((1. - r_coeff_slappy*r_coeff_slappy));
+  pol_perp_air = t_coeff_slappy * pol_perp_ice; // find slappy component in the ice
+
+  mag=sqrt( tan(incident_angle) / tan(transmitted_angle) );
+
+  fresnel = sqrt( pow(efield * pol_perp_air, 2) + pow(efield * pol_parallel_air, 2)) / efield;
+
+  pol = (pol_perp_air * perp + pol_parallel_air * air_parallel).Unit();
+}
+//end Roughness::GetFresnel()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

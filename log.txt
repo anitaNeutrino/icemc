@@ -740,3 +740,6 @@ Split the function WhichBandsPass in two.
 
 05/25/2016 15.27 PM ET M. Sutherland
 Removing some previous roughness work in icemc.cc. Added fresnel and loss correction factors from Table 4 ELOG 077 to roughness. Renamed Roughness::ConstructTheta0Splines() to Roughness::ConstructSplines(). Removed FILLRAYTREES in Settings.cc/h and input.txt.roughness.
+
+05/27/2016 14.40 PM ET M. Sutherland
+Changed some Screen data member and functions from Vector to Position. Made an explicit Roughness::GetFresnel() function for the roughness case. Modified icemc.cc to start calculating contributions on actual screens based on event properties. It compiles right now but is untested.

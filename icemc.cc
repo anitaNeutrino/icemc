@@ -654,8 +654,8 @@ int main(int argc,  char **argv) {
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
   
   Roughness *rough1=new Roughness(settings1->ROUGHSIZE); // create new instance of the roughness class
-  int fSCREENSIZE = 11;
-  Screen *panel1 = new Screen(fSCREENSIZE);              // create new instance of the screen class
+  int fSCREEN_NUMPOINTS_EDGE = 11;
+  Screen *panel1 = new Screen(fSCREEN_NUMPOINTS_EDGE);              // create new instance of the screen class
 
   // roughness testing
   //for (int ii=0; ii<90; ii++){
@@ -663,13 +663,13 @@ int main(int argc,  char **argv) {
   //}
 
   // screen testing
-  //panel1->SetEdgeLength(20.);
-  //panel1->SetCentralPoint(Vector(1,2,3));
-  //panel1->SetNormal(Vector(1,1,1));
-  //panel1->SetCornerPosition();
-  //Vector startpos;
-  //for (int ii=0; ii<fSCREENSIZE*fSCREENSIZE; ii++){
+  //panel1->SetEdgeLength(10.);
+  //panel1->SetCentralPoint(Position(.1,-.1,.1));
+  //panel1->SetNormal(Vector(1,.1,.1));
+  //Position startpos;
+  //for (int ii=0; ii<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE; ii++){
   //  startpos = panel1->GetNextPosition();
+  //  std::cerr << startpos[0] << "  " << startpos[1] << "  " << startpos[2] << std::endl;
   //}
 
   // declare instance of trigger class.
@@ -2457,10 +2457,7 @@ int main(int argc,  char **argv) {
       } // if we are calculating for all boresights
       
       
-      if (settings1->ROUGHNESS==1) {
-        vmmhz1m_fresneledtwice=vmmhz1m_max;
-      }
-      else {
+      if(!settings1->ROUGHNESS) {  // IF NO ROUGHNESS THEN DO THIS (FOR CONSISTENCY CHANGE NOTHING BELOW HERE IN THE if !rough)
         if (settings1->FIRN) {
           // now rotate that polarization vector according to ray paths in firn and air.
           // fresnel factor at ice-firn interface
@@ -2511,21 +2508,111 @@ int main(int argc,  char **argv) {
             } // end looping over layers
           } // end if we are calculating for all boresights
         }//end else firn
-      }// end else roughness
-      
-      // reject if the event is undetectable.
-      //if (vmmhz1m_fresneledtwice*heff_max*0.5*(bw/1.E6)<CHANCEINHELL_FACTOR*anita1->maxthreshold*Tools::dMin(VNOISE, settings1->NLAYERS) && !settings1->SKIPCUTS) {
-      if (settings1->CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10.
-        && !settings1->SKIPCUTS) {
-        if (bn1->WHICHPATH==3)
-          cout<<"Event is undetectable.  Leaving loop."<<endl;
+      }
+      // OTHERWISE THERE IS ROUGHNESS SO DO MAGIC
+      else{
+        //(vector) ray1->nsurf_rfexit: surface normal at RFexit position
+        //(pos)        ->rfexit[2]: final iterated position of RF exit
+        //(vector)     ->n_exit2bn[2]: vector from RF exit position TO balloon
+        //(vector) n_pol: polarization vector
 
-        //delete ray1;
-        //delete interaction1;
-        continue;
+        //IMPORTANT NOTE: WE ARE IGNORING THE FIRN UNTIL FURTHER NOTICE FOR SIMPLICITY
+
+        double Erunningtotal=0;
+        Position pos_projectedImpactPoint;
+        Position pos_current;
+        Vector vec_localnormal;         //normalized
+        Vector vec_nnu_to_impactPoint;  //normalized
+        double theta_local;             //angle between local surface normal and vector to balloon [radians]
+        double theta_0_local;                 //angle between 'inverted' local surface normal and incident direction [radians]
+        double theta_0_local_converted;       //theta_0_local converted using measurement angle conversion (air-glass -> glass-air) for spline look-up [radians]
+
+        double interpolatedPower;       // \muW for these angles
+        double temp_efield;
+        double fresnel_local;
+        double magnif_local;
+        double Emag_local;
+        Vector npol_local;
+        Vector Efield_local;
+        Vector Efield_screentotal = Vector(0,0,0);
+
+
+        //iterate points on the screen, get their position and project back to find ground impact
+        //calculate incident and transmitted angles, look up power fraction and loss correction and fresnel (use same GetFresnel?) factors
+        //add to running total, and output observables for checks
+
+        //reset the counter
+        panel1->ResetPositionIndex();
+
+        //set screen properties based on current geometry
+        panel1->SetEdgeLength( 100. );
+        panel1->SetCentralPoint( ray1->rfexit[2] + 10000.*ray1->n_exit2bn[2].Unit() ); //move 10 km away from exit point along balloon direction
+        panel1->SetNormal( ray1->n_exit2bn[2].Unit() );
+
+        // now loop over screen points
+        for (int ii=0; ii<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE; ii++){
+          pos_current = panel1->GetNextPosition();
+
+          //Determine ground impact position where the projected ray enters the ice
+          // reject if it enters beyond the borders of the continent.
+          // step size is 10 meters
+          if (!antarctica->WhereDoesItEnterIce(panel1->GetCentralPoint(), -1.*panel1->GetNormal(), 10., pos_projectedImpactPoint)){
+            if (antarctica->OutsideAntarctica(pos_projectedImpactPoint)) {
+              std::cerr<<"Warning!  Projected ground impact position of screen point is off-continent. Skipping."<<std::endl;
+              continue;
+            }// end outside antarctica
+          }// end wheredoesitenterice
+
+          // get local surface normal and vector from interaction point to impact to calculate local angles for lookup
+          vec_localnormal = antarctica->GetSurfaceNormal(pos_current).Unit();
+          vec_nnu_to_impactPoint = Vector( pos_current[0]-interaction1->posnu[0], pos_current[1]-interaction1->posnu[1], pos_current[2]-interaction1->posnu[2] ).Unit();
+
+          theta_local = vec_localnormal.Angle( (const Vector)ray1->n_exit2bn[2] );
+          theta_0_local = vec_nnu_to_impactPoint.Angle(vec_localnormal);
+          theta_0_local_converted = rough1->ConvertTheta0AirGlass_to_GlassAir(theta_0_local*180./PI);
+
+          interpolatedPower = rough1->InterpolatePowerValue(theta_0_local_converted*180./PI, theta_local*180./PI);
+
+          // Calculate the fresnel coefficient and magnification for this point
+          //GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag)
+          rough1->GetFresnel( (const Vector)vec_localnormal, ray1->rfexit[2], (const Vector)vec_nnu_to_impactPoint, npol_local, vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, fresnel_local, magnif_local);
+
+          // Calculate the electric field magnitude exiting the impact point accounting for 1)fresnel 2)magnification 3)power re-distribution from scattering 4)corrections to measurements
+          Emag_local = vmmhz1m_max * fresnel_local * magnif_local * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetFresnelCorrectionFactor(theta_0_local_converted*180./PI) / rough1->GetLossCorrectionFactor(theta_0_local_converted*180./PI));
+
+          // the field magnitude at the screen (and balloon) really depends on the vector sum of the 'local' field vectors added together
+          // later should check phase angles ....
+
+          //still need to account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
+          Emag_local /= ( interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn) );
+          Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
+
+          Efield_local = Emag_local * npol_local;
+
+          Efield_screentotal = Efield_screentotal + Efield_local;
+
+        }//end for ii < fSCREEN....
+
+      // Calculate the electric field magnitude at the balloon
+      // this variable is used downstream, so best to set it here
+      // could also set the resultant polarization too if needed
+      vmmhz_max = Efield_screentotal.Mag();
+
+      }//end else roughness
+
+
+      // reject if the event is undetectable.
+      // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
+      //if (vmmhz1m_fresneledtwice*heff_max*0.5*(bw/1.E6)<CHANCEINHELL_FACTOR*anita1->maxthreshold*Tools::dMin(VNOISE, settings1->NLAYERS) && !settings1->SKIPCUTS) {
+      if (settings1->ROUGHNESS==0){
+        if(settings1->CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10.&& !settings1->SKIPCUTS) {
+          if (bn1->WHICHPATH==3)
+            cout<<"Event is undetectable.  Leaving loop."<<endl;
+          
+          continue;
+        }
+        count1->nchanceinhell_fresnel[whichray]++;
       } //end if CHANCEINHELL factor and SKIPCUTS
-      
-      count1->nchanceinhell_fresnel[whichray]++;
       
       //
       // for plotting
@@ -2534,6 +2621,7 @@ int main(int argc,  char **argv) {
       diffrefr=acos(ray1->nrf_iceside[4]*ray1->nrf_iceside[0]);
       
       // scale by 1/r once you've found the 3rd iteration exit point
+      // ALREADY DEALT WITH IN CASE OF ROUGHNESS
       if (settings1->ROUGHNESS==0) {
         if (whichray==0)
           vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice, interaction1->posnu, bn1->r_bn);
@@ -2542,8 +2630,8 @@ int main(int argc,  char **argv) {
         // EH
         //cout<<"after applying ScaleVmMHz,  vmmhz_max: "<<vmmhz_max<<",  vmmhz1m_fresneledtwice: "<<vmmhz1m_fresneledtwice<<endl;
       }
-      else
-        vmmhz_max=vmmhz1m_max;
+      //else
+      //  vmmhz_max=vmmhz1m_max;
       
       // reject if the event is undetectable.
       //     if (vmmhz_max*heff_max*0.5*(bw/1.E6)<CHANCEINHELL_FACTOR*anita1->maxthreshold*Tools::dMin(VNOISE, settings1->NLAYERS) && !settings1->SKIPCUTS) {
@@ -2568,8 +2656,8 @@ int main(int argc,  char **argv) {
           rflength=interaction1->posnu_down.Distance(ray1->rfexit[2]);//use the real distance that singals pass
         }
       }// if this is not for roughness
-      else
-        rflength=ray1->rfexit[1].Mag()-interaction1->posnu.Mag();
+      //else
+      //  rflength=ray1->rfexit[1].Mag()-interaction1->posnu.Mag();
       
       // take into account attenuation through the ice.
       // here,  vmmhz is input and output
@@ -2577,11 +2665,14 @@ int main(int argc,  char **argv) {
         cout << "rflength is " << rflength << "\n";
       
       // applying ice attenuation factor
-      if (whichray==0)
-        Attenuate(antarctica, settings1, vmmhz_max,  rflength,  interaction1->posnu);
-      if (whichray==1)
-        Attenuate_down(antarctica, settings1, vmmhz_max,  ray1->rfexit[2],  interaction1->posnu, interaction1->posnu_down);
-      
+      if (settings1->ROUGHNESS==0) {
+        if (whichray==0)
+          Attenuate(antarctica, settings1, vmmhz_max,  rflength,  interaction1->posnu);
+        if (whichray==1)
+          Attenuate_down(antarctica, settings1, vmmhz_max,  ray1->rfexit[2],  interaction1->posnu, interaction1->posnu_down);
+      }
+      // roughness attenuation already dealt with
+
       // fill for just 1/10 of the events.
       if (tree2->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1 && bn1->WHICHPATH != 3)
         tree2->Fill();
@@ -2590,6 +2681,7 @@ int main(int argc,  char **argv) {
       count_dbexitsice++;
       
       // reject if the event is undetectable.
+      // THIS WILL CATCH ROUGHNESS==1 SINCE WE ARE SETTING STILL SETTING VMMHZ_MAX
       //     if (vmmhz_max*heff_max*0.5*(bw/1.E6)<CHANCEINHELL_FACTOR*anita1->maxthreshold*Tools::dMin(VNOISE, settings1->NLAYERS) && !settings1->SKIPCUTS) {
       if (settings1->CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS) {
         if (bn1->WHICHPATH==3)
@@ -2611,6 +2703,17 @@ int main(int argc,  char **argv) {
       // keeps track of maximum voltage seen on either polarization of any antenna
       volts_rx_max=0;
       
+
+
+
+
+
+
+
+
+
+
+
       // Make a vector of V/m/MHz scaled by 1/r and attenuated.
       // Calculates Jaime's V/m/MHz at 1 m for each frequency
       // then multiplies by scale factor vmmhz_max/vmmhz1m_max
@@ -4642,12 +4745,6 @@ double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_
   return vmmhz1m_max;
 }
 //end ScaleVmMHz()
-
-
-// int GetDirectionRough(Settings *settings1, const Vector &refr,  double deltheta_em,  double deltheta_had, double emfrac,  double hadfrac,  double pnu,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) {
-//     return 0;
-// }
-//end GetDirectionRough()
 
 
 double GetTransmission(double inc_angle, double trans_angle_par, double trans_angle_perp, double transmission[9][1000], double *min_angle, double *max_angle, int *npoints, int max_angles_backplane) {

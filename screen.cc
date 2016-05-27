@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "vector.hh"
+#include "position.hh"
 #include "screen.hh"
 
 Screen::Screen(int a){
@@ -10,7 +11,7 @@ Screen::Screen(int a){
 
   std::cerr << "Generating default screen with " << a << " sampling points" << std::endl;
   fedgeLength=1.;
-  fcentralPoint = Vector(1.,1.,1.);
+  fcentralPoint = Position(1.,1.,1.);
   fnormal = Vector(1.,1.,1.);
   funit_x = Vector(1.,1.,1.);
   funit_y = Vector(1.,1.,1.);
@@ -25,7 +26,7 @@ void Screen::SetEdgeLength(double a){
 };
 
 
-void Screen::SetCentralPoint(Vector a){
+void Screen::SetCentralPoint(Position a){
   fcentralPoint = a;
 };
 
@@ -45,28 +46,18 @@ void Screen::SetNormal(Vector a){
   }
 };
 
-void Screen::SetCornerPosition(){
-  fcornerPosition = fcentralPoint - fedgeLength/2. * (funit_x + funit_y);
-};
-
-
 double Screen::GetEdgeLength(){
   return fedgeLength;
 };
 
 
-Vector Screen::GetCentralPoint(){
+Position Screen::GetCentralPoint(){
   return fcentralPoint;
 };
 
 
 Vector Screen::GetNormal(){
   return fnormal;
-};
-
-
-Vector Screen::GetCornerPosition(){
-  return fcornerPosition;
 };
 
 
@@ -85,15 +76,17 @@ void Screen::ResetPositionIndex(){
 };
 
 
-Vector Screen::GetNextPosition(){
-  Vector pos;
+Position Screen::GetNextPosition(){
+  Position pos;
 
-  int yindex = floor(fpositionindex / fNsamples);
-  int xindex = fpositionindex % fNsamples;
+  float yindex = (float) floor(fpositionindex / fNsamples);
+  float xindex = (float) (fpositionindex % fNsamples);
 
-  pos = fcornerPosition + xindex*funit_x + yindex*funit_y + fedgeLength/4. * (funit_x + funit_y);
-        // base         //delta due to moving along screen     // shift back relative to central point
-  
+  pos = fcentralPoint                                       // base
+        - (fedgeLength/2.)*(funit_x + funit_y)              // shift to a corner
+        + (xindex/((float)fNsamples))*fedgeLength*funit_x   // move by x-increment
+        + (yindex/((float)fNsamples))*fedgeLength*funit_y;  // move by y-increment
+
   fpositionindex++;
   return pos;
 };
