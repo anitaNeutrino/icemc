@@ -738,8 +738,14 @@ Updated power threshold for global trigger to be flight-dependent. Evaluate GetF
 05/24/2016 04.30 PM BST L. Cremonesi 
 Split the function WhichBandsPass in two.
 
-05/25/2016 15.27 PM ET M. Sutherland
+05/25/2016 15.27 PM ET M. Sutherland   [in branches/roughness]
 Removing some previous roughness work in icemc.cc. Added fresnel and loss correction factors from Table 4 ELOG 077 to roughness. Renamed Roughness::ConstructTheta0Splines() to Roughness::ConstructSplines(). Removed FILLRAYTREES in Settings.cc/h and input.txt.roughness.
 
-05/27/2016 14.40 PM ET M. Sutherland
+05/27/2016 14.40 PM ET M. Sutherland   [in branches/roughness]
 Changed some Screen data member and functions from Vector to Position. Made an explicit Roughness::GetFresnel() function for the roughness case. Modified icemc.cc to start calculating contributions on actual screens based on event properties. It compiles right now but is untested.
+
+05/31/2016 12.40 PM BST L. Cremonesi
+Added signal chain impulse response to digitiser path.
+
+05/31/2016 16.07 PM ET M. Sutherland   [in branches/roughness]
+Added npol_local in icemc to get local polarization angle at the screen sample's projected ground impact point. Saving to keep in step with trunk.
