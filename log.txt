@@ -731,3 +731,6 @@ Fixed all indentations in trigger.cc to aid readability to the code.
 
 05/24/2016 04.30 PM BST L. Cremonesi 
 Split the function WhichBandsPass in two.
+
+05/31/2016 12.40 PM BST L. Cremonesi
+Added signal chain impulse response to digitiser path.

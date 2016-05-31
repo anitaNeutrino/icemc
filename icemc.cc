@@ -75,6 +75,8 @@
 UsefulAnitaEvent*     realEvPtr    = NULL;
 RawAnitaHeader*       rawHeaderPtr = NULL;
 Adu5Pat* 	      Adu5PatPtr   = NULL;
+
+#include "FFTtools.h"
 #endif
 
 Taumodel* TauPtr = NULL;
@@ -631,6 +633,11 @@ void Getearth(double*,  double*,  double*,  double*);
 #ifdef ANITA_UTIL_EXISTS
 //int GetIceMCAntfromUsefulEventAnt(Anita *anita1,  AnitaGeomTool *AnitaGeom1,  int UsefulEventAnt);
 int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt);
+TGraph *fVPolSignalChainResponse;
+TGraph *fHPolSignalChainResponse;
+double deltaT = 1/(2.6*16);
+void readImpulseResponse();
+void applyImpulseResponse(int nPoints, int ant, double *x, double y[48][512], bool pol);
 #ifdef R_EARTH
 #undef R_EARTH
 #endif
@@ -907,6 +914,8 @@ int main(int argc,  char **argv) {
   double volts_rx_max_lowband; // max voltage seen on an antenna - just for debugging purposes
   double volts_rx_rfcm_lab_e_all[48][512];
   double volts_rx_rfcm_lab_h_all[48][512];
+  double volts_rx_rfcm_lab_e_all_signalChain[48][512];
+  double volts_rx_rfcm_lab_h_all_signalChain[48][512];
   
   // miscellaneous
   //double dtemp;                       // another temp variable
@@ -1375,6 +1384,8 @@ int main(int argc,  char **argv) {
   finaltree->Branch("igps", &bn1->igps, "igyps/I");
   finaltree->Branch("volts_rx_rfcm_lab_e_all", &volts_rx_rfcm_lab_e_all, "volts_rx_rfcm_lab_e_all[48][512]/D");
   finaltree->Branch("volts_rx_rfcm_lab_h_all", &volts_rx_rfcm_lab_h_all, "volts_rx_rfcm_lab_h_all[48][512]/D");
+  finaltree->Branch("volts_rx_rfcm_lab_e_all_signalChain", &volts_rx_rfcm_lab_e_all_signalChain, "volts_rx_rfcm_lab_e_all_signalChain[48][512]/D");
+  finaltree->Branch("volts_rx_rfcm_lab_h_all_signalChain", &volts_rx_rfcm_lab_h_all_signalChain, "volts_rx_rfcm_lab_h_all_signalChain[48][512]/D");
   finaltree->Branch("ptaui", &ptaui, "ptaui/D");
   finaltree->Branch("ptauf", &ptauf, "ptauf/D");
   finaltree->Branch("sourceLon", &sourceLon, "sourceLon/D");
@@ -1910,7 +1921,9 @@ int main(int argc,  char **argv) {
     gps_offset=45;
   } else gps_offset=0;
 
-  
+  #ifdef ANITA_UTIL_EXISTS
+  readImpulseResponse();
+  #endif
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
     if (NNU >= 100) {
@@ -3061,6 +3074,9 @@ int main(int argc,  char **argv) {
 	  
           AntTrigger *anttrig1 = new AntTrigger(settings1,  ilayer,  ifold,  vmmhz,  anita1,  hitangle_e,  hitangle_h,  e_component,  h_component,  anita1->arrival_times,  volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
+	  
+	  
+	  
           Tools::Zero(sumsignal, 5);
 
           if (bn1->WHICHPATH==4 && anita1->Match(ilayer, ifold, anita1->rx_minarrivaltime)) {
@@ -3595,9 +3611,23 @@ int main(int argc,  char **argv) {
                 realEvPtr->chanId[UsefulChanIndexV] = UsefulChanIndexV;
                 realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
-                for (int j = 0; j < fNumPoints; j++) {
-                  realEvPtr->fVolts[UsefulChanIndexH][j] = volts_rx_rfcm_lab_h_all[IceMCAnt][j + 128] * 1000.;
-                  realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
+		for (int j = 0; j < fNumPoints; j++) {
+		  volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j] = volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
+		  volts_rx_rfcm_lab_h_all_signalChain[IceMCAnt][j] = volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
+		  realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
+		  realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
+		}
+
+		if (settings1->APPLYIMPULSERESPONSE){
+		  applyImpulseResponse(fNumPoints, IceMCAnt, realEvPtr->fTimes[UsefulChanIndexV], volts_rx_rfcm_lab_e_all_signalChain, 0);
+		  applyImpulseResponse(fNumPoints, IceMCAnt, realEvPtr->fTimes[UsefulChanIndexH], volts_rx_rfcm_lab_h_all_signalChain, 1);
+		}
+		
+		for (int j = 0; j < fNumPoints; j++) {
+		  // cout << volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000 << "\t" << volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j] << endl;
+		  //                  realEvPtr->fVolts[UsefulChanIndexH][j] = volts_rx_rfcm_lab_h_all[IceMCAnt][j + 128] * 1000.;
+		  realEvPtr->fVolts[UsefulChanIndexH][j] = volts_rx_rfcm_lab_h_all_signalChain[IceMCAnt][j];
+                  // realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
                   realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
                   //if (realEvPtr->fVolts[UsefulChanIndexH][j] != realEvPtr->fVolts[UsefulChanIndexH][j])
                     //cout << "Nan/inf" << endl;
@@ -3605,8 +3635,8 @@ int main(int argc,  char **argv) {
                   //if (realEvPtr->fVolts[UsefulChanIndexH][j] > 0.1)
                     //cout << "fvolts: " << realEvPtr->fVolts[UsefulChanIndexH][j] << ",  volts_rx: " << volts_rx_rfcm_lab_h_all[IceMCAnt][j+128] << endl;
 
-                  realEvPtr->fVolts[UsefulChanIndexV][j] = volts_rx_rfcm_lab_e_all[IceMCAnt][j + 128] * 1000.;
-                  realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
+                  realEvPtr->fVolts[UsefulChanIndexV][j] = volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j];
+                  // realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
                   realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
                 }//end int j
               }// end int iant
@@ -5287,5 +5317,85 @@ int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt){
   return IceMCAnt;
 }
 //end GetIceMCAntfromUsefulEventAnt()
+
+
+
+void readImpulseResponse(){
+
+  string fileName = "data/sumPicoImpulse.root";
+  TFile fImpulse(fileName.c_str());
+
+  if(!fImpulse.IsOpen()) {
+    std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
+    exit(0);
+  } else {
+    TGraph *grVTemp = (TGraph*) fImpulse.Get("grImpRespV");
+    if(!grVTemp) {
+      std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
+      exit(0);
+    }
+    TGraph *grVInt = FFTtools::getInterpolatedGraph(grVTemp,deltaT); //To match the above sampling rate
+    Int_t nPointsV  = grVInt->GetN();
+    Double_t *newxV = grVInt->GetX();
+    Double_t *newyV = grVInt->GetY();
+    //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
+    for (int i=0;i<nPointsV;i++) newyV[i]*=0.1;
+    // TGraph *grVPad = FFTtools::padWaveToLength(grVInt, paveNum);    
+    fVPolSignalChainResponse = new TGraph(nPointsV, newxV, newyV);
+
+    TGraph *grHTemp = (TGraph*) fImpulse.Get("grImpRespH");
+    if(!grHTemp) {
+      std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
+      exit(0);
+    }
+    TGraph *grHInt = FFTtools::getInterpolatedGraph(grHTemp,deltaT); //To match the above sampling rate
+    Int_t nPointsH  = grHInt->GetN();
+    Double_t *newxH = grHInt->GetX();
+    Double_t *newyH = grHInt->GetY();
+    //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
+    for (int i=0;i<nPointsH;i++) newyH[i]*=0.1;
+    // TGraph *grHPad = FFTtools::padWaveToLength(grHInt, paveNum);    
+    fHPolSignalChainResponse = new TGraph(nPointsH, newxH, newyH);
+  }
+  
+}
+
+
+void applyImpulseResponse(int nPoints, int ant, double *x, double y[48][512], bool pol){
+
+  // Upsample waveform to same deltaT of the signal chain impulse response
+  TGraph *graphUp = FFTtools::getInterpolatedGraph(new TGraph(nPoints, x, y[ant]), deltaT);
+
+  TGraph *surfSignal;
+  if (pol==0){
+    surfSignal = FFTtools::getConvolution(graphUp, fVPolSignalChainResponse);
+  } else {
+    surfSignal = FFTtools::getConvolution(graphUp, fHPolSignalChainResponse);
+  }
+
+  // Divide the output of the convolution by the number of points
+  // Because we applied 2 FFT and 1 invFFT
+  Double_t *newx = surfSignal->GetX();
+  Double_t *newy = surfSignal->GetY();
+  Int_t nPointsUp = surfSignal->GetN();
+  for (int i=0;i<nPointsUp;i++){
+    newy[i]=newy[i]/nPointsUp;
+  }
+
+  //Downsample again
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(new TGraph(nPointsUp, newx, newy), 1/2.6);
+  
+  Double_t *newy2 = surfSignalDown->GetY();
+  for (int i=0;i<nPoints;i++){
+    y[ant][i]=newy2[i];
+  }
+
+  // Cleaning up
+  delete surfSignalDown;
+  delete surfSignal;
+  delete graphUp;
+
+}
+
 
 #endif

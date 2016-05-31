@@ -696,4 +696,11 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     foutput << junk << "\n";
     Tools::GetNextNumberAsString(inputsfile,foutput,number);
     COHERENT_THRESHOLD = double (atof(number.c_str()));
+
+    getline(inputsfile,junk);
+    foutput << junk << "\n";
+    Tools::GetNextNumberAsString(inputsfile,foutput,number);
+    APPLYIMPULSERESPONSE=atoi(number.c_str());
+    std::cout << "Apply impulse response to digitizer path: " << APPLYIMPULSERESPONSE << std::endl;
+    
 } //method ReadInputs

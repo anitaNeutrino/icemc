@@ -408,7 +408,7 @@ void AntTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, Glob
  */
 void AntTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[5]){
 
-    double v_banding_rfcm_e_forfft[5][anita1->HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
+  double v_banding_rfcm_e_forfft[5][anita1->HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
   double v_banding_rfcm_h_forfft[5][anita1->HALFNFOUR];
   double vm_banding_rfcm_1_forfft[5][anita1->HALFNFOUR];
   double vm_banding_rfcm_2_forfft[5][anita1->HALFNFOUR];
@@ -1060,10 +1060,8 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   // now vmmhz_rx_rfcm_lab_e,h_forfft are the time domain waveforms after the antenna and lab attenuation
   // now find peak voltage
   // these get written to a tree
-  // still no noise
   anita1->peak_e_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_e,anita1->HALFNFOUR);
-    
-  anita1->peak_h_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_h,anita1->HALFNFOUR); // with no noise // EH, again I think this is WITH noise
+  anita1->peak_h_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_h,anita1->HALFNFOUR); 
     
     
   for (int iband=0;iband<5;iband++) { // loop over bands
