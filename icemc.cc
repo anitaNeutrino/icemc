@@ -177,9 +177,9 @@ double MAXMEASUREDANGLE=75.;
 Vector specular_vector; // the specular angle (the direction the signal would be transmitted if it purely obeyed Snell's law
 Vector reference_vector; // direction that theta_trans_par and theta_trans_perp are measured with respect to.
 Vector aimthescreen_vector; // direction to aim the screen
-void GetSmearedIncidentAngle(Vector &specular,  Vector &nsurf_rfexit,  Vector &nrf_iceside,  Vector &n_exit2bn,  double SMEARINCIDENTANGLE,  double theta_inc_smeared); // Smear the incident angle for roughness studies
+void GetSmearedIncidentAngle(Vector &specular,  Vector &nrf_iceside,  Vector &n_exit2bn,  double SMEARINCIDENTANGLE);//,  double theta_inc_smeared); // Smear the incident angle for roughness studies
 double SMEARINCIDENTANGLE=40.*RADDEG; // how much to smear the incident angle by
-double theta_inc_smeared;// smeared angle of incidence
+// double theta_inc_smeared;// smeared angle of incidence
 const int NRAYS=40000;  // number of rays around the specular that we sum to get the signal at the balloon
 int nrays=NRAYS;// for tree
 
@@ -899,7 +899,7 @@ int main(int argc,  char **argv) {
   string taudecay;                   // tau decay type: e, m, h
   
   double elast_y=0;                   // inelasticity
-  double elpm;                        // LPM energy
+  // double elpm;                        // LPM energy
   
   // double volts_db[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2];                   // same,  for double bangs
   double volts_rx_0=0;              // voltage on an individual antenna,  lc polarization
@@ -974,7 +974,6 @@ int main(int argc,  char **argv) {
   double ptaui=0;
   double ptauf =0;
   double tauweight=0;
-  int taumodes1 =0;
   double nutauweightsum=0;
   double tauweightsum=0;
   double nutauweight=0;
@@ -1775,7 +1774,7 @@ int main(int argc,  char **argv) {
   TCanvas *cgains=new TCanvas("cgains", "cgains", 880, 800);
   TGraph *ggains=new TGraph(anita1->NPOINTS_GAIN, anita1->frequency_forgain_measured, anita1->vvGaintoHeight);
   ggains->Draw("al");
-  stemp=settings1->outputdir+"gains.eps";
+  stemp=settings1->outputdir+"/gains.eps";
   cgains->Print((TString)stemp);
   
   
@@ -1809,7 +1808,7 @@ int main(int argc,  char **argv) {
   
   // get energy at which LPM effect turns on.
   //elpm=sig1->GetLPM();
-  elpm=sig1->GetELPM();
+  // elpm=sig1->GetELPM();
   
   // sets neutrino energy
   //  if(EXPONENT>15&&EXPONENT<25)//if EXPONENT is set to be a standard energy within ANITA's energy sensitivity
@@ -1892,7 +1891,7 @@ int main(int argc,  char **argv) {
   spectra1->GetSEdNdEdAdt()->SetLineColor(2);
   spectra1->GetSEdNdEdAdt()->Draw("l same");
     
-  stemp=settings1->outputdir+"GetG_test1.pdf";
+  stemp=settings1->outputdir+"/GetG_test1.pdf";
   ctest1->Print((TString)stemp);
   
   //   gE2->Draw("al");
@@ -2006,7 +2005,6 @@ int main(int argc,  char **argv) {
       taus1 = new Taumodel();
       //pnu=pow(10., settings1->EXPONENT); // pnu already obtained above
  
-      taumodes1=0;
       int taumodes = settings1->taumodes;
       tauweighttrigger=0;
       interaction1->weight_nu=0;
@@ -4058,7 +4056,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   g->SetMarkerStyle(21);
   g->Draw("ape");
 
-  stemp = settings1->outputdir+"thresholds.eps";
+  stemp = settings1->outputdir+"/thresholds.eps";
   cthresh->Print((TString)stemp);
   g->Write();
   gdenom->Write();
@@ -4084,7 +4082,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   fthresholds->Write();  
   fthresholds->Close();
 
-  double ses;                          // single-event sensitivity
+  //  double ses;                          // single-event sensitivity
   double km2sr;                        // aperture km**2-sr
 
   foutput << "\n";
@@ -4260,7 +4258,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
       km2sr=ice_area/(1.E6)*PI*eventsfound_prob/(double)NNU;
       foutput << "Total area x steradians using 4*PI*R_EARTH^2*eff. is \t" << km2sr << " km^2 str\n\n";
       foutput << "These are not the same because we are not throwing all directions on all points of the surface.  Believe the first one as an approximation,  we are working on this for high cross sections.\n";
-      ses=(pnu/1.E9)/(km2sr*3.16E7);
+      // ses=(pnu/1.E9)/(km2sr*3.16E7);
     }//end if IsMonoenergetic
 
   }//end if NNU!=0 and nevents!=0
@@ -4691,14 +4689,15 @@ void GetScreenXY(int nrays, double screensize, Vector plusx_onscreen, Vector plu
 //end GetScreenXY()
 
 
-void GetSmearedIncidentAngle(Vector &specular, Vector &nsurf_rfexit, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE, double theta_inc_smeared) {
+void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE){
+  //  void GetSmearedIncidentAngle(Vector &specular, Vector &nsurf_rfexit, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE, double theta_inc_smeared) {
     // Smear the incident angle for roughness studies
     specular+=nrf_iceside; // specular is the ray that we got from Snell's law
     Vector parallel_to_surface; // find vector parallel to surface to rotate the vector around
     parallel_to_surface+=n_exit2bn; // want to cross specular with n_exit2bn
     parallel_to_surface.Cross(specular);
     nrf_iceside.Rotate(SMEARINCIDENTANGLE*(2*gRandom->Rndm()-1.), parallel_to_surface); // smear the incident ray
-    theta_inc_smeared=acos(nrf_iceside.Dot(nsurf_rfexit));
+    //   theta_inc_smeared=acos(nrf_iceside.Dot(nsurf_rfexit));
 }
 //end GetSmearedIncidentAngle()
 
@@ -4989,7 +4988,7 @@ void ReadRoughnessData(Settings *settings1, double trans_angle[9][1000], double 
   int angle_backplane;
   char treename[50];
   string streename;
-  int n;
+  // int n;
   
   for (int i=0;i<max_angles_backplane;i++) {
     if (i==8)
@@ -4997,7 +4996,8 @@ void ReadRoughnessData(Settings *settings1, double trans_angle[9][1000], double 
     else
       angle_backplane=10*i;
 
-    n=sprintf(treename, "t_inc_angle_backplane_%d", angle_backplane);
+    //    n=
+    sprintf(treename, "t_inc_angle_backplane_%d", angle_backplane);
     streename=treename;
     TTree *t1=(TTree*)dir->Get(streename.c_str());
     t1->SetBranchAddress("trans_angle_out", &trans_angle[i][0]);

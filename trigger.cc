@@ -1941,9 +1941,9 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
       //unsigned N_SUMMED_SECTORS = 3;    // The number of phi sectors clumped together by the coherent sum trigger
       
       double highest_power = 0;
-      unsigned hi_pow_center = 0;
-      unsigned hi_pow_phi_index = 0;
-      unsigned hi_pow_theta_index = 0;
+      // unsigned hi_pow_center = 0;
+      // unsigned hi_pow_phi_index = 0;
+      // unsigned hi_pow_theta_index = 0;
      
       
       // Here the 48 antennas are filled according to the waveforms passed to PassesTrigger(...).
@@ -2086,9 +2086,9 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
 	      double power = summed_power_window(power_of_summed_wfm, window_index, 32);
 	      if (highest_power < power){
 		highest_power = power;
-		hi_pow_center = center_phi_sector_index;
-		hi_pow_phi_index = index_phi;
-		hi_pow_theta_index = index_theta;
+		// hi_pow_center = center_phi_sector_index;
+		// hi_pow_phi_index = index_phi;
+		// hi_pow_theta_index = index_theta;
 	      }
 	      
 	      if (power >= settings1->COHERENT_THRESHOLD){

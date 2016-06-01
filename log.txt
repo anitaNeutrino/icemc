@@ -734,3 +734,6 @@ Split the function WhichBandsPass in two.
 
 05/31/2016 12.40 PM BST L. Cremonesi
 Added signal chain impulse response to digitiser path.
+
+06/01/2016 10.40 PM BST L. Cremonesi
+Solving some more warnings
