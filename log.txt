@@ -737,3 +737,6 @@ Added signal chain impulse response to digitiser path.
 
 06/01/2016 10.40 PM BST L. Cremonesi
 Solving some more warnings
+
+06/02/2016 12.10 PM BST L. Cremonesi
+Clean up memory in applySignalChain function

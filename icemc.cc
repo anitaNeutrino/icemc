@@ -5356,6 +5356,13 @@ void readImpulseResponse(){
     for (int i=0;i<nPointsH;i++) newyH[i]*=0.1;
     // TGraph *grHPad = FFTtools::padWaveToLength(grHInt, paveNum);    
     fHPolSignalChainResponse = new TGraph(nPointsH, newxH, newyH);
+
+    delete grVInt;
+    delete grVTemp;
+    
+    delete grHInt;
+    delete grHTemp;
+    
   }
   
 }
@@ -5363,8 +5370,9 @@ void readImpulseResponse(){
 
 void applyImpulseResponse(int nPoints, int ant, double *x, double y[48][512], bool pol){
 
+  TGraph *graph1 = new TGraph(nPoints, x, y[ant]);
   // Upsample waveform to same deltaT of the signal chain impulse response
-  TGraph *graphUp = FFTtools::getInterpolatedGraph(new TGraph(nPoints, x, y[ant]), deltaT);
+  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, deltaT);
 
   TGraph *surfSignal;
   if (pol==0){
@@ -5382,8 +5390,9 @@ void applyImpulseResponse(int nPoints, int ant, double *x, double y[48][512], bo
     newy[i]=newy[i]/nPointsUp;
   }
 
+  TGraph *graph2 = new TGraph(nPointsUp, newx, newy);
   //Downsample again
-  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(new TGraph(nPointsUp, newx, newy), 1/2.6);
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(graph2, 1/2.6);
   
   Double_t *newy2 = surfSignalDown->GetY();
   for (int i=0;i<nPoints;i++){
@@ -5392,9 +5401,10 @@ void applyImpulseResponse(int nPoints, int ant, double *x, double y[48][512], bo
 
   // Cleaning up
   delete surfSignalDown;
+  delete graph2;
   delete surfSignal;
   delete graphUp;
-
+  delete graph1;
 }
 
 
