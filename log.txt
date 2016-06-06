@@ -735,6 +735,9 @@ Implemented Screen class in its own .cc/.hh files with initial member data and f
 05/24/2016 04.00 PM BST L. Cremonesi 
 Updated power threshold for global trigger to be flight-dependent. Evaluate GetFresnel function for boresight option as well. Some minor format changes.
 
+05/24/2016 04.05 PM BST L. Cremonesi 
+Fixed all indentations in trigger.cc to aid readability to the code.
+
 05/24/2016 04.30 PM BST L. Cremonesi 
 Split the function WhichBandsPass in two.
 
@@ -749,3 +752,12 @@ Added signal chain impulse response to digitiser path.
 
 05/31/2016 16.07 PM ET M. Sutherland   [in branches/roughness]
 Added npol_local in icemc to get local polarization angle at the screen sample's projected ground impact point. Saving to keep in step with trunk.
+
+06/01/2016 10.40 PM BST L. Cremonesi
+Solving some more warnings
+
+06/02/2016 12.10 PM BST L. Cremonesi
+Clean up memory in applySignalChain function
+
+06/06/2016 14.34 PM ET M. Sutherland   [in branches/roughness]
+Saved updates over weekend from trunk to roughness branch

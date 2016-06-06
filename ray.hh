@@ -80,11 +80,11 @@ public:
 	double distance=0;
 	double posnu_length=posnu.Mag(); // distance from center of earth to interaction
 	
-	double lon,lat,lon_old,lat_old; //latitude, longitude indices for 1st and 2nd iteration
+	double lon,lat;//,lon_old,lat_old; //latitude, longitude indices for 1st and 2nd iteration
 	lon = posnu.Lon(); // what latitude, longitude does interaction occur at
 	lat = posnu.Lat();
-	lon_old=lon; // save this longitude and latitude so we can refer to it later
-	lat_old=lat;
+	// lon_old=lon; // save this longitude and latitude so we can refer to it later
+	// lat_old=lat;
 	
 	// use law of cosines to get distance from interaction to exit point for the ray
 	// need to solve for that distance using the quadratic formula
