@@ -45,6 +45,7 @@ Settings::Settings() {
     SHOWERTYPE=0; // Type of shower for previous option
     // End of the once-global varibles.
     taumodes = 1; //Taumodes =1, taucreated in the rock.
+}
 
 void Settings::Initialize() {
   NDISCONES_PASS=3;
@@ -703,12 +704,5 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     cout << "Signal chain impulse response is only available to anita-2 and anita-3.\n";
     exit(1);
   }
-    
-
-    getline(inputsfile,junk);
-    foutput << junk << "\n";
-    Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    APPLYIMPULSERESPONSE=atoi(number.c_str());
-    std::cout << "Apply impulse response to digitizer path: " << APPLYIMPULSERESPONSE << std::endl;
     
 } //method ReadInputs

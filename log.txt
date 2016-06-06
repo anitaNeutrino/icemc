@@ -761,3 +761,6 @@ Clean up memory in applySignalChain function
 
 06/06/2016 14.34 PM ET M. Sutherland   [in branches/roughness]
 Saved updates over weekend from trunk to roughness branch
+
+06/06/2016 17.04 PM ET M. Sutherland   [in branches/roughness]
+More syncing, just to make sure I pulled the changes correctly. Missed a curly bracket in Settings.cc during the last merge. Changed default roughness to 400grit in constructor. Removed extra info appended to input.txt.roughness, and copied parameters from input.txt.anita3 into it.

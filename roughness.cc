@@ -40,8 +40,8 @@ Roughness::Roughness(int a){
     Ntheta0 = 9;
   }
   else{
-    froughsetting = 0;  //default to flat glass
-    gritvalue = -1;
+    froughsetting = 1;  //default to flat glass
+    gritvalue = 400;
     Ntheta0 = 8;
   }
 
