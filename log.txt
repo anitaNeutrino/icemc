@@ -767,3 +767,6 @@ More syncing, just to make sure I pulled the changes correctly. Missed a curly b
 
 06/07/2016 13.10 PM ET M. Sutherland   [in branches/roughness]
 rolling branches/roughness back to r574 because my work was wiped somehow in the sync.
+
+06/07/2016 13.42 PM ET M. Sutherland   [in branches/roughness]
+saving sync. Also fixed spline assert error in Roughness::ReadDataFile() about theta_0 and changed default screensize to 5 from 11.

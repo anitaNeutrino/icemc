@@ -44,7 +44,6 @@ else
 CPPSTD_FLAGS = -Dconstexpr=const
 endif
 
-
 GENERAL_FLAGS = -pipe
 OPTIMIZE_FLAGS = -O2
 DEBUG_FLAGS = -g -ggdb
@@ -52,7 +51,7 @@ PROFILING_FLAGS =
 ARCHITECTURE_FLAGS = -m64 -pthread
 WARN_FLAGS = -W -Wall -Wextra -Woverloaded-virtual# -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable
 
-CXXFLAGS += $(GENERAL_FLAGS) $(CPPSTD_FLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZE_FLAGS) $(WARN_FLAGS) $(ROOTCFLAGS) $(INC_ANITA_UTIL)
+CXXFLAGS += $(GENERAL_FLAGS) $(CPPSTD_FLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZE_FLAGS) $(WARN_FLAGS) $(ROOTCFLAGS) $(INC_ANITA_UTIL) $(FFTFLAG)
 
 #CXXFLAGS += $(CPPSTD_FLAGS) -g -O2 $(INC_ANITA_UTIL) $(BOOSTFLAGS) $(WARN_FLAGS)
 
@@ -65,7 +64,7 @@ LDFLAGS  += $(CPPSTD_FLAGS) -g $(LD_ANITA_UTIL) -I$(BOOST_ROOT) -L.
 #LDFLAGS  += $(CPPSTD_FLAGS) -g $(LD_ANITA_UTIL) -I$(BOOST_ROOT) $(ROOTLDFLAGS) -L. 
 
 
-LIBS += 
+LIBS += $(FFTLIBS)
 
 HEADERS	  = rx.hpp Taumodel.hh
 ##ANITA_DATA_HEADERS = include/RawAnitaEvent.h include/UsefulAnitaEvent.h include/RawAnitaHeader.h include/AnitaConventions.h include/AnitaGeomTool.h include/AnitaPacketUtil.h include/simpleStructs.h

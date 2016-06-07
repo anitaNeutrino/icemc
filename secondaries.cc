@@ -594,9 +594,9 @@ using std::max;
     i=0;
 
   int n_brems,n_epair,n_pn; // number of interactions of each type.
-  int index_y; // index along the horizontal axis of ped's plots
+  // int index_y; // index along the horizontal axis of ped's plots
   double rnd1=1000.;
-  double rnd2=1000.;  // random numbers for throwing at dart board
+  // double rnd2=1000.;  // random numbers for throwing at dart board
   double y = 0; // inelasticity
  
   string whichtype; // which type of interaction corresponds to that index
@@ -620,11 +620,9 @@ using std::max;
       else
 	whichtype="pn";
 
-
-
       rnd1=1000.;
-      rnd2=1000.;  // random numbers for throwing at dart board
-      index_y=0;
+      // rnd2=1000.;  // random numbers for throwing at dart board
+      // index_y=0;
 
       if (whichtype=="brems") {	
 	rnd1=gRandom->Rndm();
@@ -669,8 +667,8 @@ using std::max;
 	whichtype="pn";
   
       rnd1=1000.;
-      rnd2=1000.;  // random numbers for throwing at dart board
-      index_y=0;
+      // rnd2=1000.;  // random numbers for throwing at dart board
+      // index_y=0;
 
       if (whichtype=="brems") {  // bremstrahlung interaction
 	rnd1=gRandom->Rndm();
@@ -708,8 +706,8 @@ using std::max;
 	whichtype="edecay";
            
       rnd1=1000.;
-      rnd2=1000.;  // random numbers for throwing at dart board
-      index_y=0;     
+      // rnd2=1000.;  // random numbers for throwing at dart board
+      // index_y=0;     
       
       if (whichtype=="hadrdecay") { // hadronic decay
 	rnd1=gRandom->Rndm();

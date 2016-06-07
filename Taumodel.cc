@@ -130,7 +130,7 @@ double Taumodel::GetTauWeight(Primaries *primary1, Settings *settings1,IceModel 
   Position posnunow;
   double avgdensity=0;
   
-  double Etau_now;//=Etau_final;
+  // double Etau_now;//=Etau_final;
   double Emin=1E15;
  
   int i=0;
@@ -156,7 +156,7 @@ double Taumodel::GetTauWeight(Primaries *primary1, Settings *settings1,IceModel 
     i=0;
     int totalsteps=0;
     TauWeight_tmp=0;
-    Etau_now=Etau_final;
+    // Etau_now=Etau_final;
     double gamma = Etau_final/mT;
    
     //calculate the initial energy needed at the step so the tau will end at the correct final energy
