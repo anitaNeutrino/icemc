@@ -739,7 +739,7 @@ void Balloon::setr_bn(double latitude,double longitude) {
 
 void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, Settings *settings1, IceModel *antarctica1,								        Ray *ray1, int &beyondhorizon) {
     
-  // double distance=1.E7;
+  double distance=1.E7;
   double phi=0,theta=0;
   double lon=0;
   double latfromSP=0;
@@ -839,7 +839,7 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
   //position of the mirror point of interaction
   
   //interaction1->posnu is downward interaction1->posnu.
-   // distance=interaction1->posnu.Distance(r_bn);
+  distance=interaction1->posnu.Distance(r_bn);
   
   
   // depth of interaction

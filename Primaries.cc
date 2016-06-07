@@ -468,7 +468,7 @@ double Y::pickYConnollyetal2011(int NU,int CURRENT,double pnu) {
 
 double Y::Getyweight(double pnu, double y, int nu_nubar, int currentint){
   //from Connolly Calc 2011, Equations 9, 10, 11, 16, and 17.
-  // double dy=0.;//default
+  double dy=0.;//default
   //Ev, cc or nc, nu or nubar.
   
   double C0_highbar, C0_lowbar,C0_high, C0_low;//these C0's are normalization factors.
@@ -493,11 +493,11 @@ double Y::Getyweight(double pnu, double y, int nu_nubar, int currentint){
     C0_low=C0_high*(pow(ymax_low-C1_low, 1/C2))/(ymax_low-C1_high);
     
     if(y<ymax_low){//Eq(9)
-      // dy=0.00002;
+      dy=0.00002;
       dNdy=C0_low/pow(y-C1_low, 1/C2);//Eq(10)
     }
     else if(y>=ymax_low && y<1.){//Eq(9)
-      // dy=0.001;
+      dy=0.001;
       dNdy=C0_high/(y-C1_high);//Eq(10)
     }
     else{
@@ -514,11 +514,11 @@ double Y::Getyweight(double pnu, double y, int nu_nubar, int currentint){
     C0_lowbar=C0_highbar*(pow(ymax_low-C1_low, 1/C2))/(ymax_low-C1_high);
    
     if(y<ymax_low){
-      // dy=0.00002;
+      dy=0.00002;
       dNdy=C0_lowbar/pow(y-C1_low, 1/C2);
     }
     else if(y>=ymax_low && y<1.){
-      // dy=0.001;
+      dy=0.001;
       dNdy=C0_highbar/(y-C1_high);
     }
     else{

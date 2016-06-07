@@ -76,8 +76,6 @@
 UsefulAnitaEvent*     realEvPtr    = NULL;
 RawAnitaHeader*       rawHeaderPtr = NULL;
 Adu5Pat* 	      Adu5PatPtr   = NULL;
-
-#include "FFTtools.h"
 #endif
 
 Taumodel* TauPtr = NULL;
@@ -514,11 +512,6 @@ void Getearth(double*,  double*,  double*,  double*);
 #ifdef ANITA_UTIL_EXISTS
 //int GetIceMCAntfromUsefulEventAnt(Anita *anita1,  AnitaGeomTool *AnitaGeom1,  int UsefulEventAnt);
 int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt);
-TGraph *fVPolSignalChainResponse;
-TGraph *fHPolSignalChainResponse;
-double deltaT = 1/(2.6*16);
-void readImpulseResponse();
-void applyImpulseResponse(int nPoints, int ant, double *x, double y[48][512], bool pol);
 #ifdef R_EARTH
 #undef R_EARTH
 #endif
@@ -793,7 +786,7 @@ int main(int argc,  char **argv) {
   string taudecay;                   // tau decay type: e, m, h
   
   double elast_y=0;                   // inelasticity
-  // double elpm;                        // LPM energy
+  double elpm;                        // LPM energy
   
   // double volts_db[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2];                   // same,  for double bangs
   double volts_rx_0=0;              // voltage on an individual antenna,  lc polarization
@@ -808,8 +801,6 @@ int main(int argc,  char **argv) {
   double volts_rx_max_lowband; // max voltage seen on an antenna - just for debugging purposes
   double volts_rx_rfcm_lab_e_all[48][512];
   double volts_rx_rfcm_lab_h_all[48][512];
-  double volts_rx_rfcm_lab_e_all_signalChain[48][512];
-  double volts_rx_rfcm_lab_h_all_signalChain[48][512];
   
   // miscellaneous
   //double dtemp;                       // another temp variable
@@ -868,6 +859,7 @@ int main(int argc,  char **argv) {
   double ptaui=0;
   double ptauf =0;
   double tauweight=0;
+  int taumodes1 =0;
   double nutauweightsum=0;
   double tauweightsum=0;
   double nutauweight=0;
@@ -1277,8 +1269,6 @@ int main(int argc,  char **argv) {
   finaltree->Branch("igps", &bn1->igps, "igyps/I");
   finaltree->Branch("volts_rx_rfcm_lab_e_all", &volts_rx_rfcm_lab_e_all, "volts_rx_rfcm_lab_e_all[48][512]/D");
   finaltree->Branch("volts_rx_rfcm_lab_h_all", &volts_rx_rfcm_lab_h_all, "volts_rx_rfcm_lab_h_all[48][512]/D");
-  finaltree->Branch("volts_rx_rfcm_lab_e_all_signalChain", &volts_rx_rfcm_lab_e_all_signalChain, "volts_rx_rfcm_lab_e_all_signalChain[48][512]/D");
-  finaltree->Branch("volts_rx_rfcm_lab_h_all_signalChain", &volts_rx_rfcm_lab_h_all_signalChain, "volts_rx_rfcm_lab_h_all_signalChain[48][512]/D");
   finaltree->Branch("ptaui", &ptaui, "ptaui/D");
   finaltree->Branch("ptauf", &ptauf, "ptauf/D");
   finaltree->Branch("sourceLon", &sourceLon, "sourceLon/D");
@@ -1609,7 +1599,7 @@ int main(int argc,  char **argv) {
   TCanvas *cgains=new TCanvas("cgains", "cgains", 880, 800);
   TGraph *ggains=new TGraph(anita1->NPOINTS_GAIN, anita1->frequency_forgain_measured, anita1->vvGaintoHeight);
   ggains->Draw("al");
-  stemp=settings1->outputdir+"/gains.eps";
+  stemp=settings1->outputdir+"gains.eps";
   cgains->Print((TString)stemp);  
   
   // sets position of balloon and related quantities
@@ -1630,7 +1620,7 @@ int main(int argc,  char **argv) {
   
   // get energy at which LPM effect turns on.
   //elpm=sig1->GetLPM();
-  // elpm=sig1->GetELPM();
+  elpm=sig1->GetELPM();
   
   // sets neutrino energy
   //  if(EXPONENT>15&&EXPONENT<25)//if EXPONENT is set to be a standard energy within ANITA's energy sensitivity
@@ -1713,7 +1703,7 @@ int main(int argc,  char **argv) {
   spectra1->GetSEdNdEdAdt()->SetLineColor(2);
   spectra1->GetSEdNdEdAdt()->Draw("l same");
     
-  stemp=settings1->outputdir+"/GetG_test1.pdf";
+  stemp=settings1->outputdir+"GetG_test1.pdf";
   ctest1->Print((TString)stemp);
   
   //   gE2->Draw("al");
@@ -1742,9 +1732,7 @@ int main(int argc,  char **argv) {
     gps_offset=45;
   } else gps_offset=0;
 
-  #ifdef ANITA_UTIL_EXISTS
-  readImpulseResponse();
-  #endif
+  
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
     if (NNU >= 100) {
@@ -1827,6 +1815,7 @@ int main(int argc,  char **argv) {
       taus1 = new Taumodel();
       //pnu=pow(10., settings1->EXPONENT); // pnu already obtained above
  
+      taumodes1=0;
       int taumodes = settings1->taumodes;
       tauweighttrigger=0;
       interaction1->weight_nu=0;
@@ -2577,8 +2566,6 @@ int main(int argc,  char **argv) {
           // get local surface normal and vector from interaction point to impact to calculate local angles for lookup
           vec_localnormal = antarctica->GetSurfaceNormal(pos_current).Unit();
           vec_nnu_to_impactPoint = Vector( pos_current[0]-interaction1->posnu[0], pos_current[1]-interaction1->posnu[1], pos_current[2]-interaction1->posnu[2] ).Unit();
-          npol_local = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint);
-
 
           theta_local = vec_localnormal.Angle( (const Vector)ray1->n_exit2bn[2] );
           theta_0_local = vec_nnu_to_impactPoint.Angle(vec_localnormal);
@@ -2587,6 +2574,7 @@ int main(int argc,  char **argv) {
           interpolatedPower = rough1->InterpolatePowerValue(theta_0_local_converted*180./PI, theta_local*180./PI);
 
           // Calculate the fresnel coefficient and magnification for this point
+          //GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag)
           rough1->GetFresnel( (const Vector)vec_localnormal, ray1->rfexit[2], (const Vector)vec_nnu_to_impactPoint, npol_local, vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, fresnel_local, magnif_local);
 
           // Calculate the electric field magnitude exiting the impact point accounting for 1)fresnel 2)magnification 3)power re-distribution from scattering 4)corrections to measurements
@@ -2965,9 +2953,6 @@ int main(int argc,  char **argv) {
 	  
           AntTrigger *anttrig1 = new AntTrigger(settings1,  ilayer,  ifold,  vmmhz,  anita1,  hitangle_e,  hitangle_h,  e_component,  h_component,  anita1->arrival_times,  volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
-	  
-	  
-	  
           Tools::Zero(sumsignal, 5);
 
           if (bn1->WHICHPATH==4 && anita1->Match(ilayer, ifold, anita1->rx_minarrivaltime)) {
@@ -3502,23 +3487,9 @@ int main(int argc,  char **argv) {
                 realEvPtr->chanId[UsefulChanIndexV] = UsefulChanIndexV;
                 realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
-		for (int j = 0; j < fNumPoints; j++) {
-		  volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j] = volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
-		  volts_rx_rfcm_lab_h_all_signalChain[IceMCAnt][j] = volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
-		  realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
-		  realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
-		}
-
-		if (settings1->APPLYIMPULSERESPONSE){
-		  applyImpulseResponse(fNumPoints, IceMCAnt, realEvPtr->fTimes[UsefulChanIndexV], volts_rx_rfcm_lab_e_all_signalChain, 0);
-		  applyImpulseResponse(fNumPoints, IceMCAnt, realEvPtr->fTimes[UsefulChanIndexH], volts_rx_rfcm_lab_h_all_signalChain, 1);
-		}
-		
-		for (int j = 0; j < fNumPoints; j++) {
-		  // cout << volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000 << "\t" << volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j] << endl;
-		  //                  realEvPtr->fVolts[UsefulChanIndexH][j] = volts_rx_rfcm_lab_h_all[IceMCAnt][j + 128] * 1000.;
-		  realEvPtr->fVolts[UsefulChanIndexH][j] = volts_rx_rfcm_lab_h_all_signalChain[IceMCAnt][j];
-                  // realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
+                for (int j = 0; j < fNumPoints; j++) {
+                  realEvPtr->fVolts[UsefulChanIndexH][j] = volts_rx_rfcm_lab_h_all[IceMCAnt][j + 128] * 1000.;
+                  realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
                   realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
                   //if (realEvPtr->fVolts[UsefulChanIndexH][j] != realEvPtr->fVolts[UsefulChanIndexH][j])
                     //cout << "Nan/inf" << endl;
@@ -3526,8 +3497,8 @@ int main(int argc,  char **argv) {
                   //if (realEvPtr->fVolts[UsefulChanIndexH][j] > 0.1)
                     //cout << "fvolts: " << realEvPtr->fVolts[UsefulChanIndexH][j] << ",  volts_rx: " << volts_rx_rfcm_lab_h_all[IceMCAnt][j+128] << endl;
 
-                  realEvPtr->fVolts[UsefulChanIndexV][j] = volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j];
-                  // realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
+                  realEvPtr->fVolts[UsefulChanIndexV][j] = volts_rx_rfcm_lab_e_all[IceMCAnt][j + 128] * 1000.;
+                  realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
                   realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
                 }//end int j
               }// end int iant
@@ -3949,7 +3920,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   g->SetMarkerStyle(21);
   g->Draw("ape");
 
-  stemp = settings1->outputdir+"/thresholds.eps";
+  stemp = settings1->outputdir+"thresholds.eps";
   cthresh->Print((TString)stemp);
   g->Write();
   gdenom->Write();
@@ -3975,7 +3946,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   fthresholds->Write();  
   fthresholds->Close();
 
-  //  double ses;                          // single-event sensitivity
+  double ses;                          // single-event sensitivity
   double km2sr;                        // aperture km**2-sr
 
   foutput << "\n";
@@ -4151,7 +4122,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
       km2sr=ice_area/(1.E6)*PI*eventsfound_prob/(double)NNU;
       foutput << "Total area x steradians using 4*PI*R_EARTH^2*eff. is \t" << km2sr << " km^2 str\n\n";
       foutput << "These are not the same because we are not throwing all directions on all points of the surface.  Believe the first one as an approximation,  we are working on this for high cross sections.\n";
-      // ses=(pnu/1.E9)/(km2sr*3.16E7);
+      ses=(pnu/1.E9)/(km2sr*3.16E7);
     }//end if IsMonoenergetic
 
   }//end if NNU!=0 and nevents!=0
@@ -4558,15 +4529,14 @@ void IsAbsorbed(double chord_kgm2, double len_int_kgm2, double &weight1) {
 */
 
 
-void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE){
-  //  void GetSmearedIncidentAngle(Vector &specular, Vector &nsurf_rfexit, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE, double theta_inc_smeared) {
+void GetSmearedIncidentAngle(Vector &specular, Vector &nsurf_rfexit, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE, double theta_inc_smeared) {
     // Smear the incident angle for roughness studies
     specular+=nrf_iceside; // specular is the ray that we got from Snell's law
     Vector parallel_to_surface; // find vector parallel to surface to rotate the vector around
     parallel_to_surface+=n_exit2bn; // want to cross specular with n_exit2bn
     parallel_to_surface.Cross(specular);
     nrf_iceside.Rotate(SMEARINCIDENTANGLE*(2*gRandom->Rndm()-1.), parallel_to_surface); // smear the incident ray
-    //   theta_inc_smeared=acos(nrf_iceside.Dot(nsurf_rfexit));
+    theta_inc_smeared=acos(nrf_iceside.Dot(nsurf_rfexit));
 }
 //end GetSmearedIncidentAngle()
 
@@ -5077,95 +5047,5 @@ int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt){
   return IceMCAnt;
 }
 //end GetIceMCAntfromUsefulEventAnt()
-
-
-
-void readImpulseResponse(){
-
-  string fileName = "data/sumPicoImpulse.root";
-  TFile fImpulse(fileName.c_str());
-
-  if(!fImpulse.IsOpen()) {
-    std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
-    exit(0);
-  } else {
-    TGraph *grVTemp = (TGraph*) fImpulse.Get("grImpRespV");
-    if(!grVTemp) {
-      std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
-      exit(0);
-    }
-    TGraph *grVInt = FFTtools::getInterpolatedGraph(grVTemp,deltaT); //To match the above sampling rate
-    Int_t nPointsV  = grVInt->GetN();
-    Double_t *newxV = grVInt->GetX();
-    Double_t *newyV = grVInt->GetY();
-    //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
-    for (int i=0;i<nPointsV;i++) newyV[i]*=0.1;
-    // TGraph *grVPad = FFTtools::padWaveToLength(grVInt, paveNum);    
-    fVPolSignalChainResponse = new TGraph(nPointsV, newxV, newyV);
-
-    TGraph *grHTemp = (TGraph*) fImpulse.Get("grImpRespH");
-    if(!grHTemp) {
-      std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
-      exit(0);
-    }
-    TGraph *grHInt = FFTtools::getInterpolatedGraph(grHTemp,deltaT); //To match the above sampling rate
-    Int_t nPointsH  = grHInt->GetN();
-    Double_t *newxH = grHInt->GetX();
-    Double_t *newyH = grHInt->GetY();
-    //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
-    for (int i=0;i<nPointsH;i++) newyH[i]*=0.1;
-    // TGraph *grHPad = FFTtools::padWaveToLength(grHInt, paveNum);    
-    fHPolSignalChainResponse = new TGraph(nPointsH, newxH, newyH);
-
-    delete grVInt;
-    delete grVTemp;
-    
-    delete grHInt;
-    delete grHTemp;
-    
-  }
-  
-}
-
-
-void applyImpulseResponse(int nPoints, int ant, double *x, double y[48][512], bool pol){
-
-  TGraph *graph1 = new TGraph(nPoints, x, y[ant]);
-  // Upsample waveform to same deltaT of the signal chain impulse response
-  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, deltaT);
-
-  TGraph *surfSignal;
-  if (pol==0){
-    surfSignal = FFTtools::getConvolution(graphUp, fVPolSignalChainResponse);
-  } else {
-    surfSignal = FFTtools::getConvolution(graphUp, fHPolSignalChainResponse);
-  }
-
-  // Divide the output of the convolution by the number of points
-  // Because we applied 2 FFT and 1 invFFT
-  Double_t *newx = surfSignal->GetX();
-  Double_t *newy = surfSignal->GetY();
-  Int_t nPointsUp = surfSignal->GetN();
-  for (int i=0;i<nPointsUp;i++){
-    newy[i]=newy[i]/nPointsUp;
-  }
-
-  TGraph *graph2 = new TGraph(nPointsUp, newx, newy);
-  //Downsample again
-  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(graph2, 1/2.6);
-  
-  Double_t *newy2 = surfSignalDown->GetY();
-  for (int i=0;i<nPoints;i++){
-    y[ant][i]=newy2[i];
-  }
-
-  // Cleaning up
-  delete surfSignalDown;
-  delete graph2;
-  delete surfSignal;
-  delete graphUp;
-  delete graph1;
-}
-
 
 #endif

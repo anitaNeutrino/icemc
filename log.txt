@@ -764,3 +764,6 @@ Saved updates over weekend from trunk to roughness branch
 
 06/06/2016 17.04 PM ET M. Sutherland   [in branches/roughness]
 More syncing, just to make sure I pulled the changes correctly. Missed a curly bracket in Settings.cc during the last merge. Changed default roughness to 400grit in constructor. Removed extra info appended to input.txt.roughness, and copied parameters from input.txt.anita3 into it.
+
+06/07/2016 13.10 PM ET M. Sutherland   [in branches/roughness]
+rolling branches/roughness back to r574 because my work was wiped somehow in the sync.

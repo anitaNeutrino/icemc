@@ -40,8 +40,8 @@ Roughness::Roughness(int a){
     Ntheta0 = 9;
   }
   else{
-    froughsetting = 1;  //default to flat glass
-    gritvalue = 400;
+    froughsetting = 0;  //default to flat glass
+    gritvalue = -1;
     Ntheta0 = 8;
   }
 
@@ -476,8 +476,7 @@ void Roughness::GetExitforRoughness(Settings *settings1,IceModel *antarctica,dou
     // here is the normalized vector from interaction to exit point (here, same as above)
     
     Vector totherightvect,tempvect,rotationvector;
-    // double angle,viewingangle_rough,viewingangle_norough,rotationangle;
-    double viewingangle_rough,viewingangle_norough,rotationangle;
+    double angle,viewingangle_rough,viewingangle_norough,rotationangle;
     if (settings1->ROUGHNESS==1)
 	referenceray_iceside_specular=(r_bn-posnu).Unit();
     else if (settings1->ROUGHNESS==2) {
@@ -488,7 +487,7 @@ void Roughness::GetExitforRoughness(Settings *settings1,IceModel *antarctica,dou
 	// this tempvect will be aligned with totheright when nrf_iceside is a ray emitted at the top of the cone
 	tempvect=(nnu.Cross(ray1->nrf_iceside[3])).Unit();
 	
-	// angle=acos(tempvect.Dot(totherightvect)); // this tells you what "phi" one the cone the ray is at.
+	angle=acos(tempvect.Dot(totherightvect)); // this tells you what "phi" one the cone the ray is at.
 	
 	// need to rotate the ray about this vector to change its viewing angle but not its "phi" around cone
 	rotationvector=nnu.Cross(ray1->nrf_iceside[3]);
@@ -506,7 +505,7 @@ void Roughness::GetExitforRoughness(Settings *settings1,IceModel *antarctica,dou
 	rotationangle=viewingangle_rough-viewingangle_norough;
 	referenceray_iceside_specular=ray1->nrf_iceside[3].Rotate(rotationangle,rotationvector);
 	tempvect=(nnu.Cross(referenceray_iceside_specular)).Unit();
-	// angle=acos(tempvect.Dot(totherightvect)); // this tells you what "phi" one the cone the ray is at.
+	angle=acos(tempvect.Dot(totherightvect)); // this tells you what "phi" one the cone the ray is at.
 	ray1->nrf_iceside[4]=referenceray_iceside_specular;
 	ray1->nrf_iceside[3]=referenceray_iceside_specular;
     }

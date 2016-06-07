@@ -167,7 +167,6 @@ public:
     int antennaclump; //number of antenna in clump (L2)
     // End of the once-global varibles.
     double COHERENT_THRESHOLD;
-    int APPLYIMPULSERESPONSE; // apply impulse response
     
 };
 #endif

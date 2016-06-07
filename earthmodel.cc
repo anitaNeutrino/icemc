@@ -286,7 +286,7 @@ int EarthModel::Getchord(Settings *settings1,
     Vector nchord;
     double x=0;
     double lat,lon;
-    // int ilon,ilat;
+    int ilon,ilat;
     
     
     total_kgm2 = 0; //Initialize column density
@@ -403,13 +403,13 @@ int EarthModel::Getchord(Settings *settings1,
 	
 	lon = where.Lon();
 	lat = where.Lat();
-	// ilon = (int)(lon/2);
-	// ilat = (int)(lat/2);
+	ilon = (int)(lon/2);
+	ilat = (int)(lat/2);
 	
 	double surface_elevation = this->SurfaceAboveGeoid(lon,lat); // altitude of surface relative to geoid at earth entrance point
 	
-	// double local_icethickness = this->IceThickness(lon,lat);
-	// double local_waterdepth = WaterDepth(lon,lat);
+	double local_icethickness = this->IceThickness(lon,lat);
+	double local_waterdepth = WaterDepth(lon,lat);
 	double altitude=0;
 	weight1_tmp=1;
 	probability_tmp=1;
@@ -466,12 +466,12 @@ int EarthModel::Getchord(Settings *settings1,
 	    
 	    lon = where.Lon();
 	    lat = where.Lat();
-	    // ilon = (int)(lon/2);
-	    // ilat = (int)(lat/2);
+	    ilon = (int)(lon/2);
+	    ilat = (int)(lat/2);
 	    altitude=where.Mag()-Geoid(lat); //what is the altitude
 	    surface_elevation = this->SurfaceAboveGeoid(lon,lat); // altitude of surface relative to geoid at earth entrance point
-	    // local_icethickness = this->IceThickness(lon,lat);
-	    // local_waterdepth = WaterDepth(lon,lat);
+	    local_icethickness = this->IceThickness(lon,lat);
+	    local_waterdepth = WaterDepth(lon,lat);
 	    
 	} //end while
 	
@@ -529,12 +529,12 @@ int EarthModel::Getchord(Settings *settings1,
 	
 	lon = where.Lon();
 	lat = where.Lat();
-	// ilon = (int)(lon/2);
-	// ilat = (int)(lat/2);
+	ilon = (int)(lon/2);
+	ilat = (int)(lat/2);
 	altitude=where.Mag()-Geoid(lat); //what is the altitude
 	surface_elevation = this->SurfaceAboveGeoid(lon,lat); // altitude of surface relative to geoid at earth entrance point
-	// local_icethickness = this->IceThickness(lon,lat);
-	// local_waterdepth = WaterDepth(lon,lat);
+	local_icethickness = this->IceThickness(lon,lat);
+	local_waterdepth = WaterDepth(lon,lat);
 	
 	double distance_remaining=where.Distance(posnu); // how much farther you need to travel before you reach the neutrino interaction point
 	
@@ -557,12 +557,12 @@ int EarthModel::Getchord(Settings *settings1,
 	    
 	    lon = where.Lon();
 	    lat = where.Lat();
-	    // ilon = (int)(lon/2);
-	    // ilat = (int)(lat/2);
+	    ilon = (int)(lon/2);
+	    ilat = (int)(lat/2);
 	    altitude=where.Mag()-Geoid(lat); //what is the altitude
 	    surface_elevation = this->SurfaceAboveGeoid(lon,lat); // altitude of surface relative to geoid at earth entrance point
-	    // local_icethickness = this->IceThickness(lon,lat);
-	    // local_waterdepth = WaterDepth(lon,lat);
+	    local_icethickness = this->IceThickness(lon,lat);
+	    local_waterdepth = WaterDepth(lon,lat);
 	} //while
 	
     } //if (getchord_method == 2)

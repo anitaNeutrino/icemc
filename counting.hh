@@ -9,7 +9,7 @@ public:
 
   Counting();
   void initializeEachRun();
-
+  
   int npass[2]; // count events that pass
   int npassestrigger[2]; // incremented if passes trigger
   int nchanceinhell2[2]; // based on direction of ray and thickness in Cerenkov cone,
