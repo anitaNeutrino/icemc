@@ -772,7 +772,7 @@ int main(int argc,  char **argv) {
   
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);
-  
+
   bn1->InitializeBalloon();
   anita1->Initialize(settings1, foutput, inu);
   
@@ -2967,9 +2967,10 @@ int main(int argc,  char **argv) {
 
       // make a global trigger object (but don't touch the electric fences)
       if (settings1->WHICH==9)
-        globaltrig1 = new GlobalTrigger(settings1, anita1, bn1->phiTrigMask, bn1->phiTrigMaskH, bn1->l1TrigMask, bn1->l1TrigMaskH ); // Anita-3 phi and l1 masking for V and H pol
+	globaltrig1 = new GlobalTrigger(settings1, anita1, bn1->phiTrigMask, bn1->phiTrigMaskH, bn1->l1TrigMask, bn1->l1TrigMaskH); // Anita-3 phi and l1 masking for V and H pol
       else
-        globaltrig1 = new GlobalTrigger(settings1, anita1, bn1->phiTrigMask);
+	globaltrig1 = new GlobalTrigger(settings1, anita1, bn1->phiTrigMask);
+      //      globaltrig1 = new GlobalTrigger(settings1, anita1, bn1);
       Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
       anita1->GetArrivalTimes(ray1->n_exit2bn[2]);
       

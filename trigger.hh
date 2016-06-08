@@ -21,6 +21,7 @@ private:
 public:
   GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn); // constructor
   GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn,UShort_t phiTrigMaskH_bn,UShort_t l1TrigMask_bn,UShort_t l1TrigMaskH_bn); // constructor for Anita-3
+  //  GlobalTrigger(Settings *settings1,Anita *anita1,Balloon* bn1);
   void GetArrivalTimes(int inu,Anita *anita1, const Vector &rf_direction);
   
   // these are not really used now that we bin in frequency, but we keep them anyway.
@@ -32,7 +33,9 @@ public:
   UShort_t phiTrigMaskH; // which phi sector is masked for Anita 3 (H-POL)
   UShort_t l1TrigMask; // which channel is masked for Anita-3 (V-POL)
   UShort_t l1TrigMaskH; // which channel is masked for Anita 3 (H-POL)
-    
+
+  UShort_t thresholds_eachant[2][48]; // thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
+
     double volts[2][Anita::NLAYERS_MAX][Anita::NPHI_MAX];                        // voltage (1st index=antenna,2nd index=pol., lcp=0. rcp=1)
     double volts_em[2][Anita::NLAYERS_MAX][Anita::NPHI_MAX];                        // component of voltage from em shower (1st index=antenna,2nd index=pol., lcp=0. rcp=1)
     double volts_original[2][Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //added djg
@@ -125,7 +128,7 @@ public:
 				 double *hvolts,
 				 double *left,double *right);
     //int Passes(double strength,double angle,int trigger_band); // whether a particular channel passes or not
-  void L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double *powerthreshold,int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass);    
+  void L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double powerthreshold[2][5],int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass);    
 
     vector<int> flag_e[5];
     vector<int> flag_h[5];
@@ -136,10 +139,10 @@ public:
     double rateToThreshold(double rate, int band); // converts a single channel rate to threshold in p/<p>
     static double GetNoise(Settings *settings1,double altitude_bn,double geoid,double theta,double bw,double temp);
     void WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac);
-  void WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[5]);
-  void WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[5]);
+  void WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]);
+  void WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
   static double FindPeak(double *waveform,int n); // find peak voltage of a waveform
-    void GetThresholds(Settings *settings1,Anita *anita1,int ilayer,double *thresholds); // get thresholds for this layer
+    void GetThresholds(Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]); // get thresholds for this layer
     
     double bwslice_volts_pol0[5];  // sum voltage for each slice in bandwidth for the lcp polarization
     double bwslice_volts_pol1[5]; // same, for rcp polarization

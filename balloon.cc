@@ -273,6 +273,18 @@ void Balloon::InitializeBalloon() {
 		realTime_tr_min=realTime_turfrate; // realTime of first event in the file
 		turfratechain->GetEvent(turfratechain->GetEntries()-1);
 		realTime_tr_max=realTime_turfrate; // realTime of last event in file
+
+		fsurf=new TFile("data/AvgSurf_icemc_anita3.root");
+		surfchain=(TTree*)fsurf->Get("surf_icemc");
+		surfchain->SetMakeClass(1);
+		surfchain->SetBranchAddress("thresholds",   &thresholds   );
+		surfchain->SetBranchAddress("scalers",      &scalers      );
+		surfchain->SetBranchAddress("realTime",     &realTime_surf);
+		surfchain->BuildIndex("realTime");
+		surfchain->GetEvent(0);
+		realTime_surf_min=realTime_surf; // realTime of first event in the file
+		surfchain->GetEvent(surfchain->GetEntries()-1);
+		realTime_surf_max=realTime_surf; // realTime of last event in file
 		
     }
     
@@ -405,7 +417,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     
     //double latitude,longitude,altitude;
     
-    //  cout << "I'm in pickballoonposition. whichpath is " << WHICHPATH << "\n";
+  //  cout << "I'm in pickballoonposition. whichpath is " << WHICHPATH << "\n";
     //Pick balloon position
     if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8) { // anita-lite or anita-I or -II path
         
@@ -419,7 +431,6 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 			
 		}
 		else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8) {  // For Anita 1 and Anita 2 and Anita 3:
-
 		  //igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
 		  igps = int(randomNumber*flightdatachain->GetEntries()); // pick random event in the tree
 		  flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
@@ -434,9 +445,11 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		  if (WHICHPATH==7)  // this is for Anita 2
 		    // get phi masking
 		    setphiTrigMask();// set phiTrigMask, and public variable of Balloon class
-		  else if (WHICHPATH==8)  // this is for Anita 3
+		  else if (WHICHPATH==8){  // this is for Anita 3
 		    // get phi masking
 		    setphiTrigMaskAnita3();// set phiTrigMask, phiTrigMaskH, l1TrigMask and l1TrigMaskH and public variable of Balloon class
+		    if (settings1->USETIMEDEPENDENTTHRESHOLDS==1) setTimeDependentThresholds();
+		  }
 		}
 		igps_previous=igps;
 		latitude=(double)flatitude;
@@ -714,9 +727,35 @@ void Balloon::setphiTrigMaskAnita3() {
       turfratechain->GetEvent(iturf);
     }
   } // end if it's in range
-
   
 }
+
+void Balloon::setTimeDependentThresholds(){
+  
+  if (realTime_flightdata<realTime_surf_min || realTime_flightdata>realTime_surf_max) {
+    for(int ipol=0;ipol<2;ipol++){
+      for (int iant=0;iant<48;iant++){
+	thresholds[ipol][iant]=0.;
+      }
+    }
+  }
+  else { // if it's in range
+		
+    isurf=surfchain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in surfchain that is closest to this realTime_flightdata
+    if (isurf<0){ // if it didn't find one
+      for(int ipol=0;ipol<2;ipol++){
+	for (int iant=0;iant<48;iant++){
+	  thresholds[ipol][iant]=0.;
+	}
+      }
+    }else{
+      surfchain->GetEvent(isurf);
+    }
+  } // end if it's in range
+  
+
+}
+
 
 void Balloon::setr_bn(double latitude,double longitude) {
     
