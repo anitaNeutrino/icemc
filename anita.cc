@@ -728,12 +728,12 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		
     }
     
-    double probability_npass[9];
-    double probability_nplus1_pass[9];
-    for (int j=0;j<9;j++) {
-      probability_npass[j]=0.;
-      probability_nplus1_pass[j]=0.;
-    }
+    // double probability_npass[9];
+    // double probability_nplus1_pass[9];
+    // for (int j=0;j<9;j++) {
+    //   probability_npass[j]=0.;
+    //   probability_nplus1_pass[j]=0.;
+    // }
     
     // just take the average noise arrays from the tdiode tree
     tdiode->GetEvent(0);
@@ -943,7 +943,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     double thresh_end=-11.;
     double thresh_step=1.;
     
-    double relthresh[5][100];
+    // double relthresh[5][100];
     double rate[5][100];
     for (double testthresh=thresh_begin;testthresh>=thresh_end;testthresh-=thresh_step) {
       for (int j=0;j<5;j++) {
@@ -984,7 +984,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
       // brian m.
       for (int j=0;j<5;j++) {
 	int ibin=(int)fabs((testthresh-thresh_begin)/thresh_step);
-	relthresh[j][ibin]=fabs(testthresh);
+	// relthresh[j][ibin]=fabs(testthresh);
 	rate[j][ibin]=passes[j]/((double)ngeneratedevents*((double)NFOUR/2*(TIMESTEP)-maxt_diode));
 	if (rate[j][ibin]!=0)
 	  rate[j][ibin]=log10(rate[j][ibin]);
@@ -1902,11 +1902,11 @@ double Anita::Get_gain_angle(int gain_type, int k, double hitangle) {
     }
     if(hitangle >= 90.) hitangle = 89.99999;
     
-    int pol;
+    // int pol;
     if (GAINS==0) {
 		// for this simple model just treat the cross pols the same with regard to effect of being hit off-axis
 		// the absolute gain will of course be different for these
-		pol=(int)((double)gain_type/2.);
+		// pol=(int)((double)gain_type/2.);
 		
 		//    cout << "gain_type, k, flare, gain are " << gain_type << " " << k << " " << flare[gain_type][k] << " " << gain[pol][k] << "\n";
 		//cout << "hitangle, flare, factor are " << hitangle << " " << flare[gain_type][k] << " " << exp(-1.*(hitangle*hitangle)/(2*flare[gain_type][k]*flare[gain_type][k])) << "\n";
@@ -2048,16 +2048,16 @@ void Anita::myconvlv(double *data,const int NFOUR,double *fdiode,double &mindiod
     // Last half NFOUR/2 array of diodeconv is result from zero padding and some spoiled information.
     
     const int length=NFOUR;
-    double data_copy[length];
+    // double data_copy[length];
     //double fdiode_real[length];
     double power_noise_copy[length];
     
-    for (int i=0;i<NFOUR/2;i++) {
-      data_copy[i]=data[i];
-    }
-    for (int i=NFOUR/2;i<length;i++) {
-      data_copy[i]=0.;
-    }
+    // for (int i=0;i<NFOUR/2;i++) {
+    //   data_copy[i]=data[i];
+    // }
+    // for (int i=NFOUR/2;i<length;i++) {
+    //   data_copy[i]=0.;
+    // }
     
     for (int i=0;i<NFOUR/2;i++) {
       power_noise_copy[i]=(data[i]*data[i])/impedence*TIMESTEP;

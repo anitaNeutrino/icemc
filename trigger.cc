@@ -1913,11 +1913,11 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
     // Notes:
     //		There will be several things hardcoded into the following method, feel free to change these to be variables within the Settings class, but for the sake of sanity, PLEASE no more global variables!
     //		This will be made to implement all types of payloads shortly, what exists below is only a temporary specialization for ANITA III.
-    double timesteps[anita1->HALFNFOUR];
+    // double timesteps[anita1->HALFNFOUR];
 
-    for (unsigned int i = 0; i < anita1->HALFNFOUR; i++){
-      timesteps[i] = i;
-    }
+    // for (unsigned int i = 0; i < anita1->HALFNFOUR; i++){
+    //   timesteps[i] = i;
+    // }
 
     for (int center_phi_sector_offset = -1; center_phi_sector_offset <= 1; center_phi_sector_offset++){
       int center_phi_sector_index = first_phi_sector_hit + center_phi_sector_offset;
