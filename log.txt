@@ -740,3 +740,6 @@ Solving some more warnings
 
 06/02/2016 12.10 PM BST L. Cremonesi
 Clean up memory in applySignalChain function
+
+06/08/2016 03:40 PM BST L. Cremonesi
+First commit of time-dependent thresholds.
