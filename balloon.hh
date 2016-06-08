@@ -101,7 +101,7 @@ public:
   void setphiTrigMaskAnita3();  // this sets phiTrigMask
   void setr_bn(double latitude,double longitude);
 
-  void setTimeDependentThresholds(); // set time dependent thresholds
+  void setTimeDependentScalers(); // read scalers from anita3 flight
 
 
 
@@ -140,8 +140,8 @@ public:
   unsigned int realTime_surf;     // realtime from the surf file
   unsigned int realTime_surf_min; // min realtime from the surf file
   unsigned int realTime_surf_max; // max realtime from the surf file
-  UShort_t thresholds[2][48]; // thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
-  UShort_t scalers[2][48]; // thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
+  // UShort_t thresholds[2][48]; // thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
+  UShort_t scalers[2][48];    // scalers as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
   int iturf;// for indexing
   int isurf;
   int iturfevent;

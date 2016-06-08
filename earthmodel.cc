@@ -288,7 +288,6 @@ int EarthModel::Getchord(Settings *settings1,
     double lat,lon;
     // int ilon,ilat;
     
-    
     total_kgm2 = 0; //Initialize column density
     nearthlayers=0; // this counts the number of earth layers the neutrino traverses.
     // Want to find probability that the neutrino survives its trip

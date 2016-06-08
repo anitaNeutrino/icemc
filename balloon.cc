@@ -277,7 +277,7 @@ void Balloon::InitializeBalloon() {
 		fsurf=new TFile("data/AvgSurf_icemc_anita3.root");
 		surfchain=(TTree*)fsurf->Get("surf_icemc");
 		surfchain->SetMakeClass(1);
-		surfchain->SetBranchAddress("thresholds",   &thresholds   );
+		// surfchain->SetBranchAddress("thresholds",   &thresholds   );
 		surfchain->SetBranchAddress("scalers",      &scalers      );
 		surfchain->SetBranchAddress("realTime",     &realTime_surf);
 		surfchain->BuildIndex("realTime");
@@ -448,7 +448,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		  else if (WHICHPATH==8){  // this is for Anita 3
 		    // get phi masking
 		    setphiTrigMaskAnita3();// set phiTrigMask, phiTrigMaskH, l1TrigMask and l1TrigMaskH and public variable of Balloon class
-		    if (settings1->USETIMEDEPENDENTTHRESHOLDS==1) setTimeDependentThresholds();
+		    if (settings1->USETIMEDEPENDENTTHRESHOLDS==1) setTimeDependentScalers();
 		  }
 		}
 		igps_previous=igps;
@@ -730,12 +730,12 @@ void Balloon::setphiTrigMaskAnita3() {
   
 }
 
-void Balloon::setTimeDependentThresholds(){
+void Balloon::setTimeDependentScalers(){
   
   if (realTime_flightdata<realTime_surf_min || realTime_flightdata>realTime_surf_max) {
     for(int ipol=0;ipol<2;ipol++){
       for (int iant=0;iant<48;iant++){
-	thresholds[ipol][iant]=0.;
+	scalers[ipol][iant]=0.;
       }
     }
   }
@@ -745,7 +745,7 @@ void Balloon::setTimeDependentThresholds(){
     if (isurf<0){ // if it didn't find one
       for(int ipol=0;ipol<2;ipol++){
 	for (int iant=0;iant<48;iant++){
-	  thresholds[ipol][iant]=0.;
+	  scalers[ipol][iant]=0.;
 	}
       }
     }else{

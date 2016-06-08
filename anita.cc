@@ -673,7 +673,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		
 		
 		double *temp5=gphases->GetY();
-		for (int i=0;i<NFOUR/2;i++) {
+		for (int i=0;i<NFOUR/4;i++) {
 			v_phases[i]=temp5[i];
 		}
 		

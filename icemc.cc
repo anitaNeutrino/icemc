@@ -2204,7 +2204,7 @@ int main(int argc,  char **argv) {
           }//end if boresights
           err=1; // everything is a-okay
         }// end else if slac
-
+	
         if(err==0)
           continue;//bad stuff has happened.
 
