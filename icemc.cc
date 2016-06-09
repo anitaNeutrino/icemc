@@ -652,7 +652,7 @@ int main(int argc,  char **argv) {
   
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);
-  
+
   bn1->InitializeBalloon();
   anita1->Initialize(settings1, foutput, inu);
   
@@ -2000,7 +2000,7 @@ int main(int argc,  char **argv) {
           }//end if boresights
           err=1; // everything is a-okay
         }// end else if slac
-
+	
         if(err==0)
           continue;//bad stuff has happened.
 
@@ -2556,24 +2556,31 @@ int main(int argc,  char **argv) {
         panel1->ResetPositionIndex();
 
         //set screen properties based on current geometry
-        panel1->SetEdgeLength( 100. );
-        panel1->SetCentralPoint( ray1->rfexit[2] + 10000.*ray1->n_exit2bn[2].Unit() ); //move 10 km away from exit point along balloon direction
+        panel1->SetEdgeLength( 10000. );
+        panel1->SetCentralPoint( ray1->rfexit[2] + 100000.*ray1->n_exit2bn[2].Unit() ); //move 10 km away from exit point along balloon direction
         panel1->SetNormal( ray1->n_exit2bn[2].Unit() );
+
+        std::cerr<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
+        std::cerr<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
+        std::cerr<<panel1->GetCentralPoint().Lon()<<"  "<<-90+panel1->GetCentralPoint().Lat()<<std::endl;
 
         // now loop over screen points
         for (int ii=0; ii<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE; ii++){
           std::cerr<<ii<<std::endl;
           pos_current = panel1->GetNextPosition();
+          pos_projectedImpactPoint = Position(1,1,1);
 
           //Determine ground impact position where the projected ray enters the ice
           // reject if it enters beyond the borders of the continent.
           // step size is 10 meters
-          if (!antarctica->WhereDoesItEnterIce(panel1->GetCentralPoint(), -1.*panel1->GetNormal(), 10., pos_projectedImpactPoint)){
+          if (!antarctica->WhereDoesItEnterIce(pos_current, panel1->GetNormal(), 1000., pos_projectedImpactPoint)){
             if (antarctica->OutsideAntarctica(pos_projectedImpactPoint)) {
               std::cerr<<"Warning!  Projected ground impact position of screen point is off-continent. Skipping."<<std::endl;
               continue;
             }// end outside antarctica
           }// end wheredoesitenterice
+
+          std::cerr<<pos_projectedImpactPoint.Lon()<<"  "<<-90+pos_projectedImpactPoint.Lat()<<std::endl;
 
           // get local surface normal and vector from interaction point to impact to calculate local angles for lookup
           vec_localnormal = antarctica->GetSurfaceNormal(pos_current).Unit();
@@ -2584,6 +2591,7 @@ int main(int argc,  char **argv) {
           theta_0_local_converted = rough1->ConvertTheta0AirGlass_to_GlassAir(theta_0_local*180./PI);
 
           interpolatedPower = rough1->InterpolatePowerValue(theta_0_local_converted*180./PI, theta_local*180./PI);
+          std::cerr<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<<theta_0_local_converted<<std::endl;
 
           // Calculate the fresnel coefficient and magnification for this point
           //GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag)
@@ -2591,7 +2599,7 @@ int main(int argc,  char **argv) {
 
           // Calculate the electric field magnitude exiting the impact point accounting for 1)fresnel 2)magnification 3)power re-distribution from scattering 4)corrections to measurements
           Emag_local = vmmhz1m_max * fresnel_local * magnif_local * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetFresnelCorrectionFactor(theta_0_local_converted*180./PI) / rough1->GetLossCorrectionFactor(theta_0_local_converted*180./PI));
-
+          std::cerr<<fresnel_local<<"  "<<magnif_local<<"  "<<Emag_local<< std::endl;
           // the field magnitude at the screen (and balloon) really depends on the vector sum of the 'local' field vectors added together
           // later should check phase angles ....
 
@@ -2860,9 +2868,10 @@ int main(int argc,  char **argv) {
 
       // make a global trigger object (but don't touch the electric fences)
       if (settings1->WHICH==9)
-        globaltrig1 = new GlobalTrigger(settings1, anita1, bn1->phiTrigMask, bn1->phiTrigMaskH, bn1->l1TrigMask, bn1->l1TrigMaskH ); // Anita-3 phi and l1 masking for V and H pol
+	globaltrig1 = new GlobalTrigger(settings1, anita1, bn1->phiTrigMask, bn1->phiTrigMaskH, bn1->l1TrigMask, bn1->l1TrigMaskH); // Anita-3 phi and l1 masking for V and H pol
       else
-        globaltrig1 = new GlobalTrigger(settings1, anita1, bn1->phiTrigMask);
+	globaltrig1 = new GlobalTrigger(settings1, anita1, bn1->phiTrigMask);
+      //      globaltrig1 = new GlobalTrigger(settings1, anita1, bn1);
       Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
       anita1->GetArrivalTimes(ray1->n_exit2bn[2]);
       

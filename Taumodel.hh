@@ -79,6 +79,6 @@ public:
     // int& mantle_entered, // 1 or 0
     // int& core_entered);//include secondaries?
  
-  
+  ClassDef(Taumodel,1);
 }; //class Taumodel
 

@@ -74,14 +74,15 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigM
 }
 
 GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn,UShort_t phiTrigMaskH_bn,UShort_t l1TrigMask_bn,UShort_t l1TrigMaskH_bn){
+  //GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1,Balloon* bn1){
     
   Tools::Zero(triggerbits,Anita::NTRIG);
     
   phiTrigMask=phiTrigMask_bn; // set the phi mask to the input value which comes from the balloon class
   phiTrigMaskH=phiTrigMaskH_bn; // set the phi mask to the input value which comes from the balloon class
   l1TrigMask=l1TrigMask_bn; // set the phi mask to the input value which comes from the balloon class
-  l1TrigMaskH=l1TrigMaskH_bn; // set the phi mask to the input value which comes from the balloon class
-    
+  l1TrigMaskH=l1TrigMaskH_bn; // set the phi mask to the input value which comes from the balloon class    
+  
   for (int i=0;i<Anita::NLAYERS_MAX;i++) {
     for (int j=0;j<Anita::NPHI_MAX;j++) {
       for (int k=0;k<2;k++) {
@@ -196,9 +197,21 @@ void AntTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
  */
 void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac){
     
-  double thresholds[5];
-  GetThresholds(settings1,anita1,ilayer,thresholds); // get the right thresholds for this layer
-            
+  double thresholds[2][5];
+  if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==9) {
+    for(int i=0;i<4;i++) thresholds[0][i] = thresholds[1][i] = anita1->powerthreshold[i];
+    int iring = (ilayer<2)*0 + (ilayer==2)*1 + (ilayer==3)*2;
+    int iphi = ifold;
+    if (ilayer==0) iphi = ifold*2;
+    else if (ilayer==1) iphi = ifold*2+1;
+    // we invert VPOL and HPOL because in AnitaEventReader (0:HPOL 1:VPOL) and in icemc (0:VPOL 1:HPOL)
+    // convert scalers to power thresholds using fitted function got from ANITA-1, are they too old?
+    thresholds[1][4] = rateToThreshold(bn1->scalers[0][iring*16+iphi]*0.001,3)*(-1.);
+    thresholds[0][4] = rateToThreshold(bn1->scalers[1][iring*16+iphi]*0.001,3)*(-1.);
+    //    cout << thresholds[4] << " \n";
+  } else {
+    GetThresholds(settings1,anita1,ilayer,thresholds); // get the right thresholds for this layer
+  }
   globaltrig1->volts[0][ilayer][ifold]=0.;
   globaltrig1->volts[1][ilayer][ifold]=0.;
     
@@ -223,12 +236,11 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
  *
  *
  */
-void AntTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[5]){
+void AntTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){
 
   double volts_thischannel;
   double energy_thischannel;
   double voltagethresh_thischannel,energythresh_thischannel;
-    
 
   // add noise, then find lcp, rcp components
   for (int ibw=0;ibw<anita1->NBANDS+1;ibw++) {
@@ -280,7 +292,7 @@ void AntTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, Glob
       // get the treshold in adc counts for this channel.
       //	     powerthresh_thischannel=bn1->powerthresh[isurf][ichan];
 	  
-      energythresh_thischannel=thresholds[ibw];
+      energythresh_thischannel=thresholds[0][ibw];
       //meanp_thischannel=bn1->meanp[isurf][ichan];
       //energy_thischannel+=meanp_thischannel*INTEGRATION_TIME;
 	  
@@ -355,7 +367,7 @@ void AntTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, Glob
 	  energy_thischannel=bwslice_energy_polh[ibw];
 	}
 	    
-	energythresh_thischannel=thresholds[ibw];
+	energythresh_thischannel=thresholds[1][ibw];
 	//meanp_thischannel=bn1->meanp[isurf][ichan];
 	    
 	//energy_thischannel+=meanp_thischannel*INTEGRATION_TIME;
@@ -406,8 +418,8 @@ void AntTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, Glob
  *
  *
  */
-void AntTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[5]){
-
+void AntTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
+  
   double v_banding_rfcm_e_forfft[5][anita1->HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
   double v_banding_rfcm_h_forfft[5][anita1->HALFNFOUR];
   double vm_banding_rfcm_1_forfft[5][anita1->HALFNFOUR];
@@ -647,9 +659,9 @@ void AntTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glob
     anita1->channels_passing_e[j]=0; // does not pass
 	
     for (int ibin = anita1->iminbin[j]; ibin < anita1->imaxbin[j]; ibin++) {
-      if (timedomain_output_1[j][ibin] < thresholds[j] * anita1->bwslice_rmsdiode[j]) {
+      if (timedomain_output_1[j][ibin] < thresholds[0][j] * anita1->bwslice_rmsdiode[j]) {
 	if (anita1->pol_allowed[0] && anita1->bwslice_allowed[j]) { // is this polarization and bw slice allowed to pass
-	  //	      std::cout << "VPOL : " << j << " " << timedomain_output_1[j][ibin]  << " " <<  thresholds[j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
+	  //	      std::cout << "VPOL : " << j << " " << timedomain_output_1[j][ibin]  << " " <<  thresholds[0][j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
 	  anita1->channels_passing_e[j] = 1;// channel passes
 	}
       }
@@ -687,9 +699,9 @@ void AntTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glob
 
     anita1->channels_passing_h[j]=0;
     for (int ibin=anita1->iminbin[j];ibin<anita1->imaxbin[j];ibin++) {
-      if (timedomain_output_2[j][ibin]<thresholds[j]*anita1->bwslice_rmsdiode[j]) {
+      if (timedomain_output_2[j][ibin]<thresholds[1][j]*anita1->bwslice_rmsdiode[j]) {
 	if (anita1->pol_allowed[1] && anita1->bwslice_allowed[j]) { // if this pol and band are allowed to pass
-	  //	      std::cout << "HPOL : " << j << " " << timedomain_output_2[j][ibin]  << " " << timedomain_output_1[j][ibin] << " " <<  thresholds[j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
+	  //	      std::cout << "HPOL : " << j << " " << timedomain_output_2[j][ibin]  << " " << timedomain_output_1[j][ibin] << " " <<  thresholds[1][j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
 	  anita1->channels_passing_h[j]=1;
 	}
       } // if it's over threshold for this time step
@@ -1399,7 +1411,7 @@ int AntTrigger::IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int i
 
 
 
-void AntTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double *powerthreshold,int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass) {
+void AntTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double powerthreshold[2][5],int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass) {
    
   int maxsample=TMath::MaxElement(5,anita1->imaxbin);
   int minsample=TMath::MinElement(5,anita1->iminbin);
@@ -1410,7 +1422,7 @@ void AntTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NF
       
     for (int i=minsample;i<maxsample;i++) {
 	
-      if (timedomain_output_1[j][i]<powerthreshold[j]*anita1->bwslice_rmsdiode[j] && anita1->bwslice_allowed[j]==1) {
+      if (timedomain_output_1[j][i]<powerthreshold[0][j]*anita1->bwslice_rmsdiode[j] && anita1->bwslice_allowed[j]==1) {
 	flag_e[j].push_back(1);
 	  
       }
@@ -1418,7 +1430,7 @@ void AntTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NF
 	flag_e[j].push_back(0);
 	
 	
-      if (timedomain_output_2[j][i]<powerthreshold[j]*anita1->bwslice_rmsdiode[j] && anita1->bwslice_allowed[j]==1)
+      if (timedomain_output_2[j][i]<powerthreshold[1][j]*anita1->bwslice_rmsdiode[j] && anita1->bwslice_allowed[j]==1)
 	flag_h[j].push_back(1);
       else
 	flag_h[j].push_back(0);
@@ -1566,14 +1578,14 @@ double AntTrigger::GetNoise(Settings *settings1,double altitude_bn,double geoid,
  *	\todo	Deprecate in favor of the more robust boost::multi_array or the more specialized
  *			PayloadArray class. Both have multi-index access to the same items.
  */
-void AntTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,double *thresholds) {
+void AntTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]) {
     
   if (ilayer==3 && settings1->DISCONES==2) // if it's a nadir layer
     for (int i=0;i<5;i++)
-      thresholds[i]=anita1->powerthreshold_nadir[i];
+      thresholds[0][i]=thresholds[1][i]=anita1->powerthreshold_nadir[i];
   else
     for (int i=0;i<5;i++)
-      thresholds[i]=anita1->powerthreshold[i];
+      thresholds[0][i]=thresholds[1][i]=anita1->powerthreshold[i];
     
 }
 
@@ -1901,11 +1913,11 @@ int GlobalTrigger::PassesTrigger(Settings *settings1, Anita *anita1, int discone
     // Notes:
     //		There will be several things hardcoded into the following method, feel free to change these to be variables within the Settings class, but for the sake of sanity, PLEASE no more global variables!
     //		This will be made to implement all types of payloads shortly, what exists below is only a temporary specialization for ANITA III.
-    double timesteps[anita1->HALFNFOUR];
+    // double timesteps[anita1->HALFNFOUR];
 
-    for (unsigned int i = 0; i < anita1->HALFNFOUR; i++){
-      timesteps[i] = i;
-    }
+    // for (unsigned int i = 0; i < anita1->HALFNFOUR; i++){
+    //   timesteps[i] = i;
+    // }
 
     for (int center_phi_sector_offset = -1; center_phi_sector_offset <= 1; center_phi_sector_offset++){
       int center_phi_sector_index = first_phi_sector_hit + center_phi_sector_offset;

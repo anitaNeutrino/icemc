@@ -770,3 +770,9 @@ rolling branches/roughness back to r574 because my work was wiped somehow in the
 
 06/07/2016 13.42 PM ET M. Sutherland   [in branches/roughness]
 saving sync. Also fixed spline assert error in Roughness::ReadDataFile() about theta_0 and changed default screensize to 5 from 11.
+
+06/08/2016 03:40 PM BST L. Cremonesi
+First commit of time-dependent thresholds.
+
+06/09/2016 12.55 PM ET M. Sutherland   [in branches/roughness]
+fixed wrong position in WhereDoesItEnterIce(). saving syncs with trunk.

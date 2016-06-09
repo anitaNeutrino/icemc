@@ -161,7 +161,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   Tools::GetNextNumberAsString(inputsfile,foutput,number);
     
   bn1->WHICHPATH=(int)atoi(number.c_str());
-    
+  
   if ((WHICH==0 && bn1->WHICHPATH!=2) || (WHICH==2 && bn1->WHICHPATH!=6))
     cout << "Non-default setting:  bn1->WHICHPATH= " << bn1->WHICHPATH << " and WHICH=" << WHICH << "\n";
     
@@ -694,6 +694,10 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   Tools::GetNextNumberAsString(inputsfile,foutput,number);
   COHERENT_THRESHOLD = double (atof(number.c_str()));
 
+  // default values are 0
+  APPLYIMPULSERESPONSE=0;       
+  USETIMEDEPENDENTTHRESHOLDS=0; 
+  
   getline(inputsfile,junk);
   foutput << junk << "\n";
   Tools::GetNextNumberAsString(inputsfile,foutput,number);
@@ -704,5 +708,18 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     cout << "Signal chain impulse response is only available to anita-2 and anita-3.\n";
     exit(1);
   }
-    
+
+  getline(inputsfile,junk);
+  foutput << junk << "\n";
+  Tools::GetNextNumberAsString(inputsfile,foutput,number);
+  USETIMEDEPENDENTTHRESHOLDS=atoi(number.c_str());
+  std::cout << "Use time-dependent thresholds: " << USETIMEDEPENDENTTHRESHOLDS << std::endl;
+
+  if ( USETIMEDEPENDENTTHRESHOLDS && WHICH!=9) {
+    cout << "Time-dependent thresholds are only available for anita-3.\n";
+    exit(1);
+  }
+
+  
+  
 } //method ReadInputs
