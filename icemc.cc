@@ -452,8 +452,6 @@ double sum_weights=0;
 // set up array of viewing angles for making plots for seckel
 void SetupViewangles(Signal *sig1);
 
-double GetTransmission(double inc_angle,  double trans_angle_par,  double trans_angle_perp,  double transmission[9][1000],  double *min_angle,  double *max_angle, int *npoints, int max_angles_backplane);
-
 void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
 double GetThisAirColumn(Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta);
 
@@ -2534,6 +2532,9 @@ int main(int argc,  char **argv) {
         Position pos_current;
         Vector vec_localnormal;         //normalized
         Vector vec_nnu_to_impactPoint;  //normalized
+        Vector vec_incplane_normal;     // normal of the incidence plane, normalized
+        Vector vec_incplane_grdtangent; // vector along tangent line to ground at impact point along balloon direction (but NOT towards it), normalized
+        Vector vec_incplane_perpgrd;    // vector '+z' in incidence plane, perp to ground tangent and plane normal, normalized
         double theta_local;             //angle between local surface normal and vector to balloon [radians]
         double theta_0_local;                 //angle between 'inverted' local surface normal and incident direction [radians]
         double theta_0_local_converted;       //theta_0_local converted using measurement angle conversion (air-glass -> glass-air) for spline look-up [radians]
@@ -2573,22 +2574,30 @@ int main(int argc,  char **argv) {
           //Determine ground impact position where the projected ray enters the ice
           // reject if it enters beyond the borders of the continent.
           // step size is 10 meters
-          if (!antarctica->WhereDoesItEnterIce(pos_current, panel1->GetNormal(), 1000., pos_projectedImpactPoint)){
+          if (!antarctica->WhereDoesItEnterIce(pos_current, panel1->GetNormal(), 100., pos_projectedImpactPoint)){
+            std::cerr<<"Warning!  Projected ground impact position of screen point does NOT enter ice. Skipping this screen point."<<std::endl;
+            continue;
             if (antarctica->OutsideAntarctica(pos_projectedImpactPoint)) {
-              std::cerr<<"Warning!  Projected ground impact position of screen point is off-continent. Skipping."<<std::endl;
+              std::cerr<<"Warning!  Projected ground impact position of screen point is off-continent. Skipping this screen point."<<std::endl;
               continue;
             }// end outside antarctica
           }// end wheredoesitenterice
 
           std::cerr<<pos_projectedImpactPoint.Lon()<<"  "<<-90+pos_projectedImpactPoint.Lat()<<std::endl;
 
-          // get local surface normal and vector from interaction point to impact to calculate local angles for lookup
-          vec_localnormal = antarctica->GetSurfaceNormal(pos_current).Unit();
-          vec_nnu_to_impactPoint = Vector( pos_current[0]-interaction1->posnu[0], pos_current[1]-interaction1->posnu[1], pos_current[2]-interaction1->posnu[2] ).Unit();
+          // get local surface normal and vector from interaction point to impact point
+          vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
+          vec_nnu_to_impactPoint = Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
 
-          theta_local = vec_localnormal.Angle( (const Vector)ray1->n_exit2bn[2] );
-          theta_0_local = vec_nnu_to_impactPoint.Angle(vec_localnormal);
-          theta_0_local_converted = rough1->ConvertTheta0AirGlass_to_GlassAir(theta_0_local*180./PI);
+          // now need to redfine the incidence plane using int.point-imp.point and imp.point-balloon vectors
+          vec_incplane_normal = vec_nnu_to_impactPoint.Cross( (const Vector)ray1->n_exit2bn[2] ).Unit();
+          vec_incplane_grdtangent = vec_incplane_normal.Cross( (const Vector)vec_localnormal ).Unit();
+          vec_incplane_perpgrd = vec_incplane_grdtangent.Cross( (const Vector)vec_incplane_normal ).Unit();
+
+          // local angles of transmission and incidence IN PLANE OF INCIDENCE
+          theta_local = vec_incplane_perpgrd.Angle( (const Vector)ray1->n_exit2bn[2] );               //[rad]
+          theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint);                              //[rad]
+          theta_0_local_converted = rough1->ConvertTheta0AirGlass_to_GlassAir(theta_0_local*180./PI); //[deg]
 
           interpolatedPower = rough1->InterpolatePowerValue(theta_0_local_converted*180./PI, theta_local*180./PI);
           std::cerr<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<<theta_0_local_converted<<std::endl;
@@ -4784,47 +4793,6 @@ double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_
   return vmmhz1m_max;
 }
 //end ScaleVmMHz()
-
-
-double GetTransmission(double inc_angle, double trans_angle_par, double trans_angle_perp, double transmission[9][1000], double *min_angle, double *max_angle, int *npoints, int max_angles_backplane) {
-    int i_inc_angle; // index of the incident angle for picking out transmission function
-    if (inc_angle>70.) {
-      if (max_angles_backplane==9)
-        i_inc_angle=8;
-      else
-        i_inc_angle=7;
-    }//end if
-    else if (inc_angle<5.)
-      i_inc_angle=0;
-    else {
-      i_inc_angle=(int)((inc_angle-5.)/10.);
-    }//end else
-
-    double step;
-    int i_trans_par; // index of the transmitted angle
-    //cout << "trans_angle_par,  max_angle are " << trans_angle_par << " " << max_angle[i_inc_angle] << "\n";
-    if (trans_angle_par>max_angle[i_inc_angle])
-      i_trans_par=npoints[i_inc_angle]-1;
-    else if (trans_angle_par<min_angle[i_inc_angle])
-      i_trans_par=0;
-    else {
-      step=(max_angle[i_inc_angle]-min_angle[i_inc_angle])/(double)npoints[i_inc_angle];
-      i_trans_par=(int)((trans_angle_par-min_angle[i_inc_angle])/step);
-    }//end else
-    
-    int i_trans_perp; // index of the transmitted angle
-    if (trans_angle_perp>max_angle[0])
-      i_trans_perp=npoints[0];
-    else if (trans_angle_perp<min_angle[0])
-      i_trans_perp=npoints[0];
-    else {
-      step=(max_angle[0]-min_angle[0])/(double)npoints[0];
-      i_trans_perp=(int)((trans_angle_perp-min_angle[0])/step);
-    }//end else
-    
-    return transmission[i_inc_angle][i_trans_par]*transmission[0][i_trans_perp];
-}
-//end GetTransmission()
 
 
 void SetupViewangles(Signal *sig1) {

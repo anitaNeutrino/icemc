@@ -776,3 +776,6 @@ First commit of time-dependent thresholds.
 
 06/09/2016 12.55 PM ET M. Sutherland   [in branches/roughness]
 fixed wrong position in WhereDoesItEnterIce(). saving syncs with trunk.
+
+06/10/2016 21.56 PM ET M. Sutherland   [in branches/roughness]
+saving some incidence plane calculations
