@@ -659,7 +659,7 @@ int main(int argc,  char **argv) {
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
   
   Roughness *rough1=new Roughness(settings1->ROUGHSIZE); // create new instance of the roughness class
-  int fSCREEN_NUMPOINTS_EDGE = 5;
+  int fSCREEN_NUMPOINTS_EDGE = 3;
   Screen *panel1 = new Screen(fSCREEN_NUMPOINTS_EDGE);              // create new instance of the screen class
 
   // roughness testing
@@ -2520,16 +2520,20 @@ int main(int argc,  char **argv) {
       }
       // OTHERWISE THERE IS ROUGHNESS SO DO MAGIC
       else{
-        //(vector) ray1->nsurf_rfexit: surface normal at RFexit position
-        //(pos)        ->rfexit[2]: final iterated position of RF exit
-        //(vector)     ->n_exit2bn[2]: vector from RF exit position TO balloon
-        //(vector) n_pol: polarization vector
+        //(vector) ray1->nsurf_rfexit:  surface normal at RFexit position
+        //(pos)        ->rfexit[2]:     final iterated position of RF exit
+        //(vector)     ->n_exit2bn[2]:  vector from RF exit position TO balloon
+        //(pos)    bn1->r_bn:           position of balloon
+        //(vector) n_pol:               polarization vector
+        //(pos)    posnu:               position of neutrino interaction
 
         //IMPORTANT NOTE: WE ARE IGNORING THE FIRN UNTIL FURTHER NOTICE FOR SIMPLICITY
 
         double Erunningtotal=0;
-        Position pos_projectedImpactPoint;
         Position pos_current;
+        Vector pos_current_localnormal; // local normal at point on ground below screen current point
+
+        Position pos_projectedImpactPoint;
         Vector vec_localnormal;         //normalized
         Vector vec_nnu_to_impactPoint;  //normalized
         Vector vec_incplane_normal;     // normal of the incidence plane, normalized
@@ -2553,28 +2557,33 @@ int main(int argc,  char **argv) {
         //calculate incident and transmitted angles, look up power fraction and loss correction and fresnel (use same GetFresnel?) factors
         //add to running total, and output observables for checks
 
-        //reset the counter
+        //reset the counter and set screen properties based on current geometry
         panel1->ResetPositionIndex();
-
-        //set screen properties based on current geometry
-        panel1->SetEdgeLength( 10000. );
-        panel1->SetCentralPoint( ray1->rfexit[2] + 100000.*ray1->n_exit2bn[2].Unit() ); //move 10 km away from exit point along balloon direction
+        panel1->SetEdgeLength( 1. );
+        panel1->SetCentralPoint( ray1->rfexit[2] + 0.8*bn1->r_bn.Distance(ray1->rfexit[2])*ray1->n_exit2bn[2].Unit() ); //move towards balloon by 80% of distance to balloon
         panel1->SetNormal( ray1->n_exit2bn[2].Unit() );
 
-        std::cerr<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
-        std::cerr<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
-        std::cerr<<panel1->GetCentralPoint().Lon()<<"  "<<-90+panel1->GetCentralPoint().Lat()<<std::endl;
+        // set screen y-hat as up 'perp.' to ground in the screen plane, define x-hat as perp.
+        pos_current_localnormal = antarctica->GetSurfaceNormal( panel1->GetCentralPoint() ).Unit();
+        panel1->SetUnitX( ray1->n_exit2bn[2].Cross(pos_current_localnormal).Unit() );
+        panel1->SetUnitY( -1.*ray1->n_exit2bn[2].Cross(ray1->n_exit2bn[2].Cross(pos_current_localnormal).Unit()) );
+
+        std::cerr<<"bln: "<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
+        std::cerr<<"int.point: "<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
+        std::cerr<<interaction1->posnu[0]<<"  "<<interaction1->posnu[1]<<"  "<<interaction1->posnu[2]<<std::endl;
+        std::cerr<<"RFexit: "<<ray1->rfexit[2].Lon()<<"  "<<-90+ray1->rfexit[2].Lat()<<std::endl;
+        std::cerr<<"screen: "<<panel1->GetCentralPoint().Lon()<<"  "<<-90+panel1->GetCentralPoint().Lat()<<std::endl;
 
         // now loop over screen points
         for (int ii=0; ii<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE; ii++){
           std::cerr<<ii<<std::endl;
-          pos_current = panel1->GetNextPosition();
-          pos_projectedImpactPoint = Position(1,1,1);
+          pos_current = panel1->GetNextPosition();        // this gets the new screen position
+          pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
 
           //Determine ground impact position where the projected ray enters the ice
           // reject if it enters beyond the borders of the continent.
           // step size is 10 meters
-          if (!antarctica->WhereDoesItEnterIce(pos_current, panel1->GetNormal(), 100., pos_projectedImpactPoint)){
+          if (!antarctica->WhereDoesItExitIce(pos_current, panel1->GetNormal(), 10., pos_projectedImpactPoint)){
             std::cerr<<"Warning!  Projected ground impact position of screen point does NOT enter ice. Skipping this screen point."<<std::endl;
             continue;
             if (antarctica->OutsideAntarctica(pos_projectedImpactPoint)) {
@@ -2583,24 +2592,37 @@ int main(int argc,  char **argv) {
             }// end outside antarctica
           }// end wheredoesitenterice
 
-          std::cerr<<pos_projectedImpactPoint.Lon()<<"  "<<-90+pos_projectedImpactPoint.Lat()<<std::endl;
+          std::cerr<<"+ "<<pos_projectedImpactPoint.Lon()<<"  "<<-90+pos_projectedImpactPoint.Lat()<<std::endl;
 
           // get local surface normal and vector from interaction point to impact point
           vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
-          vec_nnu_to_impactPoint = Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
+          vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
 
-          // now need to redfine the incidence plane using int.point-imp.point and imp.point-balloon vectors
+          // now need to redefine the incidence plane using int.point-imp.point and imp.point-balloon vectors
           vec_incplane_normal = vec_nnu_to_impactPoint.Cross( (const Vector)ray1->n_exit2bn[2] ).Unit();
           vec_incplane_grdtangent = vec_incplane_normal.Cross( (const Vector)vec_localnormal ).Unit();
           vec_incplane_perpgrd = vec_incplane_grdtangent.Cross( (const Vector)vec_incplane_normal ).Unit();
 
           // local angles of transmission and incidence IN PLANE OF INCIDENCE
           theta_local = vec_incplane_perpgrd.Angle( (const Vector)ray1->n_exit2bn[2] );               //[rad]
-          theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint);                              //[rad]
+          theta_0_local = vec_incplane_perpgrd.Angle(vec_nnu_to_impactPoint);                              //[rad]
+
+          // fix angles based on geometry and how angles defined in incidence plane
+          //if( ( vec_nnu_to_impactPoint.Dot((const Vector)ray1->n_exit2bn[2]) ) > 0 ){
+            // do nothing, intpoint-imp.point and imp.point-balloon are 'aligned'
+            //  so definitions are fine
+          //}
+          //else{
+            // do something, intpoint-imp.point and imp.point-balloon are 'opposite' 
+            //  so need correction to theta_local
+            //theta_0_local += -2.*theta_0_local;
+          //}
+
           theta_0_local_converted = rough1->ConvertTheta0AirGlass_to_GlassAir(theta_0_local*180./PI); //[deg]
+          std::cerr<< antarctica->GetSurfaceNormal(ray1->rfexit[2]).Angle(ray1->n_exit2bn[2])*180./PI<<"  "<< vec_localnormal.Angle(ray1->nrf_iceside[4])*180./PI<<std::endl;
+          std::cerr<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<<theta_0_local_converted<<std::endl;
 
           interpolatedPower = rough1->InterpolatePowerValue(theta_0_local_converted*180./PI, theta_local*180./PI);
-          std::cerr<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<<theta_0_local_converted<<std::endl;
 
           // Calculate the fresnel coefficient and magnification for this point
           //GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag)

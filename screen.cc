@@ -32,18 +32,14 @@ void Screen::SetCentralPoint(Position a){
 
 void Screen::SetNormal(Vector a){
   fnormal = a.Unit();
-  if( fabs(fnormal.GetX())>1.){
-    funit_x = Vector( -1.*(fnormal.GetY()/fnormal.GetX()), 1., 0. );
-    funit_x = funit_x.Unit();
-    funit_y = fnormal.Cross(funit_x);
-    funit_y = funit_y.Unit();
-  }
-  else{
-    funit_x = Vector( 1., -1.*(fnormal.GetX()/fnormal.GetY()), 0. );
-    funit_x = funit_x.Unit();
-    funit_y = fnormal.Cross(funit_x);
-    funit_y = funit_y.Unit();
-  }
+};
+
+void Screen::SetUnitX(Vector a){
+  funit_x = a;
+};
+
+void Screen::SetUnitY(Vector a){
+  funit_y = a;
 };
 
 double Screen::GetEdgeLength(){
@@ -84,10 +80,11 @@ Position Screen::GetNextPosition(){
 
   pos = fcentralPoint                                       // base
         - (fedgeLength/2.)*(funit_x + funit_y)              // shift to a corner
-        + (xindex/((float)fNsamples))*fedgeLength*funit_x   // move by x-increment
-        + (yindex/((float)fNsamples))*fedgeLength*funit_y;  // move by y-increment
+        + (xindex/((float)(fNsamples-1)))*fedgeLength*funit_x   // move by x-increment
+        + (yindex/((float)(fNsamples-1)))*fedgeLength*funit_y;  // move by y-increment
 
   fpositionindex++;
+  //std::cerr<<fpositionindex<<"  "<<yindex<<"  "<<xindex<<std::endl;
   return pos;
 };
 

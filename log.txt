@@ -779,3 +779,6 @@ fixed wrong position in WhereDoesItEnterIce(). saving syncs with trunk.
 
 06/10/2016 21.56 PM ET M. Sutherland   [in branches/roughness]
 saving some incidence plane calculations
+
+06/13/2016 16.10 PM ET M. Sutherland   [in branches/roughness]
+Removed GetTransmission(). Fixing pos_current and pos_projectedImpactPoint confusion. Created plane-of-incidence vectors and calculating angles using those. Added Screen::SetUnitX/Y() plane vectors instead of setting them in SetNormal().

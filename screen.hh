@@ -29,6 +29,10 @@ public:
 
   void SetNormal(Vector a);
 
+  void SetUnitX(Vector a);
+
+  void SetUnitY(Vector a);
+
   double GetEdgeLength();
   
   Position GetCentralPoint();
