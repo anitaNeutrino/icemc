@@ -785,3 +785,6 @@ Removed GetTransmission(). Fixing pos_current and pos_projectedImpactPoint confu
 
 06/14/2016 10.28 AM ET M. Sutherland   [in branches/roughness]
 icemc.cc seems to calculate plane of incidence angles correctly. Moving on Fresnel/Magnification factors and electric field vectors.
+
+06/14/2016 14.10 PM ET M. Sutherland   [in branches/roughness]
+Added vec_pos_current_to_balloon for more accurate vector from impact point to balloon (not just ray1->n_exit2bn[2]). Switched ConvertTheta0AirGlass_to_GlassAir() to ConvertTheta0GlassAir_to_AirGlass(). Added interpolatedPower>0 check. Removed *180./PI in GetFresnelCorrectionFactor() and GetLossCorrectionFactor() arguments in icemc.cc. Changed fSCREEN_NUMPOINTS_EDGE in icemc.cc so it is set by settings1->ROUGHSIZE from the input file.

@@ -659,7 +659,7 @@ int main(int argc,  char **argv) {
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
   
   Roughness *rough1=new Roughness(settings1->ROUGHSIZE); // create new instance of the roughness class
-  int fSCREEN_NUMPOINTS_EDGE = 3;
+  int fSCREEN_NUMPOINTS_EDGE = settings1->ROUGHSIZE;
   Screen *panel1 = new Screen(fSCREEN_NUMPOINTS_EDGE);              // create new instance of the screen class
 
   // roughness testing
@@ -2529,9 +2529,10 @@ int main(int argc,  char **argv) {
 
         //IMPORTANT NOTE: WE ARE IGNORING THE FIRN UNTIL FURTHER NOTICE FOR SIMPLICITY
 
-        double Erunningtotal=0;
+        int N_goodscreenpoints=0;
         Position pos_current;
         Vector pos_current_localnormal; // local normal at point on ground below screen current point
+        Vector vec_pos_current_to_balloon;
 
         Position pos_projectedImpactPoint;
         Vector vec_localnormal;         //normalized
@@ -2542,6 +2543,7 @@ int main(int argc,  char **argv) {
         double theta_local;             //angle between local surface normal and vector to balloon [radians]
         double theta_0_local;                 //angle between 'inverted' local surface normal and incident direction [radians]
         double theta_0_local_converted;       //theta_0_local converted using measurement angle conversion (air-glass -> glass-air) for spline look-up [radians]
+        double glass_air_criticalangle = 42.; // [deg], critical angle for light incident on air from glass, represents a limit for the measurement interpolations (see ELOG 077)
 
         double interpolatedPower;       // \muW for these angles
         double temp_efield;
@@ -2551,6 +2553,7 @@ int main(int argc,  char **argv) {
         Vector npol_local;
         Vector Efield_local;
         Vector Efield_screentotal = Vector(0,0,0);
+        double Erunningtotal=0;
 
 
         //iterate points on the screen, get their position and project back to find ground impact
@@ -2578,6 +2581,7 @@ int main(int argc,  char **argv) {
           //std::cerr<<ii<<std::endl;
           pos_current = panel1->GetNextPosition();        // this gets the new screen position
           pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
+          vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_current[0], bn1->r_bn[1] - pos_current[1], bn1->r_bn[2] - pos_current[2] );
 
           //Determine ground impact position where the projected ray enters the ice
           // reject if it enters beyond the borders of the continent.
@@ -2598,30 +2602,42 @@ int main(int argc,  char **argv) {
           vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
 
           // now need to redefine the incidence plane using int.point-imp.point and imp.point-balloon vectors
-          vec_incplane_normal = vec_nnu_to_impactPoint.Cross( (const Vector)ray1->n_exit2bn[2] ).Unit();
+          vec_incplane_normal = vec_nnu_to_impactPoint.Cross( (const Vector)vec_pos_current_to_balloon ).Unit();
           vec_incplane_grdtangent = vec_incplane_normal.Cross( (const Vector)vec_localnormal ).Unit();
           vec_incplane_perpgrd = vec_incplane_grdtangent.Cross( (const Vector)vec_incplane_normal ).Unit();
 
           // local angles of transmission and incidence IN PLANE OF INCIDENCE
-          theta_local = vec_incplane_perpgrd.Angle( (const Vector)ray1->n_exit2bn[2] );               //[rad]
+          theta_local = vec_incplane_perpgrd.Angle( (const Vector)vec_pos_current_to_balloon );             //[rad]
+          theta_0_local = vec_incplane_perpgrd.Angle(vec_nnu_to_impactPoint);                               //[rad]
+          theta_0_local_converted = rough1->ConvertTheta0GlassAir_to_AirGlass(theta_0_local*180./PI);       //[deg]  <- !!!!
+
           // fix angles based on geometry and how angles defined in incidence plane
-          if( ( vec_nnu_to_impactPoint.Dot((const Vector)ray1->n_exit2bn[2]) ) < 0 ){
+          if( ( vec_nnu_to_impactPoint.Dot((const Vector)vec_pos_current_to_balloon) ) < 0 ){
             theta_local *= -1.;
           }
-          theta_0_local = vec_incplane_perpgrd.Angle(vec_nnu_to_impactPoint);                              //[rad]
-          theta_0_local_converted = rough1->ConvertTheta0AirGlass_to_GlassAir(theta_0_local*180./PI); //[deg]
+
           //std::cerr<< antarctica->GetSurfaceNormal(ray1->rfexit[2]).Angle(ray1->n_exit2bn[2])*180./PI<<"  "<< vec_localnormal.Angle(ray1->nrf_iceside[4])*180./PI<<std::endl;
           //std::cerr<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<<theta_0_local_converted<<std::endl;
+          if (theta_0_local*180./PI > glass_air_criticalangle){
+            //if the incident angle exceeds the critical angle for glass->air, there are no UCLA measurements
+            //std::cerr<<"Warning! Incident angle exceeds glass-air critical angle. Skipping this screen point."<<std::endl;
+            continue;
+          }
 
-          interpolatedPower = rough1->InterpolatePowerValue(theta_0_local_converted*180./PI, theta_local*180./PI);
+          N_goodscreenpoints++;
+          interpolatedPower = rough1->InterpolatePowerValue(theta_0_local_converted, theta_local*180./PI);
+          if(interpolatedPower<0){   // tk::spline routine likes to undershoot 0 when it extrapolates
+            interpolatedPower=0;
+          }
 
           // Calculate the fresnel coefficient and magnification for this point
           //GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag)
-          rough1->GetFresnel( (const Vector)vec_localnormal, ray1->rfexit[2], (const Vector)vec_nnu_to_impactPoint, npol_local, vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, fresnel_local, magnif_local);
+          rough1->GetFresnel( (const Vector)vec_localnormal, vec_pos_current_to_balloon, (const Vector)vec_nnu_to_impactPoint, npol_local, vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, fresnel_local, magnif_local);
 
-          // Calculate the electric field magnitude exiting the impact point accounting for 1)fresnel 2)magnification 3)power re-distribution from scattering 4)corrections to measurements
-          Emag_local = vmmhz1m_max * fresnel_local * magnif_local * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetFresnelCorrectionFactor(theta_0_local_converted*180./PI) / rough1->GetLossCorrectionFactor(theta_0_local_converted*180./PI));
-          //std::cerr<<fresnel_local<<"  "<<magnif_local<<"  "<<Emag_local<< std::endl;
+          // Calculate the electric field magnitude exiting the impact point accounting for local 1)fresnel 2)magnification 3)power re-distribution from scattering 4)corrections to measurements
+          Emag_local = vmmhz1m_max * fresnel_local * magnif_local * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetFresnelCorrectionFactor(theta_0_local_converted) / rough1->GetLossCorrectionFactor(theta_0_local_converted));
+          //std::cerr<<fresnel_local<<"  "<<magnif_local<<"  "<< interpolatedPower / rough1->GetLaserPower() <<"  "<<rough1->GetFresnelCorrectionFactor(theta_0_local_converted)<<"  "<<rough1->GetLossCorrectionFactor(theta_0_local_converted)<<std::endl;
+          //std::cerr<<Emag_local<<std::endl;
           // the field magnitude at the screen (and balloon) really depends on the vector sum of the 'local' field vectors added together
           // later should check phase angles ....
 
@@ -2640,6 +2656,8 @@ int main(int argc,  char **argv) {
       // could also set the resultant polarization too if needed
       vmmhz_max = Efield_screentotal.Mag();
 
+      //std::cerr<<"N_good screen / Total: "<<N_goodscreenpoints<<" / "<<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE<<std::endl;
+      std::cerr<<Efield_screentotal.Mag()<<std::endl;
       }//end else roughness
 
 
@@ -2745,7 +2763,6 @@ int main(int argc,  char **argv) {
       // keeps track of maximum voltage seen on either polarization of any antenna
       volts_rx_max=0;
       
-
 
 
 
