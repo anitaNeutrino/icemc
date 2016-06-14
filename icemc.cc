@@ -2559,7 +2559,7 @@ int main(int argc,  char **argv) {
 
         //reset the counter and set screen properties based on current geometry
         panel1->ResetPositionIndex();
-        panel1->SetEdgeLength( 1. );
+        panel1->SetEdgeLength( 1000. );
         panel1->SetCentralPoint( ray1->rfexit[2] + 0.8*bn1->r_bn.Distance(ray1->rfexit[2])*ray1->n_exit2bn[2].Unit() ); //move towards balloon by 80% of distance to balloon
         panel1->SetNormal( ray1->n_exit2bn[2].Unit() );
 
@@ -2568,15 +2568,14 @@ int main(int argc,  char **argv) {
         panel1->SetUnitX( ray1->n_exit2bn[2].Cross(pos_current_localnormal).Unit() );
         panel1->SetUnitY( -1.*ray1->n_exit2bn[2].Cross(ray1->n_exit2bn[2].Cross(pos_current_localnormal).Unit()) );
 
-        std::cerr<<"bln: "<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
-        std::cerr<<"int.point: "<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
-        std::cerr<<interaction1->posnu[0]<<"  "<<interaction1->posnu[1]<<"  "<<interaction1->posnu[2]<<std::endl;
-        std::cerr<<"RFexit: "<<ray1->rfexit[2].Lon()<<"  "<<-90+ray1->rfexit[2].Lat()<<std::endl;
-        std::cerr<<"screen: "<<panel1->GetCentralPoint().Lon()<<"  "<<-90+panel1->GetCentralPoint().Lat()<<std::endl;
+        //std::cerr<<"bln: "<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
+        //std::cerr<<"int.point: "<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
+        //std::cerr<<"RFexit: "<<ray1->rfexit[2].Lon()<<"  "<<-90+ray1->rfexit[2].Lat()<<std::endl;
+        //std::cerr<<"screen: "<<panel1->GetCentralPoint().Lon()<<"  "<<-90+panel1->GetCentralPoint().Lat()<<std::endl;
 
         // now loop over screen points
         for (int ii=0; ii<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE; ii++){
-          std::cerr<<ii<<std::endl;
+          //std::cerr<<ii<<std::endl;
           pos_current = panel1->GetNextPosition();        // this gets the new screen position
           pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
 
@@ -2592,7 +2591,7 @@ int main(int argc,  char **argv) {
             }// end outside antarctica
           }// end wheredoesitenterice
 
-          std::cerr<<"+ "<<pos_projectedImpactPoint.Lon()<<"  "<<-90+pos_projectedImpactPoint.Lat()<<std::endl;
+          //std::cerr<<"+ "<<pos_projectedImpactPoint.Lon()<<"  "<<-90+pos_projectedImpactPoint.Lat()<<std::endl;
 
           // get local surface normal and vector from interaction point to impact point
           vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
@@ -2605,22 +2604,14 @@ int main(int argc,  char **argv) {
 
           // local angles of transmission and incidence IN PLANE OF INCIDENCE
           theta_local = vec_incplane_perpgrd.Angle( (const Vector)ray1->n_exit2bn[2] );               //[rad]
-          theta_0_local = vec_incplane_perpgrd.Angle(vec_nnu_to_impactPoint);                              //[rad]
-
           // fix angles based on geometry and how angles defined in incidence plane
-          //if( ( vec_nnu_to_impactPoint.Dot((const Vector)ray1->n_exit2bn[2]) ) > 0 ){
-            // do nothing, intpoint-imp.point and imp.point-balloon are 'aligned'
-            //  so definitions are fine
-          //}
-          //else{
-            // do something, intpoint-imp.point and imp.point-balloon are 'opposite' 
-            //  so need correction to theta_local
-            //theta_0_local += -2.*theta_0_local;
-          //}
-
+          if( ( vec_nnu_to_impactPoint.Dot((const Vector)ray1->n_exit2bn[2]) ) < 0 ){
+            theta_local *= -1.;
+          }
+          theta_0_local = vec_incplane_perpgrd.Angle(vec_nnu_to_impactPoint);                              //[rad]
           theta_0_local_converted = rough1->ConvertTheta0AirGlass_to_GlassAir(theta_0_local*180./PI); //[deg]
-          std::cerr<< antarctica->GetSurfaceNormal(ray1->rfexit[2]).Angle(ray1->n_exit2bn[2])*180./PI<<"  "<< vec_localnormal.Angle(ray1->nrf_iceside[4])*180./PI<<std::endl;
-          std::cerr<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<<theta_0_local_converted<<std::endl;
+          //std::cerr<< antarctica->GetSurfaceNormal(ray1->rfexit[2]).Angle(ray1->n_exit2bn[2])*180./PI<<"  "<< vec_localnormal.Angle(ray1->nrf_iceside[4])*180./PI<<std::endl;
+          //std::cerr<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<<theta_0_local_converted<<std::endl;
 
           interpolatedPower = rough1->InterpolatePowerValue(theta_0_local_converted*180./PI, theta_local*180./PI);
 
@@ -2630,7 +2621,7 @@ int main(int argc,  char **argv) {
 
           // Calculate the electric field magnitude exiting the impact point accounting for 1)fresnel 2)magnification 3)power re-distribution from scattering 4)corrections to measurements
           Emag_local = vmmhz1m_max * fresnel_local * magnif_local * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetFresnelCorrectionFactor(theta_0_local_converted*180./PI) / rough1->GetLossCorrectionFactor(theta_0_local_converted*180./PI));
-          std::cerr<<fresnel_local<<"  "<<magnif_local<<"  "<<Emag_local<< std::endl;
+          //std::cerr<<fresnel_local<<"  "<<magnif_local<<"  "<<Emag_local<< std::endl;
           // the field magnitude at the screen (and balloon) really depends on the vector sum of the 'local' field vectors added together
           // later should check phase angles ....
 

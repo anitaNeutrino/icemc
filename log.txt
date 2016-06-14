@@ -782,3 +782,6 @@ saving some incidence plane calculations
 
 06/13/2016 16.10 PM ET M. Sutherland   [in branches/roughness]
 Removed GetTransmission(). Fixing pos_current and pos_projectedImpactPoint confusion. Created plane-of-incidence vectors and calculating angles using those. Added Screen::SetUnitX/Y() plane vectors instead of setting them in SetNormal().
+
+06/14/2016 10.28 AM ET M. Sutherland   [in branches/roughness]
+icemc.cc seems to calculate plane of incidence angles correctly. Moving on Fresnel/Magnification factors and electric field vectors.
