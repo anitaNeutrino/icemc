@@ -746,3 +746,6 @@ First commit of time-dependent thresholds.
 
 06/15/2016 02:10 PM BST L. Cremonesi
 Correct the implementation of the time-dependent thresholds.
+
+06/15/2016 06.20 PM BST L. Cremonesi
+Commented out variables and pointers that were not used or filled (probably residuals of all code that is not there any more). This reduces the amount of memory and buffering time used.

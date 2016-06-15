@@ -102,12 +102,11 @@ private:
     static const unsigned NFOUR = 1024;
     static const unsigned HALFNFOUR = 512;
     
-    // these are from Ryan's threshold scans
-    int threshold[NSURFPLUSONE][NCHANNELS][NPOINTS];
-    int rate[NSURFMINUSONE][NCHANNELS][NPOINTS];
-    
-    int minadcthresh[NSURFMINUSONE][NCHANNELS];
-    int maxadcthresh[NSURFMINUSONE][NCHANNELS];
+    // // these are from Ryan's threshold scans
+    // int threshold[NSURFPLUSONE][NCHANNELS][NPOINTS];
+    // int rate[NSURFMINUSONE][NCHANNELS][NPOINTS];    
+    // int minadcthresh[NSURFMINUSONE][NCHANNELS];
+    // int maxadcthresh[NSURFMINUSONE][NCHANNELS];
     
     
     //int Getiangle(double viewangle);

@@ -93,7 +93,7 @@ class Position;
 // They were all global variables inside of shared.hh.
 // Most of these should not be global variables.
 const int NVIEWANGLE=100; // number of viewing angles to look at the signal,  on Seckel's request
-int irays; // counts rays (for roughness)
+// int irays; // counts rays (for roughness) // LC: commented out because not used
 int inu; // counts neutrinos as they are generated
 
 double eventsfound_beforetrigger=0.;
@@ -111,7 +111,6 @@ const int NBINS=10; // keep track of the number of events found,  binned
 double MIN_LOGWEIGHT=-3;
 double MAX_LOGWEIGHT=-1;
 int index_weights=0; // which bin the weight falls into
-double logweight2=0;
 double eventsfound_binned[NBINS];
 double eventsfound_binned_e[NBINS];
 double eventsfound_binned_mu[NBINS];
@@ -130,10 +129,9 @@ double error_mu_minus=0;
 double error_tau_minus=0;
 int ierr=0; // integer for returning error from functions.
 //double posnu[3]; // direction from center of earth to interaction
-double posnu_down[3]; //downward posnu.wufan
+//double posnu_down[3]; //downward posnu.wufan
 double gain_dipole=2.15;  // antenna gain (nominal value for dipole is 2.15)
 double changle_deg=0; // same,  in degrees.
-double NMEDIUM_INTERACTION; // index of refraction at interaction
 // inputs
 int NNU;        // number of neutrinos
 int whichray=0; // indexes the rays that we look at (actually just used for ice but we use it in GetNuFlavor so keep it here)
@@ -157,13 +155,6 @@ double gps_offset=0;
 //double pnu=pow(10., EXPONENT);   // energy of neutrinos
 double pnu=pow(10., 20);   // energy of neutrinos
 
-
-//int ANTtrig; // number of channels on an antenna that
-//need to pass for antenna to fire at L1.
-//int antennanumber; //number of L1 hits to pass L2 trigger
-
-
-
 // for roughness studies
 double trans_angle[9][1000];
 double transmission[9][1000];
@@ -171,91 +162,71 @@ double minangle_roughness[9];
 double maxangle_roughness[9];
 int npoints_roughness[9];
 int max_angles_backplane;
-double MAXMEASUREDANGLE=75.;
+//double MAXMEASUREDANGLE=75.;
 
-
-Vector specular_vector; // the specular angle (the direction the signal would be transmitted if it purely obeyed Snell's law
-Vector reference_vector; // direction that theta_trans_par and theta_trans_perp are measured with respect to.
-Vector aimthescreen_vector; // direction to aim the screen
+//Vector specular_vector; // the specular angle (the direction the signal would be transmitted if it purely obeyed Snell's law
+//Vector reference_vector; // direction that theta_trans_par and theta_trans_perp are measured with respect to.
+//Vector aimthescreen_vector; // direction to aim the screen
 void GetSmearedIncidentAngle(Vector &specular,  Vector &nrf_iceside,  Vector &n_exit2bn,  double SMEARINCIDENTANGLE);//,  double theta_inc_smeared); // Smear the incident angle for roughness studies
-double SMEARINCIDENTANGLE=40.*RADDEG; // how much to smear the incident angle by
+//double SMEARINCIDENTANGLE=40.*RADDEG; // how much to smear the incident angle by
 // double theta_inc_smeared;// smeared angle of incidence
 const int NRAYS=40000;  // number of rays around the specular that we sum to get the signal at the balloon
 int nrays=NRAYS;// for tree
 
 
-Vector diffx_on_screen_vector; // dx on the screen.  set to be the same as plusx
+//Vector diffx_on_screen_vector; // dx on the screen.  set to be the same as plusx
 // the screen is a section of the solid angle surrounding the balloon
 // the specular ray goes through the center of the screen
-Vector diffy_on_screen_vector; // dz on the screen.
-double posx_on_screen, posy_on_screen, posz_on_screen;  // for writing into trees
-double coordx_on_screen, coordy_on_screen, coordz_on_screen; // coordinate on the screen (from -sqrt(nrays) to sqrt(nrays) in each dimension.
+//Vector diffy_on_screen_vector; // dz on the screen.
+//double posx_on_screen, posy_on_screen, posz_on_screen;  // for writing into trees
+// double coordx_on_screen, coordy_on_screen, coordz_on_screen; // coordinate on the screen (from -sqrt(nrays) to sqrt(nrays) in each dimension.
 // coordz_on_screen should always be zero.
-double theta_inc_eachray[NRAYS];
-double distance_eachray[NRAYS]; // distance traveled by ray from interaction to exit point to screen
-double time_eachray[NRAYS]; // time is takes for each ray to travel from the interaction to exit point to balloon,  in nanoseconds
-double time_eachray_fortree;
-double time_specular; // time it takes the specular ray to travel from the interaction to exit point to balloon,  in nanoseconds.
-double myfunction_eachray[NRAYS];
-double myfunction_fortree;
-double theta_inc_specular, theta_trans_specular;
-double theta_trans_eachray[NRAYS];
-double distance_fortree;
-double theta_rfexit, theta_specular, theta_perptoplane, theta_iceside;
-double duh;
-double theta_fromtir;
+// double theta_inc_eachray[NRAYS];
+// double distance_eachray[NRAYS]; // distance traveled by ray from interaction to exit point to screen
+// double time_eachray[NRAYS]; // time is takes for each ray to travel from the interaction to exit point to balloon,  in nanoseconds
+// double time_eachray_fortree;
+// double time_specular; // time it takes the specular ray to travel from the interaction to exit point to balloon,  in nanoseconds.
+// double myfunction_eachray[NRAYS];
+// double myfunction_fortree;
+// double theta_inc_specular, theta_trans_specular;
+// double theta_trans_eachray[NRAYS];
+// double distance_fortree;
+// double theta_rfexit, theta_specular, theta_perptoplane, theta_iceside;
+// double theta_fromtir;
 
-
-Vector vector_temp; // a temporary vector for calculating angles
-Vector plusz=Vector(0., 0., 1.);// points in the +z direction
-Vector plusy=Vector(0., 1., 0.); // +y
-double phi_temp; // temporary phi
-Vector position_on_screen_vector[NRAYS]; // this vector is used to make rotations
-Vector coord_on_screen_vector[NRAYS]; // coordinates of the ray on the screen
-Vector rotation_axis_vector1[NRAYS];
-Vector rotation_axis_vector2[NRAYS];
+// Vector plusz=Vector(0., 0., 1.);// points in the +z
+// Vector plusy=Vector(0., 1., 0.); // +y
+// Vector position_on_screen_vector[NRAYS]; // this vector is used to make rotations
+// Vector coord_on_screen_vector[NRAYS]; // coordinates of the ray on the screen
 const double SCREENSIZE=100000.0; // size of the screen on an edge,  in meters
 double screensize_fortree=SCREENSIZE;// for tree
 // we consider a square screen (no that areas are easy)
 void GetScreenXY(int nrays,  double screensize,  Vector plusx_onscreen,  Vector plusy_onscreen,  Vector *position_on_screen,  int& nx, Vector *coord_on_screen_vector);
 //void GetScreenXY(int nrays, double screensize, Vector *position_on_screen,  int& nx);
 int nx; // number of rays in x direction
-double rtemp, Rtemp;
-double theta_temp, sign_temp;
-double sintheta1, costheta1, sintheta2, costheta2, theta2; // angles that we need for geometry calculations
-Vector n_exit2bn_eachray[NRAYS]; // direction from exit point to balloon for each ray
-Vector rfexit_eachray[NRAYS]; // position of ray's exit point.
-double diffx_rfexit, diffy_rfexit, diffz_rfexit; // for writing into trees
-double theta_trans_perp_fortree, theta_trans_par_fortree;
-double dtheta_trans_perp_fortree, dtheta_trans_par_fortree;
-double min_position=-SCREENSIZE/2.;
-double viewangle_eachray[NRAYS]; // view angle for each ray
-double viewangle_fortree;
+// double theta_temp, sign_temp;
+// double sintheta1, costheta1, sintheta2, costheta2, theta2; // angles that we need for geometry calculations
+//Vector n_exit2bn_eachray[NRAYS]; // direction from exit point to balloon for each ray
+//Vector rfexit_eachray[NRAYS]; // position of ray's exit point.
+// double diffx_rfexit, diffy_rfexit, diffz_rfexit; // for writing into trees
+// double theta_trans_perp_fortree, theta_trans_par_fortree;
+// double dtheta_trans_perp_fortree, dtheta_trans_par_fortree;
+// double min_position=-SCREENSIZE/2.;
+// double viewangle_eachray[NRAYS]; // view angle for each ray
+// double viewangle_fortree;
 
-double theta_inc_fortree, theta_trans_fortree;
+// double theta_inc_fortree, theta_trans_fortree;
 
-Vector nrf_iceside_eachray[NRAYS]; // ice side ray (for now,  just line from interaction to exit point)
-Vector component_perp_eachray[NRAYS]; // component of each ray perp to specular plane
-Vector component_par_eachray[NRAYS]; // component of each ray perp to specular plane
-Vector perp_to_plane_thisray; // unit vector that points perp to specular plane
-Vector perp_to_plane_specular; // unit vector perp to bending plane for specular ray (center of screen)
-Vector plusx_onscreen; // direction of +x on the screen,  in coordinates where z is up
-Vector plusy_onscreen; // direction of +z on the screen
-Vector temp_vector; // is equal to perp_to_plane when incident ray is pointed towards the balloon
-Vector perp_to_nrf_iceside_specular_in_plane; // unit vector that points perp to specular ray in specular plane
-Vector component_perp_to_nrf_iceside_specular_in_plane;// component of ray along the previous vector
-double theta_trans_perp[NRAYS]; // angle away from specular plane
-double theta_trans_par[NRAYS]; // angle from specular ray in specular plane
-double cosine_temp; // temporary variable to avoid nan's
-double dtheta_trans_perp[NRAYS]; // differential angle away from specular plane
-double dtheta_trans_par[NRAYS]; // differential angle from specular ray in specular plane
-double contribution_eachray[NRAYS]; // E^2 for each ray
-double sumcontribution=0;
+// Vector plusx_onscreen; // direction of +x on the screen,  in coordinates where z is up
+// Vector plusy_onscreen; // direction of +z on the screen
+// double theta_trans_perp[NRAYS]; // angle away from specular plane
+// double theta_trans_par[NRAYS]; // angle from specular ray in specular plane
+// double dtheta_trans_perp[NRAYS]; // differential angle away from specular plane
+// double dtheta_trans_par[NRAYS]; // differential angle from specular ray in specular plane
 double roughnessfactor=0;
-double contribution_total; // total
-double normalization; // normalization of transmission curve
-double contribution_max; // if you read all of the emitted power,  approx
-double contribution_fortree; // for the tree
+// double normalization; // normalization of transmission curve
+// double contribution_max; // if you read all of the emitted power,  approx
+// double contribution_fortree; // for the tree
 double myfunction(double theta_trans_perp,  double theta_trans_par,  double& norm); // function that describes the transmission vs angle,  from fits to mark and martin's measurements.
 double integratemyfunction(double theta_perp,  double theta_par);
 double integralmyfunction;
@@ -264,38 +235,30 @@ double SIGMA_NEGX=0.1;
 double SIGMA_POSY=0.1;
 double SIGMA_NEGY=0.1;
 
-
-
 double MEANX=0;
 double MEANY=0.;
 
-double SIGNALRADIUS=2.; // in degrees
-double relativetaper_eachray[NRAYS]; // taper relative to specular for each ray
-double relativetaper_fortree;
-double relativetaper_specular;
+// double relativetaper_fortree;
+// double relativetaper_specular;
 
 // frequency binning
 
 const double FREQ_LOW_DISCONES=120.E6; // min frequency for discones
 const double FREQ_HIGH_DISCONES=1000.E6; // max frequency for discones
 
-double bwslice_volts_db_pol0[4]; // same,  for double bangs
-double bwslice_volts_db_pol1[4];
-
 double bwslice_vnoise_thislayer[4];// for filling tree6b,  noise for each bandwidth on each layer
-double powerthresh_thischannel=0.;// threshold in power for this channel
+// double powerthresh_thischannel=0.;// threshold in power for this channel
 
 //int passes_thischannel=0; // this channel passes
-int unmasked_thischannel=0; // this channel masked
+// int unmasked_thischannel=0; // this channel masked
 int passes_thisevent=0; // this event passes
 int unmasked_thisevent=0; // this event is unmasked
-double sum_thisslice=0;  // sum the V/m/MHz that arrive an antenna that eventually passes the trigger.
-int ibw_fortree=0; // which bandwidth slice
-int isurf, ichan;  // which surf and channel
-int lr=0; // left or right polarization
+// double sum_thisslice=0;  // sum the V/m/MHz that arrive an antenna that eventually passes the trigger.
+// int ibw_fortree=0; // which bandwidth slice
+// int lr=0; // left or right polarization
 
-int channels_passing_db[4][16][2][4] = {{{{0}}}}; // same for double bang taus
-TF1 *f[4][4]; // linear functions that parameterize variables that go into signal channel trigger effiencies that come from the time domain simulation
+// int channels_passing_db[4][16][2][4] = {{{{0}}}}; // same for double bang taus
+// TF1 *f[4][4]; // linear functions that parameterize variables that go into signal channel trigger effiencies that come from the time domain simulation
 
 int discones_passing;  // number of discones that pass
 int NDISCONES=8;
@@ -326,16 +289,16 @@ double e_comp_max3=0;
 double h_comp_max3=0;
 
 double diffexit=0;  // checking exit point between_MAX interations
-double diff_2tries=0; // more of the same
+// double diff_2tries=0; // more of the same
 double diff_3tries=0;
 double diffnorm=0;  // checking angle of surf normal between iterations
 double diffrefr=0;  // checking angle of refr between iterations
 double costheta_inc=0;  // cos angle of incidence wrt surface normal
-double costheta_refr=0; // cos angle of refraction wrt surface normal
+// double costheta_refr=0; // cos angle of refraction wrt surface normal
 double costheta_exit=0; // theta of exit point wrt earth (costheta=1 at south pole)
 double theta_rf_atbn; // polar angle of the signal as seen by perfect eyes at the balloon.
 double theta_rf_atbn_measured; //polar angle of the signal as measured at the balloon (just the above variable smeared by 0.5 degrees)
-double theta_inc=0; // angle of incidence of exiting ray (air side) wrt surface normal
+// double theta_inc=0; // angle of incidence of exiting ray (air side) wrt surface normal
 
 double costhetanu=-1000; // costheta of neutrino direction wrt earth (costheta=1 at south pole)
 
@@ -352,20 +315,13 @@ double pieceofkm2sr=0; // Use this for making plots comparing different cross se
 
 double CUTONWEIGHTS=1.E-10; // cut out events with small enough weight that they don't matter,  to save time
 
-int undetectable_counter=0;
-
-
 // roughness - will be commented later
-const int NTHETA_ROUGH=100; // bins in theta
+// const int NTHETA_ROUGH=100; // bins in theta
 
-double nrf_neighbors[10000];
-int maxarray[NTHETA_ROUGH];
-double SIGMA_HEIGHT=10.;
-double FEATURE_LENGTH=100.;
-double NEIGHBORS_RADIUS=1000.;
-
-
-
+// int maxarray[NTHETA_ROUGH];
+// double SIGMA_HEIGHT=10.;
+// double FEATURE_LENGTH=100.;
+// double NEIGHBORS_RADIUS=1000.;
 
 
 // counting variables
@@ -379,9 +335,7 @@ int count_total=0; // number of neutrinos looped over.  should always equal inu
 
 // i.e.,  is theoretically visible by balloon
 
-
 int count_asktrigger=0;
-int count_asktrigger_db=0;
 int count_asktrigger_nfb=0;
 int count_pass=0;  // how many total trigger channels pass (4 bandwidth slices*2 pol * nrx)
 
@@ -431,11 +385,11 @@ int eventsfound_binned_distance_forerror[NBINS_DISTANCE][NBINS] = {{0}}; // for 
 //taus
 double km3sr_db = 0;
 double km3sr_nfb=0;
-double e_component_db=0;
-double h_component_db=0;
-double rflength_db=0;
+// double e_component_db=0;
+// double h_component_db=0;
+// double rflength_db=0;
 double ptau=0;
-int count_passestrigger_db=0;
+// int count_passestrigger_db=0;
 int count_passestrigger_nfb=0;
 double percent_increase_db=0;
 double percent_increase_nfb=0;
@@ -444,22 +398,17 @@ double error_nfb=0;
 double error_km3sr_nfb=0;
 double error_percent_increase_nfb=0;
 
-double costheta_inc_db=0;
-double costheta_refr_db=0;
-double costheta_exit_db=0;
-double diff_angle_db=0;
+// double costheta_inc_db=0;
+// double costheta_refr_db=0;
+// double costheta_exit_db=0;
+// double diff_angle_db=0;
 
 Vector n_exit2bn_db[5];
 Vector nrf_iceside_db[5];  // direction of rf [tries][3d]
 double n_exit_phi;  //phi angle of the ray from the surface to the balloon
-int count_nutaucc=0;
 int count_dbexitsice=0;
-int count_dboccurs=0;
-int count_dbinhorizon=0;
-int count_goodray_db=0;
 
-int count_firstbang=0;
-int count_interacts_in_earth=0;
+// int count_interacts_in_earth=0;
 double eventsfound_nfb_binned[NBINS]; // counting events without first bang
 
 // rf parameters
@@ -476,21 +425,18 @@ double MAX_ATTENLENGTH=1671;
 //double logscalefactor_taper=0; // scalefactor due to being off cerenkov cone
 double maxtaper=0; // this is just for plotting - maximum you are ever off cerenkov cone while
 //an event is detectable
-double maxtaper_db=0; //taus
 double dviewangle_deg=0; // same as taper,  just used for plotting
-double dviewangle_db_deg=0; //taus
 
-double downwardchord1=0.; // these variables are used in the iterative
-double downwardchord2=0.;// procedure that is used to find the neutrino
-double downwardchord3=0.;// entrance point
-double downwardchord4=0.;
-double diffdownwardchord1=0; // these variables are used to test how well
-double diffdownwardchord2=0;// the above iterative procedure converges.
-double diffdownwardchord3=0;
-double diffdiffdownwardchord1=0;// second derivative of convergance
-double diffdiffdownwardchord2=0;
+// double downwardchord1=0.; // these variables are used in the iterative
+// double downwardchord2=0.;// procedure that is used to find the neutrino
+// double downwardchord3=0.;// entrance point
+// double downwardchord4=0.;
+// double diffdownwardchord1=0; // these variables are used to test how well
+// double diffdownwardchord2=0;// the above iterative procedure converges.
+// double diffdownwardchord3=0;
+// double diffdiffdownwardchord1=0;// second derivative of convergance
+// double diffdiffdownwardchord2=0;
 double forseckel[NVIEWANGLE][Anita::NFREQ];// Per Seckel's request,  get strength of signal across frequencies for different viewing angles.
-double poyntingflux_1m=0.;
 double viewangles[NVIEWANGLE];
 //vector<Position> station; // the position of every station that can prevent a pulse from being called a neutrino event
 double GetAirDistance(double altitude_bn,  double beta); // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth
@@ -498,15 +444,7 @@ double GetAirDistance(double altitude_bn,  double beta); // given beta=angle wrt
 //Input files
 int err=0; // errors from GetDirection function
 
-
-
-
-//miscellaneous
-int ilon_tmp=0; //temporary variables for longitude and latitude indices
-int ilat_tmp=0; //
-
 double djunk; // junk variable
-
 
 //For verification plots - added by Stephen
 int max_antenna0 = -1;  //antenna with the peak voltage,  top layer
@@ -531,7 +469,6 @@ Vector ant_max_normal2; //Vector normal to the face of the antenna with the maxi
 double vmmhz1m_visible = 0; //Actual V/m/Mhz at 1m
 int freq_bins = Anita::NFREQ; //Because the compiler objected to using the const directly
 double total_kgm2 = 0; // output of Getchord
-double total_kgm2_fordebug = 0; // this one just for debugging
 double nnu_array[3];
 double r_in_array[3];
 double nsurf_rfexit_array[3];
@@ -539,7 +476,7 @@ double nsurf_rfexit_db_array[3];
 double r_bn_array[3];
 double n_bn_array[3];
 double posnu_array[3];
-double posnu2_array[3];
+// double posnu2_array[3];
 double nrf_iceside_array[5][3];
 double nrf_iceside_db_array[5][3];
 double ant_max_normal0_array[3];
@@ -551,8 +488,6 @@ double r_enterice_array[3];
 double n_exit2bn_db_array[5][3];
 double rfexit_array[5][3];
 double rfexit_db_array[5][3];
-
-int secondary_tries=0;
 
 int times_crust_entered_det=0;  //Counter for total times each Earth layer is entered for detected neutrinos only
 int times_mantle_entered_det=0;
@@ -815,7 +750,7 @@ int main(int argc,  char **argv) {
   Tools::Zero(anita1->LAYER_VPOSITION, Anita::NLAYERS_MAX);
   Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
   
-  Tools::Zero(maxarray, NTHETA_ROUGH);
+  // Tools::Zero(maxarray, NTHETA_ROUGH);
   
   //added djg ////////////////////////////////////////////////////////
   al_voltages_direct<<"antenna #"<<"   "<<"volts chan 1"<<"   "<<"volts chan 2"<<"    "<<"volts chan 3"<<"    "<<"volts chan 4"<<"    "<<"noise chan 1"<<"    "<<"noise chan 2"<<"    "<<"noise chan 3"<<"   "<<"noise chan 4"<<"  "<<"weight"<<endl;
@@ -944,7 +879,6 @@ int main(int argc,  char **argv) {
   
   double sigma = 0;                       // for cross section
   double len_int_kgm2=0;              // interaction length in kg/m^2
-  double km3sr;                       // to calculate km3sr
   double eventsfound_db=0; // same,  for double bang
   double eventsfound_nfb=0; // for taus
   
@@ -989,9 +923,9 @@ int main(int argc,  char **argv) {
   
   
   
-  Vector n_exit2bn_db[5]; // for double bangs
+  // Vector n_exit2bn_db[5]; // for double bangs
   Vector n_nutraject_ontheground; //direction of the neutrino from the person standing on the ground just below the balloon.
-  Vector nrf_iceside_db[5];  // direction of rf [tries][3d]
+  // Vector nrf_iceside_db[5];  // direction of rf [tries][3d]
   Vector n_pol; // direction of polarization
   Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
   Vector n_pol_db; // same,  double bangs
@@ -1113,7 +1047,7 @@ int main(int argc,  char **argv) {
   tree5->Branch("inu", &inu, "inu/I");
   tree5->Branch("nuexitlength", &nuexitlength, "nuexitlength/D");
   tree5->Branch("nuexitice",  &nuexitice,  "nuexitice");
-  tree5->Branch("diff_angle_db", &diff_angle_db, "diff_angle_db");
+  // tree5->Branch("diff_angle_db", &diff_angle_db, "diff_angle_db");
   tree5->Branch("vmmhz_max", &vmmhz_max, "vmmhz_max");
   tree5->Branch("maxtaper", &maxtaper, "maxtaper");
   tree5->Branch("inu", &inu, "inu/I");
@@ -1131,11 +1065,11 @@ int main(int argc,  char **argv) {
   tree5->Branch("weight1", &weight1, "weight1/D");
   tree5->Branch("nearthlayers", &nearthlayers, "nearthlayers/D");
   tree5->Branch("logchord", &logchord2, "interaction1->logchord/D");
-  tree5->Branch("diff_2tries", &diff_2tries, "diff_2tries/D");
+  // tree5->Branch("diff_2tries", &diff_2tries, "diff_2tries/D");
   tree5->Branch("diff_3tries", &diff_3tries, "diff_3tries/D");
   tree5->Branch("fresnel2", &fresnel2, "fresnel2/D");
   tree5->Branch("costheta_inc", &costheta_inc, "costheta_inc/D");
-  tree5->Branch("costheta_refr", &costheta_refr, "costheta_refr/D");
+  // tree5->Branch("costheta_refr", &costheta_refr, "costheta_refr/D");
   tree5->Branch("costheta_exit", &costheta_exit, "costheta_exit/D");
   tree5->Branch("deltheta_em", &deltheta_em[0], "deltheta_em/D");
   tree5->Branch("deltheta_had", &deltheta_had[0], "deltheta_had/F");
@@ -1234,7 +1168,7 @@ int main(int argc,  char **argv) {
   finaltree->Branch("weight", &weight, "weight/D");
   finaltree->Branch("logweight", &logweight, "logweight/D");
   finaltree->Branch("posnu", &posnu_array, "posnu_array[3]/D");
-  finaltree->Branch("posnu2", &posnu2_array, "posnu2_array[3]/D");
+  // finaltree->Branch("posnu2", &posnu2_array, "posnu2_array[3]/D");
   finaltree->Branch("costheta_nutraject", &costheta_nutraject2, "costheta_nutraject/D");
   finaltree->Branch("chord_kgm2_ice",  &chord_kgm2_ice2, "chord_kgm2_ice/D");
   finaltree->Branch("phi_nutraject", &phi_nutraject2, "phi_nutraject/D");
@@ -1369,12 +1303,12 @@ int main(int argc,  char **argv) {
   finaltree->Branch("core_entered", &core_entered, "core_entered/I");
   finaltree->Branch("n_pol", &n_pol_array, "n_pol_array[3]/D");
   finaltree->Branch("vmmhz_min_thatpasses", &vmmhz_min_thatpasses, "vmmhz_min_thatpasses/D");
-  finaltree->Branch("sum_thisslice", &sum_thisslice, "sum_thisslice/D");
+  // finaltree->Branch("sum_thisslice", &sum_thisslice, "sum_thisslice/D");
   //finaltree->Branch("nchannels_perband_triggered", &nchannels_perband_triggered, "nchannels_perband_triggered[40][8]/I");
   
   finaltree->Branch("pieceofkm2sr", &pieceofkm2sr, "pieceofkm2sr/D");
   //finaltree->Branch("volts_original", &volts_original, "volts_original[10][20][2]/D");
-  finaltree->Branch("theta_fromtir", &theta_fromtir, "theta_fromtir/D");
+  // finaltree->Branch("theta_fromtir", &theta_fromtir, "theta_fromtir/D");
   finaltree->Branch("r_exit2bn", &r_exit2bn2, "r_exit2bn/D");
   finaltree->Branch("r_exit2bn_measured", &r_exit2bn_measured2, "r_exit2bn_measured/D");
   finaltree->Branch("scalefactor_attenuation", &scalefactor_attenuation, "scalefactor_attenuation/D");
@@ -1449,16 +1383,16 @@ int main(int argc,  char **argv) {
   
   //End block added by Stephen
   
-  TTree *tree8 = new TTree("h8000", "h8000"); // tree8
-  tree8->Branch("downwardchord1", &downwardchord1, "downwardchord1/D");
-  tree8->Branch("downwardchord2", &downwardchord2, "downwardchord2/D");
-  tree8->Branch("downwardchord3", &downwardchord3, "downwardchord3/D");
-  tree8->Branch("downwardchord4", &downwardchord4, "downwardchord4/D");
-  tree8->Branch("diffdownwardchord1", &diffdownwardchord1, "diffdownwardchord1/D");
-  tree8->Branch("diffdownwardchord2", &diffdownwardchord2, "diffdownwardchord2/D");
-  tree8->Branch("diffdownwardchord3", &diffdownwardchord3, "diffdownwardchord3/D");
-  tree8->Branch("diffdiffdownwardchord1", &diffdiffdownwardchord1, "diffdiffdownwardchord1/D");
-  tree8->Branch("diffdiffdownwardchord2", &diffdiffdownwardchord2, "diffdiffdownwardchord2/D");
+  // TTree *tree8 = new TTree("h8000", "h8000"); // tree8
+  // tree8->Branch("downwardchord1", &downwardchord1, "downwardchord1/D");
+  // tree8->Branch("downwardchord2", &downwardchord2, "downwardchord2/D");
+  // tree8->Branch("downwardchord3", &downwardchord3, "downwardchord3/D");
+  // tree8->Branch("downwardchord4", &downwardchord4, "downwardchord4/D");
+  // tree8->Branch("diffdownwardchord1", &diffdownwardchord1, "diffdownwardchord1/D");
+  // tree8->Branch("diffdownwardchord2", &diffdownwardchord2, "diffdownwardchord2/D");
+  // tree8->Branch("diffdownwardchord3", &diffdownwardchord3, "diffdownwardchord3/D");
+  // tree8->Branch("diffdiffdownwardchord1", &diffdiffdownwardchord1, "diffdiffdownwardchord1/D");
+  // tree8->Branch("diffdiffdownwardchord2", &diffdiffdownwardchord2, "diffdiffdownwardchord2/D");
   
   //  // teachchannel - filled for each channel that is sent through the trigger
   //   TTree *teachchannel = new TTree("teachchannel", "teachchannel");
@@ -1497,7 +1431,7 @@ int main(int argc,  char **argv) {
   
   TTree *tree14 = new TTree("h14000", "h14000");
   tree14->Branch("ddistance_db", &ddistance_db, "ddistance_db/D");
-  tree14->Branch("diff_angle_db", &diff_angle_db, "diff_angle_db/D");
+  // tree14->Branch("diff_angle_db", &diff_angle_db, "diff_angle_db/D");
   
   TTree *tree15 = new TTree("h15000", "h15000"); // tree15
   tree15->Branch("loctrig00", &loctrig[0][0], "loctrig0/D");
@@ -1557,63 +1491,62 @@ int main(int argc,  char **argv) {
   tree20->Branch("emfrac", &emfrac, "emfrac/D");
   tree20->Branch("hadfrac", &hadfrac, "hadfrac/D");
   
-  TTree *raytree1=new TTree("raytree1", "raytree1");
-  raytree1->Branch("irays", &irays, "irays/I");
-  raytree1->Branch("inu", &inu, "inu/I");
-  raytree1->Branch("posx_on_screen", &posx_on_screen, "posx_on_screen/D");
-  raytree1->Branch("posy_on_screen", &posy_on_screen, "posy_on_screen/D");
-  raytree1->Branch("posz_on_screen", &posz_on_screen, "posz_on_screen/D");
-  raytree1->Branch("coordx_on_screen", &coordx_on_screen, "coordx_on_screen/D");
-  raytree1->Branch("coordy_on_screen", &coordy_on_screen, "coordy_on_screen/D");
-  raytree1->Branch("coordz_on_screen", &coordz_on_screen, "coordz_on_screen/D");
-  raytree1->Branch("theta_temp", &theta_temp, "theta_temp/D");
-  raytree1->Branch("sign_temp", &sign_temp, "sign_temp/D");
-  raytree1->Branch("costheta1", &costheta1, "costheta1/D");
-  raytree1->Branch("sintheta1", &sintheta1, "sintheta1/D");
-  raytree1->Branch("costheta2", &costheta2, "costheta2/D");
-  raytree1->Branch("theta2", &theta2, "theta2/D");
-  raytree1->Branch("diffx_rfexit", &diffx_rfexit, "diffx_rfexit/D");
-  raytree1->Branch("diffy_rfexit", &diffy_rfexit, "diffy_rfexit/D");
-  raytree1->Branch("diffz_rfexit", &diffz_rfexit, "diffz_rfexit/D");
-  raytree1->Branch("theta_fromtir", &theta_fromtir, "theta_fromtir/D");
+  // TTree *raytree1=new TTree("raytree1", "raytree1");
+  // raytree1->Branch("irays", &irays, "irays/I");
+  // raytree1->Branch("inu", &inu, "inu/I");
+  // raytree1->Branch("posx_on_screen", &posx_on_screen, "posx_on_screen/D");
+  // raytree1->Branch("posy_on_screen", &posy_on_screen, "posy_on_screen/D");
+  // raytree1->Branch("posz_on_screen", &posz_on_screen, "posz_on_screen/D");
+  // raytree1->Branch("coordx_on_screen", &coordx_on_screen, "coordx_on_screen/D");
+  // raytree1->Branch("coordy_on_screen", &coordy_on_screen, "coordy_on_screen/D");
+  // raytree1->Branch("coordz_on_screen", &coordz_on_screen, "coordz_on_screen/D");
+  // raytree1->Branch("theta_temp", &theta_temp, "theta_temp/D");
+  // raytree1->Branch("sign_temp", &sign_temp, "sign_temp/D");
+  // raytree1->Branch("costheta1", &costheta1, "costheta1/D");
+  // raytree1->Branch("sintheta1", &sintheta1, "sintheta1/D");
+  // raytree1->Branch("costheta2", &costheta2, "costheta2/D");
+  // raytree1->Branch("theta2", &theta2, "theta2/D");
+  // raytree1->Branch("diffx_rfexit", &diffx_rfexit, "diffx_rfexit/D");
+  // raytree1->Branch("diffy_rfexit", &diffy_rfexit, "diffy_rfexit/D");
+  // raytree1->Branch("diffz_rfexit", &diffz_rfexit, "diffz_rfexit/D");
+  // raytree1->Branch("theta_fromtir", &theta_fromtir, "theta_fromtir/D");
   //  raytree1->Branch("contribution_total", &contribution_total, "contribution_total/D");
-  raytree1->Branch("contribution_max", &contribution_max, "contribution_max/D");
-  raytree1->Branch("theta_inc", &theta_inc_fortree, "theta_inc/D");
-  raytree1->Branch("theta_inc_specular", &theta_inc_specular, "theta_inc_specular/D");
-  raytree1->Branch("theta_trans", &theta_trans_fortree, "theta_trans/D");
-  raytree1->Branch("theta_trans_specular", &theta_trans_specular, "theta_trans_specular/D");
-  raytree1->Branch("theta_rfexit", &theta_rfexit, "theta_rfexit/D");
-  raytree1->Branch("theta_specular", &theta_specular, "theta_specular/D");
-  raytree1->Branch("theta_perptoplane", &theta_perptoplane, "theta_perptoplane/D");
-  raytree1->Branch("theta_iceside", &theta_iceside, "theta_iceside/D");
+  // raytree1->Branch("contribution_max", &contribution_max, "contribution_max/D");
+  // raytree1->Branch("theta_inc", &theta_inc_fortree, "theta_inc/D");
+  // raytree1->Branch("theta_inc_specular", &theta_inc_specular, "theta_inc_specular/D");
+  // raytree1->Branch("theta_trans", &theta_trans_fortree, "theta_trans/D");
+  // raytree1->Branch("theta_trans_specular", &theta_trans_specular, "theta_trans_specular/D");
+  // raytree1->Branch("theta_rfexit", &theta_rfexit, "theta_rfexit/D");
+  // raytree1->Branch("theta_specular", &theta_specular, "theta_specular/D");
+  // raytree1->Branch("theta_perptoplane", &theta_perptoplane, "theta_perptoplane/D");
+  // raytree1->Branch("theta_iceside", &theta_iceside, "theta_iceside/D");
   
-  TTree *raytree2=new TTree("raytree2", "raytree2");
-  raytree2->Branch("posx_on_screen", &posx_on_screen, "posx_on_screen/D");
-  raytree2->Branch("posy_on_screen", &posy_on_screen, "posy_on_screen/D");
-  raytree2->Branch("posz_on_screen", &posz_on_screen, "posz_on_screen/D");
-  raytree2->Branch("coordx_on_screen", &coordx_on_screen, "coordx_on_screen/D");
-  raytree2->Branch("coordy_on_screen", &coordy_on_screen, "coordy_on_screen/D");
-  raytree2->Branch("coordz_on_screen", &coordz_on_screen, "coordz_on_screen/D");
-  raytree2->Branch("irays", &irays, "irays/I");
-  raytree2->Branch("inu", &inu, "inu/I");
-  raytree2->Branch("theta_inc", &theta_inc_fortree, "theta_inc/D");
-  raytree2->Branch("theta_trans_par", &theta_trans_par_fortree, "theta_trans_par/D");
-  raytree2->Branch("theta_trans_perp", &theta_trans_perp_fortree, "theta_trans_perp/D");
-  raytree2->Branch("dtheta_trans_par", &dtheta_trans_par_fortree, "dtheta_trans_par/D");
-  raytree2->Branch("dtheta_trans_perp", &dtheta_trans_perp_fortree, "dtheta_trans_perp/D");
-  raytree2->Branch("nrays", &nrays, "nrays/I");
-  raytree2->Branch("myfunction", &myfunction_fortree, "myfunction/D");
-  raytree2->Branch("distance", &distance_fortree, "distance/D");
-  raytree2->Branch("contribution", &contribution_fortree, "contribution/D");
-  raytree2->Branch("normalization", &normalization, "normalization/D");
-  raytree2->Branch("duh", &duh, "duh/D");
-  raytree2->Branch("screensize", &screensize_fortree, "screensize/D");
-  raytree2->Branch("relativetaper", &relativetaper_fortree, "relativetaper/D");
-  raytree2->Branch("relativetaper_specular", &relativetaper_specular, "relativetaper_specular/D");
-  raytree2->Branch("viewangle", &viewangle_fortree, "viewangle/D");
+  // TTree *raytree2=new TTree("raytree2", "raytree2");
+  // raytree2->Branch("posx_on_screen", &posx_on_screen, "posx_on_screen/D");
+  // raytree2->Branch("posy_on_screen", &posy_on_screen, "posy_on_screen/D");
+  // raytree2->Branch("posz_on_screen", &posz_on_screen, "posz_on_screen/D");
+  // raytree2->Branch("coordx_on_screen", &coordx_on_screen, "coordx_on_screen/D");
+  // raytree2->Branch("coordy_on_screen", &coordy_on_screen, "coordy_on_screen/D");
+  // raytree2->Branch("coordz_on_screen", &coordz_on_screen, "coordz_on_screen/D");
+  // raytree2->Branch("irays", &irays, "irays/I");
+  // raytree2->Branch("inu", &inu, "inu/I");
+  // raytree2->Branch("theta_inc", &theta_inc_fortree, "theta_inc/D");
+  // raytree2->Branch("theta_trans_par", &theta_trans_par_fortree, "theta_trans_par/D");
+  // raytree2->Branch("theta_trans_perp", &theta_trans_perp_fortree, "theta_trans_perp/D");
+  // raytree2->Branch("dtheta_trans_par", &dtheta_trans_par_fortree, "dtheta_trans_par/D");
+  // raytree2->Branch("dtheta_trans_perp", &dtheta_trans_perp_fortree, "dtheta_trans_perp/D");
+  // raytree2->Branch("nrays", &nrays, "nrays/I");
+  // raytree2->Branch("myfunction", &myfunction_fortree, "myfunction/D");
+  // raytree2->Branch("distance", &distance_fortree, "distance/D");
+  // raytree2->Branch("contribution", &contribution_fortree, "contribution/D");
+  // raytree2->Branch("normalization", &normalization, "normalization/D");
+  // raytree2->Branch("screensize", &screensize_fortree, "screensize/D");
+  // raytree2->Branch("relativetaper", &relativetaper_fortree, "relativetaper/D");
+  // raytree2->Branch("relativetaper_specular", &relativetaper_specular, "relativetaper_specular/D");
+  // raytree2->Branch("viewangle", &viewangle_fortree, "viewangle/D");
   //   raytree2->Branch("changle", &changle, "changle/D");
-  raytree2->Branch("time_specular", &time_specular, "time_specular/D");
-  raytree2->Branch("time_eachray", &time_eachray_fortree, "time_eachray/D");
+  // raytree2->Branch("time_specular", &time_specular, "time_specular/D");
+  // raytree2->Branch("time_eachray", &time_eachray_fortree, "time_eachray/D");
     
     
   TH1D *h1mybeta = new TH1D("betaforall", "betaforall(deg)", 180, -15, 15);
@@ -2461,8 +2394,8 @@ int main(int argc,  char **argv) {
       count_chanceofsurviving++;
       
       
-      if (tree8->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1 && bn1->WHICHPATH != 3)
-        tree8->Fill();
+      // if (tree8->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1 && bn1->WHICHPATH != 3)
+      //   tree8->Fill();
       
       // theta of nu entrance point,  in earth frame
       // and latitude
