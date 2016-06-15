@@ -169,5 +169,6 @@ public:
     double COHERENT_THRESHOLD;
     int APPLYIMPULSERESPONSE;       // apply impulse response
     int USETIMEDEPENDENTTHRESHOLDS; // use time-dependent thresholds
+    double SCREENEDGELENGTH;        // edge length of screen used if there is roughness
 };
 #endif

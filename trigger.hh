@@ -102,18 +102,17 @@ private:
     static const unsigned NFOUR = 1024;
     static const unsigned HALFNFOUR = 512;
     
-    // these are from Ryan's threshold scans
-    int threshold[NSURFPLUSONE][NCHANNELS][NPOINTS];
-    int rate[NSURFMINUSONE][NCHANNELS][NPOINTS];
-    
-    int minadcthresh[NSURFMINUSONE][NCHANNELS];
-    int maxadcthresh[NSURFMINUSONE][NCHANNELS];
+    // // these are from Ryan's threshold scans
+    // int threshold[NSURFPLUSONE][NCHANNELS][NPOINTS];
+    // int rate[NSURFMINUSONE][NCHANNELS][NPOINTS];    
+    // int minadcthresh[NSURFMINUSONE][NCHANNELS];
+    // int maxadcthresh[NSURFMINUSONE][NCHANNELS];
     
     
     //int Getiangle(double viewangle);
     
-    double ADCCountstoPowerThreshold(int threshadc,int isurf,int ichan);
-    
+  //    double ADCCountstoPowerThreshold(int threshadc,int isurf,int ichan);
+    double ADCCountstoPowerThreshold(Balloon *bn1, int ipol, int iant);
     double thisrate;// set when getFunction is called for each channel. this is in MHz
     double thispowerthresh;// set when getFunction is called for each channel
     

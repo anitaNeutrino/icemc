@@ -45,6 +45,7 @@ Settings::Settings() {
   SHOWERTYPE=0; // Type of shower for previous option
   // End of the once-global varibles.
   taumodes = 1; //Taumodes =1, taucreated in the rock.
+  SCREENEDGELENGTH=25.;
 }
 
 void Settings::Initialize() {
@@ -500,6 +501,10 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   ROUGHNESS=(int)atoi(number.c_str()); 
   Tools::GetNextNumberAsString(inputsfile,foutput,number);
   ROUGHSIZE=(int)atof(number.c_str()); 
+    // edge length of screen used if there is roughness
+  Tools::GetNextNumberAsString(inputsfile,foutput,number);
+  SCREENEDGELENGTH=(double)atof(number.c_str()); 
+  
   Tools::GetNextNumberAsString(inputsfile,foutput,number);
   FIRN=atoi(number.c_str()); 
   if (FIRN==0)
@@ -705,7 +710,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   std::cout << "Apply impulse response to digitizer path: " << APPLYIMPULSERESPONSE << std::endl;
 
   if ( APPLYIMPULSERESPONSE && WHICH!=8 && WHICH!=9) {
-    cout << "Signal chain impulse response is only available to anita-2 and anita-3.\n";
+    cout << "Signal chain impulse response is only available for anita-2 and anita-3.\n";
     exit(1);
   }
 
@@ -720,6 +725,5 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     exit(1);
   }
 
-  
   
 } //method ReadInputs

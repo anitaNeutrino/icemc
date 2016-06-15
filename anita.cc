@@ -2506,29 +2506,36 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
     
     //  Tools::InterpolateComplex(vsignal_e_forfft,NFOUR/4);
     //Tools::InterpolateComplex(vsignal_h_forfft,NFOUR/4);
-    for (int ifour=0;ifour<NFOUR/4;ifour++) {
-      
-      if (!PULSER) {
-	
-	vsignal_e_forfft[2*ifour]*=cos(phase*PI/180.);
-	vsignal_e_forfft[2*ifour+1]*=sin(phase*PI/180.);
-	
-	vsignal_h_forfft[2*ifour]*=cos(phase*PI/180.);
-	vsignal_h_forfft[2*ifour+1]*=sin(phase*PI/180.);
-	
-	
+    double cosphase=cos(phase*PI/180.);
+    double sinphase=sin(phase*PI/180.);
+    for (int ifour=0;ifour<NFOUR/4;ifour++) {      
+      if (PULSER) {
+	cosphase = cos(v_phases[ifour]*PI/180.);
+	sinphase = sin(v_phases[ifour]*PI/180.);
       }
-      else {
-	vsignal_e_forfft[2*ifour]*=cos(v_phases[ifour]*PI/180.);
-	vsignal_e_forfft[2*ifour+1]*=sin(v_phases[ifour]*PI/180.);
+      vsignal_e_forfft[2*ifour]*=cosphase;
+      vsignal_e_forfft[2*ifour+1]*=sinphase;
 	
-	vsignal_h_forfft[2*ifour]*=cos(v_phases[ifour]*PI/180.);
-	vsignal_h_forfft[2*ifour+1]*=sin(v_phases[ifour]*PI/180.);
-	
-      }
-		
-      
+      vsignal_h_forfft[2*ifour]*=cosphase;
+      vsignal_h_forfft[2*ifour+1]*=sinphase;	
     }
+
+    // for (int ifour=0;ifour<NFOUR/4;ifour++) {      
+    //   if (!PULSER) {
+    // 	vsignal_e_forfft[2*ifour]*=cos(phase*PI/180.);
+    // 	vsignal_e_forfft[2*ifour+1]*=sin(phase*PI/180.);
+	
+    // 	vsignal_h_forfft[2*ifour]*=cos(phase*PI/180.);
+    // 	vsignal_h_forfft[2*ifour+1]*=sin(phase*PI/180.);	
+    //   } else {
+    // 	vsignal_e_forfft[2*ifour]*=cos(v_phases[ifour]*PI/180.);
+    // 	vsignal_e_forfft[2*ifour+1]*=sin(v_phases[ifour]*PI/180.);
+	
+    // 	vsignal_h_forfft[2*ifour]*=cos(v_phases[ifour]*PI/180.);
+    // 	vsignal_h_forfft[2*ifour+1]*=sin(v_phases[ifour]*PI/180.);	
+    //   }
+    // }
+    
     
     
 }

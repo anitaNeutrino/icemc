@@ -9,6 +9,8 @@
 #include "vector.hh"
 #include "TF1.h"
 #include "TH1F.h"
+#include "TGraph.h"
+#include "TMath.h"
 
 #include "position.hh"
 #include "anita.hh"
@@ -274,10 +276,11 @@ void Balloon::InitializeBalloon() {
 		turfratechain->GetEvent(turfratechain->GetEntries()-1);
 		realTime_tr_max=realTime_turfrate; // realTime of last event in file
 
+		// Reading in average thresholds/scalers every 60 seconds
 		fsurf=new TFile("data/AvgSurf_icemc_anita3.root");
 		surfchain=(TTree*)fsurf->Get("surf_icemc");
 		surfchain->SetMakeClass(1);
-		// surfchain->SetBranchAddress("thresholds",   &thresholds   );
+		surfchain->SetBranchAddress("thresholds",   &thresholds   );
 		surfchain->SetBranchAddress("scalers",      &scalers      );
 		surfchain->SetBranchAddress("realTime",     &realTime_surf);
 		surfchain->BuildIndex("realTime");
@@ -285,7 +288,39 @@ void Balloon::InitializeBalloon() {
 		realTime_surf_min=realTime_surf; // realTime of first event in the file
 		surfchain->GetEvent(surfchain->GetEntries()-1);
 		realTime_surf_max=realTime_surf; // realTime of last event in file
-		
+
+
+		// Reading in last threshold scan before Anita-3 flight
+		// Run 11927
+		TFile *fthresh = new TFile ("data/threshScan_anita3.root");
+		TGraph *gtemp;
+		double *x, *y;
+		for (int ipol=0;ipol<2;ipol++){
+		  for (int iant=0;iant<48;iant++){
+		     gtemp = (TGraph*)fthresh->Get(Form("g_%i_%i", ipol, iant));
+		     x = gtemp->GetX();
+		     y = gtemp->GetY();
+		     for (int i=0;i<npointThresh;i++){
+		       threshScanThresh[ipol][iant][i] = (Int_t)x[i];
+		       threshScanScaler[ipol][iant][i] = (Int_t)y[i];
+		     }
+		     minadcthresh[ipol][iant]=TMath::MinElement(npointThresh, x);
+		     maxadcthresh[ipol][iant]=TMath::MaxElement(npointThresh, x);
+		  }
+		}
+		// This channel was turned off during the threshold scan
+		// We are then using the scan for a different channel
+		// that had very similar thresholds during the flight
+		for (int i=0;i<npointThresh;i++){
+		  threshScanThresh[0][35][i] = threshScanThresh[0][20][i];
+		  threshScanScaler[0][35][i] = threshScanScaler[0][20][i];
+		}
+		minadcthresh[0][35] = minadcthresh[0][20];
+		maxadcthresh[0][35] = maxadcthresh[0][20];
+
+		delete gtemp;
+		delete fthresh;
+
     }
     
     
@@ -448,7 +483,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		  else if (WHICHPATH==8){  // this is for Anita 3
 		    // get phi masking
 		    setphiTrigMaskAnita3();// set phiTrigMask, phiTrigMaskH, l1TrigMask and l1TrigMaskH and public variable of Balloon class
-		    if (settings1->USETIMEDEPENDENTTHRESHOLDS==1) setTimeDependentScalers();
+		    if (settings1->USETIMEDEPENDENTTHRESHOLDS==1) setTimeDependentThresholds();
 		  }
 		}
 		igps_previous=igps;
@@ -730,12 +765,12 @@ void Balloon::setphiTrigMaskAnita3() {
   
 }
 
-void Balloon::setTimeDependentScalers(){
+void Balloon::setTimeDependentThresholds(){
   
   if (realTime_flightdata<realTime_surf_min || realTime_flightdata>realTime_surf_max) {
     for(int ipol=0;ipol<2;ipol++){
       for (int iant=0;iant<48;iant++){
-	scalers[ipol][iant]=0.;
+	scalers[ipol][iant]=thresholds[ipol][iant]=0.;
       }
     }
   }
@@ -745,7 +780,7 @@ void Balloon::setTimeDependentScalers(){
     if (isurf<0){ // if it didn't find one
       for(int ipol=0;ipol<2;ipol++){
 	for (int iant=0;iant<48;iant++){
-	  scalers[ipol][iant]=0.;
+	  scalers[ipol][iant]=thresholds[ipol][iant]=0.;
 	}
       }
     }else{

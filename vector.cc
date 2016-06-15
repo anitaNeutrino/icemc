@@ -193,10 +193,12 @@ Vector Vector::RotateY(double angle) const {
 } //RotateY
 
 Vector Vector::RotateZ(double angle) const {
-	double new_x = cos(angle)*x - sin(angle)*y;
-	double new_y = sin(angle)*x + cos(angle)*y;
-	double new_z = z;
-	Vector rotated_vector(new_x,new_y,new_z);
+	// double new_x = cos(angle)*x - sin(angle)*y;
+	// double new_y = sin(angle)*x + cos(angle)*y;
+	// double new_z = z;
+        double cosangle = cos(angle);
+        double sinangle = sin(angle);
+   	Vector rotated_vector(cosangle*x - sinangle*y,sinangle*x + cosangle*y,z);
 	return rotated_vector;
 } //RotateZ
 

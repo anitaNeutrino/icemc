@@ -612,10 +612,10 @@ void Tools::get_random_rician(double signal_amplitude, double signal_phase, doub
 void Tools::get_circular_bivariate_normal_random_variable(double& rand_gauss_a, double& rand_gauss_b){
     double rand_uni_a = gRandom->Rndm(); //gRandom->Rndm() produces uniformly-distributed floating points in ]0,1]
     double rand_uni_b = gRandom->Rndm();
-    
+    double first_term = sqrt(-2. * log(rand_uni_a));
     // Box-Muller transform from a bivariate uniform distribution from 0 to 1 to a gaussian with mean = 0 and sigma = 1
-    rand_gauss_a = sqrt(-2. * log(rand_uni_a)) * cos(2. * M_PI * rand_uni_b);
-    rand_gauss_b = sqrt(-2. * log(rand_uni_a)) * sin(2. * M_PI * rand_uni_b);
+    rand_gauss_a = first_term * cos(2. * M_PI * rand_uni_b);
+    rand_gauss_b = first_term * sin(2. * M_PI * rand_uni_b);
     return;
 }
 

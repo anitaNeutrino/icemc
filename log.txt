@@ -788,3 +788,12 @@ icemc.cc seems to calculate plane of incidence angles correctly. Moving on Fresn
 
 06/14/2016 14.10 PM ET M. Sutherland   [in branches/roughness]
 Added vec_pos_current_to_balloon for more accurate vector from impact point to balloon (not just ray1->n_exit2bn[2]). Switched ConvertTheta0AirGlass_to_GlassAir() to ConvertTheta0GlassAir_to_AirGlass(). Added interpolatedPower>0 check. Removed *180./PI in GetFresnelCorrectionFactor() and GetLossCorrectionFactor() arguments in icemc.cc. Changed fSCREEN_NUMPOINTS_EDGE in icemc.cc so it is set by settings1->ROUGHSIZE from the input file.
+
+06/15/2016 02:10 PM BST L. Cremonesi
+Correct the implementation of the time-dependent thresholds.
+
+06/15/2016 06.20 PM BST L. Cremonesi
+Commented out variables and pointers that were not used or filled (probably residuals of all code that is not there any more). This reduces the amount of memory and buffering time used.
+
+06/15/2016 15.57 PM ET M. Sutherland   [in branches/roughness]
+fSCREEN_NUMPOINTS_EDGE uses settings1->ROUGHNESS, not ROUGHSIZE. Added SCREENEDGELENGTH in settings. synced some trunk changes over here (r600).
