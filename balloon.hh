@@ -16,7 +16,6 @@ class TChain;
 class TTree;
 class TFile;
 class TTreeIndex;
-//class UShort_t;
 class IceModel;
 class Anita;
 class Settings;
@@ -24,6 +23,7 @@ class TRandom3;
 class Interaction;
 class Ray;
 class TH1F;
+class TGraph;
 
 using std::string;
 using std::cout;
@@ -101,7 +101,7 @@ public:
   void setphiTrigMaskAnita3();  // this sets phiTrigMask
   void setr_bn(double latitude,double longitude);
 
-  void setTimeDependentScalers(); // read scalers from anita3 flight
+  void setTimeDependentThresholds(); // read thresholds and scalers from anita3 flight
 
 
 
@@ -140,11 +140,18 @@ public:
   unsigned int realTime_surf;     // realtime from the surf file
   unsigned int realTime_surf_min; // min realtime from the surf file
   unsigned int realTime_surf_max; // max realtime from the surf file
-  // UShort_t thresholds[2][48]; // thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
+  UShort_t thresholds[2][48]; // thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
   UShort_t scalers[2][48];    // scalers as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
   int iturf;// for indexing
   int isurf;
   int iturfevent;
+
+  static const int npointThresh = 1640;
+  Int_t threshScanThresh[2][48][npointThresh]; // adc thresholds from threshold scan
+  Int_t threshScanScaler[2][48][npointThresh]; // scalers from threshold scan 
+  Int_t minadcthresh[2][48];
+  Int_t maxadcthresh[2][48];
+  
   float flatitude,flongitude,faltitude,fheading,froll, fpitch;
   double latitude,longitude,altitude,heading,roll,pitch;
   double MINALTITUDE; // minimum altitude balloon needs to be before we consider it a good event to read from the flight data file

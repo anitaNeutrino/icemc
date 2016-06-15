@@ -708,7 +708,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   std::cout << "Apply impulse response to digitizer path: " << APPLYIMPULSERESPONSE << std::endl;
 
   if ( APPLYIMPULSERESPONSE && WHICH!=8 && WHICH!=9) {
-    cout << "Signal chain impulse response is only available to anita-2 and anita-3.\n";
+    cout << "Signal chain impulse response is only available for anita-2 and anita-3.\n";
     exit(1);
   }
 

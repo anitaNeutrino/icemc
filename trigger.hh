@@ -112,8 +112,8 @@ private:
     
     //int Getiangle(double viewangle);
     
-    double ADCCountstoPowerThreshold(int threshadc,int isurf,int ichan);
-    
+  //    double ADCCountstoPowerThreshold(int threshadc,int isurf,int ichan);
+    double ADCCountstoPowerThreshold(Balloon *bn1, int ipol, int iant);
     double thisrate;// set when getFunction is called for each channel. this is in MHz
     double thispowerthresh;// set when getFunction is called for each channel
     

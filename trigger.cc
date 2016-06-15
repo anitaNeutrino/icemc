@@ -206,8 +206,8 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
     else if (ilayer==1) iphi = ifold*2+1;
     // we invert VPOL and HPOL because in AnitaEventReader (0:HPOL 1:VPOL) and in icemc (0:VPOL 1:HPOL)
     // convert scalers to power thresholds using fitted function got from ANITA-1, are they too old?
-    thresholds[1][4] = rateToThreshold(bn1->scalers[0][iring*16+iphi]*0.001,3)*(-1.);
-    thresholds[0][4] = rateToThreshold(bn1->scalers[1][iring*16+iphi]*0.001,3)*(-1.);
+    thresholds[1][4] = ADCCountstoPowerThreshold(bn1,0,iring*16+iphi)*(-1.);
+    thresholds[0][4] = ADCCountstoPowerThreshold(bn1,1,iring*16+iphi)*(-1.);
     //    cout << thresholds[4] << " \n";
   } else {
     GetThresholds(settings1,anita1,ilayer,thresholds); // get the right thresholds for this layer
@@ -1235,53 +1235,56 @@ void AntTrigger::addToChannelSums(Settings *settings1,Anita *anita1,int ibw, int
  *	"this is a place holder for now, from reading off of various plots, pointed out below"
  *	
  */
-double AntTrigger::ADCCountstoPowerThreshold(int threshadc, int isurf,int ichan) {
+double AntTrigger::ADCCountstoPowerThreshold(Balloon *bn1, int ipol, int iant) {
+  //double AntTrigger::ADCCountstoPowerThreshold(int threshadc, int isurf,int ichan) {
   // first convert threshold in adc counts to the singles rate
-  // do this using Ryan's threshold scans from Elog #133
-  // these curves were read in the Trigger constructor
+  // do this using threshold scans taken before the flight
+  // For Anita-3 using run 11927
+  // these curves were read in the Balloon constructor
   // first check if the threshold in adc counts is in the allowable range
-  if (unwarned && (threshadc<minadcthresh[isurf][ichan] || threshadc>maxadcthresh[isurf][ichan]))
+  int threshadc = bn1->thresholds[ipol][iant];
+  if (unwarned && (threshadc<bn1->minadcthresh[ipol][iant] || threshadc>bn1->maxadcthresh[ipol][iant]))
     cout << "Warning! ADC threshold is outside range of measured threshold scans.";
-  if (threshadc<minadcthresh[isurf][ichan]) {
+  if (threshadc<bn1->minadcthresh[ipol][iant]) {
     if (unwarned) {
       cout << "It is below the minimum so set it to the minimum.  Will not be warned again.\n";
       unwarned=0;
     }
-    threshadc=minadcthresh[isurf][ichan];
+    threshadc=bn1->minadcthresh[ipol][iant];
   }
-  if (threshadc>maxadcthresh[isurf][ichan]) {
+  if (threshadc>bn1->maxadcthresh[ipol][iant]) {
     if (unwarned) {
       cout << "It is higher than the maximum so set it to the maximum.  Will not be warned again.\n";
       unwarned=0;
     }
-    threshadc=maxadcthresh[isurf][ichan];
+    threshadc=bn1->maxadcthresh[ipol][iant];
   }
     
     
   // Now find singles rate for this threshold
   // first sort thresholds
-  int index=TMath::BinarySearch(NPOINTS,threshold[isurf][ichan],threshadc);
+  // int index=TMath::BinarySearch(NPOINTS,threshold[isurf][ichan],threshadc);
+  int index=TMath::BinarySearch(bn1->npointThresh, bn1->threshScanThresh[ipol][iant], threshadc);
+
   //cout << "rate is " << rate[isurf][ichan][index] << "\n";
-  thisrate=(double)rate[isurf][ichan][index]; // these scalers are in kHz
-    
+  //  thisrate=(double)rate[isurf][ichan][index]; // these scalers are in kHz
+  thisrate=(double)bn1->threshScanScaler[ipol][iant][index]; // these scalers are in kHz
     
   // now find threshold for this scaler.  Here, scalers have to be in MHz.
   thisrate=thisrate/1.E3; // put it in MHz
   //cout << "thisrate is " << thisrate << "\n";
   // figure out what band we're talking about
-  int iband=Anita::SurfChanneltoBand(ichan);
+  // int iband=Anita::SurfChanneltoBand(ichan);
+  // FOR THE MOMENT JUST USING THE FULL BAND
+  int iband =3;
   thispowerthresh=rateToThreshold(thisrate,iband);
-  cout << "thisrate, iband, thispowerthresh are " << thisrate << " " << iband << " " << thispowerthresh << "\n";
+  //cout << "thisrate, iband, thispowerthresh are " << thisrate << " " << iband << " " << thispowerthresh << "\n";
   return thispowerthresh;
     
-    
   //  double powerthresh=-0.3*pow(10.,logsingles)/1.E6+5.091; // this has the right slope and intercept
-    
   //cout << "threshadc, powerthresh are " << threshadc << " " << powerthresh << "\n";
-    
   //return powerthresh;
-    
-  return 0;
+  // return 0;
 }
 
 

@@ -743,3 +743,6 @@ Clean up memory in applySignalChain function
 
 06/08/2016 03:40 PM BST L. Cremonesi
 First commit of time-dependent thresholds.
+
+06/15/2016 02:10 PM BST L. Cremonesi
+Correct the implementation of the time-dependent thresholds.

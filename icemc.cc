@@ -5395,9 +5395,9 @@ void applyImpulseResponse(int nPoints, int ant, double *x, double y[48][512], bo
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(graph2, 1/2.6);
   
-  Double_t *newy2 = surfSignalDown->GetY();
+  newy = surfSignalDown->GetY();
   for (int i=0;i<nPoints;i++){
-    y[ant][i]=newy2[i];
+    y[ant][i]=newy[i];
   }
 
   // Cleaning up
