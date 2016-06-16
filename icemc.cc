@@ -901,7 +901,7 @@ int main(int argc,  char **argv) {
   double taulength=0;  // distance tau travels in ice before decaying
   double icethickness=0; // for taus
   double theta_pol_measured; // theta of the polarization as measured at the payload (for now we don't correct for the 10 degree cant)
-  double ddistance_db; // for taus
+  // double ddistance_db; // for taus
   //double phi_db=0; // same,  for double bang
   //double theta_db=0; // same,  for double bangs
   
@@ -1033,13 +1033,13 @@ int main(int argc,  char **argv) {
   //tree3->Branch("current", &currentint, "currentint/I");
   //tree3->Branch("nuflavor", &nuflavorint, "nuflavorint/I");//was commented
   
-  TTree *tree4 = new TTree("h4000", "h4000"); // tree4 is signal is detectable
-  tree4->Branch("dnutries", &interaction1->dnutries, "dnutries/D");
-  tree4->Branch("dtryingdirection", &dtryingdirection2, "dtryingdirection/D");
-  tree4->Branch("bn1->dtryingposition", &bn1->dtryingposition, "bn1->dtryingposition/D");
-  tree4->Branch("horizcoord", &horizcoord, "horizcoord/D");
-  tree4->Branch("vertcoord", &vertcoord, "vertcoord/D");
-  //tree4->Branch("logscalefactor_taper", &logscalefactor_taper, "logscalefactor_taper/D");
+  // TTree *tree4 = new TTree("h4000", "h4000"); // tree4 is signal is detectable
+  // tree4->Branch("dnutries", &interaction1->dnutries, "dnutries/D");
+  // tree4->Branch("dtryingdirection", &dtryingdirection2, "dtryingdirection/D");
+  // tree4->Branch("bn1->dtryingposition", &bn1->dtryingposition, "bn1->dtryingposition/D");
+  // tree4->Branch("horizcoord", &horizcoord, "horizcoord/D");
+  // tree4->Branch("vertcoord", &vertcoord, "vertcoord/D");
+  // //tree4->Branch("logscalefactor_taper", &logscalefactor_taper, "logscalefactor_taper/D");
   
     
   TTree *tree5 = new TTree("h5000", "h5000"); // tree5 filled for each nutau.
@@ -1424,24 +1424,24 @@ int main(int argc,  char **argv) {
   tree11->Branch("loctrig21", &loctrig[2][1], "loctrig1/D");
   tree11->Branch("loctrig_nadironly1", &loctrig_nadironly[1], "loctrig0/D");
   
-  TTree *tree12 = new TTree("h12000", "h12000");
-  tree12->Branch("nuexitlength", &nuexitlength, "nuexitlength/D");
-  tree12->Branch("y", &elast_y, "elast_y/D");
-  tree12->Branch("costheta_nutraject", &interaction1->costheta_nutraject, "costheta_nutraject/D");
+  // TTree *tree12 = new TTree("h12000", "h12000");
+  // tree12->Branch("nuexitlength", &nuexitlength, "nuexitlength/D");
+  // tree12->Branch("y", &elast_y, "elast_y/D");
+  // tree12->Branch("costheta_nutraject", &interaction1->costheta_nutraject, "costheta_nutraject/D");
   
-  TTree *tree14 = new TTree("h14000", "h14000");
-  tree14->Branch("ddistance_db", &ddistance_db, "ddistance_db/D");
+  // TTree *tree14 = new TTree("h14000", "h14000");
+  // tree14->Branch("ddistance_db", &ddistance_db, "ddistance_db/D");
   // tree14->Branch("diff_angle_db", &diff_angle_db, "diff_angle_db/D");
   
-  TTree *tree15 = new TTree("h15000", "h15000"); // tree15
-  tree15->Branch("loctrig00", &loctrig[0][0], "loctrig0/D");
-  tree15->Branch("loctrig10", &loctrig[1][0], "loctrig0/D");
-  tree15->Branch("loctrig20", &loctrig[2][0], "loctrig0/D");
-  tree15->Branch("loctrig_nadironly0", &loctrig_nadironly[0], "loctrig_nadironly0/D");
-  tree15->Branch("loctrig01", &loctrig[0][1], "loctrig1/D");
-  tree15->Branch("loctrig11", &loctrig[1][1], "loctrig1/D");
-  tree15->Branch("loctrig21", &loctrig[2][1], "loctrig1/D");
-  tree15->Branch("loctrig_nadironly1", &loctrig_nadironly[1], "loctrig0/D");
+  // TTree *tree15 = new TTree("h15000", "h15000"); // tree15
+  // tree15->Branch("loctrig00", &loctrig[0][0], "loctrig0/D");
+  // tree15->Branch("loctrig10", &loctrig[1][0], "loctrig0/D");
+  // tree15->Branch("loctrig20", &loctrig[2][0], "loctrig0/D");
+  // tree15->Branch("loctrig_nadironly0", &loctrig_nadironly[0], "loctrig_nadironly0/D");
+  // tree15->Branch("loctrig01", &loctrig[0][1], "loctrig1/D");
+  // tree15->Branch("loctrig11", &loctrig[1][1], "loctrig1/D");
+  // tree15->Branch("loctrig21", &loctrig[2][1], "loctrig1/D");
+  // tree15->Branch("loctrig_nadironly1", &loctrig_nadironly[1], "loctrig0/D");
   
   TTree *tree16 = new TTree("h16000", "h16000");
   tree16->Branch("pnu", &pnu, "pnu/D");
@@ -1452,44 +1452,45 @@ int main(int argc,  char **argv) {
   tree16->Branch("hadfrac", &hadfrac, "hadfrac/D");
   tree16->Branch("nuentrancelength", &nuentrancelength, "nuentrancelength/D");
   
-  TTree *tree17 = new TTree("h17000", "h17000");
-  tree17->Branch("pnu", &pnu, "pnu/D");
-  tree17->Branch("sum_frac0", &sum_frac[0], "sum_frac0/D");
-  tree17->Branch("sum_frac1", &sum_frac[1], "sum_frac1/D");
-  tree17->Branch("sum_frac2", &sum_frac[2], "sum_frac2/D");
-  tree17->Branch("sum_frac_db0", &sum_frac_db[0], "sum_frac_db0/D");
-  tree17->Branch("sum_frac_db1", &sum_frac_db[1], "sum_frac_db1/D");
-  tree17->Branch("sum_frac_db2", &sum_frac_db[2], "sum_frac_db2/D");
-  tree17->Branch("percent_increase_db", &percent_increase_db, "percent_increase_db/D");
-  tree17->Branch("percent_increase_nfb", &percent_increase_nfb, "percent_increase_nfb/D");
-  tree17->Branch("error_percent_increase_nfb", &error_percent_increase_nfb, "error_percent_increase_nfb/D");
-  tree17->Branch("percent_increase_total", &percent_increase_total, "percent_increase_total/D");
-  tree17->Branch("km3sr", &km3sr, "km3sr/D");
-  tree17->Branch("error_plus", &error_plus, "error_plus/D");
-  tree17->Branch("km3sr_nfb", &km3sr_nfb, "km3sr_nfb/D");
-  tree17->Branch("error_km3sr_nfb", &error_km3sr_nfb, "error_km3sr_nfb/D");
-  tree17->Branch("eventsfound_nfb", &eventsfound_nfb, "eventsfound_nfb/D");
-  tree17->Branch("error_nfb", &error_nfb, "error_nfb/D");
+  // TTree *tree17 = new TTree("h17000", "h17000");
+  // tree17->Branch("pnu", &pnu, "pnu/D");
+  // tree17->Branch("sum_frac0", &sum_frac[0], "sum_frac0/D");
+  // tree17->Branch("sum_frac1", &sum_frac[1], "sum_frac1/D");
+  // tree17->Branch("sum_frac2", &sum_frac[2], "sum_frac2/D");
+  // tree17->Branch("sum_frac_db0", &sum_frac_db[0], "sum_frac_db0/D");
+  // tree17->Branch("sum_frac_db1", &sum_frac_db[1], "sum_frac_db1/D");
+  // tree17->Branch("sum_frac_db2", &sum_frac_db[2], "sum_frac_db2/D");
+  // tree17->Branch("percent_increase_db", &percent_increase_db, "percent_increase_db/D");
+  // tree17->Branch("percent_increase_nfb", &percent_increase_nfb, "percent_increase_nfb/D");
+  // tree17->Branch("error_percent_increase_nfb", &error_percent_increase_nfb, "error_percent_increase_nfb/D");
+  // tree17->Branch("percent_increase_total", &percent_increase_total, "percent_increase_total/D");
+  // tree17->Branch("km3sr", &km3sr, "km3sr/D");
+  // tree17->Branch("error_plus", &error_plus, "error_plus/D");
+  // tree17->Branch("km3sr_nfb", &km3sr_nfb, "km3sr_nfb/D");
+  // tree17->Branch("error_km3sr_nfb", &error_km3sr_nfb, "error_km3sr_nfb/D");
+  // tree17->Branch("eventsfound_nfb", &eventsfound_nfb, "eventsfound_nfb/D");
+  // tree17->Branch("error_nfb", &error_nfb, "error_nfb/D");
+
+  int pdgcode;
   
   TTree *tree18 = new TTree("h18000", "h18000");
   //tree18->Branch("vmmhz1m_em", &vmmhz1m_em, "vmmhz1m_em/D");
   //tree18->Branch("vmmhz1m_had", &vmmhz1m_had, "vmmhz1m_had/D");
-  tree18->Branch("emfrac", &emfrac, "emfrac/D");
+  tree18->Branch("emfrac",  &emfrac,  "emfrac/D");
   tree18->Branch("hadfrac", &hadfrac, "hadfrac/D");
+  tree18->Branch("pdgcode", &pdgcode, "pdgcode/I");
   
-  
-  TTree *tree19 = new TTree("h19000", "h19000");
-  //tree19->Branch("vmmhz1m_em", &vmmhz1m_em, "vmmhz1m_em/D");
-  //tree19->Branch("vmmhz1m_had", &vmmhz1m_had, "vmmhz1m_had/D");
-  tree19->Branch("emfrac", &emfrac, "emfrac/D");
-  tree19->Branch("hadfrac", &hadfrac, "hadfrac/D");
-  
-  
-  TTree *tree20 = new TTree("h20000", "h20000");
-  //tree20->Branch("vmmhz1m_em", &vmmhz1m_em, "vmmhz1m_em/D");
-  //tree20->Branch("vmmhz1m_had", &vmmhz1m_had, "vmmhz1m_had/D");
-  tree20->Branch("emfrac", &emfrac, "emfrac/D");
-  tree20->Branch("hadfrac", &hadfrac, "hadfrac/D");
+  // TTree *tree19 = new TTree("h19000", "h19000");
+  // //tree19->Branch("vmmhz1m_em", &vmmhz1m_em, "vmmhz1m_em/D");
+  // //tree19->Branch("vmmhz1m_had", &vmmhz1m_had, "vmmhz1m_had/D");
+  // tree19->Branch("emfrac", &emfrac, "emfrac/D");
+  // tree19->Branch("hadfrac", &hadfrac, "hadfrac/D");
+    
+  // TTree *tree20 = new TTree("h20000", "h20000");
+  // //tree20->Branch("vmmhz1m_em", &vmmhz1m_em, "vmmhz1m_em/D");
+  // //tree20->Branch("vmmhz1m_had", &vmmhz1m_had, "vmmhz1m_had/D");
+  // tree20->Branch("emfrac", &emfrac, "emfrac/D");
+  // tree20->Branch("hadfrac", &hadfrac, "hadfrac/D");
   
   // TTree *raytree1=new TTree("raytree1", "raytree1");
   // raytree1->Branch("irays", &irays, "irays/I");
@@ -1583,27 +1584,27 @@ int main(int argc,  char **argv) {
   tree1->Branch("igps", &bn1->igps, "igps/I");
   tree1->Branch("weight", &weight, "weight/D");
   tree1->Branch("r_exit2bn", &interaction1->r_exit2bn, "r_exit2bn/D");
-  
-    
-  TTree *tree1b = new TTree("h1001", "h1001"); // tree1b filled for each neutrino
-  tree1b->Branch("inu", &inu, "inu/I");
-  tree1b->Branch("diffexit", &diffexit, "diffexit/D");
-  tree1b->Branch("diffrefr", &diffrefr, "diffrefr/D");
-  tree1b->Branch("horizcoord", &horizcoord, "horizcoord/D");
-  tree1b->Branch("vertcoord", &vertcoord, "vertcoord/D");
-  tree1b->Branch("costhetanu", &costhetanu, "costhetanu/D");
-  tree1b->Branch("vmmhz1m_max", &vmmhz1m_max, "vmmhz1m_max/D");
-  
-  //  tree1b->Branch("ibnposition", &ibnposition, "ibnposition/I");
-  tree1b->Branch("volume_thishorizon", &volume_thishorizon, "volume_thishorizon/D");
-  tree1b->Branch("realtime", &realtime_this, "realtime/D");
-  tree1b->Branch("longitude", &longitude_this, "longitude/D");
-  tree1b->Branch("latitude", &latitude_this, "latitude/D");
-  tree1b->Branch("MAXHORIZON", &bn1->MAXHORIZON, "MAXHORIZON/D");
-  tree1b->Branch("igps", &bn1->igps, "igps/I");
-  //tree1b->Branch("energy_wholeband", &energy_wholeband, "energy_wholeband/D");
-  tree1b->Branch("passes_thisevent", &passes_thisevent, "passes_thisevent/I");
   tree1->Branch("bn1->igps", &bn1->igps, "bn1->igps/I");
+    
+  // TTree *tree1b = new TTree("h1001", "h1001"); // tree1b filled for each neutrino
+  // tree1b->Branch("inu", &inu, "inu/I");
+  // tree1b->Branch("diffexit", &diffexit, "diffexit/D");
+  // tree1b->Branch("diffrefr", &diffrefr, "diffrefr/D");
+  // tree1b->Branch("horizcoord", &horizcoord, "horizcoord/D");
+  // tree1b->Branch("vertcoord", &vertcoord, "vertcoord/D");
+  // tree1b->Branch("costhetanu", &costhetanu, "costhetanu/D");
+  // tree1b->Branch("vmmhz1m_max", &vmmhz1m_max, "vmmhz1m_max/D");
+  
+  // //  tree1b->Branch("ibnposition", &ibnposition, "ibnposition/I");
+  // tree1b->Branch("volume_thishorizon", &volume_thishorizon, "volume_thishorizon/D");
+  // tree1b->Branch("realtime", &realtime_this, "realtime/D");
+  // tree1b->Branch("longitude", &longitude_this, "longitude/D");
+  // tree1b->Branch("latitude", &latitude_this, "latitude/D");
+  // tree1b->Branch("MAXHORIZON", &bn1->MAXHORIZON, "MAXHORIZON/D");
+  // tree1b->Branch("igps", &bn1->igps, "igps/I");
+  // //tree1b->Branch("energy_wholeband", &energy_wholeband, "energy_wholeband/D");
+  // tree1b->Branch("passes_thisevent", &passes_thisevent, "passes_thisevent/I");
+  
   
 
 
@@ -2856,13 +2857,19 @@ int main(int argc,  char **argv) {
         if (sig1->logscalefactor_taper>maxtaper)
           maxtaper=sig1->logscalefactor_taper;
 
-        if (settings1->HIST==1 && !settings1->ONLYFINAL && bn1->WHICHPATH != 3) {
-          if (k==Anita::NFREQ/2 && interaction1->nuflavor=="nue" && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES)
-            tree18->Fill();
-          if (k==Anita::NFREQ/2 && interaction1->nuflavor=="numu" && tree19->GetEntries()<settings1->HIST_MAX_ENTRIES)
-            tree19->Fill();
-          if (k==Anita::NFREQ/2 && interaction1->nuflavor=="nutau" && tree20->GetEntries()<settings1->HIST_MAX_ENTRIES)
-            tree20->Fill();
+        if (settings1->HIST==1 && !settings1->ONLYFINAL && bn1->WHICHPATH != 3 && k==Anita::NFREQ/2 && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES) {
+
+	  if (interaction1->nuflavor=="nue")        pdgcode = 12;
+	  else if (interaction1->nuflavor=="numu")  pdgcode = 14;
+	  else if (interaction1->nuflavor=="nutau") pdgcode = 16;
+	    
+	  tree18->Fill();
+          // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="nue" && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES)
+          //   tree18->Fill();
+          // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="numu" && tree19->GetEntries()<settings1->HIST_MAX_ENTRIES)
+          //   tree19->Fill();
+          // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="nutau" && tree20->GetEntries()<settings1->HIST_MAX_ENTRIES)
+          //   tree20->Fill();
         }
 
         if (bn1->WHICHPATH == 3)
@@ -3733,13 +3740,13 @@ int main(int argc,  char **argv) {
         && bn1->WHICHPATH != 3){ // all events
         tree1->Fill();
       }//end if
-      if (settings1->HIST==1
-        && !settings1->ONLYFINAL
-        && tree1b->GetEntries()<settings1->HIST_MAX_ENTRIES
-        && bn1->WHICHPATH != 3
-        && passes_thisevent>0){ // just if the event passes
-        tree1b->Fill();
-      }//end if
+      // if (settings1->HIST==1
+      //   && !settings1->ONLYFINAL
+      //   && tree1b->GetEntries()<settings1->HIST_MAX_ENTRIES
+      //   && bn1->WHICHPATH != 3
+      //   && passes_thisevent>0){ // just if the event passes
+      //   tree1b->Fill();
+      // }//end if
       
     //delete ray1; // delete instance of ray class
     ////delete interaction1;
