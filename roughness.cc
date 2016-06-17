@@ -200,7 +200,7 @@ double Roughness::GetLaserPower(){
 
 
 double Roughness::InterpolatePowerValue(double T0, double T){
-  // T0 [degrees] is the incident angle of the ray-in-ice with respect the the surface normal pointed into the ice
+  // T0 [degrees] is the incident angle of the ray-in-ice with respect the the surface normal pointed into the air
   // theta [degrees] is the exiting angle from the surface towards the balloon, measured with respect to the surface normal pointing into the air
   //
   // procedure: for theta, go through spline vector and get that value. write to a vector, then spline that and get value for the T0
@@ -240,6 +240,9 @@ double Roughness::ConvertTheta0GlassAir_to_AirGlass(double T1){
 
 // taken from icemc::GetFresnel and modified for this case use
 void Roughness::GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag) {
+  // arguments in icemc.cc are:
+  // (const Vector)vec_localnormal, vec_pos_current_to_balloon, (const Vector)vec_nnu_to_impactPoint, npol_local, vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, fresnel_local, magnif_local
+
   // find angle of incidence and angle of transmission
   double incident_angle = surface_normal.Angle(ice_rf);
   double transmitted_angle = surface_normal.Angle(air_rf);
@@ -277,7 +280,23 @@ void Roughness::GetFresnel(const Vector &surface_normal, const Vector &air_rf, c
 //end Roughness::GetFresnel()
 
 
-
+inline float Roughness::BilinearInterpolation(float q11, float q12, float q21, float q22, float x1, float x2, float y1, float y2, float x, float y){
+  // from https://helloacm.com/cc-function-to-compute-the-bilinear-interpolation/
+  // same formula as that used in R**T
+  float x2x1, y2y1, x2x, y2y, yy1, xx1;
+  x2x1 = x2 - x1;
+  y2y1 = y2 - y1;
+  x2x = x2 - x;
+  y2y = y2 - y;
+  yy1 = y - y1;
+  xx1 = x - x1;
+  return 1.0 / (x2x1 * y2y1) * (
+      q11 * x2x * y2y +
+      q21 * xx1 * y2y +
+      q12 * x2x * yy1 +
+      q22 * xx1 * yy1
+  );
+}
 
 
 

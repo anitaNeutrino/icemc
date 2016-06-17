@@ -797,3 +797,6 @@ Commented out variables and pointers that were not used or filled (probably resi
 
 06/15/2016 15.57 PM ET M. Sutherland   [in branches/roughness]
 fSCREEN_NUMPOINTS_EDGE uses settings1->ROUGHNESS, not ROUGHSIZE. Added SCREENEDGELENGTH in settings. synced some trunk changes over here (r600).
+
+06/17/2016 10.06 AM ET M. Sutherland   [in branches/roughness]
+changed glass_air_criticalangle from 42 to 41.81. Added data/roughness/Bilinear_interpolation.png. Added Roughness::BilinearInterpolation() placeholder function to attempt better 2-d interpolation instead of 1+1.
