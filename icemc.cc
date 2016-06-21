@@ -3582,19 +3582,19 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->errorFlag = 0;
               rawHeaderPtr->trigType = 1;//wrong?!
               rawHeaderPtr->run = run_no;
-      
-              rawHeaderPtr->upperL1TrigPattern = l1trig[0];
-              rawHeaderPtr->lowerL1TrigPattern = l1trig[1];
-              rawHeaderPtr->nadirL1TrigPattern = l1trig[2];
 
 	      // put the vpol only as a placeholder - not sure what I should do here!
+              rawHeaderPtr->upperL1TrigPattern = l1trig[0][0];
+              rawHeaderPtr->lowerL1TrigPattern = l1trig[0][1];
+              rawHeaderPtr->nadirL1TrigPattern = l1trig[0][2];
+
               rawHeaderPtr->upperL2TrigPattern = l2trig[0][0];
               rawHeaderPtr->lowerL2TrigPattern = l2trig[0][1];
               rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
 
-              rawHeaderPtr->l3TrigPattern = (short) l3trig;
+              rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
               if (settings1->WHICH==9) { // anita-3
-                rawHeaderPtr->l3TrigPatternH = (short) l3trigH;
+                rawHeaderPtr->l3TrigPatternH = (short) l3trig[1];
                 rawHeaderPtr->l1TrigMask   = (short) l1TrigMask;
                 rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
                 rawHeaderPtr->l1TrigMaskH  = (short) l1TrigMaskH;
