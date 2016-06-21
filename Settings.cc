@@ -313,22 +313,22 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   anita1->trigRequirements[2]=atoi(number.c_str()); 
   Tools::GetNextNumberAsString(inputsfile,foutput,number);
   LCPRCP=atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  JUSTVPOL=atoi(number.c_str());
+
+
+  Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,2);
     
-  if (JUSTVPOL && LCPRCP) {
-    cout << "Requested LCP, RCP trigger and just vertical polarization.  Contradiction.\n";
-    exit(1);
+  for (int n=0;n<2;n++) {
+    //anita1->bwslice is actaully an int
+    anita1->pol_required[n]=(int)atof(vnumber[n].c_str());
   }
     
-  if (JUSTVPOL) {
-    anita1->pol_allowed[0]=1;
-    anita1->pol_allowed[1]=0;
+  Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,2);
+    
+  for (int n=0;n<2;n++) {
+    //anita1->bwslice_allowed[n] is still an int, not a double
+    anita1->pol_allowed[n]=(int)atof(vnumber[n].c_str());
   }
-  else {
-    anita1->pol_allowed[0]=1;
-    anita1->pol_allowed[1]=1;
-  }
+
     
   Tools::GetNextNumberAsString(inputsfile,foutput,number);
   DISCONES=(int)atof(number.c_str()); 
