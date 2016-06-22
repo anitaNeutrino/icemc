@@ -19,8 +19,7 @@ class GlobalTrigger {
 private:
     
 public:
-  //  GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn); // constructor
-  GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn,UShort_t phiTrigMaskH_bn,UShort_t l1TrigMask_bn,UShort_t L1TrigMaskH_bn); // constructor for Anita-3
+  GlobalTrigger(Settings *settings1,Anita *anita1);
   //  GlobalTrigger(Settings *settings1,Anita *anita1,Balloon* bn1);
   void GetArrivalTimes(int inu,Anita *anita1, const Vector &rf_direction);
   
@@ -115,7 +114,7 @@ private:
     //int Getiangle(double viewangle);
     
   //    double ADCCountstoPowerThreshold(int threshadc,int isurf,int ichan);
-    double ADCCountstoPowerThreshold(Balloon *bn1, int ipol, int iant);
+    double ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant);
     double thisrate;// set when getFunction is called for each channel. this is in MHz
     double thispowerthresh;// set when getFunction is called for each channel
     

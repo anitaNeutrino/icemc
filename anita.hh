@@ -102,11 +102,38 @@ static const int NPOL=2; // number of polarizations
     
     double timedomainsignal_rfcm[HALFNFOUR];
     double timedomainsignal_lab[HALFNFOUR];
-    
-    
-    
 
+  TTree *turfratechain;
+  TTree *surfchain;
+  TFile *fturf;
+  TFile *fsurf;
+  
+  UShort_t phiTrigMask;
+  UShort_t phiTrigMaskH;
+  UShort_t l1TrigMask;
+  UShort_t l1TrigMaskH;
+  unsigned int realTime_turfrate; // realtime from the turf rate file
+  unsigned int realTime_tr_min; // min realtime from the turf rate file
+  unsigned int realTime_tr_max; // max realtime from the turf rate file
+  unsigned int realTime_surf;     // realtime from the surf file
+  unsigned int realTime_surf_min; // min realtime from the surf file
+  unsigned int realTime_surf_max; // max realtime from the surf file
+  UShort_t thresholds[2][48]; // thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
+  UShort_t scalers[2][48];    // scalers as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
+  int iturf;// for indexing
+  int isurf;
+  int iturfevent;
 
+  static const int npointThresh = 1640;
+  Int_t threshScanThresh[2][48][npointThresh]; // adc thresholds from threshold scan
+  Int_t threshScanScaler[2][48][npointThresh]; // scalers from threshold scan 
+  Int_t minadcthresh[2][48];
+  Int_t maxadcthresh[2][48];
+  
+  void setphiTrigMaskAnita3(UInt_t realTime_flightdata);
+  void setphiTrigMask(UInt_t realTime_flightdata);
+  void setTimeDependentThresholds(UInt_t realTime_flightdata);
+  
     double total_diodeinput_1_inanita[5][HALFNFOUR]; // this is the waveform that is input to the tunnel diode in the first (LCP or vertical) polarization
     double total_diodeinput_2_inanita[5][HALFNFOUR]; // this is the waveform that is input to the tunnel diode in the second (RCP or horizontal) polarization
 

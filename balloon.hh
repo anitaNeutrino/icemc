@@ -95,15 +95,7 @@ public:
  
   void SetDefaultBalloonPosition(IceModel *antarctica1);
 
-
-
-  void setphiTrigMask();  // this sets phiTrigMask
-  void setphiTrigMaskAnita3();  // this sets phiTrigMask
   void setr_bn(double latitude,double longitude);
-
-  void setTimeDependentThresholds(); // read thresholds and scalers from anita3 flight
-
-
 
   void AdjustSlacBalloonPosition(int inu); // move payload around like we did at slac
   void GetSlacPositions(Anita *anita1); 
@@ -117,41 +109,13 @@ public:
   string sslacpositions[MAX_POSITIONS];
   int islacposition;
 
-  //  TFile *flightdatafile;
-  //TTree *flightdatatree;
   TChain *flightdatachain;
-  //TChain *turfratechain;
-  TTree *turfratechain;
-  TTree *surfchain;
-  TFile *fturf;
-  TFile *fsurf;
+
   TTreeIndex *tindex;
-  //  double longitude,latitude,altitude
-  UShort_t phiTrigMask;
-  UShort_t phiTrigMaskH;
-  UShort_t l1TrigMask;
-  UShort_t l1TrigMaskH;
-  
+
   unsigned int realTime_flightdata_temp; // realtime from the flight data file
   unsigned int realTime_flightdata; // realtime from the flight data file
-  unsigned int realTime_turfrate; // realtime from the turf rate file
-  unsigned int realTime_tr_min; // min realtime from the turf rate file
-  unsigned int realTime_tr_max; // max realtime from the turf rate file
-  unsigned int realTime_surf;     // realtime from the surf file
-  unsigned int realTime_surf_min; // min realtime from the surf file
-  unsigned int realTime_surf_max; // max realtime from the surf file
-  UShort_t thresholds[2][48]; // thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
-  UShort_t scalers[2][48];    // scalers as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
-  int iturf;// for indexing
-  int isurf;
-  int iturfevent;
-
-  static const int npointThresh = 1640;
-  Int_t threshScanThresh[2][48][npointThresh]; // adc thresholds from threshold scan
-  Int_t threshScanScaler[2][48][npointThresh]; // scalers from threshold scan 
-  Int_t minadcthresh[2][48];
-  Int_t maxadcthresh[2][48];
-  
+   
   float flatitude,flongitude,faltitude,fheading,froll, fpitch;
   double latitude,longitude,altitude,heading,roll,pitch;
   double MINALTITUDE; // minimum altitude balloon needs to be before we consider it a good event to read from the flight data file

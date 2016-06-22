@@ -755,3 +755,6 @@ New handling of vpol/hpol triggers
 
 06/22/2016 02.16 PM BST L. Cremonesi
 Make previous commit work also when triggering only on one pol.
+
+06/22/2016 05.40 PM BST L. Cremonesi
+Move all turf and surf related things from balloon to anita.

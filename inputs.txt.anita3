@@ -121,4 +121,4 @@
 # Settings for digitiser path
 0       # apply impulse response (default for Anita-3 is 1)
 # Settings for time-dependent thresholds
-0       # use time-dependent thresholds (only available for Anita-3)
+1       # use time-dependent thresholds (only available for Anita-3)

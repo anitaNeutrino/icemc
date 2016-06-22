@@ -24,64 +24,14 @@
 
 using std::cout;
 
-// GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn){
-    
-//   Tools::Zero(triggerbits,Anita::NTRIG);
-    
-//   phiTrigMask=phiTrigMask_bn; // set the phi mask to the input value which comes from the balloon class
-//   phiTrigMaskH=0; // set other variables to 0 
-//   l1TrigMask  =0; 
-//   l1TrigMaskH =0;
-    
-//   for (int i=0;i<Anita::NLAYERS_MAX;i++) {
-//     for (int j=0;j<Anita::NPHI_MAX;j++) {
-//       for (int k=0;k<2;k++) {
-// 	for (int p=0;p<anita1->NBANDS+1;p++) {
-// 	  //	for (int p=0;p<5;p++) {
-// 	  channels_passing[i][j][k][p]=0;
-// 	  // make vchannels_passing the proper length.
-// 	  vchannels_passing[i][j][k].push_back(0);
-// 	}
-//       }
-//     }
-//   }
-    
-    
-    
-//   for (int k=0;k<2;k++) {		
-//     for (int i=0;i<Anita::NLAYERS_MAX;i++) {
-//       for (int j=0;j<Anita::NPHI_MAX;j++) {
-// 	volts[k][i][j]=0.;
-// 	volts_em[k][i][j]=0.;
-// 	volts_original[k][i][j]=0.; //added djg
-//       }
-//     }
-//   }
-    
-    
-    
-//   //Zeroing
-//   for (int i=0;i<settings1->NANTENNAS;i++) {
-//     nchannels_perrx_triggered[i] = 0;
-//     for (int j=0;j<8;j++) {
-//       nchannels_perband_triggered[i][j]=0;
-//     }
-//   } //Zero the trigger array
-    
-    
-    
-    
-// }
-
-GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn,UShort_t phiTrigMaskH_bn,UShort_t l1TrigMask_bn,UShort_t l1TrigMaskH_bn){
-  //GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1,Balloon* bn1){
+ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
     
   Tools::Zero(triggerbits,Anita::NTRIG);
     
-  phiTrigMask[0]=phiTrigMask_bn; // set the phi mask to the input value which comes from the balloon class
-  phiTrigMask[1]=phiTrigMaskH_bn; // set the phi mask to the input value which comes from the balloon class
-  l1TrigMask[0]=l1TrigMask_bn; // set the phi mask to the input value which comes from the balloon class
-  l1TrigMask[1]=l1TrigMaskH_bn; // set the phi mask to the input value which comes from the balloon class    
+  phiTrigMask[0]=anita1->phiTrigMask; // set the phi mask to the input value which comes from the balloon class
+  phiTrigMask[1]=anita1->phiTrigMaskH; // set the phi mask to the input value which comes from the balloon class
+  l1TrigMask[0]=anita1->l1TrigMask; // set the phi mask to the input value which comes from the balloon class
+  l1TrigMask[1]=anita1->l1TrigMaskH; // set the phi mask to the input value which comes from the balloon class    
   
   for (int i=0;i<Anita::NLAYERS_MAX;i++) {
     for (int j=0;j<Anita::NPHI_MAX;j++) {
@@ -203,8 +153,8 @@ void AntTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigge
     else if (ilayer==1) iphi = ifold*2+1;
     // we invert VPOL and HPOL because in AnitaEventReader (0:HPOL 1:VPOL) and in icemc (0:VPOL 1:HPOL)
     // convert scalers to power thresholds using fitted function got from ANITA-1, are they too old?
-    thresholds[1][4] = ADCCountstoPowerThreshold(bn1,0,iring*16+iphi)*(-1.);
-    thresholds[0][4] = ADCCountstoPowerThreshold(bn1,1,iring*16+iphi)*(-1.);
+    thresholds[1][4] = ADCCountstoPowerThreshold(anita1,0,iring*16+iphi)*(-1.);
+    thresholds[0][4] = ADCCountstoPowerThreshold(anita1,1,iring*16+iphi)*(-1.);
     //    cout << thresholds[4] << " \n";
   } else {
     GetThresholds(settings1,anita1,ilayer,thresholds); // get the right thresholds for this layer
@@ -1233,40 +1183,40 @@ void AntTrigger::addToChannelSums(Settings *settings1,Anita *anita1,int ibw, int
  *	"this is a place holder for now, from reading off of various plots, pointed out below"
  *	
  */
-double AntTrigger::ADCCountstoPowerThreshold(Balloon *bn1, int ipol, int iant) {
+double AntTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant) {
   //double AntTrigger::ADCCountstoPowerThreshold(int threshadc, int isurf,int ichan) {
   // first convert threshold in adc counts to the singles rate
   // do this using threshold scans taken before the flight
   // For Anita-3 using run 11927
   // these curves were read in the Balloon constructor
   // first check if the threshold in adc counts is in the allowable range
-  int threshadc = bn1->thresholds[ipol][iant];
-  if (unwarned && (threshadc<bn1->minadcthresh[ipol][iant] || threshadc>bn1->maxadcthresh[ipol][iant]))
+  int threshadc = anita1->thresholds[ipol][iant];
+  if (unwarned && (threshadc<anita1->minadcthresh[ipol][iant] || threshadc>anita1->maxadcthresh[ipol][iant]))
     cout << "Warning! ADC threshold is outside range of measured threshold scans.";
-  if (threshadc<bn1->minadcthresh[ipol][iant]) {
+  if (threshadc<anita1->minadcthresh[ipol][iant]) {
     if (unwarned) {
       cout << "It is below the minimum so set it to the minimum.  Will not be warned again.\n";
       unwarned=0;
     }
-    threshadc=bn1->minadcthresh[ipol][iant];
+    threshadc=anita1->minadcthresh[ipol][iant];
   }
-  if (threshadc>bn1->maxadcthresh[ipol][iant]) {
+  if (threshadc>anita1->maxadcthresh[ipol][iant]) {
     if (unwarned) {
       cout << "It is higher than the maximum so set it to the maximum.  Will not be warned again.\n";
       unwarned=0;
     }
-    threshadc=bn1->maxadcthresh[ipol][iant];
+    threshadc=anita1->maxadcthresh[ipol][iant];
   }
     
     
   // Now find singles rate for this threshold
   // first sort thresholds
   // int index=TMath::BinarySearch(NPOINTS,threshold[isurf][ichan],threshadc);
-  int index=TMath::BinarySearch(bn1->npointThresh, bn1->threshScanThresh[ipol][iant], threshadc);
+  int index=TMath::BinarySearch(anita1->npointThresh, anita1->threshScanThresh[ipol][iant], threshadc);
 
   //cout << "rate is " << rate[isurf][ichan][index] << "\n";
   //  thisrate=(double)rate[isurf][ichan][index]; // these scalers are in kHz
-  thisrate=(double)bn1->threshScanScaler[ipol][iant][index]; // these scalers are in kHz
+  thisrate=(double)anita1->threshScanScaler[ipol][iant][index]; // these scalers are in kHz
     
   // now find threshold for this scaler.  Here, scalers have to be in MHz.
   thisrate=thisrate/1.E3; // put it in MHz
