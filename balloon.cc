@@ -182,10 +182,6 @@ void Balloon::InitializeBalloon() {
     
     
     MINALTITUDE=30000; // balloon has to be 30 km altitude at least for us to read the event from the flight data file
-    phiTrigMask=0;
-    phiTrigMaskH=0;
-    l1TrigMask=0;
-    l1TrigMaskH=0;
     
     // initialisation of igps_previous
     if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8)
@@ -226,27 +222,6 @@ void Balloon::InitializeBalloon() {
 		flightdatachain->SetBranchAddress("roll",&froll);
 		//cout << "Loading file.  n events is " << flightdatachain->GetEntries() << "\n";
 		
-		
-		fturf=new TFile("data/turfrate_icemc.root");
-		//turfratechain = new TChain("turfrate_icemc");
-		//turfratechain->Add("data/turfrate_icemc.root");
-		
-		turfratechain=(TTree*)fturf->Get("turfrate_icemc");
-		//    turfratechain->Add("data/anita2turfrate_2.root");
-		turfratechain->SetMakeClass(1);
-		turfratechain->SetBranchAddress("phiTrigMask",&phiTrigMask);
-		turfratechain->SetBranchAddress("realTime",&realTime_turfrate);
-		//turfratechain->SetBranchAddress("iev",&iturfevent);
-		turfratechain->BuildIndex("realTime");
-		//tindex = (TTreeIndex*)turfratechai,n->GetTree()->GetTreeIndex() ;
-		//tindex = new TTreeIndex(turfratechain, "realTime", "iev");
-		//    tindex=new TTreeIndex((TTree*)turfratechain,"realTime","iev");
-		
-		turfratechain->GetEvent(0);
-		realTime_tr_min=realTime_turfrate; // realTime of first event in the file
-		turfratechain->GetEvent(turfratechain->GetEntries()-1);
-		realTime_tr_max=realTime_turfrate; // realTime of last event in file
-		
     } else if (WHICHPATH==8) { // for anita-3 flight
 		      
                 flightdatachain = new TChain("adu5PatTree");
@@ -260,67 +235,6 @@ void Balloon::InitializeBalloon() {
 		flightdatachain->SetBranchAddress("pitch",&fpitch);
 		flightdatachain->SetBranchAddress("roll",&froll);
 		
-		fturf=new TFile("data/turfrate_icemc_anita3.root");
-
-		turfratechain=(TTree*)fturf->Get("turfrate_icemc");
-		turfratechain->SetMakeClass(1);
-		turfratechain->SetBranchAddress("phiTrigMask",&phiTrigMask);
-		turfratechain->SetBranchAddress("phiTrigMaskH",&phiTrigMaskH);
-		turfratechain->SetBranchAddress("l1TrigMask",&l1TrigMask);
-		turfratechain->SetBranchAddress("l1TrigMaskH",&l1TrigMaskH);
-		turfratechain->SetBranchAddress("realTime",&realTime_turfrate);
-		turfratechain->BuildIndex("realTime");
-
-		turfratechain->GetEvent(0);
-		realTime_tr_min=realTime_turfrate; // realTime of first event in the file
-		turfratechain->GetEvent(turfratechain->GetEntries()-1);
-		realTime_tr_max=realTime_turfrate; // realTime of last event in file
-
-		// Reading in average thresholds/scalers every 60 seconds
-		fsurf=new TFile("data/AvgSurf_icemc_anita3.root");
-		surfchain=(TTree*)fsurf->Get("surf_icemc");
-		surfchain->SetMakeClass(1);
-		surfchain->SetBranchAddress("thresholds",   &thresholds   );
-		surfchain->SetBranchAddress("scalers",      &scalers      );
-		surfchain->SetBranchAddress("realTime",     &realTime_surf);
-		surfchain->BuildIndex("realTime");
-		surfchain->GetEvent(0);
-		realTime_surf_min=realTime_surf; // realTime of first event in the file
-		surfchain->GetEvent(surfchain->GetEntries()-1);
-		realTime_surf_max=realTime_surf; // realTime of last event in file
-
-
-		// Reading in last threshold scan before Anita-3 flight
-		// Run 11927
-		TFile *fthresh = new TFile ("data/threshScan_anita3.root");
-		TGraph *gtemp;
-		double *x, *y;
-		for (int ipol=0;ipol<2;ipol++){
-		  for (int iant=0;iant<48;iant++){
-		     gtemp = (TGraph*)fthresh->Get(Form("g_%i_%i", ipol, iant));
-		     x = gtemp->GetX();
-		     y = gtemp->GetY();
-		     for (int i=0;i<npointThresh;i++){
-		       threshScanThresh[ipol][iant][i] = (Int_t)x[i];
-		       threshScanScaler[ipol][iant][i] = (Int_t)y[i];
-		     }
-		     minadcthresh[ipol][iant]=TMath::MinElement(npointThresh, x);
-		     maxadcthresh[ipol][iant]=TMath::MaxElement(npointThresh, x);
-		  }
-		}
-		// This channel was turned off during the threshold scan
-		// We are then using the scan for a different channel
-		// that had very similar thresholds during the flight
-		for (int i=0;i<npointThresh;i++){
-		  threshScanThresh[0][35][i] = threshScanThresh[0][20][i];
-		  threshScanScaler[0][35][i] = threshScanScaler[0][20][i];
-		}
-		minadcthresh[0][35] = minadcthresh[0][20];
-		maxadcthresh[0][35] = maxadcthresh[0][20];
-
-		delete gtemp;
-		delete fthresh;
-
     }
     
     
@@ -479,11 +393,11 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		  }
 		  if (WHICHPATH==7)  // this is for Anita 2
 		    // get phi masking
-		    setphiTrigMask();// set phiTrigMask, and public variable of Balloon class
+		    anita1->setphiTrigMask(realTime_flightdata);// set phiTrigMask, and public variable of Balloon class
 		  else if (WHICHPATH==8){  // this is for Anita 3
 		    // get phi masking
-		    setphiTrigMaskAnita3();// set phiTrigMask, phiTrigMaskH, l1TrigMask and l1TrigMaskH and public variable of Balloon class
-		    if (settings1->USETIMEDEPENDENTTHRESHOLDS==1) setTimeDependentThresholds();
+		    anita1->setphiTrigMaskAnita3(realTime_flightdata);// set phiTrigMask, phiTrigMaskH, l1TrigMask and l1TrigMaskH and public variable of Balloon class
+		    if (settings1->USETIMEDEPENDENTTHRESHOLDS==1) anita1->setTimeDependentThresholds(realTime_flightdata);
 		  }
 		}
 		igps_previous=igps;
@@ -718,78 +632,6 @@ void Balloon::GetHitAngles(double e_component_kvector, double h_component_kvecto
 		hitangle_h+=PI;
         
 } //end void GetHitAngles
-
-
-void Balloon::setphiTrigMask() {
-    if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
-		phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
-		
-    }
-    else { // if it's in range
-		
-		
-		iturf=turfratechain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in turfratechain that is closest to this realTime_flightdata
-		
-		if (iturf<0) // if it didn't find one
-			phiTrigMask=0; // set to zero
-		
-		else
-			turfratechain->GetEvent(iturf);
-		
-		
-    } // end if it's in range
-    
-}
-
-void Balloon::setphiTrigMaskAnita3() {
-
-  if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
-    phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
-    phiTrigMaskH=0;
-    l1TrigMask=0;
-    l1TrigMaskH=0;
-  }
-  else { // if it's in range
-		
-    iturf=turfratechain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in turfratechain that is closest to this realTime_flightdata
-    if (iturf<0){ // if it didn't find one
-      phiTrigMask=0; // set to zero
-      phiTrigMaskH=0;
-      l1TrigMask=0;
-      l1TrigMaskH=0;
-
-    }else{
-      turfratechain->GetEvent(iturf);
-    }
-  } // end if it's in range
-  
-}
-
-void Balloon::setTimeDependentThresholds(){
-  
-  if (realTime_flightdata<realTime_surf_min || realTime_flightdata>realTime_surf_max) {
-    for(int ipol=0;ipol<2;ipol++){
-      for (int iant=0;iant<48;iant++){
-	scalers[ipol][iant]=thresholds[ipol][iant]=0.;
-      }
-    }
-  }
-  else { // if it's in range
-		
-    isurf=surfchain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in surfchain that is closest to this realTime_flightdata
-    if (isurf<0){ // if it didn't find one
-      for(int ipol=0;ipol<2;ipol++){
-	for (int iant=0;iant<48;iant++){
-	  scalers[ipol][iant]=thresholds[ipol][iant]=0.;
-	}
-      }
-    }else{
-      surfchain->GetEvent(isurf);
-    }
-  } // end if it's in range
-  
-
-}
 
 
 void Balloon::setr_bn(double latitude,double longitude) {

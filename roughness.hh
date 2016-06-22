@@ -45,6 +45,7 @@ private:
   std::vector<double> theta_0;
   std::vector<double> theta_0_unique;
   std::vector<double> theta;
+  std::vector<double> theta_unique;
   std::vector<double> power;
 
   std::vector<tk::spline*> spline_theta0;
@@ -84,7 +85,7 @@ public:
   
   void GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag);
 
-  inline float BilinearInterpolation(float q11, float q12, float q21, float q22, float x1, float x2, float y1, float y2, float x, float y);
+  inline double BilinearInterpolation(double q11, double q12, double q21, double q22, double x1, double x2, double y1, double y2, double x, double y);
   // 
 
 

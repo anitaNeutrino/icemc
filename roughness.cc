@@ -91,7 +91,7 @@ void Roughness::ReadDataFile(void){
 
   double pG, pT0, pT, pP;
 
-  for (int i = 0; i < 648; i++){
+  for (int i = 0; i < 648; i++){ // we know there are X lines in the file
     in >> pG >> pT0 >> pT >> pP;
     if (pG != gritvalue)
       continue;
@@ -202,19 +202,68 @@ double Roughness::GetLaserPower(){
 double Roughness::InterpolatePowerValue(double T0, double T){
   // T0 [degrees] is the incident angle of the ray-in-ice with respect the the surface normal pointed into the air
   // theta [degrees] is the exiting angle from the surface towards the balloon, measured with respect to the surface normal pointing into the air
-  //
+
+  //++++++++++++++++++++++++++++++++++++++
+  // use this for 1+1 interpolation
   // procedure: for theta, go through spline vector and get that value. write to a vector, then spline that and get value for the T0
-
   // use Roughness::T0 for X proxy
-  std::vector<double> spl_values; // Y proxy
+  //std::vector<double> spl_values; // Y proxy
+  //for (int j=0; j<Ntheta0; j++){
+  //  spl_values.push_back(  (*(spline_theta0[j]))(T)  );
+  //}
+  //tk::spline s;
+  //s.set_points(theta_0_unique, spl_values);
+  //return s(T0);
 
-  for (int j=0; j<Ntheta0; j++){
-    spl_values.push_back(  (*(spline_theta0[j]))(T)  );
+
+  //++++++++++++++++++++++++++++++++++++++
+  // use this for 2-d bilinear interpolation with BilinearInterpolation(double q11, double q12, double q21, double q22, double x1, double x2, double y1, double y2, double x, double y)
+  // if flat glass, skip for now
+  if(froughsetting==0){
+    return 0;
   }
 
-  tk::spline s;
-  s.set_points(theta_0_unique, spl_values);
-  return s(T0);
+  double ilower, iupper;
+  double q11, q12, q21, q22;
+  double x1, x2, y1, y2;
+
+  // find the bounding theta0 values for the given T0
+  for(int i=0; i<theta_0_unique.size(); i++){
+    if( (T0>=theta_0_unique[i])&&(T0<theta_0_unique[i+1]) ){
+      ilower = i;
+      iupper = i+1;
+      x1 = theta_0_unique[ilower];
+      x2 = theta_0_unique[iupper];
+    }
+    if(i==theta_0_unique.size()-1){  //treat special case at end
+      ilower = i;
+      iupper = i+1;
+      x1 = theta_0_unique[ilower];
+      x2 = 90.;
+    }
+
+  }
+
+  for(int j=0; j<19; j++){
+    if( (j==0)&&(T<theta[ (ilower+1)*19 - (j) ]) ){  //below lowest negative theta 
+      y1 = -90;
+      y2 = theta[ (ilower+1)*19 - (j) ];
+      q11 = 0.;
+      q21 = 0.;
+      q12 = power[(ilower+1)*19 - (j)];
+      q22 = power[(iupper+1)*19 - (j)];
+    }
+    else if( (j==19)&&(T<theta[ (ilower+1)*19 - (j) ]) ){  //above highest positive theta
+      y1 = theta[ (ilower+1)*19 - (j) ];
+      y2 = 90.;
+      q11 = power[(ilower+1)*19 - (j)];
+      q21 = power[(iupper+1)*19 - (j)];
+      q12 = 0.;
+      q22 = 0.;
+    }
+
+  }
+
 };
 
 
@@ -280,10 +329,10 @@ void Roughness::GetFresnel(const Vector &surface_normal, const Vector &air_rf, c
 //end Roughness::GetFresnel()
 
 
-inline float Roughness::BilinearInterpolation(float q11, float q12, float q21, float q22, float x1, float x2, float y1, float y2, float x, float y){
+inline double Roughness::BilinearInterpolation(double q11, double q12, double q21, double q22, double x1, double x2, double y1, double y2, double x, double y){
   // from https://helloacm.com/cc-function-to-compute-the-bilinear-interpolation/
   // same formula as that used in R**T
-  float x2x1, y2y1, x2x, y2y, yy1, xx1;
+  double x2x1, y2y1, x2x, y2y, yy1, xx1;
   x2x1 = x2 - x1;
   y2y1 = y2 - y1;
   x2x = x2 - x;

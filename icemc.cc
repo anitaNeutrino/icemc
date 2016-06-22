@@ -1728,10 +1728,10 @@ int main(int argc,  char **argv) {
       // Picks the balloon position and at the same time sets the masks and thresholds
       bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
       // also sets phiTrigMask
-      phiTrigMask=bn1->phiTrigMask;
-      phiTrigMaskH=bn1->phiTrigMaskH;
-      l1TrigMask=bn1->l1TrigMask;
-      l1TrigMaskH=bn1->l1TrigMaskH;
+      phiTrigMask=anita1->phiTrigMask;
+      phiTrigMaskH=anita1->phiTrigMaskH;
+      l1TrigMask=anita1->l1TrigMask;
+      l1TrigMaskH=anita1->l1TrigMaskH;
 
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter
@@ -2877,8 +2877,7 @@ int main(int argc,  char **argv) {
       chanceinhell2=1;
 
       // make a global trigger object (but don't touch the electric fences)
-     
-      globaltrig1 = new GlobalTrigger(settings1, anita1, bn1->phiTrigMask, bn1->phiTrigMaskH, bn1->l1TrigMask, bn1->l1TrigMaskH); // Anita-3 phi and l1 masking for V and H pol
+      globaltrig1 = new GlobalTrigger(settings1, anita1);
       
       Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
       anita1->GetArrivalTimes(ray1->n_exit2bn[2]);
