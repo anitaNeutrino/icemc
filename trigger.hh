@@ -19,8 +19,8 @@ class GlobalTrigger {
 private:
     
 public:
-  GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn); // constructor
-  GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn,UShort_t phiTrigMaskH_bn,UShort_t l1TrigMask_bn,UShort_t l1TrigMaskH_bn); // constructor for Anita-3
+  //  GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn); // constructor
+  GlobalTrigger(Settings *settings1,Anita *anita1,UShort_t phiTrigMask_bn,UShort_t phiTrigMaskH_bn,UShort_t l1TrigMask_bn,UShort_t L1TrigMaskH_bn); // constructor for Anita-3
   //  GlobalTrigger(Settings *settings1,Anita *anita1,Balloon* bn1);
   void GetArrivalTimes(int inu,Anita *anita1, const Vector &rf_direction);
   
@@ -29,10 +29,10 @@ public:
   vector<int> flag_e_L1[Anita::NPHI_MAX];
   vector<int> flag_h_L1[Anita::NPHI_MAX];
   
-  UShort_t phiTrigMask; // which phi sector is masked for Anita 2 or Anita-3 (V-POL)
-  UShort_t phiTrigMaskH; // which phi sector is masked for Anita 3 (H-POL)
-  UShort_t l1TrigMask; // which channel is masked for Anita-3 (V-POL)
-  UShort_t l1TrigMaskH; // which channel is masked for Anita 3 (H-POL)
+  UShort_t phiTrigMask[Anita::NPOL]; // which phi sector is masked for Anita 2 or Anita-3 (V-POL)
+  //UShort_t phiTrigMaskH; // which phi sector is masked for Anita 3 (H-POL)
+  UShort_t l1TrigMask[Anita::NPOL]; // which channel is masked for Anita-3 (V-POL)
+  //UShort_t l1TrigMaskH; // which channel is masked for Anita 3 (H-POL)
 
   UShort_t thresholds_eachant[2][48]; // thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
 
@@ -63,9 +63,12 @@ public:
     // for the nadir studies
     
     // this is L2 and L3 triggers
-  int PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int &l3trig,int *l2trig,int *l1trig,int antennaclump,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int inu, bool ishpol=false);
-  int PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int &l3trig,int *l2trig,int *l1trig,int antennaclump,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int inu,double this_threshold, bool ishpol=false);
-    int L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int *loctrig_nadironly,int discones_passing,int &l3trigy);
+  void PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,
+		    int *thispasses);
+  void PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold,
+		    int *thispasses);
+  void L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int discones_passing,int *l3trigy,
+		 int *thispasses);
     
     
     int GetPhiSector(Settings *settings1,int i,int j); // given trigger layer and index, get phi sector.

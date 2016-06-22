@@ -105,6 +105,8 @@ Anita::Anita() {
     bwslice_required[4]=1; // these bands are required to be among the channels that pass -- this is set in the input file
     pol_allowed[0]=1;// which polarisations are allowed to have channels that fire (V,H)
     pol_allowed[1]=1;// which polarisations are allowed to have channels that fire (V,H)
+    pol_required[0]=1;// which polarisations are required to have channels that fire (V,H)
+    pol_required[1]=0;// which polarisations are required to have channels that fire (V,H)
     
     
     bwslice_center[0]=265.e6;
@@ -321,7 +323,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		powerthreshold[3] << " (H)\t" <<
 		powerthreshold[4] << " \n";
 		
-    } else if (BANDING==4){ // anita-3
+    } else if (BANDING==4 || BANDING==5){ // anita-3
       powerthreshold[0]=-1; // not used 
       powerthreshold[1]=-1; // not used 
       powerthreshold[2]=-1; // not used 
@@ -427,7 +429,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		sdiode="data/diode_nobanding.root";
     else if (BANDING==2)
 		sdiode="data/diode_anita2.root";
-    else if (BANDING==4) // Linda
+    else if (BANDING==4 || BANDING==5) // Linda
 		sdiode="data/diode_anita3.root";
     
     fnoise=new TFile(sdiode.c_str());
@@ -442,7 +444,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		sbands="data/bands_nobanding.root";
     else if (BANDING==2)
       sbands="data/bands_anita2.root";
-    else if (BANDING==4) // Linda 
+    else if (BANDING==4 || BANDING==5) // Linda 
       sbands="data/bands_anita2.root";
     
     TFile *fbands=new TFile(sbands.c_str());
@@ -1069,7 +1071,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 	if ((BANDING==2 && j!=3) ||
 	    //	(BANDING!=2 && j!=4)) {
 	    (BANDING!=2 && BANDING!=4) ||
-	    (BANDING==4 && j==4) ){
+	    ((BANDING==4||BANDING==5) && j==4) ){
 	    c4->cd(jplot+1);
 	    
 	    if (j==0 && BANDING==2)
@@ -1078,7 +1080,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		hnoise[j]->Fit(frice[j],"Q","",-20.,2.);
 	    if (j==2 && BANDING==2)
 		hnoise[j]->Fit(frice[j],"Q","",-20.,10.);
-	    if (j==4 && (BANDING==2 || BANDING==4))
+	    if (j==4 && (BANDING==2 || BANDING==4 || BANDING==5))
 		hnoise[j]->Fit(frice[j],"Q","",-15.,15.);
 	    
 	    if (j==0 && BANDING==0)
@@ -1648,7 +1650,7 @@ int Anita::GetBeamWidths(Settings *settings1) {
 		
 		
     }
-    else if (settings1->WHICH==10) { // Satellite
+    else if (settings1->WHICH==11) { // Satellite
 		NFREQ_FORGAINS=4;
 		freq_specs[0]=265.E6; // lower edge of
 		freq_specs[1]=435.E6;
@@ -1756,7 +1758,7 @@ int Anita::GetBeamWidths(Settings *settings1) {
 		
 		
     }
-    else if (settings1->WHICH==10) { // satellite
+    else if (settings1->WHICH==11) { // satellite
 		
 		// this is in dBi
 		// 40 MHz
@@ -3398,7 +3400,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     }
     
     
-    else if (settings1->WHICH==10) { // satellite
+    else if (settings1->WHICH==11) { // satellite
       
 		
 		// layer 0 is antennas 1-8 on the payload

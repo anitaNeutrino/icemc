@@ -853,19 +853,17 @@ int main(int argc,  char **argv) {
   
   
   //  int iphisector; //phi sector trigger test (L3)
-  int l3trig;  // 16 bit number which says which phi sectors pass L3 V-POL
-  int l3trigH; // 16 bit number which says which phi sectors pass L3 H-POL
-  // For each trigger layer,  which "clumps" pass L2.  16 bit,  16 bit and 8 bit for layers 1 & 2 and nadirs  
-  int l2trig[Anita::NTRIGGERLAYERS_MAX];
-  int l2trigH[Anita::NTRIGGERLAYERS_MAX];
-  //For each trigger layer,  which antennas pass L1.  16 bit,  16 bit and 8 bit and layers 1,  2 and nadirs  
-  int l1trig[Anita::NTRIGGERLAYERS_MAX];
-  int l1trigH[Anita::NTRIGGERLAYERS_MAX];
+  int l3trig[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
+    // For each trigger layer,  which "clumps" pass L2.  16 bit,  16 bit and 8 bit for layers 1 & 2 and nadirs  
+  int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
+   //For each trigger layer,  which antennas pass L1.  16 bit,  16 bit and 8 bit and layers 1,  2 and nadirs  
+  int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
+  
   // these are declared here so that they can be stuck into trees
-  int loctrig[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement  
-  int loctrigH[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement  
-  int loctrig_nadironly[Anita::NPHI_MAX]; //counting how many pass trigger requirement  
-  int loctrigH_nadironly[Anita::NPHI_MAX]; //counting how many pass trigger requirement
+  int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement  
+  
+  int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement  
+
  
   UShort_t phiTrigMask;
   UShort_t phiTrigMaskH;
@@ -1111,12 +1109,9 @@ int main(int argc,  char **argv) {
   finaltree->Branch("weight_bestcase",  &weight_bestcase2,  "weight_bestcase/D");
   finaltree->Branch("chord_kgm2_bestcase",  &chord_kgm2_bestcase2,  "chord_kgm2_bestcase/D");
   finaltree->Branch("dtryingdirection",  &dtryingdirection2,  "dtryingdirection/D");
-  finaltree->Branch("l3trig", &l3trig, "l3trig/I");
-  finaltree->Branch("l2trig", &l2trig, "l2trig[3]/I");
-  finaltree->Branch("l1trig", &l1trig, "l1trig[3]/I");
-  finaltree->Branch("l3trigH", &l3trigH, "l3trigH/I");
-  finaltree->Branch("l2trigH", &l2trigH, "l2trigH[3]/I");
-  finaltree->Branch("l1trigH", &l1trigH, "l1trigH[3]/I");
+  finaltree->Branch("l3trig", &l3trig, "l3trig[2]/I");
+  finaltree->Branch("l2trig", &l2trig, "l2trig[2][3]/I");
+  finaltree->Branch("l1trig", &l1trig, "l1trig[2][3]/I");
   finaltree->Branch("phiTrigMask", &phiTrigMask, "phiTrigMask/s");
   finaltree->Branch("phiTrigMaskH", &phiTrigMaskH, "phiTrigMaskH/s");
   finaltree->Branch("l1TrigMask", &l1TrigMask, "l1TrigMask/s");
@@ -2882,11 +2877,9 @@ int main(int argc,  char **argv) {
       chanceinhell2=1;
 
       // make a global trigger object (but don't touch the electric fences)
-      if (settings1->WHICH==9)
-	globaltrig1 = new GlobalTrigger(settings1, anita1, bn1->phiTrigMask, bn1->phiTrigMaskH, bn1->l1TrigMask, bn1->l1TrigMaskH); // Anita-3 phi and l1 masking for V and H pol
-      else
-	globaltrig1 = new GlobalTrigger(settings1, anita1, bn1->phiTrigMask);
-      //      globaltrig1 = new GlobalTrigger(settings1, anita1, bn1);
+     
+      globaltrig1 = new GlobalTrigger(settings1, anita1, bn1->phiTrigMask, bn1->phiTrigMaskH, bn1->l1TrigMask, bn1->l1TrigMaskH); // Anita-3 phi and l1 masking for V and H pol
+      
       Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
       anita1->GetArrivalTimes(ray1->n_exit2bn[2]);
       
@@ -3225,14 +3218,15 @@ int main(int argc,  char **argv) {
       for (int i=0;i<NTHRESHOLDS;i++) {
 	double this_threshold=  threshold_start+(double)i*threshold_step;
 	thresholds[i]=fabs(this_threshold);
-	if (globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold)) {
+	int thispasses[Anita::NPOL]={0,0};
+	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold,
+				   thispasses);
+	if (thispasses[0]) 
 	  npass_v_thresh[i]+=1.;
-	}
-	
-	// for anita-3 also trigger on HPOL
-	if (settings1->WHICH==9 && globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu, this_threshold,  true)) {
+	if (thispasses[1]) 
 	  npass_h_thresh[i]+=1.;
-	}
+	
+	
 	denom_h_thresh[i]+=1.E-7;	
 	denom_v_thresh[i]+=1.E-7;
 	//cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
@@ -3243,19 +3237,20 @@ int main(int argc,  char **argv) {
       //          FOR VPOL AND HPOL       //
       //////////////////////////////////////
       
-      bool passVPOL = false;
-      bool passHPOL = false;
-      if (settings1->TRIGTYPE==1){
-	passVPOL = globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, false);
-	if (settings1->WHICH==9 && !settings1->JUSTVPOL) passHPOL = globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trigH, l2trigH, l1trigH, settings1->antennaclump, loctrigH, loctrigH_nadironly, inu,  true);
-      }
+
+      int thispasses[Anita::NPOL]={0,0};
+
+      globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, 
+				 thispasses);
       
       ///////////////////////////////////////
       //       Require that it passes      //
       //            global trigger         //
       ///////////////////////////////////////
       // for Anita-lite,  Anita Hill, just L1 requirement on 2 antennas. This option is currently disabled
-      if ( passVPOL || passHPOL || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD) ) {
+      if ( (thispasses[0]==1 && anita1->pol_allowed[0]==1)  
+	   || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
+	   || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD) ) {
 
         if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
@@ -3368,11 +3363,11 @@ int main(int argc,  char **argv) {
             else {
               allcuts[whichray]++;
               allcuts_weighted[whichray]+=weight;
-	      if (passVPOL && passHPOL) {
+	      if (thispasses[0] && thispasses[1]) {
 		allcuts_weighted_polarization[2]+=weight;
-	      } else if (passVPOL){
+	      } else if (thispasses[0]){
 		allcuts_weighted_polarization[0]+=weight;
-	      } else if (passHPOL){
+	      } else if (thispasses[1]){
 		allcuts_weighted_polarization[1]+=weight;
 	      }
 	      
@@ -3563,18 +3558,19 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->errorFlag = 0;
               rawHeaderPtr->trigType = 1;//wrong?!
               rawHeaderPtr->run = run_no;
-      
-              rawHeaderPtr->upperL1TrigPattern = l1trig[0];
-              rawHeaderPtr->lowerL1TrigPattern = l1trig[1];
-              rawHeaderPtr->nadirL1TrigPattern = l1trig[2];
 
-              rawHeaderPtr->upperL2TrigPattern = l2trig[0];
-              rawHeaderPtr->lowerL2TrigPattern = l2trig[1];
-              rawHeaderPtr->nadirL2TrigPattern = l2trig[2];
+	      // put the vpol only as a placeholder - not sure what I should do here!
+              rawHeaderPtr->upperL1TrigPattern = l1trig[0][0];
+              rawHeaderPtr->lowerL1TrigPattern = l1trig[0][1];
+              rawHeaderPtr->nadirL1TrigPattern = l1trig[0][2];
 
-              rawHeaderPtr->l3TrigPattern = (short) l3trig;
+              rawHeaderPtr->upperL2TrigPattern = l2trig[0][0];
+              rawHeaderPtr->lowerL2TrigPattern = l2trig[0][1];
+              rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
+
+              rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
               if (settings1->WHICH==9) { // anita-3
-                rawHeaderPtr->l3TrigPatternH = (short) l3trigH;
+                rawHeaderPtr->l3TrigPatternH = (short) l3trig[1];
                 rawHeaderPtr->l1TrigMask   = (short) l1TrigMask;
                 rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
                 rawHeaderPtr->l1TrigMaskH  = (short) l1TrigMaskH;

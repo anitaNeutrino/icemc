@@ -36,8 +36,9 @@
 3	# number of antenna in 'clump' for L2 trigger 
 1 	# require centre antenna in clump is one of those hit
 1	# (1) for L3 trigger or (0) no L3 trigger requirement 
-1	# 1 for LCP and RCP, 0 for V and H 
-0	# 0 for both polarizations or 1 for just vertical polarization
+1	# 1 for LCP and RCP, 0 for V and H
+1	0	#any channels passing are REQUIRED to be from this polarization 
+1	0	#any channels passing are ALLOWED to be from this polarization  
 0      # 2=use nadirs, 1= use discones or 0= do not use discones or nadirs
 0      # Implement the nadir-only trigger (require 3/3 antennas in nadir layer pass)
 1	# implement masking as in anita flight (1) yes or (0) no

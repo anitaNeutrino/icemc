@@ -800,3 +800,6 @@ fSCREEN_NUMPOINTS_EDGE uses settings1->ROUGHNESS, not ROUGHSIZE. Added SCREENEDG
 
 06/17/2016 10.06 AM ET M. Sutherland   [in branches/roughness]
 changed glass_air_criticalangle from 42 to 41.81. Added data/roughness/Bilinear_interpolation.png. Added Roughness::BilinearInterpolation() placeholder function to attempt better 2-d interpolation instead of 1+1.
+
+06/22/2016 09.03 AM ET M. Sutherland   [in branches/roughness]
+sync merged with trunk r605

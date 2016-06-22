@@ -38,7 +38,8 @@ public:
   int number_all_antennas; // this keeps count of the number of antennas for use with timing calculations, etc.    
 
 
-    static const int NBANDS_MAX=100; // max number of bands 
+    static const int NBANDS_MAX=100; // max number of bands     
+static const int NPOL=2; // number of polarizations 
     static const int NFREQ=128;  // number of frequency bins
     //const int NFREQ=4096; 
     
@@ -436,6 +437,7 @@ public:
     int bwslice_allowed[5]; // these bands are allowed to contribute to the trigger sum -- this is set in the input file
     int bwslice_required[5]; // these bands are required to be among the channels that pass -- this is set in the input file
     int pol_allowed[2];// which polarisations are allowed to have channels that fire (V,H)
+  int pol_required[2];// which polarisations are required to have channels that fire (V,H)
     
     
     
