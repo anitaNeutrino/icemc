@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <array>
 #include <time.h>
 #include "TTreeIndex.h"
 #include "TChain.h"

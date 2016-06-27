@@ -92,7 +92,8 @@ static const int NPOL=2; // number of polarizations
     static const int HALFNFOUR=512;
     
     // these are used for the satellite thing
-    int NBANDS; // number of frequency sub-bands (not counting full band)
+  int NBANDS; // number of frequency sub-bands (not counting full band)
+  
     int PERCENTBW; // percent bandwidth
     
     // these variables are for filling the tsignals tree
@@ -376,7 +377,9 @@ static const int NPOL=2; // number of polarizations
   
   double INTEGRATIONTIME; // integration time of the tunnel diode
   static const int nsamp=100; // number of samples that were used to measure the noise data
-  double TIMESTEP; // time step between samples
+  double TIMESTEP; // time step between samples for digitization
+  double TRIGTIMESTEP;
+
   double DEADTIME;
   
   double TRIG_TIMESTEP; // this is the l1 trigger window for the anita 3 trigger.  

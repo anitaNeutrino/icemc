@@ -1,4 +1,5 @@
 #include <vector>
+#include <array>
 #include <iostream>
 #include <fstream>
 #include "vector.hh"
@@ -24,6 +25,7 @@
 
 using std::cout;
 
+
  GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
     
   Tools::Zero(triggerbits,Anita::NTRIG);
@@ -33,6 +35,10 @@ using std::cout;
   l1TrigMask[0]=anita1->l1TrigMask; // set the phi mask to the input value which comes from the balloon class
   l1TrigMask[1]=anita1->l1TrigMaskH; // set the phi mask to the input value which comes from the balloon class    
   
+
+
+  
+
   for (int i=0;i<Anita::NLAYERS_MAX;i++) {
     for (int j=0;j<Anita::NPHI_MAX;j++) {
       for (int k=0;k<2;k++) {
@@ -42,10 +48,12 @@ using std::cout;
 	  // make vchannels_passing the proper length.
 	  vchannels_passing[i][j][k].push_back(0);
 	}
+	for (int p=0;p<Anita::NBANDS_MAX;p++) {
+	  arrayofhits[i][j][k][p].clear();
+	}
       }
     }
   }
-    
     
     
   for (int k=0;k<2;k++) {		
@@ -606,15 +614,33 @@ void AntTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glob
 	
     anita1->channels_passing_e[j]=0; // does not pass
 	
+    // want the bits in arrayofhits to each represent a 2 ns interval =TRIGTIMESTEP
+    // but TIMESTEP doesn't necessarily go into TRIGTIMESTEP nicely
+ 
+    int whichtrigbin=1;
+    int nextbreakpoint=(int)((anita1->TIMESTEP*Anita::NFOUR/2)/anita1->TRIGTIMESTEP);
+    while (nextbreakpoint<anita1->iminbin[j]) {
+      nextbreakpoint=(int)((double)(whichtrigbin+1)*(anita1->TIMESTEP*Anita::NFOUR/2)/anita1->TRIGTIMESTEP);
+      whichtrigbin++;
+    }
+    int thisisaone=0;
     for (int ibin = anita1->iminbin[j]; ibin < anita1->imaxbin[j]; ibin++) {
-      if (timedomain_output_1[j][ibin] < thresholds[0][j] * anita1->bwslice_rmsdiode[j]) {
-	if (anita1->pol_allowed[0] && anita1->bwslice_allowed[j]) { // is this polarization and bw slice allowed to pass
+    
+      if (timedomain_output_1[j][ibin] < thresholds[0][j] * anita1->bwslice_rmsdiode[j] && anita1->pol_allowed[0] && anita1->bwslice_allowed[j]) { // is this polarization and bw slice allowed to pass
 	  //	      std::cout << "VPOL : " << j << " " << timedomain_output_1[j][ibin]  << " " <<  thresholds[0][j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
 	  anita1->channels_passing_e[j] = 1;// channel passes
-	}
+    
+	  if (ibin<nextbreakpoint)
+	    thisisaone=1;
+	  else {
+	    globaltrig1->arrayofhits[ilayer][ifold][0][j].push_back(thisisaone);
+	    nextbreakpoint=(int)((double)(whichtrigbin+1)*(anita1->TIMESTEP*Anita::NFOUR/2)/anita1->TRIGTIMESTEP);
+	    whichtrigbin++;
+	  }
       }
+
     } // end loop over bins in the window
-	
+    
     if (anita1->channels_passing_e[j]) {
       globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]++; //Records number of first level triggers on each antenna for a single neutrino
 	  
