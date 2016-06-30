@@ -45,7 +45,6 @@ private:
   std::vector<double> theta_0;
   std::vector<double> theta_0_unique;
   std::vector<double> theta;
-  std::vector<double> theta_unique;
   std::vector<double> power;
 
   std::vector<tk::spline*> spline_theta0;
@@ -62,6 +61,12 @@ private:
 
   std::vector<double> theta_g2a;
 
+  //parameters for 2d gaussian fits from astropy
+  double amplitude;                             // in [muW]
+  double x_mean, y_mean, x_stddev, y_stddev;    // in [rad]
+  double gaustheta;                                 // in [rad]
+  double maxmeaspower, fitfuncmax;
+
   void ReadDataFile(void);
   
   void ConstructSplines(void);
@@ -75,6 +80,8 @@ public:
 
   double InterpolatePowerValue(double T0, double T);
 
+  double evaluate2dGaussian(double T0, double T);
+
   double GetFresnelCorrectionFactor(double T0);
 
   double GetLossCorrectionFactor(double T0);
@@ -84,10 +91,6 @@ public:
   double ConvertTheta0GlassAir_to_AirGlass(double T1);
   
   void GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag);
-
-  inline double BilinearInterpolation(double q11, double q12, double q21, double q22, double x1, double x2, double y1, double y2, double x, double y);
-  // 
-
 
   
 

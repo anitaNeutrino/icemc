@@ -815,3 +815,6 @@ Move all turf and surf related things from balloon to anita.
 
 06/22/2016 13.22 PM ET M. Sutherland   [in branches/roughness]
 Changed BilinearInterpolation() arguments to double. Added 2-d bilinear interp to InterpolatePower(), commenting out pre-existing spline code, still working on it. Removed extra double castings in roughness. Fixed input.txt.roughness to accomodate new LCP/RCP input line.
+
+06/30/2016 10.26 AM ET M. Sutherland   [in branches/roughness]
+Removed 2-d interp algorithm in InterpolatePower(), BilinearInterpolation() function, and theta_unique vector. Adding analytic gaussian function using astropy 2d gaussian fits to raw power measurements. Changed default roughness to 400 grit. synced with trunk.

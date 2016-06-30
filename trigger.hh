@@ -58,6 +58,8 @@ public:
     int channels_passing[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2][Anita::NBANDS_MAX]; // keeps track of which channels pass
     // make this an array of vectors instead so that we can have an arbitrary number of bands for satellite
     vector<int> vchannels_passing[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2];
+  std::array< std::array< std::array< std::array<std::vector<int>,Anita::NBANDS_MAX>, 2>, Anita::NPHI_MAX>, Anita::NLAYERS_MAX>  arrayofhits; 
+
     int triggerbits[Anita::NTRIG]; // keeps track of which trigger scenarios pass
     // for the nadir studies
     

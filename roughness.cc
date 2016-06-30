@@ -26,23 +26,68 @@ Roughness::Roughness(int a){
   if (froughsetting==0){
     gritvalue = -1;
     Ntheta0 = 8;
+
+    amplitude = 11533.5079801;
+    x_mean = -70.7895043835*PI/180.;
+    y_mean = -117.265622073*PI/180.;
+    x_stddev = -62.0590662533*PI/180.;
+    y_stddev = 0.278860665027*PI/180.;
+    gaustheta = 1.02423010135;
+    maxmeaspower = 240.000000;
+    fitfuncmax = 1026.090470;
   }
   else if (froughsetting==1){
     gritvalue = 400;
     Ntheta0 = 8;
+
+    amplitude = 10.6775743805;
+    x_mean = 2.72644088639*PI/180.;
+    y_mean = 4.30910349029*PI/180.;
+    x_stddev = 30.5405941232*PI/180.;
+    y_stddev = 1.19768826165*PI/180.;
+    gaustheta = 1.01394332614;
+    maxmeaspower = 11.930000;
+    fitfuncmax = 10.643788;
   }
   else if (froughsetting==2){
     gritvalue = 1000;
     Ntheta0 = 9;
+
+    amplitude = 4.98141776637;
+    x_mean = 5.82182777326*PI/180.;
+    y_mean = 7.98147417219*PI/180.;
+    x_stddev = 33.4842444088*PI/180.;
+    y_stddev = 2.3019635059*PI/180.;
+    gaustheta = 1.00169997698;
+    maxmeaspower = 6.014093;
+    fitfuncmax = 4.972172;
   }
   else if (froughsetting==3){
     gritvalue = 1500;
     Ntheta0 = 9;
+
+    amplitude = 1.93882105435;
+    x_mean = 2.06659758103*PI/180.;
+    y_mean = 2.45567914294*PI/180.;
+    x_stddev = 43.1937102786*PI/180.;
+    y_stddev = 4.21294249006*PI/180.;
+    gaustheta = 0.967793908981;
+    maxmeaspower = 2.115675;
+    fitfuncmax = 1.936978;
   }
   else{
-    froughsetting = 0;  //default to flat glass
-    gritvalue = -1;
+    froughsetting = 1; //default to 400 grit
+    gritvalue = 400;
     Ntheta0 = 8;
+
+    amplitude = 10.6775743805;
+    x_mean = 2.72644088639*PI/180.;
+    y_mean = 4.30910349029*PI/180.;
+    x_stddev = 30.5405941232*PI/180.;
+    y_stddev = 1.19768826165*PI/180.;
+    gaustheta = 1.01394332614;
+    maxmeaspower = 11.930000;
+    fitfuncmax = 10.643788;
   }
 
   for (int ii=0; ii<8; ii++){
@@ -215,55 +260,26 @@ double Roughness::InterpolatePowerValue(double T0, double T){
   //s.set_points(theta_0_unique, spl_values);
   //return s(T0);
 
-
   //++++++++++++++++++++++++++++++++++++++
-  // use this for 2-d bilinear interpolation with BilinearInterpolation(double q11, double q12, double q21, double q22, double x1, double x2, double y1, double y2, double x, double y)
-  // if flat glass, skip for now
-  if(froughsetting==0){
-    return 0;
-  }
+  // use this for analytic evaluation
+  // get the fit value and renormalize to the maximum measured power
+  return (evaluate2dGaussian(T0, T) * maxmeaspower / fitfuncmax);
+};
 
-  double ilower, iupper;
-  double q11, q12, q21, q22;
-  double x1, x2, y1, y2;
 
-  // find the bounding theta0 values for the given T0
-  for(int i=0; i<theta_0_unique.size(); i++){
-    if( (T0>=theta_0_unique[i])&&(T0<theta_0_unique[i+1]) ){
-      ilower = i;
-      iupper = i+1;
-      x1 = theta_0_unique[ilower];
-      x2 = theta_0_unique[iupper];
-    }
-    if(i==theta_0_unique.size()-1){  //treat special case at end
-      ilower = i;
-      iupper = i+1;
-      x1 = theta_0_unique[ilower];
-      x2 = 90.;
-    }
+double Roughness::evaluate2dGaussian(double T0, double T){
+  double x = T0*PI/180.;
+  double y = T*PI/180.;
 
-  }
+  double a = cos(gaustheta)*cos(gaustheta)/2./x_stddev/x_stddev + sin(gaustheta)*sin(gaustheta)/2./y_stddev/y_stddev;
+  
+  double b = sin(2.*gaustheta)/2./x_stddev/x_stddev - sin(2.*gaustheta)/2./y_stddev/y_stddev;
+  
+  double c = sin(gaustheta)*sin(gaustheta)/2./x_stddev/x_stddev + cos(gaustheta)*cos(gaustheta)/2./y_stddev/y_stddev;
 
-  for(int j=0; j<19; j++){
-    if( (j==0)&&(T<theta[ (ilower+1)*19 - (j) ]) ){  //below lowest negative theta 
-      y1 = -90;
-      y2 = theta[ (ilower+1)*19 - (j) ];
-      q11 = 0.;
-      q21 = 0.;
-      q12 = power[(ilower+1)*19 - (j)];
-      q22 = power[(iupper+1)*19 - (j)];
-    }
-    else if( (j==19)&&(T<theta[ (ilower+1)*19 - (j) ]) ){  //above highest positive theta
-      y1 = theta[ (ilower+1)*19 - (j) ];
-      y2 = 90.;
-      q11 = power[(ilower+1)*19 - (j)];
-      q21 = power[(iupper+1)*19 - (j)];
-      q12 = 0.;
-      q22 = 0.;
-    }
+  double expvalue = -a*(x-x_mean)*(x-x_mean)-b*(x-x_mean)*(y-y_mean)-c*(y-y_mean)*(y-y_mean);
 
-  }
-
+  return (amplitude * expvalue);
 };
 
 
@@ -329,23 +345,6 @@ void Roughness::GetFresnel(const Vector &surface_normal, const Vector &air_rf, c
 //end Roughness::GetFresnel()
 
 
-inline double Roughness::BilinearInterpolation(double q11, double q12, double q21, double q22, double x1, double x2, double y1, double y2, double x, double y){
-  // from https://helloacm.com/cc-function-to-compute-the-bilinear-interpolation/
-  // same formula as that used in R**T
-  double x2x1, y2y1, x2x, y2y, yy1, xx1;
-  x2x1 = x2 - x1;
-  y2y1 = y2 - y1;
-  x2x = x2 - x;
-  y2y = y2 - y;
-  yy1 = y - y1;
-  xx1 = x - x1;
-  return 1.0 / (x2x1 * y2y1) * (
-      q11 * x2x * y2y +
-      q21 * xx1 * y2y +
-      q12 * x2x * yy1 +
-      q22 * xx1 * yy1
-  );
-}
 
 
 
