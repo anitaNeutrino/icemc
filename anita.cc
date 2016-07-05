@@ -355,7 +355,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     // assuming v(t) is real, then phase(neg)=-phase(pos)
     INTEGRATIONTIME=3.5E-9; // integration time of trigger diode
     TIMESTEP=(1./2.6)*1.E-9; // time step between samples
-    TRIGTIMESTEP=2.E-9; // time step between sampling tunnel diode output for the trigger
+    
     DEADTIME=10.E-9; // dead time after a trigger
     energythreshold=3.;  // power threshold
 

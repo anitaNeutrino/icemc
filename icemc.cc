@@ -1855,6 +1855,7 @@ int main(int argc,  char **argv) {
   #endif
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
+    
     if (NNU >= 100) {
       if (inu % (NNU / 100) == 0)
         cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
@@ -3104,7 +3105,10 @@ int main(int argc,  char **argv) {
             tree6b->Fill();
           } // end if this is the closest antenna
 
+
           anttrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac);
+
+
 
           if (Anita::GetAntennaNumber(ilayer, ifold)==anita1->rx_minarrivaltime) {
             for (int iband=0;iband<5;iband++) {
@@ -3161,6 +3165,7 @@ int main(int argc,  char **argv) {
           delete anttrig1;
         } //loop through the phi-fold antennas
       }  //loop through the layers of antennas
+
 
       anita1->rms_rfcm_e_single_event = sqrt(anita1->rms_rfcm_e_single_event / (anita1->HALFNFOUR * settings1->NANTENNAS));
 
@@ -3235,6 +3240,7 @@ int main(int argc,  char **argv) {
 
       eventsfound_beforetrigger+=weight;
 
+
       /////////////////////////////////////////////
       //             EVALUATE TRIGGER            //
       //         FOR EACH BAND THRESHOLD         //
@@ -3245,6 +3251,8 @@ int main(int argc,  char **argv) {
 	int thispasses[Anita::NPOL]={0,0};
 	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold,
 				   thispasses);
+
+
 	if (thispasses[0]) 
 	  npass_v_thresh[i]+=1.;
 	if (thispasses[1]) 

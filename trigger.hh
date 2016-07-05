@@ -25,6 +25,18 @@ public:
   
   // these are not really used now that we bin in frequency, but we keep them anyway.
   
+  double TRIGTIMESTEP;
+int MAXNBINSTRACKEDINPAST; // keep track of this many bins in the past- for making trigger decisions
+//  const double L1_COINCIDENCE[3]={8.E-9,8.E-9,8.E-9}; // L1 coincidence window, in seconds  
+  double L1_COINCIDENCE[3]; // L1 coincidence window, in seconds  
+  // in this scenario B->M is the same as M->B for example
+  const double L3_COINCIDENCE=8.E-9; // L3 is now among neighboring phi sectors  
+
+  double L1_COINCIDENCE_MOREGENERAL[3][2]; // L1 coincidence window, in seconds  
+// in this scenario B->M is *not* the same as M->B for example
+  
+  double LATESTTIMETOTESTL1; // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.
+
   vector<int> flag_e_L1[Anita::NPHI_MAX];
   vector<int> flag_h_L1[Anita::NPHI_MAX];
   
@@ -90,6 +102,29 @@ public:
     void square_waveform_elements(const vector <double>& waveform, vector <double>& output);
     double summed_power_window(const vector <double>& waveform, unsigned int start_index, unsigned int length);
     // End of functions relating to coherent-sum trigger
+
+  int findahit(vector<int> myvector,int first,int last);
+  int findanl3(int *l3,int NPHISECTORS);
+
+  int L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
+	       vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top);
+
+
+  void L1Anita3_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,Anita::NPHI_MAX>,Anita::NPOL> &l1trig);
+
+  void L2Anita3(Anita *anita1,std::array<std::array<std::vector<int>,Anita::NPHI_MAX>,Anita::NPOL> l1trig,
+		std::array<std::array<std::vector<int>,Anita::NPHI_MAX>,Anita::NPOL> &l2trig);
+
+  void L3Anita3(Anita *anita1,std::array<std::array<std::vector<int>,Anita::NPHI_MAX>,Anita::NPOL> l2trig,
+		int *thispasses);
+
+
+  int L1Anita4(vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
+	       vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top);
+  int L1Anita4LR(vector<int> &vl0_realtime_bottom, vector<int> &v2l0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &v2l0_realtime_middle,vector<int> &vl0_realtime_top, vector<int> &v2l0_realtime_top,
+		 vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top);
+  
+
 };
 //! Handles L0 and L1 Triggers for an antenna
 class AntTrigger {
