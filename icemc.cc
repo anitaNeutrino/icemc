@@ -631,6 +631,11 @@ int main(int argc,  char **argv) {
   //for (int ii=0; ii<90; ii++){
   //  std::cerr<<ii<<"  "<<rough1->ConvertTheta0AirGlass_to_GlassAir(ii)<<"  "<<rough1->ConvertTheta0GlassAir_to_AirGlass(ii)<<std::endl;
   //}
+  //for(int ii=-90; ii<=90; ii+=10){
+  //  for (int jj=-90; jj<=90; jj+=10){
+  //    std::cerr<<ii<<"  "<<jj<<"  "<< rough1->InterpolatePowerValue(ii, jj)<<std::endl;
+  //  }
+  //}
 
   // screen testing
   //panel1->SetEdgeLength(10.);
@@ -1693,6 +1698,7 @@ int main(int argc,  char **argv) {
   #endif
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
+    
     if (NNU >= 100) {
       if (inu % (NNU / 100) == 0)
         cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
@@ -2547,8 +2553,6 @@ int main(int argc,  char **argv) {
             }// end outside antarctica
           }// end wheredoesitenterice
 
-          //std::cerr<<"+ "<<pos_projectedImpactPoint.Lon()<<"  "<<-90+pos_projectedImpactPoint.Lat()<<std::endl;
-
           // get local surface normal and vector from interaction point to impact point
           vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
           vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
@@ -2568,24 +2572,9 @@ int main(int argc,  char **argv) {
             theta_local *= -1.;
           }
 
-          //std::cerr<< antarctica->GetSurfaceNormal(ray1->rfexit[2]).Angle(ray1->n_exit2bn[2])*180./PI<<"  "<< vec_localnormal.Angle(ray1->nrf_iceside[4])*180./PI<<std::endl;
-          //std::cerr<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<<theta_0_local_converted<<std::endl;
-          if (theta_0_local*180./PI > glass_air_criticalangle){
-            //if the incident angle exceeds the critical angle for glass->air, there are no UCLA measurements
-            //std::cerr<<"Warning! Incident angle exceeds glass-air critical angle. Skipping this screen point."<<std::endl;
-            roughout<<ii<<"  "
-                  <<pos_projectedImpactPoint.Lon()<<"  "
-                  <<-90+pos_projectedImpactPoint.Lat()<<"  "
-                  <<-999<<"  "
-                  <<theta_local<<"  "
-                  <<theta_0_local<<"  "
-                  <<theta_0_local_converted<<std::endl;
-            continue;
-          }
-
           N_goodscreenpoints++;
-          interpolatedPower = rough1->InterpolatePowerValue(theta_0_local_converted, theta_local*180./PI);
-          if(interpolatedPower<0){   // tk::spline routine likes to undershoot 0 when it extrapolates
+          interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
+          if(interpolatedPower<0){
             interpolatedPower=0;
           }
 
@@ -2594,11 +2583,7 @@ int main(int argc,  char **argv) {
           rough1->GetFresnel( (const Vector)vec_localnormal, vec_pos_current_to_balloon, (const Vector)vec_nnu_to_impactPoint, npol_local, vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, fresnel_local, magnif_local);
 
           // Calculate the electric field magnitude exiting the impact point accounting for local 1)fresnel 2)magnification 3)power re-distribution from scattering 4)corrections to measurements
-          Emag_local = vmmhz1m_max * fresnel_local * magnif_local * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetFresnelCorrectionFactor(theta_0_local_converted) / rough1->GetLossCorrectionFactor(theta_0_local_converted));
-          //std::cerr<<fresnel_local<<"  "<<magnif_local<<"  "<< interpolatedPower / rough1->GetLaserPower() <<"  "<<rough1->GetFresnelCorrectionFactor(theta_0_local_converted)<<"  "<<rough1->GetLossCorrectionFactor(theta_0_local_converted)<<std::endl;
-          //std::cerr<<Emag_local<<std::endl;
-          // the field magnitude at the screen (and balloon) really depends on the vector sum of the 'local' field vectors added together
-          // later should check phase angles ....
+          Emag_local = vmmhz1m_max * fresnel_local * magnif_local * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetFresnelCorrectionFactor(theta_0_local) / rough1->GetLossCorrectionFactor(theta_0_local));
 
           // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
           Emag_local /= ( interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn) );
@@ -2608,8 +2593,8 @@ int main(int argc,  char **argv) {
                   <<pos_projectedImpactPoint.Lon()<<"  "
                   <<-90+pos_projectedImpactPoint.Lat()<<"  "
                   <<Emag_local<<"  "
-                  <<theta_local<<"  "
-                  <<theta_0_local<<"  "
+                  <<theta_local*180./PI<<"  "
+                  <<theta_0_local*180./PI<<"  "
                   <<theta_0_local_converted<<std::endl;
           Efield_local = Emag_local * npol_local;
 
@@ -2622,7 +2607,8 @@ int main(int argc,  char **argv) {
       // could also set the resultant polarization too if needed
       vmmhz_max = Efield_screentotal.Mag();
 
-      //std::cerr<<"N_good screen / Total: "<<N_goodscreenpoints<<" / "<<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE<<std::endl;
+      std::cerr<<"N_good screen / Total: "<<N_goodscreenpoints<<" / "<<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE<<std::endl;
+      std::cerr<<"Screen Mag: "<<vmmhz_max<<std::endl;
       }//end else roughness
 
       roughout.close();
@@ -3080,7 +3066,10 @@ int main(int argc,  char **argv) {
             tree6b->Fill();
           } // end if this is the closest antenna
 
+
           anttrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac);
+
+
 
           if (Anita::GetAntennaNumber(ilayer, ifold)==anita1->rx_minarrivaltime) {
             for (int iband=0;iband<5;iband++) {
@@ -3137,6 +3126,7 @@ int main(int argc,  char **argv) {
           delete anttrig1;
         } //loop through the phi-fold antennas
       }  //loop through the layers of antennas
+
 
       anita1->rms_rfcm_e_single_event = sqrt(anita1->rms_rfcm_e_single_event / (anita1->HALFNFOUR * settings1->NANTENNAS));
 
@@ -3211,6 +3201,7 @@ int main(int argc,  char **argv) {
 
       eventsfound_beforetrigger+=weight;
 
+
       /////////////////////////////////////////////
       //             EVALUATE TRIGGER            //
       //         FOR EACH BAND THRESHOLD         //
@@ -3221,6 +3212,8 @@ int main(int argc,  char **argv) {
 	int thispasses[Anita::NPOL]={0,0};
 	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold,
 				   thispasses);
+
+
 	if (thispasses[0]) 
 	  npass_v_thresh[i]+=1.;
 	if (thispasses[1]) 

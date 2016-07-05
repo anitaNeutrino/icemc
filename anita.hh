@@ -378,7 +378,7 @@ static const int NPOL=2; // number of polarizations
   double INTEGRATIONTIME; // integration time of the tunnel diode
   static const int nsamp=100; // number of samples that were used to measure the noise data
   double TIMESTEP; // time step between samples for digitization
-  double TRIGTIMESTEP;
+ 
 
   double DEADTIME;
   

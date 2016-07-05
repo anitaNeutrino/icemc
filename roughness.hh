@@ -92,7 +92,7 @@ public:
   
   void GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag);
 
-  
+  double CalculateTransmittedMagAndPol(const Vector &transmitted_rf, const Vector &incident_ray, const Vector &local_surface_normal, const Vector &specular_surface_normal, const Vector &incident_pol, Vector &transmitted_pol);
 
 
 

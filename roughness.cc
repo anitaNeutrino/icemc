@@ -40,14 +40,14 @@ Roughness::Roughness(int a){
     gritvalue = 400;
     Ntheta0 = 8;
 
-    amplitude = 10.6775743805;
-    x_mean = 2.72644088639*PI/180.;
-    y_mean = 4.30910349029*PI/180.;
-    x_stddev = 30.5405941232*PI/180.;
-    y_stddev = 1.19768826165*PI/180.;
-    gaustheta = 1.01394332614;
-    maxmeaspower = 11.930000;
-    fitfuncmax = 10.643788;
+    amplitude = 1.93882105435;
+    x_mean = 2.06659758103*PI/180.;
+    y_mean = 2.45567914294*PI/180.;
+    x_stddev = 43.1937102786*PI/180.;
+    y_stddev = 4.21294249006*PI/180.;
+    gaustheta = 0.967793908981;
+    maxmeaspower = 2.115675;
+    fitfuncmax = 1.936978;
   }
   else if (froughsetting==2){
     gritvalue = 1000;
@@ -66,20 +66,6 @@ Roughness::Roughness(int a){
     gritvalue = 1500;
     Ntheta0 = 9;
 
-    amplitude = 1.93882105435;
-    x_mean = 2.06659758103*PI/180.;
-    y_mean = 2.45567914294*PI/180.;
-    x_stddev = 43.1937102786*PI/180.;
-    y_stddev = 4.21294249006*PI/180.;
-    gaustheta = 0.967793908981;
-    maxmeaspower = 2.115675;
-    fitfuncmax = 1.936978;
-  }
-  else{
-    froughsetting = 1; //default to 400 grit
-    gritvalue = 400;
-    Ntheta0 = 8;
-
     amplitude = 10.6775743805;
     x_mean = 2.72644088639*PI/180.;
     y_mean = 4.30910349029*PI/180.;
@@ -88,6 +74,20 @@ Roughness::Roughness(int a){
     gaustheta = 1.01394332614;
     maxmeaspower = 11.930000;
     fitfuncmax = 10.643788;
+  }
+  else{
+    froughsetting = 1; //default to 400 grit
+    gritvalue = 400;
+    Ntheta0 = 8;
+
+    amplitude = 1.93882105435;
+    x_mean = 2.06659758103*PI/180.;
+    y_mean = 2.45567914294*PI/180.;
+    x_stddev = 43.1937102786*PI/180.;
+    y_stddev = 4.21294249006*PI/180.;
+    gaustheta = 0.967793908981;
+    maxmeaspower = 2.115675;
+    fitfuncmax = 1.936978;
   }
 
   for (int ii=0; ii<8; ii++){
@@ -114,6 +114,9 @@ Roughness::Roughness(int a){
     }
     if(ii==7){
       corrfactor_thetas.push_back(70.); corrfactor_fresnel.push_back(0.65); corrfactor_loss.push_back(0.89); theta_g2a.push_back(38.8);
+    }
+    if(ii==8){
+      corrfactor_thetas.push_back(90.); corrfactor_fresnel.push_back(0.); corrfactor_loss.push_back(0.); theta_g2a.push_back(41.81031489);
     }
   }
 
@@ -247,6 +250,7 @@ double Roughness::GetLaserPower(){
 double Roughness::InterpolatePowerValue(double T0, double T){
   // T0 [degrees] is the incident angle of the ray-in-ice with respect the the surface normal pointed into the air
   // theta [degrees] is the exiting angle from the surface towards the balloon, measured with respect to the surface normal pointing into the air
+  double p;
 
   //++++++++++++++++++++++++++++++++++++++
   // use this for 1+1 interpolation
@@ -258,12 +262,13 @@ double Roughness::InterpolatePowerValue(double T0, double T){
   //}
   //tk::spline s;
   //s.set_points(theta_0_unique, spl_values);
-  //return s(T0);
+  //p = s(T0);
 
   //++++++++++++++++++++++++++++++++++++++
   // use this for analytic evaluation
   // get the fit value and renormalize to the maximum measured power
-  return (evaluate2dGaussian(T0, T) * maxmeaspower / fitfuncmax);
+  p = (evaluate2dGaussian(T0, T) * maxmeaspower / fitfuncmax);
+  return p;
 };
 
 
@@ -279,7 +284,7 @@ double Roughness::evaluate2dGaussian(double T0, double T){
 
   double expvalue = -a*(x-x_mean)*(x-x_mean)-b*(x-x_mean)*(y-y_mean)-c*(y-y_mean)*(y-y_mean);
 
-  return (amplitude * expvalue);
+  return (amplitude * exp(expvalue));
 };
 
 
@@ -345,8 +350,35 @@ void Roughness::GetFresnel(const Vector &surface_normal, const Vector &air_rf, c
 //end Roughness::GetFresnel()
 
 
+// this function will return the 'roughness' fresnel coefficient for the transmitted ray
+// returns a (double) for the value, and also sets the transmitted polarization vector
+double Roughness::CalculateTransmittedMagAndPol(const Vector &transmitted_rf, const Vector &incident_ray, const Vector &local_surface_normal, const Vector &specular_surface_normal, const Vector &incident_pol, Vector &transmitted_pol){
 
+  //define plane of incidence between incident ray and local normal
+  //find pol components in local incidence plane
+  //find angles
+  //compute interpolated power and correction factors
+  //define plane of scattering between transmitted ray and local normal
+  //find pol components in scattering plane
 
+/*
+          // now need to redefine the incidence plane using int.point-imp.point and imp.point-balloon vectors
+          vec_incplane_normal = vec_nnu_to_impactPoint.Cross( (const Vector)vec_pos_current_to_balloon ).Unit();
+          vec_incplane_grdtangent = vec_incplane_normal.Cross( (const Vector)vec_localnormal ).Unit();
+          vec_incplane_perpgrd = vec_incplane_grdtangent.Cross( (const Vector)vec_incplane_normal ).Unit();
+
+          // local angles of transmission and incidence IN PLANE OF INCIDENCE
+          theta_local = vec_incplane_perpgrd.Angle( (const Vector)vec_pos_current_to_balloon );             //[rad]
+          theta_0_local = vec_incplane_perpgrd.Angle(vec_nnu_to_impactPoint);                               //[rad]
+          theta_0_local_converted = rough1->ConvertTheta0GlassAir_to_AirGlass(theta_0_local*180./PI);       //[deg]  <- !!!!
+
+          // fix angles based on geometry and how angles defined in incidence plane
+          if( ( vec_nnu_to_impactPoint.Dot((const Vector)vec_pos_current_to_balloon) ) < 0 ){
+            theta_local *= -1.;
+          }
+*/
+
+}// end Roughness::CalculateTransmittedMagAndPol()
 
 
 

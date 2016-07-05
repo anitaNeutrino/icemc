@@ -818,3 +818,6 @@ Changed BilinearInterpolation() arguments to double. Added 2-d bilinear interp t
 
 06/30/2016 10.26 AM ET M. Sutherland   [in branches/roughness]
 Removed 2-d interp algorithm in InterpolatePower(), BilinearInterpolation() function, and theta_unique vector. Adding analytic gaussian function using astropy 2d gaussian fits to raw power measurements. Changed default roughness to 400 grit. synced with trunk.
+
+07/05/2016 10.54 AM ET M. Sutherland   [in branches/roughness]
+Switched swapped 400 grit and 1500 grit 2-d fit parameters. Removed some comments and std::cerr statements. synced with trunk. InterpolatePower() use theta_0_local. Removed critical angle cut. Added an explicit 90 degree upper limit to Roughness::corrfactor vectors, this removes the nan region in front of specular exit point.
