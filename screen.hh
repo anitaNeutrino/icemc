@@ -12,6 +12,10 @@ private:
   double fedgeLength;        // the full length of one side
 
   Position fcentralPoint;      // coordinates of screen center
+
+  double fcosineProjectionFactor;    // cosine projection factor of the screen onto the ground,
+                                    // corrects for the long extension so sampling is faster
+                                    // = cos(angle between local normal at RF exit and vector to balloon)
   
   Vector fnormal;            // screen orientation, '+' = pointing back to balloon
   Vector funit_x;            // X unit vector in screen (parallel to ground surface, perp. to screen normal)
@@ -26,6 +30,10 @@ public:
   void SetEdgeLength(double a);
   
   void SetCentralPoint(Position a);
+
+  void SetCosineProjectionFactor(double a);
+
+  double GetCosineProjectionFactor();
 
   void SetNormal(Vector a);
 

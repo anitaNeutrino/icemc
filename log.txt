@@ -821,3 +821,6 @@ Removed 2-d interp algorithm in InterpolatePower(), BilinearInterpolation() func
 
 07/05/2016 10.54 AM ET M. Sutherland   [in branches/roughness]
 Switched swapped 400 grit and 1500 grit 2-d fit parameters. Removed some comments and std::cerr statements. synced with trunk. InterpolatePower() use theta_0_local. Removed critical angle cut. Added an explicit 90 degree upper limit to Roughness::corrfactor vectors, this removes the nan region in front of specular exit point.
+
+07/08/2016 07.15 AM PT M. Sutherland   [in branches/roughness]
+In icemc.cc, removed Roughness::GetFresnel() call and commented GetFresnelCorrectionFactor() in Emag_local calculation. Separated OutsideAntarctica() from WhereDoesItExitIce() check. Added cosine projection factor in Screen (fcosineProjectionFactor) with member access functions. Adjusted projection of central screen position so it impacts closer to balloon and screen samples more of the forward power transmission region. Fixed theta when incident ray points 'away' from balloon direction. Added condition in Attenuate() to allow for larger dtemp in case of roughness.

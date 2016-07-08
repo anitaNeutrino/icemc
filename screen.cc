@@ -30,6 +30,15 @@ void Screen::SetCentralPoint(Position a){
   fcentralPoint = a;
 };
 
+void Screen::SetCosineProjectionFactor(double a){
+  fcosineProjectionFactor = a;
+};
+
+
+double Screen::GetCosineProjectionFactor(){
+  return fcosineProjectionFactor;
+};
+
 void Screen::SetNormal(Vector a){
   fnormal = a.Unit();
 };
@@ -79,9 +88,9 @@ Position Screen::GetNextPosition(){
   float xindex = (float) (fpositionindex % fNsamples);
 
   pos = fcentralPoint                                       // base
-        - (fedgeLength/2.)*(funit_x + funit_y)              // shift to a corner
+        - 0.5*fedgeLength*funit_x - 0.75*fedgeLength*fcosineProjectionFactor*funit_y              // shift to a corner
         + (xindex/((float)(fNsamples-1)))*fedgeLength*funit_x   // move by x-increment
-        + (yindex/((float)(fNsamples-1)))*fedgeLength*funit_y;  // move by y-increment
+        + (yindex/((float)(fNsamples-1)))*fedgeLength*fcosineProjectionFactor*funit_y;  // move by y-increment with the cosine projection correction
 
   fpositionindex++;
   //std::cerr<<fpositionindex<<"  "<<yindex<<"  "<<xindex<<std::endl;

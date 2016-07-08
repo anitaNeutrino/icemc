@@ -2503,8 +2503,6 @@ int main(int argc,  char **argv) {
 
         double interpolatedPower;       // \muW for these angles
         double temp_efield;
-        double fresnel_local;
-        double magnif_local;
         double Emag_local;
         Vector npol_local;
         Vector Efield_local;
@@ -2521,6 +2519,7 @@ int main(int argc,  char **argv) {
         panel1->SetEdgeLength( settings1->SCREENEDGELENGTH );
         panel1->SetCentralPoint( ray1->rfexit[2] + 0.8*bn1->r_bn.Distance(ray1->rfexit[2])*ray1->n_exit2bn[2].Unit() ); //move towards balloon by 80% of distance to balloon
         panel1->SetNormal( ray1->n_exit2bn[2].Unit() );
+        panel1->SetCosineProjectionFactor( ray1->n_exit2bn[2].Unit().Dot(antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit()) );
 
         // set screen y-hat as up 'perp.' to ground in the screen plane, define x-hat as perp.
         pos_current_localnormal = antarctica->GetSurfaceNormal( panel1->GetCentralPoint() ).Unit();
@@ -2528,12 +2527,16 @@ int main(int argc,  char **argv) {
         panel1->SetUnitY( -1.*ray1->n_exit2bn[2].Cross(ray1->n_exit2bn[2].Cross(pos_current_localnormal).Unit()) );
 
         std::cerr<<"bln: "<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
+        std::cerr<<"bln X: "<<bn1->r_bn.GetX()<<"  "<<bn1->r_bn.GetY()<<"  "<<bn1->r_bn.GetZ()<<std::endl;
+        std::cerr<<"Surface: "<<antarctica->Surface(bn1->r_bn)<<std::endl;
         std::cerr<<"int.point: "<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
         std::cerr<<"RFexit: "<<ray1->rfexit[2].Lon()<<"  "<<-90+ray1->rfexit[2].Lat()<<std::endl;
         std::cerr<<"screen: "<<panel1->GetCentralPoint().Lon()<<"  "<<-90+panel1->GetCentralPoint().Lat()<<std::endl;
 
         // now loop over screen points
         for (int ii=0; ii<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE; ii++){
+          Emag_local = 0.;
+
           if((ii%1000)==0){
             std::cerr<<ii<<std::endl;
           }
@@ -2547,11 +2550,11 @@ int main(int argc,  char **argv) {
           if (!antarctica->WhereDoesItExitIce(pos_current, panel1->GetNormal(), 10., pos_projectedImpactPoint)){
             std::cerr<<"Warning!  Projected ground impact position of screen point does NOT enter ice. Skipping this screen point."<<std::endl;
             continue;
-            if (antarctica->OutsideAntarctica(pos_projectedImpactPoint)) {
+          }
+          if (antarctica->OutsideAntarctica(pos_projectedImpactPoint)) {
               std::cerr<<"Warning!  Projected ground impact position of screen point is off-continent. Skipping this screen point."<<std::endl;
-              continue;
-            }// end outside antarctica
-          }// end wheredoesitenterice
+            continue;
+          }// end outside antarctica
 
           // get local surface normal and vector from interaction point to impact point
           vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
@@ -2569,33 +2572,40 @@ int main(int argc,  char **argv) {
 
           // fix angles based on geometry and how angles defined in incidence plane
           if( ( vec_nnu_to_impactPoint.Dot((const Vector)vec_pos_current_to_balloon) ) < 0 ){
-            theta_local *= -1.;
+            //theta_local -= PI/2.;
           }
 
           N_goodscreenpoints++;
           interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
-          if(interpolatedPower<0){
-            interpolatedPower=0;
-          }
+          //if(interpolatedPower<0){
+          //  interpolatedPower=0;
+          //}
 
-          // Calculate the fresnel coefficient and magnification for this point
-          //GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag)
-          rough1->GetFresnel( (const Vector)vec_localnormal, vec_pos_current_to_balloon, (const Vector)vec_nnu_to_impactPoint, npol_local, vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, fresnel_local, magnif_local);
 
           // Calculate the electric field magnitude exiting the impact point accounting for local 1)fresnel 2)magnification 3)power re-distribution from scattering 4)corrections to measurements
-          Emag_local = vmmhz1m_max * fresnel_local * magnif_local * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetFresnelCorrectionFactor(theta_0_local) / rough1->GetLossCorrectionFactor(theta_0_local));
+          Emag_local = vmmhz1m_max * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local));
 
           // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
           Emag_local /= ( interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn) );
           Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
 
-          roughout<<ii<<"  "
+          roughout<<inu<<"  "
+                  <<ii<<"  "
                   <<pos_projectedImpactPoint.Lon()<<"  "
                   <<-90+pos_projectedImpactPoint.Lat()<<"  "
                   <<Emag_local<<"  "
                   <<theta_local*180./PI<<"  "
                   <<theta_0_local*180./PI<<"  "
-                  <<theta_0_local_converted<<std::endl;
+                  <<theta_0_local_converted<<"  "
+                  <<interaction1->posnu.Distance(pos_projectedImpactPoint)<<"  "
+                  <<pos_projectedImpactPoint.Distance(bn1->r_bn)<<"  "
+                  <<pos_current[0]<<"  "
+                  <<pos_current[1]<<"  "
+                  <<pos_current[2]<<"  "
+                  <<pos_projectedImpactPoint[0]<<"  "
+                  <<pos_projectedImpactPoint[1]<<"  "
+                  <<pos_projectedImpactPoint[2]<<"  "
+                  <<std::endl;
           Efield_local = Emag_local * npol_local;
 
           Efield_screentotal = Efield_screentotal + Efield_local;
@@ -4503,14 +4513,26 @@ void Attenuate(IceModel *antarctica1, Settings *settings1, double& vmmhz_max,  d
     }
     
     double dtemp=(rflength/ATTENLENGTH);
-    if (dtemp<20) {
-      scalefactor_attenuation=exp(-dtemp);
-      vmmhz_max=vmmhz_max*exp(-dtemp);
-    } //if
-    else {
-      scalefactor_attenuation=0;
-      vmmhz_max=0;
-    } //else
+    if(!settings1->ROUGHNESS){
+      if (dtemp<20) {
+        scalefactor_attenuation=exp(-dtemp);
+        vmmhz_max=vmmhz_max*exp(-dtemp);
+      } //if
+      else {
+        scalefactor_attenuation=0;
+        vmmhz_max=0;
+      } //else
+    }
+    else{       // use a larger allowable value in case of roughness
+      if (dtemp<10000) {
+        scalefactor_attenuation=exp(-dtemp);
+        vmmhz_max=vmmhz_max*exp(-dtemp);
+      } //if
+      else {
+        scalefactor_attenuation=0;
+        vmmhz_max=0;
+      } //else
+    }
 }
 //end Attenuate()
 
