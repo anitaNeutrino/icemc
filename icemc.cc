@@ -1846,7 +1846,7 @@ int main(int argc,  char **argv) {
     gps_offset=atan2(-0.7042,0.71)*DEGRAD;
   } else if(settings1->WHICH==8){
     gps_offset=atan2(-0.7085,0.7056)*DEGRAD;
-  } else if (settings1->WHICH==9){
+  } else if (settings1->WHICH==9 || settings1->WHICH==10){
     gps_offset=45;
   } else gps_offset=0;
 
@@ -1863,8 +1863,11 @@ int main(int argc,  char **argv) {
     else
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
     
+
+
     for (whichray = settings1->MINRAY; whichray <= settings1->MAXRAY; whichray++) {
-      anita1->passglobtrig=0;
+      anita1->passglobtrig[0]=0;
+      anita1->passglobtrig[1]=0;
       passes_thisevent=0;
       unmasked_thisevent=1;
       vmmhz_min_thatpasses=1000; // initializing.  want to find the minumum voltage that passes a
@@ -3287,7 +3290,9 @@ int main(int argc,  char **argv) {
         if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 
-        anita1->passglobtrig=1;
+        anita1->passglobtrig[0]=thispasses[0];
+        anita1->passglobtrig[1]=thispasses[1];
+
 
         //calculate the phi angle wrt +x axis of the ray from exit to balloon
         n_exit_phi = Tools::AbbyPhiCalc(ray1->n_exit2bn[2][0], ray1->n_exit2bn[2][1]);
@@ -3601,7 +3606,7 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
 
               rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
-              if (settings1->WHICH==9) { // anita-3
+              if (settings1->WHICH==9 || settings1->WHICH==10) { // anita-3
                 rawHeaderPtr->l3TrigPatternH = (short) l3trig[1];
                 rawHeaderPtr->l1TrigMask   = (short) l1TrigMask;
                 rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
@@ -3702,6 +3707,30 @@ int main(int argc,  char **argv) {
           cout << "Chord is less than 1m.\n";
         } //end else GetChord
 
+
+      //      cout <<"inu,  ston is " <<inu << "\t" << anita1->ston[4] << "\n";
+      //      if (settings1->HIST==1 && !settings1->ONLYFINAL && anita1->tglob->GetEntries()<settings1->HIST_MAX_ENTRIES && anita1->ston[4]<-1.) {// all events
+      if (settings1->HIST==1 && !settings1->ONLYFINAL && anita1->tglob->GetEntries()<settings1->HIST_MAX_ENTRIES) {// all events
+	// cout << "Filling global trigger tree.  inu is " << inu << "\n";
+        anita1->tglob->Fill();
+
+// 	if (anita1->tdata->GetEntries()==2) {
+// 	  for (int ipol=0;ipol<2;ipol++) {
+// 	    for (int iphi=0;iphi<16;iphi++) {
+	      
+// 	      for (int ibin=0;ibin<100;ibin++) {
+		
+// 		if (anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] )
+// 		  cout << "l1 is " << ipol << "\t" << ipol << "\t" << ibin << "\t" << iphi << "\t" << anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] << "\n";
+		
+// 	      }
+	      
+// 	    }
+// 	  }
+// 	}
+        anita1->tdata->Fill();
+      }
+
         passes_thisevent=1; // flag this event as passing
       } // end if passing global trigger conditions
       else {
@@ -3719,12 +3748,7 @@ int main(int argc,  char **argv) {
       //
       /////////////
 
-      //cout <<"inu,  ston is " <<inu << "\t" << anita1->ston[4] << "\n";
-      if (settings1->HIST==1 && !settings1->ONLYFINAL && anita1->tglob->GetEntries()<settings1->HIST_MAX_ENTRIES && anita1->ston[4]<-1.) {// all events
-        //cout << "Filling global trigger tree.  inu is " << inu << "\n";
-        anita1->tglob->Fill();
-        anita1->tdata->Fill();
-      }
+
     
       delete globaltrig1;
 
@@ -3974,7 +3998,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
       errordown_v_thresh[i]=poissonerror_minus[(int)npass_v_thresh[i]]/denom_v_thresh[i];
       // cout << errorup_v_thresh[i] << " " << errordown_v_thresh[i] << endl;
     }//end if
-    if (settings1->WHICH==9){ // Anita-3
+    if (settings1->WHICH==9 || settings1->WHICH==10){ // Anita-3
       rate_h_thresh[i]=npass_h_thresh[i]/denom_h_thresh[i];
       if (npass_h_thresh[i]<=20) {
         errorup_h_thresh[i]=poissonerror_plus[(int)npass_h_thresh[i]]/denom_h_thresh[i];
@@ -4008,7 +4032,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   gnpass->Write();
 
 
-  if (settings1->WHICH==9){ // Anita-3
+  if (settings1->WHICH==9 || settings1->WHICH==10){ // Anita-3 or Anita-4
     TGraph *gnpassH=new TGraph(NTHRESHOLDS, thresholds, npass_h_thresh);
     gnpassH->SetName("npassH");
     TGraph *gdenomH=new TGraph(NTHRESHOLDS, thresholds, denom_h_thresh);
@@ -4022,7 +4046,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     gH->Write();
     gdenomH->Write();
     gnpassH->Write();
-  }//end if WHICH==9
+  }//end if WHICH==9 or WHICH==10
 
   fthresholds->Write();  
   fthresholds->Close();
@@ -5255,7 +5279,7 @@ int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt){
   //int position_temp = IceMCLayerPosition[UsefulEventIndex][1];
   //int IceMCIndex = anita1->GetRx(layer_temp,  position_temp);
   int IceMCAnt = UsefulEventAnt;
-  if (settings1->WHICH==9 && UsefulEventAnt<16) {
+  if ((settings1->WHICH==9 || settings1->WHICH==10) && UsefulEventAnt<16) {
     IceMCAnt = (UsefulEventAnt%2==0)*UsefulEventAnt/2 + (UsefulEventAnt%2==1)*(UsefulEventAnt/2+8);
   }
   

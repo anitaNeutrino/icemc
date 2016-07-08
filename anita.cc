@@ -206,7 +206,7 @@ int Anita::GetRx(int ilayer, int ifold) { // get antenna number based on which l
     
     int irx=0;
     for (int i=0;i<ilayer;i++) {
-		irx+=NRX_PHI[i];
+      irx+=NRX_PHI[i];
     }
     irx+=ifold;
     return irx;
@@ -214,9 +214,11 @@ int Anita::GetRx(int ilayer, int ifold) { // get antenna number based on which l
 }
 int Anita::GetRxTriggerNumbering(int ilayer, int ifold) { // get antenna number based on which layer and position it is
   // make the top trigger layer count 1-16 left to right
-  if (ilayer==0 || ilayer==1) {
+  if (ilayer==0)
     //cout << "ilayer, ifold, getrx are " << ilayer << "\t" << ifold << "\t" << 2*ifold+ilayer << "\n";
-    return 2*ifold+ilayer;
+    return 2*ifold+1;
+  else if(ilayer==1) {
+    return 2*ifold;
   }
   else {
     //cout << "ilayer, ifold, getrx are " << ilayer << "\t" << ifold << "\t" << GetRx(ilayer,ifold) << "\n";
@@ -1259,10 +1261,20 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
    tdata->Branch("timedomain_output_2_allantennas",&timedomain_output_2_allantennas,"timedomain_output_2_allantennas[48][512]/D"); // this is the waveform that is output to the tunnel diode in the first (LCP or vertical) polarization
    tdata->Branch("arrival_times",&arrival_times,"arrival_times[48]/D");
     tdata->Branch("inu",&inu,"inu/I");
-    
+    tdata->Branch("powerthreshold",&powerthreshold,"powerthreshold[5]/D");
+    tdata->Branch("bwslice_rmsdiode",&bwslice_rmsdiode,"bwslice_rmsdiode[5]/D");
+
+    //std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhits_inanita; 
+
+    tdata->Branch("arrayofhits_inanita",&arrayofhits_inanita,"arrayofhits_inanita[3][16][2][512]/I");
+
+    tdata->Branch("l1trig_anita3and4_inanita",&l1trig_anita3and4_inanita,"l1trig_anita3and4_inanita[2][16][512]/I");
+    //tdata->Branch("arrayofhits_inanita",&arrayofhits_inanita,"std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>");
+    tdata->Branch("passglobtrig",&passglobtrig,"passglobtrig[2]/I");
+
     tglob=new TTree("tglob","tglob");
     tglob->Branch("inu",&inu,"inu/I");
-    tglob->Branch("passglobtrig",&passglobtrig,"passglobtrig/I");
+    tglob->Branch("passglobtrig",&passglobtrig,"passglobtrig[2]/I");
     tglob->Branch("l1_passing_allantennas",&l1_passing_allantennas,"l1_passing_allantennas[48]/I");
     
     
@@ -3331,7 +3343,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 		
 		
     } 
-    else if (settings1->WHICH==9) { // ANITA-III
+    else if (settings1->WHICH==9 || settings1->WHICH==10) { // ANITA-3 and ANITA-4
       cout<<"initializing and using ANITA-III payload geometry"<<endl;
       // layer 0 is antennas 1-8 on the payload
       // layer 1 is antennas 9-15

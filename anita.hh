@@ -3,6 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "rx.hpp"
+#include <array>
 
 class RX;
 class TGraph;
@@ -19,7 +20,7 @@ class TRandom3;
 
 using std::ofstream;
 using std::vector;
-
+using std::array;
 //! Contains everything about positions within payload and signals it sees for each event, in both the trigger and signal paths.
 class Anita {
     
@@ -145,6 +146,11 @@ static const int NPOL=2; // number of polarizations
     double timedomain_output_1_inanita[5][HALFNFOUR]; // this is just for writing out to the following tree
     double timedomain_output_2_inanita[5][HALFNFOUR]; // this is just for writing out to the following tree
 
+  int arrayofhits_inanita[3][16][2][HALFNFOUR];
+  //std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhits_inanita; 
+
+  int l1trig_anita3and4_inanita[2][16][HALFNFOUR];
+
     double timedomain_output_1_corrected_forplotting[6][HALFNFOUR]; // this is just for writing out to the following tree
     double timedomain_output_2_corrected_forplotting[6][HALFNFOUR]; // this is just for writing out to the following tree
 
@@ -255,7 +261,8 @@ static const int NPOL=2; // number of polarizations
     double phases[5][HALFNFOUR];
     
     // for filling tglob
-    int passglobtrig;
+  // for each polarization
+    int passglobtrig[2];
     double integral_vmmhz_foranita;
     
     
