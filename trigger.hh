@@ -30,7 +30,8 @@ int MAXNBINSTRACKEDINPAST; // keep track of this many bins in the past- for maki
 //  const double L1_COINCIDENCE[3]={8.E-9,8.E-9,8.E-9}; // L1 coincidence window, in seconds  
   double L1_COINCIDENCE[3]; // L1 coincidence window, in seconds  
   // in this scenario B->M is the same as M->B for example
-  const double L3_COINCIDENCE=22.5E-9; // L3 is now among neighboring phi sectors  
+  //  const double L3_COINCIDENCE=22.5E-9; // L3 is now among neighboring phi sectors  
+  double L3_COINCIDENCE; // L3 is now among neighboring phi sectors  
   double L1_COINCIDENCE_MOREGENERAL[3][2]; // L1 coincidence window, in seconds  
 // in this scenario B->M is *not* the same as M->B for example
   int nstepback;  

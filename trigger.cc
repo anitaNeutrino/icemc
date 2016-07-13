@@ -61,6 +61,7 @@ using std::cout;
    L1_COINCIDENCE_MOREGENERAL[2][0]=4.E-9; // L1 coincidence window, in seconds  ;
    L1_COINCIDENCE_MOREGENERAL[2][1]=4.E-9; // L1 coincidence window, in seconds  ;
 
+   L3_COINCIDENCE=22.5E-9;
 
     nstepback=(int)(2.E-9/TRIGTIMESTEP);
 
