@@ -31,12 +31,18 @@ int MAXNBINSTRACKEDINPAST; // keep track of this many bins in the past- for maki
   double L1_COINCIDENCE[3]; // L1 coincidence window, in seconds  
   // in this scenario B->M is the same as M->B for example
   const double L3_COINCIDENCE=22.5E-9; // L3 is now among neighboring phi sectors  
-
   double L1_COINCIDENCE_MOREGENERAL[3][2]; // L1 coincidence window, in seconds  
 // in this scenario B->M is *not* the same as M->B for example
   int nstepback;  
 
   double LATESTTIMETOTESTL1; // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.
+
+
+double L1_COINCIDENCE_LR[2]; // L1 coincidence window, in seconds  
+
+  double WHICHLAYERSLCPRCP[Anita::NTRIGGERLAYERS_MAX];
+
+
 
   vector<int> flag_e_L1[Anita::NPHI_MAX];
   vector<int> flag_h_L1[Anita::NPHI_MAX];
@@ -119,6 +125,8 @@ int MAXNBINSTRACKEDINPAST; // keep track of this many bins in the past- for maki
   void L3Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> l2trig,
 		    int *thispasses);
 
+  void L3Anita4LR(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
+			       int *thispasses);
 
   int L1Anita4(vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
 	       vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top);
@@ -126,9 +134,26 @@ int MAXNBINSTRACKEDINPAST; // keep track of this many bins in the past- for maki
 			    vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top);
   void L1Anita4_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &l1trig);
 
-  int L1Anita4LR(vector<int> &vl0_realtime_bottom, vector<int> &v2l0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &v2l0_realtime_middle,vector<int> &vl0_realtime_top, vector<int> &v2l0_realtime_top,
-		 vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top);
-  
+
+  void L1Anita4LR_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig);
+
+
+  int PartofL1Anita4LR_TwoPhiSectors(int ilayerreverse,int IZERO,int ipolar,
+						    vector<int> &v1l0_realtime_left, vector<int> &v2l0_realtime_left, 
+						    vector<int> &v1l0_realtime_right, vector<int> &v2l0_realtime_right, 
+						    vector<int> &vl1_realtime);
+
+
+  int L1Anita4LR_TwoPhiSectors(int IZERO,int ipolar,
+			       vector<int> &vl0_realtime_bottomleft, vector<int> &v2l0_realtime_bottomleft, 
+			       vector<int> &vl0_realtime_bottomright, vector<int> &v2l0_realtime_bottomright, 
+			       vector<int> &vl0_realtime_middleleft, vector<int> &v2l0_realtime_middleleft,
+			       vector<int> &vl0_realtime_middleright, vector<int> &v2l0_realtime_middleright,
+			       vector<int> &vl0_realtime_topleft, vector<int> &v2l0_realtime_topleft,
+			       vector<int> &vl0_realtime_topright, vector<int> &v2l0_realtime_topright,
+			       vector<int> &vl1_realtime_bottom, 
+			       vector<int> &vl1_realtime_middle, 
+			       vector<int> &vl1_realtime_top);
 
 };
 //! Handles L0 and L1 Triggers for an antenna

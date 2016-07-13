@@ -601,6 +601,7 @@ int main(int argc,  char **argv) {
   //
   //--------------------------------------------------------------
 
+
   // for comparing with peter
   double sumsignal[5]={0.};
   double sumsignal_aftertaper[5]={0.};

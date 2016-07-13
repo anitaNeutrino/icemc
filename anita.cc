@@ -1271,6 +1271,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     tdata->Branch("l1trig_anita3and4_inanita",&l1trig_anita3and4_inanita,"l1trig_anita3and4_inanita[2][16][512]/I");
     //tdata->Branch("arrayofhits_inanita",&arrayofhits_inanita,"std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>");
     tdata->Branch("passglobtrig",&passglobtrig,"passglobtrig[2]/I");
+    
+
 
     tglob=new TTree("tglob","tglob");
     tglob->Branch("inu",&inu,"inu/I");
