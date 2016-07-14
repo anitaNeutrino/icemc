@@ -1000,7 +1000,7 @@ void Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
     for (int ilayer = 0; ilayer < settings1->NLAYERS; ilayer++){
 		for (int ifold = 0; ifold < anita1->NRX_PHI[ilayer]; ifold++){
 			double phi = 0;
-			if (settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH == 9){ //If payload is either
+			if (settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH == 9 || settings1->WHICH == 10){ //If payload is either
 				antenna_position = anita1->ANTENNA_POSITION_START[ilayer][ifold];
 			}
 			else {

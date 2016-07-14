@@ -42,6 +42,7 @@
 #include "Constants.h"
 #include "Settings.h"
 #include "position.hh"
+
 #include "earthmodel.hh"
 #include "Tools.h"
 #include "vector.hh"
@@ -95,8 +96,8 @@ class Position;
 // Most of these should not be global variables.
 const int NVIEWANGLE=100; // number of viewing angles to look at the signal,  on Seckel's request
 // int irays; // counts rays (for roughness) // LC: commented out because not used
-int inu; // counts neutrinos as they are generated
 
+int inu; // counts neutrinos as they are generated
 double eventsfound_beforetrigger=0.;
 double eventsfound_crust=0; //number of events that only traverse the crust
 double eventsfound_weightgt01=0; // summing weights > 0.1
@@ -3110,7 +3111,7 @@ int main(int argc,  char **argv) {
           } // end if this is the closest antenna
 
 
-          anttrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac);
+          anttrig1->WhichBandsPass(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac);
 
 
 
@@ -3249,24 +3250,24 @@ int main(int argc,  char **argv) {
       //             EVALUATE TRIGGER            //
       //         FOR EACH BAND THRESHOLD         //
       /////////////////////////////////////////////
-      for (int i=0;i<NTHRESHOLDS;i++) {
-	double this_threshold=  threshold_start+(double)i*threshold_step;
-	thresholds[i]=fabs(this_threshold);
-	int thispasses[Anita::NPOL]={0,0};
-	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold,
-				   thispasses);
+ //      for (int i=0;i<NTHRESHOLDS;i++) {
+// 	double this_threshold=  threshold_start+(double)i*threshold_step;
+// 	thresholds[i]=fabs(this_threshold);
+// 	int thispasses[Anita::NPOL]={0,0};
+// 	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold,
+// 				   thispasses);
 
 
-	if (thispasses[0]) 
-	  npass_v_thresh[i]+=1.;
-	if (thispasses[1]) 
-	  npass_h_thresh[i]+=1.;
+// 	if (thispasses[0]) 
+// 	  npass_v_thresh[i]+=1.;
+// 	if (thispasses[1]) 
+// 	  npass_h_thresh[i]+=1.;
 	
 	
-	denom_h_thresh[i]+=1.E-7;	
-	denom_v_thresh[i]+=1.E-7;
-	//cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
-      }//end if nthresholds
+// 	denom_h_thresh[i]+=1.E-7;	
+// 	denom_v_thresh[i]+=1.E-7;
+// 	//cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
+//       }//end if nthresholds
 
       //////////////////////////////////////
       //       EVALUATE GLOBAL TRIGGER    //
@@ -3275,10 +3276,18 @@ int main(int argc,  char **argv) {
       
 
       int thispasses[Anita::NPOL]={0,0};
+      //cout << "Event number " << inu << "\n";
 
       globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, 
 				 thispasses);
       
+      for (int i=0;i<2;i++) {
+	for (int j=0;j<16;j++) {
+	  for (int k=0;k<anita1->HALFNFOUR;k++) {
+	    count1->nl1triggers[i][whichray]+=anita1->l1trig_anita3and4_inanita[i][j][k];
+	  }
+	}
+      }
       ///////////////////////////////////////
       //       Require that it passes      //
       //            global trigger         //
@@ -3302,7 +3311,8 @@ int main(int argc,  char **argv) {
         count1->npassestrigger[whichray]++;
         // tags this event as passing
         passestrigger=1;
-        
+	//	cout << "This event passes.\n";
+  
         // for plotting
         if (tree11->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
           tree11->Fill();
@@ -3729,10 +3739,11 @@ int main(int argc,  char **argv) {
 // 	    }
 // 	  }
 // 	}
-        anita1->tdata->Fill();
+       
       }
+      //cout << "This event passes. " << inu << "\n";
 
-        passes_thisevent=1; // flag this event as passing
+      passes_thisevent=1; // flag this event as passing
       } // end if passing global trigger conditions
       else {
         passes_thisevent=0; // flag this event as not passing
@@ -3740,8 +3751,12 @@ int main(int argc,  char **argv) {
           cout << "This event does not pass.\n";
       }// end else event does not pass trigger
 
-
-
+      
+      if (inu==129) {
+      //cout << "filling inu " << inu << "\n";
+	anita1->tdata->Fill();
+      }
+	//      }
 
       ///////////////////////////////////////
       //  
@@ -4377,6 +4392,8 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput << "After factoring in off-Cerenkov cone tapering, \n\tMaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell2[0]/(double)count1->nviewanglecut[0] << "\t" << (double)count1->nchanceinhell2[1]/(double)count1->nviewanglecut[1] << "\t\t" << count1->nchanceinhell2[0] << " " << count1->nchanceinhell2[1] << "\n";
   
   foutput << "Passes trigger\t\t\t\t\t\t" << (double)count1->npassestrigger[0]/(double)count1->nchanceinhell2[0] << "\t" << (double)count1->npassestrigger[1]/(double)count1->nchanceinhell2[1] << "\t\t" << count1->npassestrigger[0] << "\t" << count1->npassestrigger[1] << "\n";
+  foutput << "Number of l1 triggers\t\t\t\t\t\t" << (double)count1->nl1triggers[0][0] << "\t" << (double)count1->nl1triggers[1][0] << "\n";
+
   foutput << "Chord is good length\t\t\t\t\t" << (double)count_chordgoodlength/(double)count1->npassestrigger[0] << "\t\t\t";
   foutput.precision(10);
   foutput <<count_chordgoodlength << "\n";

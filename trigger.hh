@@ -139,13 +139,13 @@ double L1_COINCIDENCE_LR[2]; // L1 coincidence window, in seconds
   void L1Anita4LR_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig);
 
 
-  int PartofL1Anita4LR_TwoPhiSectors(int ilayerreverse,int IZERO,int ipolar,
+  int PartofL1Anita4LR_TwoPhiSectors(int iphi,int ilayerreverse,int IZERO,int ipolar,
 						    vector<int> &v1l0_realtime_left, vector<int> &v2l0_realtime_left, 
 						    vector<int> &v1l0_realtime_right, vector<int> &v2l0_realtime_right, 
 						    vector<int> &vl1_realtime);
 
 
-  int L1Anita4LR_TwoPhiSectors(int IZERO,int ipolar,
+  int L1Anita4LR_TwoPhiSectors(int iphi,int IZERO,int ipolar,
 			       vector<int> &vl0_realtime_bottomleft, vector<int> &v2l0_realtime_bottomleft, 
 			       vector<int> &vl0_realtime_bottomright, vector<int> &v2l0_realtime_bottomright, 
 			       vector<int> &vl0_realtime_middleleft, vector<int> &v2l0_realtime_middleleft,
@@ -207,9 +207,9 @@ public:
     double getRate();
     double rateToThreshold(double rate, int band); // converts a single channel rate to threshold in p/<p>
     static double GetNoise(Settings *settings1,double altitude_bn,double geoid,double theta,double bw,double temp);
-    void WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac);
+  void WhichBandsPass(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac);
   void WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]);
-  void WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
+  void WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
   static double FindPeak(double *waveform,int n); // find peak voltage of a waveform
     void GetThresholds(Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]); // get thresholds for this layer
     

@@ -3840,7 +3840,7 @@ void Anita::calculate_antenna_positions(Settings *settings1,double pitch, double
 }
 */
 void Anita::GetArrivalTimes(const Vector& rf_direction) {
-  
+  //cout << "inside getarrivaltimes.\n";
   
   // cout << "rf_direction is ";
   // rf_direction.Print();
@@ -3852,8 +3852,9 @@ void Anita::GetArrivalTimes(const Vector& rf_direction) {
       arrival_times[antenna_index] = (antenna_positions[antenna_index] * rf_direction) / CLIGHT;
       //      arrival_times[antenna_index] = ((antenna_positions[antenna_index]-one_antenna_position) * rf_direction) / CLIGHT;
       
-           // cout << "index is " << antenna_index << "\n";
-
+//       cout << "index is " << antenna_index << "\n";
+//       cout << "antenna_positions are " << antenna_positions[antenna_index] << "\n";
+//       cout << "arrival_times is " << arrival_times[antenna_index] << "\n";
     } // for: loop over antenna layers
     
 

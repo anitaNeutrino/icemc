@@ -12,6 +12,7 @@ public:
 
   int npass[2]; // count events that pass
   int npassestrigger[2]; // incremented if passes trigger
+  int nl1triggers[2][2]; // how l1 triggers.  polarization, ray
   int nchanceinhell2[2]; // based on direction of ray and thickness in Cerenkov cone,
   // signal has a chance to pass after accounting for 
   // angle, ice attenuation and 1/r 

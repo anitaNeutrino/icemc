@@ -1,7 +1,7 @@
 # This is a card file containing inputs for the UCLA-based ANITA simulation
 ### Event input output
-2000000 # How many neutrinos to generate
-18.5     # Select energy (just enter the exponent) or (0) for baseline ES&S (1) for E^-1 (2) for E^-2 (3) for E^-3 (4) for E^-4 (5) for ES&S flux with cosmological constant (6) for neutrino GZK flux from Iron nucleii (16-22)not using spectrum but just for a single energy (101-114)use all kinds of theoretical flux models 
+200000 # How many neutrinos to generate
+19     # Select energy (just enter the exponent) or (0) for baseline ES&S (1) for E^-1 (2) for E^-2 (3) for E^-3 (4) for E^-4 (5) for ES&S flux with cosmological constant (6) for neutrino GZK flux from Iron nucleii (16-22)not using spectrum but just for a single energy (101-114)use all kinds of theoretical flux models 
 0  # (0) Pick neutrino position in the ice within the horizon of the balloon and neutrino direction such that the specular ray hitting the balloon sits on the Cerenkov cone or (1) Pick neutrino interaction point from anywhere in the ice and neutrino direction from all directions equally
 1      # 1=write to histograms and trees, 0=don't write to histograms & trees
 0      # 1=write to ray tree (for roughness study), 0 don't write
@@ -11,7 +11,7 @@
 0      # Write neutrino position info to file
 0	#EVENTSMAP (1)draw the events distribution map or (0) not
 ### Balloon and payload
-9      # Which payload:  ANITA-lite (0), Ross Payload (1), 2006-2007 flight with simple settings, Make Your Own (3), Ant Hill (4), 2006-2007 flight with Kurt measurements(6), EeVEX (one layer of antennas) (7), ANITA-2 (8), ANITA-3 (9), ANITA-4 (10), (SWORD) Satellite (11) 
+9      # Which payload:  ANITA-lite (0), Ross Payload (1), 2006-2007 flight with simple settings, Make Your Own (3), Ant Hill (4), 2006-2007 flight with Kurt measurements(6), EeVEX (one layer of antennas) (7), ANITA-II (8), ANITA-III (9), (SWORD) Satellite (10) 
 4      # How many physical layers of antennas to include.  If you indicate N, it will consider the top N layers and ignore the rest.  Useful for turning off the nadirs.  4=default
 10     # Inclination angle in degrees for top three antenna layers 10=default
 10     # Inclination angle in degrees for fourth layer of antennas 10=default
@@ -37,13 +37,13 @@
 3	# number of antenna in 'clump' for L2 trigger
 1 	# require centre antenna in clump is one of those hit
 1	# (1) for L3 trigger or (0) no L3 trigger requirement 
-0	# 1 for LCP and RCP, 0 for V and H 
-0	0	#any channels passing are REQUIRED to be from this polarization 
+0	# 1 for LCP and RCP, 0 for V and H
+1	1	#any channels passing are REQUIRED to be from this polarization 
 1	1	#any channels passing are ALLOWED to be from this polarization 
 0      # 2=use nadirs, 1= use discones or 0= do not use discones or nadirs in the trigger
 0      # Implement the nadir-only trigger (require 3/3 antennas in nadir layer pass)
 0	# implement channel masking as in anita 1 flight (1) yes or (0) no
-0	# implement phi masking as in anita 2 flight or in anita 3 flight (1) yes or (0) no
+1	# implement phi masking as in anita 2 flight or in anita 3 flight (1) yes or (0) no
 ### Modifications to the trigger that have been used for modeling anita-lite
 0      # scale down lcp voltage of 1st antenna for anita-lite
 0      # scale down e pol. of 1st antenna for anita-lite
@@ -121,5 +121,4 @@
 # Settings for digitiser path
 0       # apply impulse response (default for Anita-3 is 1)
 # Settings for time-dependent thresholds
-0       # use time-dependent thresholds (only available for Anita-3)
-
+1       # use time-dependent thresholds (only available for Anita-3)
