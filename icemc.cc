@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <math.h>
+#include <ctype.h>
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
@@ -625,11 +626,22 @@ int main(int argc,  char **argv) {
     cout << "Syntax for options: -i inputfile -o outputdir -r run_number\n";
     return 0;
   }
-  
+  int nnu_tmp=0;
+  double trig_thresh=0.;
   char clswitch; // command line switch
   if (argc>1) {
-    while ((clswitch = getopt(argc, argv, "i:o:r:")) != EOF) {
+    while ((clswitch = getopt(argc, argv, "t:i:o:r:n:")) != EOF) {
       switch(clswitch) {
+      case 'n':
+	nnu_tmp=atoi(optarg);
+//         stringstream convert(run_num);
+//         convert>>run_no;
+        break;
+      case 't':
+	trig_thresh=atof(optarg);
+//         stringstream convert(run_num);
+//         convert>>run_no;
+        break;
       case 'i':
         input=optarg;
         cout << "Changed input file to: " << input << endl;
@@ -652,6 +664,7 @@ int main(int argc,  char **argv) {
     } // end while
   } // end if arg>1
   
+
   settings1->SEED=settings1->SEED +run_no;
   cout <<"seed is " << settings1->SEED << endl;
 
@@ -708,12 +721,21 @@ int main(int argc,  char **argv) {
   // input parameters
   settings1->ReadInputs(inputsfile,  foutput,  anita1,  sec1,  sig1,  bn1,  ray1);
   
+
+
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);
 
+
+
   bn1->InitializeBalloon();
   anita1->Initialize(settings1, foutput, inu);
-  
+
+  if (trig_thresh!=0)
+    anita1->powerthreshold[4]=trig_thresh;
+  if (nnu_tmp!=0)
+    NNU=nnu_tmp;
+
   Spectra *spectra1 = new Spectra((int)settings1->EXPONENT);
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);

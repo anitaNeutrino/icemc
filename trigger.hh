@@ -26,22 +26,32 @@ public:
   // these are not really used now that we bin in frequency, but we keep them anyway.
   
   double TRIGTIMESTEP;
-int MAXNBINSTRACKEDINPAST; // keep track of this many bins in the past- for making trigger decisions
+  int nstepback;  // when a trigger is fired, how many bins you step back to start a coincidence window
+
+  // this is used for Anita 3
 //  const double L1_COINCIDENCE[3]={8.E-9,8.E-9,8.E-9}; // L1 coincidence window, in seconds  
-  double L1_COINCIDENCE[3]; // L1 coincidence window, in seconds  
+  double L1_COINCIDENCE_ANITA3[3]; // L1 coincidence window, in seconds  
   // in this scenario B->M is the same as M->B for example
   //  const double L3_COINCIDENCE=22.5E-9; // L3 is now among neighboring phi sectors  
-  double L3_COINCIDENCE; // L3 is now among neighboring phi sectors  
+  double LASTTIMETOTESTL1_ANITA3; // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.
+  double L3_COINCIDENCE; // L3 is now among neighboring phi sectors.  For Anita 3 and Anita 4 where there is an l3 coincidence  
+
+  // used for an Anita 4 scenario where B->M doesn't have the same window as M->B necessarily
   double L1_COINCIDENCE_MOREGENERAL[3][2]; // L1 coincidence window, in seconds  
 // in this scenario B->M is *not* the same as M->B for example
-  int nstepback;  
+  double LASTTIMETOTESTL1_ANITA4;
+  double LASTTIMETOTESTL1_ANITA4LR_SCA;
 
-  double LATESTTIMETOTESTL1; // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.
 
 
-double L1_COINCIDENCE_LR[2]; // L1 coincidence window, in seconds  
-
+  // In LR scenario A, a bottom antenna initiates the trigger, then require coincidences with hits in other layers
+  double L1_COINCIDENCE_LR_SCA[2]; // L1 coincidence window, in seconds  
+  // which layers we're considering LCP, RCP polarizations instead of V,H in scenario A
   double WHICHLAYERSLCPRCP[Anita::NTRIGGERLAYERS_MAX];
+
+  // This if a coincidence between LCP and RCP for a single antenna for Anita 4
+  double L1_COINCIDENCE_LR_SCB; // L1 coincidence window, in seconds  
+
 
 
 
@@ -120,41 +130,57 @@ double L1_COINCIDENCE_LR[2]; // L1 coincidence window, in seconds
 
   void L1Anita3_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &l1trig);  
 
+
+  int L1Anita4_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
+			    vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top);
+  void L1Anita4_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &l1trig);
+
   void L2Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> l1trig,
 		    std::array<std::array<std::vector<int>,16>,2> &l2trig);
 
   void L3Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> l2trig,
 		    int *thispasses);
 
-  void L3Anita4LR(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
-			       int *thispasses);
 
-  int L1Anita4(vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
-	       vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top);
-  int L1Anita4_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
-			    vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top);
-  void L1Anita4_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &l1trig);
+  int PartofL1Anita4LR_ScA_TwoPhiSectors(int ilayerreverse,int IZERO,int ipolar,
+					 vector<int> &v1l0_realtime_left, vector<int> &v2l0_realtime_left, 
+					 vector<int> &v1l0_realtime_right, vector<int> &v2l0_realtime_right, 
+					 vector<int> &vl1_realtime);
+  
+  int L1Anita4LR_ScA_TwoPhiSectors(int IZERO,int ipolar,
+				   vector<int> &vl0_realtime_bottomleft, vector<int> &v2l0_realtime_bottomleft, 
+				   vector<int> &vl0_realtime_bottomright, vector<int> &v2l0_realtime_bottomright, 
+				   vector<int> &vl0_realtime_middleleft, vector<int> &v2l0_realtime_middleleft,
+				   vector<int> &vl0_realtime_middleright, vector<int> &v2l0_realtime_middleright,
+				   vector<int> &vl0_realtime_topleft, vector<int> &v2l0_realtime_topleft,
+				   vector<int> &vl0_realtime_topright, vector<int> &v2l0_realtime_topright,
+				   vector<int> &vl1_realtime_bottom, 
+				   vector<int> &vl1_realtime_middle, 
+				   vector<int> &vl1_realtime_top);
+  
+  void L1Anita4LR_ScA_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig);
+  void L3Anita4LR_ScA(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
+		      int *thispasses);
 
 
-  void L1Anita4LR_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig);
+  // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
+  void L1Anita4LR_ScB(int IZERO,Anita *anita1,vector<int> vleft,vector<int> vright,
+		      vector<int> &vl1trig);
+  // L2 trigger is for one phi sector again
+  void L2Anita4LR_ScB_OnePhiSector(vector<int> &vl0_realtime_bottom, vector<int> &v2l0_realtime_bottom, 
+				   vector<int> &vl0_realtime_middle, vector<int> &v2l0_realtime_middle,
+				   vector<int> &vl0_realtime_top, vector<int> &v2l0_realtime_top,
+				   vector<int> &vl1_realtime);
+  void L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &l1trig);
 
 
-  int PartofL1Anita4LR_TwoPhiSectors(int iphi,int ilayerreverse,int IZERO,int ipolar,
-						    vector<int> &v1l0_realtime_left, vector<int> &v2l0_realtime_left, 
-						    vector<int> &v1l0_realtime_right, vector<int> &v2l0_realtime_right, 
-						    vector<int> &vl1_realtime);
 
 
-  int L1Anita4LR_TwoPhiSectors(int iphi,int IZERO,int ipolar,
-			       vector<int> &vl0_realtime_bottomleft, vector<int> &v2l0_realtime_bottomleft, 
-			       vector<int> &vl0_realtime_bottomright, vector<int> &v2l0_realtime_bottomright, 
-			       vector<int> &vl0_realtime_middleleft, vector<int> &v2l0_realtime_middleleft,
-			       vector<int> &vl0_realtime_middleright, vector<int> &v2l0_realtime_middleright,
-			       vector<int> &vl0_realtime_topleft, vector<int> &v2l0_realtime_topleft,
-			       vector<int> &vl0_realtime_topright, vector<int> &v2l0_realtime_topright,
-			       vector<int> &vl1_realtime_bottom, 
-			       vector<int> &vl1_realtime_middle, 
-			       vector<int> &vl1_realtime_top);
+
+
+
+
+
 
 };
 //! Handles L0 and L1 Triggers for an antenna

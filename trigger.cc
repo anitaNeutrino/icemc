@@ -35,32 +35,48 @@ using std::cout;
 
 
    TRIGTIMESTEP=2.E-9; // time step between sampling tunnel diode output for the trigger
-   MAXNBINSTRACKEDINPAST=10; // keep track of this many bins in the past
+      
    
-   LATESTTIMETOTESTL1=((double)anita1->NFOUR/2)*anita1->TIMESTEP-Tools::dMax(L1_COINCIDENCE,3); // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.
+   L3_COINCIDENCE=22.5e-9;
 
-
-   L1_COINCIDENCE[0]=16.E-9;
-   L1_COINCIDENCE[1]=22.E-9;
-   L1_COINCIDENCE[2]=5.E-9; // L1 coincidence window, in seconds  
+   // L1 coincidence window, in seconds  
+   L1_COINCIDENCE_ANITA3[0]=16.E-9; // B->M or T
+   L1_COINCIDENCE_ANITA3[1]=22.E-9; // M->B or T
+   L1_COINCIDENCE_ANITA3[2]=5.E-9; // T->B or M 
 // in this scenario B->M is the same as M->B for example
+// this needs to be generalized- using this same thing for all scenarios which isn't right
+   LASTTIMETOTESTL1_ANITA3=((double)anita1->NFOUR/2)*anita1->TIMESTEP-Tools::dMax(L1_COINCIDENCE_ANITA3,3); // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.
+
+
+
 
 // layers indexed in reverse order!
    // B->M
    // B->T
-   L1_COINCIDENCE_LR[0]=16.E-9;
-   L1_COINCIDENCE_LR[1]=16.E-9;
+   L1_COINCIDENCE_LR_SCA[0]=16.E-9;
+   L1_COINCIDENCE_LR_SCA[1]=16.E-9;
 
+   LASTTIMETOTESTL1_ANITA4LR_SCA=Tools::dMax(L1_COINCIDENCE_LR_SCA,2);
+   LASTTIMETOTESTL1_ANITA4LR_SCA=((double)anita1->NFOUR/2)*anita1->TIMESTEP-LASTTIMETOTESTL1_ANITA4LR_SCA; // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.
 
    L1_COINCIDENCE_MOREGENERAL[0][0]=16.E-9;
    L1_COINCIDENCE_MOREGENERAL[0][1]=4.E-9;
 
- L1_COINCIDENCE_MOREGENERAL[1][0]=16.E-9;
-  L1_COINCIDENCE_MOREGENERAL[1][1]=4.E-9;
-
+   L1_COINCIDENCE_MOREGENERAL[1][0]=16.E-9;
+   L1_COINCIDENCE_MOREGENERAL[1][1]=4.E-9;
+   
    L1_COINCIDENCE_MOREGENERAL[2][0]=4.E-9; // L1 coincidence window, in seconds  ;
    L1_COINCIDENCE_MOREGENERAL[2][1]=4.E-9; // L1 coincidence window, in seconds  ;
 
+   LASTTIMETOTESTL1_ANITA4=0.;
+   for (int i=0;i<3;i++) {
+     for (int j=0;j<2;j++) {
+       if (L1_COINCIDENCE_MOREGENERAL[i][j]>LASTTIMETOTESTL1_ANITA4)
+	 LASTTIMETOTESTL1_ANITA4=L1_COINCIDENCE_MOREGENERAL[i][j];
+     }
+   }
+   LASTTIMETOTESTL1_ANITA4=((double)anita1->NFOUR/2)*anita1->TIMESTEP-LASTTIMETOTESTL1_ANITA4; // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.
+   //   cout << "LASTTMETOTESTL1_ANITA4 is " << LASTTIMETOTESTL1_ANITA4 << "\n";
 //    L1_COINCIDENCE_MOREGENERAL[0][0]=16.E-9; // B->T
 //    L1_COINCIDENCE_MOREGENERAL[0][1]=16.E-9;
 
@@ -711,7 +727,7 @@ int whichlayer,whichphisector;
     for (int ibin = anita1->iminbin[j]; ibin < anita1->imaxbin[j]; ibin++) {
     
       if (timedomain_output_1[j][ibin] < thresholds[0][j] * anita1->bwslice_rmsdiode[j] && anita1->pol_allowed[0] && anita1->bwslice_allowed[j]) { // is this polarization and bw slice allowed to pass
-	  //	      std::cout << "VPOL : " << j << " " << timedomain_output_1[j][ibin]  << " " <<  thresholds[0][j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
+	//std::cout << "VPOL : " << j << " " << timedomain_output_1[j][ibin]  << " " <<  thresholds[0][j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
 	  anita1->channels_passing_e[j] = 1;// channel passes
     
 	
@@ -2029,8 +2045,8 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	    for (int ibin=0;ibin<vl1trig[ipol][iphi].size();ibin++) {
 	      anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=vl1trig[ipol][iphi][ibin];
 	     
-	      //if (anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin])
-	      //cout << "This l1 is " << ipol << "\t" << iphi << "\t" << ibin << "\t" << anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] << "\n";
+// 	      if (anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin])
+// 		cout << "This l1 is " << ipol << "\t" << iphi << "\t" << ibin << "\t" << anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] << "\n";
 	    }
 	    for (int ibin=vl1trig[ipol][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
 	      anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=0;
@@ -2053,7 +2069,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 
 	std::array<std::array<std::vector<int>,16>,2> vl1trig;
 	//cout << "calling allphisectors.\n";
-	L1Anita4LR_AllPhiSectors(anita1,vl1trig);
+	L1Anita4LR_ScA_AllPhiSectors(anita1,vl1trig);
 
 	for (int ipol=0;ipol<2;ipol++) {
 	  for (int iphi=0;iphi<16;iphi++) {
@@ -2075,7 +2091,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	
 	L2Anita3and4(anita1,vl1trig,
 		     vl2trig);
-	L3Anita4LR(anita1,vl2trig,
+	L3Anita4LR_ScA(anita1,vl2trig,
 		   thispasses);
 
       }
@@ -3361,7 +3377,7 @@ void GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std::vector
     for (int iphi_neighbor=iphi-1;iphi_neighbor<=iphi+1;iphi_neighbor++) {
       if (iphi_neighbor!=iphi) {
       iphimod16_neighbor=(iphi_neighbor+16)%16;
-
+      //cout << "L3_COINCIDENCE is " << L3_COINCIDENCE << "\n";
       for (int ibin=0;ibin<vl2trig[ipolar][iphi].size();ibin++) {
 	if (ibin+(int)(L3_COINCIDENCE/TRIGTIMESTEP)<vl2trig[ipolar][iphimod16_neighbor].size()) {
 	if (vl2trig[ipolar][iphi][ibin] && 
@@ -3382,7 +3398,28 @@ void GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std::vector
 
 }
 
-void GlobalTrigger::L3Anita4LR(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
+
+  // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
+void GlobalTrigger::L1Anita4LR_ScB(int IZERO,Anita *anita1,vector<int> vleft,vector<int> vright,
+		      vector<int> &vl1trig) {
+
+  
+
+
+  }
+  // L2 trigger is for one phi sector again
+void GlobalTrigger::L2Anita4LR_ScB_OnePhiSector(vector<int> &vl0_realtime_bottom, vector<int> &v2l0_realtime_bottom, 
+				   vector<int> &vl0_realtime_middle, vector<int> &v2l0_realtime_middle,
+				   vector<int> &vl0_realtime_top, vector<int> &v2l0_realtime_top,
+				   vector<int> &vl1_realtime) {
+
+  }
+void GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &l1trig) {
+
+}
+
+
+void GlobalTrigger::L3Anita4LR_ScA(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
 			     int *thispasses) {
 
 
@@ -3396,8 +3433,6 @@ void GlobalTrigger::L3Anita4LR(Anita *anita1,std::array<std::array<std::vector<i
 	if (vl2trig[ipolar][iphi][ibin]) {
 
 	  thispasses[ipolar]=1;
-	  ibin=vl2trig[ipolar][iphi].size();
-	  iphi=anita1->PHITRIG[0]; // end both loops
 	}
       }
 
@@ -3420,7 +3455,7 @@ void GlobalTrigger::L1Anita3_AllPhiSectors(Anita *anita1,std::array<std::array<s
   for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
     itrigbin=0;
     time_thisbin=0.;
-    while (time_thisbin<LATESTTIMETOTESTL1) {
+    while (time_thisbin<LASTTIMETOTESTL1_ANITA3) {
 
       vl1trig[0][iphi].push_back(L1Anita3_OnePhiSector(itrigbin,arrayofhits[2][iphi][0][4], 
 						       arrayofhits[1][iphi][0][4], 
@@ -3451,7 +3486,7 @@ void GlobalTrigger::L1Anita4_AllPhiSectors(Anita *anita1,std::array<std::array<s
   for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
     itrigbin=0;
     time_thisbin=0.;
-    while (time_thisbin<LATESTTIMETOTESTL1) {
+    while (time_thisbin<LASTTIMETOTESTL1_ANITA4) {
       //cout << "iphi is " << iphi << "\n";
       vl1trig[0][iphi].push_back(L1Anita4_OnePhiSector(itrigbin,arrayofhits[2][iphi][0][4], arrayofhits[1][iphi][0][4], arrayofhits[0][iphi][0][4],
 						       vl1_realtime_vbottom, vl1_realtime_vmiddle, vl1_realtime_vtop));
@@ -3487,7 +3522,7 @@ void GlobalTrigger::L1Anita4_AllPhiSectors(Anita *anita1,std::array<std::array<s
   }
   //  cout << "inside, vl1trig is " << vl1trig[0][0].size() << "\n";
 }
-void GlobalTrigger::L1Anita4LR_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig) {
+void GlobalTrigger::L1Anita4LR_ScA_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig) {
   vector<int> vl1_realtime_1bottom;
   vector<int> vl1_realtime_1middle; 
   vector<int> vl1_realtime_1top;
@@ -3506,11 +3541,11 @@ void GlobalTrigger::L1Anita4LR_AllPhiSectors(Anita *anita1,std::array<std::array
     taketheor=0;
     int iphi_rightneighbor=(iphi+1+16)%16;
     int iphi_leftneighbor=(iphi-1+16)%16;
-    while (time_thisbin<LATESTTIMETOTESTL1) {
+    while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCA) {
       
       for (int ipolar=0;ipolar<2;ipolar++) {
 
-	if (L1Anita4LR_TwoPhiSectors(iphi,itrigbin,ipolar,
+	if (L1Anita4LR_ScA_TwoPhiSectors(itrigbin,ipolar,
 					   arrayofhits[2][iphi][0][4],arrayofhits[2][iphi][1][4], 
 					   arrayofhits[2][iphi_rightneighbor][0][4],arrayofhits[2][iphi_rightneighbor][1][4], 
 					   arrayofhits[1][iphi][0][4], arrayofhits[1][iphi][1][4], 
@@ -3519,7 +3554,7 @@ void GlobalTrigger::L1Anita4LR_AllPhiSectors(Anita *anita1,std::array<std::array
 					   arrayofhits[0][iphi_rightneighbor][0][4],arrayofhits[0][iphi_rightneighbor][1][4], 
 					   vl1_realtime_1bottom, vl1_realtime_1middle, vl1_realtime_1top) ||
 	  
-	    L1Anita4LR_TwoPhiSectors(iphi,itrigbin,ipolar,
+	    L1Anita4LR_ScA_TwoPhiSectors(itrigbin,ipolar,
 					   arrayofhits[2][iphi][0][4],arrayofhits[2][iphi][1][4], 
 					   arrayofhits[2][iphi_leftneighbor][0][4],arrayofhits[2][iphi_leftneighbor][1][4], 
 					   arrayofhits[1][iphi][0][4], arrayofhits[1][iphi][1][4], 
@@ -3534,7 +3569,7 @@ void GlobalTrigger::L1Anita4LR_AllPhiSectors(Anita *anita1,std::array<std::array
 	  
 	//	if (iphi==13) {
 	//cout << "itrigbin is " << itrigbin << "\n";
-	  // cout << "first one is " << L1Anita4LR_TwoPhiSectors(iphi,itrigbin,ipolar,
+	  // cout << "first one is " << L1Anita4LR_ScA_TwoPhiSectors(iphi,itrigbin,ipolar,
 // 					   arrayofhits[2][iphi][0][4],arrayofhits[2][iphi][1][4], 
 // 					   arrayofhits[2][iphi_rightneighbor][0][4],arrayofhits[2][iphi_rightneighbor][1][4], 
 // 					   arrayofhits[1][iphi][0][4], arrayofhits[1][iphi][1][4], 
@@ -3542,7 +3577,7 @@ void GlobalTrigger::L1Anita4LR_AllPhiSectors(Anita *anita1,std::array<std::array
 // 					   arrayofhits[0][iphi][0][4], arrayofhits[0][iphi][1][4], 
 // 					   arrayofhits[0][iphi_rightneighbor][0][4],arrayofhits[0][iphi_rightneighbor][1][4], 
 // 							      vl1_realtime_1bottom, vl1_realtime_1middle, vl1_realtime_1top) << "\n";
-// 	  cout << "second one is " << L1Anita4LR_TwoPhiSectors(iphi,itrigbin,ipolar,
+// 	  cout << "second one is " << L1Anita4LR_ScA_TwoPhiSectors(iphi,itrigbin,ipolar,
 // 					   arrayofhits[2][iphi][0][4],arrayofhits[2][iphi][1][4], 
 // 					   arrayofhits[2][iphi_leftneighbor][0][4],arrayofhits[2][iphi_leftneighbor][1][4], 
 // 					   arrayofhits[1][iphi][0][4], arrayofhits[1][iphi][1][4], 
@@ -3569,15 +3604,14 @@ int GlobalTrigger::L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bot
 	     vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top) {
 
 
-  //    int nstepback=(int)(4.E-9/TRIGTIMESTEP);
 
     // ask if L1 trigger passes
      // Patrick says "check every 2 ns for 4 ns back and start 4 ns gate, or 12 ns, or 16 ns."
      if (vl0_realtime_bottom[IZERO]==1) {
 
        //cout << "findahit from " << IZERO-nstepback << " to " << IZERO-nstepback+(int)(L1_COINCIDENCE[0]/TRIGTIMESTEP)-1 << "\n";
-       if (findahit(vl0_realtime_top,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE[0]/TRIGTIMESTEP)) ||
-	   findahit(vl0_realtime_middle,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE[0]/TRIGTIMESTEP))) {
+       if (findahit(vl0_realtime_top,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[0]/TRIGTIMESTEP)) ||
+	   findahit(vl0_realtime_middle,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[0]/TRIGTIMESTEP))) {
 
 
  	 vl1_realtime_bottom.push_back(1);
@@ -3594,8 +3628,8 @@ int GlobalTrigger::L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bot
      }
      
      if (vl0_realtime_middle[IZERO]==1) {
-       if (findahit(vl0_realtime_top,IZERO,IZERO-nstepback+(int)(L1_COINCIDENCE[1]/TRIGTIMESTEP)) ||
-	   findahit(vl0_realtime_bottom,IZERO,IZERO-nstepback+(int)(L1_COINCIDENCE[1]/TRIGTIMESTEP))) {
+       if (findahit(vl0_realtime_top,IZERO,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[1]/TRIGTIMESTEP)) ||
+	   findahit(vl0_realtime_bottom,IZERO,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[1]/TRIGTIMESTEP))) {
 	 
  	 vl1_realtime_middle.push_back(1);
 	 
@@ -3611,8 +3645,8 @@ int GlobalTrigger::L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bot
      //     if (vl1_realtime_bottom[vl1_realtime_bottom.size()-1])
      //cout << "the bottom bit is " << vl1_realtime_bottom[vl1_realtime_bottom.size()-1] << "\n";
      if (vl0_realtime_top[IZERO]==1) {
-       if (findahit(vl0_realtime_middle,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE[2]/TRIGTIMESTEP)) ||
-	   findahit(vl0_realtime_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE[2]/TRIGTIMESTEP))) {
+       if (findahit(vl0_realtime_middle,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[2]/TRIGTIMESTEP)) ||
+	   findahit(vl0_realtime_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[2]/TRIGTIMESTEP))) {
 	 
  	 vl1_realtime_top.push_back(1);
 	 
@@ -3636,8 +3670,6 @@ int GlobalTrigger::L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bot
 int GlobalTrigger::L1Anita4_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
 	     vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top) {
 
-  //    int nstepback=(int)(4.E-9/TRIGTIMESTEP);
-  //int nstepback=(int)(2.E-9/TRIGTIMESTEP);
 
 
     // ask if L1 trigger passes
@@ -3695,7 +3727,7 @@ int GlobalTrigger::L1Anita4_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bot
        return 1;
      else return 0;
 }
-int GlobalTrigger::L1Anita4LR_TwoPhiSectors(int iphi,int IZERO,int ipolar,
+int GlobalTrigger::L1Anita4LR_ScA_TwoPhiSectors(int IZERO,int ipolar,
 					    vector<int> &v1l0_realtime_bottomleft, vector<int> &v2l0_realtime_bottomleft, 
 					    vector<int> &v1l0_realtime_bottomright, vector<int> &v2l0_realtime_bottomright, 
 					    vector<int> &v1l0_realtime_middleleft, vector<int> &v2l0_realtime_middleleft,
@@ -3706,8 +3738,7 @@ int GlobalTrigger::L1Anita4LR_TwoPhiSectors(int iphi,int IZERO,int ipolar,
 					    vector<int> &vl1_realtime_middle, 
 					    vector<int> &vl1_realtime_top) {
 
-  //    int nstepback=(int)(4.E-9/TRIGTIMESTEP);
-  //  int IZERO=MAXNBINSTRACKEDINPAST;
+  
   //if (IZERO>=42 && IZERO<=44 && iphi==13)
   //cout << "inside _TwoPhiSectors. IZERO, ipolar are " <<  IZERO << "\t" << ipolar << "\n";
 
@@ -3725,10 +3756,10 @@ int GlobalTrigger::L1Anita4LR_TwoPhiSectors(int iphi,int IZERO,int ipolar,
   if (vleft[IZERO]==1 || vright[IZERO]==1) {
     //   if (IZERO>=40 && IZERO<=44 && iphi==13)
     //cout << "got a bottom trigger.  iphi, izero, ipolar is " << iphi << "\t" << IZERO << "\t" << ipolar << "\t" << vleft[IZERO] << "\t" << vright[IZERO] << "\n";
-    if (PartofL1Anita4LR_TwoPhiSectors(iphi,1,ipolar,IZERO,v1l0_realtime_middleleft, v2l0_realtime_middleleft,
+    if (PartofL1Anita4LR_ScA_TwoPhiSectors(1,ipolar,IZERO,v1l0_realtime_middleleft, v2l0_realtime_middleleft,
 				       v1l0_realtime_middleright, v2l0_realtime_middleright,
 				       vl1_realtime_middle) &&
-	PartofL1Anita4LR_TwoPhiSectors(iphi,0,ipolar,IZERO,v1l0_realtime_topleft, v2l0_realtime_topleft,
+	PartofL1Anita4LR_ScA_TwoPhiSectors(0,ipolar,IZERO,v1l0_realtime_topleft, v2l0_realtime_topleft,
 				       v1l0_realtime_topright, v2l0_realtime_topright,
 				       vl1_realtime_top)) {
       //if (IZERO>=40 && IZERO<=44 && iphi==13)
@@ -3754,7 +3785,7 @@ int GlobalTrigger::L1Anita4LR_TwoPhiSectors(int iphi,int IZERO,int ipolar,
   
 
 
-int GlobalTrigger::PartofL1Anita4LR_TwoPhiSectors(int iphi,int ilayerreverse,int ipolar,int IZERO,
+int GlobalTrigger::PartofL1Anita4LR_ScA_TwoPhiSectors(int ilayerreverse,int ipolar,int IZERO,
 						    vector<int> &v1l0_realtime_left, vector<int> &v2l0_realtime_left, 
 						    vector<int> &v1l0_realtime_right, vector<int> &v2l0_realtime_right, 
 						    vector<int> &vl1_realtime) {
@@ -3792,8 +3823,8 @@ int GlobalTrigger::PartofL1Anita4LR_TwoPhiSectors(int iphi,int ilayerreverse,int
 // //       cout << "left findahit is " << findahit(vleft,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR[ilayerreverse]/TRIGTIMESTEP)) << "\n";
 // //       cout << "right findahit is " << findahit(vleft,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR[ilayerreverse]/TRIGTIMESTEP)) << "\n";
 //     }
-    if (findahit(vleft,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR[ilayerreverse]/TRIGTIMESTEP)) ||
-	findahit(vright,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR[ilayerreverse]/TRIGTIMESTEP))) {
+    if (findahit(vleft,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR_SCA[ilayerreverse]/TRIGTIMESTEP)) ||
+	findahit(vright,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR_SCA[ilayerreverse]/TRIGTIMESTEP))) {
       
       vl1_realtime.push_back(1);
       //      if (IZERO>=40 && IZERO<=44)
@@ -3803,10 +3834,10 @@ int GlobalTrigger::PartofL1Anita4LR_TwoPhiSectors(int iphi,int ilayerreverse,int
       vl1_realtime.push_back(0);
   }
   else {
-    if ( (findahit(v1l0_realtime_left,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR[ilayerreverse]/TRIGTIMESTEP)) &&
-	  findahit(v2l0_realtime_left,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR[ilayerreverse]/TRIGTIMESTEP))) ||
-	 (findahit(v1l0_realtime_right,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR[ilayerreverse]/TRIGTIMESTEP)) &&
-	  findahit(v2l0_realtime_right,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR[ilayerreverse]/TRIGTIMESTEP))) ) {
+    if ( (findahit(v1l0_realtime_left,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR_SCA[ilayerreverse]/TRIGTIMESTEP)) &&
+	  findahit(v2l0_realtime_left,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR_SCA[ilayerreverse]/TRIGTIMESTEP))) ||
+	 (findahit(v1l0_realtime_right,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR_SCA[ilayerreverse]/TRIGTIMESTEP)) &&
+	  findahit(v2l0_realtime_right,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_LR_SCA[ilayerreverse]/TRIGTIMESTEP))) ) {
       vl1_realtime.push_back(1);
       //if (IZERO>=40 && IZERO<=44)
       //cout << "lcp rcp is triggered in " << ipolar << "\n";
