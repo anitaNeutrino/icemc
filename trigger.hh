@@ -145,8 +145,7 @@ public:
 		    std::array<std::array<std::vector<int>,16>,2> &l2trig);
 
 void L3Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
-				 std::array<std::array<std::vector<int>,16>,2> vl3trig,int *thispasses);
-
+ 				 int vl3trig[2][16],int *thispasses);
 
 
   int PartofL1Anita4LR_ScA_TwoPhiSectors(int ilayerreverse,int IZERO,int ipolar,

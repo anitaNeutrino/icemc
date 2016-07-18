@@ -2037,10 +2037,16 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	L2Anita3and4(anita1,vl1trig,
 		 vl2trig);
 	
-	std::array<std::array<std::vector<int>,16>,2> vl3trig;
+	int vl3trig[2][16];
 	L3Anita3and4(anita1,vl2trig,
 		     vl3trig,thispasses);
 
+	for (int ipol=0;ipol<2;ipol++) {
+          for (int iphi=0;iphi<16;iphi++) {
+            if (vl3trig[ipol][iphi]>0)    l3trig[ipol]+=(1<<iphi);
+          }
+        }
+	
       }
 	// ANITA-4
       else if (settings1->WHICH==10 && !(settings1->LCPRCP)) {
@@ -2071,8 +2077,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	L2Anita3and4(anita1,vl1trig,
 		     vl2trig);
 
-	std::array<std::array<std::vector<int>,16>,2> vl3trig;
-	
+	int vl3trig[2][16];
 	L3Anita3and4(anita1,vl2trig,
 		     vl3trig,thispasses);
 
@@ -3419,7 +3424,7 @@ void GlobalTrigger::L2Anita3and4(Anita *anita1,std::array<std::array<std::vector
 
 }
 void GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
-				 std::array<std::array<std::vector<int>,16>,2> vl3trig,int *thispasses) {
+				 int vl3trig[2][16],int *thispasses) {
 
   int iphimod16_neighbor;
 
@@ -3436,17 +3441,17 @@ void GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std::vector
 	    findahit(vl2trig[ipolar][iphimod16_neighbor],ibin,ibin+(int)(L3_COINCIDENCE/TRIGTIMESTEP))) {
 	  //cout << "passes: " << ipolar << "\t" << iphi << "\t" << ibin << "\n";
 	  //cout << "neighbor: " << ipolar << "\t" << iphimod16_neighbor << "\n";
-	  vl3trig[ipolar][iphi].push_back(1);
+	  vl3trig[ipolar][iphi]=1;
 	  thispasses[ipolar]=1;
-	  iphi_neighbor=iphi+1;
-	  iphi=anita1->PHITRIG[0]; // end both loops
+	  ibin = vl2trig[ipolar][iphi].size(); // ends this loop
+	  iphi_neighbor=iphi+2; // ends outer loop
 	}
 	else
-	  vl3trig[ipolar][iphi].push_back(0);
+	  vl3trig[ipolar][iphi]=0;
  
 	} // end if so we're not going off the end of vl2trig
 	else
-	  vl3trig[ipolar][iphi].push_back(0);
+	  vl3trig[ipolar][iphi]=0;
       }
       }
     }
