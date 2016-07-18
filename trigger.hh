@@ -50,10 +50,13 @@ public:
   double WHICHLAYERSLCPRCP[Anita::NTRIGGERLAYERS_MAX];
 
   // This if a coincidence between LCP and RCP for a single antenna for Anita 4
-  double L1_COINCIDENCE_LR_SCB; // L1 coincidence window, in seconds  
+  double L1_COINCIDENCE_ANITA4LR_SCB; // L1 coincidence window, in seconds  
+  double LASTTIMETOTESTL1_ANITA4LR_SCB;
 
+  double L2_COINCIDENCE_ANITA4LR_SCB[3]; // L2 coincidence window, in seconds  
+  double LASTTIMETOTESTL2_ANITA4LR_SCB;
 
-
+  double L3_COINCIDENCE_ANITA4LR_SCB; // L3 coincidence window, in seconds  
 
   vector<int> flag_e_L1[Anita::NPHI_MAX];
   vector<int> flag_h_L1[Anita::NPHI_MAX];
@@ -164,16 +167,39 @@ public:
 
 
   // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
-  void L1Anita4LR_ScB(int IZERO,Anita *anita1,vector<int> vleft,vector<int> vright,
+  void L1Anita4LR_ScB(int IZERO,vector<int> vleft,vector<int> vright,
 		      vector<int> &vl1trig);
+
+  void L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
+				    std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb);
   // L2 trigger is for one phi sector again
-  void L2Anita4LR_ScB_OnePhiSector(vector<int> &vl0_realtime_bottom, vector<int> &v2l0_realtime_bottom, 
-				   vector<int> &vl0_realtime_middle, vector<int> &v2l0_realtime_middle,
-				   vector<int> &vl0_realtime_top, vector<int> &v2l0_realtime_top,
-				   vector<int> &vl1_realtime);
-  void L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &l1trig);
+  void L2Anita4LR_ScB_OnePhiSector(vector<int> vl1_bottom, 
+				   vector<int> vl1_middle,
+				   vector<int> vl1_top,
+				   std::array<vector<int>,3> &vpartofl2_realtime_anita4_scb);
+  
+  // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
 
+  void L1Anita4LR_ScB_AllAntennas(Anita *anita1,std::array< std::array< vector<int>,16>,3> &vl1trig_anita4lr_scb);
+  //void L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array<std::vector<int>,16> &l2trig_anita4lr_scb);
+// ask if L3 type 1 (2 and 2) or L3 type 0 (3 and 1 or 1 and 3) passes
+  int L3or30Anita4LR_ScB_TwoPhiSectors(Anita *anita1, 
+				       std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
+				       std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
+				       int npass1,int npass2,	
+				       vector<int> &vl3trig );
+  
+  int L3or30Anita4LR_ScB_TwoPhiSectors(Anita *anita1,int iphi,int iother,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,int npass1,int npass2,	
+				       vector<int> &vl3trig );
 
+  void L3Anita4LR_ScB(Anita *anita1,std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb,
+		      std::array<vector<int>,16> &vl3trig_type0, std::array<vector<int>,16> &vl3trig_type1,
+		      int &thispasses_l3type0,int &thispasses_l3type1);
+
+  void delayL0(vector<int> &vl0,double delay);
+  void delay_AllAntennas(Anita *anita1);
+
+  double DELAYS[3]; // delay top, middle, bottom
 
 
 
@@ -294,6 +320,8 @@ public:
     void addToChannelSums(Settings *settings1,Anita *anita1,int ibw,int k);
     
     static int IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int ilayer, int ifold, int ipol);
+
+
     
     int unwarned;  // whether we have warned the user about resetting thresholds when they are beyond the measured bounds
 }; //class AntTrigger

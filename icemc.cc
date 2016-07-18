@@ -3766,6 +3766,7 @@ int main(int argc,  char **argv) {
       //cout << "This event passes. " << inu << "\n";
 
       passes_thisevent=1; // flag this event as passing
+      anita1->tdata->Fill();
       } // end if passing global trigger conditions
       else {
         passes_thisevent=0; // flag this event as not passing
@@ -3774,10 +3775,10 @@ int main(int argc,  char **argv) {
       }// end else event does not pass trigger
 
       
-      if (inu==129) {
+      //      if (inu==129) {
       //cout << "filling inu " << inu << "\n";
-	anita1->tdata->Fill();
-      }
+	
+	//}
 	//      }
 
       ///////////////////////////////////////
