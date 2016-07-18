@@ -89,12 +89,15 @@ using std::cout;
     
     // coincidence between lcp,rcp within an antenna
     L1_COINCIDENCE_ANITA4LR_SCB=4.e-9;
+
     // B->T, B->M, M->T
     L2_COINCIDENCE_ANITA4LR_SCB[0]=12.e-9;
     L2_COINCIDENCE_ANITA4LR_SCB[1]=4.e-9;
     L2_COINCIDENCE_ANITA4LR_SCB[2]=8.e-9;
+
     LASTTIMETOTESTL1_ANITA4LR_SCB=((double)anita1->NFOUR/2)*anita1->TIMESTEP-L1_COINCIDENCE_ANITA4LR_SCB; // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.;
     LASTTIMETOTESTL2_ANITA4LR_SCB=((double)anita1->NFOUR/2)*anita1->TIMESTEP-Tools::dMax(L2_COINCIDENCE_ANITA4LR_SCB,3); // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.;
+
     L3_COINCIDENCE_ANITA4LR_SCB=12.e-9;
 				   
     DELAYS[0]=0.; // delay top
