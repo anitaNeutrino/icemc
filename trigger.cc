@@ -2036,6 +2036,17 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	
 	L2Anita3and4(anita1,vl1trig,
 		 vl2trig);
+
+	if (settings1->PHIMASKING){ // only applying channel masking like this if it's Anita-3
+	  for (int ipol=0;ipol<2;ipol++) {
+	    for (int iphi=0;iphi<16;iphi++) {
+	      if  ((1<<iphi & l1TrigMask[ipol])||(1<<iphi & phiTrigMask[ipol]))  {
+	        // set phi sector to 0
+		std::fill(vl2trig[ipol][iphi].begin(), vl2trig[ipol][iphi].end(), 0);
+	      }
+	    }
+	  }
+	}
 	
 	int vl3trig[2][16];
 	L3Anita3and4(anita1,vl2trig,
