@@ -89,15 +89,12 @@ using std::cout;
     
     // coincidence between lcp,rcp within an antenna
     L1_COINCIDENCE_ANITA4LR_SCB=4.e-9;
-
     // B->T, B->M, M->T
     L2_COINCIDENCE_ANITA4LR_SCB[0]=12.e-9;
     L2_COINCIDENCE_ANITA4LR_SCB[1]=4.e-9;
     L2_COINCIDENCE_ANITA4LR_SCB[2]=8.e-9;
-
     LASTTIMETOTESTL1_ANITA4LR_SCB=((double)anita1->NFOUR/2)*anita1->TIMESTEP-L1_COINCIDENCE_ANITA4LR_SCB; // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.;
     LASTTIMETOTESTL2_ANITA4LR_SCB=((double)anita1->NFOUR/2)*anita1->TIMESTEP-Tools::dMax(L2_COINCIDENCE_ANITA4LR_SCB,3); // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.;
-
     L3_COINCIDENCE_ANITA4LR_SCB=12.e-9;
 				   
     DELAYS[0]=0.; // delay top
@@ -2040,8 +2037,9 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	L2Anita3and4(anita1,vl1trig,
 		 vl2trig);
 	
+	std::array<std::array<std::vector<int>,16>,2> vl3trig;
 	L3Anita3and4(anita1,vl2trig,
-		 thispasses);
+		     vl3trig,thispasses);
 
       }
 	// ANITA-4
@@ -2072,9 +2070,11 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	
 	L2Anita3and4(anita1,vl1trig,
 		     vl2trig);
+
+	std::array<std::array<std::vector<int>,16>,2> vl3trig;
 	
 	L3Anita3and4(anita1,vl2trig,
-		     thispasses);
+		     vl3trig,thispasses);
 
 
       }
@@ -3419,7 +3419,7 @@ void GlobalTrigger::L2Anita3and4(Anita *anita1,std::array<std::array<std::vector
 
 }
 void GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
-			     int *thispasses) {
+				 std::array<std::array<std::vector<int>,16>,2> vl3trig,int *thispasses) {
 
   int iphimod16_neighbor;
 
@@ -3436,12 +3436,17 @@ void GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std::vector
 	    findahit(vl2trig[ipolar][iphimod16_neighbor],ibin,ibin+(int)(L3_COINCIDENCE/TRIGTIMESTEP))) {
 	  //cout << "passes: " << ipolar << "\t" << iphi << "\t" << ibin << "\n";
 	  //cout << "neighbor: " << ipolar << "\t" << iphimod16_neighbor << "\n";
-
+	  vl3trig[ipolar][iphi].push_back(1);
 	  thispasses[ipolar]=1;
 	  iphi_neighbor=iphi+1;
 	  iphi=anita1->PHITRIG[0]; // end both loops
 	}
+	else
+	  vl3trig[ipolar][iphi].push_back(0);
+ 
 	} // end if so we're not going off the end of vl2trig
+	else
+	  vl3trig[ipolar][iphi].push_back(0);
       }
       }
     }

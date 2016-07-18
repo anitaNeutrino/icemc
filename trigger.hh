@@ -49,6 +49,7 @@ public:
   // which layers we're considering LCP, RCP polarizations instead of V,H in scenario A
   double WHICHLAYERSLCPRCP[Anita::NTRIGGERLAYERS_MAX];
 
+
   // This if a coincidence between LCP and RCP for a single antenna for Anita 4
   double L1_COINCIDENCE_ANITA4LR_SCB; // L1 coincidence window, in seconds  
   double LASTTIMETOTESTL1_ANITA4LR_SCB;
@@ -57,6 +58,8 @@ public:
   double LASTTIMETOTESTL2_ANITA4LR_SCB;
 
   double L3_COINCIDENCE_ANITA4LR_SCB; // L3 coincidence window, in seconds  
+
+  double DELAYS[3]; // delay top, middle, bottom
 
   vector<int> flag_e_L1[Anita::NPHI_MAX];
   vector<int> flag_h_L1[Anita::NPHI_MAX];
@@ -141,8 +144,9 @@ public:
   void L2Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> l1trig,
 		    std::array<std::array<std::vector<int>,16>,2> &l2trig);
 
-  void L3Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> l2trig,
-		    int *thispasses);
+void L3Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
+				 std::array<std::array<std::vector<int>,16>,2> vl3trig,int *thispasses);
+
 
 
   int PartofL1Anita4LR_ScA_TwoPhiSectors(int ilayerreverse,int IZERO,int ipolar,
@@ -199,7 +203,7 @@ public:
   void delayL0(vector<int> &vl0,double delay);
   void delay_AllAntennas(Anita *anita1);
 
-  double DELAYS[3]; // delay top, middle, bottom
+
 
 
 
