@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <math.h>
+#include <ctype.h>
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +43,7 @@
 #include "Constants.h"
 #include "Settings.h"
 #include "position.hh"
+
 #include "earthmodel.hh"
 #include "Tools.h"
 #include "vector.hh"
@@ -96,8 +98,8 @@ class Position;
 // Most of these should not be global variables.
 const int NVIEWANGLE=100; // number of viewing angles to look at the signal,  on Seckel's request
 // int irays; // counts rays (for roughness) // LC: commented out because not used
-int inu; // counts neutrinos as they are generated
 
+int inu; // counts neutrinos as they are generated
 double eventsfound_beforetrigger=0.;
 double eventsfound_crust=0; //number of events that only traverse the crust
 double eventsfound_weightgt01=0; // summing weights > 0.1
@@ -509,6 +511,7 @@ int main(int argc,  char **argv) {
   //
   //--------------------------------------------------------------
 
+
   // for comparing with peter
   double sumsignal[5]={0.};
   double sumsignal_aftertaper[5]={0.};
@@ -531,11 +534,22 @@ int main(int argc,  char **argv) {
     cout << "Syntax for options: -i inputfile -o outputdir -r run_number\n";
     return 0;
   }
-  
+  int nnu_tmp=0;
+  double trig_thresh=0.;
   char clswitch; // command line switch
   if (argc>1) {
-    while ((clswitch = getopt(argc, argv, "i:o:r:")) != EOF) {
+    while ((clswitch = getopt(argc, argv, "t:i:o:r:n:")) != EOF) {
       switch(clswitch) {
+      case 'n':
+	nnu_tmp=atoi(optarg);
+//         stringstream convert(run_num);
+//         convert>>run_no;
+        break;
+      case 't':
+	trig_thresh=atof(optarg);
+//         stringstream convert(run_num);
+//         convert>>run_no;
+        break;
       case 'i':
         input=optarg;
         cout << "Changed input file to: " << input << endl;
@@ -558,6 +572,7 @@ int main(int argc,  char **argv) {
     } // end while
   } // end if arg>1
   
+
   settings1->SEED=settings1->SEED +run_no;
   cout <<"seed is " << settings1->SEED << endl;
 
@@ -613,12 +628,21 @@ int main(int argc,  char **argv) {
   // input parameters
   settings1->ReadInputs(inputsfile,  foutput,  anita1,  sec1,  sig1,  bn1,  ray1);
   
+
+
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);
 
+
+
   bn1->InitializeBalloon();
   anita1->Initialize(settings1, foutput, inu);
-  
+
+  if (trig_thresh!=0)
+    anita1->powerthreshold[4]=trig_thresh;
+  if (nnu_tmp!=0)
+    NNU=nnu_tmp;
+
   Spectra *spectra1 = new Spectra((int)settings1->EXPONENT);
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
@@ -1689,7 +1713,7 @@ int main(int argc,  char **argv) {
     gps_offset=atan2(-0.7042,0.71)*DEGRAD;
   } else if(settings1->WHICH==8){
     gps_offset=atan2(-0.7085,0.7056)*DEGRAD;
-  } else if (settings1->WHICH==9){
+  } else if (settings1->WHICH==9 || settings1->WHICH==10){
     gps_offset=45;
   } else gps_offset=0;
 
@@ -1706,8 +1730,11 @@ int main(int argc,  char **argv) {
     else
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
     
+
+
     for (whichray = settings1->MINRAY; whichray <= settings1->MAXRAY; whichray++) {
-      anita1->passglobtrig=0;
+      anita1->passglobtrig[0]=0;
+      anita1->passglobtrig[1]=0;
       passes_thisevent=0;
       unmasked_thisevent=1;
       vmmhz_min_thatpasses=1000; // initializing.  want to find the minumum voltage that passes a
@@ -3077,7 +3104,7 @@ int main(int argc,  char **argv) {
           } // end if this is the closest antenna
 
 
-          anttrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac);
+          anttrig1->WhichBandsPass(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac);
 
 
 
@@ -3216,24 +3243,24 @@ int main(int argc,  char **argv) {
       //             EVALUATE TRIGGER            //
       //         FOR EACH BAND THRESHOLD         //
       /////////////////////////////////////////////
-      for (int i=0;i<NTHRESHOLDS;i++) {
-	double this_threshold=  threshold_start+(double)i*threshold_step;
-	thresholds[i]=fabs(this_threshold);
-	int thispasses[Anita::NPOL]={0,0};
-	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold,
-				   thispasses);
+ //      for (int i=0;i<NTHRESHOLDS;i++) {
+// 	double this_threshold=  threshold_start+(double)i*threshold_step;
+// 	thresholds[i]=fabs(this_threshold);
+// 	int thispasses[Anita::NPOL]={0,0};
+// 	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold,
+// 				   thispasses);
 
 
-	if (thispasses[0]) 
-	  npass_v_thresh[i]+=1.;
-	if (thispasses[1]) 
-	  npass_h_thresh[i]+=1.;
+// 	if (thispasses[0]) 
+// 	  npass_v_thresh[i]+=1.;
+// 	if (thispasses[1]) 
+// 	  npass_h_thresh[i]+=1.;
 	
 	
-	denom_h_thresh[i]+=1.E-7;	
-	denom_v_thresh[i]+=1.E-7;
-	//cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
-      }//end if nthresholds
+// 	denom_h_thresh[i]+=1.E-7;	
+// 	denom_v_thresh[i]+=1.E-7;
+// 	//cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
+//       }//end if nthresholds
 
       //////////////////////////////////////
       //       EVALUATE GLOBAL TRIGGER    //
@@ -3242,10 +3269,18 @@ int main(int argc,  char **argv) {
       
 
       int thispasses[Anita::NPOL]={0,0};
+      //cout << "Event number " << inu << "\n";
 
       globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, 
 				 thispasses);
       
+      for (int i=0;i<2;i++) {
+	for (int j=0;j<16;j++) {
+	  for (int k=0;k<anita1->HALFNFOUR;k++) {
+	    count1->nl1triggers[i][whichray]+=anita1->l1trig_anita3and4_inanita[i][j][k];
+	  }
+	}
+      }
       ///////////////////////////////////////
       //       Require that it passes      //
       //            global trigger         //
@@ -3258,7 +3293,9 @@ int main(int argc,  char **argv) {
         if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 
-        anita1->passglobtrig=1;
+        anita1->passglobtrig[0]=thispasses[0];
+        anita1->passglobtrig[1]=thispasses[1];
+
 
         //calculate the phi angle wrt +x axis of the ray from exit to balloon
         n_exit_phi = Tools::AbbyPhiCalc(ray1->n_exit2bn[2][0], ray1->n_exit2bn[2][1]);
@@ -3267,7 +3304,8 @@ int main(int argc,  char **argv) {
         count1->npassestrigger[whichray]++;
         // tags this event as passing
         passestrigger=1;
-        
+	//	cout << "This event passes.\n";
+  
         // for plotting
         if (tree11->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
           tree11->Fill();
@@ -3572,7 +3610,7 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
 
               rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
-              if (settings1->WHICH==9) { // anita-3
+              if (settings1->WHICH==9 || settings1->WHICH==10) { // anita-3
                 rawHeaderPtr->l3TrigPatternH = (short) l3trig[1];
                 rawHeaderPtr->l1TrigMask   = (short) l1TrigMask;
                 rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
@@ -3673,7 +3711,33 @@ int main(int argc,  char **argv) {
           cout << "Chord is less than 1m.\n";
         } //end else GetChord
 
-        passes_thisevent=1; // flag this event as passing
+
+      //      cout <<"inu,  ston is " <<inu << "\t" << anita1->ston[4] << "\n";
+      //      if (settings1->HIST==1 && !settings1->ONLYFINAL && anita1->tglob->GetEntries()<settings1->HIST_MAX_ENTRIES && anita1->ston[4]<-1.) {// all events
+      if (settings1->HIST==1 && !settings1->ONLYFINAL && anita1->tglob->GetEntries()<settings1->HIST_MAX_ENTRIES) {// all events
+	// cout << "Filling global trigger tree.  inu is " << inu << "\n";
+        anita1->tglob->Fill();
+
+// 	if (anita1->tdata->GetEntries()==2) {
+// 	  for (int ipol=0;ipol<2;ipol++) {
+// 	    for (int iphi=0;iphi<16;iphi++) {
+	      
+// 	      for (int ibin=0;ibin<100;ibin++) {
+		
+// 		if (anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] )
+// 		  cout << "l1 is " << ipol << "\t" << ipol << "\t" << ibin << "\t" << iphi << "\t" << anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] << "\n";
+		
+// 	      }
+	      
+// 	    }
+// 	  }
+// 	}
+       
+      }
+      //cout << "This event passes. " << inu << "\n";
+
+      passes_thisevent=1; // flag this event as passing
+      anita1->tdata->Fill();
       } // end if passing global trigger conditions
       else {
         passes_thisevent=0; // flag this event as not passing
@@ -3681,8 +3745,12 @@ int main(int argc,  char **argv) {
           cout << "This event does not pass.\n";
       }// end else event does not pass trigger
 
-
-
+      
+      //      if (inu==129) {
+      //cout << "filling inu " << inu << "\n";
+	
+	//}
+	//      }
 
       ///////////////////////////////////////
       //  
@@ -3690,12 +3758,7 @@ int main(int argc,  char **argv) {
       //
       /////////////
 
-      //cout <<"inu,  ston is " <<inu << "\t" << anita1->ston[4] << "\n";
-      if (settings1->HIST==1 && !settings1->ONLYFINAL && anita1->tglob->GetEntries()<settings1->HIST_MAX_ENTRIES && anita1->ston[4]<-1.) {// all events
-        //cout << "Filling global trigger tree.  inu is " << inu << "\n";
-        anita1->tglob->Fill();
-        anita1->tdata->Fill();
-      }
+
     
       delete globaltrig1;
 
@@ -3945,7 +4008,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
       errordown_v_thresh[i]=poissonerror_minus[(int)npass_v_thresh[i]]/denom_v_thresh[i];
       // cout << errorup_v_thresh[i] << " " << errordown_v_thresh[i] << endl;
     }//end if
-    if (settings1->WHICH==9){ // Anita-3
+    if (settings1->WHICH==9 || settings1->WHICH==10){ // Anita-3
       rate_h_thresh[i]=npass_h_thresh[i]/denom_h_thresh[i];
       if (npass_h_thresh[i]<=20) {
         errorup_h_thresh[i]=poissonerror_plus[(int)npass_h_thresh[i]]/denom_h_thresh[i];
@@ -3979,7 +4042,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   gnpass->Write();
 
 
-  if (settings1->WHICH==9){ // Anita-3
+  if (settings1->WHICH==9 || settings1->WHICH==10){ // Anita-3 or Anita-4
     TGraph *gnpassH=new TGraph(NTHRESHOLDS, thresholds, npass_h_thresh);
     gnpassH->SetName("npassH");
     TGraph *gdenomH=new TGraph(NTHRESHOLDS, thresholds, denom_h_thresh);
@@ -3993,7 +4056,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     gH->Write();
     gdenomH->Write();
     gnpassH->Write();
-  }//end if WHICH==9
+  }//end if WHICH==9 or WHICH==10
 
   fthresholds->Write();  
   fthresholds->Close();
@@ -4323,6 +4386,8 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput << "After factoring in off-Cerenkov cone tapering, \n\tMaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell2[0]/(double)count1->nviewanglecut[0] << "\t" << (double)count1->nchanceinhell2[1]/(double)count1->nviewanglecut[1] << "\t\t" << count1->nchanceinhell2[0] << " " << count1->nchanceinhell2[1] << "\n";
   
   foutput << "Passes trigger\t\t\t\t\t\t" << (double)count1->npassestrigger[0]/(double)count1->nchanceinhell2[0] << "\t" << (double)count1->npassestrigger[1]/(double)count1->nchanceinhell2[1] << "\t\t" << count1->npassestrigger[0] << "\t" << count1->npassestrigger[1] << "\n";
+  foutput << "Number of l1 triggers\t\t\t\t\t\t" << (double)count1->nl1triggers[0][0] << "\t" << (double)count1->nl1triggers[1][0] << "\n";
+
   foutput << "Chord is good length\t\t\t\t\t" << (double)count_chordgoodlength/(double)count1->npassestrigger[0] << "\t\t\t";
   foutput.precision(10);
   foutput <<count_chordgoodlength << "\n";
@@ -5064,7 +5129,7 @@ int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt){
   //int position_temp = IceMCLayerPosition[UsefulEventIndex][1];
   //int IceMCIndex = anita1->GetRx(layer_temp,  position_temp);
   int IceMCAnt = UsefulEventAnt;
-  if (settings1->WHICH==9 && UsefulEventAnt<16) {
+  if ((settings1->WHICH==9 || settings1->WHICH==10) && UsefulEventAnt<16) {
     IceMCAnt = (UsefulEventAnt%2==0)*UsefulEventAnt/2 + (UsefulEventAnt%2==1)*(UsefulEventAnt/2+8);
   }
   

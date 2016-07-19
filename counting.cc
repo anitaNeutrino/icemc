@@ -5,6 +5,13 @@
 #include "TMath.h"
 
 Counting::Counting() {
+
+  for (int i=0;i<2;i++) {
+    for (int j=0;j<2;j++) {
+      nl1triggers[i][j]=0;
+    }
+  }
+
   Tools::Zero(npass,2);
   Tools::Zero(npassestrigger,2);
   Tools::Zero(nchanceinhell2,2);

@@ -140,7 +140,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas.  So that means for Anita 1 and Anita 2, there are one fewer trigger layers than physical layers. 
   // anything anita like
   // anita 1 simple, anita 1 kurt, anita 2 kurt, anita 3, satellite
-  if (WHICH==2 || WHICH==6 || WHICH==8 || WHICH==9)
+  if (WHICH==2 || WHICH==6 || WHICH==8 || WHICH==9 || WHICH==10)
     anita1->NTRIGGERLAYERS = NLAYERS - 1;
   else
     anita1->NTRIGGERLAYERS=NLAYERS;

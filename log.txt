@@ -824,3 +824,6 @@ Switched swapped 400 grit and 1500 grit 2-d fit parameters. Removed some comment
 
 07/08/2016 07.15 AM PT M. Sutherland   [in branches/roughness]
 In icemc.cc, removed Roughness::GetFresnel() call and commented GetFresnelCorrectionFactor() in Emag_local calculation. Separated OutsideAntarctica() from WhereDoesItExitIce() check. Added cosine projection factor in Screen (fcosineProjectionFactor) with member access functions. Adjusted projection of central screen position so it impacts closer to balloon and screen samples more of the forward power transmission region. Fixed theta when incident ray points 'away' from balloon direction. Added condition in Attenuate() to allow for larger dtemp in case of roughness.
+
+07/19/2016 11.10 AM ET M. Sutherland   [in branches/roughness]
+synced with trunk, since there were a few trunk updates over the last week.
