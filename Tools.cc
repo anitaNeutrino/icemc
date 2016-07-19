@@ -348,6 +348,13 @@ void Tools::Zero(double *anarray,int n) {
         anarray[i]=0.;
     } //for
 } //Zero (int*,int)
+double Tools::dSum(double *anarray,int n) {
+  double sum=0.;
+    for (int i=0;i<n;i++) {
+        sum+=anarray[i];
+    } //for
+    return sum;
+} //Zero (int*,int)
 
 
 double Tools::dMinNotZero(const double *x,int n) {
