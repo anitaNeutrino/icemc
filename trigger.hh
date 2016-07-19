@@ -169,19 +169,29 @@ void L3Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl
 		      int *thispasses);
 
 
-  // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
-  void L1Anita4LR_ScB(int IZERO,vector<int> vleft,vector<int> vright,
+ // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
+  void L1Anita4LR_ScB_OneBin(int IZERO,vector<int> vleft,vector<int> vright,
 		      vector<int> &vl1trig);
+
 
   void L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
 				    std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb);
+
+  void L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
+					   std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb, int &npassesl2, int &npassesl2_type0);
+
   // L2 trigger is for one phi sector again
-  void L2Anita4LR_ScB_OnePhiSector(vector<int> vl1_bottom, 
-				   vector<int> vl1_middle,
-				   vector<int> vl1_top,
-				   std::array<vector<int>,3> &vpartofl2_realtime_anita4_scb);
+//   void L2Anita4LR_ScB_OnePhiSector(vector<int> vl1_bottom, 
+// 				   vector<int> vl1_middle,
+// 				   vector<int> vl1_top,
+// 				   std::array<vector<int>,3> &vpartofl2_realtime_anita4_scb);
   
   // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
+
+  void L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,vector<int> vl1_bottom, 
+					  vector<int> vl1_middle,
+					  vector<int> vl1_top,
+					  std::array<vector<int>,3> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0);
 
   void L1Anita4LR_ScB_AllAntennas(Anita *anita1,std::array< std::array< vector<int>,16>,3> &vl1trig_anita4lr_scb);
   //void L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array<std::vector<int>,16> &l2trig_anita4lr_scb);

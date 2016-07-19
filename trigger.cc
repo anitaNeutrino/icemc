@@ -2139,6 +2139,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	L2Anita4LR_ScB_AllPhiSectors(anita1,vl1trig_anita4lr_scb,
 				     vl2_realtime_anita4_scb);
 
+
 	//	cout << "did L2.\n";
 	std::array<vector<int>,16> vl3trig_type0;
 	std::array<vector<int>,16> vl3trig_type1;
@@ -3472,7 +3473,7 @@ void GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std::vector
 }
 
 // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
-void GlobalTrigger::L1Anita4LR_ScB(int IZERO,vector<int> vleft,vector<int> vright,
+void GlobalTrigger::L1Anita4LR_ScB_OneBin(int IZERO,vector<int> vleft,vector<int> vright,
 		      vector<int> &vl1trig) {
 
   if ((vleft[IZERO] && findahit(vright,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA4LR_SCB/TRIGTIMESTEP))) ||
@@ -3498,7 +3499,7 @@ void GlobalTrigger::L1Anita4LR_ScB_AllAntennas(Anita *anita1,std::array< std::ar
       
       // i should really do this in a different step so this function has fewer inputs.
       while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
-	L1Anita4LR_ScB(itrigbin,arrayofhits[itriglayer][iphi][0][4],arrayofhits[itriglayer][iphi][1][4],
+	L1Anita4LR_ScB_OneBin(itrigbin,arrayofhits[itriglayer][iphi][0][4],arrayofhits[itriglayer][iphi][1][4],
 		     vl1trig_anita4lr_scb[itriglayer][iphi]);
 	itrigbin++;
 	time_thisbin=(double)itrigbin*TRIGTIMESTEP;
@@ -3549,107 +3550,128 @@ void GlobalTrigger::L3Anita4LR_ScB(Anita *anita1,std::array<std::array<vector<in
   
 
 }
-
 // for each phi sector, does 1, 2 or 3 pass
 void GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
 						 std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb) {
 
-  for (int itriglayer=0;itriglayer<anita1->NTRIGGERLAYERS;itriglayer++) {
-    for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
-
-      //      cout << "itriglayer, iphi are " << itriglayer << "\t" << iphi << "\n";
-
-      L2Anita4LR_ScB_OnePhiSector(vl1trig_anita4lr_scb[2][iphi], 
-				  vl1trig_anita4lr_scb[1][iphi], 
-				  vl1trig_anita4lr_scb[0][iphi], 		
-				  vl2_realtime_anita4_scb[iphi]);
-
-
-    }
-
-  }
-  
-
-
-}
-void GlobalTrigger::L2Anita4LR_ScB_OnePhiSector(vector<int> vl1_bottom, 
-						      vector<int> vl1_middle,
-						      vector<int> vl1_top,
-						      std::array<vector<int>,3> &vl2_realtime_anita4_scb) {
-  // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
-  
-
- 
-  // If any of them pass l1, then the 0th element of the vpartofl2_realtime_anita4_scb array goes to one.
-  //cout << "doing the one-hits.\n";
-  for (int i=0;i<vl1_bottom.size();i++) {
-    if (vl1_bottom[i] || vl1_middle[i] || vl1_top[i]) {
-      vl2_realtime_anita4_scb[0].push_back(1);
-      //cout << "got a one-hit.\n";
-    }
-    else
-      vl2_realtime_anita4_scb[0].push_back(0);
-  }
-  //cout << "doing the two-hits.\n";
-// If you get a coincidence betw. any two, then the 1st element of the vl2_realtime_anita4_scb array goes to one.
   double time_thisbin=(double)nstepback*TRIGTIMESTEP;
   int itrigbin=nstepback;
 
-  //  cout << "sizes are " << vl1_bottom.size() << "\t" << vl1_middle.size() << "\t" << vl1_top.size() << "\n";
- 
-
   while (time_thisbin<LASTTIMETOTESTL2_ANITA4LR_SCB) {
 
-    //    cout << "start, stop bins  are " << itrigbin-nstepback << "\t" << itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP) << "\n";
-    if ((vl1_bottom[itrigbin] &&
-	 (	findahit(vl1_middle,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) ||
-		findahit(vl1_top,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) )) ||
+      for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
 	
-	(vl1_middle[itrigbin] &&
-	 (	findahit(vl1_bottom,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) ||
-		findahit(vl1_top,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP)))) ||
+	//      cout << "itriglayer, iphi are " << itriglayer << "\t" << iphi << "\n";
+	int npassesl2=0;
+	int npassesl2type0=0;
+
+	L2Anita4LR_ScB_OnePhiSector_OneBin(itrigbin,vl1trig_anita4lr_scb[2][iphi], 
+					   vl1trig_anita4lr_scb[1][iphi], 
+					   vl1trig_anita4lr_scb[0][iphi], 		
+					   vl2_realtime_anita4_scb[iphi],
+					   npassesl2,npassesl2type0);
+
 	
- 	(vl1_top[itrigbin] &&
- 	 (	findahit(vl1_bottom,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) ||
- 		findahit(vl1_middle,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP))))
-	) {
-      vl2_realtime_anita4_scb[1].push_back(1);
-      //cout << "got a two-hit.\n";
-    }
-    else
-      vl2_realtime_anita4_scb[1].push_back(0);
+      }
+      
+    
     itrigbin++;
     time_thisbin=(double)itrigbin*TRIGTIMESTEP;
   }
 
-  //cout << "doing the three-hits.\n";
-// If you get a coincidence betw. all three, then the 2nd element of the vl2_realtime_anita4_scb array goes to one.
-  time_thisbin=(double)nstepback*TRIGTIMESTEP;
-  itrigbin=nstepback;
 
-  while (time_thisbin<LASTTIMETOTESTL2_ANITA4LR_SCB) {
+}
 
-    if ((vl1_bottom[itrigbin] &&
-	 (	findahit(vl1_middle,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) &&
-		findahit(vl1_top,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) )) ||
-	
-	(vl1_middle[itrigbin] &&
-	 (	findahit(vl1_bottom,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) &&
-		findahit(vl1_top,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP)))) ||
-	
- 	(vl1_top[itrigbin] &&
- 	 (	findahit(vl1_bottom,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) &&
- 		findahit(vl1_middle,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP))))
-	) {
-      vl2_realtime_anita4_scb[2].push_back(1);
+// for each phi sector, does 1, 2 or 3 pass
+void GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
+							std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0) {
+
+    for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
+      
+      //      cout << "itriglayer, iphi are " << itriglayer << "\t" << iphi << "\n";
+      
+      L2Anita4LR_ScB_OnePhiSector_OneBin(IZERO,vl1trig_anita4lr_scb[2][iphi], 
+					 vl1trig_anita4lr_scb[1][iphi], 
+					 vl1trig_anita4lr_scb[0][iphi], 		
+					 vl2_realtime_anita4_scb[iphi],npassesl2,npassesl2_type0);
+      
       
     }
-    else
-      vl2_realtime_anita4_scb[2].push_back(0);
-    itrigbin++;
-    time_thisbin=(double)itrigbin*TRIGTIMESTEP;
-  }  
+    
+  
+
+
 }
+
+// void GlobalTrigger::L2Anita4LR_ScB_OnePhiSector(vector<int> vl1_bottom, 
+// 						      vector<int> vl1_middle,
+// 						      vector<int> vl1_top,
+// 						      std::array<vector<int>,3> &vl2_realtime_anita4_scb) {
+//   // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
+  
+
+ 
+//   // If any of them pass l1, then the 0th element of the vpartofl2_realtime_anita4_scb array goes to one.
+//   //cout << "doing the one-hits.\n";
+//   for (int i=0;i<vl1_bottom.size();i++) {
+//     if (vl1_bottom[i] || vl1_middle[i] || vl1_top[i]) {
+//       vl2_realtime_anita4_scb[0].push_back(1);
+//       //cout << "got a one-hit.\n";
+//     }
+//     else
+//       vl2_realtime_anita4_scb[0].push_back(0);
+//   }
+//   //cout << "doing the two-hits.\n";
+// // If you get a coincidence betw. any two, then the 1st element of the vl2_realtime_anita4_scb array goes to one.
+ 
+
+//   //  cout << "sizes are " << vl1_bottom.size() << "\t" << vl1_middle.size() << "\t" << vl1_top.size() << "\n";
+ 
+
+
+
+//     //    cout << "start, stop bins  are " << itrigbin-nstepback << "\t" << itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP) << "\n";
+//     if ((vl1_bottom[itrigbin] &&
+// 	 (	findahit(vl1_middle,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) ||
+// 		findahit(vl1_top,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) )) ||
+	
+// 	(vl1_middle[itrigbin] &&
+// 	 (	findahit(vl1_bottom,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) ||
+// 		findahit(vl1_top,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP)))) ||
+	
+//  	(vl1_top[itrigbin] &&
+//  	 (	findahit(vl1_bottom,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) ||
+//  		findahit(vl1_middle,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP))))
+// 	) {
+//       vl2_realtime_anita4_scb[1].push_back(1);
+//       //cout << "got a two-hit.\n";
+//     }
+//     else
+//       vl2_realtime_anita4_scb[1].push_back(0);
+
+
+//   //cout << "doing the three-hits.\n";
+// // If you get a coincidence betw. all three, then the 2nd element of the vl2_realtime_anita4_scb array goes to one.
+ 
+//     if ((vl1_bottom[itrigbin] &&
+// 	 (	findahit(vl1_middle,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) &&
+// 		findahit(vl1_top,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) )) ||
+	
+// 	(vl1_middle[itrigbin] &&
+// 	 (	findahit(vl1_bottom,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) &&
+// 		findahit(vl1_top,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP)))) ||
+	
+//  	(vl1_top[itrigbin] &&
+//  	 (	findahit(vl1_bottom,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) &&
+//  		findahit(vl1_middle,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP))))
+// 	) {
+//       vl2_realtime_anita4_scb[2].push_back(1);
+      
+//     }
+//     else
+//       vl2_realtime_anita4_scb[2].push_back(0);
+
+// }
 
 // ask if L3 type 1 (2 and 2) or L3 type 0 (3 and 1 or 1 and 3) passes
 int GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors(Anita *anita1, 
@@ -4146,3 +4168,83 @@ void GlobalTrigger::delay_AllAntennas(Anita *anita1) {
 
 
 }
+void GlobalTrigger::L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,vector<int> vl1_bottom, 
+						      vector<int> vl1_middle,
+						      vector<int> vl1_top,
+				 std::array<vector<int>,3> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0) {
+  // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
+  
+
+ 
+  // If any of them pass l1, then the 0th element of the vpartofl2_realtime_anita4_scb array goes to one.
+  //cout << "doing the one-hits.\n";
+  
+
+  if (vl1_bottom[IZERO] || vl1_middle[IZERO] || vl1_top[IZERO]) {
+    vl2_realtime_anita4_scb[0].push_back(1);
+    //cout << "got a one-hit.\n";
+  }
+  else
+      vl2_realtime_anita4_scb[0].push_back(0);
+  
+  //cout << "doing the two-hits.\n";
+// If you get a coincidence betw. any two, then the 1st element of the vl2_realtime_anita4_scb array goes to one.
+  //double time_thisbin=(double)nstepback*TRIGTIMESTEP;
+  //int itrigbin=nstepback;
+
+  //  cout << "sizes are " << vl1_bottom.size() << "\t" << vl1_middle.size() << "\t" << vl1_top.size() << "\n";
+ 
+
+  //  while (time_thisbin<LASTTIMETOTESTL2_ANITA4LR_SCB) {
+
+    //    cout << "start, stop bins  are " << itrigbin-nstepback << "\t" << itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP) << "\n";
+    if ((vl1_bottom[IZERO] &&
+	 (	findahit(vl1_middle,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) ||
+		findahit(vl1_top,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) )) ||
+	
+	(vl1_middle[IZERO] &&
+	 (	findahit(vl1_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) ||
+		findahit(vl1_top,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP)))) ||
+	
+ 	(vl1_top[IZERO] &&
+ 	 (	findahit(vl1_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) ||
+ 		findahit(vl1_middle,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP))))
+	) {
+      vl2_realtime_anita4_scb[1].push_back(1);
+      npassesl2++;
+     //cout << "got a two-hit.\n";
+    }
+    else
+      vl2_realtime_anita4_scb[1].push_back(0);
+    //itrigbin++;
+    //time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+    //}
+
+  //cout << "doing the three-hits.\n";
+// If you get a coincidence betw. all three, then the 2nd element of the vl2_realtime_anita4_scb array goes to one.
+    //time_thisbin=(double)nstepback*TRIGTIMESTEP;
+    //IZERO=nstepback;
+
+  //  while (time_thisbin<LASTTIMETOTESTL2_ANITA4LR_SCB) {
+
+    if ((vl1_bottom[IZERO] &&
+	 (	findahit(vl1_middle,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) &&
+		findahit(vl1_top,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) )) ||
+	
+	(vl1_middle[IZERO] &&
+	 (	findahit(vl1_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) &&
+		findahit(vl1_top,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP)))) ||
+	
+ 	(vl1_top[IZERO] &&
+ 	 (	findahit(vl1_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) &&
+ 		findahit(vl1_middle,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP))))
+	) {
+      vl2_realtime_anita4_scb[2].push_back(1);
+      npassesl2_type0++;
+    }
+    else
+      vl2_realtime_anita4_scb[2].push_back(0);
+    //itrigbin++;
+    //time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+    //}  
+  }
