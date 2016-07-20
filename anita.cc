@@ -2476,7 +2476,7 @@ void Anita::normalize_for_nsamples(double *spectrum, double nsamples, double nsa
 void Anita::convert_power_spectrum_to_voltage_spectrum_for_fft(double *spectrum, double domain[], double phase[]){
     double current_amplitude, current_phase;
     for (int k = 0; k < NFOUR / 4; k++){
-		//current_amplitude = domain[k];
+		current_amplitude = domain[k];
 		current_phase = phase[k];
 		
 		// Uncomment the following line of code to allow the the noise generated to have a Rician/Rayleigh distribution, which should increase the number of weighted neutrinos that pass *slightly*.
