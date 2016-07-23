@@ -12,7 +12,7 @@ include Makefile.arch
 #BOOSTFLAGS = -I boost_1_48_0
 
 # commented out for kingbee and older versions of gcc
-#CPPSTD = c++11
+CPPSTD = c++11
 
 #CC = gcc-4.8
 #CXX = g++-4.8
