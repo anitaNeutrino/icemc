@@ -25,6 +25,10 @@
 
 using std::cout;
 
+#ifdef ANITA_UTIL_EXISTS
+#include "FFTtools.h"
+#endif
+
 
  GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
     
@@ -1093,11 +1097,35 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   anita1->peak_e_rx_signalonly=AntTrigger::FindPeak(volts_rx_e_forfft,anita1->HALFNFOUR); // with no noise
   anita1->peak_h_rx_signalonly=AntTrigger::FindPeak(volts_rx_h_forfft,anita1->HALFNFOUR); // with no noise
     
-    
-  // matt - beginning of section to be replaced
-    
+
+  
   double vhz_rx_rfcm_e[Anita::NFREQ]; // V/Hz after rx, rfcm
   double vhz_rx_rfcm_h[Anita::NFREQ];
+    
+  double vhz_rx_rfcm_lab_e[Anita::NFREQ]; // V/Hz after rx, rfcm and lab
+  double vhz_rx_rfcm_lab_h[Anita::NFREQ];
+
+  
+  // Apply anita-3 measured impulse response
+  if (settings1->APPLYIMPULSERESPONSE){
+    
+    anita1->GetNoiseWaveforms(); // get noise waveforms
+    
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_e_forfft); 
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_h_forfft);
+  
+    int fNumPoints = anita1->HALFNFOUR;//260;
+    int ant = anita1->GetRx(ilayer, ifold);
+    for (int i=0;i<fNumPoints;i++){
+      anita1->volts_rx_rfcm_lab_e[i] = volts_rx_e_forfft[i];
+      anita1->volts_rx_rfcm_lab_h[i] = volts_rx_h_forfft[i];
+      fTimes[i] = i * anita1->TIMESTEP * 1.0E9; 
+    }
+
+    applyImpulseResponse(anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_e, 0);
+    applyImpulseResponse(anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_h, 1);
+    
+   } else {
     
   Tools::Zero(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR);// will be volts vs. time after rx, rfcm
   Tools::Zero(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR);
@@ -1165,20 +1193,12 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     for (int i=0;i<anita1->NFOUR/2;i++) {
       anita1->volts_rx_rfcm_e[i]+=anita1->timedomainnoise_rfcm_e[i]; // add noise.
       anita1->volts_rx_rfcm_h[i]+=anita1->timedomainnoise_rfcm_h[i];
-    }
-      
+    } 
   }
-    
     
     
   anita1->peak_e_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR); // with noise 
   anita1->peak_h_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR); // with noise
-    
-    
-    
-  double vhz_rx_rfcm_lab_e[Anita::NFREQ]; // V/Hz after rx, rfcm and lab
-  double vhz_rx_rfcm_lab_h[Anita::NFREQ];
-    
     
     
   for (int i=0;i<Anita::NFREQ;i++) {
@@ -1206,41 +1226,42 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   // still don't have any noise
   Tools::realft(anita1->volts_rx_rfcm_lab_e,1,anita1->HALFNFOUR); // EH, again, I think this has to be -1 for invFFT
   Tools::realft(anita1->volts_rx_rfcm_lab_h,1,anita1->HALFNFOUR);
-    
-  // matt- end of section to be replaced
-    
-    
+
   // put it in normal time ording -T to T
-  // instead of 0 to T, -T to 0
+  // instead of 0 to T, -T to 0 
   Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab_e); // EH, why only this has NormalTimeOrdering applied? Why not before?
   Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab_h);
     
+  
+  }    
     
   // now shift right to account for arrival times
   // for (int i=0;i<48;i++) std::cout << arrival_times[i] << std::endl;
   Tools::ShiftRight(anita1->volts_rx_rfcm_lab_e,anita1->NFOUR/2, int(arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
   Tools::ShiftRight(anita1->volts_rx_rfcm_lab_h,anita1->NFOUR/2, int(arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
     
-    
+
   if (settings1->SIGNAL_FLUCT) {
     for (int i=0;i<anita1->NFOUR/2;i++) {
       anita1->volts_rx_rfcm_lab_e[i]+=anita1->timedomainnoise_lab_e[i]; // add noise
       anita1->volts_rx_rfcm_lab_h[i]+=anita1->timedomainnoise_lab_h[i];
     }
   }
-    
+
+  
   for (int i=0;i<anita1->NFOUR/2;i++) {
     volts_rx_rfcm_lab_e_all[anita1->GetRx(ilayer, ifold)][i] = anita1->volts_rx_rfcm_lab_e[i];
-    volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][i] = anita1->volts_rx_rfcm_lab_h[i];
-      
+    volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][i] = anita1->volts_rx_rfcm_lab_h[i];      
   }
-    
+
+
+  
+  
   // now vmmhz_rx_rfcm_lab_e,h_forfft are the time domain waveforms after the antenna and lab attenuation
   // now find peak voltage
   // these get written to a tree
   anita1->peak_e_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_e,anita1->HALFNFOUR);
-  anita1->peak_h_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_h,anita1->HALFNFOUR); 
-    
+  anita1->peak_h_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_h,anita1->HALFNFOUR);  
     
   for (int iband=0;iband<5;iband++) { // loop over bands
 		
@@ -4328,6 +4349,53 @@ void GlobalTrigger::L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,vector<int> vl1
     //time_thisbin=(double)itrigbin*TRIGTIMESTEP;
     //}  
   }
+
+#ifdef ANITA_UTIL_EXISTS
+
+void AntTrigger::applyImpulseResponse(Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
+
+  TGraph *graph1 = new TGraph(nPoints, x, y);
+  // Upsample waveform to same deltaT of the signal chain impulse response
+  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
+
+  int ipol=0;
+  int iring=2;
+  if (pol) ipol = 1;
+  if (ant<16) iring=0;
+  else if (ant<32) iring=1;
+  
+  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponse[ipol][iring]);
+
+  // Divide the output of the convolution by the number of points
+  // Because we applied 2 FFT and 1 invFFT
+  Double_t *newx = surfSignal->GetX();
+  Double_t *newy = surfSignal->GetY();
+  Int_t nPointsUp = surfSignal->GetN();
+  for (int i=0;i<nPointsUp;i++){
+    newy[i]=newy[i];///nPointsUp;
+  }
+
+  TGraph *graph2 = new TGraph(nPointsUp, newx, newy);
+  //Downsample again
+
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(graph2, 1/2.6);
+
+  newy = surfSignalDown->GetY();
+  for (int i=0;i<nPoints;i++){
+    y[i]=newy[i];
+  }
+
+  // Cleaning up
+  delete surfSignalDown;
+  delete graph2;
+  delete surfSignal;
+  delete graphUp;
+  delete graph1;
+}
+
+
+#endif
+
 // ask if L3 type 1 (2 and 2) or L3 type 0 (3 and 1 or 1 and 3) passes
 int GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( int IZERO,
 						    std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
@@ -4362,3 +4430,4 @@ int GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( int IZERO,
   return passaone;
   
 }
+

@@ -35,6 +35,12 @@
 
 #include "TMath.h"
 
+#ifdef ANITA_UTIL_EXISTS
+#include "FFTtools.h"
+#endif
+
+
+
 using std::cout;
 using std::cin;
 using std::endl;
@@ -267,6 +273,9 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     PERCENTBW=10; // subbands (not counting full band)
     
     
+#ifdef ANITA_UTIL_EXISTS
+    if (settings1->APPLYIMPULSERESPONSE)   readImpulseResponse();
+#endif
     
     for (int i=0;i<NFREQ;i++) {
 		freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
@@ -469,7 +478,6 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
       delete fthresh;
       
     }
-
     
     // get rfcm amplification data
     
@@ -3888,7 +3896,7 @@ void Anita::GetArrivalTimes(const Vector& rf_direction) {
 } // GetArrivalTimes
 
 
-void Anita::setphiTrigMaskAnita3(UInt_t realTime_flightdata) {
+void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
 
   if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
     phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
@@ -3912,23 +3920,23 @@ void Anita::setphiTrigMaskAnita3(UInt_t realTime_flightdata) {
   
 }
 
-void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
-  if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
-    phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
+// void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
+//   if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
+//     phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
 		
-  }
-  else { // if it's in range
+//   }
+//   else { // if it's in range
 			
-    iturf=turfratechain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in turfratechain that is closest to this realTime_flightdata
+//     iturf=turfratechain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in turfratechain that is closest to this realTime_flightdata
 		
-    if (iturf<0) // if it didn't find one
-      phiTrigMask=0; // set to zero
-    else
-      turfratechain->GetEvent(iturf);
+//     if (iturf<0) // if it didn't find one
+//       phiTrigMask=0; // set to zero
+//     else
+//       turfratechain->GetEvent(iturf);
 		
-  } // end if it's in range
+//   } // end if it's in range
     
-}
+// }
 
 void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
   
@@ -3955,3 +3963,70 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
   
 
 }
+
+#ifdef ANITA_UTIL_EXISTS
+
+void Anita::readImpulseResponse(){
+
+  // string fileName = "data/sumPicoImpulse.root";
+  // TFile fImpulse(fileName.c_str());
+
+  // if(!fImpulse.IsOpen()) {
+  //   std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
+  //   exit(0);
+  // } else {
+  //   TGraph *grVTemp = (TGraph*) fImpulse.Get("grImpRespV");
+  //   if(!grVTemp) {
+  //     std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
+  //     exit(0);
+  //   }
+
+  //   TGraph *grHTemp = (TGraph*) fImpulse.Get("grImpRespH");
+  //   if(!grHTemp) {
+  //     std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
+  //     exit(0);
+  //   }
+
+
+  deltaT = 1/(2.6*16);
+  
+  string fileName = "data/SignalChainImpulseResponse_anita3.root";
+  TFile fImpulse(fileName.c_str());
+
+  if(!fImpulse.IsOpen()) {
+    std::cerr << "Couldn't read ANITA-3 siganl chain impulse response from " << fileName << "\n";
+    exit(0);
+  } else {
+
+    string spol[2] ={"V", "H"};
+    string sring[3]={"Top", "Middle", "Bottom"};
+    for (int ipol=0;ipol<2;ipol++){
+      for (int iring=0;iring<3;iring++){
+	TGraph *grTemp = (TGraph*) fImpulse.Get(Form("ImpulseResponse_%spol_%s", spol[ipol].c_str(), sring[iring].c_str()));
+	if(!grTemp) {
+	  std::cerr << "Couldn't read ANITA-3 siganl chain impulse response from " << fileName << "\n";
+	  exit(0);
+	}
+	TGraph *grInt = FFTtools::getInterpolatedGraph(grTemp,deltaT); //To match the above sampling rate
+	Int_t nPoints  = grInt->GetN();
+	Double_t *newx = grInt->GetX();
+	Double_t *newy = grInt->GetY();
+	// double unitsConversion = 1;//0.001;
+	// //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
+	// for (int i=0;i<nPoints;i++) newy[i]*=0.1*unitsConversion;
+	// 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
+	for (int i=0;i<nPoints;i++) newy[i]*=48.; 
+	// TGraph *grVPad = FFTtools::padWaveToLength(grVInt, paveNum);    
+	fSignalChainResponse[ipol][iring] = new TGraph(nPoints, newx, newy);
+
+	delete grInt;
+	delete grTemp;
+      }
+    }
+    
+    
+  }
+  
+}
+
+#endif

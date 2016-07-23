@@ -340,7 +340,11 @@ public:
     
     static int IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int ilayer, int ifold, int ipol);
 
-
+#ifdef ANITA_UTIL_EXISTS
+  void applyImpulseResponse(Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
+  Double_t fTimes[HALFNFOUR];
+//  TGraph *getNoiseSignal(TGraph *grInput, int antenna, AnitaPol::AnitaPol_t polarization,UInt_t solBin);
+#endif
     
     int unwarned;  // whether we have warned the user about resetting thresholds when they are beyond the measured bounds
 }; //class AntTrigger

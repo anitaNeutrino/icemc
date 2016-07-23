@@ -36,9 +36,8 @@ private:
 
     
 public:
-  int number_all_antennas; // this keeps count of the number of antennas for use with timing calculations, etc.    
-
-
+  int number_all_antennas; // this keeps count of the number of antennas for use with timing calculations, etc.
+  
     static const int NBANDS_MAX=100; // max number of bands     
 static const int NPOL=2; // number of polarizations 
     static const int NFREQ=128;  // number of frequency bins
@@ -540,6 +539,16 @@ static const int NPOL=2; // number of polarizations
     double LIVETIME;
     
     double SIGMA_THETA; // resolution on the polar angle of the signal
+
+#ifdef ANITA_UTIL_EXISTS
+
+  void readImpulseResponse();
+  TGraph *fSignalChainResponse[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
+  double deltaT;
+  
+#endif
+
+  
 }; //class Anita
 
 //! namespace for referring to polarizations
