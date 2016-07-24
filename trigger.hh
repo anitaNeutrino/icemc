@@ -339,10 +339,9 @@ public:
     void addToChannelSums(Settings *settings1,Anita *anita1,int ibw,int k);
     
     static int IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int ilayer, int ifold, int ipol);
-
+  Double_t fTimes[HALFNFOUR];
 #ifdef ANITA_UTIL_EXISTS
   void applyImpulseResponse(Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
-  Double_t fTimes[HALFNFOUR];
 //  TGraph *getNoiseSignal(TGraph *grInput, int antenna, AnitaPol::AnitaPol_t polarization,UInt_t solBin);
 #endif
     
