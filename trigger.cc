@@ -1108,7 +1108,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   
   // Apply anita-3 measured impulse response
   if (settings1->APPLYIMPULSERESPONSE){
-    
+
     anita1->GetNoiseWaveforms(); // get noise waveforms
     
     Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_e_forfft); 
@@ -1121,10 +1121,11 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
       anita1->volts_rx_rfcm_lab_h[i] = volts_rx_h_forfft[i];
       fTimes[i] = i * anita1->TIMESTEP * 1.0E9; 
     }
-
+#ifdef ANITA_UTIL_EXISTS    
     applyImpulseResponse(anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_e, 0);
     applyImpulseResponse(anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_h, 1);
-    
+
+#endif
    } else {
     
   Tools::Zero(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR);// will be volts vs. time after rx, rfcm
