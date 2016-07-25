@@ -4448,3 +4448,48 @@ void GlobalTrigger::delay_AllAntennas(Anita *anita1) {
 
 
 }
+
+
+#ifdef ANITA_UTIL_EXISTS    
+void AntTrigger::applyImpulseResponse(Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
+
+  TGraph *graph1 = new TGraph(nPoints, x, y);
+  // Upsample waveform to same deltaT of the signal chain impulse response
+  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
+
+  int ipol=0;
+  int iring=2;
+  if (pol) ipol = 1;
+  if (ant<16) iring=0;
+  else if (ant<32) iring=1;
+  
+  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponse[ipol][iring]);
+
+  // Divide the output of the convolution by the number of points
+  // Because we applied 2 FFT and 1 invFFT
+  Double_t *newx = surfSignal->GetX();
+  Double_t *newy = surfSignal->GetY();
+  Int_t nPointsUp = surfSignal->GetN();
+  for (int i=0;i<nPointsUp;i++){
+    newy[i]=newy[i];///nPointsUp;
+  }
+
+  TGraph *graph2 = new TGraph(nPointsUp, newx, newy);
+  //Downsample again
+
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(graph2, 1/2.6);
+
+  newy = surfSignalDown->GetY();
+  for (int i=0;i<nPoints;i++){
+    y[i]=newy[i];
+  }
+
+  // Cleaning up
+  delete surfSignalDown;
+  delete graph2;
+  delete surfSignal;
+  delete graphUp;
+  delete graph1;
+}
+
+#endif

@@ -571,11 +571,6 @@ void Getearth(double*,  double*,  double*,  double*);
 #ifdef ANITA_UTIL_EXISTS
 //int GetIceMCAntfromUsefulEventAnt(Anita *anita1,  AnitaGeomTool *AnitaGeom1,  int UsefulEventAnt);
 int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt);
-// TGraph *fVPolSignalChainResponse;
-// TGraph *fHPolSignalChainResponse;
-// double deltaT = 1/(2.6*16);
-// void readImpulseResponse();
-// void applyImpulseResponse(int nPoints, int ant, double *x, double y[48][512], bool pol);
 #ifdef R_EARTH
 #undef R_EARTH
 #endif
