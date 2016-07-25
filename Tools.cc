@@ -579,6 +579,25 @@ void Tools::NormalTimeOrdering(const int n, double* volts) {
     }
 }
 
+void Tools::reverseTimeOrdering(const int n, double* bitsin,double *bitsout) {
+    double bits_temp[n];
+    for (int i=0;i<n;i++) {
+        bits_temp[i]=bitsin[n-i-1];
+    }
+    for (int i=0;i<n;i++) {
+        bitsout[i]=bitsin[i];
+    }
+}
+void Tools::reverseTimeOrdering(const int n, int* bitsin,int *bitsout) {
+    int bits_temp[n];
+    for (int i=0;i<n;i++) {
+        bits_temp[i]=bitsin[n-i-1];
+    }
+    for (int i=0;i<n;i++) {
+        bitsout[i]=bitsin[i];
+    }
+}
+
 
 int Tools::findIndex(double *freqlab,double freq,int npoints,double min,double max) {
     

@@ -39,6 +39,9 @@ namespace Tools {
 
     void SWAP(double &a, double &b);// swaps two numbers
     void NormalTimeOrdering(const int n,double *volts);
+    void reverseTimeOrdering(const int n,double *bitsin,double *bitsout);
+    void reverseTimeOrdering(const int n,int *bitsin,int *bitsout);
+
     void ShiftLeft(double *x,const int n,int ishift);  
     void ShiftRight(double *x,const int n,int ishift);  
     double GetFWHM(TH1 *h1);

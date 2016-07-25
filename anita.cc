@@ -1278,16 +1278,29 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 
     tdata->Branch("l1trig_anita3and4_inanita",&l1trig_anita3and4_inanita,"l1trig_anita3and4_inanita[2][16][512]/I");
 
-    tdata->Branch("l1trig_anita4lr_inanita",&l1trig_anita4lr_inanita,"l1trig_anita4lr_inanita[48][512]/I");
+   tdata->Branch("l1trig_anita4lr_inanita",&l1trig_anita4lr_inanita,"l1trig_anita4lr_inanita[3][16][512]/I");
+
 
     tdata->Branch("l2trig_anita4lr_inanita",&l2trig_anita4lr_inanita,"l2trig_anita4lr_inanita[16][3][512]/I");
 
-
+    tdata->Branch("l3type0trig_anita4lr_inanita",&l3type0trig_anita4lr_inanita,"l3type0trig_anita4lr_inanita[16][512]/I");
+    tdata->Branch("l3trig_anita4lr_inanita",&l3trig_anita4lr_inanita,"l3trig_anita4lr_inanita[16][512]/I");
 
 
     //tdata->Branch("arrayofhits_inanita",&arrayofhits_inanita,"std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>");
     tdata->Branch("passglobtrig",&passglobtrig,"passglobtrig[2]/I");
     
+
+   tgaryanderic=new TTree("tgaryanderic","tgaryanderic");
+    tgaryanderic->Branch("arrayofhits",&arrayofhits_forgaryanderic,"arrayofhits_forgaryanderic[3][16][2][512]/I");
+    tgaryanderic->Branch("l1trig",&l1trig_anita4lr_forgaryanderic,"l1trig_anita4lr_forgaryanderic[3][16][512]/I");
+
+    tgaryanderic->Branch("l2trig",&l2trig_anita4lr_forgaryanderic,"l2trig_anita4lr_forgaryanderic[16][512]/I"); 
+    tgaryanderic->Branch("l3type0trig",&l3type0trig_anita4lr_forgaryanderic,"l3type0trig_anita4lr_forgaryanderic[16][512]/I"); 
+    tgaryanderic->Branch("l3type1trig",&l3type1trig_anita4lr_forgaryanderic,"l3type1trig_anita4lr_forgaryanderic[16][512]/I"); 
+    tgaryanderic->Branch("passglobtrig",&passglobtrig,"passglobtrig[2]/I");
+    tgaryanderic->Branch("weight",&weight_inanita,"weight_inanita/D");
+    tgaryanderic->Branch("time",&time_trig,"time_trig[512]/D");
 
 
     tglob=new TTree("tglob","tglob");

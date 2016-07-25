@@ -3440,7 +3440,8 @@ int main(int argc,  char **argv) {
 	      } else if (thispasses[1]){
 		allcuts_weighted_polarization[1]+=weight;
 	      }
-	      
+	      anita1->weight_inanita=weight;	      
+
               if (h1mybeta->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
                 h1mybeta -> Fill(mybeta, weight); //get the angle distribution of mybeta
               
@@ -3752,6 +3753,7 @@ int main(int argc,  char **argv) {
 
       passes_thisevent=1; // flag this event as passing
       anita1->tdata->Fill();
+      anita1->tgaryanderic->Fill();
       } // end if passing global trigger conditions
       else {
         passes_thisevent=0; // flag this event as not passing
@@ -3856,6 +3858,8 @@ int main(int argc,  char **argv) {
   
   cout << "about to close tsignals tree.\n";
   anita1->fsignals=anita1->tsignals->GetCurrentFile();
+  anita1->fdata=anita1->tdata->GetCurrentFile();
+  anita1->fdata=anita1->tgaryanderic->GetCurrentFile();
   anita1->fsignals->Write();
   anita1->fsignals->Close();
   

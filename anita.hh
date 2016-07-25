@@ -145,16 +145,37 @@ static const int NPOL=2; // number of polarizations
     double timedomain_output_1_inanita[5][HALFNFOUR]; // this is just for writing out to the following tree
     double timedomain_output_2_inanita[5][HALFNFOUR]; // this is just for writing out to the following tree
 
+  double time_trig[HALFNFOUR];
+  double weight_inanita; // weight of the event
   int arrayofhits_inanita[3][16][2][HALFNFOUR];
   //std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhits_inanita; 
 
+
+
+ // same as arrayofhits_inanita but it's time reversed
+  int arrayofhits_forgaryanderic[3][16][2][HALFNFOUR];
+  //std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhits_inanita; 
+
   int l1trig_anita3and4_inanita[2][16][HALFNFOUR];
-  int l1trig_anita4lr_inanita[48][HALFNFOUR];
+
+
+ 
+ int l1trig_anita4lr_inanita[3][16][HALFNFOUR];
+
+ int l1trig_anita4lr_forgaryanderic[3][16][HALFNFOUR];
+
 
   int l2trig_anita4lr_inanita[16][3][HALFNFOUR];
 
+  int l2trig_anita4lr_forgaryanderic[16][HALFNFOUR]; // when it passes 2/3
+
   int l3type0trig_anita4lr_inanita[16][HALFNFOUR];
   int l3trig_anita4lr_inanita[16][HALFNFOUR];
+
+  int l3type0trig_anita4lr_forgaryanderic[16][HALFNFOUR];
+  int l3type1trig_anita4lr_forgaryanderic[16][HALFNFOUR];
+
+
 
 
     double timedomain_output_1_corrected_forplotting[6][HALFNFOUR]; // this is just for writing out to the following tree
@@ -236,7 +257,8 @@ static const int NPOL=2; // number of polarizations
     
     TFile *fdata;
     TTree *tdata; // writing data out for the analysers
-    
+TTree *tgaryanderic; // writing data out for the analysers    
+
     TTree *tglob;
     
     TH1F *hsignals[5]; // s/n (max diode output/mean diode output) for vertical polarization in each band
