@@ -495,7 +495,7 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
   for (int iband=0;iband<5;iband++) {
     //cout << "arrival time is " << globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP << "\n";
     //anita1->iminbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]+globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP; // we start to look for single channel triggers firing
-    //anita1->iminbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]; // we start to look for single channel triggers firing
+    //anita1->iminbin[iband]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[iband]; // we start to look for single channel triggers firing
     anita1->iminbin[iband]=0.; // we start to look for single channel triggers firing
     // starting with the first bin where the diode function is completely
     // overlapping plus a delay that is brought about by the diode
@@ -2170,7 +2170,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
       //cout << "size of arrayofhits is " << arrayofhits[0][0][0].size() << "\n";
       // i should really do this in a different step so this function has fewer inputs.
       while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
-
+	//cout << "vector size is " << vl1trig_anita4lr_scb[0][0].size() << "\n";
 	int npassesl1=0;
 	L1Anita4LR_ScB_AllAntennas_OneBin(itrigbin,anita1,vl1trig_anita4lr_scb,npassesl1);
 
@@ -2225,8 +2225,8 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	if (thispasses_l3type1)
 	  thispasses[1]=1;
 
-	if (thispasses[0] || thispasses[1])
-	  cout << "This passes! " << thispasses[0] << "\t" << thispasses[1] << "\n";
+	//	if (thispasses[0] || thispasses[1])
+	//cout << "This passes! " << thispasses[0] << "\t" << thispasses[1] << "\n";
 
 
 	for (int ilayer=0;ilayer<anita1->NTRIGGERLAYERS;ilayer++) {
@@ -3537,6 +3537,9 @@ void GlobalTrigger::convert_wfm_to_3_bit(const vector <double>& wfm, double rms,
 int GlobalTrigger::findahit(vector<int> myvector,int first,int last) {
 
   int yes=0;
+  if (myvector.size()<=last)
+    return yes;
+
   for (int i=first;i<=last;i++) {
     if (myvector[i]==1) {
       yes=1;

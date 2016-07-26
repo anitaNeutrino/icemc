@@ -281,10 +281,19 @@ TTree *tgaryanderic; // writing data out for the analysers
     // for filling tsignals tree
     double timedomainnoise_rfcm_banding_e[5][HALFNFOUR];
     double timedomainnoise_rfcm_banding_h[5][HALFNFOUR];
+
+    double timedomainnoise_rfcm_banding_e_long[5][HALFNFOUR];
+    double timedomainnoise_rfcm_banding_h_long[5][HALFNFOUR];
+
     double timedomainnoise_rfcm_e[HALFNFOUR];
     double timedomainnoise_rfcm_h[HALFNFOUR];
     double timedomainnoise_lab_e[HALFNFOUR];
     double timedomainnoise_lab_h[HALFNFOUR];
+
+    double timedomainnoise_rfcm_e_long[HALFNFOUR];
+    double timedomainnoise_rfcm_h_long[HALFNFOUR];
+    double timedomainnoise_lab_e_long[HALFNFOUR];
+    double timedomainnoise_lab_h_long[HALFNFOUR];
     
     double phases[5][HALFNFOUR];
     
@@ -310,21 +319,39 @@ TTree *tgaryanderic; // writing data out for the analysers
     double freq[NFREQ];  // frequency for each bin
     double freq_forfft[NFOUR]; // frequencies for taking fft of signal
     double freq_forplotting[NFOUR/4]; // just one entry for frequency, unlike the above.
+    double freq_forfft_long[2*NFOUR]; // frequencies for taking fft of signal
+    double freq_forplotting_long[NFOUR/2]; // just one entry for frequency, unlike the above.
     double time[NFOUR/2];
     double time_long[NFOUR];
     
     double time_centered[NFOUR/2];
     double freqdomain_rfcm_banding[5][HALFNFOUR/2]; // average noise in frequency domain
+    double freqdomain_rfcm_banding_long[5][HALFNFOUR]; // average noise in frequency domain
+
     double freqdomain_rfcm[HALFNFOUR/2]; // average noise in frequency domain
+    double freqdomain_rfcm_long[HALFNFOUR]; // average noise in frequency domain
+
     double freqdomain_rfcm_theory[HALFNFOUR/2]; // average noise in frequency domain
     double avgfreqdomain_lab[HALFNFOUR/2]; // average noise in frequency domain
+    double avgfreqdomain_lab_long[HALFNFOUR]; // average noise in frequency domain
+
     double phases_rfcm_banding_e[5][HALFNFOUR/2];
     double phases_rfcm_banding_h[5][HALFNFOUR/2];
+
+    double phases_rfcm_banding_e_long[5][HALFNFOUR];
+    double phases_rfcm_banding_h_long[5][HALFNFOUR];
     
     double phases_rfcm_e[HALFNFOUR/2];
     double phases_rfcm_h[HALFNFOUR/2];
-    double phases_lab_e[HALFNFOUR/2];
-    double phases_lab_h[HALFNFOUR/2];
+
+    double phases_rfcm_e_long[HALFNFOUR];
+    double phases_rfcm_h_long[HALFNFOUR];
+
+    double phases_lab_e[HALFNFOUR];
+    double phases_lab_h[HALFNFOUR];
+
+    double phases_lab_e_long[HALFNFOUR];
+    double phases_lab_h_long[HALFNFOUR];
     
     
     // this goes from 0 to Fmax, and represents both real and imaginary components
@@ -359,7 +386,7 @@ TTree *tgaryanderic; // writing data out for the analysers
     void Banding(int iband,double *vmmhz);
     void RFCMs(int ilayer,int ifold,double *vmmhz);
     void normalize_for_nsamples(double *spectrum, double nsamples, double nsamp);
-    void convert_power_spectrum_to_voltage_spectrum_for_fft(double *spectrum, double domain[], double phase[]);
+  void convert_power_spectrum_to_voltage_spectrum_for_fft(int length,double *spectrum, double domain[], double phase[]);
     void GetNoiseWaveforms(); // make time domain noise waveform based on avgnoise being the v^2
     //void GetNoiseWaveform(int iband); // make time domain noise waveform based on avgnoise being the v^2
     void GetPhases();
