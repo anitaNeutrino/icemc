@@ -64,7 +64,7 @@ LDFLAGS  += $(CPPSTD_FLAGS) -g $(LD_ANITA_UTIL) -I$(BOOST_ROOT) -L.
 #LDFLAGS  += $(CPPSTD_FLAGS) -g $(LD_ANITA_UTIL) -I$(BOOST_ROOT) $(ROOTLDFLAGS) -L. 
 
 
-LIBS += $(FFTLIBS)
+LIBS += -lMathMore $(FFTLIBS)
 
 HEADERS	  = rx.hpp Taumodel.hh
 ##ANITA_DATA_HEADERS = include/RawAnitaEvent.h include/UsefulAnitaEvent.h include/RawAnitaHeader.h include/AnitaConventions.h include/AnitaGeomTool.h include/AnitaPacketUtil.h include/simpleStructs.h

@@ -8,6 +8,22 @@
 #include "TRandom3.h" 
 #include <vector>
 
+// c++ libraries thingies
+#include <map>
+#include <algorithm>
+#include <iostream>
+#include <fstream>
+
+// ROOT
+#include "TGraph.h"
+#include "TROOT.h"
+#include "TMath.h"
+#include "TString.h"
+#include "TSystem.h"
+#include "TMath.h"
+#include "Math/Interpolator.h"
+#include "Math/InterpolationTypes.h"
+
 //using std::string;
 //using std::vector;
 
@@ -74,6 +90,8 @@ namespace Tools {
 
     double AbbyPhiCalc(double x_abby, double y_abby);
 
+    TGraph *getInterpolatedGraph(TGraph *grIn, Double_t deltaT);
+    
     template <class T, class U> void vector_element_convert(const vector<T>& input, vector<U>& output){
     output.clear();
         for (unsigned int index = 0; index < input.size(); index++){

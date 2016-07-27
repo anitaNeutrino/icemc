@@ -670,3 +670,53 @@ double Tools::AbbyPhiCalc(double x_abby, double y_abby){
     //cout<<"abby's phi is "<< abbyanglephi<<endl;
     return abbyanglephi;
 }
+
+TGraph *Tools::getInterpolatedGraph(TGraph *grIn, Double_t deltaT)
+{
+  //Will use the ROOT::Math::Interpolator function to do this.
+  std::vector<double> tVec;
+  std::vector<double> vVec;
+   
+  Int_t numIn=grIn->GetN();
+  Double_t tIn,vIn;
+
+  Double_t startTime=0;
+  Double_t lastTime=0;
+  for (int samp=0;samp<numIn;samp++) {
+    grIn->GetPoint(samp,tIn,vIn);
+    tVec.push_back(tIn);
+    vVec.push_back(vIn);
+    //std::cout << "samp " << samp << " t " << tIn << " v " << vIn << " this-last " << tIn-tVec[tVec.size()-2] << std::endl;
+    if(samp==0)
+      startTime=tIn;
+    lastTime=tIn;
+   }
+   if(tVec.size()<1) {
+     std::cout << "Insufficent points for interpolation\n";
+     return NULL;
+   }
+
+   //Bastards
+   ROOT::Math::Interpolator chanInterp(tVec,vVec,ROOT::Math::Interpolation::kAKIMA);
+   
+   Int_t roughPoints=Int_t((lastTime-startTime)/deltaT);
+   
+
+   Double_t *newTimes = new Double_t[roughPoints+100]; //Will change this at some point, but for now
+   Double_t *newVolts = new Double_t[roughPoints+100]; //Will change this at some point, but for now
+   Int_t numPoints=0;
+   for(Double_t time=startTime;time<=lastTime;time+=deltaT) {
+      newTimes[numPoints]=time;
+      newVolts[numPoints]=chanInterp.Eval(time);
+      //      std::cout << numPoints << "\t" << newTimes[numPoints]
+      //      		<< "\t" << newVolts[numPoints] << std::endl;
+	       
+      numPoints++;
+   }
+
+   TGraph *grInt = new TGraph(numPoints,newTimes,newVolts);
+   delete [] newTimes;
+   delete [] newVolts;
+   return grInt;
+
+}

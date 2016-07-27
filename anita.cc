@@ -35,12 +35,6 @@
 
 #include "TMath.h"
 
-#ifdef ANITA_UTIL_EXISTS
-#include "FFTtools.h"
-#endif
-
-
-
 using std::cout;
 using std::cin;
 using std::endl;
@@ -272,10 +266,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     
     PERCENTBW=10; // subbands (not counting full band)
     
-    
-#ifdef ANITA_UTIL_EXISTS
     if (settings1->APPLYIMPULSERESPONSE)   readImpulseResponse();
-#endif
     
     for (int i=0;i<NFREQ;i++) {
 		freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
@@ -4027,7 +4018,6 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
 
 }
 
-#ifdef ANITA_UTIL_EXISTS
 
 void Anita::readImpulseResponse(){
 
@@ -4070,7 +4060,7 @@ void Anita::readImpulseResponse(){
 	  std::cerr << "Couldn't read ANITA-3 siganl chain impulse response from " << fileName << "\n";
 	  exit(0);
 	}
-	TGraph *grInt = FFTtools::getInterpolatedGraph(grTemp,deltaT); //To match the above sampling rate
+	TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); //To match the above sampling rate
 	Int_t nPoints  = grInt->GetN();
 	Double_t *newx = grInt->GetX();
 	Double_t *newy = grInt->GetY();
@@ -4092,4 +4082,3 @@ void Anita::readImpulseResponse(){
   
 }
 
-#endif

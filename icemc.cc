@@ -1659,7 +1659,7 @@ int main(int argc,  char **argv) {
   TFile *anitafileEvent = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *eventTree = new TTree("eventTree", "eventTree");
-  eventTree->Branch("UsefulAnitaEvent",  &realEvPtr           );
+  eventTree->Branch("event",             &realEvPtr           );
   eventTree->Branch("run",               &run_no,   "run/I"   );
   eventTree->Branch("weight",            &weight,   "weight/D");
 
@@ -1869,9 +1869,6 @@ int main(int argc,  char **argv) {
     gps_offset=45;
   } else gps_offset=0;
 
-  // #ifdef ANITA_UTIL_EXISTS
-  // readImpulseResponse();
-  // #endif
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
     
@@ -3569,7 +3566,7 @@ int main(int argc,  char **argv) {
               // Total number of antennas
               // int numAnts_temp = anita1->PHITRIG[0] + anita1->PHITRIG[1] + anita1->PHITRIG[2] ;
               int fNumPoints = 260;
-              for (int i = 0; i < 90; i++){
+              for (int i = 0; i < 96; i++){
                 for (int j = 0; j < 260; j++){
                   realEvPtr->fVolts[i][j] = 0.;
                   realEvPtr->fTimes[i][j] = 0.;
