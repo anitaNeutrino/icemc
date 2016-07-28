@@ -2438,7 +2438,7 @@ int main(int argc,  char **argv) {
         } // end looping over layers
       } // if we are calculating for all boresights
       
-      ofstream roughout("data/roughness/scan_Npts_Ledge.dat", std::fstream::app); // length of chord in air vs. theta (deg)
+      //ofstream roughout("data/roughness/scan_Npts_Ledge.dat", std::fstream::app); // length of chord in air vs. theta (deg)
 
       
       if(!settings1->ROUGHNESS) {  // IF NO ROUGHNESS THEN DO THIS (FOR CONSISTENCY CHANGE NOTHING BELOW HERE IN THE if !rough)
@@ -2630,6 +2630,9 @@ int main(int argc,  char **argv) {
           // transmitted polarization needs to be perpendicular to to-balloon vector, and the horizontal component is 'set', so need to find appropriate vector for the vertical component to ensure perpendicularity
           npol_local_trans = (E_local_h_trans_mag*vec_scatplane_normal
                            + E_local_v_trans_mag* vec_pos_current_to_balloon.Cross( (const Vector)vec_scatplane_normal ).Unit() ).Unit();
+          if(npol_local_trans[0]!=npol_local_trans[0]){
+            continue;   // skip if transmitted polarization is undefined
+          }
 
           // now work on the field magnitude
           // calculate the transmitted power based on the UCLA measurements
@@ -2648,7 +2651,7 @@ int main(int argc,  char **argv) {
           // add to the running total at the balloon
           Efield_screentotal = Efield_screentotal + Efield_local;
 
-          roughout<<inu<<"  "
+          /*roughout<<inu<<"  "
                   <<ii<<"  "
                   <<pos_projectedImpactPoint.Lon()<<"  "
                   <<-90+pos_projectedImpactPoint.Lat()<<"  "
@@ -2669,7 +2672,7 @@ int main(int argc,  char **argv) {
                   <<E_local_h_trans_mag<<"  "
                   <<E_local_v_trans_mag<<"  "
                   <<vec_pos_current_to_balloon.Unit().Dot(npol_local_trans)<<"  "
-                  <<std::endl;
+                  <<std::endl;*/
         }//end for ii < fSCREEN....
 
 
@@ -2679,11 +2682,11 @@ int main(int argc,  char **argv) {
       // Calculate the polarization at the balloon
       n_pol = Efield_screentotal.Unit();
 
-      //std::cerr<<"Screen Mag: "<<vmmhz_max<<std::endl;
+      //std::cerr<<"++ "<<fSCREEN_NUMPOINTS_EDGE<<"   "<<panel1->GetEdgeLength()<<"   "<<vmmhz_max<<std::endl;
 
       }//end else roughness
 
-      roughout.close();
+      //roughout.close();
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
       //if (vmmhz1m_fresneledtwice*heff_max*0.5*(bw/1.E6)<CHANCEINHELL_FACTOR*anita1->maxthreshold*Tools::dMin(VNOISE, settings1->NLAYERS) && !settings1->SKIPCUTS) {
@@ -2786,16 +2789,7 @@ int main(int argc,  char **argv) {
       // keeps track of maximum voltage seen on either polarization of any antenna
       volts_rx_max=0;
       
-
-      //std::cerr<<vmmhz_max<<std::endl;
-      //Vector temp=Vector( ray1->rfexit[2][0]-interaction1->posnu[0], ray1->rfexit[2][1]-interaction1->posnu[1], ray1->rfexit[2][2]-interaction1->posnu[2]);
-      //std::cerr<< antarctica->GetSurfaceNormal(ray1->rfexit[2]).Angle(ray1->n_exit2bn[2])*180./PI<<"  "<< antarctica->GetSurfaceNormal(ray1->rfexit[2]).Angle(temp)*180./PI<<std::endl;
-
-
-
-
-
-
+      std::cerr<<vmmhz_max<<std::endl;
 
       // Make a vector of V/m/MHz scaled by 1/r and attenuated.
       // Calculates Jaime's V/m/MHz at 1 m for each frequency
@@ -2860,8 +2854,9 @@ int main(int argc,  char **argv) {
           } //for (loop over viewing angles)
         } //if (settings1->FORSECKEL==1)
 
-        if (settings1->ROUGHNESS==0) {// we apply this normal angular dependence if we are not dealing with roughness here
-          sig1->TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz[k], vmmhz_em[k]);// this applies the angular dependence.
+        //if (settings1->ROUGHNESS==0) {// we apply this normal angular dependence if we are not dealing with roughness here
+        // MS, commented the above if so it catches Taper in roughness case
+        sig1->TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz[k], vmmhz_em[k]);// this applies the angular dependence.
           // viewangle is which viewing angle we are at
           // deltheta_em is the width of the em component at this frequency
           // deltheta_had is the width of the had component at this frequency
@@ -2869,10 +2864,10 @@ int main(int argc,  char **argv) {
           // hadfrac is the hadronic fraction of the shower
           // vmmhz is the strength of the signal in V/m/MHz at this viewing angle
           // vmmhz_em is the strength of the em component
-          if (bn1->WHICHPATH==4)
-            IntegrateBands(anita1, k, vmmhz, anita1->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
+        if (bn1->WHICHPATH==4)
+          IntegrateBands(anita1, k, vmmhz, anita1->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
           
-        }
+        //}
         //else{
         //  vmmhz[k]*=roughnessfactor;// if we are dealing with roughness then instead apply roughness factor
         //}
@@ -2888,12 +2883,14 @@ int main(int argc,  char **argv) {
           maxtaper=sig1->logscalefactor_taper;
 
         if (settings1->HIST==1 && !settings1->ONLYFINAL && bn1->WHICHPATH != 3 && k==Anita::NFREQ/2 && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES) {
-
-	  if (interaction1->nuflavor=="nue")        pdgcode = 12;
-	  else if (interaction1->nuflavor=="numu")  pdgcode = 14;
-	  else if (interaction1->nuflavor=="nutau") pdgcode = 16;
-	    
-	  tree18->Fill();
+          if (interaction1->nuflavor=="nue")
+            pdgcode = 12;
+          else if (interaction1->nuflavor=="numu")
+            pdgcode = 14;
+          else if (interaction1->nuflavor=="nutau")
+            pdgcode = 16;
+            
+          tree18->Fill();
           // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="nue" && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES)
           //   tree18->Fill();
           // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="numu" && tree19->GetEntries()<settings1->HIST_MAX_ENTRIES)
@@ -2930,6 +2927,8 @@ int main(int argc,  char **argv) {
       // just for plotting
       vmmhz_max=Tools::dMax(vmmhz, Anita::NFREQ);
       vmmhz_min=Tools::dMin(vmmhz, Anita::NFREQ);
+      
+      std::cerr<<"++ "<<fSCREEN_NUMPOINTS_EDGE<<"   "<<panel1->GetEdgeLength()<<"   "<<vmmhz_min<<std::endl;
       
       // intermediate counting
       count1->nchanceinhell2[whichray]++;

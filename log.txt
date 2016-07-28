@@ -830,3 +830,6 @@ synced with trunk, since there were a few trunk updates over the last week.
 
 07/28/2016 10.40 AM ET M. Sutherland   [in branches/roughness]
 Centered screen on central point (50% / 50%). Cleaned out some commented statements and unused variables, and commented some std::cerr statements in icemc.cc. Removed glass_air_criticalangle. Added transformation matrices for converting from 'global' to 'local' coordinates to respect boundary conditions, to allow transmitted polarization calculation. Separated incidence and scattering planes to be consistent with transformation matrix. Set npol_local_inc as unit vector. Re-orient npol_local_trans so it is properly perpendicular to the to-balloon vector.
+
+07/28 2016 15.23 PM ET M. Sutherland   [in branches/roughness]
+Commented roughout stream. Added condition that event is skipped if transmitted polarization has nan components. Moved data/roughness/masterfile.txt to data/roughness_full.txt. Removed data/roughness/ folder.

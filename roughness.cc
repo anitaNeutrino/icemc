@@ -21,7 +21,7 @@
 #include "spline.h"
 
 Roughness::Roughness(int a){
-  file_roughness = "data/roughness/masterfile.txt";
+  file_roughness = "data/roughness_full.txt";
   froughsetting = a;
   if (froughsetting==0){
     gritvalue = -1;
