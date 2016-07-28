@@ -88,7 +88,7 @@ Position Screen::GetNextPosition(){
   float xindex = (float) (fpositionindex % fNsamples);
 
   pos = fcentralPoint                                       // base
-        - 0.5*fedgeLength*funit_x - 0.75*fedgeLength*fcosineProjectionFactor*funit_y              // shift to a corner
+        - 0.5*fedgeLength*funit_x - 0.5*fedgeLength*fcosineProjectionFactor*funit_y              // shift to a corner
         + (xindex/((float)(fNsamples-1)))*fedgeLength*funit_x   // move by x-increment
         + (yindex/((float)(fNsamples-1)))*fedgeLength*fcosineProjectionFactor*funit_y;  // move by y-increment with the cosine projection correction
 

@@ -479,11 +479,6 @@ void Getearth(double*,  double*,  double*,  double*);
 #ifdef ANITA_UTIL_EXISTS
 //int GetIceMCAntfromUsefulEventAnt(Anita *anita1,  AnitaGeomTool *AnitaGeom1,  int UsefulEventAnt);
 int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt);
-TGraph *fVPolSignalChainResponse;
-TGraph *fHPolSignalChainResponse;
-double deltaT = 1/(2.6*16);
-void readImpulseResponse();
-void applyImpulseResponse(int nPoints, int ant, double *x, double y[48][512], bool pol);
 #ifdef R_EARTH
 #undef R_EARTH
 #endif
@@ -1520,7 +1515,7 @@ int main(int argc,  char **argv) {
   TFile *anitafileEvent = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *eventTree = new TTree("eventTree", "eventTree");
-  eventTree->Branch("UsefulAnitaEvent",  &realEvPtr           );
+  eventTree->Branch("event",             &realEvPtr           );
   eventTree->Branch("run",               &run_no,   "run/I"   );
   eventTree->Branch("weight",            &weight,   "weight/D");
 
@@ -1717,18 +1712,15 @@ int main(int argc,  char **argv) {
     gps_offset=45;
   } else gps_offset=0;
 
-  #ifdef ANITA_UTIL_EXISTS
-  readImpulseResponse();
-  #endif
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
     
-    if (NNU >= 100) {
-      if (inu % (NNU / 100) == 0)
-        cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
-    }
-    else
-      cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
+    //if (NNU >= 100) {
+    //  if (inu % (NNU / 100) == 0)
+    //    cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
+    //}
+    //else
+    //  cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
     
 
 
@@ -2512,30 +2504,40 @@ int main(int argc,  char **argv) {
 
         //IMPORTANT NOTE: WE ARE IGNORING THE FIRN UNTIL FURTHER NOTICE FOR SIMPLICITY
 
-        int N_goodscreenpoints=0;
         Position pos_current;
         Vector pos_current_localnormal; // local normal at point on ground below screen current point
         Vector vec_pos_current_to_balloon;
 
         Position pos_projectedImpactPoint;
-        Vector vec_localnormal;         //normalized
+        Vector vec_specularnormal;      //normalized, normal vector at specular point
+        Vector vec_localnormal;         //normalized, normal vector at projected ground point
         Vector vec_nnu_to_impactPoint;  //normalized
+
         Vector vec_incplane_normal;     // normal of the incidence plane, normalized
-        Vector vec_incplane_grdtangent; // vector along tangent line to ground at impact point along balloon direction (but NOT towards it), normalized
-        Vector vec_incplane_perpgrd;    // vector '+z' in incidence plane, perp to ground tangent and plane normal, normalized
+        Vector vec_scatplane_normal;     // normal of the scattering plane, normalized
+
         double theta_local;             //angle between local surface normal and vector to balloon [radians]
         double theta_0_local;                 //angle between 'inverted' local surface normal and incident direction [radians]
         double theta_0_local_converted;       //theta_0_local converted using measurement angle conversion (air-glass -> glass-air) for spline look-up [radians]
-        double glass_air_criticalangle = 41.81; // [deg], critical angle for light incident on air from glass, represents a limit for the measurement interpolations (see ELOG 077)
+
+        double mtrx_cos_inc, mtrx_sin_inc;    // matrix coefficients for converting polarization components
+        double mtrx_cos_trans, mtrx_sin_trans;
 
         double interpolatedPower;       // \muW for these angles
-        double temp_efield;
+
+        Vector npol_local_inc;
+        Vector E_local_h_inc;
+        Vector E_local_v_inc;
+
+        Vector npol_local_trans;
+        double E_local_h_trans_mag;     // only need magnitude, use scattering plane basis vector to construct actual polarization vector
+        double E_local_v_trans_mag;
+
         double Emag_local;
-        Vector npol_local;
         Vector Efield_local;
         Vector Efield_screentotal = Vector(0,0,0);
-        double Erunningtotal=0;
 
+        Vector temp_a, temp_b;          // some temporary vectors
 
         //iterate points on the screen, get their position and project back to find ground impact
         //calculate incident and transmitted angles, look up power fraction and loss correction and fresnel (use same GetFresnel?) factors
@@ -2553,20 +2555,20 @@ int main(int argc,  char **argv) {
         panel1->SetUnitX( ray1->n_exit2bn[2].Cross(pos_current_localnormal).Unit() );
         panel1->SetUnitY( -1.*ray1->n_exit2bn[2].Cross(ray1->n_exit2bn[2].Cross(pos_current_localnormal).Unit()) );
 
-        std::cerr<<"bln: "<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
-        std::cerr<<"bln X: "<<bn1->r_bn.GetX()<<"  "<<bn1->r_bn.GetY()<<"  "<<bn1->r_bn.GetZ()<<std::endl;
-        std::cerr<<"Surface: "<<antarctica->Surface(bn1->r_bn)<<std::endl;
-        std::cerr<<"int.point: "<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
-        std::cerr<<"RFexit: "<<ray1->rfexit[2].Lon()<<"  "<<-90+ray1->rfexit[2].Lat()<<std::endl;
-        std::cerr<<"screen: "<<panel1->GetCentralPoint().Lon()<<"  "<<-90+panel1->GetCentralPoint().Lat()<<std::endl;
+        //std::cerr<<"bln: "<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
+        //std::cerr<<"bln X: "<<bn1->r_bn.GetX()<<"  "<<bn1->r_bn.GetY()<<"  "<<bn1->r_bn.GetZ()<<std::endl;
+        //std::cerr<<"Surface: "<<antarctica->Surface(bn1->r_bn)<<std::endl;
+        //std::cerr<<"int.point: "<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
+        std::cerr<<"["<<ray1->rfexit[2].Lon()<<",  "<<-90+ray1->rfexit[2].Lat()<<"]"<<std::endl;
+        //std::cerr<<"screen: "<<panel1->GetCentralPoint().Lon()<<"  "<<-90+panel1->GetCentralPoint().Lat()<<std::endl;
 
         // now loop over screen points
         for (int ii=0; ii<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE; ii++){
           Emag_local = 0.;
 
-          if((ii%1000)==0){
-            std::cerr<<ii<<std::endl;
-          }
+          //if((ii%1000)==0){
+          //  std::cerr<<ii<<std::endl;
+          //}
           pos_current = panel1->GetNextPosition();        // this gets the new screen position
           pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
           vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_current[0], bn1->r_bn[1] - pos_current[1], bn1->r_bn[2] - pos_current[2] );
@@ -2575,46 +2577,76 @@ int main(int argc,  char **argv) {
           // reject if it enters beyond the borders of the continent.
           // step size is 10 meters
           if (!antarctica->WhereDoesItExitIce(pos_current, panel1->GetNormal(), 10., pos_projectedImpactPoint)){
-            std::cerr<<"Warning!  Projected ground impact position of screen point does NOT enter ice. Skipping this screen point."<<std::endl;
+            //std::cerr<<"Warning!  Projected ground impact position of screen point does NOT enter ice. Skipping this screen point."<<std::endl;
             continue;
           }
           if (antarctica->OutsideAntarctica(pos_projectedImpactPoint)) {
-              std::cerr<<"Warning!  Projected ground impact position of screen point is off-continent. Skipping this screen point."<<std::endl;
+              //std::cerr<<"Warning!  Projected ground impact position of screen point is off-continent. Skipping this screen point."<<std::endl;
             continue;
           }// end outside antarctica
 
-          // get local surface normal and vector from interaction point to impact point
+          // get surface normals and vector from interaction point to impact point
+          vec_specularnormal = antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit();
+          //
           vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
           vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
 
-          // now need to redefine the incidence plane using int.point-imp.point and imp.point-balloon vectors
-          vec_incplane_normal = vec_nnu_to_impactPoint.Cross( (const Vector)vec_pos_current_to_balloon ).Unit();
-          vec_incplane_grdtangent = vec_incplane_normal.Cross( (const Vector)vec_localnormal ).Unit();
-          vec_incplane_perpgrd = vec_incplane_grdtangent.Cross( (const Vector)vec_incplane_normal ).Unit();
+          // get incident polarization
+          npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint).Unit();
 
-          // local angles of transmission and incidence IN PLANE OF INCIDENCE
-          theta_local = vec_incplane_perpgrd.Angle( (const Vector)vec_pos_current_to_balloon );             //[rad]
-          theta_0_local = vec_incplane_perpgrd.Angle(vec_nnu_to_impactPoint);                               //[rad]
-          theta_0_local_converted = rough1->ConvertTheta0GlassAir_to_AirGlass(theta_0_local*180./PI);       //[deg]  <- !!!!
+          // calculate polarization transformation matrix coefficients (from Bahar 1995, page 535)
+          // treat a_y = normal at specular exit point
+          temp_a = interaction1->nnu.Cross(vec_specularnormal).Unit();
+          temp_b = interaction1->nnu.Cross(vec_localnormal).Unit();
+          mtrx_cos_inc = temp_a.Dot(temp_b) / temp_a.Mag() / temp_b.Mag();
+          mtrx_sin_inc = sqrt(1. - mtrx_cos_inc*mtrx_cos_inc);
 
-          // fix angles based on geometry and how angles defined in incidence plane
-          if( ( vec_nnu_to_impactPoint.Dot((const Vector)vec_pos_current_to_balloon) ) < 0 ){
-            //theta_local -= PI/2.;
-          }
+          temp_a = vec_pos_current_to_balloon.Cross(vec_specularnormal).Unit();
+          temp_b = vec_pos_current_to_balloon.Cross(vec_localnormal).Unit();
+          mtrx_cos_trans = temp_a.Dot(temp_b) / temp_a.Mag() / temp_b.Mag();
+          mtrx_sin_trans = sqrt(1. - mtrx_cos_trans*mtrx_cos_trans);
 
-          N_goodscreenpoints++;
+          // now define the incidence plane using int.point-imp.point vector and local surface normal
+          vec_incplane_normal = vec_nnu_to_impactPoint.Cross( (const Vector)vec_localnormal ).Unit();
+
+          // now define the scattering plane using imp.point-balloon vector and local surface normal
+          vec_scatplane_normal = vec_pos_current_to_balloon.Cross( (const Vector)vec_localnormal ).Unit();
+
+          // local angles of transmission and incidence in their respective planes
+          theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
+          theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
+          theta_0_local_converted = rough1->ConvertTheta0GlassAir_to_AirGlass(theta_0_local*180./PI); //[deg]  <- !!!!
+
+          // determine incident vertical and horizontal field components (vertical = in-plane)
+          E_local_h_inc = npol_local_inc.Dot(vec_incplane_normal) * vec_incplane_normal;
+          E_local_v_inc = npol_local_inc - E_local_h_inc;
+
+          // recast the values with the transformation matrix
+          E_local_v_trans_mag = mtrx_cos_trans * (mtrx_cos_inc*E_local_v_inc.Mag() - mtrx_sin_inc*E_local_h_inc.Mag())
+                      - mtrx_sin_trans * (mtrx_sin_inc*E_local_v_inc.Mag() + mtrx_cos_inc*E_local_h_inc.Mag());
+          E_local_h_trans_mag = mtrx_sin_trans * (mtrx_cos_inc*E_local_v_inc.Mag() - mtrx_sin_inc*E_local_h_inc.Mag())
+                      + mtrx_cos_trans * (mtrx_sin_inc*E_local_v_inc.Mag() + mtrx_cos_inc*E_local_h_inc.Mag());
+
+          // transmitted polarization needs to be perpendicular to to-balloon vector, and the horizontal component is 'set', so need to find appropriate vector for the vertical component to ensure perpendicularity
+          npol_local_trans = (E_local_h_trans_mag*vec_scatplane_normal
+                           + E_local_v_trans_mag* vec_pos_current_to_balloon.Cross( (const Vector)vec_scatplane_normal ).Unit() ).Unit();
+
+          // now work on the field magnitude
+          // calculate the transmitted power based on the UCLA measurements
           interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
-          //if(interpolatedPower<0){
-          //  interpolatedPower=0;
-          //}
 
-
-          // Calculate the electric field magnitude exiting the impact point accounting for local 1)fresnel 2)magnification 3)power re-distribution from scattering 4)corrections to measurements
+          // Calculate the electric field magnitude exiting the impact point accounting for local 1)power re-distribution from scattering, 2)corrections to measurements
           Emag_local = vmmhz1m_max * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local));
 
           // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
           Emag_local /= ( interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn) );
           Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
+
+          // here is the full transmitted electric field for this screen point
+          Efield_local = Emag_local * npol_local_trans;
+
+          // add to the running total at the balloon
+          Efield_screentotal = Efield_screentotal + Efield_local;
 
           roughout<<inu<<"  "
                   <<ii<<"  "
@@ -2632,20 +2664,23 @@ int main(int argc,  char **argv) {
                   <<pos_projectedImpactPoint[0]<<"  "
                   <<pos_projectedImpactPoint[1]<<"  "
                   <<pos_projectedImpactPoint[2]<<"  "
+                  <<E_local_h_inc.Mag()<<"  "
+                  <<E_local_v_inc.Mag()<<"  "
+                  <<E_local_h_trans_mag<<"  "
+                  <<E_local_v_trans_mag<<"  "
+                  <<vec_pos_current_to_balloon.Unit().Dot(npol_local_trans)<<"  "
                   <<std::endl;
-          Efield_local = Emag_local * npol_local;
-
-          Efield_screentotal = Efield_screentotal + Efield_local;
-
         }//end for ii < fSCREEN....
 
-      // Calculate the electric field magnitude at the balloon
-      // this variable is used downstream, so best to set it here
-      // could also set the resultant polarization too if needed
-      vmmhz_max = Efield_screentotal.Mag();
 
-      std::cerr<<"N_good screen / Total: "<<N_goodscreenpoints<<" / "<<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE<<std::endl;
-      std::cerr<<"Screen Mag: "<<vmmhz_max<<std::endl;
+      // these variables are used downstream, so best to set it here
+      // Calculate the electric field magnitude at the balloon
+      vmmhz_max = Efield_screentotal.Mag();
+      // Calculate the polarization at the balloon
+      n_pol = Efield_screentotal.Unit();
+
+      //std::cerr<<"Screen Mag: "<<vmmhz_max<<std::endl;
+
       }//end else roughness
 
       roughout.close();
@@ -2752,9 +2787,9 @@ int main(int argc,  char **argv) {
       volts_rx_max=0;
       
 
-      std::cerr<<vmmhz_max<<std::endl;
-      Vector temp=Vector( ray1->rfexit[2][0]-interaction1->posnu[0], ray1->rfexit[2][1]-interaction1->posnu[1], ray1->rfexit[2][2]-interaction1->posnu[2]);
-      std::cerr<< antarctica->GetSurfaceNormal(ray1->rfexit[2]).Angle(ray1->n_exit2bn[2])*180./PI<<"  "<< antarctica->GetSurfaceNormal(ray1->rfexit[2]).Angle(temp)*180./PI<<std::endl;
+      //std::cerr<<vmmhz_max<<std::endl;
+      //Vector temp=Vector( ray1->rfexit[2][0]-interaction1->posnu[0], ray1->rfexit[2][1]-interaction1->posnu[1], ray1->rfexit[2][2]-interaction1->posnu[2]);
+      //std::cerr<< antarctica->GetSurfaceNormal(ray1->rfexit[2]).Angle(ray1->n_exit2bn[2])*180./PI<<"  "<< antarctica->GetSurfaceNormal(ray1->rfexit[2]).Angle(temp)*180./PI<<std::endl;
 
 
 
@@ -3411,7 +3446,8 @@ int main(int argc,  char **argv) {
 	      } else if (thispasses[1]){
 		allcuts_weighted_polarization[1]+=weight;
 	      }
-	      
+	      anita1->weight_inanita=weight;	      
+
               if (h1mybeta->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
                 h1mybeta -> Fill(mybeta, weight); //get the angle distribution of mybeta
               
@@ -3544,7 +3580,7 @@ int main(int argc,  char **argv) {
               // Total number of antennas
               // int numAnts_temp = anita1->PHITRIG[0] + anita1->PHITRIG[1] + anita1->PHITRIG[2] ;
               int fNumPoints = 260;
-              for (int i = 0; i < 90; i++){
+              for (int i = 0; i < 96; i++){
                 for (int j = 0; j < 260; j++){
                   realEvPtr->fVolts[i][j] = 0.;
                   realEvPtr->fTimes[i][j] = 0.;
@@ -3563,31 +3599,16 @@ int main(int argc,  char **argv) {
                 realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
 		for (int j = 0; j < fNumPoints; j++) {
+		  // convert volts to mV
 		  volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j] = volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
 		  volts_rx_rfcm_lab_h_all_signalChain[IceMCAnt][j] = volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
 		  realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
 		  realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
-		}
 
-		if (settings1->APPLYIMPULSERESPONSE){
-		  applyImpulseResponse(fNumPoints, IceMCAnt, realEvPtr->fTimes[UsefulChanIndexV], volts_rx_rfcm_lab_e_all_signalChain, 0);
-		  applyImpulseResponse(fNumPoints, IceMCAnt, realEvPtr->fTimes[UsefulChanIndexH], volts_rx_rfcm_lab_h_all_signalChain, 1);
-		}
-		
-		for (int j = 0; j < fNumPoints; j++) {
-		  // cout << volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000 << "\t" << volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j] << endl;
-		  //                  realEvPtr->fVolts[UsefulChanIndexH][j] = volts_rx_rfcm_lab_h_all[IceMCAnt][j + 128] * 1000.;
 		  realEvPtr->fVolts[UsefulChanIndexH][j] = volts_rx_rfcm_lab_h_all_signalChain[IceMCAnt][j];
-                  // realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
                   realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
-                  //if (realEvPtr->fVolts[UsefulChanIndexH][j] != realEvPtr->fVolts[UsefulChanIndexH][j])
-                    //cout << "Nan/inf" << endl;
-
-                  //if (realEvPtr->fVolts[UsefulChanIndexH][j] > 0.1)
-                    //cout << "fvolts: " << realEvPtr->fVolts[UsefulChanIndexH][j] << ",  volts_rx: " << volts_rx_rfcm_lab_h_all[IceMCAnt][j+128] << endl;
 
                   realEvPtr->fVolts[UsefulChanIndexV][j] = volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j];
-                  // realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
                   realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
                 }//end int j
               }// end int iant
@@ -3738,6 +3759,7 @@ int main(int argc,  char **argv) {
 
       passes_thisevent=1; // flag this event as passing
       anita1->tdata->Fill();
+      anita1->tgaryanderic->Fill();
       } // end if passing global trigger conditions
       else {
         passes_thisevent=0; // flag this event as not passing
@@ -3842,6 +3864,8 @@ int main(int argc,  char **argv) {
   
   cout << "about to close tsignals tree.\n";
   anita1->fsignals=anita1->tsignals->GetCurrentFile();
+  anita1->fdata=anita1->tdata->GetCurrentFile();
+  anita1->fdata=anita1->tgaryanderic->GetCurrentFile();
   anita1->fsignals->Write();
   anita1->fsignals->Close();
   
@@ -5136,95 +5160,6 @@ int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt){
   return IceMCAnt;
 }
 //end GetIceMCAntfromUsefulEventAnt()
-
-
-
-void readImpulseResponse(){
-
-  string fileName = "data/sumPicoImpulse.root";
-  TFile fImpulse(fileName.c_str());
-
-  if(!fImpulse.IsOpen()) {
-    std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
-    exit(0);
-  } else {
-    TGraph *grVTemp = (TGraph*) fImpulse.Get("grImpRespV");
-    if(!grVTemp) {
-      std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
-      exit(0);
-    }
-    TGraph *grVInt = FFTtools::getInterpolatedGraph(grVTemp,deltaT); //To match the above sampling rate
-    Int_t nPointsV  = grVInt->GetN();
-    Double_t *newxV = grVInt->GetX();
-    Double_t *newyV = grVInt->GetY();
-    //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
-    for (int i=0;i<nPointsV;i++) newyV[i]*=0.1;
-    // TGraph *grVPad = FFTtools::padWaveToLength(grVInt, paveNum);    
-    fVPolSignalChainResponse = new TGraph(nPointsV, newxV, newyV);
-
-    TGraph *grHTemp = (TGraph*) fImpulse.Get("grImpRespH");
-    if(!grHTemp) {
-      std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
-      exit(0);
-    }
-    TGraph *grHInt = FFTtools::getInterpolatedGraph(grHTemp,deltaT); //To match the above sampling rate
-    Int_t nPointsH  = grHInt->GetN();
-    Double_t *newxH = grHInt->GetX();
-    Double_t *newyH = grHInt->GetY();
-    //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
-    for (int i=0;i<nPointsH;i++) newyH[i]*=0.1;
-    // TGraph *grHPad = FFTtools::padWaveToLength(grHInt, paveNum);    
-    fHPolSignalChainResponse = new TGraph(nPointsH, newxH, newyH);
-
-    delete grVInt;
-    delete grVTemp;
-    
-    delete grHInt;
-    delete grHTemp;
-    
-  }
-  
-}
-
-
-void applyImpulseResponse(int nPoints, int ant, double *x, double y[48][512], bool pol){
-
-  TGraph *graph1 = new TGraph(nPoints, x, y[ant]);
-  // Upsample waveform to same deltaT of the signal chain impulse response
-  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, deltaT);
-
-  TGraph *surfSignal;
-  if (pol==0){
-    surfSignal = FFTtools::getConvolution(graphUp, fVPolSignalChainResponse);
-  } else {
-    surfSignal = FFTtools::getConvolution(graphUp, fHPolSignalChainResponse);
-  }
-
-  // Divide the output of the convolution by the number of points
-  // Because we applied 2 FFT and 1 invFFT
-  Double_t *newx = surfSignal->GetX();
-  Double_t *newy = surfSignal->GetY();
-  Int_t nPointsUp = surfSignal->GetN();
-  for (int i=0;i<nPointsUp;i++){
-    newy[i]=newy[i]/nPointsUp;
-  }
-
-  TGraph *graph2 = new TGraph(nPointsUp, newx, newy);
-  //Downsample again
-  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(graph2, 1/2.6);
-  
-  newy = surfSignalDown->GetY();
-  for (int i=0;i<nPoints;i++){
-    y[ant][i]=newy[i];
-  }
-
-  // Cleaning up
-  delete surfSignalDown;
-  delete graph2;
-  delete surfSignal;
-  delete graphUp;
-  delete graph1;
-}
 
 
 #endif

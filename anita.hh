@@ -36,9 +36,8 @@ private:
 
     
 public:
-  int number_all_antennas; // this keeps count of the number of antennas for use with timing calculations, etc.    
-
-
+  int number_all_antennas; // this keeps count of the number of antennas for use with timing calculations, etc.
+  
     static const int NBANDS_MAX=100; // max number of bands     
 static const int NPOL=2; // number of polarizations 
     static const int NFREQ=128;  // number of frequency bins
@@ -146,10 +145,38 @@ static const int NPOL=2; // number of polarizations
     double timedomain_output_1_inanita[5][HALFNFOUR]; // this is just for writing out to the following tree
     double timedomain_output_2_inanita[5][HALFNFOUR]; // this is just for writing out to the following tree
 
+  double time_trig[HALFNFOUR];
+  double weight_inanita; // weight of the event
   int arrayofhits_inanita[3][16][2][HALFNFOUR];
   //std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhits_inanita; 
 
+
+
+ // same as arrayofhits_inanita but it's time reversed
+  int arrayofhits_forgaryanderic[3][16][2][HALFNFOUR];
+  //std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhits_inanita; 
+
   int l1trig_anita3and4_inanita[2][16][HALFNFOUR];
+
+
+ 
+ int l1trig_anita4lr_inanita[3][16][HALFNFOUR];
+
+ int l1trig_anita4lr_forgaryanderic[3][16][HALFNFOUR];
+
+
+  int l2trig_anita4lr_inanita[16][3][HALFNFOUR];
+
+  int l2trig_anita4lr_forgaryanderic[16][HALFNFOUR]; // when it passes 2/3
+
+  int l3type0trig_anita4lr_inanita[16][HALFNFOUR];
+  int l3trig_anita4lr_inanita[16][HALFNFOUR];
+
+  int l3type0trig_anita4lr_forgaryanderic[16][HALFNFOUR];
+  int l3type1trig_anita4lr_forgaryanderic[16][HALFNFOUR];
+
+
+
 
     double timedomain_output_1_corrected_forplotting[6][HALFNFOUR]; // this is just for writing out to the following tree
     double timedomain_output_2_corrected_forplotting[6][HALFNFOUR]; // this is just for writing out to the following tree
@@ -230,7 +257,8 @@ static const int NPOL=2; // number of polarizations
     
     TFile *fdata;
     TTree *tdata; // writing data out for the analysers
-    
+TTree *tgaryanderic; // writing data out for the analysers    
+
     TTree *tglob;
     
     TH1F *hsignals[5]; // s/n (max diode output/mean diode output) for vertical polarization in each band
@@ -253,10 +281,19 @@ static const int NPOL=2; // number of polarizations
     // for filling tsignals tree
     double timedomainnoise_rfcm_banding_e[5][HALFNFOUR];
     double timedomainnoise_rfcm_banding_h[5][HALFNFOUR];
+
+    double timedomainnoise_rfcm_banding_e_long[5][HALFNFOUR];
+    double timedomainnoise_rfcm_banding_h_long[5][HALFNFOUR];
+
     double timedomainnoise_rfcm_e[HALFNFOUR];
     double timedomainnoise_rfcm_h[HALFNFOUR];
     double timedomainnoise_lab_e[HALFNFOUR];
     double timedomainnoise_lab_h[HALFNFOUR];
+
+    double timedomainnoise_rfcm_e_long[HALFNFOUR];
+    double timedomainnoise_rfcm_h_long[HALFNFOUR];
+    double timedomainnoise_lab_e_long[HALFNFOUR];
+    double timedomainnoise_lab_h_long[HALFNFOUR];
     
     double phases[5][HALFNFOUR];
     
@@ -282,21 +319,39 @@ static const int NPOL=2; // number of polarizations
     double freq[NFREQ];  // frequency for each bin
     double freq_forfft[NFOUR]; // frequencies for taking fft of signal
     double freq_forplotting[NFOUR/4]; // just one entry for frequency, unlike the above.
+    double freq_forfft_long[2*NFOUR]; // frequencies for taking fft of signal
+    double freq_forplotting_long[NFOUR/2]; // just one entry for frequency, unlike the above.
     double time[NFOUR/2];
     double time_long[NFOUR];
     
     double time_centered[NFOUR/2];
     double freqdomain_rfcm_banding[5][HALFNFOUR/2]; // average noise in frequency domain
+    double freqdomain_rfcm_banding_long[5][HALFNFOUR]; // average noise in frequency domain
+
     double freqdomain_rfcm[HALFNFOUR/2]; // average noise in frequency domain
+    double freqdomain_rfcm_long[HALFNFOUR]; // average noise in frequency domain
+
     double freqdomain_rfcm_theory[HALFNFOUR/2]; // average noise in frequency domain
     double avgfreqdomain_lab[HALFNFOUR/2]; // average noise in frequency domain
+    double avgfreqdomain_lab_long[HALFNFOUR]; // average noise in frequency domain
+
     double phases_rfcm_banding_e[5][HALFNFOUR/2];
     double phases_rfcm_banding_h[5][HALFNFOUR/2];
+
+    double phases_rfcm_banding_e_long[5][HALFNFOUR];
+    double phases_rfcm_banding_h_long[5][HALFNFOUR];
     
     double phases_rfcm_e[HALFNFOUR/2];
     double phases_rfcm_h[HALFNFOUR/2];
-    double phases_lab_e[HALFNFOUR/2];
-    double phases_lab_h[HALFNFOUR/2];
+
+    double phases_rfcm_e_long[HALFNFOUR];
+    double phases_rfcm_h_long[HALFNFOUR];
+
+    double phases_lab_e[HALFNFOUR];
+    double phases_lab_h[HALFNFOUR];
+
+    double phases_lab_e_long[HALFNFOUR];
+    double phases_lab_h_long[HALFNFOUR];
     
     
     // this goes from 0 to Fmax, and represents both real and imaginary components
@@ -331,7 +386,7 @@ static const int NPOL=2; // number of polarizations
     void Banding(int iband,double *vmmhz);
     void RFCMs(int ilayer,int ifold,double *vmmhz);
     void normalize_for_nsamples(double *spectrum, double nsamples, double nsamp);
-    void convert_power_spectrum_to_voltage_spectrum_for_fft(double *spectrum, double domain[], double phase[]);
+  void convert_power_spectrum_to_voltage_spectrum_for_fft(int length,double *spectrum, double domain[], double phase[]);
     void GetNoiseWaveforms(); // make time domain noise waveform based on avgnoise being the v^2
     //void GetNoiseWaveform(int iband); // make time domain noise waveform based on avgnoise being the v^2
     void GetPhases();
@@ -533,6 +588,12 @@ static const int NPOL=2; // number of polarizations
     double LIVETIME;
     
     double SIGMA_THETA; // resolution on the polar angle of the signal
+
+  void readImpulseResponse();
+  TGraph *fSignalChainResponse[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
+  double deltaT;
+ 
+  
 }; //class Anita
 
 //! namespace for referring to polarizations

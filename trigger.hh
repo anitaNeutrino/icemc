@@ -169,36 +169,34 @@ void L3Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl
 		      int *thispasses);
 
 
-  // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
-  void L1Anita4LR_ScB(int IZERO,vector<int> vleft,vector<int> vright,
+
+
+  void L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> &vl1trig_anita4lr_scb,int &npassesl1);
+ // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
+  void L1Anita4LR_ScB_OneBin(int IZERO,vector<int> vleft,vector<int> vright,
 		      vector<int> &vl1trig);
 
-  void L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
-				    std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb);
-  // L2 trigger is for one phi sector again
-  void L2Anita4LR_ScB_OnePhiSector(vector<int> vl1_bottom, 
-				   vector<int> vl1_middle,
-				   vector<int> vl1_top,
-				   std::array<vector<int>,3> &vpartofl2_realtime_anita4_scb);
+  void L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
+					   std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb, int &npassesl2, int &npassesl2_type0);
+
   
   // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
 
-  void L1Anita4LR_ScB_AllAntennas(Anita *anita1,std::array< std::array< vector<int>,16>,3> &vl1trig_anita4lr_scb);
-  //void L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array<std::vector<int>,16> &l2trig_anita4lr_scb);
-// ask if L3 type 1 (2 and 2) or L3 type 0 (3 and 1 or 1 and 3) passes
-  int L3or30Anita4LR_ScB_TwoPhiSectors(Anita *anita1, 
-				       std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
-				       std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
-				       int npass1,int npass2,	
-				       vector<int> &vl3trig );
+  void L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,vector<int> vl1_bottom, 
+					  vector<int> vl1_middle,
+					  vector<int> vl1_top,
+					  std::array<vector<int>,3> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0);
+
+  int L3or30Anita4LR_ScB_TwoPhiSectors_OneBin(int IZERO, 
+					      std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
+					      std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
+					      int npass1,int npass2);
   
-  int L3or30Anita4LR_ScB_TwoPhiSectors(Anita *anita1,int iphi,int iother,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,int npass1,int npass2,	
-				       vector<int> &vl3trig );
+  void L3Anita4LR_ScB_OneBin(int IZERO,Anita *anita1,std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb,
+			   std::array<vector<int>,16> &vl3trig_type0, std::array<vector<int>,16> &vl3trig_type1,
+			   int &thispasses_l3type0,int &thispasses_l3type1);
 
-  void L3Anita4LR_ScB(Anita *anita1,std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb,
-		      std::array<vector<int>,16> &vl3trig_type0, std::array<vector<int>,16> &vl3trig_type1,
-		      int &thispasses_l3type0,int &thispasses_l3type1);
-
+  
   void delayL0(vector<int> &vl0,double delay);
   void delay_AllAntennas(Anita *anita1);
 
@@ -323,8 +321,11 @@ public:
     void addToChannelSums(Settings *settings1,Anita *anita1,int ibw,int k);
     
     static int IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int ilayer, int ifold, int ipol);
-
-
+  Double_t fTimes[HALFNFOUR];
+#ifdef ANITA_UTIL_EXISTS
+  void applyImpulseResponse(Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
+//  TGraph *getNoiseSignal(TGraph *grInput, int antenna, AnitaPol::AnitaPol_t polarization,UInt_t solBin);
+#endif
     
     int unwarned;  // whether we have warned the user about resetting thresholds when they are beyond the measured bounds
 }; //class AntTrigger

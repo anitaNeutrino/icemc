@@ -266,7 +266,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     
     PERCENTBW=10; // subbands (not counting full band)
     
-    
+    if (settings1->APPLYIMPULSERESPONSE)   readImpulseResponse();
     
     for (int i=0;i<NFREQ;i++) {
 		freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
@@ -374,6 +374,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     //MAX_THETA_HYPOTHESIS=20.;
 
     double freqstep=1./(double)(NFOUR/2)/TIMESTEP;
+    double freqstep_long=1./(double)(NFOUR)/TIMESTEP; // freqstep_long is actually shorter so that time domain waveform is longer
     
     for (int i=0;i<HALFNFOUR/2;i++) {
 		freq_forfft[2*i]=(double)i*freqstep;
@@ -387,6 +388,20 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		freq_forfft[2*i+1]=(double)i*freqstep;
 		
     }
+
+//     for (int i=0;i<HALFNFOUR;i++) {
+// 		freq_forfft_long[2*i]=(double)i*freqstep_long;
+// 		freq_forfft_long[2*i+1]=(double)i*freqstep_long;
+		
+// 		freq_forplotting_long[i]=freq_forfft_long[2*i];
+		
+//     }
+//     for (int i=HALFNFOUR;i<NFOUR;i++) {
+// 		freq_forfft_long[2*i]=(double)i*freqstep_long;
+// 		freq_forfft_long[2*i+1]=(double)i*freqstep_long;	
+//     }
+
+
     
     phiTrigMask=0;
     phiTrigMaskH=0;
@@ -469,7 +484,6 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
       delete fthresh;
       
     }
-
     
     // get rfcm amplification data
     
@@ -604,6 +618,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     tdiode->SetBranchAddress("freqdomain_amp_icemc",&(freqdomain_rfcm[0]));
     tdiode->SetBranchAddress("freqdomain_rfcm_banding",&(freqdomain_rfcm_banding[0][0]));
     
+
     
     tbands->SetBranchAddress("freq_bands",freq_bands);
     tbands->SetBranchAddress("bandsattn",bandsattn);
@@ -832,7 +847,12 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     TGraph *gfreqdomain_rfcm=new TGraph(NFOUR/4,freq_forplotting,freqdomain_rfcm);
     TGraph *gavgfreqdomain_lab=new TGraph(NFOUR/4,freq_forplotting,avgfreqdomain_lab);
     TGraph *gfreqdomain_rfcm_banding[5];
+
+    TGraph *gfreqdomain_rfcm_long;
+    TGraph *gavgfreqdomain_lab_long;
+    TGraph *gfreqdomain_rfcm_banding_long[5];
     
+
     for (int i=0;i<5;i++) {
       gfreqdomain_rfcm_banding[i]=new TGraph(NFOUR/4,freq_forplotting,freqdomain_rfcm_banding[i]);
     }
@@ -1269,9 +1289,30 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     tdata->Branch("arrayofhits_inanita",&arrayofhits_inanita,"arrayofhits_inanita[3][16][2][512]/I");
 
     tdata->Branch("l1trig_anita3and4_inanita",&l1trig_anita3and4_inanita,"l1trig_anita3and4_inanita[2][16][512]/I");
+
+   tdata->Branch("l1trig_anita4lr_inanita",&l1trig_anita4lr_inanita,"l1trig_anita4lr_inanita[3][16][512]/I");
+
+
+    tdata->Branch("l2trig_anita4lr_inanita",&l2trig_anita4lr_inanita,"l2trig_anita4lr_inanita[16][3][512]/I");
+
+    tdata->Branch("l3type0trig_anita4lr_inanita",&l3type0trig_anita4lr_inanita,"l3type0trig_anita4lr_inanita[16][512]/I");
+    tdata->Branch("l3trig_anita4lr_inanita",&l3trig_anita4lr_inanita,"l3trig_anita4lr_inanita[16][512]/I");
+
+
     //tdata->Branch("arrayofhits_inanita",&arrayofhits_inanita,"std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>");
     tdata->Branch("passglobtrig",&passglobtrig,"passglobtrig[2]/I");
     
+
+   tgaryanderic=new TTree("tgaryanderic","tgaryanderic");
+    tgaryanderic->Branch("arrayofhits",&arrayofhits_forgaryanderic,"arrayofhits_forgaryanderic[3][16][2][512]/I");
+    tgaryanderic->Branch("l1trig",&l1trig_anita4lr_forgaryanderic,"l1trig_anita4lr_forgaryanderic[3][16][512]/I");
+
+    tgaryanderic->Branch("l2trig",&l2trig_anita4lr_forgaryanderic,"l2trig_anita4lr_forgaryanderic[16][512]/I"); 
+    tgaryanderic->Branch("l3type0trig",&l3type0trig_anita4lr_forgaryanderic,"l3type0trig_anita4lr_forgaryanderic[16][512]/I"); 
+    tgaryanderic->Branch("l3type1trig",&l3type1trig_anita4lr_forgaryanderic,"l3type1trig_anita4lr_forgaryanderic[16][512]/I"); 
+    tgaryanderic->Branch("passglobtrig",&passglobtrig,"passglobtrig[2]/I");
+    tgaryanderic->Branch("weight",&weight_inanita,"weight_inanita/D");
+    tgaryanderic->Branch("time",&time_trig,"time_trig[512]/D");
 
 
     tglob=new TTree("tglob","tglob");
@@ -2458,25 +2499,26 @@ void Anita::GetPhases() {
 }
 
 void Anita::normalize_for_nsamples(double *spectrum, double nsamples, double nsamp){
-    for (int k = 0; k < NFOUR / 4; k++){
-		spectrum[2 * k] *= sqrt((double) nsamples / (double) nsamp);
-		spectrum[2 * k + 1] *= sqrt((double) nsamples / (double) nsamp);
+  for (int k = 0; k < NFOUR / 4; k++){
+    spectrum[2 * k] *= sqrt((double) nsamples / (double) nsamp);
+    spectrum[2 * k + 1] *= sqrt((double) nsamples / (double) nsamp);
     }
     return;
 }
 
-void Anita::convert_power_spectrum_to_voltage_spectrum_for_fft(double *spectrum, double domain[], double phase[]){
+void Anita::convert_power_spectrum_to_voltage_spectrum_for_fft(int length,double *spectrum, double domain[], double phase[]){
     double current_amplitude, current_phase;
-    for (int k = 0; k < NFOUR / 4; k++){
-		//current_amplitude = domain[k];
-		current_phase = phase[k];
-		
-		// Uncomment the following line of code to allow the the noise generated to have a Rician/Rayleigh distribution, which should increase the number of weighted neutrinos that pass *slightly*.
-		Tools::get_random_rician(0., 0., sqrt(2. / M_PI) * domain[k], current_amplitude, current_phase);
-		// The above function uses 0. as the mean of the rician distribution, and uses sqrt(2. / M_PI) * domain[k] as the standard deviation for the distribution, as discussed in Goodman's "Statistical Optics", equation 2.9-13 on page 49
-		
-		spectrum[2 * k] = sqrt(current_amplitude) * cos(phase[k]) / (( (double) NFOUR / 2) / 2);
-		spectrum[2 * k + 1] = sqrt(current_amplitude) * sin(phase[k]) / (( (double) NFOUR / 2) / 2);
+    //    for (int k = 0; k < NFOUR / 4; k++){
+    for (int k = 0; k < length/2 ; k++){
+      current_amplitude = domain[k];
+      current_phase = phase[k];
+      
+      // Uncomment the following line of code to allow the the noise generated to have a Rician/Rayleigh distribution, which should increase the number of weighted neutrinos that pass *slightly*.
+      Tools::get_random_rician(0., 0., sqrt(2. / M_PI) * domain[k], current_amplitude, current_phase);
+      // The above function uses 0. as the mean of the rician distribution, and uses sqrt(2. / M_PI) * domain[k] as the standard deviation for the distribution, as discussed in Goodman's "Statistical Optics", equation 2.9-13 on page 49
+      
+      spectrum[2 * k] = sqrt(current_amplitude) * cos(phase[k]) / (( (double) NFOUR / 2) / 2);
+      spectrum[2 * k + 1] = sqrt(current_amplitude) * sin(phase[k]) / (( (double) NFOUR / 2) / 2);
     }
     return;
 }
@@ -2484,13 +2526,19 @@ void Anita::convert_power_spectrum_to_voltage_spectrum_for_fft(double *spectrum,
 void Anita::GetNoiseWaveforms() {
     GetPhases();
     int nsamples = NFOUR / 2;
+    int nsamples_long = NFOUR;
     double sumfreqdomain = 0.;
     double sumtimedomain = 0.;
     
-    convert_power_spectrum_to_voltage_spectrum_for_fft(timedomainnoise_rfcm_e, freqdomain_rfcm, phases_rfcm_e);
-    convert_power_spectrum_to_voltage_spectrum_for_fft(timedomainnoise_rfcm_h, freqdomain_rfcm, phases_rfcm_h);
-    convert_power_spectrum_to_voltage_spectrum_for_fft(timedomainnoise_lab_e, avgfreqdomain_lab, phases_lab_e);
-    convert_power_spectrum_to_voltage_spectrum_for_fft(timedomainnoise_lab_h, avgfreqdomain_lab, phases_lab_h);
+    convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples,timedomainnoise_rfcm_e, freqdomain_rfcm, phases_rfcm_e);
+    convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples,timedomainnoise_rfcm_h, freqdomain_rfcm, phases_rfcm_h);
+    convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples,timedomainnoise_lab_e, avgfreqdomain_lab, phases_lab_e);
+    convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples,timedomainnoise_lab_h, avgfreqdomain_lab, phases_lab_h);
+
+//     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long,timedomainnoise_rfcm_e_long, freqdomain_rfcm_long, phases_rfcm_e_long);
+//     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long,timedomainnoise_rfcm_h_long, freqdomain_rfcm_long, phases_rfcm_h_long);
+//     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long,timedomainnoise_lab_e_long, avgfreqdomain_lab_long, phases_lab_e_long);
+//     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long,timedomainnoise_lab_h_long, avgfreqdomain_lab_long, phases_lab_h_long);
     
     // want to restrict it to NFOUR/2 samples -# samples that equal twice
     // maxt_diode
@@ -2506,35 +2554,57 @@ void Anita::GetNoiseWaveforms() {
     normalize_for_nsamples(timedomainnoise_rfcm_h, (double) nsamples, (double) nsamp);
     normalize_for_nsamples(timedomainnoise_lab_e, (double) nsamples, (double) nsamp);
     normalize_for_nsamples(timedomainnoise_lab_h, (double) nsamples, (double) nsamp);
+
+//     normalize_for_nsamples(timedomainnoise_rfcm_e_long, (double) nsamples_long, (double) nsamp);
+//     normalize_for_nsamples(timedomainnoise_rfcm_h_long, (double) nsamples_long, (double) nsamp);
+//     normalize_for_nsamples(timedomainnoise_lab_e_long, (double) nsamples_long, (double) nsamp);
+//     normalize_for_nsamples(timedomainnoise_lab_h_long, (double) nsamples_long, (double) nsamp);
     
     for (int k = 0; k < NFOUR / 4; k++){
-		sumfreqdomain += avgfreqdomain_lab[k];
+      sumfreqdomain += avgfreqdomain_lab[k];
     }
     
     Tools::realft(timedomainnoise_rfcm_e, -1, NFOUR / 2);
     Tools::realft(timedomainnoise_rfcm_h, -1, NFOUR / 2);
     Tools::realft(timedomainnoise_lab_e,-1, NFOUR / 2);
     Tools::realft(timedomainnoise_lab_h, -1, NFOUR / 2);
+
+
+ //    Tools::realft(timedomainnoise_rfcm_e_long, -1, NFOUR );
+//     Tools::realft(timedomainnoise_rfcm_h_long, -1, NFOUR );
+//     Tools::realft(timedomainnoise_lab_e_long,-1, NFOUR );
+//     Tools::realft(timedomainnoise_lab_h_long, -1, NFOUR );
     
     for (int k = 0; k < NFOUR / 2; k++) {
-		sumtimedomain += timedomainnoise_lab_e[k] * timedomainnoise_lab_e[k];
-		rms_rfcm_e += timedomainnoise_rfcm_e[k] * timedomainnoise_rfcm_e[k] / ((double) NFOUR / 2);
-		rms_lab_e += timedomainnoise_lab_e[k] * timedomainnoise_lab_e[k] / ((double) NFOUR / 2);
-		rms_rfcm_h += timedomainnoise_rfcm_h[k] * timedomainnoise_rfcm_h[k] / ((double) NFOUR / 2);
-		rms_lab_h += timedomainnoise_lab_h[k] * timedomainnoise_lab_h[k] / ((double) NFOUR / 2);
-		
-		rms_rfcm_e_single_event += timedomainnoise_rfcm_e[k] * timedomainnoise_rfcm_e[k];
+      sumtimedomain += timedomainnoise_lab_e[k] * timedomainnoise_lab_e[k];
+      rms_rfcm_e += timedomainnoise_rfcm_e[k] * timedomainnoise_rfcm_e[k] / ((double) NFOUR / 2);
+      rms_lab_e += timedomainnoise_lab_e[k] * timedomainnoise_lab_e[k] / ((double) NFOUR / 2);
+      rms_rfcm_h += timedomainnoise_rfcm_h[k] * timedomainnoise_rfcm_h[k] / ((double) NFOUR / 2);
+      rms_lab_h += timedomainnoise_lab_h[k] * timedomainnoise_lab_h[k] / ((double) NFOUR / 2);
+      
+      rms_rfcm_e_single_event += timedomainnoise_rfcm_e[k] * timedomainnoise_rfcm_e[k];
     }
     
     count_getnoisewaveforms++;
+
     for (int j=0; j<5; j++) {
-      convert_power_spectrum_to_voltage_spectrum_for_fft(timedomainnoise_rfcm_banding_e[j], freqdomain_rfcm_banding[j], phases_rfcm_banding_e[j]);
-      convert_power_spectrum_to_voltage_spectrum_for_fft(timedomainnoise_rfcm_banding_h[j], freqdomain_rfcm_banding[j], phases_rfcm_banding_h[j]);
+      convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR/2,timedomainnoise_rfcm_banding_e[j], freqdomain_rfcm_banding[j], phases_rfcm_banding_e[j]);
+      convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR/2,timedomainnoise_rfcm_banding_h[j], freqdomain_rfcm_banding[j], phases_rfcm_banding_h[j]);
       normalize_for_nsamples(timedomainnoise_rfcm_banding_e[j], (double) nsamples, (double) nsamp);
-      normalize_for_nsamples(timedomainnoise_rfcm_banding_h[j], (double) nsamples, (double) nsamp);
-      
+      normalize_for_nsamples(timedomainnoise_rfcm_banding_h[j], (double) nsamples, (double) nsamp);     
       Tools::realft(timedomainnoise_rfcm_banding_e[j], -1, NFOUR / 2);
       Tools::realft(timedomainnoise_rfcm_banding_h[j], -1, NFOUR / 2);
+
+ //      convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR,timedomainnoise_rfcm_banding_e_long[j], freqdomain_rfcm_banding_long[j], phases_rfcm_banding_e_long[j]);
+//       convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR,timedomainnoise_rfcm_banding_h_long[j], freqdomain_rfcm_banding_long[j], phases_rfcm_banding_h_long[j]);
+//       normalize_for_nsamples(timedomainnoise_rfcm_banding_e_long[j], (double) nsamples_long, (double) nsamp);
+//       normalize_for_nsamples(timedomainnoise_rfcm_banding_h_long[j], (double) nsamples_long, (double) nsamp);     
+//       Tools::realft(timedomainnoise_rfcm_banding_e_long[j], -1, NFOUR);
+//       Tools::realft(timedomainnoise_rfcm_banding_h_long[j], -1, NFOUR);
+
+
+
+
     }
 }
 
@@ -3880,7 +3950,7 @@ void Anita::GetArrivalTimes(const Vector& rf_direction) {
 } // GetArrivalTimes
 
 
-void Anita::setphiTrigMaskAnita3(UInt_t realTime_flightdata) {
+void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
 
   if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
     phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
@@ -3904,23 +3974,23 @@ void Anita::setphiTrigMaskAnita3(UInt_t realTime_flightdata) {
   
 }
 
-void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
-  if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
-    phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
+// void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
+//   if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
+//     phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
 		
-  }
-  else { // if it's in range
+//   }
+//   else { // if it's in range
 			
-    iturf=turfratechain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in turfratechain that is closest to this realTime_flightdata
+//     iturf=turfratechain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in turfratechain that is closest to this realTime_flightdata
 		
-    if (iturf<0) // if it didn't find one
-      phiTrigMask=0; // set to zero
-    else
-      turfratechain->GetEvent(iturf);
+//     if (iturf<0) // if it didn't find one
+//       phiTrigMask=0; // set to zero
+//     else
+//       turfratechain->GetEvent(iturf);
 		
-  } // end if it's in range
+//   } // end if it's in range
     
-}
+// }
 
 void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
   
@@ -3947,3 +4017,68 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
   
 
 }
+
+
+void Anita::readImpulseResponse(){
+
+  // string fileName = "data/sumPicoImpulse.root";
+  // TFile fImpulse(fileName.c_str());
+
+  // if(!fImpulse.IsOpen()) {
+  //   std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
+  //   exit(0);
+  // } else {
+  //   TGraph *grVTemp = (TGraph*) fImpulse.Get("grImpRespV");
+  //   if(!grVTemp) {
+  //     std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
+  //     exit(0);
+  //   }
+
+  //   TGraph *grHTemp = (TGraph*) fImpulse.Get("grImpRespH");
+  //   if(!grHTemp) {
+  //     std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
+  //     exit(0);
+  //   }
+
+
+  deltaT = 1/(2.6*16);
+  
+  string fileName = "data/SignalChainImpulseResponse_anita3.root";
+  TFile fImpulse(fileName.c_str());
+
+  if(!fImpulse.IsOpen()) {
+    std::cerr << "Couldn't read ANITA-3 siganl chain impulse response from " << fileName << "\n";
+    exit(0);
+  } else {
+
+    string spol[2] ={"V", "H"};
+    string sring[3]={"Top", "Middle", "Bottom"};
+    for (int ipol=0;ipol<2;ipol++){
+      for (int iring=0;iring<3;iring++){
+	TGraph *grTemp = (TGraph*) fImpulse.Get(Form("ImpulseResponse_%spol_%s", spol[ipol].c_str(), sring[iring].c_str()));
+	if(!grTemp) {
+	  std::cerr << "Couldn't read ANITA-3 siganl chain impulse response from " << fileName << "\n";
+	  exit(0);
+	}
+	TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); //To match the above sampling rate
+	Int_t nPoints  = grInt->GetN();
+	Double_t *newx = grInt->GetX();
+	Double_t *newy = grInt->GetY();
+	// double unitsConversion = 1;//0.001;
+	// //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
+	// for (int i=0;i<nPoints;i++) newy[i]*=0.1*unitsConversion;
+	// 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
+	for (int i=0;i<nPoints;i++) newy[i]*=48.; 
+	// TGraph *grVPad = FFTtools::padWaveToLength(grVInt, paveNum);    
+	fSignalChainResponse[ipol][iring] = new TGraph(nPoints, newx, newy);
+
+	delete grInt;
+	delete grTemp;
+      }
+    }
+    
+    
+  }
+  
+}
+

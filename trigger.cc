@@ -25,6 +25,10 @@
 
 using std::cout;
 
+#ifdef ANITA_UTIL_EXISTS
+#include "FFTtools.h"
+#endif
+
 
  GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
     
@@ -491,7 +495,7 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
   for (int iband=0;iband<5;iband++) {
     //cout << "arrival time is " << globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP << "\n";
     //anita1->iminbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]+globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP; // we start to look for single channel triggers firing
-    //anita1->iminbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]; // we start to look for single channel triggers firing
+    //anita1->iminbin[iband]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[iband]; // we start to look for single channel triggers firing
     anita1->iminbin[iband]=0.; // we start to look for single channel triggers firing
     // starting with the first bin where the diode function is completely
     // overlapping plus a delay that is brought about by the diode
@@ -1093,11 +1097,36 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   anita1->peak_e_rx_signalonly=AntTrigger::FindPeak(volts_rx_e_forfft,anita1->HALFNFOUR); // with no noise
   anita1->peak_h_rx_signalonly=AntTrigger::FindPeak(volts_rx_h_forfft,anita1->HALFNFOUR); // with no noise
     
-    
-  // matt - beginning of section to be replaced
-    
+
+  
   double vhz_rx_rfcm_e[Anita::NFREQ]; // V/Hz after rx, rfcm
   double vhz_rx_rfcm_h[Anita::NFREQ];
+    
+  double vhz_rx_rfcm_lab_e[Anita::NFREQ]; // V/Hz after rx, rfcm and lab
+  double vhz_rx_rfcm_lab_h[Anita::NFREQ];
+
+  
+  // Apply anita-3 measured impulse response
+  if (settings1->APPLYIMPULSERESPONSE){
+
+    anita1->GetNoiseWaveforms(); // get noise waveforms
+    
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_e_forfft); 
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_h_forfft);
+  
+    int fNumPoints = anita1->HALFNFOUR;//260;
+    int ant = anita1->GetRx(ilayer, ifold);
+    for (int i=0;i<fNumPoints;i++){
+      anita1->volts_rx_rfcm_lab_e[i] = volts_rx_e_forfft[i];
+      anita1->volts_rx_rfcm_lab_h[i] = volts_rx_h_forfft[i];
+      fTimes[i] = i * anita1->TIMESTEP * 1.0E9; 
+    }
+#ifdef ANITA_UTIL_EXISTS    
+    applyImpulseResponse(anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_e, 0);
+    applyImpulseResponse(anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_h, 1);
+
+#endif
+   } else {
     
   Tools::Zero(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR);// will be volts vs. time after rx, rfcm
   Tools::Zero(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR);
@@ -1165,20 +1194,12 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     for (int i=0;i<anita1->NFOUR/2;i++) {
       anita1->volts_rx_rfcm_e[i]+=anita1->timedomainnoise_rfcm_e[i]; // add noise.
       anita1->volts_rx_rfcm_h[i]+=anita1->timedomainnoise_rfcm_h[i];
-    }
-      
+    } 
   }
-    
     
     
   anita1->peak_e_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR); // with noise 
   anita1->peak_h_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR); // with noise
-    
-    
-    
-  double vhz_rx_rfcm_lab_e[Anita::NFREQ]; // V/Hz after rx, rfcm and lab
-  double vhz_rx_rfcm_lab_h[Anita::NFREQ];
-    
     
     
   for (int i=0;i<Anita::NFREQ;i++) {
@@ -1206,41 +1227,42 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   // still don't have any noise
   Tools::realft(anita1->volts_rx_rfcm_lab_e,1,anita1->HALFNFOUR); // EH, again, I think this has to be -1 for invFFT
   Tools::realft(anita1->volts_rx_rfcm_lab_h,1,anita1->HALFNFOUR);
-    
-  // matt- end of section to be replaced
-    
-    
+
   // put it in normal time ording -T to T
-  // instead of 0 to T, -T to 0
+  // instead of 0 to T, -T to 0 
   Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab_e); // EH, why only this has NormalTimeOrdering applied? Why not before?
   Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab_h);
     
+  
+  }    
     
   // now shift right to account for arrival times
   // for (int i=0;i<48;i++) std::cout << arrival_times[i] << std::endl;
   Tools::ShiftRight(anita1->volts_rx_rfcm_lab_e,anita1->NFOUR/2, int(arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
   Tools::ShiftRight(anita1->volts_rx_rfcm_lab_h,anita1->NFOUR/2, int(arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
     
-    
+
   if (settings1->SIGNAL_FLUCT) {
     for (int i=0;i<anita1->NFOUR/2;i++) {
       anita1->volts_rx_rfcm_lab_e[i]+=anita1->timedomainnoise_lab_e[i]; // add noise
       anita1->volts_rx_rfcm_lab_h[i]+=anita1->timedomainnoise_lab_h[i];
     }
   }
-    
+
+  
   for (int i=0;i<anita1->NFOUR/2;i++) {
     volts_rx_rfcm_lab_e_all[anita1->GetRx(ilayer, ifold)][i] = anita1->volts_rx_rfcm_lab_e[i];
-    volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][i] = anita1->volts_rx_rfcm_lab_h[i];
-      
+    volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][i] = anita1->volts_rx_rfcm_lab_h[i];      
   }
-    
+
+
+  
+  
   // now vmmhz_rx_rfcm_lab_e,h_forfft are the time domain waveforms after the antenna and lab attenuation
   // now find peak voltage
   // these get written to a tree
   anita1->peak_e_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_e,anita1->HALFNFOUR);
-  anita1->peak_h_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_h,anita1->HALFNFOUR); 
-    
+  anita1->peak_h_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_h,anita1->HALFNFOUR);  
     
   for (int iband=0;iband<5;iband++) { // loop over bands
 		
@@ -2096,6 +2118,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
       }
       else if (settings1->WHICH==10 && settings1->LCPRCP) {
 
+
 // 	std::array<std::array<std::vector<int>,16>,2> vl1trig;
 // 	//cout << "calling allphisectors.\n";
 // 	L1Anita4LR_ScA_AllPhiSectors(anita1,vl1trig);
@@ -2123,42 +2146,158 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 // 	L3Anita4LR_ScA(anita1,vl2trig,
 // 		   thispasses);
 
-//	cout << "about to do delays.\n";
+	//cout << "about to do delays.\n";
 	delay_AllAntennas(anita1);
 
 	//	cout << "did delays.\n";
 	// l1 triggers for all antennas
 	std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb;
-	L1Anita4LR_ScB_AllAntennas(anita1,vl1trig_anita4lr_scb);
 
-	//	cout << "did L1.\n";
-	
   // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
 	// for each phi sector, whether there is a 1, 2 or 3 coincidence
 	std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb;
-	L2Anita4LR_ScB_AllPhiSectors(anita1,vl1trig_anita4lr_scb,
-				     vl2_realtime_anita4_scb);
-
 	//	cout << "did L2.\n";
+
 	std::array<vector<int>,16> vl3trig_type0;
 	std::array<vector<int>,16> vl3trig_type1;
 	int thispasses_l3type0=0;
 	int thispasses_l3type1=0;
-	L3Anita4LR_ScB(anita1,vl2_realtime_anita4_scb,
-		       vl3trig_type0, vl3trig_type1,
-		       thispasses_l3type0,thispasses_l3type1);
 
+	
+      double time_thisbin=(double)nstepback*TRIGTIMESTEP;
+      int itrigbin=nstepback;
+      //cout << "about to loop.\n";
+      //cout << "size of arrayofhits is " << arrayofhits[0][0][0].size() << "\n";
+      // i should really do this in a different step so this function has fewer inputs.
+      while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
+	//cout << "vector size is " << vl1trig_anita4lr_scb[0][0].size() << "\n";
+	int npassesl1=0;
+	L1Anita4LR_ScB_AllAntennas_OneBin(itrigbin,anita1,vl1trig_anita4lr_scb,npassesl1);
+
+	//	if (npassesl1)
+	//cout << "npassesl1 is " << npassesl1 << "\n";
+
+ 	itrigbin++;
+	time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+      } // loop over time steps
+
+      //      cout << "got out of first loop.\n";
+      time_thisbin=(double)nstepback*TRIGTIMESTEP;
+      itrigbin=nstepback;
+
+      while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
+	
+	int npassesl2=0;
+	int npassesl2_type0=0;
+	L2Anita4LR_ScB_AllPhiSectors_OneBin(itrigbin,anita1,vl1trig_anita4lr_scb,
+					    vl2_realtime_anita4_scb,npassesl2,npassesl2_type0);
+
+
+ //  	if (npassesl2)
+//   	  cout << "npassesl2 is " << npassesl2 << "\n";
+//   	if (npassesl2_type0)
+//   	  cout << "npassesl2_type0 is " << npassesl2_type0 << "\n";
+	
+	itrigbin++;
+	time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+      } // loop over time steps
+
+
+      time_thisbin=(double)nstepback*TRIGTIMESTEP;
+      itrigbin=nstepback;
+      
+      
+      while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
+	
+	
+	L3Anita4LR_ScB_OneBin(itrigbin,anita1,vl2_realtime_anita4_scb,
+			      vl3trig_type0, vl3trig_type1,
+			      thispasses_l3type0,thispasses_l3type1);
+	
 	// 	cout << "did L3.\n";
- 
+	itrigbin++;
+	time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+      } // loop over time steps
+      
 
-
-	if (thispasses_l3type0)
+      if (thispasses_l3type0)
 	  thispasses[0]=1;
 	if (thispasses_l3type1)
 	  thispasses[1]=1;
 
 	//	if (thispasses[0] || thispasses[1])
-	//cout << "This passes!\n";
+	//cout << "This passes! " << thispasses[0] << "\t" << thispasses[1] << "\n";
+
+
+	for (int ilayer=0;ilayer<anita1->NTRIGGERLAYERS;ilayer++) {
+	  for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
+	    for (int ipolar=0;ipolar<anita1->NPOL;ipolar++) {
+	      Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->arrayofhits_inanita[ilayer][iphi][ipolar],anita1->arrayofhits_forgaryanderic[ilayer][iphi][ipolar]);
+	      
+	    }
+	  }
+	}
+
+
+	for (int ilayer=0;ilayer<anita1->NTRIGGERLAYERS;ilayer++) {
+	  for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
+	    for (int ibin=0;ibin<vl1trig_anita4lr_scb[ilayer][iphi].size();ibin++) {
+	      anita1->l1trig_anita4lr_inanita[ilayer][iphi][ibin]=vl1trig_anita4lr_scb[ilayer][iphi][ibin];
+	    }
+	    for (int ibin=vl1trig_anita4lr_scb[ilayer][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+	      anita1->l1trig_anita4lr_inanita[ilayer][iphi][ibin]=0;
+	    }
+
+	    Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l1trig_anita4lr_inanita[ilayer][iphi],anita1->l1trig_anita4lr_forgaryanderic[ilayer][iphi]);
+
+	  }
+	}
+
+
+
+	for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
+	  for (int ibin=0;ibin<vl2_realtime_anita4_scb[iphi][1].size();ibin++) {
+	    anita1->l2trig_anita4lr_inanita[iphi][1][ibin]=vl2_realtime_anita4_scb[iphi][1][ibin];
+	    
+	  }
+	  for (int ibin=vl2_realtime_anita4_scb[iphi][1].size();ibin<anita1->HALFNFOUR;ibin++) {
+	    anita1->l2trig_anita4lr_inanita[iphi][1][ibin]=0;
+	  }
+	  Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l2trig_anita4lr_inanita[iphi][1],anita1->l2trig_anita4lr_forgaryanderic[iphi]);
+	  
+	  for (int ibin=0;ibin<vl3trig_type0[iphi].size();ibin++) {
+	    
+	    anita1->l3type0trig_anita4lr_inanita[iphi][ibin]=vl3trig_type0[iphi][ibin];
+	  }
+	  for (int ibin=vl3trig_type0[iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+	    anita1->l3type0trig_anita4lr_inanita[iphi][ibin]=0;
+	  }
+	  Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l3type0trig_anita4lr_inanita[iphi],anita1->l3type0trig_anita4lr_forgaryanderic[iphi]);
+	  for (int ibin=0;ibin<vl3trig_type1[iphi].size();ibin++) {
+	    
+	    anita1->l3trig_anita4lr_inanita[iphi][ibin]=vl3trig_type1[iphi][ibin];
+	  }
+	  for (int ibin=vl3trig_type1[iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+	    anita1->l3trig_anita4lr_inanita[iphi][ibin]=0;
+	  }
+	  Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l3trig_anita4lr_inanita[iphi],anita1->l3type1trig_anita4lr_forgaryanderic[iphi]);
+	}
+ 
+	
+	for (int ibin=0;ibin<anita1->HALFNFOUR;ibin++) {
+	  anita1->time_trig[ibin]=TRIGTIMESTEP*(double)ibin;
+	}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3398,6 +3537,9 @@ void GlobalTrigger::convert_wfm_to_3_bit(const vector <double>& wfm, double rms,
 int GlobalTrigger::findahit(vector<int> myvector,int first,int last) {
 
   int yes=0;
+  if (myvector.size()<=last)
+    return yes;
+
   for (int i=first;i<=last;i++) {
     if (myvector[i]==1) {
       yes=1;
@@ -3472,7 +3614,7 @@ void GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std::vector
 }
 
 // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
-void GlobalTrigger::L1Anita4LR_ScB(int IZERO,vector<int> vleft,vector<int> vright,
+void GlobalTrigger::L1Anita4LR_ScB_OneBin(int IZERO,vector<int> vleft,vector<int> vright,
 		      vector<int> &vl1trig) {
 
   if ((vleft[IZERO] && findahit(vright,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA4LR_SCB/TRIGTIMESTEP))) ||
@@ -3487,22 +3629,25 @@ void GlobalTrigger::L1Anita4LR_ScB(int IZERO,vector<int> vleft,vector<int> vrigh
 
 }
 // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
-void GlobalTrigger::L1Anita4LR_ScB_AllAntennas(Anita *anita1,std::array< std::array< vector<int>,16>,3> &vl1trig_anita4lr_scb) {
+void GlobalTrigger::L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> &vl1trig_anita4lr_scb,int &npassesl1) {
  
-  vector<int> vl1trig;
+
   for (int itriglayer=0;itriglayer<anita1->NTRIGGERLAYERS;itriglayer++) {
     for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
-      vl1trig.clear();
-      double time_thisbin=(double)nstepback*TRIGTIMESTEP;
-      int itrigbin=nstepback;
+
+      //double time_thisbin=(double)nstepback*TRIGTIMESTEP;
+      //int itrigbin=nstepback;
       
       // i should really do this in a different step so this function has fewer inputs.
-      while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
-	L1Anita4LR_ScB(itrigbin,arrayofhits[itriglayer][iphi][0][4],arrayofhits[itriglayer][iphi][1][4],
+      //while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
+	L1Anita4LR_ScB_OneBin(IZERO,arrayofhits[itriglayer][iphi][0][4],arrayofhits[itriglayer][iphi][1][4],
 		     vl1trig_anita4lr_scb[itriglayer][iphi]);
-	itrigbin++;
-	time_thisbin=(double)itrigbin*TRIGTIMESTEP;
-      } // loop over time steps
+	if (vl1trig_anita4lr_scb[itriglayer][iphi][vl1trig_anita4lr_scb[itriglayer][iphi].size()-1])
+	  npassesl1++;
+
+	//itrigbin++;
+	//time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+	// } // loop over time steps
     } // loop over phi sectors
   } // loop over trigger layers
   
@@ -3510,180 +3655,165 @@ void GlobalTrigger::L1Anita4LR_ScB_AllAntennas(Anita *anita1,std::array< std::ar
 
 }
 
-void GlobalTrigger::L3Anita4LR_ScB(Anita *anita1,std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb,
-				   std::array<vector<int>,16> &vl3trig_type0, std::array<vector<int>,16> &vl3trig_type1,
-				   int &thispasses_l3type0,int &thispasses_l3type1) {
-  thispasses_l3type0=0;
-  thispasses_l3type1=0;
+
+// void GlobalTrigger::L3Anita4LR_ScB(Anita *anita1,std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb,
+// 				   std::array<vector<int>,16> &vl3trig_type0, std::array<vector<int>,16> &vl3trig_type1,
+// 				   int &thispasses_l3type0,int &thispasses_l3type1) {
+//   thispasses_l3type0=0;
+//   thispasses_l3type1=0;
 
 
-  for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
+//   for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
 
-    vl3trig_type0[iphi].clear();
-    vl3trig_type1[iphi].clear();
+//     vl3trig_type0[iphi].clear();
+//     vl3trig_type1[iphi].clear();
 
-    int iphi_next=(iphi+1+16)%16;
-    int iphi_previous=(iphi-1+16)%16;
+//     int iphi_next=(iphi+1+16)%16;
+//     int iphi_previous=(iphi-1+16)%16;
 
-    if (L3or30Anita4LR_ScB_TwoPhiSectors(anita1, 
-				     vl2_realtime_anita4_scb[iphi], // 3 neighbors, whether 1, 2 or 3 pass
-				     vl2_realtime_anita4_scb[iphi_previous], // 3 neighbors, whether 1, 2 or 3 pass
+//     if (L3or30Anita4LR_ScB_TwoPhiSectors( 
+// 				     vl2_realtime_anita4_scb[iphi], // 3 neighbors, whether 1, 2 or 3 pass
+// 				     vl2_realtime_anita4_scb[iphi_previous], // 3 neighbors, whether 1, 2 or 3 pass
 				     
-				     2,2,	
-					 vl3trig_type1[iphi] ))
-      thispasses_l3type1=1;
+// 				     2,2,	
+// 					 vl3trig_type1[iphi] ))
+//       thispasses_l3type1=1;
 
-    if (iphi%2==0) {
-      if (L3or30Anita4LR_ScB_TwoPhiSectors(anita1, 
-				       vl2_realtime_anita4_scb[iphi], // 3 neighbors, whether 1, 2 or 3 pass
-				       vl2_realtime_anita4_scb[iphi_previous], // 3 neighbors, whether 1, 2 or 3 pass
+//     if (iphi%2==0) {
+//       if (L3or30Anita4LR_ScB_TwoPhiSectors( 
+// 				       vl2_realtime_anita4_scb[iphi], // 3 neighbors, whether 1, 2 or 3 pass
+// 				       vl2_realtime_anita4_scb[iphi_previous], // 3 neighbors, whether 1, 2 or 3 pass
 				       
-				       1,3,	
-					   vl3trig_type0[iphi] ))
-	thispasses_l3type0=1;
+// 				       1,3,	
+// 					   vl3trig_type0[iphi] ))
+// 	thispasses_l3type0=1;
 	    
 
 
-    }
-  }
+//     }
+//   }
   
 
-}
+// }
+// for each phi sector, does 1, 2 or 3 pass
+// void GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
+// 						 std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb) {
+
+//   double time_thisbin=(double)nstepback*TRIGTIMESTEP;
+//   int itrigbin=nstepback;
+
+//   while (time_thisbin<LASTTIMETOTESTL2_ANITA4LR_SCB) {
+
+//       for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
+	
+// 	//      cout << "itriglayer, iphi are " << itriglayer << "\t" << iphi << "\n";
+// 	int npassesl2=0;
+// 	int npassesl2type0=0;
+
+// 	L2Anita4LR_ScB_OnePhiSector_OneBin(itrigbin,vl1trig_anita4lr_scb[2][iphi], 
+// 					   vl1trig_anita4lr_scb[1][iphi], 
+// 					   vl1trig_anita4lr_scb[0][iphi], 		
+// 					   vl2_realtime_anita4_scb[iphi],
+// 					   npassesl2,npassesl2type0);
+
+	
+//       }
+      
+    
+//     itrigbin++;
+//     time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+//   }
+
+
+// }
 
 // for each phi sector, does 1, 2 or 3 pass
-void GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
-						 std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb) {
+void GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
+							std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0) {
 
-  for (int itriglayer=0;itriglayer<anita1->NTRIGGERLAYERS;itriglayer++) {
     for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
-
+      
       //      cout << "itriglayer, iphi are " << itriglayer << "\t" << iphi << "\n";
-
-      L2Anita4LR_ScB_OnePhiSector(vl1trig_anita4lr_scb[2][iphi], 
-				  vl1trig_anita4lr_scb[1][iphi], 
-				  vl1trig_anita4lr_scb[0][iphi], 		
-				  vl2_realtime_anita4_scb[iphi]);
-
-
-    }
-
-  }
-  
-
-
-}
-void GlobalTrigger::L2Anita4LR_ScB_OnePhiSector(vector<int> vl1_bottom, 
-						      vector<int> vl1_middle,
-						      vector<int> vl1_top,
-						      std::array<vector<int>,3> &vl2_realtime_anita4_scb) {
-  // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
-  
-
- 
-  // If any of them pass l1, then the 0th element of the vpartofl2_realtime_anita4_scb array goes to one.
-  //cout << "doing the one-hits.\n";
-  for (int i=0;i<vl1_bottom.size();i++) {
-    if (vl1_bottom[i] || vl1_middle[i] || vl1_top[i]) {
-      vl2_realtime_anita4_scb[0].push_back(1);
-      //cout << "got a one-hit.\n";
-    }
-    else
-      vl2_realtime_anita4_scb[0].push_back(0);
-  }
-  //cout << "doing the two-hits.\n";
-// If you get a coincidence betw. any two, then the 1st element of the vl2_realtime_anita4_scb array goes to one.
-  double time_thisbin=(double)nstepback*TRIGTIMESTEP;
-  int itrigbin=nstepback;
-
-  //  cout << "sizes are " << vl1_bottom.size() << "\t" << vl1_middle.size() << "\t" << vl1_top.size() << "\n";
- 
-
-  while (time_thisbin<LASTTIMETOTESTL2_ANITA4LR_SCB) {
-
-    //    cout << "start, stop bins  are " << itrigbin-nstepback << "\t" << itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP) << "\n";
-    if ((vl1_bottom[itrigbin] &&
-	 (	findahit(vl1_middle,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) ||
-		findahit(vl1_top,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) )) ||
-	
-	(vl1_middle[itrigbin] &&
-	 (	findahit(vl1_bottom,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) ||
-		findahit(vl1_top,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP)))) ||
-	
- 	(vl1_top[itrigbin] &&
- 	 (	findahit(vl1_bottom,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) ||
- 		findahit(vl1_middle,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP))))
-	) {
-      vl2_realtime_anita4_scb[1].push_back(1);
-      //cout << "got a two-hit.\n";
-    }
-    else
-      vl2_realtime_anita4_scb[1].push_back(0);
-    itrigbin++;
-    time_thisbin=(double)itrigbin*TRIGTIMESTEP;
-  }
-
-  //cout << "doing the three-hits.\n";
-// If you get a coincidence betw. all three, then the 2nd element of the vl2_realtime_anita4_scb array goes to one.
-  time_thisbin=(double)nstepback*TRIGTIMESTEP;
-  itrigbin=nstepback;
-
-  while (time_thisbin<LASTTIMETOTESTL2_ANITA4LR_SCB) {
-
-    if ((vl1_bottom[itrigbin] &&
-	 (	findahit(vl1_middle,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) &&
-		findahit(vl1_top,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) )) ||
-	
-	(vl1_middle[itrigbin] &&
-	 (	findahit(vl1_bottom,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) &&
-		findahit(vl1_top,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP)))) ||
-	
- 	(vl1_top[itrigbin] &&
- 	 (	findahit(vl1_bottom,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) &&
- 		findahit(vl1_middle,itrigbin-nstepback,itrigbin-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP))))
-	) {
-      vl2_realtime_anita4_scb[2].push_back(1);
+      
+      L2Anita4LR_ScB_OnePhiSector_OneBin(IZERO,vl1trig_anita4lr_scb[2][iphi], 
+					 vl1trig_anita4lr_scb[1][iphi], 
+					 vl1trig_anita4lr_scb[0][iphi], 		
+					 vl2_realtime_anita4_scb[iphi],npassesl2,npassesl2_type0);
+      
       
     }
-    else
-      vl2_realtime_anita4_scb[2].push_back(0);
-    itrigbin++;
-    time_thisbin=(double)itrigbin*TRIGTIMESTEP;
-  }  
+    
+  
+
+
 }
 
 // ask if L3 type 1 (2 and 2) or L3 type 0 (3 and 1 or 1 and 3) passes
-int GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors(Anita *anita1, 
-						    std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
-						    std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
-						    int npass1,int npass2,	
-						    vector<int> &vl3trig ) {
+// int GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors(
+// 						    std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
+// 						    std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
+// 						    int npass1,int npass2,	
+// 						    vector<int> &vl3trig ) {
 
   
 
-  int passaone=0;
-  double time_thisbin=(double)nstepback*TRIGTIMESTEP;
-  int itrigbin=nstepback;
-  int thispasses=0;
-  while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {   
-    thispasses=0;
+//   int passaone=0;
 
 
-    if ((vl2_realtime_anita4_scb[npass1-1][itrigbin] &&
-	 findahit(vl2_realtime_anita4_scb_other[npass2-1],itrigbin-nstepback,itrigbin-nstepback+(int)(L3_COINCIDENCE_ANITA4LR_SCB/TRIGTIMESTEP)))   ||
-	(vl2_realtime_anita4_scb_other[npass2-1][itrigbin] &&
-	 findahit(vl2_realtime_anita4_scb[npass1-1],itrigbin-nstepback,itrigbin-nstepback+(int)(L3_COINCIDENCE_ANITA4LR_SCB/TRIGTIMESTEP)))) {
-      thispasses=1;
-      passaone=1;
-      //cout << "got an l3 with " << npass1 << " and " << npass2 << "\n";
-    }
-    vl3trig.push_back(thispasses);
-    itrigbin++;
-    time_thisbin=(double)itrigbin*TRIGTIMESTEP;
-  }
-  return passaone;
+
+//   int thispasses=0;
+
   
-}
+//   if (L3or30Anita4LR_ScB_TwoPhiSectors_OneBin(itrigbin,
+// 					      vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
+// 					      vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
+// 					      npass1,npass2,	
+// 					      vl3trig )) {
+    
+    
+//     thispasses=1;
+//     passaone=1;
+//     //cout << "got an l3 with " << npass1 << " and " << npass2 << "\n";
+//   }
+//   vl3trig.push_back(thispasses);
+  
+//   return passaone;
+  
+// }
+// ask if L3 type 1 (2 and 2) or L3 type 0 (3 and 1 or 1 and 3) passes
+// int GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( int IZERO,
+// 						    std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
+// 						    std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
+// 						    int npass1,int npass2,	
+// 						    vector<int> &vl3trig ) {
 
+  
+
+//   int passaone=0;
+//   //double time_thisbin=(double)nstepback*TRIGTIMESTEP;
+//   //int itrigbin=nstepback;
+//   int thispasses=0;
+//   //while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {   
+//     thispasses=0;
+
+
+//     if ((vl2_realtime_anita4_scb[npass1-1][IZERO] &&
+// 	 findahit(vl2_realtime_anita4_scb_other[npass2-1],IZERO-nstepback,IZERO-nstepback+(int)(L3_COINCIDENCE_ANITA4LR_SCB/TRIGTIMESTEP)))   ||
+// 	(vl2_realtime_anita4_scb_other[npass2-1][IZERO] &&
+// 	 findahit(vl2_realtime_anita4_scb[npass1-1],IZERO-nstepback,IZERO-nstepback+(int)(L3_COINCIDENCE_ANITA4LR_SCB/TRIGTIMESTEP)))) {
+//       thispasses=1;
+//       passaone=1;
+//       //cout << "got an l3 with " << npass1 << " and " << npass2 << "\n";
+//     }
+//     //    cout << "adding to vl3trig.\n";
+//     vl3trig.push_back(thispasses);
+ 
+//     //itrigbin++;
+//     //time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+//     //}
+//   return passaone;
+  
+// }
 
 void GlobalTrigger::L3Anita4LR_ScA(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
 			     int *thispasses) {
@@ -4124,6 +4254,181 @@ int GlobalTrigger::PartofL1Anita4LR_ScA_TwoPhiSectors(int ilayerreverse,int ipol
     return 0;
 
 }
+void GlobalTrigger::L3Anita4LR_ScB_OneBin(int IZERO,Anita *anita1,std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb,
+				   std::array<vector<int>,16> &vl3trig_type0, std::array<vector<int>,16> &vl3trig_type1,
+				   int &thispasses_l3type0,int &thispasses_l3type1) {
+
+
+
+  for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
+
+
+    int iphi_next=(iphi+1+16)%16;
+    int iphi_previous=(iphi-1+16)%16;
+
+    //    cout << "iphi is " << iphi << "\n";
+    //    cout << "calling the first l3.\n";
+    if (L3or30Anita4LR_ScB_TwoPhiSectors_OneBin(IZERO, 
+				     vl2_realtime_anita4_scb[iphi], // 3 neighbors, whether 1, 2 or 3 pass
+				     vl2_realtime_anita4_scb[iphi_previous], // 3 neighbors, whether 1, 2 or 3 pass
+				     
+				     2,2) ||
+	L3or30Anita4LR_ScB_TwoPhiSectors_OneBin(IZERO, 
+						vl2_realtime_anita4_scb[iphi], // 3 neighbors, whether 1, 2 or 3 pass
+						vl2_realtime_anita4_scb[iphi_next], // 3 neighbors, whether 1, 2 or 3 pass
+						
+						2,2)
+
+	) {
+
+      thispasses_l3type1=1;
+      vl3trig_type1[iphi].push_back(1);
+
+    }
+    else
+      vl3trig_type1[iphi].push_back(0);
+
+      //cout << "calling the second l3.\n";
+    if ((iphi%2==0 && L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( IZERO,
+							      vl2_realtime_anita4_scb[iphi], // 3 neighbors, whether 1, 2 or 3 pass
+							      vl2_realtime_anita4_scb[iphi_next], // 3 neighbors, whether 1, 2 or 3 pass
+							      
+							      1,3)	  
+	 ) ||
+	(
+	 iphi%2==1 && L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( IZERO,
+							       vl2_realtime_anita4_scb[iphi], // 3 neighbors, whether 1, 2 or 3 pass
+							       vl2_realtime_anita4_scb[iphi_previous], // 3 neighbors, whether 1, 2 or 3 pass
+							       
+							       1,3)
+
+	 )) {
+      thispasses_l3type0=1;
+      vl3trig_type0[iphi].push_back(1);
+      
+    }
+
+
+
+    else
+      vl3trig_type0[iphi].push_back(0);
+  }
+
+}
+
+
+
+void GlobalTrigger::L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,vector<int> vl1_bottom, 
+						      vector<int> vl1_middle,
+						      vector<int> vl1_top,
+				 std::array<vector<int>,3> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0) {
+  // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
+  
+
+ 
+  // If any of them pass l1, then the 0th element of the vpartofl2_realtime_anita4_scb array goes to one.
+  //cout << "doing the one-hits.\n";
+  
+
+  if (vl1_bottom[IZERO] || vl1_middle[IZERO] || vl1_top[IZERO]) {
+    vl2_realtime_anita4_scb[0].push_back(1);
+    //cout << "got a one-hit.\n";
+  }
+  else
+      vl2_realtime_anita4_scb[0].push_back(0);
+  
+  //cout << "doing the two-hits.\n";
+// If you get a coincidence betw. any two, then the 1st element of the vl2_realtime_anita4_scb array goes to one.
+  //double time_thisbin=(double)nstepback*TRIGTIMESTEP;
+  //int itrigbin=nstepback;
+
+  //  cout << "sizes are " << vl1_bottom.size() << "\t" << vl1_middle.size() << "\t" << vl1_top.size() << "\n";
+ 
+
+  //  while (time_thisbin<LASTTIMETOTESTL2_ANITA4LR_SCB) {
+
+
+    if ((vl1_bottom[IZERO] &&
+	 (	findahit(vl1_middle,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) ||
+		findahit(vl1_top,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) )) ||
+	
+	(vl1_middle[IZERO] &&
+	 (	findahit(vl1_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) ||
+		findahit(vl1_top,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP)))) ||
+	
+ 	(vl1_top[IZERO] &&
+ 	 (	findahit(vl1_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) ||
+ 		findahit(vl1_middle,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP))))
+	) {
+      vl2_realtime_anita4_scb[1].push_back(1);
+      npassesl2++;
+      //      cout << "start, stop bins  are " << IZERO-nstepback << "\t" << IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP) << "\n";
+      //cout << "sizes are " << vl1_bottom.size() << "\t" << vl1_middle.size() << "\t" << vl1_top.size() << "\n";
+      //cout << "got a two-hit.\n";
+    }
+    else
+      vl2_realtime_anita4_scb[1].push_back(0);
+    //itrigbin++;
+    //time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+    //}
+
+  //cout << "doing the three-hits.\n";
+// If you get a coincidence betw. all three, then the 2nd element of the vl2_realtime_anita4_scb array goes to one.
+    //time_thisbin=(double)nstepback*TRIGTIMESTEP;
+    //IZERO=nstepback;
+
+  //  while (time_thisbin<LASTTIMETOTESTL2_ANITA4LR_SCB) {
+
+    if ((vl1_bottom[IZERO] &&
+	 (	findahit(vl1_middle,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) &&
+		findahit(vl1_top,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) )) ||
+	
+	(vl1_middle[IZERO] &&
+	 (	findahit(vl1_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[1]/TRIGTIMESTEP)) &&
+		findahit(vl1_top,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP)))) ||
+	
+ 	(vl1_top[IZERO] &&
+ 	 (	findahit(vl1_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[0]/TRIGTIMESTEP)) &&
+ 		findahit(vl1_middle,IZERO-nstepback,IZERO-nstepback+(int)(L2_COINCIDENCE_ANITA4LR_SCB[2]/TRIGTIMESTEP))))
+	) {
+      vl2_realtime_anita4_scb[2].push_back(1);
+      npassesl2_type0++;
+    }
+    else
+      vl2_realtime_anita4_scb[2].push_back(0);
+    //itrigbin++;
+    //time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+    //}  
+}
+// ask if L3 type 1 (2 and 2) or L3 type 0 (3 and 1 or 1 and 3) passes
+int GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( int IZERO,
+						    std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
+						    std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
+						    int npass1,int npass2) {
+
+  
+
+  int passaone=0;
+  //double time_thisbin=(double)nstepback*TRIGTIMESTEP;
+  //int itrigbin=nstepback;
+  int thispasses=0;
+  //while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {   
+    thispasses=0;
+
+
+    if ((vl2_realtime_anita4_scb[npass1-1][IZERO] &&
+	 findahit(vl2_realtime_anita4_scb_other[npass2-1],IZERO-nstepback,IZERO-nstepback+(int)(L3_COINCIDENCE_ANITA4LR_SCB/TRIGTIMESTEP)))   ||
+	(vl2_realtime_anita4_scb_other[npass2-1][IZERO] &&
+	 findahit(vl2_realtime_anita4_scb[npass1-1],IZERO-nstepback,IZERO-nstepback+(int)(L3_COINCIDENCE_ANITA4LR_SCB/TRIGTIMESTEP)))) {
+      thispasses=1;
+      passaone=1;
+      //cout << "got an l3 with " << npass1 << " and " << npass2 << "\n";
+    }
+
+  return passaone;
+  
+}
+
 void GlobalTrigger::delayL0(vector<int> &vl0,double delay) {
   int ndelay=(int)(delay/TRIGTIMESTEP);
   for (int i=0;i<ndelay;i++) {
@@ -4146,3 +4451,48 @@ void GlobalTrigger::delay_AllAntennas(Anita *anita1) {
 
 
 }
+
+
+#ifdef ANITA_UTIL_EXISTS    
+void AntTrigger::applyImpulseResponse(Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
+
+  TGraph *graph1 = new TGraph(nPoints, x, y);
+  // Upsample waveform to same deltaT of the signal chain impulse response
+  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
+
+  int ipol=0;
+  int iring=2;
+  if (pol) ipol = 1;
+  if (ant<16) iring=0;
+  else if (ant<32) iring=1;
+  
+  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponse[ipol][iring]);
+
+  // Divide the output of the convolution by the number of points
+  // Because we applied 2 FFT and 1 invFFT
+  Double_t *newx = surfSignal->GetX();
+  Double_t *newy = surfSignal->GetY();
+  Int_t nPointsUp = surfSignal->GetN();
+  for (int i=0;i<nPointsUp;i++){
+    newy[i]=newy[i];///nPointsUp;
+  }
+
+  TGraph *graph2 = new TGraph(nPointsUp, newx, newy);
+  //Downsample again
+
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(graph2, 1/2.6);
+
+  newy = surfSignalDown->GetY();
+  for (int i=0;i<nPoints;i++){
+    y[i]=newy[i];
+  }
+
+  // Cleaning up
+  delete surfSignalDown;
+  delete graph2;
+  delete surfSignal;
+  delete graphUp;
+  delete graph1;
+}
+
+#endif

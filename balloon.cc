@@ -391,14 +391,11 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		    
 		    flightdatachain->GetEvent(igps);	  // get new event
 		  }
-		  if (WHICHPATH==7)  // this is for Anita 2
-		    // get phi masking
-		    anita1->setphiTrigMask(realTime_flightdata);// set phiTrigMask, and public variable of Balloon class
-		  else if (WHICHPATH==8){  // this is for Anita 3
-		    // get phi masking
-		    anita1->setphiTrigMaskAnita3(realTime_flightdata);// set phiTrigMask, phiTrigMaskH, l1TrigMask and l1TrigMaskH and public variable of Balloon class
-		    if (settings1->USETIMEDEPENDENTTHRESHOLDS==1) anita1->setTimeDependentThresholds(realTime_flightdata);
-		  }
+		  if ((WHICHPATH==7 || WHICHPATH==8) && settings1->PHIMASKING==1)  // set phi Masking for Anita 2 or Anita 3
+		    anita1->setphiTrigMask(realTime_flightdata);
+		  if (WHICHPATH==8 && settings1->USETIMEDEPENDENTTHRESHOLDS==1) // set time-dependent thresholds
+		    anita1->setTimeDependentThresholds(realTime_flightdata);
+		  
 		}
 		igps_previous=igps;
 		latitude=(double)flatitude;
