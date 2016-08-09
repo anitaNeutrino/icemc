@@ -833,3 +833,6 @@ Centered screen on central point (50% / 50%). Cleaned out some commented stateme
 
 07/28 2016 15.23 PM ET M. Sutherland   [in branches/roughness]
 Commented roughout stream. Added condition that event is skipped if transmitted polarization has nan components. Moved data/roughness/masterfile.txt to data/roughness_full.txt. Removed data/roughness/ folder.
+
+08/08/2016 13.22 PM ET M. Sutherland   [in branches/roughness]
+Simply saving some added parameters to the roughout stream.

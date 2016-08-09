@@ -1715,13 +1715,13 @@ int main(int argc,  char **argv) {
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
     
-    //if (NNU >= 100) {
-    //  if (inu % (NNU / 100) == 0)
-    //    cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
-    //}
-    //else
-    //  cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
-    
+    /*if (NNU >= 100) {
+      if (inu % (NNU / 100) == 0)
+        cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
+    }
+    else
+      cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
+    */
 
 
     for (whichray = settings1->MINRAY; whichray <= settings1->MAXRAY; whichray++) {
@@ -2438,7 +2438,7 @@ int main(int argc,  char **argv) {
         } // end looping over layers
       } // if we are calculating for all boresights
       
-      //ofstream roughout("data/roughness/scan_Npts_Ledge.dat", std::fstream::app); // length of chord in air vs. theta (deg)
+      ofstream roughout("data/scan_Npts_Ledge.dat", std::fstream::app); // length of chord in air vs. theta (deg)
 
       
       if(!settings1->ROUGHNESS) {  // IF NO ROUGHNESS THEN DO THIS (FOR CONSISTENCY CHANGE NOTHING BELOW HERE IN THE if !rough)
@@ -2559,7 +2559,7 @@ int main(int argc,  char **argv) {
         //std::cerr<<"bln X: "<<bn1->r_bn.GetX()<<"  "<<bn1->r_bn.GetY()<<"  "<<bn1->r_bn.GetZ()<<std::endl;
         //std::cerr<<"Surface: "<<antarctica->Surface(bn1->r_bn)<<std::endl;
         //std::cerr<<"int.point: "<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
-        std::cerr<<"["<<ray1->rfexit[2].Lon()<<",  "<<-90+ray1->rfexit[2].Lat()<<"]"<<std::endl;
+        std::cerr<<"[ ["<<ray1->rfexit[2].Lon()<<",  "<<-90+ray1->rfexit[2].Lat()<<"],  ["<<bn1->r_bn.Lon()<<",  "<<-90+bn1->r_bn.Lat()<<"],  ["<<interaction1->posnu.Lon()<<",  "<<-90+interaction1->posnu.Lat()<<"]  ],"<<std::endl;
         //std::cerr<<"screen: "<<panel1->GetCentralPoint().Lon()<<"  "<<-90+panel1->GetCentralPoint().Lat()<<std::endl;
 
         // now loop over screen points
@@ -2651,7 +2651,7 @@ int main(int argc,  char **argv) {
           // add to the running total at the balloon
           Efield_screentotal = Efield_screentotal + Efield_local;
 
-          /*roughout<<inu<<"  "
+          roughout<<inu<<"  "
                   <<ii<<"  "
                   <<pos_projectedImpactPoint.Lon()<<"  "
                   <<-90+pos_projectedImpactPoint.Lat()<<"  "
@@ -2672,7 +2672,10 @@ int main(int argc,  char **argv) {
                   <<E_local_h_trans_mag<<"  "
                   <<E_local_v_trans_mag<<"  "
                   <<vec_pos_current_to_balloon.Unit().Dot(npol_local_trans)<<"  "
-                  <<std::endl;*/
+                  <<npol_local_inc.Dot(npol_local_trans)<<"  "
+                  <<pos_current_localnormal.Dot(npol_local_trans)<<"  "
+                  <<antarctica->Surface(pos_projectedImpactPoint.Lon(),pos_projectedImpactPoint.Lat())<<"  "
+                  <<std::endl;
         }//end for ii < fSCREEN....
 
 
@@ -2686,7 +2689,7 @@ int main(int argc,  char **argv) {
 
       }//end else roughness
 
-      //roughout.close();
+      roughout.close();
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
       //if (vmmhz1m_fresneledtwice*heff_max*0.5*(bw/1.E6)<CHANCEINHELL_FACTOR*anita1->maxthreshold*Tools::dMin(VNOISE, settings1->NLAYERS) && !settings1->SKIPCUTS) {
@@ -2789,7 +2792,7 @@ int main(int argc,  char **argv) {
       // keeps track of maximum voltage seen on either polarization of any antenna
       volts_rx_max=0;
       
-      std::cerr<<vmmhz_max<<std::endl;
+      //std::cerr<<vmmhz_max<<std::endl;
 
       // Make a vector of V/m/MHz scaled by 1/r and attenuated.
       // Calculates Jaime's V/m/MHz at 1 m for each frequency
@@ -2928,7 +2931,7 @@ int main(int argc,  char **argv) {
       vmmhz_max=Tools::dMax(vmmhz, Anita::NFREQ);
       vmmhz_min=Tools::dMin(vmmhz, Anita::NFREQ);
       
-      std::cerr<<"++ "<<fSCREEN_NUMPOINTS_EDGE<<"   "<<panel1->GetEdgeLength()<<"   "<<vmmhz_min<<std::endl;
+      //std::cerr<<"++ "<<fSCREEN_NUMPOINTS_EDGE<<"   "<<panel1->GetEdgeLength()<<"   "<<vmmhz_min<<std::endl;
       
       // intermediate counting
       count1->nchanceinhell2[whichray]++;
