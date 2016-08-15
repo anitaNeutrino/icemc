@@ -593,7 +593,7 @@ TTree *tgaryanderic; // writing data out for the analysers
     
     double SIGMA_THETA; // resolution on the polar angle of the signal
 
-  void readImpulseResponse();
+  void readImpulseResponse(Settings *settings1);
   TGraph *fSignalChainResponse[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   double deltaT;
  

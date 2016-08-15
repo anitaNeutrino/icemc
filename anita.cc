@@ -270,7 +270,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     
     PERCENTBW=10; // subbands (not counting full band)
     
-    if (settings1->APPLYIMPULSERESPONSE)   readImpulseResponse();
+    if (settings1->APPLYIMPULSERESPONSE)   readImpulseResponse(settings1);
     
     for (int i=0;i<NFREQ;i++) {
 		freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
@@ -4058,66 +4058,73 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
 }
 
 
-void Anita::readImpulseResponse(){
+void Anita::readImpulseResponse(Settings *settings1){
 
-  // string fileName = "data/sumPicoImpulse.root";
-  // TFile fImpulse(fileName.c_str());
-
-  // if(!fImpulse.IsOpen()) {
-  //   std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
-  //   exit(0);
-  // } else {
-  //   TGraph *grVTemp = (TGraph*) fImpulse.Get("grImpRespV");
-  //   if(!grVTemp) {
-  //     std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
-  //     exit(0);
-  //   }
-
-  //   TGraph *grHTemp = (TGraph*) fImpulse.Get("grImpRespH");
-  //   if(!grHTemp) {
-  //     std::cerr << "Couldn't read ANITA-II siganl chain impulse response from " << fileName << "\n";
-  //     exit(0);
-  //   }
-
-
+  // Set deltaT to be used in the convolution
   deltaT = 1/(2.6*16);
-  
-  string fileName = "data/SignalChainImpulseResponse_anita3_shifted.root";
-  TFile fImpulse(fileName.c_str());
+  string graphNames[2][3];
+  string fileName;
+  double norm=0;
 
-  if(!fImpulse.IsOpen()) {
-    std::cerr << "Couldn't read ANITA-3 siganl chain impulse response from " << fileName << "\n";
-    exit(0);
-  } else {
+  // For ANITA-2 we have 1 impulse response for VPOL and 1 for HPOL
+  // For ANITA-3 we have 3 impulse responses (Top, Middle, Bottom ring) for VPOL and 3 for HPOL.
+  // Set Graph names for ANITA-2 and ANITA-3
+  if (settings1->WHICH==8){
+    fileName = "data/sumPicoImpulse.root";
+    
+    for (int iring=0;iring<3;iring++)  graphNames[0][iring]="grImpRespV";
+    for (int iring=0;iring<3;iring++)  graphNames[1][iring]="grImpRespH";
+    //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
+    norm=0.1;
+  } else if(settings1->WHICH==9){
+
+    fileName = "data/SignalChainImpulseResponse_anita3_shifted.root";
 
     string spol[2] ={"V", "H"};
     string sring[3]={"Top", "Middle", "Bottom"};
+    
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
-	TGraph *grTemp = (TGraph*) fImpulse.Get(Form("ImpulseResponse_%spol_%s", spol[ipol].c_str(), sring[iring].c_str()));
+	graphNames[ipol][iring]=Form("ImpulseResponse_%spol_%s", spol[ipol].c_str(), sring[iring].c_str());
+      }
+    }
+    // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
+    norm = 48.;
+  }
+
+  // Read in input file
+  TFile fImpulse(fileName.c_str());
+  
+  if(!fImpulse.IsOpen()) {
+    std::cerr << "Couldn't read siganl chain impulse response from " << fileName << "\n";
+    exit(0);
+  } else {
+    
+    for (int ipol=0;ipol<2;ipol++){
+      for (int iring=0;iring<3;iring++){
+	// Read graph
+	TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring].c_str());
 	if(!grTemp) {
-	  std::cerr << "Couldn't read ANITA-3 siganl chain impulse response from " << fileName << "\n";
+	  std::cerr << "Couldn't read siganl chain impulse response" << graphNames[ipol][iring] << " from file " << fileName << "\n";
 	  exit(0);
 	}
-	TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); //To match the above sampling rate
+	// Interpolate to high sampling rate that will be used for the convolution
+	TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); 
 	Int_t nPoints  = grInt->GetN();
 	Double_t *newx = grInt->GetX();
 	Double_t *newy = grInt->GetY();
-	// double unitsConversion = 1;//0.001;
-	// //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
-	// for (int i=0;i<nPoints;i++) newy[i]*=0.1*unitsConversion;
-	// 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
-	for (int i=0;i<nPoints;i++) newy[i]*=48.;
+	// Normalise
+	for (int i=0;i<nPoints;i++) newy[i]*=norm;
+	// Pave to 0
 	int paveNum = 8533;
 	grTemp = new TGraph(nPoints,  newx, newy);
-	// TGraph *grVPad = FFTtools::padWaveToLength(grVInt, paveNum);    
+
 	fSignalChainResponse[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
 
 	delete grInt;
 	delete grTemp;
       }
     }
-    
     
   }
   
