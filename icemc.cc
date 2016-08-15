@@ -3643,8 +3643,7 @@ int main(int argc,  char **argv) {
               eventTree->Fill();
               adu5PatTree->Fill();
 
-	      delete usefulPat;
-	      
+      
               delete realEvPtr;
               delete rawHeaderPtr;
               delete Adu5PatPtr;
