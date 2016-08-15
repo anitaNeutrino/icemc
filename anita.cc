@@ -35,6 +35,10 @@
 
 #include "TMath.h"
 
+#ifdef ANITA_UTIL_EXISTS
+#include "FFTtools.h"
+#endif
+
 using std::cout;
 using std::cin;
 using std::endl;
@@ -3517,7 +3521,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 	tokens->Delete();
 	
       }
-
+      Anita3PhotoFile.close();
 
       // Fill photogrammetry position for top rings
       for (int iant=0; iant<8;iant++){
@@ -3543,22 +3547,36 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 	ANTENNA_DOWN[3][iant] = apertureElPhoto[iant+32] * RADDEG; 
 
       }
-
+      
+      // HERE HPOL IS 0 AND VPOL IS 1
       std::ifstream PhaseCenterFile("data/phaseCenterPositionsRelativeToPhotogrammetryAnita3.dat");
       Int_t antNum, pol;
-      Double_t deltaR,deltaPhi,deltaZ;
+      Double_t deltaR,deltaPhi,deltaZ, deltaT;
       char firstLine[180];
-      Double_t deltaRPhaseCentre[48][2]; //Relative to photogrammetry + ring offset
-      Double_t deltaZPhaseCentre[48][2]; //Relative to photogrammetry + ring offset
-      Double_t deltaPhiPhaseCentre[48][2]; //Relative to photogrammetry + ring offset
+      Double_t deltaRPhaseCentre[2][48]; //Relative to photogrammetry + ring offset
+      Double_t deltaZPhaseCentre[2][48]; //Relative to photogrammetry + ring offset
+      Double_t deltaPhiPhaseCentre[2][48]; //Relative to photogrammetry + ring offset
       
       PhaseCenterFile.getline(firstLine,179);
       while(PhaseCenterFile >> antNum >> pol >> deltaR >> deltaPhi >> deltaZ) {
-	deltaRPhaseCentre[antNum][pol]=deltaR;
-	deltaPhiPhaseCentre[antNum][pol]=deltaPhi*TMath::DegToRad();
-	deltaZPhaseCentre[antNum][pol]=deltaZ;
+	deltaRPhaseCentre[pol][antNum]=deltaR;
+	deltaPhiPhaseCentre[pol][antNum]=deltaPhi*TMath::DegToRad();
+	deltaZPhaseCentre[pol][antNum]=deltaZ;
       } 
+      PhaseCenterFile.close();
 
+      // HERE HPOL IS 0 AND VPOL IS 1
+      //std::ifstream CableDelayFile("data/relativePhaseCenterToAmpaDelaysAnita3.dat");
+      std::ifstream CableDelayFile("data/relativeCableDelays_anita3.dat");
+      
+      while(CableDelayFile >> pol >> antNum  >> deltaT) {
+	int ilayer = (antNum<16)*((antNum%2==0)*0 + (antNum%2==1)*1)+ (antNum>15)*(antNum<32)*2+(antNum>31)*3;
+	int ifold = (ilayer<2)*(antNum%8)+(ilayer>1)*(antNum%16);
+	deltaTPhaseCentre[pol][ilayer][ifold]=deltaT*1e-9; // convert from ns to seconds
+	// std::cout << pol << " " << antNum << " " << deltaTPhaseCentre[pol][antNum] << std::endl;
+      } 
+      CableDelayFile.close();
+      
       for(int ilayer = 0; ilayer < 4; ilayer++){ 
  	for(int iphi = 0; iphi < NRX_PHI[ilayer]; iphi++){
 	  // move from the square centers to the phase centers
@@ -3917,14 +3935,15 @@ void Anita::GetArrivalTimes(const Vector& rf_direction) {
   //Vector one_antenna_position=antenna_positions[2*16];
   // cout << "one_antenna_position is ";
   //   one_antenna_position.Print();
-   
+  
     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
       arrival_times[antenna_index] = (antenna_positions[antenna_index] * rf_direction) / CLIGHT;
       //      arrival_times[antenna_index] = ((antenna_positions[antenna_index]-one_antenna_position) * rf_direction) / CLIGHT;
       
-//       cout << "index is " << antenna_index << "\n";
-//       cout << "antenna_positions are " << antenna_positions[antenna_index] << "\n";
-//       cout << "arrival_times is " << arrival_times[antenna_index] << "\n";
+      // cout << "index is " << antenna_index << "\n";
+      // cout << "antenna_positions are " << antenna_positions[antenna_index] << "\n";
+      // cout << "rf direction is " << rf_direction << "\n";
+      // cout << "arrival_times is " << arrival_times[antenna_index] << "\n";
     } // for: loop over antenna layers
     
 
@@ -3933,21 +3952,41 @@ void Anita::GetArrivalTimes(const Vector& rf_direction) {
     //cout << "last_trigger_time is " << last_trigger_time << "\n";
     double first_trigger_time = Tools::dMin(arrival_times,(number_all_antennas));
      for (int i=0;i<(number_all_antennas);i++){
-        // cout << "antenna_positions is ";
-        // antenna_positions[i].Print();
-        // cout << "diff is ";
-       //       (antenna_positions[i]-one_antenna_position).Print();
+       // cout << "antenna_positions is ";
+       //  antenna_positions[i].Print();
+	// cout << "diff is ";
+	// (antenna_positions[i]-one_antenna_position).Print();
 
-       arrival_times[i] -= first_trigger_time;
-        // cout << "arrivaltimes is " << arrival_times[i] << "\n";
-	//   arrival_times[i] -= last_trigger_time;
+        arrival_times[i] -= first_trigger_time;
+       // cout << "arrivaltimes is " << arrival_times[i] << "\n";
+       // arrival_times[i] -= last_trigger_time;
 
        // if (arrival_times[i] == 0){
 // 	 first_phi_sector_hit = (int)((double)i/16.);
 //        }
      }
-     //cout << "end of GetArrivalTimes.\n";
+     // cout << "end of GetArrivalTimes.\n";
 } // GetArrivalTimes
+
+void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]) {
+
+    for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
+      int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
+      int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
+      arrival_times[antenna_index] = (antenna_positions[antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
+
+           // FOR THE MOMENT JUST ADD VPOL CABLE DELAY
+      // arrival_times[antenna_index] +=deltaTPhaseCentre[1][ilayer][ifold];
+      //  arrival_times[antenna_index]=0;
+    } // for: loop over antenna layers
+    
+    double first_trigger_time = Tools::dMin(arrival_times,(number_all_antennas));
+     for (int i=0;i<(number_all_antennas);i++){
+
+        arrival_times[i] -= first_trigger_time;
+
+     }
+} // GetArrivalTimesBoresights
 
 
 void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
@@ -4043,7 +4082,7 @@ void Anita::readImpulseResponse(){
 
   deltaT = 1/(2.6*16);
   
-  string fileName = "data/SignalChainImpulseResponse_anita3.root";
+  string fileName = "data/SignalChainImpulseResponse_anita3_shifted.root";
   TFile fImpulse(fileName.c_str());
 
   if(!fImpulse.IsOpen()) {
@@ -4068,9 +4107,11 @@ void Anita::readImpulseResponse(){
 	// //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
 	// for (int i=0;i<nPoints;i++) newy[i]*=0.1*unitsConversion;
 	// 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
-	for (int i=0;i<nPoints;i++) newy[i]*=48.; 
+	for (int i=0;i<nPoints;i++) newy[i]*=48.;
+	int paveNum = 8533;
+	grTemp = new TGraph(nPoints,  newx, newy);
 	// TGraph *grVPad = FFTtools::padWaveToLength(grVInt, paveNum);    
-	fSignalChainResponse[ipol][iring] = new TGraph(nPoints, newx, newy);
+	fSignalChainResponse[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
 
 	delete grInt;
 	delete grTemp;

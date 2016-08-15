@@ -797,10 +797,10 @@ int whichlayer,whichphisector;
 //       }
 //       cout << "\n";
 //     }
+
     // now shift right to account for arrival times
     Tools::ShiftRight(timedomain_output_2[j],anita1->NFOUR,(int)(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-
-	
+      
     if (settings1->TRIGGERSCHEME == 2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
       //      if (inu==1570)
       //cout << "shifting left.\n";
@@ -1110,7 +1110,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   if (settings1->APPLYIMPULSERESPONSE){
 
     anita1->GetNoiseWaveforms(); // get noise waveforms
-    
+
     Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_e_forfft); 
     Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_h_forfft);
   
@@ -1121,12 +1121,13 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
       anita1->volts_rx_rfcm_lab_h[i] = volts_rx_h_forfft[i];
       fTimes[i] = i * anita1->TIMESTEP * 1.0E9; 
     }
+
 #ifdef ANITA_UTIL_EXISTS    
     applyImpulseResponse(anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_e, 0);
     applyImpulseResponse(anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_h, 1);
-
 #endif
-   } else {
+
+  } else {
     
   Tools::Zero(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR);// will be volts vs. time after rx, rfcm
   Tools::Zero(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR);
@@ -1237,11 +1238,10 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   }    
     
   // now shift right to account for arrival times
-  // for (int i=0;i<48;i++) std::cout << arrival_times[i] << std::endl;
+  //for (int i=0;i<48;i++) std::cout << arrival_times[i] << std::endl;
   Tools::ShiftRight(anita1->volts_rx_rfcm_lab_e,anita1->NFOUR/2, int(arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
   Tools::ShiftRight(anita1->volts_rx_rfcm_lab_h,anita1->NFOUR/2, int(arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
     
-
   if (settings1->SIGNAL_FLUCT) {
     for (int i=0;i<anita1->NFOUR/2;i++) {
       anita1->volts_rx_rfcm_lab_e[i]+=anita1->timedomainnoise_lab_e[i]; // add noise
@@ -4466,30 +4466,20 @@ void AntTrigger::applyImpulseResponse(Anita *anita1, int nPoints, int ant, doubl
   if (ant<16) iring=0;
   else if (ant<32) iring=1;
   
+  //Calculate convolution
   TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponse[ipol][iring]);
 
-  // Divide the output of the convolution by the number of points
-  // Because we applied 2 FFT and 1 invFFT
-  Double_t *newx = surfSignal->GetX();
-  Double_t *newy = surfSignal->GetY();
-  Int_t nPointsUp = surfSignal->GetN();
-  for (int i=0;i<nPointsUp;i++){
-    newy[i]=newy[i];///nPointsUp;
-  }
-
-  TGraph *graph2 = new TGraph(nPointsUp, newx, newy);
   //Downsample again
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
 
-  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(graph2, 1/2.6);
-
-  newy = surfSignalDown->GetY();
+  Double_t *newy = surfSignalDown->GetY();
   for (int i=0;i<nPoints;i++){
     y[i]=newy[i];
   }
 
   // Cleaning up
   delete surfSignalDown;
-  delete graph2;
+  // delete graph2;
   delete surfSignal;
   delete graphUp;
   delete graph1;

@@ -72,7 +72,10 @@ static const int NPOL=2; // number of polarizations
     double LAYER_HPOSITION[Anita::NLAYERS_MAX]; // distance in horizontal plane between center axis of the "payload" and each "layer".
     double LAYER_PHIPOSITION[Anita::NLAYERS_MAX];//phi corresponding to the position of each "layer" on the "payload"
     double RRX[Anita::NLAYERS_MAX]; // radius that the antenna sits from the axis of the payload (feedpoint)
-    
+    Double_t deltaTPhaseCentre[2][NLAYERS_MAX][NPHI_MAX]; //Relative to photogrammetry + ring offset
+
+
+  
     Anita(); // constructor
     ~Anita();
     void Initialize(Settings *settings1,ofstream &foutput,int inu); // initialize a bunch of stuff
@@ -371,6 +374,7 @@ TTree *tgaryanderic; // writing data out for the analysers
     void myconvlv(double *timedomain_forconvl,const int NFOUR,double *fdiode,double &maxdiodeconvl,double &onediodeconvl,double *power_noise,double *diodeconv);
     
   void GetArrivalTimes(const Vector& rf_direction);
+  void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]);
   int rx_minarrivaltime;
   double arrival_times[NLAYERS_MAX*NPHI_MAX];
 

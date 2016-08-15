@@ -577,7 +577,6 @@ int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt);
 #endif
 
 
-
 //do a threshold scan
 double threshold_start=-1.;
 double threshold_end=-6.;
@@ -2925,7 +2924,10 @@ int main(int argc,  char **argv) {
       globaltrig1 = new GlobalTrigger(settings1, anita1);
       
       Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-      anita1->GetArrivalTimes(ray1->n_exit2bn[2]);
+      if(settings1->BORESIGHTS)
+	anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2]);
+      else
+	anita1->GetArrivalTimes(ray1->n_exit2bn[2]);
       
       anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times, settings1->NANTENNAS);
 
@@ -3562,9 +3564,16 @@ int main(int argc,  char **argv) {
               rawHeaderPtr	= new RawAnitaHeader();
               Adu5PatPtr	= new Adu5Pat();
 
-              // const int numAnts_temp = 40;
-              // Total number of antennas
-              // int numAnts_temp = anita1->PHITRIG[0] + anita1->PHITRIG[1] + anita1->PHITRIG[2] ;
+
+              Adu5PatPtr->latitude= bn1->latitude;
+              Adu5PatPtr->longitude=bn1->longitude;
+              Adu5PatPtr->altitude=bn1->altitude;
+              Adu5PatPtr->realTime=bn1->realTime_flightdata;
+              Adu5PatPtr->heading = bn1->heading;
+              Adu5PatPtr->pitch = bn1->pitch;
+              Adu5PatPtr->roll = bn1->roll;
+              Adu5PatPtr->run = run_no;
+
               int fNumPoints = 260;
               for (int i = 0; i < 96; i++){
                 for (int j = 0; j < 260; j++){
@@ -3584,6 +3593,7 @@ int main(int argc,  char **argv) {
                 realEvPtr->chanId[UsefulChanIndexV] = UsefulChanIndexV;
                 realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
+		
 		for (int j = 0; j < fNumPoints; j++) {
 		  // convert volts to mV
 		  volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j] = volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
@@ -3627,20 +3637,14 @@ int main(int argc,  char **argv) {
 
               rawHeaderPtr->calibStatus = 15;
               rawHeaderPtr->realTime = bn1->realTime_flightdata;
-              Adu5PatPtr->latitude= bn1->latitude;
-              Adu5PatPtr->longitude=bn1->longitude;
-              Adu5PatPtr->altitude=bn1->altitude;
-              Adu5PatPtr->realTime=bn1->realTime_flightdata;
-              Adu5PatPtr->heading = bn1->heading;
-              Adu5PatPtr->pitch = bn1->pitch;
-              Adu5PatPtr->roll = bn1->roll;
-              Adu5PatPtr->run = run_no;
               eventNumber = inu;
 
               headTree->Fill();
               eventTree->Fill();
               adu5PatTree->Fill();
 
+	      delete usefulPat;
+	      
               delete realEvPtr;
               delete rawHeaderPtr;
               delete Adu5PatPtr;
