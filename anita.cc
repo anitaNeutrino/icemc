@@ -378,7 +378,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     //MAX_THETA_HYPOTHESIS=20.;
 
     double freqstep=1./(double)(NFOUR/2)/TIMESTEP;
-    double freqstep_long=1./(double)(NFOUR)/TIMESTEP; // freqstep_long is actually shorter so that time domain waveform is longer
+    // double freqstep_long=1./(double)(NFOUR)/TIMESTEP; // freqstep_long is actually shorter so that time domain waveform is longer
     
     for (int i=0;i<HALFNFOUR/2;i++) {
 		freq_forfft[2*i]=(double)i*freqstep;
@@ -851,11 +851,6 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     TGraph *gfreqdomain_rfcm=new TGraph(NFOUR/4,freq_forplotting,freqdomain_rfcm);
     TGraph *gavgfreqdomain_lab=new TGraph(NFOUR/4,freq_forplotting,avgfreqdomain_lab);
     TGraph *gfreqdomain_rfcm_banding[5];
-
-    TGraph *gfreqdomain_rfcm_long;
-    TGraph *gavgfreqdomain_lab_long;
-    TGraph *gfreqdomain_rfcm_banding_long[5];
-    
 
     for (int i=0;i<5;i++) {
       gfreqdomain_rfcm_banding[i]=new TGraph(NFOUR/4,freq_forplotting,freqdomain_rfcm_banding[i]);
@@ -2530,7 +2525,7 @@ void Anita::convert_power_spectrum_to_voltage_spectrum_for_fft(int length,double
 void Anita::GetNoiseWaveforms() {
     GetPhases();
     int nsamples = NFOUR / 2;
-    int nsamples_long = NFOUR;
+    // int nsamples_long = NFOUR;
     double sumfreqdomain = 0.;
     double sumtimedomain = 0.;
     
@@ -3976,7 +3971,7 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
       arrival_times[antenna_index] = (antenna_positions[antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
 
            // FOR THE MOMENT JUST ADD VPOL CABLE DELAY
-      // arrival_times[antenna_index] +=deltaTPhaseCentre[1][ilayer][ifold];
+      //arrival_times[antenna_index] +=deltaTPhaseCentre[1][ilayer][ifold];
       //  arrival_times[antenna_index]=0;
     } // for: loop over antenna layers
     
@@ -4058,6 +4053,7 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
 }
 
 
+#ifdef ANITA_UTIL_EXISTS
 void Anita::readImpulseResponse(Settings *settings1){
 
   // Set deltaT to be used in the convolution
@@ -4130,3 +4126,5 @@ void Anita::readImpulseResponse(Settings *settings1){
   
 }
 
+
+#endif
