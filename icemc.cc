@@ -734,6 +734,8 @@ int main(int argc,  char **argv) {
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
 
+  if(spectra1->IsSpectrum()) cout<<" Lowest energy for spectrum is 10^18 eV! \n";
+
   if (settings1->ROUGHNESS==1)
     ReadRoughnessData(settings1, trans_angle, transmission, minangle_roughness, maxangle_roughness, npoints_roughness, max_angles_backplane);
   
@@ -1797,7 +1799,7 @@ int main(int argc,  char **argv) {
     Vector x = Vector(cos(angle_theta * RADDEG) * cos((angle_phi+11.25) * RADDEG),
                       cos(angle_theta * RADDEG) * sin((angle_phi+11.25) * RADDEG),
                       sin(angle_theta * RADDEG));  
-    anita1->GetArrivalTimes(x);
+    anita1->GetArrivalTimes(x,bn1,settings1);
     cout << "end of getarrivaltimes\n";
   }
 
@@ -1887,7 +1889,8 @@ int main(int argc,  char **argv) {
       unmasked_thisevent=1;
       vmmhz_min_thatpasses=1000; // initializing.  want to find the minumum voltage that passes a
       if ( spectra1->IsSpectrum() ){//if using energy spectrum
-        pnu=spectra1->GetNuEnergy();
+        //pnu=spectra1->GetNuEnergy();
+	pnu=spectra1->GetCDFEnergy();
         ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, 0, 0);	// given neutrino momentum,  cross section and interaction length of neutrino.
         // ierr=0 if the energy is too low for the parameterization
         // ierr=1 otherwise
@@ -2927,7 +2930,7 @@ int main(int argc,  char **argv) {
       if(settings1->BORESIGHTS)
 	anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2]);
       else
-	anita1->GetArrivalTimes(ray1->n_exit2bn[2]);
+	anita1->GetArrivalTimes(ray1->n_exit2bn[2],bn1,settings1);
       
       anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times, settings1->NANTENNAS);
 
@@ -3627,15 +3630,15 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
 
               rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
-              if (settings1->WHICH==9 || settings1->WHICH==10) { // anita-3
+	       if (settings1->WHICH==9 || settings1->WHICH==10) { // anita-3
                 rawHeaderPtr->l3TrigPatternH = (short) l3trig[1];
                 rawHeaderPtr->l1TrigMask   = (short) l1TrigMask;
                 rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
                 rawHeaderPtr->l1TrigMaskH  = (short) l1TrigMaskH;
                 rawHeaderPtr->phiTrigMaskH = (short) phiTrigMaskH;
               }
-
-              rawHeaderPtr->calibStatus = 15;
+	      
+              rawHeaderPtr->calibStatus = 31;
               rawHeaderPtr->realTime = bn1->realTime_flightdata;
               eventNumber = inu;
 

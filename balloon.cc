@@ -339,9 +339,7 @@ void Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,Settin
   
 
   // find position of each antenna boresight
-  if (settings1->BORESIGHTS)
-    GetBoresights(settings1,anita1);
-    
+  
   // now finding north
   n_north = n_bn.Cross(n_east);
   
@@ -352,6 +350,9 @@ void Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,Settin
   
   calculate_antenna_positions(settings1,anita1);
   //  cout << "calculated antenna positions.\n";
+  if (settings1->BORESIGHTS)
+    GetBoresights(settings1,anita1);
+    
 }
 
 // this is called for each neutrino
@@ -500,9 +501,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     if (settings1->SLAC)
       AdjustSlacBalloonPosition(inu); // move payload around like we did at slac
     // find position of each antenna boresight
-    if (settings1->BORESIGHTS)
-      GetBoresights(settings1,anita1);
-    
+   
     // now finding north
     n_north = n_bn.Cross(n_east);
     
@@ -511,6 +510,8 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     vertcoord_bn=r_bn[1]/1000.;
     
     calculate_antenna_positions(settings1,anita1);
+     if (settings1->BORESIGHTS)
+      GetBoresights(settings1,anita1);
     
     
 } // end PickBalloonPosition
@@ -562,17 +563,17 @@ void Balloon::GetAntennaOrientation(Settings *settings1, Anita *anita1, int ilay
 		phi=(double)ifold/(double)anita1->NRX_PHI[ilayer]*2*PI + anita1->PHI_OFFSET[ilayer] + phi_spin;
     }
     else{
-	phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer] +phi_spin;
+      //phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer] +phi_spin;
+      phi=anita1->PHI_EACHLAYER[ilayer][ifold];
     }
         
     n_eplane = n_eplane.RotateZ(phi);
     n_hplane = n_hplane.RotateZ(phi);
     n_normal = n_normal.RotateZ(phi);
    
-    n_eplane = n_eplane.ChangeCoord(n_north,-1.*n_east);
-    n_hplane = n_hplane.ChangeCoord(n_north,-1.*n_east);
-    n_normal = n_normal.ChangeCoord(n_north,-1.*n_east);
-
+    n_eplane = RotatePayload(n_eplane);
+    n_hplane = RotatePayload(n_hplane);
+    n_normal = RotatePayload(n_normal);
 } //end void GetAntennaOrientation
 
 
@@ -1012,10 +1013,12 @@ void Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
 				
 			}//else
 			
+			//cout<<"antenna_position start for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
 			
 			antenna_position=RotatePayload(antenna_position);
 		
 			anita1->antenna_positions[number_all_antennas] = antenna_position;
+			//cout<<"antenna_position for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
 			number_all_antennas++;
 		}
     }
@@ -1036,7 +1039,7 @@ Vector Balloon::RotatePayload(Vector ant_pos_pre) {
   BalloonPos=r_bn;
   double BalloonTheta = BalloonPos.Theta();
   double BalloonPhi = BalloonPos.Phi();
- 
+  
   if(BalloonPhi > PI){
     BalloonPhi =BalloonPhi-TWOPI;
   }
@@ -1066,10 +1069,50 @@ Vector Balloon::RotatePayload(Vector ant_pos_pre) {
   northaxis=northaxis.RotateY(BalloonTheta);
   eastaxis=eastaxis.RotateY(BalloonTheta);
 
-  ant_pos=ant_pos.RotateZ(BalloonPhi);
-  northaxis = northaxis.RotateZ(BalloonPhi);
-  eastaxis = eastaxis.RotateZ(BalloonPhi);
+  ant_pos=ant_pos.RotateZ(-1*BalloonPhi);
+  northaxis = northaxis.RotateZ(-1*BalloonPhi);
+  eastaxis = eastaxis.RotateZ(-1*BalloonPhi);
   // cout<<"northaxis is "<<northaxis<<" n_north is "<<n_north<<"\n";
   // cout<<"eastaxis is "<<eastaxis<<" n_east is "<<n_east<<"\n";
+  this->x_axis_rot = xaxis;
+  this->y_axis_rot = yaxis;
+  this->z_axis_rot = zaxis;
+  return ant_pos;
+}  
+Vector Balloon::unRotatePayload(Vector ant_pos_pre) {//rotate back to Payload Centric coordinates
+  if(WHICHPATH==7){
+    pitch=-0.29; //ANITA-2 settings in ANALYSIS
+    roll=0.89; //ANITA-2 settings in ANALYSIS
+  }
+  
+  //double TWOPI = 6.283;
+  
+  Vector BalloonPos;
+
+  BalloonPos=r_bn;
+  double BalloonTheta = BalloonPos.Theta();
+  double BalloonPhi = BalloonPos.Phi();
+  
+  //cout<<"BalloonTheta is "<<BalloonTheta<<" phi is "<<BalloonPhi<<"\n";
+  if(BalloonPhi > PI){
+    BalloonPhi =BalloonPhi-TWOPI;
+  }
+  
+ 
+  Vector ant_pos = ant_pos_pre;
+ 
+  
+  //rotate to correct heading, roll and pitch
+
+  
+  ant_pos=ant_pos.RotateZ(1*BalloonPhi);
+  
+  ant_pos=ant_pos.RotateY(-1*BalloonTheta);
+
+  ant_pos=ant_pos.Rotate(-1*roll*RADDEG,x_axis_rot);//roll and pitch
+  
+  ant_pos=ant_pos.Rotate(-1*pitch*RADDEG,y_axis_rot);
+
+  ant_pos=ant_pos.Rotate(-1*heading*RADDEG,z_axis_rot);
   return ant_pos;
 }  

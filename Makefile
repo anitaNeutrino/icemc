@@ -41,7 +41,7 @@ else
 # which replaces all instances of the text "constexpr" and replaces it
 # with "const".
 # This preserves functionality while only affecting very specific semantics.
-CPPSTD_FLAGS = -Dconstexpr=const
+CPPSTD_FLAGS = -Dconstexpr=const -std=c++0x
 endif
 
 GENERAL_FLAGS = -pipe

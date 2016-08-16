@@ -852,5 +852,7 @@ r638 | lindac | 2016-07-27 16:54:47 +0100 (Wed, 27 Jul 2016) | 1 line
 Added getInterpolated graph to Tools to start removing dependence of impulse response to FFTtools
 ------------------------------------------------------------------------
 
+8/16/16 B. Dailey: Made a feew changes. First, created a CDF function to run over neutrino spectra faster. It is currently limited to 10^18 eV at the low end. (may be able to go lower). Secondly, updated various functions in anita.cc and balloon.cc to help match antenna position in analysis codes. IN anita.cc , for ANITA-2 updated starting position to match Simon's Numbers (used in analysis). Also added an 'off boresight' delay for ANITA-2 to match ANITA-2 analysis. Updated antenna orientation to better match analysis. Fixed bug in RealDataFormat that wouldn't allow nadir antennas (ANITA-2) to function in analysis (calibStatus=15 is now calibStatus=31). May need to be changed for ANITA-3, depending on analysis code.
+
 
 

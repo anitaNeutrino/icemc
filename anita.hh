@@ -52,7 +52,9 @@ static const int NPOL=2; // number of polarizations
     static const int NPHI_MAX=400; // max number of antennas around in phi (in smex, 16)
     Vector ANTENNA_POSITION_START[NLAYERS_MAX][NPHI_MAX]; // antenna positions from Kurt's measurements
     double ANTENNA_DOWN[NLAYERS_MAX][NPHI_MAX]; // down angles of antennas from Kurt's measurements
-    
+  double SIMON_DELTA_R[NLAYERS_MAX][NPHI_MAX]; // measurements by Simon used in analysis ANITA-2
+    double SIMON_DELTA_PHI[NLAYERS_MAX][NPHI_MAX]; // measurements by Simon used in analysis ANITA-2
+   
   Vector antenna_positions[NLAYERS_MAX * NPHI_MAX]; // these are the antenna positions in space in a coordinate system where x=north and y=west and the origin is at the center of the payload
     
     int NRX_PHI[NLAYERS_MAX]; // number of antennas around in each layer. (radians)
@@ -373,7 +375,7 @@ TTree *tgaryanderic; // writing data out for the analysers
     
     void myconvlv(double *timedomain_forconvl,const int NFOUR,double *fdiode,double &maxdiodeconvl,double &onediodeconvl,double *power_noise,double *diodeconv);
     
-  void GetArrivalTimes(const Vector& rf_direction);
+  void GetArrivalTimes(const Vector& rf_direction,Balloon *bn1,Settings *settings1);
   void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]);
   int rx_minarrivaltime;
   double arrival_times[NLAYERS_MAX*NPHI_MAX];
