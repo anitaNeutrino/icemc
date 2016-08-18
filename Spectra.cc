@@ -281,8 +281,11 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   {
       GetFlux("Kotera2010_mix_min.dat");
   }
+  
 
-  GetCDF();
+  if(EXPONENT <6 || EXPONENT >29){//is spectrum
+    GetCDF();
+  }
     //
     // End of selecting the Model!!!
     //
@@ -347,9 +350,12 @@ double  Spectra::GetNuEnergy() {
 } //Pick Neutrino Energy
 
 void Spectra::GetCDF(){//set up CDF and inverse CDF;
+  cout<<"in CDF \n";
   double y_val=0.;
-  double E_min =18; //energy[0];
+  double E_min =18;//energy[0];
+ 
   double E_max = energy[E_bin-1];
+  if(E_max > 21) E_max=21;
   double step_size =.25;//in logE
   int n =(int) floor((E_max-E_min)/step_size);
   double E[n];
@@ -389,11 +395,13 @@ double Spectra::GetCDFEnergy(){//get Energy from 'CDF'
   double thisenergy=0.;
 
   thisenergy = inverse_CDF->Eval(ran,0,"S");
-  
+  //cout<<"ran is "<<ran<<" thisenergy is "<<thisenergy<<"\n";
 
-  while(thisenergy <16){
+  while(thisenergy <18){//redundant?
+    //cout<<"thisenergy was "<<thisenergy<<" ran was "<<ran<<"\n";
     ran = gRandom->Rndm();
     thisenergy = inverse_CDF->Eval(ran,0,"S");
+    //cout<<"ran is "<<ran<<" thisenergy is "<<thisenergy<<"\n";
   }
   
   return pow(10.,thisenergy);

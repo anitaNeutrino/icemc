@@ -269,9 +269,9 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
  
     
     PERCENTBW=10; // subbands (not counting full band)
-    
+    #ifdef ANITA_UTIL_EXISTS
     if (settings1->APPLYIMPULSERESPONSE)   readImpulseResponse(settings1);
-    
+    #endif
     for (int i=0;i<NFREQ;i++) {
 		freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
 		avgfreq_rfcm[i]=0.;
