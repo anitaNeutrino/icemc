@@ -1,7 +1,7 @@
 # This is a card file containing inputs for the UCLA-based ANITA simulation
 ### Event input output
 1000000 # How many neutrinos to generate
-5     # Select energy (just enter the exponent) or (0) for baseline ES&S (1) for E^-1 (2) for E^-2 (3) for E^-3 (4) for E^-4 (5) for ES&S flux with cosmological constant (6) for neutrino GZK flux from Iron nucleii (16-22)not using spectrum but just for a single energy (101-114)use all kinds of theoretical flux models 
+5     # Select energy (just enter the exponent) or (30) for baseline ES&S (1) for E^-1 (2) for E^-2 (3) for E^-3 (4) for E^-4 (5) for ES&S flux with cosmological constant (6) for neutrino GZK flux from Iron nucleii (16-22)not using spectrum but just for a single energy (101-114)use all kinds of theoretical flux models 
 1      # 1=write to histograms,0=don't write to histograms
 1      # 1=write to ray tree (for roughness study), 0 don't write
 0     # 1=only write to final tree (for events that pass)

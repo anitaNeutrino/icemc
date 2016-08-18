@@ -281,6 +281,11 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   {
       GetFlux("Kotera2010_mix_min.dat");
   }
+  
+
+  if(EXPONENT <6 || EXPONENT >29){//is spectrum
+    GetCDF();
+  }
     //
     // End of selecting the Model!!!
     //
@@ -344,6 +349,65 @@ double  Spectra::GetNuEnergy() {
   return pow(10.,thisenergy);
 } //Pick Neutrino Energy
 
+void Spectra::GetCDF(){//set up CDF and inverse CDF;
+  cout<<"in CDF \n";
+  double y_val=0.;
+  double E_min =18;//energy[0];
+ 
+  double E_max = energy[E_bin-1];
+  if(E_max > 21) E_max=21;
+  double step_size =.25;//in logE
+  int n =(int) floor((E_max-E_min)/step_size);
+  double E[n];
+  double N[n];
+  double E_tmp=0.;
+  double integral=0.;
+
+  TGraph *hEdNdE = new TGraph(E_bin,energy,EdNdEdAdt);
+  //cout<<"E_min, Max, n are "<<E_min<<" "<<E_max<<" "<<n<<"\n";
+  for(int i=0;i<n;i++){
+    E_tmp = E_min+i*step_size;
+    y_val=hEdNdE->Eval(E_tmp,0,"s");//get interpolated value
+    
+    integral +=y_val*step_size;//integrate in log space
+    
+    E[i]=E_tmp;
+    N[i]=integral;
+  }
+  
+  for(int i=0;i<n;i++){
+    N[i]=N[i]/integral;
+    
+  }
+
+
+  CDF = new TGraph(n,E,N);
+  inverse_CDF = new TGraph(n,N,E);
+  
+  
+
+}
+
+double Spectra::GetCDFEnergy(){//get Energy from 'CDF'
+
+  double ran = gRandom->Rndm();
+ 
+  double thisenergy=0.;
+
+  thisenergy = inverse_CDF->Eval(ran,0,"S");
+  //cout<<"ran is "<<ran<<" thisenergy is "<<thisenergy<<"\n";
+
+  while(thisenergy <18){//redundant?
+    //cout<<"thisenergy was "<<thisenergy<<" ran was "<<ran<<"\n";
+    ran = gRandom->Rndm();
+    thisenergy = inverse_CDF->Eval(ran,0,"S");
+    //cout<<"ran is "<<ran<<" thisenergy is "<<thisenergy<<"\n";
+  }
+  
+  return pow(10.,thisenergy);
+
+  
+}
 
 inline void Spectra::GetFlux(string filename)
 {

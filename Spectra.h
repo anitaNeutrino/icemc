@@ -23,9 +23,12 @@ private:
 //  double E2dNdEdAdt[E_bin_max]; //flux of incident neutrinos vs. energy E^2*dN/dE/dA/dt
   
   void GetFlux(string filename);    // read neutrino flux EdNdEdAdt (in GeV) from filename file
-
+  
   TGraph *gEdNdEdAdt;   //graph for EdNdEdAdt flux
   TGraph *gE2dNdEdAdt;  //graph for E2dNdEdAdt flux
+
+  TGraph *CDF;
+  TGraph *inverse_CDF;
 
   TSpline3 *sEdNdEdAdt; //spline of EdNdEdAdt
   TSpline3 *sE2dNdEdAdt;    //spline of E2dNdEdAdt
@@ -40,7 +43,8 @@ public:
   Spectra(int EXPONENT); // constructor  
   
   double GetNuEnergy(); // get the neutrino energy which follows neutrino flux. 
-
+  double GetCDFEnergy();//get Energy from 'CDF'
+  void GetCDF();//set up CDF and inverse CDF;
   TGraph *GetGEdNdEdAdt();
   TGraph *GetGE2dNdEdAdt();
 

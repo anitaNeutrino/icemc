@@ -837,5 +837,105 @@ Commented roughout stream. Added condition that event is skipped if transmitted 
 08/08/2016 13.22 PM ET M. Sutherland   [in branches/roughness]
 Simply saving some added parameters to the roughout stream.
 
+08/15/2016 12.20 PM BST L. Cremonesi
+Log hasn't really been updated lately, so I copy here the svn log from June (and in this commit there is a fix to the impulse response)
+
+------------------------------------------------------------------------
+r615 | connolly | 2016-07-08 21:35:06 +0100 (Fri, 08 Jul 2016) | 1 line
+
+More work on anita 3 and 4 triggers.
+------------------------------------------------------------------------
+r612 | connolly | 2016-07-05 05:27:03 +0100 (Tue, 05 Jul 2016) | 1 line
+
+attempt to implement an anita-3 trigger including timing coincidences.
+------------------------------------------------------------------------
+r610 | connolly | 2016-06-27 22:05:25 +0100 (Mon, 27 Jun 2016) | 1 line
+
+starting to work on keeping track of timings for l0 triggers.
+------------------------------------------------------------------------
+r618 | connolly | 2016-07-14 14:42:03 +0100 (Thu, 14 Jul 2016) | 1 line
+
+more work on the anita3 and anita4 triggers.
+------------------------------------------------------------------------
+r619 | connolly | 2016-07-16 23:21:52 +0100 (Sat, 16 Jul 2016) | 1 line
+
+Working further on anita 3 and 4 triggers.
+------------------------------------------------------------------------
+r620 | connolly | 2016-07-18 15:07:44 +0100 (Mon, 18 Jul 2016) | 1 line
+
+New version of Anita 4 trigger.
+------------------------------------------------------------------------
+r621 | connolly | 2016-07-18 15:26:37 +0100 (Mon, 18 Jul 2016) | 1 line
+
+New version of Anita 4 trigger.
+------------------------------------------------------------------------
+r622 | connolly | 2016-07-18 17:36:26 +0100 (Mon, 18 Jul 2016) | 1 line
+
+Write an l3trig vector for Linda.  :)
+------------------------------------------------------------------------
+r623 | lindac | 2016-07-18 23:49:57 +0100 (Mon, 18 Jul 2016) | 1 line
+
+Get l3trig to be filled
+------------------------------------------------------------------------
+r624 | lindac | 2016-07-19 00:09:08 +0100 (Tue, 19 Jul 2016) | 1 line
+
+Added phi masking to new trigger
+------------------------------------------------------------------------
+r625 | connolly | 2016-07-19 16:01:33 +0100 (Tue, 19 Jul 2016) | 1 line
+
+More work on Anita 3 and 4 trigger.
+------------------------------------------------------------------------
+r627 | connolly | 2016-07-19 17:55:58 +0100 (Tue, 19 Jul 2016) | 1 line
+
+Further work on trigger.
+------------------------------------------------------------------------
+r628 | connolly | 2016-07-19 23:51:37 +0100 (Tue, 19 Jul 2016) | 1 line
+
+working on the anita 4 trigger.
+------------------------------------------------------------------------
+r629 | connolly | 2016-07-20 01:14:03 +0100 (Wed, 20 Jul 2016) | 1 line
+
+There was a line in convert_power_spectrum_to_voltage_spectrum_for_fft where the amplitude of the noise spectrum seems to have been erroneously commented out.  It's uncommented now.
+------------------------------------------------------------------------
+r630 | lindac | 2016-07-23 20:54:33 +0100 (Sat, 23 Jul 2016) | 1 line
+
+Update to signal chain impulse response for Anita-3
+------------------------------------------------------------------------
+r631 | lindac | 2016-07-23 21:01:10 +0100 (Sat, 23 Jul 2016) | 1 line
+
+Forgot to add the Anita-3 signal chain impulse response
+------------------------------------------------------------------------
+r632 | lindac | 2016-07-23 21:05:08 +0100 (Sat, 23 Jul 2016) | 1 line
+
+Accidentally committed my makefile, this should be the previous one
+------------------------------------------------------------------------
+r633 | lindac | 2016-07-24 17:15:25 +0100 (Sun, 24 Jul 2016) | 1 line
+
+Update trigger.hh to compile even without anita tools
+------------------------------------------------------------------------
+r634 | lindac | 2016-07-24 19:03:45 +0100 (Sun, 24 Jul 2016) | 1 line
+
+Apply impulse response only when Anita tools are sourced
+------------------------------------------------------------------------
+r635 | connolly | 2016-07-25 03:37:48 +0100 (Mon, 25 Jul 2016) | 1 line
+
+Merged my work on anita 4 trigger with what Linda's been doing on impulse response.
+------------------------------------------------------------------------
+r636 | lindac | 2016-07-25 18:13:19 +0100 (Mon, 25 Jul 2016) | 1 line
+
+Re-add applyImpulseResponse that was deleted in previous commits
+------------------------------------------------------------------------
+r638 | lindac | 2016-07-27 16:54:47 +0100 (Wed, 27 Jul 2016) | 1 line
+
+Added getInterpolated graph to Tools to start removing dependence of impulse response to FFTtools
+------------------------------------------------------------------------
+
+8/16/16 B. Dailey: Made a feew changes. First, created a CDF function to run over neutrino spectra faster. It is currently limited to 10^18 eV at the low end. (may be able to go lower). Secondly, updated various functions in anita.cc and balloon.cc to help match antenna position in analysis codes. IN anita.cc , for ANITA-2 updated starting position to match Simon's Numbers (used in analysis). Also added an 'off boresight' delay for ANITA-2 to match ANITA-2 analysis. Updated antenna orientation to better match analysis. Fixed bug in RealDataFormat that wouldn't allow nadir antennas (ANITA-2) to function in analysis (calibStatus=15 is now calibStatus=31). May need to be changed for ANITA-3, depending on analysis code.
+
 08/18/2016 14.55 PM ET M. Sutherland   [in branches/roughness]
 Added GetVmMHz() and TaperVmMHz() for each screen point. Added preliminary relative phases (but needs corrected to properly affect the time domain waveform). Added specular parameter calculation to beginning of roughness before the screen starts looping. Added index functions to Screen class to get the index values for plotting and looping.
+
+8/18/16 B.Dailey: Fixed a couple of bugs from last submit. The function GetCDF was being run even if the input spectrum was mono-energetic which caused problems. I put 'ifdef' statement around impulseresponse as it is only used with real data output. Also moved one plot to the outputdir as Mike S. request. Also fixed wording in output files for ESS spectrum was 0, when it should be 30. 
+
+08/18/2016 19.45 PM ET M. Sutherland   [in branches/roughness]
+copied Brian's updates in trunk into the branch.
