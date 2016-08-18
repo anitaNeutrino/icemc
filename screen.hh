@@ -53,6 +53,10 @@ public:
 
   void ResetPositionIndex();
 
-  Position GetNextPosition();
+  double CalcXindex(int i);
+
+  double CalcYindex(int i);
+
+  Position GetNextPosition(int i);
 };
 #endif

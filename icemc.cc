@@ -2504,6 +2504,20 @@ int main(int argc,  char **argv) {
 
         //IMPORTANT NOTE: WE ARE IGNORING THE FIRN UNTIL FURTHER NOTICE FOR SIMPLICITY
 
+        /////////////
+        //  THESE ARE FOR DETERMINING SOME SPECULAR PARAMETERS (POL, MAGNITUDE, ..)
+        //
+        Vector pol_specular = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4]);;
+
+        sig1->GetSpread(pnu, emfrac, hadfrac, (anita1->bwslice_min[2]+anita1->bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
+        GetFresnel(rough1, 0, ray1->nsurf_rfexit, ray1->n_exit2bn[2], pol_specular, ray1->nrf_iceside[4], vmmhz1m_max, emfrac, hadfrac, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);
+        vmmhz1m_fresneledtwice = vmmhz1m_max*fresnel1*mag1;  //  only the ice-air interface
+
+        vmmhz1m_fresneledtwice /= ( interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn) );
+        Attenuate(antarctica, settings1, vmmhz1m_fresneledtwice,  interaction1->posnu.Distance(ray1->rfexit[2]),  interaction1->posnu);
+        /////////////
+
+
         Position pos_current;
         Vector pos_current_localnormal; // local normal at point on ground below screen current point
         Vector vec_pos_current_to_balloon;
@@ -2537,10 +2551,16 @@ int main(int argc,  char **argv) {
         Vector Efield_local;
         Vector Efield_screentotal = Vector(0,0,0);
 
-        Vector temp_a, temp_b;          // some temporary vectors
+        Vector temp_a, temp_b;          // some temporary parameters for roughness
+        double tempdoub;
+
+        double viewangle_local;
+        double pathlength_specular = interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn);
+        double pathlength_local;        // set for each screen point
+        double vmmhz_local[Anita::NFREQ];   //  V/m/MHz at balloon (after all steps)
 
         //iterate points on the screen, get their position and project back to find ground impact
-        //calculate incident and transmitted angles, look up power fraction and loss correction and fresnel (use same GetFresnel?) factors
+        //calculate incident and transmitted angles, look up power fraction and loss correction factor
         //add to running total, and output observables for checks
 
         //reset the counter and set screen properties based on current geometry
@@ -2552,14 +2572,26 @@ int main(int argc,  char **argv) {
 
         // set screen y-hat as up 'perp.' to ground in the screen plane, define x-hat as perp.
         pos_current_localnormal = antarctica->GetSurfaceNormal( panel1->GetCentralPoint() ).Unit();
-        panel1->SetUnitX( ray1->n_exit2bn[2].Cross(pos_current_localnormal).Unit() );
-        panel1->SetUnitY( -1.*ray1->n_exit2bn[2].Cross(ray1->n_exit2bn[2].Cross(pos_current_localnormal).Unit()) );
+        temp_a = pos_current_localnormal - ray1->n_exit2bn[2].Dot(pos_current_localnormal) * ray1->n_exit2bn[2].Unit();
+        panel1->SetUnitX( ray1->n_exit2bn[2].Cross(temp_a).Unit() );
+        panel1->SetUnitY( -1.*ray1->n_exit2bn[2].Cross(ray1->n_exit2bn[2].Cross(temp_a).Unit()) );
+
+        temp_a = interaction1->nnu - pos_current_localnormal.Dot(interaction1->nnu) * pos_current_localnormal;
+        Position tpos = interaction1->posnu + 500.*temp_a.Unit();
 
         //std::cerr<<"bln: "<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
         //std::cerr<<"bln X: "<<bn1->r_bn.GetX()<<"  "<<bn1->r_bn.GetY()<<"  "<<bn1->r_bn.GetZ()<<std::endl;
         //std::cerr<<"Surface: "<<antarctica->Surface(bn1->r_bn)<<std::endl;
         //std::cerr<<"int.point: "<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
-        std::cerr<<"[ ["<<ray1->rfexit[2].Lon()<<",  "<<-90+ray1->rfexit[2].Lat()<<"],  ["<<bn1->r_bn.Lon()<<",  "<<-90+bn1->r_bn.Lat()<<"],  ["<<interaction1->posnu.Lon()<<",  "<<-90+interaction1->posnu.Lat()<<"]  ],"<<std::endl;
+        std::cerr<<"[ ";
+        std::cerr<<"["<<ray1->rfexit[2].Lon()<<",  "<<-90+ray1->rfexit[2].Lat()<<"],  ";
+        std::cerr<<"["<<bn1->r_bn.Lon()<<",  "<<-90+bn1->r_bn.Lat()<<"],  ";
+        std::cerr<<"["<<interaction1->posnu.Lon()<<",  "<<-90+interaction1->posnu.Lat()<<"],  ";
+        std::cerr<<"["<<tpos.Lon()<<",  "<<-90+tpos.Lat()<<"],  ";
+
+
+        std::cerr<<"["<<pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) <<",  "<<(pol_specular - pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) * antarctica->GetSurfaceNormal(bn1->r_bn)).Mag()<<",  "<< vmmhz1m_fresneledtwice <<"]  ";
+        std::cerr<<"],"<<std::endl;
         //std::cerr<<"screen: "<<panel1->GetCentralPoint().Lon()<<"  "<<-90+panel1->GetCentralPoint().Lat()<<std::endl;
 
         // now loop over screen points
@@ -2569,7 +2601,7 @@ int main(int argc,  char **argv) {
           //if((ii%1000)==0){
           //  std::cerr<<ii<<std::endl;
           //}
-          pos_current = panel1->GetNextPosition();        // this gets the new screen position
+          pos_current = panel1->GetNextPosition(ii);        // this gets the new screen position
           pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
           vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_current[0], bn1->r_bn[1] - pos_current[1], bn1->r_bn[2] - pos_current[2] );
 
@@ -2590,6 +2622,19 @@ int main(int argc,  char **argv) {
           //
           vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
           vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
+
+          // gets angle between this screen ray and neutrino direction
+          viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
+          if(viewangle_local>1.57 && !settings1->SKIPCUTS) { //discard the event if viewangle_local is greater than 90 degrees
+            //delete interaction1;
+            continue;
+          }
+
+          tempdoub=Tools::dMin((viewangle_local-sig1->changle)/(deltheta_em_max), (viewangle_local-sig1->changle)/(deltheta_had_max));
+          if (tempdoub>Signal::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
+            //delete interaction1;
+            continue;
+          }
 
           // get incident polarization
           npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint).Unit();
@@ -2642,20 +2687,30 @@ int main(int argc,  char **argv) {
           Emag_local = vmmhz1m_max * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local));
 
           // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
-          Emag_local /= ( interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn) );
+          pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
+          Emag_local /= pathlength_local ;
           Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
 
-          // here is the full transmitted electric field for this screen point
-          Efield_local = Emag_local * npol_local_trans;
+          // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor) and making an array across frequency bins by putting in frequency dependence.
+          sig1->GetVmMHz(Emag_local, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local, Anita::NFREQ);
 
-          // add to the running total at the balloon
-          Efield_screentotal = Efield_screentotal + Efield_local;
+          // apply the off-angle tapering
+          for (int k=0;k<Anita::NFREQ;k++) {
+            deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
+            deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
+            sig1->TaperVmMHz(viewangle_local, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local[k], vmmhz_em[k]);// this applies the angular dependence.
+          }
+
+          //add the contribution to the running total
+          for (int k=0;k<Anita::NFREQ;k++) {
+            vmmhz[k] += vmmhz_local[k] * cos( TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[k]/CLIGHT );
+          }
 
           roughout<<inu<<"  "
                   <<ii<<"  "
                   <<pos_projectedImpactPoint.Lon()<<"  "
                   <<-90+pos_projectedImpactPoint.Lat()<<"  "
-                  <<Emag_local<<"  "
+                  <<vmmhz_local[0] * cos( TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT )<<"  "
                   <<theta_local*180./PI<<"  "
                   <<theta_0_local*180./PI<<"  "
                   <<theta_0_local_converted<<"  "
@@ -2674,18 +2729,29 @@ int main(int argc,  char **argv) {
                   <<vec_pos_current_to_balloon.Unit().Dot(npol_local_trans)<<"  "
                   <<npol_local_inc.Dot(npol_local_trans)<<"  "
                   <<pos_current_localnormal.Dot(npol_local_trans)<<"  "
+                  <<(npol_local_trans - pos_current_localnormal.Dot(npol_local_trans)*pos_current_localnormal).Mag()<<"  "
                   <<antarctica->Surface(pos_projectedImpactPoint.Lon(),pos_projectedImpactPoint.Lat())<<"  "
+                  <<panel1->CalcXindex(ii)<<"  "
+                  <<panel1->CalcYindex(ii)<<"  "
+                  <<cos(TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT)<<"  "
                   <<std::endl;
+
+
+          // here is the full transmitted electric field for this screen point
+          Efield_local = vmmhz_local[0] * npol_local_trans;
+
+          // add to the running total at the balloon
+          Efield_screentotal = Efield_screentotal + Efield_local;
         }//end for ii < fSCREEN....
 
 
-      // these variables are used downstream, so best to set it here
-      // Calculate the electric field magnitude at the balloon
-      vmmhz_max = Efield_screentotal.Mag();
-      // Calculate the polarization at the balloon
-      n_pol = Efield_screentotal.Unit();
+        // these variables are used downstream, so best to set it here
+        // Calculate the electric field magnitude at the balloon
+        vmmhz_max = Efield_screentotal.Mag();
+        // Calculate the polarization at the balloon
+        n_pol = Efield_screentotal.Unit();
 
-      //std::cerr<<"++ "<<fSCREEN_NUMPOINTS_EDGE<<"   "<<panel1->GetEdgeLength()<<"   "<<vmmhz_max<<std::endl;
+        //std::cerr<<"++ "<<fSCREEN_NUMPOINTS_EDGE<<"   "<<panel1->GetEdgeLength()<<"   "<<vmmhz_max<<std::endl;
 
       }//end else roughness
 
@@ -2799,14 +2865,15 @@ int main(int argc,  char **argv) {
       // then multiplies by scale factor vmmhz_max/vmmhz1m_max
       // this will need to be improved once frequency-dependent
       // attenuation length is included.
-      if (settings1->FORSECKEL==1)
-        sig1->SetNDepth(sig1->NICE); // for making array of signal vs. frequency,  viewangle
+      if (settings1->ROUGHNESS==0){
+        if (settings1->FORSECKEL==1)
+          sig1->SetNDepth(sig1->NICE); // for making array of signal vs. frequency,  viewangle
+        
+        sig1->GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ); // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
+        //   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
+        // and making an array across frequency bins by putting in frequency dependence.
+      }
       
-      sig1->GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ); // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
-      //   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
-      // and making an array across frequency bins by putting in frequency dependence.
-      
-      maxtaper=-1000;
       // For each frequency,  get the width of Cerenkov cone
       // and size of signal once position of viewing angle is taken into account
       
@@ -2825,108 +2892,105 @@ int main(int argc,  char **argv) {
       rec_efield=0;
       true_efield=0;
       
-      Tools::Zero(sumsignal_aftertaper, 5);
       
-      // don't loop over frequencies if the viewing angle is too far off
-      double rtemp=Tools::dMin((viewangle-sig1->changle)/(deltheta_em_max), (viewangle-sig1->changle)/(deltheta_had_max));
-      if (rtemp>Signal::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
-        //delete interaction1;
-        continue;
-      }
-      
-      count1->nviewanglecut[whichray]++;
-      
-
-      for (int k=0;k<Anita::NFREQ;k++) {
-        //GetSpread(pnu, emfrac, hadfrac, freq[k], N_DEPTH, X0ICE, 
-        //deltheta_em[k], deltheta_had[k]); // this gets the angular width of the em and had components of the cerenkov cone
-        deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
-        deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
-
-        if (settings1->FORSECKEL==1) {// this is for making plots of the signal
-          for (int iviewangle=0;iviewangle<NVIEWANGLE;iviewangle++) {// loop over viewing angles
-            // remove the 1/r and attenuation factors that are contained in the ratio vmmhz1m_max/vmmhz_max
-                  //
-            vmmhz_temp=vmmhz[k]*vmmhz1m_max/vmmhz_max; // EH,  I guess temporally remove 1/r and attenuation factors,  not for general use?
-
-            viewangle_temp=viewangles[iviewangle]; //grab the viewing angle from this array
-            //apply the gaussian dependence away from the cerenkov angle.  vmmhz_temp is both an input and an output.
-            //vmmhz_temp as an output is the signal with the angular dependence applied.
-            sig1->TaperVmMHz(viewangle_temp, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_temp, djunk);
-            forseckel[iviewangle][k]=vmmhz_temp;// put this in an array which we will plot later.
-          } //for (loop over viewing angles)
-        } //if (settings1->FORSECKEL==1)
-
-        //if (settings1->ROUGHNESS==0) {// we apply this normal angular dependence if we are not dealing with roughness here
-        // MS, commented the above if so it catches Taper in roughness case
-        sig1->TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz[k], vmmhz_em[k]);// this applies the angular dependence.
-          // viewangle is which viewing angle we are at
-          // deltheta_em is the width of the em component at this frequency
-          // deltheta_had is the width of the had component at this frequency
-          // emfrac is the em fraction of the shower
-          // hadfrac is the hadronic fraction of the shower
-          // vmmhz is the strength of the signal in V/m/MHz at this viewing angle
-          // vmmhz_em is the strength of the em component
-        if (bn1->WHICHPATH==4)
-          IntegrateBands(anita1, k, vmmhz, anita1->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
-          
-        //}
-        //else{
-        //  vmmhz[k]*=roughnessfactor;// if we are dealing with roughness then instead apply roughness factor
-        //}
-
-        vmmhz_lowfreq=vmmhz[0]; // for plotting,  vmmhz at the lowest frequency
-          // EH,  now here,  vmmhz array is the spectrum right infront of antennas (so not yet any detector properties are applied)
-        //GetVmMHz(vmmhz1m_max, vmmhz1m_max, pnu, vmmhz); //Get vmmhz in frequency domain before the antenna response,  for modeling time dependent pulses
-
-        // just want to see the maximum effect of viewing angle being off cerenkov cone
-        // should be at highest frequency
-        // just for plotting
-        if (sig1->logscalefactor_taper>maxtaper)
-          maxtaper=sig1->logscalefactor_taper;
-
-        if (settings1->HIST==1 && !settings1->ONLYFINAL && bn1->WHICHPATH != 3 && k==Anita::NFREQ/2 && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES) {
-          if (interaction1->nuflavor=="nue")
-            pdgcode = 12;
-          else if (interaction1->nuflavor=="numu")
-            pdgcode = 14;
-          else if (interaction1->nuflavor=="nutau")
-            pdgcode = 16;
-            
-          tree18->Fill();
-          // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="nue" && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES)
-          //   tree18->Fill();
-          // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="numu" && tree19->GetEntries()<settings1->HIST_MAX_ENTRIES)
-          //   tree19->Fill();
-          // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="nutau" && tree20->GetEntries()<settings1->HIST_MAX_ENTRIES)
-          //   tree20->Fill();
+      if (settings1->ROUGHNESS==0){
+        // don't loop over frequencies if the viewing angle is too far off
+        double rtemp=Tools::dMin((viewangle-sig1->changle)/(deltheta_em_max), (viewangle-sig1->changle)/(deltheta_had_max));
+        if (rtemp>Signal::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
+          //delete interaction1;
+          continue;
         }
+        count1->nviewanglecut[whichray]++;
+        
+        for (int k=0;k<Anita::NFREQ;k++) {
+          //GetSpread(pnu, emfrac, hadfrac, freq[k], N_DEPTH, X0ICE, 
+          //deltheta_em[k], deltheta_had[k]); // this gets the angular width of the em and had components of the cerenkov cone
+          deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
+          deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
 
-        if (bn1->WHICHPATH == 3)
-          interaction1->banana_volts += vmmhz[k]*(settings1->BW/(double)Anita::NFREQ/1.E6);
-      }//end for (int k=0;k<Anita::NFREQ;k++)
+          if (settings1->FORSECKEL==1) {// this is for making plots of the signal
+            for (int iviewangle=0;iviewangle<NVIEWANGLE;iviewangle++) {// loop over viewing angles
+              // remove the 1/r and attenuation factors that are contained in the ratio vmmhz1m_max/vmmhz_max
+                    //
+              vmmhz_temp=vmmhz[k]*vmmhz1m_max/vmmhz_max; // EH,  I guess temporally remove 1/r and attenuation factors,  not for general use?
+
+              viewangle_temp=viewangles[iviewangle]; //grab the viewing angle from this array
+              //apply the gaussian dependence away from the cerenkov angle.  vmmhz_temp is both an input and an output.
+              //vmmhz_temp as an output is the signal with the angular dependence applied.
+              sig1->TaperVmMHz(viewangle_temp, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_temp, djunk);
+              forseckel[iviewangle][k]=vmmhz_temp;// put this in an array which we will plot later.
+            } //for (loop over viewing angles)
+          } //if (settings1->FORSECKEL==1)
+
+          //if (settings1->ROUGHNESS==0) {// we apply this normal angular dependence if we are not dealing with roughness here
+          sig1->TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz[k], vmmhz_em[k]);// this applies the angular dependence.
+            // viewangle is which viewing angle we are at
+            // deltheta_em is the width of the em component at this frequency
+            // deltheta_had is the width of the had component at this frequency
+            // emfrac is the em fraction of the shower
+            // hadfrac is the hadronic fraction of the shower
+            // vmmhz is the strength of the signal in V/m/MHz at this viewing angle
+            // vmmhz_em is the strength of the em component
+
+          Tools::Zero(sumsignal_aftertaper, 5);
+          if (bn1->WHICHPATH==4)
+            IntegrateBands(anita1, k, vmmhz, anita1->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
+
+          vmmhz_lowfreq=vmmhz[0]; // for plotting,  vmmhz at the lowest frequency
+            // EH,  now here,  vmmhz array is the spectrum right infront of antennas (so not yet any detector properties are applied)
+          //GetVmMHz(vmmhz1m_max, vmmhz1m_max, pnu, vmmhz); //Get vmmhz in frequency domain before the antenna response,  for modeling time dependent pulses
+
+          // just want to see the maximum effect of viewing angle being off cerenkov cone
+          // should be at highest frequency
+          // just for plotting
+          maxtaper=-1000;
+          if (sig1->logscalefactor_taper>maxtaper)
+            maxtaper=sig1->logscalefactor_taper;
+
+          if (settings1->HIST==1 && !settings1->ONLYFINAL && bn1->WHICHPATH != 3 && k==Anita::NFREQ/2 && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES) {
+            if (interaction1->nuflavor=="nue")
+              pdgcode = 12;
+            else if (interaction1->nuflavor=="numu")
+              pdgcode = 14;
+            else if (interaction1->nuflavor=="nutau")
+              pdgcode = 16;
+              
+            tree18->Fill();
+            // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="nue" && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES)
+            //   tree18->Fill();
+            // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="numu" && tree19->GetEntries()<settings1->HIST_MAX_ENTRIES)
+            //   tree19->Fill();
+            // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="nutau" && tree20->GetEntries()<settings1->HIST_MAX_ENTRIES)
+            //   tree20->Fill();
+          }
+
+          if (bn1->WHICHPATH == 3)
+            interaction1->banana_volts += vmmhz[k]*(settings1->BW/(double)Anita::NFREQ/1.E6);
+        }//end for (int k=0;k<Anita::NFREQ;k++)
 
 
-      if (bn1->WHICHPATH==3 && interaction1->banana_volts != 0 && settings1->HIST && banana_tree->GetEntries()<settings1->HIST_MAX_ENTRIES) {
-        banana_tree->Fill();
-        //delete ray1;
-        //delete interaction1;
-        continue;
-      } //This is all the data needed for the banana plot - we now have the final value of vmmhz[]
-      else if (bn1->WHICHPATH==3 && interaction1->banana_volts == 0) {
-        //delete ray1;
-        //delete interaction1;
-        continue; //Exit the loop if there's no voltage here - no value at a point is the same as zero,  and this will save HD space
-      }
-      // reject if it is undetectable now that we have accounted for viewing angle
-      
-      //if (Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(bw/1.E6)<CHANCEINHELL_FACTOR*anita1->maxthreshold*Tools::dMin(VNOISE, settings1->NLAYERS) && !settings1->SKIPCUTS) {
-      if (settings1->CHANCEINHELL_FACTOR*Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS) {
-        //delete interaction1;
-        //delete ray1;
-        continue;
-      }
-      
+        if (bn1->WHICHPATH==3 && interaction1->banana_volts != 0 && settings1->HIST && banana_tree->GetEntries()<settings1->HIST_MAX_ENTRIES) {
+          banana_tree->Fill();
+          //delete ray1;
+          //delete interaction1;
+          continue;
+        } //This is all the data needed for the banana plot - we now have the final value of vmmhz[]
+        else if (bn1->WHICHPATH==3 && interaction1->banana_volts == 0) {
+          //delete ray1;
+          //delete interaction1;
+          continue; //Exit the loop if there's no voltage here - no value at a point is the same as zero,  and this will save HD space
+        }
+        // reject if it is undetectable now that we have accounted for viewing angle
+        
+        //if (Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(bw/1.E6)<CHANCEINHELL_FACTOR*anita1->maxthreshold*Tools::dMin(VNOISE, settings1->NLAYERS) && !settings1->SKIPCUTS) {
+        if (settings1->CHANCEINHELL_FACTOR*Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS) {
+          //delete interaction1;
+          //delete ray1;
+          continue;
+        }
+        
+      }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
+
       // just for plotting
       vmmhz_max=Tools::dMax(vmmhz, Anita::NFREQ);
       vmmhz_min=Tools::dMin(vmmhz, Anita::NFREQ);
@@ -2936,6 +3000,9 @@ int main(int argc,  char **argv) {
       // intermediate counting
       count1->nchanceinhell2[whichray]++;
       chanceinhell2=1;
+
+
+
 
       // make a global trigger object (but don't touch the electric fences)
       globaltrig1 = new GlobalTrigger(settings1, anita1);

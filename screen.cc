@@ -80,17 +80,24 @@ void Screen::ResetPositionIndex(){
   fpositionindex = 0;
 };
 
+double Screen::CalcXindex(int i){
+  return (double) (i % fNsamples);
+};
 
-Position Screen::GetNextPosition(){
+double Screen::CalcYindex(int i){
+  return (double) floor(i / fNsamples);
+};
+
+Position Screen::GetNextPosition(int i){
   Position pos;
 
-  float yindex = (float) floor(fpositionindex / fNsamples);
-  float xindex = (float) (fpositionindex % fNsamples);
+  double yindex = CalcYindex(i);
+  double xindex = CalcXindex(i);
 
   pos = fcentralPoint                                       // base
         - 0.5*fedgeLength*funit_x - 0.5*fedgeLength*fcosineProjectionFactor*funit_y              // shift to a corner
-        + (xindex/((float)(fNsamples-1)))*fedgeLength*funit_x   // move by x-increment
-        + (yindex/((float)(fNsamples-1)))*fedgeLength*fcosineProjectionFactor*funit_y;  // move by y-increment with the cosine projection correction
+        + (xindex/((double)(fNsamples)))*fedgeLength*funit_x   // move by x-increment
+        + (yindex/((double)(fNsamples)))*fedgeLength*fcosineProjectionFactor*funit_y;  // move by y-increment with the cosine projection correction
 
   fpositionindex++;
   //std::cerr<<fpositionindex<<"  "<<yindex<<"  "<<xindex<<std::endl;

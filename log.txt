@@ -836,3 +836,6 @@ Commented roughout stream. Added condition that event is skipped if transmitted 
 
 08/08/2016 13.22 PM ET M. Sutherland   [in branches/roughness]
 Simply saving some added parameters to the roughout stream.
+
+08/18/2016 14.55 PM ET M. Sutherland   [in branches/roughness]
+Added GetVmMHz() and TaperVmMHz() for each screen point. Added preliminary relative phases (but needs corrected to properly affect the time domain waveform). Added specular parameter calculation to beginning of roughness before the screen starts looping. Added index functions to Screen class to get the index values for plotting and looping.
