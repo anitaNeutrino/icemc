@@ -1387,7 +1387,6 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 	VNOISE[j]*=settings1->THERMALNOISE_FACTOR;
     }//for
     
-    
 }
 
 
@@ -3647,41 +3646,57 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       
       // HERE HPOL IS 0 AND VPOL IS 1
       std::ifstream PhaseCenterFile("data/phaseCenterPositionsRelativeToPhotogrammetryAnita3.dat");
-      Int_t antNum, pol;
+      Int_t antNum, tpol, pol;
       Double_t deltaR,deltaPhi,deltaZ, deltaT;
       char firstLine[180];
-      Double_t deltaRPhaseCentre[2][48]; //Relative to photogrammetry + ring offset
-      Double_t deltaZPhaseCentre[2][48]; //Relative to photogrammetry + ring offset
-      Double_t deltaPhiPhaseCentre[2][48]; //Relative to photogrammetry + ring offset
+      Double_t deltaRPhaseCentre[2][4][16]; //Relative to photogrammetry + ring offset
+      Double_t deltaZPhaseCentre[2][4][16]; //Relative to photogrammetry + ring offset
+      Double_t deltaPhiPhaseCentre[2][4][16]; //Relative to photogrammetry + ring offset
       
       PhaseCenterFile.getline(firstLine,179);
-      while(PhaseCenterFile >> antNum >> pol >> deltaR >> deltaPhi >> deltaZ) {
-	deltaRPhaseCentre[pol][antNum]=deltaR;
-	deltaPhiPhaseCentre[pol][antNum]=deltaPhi*TMath::DegToRad();
-	deltaZPhaseCentre[pol][antNum]=deltaZ;
+      // HERE HPOL IS 0 AND VPOL IS 1 that's why we invert pol here
+      while(PhaseCenterFile >> antNum >> tpol >> deltaR >> deltaPhi >> deltaZ) {
+	int ilayer = (antNum<16)*((antNum%2==0)*0 + (antNum%2==1)*1)+ (antNum>15)*(antNum<32)*2+(antNum>31)*3;
+	int ifold = (ilayer<2)*(antNum%8)+(ilayer>1)*(antNum%16);
+       
+	if (tpol==1) pol=0;
+	else if (tpol==0) pol=1;
+	
+	deltaRPhaseCentre[pol][ilayer][ifold]=deltaR;
+	deltaPhiPhaseCentre[pol][ilayer][ifold]=deltaPhi*TMath::DegToRad();
+	deltaZPhaseCentre[pol][ilayer][ifold]=deltaZ;
       } 
       PhaseCenterFile.close();
 
       // HERE HPOL IS 0 AND VPOL IS 1
-      //std::ifstream CableDelayFile("data/relativePhaseCenterToAmpaDelaysAnita3.dat");
-      std::ifstream CableDelayFile("data/relativeCableDelays_anita3.dat");
+      std::ifstream CableDelayFile("data/relativePhaseCenterToAmpaDelaysAnita3.dat");
+      //      std::ifstream CableDelayFile("data/relativeCableDelays_anita3.dat");
       
-      while(CableDelayFile >> pol >> antNum  >> deltaT) {
+      while(CableDelayFile >> tpol >> antNum  >> deltaT) {
 	int ilayer = (antNum<16)*((antNum%2==0)*0 + (antNum%2==1)*1)+ (antNum>15)*(antNum<32)*2+(antNum>31)*3;
 	int ifold = (ilayer<2)*(antNum%8)+(ilayer>1)*(antNum%16);
+	if (tpol==1) pol=0;
+	else if (tpol==0) pol=1;
 	deltaTPhaseCentre[pol][ilayer][ifold]=deltaT*1e-9; // convert from ns to seconds
 	// std::cout << pol << " " << antNum << " " << deltaTPhaseCentre[pol][antNum] << std::endl;
       } 
       CableDelayFile.close();
-      
+
+      double tempr;
       for(int ilayer = 0; ilayer < 4; ilayer++){ 
  	for(int iphi = 0; iphi < NRX_PHI[ilayer]; iphi++){
 	  // move from the square centers to the phase centers
 	  //IS ANTENNA_DOWN MEASURED CORRECTLY?
  	  ANTENNA_POSITION_START[ilayer][iphi] = ANTENNA_POSITION_START[ilayer][iphi] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[ilayer][iphi])*sin(90.*RADDEG+ANTENNA_DOWN[ilayer][iphi]), sin(PHI_EACHLAYER[ilayer][iphi])*sin(90.*RADDEG+ANTENNA_DOWN[ilayer][iphi]), cos(90.*RADDEG+ANTENNA_DOWN[ilayer][iphi]));
 
+	  // apply phase centers calibration (applying VPOL only for now) LINDATEMP
+	  tempr = sqrt( ANTENNA_POSITION_START[ilayer][iphi].GetX()*ANTENNA_POSITION_START[ilayer][iphi].GetX() + ANTENNA_POSITION_START[ilayer][iphi].GetY()*ANTENNA_POSITION_START[ilayer][iphi].GetY() );
 	  PHI_EACHLAYER[ilayer][iphi]=atan2(ANTENNA_POSITION_START[ilayer][iphi][1],ANTENNA_POSITION_START[ilayer][iphi][0]);
-	  // apply phase centers calibration (applying HPOL now)
+	  ANTENNA_POSITION_START[ilayer][iphi].SetX((tempr+deltaRPhaseCentre[1][ilayer][iphi])*cos(PHI_EACHLAYER[ilayer][iphi]+deltaPhiPhaseCentre[1][ilayer][iphi]));
+	  ANTENNA_POSITION_START[ilayer][iphi].SetY((tempr+deltaRPhaseCentre[1][ilayer][iphi])*sin(PHI_EACHLAYER[ilayer][iphi]+deltaPhiPhaseCentre[1][ilayer][iphi]));
+	  ANTENNA_POSITION_START[ilayer][iphi].SetZ(ANTENNA_POSITION_START[ilayer][iphi].GetZ()+deltaZPhaseCentre[1][ilayer][iphi]);
+
+
 	}
       }
     }
@@ -4068,10 +4083,7 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
      for(int iii = 0; iii < 4; iii++){ 
       for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++){
 		   
-       
        phi_deg = rf_tmp_dir.Phi();
-       
-      
       
        phi_eachlayer =atan2(ANTENNA_POSITION_START[iii][jjj][1],ANTENNA_POSITION_START[iii][jjj][0]);
        
@@ -4112,15 +4124,15 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
      // cout << "end of GetArrivalTimes.\n";
 } // GetArrivalTimes
 
-void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]) {
+void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX], Balloon *bn1,Settings *settings1) {
 
     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
       int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
       int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
       arrival_times[antenna_index] = (antenna_positions[antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
 
-           // FOR THE MOMENT JUST ADD VPOL CABLE DELAY
-      //arrival_times[antenna_index] +=deltaTPhaseCentre[1][ilayer][ifold];
+      // FOR THE MOMENT JUST ADD VPOL CABLE DELAY only for anita-3
+      if (bn1->WHICHPATH==8)  arrival_times[antenna_index] +=deltaTPhaseCentre[0][ilayer][ifold];
       //  arrival_times[antenna_index]=0;
     } // for: loop over antenna layers
     
