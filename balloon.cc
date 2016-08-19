@@ -571,9 +571,10 @@ void Balloon::GetAntennaOrientation(Settings *settings1, Anita *anita1, int ilay
     n_hplane = n_hplane.RotateZ(phi);
     n_normal = n_normal.RotateZ(phi);
    
-    n_eplane = RotatePayload(n_eplane);
+    n_eplane = RotatePayload(n_eplane); 
     n_hplane = RotatePayload(n_hplane);
     n_normal = RotatePayload(n_normal);
+
 } //end void GetAntennaOrientation
 
 
@@ -1069,9 +1070,16 @@ Vector Balloon::RotatePayload(Vector ant_pos_pre) {
   northaxis=northaxis.RotateY(BalloonTheta);
   eastaxis=eastaxis.RotateY(BalloonTheta);
 
-  ant_pos=ant_pos.RotateZ(-1*BalloonPhi);
-  northaxis = northaxis.RotateZ(-1*BalloonPhi);
-  eastaxis = eastaxis.RotateZ(-1*BalloonPhi);
+  if (WHICHPATH==8){ //ANITA-3
+    ant_pos=ant_pos.RotateZ(BalloonPhi);
+    northaxis = northaxis.RotateZ(BalloonPhi);
+    eastaxis = eastaxis.RotateZ(BalloonPhi);
+  } else {
+    ant_pos=ant_pos.RotateZ(-1*BalloonPhi);
+    northaxis = northaxis.RotateZ(-1*BalloonPhi);
+    eastaxis = eastaxis.RotateZ(-1*BalloonPhi);
+  }
+
   // cout<<"northaxis is "<<northaxis<<" n_north is "<<n_north<<"\n";
   // cout<<"eastaxis is "<<eastaxis<<" n_east is "<<n_east<<"\n";
   this->x_axis_rot = xaxis;
