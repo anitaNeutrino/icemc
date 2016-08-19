@@ -1001,10 +1001,10 @@ int whichlayer,whichphisector;
  
     for (int i=0;i<2;i++) {
 
-      for (int ibin=0;ibin<globaltrig1->arrayofhits[whichlayer][whichphisector][i][4].size();ibin++) {
+      for (unsigned int ibin=0;ibin<globaltrig1->arrayofhits[whichlayer][whichphisector][i][4].size();ibin++) {
 	anita1->arrayofhits_inanita[whichlayer][whichphisector][i][ibin]=globaltrig1->arrayofhits[whichlayer][whichphisector][i][4][ibin];
       }
-      for (int ibin=globaltrig1->arrayofhits[whichlayer][whichphisector][i][4].size();ibin<HALFNFOUR;ibin++) {
+      for (unsigned int ibin=globaltrig1->arrayofhits[whichlayer][whichphisector][i][4].size();ibin<HALFNFOUR;ibin++) {
 	anita1->arrayofhits_inanita[whichlayer][whichphisector][i][ibin]=0.;
       }
 //       if (j==4 && i==0)
@@ -2042,7 +2042,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	for (int ipol=0;ipol<2;ipol++) {
 	  for (int iphi=0;iphi<16;iphi++) {
 
-	    for (int ibin=0;ibin<vl1trig[ipol][iphi].size();ibin++) {
+	    for (unsigned int ibin=0;ibin<vl1trig[ipol][iphi].size();ibin++) {
 	      anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=vl1trig[ipol][iphi][ibin];
 	      // if (anita1->l1trig_anita3_inanita[ipol][iphi][ibin])
 // 		cout << "This l1 is 1.\n";
@@ -2092,7 +2092,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	for (int ipol=0;ipol<2;ipol++) {
 	  for (int iphi=0;iphi<16;iphi++) {
 
-	    for (int ibin=0;ibin<vl1trig[ipol][iphi].size();ibin++) {
+	    for (unsigned int ibin=0;ibin<vl1trig[ipol][iphi].size();ibin++) {
 	      anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=vl1trig[ipol][iphi][ibin];
 	     
 // 	      if (anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin])
@@ -2241,7 +2241,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 
 	for (int ilayer=0;ilayer<anita1->NTRIGGERLAYERS;ilayer++) {
 	  for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
-	    for (int ibin=0;ibin<vl1trig_anita4lr_scb[ilayer][iphi].size();ibin++) {
+	    for (unsigned int ibin=0;ibin<vl1trig_anita4lr_scb[ilayer][iphi].size();ibin++) {
 	      anita1->l1trig_anita4lr_inanita[ilayer][iphi][ibin]=vl1trig_anita4lr_scb[ilayer][iphi][ibin];
 	    }
 	    for (int ibin=vl1trig_anita4lr_scb[ilayer][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
@@ -2256,7 +2256,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 
 
 	for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
-	  for (int ibin=0;ibin<vl2_realtime_anita4_scb[iphi][1].size();ibin++) {
+	  for (unsigned int ibin=0;ibin<vl2_realtime_anita4_scb[iphi][1].size();ibin++) {
 	    anita1->l2trig_anita4lr_inanita[iphi][1][ibin]=vl2_realtime_anita4_scb[iphi][1][ibin];
 	    
 	  }
@@ -2265,15 +2265,14 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	  }
 	  Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l2trig_anita4lr_inanita[iphi][1],anita1->l2trig_anita4lr_forgaryanderic[iphi]);
 	  
-	  for (int ibin=0;ibin<vl3trig_type0[iphi].size();ibin++) {
-	    
+	  for (unsigned int ibin=0;ibin<vl3trig_type0[iphi].size();ibin++) {
 	    anita1->l3type0trig_anita4lr_inanita[iphi][ibin]=vl3trig_type0[iphi][ibin];
 	  }
 	  for (int ibin=vl3trig_type0[iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
 	    anita1->l3type0trig_anita4lr_inanita[iphi][ibin]=0;
 	  }
 	  Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l3type0trig_anita4lr_inanita[iphi],anita1->l3type0trig_anita4lr_forgaryanderic[iphi]);
-	  for (int ibin=0;ibin<vl3trig_type1[iphi].size();ibin++) {
+	  for (unsigned int ibin=0;ibin<vl3trig_type1[iphi].size();ibin++) {
 	    
 	    anita1->l3trig_anita4lr_inanita[iphi][ibin]=vl3trig_type1[iphi][ibin];
 	  }
@@ -3563,7 +3562,7 @@ void GlobalTrigger::L2Anita3and4(Anita *anita1,std::array<std::array<std::vector
   for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
     for (int ipolar=0;ipolar<2;ipolar++) {
       //cout << "iphi, ipolar, size is " <<  iphi << "\t" << ipolar << "\t" << vl1trig[ipolar][iphi].size() << "\n";
-      for (int ibin=0;ibin<vl1trig[ipolar][iphi].size();ibin++) {
+      for (unsigned int ibin=0;ibin<vl1trig[ipolar][iphi].size();ibin++) {
 	//cout << "ipolar, iphi , ibin are " << ipolar << "\t" << iphi << "\t" << ibin << "\n";
 // 	if (vl1trig[ipolar][iphi][ibin])
 // 	  cout << "actually a nonzero l1trig.\n";
@@ -3588,7 +3587,7 @@ void GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std::vector
       if (iphi_neighbor!=iphi) {
       iphimod16_neighbor=(iphi_neighbor+16)%16;
       //cout << "L3_COINCIDENCE is " << L3_COINCIDENCE << "\n";
-      for (int ibin=0;ibin<vl2trig[ipolar][iphi].size();ibin++) {
+      for (unsigned int ibin=0;ibin<vl2trig[ipolar][iphi].size();ibin++) {
 	if (ibin+(int)(L3_COINCIDENCE/TRIGTIMESTEP)<vl2trig[ipolar][iphimod16_neighbor].size()) {
 	if (vl2trig[ipolar][iphi][ibin] && 
 	    findahit(vl2trig[ipolar][iphimod16_neighbor],ibin,ibin+(int)(L3_COINCIDENCE/TRIGTIMESTEP))) {
@@ -3824,7 +3823,7 @@ void GlobalTrigger::L3Anita4LR_ScA(Anita *anita1,std::array<std::array<std::vect
 
 
       
-      for (int ibin=0;ibin<vl2trig[ipolar][iphi].size();ibin++) {
+      for (unsigned int ibin=0;ibin<vl2trig[ipolar][iphi].size();ibin++) {
 
 	if (vl2trig[ipolar][iphi][ibin]) {
 
