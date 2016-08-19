@@ -4071,7 +4071,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     gH->SetLineWidth(2);
     gH->SetMarkerStyle(21);
     gH->Draw("ape");
-    stemp = settings1->outputdir+"thresholds_HPOL.eps";
+    stemp = settings1->outputdir+"/thresholds_HPOL.eps";
     cthresh->Print((TString)stemp);
     
     gH->Write();
