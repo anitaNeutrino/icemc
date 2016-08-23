@@ -3657,8 +3657,8 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       // HERE HPOL IS 0 AND VPOL IS 1 that's why we invert pol here
       while(PhaseCenterFile >> antNum >> tpol >> deltaR >> deltaPhi >> deltaZ) {
 	int ilayer = (antNum<16)*((antNum%2==0)*0 + (antNum%2==1)*1)+ (antNum>15)*(antNum<32)*2+(antNum>31)*3;
-	int ifold = (ilayer<2)*(antNum%8)+(ilayer>1)*(antNum%16);
-       
+	int ifold = (ilayer<2)*((antNum-ilayer)/2)+(ilayer>1)*(antNum%16);
+
 	if (tpol==1) pol=0;
 	else if (tpol==0) pol=1;
 	
@@ -3674,7 +3674,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       
       while(CableDelayFile >> tpol >> antNum  >> deltaT) {
 	int ilayer = (antNum<16)*((antNum%2==0)*0 + (antNum%2==1)*1)+ (antNum>15)*(antNum<32)*2+(antNum>31)*3;
-	int ifold = (ilayer<2)*(antNum%8)+(ilayer>1)*(antNum%16);
+	int ifold = (ilayer<2)*((antNum-ilayer)/2)+(ilayer>1)*(antNum%16);
 	if (tpol==1) pol=0;
 	else if (tpol==0) pol=1;
 	deltaTPhaseCentre[pol][ilayer][ifold]=deltaT*1e-9; // convert from ns to seconds
@@ -3695,7 +3695,6 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 	  ANTENNA_POSITION_START[ilayer][iphi].SetX((tempr+deltaRPhaseCentre[1][ilayer][iphi])*cos(PHI_EACHLAYER[ilayer][iphi]+deltaPhiPhaseCentre[1][ilayer][iphi]));
 	  ANTENNA_POSITION_START[ilayer][iphi].SetY((tempr+deltaRPhaseCentre[1][ilayer][iphi])*sin(PHI_EACHLAYER[ilayer][iphi]+deltaPhiPhaseCentre[1][ilayer][iphi]));
 	  ANTENNA_POSITION_START[ilayer][iphi].SetZ(ANTENNA_POSITION_START[ilayer][iphi].GetZ()+deltaZPhaseCentre[1][ilayer][iphi]);
-
 
 	}
       }
