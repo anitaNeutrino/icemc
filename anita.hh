@@ -52,7 +52,9 @@ static const int NPOL=2; // number of polarizations
     static const int NPHI_MAX=400; // max number of antennas around in phi (in smex, 16)
     Vector ANTENNA_POSITION_START[NLAYERS_MAX][NPHI_MAX]; // antenna positions from Kurt's measurements
     double ANTENNA_DOWN[NLAYERS_MAX][NPHI_MAX]; // down angles of antennas from Kurt's measurements
-    
+  double SIMON_DELTA_R[NLAYERS_MAX][NPHI_MAX]; // measurements by Simon used in analysis ANITA-2
+    double SIMON_DELTA_PHI[NLAYERS_MAX][NPHI_MAX]; // measurements by Simon used in analysis ANITA-2
+   
   Vector antenna_positions[NLAYERS_MAX * NPHI_MAX]; // these are the antenna positions in space in a coordinate system where x=north and y=west and the origin is at the center of the payload
     
     int NRX_PHI[NLAYERS_MAX]; // number of antennas around in each layer. (radians)
@@ -72,7 +74,10 @@ static const int NPOL=2; // number of polarizations
     double LAYER_HPOSITION[Anita::NLAYERS_MAX]; // distance in horizontal plane between center axis of the "payload" and each "layer".
     double LAYER_PHIPOSITION[Anita::NLAYERS_MAX];//phi corresponding to the position of each "layer" on the "payload"
     double RRX[Anita::NLAYERS_MAX]; // radius that the antenna sits from the axis of the payload (feedpoint)
-    
+    Double_t deltaTPhaseCentre[2][NLAYERS_MAX][NPHI_MAX]; //Relative to photogrammetry + ring offset
+
+
+  
     Anita(); // constructor
     ~Anita();
     void Initialize(Settings *settings1,ofstream &foutput,int inu); // initialize a bunch of stuff
@@ -370,7 +375,8 @@ TTree *tgaryanderic; // writing data out for the analysers
     
     void myconvlv(double *timedomain_forconvl,const int NFOUR,double *fdiode,double &maxdiodeconvl,double &onediodeconvl,double *power_noise,double *diodeconv);
     
-  void GetArrivalTimes(const Vector& rf_direction);
+  void GetArrivalTimes(const Vector& rf_direction,Balloon *bn1,Settings *settings1);
+  void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX], Balloon *bn1,Settings *settings1);
   int rx_minarrivaltime;
   double arrival_times[NLAYERS_MAX*NPHI_MAX];
 
@@ -589,7 +595,9 @@ TTree *tgaryanderic; // writing data out for the analysers
     
     double SIGMA_THETA; // resolution on the polar angle of the signal
 
-  void readImpulseResponse();
+#ifdef ANITA_UTIL_EXISTS
+  void readImpulseResponse(Settings *settings1);
+#endif
   TGraph *fSignalChainResponse[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   double deltaT;
  

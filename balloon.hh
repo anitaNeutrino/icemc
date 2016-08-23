@@ -139,10 +139,13 @@ public:
   Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //position of antenna boresights
 
   void GetBoresights(Settings *settings1,Anita *anita1);
-  Vector RotatePayload(Vector ant_pos);
+  Vector RotatePayload(Vector ant_pos);//rotate from payload coord to earth coord
+  Vector unRotatePayload(Vector ant_pos);//rotate from earth to payload coord. (undoes RotatePayload)
   void calculate_antenna_positions(Settings *settings1,Anita *anita1);// this calculates the above 
 
-
+  Vector x_axis_rot;
+  Vector y_axis_rot;
+  Vector z_axis_rot;
   Vector n_bn; // normalized r_bn
   Vector n_east; // east, as seen from the balloon position
   Vector n_north; // north, as seen from the balloon position

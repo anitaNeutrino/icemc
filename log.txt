@@ -939,3 +939,6 @@ Added GetVmMHz() and TaperVmMHz() for each screen point. Added preliminary relat
 
 08/18/2016 19.45 PM ET M. Sutherland   [in branches/roughness]
 copied Brian's updates in trunk into the branch.
+
+08/18/2016 13.19 PM ET M. Sutherland   [in branches/roughness]
+copied Linda's updates in trunk into the branch.

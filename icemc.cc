@@ -628,8 +628,6 @@ int main(int argc,  char **argv) {
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);
 
-
-
   bn1->InitializeBalloon();
   anita1->Initialize(settings1, foutput, inu);
 
@@ -701,7 +699,6 @@ int main(int argc,  char **argv) {
   //added djg ////////////////////////////////////////////////////////
   al_voltages_direct<<"antenna #"<<"   "<<"volts chan 1"<<"   "<<"volts chan 2"<<"    "<<"volts chan 3"<<"    "<<"volts chan 4"<<"    "<<"noise chan 1"<<"    "<<"noise chan 2"<<"    "<<"noise chan 3"<<"   "<<"noise chan 4"<<"  "<<"weight"<<endl;
   ////////////////////////////////////////////////////////////////////
-  
   
   /*
   for (int i=0;i<4;i++) {
@@ -863,6 +860,7 @@ int main(int argc,  char **argv) {
 
   double sourceLon;
   double sourceLat;
+  double sourceMag;
  
   //Position posnu; // direction from center of earth to interaction
   //Position posnu_down; //downward posnu
@@ -1021,7 +1019,7 @@ int main(int argc,  char **argv) {
   tree5->Branch("theta_in", &theta_in, "theta_in/D");
   tree5->Branch("lat_in", &lat_in, "lat_in/D");
   
-  
+    
   TTree *tree6 = new TTree("h6000", "h6000"); // tree6 filled for neutrinos that enter S of 60 deg S latitude.
   tree6->Branch("volts_rx_0", &volts_rx_0, "volts_rx_0/D");
   tree6->Branch("volts_rx_1", &volts_rx_1, "volts_rx_1/D");
@@ -1263,6 +1261,7 @@ int main(int argc,  char **argv) {
   finaltree->Branch("ptauf", &ptauf, "ptauf/D");
   finaltree->Branch("sourceLon", &sourceLon, "sourceLon/D");
   finaltree->Branch("sourceLat", &sourceLat, "sourceLat/D");
+  finaltree->Branch("sourceMag", &sourceMag, "sourceMag/D");
   
   TTree *mytaus_tree = new TTree("mytaus", "mytaus");
   mytaus_tree->Branch("taus",  &TauPtr);
@@ -1478,7 +1477,6 @@ int main(int argc,  char **argv) {
   
   
 
-
   // set up balloontree 
 
   TTree *balloontree = new TTree("balloon", "balloon"); //filled for all events
@@ -1641,7 +1639,7 @@ int main(int argc,  char **argv) {
     Vector x = Vector(cos(angle_theta * RADDEG) * cos((angle_phi+11.25) * RADDEG),
                       cos(angle_theta * RADDEG) * sin((angle_phi+11.25) * RADDEG),
                       sin(angle_theta * RADDEG));  
-    anita1->GetArrivalTimes(x);
+    anita1->GetArrivalTimes(x,bn1,settings1);
     cout << "end of getarrivaltimes\n";
   }
 
@@ -3011,7 +3009,10 @@ int main(int argc,  char **argv) {
       globaltrig1 = new GlobalTrigger(settings1, anita1);
       
       Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-      anita1->GetArrivalTimes(ray1->n_exit2bn[2]);
+      if(settings1->BORESIGHTS)
+	anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2],bn1,settings1);
+      else
+	anita1->GetArrivalTimes(ray1->n_exit2bn[2],bn1,settings1);
       
       anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times, settings1->NANTENNAS);
 
@@ -3732,9 +3733,12 @@ int main(int argc,  char **argv) {
               delete Adu5PatPtr;
 #endif
 
-              sourceLon = interaction1->nuexit.Lon() - 180;
-              sourceLat = interaction1->nuexit.Lat();
-
+              // sourceLon = interaction1->nuexit.Lon() - 180;
+              // sourceLat = interaction1->nuexit.Lat();
+              sourceLon = ray1->rfexit[2].Lon() - 180;
+              sourceLat = ray1->rfexit[2].Lat() - 90;
+	      sourceMag = ray1->rfexit[2].Mag();
+	      
               finaltree->Fill();
               count1->IncrementWeights_r_in(interaction1->r_in, weight);
             } //end if HIST & HISTMAXENTRIES
@@ -4148,7 +4152,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     gH->SetLineWidth(2);
     gH->SetMarkerStyle(21);
     gH->Draw("ape");
-    stemp = settings1->outputdir+"thresholds_HPOL.eps";
+    stemp = settings1->outputdir+"/thresholds_HPOL.eps";
     cthresh->Print((TString)stemp);
     
     gH->Write();
