@@ -12,6 +12,7 @@ class Balloon;
 class IceModel;
 class Settings;
 class TRandom3;
+class Screen;
 
 //!  Global Trigger
 class GlobalTrigger {
@@ -242,7 +243,7 @@ private:
 public:
     
     AntTrigger(); // constructor
-    AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512]); 
+    AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512]); 
     //AntTrigger(int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,int rx_minarrivaltime_temp); 
     static void ConvertEHtoLREfield(double,double,double&,double&);
     static void ConvertEHtoLREnergy(double,double,double&,double&);
@@ -315,7 +316,7 @@ public:
     // End of band waveform triggering arrays
     
     double integral_vmmhz;
-    
+    double integral_vmmhz_r[Anita::NFREQ];
     
     // this increments the bwslice_volts_...'s at each frequency
     void addToChannelSums(Settings *settings1,Anita *anita1,int ibw,int k);

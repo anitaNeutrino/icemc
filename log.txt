@@ -942,3 +942,6 @@ copied Brian's updates in trunk into the branch.
 
 08/18/2016 13.19 PM ET M. Sutherland   [in branches/roughness]
 copied Linda's updates in trunk into the branch.
+
+XX/XX/2016   [in branches/roughness]
+Created vectors in Screen to hold the vmmhz magnitudes for each frequency and phase delay of each point. Added member functions for accessing those. Modified AntTrigger::AntTrigger in trigger.cc/.hh to access the screen instance. Added parameter for tracking number of valid screen points and access functions in Screen. AntTrigger::integral_vmmhz now uses sum of screen points in roughness case. Merged latest updates from trunk into the branch.

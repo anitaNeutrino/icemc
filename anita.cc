@@ -3668,7 +3668,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       } 
       PhaseCenterFile.close();
 
-      // HERE HPOL IS 0 AND VPOL IS 1
+      // HERE HPOL IS 0 AND VPOL IS 1 that's why we invert pol here
       std::ifstream CableDelayFile("data/relativePhaseCenterToAmpaDelaysAnita3.dat");
       //      std::ifstream CableDelayFile("data/relativeCableDelays_anita3.dat");
       
@@ -3682,20 +3682,26 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       } 
       CableDelayFile.close();
 
-      double tempr;
+      double x, y, z, r, phi;
       for(int ilayer = 0; ilayer < 4; ilayer++){ 
- 	for(int iphi = 0; iphi < NRX_PHI[ilayer]; iphi++){
-	  // move from the square centers to the phase centers
-	  //IS ANTENNA_DOWN MEASURED CORRECTLY?
- 	  ANTENNA_POSITION_START[ilayer][iphi] = ANTENNA_POSITION_START[ilayer][iphi] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[ilayer][iphi])*sin(90.*RADDEG+ANTENNA_DOWN[ilayer][iphi]), sin(PHI_EACHLAYER[ilayer][iphi])*sin(90.*RADDEG+ANTENNA_DOWN[ilayer][iphi]), cos(90.*RADDEG+ANTENNA_DOWN[ilayer][iphi]));
-
+ 	for(int ifold = 0; ifold < NRX_PHI[ilayer]; ifold++){
+	  
+	  ANTENNA_POSITION_START[ilayer][ifold] = ANTENNA_POSITION_START[ilayer][ifold] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(ANTENNA_DOWN[ilayer][ifold]));
+	  
+	  x = ANTENNA_POSITION_START[ilayer][ifold].GetX();
+	  y = ANTENNA_POSITION_START[ilayer][ifold].GetY();
+	  
 	  // apply phase centers calibration (applying VPOL only for now) LINDATEMP
-	  tempr = sqrt( ANTENNA_POSITION_START[ilayer][iphi].GetX()*ANTENNA_POSITION_START[ilayer][iphi].GetX() + ANTENNA_POSITION_START[ilayer][iphi].GetY()*ANTENNA_POSITION_START[ilayer][iphi].GetY() );
-	  PHI_EACHLAYER[ilayer][iphi]=atan2(ANTENNA_POSITION_START[ilayer][iphi][1],ANTENNA_POSITION_START[ilayer][iphi][0]);
-	  ANTENNA_POSITION_START[ilayer][iphi].SetX((tempr+deltaRPhaseCentre[1][ilayer][iphi])*cos(PHI_EACHLAYER[ilayer][iphi]+deltaPhiPhaseCentre[1][ilayer][iphi]));
-	  ANTENNA_POSITION_START[ilayer][iphi].SetY((tempr+deltaRPhaseCentre[1][ilayer][iphi])*sin(PHI_EACHLAYER[ilayer][iphi]+deltaPhiPhaseCentre[1][ilayer][iphi]));
-	  ANTENNA_POSITION_START[ilayer][iphi].SetZ(ANTENNA_POSITION_START[ilayer][iphi].GetZ()+deltaZPhaseCentre[1][ilayer][iphi]);
+	  r = sqrt(pow(x,2)+pow(y,2)) + deltaRPhaseCentre[0][ilayer][ifold];
+	  phi = atan2(y,x) + deltaPhiPhaseCentre[0][ilayer][ifold];
+	  z = ANTENNA_POSITION_START[ilayer][ifold].GetZ() + deltaZPhaseCentre[0][ilayer][ifold];	  
 
+	  if(phi<0) phi+=TMath::TwoPi();
+	  if(phi>TMath::TwoPi()) phi-=TMath::TwoPi();
+	  
+	  ANTENNA_POSITION_START[ilayer][ifold]= Vector(r*cos(phi),r*sin(phi),z);
+	  PHI_EACHLAYER[ilayer][ifold]=phi;
+	  
 	}
       }
     }

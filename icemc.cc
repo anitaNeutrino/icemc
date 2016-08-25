@@ -2518,7 +2518,7 @@ int main(int argc,  char **argv) {
         Attenuate(antarctica, settings1, vmmhz1m_fresneledtwice,  interaction1->posnu.Distance(ray1->rfexit[2]),  interaction1->posnu);
         /////////////
 
-
+        int num_validscreenpoints = 0;
         Position pos_current;
         Vector pos_current_localnormal; // local normal at point on ground below screen current point
         Vector vec_pos_current_to_balloon;
@@ -2702,10 +2702,18 @@ int main(int argc,  char **argv) {
             sig1->TaperVmMHz(viewangle_local, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local[k], vmmhz_em[k]);// this applies the angular dependence.
           }
 
+          // increment the valid point counter so we can track the size of the screen's vmmhz_freq vector
+          num_validscreenpoints++;
+
           //add the contribution to the running total
           for (int k=0;k<Anita::NFREQ;k++) {
-            vmmhz[k] += vmmhz_local[k] * cos( TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[k]/CLIGHT );
+            //vmmhz[k] += vmmhz_local[k] * cos( TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[k]/CLIGHT );
+            vmmhz[k] += vmmhz_local[k];
+            panel1->SetVmmhz_freq(vmmhz_local[k]);
           }
+
+          // for each point, push back the magnitude for each frequency, and the corresponding relative phase delay
+          panel1->SetDelay( cos(TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT) );
 
           roughout<<inu<<"  "
                   <<ii<<"  "
@@ -3111,7 +3119,7 @@ int main(int argc,  char **argv) {
           //   }
           // }
 	  
-          AntTrigger *anttrig1 = new AntTrigger(settings1,  ilayer,  ifold,  vmmhz,  anita1,  hitangle_e,  hitangle_h,  e_component,  h_component,  anita1->arrival_times,  volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
+          AntTrigger *anttrig1 = new AntTrigger(settings1,  ilayer,  ifold,  vmmhz,  panel1,  anita1,  hitangle_e,  hitangle_h,  e_component,  h_component,  anita1->arrival_times,  volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
 	  
 	  

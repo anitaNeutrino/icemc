@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <math.h>
+#include <vector>
 
 #include "Constants.h"
 #include "spline.h"

@@ -1026,7 +1026,7 @@ int whichlayer,whichphisector;
  *
  *
  */
-AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
+AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
 {
   unwarned=1;
   for (int ipol=0;ipol<2;ipol++) {
@@ -1058,11 +1058,28 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
   // this gets written to a tree because it is a measure of signal strength in the frequency domain
   integral_vmmhz=0.;
-    
+  //used if roughness, to first determine total of a frequency for all screen points
   for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-    integral_vmmhz+=vmmhz[ifreq]*(anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
+    integral_vmmhz_r[ifreq] = 0.;
   }
-    
+
+  if(settings1->ROUGHNESS==0){
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+      integral_vmmhz+=vmmhz[ifreq]*(anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
+    }
+  }
+  else{ // for each frequency, add all screen points
+    int jf;
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+      for (int npts=0; npts<panel1->GetNvalidPoints(); npts++){
+        jf = (npts * anita1->NFREQ) + ifreq;
+        integral_vmmhz_r[ifreq] += panel1->GetVmmhz_freq[jf] // integrate vmmhz
+      }
+    }
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+      integral_vmmhz += integral_vmmhz_r[ifreq] * (anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
+    }
+  }
     
   double vhz_rx_e[Anita::NFREQ]={0.}; // V/Hz after antenna gains
   double vhz_rx_h[Anita::NFREQ]={0.};
