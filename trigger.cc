@@ -22,6 +22,7 @@
 #include <cmath>
 #include "Tools.h"
 #include "Settings.h"
+#include "screen.hh"
 
 using std::cout;
 
@@ -1073,7 +1074,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, S
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
       for (int npts=0; npts<panel1->GetNvalidPoints(); npts++){
         jf = (npts * anita1->NFREQ) + ifreq;
-        integral_vmmhz_r[ifreq] += panel1->GetVmmhz_freq[jf] // integrate vmmhz
+        integral_vmmhz_r[ifreq] += panel1->GetVmmhz_freq(jf); // integrate vmmhz
       }
     }
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
