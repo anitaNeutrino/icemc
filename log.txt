@@ -948,3 +948,6 @@ Created vectors in Screen to hold the vmmhz magnitudes for each frequency and ph
 
 08/25/2016 10.03 AM ET M. Sutherland   [in branches/roughness]
 Forgot to test-compile before committing, so updating with some changes in trigger.cc to resolve compile errors related to Screen member access in AntTrigger().
+
+08/26/2016 12.27 PM ET M. Sutherland   [in branches/roughness]
+Commented TCint.h in rx.hpp to allow root6 compilation.
