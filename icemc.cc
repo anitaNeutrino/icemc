@@ -2626,10 +2626,10 @@ int main(int argc,  char **argv) {
 
           // gets angle between this screen ray and neutrino direction
           viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
-          if(viewangle_local>1.57 && !settings1->SKIPCUTS) { //discard the event if viewangle_local is greater than 90 degrees
+          //if(viewangle_local>1.57 && !settings1->SKIPCUTS) { //discard the event if viewangle_local is greater than 90 degrees
             //delete interaction1;
-            continue;
-          }
+            //continue;
+          //}
 
           tempdoub=Tools::dMin((viewangle_local-sig1->changle)/(deltheta_em_max), (viewangle_local-sig1->changle)/(deltheta_had_max));
           if (tempdoub>Signal::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
@@ -2709,11 +2709,13 @@ int main(int argc,  char **argv) {
           for (int k=0;k<Anita::NFREQ;k++) {
             //vmmhz[k] += vmmhz_local[k] * cos( TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[k]/CLIGHT );
             vmmhz[k] += vmmhz_local[k];
-            panel1->SetVmmhz_freq(vmmhz_local[k]);
+            panel1->AddVmmhz_freq(vmmhz_local[k]);
           }
+          panel1->AddVec2bln(vec_pos_current_to_balloon);
+          panel1->AddPol(npol_local_trans);
 
           // for each point, push back the magnitude for each frequency, and the corresponding relative phase delay
-          panel1->SetDelay( cos(TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT) );
+          panel1->AddDelay( TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT );
 
           roughout<<inu<<"  "
                   <<ii<<"  "
@@ -2753,6 +2755,7 @@ int main(int argc,  char **argv) {
           Efield_screentotal = Efield_screentotal + Efield_local;
         }//end for ii < fSCREEN....
 
+        panel1->SetNvalidPoints(num_validscreenpoints);
 
         // these variables are used downstream, so best to set it here
         // Calculate the electric field magnitude at the balloon

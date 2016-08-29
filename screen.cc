@@ -104,7 +104,7 @@ Position Screen::GetNextPosition(int i){
   return pos;
 };
 
-void Screen::SetVmmhz_freq(double A){
+void Screen::AddVmmhz_freq(double A){
   //here i refers to the 'screen' loop
   fVmmhz_freq.push_back(A);
 };
@@ -113,7 +113,7 @@ double Screen::GetVmmhz_freq(int i){
   return fVmmhz_freq[i];
 };
 
-void Screen::SetDelay(double A){
+void Screen::AddDelay(double A){
   fDelays.push_back(A);
 };
 
@@ -129,4 +129,18 @@ double Screen::GetNvalidPoints(){
   return fNvalidpoints;
 };
 
+void Screen::AddVec2bln(Vector v){
+  fVec2blns.push_back(v);
+};
 
+Vector Screen::GetVec2bln(int i){
+  return fVec2blns[i];
+};
+
+void Screen::AddPol(Vector v){
+  fPols.push_back(v);
+};
+
+Vector Screen::GetPol(int i){
+  return fPols[i];
+};

@@ -38,6 +38,8 @@ private:
 
   std::vector<double> fVmmhz_freq; //container for the valid screen points giving the frequency dependence magnitude for each point; every anita::NFREQ will be each screen point; final size will be (anita::NFREQ * fNsamples)
   std::vector<double> fDelays;     //container for the relative propagation phase delays; final size will be anita::NFREQ after the push_backs
+  std::vector<Vector> fVec2blns;  //container of 'vector to balloon'
+  std::vector<Vector> fPols;      //container of transmitted polarizations
 
   
 
@@ -76,16 +78,24 @@ public:
 
   Position GetNextPosition(int i);
 
-  void SetVmmhz_freq(double A);
+  void AddVmmhz_freq(double A);
 
   double GetVmmhz_freq(int i);
 
-  void SetDelay(double A);
+  void AddDelay(double A);
 
   double GetDelay(int i);
 
   void SetNvalidPoints(int i);
 
   double GetNvalidPoints();
+
+  void AddVec2bln(Vector v);
+
+  Vector GetVec2bln(int i);
+
+  void AddPol(Vector v);
+
+  Vector GetPol(int i);
 };
 #endif
