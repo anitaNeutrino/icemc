@@ -2768,6 +2768,18 @@ int main(int argc,  char **argv) {
       }//end else roughness
 
       roughout.close();
+
+      //if no-roughness case, add its parameters to the saved screen parameters
+      if(!settings1->ROUGHNESS){
+        panel1->SetNvalidPoints(1);
+        for (int k=0;k<Anita::NFREQ;k++) {
+          panel1->AddVmmhz_freq(vmmhz[k]);
+        }
+        panel1->AddVec2bln(ray1->n_exit2bn[2]);
+        panel1->AddPol(n_pol);
+        panel1->AddDelay( 0. );
+      }
+
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
       //if (vmmhz1m_fresneledtwice*heff_max*0.5*(bw/1.E6)<CHANCEINHELL_FACTOR*anita1->maxthreshold*Tools::dMin(VNOISE, settings1->NLAYERS) && !settings1->SKIPCUTS) {
@@ -3095,6 +3107,8 @@ int main(int argc,  char **argv) {
 
       for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
         for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
+          AntTrigger *anttrig1 = new AntTrigger();
+
           // get the angle ray makes with e-plane, h-plane
           // and component of polarization along e-plane and h-plane
           bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
@@ -3122,7 +3136,7 @@ int main(int argc,  char **argv) {
           //   }
           // }
 	  
-          AntTrigger *anttrig1 = new AntTrigger(settings1,  ilayer,  ifold,  vmmhz,  panel1,  anita1,  hitangle_e,  hitangle_h,  e_component,  h_component,  anita1->arrival_times,  volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
+          anttrig1->RunTrigger(settings1,  ilayer,  ifold,  vmmhz,  panel1,  anita1,  hitangle_e,  hitangle_h,  e_component,  h_component,  anita1->arrival_times,  volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
 	  
 	  

@@ -954,3 +954,6 @@ Commented TCint.h in rx.hpp to allow root6 compilation.
 
 08/29/2016 13.15 PM ET M. Sutherland   [in branches/roughness]
 Removed viewangle_local cut. Renamed Screen::Set vectors to ::Add. Added polarization and vector-to-balloon as saved quantities in Screen.
+
+08/29/2016 14.01 PM ET M. Sutherland   [in branches/roughness]
+In case of no-roughness, icemc also stores the specular parameters (vmmhz, pol, etc) in Screen, so we could simply make a single loop query over valid screen points in trigger instead of splitting the two cases. Renamed AntTrigger::AntTrigger(...) as void AntTrigger::RunTrigger(...), keeping the default empty argument constructor.
