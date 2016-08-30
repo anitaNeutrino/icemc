@@ -1713,13 +1713,13 @@ int main(int argc,  char **argv) {
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
     
-    /*if (NNU >= 100) {
+    if (NNU >= 100) {
       if (inu % (NNU / 100) == 0)
         cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
     }
     else
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
-    */
+    
 
 
     for (whichray = settings1->MINRAY; whichray <= settings1->MAXRAY; whichray++) {
@@ -3135,12 +3135,23 @@ int main(int argc,  char **argv) {
           //     Tools::Zero(volts_db[i][j], 2);
           //   }
           // }
-	  
-          anttrig1->RunTrigger(settings1,  ilayer,  ifold,  vmmhz,  panel1,  anita1,  hitangle_e,  hitangle_h,  e_component,  h_component,  anita1->arrival_times,  volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
-	  
-	  
-	  
+
+          /////////////////
+          //   The following functions used to be contained in AntTrigger::AntTrigger(Settings *settings1, ... etc)
+          //    but it needed to be broken up to deal with the Screen rays
+          anttrig1->InitializeEachBand(anita1);
+
+          anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, panel1, vmmhz,  hitangle_e, hitangle_h, e_component, h_component);
+          
+          anttrig1->ImpulseResponse(settings1, anita1, ilayer, ifold);
+          
+          anttrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
+          
+          anttrig1->Banding(settings1,  anita1, vmmhz);
+          //
+          /////////////////
+
           Tools::Zero(sumsignal, 5);
 
           if (bn1->WHICHPATH==4 && anita1->Match(ilayer, ifold, anita1->rx_minarrivaltime)) {

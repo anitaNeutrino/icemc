@@ -240,11 +240,22 @@ private:
     double thisrate;// set when getFunction is called for each channel. this is in MHz
     double thispowerthresh;// set when getFunction is called for each channel
     
+  double vhz_rx_e[Anita::NFREQ]; // V/Hz after antenna gains
+  double vhz_rx_h[Anita::NFREQ];
+  // same but with binning for fft
+  double volts_rx_e_forfft[Anita::HALFNFOUR];
+  double volts_rx_h_forfft[Anita::HALFNFOUR];
+
 public:
     
     AntTrigger(); // constructor
-    void RunTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512]); 
-    //AntTrigger(int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,int rx_minarrivaltime_temp); 
+    void InitializeEachBand(Anita *anita1);
+    void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Screen *panel1, double *vmmhz, double hitangle_e,double hitangle_h,double e_component,double h_component);
+    void ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer, int ifold);
+    void TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
+    void Banding(Settings *settings1, Anita *anita1, double *vmmhz);
+
+
     static void ConvertEHtoLREfield(double,double,double&,double&);
     static void ConvertEHtoLREnergy(double,double,double&,double&);
     void ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
