@@ -867,8 +867,6 @@ int main(int argc,  char **argv) {
   double volts_rx_max_lowband; // max voltage seen on an antenna - just for debugging purposes
   double volts_rx_rfcm_lab_e_all[48][512];
   double volts_rx_rfcm_lab_h_all[48][512];
-  double volts_rx_rfcm_lab_e_all_signalChain[48][512];
-  double volts_rx_rfcm_lab_h_all_signalChain[48][512];
   
   // miscellaneous
   //double dtemp;                       // another temp variable
@@ -934,6 +932,7 @@ int main(int argc,  char **argv) {
 
 
   double sourceLon;
+  double sourceAlt;
   double sourceLat;
   double sourceMag;
  
@@ -1331,12 +1330,11 @@ int main(int argc,  char **argv) {
   finaltree->Branch("igps", &bn1->igps, "igyps/I");
   finaltree->Branch("volts_rx_rfcm_lab_e_all", &volts_rx_rfcm_lab_e_all, "volts_rx_rfcm_lab_e_all[48][512]/D");
   finaltree->Branch("volts_rx_rfcm_lab_h_all", &volts_rx_rfcm_lab_h_all, "volts_rx_rfcm_lab_h_all[48][512]/D");
-  finaltree->Branch("volts_rx_rfcm_lab_e_all_signalChain", &volts_rx_rfcm_lab_e_all_signalChain, "volts_rx_rfcm_lab_e_all_signalChain[48][512]/D");
-  finaltree->Branch("volts_rx_rfcm_lab_h_all_signalChain", &volts_rx_rfcm_lab_h_all_signalChain, "volts_rx_rfcm_lab_h_all_signalChain[48][512]/D");
   finaltree->Branch("ptaui", &ptaui, "ptaui/D");
   finaltree->Branch("ptauf", &ptauf, "ptauf/D");
   finaltree->Branch("sourceLon", &sourceLon, "sourceLon/D");
   finaltree->Branch("sourceLat", &sourceLat, "sourceLat/D");
+  finaltree->Branch("sourceAlt", &sourceAlt, "sourceAlt/D");
   finaltree->Branch("sourceMag", &sourceMag, "sourceMag/D");
   
   TTree *mytaus_tree = new TTree("mytaus", "mytaus");
@@ -3598,16 +3596,14 @@ int main(int argc,  char **argv) {
 
 		
 		for (int j = 0; j < fNumPoints; j++) {
-		  // convert volts to mV
-		  volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j] = volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
-		  volts_rx_rfcm_lab_h_all_signalChain[IceMCAnt][j] = volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
+		  // convert seconds to nanoseconds
 		  realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
 		  realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
-
-		  realEvPtr->fVolts[UsefulChanIndexH][j] = volts_rx_rfcm_lab_h_all_signalChain[IceMCAnt][j];
+		  // convert volts to millivolts
+		  realEvPtr->fVolts[UsefulChanIndexH][j] =  volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
                   realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
 
-                  realEvPtr->fVolts[UsefulChanIndexV][j] = volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j];
+                  realEvPtr->fVolts[UsefulChanIndexV][j] =  volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
                   realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
                 }//end int j
               }// end int iant
@@ -3656,6 +3652,7 @@ int main(int argc,  char **argv) {
               // sourceLat = interaction1->nuexit.Lat();
               sourceLon = ray1->rfexit[2].Lon() - 180;
               sourceLat = ray1->rfexit[2].Lat() - 90;
+	      sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon+180, sourceLat+90);
 	      sourceMag = ray1->rfexit[2].Mag();
 	      
               finaltree->Fill();

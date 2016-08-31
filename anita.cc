@@ -2849,7 +2849,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     double temp_eachrx[Anita::NPHI_MAX]; // temperature of each antenna (for the anita-lite configuration)
     
     const double gps_offset = atan2(-0.7042,0.71), MINCH = 0.0254, phase_center = 0.17;
-    const double phase_center_anita2=0.17;
+    // const double phase_center_anita2=0.17;
     const double phase_center_anita2_analysis=.2;
     //const double gps_offset_anita2=atan2(0.89,-0.29);
     const double gps_offset_anita2=atan2(-0.7085,0.7056); // from elog 473
@@ -3647,7 +3647,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       // HERE HPOL IS 0 AND VPOL IS 1
       std::ifstream PhaseCenterFile("data/phaseCenterPositionsRelativeToPhotogrammetryAnita3.dat");
       Int_t antNum, tpol, pol;
-      Double_t deltaR,deltaPhi,deltaZ, deltaT;
+      Double_t deltaR,deltaPhi,deltaZ;
       char firstLine[180];
       Double_t deltaRPhaseCentre[2][4][16]; //Relative to photogrammetry + ring offset
       Double_t deltaZPhaseCentre[2][4][16]; //Relative to photogrammetry + ring offset
@@ -3668,19 +3668,20 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       } 
       PhaseCenterFile.close();
 
-      // HERE HPOL IS 0 AND VPOL IS 1 that's why we invert pol here
-      std::ifstream CableDelayFile("data/relativePhaseCenterToAmpaDelaysAnita3.dat");
-      //      std::ifstream CableDelayFile("data/relativeCableDelays_anita3.dat");
-      
-      while(CableDelayFile >> tpol >> antNum  >> deltaT) {
-	int ilayer = (antNum<16)*((antNum%2==0)*0 + (antNum%2==1)*1)+ (antNum>15)*(antNum<32)*2+(antNum>31)*3;
-	int ifold = (ilayer<2)*((antNum-ilayer)/2)+(ilayer>1)*(antNum%16);
-	if (tpol==1) pol=0;
-	else if (tpol==0) pol=1;
-	deltaTPhaseCentre[pol][ilayer][ifold]=deltaT*1e-9; // convert from ns to seconds
-	// std::cout << pol << " " << antNum << " " << deltaTPhaseCentre[pol][antNum] << std::endl;
-      } 
-      CableDelayFile.close();
+      // CABLE DELAYS ARE APPLIED DURING CALIBRATION
+      // ICEMC OUTPUT IS A CALIBRATED EVENT SO NO NEED TO APPLY CABLE DELAYS
+      // // HERE HPOL IS 0 AND VPOL IS 1 that's why we invert pol here
+      // std::ifstream CableDelayFile("data/relativePhaseCenterToAmpaDelaysAnita3.dat");
+      // //      std::ifstream CableDelayFile("data/relativeCableDelays_anita3.dat");      
+      // while(CableDelayFile >> tpol >> antNum  >> deltaT) {
+      // 	int ilayer = (antNum<16)*((antNum%2==0)*0 + (antNum%2==1)*1)+ (antNum>15)*(antNum<32)*2+(antNum>31)*3;
+      // 	int ifold = (ilayer<2)*((antNum-ilayer)/2)+(ilayer>1)*(antNum%16);
+      // 	if (tpol==1) pol=0;
+      // 	else if (tpol==0) pol=1;
+      // 	deltaTPhaseCentre[pol][ilayer][ifold]=deltaT*1e-9; // convert from ns to seconds
+      // 	// std::cout << pol << " " << antNum << " " << deltaTPhaseCentre[pol][antNum] << std::endl;
+      // } 
+      // CableDelayFile.close();
 
       double x, y, z, r, phi;
       for(int ilayer = 0; ilayer < 4; ilayer++){ 
@@ -4136,8 +4137,6 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
       int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
       arrival_times[antenna_index] = (antenna_positions[antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
 
-      // FOR THE MOMENT JUST ADD VPOL CABLE DELAY only for anita-3
-      if (bn1->WHICHPATH==8)  arrival_times[antenna_index] +=deltaTPhaseCentre[0][ilayer][ifold];
       //  arrival_times[antenna_index]=0;
     } // for: loop over antenna layers
     
@@ -4227,7 +4226,7 @@ void Anita::readImpulseResponse(Settings *settings1){
   string graphNames[2][3];
   string fileName;
   double norm=0;
-
+  
   // For ANITA-2 we have 1 impulse response for VPOL and 1 for HPOL
   // For ANITA-3 we have 3 impulse responses (Top, Middle, Bottom ring) for VPOL and 3 for HPOL.
   // Set Graph names for ANITA-2 and ANITA-3
@@ -4240,18 +4239,20 @@ void Anita::readImpulseResponse(Settings *settings1){
     norm=0.1;
   } else if(settings1->WHICH==9){
 
-    fileName = "data/SignalChainImpulseResponse_anita3_shifted.root";
+    fileName = "data/SignalChainImpulseResponse_anita3.root";
 
     string spol[2] ={"V", "H"};
-    string sring[3]={"Top", "Middle", "Bottom"};
+    //   string sring[3]={"Top", "Middle", "Bottom"};
     
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
-	graphNames[ipol][iring]=Form("ImpulseResponse_%spol_%s", spol[ipol].c_str(), sring[iring].c_str());
+	//	graphNames[ipol][iring]=Form("ImpulseResponse_%spol_%s", spol[ipol].c_str(), sring[iring].c_str());
+	graphNames[ipol][iring]=Form("ImpulseResponse_%spol", spol[ipol].c_str());
       }
     }
     // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
     norm = 48.;
+
   }
 
   // Read in input file
@@ -4261,7 +4262,7 @@ void Anita::readImpulseResponse(Settings *settings1){
     std::cerr << "Couldn't read siganl chain impulse response from " << fileName << "\n";
     exit(0);
   } else {
-    
+
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
 	// Read graph
@@ -4276,7 +4277,7 @@ void Anita::readImpulseResponse(Settings *settings1){
 	Double_t *newx = grInt->GetX();
 	Double_t *newy = grInt->GetY();
 	// Normalise
-	for (int i=0;i<nPoints;i++) newy[i]*=norm;
+	for (int i=0;i<nPoints;i++) newy[i]=newy[i]*norm;
 	// Pave to 0
 	int paveNum = 8533;
 	grTemp = new TGraph(nPoints,  newx, newy);
