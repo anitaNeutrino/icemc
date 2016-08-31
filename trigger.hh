@@ -255,6 +255,9 @@ public:
     void TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
     void Banding(Settings *settings1, Anita *anita1, double *vmmhz);
 
+    // just for historical reference, this function:
+    //void AntTrigger::RunTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
+    // was split into InitializeEachBand, ConvertInputWFtoAntennaWF, ImpulseResponse, TimeShiftAndSignalFluct, Banding
 
     static void ConvertEHtoLREfield(double,double,double&,double&);
     static void ConvertEHtoLREnergy(double,double,double&,double&);

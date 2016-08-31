@@ -960,3 +960,6 @@ In case of no-roughness, icemc also stores the specular parameters (vmmhz, pol, 
 
 08/30/2016 15.41 PM ET M. Sutherland   [in branches/roughness]
 splitting AntTrigger::RunTrigger() into multiple more sensible functions and to allow use of Screen vectors to construct signal: InitializeEachBand(), ConvertInputWFtoAntennaWF(), ImpulseResponse(), TimeShiftAndSignalFluct(), and Banding().
+
+08/31/2016 12.10 PM ET M. Sutherland   [in branches/roughness]
+Merged latest updates from trunk into the branch.

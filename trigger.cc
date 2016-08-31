@@ -1019,15 +1019,6 @@ int whichlayer,whichphisector;
 
 }// end WhichBandsPassTrigger2
 
-//!
-/*!
- *
- *
- *
- *
- *
- */
-//void AntTrigger::RunTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
 
 void AntTrigger::InitializeEachBand(Anita *anita1)
 {

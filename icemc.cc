@@ -792,8 +792,6 @@ int main(int argc,  char **argv) {
   double volts_rx_max_lowband; // max voltage seen on an antenna - just for debugging purposes
   double volts_rx_rfcm_lab_e_all[48][512];
   double volts_rx_rfcm_lab_h_all[48][512];
-  double volts_rx_rfcm_lab_e_all_signalChain[48][512];
-  double volts_rx_rfcm_lab_h_all_signalChain[48][512];
   
   // miscellaneous
   //double dtemp;                       // another temp variable
@@ -859,6 +857,7 @@ int main(int argc,  char **argv) {
 
 
   double sourceLon;
+  double sourceAlt;
   double sourceLat;
   double sourceMag;
  
@@ -1255,12 +1254,11 @@ int main(int argc,  char **argv) {
   finaltree->Branch("igps", &bn1->igps, "igyps/I");
   finaltree->Branch("volts_rx_rfcm_lab_e_all", &volts_rx_rfcm_lab_e_all, "volts_rx_rfcm_lab_e_all[48][512]/D");
   finaltree->Branch("volts_rx_rfcm_lab_h_all", &volts_rx_rfcm_lab_h_all, "volts_rx_rfcm_lab_h_all[48][512]/D");
-  finaltree->Branch("volts_rx_rfcm_lab_e_all_signalChain", &volts_rx_rfcm_lab_e_all_signalChain, "volts_rx_rfcm_lab_e_all_signalChain[48][512]/D");
-  finaltree->Branch("volts_rx_rfcm_lab_h_all_signalChain", &volts_rx_rfcm_lab_h_all_signalChain, "volts_rx_rfcm_lab_h_all_signalChain[48][512]/D");
   finaltree->Branch("ptaui", &ptaui, "ptaui/D");
   finaltree->Branch("ptauf", &ptauf, "ptauf/D");
   finaltree->Branch("sourceLon", &sourceLon, "sourceLon/D");
   finaltree->Branch("sourceLat", &sourceLat, "sourceLat/D");
+  finaltree->Branch("sourceAlt", &sourceAlt, "sourceAlt/D");
   finaltree->Branch("sourceMag", &sourceMag, "sourceMag/D");
   
   TTree *mytaus_tree = new TTree("mytaus", "mytaus");
@@ -3107,14 +3105,18 @@ int main(int argc,  char **argv) {
 
       for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
         for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
+          
           AntTrigger *anttrig1 = new AntTrigger();
+          anttrig1->InitializeEachBand(anita1);
 
-          // get the angle ray makes with e-plane, h-plane
-          // and component of polarization along e-plane and h-plane
           bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
+
+
+          //loop over rays now , including ConvertInputWFtoAntennaWF
+          // for this (hitangle_h_all[count_rx]=hitangle_h;) and histogram fill, use specular case
           if (!settings1->BORESIGHTS) {
             bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
-	    bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
+            bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
           }
           else{ // i.e. if BORESIGHTS is true
             bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector,  h_component_kvector,  n_component_kvector);
@@ -3129,28 +3131,16 @@ int main(int argc,  char **argv) {
           // for debugging
           if (h6->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
             h6->Fill(hitangle_h, ray1->n_exit2bn[2]*bn1->n_bn);
-          
-          // for (int i=0;i<Anita::NLAYERS_MAX;i++) { This variable is currently not used LC
-          //   for (int j=0;j<Anita::NPHI_MAX;j++) {
-          //     Tools::Zero(volts_db[i][j], 2);
-          //   }
-          // }
-
-
-          /////////////////
-          //   The following functions used to be contained in AntTrigger::AntTrigger(Settings *settings1, ... etc)
-          //    but it needed to be broken up to deal with the Screen rays
-          anttrig1->InitializeEachBand(anita1);
 
           anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, panel1, vmmhz,  hitangle_e, hitangle_h, e_component, h_component);
-          
+
+
+          // AntTrig::ImpulseResponse needs to be outside the ray loop
           anttrig1->ImpulseResponse(settings1, anita1, ilayer, ifold);
           
           anttrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
           
           anttrig1->Banding(settings1,  anita1, vmmhz);
-          //
-          /////////////////
 
           Tools::Zero(sumsignal, 5);
 
@@ -3708,16 +3698,14 @@ int main(int argc,  char **argv) {
                 realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
 		for (int j = 0; j < fNumPoints; j++) {
-		  // convert volts to mV
-		  volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j] = volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
-		  volts_rx_rfcm_lab_h_all_signalChain[IceMCAnt][j] = volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
+		  // convert seconds to nanoseconds
 		  realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
 		  realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
-
-		  realEvPtr->fVolts[UsefulChanIndexH][j] = volts_rx_rfcm_lab_h_all_signalChain[IceMCAnt][j];
+		  // convert volts to millivolts
+		  realEvPtr->fVolts[UsefulChanIndexH][j] =  volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
                   realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
 
-                  realEvPtr->fVolts[UsefulChanIndexV][j] = volts_rx_rfcm_lab_e_all_signalChain[IceMCAnt][j];
+                  realEvPtr->fVolts[UsefulChanIndexV][j] =  volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
                   realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
                 }//end int j
               }// end int iant
@@ -3773,6 +3761,7 @@ int main(int argc,  char **argv) {
               // sourceLat = interaction1->nuexit.Lat();
               sourceLon = ray1->rfexit[2].Lon() - 180;
               sourceLat = ray1->rfexit[2].Lat() - 90;
+	      sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon+180, sourceLat+90);
 	      sourceMag = ray1->rfexit[2].Mag();
 	      
               finaltree->Fill();
