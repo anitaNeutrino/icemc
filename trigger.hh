@@ -239,18 +239,26 @@ private:
     double ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant);
     double thisrate;// set when getFunction is called for each channel. this is in MHz
     double thispowerthresh;// set when getFunction is called for each channel
+
+    double e_component; // E comp along polarization
+    double h_component; // H comp along polarization
+    double n_component; // normal comp along polarization
+    double e_component_kvector; // component of e-field along the rx e-plane
+    double h_component_kvector; // component of the e-field along the rx h-plane
+    double n_component_kvector; // component of the e-field along the normal 
+    double hitangle_e, hitangle_h;       // angle the ray hits the antenna wrt e-plane, h-plane
     
-  double vhz_rx_e[Anita::NFREQ]; // V/Hz after antenna gains
-  double vhz_rx_h[Anita::NFREQ];
-  // same but with binning for fft
-  double volts_rx_e_forfft[Anita::HALFNFOUR];
-  double volts_rx_h_forfft[Anita::HALFNFOUR];
+    double vhz_rx_e[Anita::NFREQ]; // V/Hz after antenna gains
+    double vhz_rx_h[Anita::NFREQ];
+    // same but with binning for fft
+    double volts_rx_e_forfft[Anita::HALFNFOUR];
+    double volts_rx_h_forfft[Anita::HALFNFOUR];
 
 public:
     
     AntTrigger(); // constructor
     void InitializeEachBand(Anita *anita1);
-    void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Screen *panel1, double *vmmhz, double hitangle_e,double hitangle_h,double e_component,double h_component);
+    void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, double *vmmhz, Vector n_eplane, Vector n_hplane, Vector n_normal);
     void ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer, int ifold);
     void TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
     void Banding(Settings *settings1, Anita *anita1, double *vmmhz);

@@ -2713,7 +2713,7 @@ int main(int argc,  char **argv) {
           panel1->AddPol(npol_local_trans);
 
           // for each point, push back the magnitude for each frequency, and the corresponding relative phase delay
-          panel1->AddDelay( TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT );
+          panel1->AddDelay( TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT * 180./PI ); //phase needs to be in degrees for consistency
 
           roughout<<inu<<"  "
                   <<ii<<"  "
@@ -2742,7 +2742,7 @@ int main(int argc,  char **argv) {
                   <<antarctica->Surface(pos_projectedImpactPoint.Lon(),pos_projectedImpactPoint.Lat())<<"  "
                   <<panel1->CalcXindex(ii)<<"  "
                   <<panel1->CalcYindex(ii)<<"  "
-                  <<cos(TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT)<<"  "
+                  <<TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT<<"  "
                   <<std::endl;
 
 
@@ -2775,7 +2775,7 @@ int main(int argc,  char **argv) {
         }
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
         panel1->AddPol(n_pol);
-        panel1->AddDelay( 0. );
+        panel1->AddDelay( 90. );
       }
 
       // reject if the event is undetectable.
@@ -3112,8 +3112,8 @@ int main(int argc,  char **argv) {
           bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
 
 
-          //loop over rays now , including ConvertInputWFtoAntennaWF
           // for this (hitangle_h_all[count_rx]=hitangle_h;) and histogram fill, use specular case
+          //although the GetEcomp..() functions are called in ConvertInputWFtoAntennaWF() to calculate the actual waveforms
           if (!settings1->BORESIGHTS) {
             bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
             bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
@@ -3127,13 +3127,12 @@ int main(int argc,  char **argv) {
           // store hitangles for plotting
           hitangle_h_all[count_rx]=hitangle_h;
           hitangle_e_all[count_rx]=hitangle_e;
-
           // for debugging
           if (h6->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
             h6->Fill(hitangle_h, ray1->n_exit2bn[2]*bn1->n_bn);
 
-          anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, panel1, vmmhz,  hitangle_e, hitangle_h, e_component, h_component);
 
+          anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, vmmhz, n_eplane,  n_hplane,  n_normal);
 
           // AntTrig::ImpulseResponse needs to be outside the ray loop
           anttrig1->ImpulseResponse(settings1, anita1, ilayer, ifold);
