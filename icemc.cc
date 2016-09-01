@@ -2437,7 +2437,7 @@ int main(int argc,  char **argv) {
         } // end looping over layers
       } // if we are calculating for all boresights
       
-      ofstream roughout("data/scan_Npts_Ledge.dat", std::fstream::app); // length of chord in air vs. theta (deg)
+      //ofstream roughout("data/scan_Npts_Ledge.dat", std::fstream::app); // length of chord in air vs. theta (deg)
 
       
       if(!settings1->ROUGHNESS) {  // IF NO ROUGHNESS THEN DO THIS (FOR CONSISTENCY CHANGE NOTHING BELOW HERE IN THE if !rough)
@@ -2582,15 +2582,15 @@ int main(int argc,  char **argv) {
         //std::cerr<<"bln X: "<<bn1->r_bn.GetX()<<"  "<<bn1->r_bn.GetY()<<"  "<<bn1->r_bn.GetZ()<<std::endl;
         //std::cerr<<"Surface: "<<antarctica->Surface(bn1->r_bn)<<std::endl;
         //std::cerr<<"int.point: "<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
-        std::cerr<<"[ ";
-        std::cerr<<"["<<ray1->rfexit[2].Lon()<<",  "<<-90+ray1->rfexit[2].Lat()<<"],  ";
-        std::cerr<<"["<<bn1->r_bn.Lon()<<",  "<<-90+bn1->r_bn.Lat()<<"],  ";
-        std::cerr<<"["<<interaction1->posnu.Lon()<<",  "<<-90+interaction1->posnu.Lat()<<"],  ";
-        std::cerr<<"["<<tpos.Lon()<<",  "<<-90+tpos.Lat()<<"],  ";
 
+        //std::cerr<<"[ ";
+        //std::cerr<<"["<<ray1->rfexit[2].Lon()<<",  "<<-90+ray1->rfexit[2].Lat()<<"],  ";
+        //std::cerr<<"["<<bn1->r_bn.Lon()<<",  "<<-90+bn1->r_bn.Lat()<<"],  ";
+        //std::cerr<<"["<<interaction1->posnu.Lon()<<",  "<<-90+interaction1->posnu.Lat()<<"],  ";
+        //std::cerr<<"["<<tpos.Lon()<<",  "<<-90+tpos.Lat()<<"],  ";
+        //std::cerr<<"["<<pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) <<",  "<<(pol_specular - pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) * antarctica->GetSurfaceNormal(bn1->r_bn)).Mag()<<",  "<< vmmhz1m_fresneledtwice <<"]  ";
+        //std::cerr<<"],"<<std::endl;
 
-        std::cerr<<"["<<pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) <<",  "<<(pol_specular - pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) * antarctica->GetSurfaceNormal(bn1->r_bn)).Mag()<<",  "<< vmmhz1m_fresneledtwice <<"]  ";
-        std::cerr<<"],"<<std::endl;
         //std::cerr<<"screen: "<<panel1->GetCentralPoint().Lon()<<"  "<<-90+panel1->GetCentralPoint().Lat()<<std::endl;
 
         // now loop over screen points
@@ -2715,7 +2715,7 @@ int main(int argc,  char **argv) {
           // for each point, push back the magnitude for each frequency, and the corresponding relative phase delay
           panel1->AddDelay( TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT * 180./PI ); //phase needs to be in degrees for consistency
 
-          roughout<<inu<<"  "
+          /*roughout<<inu<<"  "
                   <<ii<<"  "
                   <<pos_projectedImpactPoint.Lon()<<"  "
                   <<-90+pos_projectedImpactPoint.Lat()<<"  "
@@ -2743,7 +2743,7 @@ int main(int argc,  char **argv) {
                   <<panel1->CalcXindex(ii)<<"  "
                   <<panel1->CalcYindex(ii)<<"  "
                   <<TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT<<"  "
-                  <<std::endl;
+                  <<std::endl;*/
 
 
           // here is the full transmitted electric field for this screen point
@@ -2765,18 +2765,7 @@ int main(int argc,  char **argv) {
 
       }//end else roughness
 
-      roughout.close();
-
-      //if no-roughness case, add its parameters to the saved screen parameters
-      if(!settings1->ROUGHNESS){
-        panel1->SetNvalidPoints(1);
-        for (int k=0;k<Anita::NFREQ;k++) {
-          panel1->AddVmmhz_freq(vmmhz[k]);
-        }
-        panel1->AddVec2bln(ray1->n_exit2bn[2]);
-        panel1->AddPol(n_pol);
-        panel1->AddDelay( 90. );
-      }
+      //roughout.close();
 
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
@@ -3013,6 +3002,17 @@ int main(int argc,  char **argv) {
         
       }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
 
+      //if no-roughness case, add its parameters to the saved screen parameters
+      if(!settings1->ROUGHNESS){
+        panel1->SetNvalidPoints(1);
+        for (int k=0;k<Anita::NFREQ;k++) {
+          panel1->AddVmmhz_freq(vmmhz[k]);
+        }
+        panel1->AddVec2bln(ray1->n_exit2bn[2]);
+        panel1->AddPol(n_pol);
+        panel1->AddDelay( 90. );
+      }
+
       // just for plotting
       vmmhz_max=Tools::dMax(vmmhz, Anita::NFREQ);
       vmmhz_min=Tools::dMin(vmmhz, Anita::NFREQ);
@@ -3132,7 +3132,7 @@ int main(int argc,  char **argv) {
             h6->Fill(hitangle_h, ray1->n_exit2bn[2]*bn1->n_bn);
 
 
-          anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, vmmhz, n_eplane,  n_hplane,  n_normal);
+          anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, vmmhz, n_eplane,  n_hplane,  n_normal, inu, ilayer, ifold);
 
           // AntTrig::ImpulseResponse needs to be outside the ray loop
           anttrig1->ImpulseResponse(settings1, anita1, ilayer, ifold);
@@ -3140,6 +3140,16 @@ int main(int argc,  char **argv) {
           anttrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
           
           anttrig1->Banding(settings1,  anita1, vmmhz);
+
+          /*ofstream waveout("data/waveform.dat", std::fstream::app);
+          for (int ii=0; ii<Anita::HALFNFOUR; ii++){
+            waveout << inu << "  "
+                    << ilayer << "  "
+                    << ifold << "  "
+                    << volts_rx_rfcm_lab_e_all[anita1->GetRx(ilayer, ifold)][ii] << "  "
+                    << volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][ii] << std::endl;
+          }
+          waveout.close();*/
 
           Tools::Zero(sumsignal, 5);
 

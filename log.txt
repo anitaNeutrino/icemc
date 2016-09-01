@@ -964,5 +964,8 @@ splitting AntTrigger::RunTrigger() into multiple more sensible functions and to 
 08/31/2016 12.10 PM ET M. Sutherland   [in branches/roughness]
 Merged latest updates from trunk into the branch.
 
-09/01/2016
+09/01/2016 10.30 AM ET M. Sutherland   [in branches/roughness]
 Modified Anita::MakeArraysforFFT so it takes an additional double argument (phasedelay) which is used in cosphase and sinphase. Modified AntTrigger::ConvertInputWFtoAntennaWF so it loops over the frequencies of each screen point and computes its time domain waveform, then constructs the summed waveform; also changed 3 later calls to Anita::MakeArraysforFFT so they use 90 degree phase delays (similar to what was being done previously). Modified icemc.cc so the screen phase delay is stored in degrees, and the default no-roughness delay is 90. When compiled and tested with NO roughness (A3, 10^5 nu, no firn or t-dep threshes.), the simulation returns identical results (weighted events, aperture, etc.). Progress indeed.
+
+09/01/2016 15.00 PM ET M. Sutherland   [in branches/roughness]
+Moved setting of no-roughness case screen properties (vmmhz, phase) to before trigger instantiation so they are properly calculated and set.
