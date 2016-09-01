@@ -969,3 +969,6 @@ Modified Anita::MakeArraysforFFT so it takes an additional double argument (phas
 
 09/01/2016 15.00 PM ET M. Sutherland   [in branches/roughness]
 Moved setting of no-roughness case screen properties (vmmhz, phase) to before trigger instantiation so they are properly calculated and set.
+
+09/01/2016 16.05 PM ET M. Sutherland   [in branches/roughness]
+Removed extra arguments from ConvertInputWFtoAntennaWF in icemc.cc (leftovers from tests)
