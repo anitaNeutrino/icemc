@@ -41,8 +41,6 @@ private:
   int gritvalue;  // [-1, 400, 1000, 1500]
   int Ntheta0;
 
-  double laserPower;
-
   std::vector<double> theta_0;
   std::vector<double> theta_0_unique;
   std::vector<double> theta;
@@ -90,38 +88,6 @@ public:
   double ConvertTheta0AirGlass_to_GlassAir(double T0);
 
   double ConvertTheta0GlassAir_to_AirGlass(double T1);
-  
-  void GetFresnel(const Vector &surface_normal, const Vector &air_rf, const Vector &ice_rf, Vector &pol, double efield, double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, double &fresnel, double &mag);
-
-  double CalculateTransmittedMagAndPol(const Vector &transmitted_rf, const Vector &incident_ray, const Vector &local_surface_normal, const Vector &specular_surface_normal, const Vector &incident_pol, Vector &transmitted_pol);
-
-
-
-
-
-
-
-
-  //
-  //  Below here are the old roughness members, need to decide what to do with them
-  //
-  TF2 *fpokey2;
-  TF2 *fslappy2;
-  void GetExitforRoughness(Settings *settings1,IceModel *antarctica,double emfrac,double hadfrac,double deltheta_em_max,double deltheta_had_max,Ray *ray1,Vector &nnu,Vector &r_bn,Vector &posnu);
-  double GetPokey(double incident_angle,double transmitted_angle, double emfrac,double hadfrac,double deltheta_em,double deltheta_had);
-  double GetSlappy(double incident_angle,double transmitted_angle, double emfrac,double hadfrac,double deltheta_em,double deltheta_had);
-  double GetCombinedDeltheta(double emfrac,double hadrac,double deltheta_em_max,double deltheta_had_max);
-    // need to find balloon location in coordinates where 
-  // the surface normal is the +z axis
-  // the x-z plane is defined by the neutrino trajectory
-  // these are set in getballoonlocation
-  double balloonphi; 
-  double balloontheta;
-  double balloondist;
-  double rough_sigma;
-  void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceModel *antarctica);
-
-  Vector nrf_iceside_specular; // ice side "specular" ray - for now, this is just a line from the interaction to the specular exit point, since we are still working on the formula to trace the ray back to the interaction through the firn.  For interactions within the firn, this will be equal to nrf_iceside[3]
 
 };
 //double rough_sigma_0=0.002;

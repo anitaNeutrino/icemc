@@ -975,3 +975,6 @@ Removed extra arguments from ConvertInputWFtoAntennaWF in icemc.cc (leftovers fr
 
 09/06/2016 9.56 AM ET M. Sutherland   [in branches/roughness]
 Set default Screen y-shift to be 1*fedgeLength and not 0.5*fedgeLength, since emission region is in front of specular RFexit point.
+
+09/06/2016 16.00 PM ET M. Sutherland   [in branches/roughness]
+Undid last branch commit and set default screen y-shift to be -1.0 not -0.5. Cleaned up icemc.cc comments. Moved screen's transmitted polarization calc into Screen::CalculateTransmittedPolarization(). Removed old roughness functions in Roughness class files. Moved GetBalloonLocation from Roughness into icemc.cc.

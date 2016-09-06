@@ -14,8 +14,10 @@
 #include "vector.hh"
 #include "position.hh"
 
+
 class Vector;
 class Position;
+
 
 class Screen {
 private:
@@ -45,6 +47,10 @@ private:
 
 public:
   Screen(int a);
+
+  void SetNsamples(int i);
+
+  int GetNsamples();
 
   void SetEdgeLength(double a);
   
@@ -97,5 +103,8 @@ public:
   void AddPol(Vector v);
 
   Vector GetPol(int i);
+
+  Vector CalculateTransmittedPolarization(const Vector &nnu, Vector vec_specularnormal, Vector vec_localnormal, Vector vec_pos_current_to_balloon, Vector vec_nnu_to_impactPoint, Vector npol_local_inc);
+
 };
 #endif

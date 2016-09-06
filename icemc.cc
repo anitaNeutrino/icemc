@@ -439,7 +439,7 @@ void Attenuate(IceModel *antartica1, Settings *settings1,  double& vmmhz_max,  d
 void Attenuate_down(IceModel *antarctica1,  Settings *settings1,  double& vmmhz_max,  const Position &rfexit2,  const Position &posnu,  const Position &posnu_down);
 void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight);
 
-
+void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceModel *antarctica);
 
 int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside);
 
@@ -2153,7 +2153,7 @@ int main(int argc,  char **argv) {
       if (!Ray::WhereDoesItLeave(interaction1->posnu, interaction1->nnu, antarctica, interaction1->nuexit))
         continue; // doesn't give a real value from quadratic formula
       
-      rough1->GetBalloonLocation(interaction1, ray1, bn1, antarctica);
+      GetBalloonLocation(interaction1, ray1, bn1, antarctica);
       
       nuexitlength=interaction1->posnu.Distance(interaction1->nuexit);
       // probability a tau would decay within this length at this
@@ -2508,12 +2508,14 @@ int main(int argc,  char **argv) {
         //
         Vector pol_specular = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4]);;
 
+        double pathlength_specular = interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn);
+
         sig1->GetSpread(pnu, emfrac, hadfrac, (anita1->bwslice_min[2]+anita1->bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
         GetFresnel(rough1, 0, ray1->nsurf_rfexit, ray1->n_exit2bn[2], pol_specular, ray1->nrf_iceside[4], vmmhz1m_max, emfrac, hadfrac, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);
         vmmhz1m_fresneledtwice = vmmhz1m_max*fresnel1*mag1;  //  only the ice-air interface
-
         vmmhz1m_fresneledtwice /= ( interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn) );
         Attenuate(antarctica, settings1, vmmhz1m_fresneledtwice,  interaction1->posnu.Distance(ray1->rfexit[2]),  interaction1->posnu);
+
         /////////////
 
         int num_validscreenpoints = 0;
@@ -2526,35 +2528,19 @@ int main(int argc,  char **argv) {
         Vector vec_localnormal;         //normalized, normal vector at projected ground point
         Vector vec_nnu_to_impactPoint;  //normalized
 
-        Vector vec_incplane_normal;     // normal of the incidence plane, normalized
-        Vector vec_scatplane_normal;     // normal of the scattering plane, normalized
-
+        double viewangle_local;
         double theta_local;             //angle between local surface normal and vector to balloon [radians]
         double theta_0_local;                 //angle between 'inverted' local surface normal and incident direction [radians]
-        double theta_0_local_converted;       //theta_0_local converted using measurement angle conversion (air-glass -> glass-air) for spline look-up [radians]
-
-        double mtrx_cos_inc, mtrx_sin_inc;    // matrix coefficients for converting polarization components
-        double mtrx_cos_trans, mtrx_sin_trans;
 
         double interpolatedPower;       // \muW for these angles
 
-        Vector npol_local_inc;
-        Vector E_local_h_inc;
-        Vector E_local_v_inc;
-
-        Vector npol_local_trans;
-        double E_local_h_trans_mag;     // only need magnitude, use scattering plane basis vector to construct actual polarization vector
-        double E_local_v_trans_mag;
+        Vector npol_local_inc, npol_local_trans;
+        Vector temp_a;
 
         double Emag_local;
         Vector Efield_local;
         Vector Efield_screentotal = Vector(0,0,0);
 
-        Vector temp_a, temp_b;          // some temporary parameters for roughness
-        double tempdoub;
-
-        double viewangle_local;
-        double pathlength_specular = interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn);
         double pathlength_local;        // set for each screen point
         double vmmhz_local[Anita::NFREQ];   //  V/m/MHz at balloon (after all steps)
 
@@ -2568,20 +2554,15 @@ int main(int argc,  char **argv) {
         panel1->SetCentralPoint( ray1->rfexit[2] + 0.8*bn1->r_bn.Distance(ray1->rfexit[2])*ray1->n_exit2bn[2].Unit() ); //move towards balloon by 80% of distance to balloon
         panel1->SetNormal( ray1->n_exit2bn[2].Unit() );
         panel1->SetCosineProjectionFactor( ray1->n_exit2bn[2].Unit().Dot(antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit()) );
-
-        // set screen y-hat as up 'perp.' to ground in the screen plane, define x-hat as perp.
         pos_current_localnormal = antarctica->GetSurfaceNormal( panel1->GetCentralPoint() ).Unit();
         temp_a = pos_current_localnormal - ray1->n_exit2bn[2].Dot(pos_current_localnormal) * ray1->n_exit2bn[2].Unit();
-        panel1->SetUnitX( ray1->n_exit2bn[2].Cross(temp_a).Unit() );
+        panel1->SetUnitX( ray1->n_exit2bn[2].Cross(temp_a).Unit() );  // set screen y-hat as up 'perp.' to ground in the screen plane, define x-hat as perp.
         panel1->SetUnitY( -1.*ray1->n_exit2bn[2].Cross(ray1->n_exit2bn[2].Cross(temp_a).Unit()) );
+
+
 
         temp_a = interaction1->nnu - pos_current_localnormal.Dot(interaction1->nnu) * pos_current_localnormal;
         Position tpos = interaction1->posnu + 500.*temp_a.Unit();
-
-        //std::cerr<<"bln: "<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
-        //std::cerr<<"bln X: "<<bn1->r_bn.GetX()<<"  "<<bn1->r_bn.GetY()<<"  "<<bn1->r_bn.GetZ()<<std::endl;
-        //std::cerr<<"Surface: "<<antarctica->Surface(bn1->r_bn)<<std::endl;
-        //std::cerr<<"int.point: "<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
 
         //std::cerr<<"[ ";
         //std::cerr<<"["<<ray1->rfexit[2].Lon()<<",  "<<-90+ray1->rfexit[2].Lat()<<"],  ";
@@ -2591,15 +2572,9 @@ int main(int argc,  char **argv) {
         //std::cerr<<"["<<pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) <<",  "<<(pol_specular - pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) * antarctica->GetSurfaceNormal(bn1->r_bn)).Mag()<<",  "<< vmmhz1m_fresneledtwice <<"]  ";
         //std::cerr<<"],"<<std::endl;
 
-        //std::cerr<<"screen: "<<panel1->GetCentralPoint().Lon()<<"  "<<-90+panel1->GetCentralPoint().Lat()<<std::endl;
-
         // now loop over screen points
         for (int ii=0; ii<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE; ii++){
           Emag_local = 0.;
-
-          //if((ii%1000)==0){
-          //  std::cerr<<ii<<std::endl;
-          //}
           pos_current = panel1->GetNextPosition(ii);        // this gets the new screen position
           pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
           vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_current[0], bn1->r_bn[1] - pos_current[1], bn1->r_bn[2] - pos_current[2] );
@@ -2616,83 +2591,37 @@ int main(int argc,  char **argv) {
             continue;
           }// end outside antarctica
 
-          // get surface normals and vector from interaction point to impact point
-          vec_specularnormal = antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit();
-          //
+          // local angles of transmission and incidence in their respective planes
           vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
           vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
-
-          // gets angle between this screen ray and neutrino direction
-          viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
-          //if(viewangle_local>1.57 && !settings1->SKIPCUTS) { //discard the event if viewangle_local is greater than 90 degrees
-            //delete interaction1;
-            //continue;
-          //}
-
-          tempdoub=Tools::dMin((viewangle_local-sig1->changle)/(deltheta_em_max), (viewangle_local-sig1->changle)/(deltheta_had_max));
-          if (tempdoub>Signal::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
-            //delete interaction1;
-            continue;
-          }
-
-          // get incident polarization
-          npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint).Unit();
-
-          // calculate polarization transformation matrix coefficients (from Bahar 1995, page 535)
-          // treat a_y = normal at specular exit point
-          temp_a = interaction1->nnu.Cross(vec_specularnormal).Unit();
-          temp_b = interaction1->nnu.Cross(vec_localnormal).Unit();
-          mtrx_cos_inc = temp_a.Dot(temp_b) / temp_a.Mag() / temp_b.Mag();
-          mtrx_sin_inc = sqrt(1. - mtrx_cos_inc*mtrx_cos_inc);
-
-          temp_a = vec_pos_current_to_balloon.Cross(vec_specularnormal).Unit();
-          temp_b = vec_pos_current_to_balloon.Cross(vec_localnormal).Unit();
-          mtrx_cos_trans = temp_a.Dot(temp_b) / temp_a.Mag() / temp_b.Mag();
-          mtrx_sin_trans = sqrt(1. - mtrx_cos_trans*mtrx_cos_trans);
-
-          // now define the incidence plane using int.point-imp.point vector and local surface normal
-          vec_incplane_normal = vec_nnu_to_impactPoint.Cross( (const Vector)vec_localnormal ).Unit();
-
-          // now define the scattering plane using imp.point-balloon vector and local surface normal
-          vec_scatplane_normal = vec_pos_current_to_balloon.Cross( (const Vector)vec_localnormal ).Unit();
-
-          // local angles of transmission and incidence in their respective planes
           theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
           theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
-          theta_0_local_converted = rough1->ConvertTheta0GlassAir_to_AirGlass(theta_0_local*180./PI); //[deg]  <- !!!!
 
-          // determine incident vertical and horizontal field components (vertical = in-plane)
-          E_local_h_inc = npol_local_inc.Dot(vec_incplane_normal) * vec_incplane_normal;
-          E_local_v_inc = npol_local_inc - E_local_h_inc;
-
-          // recast the values with the transformation matrix
-          E_local_v_trans_mag = mtrx_cos_trans * (mtrx_cos_inc*E_local_v_inc.Mag() - mtrx_sin_inc*E_local_h_inc.Mag())
-                      - mtrx_sin_trans * (mtrx_sin_inc*E_local_v_inc.Mag() + mtrx_cos_inc*E_local_h_inc.Mag());
-          E_local_h_trans_mag = mtrx_sin_trans * (mtrx_cos_inc*E_local_v_inc.Mag() - mtrx_sin_inc*E_local_h_inc.Mag())
-                      + mtrx_cos_trans * (mtrx_sin_inc*E_local_v_inc.Mag() + mtrx_cos_inc*E_local_h_inc.Mag());
-
-          // transmitted polarization needs to be perpendicular to to-balloon vector, and the horizontal component is 'set', so need to find appropriate vector for the vertical component to ensure perpendicularity
-          npol_local_trans = (E_local_h_trans_mag*vec_scatplane_normal
-                           + E_local_v_trans_mag* vec_pos_current_to_balloon.Cross( (const Vector)vec_scatplane_normal ).Unit() ).Unit();
-          if(npol_local_trans[0]!=npol_local_trans[0]){
-            continue;   // skip if transmitted polarization is undefined
-          }
-
-          // now work on the field magnitude
-          // calculate the transmitted power based on the UCLA measurements
+          /////
+          // Field Magnitude
           interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
-
-          // Calculate the electric field magnitude exiting the impact point accounting for local 1)power re-distribution from scattering, 2)corrections to measurements
           Emag_local = vmmhz1m_max * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local));
-
           // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
           pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
           Emag_local /= pathlength_local ;
           Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
 
+          /////
+          // Transmitted Polarization
+          npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint).Unit();
+          // calculate polarization transformation matrix coefficients (from Bahar 1995, page 535)
+          // treat a_y = normal at specular exit point
+          vec_specularnormal = antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit();
+          // transmitted polarization needs to be perpendicular to to-balloon vector, and the horizontal component is 'set', so need to find appropriate vector for the vertical component to ensure perpendicularity
+          npol_local_trans = panel1->CalculateTransmittedPolarization(interaction1->nnu, vec_specularnormal, vec_localnormal, vec_pos_current_to_balloon, vec_nnu_to_impactPoint, npol_local_inc);
+          if(npol_local_trans[0]!=npol_local_trans[0]){
+            continue;   // skip if transmitted polarization is undefined
+          }
+
+
           // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor) and making an array across frequency bins by putting in frequency dependence.
           sig1->GetVmMHz(Emag_local, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local, Anita::NFREQ);
-
+          viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
           // apply the off-angle tapering
           for (int k=0;k<Anita::NFREQ;k++) {
             deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
@@ -2722,7 +2651,6 @@ int main(int argc,  char **argv) {
                   <<vmmhz_local[0] * cos( TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT )<<"  "
                   <<theta_local*180./PI<<"  "
                   <<theta_0_local*180./PI<<"  "
-                  <<theta_0_local_converted<<"  "
                   <<interaction1->posnu.Distance(pos_projectedImpactPoint)<<"  "
                   <<pos_projectedImpactPoint.Distance(bn1->r_bn)<<"  "
                   <<pos_current[0]<<"  "
@@ -2731,10 +2659,6 @@ int main(int argc,  char **argv) {
                   <<pos_projectedImpactPoint[0]<<"  "
                   <<pos_projectedImpactPoint[1]<<"  "
                   <<pos_projectedImpactPoint[2]<<"  "
-                  <<E_local_h_inc.Mag()<<"  "
-                  <<E_local_v_inc.Mag()<<"  "
-                  <<E_local_h_trans_mag<<"  "
-                  <<E_local_v_trans_mag<<"  "
                   <<vec_pos_current_to_balloon.Unit().Dot(npol_local_trans)<<"  "
                   <<npol_local_inc.Dot(npol_local_trans)<<"  "
                   <<pos_current_localnormal.Dot(npol_local_trans)<<"  "
@@ -5248,6 +5172,77 @@ void GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING, const Vector &surface_
   pol = (pol_perp_air * perp + pol_parallel_air * air_parallel).Unit();
 }
 //end GetFresnel()
+
+
+
+void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceModel *antarctica) {
+    // brian enter function to calculate balloon position on your map.
+    // use interaction1->posnu // location of neutrino interaction
+    // coordinate system:  +z="up" at the south pole
+    // bn1->r_bn
+    // nnu
+    // ray1->nsurf_rfexit
+    
+    
+    // brian enter function to calculate balloon position on your map.
+    // use interaction1->posnu // location of neutrino interaction
+    // coordinate system:  +z="up" at the south pole
+    // bn1->r_bn
+    // nnu
+    
+    
+    // balloonvector = balloonvector - nuvector;//change origin to the nuetrino interaction point
+    
+    const Vector nuvector = interaction1->nnu;
+    // double interactiondepth = nuvector[2];//NOT CORRECT! need depth BELOW the ice. this is height above center of earth.
+    
+    Vector zcoordvector = ray1->nsurf_rfexit;
+    zcoordvector=zcoordvector.Unit();
+    
+    // double thetainc =acos(zcoordvector.Dot(nuvector))*180/PI;
+    //nsurf_rfexit is z direction for new coordinate system. Need to make sure the n-vector is in x-z plane.
+    
+    Vector xcoordvector = nuvector-(zcoordvector.Dot(nuvector))*zcoordvector;//xcoordvector is such that nnu lies in the x-z plane
+    xcoordvector = xcoordvector.Unit();
+    
+    const Vector ycoordvector = zcoordvector.Cross(xcoordvector);//Need this for ChangeCoord. 
+    
+    
+    Vector origin_brian_tmp;
+    if (interaction1->nnu.Dot(zcoordvector)>0) // up  going
+  origin_brian_tmp=interaction1->nuexit; // the origin is the neutrino exit point 
+    else {     
+  Vector nnu_flipped=interaction1->nnu;
+  nnu_flipped=nnu_flipped-2.*nnu_flipped.Dot(zcoordvector)*zcoordvector; // take it's upgoing reflection from surface
+  
+  Position nuexit_flipped;
+  if (Ray::WhereDoesItLeave(interaction1->posnu,nnu_flipped,antarctica,nuexit_flipped))
+      origin_brian_tmp=nuexit_flipped;
+  
+  
+    }
+    Vector r_bn_tmp=bn1->r_bn-origin_brian_tmp;
+    r_bn_tmp=r_bn_tmp.ChangeCoord(xcoordvector,ycoordvector);//change coordinates
+    
+    
+    double balloondist =r_bn_tmp.Mag();//this is above center of earth, if i understand correctly. Need above the surface of the earth. 
+    double balloonphi = r_bn_tmp.Phi(); //phi position of the balloon
+    if (balloonphi>PI)
+      balloonphi=balloonphi-2*PI;
+
+    double balloontheta = r_bn_tmp.Theta();// costheta position of the baloon
+    // get this by dotting ray1->nsurf_rfexit with nnu?     
+    // double thetainc = acos(interaction1->nnu[2])*180/PI; //nnu is unit vector; cos(thetainc) = z/r
+    balloontheta = PI-balloontheta;//walter.cc uses a pos z as down. this corrects for that.
+    
+    // define a coordinate system with ray1->nsurf_rfexit defining +z
+    // nnu direction defines the x-z plane
+    // find balloon position in that coordinate system
+    //to get the values from walter.cc we need : E_shower, correlation length, rms height and the em_frac and had_frac. the last
+    // two are so we can multiply the number from sky maps by the correct frac and then add the em and hadronic portion together
+    // to get the total.
+    
+}
 
 
 void interrupt_signal_handler(int sig){

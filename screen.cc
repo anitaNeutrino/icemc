@@ -80,13 +80,16 @@ void Screen::ResetPositionIndex(){
   fpositionindex = 0;
 };
 
+
 double Screen::CalcXindex(int i){
   return (double) (i % fNsamples);
 };
 
+
 double Screen::CalcYindex(int i){
   return (double) floor(i / fNsamples);
 };
+
 
 Position Screen::GetNextPosition(int i){
   Position pos;
@@ -95,7 +98,7 @@ Position Screen::GetNextPosition(int i){
   double xindex = CalcXindex(i);
 
   pos = fcentralPoint                                       // base
-        - 0.5*fedgeLength*funit_x - 1.*fedgeLength*fcosineProjectionFactor*funit_y              // shift to a corner
+        - 0.5*fedgeLength*funit_x - 0.5*fedgeLength*fcosineProjectionFactor*funit_y              // shift to a corner
         + (xindex/((double)(fNsamples)))*fedgeLength*funit_x   // move by x-increment
         + (yindex/((double)(fNsamples)))*fedgeLength*fcosineProjectionFactor*funit_y;  // move by y-increment with the cosine projection correction
 
@@ -104,43 +107,88 @@ Position Screen::GetNextPosition(int i){
   return pos;
 };
 
+
 void Screen::AddVmmhz_freq(double A){
   //here i refers to the 'screen' loop
   fVmmhz_freq.push_back(A);
 };
 
+
 double Screen::GetVmmhz_freq(int i){
   return fVmmhz_freq[i];
 };
+
 
 void Screen::AddDelay(double A){
   fDelays.push_back(A);
 };
 
+
 double Screen::GetDelay(int i){
   return fDelays[i];
 };
+
 
 void Screen::SetNvalidPoints(int i){
   fNvalidpoints = i;
 };
 
+
 double Screen::GetNvalidPoints(){
   return fNvalidpoints;
 };
+
 
 void Screen::AddVec2bln(Vector v){
   fVec2blns.push_back(v);
 };
 
+
 Vector Screen::GetVec2bln(int i){
   return fVec2blns[i];
 };
+
 
 void Screen::AddPol(Vector v){
   fPols.push_back(v);
 };
 
+
 Vector Screen::GetPol(int i){
   return fPols[i];
+};
+
+
+Vector Screen::CalculateTransmittedPolarization(const Vector &nnu, Vector vec_specularnormal, Vector vec_localnormal, Vector vec_pos_current_to_balloon, Vector vec_nnu_to_impactPoint, Vector npol_local_inc){
+  Vector temp_a = nnu.Cross(vec_specularnormal).Unit();
+  Vector temp_b = nnu.Cross(vec_localnormal).Unit();
+  double mtrx_cos_inc = temp_a.Dot(temp_b) / temp_a.Mag() / temp_b.Mag();
+  double mtrx_sin_inc = sqrt(1. - mtrx_cos_inc*mtrx_cos_inc);
+
+  temp_a = vec_pos_current_to_balloon.Cross(vec_specularnormal).Unit();
+  temp_b = vec_pos_current_to_balloon.Cross(vec_localnormal).Unit();
+  double mtrx_cos_trans = temp_a.Dot(temp_b) / temp_a.Mag() / temp_b.Mag();
+  double mtrx_sin_trans = sqrt(1. - mtrx_cos_trans*mtrx_cos_trans);
+
+  // now define the incidence plane using int.point-imp.point vector and local surface normal
+  Vector vec_incplane_normal = vec_nnu_to_impactPoint.Cross( (const Vector)vec_localnormal ).Unit();
+
+  // now define the scattering plane using imp.point-balloon vector and local surface normal
+  Vector vec_scatplane_normal = vec_pos_current_to_balloon.Cross( (const Vector)vec_localnormal ).Unit();
+
+  // determine incident vertical and horizontal field components (vertical = in-plane)
+  Vector E_local_h_inc = npol_local_inc.Dot(vec_incplane_normal) * vec_incplane_normal;
+  Vector E_local_v_inc = npol_local_inc - E_local_h_inc;
+
+  // recast the values with the transformation matrix
+  double E_local_v_trans_mag = mtrx_cos_trans * (mtrx_cos_inc*E_local_v_inc.Mag() - mtrx_sin_inc*E_local_h_inc.Mag())
+          - mtrx_sin_trans * (mtrx_sin_inc*E_local_v_inc.Mag() + mtrx_cos_inc*E_local_h_inc.Mag());
+  double E_local_h_trans_mag = mtrx_sin_trans * (mtrx_cos_inc*E_local_v_inc.Mag() - mtrx_sin_inc*E_local_h_inc.Mag())
+          + mtrx_cos_trans * (mtrx_sin_inc*E_local_v_inc.Mag() + mtrx_cos_inc*E_local_h_inc.Mag());
+
+  // transmitted polarization needs to be perpendicular to to-balloon vector, and the horizontal component is 'set', so need to find appropriate vector for the vertical component to ensure perpendicularity
+  Vector npol_local_trans = (E_local_h_trans_mag*vec_scatplane_normal
+          + E_local_v_trans_mag* vec_pos_current_to_balloon.Cross( (const Vector)vec_scatplane_normal ).Unit() ).Unit();
+
+  return npol_local_trans;
 };
