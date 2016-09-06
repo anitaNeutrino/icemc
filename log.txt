@@ -972,3 +972,6 @@ Moved setting of no-roughness case screen properties (vmmhz, phase) to before tr
 
 09/01/2016 16.05 PM ET M. Sutherland   [in branches/roughness]
 Removed extra arguments from ConvertInputWFtoAntennaWF in icemc.cc (leftovers from tests)
+
+09/06/2016 9.56 AM ET M. Sutherland   [in branches/roughness]
+Set default Screen y-shift to be 1*fedgeLength and not 0.5*fedgeLength, since emission region is in front of specular RFexit point.
