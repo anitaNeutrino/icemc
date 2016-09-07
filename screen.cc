@@ -21,6 +21,16 @@ Screen::Screen(int a){
 };
 
 
+void Screen::SetNsamples(int i){
+  fNsamples = i;
+};
+
+
+int Screen::GetNsamples(){
+  return fNsamples;
+};
+
+
 void Screen::SetEdgeLength(double a){
   fedgeLength = a;
 };
@@ -82,12 +92,12 @@ void Screen::ResetPositionIndex(){
 
 
 double Screen::CalcXindex(int i){
-  return (double) (i % fNsamples);
+  return (double) (i % (fNsamples+1));
 };
 
 
 double Screen::CalcYindex(int i){
-  return (double) floor(i / fNsamples);
+  return (double) floor(i / (fNsamples+1));
 };
 
 
@@ -97,10 +107,12 @@ Position Screen::GetNextPosition(int i){
   double yindex = CalcYindex(i);
   double xindex = CalcXindex(i);
 
+  // this picks points that are NOT on the edge
   pos = fcentralPoint                                       // base
-        - 0.5*fedgeLength*funit_x - 0.5*fedgeLength*fcosineProjectionFactor*funit_y              // shift to a corner
-        + (xindex/((double)(fNsamples)))*fedgeLength*funit_x   // move by x-increment
-        + (yindex/((double)(fNsamples)))*fedgeLength*fcosineProjectionFactor*funit_y;  // move by y-increment with the cosine projection correction
+        - 0.5*fedgeLength*funit_x - 0.5*fedgeLength*fcosineProjectionFactor*funit_y   // shift to a corner
+        + (1./((double)(fNsamples+1)))*fedgeLength*(funit_x + fcosineProjectionFactor*funit_y)  // move off the edge
+        + (xindex/((double)(fNsamples+1)))*fedgeLength*funit_x   // move by x-increment
+        + (yindex/((double)(fNsamples+1)))*fedgeLength*fcosineProjectionFactor*funit_y;  // move by y-increment with the cosine projection correction
 
   fpositionindex++;
   //std::cerr<<fpositionindex<<"  "<<yindex<<"  "<<xindex<<std::endl;
@@ -156,6 +168,16 @@ void Screen::AddPol(Vector v){
 
 Vector Screen::GetPol(int i){
   return fPols[i];
+};
+
+
+void Screen::AddImpactPt(Position p){
+  fImpactPt.push_back(p);
+};
+
+
+Position Screen::GetImpactPt(int i){
+  return fImpactPt[i];
 };
 
 

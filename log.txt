@@ -978,3 +978,6 @@ Set default Screen y-shift to be 1*fedgeLength and not 0.5*fedgeLength, since em
 
 09/06/2016 16.00 PM ET M. Sutherland   [in branches/roughness]
 Undid last branch commit and set default screen y-shift to be -1.0 not -0.5. Cleaned up icemc.cc comments. Moved screen's transmitted polarization calc into Screen::CalculateTransmittedPolarization(). Removed old roughness functions in Roughness class files. Moved GetBalloonLocation from Roughness into icemc.cc.
+
+09/07/2016 16.08 PM ET M. Sutherland   [in branches/roughness]
+trying to make an 'adaptive' screen procedure. Probably broken right now.

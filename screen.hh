@@ -42,6 +42,7 @@ private:
   std::vector<double> fDelays;     //container for the relative propagation phase delays; final size will be anita::NFREQ after the push_backs
   std::vector<Vector> fVec2blns;  //container of 'vector to balloon'
   std::vector<Vector> fPols;      //container of transmitted polarizations
+  std::vector<Position> fImpactPt;//container of ground impact points
 
   
 
@@ -103,6 +104,10 @@ public:
   void AddPol(Vector v);
 
   Vector GetPol(int i);
+
+  void AddImpactPt(Position p);
+
+  Position GetImpactPt(int i);
 
   Vector CalculateTransmittedPolarization(const Vector &nnu, Vector vec_specularnormal, Vector vec_localnormal, Vector vec_pos_current_to_balloon, Vector vec_nnu_to_impactPoint, Vector npol_local_inc);
 
