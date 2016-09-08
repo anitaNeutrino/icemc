@@ -981,3 +981,6 @@ Undid last branch commit and set default screen y-shift to be -1.0 not -0.5. Cle
 
 09/07/2016 16.08 PM ET M. Sutherland   [in branches/roughness]
 trying to make an 'adaptive' screen procedure. Probably broken right now.
+
+09/08/2016 9.54 AM ET M. Sutherland   [in branches/roughness]
+Modified screen screen sampling so it uses smaller physical screens in locations where the vmmhz varies sufficiently across the parent screen. This seems to be working, but need to check final signal waveforms before full simulation testing.

@@ -92,12 +92,12 @@ void Screen::ResetPositionIndex(){
 
 
 double Screen::CalcXindex(int i){
-  return (double) (i % (fNsamples+1));
+  return (double) (i % (fNsamples));
 };
 
 
 double Screen::CalcYindex(int i){
-  return (double) floor(i / (fNsamples+1));
+  return (double) floor(i / (fNsamples));
 };
 
 
@@ -110,9 +110,9 @@ Position Screen::GetNextPosition(int i){
   // this picks points that are NOT on the edge
   pos = fcentralPoint                                       // base
         - 0.5*fedgeLength*funit_x - 0.5*fedgeLength*fcosineProjectionFactor*funit_y   // shift to a corner
-        + (1./((double)(fNsamples+1)))*fedgeLength*(funit_x + fcosineProjectionFactor*funit_y)  // move off the edge
-        + (xindex/((double)(fNsamples+1)))*fedgeLength*funit_x   // move by x-increment
-        + (yindex/((double)(fNsamples+1)))*fedgeLength*fcosineProjectionFactor*funit_y;  // move by y-increment with the cosine projection correction
+        + (1./(2.*(double)(fNsamples)))*fedgeLength*(funit_x + fcosineProjectionFactor*funit_y)  // move off the edge
+        + (xindex/((double)(fNsamples)))*fedgeLength*funit_x   // move by x-increment
+        + (yindex/((double)(fNsamples)))*fedgeLength*fcosineProjectionFactor*funit_y;  // move by y-increment with the cosine projection correction
 
   fpositionindex++;
   //std::cerr<<fpositionindex<<"  "<<yindex<<"  "<<xindex<<std::endl;

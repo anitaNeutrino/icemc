@@ -2557,7 +2557,7 @@ int main(int argc,  char **argv) {
         //reset the counter and set the BASE screen properties based on current event/balloon geometry
         panel1->ResetPositionIndex();
         panel1->SetNsamples(5);
-        panel1->SetEdgeLength( 3000. );
+        panel1->SetEdgeLength( 10000. );
         panel1->SetCentralPoint( ray1->rfexit[2] + 0.8*bn1->r_bn.Distance(ray1->rfexit[2])*ray1->n_exit2bn[2].Unit() ); //move towards balloon by 80% of distance to balloon
         panel1->SetNormal( ray1->n_exit2bn[2].Unit() );
         panel1->SetCosineProjectionFactor( ray1->n_exit2bn[2].Unit().Dot(antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit()) );
@@ -2636,7 +2636,7 @@ int main(int argc,  char **argv) {
         // Third, now loop over the seed positions, resetting the screen parameters for each seed position.
         //if the min(Efield) < 0.50 max(Efield), then add these points to the seedposition vector to sample further
         for (int ii=0; ii< seedpositions.size(); ii++){
-          if(seedEdgeLengths[ii]<20.){ //don't spend time on screens with L<20 meters
+          if(seedEdgeLengths[ii]<10.){ //don't spend time on screens with L<10 meters
             //std::cerr<<"Seed screen getting too small, skipping"<<std::endl;
             continue;
           }
@@ -2701,6 +2701,9 @@ int main(int argc,  char **argv) {
             // transmitted polarization needs to be perpendicular to to-balloon vector, and the horizontal component is 'set', so need to find appropriate vector for the vertical component to ensure perpendicularity
             npol_local_trans = panel1->CalculateTransmittedPolarization(interaction1->nnu, vec_specularnormal, vec_localnormal, vec_pos_current_to_balloon, vec_nnu_to_impactPoint, npol_local_inc);
             if(npol_local_trans[0]!=npol_local_trans[0]){
+              //std::cerr<<"Bad transmitted polarization"<<std::endl;
+              //seedpositions.push_back(pos_current);
+              //seedEdgeLengths.push_back(panel1->GetEdgeLength()/panel1->GetNsamples());
               continue;   // skip if transmitted polarization is undefined
             }
 
@@ -2710,6 +2713,9 @@ int main(int argc,  char **argv) {
             double rtemp=Tools::dMin((viewangle_local-sig1->changle)/(deltheta_em_max), (viewangle_local-sig1->changle)/(deltheta_had_max));
             if (rtemp>Signal::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
               //delete interaction1;
+              //std::cerr<<"Bad viewangle: "<<viewangle_local<< std::endl;
+              //seedpositions.push_back(pos_current);
+              //seedEdgeLengths.push_back(panel1->GetEdgeLength()/panel1->GetNsamples());
               continue;
             }
             // apply the off-angle tapering
@@ -2719,6 +2725,9 @@ int main(int argc,  char **argv) {
               sig1->TaperVmMHz(viewangle_local, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local[k], vmmhz_em[k]);// this applies the angular dependence.
             }
             if(vmmhz_local[0]==0){
+              //std::cerr<<"VmMHz == 0"<<std::endl;
+              //seedpositions.push_back(pos_current);
+              //seedEdgeLengths.push_back(panel1->GetEdgeLength()/panel1->GetNsamples());
               continue;
             }
 
@@ -2736,16 +2745,23 @@ int main(int argc,  char **argv) {
 
           //std::cerr<<minE<<"  "<<maxE;
 
-          if (minE < 0.75*maxE){ //if true, reject these points and pass the positions back into seedpositions so we sample at higher resolutions (smaller edge length)
-            //std::cerr<<"  redo."<<std::endl;
+          if (minE < 0.33*maxE){ //if true, reject these points and pass the positions back into seedpositions so we sample at higher resolutions (smaller edge length)
+            std::cerr<<ii<<"  "<<seedEdgeLengths[ii]<<"  <-- ! redo."<<std::endl;
             for (int jj=0; jj<seedscreens_pos.size(); jj++){
               seedpositions.push_back(seedscreens_pos[jj]);
               seedEdgeLengths.push_back(panel1->GetEdgeLength()/panel1->GetNsamples());
+            roughout<<inu<<"  "
+                      <<0<<"  "
+                      <<seedscreens_impactpt[jj].Lon()<<"  "
+                      <<-90+seedscreens_impactpt[jj].Lat()<<"  "
+                      <<0<<"  "
+                      <<panel1->GetEdgeLength()<<"  "
+                      <<std::endl;
             }
             continue;
           }
           else{ // otherwise store these and move on to the next seed screen
-            //std::cerr<<"  saved."<<std::endl;
+            std::cerr<<ii<<"  "<<seedEdgeLengths[ii]<<"  saved."<<std::endl;
             for (int jj=0; jj<seedscreens_pos.size(); jj++){
               // increment the valid point counter so we can track the size of the screen's vmmhz_freq vector
               num_validscreenpoints++;
@@ -2768,6 +2784,7 @@ int main(int argc,  char **argv) {
                       <<seedscreens_impactpt[jj].Lon()<<"  "
                       <<-90+seedscreens_impactpt[jj].Lat()<<"  "
                       <<seedscreens_phasedelay[jj]*PI/180.<<"  "
+                      <<panel1->GetEdgeLength()<<"  "
                       <<std::endl;
 
             }// end for jj<seedscreens_pos
