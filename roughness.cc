@@ -21,73 +21,73 @@
 #include "spline.h"
 
 Roughness::Roughness(int a){
-  file_roughness = "data/roughness_full.txt";
+  file_roughness = "data/roughness_full_dPdtheta.txt";
   froughsetting = a;
   if (froughsetting==0){
     gritvalue = -1;
     Ntheta0 = 8;
 
-    amplitude = 11533.5079801;
-    x_mean = -70.7895043835*PI/180.;
-    y_mean = -117.265622073*PI/180.;
-    x_stddev = -62.0590662533*PI/180.;
-    y_stddev = 0.278860665027*PI/180.;
-    gaustheta = 1.02423010135;
-    maxmeaspower = 240.000000;
-    fitfuncmax = 1026.090470;
+    amplitude = 1112.67009843;
+    x_mean = -20.0115394201*PI/180.;
+    y_mean = -33.7371829382*PI/180.;
+    x_stddev = -34.497529739*PI/180.;
+    y_stddev = 0.231052092516*PI/180.;
+    gaustheta = 1.02432941913;
+    maxmeaspower = 99.006880;
+    fitfuncmax = 560.591438;
   }
   else if (froughsetting==1){
     gritvalue = 400;
     Ntheta0 = 8;
 
-    amplitude = 1.93882105435;
-    x_mean = 2.06659758103*PI/180.;
-    y_mean = 2.45567914294*PI/180.;
-    x_stddev = 43.1937102786*PI/180.;
-    y_stddev = 4.21294249006*PI/180.;
-    gaustheta = 0.967793908981;
-    maxmeaspower = 2.115675;
-    fitfuncmax = 1.936978;
+    amplitude = 0.798064953724;
+    x_mean = -4.84261442966*PI/180.;
+    y_mean = -7.05473728178*PI/180.;
+    x_stddev = 40.3467981404*PI/180.;
+    y_stddev = 3.49683983104*PI/180.;
+    gaustheta = 0.928258773739;
+    maxmeaspower = 0.874336;
+    fitfuncmax = 0.781501;
   }
   else if (froughsetting==2){
     gritvalue = 1000;
     Ntheta0 = 9;
 
-    amplitude = 4.98141776637;
-    x_mean = 5.82182777326*PI/180.;
-    y_mean = 7.98147417219*PI/180.;
-    x_stddev = 33.4842444088*PI/180.;
-    y_stddev = 2.3019635059*PI/180.;
-    gaustheta = 1.00169997698;
-    maxmeaspower = 6.014093;
-    fitfuncmax = 4.972172;
+    amplitude = 1.99315873416;
+    x_mean = -1.43758569242*PI/180.;
+    y_mean = -2.9617313585*PI/180.;
+    x_stddev = 32.2255020021*PI/180.;
+    y_stddev = 2.05472924304*PI/180.;
+    gaustheta = 0.97544239723;
+    maxmeaspower = 2.087395;
+    fitfuncmax = 1.985588;
   }
   else if (froughsetting==3){
     gritvalue = 1500;
     Ntheta0 = 9;
 
-    amplitude = 10.6775743805;
-    x_mean = 2.72644088639*PI/180.;
-    y_mean = 4.30910349029*PI/180.;
-    x_stddev = 30.5405941232*PI/180.;
-    y_stddev = 1.19768826165*PI/180.;
-    gaustheta = 1.01394332614;
-    maxmeaspower = 11.930000;
-    fitfuncmax = 10.643788;
+    amplitude = 6.39968975801;
+    x_mean = -18.3706965926*PI/180.;
+    y_mean = -29.1330198008*PI/180.;
+    x_stddev = 41.5606379916*PI/180.;
+    y_stddev = 1.09720021655*PI/180.;
+    gaustheta = 1.00846567317;
+    maxmeaspower = 4.921467;
+    fitfuncmax = 4.539596;
   }
   else{
     froughsetting = 1; //default to 400 grit
     gritvalue = 400;
     Ntheta0 = 8;
 
-    amplitude = 1.93882105435;
-    x_mean = 2.06659758103*PI/180.;
-    y_mean = 2.45567914294*PI/180.;
-    x_stddev = 43.1937102786*PI/180.;
-    y_stddev = 4.21294249006*PI/180.;
-    gaustheta = 0.967793908981;
-    maxmeaspower = 2.115675;
-    fitfuncmax = 1.936978;
+    amplitude = 0.798064953724;
+    x_mean = -4.84261442966*PI/180.;
+    y_mean = -7.05473728178*PI/180.;
+    x_stddev = 40.3467981404*PI/180.;
+    y_stddev = 3.49683983104*PI/180.;
+    gaustheta = 0.928258773739;
+    maxmeaspower = 0.874336;
+    fitfuncmax = 0.781501;
   }
 
   for (int ii=0; ii<8; ii++){
@@ -120,7 +120,8 @@ Roughness::Roughness(int a){
     }
   }
 
-
+  //++++++++++++++++++++++++++++++++++++++
+  // use this for 1+1 interpolation
   std::cerr<<"Reading roughness data file:  "<< file_roughness<<std::endl;
   ReadDataFile();
   std::cerr<<"Constructing roughness splines"<<std::endl;

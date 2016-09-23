@@ -596,7 +596,26 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
 	
   } // loop over bands
   // now we have converted the signal to time domain waveforms for all the bands of the antenna
-      
+
+
+
+  ofstream props;
+  std::string stemp;
+  if(settings1->ROUGHNESS>0)
+    stemp = settings1->outputdir+"/rough"+to_string(settings1->ROUGHSIZE)+"_"+to_string(ilayer)+"_"+to_string(ifold)+".dat";
+  else
+    stemp = settings1->outputdir+"/rough"+to_string(settings1->ROUGHNESS)+"_"+to_string(ilayer)+"_"+to_string(ifold)+".dat";
+  props.open(stemp);
+  for (int iband=0;iband<5;iband++) {
+    for (int k=0;k<anita1->NFOUR/2;k++) {
+      props << iband <<"  "<<k<<"  "<< anita1->signal_vpol_inanita[iband][k]<<"  "<<v_banding_rfcm_h_forfft[iband][k]<<std::endl;
+    }
+  }
+  props.close();
+
+
+
+
   double integrateenergy[5]={0.,0.,0.,0.,0.};
       
   if (settings1->SIGNAL_FLUCT) {

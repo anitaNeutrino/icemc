@@ -984,3 +984,6 @@ trying to make an 'adaptive' screen procedure. Probably broken right now.
 
 09/08/2016 9.54 AM ET M. Sutherland   [in branches/roughness]
 Modified screen screen sampling so it uses smaller physical screens in locations where the vmmhz varies sufficiently across the parent screen. This seems to be working, but need to check final signal waveforms before full simulation testing.
+
+09/23/2016 13.25 PM ET M. Sutherland   [in branches/roughness]
+Modified trigger.cc to output v_banding_rfcm_h_forfft and v_banding_rfcm_e_forfft (which is also anita1::signal_vpol_inanita) to a file. Re-interpreted UCLA measurements as dP/dTheta, and re-scaled the values by the angular bin widths, saved in a new file (data/roughness_full_dPdtheta.dat), and re-fit the parameters and saved them in roughness.cc. Added the new roughness file. In icemc.cc, 1) added (&& not settings1->ROUGHNESS) as a condition in the check if absorption probability is near 1, 2) added output file for record event properties, 3) adjusted Emag_local by the angular size of the element, since interpolatedPower gets dP/dtheta, not P, 4) added output file for record base screen properties.
