@@ -131,6 +131,23 @@ double Screen::GetVmmhz_freq(int i){
 };
 
 
+void Screen::AddVmmhz0(double A){
+  fVmmhz0.push_back(A);
+};
+
+double Screen::GetVmmhz0(int i){
+  return fVmmhz0[i];
+};
+
+void Screen::AddViewangle(double A){
+  fViewangle.push_back(A);
+};
+
+double Screen::GetViewangle(int i){
+  return fViewangle[i];
+};
+
+
 void Screen::AddDelay(double A){
   fDelays.push_back(A);
 };

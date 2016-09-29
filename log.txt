@@ -987,3 +987,6 @@ Modified screen screen sampling so it uses smaller physical screens in locations
 
 09/23/2016 13.25 PM ET M. Sutherland   [in branches/roughness]
 Modified trigger.cc to output v_banding_rfcm_h_forfft and v_banding_rfcm_e_forfft (which is also anita1::signal_vpol_inanita) to a file. Re-interpreted UCLA measurements as dP/dTheta, and re-scaled the values by the angular bin widths, saved in a new file (data/roughness_full_dPdtheta.dat), and re-fit the parameters and saved them in roughness.cc. Added the new roughness file. In icemc.cc, 1) added (&& not settings1->ROUGHNESS) as a condition in the check if absorption probability is near 1, 2) added output file for record event properties, 3) adjusted Emag_local by the angular size of the element, since interpolatedPower gets dP/dtheta, not P, 4) added output file for record base screen properties.
+
+09/29/2016 14.00 PM ET M. Sutherland   [in branches/roughness]
+Moved vmmhz array and Taper outside the loop that checks for valid screen points, so that the frequncy arrays are only constructed for valid points. This reduces runtime by a factor of 7 roughly.

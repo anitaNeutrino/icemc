@@ -2529,8 +2529,10 @@ int main(int argc,  char **argv) {
 
         /////////////
 
-        double minimumScreenLength = 0.5; // screen minimum size limit, default 8.
-        double subscreenFractionLimit = 1e-2; // default 1e-4
+        //double minimumScreenLength = 8.; // screen minimum size limit, default 8.
+        double subscreenFractionLimit = 1e-4; // default 1e-4
+        int maximumSubscreenGeneration = 2;  // value is inclusive; default 3
+        int subscreenDivisions = 4;
         int num_validscreenpoints = 0;
         Position pos_basescreen_centralpos;
         Position pos_current;
@@ -2552,7 +2554,7 @@ int main(int argc,  char **argv) {
         Vector npol_local_inc, npol_local_trans;
         Vector temp_a;
 
-        double Emag_local;
+        double Emag_local, Emag_local_notaper;
         Vector Efield_local;
         Vector Efield_screentotal = Vector(0,0,0);
 
@@ -2561,9 +2563,11 @@ int main(int argc,  char **argv) {
         std::vector<double> basescrn_length;            // container for base screen edge lengths
         std::vector<Position> seedpositions;            // container for seed positions for additional passes
         std::vector<double> seedEdgeLengths;            // container for edge lengths for additional passes
+        std::vector<int> seedGeneration;                // container for tracking generations for additional passes
 
         double pathlength_local;        // set for each screen point
-        double vmmhz_local[Anita::NFREQ];   //  V/m/MHz at balloon (after all steps)
+        double vmmhz_local;   //  V/m/MHz at balloon (after all steps)
+        double tempvar;
 
         //iterate points on the screen, get their position and project back to find ground impact
         //calculate incident and transmitted angles, look up power fraction and loss correction factor
@@ -2629,7 +2633,7 @@ int main(int argc,  char **argv) {
 
           /////
           // Field Magnitude
-          element_sa = ( panel1->GetEdgeLength() / pos_projectedImpactPoint.Distance(pos_current) ) * 180./PI;
+          element_sa = ( (panel1->GetEdgeLength()/panel1->GetNsamples()) / pos_projectedImpactPoint.Distance(pos_current) ) * 180./PI;
           interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
           Emag_local = vmmhz1m_max
                         * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local));
@@ -2660,6 +2664,7 @@ int main(int argc,  char **argv) {
           //}
           seedpositions.push_back(basescrn_pos[ii]);
           seedEdgeLengths.push_back(basescrn_length[ii]);
+          seedGeneration.push_back(1);
         }
         basescreenout.close();
         //std::cerr<<seedpositions.size()<<" good seeds."<<std::endl;
@@ -2671,7 +2676,7 @@ int main(int argc,  char **argv) {
           //std::cerr<<"  Screen seed "<<ii;
 
           panel1->ResetPositionIndex();
-          panel1->SetNsamples(5); //default 5
+          panel1->SetNsamples(subscreenDivisions); //default 5
           panel1->SetEdgeLength( seedEdgeLengths[ii] );
           panel1->SetCentralPoint( seedpositions[ii] );
           // the Nsamples, normal, cosine projection factor, and unit vectors are the same as for the base screen
@@ -2681,11 +2686,12 @@ int main(int argc,  char **argv) {
 
           //these are per-screen and will be overwritten for each seed screen, use to store values before deciding if screen was 'valid'
           std::vector<Position> seedscreens_pos;
-          std::vector<double> seedscreens_vmmhzlocal;
+          std::vector<double> seedscreens_vmmhzlocal;  //use this to save Emag_local aka vmmhz[0] ONLY
           std::vector<Vector> seedscreens_2bln;
           std::vector<Vector> seedscreens_pols;
           std::vector<double> seedscreens_phasedelay;
           std::vector<Position> seedscreens_impactpt;
+          std::vector<double> seedscreens_viewangle;
 
           for (int jj=0; jj< panel1->GetNsamples()*panel1->GetNsamples(); jj++){
             Emag_local = 0.;
@@ -2711,6 +2717,8 @@ int main(int argc,  char **argv) {
             theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
             theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
 
+            viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
+
             /////
             // Field Magnitude
             element_sa = ( panel1->GetEdgeLength() / pos_projectedImpactPoint.Distance(pos_current) ) * 180./PI;
@@ -2721,6 +2729,19 @@ int main(int argc,  char **argv) {
             pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
             Emag_local /= pathlength_local ;
             Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
+            Emag_local_notaper = Emag_local;
+            //check the vmmhz[0] component ONLY here
+            deltheta_em[0]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[0];
+            deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
+            sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, Emag_local, vmmhz_em[0]);// this applies the angular dependence.
+            //check if Taper would remove this
+            if(Emag_local==0){
+              //std::cerr<<"VmMHz == 0"<<std::endl;
+              //seedpositions.push_back(pos_current);
+              //seedEdgeLengths.push_back(panel1->GetEdgeLength()/panel1->GetNsamples());
+              //std::cerr<<" -------"<<std::endl;
+              continue;
+            }
 
             /////
             // Transmitted Polarization
@@ -2737,63 +2758,40 @@ int main(int argc,  char **argv) {
               continue;   // skip if transmitted polarization is undefined
             }
 
-            // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor) and making an array across frequency bins by putting in frequency dependence.
-            sig1->GetVmMHz(Emag_local, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local, Anita::NFREQ);
-            viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
-            double rtemp=Tools::dMin((viewangle_local-sig1->changle)/(deltheta_em_max), (viewangle_local-sig1->changle)/(deltheta_had_max));
-            if (rtemp>Signal::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
-              //delete interaction1;
-              //std::cerr<<"Bad viewangle: "<<viewangle_local<< std::endl;
-              //seedpositions.push_back(pos_current);
-              //seedEdgeLengths.push_back(panel1->GetEdgeLength()/panel1->GetNsamples());
-              continue;
-            }
-            // apply the off-angle tapering
-            for (int k=0;k<Anita::NFREQ;k++) {
-              deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
-              deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
-              sig1->TaperVmMHz(viewangle_local, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local[k], vmmhz_em[k]);// this applies the angular dependence.
-            }
-            if(vmmhz_local[0]==0){
-              //std::cerr<<"VmMHz == 0"<<std::endl;
-              //seedpositions.push_back(pos_current);
-              //seedEdgeLengths.push_back(panel1->GetEdgeLength()/panel1->GetNsamples());
-              continue;
-            }
-
-            minE = Tools::dMin(minE, Emag_local);
-            maxE = Tools::dMax(maxE, Emag_local);
+            minE = Tools::dMin(minE, Emag_local_notaper);
+            maxE = Tools::dMax(maxE, Emag_local_notaper);
             seedscreens_pos.push_back(pos_current);
-            for (int kk=0; kk<Anita::NFREQ; kk++){
-              seedscreens_vmmhzlocal.push_back( vmmhz_local[kk] );
-            }
+            seedscreens_vmmhzlocal.push_back( Emag_local_notaper );
+            //for (int kk=0; kk<Anita::NFREQ; kk++){
+            //  seedscreens_vmmhzlocal.push_back( vmmhz_local[kk] );
+            //}
             seedscreens_2bln.push_back(vec_pos_current_to_balloon);
             seedscreens_pols.push_back(npol_local_trans);
             seedscreens_phasedelay.push_back( TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[0]/CLIGHT * 180./PI );
             seedscreens_impactpt.push_back(pos_projectedImpactPoint);
-          }// end for jj < 5*5 for this seed screen
+            seedscreens_viewangle.push_back(viewangle_local);
+          }// end for jj for this seed screen
 
-          //std::cerr<<minE<<"  "<<maxE;
+          // simply drop this screen if the maximum vmmhz[0] is below some threshold
+          if (maxE < 1.e-50){
+            continue;
+          }
 
-          if( (minE >= subscreenFractionLimit*maxE) || (minimumScreenLength > panel1->GetEdgeLength()/panel1->GetNsamples()) ){ // store these and move on to the next seed screen
+          //if( (minE >= subscreenFractionLimit*maxE) || (minimumScreenLength > panel1->GetEdgeLength()/panel1->GetNsamples()) ){ // store these and move on to the next seed screen
+          if( (minE >= subscreenFractionLimit*maxE) || (seedGeneration[ii] == maximumSubscreenGeneration) ){ // store these and move on to the next seed screen
             //std::cerr<<ii<<"  "<<seedEdgeLengths[ii]<<"  saved."<<std::endl;
             double pol_bln_vert, pol_bln_horiz;
             for (int jj=0; jj<seedscreens_pos.size(); jj++){
               // increment the valid point counter so we can track the size of the screen's vmmhz_freq vector
               num_validscreenpoints++;
 
-              Efield_local = seedscreens_vmmhzlocal[jj*Anita::NFREQ] * seedscreens_pols[jj];
-              Efield_screentotal = Efield_screentotal + Efield_local;
-
               //add the contribution to the running total
-              for (int k=0;k<Anita::NFREQ;k++) {
-                vmmhz[k] += seedscreens_vmmhzlocal[jj*Anita::NFREQ + k];
-                panel1->AddVmmhz_freq(seedscreens_vmmhzlocal[jj*Anita::NFREQ + k]);
-              }
+              panel1->AddVmmhz0(seedscreens_vmmhzlocal[jj]);
               panel1->AddVec2bln(seedscreens_2bln[jj]);
               panel1->AddPol(seedscreens_pols[jj]);
               panel1->AddDelay( seedscreens_phasedelay[jj] ); 
               panel1->AddImpactPt(seedscreens_impactpt[jj]);
+              panel1->AddViewangle(seedscreens_viewangle[jj]);
 
               pol_bln_vert = npol_local_trans.Dot(vec_bln_vert);
               pol_bln_horiz = (npol_local_trans - pol_bln_vert*vec_bln_vert).Mag();
@@ -2802,7 +2800,7 @@ int main(int argc,  char **argv) {
 
 
               roughout<<inu<<"  "
-                      <<seedscreens_vmmhzlocal[jj*Anita::NFREQ]<<"  "
+                      <<seedscreens_vmmhzlocal[jj]<<"  "
                       <<seedscreens_impactpt[jj].Lon()<<"  "
                       <<-90+seedscreens_impactpt[jj].Lat()<<"  "
                       <<seedscreens_phasedelay[jj]*PI/180.<<"  "
@@ -2820,6 +2818,7 @@ int main(int argc,  char **argv) {
             for (int jj=0; jj<seedscreens_pos.size(); jj++){
               seedpositions.push_back(seedscreens_pos[jj]);
               seedEdgeLengths.push_back(panel1->GetEdgeLength()/panel1->GetNsamples());
+              seedGeneration.push_back(seedGeneration[ii]+1);
               /*roughout<<inu<<"  "
                       <<0<<"  "
                       <<seedscreens_impactpt[jj].Lon()<<"  "
@@ -2832,8 +2831,33 @@ int main(int argc,  char **argv) {
         }// end for ii loop over seedpositions
 
         panel1->SetNvalidPoints(num_validscreenpoints);
+        std::cerr<<panel1->GetNvalidPoints()<<std::endl;
+
+        //now construct the Screen's vmmhz array for all points, so it gets passed to the trigger object later to make the waveforms
+        // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor) and making an array across frequency bins by putting in frequency dependence.
+        double vmmhz_local_array[Anita::NFREQ];
+        for (int jj=0; jj<panel1->GetNvalidPoints(); jj++){
+
+          sig1->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
+
+          // apply the off-angle tapering
+          for (int k=0;k<Anita::NFREQ;k++) {
+            deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
+            deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
+            sig1->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
+            panel1->AddVmmhz_freq(vmmhz_local_array[k]);
+
+            vmmhz[k] += vmmhz_local_array[k];
+          }
+
+
+              Efield_local = seedscreens_vmmhzlocal[jj] * seedscreens_pols[jj];
+              Efield_screentotal = Efield_screentotal + Efield_local;
         vmmhz_max = Efield_screentotal.Mag();
         n_pol = Efield_screentotal.Unit();
+
+
+        }//end jj over panel Nvalid points
       }//end else roughness
 
       roughout.close();
@@ -4149,7 +4173,7 @@ int main(int argc,  char **argv) {
   cout<<"Total time elapsed is "<<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<endl;
   
   foutput << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<endl;
-  
+  std::cerr<<"CUT  "<< CUTONWEIGHTS<<std::endl;
   delete anita1;
   return 0;
 
