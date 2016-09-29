@@ -990,3 +990,6 @@ Modified trigger.cc to output v_banding_rfcm_h_forfft and v_banding_rfcm_e_forff
 
 09/29/2016 14.00 PM ET M. Sutherland   [in branches/roughness]
 Moved vmmhz array and Taper outside the loop that checks for valid screen points, so that the frequncy arrays are only constructed for valid points. This reduces runtime by a factor of 7 roughly.
+
+09/29/2016 15.00 PM ET M. Sutherland   [in branches/roughness]
+Modified Anita::MakeArraysforFFT() so it takes a bool argument about whether to use a constant delay factor: if true it uses the value passed (default 90), if false the function does not apply phase factors. Instead to use the screen's phases, I copied the relevant code from that function and pasted it below the function call in AntTrigger::ConvertInputWFtoAntennaWF().

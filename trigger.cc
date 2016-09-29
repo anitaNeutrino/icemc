@@ -521,7 +521,7 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
     Tools::Zero(v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
     Tools::Zero(v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
 	
-    anita1->MakeArraysforFFT(v_banding_rfcm_e[iband],v_banding_rfcm_h[iband],v_banding_rfcm_e_forfft[iband],v_banding_rfcm_h_forfft[iband], 90.);
+    anita1->MakeArraysforFFT(v_banding_rfcm_e[iband],v_banding_rfcm_h[iband],v_banding_rfcm_e_forfft[iband],v_banding_rfcm_h_forfft[iband], 90., true);
 	
     // for some reason I'm averaging over 10 neighboring bins
     // to get rid of the zero bins
@@ -1141,10 +1141,18 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
 
       anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, ifreq, tmp_vhz_rx_e[ifreq], tmp_vhz_rx_h[ifreq]);
     }
-      
+
     // change their length from Anita::NFREQ to HALFNFOUR
-    anita1->MakeArraysforFFT(tmp_vhz_rx_e, tmp_vhz_rx_h, tmp_volts_rx_e_forfft, tmp_volts_rx_h_forfft, panel1->GetDelay(jpt));
-      
+    anita1->MakeArraysforFFT(tmp_vhz_rx_e, tmp_vhz_rx_h, tmp_volts_rx_e_forfft, tmp_volts_rx_h_forfft, 90., false);// 90 is just a placeholder
+    //need to handle phase delay explicitly here
+    for (int ifour=0;ifour<NFOUR/4;ifour++) {
+      tmp_volts_rx_e_forfft[2*ifour]*=cos(panel1->GetDelay(jpt*Anita::NFOUR/4 + 2*ifour)*PI/180.);
+      tmp_volts_rx_e_forfft[2*ifour+1]*=sin(panel1->GetDelay(jpt*Anita::NFOUR/4 + 2*ifour)*PI/180.);
+      tmp_volts_rx_h_forfft[2*ifour]*=cos(panel1->GetDelay(jpt*Anita::NFOUR/4 + 2*ifour)*PI/180.);
+      tmp_volts_rx_h_forfft[2*ifour+1]*=sin(panel1->GetDelay(jpt*Anita::NFOUR/4 + 2*ifour)*PI/180.);  
+    }
+
+
     // now the last two are in the frequency domain
     // convert to the time domain
     Tools::realft(tmp_volts_rx_e_forfft,1,anita1->HALFNFOUR); // EH, I believe this has to the -1 for inverse FFT (1 for forward FFT which is t-domain to f-domain)
@@ -1233,7 +1241,7 @@ void AntTrigger::ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer,
     }
     
     // change their length from Anita::NFREQ to HALFNFOUR
-    anita1->MakeArraysforFFT(vhz_rx_rfcm_e,vhz_rx_rfcm_h,anita1->volts_rx_rfcm_e,anita1->volts_rx_rfcm_h, 90.);
+    anita1->MakeArraysforFFT(vhz_rx_rfcm_e,vhz_rx_rfcm_h,anita1->volts_rx_rfcm_e,anita1->volts_rx_rfcm_h, 90., true);
       
     // double volts_rx_rfcm_e_freq[anita1->HALFNFOUR];
     // for (int i=0;i<anita1->HALFNFOUR;i++) {
@@ -1282,7 +1290,7 @@ void AntTrigger::ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer,
     }
 
     // change their length from Anita::NFREQ to HALFNFOUR
-    anita1->MakeArraysforFFT(vhz_rx_rfcm_lab_e,vhz_rx_rfcm_lab_h,anita1->volts_rx_rfcm_lab_e,anita1->volts_rx_rfcm_lab_h, 90.);
+    anita1->MakeArraysforFFT(vhz_rx_rfcm_lab_e,vhz_rx_rfcm_lab_h,anita1->volts_rx_rfcm_lab_e,anita1->volts_rx_rfcm_lab_h, 90., true);
       
     // now the last two are in the frequency domain
     // convert to the time domain
