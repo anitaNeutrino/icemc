@@ -155,8 +155,8 @@ double gps_offset=0;
 // inputs
 
 //double EXPONENT=20.; // energy exponent
-//double pnu=pow(10., EXPONENT);   // energy of neutrinos
-double pnu=pow(10., 20);   // energy of neutrinos
+//double pnu=pow(10., EXPONENT);   //energy of neutrinos
+double pnu=pow(10., 20);   //!< energy of neutrinos
 
 // for roughness studies
 double trans_angle[9][1000];
@@ -275,9 +275,9 @@ double vnoise_discone=0.; // noise on each discone
 double BW_DISCONES=300.E6-120.E6; // bandwidth of the discones
 
 // ray tracing
-double fresnel1=0;  // net fresnel factor on field at ice-firn interface
+double fresnel1=0;  //!< net fresnel factor on field at ice-firn interface
 double fresnel1_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX];  // for slac simulation
-double fresnel2=0;  // net fresnel factor on field at firn-air
+double fresnel2=0;  //!< net fresnel factor on field at firn-air
 double mag1=0;  // magnification factor on field at ice-firn interface
 double mag1_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX];// for slac simulation
 double mag2=0;  // magnification factor on field in firn-air
@@ -428,7 +428,7 @@ double MAX_ATTENLENGTH=1671;
 //double logscalefactor_taper=0; // scalefactor due to being off cerenkov cone
 double maxtaper=0; // this is just for plotting - maximum you are ever off cerenkov cone while
 //an event is detectable
-double dviewangle_deg=0; // same as taper,  just used for plotting
+double dviewangle_deg=0; //!< deviation from the cherenkov angle
 
 // double downwardchord1=0.; // these variables are used in the iterative
 // double downwardchord2=0.;// procedure that is used to find the neutrino
@@ -908,9 +908,9 @@ int main(int argc,  char **argv) {
   double viewangle_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // viewing angle for each antenna
   
   double cosalpha; // angle between nu momentum and surface normal at earth entrance point
-  double mytheta; //alpha minus 90 degrees
+  double mytheta; //!< alpha minus 90 degrees
   double cosbeta0; // angle between nu momentum and surface normal at interaction point.
-  double mybeta; // beta minus 90 degrees
+  double mybeta; //!< beta minus 90 degrees
   double nuexitlength=0; // distance from interaction to where neutrino would leave
   double nuexitice=0; 
   double nuentrancelength=0; // for taus
