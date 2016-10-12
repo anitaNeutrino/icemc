@@ -737,7 +737,8 @@ int main(int argc,  char **argv) {
   if (settings1->ROUGHNESS==1)
     ReadRoughnessData(settings1, trans_angle, transmission, minangle_roughness, maxangle_roughness, npoints_roughness, max_angles_backplane);
   
-  
+
+
   // declare instance of trigger class.
   // this constructor reads from files with info to parameterize the
   // signal efficiency curves.
@@ -2002,7 +2003,6 @@ int main(int argc,  char **argv) {
       if (!interaction1->iceinteraction)
         continue;
       count1->iceinteraction[whichray]++;
-
       
       if (beyondhorizon) {
         //delete ray1;
@@ -2162,8 +2162,9 @@ int main(int argc,  char **argv) {
         
         taus1->GetTauWeight(primary1,  settings1,  antarctica,  interaction1,  pnu,  1,  ptauf, crust_entered);
 
-        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
 
+        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
+	
         nutauweight = interaction1->weight_nu_prob;
         tauweight = taus1->weight_tau_prob;
 
@@ -2372,7 +2373,7 @@ int main(int argc,  char **argv) {
       }
       
       count1->ngoodfracs[whichray]++;
-      
+
       // these variables are just for plotting
       nsigma_em_threshold=theta_threshold/deltheta_em_max;
       nsigma_had_threshold=theta_threshold/deltheta_had_max;
@@ -2397,17 +2398,18 @@ int main(int argc,  char **argv) {
       
       double weight_test=0;  // weight if the whole chord from interaction to earth entrance is ice.
       // take best case scenario chord length and find corresponding weight
+      
       IsAbsorbed(chord_kgm2_test, len_int_kgm2, weight_test);
       // if the probably the neutrino gets absorbed is almost 1,  throw it out.
-      
+
       if (bn1->WHICHPATH!=4 && settings1->FORSECKEL!=1 && !settings1->SKIPCUTS) {
         if (weight_test<CUTONWEIGHTS) {
           //delete ray1;
           //delete interaction1;
-          continue;
+	  continue;
         }
       }
-      
+
       count_chanceofsurviving++;
       
       
@@ -3310,9 +3312,15 @@ int main(int argc,  char **argv) {
       //            global trigger         //
       ///////////////////////////////////////
       // for Anita-lite,  Anita Hill, just L1 requirement on 2 antennas. This option is currently disabled
+      // Save events that generate an RF trigger or that are part of the min bias sample
+      // Minimum bias sample: save all events that we could see at the payload
+      // Independentely from the fact that they generated an RF trigger
+
       if ( (thispasses[0]==1 && anita1->pol_allowed[0]==1)  
 	   || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
-	   || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD) ) {
+	   || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD)
+	   || (settings1->MINBIAS==1)) {
+
 
         if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
@@ -3613,7 +3621,8 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->eventNumber = inu;
               rawHeaderPtr->surfSlipFlag = 0;
               rawHeaderPtr->errorFlag = 0;
-              rawHeaderPtr->trigType = 1;//wrong?!
+	      if (settings1->MINBIAS==1) rawHeaderPtr->trigType = 8; // soft-trigger
+	      else                       rawHeaderPtr->trigType = 1; // RF trigger
               rawHeaderPtr->run = run_no;
 
 	      // put the vpol only as a placeholder - not sure what I should do here!
@@ -3648,8 +3657,6 @@ int main(int argc,  char **argv) {
               delete Adu5PatPtr;
 #endif
 
-              // sourceLon = interaction1->nuexit.Lon() - 180;
-              // sourceLat = interaction1->nuexit.Lat();
               sourceLon = ray1->rfexit[2].Lon() - 180;
               sourceLat = ray1->rfexit[2].Lat() - 90;
 	      sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon+180, sourceLat+90);

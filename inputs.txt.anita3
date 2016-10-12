@@ -6,7 +6,7 @@
 1      # 1=write to histograms and trees, 0=don't write to histograms & trees
 0      # 1=write to ray tree (for roughness study), 0 don't write
 0     # 1=only write to final tree (for events that pass)
-10000  # Maximum number of entries to store in histograms (10000=default).
+2000000  # Maximum number of entries to store in histograms (10000=default).
 65546  # Random number seed
 0      # Write neutrino position info to file
 0	#EVENTSMAP (1)draw the events distribution map or (0) not
@@ -57,7 +57,7 @@
 0      # LCP of 2nd antenna is dead
 ### Modifications to signal and noise for testing
 1      # Add noise fluctuations to the signal. 0=no or 1=yes=default
-0	# zero the signal to measure noise hits
+1	# zero the signal to measure noise hits
 0	# randomize rotation of polarization around ray arrival direction at thepayload by a gaussian with width x degrees (0 = no randomisation)
 1      # Turn on (1) and off (0) the LPM effect 1=default
 1.     # For systematics studies:  multiply Jaime's E-field by this factor.  1=default
@@ -122,3 +122,6 @@
 1       # apply impulse response (default for Anita-3 is 1)
 # Settings for time-dependent thresholds
 1       # use time-dependent thresholds (only available for Anita-3)
+# Settings for simulating thermal noise
+1       # generate thermal noise using flight data (only available for Anita-3)
+0       # generate minimum bias sample (save events independently from the RF trigger)

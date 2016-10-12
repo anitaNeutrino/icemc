@@ -216,13 +216,14 @@ int Anita::GetRx(int ilayer, int ifold) { // get antenna number based on which l
     return irx;
     
 }
+
 int Anita::GetRxTriggerNumbering(int ilayer, int ifold) { // get antenna number based on which layer and position it is
   // make the top trigger layer count 1-16 left to right
   if (ilayer==0)
     //cout << "ilayer, ifold, getrx are " << ilayer << "\t" << ifold << "\t" << 2*ifold+ilayer << "\n";
-    return 2*ifold+1;
-  else if(ilayer==1) {
     return 2*ifold;
+  else if(ilayer==1) {
+    return 2*ifold+1;
   }
   else {
     //cout << "ilayer, ifold, getrx are " << ilayer << "\t" << ifold << "\t" << GetRx(ilayer,ifold) << "\n";
@@ -4290,8 +4291,28 @@ void Anita::readImpulseResponse(Settings *settings1){
     }
     
   }
+
+  TFile *fRayleighAnita3 = new TFile("data/RayleighAmplitudesAnita3_noSun_Interp.root", "read");
+
+  for (int iant=0;iant<48;iant++){
+    RayleighFits[0][iant] = (TGraph*)fRayleighAnita3->Get(Form("grSigma%dV_interp", iant+1));
+    RayleighFits[1][iant] = (TGraph*)fRayleighAnita3->Get(Form("grSigma%dH_interp", iant+1));
+  }
+  
+  Double_t *timeVals = new Double_t [780];
+  Double_t *voltVals = new Double_t [780];
+  for(int i=0;i<780;i++){
+    timeVals[i] = i*1./2.6;
+    voltVals[i] = 0.1;
+  }
+  
+  RFSignal *rfTemplate = new RFSignal(780,timeVals,voltVals,true);
+  
+  numFreqs=rfTemplate->getNumFreqs();
+  freqs=rfTemplate->getFreqs();
+  
+  fRand = new TRandom3(settings1->SEED);
   
 }
-
 
 #endif

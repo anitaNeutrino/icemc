@@ -36,7 +36,6 @@ private:
   //  string anitaliteflight; // the gps path of the anita-lite flight
   //string anitaflight;// gps path of anita flight
  
-  TRandom3 Rand3;
 public:
   Balloon();
 

@@ -170,5 +170,7 @@ public:
     double COHERENT_THRESHOLD;
     int APPLYIMPULSERESPONSE;       // apply impulse response
     int USETIMEDEPENDENTTHRESHOLDS; // use time-dependent thresholds
+    int NOISEFROMFLIGHT;            // use thermal noise from flight
+    int MINBIAS;                    // generate minimum bias sample
 };
 #endif

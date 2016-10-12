@@ -856,3 +856,6 @@ Added getInterpolated graph to Tools to start removing dependence of impulse res
 
 
 8/18/16 B.Dailey: Fixed a couple of bugs from last submit. The function GetCDF was being run even if the input spectrum was mono-energetic which caused problems. I put 'ifdef' statement around impulseresponse as it is only used with real data output. Also moved one plot to the outputdir as Mike S. request. Also fixed wording in output files for ESS spectrum was 0, when it should be 30. 
+
+10/12/16 L.Cremonesi
+Fixed bug in RxTriggerNumbering. Add thermal noise generated from Anita-3 flight. Add possibility to generate minimum bias sample.

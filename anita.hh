@@ -5,6 +5,10 @@
 #include "rx.hpp"
 #include <array>
 
+#ifdef ANITA_UTIL_EXISTS
+#include "FFTtools.h"
+#endif
+
 class RX;
 class TGraph;
 class TFile;
@@ -28,8 +32,6 @@ private:
     
     std::string stemp;
 
-    TRandom Rand3;
-    
     double GaintoHeight(double gain,double freq,double nmedium_receiver);
     TGraph *gshort[4];
     void setTrigRequirement(int WHICH);
@@ -597,6 +599,10 @@ TTree *tgaryanderic; // writing data out for the analysers
 
 #ifdef ANITA_UTIL_EXISTS
   void readImpulseResponse(Settings *settings1);
+  TGraph *RayleighFits[2][48];
+  Int_t numFreqs;
+  Double_t *freqs;
+  TRandom3 *fRand;
 #endif
   TGraph *fSignalChainResponse[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   double deltaT;
