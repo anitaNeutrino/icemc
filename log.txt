@@ -859,3 +859,6 @@ Added getInterpolated graph to Tools to start removing dependence of impulse res
 
 10/12/16 L.Cremonesi
 Fixed bug in RxTriggerNumbering. Add thermal noise generated from Anita-3 flight. Add possibility to generate minimum bias sample.
+
+10/13/16 L.Cremonesi
+Filling the Anita Truth event class (only if compilation variable ANITA3_EVENTREADER is defined, by default it is not defined so that not to break compilation for Brian). Also removed the cap on the number of events to be saved in the data-like format (all other outputs still have the cap).

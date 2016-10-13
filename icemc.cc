@@ -69,17 +69,22 @@
 
 #include <typeinfo>
 
+//#define ANITA3_EVENTREADER
+
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
 #include "AnitaGeomTool.h"
 #include "AnitaConventions.h"
 #include "RawAnitaHeader.h"
 #include "Adu5Pat.h"
+#include "FFTtools.h"
 UsefulAnitaEvent*     realEvPtr    = NULL;
 RawAnitaHeader*       rawHeaderPtr = NULL;
 Adu5Pat* 	      Adu5PatPtr   = NULL;
-
-#include "FFTtools.h"
+#ifdef ANITA3_EVENTREADER
+#include "TruthAnitaEvent.h"
+TruthAnitaEvent*      truthEvPtr   = NULL;
+#endif
 #endif
 
 Taumodel* TauPtr = NULL;
@@ -1676,8 +1681,16 @@ int main(int argc,  char **argv) {
   adu5PatTree->Branch("pat",          &Adu5PatPtr                   );
   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
   adu5PatTree->Branch("weight",       &weight,       "weight/D"     );
+
+  AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();
   
-  AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();// new AnitaGeomTool();
+#ifdef ANITA3_EVENTREADER
+  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaTruthFile"+run_num+".root";
+  TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
+
+  TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
+  truthAnitaTree->Branch("truth",     &truthEvPtr                   );
+#endif
   
 #endif
   
@@ -3568,11 +3581,19 @@ int main(int argc,  char **argv) {
               r_exit2bn2=interaction1->r_exit2bn;
               r_exit2bn_measured2=interaction1->r_exit2bn_measured;
 
+              sourceLon = ray1->rfexit[2].Lon() - 180;
+              sourceLat = ray1->rfexit[2].Lat() - 90;
+	      sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon+180, sourceLat+90);
+	      sourceMag = ray1->rfexit[2].Mag();
+	      
+              finaltree->Fill();
+              count1->IncrementWeights_r_in(interaction1->r_in, weight);
+            } //end if HIST & HISTMAXENTRIES
+
 #ifdef ANITA_UTIL_EXISTS
               realEvPtr 	= new UsefulAnitaEvent();
               rawHeaderPtr	= new RawAnitaHeader();
               Adu5PatPtr	= new Adu5Pat();
-
 
               Adu5PatPtr->latitude= bn1->latitude;
               Adu5PatPtr->longitude=bn1->longitude;
@@ -3625,7 +3646,7 @@ int main(int argc,  char **argv) {
 	      else                       rawHeaderPtr->trigType = 1; // RF trigger
               rawHeaderPtr->run = run_no;
 
-	      // put the vpol only as a placeholder - not sure what I should do here!
+	      // put the vpol only as a placeholder - these are only used in Anita-2 anyway
               rawHeaderPtr->upperL1TrigPattern = l1trig[0][0];
               rawHeaderPtr->lowerL1TrigPattern = l1trig[0][1];
               rawHeaderPtr->nadirL1TrigPattern = l1trig[0][2];
@@ -3635,7 +3656,7 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
 
               rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
-	      if (settings1->WHICH==9 || settings1->WHICH==10) { // anita-3
+	      if (settings1->WHICH==9 || settings1->WHICH==10) { 
                 rawHeaderPtr->l3TrigPatternH = (short) l3trig[1];
                 rawHeaderPtr->l1TrigMask   = (short) l1TrigMask;
                 rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
@@ -3647,24 +3668,54 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->realTime = bn1->realTime_flightdata;
               eventNumber = inu;
 
+#ifdef ANITA3_EVENTREADER
+	      truthEvPtr        = new TruthAnitaEvent();
+	      truthEvPtr->eventNumber      = inu;
+	      truthEvPtr->realTime         = bn1->realTime_flightdata;
+	      truthEvPtr->run              = run_no;
+	      truthEvPtr->nuMom            = pnu;
+	      truthEvPtr->nu_pdg           = pdgcode;
+ 	      truthEvPtr->e_component      = e_component;
+	      truthEvPtr->h_component      = h_component;
+	      truthEvPtr->n_component      = n_component;
+ 	      truthEvPtr->e_component_k    = e_component_kvector;
+	      truthEvPtr->h_component_k    = h_component_kvector;
+	      truthEvPtr->n_component_k    = n_component_kvector;
+	      truthEvPtr->sourceLon        = sourceLon;    
+	      truthEvPtr->sourceLat        = sourceLat;  
+	      truthEvPtr->sourceAlt        = sourceAlt;
+	      truthEvPtr->weight           = weight;
+	      for (int i=0;i<3;i++){
+		truthEvPtr->balloonPos[i]  = r_bn_array[i];
+		truthEvPtr->balloonDir[i]  = n_bn_array[i]; 
+		truthEvPtr->nuPos[i]       = posnu_array[i];
+		truthEvPtr->nuDir[i]       = nnu_array[i];
+	      }
+	      for (int i=0;i<5;i++){
+		for (int j=0;j<3;j++){
+		  truthEvPtr->rfExitNor[i][j] = n_exit2bn_array[i][j];
+		  truthEvPtr->rfExitPos[i][j] = rfexit_array[i][j];
+		}
+	      }
+	      for (int i=0;i<48;i++){
+		truthEvPtr->hitangle_e[i]  = hitangle_e_all[i];
+		truthEvPtr->hitangle_h[i]  = hitangle_h_all[i];
+	      }
+	      for (int i=0;i<Anita::NFREQ;i++)
+		truthEvPtr->vmmhz[i]       = vmmhz[i];
+
+	      truthAnitaTree->Fill();
+	      delete truthEvPtr;
+#endif
+      
               headTree->Fill();
               eventTree->Fill();
               adu5PatTree->Fill();
-
-      
+   
               delete realEvPtr;
               delete rawHeaderPtr;
               delete Adu5PatPtr;
 #endif
-
-              sourceLon = ray1->rfexit[2].Lon() - 180;
-              sourceLat = ray1->rfexit[2].Lat() - 90;
-	      sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon+180, sourceLat+90);
-	      sourceMag = ray1->rfexit[2].Mag();
-	      
-              finaltree->Fill();
-              count1->IncrementWeights_r_in(interaction1->r_in, weight);
-            } //end if HIST & HISTMAXENTRIES
 
             sum_weights+=weight;
             neutrinos_passing_all_cuts++;
@@ -3856,6 +3907,13 @@ int main(int argc,  char **argv) {
   adu5PatTree->Write("adu5PatTree");
   anitafileGps->Close();
   delete anitafileGps;
+
+#ifdef ANITA3_EVENTREADER
+  anitafileTruth->cd();
+  truthAnitaTree->Write("truthAnitaTree");
+  anitafileTruth->Close();
+  delete anitafileTruth;
+#endif  
   
 #endif  
 
