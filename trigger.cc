@@ -236,7 +236,7 @@ void AntTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
  *
  *
  */
-void AntTrigger::WhichBandsPass(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac){
+void AntTrigger::WhichBandsPass(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, Screen *panel1){
     
   double thresholds[2][5];
   if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==9) {
@@ -266,7 +266,7 @@ void AntTrigger::WhichBandsPass(int inu,Settings *settings1, Anita *anita1, Glob
   } else  if (settings1->TRIGGERSCHEME >= 2){
     // this scheme is used for ANITA 2 on.
     //cout << "i'm here.\n";
-    WhichBandsPassTrigger2(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold, dangle, emfrac, hadfrac, thresholds);
+    WhichBandsPassTrigger2(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold, dangle, emfrac, hadfrac, thresholds, panel1);
 
   }
 } // end which bands pass
@@ -462,7 +462,7 @@ void AntTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, Glob
  *
  *
  */
-void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
+void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5], Screen *panel1){
   
   double v_banding_rfcm_e_forfft[5][anita1->HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
   double v_banding_rfcm_h_forfft[5][anita1->HALFNFOUR];
@@ -521,7 +521,7 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
     Tools::Zero(v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
     Tools::Zero(v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
 	
-    anita1->MakeArraysforFFT(v_banding_rfcm_e[iband],v_banding_rfcm_h[iband],v_banding_rfcm_e_forfft[iband],v_banding_rfcm_h_forfft[iband], 90., true);
+    anita1->MakeArraysforFFT(v_banding_rfcm_e[iband],v_banding_rfcm_h[iband],v_banding_rfcm_e_forfft[iband],v_banding_rfcm_h_forfft[iband]);
 	
     // for some reason I'm averaging over 10 neighboring bins
     // to get rid of the zero bins
@@ -1081,7 +1081,7 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
 
   if(settings1->ROUGHNESS==0){
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-      integral_vmmhz+=vmmhz[ifreq]*(anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
+      integral_vmmhz+=panel1->GetVmmhz_freq(ifreq)*(anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
     }
   }
   else{ // for each frequency, add all screen points
@@ -1121,7 +1121,8 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
   double tmp_vhz_rx_h[Anita::NFREQ];
   double tmp_volts_rx_e_forfft[Anita::HALFNFOUR];
   double tmp_volts_rx_h_forfft[Anita::HALFNFOUR];
-
+  double cosphase, sinphase;
+  double screenElementWeight;
 
 
   // vmmhz_rx_e,h are going to be the V/m/MHz received by the rx (after gains)
@@ -1143,24 +1144,28 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
     }
 
     // change their length from Anita::NFREQ to HALFNFOUR
-    anita1->MakeArraysforFFT(tmp_vhz_rx_e, tmp_vhz_rx_h, tmp_volts_rx_e_forfft, tmp_volts_rx_h_forfft, 90., false);// 90 is just a placeholder
-    //need to handle phase delay explicitly here
-    for (int ifour=0;ifour<NFOUR/4;ifour++) {
-      tmp_volts_rx_e_forfft[2*ifour]*=cos(panel1->GetDelay(jpt*Anita::NFOUR/4 + 2*ifour)*PI/180.);
-      tmp_volts_rx_e_forfft[2*ifour+1]*=sin(panel1->GetDelay(jpt*Anita::NFOUR/4 + 2*ifour)*PI/180.);
-      tmp_volts_rx_h_forfft[2*ifour]*=cos(panel1->GetDelay(jpt*Anita::NFOUR/4 + 2*ifour)*PI/180.);
-      tmp_volts_rx_h_forfft[2*ifour+1]*=sin(panel1->GetDelay(jpt*Anita::NFOUR/4 + 2*ifour)*PI/180.);  
-    }
+    anita1->MakeArraysforFFT(tmp_vhz_rx_e, tmp_vhz_rx_h, tmp_volts_rx_e_forfft, tmp_volts_rx_h_forfft);
 
+    for (int i=0;i<Anita::NFREQ;i++) {
+      int ifour=Tools::Getifreq(anita1->freq[i],anita1->freq_forfft[0],anita1->freq_forfft[Anita::NFOUR/2-1],Anita::NFOUR/4);
+      cosphase = cos(panel1->GetDelay(jpt*Anita::NFREQ + i)*PI/180.);
+      sinphase = sin(panel1->GetDelay(jpt*Anita::NFREQ + i)*PI/180.);
+      tmp_volts_rx_e_forfft[2*ifour]*=cosphase;
+      tmp_volts_rx_e_forfft[2*ifour+1]*=sinphase;
+      tmp_volts_rx_h_forfft[2*ifour]*=cosphase;
+      tmp_volts_rx_h_forfft[2*ifour+1]*=sinphase;
+    }
 
     // now the last two are in the frequency domain
     // convert to the time domain
     Tools::realft(tmp_volts_rx_e_forfft,1,anita1->HALFNFOUR); // EH, I believe this has to the -1 for inverse FFT (1 for forward FFT which is t-domain to f-domain)
     Tools::realft(tmp_volts_rx_h_forfft,1,anita1->HALFNFOUR);
 
+    screenElementWeight = panel1->GetWeight(jpt) * panel1->GetVmmhz_freq(jpt*Anita::NFREQ) * panel1->GetWeightNormalization();
+
     for (int ii=0; ii<Anita::HALFNFOUR; ii++){
-      volts_rx_e_forfft[ii] += tmp_volts_rx_e_forfft[ii];
-      volts_rx_h_forfft[ii] += tmp_volts_rx_h_forfft[ii];
+      volts_rx_e_forfft[ii] += screenElementWeight * tmp_volts_rx_e_forfft[ii];
+      volts_rx_h_forfft[ii] += screenElementWeight * tmp_volts_rx_h_forfft[ii];
     }
   }//end int jpt loop over screen
 
@@ -1241,7 +1246,7 @@ void AntTrigger::ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer,
     }
     
     // change their length from Anita::NFREQ to HALFNFOUR
-    anita1->MakeArraysforFFT(vhz_rx_rfcm_e,vhz_rx_rfcm_h,anita1->volts_rx_rfcm_e,anita1->volts_rx_rfcm_h, 90., true);
+    anita1->MakeArraysforFFT(vhz_rx_rfcm_e,vhz_rx_rfcm_h,anita1->volts_rx_rfcm_e,anita1->volts_rx_rfcm_h);
       
     // double volts_rx_rfcm_e_freq[anita1->HALFNFOUR];
     // for (int i=0;i<anita1->HALFNFOUR;i++) {
@@ -1290,7 +1295,7 @@ void AntTrigger::ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer,
     }
 
     // change their length from Anita::NFREQ to HALFNFOUR
-    anita1->MakeArraysforFFT(vhz_rx_rfcm_lab_e,vhz_rx_rfcm_lab_h,anita1->volts_rx_rfcm_lab_e,anita1->volts_rx_rfcm_lab_h, 90., true);
+    anita1->MakeArraysforFFT(vhz_rx_rfcm_lab_e,vhz_rx_rfcm_lab_h,anita1->volts_rx_rfcm_lab_e,anita1->volts_rx_rfcm_lab_h);
       
     // now the last two are in the frequency domain
     // convert to the time domain
@@ -1334,18 +1339,30 @@ void AntTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int
 }
 
 
-
-
-
-void AntTrigger::Banding(Settings *settings1, Anita *anita1, double *vmmhz)
+void AntTrigger::Banding(Settings *settings1, Anita *anita1, Screen *panel1)
 {
+  // zero the necessary variables and arrays
+  e_component=0;
+  h_component=0;
+  n_component=0;
+  e_component_kvector=0;
+  h_component_kvector=0;
+  n_component_kvector=0;
+  hitangle_e=0;
+  hitangle_h=0;
+
+  double tmp_v_banding_rfcm_e[5][Anita::NFREQ];
+  double tmp_v_banding_rfcm_h[5][Anita::NFREQ];
+
   for (int iband=0;iband<5;iband++) { // loop over bands
-    for (int i=0;i<Anita::NFREQ;i++) {
-      anita1->vmmhz_banding[i]=vmmhz[i]; // now copy vmmhz to vmmhz_bak instead, which we now play with to get the time domain waveforms for each subband
-      // remember vmmhz is V/m/MHz at the face of the antenna
-    }
+
+    for (int jpt=0; jpt < panel1->GetNvalidPoints(); jpt++){
+      for (int i=0;i<Anita::NFREQ;i++) {
+        anita1->vmmhz_banding[i] += panel1->GetWeight(jpt) * panel1->GetVmmhz_freq(jpt*Anita::NFREQ + i); // now copy vmmhz to vmmhz_bak instead, which we now play with to get the time domain waveforms for each subband
+        // remember vmmhz is V/m/MHz at the face of the antenna
+      }
     // Don't we need to apply antenna gains here?
-      
+    }
     // impose banding on the incident signal
     anita1->Banding(iband,anita1->freq,anita1->vmmhz_banding,Anita::NFREQ); // impose banding whatever the trigger scheme
       

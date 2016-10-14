@@ -993,3 +993,6 @@ Moved vmmhz array and Taper outside the loop that checks for valid screen points
 
 09/29/2016 15.00 PM ET M. Sutherland   [in branches/roughness]
 Modified Anita::MakeArraysforFFT() so it takes a bool argument about whether to use a constant delay factor: if true it uses the value passed (default 90), if false the function does not apply phase factors. Instead to use the screen's phases, I copied the relevant code from that function and pasted it below the function call in AntTrigger::ConvertInputWFtoAntennaWF().
+
+10/14/2016 14.26 PM ET M. Sutherland   [in branches/roughness]
+Saving the branch with misc updates. Need to add screen loops and weights in the anttrig1->Banding function so the trigger actually sees something besides the vmmhz array, i.e., previous work didn't actually do anything.

@@ -198,6 +198,24 @@ Position Screen::GetImpactPt(int i){
 };
 
 
+void Screen::AddWeight(double a){
+  fWeight.push_back(a);
+};
+
+double Screen::GetWeight(int i){
+  return fWeight[i];
+};
+
+void Screen::SetWeightNormalization(double a){
+  fWeight_normalization = a;
+};
+
+double Screen::GetWeightNormalization(){
+  return fWeight_normalization;
+};
+
+
+
 Vector Screen::CalculateTransmittedPolarization(const Vector &nnu, Vector vec_specularnormal, Vector vec_localnormal, Vector vec_pos_current_to_balloon, Vector vec_nnu_to_impactPoint, Vector npol_local_inc){
   Vector temp_a = nnu.Cross(vec_specularnormal).Unit();
   Vector temp_b = nnu.Cross(vec_localnormal).Unit();

@@ -21,6 +21,7 @@
 #include "spline.h"
 
 Roughness::Roughness(int a){
+  std::cerr<<"Using roughness "<< a << std::endl;
   file_roughness = "data/roughness_full_dPdtheta.txt";
   froughsetting = a;
   if (froughsetting==0){
@@ -122,9 +123,9 @@ Roughness::Roughness(int a){
 
   //++++++++++++++++++++++++++++++++++++++
   // use this for 1+1 interpolation
-  std::cerr<<"Reading roughness data file:  "<< file_roughness<<std::endl;
+  //std::cerr<<"Reading roughness data file:  "<< file_roughness<<std::endl;
   ReadDataFile();
-  std::cerr<<"Constructing roughness splines"<<std::endl;
+  //std::cerr<<"Constructing roughness splines"<<std::endl;
   ConstructSplines();
 
 };
