@@ -996,3 +996,6 @@ Modified Anita::MakeArraysforFFT() so it takes a bool argument about whether to 
 
 10/14/2016 14.26 PM ET M. Sutherland   [in branches/roughness]
 Saving the branch with misc updates. Need to add screen loops and weights in the anttrig1->Banding function so the trigger actually sees something besides the vmmhz array, i.e., previous work didn't actually do anything.
+
+10/14/2016 15.20 PM ET M. Sutherland   [in branches/roughness]
+Restored anttrig->Banding() function so it takes vmmhz as argument and outputs 'correct' waveforms. Still need to fix this function so it uses the Screen vectors, phases, weights etc.

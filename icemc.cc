@@ -3258,7 +3258,7 @@ int main(int argc,  char **argv) {
           
           // there is a loop over screen points inside this function
           // BUT this one actually matters to the trigger (!), not the one above
-          anttrig1->Banding(settings1,  anita1, panel1);
+          anttrig1->Banding(settings1,  anita1, panel1, vmmhz);
 
           Tools::Zero(sumsignal, 5);
 

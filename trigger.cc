@@ -1339,7 +1339,7 @@ void AntTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int
 }
 
 
-void AntTrigger::Banding(Settings *settings1, Anita *anita1, Screen *panel1)
+void AntTrigger::Banding(Settings *settings1, Anita *anita1, Screen *panel1, double *vmmhz)
 {
   // zero the necessary variables and arrays
   e_component=0;
@@ -1351,18 +1351,13 @@ void AntTrigger::Banding(Settings *settings1, Anita *anita1, Screen *panel1)
   hitangle_e=0;
   hitangle_h=0;
 
-  double tmp_v_banding_rfcm_e[5][Anita::NFREQ];
-  double tmp_v_banding_rfcm_h[5][Anita::NFREQ];
-
   for (int iband=0;iband<5;iband++) { // loop over bands
-
-    for (int jpt=0; jpt < panel1->GetNvalidPoints(); jpt++){
-      for (int i=0;i<Anita::NFREQ;i++) {
-        anita1->vmmhz_banding[i] += panel1->GetWeight(jpt) * panel1->GetVmmhz_freq(jpt*Anita::NFREQ + i); // now copy vmmhz to vmmhz_bak instead, which we now play with to get the time domain waveforms for each subband
-        // remember vmmhz is V/m/MHz at the face of the antenna
-      }
-    // Don't we need to apply antenna gains here?
+    for (int i=0;i<Anita::NFREQ;i++) {
+      anita1->vmmhz_banding[i] += vmmhz[i]; // now copy vmmhz to vmmhz_bak instead, which we now play with to get the time domain waveforms for each subband
+      // remember vmmhz is V/m/MHz at the face of the antenna
     }
+    // Don't we need to apply antenna gains here?
+
     // impose banding on the incident signal
     anita1->Banding(iband,anita1->freq,anita1->vmmhz_banding,Anita::NFREQ); // impose banding whatever the trigger scheme
       
