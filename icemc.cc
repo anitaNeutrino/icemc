@@ -2530,14 +2530,14 @@ int main(int argc,  char **argv) {
 
         /////////////
 
-        double screenEdgeLength_base = 45000. / settings1->ROUGHSIZE;  //default 45km / r
+        double screenEdgeLength_base = 90000. / settings1->ROUGHSIZE;  //default 45km / r
         double screenEdgeLength = screenEdgeLength_base;
-        int Nbase = 100;                     // number of grid points in base screen, default 100
-        double Fbase = 1.e-3;                // threshold for preselecting base screen points (ratio to maximum), default 1.e-3
+        int Nbase = 50;                     // number of grid points in base screen, default 100
+        double Fbase = 1.e-5;                // threshold for preselecting base screen points (ratio to maximum), default 1.e-3
         int maximumSubscreenGeneration = 0;   // number of subsequent screen generations (beyond the base screen), value is inclusive; default 2
         int subscreenDivisions = 1;           // grid for subsequent generations; default 5
         double minimumScreenFieldValue = 1.e-20 * (pnu/1.e20);  // absolute minimum value allowed for maximum field value for a screen's point; if below, then reject the screen; default 1.e-20 * (pnu/1.e20)
-        double subscreenFractionLimit = 0.90; //ratio to consider between screen's min and max field; default 75%
+        double subscreenFractionLimit = 0.50; //ratio to consider between screen's min and max field; default 75%
 
         int num_validscreenpoints = 0;  // counter for number of valid screen points to add to Screen instance
 
@@ -2813,7 +2813,7 @@ int main(int argc,  char **argv) {
               panel1->AddViewangle(seedscreens_viewangle[jj]);
               //panel1->AddWeight( (panel1->GetEdgeLength()*panel1->GetEdgeLength()/panel1->GetNsamples()/panel1->GetNsamples()) ); //area of this screen element
               //panel1->AddWeight( 1.  / (   baseWeight * pow(subscreenDivisions,2*seedGeneration[ii])  ) );
-              panel1->AddWeight(   (panel1->GetEdgeLength()*panel1->GetEdgeLength()/panel1->GetNsamples()/panel1->GetNsamples()) / (screenEdgeLength_base*screenEdgeLength_base)   );
+              panel1->AddWeight(   (panel1->GetEdgeLength()*panel1->GetEdgeLength()/panel1->GetNsamples()/panel1->GetNsamples())   );
 
               pol_bln_vert = npol_local_trans.Dot(vec_bln_vert);
               pol_bln_horiz = (npol_local_trans - pol_bln_vert*vec_bln_vert).Mag();
@@ -2857,6 +2857,7 @@ int main(int argc,  char **argv) {
         //now construct the Screen's vmmhz array for all points, so it gets passed to the trigger object later to make the waveforms
         // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor) and making an array across frequency bins by putting in frequency dependence.
         double vmmhz_local_array[Anita::NFREQ];
+        double summedWeight = 0.;
         for (int jj=0; jj<panel1->GetNvalidPoints(); jj++){
           sig1->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
           // apply the off-angle tapering
@@ -2865,17 +2866,17 @@ int main(int argc,  char **argv) {
             deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
             sig1->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
             panel1->AddVmmhz_freq(vmmhz_local_array[k]);
-            vmmhz[k] += vmmhz_local_array[k];
+            //vmmhz[k] += vmmhz_local_array[k];
           }
 
           Efield_local = panel1->GetVmmhz_freq(jj*Anita::NFREQ) * panel1->GetPol(jj);
           Efield_screentotal = Efield_screentotal + Efield_local;
-
+          summedWeight += panel1->GetWeight(jj);
           //std::cerr<<panel1->GetWeight(jj)<<"  "<<panel1->GetVmmhz_freq(jj*Anita::NFREQ)<< std::endl;
         }//end jj over panel Nvalid points
         vmmhz_max = Efield_screentotal.Mag();
         n_pol = Efield_screentotal.Unit();
-        panel1->SetWeightNormalization(  1. );
+        panel1->SetWeightNormalization(  1./summedWeight );
       }//end else roughness
 
       roughout.close();
@@ -3149,9 +3150,9 @@ int main(int argc,  char **argv) {
       
       Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
       if(settings1->BORESIGHTS)
-	anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2],bn1,settings1);
+        anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2],bn1,settings1);
       else
-	anita1->GetArrivalTimes(ray1->n_exit2bn[2],bn1,settings1);
+        anita1->GetArrivalTimes(ray1->n_exit2bn[2],bn1,settings1);
       
       anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times, settings1->NANTENNAS);
 
@@ -3228,8 +3229,6 @@ int main(int argc,  char **argv) {
           anttrig1->InitializeEachBand(anita1);
 
           bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
-
-
           // for this (hitangle_h_all[count_rx]=hitangle_h;) and histogram fill, use specular case
           //although the GetEcomp..() functions are called in ConvertInputWFtoAntennaWF() to calculate the actual waveforms
           if (!settings1->BORESIGHTS) {
@@ -3250,15 +3249,63 @@ int main(int argc,  char **argv) {
             h6->Fill(hitangle_h, ray1->n_exit2bn[2]*bn1->n_bn);
 
           // there is a loop over screen points inside this function
-          anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, vmmhz, n_eplane,  n_hplane,  n_normal);
+          anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, n_eplane,  n_hplane,  n_normal);
 
           anttrig1->ImpulseResponse(settings1, anita1, ilayer, ifold);
           
           anttrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
-          
-          // there is a loop over screen points inside this function
-          // BUT this one actually matters to the trigger (!), not the one above
-          anttrig1->Banding(settings1,  anita1, panel1, vmmhz);
+
+
+
+
+
+          // this used to be my 'old' AntTrig::Banding() function, but should this be moved up into anttrig1->ConvertInputWFtoAntennaWF to also make these arrays at the same time (since it's the same thing?); would also need to pull some stuff from AntTrigger::WhichBandsPassTrigger2()
+
+
+          for (int iband=0;iband<5;iband++) { // loop over bands
+            for (int jpt=0; jpt < panel1->GetNvalidPoints(); jpt++){
+              for (int i=0;i<Anita::NFREQ;i++) {
+                anita1->vmmhz_banding[i] += panel1->GetWeight(jpt) * panel1->GetWeightNormalization() * panel1->GetVmmhz_freq(jpt*Anita::NFREQ + i);
+                //anita1->vmmhz_banding[i] += vmmhz[i]; // now copy vmmhz to vmmhz_bak instead, which we now play with to get the time domain waveforms for each subband
+                // remember vmmhz is V/m/MHz at the face of the antenna
+              }
+            }// end for jpt
+            // Don't we need to apply antenna gains here?
+            // impose banding on the incident signal
+            anita1->Banding(iband,anita1->freq,anita1->vmmhz_banding,Anita::NFREQ); // impose banding whatever the trigger scheme
+            for (int i=0;i<Anita::NFREQ;i++) {
+              anita1->vmmhz_banding_rfcm[i]=anita1->vmmhz_banding[i];
+            }
+            // for frequency-domain voltage-based trigger (triggerscheme==0)
+            // we do not apply rfcm's
+            // for other trigger types we do
+            if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5)
+              anita1->RFCMs(1,1,anita1->vmmhz_banding_rfcm);
+            if (settings1->TRIGGERSCHEME >=2) { // we need to prepar the signal for the diode integration
+              for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+                anita1->vmmhz_banding_rfcm[ifreq]=anita1->vmmhz_banding_rfcm[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6);
+                // vmmhz was set to account for both negative and positive frequencies
+                // now it has units of volts/(meter*s) so below we copy it to vm_banding_rfcm_e,h
+                // here let's treat it as just one side of a double sided function though
+                // divide by timestep so that we can use it for discrete fourier transform.
+                // as in numerical recipes, F = (Delta t) * H
+              }
+            }
+            double integral=0.;
+            for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+              anttrig1->vm_banding_rfcm_e[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq]; // this is now Volts/(m*s) vs. frequency with banding and rfcm's applied
+              anttrig1->vm_banding_rfcm_h[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq];
+              integral+=anttrig1->vm_banding_rfcm_e[iband][ifreq]*anttrig1->vm_banding_rfcm_e[iband][ifreq];
+            } // end loop over nfreq
+          } // end loop over bands
+    
+
+
+
+
+
+
+
 
           Tools::Zero(sumsignal, 5);
 

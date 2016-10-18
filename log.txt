@@ -999,3 +999,6 @@ Saving the branch with misc updates. Need to add screen loops and weights in the
 
 10/14/2016 15.20 PM ET M. Sutherland   [in branches/roughness]
 Restored anttrig->Banding() function so it takes vmmhz as argument and outputs 'correct' waveforms. Still need to fix this function so it uses the Screen vectors, phases, weights etc.
+
+10/18/2016 15.13 PM ET M. Sutherland   [in branches/roughness]
+Removed vmmhz argument from AntTrigger::ConvertInputWFtoAntennaWF() to minimize confusion (we no longer want to use vmmhz and instead use panel1 stuff). Screen weights only involve ratio of areas. Commented out assignment of sum of local vmmhz to vmmhz array, so the trigger signal is zero and we can check the use of Screen. Removed AntTrigger::Banding() and put contents back into icemc.cc main(). Added tmp_vhz_rx_e contributing to vhz_rx_e in AntTrig::ConvertInputWFtoAntennaWF(), missed it before.

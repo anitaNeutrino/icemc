@@ -1069,7 +1069,7 @@ void AntTrigger::InitializeEachBand(Anita *anita1)
 }
 
 
-void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, double *vmmhz, Vector n_eplane, Vector n_hplane, Vector n_normal)
+void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector n_eplane, Vector n_hplane, Vector n_normal)
 {
   // vmmhz is V/m/MHz at the face of the antenna
   // this gets written to a tree because it is a measure of signal strength in the frequency domain
@@ -1129,6 +1129,9 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
   //
   // for each screen point, assemble the waveform and FFT it with the phase information to get its time-domain waveform, which we THEN add to the running total
   for (int jpt=0; jpt < panel1->GetNvalidPoints(); jpt++){
+    bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal, panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
+    bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
+    bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
       // Convert V/m/MHz to V/m/Hz and divide by dt to prepare for fft
       //vhz_rx_e[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); // EH, 1/sqrt(2) for dividing power in half for TDA and DDA?
@@ -1136,11 +1139,10 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
       tmp_vhz_rx_e[ifreq] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + ifreq) /sqrt(2.)/(anita1->TIMESTEP*1.E6);
       tmp_vhz_rx_h[ifreq] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + ifreq) /sqrt(2.)/(anita1->TIMESTEP*1.E6);
 
-      bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal, panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
-      bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
-      bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
-
       anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, ifreq, tmp_vhz_rx_e[ifreq], tmp_vhz_rx_h[ifreq]);
+
+      vhz_rx_e[ifreq] += tmp_vhz_rx_e[ifreq];
+      vhz_rx_h[ifreq] += tmp_vhz_rx_h[ifreq];
     }
 
     // change their length from Anita::NFREQ to HALFNFOUR
@@ -1161,7 +1163,7 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
     Tools::realft(tmp_volts_rx_e_forfft,1,anita1->HALFNFOUR); // EH, I believe this has to the -1 for inverse FFT (1 for forward FFT which is t-domain to f-domain)
     Tools::realft(tmp_volts_rx_h_forfft,1,anita1->HALFNFOUR);
 
-    screenElementWeight = panel1->GetWeight(jpt) * panel1->GetVmmhz_freq(jpt*Anita::NFREQ) * panel1->GetWeightNormalization();
+    screenElementWeight = panel1->GetWeight(jpt) * panel1->GetWeightNormalization();
 
     for (int ii=0; ii<Anita::HALFNFOUR; ii++){
       volts_rx_e_forfft[ii] += screenElementWeight * tmp_volts_rx_e_forfft[ii];
@@ -1326,11 +1328,6 @@ void AntTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int
     }
   }
 
-  
-  for (int i=0;i<anita1->NFOUR/2;i++) {
-    volts_rx_rfcm_lab_e_all[anita1->GetRx(ilayer, ifold)][i] = anita1->volts_rx_rfcm_lab_e[i];
-    volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][i] = anita1->volts_rx_rfcm_lab_h[i];      
-  }
   // now vmmhz_rx_rfcm_lab_e,h_forfft are the time domain waveforms after the antenna and lab attenuation
   // now find peak voltage
   // these get written to a tree
@@ -1338,62 +1335,6 @@ void AntTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int
   anita1->peak_h_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_h,anita1->HALFNFOUR);  
 }
 
-
-void AntTrigger::Banding(Settings *settings1, Anita *anita1, Screen *panel1, double *vmmhz)
-{
-  // zero the necessary variables and arrays
-  e_component=0;
-  h_component=0;
-  n_component=0;
-  e_component_kvector=0;
-  h_component_kvector=0;
-  n_component_kvector=0;
-  hitangle_e=0;
-  hitangle_h=0;
-
-  for (int iband=0;iband<5;iband++) { // loop over bands
-    for (int i=0;i<Anita::NFREQ;i++) {
-      anita1->vmmhz_banding[i] += vmmhz[i]; // now copy vmmhz to vmmhz_bak instead, which we now play with to get the time domain waveforms for each subband
-      // remember vmmhz is V/m/MHz at the face of the antenna
-    }
-    // Don't we need to apply antenna gains here?
-
-    // impose banding on the incident signal
-    anita1->Banding(iband,anita1->freq,anita1->vmmhz_banding,Anita::NFREQ); // impose banding whatever the trigger scheme
-      
-    for (int i=0;i<Anita::NFREQ;i++) {
-      anita1->vmmhz_banding_rfcm[i]=anita1->vmmhz_banding[i];
-    }
-      
-    // for frequency-domain voltage-based trigger (triggerscheme==0)
-    // we do not apply rfcm's
-    // for other trigger types we do
-    if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5)
-      anita1->RFCMs(1,1,anita1->vmmhz_banding_rfcm);
-      
-      
-    if (settings1->TRIGGERSCHEME >=2) { // we need to prepar the signal for the diode integration
-      for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-
-        anita1->vmmhz_banding_rfcm[ifreq]=anita1->vmmhz_banding_rfcm[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6);
-        // vmmhz was set to account for both negative and positive frequencies
-        // now it has units of volts/(meter*s) so below we copy it to vm_banding_rfcm_e,h
-          
-        // here let's treat it as just one side of a double sided function though
-        // divide by timestep so that we can use it for discrete fourier transform.
-        // as in numerical recipes, F = (Delta t) * H
-      }
-    }
-    double integral=0.;
-    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-      vm_banding_rfcm_e[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq]; // this is now Volts/(m*s) vs. frequency with banding and rfcm's applied
-      vm_banding_rfcm_h[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq];
-      integral+=vm_banding_rfcm_e[iband][ifreq]*vm_banding_rfcm_e[iband][ifreq];
-    } // end loop over nfreq
-      
-  } // end loop over bands
-    
-} //AntTrigger constructor
 
 
 
