@@ -78,7 +78,8 @@ static const int NPOL=2; // number of polarizations
     double RRX[Anita::NLAYERS_MAX]; // radius that the antenna sits from the axis of the payload (feedpoint)
     Double_t deltaTPhaseCentre[2][NLAYERS_MAX][NPHI_MAX]; //Relative to photogrammetry + ring offset
 
-
+  double THERMALNOISE_FACTOR; // factor to multiply thermal noise for error analysis
+  
   
     Anita(); // constructor
     ~Anita();

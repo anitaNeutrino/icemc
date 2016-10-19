@@ -694,103 +694,91 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     
     //PULSER=1;
     if (PULSER==1) {
-	TFile *fpulser=new TFile("data/pulser.root");
+      TFile *fpulser=new TFile("data/pulser.root");
 	
-	TGraph *gpulser=(TGraph*)fpulser->Get("pulser");
-	TGraph *gphases=(TGraph*)fpulser->Get("phases");
-	TGraph *gnoise=(TGraph*)fpulser->Get("noise");
-	
-	
-	double *temp1=gpulser->GetX();
-	for (int i=0;i<NFOUR/4;i++) {
-	    f_pulser[i]=temp1[i];
-	}
-	double *temp2=gphases->GetX();
-	for (int i=0;i<NFOUR/4;i++) {
-	    f_phases[i]=temp2[i];
-	}
-	double *temp3=gpulser->GetY();
-	double *temp4=gnoise->GetY();
+      TGraph *gpulser=(TGraph*)fpulser->Get("pulser");
+      TGraph *gphases=(TGraph*)fpulser->Get("phases");
+      TGraph *gnoise=(TGraph*)fpulser->Get("noise");
 	
 	
-	for (int i=0;i<NFOUR/4;i++) {
-	    v_pulser[i]=sqrt(temp3[i]); // is this right
-	    v_noise[i]=sqrt(temp4[i]);
-	    if (f_phases[i]<75.E6)
-		v_noise[i]=0.;
+      double *temp1=gpulser->GetX();
+      for (int i=0;i<NFOUR/4;i++) {
+	f_pulser[i]=temp1[i];
+      }
+      double *temp2=gphases->GetX();
+      for (int i=0;i<NFOUR/4;i++) {
+	f_phases[i]=temp2[i];
+      }
+      double *temp3=gpulser->GetY();
+      double *temp4=gnoise->GetY();
+	
+	
+      for (int i=0;i<NFOUR/4;i++) {
+	v_pulser[i]=sqrt(temp3[i]); // is this right
+	v_noise[i]=sqrt(temp4[i]);
+	if (f_phases[i]<75.E6)
+	  v_noise[i]=0.;
 	    
+      }
+	
+      TGraph *gpulser_eachband;
+      TGraph *gnoise_eachband;
+      TCanvas *cpulser=new TCanvas("cpulser","cpulser",880,800);
+      cpulser->Divide(1,5);
+      int iplot;
+      for (int i=0;i<5;i++) {
+	iplot=i;
+			
+	if (i!=3) {
+	  cpulser->cd(iplot+1);
+				
+	  gpulser_eachband=new TGraph(NFOUR/4,f_pulser,v_pulser);
+				
+	  gpulser_eachband->Draw("al");
 	}
-	
-	
-	
-	
-	TGraph *gpulser_eachband;
-	TGraph *gnoise_eachband;
-	TCanvas *cpulser=new TCanvas("cpulser","cpulser",880,800);
-	cpulser->Divide(1,5);
-	int iplot;
-	for (int i=0;i<5;i++) {
-	    iplot=i;
+      }
+		
+      cpulser->Print("pulser.eps");
+		
+      TCanvas *cnoise=new TCanvas("cnoise","cnoise",880,800);
+      cnoise->Divide(1,5);
+      for (int i=0;i<5;i++) {
+	iplot=i;
 			
-			if (i!=3) {
-				cpulser->cd(iplot+1);
+	if (i!=3) {
+	  cnoise->cd(iplot+1);
+	  gnoise_eachband=new TGraph(NFOUR/4,f_pulser,v_noise);
 				
-				gpulser_eachband=new TGraph(NFOUR/4,f_pulser,v_pulser);
-				
-				gpulser_eachband->Draw("al");
-			}
-		}
+	  gnoise_eachband->Draw("al");
+	}
+      }
 		
-		cpulser->Print("pulser.eps");
+      cnoise->Print("noise.eps");
+	       
 		
-		TCanvas *cnoise=new TCanvas("cnoise","cnoise",880,800);
-		cnoise->Divide(1,5);
-		for (int i=0;i<5;i++) {
-			iplot=i;
-			
-			if (i!=3) {
-				cnoise->cd(iplot+1);
-				gnoise_eachband=new TGraph(NFOUR/4,f_pulser,v_noise);
-				
-				gnoise_eachband->Draw("al");
-			}
-		}
-		
-		cnoise->Print("noise.eps");
+      //	gpulser_eachband=new TGraph(NFOUR/4,f_pulser,v_pulser[iplot]);
+      //gpulser_eachband->Draw("al");
 		
 		
 		
+      double sumpulserpower=0.;
+      double sumnoisepower=0.;
 		
+      for (int i=0;i<NFOUR/4;i++) {
+	sumpulserpower+=v_pulser[i]*v_pulser[i];
+	sumnoisepower+=v_noise[i]*v_noise[i];
+      }
 		
-		//	gpulser_eachband=new TGraph(NFOUR/4,f_pulser,v_pulser[iplot]);
-		//gpulser_eachband->Draw("al");
+      double *temp5=gphases->GetY();
+      for (int i=0;i<NFOUR/4;i++) {
+	v_phases[i]=temp5[i];
+      }
 		
+      gpulser->Delete();
+      gphases->Delete();
+      gnoise->Delete();
 		
-		
-		
-		
-		
-		double sumpulserpower=0.;
-		double sumnoisepower=0.;
-		
-		for (int i=0;i<NFOUR/4;i++) {
-			sumpulserpower+=v_pulser[i]*v_pulser[i];
-			sumnoisepower+=v_noise[i]*v_noise[i];
-		}
-		
-		
-		
-		
-		double *temp5=gphases->GetY();
-		for (int i=0;i<NFOUR/4;i++) {
-			v_phases[i]=temp5[i];
-		}
-		
-		gpulser->Delete();
-		gphases->Delete();
-		gnoise->Delete();
-		
-		fpulser->Close();
+      fpulser->Close();
     } // end if pulser
     
     double mindiodeconvl[5];
@@ -1380,12 +1368,12 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     //   Set_gain_angle();
     
     //   SetDiffraction();
-    
+    THERMALNOISE_FACTOR=settings1->THERMALNOISE_FACTOR;
     for (int j=0;j<settings1->NLAYERS;j++) {
 	// noise depends on cant angle of antenna
 	//     //   VNOISE[j]=AntTrigger::GetNoise(altitude_bn,surface_under_balloon,THETA_ZENITH[j],BW_SEAVEYS,0.);
 	VNOISE[j]=1.52889E-5; // this comes from V^2/R=kT*bw -> V=sqrt(kT*bw*R)
-	VNOISE[j]*=settings1->THERMALNOISE_FACTOR;
+	VNOISE[j]*=THERMALNOISE_FACTOR;
     }//for
     
 }
@@ -2575,6 +2563,11 @@ void Anita::GetNoiseWaveforms() {
 //     Tools::realft(timedomainnoise_lab_h_long, -1, NFOUR );
     
     for (int k = 0; k < NFOUR / 2; k++) {
+      timedomainnoise_lab_e[k] *=THERMALNOISE_FACTOR;
+      timedomainnoise_rfcm_e[k]*=THERMALNOISE_FACTOR;
+      timedomainnoise_lab_h[k] *=THERMALNOISE_FACTOR;
+      timedomainnoise_rfcm_h[k]*=THERMALNOISE_FACTOR;
+      
       sumtimedomain += timedomainnoise_lab_e[k] * timedomainnoise_lab_e[k];
       rms_rfcm_e += timedomainnoise_rfcm_e[k] * timedomainnoise_rfcm_e[k] / ((double) NFOUR / 2);
       rms_lab_e += timedomainnoise_lab_e[k] * timedomainnoise_lab_e[k] / ((double) NFOUR / 2);

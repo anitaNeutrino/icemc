@@ -4483,7 +4483,7 @@ void AntTrigger::applyImpulseResponse(Settings *settings1, Anita *anita1, int nP
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHT) { // add thermal noise for anita-3 flight
     double *justNoise = addNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
-      y[i]=newy[i] + justNoise[i];
+      y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
       // std::cout << justNoise[i] << std::endl;
     }    
 
