@@ -862,3 +862,6 @@ Fixed bug in RxTriggerNumbering. Add thermal noise generated from Anita-3 flight
 
 10/13/16 L.Cremonesi
 Filling the Anita Truth event class (only if compilation variable ANITA3_EVENTREADER is defined, by default it is not defined so that not to break compilation for Brian). Also removed the cap on the number of events to be saved in the data-like format (all other outputs still have the cap).
+
+10/25/16 B.Dailey
+Found some discrepancies for ANITA-2 between my older verion and latest version. Rotate payload does not need a different rotation for ANITA3 and corrected the negative sign difference in UnRotatePayload. 

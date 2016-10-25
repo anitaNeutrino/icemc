@@ -3224,10 +3224,10 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
 
               rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
-	      if (settings1->WHICH==9 || settings1->WHICH==10) { 
+	      rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
+	        if (settings1->WHICH==9 || settings1->WHICH==10) { 
                 rawHeaderPtr->l3TrigPatternH = (short) l3trig[1];
                 rawHeaderPtr->l1TrigMask   = (short) l1TrigMask;
-                rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
                 rawHeaderPtr->l1TrigMaskH  = (short) l1TrigMaskH;
                 rawHeaderPtr->phiTrigMaskH = (short) phiTrigMaskH;
               }
