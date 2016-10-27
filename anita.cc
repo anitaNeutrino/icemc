@@ -2607,7 +2607,7 @@ void Anita::GetNoiseWaveforms() {
 }
 
 
-void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft) {
+void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay) {
     
     Tools::Zero(vsignal_e_forfft,NFOUR/2);
     Tools::Zero(vsignal_h_forfft,NFOUR/2);
@@ -2645,12 +2645,12 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
         // how about we interpolate instead of doing a box average
 
         for (int j=iprevious+1;j<ifour;j++) {
-          vsignal_e_forfft[2*j]=previous_value_e_even+(vsignal_e_forfft[2*ifour]-previous_value_e_even)*(double)(j-iprevious)/(double)(ifour-iprevious);
-          //	cout << "j, vsignal is " << j << " " << vsignal_e_forfft[2*j] << "\n";
-          vsignal_h_forfft[2*j]=previous_value_h_even+(vsignal_h_forfft[2*ifour]-previous_value_h_even)*(double)(j-iprevious)/(double)(ifour-iprevious);
+        vsignal_e_forfft[2*j]=previous_value_e_even+(vsignal_e_forfft[2*ifour]-previous_value_e_even)*(double)(j-iprevious)/(double)(ifour-iprevious);
+        //	cout << "j, vsignal is " << j << " " << vsignal_e_forfft[2*j] << "\n";
+        vsignal_h_forfft[2*j]=previous_value_h_even+(vsignal_h_forfft[2*ifour]-previous_value_h_even)*(double)(j-iprevious)/(double)(ifour-iprevious);
 
-          vsignal_e_forfft[2*j+1]=previous_value_e_odd+(vsignal_e_forfft[2*ifour+1]-previous_value_e_odd)*(double)(j-iprevious)/(double)(ifour-iprevious);
-          vsignal_h_forfft[2*j+1]=previous_value_h_odd+(vsignal_h_forfft[2*ifour+1]-previous_value_h_odd)*(double)(j-iprevious)/(double)(ifour-iprevious);
+        vsignal_e_forfft[2*j+1]=previous_value_e_odd+(vsignal_e_forfft[2*ifour+1]-previous_value_e_odd)*(double)(j-iprevious)/(double)(ifour-iprevious);
+        vsignal_h_forfft[2*j+1]=previous_value_h_odd+(vsignal_h_forfft[2*ifour+1]-previous_value_h_odd)*(double)(j-iprevious)/(double)(ifour-iprevious);
         }
 
         ilastnonzero=ifour;
@@ -2676,17 +2676,19 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
     //  Tools::InterpolateComplex(vsignal_e_forfft,NFOUR/4);
     //Tools::InterpolateComplex(vsignal_h_forfft,NFOUR/4);
 
-    double cosphase=cos(phase*PI/180.);
-    double sinphase=sin(phase*PI/180.);
-    for (int ifour=0;ifour<NFOUR/4;ifour++) {      
-      if (PULSER) {
-        cosphase = cos(v_phases[ifour]*PI/180.);
-        sinphase = sin(v_phases[ifour]*PI/180.);
+    if (useconstantdelay){
+      double cosphase=cos(phasedelay*PI/180.);
+      double sinphase=sin(phasedelay*PI/180.);
+      for (int ifour=0;ifour<NFOUR/4;ifour++) {      
+        if (PULSER) {
+          cosphase = cos(v_phases[ifour]*PI/180.);
+          sinphase = sin(v_phases[ifour]*PI/180.);
+        }
+        vsignal_e_forfft[2*ifour]*=cosphase;
+        vsignal_e_forfft[2*ifour+1]*=sinphase;
+        vsignal_h_forfft[2*ifour]*=cosphase;
+        vsignal_h_forfft[2*ifour+1]*=sinphase;	
       }
-      vsignal_e_forfft[2*ifour]*=cosphase;
-      vsignal_e_forfft[2*ifour+1]*=sinphase;
-      vsignal_h_forfft[2*ifour]*=cosphase;
-      vsignal_h_forfft[2*ifour+1]*=sinphase;	
     }
 }
 

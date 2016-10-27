@@ -1002,3 +1002,7 @@ Restored anttrig->Banding() function so it takes vmmhz as argument and outputs '
 
 10/18/2016 15.13 PM ET M. Sutherland   [in branches/roughness]
 Removed vmmhz argument from AntTrigger::ConvertInputWFtoAntennaWF() to minimize confusion (we no longer want to use vmmhz and instead use panel1 stuff). Screen weights only involve ratio of areas. Commented out assignment of sum of local vmmhz to vmmhz array, so the trigger signal is zero and we can check the use of Screen. Removed AntTrigger::Banding() and put contents back into icemc.cc main(). Added tmp_vhz_rx_e contributing to vhz_rx_e in AntTrig::ConvertInputWFtoAntennaWF(), missed it before.
+
+10/27/2016 10.30 AM ET M. Sutherland   [in branches/roughness]
+Rolled back the branch to r677 (kept the r689 log.txt though for history completeness) in preparation for merging trunk over here with Linda's and Brian's commits.
+

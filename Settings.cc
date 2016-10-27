@@ -45,7 +45,7 @@ Settings::Settings() {
   SHOWERTYPE=0; // Type of shower for previous option
   // End of the once-global varibles.
   taumodes = 1; //Taumodes =1, taucreated in the rock.
-  //SCREENEDGELENGTH=25.;
+  SCREENEDGELENGTH=25.;
 }
 
 void Settings::Initialize() {
@@ -502,8 +502,8 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   Tools::GetNextNumberAsString(inputsfile,foutput,number);
   ROUGHSIZE=(int)atof(number.c_str()); 
     // edge length of screen used if there is roughness
-  //Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  //SCREENEDGELENGTH=(double)atof(number.c_str()); 
+  Tools::GetNextNumberAsString(inputsfile,foutput,number);
+  SCREENEDGELENGTH=(double)atof(number.c_str()); 
   
   Tools::GetNextNumberAsString(inputsfile,foutput,number);
   FIRN=atoi(number.c_str()); 
