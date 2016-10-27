@@ -45,6 +45,8 @@ private:
   std::vector<Vector> fVec2blns;  //container of 'vector to balloon'
   std::vector<Vector> fPols;      //container of transmitted polarizations
   std::vector<Position> fImpactPt;//container of ground impact points
+  std::vector<double> fWeight;    //container for weight of a screen point ( == area of screen element), normalized when used
+  double fWeightNorm;             //normalization of the weights == simple weight sum
 
   
 
@@ -118,6 +120,14 @@ public:
   void AddImpactPt(Position p);
 
   Position GetImpactPt(int i);
+
+  void AddWeight(double a);
+
+  double GetWeight(int i);
+
+  void SetWeightNorm(double a);
+
+  double GetWeightNorm();
 
   Vector CalculateTransmittedPolarization(const Vector &nnu, Vector vec_specularnormal, Vector vec_localnormal, Vector vec_pos_current_to_balloon, Vector vec_nnu_to_impactPoint, Vector npol_local_inc);
 

@@ -416,7 +416,7 @@ void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_
 double GetViewAngle(const Vector &nrf2_iceside,  const Vector &nnu);
 int TIR(const Vector &n_surf,  const Vector &nrf2_iceside,  double N_IN,  double N_OUT);
 
-void IntegrateBands(Anita *anita1,  int k,  double *vmmhz,  double *freq,  double scalefactor,  double *sumsignal);
+void IntegrateBands(Anita *anita1,  int k,  Screen *panel1,  double *freq,  double scalefactor,  double *sumsignal);
 void Integrate(Anita *anita1,  int j,  int k,  double *vmmhz,  double *freq,  double scalefactor,  double sumsignal);
 void interrupt_signal_handler(int);	// This catches the Control-C interrupt,  SIGINT
 bool ABORT_EARLY = false;		// This flag is set to true when interrupt_signal_handler() is called
@@ -2551,6 +2551,7 @@ int main(int argc,  char **argv) {
               }
               panel1->AddImpactPt(seedscreens_impactpt[jj]);
               panel1->AddViewangle(seedscreens_viewangle[jj]);
+              panel1->AddWeight( panel1->GetEdgeLength() / panel1->GetNsamples() );
 
               pol_bln_vert = npol_local_trans.Dot(vec_bln_vert);
               pol_bln_horiz = (npol_local_trans - pol_bln_vert*vec_bln_vert).Mag();
@@ -2593,6 +2594,7 @@ int main(int argc,  char **argv) {
 
         //now construct the Screen's vmmhz array for all points, so it gets passed to the trigger object later to make the waveforms
         // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor) and making an array across frequency bins by putting in frequency dependence.
+        double validScreenSummedArea = 0.;
         double vmmhz_local_array[Anita::NFREQ];
         for (int jj=0; jj<panel1->GetNvalidPoints(); jj++){
           sig1->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
@@ -2602,11 +2604,13 @@ int main(int argc,  char **argv) {
             deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
             sig1->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
             panel1->AddVmmhz_freq(vmmhz_local_array[k]);
-            vmmhz[k] += vmmhz_local_array[k];
+            //vmmhz[k] += vmmhz_local_array[k];
           }
+          validScreenSummedArea += panel1->GetWeight(jj);
           Efield_local = panel1->GetVmmhz_freq(jj*Anita::NFREQ) * panel1->GetPol(jj);
           Efield_screentotal = Efield_screentotal + Efield_local;
         }//end jj over panel Nvalid points
+        panel1->SetWeightNorm(validScreenSummedArea);
         vmmhz_max = Efield_screentotal.Mag();
         n_pol = Efield_screentotal.Unit();
       }//end else roughness
@@ -2790,9 +2794,10 @@ int main(int argc,  char **argv) {
             // vmmhz is the strength of the signal in V/m/MHz at this viewing angle
             // vmmhz_em is the strength of the em component
 
-          Tools::Zero(sumsignal_aftertaper, 5);
-          if (bn1->WHICHPATH==4)
-            IntegrateBands(anita1, k, vmmhz, anita1->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
+          // MS - moved this stuff to just before globaltrigger so it uses screen
+          //Tools::Zero(sumsignal_aftertaper, 5);
+          //if (bn1->WHICHPATH==4)
+          //  IntegrateBands(anita1, k, panel1, anita1->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
 
           vmmhz_lowfreq=vmmhz[0]; // for plotting,  vmmhz at the lowest frequency
             // EH,  now here,  vmmhz array is the spectrum right infront of antennas (so not yet any detector properties are applied)
@@ -2805,13 +2810,12 @@ int main(int argc,  char **argv) {
           if (sig1->logscalefactor_taper>maxtaper)
             maxtaper=sig1->logscalefactor_taper;
 
-	  if (interaction1->nuflavor=="nue")        pdgcode = 12;
-	  else if (interaction1->nuflavor=="numu")  pdgcode = 14;
-	  else if (interaction1->nuflavor=="nutau") pdgcode = 16;
-	
+          if (interaction1->nuflavor=="nue")        pdgcode = 12;
+          else if (interaction1->nuflavor=="numu")  pdgcode = 14;
+          else if (interaction1->nuflavor=="nutau") pdgcode = 16;
+
           if (settings1->HIST==1 && !settings1->ONLYFINAL && bn1->WHICHPATH != 3 && k==Anita::NFREQ/2 && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES) {
-	    
-	    tree18->Fill();
+            tree18->Fill();
           }
 
           if (bn1->WHICHPATH == 3)
@@ -2840,17 +2844,6 @@ int main(int argc,  char **argv) {
         
       }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
 
-      //if no-roughness case, add its parameters to the saved screen parameters
-      if(!settings1->ROUGHNESS){
-        panel1->SetNvalidPoints(1);
-        for (int k=0;k<Anita::NFREQ;k++) {
-          panel1->AddVmmhz_freq(vmmhz[k]);
-        }
-        panel1->AddVec2bln(ray1->n_exit2bn[2]);
-        panel1->AddPol(n_pol);
-        panel1->AddDelay( 90. );
-      }
-
       // just for plotting
       vmmhz_max=Tools::dMax(vmmhz, Anita::NFREQ);
       vmmhz_min=Tools::dMin(vmmhz, Anita::NFREQ);
@@ -2861,7 +2854,24 @@ int main(int argc,  char **argv) {
       count1->nchanceinhell2[whichray]++;
       chanceinhell2=1;
 
+      //if no-roughness case, add its parameters to the saved screen parameters
+      if(!settings1->ROUGHNESS){
+        panel1->SetNvalidPoints(1);
+        for (int k=0;k<Anita::NFREQ;k++) {
+          panel1->AddVmmhz_freq(vmmhz[k]);
+        }
+        panel1->AddVec2bln(ray1->n_exit2bn[2]);
+        panel1->AddPol(n_pol);
+        panel1->AddDelay( 0. );
+        panel1->AddWeight( 1. );
+        panel1->SetWeightNorm( 1. );
 
+        for (int k=0;k<Anita::NFREQ;k++) {
+          Tools::Zero(sumsignal_aftertaper, 5);
+          if (bn1->WHICHPATH==4)
+            IntegrateBands(anita1, k, panel1, anita1->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
+        }
+      }
 
 
       // make a global trigger object (but don't touch the electric fences)
@@ -2910,7 +2920,7 @@ int main(int argc,  char **argv) {
       if (bn1->WHICHPATH==4) {
         Tools::Zero(sumsignal, 5);
         for (int k=0;k<Anita::NFREQ;k++)
-          IntegrateBands(anita1, k, vmmhz, anita1->freq, bn1->r_bn.Distance(interaction1->posnu)/1.E6, sumsignal);
+          IntegrateBands(anita1, k, panel1, anita1->freq, bn1->r_bn.Distance(interaction1->posnu)/1.E6, sumsignal);
       }//end if whichpath==4
       
       if (bn1->CENTER){
@@ -2970,14 +2980,64 @@ int main(int argc,  char **argv) {
             h6->Fill(hitangle_h, ray1->n_exit2bn[2]*bn1->n_bn);
 
 
-          anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, vmmhz, n_eplane,  n_hplane,  n_normal);
+          anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, n_eplane,  n_hplane,  n_normal);
 
           // AntTrig::ImpulseResponse needs to be outside the ray loop
           anttrig1->ImpulseResponse(settings1, anita1, ilayer, ifold);
           
           anttrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
-          
-          anttrig1->Banding(settings1,  anita1, vmmhz);
+
+
+
+
+          //anttrig1->Banding(settings1,  anita1, vmmhz);
+          for (int iband=0;iband<5;iband++) { // loop over bands
+            for (int i=0;i<Anita::NFREQ;i++) {
+              anita1->vmmhz_banding[i]=vmmhz[i]; // now copy vmmhz to vmmhz_bak instead, which we now play with to get the time domain waveforms for each subband
+              // remember vmmhz is V/m/MHz at the face of the antenna
+            }
+            // Don't we need to apply antenna gains here?
+              
+            // impose banding on the incident signal
+            anita1->Banding(iband,anita1->freq,anita1->vmmhz_banding,Anita::NFREQ); // impose banding whatever the trigger scheme
+              
+            for (int i=0;i<Anita::NFREQ;i++) {
+              anita1->vmmhz_banding_rfcm[i]=anita1->vmmhz_banding[i];
+            }
+              
+            // for frequency-domain voltage-based trigger (triggerscheme==0)
+            // we do not apply rfcm's
+            // for other trigger types we do
+            if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5)
+              anita1->RFCMs(1,1,anita1->vmmhz_banding_rfcm);
+              
+              
+            if (settings1->TRIGGERSCHEME >=2) { // we need to prepar the signal for the diode integration
+              for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+
+                anita1->vmmhz_banding_rfcm[ifreq]=anita1->vmmhz_banding_rfcm[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6);
+                // vmmhz was set to account for both negative and positive frequencies
+                // now it has units of volts/(meter*s) so below we copy it to vm_banding_rfcm_e,h
+                  
+                // here let's treat it as just one side of a double sided function though
+                // divide by timestep so that we can use it for discrete fourier transform.
+                // as in numerical recipes, F = (Delta t) * H
+              }
+            }
+            double integral=0.;
+            for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+              anttrig1->vm_banding_rfcm_e[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq]; // this is now Volts/(m*s) vs. frequency with banding and rfcm's applied
+              anttrig1->vm_banding_rfcm_h[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq];
+              integral += anttrig1->vm_banding_rfcm_e[iband][ifreq]*anttrig1->vm_banding_rfcm_e[iband][ifreq];
+            } // end loop over nfreq
+              
+          } // end loop over bands
+
+
+
+
+
+
 
           /*ofstream waveout("data/waveform.dat", std::fstream::app);
           for (int ii=0; ii<Anita::HALFNFOUR; ii++){
@@ -2993,7 +3053,7 @@ int main(int argc,  char **argv) {
 
           if (bn1->WHICHPATH==4 && anita1->Match(ilayer, ifold, anita1->rx_minarrivaltime)) {
             for (int k=0;k<Anita::NFREQ;k++)
-              IntegrateBands(anita1, k, vmmhz, anita1->freq, 1./1.E6, sumsignal);
+              IntegrateBands(anita1, k, panel1, anita1->freq, 1./1.E6, sumsignal);
           }
           
           for (int ibw=0;ibw<5;ibw++)
@@ -3938,13 +3998,14 @@ int main(int argc,  char **argv) {
 //
 
 
-void IntegrateBands(Anita *anita1, int k, double *vmmhz, double *freq, double scalefactor, double *sumsignal) {
+void IntegrateBands(Anita *anita1, int k, Screen *panel1, double *freq, double scalefactor, double *sumsignal) {
   for (int j=0;j<5;j++) {
   // if this frequency is in this bandwidth slice
-    if (anita1->bwslice_min[j]<=freq[k] && anita1->bwslice_max[j]>freq[k])
-      sumsignal[j]+=vmmhz[k]*(freq[k+1]-freq[k])*scalefactor;
-
-  } 
+    for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
+      if (anita1->bwslice_min[j]<=freq[k] && anita1->bwslice_max[j]>freq[k])
+        sumsignal[j]+=panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)*(freq[k+1]-freq[k])*scalefactor;
+    }
+  }
 }
 //end IntegrateBands()
 

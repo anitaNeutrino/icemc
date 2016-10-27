@@ -1068,7 +1068,7 @@ void AntTrigger::InitializeEachBand(Anita *anita1)
 }
 
 
-void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, double *vmmhz, Vector n_eplane, Vector n_hplane, Vector n_normal)
+void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector n_eplane, Vector n_hplane, Vector n_normal)
 {
   // vmmhz is V/m/MHz at the face of the antenna
   // this gets written to a tree because it is a measure of signal strength in the frequency domain
@@ -1080,7 +1080,7 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
 
   if(settings1->ROUGHNESS==0){
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-      integral_vmmhz+=vmmhz[ifreq]*(anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
+      integral_vmmhz+=panel1->GetVmmhz_freq(ifreq)*(anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
     }
   }
   else{ // for each frequency, add all screen points
@@ -1158,8 +1158,8 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
     Tools::realft(tmp_volts_rx_h_forfft,1,anita1->HALFNFOUR);
 
     for (int ii=0; ii<Anita::HALFNFOUR; ii++){
-      volts_rx_e_forfft[ii] += tmp_volts_rx_e_forfft[ii];
-      volts_rx_h_forfft[ii] += tmp_volts_rx_h_forfft[ii];
+      volts_rx_e_forfft[ii] += tmp_volts_rx_e_forfft[ii] * panel1->GetWeight(jpt) * panel1->GetWeightNorm();
+      volts_rx_h_forfft[ii] += tmp_volts_rx_h_forfft[ii] * panel1->GetWeight(jpt) * panel1->GetWeightNorm();
     }
   }//end int jpt loop over screen
 

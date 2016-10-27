@@ -12,7 +12,7 @@ include Makefile.arch
 #BOOSTFLAGS = -I boost_1_48_0
 
 # commented out for kingbee and older versions of gcc
-#CPPSTD = c++11
+CPPSTD = c++11
 
 #CC = gcc-4.8
 #CXX = g++-4.8
@@ -41,7 +41,7 @@ else
 # which replaces all instances of the text "constexpr" and replaces it
 # with "const".
 # This preserves functionality while only affecting very specific semantics.
-CPPSTD_FLAGS = -Dconstexpr=const -std=c++0x
+CPPSTD_FLAGS = -Dconstexpr=const
 endif
 
 GENERAL_FLAGS = -pipe
