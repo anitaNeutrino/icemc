@@ -70,17 +70,22 @@
 
 #include <typeinfo>
 
+//#define ANITA3_EVENTREADER
+
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
 #include "AnitaGeomTool.h"
 #include "AnitaConventions.h"
 #include "RawAnitaHeader.h"
 #include "Adu5Pat.h"
+#include "FFTtools.h"
 UsefulAnitaEvent*     realEvPtr    = NULL;
 RawAnitaHeader*       rawHeaderPtr = NULL;
 Adu5Pat* 	      Adu5PatPtr   = NULL;
-
-#include "FFTtools.h"
+#ifdef ANITA3_EVENTREADER
+#include "TruthAnitaEvent.h"
+TruthAnitaEvent*      truthEvPtr   = NULL;
+#endif
 #endif
 
 Taumodel* TauPtr = NULL;
@@ -132,8 +137,6 @@ double error_e_minus=0;
 double error_mu_minus=0;
 double error_tau_minus=0;
 int ierr=0; // integer for returning error from functions.
-//double posnu[3]; // direction from center of earth to interaction
-//double posnu_down[3]; //downward posnu.wufan
 double gain_dipole=2.15;  // antenna gain (nominal value for dipole is 2.15)
 double changle_deg=0; // same,  in degrees.
 // inputs
@@ -142,8 +145,6 @@ int whichray=0; // indexes the rays that we look at (actually just used for ice 
 double RANDOMISEPOL=0.;
 /************MOVED FROM shared.hh and shared.cc*****************/
 
-//TStyle* RootStyle();
-//TStyle *color=RootStyle();
 
 double volume_thishorizon; // for plotting volume within the horizon of the balloon
 int realtime_this;  // for plotting real unix time
@@ -155,9 +156,7 @@ double gps_offset=0;
 
 // inputs
 
-//double EXPONENT=20.; // energy exponent
-//double pnu=pow(10., EXPONENT);   // energy of neutrinos
-double pnu=pow(10., 20);   // energy of neutrinos
+double pnu=pow(10., 20);   //!< energy of neutrinos
 
 double MEANX=0;
 double MEANY=0.;
@@ -165,23 +164,12 @@ double MEANY=0.;
 double SIGNALRADIUS=2.; // in degrees
 
 // frequency binning
-
 const double FREQ_LOW_DISCONES=120.E6; // min frequency for discones
 const double FREQ_HIGH_DISCONES=1000.E6; // max frequency for discones
 
 double bwslice_vnoise_thislayer[4];// for filling tree6b,  noise for each bandwidth on each layer
-// double powerthresh_thischannel=0.;// threshold in power for this channel
-
-//int passes_thischannel=0; // this channel passes
-// int unmasked_thischannel=0; // this channel masked
 int passes_thisevent=0; // this event passes
 int unmasked_thisevent=0; // this event is unmasked
-// double sum_thisslice=0;  // sum the V/m/MHz that arrive an antenna that eventually passes the trigger.
-// int ibw_fortree=0; // which bandwidth slice
-// int lr=0; // left or right polarization
-
-// int channels_passing_db[4][16][2][4] = {{{{0}}}}; // same for double bang taus
-// TF1 *f[4][4]; // linear functions that parameterize variables that go into signal channel trigger effiencies that come from the time domain simulation
 
 int discones_passing;  // number of discones that pass
 int NDISCONES=8;
@@ -195,9 +183,9 @@ double vnoise_discone=0.; // noise on each discone
 double BW_DISCONES=300.E6-120.E6; // bandwidth of the discones
 
 // ray tracing
-double fresnel1=0;  // net fresnel factor on field at ice-firn interface
+double fresnel1=0;  //!< net fresnel factor on field at ice-firn interface
 double fresnel1_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX];  // for slac simulation
-double fresnel2=0;  // net fresnel factor on field at firn-air
+double fresnel2=0;  //!< net fresnel factor on field at firn-air
 double mag1=0;  // magnification factor on field at ice-firn interface
 double mag1_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX];// for slac simulation
 double mag2=0;  // magnification factor on field in firn-air
@@ -212,16 +200,13 @@ double e_comp_max3=0;
 double h_comp_max3=0;
 
 double diffexit=0;  // checking exit point between_MAX interations
-// double diff_2tries=0; // more of the same
 double diff_3tries=0;
 double diffnorm=0;  // checking angle of surf normal between iterations
 double diffrefr=0;  // checking angle of refr between iterations
 double costheta_inc=0;  // cos angle of incidence wrt surface normal
-// double costheta_refr=0; // cos angle of refraction wrt surface normal
 double costheta_exit=0; // theta of exit point wrt earth (costheta=1 at south pole)
 double theta_rf_atbn; // polar angle of the signal as seen by perfect eyes at the balloon.
 double theta_rf_atbn_measured; //polar angle of the signal as measured at the balloon (just the above variable smeared by 0.5 degrees)
-// double theta_inc=0; // angle of incidence of exiting ray (air side) wrt surface normal
 
 double costhetanu=-1000; // costheta of neutrino direction wrt earth (costheta=1 at south pole)
 
@@ -299,11 +284,7 @@ int eventsfound_binned_distance_forerror[NBINS_DISTANCE][NBINS] = {{0}}; // for 
 //taus
 double km3sr_db = 0;
 double km3sr_nfb=0;
-// double e_component_db=0;
-// double h_component_db=0;
-// double rflength_db=0;
 double ptau=0;
-// int count_passestrigger_db=0;
 int count_passestrigger_nfb=0;
 double percent_increase_db=0;
 double percent_increase_nfb=0;
@@ -311,11 +292,6 @@ double percent_increase_total=0;
 double error_nfb=0;
 double error_km3sr_nfb=0;
 double error_percent_increase_nfb=0;
-
-// double costheta_inc_db=0;
-// double costheta_refr_db=0;
-// double costheta_exit_db=0;
-// double diff_angle_db=0;
 
 Vector n_exit2bn_db[5];
 Vector nrf_iceside_db[5];  // direction of rf [tries][3d]
@@ -328,31 +304,16 @@ double eventsfound_nfb_binned[NBINS]; // counting events without first bang
 // rf parameters
 double heff_max=0.62639; // maximum value of the effective height based on antenna specs
 
-//double vnoise=VNOISE*sqrt((bwslice_max[3]-bwslice_min[3])/BW); // noise due to one bandwidth slice
-
-
-
 // event geometry
 double scalefactor_distance=0; // 1/r scalefactor
 double scalefactor_attenuation=0; //scalefactor due to attenuation in ice
 double MAX_ATTENLENGTH=1671;
-//double logscalefactor_taper=0; // scalefactor due to being off cerenkov cone
 double maxtaper=0; // this is just for plotting - maximum you are ever off cerenkov cone while
 //an event is detectable
-double dviewangle_deg=0; // same as taper,  just used for plotting
+double dviewangle_deg=0; //!< deviation from the cherenkov angle
 
-// double downwardchord1=0.; // these variables are used in the iterative
-// double downwardchord2=0.;// procedure that is used to find the neutrino
-// double downwardchord3=0.;// entrance point
-// double downwardchord4=0.;
-// double diffdownwardchord1=0; // these variables are used to test how well
-// double diffdownwardchord2=0;// the above iterative procedure converges.
-// double diffdownwardchord3=0;
-// double diffdiffdownwardchord1=0;// second derivative of convergance
-// double diffdiffdownwardchord2=0;
 double forseckel[NVIEWANGLE][Anita::NFREQ];// Per Seckel's request,  get strength of signal across frequencies for different viewing angles.
 double viewangles[NVIEWANGLE];
-//vector<Position> station; // the position of every station that can prevent a pulse from being called a neutrino event
 double GetAirDistance(double altitude_bn,  double beta); // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth
 
 //Input files
@@ -390,7 +351,6 @@ double nsurf_rfexit_db_array[3];
 double r_bn_array[3];
 double n_bn_array[3];
 double posnu_array[3];
-// double posnu2_array[3];
 double nrf_iceside_array[5][3];
 double nrf_iceside_db_array[5][3];
 double ant_max_normal0_array[3];
@@ -455,12 +415,6 @@ void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_
 
 double GetViewAngle(const Vector &nrf2_iceside,  const Vector &nnu);
 int TIR(const Vector &n_surf,  const Vector &nrf2_iceside,  double N_IN,  double N_OUT);
-//Position WhereDoesItEnter(IceModel *antartica1, const Position &posnu,  const Vector &nnu);
-
-
-// int IsDoubleBang(Ray *ray1, double pnu, double elast_y, double elpm, double hadfrac_db, double emfrac_db, string taudecay, double theta_bn, double phi_bn, double phi_spin, const Position &posnu, Position &posnu2, const Vector &nnu, double *deltheta_em_db, double *deltheta_had_db, double *vmmhz_db, double volts_db[][Anita::NPHI_MAX][2], double gain[][Anita::NFREQ], double *freq, double flare[][Anita::NFREQ], Vector &n_pol_db, Position &nuexit, Position *rfexit_db,  const Position &r_bn, Vector *n_exit2bn_db, Vector *nrf_iceside_db, double altitude_int, Vector nsurf_rfexit_db, const Vector *nrf_iceside, double &ptau, double &deltheta_em_max_db, double &deltheta_had_max_db, double &vmmhz1m_max_db, double &vmmhz1m_max_db, double &volts_rx_db, double &volts_rx_max_db, double &viewangle_db, double &nuexitlength, double &r_fromballoon_db, double &ddistance_db, double &theta_db, double &phi_db, double &costheta_inc_db, double &costheta_exit_db, double &dtemp, double &diff_angle_db, double &e_component_db, double &h_component_db, double &sumfrac_db, double &hitangle_e_db, double &hitangle_h_db, Signal *Sig1);
-
-//int Getibnposition();
 
 void IntegrateBands(Anita *anita1,  int k,  double *vmmhz,  double *freq,  double scalefactor,  double *sumsignal);
 void Integrate(Anita *anita1,  int j,  int k,  double *vmmhz,  double *freq,  double scalefactor,  double sumsignal);
@@ -477,7 +431,6 @@ void Getearth(double*,  double*,  double*,  double*);
 
 
 #ifdef ANITA_UTIL_EXISTS
-//int GetIceMCAntfromUsefulEventAnt(Anita *anita1,  AnitaGeomTool *AnitaGeom1,  int UsefulEventAnt);
 int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt);
 #ifdef R_EARTH
 #undef R_EARTH
@@ -537,13 +490,9 @@ int main(int argc,  char **argv) {
       switch(clswitch) {
       case 'n':
 	nnu_tmp=atoi(optarg);
-//         stringstream convert(run_num);
-//         convert>>run_no;
         break;
       case 't':
 	trig_thresh=atof(optarg);
-//         stringstream convert(run_num);
-//         convert>>run_no;
         break;
       case 'i':
         input=optarg;
@@ -554,7 +503,6 @@ int main(int argc,  char **argv) {
       case 'o':
         settings1->outputdir=optarg;
         cout << "Changed output directory to: " << settings1->outputdir << endl;
-        //ofstream ftemp(settings1->outputdir.c_str());
         stemp="mkdir " + settings1->outputdir;
         system(stemp.c_str());
         break;
@@ -607,10 +555,7 @@ int main(int argc,  char **argv) {
   
   stemp=settings1->outputdir+"/slac_hitangles"+run_num+".dat";
   ofstream fslac_hitangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
-  
-  // stemp=settings1->outputdir+"/outseckel"+run_num+".txt";
-  // ofstream foutseckel(stemp.c_str());
-  
+    
   Balloon *bn1=new Balloon(); // instance of the balloon
   Anita *anita1=new Anita();// right now this constructor gets banding info
   Secondaries *sec1=new Secondaries();
@@ -700,24 +645,11 @@ int main(int argc,  char **argv) {
   al_voltages_direct<<"antenna #"<<"   "<<"volts chan 1"<<"   "<<"volts chan 2"<<"    "<<"volts chan 3"<<"    "<<"volts chan 4"<<"    "<<"noise chan 1"<<"    "<<"noise chan 2"<<"    "<<"noise chan 3"<<"   "<<"noise chan 4"<<"  "<<"weight"<<endl;
   ////////////////////////////////////////////////////////////////////
   
-  /*
-  for (int i=0;i<4;i++) {
-    for (int j=0;j<16;j++) {
-      for (int k=0;k<2;k++) {
-	for (int p=0;p<4;p++) {
-	  channels_passing_db[i][j][k][p]=0;
-	}
-      }
-    }
-  }
-  */
-
   // ray tracing
   double viewangle=0;
   double viewangle_temp=0; // angle of ray in ice relative to neutrino direction
   double viewangle_deg=0; // viewing angle in degrees.
   double cosviewangle=0; // cosine of viewing angle
-  //double viewangle_db=0; // same,  for double-bang
   double offaxis=0; // viewangle-changle,  for plotting
   double nsigma_offaxis=0;// offaxis,  relative to deltheta_had,  for plotting
   double theta_threshold=0; // maximum angle you can be away from the cerenkov angle and still have a chance of seeing the event.
@@ -735,9 +667,7 @@ int main(int argc,  char **argv) {
   double bestcase_atten=0;// attenuation factor,  best case
   double vmmhz1m_fresneledonce=0; // above,  after fresnel factor applied for ice-air interface
   double vmmhz1m_fresneledtwice=0; // above,  after fresnel factor applied for firn
-  //double vmmhz1m_max_db=0;  // for taus
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
-  //double vmhz[Anita::NFREQ]; // V/MHz at balloon
   // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
   double vmmhz_em[Anita::NFREQ];
   
@@ -745,19 +675,14 @@ int main(int argc,  char **argv) {
   double vmmhz_min_thatpasses=1000;
   double vmmhz_min=0;   // minimum of the above array
   double vmmhz_max=0;                        // maximum of the above array
-  //double vmmhz_db[Anita::NFREQ];                    // V/m/MHz for double bangs
-  //double vmmhz_max_db=0;                     // maximum of above array
   double deltheta_em[Anita::NFREQ], deltheta_had[Anita::NFREQ];     // for ch angular distribution
   double deltheta_em_max, deltheta_had_max;     // maximum value of above array angular distribution
   double deltheta_em_mid2, deltheta_had_mid2;     // widths of cones for the mid2 band
-  //double deltheta_em_db[Anita::NFREQ], deltheta_had_db[Anita::NFREQ]; // same,  for double bangs.
-  //double deltheta_em_max_db, deltheta_had_max_db; // maximum value of above array
   
   // shower properties
   double emfrac, hadfrac, sumfrac;               // em and had fractions
   int n_interactions=1;            // count number of interactions for this event,  including secondaries.
   double emfrac_db, hadfrac_db;
-  //double sumfrac_db;      // em and had fractions for double bangs
   int nuflavorint2=interaction1->nuflavorint;
   double costheta_nutraject2=interaction1->costheta_nutraject;
   double phi_nutraject2=interaction1->phi_nutraject;
@@ -777,14 +702,9 @@ int main(int argc,  char **argv) {
   string taudecay;                   // tau decay type: e, m, h
   
   double elast_y=0;                   // inelasticity
-  // double elpm;                        // LPM energy
-  
-  // double volts_db[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2];                   // same,  for double bangs
   double volts_rx_0=0;              // voltage on an individual antenna,  lc polarization
   double volts_rx_1=0;              // voltage on an individual antenna,  rc polarization
-  //double volts_rx_db=0;           // same,  for double bangs
   double volts_rx_max=0; // max voltage seen on an antenna - just for debugging purposes
-  //double volts_rx_max_db=0; // same,  for double bangs.
   double volts_rx_ave=0; // ave voltage seen on an antenna,  among hit antennas
   double volts_rx_sum=0; // ave voltage seen on an antenna,  among hit antennas
   
@@ -792,9 +712,6 @@ int main(int argc,  char **argv) {
   double volts_rx_max_lowband; // max voltage seen on an antenna - just for debugging purposes
   double volts_rx_rfcm_lab_e_all[48][512];
   double volts_rx_rfcm_lab_h_all[48][512];
-  
-  // miscellaneous
-  //double dtemp;                       // another temp variable
   
  // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
   double e_component=0; // E comp along polarization
@@ -816,7 +733,6 @@ int main(int argc,  char **argv) {
   double hitangle_e, hitangle_h;       // angle the ray hits the antenna wrt e-plane, h-plane
   double hitangle_e_all[Anita::NANTENNAS_MAX];         // hit angles rel. to e plane stored for each antenna
   double hitangle_h_all[Anita::NANTENNAS_MAX];         // hit angles rel. to h plane stored for each antenna
-  //double hitangle_e_db, hitangle_h_db; // same,  for double bangs
   
   double sigma = 0;                       // for cross section
   double len_int_kgm2=0;              // interaction length in kg/m^2
@@ -833,18 +749,15 @@ int main(int argc,  char **argv) {
   double viewangle_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // viewing angle for each antenna
   
   double cosalpha; // angle between nu momentum and surface normal at earth entrance point
-  double mytheta; //alpha minus 90 degrees
+  double mytheta; //!< alpha minus 90 degrees
   double cosbeta0; // angle between nu momentum and surface normal at interaction point.
-  double mybeta; // beta minus 90 degrees
+  double mybeta; //!< beta minus 90 degrees
   double nuexitlength=0; // distance from interaction to where neutrino would leave
   double nuexitice=0; 
   double nuentrancelength=0; // for taus
   double taulength=0;  // distance tau travels in ice before decaying
   double icethickness=0; // for taus
   double theta_pol_measured; // theta of the polarization as measured at the payload (for now we don't correct for the 10 degree cant)
-  // double ddistance_db; // for taus
-  //double phi_db=0; // same,  for double bang
-  //double theta_db=0; // same,  for double bangs
   
   double ptaui=0;
   double ptauf =0;
@@ -861,20 +774,11 @@ int main(int argc,  char **argv) {
   double sourceLat;
   double sourceMag;
  
-  //Position posnu; // direction from center of earth to interaction
-  //Position posnu_down; //downward posnu
-  
-  
-  
-  // Vector n_exit2bn_db[5]; // for double bangs
   Vector n_nutraject_ontheground; //direction of the neutrino from the person standing on the ground just below the balloon.
-  // Vector nrf_iceside_db[5];  // direction of rf [tries][3d]
   Vector n_pol; // direction of polarization
   Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
   Vector n_pol_db; // same,  double bangs
   
-  
-  //  int iphisector; //phi sector trigger test (L3)
   int l3trig[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
     // For each trigger layer,  which "clumps" pass L2.  16 bit,  16 bit and 8 bit for layers 1 & 2 and nadirs  
   int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
@@ -910,15 +814,6 @@ int main(int argc,  char **argv) {
   Tools::Zero(eventsfound_binned_tau, NBINS);
   Tools::Zero(eventsfound_nfb_binned, NBINS);
 
-/*
-  Tools::Zero(eventsfound_binned_distance, NBINS_DISTANCE);
-  Tools::Zero(km3sr_distance, NBINS_DISTANCE);
-  Tools::Zero(error_distance_plus, NBINS_DISTANCE);
-  Tools::Zero(error_distance_minus, NBINS_DISTANCE);
-
-  Tools::Zero(eventsfound_binned_distance_forerror[NBINS_DISTANCE], NBINS);
-*/  
-    
   //we pick both the interaction point and its corresponding mirror point
   
   //for drawing the events on the events map
@@ -949,7 +844,6 @@ int main(int argc,  char **argv) {
   TTree *tree2 = new TTree("h2000", "h2000"); // tree2 filled for each event that is beyond the horizon.
   
   tree2->Branch("inu", &inu, "inu/I");
-  //tree2->Branch("theta", &theta, "theta/D");
   tree2->Branch("horizcoord", &horizcoord, "horizcoord/D");
   tree2->Branch("vertcoord", &vertcoord, "vertcoord/D");
   tree2->Branch("scalefactor_distance", &scalefactor_distance, "scalefactor_distance/D");
@@ -971,24 +865,12 @@ int main(int argc,  char **argv) {
   tree3->Branch("cosviewangle", &cosviewangle, "cosviewangle/D");
   tree3->Branch("emfrac", &emfrac, "emfrac/D");
   tree3->Branch("hadfrac", &hadfrac, "hadfrac/D");
-  //tree3->Branch("current", &currentint, "currentint/I");
-  //tree3->Branch("nuflavor", &nuflavorint, "nuflavorint/I");//was commented
-  
-  // TTree *tree4 = new TTree("h4000", "h4000"); // tree4 is signal is detectable
-  // tree4->Branch("dnutries", &interaction1->dnutries, "dnutries/D");
-  // tree4->Branch("dtryingdirection", &dtryingdirection2, "dtryingdirection/D");
-  // tree4->Branch("bn1->dtryingposition", &bn1->dtryingposition, "bn1->dtryingposition/D");
-  // tree4->Branch("horizcoord", &horizcoord, "horizcoord/D");
-  // tree4->Branch("vertcoord", &vertcoord, "vertcoord/D");
-  // //tree4->Branch("logscalefactor_taper", &logscalefactor_taper, "logscalefactor_taper/D");
-  
-    
+      
   TTree *tree5 = new TTree("h5000", "h5000"); // tree5 filled for each nutau.
   tree5->Branch("vmmhz1m_max", &vmmhz1m_max, "vmmhz1m_max/D");
   tree5->Branch("inu", &inu, "inu/I");
   tree5->Branch("nuexitlength", &nuexitlength, "nuexitlength/D");
   tree5->Branch("nuexitice",  &nuexitice,  "nuexitice");
-  // tree5->Branch("diff_angle_db", &diff_angle_db, "diff_angle_db");
   tree5->Branch("vmmhz_max", &vmmhz_max, "vmmhz_max");
   tree5->Branch("maxtaper", &maxtaper, "maxtaper");
   tree5->Branch("inu", &inu, "inu/I");
@@ -1006,11 +888,9 @@ int main(int argc,  char **argv) {
   tree5->Branch("weight1", &weight1, "weight1/D");
   tree5->Branch("nearthlayers", &nearthlayers, "nearthlayers/D");
   tree5->Branch("logchord", &logchord2, "interaction1->logchord/D");
-  // tree5->Branch("diff_2tries", &diff_2tries, "diff_2tries/D");
   tree5->Branch("diff_3tries", &diff_3tries, "diff_3tries/D");
   tree5->Branch("fresnel2", &fresnel2, "fresnel2/D");
   tree5->Branch("costheta_inc", &costheta_inc, "costheta_inc/D");
-  // tree5->Branch("costheta_refr", &costheta_refr, "costheta_refr/D");
   tree5->Branch("costheta_exit", &costheta_exit, "costheta_exit/D");
   tree5->Branch("deltheta_em", &deltheta_em[0], "deltheta_em/D");
   tree5->Branch("deltheta_had", &deltheta_had[0], "deltheta_had/F");
@@ -1050,8 +930,6 @@ int main(int argc,  char **argv) {
   jaimetree->Branch("vmmhz1m_max", &vmmhz1m_max, "vmmhz1m_max/D");
   jaimetree->Branch("emfrac", &emfrac, "emfrac/D");
   jaimetree->Branch("hadfrac", &hadfrac, "hadfrac/D");
-  //jaimetree->Branch("current", &currentint, "currentint/I");
-  //jaimetree->Branch("nuflavor", &nuflavorint, "nuflavorint/I");
   jaimetree->Branch("deltheta_em_max", &deltheta_em_max, "deltheta_em_max/D");
   jaimetree->Branch("deltheta_had_max", &deltheta_had_max, "deltheta_had_max/D");
   jaimetree->Branch("sumfrac", &sumfrac, "sumfrac/D");
@@ -1061,8 +939,6 @@ int main(int argc,  char **argv) {
   viewangletree->Branch("dviewangle_deg", &dviewangle_deg, "dviewangle_deg/D");
   viewangletree->Branch("emfrac", &emfrac, "emfrac/D");
   viewangletree->Branch("hadfrac", &hadfrac, "hadfrac/D");
-  //viewangletree->Branch("current", &currentint, "currentint/I");
-  //viewangletree->Branch("nuflavor", &nuflavorint, "nuflavorint/I");
   viewangletree->Branch("deltheta_em_max", &deltheta_em_max, "deltheta_em_max/D");
   viewangletree->Branch("deltheta_had_max", &deltheta_had_max, "deltheta_had_max/D");
   viewangletree->Branch("theta_threshold_deg", &theta_threshold_deg, "theta_threshold_deg/D");
@@ -1072,8 +948,6 @@ int main(int argc,  char **argv) {
   
   TTree *neutrino_positiontree=new TTree("neutrino_positiontree", "neutrino_positiontree");
   neutrino_positiontree->Branch("nnu", &interaction1->nnu, "nnu[3]/D");
-  //  neutrino_positiontree->Branch("posnu", &posnu, "posnu[3]/D");
-  //neutrino_positiontree->Branch("bin_volume", &bin_volume, "bin_volume/D");
   neutrino_positiontree->Branch("dtryingdirection", &interaction1->dtryingdirection, "dtryingdirection/D");
   neutrino_positiontree->Branch("bn1->dtryingposition", &bn1->dtryingposition, "bn1->dtryingposition/D");
   
@@ -1090,7 +964,6 @@ int main(int argc,  char **argv) {
   
   
   TTree *finaltree = new TTree("passing_events", "passing_events"); // finaltree filled for all events that pass
-  //finaltree->Branch("nnu", "Vector", &nnu, 32000, 0);
   finaltree->Branch("inu", &inu, "inu/I");
   finaltree->Branch("vmmhz_min", &vmmhz_min, "vmmhz_min/D");
   finaltree->Branch("vmmhz_max", &vmmhz_max, "vmmhz_max/D");
@@ -1109,7 +982,6 @@ int main(int argc,  char **argv) {
   finaltree->Branch("weight", &weight, "weight/D");
   finaltree->Branch("logweight", &logweight, "logweight/D");
   finaltree->Branch("posnu", &posnu_array, "posnu_array[3]/D");
-  // finaltree->Branch("posnu2", &posnu2_array, "posnu2_array[3]/D");
   finaltree->Branch("costheta_nutraject", &costheta_nutraject2, "costheta_nutraject/D");
   finaltree->Branch("chord_kgm2_ice",  &chord_kgm2_ice2, "chord_kgm2_ice/D");
   finaltree->Branch("phi_nutraject", &phi_nutraject2, "phi_nutraject/D");
@@ -1138,14 +1010,11 @@ int main(int argc,  char **argv) {
   finaltree->Branch("phiTrigMaskH", &phiTrigMaskH, "phiTrigMaskH/s");
   finaltree->Branch("l1TrigMask", &l1TrigMask, "l1TrigMask/s");
   finaltree->Branch("l1TrigMaskH", &l1TrigMaskH, "l1TrigMaskH/s");
-  //finaltree->Branch("arrival_times", &(globaltrig1->arrival_times), "arrival_times[Anita::NLAYERS_MAX*Anita::NPHI_MAX]/D");
-  //finaltree->Branch("rx_minarrivaltime", &(globaltrig1->rx_minarrivaltime), "rx_minarrivaltime/I");
   finaltree->Branch("max_antenna0", &max_antenna0, "max_antenna0/I");
   finaltree->Branch("max_antenna1", &max_antenna1, "max_antenna1/I");
   finaltree->Branch("max_antenna2", &max_antenna2, "max_antenna2/I");
   
   finaltree->Branch("viewangle", &viewangle, "viewangle/D");
-  //finaltree->Branch("changle", &changle, "changle/D");
   finaltree->Branch("offaxis", &offaxis, "offaxis/D");
   finaltree->Branch("rx0_signal_eachband", &rx0_signal_eachband, "rx0_signal_eachband[2][5]/D");
   finaltree->Branch("rx0_threshold_eachband", &rx0_threshold_eachband, "rx0_threshold_eachband[2][5]/D");
@@ -1170,7 +1039,6 @@ int main(int argc,  char **argv) {
   finaltree->Branch("mag2", &mag2, "mag2/D");
   finaltree->Branch("t_coeff_pokey", &t_coeff_pokey, "t_coeff_pokey/D");
   finaltree->Branch("t_coeff_slappy", &t_coeff_slappy, "t_coeff_slappy/D");
-  //  finaltree->Branch("exponent", &EXPONENT, "EXPONENT/D");
   finaltree->Branch("exponent", &settings1->EXPONENT, "EXPONENT/D");
   
   finaltree->Branch("hitangle_e_all", &hitangle_e_all, "hitangle_e_all[48]/D");
@@ -1200,7 +1068,6 @@ int main(int argc,  char **argv) {
   finaltree->Branch("voltage", &voltagearray, "voltagearray[48]/D");
   finaltree->Branch("nlayers", &settings1->NLAYERS, "settings1->NLAYERS/I");
   
-  //finaltree->Branch("taudecay", &taudecayint, "taudecayint/I");//1=m,  2=e,  3=h
   finaltree->Branch("vmmhz1m_max", &vmmhz1m_max, "vmmhz1m_max/D");
   finaltree->Branch("vmmhz_lowfreq", &vmmhz_lowfreq, "vmmhz_lowfreq/D");
   
@@ -1211,7 +1078,6 @@ int main(int argc,  char **argv) {
   
   finaltree->Branch("rfexit_db", &rfexit_db_array, "rfexit_db_array[5][3]/D");
   finaltree->Branch("r_in", &r_in_array, "r_in_array[3]/D");
-  //finaltree->Branch("n_out_surf", &n_out_surf_array, "n_out_surf_array[3]/D");
   finaltree->Branch("nsurf_rfexit", &nsurf_rfexit_array, "nsurf_rfexit_array[3]/D");
   finaltree->Branch("nsurf_rfexit_db", &nsurf_rfexit_db_array, "nsurf_rfexit_db_array[3]/D");
   finaltree->Branch("r_fromballoon", &r_fromballoon2, "r_fromballoon/D");
@@ -1241,8 +1107,6 @@ int main(int argc,  char **argv) {
   finaltree->Branch("core_entered", &core_entered, "core_entered/I");
   finaltree->Branch("n_pol", &n_pol_array, "n_pol_array[3]/D");
   finaltree->Branch("vmmhz_min_thatpasses", &vmmhz_min_thatpasses, "vmmhz_min_thatpasses/D");
-  // finaltree->Branch("sum_thisslice", &sum_thisslice, "sum_thisslice/D");
-  //finaltree->Branch("nchannels_perband_triggered", &nchannels_perband_triggered, "nchannels_perband_triggered[40][8]/I");
   
   finaltree->Branch("pieceofkm2sr", &pieceofkm2sr, "pieceofkm2sr/D");
   //finaltree->Branch("volts_original", &volts_original, "volts_original[10][20][2]/D");
@@ -1250,7 +1114,6 @@ int main(int argc,  char **argv) {
   finaltree->Branch("r_exit2bn_measured", &r_exit2bn_measured2, "r_exit2bn_measured/D");
   finaltree->Branch("scalefactor_attenuation", &scalefactor_attenuation, "scalefactor_attenuation/D");
   finaltree->Branch("anita1->PHI_OFFSET", &anita1->PHI_OFFSET, "anita1->PHI_OFFSET/D");
-  //finaltree->Branch("globtrig1->triggerbits", &globtrig1->triggerbits, "globtrig1->triggerbits[4]/I");
   finaltree->Branch("igps", &bn1->igps, "igyps/I");
   finaltree->Branch("volts_rx_rfcm_lab_e_all", &volts_rx_rfcm_lab_e_all, "volts_rx_rfcm_lab_e_all[48][512]/D");
   finaltree->Branch("volts_rx_rfcm_lab_h_all", &volts_rx_rfcm_lab_h_all, "volts_rx_rfcm_lab_h_all[48][512]/D");
@@ -1287,10 +1150,6 @@ int main(int argc,  char **argv) {
   
   TTree *banana_tree = new TTree("banana_tree", "banana_tree");  //To record banana plot info - Stephen
   banana_tree->Branch("r_bn", &bn1->r_bn, "r_bn[3]/D");
-  //   banana_tree->Branch("volts", &banana_volts, "banana_volts/D");
-  //   banana_tree->Branch("banana_theta_obs", &banana_theta_obs, "banana_theta_obs/D");
-  //   banana_tree->Branch("banana_phi_obs", &banana_phi_obs, "banana_phi_obs/D");
-  //   banana_tree->Branch("n_pol", &n_pol, "n_pol[3]/D");
   
   TTree *ytree = new TTree("ytree", "ytree"); //To record y distributions
   ytree->Branch("elast_y", &elast_y, "elast_y/D");
@@ -1319,38 +1178,7 @@ int main(int argc,  char **argv) {
   groundtree->Branch("lat_ground", &lat_ground, "lat_ground/D");
   
   //End block added by Stephen
-  
-  // TTree *tree8 = new TTree("h8000", "h8000"); // tree8
-  // tree8->Branch("downwardchord1", &downwardchord1, "downwardchord1/D");
-  // tree8->Branch("downwardchord2", &downwardchord2, "downwardchord2/D");
-  // tree8->Branch("downwardchord3", &downwardchord3, "downwardchord3/D");
-  // tree8->Branch("downwardchord4", &downwardchord4, "downwardchord4/D");
-  // tree8->Branch("diffdownwardchord1", &diffdownwardchord1, "diffdownwardchord1/D");
-  // tree8->Branch("diffdownwardchord2", &diffdownwardchord2, "diffdownwardchord2/D");
-  // tree8->Branch("diffdownwardchord3", &diffdownwardchord3, "diffdownwardchord3/D");
-  // tree8->Branch("diffdiffdownwardchord1", &diffdiffdownwardchord1, "diffdiffdownwardchord1/D");
-  // tree8->Branch("diffdiffdownwardchord2", &diffdiffdownwardchord2, "diffdiffdownwardchord2/D");
-  
-  //  // teachchannel - filled for each channel that is sent through the trigger
-  //   TTree *teachchannel = new TTree("teachchannel", "teachchannel");
-  //   teachchannel->Branch("volts_rx_max", &volts_rx_max, "volts_rx_max/D");
-  //   teachchannel->Branch("inu", &inu, "inu/I");
-  //   teachchannel->Branch("ibw", &ibw_fortree, "ibw/I"); // which channel
-  //   teachchannel->Branch("lr", &lr, "lr/I"); // whether it's left or right polarization
-  //   teachchannel->Branch("ilayer", &ilayer, "ilayer/I");  // layer of the payload
-  //   teachchannel->Branch("iphi", &ifold, "ifold/I"); // index of antenna phi
-  //   teachchannel->Branch("weight1", &weight1, "weight1/D"); // weight of the event
-  //   teachchannel->Branch("bwslice_vnoise", &bwslice_vnoise_thislayer, "bwslice_vnoise/D");
-  //   teachchannel->Branch("viewangle", &viewangle, "viewangle/D");
-  //   teachchannel->Branch("powerthresh_thischannel", &powerthresh_thischannel, "powerthresh_thischannel/D");
-  //   teachchannel->Branch("igps", &bn1->igps, "igps/I");
-  //   teachchannel->Branch("realtime", &realtime_this, "realtime/i");
-  //   teachchannel->Branch("unmasked_thischannel", &unmasked_thischannel, "unmasked_thischannel/I");
-  //   teachchannel->Branch("hitangle_e", &hitangle_e, "hitangle_e/D");
-  //   teachchannel->Branch("hitangle_h", &hitangle_h, "hitangle_h/D");
-  //   teachchannel->Branch("e_component", &e_component, "e_component/D");
-  //   teachchannel->Branch("h_component", &h_component, "h_component/D");
-  
+    
   TTree *tree11 = new TTree("h11000", "h11000"); // tree11
   tree11->Branch("loctrig00", &loctrig[0][0], "loctrig0/D");
   tree11->Branch("loctrig10", &loctrig[1][0], "loctrig0/D");
@@ -1360,26 +1188,7 @@ int main(int argc,  char **argv) {
   tree11->Branch("loctrig11", &loctrig[1][1], "loctrig1/D");
   tree11->Branch("loctrig21", &loctrig[2][1], "loctrig1/D");
   tree11->Branch("loctrig_nadironly1", &loctrig_nadironly[1], "loctrig0/D");
-  
-  // TTree *tree12 = new TTree("h12000", "h12000");
-  // tree12->Branch("nuexitlength", &nuexitlength, "nuexitlength/D");
-  // tree12->Branch("y", &elast_y, "elast_y/D");
-  // tree12->Branch("costheta_nutraject", &interaction1->costheta_nutraject, "costheta_nutraject/D");
-  
-  // TTree *tree14 = new TTree("h14000", "h14000");
-  // tree14->Branch("ddistance_db", &ddistance_db, "ddistance_db/D");
-  // tree14->Branch("diff_angle_db", &diff_angle_db, "diff_angle_db/D");
-  
-  // TTree *tree15 = new TTree("h15000", "h15000"); // tree15
-  // tree15->Branch("loctrig00", &loctrig[0][0], "loctrig0/D");
-  // tree15->Branch("loctrig10", &loctrig[1][0], "loctrig0/D");
-  // tree15->Branch("loctrig20", &loctrig[2][0], "loctrig0/D");
-  // tree15->Branch("loctrig_nadironly0", &loctrig_nadironly[0], "loctrig_nadironly0/D");
-  // tree15->Branch("loctrig01", &loctrig[0][1], "loctrig1/D");
-  // tree15->Branch("loctrig11", &loctrig[1][1], "loctrig1/D");
-  // tree15->Branch("loctrig21", &loctrig[2][1], "loctrig1/D");
-  // tree15->Branch("loctrig_nadironly1", &loctrig_nadironly[1], "loctrig0/D");
-  
+    
   TTree *tree16 = new TTree("h16000", "h16000");
   tree16->Branch("pnu", &pnu, "pnu/D");
   tree16->Branch("ptau", &ptau, "ptau/D");
@@ -1389,30 +1198,9 @@ int main(int argc,  char **argv) {
   tree16->Branch("hadfrac", &hadfrac, "hadfrac/D");
   tree16->Branch("nuentrancelength", &nuentrancelength, "nuentrancelength/D");
   
-  // TTree *tree17 = new TTree("h17000", "h17000");
-  // tree17->Branch("pnu", &pnu, "pnu/D");
-  // tree17->Branch("sum_frac0", &sum_frac[0], "sum_frac0/D");
-  // tree17->Branch("sum_frac1", &sum_frac[1], "sum_frac1/D");
-  // tree17->Branch("sum_frac2", &sum_frac[2], "sum_frac2/D");
-  // tree17->Branch("sum_frac_db0", &sum_frac_db[0], "sum_frac_db0/D");
-  // tree17->Branch("sum_frac_db1", &sum_frac_db[1], "sum_frac_db1/D");
-  // tree17->Branch("sum_frac_db2", &sum_frac_db[2], "sum_frac_db2/D");
-  // tree17->Branch("percent_increase_db", &percent_increase_db, "percent_increase_db/D");
-  // tree17->Branch("percent_increase_nfb", &percent_increase_nfb, "percent_increase_nfb/D");
-  // tree17->Branch("error_percent_increase_nfb", &error_percent_increase_nfb, "error_percent_increase_nfb/D");
-  // tree17->Branch("percent_increase_total", &percent_increase_total, "percent_increase_total/D");
-  // tree17->Branch("km3sr", &km3sr, "km3sr/D");
-  // tree17->Branch("error_plus", &error_plus, "error_plus/D");
-  // tree17->Branch("km3sr_nfb", &km3sr_nfb, "km3sr_nfb/D");
-  // tree17->Branch("error_km3sr_nfb", &error_km3sr_nfb, "error_km3sr_nfb/D");
-  // tree17->Branch("eventsfound_nfb", &eventsfound_nfb, "eventsfound_nfb/D");
-  // tree17->Branch("error_nfb", &error_nfb, "error_nfb/D");
-
   int pdgcode;
   
   TTree *tree18 = new TTree("h18000", "h18000");
-  //tree18->Branch("vmmhz1m_em", &vmmhz1m_em, "vmmhz1m_em/D");
-  //tree18->Branch("vmmhz1m_had", &vmmhz1m_had, "vmmhz1m_had/D");
   tree18->Branch("emfrac",  &emfrac,  "emfrac/D");
   tree18->Branch("hadfrac", &hadfrac, "hadfrac/D");
   tree18->Branch("pdgcode", &pdgcode, "pdgcode/I");
@@ -1447,34 +1235,12 @@ int main(int argc,  char **argv) {
   tree1->Branch("latitude", &latitude_this, "latitude/D");
   tree1->Branch("MAXHORIZON", &bn1->MAXHORIZON, "MAXHORIZON/D");
   tree1->Branch("igps", &bn1->igps, "igps/I");
-  //tree1->Branch("energy_wholeband", &energy_wholeband, "energy_wholeband/D");
   tree1->Branch("passes_thisevent", &passes_thisevent, "passes_thisevent/I");
   tree1->Branch("igps", &bn1->igps, "igps/I");
   tree1->Branch("weight", &weight, "weight/D");
   tree1->Branch("r_exit2bn", &interaction1->r_exit2bn, "r_exit2bn/D");
   tree1->Branch("bn1->igps", &bn1->igps, "bn1->igps/I");
     
-  // TTree *tree1b = new TTree("h1001", "h1001"); // tree1b filled for each neutrino
-  // tree1b->Branch("inu", &inu, "inu/I");
-  // tree1b->Branch("diffexit", &diffexit, "diffexit/D");
-  // tree1b->Branch("diffrefr", &diffrefr, "diffrefr/D");
-  // tree1b->Branch("horizcoord", &horizcoord, "horizcoord/D");
-  // tree1b->Branch("vertcoord", &vertcoord, "vertcoord/D");
-  // tree1b->Branch("costhetanu", &costhetanu, "costhetanu/D");
-  // tree1b->Branch("vmmhz1m_max", &vmmhz1m_max, "vmmhz1m_max/D");
-  
-  // //  tree1b->Branch("ibnposition", &ibnposition, "ibnposition/I");
-  // tree1b->Branch("volume_thishorizon", &volume_thishorizon, "volume_thishorizon/D");
-  // tree1b->Branch("realtime", &realtime_this, "realtime/D");
-  // tree1b->Branch("longitude", &longitude_this, "longitude/D");
-  // tree1b->Branch("latitude", &latitude_this, "latitude/D");
-  // tree1b->Branch("MAXHORIZON", &bn1->MAXHORIZON, "MAXHORIZON/D");
-  // tree1b->Branch("igps", &bn1->igps, "igps/I");
-  // //tree1b->Branch("energy_wholeband", &energy_wholeband, "energy_wholeband/D");
-  // tree1b->Branch("passes_thisevent", &passes_thisevent, "passes_thisevent/I");
-  
-  
-
   // set up balloontree 
 
   TTree *balloontree = new TTree("balloon", "balloon"); //filled for all events
@@ -1530,8 +1296,16 @@ int main(int argc,  char **argv) {
   adu5PatTree->Branch("pat",          &Adu5PatPtr                   );
   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
   adu5PatTree->Branch("weight",       &weight,       "weight/D"     );
+
+  AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();
   
-  AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();// new AnitaGeomTool();
+#ifdef ANITA3_EVENTREADER
+  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaTruthFile"+run_num+".root";
+  TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
+
+  TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
+  truthAnitaTree->Branch("truth",     &truthEvPtr                   );
+#endif
   
 #endif
   
@@ -1844,7 +1618,6 @@ int main(int argc,  char **argv) {
       if (!interaction1->iceinteraction)
         continue;
       count1->iceinteraction[whichray]++;
-
       
       if (beyondhorizon) {
         //delete ray1;
@@ -1978,8 +1751,9 @@ int main(int argc,  char **argv) {
         
         taus1->GetTauWeight(primary1,  settings1,  antarctica,  interaction1,  pnu,  1,  ptauf, crust_entered);
 
-        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
 
+        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
+	
         nutauweight = interaction1->weight_nu_prob;
         tauweight = taus1->weight_tau_prob;
 
@@ -2188,7 +1962,7 @@ int main(int argc,  char **argv) {
       }
       
       count1->ngoodfracs[whichray]++;
-      
+
       // these variables are just for plotting
       nsigma_em_threshold=theta_threshold/deltheta_em_max;
       nsigma_had_threshold=theta_threshold/deltheta_had_max;
@@ -2213,17 +1987,18 @@ int main(int argc,  char **argv) {
       
       double weight_test=0;  // weight if the whole chord from interaction to earth entrance is ice.
       // take best case scenario chord length and find corresponding weight
+      
       IsAbsorbed(chord_kgm2_test, len_int_kgm2, weight_test);
       // if the probably the neutrino gets absorbed is almost 1,  throw it out.
-      
+
       if (bn1->WHICHPATH!=4 && settings1->FORSECKEL!=1 && !settings1->SKIPCUTS) {
         if (weight_test<CUTONWEIGHTS) {
           //delete ray1;
           //delete interaction1;
-          continue;
+	  continue;
         }
       }
-      
+
       count_chanceofsurviving++;
       
       
@@ -2303,8 +2078,6 @@ int main(int argc,  char **argv) {
         if (bn1->WHICHPATH==3)
           cout<<"Neutrino is getting absorbed and thrown out!"<<endl;
 
-        //delete ray1;
-        //delete interaction1;
         continue;
       }
       
@@ -2332,9 +2105,7 @@ int main(int argc,  char **argv) {
       //if (CHANCEINHELL_FACTOR*Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/r_fromballoon*heff_max*bw/1.E6)>1. && !settings1->SKIPCUTS && !settings1->FORSECKEL) {
         if (bn1->WHICHPATH==3)
           cout<<"Event rejected.  Check."<<endl;
-
-        //delete ray1;
-        //delete interaction1;
+;
         continue;
       }
       
@@ -2386,9 +2157,6 @@ int main(int argc,  char **argv) {
       if (!antarctica->AcceptableRfexit(ray1->nsurf_rfexit, ray1->rfexit[2], ray1->n_exit2bn[2])){
         if (bn1->WHICHPATH==3)
           cout<<"Should look at this. Not expecting to be here."<<endl;
-
-        //delete ray1;
-        //delete interaction1;
         continue;
       }//end if acceptableRFexit
       
@@ -2412,20 +2180,7 @@ int main(int argc,  char **argv) {
         }
       }
       count1->nconverges[whichray]++;
-      
-      // This shouldn't be used for WHICHPATH == 6 because it's now part of Stephen's analysis efficiency.
-      //Someone might want to uncomment it and update the list of stations for WHICHPATH == 1 && WHICH == 9.
-      /*if(bn1->WHICHPATH == 6) {
-      	int station_index = 0;
-      	for(; station_index < NUMBEROFSTATIONS; station_index++) {
-      	n_station2bn = (bn1->r_bn-station[station_index]).Unit(); // unit vector pointing from the station to the payload
-      	if(station[station_index].Dot(n_station2bn) > 0.) // if ANITA is above the station's horizon
-      	if(n_station2bn.Dot(ray1->n_exit2bn[2]) > cos(3.*1.46*RADDEG)) // AND if the radio pulse is from the same direction as the station in sort-of phi
-      	if(fabs( acos(bn1->r_bn.Unit().Dot(n_station2bn)) - acos(bn1->r_bn.Unit().Dot(ray1->n_exit2bn[2])) ) < 3.*0.23*RADDEG) break; // AND if the radio pulse is from the same direction as the station in theta, 
-      	}
-      	if(station_index < NUMBEROFSTATIONS) continue; // then the pulse won't be accepted as a neutrino event
-      }*/
-      
+            
       // Get Polarization vector.  See Jackson,  Cherenkov section.
       n_pol = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4]);
       
@@ -2436,21 +2191,21 @@ int main(int argc,  char **argv) {
           } // end looping over antennas in phi
         } // end looping over layers
       } // if we are calculating for all boresights
-      
+      /*
       ofstream roughout; // length of chord in air vs. theta (deg)
       stemp = settings1->outputdir+"/scan_Npts_Ledge.dat";
       roughout.open(stemp);
       ofstream props; // length of chord in air vs. theta (deg)
       stemp = settings1->outputdir+"/eventproperties.dat";
       props.open(stemp);
-
+*/
       if(!settings1->ROUGHNESS) {  // IF NO ROUGHNESS THEN DO THIS (FOR CONSISTENCY CHANGE NOTHING BELOW HERE IN THE if !rough)
-
+/*
         // output some general event parameters
         props<<ray1->rfexit[2].Lon()<<"  "<<-90+ray1->rfexit[2].Lat()<<std::endl;
         props<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
         props<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
-
+*/
         if (settings1->FIRN) {
           // now rotate that polarization vector according to ray paths in firn and air.
           // fresnel factor at ice-firn interface
@@ -2596,11 +2351,11 @@ int main(int argc,  char **argv) {
         //std::cerr<<"["<<tpos.Lon()<<",  "<<-90+tpos.Lat()<<"],  ";
         //std::cerr<<"["<<pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) <<",  "<<(pol_specular - pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) * antarctica->GetSurfaceNormal(bn1->r_bn)).Mag()<<",  "<< vmmhz1m_fresneledtwice <<"]  ";
         //std::cerr<<"],"<<std::endl;
-        props<<ray1->rfexit[2].Lon()<<"  "<<-90+ray1->rfexit[2].Lat()<<std::endl;
+/*        props<<ray1->rfexit[2].Lon()<<"  "<<-90+ray1->rfexit[2].Lat()<<std::endl;
         props<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
         props<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
         props<<tpos.Lon()<<"  "<<-90+tpos.Lat()<<std::endl;
-        props<<pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) <<"  "<<(pol_specular - pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) * antarctica->GetSurfaceNormal(bn1->r_bn)).Mag()<<"  "<< vmmhz1m_fresneledtwice <<std::endl;
+        props<<pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) <<"  "<<(pol_specular - pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) * antarctica->GetSurfaceNormal(bn1->r_bn)).Mag()<<"  "<< vmmhz1m_fresneledtwice <<std::endl;*/
 
 
         //#########
@@ -2803,7 +2558,7 @@ int main(int argc,  char **argv) {
               temp_a = Vector( seedscreens_pos[jj][0] - pos_basescreen_centralpos[0], seedscreens_pos[jj][1] - pos_basescreen_centralpos[1], seedscreens_pos[jj][2] - pos_basescreen_centralpos[2] );
 
 
-              roughout<<inu<<"  "
+/*              roughout<<inu<<"  "
                       <<seedscreens_vmmhzlocal[jj]<<"  "
                       <<seedscreens_impactpt[jj].Lon()<<"  "
                       <<-90+seedscreens_impactpt[jj].Lat()<<"  "
@@ -2813,7 +2568,7 @@ int main(int argc,  char **argv) {
                       <<pol_bln_horiz<<"  "
                       <<temp_a.Dot(panel1->GetUnitX())<<"  "
                       <<temp_a.Dot(panel1->GetUnitY())<<"  "
-                      <<std::endl;
+                      <<std::endl;*/
 
             }// end for jj<seedscreens_pos
           }// end else
@@ -2856,7 +2611,7 @@ int main(int argc,  char **argv) {
         n_pol = Efield_screentotal.Unit();
       }//end else roughness
 
-      roughout.close();
+//      roughout.close();
 
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
@@ -2865,7 +2620,7 @@ int main(int argc,  char **argv) {
         if(settings1->CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10.&& !settings1->SKIPCUTS) {
           if (bn1->WHICHPATH==3)
             cout<<"Event is undetectable.  Leaving loop."<<endl;
-          cout<<"settings1->CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10.&& !settings1->SKIPCUTS"<<endl;
+
           continue;
         }
         count1->nchanceinhell_fresnel[whichray]++;
@@ -2891,12 +2646,11 @@ int main(int argc,  char **argv) {
       //  vmmhz_max=vmmhz1m_max;
       
       // reject if the event is undetectable.
-      //     if (vmmhz_max*heff_max*0.5*(bw/1.E6)<CHANCEINHELL_FACTOR*anita1->maxthreshold*Tools::dMin(VNOISE, settings1->NLAYERS) && !settings1->SKIPCUTS) {
       if (settings1->ROUGHNESS==0){
         if (settings1->CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS) {
           if (bn1->WHICHPATH==3)
             cout<<"Event is undetectable.  Leaving loop."<<endl;
-          cout<<"settings1->CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS"<<endl;
+
           //delete ray1;
           //delete interaction1;
           continue;
@@ -2944,7 +2698,7 @@ int main(int argc,  char **argv) {
         if (settings1->CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS) {
           if (bn1->WHICHPATH==3)
             cout<<"Event is undetectable.  Leaving loop."<<endl;
-          cout<<"settings1->CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS"<<endl;
+
           //delete ray1;
           //delete interaction1;
           continue;
@@ -3051,27 +2805,18 @@ int main(int argc,  char **argv) {
           if (sig1->logscalefactor_taper>maxtaper)
             maxtaper=sig1->logscalefactor_taper;
 
+	  if (interaction1->nuflavor=="nue")        pdgcode = 12;
+	  else if (interaction1->nuflavor=="numu")  pdgcode = 14;
+	  else if (interaction1->nuflavor=="nutau") pdgcode = 16;
+	
           if (settings1->HIST==1 && !settings1->ONLYFINAL && bn1->WHICHPATH != 3 && k==Anita::NFREQ/2 && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES) {
-            if (interaction1->nuflavor=="nue")
-              pdgcode = 12;
-            else if (interaction1->nuflavor=="numu")
-              pdgcode = 14;
-            else if (interaction1->nuflavor=="nutau")
-              pdgcode = 16;
-              
-            tree18->Fill();
-            // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="nue" && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES)
-            //   tree18->Fill();
-            // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="numu" && tree19->GetEntries()<settings1->HIST_MAX_ENTRIES)
-            //   tree19->Fill();
-            // if (k==Anita::NFREQ/2 && interaction1->nuflavor=="nutau" && tree20->GetEntries()<settings1->HIST_MAX_ENTRIES)
-            //   tree20->Fill();
+	    
+	    tree18->Fill();
           }
 
           if (bn1->WHICHPATH == 3)
             interaction1->banana_volts += vmmhz[k]*(settings1->BW/(double)Anita::NFREQ/1.E6);
         }//end for (int k=0;k<Anita::NFREQ;k++)
-
 
         if (bn1->WHICHPATH==3 && interaction1->banana_volts != 0 && settings1->HIST && banana_tree->GetEntries()<settings1->HIST_MAX_ENTRIES) {
           banana_tree->Fill();
@@ -3475,29 +3220,6 @@ int main(int argc,  char **argv) {
       eventsfound_beforetrigger+=weight;
 
 
-      /////////////////////////////////////////////
-      //             EVALUATE TRIGGER            //
-      //         FOR EACH BAND THRESHOLD         //
-      /////////////////////////////////////////////
- //      for (int i=0;i<NTHRESHOLDS;i++) {
-// 	double this_threshold=  threshold_start+(double)i*threshold_step;
-// 	thresholds[i]=fabs(this_threshold);
-// 	int thispasses[Anita::NPOL]={0,0};
-// 	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, this_threshold,
-// 				   thispasses);
-
-
-// 	if (thispasses[0]) 
-// 	  npass_v_thresh[i]+=1.;
-// 	if (thispasses[1]) 
-// 	  npass_h_thresh[i]+=1.;
-	
-	
-// 	denom_h_thresh[i]+=1.E-7;	
-// 	denom_v_thresh[i]+=1.E-7;
-// 	//cout << "denom is " << Tools::NonZero(anita1->timedomain_output_1_allantennas[anita1->rx_minarrivaltime], anita1->NFOUR/2)*(double)anita1->TIMESTEP << "\n";
-//       }//end if nthresholds
-
       //////////////////////////////////////
       //       EVALUATE GLOBAL TRIGGER    //
       //          FOR VPOL AND HPOL       //
@@ -3522,9 +3244,15 @@ int main(int argc,  char **argv) {
       //            global trigger         //
       ///////////////////////////////////////
       // for Anita-lite,  Anita Hill, just L1 requirement on 2 antennas. This option is currently disabled
+      // Save events that generate an RF trigger or that are part of the min bias sample
+      // Minimum bias sample: save all events that we could see at the payload
+      // Independentely from the fact that they generated an RF trigger
+
       if ( (thispasses[0]==1 && anita1->pol_allowed[0]==1)  
 	   || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
-	   || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD) ) {
+	   || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD)
+	   || (settings1->MINBIAS==1)) {
+
 
         if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
@@ -3654,7 +3382,6 @@ int main(int argc,  char **argv) {
               
               eventsfound+=weight; // counting events that pass,  weighted.
               eventsfound_prob+=weight_prob; // counting events that pass,  probabilities.
-              //			    cout << "eventsfound,  eventsfound_prob are " << eventsfound << " " << eventsfound_prob <<"\n";
               if (cosalpha>0)
                 eventsfound_belowhorizon+=weight;
               
@@ -3725,7 +3452,12 @@ int main(int argc,  char **argv) {
             rec_diff3->Fill((rec_efield_array[3]-true_efield_array[3])/true_efield_array[3], weight);
             recsum_diff->Fill((rec_efield_array[0]+rec_efield_array[1]+rec_efield_array[2]+rec_efield_array[3]-true_efield)/true_efield, weight);
 
-            //Now put data in Vectors and Positions into arrays for output to the ROOT file.
+
+	    sourceLon = ray1->rfexit[2].Lon() - 180;
+	    sourceLat = ray1->rfexit[2].Lat() - 90;
+	    sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon+180, sourceLat+90);
+	      
+	    //Now put data in Vectors and Positions into arrays for output to the ROOT file.
             if (settings1->HIST && finaltree->GetEntries()<settings1->HIST_MAX_ENTRIES) {
               for (int i=0;i<3;i++) {
                 nnu_array[i] = interaction1->nnu[i];
@@ -3733,7 +3465,6 @@ int main(int argc,  char **argv) {
                 r_bn_array[i] = bn1->r_bn[i];
                 n_bn_array[i] = bn1->n_bn[i];
                 posnu_array[i] = interaction1->posnu[i];
-                //interaction1->posnu2_array[i] = interaction1->posnu2[i];
                 ant_max_normal0_array[i] = ant_max_normal0[i];
                 ant_max_normal1_array[i] = ant_max_normal1[i];
                 ant_max_normal2_array[i] = ant_max_normal2[i];
@@ -3772,14 +3503,26 @@ int main(int argc,  char **argv) {
               r_exit2bn2=interaction1->r_exit2bn;
               r_exit2bn_measured2=interaction1->r_exit2bn_measured;
 
+	      sourceMag = ray1->rfexit[2].Mag();
+	      
+              finaltree->Fill();
+              count1->IncrementWeights_r_in(interaction1->r_in, weight);
+            } //end if HIST & HISTMAXENTRIES
+
 #ifdef ANITA_UTIL_EXISTS
               realEvPtr 	= new UsefulAnitaEvent();
               rawHeaderPtr	= new RawAnitaHeader();
               Adu5PatPtr	= new Adu5Pat();
 
-              // const int numAnts_temp = 40;
-              // Total number of antennas
-              // int numAnts_temp = anita1->PHITRIG[0] + anita1->PHITRIG[1] + anita1->PHITRIG[2] ;
+              Adu5PatPtr->latitude= bn1->latitude;
+              Adu5PatPtr->longitude=bn1->longitude;
+              Adu5PatPtr->altitude=bn1->altitude;
+              Adu5PatPtr->realTime=bn1->realTime_flightdata;
+              Adu5PatPtr->heading = bn1->heading;
+              Adu5PatPtr->pitch = bn1->pitch;
+              Adu5PatPtr->roll = bn1->roll;
+              Adu5PatPtr->run = run_no;
+
               int fNumPoints = 260;
               for (int i = 0; i < 96; i++){
                 for (int j = 0; j < 260; j++){
@@ -3817,10 +3560,11 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->eventNumber = inu;
               rawHeaderPtr->surfSlipFlag = 0;
               rawHeaderPtr->errorFlag = 0;
-              rawHeaderPtr->trigType = 1;//wrong?!
+	      if (settings1->MINBIAS==1) rawHeaderPtr->trigType = 8; // soft-trigger
+	      else                       rawHeaderPtr->trigType = 1; // RF trigger
               rawHeaderPtr->run = run_no;
 
-	      // put the vpol only as a placeholder - not sure what I should do here!
+	      // put the vpol only as a placeholder - these are only used in Anita-2 anyway
               rawHeaderPtr->upperL1TrigPattern = l1trig[0][0];
               rawHeaderPtr->lowerL1TrigPattern = l1trig[0][1];
               rawHeaderPtr->nadirL1TrigPattern = l1trig[0][2];
@@ -3830,10 +3574,10 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
 
               rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
-              if (settings1->WHICH==9 || settings1->WHICH==10) { // anita-3
+	      rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
+	      if (settings1->WHICH==9 || settings1->WHICH==10) { 
                 rawHeaderPtr->l3TrigPatternH = (short) l3trig[1];
                 rawHeaderPtr->l1TrigMask   = (short) l1TrigMask;
-                rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
                 rawHeaderPtr->l1TrigMaskH  = (short) l1TrigMaskH;
                 rawHeaderPtr->phiTrigMaskH = (short) phiTrigMaskH;
               }
@@ -3850,6 +3594,46 @@ int main(int argc,  char **argv) {
               Adu5PatPtr->run = run_no;
               eventNumber = inu;
 
+#ifdef ANITA3_EVENTREADER
+	      truthEvPtr        = new TruthAnitaEvent();
+	      truthEvPtr->eventNumber      = inu;
+	      truthEvPtr->realTime         = bn1->realTime_flightdata;
+	      truthEvPtr->run              = run_no;
+	      truthEvPtr->nuMom            = pnu;
+	      truthEvPtr->nu_pdg           = pdgcode;
+ 	      truthEvPtr->e_component      = e_component;
+	      truthEvPtr->h_component      = h_component;
+	      truthEvPtr->n_component      = n_component;
+ 	      truthEvPtr->e_component_k    = e_component_kvector;
+	      truthEvPtr->h_component_k    = h_component_kvector;
+	      truthEvPtr->n_component_k    = n_component_kvector;
+	      truthEvPtr->sourceLon        = sourceLon;    
+	      truthEvPtr->sourceLat        = sourceLat;  
+	      truthEvPtr->sourceAlt        = sourceAlt;
+	      truthEvPtr->weight           = weight;
+	      for (int i=0;i<3;i++){
+		truthEvPtr->balloonPos[i]  = bn1->r_bn[i];
+		truthEvPtr->balloonDir[i]  = bn1->n_bn[i];
+		truthEvPtr->nuPos[i]       = interaction1->posnu[i];
+		truthEvPtr->nuDir[i]       = interaction1->nnu[i];
+	      }
+	      for (int i=0;i<5;i++){
+		for (int j=0;j<3;j++){
+		  truthEvPtr->rfExitNor[i][j] = ray1->n_exit2bn[i][j];
+		  truthEvPtr->rfExitPos[i][j] = ray1->rfexit[i][j];
+		}
+	      }
+	      for (int i=0;i<48;i++){
+		truthEvPtr->hitangle_e[i]  = hitangle_e_all[i];
+		truthEvPtr->hitangle_h[i]  = hitangle_h_all[i];
+	      }
+	      for (int i=0;i<Anita::NFREQ;i++)
+		truthEvPtr->vmmhz[i]       = vmmhz[i];
+
+	      truthAnitaTree->Fill();
+	      delete truthEvPtr;
+#endif
+      
               headTree->Fill();
               eventTree->Fill();
               adu5PatTree->Fill();
@@ -3858,17 +3642,6 @@ int main(int argc,  char **argv) {
               delete rawHeaderPtr;
               delete Adu5PatPtr;
 #endif
-
-              // sourceLon = interaction1->nuexit.Lon() - 180;
-              // sourceLat = interaction1->nuexit.Lat();
-              sourceLon = ray1->rfexit[2].Lon() - 180;
-              sourceLat = ray1->rfexit[2].Lat() - 90;
-	      sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon+180, sourceLat+90);
-	      sourceMag = ray1->rfexit[2].Mag();
-	      
-              finaltree->Fill();
-              count1->IncrementWeights_r_in(interaction1->r_in, weight);
-            } //end if HIST & HISTMAXENTRIES
 
             sum_weights+=weight;
             neutrinos_passing_all_cuts++;
@@ -3942,21 +3715,6 @@ int main(int argc,  char **argv) {
 	// cout << "Filling global trigger tree.  inu is " << inu << "\n";
         anita1->tglob->Fill();
 
-// 	if (anita1->tdata->GetEntries()==2) {
-// 	  for (int ipol=0;ipol<2;ipol++) {
-// 	    for (int iphi=0;iphi<16;iphi++) {
-	      
-// 	      for (int ibin=0;ibin<100;ibin++) {
-		
-// 		if (anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] )
-// 		  cout << "l1 is " << ipol << "\t" << ipol << "\t" << ibin << "\t" << iphi << "\t" << anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] << "\n";
-		
-// 	      }
-	      
-// 	    }
-// 	  }
-// 	}
-       
       }
       //cout << "This event passes. " << inu << "\n";
 
@@ -3969,19 +3727,12 @@ int main(int argc,  char **argv) {
         if (bn1->WHICHPATH==4)
           cout << "This event does not pass.\n";
       }// end else event does not pass trigger
-
-      
-      //      if (inu==129) {
-      //cout << "filling inu " << inu << "\n";
-	
-	//}
-	//      }
-      props<<"CUT  "<< CUTONWEIGHTS<<std::endl;
+/*
       props<<"weight_prob  "<< weight_prob<<std::endl;
       props<<"weight1  "<< weight1<<std::endl;
       props<<"weight_bestcase2  "<< weight_bestcase2<<std::endl;
       props<<"weight  "<< weight <<std::endl;
-      props.close();
+      props.close();*/
       ///////////////////////////////////////
       //  
       // WE GET HERE REGARDLESS OF WHETHER THE TRIGGER PASSES
@@ -4008,20 +3759,6 @@ int main(int argc,  char **argv) {
         && bn1->WHICHPATH != 3){ // all events
         tree1->Fill();
       }//end if
-      // if (settings1->HIST==1
-      //   && !settings1->ONLYFINAL
-      //   && tree1b->GetEntries()<settings1->HIST_MAX_ENTRIES
-      //   && bn1->WHICHPATH != 3
-      //   && passes_thisevent>0){ // just if the event passes
-      //   tree1b->Fill();
-      // }//end if
-      
-    //delete ray1; // delete instance of ray class
-    ////delete interaction1;
-    
-    //delete interaction1;
-    //delete ray1; // create new instance of the ray class
-
       
     } // end for WHICHRAY 
 
@@ -4065,6 +3802,13 @@ int main(int argc,  char **argv) {
   adu5PatTree->Write("adu5PatTree");
   anitafileGps->Close();
   delete anitafileGps;
+
+#ifdef ANITA3_EVENTREADER
+  anitafileTruth->cd();
+  truthAnitaTree->Write("truthAnitaTree");
+  anitafileTruth->Close();
+  delete anitafileTruth;
+#endif  
   
 #endif  
 

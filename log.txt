@@ -994,6 +994,12 @@ Moved vmmhz array and Taper outside the loop that checks for valid screen points
 09/29/2016 15.00 PM ET M. Sutherland   [in branches/roughness]
 Modified Anita::MakeArraysforFFT() so it takes a bool argument about whether to use a constant delay factor: if true it uses the value passed (default 90), if false the function does not apply phase factors. Instead to use the screen's phases, I copied the relevant code from that function and pasted it below the function call in AntTrigger::ConvertInputWFtoAntennaWF().
 
+10/12/16 L.Cremonesi
+Fixed bug in RxTriggerNumbering. Add thermal noise generated from Anita-3 flight. Add possibility to generate minimum bias sample.
+
+10/13/16 L.Cremonesi
+Filling the Anita Truth event class (only if compilation variable ANITA3_EVENTREADER is defined, by default it is not defined so that not to break compilation for Brian). Also removed the cap on the number of events to be saved in the data-like format (all other outputs still have the cap).
+
 10/14/2016 14.26 PM ET M. Sutherland   [in branches/roughness]
 Saving the branch with misc updates. Need to add screen loops and weights in the anttrig1->Banding function so the trigger actually sees something besides the vmmhz array, i.e., previous work didn't actually do anything.
 
@@ -1003,6 +1009,12 @@ Restored anttrig->Banding() function so it takes vmmhz as argument and outputs '
 10/18/2016 15.13 PM ET M. Sutherland   [in branches/roughness]
 Removed vmmhz argument from AntTrigger::ConvertInputWFtoAntennaWF() to minimize confusion (we no longer want to use vmmhz and instead use panel1 stuff). Screen weights only involve ratio of areas. Commented out assignment of sum of local vmmhz to vmmhz array, so the trigger signal is zero and we can check the use of Screen. Removed AntTrigger::Banding() and put contents back into icemc.cc main(). Added tmp_vhz_rx_e contributing to vhz_rx_e in AntTrig::ConvertInputWFtoAntennaWF(), missed it before.
 
+10/25/16 B.Dailey
+Found some discrepancies for ANITA-2 between my older verion and latest version. Rotate payload does not need a different rotation for ANITA3 and corrected the negative sign difference in UnRotatePayload.
+
 10/27/2016 10.30 AM ET M. Sutherland   [in branches/roughness]
 Rolled back the branch to r677 (kept the r689 log.txt though for history completeness) in preparation for merging trunk over here with Linda's and Brian's commits.
+
+10/27/2016 13.00 PM ET M. Sutherland   [in branches/roughness]
+Merged over recent trunk commits into the branch and checked that specular simulations are identical.
 

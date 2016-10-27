@@ -170,5 +170,7 @@ public:
     int APPLYIMPULSERESPONSE;       // apply impulse response
     int USETIMEDEPENDENTTHRESHOLDS; // use time-dependent thresholds
     double SCREENEDGELENGTH;        // edge length of screen used if there is roughness
+    int NOISEFROMFLIGHT;            // use thermal noise from flight
+    int MINBIAS;                    // generate minimum bias sample
 };
 #endif

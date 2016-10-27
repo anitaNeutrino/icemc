@@ -1070,16 +1070,11 @@ Vector Balloon::RotatePayload(Vector ant_pos_pre) {
   northaxis=northaxis.RotateY(BalloonTheta);
   eastaxis=eastaxis.RotateY(BalloonTheta);
 
-  if (WHICHPATH==8){ //ANITA-3
-    ant_pos=ant_pos.RotateZ(BalloonPhi);
-    northaxis = northaxis.RotateZ(BalloonPhi);
-    eastaxis = eastaxis.RotateZ(BalloonPhi);
-  } else {
-    ant_pos=ant_pos.RotateZ(-1*BalloonPhi);
-    northaxis = northaxis.RotateZ(-1*BalloonPhi);
-    eastaxis = eastaxis.RotateZ(-1*BalloonPhi);
-  }
-
+ 
+  ant_pos=ant_pos.RotateZ(BalloonPhi);
+  northaxis = northaxis.RotateZ(BalloonPhi);
+  eastaxis = eastaxis.RotateZ(BalloonPhi);
+  
   // cout<<"northaxis is "<<northaxis<<" n_north is "<<n_north<<"\n";
   // cout<<"eastaxis is "<<eastaxis<<" n_east is "<<n_east<<"\n";
   this->x_axis_rot = xaxis;
@@ -1113,7 +1108,7 @@ Vector Balloon::unRotatePayload(Vector ant_pos_pre) {//rotate back to Payload Ce
   //rotate to correct heading, roll and pitch
 
   
-  ant_pos=ant_pos.RotateZ(1*BalloonPhi);
+  ant_pos=ant_pos.RotateZ(-1*BalloonPhi);
   
   ant_pos=ant_pos.RotateY(-1*BalloonTheta);
 

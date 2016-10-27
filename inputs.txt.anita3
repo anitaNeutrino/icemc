@@ -6,7 +6,7 @@
 1      # 1=write to histograms and trees, 0=don't write to histograms & trees
 0      # 1=write to ray tree (for roughness study), 0 don't write
 0     # 1=only write to final tree (for events that pass)
-10000  # Maximum number of entries to store in histograms (10000=default).
+2000000  # Maximum number of entries to store in histograms (10000=default).
 65546  # Random number seed
 0      # Write neutrino position info to file
 0	#EVENTSMAP (1)draw the events distribution map or (0) not
@@ -119,6 +119,9 @@
 # Coherent Sum Trigger settings
 1300	# power threshold (arbitrary units) for coherent sum trigger and summed power trigger
 # Settings for digitiser path
-1       # apply impulse response (default for Anita-3 is 1)
+0       # apply impulse response (default for Anita-3 is 1)
 # Settings for time-dependent thresholds
 1       # use time-dependent thresholds (only available for Anita-3)
+# Settings for simulating thermal noise
+0       # generate thermal noise using flight data (only available for Anita-3)
+0       # generate minimum bias sample (save events independently from the RF trigger)
