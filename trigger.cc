@@ -1026,10 +1026,10 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
     anita1->MakeArraysforFFT(tmp_vhz_rx_e, tmp_vhz_rx_h, tmp_volts_rx_e_forfft, tmp_volts_rx_h_forfft, 90., false);// 90 is just a placeholder
     //need to handle phase delay explicitly here
     for (int ifour=0;ifour<NFOUR/4;ifour++) {
-      tmp_volts_rx_e_forfft[2*ifour]*=cos(panel1->GetDelay(jpt*Anita::NFOUR/4 + 2*ifour)*PI/180.);
-      tmp_volts_rx_e_forfft[2*ifour+1]*=sin(panel1->GetDelay(jpt*Anita::NFOUR/4 + 2*ifour)*PI/180.);
-      tmp_volts_rx_h_forfft[2*ifour]*=cos(panel1->GetDelay(jpt*Anita::NFOUR/4 + 2*ifour)*PI/180.);
-      tmp_volts_rx_h_forfft[2*ifour+1]*=sin(panel1->GetDelay(jpt*Anita::NFOUR/4 + 2*ifour)*PI/180.);  
+      tmp_volts_rx_e_forfft[2*ifour]*=cos(panel1->GetDelay(jpt)*PI/180.);
+      tmp_volts_rx_e_forfft[2*ifour+1]*=sin(panel1->GetDelay(jpt)*PI/180.);
+      tmp_volts_rx_h_forfft[2*ifour]*=cos(panel1->GetDelay(jpt)*PI/180.);
+      tmp_volts_rx_h_forfft[2*ifour+1]*=sin(panel1->GetDelay(jpt)*PI/180.);  
     }
 
 

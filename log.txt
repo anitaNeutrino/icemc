@@ -1023,3 +1023,6 @@ Added waveform weights inside AntTrig::ConvertInputWFtoAntennaWF() corresponding
 
 10/28/2016 10.31 AM ET M. Sutherland   [in branches/roughness]
 Moved my AntTrig::Banding() content into main, and removed the function. Moved time domain waveform construction in AntTrig::WhichBandsPassTrigger2 into main right before anttrig1->WhichBandsPass() function call; moved relevant parameter declarations like v_banding_rfcm_e_forfft into trigger.hh. Confirmed identical specular results as trunk.
+
+10/28/2016 15.19 PM ET M. Sutherland   [in branches/roughness]
+Fixed some indenting. Phase treatment needs check in icemc.cc and trigger.cc. Set default specular delay to 90deg. Added screen looping inside banding trigger. 100k events with seed=709 do not give same results, but rough0_0_0 of first event of seed=313 is same as trunk but not the other rough files? This needs checked.
