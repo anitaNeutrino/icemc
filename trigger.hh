@@ -261,7 +261,6 @@ public:
     void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector n_eplane, Vector n_hplane, Vector n_normal);
     void ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer, int ifold);
     void TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
-    void Banding(Settings *settings1, Anita *anita1, double *vmmhz);
 
     // just for historical reference, this function:
     //void AntTrigger::RunTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
@@ -310,8 +309,6 @@ public:
     
     double v_banding_rfcm_e[5][Anita::NFREQ];// this is Volts/m as a function of frequency after rfcm's and banding
     double v_banding_rfcm_h[5][Anita::NFREQ];
-    
-    
     
     //static const double bwslice_center[4]; // center frequencies
     //static const double bwslice_width[4]; // 3 dB bandwidths, without overlap

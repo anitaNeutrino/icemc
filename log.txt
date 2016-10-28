@@ -1020,3 +1020,6 @@ Merged over recent trunk commits into the branch and checked that specular simul
 
 10/27/2016 14.49 PM ET M. Sutherland   [in branches/roughness]
 Added waveform weights inside AntTrig::ConvertInputWFtoAntennaWF() corresponding to the screen element area; still needs to be applied to waveform construction in actual trigger algorithm. Changed specular screen delay to 0 instead of 90. Removed vmmhz from AntTrig::ConvertInputWFtoAntennaWF() arguments, fully uses screen now. Commented vmmhz[k] += vmmhz_local_array[k] in icemc screen construction loop. IntegrateBands() uses panel1 instead of vmmhz. Moved IntegrateBands() for sumsignal_aftertaper to just before globaltrigger. Confirmed identical specular results as trunk.
+
+10/28/2016 10.31 AM ET M. Sutherland   [in branches/roughness]
+Moved my AntTrig::Banding() content into main, and removed the function. Moved time domain waveform construction in AntTrig::WhichBandsPassTrigger2 into main right before anttrig1->WhichBandsPass() function call; moved relevant parameter declarations like v_banding_rfcm_e_forfft into trigger.hh. Confirmed identical specular results as trunk.

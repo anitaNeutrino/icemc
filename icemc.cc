@@ -2989,6 +2989,7 @@ int main(int argc,  char **argv) {
 
 
 
+          //+++++//+++++//+++++//+++++//+++++//+++++//+++++
 
           //anttrig1->Banding(settings1,  anita1, vmmhz);
           for (int iband=0;iband<5;iband++) { // loop over bands
@@ -3033,31 +3034,19 @@ int main(int argc,  char **argv) {
               
           } // end loop over bands
 
+          //+++++//+++++//+++++//+++++//+++++//+++++//+++++
 
 
 
+          //Tools::Zero(sumsignal, 5);
 
-
-
-          /*ofstream waveout("data/waveform.dat", std::fstream::app);
-          for (int ii=0; ii<Anita::HALFNFOUR; ii++){
-            waveout << inu << "  "
-                    << ilayer << "  "
-                    << ifold << "  "
-                    << volts_rx_rfcm_lab_e_all[anita1->GetRx(ilayer, ifold)][ii] << "  "
-                    << volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][ii] << std::endl;
-          }
-          waveout.close();*/
-
-          Tools::Zero(sumsignal, 5);
-
-          if (bn1->WHICHPATH==4 && anita1->Match(ilayer, ifold, anita1->rx_minarrivaltime)) {
-            for (int k=0;k<Anita::NFREQ;k++)
-              IntegrateBands(anita1, k, panel1, anita1->freq, 1./1.E6, sumsignal);
-          }
+          //if (bn1->WHICHPATH==4 && anita1->Match(ilayer, ifold, anita1->rx_minarrivaltime)) {
+          //  for (int k=0;k<Anita::NFREQ;k++)
+          //    IntegrateBands(anita1, k, panel1, anita1->freq, 1./1.E6, sumsignal);
+          //}
           
-          for (int ibw=0;ibw<5;ibw++)
-            sumsignal[ibw]=0.;
+          //for (int ibw=0;ibw<5;ibw++)
+          //  sumsignal[ibw]=0.;
 
           for (int k=0;k<Anita::NFREQ;k++) {
             if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
@@ -3145,7 +3134,115 @@ int main(int argc,  char **argv) {
           } // end if this is the closest antenna
 
 
+
+
+
+
+
+            //+++++//+++++//+++++//+++++//+++++//+++++//+++++
+
+  double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
+  for (int iband=0;iband<5;iband++) {
+    //cout << "arrival time is " << globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP << "\n";
+    //anita1->iminbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]+globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP; // we start to look for single channel triggers firing
+    //anita1->iminbin[iband]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[iband]; // we start to look for single channel triggers firing
+    anita1->iminbin[iband]=0.; // we start to look for single channel triggers firing
+    // starting with the first bin where the diode function is completely
+    // overlapping plus a delay that is brought about by the diode
+    // idelaybeforepeak is the bin number in the diode response function
+    // where it peaks
+    anita1->imaxbin[iband]=anita1->NFOUR/2;
+  
+    //Matt's plot:  horiz. axis:  peak_signal_rfcm/rms_rfcm
+    // vert. axis:  peak_signal_lab/rms_lab
+    Tools::Zero(anttrig1->v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
+    Tools::Zero(anttrig1->v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
+  
+    anita1->MakeArraysforFFT(anttrig1->v_banding_rfcm_e[iband], anttrig1->v_banding_rfcm_h[iband], anttrig1->v_banding_rfcm_e_forfft[iband], anttrig1->v_banding_rfcm_h_forfft[iband], 90., true);
+  
+    // for some reason I'm averaging over 10 neighboring bins
+    // to get rid of the zero bins
+    for (int i=0;i<anita1->NFOUR/4;i++) {
+    
+      anttrig1->v_banding_rfcm_e_forfft_temp[iband][2*i]  =0.;
+      anttrig1->v_banding_rfcm_e_forfft_temp[iband][2*i+1]=0.;
+      anttrig1->v_banding_rfcm_h_forfft_temp[iband][2*i]  =0.;
+      anttrig1->v_banding_rfcm_h_forfft_temp[iband][2*i+1]=0.;
+
+      int tempcount = 0;
+      for (int k=i;k<i+10;k++) {
+  if (k<anita1->NFOUR/4) {
+    anttrig1->v_banding_rfcm_e_forfft_temp[iband][2*i]  += anttrig1->v_banding_rfcm_e_forfft[iband][2*k];
+    anttrig1->v_banding_rfcm_e_forfft_temp[iband][2*i+1]+= anttrig1->v_banding_rfcm_e_forfft[iband][2*k+1];
+    anttrig1->v_banding_rfcm_h_forfft_temp[iband][2*i]  += anttrig1->v_banding_rfcm_h_forfft[iband][2*k];
+    anttrig1->v_banding_rfcm_h_forfft_temp[iband][2*i+1]+= anttrig1->v_banding_rfcm_h_forfft[iband][2*k+1];
+    tempcount++;
+  }
+      }
+    
+      anttrig1->v_banding_rfcm_e_forfft[iband][2*i]  = anttrig1->v_banding_rfcm_e_forfft_temp[iband][2*i]/tempcount;
+      anttrig1->v_banding_rfcm_e_forfft[iband][2*i+1]= anttrig1->v_banding_rfcm_e_forfft_temp[iband][2*i+1]/tempcount;
+      anttrig1->v_banding_rfcm_h_forfft[iband][2*i]  = anttrig1->v_banding_rfcm_h_forfft_temp[iband][2*i]/tempcount;
+      anttrig1->v_banding_rfcm_h_forfft[iband][2*i+1]= anttrig1->v_banding_rfcm_h_forfft_temp[iband][2*i+1]/tempcount;
+    
+      anttrig1->v_banding_rfcm_e_forfft_temp[iband][2*i]  = anttrig1->v_banding_rfcm_e_forfft[iband][2*i];
+      anttrig1->v_banding_rfcm_e_forfft_temp[iband][2*i+1]= anttrig1->v_banding_rfcm_e_forfft[iband][2*i+1];
+      anttrig1->v_banding_rfcm_h_forfft_temp[iband][2*i]  = anttrig1->v_banding_rfcm_h_forfft[iband][2*i];
+      anttrig1->v_banding_rfcm_h_forfft_temp[iband][2*i+1]= anttrig1->v_banding_rfcm_h_forfft[iband][2*i+1];
+    }
+  
+    Tools::realft(anttrig1->v_banding_rfcm_e_forfft[iband],-1,anita1->NFOUR/2);
+    // now v_banding_rfcm_e_forfft is in the time domain
+    // and now it is really in units of V
+  
+  
+    Tools::realft(anttrig1->v_banding_rfcm_h_forfft[iband],-1,anita1->NFOUR/2);
+    // now v_banding_rfcm_h_forfft is in the time domain
+    // and now it is really in units of V
+  
+    // put it in normal time ording -T to T
+    // instead of 0 to T, -T to 0
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,anttrig1->v_banding_rfcm_e_forfft[iband]);
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,anttrig1->v_banding_rfcm_h_forfft[iband]);
+  
+    if (settings1->ZEROSIGNAL) {
+   
+      Tools::Zero(anttrig1->v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
+      Tools::Zero(anttrig1->v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
+    
+    }
+
+    //    for (int i=0;i<anita1->NFOUR/4;i++) {
+    //      cout << "v_banding is " << v_banding_rfcm_e_forfft[iband][i] << "\n";
+    //    }
+  
+  
+    for (int i=0;i<anita1->NFOUR/4;i++) {
+      integrate_energy_freq[iband]+= anttrig1->v_banding_rfcm_e_forfft[iband][2*i]*anttrig1->v_banding_rfcm_e_forfft[iband][2*i]+anttrig1->v_banding_rfcm_e_forfft[iband][2*i+1]*anttrig1->v_banding_rfcm_e_forfft[iband][2*i+1];
+    }
+  
+    // write the signal events to a tree
+    for (int k=0;k<anita1->NFOUR/2;k++) {
+      anita1->signal_vpol_inanita[iband][k]=anttrig1->v_banding_rfcm_e_forfft[iband][k];
+    }
+    anita1->integral_vmmhz_foranita=anttrig1->integral_vmmhz;
+  
+    // Find the p2p value before adding noise
+    anita1->peak_v_banding_rfcm_e[iband]=anttrig1->FindPeak(anttrig1->v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
+    anita1->peak_v_banding_rfcm_h[iband]=anttrig1->FindPeak(anttrig1->v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
+  
+  } // loop over bands
+  // now we have converted the signal to time domain waveforms for all the bands of the antenna
+
+          //+++++//+++++//+++++//+++++//+++++//+++++//+++++
+
           anttrig1->WhichBandsPass(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac);
+
+
+
+
+
+
 
 
 
