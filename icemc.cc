@@ -2859,7 +2859,7 @@ int main(int argc,  char **argv) {
         panel1->SetNvalidPoints(1);
         for (int k=0;k<Anita::NFREQ;k++) {
           panel1->AddVmmhz_freq(vmmhz[k]);
-          panel1->AddDelay( 90. );
+          panel1->AddDelay( 0. );
         }
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
         panel1->AddPol(n_pol);
@@ -3004,6 +3004,11 @@ int main(int argc,  char **argv) {
             
             anita1->iminbin[iband]=0.;
             anita1->imaxbin[iband]=anita1->NFOUR/2;
+
+            for (int i=0;i<anita1->NFOUR/2;i++) {
+              anttrig1->v_banding_rfcm_e_forfft[iband][i] = 0.;
+              anttrig1->v_banding_rfcm_h_forfft[iband][i] = 0.;
+            }
             
             for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
               //get the orientation for this screen point
@@ -3154,7 +3159,7 @@ int main(int argc,  char **argv) {
             anita1->peak_v_banding_rfcm_e[iband]=anttrig1->FindPeak(anttrig1->v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
             anita1->peak_v_banding_rfcm_h[iband]=anttrig1->FindPeak(anttrig1->v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
           }
-
+/*
   ofstream props;
   std::string stemp;
   if(settings1->ROUGHNESS>0)
@@ -3167,7 +3172,7 @@ int main(int argc,  char **argv) {
       props << iband <<"  "<<k<<"  "<< anita1->signal_vpol_inanita[iband][k]<<"  "<<anttrig1->v_banding_rfcm_h_forfft[iband][k]<<std::endl;
     }
   }
-  props.close();
+  props.close();*/
 
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
             for (int ibw=0;ibw<5;ibw++) {

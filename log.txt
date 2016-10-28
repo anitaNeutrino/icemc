@@ -1026,3 +1026,6 @@ Moved my AntTrig::Banding() content into main, and removed the function. Moved t
 
 10/28/2016 15.19 PM ET M. Sutherland   [in branches/roughness]
 Fixed some indenting. Phase treatment needs check in icemc.cc and trigger.cc. Set default specular delay to 90deg. Added screen looping inside banding trigger. 100k events with seed=709 do not give same results, but rough0_0_0 of first event of seed=313 is same as trunk but not the other rough files? This needs checked.
+
+10/28/2016 16.50 PM ET M. Sutherland   [in branches/roughness]
+Added setting anttrig1->v_banding_rfcm_e/h_forfft to zero before each screen loop in the band loop. This makes the seed 313 first event have matching waveforms with trunk, but simulation output still doesn't match for 100k events compared to trunk.
