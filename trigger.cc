@@ -1008,13 +1008,17 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
     // change their length from Anita::NFREQ to HALFNFOUR
     anita1->MakeArraysforFFT(tmp_vhz_rx_e, tmp_vhz_rx_h, tmp_volts_rx_e_forfft, tmp_volts_rx_h_forfft, 90., false);// 90 is just a placeholder
     //need to handle phase delay explicitly here
-    for (int ifour=0;ifour<NFOUR/4;ifour++) {
-      tmp_volts_rx_e_forfft[2*ifour]*=cos(panel1->GetDelay(jpt)*PI/180.);
-      tmp_volts_rx_e_forfft[2*ifour+1]*=sin(panel1->GetDelay(jpt)*PI/180.);
-      tmp_volts_rx_h_forfft[2*ifour]*=cos(panel1->GetDelay(jpt)*PI/180.);
-      tmp_volts_rx_h_forfft[2*ifour+1]*=sin(panel1->GetDelay(jpt)*PI/180.);  
+    double cosphase, sinphase;
+    int ifour;
+    for (int k=0;k<Anita::NFREQ;k++) {
+      ifour=Tools::Getifreq(anita1->freq[k],anita1->freq_forfft[0],anita1->freq_forfft[Anita::NFOUR/2-1],Anita::NFOUR/4);
+      cosphase = cos(90.+panel1->GetDelay(jpt*Anita::NFREQ + k)*PI/180.);
+      sinphase = sin(90.+panel1->GetDelay(jpt*Anita::NFREQ + k)*PI/180.);
+      tmp_volts_rx_e_forfft[2*ifour]*=cosphase;
+      tmp_volts_rx_e_forfft[2*ifour+1]*=sinphase;
+      tmp_volts_rx_h_forfft[2*ifour]*=cosphase;
+      tmp_volts_rx_h_forfft[2*ifour+1]*=sinphase;  
     }
-
 
     // now the last two are in the frequency domain
     // convert to the time domain
@@ -1022,8 +1026,8 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
     Tools::realft(tmp_volts_rx_h_forfft,1,anita1->HALFNFOUR);
 
     for (int ii=0; ii<Anita::HALFNFOUR; ii++){
-      volts_rx_e_forfft[ii] += tmp_volts_rx_e_forfft[ii] * panel1->GetWeight(jpt) * panel1->GetWeightNorm();
-      volts_rx_h_forfft[ii] += tmp_volts_rx_h_forfft[ii] * panel1->GetWeight(jpt) * panel1->GetWeightNorm();
+      volts_rx_e_forfft[ii] += tmp_volts_rx_e_forfft[ii] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+      volts_rx_h_forfft[ii] += tmp_volts_rx_h_forfft[ii] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
     }
   }//end int jpt loop over screen
 
