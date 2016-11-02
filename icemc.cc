@@ -1492,7 +1492,9 @@ int main(int argc,  char **argv) {
     else
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
     
-
+    //reset screen parameters (even for no roughness) for the new event
+    panel1->ResetParameters();
+    panel1->ResetPositionIndex();
 
     for (whichray = settings1->MINRAY; whichray <= settings1->MAXRAY; whichray++) {
       anita1->passglobtrig[0]=0;
@@ -2329,6 +2331,7 @@ int main(int argc,  char **argv) {
         //add to running total, and output observables for checks
 
         //reset the counter and set the BASE screen properties based on current event/balloon geometry
+        panel1->ResetParameters();
         panel1->ResetPositionIndex();
         panel1->SetNsamples(20);  //default 20
         panel1->SetEdgeLength( settings1->SCREENEDGELENGTH );
@@ -2854,12 +2857,13 @@ int main(int argc,  char **argv) {
       count1->nchanceinhell2[whichray]++;
       chanceinhell2=1;
 
+      Tools::Zero(sumsignal_aftertaper, 5);
       //if no-roughness case, add its parameters to the saved screen parameters
-      if(!settings1->ROUGHNESS){
+      if(settings1->ROUGHNESS==0){
         panel1->SetNvalidPoints(1);
         for (int k=0;k<Anita::NFREQ;k++) {
           panel1->AddVmmhz_freq(vmmhz[k]);
-          panel1->AddDelay( 0. );
+          panel1->AddDelay( 90. );
         }
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
         panel1->AddPol(n_pol);
@@ -2867,12 +2871,10 @@ int main(int argc,  char **argv) {
         panel1->SetWeightNorm( 1. );
 
         for (int k=0;k<Anita::NFREQ;k++) {
-          Tools::Zero(sumsignal_aftertaper, 5);
           if (bn1->WHICHPATH==4)
             IntegrateBands(anita1, k, panel1, anita1->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
         }
       }
-
 
       // make a global trigger object (but don't touch the electric fences)
       globaltrig1 = new GlobalTrigger(settings1, anita1);
@@ -3027,6 +3029,7 @@ int main(int argc,  char **argv) {
                 
               for (int i=0;i<Anita::NFREQ;i++) {
                 anita1->vmmhz_banding_rfcm[i]=anita1->vmmhz_banding[i];
+                //cerr<<i<<"  "<<vmmhz[i]<<" -- "<<panel1->GetVmmhz_freq(jpt*Anita::NFREQ + i)<<" -- "<<anita1->vmmhz_banding[i]<<endl;
               }
                 
               // for frequency-domain voltage-based trigger (triggerscheme==0)
@@ -3062,17 +3065,22 @@ int main(int argc,  char **argv) {
                     anttrig1->v_banding_rfcm_h[iband][k]=anttrig1->vm_banding_rfcm_h[iband][k];
 
                     anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, anttrig1->v_banding_rfcm_e[iband][k], anttrig1->v_banding_rfcm_h[iband][k]);
+
                     if (bn1->WHICHPATH==4 && anita1->Match(ilayer, ifold, anita1->rx_minarrivaltime))
                       Integrate(anita1, iband, k, anttrig1->v_banding_rfcm_e[iband], anita1->freq, 1./1.E6, sumsignal[iband]);
                     anttrig1->addToChannelSums(settings1, anita1, iband, k);
                 } // end if (seavey frequencies)
               } // end looping over frequencies.
+            
+              anita1->MakeArraysforFFT(anttrig1->v_banding_rfcm_e[iband], anttrig1->v_banding_rfcm_h[iband], TMP_v_banding_rfcm_e_forfft[iband], TMP_v_banding_rfcm_h_forfft[iband], 90., false);
 
-              Tools::Zero(TMP_v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
-              Tools::Zero(TMP_v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
-            
-              anita1->MakeArraysforFFT(anttrig1->v_banding_rfcm_e[iband], anttrig1->v_banding_rfcm_h[iband], TMP_v_banding_rfcm_e_forfft[iband], TMP_v_banding_rfcm_h_forfft[iband], 0., false);
-            
+              for (int ifour=0;ifour<Anita::NFOUR/4;ifour++) {
+                TMP_v_banding_rfcm_e_forfft[iband][2*ifour]*=cos(panel1->GetDelay(jpt)*PI/180.);
+                TMP_v_banding_rfcm_e_forfft[iband][2*ifour+1]*=sin(panel1->GetDelay(jpt)*PI/180.);
+                TMP_v_banding_rfcm_h_forfft[iband][2*ifour]*=cos(panel1->GetDelay(jpt)*PI/180.);
+                TMP_v_banding_rfcm_h_forfft[iband][2*ifour+1]*=sin(panel1->GetDelay(jpt)*PI/180.);  
+              }
+
               // for some reason I'm averaging over 10 neighboring bins
               // to get rid of the zero bins
               for (int i=0;i<anita1->NFOUR/4;i++) {
@@ -3103,13 +3111,6 @@ int main(int argc,  char **argv) {
                 anttrig1->v_banding_rfcm_h_forfft_temp[iband][2*i+1]= TMP_v_banding_rfcm_h_forfft[iband][2*i+1];
               }
 
-              for (int ifour=0;ifour<Anita::NFOUR/4;ifour++) {
-                TMP_v_banding_rfcm_e_forfft[iband][2*ifour]*=cos(panel1->GetDelay(jpt)*PI/180.);
-                TMP_v_banding_rfcm_e_forfft[iband][2*ifour+1]*=sin(panel1->GetDelay(jpt)*PI/180.);
-                TMP_v_banding_rfcm_h_forfft[iband][2*ifour]*=cos(panel1->GetDelay(jpt)*PI/180.);
-                TMP_v_banding_rfcm_h_forfft[iband][2*ifour+1]*=sin(panel1->GetDelay(jpt)*PI/180.);  
-              }
-
               Tools::realft(TMP_v_banding_rfcm_e_forfft[iband],-1,anita1->NFOUR/2);
               // now v_banding_rfcm_e_forfft is in the time domain
               // and now it is really in units of V
@@ -3117,7 +3118,7 @@ int main(int argc,  char **argv) {
               Tools::realft(TMP_v_banding_rfcm_h_forfft[iband],-1,anita1->NFOUR/2);
               // now v_banding_rfcm_h_forfft is in the time domain
               // and now it is really in units of V
-            
+
               // put it in normal time ording -T to T
               // instead of 0 to T, -T to 0
               Tools::NormalTimeOrdering(anita1->NFOUR/2,TMP_v_banding_rfcm_e_forfft[iband]);
@@ -3133,7 +3134,7 @@ int main(int argc,  char **argv) {
                  + TMP_v_banding_rfcm_h_forfft[iband][2*i+1]*TMP_v_banding_rfcm_h_forfft[iband][2*i+1];
               }
 
-              // now add the screen point's waveform to the total including the weighting and phase delays
+              // now add the screen point's waveform to the total including the weighting 
               for (int i=0;i<anita1->NFOUR/2;i++) {
                 anttrig1->v_banding_rfcm_e_forfft[iband][i] += TMP_v_banding_rfcm_e_forfft[iband][i] * panel1->GetWeight(jpt) * panel1->GetWeightNorm();
                 anttrig1->v_banding_rfcm_h_forfft[iband][i] += TMP_v_banding_rfcm_h_forfft[iband][i] * panel1->GetWeight(jpt) * panel1->GetWeightNorm();
@@ -3159,7 +3160,7 @@ int main(int argc,  char **argv) {
             anita1->peak_v_banding_rfcm_e[iband]=anttrig1->FindPeak(anttrig1->v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
             anita1->peak_v_banding_rfcm_h[iband]=anttrig1->FindPeak(anttrig1->v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
           }
-/*
+/*if(inu==565923){
   ofstream props;
   std::string stemp;
   if(settings1->ROUGHNESS>0)
@@ -3169,10 +3170,33 @@ int main(int argc,  char **argv) {
   props.open(stemp);
   for (int iband=0;iband<5;iband++) {
     for (int k=0;k<anita1->NFOUR/2;k++) {
-      props << iband <<"  "<<k<<"  "<< anita1->signal_vpol_inanita[iband][k]<<"  "<<anttrig1->v_banding_rfcm_h_forfft[iband][k]<<std::endl;
+      props << iband <<"  "<<k<<"  "<< anttrig1->v_banding_rfcm_e_forfft[iband][k]<<"  "<<anttrig1->v_banding_rfcm_h_forfft[iband][k]<<std::endl;
     }
   }
-  props.close();*/
+  props.close();
+}*/
+          for (int k=0;k<Anita::NFREQ;k++) {
+            if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
+              // for plotting
+              if (ilayer==0 && ifold==0) {
+                volts_rx_0=globaltrig1->volts[0][ilayer][ifold];
+                if (settings1->SIGNAL_FLUCT)
+                  volts_rx_0+=gRandom->Gaus(0, anita1->VNOISE[ilayer]);
+              } //if (first antenna,  top layer)
+
+              // for debugging
+              if (volts_rx_0>volts_rx_max) {
+                volts_rx_max=volts_rx_0;
+                volts_rx_max_highband=anttrig1->bwslice_volts_pol0[3];
+                volts_rx_max_lowband=anttrig1->bwslice_volts_pol0[0];
+                // theta of the polarization as measured at the antenna (approximately since we aren't correcting for the
+                //cant of the antenna yet) =
+                theta_pol_measured=atan(globaltrig1->volts_original[1][ilayer][ifold]/globaltrig1->volts_original[0][ilayer][ifold]);
+              }
+              // for plotting
+              volts_rx_1=globaltrig1->volts[1][ilayer][ifold];
+            }// end if (seavey frequencies)
+          }// end looping over frequencies.
 
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
             for (int ibw=0;ibw<5;ibw++) {
@@ -3210,24 +3234,8 @@ int main(int argc,  char **argv) {
             } // end loop over bandwidth slices
             tree6b->Fill();
           } // end if this is the closest antenna
-          // for plotting
-          if (ilayer==0 && ifold==0) {
-            volts_rx_0=globaltrig1->volts[0][ilayer][ifold];
-            if (settings1->SIGNAL_FLUCT)
-              volts_rx_0+=gRandom->Gaus(0, anita1->VNOISE[ilayer]);
-          } //if (first antenna,  top layer)
 
-          // for debugging
-          if (volts_rx_0>volts_rx_max) {
-            volts_rx_max=volts_rx_0;
-            volts_rx_max_highband=anttrig1->bwslice_volts_pol0[3];
-            volts_rx_max_lowband=anttrig1->bwslice_volts_pol0[0];
-            // theta of the polarization as measured at the antenna (approximately since we aren't correcting for the
-            //cant of the antenna yet) =
-            theta_pol_measured=atan(globaltrig1->volts_original[1][ilayer][ifold]/globaltrig1->volts_original[0][ilayer][ifold]);
-          }
-          // for plotting
-          volts_rx_1=globaltrig1->volts[1][ilayer][ifold];
+
 
 
           //+++++//+++++//+++++//+++++//+++++//+++++//+++++
@@ -3380,7 +3388,6 @@ int main(int argc,  char **argv) {
       
 
       int thispasses[Anita::NPOL]={0,0};
-      //cout << "Event number " << inu << "\n";
 
       globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu, 
 				 thispasses);
@@ -3400,7 +3407,8 @@ int main(int argc,  char **argv) {
       // Save events that generate an RF trigger or that are part of the min bias sample
       // Minimum bias sample: save all events that we could see at the payload
       // Independentely from the fact that they generated an RF trigger
-
+      //cerr<<"Event number "<<inu<<endl;
+//cerr<<thispasses[0]<<"  "<<thispasses[1]<<"  "<<anita1->pol_allowed[0]<<"  "<<anita1->pol_allowed[1]<<"  "<<count_pass<<endl;
       if ( (thispasses[0]==1 && anita1->pol_allowed[0]==1)  
 	   || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
 	   || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD)

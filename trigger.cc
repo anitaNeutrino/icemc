@@ -478,24 +478,6 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
   // this is the number of bins to the left of center where the diode function starts to be completely overlapping with the waveform in the convolution.
   int ibinshift=(anita1->NFOUR/4-(int)(anita1->maxt_diode/anita1->TIMESTEP));
 
-/*
-  ofstream props;
-  std::string stemp;
-  if(settings1->ROUGHNESS>0)
-    stemp = settings1->outputdir+"/rough"+to_string(settings1->ROUGHSIZE)+"_"+to_string(ilayer)+"_"+to_string(ifold)+".dat";
-  else
-    stemp = settings1->outputdir+"/rough"+to_string(settings1->ROUGHNESS)+"_"+to_string(ilayer)+"_"+to_string(ifold)+".dat";
-  props.open(stemp);
-  for (int iband=0;iband<5;iband++) {
-    for (int k=0;k<anita1->NFOUR/2;k++) {
-      props << iband <<"  "<<k<<"  "<< anita1->signal_vpol_inanita[iband][k]<<"  "<<v_banding_rfcm_h_forfft[iband][k]<<std::endl;
-    }
-  }
-  props.close();
-*/
-
-
-
   double integrateenergy[5]={0.,0.,0.,0.,0.};
       
   if (settings1->SIGNAL_FLUCT) {
@@ -608,6 +590,7 @@ int whichlayer,whichphisector;
 	
     for (int i=0;i<Anita::NFOUR/2;i++) {
       anita1->timedomain_output_1_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][i]=timedomain_output_1[4][i];
+      //cerr<<j<<" "<<i<<" "<<vm_banding_rfcm_1_forfft<<"  "<<timedomain_output_1[j][i]<<endl;
     }
 	
     anita1->channels_passing_e[j]=0; // does not pass

@@ -215,6 +215,28 @@ double Screen::GetWeightNorm(){
 };
 
 
+void Screen::ResetParameters(){
+  // reset these in icemc:
+  // Nsamples
+  // edge length
+  // central point
+  // normal
+  // cosine projection factor
+  // unit x /y vectors
+
+  //need to reset everything else, like the vectors...
+  fNvalidpoints = 0;
+
+  fVmmhz_freq.clear();
+  fVmmhz0.clear();
+  fViewangle.clear();
+  fDelays.clear();
+  fVec2blns.clear();
+  fPols.clear();
+  fImpactPt.clear();
+  fWeight.clear();
+  fWeightNorm = 1.;
+};
 
 
 Vector Screen::CalculateTransmittedPolarization(const Vector &nnu, Vector vec_specularnormal, Vector vec_localnormal, Vector vec_pos_current_to_balloon, Vector vec_nnu_to_impactPoint, Vector npol_local_inc){
