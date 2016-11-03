@@ -1033,5 +1033,5 @@ Added setting anttrig1->v_banding_rfcm_e/h_forfft to zero before each screen loo
 11/02/2016 9.12 AM ET M. Sutherland   [in branches/roughness]
 Added Screen::ResetParameters() to reset all vectors for each event. Set no-roughness default delay to 90deg for consistency. Moved Zero(sumsignal_aftertaper) outside antenna loop. Moved TMP_v_banding_rfcm_e_forfft phase application to right after MakeArraysforFFT(). Moved volts_rx_0 Gaus() noise into antenna loop so random numbers get called identically as in trunk. 
 
-11/02/2016 14.21 PM ET M. Sutherland   [in branches/roughness]
-Fixed application of screen element weight normalization. I think I fixed phases in the two paths. Removed some of my commented stuff. Uncommented roughout, props, basescreenout, waveout streams.
+11/03/2016 15.39 PM ET M. Sutherland   [in branches/roughness]
+Rolled back to the branch to r696 since single waveform cmparison to trunk was not identical. Changed default specular phase delay to zero, and use 90degrees+GetDelay() in the equations. Fixed screen weight value (set to area) and its norm application. Need to check that single-event specular waveform and 1M-events output are same.

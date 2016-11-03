@@ -1008,17 +1008,13 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
     // change their length from Anita::NFREQ to HALFNFOUR
     anita1->MakeArraysforFFT(tmp_vhz_rx_e, tmp_vhz_rx_h, tmp_volts_rx_e_forfft, tmp_volts_rx_h_forfft, 90., false);// 90 is just a placeholder
     //need to handle phase delay explicitly here
-    double cosphase, sinphase;
-    int ifour;
-    for (int k=0;k<Anita::NFREQ;k++) {
-      ifour=Tools::Getifreq(anita1->freq[k],anita1->freq_forfft[0],anita1->freq_forfft[Anita::NFOUR/2-1],Anita::NFOUR/4);
-      cosphase = cos(90.+panel1->GetDelay(jpt*Anita::NFREQ + k)*PI/180.);
-      sinphase = sin(90.+panel1->GetDelay(jpt*Anita::NFREQ + k)*PI/180.);
-      tmp_volts_rx_e_forfft[2*ifour]*=cosphase;
-      tmp_volts_rx_e_forfft[2*ifour+1]*=sinphase;
-      tmp_volts_rx_h_forfft[2*ifour]*=cosphase;
-      tmp_volts_rx_h_forfft[2*ifour+1]*=sinphase;  
+    for (int ifour=0;ifour<NFOUR/4;ifour++) {
+      tmp_volts_rx_e_forfft[2*ifour]*=cos((90.+panel1->GetDelay(jpt))*PI/180.);
+      tmp_volts_rx_e_forfft[2*ifour+1]*=sin((90.+panel1->GetDelay(jpt))*PI/180.);
+      tmp_volts_rx_h_forfft[2*ifour]*=cos((90.+panel1->GetDelay(jpt))*PI/180.);
+      tmp_volts_rx_h_forfft[2*ifour+1]*=sin((90.+panel1->GetDelay(jpt))*PI/180.); 
     }
+
 
     // now the last two are in the frequency domain
     // convert to the time domain

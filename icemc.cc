@@ -589,6 +589,26 @@ int main(int argc,  char **argv) {
   int fSCREEN_NUMPOINTS_EDGE = settings1->ROUGHNESS;
   Screen *panel1 = new Screen(fSCREEN_NUMPOINTS_EDGE);              // create new instance of the screen class
 
+  // roughness testing
+  //for (int ii=0; ii<90; ii++){
+  //  std::cerr<<ii<<"  "<<rough1->ConvertTheta0AirGlass_to_GlassAir(ii)<<"  "<<rough1->ConvertTheta0GlassAir_to_AirGlass(ii)<<std::endl;
+  //}
+  //for(int ii=-90; ii<=90; ii+=10){
+  //  for (int jj=-90; jj<=90; jj+=10){
+  //    std::cerr<<ii<<"  "<<jj<<"  "<< rough1->InterpolatePowerValue(ii, jj)<<std::endl;
+  //  }
+  //}
+
+  // screen testing
+  //panel1->SetEdgeLength(10.);
+  //panel1->SetCentralPoint(Position(.1,-.1,.1));
+  //panel1->SetNormal(Vector(1,.1,.1));
+  //Position startpos;
+  //for (int ii=0; ii<fSCREEN_NUMPOINTS_EDGE*fSCREEN_NUMPOINTS_EDGE; ii++){
+  //  startpos = panel1->GetNextPosition();
+  //  std::cerr << startpos[0] << "  " << startpos[1] << "  " << startpos[2] << std::endl;
+  //}
+
   // declare instance of trigger class.
   // this constructor reads from files with info to parameterize the
   // signal efficiency curves.
@@ -2173,21 +2193,21 @@ int main(int argc,  char **argv) {
           } // end looping over antennas in phi
         } // end looping over layers
       } // if we are calculating for all boresights
-      
+      /*
       ofstream roughout; // length of chord in air vs. theta (deg)
       stemp = settings1->outputdir+"/scan_Npts_Ledge.dat";
       roughout.open(stemp);
       ofstream props; // length of chord in air vs. theta (deg)
       stemp = settings1->outputdir+"/eventproperties.dat";
       props.open(stemp);
-
+*/
       if(!settings1->ROUGHNESS) {  // IF NO ROUGHNESS THEN DO THIS (FOR CONSISTENCY CHANGE NOTHING BELOW HERE IN THE if !rough)
-
+/*
         // output some general event parameters
         props<<ray1->rfexit[2].Lon()<<"  "<<-90+ray1->rfexit[2].Lat()<<std::endl;
         props<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
         props<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
-
+*/
         if (settings1->FIRN) {
           // now rotate that polarization vector according to ray paths in firn and air.
           // fresnel factor at ice-firn interface
@@ -2266,11 +2286,14 @@ int main(int argc,  char **argv) {
 
         /////////////
 
-        double basescreenedgelength = settings1->SCREENEDGELENGTH;
-        int basescreenDivisions = 20;         //default XX
-        double subscreenFractionLimit = 1e-4; // default XX
-        int maximumSubscreenGeneration = 2;  // value is inclusive; default XX
-        int subscreenDivisions = 4;           // default XX
+        double basescreenedgelength = settings1->SCREENEDGELENGTH / settings1->ROUGHSIZE;
+        int basescreenDivisions = 100;
+        double basescreenFractionLimit = 1.e-5;
+
+
+        double subscreenFractionLimit = 1e-4;
+        int maximumSubscreenGeneration = 1;  // value is inclusive
+        int subscreenDivisions = 4;
         int num_validscreenpoints = 0;
         Position pos_basescreen_centralpos;
         Position pos_current;
@@ -2335,15 +2358,15 @@ int main(int argc,  char **argv) {
         //std::cerr<<"["<<tpos.Lon()<<",  "<<-90+tpos.Lat()<<"],  ";
         //std::cerr<<"["<<pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) <<",  "<<(pol_specular - pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) * antarctica->GetSurfaceNormal(bn1->r_bn)).Mag()<<",  "<< vmmhz1m_fresneledtwice <<"]  ";
         //std::cerr<<"],"<<std::endl;
-        props<<ray1->rfexit[2].Lon()<<"  "<<-90+ray1->rfexit[2].Lat()<<std::endl;
+/*        props<<ray1->rfexit[2].Lon()<<"  "<<-90+ray1->rfexit[2].Lat()<<std::endl;
         props<<bn1->r_bn.Lon()<<"  "<<-90+bn1->r_bn.Lat()<<std::endl;
         props<<interaction1->posnu.Lon()<<"  "<<-90+interaction1->posnu.Lat()<<std::endl;
         props<<tpos.Lon()<<"  "<<-90+tpos.Lat()<<std::endl;
-        props<<pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) <<"  "<<(pol_specular - pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) * antarctica->GetSurfaceNormal(bn1->r_bn)).Mag()<<"  "<< vmmhz1m_fresneledtwice <<std::endl;
+        props<<pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) <<"  "<<(pol_specular - pol_specular.Dot(antarctica->GetSurfaceNormal(bn1->r_bn)) * antarctica->GetSurfaceNormal(bn1->r_bn)).Mag()<<"  "<< vmmhz1m_fresneledtwice <<std::endl;*/
 
 
         //#########
-        // First treat the base screen to establish seed points for higher-res scans (we know that there will be sufficient variation across the base screen)
+        // First treat the base 5x5 screen to establish seed points for higher-res scans (we know that there will be sufficient variation across the base screen)
         //std::cerr<<"Base screen..."<<std::endl;
         double summedE=0.;
         for (int ii=0; ii<panel1->GetNsamples()*panel1->GetNsamples(); ii++){
@@ -2398,9 +2421,9 @@ int main(int argc,  char **argv) {
           basescreenout<<basescrn_Emags[ii]/summedE<<"  "
                   <<temp_a.Dot(panel1->GetUnitX())<<"  "
                   <<temp_a.Dot(panel1->GetUnitY())<<std::endl;
-          //if (basescrn_Emags[ii]/summedE < 1.e-50){
-          //  continue;
-          //}
+          if (basescrn_Emags[ii]/summedE < basescreenFractionLimit){
+            continue;
+          }
           seedpositions.push_back(basescrn_pos[ii]);
           seedEdgeLengths.push_back(basescrn_length[ii]);
           seedGeneration.push_back(1);
@@ -2507,7 +2530,7 @@ int main(int argc,  char **argv) {
             seedscreens_2bln.push_back(vec_pos_current_to_balloon);
             seedscreens_pols.push_back(npol_local_trans);
             for (int k=0;k<Anita::NFREQ;k++) {
-              seedscreens_phasedelay.push_back( TWOPI*(pathlength_specular-pathlength_local)*anita1->freq[k]/CLIGHT * 180./PI );
+              seedscreens_phasedelay.push_back( (pathlength_specular-pathlength_local) * anita1->freq[k] / CLIGHT );
             }
             seedscreens_impactpt.push_back(pos_projectedImpactPoint);
             seedscreens_viewangle.push_back(viewangle_local);
@@ -2518,6 +2541,7 @@ int main(int argc,  char **argv) {
             continue;
           }
 
+          //if( (minE >= subscreenFractionLimit*maxE) || (minimumScreenLength > panel1->GetEdgeLength()/panel1->GetNsamples()) ){ // store these and move on to the next seed screen
           if( (minE >= subscreenFractionLimit*maxE) || (seedGeneration[ii] == maximumSubscreenGeneration) ){ // store these and move on to the next seed screen
             //std::cerr<<ii<<"  "<<seedEdgeLengths[ii]<<"  saved."<<std::endl;
             double pol_bln_vert, pol_bln_horiz;
@@ -2534,7 +2558,7 @@ int main(int argc,  char **argv) {
               }
               panel1->AddImpactPt(seedscreens_impactpt[jj]);
               panel1->AddViewangle(seedscreens_viewangle[jj]);
-              panel1->AddWeight( panel1->GetEdgeLength() / panel1->GetNsamples() );
+              panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
 
               pol_bln_vert = npol_local_trans.Dot(vec_bln_vert);
               pol_bln_horiz = (npol_local_trans - pol_bln_vert*vec_bln_vert).Mag();
@@ -2542,7 +2566,7 @@ int main(int argc,  char **argv) {
               temp_a = Vector( seedscreens_pos[jj][0] - pos_basescreen_centralpos[0], seedscreens_pos[jj][1] - pos_basescreen_centralpos[1], seedscreens_pos[jj][2] - pos_basescreen_centralpos[2] );
 
 
-              roughout<<inu<<"  "
+/*              roughout<<inu<<"  "
                       <<seedscreens_vmmhzlocal[jj]<<"  "
                       <<seedscreens_impactpt[jj].Lon()<<"  "
                       <<-90+seedscreens_impactpt[jj].Lat()<<"  "
@@ -2552,8 +2576,7 @@ int main(int argc,  char **argv) {
                       <<pol_bln_horiz<<"  "
                       <<temp_a.Dot(panel1->GetUnitX())<<"  "
                       <<temp_a.Dot(panel1->GetUnitY())<<"  "
-                      <<panel1->GetEdgeLength() / panel1->GetNsamples()<<"  "
-                      <<std::endl;
+                      <<std::endl;*/
 
             }// end for jj<seedscreens_pos
           }// end else
@@ -2563,6 +2586,13 @@ int main(int argc,  char **argv) {
               seedpositions.push_back(seedscreens_pos[jj]);
               seedEdgeLengths.push_back(panel1->GetEdgeLength()/panel1->GetNsamples());
               seedGeneration.push_back(seedGeneration[ii]+1);
+              /*roughout<<inu<<"  "
+                      <<0<<"  "
+                      <<seedscreens_impactpt[jj].Lon()<<"  "
+                      <<-90+seedscreens_impactpt[jj].Lat()<<"  "
+                      <<0<<"  "
+                      <<panel1->GetEdgeLength()<<"  "
+                      <<std::endl;*/
             }
           }
         }// end for ii loop over seedpositions
@@ -2592,7 +2622,7 @@ int main(int argc,  char **argv) {
         n_pol = Efield_screentotal.Unit();
       }//end else roughness
 
-      roughout.close();
+//      roughout.close();
 
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
@@ -3048,16 +3078,11 @@ int main(int argc,  char **argv) {
             
               anita1->MakeArraysforFFT(anttrig1->v_banding_rfcm_e[iband], anttrig1->v_banding_rfcm_h[iband], TMP_v_banding_rfcm_e_forfft[iband], TMP_v_banding_rfcm_h_forfft[iband], 90., false);
 
-              double cosphase, sinphase;
-              int ifour;
-              for (int k=0;k<Anita::NFREQ;k++) {
-                ifour=Tools::Getifreq(anita1->freq[k],anita1->freq_forfft[0],anita1->freq_forfft[Anita::NFOUR/2-1],Anita::NFOUR/4);
-                cosphase = cos(90.+panel1->GetDelay(jpt*Anita::NFREQ + k)*PI/180.);
-                sinphase = sin(90.+panel1->GetDelay(jpt*Anita::NFREQ + k)*PI/180.);
-                TMP_v_banding_rfcm_e_forfft[iband][2*ifour]*=cosphase;
-                TMP_v_banding_rfcm_e_forfft[iband][2*ifour+1]*=sinphase;
-                TMP_v_banding_rfcm_h_forfft[iband][2*ifour]*=cosphase;
-                TMP_v_banding_rfcm_h_forfft[iband][2*ifour+1]*=sinphase;
+              for (int ifour=0;ifour<Anita::NFOUR/4;ifour++) {
+                TMP_v_banding_rfcm_e_forfft[iband][2*ifour] *= cos( (90.+panel1->GetDelay(jpt*Anita::NFREQ))*PI/180.);
+                TMP_v_banding_rfcm_e_forfft[iband][2*ifour+1] *= sin( (90.+panel1->GetDelay(jpt*Anita::NFREQ))*PI/180.);
+                TMP_v_banding_rfcm_h_forfft[iband][2*ifour] *= cos( (90.+panel1->GetDelay(jpt*Anita::NFREQ))*PI/180.);
+                TMP_v_banding_rfcm_h_forfft[iband][2*ifour+1] *= sin( (90.+panel1->GetDelay(jpt*Anita::NFREQ))*PI/180.);
               }
 
               // for some reason I'm averaging over 10 neighboring bins
@@ -3867,12 +3892,12 @@ int main(int argc,  char **argv) {
         if (bn1->WHICHPATH==4)
           cout << "This event does not pass.\n";
       }// end else event does not pass trigger
-
+/*
       props<<"weight_prob  "<< weight_prob<<std::endl;
       props<<"weight1  "<< weight1<<std::endl;
       props<<"weight_bestcase2  "<< weight_bestcase2<<std::endl;
       props<<"weight  "<< weight <<std::endl;
-      props.close();
+      props.close();*/
       ///////////////////////////////////////
       //  
       // WE GET HERE REGARDLESS OF WHETHER THE TRIGGER PASSES
@@ -4053,7 +4078,7 @@ int main(int argc,  char **argv) {
   cout<<"Total time elapsed is "<<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<endl;
   
   foutput << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<endl;
-
+  std::cerr<<"CUT  "<< CUTONWEIGHTS<<std::endl;
   delete anita1;
   return 0;
 
