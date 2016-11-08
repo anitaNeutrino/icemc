@@ -1723,7 +1723,7 @@ int main(int argc,  char **argv) {
       
       //TAU STUFF. Pick whether it will stay as a neutrino or create tau
       if(tautrigger==1){
-        if ((settings1->ROUGHNESS==0 || !settings1->UNBIASED_SELECTION) && !settings1->SLAC ) {
+        if (( !settings1->UNBIASED_SELECTION) && !settings1->SLAC ) {
           err=GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
           //cout<<"UNBIASED_SELECTION IS "<<settings1->UNBIASED_SELECTION<<"\n";
         }
@@ -1891,7 +1891,7 @@ int main(int argc,  char **argv) {
       } //if whichray==1
       
       if(tautrigger==0){//did this for cc- taus already,  do again for all other particles
-        if ((settings1->ROUGHNESS==0 || !settings1->UNBIASED_SELECTION) && !settings1->SLAC )
+        if (( !settings1->UNBIASED_SELECTION) && !settings1->SLAC )
           err=GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
         else if (settings1->SLAC) {
           Vector xaxis(1., 0., 0.);
@@ -2093,15 +2093,11 @@ int main(int argc,  char **argv) {
       // pretty close to the right answer.
       // now get our best case attenuation again, 
       // and see if we can reject the event.
-      if (settings1->ROUGHNESS==0) {
-        if (whichray==0)
-          bestcase_atten=exp(-1*ray1->rfexit[1].Distance(interaction1->posnu)/MAX_ATTENLENGTH);
-        if (whichray==1)
-          bestcase_atten=exp(-1*ray1->rfexit[1].Distance(interaction1->posnu_down)/MAX_ATTENLENGTH);//use the real distance
-      }// end if setting roughness
-      else {
-        bestcase_atten=exp(-1*(ray1->rfexit[1].Mag()-interaction1->posnu.Mag())/MAX_ATTENLENGTH);
-      }//end else
+      if (whichray==0)
+        bestcase_atten=exp(-1*ray1->rfexit[1].Distance(interaction1->posnu)/MAX_ATTENLENGTH);
+
+      if (whichray==1)
+        bestcase_atten=exp(-1*ray1->rfexit[1].Distance(interaction1->posnu_down)/MAX_ATTENLENGTH);//use the real distance
 
       if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1->CHANCEINHELL_FACTOR && !settings1->SKIPCUTS && !settings1->FORSECKEL) {
       //if (CHANCEINHELL_FACTOR*Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/r_fromballoon*heff_max*bw/1.E6)>1. && !settings1->SKIPCUTS && !settings1->FORSECKEL) {
@@ -2155,7 +2151,7 @@ int main(int argc,  char **argv) {
         continue; // the deck will mess up the arrival times in the top ring
       }
       // reject if the rf leaves the ice where there is water,  for example.
-      //cout << "rfexit[2] is ";ray1->rfexit[2].Print();
+      cout << "rfexit[2] is ";ray1->rfexit[2].Print();
       if (!antarctica->AcceptableRfexit(ray1->nsurf_rfexit, ray1->rfexit[2], ray1->n_exit2bn[2])){
         if (bn1->WHICHPATH==3)
           cout<<"Should look at this. Not expecting to be here."<<endl;
@@ -2287,11 +2283,11 @@ int main(int argc,  char **argv) {
         /////////////
 
         double basescreenedgelength = settings1->SCREENEDGELENGTH / settings1->ROUGHSIZE;
-        int basescreenDivisions = 100;
-        double basescreenFractionLimit = 1.e-5;
+        int basescreenDivisions = 10;
+        double basescreenFractionLimit = 0.1;
 
 
-        double subscreenFractionLimit = 1e-4;
+        double subscreenFractionLimit = 1e-2;
         int maximumSubscreenGeneration = 1;  // value is inclusive
         int subscreenDivisions = 4;
         int num_validscreenpoints = 0;
@@ -2369,6 +2365,7 @@ int main(int argc,  char **argv) {
         // First treat the base 5x5 screen to establish seed points for higher-res scans (we know that there will be sufficient variation across the base screen)
         //std::cerr<<"Base screen..."<<std::endl;
         double summedE=0.;
+        double maxbaseE=-1.;
         for (int ii=0; ii<panel1->GetNsamples()*panel1->GetNsamples(); ii++){
           Emag_local = 0.;
           pos_current = panel1->GetNextPosition(ii);        // this gets the new screen position
@@ -2395,7 +2392,6 @@ int main(int argc,  char **argv) {
 
           /////
           // Field Magnitude
-          element_sa = ( (panel1->GetEdgeLength()/panel1->GetNsamples()) / pos_projectedImpactPoint.Distance(pos_current) ) * 180./PI;
           interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
           Emag_local = vmmhz1m_max
                         * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local));
@@ -2404,7 +2400,7 @@ int main(int argc,  char **argv) {
           Emag_local /= pathlength_local ;
           Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
 
-          summedE += Emag_local;
+          maxbaseE = Tools::dMax(maxbaseE, Emag_local);
           basescrn_Emags.push_back(Emag_local);
           basescrn_pos.push_back(pos_current);
           basescrn_length.push_back(panel1->GetEdgeLength() / (float)panel1->GetNsamples());
@@ -2418,12 +2414,13 @@ int main(int argc,  char **argv) {
         for (int ii=0; ii< panel1->GetNsamples()*panel1->GetNsamples(); ii++){
           pos_current = panel1->GetNextPosition(ii);
           temp_a = Vector( pos_current[0] - pos_basescreen_centralpos[0], pos_current[1] - pos_basescreen_centralpos[1], pos_current[2] - pos_basescreen_centralpos[2] );
-          basescreenout<<basescrn_Emags[ii]/summedE<<"  "
+          basescreenout<<basescrn_Emags[ii]/maxbaseE<<"  "
                   <<temp_a.Dot(panel1->GetUnitX())<<"  "
                   <<temp_a.Dot(panel1->GetUnitY())<<std::endl;
-          if (basescrn_Emags[ii]/summedE < basescreenFractionLimit){
+          if (basescrn_Emags[ii]/maxbaseE < basescreenFractionLimit){
             continue;
           }
+          cerr<<basescrn_Emags[ii]/maxbaseE<<endl;
           seedpositions.push_back(basescrn_pos[ii]);
           seedEdgeLengths.push_back(basescrn_length[ii]);
           seedGeneration.push_back(1);
@@ -2483,10 +2480,15 @@ int main(int argc,  char **argv) {
 
             /////
             // Field Magnitude
-            element_sa = ( panel1->GetEdgeLength() / pos_projectedImpactPoint.Distance(pos_current) ) * 180./PI;
+            element_sa = ( panel1->GetEdgeLength()/panel1->GetNsamples() / pos_projectedImpactPoint.Distance(pos_current) ) * 180./PI;
             interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
-            Emag_local = vmmhz1m_max
-                          * sqrt(interpolatedPower*element_sa / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local));
+            double transfactor= sqrt(interpolatedPower*element_sa / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local));
+            Emag_local = vmmhz1m_max*transfactor;
+            cerr<<theta_0_local*180./PI<<"  "
+            << theta_local*180./PI<<"  "
+            << interpolatedPower<<"  "
+            <<element_sa<<"  "
+            <<transfactor<<endl;
             // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
             pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
             Emag_local /= pathlength_local ;
@@ -2520,10 +2522,10 @@ int main(int argc,  char **argv) {
               continue;   // skip if transmitted polarization is undefined
             }
 
-            minE = Tools::dMin(minE, Emag_local_notaper);
-            maxE = Tools::dMax(maxE, Emag_local_notaper);
+            minE = Tools::dMin(minE, Emag_local);
+            maxE = Tools::dMax(maxE, Emag_local);
             seedscreens_pos.push_back(pos_current);
-            seedscreens_vmmhzlocal.push_back( Emag_local_notaper );
+            seedscreens_vmmhzlocal.push_back( Emag_local );
             //for (int kk=0; kk<Anita::NFREQ; kk++){
             //  seedscreens_vmmhzlocal.push_back( vmmhz_local[kk] );
             //}
@@ -2535,11 +2537,6 @@ int main(int argc,  char **argv) {
             seedscreens_impactpt.push_back(pos_projectedImpactPoint);
             seedscreens_viewangle.push_back(viewangle_local);
           }// end for jj for this seed screen
-
-          // simply drop this screen if the maximum vmmhz[0] is below some threshold
-          if (maxE < 1.e-50){
-            continue;
-          }
 
           //if( (minE >= subscreenFractionLimit*maxE) || (minimumScreenLength > panel1->GetEdgeLength()/panel1->GetNsamples()) ){ // store these and move on to the next seed screen
           if( (minE >= subscreenFractionLimit*maxE) || (seedGeneration[ii] == maximumSubscreenGeneration) ){ // store these and move on to the next seed screen
@@ -2595,6 +2592,13 @@ int main(int argc,  char **argv) {
                       <<std::endl;*/
             }
           }
+          seedscreens_pos.clear();
+          seedscreens_vmmhzlocal.clear();
+          seedscreens_2bln.clear();
+          seedscreens_pols.clear();
+          seedscreens_phasedelay.clear();
+          seedscreens_impactpt.clear();
+          seedscreens_viewangle.clear();
         }// end for ii loop over seedpositions
 
         panel1->SetNvalidPoints(num_validscreenpoints);
@@ -2620,6 +2624,13 @@ int main(int argc,  char **argv) {
         panel1->SetWeightNorm(validScreenSummedArea);
         vmmhz_max = Efield_screentotal.Mag();
         n_pol = Efield_screentotal.Unit();
+
+        basescrn_Emags.clear();
+        basescrn_pos.clear();
+        basescrn_length.clear();
+        seedpositions.clear();
+        seedEdgeLengths.clear();
+        seedGeneration.clear();
       }//end else roughness
 
 //      roughout.close();
@@ -3079,10 +3090,10 @@ int main(int argc,  char **argv) {
               anita1->MakeArraysforFFT(anttrig1->v_banding_rfcm_e[iband], anttrig1->v_banding_rfcm_h[iband], TMP_v_banding_rfcm_e_forfft[iband], TMP_v_banding_rfcm_h_forfft[iband], 90., false);
 
               for (int ifour=0;ifour<Anita::NFOUR/4;ifour++) {
-                TMP_v_banding_rfcm_e_forfft[iband][2*ifour] *= cos( (90.+panel1->GetDelay(jpt*Anita::NFREQ))*PI/180.);
-                TMP_v_banding_rfcm_e_forfft[iband][2*ifour+1] *= sin( (90.+panel1->GetDelay(jpt*Anita::NFREQ))*PI/180.);
-                TMP_v_banding_rfcm_h_forfft[iband][2*ifour] *= cos( (90.+panel1->GetDelay(jpt*Anita::NFREQ))*PI/180.);
-                TMP_v_banding_rfcm_h_forfft[iband][2*ifour+1] *= sin( (90.+panel1->GetDelay(jpt*Anita::NFREQ))*PI/180.);
+                TMP_v_banding_rfcm_e_forfft[iband][2*ifour] *= cos( (90.)*PI/180.);
+                TMP_v_banding_rfcm_e_forfft[iband][2*ifour+1] *= sin( (90.)*PI/180.);
+                TMP_v_banding_rfcm_h_forfft[iband][2*ifour] *= cos( (90.)*PI/180.);
+                TMP_v_banding_rfcm_h_forfft[iband][2*ifour+1] *= sin( (90.)*PI/180.);
               }
 
               // for some reason I'm averaging over 10 neighboring bins

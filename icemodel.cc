@@ -990,7 +990,7 @@ int IceModel::AcceptableRfexit(const Vector &nsurf_rfexit,const Position &rfexit
     } //if
     
     if (nsurf_rfexit*n_exit2rx<0) {
-	cout << "dot product is " << nsurf_rfexit*n_exit2rx << "\n";
+	//cout << "dot product is " << nsurf_rfexit*n_exit2rx << "\n";
 	return 0;
     } //if
     

@@ -251,7 +251,7 @@ int Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,
 
 int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth) { // iter is which iteration (1 or 2)
 
-  if (settings1->ROUGHNESS!=1) {    
+   
     // use snell's law to get the first guess at the 
     // direction of the rf as it leaves ice surface.
     // 0th guess was simply radially outward from interaction position
@@ -346,7 +346,6 @@ int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth) { /
     } // end if we are not modeling the firn
     
     
-  }
 
   return 1;
 }

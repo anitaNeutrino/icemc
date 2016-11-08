@@ -1035,3 +1035,6 @@ Added Screen::ResetParameters() to reset all vectors for each event. Set no-roug
 
 11/03/2016 15.39 PM ET M. Sutherland   [in branches/roughness]
 Rolled back to the branch to r696 since single waveform cmparison to trunk was not identical. Changed default specular phase delay to zero, and use 90degrees+GetDelay() in the equations. Fixed screen weight value (set to area) and its norm application. Need to check that single-event specular waveform and 1M-events output are same.
+
+11/08/2016 14.48 PM ET M. Sutherland   [in branches/roughness]
+element_sa uses L / N, not just L. seedscreens_vmmhzlocal uses Emag_local not Emag_local_notaper. Added vector clears to basescreen and seedscreens vectors to recover some memory. Base screen point acceptance based on maximum, not contribution to sum. Removed panel phases in signal waveform construction for the moment. After nraywithincontinent1++, removed the if/else ROUGHNESS surrounding the bestcase_atten because this was introducing differences for many event sims compared to specular, and if ROUGHNESS before err=GetDirection() in a few spots.
