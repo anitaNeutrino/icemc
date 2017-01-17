@@ -4474,21 +4474,22 @@ void AntTrigger::applyImpulseResponse(Settings *settings1, Anita *anita1, int nP
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
 
-
   Double_t *newy = surfSignalDown->GetY();
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) newy[i]=0;
   } 
-  
-  if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHT) { // add thermal noise for anita-3 flight
+
+  // add thermal noise for anita-3 flight
+  // signal re-multiplied by sqrt(2) as splitting between trigger and digitizer path
+  // is already taken into account by the signal chain impulse response
+  if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHT) { 
     double *justNoise = addNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
-      y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
+      y[i]=newy[i]*TMath::Sqrt(2) + justNoise[i]*anita1->THERMALNOISE_FACTOR;
       // std::cout << justNoise[i] << std::endl;
-    }    
-
+    }
   } else {
-    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
+    for (int i=0;i<nPoints;i++)  y[i]=newy[i]*TMath::Sqrt(2);
   }
   
   
