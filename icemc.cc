@@ -3223,20 +3223,23 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->lowerL2TrigPattern = l2trig[0][1];
               rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
 
-              rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
-	      rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
-	        if (settings1->WHICH==9 || settings1->WHICH==10) { 
-                rawHeaderPtr->l3TrigPatternH = (short) l3trig[1];
-                rawHeaderPtr->l1TrigMask   = (short) l1TrigMask;
-                rawHeaderPtr->l1TrigMaskH  = (short) l1TrigMaskH;
-                rawHeaderPtr->phiTrigMaskH = (short) phiTrigMaskH;
-              }
+	      if (settings1->WHICH<9){
+		rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
+		rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
+	      }
 	      
               rawHeaderPtr->calibStatus = 31;
               rawHeaderPtr->realTime = bn1->realTime_flightdata;
               eventNumber = inu;
 
 #ifdef ANITA3_EVENTREADER
+	      if (settings1->WHICH==9 || settings1->WHICH==10) {
+		rawHeaderPtr->setTrigPattern((short) l3trig[0], AnitaPol::kVertical); 
+		rawHeaderPtr->setTrigPattern((short) l3trig[1], AnitaPol::kHorizontal); 
+		rawHeaderPtr->setMask( (short) l1TrigMask,  (short) phiTrigMask,  AnitaPol::kVertical);
+		rawHeaderPtr->setMask( (short) l1TrigMaskH, (short) phiTrigMaskH, AnitaPol::kHorizontal);
+              }
+	      
 	      truthEvPtr        = new TruthAnitaEvent();
 	      truthEvPtr->eventNumber      = inu;
 	      truthEvPtr->realTime         = bn1->realTime_flightdata;

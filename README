@@ -15,7 +15,7 @@ If parameters are not specified:
    - trigger threshold for full band as defined in anita.hh for that flight
 
 
-To produce Anita-like output files, source the Anita tools (you will need the eventReaderRoot and libFttwrapper) and re-compile. The next time you run icemc the anita-like outputs will be produced automatically. The outputs also include the TruthAnitaEvent tree with true information about the simulation.
+To produce Anita-like output files, source the Anita tools (you will need the eventReaderRoot and libFttwrapper), uncomment line 72 of icemc.cc (//#define ANITA3_EVENTREADER) and re-compile. The next time you run icemc the anita-like outputs will be produced automatically. The outputs also include the TruthAnitaEvent tree with true information about the simulation.
 
 
 Notes to generate Anita-3 simulations:
