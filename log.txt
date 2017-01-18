@@ -865,3 +865,6 @@ Filling the Anita Truth event class (only if compilation variable ANITA3_EVENTRE
 
 10/25/16 B.Dailey
 Found some discrepancies for ANITA-2 between my older verion and latest version. Rotate payload does not need a different rotation for ANITA3 and corrected the negative sign difference in UnRotatePayload. 
+
+01/17/17 L.Cremonesi
+Make icemc compatible with both anita3 and anita4 eventReaderRoot. Update anita-3 standard input. Added factor of sqrt(2) because the splitting between digitizer/trigger path was already considered.
