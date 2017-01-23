@@ -868,3 +868,6 @@ Found some discrepancies for ANITA-2 between my older verion and latest version.
 
 01/17/17 L.Cremonesi
 Make icemc compatible with both anita3 and anita4 eventReaderRoot. Update anita-3 standard input. Added factor of sqrt(2) because the splitting between digitizer/trigger path was already considered.
+
+01/23/17 L.Cremonesi
+Several commits to implement the first version of the trigger path impulse response. Semi-working version for the moment, that's not ready to be used yet. Also improved the coding of the trigger path (moved all to trigger.cc and eliminated unused variables).
