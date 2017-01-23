@@ -2648,28 +2648,12 @@ int main(int argc,  char **argv) {
           for (int ibw=0;ibw<5;ibw++)
             sumsignal[ibw]=0.;
 
+	  // This loop is only for calculating debug variables to be added in tree6
+	  // If commenting it out, the results will change because gRandom is called once in here
           for (int k=0;k<Anita::NFREQ;k++) {
             if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
-              // need to calculate lcp and rcp components after antenna voltages are recorded.
-              for (int ibw=0;ibw<5;ibw++) {
 
-                anttrig1->v_banding_rfcm_e[ibw][k]=anttrig1->vm_banding_rfcm_e[ibw][k]; // EH,  HERE! this v_banding_rfcm_e array will be used for trigger analysis later! in WhichBandsPass function! Why this is located in this weird place!!!
-                anttrig1->v_banding_rfcm_h[ibw][k]=anttrig1->vm_banding_rfcm_h[ibw][k];
-		//              cout << "v_banding before is " << anttrig1->v_banding_rfcm_e[ibw][k] << " " << anttrig1->vm_banding_rfcm_h[ibw][k] << "\n";
-                //anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, anttrig1->v_banding_rfcm_e[ibw][k], anttrig1->v_banding_rfcm_h[ibw][k]);
-                // now it is in units of V/s
-
-                // double relativegain[4];
-                // anita1->AntennaGain(settings1, hitangle_e, hitangle_h, k, relativegain);
-                // anita1->ApplyPol(settings1, e_component, h_component, k, anttrig1->v_banding_rfcm_e[ibw][k], anttrig1->v_banding_rfcm_h[ibw][k],  relativegain);
-                anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, anttrig1->v_banding_rfcm_e[ibw][k], anttrig1->v_banding_rfcm_h[ibw][k]);
-                if (bn1->WHICHPATH==4 && anita1->Match(ilayer, ifold, anita1->rx_minarrivaltime))
-                  Integrate(anita1, ibw, k, anttrig1->v_banding_rfcm_e[ibw], anita1->freq, 1./1.E6, sumsignal[ibw]);
-
-                anttrig1->addToChannelSums(settings1, anita1, ibw, k);
-              } // end loop over bandwidth slices
-
-              // for plotting
+              //for plotting
               if (ilayer==0 && ifold==0) {
                 volts_rx_0=globaltrig1->volts[0][ilayer][ifold];
                 if (settings1->SIGNAL_FLUCT)
@@ -2690,6 +2674,7 @@ int main(int argc,  char **argv) {
               //tree6->Fill();
             } // end if (seavey frequencies)
           } // end looping over frequencies.
+	  
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
             for (int ibw=0;ibw<5;ibw++) {
               cout << "Just after Taper,  sumsignal is " << sumsignal_aftertaper[ibw] << "\n";

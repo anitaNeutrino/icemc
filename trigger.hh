@@ -280,14 +280,9 @@ public:
     double bwslice_volts_polh[5];
     double bwslice_energy_polh[5];
     
-    
-    
-    double vm_banding_rfcm_e[5][Anita::NFREQ];// this is Volts/m as a function of frequency after rfcm's and banding
-    double vm_banding_rfcm_h[5][Anita::NFREQ];
-    
+        
     double v_banding_rfcm_e[5][Anita::NFREQ];// this is Volts/m as a function of frequency after rfcm's and banding
     double v_banding_rfcm_h[5][Anita::NFREQ];
-    
     
     
     //static const double bwslice_center[4]; // center frequencies

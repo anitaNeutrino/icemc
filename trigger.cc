@@ -1266,7 +1266,12 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   // these get written to a tree
   anita1->peak_e_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_e,anita1->HALFNFOUR);
   anita1->peak_h_rx_rfcm_lab=AntTrigger::FindPeak(anita1->volts_rx_rfcm_lab_h,anita1->HALFNFOUR);  
-    
+
+
+  // END OF DIGITIZER PATH
+  ///////////////////////////////////////////////////
+  // START OF TRIGGER PATH
+  
   for (int iband=0;iband<5;iband++) { // loop over bands
 		
     for (int i=0;i<Anita::NFREQ;i++) {
@@ -1276,8 +1281,10 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     // Don't we need to apply antenna gains here?
       
     // impose banding on the incident signal
-    anita1->Banding(iband,anita1->freq,anita1->vmmhz_banding,Anita::NFREQ); // impose banding whatever the trigger scheme
-      
+    // this is include in the impulse response so we don't do it if we are using it
+    if (!settings1->APPLYIMPULSERESPONSETRIGGER){
+      anita1->Banding(iband,anita1->freq,anita1->vmmhz_banding,Anita::NFREQ); // impose banding whatever the trigger scheme
+    }
     for (int i=0;i<Anita::NFREQ;i++) {
       anita1->vmmhz_banding_rfcm[i]=anita1->vmmhz_banding[i];
     }
@@ -1285,7 +1292,8 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     // for frequency-domain voltage-based trigger (triggerscheme==0)
     // we do not apply rfcm's
     // for other trigger types we do
-    if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5)
+    // this is include in the impulse response so we don't do it if we are using it
+    if ((settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5) && (!settings1->APPLYIMPULSERESPONSETRIGGER))
       anita1->RFCMs(1,1,anita1->vmmhz_banding_rfcm);
       
       
@@ -1304,13 +1312,18 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     }
     double integral=0.;
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-      vm_banding_rfcm_e[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq]; // this is now Volts/(m*s) vs. frequency with banding and rfcm's applied
-      vm_banding_rfcm_h[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq];
-      integral+=vm_banding_rfcm_e[iband][ifreq]*vm_banding_rfcm_e[iband][ifreq];
+      if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
+	v_banding_rfcm_e[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq];
+	v_banding_rfcm_h[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq];
+	anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, ifreq, v_banding_rfcm_e[iband][ifreq], v_banding_rfcm_h[iband][ifreq]);
+	addToChannelSums(settings1, anita1, iband, ifreq);
+      }
     } // end loop over nfreq
       
   } // end loop over bands
-    
+
+
+  
 } //AntTrigger constructor
 
 
