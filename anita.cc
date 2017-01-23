@@ -272,6 +272,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     PERCENTBW=10; // subbands (not counting full band)
     #ifdef ANITA_UTIL_EXISTS
     if (settings1->APPLYIMPULSERESPONSEDIGITIZER)   readImpulseResponseDigitizer(settings1);
+    if (settings1->APPLYIMPULSERESPONSETRIGGER)     readImpulseResponseTrigger(settings1);
     #endif
     for (int i=0;i<NFREQ;i++) {
 		freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
@@ -4305,6 +4306,71 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
   freqs=rfTemplate->getFreqs();
   
   fRand = new TRandom3(settings1->SEED);
+  
+}
+
+
+
+void Anita::readImpulseResponseTrigger(Settings *settings1){
+
+  // So far only available for ANITA-3
+  
+  // Set deltaT to be used in the convolution
+  deltaT = 1/(2.6*16);
+  string graphNames[2][3];
+  string fileName;
+  double norm=0;
+  
+  if(settings1->WHICH==9){
+    
+    fileName = "data/SignalChainImpulseResponse_anita3.root";
+    
+    string spol[2] ={"V", "H"};
+    
+    for (int ipol=0;ipol<2;ipol++){
+      for (int iring=0;iring<3;iring++){
+	graphNames[ipol][iring]=Form("ImpulseResponse_%spol", spol[ipol].c_str());
+      }
+    }
+    // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
+    norm = 48.;
+  }
+
+  // Read in input file
+  TFile fImpulse(fileName.c_str());
+  
+  if(!fImpulse.IsOpen()) {
+    std::cerr << "Couldn't read siganl chain impulse response from " << fileName << "\n";
+    exit(0);
+  } else {
+
+    for (int ipol=0;ipol<2;ipol++){
+      for (int iring=0;iring<3;iring++){
+	// Read graph
+	TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring].c_str());
+	if(!grTemp) {
+	  std::cerr << "Couldn't read siganl chain impulse response" << graphNames[ipol][iring] << " from file " << fileName << "\n";
+	  exit(0);
+	}
+	// Interpolate to high sampling rate that will be used for the convolution
+	TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); 
+	Int_t nPoints  = grInt->GetN();
+	Double_t *newx = grInt->GetX();
+	Double_t *newy = grInt->GetY();
+	// Normalise
+	for (int i=0;i<nPoints;i++) newy[i]=newy[i]*norm;
+	// Pave to 0
+	int paveNum = 8533;
+	grTemp = new TGraph(nPoints,  newx, newy);
+
+	fSignalChainResponseTrigger[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
+
+	delete grInt;
+	delete grTemp;
+      }
+    }
+    
+  }
   
 }
 

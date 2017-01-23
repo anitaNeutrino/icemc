@@ -600,6 +600,7 @@ TTree *tgaryanderic; // writing data out for the analysers
 
 #ifdef ANITA_UTIL_EXISTS
   void readImpulseResponseDigitizer(Settings *settings1);
+  void readImpulseResponseTrigger(Settings *settings1);
   TGraph *RayleighFits[2][48];
   Int_t numFreqs;
   Double_t *freqs;
