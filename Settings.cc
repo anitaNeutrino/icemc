@@ -698,23 +698,27 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   COHERENT_THRESHOLD = double (atof(number.c_str()));
 
   // default values are 0
-  APPLYIMPULSERESPONSE=0;       
+  APPLYIMPULSERESPONSEDIGITIZER=0;       
+  APPLYIMPULSERESPONSETRIGGER=0;       
   USETIMEDEPENDENTTHRESHOLDS=0; 
   
   getline(inputsfile,junk);
   foutput << junk << "\n";
   Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  APPLYIMPULSERESPONSE=atoi(number.c_str());
-  std::cout << "Apply impulse response to digitizer path: " << APPLYIMPULSERESPONSE << std::endl;
+  APPLYIMPULSERESPONSEDIGITIZER=atoi(number.c_str());
+  std::cout << "Apply impulse response to digitizer path: " << APPLYIMPULSERESPONSEDIGITIZER << std::endl;
+  Tools::GetNextNumberAsString(inputsfile,foutput,number);
+  APPLYIMPULSERESPONSETRIGGER=atoi(number.c_str());
+  std::cout << "Apply impulse response to trigger path: " << APPLYIMPULSERESPONSETRIGGER << std::endl;
 
 #ifdef ANITA_UTIL_EXISTS
-  if ( APPLYIMPULSERESPONSE && WHICH!=8 && WHICH!=9) {
+  if ( (APPLYIMPULSERESPONSEDIGITIZER || APPLYIMPULSERESPONSETRIGGER) && WHICH!=8 && WHICH!=9) {
     cout << "Signal chain impulse response is only available for anita-2 and anita-3.\n";
     exit(1);
   }
 #endif
 #ifndef ANITA_UTIL_EXISTS
-  if (APPLYIMPULSERESPONSE){
+  if (APPLYIMPULSERESPONSEDIGITIZER || APPLYIMPULSERESPONSETRIGGER){
     cout << "Signal chain impulse response can only be applied when the Anita tools are sourced.\n";
     exit(1);
   }

@@ -118,8 +118,9 @@
 0.7966	# depth of interaction at slac beam test (meters)
 # Coherent Sum Trigger settings
 1300	# power threshold (arbitrary units) for coherent sum trigger and summed power trigger
-# Settings for digitiser path
-1       # apply impulse response (default for Anita-3 is 1)
+# Settings for impulse reponse from flight
+1       # apply impulse response to digitizer path (default for Anita-3 is 1, available also for Anita-2)
+1       # apply impulse response to trigger path (default for Anita-3 is 1)
 # Settings for time-dependent thresholds
 1       # use time-dependent thresholds (only available for Anita-3)
 # Settings for simulating thermal noise

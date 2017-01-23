@@ -323,7 +323,7 @@ public:
     static int IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int ilayer, int ifold, int ipol);
   Double_t fTimes[HALFNFOUR];
 #ifdef ANITA_UTIL_EXISTS
-  void applyImpulseResponse(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
+  void applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
   double *addNoiseFromFlight(Anita* anita1, int pol, int ant);
 #endif
     

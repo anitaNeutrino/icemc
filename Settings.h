@@ -168,7 +168,8 @@ public:
     int antennaclump; //number of antenna in clump (L2)
     // End of the once-global varibles.
     double COHERENT_THRESHOLD;
-    int APPLYIMPULSERESPONSE;       // apply impulse response
+    int APPLYIMPULSERESPONSEDIGITIZER;       // apply impulse response in the digitizer path
+    int APPLYIMPULSERESPONSETRIGGER;         // apply impulse response in the trigger path
     int USETIMEDEPENDENTTHRESHOLDS; // use time-dependent thresholds
     int NOISEFROMFLIGHT;            // use thermal noise from flight
     int MINBIAS;                    // generate minimum bias sample

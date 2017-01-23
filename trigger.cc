@@ -1106,7 +1106,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
 
   
   // Apply anita-3 measured impulse response
-  if (settings1->APPLYIMPULSERESPONSE){
+  if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
 
     anita1->GetNoiseWaveforms(); // get noise waveforms
 
@@ -1123,8 +1123,8 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
 
     
 #ifdef ANITA_UTIL_EXISTS    
-    applyImpulseResponse(settings1, anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_e, 0);
-    applyImpulseResponse(settings1, anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_h, 1);
+    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_e, 0);
+    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_h, 1);
 #endif
 
     if (settings1->SIGNAL_FLUCT && !settings1->NOISEFROMFLIGHT){
@@ -4456,7 +4456,7 @@ void GlobalTrigger::delay_AllAntennas(Anita *anita1) {
 
 
 #ifdef ANITA_UTIL_EXISTS    
-void AntTrigger::applyImpulseResponse(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
+void AntTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
 
   TGraph *graph1 = new TGraph(nPoints, x, y);
   // Upsample waveform to same deltaT of the signal chain impulse response
@@ -4469,7 +4469,7 @@ void AntTrigger::applyImpulseResponse(Settings *settings1, Anita *anita1, int nP
   else if (ant<32) iring=1;
   
   //Calculate convolution
-  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponse[ipol][iring]);
+  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizer[ipol][iring]);
 
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);

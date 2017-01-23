@@ -271,7 +271,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     
     PERCENTBW=10; // subbands (not counting full band)
     #ifdef ANITA_UTIL_EXISTS
-    if (settings1->APPLYIMPULSERESPONSE)   readImpulseResponse(settings1);
+    if (settings1->APPLYIMPULSERESPONSEDIGITIZER)   readImpulseResponseDigitizer(settings1);
     #endif
     for (int i=0;i<NFREQ;i++) {
 		freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
@@ -4213,7 +4213,7 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
 
 
 #ifdef ANITA_UTIL_EXISTS
-void Anita::readImpulseResponse(Settings *settings1){
+void Anita::readImpulseResponseDigitizer(Settings *settings1){
 
   // Set deltaT to be used in the convolution
   deltaT = 1/(2.6*16);
@@ -4276,7 +4276,7 @@ void Anita::readImpulseResponse(Settings *settings1){
 	int paveNum = 8533;
 	grTemp = new TGraph(nPoints,  newx, newy);
 
-	fSignalChainResponse[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
+	fSignalChainResponseDigitizer[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
 
 	delete grInt;
 	delete grTemp;
