@@ -492,6 +492,8 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
       
   double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
   for (int iband=0;iband<5;iband++) {
+    if (anita1->bwslice_allowed[iband]!=1) continue;
+    
     //cout << "arrival time is " << globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP << "\n";
     //anita1->iminbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]+globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP; // we start to look for single channel triggers firing
     //anita1->iminbin[iband]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[iband]; // we start to look for single channel triggers firing
@@ -573,6 +575,11 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
 	  
     }
 
+    // if (inu==179 && anita1->GetRxTriggerNumbering(ilayer, ifold)==8 ) {
+    //   for (int i=0;i<anita1->HALFNFOUR;i++) cout << anita1->fTimes[i] << " " << v_banding_rfcm_e_forfft[iband][i] << " " << v_banding_rfcm_h_forfft[iband][i] << endl;
+    // }
+
+    
     // 	  for (int i=0;i<anita1->NFOUR/4;i++) {
     // 	    cout << "v_banding is " << v_banding_rfcm_e_forfft[iband][i] << "\n";
     // 	  }
@@ -1068,7 +1075,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   // same but with binning for fft
   double volts_rx_e_forfft[Anita::HALFNFOUR]={0.};
   double volts_rx_h_forfft[Anita::HALFNFOUR]={0.};
-    
+
   // vmmhz_rx_e,h are going to be the V/m/MHz received by the rx (after gains)
   for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
     // Convert V/m/MHz to V/m/Hz and divide by dt to prepare for fft
@@ -1104,6 +1111,8 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   double vhz_rx_rfcm_lab_e[Anita::NFREQ]; // V/Hz after rx, rfcm and lab
   double vhz_rx_rfcm_lab_h[Anita::NFREQ];
 
+  int fNumPoints = anita1->HALFNFOUR;
+  int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
   
   // Apply anita-3 measured impulse response
   if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
@@ -1113,18 +1122,14 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_e_forfft); 
     Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_h_forfft);
   
-    int fNumPoints = anita1->HALFNFOUR;//260;
-    int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
     for (int i=0;i<fNumPoints;i++){
       anita1->volts_rx_rfcm_lab_e[i] = volts_rx_e_forfft[i];
       anita1->volts_rx_rfcm_lab_h[i] = volts_rx_h_forfft[i];
-      fTimes[i] = i * anita1->TIMESTEP * 1.0E9; 
     }
-
     
 #ifdef ANITA_UTIL_EXISTS    
-    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_e, 0);
-    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, fTimes, anita1->volts_rx_rfcm_lab_h, 1);
+    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, anita1->volts_rx_rfcm_lab_e, 0);
+    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, anita1->volts_rx_rfcm_lab_h, 1);
 #endif
 
     if (settings1->SIGNAL_FLUCT && !settings1->NOISEFROMFLIGHT){
@@ -1269,11 +1274,13 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
 
 
   // END OF DIGITIZER PATH
-  ///////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////
   // START OF TRIGGER PATH
   
   for (int iband=0;iband<5;iband++) { // loop over bands
-		
+    // only do allowed bands
+    if (anita1->bwslice_allowed[iband]!=1) continue;
+    
     for (int i=0;i<Anita::NFREQ;i++) {
       anita1->vmmhz_banding[i]=vmmhz[i]; // now copy vmmhz to vmmhz_bak instead, which we now play with to get the time domain waveforms for each subband
       // remember vmmhz is V/m/MHz at the face of the antenna
@@ -1310,19 +1317,63 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
 	// as in numerical recipes, F = (Delta t) * H
       }
     }
-    double integral=0.;
+
+    
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
       if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
 	v_banding_rfcm_e[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq];
 	v_banding_rfcm_h[iband][ifreq]=anita1->vmmhz_banding_rfcm[ifreq];
 	anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, ifreq, v_banding_rfcm_e[iband][ifreq], v_banding_rfcm_h[iband][ifreq]);
-	addToChannelSums(settings1, anita1, iband, ifreq);
       }
     } // end loop over nfreq
       
+
+
+    if (settings1->APPLYIMPULSERESPONSETRIGGER){
+      double volts_triggerPath_e[Anita::HALFNFOUR]={0.};
+      double volts_triggerPath_h[Anita::HALFNFOUR]={0.};
+      double vhz_triggerPath_e[Anita::NFREQ] = {0.};
+      double vhz_triggerPath_h[Anita::NFREQ] = {0.};
+      
+      // if (ant==8) {
+      // 	for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) cout << anita1->freq[ifreq] << " " << v_banding_rfcm_e[iband][ifreq] << " " << v_banding_rfcm_h[iband][ifreq] << endl;
+      // }
+      // change their length from Anita::NFREQ to HALFNFOUR
+      anita1->MakeArraysforFFT(v_banding_rfcm_e[iband],v_banding_rfcm_h[iband],volts_triggerPath_e,volts_triggerPath_h);
+      
+      // now the last two are in the frequency domain
+      // convert to the time domain
+      Tools::realft(volts_triggerPath_e,1,anita1->HALFNFOUR); // EH, I believe this has to the -1 for inverse FFT (1 for forward FFT which is t-domain to f-domain)
+      Tools::realft(volts_triggerPath_h,1,anita1->HALFNFOUR);
+      Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_e); 
+      Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_h);
+      
+#ifdef ANITA_UTIL_EXISTS    
+      applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_e, vhz_triggerPath_e, 0);
+      applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_h, vhz_triggerPath_h, 1);
+
+      for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+	if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
+	  v_banding_rfcm_e[iband][ifreq]=vhz_triggerPath_e[ifreq];
+	  v_banding_rfcm_h[iband][ifreq]=vhz_triggerPath_h[ifreq];
+	  // if (ant==8){
+	  //   cout << anita1->freq[ifreq] << " " << v_banding_rfcm_e[iband][ifreq] << " " << v_banding_rfcm_h[iband][ifreq] << endl;// moretemp[ifreq] << endl;
+	  // }
+	}
+      } // end loop over nfreq
+#endif
+      
+    }
+    
+    
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+      if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
+	addToChannelSums(settings1, anita1, iband, ifreq);
+      }
+    } // end loop over nfreq
+    
   } // end loop over bands
-
-
+  
   
 } //AntTrigger constructor
 
@@ -4504,7 +4555,18 @@ void AntTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita
   } else {
     for (int i=0;i<nPoints;i++)  y[i]=newy[i]*TMath::Sqrt(2);
   }
-  
+
+  // if (ant ==8 && pol==0){
+  //   TCanvas *c = new TCanvas("c");
+  //   graph1->Draw("Al");
+  //   c->Print("DigitPath_graph1.png");
+  //   graphUp->Draw("Al");
+  //   c->Print("DigitPath_graphUp.png");
+  //   surfSignal->Draw("Al");
+  //   c->Print("DigitPath_surfSignal.png");
+  //   surfSignalDown->Draw("Al");
+  //   c->Print("DigitPath_surfSignalDown.png");
+  // }
   
   // Cleaning up
   delete surfSignalDown;
@@ -4514,7 +4576,7 @@ void AntTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita
 }
 
 
-void AntTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
+void AntTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], double *vhz, bool pol){
 
   TGraph *graph1 = new TGraph(nPoints, x, y);
   // Upsample waveform to same deltaT of the signal chain impulse response
@@ -4528,15 +4590,15 @@ void AntTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1,
   
   //Calculate convolution
   TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring]);
-
+  
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
-
+  
   Double_t *newy = surfSignalDown->GetY();
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) newy[i]=0;
   } 
-
+    
   // add thermal noise for anita-3 flight
   // signal re-multiplied by sqrt(2) as splitting between trigger and digitizer path
   // is already taken into account by the signal chain impulse response
@@ -4550,8 +4612,27 @@ void AntTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1,
   // } else {
     for (int i=0;i<nPoints;i++)  y[i]=newy[i]*TMath::Sqrt(2);
   // }
-  
-  
+
+    FFTWComplex *theFFT = FFTtools::doFFT(nPoints, y);
+    
+    for (int i=0;i<anita1->NFREQ;i++){
+      vhz[i]=FFTtools::getAbs(theFFT[i]);//gtemp->GetY()[i];
+      // if (ant ==8 && pol==0) cout << vhz[i] << endl;
+    }
+
+    //    double *filteredVals = doInvFFT(length,theFFT);
+
+    // if (ant ==8 && pol==0){
+    //   TCanvas *c = new TCanvas("c");
+    //   graph1->Draw("Al");
+    //   c->Print("TriggerPath_graph1.png");
+    //   graphUp->Draw("Al");
+    //   c->Print("TriggerPath_graphUp.png");
+    //   surfSignal->Draw("Al");
+    //   c->Print("TriggerPath_surfSignal.png");
+    //   surfSignalDown->Draw("Al");
+    //   c->Print("TriggerPath_surfSignalDown.png");
+    // }
   // Cleaning up
   delete surfSignalDown;
   delete surfSignal;

@@ -363,7 +363,9 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     // assuming v(t) is real, then phase(neg)=-phase(pos)
     INTEGRATIONTIME=3.5E-9; // integration time of trigger diode
     TIMESTEP=(1./2.6)*1.E-9; // time step between samples
-    
+
+    for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
+
     DEADTIME=10.E-9; // dead time after a trigger
     energythreshold=3.;  // power threshold
 
@@ -4221,7 +4223,7 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
   string graphNames[2][3];
   string fileName;
   double norm=0;
-  
+ 
   // For ANITA-2 we have 1 impulse response for VPOL and 1 for HPOL
   // For ANITA-3 we have 3 impulse responses (Top, Middle, Bottom ring) for VPOL and 3 for HPOL.
   // Set Graph names for ANITA-2 and ANITA-3
