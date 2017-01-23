@@ -324,7 +324,8 @@ public:
   Double_t fTimes[HALFNFOUR];
 #ifdef ANITA_UTIL_EXISTS
   void applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
-  double *addNoiseFromFlight(Anita* anita1, int pol, int ant);
+  void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
+  double *getNoiseFromFlight(Anita* anita1, int pol, int ant);
 #endif
     
     int unwarned;  // whether we have warned the user about resetting thresholds when they are beyond the measured bounds

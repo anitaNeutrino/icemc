@@ -4483,7 +4483,7 @@ void AntTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita
   // signal re-multiplied by sqrt(2) as splitting between trigger and digitizer path
   // is already taken into account by the signal chain impulse response
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHT) { 
-    double *justNoise = addNoiseFromFlight(anita1, ipol, ant);
+    double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
       y[i]=newy[i]*TMath::Sqrt(2) + justNoise[i]*anita1->THERMALNOISE_FACTOR;
       // std::cout << justNoise[i] << std::endl;
@@ -4500,7 +4500,54 @@ void AntTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita
   delete graph1;
 }
 
-double *AntTrigger::addNoiseFromFlight(Anita* anita1, int pol, int ant){
+
+void AntTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
+
+  TGraph *graph1 = new TGraph(nPoints, x, y);
+  // Upsample waveform to same deltaT of the signal chain impulse response
+  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
+
+  int ipol=0;
+  int iring=2;
+  if (pol) ipol = 1;
+  if (ant<16) iring=0;
+  else if (ant<32) iring=1;
+  
+  //Calculate convolution
+  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring]);
+
+  //Downsample again
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
+
+  Double_t *newy = surfSignalDown->GetY();
+  if (settings1->ZEROSIGNAL){
+    for (int i=0;i<nPoints;i++) newy[i]=0;
+  } 
+
+  // add thermal noise for anita-3 flight
+  // signal re-multiplied by sqrt(2) as splitting between trigger and digitizer path
+  // is already taken into account by the signal chain impulse response
+  // LINDA: don't use thermal noise from flight in the trigger path at the moment
+  // if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHT) { 
+  //   double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
+  //   for (int i=0;i<nPoints;i++){
+  //     y[i]=newy[i]*TMath::Sqrt(2) + justNoise[i]*anita1->THERMALNOISE_FACTOR;
+  //     // std::cout << justNoise[i] << std::endl;
+  //   }
+  // } else {
+    for (int i=0;i<nPoints;i++)  y[i]=newy[i]*TMath::Sqrt(2);
+  // }
+  
+  
+  // Cleaning up
+  delete surfSignalDown;
+  delete surfSignal;
+  delete graphUp;
+  delete graph1;
+}
+
+
+double *AntTrigger::getNoiseFromFlight(Anita* anita1, int pol, int ant){
 
     Int_t numFreqs = anita1->numFreqs;
     FFTWComplex *phasors = new FFTWComplex[numFreqs];
