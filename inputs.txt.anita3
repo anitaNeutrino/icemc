@@ -124,5 +124,6 @@
 # Settings for time-dependent thresholds
 1       # use time-dependent thresholds (only available for Anita-3)
 # Settings for simulating thermal noise
-1       # generate thermal noise using flight data (only available for Anita-3)
+1       # generate thermal noise using flight data (only available for Anita-3) for digitizer path
+0       # generate thermal noise using flight data (only available for Anita-3 and when using trigger path response) for trigger path
 0       # generate minimum bias sample (save events independently from the RF trigger)
