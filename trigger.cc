@@ -4544,8 +4544,6 @@ void AntTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita
   } 
 
   // add thermal noise for anita-3 flight
-  // signal re-multiplied by sqrt(2) as splitting between trigger and digitizer path
-  // is already taken into account by the signal chain impulse response
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHT) { 
     double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
@@ -4601,36 +4599,36 @@ void AntTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1,
     
   // add thermal noise for anita-3 flight
   // LINDA: don't use thermal noise from flight in the trigger path at the moment
-  // if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHT) { 
-  //   double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
-  //   for (int i=0;i<nPoints;i++){
-  //     y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
-  //     // std::cout << justNoise[i] << std::endl;
-  //   }
-  // } else {
-    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
-  // }
-
-    FFTWComplex *theFFT = FFTtools::doFFT(nPoints, y);
-    
-    for (int i=0;i<anita1->NFREQ;i++){
-      vhz[i]=FFTtools::getAbs(theFFT[i]);//gtemp->GetY()[i];
-      // if (ant ==8 && pol==0) cout << vhz[i] << endl;
+  if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHT) { 
+    double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
+    for (int i=0;i<nPoints;i++){
+      y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
+      // std::cout << justNoise[i] << std::endl;
     }
+  } else {
+    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
+  }
 
-    //    double *filteredVals = doInvFFT(length,theFFT);
+  FFTWComplex *theFFT = FFTtools::doFFT(nPoints, y);
+    
+  for (int i=0;i<anita1->NFREQ;i++){
+    vhz[i]=FFTtools::getAbs(theFFT[i]);//gtemp->GetY()[i];
+    // if (ant ==8 && pol==0) cout << vhz[i] << endl;
+  }
 
-    // if (ant ==8 && pol==0){
-    //   TCanvas *c = new TCanvas("c");
-    //   graph1->Draw("Al");
-    //   c->Print("TriggerPath_graph1.png");
-    //   graphUp->Draw("Al");
-    //   c->Print("TriggerPath_graphUp.png");
-    //   surfSignal->Draw("Al");
-    //   c->Print("TriggerPath_surfSignal.png");
-    //   surfSignalDown->Draw("Al");
-    //   c->Print("TriggerPath_surfSignalDown.png");
-    // }
+  //    double *filteredVals = doInvFFT(length,theFFT);
+
+  // if (ant ==8 && pol==0){
+  //   TCanvas *c = new TCanvas("c");
+  //   graph1->Draw("Al");
+  //   c->Print("TriggerPath_graph1.png");
+  //   graphUp->Draw("Al");
+  //   c->Print("TriggerPath_graphUp.png");
+  //   surfSignal->Draw("Al");
+  //   c->Print("TriggerPath_surfSignal.png");
+  //   surfSignalDown->Draw("Al");
+  //   c->Print("TriggerPath_surfSignalDown.png");
+  // }
   // Cleaning up
   delete surfSignalDown;
   delete surfSignal;
@@ -4641,28 +4639,28 @@ void AntTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1,
 
 double *AntTrigger::getNoiseFromFlight(Anita* anita1, int pol, int ant){
 
-    Int_t numFreqs = anita1->numFreqs;
-    FFTWComplex *phasors = new FFTWComplex[numFreqs];
-    double *freqs = anita1->freqs;
-    phasors[0].setMagPhase(0,0);
-    Double_t sigma, realPart, imPart;
+  Int_t numFreqs = anita1->numFreqs;
+  FFTWComplex *phasors = new FFTWComplex[numFreqs];
+  double *freqs = anita1->freqs;
+  phasors[0].setMagPhase(0,0);
+  Double_t sigma, realPart, imPart;
 
-    for(int i=1;i<numFreqs;i++) {
-      sigma      = anita1->RayleighFits[pol][ant]->Eval(freqs[i])*4/TMath::Sqrt(numFreqs);
-      realPart   = anita1->fRand->Gaus(0,sigma);
-      imPart     = anita1->fRand->Gaus(0,sigma);
-      phasors[i] = FFTWComplex(realPart, imPart);
-    }
+  for(int i=1;i<numFreqs;i++) {
+    sigma      = anita1->RayleighFits[pol][ant]->Eval(freqs[i])*4/TMath::Sqrt(numFreqs);
+    realPart   = anita1->fRand->Gaus(0,sigma);
+    imPart     = anita1->fRand->Gaus(0,sigma);
+    phasors[i] = FFTWComplex(realPart, imPart);
+  }
     
-    RFSignal *rfNoise = new RFSignal(numFreqs,freqs,phasors,1);
+  RFSignal *rfNoise = new RFSignal(numFreqs,freqs,phasors,1);
     
-    Double_t *justNoise=rfNoise->GetY();
+  Double_t *justNoise=rfNoise->GetY();
 
-    // Cleaning up
-    delete[] phasors;
-    delete rfNoise;
+  // Cleaning up
+  delete[] phasors;
+  delete rfNoise;
     
-    return justNoise;
+  return justNoise;
   
 }
 
