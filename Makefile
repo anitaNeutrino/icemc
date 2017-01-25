@@ -61,21 +61,23 @@ DBGFLAGS  = -pipe -Wall -W -Woverloaded-virtual -g -ggdb -O0 -fno-inline
 DBGCXXFLAGS = $(DBGFLAGS) $(ROOTCFLAGS) $(BOOSTFLAGS)
 
 LDFLAGS  += $(CPPSTD_FLAGS) -g $(LD_ANITA_UTIL) -I$(BOOST_ROOT) -L.
-#LDFLAGS  += $(CPPSTD_FLAGS) -g $(LD_ANITA_UTIL) -I$(BOOST_ROOT) $(ROOTLDFLAGS) -L. 
+#LDFLAGS  += $(CPPSTD_FLAGS) -g $(LD_ANITA_UTIL) -I$(BOOST_ROOT) $(ROOTLDFLAGS) -L.
 
 
 LIBS += -lMathMore $(FFTLIBS)
 
 HEADERS	  = rx.hpp Taumodel.hh
 ##ANITA_DATA_HEADERS = include/RawAnitaEvent.h include/UsefulAnitaEvent.h include/RawAnitaHeader.h include/AnitaConventions.h include/AnitaGeomTool.h include/AnitaPacketUtil.h include/simpleStructs.h
-ICEMCO    = icemc.o vector.o position.o earthmodel.o balloon.o icemodel.o trigger.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o Settings.o classdict.o Taumodel.o 
-ICEMCS    = icemc.cc vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc trigger.cc signal.cc ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc counting.cc Settings.cc classdict.C Taumodel.cc 
+ICEMCO    = vector.o position.o earthmodel.o balloon.o icemodel.o trigger.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o Settings.o classdict.o Taumodel.o
+ICEMCS    = vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc trigger.cc signal.cc ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc counting.cc Settings.cc classdict.C Taumodel.cc
 
-ICEMC     = icemc$(ExeSuf)
+# ICEMC     = icemc$(ExeSuf)
 
-OBJS          = $(CONDTRKO) $(ICEMCO) 
+BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf)
 
-PROGRAMS      = $(ICEMC)
+OBJS          = $(CONDTRKO) $(ICEMCO)
+
+# PROGRAMS      = $(ICEMC)
 
 
 #------------------------------------------------------------------------------
@@ -87,10 +89,10 @@ PROGRAMS      = $(ICEMC)
 ##$(ANITADATALIB):
 	@cd anita_data_format; make all; make install
 
-all:            $(PROGRAMS)
+all:            $(BINARIES)
 
-$(ICEMC):       $(ICEMCO)
-		$(LD) $(LDFLAGS) $(ICEMCO) $(LIBS) $(OutPutOpt) $(ICEMC)
+$(BINARIES): %: %.$(SrcSuf) $(ICEMCO)
+		$(LD) $(CXXFLAGS) $(LDFLAGS) $(ICEMCO) $(LIBS) $< $(OutPutOpt) $@
 		@echo "$@ done"
 
 
@@ -121,7 +123,7 @@ run:
 
 ###
 
-icemc.$(ObjSuf): 
+icemc.$(ObjSuf):
 
 classdict.C:	$(HEADERS)
 	@echo "Generating dictionary…"
