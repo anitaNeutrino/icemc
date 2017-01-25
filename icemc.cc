@@ -802,11 +802,6 @@ int main(int argc,  char **argv) {
   int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement  
   
   int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement  
-
-  // UShort_t phiTrigMask;
-  // UShort_t phiTrigMaskH;
-  // UShort_t l1TrigMask;
-  // UShort_t l1TrigMaskH;
   
   int nchannels_triggered = 0; // total number of channels triggered
   int nchannels_perrx_triggered[48]; // total number of channels triggered
@@ -1550,11 +1545,6 @@ int main(int argc,  char **argv) {
 
       // Picks the balloon position and at the same time sets the masks and thresholds
       bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
-      // also sets phiTrigMask
-      // phiTrigMask=anita1->phiTrigMask;
-      // phiTrigMaskH=anita1->phiTrigMaskH;
-      // l1TrigMask=anita1->l1TrigMask;
-      // l1TrigMaskH=anita1->l1TrigMaskH;
 
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter
