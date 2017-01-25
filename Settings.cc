@@ -738,6 +738,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   Tools::GetNextNumberAsString(inputsfile,foutput,number); 
   NOISEFROMFLIGHTDIGITIZER=atoi(number.c_str());
   std::cout << "Use noise from flight for digitizer path: " << NOISEFROMFLIGHTDIGITIZER << std::endl;
+  Tools::GetNextNumberAsString(inputsfile,foutput,number); 
   NOISEFROMFLIGHTTRIGGER=atoi(number.c_str());
   std::cout << "Use noise from flight for trigger path: " << NOISEFROMFLIGHTTRIGGER << std::endl;
 #ifdef ANITA_UTIL_EXISTS
