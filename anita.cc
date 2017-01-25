@@ -4325,13 +4325,14 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   
   if(settings1->WHICH==9){
     
-    fileName = "data/SignalChainImpulseResponse_anita3.root";
-    
+    fileName = "data/SignalChainImpulseResponseTrigger_anita3_temp.root";
+
     string spol[2] ={"V", "H"};
     
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
-	graphNames[ipol][iring]=Form("ImpulseResponse_%spol", spol[ipol].c_str());
+	//	graphNames[ipol][iring]=Form("ImpulseResponse_%spol", spol[ipol].c_str());
+	graphNames[ipol][iring]=Form("ImpulseResponseTrigger", spol[ipol].c_str());	
       }
     }
     // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
