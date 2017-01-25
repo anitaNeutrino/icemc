@@ -803,11 +803,10 @@ int main(int argc,  char **argv) {
   
   int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement  
 
- 
-  UShort_t phiTrigMask;
-  UShort_t phiTrigMaskH;
-  UShort_t l1TrigMask;
-  UShort_t l1TrigMaskH;
+  // UShort_t phiTrigMask;
+  // UShort_t phiTrigMaskH;
+  // UShort_t l1TrigMask;
+  // UShort_t l1TrigMaskH;
   
   int nchannels_triggered = 0; // total number of channels triggered
   int nchannels_perrx_triggered[48]; // total number of channels triggered
@@ -1019,10 +1018,10 @@ int main(int argc,  char **argv) {
   finaltree->Branch("l3trig", &l3trig, "l3trig[2]/I");
   finaltree->Branch("l2trig", &l2trig, "l2trig[2][3]/I");
   finaltree->Branch("l1trig", &l1trig, "l1trig[2][3]/I");
-  finaltree->Branch("phiTrigMask", &phiTrigMask, "phiTrigMask/s");
-  finaltree->Branch("phiTrigMaskH", &phiTrigMaskH, "phiTrigMaskH/s");
-  finaltree->Branch("l1TrigMask", &l1TrigMask, "l1TrigMask/s");
-  finaltree->Branch("l1TrigMaskH", &l1TrigMaskH, "l1TrigMaskH/s");
+  finaltree->Branch("phiTrigMask", &anita1->phiTrigMask, "phiTrigMask/s");
+  finaltree->Branch("phiTrigMaskH", &anita1->phiTrigMaskH, "phiTrigMaskH/s");
+  finaltree->Branch("l1TrigMask", &anita1->l1TrigMask, "l1TrigMask/s");
+  finaltree->Branch("l1TrigMaskH", &anita1->l1TrigMaskH, "l1TrigMaskH/s");
   finaltree->Branch("max_antenna0", &max_antenna0, "max_antenna0/I");
   finaltree->Branch("max_antenna1", &max_antenna1, "max_antenna1/I");
   finaltree->Branch("max_antenna2", &max_antenna2, "max_antenna2/I");
@@ -1552,10 +1551,10 @@ int main(int argc,  char **argv) {
       // Picks the balloon position and at the same time sets the masks and thresholds
       bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
       // also sets phiTrigMask
-      phiTrigMask=anita1->phiTrigMask;
-      phiTrigMaskH=anita1->phiTrigMaskH;
-      l1TrigMask=anita1->l1TrigMask;
-      l1TrigMaskH=anita1->l1TrigMaskH;
+      // phiTrigMask=anita1->phiTrigMask;
+      // phiTrigMaskH=anita1->phiTrigMaskH;
+      // l1TrigMask=anita1->l1TrigMask;
+      // l1TrigMaskH=anita1->l1TrigMaskH;
 
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter
@@ -3217,7 +3216,7 @@ int main(int argc,  char **argv) {
               rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
 
 	      if (settings1->WHICH<9){
-		rawHeaderPtr->phiTrigMask  = (short) phiTrigMask;
+		rawHeaderPtr->phiTrigMask  = (short) anita1->phiTrigMask;
 		rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
 	      }
 	      
@@ -3229,8 +3228,8 @@ int main(int argc,  char **argv) {
 	      if (settings1->WHICH==9 || settings1->WHICH==10) {
 		rawHeaderPtr->setTrigPattern((short) l3trig[0], AnitaPol::kVertical); 
 		rawHeaderPtr->setTrigPattern((short) l3trig[1], AnitaPol::kHorizontal); 
-		rawHeaderPtr->setMask( (short) l1TrigMask,  (short) phiTrigMask,  AnitaPol::kVertical);
-		rawHeaderPtr->setMask( (short) l1TrigMaskH, (short) phiTrigMaskH, AnitaPol::kHorizontal);
+		rawHeaderPtr->setMask( (short) anita1->l1TrigMask,  (short) anita1->phiTrigMask,  AnitaPol::kVertical);
+		rawHeaderPtr->setMask( (short) anita1->l1TrigMaskH, (short) anita1->phiTrigMaskH, AnitaPol::kHorizontal);
               }
 	      
 	      truthEvPtr        = new TruthAnitaEvent();
