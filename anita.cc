@@ -270,10 +270,24 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
  
     
     PERCENTBW=10; // subbands (not counting full band)
-    #ifdef ANITA_UTIL_EXISTS
-    if (settings1->APPLYIMPULSERESPONSEDIGITIZER)   readImpulseResponseDigitizer(settings1);
-    if (settings1->APPLYIMPULSERESPONSETRIGGER)     readImpulseResponseTrigger(settings1);
-    #endif
+
+
+    //scaling factor for signal that is divided in digitizer and trigger path 
+    scaleDigitizer = 1./sqrt(2);
+    scaleTrigger   = 1./sqrt(2);
+ 
+
+#ifdef ANITA_UTIL_EXISTS
+    // when using impulse responses scaling factors are 1
+    if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
+      readImpulseResponseDigitizer(settings1);
+      scaleDigitizer = 1.;
+    }
+    if (settings1->APPLYIMPULSERESPONSETRIGGER){
+      readImpulseResponseTrigger(settings1);
+      scaleTrigger = 1.;
+    }
+#endif
     for (int i=0;i<NFREQ;i++) {
 		freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
 		avgfreq_rfcm[i]=0.;

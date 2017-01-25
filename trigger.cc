@@ -1079,8 +1079,8 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   // vmmhz_rx_e,h are going to be the V/m/MHz received by the rx (after gains)
   for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
     // Convert V/m/MHz to V/m/Hz and divide by dt to prepare for fft
-    vhz_rx_e[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); // EH, 1/sqrt(2) for dividing power in half for TDA and DDA?
-    vhz_rx_h[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); 
+    vhz_rx_e[ifreq]=vmmhz[ifreq]*anita1->scaleDigitizer/(anita1->TIMESTEP*1.E6); // EH, 1/sqrt(2) for dividing power in half for TDA and DDA?
+    vhz_rx_h[ifreq]=vmmhz[ifreq]*anita1->scaleDigitizer/(anita1->TIMESTEP*1.E6); 
       
     // let's find the peak voltage just after the antenna, with no banding
     anita1->AntennaGain(settings1,hitangle_e,hitangle_h,e_component,h_component,ifreq,vhz_rx_e[ifreq],vhz_rx_h[ifreq]);
@@ -1308,7 +1308,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
 	
       for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
 	  
-	anita1->vmmhz_banding_rfcm[ifreq]=anita1->vmmhz_banding_rfcm[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6);
+	anita1->vmmhz_banding_rfcm[ifreq]=anita1->vmmhz_banding_rfcm[ifreq]*anita1->scaleTrigger/(anita1->TIMESTEP*1.E6);
 	// vmmhz was set to account for both negative and positive frequencies
 	// now it has units of volts/(meter*s) so below we copy it to vm_banding_rfcm_e,h
 	  
@@ -4549,11 +4549,11 @@ void AntTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHT) { 
     double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
-      y[i]=newy[i]*TMath::Sqrt(2) + justNoise[i]*anita1->THERMALNOISE_FACTOR;
+      y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
       // std::cout << justNoise[i] << std::endl;
     }
   } else {
-    for (int i=0;i<nPoints;i++)  y[i]=newy[i]*TMath::Sqrt(2);
+    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
   }
 
   // if (ant ==8 && pol==0){
@@ -4600,17 +4600,15 @@ void AntTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1,
   } 
     
   // add thermal noise for anita-3 flight
-  // signal re-multiplied by sqrt(2) as splitting between trigger and digitizer path
-  // is already taken into account by the signal chain impulse response
   // LINDA: don't use thermal noise from flight in the trigger path at the moment
   // if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHT) { 
   //   double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
   //   for (int i=0;i<nPoints;i++){
-  //     y[i]=newy[i]*TMath::Sqrt(2) + justNoise[i]*anita1->THERMALNOISE_FACTOR;
+  //     y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
   //     // std::cout << justNoise[i] << std::endl;
   //   }
   // } else {
-    for (int i=0;i<nPoints;i++)  y[i]=newy[i]*TMath::Sqrt(2);
+    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
   // }
 
     FFTWComplex *theFFT = FFTtools::doFFT(nPoints, y);
