@@ -1,6 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //class Secondaries:
 ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+#ifndef ICEMC_SECONDARIES_HH
+#define ICEMC_SECONDARIES_HH
+
 #include <algorithm>
 #include <numeric>
 #include <iostream>
@@ -37,15 +42,15 @@ private:
   double dsdy_muon_brems[7][NPROB_MAX]; // probability distribution vs. y for brem
   double dsdy_muon_epair[7][NPROB_MAX]; // prob. dist. vs. y for pair production
   double dsdy_muon_pn[7][NPROB_MAX]; // photonuclear interactions
-  
+
   double y_muon_brems[7][NPROB_MAX]; // inelasticity corresponding to each bin,brem
   double y_muon_epair[7][NPROB_MAX]; // same for pair production
   double y_muon_pn[7][NPROB_MAX]; // same for photonuclear
-  
+
   vector<double> vy_muon_brems[7]; // vectors containing inelasticities distributed such
   //that they follow the dsdy curves above.
-  vector<double> vy_muon_epair[7]; 
-  vector<double> vy_muon_pn[7]; 
+  vector<double> vy_muon_epair[7];
+  vector<double> vy_muon_pn[7];
 
   double y_cumulative_muon_brems[7][NPROB_MAX];
   double y_cumulative_muon_epair[7][NPROB_MAX];
@@ -87,8 +92,8 @@ private:
 
   vector<double> vy_tauon_brems[7]; // vectors containing inelasticities distributed such
   //that they follow the dsdy curves above.
-  vector<double> vy_tauon_epair[7]; 
-  vector<double> vy_tauon_pn[7]; 
+  vector<double> vy_tauon_epair[7];
+  vector<double> vy_tauon_pn[7];
   vector<double> vy_tauon_hadrdecay[7];
   vector<double> vy_tauon_edecay[7];
   vector<double> vy_tauon_mudecay[7];
@@ -126,13 +131,13 @@ private:
 
   void readData(string,string,double (*)[NPROB_MAX], double (*)[NPROB_MAX]);
   void ReadSecondaries(); // read in prob. dist. for secondary interactions
-	
+
 	//For Tau Weight & Survival probability equations.
 	//n.b. not in SI units.
-	//from Tau neutrino propagaiton and tau energy loss 2005 Dutta, Huang, & Reno. 
-	//Equation 16  &  used in Equation 30. 
-	double B0,B1,E0;//parameterization using a logarithmic dependence on energy 
-	               //for B, the tau elecromagnetic energy loss parameter. 
+	//from Tau neutrino propagaiton and tau energy loss 2005 Dutta, Huang, & Reno.
+	//Equation 16  &  used in Equation 30.
+	double B0,B1,E0;//parameterization using a logarithmic dependence on energy
+	               //for B, the tau elecromagnetic energy loss parameter.
 	double mT;//mass of the Tau in Gev
 	double cT;//Tau Decay length in cm
 	// double p;//Density of Standard Rock. g/cm^3
@@ -141,7 +146,7 @@ private:
 		//p, the Density of Standard Rock. g/cm^3
 	double A; ////constant that sets the total probability to unity
 	double Mn;// nucleon/ proton mass in grams,also equal to 0.938 GeV.
-  
+
 
 public:
   Secondaries();
@@ -149,15 +154,15 @@ public:
 
   int SECONDARIES;
   int TAUDECAY; // is tau decay counted as a secondary interaction
-  double TAUFRAC; //fraction of tau neutrino-cc current events where the primare interaction point is the first bang     
+  double TAUFRAC; //fraction of tau neutrino-cc current events where the primare interaction point is the first bang
   int count_nfb;
-  int secondary_e_noncons; 
+  int secondary_e_noncons;
 
   void GetSecondaries(Settings *settings1,string,double,double&,double&,int&,TH1F*);
 
   void InitTauola();
   void GetTauDecay(string nuflavor,string current,string& taudecay, double& emfrac_db, double& hadfrac_db);
-  
+
   void GetEMFracDB(double& emfrac_db, double& hadfrac_db);
   double GetDBViewAngle(const Vector &refr, const Vector &nnu);
   //void GetFirstBang(const Position &r_in, const Vector &nnu, Position &posnu, double len_int_kgm2, double d1, double &nuentrancelength);
@@ -180,8 +185,9 @@ public:
   static const bool interestedintaus=false;
 
   //string flavors[3]={"nue","numu","nutau"}; // the gps path of the anita-lite flight
-string flavors[3]; // the gps path of the anita-lite flight  
+string flavors[3]; // the gps path of the anita-lite flight
 
 }; //class Secondaries
 
 
+#endif
