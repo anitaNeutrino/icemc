@@ -616,11 +616,4 @@ TTree *tgaryanderic; // writing data out for the analysers
   
 }; //class Anita
 
-//! namespace for referring to polarizations
-//namespace AnitaPol {
-//    typedef enum EAnitaPol {
-//	kLeft=0,
-//	kRight=1
-//    } AnitaPol_t;
-//}
 
