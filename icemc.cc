@@ -504,13 +504,15 @@ int main(int argc,  char **argv) {
     return 0;
   }
   int nnu_tmp=0;
+  double exp_tmp=0;
   double trig_thresh=0.;
   char clswitch; // command line switch
   if (argc>1) {
-    while ((clswitch = getopt(argc, argv, "t:i:o:r:n:")) != EOF) {
+    while ((clswitch = getopt(argc, argv, "t:i:o:r:n:e:")) != EOF) {
       switch(clswitch) {
       case 'n':
 	nnu_tmp=atoi(optarg);
+	cout << "Changed number of simulated neutrinos to " << nnu_tmp << endl;
         break;
       case 't':
 	trig_thresh=atof(optarg);
@@ -527,6 +529,10 @@ int main(int argc,  char **argv) {
         stemp="mkdir " + settings1->outputdir;
         system(stemp.c_str());
         break;
+      case 'e':
+	exp_tmp=atof(optarg);
+	cout << "Changed neutrino energy exponent to " << exp_tmp << endl;
+	break;
       case 'r':
         run_num=optarg;
         stringstream convert(run_num);
@@ -602,6 +608,8 @@ int main(int argc,  char **argv) {
     anita1->powerthreshold[4]=trig_thresh;
   if (nnu_tmp!=0)
     NNU=nnu_tmp;
+  if (exp_tmp!=0)
+    settings1->EXPONENT=exp_tmp;
 
   Spectra *spectra1 = new Spectra((int)settings1->EXPONENT);
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
