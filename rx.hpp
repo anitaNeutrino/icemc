@@ -10,7 +10,13 @@
 
 // ROOT Library #includes
 #include "TObject.h"
+
+// from RVersion.h
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
+#include "TClingRuntime.h"
+#else
 #include "TCint.h"
+#endif
 
 class RX : public TObject {
 public:
