@@ -1132,7 +1132,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, anita1->volts_rx_rfcm_lab_h, 1);
 #endif
 
-    if (settings1->SIGNAL_FLUCT && !settings1->NOISEFROMFLIGHT){
+    if (settings1->SIGNAL_FLUCT && !settings1->NOISEFROMFLIGHTDIGITIZER){
       for (int i=0;i<anita1->NFOUR/2;i++) {
 	anita1->volts_rx_rfcm_lab_e[i]+=anita1->timedomainnoise_lab_e[i]; // add noise
 	anita1->volts_rx_rfcm_lab_h[i]+=anita1->timedomainnoise_lab_h[i];
@@ -4544,7 +4544,7 @@ void AntTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita
   } 
 
   // add thermal noise for anita-3 flight
-  if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHT) { 
+  if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
     double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
       y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
@@ -4599,7 +4599,7 @@ void AntTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1,
     
   // add thermal noise for anita-3 flight
   // LINDA: don't use thermal noise from flight in the trigger path at the moment
-  if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHT) { 
+  if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
     double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
       y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;

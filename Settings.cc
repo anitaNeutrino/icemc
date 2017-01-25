@@ -736,16 +736,23 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   getline(inputsfile,junk);
   foutput << junk << "\n";
   Tools::GetNextNumberAsString(inputsfile,foutput,number); 
-  NOISEFROMFLIGHT=atoi(number.c_str());
-  std::cout << "Use noise from flight: " << NOISEFROMFLIGHT << std::endl;
+  NOISEFROMFLIGHTDIGITIZER=atoi(number.c_str());
+  std::cout << "Use noise from flight for digitizer path: " << NOISEFROMFLIGHTDIGITIZER << std::endl;
+  Tools::GetNextNumberAsString(inputsfile,foutput,number); 
+  NOISEFROMFLIGHTTRIGGER=atoi(number.c_str());
+  std::cout << "Use noise from flight for trigger path: " << NOISEFROMFLIGHTTRIGGER << std::endl;
 #ifdef ANITA_UTIL_EXISTS
-  if ( NOISEFROMFLIGHT && WHICH!=9) {
+  if ( (NOISEFROMFLIGHTDIGITIZER || NOISEFROMFLIGHTTRIGGER) && WHICH!=9) {
     cout << "Noise from flight only available for anita-3.\n";
+    exit(1);
+  }
+  if (!APPLYIMPULSERESPONSETRIGGER && NOISEFROMFLIGHTTRIGGER ){
+    cout << "Noise from flight can only be applied to trigger path if impulse reponse is also used \n";
     exit(1);
   }
 #endif
 #ifndef ANITA_UTIL_EXISTS
-  if (NOISEFROMFLIGHT){
+  if (NOISEFROMFLIGHTDIGITIZER || NOISEFROMFLIGHTTRIGGER){
     cout << "Noise from flight can only be applied when the Anita tools are sourced.\n";
     exit(1);
   }

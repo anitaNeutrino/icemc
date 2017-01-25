@@ -5,7 +5,7 @@ To compile icemc you only need a working ROOT installation and then do:
 
 
 To run icemc:
-   $ ./icemc -i {inputFile} -o {outputDirectory} -r {runNumber} -n {numberOfNeutrinos} -t {triggerThreshold}
+   $ ./icemc -i {inputFile} -o {outputDirectory} -r {runNumber} -n {numberOfNeutrinos} -t {triggerThreshold} -e {energyExponent}
 
 If parameters are not specified:
    - inputs from inputs.txt are used,
