@@ -17,6 +17,92 @@
 #include "counting.hh"
 #include "Primaries.h"
 
+
+#include "String.h"
+#include "TString.h"
+#include "TObjString.h"
+
+Settings::Settings(const char* fileName){
+  readSettingsFile(fileName);
+}
+
+
+/**
+ * Copies the contents of the settings file into internal memory as strings
+ * These strings get read and turned into ints, floats, doubles, later
+ *
+ * @param fileName the name of the settings file to read
+ */
+void Settings::readSettingsFile(const char* fileName){
+
+  std::ifstream settingsFile(fileName);
+
+
+  // Print error message if I can't read the file
+  if(!settingsFile.is_open()){
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", could not open settings file " << fileName << std::endl;
+  }
+
+  // Read every line in the file...
+  while(!settingsFile.eof()){
+    std::string thisLine;
+    std::getline(settingsFile, thisLine);
+
+    // First cut out the comments, which all characters after the first #, including the # too
+    std::size_t found = thisLine.find("#");
+
+    // if(found!=std::string::npos){
+    //   std::cout << "COMMENT!" << "\t" << found << "\t" << thisLine.substr(found, std::string::npos) << std::endl;
+    // }
+
+
+    // Here we switch to TString because of its lovely tokenization methods
+    TString thisLineCommentsRemoved(thisLine.substr(0, found));
+
+    // Now have a TObjArray of TObjStrings split by out delimeter :
+    TObjArray* tokens = thisLineCommentsRemoved.Tokenize(":");
+
+    int nTokens = tokens->GetEntries();
+
+    // If there are at least two tokens, then there was at least one delimeter
+    if(nTokens >= 2){
+
+      TString key = ((TObjString*) tokens->At(0))->GetString();
+      TString value = ((TObjString*) tokens->At(1))->GetString();
+      keyValuePairStrings[key.Data()] = value.Data();
+
+      // std::cout << tokens->GetEntries() << "\t" << thisLineCommentsRemoved.Data() << std::endl;
+      // std::cout << tokens->GetEntries() << "\t" << thisLineCommentsRemoved.Data() << std::endl;
+    }
+
+    delete tokens;
+  }
+}
+
+
+
+
+
+
+
+/**
+ * Print all entries in the config key/value pair string map.
+ *
+ * For debugging and testing
+ *
+ */
+void Settings::printAllKeyValuePairStrings(){
+
+  kvpMap::iterator it;
+  for(it = keyValuePairStrings.begin(); it!=keyValuePairStrings.end(); ++it){
+    std::cout << it->first << "\t" << it->second << std::endl;
+  }
+}
+
+
+
+
+
 Settings::Settings() {
   Initialize();
 
@@ -765,3 +851,126 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
 
 
 } //method ReadInputs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void Settings::getSetting(const char* key, int& value){
+
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", unable to find setting " << key << std::endl;
+  }
+  else{
+    // found a match for the key
+    value = atoi(it->second.Data());
+  }
+}
+
+void Settings::getSetting(const char* key, float& value){
+
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", unable to find setting " << key << std::endl;
+  }
+  else{
+    // found a match for the key
+    value = atof(it->second.Data());
+  }
+}
+
+void Settings::getSetting(const char* key, double& value){
+
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", unable to find setting " << key << std::endl;
+  }
+  else{
+    // found a match for the key
+    value = atof(it->second.Data());
+  }
+}
+
+void Settings::getSetting(const char* key, std::vector<int>& valueArray){
+
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", unable to find setting " << key << std::endl;
+  }
+  else{
+    // found a match for the key
+    parseValueArray(it->second.Data(), valueArray);
+  }
+}
+
+void Settings::getSetting(const char* key, std::vector<float>& valueArray){
+
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", unable to find setting " << key << std::endl;
+  }
+  else{
+    // found a match for the key
+    parseValueArray(it->second.Data(), valueArray);
+  }
+}
+
+void Settings::getSetting(const char* key, std::vector<double>& valueArray){
+
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", unable to find setting " << key << std::endl;
+  }
+  else{
+    // found a match for the key
+    parseValueArray(it->second.Data(), valueArray);
+  }
+}
+
+void Settings::parseValueArray(const char* valueString, std::vector<int>& values){
+  TString theValueString(valueString);
+
+  TObjArray* theValues = theValueString.Tokenize(",");
+  for(int i=0; i < theValues->GetEntries(); ++i){
+
+    TObjString* token = (TObjString*) theValues->At(i);
+    int value = atoi(token->GetString().Data());
+    values.push_back(value);
+  }
+}
+
+void Settings::parseValueArray(const char* valueString, std::vector<float>& values){
+  TString theValueString(valueString);
+
+  TObjArray* theValues = theValueString.Tokenize(",");
+  for(int i=0; i < theValues->GetEntries(); ++i){
+
+    TObjString* token = (TObjString*) theValues->At(i);
+    float value = atof(token->GetString().Data());
+    values.push_back(value);
+  }
+}
+
+void Settings::parseValueArray(const char* valueString, std::vector<double>& values){
+  TString theValueString(valueString);
+
+  TObjArray* theValues = theValueString.Tokenize(",");
+  for(int i=0; i < theValues->GetEntries(); ++i){
+
+    TObjString* token = (TObjString*) theValues->At(i);
+    double value = atof(token->GetString().Data());
+    values.push_back(value);
+  }
+}
