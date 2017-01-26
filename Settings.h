@@ -38,6 +38,10 @@ private:
 
 public:
 
+  Settings();
+  Settings(const char* inputFileName);
+
+  void Initialize();
 
   void printAllKeyValuePairStrings();
   void readSettingsFile(const char* fileName);
@@ -50,13 +54,9 @@ public:
   void getSetting(const char* key, std::vector<float>& valueArray);
   void getSetting(const char* key, std::vector<double>& valueArray);
 
+  void readInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1, int& NNU, double& RANDOMISEPOL);
 
 
-
-  Settings();
-  Settings(const char* inputFileName);
-
-  void Initialize();
   void ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1, int& NNU, double& RANDOMISEPOL);
 
 

@@ -594,6 +594,7 @@ int main(int argc,  char **argv) {
   Roughness *rough1=new Roughness(); // create new instance of the roughness class
   Taumodel *taus1 = new Taumodel();
   // input parameters
+  settings1->readSettingsFile("inputs.anita3.yaml");
   settings1->ReadInputs(inputsfile,  foutput,  anita1,  sec1,  sig1,  bn1,  ray1, NNU, RANDOMISEPOL);
 
 
