@@ -1102,7 +1102,6 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   // we still don't have any noise
   anita1->peak_e_rx_signalonly=AntTrigger::FindPeak(volts_rx_e_forfft,anita1->HALFNFOUR); // with no noise
   anita1->peak_h_rx_signalonly=AntTrigger::FindPeak(volts_rx_h_forfft,anita1->HALFNFOUR); // with no noise
-    
 
   
   double vhz_rx_rfcm_e[Anita::NFREQ]; // V/Hz after rx, rfcm
@@ -1113,6 +1112,11 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
 
   int fNumPoints = anita1->HALFNFOUR;
   int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
+
+  
+  if (settings1->TRIGGEREFFSCAN){
+    injectImpulseAfterAntenna(anita1, volts_rx_e_forfft, volts_rx_h_forfft, ant);
+  }
   
   // Apply anita-3 measured impulse response
   if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
@@ -1326,8 +1330,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
 	anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, ifreq, v_banding_rfcm_e[iband][ifreq], v_banding_rfcm_h[iband][ifreq]);
       }
     } // end loop over nfreq
-      
-
+          
 
     if (settings1->APPLYIMPULSERESPONSETRIGGER){
       double volts_triggerPath_e[Anita::HALFNFOUR]={0.};
@@ -1347,6 +1350,12 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
       Tools::realft(volts_triggerPath_h,1,anita1->HALFNFOUR);
       Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_e); 
       Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_h);
+
+
+      if (settings1->TRIGGEREFFSCAN){
+	injectImpulseAfterAntenna(anita1, volts_triggerPath_e, volts_triggerPath_h, ant);
+      }
+
       
 #ifdef ANITA_UTIL_EXISTS    
       applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_e, vhz_triggerPath_e, 0);
@@ -4664,5 +4673,24 @@ double *AntTrigger::getNoiseFromFlight(Anita* anita1, int pol, int ant){
   
 }
 
-
+void AntTrigger::injectImpulseAfterAntenna(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant){
+  // phiIndex is 0 for central antenna in trigger efficiency scan
+  int phiIndex = anita1->trigEffScanPhi - (ant%16);
+  if (phiIndex>8) phiIndex=phiIndex-16;
+  int fNumPoints=anita1->HALFNFOUR;
+  // only 2 phi sectors adjecent to the central one are considered in efficiency scan
+  if(TMath::Abs(phiIndex)<=2){
+    double att = anita1->trigEffScanAtt[phiIndex+2]-anita1->trigEffScanAtt[2];
+    double norm = (anita1->trigEffScanAtt[phiIndex+2]==0)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=0)*1;
+    for (int i=0;i<fNumPoints;i++){
+      volts_triggerPath_e[i]=norm*anita1->trigEffScanPulse[i]*TMath::Power(10, att/20);
+      volts_triggerPath_h[i]=0;
+    }
+  }else{
+    for (int i=0;i<fNumPoints;i++){
+      volts_triggerPath_e[i]=0;
+      volts_triggerPath_h[i]=0;
+    }
+  }
+}
 #endif
