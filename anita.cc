@@ -287,6 +287,9 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
       readImpulseResponseTrigger(settings1);
       scaleTrigger = 1.;
     }
+    if (settings1->TRIGGEREFFSCAN){
+      readTriggerEfficiencyScanPulser(settings1);
+    }
 #endif
     for (int i=0;i<NFREQ;i++) {
 		freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
@@ -4297,12 +4300,12 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     
     fileName = "data/SignalChainImpulseResponseTrigger_anita3_temp.root";
 
-    string spol[2] ={"V", "H"};
+    // string spol[2] ={"V", "H"};
     
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
 	//	graphNames[ipol][iring]=Form("ImpulseResponse_%spol", spol[ipol].c_str());
-	graphNames[ipol][iring]=Form("ImpulseResponseTrigger", spol[ipol].c_str());	
+	graphNames[ipol][iring]=Form("ImpulseResponseTrigger");	
       }
     }
     // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
@@ -4345,6 +4348,33 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     
   }
   
+}
+
+
+void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
+  
+  if(settings1->WHICH==9){
+     
+     string fileName = "data/TriggerEfficiencyScanPulser_anita3.root";
+     TFile *f = new TFile(fileName.c_str(), "read");
+
+     TGraph *gPulser = (TGraph*)f->Get("gAvgPulser");
+
+     // Apply attenuation before interpolating
+     for (int i=0;i<gPulser->GetN();i++) gPulser->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]/20);
+     
+     TGraph *gPulserInt = FFTtools::getInterpolatedGraph(gPulser, 1/(2.6));
+     double *y = gPulserInt->GetY();
+     for (int i=0;i<HALFNFOUR;i++){
+       trigEffScanPulse[i]=y[i];
+       // cout << gPulserInt->GetX()[i] << " " << trigEffScanPulse[i] << endl;
+     }
+
+     delete gPulserInt;
+     delete gPulser;
+     f->Close();
+  }
+ 
 }
 
 #endif
