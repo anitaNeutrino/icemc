@@ -760,8 +760,21 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   Tools::GetNextNumberAsString(inputsfile,foutput,number);
   MINBIAS=atoi(number.c_str());
   if (MINBIAS) std::cout << "Generate Minimum Bias sample: " << MINBIAS << std::endl;
-
-
-
+  getline(inputsfile,junk);
+  foutput << junk << "\n";
+  Tools::GetNextNumberAsString(inputsfile,foutput,number);
+  TRIGGEREFFSCAN=atoi(number.c_str());
+  Tools::GetNextNumberAsString(inputsfile,foutput,number);
+  anita1->trigEffScanPhi=atoi(number.c_str());
+  Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,5);
+  for (int i=0;i<5;i++) anita1->trigEffScanAtt[i] = (double)atof(vnumber[i].c_str());
+  
+  if (TRIGGEREFFSCAN){
+    std::cout << "Let's do a trigger efficiency scan!" << std::endl;
+    std::cout << "Central phi sector is " << anita1->trigEffScanPhi << std::endl;
+    std::cout << "Attenuations are ";
+    for (int i=0;i<5;i++) std::cout << anita1->trigEffScanAtt[i] << " ";
+    std::cout << std::endl;
+  }
 
 } //method ReadInputs

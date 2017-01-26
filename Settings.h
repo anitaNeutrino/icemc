@@ -170,9 +170,11 @@ public:
     double COHERENT_THRESHOLD;
     int APPLYIMPULSERESPONSEDIGITIZER;       // apply impulse response in the digitizer path
     int APPLYIMPULSERESPONSETRIGGER;         // apply impulse response in the trigger path
-    int USETIMEDEPENDENTTHRESHOLDS; // use time-dependent thresholds
-    int NOISEFROMFLIGHTTRIGGER;            // use thermal noise from flight in trigger path
-    int NOISEFROMFLIGHTDIGITIZER;          // use thermal noise from flight in digitizer path
-    int MINBIAS;                    // generate minimum bias sample
+    int USETIMEDEPENDENTTHRESHOLDS;          // use time-dependent thresholds
+    int NOISEFROMFLIGHTTRIGGER;              // use thermal noise from flight in trigger path
+    int NOISEFROMFLIGHTDIGITIZER;            // use thermal noise from flight in digitizer path
+    int MINBIAS;                             // generate minimum bias sample
+    int TRIGGEREFFSCAN;                      // do a trigger efficiency scan
+    
 };
 #endif

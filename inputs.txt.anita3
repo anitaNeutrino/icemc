@@ -127,3 +127,7 @@
 1       # generate thermal noise using flight data (only available for Anita-3) for digitizer path
 0       # generate thermal noise using flight data (only available for Anita-3 and when using trigger path response) for trigger path
 0       # generate minimum bias sample (save events independently from the RF trigger)
+# Settings for trigger efficiency scan
+0       # Do a trigger efficiency scan (need to turn on skip cuts and min bias flag as well)
+8       # Central phi sector
+-1 -1 -1 -1 -1 # Attenuation applied to central phi sectors and the two adjecent ones (when -1 no signal in those antennas)
