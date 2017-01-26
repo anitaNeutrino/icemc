@@ -129,5 +129,5 @@
 0       # generate minimum bias sample (save events independently from the RF trigger)
 # Settings for trigger efficiency scan
 0       # Do a trigger efficiency scan (need to turn on skip cuts and min bias flag as well)
-8       # Central phi sector
--1 -1 -1 -1 -1 # Attenuation applied to central phi sectors and the two adjecent ones (when -1 no signal in those antennas)
+15       # Central phi sector [numbers are 1-16]
+0 0 -35 -35 0 # Attenuation applied to central phi sectors and the two adjecent ones (when -1 no signal in those antennas)
