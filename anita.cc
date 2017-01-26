@@ -1324,51 +1324,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     tglob->Branch("inu",&inu,"inu/I");
     tglob->Branch("passglobtrig",&passglobtrig,"passglobtrig[2]/I");
     tglob->Branch("l1_passing_allantennas",&l1_passing_allantennas,"l1_passing_allantennas[48]/I");
-    
-    
-    
-    
-    //for (int i=0;i<NPOINTS_NOISE;i++) {
-    
-    //ifreq=findIndex(freq,freq_noise[i],NFREQ,freq[0],freq[NFREQ-1]);
-    
-    // powerperfreq is in microWatts/MHz
-    // we divide by 10^12 to get it in Watts/Hz
-    // multiply by the df*impedence
-    // take sqrt to get V
-    // Then divide by df in MHz to get V/MHz
-    
-    
-    
-    //for (int j=0;j<5;j++) {
-    //if (ifreq!=-1)
-    //vnoise[j][ifreq]=sqrt(powerperfreq[i]*df*impedence/1.E12)/(df/1.E6);  // This should be in V/Mhz
-    
-    //}
-    
-    // } // loop over noise points
-    
-    // now want the energy in each band slice in diode integration time
-    // in Joules
-    for (int j=0;j<4;j++) {
-	// bwslice_enoise[j]=0.;
-	//     for (int k=0;k<NFREQ;k++) {
-	//       // square vnoise to get V^2/(MHz)^2
-	//       // multiply by df/1.E6 to get V^2/MHz
-	//       // divide by impedence to get Watts/MHz
-	//       // Divide by 1.E6 to get Watts/Hz = Joules
-	//       // this has the right units but I think it's integrated over the time of the whole waveform
-	//       bwslice_enoise[j]+=vnoise[j][k]*vnoise[j][k]*(df/1.E6)/impedence/1.E6;
-	//     }
-	//     bwslice_enoise[j]=bwslice_enoise[j]*INTEGRATIONTIME/(TIMESTEP*(double)nsamp); // this is the energy integrated over the time of the tunnel diode
-	
-	//   for (int i=0;i<NLAYERS_MAX;i++) {
-	//        bwslice_vnoise[i][j]=sqrt(bwslice_enoise[j]/INTEGRATIONTIME*impedence); // rms voltage I think- this is an approximation
-	//     }
-	//    cout << "bwslice_vnoise is " << bwslice_vnoise[0][j] << "\n";
-    }
-    
-    
+  
     
     
     // for antenna gains
