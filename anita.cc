@@ -4363,8 +4363,8 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
      for (int i=0;i<gPulser->GetN();i++){
        // Apply attenuation before interpolating
        gPulser->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]/20);
-       // Divide by sqrt(2) to account for splitter in setting
-       gPulser->GetY()[i]/=TMath::Sqrt(2);
+       // // Divide by sqrt(2) to account for splitter in setting
+       // gPulser->GetY()[i]/=TMath::Sqrt(2);
      }
      
      TGraph *gPulserInt = FFTtools::getInterpolatedGraph(gPulser, 1/(2.6));
