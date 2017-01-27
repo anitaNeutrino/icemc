@@ -302,11 +302,7 @@ public:
     double bwslice_volts_polh[5];
     double bwslice_energy_polh[5];
     
-    
-    
-    double vm_banding_rfcm_e[5][Anita::NFREQ];// this is Volts/m as a function of frequency after rfcm's and banding
-    double vm_banding_rfcm_h[5][Anita::NFREQ];
-    
+        
     double v_banding_rfcm_e[5][Anita::NFREQ];// this is Volts/m as a function of frequency after rfcm's and banding
     double v_banding_rfcm_h[5][Anita::NFREQ];
     
@@ -341,10 +337,11 @@ public:
     void addToChannelSums(Settings *settings1,Anita *anita1,int ibw,int k);
     
     static int IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int ilayer, int ifold, int ipol);
-  Double_t fTimes[HALFNFOUR];
 #ifdef ANITA_UTIL_EXISTS
-  void applyImpulseResponse(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
-  double *addNoiseFromFlight(Anita* anita1, int pol, int ant);
+  void applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
+  void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], double *vhz, bool pol);
+  double *getNoiseFromFlight(Anita* anita1, int pol, int ant);
+  void injectImpulseAfterAntenna(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant);
 #endif
     
     int unwarned;  // whether we have warned the user about resetting thresholds when they are beyond the measured bounds

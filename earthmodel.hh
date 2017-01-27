@@ -4,10 +4,12 @@
 #include <string>
 #include <cstdlib>
 //#include "Primaries.h"
+#include "TRandom3.h"
+
 class Primaries;
 class Position;
 class Vector;
-class TRandom3;
+//class TRandom3;
 class Interaction;
 class IceModel;
 using std::string;
@@ -30,7 +32,7 @@ using std::string;
 //Geoid  : Returns the height in meters of the geoid at a given Position or lon/lat.
 //RockSurface  : Returns the distance in meters from the center of the Earth to the end of rock
 //               (the begninning of the ice/water/air)
-//GetSurfaceNormal  : Returns a unit vector pointing in the direction of the surface normal at 
+//GetSurfaceNormal  : Returns a unit vector pointing in the direction of the surface normal at
 //                    a given Position.
 //Getchord
 //
@@ -72,7 +74,7 @@ public:
 			 const Position &earth_in, // place where neutrino entered the earth
 			 const Position &r_enterice,
 			 const Position &nuexitice,
-			 
+
 			 const Position &posnu, // position of the interaction
 			 int inu,
 			 double& chord, // chord length
@@ -102,14 +104,14 @@ protected:
   int FIXEDELEVATION;
   int FLATSURFACE;
   int weightabsorption;
-  
+
 
   // pick method to step neutrino through the earth and get attenuation length
-  static constexpr int getchord_method=2; // 1=core,mantle,crust; 2=crust 2.0 model  
+  static constexpr int getchord_method=2; // 1=core,mantle,crust; 2=crust 2.0 model
 
   static const double GEOID_MAX; // parameters of geoid model
-  static const double GEOID_MIN; 
-  static const double COASTLINE; // if the rf leaves from beyond this "coastline" (in degrees of latitude relative to south pole) it's not in antarctica.  Real coastline is always closer than this. 
+  static const double GEOID_MIN;
+  static const double COASTLINE; // if the rf leaves from beyond this "coastline" (in degrees of latitude relative to south pole) it's not in antarctica.  Real coastline is always closer than this.
 
   // parameters of the Crust 2.0 earth model
   static constexpr int NLON=180; // number of bins in longitude for crust 2.0
@@ -130,7 +132,7 @@ protected:
   double geoid[NLAT];     // realistic shape of earth-radius at each latitude (in meters)
   double MIN_ALTITUDE_CRUST; // maximum depth of crust- determines when to start stepping
   //double MAX_VOL; // maximum volume of ice in a bin in Crust 2.0 - not used
-  double elevationarray[NLON][NLAT]; // If no water, measures the elevation (relative to geoid, in meters) of the top of the ice or rock (i.e., air interface).  If there is water, measures elevation to bottom of water. (There may or may not be ice on top of the water.) 
+  double elevationarray[NLON][NLAT]; // If no water, measures the elevation (relative to geoid, in meters) of the top of the ice or rock (i.e., air interface).  If there is water, measures elevation to bottom of water. (There may or may not be ice on top of the water.)
   double waterthkarray[NLON][NLAT];  // thickness of water layer (in km)
   double icethkarray[NLON][NLAT]; // thickness of ice layer (in km)
   double softsedthkarray[NLON][NLAT]; // thickness of soft sed layer (in km)

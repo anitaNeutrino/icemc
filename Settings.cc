@@ -17,8 +17,216 @@
 #include "counting.hh"
 #include "Primaries.h"
 
+
+#include "String.h"
+
+#include "TString.h"
+#include "TRegexp.h"
+#include "TObjString.h"
+
+
+
+// Prettify warnings because, why not?
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
+
+
+/**
+ * Default constructor
+ *
+ */
 Settings::Settings() {
   Initialize();
+}
+
+
+
+
+
+
+
+/**
+ * Copies the contents of a yaml settings file into internal memory as strings
+ * Later on these strings get turned into ints, floats, doubles...
+ *
+ * @param fileName the name of the settings file to read
+ */
+void Settings::parseSettingsFile(const char* fileName, std::ofstream& outputFile){
+
+  std::ifstream settingsFile(fileName);
+
+  // Print error message if I can't read the file
+  if(!settingsFile.is_open()){
+    std::cerr << "Error in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET
+	      << ", could not open file " << ANSI_COLOR_RED << fileName << ANSI_COLOR_RESET << std::endl;
+    exit(1);
+  }
+  else{
+
+    time_t rawtime;
+    struct tm * timeinfo;
+    time (&rawtime);
+    timeinfo = localtime (&rawtime);
+    outputFile << "Current date and time are: " << asctime(timeinfo) << std::endl;
+
+
+    int lineNum = 1;
+
+    // Read every line in the file...
+    while(!settingsFile.eof()){
+
+      std::string thisLine;
+      std::getline(settingsFile, thisLine);
+
+      // Copy to output file
+      outputFile << thisLine << std::endl;
+
+      // First cut out the comment, which is all characters after the first #, including the #
+      std::size_t found = thisLine.find("#");
+
+
+      // Here we switch to TString because of its lovely tokenization methods
+      TString thisLineCommentsRemoved(thisLine.substr(0, found));
+
+      // Now have a TObjArray of TObjStrings split by out delimeter :
+      TObjArray* tokens = thisLineCommentsRemoved.Tokenize(":");
+
+      int nTokens = tokens->GetEntries();
+
+      // If there are two tokens, then there was one delimeter
+      if(nTokens == 2){
+
+	TString key = ((TObjString*) tokens->At(0))->GetString();
+	TString value = ((TObjString*) tokens->At(1))->GetString();
+
+	Bool_t addVariable = newKvpPassesSanityChecks(key, value, fileName, lineNum);
+
+	if(addVariable){
+	  keyValuePairStrings[key.Data()] = value.Data();
+	}
+
+      }
+      else{
+
+	TRegexp reggie("[a-zA-Z0-9]");
+	Ssiz_t len = thisLineCommentsRemoved.Length();
+
+	Bool_t isAlphaNumeric = reggie.Index(thisLineCommentsRemoved, &len) != -1;
+
+	if(nTokens > 2 || isAlphaNumeric){
+	  // complain if there are more than two tokens, i.e. more that one colon.
+	  // complain if there are non whitespace characters but no colon.
+	  std::cerr << "Warning in " ANSI_COLOR_RED << __FILE__ << ANSI_COLOR_RESET
+		    << ". I couldn't parse line " << ANSI_COLOR_RED << lineNum << ANSI_COLOR_RESET
+		    << " in " << fileName << ". It said: " << std::endl;
+	  std::cerr << ANSI_COLOR_BLUE << thisLine << ANSI_COLOR_RESET << std::endl;
+	}
+      }
+      delete tokens;
+
+      lineNum++;
+    }
+  }
+
+
+  outputFile << std::endl << std::endl;
+  outputFile << __FILE__ << " has finished parsing " << fileName << std::endl;
+  outputFile << std::endl << std::endl;
+
+}
+
+
+
+/**
+ * Perform some basic checks on the key value pair parsed on this line
+ * Prints an appropriate warning message if there was a problem
+ * Gets it own function as the warnings are a little verbose
+ * @param key is the key (Setting name)
+ * @param value is the value (Setting value)
+ * @param fileName is the name of the input.conf file
+ * @param lineNum is the line being parsed.
+ *
+ * @return true if we should insert the key into the kvp map, false if there was a problem.
+ */
+Bool_t Settings::newKvpPassesSanityChecks(const TString& key, const TString& value, const char* fileName, int lineNum){
+
+  Bool_t isGood = true;
+
+  if(key.Length()==0){
+    std::cerr << "Warning in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET << ", "
+	      << ANSI_COLOR_BLUE << fileName << ANSI_COLOR_RESET
+	      << " has a variable with no name at " << ANSI_COLOR_RED << "line " << lineNum
+	      << ANSI_COLOR_RESET << "." << std::endl;
+    isGood = false;
+  }
+
+  else if(value.Length()==0){
+    std::cerr << "Warning in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET << ", "
+	      << ANSI_COLOR_BLUE << fileName << ANSI_COLOR_RESET
+	      << " has a variable with no value at " << ANSI_COLOR_RED << "line " << lineNum
+	      << ANSI_COLOR_RESET << "." << std::endl;
+    isGood = false;
+  }
+  else{
+    kvpMap::iterator it = keyValuePairStrings.find(key);
+
+    if(it!=keyValuePairStrings.end()){
+    std::cerr << "Warning in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET << ", "
+	      << ANSI_COLOR_BLUE << fileName << ANSI_COLOR_RESET
+	      << " already has a variable named " << ANSI_COLOR_RED << key.Data()
+	      << ANSI_COLOR_RESET << "." << std::endl;
+
+      isGood = false;
+    }
+  }
+
+  if(!isGood){
+    std::cerr << "Will ignore " << ANSI_COLOR_RED << "line " << lineNum << ANSI_COLOR_RESET << std::endl;
+  }
+
+  return isGood;
+}
+
+
+
+/**
+ * Print all entries in the config key/value pair string map.
+ *
+ * For debugging and testing
+ *
+ */
+void Settings::printAllKeyValuePairStrings(){
+
+  kvpMap::iterator it;
+  for(it = keyValuePairStrings.begin(); it!=keyValuePairStrings.end(); ++it){
+    std::cout << it->first << "\t" << it->second << std::endl;
+  }
+}
+
+
+
+/**
+ * Set member variables to default values
+ *
+ */
+void Settings::Initialize() {
+  NDISCONES_PASS=3;
+  DEBUG=false;                   // debugging option
+  outputdir="outputs"; // directory where outputs go
+  FREQ_LOW_SEAVEYS=200.E6;
+  FREQ_HIGH_SEAVEYS=1200.E6;
+  BW_SEAVEYS=FREQ_HIGH_SEAVEYS-FREQ_LOW_SEAVEYS;
+  SIGMAPARAM=1;  // Connolly et al. 2011 default cross section parametrization
+  YPARAM=1;  // Connolly et al. 2011 default y parametrization
+  UNBIASED_SELECTION=1.; // (0) pick neutrino interaction in the ice and neutrino from any direction or (1) choose neutrino interaction point in the horizon on the balloon in the ice and neutrino direction on the cerenkov cone
+  SIGMA_FACTOR=1;
+
 
   // Bunch of variables which were global in icemc.cc but are settings:
   SEED=65540;      // random number seed.
@@ -48,710 +256,758 @@ Settings::Settings() {
   SCREENEDGELENGTH=25.;
 }
 
-void Settings::Initialize() {
-  NDISCONES_PASS=3;
-  DEBUG=false;                   // debugging option
-  outputdir="outputs"; // directory where outputs go
-  FREQ_LOW_SEAVEYS=200.E6;
-  FREQ_HIGH_SEAVEYS=1200.E6;
-  BW_SEAVEYS=FREQ_HIGH_SEAVEYS-FREQ_LOW_SEAVEYS;
-  SIGMAPARAM=1;  // Connolly et al. 2011 default cross section parametrization
-  YPARAM=1;  // Connolly et al. 2011 default y parametrization
-  UNBIASED_SELECTION=1.; // (0) pick neutrino interaction in the ice and neutrino from any direction or (1) choose neutrino interaction point in the horizon on the balloon in the ice and neutrino direction on the cerenkov cone
-  SIGMA_FACTOR=1;
-}
 
-void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1) {
-  // read inputs to the code.  
-  // See comments in input file
-    
-  extern int NNU;
-  extern double RANDOMISEPOL;
-    
-  string number;
-  string junk;
-    
-  getline(inputsfile,junk);
-    
-  foutput << "\n\n";
-    
-  time_t rawtime;
-  struct tm * timeinfo;
-    
-  time ( &rawtime );
-  timeinfo = localtime ( &rawtime );
-    
-  foutput << "Current date and time are: " << asctime (timeinfo) << "\n";
-    
-    
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  // The following inputs have to do with event input/output
-    
-  //Fenfang's livetime
-  //The LIVETIME I used is 34.78days*0.75
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  NNU=(int)atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  EXPONENT=(double)atof(number.c_str());
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  UNBIASED_SELECTION=(double)atof(number.c_str());
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  HIST=(int)atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  ONLYFINAL=(int)atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  HIST_MAX_ENTRIES=(int)atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SEED=(int)atoi(number.c_str());
-  cout << "SEED is " << SEED << "\n";
+
+
+
+
+
+
+
+void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
+			  Anita* anita1, Secondaries* sec1, Signal* sig1,
+			  Balloon* bn1, Ray* ray1,
+			  int& NNU, double& RANDOMISEPOL) {
+
+  parseSettingsFile(inputFileName, foutput);
+
+  getSetting("Number of neutrinos", NNU);
+  getSetting("Energy exponent", EXPONENT);
+  getSetting("Neutrino position", UNBIASED_SELECTION);
+  getSetting("Write hists and trees", HIST);
+  getSetting("Write ray", FILLRAYTREES);
+
+  getSetting("Only final tree", ONLYFINAL);
+  getSetting("Max histogram entries", HIST_MAX_ENTRIES);
+  getSetting("Random seed", SEED);
+  std::cout << "SEED is " << SEED << std::endl;
   gRandom->SetSeed(SEED);
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  WRITEPOSFILE=(int)atof(number.c_str());
-    
-  if (WRITEPOSFILE==1)
-    cout << "Non-default setting:  WRITEPOSFILE= " << WRITEPOSFILE << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  EVENTSMAP=atoi(number.c_str());//draw the events map or not
-    
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  // The following inputs have to do with the payload and balloon
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    
-  WHICH=(int)atoi(number.c_str());
-    
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    
-  NLAYERS=(int)atoi(number.c_str()); // this is number of layers, counting the upper 16 as 2 layers
-    
-  if (((WHICH==1 || WHICH==6) && NLAYERS!=4) ||
-      (WHICH==0 && NLAYERS!=1) ||
-      (WHICH==7 && NLAYERS!=1))
-    cout << "Non-default setting:  WHICH= " << WHICH << " and NLAYERS= " << NLAYERS << "\n";
-    
-  //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas.  So that means for Anita 1 and Anita 2, there are one fewer trigger layers than physical layers. 
+
+  getSetting("Write neutrino position", WRITEPOSFILE);
+
+  if (WRITEPOSFILE==1){
+    std::cout << "Non-default setting: WRITEPOSFILE= " << WRITEPOSFILE << std::endl;
+  }
+  getSetting("Events map", EVENTSMAP);
+
+
+
+// ################################################################################################
+// # Balloon and payload
+// ################################################################################################
+
+
+
+  getSetting("Which payload", WHICH);
+  getSetting("Antenna layers", NLAYERS);
+
+  if(((WHICH==1 || WHICH==6) && NLAYERS!=4) || (WHICH==0 && NLAYERS!=1) || (WHICH==7 && NLAYERS!=1)){
+    std::cout << "Non-default setting: WHICH = " << WHICH << " and NLAYERS= " << NLAYERS << std::endl;
+  }
+
+
+  //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas.  So that means for Anita 1 and Anita 2, there are one fewer trigger layers than physical layers.
   // anything anita like
   // anita 1 simple, anita 1 kurt, anita 2 kurt, anita 3, satellite
-  if (WHICH==2 || WHICH==6 || WHICH==8 || WHICH==9 || WHICH==10)
+  if (WHICH==2 || WHICH==6 || WHICH==8 || WHICH==9 || WHICH==10){
     anita1->NTRIGGERLAYERS = NLAYERS - 1;
-  else
+  }
+  else{
     anita1->NTRIGGERLAYERS=NLAYERS;
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    
-  anita1->INCLINE_TOPTHREE=(double)atof(number.c_str());
-    
-  if (anita1->INCLINE_TOPTHREE!=10)
-    cout << "Non-default setting:  INCLINE_TOPTHREE= " << anita1->INCLINE_TOPTHREE << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    
-  anita1->INCLINE_NADIR=(double)atof(number.c_str());
-    
-  if (anita1->INCLINE_NADIR!=10)
-    cout << "Non-default setting:  INCLINE_NADIR= " << anita1->INCLINE_NADIR << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    
-  bn1->WHICHPATH=(int)atoi(number.c_str());
-  
-  if ((WHICH==0 && bn1->WHICHPATH!=2) || (WHICH==2 && bn1->WHICHPATH!=6))
-    cout << "Non-default setting:  bn1->WHICHPATH= " << bn1->WHICHPATH << " and WHICH=" << WHICH << "\n";
-    
-  if (bn1->WHICHPATH==2)
+  }
+  getSetting("Inclination top three layers", anita1->INCLINE_TOPTHREE);
+
+  if(anita1->INCLINE_TOPTHREE!=10){
+    std::cout << "Non-default setting: INCLINE_TOPTHREE= " << anita1->INCLINE_TOPTHREE << std::endl;
+  }
+
+  getSetting("Inclination fourth layer", anita1->INCLINE_NADIR);
+
+  if(anita1->INCLINE_NADIR!=10){
+    std::cout << "Non-default setting: INCLINE_NADIR= " << anita1->INCLINE_NADIR << std::endl;
+  }
+  getSetting("Flight path", bn1->WHICHPATH);
+
+  if((WHICH==0 && bn1->WHICHPATH!=2) || (WHICH==2 && bn1->WHICHPATH!=6)){
+    std::cout << "Non-default setting: bn1->WHICHPATH = " << bn1->WHICHPATH << " and WHICH = "
+	      << WHICH << std::endl;
+  }
+
+  if(bn1->WHICHPATH==2){
     anita1->LIVETIME=45.*24.*3600.*0.75; // 45 days for anita-lite
-  else if (bn1->WHICHPATH==0)
+  }
+  else if (bn1->WHICHPATH==0){
     anita1->LIVETIME=6.02*24.*3600.; // anita-lite
-  else if (bn1->WHICHPATH==6) // kim's livetime for anita
+  }
+  else if (bn1->WHICHPATH==6){
+    // kim's livetime for anita
     anita1->LIVETIME=17.*24.*3600.; // for anita, take 34.78 days * 0.75 efficiency
-  else
+  }
+  else{
     anita1->LIVETIME=14.*24.*3600.; // otherwise use 2 weeks by default
-    
-  if (WHICH==7) // EeVEX
+  }
+
+  if (WHICH==7){
+    // EeVEX
     anita1->LIVETIME=100.*24.*3600.; // ultra-long duration balloon flight of 100 days
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    
-  bn1->BN_LATITUDE=(double)atof(number.c_str());
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    
-  bn1->BN_LONGITUDE=(double)atof(number.c_str());
-    
-  if((bn1->BN_LONGITUDE!=999 || bn1->BN_LATITUDE!=999) && bn1->WHICHPATH==0)
-    cout<<"BN_LATITUDE: "<<bn1->BN_LATITUDE<<", BN_LONGITUDE: "<<bn1->BN_LONGITUDE<<endl;
-    
-  if (bn1->BN_LONGITUDE>180. && bn1->BN_LONGITUDE!=999)
-    cout << "Entered balloon longitude wrong!  Should be between -180 and 180 degrees.\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    
-  bn1->RANDOMIZE_BN_ORIENTATION=(int)atoi(number.c_str());
-    
-  if (bn1->RANDOMIZE_BN_ORIENTATION==1 && (bn1->WHICHPATH==2 || bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8))
-    cout << "Warning:: Strangely you asked for a real flight path but a randomized balloon orientation.  WILL BE OVERRIDDEN.\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    
-  bn1->BN_ALTITUDE=(double)atof(number.c_str()); 
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    
+  }
+
+  getSetting("Balloon latitude", bn1->BN_LATITUDE);
+
+  getSetting("Balloon longitude", bn1->BN_LATITUDE);
+
+  if((bn1->BN_LONGITUDE!=999 || bn1->BN_LATITUDE!=999) && bn1->WHICHPATH==0){
+    std::cout << "BN_LATITUDE: "<< bn1->BN_LATITUDE << ", BN_LONGITUDE: " << bn1->BN_LONGITUDE << std::endl;
+  }
+
+  if (bn1->BN_LONGITUDE>180. && bn1->BN_LONGITUDE!=999){
+    std::cout << "Entered balloon longitude wrong!  Should be between -180 and 180 degrees." << std::endl;
+  }
+  getSetting("Balloon orientation", bn1->RANDOMIZE_BN_ORIENTATION);
+
+
+  if (bn1->RANDOMIZE_BN_ORIENTATION==1 && (bn1->WHICHPATH==2 || bn1->WHICHPATH==6 ||
+					   bn1->WHICHPATH==7 || bn1->WHICHPATH==8)){
+    std::cout << "Warning:: Strangely you asked for a real flight path but a randomized balloon orientation.  WILL BE OVERRIDDEN." << std::endl;
+  }
+
+  getSetting("Balloon altitude", bn1->BN_ALTITUDE);
+
+
   // whether to use constant gains as entered in GetBeamWidths (0) or to use Ped's measurements as entered in ReadGains (1)
   // GAINS is actually an int, not a double...
-  anita1->GAINS=(int)atof(number.c_str()); 
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  // The following inputs have to do with event input/output
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  TRIGGERSCHEME=atoi(number.c_str()); // whether it's frequency domain (0) or time domain
+  getSetting("Gain setting", anita1->GAINS);
+
+
+
+  getSetting("Trigger scheme", TRIGGERSCHEME);
+
+  // Ben S, leaving this here... should it get its own config file entry?
   TRIGTYPE=1; // ANITA, not anita-lite.  But the anita-lite code back in later
-    
-  vector<string> vnumber;
-  Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,5);
-    
-  for (int n=0;n<5;n++) {
-    anita1->bwslice_thresholds[n]=(double)atof(vnumber[n].c_str());
+
+  std::vector<double> tempThresholds;
+  getSetting("Band thresholds", tempThresholds);
+  for (unsigned int i=0;i<tempThresholds.size();i++) {
+    anita1->bwslice_thresholds[i] = tempThresholds.at(i);
   }
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  anita1->BANDING=atoi(number.c_str()); // whether you use anita-1 banding (0) or choose-your-own
-    
-  if (anita1->BANDING !=0 && anita1->BANDING!= 1 && anita1->BANDING!=2 && anita1->BANDING!=4) {
-    cout << "Banding should be set to 0 (Anita 1), 1 (custum), 2 (Anita 2), 3 (Satellite) or 4 (Anita 3).\n";
+
+  getSetting("Banding", anita1->BANDING);
+
+
+  if(anita1->BANDING !=0 && anita1->BANDING!= 1 && anita1->BANDING!=2 && anita1->BANDING!=4) {
+    std::cout << "Banding should be set to 0 (Anita 1), 1 (custum), 2 (Anita 2), 3 (Satellite) or 4 (Anita 3)."
+	      << std::endl;
     exit(1);
   }
-    
+
   if ((TRIGGERSCHEME==0 || TRIGGERSCHEME==1) && anita1->BANDING!=1) {
-    cout << "Frequency domain trigger schemes can only be used with user-set sub-bands.\n";
+    std::cout << "Frequency domain trigger schemes can only be used with user-set sub-bands." << std::endl;
     exit(1);
   }
-    
+
   if (TRIGGERSCHEME==2 && anita1->BANDING==1) {
-    cout << "Time domain trigger scheme only works with Anita 1, Anita 2 or Anita 3 banding data, you can't set your own bands.\n";
+    std::cout << "Time domain trigger scheme only works with Anita 1, Anita 2 or Anita 3 banding data, you can't set your own bands." << std::endl;
     exit(1);
   }
-    
-    
-  Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,5);
-  vector<string> vnumber2;
-  Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber2,5);
-    
-  //  double mintemp,maxtemp;
-  for (int n=0;n<5;n++) {
-    anita1->bwslice_min[n]=(double)atof(vnumber[n].c_str())*1.E6;
-    anita1->bwslice_max[n]=(double)atof(vnumber2[n].c_str())*1.E6;
-    anita1->bwslice_center[n]=(anita1->bwslice_min[n]+anita1->bwslice_max[n])/2.;
-    anita1->bwslice_width[n]=(anita1->bwslice_max[n]-anita1->bwslice_min[n]);
-    //cout << "center, width are " << anita1->bwslice_center[n] << " " << anita1->bwslice_width[n] << "\n";
+
+
+  std::vector<double> bandLowEdgesMHz;
+  getSetting("Lower band edges", bandLowEdgesMHz);
+  std::vector<double> bandHighEdgesMHz;
+  getSetting("Upper band edges", bandHighEdgesMHz);
+
+  for (unsigned int i=0; i < bandLowEdgesMHz.size(); i++) {
+    anita1->bwslice_min[i] = 1e6*bandLowEdgesMHz.at(i);
+    anita1->bwslice_max[i] = 1e6*bandHighEdgesMHz.at(i);
+    anita1->bwslice_center[i] = 0.5*(anita1->bwslice_min[i] + anita1->bwslice_max[i]);
+    anita1->bwslice_width[i] = anita1->bwslice_max[i] - anita1->bwslice_min[i];
   }
-    
-  Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,5);
-    
-  for (int n=0;n<5;n++) {
-    //anita1->bwslice is actaully an int
-    anita1->bwslice_required[n]=(int)atof(vnumber[n].c_str());
+
+
+  std::vector<int> requiredBands;
+  getSetting("Required bands", requiredBands);
+  for(unsigned int i=0; i < requiredBands.size(); i++){
+    anita1->bwslice_required[i] = requiredBands.at(i);
   }
-    
-  Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,5);
-    
-  for (int n=0;n<5;n++) {
-    //anita1->bwslice_allowed[n] is still an int, not a double
-    anita1->bwslice_allowed[n]=(int)atof(vnumber[n].c_str());
+
+
+  std::vector<int> allowedBands;
+  getSetting("Allowed bands", allowedBands);
+  for(unsigned int i=0; i < allowedBands.size(); i++){
+    anita1->bwslice_allowed[i] = allowedBands.at(i);
   }
-    
+
   anita1->maxthreshold=0.;
   anita1->bwmin=1.E10;
-  if (anita1->BANDING!=1)
+  if (anita1->BANDING!=1){
     anita1->bwmin=200.E6;
-    
-  for (int n=0;n<5;n++) {
-    if (anita1->bwslice_thresholds[n]>anita1->maxthreshold && anita1->bwslice_allowed[n]==1)
-      anita1->maxthreshold=anita1->bwslice_thresholds[n];
+  }
 
+  const int numBands = 5;
+  for (int i=0; i<numBands; i++) {
+    if (anita1->bwslice_thresholds[i]>anita1->maxthreshold && anita1->bwslice_allowed[i]==1){
+      anita1->maxthreshold = anita1->bwslice_thresholds[i];
+    }
     if (anita1->BANDING==1) {
-      if ((anita1->bwslice_max[n]-anita1->bwslice_min[n])<anita1->bwmin && anita1->bwslice_allowed[n]==1)
-	anita1->bwmin=anita1->bwslice_max[n]-anita1->bwslice_min[n];
+      if ((anita1->bwslice_max[i] - anita1->bwslice_min[i]) < anita1->bwmin && anita1->bwslice_allowed[i] == 1){
+
+	anita1->bwmin = anita1->bwslice_max[i] - anita1->bwslice_min[i];
+      }
     }
   }
-    
-  // now get number of bands for banding option 3 (satellite)
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  anita1->NBANDS=atoi(number.c_str()); 
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  anita1->PERCENTBW=atoi(number.c_str()); 
-  Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,2);
-    
-  anita1->NOTCH_MIN=(double)atof(vnumber[0].c_str())*1.E6; // min and max frequencies for notch filter
-  anita1->NOTCH_MAX=(double)atof(vnumber[1].c_str())*1.E6;
-    
+
+
+  getSetting("Number of bands", anita1->NBANDS);
+  getSetting("Percent bandwidth", anita1->PERCENTBW);
+
+  std::vector<double> notchFilterLimitsMHz;
+  getSetting("Notch filter limits", notchFilterLimitsMHz);
+  anita1->NOTCH_MIN = 1e6*notchFilterLimitsMHz.at(0);
+  anita1->NOTCH_MAX = 1e6*notchFilterLimitsMHz.at(1);
+
+
   if (anita1->NOTCH_MIN>anita1->NOTCH_MAX) {
-    cout << "Min of notch filter is greater than max.  Try again.\n";
+    std::cout << "Min of notch filter is greater than max. Try again." << std::endl;
   }
-  if (anita1->NOTCH_MIN!=0 || anita1->NOTCH_MAX!=0)
-    cout << "Applying a notch filter from " << anita1->NOTCH_MIN << " Hz to " << anita1->NOTCH_MAX << " Hz\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  anita1->trigRequirements[0]=atoi(number.c_str()); 
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  anita1->trigRequirements[1]=atoi(number.c_str()); 
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  antennaclump=atoi(number.c_str()); 
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  anita1->REQUIRE_CENTRE=atoi(number.c_str()); // require centre antenna in clump is one of those his
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  anita1->trigRequirements[2]=atoi(number.c_str()); 
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  LCPRCP=atoi(number.c_str());
-
-
-  Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,2);
-    
-  for (int n=0;n<2;n++) {
-    //anita1->bwslice is actaully an int
-    anita1->pol_required[n]=(int)atof(vnumber[n].c_str());
-  }
-    
-  Tools::GetNumbersAsStringArray(inputsfile,foutput,vnumber,2);
-    
-  for (int n=0;n<2;n++) {
-    //anita1->bwslice_allowed[n] is still an int, not a double
-    anita1->pol_allowed[n]=(int)atof(vnumber[n].c_str());
+  if (anita1->NOTCH_MIN!=0 || anita1->NOTCH_MAX!=0){
+    std::cout << "Applying a notch filter from " << anita1->NOTCH_MIN << " Hz to "
+	      << anita1->NOTCH_MAX << " Hz" << std::endl;
   }
 
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  DISCONES=(int)atof(number.c_str()); 
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  anita1->INCLUDE_NADIRONLY=(double)atof(number.c_str());
-    
-  if (anita1->INCLUDE_NADIRONLY!=0)
-    cout << "Non-default setting:  INCLUDE_NADIRONLY= " << anita1->INCLUDE_NADIRONLY << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  CHMASKING=atoi(number.c_str());
-    
+
+  getSetting("Num antenna channels for L1 trigger", anita1->trigRequirements[0]);
+  getSetting("Num L1 hits to pass L2", anita1->trigRequirements[1]);
+  getSetting("Num antenna for L2 trigger", antennaclump);
+  getSetting("Require centre antenna", anita1->REQUIRE_CENTRE);
+  getSetting("L3 trigger requirement", anita1->trigRequirements[2]);
+  getSetting("LCP/RCP or V/H", LCPRCP);
+  std::vector<int> channelRequirePol;
+  getSetting("Channels required polarization", channelRequirePol);
+  for(unsigned int i=0; i < channelRequirePol.size(); i++){
+    anita1->pol_required[i] = channelRequirePol.at(i);
+  }
+  std::vector<int> channelAllowedPol;
+  getSetting("Channels allowed polarization", channelAllowedPol);
+  for(unsigned int i=0; i < channelAllowedPol.size(); i++){
+    anita1->pol_allowed[i] = channelAllowedPol.at(i);
+  }
+  getSetting("Exta antennas in trigger", DISCONES);
+  getSetting("Nadir only trigger", anita1->INCLUDE_NADIRONLY);
+
+  if (anita1->INCLUDE_NADIRONLY!=0){
+    std::cout << "Non-default setting:  INCLUDE_NADIRONLY = " << anita1->INCLUDE_NADIRONLY << std::endl;
+  }
+
+  getSetting("ANITA-1 channel masking", CHMASKING);
+
   if (bn1->WHICHPATH!=6 && CHMASKING==1) {
-    cout << "Cannot include masking for flights other than the ANITA-1 flight. For the ANITA-3 channel masking, it is implemented together with the phi masking and it's turned on whenever the PHIMASKING is ON. CHMASKING set to 0.\n";
+    std::cout << "Cannot include masking for flights other than the ANITA-1 flight." << std::endl;
+    std::cout << "For the ANITA-3 channel masking, it is implemented together with the phi masking and it's turned on whenever the PHIMASKING is ON." << std::endl;
+    std::cout << "CHMASKING set to 0." << std::endl;
     CHMASKING=0;
-  } 
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  PHIMASKING=atoi(number.c_str());
-    
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  // The following are variables that have been used for modeling anita-lite
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SCALEDOWNLCPRX1=(int)atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SCALEDOWNEPOLRX1=(int)atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SCALEDOWNHPOLRX1=(int)atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SCALEDOWNEPOLRX2=(int)atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SCALEFACTOREPOLRX2=(double)atof(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SCALEDOWNHPOLRX2=(int)atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  EPOLRX2ZERO=(int)atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  HPOLRX2ZERO=(int)atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  RCPRX2ZERO=(int)atoi(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  LCPRX2ZERO=(int)atoi(number.c_str());
-    
-  if (WHICH==0 && !(SCALEDOWNEPOLRX1==1 && RCPRX2ZERO==1))
-    cout << "Non-default setting:  WHICH= " << WHICH << " and EPOLRX2ZERO= " << EPOLRX2ZERO << "\n";
-    
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  // Modify the following settings to make changes to the signal and noise
-  // for testing
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SIGNAL_FLUCT=(int)atoi(number.c_str());
-    
-  if (SIGNAL_FLUCT!=1)
-    cout << "Non-default setting:  SIGNAL_FLUCT= " << SIGNAL_FLUCT << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  ZEROSIGNAL=atoi(number.c_str()); // whether it's frequency domain (0) or time domain
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  RANDOMISEPOL=atoi(number.c_str()); 
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  sig1->SetLPM((int)atoi(number.c_str()));
-    
-  if (sig1->GetLPM()!=1)
-    cout << "Non-default setting:  LPM= " << sig1->GetLPM() << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  sig1->SetJaime_Factor((double)atof(number.c_str()));
-    
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  THERMALNOISE_FACTOR=(double)atof(number.c_str());
-    
-  if (THERMALNOISE_FACTOR!=1)
-    cout << "Non-default setting:  THERMALNOISE_FACTOR= " << THERMALNOISE_FACTOR << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-    
-  REMOVEPOLARIZATION=(int)atof(number.c_str());
-    
-  if (REMOVEPOLARIZATION==1)
-    cout << "Non-default setting:  Polarizations turned off!\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  anita1->PULSER=atoi(number.c_str()); 
-    
-  if (anita1->PULSER!=0)
-    cout << "Warning!  Injecting a pulser spectrum- not simulating neutrinos!  PULSER = " << anita1->PULSER << "\n";
-    
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  bn1->CENTER=atoi(number.c_str()); 
-    
-  if (bn1->CENTER!=0)
-    cout << "WARNING!!  Rotating payload to center one phi sector on the incoming signal for each event.\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  ray1->MAKEVERTICAL=atoi(number.c_str()); 
-    
-  if (ray1->MAKEVERTICAL!=0)
-    cout << "WARNING!!  Rotating polarization so it is always vertical approaching the payload.\n";
-    
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  // The following are variables that have been used for modeling anita-lite
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SLOPEYSIZE=(double)atof(number.c_str());
-    
-  if (SLOPEYSIZE!=0.012)
-    cout << "Non-default setting:  SLOPEYSIZE= " << SLOPEYSIZE << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SLOPEY=(int)atoi(number.c_str());
-    
-  if (SLOPEY!=1)
-    cout << "Non-default setting:  SLOPEY= " << SLOPEY << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  NOFZ=(int)atoi(number.c_str());
-    
-  if (NOFZ!=1)
-    cout << "Non-default setting:  NOFZ= " << NOFZ << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  VARIABLE_ATTEN=(int)atoi(number.c_str());
-    
-  if (VARIABLE_ATTEN!=0)
-    cout << "Non-default setting:  VARIABLE_ATTEN= " << VARIABLE_ATTEN << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  CONSTANTICETHICKNESS=(int)atof(number.c_str());
-    
-  if (CONSTANTICETHICKNESS==1)
-    cout << "Non-default setting:  CONSTANTICETHICKNESS= " << CONSTANTICETHICKNESS << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  ICE_MODEL=(int)atof(number.c_str());
-    
+  }
+
+  getSetting("ANITA-2 channel masking", PHIMASKING);
+
+
+
+  getSetting("Scale down LCP voltage 1st ant", SCALEDOWNLCPRX1);
+  getSetting("Scale down E pol 1st ant", SCALEDOWNEPOLRX1);
+  getSetting("Scale down H pol 1st ant", SCALEDOWNHPOLRX1);
+  getSetting("Scale down E pol 2nd ant", SCALEDOWNEPOLRX2);
+  getSetting("E pol scale down factor 2nd ant", SCALEFACTOREPOLRX2);
+  getSetting("H pol scale down factor 2nd ant", SCALEDOWNHPOLRX2);
+  getSetting("E pol 2nd ant dead", EPOLRX2ZERO);
+  getSetting("H pol 2nd ant dead", HPOLRX2ZERO);
+  getSetting("RCP 2nd ant dead", RCPRX2ZERO);
+  getSetting("LCP 2nd ant dead", LCPRX2ZERO);
+
+  if (WHICH==0 && !(SCALEDOWNEPOLRX1==1 && RCPRX2ZERO==1)){
+    std::cout << "Non-default setting:  WHICH= " << WHICH << " and EPOLRX2ZERO= " << EPOLRX2ZERO << std::endl;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  getSetting("Add noise to signal", SIGNAL_FLUCT);
+
+  if (SIGNAL_FLUCT!=1){
+    std::cout << "Non-default setting:  SIGNAL_FLUCT= " << SIGNAL_FLUCT << std::endl;
+  }
+  getSetting("Zero signal", ZEROSIGNAL);
+  getSetting("Random rotation polarization", RANDOMISEPOL);
+  int useLPM;
+  getSetting("LPM effect", useLPM);
+  sig1->SetLPM(useLPM);
+
+  if (sig1->GetLPM()!=1){
+    std::cout << "Non-default setting:  LPM= " << sig1->GetLPM() << std::endl;
+  }
+  double jamieFactor = 0;
+  getSetting("E-field factor", jamieFactor);
+  sig1->SetJaime_Factor(jamieFactor);
+  getSetting("Thermal noise factor", THERMALNOISE_FACTOR);
+
+  if (THERMALNOISE_FACTOR!=1){
+    std::cout << "Non-default setting:  THERMALNOISE_FACTOR= " << THERMALNOISE_FACTOR << std::endl;
+  }
+
+  getSetting("Disable polarization vectors", REMOVEPOLARIZATION);
+
+  if (REMOVEPOLARIZATION==1){
+    std::cout << "Non-default setting:  Polarizations turned off!" << std::endl;
+  }
+  getSetting("Use pulser spectrum", anita1->PULSER);
+  if (anita1->PULSER!=0){
+    std::cout << "Warning! Injecting a pulser spectrum- not simulating neutrinos!  PULSER = "
+	      << anita1->PULSER << std::endl;
+  }
+
+  getSetting("Centre one phi-sector", bn1->CENTER);
+
+  if (bn1->CENTER!=0){
+    std::cout << "WARNING!!  Rotating payload to center one phi sector on the incoming signal for each event."
+	      << std::endl;
+  }
+
+  getSetting("Force vertical polarization", ray1->MAKEVERTICAL);
+
+  if (ray1->MAKEVERTICAL!=0){
+    std::cout << "WARNING!!  Rotating polarization so it is always vertical approaching the payload" << std::endl;
+  }
+
+
+
+
+
+
+
+
+
+  getSetting("Slopeyness", SLOPEYSIZE);
+  if (SLOPEYSIZE!=0.012){
+    std::cout << "Non-default setting:  SLOPEYSIZE= " << SLOPEYSIZE << std::endl;
+  }
+  getSetting("Enable slopeyness", SLOPEY);
+  if (SLOPEY!=1){
+    std::cout << "Non-default setting:  SLOPEY= " << SLOPEY << std::endl;
+  }
+  getSetting("Depth dependent refractive index", NOFZ);
+  if (NOFZ!=1){
+    std::cout << "Non-default setting:  NOFZ= " << NOFZ << std::endl;
+  }
+  getSetting("Variable attenuation length", VARIABLE_ATTEN);
+  if (VARIABLE_ATTEN!=0){
+    std::cout << "Non-default setting:  VARIABLE_ATTEN= " << VARIABLE_ATTEN << std::endl;
+  }
+  getSetting("Constant ice thickness", CONSTANTICETHICKNESS);
+
+  if (CONSTANTICETHICKNESS==1){
+    std::cout << "Non-default setting:  CONSTANTICETHICKNESS= " << CONSTANTICETHICKNESS << std::endl;
+  }
+
+  getSetting("Antarctic ice model", ICE_MODEL);
   if ((CONSTANTICETHICKNESS || FIXEDELEVATION) && ICE_MODEL != 0) {
     ICE_MODEL=0;
-    cout<<"Constant ice thickness and/or fixed elevation requested.  Using Crust 2.0 ice model.\n";
+    std::cout << "Constant ice thickness and/or fixed elevation requested.  Using Crust 2.0 ice model." << std::endl;
   } //use the Crust 2.0 data if set to constant icethickness or ground elevation
-    
-  if (ICE_MODEL==0)
-    cout << "Using Crust 2.0 ice model.\n";
-  else if (ICE_MODEL==1)
-    cout << "Using BEDMAP ice model.\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  FLATSURFACE=(int)atof(number.c_str());
-    
-  if (FLATSURFACE==1)
-    cout << "Non-default setting: all surface segments are flat.\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  FIXEDELEVATION=(int)atof(number.c_str());
-    
-  if (FIXEDELEVATION==1)
-    cout << "Non-default setting:  FIXEDELEVATION= " << FIXEDELEVATION << "\n";
-    
-  //ice or salt
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  sig1->SetMedium(atoi(number.c_str()));
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  ROUGHNESS=(int)atoi(number.c_str()); 
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  ROUGHSIZE=(int)atof(number.c_str()); 
-    // edge length of screen used if there is roughness
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SCREENEDGELENGTH=(double)atof(number.c_str()); 
-  
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  FIRN=atoi(number.c_str()); 
-  if (FIRN==0)
-      cout << "Warning!  Non-standard parameter setting.  FIRN = " << FIRN << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  MOOREBAY=atoi(number.c_str());
-    
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  // The following are variables that have been used for modeling anita-lite
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SIGMA_FACTOR=(double)atof(number.c_str());
-    
-  if (SIGMA_FACTOR!=1)
-    cout << "Non-default setting:  settings->SIGMA_FACTOR= " << SIGMA_FACTOR << "\n";
-    
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  THETA_TH_FACTOR=(double)atof(number.c_str());
-    
-  if (THETA_TH_FACTOR!=1)
-    cout << "Non-default setting:  THETA_TH_FACTOR= " << THETA_TH_FACTOR << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  CHANCEINHELL_FACTOR=(double)atof(number.c_str());
-    
-  if (CHANCEINHELL_FACTOR!=1)
-    cout << "Non-default setting:  CHANCEINHELL_FACTOR= " << CHANCEINHELL_FACTOR << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SKIPCUTS=(int)atof(number.c_str());
-    
-  if (SKIPCUTS==1)
-    cout << "Non-default setting:  Skipping all cuts!\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  USEDIRECTIONWEIGHTS=(int)atof(number.c_str()); 
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  USEPOSITIONWEIGHTS=(int)atof(number.c_str()); 
-    
-  if (USEPOSITIONWEIGHTS==0)
-    cout << "Non-default setting:  Not selecting events within the horizon.\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  WEIGHTABSORPTION=(int)atoi(number.c_str()); 
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  horizontal_banana_points=(int)atof(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  vertical_banana_points=(int)atof(number.c_str());
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  FORSECKEL=(int)atoi(number.c_str()); 
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SHOWERTYPE=(int)atoi(number.c_str()); 
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  BORESIGHTS=atoi(number.c_str()); 
-    
-  if (BORESIGHTS==0)
-    cout << "Warning!  Non-standard parameter setting.  BORESIGHTS = " << BORESIGHTS << "\n";
-    
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  // Interactions
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  sig1->SetParameterization(atoi(number.c_str()));
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SIGMAPARAM=(int)atoi(number.c_str());
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  YPARAM=(int)atoi(number.c_str());
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  sec1->SECONDARIES=(int)atoi(number.c_str());
-    
-  if (sec1->SECONDARIES!=1)
-    cout << "Non-default setting:  SECONDARIES= " << sec1->SECONDARIES << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  sec1->TAUDECAY=(int)atoi(number.c_str());
-    
-  if (sec1->TAUDECAY!=1)
-    cout << "Non-default setting:  TAUDECAY= " << sec1->TAUDECAY << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  ATMOSPHERE=(int)atoi(number.c_str());
-    
-  if (ATMOSPHERE!=1)
-    cout << "Non-default setting:  ATMOSPHERE= " << ATMOSPHERE << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  CONSTANTCRUST=(int)atof(number.c_str());
-    
-  if (CONSTANTCRUST==1)
-    cout << "Non-default setting:  CONSTANTCRUST= " << CONSTANTCRUST << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  CONSTANTY=(int)atoi(number.c_str()); // whether to use contant of 0.2 for y (1) yes or (0) no
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  bn1->MAXHORIZON=(int)atof(number.c_str()); // max distance from interaction point to horizon
 
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  taumodes=(int)atoi(number.c_str()); // tau modes (1 for flat distribution for y)
-    
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  // General settings
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  WHICHRAYS=(int)atoi(number.c_str());
-    
-  if (WHICHRAYS!=1)
-    cout << "Non-default setting:  WHICHRAYS= " << WHICHRAYS << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  WRITE_FILE=(int)atof(number.c_str());
-    
-  if (WRITE_FILE) cout<<"Writing CreateHorizons input file.\n";
-    
-  //  cout << "WRITE_FILE is " << WRITE_FILE << "\n";
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  anita1->SIGMA_THETA=(double)atof(number.c_str());
-    
-  if (anita1->SIGMA_THETA==1)
-    cout << "Non-default setting:  SIGMA_THETA = 1\n";
-    
-  anita1->SIGMA_THETA*=RADDEG; // immediately convert degrees to radians
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  anita1->FREQ_LOW=(double)atof(number.c_str()); 
-    
-  if (FREQ_LOW_SEAVEYS>anita1->FREQ_LOW)
-    FREQ_LOW_SEAVEYS=anita1->FREQ_LOW;
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  anita1->FREQ_HIGH=(double)atof(number.c_str());
-  BW=anita1->FREQ_HIGH-anita1->FREQ_LOW; // total bandwidth of simulation
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  // Slac
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SLAC=atoi(number.c_str()); 
-  // this rotates surface slope 10 degrees away from south pole
-    
-  if (SLAC==1)
-    cout << "Warning!  Non-standard parameter setting.  SLAC = " << SLAC << "\n";
-    
-  if (SLAC) {
-    foutput << "!!!!SLAC setting causes some settings to be superseded:\n";
-    FIRN=0; // no firn
-    foutput << "FIRN=0\n";
-    SLOPEY=0; // slopeyness off
-    foutput << "SLOPEY=0\n";
-    BORESIGHTS=1; // loop over boresights
-    foutput << "BORESIGHTS=1\n";
-    bn1->BN_ALTITUDE=4.22/0.3; // balloon altitude in ft.!!
-    foutput << "BN_ALTITUDE=4.22/0.3\n";
-    bn1->RANDOMIZE_BN_ORIENTATION=0; // don't randomize the balloon orientation
-    foutput << "RANDOMIZE_BN_ORIENTATION=0\n";
-    SKIPCUTS=1; // don't make chance in hell cuts
-    foutput << "SKIPCUTS=1\n";
-    SLACSLOPE=5.8; // slope of the ice in degrees
-    foutput << "SLACSLOPE=5.8\n";
-    SLACICELENGTH=5.02; // length of the block of ice
-    foutput << "SLACICELENGTH=5.02\n";
+  if (ICE_MODEL==0){
+    std::cout << "Using Crust 2.0 ice model." << std::endl;
   }
-    
-    
-    
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SLAC_HORIZDIST=(double)atof(number.c_str()); 
-  // horizontal distance from interaction point to payload
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SLACSLOPE=(double)atof(number.c_str()); 
-  // slope of the ice surface
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SLACICELENGTH=(double)atof(number.c_str()); 
-  // length of the block of ice
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  SLAC_HORIZ_DEPTH=(double)atof(number.c_str()); 
-  // horizontal distance from interaction point to surface
-    
+  else if (ICE_MODEL==1){
+    std::cout << "Using BEDMAP ice model." << std::endl;
+  }
+
+  getSetting("Flat surface", FLATSURFACE);
+  if (FLATSURFACE==1){
+    std::cout << "Non-default setting: all surface segments are flat." << std::endl;
+  }
+
+  getSetting("Fixed ice elevation", FIXEDELEVATION);
+  if (FIXEDELEVATION==1){
+    std::cout << "Non-default setting:  FIXEDELEVATION= " << FIXEDELEVATION << std::endl;
+  }
+
+  int medium = 0;
+  getSetting("Medium", medium);
+  sig1->SetMedium(medium);
+
+  getSetting("Enable surface roughness", ROUGHNESS);
+  getSetting("Surface roughness", ROUGHSIZE);
+  getSetting("Screen edge length [meters]", SCREENEDGELENGTH);
+  getSetting("FIRN", FIRN);
+  if (FIRN==0){
+    std::cout << "Warning!  Non-standard parameter setting.  FIRN = " << FIRN << std::endl;
+  }
+  getSetting("Which attenuation length", MOOREBAY);
+
+
+
+
+
+
+
+
+  getSetting("Cross-section factor", SIGMA_FACTOR);
+  if (SIGMA_FACTOR!=1){
+    std::cout << "Non-default setting:  settings->SIGMA_FACTOR= " << SIGMA_FACTOR << std::endl;
+  }
+  getSetting("Theta_th factor", THETA_TH_FACTOR);
+  if (THETA_TH_FACTOR!=1){
+    std::cout << "Non-default setting:  THETA_TH_FACTOR= " << THETA_TH_FACTOR << std::endl;
+  }
+  getSetting("Chance in hell factor", CHANCEINHELL_FACTOR);
+  if (CHANCEINHELL_FACTOR!=1){
+    std::cout << "Non-default setting:  CHANCEINHELL_FACTOR= " << CHANCEINHELL_FACTOR << std::endl;
+  }
+  getSetting("Skip neutrinos", SKIPCUTS);
+  if (SKIPCUTS==1){
+    std::cout << "Non-default setting:  Skipping all cuts!" << std::endl;
+  }
+  getSetting("Restrict neutrino directions", USEDIRECTIONWEIGHTS);
+  getSetting("Restrict neutrino positions", USEPOSITIONWEIGHTS);
+  if (USEPOSITIONWEIGHTS==0){
+    std::cout << "Non-default setting:  Not selecting events within the horizon." << std::endl;
+  }
+  getSetting("Weight on absorption", WEIGHTABSORPTION);
+  getSetting("Phi points banana", horizontal_banana_points);
+  getSetting("Theta points banana", vertical_banana_points);
+  getSetting("Signal across frequencies", FORSECKEL);
+  getSetting("Shower type", SHOWERTYPE);
+  getSetting("Loop over boresights", BORESIGHTS);
+  if (BORESIGHTS==0){
+    std::cout << "Warning!  Non-standard parameter setting.  BORESIGHTS = " << BORESIGHTS << std::endl;
+  }
+
+
+
+
+
+
+
+  int askaryanParameterization = 0;
+  getSetting("Askaryan parameterization", askaryanParameterization);
+  sig1->SetParameterization(askaryanParameterization);
+
+  getSetting("Cross-section parameterization", SIGMAPARAM);
+  getSetting("Inelasticity parameterization", YPARAM);
+  getSetting("Secondary interactions", sec1->SECONDARIES);
+  if (sec1->SECONDARIES!=1){
+    std::cout << "Non-default setting:  SECONDARIES= " << sec1->SECONDARIES << std::endl;
+  }
+  getSetting("Tau decay as secondary interaction", sec1->TAUDECAY);
+  if (sec1->TAUDECAY!=1){
+    std::cout << "Non-default setting:  TAUDECAY= " << sec1->TAUDECAY << std::endl;
+  }
+  getSetting("Include atmosphere", ATMOSPHERE);
+  if (ATMOSPHERE!=1){
+    std::cout << "Non-default setting:  ATMOSPHERE= " << ATMOSPHERE << std::endl;
+  }
+  getSetting("Constant crust density", CONSTANTCRUST);
+  if (CONSTANTCRUST==1){
+    std::cout << "Non-default setting:  CONSTANTCRUST= " << CONSTANTCRUST << std::endl;
+  }
+  getSetting("Constant y", CONSTANTY);
+  getSetting("Max interaction distance", bn1->MAXHORIZON);
+  getSetting("Set tau modes", taumodes);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  getSetting("Which rays", WHICHRAYS);
+  if (WHICHRAYS!=1){
+    std::cout << "Non-default setting:  WHICHRAYS= " << WHICHRAYS << std::endl;
+  }
+  getSetting("CreateHorizons file", WRITE_FILE);
+  if (WRITE_FILE){
+    std::cout<<"Writing CreateHorizons input file." << std::endl;
+  }
+  getSetting("Theta resolution", anita1->SIGMA_THETA);
+  if (anita1->SIGMA_THETA==1){
+    std::cout << "Non-default setting:  SIGMA_THETA = 1" << std::endl;
+  }
+  anita1->SIGMA_THETA*=RADDEG; // immediately convert degrees to radians
+  getSetting("Low frequency", anita1->FREQ_LOW);
+
+  if (FREQ_LOW_SEAVEYS>anita1->FREQ_LOW){
+    FREQ_LOW_SEAVEYS=anita1->FREQ_LOW;
+  }
+  getSetting("High frequency", anita1->FREQ_HIGH);
+  BW = anita1->FREQ_HIGH - anita1->FREQ_LOW; // total bandwidth of simulation
+
+
+
+
+
+
+  getSetting("SLAC run", SLAC);
+  // this rotates surface slope 10 degrees away from south pole
+  if (SLAC==1){
+    std::cout << "Warning!  Non-standard parameter setting.  SLAC = " << SLAC << std::endl;
+  }
+  if (SLAC) {
+    foutput << "!!!!SLAC setting causes some settings to be superseded:" << std::endl;
+    FIRN=0; // no firn
+    foutput << "FIRN=0" << std::endl;
+    SLOPEY=0; // slopeyness off
+    foutput << "SLOPEY=0" << std::endl;
+    BORESIGHTS=1; // loop over boresights
+    foutput << "BORESIGHTS=1" << std::endl;
+    bn1->BN_ALTITUDE=4.22/0.3; // balloon altitude in ft.!!
+    foutput << "BN_ALTITUDE=4.22/0.3" << std::endl;
+    bn1->RANDOMIZE_BN_ORIENTATION=0; // don't randomize the balloon orientation
+    foutput << "RANDOMIZE_BN_ORIENTATION=0" << std::endl;
+    SKIPCUTS=1; // don't make chance in hell cuts
+    foutput << "SKIPCUTS=1" << std::endl;
+    SLACSLOPE=5.8; // slope of the ice in degrees
+    foutput << "SLACSLOPE=5.8" << std::endl;
+    SLACICELENGTH=5.02; // length of the block of ice
+    foutput << "SLACICELENGTH=5.02" << std::endl;
+  }
+  getSetting("SLAC horizontal distance", SLAC_HORIZDIST);
+  getSetting("SLAC ice slope", SLACSLOPE);
+  getSetting("SLAC block length", SLACICELENGTH);
+  getSetting("SLAC interaction depth", SLAC_HORIZ_DEPTH);
   SLAC_DEPTH=tan(SLACSLOPE*RADDEG)*(SLACICELENGTH-SLAC_HORIZ_DEPTH) // height from lowest point of ice
     +21.375*CMINCH/100.; // height from beam to lowest point of ice
-    
-    
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  COHERENT_THRESHOLD = double (atof(number.c_str()));
+
+
+
+
+
+
+
+
+  getSetting("Coherent power threshold", COHERENT_THRESHOLD );
+
+
 
   // default values are 0
-  APPLYIMPULSERESPONSE=0;       
-  USETIMEDEPENDENTTHRESHOLDS=0; 
-  
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  APPLYIMPULSERESPONSE=atoi(number.c_str());
-  std::cout << "Apply impulse response to digitizer path: " << APPLYIMPULSERESPONSE << std::endl;
+  APPLYIMPULSERESPONSEDIGITIZER=0;
+  APPLYIMPULSERESPONSETRIGGER=0;
+  USETIMEDEPENDENTTHRESHOLDS=0;
+  getSetting("Digitizer path impulse response", APPLYIMPULSERESPONSEDIGITIZER);
+  std::cout << "Apply impulse response to digitizer path: " << APPLYIMPULSERESPONSEDIGITIZER << std::endl;
+  getSetting("Trigger path impulse response", APPLYIMPULSERESPONSETRIGGER);
+  std::cout << "Apply impulse response to trigger path: " << APPLYIMPULSERESPONSETRIGGER << std::endl;
 
 #ifdef ANITA_UTIL_EXISTS
-  if ( APPLYIMPULSERESPONSE && WHICH!=8 && WHICH!=9) {
-    cout << "Signal chain impulse response is only available for anita-2 and anita-3.\n";
+  if ( (APPLYIMPULSERESPONSEDIGITIZER || APPLYIMPULSERESPONSETRIGGER) && WHICH!=8 && WHICH!=9) {
+    std::cout << "Signal chain impulse response is only available for anita-2 and anita-3." << std::endl;
     exit(1);
   }
 #endif
 #ifndef ANITA_UTIL_EXISTS
-  if (APPLYIMPULSERESPONSE){
-    cout << "Signal chain impulse response can only be applied when the Anita tools are sourced.\n";
+  if (APPLYIMPULSERESPONSEDIGITIZER || APPLYIMPULSERESPONSETRIGGER){
+    std::cout << "Signal chain impulse response can only be applied when the Anita tools are sourced." << std::endl;
     exit(1);
   }
 #endif
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  Tools::GetNextNumberAsString(inputsfile,foutput,number);
-  USETIMEDEPENDENTTHRESHOLDS=atoi(number.c_str());
+  getSetting("Time dependent thresholds", USETIMEDEPENDENTTHRESHOLDS);
   std::cout << "Use time-dependent thresholds: " << USETIMEDEPENDENTTHRESHOLDS << std::endl;
 
   if ( USETIMEDEPENDENTTHRESHOLDS && WHICH!=9) {
-    cout << "Time-dependent thresholds are only available for anita-3.\n";
+    std::cout << "Time-dependent thresholds are only available for anita-3." << std::endl;
     exit(1);
   }
-  getline(inputsfile,junk);
-  foutput << junk << "\n";
-  Tools::GetNextNumberAsString(inputsfile,foutput,number); 
-  NOISEFROMFLIGHT=atoi(number.c_str());
-  std::cout << "Use noise from flight: " << NOISEFROMFLIGHT << std::endl;
-#ifdef ANITA_UTIL_EXISTS
-  if ( NOISEFROMFLIGHT && WHICH!=9) {
-    cout << "Noise from flight only available for anita-3.\n";
+
+
+  getSetting("Digitizer noise from flight", NOISEFROMFLIGHTDIGITIZER);
+  std::cout << "Use noise from flight for digitizer path: " << NOISEFROMFLIGHTDIGITIZER << std::endl;
+
+  getSetting("Trigger noise from flight", NOISEFROMFLIGHTTRIGGER);
+  std::cout << "Use noise from flight for trigger path: " << NOISEFROMFLIGHTTRIGGER << std::endl;
+
+#ifndef ANITA3_EVENTREADER
+  if ( (NOISEFROMFLIGHTDIGITIZER || NOISEFROMFLIGHTTRIGGER) && WHICH!=9) {
+    std::cout << "Noise from flight only available for anita-3." << std::endl;
+    exit(1);
+  }
+  if (!APPLYIMPULSERESPONSETRIGGER && NOISEFROMFLIGHTTRIGGER ){
+    std::cout << "Noise from flight can only be applied to trigger path if impulse reponse is also used " << std::endl;
     exit(1);
   }
 #endif
+
 #ifndef ANITA_UTIL_EXISTS
-  if (NOISEFROMFLIGHT){
-    cout << "Noise from flight can only be applied when the Anita tools are sourced.\n";
+  if (NOISEFROMFLIGHTDIGITIZER || NOISEFROMFLIGHTTRIGGER){
+    std::cout << "Noise from flight can only be applied when the Anita tools are sourced." << std::endl;
     exit(1);
   }
 #endif
-  Tools::GetNextNumberAsString(inputsfile,foutput,number); 
-  MINBIAS=atoi(number.c_str());
-  if (MINBIAS) std::cout << "Generate Minimum Bias sample: " << MINBIAS << std::endl;
+
+  getSetting("Min bias", MINBIAS);
+  if (MINBIAS){
+    std::cout << "Generate Minimum Bias sample: " << MINBIAS << std::endl;
+  }
+
+// Efficiency scan: 0 # Do a trigger efficiency scan (need to turn on skip cuts and min bias flag as well)
+// Central phi-sector: 15       # Central phi sector [numbers are 1-16]
+// Off-axis attenuation: 0, 0, -35, -35, 0 # Attenuation applied to central phi sectors and the two adjecent ones (when -1 no signal in those antennas)
 
 
-  
+  getSetting("Efficiency scan", TRIGGEREFFSCAN);
+  getSetting("Central phi-sector", anita1->trigEffScanPhi);
+
+  std::vector<double> effiencyScanOffAxisAttenuations;
+  getSetting("Off-axis attenuation", effiencyScanOffAxisAttenuations);
+
+  for (unsigned int i=0; i < effiencyScanOffAxisAttenuations.size(); i++){
+    anita1->trigEffScanAtt[i] = effiencyScanOffAxisAttenuations.at(i);
+  }
+
+  if (TRIGGEREFFSCAN){
+    std::cout << "Let's do a trigger efficiency scan!" << std::endl;
+    std::cout << "Central phi sector is " << anita1->trigEffScanPhi << std::endl;
+    std::cout << "Attenuations are ";
+    for (int i=0;i<5;i++) std::cout << anita1->trigEffScanAtt[i] << " ";
+    std::cout << std::endl;
+  }
+
 } //method ReadInputs
+
+
+
+
+
+
+
+
+
+
+
+
+
+void Settings::complainAboutNotFindingKey(const TString& key){
+  std::cerr << "Warning in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET
+	    << ", unable to find setting " << ANSI_COLOR_RED << key << ANSI_COLOR_RESET << std::endl;
+}
+
+
+void Settings::getSetting(const char* key, int& value){
+
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    complainAboutNotFindingKey(key);
+  }
+  else{
+    // found a match for the key
+    value = atoi(it->second.Data());
+  }
+}
+
+void Settings::getSetting(const char* key, float& value){
+
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    complainAboutNotFindingKey(key);
+  }
+  else{
+    // found a match for the key
+    value = atof(it->second.Data());
+  }
+}
+
+void Settings::getSetting(const char* key, double& value){
+
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    complainAboutNotFindingKey(key);
+  }
+  else{
+    // found a match for the key
+    value = atof(it->second.Data());
+  }
+}
+
+void Settings::getSetting(const char* key, std::vector<int>& valueArray){
+
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    complainAboutNotFindingKey(key);
+  }
+  else{
+    // found a match for the key
+    parseValueArray(it->second.Data(), valueArray);
+  }
+}
+
+void Settings::getSetting(const char* key, std::vector<float>& valueArray){
+
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    complainAboutNotFindingKey(key);
+  }
+  else{
+    // found a match for the key
+    parseValueArray(it->second.Data(), valueArray);
+  }
+}
+
+void Settings::getSetting(const char* key, std::vector<double>& valueArray){
+
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    complainAboutNotFindingKey(key);
+  }
+  else{
+    // found a match for the key
+    parseValueArray(it->second.Data(), valueArray);
+  }
+}
+
+void Settings::parseValueArray(const char* valueString, std::vector<int>& values){
+  TString theValueString(valueString);
+
+  TObjArray* theValues = theValueString.Tokenize(",");
+  for(int i=0; i < theValues->GetEntries(); ++i){
+
+    TObjString* token = (TObjString*) theValues->At(i);
+    int value = atoi(token->GetString().Data());
+    values.push_back(value);
+  }
+}
+
+void Settings::parseValueArray(const char* valueString, std::vector<float>& values){
+  TString theValueString(valueString);
+
+  TObjArray* theValues = theValueString.Tokenize(",");
+  for(int i=0; i < theValues->GetEntries(); ++i){
+
+    TObjString* token = (TObjString*) theValues->At(i);
+    float value = atof(token->GetString().Data());
+    values.push_back(value);
+  }
+}
+
+void Settings::parseValueArray(const char* valueString, std::vector<double>& values){
+  TString theValueString(valueString);
+
+  TObjArray* theValues = theValueString.Tokenize(",");
+  for(int i=0; i < theValues->GetEntries(); ++i){
+
+    TObjString* token = (TObjString*) theValues->At(i);
+    double value = atof(token->GetString().Data());
+    values.push_back(value);
+  }
+}

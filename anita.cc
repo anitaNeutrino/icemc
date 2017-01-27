@@ -270,9 +270,27 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
  
     
     PERCENTBW=10; // subbands (not counting full band)
-    #ifdef ANITA_UTIL_EXISTS
-    if (settings1->APPLYIMPULSERESPONSE)   readImpulseResponse(settings1);
-    #endif
+
+
+    //scaling factor for signal that is divided in digitizer and trigger path 
+    scaleDigitizer = 1./sqrt(2);
+    scaleTrigger   = 1./sqrt(2);
+ 
+
+#ifdef ANITA_UTIL_EXISTS
+    // when using impulse responses scaling factors are 1
+    if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
+      readImpulseResponseDigitizer(settings1);
+      scaleDigitizer = 1.;
+    }
+    if (settings1->APPLYIMPULSERESPONSETRIGGER){
+      readImpulseResponseTrigger(settings1);
+      scaleTrigger = 1.;
+    }
+    if (settings1->TRIGGEREFFSCAN){
+      readTriggerEfficiencyScanPulser(settings1);
+    }
+#endif
     for (int i=0;i<NFREQ;i++) {
 		freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
 		avgfreq_rfcm[i]=0.;
@@ -362,7 +380,9 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     // assuming v(t) is real, then phase(neg)=-phase(pos)
     INTEGRATIONTIME=3.5E-9; // integration time of trigger diode
     TIMESTEP=(1./2.6)*1.E-9; // time step between samples
-    
+
+    for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
+
     DEADTIME=10.E-9; // dead time after a trigger
     energythreshold=3.;  // power threshold
 
@@ -1307,51 +1327,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     tglob->Branch("inu",&inu,"inu/I");
     tglob->Branch("passglobtrig",&passglobtrig,"passglobtrig[2]/I");
     tglob->Branch("l1_passing_allantennas",&l1_passing_allantennas,"l1_passing_allantennas[48]/I");
-    
-    
-    
-    
-    //for (int i=0;i<NPOINTS_NOISE;i++) {
-    
-    //ifreq=findIndex(freq,freq_noise[i],NFREQ,freq[0],freq[NFREQ-1]);
-    
-    // powerperfreq is in microWatts/MHz
-    // we divide by 10^12 to get it in Watts/Hz
-    // multiply by the df*impedence
-    // take sqrt to get V
-    // Then divide by df in MHz to get V/MHz
-    
-    
-    
-    //for (int j=0;j<5;j++) {
-    //if (ifreq!=-1)
-    //vnoise[j][ifreq]=sqrt(powerperfreq[i]*df*impedence/1.E12)/(df/1.E6);  // This should be in V/Mhz
-    
-    //}
-    
-    // } // loop over noise points
-    
-    // now want the energy in each band slice in diode integration time
-    // in Joules
-    for (int j=0;j<4;j++) {
-	// bwslice_enoise[j]=0.;
-	//     for (int k=0;k<NFREQ;k++) {
-	//       // square vnoise to get V^2/(MHz)^2
-	//       // multiply by df/1.E6 to get V^2/MHz
-	//       // divide by impedence to get Watts/MHz
-	//       // Divide by 1.E6 to get Watts/Hz = Joules
-	//       // this has the right units but I think it's integrated over the time of the whole waveform
-	//       bwslice_enoise[j]+=vnoise[j][k]*vnoise[j][k]*(df/1.E6)/impedence/1.E6;
-	//     }
-	//     bwslice_enoise[j]=bwslice_enoise[j]*INTEGRATIONTIME/(TIMESTEP*(double)nsamp); // this is the energy integrated over the time of the tunnel diode
-	
-	//   for (int i=0;i<NLAYERS_MAX;i++) {
-	//        bwslice_vnoise[i][j]=sqrt(bwslice_enoise[j]/INTEGRATIONTIME*impedence); // rms voltage I think- this is an approximation
-	//     }
-	//    cout << "bwslice_vnoise is " << bwslice_vnoise[0][j] << "\n";
-    }
-    
-    
+  
     
     
     // for antenna gains
@@ -4198,14 +4174,14 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
 
 
 #ifdef ANITA_UTIL_EXISTS
-void Anita::readImpulseResponse(Settings *settings1){
+void Anita::readImpulseResponseDigitizer(Settings *settings1){
 
   // Set deltaT to be used in the convolution
   deltaT = 1/(2.6*16);
   string graphNames[2][3];
   string fileName;
   double norm=0;
-  
+ 
   // For ANITA-2 we have 1 impulse response for VPOL and 1 for HPOL
   // For ANITA-3 we have 3 impulse responses (Top, Middle, Bottom ring) for VPOL and 3 for HPOL.
   // Set Graph names for ANITA-2 and ANITA-3
@@ -4261,7 +4237,7 @@ void Anita::readImpulseResponse(Settings *settings1){
 	int paveNum = 8533;
 	grTemp = new TGraph(nPoints,  newx, newy);
 
-	fSignalChainResponse[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
+	fSignalChainResponseDigitizer[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
 
 	delete grInt;
 	delete grTemp;
@@ -4291,6 +4267,103 @@ void Anita::readImpulseResponse(Settings *settings1){
   
   fRand = new TRandom3(settings1->SEED);
   
+}
+
+
+
+void Anita::readImpulseResponseTrigger(Settings *settings1){
+
+  // So far only available for ANITA-3
+  
+  // Set deltaT to be used in the convolution
+  deltaT = 1/(2.6*16);
+  string graphNames[2][3];
+  string fileName;
+  double norm=0;
+  
+  if(settings1->WHICH==9){
+    
+    fileName = "data/SignalChainImpulseResponseTrigger_anita3_temp.root";
+
+    // string spol[2] ={"V", "H"};
+    
+    for (int ipol=0;ipol<2;ipol++){
+      for (int iring=0;iring<3;iring++){
+	//	graphNames[ipol][iring]=Form("ImpulseResponse_%spol", spol[ipol].c_str());
+	graphNames[ipol][iring]=Form("ImpulseResponseTrigger");	
+      }
+    }
+    // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
+    norm = 48.;
+  }
+
+  // Read in input file
+  TFile fImpulse(fileName.c_str());
+  
+  if(!fImpulse.IsOpen()) {
+    std::cerr << "Couldn't read siganl chain impulse response from " << fileName << "\n";
+    exit(0);
+  } else {
+
+    for (int ipol=0;ipol<2;ipol++){
+      for (int iring=0;iring<3;iring++){
+	// Read graph
+	TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring].c_str());
+	if(!grTemp) {
+	  std::cerr << "Couldn't read siganl chain impulse response" << graphNames[ipol][iring] << " from file " << fileName << "\n";
+	  exit(0);
+	}
+	// Interpolate to high sampling rate that will be used for the convolution
+	TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); 
+	Int_t nPoints  = grInt->GetN();
+	Double_t *newx = grInt->GetX();
+	Double_t *newy = grInt->GetY();
+	// Normalise
+	for (int i=0;i<nPoints;i++) newy[i]=newy[i]*norm;
+	// Pave to 0
+	int paveNum = 8533;
+	grTemp = new TGraph(nPoints,  newx, newy);
+
+	fSignalChainResponseTrigger[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
+
+	delete grInt;
+	delete grTemp;
+      }
+    }
+    
+  }
+  
+}
+
+
+void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
+  
+  if(settings1->WHICH==9){
+     
+     string fileName = "data/TriggerEfficiencyScanPulser_anita3.root";
+     TFile *f = new TFile(fileName.c_str(), "read");
+
+     TGraph *gPulser = (TGraph*)f->Get("gAvgPulser");
+
+     for (int i=0;i<gPulser->GetN();i++){
+       // Apply attenuation before interpolating
+       gPulser->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]/20);
+       // // Divide by sqrt(2) to account for splitter in setting
+       // gPulser->GetY()[i]/=TMath::Sqrt(2);
+     }
+     
+     TGraph *gPulserInt = FFTtools::getInterpolatedGraph(gPulser, 1/(2.6));
+     double *y = gPulserInt->GetY();
+     for (int i=0;i<HALFNFOUR;i++){
+       trigEffScanPulse[i]=y[i];
+       // cout << gPulserInt->GetX()[i] << " " << trigEffScanPulse[i] << endl;
+     }
+
+     delete gPulserInt;
+     delete gPulser;
+     f->Close();
+  }
+ 
 }
 
 #endif
