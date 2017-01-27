@@ -493,12 +493,6 @@ int main(int argc,  char **argv) {
   string run_num;//current run number as string
   int run_no = 0;//current run number as integer
 
-  ifstream inputsfile(input.c_str());
-  if (!inputsfile.good()) {
-    cout << "Can't find inputs file.\n";
-    exit(1);
-  }
-
   if( (argc%3!=1)&&(argc%2!=1)) {
     cout << "Syntax for options: -i inputfile -o outputdir -r run_number\n";
     return 0;
@@ -520,8 +514,6 @@ int main(int argc,  char **argv) {
       case 'i':
         input=optarg;
         cout << "Changed input file to: " << input << endl;
-        inputsfile.close();
-        inputsfile.open(input.c_str());
         break;
       case 'o':
         settings1->outputdir=optarg;
@@ -594,9 +586,7 @@ int main(int argc,  char **argv) {
   Roughness *rough1=new Roughness(); // create new instance of the roughness class
   Taumodel *taus1 = new Taumodel();
   // input parameters
-  settings1->readSettingsFile("inputs.anita3.yaml");
-  settings1->ReadInputs(inputsfile,  foutput,  anita1,  sec1,  sig1,  bn1,  ray1, NNU, RANDOMISEPOL);
-
+  settings1->ReadInputs(input.c_str(),  foutput,  anita1,  sec1,  sig1,  bn1,  ray1, NNU, RANDOMISEPOL);
 
 
   settings1->SEED=settings1->SEED + run_no;

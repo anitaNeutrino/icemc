@@ -16,15 +16,15 @@ git clone https://github.com/anitaNeutrino/icemc
 ``` bash
 make
 ```
-The Makefile is currently in a sorry state and may require some love by uncommenting or commenting out various flags.
-Makefiles are a dark art so send an email, or message us in the slack [#anita_simulation](https://anitamission.slack.com/messages/anita_simulation/) or [#github_commits](https://anitamission.slack.com/messages/github_commits/) rooms if you need help.
-
+Currently the Makefile tries to figure out whether to compile against the ANITA libraries by looking for the `ANITA_UTIL_INSTALL_DIR` environment variable.
+The Makefile may require some love by uncommenting or commenting out various site specific flags at the top.
+Makefiles are a dark art so if you need help send an email or message someone in the slack [#anita_simulation](https://anitamission.slack.com/messages/anita_simulation/) or [#github_commits](https://anitamission.slack.com/messages/github_commits/) rooms.
 
 ## Running icemc ##
 
 From the command line do
 ``` bash
-    ./icemc -i {inputFile} -o {outputDirectory} -r {runNumber} -n {numberOfNeutrinos} -t {triggerThreshold} -e {energyExponent}
+./icemc -i {inputFile} -o {outputDirectory} -r {runNumber} -n {numberOfNeutrinos} -t {triggerThreshold} -e {energyExponent}
 ```
 If parameters are not specified
 
@@ -38,7 +38,7 @@ If parameters are not specified
 
 To produce Anita-like output files, you must have the [libRootFftwWrapper](https://github.com/nichol77/libRootFftwWrapper) and [eventReaderRoot](https://github.com/anitaNeutrino/eventReaderRoot) libraries installed before compiling icemc.
 
-After that you will need to find and uncomment the line in icemc.cc `#define ANITA3_EVENTREADER`.
+After that you will need to find and uncomment the site specific flag `ANITA3_EVENTREADER=1` in the Makefile.
 The next time you compile and run icemc, the ANITA-like outputs will be produced automatically.
 The outputs also include the TruthAnitaEvent tree with the Monte Carlo truth information about the simulated events.
 

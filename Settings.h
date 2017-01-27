@@ -20,42 +20,20 @@ using std::ofstream;
 #include "TString.h"
 #include <map>
 
-// Prettify warnings because, why not?
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-#define ANSI_COLOR_YELLOW  "\x1b[33m"
-#define ANSI_COLOR_BLUE    "\x1b[34m"
-#define ANSI_COLOR_MAGENTA "\x1b[35m"
-#define ANSI_COLOR_CYAN    "\x1b[36m"
-#define ANSI_COLOR_RESET   "\x1b[0m"
-
 
 //! Reads in and stores input settings for the run
 
-typedef std::map<TString, TString> kvpMap;
 
 class Settings {
 
 protected:
 
-private:
-  kvpMap keyValuePairStrings; //< The raw key value pairs as string, from parsing the config file
-  Bool_t newKvpPassesSanityChecks(const TString& key, const TString& value, const char* fileName, int lineNum);
-  void complainAboutNotFindingKey(const TString& key);
-  void parseValueArray(const char* valueString, std::vector<int>& values);
-  void parseValueArray(const char* valueString, std::vector<float>& values);
-  void parseValueArray(const char* valueString, std::vector<double>& values);
-
 
 public:
 
   Settings();
-  Settings(const char* inputFileName);
-
   void Initialize();
-
   void printAllKeyValuePairStrings();
-  void readSettingsFile(const char* fileName);
 
   void getSetting(const char* key, int& value);
   void getSetting(const char* key, float& value);
@@ -65,10 +43,8 @@ public:
   void getSetting(const char* key, std::vector<float>& valueArray);
   void getSetting(const char* key, std::vector<double>& valueArray);
 
-  void readInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1, int& NNU, double& RANDOMISEPOL);
+  void ReadInputs(const char* fileName , ofstream &foutput, Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1, int& NNU, double& RANDOMISEPOL);
 
-
-  void ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1, int& NNU, double& RANDOMISEPOL);
 
 
   int UNBIASED_SELECTION;
@@ -217,5 +193,17 @@ public:
   int NOISEFROMFLIGHTTRIGGER;            // use thermal noise from flight in trigger path
   int NOISEFROMFLIGHTDIGITIZER;          // use thermal noise from flight in digitizer path
   int MINBIAS;                    // generate minimum bias sample
+
+private:
+  typedef std::map<TString, TString> kvpMap;
+
+  kvpMap keyValuePairStrings; //< The raw key value pairs as string, from parsing the config file
+  Bool_t newKvpPassesSanityChecks(const TString& key, const TString& value, const char* fileName, int lineNum);
+  void complainAboutNotFindingKey(const TString& key);
+  void parseValueArray(const char* valueString, std::vector<int>& values);
+  void parseValueArray(const char* valueString, std::vector<float>& values);
+  void parseValueArray(const char* valueString, std::vector<double>& values);
+  void parseSettingsFile(const char* fileName, std::ofstream& outputFile);
+
 };
 #endif

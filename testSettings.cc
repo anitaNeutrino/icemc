@@ -29,10 +29,28 @@
 #include "Primaries.h"
 #include "Taumodel.hh"
 
+
 int main(){
 
-  Settings s("inputs.anita3.conf");
-  s.printAllKeyValuePairStrings();
+  Settings s;
+
+
+  std::ofstream outputsFile("/tmp/outputs.txt");
+
+  Balloon *bn1=new Balloon(); // instance of the balloon
+  Anita *anita1=new Anita();// right now this constructor gets banding info
+  Secondaries *sec1=new Secondaries();
+  Signal *sig1=new Signal();
+  Ray *ray1=new Ray(); // create new instance of the ray class
+  // input parameters
+  int NNU;
+  double RANDOMISEPOL;
+  s.ReadInputs("inputs.anita3.conf", outputsFile,  anita1,  sec1,  sig1,  bn1,  ray1, NNU, RANDOMISEPOL);
+
+
+
+
+  //  s.printAllKeyValuePairStrings();
 
   std::cout << std::endl << std::endl;
 
@@ -53,26 +71,18 @@ int main(){
   std::cout << std::endl;
 
 
-
+  // std::cout << "Now about to try and get a setting that doesn't exist" << std::endl;
   const char* nonExistentKey = "adsfasdfasdfasdf";
+  std::cout << "Now about to try and get a setting, called " << nonExistentKey << ", that doesn't exist..." << std::endl;
   std::vector<double> shouldBeEmpty;
   s.getSetting(nonExistentKey, shouldBeEmpty);
+  std::cout << std::endl;
 
-
-
-  std::ifstream inputsFile("inputs.txt");
-  std::ofstream outputsFile("/tmp/outputs.txt");
-
-  Balloon *bn1=new Balloon(); // instance of the balloon
-  Anita *anita1=new Anita();// right now this constructor gets banding info
-  Secondaries *sec1=new Secondaries();
-  Signal *sig1=new Signal();
-  Ray *ray1=new Ray(); // create new instance of the ray class
-  // input parameters
-  int NNU;
-  double RANDOMISEPOL;
-  s.ReadInputs(inputsFile, outputsFile,  anita1,  sec1,  sig1,  bn1,  ray1, NNU, RANDOMISEPOL);
-
+  delete ray1;
+  delete sig1;
+  delete sec1;
+  delete anita1;
+  delete bn1;
 
 
   return 0;

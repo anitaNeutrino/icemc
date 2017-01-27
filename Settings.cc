@@ -25,6 +25,18 @@
 #include "TObjString.h"
 
 
+
+// Prettify warnings because, why not?
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
+
+
 /**
  * Default constructor
  *
@@ -37,18 +49,6 @@ Settings::Settings() {
 
 
 
-/**
- * Constructor taking filename
- *
- * @param fileName
- */
-Settings::Settings(const char* fileName){
-  Initialize();
-  readSettingsFile(fileName);
-}
-
-
-
 
 
 /**
@@ -57,16 +57,25 @@ Settings::Settings(const char* fileName){
  *
  * @param fileName the name of the settings file to read
  */
-void Settings::readSettingsFile(const char* fileName){
+void Settings::parseSettingsFile(const char* fileName, std::ofstream& outputFile){
 
   std::ifstream settingsFile(fileName);
 
   // Print error message if I can't read the file
   if(!settingsFile.is_open()){
-    std::cerr << "Warning in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET
+    std::cerr << "Error in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET
 	      << ", could not open file " << ANSI_COLOR_RED << fileName << ANSI_COLOR_RESET << std::endl;
+    exit(1);
   }
   else{
+
+    time_t rawtime;
+    struct tm * timeinfo;
+    time (&rawtime);
+    timeinfo = localtime (&rawtime);
+    outputFile << "Current date and time are: " << asctime(timeinfo) << std::endl;
+
+
     int lineNum = 1;
 
     // Read every line in the file...
@@ -74,6 +83,9 @@ void Settings::readSettingsFile(const char* fileName){
 
       std::string thisLine;
       std::getline(settingsFile, thisLine);
+
+      // Copy to output file
+      outputFile << thisLine << std::endl;
 
       // First cut out the comment, which is all characters after the first #, including the #
       std::size_t found = thisLine.find("#");
@@ -245,17 +257,12 @@ void Settings::Initialize() {
 
 
 
-void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1, int& NNU, double& RANDOMISEPOL) {
+void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
+			  Anita* anita1, Secondaries* sec1, Signal* sig1,
+			  Balloon* bn1, Ray* ray1,
+			  int& NNU, double& RANDOMISEPOL) {
 
-
-  time_t rawtime;
-  struct tm * timeinfo;
-
-  time ( &rawtime );
-  timeinfo = localtime ( &rawtime );
-
-  foutput << "Current date and time are: " << asctime (timeinfo) << "\n";
-
+  parseSettingsFile(inputFileName, foutput);
 
   getSetting("Number of neutrinos", NNU);
   getSetting("Energy exponent", EXPONENT);
@@ -822,7 +829,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
   getSetting("Trigger noise from flight", NOISEFROMFLIGHTTRIGGER);
   std::cout << "Use noise from flight for trigger path: " << NOISEFROMFLIGHTTRIGGER << std::endl;
 
-#ifdef ANITA_UTIL_EXISTS
+#ifndef ANITA3_EVENTREADER
   if ( (NOISEFROMFLIGHTDIGITIZER || NOISEFROMFLIGHTTRIGGER) && WHICH!=9) {
     std::cout << "Noise from flight only available for anita-3." << std::endl;
     exit(1);
@@ -831,6 +838,9 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
     std::cout << "Noise from flight can only be applied to trigger path if impulse reponse is also used " << std::endl;
     exit(1);
   }
+#endif
+
+#ifndef ANITA_UTIL_EXISTS
   if (NOISEFROMFLIGHTDIGITIZER || NOISEFROMFLIGHTTRIGGER){
     std::cout << "Noise from flight can only be applied when the Anita tools are sourced." << std::endl;
     exit(1);
