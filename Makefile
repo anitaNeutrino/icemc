@@ -8,23 +8,37 @@
 include Makefile.arch
 
 #------------------------------------------------------------------------------
-#brings in the few minossoft things i need
+
+################################################################################
+# Site specific flags
+################################################################################
+# Toggle these as needed to get things to install
+
 #BOOSTFLAGS = -I boost_1_48_0
-
 # commented out for kingbee and older versions of gcc
-#CPPSTD = c++11
+CPPSTD= c++11
+ANITA3_EVENTREADER=1
 
-#CC = gcc-4.8
-#CXX = g++-4.8
-#LD = $(CC)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+################################################################################
 
 ifeq ($(CPPSTD), c++11)
 CPPSTD_FLAGS = -std=c++11
-
-#ifeq ($(CXX), clang++)
-#CPPSTD_FLAGS += -stdlib=libc++
-#endif
-
 else
 # If not compiling with C++11 support, all occurrences of "constexpr"
 # must be replaced with "const", because "constexpr" is a keyword
@@ -44,91 +58,76 @@ else
 CPPSTD_FLAGS = -Dconstexpr=const -std=c++0x
 endif
 
-GENERAL_FLAGS = -pipe
-OPTIMIZE_FLAGS = -O2
-DEBUG_FLAGS = -g -ggdb
-PROFILING_FLAGS =
-ARCHITECTURE_FLAGS = -m64 -pthread
-WARN_FLAGS = -W -Wall -Wextra -Woverloaded-virtual# -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable
 
-CXXFLAGS += $(GENERAL_FLAGS) $(CPPSTD_FLAGS) $(ARCHITECTURE_FLAGS) $(OPTIMIZE_FLAGS) $(WARN_FLAGS) $(ROOTCFLAGS) $(INC_ANITA_UTIL) $(FFTFLAG)
 
-#CXXFLAGS += $(CPPSTD_FLAGS) -g -O2 $(INC_ANITA_UTIL) $(BOOSTFLAGS) $(WARN_FLAGS)
+# Uses the standard ANITA environment variable to figure
+# out if ANITA libs are installed
+ifdef ANITA_UTIL_INSTALL_DIR
+ANITA_UTIL_EXISTS=1
 
-OPTFLAGS  = -O2
+ANITA_UTIL_LIB_DIR=${ANITA_UTIL_INSTALL_DIR}/lib
+ANITA_UTIL_INC_DIR=${ANITA_UTIL_INSTALL_DIR}/include
+LD_ANITA_UTIL=-L$(ANITA_UTIL_LIB_DIR) -lAnitaEvent -lRootFftwWrapper
+INC_ANITA_UTIL=-I$(ANITA_UTIL_INC_DIR)
+ANITA_UTIL_ETC_DIR=$(ANITA_UTIL_INSTALL_DIR)/etc
+endif
+
+ifdef ANITA_UTIL_EXISTS
+CXXFLAGS += -DANITA_UTIL_EXISTS
+endif
+
+ifdef ANITA3_EVENTREADER
+CXXFLAGS += -DANITA3_EVENTREADER
+endif
+
+GENERAL_FLAGS = -g -O2 -pipe -m64 -pthread
+WARN_FLAGS = -W -Wall -Wextra -Woverloaded-virtual
+# -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable
+
+CXXFLAGS += $(GENERAL_FLAGS) $(CPPSTD_FLAGS) $(WARN_FLAGS) $(ROOTCFLAGS) $(INC_ANITA_UTIL)
+
 DBGFLAGS  = -pipe -Wall -W -Woverloaded-virtual -g -ggdb -O0 -fno-inline
 
 DBGCXXFLAGS = $(DBGFLAGS) $(ROOTCFLAGS) $(BOOSTFLAGS)
+LDFLAGS  += $(CPPSTD_FLAGS) $(LD_ANITA_UTIL) -I$(BOOST_ROOT) -L.
 
-LDFLAGS  += $(CPPSTD_FLAGS) -g $(LD_ANITA_UTIL) -I$(BOOST_ROOT) -L.
-#LDFLAGS  += $(CPPSTD_FLAGS) -g $(LD_ANITA_UTIL) -I$(BOOST_ROOT) $(ROOTLDFLAGS) -L.
+# Mathmore not included in the standard ROOT libs
+LIBS += -lMathMore
 
+CLASS_HEADERS = rx.hpp Taumodel.hh
+DICT = classdict
+OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o trigger.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o Settings.o $(DICT).o Taumodel.o
 
-LIBS += -lMathMore $(FFTLIBS)
-
-HEADERS	  = rx.hpp Taumodel.hh
-##ANITA_DATA_HEADERS = include/RawAnitaEvent.h include/UsefulAnitaEvent.h include/RawAnitaHeader.h include/AnitaConventions.h include/AnitaGeomTool.h include/AnitaPacketUtil.h include/simpleStructs.h
-ICEMCO    = vector.o position.o earthmodel.o balloon.o icemodel.o trigger.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o Settings.o classdict.o Taumodel.o
-ICEMCS    = vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc trigger.cc signal.cc ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc counting.cc Settings.cc classdict.C Taumodel.cc
-
-# ICEMC     = icemc$(ExeSuf)
-
-BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf)
-
-OBJS          = $(CONDTRKO) $(ICEMCO)
-
-# PROGRAMS      = $(ICEMC)
-
+BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf)
 
 #------------------------------------------------------------------------------
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf)
 
-##ANITADATALIB = libAnitaEvent.$(DllSuf)
-
-##$(ANITADATALIB):
-	@cd anita_data_format; make all; make install
-
 all:            $(BINARIES)
 
-$(BINARIES): %: %.$(SrcSuf) $(ICEMCO)
-		$(LD) $(CXXFLAGS) $(LDFLAGS) $(ICEMCO) $(LIBS) $< $(OutPutOpt) $@
+$(BINARIES): %: %.$(SrcSuf) $(OBJS)
+		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $< $(OutPutOpt) $@
 		@echo "$@ done"
-
 
 .PHONY: clean
 clean:
-		@rm -f $(OBJS) core classdict.* icemc
-##@cd anita_data_format; make clean
+		@rm -f $(OBJS) classdict.* $(BINARIES)
 
 distclean:      clean
-		@rm -f $(PROGRAMS) $(ICEMCSO) $(ICEMCLIB) *dict.* *.def *.exp \
+		@rm -f $(OBJS) $(BINAIRES) $(DICT)* *.def *.exp \
 		   *.ps *.so *.lib *.dll *.d *.log .def so_locations
 		@rm -rf cxx_repository core* classdict.* icemc
 
-.PHONY: debug
-debug: CXXFLAGS = $(DBGCXXFLAGS)
-debug: LDFLAGS = -O0 -g -ggdb
-debug: 		$(ICEMC)
-		@echo "Compile in $@ mode done"
+$(DICT).C : $(HEADERS)
+		@echo "<**And here's the dictionary...**>" $<
+		@rm -f *Dict*
+		rootcint $@ -c -p -I./ $(INC_ANITA_UTIL) $(CLASS_HEADERS) LinkDef.h
 
+%.$(ObjSuf) : %.$(SrcSuf) %.h
+	@echo "<**Compiling**> "$<
+	$(LD) $(CXXFLAGS) -c $< -o $@
 
-.PHONY: run
-run:
-	  ./$(ICEMC)
-
-
-
-.SUFFIXES: .$(SrcSuf)
-
-###
-
-icemc.$(ObjSuf):
-
-classdict.C:	$(HEADERS)
-	@echo "Generating dictionary…"
-	@rm -f classdict*
-	rootcint classdict.C -c $(ANITA_DATA_HEADERS) $(HEADERS) LinkDef.h
-
-.$(SrcSuf).$(ObjSuf):
-	$(CXX) $(CXXFLAGS) -c $<
+%.$(ObjSuf) : %.C
+	@echo "<**Compiling**> "$<
+	$(LD) $(CXXFLAGS) $ -c $< -o  $@

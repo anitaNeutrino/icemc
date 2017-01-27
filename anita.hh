@@ -12,6 +12,8 @@
 #include "FFTtools.h"
 #endif
 
+#include "TF1.h"
+
 class RX;
 class TGraph;
 class TFile;
@@ -21,7 +23,6 @@ class Vector;
 class Position;
 class Balloon;
 class IceModel;
-class TF1;
 class Settings;
 class TRandom3;
 
