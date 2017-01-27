@@ -868,7 +868,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Central phi-sector", anita1->trigEffScanPhi);
 
   std::vector<double> effiencyScanOffAxisAttenuations;
-  getSetting("", effiencyScanOffAxisAttenuations);
+  getSetting("Off-axis attenuation", effiencyScanOffAxisAttenuations);
 
   for (unsigned int i=0; i < effiencyScanOffAxisAttenuations.size(); i++){
     anita1->trigEffScanAtt[i] = effiencyScanOffAxisAttenuations.at(i);
