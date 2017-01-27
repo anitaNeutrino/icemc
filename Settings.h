@@ -30,7 +30,7 @@ protected:
 
 private:
   kvpMap keyValuePairStrings; //< The raw key value pairs as string, from parsing the config file
-
+  Bool_t newKvpPassesSanityChecks(const TString& key, const TString& value, const char* fileName, int lineNum);
   void parseValueArray(const char* valueString, std::vector<int>& values);
   void parseValueArray(const char* valueString, std::vector<float>& values);
   void parseValueArray(const char* valueString, std::vector<double>& values);

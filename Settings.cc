@@ -19,7 +19,9 @@
 
 
 #include "String.h"
+
 #include "TString.h"
+#include "TRegexp.h"
 #include "TObjString.h"
 
 
@@ -61,21 +63,19 @@ void Settings::readSettingsFile(const char* fileName){
 
   // Print error message if I can't read the file
   if(!settingsFile.is_open()){
-    std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", could not open settings file " << fileName << std::endl;
+    std::cerr << "Warning in " << __FILE__ << ", could not open file " << fileName << std::endl;
   }
   else{
     int lineNum = 1;
+
     // Read every line in the file...
     while(!settingsFile.eof()){
+
       std::string thisLine;
       std::getline(settingsFile, thisLine);
 
-      // First cut out the comments, which all characters after the first #, including the # too
+      // First cut out the comment, which is all characters after the first #, including the #
       std::size_t found = thisLine.find("#");
-
-      // if(found!=std::string::npos){
-      //   std::cout << "COMMENT!" << "\t" << found << "\t" << thisLine.substr(found, std::string::npos) << std::endl;
-      // }
 
 
       // Here we switch to TString because of its lovely tokenization methods
@@ -91,18 +91,28 @@ void Settings::readSettingsFile(const char* fileName){
 
 	TString key = ((TObjString*) tokens->At(0))->GetString();
 	TString value = ((TObjString*) tokens->At(1))->GetString();
-	keyValuePairStrings[key.Data()] = value.Data();
 
-	// std::cout << tokens->GetEntries() << "\t" << thisLineCommentsRemoved.Data() << std::endl;
-	// std::cout << tokens->GetEntries() << "\t" << thisLineCommentsRemoved.Data() << std::endl;
-      }
-      else if(nTokens > 2){
-	std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ", I couldn't parse line " << lineNum
-		  << " of " << fileName << ". The line said... " << std::endl;
-	std::cerr << thisLine << std::endl;
+	Bool_t addVariable = newKvpPassesSanityChecks(key, value, fileName, lineNum);
+
+	if(addVariable){
+	  keyValuePairStrings[key.Data()] = value.Data();
+	}
+
       }
       else{
 
+	TRegexp reggie("[a-zA-Z0-9]");
+	Ssiz_t len = thisLineCommentsRemoved.Length();
+
+	Bool_t isAlphaNumeric = reggie.Index(thisLineCommentsRemoved, &len) != -1;
+
+	if(nTokens > 2 || isAlphaNumeric){
+	  // complain if there are more than two tokens, i.e. more that one colon.
+	  // complain if there are non whitespace characters but no colon.
+	  std::cerr << "Warning in " << __FILE__ << ". I couldn't parse line " << lineNum
+		    << " in " << fileName << ". It said: " << std::endl;
+	  std::cerr << thisLine << std::endl;
+	}
       }
       delete tokens;
 
@@ -113,7 +123,48 @@ void Settings::readSettingsFile(const char* fileName){
 
 
 
+/**
+ * Perform some basic checks on the key value pair parsed on this line
+ * Prints an appropriate warning message if there was a problem
+ * Gets it own function as the warnings are a little verbose
+ * @param key is the key (Setting name)
+ * @param value is the value (Setting value)
+ * @param fileName is the name of the input.conf file
+ * @param lineNum is the line being parsed.
+ *
+ * @return true if we should insert the key into the kvp map, false if there was a problem.
+ */
+Bool_t Settings::newKvpPassesSanityChecks(const TString& key, const TString& value, const char* fileName, int lineNum){
 
+  Bool_t isGood = true;
+
+  if(key.Length()==0){
+    std::cerr << "Warning in " << __FILE__ << ", " << fileName
+	      << " has a variable with no name at line " << lineNum << "." << std::endl;
+    isGood = false;
+  }
+
+  else if(value.Length()==0){
+    std::cerr << "Warning in " << __FILE__ << ", " << fileName
+	      << " has a variable with no value at line " << lineNum << "." << std::endl;
+    isGood = false;
+  }
+  else{
+    kvpMap::iterator it = keyValuePairStrings.find(key);
+
+    if(it!=keyValuePairStrings.end()){
+      std::cerr << "Warning in " << __FILE__ << ", " << fileName
+		<< " already has a variable named " << key.Data() << std::endl;
+      isGood = false;
+    }
+  }
+
+  if(!isGood){
+    std::cerr << "Will ignore line " << lineNum << std::endl;
+  }
+
+  return isGood;
+}
 
 
 
@@ -587,7 +638,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
 
   getNextNumberAsString(inputsfile,foutput,number);
   anita1->trigRequirements[0]=atoi(number.c_str());
-  getSetting("Num antenna channels", anita1->trigRequirements[0]);
+  getSetting("Num antenna channels for L1 trigger", anita1->trigRequirements[0]);
 
   getNextNumberAsString(inputsfile,foutput,number);
   anita1->trigRequirements[1]=atoi(number.c_str());
@@ -1114,7 +1165,7 @@ void Settings::ReadInputs(ifstream &inputsfile, ofstream &foutput, Anita* anita1
 
   getNextNumberAsString(inputsfile,foutput,number);
   WHICHRAYS=(int)atoi(number.c_str());
-  getSetting("Which Rays", WHICHRAYS);
+  getSetting("Which rays", WHICHRAYS);
 
   if (WHICHRAYS!=1){
     std::cout << "Non-default setting:  WHICHRAYS= " << WHICHRAYS << std::endl;
