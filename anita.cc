@@ -427,12 +427,6 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 //     }
 
 
-    
-    phiTrigMask=0;
-    phiTrigMaskH=0;
-    l1TrigMask=0;
-    l1TrigMaskH=0;
-
     if (settings1->WHICH==8) { // ANITA-2
       fturf=new TFile("data/turfrate_icemc.root");
       turfratechain=(TTree*)fturf->Get("turfrate_icemc");
@@ -509,6 +503,12 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
       delete fthresh;
       
     }
+
+    phiTrigMask=0;
+    phiTrigMaskH=0;
+    l1TrigMask=0;
+    l1TrigMaskH=0;
+
     
     // get rfcm amplification data
     
@@ -4363,6 +4363,7 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
      for (int i=0;i<gPulser->GetN();i++){
        // Apply attenuation before interpolating
        gPulser->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]/20);
+       gPulser->GetY()[i]/=TMath::Sqrt(7);
        // // Divide by sqrt(2) to account for splitter in setting
        // gPulser->GetY()[i]/=TMath::Sqrt(2);
      }
