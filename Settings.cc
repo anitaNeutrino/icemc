@@ -836,7 +836,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Trigger noise from flight", NOISEFROMFLIGHTTRIGGER);
   std::cout << "Use noise from flight for trigger path: " << NOISEFROMFLIGHTTRIGGER << std::endl;
 
-#ifndef ANITA3_EVENTREADER
+#ifdef ANITA3_EVENTREADER
   if ( (NOISEFROMFLIGHTDIGITIZER || NOISEFROMFLIGHTTRIGGER) && WHICH!=9) {
     std::cout << "Noise from flight only available for anita-3." << std::endl;
     exit(1);
