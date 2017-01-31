@@ -4358,26 +4358,43 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
      string fileName = "data/TriggerEfficiencyScanPulser_anita3.root";
      TFile *f = new TFile(fileName.c_str(), "read");
 
-     TGraph *gPulser = (TGraph*)f->Get("gAvgPulser");
+     // Get average pulse as measured by scope
+     TGraph *gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulser");
 
-     for (int i=0;i<gPulser->GetN();i++){
+     // Get average waveform at SURF as measured by scope
+     TGraph *gPulseAtSurf = (TGraph*)f->Get("gAvgTrigger");
+     
+
+     for (int i=0;i<gPulseAtAmpa->GetN();i++){
        // Apply attenuation before interpolating
-       gPulser->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]/20);
-       gPulser->GetY()[i]/=TMath::Sqrt(7);
+       gPulseAtAmpa->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]/20);
+       gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(7);
        // // Divide by sqrt(2) to account for splitter in setting
-       // gPulser->GetY()[i]/=TMath::Sqrt(2);
+       // gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(2);
      }
      
-     TGraph *gPulserInt = FFTtools::getInterpolatedGraph(gPulser, 1/(2.6));
-     double *y = gPulserInt->GetY();
+     TGraph *gPulseAtAmpaInt = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/(2.6));
+     double *y = gPulseAtAmpaInt->GetY();
      for (int i=0;i<HALFNFOUR;i++){
-       trigEffScanPulse[i]=y[i];
-       // cout << gPulserInt->GetX()[i] << " " << trigEffScanPulse[i] << endl;
+       trigEffScanPulseAtAmpa[i]=y[i];
+       // cout << gPulseAtAmpaInt->GetX()[i] << " " << trigEffScanPulse[i] << endl;
      }
 
-     delete gPulserInt;
-     delete gPulser;
+     TGraph *gPulseAtSurfInt = FFTtools::getInterpolatedGraph(gPulseAtSurf, 1/(2.6));
+     double *y2 = gPulseAtSurfInt->GetY();
+     for (int i=0;i<HALFNFOUR;i++){
+       trigEffScanPulseAtSurf[i]=y2[i];
+       // cout << gPulseAtAmpaInt->GetX()[i] << " " << trigEffScanPulse[i] << endl;
+     }
+     
+     delete gPulseAtAmpaInt;
+     delete gPulseAtAmpa;
+     delete gPulseAtSurfInt;
+     delete gPulseAtSurf;
      f->Close();
+  }else{
+    cout << "Impulse response on trigger path can only be used with ANITA-3" << endl;
+    exit(1);
   }
  
 }
