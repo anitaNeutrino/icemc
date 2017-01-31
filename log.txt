@@ -1044,4 +1044,6 @@ Make icemc compatible with both anita3 and anita4 eventReaderRoot. Update anita-
 
 01/23/17 L.Cremonesi
 Several commits to implement the first version of the trigger path impulse response. Semi-working version for the moment, that's not ready to be used yet. Also improved the coding of the trigger path (moved all to trigger.cc and eliminated unused variables).
->>>>>>> origin/master
+
+1/31/17 1.50 PM ET M. Sutherland   [in branches/roughness]
+Merged trunk updates into branch. Specular results in branch are identical to trunk.

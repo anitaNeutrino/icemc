@@ -510,7 +510,7 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
     Tools::Zero(v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
     Tools::Zero(v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
 	
-    anita1->MakeArraysforFFT(v_banding_rfcm_e[iband],v_banding_rfcm_h[iband],v_banding_rfcm_e_forfft[iband],v_banding_rfcm_h_forfft[iband], 90., false);
+    anita1->MakeArraysforFFT(v_banding_rfcm_e[iband],v_banding_rfcm_h[iband],v_banding_rfcm_e_forfft[iband],v_banding_rfcm_h_forfft[iband], 90., true);
 	
     // for some reason I'm averaging over 10 neighboring bins
     // to get rid of the zero bins
@@ -1122,10 +1122,10 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
     anita1->MakeArraysforFFT(tmp_vhz_rx_e, tmp_vhz_rx_h, tmp_volts_rx_e_forfft, tmp_volts_rx_h_forfft, 90., false);// 90 is just a placeholder
     //need to handle phase delay explicitly here
     for (int ifour=0;ifour<NFOUR/4;ifour++) {
-      tmp_volts_rx_e_forfft[2*ifour]*=cos((90.+panel1->GetDelay(jpt))*PI/180.);
-      tmp_volts_rx_e_forfft[2*ifour+1]*=sin((90.+panel1->GetDelay(jpt))*PI/180.);
-      tmp_volts_rx_h_forfft[2*ifour]*=cos((90.+panel1->GetDelay(jpt))*PI/180.);
-      tmp_volts_rx_h_forfft[2*ifour+1]*=sin((90.+panel1->GetDelay(jpt))*PI/180.); 
+      tmp_volts_rx_e_forfft[2*ifour]*=cos((90.)*PI/180.);
+      tmp_volts_rx_e_forfft[2*ifour+1]*=sin((90.)*PI/180.);
+      tmp_volts_rx_h_forfft[2*ifour]*=cos((90.)*PI/180.);
+      tmp_volts_rx_h_forfft[2*ifour+1]*=sin((90.)*PI/180.); 
     }
 
 

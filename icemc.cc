@@ -2994,10 +2994,6 @@ int main(int argc,  char **argv) {
           // THIS IS WHERE WE ACTUALLY CONSTRUCT THE WAVEFORMS THAT GET PASSED TO THE TRIGGER
           //anttrig1->Banding(settings1,  anita1, vmmhz);
 
-          //temporary containers for each screen point to construct the summed waveforms
-          double TMP_v_banding_rfcm_e_forfft[5][Anita::HALFNFOUR]={0.};
-          double TMP_v_banding_rfcm_h_forfft[5][Anita::HALFNFOUR]={0.};
-
           int fNumPoints = anita1->HALFNFOUR;
           int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
           Tools::Zero(sumsignal, 5);
@@ -3016,10 +3012,6 @@ int main(int argc,  char **argv) {
             
             for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
               //get the orientation for this screen point
-              bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal, panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
-              bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
-              bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
-
               for (int i=0;i<Anita::NFREQ;i++) {
                 anita1->vmmhz_banding[i]=panel1->GetVmmhz_freq(jpt*Anita::NFREQ + i);//; // now copy vmmhz to vmmhz_bak instead, which we now play with to get the time domain waveforms for each subband
                 // remember vmmhz is V/m/MHz at the face of the antenna
@@ -3027,8 +3019,10 @@ int main(int argc,  char **argv) {
               // Don't we need to apply antenna gains here?
                 
               // impose banding on the incident signal
-              anita1->Banding(iband,anita1->freq,anita1->vmmhz_banding,Anita::NFREQ); // impose banding whatever the trigger scheme
-                
+              if (!settings1->APPLYIMPULSERESPONSETRIGGER){
+                anita1->Banding(iband,anita1->freq,anita1->vmmhz_banding,Anita::NFREQ); // impose banding whatever the trigger scheme
+              }
+
               for (int i=0;i<Anita::NFREQ;i++) {
                 anita1->vmmhz_banding_rfcm[i]=anita1->vmmhz_banding[i];
                 //cerr<<i<<"  "<<vmmhz[i]<<" -- "<<panel1->GetVmmhz_freq(jpt*Anita::NFREQ + i)<<" -- "<<anita1->vmmhz_banding[i]<<endl;
@@ -3037,13 +3031,12 @@ int main(int argc,  char **argv) {
               // for frequency-domain voltage-based trigger (triggerscheme==0)
               // we do not apply rfcm's
               // for other trigger types we do
-              if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5)
+              if ((settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5) && (!settings1->APPLYIMPULSERESPONSETRIGGER))
                 anita1->RFCMs(1,1,anita1->vmmhz_banding_rfcm);
-                
                 
               if (settings1->TRIGGERSCHEME >=2) { // we need to prepar the signal for the diode integration
                 for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-                  anita1->vmmhz_banding_rfcm[ifreq]=anita1->vmmhz_banding_rfcm[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6);
+                  anita1->vmmhz_banding_rfcm[ifreq]=anita1->vmmhz_banding_rfcm[ifreq]*anita1->scaleTrigger/(anita1->TIMESTEP*1.E6);
                   // vmmhz was set to account for both negative and positive frequencies
                   // now it has units of volts/(meter*s) so below we copy it to vm_banding_rfcm_e,h
                     
@@ -3052,7 +3045,7 @@ int main(int argc,  char **argv) {
                   // as in numerical recipes, F = (Delta t) * H
                 }
               }
-              double integral=0.;
+
               for (int k=0;k<Anita::NFREQ;k++) {
                 if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
                   // need to calculate lcp and rcp components after antenna voltages are recorded.
@@ -3063,39 +3056,41 @@ int main(int argc,  char **argv) {
               } // end looping over frequencies.
 
               if (settings1->APPLYIMPULSERESPONSETRIGGER){
+                double volts_triggerPath_e[Anita::HALFNFOUR]={0.};
+                double volts_triggerPath_h[Anita::HALFNFOUR]={0.};
                 double vhz_triggerPath_e[Anita::NFREQ] = {0.};
                 double vhz_triggerPath_h[Anita::NFREQ] = {0.};
 
-                anita1->MakeArraysforFFT(anttrig1->v_banding_rfcm_e[iband], anttrig1->v_banding_rfcm_h[iband], TMP_v_banding_rfcm_e_forfft[iband], TMP_v_banding_rfcm_h_forfft[iband], 90., false);
+                anita1->MakeArraysforFFT(anttrig1->v_banding_rfcm_e[iband], anttrig1->v_banding_rfcm_h[iband], volts_triggerPath_e, volts_triggerPath_h, 90., true);
 
-                for (int ifour=0;ifour<Anita::NFOUR/4;ifour++) {
-                  TMP_v_banding_rfcm_e_forfft[iband][2*ifour] *= cos( (90.)*PI/180.);
-                  TMP_v_banding_rfcm_e_forfft[iband][2*ifour+1] *= sin( (90.)*PI/180.);
-                  TMP_v_banding_rfcm_h_forfft[iband][2*ifour] *= cos( (90.)*PI/180.);
-                  TMP_v_banding_rfcm_h_forfft[iband][2*ifour+1] *= sin( (90.)*PI/180.);
-                }
+                //for (int ifour=0;ifour<Anita::NFOUR/4;ifour++) {
+                //  volts_triggerPath_e[2*ifour] *= cos( (90.)*PI/180.);
+                //  volts_triggerPath_e[2*ifour+1] *= sin( (90.)*PI/180.);
+                //  volts_triggerPath_h[2*ifour] *= cos( (90.)*PI/180.);
+                //  volts_triggerPath_h[2*ifour+1] *= sin( (90.)*PI/180.);
+                //}
 
 
-                Tools::realft(TMP_v_banding_rfcm_e_forfft[iband],-1,anita1->NFOUR/2);
+                Tools::realft(volts_triggerPath_e,1,anita1->NFOUR/2);
                 // now v_banding_rfcm_e_forfft is in the time domain
                 // and now it is really in units of V
 
-                Tools::realft(TMP_v_banding_rfcm_h_forfft[iband],-1,anita1->NFOUR/2);
+                Tools::realft(volts_triggerPath_h,1,anita1->NFOUR/2);
                 // now v_banding_rfcm_h_forfft is in the time domain
                 // and now it is really in units of V
 
                 // put it in normal time ording -T to T
                 // instead of 0 to T, -T to 0
-                Tools::NormalTimeOrdering(anita1->NFOUR/2,TMP_v_banding_rfcm_e_forfft[iband]);
-                Tools::NormalTimeOrdering(anita1->NFOUR/2,TMP_v_banding_rfcm_h_forfft[iband]);
+                Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_e);
+                Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_h);
 
                 if (settings1->TRIGGEREFFSCAN){
-                  anttrig1->injectImpulseAfterAntenna(anita1, TMP_v_banding_rfcm_e_forfft[iband], TMP_v_banding_rfcm_h_forfft[iband], ant);
+                  anttrig1->injectImpulseAfterAntenna(anita1, volts_triggerPath_e, volts_triggerPath_h, ant);
                 }
 
                 #ifdef ANITA_UTIL_EXISTS    
-                      anttrig1->applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, TMP_v_banding_rfcm_e_forfft[iband], vhz_triggerPath_e, 0);
-                      anttrig1->applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, TMP_v_banding_rfcm_h_forfft[iband], vhz_triggerPath_h, 1);
+                      anttrig1->applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_e, vhz_triggerPath_e, 0);
+                      anttrig1->applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_h, vhz_triggerPath_h, 1);
 
                       for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
                         if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
@@ -3110,33 +3105,39 @@ int main(int argc,  char **argv) {
 
                 // now add the screen point's waveform to the total including the weighting 
                 for (int i=0;i<anita1->NFOUR/2;i++) {
-                  anttrig1->v_banding_rfcm_e_forfft[iband][i] += TMP_v_banding_rfcm_e_forfft[iband][i] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
-                  anttrig1->v_banding_rfcm_h_forfft[iband][i] += TMP_v_banding_rfcm_h_forfft[iband][i] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+                  anttrig1->v_banding_rfcm_e_forfft[iband][i] += volts_triggerPath_e[i] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+                  anttrig1->v_banding_rfcm_h_forfft[iband][i] += volts_triggerPath_h[i] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
                 }
 
               }//if (settings1->APPLYIMPULSERESPONSETRIGGER)
 
+              for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+                if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
+                  anttrig1->addToChannelSums(settings1, anita1, iband, ifreq);
+                }
+              } // end loop over nfreq
+
             } // end loop over screen points
+
+            // write the signal events to a tree
+            for (int iband=0;iband<5;iband++) {
+              for (int k=0;k<anita1->NFOUR/2;k++) {
+                anita1->signal_vpol_inanita[iband][k]=anttrig1->v_banding_rfcm_e_forfft[iband][k];
+              }
+            }
+            anita1->integral_vmmhz_foranita=anttrig1->integral_vmmhz;
+          
+            // Find the p2p value before adding noise
+            for (int iband=0;iband<5;iband++) {
+              anita1->peak_v_banding_rfcm_e[iband]=anttrig1->FindPeak(anttrig1->v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
+              anita1->peak_v_banding_rfcm_h[iband]=anttrig1->FindPeak(anttrig1->v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
+            }
           } // end loop over bands
           
           // now hopefully we have converted the signal to time domain waveforms
           // for all the bands of the antenna and screen points
 
-
-          // write the signal events to a tree
-          for (int iband=0;iband<5;iband++) {
-            for (int k=0;k<anita1->NFOUR/2;k++) {
-              anita1->signal_vpol_inanita[iband][k]=anttrig1->v_banding_rfcm_e_forfft[iband][k];
-            }
-          }
-          anita1->integral_vmmhz_foranita=anttrig1->integral_vmmhz;
-        
-          // Find the p2p value before adding noise
-          for (int iband=0;iband<5;iband++) {
-            anita1->peak_v_banding_rfcm_e[iband]=anttrig1->FindPeak(anttrig1->v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
-            anita1->peak_v_banding_rfcm_h[iband]=anttrig1->FindPeak(anttrig1->v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
-          }
-
+/*if((inu==90843) || (inu==73400)){
   ofstream waveout;
   std::string stemp;
   if(settings1->ROUGHNESS>0)
@@ -3150,6 +3151,7 @@ int main(int argc,  char **argv) {
     }
   }
   waveout.close();
+}*/
 
           for (int k=0;k<Anita::NFREQ;k++) {
             if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
@@ -3300,7 +3302,7 @@ int main(int argc,  char **argv) {
                 thislambda=CLIGHT/sig1->N_AIR/anita1->freq[k];
                 heff_discone= thislambda*sqrt(2*Zr*gain_dipole/Z0/4/PI*sig1->N_AIR);   // effective height of dipole,  using formula from Ped's note
 
-                volts_discone+=panel1->GetVmmhz_freq[k]*0.5*heff_discone*((settings1->BW/1E6)/(double)Anita::NFREQ)*polarfactor_discone;
+                volts_discone+=panel1->GetVmmhz_freq(k)*0.5*heff_discone*((settings1->BW/1E6)/(double)Anita::NFREQ)*polarfactor_discone;
               }
             }// end for k loop
 
@@ -3772,7 +3774,7 @@ int main(int argc,  char **argv) {
 	      }
         if(settings1->ROUGHNESS){
   	      for (int i=0;i<Anita::NFREQ;i++)
-        		truthEvPtr->vmmhz[i]       = panel1->GetVmmhz_freq[k];
+        		truthEvPtr->vmmhz[i]       = panel1->GetVmmhz_freq(i);
         }
 	      truthAnitaTree->Fill();
 	      delete truthEvPtr;
