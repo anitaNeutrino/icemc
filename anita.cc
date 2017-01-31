@@ -4359,32 +4359,29 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
      TFile *f = new TFile(fileName.c_str(), "read");
 
      // Get average pulse as measured by scope
-     TGraph *gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulser");
+     TGraph *gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
 
      // Get average waveform at SURF as measured by scope
-     TGraph *gPulseAtSurf = (TGraph*)f->Get("gAvgTrigger");
+     TGraph *gPulseAtSurf = (TGraph*)f->Get("gSamplePulseAtSurf");
      
 
      for (int i=0;i<gPulseAtAmpa->GetN();i++){
        // Apply attenuation before interpolating
        gPulseAtAmpa->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]/20);
        gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(7);
-       // // Divide by sqrt(2) to account for splitter in setting
-       // gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(2);
      }
      
      TGraph *gPulseAtAmpaInt = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/(2.6));
      double *y = gPulseAtAmpaInt->GetY();
      for (int i=0;i<HALFNFOUR;i++){
        trigEffScanPulseAtAmpa[i]=y[i];
-       // cout << gPulseAtAmpaInt->GetX()[i] << " " << trigEffScanPulse[i] << endl;
      }
 
      TGraph *gPulseAtSurfInt = FFTtools::getInterpolatedGraph(gPulseAtSurf, 1/(2.6));
      double *y2 = gPulseAtSurfInt->GetY();
+     // 20dB attenuation was applied at the scope
      for (int i=0;i<HALFNFOUR;i++){
-       trigEffScanPulseAtSurf[i]=y2[i];
-       // cout << gPulseAtAmpaInt->GetX()[i] << " " << trigEffScanPulse[i] << endl;
+       trigEffScanPulseAtSurf[i]=y2[i]/10.;
      }
      
      delete gPulseAtAmpaInt;
