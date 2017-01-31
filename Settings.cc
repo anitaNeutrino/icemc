@@ -18,7 +18,7 @@
 #include "Primaries.h"
 
 
-#include "String.h"
+#include <string.h>
 
 #include "TString.h"
 #include "TRegexp.h"
@@ -838,7 +838,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Trigger noise from flight", NOISEFROMFLIGHTTRIGGER);
   std::cout << "Use noise from flight for trigger path: " << NOISEFROMFLIGHTTRIGGER << std::endl;
 
-#ifndef ANITA3_EVENTREADER
+#ifdef ANITA3_EVENTREADER
   if ( (NOISEFROMFLIGHTDIGITIZER || NOISEFROMFLIGHTTRIGGER) && WHICH!=9) {
     std::cout << "Noise from flight only available for anita-3." << std::endl;
     exit(1);
@@ -868,6 +868,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   getSetting("Efficiency scan", TRIGGEREFFSCAN);
   getSetting("Central phi-sector", anita1->trigEffScanPhi);
+  getSetting("Apply pulse at surf", TRIGGEREFFSCAPULSE);
 
   std::vector<double> effiencyScanOffAxisAttenuations;
   getSetting("Off-axis attenuation", effiencyScanOffAxisAttenuations);
@@ -878,6 +879,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   if (TRIGGEREFFSCAN){
     std::cout << "Let's do a trigger efficiency scan!" << std::endl;
+    std::cout << "Apply pulse at AMPA (0) or SURF : " << TRIGGEREFFSCAPULSE << std::endl;
     std::cout << "Central phi sector is " << anita1->trigEffScanPhi << std::endl;
     std::cout << "Attenuations are ";
     for (int i=0;i<5;i++) std::cout << anita1->trigEffScanAtt[i] << " ";

@@ -342,6 +342,7 @@ public:
   void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], double *vhz, bool pol);
   double *getNoiseFromFlight(Anita* anita1, int pol, int ant);
   void injectImpulseAfterAntenna(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant);
+  void injectImpulseAtSurf(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant);
 #endif
     
     int unwarned;  // whether we have warned the user about resetting thresholds when they are beyond the measured bounds

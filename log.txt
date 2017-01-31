@@ -1047,3 +1047,6 @@ Several commits to implement the first version of the trigger path impulse respo
 
 1/31/17 1.50 PM ET M. Sutherland   [in branches/roughness]
 Merged trunk updates into branch. Specular results in branch are identical to trunk.
+
+1/31/17 1.50 PM ET M. Sutherland   [in branches/roughness]
+Merged additional trunk updates to the branch. Specular confirmed identical. Concurrent with trunk.
