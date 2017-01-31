@@ -194,6 +194,7 @@ public:
   int NOISEFROMFLIGHTDIGITIZER;          // use thermal noise from flight in digitizer path
   int MINBIAS;                    // generate minimum bias sample
   int TRIGGEREFFSCAN;                      // do a trigger efficiency scan
+  int TRIGGEREFFSCAPULSE;                  // Apply pulse at AMPA (0) or at SURF (1)
 
 private:
   typedef std::map<TString, TString> kvpMap;
