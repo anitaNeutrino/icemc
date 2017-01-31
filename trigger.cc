@@ -4715,10 +4715,8 @@ void AntTrigger::injectImpulseAtSurf(Anita *anita1, double volts_triggerPath_e[A
     double att = anita1->trigEffScanAtt[phiIndex+2];
     double norm = (anita1->trigEffScanAtt[phiIndex+2]==999)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=999)*1;
 
-    double *justNoise = getNoiseFromFlight(anita1, 0, ant);
-
     for (int i=0;i<fNumPoints;i++){
-      volts_triggerPath_e[i]=norm*anita1->trigEffScanPulseAtSurf[i]*TMath::Power(10, att/20) + justNoise[i]*anita1->THERMALNOISE_FACTOR;
+      volts_triggerPath_e[i]=norm*anita1->trigEffScanPulseAtSurf[i]*TMath::Power(10, att/20);
       volts_triggerPath_h[i]=0;
     }
   }else{
