@@ -877,7 +877,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   if (TRIGGEREFFSCAN){
     std::cout << "Let's do a trigger efficiency scan!" << std::endl;
-    std::cout << "Apply pulse at AMPA (0) or SURF : " << TRIGGEREFFSCAPULSE << std::endl;
+    std::cout << "Apply pulse at AMPA (0) or SURF (1) : " << TRIGGEREFFSCAPULSE << std::endl;
     std::cout << "Central phi sector is " << anita1->trigEffScanPhi << std::endl;
     std::cout << "Attenuations are ";
     for (int i=0;i<5;i++) std::cout << anita1->trigEffScanAtt[i] << " ";
