@@ -562,12 +562,18 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
     Tools::realft(v_banding_rfcm_h_forfft[iband],-1,anita1->NFOUR/2);
     // now v_banding_rfcm_h_forfft is in the time domain
     // and now it is really in units of V
-	
+
+       
     // put it in normal time ording -T to T
     // instead of 0 to T, -T to 0
     Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_e_forfft[iband]);
     Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_h_forfft[iband]);
-	
+
+    if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==1)){  // LINDA TEMP
+      injectImpulseAtSurf(anita1, v_banding_rfcm_e_forfft[iband], v_banding_rfcm_h_forfft[iband], anita1->GetRxTriggerNumbering(ilayer, ifold));
+    }
+
+    
     if (settings1->ZEROSIGNAL) {
 	 
       Tools::Zero(v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
@@ -1114,7 +1120,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
   
-  if (settings1->TRIGGEREFFSCAN){
+  if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
     injectImpulseAfterAntenna(anita1, volts_rx_e_forfft, volts_rx_h_forfft, ant);
   }
   
@@ -1259,7 +1265,12 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   }
   
   } // END ELSE IMPULSE RESPONSE
-    
+
+  if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==1)){ 
+    injectImpulseAtSurf(anita1, anita1->volts_rx_rfcm_lab_e, anita1->volts_rx_rfcm_lab_h, ant);
+  }
+
+  
   // now shift right to account for arrival times
   //for (int i=0;i<48;i++) std::cout << arrival_times[i] << std::endl;
   Tools::ShiftRight(anita1->volts_rx_rfcm_lab_e,anita1->NFOUR/2, int(arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
@@ -1352,8 +1363,8 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
       Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_h);
 
 
-      if (settings1->TRIGGEREFFSCAN){
-	injectImpulseAfterAntenna(anita1, volts_triggerPath_e, volts_triggerPath_h, ant);
+      if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
+      	injectImpulseAfterAntenna(anita1, volts_triggerPath_e, volts_triggerPath_h, ant);
       }
 
       
@@ -4681,9 +4692,33 @@ void AntTrigger::injectImpulseAfterAntenna(Anita *anita1, double volts_triggerPa
   // only 2 phi sectors adjecent to the central one are considered in efficiency scan
   if(TMath::Abs(phiIndex)<=2){
     double att = anita1->trigEffScanAtt[phiIndex+2]-anita1->trigEffScanAtt[2];
-    double norm = (anita1->trigEffScanAtt[phiIndex+2]==0)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=0)*1;
+    double norm = (anita1->trigEffScanAtt[phiIndex+2]==999)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=999)*1;
     for (int i=0;i<fNumPoints;i++){
-      volts_triggerPath_e[i]=norm*anita1->trigEffScanPulse[i]*TMath::Power(10, att/20);
+      volts_triggerPath_e[i]=norm*anita1->trigEffScanPulseAtAmpa[i]*TMath::Power(10, att/20);
+      volts_triggerPath_h[i]=0;
+    }
+  }else{
+    for (int i=0;i<fNumPoints;i++){
+      volts_triggerPath_e[i]=0;
+      volts_triggerPath_h[i]=0;
+    }
+  }
+}
+
+void AntTrigger::injectImpulseAtSurf(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant){
+  // phiIndex is 0 for central antenna in trigger efficiency scan
+  int phiIndex = anita1->trigEffScanPhi - (ant%16);
+  if (phiIndex>8) phiIndex=phiIndex-16;
+  int fNumPoints=anita1->HALFNFOUR;
+  // only 2 phi sectors adjecent to the central one are considered in efficiency scan
+  if(TMath::Abs(phiIndex)<=2){
+    double att = anita1->trigEffScanAtt[phiIndex+2];
+    double norm = (anita1->trigEffScanAtt[phiIndex+2]==999)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=999)*1;
+
+    double *justNoise = getNoiseFromFlight(anita1, 0, ant);
+
+    for (int i=0;i<fNumPoints;i++){
+      volts_triggerPath_e[i]=norm*anita1->trigEffScanPulseAtSurf[i]*TMath::Power(10, att/20) + justNoise[i]*anita1->THERMALNOISE_FACTOR;
       volts_triggerPath_h[i]=0;
     }
   }else{
