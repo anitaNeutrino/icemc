@@ -18,7 +18,7 @@
 #include "Primaries.h"
 
 
-#include "String.h"
+#include <string.h>
 
 #include "TString.h"
 #include "TRegexp.h"
