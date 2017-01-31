@@ -621,7 +621,8 @@ TTree *tgaryanderic; // writing data out for the analysers
   // Trigger efficiency scan parameters
   int trigEffScanPhi;                      // central phi sector of trigger efficiency scan
   double trigEffScanAtt[5];                // attenuations to apply to central and adjecent antennas
-  Double_t trigEffScanPulse[HALFNFOUR];
+  Double_t trigEffScanPulseAtAmpa[HALFNFOUR];
+  Double_t trigEffScanPulseAtSurf[HALFNFOUR];
   
 
 }; //class Anita
