@@ -414,6 +414,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 		
     }
 
+    
 //     for (int i=0;i<HALFNFOUR;i++) {
 // 		freq_forfft_long[2*i]=(double)i*freqstep_long;
 // 		freq_forfft_long[2*i+1]=(double)i*freqstep_long;
@@ -1351,6 +1352,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 	VNOISE[j]=1.52889E-5; // this comes from V^2/R=kT*bw -> V=sqrt(kT*bw*R)
 	VNOISE[j]*=THERMALNOISE_FACTOR;
     }//for
+
     
 }
 
@@ -2604,7 +2606,7 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
 	
 	vsignal_e_forfft[2*ifour]=vsignalarray_e[i]*2/((double)NFOUR/2); // phases is 90 deg.
 	
-	//      cout << "ifour, vsignal is " << ifour << " " << vsignal_e_forfft[2*ifour] << "\n";
+	//cout << "ifour, vsignal is " << ifour << " " << vsignal_e_forfft[2*ifour] << "\n";
 	
 	vsignal_e_forfft[2*ifour+1]=vsignalarray_e[i]*2/((double)NFOUR/2); // phase is 90 deg.
 	// the 2/(nfour/2) needs to be included since were using Tools::realft with the -1 setting
@@ -4361,14 +4363,11 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
      // Get average pulse as measured by scope
      TGraph *gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
 
-     // Get average waveform at SURF as measured by scope
-     TGraph *gPulseAtSurf = (TGraph*)f->Get("gSamplePulseAtSurf");
-     
 
      for (int i=0;i<gPulseAtAmpa->GetN();i++){
        // Apply attenuation before interpolating
        gPulseAtAmpa->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]/20);
-       gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(7);
+       gPulseAtAmpa->GetY()[i]/=10.;
      }
      
      TGraph *gPulseAtAmpaInt = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/(2.6));
@@ -4377,17 +4376,78 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
        trigEffScanPulseAtAmpa[i]=y[i];
      }
 
-     TGraph *gPulseAtSurfInt = FFTtools::getInterpolatedGraph(gPulseAtSurf, 1/(2.6));
-     double *y2 = gPulseAtSurfInt->GetY();
-     // 20dB attenuation was applied at the scope
-     for (int i=0;i<HALFNFOUR;i++){
-       trigEffScanPulseAtSurf[i]=y2[i]/10.;
+     FFTWComplex *theFFT = FFTtools::doFFT(HALFNFOUR, trigEffScanPulseAtAmpa);
+    
+     for (int i=0;i<NFREQ;i++){
+       trigEffScanAmplitudeAtAmpa[i]=FFTtools::getAbs(theFFT[i]);//gtemp->GetY()[i];
+       // if (ant ==8 && pol==0) cout << vhz[i] << endl;
      }
      
+     delete []theFFT;
      delete gPulseAtAmpaInt;
      delete gPulseAtAmpa;
-     delete gPulseAtSurfInt;
-     delete gPulseAtSurf;
+     
+     
+     for (int isample=0;isample<250;isample++){
+       // Get average waveform at SURF as measured by scope
+       TGraph *gPulseAtSurf = (TGraph*)f->Get(Form("gSamplePulseAtSurf_%i", isample));
+     
+       TGraph *gPulseAtSurfInt = FFTtools::getInterpolatedGraph(gPulseAtSurf, 1/(2.6));
+       double *y2 = gPulseAtSurfInt->GetY();
+       // 20dB attenuation was applied at the scope
+       for (int i=0;i<HALFNFOUR;i++){
+	 trigEffScanPulseAtSurf[isample][i]=y2[i]/10.;
+       }	 
+       delete gPulseAtSurfInt;
+       delete gPulseAtSurf;
+        
+     }
+
+
+     // // START LINDA TEMP BIT
+     // FFTWComplex *tempFFT = FFTtools::doFFT(HALFNFOUR, trigEffScanPulseAtSurf[0]);
+     // double tempTimes[HALFNFOUR];
+     // for (int i=0;i<HALFNFOUR;i++) tempTimes[i]=fTimes[i]*1-9;
+     // RFSignal *rftemp = new RFSignal(new TGraph(HALFNFOUR,tempTimes,trigEffScanPulseAtSurf[0]));
+     
+     // Double_t *rfFreqs = rftemp->getFreqs();
+     // Double_t *rfMags  = rftemp->getMags();
+     // Double_t *rfPhase = rftemp->getPhases();
+     
+     // double trigEffScanAmplitudeAtSurf[HALFNFOUR];
+     // for (int i=0;i<NFREQ;i++){
+     //   // cout << i << " " << rfFreqs[i] << " " << freq[i] << " " << freq_forfft[i] << endl;
+
+     //   // cout << " " << i << " " << freq[i] << " " << tempFFT[i].getAbs() << endl;
+       
+     //   trigEffScanAmplitudeAtSurf[i]=rfMags[i];
+     // 	// trigEffScanAmplitudeAtSurf[2*i+1]=(tempFFT[ifour].getPhase());
+      
+     // }
+     
+     // double tempTime1[HALFNFOUR]={0.};
+     // double tempTime2[HALFNFOUR]={0.};
+     // double tempFreq[HALFNFOUR]={0.};
+
+     // // change their length from Anita::NFREQ to HALFNFOUR
+     // MakeArraysforFFT(trigEffScanAmplitudeAtSurf,tempFreq, tempTime1, tempTime2);
+       
+     // // now the last two are in the frequency domain
+     // // convert to the time domain
+     // Tools::realft(tempTime1,1,HALFNFOUR);  
+     // Tools::NormalTimeOrdering(NFOUR/2,tempTime1);
+    
+     // ofstream myfile;
+     // myfile.open ("temp.txt");
+     // for (int i=0;i<HALFNFOUR;i++){
+     //   //   cout << i << " "   << " " << trigEffScanPulseAtSurf[0][i] << " " << tempTime1[i] << endl;
+     //   myfile << i << " " << trigEffScanPulseAtSurf[0][i] << " " << tempTime1[i] << endl;
+     // }
+     // myfile.close();
+     
+     // exit(1);
+     // // END TEMP BIT
+     
      f->Close();
   }else{
     cout << "Impulse response on trigger path can only be used with ANITA-3" << endl;
