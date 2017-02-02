@@ -2519,11 +2519,12 @@ int main(int argc,  char **argv) {
       globaltrig1 = new GlobalTrigger(settings1, anita1);
 
       Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-      if(settings1->BORESIGHTS)
-	anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2],bn1,settings1);
-      else
-	anita1->GetArrivalTimes(ray1->n_exit2bn[2],bn1,settings1);
-
+      if (!settings1->TRIGGEREFFSCAN){
+	if(settings1->BORESIGHTS)
+	  anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2],bn1,settings1);
+	else
+	  anita1->GetArrivalTimes(ray1->n_exit2bn[2],bn1,settings1);
+      }
       anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times, settings1->NANTENNAS);
 
       //Zeroing
