@@ -72,14 +72,14 @@ void Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posn
     //cout << "first iteration.\n";
     for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
       for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-	WhereDoesItLeave(posnu,nrf_iceside_eachboresight[2*whichtry][ilayer][ifold],antarctica,
-	rfexit_eachboresight[whichtry][ilayer][ifold]);
-	n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit(); // Linda added this line
+        WhereDoesItLeave(posnu,nrf_iceside_eachboresight[2*whichtry][ilayer][ifold],antarctica,
+        rfexit_eachboresight[whichtry][ilayer][ifold]);
+        n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit(); // Linda added this line
       }
     }
   } // end if we are doing this for each boresight
   
-    if (settings1->SLAC) {
+  if (settings1->SLAC) {
     // ray comes out a little earlier because of the slope of the surface.
     // use law of cosines the get how much "distance" should be cut short
     
@@ -87,78 +87,23 @@ void Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posn
     
     rfexit[whichtry]-=x*nrf_iceside[2*whichtry];
     
-
-    
     if (settings1->BORESIGHTS) {
-      
       for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
-	for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-	  
-	  x=sin(settings1->SLACSLOPE*RADDEG)*(settings1->SLACICELENGTH/2.+rfexit_eachboresight[0][ilayer][ifold].Distance(rfexit_eachboresight[whichtry][ilayer][ifold]))/sin(PI/2.+acos(nrf_iceside_eachboresight[2*whichtry][ilayer][ifold].Dot(nsurf_rfexit)));
-	  
-	  rfexit_eachboresight[whichtry][ilayer][ifold]-=x*nrf_iceside_eachboresight[2*whichtry][ilayer][ifold];
-	  
-	  
-	  n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit();
-	  
-	  
-	} // end loop over antennas on a layer
+        for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+          
+          x=sin(settings1->SLACSLOPE*RADDEG)*(settings1->SLACICELENGTH/2.+rfexit_eachboresight[0][ilayer][ifold].Distance(rfexit_eachboresight[whichtry][ilayer][ifold]))/sin(PI/2.+acos(nrf_iceside_eachboresight[2*whichtry][ilayer][ifold].Dot(nsurf_rfexit)));
+          
+          rfexit_eachboresight[whichtry][ilayer][ifold]-=x*nrf_iceside_eachboresight[2*whichtry][ilayer][ifold];
+          
+          n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit();
+        } // end loop over antennas on a layer
       } // end loop over layers of the payload
     } // end if we're keeping track of all antenna boresights
-    
-    
-    
-    } // end if we're modeling the slac run
-
+  } // end if we're modeling the slac run
 }
 
-
-// void Ray::WhereDoesItLeave(const Position &posnu,
-// 			   const Vector &nnu,Position &r_out) {
-
-//   double distance=0;
-//   double posnu_length=posnu.Mag(); // distance from center of earth to interaction
-  
-//   double lon,lat,lon_old,lat_old; //latitude, longitude indices for 1st and 2nd iteration
-//   lon = posnu.Lon(); // what latitude, longitude does interaction occur at
-//   lat = posnu.Lat();
-//   lon_old=lon; // save this longitude and latitude so we can refer to it later
-//   lat_old=lat;
-
-//   // use law of cosines to get distance from interaction to exit point for the ray
-//   // need to solve for that distance using the quadratic formula
-
-//   // angle between posnu and nnu vector for law of cosines.
-//   double costheta=-1*(posnu*nnu)/posnu_length;
-
-//   // a,b,c for quadratic formula, needed to solve for 
-//   double a=1;
-//   double b=-1*2*posnu_length*costheta;
-//   double c=posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2);
- 
-//   // use the "+" solution because the other one is where the ray is headed downward toward the rock
-//   distance=(-1*b+sqrt(b*b-4*a*c))/2;
-
-//   if (WHICHPATH==4 && inu==0) {
-//     cout << "distance is " << distance << "\n"; 
-//     cout << "depth is " << antarctica->Surface(lon,lat)-posnu_length << "\n";
-//   } //if
-
-//   // now here is the exit point for the ray
-//   r_out = posnu + distance*nnu;
-
-
-//   lon = r_out.Lon(); // latitude and longitude of exit point
-//   lat = r_out.Lat();
-//   difflon1=lon-lon_old;
-//   difflat1=lat-lat_old;
-
-//     c = posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2); // redo the law of cosines
-//     distance=(-1*b+sqrt(b*b-4*a*c))/2; // and quadratic formula
-
-//     r_out = posnu + distance*nnu;
-
-// } //WhereDoesItLeave
+//###########
+// Ray::WhereDoesItLeave() is defined in ray.hh since it is a statis member function // MS 2/1/2017
 
 
 int Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,IceModel *antarctica,double &slopeyangle,int whichtry) {

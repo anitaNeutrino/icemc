@@ -652,6 +652,58 @@ void Balloon::setr_bn(double latitude,double longitude) {
     r_bn = Position(theta_bn,phi_bn);  //r_bn is a unit vector pointing in the right direction
 }
 
+void Balloon::PickRoughnessInteractionPoint(Interaction *interaction1, Anita *anita1, Settings *settings1,IceModel *antarctica1, Ray *ray1, int &beyondhorizon){
+  // function for determining the interaction point below the balloon, not "near the horizon" as in the specular case
+
+  // let's use PickUnbiased() but restrict an acceptable position to somewhere within ~60 degrees of the balloonn nadir
+  bool bl_foundpt = false;
+  Vector bl2posnu;
+  Vector blnormal;
+  while (!bl_foundpt){
+    antarctica1->PickUnbiased(interaction1,antarctica1);
+    bl2posnu = Vector( r_bn[0] - interaction1->posnu[0], r_bn[1] - interaction1->posnu[1], r_bn[2] - interaction1->posnu[2] ).Unit();
+    blnormal = antarctica1->GetSurfaceNormal(r_bn).Unit();
+    if ( blnormal.Angle(bl2posnu) < PI/3. ){
+      interaction1->dtryingdirection=1.;
+      interaction1->iceinteraction=1;
+      bl_foundpt = true;
+    }
+  } //end while
+
+  // now use similar code as in Balloon::PickDownwardInteractionPoint() below to finish
+
+  // first guess at the rf exit point is just the point on the surface directly above the interaction
+  ray1->rfexit[0] = antarctica1->Surface(interaction1->posnu) * interaction1->posnu.Unit();  
+  
+  // unit vector pointing to antenna from exit point.
+  ray1->n_exit2bn[0] = (r_bn - ray1->rfexit[0]).Unit();
+  
+  // first pass at direction of vector from interaction to exit point
+  // just make the ray go radially outward away from center of earth; still for first guess
+  ray1->nrf_iceside[0] = interaction1->posnu.Unit();
+  
+  double r_down = 2*(antarctica1->Surface(interaction1->posnu)-antarctica1->IceThickness(interaction1->posnu))-interaction1->posnu.Mag();
+  interaction1->posnu_down = r_down * interaction1->posnu.Unit();
+  //position of the mirror point of interaction
+  
+  // depth of interaction
+  // gets distance between interaction and exit point, this time it's same as depth
+  // because our first guess at exit point is radially outward from interaction.
+  // negative means below surface
+  interaction1->altitude_int=-1*ray1->rfexit[0].Distance(interaction1->posnu);
+  interaction1->altitude_int_mirror=-1*ray1->rfexit[0].Distance(interaction1->posnu_down);//get depth of mirror point
+  
+  interaction1->r_fromballoon[0]=r_bn.Distance(interaction1->posnu);
+  
+  //distance from the mirror point to the balloon because it is equal to the path that signals pass
+  interaction1->r_fromballoon[1]=r_bn.Distance(interaction1->posnu_down);
+  
+  if (ray1->n_exit2bn[0].Angle(interaction1->posnu) > PI/2. )
+    beyondhorizon = 1;
+  
+  return;
+}
+
 void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, Settings *settings1, IceModel *antarctica1,								        Ray *ray1, int &beyondhorizon) {
     
   // double distance=1.E7;

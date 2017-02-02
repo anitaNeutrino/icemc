@@ -1127,7 +1127,7 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
     // change their length from Anita::NFREQ to HALFNFOUR
     anita1->MakeArraysforFFT(tmp_vhz_rx_e, tmp_vhz_rx_h, tmp_volts_rx_e_forfft, tmp_volts_rx_h_forfft, 90., false);// 90 is just a placeholder
     //need to handle phase delay explicitly here
-    for (int ifour=0;ifour<NFOUR/4;ifour++) {
+    for (unsigned int ifour=0;ifour<NFOUR/4;ifour++) {
       tmp_volts_rx_e_forfft[2*ifour]*=cos((90.)*PI/180.);
       tmp_volts_rx_e_forfft[2*ifour+1]*=sin((90.)*PI/180.);
       tmp_volts_rx_h_forfft[2*ifour]*=cos((90.)*PI/180.);
@@ -1304,7 +1304,6 @@ void AntTrigger::ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer,
 
 void AntTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
 {   
-  int fNumPoints = anita1->HALFNFOUR;
   int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
 
