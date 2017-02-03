@@ -2633,11 +2633,12 @@ int main(int argc,  char **argv) {
       globaltrig1 = new GlobalTrigger(settings1, anita1);
 
       Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-      if(settings1->BORESIGHTS)
-        anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2],bn1,settings1);
-      else
-        anita1->GetArrivalTimes(ray1->n_exit2bn[2],bn1,settings1);
-      
+      if (!settings1->TRIGGEREFFSCAN){
+        if(settings1->BORESIGHTS)
+          anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2],bn1,settings1);
+        else
+          anita1->GetArrivalTimes(ray1->n_exit2bn[2],bn1,settings1);
+      }
       anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times, settings1->NANTENNAS);
 
       //Zeroing
@@ -2731,7 +2732,7 @@ int main(int argc,  char **argv) {
             h6->Fill(hitangle_h, ray1->n_exit2bn[2]*bn1->n_bn);
 
 
-          anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, n_eplane,  n_hplane,  n_normal);
+          anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, n_eplane,  n_hplane,  n_normal, ilayer, ifold);
 
           // AntTrig::ImpulseResponse needs to be outside the ray loop
           anttrig1->ImpulseResponse(settings1, anita1, ilayer, ifold);
@@ -2802,6 +2803,15 @@ int main(int argc,  char **argv) {
                 } // end if (seavey frequencies)
               } // end looping over frequencies.
 
+              if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
+                anttrig1->injectImpulseAmplitudeAfterAntenna(anita1, anttrig1->v_banding_rfcm_e[iband], anttrig1->v_banding_rfcm_h[iband], ant);
+                // if not using the impulse response we need to re-apply banding and rfcms
+                if (!settings1->APPLYIMPULSERESPONSETRIGGER){
+                anita1->Banding(iband, anita1->freq, anttrig1->v_banding_rfcm_e[iband], Anita::NFREQ);
+                anita1->RFCMs(1, 1, anttrig1->v_banding_rfcm_e[iband]);
+                }
+              }
+
               if (settings1->APPLYIMPULSERESPONSETRIGGER){
                 double volts_triggerPath_e[Anita::HALFNFOUR]={0.};
                 double volts_triggerPath_h[Anita::HALFNFOUR]={0.};
@@ -2831,7 +2841,7 @@ int main(int argc,  char **argv) {
                 Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_e);
                 Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_h);
 
-                if (settings1->TRIGGEREFFSCAN){
+                if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
                   anttrig1->injectImpulseAfterAntenna(anita1, volts_triggerPath_e, volts_triggerPath_h, ant);
                 }
 

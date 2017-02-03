@@ -258,7 +258,7 @@ public:
     
     AntTrigger(); // constructor
     void InitializeEachBand(Anita *anita1);
-    void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector n_eplane, Vector n_hplane, Vector n_normal);
+    void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector n_eplane, Vector n_hplane, Vector n_normal, int ilayer, int ifold);
     void ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer, int ifold);
     void TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
 
@@ -340,8 +340,10 @@ public:
 #ifdef ANITA_UTIL_EXISTS
   void applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
   void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], double *vhz, bool pol);
+  void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], bool pol);
   double *getNoiseFromFlight(Anita* anita1, int pol, int ant);
   void injectImpulseAfterAntenna(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant);
+  void injectImpulseAmplitudeAfterAntenna(Anita *anita1, double vhz_triggerPath_e[Anita::NFREQ], double vhz_triggerPath_h[Anita::NFREQ], int ant);
   void injectImpulseAtSurf(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant);
 #endif
     
