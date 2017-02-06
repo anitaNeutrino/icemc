@@ -2784,7 +2784,7 @@ int main(int argc,  char **argv) {
               //
               if (settings1->TRIGGERSCHEME >=2) { // we need to prepar the signal for the diode integration
                 for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-                  anita1->vmmhz_banding_rfcm[ifreq]=anita1->vmmhz_banding_rfcm[ifreq]*anita1->scaleTrigger/(anita1->TIMESTEP*1.E6);
+                  anita1->vmmhz_banding_rfcm[ifreq]=anita1->vmmhz_banding_rfcm[ifreq]/sqrt(2)/(anita1->TIMESTEP*1.E6);
                   // vmmhz was set to account for both negative and positive frequencies
                   // now it has units of volts/(meter*s) so below we copy it to vm_banding_rfcm_e,h
                     
