@@ -615,8 +615,6 @@ TTree *tgaryanderic; // writing data out for the analysers
   TGraph *fSignalChainResponseDigitizer[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   TGraph *fSignalChainResponseTrigger[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   double deltaT;
-  double scaleDigitizer; // scaling factor for signal that is divided in digitizer and trigger path
-  double scaleTrigger;   // scaling factor for signal that is divided in digitizer and trigger path
 
   // Trigger efficiency scan parameters
   int trigEffScanPhi;                      // central phi sector of trigger efficiency scan
