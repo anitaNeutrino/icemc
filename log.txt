@@ -711,6 +711,9 @@ SVN-deleted freqdomainplots.eps and cE2.pdf, and moved [freqdomainplots, thresho
 05/17/2016 05.08 PM BST L. Cremonesi
 Added condition to get out of passing trigger if trying to calculate hpol trigger on payload other than anita-3 or when requesting only vpol triggers. Added weights to the output in the standard anita data format. Made formatting easier to read
 
+05/17/2016 3.30 PM ET M. Sutherland   [in branches/roughness]
+Changed Settings::ROUGHSIZE to (int) not (float). Removed ReadRoughnessData() in icemc.cc. SVN-deleted inputs.txt.roughness and inputs.txt.roughness_singleray. Changed roughness settings in input.txt and Roughness() constructor. Commented out raytree and raytree2 TTrees, roughness stuff between lines 165-264, and GetScreenXY stuff. Created Roughness::Screen member. Removed rough_sigma from GetDirections().
+
 05/18/2016 02.16 PM BST L. Cremonesi
 Corrected a bug inserted with the previous commit
 
@@ -723,6 +726,12 @@ Clean up of l3Trig(H) after use, that was causing anita-3 trigger to trigger too
 05/19/2016 11.37 AM BST L. Cremonesi
 Fixed bug related to HPOL triggers not being filled properly. Anita-3 trigger still shows too much HPOL.
 
+05/19/2016 10.14 AM ET M. Sutherland   [in branches/roughness]
+Merged over trunk's last few updates. Removed GetScreenXY(). Removed TTree raytree and raytree2. Removed myfunction() and integratemyfunction(). Removed roughness parameter declarations from roughly line 165-235. Saving to keep step with trunk.
+
+05/23/2016 13.33 PM ET M. Sutherland   [in branches/roughness]
+Implemented Screen class in its own .cc/.hh files with initial member data and functions. Added screen.cc/.hh to Makefile. Fixed reading/splining of flat glass data.
+
 05/24/2016 04.00 PM BST L. Cremonesi 
 Updated power threshold for global trigger to be flight-dependent. Evaluate GetFresnel function for boresight option as well. Some minor format changes.
 
@@ -732,8 +741,17 @@ Fixed all indentations in trigger.cc to aid readability to the code.
 05/24/2016 04.30 PM BST L. Cremonesi 
 Split the function WhichBandsPass in two.
 
+05/25/2016 15.27 PM ET M. Sutherland   [in branches/roughness]
+Removing some previous roughness work in icemc.cc. Added fresnel and loss correction factors from Table 4 ELOG 077 to roughness. Renamed Roughness::ConstructTheta0Splines() to Roughness::ConstructSplines(). Removed FILLRAYTREES in Settings.cc/h and input.txt.roughness.
+
+05/27/2016 14.40 PM ET M. Sutherland   [in branches/roughness]
+Changed some Screen data member and functions from Vector to Position. Made an explicit Roughness::GetFresnel() function for the roughness case. Modified icemc.cc to start calculating contributions on actual screens based on event properties. It compiles right now but is untested.
+
 05/31/2016 12.40 PM BST L. Cremonesi
 Added signal chain impulse response to digitiser path.
+
+05/31/2016 16.07 PM ET M. Sutherland   [in branches/roughness]
+Added npol_local in icemc to get local polarization angle at the screen sample's projected ground impact point. Saving to keep in step with trunk.
 
 06/01/2016 10.40 PM BST L. Cremonesi
 Solving some more warnings
@@ -741,8 +759,35 @@ Solving some more warnings
 06/02/2016 12.10 PM BST L. Cremonesi
 Clean up memory in applySignalChain function
 
+06/06/2016 14.34 PM ET M. Sutherland   [in branches/roughness]
+Saved updates over weekend from trunk to roughness branch
+
+06/06/2016 17.04 PM ET M. Sutherland   [in branches/roughness]
+More syncing, just to make sure I pulled the changes correctly. Missed a curly bracket in Settings.cc during the last merge. Changed default roughness to 400grit in constructor. Removed extra info appended to input.txt.roughness, and copied parameters from input.txt.anita3 into it.
+
+06/07/2016 13.10 PM ET M. Sutherland   [in branches/roughness]
+rolling branches/roughness back to r574 because my work was wiped somehow in the sync.
+
+06/07/2016 13.42 PM ET M. Sutherland   [in branches/roughness]
+saving sync. Also fixed spline assert error in Roughness::ReadDataFile() about theta_0 and changed default screensize to 5 from 11.
+
 06/08/2016 03:40 PM BST L. Cremonesi
 First commit of time-dependent thresholds.
+
+06/09/2016 12.55 PM ET M. Sutherland   [in branches/roughness]
+fixed wrong position in WhereDoesItEnterIce(). saving syncs with trunk.
+
+06/10/2016 21.56 PM ET M. Sutherland   [in branches/roughness]
+saving some incidence plane calculations
+
+06/13/2016 16.10 PM ET M. Sutherland   [in branches/roughness]
+Removed GetTransmission(). Fixing pos_current and pos_projectedImpactPoint confusion. Created plane-of-incidence vectors and calculating angles using those. Added Screen::SetUnitX/Y() plane vectors instead of setting them in SetNormal().
+
+06/14/2016 10.28 AM ET M. Sutherland   [in branches/roughness]
+icemc.cc seems to calculate plane of incidence angles correctly. Moving on Fresnel/Magnification factors and electric field vectors.
+
+06/14/2016 14.10 PM ET M. Sutherland   [in branches/roughness]
+Added vec_pos_current_to_balloon for more accurate vector from impact point to balloon (not just ray1->n_exit2bn[2]). Switched ConvertTheta0AirGlass_to_GlassAir() to ConvertTheta0GlassAir_to_AirGlass(). Added interpolatedPower>0 check. Removed *180./PI in GetFresnelCorrectionFactor() and GetLossCorrectionFactor() arguments in icemc.cc. Changed fSCREEN_NUMPOINTS_EDGE in icemc.cc so it is set by settings1->ROUGHSIZE from the input file.
 
 06/15/2016 02:10 PM BST L. Cremonesi
 Correct the implementation of the time-dependent thresholds.
@@ -750,14 +795,47 @@ Correct the implementation of the time-dependent thresholds.
 06/15/2016 06.20 PM BST L. Cremonesi
 Commented out variables and pointers that were not used or filled (probably residuals of all code that is not there any more). This reduces the amount of memory and buffering time used.
 
+06/15/2016 15.57 PM ET M. Sutherland   [in branches/roughness]
+fSCREEN_NUMPOINTS_EDGE uses settings1->ROUGHNESS, not ROUGHSIZE. Added SCREENEDGELENGTH in settings. synced some trunk changes over here (r600).
+
+06/17/2016 10.06 AM ET M. Sutherland   [in branches/roughness]
+changed glass_air_criticalangle from 42 to 41.81. Added data/roughness/Bilinear_interpolation.png. Added Roughness::BilinearInterpolation() placeholder function to attempt better 2-d interpolation instead of 1+1.
+
 06/21/2016 A. Connolly
 New handling of vpol/hpol triggers
+
+06/22/2016 09.03 AM ET M. Sutherland   [in branches/roughness]
+sync merged with trunk r605
 
 06/22/2016 02.16 PM BST L. Cremonesi
 Make previous commit work also when triggering only on one pol.
 
 06/22/2016 05.40 PM BST L. Cremonesi
 Move all turf and surf related things from balloon to anita.
+
+06/22/2016 13.22 PM ET M. Sutherland   [in branches/roughness]
+Changed BilinearInterpolation() arguments to double. Added 2-d bilinear interp to InterpolatePower(), commenting out pre-existing spline code, still working on it. Removed extra double castings in roughness. Fixed input.txt.roughness to accomodate new LCP/RCP input line.
+
+06/30/2016 10.26 AM ET M. Sutherland   [in branches/roughness]
+Removed 2-d interp algorithm in InterpolatePower(), BilinearInterpolation() function, and theta_unique vector. Adding analytic gaussian function using astropy 2d gaussian fits to raw power measurements. Changed default roughness to 400 grit. synced with trunk.
+
+07/05/2016 10.54 AM ET M. Sutherland   [in branches/roughness]
+Switched swapped 400 grit and 1500 grit 2-d fit parameters. Removed some comments and std::cerr statements. synced with trunk. InterpolatePower() use theta_0_local. Removed critical angle cut. Added an explicit 90 degree upper limit to Roughness::corrfactor vectors, this removes the nan region in front of specular exit point.
+
+07/08/2016 07.15 AM PT M. Sutherland   [in branches/roughness]
+In icemc.cc, removed Roughness::GetFresnel() call and commented GetFresnelCorrectionFactor() in Emag_local calculation. Separated OutsideAntarctica() from WhereDoesItExitIce() check. Added cosine projection factor in Screen (fcosineProjectionFactor) with member access functions. Adjusted projection of central screen position so it impacts closer to balloon and screen samples more of the forward power transmission region. Fixed theta when incident ray points 'away' from balloon direction. Added condition in Attenuate() to allow for larger dtemp in case of roughness.
+
+07/19/2016 11.10 AM ET M. Sutherland   [in branches/roughness]
+synced with trunk, since there were a few trunk updates over the last week.
+
+07/28/2016 10.40 AM ET M. Sutherland   [in branches/roughness]
+Centered screen on central point (50% / 50%). Cleaned out some commented statements and unused variables, and commented some std::cerr statements in icemc.cc. Removed glass_air_criticalangle. Added transformation matrices for converting from 'global' to 'local' coordinates to respect boundary conditions, to allow transmitted polarization calculation. Separated incidence and scattering planes to be consistent with transformation matrix. Set npol_local_inc as unit vector. Re-orient npol_local_trans so it is properly perpendicular to the to-balloon vector.
+
+07/28 2016 15.23 PM ET M. Sutherland   [in branches/roughness]
+Commented roughout stream. Added condition that event is skipped if transmitted polarization has nan components. Moved data/roughness/masterfile.txt to data/roughness_full.txt. Removed data/roughness/ folder.
+
+08/08/2016 13.22 PM ET M. Sutherland   [in branches/roughness]
+Simply saving some added parameters to the roughout stream.
 
 08/15/2016 12.20 PM BST L. Cremonesi
 Log hasn't really been updated lately, so I copy here the svn log from June (and in this commit there is a fix to the impulse response)
@@ -854,8 +932,67 @@ Added getInterpolated graph to Tools to start removing dependence of impulse res
 
 8/16/16 B. Dailey: Made a feew changes. First, created a CDF function to run over neutrino spectra faster. It is currently limited to 10^18 eV at the low end. (may be able to go lower). Secondly, updated various functions in anita.cc and balloon.cc to help match antenna position in analysis codes. IN anita.cc , for ANITA-2 updated starting position to match Simon's Numbers (used in analysis). Also added an 'off boresight' delay for ANITA-2 to match ANITA-2 analysis. Updated antenna orientation to better match analysis. Fixed bug in RealDataFormat that wouldn't allow nadir antennas (ANITA-2) to function in analysis (calibStatus=15 is now calibStatus=31). May need to be changed for ANITA-3, depending on analysis code.
 
+08/18/2016 14.55 PM ET M. Sutherland   [in branches/roughness]
+Added GetVmMHz() and TaperVmMHz() for each screen point. Added preliminary relative phases (but needs corrected to properly affect the time domain waveform). Added specular parameter calculation to beginning of roughness before the screen starts looping. Added index functions to Screen class to get the index values for plotting and looping.
 
 8/18/16 B.Dailey: Fixed a couple of bugs from last submit. The function GetCDF was being run even if the input spectrum was mono-energetic which caused problems. I put 'ifdef' statement around impulseresponse as it is only used with real data output. Also moved one plot to the outputdir as Mike S. request. Also fixed wording in output files for ESS spectrum was 0, when it should be 30. 
+
+08/18/2016 19.45 PM ET M. Sutherland   [in branches/roughness]
+copied Brian's updates in trunk into the branch.
+
+08/18/2016 13.19 PM ET M. Sutherland   [in branches/roughness]
+copied Linda's updates in trunk into the branch.
+
+08/25/2016 09.53 AM ET M. Sutherland   [in branches/roughness]
+Created vectors in Screen to hold the vmmhz magnitudes for each frequency and phase delay of each point. Added member functions for accessing those. Modified AntTrigger::AntTrigger in trigger.cc/.hh to access the screen instance. Added parameter for tracking number of valid screen points and access functions in Screen. AntTrigger::integral_vmmhz now uses sum of screen points in roughness case. Merged latest updates from trunk into the branch.
+
+08/25/2016 10.03 AM ET M. Sutherland   [in branches/roughness]
+Forgot to test-compile before committing, so updating with some changes in trigger.cc to resolve compile errors related to Screen member access in AntTrigger().
+
+08/26/2016 12.27 PM ET M. Sutherland   [in branches/roughness]
+Commented TCint.h in rx.hpp to allow root6 compilation.
+
+08/29/2016 13.15 PM ET M. Sutherland   [in branches/roughness]
+Removed viewangle_local cut. Renamed Screen::Set vectors to ::Add. Added polarization and vector-to-balloon as saved quantities in Screen.
+
+08/29/2016 14.01 PM ET M. Sutherland   [in branches/roughness]
+In case of no-roughness, icemc also stores the specular parameters (vmmhz, pol, etc) in Screen, so we could simply make a single loop query over valid screen points in trigger instead of splitting the two cases. Renamed AntTrigger::AntTrigger(...) as void AntTrigger::RunTrigger(...), keeping the default empty argument constructor.
+
+08/30/2016 15.41 PM ET M. Sutherland   [in branches/roughness]
+splitting AntTrigger::RunTrigger() into multiple more sensible functions and to allow use of Screen vectors to construct signal: InitializeEachBand(), ConvertInputWFtoAntennaWF(), ImpulseResponse(), TimeShiftAndSignalFluct(), and Banding().
+
+08/31/2016 12.10 PM ET M. Sutherland   [in branches/roughness]
+Merged latest updates from trunk into the branch.
+
+09/01/2016 10.30 AM ET M. Sutherland   [in branches/roughness]
+Modified Anita::MakeArraysforFFT so it takes an additional double argument (phasedelay) which is used in cosphase and sinphase. Modified AntTrigger::ConvertInputWFtoAntennaWF so it loops over the frequencies of each screen point and computes its time domain waveform, then constructs the summed waveform; also changed 3 later calls to Anita::MakeArraysforFFT so they use 90 degree phase delays (similar to what was being done previously). Modified icemc.cc so the screen phase delay is stored in degrees, and the default no-roughness delay is 90. When compiled and tested with NO roughness (A3, 10^5 nu, no firn or t-dep threshes.), the simulation returns identical results (weighted events, aperture, etc.). Progress indeed.
+
+09/01/2016 15.00 PM ET M. Sutherland   [in branches/roughness]
+Moved setting of no-roughness case screen properties (vmmhz, phase) to before trigger instantiation so they are properly calculated and set.
+
+09/01/2016 16.05 PM ET M. Sutherland   [in branches/roughness]
+Removed extra arguments from ConvertInputWFtoAntennaWF in icemc.cc (leftovers from tests)
+
+09/06/2016 9.56 AM ET M. Sutherland   [in branches/roughness]
+Set default Screen y-shift to be 1*fedgeLength and not 0.5*fedgeLength, since emission region is in front of specular RFexit point.
+
+09/06/2016 16.00 PM ET M. Sutherland   [in branches/roughness]
+Undid last branch commit and set default screen y-shift to be -1.0 not -0.5. Cleaned up icemc.cc comments. Moved screen's transmitted polarization calc into Screen::CalculateTransmittedPolarization(). Removed old roughness functions in Roughness class files. Moved GetBalloonLocation from Roughness into icemc.cc.
+
+09/07/2016 16.08 PM ET M. Sutherland   [in branches/roughness]
+trying to make an 'adaptive' screen procedure. Probably broken right now.
+
+09/08/2016 9.54 AM ET M. Sutherland   [in branches/roughness]
+Modified screen screen sampling so it uses smaller physical screens in locations where the vmmhz varies sufficiently across the parent screen. This seems to be working, but need to check final signal waveforms before full simulation testing.
+
+09/23/2016 13.25 PM ET M. Sutherland   [in branches/roughness]
+Modified trigger.cc to output v_banding_rfcm_h_forfft and v_banding_rfcm_e_forfft (which is also anita1::signal_vpol_inanita) to a file. Re-interpreted UCLA measurements as dP/dTheta, and re-scaled the values by the angular bin widths, saved in a new file (data/roughness_full_dPdtheta.dat), and re-fit the parameters and saved them in roughness.cc. Added the new roughness file. In icemc.cc, 1) added (&& not settings1->ROUGHNESS) as a condition in the check if absorption probability is near 1, 2) added output file for record event properties, 3) adjusted Emag_local by the angular size of the element, since interpolatedPower gets dP/dtheta, not P, 4) added output file for record base screen properties.
+
+09/29/2016 14.00 PM ET M. Sutherland   [in branches/roughness]
+Moved vmmhz array and Taper outside the loop that checks for valid screen points, so that the frequncy arrays are only constructed for valid points. This reduces runtime by a factor of 7 roughly.
+
+09/29/2016 15.00 PM ET M. Sutherland   [in branches/roughness]
+Modified Anita::MakeArraysforFFT() so it takes a bool argument about whether to use a constant delay factor: if true it uses the value passed (default 90), if false the function does not apply phase factors. Instead to use the screen's phases, I copied the relevant code from that function and pasted it below the function call in AntTrigger::ConvertInputWFtoAntennaWF().
 
 10/12/16 L.Cremonesi
 Fixed bug in RxTriggerNumbering. Add thermal noise generated from Anita-3 flight. Add possibility to generate minimum bias sample.
@@ -863,11 +1000,53 @@ Fixed bug in RxTriggerNumbering. Add thermal noise generated from Anita-3 flight
 10/13/16 L.Cremonesi
 Filling the Anita Truth event class (only if compilation variable ANITA3_EVENTREADER is defined, by default it is not defined so that not to break compilation for Brian). Also removed the cap on the number of events to be saved in the data-like format (all other outputs still have the cap).
 
+10/14/2016 14.26 PM ET M. Sutherland   [in branches/roughness]
+Saving the branch with misc updates. Need to add screen loops and weights in the anttrig1->Banding function so the trigger actually sees something besides the vmmhz array, i.e., previous work didn't actually do anything.
+
+10/14/2016 15.20 PM ET M. Sutherland   [in branches/roughness]
+Restored anttrig->Banding() function so it takes vmmhz as argument and outputs 'correct' waveforms. Still need to fix this function so it uses the Screen vectors, phases, weights etc.
+
+10/18/2016 15.13 PM ET M. Sutherland   [in branches/roughness]
+Removed vmmhz argument from AntTrigger::ConvertInputWFtoAntennaWF() to minimize confusion (we no longer want to use vmmhz and instead use panel1 stuff). Screen weights only involve ratio of areas. Commented out assignment of sum of local vmmhz to vmmhz array, so the trigger signal is zero and we can check the use of Screen. Removed AntTrigger::Banding() and put contents back into icemc.cc main(). Added tmp_vhz_rx_e contributing to vhz_rx_e in AntTrig::ConvertInputWFtoAntennaWF(), missed it before.
+
 10/25/16 B.Dailey
-Found some discrepancies for ANITA-2 between my older verion and latest version. Rotate payload does not need a different rotation for ANITA3 and corrected the negative sign difference in UnRotatePayload. 
+Found some discrepancies for ANITA-2 between my older verion and latest version. Rotate payload does not need a different rotation for ANITA3 and corrected the negative sign difference in UnRotatePayload.
+
+10/27/2016 10.30 AM ET M. Sutherland   [in branches/roughness]
+Rolled back the branch to r677 (kept the r689 log.txt though for history completeness) in preparation for merging trunk over here with Linda's and Brian's commits.
+
+10/27/2016 13.00 PM ET M. Sutherland   [in branches/roughness]
+Merged over recent trunk commits into the branch and checked that specular simulations are identical.
+
+10/27/2016 14.49 PM ET M. Sutherland   [in branches/roughness]
+Added waveform weights inside AntTrig::ConvertInputWFtoAntennaWF() corresponding to the screen element area; still needs to be applied to waveform construction in actual trigger algorithm. Changed specular screen delay to 0 instead of 90. Removed vmmhz from AntTrig::ConvertInputWFtoAntennaWF() arguments, fully uses screen now. Commented vmmhz[k] += vmmhz_local_array[k] in icemc screen construction loop. IntegrateBands() uses panel1 instead of vmmhz. Moved IntegrateBands() for sumsignal_aftertaper to just before globaltrigger. Confirmed identical specular results as trunk.
+
+10/28/2016 10.31 AM ET M. Sutherland   [in branches/roughness]
+Moved my AntTrig::Banding() content into main, and removed the function. Moved time domain waveform construction in AntTrig::WhichBandsPassTrigger2 into main right before anttrig1->WhichBandsPass() function call; moved relevant parameter declarations like v_banding_rfcm_e_forfft into trigger.hh. Confirmed identical specular results as trunk.
+
+10/28/2016 15.19 PM ET M. Sutherland   [in branches/roughness]
+Fixed some indenting. Phase treatment needs check in icemc.cc and trigger.cc. Set default specular delay to 90deg. Added screen looping inside banding trigger. 100k events with seed=709 do not give same results, but rough0_0_0 of first event of seed=313 is same as trunk but not the other rough files? This needs checked.
+
+10/28/2016 16.50 PM ET M. Sutherland   [in branches/roughness]
+Added setting anttrig1->v_banding_rfcm_e/h_forfft to zero before each screen loop in the band loop. This makes the seed 313 first event have matching waveforms with trunk, but simulation output still doesn't match for 100k events compared to trunk.
+
+11/02/2016 9.12 AM ET M. Sutherland   [in branches/roughness]
+Added Screen::ResetParameters() to reset all vectors for each event. Set no-roughness default delay to 90deg for consistency. Moved Zero(sumsignal_aftertaper) outside antenna loop. Moved TMP_v_banding_rfcm_e_forfft phase application to right after MakeArraysforFFT(). Moved volts_rx_0 Gaus() noise into antenna loop so random numbers get called identically as in trunk. 
+
+11/03/2016 15.39 PM ET M. Sutherland   [in branches/roughness]
+Rolled back to the branch to r696 since single waveform cmparison to trunk was not identical. Changed default specular phase delay to zero, and use 90degrees+GetDelay() in the equations. Fixed screen weight value (set to area) and its norm application. Need to check that single-event specular waveform and 1M-events output are same.
+
+11/08/2016 14.48 PM ET M. Sutherland   [in branches/roughness]
+element_sa uses L / N, not just L. seedscreens_vmmhzlocal uses Emag_local not Emag_local_notaper. Added vector clears to basescreen and seedscreens vectors to recover some memory. Base screen point acceptance based on maximum, not contribution to sum. Removed panel phases in signal waveform construction for the moment. After nraywithincontinent1++, removed the if/else ROUGHNESS surrounding the bestcase_atten because this was introducing differences for many event sims compared to specular, and if ROUGHNESS before err=GetDirection() in a few spots. 
 
 01/17/17 L.Cremonesi
 Make icemc compatible with both anita3 and anita4 eventReaderRoot. Update anita-3 standard input. Added factor of sqrt(2) because the splitting between digitizer/trigger path was already considered.
 
 01/23/17 L.Cremonesi
 Several commits to implement the first version of the trigger path impulse response. Semi-working version for the moment, that's not ready to be used yet. Also improved the coding of the trigger path (moved all to trigger.cc and eliminated unused variables).
+
+1/31/17 1.50 PM ET M. Sutherland   [in branches/roughness]
+Merged trunk updates into branch. Specular results in branch are identical to trunk.
+
+1/31/17 1.50 PM ET M. Sutherland   [in branches/roughness]
+Merged additional trunk updates to the branch. Specular confirmed identical. Concurrent with trunk.

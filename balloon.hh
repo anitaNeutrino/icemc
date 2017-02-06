@@ -46,6 +46,8 @@ public:
   int ibnposition;
   double dtryingposition; // weighting factor: how many equivalent tries each neutrino counts for after having reduced possible interaction positions to within horizon
   
+  void PickRoughnessInteractionPoint(Interaction *interaction1, Anita *anita1, Settings *settings1,IceModel *antarctica1, Ray *ray1, int &beyondhorizon);
+
   void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,Settings *settings1,IceModel *antarctica1,
 				    Ray *ray1, int &beyondhorizon); 
   

@@ -12,6 +12,7 @@ class Balloon;
 class IceModel;
 class Settings;
 class TRandom3;
+class Screen;
 
 //!  Global Trigger
 class GlobalTrigger {
@@ -238,12 +239,33 @@ private:
     double ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant);
     double thisrate;// set when getFunction is called for each channel. this is in MHz
     double thispowerthresh;// set when getFunction is called for each channel
+
+    double e_component; // E comp along polarization
+    double h_component; // H comp along polarization
+    double n_component; // normal comp along polarization
+    double e_component_kvector; // component of e-field along the rx e-plane
+    double h_component_kvector; // component of the e-field along the rx h-plane
+    double n_component_kvector; // component of the e-field along the normal 
+    double hitangle_e, hitangle_h;       // angle the ray hits the antenna wrt e-plane, h-plane
     
+    double vhz_rx_e[Anita::NFREQ]; // V/Hz after antenna gains
+    double vhz_rx_h[Anita::NFREQ];
+    // same but with binning for fft
+    double volts_rx_e_forfft[Anita::HALFNFOUR];
+    double volts_rx_h_forfft[Anita::HALFNFOUR];
+
 public:
     
     AntTrigger(); // constructor
-    AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512]); 
-    //AntTrigger(int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,int rx_minarrivaltime_temp); 
+    void InitializeEachBand(Anita *anita1);
+    void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector n_eplane, Vector n_hplane, Vector n_normal, int ilayer, int ifold);
+    void ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer, int ifold);
+    void TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
+
+    // just for historical reference, this function:
+    //void AntTrigger::RunTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
+    // was split into InitializeEachBand, ConvertInputWFtoAntennaWF, ImpulseResponse, TimeShiftAndSignalFluct, Banding
+
     static void ConvertEHtoLREfield(double,double,double&,double&);
     static void ConvertEHtoLREnergy(double,double,double&,double&);
     void ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
@@ -284,7 +306,6 @@ public:
     double v_banding_rfcm_e[5][Anita::NFREQ];// this is Volts/m as a function of frequency after rfcm's and banding
     double v_banding_rfcm_h[5][Anita::NFREQ];
     
-    
     //static const double bwslice_center[4]; // center frequencies
     //static const double bwslice_width[4]; // 3 dB bandwidths, without overlap
     
@@ -310,7 +331,7 @@ public:
     // End of band waveform triggering arrays
     
     double integral_vmmhz;
-    
+    double integral_vmmhz_r[Anita::NFREQ];
     
     // this increments the bwslice_volts_...'s at each frequency
     void addToChannelSums(Settings *settings1,Anita *anita1,int ibw,int k);

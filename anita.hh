@@ -89,7 +89,7 @@ static const int NPOL=2; // number of polarizations
     ~Anita();
     void Initialize(Settings *settings1,ofstream &foutput,int inu); // initialize a bunch of stuff
     // takes arrays that span NFREQ and turn them into arrays that span HALFNFOUR
-    void MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft);
+    void MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay);
     int Match(int ilayer,int ifold,int rx_minarrivaltime);
     int getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn);
 

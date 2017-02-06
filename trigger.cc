@@ -21,6 +21,7 @@
 #include <cmath>
 #include "Tools.h"
 #include "Settings.h"
+#include "screen.hh"
 
 using std::cout;
 
@@ -461,20 +462,10 @@ void AntTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, Glob
  *
  */
 void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
-  
-  double v_banding_rfcm_e_forfft[5][anita1->HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
-  double v_banding_rfcm_h_forfft[5][anita1->HALFNFOUR];
-  double vm_banding_rfcm_1_forfft[5][anita1->HALFNFOUR];
-  double vm_banding_rfcm_2_forfft[5][anita1->HALFNFOUR];
-    
-  double v_banding_rfcm_e_forfft_temp[5][anita1->HALFNFOUR];
-    
-  double v_banding_rfcm_h_forfft_temp[5][anita1->HALFNFOUR];
-    
-    
+
   double psignal_e[5][anita1->NFOUR];
   double psignal_h[5][anita1->NFOUR];
-    
+
   double mindiodeconvl_e[5];
   double mindiodeconvl_h[5];
   double onediodeconvl_e[5];
@@ -482,8 +473,6 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
     
   double timedomain_output_1[5][Anita::NFOUR];
   double timedomain_output_2[5][Anita::NFOUR];
-
-  
 
   // if we use the diode to perform an integral
   // this is the number of bins to the left of center where the diode function starts to be completely overlapping with the waveform in the convolution.
@@ -521,7 +510,7 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
     Tools::Zero(v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
     Tools::Zero(v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
 	
-    anita1->MakeArraysforFFT(v_banding_rfcm_e[iband],v_banding_rfcm_h[iband],v_banding_rfcm_e_forfft[iband],v_banding_rfcm_h_forfft[iband]);
+    anita1->MakeArraysforFFT(v_banding_rfcm_e[iband],v_banding_rfcm_h[iband],v_banding_rfcm_e_forfft[iband],v_banding_rfcm_h_forfft[iband], 90., true);
 	
     // for some reason I'm averaging over 10 neighboring bins
     // to get rid of the zero bins
@@ -709,6 +698,7 @@ int whichlayer,whichphisector;
 	
     for (int i=0;i<Anita::NFOUR/2;i++) {
       anita1->timedomain_output_1_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][i]=timedomain_output_1[4][i];
+      //cerr<<j<<" "<<i<<" "<<vm_banding_rfcm_1_forfft<<"  "<<timedomain_output_1[j][i]<<endl;
     }
 	
     anita1->channels_passing_e[j]=0; // does not pass
@@ -788,11 +778,10 @@ int whichlayer,whichphisector;
       
   for (int j=0;j<5;j++) {
     anita1->myconvlv(vm_banding_rfcm_2_forfft[j],anita1->NFOUR,anita1->fdiode_real[j],mindiodeconvl_h[j],onediodeconvl_h[j],psignal_h[j],timedomain_output_2[j]);
-	
-
     // now shift right to account for arrival times
     Tools::ShiftRight(timedomain_output_2[j],anita1->NFOUR,(int)(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-      
+
+	
     if (settings1->TRIGGERSCHEME == 2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
       //      if (inu==1570)
       //cout << "shifting left.\n";
@@ -1006,15 +995,8 @@ int whichlayer,whichphisector;
 
 }// end WhichBandsPassTrigger2
 
-//!
-/*!
- *
- *
- *
- *
- *
- */
-AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
+
+void AntTrigger::InitializeEachBand(Anita *anita1)
 {
   unwarned=1;
   for (int ipol=0;ipol<2;ipol++) {
@@ -1042,50 +1024,112 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   Tools::Zero(bwslice_energy_polh,5);
   Tools::Zero(bwslice_volts_polh,5);
   Tools::Zero(bwslice_volts_pole,5);
-    
+}
+
+
+void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector n_eplane, Vector n_hplane, Vector n_normal, int ilayer, int ifold)
+{
   // vmmhz is V/m/MHz at the face of the antenna
-    
   // this gets written to a tree because it is a measure of signal strength in the frequency domain
   integral_vmmhz=0.;
-    
+  //used if roughness, to first determine total of a frequency for all screen points
   for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-    integral_vmmhz+=vmmhz[ifreq]*(anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
+    integral_vmmhz_r[ifreq] = 0.;
   }
-    
-    
-  double vhz_rx_e[Anita::NFREQ]={0.}; // V/Hz after antenna gains
-  double vhz_rx_h[Anita::NFREQ]={0.};
-  // same but with binning for fft
-  double volts_rx_e_forfft[Anita::HALFNFOUR]={0.};
-  double volts_rx_h_forfft[Anita::HALFNFOUR]={0.};
+
+  if(settings1->ROUGHNESS==0){
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+      integral_vmmhz+=panel1->GetVmmhz_freq(ifreq)*(anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
+    }
+  }
+  else{ // for each frequency, add all screen points
+    int jf;
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+      for (int npts=0; npts<panel1->GetNvalidPoints(); npts++){
+        jf = (npts * anita1->NFREQ) + ifreq;
+        integral_vmmhz_r[ifreq] += panel1->GetVmmhz_freq(jf); // integrate vmmhz
+      }
+    }
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+      integral_vmmhz += integral_vmmhz_r[ifreq] * (anita1->freq[1]-anita1->freq[0])/1.E6; // integrate vmmhz
+    }
+  }
+
+  // zero the necessary variables and arrays
+  e_component=0;
+  h_component=0;
+  n_component=0;
+  e_component_kvector=0;
+  h_component_kvector=0;
+  n_component_kvector=0;
+  hitangle_e=0;
+  hitangle_h=0;
+
+  for (int i=0; i<Anita::NFREQ; i++){
+    vhz_rx_e[i]=0.;
+    vhz_rx_h[i]=0.;
+  }
+  for (int i=0; i<Anita::HALFNFOUR; i++){
+    volts_rx_e_forfft[i]=0.;
+    volts_rx_h_forfft[i]=0.;
+  }
 
   int fNumPoints = anita1->HALFNFOUR;
   int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
-  
-  // vmmhz_rx_e,h are going to be the V/m/MHz received by the rx (after gains)
-  for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-    // Convert V/m/MHz to V/m/Hz and divide by dt to prepare for fft
-    // Divide by sqrt 2 to account for signal splitting to trigger and digitizer path
-    vhz_rx_e[ifreq]=vmmhz[ifreq]/sqrt(2)/(anita1->TIMESTEP*1.E6); 
-    vhz_rx_h[ifreq]=vmmhz[ifreq]/sqrt(2)/(anita1->TIMESTEP*1.E6); 
-      
-    // let's find the peak voltage just after the antenna, with no banding
-    anita1->AntennaGain(settings1,hitangle_e,hitangle_h,e_component,h_component,ifreq,vhz_rx_e[ifreq],vhz_rx_h[ifreq]);
-  }
 
-  if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
-    injectImpulseAmplitudeAfterAntenna(anita1, vhz_rx_e, vhz_rx_h, ant);
-  }
-  
-  // change their length from Anita::NFREQ to HALFNFOUR
-  anita1->MakeArraysforFFT(vhz_rx_e,vhz_rx_h,volts_rx_e_forfft,volts_rx_h_forfft);
-    
-  // now the last two are in the frequency domain
-  // convert to the time domain
-  Tools::realft(volts_rx_e_forfft,1,anita1->HALFNFOUR); // EH, I believe this has to the -1 for inverse FFT (1 for forward FFT which is t-domain to f-domain)
-  Tools::realft(volts_rx_h_forfft,1,anita1->HALFNFOUR);
-    
-  // now volts_rx_e,h_forfft are the time domain signals on the back end of the antenna
+  double tmp_vhz_rx_e[Anita::NFREQ]; // V/Hz after antenna gains
+  double tmp_vhz_rx_h[Anita::NFREQ];
+  double tmp_volts_rx_e_forfft[Anita::HALFNFOUR];
+  double tmp_volts_rx_h_forfft[Anita::HALFNFOUR];
+
+
+
+  // vmmhz_rx_e,h are going to be the V/m/MHz received by the rx (after gains)
+  //
+  // for each screen point, assemble the waveform and FFT it with the phase information to get its time-domain waveform, which we THEN add to the running total
+  for (int jpt=0; jpt < panel1->GetNvalidPoints(); jpt++){
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+      // Convert V/m/MHz to V/m/Hz and divide by dt to prepare for fft
+      //vhz_rx_e[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); // EH, 1/sqrt(2) for dividing power in half for TDA and DDA?
+      //vhz_rx_h[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); 
+      tmp_vhz_rx_e[ifreq] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + ifreq)/sqrt(2)/(anita1->TIMESTEP*1.E6);
+      tmp_vhz_rx_h[ifreq] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + ifreq)/sqrt(2)/(anita1->TIMESTEP*1.E6);
+
+      bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal, panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
+      bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
+      bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
+
+      anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, ifreq, tmp_vhz_rx_e[ifreq], tmp_vhz_rx_h[ifreq]);
+    }
+
+    if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
+      injectImpulseAmplitudeAfterAntenna(anita1, tmp_vhz_rx_e, tmp_vhz_rx_h, ant);
+    }
+
+    // change their length from Anita::NFREQ to HALFNFOUR
+    anita1->MakeArraysforFFT(tmp_vhz_rx_e, tmp_vhz_rx_h, tmp_volts_rx_e_forfft, tmp_volts_rx_h_forfft, 90., false);// 90 is just a placeholder
+    //need to handle phase delay explicitly here (eventually when roughness gets worked out)
+    for (unsigned int ifour=0;ifour<NFOUR/4;ifour++) {
+      tmp_volts_rx_e_forfft[2*ifour]*=cos((90.)*PI/180.);
+      tmp_volts_rx_e_forfft[2*ifour+1]*=sin((90.)*PI/180.);
+      tmp_volts_rx_h_forfft[2*ifour]*=cos((90.)*PI/180.);
+      tmp_volts_rx_h_forfft[2*ifour+1]*=sin((90.)*PI/180.); 
+    }
+
+
+    // now the last two are in the frequency domain
+    // convert to the time domain
+    Tools::realft(tmp_volts_rx_e_forfft,1,anita1->HALFNFOUR); // EH, I believe this has to the -1 for inverse FFT (1 for forward FFT which is t-domain to f-domain)
+    Tools::realft(tmp_volts_rx_h_forfft,1,anita1->HALFNFOUR);
+
+    for (int ii=0; ii<Anita::HALFNFOUR; ii++){
+      volts_rx_e_forfft[ii] += tmp_volts_rx_e_forfft[ii] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+      volts_rx_h_forfft[ii] += tmp_volts_rx_h_forfft[ii] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+    }
+  }//end int jpt loop over screen
+
+
+  // now volts_rx_e,h_forfft are the FULL time domain signals FROM ALL SCREEN POINTS on the back end of the antenna
   // this is in volts
     
   // now find peak voltage
@@ -1093,13 +1137,17 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   // we still don't have any noise
   anita1->peak_e_rx_signalonly=AntTrigger::FindPeak(volts_rx_e_forfft,anita1->HALFNFOUR); // with no noise
   anita1->peak_h_rx_signalonly=AntTrigger::FindPeak(volts_rx_h_forfft,anita1->HALFNFOUR); // with no noise
+}
 
-  
+
+void AntTrigger::ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer, int ifold)
+{
   double vhz_rx_rfcm_e[Anita::NFREQ]; // V/Hz after rx, rfcm
   double vhz_rx_rfcm_h[Anita::NFREQ];
-    
-  double vhz_rx_rfcm_lab_e[Anita::NFREQ]; // V/Hz after rx, rfcm and lab
-  double vhz_rx_rfcm_lab_h[Anita::NFREQ];
+
+  int fNumPoints = anita1->HALFNFOUR;
+  int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
+
   
   // if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
   //   injectImpulseAfterAntenna(anita1, volts_rx_e_forfft, volts_rx_h_forfft, ant);
@@ -1109,7 +1157,7 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
   if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
 
     anita1->GetNoiseWaveforms(); // get noise waveforms
-
+    
     Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_e_forfft); 
     Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_h_forfft);
   
@@ -1133,130 +1181,124 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
     
   } else {
     
-  Tools::Zero(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR);// will be volts vs. time after rx, rfcm
-  Tools::Zero(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR);
+    // for frequency-domain voltage-based trigger (triggerscheme==0)
+    // we do not apply rfcm's
+    // for other trigger types we do
+      
+    // apply rfcm's
+    if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5) {
+      anita1->RFCMs(1,1,vhz_rx_rfcm_e);
+      anita1->RFCMs(1,1,vhz_rx_rfcm_h);
+    }
+    
+    double scale;
+    double sumpower=0.;
+    if (anita1->PULSER) { // if we are using the pulser spectrum instead of simulating neutrinos
+      scale=Tools::dMax(vhz_rx_rfcm_e,Anita::NFREQ)/Tools::dMax(anita1->v_pulser,anita1->NFOUR/4);
+      sumpower=0.;
+      int ifour;// index for fourier transform
+      for (int i=0;i<Anita::NFREQ;i++) {
+        ifour=Tools::Getifreq(anita1->freq[i],anita1->freq_forfft[0],anita1->freq_forfft[anita1->NFOUR/2-1],anita1->NFOUR/4);
+        vhz_rx_rfcm_e[i]=scale*anita1->v_pulser[ifour];
+        vhz_rx_rfcm_h[i]=0.;
+        sumpower+=vhz_rx_rfcm_e[i]*vhz_rx_rfcm_e[i];
+      }
+    } // end if we are just using the pulser spectrum
+      
+      
+    for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+      anita1->avgfreq_rfcm[ifreq]+=vhz_rx_rfcm_e[ifreq];
+    }
+    
+    // change their length from Anita::NFREQ to HALFNFOUR
+    anita1->MakeArraysforFFT(vhz_rx_rfcm_e,vhz_rx_rfcm_h,anita1->volts_rx_rfcm_e,anita1->volts_rx_rfcm_h, 90., true);
+      
+    // double volts_rx_rfcm_e_freq[anita1->HALFNFOUR];
+    // for (int i=0;i<anita1->HALFNFOUR;i++) {
+    //   volts_rx_rfcm_e_freq[i]=anita1->volts_rx_rfcm_e[i];
+    // }
+          
+    // now the last two are in the frequency domain
+    // convert to the time domain
+    // still don't have any noise
+      
+    Tools::realft(anita1->volts_rx_rfcm_e,1,anita1->HALFNFOUR); // EH, again, I think this has to be -1 for invFFT
+    Tools::realft(anita1->volts_rx_rfcm_h,1,anita1->HALFNFOUR);
+      
+    anita1->GetNoiseWaveforms(); // get noise waveforms
+      
+    // find the peak right here and it might be the numerator of the horizontal axis of matt's plot
+    anita1->peak_e_rx_rfcm_signalonly=AntTrigger::FindPeak(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR); // with no noise
+    anita1->peak_h_rx_rfcm_signalonly=AntTrigger::FindPeak(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR);
+      
+    if (settings1->SIGNAL_FLUCT) {
+      for (int i=0;i<anita1->NFOUR/2;i++) {
+        anita1->volts_rx_rfcm_e[i]+=anita1->timedomainnoise_rfcm_e[i]; // add noise.
+        anita1->volts_rx_rfcm_h[i]+=anita1->timedomainnoise_rfcm_h[i];
+      } 
+    }
     
     
-  for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-    vhz_rx_rfcm_e[ifreq]=vhz_rx_e[ifreq]; // start with V/Hz after rx
-    vhz_rx_rfcm_h[ifreq]=vhz_rx_h[ifreq];
-  }
-    
-  // for frequency-domain voltage-based trigger (triggerscheme==0)
-  // we do not apply rfcm's
-  // for other trigger types we do
-    
-  // apply rfcm's
-  if (settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5) {
+    anita1->peak_e_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR); // with noise 
+    anita1->peak_h_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR); // with noise
+      
 
-    anita1->RFCMs(1,1,vhz_rx_rfcm_e);
-    anita1->RFCMs(1,1,vhz_rx_rfcm_h);
-		
-  }
-    
-  double scale;
-  double sumpower=0.;
-  if (anita1->PULSER) { // if we are using the pulser spectrum instead of simulating neutrinos
-    scale=Tools::dMax(vhz_rx_rfcm_e,Anita::NFREQ)/Tools::dMax(anita1->v_pulser,anita1->NFOUR/4);
-    sumpower=0.;
-    int ifour;// index for fourier transform
+    double vhz_rx_rfcm_lab_e[Anita::NFREQ]; // V/Hz after rx, rfcm and lab
+    double vhz_rx_rfcm_lab_h[Anita::NFREQ];
+
     for (int i=0;i<Anita::NFREQ;i++) {
-      ifour=Tools::Getifreq(anita1->freq[i],anita1->freq_forfft[0],anita1->freq_forfft[anita1->NFOUR/2-1],anita1->NFOUR/4);
-      vhz_rx_rfcm_e[i]=scale*anita1->v_pulser[ifour];
-      vhz_rx_rfcm_h[i]=0.;
-      sumpower+=vhz_rx_rfcm_e[i]*vhz_rx_rfcm_e[i];
-	
+      vhz_rx_rfcm_lab_e[i]=vhz_rx_rfcm_e[i];
+      vhz_rx_rfcm_lab_h[i]=vhz_rx_rfcm_h[i];
+    }  
+    // now go back to vhz_rx_e,h and apply rfcm's and surf attn. and then we will write the time domain waveforms to tsignals for andres
+    // apply surf (lab) attn.
+    anita1->labAttn(vhz_rx_rfcm_lab_e);
+    anita1->labAttn(vhz_rx_rfcm_lab_h);
+      
+    for (int i=0;i<Anita::NFREQ;i++) {
+      anita1->avgfreq_rfcm_lab[i]+=vhz_rx_rfcm_lab_e[i];
     }
-  } // end if we are just using the pulser spectrum
-    
-    
-  for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-    anita1->avgfreq_rfcm[ifreq]+=vhz_rx_rfcm_e[ifreq];
-  }
-    
-  // change their length from Anita::NFREQ to HALFNFOUR
-  anita1->MakeArraysforFFT(vhz_rx_rfcm_e,vhz_rx_rfcm_h,anita1->volts_rx_rfcm_e,anita1->volts_rx_rfcm_h);
-    
-  // double volts_rx_rfcm_e_freq[anita1->HALFNFOUR];
-  // for (int i=0;i<anita1->HALFNFOUR;i++) {
-  //   volts_rx_rfcm_e_freq[i]=anita1->volts_rx_rfcm_e[i];
-  // }
-        
-  // now the last two are in the frequency domain
-  // convert to the time domain
-  // still don't have any noise
-    
-  Tools::realft(anita1->volts_rx_rfcm_e,1,anita1->HALFNFOUR); // EH, again, I think this has to be -1 for invFFT
-  Tools::realft(anita1->volts_rx_rfcm_h,1,anita1->HALFNFOUR);
-    
-  anita1->GetNoiseWaveforms(); // get noise waveforms
-    
-  // find the peak right here and it might be the numerator of the horizontal axis of matt's plot
-  anita1->peak_e_rx_rfcm_signalonly=AntTrigger::FindPeak(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR); // with no noise
-  anita1->peak_h_rx_rfcm_signalonly=AntTrigger::FindPeak(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR);
-    
-  if (settings1->SIGNAL_FLUCT) {
-    for (int i=0;i<anita1->NFOUR/2;i++) {
-      anita1->volts_rx_rfcm_e[i]+=anita1->timedomainnoise_rfcm_e[i]; // add noise.
-      anita1->volts_rx_rfcm_h[i]+=anita1->timedomainnoise_rfcm_h[i];
-    } 
-  }
-    
-    
-  anita1->peak_e_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_e,anita1->HALFNFOUR); // with noise 
-  anita1->peak_h_rx_rfcm=AntTrigger::FindPeak(anita1->volts_rx_rfcm_h,anita1->HALFNFOUR); // with noise
-    
-    
-  for (int i=0;i<Anita::NFREQ;i++) {
-    vhz_rx_rfcm_lab_e[i]=vhz_rx_rfcm_e[i];
-    vhz_rx_rfcm_lab_h[i]=vhz_rx_rfcm_h[i];
-  }
-    
-    
-  // now go back to vhz_rx_e,h and apply rfcm's and surf attn. and then we will write the time domain waveforms to tsignals for andres
-  // apply surf (lab) attn.
-  anita1->labAttn(vhz_rx_rfcm_lab_e);
-  anita1->labAttn(vhz_rx_rfcm_lab_h);
-    
-  for (int i=0;i<Anita::NFREQ;i++) {
-    anita1->avgfreq_rfcm_lab[i]+=vhz_rx_rfcm_lab_e[i];
-  }
-    
-    
-  // change their length from Anita::NFREQ to HALFNFOUR
-  anita1->MakeArraysforFFT(vhz_rx_rfcm_lab_e,vhz_rx_rfcm_lab_h,anita1->volts_rx_rfcm_lab_e,anita1->volts_rx_rfcm_lab_h);
-    
-    
-  // now the last two are in the frequency domain
-  // convert to the time domain
-  // still don't have any noise
-  Tools::realft(anita1->volts_rx_rfcm_lab_e,1,anita1->HALFNFOUR); // EH, again, I think this has to be -1 for invFFT
-  Tools::realft(anita1->volts_rx_rfcm_lab_h,1,anita1->HALFNFOUR);
 
-  // put it in normal time ording -T to T
-  // instead of 0 to T, -T to 0 
-  Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab_e); // EH, why only this has NormalTimeOrdering applied? Why not before?
-  Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab_h);
+    // change their length from Anita::NFREQ to HALFNFOUR
+    anita1->MakeArraysforFFT(vhz_rx_rfcm_lab_e,vhz_rx_rfcm_lab_h,anita1->volts_rx_rfcm_lab_e,anita1->volts_rx_rfcm_lab_h, 90., true);
+      
+    // now the last two are in the frequency domain
+    // convert to the time domain
+    // still don't have any noise
+    Tools::realft(anita1->volts_rx_rfcm_lab_e,1,anita1->HALFNFOUR); // EH, again, I think this has to be -1 for invFFT
+    Tools::realft(anita1->volts_rx_rfcm_lab_h,1,anita1->HALFNFOUR);
 
-  if (settings1->SIGNAL_FLUCT) { 
-    for (int i=0;i<anita1->NFOUR/2;i++) {
-      anita1->volts_rx_rfcm_lab_e[i]+=anita1->timedomainnoise_lab_e[i]; // add noise
-      anita1->volts_rx_rfcm_lab_h[i]+=anita1->timedomainnoise_lab_h[i];
-    }
-  }
-  
+    // put it in normal time ording -T to T
+    // instead of 0 to T, -T to 0 
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab_e); // EH, why only this has NormalTimeOrdering applied? Why not before?
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab_h);
+
+    if (settings1->SIGNAL_FLUCT) { 
+      for (int i=0;i<anita1->NFOUR/2;i++) {
+        anita1->volts_rx_rfcm_lab_e[i]+=anita1->timedomainnoise_lab_e[i]; // add noise
+        anita1->volts_rx_rfcm_lab_h[i]+=anita1->timedomainnoise_lab_h[i];
+      }
+    }//end if signal_fluct
+
   } // END ELSE IMPULSE RESPONSE
-  
+}// end ImpulseResponse()
+
+
+void AntTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
+{   
+  int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
+
   // now shift right to account for arrival times
-  Tools::ShiftRight(anita1->volts_rx_rfcm_lab_e,anita1->NFOUR/2, int(arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-  Tools::ShiftRight(anita1->volts_rx_rfcm_lab_h,anita1->NFOUR/2, int(arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-  
+  // for (int i=0;i<48;i++) std::cout << arrival_times[i] << std::endl;
+  Tools::ShiftRight(anita1->volts_rx_rfcm_lab_e,anita1->NFOUR/2, int(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+  Tools::ShiftRight(anita1->volts_rx_rfcm_lab_h,anita1->NFOUR/2, int(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+
 
   if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==1)){ 
     injectImpulseAtSurf(anita1, anita1->volts_rx_rfcm_lab_e, anita1->volts_rx_rfcm_lab_h, ant);
   }
 
-  
+
   for (int i=0;i<anita1->NFOUR/2;i++) {
     volts_rx_rfcm_lab_e_all[anita1->GetRx(ilayer, ifold)][i] = anita1->volts_rx_rfcm_lab_e[i];
     volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][i] = anita1->volts_rx_rfcm_lab_h[i];      
@@ -1402,10 +1444,6 @@ AntTrigger::AntTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz,An
 AntTrigger::AntTrigger() {
     
 }
-
-
-
-
 
 
 //!

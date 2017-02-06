@@ -229,7 +229,6 @@ void Settings::Initialize() {
 
 
   // Bunch of variables which were global in icemc.cc but are settings:
-  FILLRAYTREES=1; // fill tree for each ray in roughness simulation
   SEED=65540;      // random number seed.
   THETA_TH_FACTOR=1.0; // factor to multiply theta_th to check code is working properly
   CHANCEINHELL_FACTOR=1.0; // loosen chance in hell cuts to check code is working properly
@@ -254,9 +253,11 @@ void Settings::Initialize() {
   SHOWERTYPE=0; // Type of shower for previous option
   // End of the once-global varibles.
   taumodes = 1; //Taumodes =1, taucreated in the rock.
-
-
+  SCREENEDGELENGTH=25.;
 }
+
+
+
 
 
 
@@ -643,6 +644,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   getSetting("Enable surface roughness", ROUGHNESS);
   getSetting("Surface roughness", ROUGHSIZE);
+  getSetting("Screen edge length [meters]", SCREENEDGELENGTH);
   getSetting("FIRN", FIRN);
   if (FIRN==0){
     std::cout << "Warning!  Non-standard parameter setting.  FIRN = " << FIRN << std::endl;

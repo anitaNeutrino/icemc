@@ -130,6 +130,7 @@ public:
   int FORSECKEL; // Make array of strength of signal across frequencies for different viewing angles.
 
   double ROUGHSIZE; // roughness size
+  double SCREENEDGELENGTH;        // edge length of screen used if there is roughness
 
 
   /* int ICE_MODEL=0; //Select ice model to be used.  0 = Crust 2.0 , 1 = BEDMAP. */

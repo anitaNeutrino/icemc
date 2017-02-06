@@ -55,7 +55,7 @@ else
 # which replaces all instances of the text "constexpr" and replaces it
 # with "const".
 # This preserves functionality while only affecting very specific semantics.
-CPPSTD_FLAGS = -Dconstexpr=const -std=c++0x
+CPPSTD_FLAGS = -Dconstexpr=const
 endif
 
 
@@ -96,7 +96,7 @@ LIBS += -lMathMore
 
 CLASS_HEADERS = rx.hpp Taumodel.hh
 DICT = classdict
-OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o trigger.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o Settings.o $(DICT).o Taumodel.o
+OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o trigger.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o Settings.o $(DICT).o Taumodel.o screen.o
 
 BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf)
 
