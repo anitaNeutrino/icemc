@@ -270,22 +270,15 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
  
     
     PERCENTBW=10; // subbands (not counting full band)
-
-
-    //scaling factor for signal that is divided in digitizer and trigger path 
-    scaleDigitizer = 1./sqrt(2);
-    scaleTrigger   = 1./sqrt(2);
  
 
 #ifdef ANITA_UTIL_EXISTS
     // when using impulse responses scaling factors are 1
     if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
       readImpulseResponseDigitizer(settings1);
-      scaleDigitizer = 1.;
     }
     if (settings1->APPLYIMPULSERESPONSETRIGGER){
       readImpulseResponseTrigger(settings1);
-      scaleTrigger = 1.;
     }
     if (settings1->TRIGGEREFFSCAN){
       readTriggerEfficiencyScanPulser(settings1);
@@ -4225,6 +4218,9 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
     // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
     norm = 48.;
 
+    // Impulse response already accounts for trigger/digitizer splitter
+    norm *= sqrt(2);
+
   }
 
   // Read in input file
@@ -4312,6 +4308,9 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     }
     // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
     norm = 48.;
+
+    // Impulse response already accounts for trigger/digitizer splitter
+    norm *= sqrt(2);
   }
 
   // Read in input file
@@ -4363,11 +4362,28 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
      // Get average pulse as measured by scope
      TGraph *gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
 
-
+     // count in how many channels did we inject a pulse
+     // the scope is one of them
+     // every phi sector contributes with 3 channels
+     int countChannels=1;
+     for (int iphi=0;iphi<5;iphi++) if (trigEffScanAtt[iphi]!=999) countChannels=countChannels+3;
+     
      for (int i=0;i<gPulseAtAmpa->GetN();i++){
-       // Apply attenuation before interpolating
+       // 7db fixed attenuation
+       gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-7/20);
+
+       // Variable attenuation of central phi sector
        gPulseAtAmpa->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]/20);
-       gPulseAtAmpa->GetY()[i]/=10.;
+
+       // Signal in a 12-way splitter but only 6 channels + scope are connected
+       gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(countChannels*1.);
+
+       // Splitter between digitizer and trigger path
+       gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(2);
+       
+       // Additional factor to make things work????
+       gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(2);
+       
      }
      
      TGraph *gPulseAtAmpaInt = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/(2.6));
@@ -4379,8 +4395,7 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
      FFTWComplex *theFFT = FFTtools::doFFT(HALFNFOUR, trigEffScanPulseAtAmpa);
     
      for (int i=0;i<NFREQ;i++){
-       trigEffScanAmplitudeAtAmpa[i]=FFTtools::getAbs(theFFT[i]);//gtemp->GetY()[i];
-       // if (ant ==8 && pol==0) cout << vhz[i] << endl;
+       trigEffScanAmplitudeAtAmpa[i]=FFTtools::getAbs(theFFT[i]);
      }
      
      delete []theFFT;
