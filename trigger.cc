@@ -598,8 +598,9 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
   double integrateenergy[5]={0.,0.,0.,0.,0.};
       
   if (settings1->SIGNAL_FLUCT && (!settings1->NOISEFROMFLIGHTTRIGGER)) {
-	
-    for (int iband=0;iband<5;iband++) {
+    for (int iband=0;iband<5;iband++) { // Only loop over allowed bands
+      if (anita1->bwslice_allowed[iband]!=1) continue; 
+
       if (settings1->TRIGGERSCHEME == 2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
 	for (int k=0;k<anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);k++) {
 	  anita1->maxbin_fortotal[iband]=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);
@@ -609,7 +610,7 @@ void AntTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anit
 	      
 	  // this is just the straight sum of the two
 	  anita1->total_vpol_inanita[iband][k]=anita1->timedomainnoise_rfcm_banding_e[iband][k]+anita1->signal_vpol_inanita[iband][k];
-	      
+
 	  integrateenergy[iband]+=anita1->timedomainnoise_rfcm_banding_e[iband][k]*anita1->timedomainnoise_rfcm_banding_e[iband][k]*anita1->TIMESTEP;
 	  // this reverses the noise is time, and starts with bin anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)
 	  v_banding_rfcm_e_forfft[iband][k]=v_banding_rfcm_e_forfft[iband][k]+anita1->timedomainnoise_rfcm_banding_e[iband][knoisebin];
