@@ -1455,9 +1455,9 @@ int main(int argc,  char **argv) {
       vmmhz_min_thatpasses=1000; // initializing.  want to find the minumum voltage that passes a
       if ( spectra1->IsSpectrum() ){//if using energy spectrum
         //pnu=spectra1->GetNuEnergy();
-        cout<<"using spectrum \n";
+        // cout<<"using spectrum \n";
         pnu=spectra1->GetCDFEnergy();
-        cout<<"pnu is "<<pnu<<"\n";
+        // cout<<"pnu is "<<pnu<<"\n";
         ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, 0, 0);  // given neutrino momentum,  cross section and interaction length of neutrino.
         // ierr=0 if the energy is too low for the parameterization
         // ierr=1 otherwise
