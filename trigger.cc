@@ -1140,7 +1140,150 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
 }
 
 
-void AntTrigger::ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer, int ifold)
+void AntTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen *panel1, int ilayer, int ifold, double hitangle_e, double hitangle_h, double e_component, double h_component){
+
+  int fNumPoints = anita1->HALFNFOUR;
+  int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
+
+  for (int iband=0;iband<5;iband++) { // loop over bands
+    if (anita1->bwslice_allowed[iband]!=1) continue;
+    
+    anita1->iminbin[iband]=0.;
+    anita1->imaxbin[iband]=anita1->NFOUR/2;
+    
+    for (int i=0;i<anita1->NFOUR/2;i++) {
+      v_banding_rfcm_e_forfft[iband][i] = 0.;
+      v_banding_rfcm_h_forfft[iband][i] = 0.;
+    }
+    
+    for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
+      //get the orientation for this screen point
+      for (int i=0;i<Anita::NFREQ;i++) {
+	anita1->vmmhz_banding[i]=panel1->GetVmmhz_freq(jpt*Anita::NFREQ + i);
+      }
+                
+      // impose banding on the incident signal
+      if (!settings1->APPLYIMPULSERESPONSETRIGGER){
+	anita1->Banding(iband,anita1->freq,anita1->vmmhz_banding,Anita::NFREQ); 
+      }
+
+      for (int i=0;i<Anita::NFREQ;i++) {
+	anita1->vmmhz_banding_rfcm[i]=anita1->vmmhz_banding[i];
+      }
+                
+      // for frequency-domain voltage-based trigger (triggerscheme==0)
+      // and when using impulse response (APPLYIMPULSERESPONSETRIGGER==1)
+      // we do not apply rfcm's
+      // for other trigger types we do
+      if ((settings1->TRIGGERSCHEME==1 || settings1->TRIGGERSCHEME==2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5) && (!settings1->APPLYIMPULSERESPONSETRIGGER))
+	anita1->RFCMs(1,1,anita1->vmmhz_banding_rfcm);
+      
+      if (settings1->TRIGGERSCHEME >=2) { // we need to prepar the signal for the diode integration
+	for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+	  anita1->vmmhz_banding_rfcm[ifreq]=anita1->vmmhz_banding_rfcm[ifreq]/sqrt(2)/(anita1->TIMESTEP*1.E6);
+	}
+      }
+      
+      for (int k=0;k<Anita::NFREQ;k++) {
+	if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
+	  // need to calculate lcp and rcp components after antenna voltages are recorded.
+	  v_banding_rfcm_e[iband][k]=anita1->vmmhz_banding_rfcm[k];
+	  v_banding_rfcm_h[iband][k]=anita1->vmmhz_banding_rfcm[k];
+	  anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, v_banding_rfcm_e[iband][k], v_banding_rfcm_h[iband][k]);
+	} // end if (seavey frequencies)
+      } // end looping over frequencies.
+      
+      if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
+	injectImpulseAmplitudeAfterAntenna(anita1, v_banding_rfcm_e[iband], v_banding_rfcm_h[iband], ant);
+	// if not using the impulse response we need to re-apply banding and rfcms
+	if (!settings1->APPLYIMPULSERESPONSETRIGGER){
+	  anita1->Banding(iband, anita1->freq, v_banding_rfcm_e[iband], Anita::NFREQ);
+	  anita1->RFCMs(1, 1, v_banding_rfcm_e[iband]);
+	}
+      }
+      
+      // Currently not used, but don't throw it away just yet
+//       if (settings1->APPLYIMPULSERESPONSETRIGGER){
+// 	double volts_triggerPath_e[Anita::HALFNFOUR]={0.};
+// 	double volts_triggerPath_h[Anita::HALFNFOUR]={0.};
+// 	double vhz_triggerPath_e[Anita::NFREQ] = {0.};
+// 	double vhz_triggerPath_h[Anita::NFREQ] = {0.};
+	
+// 	anita1->MakeArraysforFFT(v_banding_rfcm_e[iband], v_banding_rfcm_h[iband], volts_triggerPath_e, volts_triggerPath_h, 90., true);
+	
+// 	// for the ROUGHNESS case, need to apply phase factors here somehow, like in ConvertInputWFtoAntennaWF() above in the digitization path
+// 	//for (int ifour=0;ifour<Anita::NFOUR/4;ifour++) {
+// 	//  volts_triggerPath_e[2*ifour] *= cos( (90.)*PI/180.);
+// 	//  volts_triggerPath_e[2*ifour+1] *= sin( (90.)*PI/180.);
+// 	//  volts_triggerPath_h[2*ifour] *= cos( (90.)*PI/180.);
+// 	//  volts_triggerPath_h[2*ifour+1] *= sin( (90.)*PI/180.);
+// 	//}
+	
+// 	Tools::realft(volts_triggerPath_e,1,anita1->NFOUR/2);
+// 	// now v_banding_rfcm_e_forfft is in the time domain
+// 	// and now it is really in units of V
+	
+// 	Tools::realft(volts_triggerPath_h,1,anita1->NFOUR/2);
+// 	// now v_banding_rfcm_h_forfft is in the time domain
+// 	// and now it is really in units of V
+	
+// 	// put it in normal time ording -T to T
+// 	// instead of 0 to T, -T to 0
+// 	Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_e);
+// 	Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_h);
+	
+// 	if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
+// 	  injectImpulseAfterAntenna(anita1, volts_triggerPath_e, volts_triggerPath_h, ant);
+// 	}
+	
+// #ifdef ANITA_UTIL_EXISTS    
+// 	applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_e, vhz_triggerPath_e, 0);
+// 	applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_h, vhz_triggerPath_h, 1);
+	
+// 	for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+// 	  if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
+// 	    v_banding_rfcm_e[iband][ifreq]=vhz_triggerPath_e[ifreq];
+// 	    v_banding_rfcm_h[iband][ifreq]=vhz_triggerPath_h[ifreq];
+// 	  }
+// 	} // end loop over nfreq
+// #endif
+	
+// 	// now add the screen point's waveform to the total including the weighting 
+// 	for (int i=0;i<anita1->NFOUR/2;i++) {
+// 	  v_banding_rfcm_e_forfft[iband][i] += volts_triggerPath_e[i] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+// 	  v_banding_rfcm_h_forfft[iband][i] += volts_triggerPath_h[i] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+// 	}
+
+//       }//if (settings1->APPLYIMPULSERESPONSETRIGGER)
+      
+      for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+	if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
+	  addToChannelSums(settings1, anita1, iband, ifreq);
+	}
+      } // end loop over nfreq
+      
+      
+      //
+    } // end loop over screen points
+    
+    // write the signal events to a tree
+    for (int iband=0;iband<5;iband++) {
+      for (int k=0;k<anita1->NFOUR/2;k++) {
+	anita1->signal_vpol_inanita[iband][k]=v_banding_rfcm_e_forfft[iband][k];
+      }
+    }
+    anita1->integral_vmmhz_foranita=integral_vmmhz;
+    
+    // Find the p2p value before adding noise
+    for (int iband=0;iband<5;iband++) {
+      anita1->peak_v_banding_rfcm_e[iband]=FindPeak(v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
+      anita1->peak_v_banding_rfcm_h[iband]=FindPeak(v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
+    }
+  } // end loop over bands
+  
+}
+
+void AntTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ilayer, int ifold)
 {
   double vhz_rx_rfcm_e[Anita::NFREQ]; // V/Hz after rx, rfcm
   double vhz_rx_rfcm_h[Anita::NFREQ];

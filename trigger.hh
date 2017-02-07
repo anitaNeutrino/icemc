@@ -259,9 +259,10 @@ public:
     AntTrigger(); // constructor
     void InitializeEachBand(Anita *anita1);
     void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector n_eplane, Vector n_hplane, Vector n_normal, int ilayer, int ifold);
-    void ImpulseResponse(Settings *settings1, Anita *anita1, int ilayer, int ifold);
+    void DigitizerPath(Settings *settings1, Anita *anita1, int ilayer, int ifold);
     void TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
-
+  void PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen *panel1, int ilayer, int ifold, double hitangle_e, double hitangle_h, double e_component, double h_component);
+  
     // just for historical reference, this function:
     //void AntTrigger::RunTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
     // was split into InitializeEachBand, ConvertInputWFtoAntennaWF, ImpulseResponse, TimeShiftAndSignalFluct, Banding
