@@ -154,8 +154,8 @@ protected:
   /////////////////////////////////////
   //methods
   void ReadCrust(string);
-  double SmearPhi(int ilon);
-  double SmearTheta(int ilat) ;
+  double SmearPhi(int ilon, double rand);
+  double SmearTheta(int ilat, double rand) ;
   double dGetTheta(int itheta) ;
   double dGetPhi(int ilon) ;
   void GetILonILat(const Position&,int& ilon,int& ilat) ;

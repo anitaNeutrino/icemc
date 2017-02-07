@@ -1529,10 +1529,7 @@ int main(int argc,  char **argv) {
       else
         tautrigger=0;
 
-      if (settings1->ROUGHNESS)
-        bn1->PickRoughnessInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon);
-      else // no roughness
-        bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon);
+      bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon);
 
       if (interaction1->noway)
         continue;
@@ -2112,6 +2109,7 @@ int main(int argc,  char **argv) {
       }
       // OTHERWISE THERE IS ROUGHNESS SO DO MAGIC
       else{
+        cout<<"Screening this event: "<<inu<<endl;
         //(vector) ray1->nsurf_rfexit:  surface normal at RFexit position
         //(pos)        ->rfexit[2]:     final iterated position of RF exit
         //(vector)     ->n_exit2bn[2]:  vector from RF exit position TO balloon
@@ -2121,7 +2119,7 @@ int main(int argc,  char **argv) {
 
         //these values are not optimized, and actually could be configured in the input file
         double basescreenedgelength = settings1->SCREENEDGELENGTH / settings1->ROUGHSIZE;
-        int basescreenDivisions = 10;
+        int basescreenDivisions = 4;
         double basescreenFractionLimit = 0.1;
         double subscreenFractionLimit = 1e-2;
         int maximumSubscreenGeneration = 1;  // value is inclusive

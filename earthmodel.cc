@@ -636,10 +636,10 @@ Vector EarthModel::GetSurfaceNormal(const Position &r_out)
     
 } //method GetSurfaceNormal
 
-double EarthModel::SmearPhi(int ilon)  {
+double EarthModel::SmearPhi(int ilon, double rand)  {
     
     
-    double phi=((double)(360.*3./4.-((double)ilon+gRandom->Rndm())*360/180))*RADDEG;
+    double phi=((double)(360.*3./4.-((double)ilon+rand)*360/180))*RADDEG;
     if (phi<0 && phi>-1*PI/2)
 	phi+=2*PI;
     
@@ -647,7 +647,7 @@ double EarthModel::SmearPhi(int ilon)  {
     return phi;
 } //SmearPhi
 
-double EarthModel::SmearTheta(int ilat)  {
+double EarthModel::SmearTheta(int ilat, double rand)  {
     
     // remember that we should smear it evenly in cos(theta).
     // first get the cos(theta)'s at the boundaries.
@@ -660,7 +660,7 @@ double EarthModel::SmearTheta(int ilat)  {
     
     
     
-    double costheta=gRandom->Rndm()*(costheta2-costheta1)+costheta1;
+    double costheta=rand*(costheta2-costheta1)+costheta1;
     
     double theta=acos(costheta);
     

@@ -94,7 +94,7 @@ int NODATA;
   double SurfaceAboveGeoid(const Position& pos) ;
   double WaterDepth(double lon,double lat);
   double WaterDepth(const Position& pos);
-  Position PickInteractionLocation(int ibnposition);
+  Position PickInteractionLocation(int ibnposition, Settings *settings1, const Position &rbn, Interaction *interaction1);
   Position PickBalloonPosition();
   void GetMAXHORIZON(Balloon *bn1); // get upper limit on the horizon wrt the balloon.
   int RossIceShelf(const Position &position); 
