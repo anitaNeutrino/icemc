@@ -1120,8 +1120,8 @@ void AntTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, B
 
     // now the last two are in the frequency domain
     // convert to the time domain
-    Tools::realft(tmp_volts_rx_e_forfft,1,anita1->HALFNFOUR); // EH, I believe this has to the -1 for inverse FFT (1 for forward FFT which is t-domain to f-domain)
-    Tools::realft(tmp_volts_rx_h_forfft,1,anita1->HALFNFOUR);
+    Tools::realft(tmp_volts_rx_e_forfft,-1,anita1->HALFNFOUR);
+    Tools::realft(tmp_volts_rx_h_forfft,-1,anita1->HALFNFOUR);
 
     for (int ii=0; ii<Anita::HALFNFOUR; ii++){
       volts_rx_e_forfft[ii] += tmp_volts_rx_e_forfft[ii] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
@@ -1220,11 +1220,11 @@ void AntTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen *
 // 	//  volts_triggerPath_h[2*ifour+1] *= sin( (90.)*PI/180.);
 // 	//}
 	
-// 	Tools::realft(volts_triggerPath_e,1,anita1->NFOUR/2);
+// 	Tools::realft(volts_triggerPath_e,-1,anita1->NFOUR/2);
 // 	// now v_banding_rfcm_e_forfft is in the time domain
 // 	// and now it is really in units of V
 	
-// 	Tools::realft(volts_triggerPath_h,1,anita1->NFOUR/2);
+// 	Tools::realft(volts_triggerPath_h,-1,anita1->NFOUR/2);
 // 	// now v_banding_rfcm_h_forfft is in the time domain
 // 	// and now it is really in units of V
 	
@@ -1366,8 +1366,8 @@ void AntTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ilayer, i
     // convert to the time domain
     // still don't have any noise
       
-    Tools::realft(anita1->volts_rx_rfcm_e,1,anita1->HALFNFOUR); // EH, again, I think this has to be -1 for invFFT
-    Tools::realft(anita1->volts_rx_rfcm_h,1,anita1->HALFNFOUR);
+    Tools::realft(anita1->volts_rx_rfcm_e,-1,anita1->HALFNFOUR);
+    Tools::realft(anita1->volts_rx_rfcm_h,-1,anita1->HALFNFOUR);
       
     anita1->GetNoiseWaveforms(); // get noise waveforms
       
@@ -1409,8 +1409,8 @@ void AntTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ilayer, i
     // now the last two are in the frequency domain
     // convert to the time domain
     // still don't have any noise
-    Tools::realft(anita1->volts_rx_rfcm_lab_e,1,anita1->HALFNFOUR); // EH, again, I think this has to be -1 for invFFT
-    Tools::realft(anita1->volts_rx_rfcm_lab_h,1,anita1->HALFNFOUR);
+    Tools::realft(anita1->volts_rx_rfcm_lab_e,-1,anita1->HALFNFOUR); 
+    Tools::realft(anita1->volts_rx_rfcm_lab_h,-1,anita1->HALFNFOUR);
 
     // put it in normal time ording -T to T
     // instead of 0 to T, -T to 0 
