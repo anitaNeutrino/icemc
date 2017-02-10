@@ -60,6 +60,7 @@
 #include "Primaries.h"
 #include "Taumodel.hh"
 #include "screen.hh"
+#include "GlobalTrigger.h"
 
 #include <string>
 #include <sstream>
