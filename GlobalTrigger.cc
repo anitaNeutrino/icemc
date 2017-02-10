@@ -17,7 +17,6 @@
 #include "anita.hh"
 #include "balloon.hh"
 #include "TRandom3.h"
-#include "trigger.hh"
 #include <cmath>
 #include "Tools.h"
 #include "Settings.h"
