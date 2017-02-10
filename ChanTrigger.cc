@@ -47,8 +47,8 @@ void ChanTrigger::ConvertEHtoLREnergy(double e_component,double h_component,doub
 } //ConvertEHtoLREnergy
 
 void ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
-					 double *hvolts,
-					 double *left,double *right) {
+					  double *hvolts,
+					  double *left,double *right) {
     
   // nfour is the real and complex values from -F to F
     
@@ -512,8 +512,8 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
     } // loop over 5 bands
   } // if we require signal fluctuations
     
-int whichlayer,whichphisector;
-    globaltrig1->GetAnitaLayerPhiSector(settings1,ilayer,ifold,whichlayer,whichphisector); // Translate Anita physical layer to Anita trigger layer and phi sector (4 layers with 8,8,16,8 phi sector to 3 layers with 16 phi sectors each.  In the nadir layer, 8 of the 16 slots are empty on the trigger layer.)
+  int whichlayer,whichphisector;
+  globaltrig1->GetAnitaLayerPhiSector(settings1,ilayer,ifold,whichlayer,whichphisector); // Translate Anita physical layer to Anita trigger layer and phi sector (4 layers with 8,8,16,8 phi sector to 3 layers with 16 phi sectors each.  In the nadir layer, 8 of the 16 slots are empty on the trigger layer.)
   
   for (int iband=0;iband<5;iband++) {
     if (settings1->LCPRCP 
@@ -581,18 +581,18 @@ int whichlayer,whichphisector;
     // to equal the length we want for the trigger bin
     int nextbreakpoint=(int)((double)(whichtrigbin+1)*(globaltrig1->TRIGTIMESTEP/anita1->TIMESTEP));
 
- //    if (whichlayer==2 && whichphisector==15)
-//       cout << "1 nextbreakpoint is " << nextbreakpoint << "\n";
+    //    if (whichlayer==2 && whichphisector==15)
+    //       cout << "1 nextbreakpoint is " << nextbreakpoint << "\n";
 
     //    cout << "1 nextbreakpoint is " << nextbreakpoint << "\n";
-   // keep advancing in trigger timesteps until we're past the iminbin.
+    // keep advancing in trigger timesteps until we're past the iminbin.
     while (nextbreakpoint<anita1->iminbin[j]) {
       nextbreakpoint=(int)((double)(whichtrigbin+1)*(globaltrig1->TRIGTIMESTEP/anita1->TIMESTEP));
-          whichtrigbin++;
-// 	  if (whichlayer==2 && whichphisector==15) {
-// 	    cout << "2 nextbreakpoint is " << nextbreakpoint << "\n";
-// 	    cout << "whichtrigbin is " << whichtrigbin << "\n";
-// 	  }
+      whichtrigbin++;
+      // 	  if (whichlayer==2 && whichphisector==15) {
+      // 	    cout << "2 nextbreakpoint is " << nextbreakpoint << "\n";
+      // 	    cout << "whichtrigbin is " << whichtrigbin << "\n";
+      // 	  }
     }
     // keep track of whether each trigger bin has a hit
     int thisisaone=0;
@@ -602,11 +602,11 @@ int whichlayer,whichphisector;
     
       if (timedomain_output_1[j][ibin] < thresholds[0][j] * anita1->bwslice_rmsdiode[j] && anita1->pol_allowed[0] && anita1->bwslice_allowed[j]) { // is this polarization and bw slice allowed to pass
 	//std::cout << "VPOL : " << j << " " << timedomain_output_1[j][ibin]  << " " <<  thresholds[0][j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
-	  anita1->channels_passing_e[j] = 1;// channel passes
+	anita1->channels_passing_e[j] = 1;// channel passes
     
 	
-	  thisisaone=1;
-	  //	  cout << "got a hit.\n";
+	thisisaone=1;
+	//	  cout << "got a hit.\n";
       }
       // if (whichlayer==2 && whichphisector==15) 
       //cout << "ibin, nextbreakpoint are " << ibin << "\t" << nextbreakpoint << "\n";
@@ -615,9 +615,9 @@ int whichlayer,whichphisector;
 	//cout << "I'm filling. size is " << "\t" << globaltrig1->arrayofhits[whichlayer][whichphisector][0][j].size() << "\n";
 
 	globaltrig1->arrayofhits[whichlayer][whichphisector][0][j].push_back(thisisaone);
- // 	if (thisisaone) {
-//  	  cout << "filling with 1. phi is " << whichphisector << "\n";
-//  	}
+	// 	if (thisisaone) {
+	//  	  cout << "filling with 1. phi is " << whichphisector << "\n";
+	//  	}
 	//if (thisisaone)
 	//cout << "filling with 1.\n";
 	//cout << "filling arrayofhits with " << thisisaone << "\n";
@@ -675,7 +675,7 @@ int whichlayer,whichphisector;
     int nextbreakpoint=(int)((double)(whichtrigbin+1)*(globaltrig1->TRIGTIMESTEP/anita1->TIMESTEP));
 
     //    cout << "1 nextbreakpoint is " << nextbreakpoint << "\n";
-   // keep advancing in trigger timesteps until we're past the iminbin.
+    // keep advancing in trigger timesteps until we're past the iminbin.
     while (nextbreakpoint<anita1->iminbin[j]) {
       nextbreakpoint=(int)((double)(whichtrigbin+1)*(globaltrig1->TRIGTIMESTEP/anita1->TIMESTEP));
       whichtrigbin++;
@@ -685,16 +685,16 @@ int whichlayer,whichphisector;
 
     for (int ibin=anita1->iminbin[j];ibin<anita1->imaxbin[j];ibin++) {
       if (timedomain_output_2[j][ibin]<thresholds[1][j]*anita1->bwslice_rmsdiode[j] && anita1->pol_allowed[1] && anita1->bwslice_allowed[j]) { // if this pol and band are allowed to pass
-	  //	      std::cout << "HPOL : " << j << " " << timedomain_output_2[j][ibin]  << " " << timedomain_output_1[j][ibin] << " " <<  thresholds[1][j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
+	//	      std::cout << "HPOL : " << j << " " << timedomain_output_2[j][ibin]  << " " << timedomain_output_1[j][ibin] << " " <<  thresholds[1][j] << " " <<  anita1->bwslice_rmsdiode[j] << std::endl;
 	anita1->channels_passing_h[j]=1;
 	  
 	thisisaone=1;
       } // if it's over threshold for this time step
       if (ibin>nextbreakpoint) {
 	globaltrig1->arrayofhits[whichlayer][whichphisector][1][j].push_back(thisisaone);
-// 	if (thisisaone) {
-// 	  cout << "filling with 1. phi is " << whichphisector << "\n";
-// 	}
+	// 	if (thisisaone) {
+	// 	  cout << "filling with 1. phi is " << whichphisector << "\n";
+	// 	}
 	//cout << "filling arrayofhits with " << thisisaone << "\n";
 	//cout << "size of arrayofhits is " << globaltrig1->arrayofhits[ilayer][ifold][0][j].size() << "\n";
 	nextbreakpoint=(int)((double)(whichtrigbin+1)*(globaltrig1->TRIGTIMESTEP/anita1->TIMESTEP));
@@ -845,17 +845,17 @@ int whichlayer,whichphisector;
   
   
  
-    for (int i=0;i<2;i++) {
+  for (int i=0;i<2;i++) {
 
-      for (unsigned int ibin=0;ibin<globaltrig1->arrayofhits[whichlayer][whichphisector][i][4].size();ibin++) {
-	anita1->arrayofhits_inanita[whichlayer][whichphisector][i][ibin]=globaltrig1->arrayofhits[whichlayer][whichphisector][i][4][ibin];
-      }
-      for (unsigned int ibin=globaltrig1->arrayofhits[whichlayer][whichphisector][i][4].size();ibin<HALFNFOUR;ibin++) {
-	anita1->arrayofhits_inanita[whichlayer][whichphisector][i][ibin]=0.;
-      }
-//       if (j==4 && i==0)
-// 	cout << "whichlayer, whichphisector, size of arrayofhits is " << whichlayer << "\t" << whichphisector << "\t" << anita1->arrayofhits_inanita[whichlayer][whichphisector][i][j].size() << "\n";
+    for (unsigned int ibin=0;ibin<globaltrig1->arrayofhits[whichlayer][whichphisector][i][4].size();ibin++) {
+      anita1->arrayofhits_inanita[whichlayer][whichphisector][i][ibin]=globaltrig1->arrayofhits[whichlayer][whichphisector][i][4][ibin];
     }
+    for (unsigned int ibin=globaltrig1->arrayofhits[whichlayer][whichphisector][i][4].size();ibin<HALFNFOUR;ibin++) {
+      anita1->arrayofhits_inanita[whichlayer][whichphisector][i][ibin]=0.;
+    }
+    //       if (j==4 && i==0)
+    // 	cout << "whichlayer, whichphisector, size of arrayofhits is " << whichlayer << "\t" << whichphisector << "\t" << anita1->arrayofhits_inanita[whichlayer][whichphisector][i][j].size() << "\n";
+  }
  
  
 
@@ -1072,58 +1072,58 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
       }
       
       // Currently not used, but don't throw it away just yet
-//       if (settings1->APPLYIMPULSERESPONSETRIGGER){
-// 	double volts_triggerPath_e[Anita::HALFNFOUR]={0.};
-// 	double volts_triggerPath_h[Anita::HALFNFOUR]={0.};
-// 	double vhz_triggerPath_e[Anita::NFREQ] = {0.};
-// 	double vhz_triggerPath_h[Anita::NFREQ] = {0.};
+      //       if (settings1->APPLYIMPULSERESPONSETRIGGER){
+      // 	double volts_triggerPath_e[Anita::HALFNFOUR]={0.};
+      // 	double volts_triggerPath_h[Anita::HALFNFOUR]={0.};
+      // 	double vhz_triggerPath_e[Anita::NFREQ] = {0.};
+      // 	double vhz_triggerPath_h[Anita::NFREQ] = {0.};
 	
-// 	anita1->MakeArraysforFFT(v_banding_rfcm_e[iband], v_banding_rfcm_h[iband], volts_triggerPath_e, volts_triggerPath_h, 90., true);
+      // 	anita1->MakeArraysforFFT(v_banding_rfcm_e[iband], v_banding_rfcm_h[iband], volts_triggerPath_e, volts_triggerPath_h, 90., true);
 	
-// 	// for the ROUGHNESS case, need to apply phase factors here somehow, like in ConvertInputWFtoAntennaWF() above in the digitization path
-// 	//for (int ifour=0;ifour<Anita::NFOUR/4;ifour++) {
-// 	//  volts_triggerPath_e[2*ifour] *= cos( (90.)*PI/180.);
-// 	//  volts_triggerPath_e[2*ifour+1] *= sin( (90.)*PI/180.);
-// 	//  volts_triggerPath_h[2*ifour] *= cos( (90.)*PI/180.);
-// 	//  volts_triggerPath_h[2*ifour+1] *= sin( (90.)*PI/180.);
-// 	//}
+      // 	// for the ROUGHNESS case, need to apply phase factors here somehow, like in ConvertInputWFtoAntennaWF() above in the digitization path
+      // 	//for (int ifour=0;ifour<Anita::NFOUR/4;ifour++) {
+      // 	//  volts_triggerPath_e[2*ifour] *= cos( (90.)*PI/180.);
+      // 	//  volts_triggerPath_e[2*ifour+1] *= sin( (90.)*PI/180.);
+      // 	//  volts_triggerPath_h[2*ifour] *= cos( (90.)*PI/180.);
+      // 	//  volts_triggerPath_h[2*ifour+1] *= sin( (90.)*PI/180.);
+      // 	//}
 	
-// 	Tools::realft(volts_triggerPath_e,-1,anita1->NFOUR/2);
-// 	// now v_banding_rfcm_e_forfft is in the time domain
-// 	// and now it is really in units of V
+      // 	Tools::realft(volts_triggerPath_e,-1,anita1->NFOUR/2);
+      // 	// now v_banding_rfcm_e_forfft is in the time domain
+      // 	// and now it is really in units of V
 	
-// 	Tools::realft(volts_triggerPath_h,-1,anita1->NFOUR/2);
-// 	// now v_banding_rfcm_h_forfft is in the time domain
-// 	// and now it is really in units of V
+      // 	Tools::realft(volts_triggerPath_h,-1,anita1->NFOUR/2);
+      // 	// now v_banding_rfcm_h_forfft is in the time domain
+      // 	// and now it is really in units of V
 	
-// 	// put it in normal time ording -T to T
-// 	// instead of 0 to T, -T to 0
-// 	Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_e);
-// 	Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_h);
+      // 	// put it in normal time ording -T to T
+      // 	// instead of 0 to T, -T to 0
+      // 	Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_e);
+      // 	Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_h);
 	
-// 	if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
-// 	  injectImpulseAfterAntenna(anita1, volts_triggerPath_e, volts_triggerPath_h, ant);
-// 	}
+      // 	if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
+      // 	  injectImpulseAfterAntenna(anita1, volts_triggerPath_e, volts_triggerPath_h, ant);
+      // 	}
 	
-// #ifdef ANITA_UTIL_EXISTS    
-// 	applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_e, vhz_triggerPath_e, 0);
-// 	applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_h, vhz_triggerPath_h, 1);
+      // #ifdef ANITA_UTIL_EXISTS    
+      // 	applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_e, vhz_triggerPath_e, 0);
+      // 	applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_h, vhz_triggerPath_h, 1);
 	
-// 	for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-// 	  if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
-// 	    v_banding_rfcm_e[iband][ifreq]=vhz_triggerPath_e[ifreq];
-// 	    v_banding_rfcm_h[iband][ifreq]=vhz_triggerPath_h[ifreq];
-// 	  }
-// 	} // end loop over nfreq
-// #endif
+      // 	for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
+      // 	  if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
+      // 	    v_banding_rfcm_e[iband][ifreq]=vhz_triggerPath_e[ifreq];
+      // 	    v_banding_rfcm_h[iband][ifreq]=vhz_triggerPath_h[ifreq];
+      // 	  }
+      // 	} // end loop over nfreq
+      // #endif
 	
-// 	// now add the screen point's waveform to the total including the weighting 
-// 	for (int i=0;i<anita1->NFOUR/2;i++) {
-// 	  v_banding_rfcm_e_forfft[iband][i] += volts_triggerPath_e[i] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
-// 	  v_banding_rfcm_h_forfft[iband][i] += volts_triggerPath_h[i] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
-// 	}
+      // 	// now add the screen point's waveform to the total including the weighting 
+      // 	for (int i=0;i<anita1->NFOUR/2;i++) {
+      // 	  v_banding_rfcm_e_forfft[iband][i] += volts_triggerPath_e[i] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+      // 	  v_banding_rfcm_h_forfft[iband][i] += volts_triggerPath_h[i] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+      // 	}
 
-//       }//if (settings1->APPLYIMPULSERESPONSETRIGGER)
+      //       }//if (settings1->APPLYIMPULSERESPONSETRIGGER)
       
       for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
 	if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
@@ -1599,7 +1599,7 @@ int ChanTrigger::IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int 
 
 
 void ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double powerthreshold[2][5],
-			   int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass) {
+			    int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass) {
    
   int maxsample=TMath::MaxElement(5,anita1->imaxbin);
   int minsample=TMath::MinElement(5,anita1->iminbin);
@@ -1890,10 +1890,10 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
     vhz[i]   = theFFT[i].getAbs();    
     // if (ant ==8 && pol==0) cout << vhz[i] << endl;
   }
-   // double *invVals = FFTtools::doInvFFT(nPoints,theFFT);
-   // for (int i=0;i<nPoints;i++){
-   //   cout << y[i] << " " << invVals[i] << endl;
-   // }
+  // double *invVals = FFTtools::doInvFFT(nPoints,theFFT);
+  // for (int i=0;i<nPoints;i++){
+  //   cout << y[i] << " " << invVals[i] << endl;
+  // }
   // if (ant ==8 && pol==0){
   //   TCanvas *c = new TCanvas("c");
   //   graph1->Draw("Al");
