@@ -51,7 +51,7 @@
 #include "anita.hh"
 #include "balloon.hh"
 #include "icemodel.hh"
-#include "trigger.hh"
+// #include "trigger.hh"
 #include "Spectra.h"
 #include "signal.hh"
 #include "secondaries.hh"
@@ -61,6 +61,7 @@
 #include "Taumodel.hh"
 #include "screen.hh"
 #include "GlobalTrigger.h"
+#include "ChanTrigger.h"
 
 #include <string>
 #include <sstream>
@@ -2706,8 +2707,8 @@ int main(int argc,  char **argv) {
       for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
         for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
           
-          AntTrigger *anttrig1 = new AntTrigger();
-          anttrig1->InitializeEachBand(anita1);
+          ChanTrigger *chantrig1 = new ChanTrigger();
+          chantrig1->InitializeEachBand(anita1);
 
           bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
 
@@ -2731,17 +2732,17 @@ int main(int argc,  char **argv) {
             h6->Fill(hitangle_h, ray1->n_exit2bn[2]*bn1->n_bn);
 
 
-          anttrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, n_eplane,  n_hplane,  n_normal, ilayer, ifold);
+          chantrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, n_eplane,  n_hplane,  n_normal, ilayer, ifold);
 
-          // AntTrig::ImpulseResponse needs to be outside the ray loop
-          anttrig1->DigitizerPath(settings1, anita1, ilayer, ifold);
+          // Chantrig::ImpulseResponse needs to be outside the ray loop
+          chantrig1->DigitizerPath(settings1, anita1, ilayer, ifold);
           
-          anttrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
+          chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
 
           //+++++//+++++//+++++//+++++//+++++//+++++//+++++
           // THIS IS WHERE WE ACTUALLY CONSTRUCT THE WAVEFORMS THAT GET PASSED TO THE TRIGGER
-	  anttrig1->PrepareTriggerPath(settings1, anita1, panel1, ilayer, ifold, hitangle_e, hitangle_h, e_component, h_component);
+	  chantrig1->PrepareTriggerPath(settings1, anita1, panel1, ilayer, ifold, hitangle_e, hitangle_h, e_component, h_component);
 	  Tools::Zero(sumsignal, 5);
           
           // now hopefully we have converted the signal to time domain waveforms
@@ -2759,8 +2760,8 @@ int main(int argc,  char **argv) {
               // for debugging
               if (volts_rx_0>volts_rx_max) {
                 volts_rx_max=volts_rx_0;
-                volts_rx_max_highband=anttrig1->bwslice_volts_pol0[3];
-                volts_rx_max_lowband=anttrig1->bwslice_volts_pol0[0];
+                volts_rx_max_highband=chantrig1->bwslice_volts_pol0[3];
+                volts_rx_max_lowband=chantrig1->bwslice_volts_pol0[0];
                 // theta of the polarization as measured at the antenna (approximately since we aren't correcting for the
                 //cant of the antenna yet) =
                 theta_pol_measured=atan(globaltrig1->volts_original[1][ilayer][ifold]/globaltrig1->volts_original[0][ilayer][ifold]);
@@ -2804,7 +2805,7 @@ int main(int argc,  char **argv) {
           if (count_rx==anita1->rx_minarrivaltime) {
             rec_efield=sqrt(pow(globaltrig1->volts_original[0][ilayer][ifold]/(undogaintoheight_e*0.5), 2)+pow(globaltrig1->volts_original[1][ilayer][ifold]/(undogaintoheight_h*0.5), 2));
             for (int ibw=0;ibw<4;ibw++) {
-              rec_efield_array[ibw]=sqrt(pow(anttrig1->bwslice_volts_pole[ibw]/(undogaintoheight_e_array[ibw]*0.5), 2)+pow(anttrig1->bwslice_volts_polh[ibw]/(undogaintoheight_h_array[ibw]*0.5), 2));
+              rec_efield_array[ibw]=sqrt(pow(chantrig1->bwslice_volts_pole[ibw]/(undogaintoheight_e_array[ibw]*0.5), 2)+pow(chantrig1->bwslice_volts_polh[ibw]/(undogaintoheight_h_array[ibw]*0.5), 2));
               bwslice_vnoise_thislayer[ibw]=anita1->bwslice_vnoise[ilayer][ibw];// this is just for filling into a tree
             } // end loop over bandwidth slices
             tree6b->Fill();
@@ -2812,15 +2813,15 @@ int main(int argc,  char **argv) {
 
           //+++++//+++++//+++++//+++++//+++++//+++++//+++++
 
-          anttrig1->WhichBandsPass(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac);
+          chantrig1->WhichBandsPass(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac);
 
           if (Anita::GetAntennaNumber(ilayer, ifold)==anita1->rx_minarrivaltime) {
             for (int iband=0;iband<5;iband++) {
               for (int ipol=0;ipol<2;ipol++) {
-                rx0_signal_eachband[ipol][iband]=anttrig1->signal_eachband[ipol][iband];
-                rx0_threshold_eachband[ipol][iband]=anttrig1->threshold_eachband[ipol][iband];
-                rx0_noise_eachband[ipol][iband]=anttrig1->noise_eachband[ipol][iband];
-                rx0_passes_eachband[ipol][iband]=anttrig1->passes_eachband[ipol][iband];
+                rx0_signal_eachband[ipol][iband]=chantrig1->signal_eachband[ipol][iband];
+                rx0_threshold_eachband[ipol][iband]=chantrig1->threshold_eachband[ipol][iband];
+                rx0_noise_eachband[ipol][iband]=chantrig1->noise_eachband[ipol][iband];
+                rx0_passes_eachband[ipol][iband]=chantrig1->passes_eachband[ipol][iband];
               }
             }
           }
@@ -2866,7 +2867,7 @@ int main(int argc,  char **argv) {
           if (settings1->TRIGTYPE==0 && ifold==1 && count_pass>=settings1->NFOLD) { //added djg --line below fills "direct" voltage output file
             al_voltages_direct<<"0 0 0"<<"   "<<"    "<<globaltrig1->volts_original[1][0][0]<<"    "<<(globaltrig1->volts_original[0][0][0]/sqrt(2.))<<"     "<<globaltrig1->volts_original[1][0][1]<<"     "<<globaltrig1->volts_original[0][0][1]<<"      "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"  "<<weight<<endl;
           }
-          delete anttrig1;
+          delete chantrig1;
         } //loop through the phi-fold antennas
       }  //loop through the layers of antennas
 
@@ -2877,7 +2878,7 @@ int main(int argc,  char **argv) {
         if (settings1->DISCONES==1) {
           // loop through discones
           for (int idiscone=0;NDISCONES;idiscone++) {
-            AntTrigger *anttrig1=new AntTrigger();
+            ChanTrigger *chantrig1=new ChanTrigger();
             volts_discone=0.;
             polarfactor_discone=n_pol.Dot(bn1->n_bn); // beam pattern
             for (int k=0;k<Anita::NFREQ;k++) {
@@ -2898,7 +2899,7 @@ int main(int argc,  char **argv) {
             if (fabs(volts_discone)/vnoise_discone>anita1->maxthreshold)
               discones_passing++;
 
-            delete anttrig1;
+            delete chantrig1;
           } // end looping through discones
         } //end if settings discones==1
       }

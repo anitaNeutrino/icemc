@@ -22,10 +22,7 @@
 #include "Tools.h"
 #include "Settings.h"
 #include "screen.hh"
-#include "GlobalTrigger.h"
-
-using std::cout;
-
+#include "ChanTrigger.h"
 #include "GlobalTrigger.h"
 
 using std::cout;
@@ -210,18 +207,16 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
  *			There is a decent amount of dead code which should be pruned, as well.
  */
 
-void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,
-				  int *thispasses) {
+void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,  int *thispasses) {
 
-  double this_threshold= anita1->powerthreshold[4]; //-4.34495;
+  double this_threshold= anita1->powerthreshold[4]; 
   return PassesTrigger(settings1,anita1,discones_passing,mode,l3trig,l2trig,l1trig,antennaclump,loctrig,loctrig_nadironly,inu,this_threshold, thispasses);   
 }
 
 
 
 
-void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold,
-				  int *thispasses) {
+void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold, int *thispasses) {
 
 
   //bool ishpol should only be used for anita3, by default do only vpol

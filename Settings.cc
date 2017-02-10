@@ -9,7 +9,6 @@
 #include "anita.hh"
 #include "balloon.hh"
 #include "icemodel.hh"
-#include "trigger.hh"
 #include "Spectra.h"
 #include "signal.hh"
 #include "secondaries.hh"

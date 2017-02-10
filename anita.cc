@@ -12,7 +12,7 @@
 #include "rx.hpp"
 #include "anita.hh"
 
-#include "trigger.hh"
+#include "ChanTrigger.h"
 #include "balloon.hh"
 #include <iostream>
 #include <cmath>
@@ -250,7 +250,7 @@ void Anita::SetNoise(Settings *settings1,Balloon *bn1,IceModel *antarctica) {
     else { // if not anita 1
 		for (int il=0;il<NLAYERS_MAX;il++) {
 			for (int ibw=0;ibw<5;ibw++) {
-				bwslice_vnoise[il][ibw]=AntTrigger::GetNoise(settings1,bn1->altitude_bn,antarctica->SurfaceAboveGeoid(bn1->latitude,bn1->longitude),THETA_ZENITH[il],bwslice_max[ibw]-bwslice_min[ibw],0.);
+				bwslice_vnoise[il][ibw]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,antarctica->SurfaceAboveGeoid(bn1->latitude,bn1->longitude),THETA_ZENITH[il],bwslice_max[ibw]-bwslice_min[ibw],0.);
 			}
 		}
     }
@@ -1341,7 +1341,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     THERMALNOISE_FACTOR=settings1->THERMALNOISE_FACTOR;
     for (int j=0;j<settings1->NLAYERS;j++) {
 	// noise depends on cant angle of antenna
-	//     //   VNOISE[j]=AntTrigger::GetNoise(altitude_bn,surface_under_balloon,THETA_ZENITH[j],BW_SEAVEYS,0.);
+	//     //   VNOISE[j]=ChanTrigger::GetNoise(altitude_bn,surface_under_balloon,THETA_ZENITH[j],BW_SEAVEYS,0.);
 	VNOISE[j]=1.52889E-5; // this comes from V^2/R=kT*bw -> V=sqrt(kT*bw*R)
 	VNOISE[j]*=THERMALNOISE_FACTOR;
     }//for
@@ -2826,7 +2826,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 		}
 		
 		for (int i=0;i<NRX_PHI[0];i++) {
-			VNOISE_ANITALITE[i]=AntTrigger::GetNoise(settings1,bn1->altitude_bn,bn1->surface_under_balloon,THETA_ZENITH[i],settings1->BW_SEAVEYS,temp_eachrx[i]);
+			VNOISE_ANITALITE[i]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,bn1->surface_under_balloon,THETA_ZENITH[i],settings1->BW_SEAVEYS,temp_eachrx[i]);
 		}
     } //if (ANITA-lite)
     
@@ -3719,7 +3719,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     }
     
     for (int i=0;i<NRX_PHI[0];i++) {
-      VNOISE_ANITALITE[i]=AntTrigger::GetNoise(settings1,bn1->altitude_bn,bn1->surface_under_balloon,THETA_ZENITH[0],settings1->BW_SEAVEYS,temp_eachrx[i]);
+      VNOISE_ANITALITE[i]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,bn1->surface_under_balloon,THETA_ZENITH[0],settings1->BW_SEAVEYS,temp_eachrx[i]);
     }
 }//GetPayload
 
