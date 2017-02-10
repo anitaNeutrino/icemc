@@ -1,8 +1,8 @@
-#ifndef TRIGGER_HH_
-#define TRIGGER_HH_
+#ifndef CHANTRIGGER_HH_
+#define CHANTRIGGER_HH_
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-//class Trigger:
+//class ChanTrigger:
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 class RX;
@@ -16,7 +16,7 @@ class Screen;
 class GlobalTrigger;
 
 //! Handles L0 and L1 Triggers for an antenna
-class AntTrigger {
+class ChanTrigger {
     
 private:
     
@@ -60,7 +60,7 @@ private:
 
 public:
     
-    AntTrigger(); // constructor
+    ChanTrigger(); // constructor
     void InitializeEachBand(Anita *anita1);
     void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector n_eplane, Vector n_hplane, Vector n_normal, int ilayer, int ifold);
     void DigitizerPath(Settings *settings1, Anita *anita1, int ilayer, int ifold);
@@ -68,7 +68,7 @@ public:
   void PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen *panel1, int ilayer, int ifold, double hitangle_e, double hitangle_h, double e_component, double h_component);
   
     // just for historical reference, this function:
-    //void AntTrigger::RunTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
+    //void ChanTrigger::RunTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
     // was split into InitializeEachBand, ConvertInputWFtoAntennaWF, ImpulseResponse, TimeShiftAndSignalFluct, Banding
 
     static void ConvertEHtoLREfield(double,double,double&,double&);
@@ -126,7 +126,7 @@ public:
     vector<double> vnoise_eachband[2];
     vector<int> vpasses_eachband[2];
     
-    // Used for AntTrigger::PrepareBandWaveforms(...) and AntTrigger::WhichBandsPass(...)
+    // Used for ChanTrigger::PrepareBandWaveforms(...) and ChanTrigger::WhichBandsPass(...)
     double v_banding_rfcm_e_forfft[5][HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
     double v_banding_rfcm_h_forfft[5][HALFNFOUR];
     double vm_banding_rfcm_1_forfft[5][HALFNFOUR];
@@ -153,7 +153,7 @@ public:
 #endif
     
     int unwarned;  // whether we have warned the user about resetting thresholds when they are beyond the measured bounds
-}; //class AntTrigger
+}; //class ChanTrigger
 
 //namespace Bands {
     //   double bwslice_max[4]=; //maximum of each bandwidth slice  
