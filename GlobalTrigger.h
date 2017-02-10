@@ -100,6 +100,17 @@ class GlobalTrigger {
 		     int *thispasses);
   void PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold,
 		     int *thispasses);
+
+  
+  void PassesTriggerBasic(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses);
+
+  void PassesTriggerCoherentSum(Settings *settings1, Anita *anita1, int inu, int *thispasses);
+
+  void PassesTriggerSummedPower(Settings *settings1,Anita *anita1);
+
+  void PassesTriggerScheme5(Anita *anita1, double this_threshold, int *thispasses);
+  
+  
   void L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int discones_passing,int *l3trigy,
 		 int *thispasses);
     

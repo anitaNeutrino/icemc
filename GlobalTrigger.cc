@@ -39,7 +39,8 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
   WHICHLAYERSLCPRCP[2]=0;
 
 
-  TRIGTIMESTEP=2.E-9; // time step between sampling tunnel diode output for the trigger
+  // time step between sampling tunnel diode output for the trigger
+  TRIGTIMESTEP=2.E-9; 
       
    
   L3_COINCIDENCE=22.5e-9;
@@ -48,6 +49,7 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
   L1_COINCIDENCE_ANITA3[0]=16.E-9; // B->M or T
   L1_COINCIDENCE_ANITA3[1]=22.E-9; // M->B or T
   L1_COINCIDENCE_ANITA3[2]=5.E-9; // T->B or M 
+
   // in this scenario B->M is the same as M->B for example
   // this needs to be generalized- using this same thing for all scenarios which isn't right
   LASTTIMETOTESTL1_ANITA3=((double)anita1->NFOUR/2)*anita1->TIMESTEP-Tools::dMax(L1_COINCIDENCE_ANITA3,3); // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.
@@ -80,16 +82,10 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
 	LASTTIMETOTESTL1_ANITA4=L1_COINCIDENCE_MOREGENERAL[i][j];
     }
   }
-  LASTTIMETOTESTL1_ANITA4=((double)anita1->NFOUR/2)*anita1->TIMESTEP-LASTTIMETOTESTL1_ANITA4; // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.
-  //   cout << "LASTTMETOTESTL1_ANITA4 is " << LASTTIMETOTESTL1_ANITA4 << "\n";
-  //    L1_COINCIDENCE_MOREGENERAL[0][0]=16.E-9; // B->T
-  //    L1_COINCIDENCE_MOREGENERAL[0][1]=16.E-9;
+  
+  LASTTIMETOTESTL1_ANITA4=((double)anita1->NFOUR/2)*anita1->TIMESTEP-LASTTIMETOTESTL1_ANITA4;
+  // can't test L1 after this point because the l1_coincidence windows go past the end of the waveform.
 
-  //  L1_COINCIDENCE_MOREGENERAL[1][0]=22.E-9;
-  //   L1_COINCIDENCE_MOREGENERAL[1][1]=22.E-9;
-
-  //    L1_COINCIDENCE_MOREGENERAL[2][0]=5.E-9; // L1 coincidence window, in seconds  ;
-  //    L1_COINCIDENCE_MOREGENERAL[2][1]=5.E-9; // L1 coincidence window, in seconds  ;
   nstepback=(int)(2.E-9/TRIGTIMESTEP);
     
   // coincidence between lcp,rcp within an antenna
@@ -120,7 +116,6 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
     for (int j=0;j<Anita::NPHI_MAX;j++) {
       for (int k=0;k<2;k++) {
 	for (int p=0;p<anita1->NBANDS+1;p++) {
-	  //	for (int p=0;p<5;p++) {
 	  channels_passing[i][j][k][p]=0;
 	  // make vchannels_passing the proper length.
 	  vchannels_passing[i][j][k].push_back(0);
@@ -146,11 +141,10 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
       for (int j=0;j<Anita::NPHI_MAX;j++) {
 	volts[k][i][j]=0.;
 	volts_em[k][i][j]=0.;
-	volts_original[k][i][j]=0.; //added djg
+	volts_original[k][i][j]=0.;
       }
     }
   }
-    
     
     
   //Zeroing
@@ -231,1122 +225,1053 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 
 
   //bool ishpol should only be used for anita3, by default do only vpol
-  //  if (ishpol && ((settings1->JUSTVPOL)||(settings1->WHICH!=9))) return 0;
-  
+
+  if (settings1->TRIGGERSCHEME < 3) {
+
+    // Basic trigger refers to  frequency domain voltage (0) frequency domain energy (1) timedomain diode integration (2) 
+
+    PassesTriggerBasic(settings1, anita1, discones_passing, mode, l3trig, l2trig, l1trig, antennaclump, loctrig, loctrig_nadironly, thispasses);
+
+  }
+
+  else if (settings1->TRIGGERSCHEME == 3) {
+
+    PassesTriggerCoherentSum(settings1, anita1, inu, thispasses);
+     
+  }
+  else if (settings1->TRIGGERSCHEME == 4) {
+
+    PassesTriggerSummedPower(settings1, anita1);
+
+  }
+  else if (settings1->TRIGGERSCHEME == 5) {
+    
+    // Don't know the name of this one so I'll call it 5
+    PassesTriggerScheme5(anita1, this_threshold, thispasses);
+   
+  }
+
+
+}//PassesTrigger
+
+
+
+void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses){
+
   int ltsum=0;
   int channsum=0;
   int ihit=0;
   //  int thispasses[2]={0,0};
   int required_bands_failed[2]={0,0}; // keep track of whether bands that were required to pass did not, for each polarization
-  
-  // this is the only cheesy way where we did some integral of energy or something.
-  // probably should just get rid of it
-  // should check that we can get anita1 results with new method though
-  if (settings1->TRIGGERSCHEME < 3) {
-    // this is an array with 1=pass and 0=fail for each channel
-    // the first two layers on the payload are "compacted"
-    // into one trigger layer of 16 antennas.
-    // layer number, antenna, polarization, bandwidth slice
-    int channels_compacted_passing[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2][5] = {{{{0}}}};
+
     
+  // this is an array with 1=pass and 0=fail for each channel
+  // the first two layers on the payload are "compacted"
+  // into one trigger layer of 16 antennas.
+  // layer number, antenna, polarization, bandwidth slice
+  int channels_compacted_passing[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2][5] = {{{{0}}}};
+    
+  for (int k=0;k<Anita::NPOL;k++) {
+    l3trig[k]=0;
+    Tools::Zero(l1trig[k],Anita::NTRIGGERLAYERS_MAX);
+    Tools::Zero(l2trig[k],Anita::NTRIGGERLAYERS_MAX); // for all three layers
+    Tools::Zero(loctrig_nadironly[k],Anita::NPHI_MAX);
+  }
+  // which clumps of 3 antennas
+  //within the nadir layer pass
+  // 0th and 1st element= antenna at phi=0,
+  // 2nd and 3rd element=next antenna, etc.
+    
+  for (int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
     for (int k=0;k<Anita::NPOL;k++) {
-      l3trig[k]=0;
-      Tools::Zero(l1trig[k],Anita::NTRIGGERLAYERS_MAX);
-      Tools::Zero(l2trig[k],Anita::NTRIGGERLAYERS_MAX); // for all three layers
-      Tools::Zero(loctrig_nadironly[k],Anita::NPHI_MAX);
+      // for (int j=0;j<Anita::NPHI_MAX;j++) {
+      Tools::Zero(loctrig[k][ilayer],Anita::NPHI_MAX);
     }
     // which clumps of 3 antennas
-    //within the nadir layer pass
-    // 0th and 1st element= antenna at phi=0,
-    // 2nd and 3rd element=next antenna, etc.
-    
-    for (int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
-      for (int k=0;k<Anita::NPOL;k++) {
-	// for (int j=0;j<Anita::NPHI_MAX;j++) {
-	Tools::Zero(loctrig[k][ilayer],Anita::NPHI_MAX);
-      }
-      // which clumps of 3 antennas
-      //within each trigger layer pass L2 trigger
-      // layer, phi location
-      // } //for
-    } // end of initializing to zero
+    //within each trigger layer pass L2 trigger
+    // layer, phi location
+    // } //for
+  } // end of initializing to zero
 
-    int NBAND=5; // number of bandwidth slices
-    int whichlayer=0;
-    int whichphisector=0;
-    for (int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
-      for (int iphi=0;iphi<anita1->NRX_PHI[ilayer];iphi++) {
-	for (int ipolar=0;ipolar<2;ipolar++) {
+  int NBAND=5; // number of bandwidth slices
+  int whichlayer=0;
+  int whichphisector=0;
+  for (int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
+    for (int iphi=0;iphi<anita1->NRX_PHI[ilayer];iphi++) {
+      for (int ipolar=0;ipolar<2;ipolar++) {
 
-	  if (anita1->pol_allowed[ipolar]==0) continue;// if this polarization is not allowed to contribute then don't do it
-	  //	  if (ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
-	  //else if ((!ishpol) && ipolar==1) continue; // Anita3 : only do the polarisation required
+	if (anita1->pol_allowed[ipolar]==0) continue;// if this polarization is not allowed to contribute then don't do it
+	//	  if (ishpol && ipolar==0) continue; // Anita3 : only do the polarisation required
+	//else if ((!ishpol) && ipolar==1) continue; // Anita3 : only do the polarisation required
 	  
-	  for (int iband=0;iband<NBAND;iband++) {
+	for (int iband=0;iband<NBAND;iband++) {
 	    
-	    GetAnitaLayerPhiSector(settings1,ilayer,iphi,whichlayer,whichphisector); // Translate Anita physical layer to Anita trigger layer and phi sector (4 layers with 8,8,16,8 phi sector to 3 layers with 16 phi sectors each.  In the nadir layer, 8 of the 16 slots are empty on the trigger layer.)
+	  GetAnitaLayerPhiSector(settings1,ilayer,iphi,whichlayer,whichphisector); // Translate Anita physical layer to Anita trigger layer and phi sector (4 layers with 8,8,16,8 phi sector to 3 layers with 16 phi sectors each.  In the nadir layer, 8 of the 16 slots are empty on the trigger layer.)
 	    
 	    
 	    
-	    // combining top two layers on the payload into one trigger layer
-	    // this means the 0th antenna in the first trigger layer is
-	    // physically higher than the 1st antenna in the first trigger layer
-	    // which means that the nadirs are aligned with the antennas with indices 1,3,5 etc.
-	    // we will still use indices 0-7 for them though
-	    //	  channels_compacted_passing[0][2*iphi+ilayer][ipolar][iband]+=channels_passing[ilayer][iphi][ipolar][iband];
-	    channels_compacted_passing[whichlayer][whichphisector][ipolar][iband]+=channels_passing[ilayer][iphi][ipolar][iband];
-	  } //for
+	  // combining top two layers on the payload into one trigger layer
+	  // this means the 0th antenna in the first trigger layer is
+	  // physically higher than the 1st antenna in the first trigger layer
+	  // which means that the nadirs are aligned with the antennas with indices 1,3,5 etc.
+	  // we will still use indices 0-7 for them though
+	  channels_compacted_passing[whichlayer][whichphisector][ipolar][iband]+=channels_passing[ilayer][iphi][ipolar][iband];
 	} //for
       } //for
     } //for
+  } //for
 
-    int antsum[2]={0,0}; // counter for how many channels of each polarization on an antenna pass
-    /* antenna triggers */
+  int antsum[2]={0,0}; // counter for how many channels of each polarization on an antenna pass
+  /* antenna triggers */
     
-    int Nreq_l2[Anita::NLAYERS_MAX];
-    // number of antennas within each clump
-    //that need to pass for that clump to pass L2
-    // 1st layer, 2nd layer,
-    //nadir layer (to be "OR"ed with upper layers),
-    // and nadir layer (for nadir-only) trigger
-    //int Ntrig_chann[4]={6,6,6,8}; // NOT USED:  number of channels
-    //per clump that need to pass.
-    for (int i=0;i<Anita::NLAYERS_MAX;i++) {
-      Nreq_l2[i]=anita1->trigRequirements[1];
-    }
+  int Nreq_l2[Anita::NLAYERS_MAX];
+  // number of antennas within each clump
+  //that need to pass for that clump to pass L2
+  // 1st layer, 2nd layer,
+  //nadir layer (to be "OR"ed with upper layers),
+  // and nadir layer (for nadir-only) trigger
+  //int Ntrig_chann[4]={6,6,6,8}; // NOT USED:  number of channels
+  //per clump that need to pass.
+  for (int i=0;i<Anita::NLAYERS_MAX;i++) {
+    Nreq_l2[i]=anita1->trigRequirements[1];
+  }
     
     
-    int ant[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX] = {{{0}}}; // which antennas and which polarizations pass at L1
-    // trigger layer, phi position
+  int ant[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX] = {{{0}}}; // which antennas and which polarizations pass at L1
+  // trigger layer, phi position
     
-    int antpass[2]={0,0}; // count how many antennas pass
-    int iphitrig=0;  // which trigger phi sector
-    int ihittrig=0;
-    // local level 1 trigger at the antenna
-    for(int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++) { // loop over layers
-      // this is nlayers-1 because NLAYERS counts top 16 antennas as 2 layers
+  int antpass[2]={0,0}; // count how many antennas pass
+  int iphitrig=0;  // which trigger phi sector
+  int ihittrig=0;
+  // local level 1 trigger at the antenna
+  for(int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++) { // loop over layers
+    // this is nlayers-1 because NLAYERS counts top 16 antennas as 2 layers
       
-      for(int iphi=0;iphi<anita1->PHITRIG[iloc];iphi++) { // loop over phi position
-	iphitrig=GetPhiSector(settings1,iloc,iphi); // get trigger phi sector
-	// counts from 0
+    for(int iphi=0;iphi<anita1->PHITRIG[iloc];iphi++) { // loop over phi position
+      iphitrig=GetPhiSector(settings1,iloc,iphi); // get trigger phi sector
+      // counts from 0
 	
-	for(int ipolar=0;ipolar<2;ipolar++) {
+      for(int ipolar=0;ipolar<2;ipolar++) {
 
-	  antsum[ipolar] = 0; // start sum for this antenna for each polarization
+	antsum[ipolar] = 0; // start sum for this antenna for each polarization
 	
-	  for(int iband=0;iband<NBAND;iband++) {
-	    if(channels_compacted_passing[iloc][iphitrig][ipolar][iband] == 1
-	       && anita1->bwslice_allowed[iband]==1 && anita1->pol_allowed[ipolar]==1) { // only increment if it's one of the allowed bands and allowed polarizations.
+	for(int iband=0;iband<NBAND;iband++) {
+	  if(channels_compacted_passing[iloc][iphitrig][ipolar][iband] == 1
+	     && anita1->bwslice_allowed[iband]==1 && anita1->pol_allowed[ipolar]==1) { // only increment if it's one of the allowed bands and allowed polarizations.
 	      
-	      if (settings1->PHIMASKING && settings1->WHICH==9){ // only applying channel masking like this if it's Anita-3
-		//		if ((ipolar==0 && (1<<iphitrig & l1TrigMask[0])) || (ipolar==1 && (1<<iphitrig & l1TrigMask[1])) ){
-		if  (1<<iphitrig & l1TrigMask[ipolar])  {
-		  continue; // was this channel masked?
-		}
+	    if (settings1->PHIMASKING && settings1->WHICH==9){ // only applying channel masking like this if it's Anita-3
+	      //		if ((ipolar==0 && (1<<iphitrig & l1TrigMask[0])) || (ipolar==1 && (1<<iphitrig & l1TrigMask[1])) ){
+	      if  (1<<iphitrig & l1TrigMask[ipolar])  {
+		continue; // was this channel masked?
 	      }
-	      antsum[ipolar] = antsum[ipolar] +1; // sum channels that pass for this antenna, polarization
-
 	    }
-	  } // loop over bands
-	} // end loop over polarizations
+	    antsum[ipolar] = antsum[ipolar] +1; // sum channels that pass for this antenna, polarization
+
+	  }
+	} // loop over bands
+      } // end loop over polarizations
 	
 	
- 	for (int ipolar=0;ipolar<2;ipolar++) {
-	  required_bands_failed[ipolar]=0;
- 	  for (int iband=0;iband<NBAND;iband++) { // notice sum over 5 bands now
- 	    if(channels_compacted_passing[iloc][iphitrig][ipolar][iband] == 0
- 	       && anita1->bwslice_required[iband]==1 ) { // if this band was required to pass and it didn't,
- 	      required_bands_failed[ipolar] = 1; // fatal for this antenna, polarization
- 	    }
+      for (int ipolar=0;ipolar<2;ipolar++) {
+	required_bands_failed[ipolar]=0;
+	for (int iband=0;iband<NBAND;iband++) { // notice sum over 5 bands now
+	  if(channels_compacted_passing[iloc][iphitrig][ipolar][iband] == 0
+	     && anita1->bwslice_required[iband]==1 ) { // if this band was required to pass and it didn't,
+	    required_bands_failed[ipolar] = 1; // fatal for this antenna, polarization
+	  }
 	    
- 	  } // end loop over bands
- 	} // end loop over polarizations
+	} // end loop over bands
+      } // end loop over polarizations
 
 	// if the required bands didn't pass then set antsum=0 so the antenna doesn't pass
 	
 
-	for (int ipolar=0;ipolar<2;ipolar++) {	  
-	  ant[ipolar][iloc][iphitrig] = 1; // start with every antenna passing L1.	  
-	  if( (anita1->pol_required[ipolar]==1 && 
-	       (antsum[ipolar] < anita1->trigRequirements[0]	    
-		|| required_bands_failed[ipolar]==1 ) )
-	      || (anita1->pol_required[ipolar]==0)
-	      )  { // if this polarization is required and it doesn't pass then make the antenna fail
-	    ant[ipolar][iloc][iphitrig]=0;
-	  } //if
-	  else{
-	    antpass[ipolar]+=1;// increment if it passed
-	  }
+      for (int ipolar=0;ipolar<2;ipolar++) {	  
+	ant[ipolar][iloc][iphitrig] = 1; // start with every antenna passing L1.	  
+	if( (anita1->pol_required[ipolar]==1 && 
+	     (antsum[ipolar] < anita1->trigRequirements[0]	    
+	      || required_bands_failed[ipolar]==1 ) )
+	    || (anita1->pol_required[ipolar]==0)
+	    )  { // if this polarization is required and it doesn't pass then make the antenna fail
+	  ant[ipolar][iloc][iphitrig]=0;
+	} //if
+	else{
+	  antpass[ipolar]+=1;// increment if it passed
 	}
+      }
 
-      } //for (phi position)
-    } //for (layers)
+    } //for (phi position)
+  } //for (layers)
     
-    if (settings1->DISCONES==2) {
-      // fill the slots in  between the actual antennas with the "or"
-      // of the neighboring antennas
-      FillInNadir(anita1,ant[0][2]);
-      FillInNadir(anita1,ant[1][2]);
+  if (settings1->DISCONES==2) {
+    // fill the slots in  between the actual antennas with the "or"
+    // of the neighboring antennas
+    FillInNadir(anita1,ant[0][2]);
+    FillInNadir(anita1,ant[1][2]);
+  }
+    
+  for(int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++){ //This is NLAYERS-1 because NLAYERS counts top 16 antennas as 2 layers
+    for (int iphi=0;iphi<anita1->PHITRIG[iloc];iphi++){
+      iphitrig=GetPhiSector(settings1,iloc,iphi);
+      for (int ipolar=0;ipolar<2;ipolar++) {	  
+	if (ant[ipolar][iloc][iphitrig]==1) 
+	  l1trig[ipolar][iloc] += (1<<iphitrig); // this keeps track of which antennas pass the l1 trigger
+      }
+    }//for (phi position)
+  } //for (layers) // Hmm this is not used
+    
+  if (mode == 1) {// TRIGTYPE=2 -> just require ANTtrig channels pass on 2 antennas
+    for (int ipolar=0;ipolar<Anita::NPOL;ipolar++) {
+      if (antpass[ipolar] >= 2) 
+	thispasses[ipolar] = 1;
     }
-    
-    for(int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++){ //This is NLAYERS-1 because NLAYERS counts top 16 antennas as 2 layers
-      for (int iphi=0;iphi<anita1->PHITRIG[iloc];iphi++){
-	iphitrig=GetPhiSector(settings1,iloc,iphi);
-	for (int ipolar=0;ipolar<2;ipolar++) {	  
-	  if (ant[ipolar][iloc][iphitrig]==1) 
-	    l1trig[ipolar][iloc] += (1<<iphitrig); // this keeps track of which antennas pass the l1 trigger
-	}
-      }//for (phi position)
-    } //for (layers) // Hmm this is not used
-    
-    if (mode == 1) {// TRIGTYPE=2 -> just require ANTtrig channels pass on 2 antennas
-      for (int ipolar=0;ipolar<Anita::NPOL;ipolar++) {
-	if (antpass[ipolar] >= 2) 
-	  thispasses[ipolar] = 1;
-      }
    
-    } else if (mode == 2) { // TRIGTYPE=1 ->
+  } else if (mode == 2) { // TRIGTYPE=1 ->
 
-      // ANITA-3
-      if (settings1->WHICH==9) {
-	// for each of these, need to set 
-	// loctrig, l2trig
+    // ANITA-3
+    if (settings1->WHICH==9) {
+      // for each of these, need to set 
+      // loctrig, l2trig
 
-	//	L1Trigger(
-
-	std::array<std::array<std::vector<int>,16>,2> vl1trig;
+      std::array<std::array<std::vector<int>,16>,2> vl1trig;
 	
-	L1Anita3_AllPhiSectors(anita1,vl1trig);
-	// just have to modify this function so it's looping over all relevant trigtimesteps
+      L1Anita3_AllPhiSectors(anita1,vl1trig);
+      // just have to modify this function so it's looping over all relevant trigtimesteps
 	
+      for (int ipol=0;ipol<2;ipol++) {
+	for (int iphi=0;iphi<16;iphi++) {
+
+	  for (unsigned int ibin=0;ibin<vl1trig[ipol][iphi].size();ibin++) {
+	    anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=vl1trig[ipol][iphi][ibin];
+	    // if (anita1->l1trig_anita3_inanita[ipol][iphi][ibin])
+	    // 		cout << "This l1 is 1.\n";
+	  }
+	  for (int ibin=vl1trig[ipol][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+	    anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=0;
+	  }
+	}
+      }
+      //	cout << "vl1trig size is " << vl1trig[0][0].size() << "\n";
+
+      std::array<std::array<std::vector<int>,16>,2> vl2trig;
+	
+      L2Anita3and4(anita1,vl1trig,
+		   vl2trig);
+
+      if (settings1->PHIMASKING){ // only applying channel masking like this if it's Anita-3
 	for (int ipol=0;ipol<2;ipol++) {
 	  for (int iphi=0;iphi<16;iphi++) {
-
-	    for (unsigned int ibin=0;ibin<vl1trig[ipol][iphi].size();ibin++) {
-	      anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=vl1trig[ipol][iphi][ibin];
-	      // if (anita1->l1trig_anita3_inanita[ipol][iphi][ibin])
-	      // 		cout << "This l1 is 1.\n";
-	    }
-	    for (int ibin=vl1trig[ipol][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
-	      anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=0;
+	    if  ((1<<iphi & l1TrigMask[ipol])||(1<<iphi & phiTrigMask[ipol]))  {
+	      // set phi sector to 0
+	      std::fill(vl2trig[ipol][iphi].begin(), vl2trig[ipol][iphi].end(), 0);
 	    }
 	  }
 	}
-	//	cout << "vl1trig size is " << vl1trig[0][0].size() << "\n";
-
-	std::array<std::array<std::vector<int>,16>,2> vl2trig;
-	
-	L2Anita3and4(anita1,vl1trig,
-		     vl2trig);
-
-	if (settings1->PHIMASKING){ // only applying channel masking like this if it's Anita-3
-	  for (int ipol=0;ipol<2;ipol++) {
-	    for (int iphi=0;iphi<16;iphi++) {
-	      if  ((1<<iphi & l1TrigMask[ipol])||(1<<iphi & phiTrigMask[ipol]))  {
-	        // set phi sector to 0
-		std::fill(vl2trig[ipol][iphi].begin(), vl2trig[ipol][iphi].end(), 0);
-	      }
-	    }
-	  }
-	}
-	
-	int vl3trig[2][16];
-	L3Anita3and4(anita1,vl2trig,
-		     vl3trig,thispasses);
-
-	for (int ipol=0;ipol<2;ipol++) {
-          for (int iphi=0;iphi<16;iphi++) {
-            if (vl3trig[ipol][iphi]>0)    l3trig[ipol]+=(1<<iphi);
-          }
-        }
-	
       }
-      // ANITA-4
-      else if (settings1->WHICH==10 && !(settings1->LCPRCP)) {
-
-	std::array<std::array<std::vector<int>,16>,2> vl1trig;
 	
-	L1Anita4_AllPhiSectors(anita1,vl1trig);
-	// just have to modify this function so it's looping over all relevant trigtimesteps
-	
-	for (int ipol=0;ipol<2;ipol++) {
-	  for (int iphi=0;iphi<16;iphi++) {
+      int vl3trig[2][16];
+      L3Anita3and4(anita1,vl2trig,
+		   vl3trig,thispasses);
 
-	    for (unsigned int ibin=0;ibin<vl1trig[ipol][iphi].size();ibin++) {
-	      anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=vl1trig[ipol][iphi][ibin];
+      for (int ipol=0;ipol<2;ipol++) {
+	for (int iphi=0;iphi<16;iphi++) {
+	  if (vl3trig[ipol][iphi]>0)    l3trig[ipol]+=(1<<iphi);
+	}
+      }
+	
+    }
+    // ANITA-4
+    else if (settings1->WHICH==10 && !(settings1->LCPRCP)) {
+
+      std::array<std::array<std::vector<int>,16>,2> vl1trig;
+	
+      L1Anita4_AllPhiSectors(anita1,vl1trig);
+      // just have to modify this function so it's looping over all relevant trigtimesteps
+	
+      for (int ipol=0;ipol<2;ipol++) {
+	for (int iphi=0;iphi<16;iphi++) {
+
+	  for (unsigned int ibin=0;ibin<vl1trig[ipol][iphi].size();ibin++) {
+	    anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=vl1trig[ipol][iphi][ibin];
 	     
-	      // 	      if (anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin])
-	      // 		cout << "This l1 is " << ipol << "\t" << iphi << "\t" << ibin << "\t" << anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] << "\n";
-	    }
-	    for (int ibin=vl1trig[ipol][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
-	      anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=0;
-	    }
+	    // 	      if (anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin])
+	    // 		cout << "This l1 is " << ipol << "\t" << iphi << "\t" << ibin << "\t" << anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] << "\n";
+	  }
+	  for (int ibin=vl1trig[ipol][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+	    anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=0;
 	  }
 	}
-	//	cout << "vl1trig size is " << vl1trig[0][0].size() << "\n";
-
-	std::array<std::array<std::vector<int>,16>,2> vl2trig;
-	
-	L2Anita3and4(anita1,vl1trig,
-		     vl2trig);
-
-	int vl3trig[2][16];
-	L3Anita3and4(anita1,vl2trig,
-		     vl3trig,thispasses);
-
-
       }
-      else if (settings1->WHICH==10 && settings1->LCPRCP) {
+      //	cout << "vl1trig size is " << vl1trig[0][0].size() << "\n";
+
+      std::array<std::array<std::vector<int>,16>,2> vl2trig;
+	
+      L2Anita3and4(anita1,vl1trig,
+		   vl2trig);
+
+      int vl3trig[2][16];
+      L3Anita3and4(anita1,vl2trig,
+		   vl3trig,thispasses);
 
 
-	// 	std::array<std::array<std::vector<int>,16>,2> vl1trig;
-	// 	//cout << "calling allphisectors.\n";
-	// 	L1Anita4LR_ScA_AllPhiSectors(anita1,vl1trig);
+    }
+    else if (settings1->WHICH==10 && settings1->LCPRCP) {
 
-	// 	for (int ipol=0;ipol<2;ipol++) {
-	// 	  for (int iphi=0;iphi<16;iphi++) {
 
-	// 	    for (int ibin=0;ibin<vl1trig[ipol][iphi].size();ibin++) {
-	// 	      anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=vl1trig[ipol][iphi][ibin];
+      // 	std::array<std::array<std::vector<int>,16>,2> vl1trig;
+      // 	//cout << "calling allphisectors.\n";
+      // 	L1Anita4LR_ScA_AllPhiSectors(anita1,vl1trig);
+
+      // 	for (int ipol=0;ipol<2;ipol++) {
+      // 	  for (int iphi=0;iphi<16;iphi++) {
+
+      // 	    for (int ibin=0;ibin<vl1trig[ipol][iphi].size();ibin++) {
+      // 	      anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=vl1trig[ipol][iphi][ibin];
 	     
-	// 	      //if (anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin])
-	// 	      //cout << "This l1 is " << ipol << "\t" << iphi << "\t" << ibin << "\t" << anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] << "\n";
-	// 	    }
-	// 	    for (int ibin=vl1trig[ipol][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
-	// 	      anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=0;
-	// 	    }
-	// 	  }
-	// 	}
-	// 	//	cout << "vl1trig size is " << vl1trig[0][0].size() << "\n";
+      // 	      //if (anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin])
+      // 	      //cout << "This l1 is " << ipol << "\t" << iphi << "\t" << ibin << "\t" << anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] << "\n";
+      // 	    }
+      // 	    for (int ibin=vl1trig[ipol][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+      // 	      anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=0;
+      // 	    }
+      // 	  }
+      // 	}
+      // 	//	cout << "vl1trig size is " << vl1trig[0][0].size() << "\n";
 
-	// 	std::array<std::array<std::vector<int>,16>,2> vl2trig;
+      // 	std::array<std::array<std::vector<int>,16>,2> vl2trig;
 	
-	// 	L2Anita3and4(anita1,vl1trig,
-	// 		     vl2trig);
-	// 	L3Anita4LR_ScA(anita1,vl2trig,
-	// 		   thispasses);
+      // 	L2Anita3and4(anita1,vl1trig,
+      // 		     vl2trig);
+      // 	L3Anita4LR_ScA(anita1,vl2trig,
+      // 		   thispasses);
 
-	//cout << "about to do delays.\n";
-	delay_AllAntennas(anita1);
+      //cout << "about to do delays.\n";
+      delay_AllAntennas(anita1);
 
-	//	cout << "did delays.\n";
-	// l1 triggers for all antennas
-	std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb;
+      //	cout << "did delays.\n";
+      // l1 triggers for all antennas
+      std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb;
 
-	// keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
-	// for each phi sector, whether there is a 1, 2 or 3 coincidence
-	std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb;
-	//	cout << "did L2.\n";
+      // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
+      // for each phi sector, whether there is a 1, 2 or 3 coincidence
+      std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb;
+      //	cout << "did L2.\n";
 
-	std::array<vector<int>,16> vl3trig_type0;
-	std::array<vector<int>,16> vl3trig_type1;
-	int thispasses_l3type0=0;
-	int thispasses_l3type1=0;
+      std::array<vector<int>,16> vl3trig_type0;
+      std::array<vector<int>,16> vl3trig_type1;
+      int thispasses_l3type0=0;
+      int thispasses_l3type1=0;
 
 	
-	double time_thisbin=(double)nstepback*TRIGTIMESTEP;
-	int itrigbin=nstepback;
-	//cout << "about to loop.\n";
-	//cout << "size of arrayofhits is " << arrayofhits[0][0][0].size() << "\n";
-	// i should really do this in a different step so this function has fewer inputs.
-	while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
-	  //cout << "vector size is " << vl1trig_anita4lr_scb[0][0].size() << "\n";
-	  int npassesl1=0;
-	  L1Anita4LR_ScB_AllAntennas_OneBin(itrigbin,anita1,vl1trig_anita4lr_scb,npassesl1);
+      double time_thisbin=(double)nstepback*TRIGTIMESTEP;
+      int itrigbin=nstepback;
+      //cout << "about to loop.\n";
+      //cout << "size of arrayofhits is " << arrayofhits[0][0][0].size() << "\n";
+      // i should really do this in a different step so this function has fewer inputs.
+      while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
+	//cout << "vector size is " << vl1trig_anita4lr_scb[0][0].size() << "\n";
+	int npassesl1=0;
+	L1Anita4LR_ScB_AllAntennas_OneBin(itrigbin,anita1,vl1trig_anita4lr_scb,npassesl1);
 
-	  //	if (npassesl1)
-	  //cout << "npassesl1 is " << npassesl1 << "\n";
+	//	if (npassesl1)
+	//cout << "npassesl1 is " << npassesl1 << "\n";
 
-	  itrigbin++;
-	  time_thisbin=(double)itrigbin*TRIGTIMESTEP;
-	} // loop over time steps
+	itrigbin++;
+	time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+      } // loop over time steps
 
 	//      cout << "got out of first loop.\n";
-	time_thisbin=(double)nstepback*TRIGTIMESTEP;
-	itrigbin=nstepback;
+      time_thisbin=(double)nstepback*TRIGTIMESTEP;
+      itrigbin=nstepback;
 
-	while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
+      while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
 	
-	  int npassesl2=0;
-	  int npassesl2_type0=0;
-	  L2Anita4LR_ScB_AllPhiSectors_OneBin(itrigbin,anita1,vl1trig_anita4lr_scb,
-					      vl2_realtime_anita4_scb,npassesl2,npassesl2_type0);
+	int npassesl2=0;
+	int npassesl2_type0=0;
+	L2Anita4LR_ScB_AllPhiSectors_OneBin(itrigbin,anita1,vl1trig_anita4lr_scb,
+					    vl2_realtime_anita4_scb,npassesl2,npassesl2_type0);
 
 
-	  //  	if (npassesl2)
-	  //   	  cout << "npassesl2 is " << npassesl2 << "\n";
-	  //   	if (npassesl2_type0)
-	  //   	  cout << "npassesl2_type0 is " << npassesl2_type0 << "\n";
+	//  	if (npassesl2)
+	//   	  cout << "npassesl2 is " << npassesl2 << "\n";
+	//   	if (npassesl2_type0)
+	//   	  cout << "npassesl2_type0 is " << npassesl2_type0 << "\n";
 	
-	  itrigbin++;
-	  time_thisbin=(double)itrigbin*TRIGTIMESTEP;
-	} // loop over time steps
+	itrigbin++;
+	time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+      } // loop over time steps
 
 
-	time_thisbin=(double)nstepback*TRIGTIMESTEP;
-	itrigbin=nstepback;
+      time_thisbin=(double)nstepback*TRIGTIMESTEP;
+      itrigbin=nstepback;
       
       
-	while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
+      while (time_thisbin<LASTTIMETOTESTL1_ANITA4LR_SCB) {
 	
 	
-	  L3Anita4LR_ScB_OneBin(itrigbin,anita1,vl2_realtime_anita4_scb,
-				vl3trig_type0, vl3trig_type1,
-				thispasses_l3type0,thispasses_l3type1);
+	L3Anita4LR_ScB_OneBin(itrigbin,anita1,vl2_realtime_anita4_scb,
+			      vl3trig_type0, vl3trig_type1,
+			      thispasses_l3type0,thispasses_l3type1);
 	
-	  // 	cout << "did L3.\n";
-	  itrigbin++;
-	  time_thisbin=(double)itrigbin*TRIGTIMESTEP;
-	} // loop over time steps
+	// 	cout << "did L3.\n";
+	itrigbin++;
+	time_thisbin=(double)itrigbin*TRIGTIMESTEP;
+      } // loop over time steps
       
 
-	if (thispasses_l3type0)
-	  thispasses[0]=1;
-	if (thispasses_l3type1)
-	  thispasses[1]=1;
+      if (thispasses_l3type0)
+	thispasses[0]=1;
+      if (thispasses_l3type1)
+	thispasses[1]=1;
 
-	//	if (thispasses[0] || thispasses[1])
-	//cout << "This passes! " << thispasses[0] << "\t" << thispasses[1] << "\n";
-
-
-	for (int ilayer=0;ilayer<anita1->NTRIGGERLAYERS;ilayer++) {
-	  for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
-	    for (int ipolar=0;ipolar<anita1->NPOL;ipolar++) {
-	      Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->arrayofhits_inanita[ilayer][iphi][ipolar],anita1->arrayofhits_forgaryanderic[ilayer][iphi][ipolar]);
-	      
-	    }
-	  }
-	}
+      //	if (thispasses[0] || thispasses[1])
+      //cout << "This passes! " << thispasses[0] << "\t" << thispasses[1] << "\n";
 
 
-	for (int ilayer=0;ilayer<anita1->NTRIGGERLAYERS;ilayer++) {
-	  for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
-	    for (unsigned int ibin=0;ibin<vl1trig_anita4lr_scb[ilayer][iphi].size();ibin++) {
-	      anita1->l1trig_anita4lr_inanita[ilayer][iphi][ibin]=vl1trig_anita4lr_scb[ilayer][iphi][ibin];
-	    }
-	    for (int ibin=vl1trig_anita4lr_scb[ilayer][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
-	      anita1->l1trig_anita4lr_inanita[ilayer][iphi][ibin]=0;
-	    }
-
-	    Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l1trig_anita4lr_inanita[ilayer][iphi],anita1->l1trig_anita4lr_forgaryanderic[ilayer][iphi]);
-
-	  }
-	}
-
-
-
+      for (int ilayer=0;ilayer<anita1->NTRIGGERLAYERS;ilayer++) {
 	for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
-	  for (unsigned int ibin=0;ibin<vl2_realtime_anita4_scb[iphi][1].size();ibin++) {
-	    anita1->l2trig_anita4lr_inanita[iphi][1][ibin]=vl2_realtime_anita4_scb[iphi][1][ibin];
-	    
+	  for (int ipolar=0;ipolar<anita1->NPOL;ipolar++) {
+	    Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->arrayofhits_inanita[ilayer][iphi][ipolar],anita1->arrayofhits_forgaryanderic[ilayer][iphi][ipolar]);
+	      
 	  }
-	  for (int ibin=vl2_realtime_anita4_scb[iphi][1].size();ibin<anita1->HALFNFOUR;ibin++) {
-	    anita1->l2trig_anita4lr_inanita[iphi][1][ibin]=0;
-	  }
-	  Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l2trig_anita4lr_inanita[iphi][1],anita1->l2trig_anita4lr_forgaryanderic[iphi]);
-	  
-	  for (unsigned int ibin=0;ibin<vl3trig_type0[iphi].size();ibin++) {
-	    anita1->l3type0trig_anita4lr_inanita[iphi][ibin]=vl3trig_type0[iphi][ibin];
-	  }
-	  for (int ibin=vl3trig_type0[iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
-	    anita1->l3type0trig_anita4lr_inanita[iphi][ibin]=0;
-	  }
-	  Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l3type0trig_anita4lr_inanita[iphi],anita1->l3type0trig_anita4lr_forgaryanderic[iphi]);
-	  for (unsigned int ibin=0;ibin<vl3trig_type1[iphi].size();ibin++) {
-	    
-	    anita1->l3trig_anita4lr_inanita[iphi][ibin]=vl3trig_type1[iphi][ibin];
-	  }
-	  for (int ibin=vl3trig_type1[iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
-	    anita1->l3trig_anita4lr_inanita[iphi][ibin]=0;
-	  }
-	  Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l3trig_anita4lr_inanita[iphi],anita1->l3type1trig_anita4lr_forgaryanderic[iphi]);
 	}
+      }
+
+
+      for (int ilayer=0;ilayer<anita1->NTRIGGERLAYERS;ilayer++) {
+	for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
+	  for (unsigned int ibin=0;ibin<vl1trig_anita4lr_scb[ilayer][iphi].size();ibin++) {
+	    anita1->l1trig_anita4lr_inanita[ilayer][iphi][ibin]=vl1trig_anita4lr_scb[ilayer][iphi][ibin];
+	  }
+	  for (int ibin=vl1trig_anita4lr_scb[ilayer][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+	    anita1->l1trig_anita4lr_inanita[ilayer][iphi][ibin]=0;
+	  }
+
+	  Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l1trig_anita4lr_inanita[ilayer][iphi],anita1->l1trig_anita4lr_forgaryanderic[ilayer][iphi]);
+
+	}
+      }
+
+
+
+      for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
+	for (unsigned int ibin=0;ibin<vl2_realtime_anita4_scb[iphi][1].size();ibin++) {
+	  anita1->l2trig_anita4lr_inanita[iphi][1][ibin]=vl2_realtime_anita4_scb[iphi][1][ibin];
+	    
+	}
+	for (int ibin=vl2_realtime_anita4_scb[iphi][1].size();ibin<anita1->HALFNFOUR;ibin++) {
+	  anita1->l2trig_anita4lr_inanita[iphi][1][ibin]=0;
+	}
+	Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l2trig_anita4lr_inanita[iphi][1],anita1->l2trig_anita4lr_forgaryanderic[iphi]);
+	  
+	for (unsigned int ibin=0;ibin<vl3trig_type0[iphi].size();ibin++) {
+	  anita1->l3type0trig_anita4lr_inanita[iphi][ibin]=vl3trig_type0[iphi][ibin];
+	}
+	for (int ibin=vl3trig_type0[iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+	  anita1->l3type0trig_anita4lr_inanita[iphi][ibin]=0;
+	}
+	Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l3type0trig_anita4lr_inanita[iphi],anita1->l3type0trig_anita4lr_forgaryanderic[iphi]);
+	for (unsigned int ibin=0;ibin<vl3trig_type1[iphi].size();ibin++) {
+	    
+	  anita1->l3trig_anita4lr_inanita[iphi][ibin]=vl3trig_type1[iphi][ibin];
+	}
+	for (int ibin=vl3trig_type1[iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+	  anita1->l3trig_anita4lr_inanita[iphi][ibin]=0;
+	}
+	Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l3trig_anita4lr_inanita[iphi],anita1->l3type1trig_anita4lr_forgaryanderic[iphi]);
+      }
  
 	
-	for (int ibin=0;ibin<anita1->HALFNFOUR;ibin++) {
-	  anita1->time_trig[ibin]=TRIGTIMESTEP*(double)ibin;
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      for (int ibin=0;ibin<anita1->HALFNFOUR;ibin++) {
+	anita1->time_trig[ibin]=TRIGTIMESTEP*(double)ibin;
       }
-      else {
 
 
-	// this is the one we're using for Anita 2
 
-	// int iloc=0; // top array
-	//int inad=0;  // phi position for nadir antennas,
-	//only goes to 8, wheras iphi goes to 16
-	int x;//for number of antenna in clump
-	int y;//for number of antenna in clump
-	x = (antennaclump-1)/2;//setting boundries for clump dependent on clump size(antennaclump)
-	y = (antennaclump-1)/2 +1;
+
+
+
+
+
+
+
+
+
+
+
+    }
+    else {
+
+
+      // this is the one we're using for Anita 2
+
+      // int iloc=0; // top array
+      //int inad=0;  // phi position for nadir antennas,
+      //only goes to 8, wheras iphi goes to 16
+      int x;//for number of antenna in clump
+      int y;//for number of antenna in clump
+      x = (antennaclump-1)/2;//setting boundries for clump dependent on clump size(antennaclump)
+      y = (antennaclump-1)/2 +1;
       
-	for (int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++) {
-	  for (int ipolar=0;ipolar<Anita::NPOL;ipolar++) {
-	    for(int iphi=0;iphi<16;iphi++) {
-	      iphitrig=iphi;
+      for (int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++) {
+	for (int ipolar=0;ipolar<Anita::NPOL;ipolar++) {
+	  for(int iphi=0;iphi<16;iphi++) {
+	    iphitrig=iphi;
 	    
 	    
-	      ltsum = 0; // zero counter for number of antennas that pass per clump
-	      channsum=0; // zero counter for number of channels that pass per clump
+	    ltsum = 0; // zero counter for number of antennas that pass per clump
+	    channsum=0; // zero counter for number of channels that pass per clump
 	    
-	      // loop over clump -- with boundary check -- ugly implement
-	      // even uglier - we want to require 2/3 antennas per clump
-	      // but the middle antenna has to be one of the two
-	      // so we multiply by ant[iloc][iphi] so that when the middle one
-	      // passes we are multiplying by 1 and when it doesn't we are
-	      // multiplying by zero.
-	      for(int inbr=iphi-x;inbr<iphi+y;inbr++) {
-		ihit = (inbr + 16) % 16; // make any negative indices positive
-		ihittrig=ihit;
+	    // loop over clump -- with boundary check -- ugly implement
+	    // even uglier - we want to require 2/3 antennas per clump
+	    // but the middle antenna has to be one of the two
+	    // so we multiply by ant[iloc][iphi] so that when the middle one
+	    // passes we are multiplying by 1 and when it doesn't we are
+	    // multiplying by zero.
+	    for(int inbr=iphi-x;inbr<iphi+y;inbr++) {
+	      ihit = (inbr + 16) % 16; // make any negative indices positive
+	      ihittrig=ihit;
 	      
-		if (anita1->REQUIRE_CENTRE) {
-		  ltsum+=ant[ipolar][iloc][ihittrig]*ant[ipolar][iloc][iphitrig]; // increment if this antenna passes
-		}
-		// we multipy by ant[iloc][iphi] because this ensures that
-		// one of the triggered antennas is the center one in the clump
-		else
-		  ltsum+=ant[ipolar][iloc][ihittrig];
+	      if (anita1->REQUIRE_CENTRE) {
+		ltsum+=ant[ipolar][iloc][ihittrig]*ant[ipolar][iloc][iphitrig]; // increment if this antenna passes
+	      }
+	      // we multipy by ant[iloc][iphi] because this ensures that
+	      // one of the triggered antennas is the center one in the clump
+	      else
+		ltsum+=ant[ipolar][iloc][ihittrig];
 	    
-		for (int ipolar=0;ipolar<2;ipolar++) {
-		  for (int iband=0;iband<4;iband++) {
-		    channsum+=channels_compacted_passing[iloc][ihittrig][ipolar][iband]; // increment if this channel passes
-		  } //for
+	      for (int ipolar=0;ipolar<2;ipolar++) {
+		for (int iband=0;iband<4;iband++) {
+		  channsum+=channels_compacted_passing[iloc][ihittrig][ipolar][iband]; // increment if this channel passes
 		} //for
 	      } //for
+	    } //for
 	  
-	      if(ltsum >= Nreq_l2[iloc]){ // if enough antennas in this clump pass
-		loctrig[ipolar][iloc][iphitrig] = 1;
-		l2trig[ipolar][iloc] += (1<<iphi);
-	      }//if
-	    } //for (phi position)
+	    if(ltsum >= Nreq_l2[iloc]){ // if enough antennas in this clump pass
+	      loctrig[ipolar][iloc][iphitrig] = 1;
+	      l2trig[ipolar][iloc] += (1<<iphi);
+	    }//if
+	  } //for (phi position)
 
-	  } // end loop over polarizations
-	} // end loop over trigger layers
+	} // end loop over polarizations
+      } // end loop over trigger layers
       
 	// fill the slots in  between the actual antennas with the "or"
 	// of the neighboring antennas
-	if (settings1->DISCONES==2) {
-	  FillInNadir(settings1,anita1,l2trig[0][2]);
-	  FillInNadir(settings1,anita1,l2trig[1][2]);
-	}
-	// only difference between these is whether they implement masking in both polarizations
-	// can we simplify it
-	if (settings1->PHIMASKING && settings1->WHICH!=9) { // not for Anita3
-	  // nadir antennas are aligned with the second physical layer of antennas
-	  for (int iphi=0;iphi<anita1->NTRIGPHISECTORS;iphi++) { // loop over phi sectors
-	    if ((1<<iphi) & phiTrigMask[0]) { // if this phi sector is masked
-	      for (int ipolar=0;ipolar<Anita::NPOL;ipolar++) {
-		for (int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++) {
-		  loctrig[ipolar][iloc][iphi] = 0;
-		  if(l2trig[ipolar][iloc] & (1<<iphi)) l2trig[ipolar][iloc] -= (1<<iphi);
-		}
-	      } // end loop over polarizations
-	    } // if this phi sector is masked
-	  }
-	} else if (settings1->PHIMASKING && settings1->WHICH==9) { // only for Anita3
-	  // nadir antennas are aligned with the second physical layer of antennas
-	  for (int iphi=0;iphi<anita1->NTRIGPHISECTORS;iphi++) { // loop over phi sectors
-
-	    for (int ipolar=0;ipolar<Anita::NPOL;ipolar++) {
-	      if ( (1<<iphi) & phiTrigMask[ipolar] )   { // if this phi sector is masked
-		for (int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++) {
-		  loctrig[ipolar][iloc][iphi] = 0;
-		  if(l2trig[ipolar][iloc] & (1<<iphi)) l2trig[ipolar][iloc] -= (1<<iphi);
-		}
-	      }
-	    }// if this phi sector is masked
-	  }
-	}
+      if (settings1->DISCONES==2) {
+	FillInNadir(settings1,anita1,l2trig[0][2]);
+	FillInNadir(settings1,anita1,l2trig[1][2]);
       }
+      // only difference between these is whether they implement masking in both polarizations
+      // can we simplify it
+      if (settings1->PHIMASKING && settings1->WHICH!=9) { // not for Anita3
+	// nadir antennas are aligned with the second physical layer of antennas
+	for (int iphi=0;iphi<anita1->NTRIGPHISECTORS;iphi++) { // loop over phi sectors
+	  if ((1<<iphi) & phiTrigMask[0]) { // if this phi sector is masked
+	    for (int ipolar=0;ipolar<Anita::NPOL;ipolar++) {
+	      for (int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++) {
+		loctrig[ipolar][iloc][iphi] = 0;
+		if(l2trig[ipolar][iloc] & (1<<iphi)) l2trig[ipolar][iloc] -= (1<<iphi);
+	      }
+	    } // end loop over polarizations
+	  } // if this phi sector is masked
+	}
+      } else if (settings1->PHIMASKING && settings1->WHICH==9) { // only for Anita3
+	// nadir antennas are aligned with the second physical layer of antennas
+	for (int iphi=0;iphi<anita1->NTRIGPHISECTORS;iphi++) { // loop over phi sectors
 
-      if (anita1->trigRequirements[2]==0) {
-	for (int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++) {
 	  for (int ipolar=0;ipolar<Anita::NPOL;ipolar++) {
-	    for (int iphi=0;iphi<anita1->NTRIGPHISECTORS;iphi++) {
-	      if (l2trig[ipolar][iloc] & (1<<iphi)) { // if we are not making a L3 trigger requirement and there was a l2 trigger then call it a pass
-		thispasses[ipolar]=1;
-		//cout << "This one passes.  inu is " << inu << " " << "iloc is " << iloc << "\n";
+	    if ( (1<<iphi) & phiTrigMask[ipolar] )   { // if this phi sector is masked
+	      for (int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++) {
+		loctrig[ipolar][iloc][iphi] = 0;
+		if(l2trig[ipolar][iloc] & (1<<iphi)) l2trig[ipolar][iloc] -= (1<<iphi);
 	      }
 	    }
-	  } // end loop over polarizations
+	  }// if this phi sector is masked
 	}
       }
+    }
+
+    if (anita1->trigRequirements[2]==0) {
+      for (int iloc=0;iloc<anita1->NTRIGGERLAYERS;iloc++) {
+	for (int ipolar=0;ipolar<Anita::NPOL;ipolar++) {
+	  for (int iphi=0;iphi<anita1->NTRIGPHISECTORS;iphi++) {
+	    if (l2trig[ipolar][iloc] & (1<<iphi)) { // if we are not making a L3 trigger requirement and there was a l2 trigger then call it a pass
+	      thispasses[ipolar]=1;
+	      //cout << "This one passes.  inu is " << inu << " " << "iloc is " << iloc << "\n";
+	    }
+	  }
+	} // end loop over polarizations
+      }
+    }
       
 
-      L3Trigger(settings1,anita1,loctrig,loctrig_nadironly,discones_passing,l3trig,
-		thispasses);
+    L3Trigger(settings1,anita1,loctrig,loctrig_nadironly,discones_passing,l3trig,
+	      thispasses);
 
-    } //else if (mode 2)
-  } else if (settings1->TRIGGERSCHEME == 3) {
-    // This is the case for (settings1->TRIGGERSCHEME == 3), that coherent waveform sum is being used to trigger, based on Andres' idea. This is specific to ANITA III's antenna geometry.
-    // Written by Paul Schellin 2011
+  } //else if (mode 2)
+} // end of PassesTriggerBasic
+
+
+
+
+// This is the case for (settings1->TRIGGERSCHEME == 3), that coherent waveform sum is being used to trigger, based on Andres' idea. This is specific to ANITA III's antenna geometry.
     
-    // Method:
-    //		All bands have passed so far, we now perform the following for the first-hit phi sector and its neighbors:
-    //		    - Convert the relevent waveforms into a useful format
-    //		    - Calculate all arrival time delays relevent to the 3 phi sectors (9 antennas)
-    //		    f- For each of the direction hypotheses, do:
-    //			- Shift the waveforms according to their delay offsets
-    //			- Sum the 9 waveforms, resulting in one coherently-summed waveform
-    //			- Square each element of the summed waveform, resulting in the power of the coherently-summed waveform
-    //			- For each of the 16 sample windows (with length of 32 time-samples) do:
-    //			    - Sum the powers of those samples
-    //			    - Compare the sum to the threshold, if greater, trigger on this event (return 1)
-    // Notes:
-    //		There will be several things hardcoded into the following method, feel free to change these to be variables within the Settings class, but for the sake of sanity, PLEASE no more global variables!
-    //		This will be made to implement all types of payloads shortly, what exists below is only a temporary specialization for ANITA III.
-    // double timesteps[anita1->HALFNFOUR];
+// Method:
+//		All bands have passed so far, we now perform the following for the first-hit phi sector and its neighbors:
+//		    - Convert the relevent waveforms into a useful format
+//		    - Calculate all arrival time delays relevent to the 3 phi sectors (9 antennas)
+//		    f- For each of the direction hypotheses, do:
+//			- Shift the waveforms according to their delay offsets
+//			- Sum the 9 waveforms, resulting in one coherently-summed waveform
+//			- Square each element of the summed waveform, resulting in the power of the coherently-summed waveform
+//			- For each of the 16 sample windows (with length of 32 time-samples) do:
+//			    - Sum the powers of those samples
+//			    - Compare the sum to the threshold, if greater, trigger on this event (return 1)
+// Notes:
+//		There will be several things hardcoded into the following method, feel free to change these to be variables within the Settings class, but for the sake of sanity, PLEASE no more global variables!
+//		This will be made to implement all types of payloads shortly, what exists below is only a temporary specialization for ANITA III.
 
-    // for (unsigned int i = 0; i < anita1->HALFNFOUR; i++){
-    //   timesteps[i] = i;
-    // }
-
-    for (int center_phi_sector_offset = -1; center_phi_sector_offset <= 1; center_phi_sector_offset++){
-      int center_phi_sector_index = first_phi_sector_hit + center_phi_sector_offset;
-      if (center_phi_sector_index > 15){center_phi_sector_index = 0;}
-      if (center_phi_sector_index < 0){center_phi_sector_index = 15;}
+void GlobalTrigger::PassesTriggerCoherentSum(Settings *settings1,Anita *anita1,int inu, int *thispasses) {
+    
+  for (int center_phi_sector_offset = -1; center_phi_sector_offset <= 1; center_phi_sector_offset++){
+    int center_phi_sector_index = first_phi_sector_hit + center_phi_sector_offset;
+    if (center_phi_sector_index > 15){center_phi_sector_index = 0;}
+    if (center_phi_sector_index < 0){center_phi_sector_index = 15;}
       
-      // Method:
-      //		All bands have passed so far, we now perform the following for the first-hit phi sector and its neighbors:
-      //		    - Convert the relevant waveforms into a useful format
-      //		    - Calculate all arrival time delays relevant to the 3 phi sectors (9 antennas)
-      //		    - For each of the direction hypotheses, do:
-      //			- Shift the waveforms according to their delay offsets
-      //			- Sum the 9 waveforms, resulting in one coherently-summed waveform
-      //			- Square each element of the summed waveform, resulting in the power of the coherently-summed waveform
-      //			- For each of the 16 sample windows (with length of 32 time-samples) do:
-      //			    - Sum the powers of those samples
-      //			    - Compare the sum to the threshold, if greater, trigger on this event (return 1)
-      // Notes:
-      //		There will be several things hard-coded into the following method, feel free to change these to be variables within the Settings class, but for the sake of sanity, PLEASE no more global variables!
-      //		This will be made to implement all types of payloads shortly, what exists below is only a temporary specialization for ANITA III.
+    bool coherent_trigger_passes = false;
       
-      bool coherent_trigger_passes = false;
+    unsigned N_STEP_PHI = 16;	// The number of different phi hypotheses for a given center phi sector
+    unsigned N_STEP_THETA = 81;	// The number of different theta hypotheses for a given center phi sector
+    unsigned N_PHI_SECTORS = 16;	// The number of phi sectors
+    unsigned N_LAYERS_TRIGGER = 3;	// The number of layers as seen by the trigger
       
-      unsigned N_STEP_PHI = 16;	// The number of different phi hypotheses for a given center phi sector
-      unsigned N_STEP_THETA = 81;	// The number of different theta hypotheses for a given center phi sector
-      unsigned N_PHI_SECTORS = 16;	// The number of phi sectors
-      //unsigned N_LAYERS_PHYSICAL = 4;   // The number of physical layers on the payload
-      unsigned N_LAYERS_TRIGGER = 3;	// The number of layers as seen by the trigger
-      //unsigned N_SUMMED_SECTORS = 3;    // The number of phi sectors clumped together by the coherent sum trigger
-      
-      double highest_power = 0;
-      // unsigned hi_pow_center = 0;
-      // unsigned hi_pow_phi_index = 0;
-      // unsigned hi_pow_theta_index = 0;
+    double highest_power = 0;
      
       
-      // Here the 48 antennas are filled according to the waveforms passed to PassesTrigger(...).
-      unsigned fill_index = 0;
-      for (unsigned fill_index_phi_sector = 0; fill_index_phi_sector < 16; ++fill_index_phi_sector) {
-	for (unsigned fill_index_layer = 0; fill_index_layer < 3; ++fill_index_layer) {
-	  anita1->cwst_RXs[fill_index].phi_sector = fill_index_phi_sector;
-	  anita1->cwst_RXs[fill_index].layer = fill_index_layer;
-	  
-	  unsigned physical_layer_index = ((fill_index_phi_sector%2) ? (fill_index_layer + 1) : (0));   // Maps the trigger layers {0, 1, 2} to the physical layers {0, 1, 2, 3}.
-	  if (fill_index_phi_sector%2 == 0) {
-	    physical_layer_index = (fill_index_layer == 0) ? 0 : (fill_index + 1);
-	  }
-	  // If phi sector is even then trigger layer zero maps to physical layer zero. If phi odd, maps to layer 1.
-	  unsigned physical_phi_index (fill_index_phi_sector);
-	  if (fill_index_layer == 0) {
-	    physical_phi_index = unsigned(fill_index_phi_sector / 2.);   // Map {0, ..., 15} to {0, ..., 7}.
-	  }
-	  anita1->cwst_RXs[fill_index].x = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][0];
-	  anita1->cwst_RXs[fill_index].y = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][1];
-	  anita1->cwst_RXs[fill_index].z = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][2];
-	    
-	  anita1->cwst_RXs[fill_index].waveform->assign(volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].begin(),volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].end());
-	  
-	  for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR; ++fill_index_timestep) {
-	    anita1->cwst_RXs[fill_index].digitized->at(fill_index_timestep) = three_bit_round(anita1->cwst_RXs[fill_index].waveform->at(fill_index_timestep)/ anita1->rms_rfcm_e_single_event, (anita1->summed_power_trigger_digitizer_zero_random->Rndm() >= 0.5), false);
-	  }
-	  ++fill_index;
-	}
-      }
-      
-      /*
-	double hypothesis_offset[3][3];
-	if (inu == 2564) {
-	for (double deg_phi = 0.; deg_phi < 360.; deg_phi += 1.) {
-	anita1->calculate_single_offset(12, deg_phi, -14.082, hypothesis_offset);
-	
-	vector <double> summed_wfm(anita1->HALFNFOUR, 0.);
-	unsigned center_phi_sector_index = 12;
-	
-	for (int fill_index_phi_sector_offset = -1; fill_index_phi_sector_offset <= 1; ++fill_index_phi_sector_offset) {
-	unsigned fill_index_phi_sector = (center_phi_sector_index + fill_index_phi_sector_offset + N_PHI_SECTORS)%N_PHI_SECTORS;
-	unsigned fill_index = 0;
-	for (unsigned fill_index_layer = 0; fill_index_layer < N_LAYERS_TRIGGER; ++fill_index_layer) {
-	unsigned rx_index = fill_index_phi_sector * 3 + fill_index_layer;
-	anita1->cwst_aligned_wfms[fill_index].phi_sector = fill_index_phi_sector;
-	anita1->cwst_aligned_wfms[fill_index].layer = fill_index_layer;
-	
-	unsigned physical_layer_index = ((fill_index_phi_sector%2) ? (fill_index_layer + 1) : (0));   // Maps the trigger layers {0, 1, 2} to the physical layers {0, 1, 2, 3}.
-	// If phi sector is even then trigger layer zero maps to physical layer zero. If phi odd, maps to layer 1.
-	unsigned physical_phi_index;
-	if (fill_index_layer == 0) {
-	physical_phi_index = int(fill_index_phi_sector / 2.);   // Map {0, ..., 15} to {0, ..., 7}.
-	}
-	anita1->cwst_aligned_wfms[fill_index].x = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][0];
-	anita1->cwst_aligned_wfms[fill_index].y = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][1];
-	anita1->cwst_aligned_wfms[fill_index].z = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][2];
-	
-	unsigned time_offset = hypothesis_offset[fill_index_phi_sector_offset + 1][fill_index_layer];
-	
-	for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR - time_offset; ++fill_index_timestep) {
-	anita1->cwst_aligned_wfms[fill_index].digitized->at(fill_index_timestep) = anita1->cwst_RXs[rx_index].digitized->at(fill_index_timestep + time_offset);
-	summed_wfm.at(fill_index_timestep) += anita1->cwst_aligned_wfms[fill_index].digitized->at(fill_index_timestep);
-	}
-	
-	for (unsigned fill_index_timestep = anita1->HALFNFOUR - time_offset; fill_index_timestep < anita1->HALFNFOUR; ++fill_index_timestep) {
-	// Fill the ends of the waveforms with zeros. This should not negatively affect the simulation at all.
-	// This is an attempt to fix the power = 648 issue, where the bins were all +0.5 and summing to 9*0.5, summed over 32 bins. Bah.
-	anita1->cwst_aligned_wfms[fill_index].digitized->at(fill_index_timestep) = 0.;
-	}
-	++fill_index;
-	
-	} // for fill layer indices
-	} // for fill phi sector indices
-	
-	vector <double> power_of_summed_wfm;
-	square_waveform_elements(summed_wfm, power_of_summed_wfm);
-	
-	//for (unsigned window_index = 0; window_index < power_of_summed_wfm.size() - 32; window_index += 16) {
-	//double power = summed_power_window(power_of_summed_wfm, window_index, 32);
-	//if (highest_power < power){
-	//highest_power = power;
-	//}
-	//if (true){
-	anita1->fill_coherent_waveform_sum_tree(inu, center_phi_sector_index, settings1, anita1->rms_rfcm_e_single_event, 0., 0, 0 + 32, -14.082, deg_phi, 33., 33.,summed_wfm,	power_of_summed_wfm, 0.);
-	//return 1;	// Return that this waveform passes.
-	//}
-	//} // for window indices
-	}
-	return 1;
-	}
-      */
-      
-      for (unsigned center_phi_sector_index = 0; center_phi_sector_index < N_PHI_SECTORS; ++center_phi_sector_index) {
-	// Loop over the hypotheses to align waveforms.
-	for (unsigned index_phi = 0; index_phi < N_STEP_PHI; ++index_phi) {
-	  for (unsigned index_theta = 0; index_theta < N_STEP_THETA; ++index_theta) {
-	    unsigned fill_index = 0;
-	    vector <double> summed_wfm(anita1->HALFNFOUR, 0.);
-	    
-	    for (int fill_index_phi_sector_offset = -1; fill_index_phi_sector_offset <= 1; ++fill_index_phi_sector_offset) {
-	      unsigned fill_index_phi_sector = (center_phi_sector_index + fill_index_phi_sector_offset + N_PHI_SECTORS)%N_PHI_SECTORS;
-	      
-	      for (unsigned fill_index_layer = 0; fill_index_layer < N_LAYERS_TRIGGER; ++fill_index_layer) {
-		unsigned rx_index = fill_index_phi_sector * 3 + fill_index_layer;
-		anita1->cwst_aligned_wfms[fill_index].phi_sector = fill_index_phi_sector;
-		anita1->cwst_aligned_wfms[fill_index].layer = fill_index_layer;
-		
-		unsigned physical_layer_index = ((fill_index_phi_sector%2) ? (fill_index_layer + 1) : (0));   // Maps the trigger layers {0, 1, 2} to the physical layers {0, 1, 2, 3}.
-		// If phi sector is even then trigger layer zero maps to physical layer zero. If phi odd, maps to layer 1.
-		unsigned physical_phi_index (fill_index_phi_sector);
-		if (fill_index_layer == 0) {
-		  physical_phi_index = unsigned(fill_index_phi_sector / 2.);   // Map {0, ..., 15} to {0, ..., 7}.
-		}
-		anita1->cwst_aligned_wfms[fill_index].x = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][0];
-		anita1->cwst_aligned_wfms[fill_index].y = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][1];
-		anita1->cwst_aligned_wfms[fill_index].z = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][2];
-			  
-		unsigned time_offset = anita1->hypothesis_offsets[center_phi_sector_index][index_phi][index_theta][fill_index_phi_sector_offset + 1][fill_index_layer];
-		
-		for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR - time_offset; ++fill_index_timestep) {
-		  anita1->cwst_aligned_wfms[fill_index].digitized->at(fill_index_timestep) = anita1->cwst_RXs[rx_index].digitized->at(fill_index_timestep + time_offset);
-		  summed_wfm.at(fill_index_timestep) += anita1->cwst_aligned_wfms[fill_index].digitized->at(fill_index_timestep);
-		}
-		
-		for (unsigned fill_index_timestep = anita1->HALFNFOUR - time_offset; fill_index_timestep < anita1->HALFNFOUR; ++fill_index_timestep) {
-		  // Fill the ends of the waveforms with zeros. This should not negatively affect the simulation at all.
-		  // This is an attempt to fix the power = 648 issue, where the bins were all +0.5 and summing to 9*0.5, summed over 32 bins.
-		  anita1->cwst_aligned_wfms[fill_index].digitized->at(fill_index_timestep) = 0.;
-		}
-		++fill_index;
-		
-	      } // for fill layer indices
-	    } // for fill phi sector indices
-	    
-	    vector <double> power_of_summed_wfm;
-	    square_waveform_elements(summed_wfm, power_of_summed_wfm);
-	    
-	    for (unsigned window_index = 0; window_index < power_of_summed_wfm.size() - 32; window_index += 16) {
-	      double power = summed_power_window(power_of_summed_wfm, window_index, 32);
-	      if (highest_power < power){
-		highest_power = power;
-		// hi_pow_center = center_phi_sector_index;
-		// hi_pow_phi_index = index_phi;
-		// hi_pow_theta_index = index_theta;
-	      }
-	      
-	      if (power >= settings1->COHERENT_THRESHOLD){
-		coherent_trigger_passes = true;
-		thispasses += 2;
-	      }
-	      
-	      if (power >= settings1->COHERENT_THRESHOLD){
-		anita1->fill_coherent_waveform_sum_tree(inu, center_phi_sector_index, settings1, anita1->rms_rfcm_e_single_event, 0., window_index, window_index + 32, index_theta - 45., index_phi, 33., 33.,summed_wfm, power_of_summed_wfm, power);
-		//thispasses = true;
-		//return 1;	// Return that this waveform passes.
-	      }
-	      
-	      if (inu == 1808 && center_phi_sector_index == 6) {
-		anita1->fill_coherent_waveform_sum_tree(inu, center_phi_sector_index, settings1, anita1->rms_rfcm_e_single_event, 0., window_index, window_index + 32, index_theta - 45., index_phi, 33., 33.,summed_wfm, power_of_summed_wfm, power);
-		//return 1;
-	      }
-	      
-	      if (coherent_trigger_passes){
-		// used to be return this_passes;
-		return;
-	      }
-	      
-	    } // for window indices
-	  } // for hypothesis theta indices
-	} // for hypothesis phi indices
-      } // for hypothesis center phi sector indices
-      
-      /*
-	cout << "\nEvent number\t" << inu;
-	cout << "\nHighest power was\t" << highest_power;
-	cout << "\nCenter phi sector\t" << hi_pow_center;
-	cout << "\nHighest phi index\t" << hi_pow_phi_index;
-	cout << "\ntHighest theta index\t" << hi_pow_theta_index;
-      */
-    }
-  } else if (settings1->TRIGGERSCHEME == 4) {
-    //	TRIGGERSCHEME == 4 is the Summed Power Trigger.
-    //	For every window, all of the phi sectors find the maximum coherently summed power.
-    //	These max powers are summed with the neighboring phi sectors (for three phi sectors in total) and compared to a threshold.
-    
-    double		SummedPowerThreshold	= settings1->COHERENT_THRESHOLD;	// The threshold against which all of the events will be compared.
-    double		SummedPowerThetaMin		= -45.;		// DEGREE!	The minimum theta (elevation) angle to try in the hypotheses.
-    double		SummedPowerThetaMax		= +25.;		// DEGREE!	The maximum theta (elevation) angle to try in the hypotheses.
-    double		SummedPowerThetaStep	= 1.;		// DEGREE!	The angle to advance from minimum theta to maximum theta.
-    
-    // unsigned	N_STEP_THETA			= 81;		// The number of different theta hypotheses for a given center phi sector
-    // unsigned	N_PHI_SECTORS			= 16;		// The number of phi sectors
-    // unsigned	N_LAYERS_TRIGGER		= 3;		// The number of layers as seen by the trigger
-    
-    // double		highest_power			= 0.;
-    // unsigned	hi_pow_center			= 0;
-    // unsigned	hi_pow_phi_index		= 0;
-    // unsigned	hi_pow_theta_index		= 0;
-    
     // Here the 48 antennas are filled according to the waveforms passed to PassesTrigger(...).
-    unsigned	fill_index				= 0;
-    
+    unsigned fill_index = 0;
     for (unsigned fill_index_phi_sector = 0; fill_index_phi_sector < 16; ++fill_index_phi_sector) {
       for (unsigned fill_index_layer = 0; fill_index_layer < 3; ++fill_index_layer) {
 	anita1->cwst_RXs[fill_index].phi_sector = fill_index_phi_sector;
 	anita1->cwst_RXs[fill_index].layer = fill_index_layer;
-	
-	
-	unsigned physical_phi_index = fill_index_phi_sector;
-	unsigned physical_layer_index;
-	
-	
-	// If the phi sector is an odd one, start with physical layer 1. If even, start with layer 0
-	if (fill_index_phi_sector%2) {
-	  physical_layer_index = fill_index_layer + 1;
-	} else
-	  if (fill_index_layer == 0) {
-	    physical_layer_index = 0;
-	  } else {
-	    physical_layer_index = fill_index_layer + 1;
-	  }
-	
-	if (physical_layer_index == 0) {
-	  physical_phi_index = unsigned(fill_index_phi_sector / 2);
+	  
+	unsigned physical_layer_index = ((fill_index_phi_sector%2) ? (fill_index_layer + 1) : (0));   // Maps the trigger layers {0, 1, 2} to the physical layers {0, 1, 2, 3}.
+	if (fill_index_phi_sector%2 == 0) {
+	  physical_layer_index = (fill_index_layer == 0) ? 0 : (fill_index + 1);
 	}
-	
-	if (physical_layer_index == 1) {
-	  physical_phi_index = unsigned(fill_index_phi_sector / 2);
+	// If phi sector is even then trigger layer zero maps to physical layer zero. If phi odd, maps to layer 1.
+	unsigned physical_phi_index (fill_index_phi_sector);
+	if (fill_index_layer == 0) {
+	  physical_phi_index = unsigned(fill_index_phi_sector / 2.);   // Map {0, ..., 15} to {0, ..., 7}.
 	}
-	
-	//	Set antenna positions
 	anita1->cwst_RXs[fill_index].x = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][0];
 	anita1->cwst_RXs[fill_index].y = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][1];
 	anita1->cwst_RXs[fill_index].z = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][2];
-		  
-	//	Fill the waveforms
+	    
 	anita1->cwst_RXs[fill_index].waveform->assign(volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].begin(),volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].end());
-	
+	  
 	for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR; ++fill_index_timestep) {
-	  anita1->cwst_RXs[fill_index].digitized->at(fill_index_timestep) = three_bit_round(anita1->cwst_RXs[fill_index].waveform->at(fill_index_timestep)/ anita1->rms_rfcm_e_single_event, false);
+	  anita1->cwst_RXs[fill_index].digitized->at(fill_index_timestep) = three_bit_round(anita1->cwst_RXs[fill_index].waveform->at(fill_index_timestep)/ anita1->rms_rfcm_e_single_event, (anita1->summed_power_trigger_digitizer_zero_random->Rndm() >= 0.5), false);
 	}
 	++fill_index;
       }
     }
-    
-    /*
-      For whatever reason ANTENNA_POSITION_START is a c-array, with large dimensions (5 by 400).
-      Most of these are initialized as a Vector with (0.,0.,1) for (x,y,z). These are non-existant antennas.
-      
-      Make sure that the antennas positions being copied are actually from a real antenna, and pay attention to the physical
-      antenna layers 0 & 1, as they map to the 0th trigger layer.
-    */
-    
-    //	Calculate the theta hypothesis angles
-    vector <double> theta_hypotheses_deg;
-    double theta_deg = SummedPowerThetaMin;
-    
-    do {
-      theta_hypotheses_deg.push_back (theta_deg);
-      theta_deg += SummedPowerThetaStep;
-    } while (theta_deg <= SummedPowerThetaMax);
-    
-    //	Now we begin the trigger.
-    
-    //	First steps over windows:
-    for (unsigned index_window = 0; index_window < 31; ++index_window) {
-      double max_power_each_sector[16] = {0.};
-      double summed_power_each_sector[16] = {0.};
-      
-      for (unsigned index_phi_sector = 0; index_phi_sector < 16; ++index_phi_sector) {
-	double max_power = 0.;
-	
-	//	Use the current and opposite phi sectors to find an even horizontal line.
-	TVector3 theta_zero (anita1->cwst_RXs[index_phi_sector * 3 + 1].x - anita1->cwst_RXs[(index_phi_sector + 8)%16 * 3 + 1].x, anita1->cwst_RXs[index_phi_sector * 3 + 1].y - anita1->cwst_RXs[(index_phi_sector + 8)%16 * 3 + 1].y, anita1->cwst_RXs[index_phi_sector * 3 + 1].z - anita1->cwst_RXs[(index_phi_sector + 8)%16 * 3 + 1].z);
-	//	Normalizes that line.
-	theta_zero = theta_zero.Unit();
-	
-	//	Loop over theta hypotheses
-	for (unsigned index_theta_hypothesis = 0; index_theta_hypothesis < theta_hypotheses_deg.size(); ++index_theta_hypothesis) {
-	  double power = 0.;
-	  
-	  //	If theta_zero.Phi() is NaN, then print out the problem.
-	  /*
-	    if (theta_zero.Phi() != theta_zero.Phi()) {
-	    std::cout << theta_zero << std::endl;
-	    std::cout << anita1->cwst_RXs[index_phi_sector * 3].x << "\t" << anita1->cwst_RXs[index_phi_sector * 3].y << "\t" << anita1->cwst_RXs[index_phi_sector * 3].z << std::endl;
-	    std::cout << anita1->cwst_RXs[index_phi_sector * 3 + 1].x << "\t" << anita1->cwst_RXs[index_phi_sector * 3 + 1].y << "\t" << anita1->cwst_RXs[index_phi_sector * 3 + 1].z << std::endl;
-	    std::cout << anita1->cwst_RXs[index_phi_sector * 3 + 2].x << "\t" << anita1->cwst_RXs[index_phi_sector * 3 + 2].y << "\t" << anita1->cwst_RXs[index_phi_sector * 3 + 3].z << std::endl;
+            
+    for (unsigned center_phi_sector_index = 0; center_phi_sector_index < N_PHI_SECTORS; ++center_phi_sector_index) {
+      // Loop over the hypotheses to align waveforms.
+      for (unsigned index_phi = 0; index_phi < N_STEP_PHI; ++index_phi) {
+	for (unsigned index_theta = 0; index_theta < N_STEP_THETA; ++index_theta) {
+	  unsigned fill_index = 0;
+	  vector <double> summed_wfm(anita1->HALFNFOUR, 0.);
+	    
+	  for (int fill_index_phi_sector_offset = -1; fill_index_phi_sector_offset <= 1; ++fill_index_phi_sector_offset) {
+	    unsigned fill_index_phi_sector = (center_phi_sector_index + fill_index_phi_sector_offset + N_PHI_SECTORS)%N_PHI_SECTORS;
+	      
+	    for (unsigned fill_index_layer = 0; fill_index_layer < N_LAYERS_TRIGGER; ++fill_index_layer) {
+	      unsigned rx_index = fill_index_phi_sector * 3 + fill_index_layer;
+	      anita1->cwst_aligned_wfms[fill_index].phi_sector = fill_index_phi_sector;
+	      anita1->cwst_aligned_wfms[fill_index].layer = fill_index_layer;
+		
+	      unsigned physical_layer_index = ((fill_index_phi_sector%2) ? (fill_index_layer + 1) : (0));   // Maps the trigger layers {0, 1, 2} to the physical layers {0, 1, 2, 3}.
+	      // If phi sector is even then trigger layer zero maps to physical layer zero. If phi odd, maps to layer 1.
+	      unsigned physical_phi_index (fill_index_phi_sector);
+	      if (fill_index_layer == 0) {
+		physical_phi_index = unsigned(fill_index_phi_sector / 2.);   // Map {0, ..., 15} to {0, ..., 7}.
+	      }
+	      anita1->cwst_aligned_wfms[fill_index].x = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][0];
+	      anita1->cwst_aligned_wfms[fill_index].y = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][1];
+	      anita1->cwst_aligned_wfms[fill_index].z = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][2];
+			  
+	      unsigned time_offset = anita1->hypothesis_offsets[center_phi_sector_index][index_phi][index_theta][fill_index_phi_sector_offset + 1][fill_index_layer];
+		
+	      for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR - time_offset; ++fill_index_timestep) {
+		anita1->cwst_aligned_wfms[fill_index].digitized->at(fill_index_timestep) = anita1->cwst_RXs[rx_index].digitized->at(fill_index_timestep + time_offset);
+		summed_wfm.at(fill_index_timestep) += anita1->cwst_aligned_wfms[fill_index].digitized->at(fill_index_timestep);
+	      }
+		
+	      for (unsigned fill_index_timestep = anita1->HALFNFOUR - time_offset; fill_index_timestep < anita1->HALFNFOUR; ++fill_index_timestep) {
+		// Fill the ends of the waveforms with zeros. This should not negatively affect the simulation at all.
+		// This is an attempt to fix the power = 648 issue, where the bins were all +0.5 and summing to 9*0.5, summed over 32 bins.
+		anita1->cwst_aligned_wfms[fill_index].digitized->at(fill_index_timestep) = 0.;
+	      }
+	      ++fill_index;
+		
+	    } // for fill layer indices
+	  } // for fill phi sector indices
+	    
+	  vector <double> power_of_summed_wfm;
+	  square_waveform_elements(summed_wfm, power_of_summed_wfm);
+	    
+	  for (unsigned window_index = 0; window_index < power_of_summed_wfm.size() - 32; window_index += 16) {
+	    double power = summed_power_window(power_of_summed_wfm, window_index, 32);
+	    if (highest_power < power){
+	      highest_power = power;
+	      // hi_pow_center = center_phi_sector_index;
+	      // hi_pow_phi_index = index_phi;
+	      // hi_pow_theta_index = index_theta;
 	    }
-	  */
-	  
-	  //	Calculate the vector for the hypothesis' direction.
-	  double hypoth_theta_rad = (theta_hypotheses_deg[index_theta_hypothesis] + 45.) * RADDEG;
-	  double hypoth_phi_rad = theta_zero.Phi() * RADDEG;
-	  TVector3 hypoth_vector (sin (hypoth_theta_rad) * cos (hypoth_phi_rad), sin (hypoth_theta_rad) * sin (hypoth_phi_rad), cos (hypoth_theta_rad));
-	  
-	  //	There will be three antenna time offsets per phi sector:
-	  double dist[3] = {0.};
-	  double offset[3] = {0.};
-	  unsigned offset_steps[3] = {0};
-	  TVector3 middle_rx (anita1->cwst_RXs[index_phi_sector * 3 + 1].x, anita1->cwst_RXs[index_phi_sector * 3 + 1].y, anita1->cwst_RXs[index_phi_sector * 3 + 1].z);
-	  
-	  
-	  //	Calculate the relative path length distances
-	  dist[0] = hypoth_vector * (TVector3(anita1->cwst_RXs[index_phi_sector * 3].x, anita1->cwst_RXs[index_phi_sector * 3].y, anita1->cwst_RXs[index_phi_sector * 3].z) - middle_rx);
-	  dist[1] = 0.;	// Just let this one be defined as "zero", the other ones are relative.
-	  dist[2] = hypoth_vector * (TVector3(anita1->cwst_RXs[index_phi_sector * 3 + 2].x, anita1->cwst_RXs[index_phi_sector * 3 + 2].y, anita1->cwst_RXs[index_phi_sector * 3 + 2].z) - middle_rx);
-	  
-	  
-	  //	Find time offsets from the relative path lengths
-	  for (unsigned index_antenna = 0; index_antenna < 3; ++index_antenna) {
-	    offset[index_antenna] = dist[index_antenna] / CLIGHT;
-	  }
-	  
-	  //	Make the lowest time offset be the minoffset
-	  double minoffset = offset[0];
-	  if (offset[1] <= minoffset) {minoffset = offset[1];}
-	  if (offset[2] <= minoffset) {minoffset = offset[2];}
-	  
-	  
-	  //	Subtract the minoffset from the others, "normalizing" them so that the lowest value is zero
-	  for (unsigned index_antenna = 0; index_antenna < 3; ++index_antenna) {
-	    offset[index_antenna] -= minoffset;
-	    offset_steps[index_antenna] = int(Tools::round(offset[index_antenna] / anita1->TIMESTEP));
-	  }
-	  
-	  //	Check to make sure that all of the values will be in bounds
-	  if (offset_steps[0] + index_window * 16 + 32 > 511) {continue;}
-	  if (offset_steps[1] + index_window * 16 + 32 > 511) {continue;}
-	  if (offset_steps[2] + index_window * 16 + 32 > 511) {continue;}
-	  
-	  //	Calculate the powers for every time in the window and then add it to the window power
-	  for (unsigned time_index = index_window * 16; time_index < index_window * 16 + 32; ++time_index) {
-	    double thispower = (anita1->cwst_RXs[index_phi_sector * 3].digitized->at(time_index + offset_steps[0]) + anita1->cwst_RXs[index_phi_sector * 3 + 1].digitized->at(time_index + offset_steps[1]) + anita1->cwst_RXs[index_phi_sector * 3 + 2].digitized->at(time_index + offset_steps[2]));
-	    thispower *= thispower;
-	    power += thispower;
-	  }
-	  
-	  //	Make sure that the power is sane for the windows we care about
-	  if (power == 0 && index_window < 21) {
-	    std::cout << "Trigger error: a trigger window which should not have had zero power had zero power. Window was\t" << index_window << "\n";
-	  }
-	  
-	  //	If this is the highest-power hypothesis for this phi sector, save it to max_power
-	  if (power > max_power) {max_power = power;}
+	      
+	    if (power >= settings1->COHERENT_THRESHOLD){
+	      coherent_trigger_passes = true;
+	      thispasses += 2;
+	    }
+	      
+	    if (power >= settings1->COHERENT_THRESHOLD){
+	      anita1->fill_coherent_waveform_sum_tree(inu, center_phi_sector_index, settings1, anita1->rms_rfcm_e_single_event, 0., window_index, window_index + 32, index_theta - 45., index_phi, 33., 33.,summed_wfm, power_of_summed_wfm, power);
+	      //thispasses = true;
+	      //return 1;	// Return that this waveform passes.
+	    }
+	      
+	    if (inu == 1808 && center_phi_sector_index == 6) {
+	      anita1->fill_coherent_waveform_sum_tree(inu, center_phi_sector_index, settings1, anita1->rms_rfcm_e_single_event, 0., window_index, window_index + 32, index_theta - 45., index_phi, 33., 33.,summed_wfm, power_of_summed_wfm, power);
+	      //return 1;
+	    }
+	      
+	    if (coherent_trigger_passes){
+	      // used to be return this_passes;
+	      return;
+	    }
+	      
+	  } // for window indices
+	} // for hypothesis theta indices
+      } // for hypothesis phi indices
+    } // for hypothesis center phi sector indices
+      
+
+  }
+} // end of PassesTriggerCoherentSum
+
+
+
+
+void GlobalTrigger::PassesTriggerSummedPower(Settings *settings1,Anita *anita1){
+				  
+  //	TRIGGERSCHEME == 4 is the Summed Power Trigger.
+  //	For every window, all of the phi sectors find the maximum coherently summed power.
+  //	These max powers are summed with the neighboring phi sectors (for three phi sectors in total) and compared to a threshold.
+    
+  double		SummedPowerThreshold	= settings1->COHERENT_THRESHOLD;	// The threshold against which all of the events will be compared.
+  double		SummedPowerThetaMin		= -45.;		// DEGREE!	The minimum theta (elevation) angle to try in the hypotheses.
+  double		SummedPowerThetaMax		= +25.;		// DEGREE!	The maximum theta (elevation) angle to try in the hypotheses.
+  double		SummedPowerThetaStep	= 1.;		// DEGREE!	The angle to advance from minimum theta to maximum theta.
+    
+  // unsigned	N_STEP_THETA			= 81;		// The number of different theta hypotheses for a given center phi sector
+  // unsigned	N_PHI_SECTORS			= 16;		// The number of phi sectors
+  // unsigned	N_LAYERS_TRIGGER		= 3;		// The number of layers as seen by the trigger
+    
+  // double		highest_power			= 0.;
+  // unsigned	hi_pow_center			= 0;
+  // unsigned	hi_pow_phi_index		= 0;
+  // unsigned	hi_pow_theta_index		= 0;
+    
+  // Here the 48 antennas are filled according to the waveforms passed to PassesTrigger(...).
+  unsigned	fill_index				= 0;
+    
+  for (unsigned fill_index_phi_sector = 0; fill_index_phi_sector < 16; ++fill_index_phi_sector) {
+    for (unsigned fill_index_layer = 0; fill_index_layer < 3; ++fill_index_layer) {
+      anita1->cwst_RXs[fill_index].phi_sector = fill_index_phi_sector;
+      anita1->cwst_RXs[fill_index].layer = fill_index_layer;
+	
+	
+      unsigned physical_phi_index = fill_index_phi_sector;
+      unsigned physical_layer_index;
+	
+	
+      // If the phi sector is an odd one, start with physical layer 1. If even, start with layer 0
+      if (fill_index_phi_sector%2) {
+	physical_layer_index = fill_index_layer + 1;
+      } else
+	if (fill_index_layer == 0) {
+	  physical_layer_index = 0;
+	} else {
+	  physical_layer_index = fill_index_layer + 1;
 	}
 	
-	max_power_each_sector[index_phi_sector] = max_power;
+      if (physical_layer_index == 0) {
+	physical_phi_index = unsigned(fill_index_phi_sector / 2);
       }
-      
-      //	Calculate the power for the neighboring phi sectors
-      summed_power_each_sector[0] = max_power_each_sector[15] + max_power_each_sector[0] + max_power_each_sector[1];
-      for (unsigned index_phi_sector = 1; index_phi_sector < 15; ++index_phi_sector) {
-	summed_power_each_sector[index_phi_sector] = max_power_each_sector[index_phi_sector - 1] + max_power_each_sector[index_phi_sector] + max_power_each_sector[index_phi_sector + 1];
+	
+      if (physical_layer_index == 1) {
+	physical_phi_index = unsigned(fill_index_phi_sector / 2);
       }
-      summed_power_each_sector[15] = max_power_each_sector[14] + max_power_each_sector[15] + max_power_each_sector[1];
-      
-      
-      bool temporary_passing_variable = false;
-      for (unsigned index_phi_sector = 0; index_phi_sector < 16; ++index_phi_sector) {
-	//std::cout << "Max Power, sector\t" << index_phi_sector << "\t:\t" << summed_power_each_sector[index_phi_sector] << std::endl;
-	if (summed_power_each_sector[index_phi_sector] >= SummedPowerThreshold) {
-	  std::cout << "Passed with SummedPower =\t" << summed_power_each_sector[index_phi_sector] << "\ton sector\t" << index_phi_sector << "\n";
-	  //return 1;
-	  temporary_passing_variable = true;
-	}
+	
+      //	Set antenna positions
+      anita1->cwst_RXs[fill_index].x = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][0];
+      anita1->cwst_RXs[fill_index].y = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][1];
+      anita1->cwst_RXs[fill_index].z = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][2];
+		  
+      //	Fill the waveforms
+      anita1->cwst_RXs[fill_index].waveform->assign(volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].begin(),volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].end());
+	
+      for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR; ++fill_index_timestep) {
+	anita1->cwst_RXs[fill_index].digitized->at(fill_index_timestep) = three_bit_round(anita1->cwst_RXs[fill_index].waveform->at(fill_index_timestep)/ anita1->rms_rfcm_e_single_event, false);
       }
-      if (temporary_passing_variable) {index_window=31;} //exit
+      ++fill_index;
     }
   }
-  else if (settings1->TRIGGERSCHEME == 5) {
     
     
+  //  For whatever reason ANTENNA_POSITION_START is a c-array, with large dimensions (5 by 400).
+  //  Most of these are initialized as a Vector with (0.,0.,1) for (x,y,z). These are non-existant antennas.
+  //  
+  //  Make sure that the antennas positions being copied are actually from a real antenna, and pay attention to the physical
+  //  antenna layers 0 & 1, as they map to the 0th trigger layer.
     
     
-    double threshold=this_threshold;
+  //	Calculate the theta hypothesis angles
+  vector <double> theta_hypotheses_deg;
+  double theta_deg = SummedPowerThetaMin;
     
-    // need to find how many in a set of 6 pass
+  do {
+    theta_hypotheses_deg.push_back (theta_deg);
+    theta_deg += SummedPowerThetaStep;
+  } while (theta_deg <= SummedPowerThetaMax);
     
-    int maxsample=TMath::MaxElement(5,anita1->imaxbin);
-    int minsample=TMath::MinElement(5,anita1->iminbin);
+  //	Now we begin the trigger.
     
-    int nstayhigh=(int)(anita1->l1window/anita1->TIMESTEP);
-    // now make each flag stay high for the required amount of time
-    
-
-    minsample=(int)(anita1->maxt_diode/anita1->TIMESTEP)+(anita1->NFOUR/4-(int)(anita1->maxt_diode/anita1->TIMESTEP))+(int)(anita1->arrival_times[anita1->rx_minarrivaltime]/anita1->TIMESTEP);
-    maxsample=anita1->NFOUR/2-(int)(anita1->arrival_times[anita1->rx_minarrivaltime]/anita1->TIMESTEP);
-
-    for (int i=0;i<5;i++) {
-      anita1->iminbin[i]=minsample;
-      anita1->imaxbin[i]=maxsample;
+  //	First steps over windows:
+  for (unsigned index_window = 0; index_window < 31; ++index_window) {
+    double max_power_each_sector[16] = {0.};
+    double summed_power_each_sector[16] = {0.};
+      
+    for (unsigned index_phi_sector = 0; index_phi_sector < 16; ++index_phi_sector) {
+      double max_power = 0.;
+	
+      //	Use the current and opposite phi sectors to find an even horizontal line.
+      TVector3 theta_zero (anita1->cwst_RXs[index_phi_sector * 3 + 1].x - anita1->cwst_RXs[(index_phi_sector + 8)%16 * 3 + 1].x, anita1->cwst_RXs[index_phi_sector * 3 + 1].y - anita1->cwst_RXs[(index_phi_sector + 8)%16 * 3 + 1].y, anita1->cwst_RXs[index_phi_sector * 3 + 1].z - anita1->cwst_RXs[(index_phi_sector + 8)%16 * 3 + 1].z);
+      //	Normalizes that line.
+      theta_zero = theta_zero.Unit();
+	
+      //	Loop over theta hypotheses
+      for (unsigned index_theta_hypothesis = 0; index_theta_hypothesis < theta_hypotheses_deg.size(); ++index_theta_hypothesis) {
+	double power = 0.;
+	  	  
+	//	Calculate the vector for the hypothesis' direction.
+	double hypoth_theta_rad = (theta_hypotheses_deg[index_theta_hypothesis] + 45.) * RADDEG;
+	double hypoth_phi_rad = theta_zero.Phi() * RADDEG;
+	TVector3 hypoth_vector (sin (hypoth_theta_rad) * cos (hypoth_phi_rad), sin (hypoth_theta_rad) * sin (hypoth_phi_rad), cos (hypoth_theta_rad));
+	  
+	//	There will be three antenna time offsets per phi sector:
+	double dist[3] = {0.};
+	double offset[3] = {0.};
+	unsigned offset_steps[3] = {0};
+	TVector3 middle_rx (anita1->cwst_RXs[index_phi_sector * 3 + 1].x, anita1->cwst_RXs[index_phi_sector * 3 + 1].y, anita1->cwst_RXs[index_phi_sector * 3 + 1].z);
+	  
+	  
+	//	Calculate the relative path length distances
+	dist[0] = hypoth_vector * (TVector3(anita1->cwst_RXs[index_phi_sector * 3].x, anita1->cwst_RXs[index_phi_sector * 3].y, anita1->cwst_RXs[index_phi_sector * 3].z) - middle_rx);
+	dist[1] = 0.;	// Just let this one be defined as "zero", the other ones are relative.
+	dist[2] = hypoth_vector * (TVector3(anita1->cwst_RXs[index_phi_sector * 3 + 2].x, anita1->cwst_RXs[index_phi_sector * 3 + 2].y, anita1->cwst_RXs[index_phi_sector * 3 + 2].z) - middle_rx);
+	  
+	  
+	//	Find time offsets from the relative path lengths
+	for (unsigned index_antenna = 0; index_antenna < 3; ++index_antenna) {
+	  offset[index_antenna] = dist[index_antenna] / CLIGHT;
+	}
+	  
+	//	Make the lowest time offset be the minoffset
+	double minoffset = offset[0];
+	if (offset[1] <= minoffset) {minoffset = offset[1];}
+	if (offset[2] <= minoffset) {minoffset = offset[2];}
+	  
+	  
+	//	Subtract the minoffset from the others, "normalizing" them so that the lowest value is zero
+	for (unsigned index_antenna = 0; index_antenna < 3; ++index_antenna) {
+	  offset[index_antenna] -= minoffset;
+	  offset_steps[index_antenna] = int(Tools::round(offset[index_antenna] / anita1->TIMESTEP));
+	}
+	  
+	//	Check to make sure that all of the values will be in bounds
+	if (offset_steps[0] + index_window * 16 + 32 > 511) {continue;}
+	if (offset_steps[1] + index_window * 16 + 32 > 511) {continue;}
+	if (offset_steps[2] + index_window * 16 + 32 > 511) {continue;}
+	  
+	//	Calculate the powers for every time in the window and then add it to the window power
+	for (unsigned time_index = index_window * 16; time_index < index_window * 16 + 32; ++time_index) {
+	  double thispower = (anita1->cwst_RXs[index_phi_sector * 3].digitized->at(time_index + offset_steps[0]) + anita1->cwst_RXs[index_phi_sector * 3 + 1].digitized->at(time_index + offset_steps[1]) + anita1->cwst_RXs[index_phi_sector * 3 + 2].digitized->at(time_index + offset_steps[2]));
+	  thispower *= thispower;
+	  power += thispower;
+	}
+	  
+	//	Make sure that the power is sane for the windows we care about
+	if (power == 0 && index_window < 21) {
+	  std::cout << "Trigger error: a trigger window which should not have had zero power had zero power. Window was\t" << index_window << "\n";
+	}
+	  
+	//	If this is the highest-power hypothesis for this phi sector, save it to max_power
+	if (power > max_power) {max_power = power;}
+      }
+	
+      max_power_each_sector[index_phi_sector] = max_power;
     }
+      
+    //	Calculate the power for the neighboring phi sectors
+    summed_power_each_sector[0] = max_power_each_sector[15] + max_power_each_sector[0] + max_power_each_sector[1];
+    for (unsigned index_phi_sector = 1; index_phi_sector < 15; ++index_phi_sector) {
+      summed_power_each_sector[index_phi_sector] = max_power_each_sector[index_phi_sector - 1] + max_power_each_sector[index_phi_sector] + max_power_each_sector[index_phi_sector + 1];
+    }
+    summed_power_each_sector[15] = max_power_each_sector[14] + max_power_each_sector[15] + max_power_each_sector[1];
+      
+      
+    bool temporary_passing_variable = false;
+    for (unsigned index_phi_sector = 0; index_phi_sector < 16; ++index_phi_sector) {
+      //std::cout << "Max Power, sector\t" << index_phi_sector << "\t:\t" << summed_power_each_sector[index_phi_sector] << std::endl;
+      if (summed_power_each_sector[index_phi_sector] >= SummedPowerThreshold) {
+	std::cout << "Passed with SummedPower =\t" << summed_power_each_sector[index_phi_sector] << "\ton sector\t" << index_phi_sector << "\n";
+	//return 1;
+	temporary_passing_variable = true;
+      }
+    }
+    if (temporary_passing_variable) {index_window=31;} //exit
+  }
+} // end of PassesTriggerSummedPower
 
-    for (unsigned center_phi_sector_index = 0; center_phi_sector_index < 16; ++center_phi_sector_index) {
-      // for (unsigned center_phi_sector_index = 0; center_phi_sector_index < 16; center_phi_sector_index+=2) {
+
+void GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_threshold, int *thispasses) {
+  double threshold=this_threshold;
+    
+  // need to find how many in a set of 6 pass
+    
+  int maxsample=TMath::MaxElement(5,anita1->imaxbin);
+  int minsample=TMath::MinElement(5,anita1->iminbin);
+    
+  int nstayhigh=(int)(anita1->l1window/anita1->TIMESTEP);
+  // now make each flag stay high for the required amount of time
+    
+
+  minsample=(int)(anita1->maxt_diode/anita1->TIMESTEP)+(anita1->NFOUR/4-(int)(anita1->maxt_diode/anita1->TIMESTEP))+(int)(anita1->arrival_times[anita1->rx_minarrivaltime]/anita1->TIMESTEP);
+  maxsample=anita1->NFOUR/2-(int)(anita1->arrival_times[anita1->rx_minarrivaltime]/anita1->TIMESTEP);
+
+  for (int i=0;i<5;i++) {
+    anita1->iminbin[i]=minsample;
+    anita1->imaxbin[i]=maxsample;
+  }
+
+  for (unsigned center_phi_sector_index = 0; center_phi_sector_index < 16; ++center_phi_sector_index) {
+    // for (unsigned center_phi_sector_index = 0; center_phi_sector_index < 16; center_phi_sector_index+=2) {
       
 
-      for (unsigned int index_hyp=0;index_hyp<anita1->vdifferent_offsets.size();index_hyp++) {
+    for (unsigned int index_hyp=0;index_hyp<anita1->vdifferent_offsets.size();index_hyp++) {
 
 
-	for (unsigned i_layer = 0; i_layer < anita1->N_SUMMED_LAYERS; ++i_layer) {
-	  for (unsigned i_sector = 0; i_sector < anita1->N_SUMMED_PHI_SECTORS; ++i_sector) {
+      for (unsigned i_layer = 0; i_layer < anita1->N_SUMMED_LAYERS; ++i_layer) {
+	for (unsigned i_sector = 0; i_sector < anita1->N_SUMMED_PHI_SECTORS; ++i_sector) {
 
-	    int rx=anita1->GetRxTriggerNumbering(i_layer,(center_phi_sector_index+i_sector)%16);
+	  int rx=anita1->GetRxTriggerNumbering(i_layer,(center_phi_sector_index+i_sector)%16);
 	  
 	  
-	    double timedomain_output_1_corrected[Anita::NFOUR/2]; // these are corrected for their delays so that they should line up in time
-	    double timedomain_output_2_corrected[Anita::NFOUR/2];
-	    // if we're doing an anita 3 trigger, adjust for delays in the diode outputs so that we can do a time coincidence trigger	
+	  double timedomain_output_1_corrected[Anita::NFOUR/2]; // these are corrected for their delays so that they should line up in time
+	  double timedomain_output_2_corrected[Anita::NFOUR/2];
+	  // if we're doing an anita 3 trigger, adjust for delays in the diode outputs so that we can do a time coincidence trigger	
 	  
-	    for (int i=0;i<Anita::NFOUR/2;i++) {
-	      timedomain_output_1_corrected[i]=anita1->timedomain_output_1_allantennas[rx][i];
-	      timedomain_output_2_corrected[i]=anita1->timedomain_output_2_allantennas[rx][i];
-	    }
+	  for (int i=0;i<Anita::NFOUR/2;i++) {
+	    timedomain_output_1_corrected[i]=anita1->timedomain_output_1_allantennas[rx][i];
+	    timedomain_output_2_corrected[i]=anita1->timedomain_output_2_allantennas[rx][i];
+	  }
       
-	    //      Tools::ShiftLeft(timedomain_output_1_corrected,anita1->NFOUR/2,anita1->arrival_times[rx]);
-	    //Tools::ShiftLeft(timedomain_output_2_corrected,anita1->NFOUR/2,anita1->arrival_times[rx]);
+	  //      Tools::ShiftLeft(timedomain_output_1_corrected,anita1->NFOUR/2,anita1->arrival_times[rx]);
+	  //Tools::ShiftLeft(timedomain_output_2_corrected,anita1->NFOUR/2,anita1->arrival_times[rx]);
    
-	    Tools::ShiftLeft(timedomain_output_1_corrected,anita1->NFOUR/2,anita1->vdifferent_offsets[index_hyp][anita1->N_SUMMED_PHI_SECTORS*i_layer+i_sector]);
-	    Tools::ShiftLeft(timedomain_output_2_corrected,anita1->NFOUR/2,anita1->vdifferent_offsets[index_hyp][anita1->N_SUMMED_PHI_SECTORS*i_layer+i_sector]);
+	  Tools::ShiftLeft(timedomain_output_1_corrected,anita1->NFOUR/2,anita1->vdifferent_offsets[index_hyp][anita1->N_SUMMED_PHI_SECTORS*i_layer+i_sector]);
+	  Tools::ShiftLeft(timedomain_output_2_corrected,anita1->NFOUR/2,anita1->vdifferent_offsets[index_hyp][anita1->N_SUMMED_PHI_SECTORS*i_layer+i_sector]);
 	    
 
-	    //for (int k=0;k<5;k++) {
-	    //anita1->ston[k]=anita1->peak_v_banding_rfcm_e[k]/anita1->bwslice_vrms[k];
-	    //} // end loop over bands
+	  //for (int k=0;k<5;k++) {
+	  //anita1->ston[k]=anita1->peak_v_banding_rfcm_e[k]/anita1->bwslice_vrms[k];
+	  //} // end loop over bands
 	  
-	    if (rx==anita1->rx_minarrivaltime) {
+	  if (rx==anita1->rx_minarrivaltime) {
 
-	      for (int i=0;i<Anita::NFOUR/2;i++) {
-		anita1->timedomain_output_1_corrected_forplotting[0][i]=timedomain_output_1_corrected[i];
-		anita1->timedomain_output_2_corrected_forplotting[0][i]=timedomain_output_2_corrected[i];
-	      }
+	    for (int i=0;i<Anita::NFOUR/2;i++) {
+	      anita1->timedomain_output_1_corrected_forplotting[0][i]=timedomain_output_1_corrected[i];
+	      anita1->timedomain_output_2_corrected_forplotting[0][i]=timedomain_output_2_corrected[i];
 	    }
+	  }
 
-	    flag_e_L1[rx].clear();
-	    flag_h_L1[rx].clear();		
+	  flag_e_L1[rx].clear();
+	  flag_h_L1[rx].clear();		
       
 
-	    for (int i=minsample;i<maxsample;i++) {	      
-	      //      for (int i=minsample;i<maxsample;i++) {
+	  for (int i=minsample;i<maxsample;i++) {	      
+	    //      for (int i=minsample;i<maxsample;i++) {
 	
-	      //cout << "timedomain_output_1_corrected[i], threshold, bwslice_rmsdiode[4] are " << timedomain_output_1_corrected[i] << "\t" << threshold*anita1->bwslice_rmsdiode[4] << "\n";
-	      if (timedomain_output_1_corrected[i]<threshold*anita1->bwslice_rmsdiode[4]) {
-		flag_e_L1[rx].push_back(1);
-		//cout << "passes.\n";
-	      }
-	      else {
-		flag_e_L1[rx].push_back(0);
-		//cout << "doesn't pass.\n";
-	      }
-	
-	      if (timedomain_output_2_corrected[i]<threshold*anita1->bwslice_rmsdiode[4])
-		flag_h_L1[rx].push_back(1);
-	      else
-		flag_h_L1[rx].push_back(0);
-	
-	    } // end loop over samples in window where we look for single channel trigger firing
-
-	    for (int i=minsample;i<maxsample;i++) {	      
-	      //	for (int i=minsample;i<maxsample;i++) { // loop over samples in window where we looked for a single channel trigger
-	  
-	      if (flag_e_L1[rx][i-minsample]==1) // if the flag is high (remember the second index of flag_e counts from the start of the window)
-		for(int k=nstayhigh-1; k>0 && i<maxsample-1; k--) { // then for nstayhigh-1 samples after than we keep it high
-		  // i<maxsample-1 makes sure that the second index of flag_e is always less than maxsample-minsample-1.
-		  i++;
-		  flag_e_L1[rx][i-minsample]=1;
-	      
-		}
-	  
-	      //      if (flag_e[j][i]==1) {
-	      // 	for (int k=i;k<i+nstayhigh;k++) {
-	      // 	  if (k<NSAMPLES)
-	      // 	    flag_e[j][k]=1;
-	      // 	} // end loop over samples where we want it to stay high
-	  
-	      //       } // end if flag is high
+	    //cout << "timedomain_output_1_corrected[i], threshold, bwslice_rmsdiode[4] are " << timedomain_output_1_corrected[i] << "\t" << threshold*anita1->bwslice_rmsdiode[4] << "\n";
+	    if (timedomain_output_1_corrected[i]<threshold*anita1->bwslice_rmsdiode[4]) {
+	      flag_e_L1[rx].push_back(1);
+	      //cout << "passes.\n";
+	    }
+	    else {
+	      flag_e_L1[rx].push_back(0);
+	      //cout << "doesn't pass.\n";
 	    }
 	
-	    for (int i=minsample;i<maxsample;i++) {
-	      if (flag_h_L1[rx][i-minsample]==1)
-		for(int k=nstayhigh-1; k>0 && i<maxsample-1; k--) {
-		  i++;
-		  flag_h_L1[rx][i-minsample]=1;
-		}
-	  
-	      //      if (flag_h[j][i]==1) {
-	      // 	for (int k=i;k<i+nstayhigh;k++) {
-	      // 	  if (k<NSAMPLES)
-	      // 	    flag_h[j][k]=1;
-	      // 	} // end loop over samples where we want it to stay high
-	  
-	      //       } // end if flag is high
-	  
-	    } // end loop over samples
+	    if (timedomain_output_2_corrected[i]<threshold*anita1->bwslice_rmsdiode[4])
+	      flag_h_L1[rx].push_back(1);
+	    else
+	      flag_h_L1[rx].push_back(0);
 	
-	  } // end loop over phi sectors being considered for this L1
-	} // end loop over layers being considered for this L1
+	  } // end loop over samples in window where we look for single channel trigger firing
+
+	  for (int i=minsample;i<maxsample;i++) {	      
+	    //	for (int i=minsample;i<maxsample;i++) { // loop over samples in window where we looked for a single channel trigger
+	  
+	    if (flag_e_L1[rx][i-minsample]==1) // if the flag is high (remember the second index of flag_e counts from the start of the window)
+	      for(int k=nstayhigh-1; k>0 && i<maxsample-1; k--) { // then for nstayhigh-1 samples after than we keep it high
+		// i<maxsample-1 makes sure that the second index of flag_e is always less than maxsample-minsample-1.
+		i++;
+		flag_e_L1[rx][i-minsample]=1;
+	      
+	      }
+	  
+	    //      if (flag_e[j][i]==1) {
+	    // 	for (int k=i;k<i+nstayhigh;k++) {
+	    // 	  if (k<NSAMPLES)
+	    // 	    flag_e[j][k]=1;
+	    // 	} // end loop over samples where we want it to stay high
+	  
+	    //       } // end if flag is high
+	  }
+	
+	  for (int i=minsample;i<maxsample;i++) {
+	    if (flag_h_L1[rx][i-minsample]==1)
+	      for(int k=nstayhigh-1; k>0 && i<maxsample-1; k--) {
+		i++;
+		flag_h_L1[rx][i-minsample]=1;
+	      }
+	  
+	    //      if (flag_h[j][i]==1) {
+	    // 	for (int k=i;k<i+nstayhigh;k++) {
+	    // 	  if (k<NSAMPLES)
+	    // 	    flag_h[j][k]=1;
+	    // 	} // end loop over samples where we want it to stay high
+	  
+	    //       } // end if flag is high
+	  
+	  } // end loop over samples
+	
+	} // end loop over phi sectors being considered for this L1
+      } // end loop over layers being considered for this L1
 
 	
 	// now find the sample with the highest number of bands that pass
@@ -1354,54 +1279,46 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 	// int nbands_pass=0;
   
     
-	for (int i=minsample;i<maxsample;i++) { 
+      for (int i=minsample;i<maxsample;i++) { 
       
-	  int nbands_pass[2]={0};
-	  int maxbands[2]={0};
+	int nbands_pass[2]={0};
+	int maxbands[2]={0};
       
-	  for (unsigned i_layer = 0; i_layer < anita1->N_SUMMED_LAYERS; ++i_layer) {
-	    for (unsigned i_sector = 0; i_sector < anita1->N_SUMMED_PHI_SECTORS; ++i_sector) {
+	for (unsigned i_layer = 0; i_layer < anita1->N_SUMMED_LAYERS; ++i_layer) {
+	  for (unsigned i_sector = 0; i_sector < anita1->N_SUMMED_PHI_SECTORS; ++i_sector) {
 	  
-	      int rx=anita1->GetRxTriggerNumbering(i_layer,(center_phi_sector_index+i_sector)%16);
-	  
-	  
-	  
-	      if (flag_e_L1[rx][i-minsample]==1)
-		nbands_pass[0]++;
-	      if (flag_h_L1[rx][i-minsample]==1)
-		nbands_pass[1]++;
+	    int rx=anita1->GetRxTriggerNumbering(i_layer,(center_phi_sector_index+i_sector)%16);
 	  
 	  
-	    }
+	  
+	    if (flag_e_L1[rx][i-minsample]==1)
+	      nbands_pass[0]++;
+	    if (flag_h_L1[rx][i-minsample]==1)
+	      nbands_pass[1]++;
+	  
+	  
 	  }
+	}
       
-	  if (nbands_pass[0]>maxbands[0])	
-	    maxbands[0]=nbands_pass[0];
-	  if (nbands_pass[1]>maxbands[1])	
-	    maxbands[1]=nbands_pass[1];
+	if (nbands_pass[0]>maxbands[0])	
+	  maxbands[0]=nbands_pass[0];
+	if (nbands_pass[1]>maxbands[1])	
+	  maxbands[1]=nbands_pass[1];
       
-	  if (maxbands[0]>=anita1->NCH_PASS) 
+	if (maxbands[0]>=anita1->NCH_PASS) 
 
-	    thispasses[0]=1.;	
-	  if ( maxbands[1]>=anita1->NCH_PASS)  
-      	    thispasses[1]=1.;	
+	  thispasses[0]=1.;	
+	if ( maxbands[1]>=anita1->NCH_PASS)  
+	  thispasses[1]=1.;	
 
       
-	} // end loop over layers
+      } // end loop over layers
     
-      }
+    }
       
-    } // end loop over center phi sectors    
+  } // end loop over center phi sectors    
 
-    
-	
-    //    }
-    // return 0;
-  }
-
-
-}//PassesTrigger
-
+} // end of PassesTriggerScheme5
 
 
 
