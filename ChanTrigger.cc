@@ -466,6 +466,8 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
   double integrateenergy[5]={0.,0.,0.,0.,0.};
       
   if (settings1->SIGNAL_FLUCT && (!settings1->NOISEFROMFLIGHTTRIGGER)) {
+
+
     for (int iband=0;iband<5;iband++) { // Only loop over allowed bands
       if (anita1->bwslice_allowed[iband]!=1) continue; 
 
@@ -482,10 +484,12 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
 	  integrateenergy[iband]+=anita1->timedomainnoise_rfcm_banding_e[iband][k]*anita1->timedomainnoise_rfcm_banding_e[iband][k]*anita1->TIMESTEP;
 	  // this reverses the noise is time, and starts with bin anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)
 	  v_banding_rfcm_e_forfft[iband][k]=v_banding_rfcm_e_forfft[iband][k]+anita1->timedomainnoise_rfcm_banding_e[iband][knoisebin];
+	  v_banding_rfcm_h_forfft[iband][k]=v_banding_rfcm_h_forfft[iband][k]+anita1->timedomainnoise_rfcm_banding_h[iband][knoisebin];
 	}
 	for (int k=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);k<anita1->NFOUR/2;k++) {
 	  anita1->total_vpol_inanita[iband][k]=0.;
 	  v_banding_rfcm_e_forfft[iband][k]=0.;
+	  v_banding_rfcm_h_forfft[iband][k]=0.;
 	}
       }
       else {
@@ -497,19 +501,8 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
 	  v_banding_rfcm_e_forfft[iband][k] += anita1->timedomainnoise_rfcm_banding_e[iband][k];
 	}
       }
-    } // end loop over bands
-	
-    for (int iband=0;iband<5;iband++) { // loop over bands
-      for (int k=0;k<anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);k++) {
-	int knoisebin=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)-k;
-	//	  cout << "before adding noise, p2p is " << FindPeak(v_banding_rfcm_h_forfft[j],anita1->NFOUR/2) << "\n";
-	v_banding_rfcm_h_forfft[iband][k]=v_banding_rfcm_h_forfft[iband][k]+anita1->timedomainnoise_rfcm_banding_h[iband][knoisebin];
-      }
-      for (int k=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);k<anita1->NFOUR/2;k++) {
-	v_banding_rfcm_h_forfft[iband][k]=0.;
-      }
-	  
-    } // loop over 5 bands
+    } // end loop over bands	
+    
   } // if we require signal fluctuations
     
   int whichlayer,whichphisector;
