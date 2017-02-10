@@ -641,11 +641,13 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
     cout << "inu, whichlayer, whichphisector, size is " << whichlayer << "\t" << whichphisector << "\t" << globaltrig1->arrayofhits[whichlayer][whichphisector][0][4].size() << "\n";
    
   for (int iband=0;iband<5;iband++) {
+    if (anita1->bwslice_allowed[iband]!=1) continue; 
     // Find p2p value before adding noise
     anita1->peak_v_banding_rfcm_h[iband]=FindPeak(v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
   }
       
   for (int iband=0;iband<5;iband++) {
+    if (anita1->bwslice_allowed[iband]!=1) continue; 
     anita1->myconvlv(vm_banding_rfcm_2_forfft[iband],anita1->NFOUR,anita1->fdiode_real[iband],mindiodeconvl_h[iband],onediodeconvl_h[iband],psignal_h[iband],timedomain_output_2[iband]);
     // now shift right to account for arrival times
     Tools::ShiftRight(timedomain_output_2[iband],anita1->NFOUR,(int)(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
@@ -730,6 +732,7 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
       
   if (ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
     for (int iband=0;iband<5;iband++) {
+      if (anita1->bwslice_allowed[iband]!=1) continue; 
 
       //	  cout << "zeroeing here 1.\n";
       anita1->ston[iband]=0.;
@@ -766,7 +769,8 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
       
       
       
-  for (int iband=0;iband<4;iband++) {
+  for (int iband=0;iband<5;iband++) {
+    if (anita1->bwslice_allowed[iband]!=1) continue; 
     // this is for the e polarization
     // if we're implementing masking and the channel has been masked
     if (settings1->CHMASKING && !ChanTrigger::IsItUnmasked(bn1->surfTrigBandMask,iband,ilayer,ifold,0)) {
@@ -870,7 +874,7 @@ void ChanTrigger::InitializeEachBand(Anita *anita1)
   unwarned=1;
   for (int ipol=0;ipol<2;ipol++) {
     for (int iband=0;iband<anita1->NBANDS+1;iband++) {
-      
+
       vsignal_eachband[ipol].push_back(0.);
       vthreshold_eachband[ipol].push_back(0.);
       vnoise_eachband[ipol].push_back(0.);
@@ -1137,6 +1141,7 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
     
     // write the signal events to a tree
     for (int iband=0;iband<5;iband++) {
+      if (anita1->bwslice_allowed[iband]!=1) continue; 
       for (int k=0;k<anita1->NFOUR/2;k++) {
 	anita1->signal_vpol_inanita[iband][k]=v_banding_rfcm_e_forfft[iband][k];
       }
@@ -1145,6 +1150,7 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
     
     // Find the p2p value before adding noise
     for (int iband=0;iband<5;iband++) {
+      if (anita1->bwslice_allowed[iband]!=1) continue; 
       anita1->peak_v_banding_rfcm_e[iband]=FindPeak(v_banding_rfcm_e_forfft[iband],anita1->NFOUR/2);
       anita1->peak_v_banding_rfcm_h[iband]=FindPeak(v_banding_rfcm_h_forfft[iband],anita1->NFOUR/2);
     }
