@@ -338,12 +338,13 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   }
   else if (bn1->WHICHPATH==0){
     anita1->LIVETIME=6.02*24.*3600.; // anita-lite
-  }
-  else if (bn1->WHICHPATH==6){
+  } else if (bn1->WHICHPATH==6){
     // kim's livetime for anita
     anita1->LIVETIME=17.*24.*3600.; // for anita, take 34.78 days * 0.75 efficiency
   }
-  else{
+  else if (bn1->WHICHPATH==8){
+    anita1->LIVETIME=17.4*24*3600;  // Anita-3 livetime taken from Ben Strutt's thesis (elog note 698)
+  } else {
     anita1->LIVETIME=14.*24.*3600.; // otherwise use 2 weeks by default
   }
 
