@@ -92,7 +92,10 @@ class ChanTrigger {
   void WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
   static double FindPeak(double *waveform,int n); // find peak voltage of a waveform
   void GetThresholds(Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]); // get thresholds for this layer
-    
+
+
+  void DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]);
+  
   double bwslice_volts_pol0[5];  // sum voltage for each slice in bandwidth for the lcp polarization
   double bwslice_volts_pol1[5]; // same, for rcp polarization
     
@@ -108,8 +111,7 @@ class ChanTrigger {
   double bwslice_energy_polh[5];
     
         
-  double v_banding_rfcm_e[5][Anita::NFREQ];// this is Volts/m as a function of frequency after rfcm's and banding
-  double v_banding_rfcm_h[5][Anita::NFREQ];
+  double v_banding_rfcm[2][5][Anita::NFREQ];// this is Volts/m as a function of frequency after rfcm's and banding
     
   //static const double bwslice_center[4]; // center frequencies
   //static const double bwslice_width[4]; // 3 dB bandwidths, without overlap
@@ -127,12 +129,9 @@ class ChanTrigger {
   vector<int> vpasses_eachband[2];
     
   // Used for ChanTrigger::PrepareBandWaveforms(...) and ChanTrigger::WhichBandsPass(...)
-  double v_banding_rfcm_e_forfft[5][HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
-  double v_banding_rfcm_h_forfft[5][HALFNFOUR];
-  double vm_banding_rfcm_1_forfft[5][HALFNFOUR];
-  double vm_banding_rfcm_2_forfft[5][HALFNFOUR];
-  double v_banding_rfcm_e_forfft_temp[5][HALFNFOUR];
-  double v_banding_rfcm_h_forfft_temp[5][HALFNFOUR];
+  double v_banding_rfcm_forfft[2][5][HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
+  double vm_banding_rfcm_forfft[2][5][HALFNFOUR];
+  double v_banding_rfcm_forfft_temp[2][5][HALFNFOUR];
   // End of band waveform triggering arrays
     
   double integral_vmmhz;
