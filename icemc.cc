@@ -70,8 +70,6 @@
 
 #include <typeinfo>
 
-//#define ANITA3_EVENTREADER
-
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
 #include "AnitaGeomTool.h"
@@ -2977,6 +2975,8 @@ int main(int argc,  char **argv) {
         if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 
+	cout << inu << endl;
+
         anita1->passglobtrig[0]=thispasses[0];
         anita1->passglobtrig[1]=thispasses[1];
 
@@ -3269,10 +3269,10 @@ int main(int argc,  char **argv) {
 
 #ifdef ANITA3_EVENTREADER
             if (settings1->WHICH==9 || settings1->WHICH==10) {
-              //rawHeaderPtr->setTrigPattern((short) l3trig[0], AnitaPol::kVertical);
-              //rawHeaderPtr->setTrigPattern((short) l3trig[1], AnitaPol::kHorizontal);
-              //rawHeaderPtr->setMask( (short) anita1->l1TrigMask,  (short) anita1->phiTrigMask,  AnitaPol::kVertical);
-              //rawHeaderPtr->setMask( (short) anita1->l1TrigMaskH, (short) anita1->phiTrigMaskH, AnitaPol::kHorizontal);
+              rawHeaderPtr->setTrigPattern((short) l3trig[0], AnitaPol::kVertical);
+              rawHeaderPtr->setTrigPattern((short) l3trig[1], AnitaPol::kHorizontal);
+              rawHeaderPtr->setMask( (short) anita1->l1TrigMask,  (short) anita1->phiTrigMask,  AnitaPol::kVertical);
+              rawHeaderPtr->setMask( (short) anita1->l1TrigMaskH, (short) anita1->phiTrigMaskH, AnitaPol::kHorizontal);
             }
 
             truthEvPtr        = new TruthAnitaEvent();
