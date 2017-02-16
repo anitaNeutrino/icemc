@@ -263,8 +263,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     
     
     count_getnoisewaveforms=0;
-    rms_lab_e=0.;
-    rms_rfcm_e=0.;
+    rms_lab[0]=rms_lab[1]=0.;
+    rms_rfcm[0]=rms_rfcm[1]=0.;
     
     NBANDS=4; // subbands (not counting full band)
  
@@ -954,7 +954,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 	    //       // based on the function that you define in getDiodeModel
 	    
 	    //       cout << "timedomainnoise_rfcm_banding_e is " << timedomainnoise_rfcm_banding_e[j][NFOUR/4-1] << "\n";
-	    myconvlv(timedomainnoise_rfcm_banding_e[j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output_e[j]);
+	    myconvlv(timedomainnoise_rfcm_banding[0][j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output_e[j]);
 	    
 	    //       GetNoiseWaveform(j,timedomainnoise_rfcm_banding_e[j]);
 	    
@@ -983,8 +983,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 			
 			for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
 				bwslice_meandiode[j]+=timedomain_output_e[j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
-				bwslice_vrms[j]+=timedomainnoise_rfcm_banding_e[j][m]*timedomainnoise_rfcm_banding_e[j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)); // this is the rms of the diode input voltage
-				//bwslice_vrms[j]+=timedomainnoise_rfcm_banding_e[j][m]*timedomainnoise_rfcm_banding_e[j][m]; // this is the rms of the diode input voltage
+				bwslice_vrms[j]+=timedomainnoise_rfcm_banding[0][j][m]*timedomainnoise_rfcm_banding[0][j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)); // this is the rms of the diode input voltage
+				//bwslice_vrms[j]+=timedomainnoise_rfcm_banding[0][j][m]*timedomainnoise_rfcm_banding[0][j][m]; // this is the rms of the diode input voltage
 				averageoutput[j]+=timedomain_output_e[j][m]*timedomain_output_e[j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
 			} // end loop over samples where diode function is fully contained
 			
@@ -1033,7 +1033,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 	//       // myconvlv performs a convolution on that time domain waveform
 	//       // based on the function that you define in getDiodeModel
 	
-	myconvlv(timedomainnoise_rfcm_banding_e[j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output_e[j]);
+	myconvlv(timedomainnoise_rfcm_banding[0][j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output_e[j]);
 	
 	for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
 	  
@@ -1077,7 +1077,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
 // 	  for (int i=0;i<NFOUR/2;i++) {
 // 	    cout << "timedomain_noise_rfcm_banding_e is " << timedomainnoise_rfcm_banding_e[j][i] << "\n";
 // 	  }
-	  myconvlv(timedomainnoise_rfcm_banding_e[j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output_e[j]);
+	  myconvlv(timedomainnoise_rfcm_banding[0][j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output_e[j]);
 	  	
 
   
@@ -1228,7 +1228,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     
     
     tsignals->Branch("signal_vpol_inanita",&signal_vpol_inanita,"signal_vpol_inanita[5][512]/D");
-    tsignals->Branch("timedomainnoise_rfcm_banding_e",&timedomainnoise_rfcm_banding_e,"timedomainnoise_rfcm_banding_e[5][512]/D");
+    tsignals->Branch("timedomainnoise_rfcm_banding",&timedomainnoise_rfcm_banding,"timedomainnoise_rfcm_banding[2][5][512]/D");
     tsignals->Branch("total_vpol_inanita",&total_vpol_inanita,"total_vpol_inanita[5][512]/D");
     tsignals->Branch("total_diodeinput_1_inanita",&total_diodeinput_1_inanita,"total_diodeinput_1_inanita[5][512]/D"); // this is the waveform that is input to the tunnel diode in the first (LCP or vertical) polarization
     tsignals->Branch("total_diodeinput_2_inanita",&total_diodeinput_2_inanita,"total_diodeinput_2_inanita[5][512]/D"); // this is the waveform that is input to the tunnel diode in the first (RCP or horizontal) polarization
@@ -1237,34 +1237,25 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     tsignals->Branch("timedomain_output_1_inanita",&timedomain_output_1_inanita,"timedomain_output_1_inanita[5][512]/D");
     tsignals->Branch("timedomain_output_2_inanita",&timedomain_output_2_inanita,"timedomain_output_2_inanita[5][512]/D"); // this is the output to the tunnel diode
     
-
-    tsignals->Branch("peak_e",&peak_v_banding_rfcm_e,"peak_v_banding_rfcm_e[5]/D");
-    tsignals->Branch("peak_h",&peak_v_banding_rfcm_h,"peak_v_banding_rfcm_h[5]/D");
     
-    tsignals->Branch("volts_rx_rfcm_lab_e",&volts_rx_rfcm_lab_e,"volts_rx_rfcm_lab_e[512]/D");
-    tsignals->Branch("volts_rx_rfcm_lab_h",&volts_rx_rfcm_lab_h,"volts_rx_rfcm_lab_h[512]/D");
-    tsignals->Branch("peak_e_rx_rfcm_lab",&peak_e_rx_rfcm_lab,"peak_e_rx_rfcm_lab/D");
-    tsignals->Branch("peak_h_rx_rfcm_lab",&peak_h_rx_rfcm_lab,"peak_h_rx_rfcm_lab/D");
+    tsignals->Branch("volts_rx_rfcm_lab",&volts_rx_rfcm_lab,"volts_rx_rfcm_lab[2][512]/D");
+    tsignals->Branch("peak_rx_rfcm_lab",&peak_rx_rfcm_lab,"peak_rx_rfcm_lab[2]/D");
     tsignals->Branch("inu",&inu,"inu/I");
     tsignals->Branch("dangle",&dangle_inanita,"dangle/D");
     tsignals->Branch("emfrac",&emfrac_inanita,"emfrac/D");
     tsignals->Branch("hadfrac",&hadfrac_inanita,"hadfrac/D");
     tsignals->Branch("ston",&ston,"ston[5]/D");
-    
-    tsignals->Branch("peak_e_rx",&peak_e_rx_signalonly,"peak_e_rx/D");
-    tsignals->Branch("peak_h_rx",&peak_h_rx_signalonly,"peak_h_rx/D");
-    tsignals->Branch("peak_e_rx_rfcm",&peak_e_rx_rfcm,"peak_e_rx_rfcm/D");
-    tsignals->Branch("peak_h_rx_rfcm",&peak_h_rx_rfcm,"peak_h_rx_rfcm/D");
-    tsignals->Branch("peak_e_rx_rfcm_signalonly",&peak_e_rx_rfcm_signalonly,"peak_e_rx_rfcm_signalonly/D");
-    tsignals->Branch("peak_h_rx_rfcm_signalonly",&peak_h_rx_rfcm_signalonly,"peak_h_rx_rfcm_signalonly/D");
-    tsignals->Branch("peak_e_rx_rfcm_lab",&peak_e_rx_rfcm_lab,"peak_e_rx_rfcm_lab/D");
-    tsignals->Branch("peak_h_rx_rfcm_lab",&peak_h_rx_rfcm_lab,"peak_h_rx_rfcm_lab/D");
+
+    tsignals->Branch("peak",                     &peak_v_banding_rfcm,      "peak_v_banding_rfcm[2][5]/D"   );
+    tsignals->Branch("peak_rx",                  &peak_rx_signalonly,       "peak_rx[2]/D"                  );
+    tsignals->Branch("peak_rx_rfcm",             &peak_rx_rfcm,             "peak_rx_rfcm[2]/D"             );
+    tsignals->Branch("peak_rx_rfcm_signalonly",  &peak_rx_rfcm_signalonly,  "peak_rx_rfcm_signalonly[2]/D"  );
+    tsignals->Branch("peak_rx_rfcm_lab",         &peak_rx_rfcm_lab,         "peak_rx_rfcm_lab[2]/D"         );
     tsignals->Branch("bwslice_vrms",&bwslice_vrms,"bwslice_vrms[5]/D");
     tsignals->Branch("iminbin",&iminbin,"iminbin[5]/I");
     tsignals->Branch("imaxbin",&imaxbin,"imaxbin[5]/I");
     tsignals->Branch("maxbin_fortotal",&maxbin_fortotal,"maxbin_fortotal[5]/I");
-    tsignals->Branch("channels_passing_e",&channels_passing_e,"channels_passing_e[5]/I");
-    tsignals->Branch("channels_passing_h",&channels_passing_h,"channels_passing_h[5]/I");
+    tsignals->Branch("channels_passing",&channels_passing,"channels_passing[2][5]/I");
     tsignals->Branch("bwslice_rmsdiode",&bwslice_rmsdiode,"bwslice_rmsdiode[5]/D");
     tsignals->Branch("l1_passing",&l1_passing,"l1_passing/I");
     tsignals->Branch("integral_vmmhz",&integral_vmmhz_foranita,"integral_vmmhz/D");
@@ -1275,8 +1266,6 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     
     
     tdata=new TTree("tdata","tdata");
- //    tdata->Branch("volts_rx_rfcm_lab_e",&volts_rx_rfcm_lab_e,"volts_rx_rfcm_lab_e[512]/D");
-//     tdata->Branch("volts_rx_rfcm_lab_h",&volts_rx_rfcm_lab_h,"volts_rx_rfcm_lab_h[512]/D");
     tdata->Branch("total_diodeinput_1_allantennas",&total_diodeinput_1_allantennas,"total_diodeinput_1_allantennas[48][512]/D"); // this is the waveform that is input to the tunnel diode in the first (LCP or vertical) polarization
    tdata->Branch("total_diodeinput_2_allantennas",&total_diodeinput_2_allantennas,"total_diodeinput_2_allantennas[48][512]/D"); // this is the waveform that is input to the tunnel diode in the first (LCP or vertical) polarization
     tdata->Branch("timedomain_output_1_allantennas",&timedomain_output_1_allantennas,"timedomain_output_1_allantennas[48][512]/D"); // this is the waveform that is output to the tunnel diode in the first (LCP or vertical) polarization
@@ -2403,55 +2392,41 @@ void Anita::GetPhases() {
     double phase_corr,phase_uncorr;
     double phasor_x,phasor_y;
     
-    for (int k=0;k<NFOUR/4;k++) { // loop through samples
-		iband=Tools::findIndex(freq_bands[0],freq_forfft[2*k],NPOINTS_BANDS,freq_bands[0][0],freq_bands[0][NPOINTS_BANDS-1]);
+    for (int ifreq=0;ifreq<NFOUR/4;ifreq++) { // loop through samples
+      for (int ipol=0; ipol<2; ipol++){
+
+	iband=Tools::findIndex(freq_bands[0],freq_forfft[2*ifreq],NPOINTS_BANDS,freq_bands[0][0],freq_bands[0][NPOINTS_BANDS-1]);
+	
+	phases_rfcm[ipol][ifreq]=2*PI*gRandom->Rndm(); // set phases at output of rfcm randoml		
 		
-		
-		phases_rfcm_e[k]=2*PI*gRandom->Rndm(); // set phases at output of rfcm randoml
-		phases_rfcm_h[k]=2*PI*gRandom->Rndm(); // set phases at output of rfcm randomly
-		
-		
-		// now set phases at the lab chip
-		
-		if(iband < 0) corr = 0;
-		else corr=correl_lab[iband];
-		uncorr=1-corr;
-		phase_corr=phases_rfcm_e[k];
-		phase_uncorr=2*PI*gRandom->Rndm();
-		phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
-		phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
-		phases_lab_e[k]=TMath::ATan2(phasor_y,phasor_x);
-		
-		
-		
-		phase_corr=phases_rfcm_h[k];
-		phase_uncorr=2*PI*gRandom->Rndm();
-		phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
-		phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
-		phases_lab_h[k]=TMath::ATan2(phasor_y,phasor_x);
-		
-		
-		// do the same thing for the bands
-		for (int j=0;j<5;j++) {
-			
-			if(iband < 0) corr = 0;
-			else corr=correl_banding[j][iband];
-			uncorr=1-corr;
-			phase_corr=phases_rfcm_e[k];
-			phase_uncorr=2*PI*gRandom->Rndm();
-			phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
-			phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
-			phases_rfcm_banding_e[j][k]=TMath::ATan2(phasor_y,phasor_x);
-			phase_corr=phases_rfcm_h[k];
-			phase_uncorr=2*PI*gRandom->Rndm();
-			phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
-			phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
-			phases_rfcm_banding_h[j][k]=TMath::ATan2(phasor_y,phasor_x);
-			
-			
-		}
+	// now set phases at the lab chip
+	
+	if(iband < 0) corr = 0;
+	else corr=correl_lab[iband];
+	uncorr=1-corr;
+	phase_corr=phases_rfcm[ipol][ifreq];
+	phase_uncorr=2*PI*gRandom->Rndm();
+	phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
+	phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
+	phases_lab[ipol][ifreq]=TMath::ATan2(phasor_y,phasor_x);
+				
+	
+	// do the same thing for the bands
+	for (int j=0;j<5;j++) {
+	  
+	  if(iband < 0) corr = 0;
+	  else corr=correl_banding[j][iband];
+	  uncorr=1-corr;
+	  
+	  phase_corr=phases_rfcm[ipol][ifreq];
+	  phase_uncorr=2*PI*gRandom->Rndm();
+	  phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
+	  phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
+	  phases_rfcm_banding[ipol][j][ifreq]=TMath::ATan2(phasor_y,phasor_x);  
+	  
+	}
+      }
     }
-    
     
     
 }
@@ -2482,21 +2457,20 @@ void Anita::convert_power_spectrum_to_voltage_spectrum_for_fft(int length,double
 }
 
 void Anita::GetNoiseWaveforms() {
-    GetPhases();
-    int nsamples = NFOUR / 2;
-    // int nsamples_long = NFOUR;
-    double sumfreqdomain = 0.;
-    double sumtimedomain = 0.;
-    
-    convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples,timedomainnoise_rfcm_e, freqdomain_rfcm, phases_rfcm_e);
-    convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples,timedomainnoise_rfcm_h, freqdomain_rfcm, phases_rfcm_h);
-    convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples,timedomainnoise_lab_e, avgfreqdomain_lab, phases_lab_e);
-    convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples,timedomainnoise_lab_h, avgfreqdomain_lab, phases_lab_h);
+  GetPhases();
+  int nsamples = NFOUR / 2;
+  // int nsamples_long = NFOUR;
+  double sumfreqdomain = 0.;
+  double sumtimedomain = 0.;
 
-//     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long,timedomainnoise_rfcm_e_long, freqdomain_rfcm_long, phases_rfcm_e_long);
-//     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long,timedomainnoise_rfcm_h_long, freqdomain_rfcm_long, phases_rfcm_h_long);
-//     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long,timedomainnoise_lab_e_long, avgfreqdomain_lab_long, phases_lab_e_long);
-//     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long,timedomainnoise_lab_h_long, avgfreqdomain_lab_long, phases_lab_h_long);
+  count_getnoisewaveforms++;
+
+  for (int ipol=0;ipol<2;ipol++){
+    convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples, timedomainnoise_rfcm[ipol], freqdomain_rfcm,   phases_rfcm[ipol] );
+    convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples, timedomainnoise_lab[ipol],  avgfreqdomain_lab, phases_lab[ipol]  );
+
+    //     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long, timedomainnoise_rfcm_long[ipol], freqdomain_rfcm_long,   phases_rfcm_long[ipol] );
+    //     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long, timedomainnoise_lab_long[ipol],  avgfreqdomain_lab_long, phases_lab_long[ipol]  );
     
     // want to restrict it to NFOUR/2 samples -# samples that equal twice
     // maxt_diode
@@ -2508,69 +2482,49 @@ void Anita::GetNoiseWaveforms() {
     // everything but the middle nsamp samples and scale the waveforms
     // by sqrt((NFOUR/2)/nsamp)
     
-    normalize_for_nsamples(timedomainnoise_rfcm_e, (double) nsamples, (double) nsamp);
-    normalize_for_nsamples(timedomainnoise_rfcm_h, (double) nsamples, (double) nsamp);
-    normalize_for_nsamples(timedomainnoise_lab_e, (double) nsamples, (double) nsamp);
-    normalize_for_nsamples(timedomainnoise_lab_h, (double) nsamples, (double) nsamp);
+    normalize_for_nsamples(timedomainnoise_rfcm[ipol], (double) nsamples, (double) nsamp);
+    normalize_for_nsamples(timedomainnoise_lab[ipol],  (double) nsamples, (double) nsamp);
 
-//     normalize_for_nsamples(timedomainnoise_rfcm_e_long, (double) nsamples_long, (double) nsamp);
-//     normalize_for_nsamples(timedomainnoise_rfcm_h_long, (double) nsamples_long, (double) nsamp);
-//     normalize_for_nsamples(timedomainnoise_lab_e_long, (double) nsamples_long, (double) nsamp);
-//     normalize_for_nsamples(timedomainnoise_lab_h_long, (double) nsamples_long, (double) nsamp);
+    //     normalize_for_nsamples(timedomainnoise_rfcm_long[ipol], (double) nsamples_long, (double) nsamp);
+    //     normalize_for_nsamples(timedomainnoise_lab_long[ipol],  (double) nsamples_long, (double) nsamp);
     
     for (int k = 0; k < NFOUR / 4; k++){
       sumfreqdomain += avgfreqdomain_lab[k];
     }
     
-    Tools::realft(timedomainnoise_rfcm_e, -1, NFOUR / 2);
-    Tools::realft(timedomainnoise_rfcm_h, -1, NFOUR / 2);
-    Tools::realft(timedomainnoise_lab_e,-1, NFOUR / 2);
-    Tools::realft(timedomainnoise_lab_h, -1, NFOUR / 2);
+    Tools::realft(timedomainnoise_rfcm[ipol], -1, NFOUR / 2);
+    Tools::realft(timedomainnoise_lab[ipol],  -1, NFOUR / 2);
 
-
- //    Tools::realft(timedomainnoise_rfcm_e_long, -1, NFOUR );
-//     Tools::realft(timedomainnoise_rfcm_h_long, -1, NFOUR );
-//     Tools::realft(timedomainnoise_lab_e_long,-1, NFOUR );
-//     Tools::realft(timedomainnoise_lab_h_long, -1, NFOUR );
+    //    Tools::realft(timedomainnoise_rfcm_long[ipol], -1, NFOUR );
+    //     Tools::realft(timedomainnoise_lab_long[ipol],-1, NFOUR );
     
     for (int k = 0; k < NFOUR / 2; k++) {
-      timedomainnoise_lab_e[k] *=THERMALNOISE_FACTOR;
-      timedomainnoise_rfcm_e[k]*=THERMALNOISE_FACTOR;
-      timedomainnoise_lab_h[k] *=THERMALNOISE_FACTOR;
-      timedomainnoise_rfcm_h[k]*=THERMALNOISE_FACTOR;
+      timedomainnoise_lab[ipol][k] *=THERMALNOISE_FACTOR;
+      timedomainnoise_rfcm[ipol][k]*=THERMALNOISE_FACTOR;
       
-      sumtimedomain += timedomainnoise_lab_e[k] * timedomainnoise_lab_e[k];
-      rms_rfcm_e += timedomainnoise_rfcm_e[k] * timedomainnoise_rfcm_e[k] / ((double) NFOUR / 2);
-      rms_lab_e += timedomainnoise_lab_e[k] * timedomainnoise_lab_e[k] / ((double) NFOUR / 2);
-      rms_rfcm_h += timedomainnoise_rfcm_h[k] * timedomainnoise_rfcm_h[k] / ((double) NFOUR / 2);
-      rms_lab_h += timedomainnoise_lab_h[k] * timedomainnoise_lab_h[k] / ((double) NFOUR / 2);
-      
-      rms_rfcm_e_single_event += timedomainnoise_rfcm_e[k] * timedomainnoise_rfcm_e[k];
+      if (ipol==0){
+	sumtimedomain += timedomainnoise_lab[ipol][k] * timedomainnoise_lab[ipol][k];
+	rms_rfcm_e_single_event += timedomainnoise_rfcm[ipol][k] * timedomainnoise_rfcm[ipol][k];
+      }
+      rms_rfcm[ipol] += timedomainnoise_rfcm[ipol][k] * timedomainnoise_rfcm[ipol][k] / ((double) NFOUR / 2);
+      rms_lab[ipol]  += timedomainnoise_lab[ipol][k] * timedomainnoise_lab[ipol][k] / ((double) NFOUR / 2);
+            
     }
     
-    count_getnoisewaveforms++;
 
-    for (int j=0; j<5; j++) {
-      convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR/2,timedomainnoise_rfcm_banding_e[j], freqdomain_rfcm_banding[j], phases_rfcm_banding_e[j]);
-      convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR/2,timedomainnoise_rfcm_banding_h[j], freqdomain_rfcm_banding[j], phases_rfcm_banding_h[j]);
-      normalize_for_nsamples(timedomainnoise_rfcm_banding_e[j], (double) nsamples, (double) nsamp);
-      normalize_for_nsamples(timedomainnoise_rfcm_banding_h[j], (double) nsamples, (double) nsamp);     
-      Tools::realft(timedomainnoise_rfcm_banding_e[j], -1, NFOUR / 2);
-      Tools::realft(timedomainnoise_rfcm_banding_h[j], -1, NFOUR / 2);
+    for (int iband=0; iband<5; iband++) {
+      convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR/2,timedomainnoise_rfcm_banding[ipol][iband], freqdomain_rfcm_banding[iband], phases_rfcm_banding[ipol][iband]);
+      normalize_for_nsamples(timedomainnoise_rfcm_banding[ipol][iband], (double) nsamples, (double) nsamp);
+      Tools::realft(timedomainnoise_rfcm_banding[ipol][iband], -1, NFOUR / 2);
 
- //      convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR,timedomainnoise_rfcm_banding_e_long[j], freqdomain_rfcm_banding_long[j], phases_rfcm_banding_e_long[j]);
-//       convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR,timedomainnoise_rfcm_banding_h_long[j], freqdomain_rfcm_banding_long[j], phases_rfcm_banding_h_long[j]);
-//       normalize_for_nsamples(timedomainnoise_rfcm_banding_e_long[j], (double) nsamples_long, (double) nsamp);
-//       normalize_for_nsamples(timedomainnoise_rfcm_banding_h_long[j], (double) nsamples_long, (double) nsamp);     
-//       Tools::realft(timedomainnoise_rfcm_banding_e_long[j], -1, NFOUR);
-//       Tools::realft(timedomainnoise_rfcm_banding_h_long[j], -1, NFOUR);
-
-
-
+      //      convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR,timedomainnoise_rfcm_banding_long[ipol][iband], freqdomain_rfcm_banding_long[iband], phases_rfcm_banding_e_long[iband]);
+      //       normalize_for_nsamples(timedomainnoise_rfcm_banding_long[ipol][iband], (double) nsamples_long, (double) nsamp);
+      //       Tools::realft(timedomainnoise_rfcm_banding_long[ipol][iband], -1, NFOUR);
 
     }
+    
+  }
 }
-
 
 void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay) {
     
