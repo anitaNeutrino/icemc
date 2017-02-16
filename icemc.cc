@@ -3531,24 +3531,24 @@ int main(int argc,  char **argv) {
   }
   cout << "about to Summarize.\n";
 
-  anita1->rms_rfcm_e = sqrt(anita1->rms_rfcm_e / (double)anita1->count_getnoisewaveforms)*1000.;
-  anita1->rms_rfcm_h = sqrt(anita1->rms_rfcm_h / (double)anita1->count_getnoisewaveforms)*1000.;
-  anita1->rms_lab_e = sqrt(anita1->rms_lab_e / (double)anita1->count_getnoisewaveforms)*1000.;
-  anita1->rms_lab_h = sqrt(anita1->rms_lab_h / (double)anita1->count_getnoisewaveforms)*1000.;
+  anita1->rms_rfcm[0] = sqrt(anita1->rms_rfcm[0] / (double)anita1->count_getnoisewaveforms)*1000.;
+  anita1->rms_rfcm[1] = sqrt(anita1->rms_rfcm[1] / (double)anita1->count_getnoisewaveforms)*1000.;
+  anita1->rms_lab[0] = sqrt(anita1->rms_lab[0] / (double)anita1->count_getnoisewaveforms)*1000.;
+  anita1->rms_lab[1] = sqrt(anita1->rms_lab[1] / (double)anita1->count_getnoisewaveforms)*1000.;
 
-  cout << "RMS noise in rfcm e-pol is " << anita1->rms_rfcm_e << " mV.\n";
-  cout << "RMS noise in rfcm h-pol is " << anita1->rms_rfcm_h << " mV.\n";
-  cout << "RMS noise in lab e-pol is " << anita1->rms_lab_e << "mV.\n";
-  cout << "RMS noise in lab h-pol is " << anita1->rms_lab_h << "mV.\n";
+  cout << "RMS noise in rfcm e-pol is " << anita1->rms_rfcm[0] << " mV.\n";
+  cout << "RMS noise in rfcm h-pol is " << anita1->rms_rfcm[1] << " mV.\n";
+  cout << "RMS noise in lab e-pol is " << anita1->rms_lab[0] << "mV.\n";
+  cout << "RMS noise in lab h-pol is " << anita1->rms_lab[1] << "mV.\n";
   for (int i=0;i<Anita::NFREQ;i++) {
     anita1->avgfreq_rfcm[i]/=(double)anita1->count_getnoisewaveforms;
     anita1->avgfreq_rfcm_lab[i]/=(double)anita1->count_getnoisewaveforms;
   }
 
-  rms_rfcm_e=anita1->rms_rfcm_e;
-  rms_rfcm_h=anita1->rms_rfcm_h;
-  rms_lab_e=anita1->rms_lab_e;
-  rms_lab_h=anita1->rms_lab_h;
+  rms_rfcm_e=anita1->rms_rfcm[0];
+  rms_rfcm_h=anita1->rms_rfcm[1];
+  rms_lab_e=anita1->rms_lab[0];
+  rms_lab_h=anita1->rms_lab[1];
   for (int i=0;i<Anita::NFREQ;i++) {
     avgfreq_rfcm[i]=anita1->avgfreq_rfcm[i];
     avgfreq_rfcm_lab[i]=anita1->avgfreq_rfcm_lab[i];
