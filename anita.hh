@@ -88,6 +88,12 @@ public:
   Anita(); // constructor
   ~Anita();
   void Initialize(Settings *settings1,ofstream &foutput,int inu); // initialize a bunch of stuff
+  void initializeFixedPowerThresholds(ofstream &foutput);
+  void readVariableThresholds(Settings *settings1);
+  void readAmplification();
+  void getDiodeDataAndAttenuation(Settings *settings1);
+  void getPulserData();
+  
   // takes arrays that span NFREQ and turn them into arrays that span HALFNFOUR
   void MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay);
   int Match(int ilayer,int ifold,int rx_minarrivaltime);
@@ -154,8 +160,7 @@ public:
   double total_diodeinput_2_allantennas[48][HALFNFOUR]; //
 
   // these are just for the antenna that receives the signal first
-  double timedomain_output_1_inanita[5][HALFNFOUR]; // this is just for writing out to the following tree
-  double timedomain_output_2_inanita[5][HALFNFOUR]; // this is just for writing out to the following tree
+  double timedomain_output_inanita[2][5][HALFNFOUR]; // this is just for writing out to the following tree
 
   double time_trig[HALFNFOUR];
   double weight_inanita; // weight of the event
@@ -190,12 +195,10 @@ public:
 
 
 
-  double timedomain_output_1_corrected_forplotting[6][HALFNFOUR]; // this is just for writing out to the following tree
-  double timedomain_output_2_corrected_forplotting[6][HALFNFOUR]; // this is just for writing out to the following tree
+  double timedomain_output_corrected_forplotting[2][6][HALFNFOUR]; // this is just for writing out to the following tree
 
 
-  double timedomain_output_1_allantennas[48][HALFNFOUR]; // this is across all antennas, just the full band
-  double timedomain_output_2_allantennas[48][HALFNFOUR]; //
+  double timedomain_output_allantennas[2][48][HALFNFOUR]; // this is across all antennas, just the full band
 
 
 
