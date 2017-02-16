@@ -579,8 +579,8 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
       for (int i=0;i<anita1->HALFNFOUR;i++) {
 	anita1->flag_e_inanita[iband][i]=0;
 	anita1->flag_h_inanita[iband][i]=0;
-	anita1->timedomain_output_1_inanita[iband][i]=timedomain_output[0][iband][i];
-	anita1->timedomain_output_2_inanita[iband][i]=timedomain_output[1][iband][i];
+	anita1->timedomain_output_inanita[0][iband][i]=timedomain_output[0][iband][i];
+	anita1->timedomain_output_inanita[1][iband][i]=timedomain_output[1][iband][i];
 
       }
       for (int i=0;i<(int)flag_e[iband].size();i++) {
@@ -715,9 +715,8 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
 
 	
     for (int itime=0;itime<Anita::NFOUR/2;itime++) {
-      if (ipol==0) anita1->timedomain_output_1_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][itime]=timedomain_output[4][itime];
-      else anita1->timedomain_output_2_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][itime]=timedomain_output[4][itime];
-      //cerr<<iband<<" "<<i<<" "<<vm_banding_rfcm_forfft[ipol] <<"  "<<timedomain_output_1[iband][i]<<endl;
+      anita1->timedomain_output_allantennas[ipol][anita1->GetRxTriggerNumbering(ilayer,ifold)][itime]=timedomain_output[4][itime];
+      //cerr<<iband<<" "<<i<<" "<<vm_banding_rfcm_forfft[ipol] <<"  "<<timedomain_output[iband][i]<<endl;
     }
 	
     
