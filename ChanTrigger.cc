@@ -399,6 +399,7 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
 	
 	v_banding_rfcm_forfft_temp[ipol][iband][2*i]  =v_banding_rfcm_forfft[ipol][iband][2*i];
 	v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]=v_banding_rfcm_forfft[ipol][iband][2*i+1];
+
       }
     }
     
@@ -410,12 +411,13 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
     Tools::realft(v_banding_rfcm_forfft[1][iband],-1,anita1->NFOUR/2);
     // now v_banding_rfcm_h_forfft is in the time domain
     // and now it is really in units of V
-    
-    
+
+       
     // put it in normal time ording -T to T
     // instead of 0 to T, -T to 0
     Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[0][iband]);
     Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
+
     
     if (settings1->APPLYIMPULSERESPONSETRIGGER){
       applyImpulseResponseTrigger(settings1, anita1, anita1->GetRxTriggerNumbering(ilayer, ifold), v_banding_rfcm_forfft[0][iband], 0);
@@ -456,45 +458,44 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
       
   double integrateenergy[5]={0.,0.,0.,0.,0.};
       
-  
   for (int iband=0;iband<5;iband++) { // Only loop over allowed bands
     if (anita1->bwslice_allowed[iband]!=1) continue; 
-    
+  
     if (settings1->TRIGGERSCHEME == 2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
       for (int itime=0;itime<anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);itime++) {
-	anita1->maxbin_fortotal[iband]=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);
-	
-	// The below line seems to shorten the length of the waveform to less than HALFNFOUR
-	int itimenoisebin=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)-itime;
-	
-	// this is just the straight sum of the two
-	anita1->total_vpol_inanita[iband][itime]=anita1->timedomainnoise_rfcm_banding[0][iband][itime]+anita1->signal_vpol_inanita[iband][itime];
+  	anita1->maxbin_fortotal[iband]=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);
+  	
+  	// The below line seems to shorten the length of the waveform to less than HALFNFOUR
+  	int itimenoisebin=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)-itime;
+  	
+  	// this is just the straight sum of the two
+  	anita1->total_vpol_inanita[iband][itime]=anita1->timedomainnoise_rfcm_banding[0][iband][itime]+anita1->signal_vpol_inanita[iband][itime];
 
-	integrateenergy[iband]+=anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->TIMESTEP;
-	if (settings1->SIGNAL_FLUCT && (!settings1->NOISEFROMFLIGHTTRIGGER)) {
-	  // this reverses the noise is time, and starts with bin anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)
-	  v_banding_rfcm_forfft[0][iband][itime]=v_banding_rfcm_forfft[0][iband][itime]+anita1->timedomainnoise_rfcm_banding[0][iband][itimenoisebin];
-	  v_banding_rfcm_forfft[1][iband][itime]=v_banding_rfcm_forfft[1][iband][itime]+anita1->timedomainnoise_rfcm_banding[1][iband][itimenoisebin];
-	  }
+  	integrateenergy[iband]+=anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->TIMESTEP;
+  	if (settings1->SIGNAL_FLUCT && (!settings1->NOISEFROMFLIGHTTRIGGER)) {
+  	  // this reverses the noise is time, and starts with bin anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)
+  	  v_banding_rfcm_forfft[0][iband][itime]=v_banding_rfcm_forfft[0][iband][itime]+anita1->timedomainnoise_rfcm_banding[0][iband][itimenoisebin];
+  	  v_banding_rfcm_forfft[1][iband][itime]=v_banding_rfcm_forfft[1][iband][itime]+anita1->timedomainnoise_rfcm_banding[1][iband][itimenoisebin];
+  	  }
       }
       for (int itime=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);itime<anita1->NFOUR/2;itime++) {
-	anita1->total_vpol_inanita[iband][itime]=0.;
-	v_banding_rfcm_forfft[0][iband][itime]=0.;
-	v_banding_rfcm_forfft[1][iband][itime]=0.;
+  	anita1->total_vpol_inanita[iband][itime]=0.;
+  	v_banding_rfcm_forfft[0][iband][itime]=0.;
+  	v_banding_rfcm_forfft[1][iband][itime]=0.;
       }
     }
     else if (settings1->SIGNAL_FLUCT && (!settings1->NOISEFROMFLIGHTTRIGGER)) {
       for (unsigned int itime = 0; itime < anita1->HALFNFOUR; ++itime){
-	// this is just a straight sum
-	anita1->total_vpol_inanita[iband][itime]=anita1->timedomainnoise_rfcm_banding[0][iband][itime]+anita1->signal_vpol_inanita[iband][itime];
-	integrateenergy[iband]+=anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->TIMESTEP;
-	// this one is the one actually used by the diode
-	v_banding_rfcm_forfft[0][iband][itime] += anita1->timedomainnoise_rfcm_banding[0][iband][itime];
+  	// this is just a straight sum
+  	anita1->total_vpol_inanita[iband][itime]=anita1->timedomainnoise_rfcm_banding[0][iband][itime]+anita1->signal_vpol_inanita[iband][itime];
+  	integrateenergy[iband]+=anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->TIMESTEP;
+  	// this one is the one actually used by the diode
+  	v_banding_rfcm_forfft[0][iband][itime] += anita1->timedomainnoise_rfcm_banding[0][iband][itime];
       }
     }
   } // end loop over bands	
-  
 
+  
   // Translate Anita physical layer to Anita trigger layer and phi sector
   // (4 layers with 8,8,16,8 phi sector to 3 layers with 16 phi sectors each.
   // In the nadir layer, 8 of the 16 slots are empty on the trigger layer.)
@@ -535,11 +536,10 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
     anita1->total_diodeinput_1_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][itime]=anita1->total_diodeinput_1_inanita[4][itime];
     anita1->total_diodeinput_2_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][itime]=anita1->total_diodeinput_2_inanita[4][itime];
   }
-
+  
   DiodeConvolution(settings1, anita1, globaltrig1, ilayer, ifold, mindiodeconvl[0], onediodeconvl[0], psignal[0], timedomain_output[0], ibinshift, 0, thresholds);
   DiodeConvolution(settings1, anita1, globaltrig1, ilayer, ifold, mindiodeconvl[1], onediodeconvl[1], psignal[1], timedomain_output[1], ibinshift, 1, thresholds);
 
-  
   
   // fill channels_passing
   //  } // end if the signal is big enough the be considered
@@ -682,7 +682,7 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
 
 
 
-  void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]){
+void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]){
 
   int tempChansPassing[5]={0,0,0,0,0};
 
@@ -695,6 +695,8 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
 
   
   for (int iband=0;iband<5;iband++) {
+    
+    anita1->channels_passing[ipol][iband]=0;
     if (anita1->bwslice_allowed[iband]!=1) continue; 
     
     // myconvl
@@ -959,6 +961,7 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
       //get the orientation for this screen point
       for (int i=0;i<Anita::NFREQ;i++) {
 	anita1->vmmhz_banding[i]=panel1->GetVmmhz_freq(jpt*Anita::NFREQ + i);
+
       }
                 
       // impose banding on the incident signal

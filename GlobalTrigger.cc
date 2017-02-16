@@ -224,7 +224,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 
     // Basic trigger refers to  frequency domain voltage (0) frequency domain energy (1) timedomain diode integration (2) 
 
-    PassesTriggerBasic(settings1, anita1, discones_passing, mode, l3trig, l2trig, l1trig, antennaclump, loctrig, loctrig_nadironly, thispasses);
+    PassesTriggerBasic(settings1, anita1, discones_passing, mode, l3trig, l2trig, l1trig, antennaclump, loctrig, loctrig_nadironly, thispasses, inu);
 
   }
 
@@ -250,7 +250,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 
 
 
-void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses){
+void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses, int inu){
 
   int ltsum=0;
   int channsum=0;
@@ -299,7 +299,8 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
 	//else if ((!ishpol) && ipolar==1) continue; // Anita3 : only do the polarisation required
 	  
 	for (int iband=0;iband<NBAND;iband++) {
-	    
+	  if (!anita1->bwslice_allowed[iband]) continue;
+	  
 	  GetAnitaLayerPhiSector(settings1,ilayer,iphi,whichlayer,whichphisector); // Translate Anita physical layer to Anita trigger layer and phi sector (4 layers with 8,8,16,8 phi sector to 3 layers with 16 phi sectors each.  In the nadir layer, 8 of the 16 slots are empty on the trigger layer.)
 	    
 	    
@@ -309,6 +310,7 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
 	  // physically higher than the 1st antenna in the first trigger layer
 	  // which means that the nadirs are aligned with the antennas with indices 1,3,5 etc.
 	  // we will still use indices 0-7 for them though
+	  if (inu==672) cout << ilayer << " " << iphi << " " << ipolar << " " << iband << " " << channels_passing[ilayer][iphi][ipolar][iband] << endl;
 	  channels_compacted_passing[whichlayer][whichphisector][ipolar][iband]+=channels_passing[ilayer][iphi][ipolar][iband];
 	} //for
       } //for

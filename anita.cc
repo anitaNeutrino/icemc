@@ -2114,48 +2114,62 @@ void Anita::myconvlv(double *data,const int NFOUR,double *fdiode,double &mindiod
 // number of bins
 
 void Anita::GetPhases() {
-    
-    int iband;
-    double corr,uncorr;
-    double phase_corr,phase_uncorr;
-    double phasor_x,phasor_y;
-    
-    for (int ifreq=0;ifreq<NFOUR/4;ifreq++) { // loop through samples
-      for (int ipol=0; ipol<2; ipol++){
 
-	iband=Tools::findIndex(freq_bands[0],freq_forfft[2*ifreq],NPOINTS_BANDS,freq_bands[0][0],freq_bands[0][NPOINTS_BANDS-1]);
-	
-	phases_rfcm[ipol][ifreq]=2*PI*gRandom->Rndm(); // set phases at output of rfcm randoml		
-		
-	// now set phases at the lab chip
-	
-	if(iband < 0) corr = 0;
-	else corr=correl_lab[iband];
-	uncorr=1-corr;
-	phase_corr=phases_rfcm[ipol][ifreq];
-	phase_uncorr=2*PI*gRandom->Rndm();
-	phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
-	phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
-	phases_lab[ipol][ifreq]=TMath::ATan2(phasor_y,phasor_x);
-				
-	
-	// do the same thing for the bands
-	for (int j=0;j<5;j++) {
-	  
-	  if(iband < 0) corr = 0;
-	  else corr=correl_banding[j][iband];
-	  uncorr=1-corr;
-	  
-	  phase_corr=phases_rfcm[ipol][ifreq];
-	  phase_uncorr=2*PI*gRandom->Rndm();
-	  phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
-	  phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
-	  phases_rfcm_banding[ipol][j][ifreq]=TMath::ATan2(phasor_y,phasor_x);  
-	  
-	}
-      }
-    }
+  int iband;
+  double corr,uncorr;
+  double phase_corr,phase_uncorr;
+  double phasor_x,phasor_y;
     
+  for (int k=0;k<NFOUR/4;k++) { // loop through samples
+    iband=Tools::findIndex(freq_bands[0],freq_forfft[2*k],NPOINTS_BANDS,freq_bands[0][0],freq_bands[0][NPOINTS_BANDS-1]);
+		
+		
+    phases_rfcm[0][k]=2*PI*gRandom->Rndm(); // set phases at output of rfcm randoml
+    phases_rfcm[1][k]=2*PI*gRandom->Rndm(); // set phases at output of rfcm randomly
+		
+		
+    // now set phases at the lab chip
+		
+    if(iband < 0) corr = 0;
+    else corr=correl_lab[iband];
+    uncorr=1-corr;
+    phase_corr=phases_rfcm[0][k];
+    phase_uncorr=2*PI*gRandom->Rndm();
+    phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
+    phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
+    phases_lab[0][k]=TMath::ATan2(phasor_y,phasor_x);
+		
+		
+		
+    phase_corr=phases_rfcm[1][k];
+    phase_uncorr=2*PI*gRandom->Rndm();
+    phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
+    phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
+    phases_lab[1][k]=TMath::ATan2(phasor_y,phasor_x);
+		
+		
+    // do the same thing for the bands
+    for (int j=0;j<5;j++) {
+			
+      if(iband < 0) corr = 0;
+      else corr=correl_banding[j][iband];
+      uncorr=1-corr;
+      phase_corr=phases_rfcm[0][k];
+      phase_uncorr=2*PI*gRandom->Rndm();
+      phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
+      phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
+      phases_rfcm_banding[0][j][k]=TMath::ATan2(phasor_y,phasor_x);
+      phase_corr=phases_rfcm[1][k];
+      phase_uncorr=2*PI*gRandom->Rndm();
+      phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
+      phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
+      phases_rfcm_banding[1][j][k]=TMath::ATan2(phasor_y,phasor_x);
+
+    }
+  }
+    
+    
+
     
 }
 
@@ -2193,8 +2207,16 @@ void Anita::GetNoiseWaveforms() {
 
   count_getnoisewaveforms++;
 
-  for (int ipol=0;ipol<2;ipol++){
+
+  // This is done in a stupid way for the moment to provide the same order of gRandom calls
+  // So that I have the exact same results as masters
+  // This should be done in 1 loop once I merge the trigger branch with master
+  // LC, 16/02/17
+
+  
+  for (int ipol=0;ipol<2;ipol++)
     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples, timedomainnoise_rfcm[ipol], freqdomain_rfcm,   phases_rfcm[ipol] );
+  for (int ipol=0;ipol<2;ipol++)
     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples, timedomainnoise_lab[ipol],  avgfreqdomain_lab, phases_lab[ipol]  );
 
     //     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long, timedomainnoise_rfcm_long[ipol], freqdomain_rfcm_long,   phases_rfcm_long[ipol] );
@@ -2210,6 +2232,7 @@ void Anita::GetNoiseWaveforms() {
     // everything but the middle nsamp samples and scale the waveforms
     // by sqrt((NFOUR/2)/nsamp)
     
+  for (int ipol=0;ipol<2;ipol++){
     normalize_for_nsamples(timedomainnoise_rfcm[ipol], (double) nsamples, (double) nsamp);
     normalize_for_nsamples(timedomainnoise_lab[ipol],  (double) nsamples, (double) nsamp);
 
@@ -2239,17 +2262,21 @@ void Anita::GetNoiseWaveforms() {
             
     }
     
+  }
 
-    for (int iband=0; iband<5; iband++) {
+  for (int iband=0; iband<5; iband++) {
+    for (int ipol=0;ipol<2;ipol++)
       convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR/2,timedomainnoise_rfcm_banding[ipol][iband], freqdomain_rfcm_banding[iband], phases_rfcm_banding[ipol][iband]);
+    for (int ipol=0;ipol<2;ipol++)
       normalize_for_nsamples(timedomainnoise_rfcm_banding[ipol][iband], (double) nsamples, (double) nsamp);
+    for (int ipol=0;ipol<2;ipol++)
       Tools::realft(timedomainnoise_rfcm_banding[ipol][iband], -1, NFOUR / 2);
 
-      //      convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR,timedomainnoise_rfcm_banding_long[ipol][iband], freqdomain_rfcm_banding_long[iband], phases_rfcm_banding_e_long[iband]);
-      //       normalize_for_nsamples(timedomainnoise_rfcm_banding_long[ipol][iband], (double) nsamples_long, (double) nsamp);
-      //       Tools::realft(timedomainnoise_rfcm_banding_long[ipol][iband], -1, NFOUR);
+    //      convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR,timedomainnoise_rfcm_banding_long[ipol][iband], freqdomain_rfcm_banding_long[iband], phases_rfcm_banding_e_long[iband]);
+    //       normalize_for_nsamples(timedomainnoise_rfcm_banding_long[ipol][iband], (double) nsamples_long, (double) nsamp);
+    //       Tools::realft(timedomainnoise_rfcm_banding_long[ipol][iband], -1, NFOUR);
 
-    }
+    
     
   }
 }
