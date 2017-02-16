@@ -1180,8 +1180,8 @@ void GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_threshold, in
 	  // if we're doing an anita 3 trigger, adjust for delays in the diode outputs so that we can do a time coincidence trigger	
 	  
 	  for (int i=0;i<Anita::NFOUR/2;i++) {
-	    timedomain_output_1_corrected[i]=anita1->timedomain_output_1_allantennas[rx][i];
-	    timedomain_output_2_corrected[i]=anita1->timedomain_output_2_allantennas[rx][i];
+	    timedomain_output_1_corrected[i]=anita1->timedomain_output_allantennas[0][rx][i];
+	    timedomain_output_2_corrected[i]=anita1->timedomain_output_allantennas[1][rx][i];
 	  }
       
 	  //      Tools::ShiftLeft(timedomain_output_1_corrected,anita1->NFOUR/2,anita1->arrival_times[rx]);
@@ -1198,8 +1198,8 @@ void GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_threshold, in
 	  if (rx==anita1->rx_minarrivaltime) {
 
 	    for (int i=0;i<Anita::NFOUR/2;i++) {
-	      anita1->timedomain_output_1_corrected_forplotting[0][i]=timedomain_output_1_corrected[i];
-	      anita1->timedomain_output_2_corrected_forplotting[0][i]=timedomain_output_2_corrected[i];
+	      anita1->timedomain_output_corrected_forplotting[0][0][i]=timedomain_output_1_corrected[i];
+	      anita1->timedomain_output_corrected_forplotting[1][0][i]=timedomain_output_2_corrected[i];
 	    }
 	  }
 
