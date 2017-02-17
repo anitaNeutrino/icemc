@@ -96,7 +96,9 @@ LIBS += -lMathMore
 
 CLASS_HEADERS = rx.hpp Taumodel.hh
 DICT = classdict
-OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o trigger.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o Settings.o $(DICT).o Taumodel.o screen.o SimulatedSignal.o
+
+OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o Settings.o $(DICT).o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o
+
 
 BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf)
 
