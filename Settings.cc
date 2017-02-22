@@ -254,6 +254,7 @@ void Settings::Initialize() {
   // End of the once-global varibles.
   taumodes = 1; //Taumodes =1, taucreated in the rock.
   SCREENEDGELENGTH=25.;
+  ROUGH_INTPOS_SHIFT=100000.;
 }
 
 
@@ -646,6 +647,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Enable surface roughness", ROUGHNESS);
   getSetting("Surface roughness", ROUGHSIZE);
   getSetting("Screen edge length [meters]", SCREENEDGELENGTH);
+  getSetting("Interaction position shift [meters]", ROUGH_INTPOS_SHIFT);
   getSetting("FIRN", FIRN);
   if (FIRN==0){
     std::cout << "Warning!  Non-standard parameter setting.  FIRN = " << FIRN << std::endl;

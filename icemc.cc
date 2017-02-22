@@ -2107,7 +2107,7 @@ int main(int argc,  char **argv) {
       }
       // OTHERWISE THERE IS ROUGHNESS SO DO MAGIC
       else{
-        cout<<"Screening this event: "<<inu<<endl;
+        //cout<<"Screening this event: "<<inu<<endl;
         //(vector) ray1->nsurf_rfexit:  surface normal at RFexit position
         //(pos)        ->rfexit[2]:     final iterated position of RF exit
         //(vector)     ->n_exit2bn[2]:  vector from RF exit position TO balloon
@@ -2117,7 +2117,7 @@ int main(int argc,  char **argv) {
 
         //these values are not optimized, and actually could be configured in the input file
         double basescreenedgelength = settings1->SCREENEDGELENGTH / settings1->ROUGHSIZE;
-        int basescreenDivisions = 4;
+        int basescreenDivisions = 10;
         double basescreenFractionLimit = 0.1;
         double subscreenFractionLimit = 1e-2;
         int maximumSubscreenGeneration = 1;  // value is inclusive
@@ -2230,7 +2230,7 @@ int main(int argc,  char **argv) {
           if (basescrn_Emags[ii]/maxbaseE < basescreenFractionLimit){
             continue;
           }
-          cerr<<basescrn_Emags[ii]/maxbaseE<<endl;
+          //cerr<<basescrn_Emags[ii]/maxbaseE<<endl;
           seedpositions.push_back(basescrn_pos[ii]);
           seedEdgeLengths.push_back(basescrn_length[ii]);
           seedGeneration.push_back(1);
@@ -2267,6 +2267,12 @@ int main(int argc,  char **argv) {
             //Determine ground impact position where the projected ray enters the ice
             // reject if it enters beyond the borders of the continent.
             // step size is 10 meters
+            //cout << pos_current.Lon()<<"  "<<pos_current.Lat()<<endl;
+            // ^
+            // check if pos_current gets placed below the ice surface
+            // -> why is IceModel::Surface failing ??
+
+
             if (!antarctica->WhereDoesItExitIce(pos_current, panel1->GetNormal(), 10., pos_projectedImpactPoint)){
               //std::cerr<<"Warning!  Projected ground impact position of screen point does NOT enter ice. Skipping this screen point."<<std::endl;
               continue;
@@ -3448,7 +3454,6 @@ int main(int argc,  char **argv) {
     }
   }//end NNU neutrino loop
 
-
   // Finished with individual neutrinos now ...
 
 
@@ -4301,187 +4306,197 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
   // in the roughness case we just want to pick a random allowable direction, so let's keep the original sampled neutrino direction from back in IceModel::PickUnbiased() inside Ray::PickRoughnessInteractionPoint()
 
   if (!settings1->ROUGHNESS){ // no roughness, use the original routine
-  int dont_count=0;
-  double theta_test=0;
-  double vmmhz1m_test=0;
-  double costhetanu1 = 0;
-  double costhetanu2 = 0;
+    int dont_count=0;
+    double theta_test=0;
+    double vmmhz1m_test=0;
+    double costhetanu1 = 0;
+    double costhetanu2 = 0;
 
-  if (bn1->WHICHPATH==3) { //To make a banana plot,  force neutrino direction
-    nnu = interaction1->nnu_banana;
-    theta_threshold = 0; //not used for anything in banana plots
-    return 1;
-  } //if (make banana plot)
+    if (bn1->WHICHPATH==3) { //To make a banana plot,  force neutrino direction
+      nnu = interaction1->nnu_banana;
+      theta_threshold = 0; //not used for anything in banana plots
+      return 1;
+    } //if (make banana plot)
 
-  if (settings1->SKIPCUTS || !settings1->USEDIRECTIONWEIGHTS) { // this is a setting that allows all neutrino angles,  no restriction.  Makes the code slower.
-    costhetanu2=1.;
-    costhetanu1=-1.;
-    theta_threshold=1;
-  } //end if (settings1->SKIPCUTS || !USEWEIGHTS)
-  else {
-    if (emfrac<=1.E-10 && deltheta_had >1.E-10) {
-      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle)>1)
-        //if (Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle)>1)
-        theta_threshold=-1;
-      else {
-        //theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle))/ALOG2);
-        theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/ALOG2);
-        averaging_thetas1+=theta_threshold;
-      } //else
-      count_inthisloop1++;
-    } //if
+    if (settings1->SKIPCUTS || !settings1->USEDIRECTIONWEIGHTS) { // this is a setting that allows all neutrino angles,  no restriction.  Makes the code slower.
+      costhetanu2=1.;
+      costhetanu1=-1.;
+      theta_threshold=1;
+    } //end if (settings1->SKIPCUTS || !USEWEIGHTS)
+    else {
+      if (emfrac<=1.E-10 && deltheta_had >1.E-10) {
+        if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle)>1)
+          //if (Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle)>1)
+          theta_threshold=-1;
+        else {
+          //theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle))/ALOG2);
+          theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/ALOG2);
+          averaging_thetas1+=theta_threshold;
+        } //else
+        count_inthisloop1++;
+      } //if
 
-    if (emfrac>1.E-10 && deltheta_had <=1.E-10) {
-      dont_count++;
-      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle)>1)
-      //if (Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle)>1)
-        theta_threshold=-1;
-      else {
-        //theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle))/0.5);
-        theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/0.5);
-        averaging_thetas2+=theta_threshold;
-      } //else
-      count_inthisloop2++;
-    } //if
+      if (emfrac>1.E-10 && deltheta_had <=1.E-10) {
+        dont_count++;
+        if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle)>1)
+        //if (Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle)>1)
+          theta_threshold=-1;
+        else {
+          //theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle))/0.5);
+          theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/0.5);
+          averaging_thetas2+=theta_threshold;
+        } //else
+        count_inthisloop2++;
+      } //if
 
 
-    //start big code block of ifs/elses
-    if (emfrac>1.E-10 && deltheta_had>1.E-10) {
-    // if the electromagnetic and hadronic components of the shower are both non-negligible
-    // then theta_threshold cannot be determined analytically so we step away from the cerenkov angle in steps equal to 1/2 * deltheta_em
-      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
-      //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*heff_max*bw/1.E6)>1.) {
-        theta_threshold=-1.; // if it's not detectable at all
-      }
-      else { // otherwise,  start stepping.
-        theta_test=deltheta_em; // this is the angle we start stepping at
-        vmmhz1m_test=vmmhz1m_max; // this will be the magnitude of the signal at theta_test away from the cerenkov cone.
-        // find the magnitude of the signal at theta_test away from the cerenkov cone.
-        sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
-        //  if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
-        if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
-          theta_threshold=theta_test; // then that is the maximum angular deviation
+      //start big code block of ifs/elses
+      if (emfrac>1.E-10 && deltheta_had>1.E-10) {
+      // if the electromagnetic and hadronic components of the shower are both non-negligible
+      // then theta_threshold cannot be determined analytically so we step away from the cerenkov angle in steps equal to 1/2 * deltheta_em
+        if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
+        //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*heff_max*bw/1.E6)>1.) {
+          theta_threshold=-1.; // if it's not detectable at all
         }
-        else { // otherwise increment by the step size and check again.
-          theta_test=1.5*deltheta_em;
-          vmmhz1m_test=vmmhz1m_max;
+        else { // otherwise,  start stepping.
+          theta_test=deltheta_em; // this is the angle we start stepping at
+          vmmhz1m_test=vmmhz1m_max; // this will be the magnitude of the signal at theta_test away from the cerenkov cone.
+          // find the magnitude of the signal at theta_test away from the cerenkov cone.
           sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
-
-          if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
-          //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) {
-            theta_threshold=theta_test;
+          //  if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
+          if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
+            theta_threshold=theta_test; // then that is the maximum angular deviation
           }
           else { // otherwise increment by the step size and check again.
-            theta_test=2*deltheta_em;
+            theta_test=1.5*deltheta_em;
             vmmhz1m_test=vmmhz1m_max;
             sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
-            //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
-            if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
+
+            if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
+            //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) {
               theta_threshold=theta_test;
+            }
             else { // otherwise increment by the step size and check again.
-              theta_test=3*deltheta_em;
+              theta_test=2*deltheta_em;
               vmmhz1m_test=vmmhz1m_max;
               sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
               //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
-
               if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
                 theta_threshold=theta_test;
-              else { // otherwise,  set is the the width of the hadronic component (much wider than the electromagnetic component)
-                theta_test=deltheta_had;
+              else { // otherwise increment by the step size and check again.
+                theta_test=3*deltheta_em;
                 vmmhz1m_test=vmmhz1m_max;
                 sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
-                // if at the hadronic width,  you're below the threshold
+                //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
+
                 if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
-                //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) // if at the hadronic width,  you're below the threshold
-                  theta_threshold=theta_test; // set theta_threshold
-                else { // otherwise,  find theta_threshold considering the hadronic component alone.  This is conservative-- an electromagnetic component would only make it narrower.
-                  theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/0.5);
-                } // else: not below threshold at deltheta_had
-              } // else: not below threshold at 3*deltheta_em
+                  theta_threshold=theta_test;
+                else { // otherwise,  set is the the width of the hadronic component (much wider than the electromagnetic component)
+                  theta_test=deltheta_had;
+                  vmmhz1m_test=vmmhz1m_max;
+                  sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
+                  // if at the hadronic width,  you're below the threshold
+                  if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
+                  //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) // if at the hadronic width,  you're below the threshold
+                    theta_threshold=theta_test; // set theta_threshold
+                  else { // otherwise,  find theta_threshold considering the hadronic component alone.  This is conservative-- an electromagnetic component would only make it narrower.
+                    theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/0.5);
+                  } // else: not below threshold at deltheta_had
+                } // else: not below threshold at 3*deltheta_em
 
-            } // else: not below threshold at 2.5*deltheta_em
-          } // else: not below threshold at 2.0*deltheta_em
+              } // else: not below threshold at 2.5*deltheta_em
+            } // else: not below threshold at 2.0*deltheta_em
 
-        } // else: not below threshold at 1.5*deltheta_em
+          } // else: not below threshold at 1.5*deltheta_em
 
-      } // not below threshold at 1.0*deltheta_em
-      count_inthisloop3++;
-      averaging_thetas3+=theta_threshold;
+        } // not below threshold at 1.0*deltheta_em
+        count_inthisloop3++;
+        averaging_thetas3+=theta_threshold;
 
-    } // end if both the em and hadronic components are non-negligible.
-    //end big code block of ifs/elses
+      } // end if both the em and hadronic components are non-negligible.
+      //end big code block of ifs/elses
 
-    theta_threshold*=settings1->THETA_TH_FACTOR; // multiply theta_threshold by scale factor if requested,  for testing purposes.
-    if (theta_threshold>0) { // we only pick the angle between 0 and pi so set the upper and lower limits accordingly.
-      if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold> PI) {
-        costhetanu2=1.;
-        costhetanu1=-1.;
-      } //if
-      else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold> PI) {
-        costhetanu2=cos(sig1->changle-theta_threshold);
-        costhetanu1=-1.;
-      } //else if
-      else if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold< PI) {
-        costhetanu2=1.;
-        costhetanu1=cos(sig1->changle+theta_threshold);
-      } //else if
-      else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold< PI) {
-        costhetanu2=cos(sig1->changle-theta_threshold);
-        costhetanu1=cos(sig1->changle+theta_threshold);
-      } //else if
-    } // end if theta_threshold>0
+      theta_threshold*=settings1->THETA_TH_FACTOR; // multiply theta_threshold by scale factor if requested,  for testing purposes.
+      if (theta_threshold>0) { // we only pick the angle between 0 and pi so set the upper and lower limits accordingly.
+        if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold> PI) {
+          costhetanu2=1.;
+          costhetanu1=-1.;
+        } //if
+        else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold> PI) {
+          costhetanu2=cos(sig1->changle-theta_threshold);
+          costhetanu1=-1.;
+        } //else if
+        else if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold< PI) {
+          costhetanu2=1.;
+          costhetanu1=cos(sig1->changle+theta_threshold);
+        } //else if
+        else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold< PI) {
+          costhetanu2=cos(sig1->changle-theta_threshold);
+          costhetanu1=cos(sig1->changle+theta_threshold);
+        } //else if
+      } // end if theta_threshold>0
 
 
-  } // if SKIP_CUTS !=0
+    } // if SKIP_CUTS !=0
 
-  if (theta_threshold>0) {
-    // pick the neutrino direction,  in a coordinate system where the z axis lies along the cerenkov cone.
-    costhetanu=costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
+    if (theta_threshold>0) {
+      // pick the neutrino direction,  in a coordinate system where the z axis lies along the cerenkov cone.
+      costhetanu=costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
 
-    double phinu=TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
-    double sinthetanu=sqrt(1-costhetanu*costhetanu);
-    // 3-vector of neutrino direction,  at that same coordinate system.
-    nnu = Vector(sinthetanu*cos(phinu), sinthetanu*sin(phinu), costhetanu);
-    nnu = nnu.ChangeCoord(refr); // rotate so it's in our normal coordinate system.
-    // now the ray is aligned along the cerenkov cone and
-    // the neutrino is rotated by that same angle
+      double phinu=TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
+      double sinthetanu=sqrt(1-costhetanu*costhetanu);
+      // 3-vector of neutrino direction,  at that same coordinate system.
+      nnu = Vector(sinthetanu*cos(phinu), sinthetanu*sin(phinu), costhetanu);
+      nnu = nnu.ChangeCoord(refr); // rotate so it's in our normal coordinate system.
+      // now the ray is aligned along the cerenkov cone and
+      // the neutrino is rotated by that same angle
 
-    //dtryingdirection+=4*PI/(2.*theta_threshold*sin(sig1->changle)*2*PI);
-    interaction1->dtryingdirection=1/((costhetanu2-costhetanu1)/2.);
-    if (bn1->WHICHPATH==4) {
-      //double angle=(PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4])+1.*RADDEG;
-      double angle=(PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4]);      // this will put the viewing angle at the cerenkov angle
-      double thetaposnu=posnu.Theta();
-      //double phiposnu=posnu.Phi();
-      costhetanu=cos(PI/2+(thetaposnu-angle));
-      sinthetanu=sqrt(1-costhetanu*costhetanu);
-      //phinu=0.95993;
-      phinu=-1.339; // this is the phi where it's coming *from.*
-      // we want the neutrino to be headed north
-      nnu = Vector(-1.*sinthetanu*cos(phinu), -1.*sinthetanu*sin(phinu), -1.*costhetanu);// 3-vector of neutrino direction,  at that same coordinate system.
+      //dtryingdirection+=4*PI/(2.*theta_threshold*sin(sig1->changle)*2*PI);
+      interaction1->dtryingdirection=1/((costhetanu2-costhetanu1)/2.);
+      if (bn1->WHICHPATH==4) {
+        //double angle=(PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4])+1.*RADDEG;
+        double angle=(PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4]);      // this will put the viewing angle at the cerenkov angle
+        double thetaposnu=posnu.Theta();
+        //double phiposnu=posnu.Phi();
+        costhetanu=cos(PI/2+(thetaposnu-angle));
+        sinthetanu=sqrt(1-costhetanu*costhetanu);
+        //phinu=0.95993;
+        phinu=-1.339; // this is the phi where it's coming *from.*
+        // we want the neutrino to be headed north
+        nnu = Vector(-1.*sinthetanu*cos(phinu), -1.*sinthetanu*sin(phinu), -1.*costhetanu);// 3-vector of neutrino direction,  at that same coordinate system.
+      }
+      return 1;
+    } //end if theta_threshold
+    else if (theta_threshold==-1.) {
+      cout << "theta_threshold is " << theta_threshold << "\n";
+      return 0;
     }
-    return 1;
-  } //end if theta_threshold
-  else if (theta_threshold==-1.) {
-    cout << "theta_threshold is " << theta_threshold << "\n";
-    return 0;
-  }
-  else if (emfrac<=1.E-10 && deltheta_had <= 1.E-10) {
-    cout << "Error:  emfrac, hadfrac are (1st place)" << emfrac << " " << hadfrac << " " << "\n";
-    return 0;
-  } //else if
+    else if (emfrac<=1.E-10 && deltheta_had <= 1.E-10) {
+      cout << "Error:  emfrac, hadfrac are (1st place)" << emfrac << " " << hadfrac << " " << "\n";
+      return 0;
+    } //else if
 
-  return 0;
+    return 0;
   } // end NO ROUGHNESS
 
   // treat the roughness case
   else if(settings1->ROUGHNESS){
-    //haha, do nothing
-    // interaction1->nnu is already
+    //copy SKIPCUTS and USEDIRECTIONWEIGHTS from earlier in this function
+      double costhetanu2=1.;
+      double costhetanu1=-1.;
+      double theta_threshold=1;
+      double costhetanu=costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
 
-    //let's set these anyway, since they are passed by address and possibly used later in the sim
-    costhetanu=cos(interaction1->nnu.Theta());
-    theta_threshold=1.; // this is a bogus theta_threshold but it is only used for plotting anyway
+      double phinu=TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
+      double sinthetanu=sqrt(1-costhetanu*costhetanu);
+      // 3-vector of neutrino direction,  at that same coordinate system.
+      nnu = Vector(sinthetanu*cos(phinu), sinthetanu*sin(phinu), costhetanu);
+      nnu = nnu.ChangeCoord(refr); // rotate so it's in our normal coordinate system.
+      // now the ray is aligned along the cerenkov cone and
+      // the neutrino is rotated by that same angle
+
+      //dtryingdirection+=4*PI/(2.*theta_threshold*sin(sig1->changle)*2*PI);
+      interaction1->dtryingdirection=1/((costhetanu2-costhetanu1)/2.);
   }
 
   else{ //something bad happened
