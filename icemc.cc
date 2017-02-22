@@ -586,7 +586,8 @@ int main(int argc,  char **argv) {
 
   int fSCREEN_NUMPOINTS_EDGE = settings1->ROUGHNESS;
   Screen *panel1 = new Screen(fSCREEN_NUMPOINTS_EDGE);              // create new instance of the screen class
-
+  stemp=settings1->outputdir+"/rough_groundvalues.dat";
+  ofstream roughout(stemp.c_str());
   if(spectra1->IsSpectrum()) cout<<" Lowest energy for spectrum is 10^18 eV! \n";
 
   // declare instance of trigger class.
@@ -2124,7 +2125,7 @@ int main(int argc,  char **argv) {
         int basescreenDivisions = 10;
         double basescreenFractionLimit = 0.1;
         double subscreenFractionLimit = 1e-2;
-        int maximumSubscreenGeneration = 1;  // value is inclusive
+        int maximumSubscreenGeneration = 5;  // value is inclusive
         int subscreenDivisions = 4;
 
         int num_validscreenpoints = 0;
@@ -2258,7 +2259,7 @@ int main(int argc,  char **argv) {
           std::vector<double> seedscreens_vmmhzlocal;  //use this to save Emag_local aka vmmhz[0] ONLY, the vmmhz array is calculated using only vmmhz[0] anyway
           std::vector<Vector> seedscreens_2bln;
           std::vector<Vector> seedscreens_pols;
-          std::vector<double> seedscreens_phasedelay;
+          std::vector<double> seedscreens_propdelay;
           std::vector<Position> seedscreens_impactpt;
           std::vector<double> seedscreens_viewangle;
 
@@ -2332,9 +2333,7 @@ int main(int argc,  char **argv) {
             seedscreens_vmmhzlocal.push_back( Emag_local );
             seedscreens_2bln.push_back(vec_pos_current_to_balloon);
             seedscreens_pols.push_back(npol_local_trans);
-            for (int k=0;k<Anita::NFREQ;k++) {
-              seedscreens_phasedelay.push_back( (pathlength_specular-pathlength_local) * anita1->freq[k] / CLIGHT );
-            }
+            seedscreens_propdelay.push_back( (pathlength_specular-pathlength_local) / CLIGHT );
             seedscreens_impactpt.push_back(pos_projectedImpactPoint);
             seedscreens_viewangle.push_back(viewangle_local);
           }// end for jj for this seed screen
@@ -2349,9 +2348,7 @@ int main(int argc,  char **argv) {
               panel1->AddVmmhz0(seedscreens_vmmhzlocal[jj]);
               panel1->AddVec2bln(seedscreens_2bln[jj]);
               panel1->AddPol(seedscreens_pols[jj]);
-              for (int k=0;k<Anita::NFREQ;k++) {
-                panel1->AddDelay( seedscreens_phasedelay[jj*Anita::NFREQ + k] );
-              }
+              panel1->AddDelay( seedscreens_propdelay[jj] );
               panel1->AddImpactPt(seedscreens_impactpt[jj]);
               panel1->AddViewangle(seedscreens_viewangle[jj]);
               panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
@@ -2373,7 +2370,7 @@ int main(int argc,  char **argv) {
           seedscreens_vmmhzlocal.clear();
           seedscreens_2bln.clear();
           seedscreens_pols.clear();
-          seedscreens_phasedelay.clear();
+          seedscreens_propdelay.clear();
           seedscreens_impactpt.clear();
           seedscreens_viewangle.clear();
         }// end for ii loop over seedpositions
@@ -2393,9 +2390,17 @@ int main(int argc,  char **argv) {
             sig1->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
             panel1->AddVmmhz_freq(vmmhz_local_array[k]);
           }
+
           validScreenSummedArea += panel1->GetWeight(jj);
+          
           Efield_local = panel1->GetVmmhz_freq(jj*Anita::NFREQ) * panel1->GetPol(jj);
           Efield_screentotal = Efield_screentotal + Efield_local;
+
+          roughout << inu << "  "
+                   << panel1->GetImpactPt(jj).Lon() << "  "
+                   << -90+panel1->GetImpactPt(jj).Lat() << "  "
+                   << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << std::endl;
+
         }//end jj over panel Nvalid points
         panel1->SetWeightNorm(validScreenSummedArea);
         vmmhz_max = Efield_screentotal.Mag();
@@ -2622,8 +2627,8 @@ int main(int argc,  char **argv) {
         panel1->SetNvalidPoints(1);
         for (int k=0;k<Anita::NFREQ;k++) {
           panel1->AddVmmhz_freq(vmmhz[k]);
-          panel1->AddDelay( 0. );
         }
+        panel1->AddDelay( 0. );
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
         panel1->AddPol(n_pol);
         panel1->AddWeight( 1. );
@@ -3457,7 +3462,7 @@ int main(int argc,  char **argv) {
   }//end NNU neutrino loop
 
   // Finished with individual neutrinos now ...
-
+roughout.close();
 
   gRandom=rsave;
   delete Rand3;
