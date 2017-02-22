@@ -941,8 +941,8 @@ Vector EarthModel::PickPosnuForaLonLat(double lon,double lat,double theta,double
     Vector posnu((elevation+this->Geoid(lat))*sin(theta)*cos(phi),(elevation+this->Geoid(lat))*sin(theta)*sin(phi),(elevation+this->Geoid(lat))*cos(theta));
     
     if (((this->Geoid(lat) + surface_above_geoid)) - posnu.Mag() < 0) {
-	cout<<"/nYikes!  (Geoid(lat) + Surface(lon,lat)) - sqrt(dSquare(posnu) = "<<((this->Geoid(lat) + surface_above_geoid)) - posnu.Mag()<<"/nlon, lat: "<<lon<<" , "<<lat<< " " << endl<<endl;
-	cout << "local_ice_thickness is " << local_ice_thickness << "\n";
+      //cout<<"/nYikes!  (Geoid(lat) + Surface(lon,lat)) - sqrt(dSquare(posnu) = "<<((this->Geoid(lat) + surface_above_geoid)) - posnu.Mag()<<"/nlon, lat: "<<lon<<" , "<<lat<< " " << endl<<endl;
+      //cout << "local_ice_thickness is " << local_ice_thickness << "\n";
     }
     
     return posnu;

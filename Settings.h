@@ -131,7 +131,7 @@ public:
 
   double ROUGHSIZE; // roughness size
   double SCREENEDGELENGTH;        // edge length of screen used if there is roughness
-
+  double ROUGH_INTPOS_SHIFT;      // furthest distance to shift the neutrino interaction position from the balloon if roughness
 
   /* int ICE_MODEL=0; //Select ice model to be used.  0 = Crust 2.0 , 1 = BEDMAP. */
   /* int NOFZ=1; // 1=depth dependent index of refraction,0=off */
