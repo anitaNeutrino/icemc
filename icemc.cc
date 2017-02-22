@@ -586,8 +586,8 @@ int main(int argc,  char **argv) {
 
   int fSCREEN_NUMPOINTS_EDGE = settings1->ROUGHNESS;
   Screen *panel1 = new Screen(fSCREEN_NUMPOINTS_EDGE);              // create new instance of the screen class
-  stemp=settings1->outputdir+"/rough_groundvalues.dat";
-  ofstream roughout(stemp.c_str());
+  //stemp=settings1->outputdir+"/rough_groundvalues.dat";
+  //ofstream roughout(stemp.c_str());
   if(spectra1->IsSpectrum()) cout<<" Lowest energy for spectrum is 10^18 eV! \n";
 
   // declare instance of trigger class.
@@ -2125,7 +2125,7 @@ int main(int argc,  char **argv) {
         int basescreenDivisions = 10;
         double basescreenFractionLimit = 0.1;
         double subscreenFractionLimit = 1e-2;
-        int maximumSubscreenGeneration = 5;  // value is inclusive
+        int maximumSubscreenGeneration = 3;  // value is inclusive
         int subscreenDivisions = 4;
 
         int num_validscreenpoints = 0;
@@ -2396,10 +2396,10 @@ int main(int argc,  char **argv) {
           Efield_local = panel1->GetVmmhz_freq(jj*Anita::NFREQ) * panel1->GetPol(jj);
           Efield_screentotal = Efield_screentotal + Efield_local;
 
-          roughout << inu << "  "
+          /*roughout << inu << "  "
                    << panel1->GetImpactPt(jj).Lon() << "  "
                    << -90+panel1->GetImpactPt(jj).Lat() << "  "
-                   << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << std::endl;
+                   << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << std::endl;*/
 
         }//end jj over panel Nvalid points
         panel1->SetWeightNorm(validScreenSummedArea);
@@ -3462,7 +3462,7 @@ int main(int argc,  char **argv) {
   }//end NNU neutrino loop
 
   // Finished with individual neutrinos now ...
-roughout.close();
+//roughout.close();
 
   gRandom=rsave;
   delete Rand3;
