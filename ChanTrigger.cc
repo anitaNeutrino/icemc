@@ -842,13 +842,14 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
     anita1->iminbin[iband]=0.;
     anita1->imaxbin[iband]=anita1->NFOUR/2;
     
+    Tools::Zero(v_banding_rfcm_forfft[0][iband],anita1->NFOUR/2);
+    Tools::Zero(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
 
-    for (int i=0;i<anita1->NFOUR/2;i++) {
-      for (int ipol=0;ipol<2;ipol++)
-        v_banding_rfcm_forfft[ipol][iband][i] = 0.;
-    }
-    
     for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
+
+      Tools::Zero(v_banding_rfcm_forfft_ROUGHELEMENT[0][iband],anita1->NFOUR/2);
+      Tools::Zero(v_banding_rfcm_forfft_ROUGHELEMENT[1][iband],anita1->NFOUR/2);
+
       //get the orientation for this screen point
       for (int i=0;i<Anita::NFREQ;i++) {
         anita1->vmmhz_banding[i]=panel1->GetVmmhz_freq(jpt*Anita::NFREQ + i);
@@ -895,60 +896,6 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
         }
       }
       
-      // Currently not used, but don't throw it away just yet
-      //if (settings1->APPLYIMPULSERESPONSETRIGGER){
-      // 	double volts_triggerPath_e[Anita::HALFNFOUR]={0.};
-      // 	double volts_triggerPath_h[Anita::HALFNFOUR]={0.};
-      // 	double vhz_triggerPath_e[Anita::NFREQ] = {0.};
-      // 	double vhz_triggerPath_h[Anita::NFREQ] = {0.};
-	
-      // 	anita1->MakeArraysforFFT(v_banding_rfcm[0][iband], v_banding_rfcm[1][iband], volts_triggerPath_e, volts_triggerPath_h, 90., true);
-	
-      // 	// for the ROUGHNESS case, need to apply phase factors here somehow, like in ConvertInputWFtoAntennaWF() above in the digitization path
-      // 	//for (int ifour=0;ifour<Anita::NFOUR/4;ifour++) {
-      // 	//  volts_triggerPath_e[2*ifour] *= cos( (90.)*PI/180.);
-      // 	//  volts_triggerPath_e[2*ifour+1] *= sin( (90.)*PI/180.);
-      // 	//  volts_triggerPath_h[2*ifour] *= cos( (90.)*PI/180.);
-      // 	//  volts_triggerPath_h[2*ifour+1] *= sin( (90.)*PI/180.);
-      // 	//}
-	
-      // 	Tools::realft(volts_triggerPath_e,-1,anita1->NFOUR/2);
-      // 	// now v_banding_rfcm_e_forfft is in the time domain
-      // 	// and now it is really in units of V
-	
-      // 	Tools::realft(volts_triggerPath_h,-1,anita1->NFOUR/2);
-      // 	// now v_banding_rfcm_h_forfft is in the time domain
-      // 	// and now it is really in units of V
-	
-      // 	// put it in normal time ording -T to T
-      // 	// instead of 0 to T, -T to 0
-      // 	Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_e);
-      // 	Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_triggerPath_h);
-	
-      // 	if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
-      // 	  injectImpulseAfterAntenna(anita1, volts_triggerPath_e, volts_triggerPath_h, ant);
-      // 	}
-	
-      // #ifdef ANITA_UTIL_EXISTS    
-      // 	applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_e, vhz_triggerPath_e, 0);
-      // 	applyImpulseResponseTrigger(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_triggerPath_h, vhz_triggerPath_h, 1);
-	
-      // 	for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
-      // 	  if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
-      // 	    v_banding_rfcm[0][iband][ifreq]=vhz_triggerPath_e[ifreq];
-      // 	    v_banding_rfcm[1][iband][ifreq]=vhz_triggerPath_h[ifreq];
-      // 	  }
-      // 	} // end loop over nfreq
-      // #endif
-	
-      // 	// now add the screen point's waveform to the total including the weighting 
-      // 	for (int i=0;i<anita1->NFOUR/2;i++) {
-      // 	  v_banding_rfcm_forfft[0][iband][i] += volts_triggerPath_e[i] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
-      // 	  v_banding_rfcm_forfft[1][iband][i] += volts_triggerPath_h[i] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
-      // 	}
-
-      //}//if (settings1->APPLYIMPULSERESPONSETRIGGER)
-      
       for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
         if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
           addToChannelSums(settings1, anita1, iband, ifreq);
@@ -956,13 +903,52 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
       } // end loop over nfreq
       
       
+      anita1->MakeArraysforFFT(v_banding_rfcm[0][iband],v_banding_rfcm[1][iband],v_banding_rfcm_forfft_ROUGHELEMENT[0][iband],v_banding_rfcm_forfft_ROUGHELEMENT[1][iband], 90., true);
+
+      // for some reason I'm averaging over 10 neighboring bins
+      // to get rid of the zero bins
+      for (int i=0;i<anita1->NFOUR/4;i++) {
+        for (int ipol=0;ipol<2;ipol++){
+    
+          v_banding_rfcm_forfft_temp[ipol][iband][2*i]  =0.;
+          v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]=0.;
+          
+          int tempcount = 0;
+          for (int k=i;k<i+10;k++) {
+            if (k<anita1->NFOUR/4) {
+              v_banding_rfcm_forfft_temp[ipol][iband][2*i]  +=v_banding_rfcm_forfft_ROUGHELEMENT[ipol][iband][2*k];
+              v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]+=v_banding_rfcm_forfft_ROUGHELEMENT[ipol][iband][2*k+1];
+              tempcount++;
+            }
+          }
+          
+          v_banding_rfcm_forfft_ROUGHELEMENT[ipol][iband][2*i]  =v_banding_rfcm_forfft_temp[ipol][iband][2*i]/tempcount;
+          v_banding_rfcm_forfft_ROUGHELEMENT[ipol][iband][2*i+1]=v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]/tempcount;
+          
+          v_banding_rfcm_forfft_temp[ipol][iband][2*i]  =v_banding_rfcm_forfft_ROUGHELEMENT[ipol][iband][2*i];
+          v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]=v_banding_rfcm_forfft_ROUGHELEMENT[ipol][iband][2*i+1];
+        }
+      }
+
+      // now v_banding_rfcm_h_forfft is in the time domain
+      // and now it is really in units of V
+      Tools::realft(v_banding_rfcm_forfft_ROUGHELEMENT[0][iband],-1,anita1->NFOUR/2);
+      Tools::realft(v_banding_rfcm_forfft_ROUGHELEMENT[1][iband],-1,anita1->NFOUR/2);
+
+      // put it in normal time ording -T to T
+      // instead of 0 to T, -T to 0
+      Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft_ROUGHELEMENT[0][iband]);
+      Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft_ROUGHELEMENT[1][iband]);
+
+      for (int k=0;k<anita1->NFOUR/2;k++) {
+        v_banding_rfcm_forfft[0][iband][k] += v_banding_rfcm_forfft_ROUGHELEMENT[0][iband][k];
+        v_banding_rfcm_forfft[1][iband][k] += v_banding_rfcm_forfft_ROUGHELEMENT[1][iband][k];
+      }
+
       //
     } // end loop over screen points
     
-
-    Tools::Zero(v_banding_rfcm_forfft[0][iband],anita1->NFOUR/2);
-    Tools::Zero(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
-    
+/*
     anita1->MakeArraysforFFT(v_banding_rfcm[0][iband],v_banding_rfcm[1][iband],v_banding_rfcm_forfft[0][iband],v_banding_rfcm_forfft[1][iband], 90., true);
 
     // for some reason I'm averaging over 10 neighboring bins
@@ -999,6 +985,11 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
     // instead of 0 to T, -T to 0
     Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[0][iband]);
     Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
+*/
+
+
+
+
 
     if (settings1->APPLYIMPULSERESPONSETRIGGER){
       applyImpulseResponseTrigger(settings1, anita1, anita1->GetRxTriggerNumbering(ilayer, ifold), v_banding_rfcm_forfft[0][iband], 0);
