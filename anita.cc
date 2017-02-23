@@ -3922,28 +3922,19 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
 
      // Get average pulse as measured by scope
      TGraph *gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
-
-     // count in how many channels did we inject a pulse
-     // the scope is one of them
-     // every phi sector contributes with 3 channels
-     int countChannels=1;
-     for (int iphi=0;iphi<5;iphi++) if (trigEffScanAtt[iphi]!=999) countChannels=countChannels+3;
      
      for (int i=0;i<gPulseAtAmpa->GetN();i++){
        // 7db fixed attenuation
-       gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-7/20);
+       gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-7./20.);
 
        // Variable attenuation of central phi sector
-       gPulseAtAmpa->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]/20);
+       gPulseAtAmpa->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]*1./20.);
 
-       // Signal in a 12-way splitter but only 6 channels + scope are connected
-       gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(countChannels*1.);
+       // Signal in a 12-way splitter 
+       gPulseAtAmpa->GetY()[i]*=TMath::Power(10, -10.8/20.);
 
        // Splitter between digitizer and trigger path
-       gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(2);
-       
-       // Additional factor to make things work????
-       gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(2);
+       gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-3./20.);;
        
      }
      
