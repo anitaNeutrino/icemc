@@ -343,117 +343,6 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
   // this is the number of bins to the left of center where the diode function starts to be completely overlapping with the waveform in the convolution.
   int ibinshift=(anita1->NFOUR/4-(int)(anita1->maxt_diode/anita1->TIMESTEP));
   
-  
-  double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
-  for (int iband=0;iband<5;iband++) {
-    if (anita1->bwslice_allowed[iband]!=1) continue;
-    
-    //cout << "arrival time is " << globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP << "\n";
-    //anita1->iminbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]+globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP; // we start to look for single channel triggers firing
-    //anita1->iminbin[iband]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[iband]; // we start to look for single channel triggers firing
-    anita1->iminbin[iband]=0.; // we start to look for single channel triggers firing
-    // starting with the first bin where the diode function is completely
-    // overlapping plus a delay that is brought about by the diode
-    // idelaybeforepeak is the bin number in the diode response function
-    // where it peaks
-    //
-    //
-    //
-    //
-    // E. Hong added comment in 040412 : currently the code looks at the same bin for the peak (from iminbin to imaxbin) for all antennas
-    // However, as there is a code which account for the time delay between antennas (Tools::ShiftRight), I think iminbin and imaxbin also have to account for that.
-    // I think L, M, H bwslice could be fine with sharing same iminbin and imaxbin as total bin we are looking (imaxbin - iminbin) is large (anita1->iwindow = 20ns), but for the Full band sharing same iminbin and imaxbin with all antennas can cause missing the peak between iminbin and imaxbin as the monitoring bin width for full band is small (anita1->iwindow = 4ns)
-    // Hope someone can check the part and either fix the code or confirm that the code is fine.
-    //
-    //
-    //anita1->imaxbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]+anita1->iwindow[j];
-    //anita1->imaxbin[j]=anita1->NFOUR/4-ibinshift+anita1->idelaybeforepeak[j]+anita1->iwindow[j]+(globaltrig1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP);
-    anita1->imaxbin[iband]=anita1->NFOUR/2;
-    
-    //Matt's plot:  horiz. axis:  peak_signal_rfcm/rms_rfcm
-    // vert. axis:  peak_signal_lab/rms_lab
-    Tools::Zero(v_banding_rfcm_forfft[0][iband],anita1->NFOUR/2);
-    Tools::Zero(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
-    
-    anita1->MakeArraysforFFT(v_banding_rfcm[0][iband],v_banding_rfcm[1][iband],v_banding_rfcm_forfft[0][iband],v_banding_rfcm_forfft[1][iband], 90., true);
-    
-    // for some reason I'm averaging over 10 neighboring bins
-    // to get rid of the zero bins
-    for (int i=0;i<anita1->NFOUR/4;i++) {
-      for (int ipol=0;ipol<2;ipol++){
-	
-	v_banding_rfcm_forfft_temp[ipol][iband][2*i]  =0.;
-	v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]=0.;
-	
-	int tempcount = 0;
-	for (int k=i;k<i+10;k++) {
-	  if (k<anita1->NFOUR/4) {
-	    v_banding_rfcm_forfft_temp[ipol][iband][2*i]  +=v_banding_rfcm_forfft[ipol][iband][2*k];
-	    v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]+=v_banding_rfcm_forfft[ipol][iband][2*k+1];
-	    tempcount++;
-	  }
-	}
-	
-	v_banding_rfcm_forfft[ipol][iband][2*i]  =v_banding_rfcm_forfft_temp[ipol][iband][2*i]/tempcount;
-	v_banding_rfcm_forfft[ipol][iband][2*i+1]=v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]/tempcount;
-	
-	v_banding_rfcm_forfft_temp[ipol][iband][2*i]  =v_banding_rfcm_forfft[ipol][iband][2*i];
-	v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]=v_banding_rfcm_forfft[ipol][iband][2*i+1];
-
-      }
-    }
-    
-    Tools::realft(v_banding_rfcm_forfft[0][iband],-1,anita1->NFOUR/2);
-    // now v_banding_rfcm_e_forfft is in the time domain
-    // and now it is really in units of V
-    
-    
-    Tools::realft(v_banding_rfcm_forfft[1][iband],-1,anita1->NFOUR/2);
-    // now v_banding_rfcm_h_forfft is in the time domain
-    // and now it is really in units of V
-
-       
-    // put it in normal time ording -T to T
-    // instead of 0 to T, -T to 0
-    Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[0][iband]);
-    Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
-
-    
-    if (settings1->APPLYIMPULSERESPONSETRIGGER){
-      applyImpulseResponseTrigger(settings1, anita1, anita1->GetRxTriggerNumbering(ilayer, ifold), v_banding_rfcm_forfft[0][iband], 0);
-      applyImpulseResponseTrigger(settings1, anita1, anita1->GetRxTriggerNumbering(ilayer, ifold), v_banding_rfcm_forfft[1][iband], 1);
-    }
-    
-
-    
-    if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==1)){  
-      injectImpulseAtSurf(anita1, v_banding_rfcm_forfft[0][iband], v_banding_rfcm_forfft[1][iband], anita1->GetRxTriggerNumbering(ilayer, ifold));
-    }
-    
-    
-    if (settings1->ZEROSIGNAL) {
-	 
-      Tools::Zero(v_banding_rfcm_forfft[0][iband],anita1->NFOUR/2);
-      Tools::Zero(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
-	  
-    }
-	
-	
-    for (int i=0;i<anita1->NFOUR/4;i++) {
-      integrate_energy_freq[iband]+=v_banding_rfcm_forfft[0][iband][2*i]*v_banding_rfcm_forfft[0][iband][2*i]+v_banding_rfcm_forfft[0][iband][2*i+1]*v_banding_rfcm_forfft[0][iband][2*i+1];
-    }
-	
-    // write the signal events to a tree
-    for (int k=0;k<anita1->NFOUR/2;k++) {
-      anita1->signal_vpol_inanita[iband][k]=v_banding_rfcm_forfft[0][iband][k];
-    }
-    anita1->integral_vmmhz_foranita=integral_vmmhz;
-	
-    // Find the p2p value before adding noise
-    anita1->peak_v_banding_rfcm[0][iband]=FindPeak(v_banding_rfcm_forfft[0][iband],anita1->NFOUR/2);
-    anita1->peak_v_banding_rfcm[1][iband]=FindPeak(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
-	
-  } // loop over bands
   // now we have converted the signal to time domain waveforms for all the bands of the antenna
       
   double integrateenergy[5]={0.,0.,0.,0.,0.};
@@ -1077,6 +966,90 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
       }
     }
     anita1->integral_vmmhz_foranita=integral_vmmhz;
+
+    Tools::Zero(v_banding_rfcm_forfft[0][iband],anita1->NFOUR/2);
+    Tools::Zero(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
+    
+    anita1->MakeArraysforFFT(v_banding_rfcm[0][iband],v_banding_rfcm[1][iband],v_banding_rfcm_forfft[0][iband],v_banding_rfcm_forfft[1][iband], 90., true);
+    
+
+    // for some reason I'm averaging over 10 neighboring bins
+    // to get rid of the zero bins
+    for (int i=0;i<anita1->NFOUR/4;i++) {
+      for (int ipol=0;ipol<2;ipol++){
+  
+        v_banding_rfcm_forfft_temp[ipol][iband][2*i]  =0.;
+        v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]=0.;
+        
+        int tempcount = 0;
+        for (int k=i;k<i+10;k++) {
+          if (k<anita1->NFOUR/4) {
+            v_banding_rfcm_forfft_temp[ipol][iband][2*i]  +=v_banding_rfcm_forfft[ipol][iband][2*k];
+            v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]+=v_banding_rfcm_forfft[ipol][iband][2*k+1];
+            tempcount++;
+          }
+        }
+        
+        v_banding_rfcm_forfft[ipol][iband][2*i]  =v_banding_rfcm_forfft_temp[ipol][iband][2*i]/tempcount;
+        v_banding_rfcm_forfft[ipol][iband][2*i+1]=v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]/tempcount;
+        
+        v_banding_rfcm_forfft_temp[ipol][iband][2*i]  =v_banding_rfcm_forfft[ipol][iband][2*i];
+        v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]=v_banding_rfcm_forfft[ipol][iband][2*i+1];
+      }
+    }
+
+    Tools::realft(v_banding_rfcm_forfft[0][iband],-1,anita1->NFOUR/2);
+    // now v_banding_rfcm_e_forfft is in the time domain
+    // and now it is really in units of V
+    
+    
+    Tools::realft(v_banding_rfcm_forfft[1][iband],-1,anita1->NFOUR/2);
+    // now v_banding_rfcm_h_forfft is in the time domain
+    // and now it is really in units of V
+
+       
+    // put it in normal time ording -T to T
+    // instead of 0 to T, -T to 0
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[0][iband]);
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
+
+    
+    if (settings1->APPLYIMPULSERESPONSETRIGGER){
+      applyImpulseResponseTrigger(settings1, anita1, anita1->GetRxTriggerNumbering(ilayer, ifold), v_banding_rfcm_forfft[0][iband], 0);
+      applyImpulseResponseTrigger(settings1, anita1, anita1->GetRxTriggerNumbering(ilayer, ifold), v_banding_rfcm_forfft[1][iband], 1);
+    }
+    
+    if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==1)){  
+      injectImpulseAtSurf(anita1, v_banding_rfcm_forfft[0][iband], v_banding_rfcm_forfft[1][iband], anita1->GetRxTriggerNumbering(ilayer, ifold));
+    }
+    
+    
+    if (settings1->ZEROSIGNAL) {
+      Tools::Zero(v_banding_rfcm_forfft[0][iband],anita1->NFOUR/2);
+      Tools::Zero(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
+    }
+  
+
+
+double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
+
+    for (int i=0;i<anita1->NFOUR/4;i++) {
+      integrate_energy_freq[iband]+=v_banding_rfcm_forfft[0][iband][2*i]*v_banding_rfcm_forfft[0][iband][2*i]+v_banding_rfcm_forfft[0][iband][2*i+1]*v_banding_rfcm_forfft[0][iband][2*i+1];
+    }
+  
+    // write the signal events to a tree
+    for (int k=0;k<anita1->NFOUR/2;k++) {
+      anita1->signal_vpol_inanita[iband][k]=v_banding_rfcm_forfft[0][iband][k];
+    }
+    anita1->integral_vmmhz_foranita=integral_vmmhz;
+  
+    // Find the p2p value before adding noise
+    anita1->peak_v_banding_rfcm[0][iband]=FindPeak(v_banding_rfcm_forfft[0][iband],anita1->NFOUR/2);
+    anita1->peak_v_banding_rfcm[1][iband]=FindPeak(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
+
+
+
+
 
 /*   std::string stemp=settings1->outputdir+"/rough_signalwaveforms.dat";
   ofstream sigout(stemp.c_str(), ios::app);
