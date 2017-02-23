@@ -834,6 +834,8 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
   int fNumPoints = anita1->HALFNFOUR;
   int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
+  double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
+
   for (int iband=0;iband<5;iband++) { // loop over bands
     if (anita1->bwslice_allowed[iband]!=1) continue;
     
@@ -958,20 +960,10 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
     } // end loop over screen points
     
 
-    // write the signal events to a tree
-    for (int iband=0;iband<5;iband++) {
-      if (anita1->bwslice_allowed[iband]!=1) continue; 
-      for (int k=0;k<anita1->NFOUR/2;k++) {
-        anita1->signal_vpol_inanita[iband][k]=v_banding_rfcm_forfft[0][iband][k];
-      }
-    }
-    anita1->integral_vmmhz_foranita=integral_vmmhz;
-
     Tools::Zero(v_banding_rfcm_forfft[0][iband],anita1->NFOUR/2);
     Tools::Zero(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
     
     anita1->MakeArraysforFFT(v_banding_rfcm[0][iband],v_banding_rfcm[1][iband],v_banding_rfcm_forfft[0][iband],v_banding_rfcm_forfft[1][iband], 90., true);
-    
 
     // for some reason I'm averaging over 10 neighboring bins
     // to get rid of the zero bins
@@ -998,22 +990,16 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
       }
     }
 
-    Tools::realft(v_banding_rfcm_forfft[0][iband],-1,anita1->NFOUR/2);
-    // now v_banding_rfcm_e_forfft is in the time domain
-    // and now it is really in units of V
-    
-    
-    Tools::realft(v_banding_rfcm_forfft[1][iband],-1,anita1->NFOUR/2);
     // now v_banding_rfcm_h_forfft is in the time domain
     // and now it is really in units of V
+    Tools::realft(v_banding_rfcm_forfft[0][iband],-1,anita1->NFOUR/2);
+    Tools::realft(v_banding_rfcm_forfft[1][iband],-1,anita1->NFOUR/2);
 
-       
     // put it in normal time ording -T to T
     // instead of 0 to T, -T to 0
     Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[0][iband]);
     Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
 
-    
     if (settings1->APPLYIMPULSERESPONSETRIGGER){
       applyImpulseResponseTrigger(settings1, anita1, anita1->GetRxTriggerNumbering(ilayer, ifold), v_banding_rfcm_forfft[0][iband], 0);
       applyImpulseResponseTrigger(settings1, anita1, anita1->GetRxTriggerNumbering(ilayer, ifold), v_banding_rfcm_forfft[1][iband], 1);
@@ -1029,9 +1015,6 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
       Tools::Zero(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
     }
   
-
-
-double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
 
     for (int i=0;i<anita1->NFOUR/4;i++) {
       integrate_energy_freq[iband]+=v_banding_rfcm_forfft[0][iband][2*i]*v_banding_rfcm_forfft[0][iband][2*i]+v_banding_rfcm_forfft[0][iband][2*i+1]*v_banding_rfcm_forfft[0][iband][2*i+1];

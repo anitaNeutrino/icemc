@@ -131,7 +131,8 @@ class ChanTrigger {
   // Used for ChanTrigger::PrepareBandWaveforms(...) and ChanTrigger::WhichBandsPass(...)
   double v_banding_rfcm_forfft[2][5][HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
   double vm_banding_rfcm_forfft[2][5][HALFNFOUR];
-  double v_banding_rfcm_forfft_temp[2][5][HALFNFOUR];
+  double v_banding_rfcm_forfft_temp[2][5][HALFNFOUR]; //use for the averaging over 10 neighboring bins
+  double v_banding_rfcm_forfft_ROUGHELEMENT[2][5][HALFNFOUR]; //use for the individual screen elements, then add to the vm_banding_rfcm_forfft[][][]
   // End of band waveform triggering arrays
     
   double integral_vmmhz;
