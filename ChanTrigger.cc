@@ -716,7 +716,7 @@ void ChanTrigger::InitializeEachBand(Anita *anita1)
 }
 
 
-void ChanTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector n_eplane, Vector n_hplane, Vector n_normal, int ilayer, int ifold)
+void ChanTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, int ilayer, int ifold)
 {
   // vmmhz is V/m/MHz at the face of the antenna
   // this gets written to a tree because it is a measure of signal strength in the frequency domain
@@ -829,12 +829,22 @@ void ChanTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, 
 }
 
 
-void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen *panel1, int ilayer, int ifold, double hitangle_e, double hitangle_h, double e_component, double h_component){
+void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ilayer, int ifold, Vector &n_eplane, Vector &n_hplane, Vector &n_normal){
 
   int fNumPoints = anita1->HALFNFOUR;
   int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
   double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
+  double e_component=0;
+  double h_component=0;
+  double n_component=0;
+  double e_component_kvector=0;
+  double h_component_kvector=0;
+  double n_component_kvector=0;
+  double hitangle_e=0;
+  double hitangle_h=0;
+
+  //bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
 
   for (int iband=0;iband<5;iband++) { // loop over bands
     if (anita1->bwslice_allowed[iband]!=1) continue;
@@ -882,6 +892,10 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
 
           // need to calculate lcp and rcp components after antenna voltages are recorded.
           v_banding_rfcm[0][iband][k]=v_banding_rfcm[1][iband][k]=anita1->vmmhz_banding_rfcm[k];
+
+          bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
+          bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
+          bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
 
           anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, v_banding_rfcm[0][iband][k], v_banding_rfcm[1][iband][k]);
         } // end if (seavey frequencies)
@@ -948,48 +962,6 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen 
       //
     } // end loop over screen points
     
-/*
-    anita1->MakeArraysforFFT(v_banding_rfcm[0][iband],v_banding_rfcm[1][iband],v_banding_rfcm_forfft[0][iband],v_banding_rfcm_forfft[1][iband], 90., true);
-
-    // for some reason I'm averaging over 10 neighboring bins
-    // to get rid of the zero bins
-    for (int i=0;i<anita1->NFOUR/4;i++) {
-      for (int ipol=0;ipol<2;ipol++){
-  
-        v_banding_rfcm_forfft_temp[ipol][iband][2*i]  =0.;
-        v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]=0.;
-        
-        int tempcount = 0;
-        for (int k=i;k<i+10;k++) {
-          if (k<anita1->NFOUR/4) {
-            v_banding_rfcm_forfft_temp[ipol][iband][2*i]  +=v_banding_rfcm_forfft[ipol][iband][2*k];
-            v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]+=v_banding_rfcm_forfft[ipol][iband][2*k+1];
-            tempcount++;
-          }
-        }
-        
-        v_banding_rfcm_forfft[ipol][iband][2*i]  =v_banding_rfcm_forfft_temp[ipol][iband][2*i]/tempcount;
-        v_banding_rfcm_forfft[ipol][iband][2*i+1]=v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]/tempcount;
-        
-        v_banding_rfcm_forfft_temp[ipol][iband][2*i]  =v_banding_rfcm_forfft[ipol][iband][2*i];
-        v_banding_rfcm_forfft_temp[ipol][iband][2*i+1]=v_banding_rfcm_forfft[ipol][iband][2*i+1];
-      }
-    }
-
-    // now v_banding_rfcm_h_forfft is in the time domain
-    // and now it is really in units of V
-    Tools::realft(v_banding_rfcm_forfft[0][iband],-1,anita1->NFOUR/2);
-    Tools::realft(v_banding_rfcm_forfft[1][iband],-1,anita1->NFOUR/2);
-
-    // put it in normal time ording -T to T
-    // instead of 0 to T, -T to 0
-    Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[0][iband]);
-    Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
-*/
-
-
-
-
 
     if (settings1->APPLYIMPULSERESPONSETRIGGER){
       applyImpulseResponseTrigger(settings1, anita1, anita1->GetRxTriggerNumbering(ilayer, ifold), v_banding_rfcm_forfft[0][iband], 0);

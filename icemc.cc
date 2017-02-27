@@ -2751,8 +2751,8 @@ int main(int argc,  char **argv) {
 
           //+++++//+++++//+++++//+++++//+++++//+++++//+++++
           // THIS IS WHERE WE ACTUALLY CONSTRUCT THE WAVEFORMS THAT GET PASSED TO THE TRIGGER
-	  chantrig1->PrepareTriggerPath(settings1, anita1, panel1, ilayer, ifold, hitangle_e, hitangle_h, e_component, h_component);
-	  Tools::Zero(sumsignal, 5);
+          chantrig1->PrepareTriggerPath(settings1, anita1, bn1, panel1, ilayer, ifold, n_eplane, n_hplane, n_normal);
+          Tools::Zero(sumsignal, 5);
           
           // now hopefully we have converted the signal to time domain waveforms
           // for all the bands of the antenna and screen points
