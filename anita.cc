@@ -3944,6 +3944,12 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
        trigEffScanPulseAtAmpa[i]=y[i];
      }
 
+     TGraph *gPulseAtAmpaUp = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/(2.6*2));
+     double *y2 = gPulseAtAmpaUp->GetY();
+     for (int i=0;i<NFOUR;i++){
+       trigEffScanPulseAtAmpaUpsampled[i]=y2[i];
+     }
+
      FFTWComplex *theFFT = FFTtools::doFFT(HALFNFOUR, trigEffScanPulseAtAmpa);
     
      for (int i=0;i<NFREQ;i++){
@@ -3952,6 +3958,7 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
      
      delete []theFFT;
      delete gPulseAtAmpaInt;
+     delete gPulseAtAmpaUp;
      delete gPulseAtAmpa;
      
      

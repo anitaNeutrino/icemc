@@ -590,6 +590,7 @@ public:
   int trigEffScanPhi;                      // central phi sector of trigger efficiency scan
   double trigEffScanAtt[5];                // attenuations to apply to central and adjecent antennas
   Double_t trigEffScanPulseAtAmpa[HALFNFOUR];
+  Double_t trigEffScanPulseAtAmpaUpsampled[NFOUR];
   Double_t trigEffScanAmplitudeAtAmpa[NFREQ];
   Double_t trigEffScanPulseAtSurf[250][HALFNFOUR];
   
