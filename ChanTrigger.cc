@@ -1691,7 +1691,18 @@ void ChanTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,dou
 #ifdef ANITA_UTIL_EXISTS    
 void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
 
-  TGraph *graph1 = new TGraph(nPoints, x, y);
+  TGraph *graph1 = NULL;
+  
+  if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)) {
+    nPoints*=2;
+    double x2[1500];
+    for (int i=0;i<nPoints;i++) x2[i] = (x[1]-x[0])*0.5*i;
+    graph1 = new TGraph(nPoints, x2, anita1->trigEffScanPulseAtAmpaUpsampled);
+
+  } else {
+    graph1 = new TGraph(nPoints, x, y);
+  }
+
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
 
@@ -1748,7 +1759,18 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
 
 void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], double *vhz, bool pol){
 
-  TGraph *graph1 = new TGraph(nPoints, x, y);
+  TGraph *graph1 = NULL;
+  
+  if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)) {
+    nPoints*=2;
+    double x2[1500];
+    for (int i=0;i<nPoints;i++) x2[i] = (x[1]-x[0])*0.5*i;
+    graph1 = new TGraph(nPoints, x2, anita1->trigEffScanPulseAtAmpaUpsampled);
+
+  } else {
+    graph1 = new TGraph(nPoints, x, y);
+  }
+
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
 
@@ -1816,8 +1838,19 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
 
   int nPoints=anita1->HALFNFOUR;
   double *x = anita1->fTimes;
+
+  TGraph *graph1 = NULL;
   
-  TGraph *graph1 = new TGraph(nPoints, x, y);
+  if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)) {
+    nPoints*=2;
+    double x2[1500];
+    for (int i=0;i<nPoints;i++) x2[i] = (x[1]-x[0])*0.5*i;
+    graph1 = new TGraph(nPoints, x2, anita1->trigEffScanPulseAtAmpaUpsampled);
+
+  } else {
+    graph1 = new TGraph(nPoints, x, y);
+  }
+  
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
 
@@ -1895,7 +1928,7 @@ void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, double volts_triggerP
     double att = anita1->trigEffScanAtt[phiIndex+2]-anita1->trigEffScanAtt[2];
     double norm = (anita1->trigEffScanAtt[phiIndex+2]==999)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=999)*1;
     for (int i=0;i<fNumPoints;i++){
-      volts_triggerPath_e[i]=norm*anita1->trigEffScanPulseAtAmpa[i]*TMath::Power(10, att/20);
+      volts_triggerPath_e[i]=norm*anita1->trigEffScanPulseAtAmpa[i]*TMath::Power(10, att/20.);
       volts_triggerPath_h[i]=0;
     }
   }else{
