@@ -2988,7 +2988,7 @@ int main(int argc,  char **argv) {
         if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 
-	cout << inu << endl;
+	//	cout << inu << endl;
 
         anita1->passglobtrig[0]=thispasses[0];
         anita1->passglobtrig[1]=thispasses[1];
