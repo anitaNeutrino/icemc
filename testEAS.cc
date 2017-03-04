@@ -421,7 +421,6 @@ int main(int argc,  char **argv) {
 
 	//reset screen parameters (even for no roughness) for the new event
 	panel1->ResetParameters();
-	panel1->ResetPositionIndex();
 	
 	// For each antenna you need to define the electric field Vmmhz by doing
 	for (int ifreq=0; ifreq<anita1->NFREQ; ifreq++){
