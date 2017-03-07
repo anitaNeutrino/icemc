@@ -421,11 +421,19 @@ int main(int argc,  char **argv) {
 
 	//reset screen parameters (even for no roughness) for the new event
 	panel1->ResetParameters();
-	
+
+	panel1->SetNvalidPoints(1);
 	// For each antenna you need to define the electric field Vmmhz by doing
-	for (int ifreq=0; ifreq<anita1->NFREQ; ifreq++){
-	  panel1->AddVmmhz_freq(0);
-	}
+        for (int k=0;k<Anita::NFREQ;k++) {
+          panel1->AddVmmhz_freq(vmmhz[k]);
+        }
+        panel1->AddDelay( 0. );
+	// Use this to add the direction
+	panel1->AddVec2bln(direction);
+	// Use this to add direction of polarization
+	panel1->AddPol(n_pol);
+        panel1->AddWeight( 1. );
+        panel1->SetWeightNorm( 1. );
 
 	// set the position of the source
 	sourceLon=sourceLat=sourceAlt=0;
