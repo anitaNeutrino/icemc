@@ -247,12 +247,28 @@ int main(int argc,  char **argv) {
   Vector n_hplane = -const_y;
   Vector n_normal = const_x;
 
+  Vector n_pol; // direction of polarization
+  Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
+  Vector direction2bn; // direction from EAS to balloon
+  Vector direction2bn_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction from EAS to balloon
 
+  // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
+  double e_component=0; // E comp along polarization
+  double h_component=0; // H comp along polarization
+  double n_component=0; // normal comp along polarization
+
+  double e_component_kvector=0; // component of e-field along the rx e-plane
+  double h_component_kvector=0; // component of the e-field along the rx h-plane
+  double n_component_kvector=0; // component of the e-field along the normal
+
+
+  double hitangle_e, hitangle_h;       // angle the ray hits the antenna wrt e-plane, h-plane
+  double hitangle_e_all[Anita::NANTENNAS_MAX];         // hit angles rel. to e plane stored for each antenna
+  double hitangle_h_all[Anita::NANTENNAS_MAX];         // hit angles rel. to h plane stored for each antenna
+  
   double sourceLon;
   double sourceAlt;
   double sourceLat;
-  // double sourceMag;
-
 
 
   int l3trig[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
@@ -365,6 +381,7 @@ int main(int argc,  char **argv) {
   int passes_thisevent=0;
   int passestrigger=0;
   int count_total=0;
+  int count_rx=0;
   
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
@@ -392,18 +409,25 @@ int main(int argc,  char **argv) {
       // Picks the balloon position and at the same time sets the masks and thresholds
     bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
     
+    // BR: Here calculate the direction to the balloon
+    // And the polarization
+    // direction2bn = something something something
+    // n_pol        = something something something
+    // if you decide to evaluate a different direction per antenna, then you should define also
+    // direction2bn_eachboresight = something something something
+    // n_pol_eachboresight        = something something something
 
+    
     
     // make a global trigger object (but don't touch the electric fences)
     globaltrig1 = new GlobalTrigger(settings1, anita1);
     
     Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-    // if (!settings1->TRIGGEREFFSCAN){
-    //   if(settings1->BORESIGHTS)
-    // 	anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2],bn1,settings1);
-    //   else
-    // 	anita1->GetArrivalTimes(ray1->n_exit2bn[2],bn1,settings1);
-    // }
+    
+    if(settings1->BORESIGHTS)
+      anita1->GetArrivalTimesBoresights(direction2bn_eachboresight,bn1,settings1);
+    else
+      anita1->GetArrivalTimes(direction2bn,bn1,settings1);
     
     anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times, settings1->NANTENNAS);
     
@@ -412,7 +436,7 @@ int main(int argc,  char **argv) {
     anita1->rms_rfcm_e_single_event = 0;
 
 
-    
+    count_rx=0;
     for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
       for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
 	
@@ -423,13 +447,15 @@ int main(int argc,  char **argv) {
 	panel1->ResetParameters();
 
 	panel1->SetNvalidPoints(1);
+
+	// BR: Add here the electric field at the payload before it gets through the antennas
 	// For each antenna you need to define the electric field Vmmhz by doing
         for (int k=0;k<Anita::NFREQ;k++) {
           panel1->AddVmmhz_freq(vmmhz[k]);
         }
         panel1->AddDelay( 0. );
 	// Use this to add the direction
-	panel1->AddVec2bln(direction);
+	panel1->AddVec2bln(direction2bn);
 	// Use this to add direction of polarization
 	panel1->AddPol(n_pol);
         panel1->AddWeight( 1. );
@@ -437,25 +463,23 @@ int main(int argc,  char **argv) {
 
 	// set the position of the source
 	sourceLon=sourceLat=sourceAlt=0;
+	
+	bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
 
-	
-	
-	//	bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
-	// // for this (hitangle_h_all[count_rx]=hitangle_h;) and histogram fill, use specular case
-	// //although the GetEcomp..() functions are called in ConvertInputWFtoAntennaWF() to calculate the actual waveforms
-	// if (!settings1->BORESIGHTS) {
-	//   bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
-	//   bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
-	// }
-	// else{ // i.e. if BORESIGHTS is true
-	//   bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector,  h_component_kvector,  n_component_kvector);
-	//   bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol_eachboresight[ilayer][ifold], e_component,  h_component,  n_component);
-	//   fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold] << " " << mag1_eachboresight[ilayer][ifold] << "\n";
-	// }
-	// bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
-	// // store hitangles for plotting
-        //   hitangle_h_all[count_rx]=hitangle_h;
-        //   hitangle_e_all[count_rx]=hitangle_e;
+	// for this (hitangle_h_all[count_rx]=hitangle_h;) and histogram fill, use specular case
+	//although the GetEcomp..() functions are called in ConvertInputWFtoAntennaWF() to calculate the actual waveforms
+	if (!settings1->BORESIGHTS) {
+	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  direction2bn, e_component_kvector,  h_component_kvector,  n_component_kvector);
+	  bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
+	}
+	else{ // i.e. if BORESIGHTS is true
+	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector,  h_component_kvector,  n_component_kvector);
+	  bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol_eachboresight[ilayer][ifold], e_component,  h_component,  n_component);
+	}
+	bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
+	// store hitangles for plotting
+	hitangle_h_all[count_rx]=hitangle_h;
+	hitangle_e_all[count_rx]=hitangle_e;
 	// for debugging
 
 	chantrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, n_eplane,  n_hplane,  n_normal, ilayer, ifold);
@@ -476,7 +500,8 @@ int main(int argc,  char **argv) {
 	
 		
 	delete chantrig1;
-	
+
+	count_rx++;
       } //loop through the phi-fold antennas
     }  //loop through the layers of antennas
     
@@ -629,12 +654,12 @@ int main(int argc,  char **argv) {
       truthEvPtr->run              = run_no;
       truthEvPtr->nuMom            = 0; //pnu;
       truthEvPtr->nu_pdg           = 0; //pdgcode;
-      truthEvPtr->e_component      = 0; //e_component;
-      truthEvPtr->h_component      = 0; //h_component;
-      truthEvPtr->n_component      = 0; //n_component;
-      truthEvPtr->e_component_k    = 0; //e_component_kvector;
-      truthEvPtr->h_component_k    = 0; //h_component_kvector;
-      truthEvPtr->n_component_k    = 0; //n_component_kvector;
+      truthEvPtr->e_component      = e_component;
+      truthEvPtr->h_component      = h_component;
+      truthEvPtr->n_component      = n_component;
+      truthEvPtr->e_component_k    = e_component_kvector;
+      truthEvPtr->h_component_k    = h_component_kvector;
+      truthEvPtr->n_component_k    = n_component_kvector;
       truthEvPtr->sourceLon        = sourceLon;
       truthEvPtr->sourceLat        = sourceLat;
       truthEvPtr->sourceAlt        = sourceAlt;
@@ -652,8 +677,8 @@ int main(int argc,  char **argv) {
 	}
       }
       for (int i=0;i<48;i++){
-	truthEvPtr->hitangle_e[i]  = 0; //hitangle_e_all[i];
-	truthEvPtr->hitangle_h[i]  = 0; //hitangle_h_all[i];
+	truthEvPtr->hitangle_e[i]  = hitangle_e_all[i];
+	truthEvPtr->hitangle_h[i]  = hitangle_h_all[i];
       }
       if(settings1->ROUGHNESS){
 	for (int i=0;i<Anita::NFREQ;i++)
