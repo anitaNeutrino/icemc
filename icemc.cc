@@ -2123,7 +2123,7 @@ int main(int argc,  char **argv) {
         int basescreenDivisions = 10;
         double basescreenFractionLimit = 0.1;
         double subscreenFractionLimit = 1e-2;
-        int maximumSubscreenGeneration = 3;  // value is inclusive
+        int maximumSubscreenGeneration = 4;  // value is inclusive
         int subscreenDivisions = 4;
 
         int num_validscreenpoints = 0;
@@ -2754,6 +2754,23 @@ int main(int argc,  char **argv) {
           chantrig1->PrepareTriggerPath(settings1, anita1, bn1, panel1, ilayer, ifold, n_eplane, n_hplane, n_normal);
           Tools::Zero(sumsignal, 5);
           
+
+/*    std::string nunum = std::to_string(inu);
+   std::string stemp=settings1->outputdir+"/rough_signalwaveforms_"+nunum+".dat";
+  ofstream sigout(stemp.c_str(), ios::app);
+    for (int iband=0;iband<5;iband++) {
+      if (anita1->bwslice_allowed[iband]!=1) continue; 
+      for (int k=0;k<anita1->NFOUR/2;k++) {
+        sigout << ilayer << "  "
+               << ifold << "  "
+               << iband << "  "
+               << k << "  "
+               << anita1->signal_vpol_inanita[iband][k] << std::endl;
+      }
+    }
+  sigout.close();*/
+
+
           // now hopefully we have converted the signal to time domain waveforms
           // for all the bands of the antenna and screen points
 
