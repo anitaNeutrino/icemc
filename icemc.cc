@@ -2323,7 +2323,7 @@ int main(int argc,  char **argv) {
             // calculate polarization transformation matrix coefficients (from Bahar 1995, page 535); treat a_y = normal at specular exit point
             vec_specularnormal = antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit();
             // transmitted polarization needs to be perpendicular to to-balloon vector, and the horizontal component is 'set', so need to find appropriate vector for the vertical component to ensure perpendicularity
-            npol_local_trans = panel1->CalculateTransmittedPolarization(interaction1->nnu, vec_specularnormal, vec_localnormal, vec_pos_current_to_balloon, vec_nnu_to_impactPoint, npol_local_inc);
+            npol_local_trans = rough1->CalculateTransmittedPolarization(interaction1->nnu, vec_specularnormal, vec_localnormal, vec_pos_current_to_balloon, vec_nnu_to_impactPoint, npol_local_inc);
             if(npol_local_trans[0]!=npol_local_trans[0]){
               continue;   // skip if transmitted polarization is undefined
             }
