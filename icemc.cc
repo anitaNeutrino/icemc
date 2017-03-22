@@ -584,8 +584,7 @@ int main(int argc,  char **argv) {
 
   int fSCREEN_NUMPOINTS_EDGE = settings1->ROUGHNESS;
   Screen *panel1 = new Screen(fSCREEN_NUMPOINTS_EDGE);              // create new instance of the screen class
-  //stemp=settings1->outputdir+"/rough_groundvalues.dat";
-  //ofstream roughout(stemp.c_str());
+
   if(spectra1->IsSpectrum()) cout<<" Lowest energy for spectrum is 10^18 eV! \n";
 
   // declare instance of trigger class.
@@ -1447,7 +1446,11 @@ int main(int argc,  char **argv) {
     //reset screen parameters (even for no roughness) for the new event
     panel1->ResetParameters();
     panel1->ResetPositionIndex();
-
+    std::string nunum = std::to_string(inu);
+    //stemp=settings1->outputdir+"/rough_groundvalues_"+nunum+".dat";
+    //ofstream roughout(stemp.c_str());
+    //stemp=settings1->outputdir+"/rough_evtweight_"+nunum+".dat";
+    //ofstream evtwgtout(stemp.c_str());
     for (whichray = settings1->MINRAY; whichray <= settings1->MAXRAY; whichray++) {
       anita1->passglobtrig[0]=0;
       anita1->passglobtrig[1]=0;
@@ -2331,7 +2334,7 @@ int main(int argc,  char **argv) {
             seedscreens_vmmhzlocal.push_back( Emag_local );
             seedscreens_2bln.push_back(vec_pos_current_to_balloon);
             seedscreens_pols.push_back(npol_local_trans);
-            seedscreens_propdelay.push_back( (pathlength_specular-pathlength_local) / CLIGHT );
+            seedscreens_propdelay.push_back( (pathlength_specular-pathlength_local) / CLIGHT ); //need to account for speed difference in ice versus in air? negligible?
             seedscreens_impactpt.push_back(pos_projectedImpactPoint);
             seedscreens_viewangle.push_back(viewangle_local);
           }// end for jj for this seed screen
@@ -2397,7 +2400,11 @@ int main(int argc,  char **argv) {
           /*roughout << inu << "  "
                    << panel1->GetImpactPt(jj).Lon() << "  "
                    << -90+panel1->GetImpactPt(jj).Lat() << "  "
-                   << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << std::endl;*/
+                   << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << "  "
+                   << panel1->GetDelay(jj) << "  "
+                   << panel1->GetWeight(jj) << "  "
+                   << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
+                   << std::endl;*/
 
         }//end jj over panel Nvalid points
         panel1->SetWeightNorm(validScreenSummedArea);
@@ -2755,7 +2762,7 @@ int main(int argc,  char **argv) {
           Tools::Zero(sumsignal, 5);
           
 
-/*    std::string nunum = std::to_string(inu);
+/*
    std::string stemp=settings1->outputdir+"/rough_signalwaveforms_"+nunum+".dat";
   ofstream sigout(stemp.c_str(), ios::app);
     for (int iband=0;iband<5;iband++) {
@@ -2765,7 +2772,9 @@ int main(int argc,  char **argv) {
                << ifold << "  "
                << iband << "  "
                << k << "  "
-               << anita1->signal_vpol_inanita[iband][k] << std::endl;
+               << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
+               << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
+               << std::endl;
       }
     }
   sigout.close();*/
@@ -3441,6 +3450,25 @@ int main(int argc,  char **argv) {
       //
       /////////////
 
+/*Vector tempa = ray1->n_exit2bn[2].Unit() - antarctica->GetSurfaceNormal(bn1->r_bn).Dot(ray1->n_exit2bn[2].Unit()) * antarctica->GetSurfaceNormal(bn1->r_bn);
+Position posa = ray1->rfexit[2] + 300.*tempa;
+Vector tempb = interaction1->nnu.Unit() - antarctica->GetSurfaceNormal(interaction1->posnu).Dot(interaction1->nnu.Unit()) * antarctica->GetSurfaceNormal(interaction1->posnu);
+Position posb = interaction1->posnu + 300.*tempb;
+
+evtwgtout << weight << "  "
+          << thispasses[0] << "  "
+          << anita1->pol_allowed[0] << "  "
+          << thispasses[1] << "  "
+          << anita1->pol_allowed[1] << "  "
+          << ray1->rfexit[2].Lon()<< "  "
+          << -90+ray1->rfexit[2].Lat()<< "  "
+          << posa.Lon() <<"  "
+          << -90+posa.Lat()<<"  "
+          << interaction1->posnu.Lon() << "  "
+          << -90+interaction1->posnu.Lat() << "  "
+          << posb.Lon() <<"  "
+          <<-90+posb.Lat()<<"  "
+<<std::endl;*/
       delete globaltrig1;
 
       // keeping track of intermediate counters,  incrementing by weight1.
@@ -3461,7 +3489,8 @@ int main(int argc,  char **argv) {
       }//end if
 
     } // end for WHICHRAY
-
+//roughout.close();
+//evtwgtout.close();
     //looping over two types of rays - upgoing and downgoing.
     if (ABORT_EARLY){
       std::cout << "\n***********************************************************";
@@ -3478,8 +3507,6 @@ int main(int argc,  char **argv) {
     }
   }//end NNU neutrino loop
 
-  // Finished with individual neutrinos now ...
-//roughout.close();
 
   gRandom=rsave;
   delete Rand3;
