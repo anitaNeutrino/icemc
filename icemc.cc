@@ -2123,11 +2123,11 @@ int main(int argc,  char **argv) {
 
         //these values are not optimized, and actually could be configured in the input file
         double basescreenedgelength = settings1->SCREENEDGELENGTH / settings1->ROUGHSIZE;
-        int basescreenDivisions = 10;
-        double basescreenFractionLimit = 0.1;
-        double subscreenFractionLimit = 1e-2;
-        int maximumSubscreenGeneration = 4;  // value is inclusive
-        int subscreenDivisions = 4;
+        int basescreenDivisions = settings1->ROUGHSCREENDIV_BASE;
+        int maximumSubscreenGeneration = settings1->ROUGHSCREENDIV_SUB;
+        double basescreenFractionLimit = settings1->ROUGHSCREENFRAC_BASE;
+        double subscreenFractionLimit = settings1->ROUGHSCREENFRAC_SUB;
+        int subscreenDivisions = settings1->ROUGHMAXGEN;
 
         int num_validscreenpoints = 0;
         Position pos_basescreen_centralpos;
@@ -2214,9 +2214,10 @@ int main(int argc,  char **argv) {
 
           /////
           // Field Magnitude
+          theta_local = asin(NFIRN/1.5 * sin(theta_local)); //for power look-up, re-adjust transmitted angle for what it "would be" for snow
           interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
           Emag_local = vmmhz1m_max
-                        * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local));
+                        * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local)) / rough1->GetFresnelCorrectionFactor(theta_0_local);
           // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
           pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
           Emag_local /= pathlength_local ;
@@ -2299,8 +2300,10 @@ int main(int argc,  char **argv) {
             /////
             // Field Magnitude
             element_sa = ( panel1->GetEdgeLength()/panel1->GetNsamples() / pos_projectedImpactPoint.Distance(pos_current) ) * 180./PI;
+            theta_local = asin(NFIRN/1.5 * sin(theta_local)); //for power look-up, re-adjust transmitted angle for what it "would be" for snow
             interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
-            double transfactor= sqrt(interpolatedPower*element_sa / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local));
+            // Loss factor is in power, Fresnel is the field coefficient
+            double transfactor= sqrt(interpolatedPower*element_sa / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local) ) / rough1->GetFresnelCorrectionFactor(theta_0_local);
             Emag_local = vmmhz1m_max*transfactor;
             // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
             pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
@@ -2396,16 +2399,16 @@ int main(int argc,  char **argv) {
           
           Efield_local = panel1->GetVmmhz_freq(jj*Anita::NFREQ) * panel1->GetPol(jj);
           Efield_screentotal = Efield_screentotal + Efield_local;
-
-          /*roughout << inu << "  "
+/*
+          roughout << inu << "  "
                    << panel1->GetImpactPt(jj).Lon() << "  "
                    << -90+panel1->GetImpactPt(jj).Lat() << "  "
                    << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << "  "
                    << panel1->GetDelay(jj) << "  "
                    << panel1->GetWeight(jj) << "  "
                    << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
-                   << std::endl;*/
-
+                   << std::endl;
+*/
         }//end jj over panel Nvalid points
         panel1->SetWeightNorm(validScreenSummedArea);
         vmmhz_max = Efield_screentotal.Mag();
@@ -2763,7 +2766,7 @@ int main(int argc,  char **argv) {
           
 
 /*
-   std::string stemp=settings1->outputdir+"/rough_signalwaveforms_"+nunum+".dat";
+  std::string stemp=settings1->outputdir+"/rough_signalwaveforms_"+nunum+".dat";
   ofstream sigout(stemp.c_str(), ios::app);
     for (int iband=0;iband<5;iband++) {
       if (anita1->bwslice_allowed[iband]!=1) continue; 
@@ -2777,8 +2780,8 @@ int main(int argc,  char **argv) {
                << std::endl;
       }
     }
-  sigout.close();*/
-
+  sigout.close();
+*/
 
           // now hopefully we have converted the signal to time domain waveforms
           // for all the bands of the antenna and screen points
@@ -3450,11 +3453,11 @@ int main(int argc,  char **argv) {
       //
       /////////////
 
-/*Vector tempa = ray1->n_exit2bn[2].Unit() - antarctica->GetSurfaceNormal(bn1->r_bn).Dot(ray1->n_exit2bn[2].Unit()) * antarctica->GetSurfaceNormal(bn1->r_bn);
+Vector tempa = ray1->n_exit2bn[2].Unit() - antarctica->GetSurfaceNormal(bn1->r_bn).Dot(ray1->n_exit2bn[2].Unit()) * antarctica->GetSurfaceNormal(bn1->r_bn);
 Position posa = ray1->rfexit[2] + 300.*tempa;
 Vector tempb = interaction1->nnu.Unit() - antarctica->GetSurfaceNormal(interaction1->posnu).Dot(interaction1->nnu.Unit()) * antarctica->GetSurfaceNormal(interaction1->posnu);
 Position posb = interaction1->posnu + 300.*tempb;
-
+/*
 evtwgtout << weight << "  "
           << thispasses[0] << "  "
           << anita1->pol_allowed[0] << "  "
