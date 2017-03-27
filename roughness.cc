@@ -342,3 +342,12 @@ Vector Roughness::CalculateTransmittedPolarization(const Vector &nnu, Vector vec
 
   return npol_local_trans;
 };
+
+
+double Roughness::AdjustTransmissionAngle(double n1_old, double n1_new, double trans_angle_old){
+  double temp = n1_new / n1_old * sin(trans_angle_old);
+  if(temp<1.)
+    return asin( temp );
+  else
+    return PI/2.;
+};

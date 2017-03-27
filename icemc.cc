@@ -2122,7 +2122,7 @@ int main(int argc,  char **argv) {
         //(pos)    posnu:               position of neutrino interaction
 
         //these values are not optimized, and actually could be configured in the input file
-        double basescreenedgelength = settings1->SCREENEDGELENGTH / settings1->ROUGHSIZE;
+        double basescreenedgelength = settings1->SCREENEDGELENGTH;
         int basescreenDivisions = settings1->ROUGHSCREENDIV_BASE;
         int maximumSubscreenGeneration = settings1->ROUGHSCREENDIV_SUB;
         double basescreenFractionLimit = settings1->ROUGHSCREENFRAC_BASE;
@@ -2214,7 +2214,7 @@ int main(int argc,  char **argv) {
 
           /////
           // Field Magnitude
-          theta_local = asin(NFIRN/1.5 * sin(theta_local)); //for power look-up, re-adjust transmitted angle for what it "would be" for snow
+          theta_local = rough1->AdjustTransmissionAngle(NFIRN, 1.5, theta_local); //for power look-up, re-adjust transmitted angle for what it "would be" for snow
           interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
           Emag_local = vmmhz1m_max
                         * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local)) / rough1->GetFresnelCorrectionFactor(theta_0_local);
@@ -2300,7 +2300,7 @@ int main(int argc,  char **argv) {
             /////
             // Field Magnitude
             element_sa = ( panel1->GetEdgeLength()/panel1->GetNsamples() / pos_projectedImpactPoint.Distance(pos_current) ) * 180./PI;
-            theta_local = asin(NFIRN/1.5 * sin(theta_local)); //for power look-up, re-adjust transmitted angle for what it "would be" for snow
+            theta_local = rough1->AdjustTransmissionAngle(NFIRN, 1.5, theta_local); //for power look-up, re-adjust transmitted angle for what it "would be" for snow
             interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
             // Loss factor is in power, Fresnel is the field coefficient
             double transfactor= sqrt(interpolatedPower*element_sa / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local) ) / rough1->GetFresnelCorrectionFactor(theta_0_local);
@@ -2765,7 +2765,7 @@ int main(int argc,  char **argv) {
           Tools::Zero(sumsignal, 5);
           
 
-/*
+
   std::string stemp=settings1->outputdir+"/rough_signalwaveforms_"+nunum+".dat";
   ofstream sigout(stemp.c_str(), ios::app);
     for (int iband=0;iband<5;iband++) {
@@ -2781,7 +2781,7 @@ int main(int argc,  char **argv) {
       }
     }
   sigout.close();
-*/
+
 
           // now hopefully we have converted the signal to time domain waveforms
           // for all the bands of the antenna and screen points

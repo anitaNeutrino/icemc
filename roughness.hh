@@ -90,6 +90,8 @@ public:
   double ConvertTheta0GlassAir_to_AirGlass(double T1);
 
   Vector CalculateTransmittedPolarization(const Vector &nnu, Vector vec_specularnormal, Vector vec_localnormal, Vector vec_pos_current_to_balloon, Vector vec_nnu_to_impactPoint, Vector npol_local_inc);
+
+  double AdjustTransmissionAngle(double n1_old, double n1_new, double trans_angle_old);
 };
 //double rough_sigma_0=0.002;
 #endif
