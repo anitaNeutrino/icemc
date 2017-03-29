@@ -820,8 +820,8 @@ void ChanTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, 
         Tools::ShiftLeft(tmp_volts_rx_h_forfft, anita1->HALFNFOUR, numBinShift );
       }
       else if( panel1->GetDelay(jpt)<0 ){
-        Tools::ShiftLeft(tmp_volts_rx_e_forfft, anita1->HALFNFOUR, -1*numBinShift );
-        Tools::ShiftLeft(tmp_volts_rx_h_forfft, anita1->HALFNFOUR, -1*numBinShift );
+        Tools::ShiftRight(tmp_volts_rx_e_forfft, anita1->HALFNFOUR, -1*numBinShift );
+        Tools::ShiftRight(tmp_volts_rx_h_forfft, anita1->HALFNFOUR, -1*numBinShift );
       }
     
       for (int ii=0; ii<Anita::HALFNFOUR; ii++){
@@ -980,8 +980,8 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Balloon
           Tools::ShiftLeft(v_banding_rfcm_forfft_ROUGHELEMENT[1][iband], anita1->NFOUR/2, numBinShift );
         }
         else if( panel1->GetDelay(jpt)<0 ){
-          Tools::ShiftLeft(v_banding_rfcm_forfft_ROUGHELEMENT[0][iband], anita1->NFOUR/2, -1*numBinShift );
-          Tools::ShiftLeft(v_banding_rfcm_forfft_ROUGHELEMENT[1][iband], anita1->NFOUR/2, -1*numBinShift );
+          Tools::ShiftRight(v_banding_rfcm_forfft_ROUGHELEMENT[0][iband], anita1->NFOUR/2, -1*numBinShift );
+          Tools::ShiftRight(v_banding_rfcm_forfft_ROUGHELEMENT[1][iband], anita1->NFOUR/2, -1*numBinShift );
         }
     
         for (int k=0;k<anita1->NFOUR/2;k++) {
