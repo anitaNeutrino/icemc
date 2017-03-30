@@ -342,6 +342,9 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
     // kim's livetime for anita
     anita1->LIVETIME=17.*24.*3600.; // for anita, take 34.78 days * 0.75 efficiency
   }
+  else if (bn1->WHICHPATH==7){
+    anita1->LIVETIME=28.5*24*3600;  // Anita-2 livetime taken from paper
+  }
   else if (bn1->WHICHPATH==8){
     anita1->LIVETIME=17.4*24*3600;  // Anita-3 livetime taken from Ben Strutt's thesis (elog note 698)
   } else {
@@ -544,7 +547,12 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   if (SIGNAL_FLUCT!=1){
     std::cout << "Non-default setting:  SIGNAL_FLUCT= " << SIGNAL_FLUCT << std::endl;
   }
-  getSetting("Zero signal", ZEROSIGNAL);
+
+  getSetting("Zero signal", ZEROSIGNAL); 
+  if (ZEROSIGNAL!=0){
+    std::cout << "Non-default setting:  ZEROSIGNAL= " << ZEROSIGNAL << std::endl;
+  }
+  
   getSetting("Random rotation polarization", RANDOMISEPOL);
   int useLPM;
   getSetting("LPM effect", useLPM);
