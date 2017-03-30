@@ -3777,8 +3777,11 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
       }
     }
     // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
-    norm = 48.;
+    //  norm = 48.;
 
+    // There was a 20dB amplifier at the scope that was not considered in the evaluation of the impulse response
+    norm = TMath::Power(10, 20./20.);
+    
     // Impulse response already accounts for trigger/digitizer splitter
     norm *= sqrt(2);
 
@@ -3806,7 +3809,11 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 	Double_t *newx = grInt->GetX();
 	Double_t *newy = grInt->GetY();
 	// Normalise
-	for (int i=0;i<nPoints;i++) newy[i]=newy[i]*norm;
+	for (int i=0;i<nPoints;i++){
+	  newy[i]=newy[i]*norm;
+	  // change time axis from ns to s
+	  newx[i]=newx[i]*1E-9;
+	}
 	// Pave to 0
 	int paveNum = 8533;
 	grTemp = new TGraph(nPoints,  newx, newy);
@@ -3868,8 +3875,11 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
       }
     }
     // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
-    norm = 48.;
+    //    norm = 48.;
 
+    // There was a 20dB amplifier at the scope that was not considered in the evaluation of the impulse response
+    norm = TMath::Power(10, 20./20.);
+    
     // Impulse response already accounts for trigger/digitizer splitter
     norm *= sqrt(2);
   }
