@@ -491,7 +491,7 @@ int main(int argc,  char **argv) {
       case 'o':
         settings1->outputdir=optarg;
         cout << "Changed output directory to: " << settings1->outputdir << endl;
-        stemp="mkdir " + settings1->outputdir;
+        stemp="mkdir -p " + settings1->outputdir;
         system(stemp.c_str());
         break;
       case 'e':
