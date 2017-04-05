@@ -2765,7 +2765,7 @@ int main(int argc,  char **argv) {
           Tools::Zero(sumsignal, 5);
           
 
-
+/*
   std::string stemp=settings1->outputdir+"/rough_signalwaveforms_"+nunum+".dat";
   ofstream sigout(stemp.c_str(), ios::app);
     for (int iband=0;iband<5;iband++) {
@@ -2781,7 +2781,7 @@ int main(int argc,  char **argv) {
       }
     }
   sigout.close();
-
+*/
 
           // now hopefully we have converted the signal to time domain waveforms
           // for all the bands of the antenna and screen points
