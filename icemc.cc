@@ -62,6 +62,7 @@
 #include "screen.hh"
 #include "GlobalTrigger.h"
 #include "ChanTrigger.h"
+#include "SimulatedSignal.h"
 
 #include <string>
 #include <sstream>
@@ -2507,11 +2508,19 @@ int main(int argc,  char **argv) {
         //   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
         // and making an array across frequency bins by putting in frequency dependence.
       }
+        
+        //oindree: define the SimulatedSignal
+        SimulatedSignal *sim_signal = new SimulatedSignal(Anita::NFREQ, anita1->freq, vmmhz);
+        //After this, everything happening to vmmhz should happen to sim_signal
+        //so figure out what happens to vmmhz then do it to sim_signal as well
+        
+        
       
       // For each frequency,  get the width of Cerenkov cone
       // and size of signal once position of viewing angle is taken into account
 
       // these variables are for energy reconstruction studies
+        
       undogaintoheight_e=0;
       undogaintoheight_h=0;
 
