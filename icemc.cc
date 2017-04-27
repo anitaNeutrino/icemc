@@ -432,6 +432,9 @@ int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt);
 #endif
 
 
+double thresholdsAnt[48][2][5];
+double thresholdsAntPass[48][2][5];
+
 
 //do a threshold scan
 double threshold_start=-1.;
@@ -940,6 +943,8 @@ int main(int argc,  char **argv) {
   finaltree->Branch("inu", &inu, "inu/I");
   finaltree->Branch("vmmhz_min", &vmmhz_min, "vmmhz_min/D");
   finaltree->Branch("vmmhz_max", &vmmhz_max, "vmmhz_max/D");
+  finaltree->Branch("thresholdsAnt", &thresholdsAnt, "thresholdsAnt[48][2][5]/D");
+  finaltree->Branch("thresholdsAntPass", &thresholdsAntPass, "thresholdsAntPass[48][2][5]/D");
   finaltree->Branch("horizcoord", &horizcoord, "horizcoord/D");
   finaltree->Branch("vertcoord", &vertcoord, "vertcoord/D");
   finaltree->Branch("horizcoord_bn", &bn1->horizcoord_bn, "horizcoord_bn/D");
@@ -1433,6 +1438,8 @@ int main(int argc,  char **argv) {
   } else if (settings1->WHICH==9 || settings1->WHICH==10){
     gps_offset=45;
   } else gps_offset=0;
+
+  int antNum;
 
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
@@ -2712,7 +2719,7 @@ int main(int argc,  char **argv) {
 
       globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
       anita1->rms_rfcm_e_single_event = 0;
-
+      
       for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
         for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
           
@@ -2748,7 +2755,8 @@ int main(int argc,  char **argv) {
           
           chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
-
+	  antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
+	  
           //+++++//+++++//+++++//+++++//+++++//+++++//+++++
           // THIS IS WHERE WE ACTUALLY CONSTRUCT THE WAVEFORMS THAT GET PASSED TO THE TRIGGER
           chantrig1->PrepareTriggerPath(settings1, anita1, bn1, panel1, ilayer, ifold, n_eplane, n_hplane, n_normal);
@@ -2822,8 +2830,9 @@ int main(int argc,  char **argv) {
 
           //+++++//+++++//+++++//+++++//+++++//+++++//+++++
 
-          chantrig1->WhichBandsPass(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac);
+          chantrig1->WhichBandsPass(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac, thresholdsAnt[antNum]);
 
+	  
           if (Anita::GetAntennaNumber(ilayer, ifold)==anita1->rx_minarrivaltime) {
             for (int iband=0;iband<5;iband++) {
               for (int ipol=0;ipol<2;ipol++) {
@@ -2879,7 +2888,6 @@ int main(int argc,  char **argv) {
           delete chantrig1;
         } //loop through the phi-fold antennas
       }  //loop through the layers of antennas
-
 
       anita1->rms_rfcm_e_single_event = sqrt(anita1->rms_rfcm_e_single_event / (anita1->HALFNFOUR * settings1->NANTENNAS));
 
