@@ -495,8 +495,10 @@ int main(int argc,  char **argv) {
 	chantrig1->PrepareTriggerPath(settings1, anita1, bn1, panel1, ilayer, ifold, n_eplane, n_hplane, n_normal);
 	
 	
+
+	double thresholds[2][5];
 	//+++++//+++++//+++++//+++++//+++++//+++++//+++++
-	chantrig1->WhichBandsPass(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold,  0, 0, 0);
+	chantrig1->WhichBandsPass(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold,  0, 0, 0, thresholds);
 	
 		
 	delete chantrig1;
