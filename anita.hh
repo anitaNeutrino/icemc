@@ -144,10 +144,10 @@ public:
   int iturfevent;
 
   static const int npointThresh = 1640;
-  Int_t threshScanThresh[2][48][npointThresh]; // adc thresholds from threshold scan
-  Int_t threshScanScaler[2][48][npointThresh]; // scalers from threshold scan
-  Int_t minadcthresh[2][48];
-  Int_t maxadcthresh[2][48];
+  Float_t threshScanThresh[2][48][npointThresh]; // adc thresholds from threshold scan
+  Float_t threshScanScaler[2][48][npointThresh]; // scalers from threshold scan
+  Float_t minadcthresh[2][48];
+  Float_t maxadcthresh[2][48];
 
   void setphiTrigMaskAnita3(UInt_t realTime_flightdata);
   void setphiTrigMask(UInt_t realTime_flightdata);

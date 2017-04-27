@@ -902,8 +902,9 @@ void Anita::readVariableThresholds(Settings *settings1){
 
     
   }else if (settings1->WHICH==9){ // ANITA-3
-    fturf=new TFile("data/turfrate_icemc_anita3.root");
 
+    // Reading in masking every 60 seconds
+    fturf=new TFile("data/SampleTurf_icemc_anita3.root");
     turfratechain=(TTree*)fturf->Get("turfrate_icemc");
     turfratechain->SetMakeClass(1);
     turfratechain->SetBranchAddress("phiTrigMask",&phiTrigMask);
@@ -917,9 +918,8 @@ void Anita::readVariableThresholds(Settings *settings1){
     turfratechain->GetEvent(turfratechain->GetEntries()-1);
     realTime_tr_max=realTime_turfrate; // realTime of last event in file
 
-
-    // Reading in average thresholds/scalers every 60 seconds
-    fsurf=new TFile("data/AvgSurf_icemc_anita3.root");
+    // Reading in thresholds/scalers every 60 seconds
+    fsurf=new TFile("data/SampleSurf_icemc_anita3.root");
     surfchain=(TTree*)fsurf->Get("surf_icemc");
     surfchain->SetMakeClass(1);
     surfchain->SetBranchAddress("thresholds",   &thresholds   );
