@@ -655,6 +655,13 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Surface roughness", ROUGHSIZE);
   getSetting("Screen edge length [meters]", SCREENEDGELENGTH);
   getSetting("Interaction position shift [meters]", ROUGH_INTPOS_SHIFT);
+
+  getSetting("Base screen divisions", ROUGHSCREENDIV_BASE);
+  getSetting("Subgrid divisions", ROUGHSCREENDIV_SUB);
+  getSetting("Base screen fraction threshold", ROUGHSCREENFRAC_BASE);
+  getSetting("Subgrid fraction threshold", ROUGHSCREENFRAC_SUB);
+  getSetting("Number of subgrid generations", ROUGHMAXGEN);
+
   getSetting("FIRN", FIRN);
   if (FIRN==0){
     std::cout << "Warning!  Non-standard parameter setting.  FIRN = " << FIRN << std::endl;

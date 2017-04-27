@@ -771,7 +771,7 @@ void ChanTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, 
   double tmp_volts_rx_e_forfft[Anita::HALFNFOUR];
   double tmp_volts_rx_h_forfft[Anita::HALFNFOUR];
 
-
+  int numBinShift;
 
   // vmmhz_rx_e,h are going to be the V/m/MHz received by the rx (after gains)
   //
@@ -790,7 +790,6 @@ void ChanTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, 
 
       anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, ifreq, tmp_vhz_rx_e[ifreq], tmp_vhz_rx_h[ifreq]);
     }
-
     if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
       injectImpulseAmplitudeAfterAntenna(anita1, tmp_vhz_rx_e, tmp_vhz_rx_h, ant);
     }
@@ -805,18 +804,32 @@ void ChanTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, 
       tmp_volts_rx_h_forfft[2*ifour+1]*=sin((90.)*PI/180.); 
     }
 
-
     // now the last two are in the frequency domain
     // convert to the time domain
     Tools::realft(tmp_volts_rx_e_forfft,-1,anita1->HALFNFOUR);
     Tools::realft(tmp_volts_rx_h_forfft,-1,anita1->HALFNFOUR);
 
-    for (int ii=0; ii<Anita::HALFNFOUR; ii++){
-      volts_rx_e_forfft[ii] += tmp_volts_rx_e_forfft[ii] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
-      volts_rx_h_forfft[ii] += tmp_volts_rx_h_forfft[ii] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+    numBinShift = int(panel1->GetDelay(jpt) / anita1->TIMESTEP);
+    if(fabs(numBinShift) >= anita1->HALFNFOUR){
+      //cout<<"skipping"<<"\n";
+      //don't bother adding it to the total since it's shifted out of range
+    }
+    else{
+      if( panel1->GetDelay(jpt)>0 ){
+        Tools::ShiftLeft(tmp_volts_rx_e_forfft, anita1->HALFNFOUR, numBinShift );
+        Tools::ShiftLeft(tmp_volts_rx_h_forfft, anita1->HALFNFOUR, numBinShift );
+      }
+      else if( panel1->GetDelay(jpt)<0 ){
+        Tools::ShiftRight(tmp_volts_rx_e_forfft, anita1->HALFNFOUR, -1*numBinShift );
+        Tools::ShiftRight(tmp_volts_rx_h_forfft, anita1->HALFNFOUR, -1*numBinShift );
+      }
+    
+      for (int ii=0; ii<Anita::HALFNFOUR; ii++){
+        volts_rx_e_forfft[ii] += tmp_volts_rx_e_forfft[ii] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+        volts_rx_h_forfft[ii] += tmp_volts_rx_h_forfft[ii] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+      }
     }
   }//end int jpt loop over screen
-
 
   // now volts_rx_e,h_forfft are the FULL time domain signals FROM ALL SCREEN POINTS on the back end of the antenna
   // this is in volts
@@ -843,6 +856,8 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Balloon
   double n_component_kvector=0;
   double hitangle_e=0;
   double hitangle_h=0;
+
+  int numBinShift;
 
   //bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
 
@@ -954,11 +969,26 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Balloon
       Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft_ROUGHELEMENT[0][iband]);
       Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft_ROUGHELEMENT[1][iband]);
 
-      for (int k=0;k<anita1->NFOUR/2;k++) {
-        v_banding_rfcm_forfft[0][iband][k] += v_banding_rfcm_forfft_ROUGHELEMENT[0][iband][k];
-        v_banding_rfcm_forfft[1][iband][k] += v_banding_rfcm_forfft_ROUGHELEMENT[1][iband][k];
+      numBinShift = int(panel1->GetDelay(jpt) / anita1->TIMESTEP);
+      if(fabs(numBinShift) >= anita1->HALFNFOUR){
+        //cout<<"skipping"<<"\n";
+        //don't bother adding it to the total since it's shifted out of range
       }
-
+      else{
+        if( panel1->GetDelay(jpt)>0 ){
+          Tools::ShiftLeft(v_banding_rfcm_forfft_ROUGHELEMENT[0][iband], anita1->NFOUR/2, numBinShift );
+          Tools::ShiftLeft(v_banding_rfcm_forfft_ROUGHELEMENT[1][iband], anita1->NFOUR/2, numBinShift );
+        }
+        else if( panel1->GetDelay(jpt)<0 ){
+          Tools::ShiftRight(v_banding_rfcm_forfft_ROUGHELEMENT[0][iband], anita1->NFOUR/2, -1*numBinShift );
+          Tools::ShiftRight(v_banding_rfcm_forfft_ROUGHELEMENT[1][iband], anita1->NFOUR/2, -1*numBinShift );
+        }
+    
+        for (int k=0;k<anita1->NFOUR/2;k++) {
+          v_banding_rfcm_forfft[0][iband][k] += v_banding_rfcm_forfft_ROUGHELEMENT[0][iband][k] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+          v_banding_rfcm_forfft[1][iband][k] += v_banding_rfcm_forfft_ROUGHELEMENT[1][iband][k] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+        }
+      }
       //
     } // end loop over screen points
     
@@ -992,22 +1022,6 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Balloon
     // Find the p2p value before adding noise
     anita1->peak_v_banding_rfcm[0][iband]=FindPeak(v_banding_rfcm_forfft[0][iband],anita1->NFOUR/2);
     anita1->peak_v_banding_rfcm[1][iband]=FindPeak(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
-
-
-
-
-
-/*   std::string stemp=settings1->outputdir+"/rough_signalwaveforms.dat";
-  ofstream sigout(stemp.c_str(), ios::app);
-    for (int iband=0;iband<5;iband++) {
-      if (anita1->bwslice_allowed[iband]!=1) continue; 
-      for (int k=0;k<anita1->NFOUR/2;k++) {
-        sigout << iband << "  "
-                 << k << "  "
-                 << anita1->signal_vpol_inanita[iband][k] << std::endl;
-      }
-    }
-  sigout.close();*/
 
     // Find the p2p value before adding noise
     for (int iband=0;iband<5;iband++) {
