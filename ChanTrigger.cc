@@ -763,7 +763,6 @@ void ChanTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, 
     volts_rx_h_forfft[i]=0.;
   }
 
-  int fNumPoints = anita1->HALFNFOUR;
   int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
   double tmp_vhz_rx_e[Anita::NFREQ]; // V/Hz after antenna gains
@@ -844,7 +843,6 @@ void ChanTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, 
 
 void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ilayer, int ifold, Vector &n_eplane, Vector &n_hplane, Vector &n_normal){
 
-  int fNumPoints = anita1->HALFNFOUR;
   int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
   double integrate_energy_freq[5]={0.,0.,0.,0.,0.};

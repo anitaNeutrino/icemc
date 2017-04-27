@@ -493,7 +493,7 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
 	    // 	      if (anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin])
 	    // 		cout << "This l1 is " << ipol << "\t" << iphi << "\t" << ibin << "\t" << anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin] << "\n";
 	  }
-	  for (int ibin=vl1trig[ipol][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+	  for (unsigned int ibin=vl1trig[ipol][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
 	    anita1->l1trig_anita3and4_inanita[ipol][iphi][ibin]=0;
 	  }
 	}
@@ -639,7 +639,7 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
 	  for (unsigned int ibin=0;ibin<vl1trig_anita4lr_scb[ilayer][iphi].size();ibin++) {
 	    anita1->l1trig_anita4lr_inanita[ilayer][iphi][ibin]=vl1trig_anita4lr_scb[ilayer][iphi][ibin];
 	  }
-	  for (int ibin=vl1trig_anita4lr_scb[ilayer][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+	  for (unsigned int ibin=vl1trig_anita4lr_scb[ilayer][iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
 	    anita1->l1trig_anita4lr_inanita[ilayer][iphi][ibin]=0;
 	  }
 
@@ -655,7 +655,7 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
 	  anita1->l2trig_anita4lr_inanita[iphi][1][ibin]=vl2_realtime_anita4_scb[iphi][1][ibin];
 	    
 	}
-	for (int ibin=vl2_realtime_anita4_scb[iphi][1].size();ibin<anita1->HALFNFOUR;ibin++) {
+	for (unsigned int ibin=vl2_realtime_anita4_scb[iphi][1].size();ibin<anita1->HALFNFOUR;ibin++) {
 	  anita1->l2trig_anita4lr_inanita[iphi][1][ibin]=0;
 	}
 	Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l2trig_anita4lr_inanita[iphi][1],anita1->l2trig_anita4lr_forgaryanderic[iphi]);
@@ -663,7 +663,7 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
 	for (unsigned int ibin=0;ibin<vl3trig_type0[iphi].size();ibin++) {
 	  anita1->l3type0trig_anita4lr_inanita[iphi][ibin]=vl3trig_type0[iphi][ibin];
 	}
-	for (int ibin=vl3trig_type0[iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+	for (unsigned int ibin=vl3trig_type0[iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
 	  anita1->l3type0trig_anita4lr_inanita[iphi][ibin]=0;
 	}
 	Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l3type0trig_anita4lr_inanita[iphi],anita1->l3type0trig_anita4lr_forgaryanderic[iphi]);
@@ -671,7 +671,7 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
 	    
 	  anita1->l3trig_anita4lr_inanita[iphi][ibin]=vl3trig_type1[iphi][ibin];
 	}
-	for (int ibin=vl3trig_type1[iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
+	for (unsigned int ibin=vl3trig_type1[iphi].size();ibin<anita1->HALFNFOUR;ibin++) {
 	  anita1->l3trig_anita4lr_inanita[iphi][ibin]=0;
 	}
 	Tools::reverseTimeOrdering(anita1->HALFNFOUR,anita1->l3trig_anita4lr_inanita[iphi],anita1->l3type1trig_anita4lr_forgaryanderic[iphi]);
@@ -1830,7 +1830,7 @@ void GlobalTrigger::convert_wfm_to_3_bit(const vector <double>& wfm, double rms,
 int GlobalTrigger::findahit(vector<int> myvector,int first,int last) {
 
   int yes=0;
-  if (myvector.size()<=last)
+  if ((int)myvector.size()<=last)
     return yes;
 
   for (int i=first;i<=last;i++) {

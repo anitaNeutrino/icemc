@@ -2661,7 +2661,7 @@ int main(int argc,  char **argv) {
       Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
       if (!settings1->TRIGGEREFFSCAN){
         if(settings1->BORESIGHTS)
-          anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2],bn1,settings1);
+          anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2]);
         else
           anita1->GetArrivalTimes(ray1->n_exit2bn[2],bn1,settings1);
       }
@@ -3461,10 +3461,10 @@ int main(int argc,  char **argv) {
       //
       /////////////
 
-Vector tempa = ray1->n_exit2bn[2].Unit() - antarctica->GetSurfaceNormal(bn1->r_bn).Dot(ray1->n_exit2bn[2].Unit()) * antarctica->GetSurfaceNormal(bn1->r_bn);
-Position posa = ray1->rfexit[2] + 300.*tempa;
-Vector tempb = interaction1->nnu.Unit() - antarctica->GetSurfaceNormal(interaction1->posnu).Dot(interaction1->nnu.Unit()) * antarctica->GetSurfaceNormal(interaction1->posnu);
-Position posb = interaction1->posnu + 300.*tempb;
+// Vector tempa = ray1->n_exit2bn[2].Unit() - antarctica->GetSurfaceNormal(bn1->r_bn).Dot(ray1->n_exit2bn[2].Unit()) * antarctica->GetSurfaceNormal(bn1->r_bn);
+// Position posa = ray1->rfexit[2] + 300.*tempa;
+// Vector tempb = interaction1->nnu.Unit() - antarctica->GetSurfaceNormal(interaction1->posnu).Dot(interaction1->nnu.Unit()) * antarctica->GetSurfaceNormal(interaction1->posnu);
+// Position posb = interaction1->posnu + 300.*tempb;
 /*
 evtwgtout << weight << "  "
           << thispasses[0] << "  "
@@ -4546,7 +4546,6 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
     //copy SKIPCUTS and USEDIRECTIONWEIGHTS from earlier in this function
       double costhetanu2=1.;
       double costhetanu1=-1.;
-      double theta_threshold=1;
       double costhetanu=costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
 
       double phinu=TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
@@ -4847,7 +4846,7 @@ void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceMode
     Vector r_bn_tmp=bn1->r_bn-origin_brian_tmp;
     r_bn_tmp=r_bn_tmp.ChangeCoord(xcoordvector,ycoordvector);//change coordinates
     
-    double balloondist =r_bn_tmp.Mag();//this is above center of earth, if i understand correctly. Need above the surface of the earth. 
+    // double balloondist =r_bn_tmp.Mag();//this is above center of earth, if i understand correctly. Need above the surface of the earth. 
     double balloonphi = r_bn_tmp.Phi(); //phi position of the balloon
     if (balloonphi>PI)
       balloonphi=balloonphi-2*PI;

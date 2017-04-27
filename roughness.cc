@@ -150,7 +150,7 @@ void Roughness::ReadDataFile(void){
     //std::cerr<<pT0<<"  "<<pT<<"  "<<pP<<std::endl;
   }
 
-  for(int i=0; i<theta_0.size(); i++){
+  for(unsigned int i=0; i<theta_0.size(); i++){
     if(theta_0[i]!=theta_0[i+1])
       theta_0_unique.push_back(theta_0[i]);
   }
