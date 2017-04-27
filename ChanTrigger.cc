@@ -103,9 +103,9 @@ void ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
  *
  *
  */
-void ChanTrigger::WhichBandsPass(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac){
+void ChanTrigger::WhichBandsPass(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
     
-  double thresholds[2][5];
+
   if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==9) {
     for(int i=0;i<4;i++) thresholds[0][i] = thresholds[1][i] = anita1->powerthreshold[i];
     int iring = (ilayer<2)*0 + (ilayer==2)*1 + (ilayer==3)*2;
@@ -1289,21 +1289,29 @@ void ChanTrigger::addToChannelSums(Settings *settings1,Anita *anita1,int ibw, in
 
 //!	Takes ADC threshold as an input and outputs threshold in power
 /*!
- *	"this is a place holder for now, from reading off of various plots, pointed out below"
- *	
+ *       So far this only works for ANITA-3 and full band trigger	
  */
 double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant) {
-  //double ChanTrigger::ADCCountstoPowerThreshold(int threshadc, int isurf,int ichan) {
   // first convert threshold in adc counts to the singles rate
   // do this using threshold scans taken before the flight
+
   // For Anita-3 using run 11927
   // these curves were read in the Balloon constructor
   // first check if the threshold in adc counts is in the allowable range
-  int threshadc = anita1->thresholds[ipol][iant];
-  if (unwarned && (threshadc<anita1->minadcthresh[ipol][iant] || threshadc>anita1->maxadcthresh[ipol][iant]))
-    cout << "Warning! ADC threshold is outside range of measured threshold scans.";
+  Float_t threshadc = (Float_t)anita1->thresholds[ipol][iant];
+
+  // If there was a problem reading the flight threshold
+  // return 5
+  // 5 is the average relative threshold corresponding to
+  // 500kHz scalers in a full band trigger
+  if (threshadc<10){
+    return 5;
+  }
+
+  
   if (threshadc<anita1->minadcthresh[ipol][iant]) {
     if (unwarned) {
+      cout << "Warning! ADC threshold is outside range of measured threshold scans.";
       cout << "It is below the minimum so set it to the minimum.  Will not be warned again.\n";
       unwarned=0;
     }
@@ -1311,37 +1319,37 @@ double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant)
   }
   if (threshadc>anita1->maxadcthresh[ipol][iant]) {
     if (unwarned) {
+      cout << "Warning! ADC threshold is outside range of measured threshold scans.";
       cout << "It is higher than the maximum so set it to the maximum.  Will not be warned again.\n";
       unwarned=0;
     }
     threshadc=anita1->maxadcthresh[ipol][iant];
   }
-    
-    
+
   // Now find singles rate for this threshold
   // first sort thresholds
-  // int index=TMath::BinarySearch(NPOINTS,threshold[isurf][ichan],threshadc);
   int index=TMath::BinarySearch(anita1->npointThresh, anita1->threshScanThresh[ipol][iant], threshadc);
-
-  //cout << "rate is " << rate[isurf][ichan][index] << "\n";
-  //  thisrate=(double)rate[isurf][ichan][index]; // these scalers are in kHz
+  
   thisrate=(double)anita1->threshScanScaler[ipol][iant][index]; // these scalers are in kHz
     
   // now find threshold for this scaler.  Here, scalers have to be in MHz.
   thisrate=thisrate/1.E3; // put it in MHz
-  //cout << "thisrate is " << thisrate << "\n";
+
   // figure out what band we're talking about
   // int iband=Anita::SurfChanneltoBand(ichan);
   // FOR THE MOMENT JUST USING THE FULL BAND
   int iband =3;
   thispowerthresh=rateToThreshold(thisrate,iband);
-  //cout << "thisrate, iband, thispowerthresh are " << thisrate << " " << iband << " " << thispowerthresh << "\n";
+
+  // Avoid inf and nan: 5 is the relative power threshold corresponding to 500kHz scalers
+  if (thispowerthresh>999999) return 5.;
+  if (thispowerthresh<0.0001) return 5.;
+
+  // Limit on relative power threshold to avoid thermal noise to trigger
+  if (thispowerthresh<4.5) return 4.5;
+
   return thispowerthresh;
     
-  //  double powerthresh=-0.3*pow(10.,logsingles)/1.E6+5.091; // this has the right slope and intercept
-  //cout << "threshadc, powerthresh are " << threshadc << " " << powerthresh << "\n";
-  //return powerthresh;
-  // return 0;
 }
 
 

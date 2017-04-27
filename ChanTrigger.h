@@ -87,7 +87,7 @@ class ChanTrigger {
   double getRate();
   double rateToThreshold(double rate, int band); // converts a single channel rate to threshold in p/<p>
   static double GetNoise(Settings *settings1,double altitude_bn,double geoid,double theta,double bw,double temp);
-  void WhichBandsPass(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac);
+  void WhichBandsPass(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
   void WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]);
   void WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
   static double FindPeak(double *waveform,int n); // find peak voltage of a waveform
