@@ -3319,9 +3319,9 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 	if (tpol==1) pol=0;
 	else if (tpol==0) pol=1;
 	
-	deltaRPhaseCentre[pol][ilayer][ifold]=deltaR;
-	deltaPhiPhaseCentre[pol][ilayer][ifold]=deltaPhi*TMath::DegToRad();
-	deltaZPhaseCentre[pol][ilayer][ifold]=deltaZ;
+	deltaRPhaseCentre[pol][ilayer][ifold]=0;//deltaR;
+	deltaPhiPhaseCentre[pol][ilayer][ifold]=0;//deltaPhi*TMath::DegToRad();
+	deltaZPhaseCentre[pol][ilayer][ifold]=0;//deltaZ;
       } 
       PhaseCenterFile.close();
 
@@ -3650,7 +3650,7 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
 	 ant_ctr++;
        }
     }
-   }
+     }
     
     //    double last_trigger_time=Tools::dMax(arrival_times,(number_all_antennas));
     //cout << "last_trigger_time is " << last_trigger_time << "\n";
@@ -3759,13 +3759,16 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
   if (settings1->WHICH==8){
     fileName = "data/sumPicoImpulse.root";
     
-    for (int iring=0;iring<3;iring++)  graphNames[0][iring]="grImpRespV";
-    for (int iring=0;iring<3;iring++)  graphNames[1][iring]="grImpRespH";
+    for (int iring=0;iring<3;iring++){
+      graphNames[0][iring]="grImpRespV";
+      graphNames[1][iring]="grImpRespH";
+    }
     //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
     norm=0.1;
   } else if(settings1->WHICH==9){
 
-    fileName = "data/SignalChainImpulseResponse_anita3.root";
+    //    fileName = "data/SignalChainImpulseResponse_anita3.root";
+    fileName = "data/TempImpulseResponseAnita3.root";
 
     string spol[2] ={"V", "H"};
     //   string sring[3]={"Top", "Middle", "Bottom"};
@@ -3773,7 +3776,9 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
 	//	graphNames[ipol][iring]=Form("ImpulseResponse_%spol_%s", spol[ipol].c_str(), sring[iring].c_str());
-	graphNames[ipol][iring]=Form("ImpulseResponse_%spol", spol[ipol].c_str());
+	  //	  graphNames[ipol][iring][iphi]=Form("ImpulseResponse_%spol", spol[ipol].c_str());
+	graphNames[ipol][iring]=Form("Graph");
+	
       }
     }
     // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
