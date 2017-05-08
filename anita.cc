@@ -3319,9 +3319,9 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 	if (tpol==1) pol=0;
 	else if (tpol==0) pol=1;
 	
-	deltaRPhaseCentre[pol][ilayer][ifold]=0;//deltaR;
-	deltaPhiPhaseCentre[pol][ilayer][ifold]=0;//deltaPhi*TMath::DegToRad();
-	deltaZPhaseCentre[pol][ilayer][ifold]=0;//deltaZ;
+	deltaRPhaseCentre[pol][ilayer][ifold]=deltaR;
+	deltaPhiPhaseCentre[pol][ilayer][ifold]=deltaPhi*TMath::DegToRad();
+	deltaZPhaseCentre[pol][ilayer][ifold]=deltaZ;
       } 
       PhaseCenterFile.close();
 
