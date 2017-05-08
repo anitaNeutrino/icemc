@@ -1715,18 +1715,15 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
     for (int i=0;i<nPoints;i++) newy[i]=0;
   }
 
-  // Translate graph of 35ns
-  int indexTranslation = 35*2.6;
-
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
     double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
-      y[i]=newy[i+indexTranslation] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
+      y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
       // std::cout << justNoise[i] << std::endl;
     }
   } else {
-    for (int i=0;i<nPoints;i++)  y[i]=newy[i+indexTranslation];
+    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
   }
 
   // if (ant ==8 && pol==0){
@@ -1782,19 +1779,16 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) newy[i]=0;
   }
-
-  // Translate graph of 35ns
-  int indexTranslation = 35*2.6;
     
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
     double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
-      y[i]=newy[i] + justNoise[i+indexTranslation]*anita1->THERMALNOISE_FACTOR;
+      y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
       // std::cout << justNoise[i] << std::endl;
     }
   } else {
-    for (int i=0;i<nPoints;i++)  y[i]=newy[i+indexTranslation];
+    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
   }
 
   FFTWComplex *theFFT = FFTtools::doFFT(nPoints, y);
@@ -1863,18 +1857,16 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
     for (int i=0;i<nPoints;i++) newy[i]=0;
   } 
 
-  // Translate graph of 35ns
-  int indexTranslation = 35*2.6;
 
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
     double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
-      y[i]=newy[i] + justNoise[i+indexTranslation]*anita1->THERMALNOISE_FACTOR;
+      y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
       // std::cout << justNoise[i] << std::endl;
     }
   } else {
-    for (int i=0;i<nPoints;i++)  y[i]=newy[i+indexTranslation];
+    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
   }
 
   delete surfSignalDown;
