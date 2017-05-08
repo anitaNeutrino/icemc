@@ -3307,6 +3307,7 @@ int main(int argc,  char **argv) {
 
             rawHeaderPtr->calibStatus = 31;
             rawHeaderPtr->realTime = bn1->realTime_flightdata;
+	    rawHeaderPtr->triggerTime = bn1->realTime_flightdata;
             Adu5PatPtr->latitude= bn1->latitude;
             Adu5PatPtr->longitude=bn1->longitude;
             Adu5PatPtr->altitude=bn1->altitude;
