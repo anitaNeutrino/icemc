@@ -131,6 +131,7 @@ public:
   UShort_t phiTrigMaskH;
   UShort_t l1TrigMask;
   UShort_t l1TrigMaskH;
+  Double_t deadTime;              // fractional deadTime
   unsigned int realTime_turfrate; // realtime from the turf rate file
   unsigned int realTime_tr_min; // min realtime from the turf rate file
   unsigned int realTime_tr_max; // max realtime from the turf rate file

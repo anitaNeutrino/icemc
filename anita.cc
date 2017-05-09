@@ -911,6 +911,7 @@ void Anita::readVariableThresholds(Settings *settings1){
     turfratechain->SetBranchAddress("phiTrigMaskH",&phiTrigMaskH);
     turfratechain->SetBranchAddress("l1TrigMask",&l1TrigMask);
     turfratechain->SetBranchAddress("l1TrigMaskH",&l1TrigMaskH);
+    turfratechain->SetBranchAddress("deadTime",&deadTime);
     turfratechain->SetBranchAddress("realTime",&realTime_turfrate);
     turfratechain->BuildIndex("realTime");
     turfratechain->GetEvent(0);
@@ -3698,6 +3699,7 @@ void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
     phiTrigMaskH=0;
     l1TrigMask=0;
     l1TrigMaskH=0;
+    deadTime=0;
   }
   else { // if it's in range
 		
@@ -3707,7 +3709,7 @@ void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
       phiTrigMaskH=0;
       l1TrigMask=0;
       l1TrigMaskH=0;
-
+      deadTime=0;
     }else{
       turfratechain->GetEvent(iturf);
     }
