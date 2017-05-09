@@ -582,7 +582,7 @@ public:
   TRandom3 *fRand;
   Double_t fTimes[HALFNFOUR];
 #endif
-  TGraph *fSignalChainResponseDigitizer[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
+  TGraph *fSignalChainResponseDigitizer[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   TGraph *fSignalChainResponseTrigger[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   double deltaT;
 

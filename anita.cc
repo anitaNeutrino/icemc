@@ -3749,9 +3749,9 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 
   // Set deltaT to be used in the convolution
   deltaT = 1/(2.6*16);
-  string graphNames[2][3];
+  string graphNames[2][3][16];
   string fileName;
-  double norm=0;
+  double norm=1;
  
   // For ANITA-2 we have 1 impulse response for VPOL and 1 for HPOL
   // For ANITA-3 we have 3 impulse responses (Top, Middle, Bottom ring) for VPOL and 3 for HPOL.
@@ -3760,35 +3760,33 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
     fileName = "data/sumPicoImpulse.root";
     
     for (int iring=0;iring<3;iring++){
-      graphNames[0][iring]="grImpRespV";
-      graphNames[1][iring]="grImpRespH";
+      for (int iphi=1;iphi<17;iphi++){
+	graphNames[0][iring][iphi]="grImpRespV";
+	graphNames[1][iring][iphi]="grImpRespH";
+      }
     }
     //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
-    norm=0.1;
+    norm*=0.1;
   } else if(settings1->WHICH==9){
 
-    //    fileName = "data/SignalChainImpulseResponse_anita3.root";
-    fileName = "data/TempImpulseResponseAnita3.root";
+    fileName = "data/Anita3_ImpulseResponseDigitizer.root";
 
     string spol[2] ={"V", "H"};
-    //   string sring[3]={"Top", "Middle", "Bottom"};
+    string sring[3]={"T", "M", "B"};
     
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
-	//	graphNames[ipol][iring]=Form("ImpulseResponse_%spol_%s", spol[ipol].c_str(), sring[iring].c_str());
-	  //	  graphNames[ipol][iring][iphi]=Form("ImpulseResponse_%spol", spol[ipol].c_str());
-	graphNames[ipol][iring]=Form("Graph");
-	
+	for (int iphi=0;iphi<16;iphi++){
+	  graphNames[ipol][iring][iphi] = Form("g%02d%s%s", iphi+1, sring[iring].c_str(), spol[ipol].c_str() ) ;
+	}
       }
     }
-    // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
-    //  norm = 48.;
 
-    // There was a 20dB amplifier at the scope that was not considered in the evaluation of the impulse response
-    norm = TMath::Power(10, 20./20.);
+    // 10dB missing from impulse response
+    //norm *= TMath::Power(10, 10./20.);
     
     // Impulse response already accounts for trigger/digitizer splitter
-    norm *= sqrt(2);
+    //norm *= sqrt(2);
 
   }
 
@@ -3802,38 +3800,39 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
-	// Read graph
-	TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring].c_str());
-	if(!grTemp) {
-	  std::cerr << "Couldn't read siganl chain impulse response" << graphNames[ipol][iring] << " from file " << fileName << "\n";
-	  exit(0);
+	for (int iphi=0;iphi<16;iphi++){
+	  // Read graph
+	  TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring][iphi].c_str());
+	  if(!grTemp) {
+	    std::cerr << "Couldn't read siganl chain impulse response" << graphNames[ipol][iring][iphi] << " from file " << fileName << "\n";
+	    exit(0);
+	  }
+	  // Interpolate to high sampling rate that will be used for the convolution
+	  TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); 
+	  Int_t nPoints  = grInt->GetN();
+	  Double_t *newx = grInt->GetX();
+	  Double_t *newy = grInt->GetY();
+	  // Normalise
+	  for (int i=0;i<nPoints;i++){
+	    newy[i]=newy[i]*norm;
+	    // change time axis from ns to s
+	    newx[i]=newx[i]*1E-9;
+	  }
+	  // Pave to 0
+	  int paveNum = 8533;
+	  grTemp = new TGraph(nPoints,  newx, newy);
+	  
+	  fSignalChainResponseDigitizer[ipol][iring][iphi] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
+	  
+	  delete grInt;
+	  delete grTemp;
 	}
-	// Interpolate to high sampling rate that will be used for the convolution
-	TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); 
-	Int_t nPoints  = grInt->GetN();
-	Double_t *newx = grInt->GetX();
-	Double_t *newy = grInt->GetY();
-	// Normalise
-	for (int i=0;i<nPoints;i++){
-	  newy[i]=newy[i]*norm;
-	  // change time axis from ns to s
-	  newx[i]=newx[i]*1E-9;
-	}
-	// Pave to 0
-	int paveNum = 8533;
-	grTemp = new TGraph(nPoints,  newx, newy);
-
-	fSignalChainResponseDigitizer[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
-
-	delete grInt;
-	delete grTemp;
       }
     }
-    
   }
-
+  
   TFile *fRayleighAnita3 = new TFile("data/RayleighAmplitudesAnita3_noSun_Interp.root", "read");
-
+  
   for (int iant=0;iant<48;iant++){
     RayleighFits[0][iant] = (TGraph*)fRayleighAnita3->Get(Form("grSigma%dV_interp", iant+1));
     RayleighFits[1][iant] = (TGraph*)fRayleighAnita3->Get(Form("grSigma%dH_interp", iant+1));
