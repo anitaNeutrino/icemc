@@ -49,7 +49,8 @@ public:
   int wheredoesitenterice_err[2];  // there is an interaction in the ice
   int toohigh[2];  // there is an interaction in the ice
   int toolow[2];  // there is an interaction in the ice
-
+  int ndeadtime[2]; // thrown out by dead time
+  
 
 // variables for counting neutrinos and reporting results.
   int nnu_e;  //counting the number of e,mu,tau neutrinos
