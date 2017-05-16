@@ -823,6 +823,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   APPLYIMPULSERESPONSEDIGITIZER=0;
   APPLYIMPULSERESPONSETRIGGER=0;
   USETIMEDEPENDENTTHRESHOLDS=0;
+  USEDEADTIME=0;
   getSetting("Digitizer path impulse response", APPLYIMPULSERESPONSEDIGITIZER);
   std::cout << "Apply impulse response to digitizer path: " << APPLYIMPULSERESPONSEDIGITIZER << std::endl;
   getSetting("Trigger path impulse response", APPLYIMPULSERESPONSETRIGGER);
@@ -842,8 +843,10 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 #endif
   getSetting("Time dependent thresholds", USETIMEDEPENDENTTHRESHOLDS);
   std::cout << "Use time-dependent thresholds: " << USETIMEDEPENDENTTHRESHOLDS << std::endl;
-
-  if ( USETIMEDEPENDENTTHRESHOLDS && WHICH!=9) {
+  getSetting("Dead time", USEDEADTIME);
+  std::cout << "Use dead time from flight: " << USEDEADTIME << std::endl;
+  
+  if ( (USETIMEDEPENDENTTHRESHOLDS || USEDEADTIME) && WHICH!=9) {
     std::cout << "Time-dependent thresholds are only available for anita-3." << std::endl;
     exit(1);
   }
