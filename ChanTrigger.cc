@@ -1321,7 +1321,7 @@ double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant)
   }
 
   // Broken channel during ANITA-3 flight
-  if (ipol==0 && iant==7){
+  if (ipol==1 && iant==7){
     return 5;
   }
   
