@@ -1320,6 +1320,10 @@ double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant)
     return 5;
   }
 
+  // Broken channel during ANITA-3 flight
+  if (ipol==0 && iant==7){
+    return 5;
+  }
   
   if (threshadc<anita1->minadcthresh[ipol][iant]) {
     if (unwarned) {
@@ -1357,8 +1361,8 @@ double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant)
   if (thispowerthresh>999999) return 5.;
   if (thispowerthresh<0.0001) return 5.;
 
-  // Limit on relative power threshold to avoid thermal noise to trigger
-  if (thispowerthresh<4.5) return 4.5;
+  // // Limit on relative power threshold to avoid thermal noise to trigger
+  // if (thispowerthresh<4.5) return 4.5;
 
   return thispowerthresh;
     
