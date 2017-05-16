@@ -392,7 +392,9 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		    
 		    flightdatachain->GetEvent(igps);	  // get new event
 		  }
-		  if ((WHICHPATH==7 || WHICHPATH==8) && settings1->PHIMASKING==1)  // set phi Masking for Anita 2 or Anita 3
+		  // set phi Masking for Anita 2 or Anita 3
+		  // the deadtime is read from the same tree
+		  if ((WHICHPATH==7 || WHICHPATH==8) && (settings1->PHIMASKING==1 || settings1->USEDEADTIME))  
 		    anita1->setphiTrigMask(realTime_flightdata);
 		  if (WHICHPATH==8 && settings1->USETIMEDEPENDENTTHRESHOLDS==1) // set time-dependent thresholds
 		    anita1->setTimeDependentThresholds(realTime_flightdata);
