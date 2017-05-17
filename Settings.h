@@ -49,6 +49,7 @@ public:
 
   int UNBIASED_SELECTION;
   int WHICH; // which payload to use 0=Anita-lite,1=Ross,2=Smex,3=make your own
+  int ANITAVERSION;
   int CYLINDRICALSYMMETRY; // is it cylindrically symmetric =1 if which=1,2, =0 if which=0
   // if which=3 then 0 or 1
   double SIGMA_FACTOR; // factor to multiply cross section by for error analysis

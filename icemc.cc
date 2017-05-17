@@ -1275,9 +1275,11 @@ int main(int argc,  char **argv) {
   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
   adu5PatTree->Branch("weight",       &weight,       "weight/D"     );
 
-  AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();
-
 #ifdef ANITA3_EVENTREADER
+
+  // Set AnitaVersion so that the right payload geometry is used
+  AnitaVersion::set(settings1->ANITAVERSION);
+  
   outputAnitaFile =settings1->outputdir+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
@@ -1285,6 +1287,8 @@ int main(int argc,  char **argv) {
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
 #endif
 
+  AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();
+  
 #endif
   //end ROOT variable definitions
   ///////////////////////////////////////////////////////////////////////
