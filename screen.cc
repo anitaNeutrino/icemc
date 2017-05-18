@@ -238,37 +238,3 @@ void Screen::ResetParameters(){
   fWeightNorm = 1.;
 };
 
-
-Vector Screen::CalculateTransmittedPolarization(const Vector &nnu, Vector vec_specularnormal, Vector vec_localnormal, Vector vec_pos_current_to_balloon, Vector vec_nnu_to_impactPoint, Vector npol_local_inc){
-  Vector temp_a = nnu.Cross(vec_specularnormal).Unit();
-  Vector temp_b = nnu.Cross(vec_localnormal).Unit();
-  double mtrx_cos_inc = temp_a.Dot(temp_b) / temp_a.Mag() / temp_b.Mag();
-  double mtrx_sin_inc = sqrt(1. - mtrx_cos_inc*mtrx_cos_inc);
-
-  temp_a = vec_pos_current_to_balloon.Cross(vec_specularnormal).Unit();
-  temp_b = vec_pos_current_to_balloon.Cross(vec_localnormal).Unit();
-  double mtrx_cos_trans = temp_a.Dot(temp_b) / temp_a.Mag() / temp_b.Mag();
-  double mtrx_sin_trans = sqrt(1. - mtrx_cos_trans*mtrx_cos_trans);
-
-  // now define the incidence plane using int.point-imp.point vector and local surface normal
-  Vector vec_incplane_normal = vec_nnu_to_impactPoint.Cross( (const Vector)vec_localnormal ).Unit();
-
-  // now define the scattering plane using imp.point-balloon vector and local surface normal
-  Vector vec_scatplane_normal = vec_pos_current_to_balloon.Cross( (const Vector)vec_localnormal ).Unit();
-
-  // determine incident vertical and horizontal field components (vertical = in-plane)
-  Vector E_local_h_inc = npol_local_inc.Dot(vec_incplane_normal) * vec_incplane_normal;
-  Vector E_local_v_inc = npol_local_inc - E_local_h_inc;
-
-  // recast the values with the transformation matrix
-  double E_local_v_trans_mag = mtrx_cos_trans * (mtrx_cos_inc*E_local_v_inc.Mag() - mtrx_sin_inc*E_local_h_inc.Mag())
-          - mtrx_sin_trans * (mtrx_sin_inc*E_local_v_inc.Mag() + mtrx_cos_inc*E_local_h_inc.Mag());
-  double E_local_h_trans_mag = mtrx_sin_trans * (mtrx_cos_inc*E_local_v_inc.Mag() - mtrx_sin_inc*E_local_h_inc.Mag())
-          + mtrx_cos_trans * (mtrx_sin_inc*E_local_v_inc.Mag() + mtrx_cos_inc*E_local_h_inc.Mag());
-
-  // transmitted polarization needs to be perpendicular to to-balloon vector, and the horizontal component is 'set', so need to find appropriate vector for the vertical component to ensure perpendicularity
-  Vector npol_local_trans = (E_local_h_trans_mag*vec_scatplane_normal
-          + E_local_v_trans_mag* vec_pos_current_to_balloon.Cross( (const Vector)vec_scatplane_normal ).Unit() ).Unit();
-
-  return npol_local_trans;
-};

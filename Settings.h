@@ -131,7 +131,12 @@ public:
 
   double ROUGHSIZE; // roughness size
   double SCREENEDGELENGTH;        // edge length of screen used if there is roughness
-
+  double ROUGH_INTPOS_SHIFT;      // furthest distance to shift the neutrino interaction position from the balloon if roughness
+  int ROUGHSCREENDIV_BASE;        // (N x N) grid for the base screen (to preselect)
+  int ROUGHSCREENDIV_SUB;         // (n x n) subgrids for the preselected regions
+  int ROUGHSCREENFRAC_BASE;       // fraction threshold for ratio of minimum Efield to maximum Efield magnitude for the base screen
+  int ROUGHSCREENFRAC_SUB;        // fraction threshold for ratio of minimum Efield to maximum Efield magnitude for the subgrids
+  int ROUGHMAXGEN;                // number of maximum generations (inclusive)
 
   /* int ICE_MODEL=0; //Select ice model to be used.  0 = Crust 2.0 , 1 = BEDMAP. */
   /* int NOFZ=1; // 1=depth dependent index of refraction,0=off */
@@ -190,10 +195,11 @@ public:
   double COHERENT_THRESHOLD;
   int APPLYIMPULSERESPONSEDIGITIZER;       // apply impulse response in the digitizer path
   int APPLYIMPULSERESPONSETRIGGER;         // apply impulse response in the trigger path
-  int USETIMEDEPENDENTTHRESHOLDS; // use time-dependent thresholds
-  int NOISEFROMFLIGHTTRIGGER;            // use thermal noise from flight in trigger path
-  int NOISEFROMFLIGHTDIGITIZER;          // use thermal noise from flight in digitizer path
-  int MINBIAS;                    // generate minimum bias sample
+  int USETIMEDEPENDENTTHRESHOLDS;          // use time-dependent thresholds
+  int USEDEADTIME;                         // use dead time from flight
+  int NOISEFROMFLIGHTTRIGGER;              // use thermal noise from flight in trigger path
+  int NOISEFROMFLIGHTDIGITIZER;            // use thermal noise from flight in digitizer path
+  int MINBIAS;                             // generate minimum bias sample
   int TRIGGEREFFSCAN;                      // do a trigger efficiency scan
   int TRIGGEREFFSCAPULSE;                  // Apply pulse at AMPA (0) or at SURF (1)
 

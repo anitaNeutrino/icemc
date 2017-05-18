@@ -62,10 +62,10 @@ class ChanTrigger {
     
   ChanTrigger(); // constructor
   void InitializeEachBand(Anita *anita1);
-  void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector n_eplane, Vector n_hplane, Vector n_normal, int ilayer, int ifold);
+  void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, int ilayer, int ifold);
   void DigitizerPath(Settings *settings1, Anita *anita1, int ilayer, int ifold);
   void TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
-  void PrepareTriggerPath(Settings *settings1, Anita *anita1, Screen *panel1, int ilayer, int ifold, double hitangle_e, double hitangle_h, double e_component, double h_component);
+  void PrepareTriggerPath(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ilayer, int ifold, Vector &n_eplane, Vector &n_hplane, Vector &n_normal);
   
   // just for historical reference, this function:
   //void ChanTrigger::RunTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
@@ -87,7 +87,7 @@ class ChanTrigger {
   double getRate();
   double rateToThreshold(double rate, int band); // converts a single channel rate to threshold in p/<p>
   static double GetNoise(Settings *settings1,double altitude_bn,double geoid,double theta,double bw,double temp);
-  void WhichBandsPass(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac);
+  void WhichBandsPass(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
   void WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]);
   void WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
   static double FindPeak(double *waveform,int n); // find peak voltage of a waveform
@@ -131,7 +131,8 @@ class ChanTrigger {
   // Used for ChanTrigger::PrepareBandWaveforms(...) and ChanTrigger::WhichBandsPass(...)
   double v_banding_rfcm_forfft[2][5][HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
   double vm_banding_rfcm_forfft[2][5][HALFNFOUR];
-  double v_banding_rfcm_forfft_temp[2][5][HALFNFOUR];
+  double v_banding_rfcm_forfft_temp[2][5][HALFNFOUR]; //use for the averaging over 10 neighboring bins
+  double v_banding_rfcm_forfft_ROUGHELEMENT[2][5][HALFNFOUR]; //use for the individual screen elements, then add to the vm_banding_rfcm_forfft[][][]
   // End of band waveform triggering arrays
     
   double integral_vmmhz;

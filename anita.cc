@@ -902,14 +902,16 @@ void Anita::readVariableThresholds(Settings *settings1){
 
     
   }else if (settings1->WHICH==9){ // ANITA-3
-    fturf=new TFile("data/turfrate_icemc_anita3.root");
 
+    // Reading in masking every 60 seconds
+    fturf=new TFile("data/SampleTurf_icemc_anita3.root");
     turfratechain=(TTree*)fturf->Get("turfrate_icemc");
     turfratechain->SetMakeClass(1);
     turfratechain->SetBranchAddress("phiTrigMask",&phiTrigMask);
     turfratechain->SetBranchAddress("phiTrigMaskH",&phiTrigMaskH);
     turfratechain->SetBranchAddress("l1TrigMask",&l1TrigMask);
     turfratechain->SetBranchAddress("l1TrigMaskH",&l1TrigMaskH);
+    turfratechain->SetBranchAddress("deadTime",&deadTime);
     turfratechain->SetBranchAddress("realTime",&realTime_turfrate);
     turfratechain->BuildIndex("realTime");
     turfratechain->GetEvent(0);
@@ -917,9 +919,8 @@ void Anita::readVariableThresholds(Settings *settings1){
     turfratechain->GetEvent(turfratechain->GetEntries()-1);
     realTime_tr_max=realTime_turfrate; // realTime of last event in file
 
-
-    // Reading in average thresholds/scalers every 60 seconds
-    fsurf=new TFile("data/AvgSurf_icemc_anita3.root");
+    // Reading in thresholds/scalers every 60 seconds
+    fsurf=new TFile("data/SampleSurf_icemc_anita3.root");
     surfchain=(TTree*)fsurf->Get("surf_icemc");
     surfchain->SetMakeClass(1);
     surfchain->SetBranchAddress("thresholds",   &thresholds   );
@@ -3650,7 +3651,7 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
 	 ant_ctr++;
        }
     }
-   }
+     }
     
     //    double last_trigger_time=Tools::dMax(arrival_times,(number_all_antennas));
     //cout << "last_trigger_time is " << last_trigger_time << "\n";
@@ -3672,7 +3673,7 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
      // cout << "end of GetArrivalTimes.\n";
 } // GetArrivalTimes
 
-void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX], Balloon *bn1,Settings *settings1) {
+void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]) {
 
     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
       int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
@@ -3698,6 +3699,7 @@ void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
     phiTrigMaskH=0;
     l1TrigMask=0;
     l1TrigMaskH=0;
+    deadTime=0;
   }
   else { // if it's in range
 		
@@ -3707,7 +3709,7 @@ void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
       phiTrigMaskH=0;
       l1TrigMask=0;
       l1TrigMaskH=0;
-
+      deadTime=0;
     }else{
       turfratechain->GetEvent(iturf);
     }
@@ -3749,9 +3751,9 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 
   // Set deltaT to be used in the convolution
   deltaT = 1/(2.6*16);
-  string graphNames[2][3];
+  string graphNames[2][3][16];
   string fileName;
-  double norm=0;
+  double norm=1;
  
   // For ANITA-2 we have 1 impulse response for VPOL and 1 for HPOL
   // For ANITA-3 we have 3 impulse responses (Top, Middle, Bottom ring) for VPOL and 3 for HPOL.
@@ -3759,26 +3761,32 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
   if (settings1->WHICH==8){
     fileName = "data/sumPicoImpulse.root";
     
-    for (int iring=0;iring<3;iring++)  graphNames[0][iring]="grImpRespV";
-    for (int iring=0;iring<3;iring++)  graphNames[1][iring]="grImpRespH";
+    for (int iring=0;iring<3;iring++){
+      for (int iphi=1;iphi<17;iphi++){
+	graphNames[0][iring][iphi]="grImpRespV";
+	graphNames[1][iring][iphi]="grImpRespH";
+      }
+    }
     //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
-    norm=0.1;
+    norm*=0.1;
   } else if(settings1->WHICH==9){
 
-    fileName = "data/SignalChainImpulseResponse_anita3.root";
+    fileName = "data/Anita3_ImpulseResponseDigitizer.root";
 
     string spol[2] ={"V", "H"};
-    //   string sring[3]={"Top", "Middle", "Bottom"};
+    string sring[3]={"T", "M", "B"};
     
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
-	//	graphNames[ipol][iring]=Form("ImpulseResponse_%spol_%s", spol[ipol].c_str(), sring[iring].c_str());
-	graphNames[ipol][iring]=Form("ImpulseResponse_%spol", spol[ipol].c_str());
+	for (int iphi=0;iphi<16;iphi++){
+	  graphNames[ipol][iring][iphi] = Form("g%02d%s%s", iphi+1, sring[iring].c_str(), spol[ipol].c_str() ) ;
+	}
       }
     }
-    // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
-    norm = 48.;
 
+    // 10dB missing from impulse response
+    //norm *= TMath::Power(10, 10./20.);
+    
     // Impulse response already accounts for trigger/digitizer splitter
     norm *= sqrt(2);
 
@@ -3794,34 +3802,39 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
-	// Read graph
-	TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring].c_str());
-	if(!grTemp) {
-	  std::cerr << "Couldn't read siganl chain impulse response" << graphNames[ipol][iring] << " from file " << fileName << "\n";
-	  exit(0);
+	for (int iphi=0;iphi<16;iphi++){
+	  // Read graph
+	  TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring][iphi].c_str());
+	  if(!grTemp) {
+	    std::cerr << "Couldn't read siganl chain impulse response" << graphNames[ipol][iring][iphi] << " from file " << fileName << "\n";
+	    exit(0);
+	  }
+	  // Interpolate to high sampling rate that will be used for the convolution
+	  TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); 
+	  Int_t nPoints  = grInt->GetN();
+	  Double_t *newx = grInt->GetX();
+	  Double_t *newy = grInt->GetY();
+	  // Normalise
+	  for (int i=0;i<nPoints;i++){
+	    newy[i]=newy[i]*norm;
+	    // change time axis from ns to s
+	    newx[i]=newx[i]*1E-9;
+	  }
+	  // Pave to 0
+	  int paveNum = 8533;
+	  grTemp = new TGraph(nPoints,  newx, newy);
+	  
+	  fSignalChainResponseDigitizer[ipol][iring][iphi] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
+	  
+	  delete grInt;
+	  delete grTemp;
 	}
-	// Interpolate to high sampling rate that will be used for the convolution
-	TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); 
-	Int_t nPoints  = grInt->GetN();
-	Double_t *newx = grInt->GetX();
-	Double_t *newy = grInt->GetY();
-	// Normalise
-	for (int i=0;i<nPoints;i++) newy[i]=newy[i]*norm;
-	// Pave to 0
-	int paveNum = 8533;
-	grTemp = new TGraph(nPoints,  newx, newy);
-
-	fSignalChainResponseDigitizer[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
-
-	delete grInt;
-	delete grTemp;
       }
     }
-    
   }
-
+  
   TFile *fRayleighAnita3 = new TFile("data/RayleighAmplitudesAnita3_noSun_Interp.root", "read");
-
+  
   for (int iant=0;iant<48;iant++){
     RayleighFits[0][iant] = (TGraph*)fRayleighAnita3->Get(Form("grSigma%dV_interp", iant+1));
     RayleighFits[1][iant] = (TGraph*)fRayleighAnita3->Get(Form("grSigma%dH_interp", iant+1));
@@ -3868,8 +3881,11 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
       }
     }
     // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
-    norm = 48.;
+    //    norm = 48.;
 
+    // There was a 20dB amplifier at the scope that was not considered in the evaluation of the impulse response
+    norm = TMath::Power(10, 20./20.);
+    
     // Impulse response already accounts for trigger/digitizer splitter
     norm *= sqrt(2);
   }
@@ -3922,28 +3938,19 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
 
      // Get average pulse as measured by scope
      TGraph *gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
-
-     // count in how many channels did we inject a pulse
-     // the scope is one of them
-     // every phi sector contributes with 3 channels
-     int countChannels=1;
-     for (int iphi=0;iphi<5;iphi++) if (trigEffScanAtt[iphi]!=999) countChannels=countChannels+3;
      
      for (int i=0;i<gPulseAtAmpa->GetN();i++){
        // 7db fixed attenuation
-       gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-7/20);
+       gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-7./20.);
 
        // Variable attenuation of central phi sector
-       gPulseAtAmpa->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]/20);
+       gPulseAtAmpa->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]*1./20.);
 
-       // Signal in a 12-way splitter but only 6 channels + scope are connected
-       gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(countChannels*1.);
+       // Signal in a 12-way splitter 
+       gPulseAtAmpa->GetY()[i]*=TMath::Power(10, -10.8/20.);
 
        // Splitter between digitizer and trigger path
-       gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(2);
-       
-       // Additional factor to make things work????
-       gPulseAtAmpa->GetY()[i]/=TMath::Sqrt(2);
+       gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-3./20.);;
        
      }
      
@@ -3951,6 +3958,12 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
      double *y = gPulseAtAmpaInt->GetY();
      for (int i=0;i<HALFNFOUR;i++){
        trigEffScanPulseAtAmpa[i]=y[i];
+     }
+
+     TGraph *gPulseAtAmpaUp = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/(2.6*2));
+     double *y2 = gPulseAtAmpaUp->GetY();
+     for (int i=0;i<NFOUR;i++){
+       trigEffScanPulseAtAmpaUpsampled[i]=y2[i];
      }
 
      FFTWComplex *theFFT = FFTtools::doFFT(HALFNFOUR, trigEffScanPulseAtAmpa);
@@ -3961,6 +3974,7 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
      
      delete []theFFT;
      delete gPulseAtAmpaInt;
+     delete gPulseAtAmpaUp;
      delete gPulseAtAmpa;
      
      

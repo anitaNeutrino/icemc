@@ -184,8 +184,6 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
     //in case of roughness, create an array of allowable indices for the lookup (so this stay local to this function and we don't modify *horizon[ibnposition] and fark up other things downstream)
     if(settings1->ROUGHNESS){
 
-      double allowable_angle_range = 80.*PI/180.;
-
       interaction1->noway=0;
       interaction1->wheredoesitleave_err=0;
       interaction1->neverseesice=0;
@@ -193,93 +191,30 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
       interaction1->toohigh=0;
       interaction1->toolow=0;
 
-      vector<int> allowable_values;
-      Vector bl2pos;
-      Vector locnorm = GetSurfaceNormal(rbn).Unit(); //points down
+      bool bl_foundit = false;
+      Position temppos;
 
-      if (ice_model == 0) { // this is Crust 2.0
-        Vector pos;
-        //crust2.0 selects from ilat_inhorizon[ibnposition]
-        for(unsigned long i=0; i<ilat_inhorizon[ibnposition].size(); i++){
-          //cout<<ilat_inhorizon[ibnposition][i]<<"  "<<ilon_inhorizon[ibnposition][i]<<"\n";
-          
-          //get the position of this bin
-          ilat=ilat_inhorizon[ibnposition][i];
-          ilon=ilon_inhorizon[ibnposition][i];
+      while (!bl_foundit){
+        // go through selecting a shift off the balloon position to get lon,lat
+        Vector blnormal = GetSurfaceNormal(rbn).Unit();
+        Vector unitx = Vector();
+        Vector unity;
 
-          phi=SmearPhi(ilon, 0);
-          theta=SmearTheta(ilat, 0);
+        unitx = unitx - unitx.Dot(blnormal)*blnormal;
+        unity = blnormal.Cross(unitx);
 
-          lon = GetLon(phi);
-          lat = GetLat(theta);
+        temppos = rbn + gRandom->Rndm() * settings1->ROUGH_INTPOS_SHIFT * unitx + gRandom->Rndm() * settings1->ROUGH_INTPOS_SHIFT * unity;
+        lon = temppos.Lon();
+        lat = temppos.Lat();
+        //if( !IceThickness(lon,lat)){   //ignore if not thick enough
+        //  continue;                       // PickPosnuForaLonLat below complained too much
+        //}
+        bl_foundit = true;
+      }
 
-          pos = PickPosnuForaLonLat(lon,lat,theta,phi); //this returns a vector (!)
-          bl2pos = (rbn-pos).Unit();
-
-          if( locnorm.Angle(bl2pos) > allowable_angle_range )
-            continue;
-          //cout<<locnorm.Angle(bl2pos)*180./PI<<"\n";
-          //if get here, then it's an ok bin
-          allowable_values.push_back(ilat_inhorizon[ibnposition][i]);
-        }
-        // so now we should have our allowable list, let's copy the selection below
-        while(vol_bybin/maxvol_inhorizon[ibnposition]<rnd3) {
-          rnd3=gRandom->Rndm(); // pick random numbers between 0 and 1
-          rnd1=gRandom->Rndm();
-          rnd2=gRandom->Rndm();
-
-          whichbin_forcrust20=(int)(rnd1*(double)allowable_values.size());
-          ilat=ilat_inhorizon[ibnposition][whichbin_forcrust20];
-
-          ilon=ilon_inhorizon[ibnposition][whichbin_forcrust20];
-
-          vol_bybin=icethkarray[ilon][ilat]*1000.*area[ilat];
-        } //while
-        phi=SmearPhi(ilon, gRandom->Rndm());
-        theta=SmearTheta(ilat, gRandom->Rndm());
-        lon = GetLon(phi);
-        lat = GetLat(theta);
-
-      }// end if crust 2.0
-
-      //bedmap selects from easting_inhorizon[ibnposition]
-      else if (ice_model == 1) { // this is BEDMAP
-        Position pos;
-        //bedmap selects fromeasting_inhorizon[ibnposition]
-        for(unsigned long i=0; i<easting_inhorizon[ibnposition].size(); i++){
-          //get the position of this bin
-          GroundENtoLonLat(easting_inhorizon[ibnposition][i], northing_inhorizon[ibnposition][i], lon, lat);
-          pos = Position(lon,lat);
-          bl2pos = Vector(rbn[0] - pos[0], rbn[1] - pos[1], rbn[2] - pos[2]).Unit();
-
-          if( locnorm.Angle(bl2pos) > allowable_angle_range )
-            continue;
-          //cout<<locnorm.Angle(bl2pos)*180./PI<<"\n";
-          //if get here, then it's an ok bin
-          allowable_values.push_back(easting_inhorizon[ibnposition][i]);
-        }
-        while(vol_bybin/maxvol_inhorizon[ibnposition]<rnd3) {
-          rnd3=gRandom->Rndm();
-          rnd1=gRandom->Rndm();
-          rnd2=gRandom->Rndm();
-
-          which_coord=(int)(rnd1*(double)allowable_values.size());
-
-          e_coord=easting_inhorizon[ibnposition][which_coord];
-          n_coord=northing_inhorizon[ibnposition][which_coord];
-
-          GroundENtoLonLat(e_coord,n_coord,lon,lat);
-
-          if (e_coord > 1068 || e_coord < 0 || n_coord < 0 || n_coord > 869)
-            cout<<"Problem in PickDownward: e_coord, n_coord : "<<e_coord<<" , "<<n_coord<<endl;
-
-          vol_bybin=IceThickness(lon,lat)*Area(lat);
-        } //while
-        theta = lat*RADDEG;
-        phi=LongtoPhi_0is180thMeridian(lon); // convert longitude to phi
-      }//end bedmap
-
-      allowable_values.clear();
+      theta = lat*RADDEG;
+      phi=LongtoPhi_0is180thMeridian(lon); // convert longitude to phi
+      //cout << rbn.Lon() << "  "<< rbn.Lat() << "  " <<temppos.Lon()<< "  "<<temppos.Lat()<< "  :: ";
     }
     else{ // NO roughness case
       //cout << "in pickinteractionlocation, size of ilat_inhorizon is " << ilat_inhorizon[ibnposition].size() << "\n";
@@ -334,6 +269,8 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
     //all routines (roughness or no) \it{should} deliver a lon, lat, theta, phi
     //roughness may not sometimes, should add checks or something
     Vector posnu=PickPosnuForaLonLat(lon,lat,theta,phi);
+    //Vector blnormal = GetSurfaceNormal(rbn).Unit();
+    //cout << blnormal.Angle(Vector(rbn[0]-posnu[0],rbn[1]-posnu[1],rbn[2]-posnu[2]))*180./PI<<"\n";
     return posnu;
 } //PickInteractionLocation
 

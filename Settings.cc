@@ -253,6 +253,7 @@ void Settings::Initialize() {
   // End of the once-global varibles.
   taumodes = 1; //Taumodes =1, taucreated in the rock.
   SCREENEDGELENGTH=25.;
+  ROUGH_INTPOS_SHIFT=100000.;
 }
 
 
@@ -337,12 +338,16 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   }
   else if (bn1->WHICHPATH==0){
     anita1->LIVETIME=6.02*24.*3600.; // anita-lite
-  }
-  else if (bn1->WHICHPATH==6){
+  } else if (bn1->WHICHPATH==6){
     // kim's livetime for anita
     anita1->LIVETIME=17.*24.*3600.; // for anita, take 34.78 days * 0.75 efficiency
   }
-  else{
+  else if (bn1->WHICHPATH==7){
+    anita1->LIVETIME=28.5*24*3600;  // Anita-2 livetime taken from paper
+  }
+  else if (bn1->WHICHPATH==8){
+    anita1->LIVETIME=17.4*24*3600;  // Anita-3 livetime taken from Ben Strutt's thesis (elog note 698)
+  } else {
     anita1->LIVETIME=14.*24.*3600.; // otherwise use 2 weeks by default
   }
 
@@ -542,7 +547,12 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   if (SIGNAL_FLUCT!=1){
     std::cout << "Non-default setting:  SIGNAL_FLUCT= " << SIGNAL_FLUCT << std::endl;
   }
-  getSetting("Zero signal", ZEROSIGNAL);
+
+  getSetting("Zero signal", ZEROSIGNAL); 
+  if (ZEROSIGNAL!=0){
+    std::cout << "Non-default setting:  ZEROSIGNAL= " << ZEROSIGNAL << std::endl;
+  }
+  
   getSetting("Random rotation polarization", RANDOMISEPOL);
   int useLPM;
   getSetting("LPM effect", useLPM);
@@ -644,6 +654,14 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Enable surface roughness", ROUGHNESS);
   getSetting("Surface roughness", ROUGHSIZE);
   getSetting("Screen edge length [meters]", SCREENEDGELENGTH);
+  getSetting("Interaction position shift [meters]", ROUGH_INTPOS_SHIFT);
+
+  getSetting("Base screen divisions", ROUGHSCREENDIV_BASE);
+  getSetting("Subgrid divisions", ROUGHSCREENDIV_SUB);
+  getSetting("Base screen fraction threshold", ROUGHSCREENFRAC_BASE);
+  getSetting("Subgrid fraction threshold", ROUGHSCREENFRAC_SUB);
+  getSetting("Number of subgrid generations", ROUGHMAXGEN);
+
   getSetting("FIRN", FIRN);
   if (FIRN==0){
     std::cout << "Warning!  Non-standard parameter setting.  FIRN = " << FIRN << std::endl;
@@ -805,6 +823,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   APPLYIMPULSERESPONSEDIGITIZER=0;
   APPLYIMPULSERESPONSETRIGGER=0;
   USETIMEDEPENDENTTHRESHOLDS=0;
+  USEDEADTIME=0;
   getSetting("Digitizer path impulse response", APPLYIMPULSERESPONSEDIGITIZER);
   std::cout << "Apply impulse response to digitizer path: " << APPLYIMPULSERESPONSEDIGITIZER << std::endl;
   getSetting("Trigger path impulse response", APPLYIMPULSERESPONSETRIGGER);
@@ -824,8 +843,10 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 #endif
   getSetting("Time dependent thresholds", USETIMEDEPENDENTTHRESHOLDS);
   std::cout << "Use time-dependent thresholds: " << USETIMEDEPENDENTTHRESHOLDS << std::endl;
-
-  if ( USETIMEDEPENDENTTHRESHOLDS && WHICH!=9) {
+  getSetting("Dead time", USEDEADTIME);
+  std::cout << "Use dead time from flight: " << USEDEADTIME << std::endl;
+  
+  if ( (USETIMEDEPENDENTTHRESHOLDS || USEDEADTIME) && WHICH!=9) {
     std::cout << "Time-dependent thresholds are only available for anita-3." << std::endl;
     exit(1);
   }

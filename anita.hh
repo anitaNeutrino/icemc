@@ -131,6 +131,7 @@ public:
   UShort_t phiTrigMaskH;
   UShort_t l1TrigMask;
   UShort_t l1TrigMaskH;
+  Double_t deadTime;              // fractional deadTime
   unsigned int realTime_turfrate; // realtime from the turf rate file
   unsigned int realTime_tr_min; // min realtime from the turf rate file
   unsigned int realTime_tr_max; // max realtime from the turf rate file
@@ -144,10 +145,10 @@ public:
   int iturfevent;
 
   static const int npointThresh = 1640;
-  Int_t threshScanThresh[2][48][npointThresh]; // adc thresholds from threshold scan
-  Int_t threshScanScaler[2][48][npointThresh]; // scalers from threshold scan
-  Int_t minadcthresh[2][48];
-  Int_t maxadcthresh[2][48];
+  Float_t threshScanThresh[2][48][npointThresh]; // adc thresholds from threshold scan
+  Float_t threshScanScaler[2][48][npointThresh]; // scalers from threshold scan
+  Float_t minadcthresh[2][48];
+  Float_t maxadcthresh[2][48];
 
   void setphiTrigMaskAnita3(UInt_t realTime_flightdata);
   void setphiTrigMask(UInt_t realTime_flightdata);
@@ -353,7 +354,7 @@ public:
   void myconvlv(double *timedomain_forconvl,const int NFOUR,double *fdiode,double &maxdiodeconvl,double &onediodeconvl,double *power_noise,double *diodeconv);
 
   void GetArrivalTimes(const Vector& rf_direction,Balloon *bn1,Settings *settings1);
-  void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX], Balloon *bn1,Settings *settings1);
+  void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]);
   int rx_minarrivaltime;
   double arrival_times[NLAYERS_MAX*NPHI_MAX];
 
@@ -580,9 +581,9 @@ public:
   Int_t numFreqs;
   Double_t *freqs;
   TRandom3 *fRand;
-  Double_t fTimes[HALFNFOUR];
 #endif
-  TGraph *fSignalChainResponseDigitizer[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
+  Double_t fTimes[HALFNFOUR];
+  TGraph *fSignalChainResponseDigitizer[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   TGraph *fSignalChainResponseTrigger[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   double deltaT;
 
@@ -590,6 +591,7 @@ public:
   int trigEffScanPhi;                      // central phi sector of trigger efficiency scan
   double trigEffScanAtt[5];                // attenuations to apply to central and adjecent antennas
   Double_t trigEffScanPulseAtAmpa[HALFNFOUR];
+  Double_t trigEffScanPulseAtAmpaUpsampled[NFOUR];
   Double_t trigEffScanAmplitudeAtAmpa[NFREQ];
   Double_t trigEffScanPulseAtSurf[250][HALFNFOUR];
   

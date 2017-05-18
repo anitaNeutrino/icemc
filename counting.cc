@@ -43,7 +43,9 @@ Counting::Counting() {
   for (int i=0;i<NCOSTHETA;i++) {
     Tools::Zero(weights_rin[i],NPHI); // same, after next iteration.
   }
-// variables for counting neutrinos and reporting results.
+
+  Tools::Zero(ndeadtime,2);
+  // variables for counting neutrinos and reporting results.
   nnu_e=0;  //counting the number of e,mu,tau neutrinos
   nnu_mu=0;  
   nnu_tau=0;
