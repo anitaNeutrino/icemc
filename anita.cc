@@ -60,8 +60,8 @@ Anita::Anita() {
     INCLUDE_NADIRONLY = 0.; // cant angle of nadir (bottom) layer of antennas
     SIGMA_THETA=0.5*RADDEG; // resolution on the polar angle of the signal
     
-    FREQ_LOW=200.E6;
-    FREQ_HIGH=1200.E6;
+    FREQ_LOW=0.;//200.E6;
+    FREQ_HIGH=1300.E6; //1200.E6;
     
     antennatosurf[0]=2;
     antennatosurf[1]=4;
@@ -285,9 +285,9 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     }
 #endif
     for (int i=0;i<NFREQ;i++) {
-		freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
-		avgfreq_rfcm[i]=0.;
-		avgfreq_rfcm_lab[i]=0.;
+      freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
+      avgfreq_rfcm[i]=0.;
+      avgfreq_rfcm_lab[i]=0.;
     } //for
 
     initializeFixedPowerThresholds(foutput);
@@ -2363,6 +2363,77 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
         vsignal_e_forfft[2*ifour+1]*=sinphase;
         vsignal_h_forfft[2*ifour]*=cosphase;
         vsignal_h_forfft[2*ifour+1]*=sinphase;	
+      }
+    }
+}
+
+void Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay) {
+    
+    Tools::Zero(vsignal_e_forfft,NFOUR/2);
+    
+    double previous_value_e_even=0.;
+    double previous_value_e_odd=0.;
+    int count_nonzero=0;
+    int iprevious=0;
+    int ifirstnonzero=-1;
+    int ilastnonzero=2000;
+    for (int i=0;i<NFREQ;i++) {
+      // freq_forfft has NFOUR/2 elements because it is meant to cover real and imaginary values
+      // but there are only NFOUR/4 different values
+      // it's the index among the NFOUR/4 that we're interested in
+      int ifour=Tools::Getifreq(freq[i],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
+      
+      if (ifour!=-1 && 2*ifour+1<NFOUR/2) {
+        count_nonzero++;
+        if (ifirstnonzero==-1){
+          ifirstnonzero=ifour;
+        }
+
+        vsignal_e_forfft[2*ifour]=vsignalarray_e[i]*2/((double)NFOUR/2); // phases is 90 deg.
+
+        //      cout << "ifour, vsignal is " << ifour << " " << vsignal_e_forfft[2*ifour] << "\n";
+
+        vsignal_e_forfft[2*ifour+1]=vsignalarray_e[i]*2/((double)NFOUR/2); // phase is 90 deg.
+        // the 2/(nfour/2) needs to be included since were using Tools::realft with the -1 setting
+
+        // the 2/(nfour/2) needs to be included since were using Tools::realft with the -1 setting
+        // how about we interpolate instead of doing a box average
+
+        for (int j=iprevious+1;j<ifour;j++) {
+        vsignal_e_forfft[2*j]=previous_value_e_even+(vsignal_e_forfft[2*ifour]-previous_value_e_even)*(double)(j-iprevious)/(double)(ifour-iprevious);
+        //	cout << "j, vsignal is " << j << " " << vsignal_e_forfft[2*j] << "\n";
+
+        vsignal_e_forfft[2*j+1]=previous_value_e_odd+(vsignal_e_forfft[2*ifour+1]-previous_value_e_odd)*(double)(j-iprevious)/(double)(ifour-iprevious);
+        }
+
+        ilastnonzero=ifour;
+        iprevious=ifour;
+        previous_value_e_even=vsignal_e_forfft[2*ifour];
+        previous_value_e_odd=vsignal_e_forfft[2*ifour+1];
+      }
+      
+    } // end loop over nfreq
+    
+    // EH check
+    //cout << "ifirstnonzero, ilastnonzero are " << ifirstnonzero << " " << ilastnonzero << "\n";
+    //cout << "ratio is " << (double)count_nonzero/(double)(ilastnonzero-ifirstnonzero) << "\n";
+    for (int j=0;j<NFOUR/4;j++) {
+      vsignal_e_forfft[2*j]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
+      vsignal_e_forfft[2*j+1]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
+    }
+    
+    //  Tools::InterpolateComplex(vsignal_e_forfft,NFOUR/4);
+
+    if (useconstantdelay){
+      double cosphase=cos(phasedelay*PI/180.);
+      double sinphase=sin(phasedelay*PI/180.);
+      for (int ifour=0;ifour<NFOUR/4;ifour++) {      
+        if (PULSER) {
+          cosphase = cos(v_phases[ifour]*PI/180.);
+          sinphase = sin(v_phases[ifour]*PI/180.);
+        }
+        vsignal_e_forfft[2*ifour]*=cosphase;
+        vsignal_e_forfft[2*ifour+1]*=sinphase;
       }
     }
 }

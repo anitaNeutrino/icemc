@@ -46,7 +46,8 @@ public:
 
   static const int NBANDS_MAX=100; // max number of bands
   static const int NPOL=2; // number of polarizations
-  static const int NFREQ=128;  // number of frequency bins
+  //static const int NFREQ=128;  // number of frequency bins
+  static const int NFREQ=128;
   //const int NFREQ=4096;
 
 
@@ -96,6 +97,8 @@ public:
   
   // takes arrays that span NFREQ and turn them into arrays that span HALFNFOUR
   void MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay);
+  void MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay);
+  
   int Match(int ilayer,int ifold,int rx_minarrivaltime);
   int getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn);
 
