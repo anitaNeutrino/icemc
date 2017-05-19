@@ -650,9 +650,9 @@ int main(int argc,  char **argv) {
   double vmmhz1m_fresneledonce=0; // above,  after fresnel factor applied for ice-air interface
   double vmmhz1m_fresneledtwice=0; // above,  after fresnel factor applied for firn
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
+
   // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
   double vmmhz_em[Anita::NFREQ];
-
   double vmmhz_temp=1.;
   double vmmhz_min_thatpasses=1000;
   double vmmhz_min=0;   // minimum of the above array
@@ -1581,7 +1581,6 @@ int main(int argc,  char **argv) {
       count1->inhorizon[whichray]++;
 
 
-
       // cerenkov angle depends on depth because index of refraction depends on depth.
       if(!settings1->ROUGHNESS){
         if (settings1->FIRN) {
@@ -1624,6 +1623,8 @@ int main(int argc,  char **argv) {
       if (!ray1->TraceRay(settings1, anita1, 2, sig1->N_DEPTH)) {; // trace ray,  2nd iteration.
         continue;
       }
+
+      
 
       // fills ray1->n_exit2bn[2] ?
       ray1->GetRFExit(settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, bn1->r_bn, bn1->r_boresights, 2, antarctica);
@@ -1790,6 +1791,8 @@ int main(int argc,  char **argv) {
         //heff_max=maximum effective height over the frequency range
       }
 
+
+      
       // intermediate counter
       count1->nnottoosmall[whichray]++;
 
@@ -2395,8 +2398,9 @@ int main(int argc,  char **argv) {
         double validScreenSummedArea = 0.;
         double vmmhz_local_array[Anita::NFREQ];
         for (int jj=0; jj<panel1->GetNvalidPoints(); jj++){
-          sig1->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
-          // apply the off-angle tapering
+	  sig1->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
+
+	  // apply the off-angle tapering
           for (int k=0;k<Anita::NFREQ;k++) {
             deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
             deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
@@ -2433,6 +2437,8 @@ int main(int argc,  char **argv) {
       // the screen is now finished
       /////////////////////////////
 
+
+      
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
       if (!settings1->ROUGHNESS){
@@ -2445,6 +2451,8 @@ int main(int argc,  char **argv) {
         count1->nchanceinhell_fresnel[whichray]++;
       } //end if CHANCEINHELL factor and SKIPCUTS
       //
+
+
       // for plotting
       diffexit=ray1->rfexit[0].Distance(ray1->rfexit[1]);
       diffnorm=acos(ray1->nsurf_rfexit[0]*ray1->nsurf_rfexit[1]);
@@ -2470,7 +2478,6 @@ int main(int argc,  char **argv) {
       }
 
       count1->nchanceinhell_1overr[whichray]++;
-
 
       // distance ray travels through ice.
       if (!settings1->ROUGHNESS) {
@@ -2532,14 +2539,15 @@ int main(int argc,  char **argv) {
           sig1->SetNDepth(sig1->NICE); // for making array of signal vs. frequency,  viewangle
         
         sig1->GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ); // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
-        //   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
+
+	//   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
         // and making an array across frequency bins by putting in frequency dependence.
       }
         
-        //oindree: define the SimulatedSignal
-        SimulatedSignal *sim_signal = new SimulatedSignal(Anita::NFREQ, anita1->freq, vmmhz);
-        //After this, everything happening to vmmhz should happen to sim_signal
-        //so figure out what happens to vmmhz then do it to sim_signal as well
+      
+      SimulatedSignal *simSignal = new SimulatedSignal(Anita::NFREQ, anita1->freq, vmmhz);
+      //After this, everything happening to vmmhz should happen to sim_signal
+      //so figure out what happens to vmmhz then do it to sim_signal as well
         
         
       
@@ -2571,7 +2579,8 @@ int main(int argc,  char **argv) {
           continue;
         }
         count1->nviewanglecut[whichray]++;
-        
+
+
         for (int k=0;k<Anita::NFREQ;k++) {
           deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
           deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
@@ -2634,7 +2643,8 @@ int main(int argc,  char **argv) {
         if (settings1->CHANCEINHELL_FACTOR*Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS) {
           continue;
         }
-        
+
+
       }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
 
       // just for plotting
@@ -2750,6 +2760,7 @@ int main(int argc,  char **argv) {
 
       globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
       anita1->rms_rfcm_e_single_event = 0;
+
       
       for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
         for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
@@ -2783,9 +2794,9 @@ int main(int argc,  char **argv) {
 
           // Chantrig::ImpulseResponse needs to be outside the ray loop
           chantrig1->DigitizerPath(settings1, anita1, ilayer, ifold);
-          
-          chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
+          chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
+ 
 	  antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
 	  
           //+++++//+++++//+++++//+++++//+++++//+++++//+++++
@@ -2815,28 +2826,28 @@ int main(int argc,  char **argv) {
           // now hopefully we have converted the signal to time domain waveforms
           // for all the bands of the antenna and screen points
 
-          for (int k=0;k<Anita::NFREQ;k++) {
-            if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
-              // for plotting
-              if (ilayer==0 && ifold==0) {
-                volts_rx_0=globaltrig1->volts[0][ilayer][ifold];
-                if (settings1->SIGNAL_FLUCT)
-                  volts_rx_0+=gRandom->Gaus(0, anita1->VNOISE[ilayer]);
-              } //if (first antenna,  top layer)
+          // for (int k=0;k<Anita::NFREQ;k++) {
+          //   if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
+          //     // for plotting
+          //     if (ilayer==0 && ifold==0) {
+          //       volts_rx_0=globaltrig1->volts[0][ilayer][ifold];
+          //       if (settings1->SIGNAL_FLUCT)
+          //         volts_rx_0+=gRandom->Gaus(0, anita1->VNOISE[ilayer]);
+          //     } //if (first antenna,  top layer)
 
-              // for debugging
-              if (volts_rx_0>volts_rx_max) {
-                volts_rx_max=volts_rx_0;
-                volts_rx_max_highband=chantrig1->bwslice_volts_pol0[3];
-                volts_rx_max_lowband=chantrig1->bwslice_volts_pol0[0];
-                // theta of the polarization as measured at the antenna (approximately since we aren't correcting for the
-                //cant of the antenna yet) =
-                theta_pol_measured=atan(globaltrig1->volts_original[1][ilayer][ifold]/globaltrig1->volts_original[0][ilayer][ifold]);
-              }
-              // for plotting
-              volts_rx_1=globaltrig1->volts[1][ilayer][ifold];
-            }// end if (seavey frequencies)
-          }// end looping over frequencies.
+          //     // for debugging
+          //     if (volts_rx_0>volts_rx_max) {
+          //       volts_rx_max=volts_rx_0;
+          //       volts_rx_max_highband=chantrig1->bwslice_volts_pol0[3];
+          //       volts_rx_max_lowband=chantrig1->bwslice_volts_pol0[0];
+          //       // theta of the polarization as measured at the antenna (approximately since we aren't correcting for the
+          //       //cant of the antenna yet) =
+          //       theta_pol_measured=atan(globaltrig1->volts_original[1][ilayer][ifold]/globaltrig1->volts_original[0][ilayer][ifold]);
+          //     }
+          //     // for plotting
+          //     volts_rx_1=globaltrig1->volts[1][ilayer][ifold];
+          //   }// end if (seavey frequencies)
+          // }// end looping over frequencies.
 
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
             for (int ibw=0;ibw<5;ibw++) {
@@ -2939,6 +2950,7 @@ int main(int argc,  char **argv) {
         } //loop through the phi-fold antennas
       }  //loop through the layers of antennas
 
+
       anita1->rms_rfcm_e_single_event = sqrt(anita1->rms_rfcm_e_single_event / (anita1->HALFNFOUR * settings1->NANTENNAS));
 
       if(!settings1->ROUGHNESS){
@@ -3015,7 +3027,6 @@ int main(int argc,  char **argv) {
       //       EVALUATE GLOBAL TRIGGER    //
       //          FOR VPOL AND HPOL       //
       //////////////////////////////////////
-
 
       int thispasses[Anita::NPOL]={0,0};
 
