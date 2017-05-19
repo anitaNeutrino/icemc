@@ -301,6 +301,10 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Which payload", WHICH);
   getSetting("Antenna layers", NLAYERS);
 
+  if (WHICH==9)       ANITAVERSION=3;
+  else if (WHICH==10) ANITAVERSION=4;
+  else                ANITAVERSION=0;
+  
   if(((WHICH==1 || WHICH==6) && NLAYERS!=4) || (WHICH==0 && NLAYERS!=1) || (WHICH==7 && NLAYERS!=1)){
     std::cout << "Non-default setting: WHICH = " << WHICH << " and NLAYERS= " << NLAYERS << std::endl;
   }

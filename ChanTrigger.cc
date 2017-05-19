@@ -1349,7 +1349,9 @@ double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant)
   int index=TMath::BinarySearch(anita1->npointThresh, anita1->threshScanThresh[ipol][iant], threshadc);
   
   thisrate=(double)anita1->threshScanScaler[ipol][iant][index]; // these scalers are in kHz
-    
+
+  thisrate=(double)anita1->scalers[ipol][iant];
+  
   // now find threshold for this scaler.  Here, scalers have to be in MHz.
   thisrate=thisrate/1.E3; // put it in MHz
 

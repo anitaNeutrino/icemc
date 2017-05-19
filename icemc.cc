@@ -1276,9 +1276,11 @@ int main(int argc,  char **argv) {
   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
   adu5PatTree->Branch("weight",       &weight,       "weight/D"     );
 
-  AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();
-
 #ifdef ANITA3_EVENTREADER
+
+  // Set AnitaVersion so that the right payload geometry is used
+  AnitaVersion::set(settings1->ANITAVERSION);
+  
   outputAnitaFile =settings1->outputdir+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
@@ -1286,6 +1288,8 @@ int main(int argc,  char **argv) {
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
 #endif
 
+  AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();
+  
 #endif
   //end ROOT variable definitions
   ///////////////////////////////////////////////////////////////////////
@@ -2803,51 +2807,27 @@ int main(int argc,  char **argv) {
           // THIS IS WHERE WE ACTUALLY CONSTRUCT THE WAVEFORMS THAT GET PASSED TO THE TRIGGER
           chantrig1->PrepareTriggerPath(settings1, anita1, bn1, panel1, ilayer, ifold, n_eplane, n_hplane, n_normal);
           Tools::Zero(sumsignal, 5);
-          
 
-/*
-  std::string stemp=settings1->outputdir+"/rough_signalwaveforms_"+nunum+".dat";
-  ofstream sigout(stemp.c_str(), ios::app);
-    for (int iband=0;iband<5;iband++) {
-      if (anita1->bwslice_allowed[iband]!=1) continue; 
-      for (int k=0;k<anita1->NFOUR/2;k++) {
-        sigout << ilayer << "  "
-               << ifold << "  "
-               << iband << "  "
-               << k << "  "
-               << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
-               << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
-               << std::endl;
-      }
-    }
-  sigout.close();
-*/
-
-          // now hopefully we have converted the signal to time domain waveforms
+	  // now hopefully we have converted the signal to time domain waveforms
           // for all the bands of the antenna and screen points
 
-          // for (int k=0;k<Anita::NFREQ;k++) {
-          //   if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
-          //     // for plotting
-          //     if (ilayer==0 && ifold==0) {
-          //       volts_rx_0=globaltrig1->volts[0][ilayer][ifold];
-          //       if (settings1->SIGNAL_FLUCT)
-          //         volts_rx_0+=gRandom->Gaus(0, anita1->VNOISE[ilayer]);
-          //     } //if (first antenna,  top layer)
 
-          //     // for debugging
-          //     if (volts_rx_0>volts_rx_max) {
-          //       volts_rx_max=volts_rx_0;
-          //       volts_rx_max_highband=chantrig1->bwslice_volts_pol0[3];
-          //       volts_rx_max_lowband=chantrig1->bwslice_volts_pol0[0];
-          //       // theta of the polarization as measured at the antenna (approximately since we aren't correcting for the
-          //       //cant of the antenna yet) =
-          //       theta_pol_measured=atan(globaltrig1->volts_original[1][ilayer][ifold]/globaltrig1->volts_original[0][ilayer][ifold]);
-          //     }
-          //     // for plotting
-          //     volts_rx_1=globaltrig1->volts[1][ilayer][ifold];
-          //   }// end if (seavey frequencies)
-          // }// end looping over frequencies.
+	  /*
+	    std::string stemp=settings1->outputdir+"/rough_signalwaveforms_"+nunum+".dat";
+	    ofstream sigout(stemp.c_str(), ios::app);
+	    for (int iband=0;iband<5;iband++) {
+	    if (anita1->bwslice_allowed[iband]!=1) continue; 
+	    for (int k=0;k<anita1->NFOUR/2;k++) {
+	    sigout << ilayer << "  "
+	    << ifold << "  "
+	    << iband << "  "
+	    << k << "  "
+	    << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
+	    << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
+	    << std::endl;
+	    }
+	    }
+	    sigout.close();*/
 
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
             for (int ibw=0;ibw<5;ibw++) {
