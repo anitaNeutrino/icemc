@@ -778,8 +778,6 @@ void ChanTrigger::ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, 
   for (int jpt=0; jpt < panel1->GetNvalidPoints(); jpt++){
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
       // Convert V/m/MHz to V/m/Hz and divide by dt to prepare for fft
-      //vhz_rx_e[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); // EH, 1/sqrt(2) for dividing power in half for TDA and DDA?
-      //vhz_rx_h[ifreq]=vmmhz[ifreq]/sqrt(2.)/(anita1->TIMESTEP*1.E6); 
       tmp_vhz_rx_e[ifreq] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + ifreq)/sqrt(2)/(anita1->TIMESTEP*1.E6);
       tmp_vhz_rx_h[ifreq] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + ifreq)/sqrt(2)/(anita1->TIMESTEP*1.E6);
 
@@ -912,6 +910,10 @@ void ChanTrigger::PrepareTriggerPath(Settings *settings1, Anita *anita1, Balloon
 
           anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, v_banding_rfcm[0][iband][k], v_banding_rfcm[1][iband][k]);
         } // end if (seavey frequencies)
+	else {
+	  v_banding_rfcm[0][iband][k]=0;
+	  v_banding_rfcm[1][iband][k]=0;
+	}
       } // end looping over frequencies.
       
       if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
