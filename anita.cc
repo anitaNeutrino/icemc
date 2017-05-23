@@ -923,9 +923,12 @@ void Anita::readVariableThresholds(Settings *settings1){
     fsurf=new TFile("data/SampleSurf_icemc_anita3.root");
     surfchain=(TTree*)fsurf->Get("surf_icemc");
     surfchain->SetMakeClass(1);
-    surfchain->SetBranchAddress("thresholds",   &thresholds   );
-    surfchain->SetBranchAddress("scalers",      &scalers      );
-    surfchain->SetBranchAddress("realTime",     &realTime_surf);
+    surfchain->SetBranchAddress("thresholds",       &thresholds       );
+    surfchain->SetBranchAddress("scalers",          &scalers          );
+    surfchain->SetBranchAddress("fakeThreshold",    &fakeThresholds   );
+    surfchain->SetBranchAddress("fakeThreshold2",   &fakeThresholds2  );
+    surfchain->SetBranchAddress("fakeScaler",       &fakeScalers      );
+    surfchain->SetBranchAddress("realTime",         &realTime_surf    );
     surfchain->BuildIndex("realTime");
     surfchain->GetEvent(0);
     realTime_surf_min=realTime_surf; // realTime of first event in the file
@@ -3784,11 +3787,11 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
       }
     }
 
-    // 10dB missing from impulse response
-    //norm *= TMath::Power(10, 10./20.);
+    // 6.6dB missing from impulse response
+    norm *= TMath::Power(10, 6.6/20.);
     
-    // Impulse response already accounts for trigger/digitizer splitter
-    norm *= sqrt(2);
+    //// Impulse response already accounts for trigger/digitizer splitter
+    //norm *= sqrt(2);
 
   }
 
