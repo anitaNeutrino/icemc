@@ -114,9 +114,15 @@ void ChanTrigger::WhichBandsPass(int inu,Settings *settings1, Anita *anita1, Glo
     else if (ilayer==1) iphi = ifold*2+1;
     // we invert VPOL and HPOL because in AnitaEventReader (0:HPOL 1:VPOL) and in icemc (0:VPOL 1:HPOL)
     // convert scalers to power thresholds using fitted function got from ANITA-1, are they too old?
-    thresholds[1][4] = ADCCountstoPowerThreshold(anita1,0,iring*16+iphi)*(-1.);
-    thresholds[0][4] = ADCCountstoPowerThreshold(anita1,1,iring*16+iphi)*(-1.);
-    //    cout << thresholds[4] << " \n";
+    // thresholds[1][4] = ADCCountstoPowerThreshold(anita1,0,iring*16+iphi)*(-1.);
+    // thresholds[0][4] = ADCCountstoPowerThreshold(anita1,1,iring*16+iphi)*(-1.);
+
+
+    // Use thresholds converted from flight scalers
+    thresholds[0][4] = anita1->fakeThresholds2[0][iring*16+iphi]*(-1.);
+    thresholds[1][4] = anita1->fakeThresholds2[1][iring*16+iphi]*(-1.);
+
+    //    cout << thresholds[0][4] << " " <<  thresholds[0][4] << " \n";
   } else {
     GetThresholds(settings1,anita1,ilayer,thresholds); // get the right thresholds for this layer
   }
