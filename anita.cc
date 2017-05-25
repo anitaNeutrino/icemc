@@ -923,9 +923,12 @@ void Anita::readVariableThresholds(Settings *settings1){
     fsurf=new TFile("data/SampleSurf_icemc_anita3.root");
     surfchain=(TTree*)fsurf->Get("surf_icemc");
     surfchain->SetMakeClass(1);
-    surfchain->SetBranchAddress("thresholds",   &thresholds   );
-    surfchain->SetBranchAddress("scalers",      &scalers      );
-    surfchain->SetBranchAddress("realTime",     &realTime_surf);
+    surfchain->SetBranchAddress("thresholds",       &thresholds       );
+    surfchain->SetBranchAddress("scalers",          &scalers          );
+    surfchain->SetBranchAddress("fakeThreshold",    &fakeThresholds   );
+    surfchain->SetBranchAddress("fakeThreshold2",   &fakeThresholds2  );
+    surfchain->SetBranchAddress("fakeScaler",       &fakeScalers      );
+    surfchain->SetBranchAddress("realTime",         &realTime_surf    );
     surfchain->BuildIndex("realTime");
     surfchain->GetEvent(0);
     realTime_surf_min=realTime_surf; // realTime of first event in the file
@@ -933,36 +936,36 @@ void Anita::readVariableThresholds(Settings *settings1){
     realTime_surf_max=realTime_surf; // realTime of last event in file
 
 
-    // Reading in last threshold scan before Anita-3 flight
-    // Run 11927
-    TFile *fthresh = new TFile ("data/threshScan_anita3.root");
-    TGraph *gtemp;
-    double *x, *y;
-    for (int ipol=0;ipol<2;ipol++){
-      for (int iant=0;iant<48;iant++){
-	gtemp = (TGraph*)fthresh->Get(Form("g_%i_%i", ipol, iant));
-	x = gtemp->GetX();
-	y = gtemp->GetY();
-	for (int i=0;i<npointThresh;i++){
-	  threshScanThresh[ipol][iant][i] = (Int_t)x[i];
-	  threshScanScaler[ipol][iant][i] = (Int_t)y[i];
-	}
-	minadcthresh[ipol][iant]=TMath::MinElement(npointThresh, x);
-	maxadcthresh[ipol][iant]=TMath::MaxElement(npointThresh, x);
-      }
-    }
-    // This channel was turned off during the threshold scan
-    // We are then using the scan for a different channel
-    // that had very similar thresholds during the flight
-    for (int i=0;i<npointThresh;i++){
-      threshScanThresh[0][35][i] = threshScanThresh[0][20][i];
-      threshScanScaler[0][35][i] = threshScanScaler[0][20][i];
-    }
-    minadcthresh[0][35] = minadcthresh[0][20];
-    maxadcthresh[0][35] = maxadcthresh[0][20];
+    // // Reading in last threshold scan before Anita-3 flight
+    // // Run 11927
+    // TFile *fthresh = new TFile ("data/threshScan_anita3.root");
+    // TGraph *gtemp;
+    // double *x, *y;
+    // for (int ipol=0;ipol<2;ipol++){
+    //   for (int iant=0;iant<48;iant++){
+    // 	gtemp = (TGraph*)fthresh->Get(Form("g_%i_%i", ipol, iant));
+    // 	x = gtemp->GetX();
+    // 	y = gtemp->GetY();
+    // 	for (int i=0;i<npointThresh;i++){
+    // 	  threshScanThresh[ipol][iant][i] = (Int_t)x[i];
+    // 	  threshScanScaler[ipol][iant][i] = (Int_t)y[i];
+    // 	}
+    // 	minadcthresh[ipol][iant]=TMath::MinElement(npointThresh, x);
+    // 	maxadcthresh[ipol][iant]=TMath::MaxElement(npointThresh, x);
+    //   }
+    // }
+    // // This channel was turned off during the threshold scan
+    // // We are then using the scan for a different channel
+    // // that had very similar thresholds during the flight
+    // for (int i=0;i<npointThresh;i++){
+    //   threshScanThresh[0][35][i] = threshScanThresh[0][20][i];
+    //   threshScanScaler[0][35][i] = threshScanScaler[0][20][i];
+    // }
+    // minadcthresh[0][35] = minadcthresh[0][20];
+    // maxadcthresh[0][35] = maxadcthresh[0][20];
 
-    delete gtemp;
-    delete fthresh;
+    // delete gtemp;
+    // delete fthresh;
       
   }
 }
@@ -3855,11 +3858,11 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
       }
     }
 
-    // 10dB missing from impulse response
-    //norm *= TMath::Power(10, 10./20.);
+    // 6.6dB missing from impulse response
+    norm *= TMath::Power(10, 6.6/20.);
     
-    // Impulse response already accounts for trigger/digitizer splitter
-    norm *= sqrt(2);
+    //// Impulse response already accounts for trigger/digitizer splitter
+    //norm *= sqrt(2);
 
   }
 
