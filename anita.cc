@@ -2297,13 +2297,13 @@ void Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx){
     tmp_fftvhz[ifreq]=TMath::Sqrt(tmp_fftvhz[2*ifreq]*tmp_fftvhz[2*ifreq] + tmp_fftvhz[2*ifreq+1]*tmp_fftvhz[2*ifreq+1]);
   }
     
-    for (int ifreq=0; ifreq<NFREQ; ifreq++){
+  for (int ifreq=0; ifreq<NFREQ; ifreq++){
       
-      int ifour=Tools::Getifreq(freq[ifreq],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
-      //      cout << ifour << " " << ifour2 << endl;
-      vhz_rx[ifreq]=tmp_fftvhz[ifour]*norm;
-      // cout << ifour << " " << freq[ifreq] << " " << vhz_rx[ifreq] << " " << endl;
-    }
+    int ifour=Tools::Getifreq(freq[ifreq],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
+    //      cout << ifour << " " << ifour2 << endl;
+    vhz_rx[ifreq]=tmp_fftvhz[ifour]*norm;
+    // cout << ifour << " " << freq[ifreq] << " " << vhz_rx[ifreq] << " " << endl;
+  }
 
 }
 
