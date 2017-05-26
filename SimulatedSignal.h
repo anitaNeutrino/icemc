@@ -21,13 +21,17 @@ class SimulatedSignal : public RFSignal {
 
   void updateSimSignalFromVmmhz(int nfreqs0, double *freqs0, double *freqAmp0); ///< Update values of SimSignal from icemc askaryan field (vmmhz) defined from 200MHz to 1200MHz
   
-  void addCW(double frequency, double phase, double amplitude);
+  void addCW(double frequency, double phase, double amplitude); ///< Add CW following a sine wave with frequency, phase and amplitude set by the user
+
+  void getVmmhz(Anita *anita1, double *vmmhz);
+
+
+  // The final number of frequencies is 256 between 0 and 1300 MHz
+  Int_t    nfreqs = 257; //Anita::HALFNFOUR/2;
+  Double_t newdf  = 1300e6/nfreqs;
   
  private:
   
-  // The final number of frequencies is 256 between 0 and 1300 MHz
-  Int_t    nfreqs = 256; //Anita::HALFNFOUR/2;
-  Double_t newdf  = 1300e6/nfreqs;
       
 };
 

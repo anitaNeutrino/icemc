@@ -1,5 +1,8 @@
 #include <iostream>
-//#include "anita.hh"
+#include <array>
+#include "vector.hh"
+#include "Tools.h"
+#include "anita.hh"
 #include "SimulatedSignal.h"
 
 ///< SimulatedSignal inherits from RFSignal
@@ -51,19 +54,22 @@ void SimulatedSignal::updateSimSignalFromVmmhz(int nfreqs0, double *freqs0, doub
   tempMags[0]     = 0;
   tempPhases[0]   = phase;
 
-  int ndt0 = ((nfreqs0)*2+1);
-  int ndt  = floor(1000e6/newdf)*2+1;
-  // Renormalise because we are adding power when interpolating between 0 and 200 MHz
-  double norm = TMath::Sqrt(ndt0*1./ndt);
+  // Renormalise because we are adding power when interpolating between 0 and freqs0[0] (200 MHz)
+  int firstNonZero = Tools::Getifreq(freqs0[0],0,newdf*nfreqs,nfreqs);
+  int lastNonZero  = Tools::Getifreq(freqs0[nfreqs0-1],0,newdf*nfreqs,nfreqs);
+  double norm=TMath::Sqrt(double(nfreqs0)/double(lastNonZero-firstNonZero));
+  // cout << firstNonZero << " " << lastNonZero << " " << lastNonZero-firstNonZero << " " << norm << endl;
 
+  
+  //  cout << norm << endl;
   // Graph to interpolate between points properly
   TGraph *gfreq0 = new TGraph(nfreqs0, freqs0, freqAmp0);
 
-  for (int ifreq=1;ifreq<=nfreqs;ifreq++){
+  for (int ifreq=1;ifreq<nfreqs;ifreq++){
     tempFreqVals[ifreq]=newdf*ifreq;
     if (tempFreqVals[ifreq]<freqs0[0]) {
       // Points between 0 and 200 MHz are interpolated with a straight line
-      tempMags[ifreq] = freqAmp0[0]*tempFreqVals[ifreq]*norm/0.2e9;
+      tempMags[ifreq] = freqAmp0[0]*tempFreqVals[ifreq]*norm/freqs0[0];
     } else if (tempFreqVals[ifreq]<=(freqs0[nfreqs0-1]+newdf)) {
       // Points between 200 and 1200 MHz are interpolated using the TGraph
       tempMags[ifreq] = gfreq0->Eval(tempFreqVals[ifreq])*norm;
@@ -72,14 +78,14 @@ void SimulatedSignal::updateSimSignalFromVmmhz(int nfreqs0, double *freqs0, doub
       tempMags[ifreq] = 0;
     }
     tempPhases[ifreq]=phase;
-   
+    // cout << "Set frequency " << ifreq << " " << tempFreqVals[ifreq] << endl;
   }
-  
+
   // clean up
   delete gfreq0;
 
   // Set frequencies, magnitudes and phases of the RFSignal
-  setFreqs(nfreqs, tempFreqVals);
+  setFreqs(nfreqs-1, tempFreqVals);
   setMagsPhases(tempMags, tempPhases);
 
   // Update the time domain
@@ -97,18 +103,52 @@ void SimulatedSignal::updateSimSignalFromVmmhz(int nfreqs0, double *freqs0, doub
 
 void SimulatedSignal::addCW(double frequency, double phase, double amplitude){
 
-  double deltaT = (1/2.6)*1e-9;
+  // double deltaT = (1/2.6)*1e-9;
   double omega;
   double volts_cw[512];
+  double *times = GetX();
   
   for (int itime=0; itime<fNpoints; itime++){
     omega=TMath::Pi()*2*frequency;
-    volts_cw[itime]=amplitude*TMath::Sin(omega*itime*deltaT + phase);
+    volts_cw[itime]=amplitude*TMath::Sin(omega*times[itime] + phase);
   }
 
-  RFSignal *tmp = new RFSignal(fNpoints, fX, volts_cw);
+  RFSignal *tmp = new RFSignal(fNpoints, times, volts_cw);
 
   addToSignal(tmp);
 
   delete tmp;
+}
+
+
+void SimulatedSignal::getVmmhz(Anita *anita1, double *vmmhz){
+
+
+  double *freqs = getFreqs();
+  double *mags  = getMags();
+  int numFreqs  = nfreqs-1;
+  double freqMin = freqs[0];
+  double freqMax = freqs[numFreqs-1];//+freqs[1]-freqs[0];
+  double freqMin1 = anita1->freq[0];
+  double freqMax1 = anita1->freq[anita1->NFREQ-1];
+
+  int firstNonZero = Tools::Getifreq(freqMin1,freqMin,freqMax,numFreqs);
+  int lastNonZero  = Tools::Getifreq(freqMax1,freqMin,freqMax,numFreqs);
+  double norm=TMath::Sqrt(double(lastNonZero-firstNonZero)/double(anita1->NFREQ));
+  // cout << firstNonZero << " " << lastNonZero << " " << lastNonZero-firstNonZero << " " << norm << endl;
+
+  
+  // Graph to interpolate between points properly
+  TGraph *gfreq0 = new TGraph(numFreqs, freqs, mags);
+  for (int ifreq=0; ifreq<anita1->NFREQ; ifreq++){
+    
+    // int ifour=Tools::Getifreq(anita1->freq[ifreq],freqMin,freqMax,numFreqs);
+    //  vmmhz[ifreq]=mags[ifour]*norm;
+    // cout << freqs[ifour] << " " << anita1->freq[ifreq] << " " << vmmhz[ifreq] << " " << endl;
+    vmmhz[ifreq]=gfreq0->Eval(anita1->freq[ifreq])*norm;
+    //    cout << vmmhz[ifreq] << " " << endl;
+  }
+
+  delete gfreq0;
+  
 }
