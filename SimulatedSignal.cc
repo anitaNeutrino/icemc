@@ -42,7 +42,7 @@ SimulatedSignal::SimulatedSignal(int nfreqs0, double *freqs0, double *freqAmp0)
   // Graph to interpolate between points properly
   TGraph *gfreq0 = new TGraph(nfreqs0, freqs0, freqAmp0);
 
-  for (int ifreq=1;ifreq<nfreqs;ifreq++){
+  for (int ifreq=1;ifreq<=nfreqs;ifreq++){
     tempFreqVals[ifreq]=newdf*ifreq;
     if (tempFreqVals[ifreq]<freqs0[0]) {
       // Points between 0 and 200 MHz are interpolated with a straight line
@@ -70,7 +70,11 @@ SimulatedSignal::SimulatedSignal(int nfreqs0, double *freqs0, double *freqAmp0)
 }
 
 
+SimulatedSignal::SimulatedSignal(Int_t numPoints,Double_t *tVals,Double_t *vVals,Int_t mvNs)
+  :RFSignal(numPoints,tVals,vVals,mvNs)
+{
 
+}
 SimulatedSignal::~SimulatedSignal() 
 {
 //Default destructor
