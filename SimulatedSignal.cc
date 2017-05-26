@@ -11,7 +11,25 @@ SimulatedSignal::SimulatedSignal()
 }
 
 
-///< Define an SimulatedSignal from an icemc askaryan field (vmmhz)
+///< Constructor from time domain values
+
+SimulatedSignal::SimulatedSignal(Int_t numPoints,Double_t *tVals,Double_t *vVals,Int_t mvNs)
+  :RFSignal(numPoints,tVals,vVals,mvNs)
+{
+
+}
+
+///< Default destructor
+
+SimulatedSignal::~SimulatedSignal() 
+{
+//Default destructor
+}
+
+
+
+
+///< Define a SimulatedSignal from an icemc askaryan field (vmmhz)
 ///< Icemc askaryan field is defined between 200 MHz and 1200 MHz
 ///< So we interpolate it from 0 to 200 MHz
 ///< 0 pad it until 1300 MHz
@@ -19,8 +37,7 @@ SimulatedSignal::SimulatedSignal()
 ///< amplitudes before and after
 ///< For the moment the phase is always -90 degrees
 
-SimulatedSignal::SimulatedSignal(int nfreqs0, double *freqs0, double *freqAmp0)
-  :RFSignal()
+void SimulatedSignal::updateSimSignalFromVmmhz(int nfreqs0, double *freqs0, double *freqAmp0)
 {
 
   // First implementation of Askaryan field approximate all phases to -90 degrees
@@ -70,21 +87,6 @@ SimulatedSignal::SimulatedSignal(int nfreqs0, double *freqs0, double *freqAmp0)
 }
 
 
-///< Constructor from time domain values
-
-SimulatedSignal::SimulatedSignal(Int_t numPoints,Double_t *tVals,Double_t *vVals,Int_t mvNs)
-  :RFSignal(numPoints,tVals,vVals,mvNs)
-{
-
-}
-
-///< Default destructor
-
-SimulatedSignal::~SimulatedSignal() 
-{
-//Default destructor
-}
-
 
 
 ///< Add CW to simulated signal
@@ -93,7 +95,7 @@ SimulatedSignal::~SimulatedSignal()
 ///<        from the source to the antenna face
 ///< amplitude: is the CW amplitude (from power spectrum?) // good is 0.01
 
-void SimulatedSignal::AddCW(double frequency, double phase, double amplitude){
+void SimulatedSignal::addCW(double frequency, double phase, double amplitude){
 
   double deltaT = (1/2.6)*1e-9;
   double omega;

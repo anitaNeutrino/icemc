@@ -12,13 +12,16 @@ class SimulatedSignal : public RFSignal {
 
   SimulatedSignal(); ///<Default constructor
   
-  SimulatedSignal(int nfreq0, double *freq0, double *freqAmp0); ///< Constructor from icemc askaryan field (vmmhz) defined from 200MHz to 1200MHz
+  SimulatedSignal(int nfreq0, double *freq0, double *freqAmp0); 
   
   SimulatedSignal(Int_t numPoints,Double_t *tVals,Double_t *vVals,Int_t mvNs); ///< Constructor from time domain waveform
 
   ~SimulatedSignal(); ///<Destructor
 
-  void AddCW(double frequency, double phase, double amplitude);
+
+  void updateSimSignalFromVmmhz(int nfreqs0, double *freqs0, double *freqAmp0); ///< Update values of SimSignal from icemc askaryan field (vmmhz) defined from 200MHz to 1200MHz
+  
+  void addCW(double frequency, double phase, double amplitude);
   
  private:
   
