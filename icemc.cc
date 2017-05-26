@@ -2549,7 +2549,8 @@ int main(int argc,  char **argv) {
       }
         
       
-      SimulatedSignal *simSignal = new SimulatedSignal(Anita::NFREQ, anita1->freq, vmmhz);
+      SimulatedSignal *simSignal = new SimulatedSignal();
+      simSignal->updateSimSignalFromVmmhz(Anita::NFREQ, anita1->freq, vmmhz);
       //After this, everything happening to vmmhz should happen to sim_signal
       //so figure out what happens to vmmhz then do it to sim_signal as well
         
