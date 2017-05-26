@@ -51,13 +51,7 @@ class ChanTrigger {
   double h_component_kvector; // component of the e-field along the rx h-plane
   double n_component_kvector; // component of the e-field along the normal 
   double hitangle_e, hitangle_h;       // angle the ray hits the antenna wrt e-plane, h-plane
-    
-  double vhz_rx_e[Anita::NFREQ]; // V/Hz after antenna gains
-  double vhz_rx_h[Anita::NFREQ];
-  // same but with binning for fft
-  double volts_rx_e_forfft[Anita::HALFNFOUR];
-  double volts_rx_h_forfft[Anita::HALFNFOUR];
-  
+      
  public:
     
   ChanTrigger(); // constructor

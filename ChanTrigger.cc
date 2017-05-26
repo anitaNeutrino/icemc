@@ -726,15 +726,15 @@ void ChanTrigger::InitializeEachBand(Anita *anita1)
 
 void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal){
   
-  double e_component=0;
-  double h_component=0;
-  double n_component=0;
-  double e_component_kvector=0;
-  double h_component_kvector=0;
-  double n_component_kvector=0;
-  double hitangle_e=0;
-  double hitangle_h=0;
-
+  e_component=0;
+  h_component=0;
+  n_component=0;
+  e_component_kvector=0;
+  h_component_kvector=0;
+  n_component_kvector=0;
+  hitangle_e=0;
+  hitangle_h=0;
+  
   int numBinShift;
 
 
