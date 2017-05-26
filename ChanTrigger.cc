@@ -23,12 +23,12 @@
 #include "Settings.h"
 #include "screen.hh"
 #include "GlobalTrigger.h"
-#include "SimulatedSignal.h"
 
 using std::cout;
 
 #ifdef ANITA_UTIL_EXISTS
 #include "FFTtools.h"
+#include "SimulatedSignal.h"
 #endif
 
 
