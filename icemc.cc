@@ -2543,19 +2543,11 @@ int main(int argc,  char **argv) {
           sig1->SetNDepth(sig1->NICE); // for making array of signal vs. frequency,  viewangle
         
         sig1->GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ); // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
-
+	
 	//   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
         // and making an array across frequency bins by putting in frequency dependence.
       }
         
-      
-      SimulatedSignal *simSignal = new SimulatedSignal();
-      simSignal->updateSimSignalFromVmmhz(Anita::NFREQ, anita1->freq, vmmhz);
-      //After this, everything happening to vmmhz should happen to sim_signal
-      //so figure out what happens to vmmhz then do it to sim_signal as well
-        
-        
-      
       // For each frequency,  get the width of Cerenkov cone
       // and size of signal once position of viewing angle is taken into account
 
@@ -2668,14 +2660,23 @@ int main(int argc,  char **argv) {
       
       count1->ndeadtime[whichray]++;
 
-
       Tools::Zero(sumsignal_aftertaper, 5);
 
+      // Create a pointer to the SimulatedSignal
+      SimulatedSignal *simSignal = new SimulatedSignal();
+      // Define the SimSignal from vmmhz
+      simSignal->updateSimSignalFromVmmhz(Anita::NFREQ, anita1->freq, vmmhz);
+   
+      double vmmhz2[1000];
+      simSignal->getVmmhz(anita1, vmmhz2);
+      delete simSignal;
+      
       //if no-roughness case, add its parameters to the saved screen parameters so specular and roughness simulations use the same code in the waveform construction
       if(!settings1->ROUGHNESS){
         panel1->SetNvalidPoints(1);
         for (int k=0;k<Anita::NFREQ;k++) {
-          panel1->AddVmmhz_freq(vmmhz[k]);
+	  //cout << anita1->freq[k] << " " << vmmhz[k] << " " << vmmhz2[k] << " " << vmmhz[k]/vmmhz2[k] << endl;
+	  panel1->AddVmmhz_freq(vmmhz2[k]);
         }
         panel1->AddDelay( 0. );
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
@@ -2766,6 +2767,11 @@ int main(int argc,  char **argv) {
       globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
       anita1->rms_rfcm_e_single_event = 0;
 
+
+      if (!settings1->BORESIGHTS) {
+	bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
+	bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
+      }
       
       for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
         for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
@@ -2777,11 +2783,8 @@ int main(int argc,  char **argv) {
 
           // for this (hitangle_h_all[count_rx]=hitangle_h;) and histogram fill, use specular case
           //although the GetEcomp..() functions are called in ConvertInputWFtoAntennaWF() to calculate the actual waveforms
-          if (!settings1->BORESIGHTS) {
-            bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
-            bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
-          }
-          else{ // i.e. if BORESIGHTS is true
+ 
+          if (settings1->BORESIGHTS){ // i.e. if BORESIGHTS is true
             bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector,  h_component_kvector,  n_component_kvector);
             bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol_eachboresight[ilayer][ifold], e_component,  h_component,  n_component);
             fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold] << " " << mag1_eachboresight[ilayer][ifold] << "\n";
