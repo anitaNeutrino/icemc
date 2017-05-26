@@ -2793,20 +2793,17 @@ int main(int argc,  char **argv) {
           if (h6->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
             h6->Fill(hitangle_h, ray1->n_exit2bn[2]*bn1->n_bn);
 
-
-          chantrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, n_eplane,  n_hplane,  n_normal, ilayer, ifold);
-
-          // Chantrig::ImpulseResponse needs to be outside the ray loop
-          chantrig1->DigitizerPath(settings1, anita1, ilayer, ifold);
-
-          chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
- 
 	  antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
 	  
-          //+++++//+++++//+++++//+++++//+++++//+++++//+++++
-          // THIS IS WHERE WE ACTUALLY CONSTRUCT THE WAVEFORMS THAT GET PASSED TO THE TRIGGER
-          chantrig1->PrepareTriggerPath(settings1, anita1, bn1, panel1, ilayer, ifold, n_eplane, n_hplane, n_normal);
-          Tools::Zero(sumsignal, 5);
+	  chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
+	  
+	  chantrig1->TriggerPath(settings1, anita1, antNum);
+	  
+	  chantrig1->DigitizerPath(settings1, anita1, antNum);
+
+	  chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
+
+	  Tools::Zero(sumsignal, 5);
 
 	  // now hopefully we have converted the signal to time domain waveforms
           // for all the bands of the antenna and screen points
