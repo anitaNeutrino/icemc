@@ -57,15 +57,23 @@ class ChanTrigger {
   // same but with binning for fft
   double volts_rx_e_forfft[Anita::HALFNFOUR];
   double volts_rx_h_forfft[Anita::HALFNFOUR];
-
+  
  public:
     
   ChanTrigger(); // constructor
+
+  double vhz_rx[2][5][Anita::NFREQ]; // V/Hz after antenna gains
+  double volts_rx_forfft[2][5][Anita::HALFNFOUR];
+
   void InitializeEachBand(Anita *anita1);
-  void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, int ilayer, int ifold);
-  void DigitizerPath(Settings *settings1, Anita *anita1, int ilayer, int ifold);
+
+  void ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal);
+  void TriggerPath(Settings *settings1, Anita *anita1, int ant);
+  void DigitizerPath(Settings *settings1, Anita *anita1, int ant);
   void TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
-  void PrepareTriggerPath(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ilayer, int ifold, Vector &n_eplane, Vector &n_hplane, Vector &n_normal);
+  
+  
+  
   
   // just for historical reference, this function:
   //void ChanTrigger::RunTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
