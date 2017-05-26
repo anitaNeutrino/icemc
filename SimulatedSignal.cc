@@ -70,12 +70,43 @@ SimulatedSignal::SimulatedSignal(int nfreqs0, double *freqs0, double *freqAmp0)
 }
 
 
+///< Constructor from time domain values
+
 SimulatedSignal::SimulatedSignal(Int_t numPoints,Double_t *tVals,Double_t *vVals,Int_t mvNs)
   :RFSignal(numPoints,tVals,vVals,mvNs)
 {
 
 }
+
+///< Default destructor
+
 SimulatedSignal::~SimulatedSignal() 
 {
 //Default destructor
+}
+
+
+
+///< Add CW to simulated signal
+///< frequency: is the CW frequency (from power sprectum?)
+///< phase: is the phase, coming from the dt of propagation
+///<        from the source to the antenna face
+///< amplitude: is the CW amplitude (from power spectrum?) // good is 0.01
+
+void SimulatedSignal::AddCW(double frequency, double phase, double amplitude){
+
+  double deltaT = (1/2.6)*1e-9;
+  double omega;
+  double volts_cw[512];
+  
+  for (int itime=0; itime<fNpoints; itime++){
+    omega=TMath::Pi()*2*frequency;
+    volts_cw[itime]=amplitude*TMath::Sin(omega*itime*deltaT + phase);
+  }
+
+  RFSignal *tmp = new RFSignal(fNpoints, fX, volts_cw);
+
+  addToSignal(tmp);
+
+  delete tmp;
 }

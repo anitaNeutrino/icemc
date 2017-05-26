@@ -16,7 +16,9 @@ class SimulatedSignal : public RFSignal {
   
   SimulatedSignal(Int_t numPoints,Double_t *tVals,Double_t *vVals,Int_t mvNs); ///< Constructor from time domain waveform
 
-    ~SimulatedSignal(); ///<Destructor
+  ~SimulatedSignal(); ///<Destructor
+
+  void AddCW(double frequency, double phase, double amplitude);
   
  private:
   
