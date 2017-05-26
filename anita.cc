@@ -284,6 +284,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
       readTriggerEfficiencyScanPulser(settings1);
     }
 #endif
+    cout << "FREQ " << FREQ_LOW << " " << FREQ_HIGH << endl;
     for (int i=0;i<NFREQ;i++) {
       freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
       avgfreq_rfcm[i]=0.;
@@ -2285,6 +2286,27 @@ void Anita::GetNoiseWaveforms() {
   }
 }
 
+void Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx){
+  
+  int firstNonZero = Tools::Getifreq(freq[0],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
+  int lastNonZero  = Tools::Getifreq(freq[NFREQ-1],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
+  double norm=TMath::Sqrt(double(lastNonZero-firstNonZero)/double(NFREQ));
+  //    cout << firstNonZero << " " << lastNonZero << " " << lastNonZero-firstNonZero << " " << norm << endl;
+
+  for (int ifreq=0;ifreq<NFOUR/4;ifreq++){
+    tmp_fftvhz[ifreq]=TMath::Sqrt(tmp_fftvhz[2*ifreq]*tmp_fftvhz[2*ifreq] + tmp_fftvhz[2*ifreq+1]*tmp_fftvhz[2*ifreq+1]);
+  }
+    
+    for (int ifreq=0; ifreq<NFREQ; ifreq++){
+      
+      int ifour=Tools::Getifreq(freq[ifreq],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
+      //      cout << ifour << " " << ifour2 << endl;
+      vhz_rx[ifreq]=tmp_fftvhz[ifour]*norm;
+      // cout << ifour << " " << freq[ifreq] << " " << vhz_rx[ifreq] << " " << endl;
+    }
+
+}
+
 void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay) {
     
     Tools::Zero(vsignal_e_forfft,NFOUR/2);
@@ -2342,8 +2364,8 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
     } // end loop over nfreq
     
     // EH check
-    //cout << "ifirstnonzero, ilastnonzero are " << ifirstnonzero << " " << ilastnonzero << "\n";
-    //cout << "ratio is " << (double)count_nonzero/(double)(ilastnonzero-ifirstnonzero) << "\n";
+    // cout << "ifirstnonzero, ilastnonzero are " << ifirstnonzero << " " << ilastnonzero << "\n";
+    // cout << "ratio is " << (double)count_nonzero/(double)(ilastnonzero-ifirstnonzero) << "\n";
     for (int j=0;j<NFOUR/4;j++) {
       vsignal_e_forfft[2*j]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
       vsignal_e_forfft[2*j+1]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
@@ -2418,8 +2440,8 @@ void Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, dou
     } // end loop over nfreq
     
     // EH check
-    //cout << "ifirstnonzero, ilastnonzero are " << ifirstnonzero << " " << ilastnonzero << "\n";
-    //cout << "ratio is " << (double)count_nonzero/(double)(ilastnonzero-ifirstnonzero) << "\n";
+    // cout << "ifirstnonzero, ilastnonzero are " << ifirstnonzero << " " << ilastnonzero << "\n";
+    // cout << "ratio is " << (double)count_nonzero/(double)(ilastnonzero-ifirstnonzero) << "\n";
     for (int j=0;j<NFOUR/4;j++) {
       vsignal_e_forfft[2*j]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
       vsignal_e_forfft[2*j+1]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));

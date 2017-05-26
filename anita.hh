@@ -99,6 +99,8 @@ public:
   void MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay);
   void MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay);
   
+  void GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx);
+  
   int Match(int ilayer,int ifold,int rx_minarrivaltime);
   int getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn);
 
