@@ -49,6 +49,7 @@ public:
 
   int UNBIASED_SELECTION;
   int WHICH; // which payload to use 0=Anita-lite,1=Ross,2=Smex,3=make your own
+  int ANITAVERSION;
   int CYLINDRICALSYMMETRY; // is it cylindrically symmetric =1 if which=1,2, =0 if which=0
   // if which=3 then 0 or 1
   double SIGMA_FACTOR; // factor to multiply cross section by for error analysis
@@ -195,10 +196,11 @@ public:
   double COHERENT_THRESHOLD;
   int APPLYIMPULSERESPONSEDIGITIZER;       // apply impulse response in the digitizer path
   int APPLYIMPULSERESPONSETRIGGER;         // apply impulse response in the trigger path
-  int USETIMEDEPENDENTTHRESHOLDS; // use time-dependent thresholds
-  int NOISEFROMFLIGHTTRIGGER;            // use thermal noise from flight in trigger path
-  int NOISEFROMFLIGHTDIGITIZER;          // use thermal noise from flight in digitizer path
-  int MINBIAS;                    // generate minimum bias sample
+  int USETIMEDEPENDENTTHRESHOLDS;          // use time-dependent thresholds
+  int USEDEADTIME;                         // use dead time from flight
+  int NOISEFROMFLIGHTTRIGGER;              // use thermal noise from flight in trigger path
+  int NOISEFROMFLIGHTDIGITIZER;            // use thermal noise from flight in digitizer path
+  int MINBIAS;                             // generate minimum bias sample
   int TRIGGEREFFSCAN;                      // do a trigger efficiency scan
   int TRIGGEREFFSCAPULSE;                  // Apply pulse at AMPA (0) or at SURF (1)
 

@@ -140,6 +140,10 @@ public:
   unsigned int realTime_surf_max; // max realtime from the surf file
   UShort_t thresholds[2][48]; // thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
   UShort_t scalers[2][48];    // scalers as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
+  Double_t fakeThresholds[2][48];  // Fake thresholds (coming from converting fake scalers to thresholds)
+  Double_t fakeThresholds2[2][48]; // Fake thresholds 2 (coming from converting flight scalers to thresholds)
+  Double_t fakeScalers[2][48];     // Fake scalers (coming from converting threhsolds during flight to scalers using threshold scan)
+
   int iturf;// for indexing
   int isurf;
   int iturfevent;
@@ -581,8 +585,8 @@ public:
   Int_t numFreqs;
   Double_t *freqs;
   TRandom3 *fRand;
-  Double_t fTimes[HALFNFOUR];
 #endif
+  Double_t fTimes[HALFNFOUR];
   TGraph *fSignalChainResponseDigitizer[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   TGraph *fSignalChainResponseTrigger[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   double deltaT;

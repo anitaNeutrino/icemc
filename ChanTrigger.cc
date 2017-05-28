@@ -114,9 +114,15 @@ void ChanTrigger::WhichBandsPass(int inu,Settings *settings1, Anita *anita1, Glo
     else if (ilayer==1) iphi = ifold*2+1;
     // we invert VPOL and HPOL because in AnitaEventReader (0:HPOL 1:VPOL) and in icemc (0:VPOL 1:HPOL)
     // convert scalers to power thresholds using fitted function got from ANITA-1, are they too old?
-    thresholds[1][4] = ADCCountstoPowerThreshold(anita1,0,iring*16+iphi)*(-1.);
-    thresholds[0][4] = ADCCountstoPowerThreshold(anita1,1,iring*16+iphi)*(-1.);
-    //    cout << thresholds[4] << " \n";
+    // thresholds[1][4] = ADCCountstoPowerThreshold(anita1,0,iring*16+iphi)*(-1.);
+    // thresholds[0][4] = ADCCountstoPowerThreshold(anita1,1,iring*16+iphi)*(-1.);
+
+
+    // Use thresholds converted from flight scalers
+    thresholds[0][4] = anita1->fakeThresholds2[0][iring*16+iphi]*(-1.);
+    thresholds[1][4] = anita1->fakeThresholds2[1][iring*16+iphi]*(-1.);
+
+    //    cout << thresholds[0][4] << " " <<  thresholds[0][4] << " \n";
   } else {
     GetThresholds(settings1,anita1,ilayer,thresholds); // get the right thresholds for this layer
   }
@@ -1320,6 +1326,10 @@ double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant)
     return 5;
   }
 
+  // Broken channel during ANITA-3 flight
+  if (ipol==1 && iant==7){
+    return 5;
+  }
   
   if (threshadc<anita1->minadcthresh[ipol][iant]) {
     if (unwarned) {
@@ -1343,7 +1353,9 @@ double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant)
   int index=TMath::BinarySearch(anita1->npointThresh, anita1->threshScanThresh[ipol][iant], threshadc);
   
   thisrate=(double)anita1->threshScanScaler[ipol][iant][index]; // these scalers are in kHz
-    
+
+  thisrate=(double)anita1->scalers[ipol][iant];
+  
   // now find threshold for this scaler.  Here, scalers have to be in MHz.
   thisrate=thisrate/1.E3; // put it in MHz
 
@@ -1357,8 +1369,8 @@ double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant)
   if (thispowerthresh>999999) return 5.;
   if (thispowerthresh<0.0001) return 5.;
 
-  // Limit on relative power threshold to avoid thermal noise to trigger
-  if (thispowerthresh<4.5) return 4.5;
+  // // Limit on relative power threshold to avoid thermal noise to trigger
+  // if (thispowerthresh<4.5) return 4.5;
 
   return thispowerthresh;
     

@@ -944,6 +944,7 @@ int main(int argc,  char **argv) {
   finaltree->Branch("vmmhz_max", &vmmhz_max, "vmmhz_max/D");
   finaltree->Branch("thresholdsAnt", &thresholdsAnt, "thresholdsAnt[48][2][5]/D");
   finaltree->Branch("thresholdsAntPass", &thresholdsAntPass, "thresholdsAntPass[48][2][5]/D");
+  finaltree->Branch("deadTime", &anita1->deadTime, "deadTime/D");
   finaltree->Branch("horizcoord", &horizcoord, "horizcoord/D");
   finaltree->Branch("vertcoord", &vertcoord, "vertcoord/D");
   finaltree->Branch("horizcoord_bn", &bn1->horizcoord_bn, "horizcoord_bn/D");
@@ -1274,9 +1275,11 @@ int main(int argc,  char **argv) {
   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
   adu5PatTree->Branch("weight",       &weight,       "weight/D"     );
 
-  AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();
-
 #ifdef ANITA3_EVENTREADER
+
+  // Set AnitaVersion so that the right payload geometry is used
+  AnitaVersion::set(settings1->ANITAVERSION);
+  
   outputAnitaFile =settings1->outputdir+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
@@ -1284,6 +1287,8 @@ int main(int argc,  char **argv) {
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
 #endif
 
+  AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();
+  
 #endif
   //end ROOT variable definitions
   ///////////////////////////////////////////////////////////////////////
@@ -1490,7 +1495,7 @@ int main(int argc,  char **argv) {
 
       // Picks the balloon position and at the same time sets the masks and thresholds
       bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
-
+      
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter
       average_altitude+=bn1->altitude_bn/(double)NNU;
@@ -2635,6 +2640,15 @@ int main(int argc,  char **argv) {
       count1->nchanceinhell2[whichray]++;
       chanceinhell2=1;
 
+
+      // Dead time
+      if (settings1->USEDEADTIME){
+      	if ( r.Uniform(1)<anita1->deadTime) continue;
+      }
+      
+      count1->ndeadtime[whichray]++;
+
+
       Tools::Zero(sumsignal_aftertaper, 5);
 
       //if no-roughness case, add its parameters to the saved screen parameters so specular and roughness simulations use the same code in the waveform construction
@@ -2655,6 +2669,8 @@ int main(int argc,  char **argv) {
         }
       }
 
+
+      
       // make a global trigger object (but don't touch the electric fences)
       globaltrig1 = new GlobalTrigger(settings1, anita1);
 
@@ -2771,7 +2787,10 @@ int main(int argc,  char **argv) {
           // THIS IS WHERE WE ACTUALLY CONSTRUCT THE WAVEFORMS THAT GET PASSED TO THE TRIGGER
           chantrig1->PrepareTriggerPath(settings1, anita1, bn1, panel1, ilayer, ifold, n_eplane, n_hplane, n_normal);
           Tools::Zero(sumsignal, 5);
-          
+
+	  // now hopefully we have converted the signal to time domain waveforms
+          // for all the bands of the antenna and screen points
+
 
 /*
   std::string stemp=settings1->outputdir+"/rough_signalwaveforms_"+nunum+".dat";
@@ -2789,33 +2808,7 @@ int main(int argc,  char **argv) {
       }
     }
   sigout.close();
-*/
-
-          // now hopefully we have converted the signal to time domain waveforms
-          // for all the bands of the antenna and screen points
-
-          for (int k=0;k<Anita::NFREQ;k++) {
-            if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
-              // for plotting
-              if (ilayer==0 && ifold==0) {
-                volts_rx_0=globaltrig1->volts[0][ilayer][ifold];
-                if (settings1->SIGNAL_FLUCT)
-                  volts_rx_0+=gRandom->Gaus(0, anita1->VNOISE[ilayer]);
-              } //if (first antenna,  top layer)
-
-              // for debugging
-              if (volts_rx_0>volts_rx_max) {
-                volts_rx_max=volts_rx_0;
-                volts_rx_max_highband=chantrig1->bwslice_volts_pol0[3];
-                volts_rx_max_lowband=chantrig1->bwslice_volts_pol0[0];
-                // theta of the polarization as measured at the antenna (approximately since we aren't correcting for the
-                //cant of the antenna yet) =
-                theta_pol_measured=atan(globaltrig1->volts_original[1][ilayer][ifold]/globaltrig1->volts_original[0][ilayer][ifold]);
-              }
-              // for plotting
-              volts_rx_1=globaltrig1->volts[1][ilayer][ifold];
-            }// end if (seavey frequencies)
-          }// end looping over frequencies.
+*/ 
 
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
             for (int ibw=0;ibw<5;ibw++) {
@@ -4099,7 +4092,9 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput.precision(4);
   foutput << "After factoring in off-Cerenkov cone tapering, \n\tMaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell2[0]/(double)count1->nviewanglecut[0] << "\t" << (double)count1->nchanceinhell2[1]/(double)count1->nviewanglecut[1] << "\t\t" << count1->nchanceinhell2[0] << " " << count1->nchanceinhell2[1] << "\n";
 
-  foutput << "Passes trigger\t\t\t\t\t\t" << (double)count1->npassestrigger[0]/(double)count1->nchanceinhell2[0] << "\t" << (double)count1->npassestrigger[1]/(double)count1->nchanceinhell2[1] << "\t\t" << count1->npassestrigger[0] << "\t" << count1->npassestrigger[1] << "\n";
+  foutput << "Survive dead time \t\t\t\t\t" << (double)count1->ndeadtime[0]/(double)count1->nchanceinhell2[0] << "\t" << (double)count1->ndeadtime[1]/(double)count1->nchanceinhell2[1] << "\t\t" << (double)count1->ndeadtime[0] << " " << count1->ndeadtime[1] << "\n";
+  
+  foutput << "Passes trigger\t\t\t\t\t\t" << (double)count1->npassestrigger[0]/(double)count1->ndeadtime[0] << "\t" << (double)count1->npassestrigger[1]/(double)count1->ndeadtime[1] << "\t\t" << count1->npassestrigger[0] << "\t" << count1->npassestrigger[1] << "\n";
   foutput << "Number of l1 triggers\t\t\t\t\t\t" << (double)count1->nl1triggers[0][0] << "\t" << (double)count1->nl1triggers[1][0] << "\n";
 
   foutput << "Chord is good length\t\t\t\t\t" << (double)count_chordgoodlength/(double)count1->npassestrigger[0] << "\t\t\t";
