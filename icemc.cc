@@ -2662,21 +2662,19 @@ int main(int argc,  char **argv) {
 
       Tools::Zero(sumsignal_aftertaper, 5);
 
-      // Create a pointer to the SimulatedSignal
-      SimulatedSignal *simSignal = new SimulatedSignal();
-      // Define the SimSignal from vmmhz
-      simSignal->updateSimSignalFromVmmhz(Anita::NFREQ, anita1->freq, vmmhz);
-   
-      double vmmhz2[1000];
-      simSignal->getVmmhz(anita1, vmmhz2);
-      delete simSignal;
+      // // Create a pointer to the SimulatedSignal
+      // SimulatedSignal *simSignal = new SimulatedSignal();
+      // // Define the SimSignal from vmmhz
+      // simSignal->updateSimSignalFromVmmhz(Anita::NFREQ, anita1->freq, vmmhz);
+      // simSignal->getVmmhz(anita1, vmmhz);
+      // delete simSignal;
       
       //if no-roughness case, add its parameters to the saved screen parameters so specular and roughness simulations use the same code in the waveform construction
       if(!settings1->ROUGHNESS){
         panel1->SetNvalidPoints(1);
         for (int k=0;k<Anita::NFREQ;k++) {
 	  //cout << anita1->freq[k] << " " << vmmhz[k] << " " << vmmhz2[k] << " " << vmmhz[k]/vmmhz2[k] << endl;
-	  panel1->AddVmmhz_freq(vmmhz2[k]);
+	  panel1->AddVmmhz_freq(vmmhz[k]);
         }
         panel1->AddDelay( 0. );
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
