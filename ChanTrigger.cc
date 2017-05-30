@@ -972,19 +972,19 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
 
     anita1->GetNoiseWaveforms(); // get noise waveforms
     for (int i=0;i<fNumPoints;i++){
-      anita1->volts_rx_rfcm_lab[0][i] = volts_rx_forfft[0][4][i];
-      anita1->volts_rx_rfcm_lab[1][i] = volts_rx_forfft[1][4][i];
+      volts_rx_rfcm_lab[0][i] = volts_rx_forfft[0][4][i];
+      volts_rx_rfcm_lab[1][i] = volts_rx_forfft[1][4][i];
     }
 
 #ifdef ANITA_UTIL_EXISTS    
-    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, anita1->volts_rx_rfcm_lab[0], 0);
-    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, anita1->volts_rx_rfcm_lab[1], 1);
+    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[0], 0);
+    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[1], 1);
 #endif
 
     if (settings1->SIGNAL_FLUCT && !settings1->NOISEFROMFLIGHTDIGITIZER){
       for (int i=0;i<anita1->NFOUR/2;i++) {
 	for (int ipol=0;ipol<2;ipol++){
-	  anita1->volts_rx_rfcm_lab[ipol][i]+=anita1->timedomainnoise_lab[ipol][i]; // add noise
+	  volts_rx_rfcm_lab[ipol][i]+=anita1->timedomainnoise_lab[ipol][i]; // add noise
 	}
       }
     }
@@ -1026,33 +1026,33 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
     }
     
     // change their length from Anita::NFREQ to HALFNFOUR
-    anita1->MakeArraysforFFT(vhz_rx_rfcm_e,vhz_rx_rfcm_h,anita1->volts_rx_rfcm[0],anita1->volts_rx_rfcm[1], 90., true);
+    anita1->MakeArraysforFFT(vhz_rx_rfcm_e,vhz_rx_rfcm_h,volts_rx_rfcm[0],volts_rx_rfcm[1], 90., true);
       
           
     // now the last two are in the frequency domain
     // convert to the time domain
     // still don't have any noise
       
-    Tools::realft(anita1->volts_rx_rfcm[0],-1,anita1->HALFNFOUR);
-    Tools::realft(anita1->volts_rx_rfcm[1],-1,anita1->HALFNFOUR);
+    Tools::realft(volts_rx_rfcm[0],-1,anita1->HALFNFOUR);
+    Tools::realft(volts_rx_rfcm[1],-1,anita1->HALFNFOUR);
       
     anita1->GetNoiseWaveforms(); // get noise waveforms
       
     // find the peak right here and it might be the numerator of the horizontal axis of matt's plot
-    anita1->peak_rx_rfcm_signalonly[0]=ChanTrigger::FindPeak(anita1->volts_rx_rfcm[0],anita1->HALFNFOUR); // with no noise
-    anita1->peak_rx_rfcm_signalonly[1]=ChanTrigger::FindPeak(anita1->volts_rx_rfcm[1],anita1->HALFNFOUR);
+    anita1->peak_rx_rfcm_signalonly[0]=ChanTrigger::FindPeak(volts_rx_rfcm[0],anita1->HALFNFOUR); // with no noise
+    anita1->peak_rx_rfcm_signalonly[1]=ChanTrigger::FindPeak(volts_rx_rfcm[1],anita1->HALFNFOUR);
       
     if (settings1->SIGNAL_FLUCT) {
       for (int i=0;i<anita1->NFOUR/2;i++) {
 	for (int ipol=0;ipol<2;ipol++){
-	  anita1->volts_rx_rfcm[ipol][i]+=anita1->timedomainnoise_rfcm[ipol][i]; // add noise.
+	  volts_rx_rfcm[ipol][i]+=anita1->timedomainnoise_rfcm[ipol][i]; // add noise.
 	}
       } 
     }
     
     
-    anita1->peak_rx_rfcm[0]=ChanTrigger::FindPeak(anita1->volts_rx_rfcm[0],anita1->HALFNFOUR); // with noise 
-    anita1->peak_rx_rfcm[1]=ChanTrigger::FindPeak(anita1->volts_rx_rfcm[1],anita1->HALFNFOUR); // with noise
+    anita1->peak_rx_rfcm[0]=ChanTrigger::FindPeak(volts_rx_rfcm[0],anita1->HALFNFOUR); // with noise 
+    anita1->peak_rx_rfcm[1]=ChanTrigger::FindPeak(volts_rx_rfcm[1],anita1->HALFNFOUR); // with noise
       
 
     double vhz_rx_rfcm_lab_e[Anita::NFREQ]; // V/Hz after rx, rfcm and lab
@@ -1072,23 +1072,23 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
     }
 
     // change their length from Anita::NFREQ to HALFNFOUR
-    anita1->MakeArraysforFFT(vhz_rx_rfcm_lab_e,vhz_rx_rfcm_lab_h,anita1->volts_rx_rfcm_lab[0],anita1->volts_rx_rfcm_lab[1], 90., true);
+    anita1->MakeArraysforFFT(vhz_rx_rfcm_lab_e,vhz_rx_rfcm_lab_h,volts_rx_rfcm_lab[0],volts_rx_rfcm_lab[1], 90., true);
       
     // now the last two are in the frequency domain
     // convert to the time domain
     // still don't have any noise
-    Tools::realft(anita1->volts_rx_rfcm_lab[0],-1,anita1->HALFNFOUR); 
-    Tools::realft(anita1->volts_rx_rfcm_lab[1],-1,anita1->HALFNFOUR);
+    Tools::realft(volts_rx_rfcm_lab[0],-1,anita1->HALFNFOUR); 
+    Tools::realft(volts_rx_rfcm_lab[1],-1,anita1->HALFNFOUR);
 
     // put it in normal time ording -T to T
     // instead of 0 to T, -T to 0 
-    Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab[0]); // EH, why only this has NormalTimeOrdering applied? Why not before?
-    Tools::NormalTimeOrdering(anita1->NFOUR/2,anita1->volts_rx_rfcm_lab[1]);
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_rfcm_lab[0]); // EH, why only this has NormalTimeOrdering applied? Why not before?
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_rfcm_lab[1]);
 
     if (settings1->SIGNAL_FLUCT) { 
       for (int i=0;i<anita1->NFOUR/2;i++) {
 	for (int ipol=0;ipol<2;ipol++){
-	  anita1->volts_rx_rfcm_lab[ipol][i]+=anita1->timedomainnoise_lab[ipol][i]; // add noise
+	  volts_rx_rfcm_lab[ipol][i]+=anita1->timedomainnoise_lab[ipol][i]; // add noise
 	}
       }
     }//end if signal_fluct
@@ -1105,23 +1105,23 @@ void ChanTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, in
 
   // now shift right to account for arrival times
   // for (int i=0;i<48;i++) std::cout << arrival_times[i] << std::endl;
-  Tools::ShiftRight(anita1->volts_rx_rfcm_lab[0],anita1->NFOUR/2, int(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-  Tools::ShiftRight(anita1->volts_rx_rfcm_lab[1],anita1->NFOUR/2, int(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+  Tools::ShiftRight(volts_rx_rfcm_lab[0],anita1->NFOUR/2, int(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+  Tools::ShiftRight(volts_rx_rfcm_lab[1],anita1->NFOUR/2, int(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
 
   if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==1)){ 
-    injectImpulseAtSurf(anita1, anita1->volts_rx_rfcm_lab[0], anita1->volts_rx_rfcm_lab[1], ant);
+    injectImpulseAtSurf(anita1, volts_rx_rfcm_lab[0], volts_rx_rfcm_lab[1], ant);
   }
 
   for (int i=0;i<anita1->NFOUR/2;i++) {
-    volts_rx_rfcm_lab_e_all[anita1->GetRx(ilayer, ifold)][i] = anita1->volts_rx_rfcm_lab[0][i];
-    volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][i] = anita1->volts_rx_rfcm_lab[1][i];      
+    volts_rx_rfcm_lab_e_all[anita1->GetRx(ilayer, ifold)][i] = volts_rx_rfcm_lab[0][i];
+    volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][i] = volts_rx_rfcm_lab[1][i];      
   }
 
   // now vmmhz_rx_rfcm_lab_e,h_forfft are the time domain waveforms after the antenna and lab attenuation
   // now find peak voltage
   // these get written to a tree
-  anita1->peak_rx_rfcm_lab[0]=ChanTrigger::FindPeak(anita1->volts_rx_rfcm_lab[0],anita1->HALFNFOUR);
-  anita1->peak_rx_rfcm_lab[1]=ChanTrigger::FindPeak(anita1->volts_rx_rfcm_lab[1],anita1->HALFNFOUR);  
+  anita1->peak_rx_rfcm_lab[0]=ChanTrigger::FindPeak(volts_rx_rfcm_lab[0],anita1->HALFNFOUR);
+  anita1->peak_rx_rfcm_lab[1]=ChanTrigger::FindPeak(volts_rx_rfcm_lab[1],anita1->HALFNFOUR);  
 
 
   // END OF DIGITIZER PATH

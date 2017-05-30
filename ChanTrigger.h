@@ -111,12 +111,14 @@ class ChanTrigger {
   double bwslice_energy_pole[5]; // square the sum of voltage for each slice in bandwidth.  The 5th element is the full band
   double bwslice_volts_polh[5];
   double bwslice_energy_polh[5];
-    
+
+
+  // For digitizer path
+  double volts_rx_rfcm_lab[2][Anita::HALFNFOUR];          // time domain voltage vs. time after rx, rfcm's and lab
+  double volts_rx_rfcm_lab_all[2][48][Anita::HALFNFOUR];  // time domain voltage vs. time after rx, rfcm's and lab
+  double volts_rx_rfcm[2][Anita::HALFNFOUR];              // time domain voltage vs. time after rx, rfcm's
         
-  double v_banding_rfcm[2][5][Anita::NFREQ];// this is Volts/m as a function of frequency after rfcm's and banding
-    
-  //static const double bwslice_center[4]; // center frequencies
-  //static const double bwslice_width[4]; // 3 dB bandwidths, without overlap
+   
     
   // these are filled for triggerscheme==0 and triggerscheme==1
   // frequency domain voltage and energy based
@@ -131,10 +133,10 @@ class ChanTrigger {
   vector<int> vpasses_eachband[2];
     
   // Used for ChanTrigger::PrepareBandWaveforms(...) and ChanTrigger::WhichBandsPass(...)
+  double v_banding_rfcm[2][5][Anita::NFREQ];// this is Volts/m as a function of frequency after rfcm's and banding
   double v_banding_rfcm_forfft[2][5][HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
   double vm_banding_rfcm_forfft[2][5][HALFNFOUR];
   double v_banding_rfcm_forfft_temp[2][5][HALFNFOUR]; //use for the averaging over 10 neighboring bins
-  double v_banding_rfcm_forfft_ROUGHELEMENT[2][5][HALFNFOUR]; //use for the individual screen elements, then add to the vm_banding_rfcm_forfft[][][]
   // End of band waveform triggering arrays
     
   double integral_vmmhz;

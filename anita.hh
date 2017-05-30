@@ -236,11 +236,7 @@ public:
   int channels_passing[2][5]; // channels passing.  This is reset for every antenna for every event
   int l1_passing; // l1 passing
   int l1_passing_allantennas[48]; // l1 passing
-  
-  double volts_rx_rfcm_lab[2][HALFNFOUR];          // time domain voltage vs. time after rx, rfcm's and lab
-  double volts_rx_rfcm_lab_all[2][48][HALFNFOUR];  // time domain voltage vs. time after rx, rfcm's and lab
-  double volts_rx_rfcm[2][HALFNFOUR];              // time domain voltage vs. time after rx, rfcm's
-  
+    
   int irx;
   void BoxAverageComplex(double *array,const int n,int navg);
   void BoxAverage(double *array,const int n,int navg);

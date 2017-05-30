@@ -725,7 +725,6 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     tsignals->Branch("timedomain_output_inanita",&timedomain_output_inanita,"timedomain_output_inanita[2][5][512]/D");
     
     
-    tsignals->Branch("volts_rx_rfcm_lab",&volts_rx_rfcm_lab,"volts_rx_rfcm_lab[2][512]/D");
     tsignals->Branch("peak_rx_rfcm_lab",&peak_rx_rfcm_lab,"peak_rx_rfcm_lab[2]/D");
     tsignals->Branch("inu",&inu,"inu/I");
     tsignals->Branch("dangle",&dangle_inanita,"dangle/D");
