@@ -51,21 +51,23 @@ class ChanTrigger {
   double h_component_kvector; // component of the e-field along the rx h-plane
   double n_component_kvector; // component of the e-field along the normal 
   double hitangle_e, hitangle_h;       // angle the ray hits the antenna wrt e-plane, h-plane
-    
-  double vhz_rx_e[Anita::NFREQ]; // V/Hz after antenna gains
-  double vhz_rx_h[Anita::NFREQ];
-  // same but with binning for fft
-  double volts_rx_e_forfft[Anita::HALFNFOUR];
-  double volts_rx_h_forfft[Anita::HALFNFOUR];
-
+      
  public:
     
   ChanTrigger(); // constructor
+
+  double vhz_rx[2][5][Anita::NFREQ]; // V/Hz after antenna gains
+  double volts_rx_forfft[2][5][Anita::HALFNFOUR];
+
   void InitializeEachBand(Anita *anita1);
-  void ConvertInputWFtoAntennaWF(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, int ilayer, int ifold);
-  void DigitizerPath(Settings *settings1, Anita *anita1, int ilayer, int ifold);
+
+  void ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal);
+  void TriggerPath(Settings *settings1, Anita *anita1, int ant);
+  void DigitizerPath(Settings *settings1, Anita *anita1, int ant);
   void TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
-  void PrepareTriggerPath(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ilayer, int ifold, Vector &n_eplane, Vector &n_hplane, Vector &n_normal);
+  
+  
+  
   
   // just for historical reference, this function:
   //void ChanTrigger::RunTrigger(Settings *settings1,int ilayer,int ifold,double *vmmhz, Screen *panel1, Anita *anita1,double hitangle_e,double hitangle_h,double e_component,double h_component,double *arrival_times,double volts_rx_rfcm_lab_e_all[48][512],double volts_rx_rfcm_lab_h_all[48][512])
@@ -109,12 +111,14 @@ class ChanTrigger {
   double bwslice_energy_pole[5]; // square the sum of voltage for each slice in bandwidth.  The 5th element is the full band
   double bwslice_volts_polh[5];
   double bwslice_energy_polh[5];
-    
+
+
+  // For digitizer path
+  double volts_rx_rfcm_lab[2][Anita::HALFNFOUR];          // time domain voltage vs. time after rx, rfcm's and lab
+  double volts_rx_rfcm_lab_all[2][48][Anita::HALFNFOUR];  // time domain voltage vs. time after rx, rfcm's and lab
+  double volts_rx_rfcm[2][Anita::HALFNFOUR];              // time domain voltage vs. time after rx, rfcm's
         
-  double v_banding_rfcm[2][5][Anita::NFREQ];// this is Volts/m as a function of frequency after rfcm's and banding
-    
-  //static const double bwslice_center[4]; // center frequencies
-  //static const double bwslice_width[4]; // 3 dB bandwidths, without overlap
+   
     
   // these are filled for triggerscheme==0 and triggerscheme==1
   // frequency domain voltage and energy based
@@ -129,10 +133,10 @@ class ChanTrigger {
   vector<int> vpasses_eachband[2];
     
   // Used for ChanTrigger::PrepareBandWaveforms(...) and ChanTrigger::WhichBandsPass(...)
+  double v_banding_rfcm[2][5][Anita::NFREQ];// this is Volts/m as a function of frequency after rfcm's and banding
   double v_banding_rfcm_forfft[2][5][HALFNFOUR]; // starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
   double vm_banding_rfcm_forfft[2][5][HALFNFOUR];
   double v_banding_rfcm_forfft_temp[2][5][HALFNFOUR]; //use for the averaging over 10 neighboring bins
-  double v_banding_rfcm_forfft_ROUGHELEMENT[2][5][HALFNFOUR]; //use for the individual screen elements, then add to the vm_banding_rfcm_forfft[][][]
   // End of band waveform triggering arrays
     
   double integral_vmmhz;

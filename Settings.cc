@@ -770,9 +770,9 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   anita1->SIGMA_THETA*=RADDEG; // immediately convert degrees to radians
   getSetting("Low frequency", anita1->FREQ_LOW);
 
-  if (FREQ_LOW_SEAVEYS>anita1->FREQ_LOW){
-    FREQ_LOW_SEAVEYS=anita1->FREQ_LOW;
-  }
+  // if (FREQ_LOW_SEAVEYS>anita1->FREQ_LOW){
+  //   FREQ_LOW_SEAVEYS=anita1->FREQ_LOW;
+  // }
   getSetting("High frequency", anita1->FREQ_HIGH);
   BW = anita1->FREQ_HIGH - anita1->FREQ_LOW; // total bandwidth of simulation
 

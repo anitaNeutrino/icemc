@@ -62,6 +62,7 @@
 #include "screen.hh"
 #include "GlobalTrigger.h"
 #include "ChanTrigger.h"
+#include "SimulatedSignal.h"
 
 #include <string>
 #include <sstream>
@@ -649,9 +650,9 @@ int main(int argc,  char **argv) {
   double vmmhz1m_fresneledonce=0; // above,  after fresnel factor applied for ice-air interface
   double vmmhz1m_fresneledtwice=0; // above,  after fresnel factor applied for firn
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
+
   // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
   double vmmhz_em[Anita::NFREQ];
-
   double vmmhz_temp=1.;
   double vmmhz_min_thatpasses=1000;
   double vmmhz_min=0;   // minimum of the above array
@@ -1584,7 +1585,6 @@ int main(int argc,  char **argv) {
       count1->inhorizon[whichray]++;
 
 
-
       // cerenkov angle depends on depth because index of refraction depends on depth.
       if(!settings1->ROUGHNESS){
         if (settings1->FIRN) {
@@ -1627,6 +1627,8 @@ int main(int argc,  char **argv) {
       if (!ray1->TraceRay(settings1, anita1, 2, sig1->N_DEPTH)) {; // trace ray,  2nd iteration.
         continue;
       }
+
+      
 
       // fills ray1->n_exit2bn[2] ?
       ray1->GetRFExit(settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, bn1->r_bn, bn1->r_boresights, 2, antarctica);
@@ -1793,6 +1795,8 @@ int main(int argc,  char **argv) {
         //heff_max=maximum effective height over the frequency range
       }
 
+
+      
       // intermediate counter
       count1->nnottoosmall[whichray]++;
 
@@ -2398,8 +2402,9 @@ int main(int argc,  char **argv) {
         double validScreenSummedArea = 0.;
         double vmmhz_local_array[Anita::NFREQ];
         for (int jj=0; jj<panel1->GetNvalidPoints(); jj++){
-          sig1->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
-          // apply the off-angle tapering
+	  sig1->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
+
+	  // apply the off-angle tapering
           for (int k=0;k<Anita::NFREQ;k++) {
             deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
             deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
@@ -2436,6 +2441,8 @@ int main(int argc,  char **argv) {
       // the screen is now finished
       /////////////////////////////
 
+
+      
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
       if (!settings1->ROUGHNESS){
@@ -2448,6 +2455,8 @@ int main(int argc,  char **argv) {
         count1->nchanceinhell_fresnel[whichray]++;
       } //end if CHANCEINHELL factor and SKIPCUTS
       //
+
+
       // for plotting
       diffexit=ray1->rfexit[0].Distance(ray1->rfexit[1]);
       diffnorm=acos(ray1->nsurf_rfexit[0]*ray1->nsurf_rfexit[1]);
@@ -2473,7 +2482,6 @@ int main(int argc,  char **argv) {
       }
 
       count1->nchanceinhell_1overr[whichray]++;
-
 
       // distance ray travels through ice.
       if (!settings1->ROUGHNESS) {
@@ -2535,14 +2543,16 @@ int main(int argc,  char **argv) {
           sig1->SetNDepth(sig1->NICE); // for making array of signal vs. frequency,  viewangle
         
         sig1->GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ); // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
-        //   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
+	
+	//   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
         // and making an array across frequency bins by putting in frequency dependence.
       }
-      
+        
       // For each frequency,  get the width of Cerenkov cone
       // and size of signal once position of viewing angle is taken into account
 
       // these variables are for energy reconstruction studies
+        
       undogaintoheight_e=0;
       undogaintoheight_h=0;
 
@@ -2566,7 +2576,8 @@ int main(int argc,  char **argv) {
           continue;
         }
         count1->nviewanglecut[whichray]++;
-        
+
+
         for (int k=0;k<Anita::NFREQ;k++) {
           deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
           deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
@@ -2629,7 +2640,8 @@ int main(int argc,  char **argv) {
         if (settings1->CHANCEINHELL_FACTOR*Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS) {
           continue;
         }
-        
+
+
       }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
 
       // just for plotting
@@ -2648,14 +2660,21 @@ int main(int argc,  char **argv) {
       
       count1->ndeadtime[whichray]++;
 
-
       Tools::Zero(sumsignal_aftertaper, 5);
 
+      // // Create a pointer to the SimulatedSignal
+      // SimulatedSignal *simSignal = new SimulatedSignal();
+      // // Define the SimSignal from vmmhz
+      // simSignal->updateSimSignalFromVmmhz(Anita::NFREQ, anita1->freq, vmmhz);
+      // simSignal->getVmmhz(anita1, vmmhz);
+      // delete simSignal;
+      
       //if no-roughness case, add its parameters to the saved screen parameters so specular and roughness simulations use the same code in the waveform construction
       if(!settings1->ROUGHNESS){
         panel1->SetNvalidPoints(1);
         for (int k=0;k<Anita::NFREQ;k++) {
-          panel1->AddVmmhz_freq(vmmhz[k]);
+	  //cout << anita1->freq[k] << " " << vmmhz[k] << " " << vmmhz2[k] << " " << vmmhz[k]/vmmhz2[k] << endl;
+	  panel1->AddVmmhz_freq(vmmhz[k]);
         }
         panel1->AddDelay( 0. );
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
@@ -2745,6 +2764,12 @@ int main(int argc,  char **argv) {
 
       globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
       anita1->rms_rfcm_e_single_event = 0;
+
+
+      if (!settings1->BORESIGHTS) {
+	bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
+	bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
+      }
       
       for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
         for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
@@ -2756,11 +2781,8 @@ int main(int argc,  char **argv) {
 
           // for this (hitangle_h_all[count_rx]=hitangle_h;) and histogram fill, use specular case
           //although the GetEcomp..() functions are called in ConvertInputWFtoAntennaWF() to calculate the actual waveforms
-          if (!settings1->BORESIGHTS) {
-            bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
-            bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
-          }
-          else{ // i.e. if BORESIGHTS is true
+ 
+          if (settings1->BORESIGHTS){ // i.e. if BORESIGHTS is true
             bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector,  h_component_kvector,  n_component_kvector);
             bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol_eachboresight[ilayer][ifold], e_component,  h_component,  n_component);
             fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold] << " " << mag1_eachboresight[ilayer][ifold] << "\n";
@@ -2773,42 +2795,38 @@ int main(int argc,  char **argv) {
           if (h6->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
             h6->Fill(hitangle_h, ray1->n_exit2bn[2]*bn1->n_bn);
 
-
-          chantrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, n_eplane,  n_hplane,  n_normal, ilayer, ifold);
-
-          // Chantrig::ImpulseResponse needs to be outside the ray loop
-          chantrig1->DigitizerPath(settings1, anita1, ilayer, ifold);
-          
-          chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
-
 	  antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
 	  
-          //+++++//+++++//+++++//+++++//+++++//+++++//+++++
-          // THIS IS WHERE WE ACTUALLY CONSTRUCT THE WAVEFORMS THAT GET PASSED TO THE TRIGGER
-          chantrig1->PrepareTriggerPath(settings1, anita1, bn1, panel1, ilayer, ifold, n_eplane, n_hplane, n_normal);
-          Tools::Zero(sumsignal, 5);
+	  chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
+	  
+	  chantrig1->TriggerPath(settings1, anita1, antNum);
+	  
+	  chantrig1->DigitizerPath(settings1, anita1, antNum);
+
+	  chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
+
+	  Tools::Zero(sumsignal, 5);
 
 	  // now hopefully we have converted the signal to time domain waveforms
           // for all the bands of the antenna and screen points
 
 
-/*
-  std::string stemp=settings1->outputdir+"/rough_signalwaveforms_"+nunum+".dat";
-  ofstream sigout(stemp.c_str(), ios::app);
-    for (int iband=0;iband<5;iband++) {
-      if (anita1->bwslice_allowed[iband]!=1) continue; 
-      for (int k=0;k<anita1->NFOUR/2;k++) {
-        sigout << ilayer << "  "
-               << ifold << "  "
-               << iband << "  "
-               << k << "  "
-               << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
-               << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
-               << std::endl;
-      }
-    }
-  sigout.close();
-*/ 
+	  /*
+	    std::string stemp=settings1->outputdir+"/rough_signalwaveforms_"+nunum+".dat";
+	    ofstream sigout(stemp.c_str(), ios::app);
+	    for (int iband=0;iband<5;iband++) {
+	    if (anita1->bwslice_allowed[iband]!=1) continue; 
+	    for (int k=0;k<anita1->NFOUR/2;k++) {
+	    sigout << ilayer << "  "
+	    << ifold << "  "
+	    << iband << "  "
+	    << k << "  "
+	    << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
+	    << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
+	    << std::endl;
+	    }
+	    }
+	    sigout.close();*/
 
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
             for (int ibw=0;ibw<5;ibw++) {
@@ -2911,6 +2929,7 @@ int main(int argc,  char **argv) {
         } //loop through the phi-fold antennas
       }  //loop through the layers of antennas
 
+
       anita1->rms_rfcm_e_single_event = sqrt(anita1->rms_rfcm_e_single_event / (anita1->HALFNFOUR * settings1->NANTENNAS));
 
       if(!settings1->ROUGHNESS){
@@ -2987,7 +3006,6 @@ int main(int argc,  char **argv) {
       //       EVALUATE GLOBAL TRIGGER    //
       //          FOR VPOL AND HPOL       //
       //////////////////////////////////////
-
 
       int thispasses[Anita::NPOL]={0,0};
 

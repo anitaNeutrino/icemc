@@ -382,6 +382,7 @@ int main(int argc,  char **argv) {
   int passestrigger=0;
   int count_total=0;
   int count_rx=0;
+  int antNum=0;
   
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
@@ -482,18 +483,16 @@ int main(int argc,  char **argv) {
 	hitangle_e_all[count_rx]=hitangle_e;
 	// for debugging
 
-	chantrig1->ConvertInputWFtoAntennaWF(settings1, anita1, bn1, panel1, n_eplane,  n_hplane,  n_normal, ilayer, ifold);
+	
+	antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
-	// Chantrig::ImpulseResponse needs to be outside the ray loop
-	chantrig1->DigitizerPath(settings1, anita1, ilayer, ifold);
+	chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
+	
+	chantrig1->TriggerPath(settings1, anita1, antNum);
+	
+	chantrig1->DigitizerPath(settings1, anita1, antNum);
 	
 	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
-
-
-	//+++++//+++++//+++++//+++++//+++++//+++++//+++++
-	// THIS IS WHERE WE ACTUALLY CONSTRUCT THE WAVEFORMS THAT GET PASSED TO THE TRIGGER
-	chantrig1->PrepareTriggerPath(settings1, anita1, bn1, panel1, ilayer, ifold, n_eplane, n_hplane, n_normal);
-	
 	
 
 	double thresholds[2][5];

@@ -46,7 +46,8 @@ public:
 
   static const int NBANDS_MAX=100; // max number of bands
   static const int NPOL=2; // number of polarizations
-  static const int NFREQ=128;  // number of frequency bins
+  //static const int NFREQ=128;  // number of frequency bins
+  static const int NFREQ=128;
   //const int NFREQ=4096;
 
 
@@ -96,6 +97,10 @@ public:
   
   // takes arrays that span NFREQ and turn them into arrays that span HALFNFOUR
   void MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay);
+  void MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay);
+  
+  void GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx);
+  
   int Match(int ilayer,int ifold,int rx_minarrivaltime);
   int getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn);
 
@@ -231,11 +236,7 @@ public:
   int channels_passing[2][5]; // channels passing.  This is reset for every antenna for every event
   int l1_passing; // l1 passing
   int l1_passing_allantennas[48]; // l1 passing
-  
-  double volts_rx_rfcm_lab[2][HALFNFOUR];          // time domain voltage vs. time after rx, rfcm's and lab
-  double volts_rx_rfcm_lab_all[2][48][HALFNFOUR];  // time domain voltage vs. time after rx, rfcm's and lab
-  double volts_rx_rfcm[2][HALFNFOUR];              // time domain voltage vs. time after rx, rfcm's
-  
+    
   int irx;
   void BoxAverageComplex(double *array,const int n,int navg);
   void BoxAverage(double *array,const int n,int navg);
