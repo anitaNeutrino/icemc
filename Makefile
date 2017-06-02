@@ -16,7 +16,6 @@ include Makefile.arch
 
 #BOOSTFLAGS = -I boost_1_48_0
 # commented out for kingbee and older versions of gcc
-CPPSTD= c++11
 ANITA3_EVENTREADER=1
 
 
@@ -34,13 +33,9 @@ ANITA3_EVENTREADER=1
 
 
 
-
 ################################################################################
-
-ifeq ($(CPPSTD), c++11)
-CPPSTD_FLAGS = -std=c++11
-else
-# If not compiling with C++11 support, all occurrences of "constexpr"
+ifeq (,$(findstring -std=c++1, $(ROOTCFLAGS)))
+# If not compiling with C++11 (or later) support, all occurrences of "constexpr"
 # must be replaced with "const", because "constexpr" is a keyword
 # which pre-C++11 compilers do not support.
 # ("constexpr" is needed in the code to perform in-class initialization
