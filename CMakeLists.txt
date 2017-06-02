@@ -4,7 +4,7 @@ project(icemc)
 ### Site-specific options
 
 SET(BOOST_INCLUDE_DIR "" CACHE String "BOOST include path (if different from system path)")  
-option(USE_CPP11  "Use the C++11 standard" ON) 
+#option(USE_CPP11  "Use the C++11 standard" ON)
 option(ANITA3_EVENTREADER "Load ANITA3 EventReader" ON) 
 
 
@@ -17,9 +17,9 @@ include(${ROOT_USE_FILE})
 
 include_directories(${PROJECT_SOURCE_DIR})
 
-if (USE_CPP11) 
-  add_definitions(-std=c++11) 
-else() 
+string(FIND ${ROOT_CXX_FLAGS} "-std=c++1" USE_MODERN_CPP)
+
+if(${USE_MODERN_CPP} EQUAL -1)
   ##DRAGONS BE HERE 
   add_definitions(-Dconstexpr=const) 
 endif()
