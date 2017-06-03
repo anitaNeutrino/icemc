@@ -17,12 +17,27 @@ include(${ROOT_USE_FILE})
 
 include_directories(${PROJECT_SOURCE_DIR})
 
-string(FIND ${ROOT_CXX_FLAGS} "-std=c++1" USE_MODERN_CPP)
-
-if(${USE_MODERN_CPP} EQUAL -1)
-  ##DRAGONS BE HERE 
-  add_definitions(-Dconstexpr=const) 
+message("cmake_cxx_flags = ${CMAKE_CXX_FLAGS}")
+string(FIND ${CMAKE_CXX_FLAGS} "-std=" NEED_SET_CPP_FLAGS)
+if(${NEED_SET_CPP_FLAGS} EQUAL -1)
+  if(CMAKE_COMPILER_IS_GNUCC)
+    message(${CMAKE_CXX_COMPILER_VERSION})
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.5.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.5.0)
+      add_definitions(-std=c++11)
+    else()
+      add_definitions(-std=c++0x)
+    endif()
+  endif()
 endif()
+
+
+string(FIND ${CMAKE_CXX_FLAGS} "-std=c++1" USE_MODERN_CPP)
+if(${USE_MODERN_CPP} EQUAL -1)
+  ##DRAGONS BE HERE
+  add_definitions(-Dconstexpr=const)
+endif()
+
+
 
 set(DICT classdict)
 set(CLASS_HEADERS rx.hpp Taumodel.hh)
