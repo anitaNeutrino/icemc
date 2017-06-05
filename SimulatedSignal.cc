@@ -11,6 +11,9 @@ SimulatedSignal::SimulatedSignal()
  :RFSignal()
 {
   // Default constructor
+  nfreqs = 257; //Anita::HALFNFOUR/2;
+  newdf  = 1300e6/nfreqs;
+  
 }
 
 
@@ -19,7 +22,8 @@ SimulatedSignal::SimulatedSignal()
 SimulatedSignal::SimulatedSignal(Int_t numPoints,Double_t *tVals,Double_t *vVals,Int_t mvNs)
   :RFSignal(numPoints,tVals,vVals,mvNs)
 {
-
+  nfreqs = 257; //Anita::HALFNFOUR/2;
+  newdf  = 1300e6/nfreqs;
 }
 
 ///< Default destructor

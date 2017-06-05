@@ -1459,7 +1459,7 @@ int main(int argc,  char **argv) {
     //reset screen parameters (even for no roughness) for the new event
     panel1->ResetParameters();
     panel1->ResetPositionIndex();
-    std::string nunum = std::to_string(inu);
+    // std::string nunum = std::to_string(inu);    
     //stemp=settings1->outputdir+"/rough_groundvalues_"+nunum+".dat";
     //ofstream roughout(stemp.c_str());
     //stemp=settings1->outputdir+"/rough_evtweight_"+nunum+".dat";

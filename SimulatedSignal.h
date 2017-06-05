@@ -27,8 +27,10 @@ class SimulatedSignal : public RFSignal {
 
 
   // The final number of frequencies is 256 between 0 and 1300 MHz
-  Int_t    nfreqs = 257; //Anita::HALFNFOUR/2;
-  Double_t newdf  = 1300e6/nfreqs;
+  // Int_t    nfreqs = 257; //Anita::HALFNFOUR/2;
+  // Double_t newdf  = 1300e6/nfreqs;
+  Int_t    nfreqs;
+  Double_t newdf;
   
  private:
   

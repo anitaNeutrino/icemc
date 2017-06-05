@@ -29,6 +29,8 @@ if(${NEED_SET_CPP_FLAGS} EQUAL -1)
     else()
       ##DRAGONS BE HERE
       add_definitions(-Dconstexpr=const)
+      message(" -std=c++0x ")
+      add_definitions(-std=c++0x)
     endif()
   endif()
 endif()
