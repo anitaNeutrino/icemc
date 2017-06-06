@@ -16,31 +16,28 @@ include Makefile.arch
 
 #BOOSTFLAGS = -I boost_1_48_0
 # commented out for kingbee and older versions of gcc
-CPPSTD= c++11
 ANITA3_EVENTREADER=1
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+# The ROOT flags are added to the CXXFLAGS in the .arch file
+# so this should be simpler...
+ifeq (,$(findstring -std=, $(CXXFLAGS)))
+ifeq ($(shell test $(GCC_MAJOR) -lt 5; echo $$?),0)
+ifeq ($(shell test $(GCC_MINOR) -lt 5; echo $$?),0)
+CXXFLAGS += -std=c++0x
+else
+CXXFLAGS += -std=c++11
+endif
+endif
+endif
 
 ################################################################################
 
-ifeq ($(CPPSTD), c++11)
-CPPSTD_FLAGS = -std=c++11
-else
-# If not compiling with C++11 support, all occurrences of "constexpr"
+ifeq (,$(findstring -std=c++1, $(CXXFLAGS)))
+# If not compiling with C++11 (or later) support, all occurrences of "constexpr"
 # must be replaced with "const", because "constexpr" is a keyword
 # which pre-C++11 compilers do not support.
 # ("constexpr" is needed in the code to perform in-class initialization
