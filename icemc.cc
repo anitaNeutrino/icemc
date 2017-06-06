@@ -2655,7 +2655,7 @@ int main(int argc,  char **argv) {
 
       // Dead time
       if (settings1->USEDEADTIME){
-      	if ( r.Uniform(1)<anita1->deadTime) continue;
+      	if ( (anita1->deadTime>0.9) || (r.Uniform(1)<anita1->deadTime) ) continue;
       }
       
       count1->ndeadtime[whichray]++;
