@@ -4049,27 +4049,28 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
        
      }
      
-     TGraph *gPulseAtAmpaInt = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/(2.6));
+     TGraph *gPulseAtAmpaInt = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/2.6);
      double *y = gPulseAtAmpaInt->GetY();
      for (int i=0;i<HALFNFOUR;i++){
-       trigEffScanPulseAtAmpa[i]=y[i];
+       if (i<HALFNFOUR/2)  trigEffScanPulseAtAmpa[i]=0.;
+       else trigEffScanPulseAtAmpa[i]=y[i-HALFNFOUR/2];
      }
 
-     TGraph *gPulseAtAmpaUp = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/(2.6*2));
-     double *y2 = gPulseAtAmpaUp->GetY();
-     for (int i=0;i<NFOUR;i++){
-       trigEffScanPulseAtAmpaUpsampled[i]=y2[i];
-     }
+     // TGraph *gPulseAtAmpaUp = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/(2.6*2));
+     // double *y2 = gPulseAtAmpaUp->GetY();
+     // for (int i=0;i<NFOUR;i++){
+     //   trigEffScanPulseAtAmpaUpsampled[i]=y2[i];
+     // }
 
-     FFTWComplex *theFFT = FFTtools::doFFT(HALFNFOUR, trigEffScanPulseAtAmpa);
+     // FFTWComplex *theFFT = FFTtools::doFFT(HALFNFOUR, trigEffScanPulseAtAmpa);
     
-     for (int i=0;i<NFREQ;i++){
-       trigEffScanAmplitudeAtAmpa[i]=FFTtools::getAbs(theFFT[i]);
-     }
+     // for (int i=0;i<NFREQ;i++){
+     //   trigEffScanAmplitudeAtAmpa[i]=FFTtools::getAbs(theFFT[i]);
+     // }
      
-     delete []theFFT;
+     // delete []theFFT;
      delete gPulseAtAmpaInt;
-     delete gPulseAtAmpaUp;
+     // delete gPulseAtAmpaUp;
      delete gPulseAtAmpa;
      
      
