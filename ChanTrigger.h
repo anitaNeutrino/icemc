@@ -154,6 +154,10 @@ class ChanTrigger {
   void injectImpulseAfterAntenna(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant);
   void injectImpulseAmplitudeAfterAntenna(Anita *anita1, double vhz_triggerPath_e[Anita::NFREQ], double vhz_triggerPath_h[Anita::NFREQ], int ant);
   void injectImpulseAtSurf(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant);
+  
+
+  void injectImpulseAfterAntenna(Anita *anita1, int ant);
+  
 #endif
     
   int unwarned;  // whether we have warned the user about resetting thresholds when they are beyond the measured bounds
