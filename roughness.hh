@@ -67,56 +67,74 @@ public:
 
   Roughness(int a);
 
-  /// Gets the total laser power
-  /// @return returns 580. [muW]
+  //! Gets the total laser power
+  /**
+  * @return returns 580. [muW]
+  */
   double GetLaserPower();
 
-  /// Interpolates the power value using a two-dimensional gaussian for the specified angles 
-  /// @param T0 - incident angle [degrees]
-  /// @param T - transmitted angle [degrees]
-  /// @return double [muW]
+  //! Interpolates the power value using a two-dimensional gaussian for the specified angles 
+  /**
+  * @param T0 - incident angle [degrees]
+  * @param T - transmitted angle [degrees]
+  * @return double [muW]
+  */
   double InterpolatePowerValue(double T0, double T);
 
-  /// Evaluate the two-dimensional gaussian for the specified angle
-  /// @param T0 - incident angle [degrees]
-  /// @param T - transmitted angle [degrees]
-  /// @return double [muW]
+  //! Evaluate the two-dimensional gaussian for the specified angle
+  /**
+  * @param T0 - incident angle [degrees]
+  * @param T - transmitted angle [degrees]
+  * @return double [muW]
+  */
   double evaluate2dGaussian(double T0, double T);
 
-  /// Get the Fresnel correction factor
-  /// @param T0 - incident angle [degrees]
-  /// @return double
+  //! Get the Fresnel correction factor
+  /**
+  * @param T0 - incident angle [degrees]
+  * @return double
+  */
   double GetFresnelCorrectionFactor(double T0);
 
-  /// Get the loss correction factor through the glass
-  /// @param T0 - incident angle [degrees]
-  /// @return double
+  //! Get the loss correction factor through the glass
+  /**
+  * @param T0 - incident angle [degrees]
+  * @return double
+  */
   double GetLossCorrectionFactor(double T0);
 
-  /// Calculate the corresponding incidence angle if the interface is reversed
-  /// @param T0 - incident angle [degrees]
-  /// @return double
+  //! Calculate the corresponding incidence angle if the interface is reversed
+  /**
+  * @param T0 - incident angle [degrees]
+  * @return double
+  */
   double ConvertTheta0AirGlass_to_GlassAir(double T0);
 
-  /// Calculate the corresponding incidence angle if the interface is reversed
-  /// @param T1 - incident angle [degrees]
-  /// @return double
+  //! Calculate the corresponding incidence angle if the interface is reversed
+  /**
+  * @param T1 - incident angle [degrees]
+  * @return double
+  */
   double ConvertTheta0GlassAir_to_AirGlass(double T1);
 
-  /// Calculate the transmitted polarization vector
-  /// @param nnu - neutrino direction
-  /// @param vec_specularnormal - surface normal vector at the specular RF exit point
-  /// @param vec_localnormal - surface normal vector at the screen point's projected impact position
-  /// @param vec_pos_current_to_balloon - vector from the projected impact position to the balloon
-  /// @param vec_nnu_to_impactPoint - vector from neutrino interaction position to the projected impact point
-  /// @param npol_local_inc - incident polarization vector
-  /// @return transmitted polarization vector
+  //! Calculate the transmitted polarization vector
+  /**
+  * @param nnu - neutrino direction
+  * @param vec_specularnormal - surface normal vector at the specular RF exit point
+  * @param vec_localnormal - surface normal vector at the screen point's projected impact position
+  * @param vec_pos_current_to_balloon - vector from the projected impact position to the balloon
+  * @param vec_nnu_to_impactPoint - vector from neutrino interaction position to the projected impact point
+  * @param npol_local_inc - incident polarization vector
+  * @return transmitted polarization vector
+  */
   Vector CalculateTransmittedPolarization(const Vector &nnu, Vector vec_specularnormal, Vector vec_localnormal, Vector vec_pos_current_to_balloon, Vector vec_nnu_to_impactPoint, Vector npol_local_inc);
 
-  /// For a given interface between n0 and n1_old, re-calculate the transmitted angle based on switching n1_old to n1_new
-  /// @param n1_old - old index of refraction
-  /// @param n1_new - new index of refraction
-  /// @param trans_angle_old - old angle of transmission
+  //! For a given interface between n0 and n1_old, re-calculate the transmitted angle based on switching n1_old to n1_new
+  /**
+  * @param n1_old - old index of refraction
+  * @param n1_new - new index of refraction
+  * @param trans_angle_old - old angle of transmission
+  */
   double AdjustTransmissionAngle(double n1_old, double n1_new, double trans_angle_old);
 };
 

@@ -46,173 +46,249 @@ private:
   
 
 public:
-  /// Creates an instance of a screen
-  /// @param a - unused (needs removed)
+  //! Creates an instance of a screen
+  /**
+  * @param a - unused (needs removed)
+  */
   Screen(int a);
 
-  /// Sets number of grid divisions for the base screen
-  /// @param i - number of grid point
+  //! Sets number of grid divisions for the base screen
+  /**
+  * @param i - number of grid point
+  */
   void SetNsamples(int i);
 
-  /// Gets number of grid divisions for the base screen
-  /// @return integer
+  //! Gets number of grid divisions for the base screen
+  /**
+  * @return integer
+  */
   int GetNsamples();
 
-  /// Sets the physical length of a side of the screen
-  /// @param a - size (meters)
+  //! Sets the physical length of a side of the screen
+  /**
+  * @param a - size (meters)
+  */
   void SetEdgeLength(double a);
 
-  /// Sets the position of the central point of the screen
-  /// @param a - position vector
+  //! Sets the position of the central point of the screen
+  /**
+  * @param a - position vector
+  */
   void SetCentralPoint(Position a);
 
-  /// Sets the projection factor of the screen relative to the specular RF exit point
-  /// @param a - cosine of the viewing angle w.r.t. to screen normal
+  //! Sets the projection factor of the screen relative to the specular RF exit point
+  /**
+  * @param a - cosine of the viewing angle w.r.t. to screen normal
+  */
   void SetCosineProjectionFactor(double a);
 
-  /// Gets the projection factor
-  /// @return double
+  //! Gets the projection factor
+  /**
+  * @return double
+  */
   double GetCosineProjectionFactor();
 
-  /// Sets the screen normal
-  /// @param a - normal vector
+  //! Sets the screen normal
+  /**
+  * @param a - normal vector
+  */
   void SetNormal(Vector a);
 
-  /// Sets an orientation vector of the screen
-  /// @param a - vector
+  //! Sets an orientation vector of the screen
+  /**
+  * @param a - vector
+  */
   void SetUnitX(Vector a);
 
-  /// Sets another orientation vector of the screen
-  /// @param a - vector
+  //! Sets another orientation vector of the screen
+  /**
+  * @param a - vector
+  */
   void SetUnitY(Vector a);
 
-  /// Gets the screen length
-  /// @return double
+  //! Gets the screen length
+  /**
+  * @return double
+  */
   double GetEdgeLength();
 
-  /// Gets the position of the screen's central point
-  /// @return Position
+  //! Gets the position of the screen's central point
+  /**
+  * @return Position
+  */
   Position GetCentralPoint();
 
-  /// Gets the screen normal
-  /// @return Vector
+  //! Gets the screen normal
+  /**
+  * @return Vector
+  */
   Vector GetNormal();
 
-  /// Gets an orientation vector
-  /// @return Vector
+  //! Gets an orientation vector
+  /**
+  * @return Vector
+  */
   Vector GetUnitX();
 
-  /// Gets another orientation vector
-  /// @return Vector
+  //! Gets another orientation vector
+  /**
+  * @return Vector
+  */
   Vector GetUnitY();
 
-  /// Resets the internal position counter to 0
+  //! Resets the internal position counter to 0
   void ResetPositionIndex();
 
-  /// Calculates the X index of the screen corresponding to the specified counter value
-  /// @param i - index
-  /// @return double
+  //! Calculates the X index of the screen corresponding to the specified counter value
+  /**
+  * @param i - index
+  * @return double
+  */
   double CalcXindex(int i);
 
-  /// Calculates the Y index of the screen corresponding to the specified counter value
-  /// @param i - index
-  /// @return double
+  //! Calculates the Y index of the screen corresponding to the specified counter value
+  /**
+  * @param i - index
+  * @return double
+  */
   double CalcYindex(int i);
 
-  /// Calculates the physical position of the screen corresponding to the specified counter value
-  /// @param i - index
-  /// @return double
+  //! Calculates the physical position of the screen corresponding to the specified counter value
+  /**
+  * @param i - index
+  * @return double
+  */
   Position GetNextPosition(int i);
 
-  /// Appends a Vmmhz value to the fVmmhz_freq array
-  /// @param A - Vmmhz value
+  //! Appends a Vmmhz value to the fVmmhz_freq array
+  /**
+  * @param A - Vmmhz value
+  */
   void AddVmmhz_freq(double A);
 
-  /// Get the Vmmhz value stored at the specified index
-  /// @param i - index
-  /// @return double
+  //! Get the Vmmhz value stored at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
   double GetVmmhz_freq(int i);
 
-  /// Appends a Vmmhz value (for the lowest Anita frequency) to the fVmmhz0 array
-  /// @param A - Vmmhz value
+  //! Appends a Vmmhz value (for the lowest Anita frequency) to the fVmmhz0 array
+  /**
+  * @param A - Vmmhz value
+  */
   void AddVmmhz0(double A);
 
-  /// Gets the Vmmhz0 value stored at the specified index
-  /// @param i - index
-  /// @return double
+  //! Gets the Vmmhz0 value stored at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
   double GetVmmhz0(int i);
 
-  /// Appends a viewangle value to the fViewangle array
-  /// @param A - viewangle
+  //! Appends a viewangle value to the fViewangle array
+  /**
+  * @param A - viewangle
+  */
   void AddViewangle(double A);
 
-  /// Get the viewangle value stored at the specified index
-  /// @param i - index
-  /// @return double
+  //! Get the viewangle value stored at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
   double GetViewangle(int i);
 
-  /// Appends a delay value to the fDelays array
-  /// @param A - delay
+  //! Appends a delay value to the fDelays array
+  /**
+  * @param A - delay
+  */
   void AddDelay(double A);
 
-  /// Get the delay value stores at the specified index
-  /// @param i - index
-  /// @return double
+  //! Get the delay value stores at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
   double GetDelay(int i);
 
-  /// Sets the total number of points on the screen
-  /// @param i - number of points
+  //! Sets the total number of points on the screen
+  /**
+  * @param i - number of points
+  */
   void SetNvalidPoints(int i);
 
-  /// Gets the total number of points
-  /// @return int
+  //! Gets the total number of points
+  /**
+  * @return int
+  */
   double GetNvalidPoints();
 
-  /// Appends a vector to the fVec2blns array
-  /// @param v - Vector
+  //! Appends a vector to the fVec2blns array
+  /**
+  * @param v - Vector
+  */
   void AddVec2bln(Vector v);
 
-  /// Gets the to-balloon vector at the specified index
-  /// @param i - index
-  /// @return Vector
+  //! Gets the to-balloon vector at the specified index
+  /**
+  * @param i - index
+  * @return Vector
+  */
   Vector GetVec2bln(int i);
 
-  /// Appends a vector to the fPols array
-  /// @param v - Vector
+  //! Appends a vector to the fPols array
+  /**
+  * @param v - Vector
+  */
   void AddPol(Vector v);
 
-  /// Gets the polarization vector at the specified index
-  /// @param i - index
-  /// @return Vector
+  //! Gets the polarization vector at the specified index
+  /**
+  * @param i - index
+  * @return Vector
+  */
   Vector GetPol(int i);
 
-  /// Appends a vector to the fImpactPt array
-  /// @param p - Position
+  //! Appends a vector to the fImpactPt array
+  /**
+  * @param p - Position
+  */
   void AddImpactPt(Position p);
 
-  /// Gets the position at the specified index
-  /// @param i - index
-  /// @return Position
+  //! Gets the position at the specified index
+  /**
+  * @param i - index
+  * @return Position
+  */
   Position GetImpactPt(int i);
 
-  /// Appends a weight value to the fWeight array
-  /// @param a - double
+  //! Appends a weight value to the fWeight array
+  /**
+  * @param a - double
+  */
   void AddWeight(double a);
 
-  /// Gets the weight value at the specified index
-  /// @param i - index
-  /// @return double
+  //! Gets the weight value at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
   double GetWeight(int i);
 
-  /// Sets the normalization factor for the weights (so they sum to 1)
-  /// @param a - double
+  //! Sets the normalization factor for the weights (so they sum to 1)
+  /**
+  * @param a - double
+  */
   void SetWeightNorm(double a);
 
-  /// Gets the weight normalization factor
-  /// @return double
+  //! Gets the weight normalization factor
+  /**
+  * @return double
+  */
   double GetWeightNorm();
 
-  /// Resets the following screen parameters (fNvalidpoints,fVmmhz_freq,fVmmhz0,fViewangle,fDelays,fVec2blns,fPols,fImpactPt,fWeight,fWeightNorm)
+  //! Resets the following screen parameters (fNvalidpoints,fVmmhz_freq,fVmmhz0,fViewangle,fDelays,fVec2blns,fPols,fImpactPt,fWeight,fWeightNorm)
   void ResetParameters();
 
 };
