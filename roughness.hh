@@ -53,7 +53,7 @@ private:
   std::vector<double> theta_g2a;           ///< vector of glass-air incidence angles
 
   //parameters for 2d gaussian fits from astropy
-  double amplitude;                             ///< amplitude of the 2-d gaussian fit [\muW]
+  double amplitude;                             ///< amplitude of the 2-d gaussian fit [microW]
   double x_mean, y_mean, x_stddev, y_stddev;    ///< means and sigmas of the 2-d gaussian fit in [rad]
   double gaustheta;                             ///< rotation angle of the 2-d gaussian fit [rad]
   double maxmeaspower, fitfuncmax;
@@ -99,7 +99,7 @@ public:
   double ConvertTheta0AirGlass_to_GlassAir(double T0);
 
   /// Calculate the corresponding incidence angle if the interface is reversed
-  /// @param T0 - incident angle [degrees]
+  /// @param T1 - incident angle [degrees]
   /// @return double
   double ConvertTheta0GlassAir_to_AirGlass(double T1);
 

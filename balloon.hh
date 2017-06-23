@@ -111,7 +111,7 @@ public:
      *
      * @param  settings1 -
      * @param  anita1 -
-     * @param  r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX] -
+     * @param  r_boresights - [NLAYERS_MAX][NPHI_MAX] 
      * @return returns void
      */
      void GetBoresights(Settings *settings1,Anita *anita1,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]);
