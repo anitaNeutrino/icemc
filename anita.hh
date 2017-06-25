@@ -71,6 +71,7 @@ public:
   double THETA_ZENITH[NLAYERS_MAX]; // how the antenna is tilted in theta (in radians with 0=up)
   // 0=horizontal,+90=down
 
+  int inu;            ///< Neutrino number
   // what the payload looks like
 
   double LAYER_VPOSITION[Anita::NLAYERS_MAX];  // position of layers in z relative to vertical center of the payload

@@ -258,7 +258,7 @@ void Anita::SetNoise(Settings *settings1,Balloon *bn1,IceModel *antarctica) {
     
     
 }
-void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
+void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu)
 {
     
     
@@ -267,7 +267,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int inu)
     rms_rfcm[0]=rms_rfcm[1]=0.;
     
     NBANDS=4; // subbands (not counting full band)
- 
+    inu=thisInu;
     
     PERCENTBW=10; // subbands (not counting full band)
  
@@ -3919,7 +3919,7 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 	  int paveNum = 8533;
 	  grTemp = new TGraph(nPoints,  newx, newy);
 	  
-	  fSignalChainResponseDigitizer[ipol][iring][iphi] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
+	  fSignalChainResponseDigitizer[ipol][iring][iphi] = FFTtools::padWaveToLength(grTemp, paveNum);
 	  
 	  delete grInt;
 	  delete grTemp;
@@ -3964,25 +3964,31 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   double norm=0;
   
   if(settings1->WHICH==9){
-    
-    fileName = "data/SignalChainImpulseResponseTrigger_anita3_temp.root";
 
-    // string spol[2] ={"V", "H"};
+    // Use response from Digitizer path for now
+    fileName = "data/Anita3_ImpulseResponseDigitizer.root";
+
+    string spol[2] ={"V", "H"};
+    string sring[3]={"T", "M", "B"};
     
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
-	//	graphNames[ipol][iring]=Form("ImpulseResponse_%spol", spol[ipol].c_str());
-	graphNames[ipol][iring]=Form("ImpulseResponseTrigger");	
+	// for (int iphi=0;iphi<16;iphi++){
+	int iphi=10;
+	graphNames[ipol][iring]= Form("g%02d%s%s", iphi+1, sring[iring].c_str(), spol[ipol].c_str() ) ;
+	// }
       }
     }
-    // 48 is the average normalisation constant we got from the pulse used to measure the signal chain impulse response
-    //    norm = 48.;
 
-    // There was a 20dB amplifier at the scope that was not considered in the evaluation of the impulse response
-    norm = TMath::Power(10, 20./20.);
+    // 6.6dB missing from impulse response in the digitizer path
+    norm *= TMath::Power(10, 6.6/20.);
+
+    // the trigger impulse response is 6dB higher than the digitizer impulse response
+    norm *= TMath::Power(10, 6.6/20.);
     
-    // Impulse response already accounts for trigger/digitizer splitter
-    norm *= sqrt(2);
+    //// Impulse response already accounts for trigger/digitizer splitter
+    //norm *= sqrt(2);
+
   }
 
   // Read in input file
@@ -3995,6 +4001,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
+
 	// Read graph
 	TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring].c_str());
 	if(!grTemp) {
@@ -4007,18 +4014,22 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	Double_t *newx = grInt->GetX();
 	Double_t *newy = grInt->GetY();
 	// Normalise
-	for (int i=0;i<nPoints;i++) newy[i]=newy[i]*norm;
+	for (int i=0;i<nPoints;i++){
+	  newy[i]=newy[i]*norm;
+	  // change time axis from ns to s
+	  newx[i]=newx[i]*1E-9;
+	}
 	// Pave to 0
 	int paveNum = 8533;
 	grTemp = new TGraph(nPoints,  newx, newy);
-
-	fSignalChainResponseTrigger[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);    //new TGraph(nPoints, newx, newy);
-
+	
+	fSignalChainResponseTrigger[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);
+	
 	delete grInt;
 	delete grTemp;
+      
       }
     }
-    
   }
   
 }

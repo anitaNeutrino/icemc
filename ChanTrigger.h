@@ -218,7 +218,6 @@ class ChanTrigger {
   //! Which bands passes the trigger
   /**
    *
-   * @param  inu :: int - neutrino number
    * @param  settings1 :: Settings - simulation settings
    * @param  anita1 :: Anita - anita object
    * @param  globaltrig1 :: GlobalTrigger - global trigger object
@@ -230,7 +229,7 @@ class ChanTrigger {
    * @param  hadfrac :: double - hadronic fraction of the shower
    * @param  thresholds :: double [2][5] - relative power thresholds for each pol and band
    */
-  void WhichBandsPass(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
+  void WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
 
   //! Which bands passes the trigger (for trigger scheme 0 and 1)
   /**
@@ -248,7 +247,6 @@ class ChanTrigger {
   //! Which bands passes the trigger (for trigger scheme larger than 2)
   /**
    *
-   * @param  inu :: int - neutrino number
    * @param  settings1 :: Settings - simulation settings
    * @param  anita1 :: Anita - anita object
    * @param  globaltrig1 :: GlobalTrigger - global trigger object
@@ -260,7 +258,7 @@ class ChanTrigger {
    * @param  hadfrac :: double - hadronic fraction of the shower
    * @param  thresholds :: double [2][5] - relative power thresholds for each pol and band
    */
-  void WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
+  void WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
 
   //! Find peak voltage of a waveform
   /**
@@ -341,14 +339,12 @@ class ChanTrigger {
    *
    * @param  settings1 :: Settings - simulation settings
    * @param  anita1 :: Anita - anita payload object
-   * @param  nPoints :: int - number of points in time domain
    * @param  ant :: int - antenna number
-   * @param  x :: double* - time values
    * @param  y :: double[512] - output voltages
    * @param  vhz :: double* - amplitude in Fourier domain
    * @param  pol :: bool - which polarization
    */
-  void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], double *vhz, bool pol);
+  void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol);
 
   //! Apply impulse response to trigger path
   /**
