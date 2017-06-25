@@ -3901,7 +3901,7 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 	  // Read graph
 	  TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring][iphi].c_str());
 	  if(!grTemp) {
-	    std::cerr << "Couldn't read siganl chain impulse response" << graphNames[ipol][iring][iphi] << " from file " << fileName << "\n";
+	    std::cerr << "Couldn't read signal chain impulse response" << graphNames[ipol][iring][iphi] << " from file " << fileName << "\n";
 	    exit(0);
 	  }
 	  // Interpolate to high sampling rate that will be used for the convolution
@@ -4005,7 +4005,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	// Read graph
 	TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring].c_str());
 	if(!grTemp) {
-	  std::cerr << "Couldn't read siganl chain impulse response" << graphNames[ipol][iring] << " from file " << fileName << "\n";
+	  std::cerr << "Couldn't read signal chain impulse response" << graphNames[ipol][iring] << " from file " << fileName << "\n";
 	  exit(0);
 	}
 	// Interpolate to high sampling rate that will be used for the convolution
