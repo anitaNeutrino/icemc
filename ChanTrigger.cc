@@ -1581,13 +1581,9 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
 
 
   int iphi = ant - (iring*16);
-  
-  //Calculate convolution TEMPPPPP
-  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizer[ipol][iring][iphi]);
-  
-  
-  // //Calculate convolution
-  // TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring]);
+    
+  //Calculate convolution
+  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring]);
   
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
@@ -1633,50 +1629,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   delete graph1;
 }
 
-void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], bool pol){
 
-  int nPoints=anita1->HALFNFOUR;
-  double *x = anita1->fTimes;
-
-  TGraph *graph1 = new TGraph(nPoints, x, y);
-  
-  // Upsample waveform to same deltaT of the signal chain impulse response
-  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
-
-  int ipol=0;
-  int iring=2;
-  if (pol) ipol = 1;
-  if (ant<16) iring=0;
-  else if (ant<32) iring=1;
-  
-  //Calculate convolution
-  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring]);
-  
-  //Downsample again
-  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
-  
-  Double_t *newy = surfSignalDown->GetY();
-  if (settings1->ZEROSIGNAL){
-    for (int i=0;i<nPoints;i++) newy[i]=0;
-  } 
-
-
-  // add thermal noise for anita-3 flight
-  if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
-    double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
-    for (int i=0;i<nPoints;i++){
-      y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
-      // std::cout << justNoise[i] << std::endl;
-    }
-  } else {
-    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
-  }
-
-  delete surfSignalDown;
-  delete surfSignal;
-  delete graphUp;
-  delete graph1;
-}
 
 double *ChanTrigger::getNoiseFromFlight(Anita* anita1, int pol, int ant){
 
