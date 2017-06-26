@@ -3961,7 +3961,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   deltaT = 1/(2.6*16);
   string graphNames[2][3];
   string fileName;
-  double norm=0;
+  double norm=1;
   
   if(settings1->WHICH==9){
 
@@ -3977,15 +3977,16 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	int iphi=10;
 	graphNames[ipol][iring]= Form("g%02d%s%s", iphi+1, sring[iring].c_str(), spol[ipol].c_str() ) ;
 	// }
+	
       }
     }
 
     // 6.6dB missing from impulse response in the digitizer path
-    norm *= TMath::Power(10, 6.6/20.);
+    norm *= TMath::Power(10., 6.6/20.);
 
     // the trigger impulse response is 6dB higher than the digitizer impulse response
-    norm *= TMath::Power(10, 6./20.);
-    
+    norm *= TMath::Power(10., 6./20.);
+   
     // Impulse response already accounts for trigger/digitizer splitter
     norm *= sqrt(2);
 
@@ -4002,6 +4003,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
 
+	cout << graphNames[ipol][iring].c_str() << endl;
 	// Read graph
 	TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring].c_str());
 	if(!grTemp) {
@@ -4024,6 +4026,11 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	grTemp = new TGraph(nPoints,  newx, newy);
 	
 	fSignalChainResponseTrigger[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);
+
+	TCanvas *c = new TCanvas("c");
+	fSignalChainResponseTrigger[ipol][iring]->Draw("Al");
+	c->Print(Form("temp_%i_%i.png", ipol, iring));
+
 	
 	delete grInt;
 	delete grTemp;
