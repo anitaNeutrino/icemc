@@ -346,18 +346,6 @@ class ChanTrigger {
    */
   void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol);
 
-  //! Apply impulse response to trigger path
-  /**
-   * This can only work when FFTtools is also linked
-   *
-   * @param  settings1 :: Settings - simulation settings
-   * @param  anita1 :: Anita - anita payload object
-   * @param  ant :: int - antenna number
-   * @param  y :: double[512] - output voltages
-   * @param  pol :: bool - which polarization
-   */
-  void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], bool pol);
-
   //! Add noise from ANITA-3 flight to the time domain waveforms
   /**
    * Rayleigh distribution parameters of ANITA-3 thermal noise are read in anita.cc
