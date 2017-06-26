@@ -4026,11 +4026,6 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	grTemp = new TGraph(nPoints,  newx, newy);
 	
 	fSignalChainResponseTrigger[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);
-
-	TCanvas *c = new TCanvas("c");
-	fSignalChainResponseTrigger[ipol][iring]->Draw("Al");
-	c->Print(Form("temp_%i_%i.png", ipol, iring));
-
 	
 	delete grInt;
 	delete grTemp;
