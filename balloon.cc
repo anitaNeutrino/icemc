@@ -209,8 +209,6 @@ void Balloon::InitializeBalloon() {
 		
     flightdatachain = new TChain("adu5PatTree");
     flightdatachain->SetMakeClass(1);
-    //flightdatachain->Add("data/gpsFileAnita2.root");
-    //    flightdatachain->Add("data/anita2gpsdata_2.root");
     flightdatachain->Add("data/anita2gps_pitchandroll.root");//created to include pitch and roll.
     flightdatachain->SetBranchAddress("longitude",&flongitude);
     flightdatachain->SetBranchAddress("latitude",&flatitude);
@@ -221,12 +219,15 @@ void Balloon::InitializeBalloon() {
     flightdatachain->SetBranchAddress("roll",&froll);
     //cout << "Loading file.  n events is " << flightdatachain->GetEntries() << "\n";
 		
-  } else if (WHICHPATH==8 || WHICHPATH==9) { // for anita-3 flight
+  } else if (WHICHPATH==8 || WHICHPATH==9) { // for anita-3 and 4 flights
 
-      
+    string balloonFile="";
+    if (WHICHPATH==8) balloonFile+="data/anita3gps_pitchroll.root";
+    else balloonFile+="data/anita4gps_pitchroll.root";
+    
     flightdatachain = new TChain("adu5PatTree");
     flightdatachain->SetMakeClass(1);
-    flightdatachain->Add("data/anita3gps_pitchroll.root");//created to include pitch and roll.
+    flightdatachain->Add(balloonFile.c_str());//created to include pitch and roll.
     flightdatachain->SetBranchAddress("longitude",&flongitude);
     flightdatachain->SetBranchAddress("latitude",&flatitude);
     flightdatachain->SetBranchAddress("altitude",&faltitude);
