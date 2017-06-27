@@ -3842,7 +3842,7 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
     }
     //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
     norm*=0.1;
-  } else if(settings1->WHICH==9){
+  } else if(settings1->WHICH==9 || settings1->WHICH==10){
 
     fileName = "data/Anita3_ImpulseResponseDigitizer.root";
 
@@ -3941,7 +3941,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   string fileName;
   double norm=1;
   
-  if(settings1->WHICH==9){
+  if(settings1->WHICH==9 || settings1->WHICH==10){
 
     // Use response from Digitizer path for now
     fileName = "data/Anita3_ImpulseResponseDigitizer.root";
