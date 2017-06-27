@@ -183,7 +183,7 @@ void Balloon::InitializeBalloon() {
   MINALTITUDE=30000; // balloon has to be 30 km altitude at least for us to read the event from the flight data file
     
   // initialisation of igps_previous
-  if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8)
+  if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9)
     igps_previous=0; // which entry from the flight data file the previous event was
   if (WHICHPATH==2)
     igps_previous=NPOINTS_MIN; // initialise here to avoid times during launch
@@ -270,7 +270,7 @@ void Balloon::InitializeBalloon() {
 double Balloon::GetBalloonSpin(double heading) { // get the azimuth of the balloon
       
   double phi_spin;
-  if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8)
+  if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9)
     phi_spin=heading*RADDEG;
   else {
     if (RANDOMIZE_BN_ORIENTATION==1)
@@ -287,7 +287,7 @@ int Balloon::Getibnposition() {
   int ibnposition_tmp;
   if (WHICHPATH==1)
     ibnposition_tmp = (int)(r_bn.Lon() / 2);
-  else if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8){
+  else if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9){
     ibnposition_tmp=(int)((double)igps/(double)REDUCEBALLOONPOSITIONS);
     //      std::cout << igps << " " << REDUCEBALLOONPOSITIONS << " " << ibnposition_tmp << std::endl;
   } else
@@ -370,7 +370,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     
   //  cout << "I'm in pickballoonposition. whichpath is " << WHICHPATH << "\n";
   //Pick balloon position
-  if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8) { // anita-lite or anita-I or -II path
+  if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9) { // anita-lite or anita-I or -II path
         
     if (WHICHPATH==2) {
       igps=NPOINTS_MIN+(igps_previous+1-NPOINTS_MIN)%(NPOINTS_MAX-NPOINTS_MIN); //Note: ignore last 140 points, where balloon is falling - Stephen
@@ -381,7 +381,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 			
 			
     }
-    else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8) {  // For Anita 1 and Anita 2 and Anita 3:
+    else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9) {  // For Anita 1 and Anita 2 and Anita 3:
       //igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
       igps = int(randomNumber*flightdatachain->GetEntries()); // pick random event in the tree
       flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
@@ -395,9 +395,9 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
       }
       // set phi Masking for Anita 2 or Anita 3
       // the deadtime is read from the same tree
-      if ((WHICHPATH==7 || WHICHPATH==8) && (settings1->PHIMASKING==1 || settings1->USEDEADTIME))  
+      if ((WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9) && (settings1->PHIMASKING==1 || settings1->USEDEADTIME))  
 	anita1->setphiTrigMask(realTime_flightdata);
-      if (WHICHPATH==8 && settings1->USETIMEDEPENDENTTHRESHOLDS==1) // set time-dependent thresholds
+      if ((WHICHPATH==8 || WHICHPATH==9) && settings1->USETIMEDEPENDENTTHRESHOLDS==1) // set time-dependent thresholds
 	anita1->setTimeDependentThresholds(realTime_flightdata);
 		  
     }
@@ -415,7 +415,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		
     if (WHICHPATH==2)
       altitude_bn=altitude*12.*CMINCH/100.;
-    else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8)
+    else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9)
       altitude_bn=altitude; // get the altitude of the balloon in the right units
 		
     surface_under_balloon = antarctica1->Surface(r_bn); // get altitude of the surface under the balloon
