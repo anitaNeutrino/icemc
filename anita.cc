@@ -3882,8 +3882,8 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
     // 6.6dB missing from impulse response
     norm *= TMath::Power(10, 6.6/20.);
     
-    // Impulse response already accounts for trigger/digitizer splitter
-    norm *= sqrt(2);
+    // // Impulse response already accounts for trigger/digitizer splitter
+    // norm *= sqrt(2);
 
   }
 
@@ -3987,8 +3987,8 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     // the trigger impulse response is 6dB higher than the digitizer impulse response
     norm *= TMath::Power(10., 6./20.);
    
-    // Impulse response already accounts for trigger/digitizer splitter
-    norm *= sqrt(2);
+    // // Impulse response already accounts for trigger/digitizer splitter
+    // norm *= sqrt(2);
 
   }
 
@@ -4003,7 +4003,6 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
 
-	cout << graphNames[ipol][iring].c_str() << endl;
 	// Read graph
 	TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring].c_str());
 	if(!grTemp) {
