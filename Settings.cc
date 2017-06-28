@@ -834,7 +834,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   std::cout << "Apply impulse response to trigger path: " << APPLYIMPULSERESPONSETRIGGER << std::endl;
 
 #ifdef ANITA_UTIL_EXISTS
-  if ( (APPLYIMPULSERESPONSEDIGITIZER || APPLYIMPULSERESPONSETRIGGER) && WHICH!=8 && WHICH!=9) {
+  if ( (APPLYIMPULSERESPONSEDIGITIZER || APPLYIMPULSERESPONSETRIGGER) && WHICH!=8 && WHICH!=9 && WHICH!=10) {
     std::cout << "Signal chain impulse response is only available for anita-2 and anita-3." << std::endl;
     exit(1);
   }
@@ -850,7 +850,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Dead time", USEDEADTIME);
   std::cout << "Use dead time from flight: " << USEDEADTIME << std::endl;
   
-  if ( (USETIMEDEPENDENTTHRESHOLDS || USEDEADTIME) && WHICH!=9) {
+  if ( (USETIMEDEPENDENTTHRESHOLDS || USEDEADTIME) && WHICH!=9 && WHICH!=10) {
     std::cout << "Time-dependent thresholds are only available for anita-3." << std::endl;
     exit(1);
   }
@@ -863,7 +863,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   std::cout << "Use noise from flight for trigger path: " << NOISEFROMFLIGHTTRIGGER << std::endl;
 
 #ifdef ANITA3_EVENTREADER
-  if ( (NOISEFROMFLIGHTDIGITIZER || NOISEFROMFLIGHTTRIGGER) && WHICH!=9) {
+  if ( (NOISEFROMFLIGHTDIGITIZER || NOISEFROMFLIGHTTRIGGER) && (WHICH!=9 && WHICH!=10)) {
     std::cout << "Noise from flight only available for anita-3." << std::endl;
     exit(1);
   }
