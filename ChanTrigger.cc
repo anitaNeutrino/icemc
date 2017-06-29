@@ -71,10 +71,12 @@ void ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
   Tools::realft(vvolts_f,1,nfour/2);
     
   for (int i=0;i<nfour/4;i++) {
-    right[2*i]=1/sqrt(2.)*(hvolts_f[2*i]+vvolts_f[2*i+1]);
+    //right[2*i]=1/sqrt(2.)*(hvolts_f[2*i]+vvolts_f[2*i+1]); //This is what was being done, until Jacob declared it wrong
+    right[2*i]=1/sqrt(2.)*(vvolts_f[2*i]-hvolts_f[2*i+1]); //The thing Jacob declared right
     left[2*i]=1/sqrt(2.)*(hvolts_f[2*i]-vvolts_f[2*i+1]);
 		
-    right[2*i+1]=1/sqrt(2.)*(hvolts_f[2*i+1]-vvolts_f[2*i]);
+    //right[2*i+1]=1/sqrt(2.)*(hvolts_f[2*i+1]-vvolts_f[2*i]); //This is what was being done, until Jacob declared it wrong
+    right[2*i+1]=1/sqrt(2.)*(vvolts_f[2*i+1]+hvolts_f[2*i]); //The thing Jacob declared right
     left[2*i+1]=1/sqrt(2.)*(hvolts_f[2*i+1]+vvolts_f[2*i]);
 		
 
