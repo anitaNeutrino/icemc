@@ -994,7 +994,7 @@ int IceModel::WestLand(const Position &pos) {
 }//WestLand
 
 double IceModel::GetBalloonPositionWeight(int ibnpos) {
-    //cout << "ibnpos, volume_inhorizon, volume are " << ibnpos << " " << volume_inhorizon[ibnpos] << " " << volume << "\n";
+  //  cout << "ibnpos, volume_inhorizon, volume are " << ibnpos << " " << volume_inhorizon[ibnpos] << " " << volume << "\n";
     if (volume_inhorizon[ibnpos]==0) {
 	cout << "volume in horizon is zero!\n";
 	exit(1);
@@ -1239,15 +1239,14 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
     
     //for (int i=0; i<60;i++)
     //cout<<"area at lat "<<(double)i/2<<" is "<<Area((double)i/2)<<endl;
-    
-    
+  
     volume = 0.; // initialize volume to zero
     
     double total_area=0; // initialize total area to zero
     int NBALLOONPOSITIONS; // number of balloon positions considered here
     if (bn1->WHICHPATH==2) // if anita-lite
 	NBALLOONPOSITIONS=(int)((double)bn1->NPOINTS/(double)bn1->REDUCEBALLOONPOSITIONS); //only take 1/100 of the total balloon positions that we have because otherwise it's overkill.
-    else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8) {
+    else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8 || bn1->WHICHPATH==9) {
 	NBALLOONPOSITIONS=(int)((double)bn1->flightdatachain->GetEntries()/(double)bn1->REDUCEBALLOONPOSITIONS)+1;
     }
     else if (bn1->WHICHPATH==1) // for picking random point along 80 deg south
@@ -1260,7 +1259,6 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	exit(1);
     }
     
-    //  cout << "I'm here\n";
     double phi_bn_temp=0; //phi of balloon, temporary variable
     Position r_bn_temp; //position of balloon
     Position r_bin; // position of each bin
@@ -1319,7 +1317,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	
        
 	
-	else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8) {
+	else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8 || bn1->WHICHPATH==9) {
 	    
 	    bn1->flightdatachain->GetEvent(i*100);
 	    

@@ -375,7 +375,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
 
   if (bn1->RANDOMIZE_BN_ORIENTATION==1 && (bn1->WHICHPATH==2 || bn1->WHICHPATH==6 ||
-					   bn1->WHICHPATH==7 || bn1->WHICHPATH==8)){
+					   bn1->WHICHPATH==7 || bn1->WHICHPATH==8 || bn1->WHICHPATH==9)){
     std::cout << "Warning:: Strangely you asked for a real flight path but a randomized balloon orientation.  WILL BE OVERRIDDEN." << std::endl;
   }
 

@@ -902,7 +902,7 @@ void Anita::readVariableThresholds(Settings *settings1){
 
     
   }else if (settings1->WHICH==9 || settings1->WHICH==10){ // ANITA-3 and 4
-
+    
     string turfFile="";
     string surfFile="";
     if (settings1->WHICH==9){
@@ -910,9 +910,9 @@ void Anita::readVariableThresholds(Settings *settings1){
       surfFile+="data/SampleSurf_icemc_anita3.root";
     }else{
       turfFile+="data/SampleTurf_run42to367_anita4.root";
-      surfFile+="data/TriggerEfficiencyScanPulser_anita3.root";
+      surfFile+="data/SampleSurf_run42to367_anita4.root";
     }
-    
+
     // Reading in masking every 60 seconds
     fturf=new TFile(turfFile.c_str());
     turfratechain=(TTree*)fturf->Get("turfrate_icemc");
@@ -921,7 +921,9 @@ void Anita::readVariableThresholds(Settings *settings1){
     turfratechain->SetBranchAddress("phiTrigMaskH",&phiTrigMaskH);
     turfratechain->SetBranchAddress("l1TrigMask",&l1TrigMask);
     turfratechain->SetBranchAddress("l1TrigMaskH",&l1TrigMaskH);
-    turfratechain->SetBranchAddress("deadTime",&deadTime);
+
+    /////////// DEAD TIME ONLY DEFINED FOR ANITA-3 !!!!!!!!!!!!
+    if (settings1->WHICH==9) turfratechain->SetBranchAddress("deadTime",&deadTime);
     turfratechain->SetBranchAddress("realTime",&realTime_turfrate);
     turfratechain->BuildIndex("realTime");
     turfratechain->GetEvent(0);
@@ -935,16 +937,18 @@ void Anita::readVariableThresholds(Settings *settings1){
     surfchain->SetMakeClass(1);
     surfchain->SetBranchAddress("thresholds",       &thresholds       );
     surfchain->SetBranchAddress("scalers",          &scalers          );
-    surfchain->SetBranchAddress("fakeThreshold",    &fakeThresholds   );
-    surfchain->SetBranchAddress("fakeThreshold2",   &fakeThresholds2  );
-    surfchain->SetBranchAddress("fakeScaler",       &fakeScalers      );
+    ///////////// FAKE SCALERS AND THRESHOLDS ONLY FOR ANITA 3 !!!!!!!!!!
+    if (settings1->WHICH==9){
+      surfchain->SetBranchAddress("fakeThreshold",    &fakeThresholds   );
+      surfchain->SetBranchAddress("fakeThreshold2",   &fakeThresholds2  );
+      surfchain->SetBranchAddress("fakeScaler",       &fakeScalers      );
+    }
     surfchain->SetBranchAddress("realTime",         &realTime_surf    );
     surfchain->BuildIndex("realTime");
     surfchain->GetEvent(0);
     realTime_surf_min=realTime_surf; // realTime of first event in the file
     surfchain->GetEvent(surfchain->GetEntries()-1);
     realTime_surf_max=realTime_surf; // realTime of last event in file
-      
   }
 }
 
