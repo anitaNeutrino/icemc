@@ -497,7 +497,7 @@ int main(int argc,  char **argv) {
 
 	double thresholds[2][5];
 	//+++++//+++++//+++++//+++++//+++++//+++++//+++++
-	chantrig1->WhichBandsPass(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold,  0, 0, 0, thresholds);
+	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  0, 0, 0, thresholds);
 	
 		
 	delete chantrig1;

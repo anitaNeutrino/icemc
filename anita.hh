@@ -42,29 +42,28 @@ private:
 
 
 public:
-  int number_all_antennas; // this keeps count of the number of antennas for use with timing calculations, etc.
+  int number_all_antennas;                                                                                       ///< this keeps count of the number of antennas for use with timing calculations, etc.
 
-  static const int NBANDS_MAX=100; // max number of bands
-  static const int NPOL=2; // number of polarizations
-  //static const int NFREQ=128;  // number of frequency bins
+  static const int NBANDS_MAX=100;                                                                               ///< max number of bands
+  static const int NPOL=2;                                                                                       ///< number of polarizations
+  //static const int NFREQ=128;                                                                                  ///< number of frequency bins
   static const int NFREQ=128;
   //const int NFREQ=4096;
 
 
   static const int NTRIG=5;
-  // these should all be in anita
   static const int NANTENNAS_MAX=2000;
-  static const int NLAYERS_MAX=5; // max number of layers (in smex design, it's 4)
+  static const int NLAYERS_MAX=5;                                                                                ///< max number of layers (in smex design, it's 4)
   static const int NTRIGGERLAYERS_MAX=3;
-  static const int NPHI_MAX=400; // max number of antennas around in phi (in smex, 16)
-  Vector ANTENNA_POSITION_START[NLAYERS_MAX][NPHI_MAX]; // antenna positions from Kurt's measurements
-  double ANTENNA_DOWN[NLAYERS_MAX][NPHI_MAX]; // down angles of antennas from Kurt's measurements
-  double SIMON_DELTA_R[NLAYERS_MAX][NPHI_MAX]; // measurements by Simon used in analysis ANITA-2
-  double SIMON_DELTA_PHI[NLAYERS_MAX][NPHI_MAX]; // measurements by Simon used in analysis ANITA-2
+  static const int NPHI_MAX=400;                                                                                 ///< max number of antennas around in phi (in smex, 16)
+  Vector ANTENNA_POSITION_START[NLAYERS_MAX][NPHI_MAX];                                                          ///< antenna positions from Kurt's measurements
+  double ANTENNA_DOWN[NLAYERS_MAX][NPHI_MAX];                                                                    ///< down angles of antennas from Kurt's measurements
+  double SIMON_DELTA_R[NLAYERS_MAX][NPHI_MAX];                                                                   ///< measurements by Simon used in analysis ANITA-2
+  double SIMON_DELTA_PHI[NLAYERS_MAX][NPHI_MAX];                                                                 ///< measurements by Simon used in analysis ANITA-2
 
-  Vector antenna_positions[NLAYERS_MAX * NPHI_MAX]; // these are the antenna positions in space in a coordinate system where x=north and y=west and the origin is at the center of the payload
+  Vector antenna_positions[NLAYERS_MAX * NPHI_MAX];                                                              ///< these are the antenna positions in space in a coordinate system where x=north and y=west and the origin is at the center of the payload
 
-  int NRX_PHI[NLAYERS_MAX]; // number of antennas around in each layer. (radians)
+  int NRX_PHI[NLAYERS_MAX];                                                                                      ///< number of antennas around in each layer. (radians)
   double PHI_EACHLAYER[NLAYERS_MAX][NPHI_MAX];// phi of the center of each antenna on each layer
   //before correcting for offset for the layer.
   //only used if it is cylindrically symmetric (radians)
@@ -72,6 +71,7 @@ public:
   double THETA_ZENITH[NLAYERS_MAX]; // how the antenna is tilted in theta (in radians with 0=up)
   // 0=horizontal,+90=down
 
+  int inu;            ///< Neutrino number
   // what the payload looks like
 
   double LAYER_VPOSITION[Anita::NLAYERS_MAX];  // position of layers in z relative to vertical center of the payload

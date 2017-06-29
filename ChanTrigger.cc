@@ -95,18 +95,7 @@ void ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
 }
 
 
-
-
-
-//!
-/*!
- *
- *
- *
- *
- *
- */
-void ChanTrigger::WhichBandsPass(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
+void ChanTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
     
 
   if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==9) {
@@ -142,7 +131,7 @@ void ChanTrigger::WhichBandsPass(int inu,Settings *settings1, Anita *anita1, Glo
   } else  if (settings1->TRIGGERSCHEME >= 2){
     // this scheme is used for ANITA 2 on.
     //cout << "i'm here.\n";
-    WhichBandsPassTrigger2(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold, dangle, emfrac, hadfrac, thresholds);
+    WhichBandsPassTrigger2(settings1, anita1, globaltrig1, bn1, ilayer, ifold, dangle, emfrac, hadfrac, thresholds);
 
   }
 } // end which bands pass
@@ -338,7 +327,7 @@ void ChanTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, Glo
  *
  *
  */
-void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
+void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
   
   double psignal[2][5][Anita::NFOUR];
   
@@ -463,7 +452,7 @@ void ChanTrigger::WhichBandsPassTrigger2(int inu,Settings *settings1, Anita *ani
       anita1->ston[iband]=0.;
       for (int i=anita1->iminbin[iband];i<anita1->imaxbin[iband];i++) {
 	// 	    if (iband==0 && i==anita1->NFOUR/4) {
-	// 	      cout << "output is " << inu << "\t" << timedomain_output[0][iband][i] << "\n";
+	// 	      cout << "output is " << anita1->inu << "\t" << timedomain_output[0][iband][i] << "\n";
 	// 	    }
 	//	    cout << "output, bwslice_rmsdiode are " << timedomain_output[0][iband][i] << "\t" << anita1->bwslice_rmsdiode[iband] << "\n";
 	if (timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[iband]<anita1->ston[iband]) {
@@ -608,7 +597,7 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
 	
 	
     if (settings1->TRIGGERSCHEME == 2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
-      //      if (inu==1570)
+      //      if (anita1->inu==1570)
       //cout << "shifting left.\n";
       Tools::ShiftLeft(timedomain_output[iband],anita1->NFOUR,ibinshift);
     }
@@ -912,11 +901,23 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
       Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
 
     } else {
+      
+      anita1->MakeArraysforFFT(v_banding_rfcm[0][iband],v_banding_rfcm[1][iband],v_banding_rfcm_forfft[0][iband],v_banding_rfcm_forfft[1][iband], 90., true);
+      
+      // now v_banding_rfcm_h_forfft is in the time domain
+      // and now it is really in units of V
+      Tools::realft(v_banding_rfcm_forfft[0][iband],-1,anita1->NFOUR/2);
+      Tools::realft(v_banding_rfcm_forfft[1][iband],-1,anita1->NFOUR/2);
+      
+      // put it in normal time ording -T to T
+      // instead of 0 to T, -T to 0
+      Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[0][iband]);
+      Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
+
+
       // if applying the impulse response
-      // LINDA NEEEDS TO FIGURE OUT HOW TO FIX THIS
-      // 
-      applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[0][iband], 0);
-      applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[1][iband], 1);
+      applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[0][iband], v_banding_rfcm[0][iband], 0);
+      applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[1][iband], v_banding_rfcm[1][iband], 1);
     }
     
     // if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==1)){  
@@ -1129,35 +1130,15 @@ void ChanTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, in
   ///////////////////////////////////////////////////////////////////////////////////////////////////
   
   
-} //ChanTrigger constructor
+} 
 
 
 
-
-
-
-
-//!
-/*!
- *
- *
- *
- *
- *
- */
 ChanTrigger::ChanTrigger() {
     
 }
 
 
-//!
-/*!
- *
- *
- *
- *
- *
- */
 double ChanTrigger::FindPeak(double *waveform,int n) {
     
   // find peak abs(voltage) of this waveform
@@ -1173,26 +1154,11 @@ double ChanTrigger::FindPeak(double *waveform,int n) {
 }
 
 
-
-
-//!	
-/*!
- *
- *
- *
- */
 void ChanTrigger::addToChannelSums(Settings *settings1,Anita *anita1,int ibw, int k) {
-  /** Bug fix:  Changed "vm_banding_rfcm_*" to "v_banding_rfcm_*" in all four
-      of term_e, term_h, energyterm_e, and energyterm_h. Stephen Hoover, 10 August 2009 **/
-    
-  //  cout << "v_banding, vm_banding is " << v_banding_rfcm_e[ibw][k] << " " << vm_banding_rfcm_e[ibw][k] << "\n";
     
   double term_e= v_banding_rfcm[0][ibw][k]*    // for the integral over e-field
     (settings1->BW/(double)Anita::NFREQ/1.E6); // width of a frequency bin
   // uses e- and h-components instead of lcp,rcp, for Anita-lite
-  //cout << "bandwidth bin is " << (settings1->BW/(double)Anita::NFREQ/1.E6) << "\n";
-    
-  //  cout << "term_e is " << term_e  << "\n";
     
   double energyterm_e=v_banding_rfcm[0][ibw][k]*v_banding_rfcm[0][ibw][k]* // for the integral of energy of time T=N delta t = 1/delta f
     (settings1->BW/(double)Anita::NFREQ/1.E6)*(settings1->BW/(double)Anita::NFREQ/1.E6)/50.*
@@ -1216,12 +1182,6 @@ void ChanTrigger::addToChannelSums(Settings *settings1,Anita *anita1,int ibw, in
 }
 
 
-
-
-//!	Takes ADC threshold as an input and outputs threshold in power
-/*!
- *       So far this only works for ANITA-3 and full band trigger	
- */
 double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant) {
   // first convert threshold in adc counts to the singles rate
   // do this using threshold scans taken before the flight
@@ -1290,12 +1250,6 @@ double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant)
 }
 
 
-
-//!	Returns the thisrate variable value
-/*!
- *	\todo	Refactor the class so that this function is either deprecated or "thisrate"
- *			is implemented differently.
- */
 double ChanTrigger::getRate() {
     
   return thisrate;
@@ -1303,21 +1257,6 @@ double ChanTrigger::getRate() {
 
 
 
-
-//!	Calculates the trigger threshold for an antenna via a fit from the "singles" rate and band identifier
-/*!
- *	This code is stolen from Stephen's AnitaHardwareTrigger in his Aesop software
- *	"rate" is the desired singles rate, in MHz.
- *	"band" ranges from 0 to 3
- *	The output is the trigger threshold, in units of Diode Output / <Diode Output>
- *	The output is good for all antennas, and the curves are good fits in the
- *	region ~1 MHz to 25 MHz.  The curves look like they should continue beyond
- *	that range as well.
- *
- *	\todo	The hard-coded values should be explained and the band dependence should be more explicit,
- *			because the actual bands can be modified elsewhere in the code and this function won't be
- *			changed unless the user specifically knows to.
- */
 double ChanTrigger::rateToThreshold(double rate, int band)
 {
   double constant=0.;
@@ -1354,14 +1293,6 @@ double ChanTrigger::rateToThreshold(double rate, int band)
 
 
 
-
-
-//!	Returns whether the indicated antenna and band are "masked"
-/*!
- *	
- *
- *
- */
 int ChanTrigger::IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int ilayer, int ifold, int ipol) {
     
   if (ibw>3)
@@ -1398,20 +1329,6 @@ int ChanTrigger::IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int 
 
 
 
-
-//!	The L1 trigger of the Anita trigger scheme
-/*!
- *
- *	
- *	\todo	The number of parameters this function accepts is rather high and should be reduced.
- *			In many cases an argument is a member object of another argument which was already
- *			passed to this function, which leads to intent confusion. The member objects like
- *			"flag_e" and "flag_h" are manipulated here but also in other places, and it makes
- *			tracking the changes through code difficult. Also, when dealing with std::vector
- *			containers, using "clear" and "push_back" is typically much slower than accessing
- *			each element by index, since the number of allocations/deallocations is guaranteed
- *			to be zero.
- */
 
 
 void ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double powerthreshold[2][5],
@@ -1511,13 +1428,6 @@ void ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::N
   
 
 
-
-//!	
-/*!
- *
- *
- *
- */
 double ChanTrigger::GetNoise(Settings *settings1,double altitude_bn,double geoid,double theta_zenith,double bw,double temp) {
     
   int NSTEPS=1000;
@@ -1573,15 +1483,6 @@ double ChanTrigger::GetNoise(Settings *settings1,double altitude_bn,double geoid
 
 
 
-
-//!	Sets the threshold values based on which payload and where the antenna is located physically
-/*!
- *	The nadir antennas had a separate threshold from the other antennas due to the way that they
- *	were "OR"'d between their two neighbors.
- *
- *	\todo	Deprecate in favor of the more robust boost::multi_array or the more specialized
- *			PayloadArray class. Both have multi-index access to the same items.
- */
 void ChanTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]) {
     
   if (ilayer==3 && settings1->DISCONES==2) // if it's a nadir layer
@@ -1608,17 +1509,7 @@ void ChanTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,dou
 #ifdef ANITA_UTIL_EXISTS    
 void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
 
-  TGraph *graph1 = NULL;
-  
-  // if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)) {
-  //   nPoints*=2;
-  //   double x2[1500];
-  //   for (int i=0;i<nPoints;i++) x2[i] = (x[1]-x[0])*0.5*i;
-  //   graph1 = new TGraph(nPoints, x2, anita1->trigEffScanPulseAtAmpaUpsampled);
-
-  // } else {
-    graph1 = new TGraph(nPoints, x, y);
-  // }
+  TGraph *graph1 = graph1 = new TGraph(nPoints, x, y);
 
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
@@ -1673,29 +1564,26 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
 }
 
 
-void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], double *vhz, bool pol){
+void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol){
 
-  TGraph *graph1 = NULL;
-  
-  // if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)) {
-  //   nPoints*=2;
-  //   double x2[1500];
-  //   for (int i=0;i<nPoints;i++) x2[i] = (x[1]-x[0])*0.5*i;
-  //   graph1 = new TGraph(nPoints, x2, anita1->trigEffScanPulseAtAmpaUpsampled);
+  int nPoints = anita1->HALFNFOUR;
+  double *x   = anita1->fTimes;
 
-  // } else {
-    graph1 = new TGraph(nPoints, x, y);
-  // }
+  TGraph *graph1 = graph1 = new TGraph(nPoints, x, y);
 
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
 
+  double voltsArray[512];
   int ipol=0;
   int iring=2;
   if (pol) ipol = 1;
   if (ant<16) iring=0;
   else if (ant<32) iring=1;
-  
+
+
+  int iphi = ant - (iring*16);
+    
   //Calculate convolution
   TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring]);
   
@@ -1711,96 +1599,39 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
     double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
-      y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
+      y[i] = voltsArray[i] = newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
       // std::cout << justNoise[i] << std::endl;
     }
   } else {
-    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
+    for (int i=0;i<nPoints;i++)  y[i] = voltsArray[i] = newy[i];
   }
-
-  FFTWComplex *theFFT = FFTtools::doFFT(nPoints, y);
-    
-  for (int i=0;i<anita1->NFREQ;i++){
-    vhz[i]   = theFFT[i].getAbs();    
-    // if (ant ==8 && pol==0) cout << vhz[i] << endl;
-  }
-  // double *invVals = FFTtools::doInvFFT(nPoints,theFFT);
-  // for (int i=0;i<nPoints;i++){
-  //   cout << y[i] << " " << invVals[i] << endl;
-  // }
-  // if (ant ==8 && pol==0){
+  
+  // find back the frequency domain
+  Tools::realft(voltsArray,1,anita1->NFOUR/2);
+  
+  //convert the V pol time waveform into frequency amplitudes
+  anita1->GetArrayFromFFT(voltsArray, vhz);
+  
+  // if (pol==0){
   //   TCanvas *c = new TCanvas("c");
   //   graph1->Draw("Al");
-  //   c->Print("TriggerPath_graph1.png");
+  //   c->Print(Form("TriggerPath_ant%i_graph1.png", ant));
   //   graphUp->Draw("Al");
-  //   c->Print("TriggerPath_graphUp.png");
+  //   c->Print(Form("TriggerPath_ant%i_graphUp.png", ant));
   //   surfSignal->Draw("Al");
-  //   c->Print("TriggerPath_surfSignal.png");
+  //   c->Print(Form("TriggerPath_ant%i_surfSignal.png", ant));
   //   surfSignalDown->Draw("Al");
-  //   c->Print("TriggerPath_surfSignalDown.png");
+  //   c->Print(Form("TriggerPath_ant%i_surfSignalDown.png", ant));
   // }
+  
   // Cleaning up
-  delete []theFFT;
   delete surfSignalDown;
   delete surfSignal;
   delete graphUp;
   delete graph1;
 }
 
-void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], bool pol){
 
-  int nPoints=anita1->HALFNFOUR;
-  double *x = anita1->fTimes;
-
-  TGraph *graph1 = NULL;
-  
-  // if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)) {
-  //   nPoints*=2;
-  //   double x2[1500];
-  //   for (int i=0;i<nPoints;i++) x2[i] = (x[1]-x[0])*0.5*i;
-  //   graph1 = new TGraph(nPoints, x2, anita1->trigEffScanPulseAtAmpaUpsampled);
-
-  // } else {
-    graph1 = new TGraph(nPoints, x, y);
-  // }
-  
-  // Upsample waveform to same deltaT of the signal chain impulse response
-  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
-
-  int ipol=0;
-  int iring=2;
-  if (pol) ipol = 1;
-  if (ant<16) iring=0;
-  else if (ant<32) iring=1;
-  
-  //Calculate convolution
-  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring]);
-  
-  //Downsample again
-  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
-  
-  Double_t *newy = surfSignalDown->GetY();
-  if (settings1->ZEROSIGNAL){
-    for (int i=0;i<nPoints;i++) newy[i]=0;
-  } 
-
-
-  // add thermal noise for anita-3 flight
-  if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
-    double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
-    for (int i=0;i<nPoints;i++){
-      y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
-      // std::cout << justNoise[i] << std::endl;
-    }
-  } else {
-    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
-  }
-
-  delete surfSignalDown;
-  delete surfSignal;
-  delete graphUp;
-  delete graph1;
-}
 
 double *ChanTrigger::getNoiseFromFlight(Anita* anita1, int pol, int ant){
 
@@ -1829,48 +1660,7 @@ double *ChanTrigger::getNoiseFromFlight(Anita* anita1, int pol, int ant){
   
 }
 
-void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant){
-  // phiIndex is 0 for central antenna in trigger efficiency scan
-  int phiIndex = anita1->trigEffScanPhi - (ant%16);
-  if (phiIndex>8) phiIndex=phiIndex-16;
-  int fNumPoints=anita1->HALFNFOUR;
-  // only 2 phi sectors adjecent to the central one are considered in efficiency scan
-  if(TMath::Abs(phiIndex)<=2){
-    double att = anita1->trigEffScanAtt[phiIndex+2]-anita1->trigEffScanAtt[2];
-    double norm = (anita1->trigEffScanAtt[phiIndex+2]==999)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=999)*1;
-    for (int i=0;i<fNumPoints;i++){
-      volts_triggerPath_e[i]=norm*anita1->trigEffScanPulseAtAmpa[i]*TMath::Power(10, att/20.);
-      volts_triggerPath_h[i]=0;
-    }
-  }else{
-    for (int i=0;i<fNumPoints;i++){
-      volts_triggerPath_e[i]=0;
-      volts_triggerPath_h[i]=0;
-    }
-  }
-}
 
-void ChanTrigger::injectImpulseAmplitudeAfterAntenna(Anita *anita1, double vhz_triggerPath_e[Anita::HALFNFOUR], double vhz_triggerPath_h[Anita::HALFNFOUR], int ant){
-  // phiIndex is 0 for central antenna in trigger efficiency scan
-  int phiIndex = anita1->trigEffScanPhi - (ant%16);
-  if (phiIndex>8) phiIndex=phiIndex-16;
-  int fNumPoints=anita1->NFREQ;
-  // only 2 phi sectors adjecent to the central one are considered in efficiency scan
-  if(TMath::Abs(phiIndex)<=2){
-    double att = anita1->trigEffScanAtt[phiIndex+2]-anita1->trigEffScanAtt[2];
-    double norm = (anita1->trigEffScanAtt[phiIndex+2]==999)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=999)*1;
-    for (int i=0;i<fNumPoints;i++){
-      vhz_triggerPath_e[i]=norm*anita1->trigEffScanAmplitudeAtAmpa[i]*TMath::Power(10, att/20);
-      vhz_triggerPath_h[i]=0;
-    }
-  }else{
-    for (int i=0;i<fNumPoints;i++){
-      vhz_triggerPath_e[i]=0;
-      vhz_triggerPath_h[i]=0;
-    }
-  }
-  
-}
 
 
 void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
@@ -1911,22 +1701,6 @@ void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
     }
   }
   
-  
-  // int fNumPoints=anita1->NFREQ;
-  // // only 2 phi sectors adjecent to the central one are considered in efficiency scan
-  // if(TMath::Abs(phiIndex)<=2){
-  //   double att = anita1->trigEffScanAtt[phiIndex+2]-anita1->trigEffScanAtt[2];
-  //   double norm = (anita1->trigEffScanAtt[phiIndex+2]==0)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=0)*1;
-  //   for (int i=0;i<fNumPoints;i++){
-  //     vhz_rx[0][4][i]=norm*anita1->trigEffScanAmplitudeAtAmpa[i]*TMath::Power(10, att/20);
-  //     vhz_rx[1][4][i]=0;
-  //   }
-  // }else{
-  //   for (int i=0;i<fNumPoints;i++){
-  //     vhz_rx[0][4][i]=0;
-  //     vhz_rx[1][4][i]=0;
-  //   }
-  // }
   
 }
 

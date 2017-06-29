@@ -448,8 +448,8 @@ int main(int argc,  char **argv) {
   //--------------------------------------------------------------
 
 
-  // for comparing with peter
-  double sumsignal[5]={0.};
+  // // for comparing with peter
+  // double sumsignal[5]={0.};
 
   string stemp;
 
@@ -629,13 +629,13 @@ int main(int argc,  char **argv) {
   double n_component_kvector=0; // component of the e-field along the normal
 
 
-  Vector n_eplane = const_z;
-  Vector n_hplane = -const_y;
-  Vector n_normal = const_x;
+  // Vector n_eplane = const_z;
+  // Vector n_hplane = -const_y;
+  // Vector n_normal = const_x;
 
   Vector ant_normal; //Vector normal to the face of the antenna
 
-  double hitangle_e, hitangle_h;       // angle the ray hits the antenna wrt e-plane, h-plane
+  // double hitangle_e, hitangle_h;       // angle the ray hits the antenna wrt e-plane, h-plane
   double hitangle_e_all[Anita::NANTENNAS_MAX];         // hit angles rel. to e plane stored for each antenna
   double hitangle_h_all[Anita::NANTENNAS_MAX];         // hit angles rel. to h plane stored for each antenna
 
@@ -666,7 +666,7 @@ int main(int argc,  char **argv) {
 
   Vector n_nutraject_ontheground; //direction of the neutrino from the person standing on the ground just below the balloon.
   Vector n_pol; // direction of polarization
-  Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
+  // Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
   Vector n_pol_db; // same,  double bangs
 
   int l3trig[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
@@ -1031,7 +1031,7 @@ int main(int argc,  char **argv) {
 	
 	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
  
-	chantrig1->WhichBandsPass(inu,settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac, thresholdsAnt[antNum]);
+	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac, thresholdsAnt[antNum]);
 
 	//	cout << inu << " " << ilayer << " " << ifold << endl;
 	delete chantrig1;
