@@ -68,31 +68,32 @@ public:
   Vector antenna_positions[NLAYERS_MAX * NPHI_MAX];                                                              ///< these are the antenna positions in space in a coordinate system where x=north and y=west and the origin is at the center of the payload
 
   int NRX_PHI[NLAYERS_MAX];                                                                                      ///< number of antennas around in each layer. (radians)
-  double PHI_EACHLAYER[NLAYERS_MAX][NPHI_MAX];// phi of the center of each antenna on each layer
-  //before correcting for offset for the layer.
+  double PHI_EACHLAYER[NLAYERS_MAX][NPHI_MAX];                                                                   ///< phi of the center of each antenna on each layer
+  
+   //before correcting for offset for the layer.
   //only used if it is cylindrically symmetric (radians)
-  double PHI_OFFSET[NLAYERS_MAX]; // antenna offset in phi for each layer (radians)
-  double THETA_ZENITH[NLAYERS_MAX]; // how the antenna is tilted in theta (in radians with 0=up)
+  double PHI_OFFSET[NLAYERS_MAX];                                                                               ///< antenna offset in phi for each layer (radians)
+  double THETA_ZENITH[NLAYERS_MAX];                                                                             ///< how the antenna is tilted in theta (in radians with 0=up)
   // 0=horizontal,+90=down
 
   int inu;            ///< Neutrino number
   // what the payload looks like
 
-  double LAYER_VPOSITION[Anita::NLAYERS_MAX];  // position of layers in z relative to vertical center of the payload
+  double LAYER_VPOSITION[Anita::NLAYERS_MAX];                                                                   ///< position of layers in z relative to vertical center of the payload
   // anita proposal "says that the separation between upper and lower
   // 2 layers of antennas is just under 4m.
   // for anita hill, consider the positions of the "layers" of the "payload" (the stations) to be sitting on the horizontal grid defined by polar coordinates
-  double LAYER_HPOSITION[Anita::NLAYERS_MAX]; // distance in horizontal plane between center axis of the "payload" and each "layer".
-  double LAYER_PHIPOSITION[Anita::NLAYERS_MAX];//phi corresponding to the position of each "layer" on the "payload"
-  double RRX[Anita::NLAYERS_MAX]; // radius that the antenna sits from the axis of the payload (feedpoint)
-  Double_t deltaTPhaseCentre[2][NLAYERS_MAX][NPHI_MAX]; //Relative to photogrammetry + ring offset
+  double LAYER_HPOSITION[Anita::NLAYERS_MAX];                                                                   ///< distance in horizontal plane between center axis of the "payload" and each "layer".
+  double LAYER_PHIPOSITION[Anita::NLAYERS_MAX];                                                                 ///< phi corresponding to the position of each "layer" on the "payload"
+  double RRX[Anita::NLAYERS_MAX];                                                                               ///< radius that the antenna sits from the axis of the payload (feedpoint)
+  Double_t deltaTPhaseCentre[2][NLAYERS_MAX][NPHI_MAX];                                                         ///< Relative to photogrammetry + ring offset
 
-  double THERMALNOISE_FACTOR; // factor to multiply thermal noise for error analysis
+  double THERMALNOISE_FACTOR;                                                                                   ///< factor to multiply thermal noise for error analysis
 
 
   Anita(); // constructor
   ~Anita();
-  void Initialize(Settings *settings1,ofstream &foutput,int inu); // initialize a bunch of stuff
+  void Initialize(Settings *settings1,ofstream &foutput,int inu);                                                ///< initialize a bunch of stuff
   void initializeFixedPowerThresholds(ofstream &foutput);
   void readVariableThresholds(Settings *settings1);
   void readAmplification();
@@ -119,14 +120,14 @@ public:
   static const int HALFNFOUR=512;
 
   // these are used for the satellite thing
-  int NBANDS; // number of frequency sub-bands (not counting full band)
+  int NBANDS;                                                                                        ///< number of frequency sub-bands (not counting full band)
 
-  int PERCENTBW; // percent bandwidth
+  int PERCENTBW;                                                                                     ///< percent bandwidth
 
   // these variables are for filling the tsignals tree
-  double signal_vpol_inanita[5][HALFNFOUR]; // this is the signal waveform in the vertical polarization, before converting to LCP, RCP where applicable
-  //double noise_vpol_inanita[5][HALFNFOUR]; // this is the noise waveform in the vertical polarization, before converting to LCP, RCP where applicable
-  double total_vpol_inanita[5][HALFNFOUR];// this is the sum of the signal and noise in the vertical polarization, before converting to LCP, RCP where applicable
+  double signal_vpol_inanita[5][HALFNFOUR];                                                          ///< this is the signal waveform in the vertical polarization, before converting to LCP, RCP where applicable
+  //double noise_vpol_inanita[5][HALFNFOUR];                                                         ///< this is the noise waveform in the vertical polarization, before converting to LCP, RCP where applicable
+  double total_vpol_inanita[5][HALFNFOUR];                                                           ///< this is the sum of the signal and noise in the vertical polarization, before converting to LCP, RCP where applicable
 
   double timedomainsignal_rfcm[HALFNFOUR];
   double timedomainsignal_lab[HALFNFOUR];
@@ -140,26 +141,26 @@ public:
   UShort_t phiTrigMaskH;
   UShort_t l1TrigMask;
   UShort_t l1TrigMaskH;
-  Double_t deadTime;              // fractional deadTime
-  unsigned int realTime_turfrate; // realtime from the turf rate file
-  unsigned int realTime_tr_min; // min realtime from the turf rate file
-  unsigned int realTime_tr_max; // max realtime from the turf rate file
-  unsigned int realTime_surf;     // realtime from the surf file
-  unsigned int realTime_surf_min; // min realtime from the surf file
-  unsigned int realTime_surf_max; // max realtime from the surf file
-  UShort_t thresholds[2][48]; // thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
-  UShort_t scalers[2][48];    // scalers as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
-  Double_t fakeThresholds[2][48];  // Fake thresholds (coming from converting fake scalers to thresholds)
-  Double_t fakeThresholds2[2][48]; // Fake thresholds 2 (coming from converting flight scalers to thresholds)
-  Double_t fakeScalers[2][48];     // Fake scalers (coming from converting threhsolds during flight to scalers using threshold scan)
+  Double_t deadTime;                                                                                 ///< fractional deadTime
+  unsigned int realTime_turfrate;                                                                    ///< realtime from the turf rate file
+  unsigned int realTime_tr_min;                                                                      ///< min realtime from the turf rate file
+  unsigned int realTime_tr_max;                                                                      ///< max realtime from the turf rate file
+  unsigned int realTime_surf;                                                                        ///< realtime from the surf file
+  unsigned int realTime_surf_min;                                                                    ///< min realtime from the surf file
+  unsigned int realTime_surf_max;                                                                    ///< max realtime from the surf file
+  UShort_t thresholds[2][48];                                                                        ///< thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
+  UShort_t scalers[2][48];                                                                           ///< scalers as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
+  Double_t fakeThresholds[2][48];                                                                    ///< Fake thresholds (coming from converting fake scalers to thresholds)
+  Double_t fakeThresholds2[2][48];                                                                   ///< Fake thresholds 2 (coming from converting flight scalers to thresholds)
+  Double_t fakeScalers[2][48];                                                                       ///< Fake scalers (coming from converting threhsolds during flight to scalers using threshold scan)
 
   int iturf;// for indexing
   int isurf;
   int iturfevent;
 
   static const int npointThresh = 1640;
-  Float_t threshScanThresh[2][48][npointThresh]; // adc thresholds from threshold scan
-  Float_t threshScanScaler[2][48][npointThresh]; // scalers from threshold scan
+  Float_t threshScanThresh[2][48][npointThresh];                                                     ///< adc thresholds from threshold scan
+  Float_t threshScanScaler[2][48][npointThresh];                                                     ///< scalers from threshold scan
   Float_t minadcthresh[2][48];
   Float_t maxadcthresh[2][48];
 
@@ -167,18 +168,19 @@ public:
   void setphiTrigMask(UInt_t realTime_flightdata);
   void setTimeDependentThresholds(UInt_t realTime_flightdata);
 
-  double total_diodeinput_1_inanita[5][HALFNFOUR]; // this is the waveform that is input to the tunnel diode in the first (LCP or vertical) polarization
-  double total_diodeinput_2_inanita[5][HALFNFOUR]; // this is the waveform that is input to the tunnel diode in the second (RCP or horizontal) polarization
+  double total_diodeinput_1_inanita[5][HALFNFOUR];                                                   ///< this is the waveform that is input to the tunnel diode in the first (LCP or vertical) polarization
+  double total_diodeinput_2_inanita[5][HALFNFOUR];                                                   ///< this is the waveform that is input to the tunnel diode in the second (RCP or horizontal) polarization
 
-  double total_diodeinput_1_allantennas[48][HALFNFOUR]; // this is across all antennas, just the full band
-  double total_diodeinput_2_allantennas[48][HALFNFOUR]; //
+  double total_diodeinput_1_allantennas[48][HALFNFOUR];                                              ///< this is across all antennas, just the full band
+  double total_diodeinput_2_allantennas[48][HALFNFOUR];                                              ///< needs comment
 
   // these are just for the antenna that receives the signal first
-  double timedomain_output_inanita[2][5][HALFNFOUR]; // this is just for writing out to the following tree
+  double timedomain_output_inanita[2][5][HALFNFOUR];                                                 ///< this is just for writing out to the following tree
 
   double time_trig[HALFNFOUR];
   double weight_inanita; // weight of the event
   int arrayofhits_inanita[3][16][2][HALFNFOUR];
+    
   //std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhits_inanita;
 
 
@@ -198,7 +200,7 @@ public:
 
   int l2trig_anita4lr_inanita[16][3][HALFNFOUR];
 
-  int l2trig_anita4lr_forgaryanderic[16][HALFNFOUR]; // when it passes 2/3
+  int l2trig_anita4lr_forgaryanderic[16][HALFNFOUR];                                                           ///< when it passes 2/3
 
   int l3type0trig_anita4lr_inanita[16][HALFNFOUR];
   int l3trig_anita4lr_inanita[16][HALFNFOUR];
@@ -209,43 +211,43 @@ public:
 
 
 
-  double timedomain_output_corrected_forplotting[2][6][HALFNFOUR]; // this is just for writing out to the following tree
+  double timedomain_output_corrected_forplotting[2][6][HALFNFOUR];                                            ///< this is just for writing out to the following tree
 
 
-  double timedomain_output_allantennas[2][48][HALFNFOUR]; // this is across all antennas, just the full band
+  double timedomain_output_allantennas[2][48][HALFNFOUR];                                                     ///< this is across all antennas, just the full band
 
 
 
   int flag_e_inanita[5][HALFNFOUR];
   int flag_h_inanita[5][HALFNFOUR];
   double dangle_inanita,emfrac_inanita,hadfrac_inanita;
-  double ston[5]; // signal to noise;
+  double ston[5];                                                                                             ///< signal to noise;
 
-  int iminbin[5]; // this is the minimum bin to start
+  int iminbin[5];                                                                                             ///< this is the minimum bin to start
   int imaxbin[5];
-  int maxbin_fortotal[5]; // when it sums the noise and signal together it shortens the waveform
+  int maxbin_fortotal[5];                                                                                     ///< when it sums the noise and signal together it shortens the waveform
 
-  double peak_v_banding_rfcm[2][5];  // peak V in e/h polarization after rfcm's and banding
-  double peak_rx_signalonly[2];      // peak voltage in e/h polarization received by the antenna
-  double peak_rx_rfcm[2];            // peak voltage in e/h polarization received by the antenna
+  double peak_v_banding_rfcm[2][5];                                                                           ///< peak V in e/h polarization after rfcm's and banding
+  double peak_rx_signalonly[2];                                                                               ///< peak voltage in e/h polarization received by the antenna
+  double peak_rx_rfcm[2];                                                                                     ///< peak voltage in e/h polarization received by the antenna
 
-  double peak_rx_rfcm_signalonly[2]; // peak voltage in e/h polarization received by the antenna
+  double peak_rx_rfcm_signalonly[2];                                                                          ///< peak voltage in e/h polarization received by the antenna
 
-  double peak_rx_rfcm_lab[2];        // peaks of the previous arrays
+  double peak_rx_rfcm_lab[2];                                                                                 ///< peaks of the previous arrays
   //I think this is the numerator of the vertical axis on Matt's plot
 
 
 
 
-  int channels_passing[2][5]; // channels passing.  This is reset for every antenna for every event
+  int channels_passing[2][5];                                                                                 ///< channels passing.  This is reset for every antenna for every event
   int l1_passing; // l1 passing
   int l1_passing_allantennas[48]; // l1 passing
     
   int irx;
   void BoxAverageComplex(double *array,const int n,int navg);
   void BoxAverage(double *array,const int n,int navg);
-  int GetRx(int ilayer, int ifold); // get antenna number based on which layer and position it is
-  int GetRxTriggerNumbering(int ilayer, int ifold); // get antenna number based on which layer and position it is
+  int GetRx(int ilayer, int ifold);                                                                           ///< get antenna number based on which layer and position it is
+  int GetRxTriggerNumbering(int ilayer, int ifold);                                                           ///< get antenna number based on which layer and position it is
 
 
   double avgfreq_rfcm[NFREQ];
@@ -253,27 +255,27 @@ public:
 
 
 
-  double vmmhz_banding[NFREQ]; // V/m/MHz after banding
-  double vmmhz_banding_rfcm[NFREQ]; // V/m/MHz after banding and rfcms
+  double vmmhz_banding[NFREQ];                                                                                ///< V/m/MHz after banding
+  double vmmhz_banding_rfcm[NFREQ];                                                                           ///< V/m/MHz after banding and rfcms
 
-  double rms_rfcm_e_single_event; // This is in Volts, not mV!
+  double rms_rfcm_e_single_event;                                                                             ///< This is in Volts, not mV!
 
   // Note: The following 4 RMS noise variables are for all antennas of all events.
   // In fact, they don't represent RMS until after all events are finished!
-  double rms_rfcm[2]; // rms noise just after rfcm's
-  double rms_lab[2];  // rms noise at lab chip
+  double rms_rfcm[2];                                                                                         ///< rms noise just after rfcm's
+  double rms_lab[2];                                                                                          ///< rms noise at lab chip
 
 
   TFile *fsignals;
   TTree *tsignals;
 
   TFile *fdata;
-  TTree *tdata; // writing data out for the analysers
-  TTree *tgaryanderic; // writing data out for the analysers
+  TTree *tdata;                                                                                               ///< writing data out for the analysers
+  TTree *tgaryanderic;                                                                                        ///< writing data out for the analysers
 
   TTree *tglob;
 
-  TH1F *hsignals[5]; // s/n (max diode output/mean diode output) for vertical polarization in each band
+  TH1F *hsignals[5];                                                                                          ///< s/n (max diode output/mean diode output) for vertical polarization in each band
 
   int PULSER;
 
@@ -306,14 +308,14 @@ public:
   double integral_vmmhz_foranita;
 
 
-  int nnoiseevents; // total number of noise events we're choosing from
-  int noiseeventcounter; // counts which event we're on so we go in order
+  int nnoiseevents;                                                                                          ///< total number of noise events we're choosing from
+  int noiseeventcounter;                                                                                     ///< counts which event we're on so we go in order
 
-  double FREQ_LOW; // lowest frequency
-  double FREQ_HIGH; // highest frequency
+  double FREQ_LOW;                                                                                           ///< lowest frequency
+  double FREQ_HIGH;                                                                                          ///< highest frequency
 
-  double NOTCH_MIN; // low edge of notch filter.  This is set in the input file
-  double NOTCH_MAX; // upper edge of notch filter
+  double NOTCH_MIN;                                                                                          ///< low edge of notch filter.  This is set in the input file
+  double NOTCH_MAX;                                                                                          // upper edge of notch filter
 
   int BANDING;// set in the input file
   // whether or not you set your own banding (1)

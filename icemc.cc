@@ -1455,6 +1455,8 @@ int main(int argc,  char **argv) {
     //reset screen parameters (even for no roughness) for the new event
     panel1->ResetParameters();
     panel1->ResetPositionIndex();
+    anita1->inu=inu;
+
     // std::string nunum = std::to_string(inu);    
     //stemp=settings1->outputdir+"/rough_groundvalues_"+nunum+".dat";
     //ofstream roughout(stemp.c_str());
@@ -2651,6 +2653,7 @@ int main(int argc,  char **argv) {
       // SimulatedSignal *simSignal = new SimulatedSignal();
       // // Define the SimSignal from vmmhz
       // simSignal->updateSimSignalFromVmmhz(Anita::NFREQ, anita1->freq, vmmhz);
+      // simSignal->addCW(250E6, 0, 0.01);
       // simSignal->getVmmhz(anita1, vmmhz);
       // delete simSignal;
       
@@ -3014,11 +3017,13 @@ int main(int argc,  char **argv) {
       // Independentely from the fact that they generated an RF trigger
 
       if ( (thispasses[0]==1 && anita1->pol_allowed[0]==1)
-          || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
-          || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD)
-          || (settings1->MINBIAS==1)) {
-        if (bn1->WHICHPATH==4)
+           || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
+           || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD)
+           || (settings1->MINBIAS==1)){
+
+	if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
+
 
 	//	cout << inu << endl;
 
@@ -3285,6 +3290,7 @@ int main(int argc,  char **argv) {
             else
               rawHeaderPtr->trigType = 1; // RF trigger
 
+	    
             rawHeaderPtr->run = run_no;
             // put the vpol only as a placeholder - these are only used in Anita-2 anyway
             rawHeaderPtr->upperL1TrigPattern = l1trig[0][0];
