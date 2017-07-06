@@ -102,7 +102,7 @@ public:
 
  
 private:
-  TRandom3 *Rand3;
+  TRandom3 Rand3;
 
 protected:
   int EARTH_MODEL;
