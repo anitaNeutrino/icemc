@@ -2,3 +2,6 @@
 *.pcm
 classdict*
 icemc
+limits/*.pdf
+limits/*.eps
+limits/makelimitplot
