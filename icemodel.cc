@@ -28,9 +28,7 @@ using std::ifstream;
 using std::cerr;
 
 
-
 IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : EarthModel(earth_model,WEIGHTABSORPTION_SETTING) {
-    
     
     bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(71*RADDEG)) / (1 - eccentricity*sin(71*RADDEG)) ),eccentricity/2) * tan((PI/4) - (71*RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
     bedmap_nu = bedmap_R / cos(71*RADDEG);
@@ -54,9 +52,6 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
     
     
     
-    
-    
-    
     ice_model=model;
     DEPTH_DEPENDENT_N = (int) (model / 10);
     ice_model -= DEPTH_DEPENDENT_N * 10;
@@ -73,7 +68,8 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
     } //else if (BEDMAP)
     //read in attenuation length data for direct signals
     int i=0;
-    ifstream sheetup("data/icesheet_attenlength_up.txt");
+    
+    ifstream sheetup((ICEMC_DATA_DIR+"/icesheet_attenlength_up.txt").c_str());
     if(sheetup.fail())
     {
 	cerr << "Failed to open icesheet_attenlength_up.txt" << endl;
@@ -87,7 +83,7 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
     }
     sheetup.close();
     
-    ifstream shelfup("data/iceshelf_attenlength_up.txt");
+    ifstream shelfup((ICEMC_DATA_DIR+"/iceshelf_attenlength_up.txt").c_str());
     if(shelfup.fail())
     {
 	cerr << "Failed to open iceshelf_attenlength_up.txt" << endl;
@@ -101,7 +97,8 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
     }
     shelfup.close();
     
-    ifstream westlandup("data/westland_attenlength_up.txt");
+    ifstream westlandup((ICEMC_DATA_DIR+"/westland_attenlength_up.txt").c_str());
+    
     if(westlandup.fail())
     {cerr << "Failed to open westland_attenlength_up.txt";
 	exit(1);
@@ -112,9 +109,10 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
 	i++;
     }
     westlandup.close();
+
     
     //read in attenuation length for downgoing signals
-    ifstream sheetdown("data/icesheet_attenlength_down.txt");
+    ifstream sheetdown((ICEMC_DATA_DIR+"/icesheet_attenlength_down.txt").c_str());
     if(sheetdown.fail())
     {
 	cerr << "Failed to open icesheet_attenlength_down.txt" << endl;
@@ -128,8 +126,7 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
     }
     sheetdown.close();
     
-    
-    ifstream shelfdown("data/iceshelf_attenlength_down.txt");
+    ifstream shelfdown((ICEMC_DATA_DIR+"/iceshelf_attenlength_down.txt").c_str());
     if(shelfdown.fail())
     {
 	cerr << "Failed to open iceshelf_attenlength_down.txt" << endl;
@@ -143,7 +140,7 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
     }
     shelfdown.close();
     
-    ifstream westlanddown("data/westland_attenlength_down.txt");
+    ifstream westlanddown((ICEMC_DATA_DIR+"/westland_attenlength_down.txt").c_str());
     if(westlanddown.fail())
     {cerr << "Failed to open westland_attenlength_down.txt";
 	exit(1);
@@ -154,6 +151,7 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
 	i++;
     }
     westlanddown.close();
+
 }
 //constructor IceModel(int model)
 
@@ -225,7 +223,7 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
           rnd3=gRandom->Rndm(); // pick random numbers between 0 and 1
           rnd1=gRandom->Rndm();
           rnd2=gRandom->Rndm();
-
+	  
           whichbin_forcrust20=(int)(rnd1*(double)ilat_inhorizon[ibnposition].size());
           ilat=ilat_inhorizon[ibnposition][whichbin_forcrust20];
 
@@ -237,7 +235,7 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
         theta=SmearTheta(ilat, gRandom->Rndm());
         lon = GetLon(phi);
         lat = GetLat(theta);
-        //cout << "ibnposition, phi, theta, lon, lat are " << ibnposition << " " << phi << " " << theta << " " << lon << " " << lat << "\n";
+	//        cout << "ibnposition, phi, theta, lon, lat are " << ibnposition << " " << phi << " " << theta << " " << lon << " " << lat << "\n";
       } //end if(Crust 2.0)
       else if (ice_model==1) { // this is Bedmap
         //cout << "Inside Bedmap if statement.\n";
@@ -1405,7 +1403,6 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	    GetILonILat(r_bn_temp,ilon_bn,ilat_bn); // find which longitude and latitude the balloon is above
 	    
 	    if (ilat_inhorizon[i].size()==0 || ilon_inhorizon[i].size()==0) {
-		
 		maxvol_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // need to give it a maximum volume for a bin in horizon 
 		volume_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // and a total volume for the horizon
 	    }
@@ -1473,9 +1470,9 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 			
 			volume_inhorizon[i]+=local_ice_thickness*Area(lat);
 			
-			// finding which bin in horizon has maximum volume
+			// finding which bin in horizon has maximum volumey
 			if (local_ice_thickness*Area(lat)>maxvol_inhorizon[i]) {
-			    maxvol_inhorizon[i]=local_ice_thickness*Area(lat);
+			  maxvol_inhorizon[i]=local_ice_thickness*Area(lat);
 			}
 		    } //end if (distance < 800 km & ice present)
 		} //end for (e_coord loop)
@@ -1516,9 +1513,9 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 void IceModel::ReadIceThickness() {
     //Reads the BEDMAP ice thickness data.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
     
-    ifstream IceThicknessFile("data/icethic.asc");
+  ifstream IceThicknessFile((ICEMC_DATA_DIR+"/icethic.asc").c_str());
     if(!IceThicknessFile) {
-	cerr << "Couldn't open: data/icethic.asc" << endl;
+	cerr << "Couldn't open: $ICEMC_DATA_DIR/icethic.asc" << endl;
 	exit(1);
     }
     
@@ -1586,9 +1583,9 @@ void IceModel::ReadIceThickness() {
 
 void IceModel::ReadGroundBed() {
     //Reads the BEDMAP data on the elevation of the ground beneath the ice.  If there is water beneath the ice, the ground elevation is given the value 0.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
-    ifstream GroundBedFile("data/groundbed.asc");
+  ifstream GroundBedFile((ICEMC_DATA_DIR+"/groundbed.asc").c_str());
     if(!GroundBedFile) {
-	cerr << "Couldn't open: data/groundbed.asc" << endl;
+	cerr << "Couldn't open: ICEMC_DATA_DIR/groundbed.asc" << endl;
 	exit(1);
     }
     
@@ -1647,9 +1644,9 @@ void IceModel::ReadGroundBed() {
 
 void IceModel::ReadWaterDepth() {
     //Reads BEDMAP data on the depth of water beneath the ice.  Where no water is present, the value 0 is entered.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
-    ifstream WaterDepthFile("data/water.asc");
+  ifstream WaterDepthFile((ICEMC_DATA_DIR+"/water.asc").c_str());
     if(!WaterDepthFile) {
-	cerr << "Couldn't open: data/water.asc" << endl;
+	cerr << "Couldn't open: ICEMC_DATA_DIR/water.asc" << endl;
 	exit(1);
     }
     
@@ -1703,33 +1700,3 @@ void IceModel::ReadWaterDepth() {
     WaterDepthFile.close();
     return;
 } //method ReadWaterDepth
-
-// //void IceModel::FillArraysforTree(double icethck[1200][1000],double elev[1068][869],double lon_ground[1068][869],double lat_ground[1068][869],double lon_ice[1200][1000],double lat_ice[1200][1000],double h20_depth[1200][1000],double lon_water[1200][1000],double lat_water[1200][1000]) {
-// void IceModel::FillArraysforTree(double lon_ground[1068][869],double lat_ground[1068][869],double lon_ice[1200][1000],double lat_ice[1200][1000],double lon_water[1200][1000],double lat_water[1200][1000]) {
-    
-//     //  for (int rowNum=0;rowNum<nRows_ice;rowNum++) {
-//     //for (int colNum=0;colNum<nCols_ice;colNum++) {
-//     //   for (int i=0;i<nRows_ice;i++) {
-//     //     for (int j=0;j<nCols_ice;j++) {
-//     //       //     this->IceENtoLonLat(colNum,rowNum,lon_ice[colNum][rowNum],lat_ice[colNum][rowNum]); //Recall that the e / n coordinates in horizon were picked from the ground bed array.
-//     //       double test1,test2;
-//     //       cout << "rowNum, colNum are " << i << " " << j << "\n";
-//     //       //      cout << "lon_ice is " << rowNum << " " << colNum << " " << lon_ice[rowNum][colNum] << "\n";
-//     //       //this->IceENtoLonLat(i,j,test1,test2); //Recall that the e / n coordinates in horizon were picked from the ground bed array.
-//     //       //icethck[colNum][rowNum]=IceThickness(lon_ice[colNum][rowNum],lat_ice[colNum][rowNum]);
-    
-//     //       //      WaterENtoLonLat(colNum,rowNum,lon_water[colNum][rowNum],lat_water[colNum][rowNum]);
-//     //       //h20_depth[colNum][rowNum]=WaterDepth(lon_water[colNum][rowNum],lat_water[colNum][rowNum]);
-    
-//     //     }
-//     //   }h
-//     //   for (int n_coord=0;n_coord<nRows_ground;n_coord++) {
-//     //     for (int e_coord=0;e_coord<nCols_ground;e_coord++) {
-//     //       GroundENtoLonLat(e_coord,n_coord,lon_ground[e_coord][n_coord],lat_ground[e_coord][n_coord]);
-//     //       //     elev[e_coord][n_coord] = SurfaceAboveGeoid(lon_ice[e_coord][n_coord],lat_ice[e_coord][n_coord]);
-    
-//     //     }
-//     //   }
-  
-    
-// }

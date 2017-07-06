@@ -21,7 +21,10 @@
 #include "spline.h"
 
 Roughness::Roughness(int a){
-  file_roughness = "data/roughness_full_dPdtheta.txt";
+  
+  
+  const std::string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
+  file_roughness = ICEMC_SRC_DIR+"/data/roughness_full_dPdtheta.txt";
   froughsetting = a;
   if (froughsetting==0){
     gritvalue = -1;

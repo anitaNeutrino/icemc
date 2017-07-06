@@ -91,6 +91,8 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 
 Taumodel* TauPtr = NULL;
 
+const string ICEMC_SRC_DIR = std::getenv("ICEMC_SRC_DIR");
+
 ClassImp(RX);
 
 using namespace std;
@@ -622,7 +624,6 @@ int main(int argc,  char **argv) {
   Tools::Zero(anita1->LAYER_VPOSITION, Anita::NLAYERS_MAX);
   Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
 
-
   //added djg ////////////////////////////////////////////////////////
   al_voltages_direct<<"antenna #"<<"   "<<"volts chan 1"<<"   "<<"volts chan 2"<<"    "<<"volts chan 3"<<"    "<<"volts chan 4"<<"    "<<"noise chan 1"<<"    "<<"noise chan 2"<<"    "<<"noise chan 3"<<"   "<<"noise chan 4"<<"  "<<"weight"<<endl;
   ////////////////////////////////////////////////////////////////////
@@ -937,8 +938,6 @@ int main(int argc,  char **argv) {
   nupathtree->Branch("mybeta", &mybeta, "mybeta/D");
   nupathtree->Branch("costheta_nutraject", &interaction1->costheta_nutraject, "costheta_nutraject/D");
 
-
-
   TTree *finaltree = new TTree("passing_events", "passing_events"); // finaltree filled for all events that pass
   finaltree->Branch("inu", &inu, "inu/I");
   finaltree->Branch("vmmhz_min", &vmmhz_min, "vmmhz_min/D");
@@ -1233,7 +1232,6 @@ int main(int argc,  char **argv) {
   balloontree->Branch("horizcoord_bn", &bn1->horizcoord_bn, "horizcoord_bn/D");
   balloontree->Branch("vertcoord_bn", &bn1->vertcoord_bn, "vertcoord_bn/D");
 
-
   // these variables are for energy reconstruction studies
   double undogaintoheight_e=0;
   double undogaintoheight_h=0;
@@ -1293,8 +1291,6 @@ int main(int argc,  char **argv) {
 #endif
   //end ROOT variable definitions
   ///////////////////////////////////////////////////////////////////////
-
-
 
   if (bn1->WHICHPATH==3) {
     settings1->CONSTANTCRUST = 1;  //Set ice depths and elevations all the same
@@ -1540,7 +1536,7 @@ int main(int argc,  char **argv) {
       interaction1->weight_nu=0;
       interaction1->weight_nu_prob=0;
       taus1->weight_tau_prob=0;
-
+      
       if (taumodes==1 && interaction1->nuflavor=="nutau" && interaction1->current=="cc")
         tautrigger=1;//!< tau trigger sets the chance to create tau particle
       else
@@ -1583,8 +1579,7 @@ int main(int argc,  char **argv) {
         continue;
       }
       count1->inhorizon[whichray]++;
-
-
+     
       // cerenkov angle depends on depth because index of refraction depends on depth.
       if(!settings1->ROUGHNESS){
         if (settings1->FIRN) {
@@ -1795,8 +1790,6 @@ int main(int argc,  char **argv) {
         //heff_max=maximum effective height over the frequency range
       }
 
-
-      
       // intermediate counter
       count1->nnottoosmall[whichray]++;
 
@@ -1966,7 +1959,6 @@ int main(int argc,  char **argv) {
       // chord just through ice.
       interaction1->chord_kgm2_ice=interaction1->d2*sig1->RHOMEDIUM;
 
-
       if (tree6->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
         tree6->Fill();
 
@@ -1980,7 +1972,6 @@ int main(int argc,  char **argv) {
         //
         continue;
       }
-
       //intermediate counter
       count1->nabsorbed[whichray]++;
 
@@ -2007,7 +1998,7 @@ int main(int argc,  char **argv) {
 
       // intermediate counting
       count1->nraypointsup2[whichray]++;
-
+     
       double nbelowsurface;
       // reject if it is totally internally reflected at the surface AND NOT CONSIDERING ROUGHNESS
       if (!settings1->ROUGHNESS) {
@@ -2063,7 +2054,6 @@ int main(int argc,  char **argv) {
         continue;
       }
       count1->nconverges[whichray]++;
-
       // Get Polarization vector.  See Jackson,  Cherenkov section.
       n_pol = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4]);
 
@@ -2441,7 +2431,6 @@ int main(int argc,  char **argv) {
       // the screen is now finished
       /////////////////////////////
 
-
       
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
@@ -2455,7 +2444,6 @@ int main(int argc,  char **argv) {
         count1->nchanceinhell_fresnel[whichray]++;
       } //end if CHANCEINHELL factor and SKIPCUTS
       //
-
 
       // for plotting
       diffexit=ray1->rfexit[0].Distance(ray1->rfexit[1]);
@@ -2480,7 +2468,6 @@ int main(int argc,  char **argv) {
           continue;
         } //if
       }
-
       count1->nchanceinhell_1overr[whichray]++;
 
       // distance ray travels through ice.
@@ -2504,7 +2491,6 @@ int main(int argc,  char **argv) {
           Attenuate_down(antarctica, settings1, vmmhz_max,  ray1->rfexit[2],  interaction1->posnu, interaction1->posnu_down);
       }
       // roughness attenuation already dealt with
-
       // fill for just 1/10 of the events.
       if (tree2->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1 && bn1->WHICHPATH != 3)
         tree2->Fill();
@@ -2521,7 +2507,7 @@ int main(int argc,  char **argv) {
           continue;
         } //if
       }
-      
+
       count1->nchanceinhell[whichray]++;
       
       // for plotting
@@ -2543,7 +2529,6 @@ int main(int argc,  char **argv) {
           sig1->SetNDepth(sig1->NICE); // for making array of signal vs. frequency,  viewangle
         
         sig1->GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ); // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
-	
 	//   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
         // and making an array across frequency bins by putting in frequency dependence.
       }
@@ -2576,7 +2561,6 @@ int main(int argc,  char **argv) {
           continue;
         }
         count1->nviewanglecut[whichray]++;
-
 
         for (int k=0;k<Anita::NFREQ;k++) {
           deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
@@ -2643,6 +2627,7 @@ int main(int argc,  char **argv) {
 
 
       }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
+      
 
       // just for plotting
       vmmhz_max=Tools::dMax(vmmhz, Anita::NFREQ);
@@ -2652,12 +2637,12 @@ int main(int argc,  char **argv) {
       count1->nchanceinhell2[whichray]++;
       chanceinhell2=1;
 
-
       // Dead time
       if (settings1->USEDEADTIME){
-      	if ( (anita1->deadTime>0.9) || (r.Uniform(1)<anita1->deadTime) ) continue;
+	double tempNum = r.Uniform(1);
+      	if ( (anita1->deadTime>0.9) || (tempNum<anita1->deadTime) ) continue;
       }
-      
+	    
       count1->ndeadtime[whichray]++;
 
       Tools::Zero(sumsignal_aftertaper, 5);
@@ -2687,7 +2672,6 @@ int main(int argc,  char **argv) {
             IntegrateBands(anita1, k, panel1, anita1->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
         }
       }
-
 
       
       // make a global trigger object (but don't touch the electric fences)
@@ -3006,7 +2990,7 @@ int main(int argc,  char **argv) {
       //       EVALUATE GLOBAL TRIGGER    //
       //          FOR VPOL AND HPOL       //
       //////////////////////////////////////
-
+      
       int thispasses[Anita::NPOL]={0,0};
 
       globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
@@ -4631,7 +4615,7 @@ double GetThisAirColumn(Settings* settings1,  Position r_in, Vector nnu, Positio
 
 void GetAir(double *col1) {
   double nothing;
-  ifstream air1("data/atmosphere.dat"); // length of chord in air vs. theta (deg)
+  ifstream air1(ICEMC_SRC_DIR+"/data/atmosphere.dat"); // length of chord in air vs. theta (deg)
   //where theta is respect to "up"
   // binned in 0.1 degrees
   for(int iii=0;iii<900;iii++) {

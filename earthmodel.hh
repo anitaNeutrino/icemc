@@ -47,6 +47,13 @@ public:
 // properties of the Earth
   static constexpr double R_EARTH=6.378140E6;        // radius of Earth in m at bulge
 
+
+  const string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
+  const string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
+  // input files for Crust 2.0
+  const string crust20_in=ICEMC_DATA_DIR+"/outcr"; // Crust 2.0 data
+  const string crust20_out=ICEMC_SRC_DIR+"altitudes.txt"; // output file for plotting
+  
   double radii[3];
   // = {1.2e13,(EarthModel::R_EARTH-4.0E4)*(EarthModel::R_EARTH-4.0E4),EarthModel::R_EARTH*EarthModel::R_EARTH}; // average radii of boundaries between earth layers
 
@@ -93,9 +100,9 @@ public:
   void EarthCurvature(double *array,double depth_temp); // adjusts coordinates within the mine to account for the curvature of the earth.
   Position WhereDoesItEnter(const Position &posnu,const Vector &nnu);
 
+ 
 private:
-  TRandom3 Rand3;
-
+  TRandom3 *Rand3;
 
 protected:
   int EARTH_MODEL;

@@ -42,9 +42,11 @@ const double bedmap_c_0 = (2*EarthModel::R_EARTH / sqrt(1-pow(eccentricity,2))) 
 class IceModel : public EarthModel {
 
 
-
 public:
 
+  const string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
+  const string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
+  
   //BEDMAP data
   double ice_thickness_array[1200][1000];  //thickness of the ice
   double ground_elevation[1068][869]; //elevation above geoid at which ice starts
@@ -193,8 +195,9 @@ void ENtoLonLat(int e_coord,
   void ReadWaterDepth();
 
 private:
-  TRandom Rand3;
 
+  TRandom Rand3;
+  
   const static int N_sheetup=2810;
   double d_sheetup[N_sheetup], l_sheetup[N_sheetup];
   const static int N_shelfup=420;
@@ -211,8 +214,5 @@ private:
 
 
 }; //class IceModel
-// input files for Crust 2.0
-const string crust20_in="data/outcr"; // Crust 2.0 data
-const string crust20_out="altitudes.txt"; // output file for plotting
 
 #endif

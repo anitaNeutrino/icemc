@@ -192,7 +192,7 @@ void Balloon::InitializeBalloon() {
   if (WHICHPATH==6) {
 		
     flightdatachain = new TChain("foricemc");
-    flightdatachain->Add("data/anita1flightdata.root");
+    flightdatachain->Add((ICEMC_DATA_DIR+"/anita1flightdata.root").c_str());
 		
     flightdatachain->SetBranchAddress("surfTrigBandMask",surfTrigBandMask);
     flightdatachain->SetBranchAddress("powerthresh",powerthresh);
@@ -209,7 +209,7 @@ void Balloon::InitializeBalloon() {
 		
     flightdatachain = new TChain("adu5PatTree");
     flightdatachain->SetMakeClass(1);
-    flightdatachain->Add("data/anita2gps_pitchandroll.root");//created to include pitch and roll.
+    flightdatachain->Add((ICEMC_DATA_DIR+"/anita2gps_pitchandroll.root").c_str());//created to include pitch and roll.
     flightdatachain->SetBranchAddress("longitude",&flongitude);
     flightdatachain->SetBranchAddress("latitude",&flatitude);
     flightdatachain->SetBranchAddress("altitude",&faltitude);
@@ -222,8 +222,8 @@ void Balloon::InitializeBalloon() {
   } else if (WHICHPATH==8 || WHICHPATH==9) { // for anita-3 and 4 flights
 
     string balloonFile="";
-    if (WHICHPATH==8) balloonFile+="data/anita3gps_pitchroll.root";
-    else balloonFile+="data/anita4gps_pitchroll.root";
+    if (WHICHPATH==8) balloonFile+=ICEMC_DATA_DIR+"/anita3gps_pitchroll.root";
+    else balloonFile+=ICEMC_DATA_DIR+"/anita4gps_pitchroll.root";
     
     flightdatachain = new TChain("adu5PatTree");
     flightdatachain->SetMakeClass(1);
@@ -289,7 +289,7 @@ int Balloon::Getibnposition() {
     ibnposition_tmp = (int)(r_bn.Lon() / 2);
   else if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9){
     ibnposition_tmp=(int)((double)igps/(double)REDUCEBALLOONPOSITIONS);
-    //      std::cout << igps << " " << REDUCEBALLOONPOSITIONS << " " << ibnposition_tmp << std::endl;
+    // std::cout << __FUNCTION__ << " " << igps << " " << REDUCEBALLOONPOSITIONS << " " << ibnposition_tmp << std::endl;
   } else
     ibnposition_tmp=0;
     
@@ -729,7 +729,7 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
       for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
 	ray1->rfexit_eachboresight[0][ilayer][ifold]=antarctica1->Surface(interaction1->posnu) * interaction1->posnu.Unit();// this first guess rfexit is the same for all antennas too
 	ray1->n_exit2bn_eachboresight[0][ilayer][ifold]=(r_boresights[ilayer][ifold]- ray1->rfexit_eachboresight[0][ilayer][ifold]).Unit();
-	//cout << "ilayer, ifold, n_exit2bn are " << ilayer << "\t" << ifold << " ";
+	// cout << "ilayer, ifold, n_exit2bn are " << ilayer << "\t" << ifold << " ";
       }
     }
   }
@@ -775,7 +775,7 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
   interaction1->r_fromballoon[1]=r_bn.Distance(interaction1->posnu_down);
   
   
-  
+  // std::cout << (interaction1->posnu) << std::endl;
   if (ray1->n_exit2bn[0].Angle(interaction1->posnu) > PI/2  && !(WHICHPATH==3 || WHICHPATH==4))
     beyondhorizon = 1;
   

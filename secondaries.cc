@@ -75,7 +75,7 @@ using std::max;
 
 
     // reading in tauola data file for tau decays
-  tauolainfile.open("data/tau_decay_tauola.dat",ifstream::in);
+  tauolainfile.open(ICEMC_SRC_DIR+"/data/tau_decay_tauola.dat",ifstream::in);
   InitTauola();
   
   TAUFRAC=.5; //fraction of tau neutrino-cc current events where the primare interaction point is the first bang   
@@ -146,7 +146,7 @@ using std::max;
       double energy=18+0.5*index;
       int precision=(index%2==0)?2:3;
       senergy << setprecision(precision) << energy;
-      string path="secondary/"+nuflavor+"/dsdy_"+secndryType+"_1e"+senergy.str()+suffix;
+      string path=ICEMC_SECONDARY_DIR+"/"+nuflavor+"/dsdy_"+secndryType+"_1e"+senergy.str()+suffix;
       //cout << "openning file " << path.c_str() << endl;
       ifile.open(path.c_str());
       NPROB=0;

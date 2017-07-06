@@ -29,7 +29,8 @@ const double EarthModel::GEOID_MIN(6.356752E6); // from Geodetic Reference Syste
 
 
 EarthModel::EarthModel(int model,int WEIGHTABSORPTION_SETTING) {
-    
+
+ 
     radii[0]=1.2e13;
     radii[1]=(EarthModel::R_EARTH-4.0E4)*(EarthModel::R_EARTH-4.0E4);
     radii[2]=(EarthModel::R_EARTH*EarthModel::R_EARTH); // average radii of boundaries between earth layers
@@ -94,7 +95,6 @@ EarthModel::EarthModel(int model,int WEIGHTABSORPTION_SETTING) {
     for (int i=0;i<NLAT;i++) {
 	area[i]=phistep*(cos(dGetTheta(i))-cos(dGetTheta(i+1)))*pow(geoid[i],2.);
     } //for
-    
     
     if (EARTH_MODEL == 0)
 	ReadCrust(crust20_in);
@@ -671,7 +671,7 @@ void EarthModel::ReadCrust(string test) {
     
     // reads in altitudes of 7 layers of crust, ice and water
     // puts data in arrays
-    
+
     fstream infile(test.c_str(),ios::in);
     
     string thisline; // for reading in file

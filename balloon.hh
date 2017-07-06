@@ -26,17 +26,22 @@ class TGraph;
 using std::string;
 using std::cout;
 
+
 //! Handles everything related to balloon positions, payload orientation over the course of a flight.
 class Balloon {
 
 private:
-
   //  string anitaliteflight; // the gps path of the anita-lite flight
   //string anitaflight;// gps path of anita flight
  
 public:
   Balloon();
-    
+
+  const string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
+  const string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
+  const string anitaliteflight=ICEMC_DATA_DIR+"/BalloonGPS.txt"; // the gps path of the anita-lite flight
+  const string anitaflight=ICEMC_DATA_DIR+"/anitagps.txt";// gps path of anita flight
+  
   // GPS positions of Anita-lite balloon flight
   int igps;                                                                  ///< which balloon position do we use out of the 25000 anitalite GPS positions.
   int ibnposition;
@@ -377,9 +382,6 @@ public:
 
    
 }; //class Balloon
-
-const string anitaliteflight="data/BalloonGPS.txt"; // the gps path of the anita-lite flight
-const string anitaflight="data/anitagps.txt";// gps path of anita flight
 
 
 #endif

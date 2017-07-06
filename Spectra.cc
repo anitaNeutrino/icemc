@@ -411,7 +411,9 @@ double Spectra::GetCDFEnergy(){//get Energy from 'CDF'
 
 inline void Spectra::GetFlux(string filename)
 {
-    ifstream influx(("./fluxes/"+filename).c_str());
+  
+  const string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
+    ifstream influx((ICEMC_SRC_DIR+"/fluxes/"+filename).c_str());
     int NLINES;
     influx >> NLINES;   // Read how much lines in the file.
     cout<<"We are using "<<filename.c_str()<<" as the flux data."<<endl;

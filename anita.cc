@@ -889,7 +889,7 @@ void Anita::initializeFixedPowerThresholds(ofstream &foutput){
 void Anita::readVariableThresholds(Settings *settings1){
 
   if (settings1->WHICH==8) { // ANITA-2
-    fturf=new TFile("data/turfrate_icemc.root");
+    fturf=new TFile((ICEMC_DATA_DIR+"/turfrate_icemc.root").c_str());
     turfratechain=(TTree*)fturf->Get("turfrate_icemc");
     turfratechain->SetMakeClass(1);
     turfratechain->SetBranchAddress("phiTrigMask",&phiTrigMask);
@@ -906,11 +906,11 @@ void Anita::readVariableThresholds(Settings *settings1){
     string turfFile="";
     string surfFile="";
     if (settings1->WHICH==9){
-      turfFile+="data/SampleTurf_icemc_anita3.root";
-      surfFile+="data/SampleSurf_icemc_anita3.root";
+      turfFile+=ICEMC_DATA_DIR+"/SampleTurf_icemc_anita3.root";
+      surfFile+=ICEMC_DATA_DIR+"/SampleSurf_icemc_anita3.root";
     }else{
-      turfFile+="data/SampleTurf_run42to367_anita4.root";
-      surfFile+="data/SampleSurf_run42to367_anita4.root";
+      turfFile+=ICEMC_DATA_DIR+"/SampleTurf_run42to367_anita4.root";
+      surfFile+=ICEMC_DATA_DIR+"/SampleSurf_run42to367_anita4.root";
     }
 
     // Reading in masking every 60 seconds
@@ -958,7 +958,7 @@ void Anita::readAmplification(){
   // get rfcm amplification data
   // read from tree with amplification data
   // this tree contains a different event for each antenna and polarization
-  TFile *f2=new TFile("data/gains.root");
+  TFile *f2=new TFile((ICEMC_DATA_DIR+"/gains.root").c_str());
   TTree *tgain=(TTree*)f2->Get("tree1");
     
   float freq_ampl_eachantenna[NPOINTS_AMPL];
@@ -994,13 +994,13 @@ void Anita::getDiodeDataAndAttenuation(Settings *settings1){
   // get vnoise data
   string sdiode;
   if (BANDING==0)
-    sdiode="data/diode_anita1.root";
+    sdiode=ICEMC_DATA_DIR+"/diode_anita1.root";
   else if (BANDING==1) 
-    sdiode="data/diode_nobanding.root";
+    sdiode=ICEMC_DATA_DIR+"diode_nobanding.root";
   else if (BANDING==2)
-    sdiode="data/diode_anita2.root";
+    sdiode=ICEMC_DATA_DIR+"/diode_anita2.root";
   else if (BANDING==4 || BANDING==5) // Linda
-    sdiode="data/diode_anita3.root";
+    sdiode=ICEMC_DATA_DIR+"/diode_anita3.root";
     
   fnoise=new TFile(sdiode.c_str());
   tdiode=(TTree*)fnoise->Get("diodeoutputtree");
@@ -1009,13 +1009,13 @@ void Anita::getDiodeDataAndAttenuation(Settings *settings1){
     
   string sbands;
   if (BANDING==0)
-    sbands="data/bands_anita1.root";
+    sbands=ICEMC_DATA_DIR+"/bands_anita1.root";
   else if (BANDING==1)   
-    sbands="data/bands_nobanding.root";
+    sbands=ICEMC_DATA_DIR+"/bands_nobanding.root";
   else if (BANDING==2)
-    sbands="data/bands_anita2.root";
+    sbands=ICEMC_DATA_DIR+"/bands_anita2.root";
   else if (BANDING==4 || BANDING==5) // Linda 
-    sbands="data/bands_anita2.root";
+    sbands=ICEMC_DATA_DIR+"/bands_anita2.root";
     
   TFile *fbands=new TFile(sbands.c_str());
   TTree *tbands=(TTree*)fbands->Get("bandstree");
@@ -1121,7 +1121,7 @@ void Anita::getDiodeDataAndAttenuation(Settings *settings1){
     
     
   //   if (BANDING==0)
-  //     sbands="data/bands_anita2.root";
+  //     sbands=ICEMC_DATA_DIR+"/bands_anita2.root";
     
     
   //   TFile *fbands_temp=new TFile(sbands.c_str());
@@ -1141,7 +1141,7 @@ void Anita::getDiodeDataAndAttenuation(Settings *settings1){
 
 void Anita::getPulserData(){
       
-  TFile *fpulser=new TFile("data/pulser.root");
+  TFile *fpulser=new TFile((ICEMC_DATA_DIR+"/pulser.root").c_str());
 	
   TGraph *gpulser=(TGraph*)fpulser->Get("pulser");
   TGraph *gphases=(TGraph*)fpulser->Get("phases");
@@ -1240,18 +1240,18 @@ void Anita::ReadGains(void) {
   double sfrequency;
   int iii;
   ifstream gainsfile;
-  gainsfile.open("data/hh_0"); // gains for horizontal polarization
+  gainsfile.open((ICEMC_DATA_DIR+"/hh_0").c_str()); // gains for horizontal polarization
   if(gainsfile.fail()) {
-    cout << "can't open data/hh_0\n";
+    cout << "can't open `$ICEMC_DATA_DIR`/hh_0\n";
     exit(1);
   }
   for(iii = 0; iii < NPOINTS_GAIN; iii++)
     gainsfile >> frequency_forgain_measured[iii] >> gainh_measured[iii];
   gainsfile.close();
     
-  gainsfile.open("data/vv_0"); // gains for vertical polarization
+  gainsfile.open((ICEMC_DATA_DIR+"/vv_0").c_str()); // gains for vertical polarization
   if(gainsfile.fail()) {
-    cout << "can't open data/vv_0\n";
+    cout << "can't open `$ICEMC_DATA_DIR`/vv_0\n";
     exit(1);
   }
   for(iii = 0; iii < NPOINTS_GAIN; iii++) {
@@ -1261,9 +1261,9 @@ void Anita::ReadGains(void) {
   }
   gainsfile.close();
     
-  gainsfile.open("data/hv_0"); // gains for h-->v cross polarization
+  gainsfile.open((ICEMC_DATA_DIR+"/hv_0").c_str()); // gains for h-->v cross polarization
   if(gainsfile.fail()) {
-    cout << "can't open data/hv_0\n";
+    cout << "can't open `$ICEMC_DATA_DIR`/hv_0\n";
     exit(1);
   }
   for(iii = 0; iii < NPOINTS_GAIN; iii++) {
@@ -1273,9 +1273,9 @@ void Anita::ReadGains(void) {
   }
   gainsfile.close();
     
-  gainsfile.open("data/vh_0"); // gains for v-->h cross polarization
+  gainsfile.open((ICEMC_DATA_DIR+"/vh_0").c_str()); // gains for v-->h cross polarization
   if(gainsfile.fail()) {
-    cout << "can't open data/vh_0\n";
+    cout << "can't open `$ICEMC_DATA_DIR`/vh_0\n";
     exit(1);
   }
   for(iii = 0; iii < NPOINTS_GAIN; iii++) {
@@ -1500,9 +1500,9 @@ void Anita::Set_gain_angle(Settings *settings1,double nmedium_receiver) {
     for(iii = 0; iii < 131; iii++)
       gain_angle[jjj][iii][0] = 1.;
     
-  anglefile.open("data/vv_az"); // v polarization, a angle
+  anglefile.open((ICEMC_DATA_DIR+"/vv_az").c_str()); // v polarization, a angle
   if(anglefile.fail()) {
-    cout << "can't open data/vv_az\n";
+    cout << "can't open `$ICEMC_DATA_DIR`/vv_az\n";
     exit(1);
   }
   for(jjj = 1; jjj < 7; jjj++)
@@ -1514,9 +1514,9 @@ void Anita::Set_gain_angle(Settings *settings1,double nmedium_receiver) {
     
     
     
-  anglefile.open("data/hh_az"); // h polarization, a angle
+  anglefile.open((ICEMC_DATA_DIR+"/hh_az").c_str()); // h polarization, a angle
   if(anglefile.fail()) {
-    cout << "can't open data/hh_az\n";
+    cout << "can't open `$ICEMC_DATA_DIR`/hh_az\n";
     exit(1);
   }
   for(jjj = 1; jjj < 7; jjj++)
@@ -1526,9 +1526,9 @@ void Anita::Set_gain_angle(Settings *settings1,double nmedium_receiver) {
     }
   anglefile.close();
     
-  anglefile.open("data/hh_el"); // h polarization, e angle
+  anglefile.open((ICEMC_DATA_DIR+"/hh_el").c_str()); // h polarization, e angle
   if(anglefile.fail()) {
-    cout << "can't open data/hh_el\n";
+    cout << "can't open `$ICEMC_DATA_DIR`/hh_el\n";
     exit(1);
   }
   for(jjj = 1; jjj < 7; jjj++)
@@ -1538,9 +1538,9 @@ void Anita::Set_gain_angle(Settings *settings1,double nmedium_receiver) {
     }
   anglefile.close();
     
-  anglefile.open("data/vv_el"); // v polarization, e angle
+  anglefile.open((ICEMC_DATA_DIR+"/vv_el").c_str()); // v polarization, e angle
   if(anglefile.fail()) {
-    cout << "can't open data/vv_el\n";
+    cout << "can't open `$ICEMC_DATA_DIR`/vv_el\n";
     exit(1);
   }
   for(jjj = 1; jjj < 7; jjj++)
@@ -2506,7 +2506,7 @@ void Anita::labAttn(double *vhz) {
 
 int Anita::getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn) {
     
-  ifstream flab("data/surfatten_run294_ch23v.dat");
+  ifstream flab((ICEMC_DATA_DIR+"/surfatten_run294_ch23v.dat").c_str());
   if (flab.fail()) {
     cout << "Cannot open lab data file.\n";
     exit(1);
@@ -3287,7 +3287,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     THETA_ZENITH[3]=PI/2+INCLINE_TOPTHREE*RADDEG;
       
     // Read photogrammetry positions
-    std::ifstream Anita3PhotoFile("data/anitaIIIPhotogrammetry.csv");
+    std::ifstream Anita3PhotoFile((ICEMC_DATA_DIR+"/anitaIIIPhotogrammetry.csv").c_str());
     if (!Anita3PhotoFile){
       std::cerr << "Couldn't open photogrammetry!" << std::endl;
       return;
@@ -3380,7 +3380,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     }
       
     // HERE HPOL IS 0 AND VPOL IS 1
-    std::ifstream PhaseCenterFile("data/phaseCenterPositionsRelativeToPhotogrammetryAnita3.dat");
+    std::ifstream PhaseCenterFile((ICEMC_DATA_DIR+"/phaseCenterPositionsRelativeToPhotogrammetryAnita3.dat").c_str());
     Int_t antNum, tpol, pol;
     Double_t deltaR,deltaPhi,deltaZ;
     char firstLine[180];
@@ -3836,7 +3836,7 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
   // For ANITA-3 we have 3 impulse responses (Top, Middle, Bottom ring) for VPOL and 3 for HPOL.
   // Set Graph names for ANITA-2 and ANITA-3
   if (settings1->WHICH==8){
-    fileName = "data/sumPicoImpulse.root";
+    fileName = ICEMC_DATA_DIR+"/sumPicoImpulse.root";
     
     for (int iring=0;iring<3;iring++){
       for (int iphi=1;iphi<17;iphi++){
@@ -3848,7 +3848,7 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
     norm*=0.1;
   } else if(settings1->WHICH==9 || settings1->WHICH==10){
 
-    fileName = "data/Anita3_ImpulseResponseDigitizer.root";
+    fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseDigitizer.root";
 
     string spol[2] ={"V", "H"};
     string sring[3]={"T", "M", "B"};
@@ -3910,7 +3910,7 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
     }
   }
   
-  TFile *fRayleighAnita3 = new TFile("data/RayleighAmplitudesAnita3_noSun_Interp.root", "read");
+  TFile *fRayleighAnita3 = new TFile((ICEMC_DATA_DIR+"/RayleighAmplitudesAnita3_noSun_Interp.root").c_str(), "read");
   
   for (int iant=0;iant<48;iant++){
     RayleighFits[0][iant] = (TGraph*)fRayleighAnita3->Get(Form("grSigma%dV_interp", iant+1));
@@ -3948,7 +3948,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   if(settings1->WHICH==9 || settings1->WHICH==10){
 
     // Use response from Digitizer path for now
-    fileName = "data/Anita3_ImpulseResponseDigitizer.root";
+    fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseDigitizer.root";
 
     string spol[2] ={"V", "H"};
     string sring[3]={"T", "M", "B"};
@@ -4022,7 +4022,7 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
   
   if(settings1->WHICH==9){
      
-    string fileName = "data/TriggerEfficiencyScanPulser_anita3.root";
+    string fileName = ICEMC_DATA_DIR+"/TriggerEfficiencyScanPulser_anita3.root";
     TFile *f = new TFile(fileName.c_str(), "read");
 
     // Get average pulse as measured by scope
