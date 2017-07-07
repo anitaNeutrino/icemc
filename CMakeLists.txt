@@ -113,6 +113,5 @@ add_binary(icemc)
 add_binary(testTrigger) 
 add_binary(testSettings) 
 add_binary(testEAS) 
-
-
-
+add_binary(testThermalNoise)
+add_binary(testInputAfterAntenna)

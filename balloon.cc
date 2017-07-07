@@ -497,7 +497,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     
   ibnposition=Getibnposition();
     
-  if (!settings1->UNBIASED_SELECTION)
+  if (!settings1->UNBIASED_SELECTION && dtryingposition!=-999)
     dtryingposition=antarctica1->GetBalloonPositionWeight(ibnposition);
   else
     dtryingposition=1.;
