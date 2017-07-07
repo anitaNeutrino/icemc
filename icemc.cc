@@ -469,7 +469,7 @@ int main(int argc,  char **argv) {
 
   Settings* settings1 = new Settings();
 
-  string input="inputs.txt";
+  string input= ICEMC_SRC_DIR + "/inputs.conf";
   string run_num;//current run number as string
   int run_no = 0;//current run number as integer
 

@@ -59,7 +59,7 @@ const char* EnvironmentVariable::ICEMC_SRC_DIR(){
 #else
   const char* icemc_src_dir = getEnv("ICEMC_SRC_DIR", "Will guess icemc source directory is present working directory", false);
   if(!icemc_src_dir){
-    icemc_src_dir = "";
+    icemc_src_dir = ".";
   }
   return icemc_src_dir;
   
