@@ -1451,6 +1451,8 @@ int main(int argc,  char **argv) {
     }
     else
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
+
+    eventNumber=(UInt_t)(run_no)*NNU+inu;
     
     //reset screen parameters (even for no roughness) for the new event
     panel1->ResetParameters();
@@ -3278,9 +3280,9 @@ int main(int argc,  char **argv) {
               }//end int j
             }// end int iant
 
-            realEvPtr->eventNumber = inu;
+            realEvPtr->eventNumber = eventNumber;
 
-            rawHeaderPtr->eventNumber = inu;
+            rawHeaderPtr->eventNumber = eventNumber;
             rawHeaderPtr->surfSlipFlag = 0;
             rawHeaderPtr->errorFlag = 0;
 
@@ -3316,7 +3318,6 @@ int main(int argc,  char **argv) {
             Adu5PatPtr->pitch = bn1->pitch;
             Adu5PatPtr->roll = bn1->roll;
             Adu5PatPtr->run = run_no;
-            eventNumber = inu;
 
 #ifdef ANITA3_EVENTREADER
             if (settings1->WHICH==9 || settings1->WHICH==10) {
@@ -3327,7 +3328,7 @@ int main(int argc,  char **argv) {
             }
 
             truthEvPtr        = new TruthAnitaEvent();
-            truthEvPtr->eventNumber      = inu;
+            truthEvPtr->eventNumber      = eventNumber;
             truthEvPtr->realTime         = bn1->realTime_flightdata;
             truthEvPtr->run              = run_no;
             truthEvPtr->nuMom            = pnu;
