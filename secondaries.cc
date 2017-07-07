@@ -75,7 +75,7 @@ using std::max;
 
 
     // reading in tauola data file for tau decays
-  tauolainfile.open(ICEMC_SRC_DIR+"/data/tau_decay_tauola.dat",ifstream::in);
+  tauolainfile.open((ICEMC_SRC_DIR+"/data/tau_decay_tauola.dat").c_str(),ifstream::in);
   InitTauola();
   
   TAUFRAC=.5; //fraction of tau neutrino-cc current events where the primare interaction point is the first bang   
