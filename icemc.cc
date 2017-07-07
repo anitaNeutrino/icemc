@@ -63,6 +63,7 @@
 #include "GlobalTrigger.h"
 #include "ChanTrigger.h"
 #include "SimulatedSignal.h"
+#include "EnvironmentVariable.h"
 
 #include <string>
 #include <sstream>
@@ -91,23 +92,7 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 
 Taumodel* TauPtr = NULL;
 
-const char* getIcemcSrcDir(){
-  const char* icemcSrcDir = std::getenv("ICEMC_SRC_DIR");
-  if(!icemcSrcDir){
-    const char* RED = "\x1b[31m";
-    const char* RESET = "\x1b[0m";
-
-    std::cerr << RED << "Fatal error! " << RESET
-              << "Could not find environment variable "
-              << RED << "ICEMC_SRC_DIR" << RESET << std::endl;
-    std::cerr << "Without this environment variable I can't find data or config files." << std::endl;
-    std::cerr << "Giving up." << std::endl;
-    exit(1);
-  }
-  return icemcSrcDir;
-}
-
-const string ICEMC_SRC_DIR = getIcemcSrcDir();
+const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
 
 ClassImp(RX);
 
