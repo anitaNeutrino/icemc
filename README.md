@@ -22,7 +22,22 @@ Makefiles are a dark art so if you need help send an email or message someone in
 
 ## Running icemc ##
 
-From the command line do
+To run icemc you need first to define two environment variables and then add them to your (DY)LD_LIBRARY_PATH, so that icemc knows where to look for its input files:
+ 
+   * ICEMC_SRC_DIR should point to the directory where all your source code is (i.e. this directory)
+   * ICEMC_BUILD_DIR should point to the directory where your exectutables and .pcm are (in case you run icemc by itself it's again this directory, but in case you installed icemc from the anitaBuildTool, it should be something different)
+
+An example is:
+```bash
+export ICEMC_SRC_DIR=/path/to/anitaBuildTool/components/icemc/
+export ICEMC_BUILD_DIR=/path/to/anitaBuildTool/build/components/icemc/
+export DYLD_LIBRARY_PATH=${ICEMC_SRC_DIR}:${ICEMC_BUILD_DIR}:${DYLD_LIBRARY_PATH}
+```
+
+If you use the anitaBuildTool, it's a good practice to add these lines to your setup script.
+
+
+To run iceme do:
 ``` bash
 ./icemc -i {inputFile} -o {outputDirectory} -r {runNumber} -n {numberOfNeutrinos} -t {triggerThreshold} -e {energyExponent}
 ```
