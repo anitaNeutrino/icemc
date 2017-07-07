@@ -40,6 +40,12 @@
 #include "TRotation.h"
 #include "TSpline.h"
 
+#include "EnvironmentVariable.h"
+
+const string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
+const string ICEMC_SECONDARY_DIR=ICEMC_SRC_DIR+"/secondary/";
+
+
 
 using std::cout;
 using std::stringstream;

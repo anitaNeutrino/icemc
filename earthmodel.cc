@@ -13,6 +13,13 @@
 #include "signal.hh"
 #include "Primaries.h"
 #include "secondaries.hh"
+#include "EnvironmentVariable.h"
+
+const string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
+const string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
+// input files for Crust 2.0
+const string crust20_in=ICEMC_DATA_DIR+"/outcr"; // Crust 2.0 data
+const string crust20_out=ICEMC_SRC_DIR+"/altitudes.txt"; // output file for plotting
 
 
 using std::cout;

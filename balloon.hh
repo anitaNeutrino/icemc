@@ -37,10 +37,6 @@ private:
 public:
   Balloon();
 
-  const string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
-  const string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
-  const string anitaliteflight=ICEMC_DATA_DIR+"/BalloonGPS.txt"; // the gps path of the anita-lite flight
-  const string anitaflight=ICEMC_DATA_DIR+"/anitagps.txt";// gps path of anita flight
   
   // GPS positions of Anita-lite balloon flight
   int igps;                                                                  ///< which balloon position do we use out of the 25000 anitalite GPS positions.

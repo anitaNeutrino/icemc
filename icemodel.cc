@@ -14,7 +14,7 @@
 #include "ray.hh"
 #include "balloon.hh"
 #include "Settings.h"
-
+#include "EnvironmentVariable.h"
 
 
 
@@ -26,6 +26,11 @@ using std::cout;
 using std::string;
 using std::ifstream;
 using std::cerr;
+
+const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
+const string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
+  
+
 
 
 IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : EarthModel(earth_model,WEIGHTABSORPTION_SETTING) {

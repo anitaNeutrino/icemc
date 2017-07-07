@@ -44,8 +44,6 @@ private:
 public:
 
   
-  const std::string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
-  const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
   int number_all_antennas;                                                                                       ///< this keeps count of the number of antennas for use with timing calculations, etc.
 
   static const int NBANDS_MAX=100;                                                                               ///< max number of bands

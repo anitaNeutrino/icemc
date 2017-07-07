@@ -47,18 +47,12 @@ public:
 // properties of the Earth
   static constexpr double R_EARTH=6.378140E6;        // radius of Earth in m at bulge
 
-
-  const string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
-  const string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
-  // input files for Crust 2.0
-  const string crust20_in=ICEMC_DATA_DIR+"/outcr"; // Crust 2.0 data
-  const string crust20_out=ICEMC_SRC_DIR+"altitudes.txt"; // output file for plotting
   
   double radii[3];
   // = {1.2e13,(EarthModel::R_EARTH-4.0E4)*(EarthModel::R_EARTH-4.0E4),EarthModel::R_EARTH*EarthModel::R_EARTH}; // average radii of boundaries between earth layers
 
-    double volume; // sums the volume of medium (ice or salt)
-    double ice_area; // sums the area of the earth's surface that has antarctic ice underneath
+  double volume; // sums the volume of medium (ice or salt)
+  double ice_area; // sums the area of the earth's surface that has antarctic ice underneath
   double max_icevol_perbin; // maximum ice volume in any bin
   double max_icethk_perbin;
   virtual double Geoid(double latitude) ;

@@ -18,8 +18,15 @@
 #include "balloon.hh"
 #include "Settings.h"
 #include "Primaries.h"
+#include "EnvironmentVariable.h"
 
 using std::ifstream;
+
+const string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
+const string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
+const string anitaliteflight=ICEMC_DATA_DIR+"/BalloonGPS.txt"; // the gps path of the anita-lite flight
+const string anitaflight=ICEMC_DATA_DIR+"/anitagps.txt";// gps path of anita flight
+
 
 Balloon::Balloon() {
   MAXHORIZON=800000.;                // pick the interaction within this distance from the balloon so that it is within the horizon

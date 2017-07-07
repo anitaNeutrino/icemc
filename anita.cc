@@ -35,9 +35,15 @@
 
 #include "TMath.h"
 
+#include "EnvironmentVariable.h"
+
 #ifdef ANITA_UTIL_EXISTS
 #include "FFTtools.h"
 #endif
+
+const std::string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
+const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
+
 
 using std::cout;
 using std::cin;

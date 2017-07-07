@@ -44,9 +44,6 @@ class IceModel : public EarthModel {
 
 public:
 
-  const string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
-  const string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
-  
   //BEDMAP data
   double ice_thickness_array[1200][1000];  //thickness of the ice
   double ground_elevation[1068][869]; //elevation above geoid at which ice starts

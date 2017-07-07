@@ -31,8 +31,6 @@ class Secondaries {
 private:
   TRandom3 Rand3;
 
-  const string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
-  const string ICEMC_SECONDARY_DIR=ICEMC_SRC_DIR+"/secondary/";
   void Picky(double *y_cumulative,int NPROB_MAX,double rnd,double& y);
   // secondaries
   static const int NPROB_MAX=100; // this sets the maximum length of the arrays
