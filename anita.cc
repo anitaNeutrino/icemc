@@ -3867,9 +3867,6 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
       }
     }
 
-    // 6.6dB missing from impulse response
-    norm *= TMath::Power(10, 6.6/20.);
-    
     // // Impulse response already accounts for trigger/digitizer splitter
     // norm *= sqrt(2);
 
@@ -3954,27 +3951,19 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   if(settings1->WHICH==9 || settings1->WHICH==10){
 
     // Use response from Digitizer path for now
-    fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseDigitizer.root";
+    fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseTrigger.root";
 
     string spol[2] ={"V", "H"};
     string sring[3]={"T", "M", "B"};
     
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
-	// for (int iphi=0;iphi<16;iphi++){
 	int iphi=10;
-	graphNames[ipol][iring]= Form("g%02d%s%s", iphi+1, sring[iring].c_str(), spol[ipol].c_str() ) ;
-	// }
+	graphNames[ipol][iring]= Form("gTrigPath") ;
 	
       }
     }
 
-    // 6.6dB missing from impulse response in the digitizer path
-    norm *= TMath::Power(10., 6.6/20.);
-
-    // the trigger impulse response is 6dB higher than the digitizer impulse response
-    norm *= TMath::Power(10., 6./20.);
-   
     // // Impulse response already accounts for trigger/digitizer splitter
     // norm *= sqrt(2);
 
