@@ -3293,7 +3293,10 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     THETA_ZENITH[3]=PI/2+INCLINE_TOPTHREE*RADDEG;
       
     // Read photogrammetry positions
-    std::ifstream Anita3PhotoFile((ICEMC_DATA_DIR+"/anitaIIIPhotogrammetry.csv").c_str());
+    string whichANITAroman="";
+    if (settings1->WHICH==9) whichANITAroman+="III";
+    else whichANITAroman+="IV";
+    std::ifstream Anita3PhotoFile((ICEMC_DATA_DIR+"/anita"+whichANITAroman+"Photogrammetry.csv").c_str());
     if (!Anita3PhotoFile){
       std::cerr << "Couldn't open photogrammetry!" << std::endl;
       return;
@@ -3386,7 +3389,10 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     }
       
     // HERE HPOL IS 0 AND VPOL IS 1
-    std::ifstream PhaseCenterFile((ICEMC_DATA_DIR+"/phaseCenterPositionsRelativeToPhotogrammetryAnita3.dat").c_str());
+    string whichANITAcard="";
+    if (settings1->WHICH==9) whichANITAcard+="3";
+    else whichANITAcard+="4";
+    std::ifstream PhaseCenterFile((ICEMC_DATA_DIR+"/phaseCenterPositionsRelativeToPhotogrammetryAnita"+whichANITAcard+".dat").c_str());
     Int_t antNum, tpol, pol;
     Double_t deltaR,deltaPhi,deltaZ;
     char firstLine[180];
