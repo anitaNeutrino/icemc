@@ -544,7 +544,6 @@ int main(int argc,  char **argv) {
   Signal *sig1=new Signal();
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();
-  GlobalTrigger *globaltrig1;
 
   // input parameters
   settings1->ReadInputs(input.c_str(),  foutput,  anita1,  sec1,  sig1,  bn1,  ray1, NNU, RANDOMISEPOL);
@@ -581,36 +580,16 @@ int main(int argc,  char **argv) {
   Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
 
 
-  // ray tracing
-  double viewangle=0;
-  double offaxis=0; // viewangle-changle,  for plotting
-
-  int beyondhorizon = 0;  //Switch tells if neutrino interacts beyond the balloon's horizon. (0: inside horizon,  1: outside horizon)
-
   // frequency binning
-  double vmmhz1m_max=0; // maximum V/m/MHz at 1m from Jaime (highest frequency)
-  double vmmhz_lowfreq=0.; // V/m/MHz after 1/r,  attenuation at the lowest freq.
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
 
   // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
   double vmmhz_em[Anita::NFREQ];
   double vmmhz_min_thatpasses=1000;
-  double vmmhz_min=0;   // minimum of the above array
-  double vmmhz_max=0;                        // maximum of the above array
-  double deltheta_em_max, deltheta_had_max;     // maximum value of above array angular distribution
  
-  // shower properties
-  double emfrac, hadfrac, sumfrac;               // em and had fractions
 
   string taudecay;                   // tau decay type: e, m, h
 
-  double elast_y=0;                   // inelasticity
-  double volts_rx_max=0; // max voltage seen on an antenna - just for debugging purposes
-  double volts_rx_ave=0; // ave voltage seen on an antenna,  among hit antennas
-  double volts_rx_sum=0; // ave voltage seen on an antenna,  among hit antennas
-
-  double volts_rx_max_highband; // max voltage seen on an antenna - just for debugging purposes
-  double volts_rx_max_lowband; // max voltage seen on an antenna - just for debugging purposes
   double volts_rx_rfcm_lab_e_all[48][512];
   double volts_rx_rfcm_lab_h_all[48][512];
 
@@ -637,27 +616,10 @@ int main(int argc,  char **argv) {
   double eventsfound_db=0; // same,  for double bang
   double eventsfound_nfb=0; // for taus
 
-  // positions in earth frame
-  double horizcoord=0; // x component of interaction position
-  double vertcoord=0; // y component of interaction position
 
-  double dist_int_bn_2d=0; // 2-d (surface) distance between interaction and balloon
-
-  double cosalpha; // angle between nu momentum and surface normal at earth entrance point
-  double mytheta; //!< alpha minus 90 degrees
-  double cosbeta0; // angle between nu momentum and surface normal at interaction point.
-  double mybeta; //!< beta minus 90 degrees
-  double nuexitice=0;
-  double theta_pol_measured; // theta of the polarization as measured at the payload (for now we don't correct for the 10 degree cant)
-
-  double ptaui=0;
-  double ptauf =0;
-
-
-  double sourceLon;
-  double sourceAlt;
-  double sourceLat;
-  double sourceMag;
+  double sourceLon=-999;
+  double sourceAlt=-999;
+  double sourceLat=-999;
 
   Vector n_nutraject_ontheground; //direction of the neutrino from the person standing on the ground just below the balloon.
   Vector n_pol; // direction of polarization
@@ -670,13 +632,7 @@ int main(int argc,  char **argv) {
   //For each trigger layer,  which antennas pass L1.  16 bit,  16 bit and 8 bit and layers 1,  2 and nadirs
   int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
 
-  // these are declared here so that they can be stuck into trees
-  int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement
 
-  int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement
-
-  int nchannels_triggered = 0; // total number of channels triggered
-  int nchannels_perrx_triggered[48]; // total number of channels triggered
 
   eventsfound=0.; // sums weights for events that pass
 
@@ -693,16 +649,6 @@ int main(int argc,  char **argv) {
 
   //we pick both the interaction point and its corresponding mirror point
 
-
-
-  double rms_rfcm_e;
-  double rms_rfcm_h;
-  double rms_lab_e;
-  double rms_lab_h;
-
-  double avgfreq_rfcm[Anita::NFREQ];
-  double avgfreq_rfcm_lab[Anita::NFREQ];
-  double freq[Anita::NFREQ];
 
   int pdgcode=-999;
 
