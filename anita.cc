@@ -298,7 +298,10 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu)
   } //for
 
   initializeFixedPowerThresholds(foutput);
-    
+  
+  /// TEMP HACK FOR ANITA-4 !!!!
+  if (settings1->WHICH==10) powerthreshold[4] /= TMath::Sqrt(2.);
+  
   if (settings1->TRIGGERSCHEME==5)
     l1window=3.75E-9;
   else
@@ -887,7 +890,6 @@ void Anita::initializeFixedPowerThresholds(ofstream &foutput){
       powerthreshold[2] << " (M2)\t" <<
       powerthreshold[3] << " (H)\t" <<
       powerthreshold[4] << " \n";
-      
       
   }
 }
@@ -3950,29 +3952,36 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   
   // Set deltaT to be used in the convolution
   deltaT = 1/(2.6*16);
-  string graphNames[2][3];
+  string graphNames[2][3][16];
   string fileName;
   double norm=1;
+
+  bool useDig = false;
   
   if(settings1->WHICH==9 || settings1->WHICH==10){
 
     // Use response from Digitizer path for now
-    fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseTrigger.root";
+    if (useDig) fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseDigitizer.root";
+    else fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseTrigger.root";
 
     string spol[2] ={"V", "H"};
     string sring[3]={"T", "M", "B"};
     
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
-	int iphi=10;
-	graphNames[ipol][iring]= Form("gTrigPath") ;
-	
+	for (int iphi=0;iphi<16;iphi++){
+	  if (useDig) graphNames[ipol][iring][iphi] = Form("g%02d%s%s", iphi+1, sring[iring].c_str(), spol[ipol].c_str() ) ;
+	  else    graphNames[ipol][iring][iphi]= Form("gTrigPath") ;
+	}
       }
     }
 
     // // Impulse response already accounts for trigger/digitizer splitter
     // norm *= sqrt(2);
 
+    if (useDig) norm *= TMath::Power(10, 6/20.);
+    else norm *= TMath::Power(10, -8/20.);
+    
   }
 
   // Read in input file
@@ -3983,35 +3992,35 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     exit(0);
   } else {
 
-    for (int ipol=0;ipol<2;ipol++){
-      for (int iring=0;iring<3;iring++){
-
-	// Read graph
-	TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring].c_str());
-	if(!grTemp) {
-	  std::cerr << "Couldn't read signal chain impulse response" << graphNames[ipol][iring] << " from file " << fileName << "\n";
-	  exit(0);
-	}
-	// Interpolate to high sampling rate that will be used for the convolution
-	TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); 
-	Int_t nPoints  = grInt->GetN();
-	Double_t *newx = grInt->GetX();
-	Double_t *newy = grInt->GetY();
-	// Normalise
-	for (int i=0;i<nPoints;i++){
-	  newy[i]=newy[i]*norm;
-	  // change time axis from ns to s
-	  newx[i]=newx[i]*1E-9;
-	}
-	// Pave to 0
-	int paveNum = 8533;
-	grTemp = new TGraph(nPoints,  newx, newy);
+    for (int ipol=0; ipol<2; ipol++){
+      for (int iring=0; iring<3; iring++){
+	for (int iphi=0; iphi<16; iphi++){
+	  // Read graph
+	  TGraph *grTemp = (TGraph*) fImpulse.Get(graphNames[ipol][iring][iphi].c_str());
+	  if(!grTemp) {
+	    std::cerr << "Couldn't read signal chain impulse response" << graphNames[ipol][iring][iphi] << " from file " << fileName << "\n";
+	    exit(0);
+	  }
+	  // Interpolate to high sampling rate that will be used for the convolution
+	  TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); 
+	  Int_t nPoints  = grInt->GetN();
+	  Double_t *newx = grInt->GetX();
+	  Double_t *newy = grInt->GetY();
+	  // Normalise
+	  for (int i=0;i<nPoints;i++){
+	    newy[i]=newy[i]*norm;
+	    // change time axis from ns to s
+	    newx[i]=newx[i]*1E-9;
+	  }
+	  // Pave to 0
+	  int paveNum = 8533;
+	  grTemp = new TGraph(nPoints,  newx, newy);
 	
-	fSignalChainResponseTrigger[ipol][iring] = FFTtools::padWaveToLength(grTemp, paveNum);
+	  fSignalChainResponseTrigger[ipol][iring][iphi] = FFTtools::padWaveToLength(grTemp, paveNum);
 	
-	delete grInt;
-	delete grTemp;
-      
+	  delete grInt;
+	  delete grTemp;
+	}
       }
     }
   }

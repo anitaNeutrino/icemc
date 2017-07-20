@@ -593,7 +593,7 @@ public:
 #endif
   Double_t fTimes[HALFNFOUR];
   TGraph *fSignalChainResponseDigitizer[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
-  TGraph *fSignalChainResponseTrigger[2][3]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
+  TGraph *fSignalChainResponseTrigger[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   double deltaT;
 
   // Trigger efficiency scan parameters

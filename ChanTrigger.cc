@@ -1581,11 +1581,10 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   if (ant<16) iring=0;
   else if (ant<32) iring=1;
 
-
   int iphi = ant - (iring*16);
     
   //Calculate convolution
-  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring]);
+  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring][iphi]);
   
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
