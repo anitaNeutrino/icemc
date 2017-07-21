@@ -2651,13 +2651,24 @@ int main(int argc,  char **argv) {
 
       Tools::Zero(sumsignal_aftertaper, 5);
 
-      // // Create a pointer to the SimulatedSignal
-      // SimulatedSignal *simSignal = new SimulatedSignal();
-      // // Define the SimSignal from vmmhz
-      // simSignal->updateSimSignalFromVmmhz(Anita::NFREQ, anita1->freq, vmmhz);
+      // Create a pointer to the SimulatedSignal
+      SimulatedSignal *simSignal = new SimulatedSignal();
+      // std::cout << __FUNCTION__ << " " << __LINE__ << std::endl;
+      // Define the SimSignal from vmmhz
+      simSignal->updateSimSignalFromVmmhz(Anita::NFREQ, anita1->freq, vmmhz);
+
+      // // Apply notch filters
+      // Int_t numNotches = 1;
+      // const  Double_t minFreq[3]={240e6, 360e6, 450e6};
+      // const  Double_t maxFreq[3]={260e6, 390e6, 460e6};
+      // FFTtools::multipleSimpleNotchFilters(simSignal, numNotches, minFreq, maxFreq);
+
+      // // Apply CW
       // simSignal->addCW(250E6, 0, 0.01);
-      // simSignal->getVmmhz(anita1, vmmhz);
-      // delete simSignal;
+      // std::cout << __FUNCTION__ << " " << __LINE__ << std::endl;
+      simSignal->getVmmhz(anita1, vmmhz);
+      delete simSignal;
+      // std::cout << __FUNCTION__ << " " << __LINE__ << std::endl;
       
       //if no-roughness case, add its parameters to the saved screen parameters so specular and roughness simulations use the same code in the waveform construction
       if(!settings1->ROUGHNESS){
