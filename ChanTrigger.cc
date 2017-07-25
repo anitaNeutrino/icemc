@@ -743,8 +743,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
     
     anita1->iminbin[iband]=0.;
     anita1->imaxbin[iband]=anita1->NFOUR/2;
-    
-
+        
     for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
       for (int k=0;k<Anita::NFREQ;k++) {
         if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
@@ -757,7 +756,13 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
           bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
 
 	  anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
-        } // end if (seavey frequencies)
+
+	  if (settings1->TUFFSON){
+	    tmp_vhz[0][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
+	    tmp_vhz[1][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
+	  }
+	  
+	} // end if (seavey frequencies)
 	else {
 	  tmp_vhz[0][k]=0;
 	  tmp_vhz[1][k]=0;
@@ -1499,7 +1504,23 @@ void ChanTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,dou
 
 
 
+double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStatus[3]){
 
+  // Butterworth filter for two ANITA notches.
+  // order0 = order1 = 1 may be closer to hardware notch
+  //  but 2 gives better SW rejection in analysis spectrum.
+  // f0 is fairly constant, f1 does vary with time.
+  double f[3]     = {250e6, 360e6, 460e6};
+  double W[3]     = { 45e6,  55e6,  50e6};
+  double order[3] = {   2.,    2.,    2.};
+
+  double denominator = 1.;
+  for (int i=0; i<3; i++){
+    denominator += notchStatus[i]*pow(ff*W[i]/(ff*ff-f[i]*f[i]),2.*order[i]); 
+  }
+
+  return ampl/sqrt(denominator);
+}
 
 
 

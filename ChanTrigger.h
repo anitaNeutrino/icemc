@@ -383,6 +383,17 @@ class ChanTrigger {
    */
   void injectImpulseAtSurf(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant);
   
+  //! Apply Butterworth Filter
+  /**
+   * This is an approximation of the notch filters flown during ANITA4
+   * 
+   * @param ff :: frequenzy in Hz
+   * @param ampl :: amplitude
+   * @param filters :: array of three integers indicating notch status (on/off)
+   * @return frequency domain amplitude scaled by the filter
+   */
+  double applyButterworthFilter(double ff, double ampl, int notchStatus[3]);
+
   
   double vhz_rx[2][5][Anita::NFREQ];                           ///< Array of amplitudes in the Fourier domain (V/Hz) after the antenna gain. Indeces stand for [ipol][iband][ifreq] 
   double volts_rx_forfft[2][5][Anita::HALFNFOUR];              ///< Array of time domain after the antenna gain. Indeces stand for [ipol][iband][itime] 
