@@ -910,6 +910,22 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
     std::cout << std::endl;
   }
 
+
+  getSetting("Simulate TUFFs", TUFFSON);
+  std::vector<int> whichTUFFsON;
+  getSetting("Which TUFFs are on", whichTUFFsON);
+
+  for (unsigned int i=0; i< whichTUFFsON.size(); i++){
+    anita1->TUFFstatus[i] = whichTUFFsON.at(i);
+  }
+
+  if (TUFFSON){
+    std::cout << "The TUFFs are ON for the whole flight!" << std::endl;
+    std::cout << "Notch 0 status " << anita1->TUFFstatus[0] << std::endl;
+    std::cout << "Notch 1 status " << anita1->TUFFstatus[1] << std::endl;
+    std::cout << "Notch 2 status " << anita1->TUFFstatus[2] << std::endl;
+  }
+  
 } //method ReadInputs
 
 
