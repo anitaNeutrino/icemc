@@ -603,7 +603,7 @@ public:
   Double_t trigEffScanPulseAtAmpaUpsampled[NFOUR];
   Double_t trigEffScanAmplitudeAtAmpa[NFREQ];
   Double_t trigEffScanPulseAtSurf[250][HALFNFOUR];
-  
+  int TUFFstatus[3];
 
 }; //class Anita
 
