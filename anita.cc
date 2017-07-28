@@ -3979,8 +3979,8 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     // // Impulse response already accounts for trigger/digitizer splitter
     // norm *= sqrt(2);
 
-    if (useDig) norm *= TMath::Power(10, 6/20.);
-    else norm *= TMath::Power(10, -8/20.);
+    if (useDig) TMath::Power(10, +8/20.);
+    else norm *= TMath::Power(10, -7/20.);
     
   }
 
