@@ -3237,26 +3237,86 @@ void MakePlot() {
 
 
 
-  // const int n_ANITA_ben = 2;
+  const int n_ANITA_4 = 7;
+
   // TFile* fLimit = TFile::Open("limitNums.root");
   // TGraph* grLimit = (TGraph*) fLimit->Get("grLimit");
 
   // LogToLine(grLimit->GetN(), grLimit->GetX());
-  // double ANITA_ben_x[n_ANITA_ben] = {19, 20};
-  // double ANITA_ben_y[n_ANITA_ben] = {3.97188e-17, 9.1763e-19};
-  // LogToLine(n_ANITA_ben, ANITA_ben_x);
-  // LogToLine(grLimit->GetN(), grLimit->GetY());
-  // TGraph* g_ANITA_ben = grLimit;
-  // TGraph *g_ANITA_ben = new TGraph(n_ANITA_ben, ANITA_ben_x, ANITA_ben_y);
+  Double_t ANITA_4_x[n_ANITA_4]       = {18, 18.5, 19, 19.5, 20, 20.5, 21};
+  Double_t ANITA_4_y[n_ANITA_4];
+  Double_t ANITA_all_y[n_ANITA_4];
+  Double_t ANITA_4_y_low[n_ANITA_4];
+  Double_t ANITA_4_y_high[n_ANITA_4];  
+  Double_t ANITA_4_effArea[n_ANITA_4] = { 0.00153,      // E18     in km^2
+					  0.04991,      // E18.5
+					  0.53408,      // E19    
+					  2.98348,      // E19.5
+					  13.02480,     // E20
+					  41.35640,     // E20.5
+					  107.672 };    // E21
+  
+   // double ANITA_4_effArea[n_ANITA_4] = {  141.795 ,   // E19
+   // 				         558.455 ,   // E19.5
+   // 					 1739.91 ,   // E20
+   // 					 3985.39 ,   // E20.5
+   // 					 7557.76};   // E21
+  
+  double ANITA_4_anaEff  = 0.8;
+  
+  double N90 = 2.30; 
+  double ANITA_4_livetime = 27.3*24*3600; // //27.3*24*3600; // 27.3 days
+  double ANITA_all_livetime = 99.3*24*3600.;
+  
+  std::cout << "HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEERE===========================================" << std::endl;
+
+  for (int i=0; i<n_ANITA_4; i++){
+
+    // convert km^2 in cm^2
+    ANITA_4_effArea[i]*=1e10;
+    
+    ANITA_4_y[i] = N90/(ANITA_4_effArea[i]*ANITA_4_livetime*ANITA_4_anaEff*TMath::Log(10.));
+    
+    ANITA_4_y[i] *= TMath::Power(10, ANITA_4_x[i])/(TMath::Power(10, ANITA_4_x[i]+0.25) - TMath::Power(10, ANITA_4_x[i]-0.25));
+    
+    // Divide by 4 
+    ANITA_4_y[i] /= 4.;
+    ANITA_all_y[i] = ANITA_4_y[i]*ANITA_4_livetime/ANITA_all_livetime;
+
+    ANITA_4_y_low[i]  = ANITA_4_y[i]*0.5;
+    ANITA_4_y_high[i] = ANITA_4_y[i]*1.5;
+    
+    //   ANITA_4_y[i]*= TMath::Power(10, ANITA_4_x[i])/(TMath::Power(10, ANITA_4_x[i]+0.25)-TMath::Power(10, ANITA_4_x[i]-0.25));
+    std::cout << ANITA_4_x[i] << " " << ANITA_4_y[i] << std::endl;
+  }
+      
+      
+  //  double ANITA_4_y[n_ANITA_4] = {3.97188e-17, 9.1763e-19};
+      LogToLine(n_ANITA_4, ANITA_4_x);
+    // LogToLine(grLimit->GetN(), grLimit->GetY());
+  // TGraph* g_ANITA_4 = grLimit;
+  TGraph *g_ANITA_4 = new TGraph(n_ANITA_4, ANITA_4_x, ANITA_4_y);
+  TGraph *g_ANITA_all = new TGraph(n_ANITA_4, ANITA_4_x, ANITA_all_y);
+  
+  // TGraphErrors *g_ANITA_4_shade = new TGraphErrors(n_ANITA_4);
+  // for (int i=0; i<n_ANITA_4; i++){
+  //   g_ANITA_4_shade->SetPoint(i,       ANITA_4_x[i], ANITA_4_y[i] );
+  //   g_ANITA_4_shade->SetPointError(i,   0, ANITA_4_y[i]*0.1 );
+  // }
+  // g_ANITA_4_shade->SetFillStyle(3001);
+  // g_ANITA_4_shade->SetFillColor(kMagenta);
+  // g_ANITA_4_shade->SetLineColor(kMagenta);
+  
+  
   // std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-  // // for(int i=0; i < g_ANITA_ben->GetN(); i++){
-  // for(int i=g_ANITA_ben->GetN()-1; i >= 0; i--){
+  // // for(int i=0; i < g_ANITA_4->GetN(); i++){
+  // for(int i=g_ANITA_4->GetN()-1; i >= 0; i--){
   //   if((i%2)==0){
-  //     g_ANITA_ben->RemovePoint(i);
+  //     g_ANITA_4->RemovePoint(i);
   //   }
-  //   // std::cout << g_ANITA_ben->GetX()[i] << "\t" << g_ANITA_ben->GetY()[i] << std::endl;
-  //   std::cout << g_ANITA_ben->GetX()[i] << "\t" << g_ANITA_ben->GetY()[i] << std::endl;
-  //   // g_ANITA_ben->GetY()[i]*=g_ANITA_ben->GetX()[i];
+  //   // std::cout << g_ANITA_4->GetX()[i] << "\t" << g_ANITA_4->GetY()[i] << std::endl;
+  //   std::cout << g_ANITA_4->GetX()[i] << "\t" << g_ANITA_4->GetY()[i] << std::endl;
+  //   // g_ANITA_4->GetY()[i]*=g_ANITA_4->GetX()[i];
   // }
   // std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
   double ANITA_x[8] = { 18.0068  ,
@@ -3314,6 +3374,7 @@ void MakePlot() {
   LogToLine(11, ANITA_erratum_x);
   LogToLine(11, ANITA_erratum_y);
 
+  // for (int i=0; i<11; i++) cout << ANITA_erratum_x[i] << " " << ANITA_erratum_y[i] << endl;
   TGraph *g_ANITA_erratum = new TGraph( 11, ANITA_erratum_x, ANITA_erratum_y );
 
 
@@ -4774,15 +4835,15 @@ void MakePlot() {
 
   for (int bin=0; bin<N; bin++) {
 
-    cout<<"before, IC 3yr HESE at "<<IC3yrHESE_x[bin]<<", EF : "<<IC3yrHESE_y[bin]<<endl;
+    // cout<<"before, IC 3yr HESE at "<<IC3yrHESE_x[bin]<<", EF : "<<IC3yrHESE_y[bin]<<endl;
 
-    cout << "tmp is " << tmp << "\n";
+    // cout << "tmp is " << tmp << "\n";
     IC3yrHESE_x.at(bin)= log10(IC3yrHESE_x[bin]) + 9.; // in eV, log
 
     IC3yrHESE_xl.at(bin) = log10(IC3yrHESE_xl[bin]) + 9.; // in eV, log
 
     IC3yrHESE_xh.at(bin) = log10(IC3yrHESE_xh[bin]) + 9. ; // in eV, log
-    cout<<"after, IC 3yr HESE at "<<IC3yrHESE_x[bin]<<", EF : "<<IC3yrHESE_y[bin]<<endl;
+    // cout<<"after, IC 3yr HESE at "<<IC3yrHESE_x[bin]<<", EF : "<<IC3yrHESE_y[bin]<<endl;
 
 
     // to linear
@@ -4803,12 +4864,12 @@ void MakePlot() {
     }
     // calculate proper flux limit value (from x10^-8 in E^2F [GeV cm-2 s-1 sr-1] to EF)
     IC3yrHESE_y.at(bin) = IC3yrHESE_y[bin]*1.e-8; // now in linear E^2F [GeV cm-2 s-1 sr-1]
-    cout << "I'm here1.\n";
+    // cout << "I'm here1.\n";
     IC3yrHESE_yl.at(bin) = IC3yrHESE_yl[bin]*1.e-8; // now in linear E^2F [GeV cm-2 s-1 sr-1]
-    cout << "I'm here2.\n";
-    cout << "yh is " <<  IC3yrHESE_yh[bin] << "\n";
+    // cout << "I'm here2.\n";
+    // cout << "yh is " <<  IC3yrHESE_yh[bin] << "\n";
     IC3yrHESE_yh.at(bin) = IC3yrHESE_yh[bin]*1.e-8; // now in linear E^2F [GeV cm-2 s-1 sr-1]
-    cout<<"IC 3yr HESE at "<<IC3yrHESE_x[bin]<<", E^2F : "<<IC3yrHESE_y[bin]<<endl;
+    // cout<<"IC 3yr HESE at "<<IC3yrHESE_x[bin]<<", E^2F : "<<IC3yrHESE_y[bin]<<endl;
 
 
 
@@ -5039,8 +5100,8 @@ void MakePlot() {
   //g_Kotera_shade->SetLineColor(1);
   //g_Kotera_shade->SetLineStyle(3);
   //g_Kotera_shade->SetLineWidth(5);
-  //g_Kotera_shade->Draw("f");
-  g_Kotera_shade->Draw("afaxis");
+  g_Kotera_shade->Draw("af");
+  //  g_Kotera_shade->Draw("afaxis");
   gPad->RedrawAxis();
 
   // g_ARIANNA_1296_shade->SetFillStyle(1001);
@@ -5694,6 +5755,7 @@ void MakePlot() {
   g_Icecube->Draw("lp");
   */
 
+  
 
 
   //g_IC_new->SetLineColor(9);
@@ -5703,7 +5765,7 @@ void MakePlot() {
   //g_IC_new->SetLineStyle(3);
   g_IC_new->SetLineColor(kGreen+2);
   g_IC_new->SetMarkerColor(kGreen+2);
-  g_IC_new->Draw("lp");
+  // g_IC_new->Draw("lp");
 
 
 
@@ -5713,7 +5775,7 @@ void MakePlot() {
   //g_Icecube->SetLineStyle(3);
   g_RICE->SetLineColor(kBlue+2);
   g_RICE->SetMarkerColor(kBlue+2);
-  g_RICE->Draw("lp");
+  // g_RICE->Draw("lp");
 
 
 
@@ -5754,22 +5816,27 @@ void MakePlot() {
 
 
 
-  //g_ANITA->SetLineColor(36);
-  // g_ANITA_ben->SetLineColor(kMagenta);
-  // g_ANITA_ben->SetLineWidth(3);
-  // g_ANITA_ben->SetMarkerStyle(29);
-  // g_ANITA_ben->SetMarkerSize(3.5);
-  // g_ANITA_ben->SetMarkerColor(kMagenta);
-  // g_ANITA_ben->Draw("lp");
+  //  g_ANITA->SetLineColor(36);
+  g_ANITA_4->SetLineColor(kMagenta);
+  g_ANITA_4->SetLineWidth(3);
+  g_ANITA_4->SetLineStyle(2);
+  g_ANITA_4->Draw("l");
+  //g_ANITA_4_shade->Draw("l");
 
-  // g_ANITA_ben->SetLineWidth(3);
-  // g_ANITA_ben->SetMarkerStyle(8);
-  // g_ANITA_ben->SetMarkerSize(2.2);
+
+  g_ANITA_all->SetLineColor(kBlue);
+  g_ANITA_all->SetLineWidth(3);
+  g_ANITA_all->SetLineStyle(2);
+  g_ANITA_all->Draw("l");
+  
+  // g_ANITA_4->SetLineWidth(3);
+  // g_ANITA_4->SetMarkerStyle(8);
+  // g_ANITA_4->SetMarkerSize(2.2);
   // //g_ANITA->SetLineStyle(10);
-  // g_ANITA_ben->SetLineColor(kRed+2);
-  // g_ANITA_ben->SetMarkerColor(kRed+2);
-  // g_ANITA_ben->Draw("lp");
-
+  // g_ANITA_4->SetLineColor(kRed+2);
+  // g_ANITA_4->SetMarkerColor(kRed+2);
+  // g_ANITA_4->Draw("lp");
+  
 
 
 
@@ -6064,14 +6131,15 @@ void MakePlot() {
   //Leg_Const_2 -> AddEntry(g_ARIANNA_HRA3_limit_paper, "ARIANNA HRA-3 (3 x 0.58 yrs)", "lp");
   //Leg_Const_2 -> AddEntry(g_ARA37_Peter, "ARA37 (3yrs) UH", "lp");
   //Leg_Const_2 -> AddEntry(g_EVA_3fly, "EVA (3flights)", "lp");
-  Leg_Const_2 -> AddEntry(g_IC_new, "IceCube '12 (333.5 days)", "lp");
+  // Leg_Const_2 -> AddEntry(g_IC_new, "IceCube '12 (333.5 days)", "lp");
   Leg_Const_2 -> AddEntry(g_IC_3yr_HESE_X, "IceCube '15 (659.5 days)", "l");
-  Leg_Const_2 -> AddEntry(g_RICE, "RICE '11 (4.8 years)", "lp");
+  // Leg_Const_2 -> AddEntry(g_RICE, "RICE '11 (4.8 years)", "lp");
   Leg_Const_2 -> AddEntry(g_Auger15, "Auger '15 (6.5 yrs)", "lp");
   //Leg_Const_2 -> AddEntry(g_ANITA, "ANITA II", "lp");
-  Leg_Const_2 -> AddEntry(g_ANITA_erratum, "ANITA-2 '10 (28.5 days)", "lp");
+  Leg_Const_2 -> AddEntry(g_ANITA_erratum, "ANITA 2 '10 (28.5 days)", "lp");
   Leg_Const_2 -> AddEntry(g_NuMoon2014, "NuMoon '10 (47.6 hrs) ", "lp");
-  // Leg_Const_2 -> AddEntry(g_ANITA_ben, "ANITA-3 '16 (17.2 days)", "lp");
+  Leg_Const_2 -> AddEntry(g_ANITA_4, "ANITA-4 '17 (27.3 days)", "lp");
+  Leg_Const_2 -> AddEntry(g_ANITA_all, "ANITA 1-4 sensitivity (99.3 days)", "l");//27.3 days)", "lf");
 
   //Leg_Const_2_2 -> AddEntry(g_Auger, "Auger '09", "lp");
   //Leg_Const_2 -> AddEntry(g_Auger11, "Auger '11", "lp");
@@ -6111,7 +6179,7 @@ void MakePlot() {
   */
 
   Leg_Const_2 -> SetBorderSize(0);
-  Leg_Const_2 -> SetTextSize(0.03);
+  Leg_Const_2 -> SetTextSize(0.025);
   Leg_Const_2 -> SetTextFont(42);
   Leg_Const_2 -> SetFillColor(0);
   Leg_Const_2 -> SetMargin(0.32);
@@ -6222,8 +6290,9 @@ void MakePlot() {
   Leg_Const2_2 -> SetTextSize(0.03);
   Leg_Const2_2 -> Draw();
 
-  cConst_2->Print("test_Sensitivity_20150430.pdf");
-  cConst_2->Print("test_Sensitivity_20150430.eps");
+  cConst_2->Print("test_Sensitivity_20170801.png");
+  cConst_2->Print("test_Sensitivity_20170801.pdf");
+  cConst_2->Print("test_Sensitivity_20170801.eps");
 
 
 

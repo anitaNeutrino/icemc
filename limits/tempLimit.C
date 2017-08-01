@@ -4,6 +4,8 @@ void LogToLine(int N, double *Data);
 TGraph *getKoteraShade();
 TGraph *getANITA2erratum();
 TGraph *getAhlers();
+TGraphAsymmErrors *getIceCube();
+
 TGraph *getLimit(double effArea[n_ANITA], double eff[n_ANITA], double livetime);
 
 
@@ -11,16 +13,25 @@ void tempLimit(){
 
   LogToLine(n_ANITA, ANITA_4_x);
   TGraph *g_Kotera_shade = getKoteraShade();
-
+  
   TGraph *g_ANITA_2_erratum = getANITA2erratum();
   
-  Double_t ANITA_4_effArea[n_ANITA] = { 0.00153,      // E18     in km^2  
-					0.04991,      // E18.5		  
-					0.53408,      // E19    	  
-					2.98348,      // E19.5		  
-					13.02480,     // E20		  
-					41.35640,     // E20.5		  
-					107.672 };    // E21               
+  // Double_t ANITA_4_effArea[n_ANITA] = { 0.00153,      // E18     in km^2  
+  // 					0.04991,      // E18.5		  
+  // 					0.53408,      // E19    	  
+  // 					2.98348,      // E19.5		  
+  // 					13.02480,     // E20		  
+  // 					41.35640,     // E20.5		  
+  // 					107.672 };    // E21
+
+  // Numbers with threshold divided by sqrt(2)
+  Double_t ANITA_4_effArea[n_ANITA] = {  0.00104,       // E18     in km^2  
+					 0.04894,      // E18.5		  
+					 0.62948,      // E19    	  
+					 3.47982,      // E19.5		  
+					 14.65220,     // E20		  
+					 47.48070,     // E20.5		  
+					117.02800 };    // E21   
   
   double ANITA_4_eff[n_ANITA] = { 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8};
 
@@ -35,7 +46,6 @@ void tempLimit(){
 					7.14396,      // E20		  
 					22.77670,     // E20.5		  
 					58.72190};    // E21              
-
 
   double ANITA_3_eff[n_ANITA] = { 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8};
 
@@ -61,29 +71,29 @@ void tempLimit(){
   g_ANITA_2->SetLineColor(kRed);
 
 
+
+  double ANITA_all_effArea[n_ANITA];
+  double ANITA_all_livetime = 99.3*24*3600.;
+  for (int ibin=0; ibin<n_ANITA; ibin++){
+    ANITA_all_effArea[ibin] = (
+      ANITA_2_livetime*ANITA_2_effArea[ibin] +
+      ANITA_3_livetime*ANITA_3_effArea[ibin] +
+      ANITA_4_livetime*ANITA_4_effArea[ibin]
+			       )/(ANITA_2_livetime+ANITA_3_livetime+ANITA_4_livetime);
+  }
+
+
+  TGraph *g_ANITA_all = getLimit(ANITA_all_effArea, ANITA_2_eff, ANITA_all_livetime);
+  g_ANITA_all->SetLineColor(kViolet);
   
   TCanvas *cConst_2 = new TCanvas("cConst_2","A Simple Graph Example",200,10,1400,1400); // wider
 
   cConst_2->cd();
   cConst_2->SetLogy();
   cConst_2->SetLogx();
-  //g_ESS_base->SetTitle("Sensitivity");
   g_Kotera_shade->SetTitle(";E (eV);E dN/dE dA d#Omega dt (cm^{-2} sr ^{-1} s^{-1} )");
-  // g_Kotera_shade->GetHistogram()->SetXTitle("E (eV)");
-  // g_Kotera_shade->GetHistogram()->SetYTitle("E dN/dE dA d#Omega dt (cm^{-2} sr ^{-1} s^{-1} )");
-  //g_vhvh->GetHistogram()->SetMaximum(100);
-  //g_vhvh->GetHistogram()->SetMinimum(0.1);
-  //g_Kotera_shade->GetHistogram()->SetMaximum(1.e-11);
   g_Kotera_shade->GetHistogram()->SetMaximum(1.e-12);
-  //g_Kotera_shade->GetHistogram()->SetMaximum(3.e-11);
-  //g_Kotera_shade->GetHistogram()->SetMinimum(1.e-20);
-  //g_Kotera_shade->GetHistogram()->SetMaximum(1.e-13);
-  //g_Kotera_shade->GetHistogram()->SetMinimum(1.e-20);
   g_Kotera_shade->GetHistogram()->SetMinimum(1.e-19);
-  //g_Kotera_shade->GetHistogram()->SetMinimum(1.e-21);
-  //g_Kotera_shade->GetHistogram()->SetMinimum(1.e-22);
-
-  //  g_Kotera_shade->GetXaxis()->SetLimits(3.2e14,1.e24);
   g_Kotera_shade->GetXaxis()->SetLimits(1e17,1.e22); // zoom little bit
   g_Kotera_shade->GetHistogram()->SetTitleSize  ( 0.04,"X");
   g_Kotera_shade->GetHistogram()->SetLabelOffset( 0.006,"X");
@@ -91,36 +101,27 @@ void tempLimit(){
   g_Kotera_shade->GetHistogram()->SetLabelSize( 0.04,"Y");
   g_Kotera_shade->GetHistogram()->SetLabelOffset( 0.007,"Y");
   g_Kotera_shade->GetHistogram()->SetTitleSize  ( 0.04,"Y");
-  //g_Kotera_shade->GetHistogram()->SetTitleOffset( 2.0,"Y");
   g_Kotera_shade->GetHistogram()->SetTitleOffset( 1.8,"Y");
   g_Kotera_shade->GetHistogram()->SetTitleOffset( 1.3,"X");
   gPad->SetLeftMargin(0.15);
-  //g_Kotera_shade->SetLineColor(39);
-  //g_Kotera_shade->SetLineWidth(3);
-  //g_Kotera_shade->Draw("al");
-  // ESS shade
-  //g_Kotera_shade->SetFillStyle(3001);
   g_Kotera_shade->SetFillStyle(1001);
-  //g_Kotera_shade->SetFillStyle(3004);
-  //g_Kotera_shade->SetFillColor(16);
-  //g_Kotera_shade->SetFillColor(13);
   g_Kotera_shade->SetFillColor(15);
   g_Kotera_shade->SetLineColor(0);
-  //g_Kotera_shade->SetLineColor(1);
-  //g_Kotera_shade->SetLineStyle(3);
-  //g_Kotera_shade->SetLineWidth(5);
   g_Kotera_shade->Draw("af");
-  //  g_Kotera_shade->Draw("afaxis");
   gPad->RedrawAxis();
 
   TGraph *g_Ahlers=getAhlers();
   g_Ahlers->Draw("l");
+
+  // TGraphAsymmErrors *g_IceCube = getIceCube();
+  // g_IceCube->Draw("p");
   
   g_ANITA_2_erratum->Draw("l");
 
   g_ANITA_2->Draw("l");
   g_ANITA_3->Draw("l");
   g_ANITA_4->Draw("l");
+  g_ANITA_all->Draw("l");
 
 
   TLegend *leg = new TLegend(0.6, 0.6, 0.89, 0.89);
@@ -128,7 +129,21 @@ void tempLimit(){
   leg->AddEntry(g_ANITA_2,         "A2 icemc #epsilon_{ANA}=0.8",  "l" );
   leg->AddEntry(g_ANITA_3,         "A3 icemc #epsilon_{ANA}=0.8",  "l" );
   leg->AddEntry(g_ANITA_4,         "A4 icemc #epsilon_{ANA}=0.8",  "l" );
+  leg->AddEntry(g_ANITA_all,       "A1-4 icemc #epsilon_{ANA}=0.8",  "l" );
   leg->Draw();
+
+  
+  TLegend *Leg_Const2_2 = new TLegend(0.16, 0.12, 0.43, 0.254);
+  Leg_Const2_2 -> AddEntry(g_Kotera_shade, "GZK, Kotera '10", "f");  
+  Leg_Const2_2 -> AddEntry(g_Ahlers, "Ahlers '11, E_{min}=10^{18.5} eV", "l");
+  Leg_Const2_2 -> SetBorderSize(0);
+  Leg_Const2_2 -> SetFillColor(0);
+  Leg_Const2_2 -> SetTextFont(42);
+  Leg_Const2_2 -> SetTextSize(0.03);
+  Leg_Const2_2 -> Draw();
+
+  
+  
 }
 
 
@@ -488,7 +503,7 @@ TGraph *getAhlers(){
 
 TGraph *getANITA2erratum(){
 
-
+  
   // ANITA_II Erratum
   //
 
@@ -541,13 +556,12 @@ TGraph* getLimit(double effArea[n_ANITA], double eff[n_ANITA], double livetime){
   double N90 = 2.30; 
 
   for (int i=0; i<n_ANITA; i++){
-
-    // convert km^2 in cm^2
-    effArea[i]*=1e10;
     
-    ANITA_4_y[i] = N90/(effArea[i]*livetime*eff[i]);
+    ANITA_4_y[i] = N90/(effArea[i]*1e10*livetime*eff[i]*TMath::Log(10.));
 
-    //    ANITA_4_y[i] *= TMath::Power(10, ANITA_4_x[i])/(TMath::Power(10, ANITA_4_x[i]+0.25) - TMath::Power(10, ANITA_4_x[i]-0.25));
+    double exponent = TMath::Log10(ANITA_4_x[i]);
+    
+    ANITA_4_y[i] *= TMath::Power(10, exponent)/(TMath::Power(10, exponent+0.25) - TMath::Power(10, exponent-0.25));
     
     // Divide by 4 
     ANITA_4_y[i] /= 4.;
@@ -559,7 +573,7 @@ TGraph* getLimit(double effArea[n_ANITA], double eff[n_ANITA], double livetime){
   TGraph *g_ANITA_4 = new TGraph(n_ANITA, ANITA_4_x, ANITA_4_y);
 
 
-  g_ANITA_4->SetLineWidth(3);
+  g_ANITA_4->SetLineWidth(4);
   g_ANITA_4->SetLineStyle(2);
   
   return g_ANITA_4;
@@ -570,4 +584,303 @@ void LogToLine(int N, double *Data) {
   for (int i=0; i<N; i++) {
     Data[i] = pow( 10., Data[i] );
   }
+}
+
+
+
+TGraphAsymmErrors *getIceCube(){
+
+    // from 2015 paper
+  const unsigned int nPoints=12;
+  const double e[nPoints]={65161.306028,137109.233631,288498.544499,607044.529198,1277313.412688,2687660.419882,5655243.623724,11899487.080692,25038318.807265,52684406.012047,110855950.761230,233257670.521449};
+  double elow[nPoints]={41983.333910,88339.278147,185879.189115,391117.899883,822971.158513,1731655.666862,3643665.172901,7666822.074546,16132152.086837,33944485.527694,71424326.496400,150287575.026061};
+  double ehigh[nPoints]={88339.278147,185879.189115,391117.899883,822971.158513,1731655.666862,3643665.172901,7666822.074546,16132152.086837,33944485.527694,71424326.496400,150287575.026061,316227766.016838};
+  double flux[nPoints]={2.041836,1.220496,1.495319,0.000000,0.798685,0.974741,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000};
+  double fluxlow[nPoints]={0.909091,0.606061,0.909091,0.000000,0.303030,0.303030,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000};
+  double fluxhigh[nPoints]={3.636364,2.121212,2.121212,0.303030,1.818182,2.121212,0.303030,0.909091,1.212121,1.818182,3.333333,5.757576};
+
+  
+   // IceCube 3 years HESE limit
+  //
+  double only_mu_to_all = 3.; // only mu flavor to all flavors factor
+  //double only_mu_to_all = 1.; // leave as it is
+  //
+
+
+  double IC3yrHESE_lowarrow = 2.;
+
+
+  // below are pure data point values from Albrecht
+  vector<double> IC3yrHESE_x;
+  "entering this part.\n";
+  vector<double> IC3yrHESE_xl;
+  vector<double> IC3yrHESE_xh;
+  vector<double> IC3yrHESE_y;
+  vector<double> IC3yrHESE_yl;
+
+  vector<double> IC3yrHESE_yh;
+  vector<double> IC3yrHESE_y0;
+
+  int whichpub=1;  //0 for IC 3 yr paper, 1 for 2015
+
+
+  const int IC3yrHESE_bin = 12;
+
+  if (whichpub==0) {
+    IC3yrHESE_x.push_back(65161.30603);
+    IC3yrHESE_x.push_back(  137109.2336);
+    IC3yrHESE_x.push_back(       288498.5445);
+    IC3yrHESE_x.push_back(      607044.5292);
+    IC3yrHESE_x.push_back(     1277313.413);
+    IC3yrHESE_x.push_back(     2687660.42);
+    IC3yrHESE_x.push_back(      5655243.624);
+    IC3yrHESE_x.push_back(      11899487.08);
+    IC3yrHESE_x.push_back(    25038318.81);
+    IC3yrHESE_x.push_back(   52684406.01);
+    IC3yrHESE_x.push_back(     110855950.8);
+    IC3yrHESE_x.push_back(    233257670.5);
+
+
+    IC3yrHESE_xl.push_back(41983.33391);
+    IC3yrHESE_xl.push_back( 88339.27815);
+    IC3yrHESE_xl.push_back(      185879.1891);
+    IC3yrHESE_xl.push_back(  391117.8999);
+    IC3yrHESE_xl.push_back(   822971.1585);
+    IC3yrHESE_xl.push_back(   1731655.667);
+    IC3yrHESE_xl.push_back(  3643665.173);
+    IC3yrHESE_xl.push_back( 7666822.075);
+    IC3yrHESE_xl.push_back( 16132152.09);
+    IC3yrHESE_xl.push_back( 33944485.53);
+    IC3yrHESE_xl.push_back(  71424326.5);
+    IC3yrHESE_xl.push_back(  150287575);
+
+
+    IC3yrHESE_xh.push_back(88339.27815);
+    IC3yrHESE_xh.push_back(185879.1891);
+    IC3yrHESE_xh.push_back(       391117.8999);
+    IC3yrHESE_xh.push_back(       822971.1585);
+    IC3yrHESE_xh.push_back(       1731655.667);
+    IC3yrHESE_xh.push_back(   3643665.173);
+    IC3yrHESE_xh.push_back(     7666822.075);
+    IC3yrHESE_xh.push_back(    16132152.09);
+    IC3yrHESE_xh.push_back(     33944485.53);
+    IC3yrHESE_xh.push_back(    71424326.5);
+    IC3yrHESE_xh.push_back(    150287575);
+    IC3yrHESE_xh.push_back(  316227766 );
+
+
+    IC3yrHESE_y.push_back(2.041751);
+    IC3yrHESE_y.push_back(1.22059);
+    IC3yrHESE_y.push_back(      1.49531);
+    IC3yrHESE_y.push_back(    0.336603);
+    IC3yrHESE_y.push_back(      0.798582);
+    IC3yrHESE_y.push_back(    0.974725);
+    IC3yrHESE_y.push_back(      0.246002);
+    IC3yrHESE_y.push_back(     0.879309);
+    IC3yrHESE_y.push_back(      1.360814);
+    IC3yrHESE_y.push_back(      1.866319);
+    IC3yrHESE_y.push_back(    3.285333);
+    IC3yrHESE_y.push_back(   5.622056 );
+
+
+
+    /*
+      double IC3yrHESE_yl[IC3yrHESE_bin] = { 0.776708,
+      0.560106,
+      0.893709,
+      0.336603 - IC3yrHESE_lowarrow,
+      0.222002,
+      0.310203,
+      0.246002 - IC3yrHESE_lowarrow,
+      0.879309 - IC3yrHESE_lowarrow,
+      1.360814 - IC3yrHESE_lowarrow,
+      1.866319 - IC3yrHESE_lowarrow,
+      3.285333 - IC3yrHESE_lowarrow,
+      5.622056 - IC3yrHESE_lowarrow };
+    */
+
+    IC3yrHESE_yl.push_back(0.776708);
+    IC3yrHESE_yl.push_back(   0.560106);
+    IC3yrHESE_yl.push_back(     0.893709);
+    IC3yrHESE_yl.push_back(   0.);
+    IC3yrHESE_yl.push_back(   0.222002);
+    IC3yrHESE_yl.push_back(    0.310203);
+    IC3yrHESE_yl.push_back(    0.);
+    IC3yrHESE_yl.push_back(    0.);
+    IC3yrHESE_yl.push_back(   0.);
+    IC3yrHESE_yl.push_back(   0.);
+    IC3yrHESE_yl.push_back(   0.);
+    IC3yrHESE_yl.push_back(  0. );
+
+
+    IC3yrHESE_yh.push_back(3.729637);
+    IC3yrHESE_yh.push_back(2.074821);
+    IC3yrHESE_yh.push_back(     2.265923);
+    IC3yrHESE_yh.push_back(   0.336603);
+    IC3yrHESE_yh.push_back( 1.696517);
+    IC3yrHESE_yh.push_back( 2.148021);
+    IC3yrHESE_yh.push_back( 0.246002);
+    IC3yrHESE_yh.push_back( 0.879309);
+    IC3yrHESE_yh.push_back( 1.360814);
+    IC3yrHESE_yh.push_back(1.866319);
+    IC3yrHESE_yh.push_back( 3.285333);
+    IC3yrHESE_yh.push_back( 5.622056 );
+
+
+    for (int bin=0;bin<IC3yrHESE_bin;bin++) {
+      IC3yrHESE_y0.push_back(0.);
+    }
+  }
+  else if (whichpub==1) {
+    for (int bin=0;bin<nPoints;bin++) {
+      IC3yrHESE_x.push_back(e[bin]);
+      IC3yrHESE_xl.push_back(elow[bin]);
+      IC3yrHESE_xh.push_back(ehigh[bin]);
+      IC3yrHESE_y.push_back(flux[bin]);
+      IC3yrHESE_yl.push_back(fluxlow[bin]);
+      IC3yrHESE_yh.push_back(fluxhigh[bin]);
+      IC3yrHESE_y0.push_back(0.);
+    }
+
+  }
+
+
+
+  int yhl_count = 0;
+  vector <double> IC3yrHESE_hl_x;
+  vector <double> IC3yrHESE_hl_y;
+  vector <double> IC3yrHESE_hl_yh;
+  vector <double> IC3yrHESE_hl_yl;
+  vector <double> IC3yrHESE_hl_0;
+
+  int yh_count = 0;
+  vector <double> IC3yrHESE_h_x;
+  vector <double> IC3yrHESE_h_y;
+  vector <double> IC3yrHESE_h_yl;
+  vector <double> IC3yrHESE_h_0;
+  double tmp=0.;
+
+  // now calculate the correct values
+  //
+  int N=0;
+  if (whichpub==0)
+    N=IC3yrHESE_bin;
+  else if (whichpub==1)
+    N=nPoints;
+
+  for (int bin=0; bin<N; bin++) {
+
+    // cout<<"before, IC 3yr HESE at "<<IC3yrHESE_x[bin]<<", EF : "<<IC3yrHESE_y[bin]<<endl;
+
+    // cout << "tmp is " << tmp << "\n";
+    IC3yrHESE_x.at(bin)= log10(IC3yrHESE_x[bin]) + 9.; // in eV, log
+
+    IC3yrHESE_xl.at(bin) = log10(IC3yrHESE_xl[bin]) + 9.; // in eV, log
+
+    IC3yrHESE_xh.at(bin) = log10(IC3yrHESE_xh[bin]) + 9. ; // in eV, log
+    // cout<<"after, IC 3yr HESE at "<<IC3yrHESE_x[bin]<<", EF : "<<IC3yrHESE_y[bin]<<endl;
+
+
+    // to linear
+    IC3yrHESE_x.at(bin) = pow(10., IC3yrHESE_x[bin]);
+    IC3yrHESE_xl.at(bin) = pow(10., IC3yrHESE_xl[bin]);
+    IC3yrHESE_xh.at(bin) = pow(10., IC3yrHESE_xh[bin]);
+
+
+
+    // get difference
+    IC3yrHESE_xl.at(bin) = IC3yrHESE_x[bin] - IC3yrHESE_xl[bin];
+    IC3yrHESE_xh.at(bin) = IC3yrHESE_xh[bin] - IC3yrHESE_x[bin];
+
+    if (whichpub==1) {
+      if (IC3yrHESE_y[bin]==0)
+	IC3yrHESE_y.at(bin)=IC3yrHESE_yh[bin];
+
+    }
+    // calculate proper flux limit value (from x10^-8 in E^2F [GeV cm-2 s-1 sr-1] to EF)
+    IC3yrHESE_y.at(bin) = IC3yrHESE_y[bin]*1.e-8; // now in linear E^2F [GeV cm-2 s-1 sr-1]
+    // cout << "I'm here1.\n";
+    IC3yrHESE_yl.at(bin) = IC3yrHESE_yl[bin]*1.e-8; // now in linear E^2F [GeV cm-2 s-1 sr-1]
+    // cout << "I'm here2.\n";
+    // cout << "yh is " <<  IC3yrHESE_yh[bin] << "\n";
+    IC3yrHESE_yh.at(bin) = IC3yrHESE_yh[bin]*1.e-8; // now in linear E^2F [GeV cm-2 s-1 sr-1]
+    // cout<<"IC 3yr HESE at "<<IC3yrHESE_x[bin]<<", E^2F : "<<IC3yrHESE_y[bin]<<endl;
+
+
+
+    IC3yrHESE_y.at(bin) = IC3yrHESE_y[bin] / (IC3yrHESE_x[bin]/1.e9); // now in linear EF [cm-2 s-1 sr-1]
+    IC3yrHESE_yl.at(bin) = IC3yrHESE_yl[bin] / (IC3yrHESE_x[bin]/1.e9); // now in linear EF [cm-2 s-1 sr-1]
+    IC3yrHESE_yh.at(bin) = IC3yrHESE_yh[bin] / (IC3yrHESE_x[bin]/1.e9); // now in linear EF [cm-2 s-1 sr-1]
+
+
+    // get difference
+    if ( IC3yrHESE_yl[bin]== 0. ) {
+      IC3yrHESE_yl.at(bin) = IC3yrHESE_y[bin] - IC3yrHESE_y[bin]/IC3yrHESE_lowarrow;
+    }
+    else {
+      IC3yrHESE_yl.at(bin) = IC3yrHESE_y[bin] - IC3yrHESE_yl[bin];
+    }
+    IC3yrHESE_yh.at(bin) = IC3yrHESE_yh[bin] - IC3yrHESE_y[bin];
+
+
+    // apply flavor factor?
+    IC3yrHESE_y.at(bin) = IC3yrHESE_y[bin]*only_mu_to_all; // flavor factor
+    IC3yrHESE_yl.at(bin) = IC3yrHESE_yl[bin]*only_mu_to_all; // flavor factor
+    IC3yrHESE_yh.at(bin) = IC3yrHESE_yh[bin]*only_mu_to_all; // flavor factor
+
+
+
+
+    // find only H bins
+    if ( IC3yrHESE_yl[bin]== IC3yrHESE_y[bin] - IC3yrHESE_y[bin]/IC3yrHESE_lowarrow ) {
+      //if ( IC3yrHESE_yl[bin]==0) {
+
+      yh_count ++;
+
+      IC3yrHESE_h_x.push_back( IC3yrHESE_x[bin] );
+      IC3yrHESE_h_y.push_back( IC3yrHESE_y[bin] );
+      IC3yrHESE_h_yl.push_back( IC3yrHESE_yl[bin] );
+
+      IC3yrHESE_h_0.push_back( 0. );
+    }
+    else {
+
+      yhl_count ++;
+
+      IC3yrHESE_hl_x.push_back( IC3yrHESE_x[bin] );
+      IC3yrHESE_hl_y.push_back( IC3yrHESE_y[bin] );
+      IC3yrHESE_hl_yh.push_back( IC3yrHESE_yh[bin] );
+      IC3yrHESE_hl_yl.push_back( IC3yrHESE_yl[bin] );
+
+      IC3yrHESE_hl_0.push_back( 0. );
+    }
+
+
+  }
+
+  
+  TGraphAsymmErrors *g_IC_3yr_HESE_X = new TGraphAsymmErrors(IC3yrHESE_x.size(),&(IC3yrHESE_x[0]), &(IC3yrHESE_y[0]), &(IC3yrHESE_xl[0]), &(IC3yrHESE_xh[0]), &(IC3yrHESE_y0[0]), &(IC3yrHESE_y0[0]) ); // only x range bar
+
+  TGraphAsymmErrors *g_IC_3yr_HESE_HL = new TGraphAsymmErrors(IC3yrHESE_hl_x.size(), &(IC3yrHESE_hl_x[0]), &(IC3yrHESE_hl_y[0]), &(IC3yrHESE_hl_0[0]), &(IC3yrHESE_hl_0[0]), &(IC3yrHESE_hl_yl[0]), &(IC3yrHESE_hl_yh[0]) );
+
+  TGraphAsymmErrors *g_IC_3yr_HESE_H = new TGraphAsymmErrors(IC3yrHESE_h_x.size(), &(IC3yrHESE_h_x[0]), &(IC3yrHESE_h_y[0]), &(IC3yrHESE_h_0[0]), &(IC3yrHESE_h_0[0]), &(IC3yrHESE_h_yl[0]), &(IC3yrHESE_h_0[0]) );
+
+
+  g_IC_3yr_HESE_X->SetMarkerColor(kBlack);
+  g_IC_3yr_HESE_X->SetLineWidth(2);
+  g_IC_3yr_HESE_X->SetMarkerStyle(1);
+  g_IC_3yr_HESE_X->SetMarkerSize(2);
+  
+  g_IC_3yr_HESE_H->SetMarkerColor(kBlack);
+  g_IC_3yr_HESE_H->SetLineWidth(2);
+  g_IC_3yr_HESE_H->SetMarkerStyle(1);
+  g_IC_3yr_HESE_H->SetMarkerSize(2);
+  
+  g_IC_3yr_HESE_HL->SetMarkerColor(kBlack);
+  g_IC_3yr_HESE_HL->SetLineWidth(2);
+  g_IC_3yr_HESE_HL->SetMarkerStyle(1);
+  g_IC_3yr_HESE_HL->SetMarkerSize(2);
+  
+  return g_IC_3yr_HESE_X;
+
 }
