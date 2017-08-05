@@ -280,7 +280,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Only final tree", ONLYFINAL);
   getSetting("Max histogram entries", HIST_MAX_ENTRIES);
   getSetting("Random seed", SEED);
-  std::cout << "SEED is " << SEED << std::endl;
+  std::cout << "INITIAL SEED is " << SEED << std::endl;
   gRandom->SetSeed(SEED);
 
   getSetting("Write neutrino position", WRITEPOSFILE);
