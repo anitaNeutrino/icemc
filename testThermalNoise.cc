@@ -721,7 +721,7 @@ int main(int argc,  char **argv) {
   double average_altitude=0.;
   double average_rbn=0.;
 
-  TRandom r(settings1->SEED); // use seed set as input
+  //  TRandom r(settings1->SEED); // use seed set as input
 
   signal(SIGINT,  interrupt_signal_handler);     // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
 
@@ -739,6 +739,11 @@ int main(int argc,  char **argv) {
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
     
     eventNumber=(UInt_t)(run_no)*NNU+inu;
+    
+    // Set seed of all random number generators to be dependent on eventNumber
+    gRandom->SetSeed(eventNumber+6e7);
+    TRandom3 r(eventNumber+7e8);
+    anita1->fRand->SetSeed(eventNumber+8e9);
     
     anita1->passglobtrig[0]=0;
     anita1->passglobtrig[1]=0;
