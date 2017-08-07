@@ -129,7 +129,8 @@ int main(int argc,  char **argv) {
   string input="inputs.txt";
   string run_num;//current run number as string
   int run_no = 0;//current run number as integer
-
+  TString outputdir;
+  
   if( (argc%3!=1)&&(argc%2!=1)) {
     cout << "Syntax for options: -i inputfile -o outputdir -r run_number\n";
     return 0;
@@ -153,9 +154,9 @@ int main(int argc,  char **argv) {
         cout << "Changed input file to: " << input << endl;
         break;
       case 'o':
-        settings1->outputdir=optarg;
-        cout << "Changed output directory to: " << settings1->outputdir << endl;
-        stemp="mkdir " + settings1->outputdir;
+        outputdir=optarg;
+        cout << "Changed output directory to: " << outputdir.Data() << endl;
+        stemp="mkdir " + string(outputdir.Data());
         system(stemp.c_str());
         break;
       case 'e':
@@ -195,7 +196,7 @@ int main(int argc,  char **argv) {
   // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
   double vmmhz_em[Anita::NFREQ];
   
-  stemp=settings1->outputdir+"/output"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/output"+run_num+".txt";
   ofstream foutput(stemp.c_str(),  ios::app);
 
   int NNU;
@@ -211,7 +212,7 @@ int main(int argc,  char **argv) {
   gRandom->SetSeed(settings1->SEED);
 
   bn1->InitializeBalloon();
-  anita1->Initialize(settings1, foutput, inu);
+  anita1->Initialize(settings1, foutput, inu, outputdir);
 
   if (trig_thresh!=0)
     anita1->powerthreshold[4]=trig_thresh;
@@ -290,7 +291,7 @@ int main(int argc,  char **argv) {
 
 #ifdef ANITA_UTIL_EXISTS
 
-  string outputAnitaFile =settings1->outputdir+"/SimulatedAnitaEventFile"+run_num+".root";
+  string outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaEventFile"+run_num+".root";
   TFile *anitafileEvent = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *eventTree = new TTree("eventTree", "eventTree");
@@ -298,14 +299,14 @@ int main(int argc,  char **argv) {
   eventTree->Branch("run",               &run_no,   "run/I"   );
   eventTree->Branch("weight",            &weight,   "weight/D");
 
-  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaHeadFile"+run_num+".root";
+  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaHeadFile"+run_num+".root";
   TFile *anitafileHead = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *headTree = new TTree("headTree", "headTree");
   headTree->Branch("header",  &rawHeaderPtr           );
   headTree->Branch("weight",  &weight,      "weight/D");
 
-  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaGpsFile"+run_num+".root";
+  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaGpsFile"+run_num+".root";
   TFile *anitafileGps = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   UInt_t eventNumber;
@@ -317,7 +318,7 @@ int main(int argc,  char **argv) {
   AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();
 
 #ifdef ANITA3_EVENTREADER
-  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaTruthFile"+run_num+".root";
+  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");

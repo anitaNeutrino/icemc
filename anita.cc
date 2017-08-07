@@ -264,7 +264,7 @@ void Anita::SetNoise(Settings *settings1,Balloon *bn1,IceModel *antarctica) {
     
     
 }
-void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu)
+void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TString outputdir)
 {
     
     
@@ -358,7 +358,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu)
   getLabAttn(NPOINTS_LAB,freqlab,labattn);
     
 
-  getDiodeDataAndAttenuation(settings1);
+  getDiodeDataAndAttenuation(settings1, outputdir);
 
   if (PULSER==1) {
     getPulserData();
@@ -441,7 +441,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu)
   for (int i=0;i<5;i++) {
     gfreqdomain_rfcm_banding[i]->Draw("l");
   }
-  stemp=settings1->outputdir+"/freqdomainplots.eps";
+  stemp=string(outputdir.Data())+"/freqdomainplots.eps";
   cfreq->Print((TString)stemp);
     
     
@@ -460,7 +460,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu)
   }
     
   double sumpower=0.;
-  stemp=settings1->outputdir+"/forandres.txt";
+  stemp=string(outputdir.Data())+"/forandres.txt";
   ofstream fforandres(stemp.c_str());
   for (int j=0;j<5;j++) {
     sumpower=0.;
@@ -553,7 +553,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu)
     gtest[i]=new TGraph(NFOUR,time_long,timedomain_output[i]);
     gtest[i]->Draw("al");
   }
-  stemp = settings1->outputdir+"/test.eps";
+  stemp = string(outputdir.Data())+"/test.eps";
   ctest->Print((TString)stemp);
     
   for (int j=0;j<5;j++) {
@@ -713,14 +713,14 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu)
     }
 	
   }
-  stemp=settings1->outputdir+"/hnoise.eps";
+  stemp=string(outputdir.Data())+"/hnoise.eps";
   c4->Print((TString)stemp);
     
-  string stemp=settings1->outputdir+"/signals.root";
+  string stemp=string(outputdir.Data())+"/signals.root";
   fsignals=new TFile(stemp.c_str(),"RECREATE");
   tsignals=new TTree("tsignals","tsignals");
     
-  stemp=settings1->outputdir+"/data.root";
+  stemp=string(outputdir.Data())+"/data.root";
   fdata=new TFile(stemp.c_str(),"RECREATE");
   tdata=new TTree("tdata","tdata");
     
@@ -997,7 +997,7 @@ void Anita::readAmplification(){
 
 
 
-void Anita::getDiodeDataAndAttenuation(Settings *settings1){
+void Anita::getDiodeDataAndAttenuation(Settings *settings1, TString outputdir){
 
   // get vnoise data
   string sdiode;
@@ -1066,7 +1066,7 @@ void Anita::getDiodeDataAndAttenuation(Settings *settings1){
   cdiode->cd(2);
   gdiode->Draw("al");
     
-  stemp=settings1->outputdir+"/diode.eps";
+  stemp=string(outputdir.Data())+"/diode.eps";
   cdiode->Print((TString)stemp);
     
   tdiode->SetBranchAddress("avgfreqdomain_lab",&(avgfreqdomain_lab[0]));
@@ -1123,7 +1123,7 @@ void Anita::getDiodeDataAndAttenuation(Settings *settings1){
   for (int i=0;i<5;i++) {
     gcorr[i]->Draw("l");
   }
-  stemp=settings1->outputdir+"/bands.eps";
+  stemp=string(outputdir.Data())+"/bands.eps";
   cbands->Print((TString)stemp);
     
     

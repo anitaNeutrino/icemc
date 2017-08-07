@@ -459,7 +459,8 @@ int main(int argc,  char **argv) {
   string input="inputs.txt";
   string run_num;//current run number as string
   int run_no = 0;//current run number as integer
-
+  TString outputdir;
+  
   if( (argc%3!=1)&&(argc%2!=1)) {
     cout << "Syntax for options: -i inputfile -o outputdir -r run_number\n";
     return 0;
@@ -483,9 +484,9 @@ int main(int argc,  char **argv) {
         cout << "Changed input file to: " << input << endl;
         break;
       case 'o':
-        settings1->outputdir=optarg;
-        cout << "Changed output directory to: " << settings1->outputdir << endl;
-        stemp="mkdir -p " + settings1->outputdir;
+        outputdir=optarg;
+        cout << "Changed output directory to: " << string(outputdir.Data()) << endl;
+        stemp="mkdir -p " + string(outputdir.Data());
         system(stemp.c_str());
         break;
       case 'r':
@@ -505,37 +506,37 @@ int main(int argc,  char **argv) {
   TRandom3 *Rand3 = new TRandom3(settings1->SEED);//for generating random numbers
   gRandom=Rand3;
 
-  stemp=settings1->outputdir+"/nu_position"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/nu_position"+run_num+".txt";
   ofstream nu_out(stemp.c_str(),  ios::app); //Positions,  direction of momentum,  and neutrino type for Ryan.
 
-  stemp=settings1->outputdir+"/veff"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/veff"+run_num+".txt";
   ofstream veff_out(stemp.c_str(),  ios::app);//to output only energy and effective volume to veff.txt
 
-  stemp=settings1->outputdir+"/distance"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/distance"+run_num+".txt";
   ofstream distanceout(stemp.c_str());
 
-  stemp=settings1->outputdir+"/debug"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/debug"+run_num+".txt";
   fstream outfile(stemp.c_str(), ios::out);
 
-  stemp=settings1->outputdir+"/forbrian"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/forbrian"+run_num+".txt";
   fstream forbrian(stemp.c_str(), ios::out);
 
-  stemp=settings1->outputdir+"/al_voltages_direct"+run_num+".dat";
+  stemp=string(outputdir.Data())+"/al_voltages_direct"+run_num+".dat";
   fstream al_voltages_direct(stemp.c_str(), ios::out); //added djg ------provide anita-lite voltages and noise from MC for anita-lite analysis
 
-  stemp=settings1->outputdir+"/events"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/events"+run_num+".txt";
   ofstream eventsthatpassfile(stemp.c_str());
 
-  stemp=settings1->outputdir+"/numbers"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/numbers"+run_num+".txt";
   ofstream fnumbers(stemp.c_str()); // debugging
 
-  stemp=settings1->outputdir+"/output"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/output"+run_num+".txt";
   ofstream foutput(stemp.c_str(),  ios::app);
 
-  stemp=settings1->outputdir+"/slacviewangles"+run_num+".dat";
+  stemp=string(outputdir.Data())+"/slacviewangles"+run_num+".dat";
   ofstream fslac_viewangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
 
-  stemp=settings1->outputdir+"/slac_hitangles"+run_num+".dat";
+  stemp=string(outputdir.Data())+"/slac_hitangles"+run_num+".dat";
   ofstream fslac_hitangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
 
   Balloon *bn1=new Balloon(); // instance of the balloon
@@ -552,7 +553,7 @@ int main(int argc,  char **argv) {
   gRandom->SetSeed(settings1->SEED);
 
   bn1->InitializeBalloon();
-  anita1->Initialize(settings1, foutput, inu);
+  anita1->Initialize(settings1, foutput, inu, outputdir);
 
   if (nnu_tmp!=0)
     NNU=nnu_tmp;
@@ -654,7 +655,7 @@ int main(int argc,  char **argv) {
 
 #ifdef ANITA_UTIL_EXISTS
 
-  string outputAnitaFile =settings1->outputdir+"/SimulatedAnitaEventFile"+run_num+".root";
+  string outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaEventFile"+run_num+".root";
   TFile *anitafileEvent = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *eventTree = new TTree("eventTree", "eventTree");
@@ -662,14 +663,14 @@ int main(int argc,  char **argv) {
   eventTree->Branch("run",               &run_no,   "run/I"   );
   eventTree->Branch("weight",            &weight,   "weight/D");
 
-  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaHeadFile"+run_num+".root";
+  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaHeadFile"+run_num+".root";
   TFile *anitafileHead = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *headTree = new TTree("headTree", "headTree");
   headTree->Branch("header",  &rawHeaderPtr           );
   headTree->Branch("weight",  &weight,      "weight/D");
 
-  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaGpsFile"+run_num+".root";
+  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaGpsFile"+run_num+".root";
   TFile *anitafileGps = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *adu5PatTree = new TTree("adu5PatTree", "adu5PatTree");
@@ -682,7 +683,7 @@ int main(int argc,  char **argv) {
   // Set AnitaVersion so that the right payload geometry is used
   AnitaVersion::set(settings1->ANITAVERSION);
   
-  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaTruthFile"+run_num+".root";
+  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");

@@ -91,11 +91,11 @@ public:
 
   Anita(); // constructor
   ~Anita();
-  void Initialize(Settings *settings1,ofstream &foutput,int inu);                                                ///< initialize a bunch of stuff
+  void Initialize(Settings *settings1,ofstream &foutput,int inu, TString outputdir);                                                ///< initialize a bunch of stuff
   void initializeFixedPowerThresholds(ofstream &foutput);
   void readVariableThresholds(Settings *settings1);
   void readAmplification();
-  void getDiodeDataAndAttenuation(Settings *settings1);
+  void getDiodeDataAndAttenuation(Settings *settings1, TString outputdir);
   void getPulserData();
   
   // takes arrays that span NFREQ and turn them into arrays that span HALFNFOUR

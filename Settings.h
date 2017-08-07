@@ -18,20 +18,27 @@ using std::ifstream;
 using std::ofstream;
 
 #include "TString.h"
+#include <TObject.h>
 #include <map>
 
+// from RVersion.h
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
+#include "TClingRuntime.h"
+#else
+#include "TCint.h"
+#endif
 
 //! Reads in and stores input settings for the run
 
-
-class Settings {
-
-protected:
+class Settings : public TObject {
 
 
-public:
+  /* protected:  */
+
+ public:
 
   Settings();
+  ~Settings(); 
   void Initialize();
   void printAllKeyValuePairStrings();
 
@@ -116,7 +123,6 @@ public:
   double SLOPEYSIZE; // This determines size of the slopeyness (0.10=5.4, 0.20=7.4 deg mean)
 
   bool DEBUG;
-  string outputdir; // directory where outputs go
 
   //double THERMALNOISE_FACTOR=1.0; // factor to multiply thermal noise for error analysis
   double THERMALNOISE_FACTOR; // factor to multiply thermal noise for error analysis
@@ -206,8 +212,11 @@ public:
 
   int TUFFSON;                             // Are the TUFFs on for the whole flight?
 
+  //  TString outputdir; // directory where outputs go
   
-private:
+  ClassDef(Settings,1);
+  
+ private:
   typedef std::map<TString, TString> kvpMap;
 
   kvpMap keyValuePairStrings; //< The raw key value pairs as string, from parsing the config file
@@ -218,5 +227,6 @@ private:
   void parseValueArray(const char* valueString, std::vector<double>& values);
   void parseSettingsFile(const char* fileName, std::ofstream& outputFile);
 
+  
 };
 #endif
