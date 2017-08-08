@@ -546,7 +546,8 @@ int main(int argc,  char **argv) {
   Counting *count1=new Counting();
 
   // input parameters
-  settings1->ReadInputs(input.c_str(),  foutput,  anita1,  sec1,  sig1,  bn1,  ray1, NNU, RANDOMISEPOL);
+  settings1->ReadInputs(input.c_str(),  foutput, NNU, RANDOMISEPOL);
+  settings1->ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
   
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);

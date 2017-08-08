@@ -275,8 +275,6 @@ public:
 
   TH1F *hsignals[5];                                                                                          ///< s/n (max diode output/mean diode output) for vertical polarization in each band
 
-  int PULSER;
-
   double f_pulser[NFOUR/4];
   double f_phases[NFOUR/4];
   double f_noise[NFOUR/4];
@@ -452,7 +450,7 @@ public:
   double MIN_THETA_HYPOTHESIS;
   double MAX_THETA_HYPOTHESIS;
 
-
+  int PULSER;
 
   int NTRIGGERLAYERS; // number of layers considered by the trigger.  may be different from nlayers, the number of physical layers on the payload.
   // In Anita 1 and Anita 2, the number of physical layers were 3 while the number of trigger layers were 2.
@@ -577,7 +575,6 @@ public:
   double VNOISE_ANITALITE[NPHI_MAX]; // noise for each antenna, for the anita-lite trigger configuration.
   double INCLINE_TOPTHREE; // cant angle of top three layers of antennas
   double INCLINE_NADIR; // cant angle of nadir (bottom) layer of antennas
-  double INCLUDE_NADIRONLY; // cant angle of nadir (bottom) layer of antennas
   double LIVETIME;
 
   double SIGMA_THETA; // resolution on the polar angle of the signal

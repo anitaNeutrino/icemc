@@ -44,8 +44,9 @@ int main(){
   // input parameters
   int NNU;
   double RANDOMISEPOL;
-  s.ReadInputs("inputs.anita3.conf", outputsFile,  anita1,  sec1,  sig1,  bn1,  ray1, NNU, RANDOMISEPOL);
 
+  s.ReadInputs("inputs.anita3.conf",  outputsFile, NNU, RANDOMISEPOL);
+  s.ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
 
 
 

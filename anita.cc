@@ -63,7 +63,6 @@ Anita::Anita() {
   Tools::Zero(VNOISE_ANITALITE,16);
   INCLINE_TOPTHREE = 10.; // cant angle of top three layers of antennas
   INCLINE_NADIR = 10.; // cant angle of nadir (bottom) layer of antennas
-  INCLUDE_NADIRONLY = 0.; // cant angle of nadir (bottom) layer of antennas
   SIGMA_THETA=0.5*RADDEG; // resolution on the polar angle of the signal
     
   FREQ_LOW=0.;//200.E6;
@@ -360,7 +359,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu)
 
   getDiodeDataAndAttenuation(settings1);
 
-  if (PULSER==1) {
+  if (settings1->PULSER==1) {
     getPulserData();
   } 
     

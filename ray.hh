@@ -31,7 +31,6 @@ public:
     Ray();
     void Initialize();
     
-    int MAKEVERTICAL; // option in the input file to force the signal to hit the payload with completely vertical polarisation.  For making signal efficiency curves.
     Vector n_exit2bn[5]; // normal vector in direction of exit point to balloon - 5 iterations, 3 directions for each 
     Vector nsurf_rfexit; // normal of the surface at the place where the rf leaves
     Vector nsurf_rfexit_db;

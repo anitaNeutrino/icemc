@@ -1704,7 +1704,6 @@ void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
     for (int i=0;i<fNumPoints;i++){
       volts_rx_forfft[0][4][i]=tmp_volts[0][i];
       volts_rx_forfft[1][4][i]=tmp_volts[1][i];
-      // if (norm>0) cout << i*anita1->TIMESTEP << " " << volts_rx_forfft[0][4][i] << endl;
     }
 
     // find back the frequency domain

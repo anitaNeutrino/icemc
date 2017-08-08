@@ -43,8 +43,11 @@ public:
   void getSetting(const char* key, std::vector<float>& valueArray);
   void getSetting(const char* key, std::vector<double>& valueArray);
 
-  void ReadInputs(const char* fileName , ofstream &foutput, Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1, int& NNU, double& RANDOMISEPOL);
+  void ReadInputs(const char* fileName , ofstream &foutput,
+		  // Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1,
+		  int& NNU, double& RANDOMISEPOL);
 
+  void ApplyInputs(Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1);
 
 
   int UNBIASED_SELECTION;
@@ -60,9 +63,40 @@ public:
   int ZEROSIGNAL;  // zero the signal to see how many of our hits are noise hits
   int REMOVEPOLARIZATION; //Disable polarizations
 
+  double INCLINE_TOPTHREE;
+  double INCLINE_NADIR;
+  int GAINS;
+  int BANDING;
+  int NBANDS;
+  int PERCENTBW; 
+  int trigRequirements[4];//  0th element - L1 - how many channels per antenna should pass
+  // 1st element- L2 - how many antennas on a layer
+  // 2nd element - L3 - how many L2 triggers should be coincident
+  int REQUIRE_CENTRE; // require centre antenna in clump to be one of those hit
+  double INCLUDE_NADIRONLY; // cant angle of nadir (bottom) layer of antennas
+  int PULSER;
+  double SIGMA_THETA; // resolution on the polar angle of the signal
+  double FREQ_LOW;       ///< lowest frequency
+  double FREQ_HIGH;
+  
+  int SECONDARIES;
+  int TAUDECAY; // is tau decay counted as a secondary interaction
+
+  int trigEffScanPhi;                      // central phi sector of trigger efficiency scan
+
+  
+  int WHICHPATH;
+  int BN_LATITUDE;
+  int BN_LONGITUDE;
+  int BN_ALTITUDE;
+  int RANDOMIZE_BN_ORIENTATION;
+  int CENTER;                                                                ///< whether or not to center one phi sector of the payload on the incoming signal (for making signal efficiency curves)
+  double MAXHORIZON;
+  
   int EVENTSMAP;//whether draw the events distribution map
 
   int WHICHRAYS;  // how many rays to look at (1) direct only (2) direct and down-going.
+  int MAKEVERTICAL; // option in the input file to force the signal to hit the payload with completely vertical polarisation.  For making signal efficiency curves.
 
   // trigger
   int LCPRCP; // 1 for circular polarization trigger, 0 for V and H
@@ -139,15 +173,6 @@ public:
   int ROUGHSCREENFRAC_SUB;        // fraction threshold for ratio of minimum Efield to maximum Efield magnitude for the subgrids
   int ROUGHMAXGEN;                // number of maximum generations (inclusive)
 
-  /* int ICE_MODEL=0; //Select ice model to be used.  0 = Crust 2.0 , 1 = BEDMAP. */
-  /* int NOFZ=1; // 1=depth dependent index of refraction,0=off */
-  /* int CONSTANTCRUST=0; // set crust density and thickness to constant values. */
-  /* int CONSTANTICETHICKNESS=0; // set ice thickness to constant value */
-  /* int FIXEDELEVATION=0; // fix the elevation to the thickness of ice. */
-  /* int MOOREBAY=0; //1=use Moore's Bay measured ice field attenuation length for the west land, otherwise use South Pole data */
-  /* int USEPOSITIONWEIGHTS=1;// whether or not to restrict the neutrino position so it is within the horizon of the balloon */
-  /* int WRITE_FILE=0; //Select whether or not to write a new input file for CreateHorizons */
-
   int ICE_MODEL; //Select ice model to be used.  0 = Crust 2.0 , 1 = BEDMAP.
   int NOFZ; // 1=depth dependent index of refraction,0=off
   int CONSTANTCRUST; // set crust density and thickness to constant values.
@@ -206,7 +231,11 @@ public:
 
   int TUFFSON;                             // Are the TUFFs on for the whole flight?
 
-  
+  int useLPM;
+  double jamieFactor = 0;
+  int medium = 0;
+  int askaryanParameterization = 0;
+    
 private:
   typedef std::map<TString, TString> kvpMap;
 
@@ -218,5 +247,17 @@ private:
   void parseValueArray(const char* valueString, std::vector<double>& values);
   void parseSettingsFile(const char* fileName, std::ofstream& outputFile);
 
+
+  
+  std::vector<double> effiencyScanOffAxisAttenuations;
+  std::vector<int> whichTUFFsON;
+  std::vector<double> tempThresholds;  
+  std::vector<double> bandLowEdgesMHz;
+  std::vector<double> bandHighEdgesMHz;
+  std::vector<int> requiredBands;
+  std::vector<int> allowedBands;
+  std::vector<double> notchFilterLimitsMHz;
+  std::vector<int> channelRequirePol;
+  std::vector<int> channelAllowedPol;
 };
 #endif

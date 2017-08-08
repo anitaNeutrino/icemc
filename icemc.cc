@@ -565,7 +565,8 @@ int main(int argc,  char **argv) {
   GlobalTrigger *globaltrig1;
   Taumodel *taus1 = new Taumodel();
   // input parameters
-  settings1->ReadInputs(input.c_str(),  foutput,  anita1,  sec1,  sig1,  bn1,  ray1, NNU, RANDOMISEPOL);
+  settings1->ReadInputs(input.c_str(),  foutput, NNU, RANDOMISEPOL);
+  settings1->ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
 
 
   settings1->SEED=settings1->SEED + run_no;
@@ -2735,11 +2736,11 @@ int main(int argc,  char **argv) {
           IntegrateBands(anita1, k, panel1, anita1->freq, bn1->r_bn.Distance(interaction1->posnu)/1.E6, sumsignal);
       }//end if whichpath==4
 
-      if (bn1->CENTER){
+      if (settings1->CENTER){
         bn1->CenterPayload(hitangle_e);
       }
 
-      if (ray1->MAKEVERTICAL) {
+      if (settings1->MAKEVERTICAL) {
         n_pol=bn1->n_bn;
         // rotate n_exit2bn too
         // rotation axis n_bn crossed with n_exit2bn
