@@ -16,17 +16,9 @@ void tempLimit(){
   
   TGraph *g_ANITA_2_erratum = getANITA2erratum();
   
-  // Double_t ANITA_4_effArea[n_ANITA] = { 0.00153,      // E18     in km^2  
-  // 					0.04991,      // E18.5		  
-  // 					0.53408,      // E19    	  
-  // 					2.98348,      // E19.5		  
-  // 					13.02480,     // E20		  
-  // 					41.35640,     // E20.5		  
-  // 					107.672 };    // E21
-
-  // Numbers with threshold divided by sqrt(2)
-  Double_t ANITA_4_effArea[n_ANITA] = {  0.00104,       // E18     in km^2  
-					 0.04894,      // E18.5		  
+  // Numbers with threshold divided by sqrt(2) and TUFFs
+  Double_t ANITA_4_effArea[n_ANITA] = {  0.00194,       // E18     in km^2  
+					 0.0376,      // E18.5		  
 					 0.62948,      // E19    	  
 					 3.47982,      // E19.5		  
 					 14.65220,     // E20		  
@@ -65,7 +57,8 @@ void tempLimit(){
 
   double ANITA_2_eff[n_ANITA] = { 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8};
 
-  double ANITA_2_livetime = 28.5*24*3600.; // 17.4 days
+  double ANITA_2_livetime = 28.5*24*3600.; 
+  double ANITA_1_livetime = 17.4*24*3600.;
   
   TGraph *g_ANITA_2 = getLimit(ANITA_2_effArea, ANITA_2_eff, ANITA_2_livetime);
   g_ANITA_2->SetLineColor(kRed);
@@ -73,13 +66,13 @@ void tempLimit(){
 
 
   double ANITA_all_effArea[n_ANITA];
-  double ANITA_all_livetime = 99.3*24*3600.;
+  double ANITA_all_livetime = ANITA_1_livetime+ANITA_2_livetime+ANITA_3_livetime+ANITA_4_livetime;
   for (int ibin=0; ibin<n_ANITA; ibin++){
     ANITA_all_effArea[ibin] = (
-      ANITA_2_livetime*ANITA_2_effArea[ibin] +
-      ANITA_3_livetime*ANITA_3_effArea[ibin] +
-      ANITA_4_livetime*ANITA_4_effArea[ibin]
-			       )/(ANITA_2_livetime+ANITA_3_livetime+ANITA_4_livetime);
+			       (ANITA_1_livetime+ANITA_2_livetime)*ANITA_2_effArea[ibin] +
+			       ANITA_3_livetime*ANITA_3_effArea[ibin] +
+			       ANITA_4_livetime*ANITA_4_effArea[ibin]
+			       )/(ANITA_all_livetime);
   }
 
 

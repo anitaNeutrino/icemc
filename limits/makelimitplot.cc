@@ -3248,32 +3248,58 @@ void MakePlot() {
   Double_t ANITA_all_y[n_ANITA_4];
   Double_t ANITA_4_y_low[n_ANITA_4];
   Double_t ANITA_4_y_high[n_ANITA_4];  
-  Double_t ANITA_4_effArea[n_ANITA_4] = { 0.00153,      // E18     in km^2
-					  0.04991,      // E18.5
-					  0.53408,      // E19    
-					  2.98348,      // E19.5
-					  13.02480,     // E20
-					  41.35640,     // E20.5
-					  107.672 };    // E21
-  
-   // double ANITA_4_effArea[n_ANITA_4] = {  141.795 ,   // E19
-   // 				         558.455 ,   // E19.5
-   // 					 1739.91 ,   // E20
-   // 					 3985.39 ,   // E20.5
-   // 					 7557.76};   // E21
-  
+
+  Double_t ANITA_4_effArea[n_ANITA_4] = {  0.00194,       // E18     in km^2  
+					 0.0376,      // E18.5		  
+					 0.62948,      // E19    	  
+					 3.47982,      // E19.5		  
+					 14.65220,     // E20		  
+					 47.48070,     // E20.5		  
+					117.02800 };    // E21   
+
   double ANITA_4_anaEff  = 0.8;
   
   double N90 = 2.30; 
   double ANITA_4_livetime = 27.3*24*3600; // //27.3*24*3600; // 27.3 days
-  double ANITA_all_livetime = 99.3*24*3600.;
+
+
+  Double_t ANITA_3_effArea[n_ANITA_4] = { 0.00160,      // E18     in km^2  
+					0.03451,      // E18.5		  
+					0.34288,      // E19    	  
+					1.75735,      // E19.5		  
+					7.14396,      // E20		  
+					22.77670,     // E20.5		  
+					58.72190};    // E21
   
+  Double_t ANITA_2_effArea[n_ANITA_4] = { 0.00029 ,      // E18     in km^2  
+					0.02121 ,      // E18.5		  
+					0.22009 ,      // E19    	  
+					1.27190 ,      // E19.5		  
+					6.38188 ,      // E20		  
+					18.45390 ,     // E20.5		  
+					52.53270 };    // E21              
+  
+  double ANITA_all_effArea[n_ANITA_4];
+  
+  double ANITA_1_livetime = 17.4*24*3600.;
+  double ANITA_2_livetime = 28.5*24*3600.;
+  double ANITA_3_livetime = 17.4*24*3600.; // 17.4 days
+  double ANITA_all_livetime = ANITA_1_livetime+ANITA_2_livetime+ANITA_3_livetime+ANITA_4_livetime;
+  for (int ibin=0; ibin<n_ANITA_4; ibin++){
+    ANITA_all_effArea[ibin] = (
+			       (ANITA_1_livetime+ANITA_2_livetime)*ANITA_2_effArea[ibin] +
+			       ANITA_3_livetime*ANITA_3_effArea[ibin] +
+			       ANITA_4_livetime*ANITA_4_effArea[ibin]
+			       )/(ANITA_all_livetime);
+  }
+
   std::cout << "HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEERE===========================================" << std::endl;
 
   for (int i=0; i<n_ANITA_4; i++){
 
     // convert km^2 in cm^2
     ANITA_4_effArea[i]*=1e10;
+    ANITA_all_effArea[i]*=1e10;
     
     ANITA_4_y[i] = N90/(ANITA_4_effArea[i]*ANITA_4_livetime*ANITA_4_anaEff*TMath::Log(10.));
     
@@ -3281,8 +3307,15 @@ void MakePlot() {
     
     // Divide by 4 
     ANITA_4_y[i] /= 4.;
-    ANITA_all_y[i] = ANITA_4_y[i]*ANITA_4_livetime/ANITA_all_livetime;
+    
+    ANITA_all_y[i] = N90/(ANITA_all_effArea[i]*ANITA_all_livetime*ANITA_4_anaEff*TMath::Log(10.));
 
+    
+    ANITA_all_y[i] *= TMath::Power(10, ANITA_4_x[i])/(TMath::Power(10, ANITA_4_x[i]+0.25) - TMath::Power(10, ANITA_4_x[i]-0.25));
+    
+    // Divide by 4 
+    ANITA_all_y[i] /= 4.;
+    
     ANITA_4_y_low[i]  = ANITA_4_y[i]*0.5;
     ANITA_4_y_high[i] = ANITA_4_y[i]*1.5;
     
@@ -5817,14 +5850,14 @@ void MakePlot() {
 
 
   //  g_ANITA->SetLineColor(36);
-  g_ANITA_4->SetLineColor(kMagenta);
+  g_ANITA_4->SetLineColor(kBlue);
   g_ANITA_4->SetLineWidth(3);
   g_ANITA_4->SetLineStyle(2);
   g_ANITA_4->Draw("l");
   //g_ANITA_4_shade->Draw("l");
 
 
-  g_ANITA_all->SetLineColor(kBlue);
+  g_ANITA_all->SetLineColor(kMagenta);
   g_ANITA_all->SetLineWidth(3);
   g_ANITA_all->SetLineStyle(2);
   g_ANITA_all->Draw("l");
@@ -6138,7 +6171,7 @@ void MakePlot() {
   //Leg_Const_2 -> AddEntry(g_ANITA, "ANITA II", "lp");
   Leg_Const_2 -> AddEntry(g_ANITA_erratum, "ANITA 2 '10 (28.5 days)", "lp");
   Leg_Const_2 -> AddEntry(g_NuMoon2014, "NuMoon '10 (47.6 hrs) ", "lp");
-  Leg_Const_2 -> AddEntry(g_ANITA_4, "ANITA-4 '17 (27.3 days)", "lp");
+  Leg_Const_2 -> AddEntry(g_ANITA_4, "ANITA-4 sensitivity (27.3 days)", "lp");
   Leg_Const_2 -> AddEntry(g_ANITA_all, "ANITA 1-4 sensitivity (99.3 days)", "l");//27.3 days)", "lf");
 
   //Leg_Const_2_2 -> AddEntry(g_Auger, "Auger '09", "lp");
