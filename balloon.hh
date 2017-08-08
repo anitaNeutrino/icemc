@@ -61,7 +61,6 @@ public:
   unsigned short surfTrigBandMask[9][2];                                     ///< Ryan's 16 bit masks for 9 surfs.  2x16 bit masks gives 32 channels per surf
   float powerthresh[9][32];                                                  ///< power threshold in Watts
   float meanp[9][32];                                                        ///< mean power in Watts
-  int CENTER;                                                                ///< whether or not to center one phi sector of the payload on the incoming signal (for making signal efficiency curves)
   double altitude_bn;
   double theta_bn;
   double phi_bn;                                                             ///< theta,phi of balloon wrt south pole
