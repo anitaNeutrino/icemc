@@ -1556,10 +1556,8 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
 
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
-    //    double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
       y[i]=newy[i] + justNoise_digPath[ipol][i]*anita1->THERMALNOISE_FACTOR;
-      // std::cout << justNoise[i] << std::endl;
     }
   } else {
     for (int i=0;i<nPoints;i++)  y[i]=newy[i];
@@ -1617,7 +1615,6 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
 
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
-    //    double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
       y[i] = voltsArray[i] = newy[i] + justNoise_trigPath[ipol][i]*anita1->THERMALNOISE_FACTOR;
       //  std::cout << i << " " << justNoise_trigPath[ipol][i] << std::endl;
@@ -1684,8 +1681,6 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
   // Cleaning up
   delete[] phasors;
   
-    
-  // return justNoise;
   
 }
 
