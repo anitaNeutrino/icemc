@@ -267,5 +267,6 @@ class Settings : public TObject {
   std::vector<double> notchFilterLimitsMHz;
   std::vector<int> channelRequirePol;
   std::vector<int> channelAllowedPol;
+
 };
 #endif
