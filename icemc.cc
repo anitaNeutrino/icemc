@@ -95,11 +95,13 @@ Taumodel* TauPtr = NULL;
 const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
 
 ClassImp(RX);
+ClassImp(Settings);
 
 using namespace std;
 
 class EarthModel;
 class Position;
+class Settings;
 
 /************MOVED FROM shared.hh and shared.cc*****************/
 // These need to be moved elsewhere.
@@ -417,7 +419,7 @@ void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  S
 
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&);
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
 
 void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  string,  string,  double,  ofstream &nu_out);
 
@@ -480,6 +482,7 @@ int main(int argc,  char **argv) {
   int nnu_tmp=0;
   double exp_tmp=0;
   double trig_thresh=0.;
+  TString outputdir;
   char clswitch; // command line switch
   if (argc>1) {
     while ((clswitch = getopt(argc, argv, "t:i:o:r:n:e:")) != EOF) {
@@ -496,9 +499,9 @@ int main(int argc,  char **argv) {
         cout << "Changed input file to: " << input << endl;
         break;
       case 'o':
-        settings1->outputdir=optarg;
-        cout << "Changed output directory to: " << settings1->outputdir << endl;
-        stemp="mkdir -p " + settings1->outputdir;
+        outputdir=optarg;
+        cout << "Changed output directory to: " << string(outputdir.Data()) << endl;
+        stemp="mkdir -p " + string(outputdir.Data());
         system(stemp.c_str());
         break;
       case 'e':
@@ -522,37 +525,37 @@ int main(int argc,  char **argv) {
   TRandom3 *Rand3 = new TRandom3(settings1->SEED);//for generating random numbers
   gRandom=Rand3;
 
-  stemp=settings1->outputdir+"/nu_position"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/nu_position"+run_num+".txt";
   ofstream nu_out(stemp.c_str(),  ios::app); //Positions,  direction of momentum,  and neutrino type for Ryan.
 
-  stemp=settings1->outputdir+"/veff"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/veff"+run_num+".txt";
   ofstream veff_out(stemp.c_str(),  ios::app);//to output only energy and effective volume to veff.txt
 
-  stemp=settings1->outputdir+"/distance"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/distance"+run_num+".txt";
   ofstream distanceout(stemp.c_str());
 
-  stemp=settings1->outputdir+"/debug"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/debug"+run_num+".txt";
   fstream outfile(stemp.c_str(), ios::out);
 
-  stemp=settings1->outputdir+"/forbrian"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/forbrian"+run_num+".txt";
   fstream forbrian(stemp.c_str(), ios::out);
 
-  stemp=settings1->outputdir+"/al_voltages_direct"+run_num+".dat";
+  stemp=string(outputdir.Data())+"/al_voltages_direct"+run_num+".dat";
   fstream al_voltages_direct(stemp.c_str(), ios::out); //added djg ------provide anita-lite voltages and noise from MC for anita-lite analysis
 
-  stemp=settings1->outputdir+"/events"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/events"+run_num+".txt";
   ofstream eventsthatpassfile(stemp.c_str());
 
-  stemp=settings1->outputdir+"/numbers"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/numbers"+run_num+".txt";
   ofstream fnumbers(stemp.c_str()); // debugging
 
-  stemp=settings1->outputdir+"/output"+run_num+".txt";
+  stemp=string(outputdir.Data())+"/output"+run_num+".txt";
   ofstream foutput(stemp.c_str(),  ios::app);
 
-  stemp=settings1->outputdir+"/slacviewangles"+run_num+".dat";
+  stemp=string(outputdir.Data())+"/slacviewangles"+run_num+".dat";
   ofstream fslac_viewangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
 
-  stemp=settings1->outputdir+"/slac_hitangles"+run_num+".dat";
+  stemp=string(outputdir.Data())+"/slac_hitangles"+run_num+".dat";
   ofstream fslac_hitangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
 
   Balloon *bn1=new Balloon(); // instance of the balloon
@@ -573,7 +576,7 @@ int main(int argc,  char **argv) {
   gRandom->SetSeed(settings1->SEED);
 
   bn1->InitializeBalloon();
-  anita1->Initialize(settings1, foutput, inu);
+  anita1->Initialize(settings1, foutput, inu, outputdir);
 
   if (trig_thresh!=0)
     anita1->powerthreshold[4]=trig_thresh;
@@ -818,7 +821,7 @@ int main(int argc,  char **argv) {
   //them in this histogram,
 
   //to determine where the cut should be.
-  stemp=settings1->outputdir+"/icefinal"+run_num+".root";
+  stemp=string(outputdir.Data())+"/icefinal"+run_num+".root";
   TFile *hfile = new TFile(stemp.c_str(), "RECREATE", "ice");
   TTree *tree2 = new TTree("h2000", "h2000"); // tree2 filled for each event that is beyond the horizon.
 
@@ -1252,7 +1255,7 @@ int main(int argc,  char **argv) {
 
 #ifdef ANITA_UTIL_EXISTS
 
-  string outputAnitaFile =settings1->outputdir+"/SimulatedAnitaEventFile"+run_num+".root";
+  string outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaEventFile"+run_num+".root";
   TFile *anitafileEvent = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *eventTree = new TTree("eventTree", "eventTree");
@@ -1260,14 +1263,14 @@ int main(int argc,  char **argv) {
   eventTree->Branch("run",               &run_no,   "run/I"   );
   eventTree->Branch("weight",            &weight,   "weight/D");
 
-  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaHeadFile"+run_num+".root";
+  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaHeadFile"+run_num+".root";
   TFile *anitafileHead = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree *headTree = new TTree("headTree", "headTree");
   headTree->Branch("header",  &rawHeaderPtr           );
   headTree->Branch("weight",  &weight,      "weight/D");
 
-  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaGpsFile"+run_num+".root";
+  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaGpsFile"+run_num+".root";
   TFile *anitafileGps = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   UInt_t eventNumber;
@@ -1281,11 +1284,16 @@ int main(int argc,  char **argv) {
   // Set AnitaVersion so that the right payload geometry is used
   AnitaVersion::set(settings1->ANITAVERSION);
   
-  outputAnitaFile =settings1->outputdir+"/SimulatedAnitaTruthFile"+run_num+".root";
+  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
+  TTree *configAnitaTree = new TTree("configIcemcTree", "Config file and settings information");
+  configAnitaTree->Branch("settings",  &settings1                    );
+  configAnitaTree->Fill();
+    
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
+
 #endif
 
   AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();
@@ -1329,7 +1337,7 @@ int main(int argc,  char **argv) {
   TCanvas *cgains=new TCanvas("cgains", "cgains", 880, 800);
   TGraph *ggains=new TGraph(anita1->NPOINTS_GAIN, anita1->frequency_forgain_measured, anita1->vvGaintoHeight);
   ggains->Draw("al");
-  stemp=settings1->outputdir+"/gains.eps";
+  stemp=string(outputdir.Data())+"/gains.eps";
   cgains->Print((TString)stemp);  
   
   // sets position of balloon and related quantities
@@ -1421,7 +1429,7 @@ int main(int argc,  char **argv) {
   spectra1->GetSEdNdEdAdt()->SetLineColor(2);
   spectra1->GetSEdNdEdAdt()->Draw("l same");
 
-  stemp=settings1->outputdir+"/GetG_test1.pdf";
+  stemp=string(outputdir.Data())+"/GetG_test1.pdf";
   ctest1->Print((TString)stemp);
 
   // for averaging balloon altitude and distance from center of earth
@@ -1468,9 +1476,9 @@ int main(int argc,  char **argv) {
     anita1->inu=inu;
 
     // std::string nunum = std::to_string(inu);    
-    //stemp=settings1->outputdir+"/rough_groundvalues_"+nunum+".dat";
+    //stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
     //ofstream roughout(stemp.c_str());
-    //stemp=settings1->outputdir+"/rough_evtweight_"+nunum+".dat";
+    //stemp=string(outputdir.Data())+"/rough_evtweight_"+nunum+".dat";
     //ofstream evtwgtout(stemp.c_str());
     for (whichray = settings1->MINRAY; whichray <= settings1->MAXRAY; whichray++) {
       anita1->passglobtrig[0]=0;
@@ -2808,7 +2816,7 @@ int main(int argc,  char **argv) {
 
 
 	  /*
-	    std::string stemp=settings1->outputdir+"/rough_signalwaveforms_"+nunum+".dat";
+	    std::string stemp=string(outputdir.Data())+"/rough_signalwaveforms_"+nunum+".dat";
 	    ofstream sigout(stemp.c_str(), ios::app);
 	    for (int iband=0;iband<5;iband++) {
 	    if (anita1->bwslice_allowed[iband]!=1) continue; 
@@ -3552,6 +3560,7 @@ int main(int argc,  char **argv) {
 
 #ifdef ANITA3_EVENTREADER
   anitafileTruth->cd();
+  configAnitaTree->Write("configAnitaTree");
   truthAnitaTree->Write("truthAnitaTree");
   anitafileTruth->Close();
   delete anitafileTruth;
@@ -3634,7 +3643,7 @@ int main(int argc,  char **argv) {
 
 
   // maks the output file
-  Summarize(settings1, anita1, count1, spectra1, sig1, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb, sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, foutput, distanceout);
+  Summarize(settings1, anita1, count1, spectra1, sig1, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb, sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, foutput, distanceout, outputdir);
 
   veff_out << settings1->EXPONENT << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << settings1->SIGMA_FACTOR << endl;//this is for my convenience
 
@@ -3710,7 +3719,7 @@ void WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double a
 //end WriteNeutrinoInfo()
 
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, Signal *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout) {
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, Signal *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir) {
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
   double errordown_v_thresh[NTHRESHOLDS];
@@ -3739,7 +3748,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
 
   }//end for NTHRESHOLDS
 
-  string stemp=settings1->outputdir+"/thresholds.root";
+  string stemp=string(outputdir.Data())+"/thresholds.root";
   TFile *fthresholds=new TFile(stemp.c_str(), "RECREATE");
   TCanvas *cthresh=new TCanvas("cthresh", "cthresh", 880, 800);
   cthresh->SetLogy();
@@ -3756,7 +3765,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   g->SetMarkerStyle(21);
   g->Draw("ape");
 
-  stemp = settings1->outputdir+"/thresholds.eps";
+  stemp = string(outputdir.Data())+"/thresholds.eps";
   cthresh->Print((TString)stemp);
   g->Write();
   gdenom->Write();
@@ -3773,7 +3782,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     gH->SetLineWidth(2);
     gH->SetMarkerStyle(21);
     gH->Draw("ape");
-    stemp = settings1->outputdir+"/thresholds_HPOL.eps";
+    stemp = string(outputdir.Data())+"/thresholds_HPOL.eps";
     cthresh->Print((TString)stemp);
 
     gH->Write();

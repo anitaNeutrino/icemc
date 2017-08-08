@@ -45,6 +45,14 @@ Settings::Settings() {
 }
 
 
+/**
+ * Default destructor
+ *
+ */
+Settings::~Settings() {
+
+}
+
 
 
 
@@ -217,7 +225,7 @@ void Settings::printAllKeyValuePairStrings(){
 void Settings::Initialize() {
   NDISCONES_PASS=3;
   DEBUG=false;                   // debugging option
-  outputdir="outputs"; // directory where outputs go
+  // outputdir="outputs"; // directory where outputs go
   FREQ_LOW_SEAVEYS=200.E6;
   FREQ_HIGH_SEAVEYS=1200.E6;
   BW_SEAVEYS=FREQ_HIGH_SEAVEYS-FREQ_LOW_SEAVEYS;
