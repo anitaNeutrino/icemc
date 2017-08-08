@@ -1028,6 +1028,9 @@ int main(int argc,  char **argv) {
 	  
 	//	  chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
 
+	if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
+	  chantrig1->getNoiseFromFlight(anita1, antNum);
+  
 	chantrig1->injectImpulseAfterAntenna(anita1, antNum);
 
 	chantrig1->TriggerPath(settings1, anita1, antNum);

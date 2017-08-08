@@ -3916,6 +3916,7 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 	  
 	  delete grInt;
 	  delete grTemp;
+
 	}
       }
     }
@@ -4094,49 +4095,6 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
     }
 
 
-    // // START LINDA TEMP BIT
-    // FFTWComplex *tempFFT = FFTtools::doFFT(HALFNFOUR, trigEffScanPulseAtSurf[0]);
-    // double tempTimes[HALFNFOUR];
-    // for (int i=0;i<HALFNFOUR;i++) tempTimes[i]=fTimes[i]*1-9;
-    // RFSignal *rftemp = new RFSignal(new TGraph(HALFNFOUR,tempTimes,trigEffScanPulseAtSurf[0]));
-     
-    // Double_t *rfFreqs = rftemp->getFreqs();
-    // Double_t *rfMags  = rftemp->getMags();
-    // Double_t *rfPhase = rftemp->getPhases();
-     
-    // double trigEffScanAmplitudeAtSurf[HALFNFOUR];
-    // for (int i=0;i<NFREQ;i++){
-    //   // cout << i << " " << rfFreqs[i] << " " << freq[i] << " " << freq_forfft[i] << endl;
-
-    //   // cout << " " << i << " " << freq[i] << " " << tempFFT[i].getAbs() << endl;
-       
-    //   trigEffScanAmplitudeAtSurf[i]=rfMags[i];
-    // 	// trigEffScanAmplitudeAtSurf[2*i+1]=(tempFFT[ifour].getPhase());
-      
-    // }
-     
-    // double tempTime1[HALFNFOUR]={0.};
-    // double tempTime2[HALFNFOUR]={0.};
-    // double tempFreq[HALFNFOUR]={0.};
-
-    // // change their length from Anita::NFREQ to HALFNFOUR
-    // MakeArraysforFFT(trigEffScanAmplitudeAtSurf,tempFreq, tempTime1, tempTime2);
-       
-    // // now the last two are in the frequency domain
-    // // convert to the time domain
-    // Tools::realft(tempTime1,1,HALFNFOUR);  
-    // Tools::NormalTimeOrdering(NFOUR/2,tempTime1);
-    
-    // ofstream myfile;
-    // myfile.open ("temp.txt");
-    // for (int i=0;i<HALFNFOUR;i++){
-    //   //   cout << i << " "   << " " << trigEffScanPulseAtSurf[0][i] << " " << tempTime1[i] << endl;
-    //   myfile << i << " " << trigEffScanPulseAtSurf[0][i] << " " << tempTime1[i] << endl;
-    // }
-    // myfile.close();
-     
-    // exit(1);
-    // // END TEMP BIT
      
     f->Close();
   }else{

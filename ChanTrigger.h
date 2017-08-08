@@ -356,7 +356,7 @@ class ChanTrigger {
    * @param  pol :: int - which polarization
    * @param  ant :: int - which antennta
    */
-  double *getNoiseFromFlight(Anita* anita1, int pol, int ant);
+  void getNoiseFromFlight(Anita* anita1, int ant);
 
   //! Inject pulse after the antenna (used for trigger efficiency scans)
   /**
@@ -412,7 +412,8 @@ class ChanTrigger {
   double volts_rx_rfcm_lab[2][Anita::HALFNFOUR];               ///< For digitizer path, time domain voltage vs. time after rx, rfcm's and lab
   double volts_rx_rfcm_lab_all[2][48][Anita::HALFNFOUR];       ///< For digitizer path, time domain voltage vs. time after rx, rfcm's and lab
   double volts_rx_rfcm[2][Anita::HALFNFOUR];                   ///< For digitizer path, time domain voltage vs. time after rx, rfcm's
-        
+  double justNoise_digPath[2][Anita::HALFNFOUR];               ///< For digitizer path, time domain noise from flight
+  double justNoise_trigPath[2][Anita::HALFNFOUR];               ///< For digitizer path, time domain noise from flight
        
   // these are filled for triggerscheme==0 and triggerscheme==1
   // frequency domain voltage and energy based

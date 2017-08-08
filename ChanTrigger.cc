@@ -828,7 +828,11 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
     
      
   } // end loop over bands
-  
+
+
+  if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
+    getNoiseFromFlight(anita1, ant);
+
 }
 
 void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
@@ -924,10 +928,6 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
       applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[0][iband], v_banding_rfcm[0][iband], 0);
       applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[1][iband], v_banding_rfcm[1][iband], 1);
     }
-    
-    // if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==1)){  
-    //   injectImpulseAtSurf(anita1, v_banding_rfcm_forfft[0][iband], v_banding_rfcm_forfft[1][iband], ant);
-    // }
     
     
     if (settings1->ZEROSIGNAL) {
@@ -1556,9 +1556,9 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
 
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
-    double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
+    //    double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
-      y[i]=newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
+      y[i]=newy[i] + justNoise_digPath[ipol][i]*anita1->THERMALNOISE_FACTOR;
       // std::cout << justNoise[i] << std::endl;
     }
   } else {
@@ -1614,13 +1614,13 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) newy[i]=0;
   }
-    
+
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
-    double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
+    //    double *justNoise = getNoiseFromFlight(anita1, ipol, ant);
     for (int i=0;i<nPoints;i++){
-      y[i] = voltsArray[i] = newy[i] + justNoise[i]*anita1->THERMALNOISE_FACTOR;
-      // std::cout << justNoise[i] << std::endl;
+      y[i] = voltsArray[i] = newy[i] + justNoise_trigPath[ipol][i]*anita1->THERMALNOISE_FACTOR;
+      //  std::cout << i << " " << justNoise_trigPath[ipol][i] << std::endl;
     }
   } else {
     for (int i=0;i<nPoints;i++)  y[i] = voltsArray[i] = newy[i];
@@ -1653,7 +1653,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
 
 
 
-double *ChanTrigger::getNoiseFromFlight(Anita* anita1, int pol, int ant){
+void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
 
   Int_t numFreqs = anita1->numFreqs;
   FFTWComplex *phasors = new FFTWComplex[numFreqs];
@@ -1661,22 +1661,31 @@ double *ChanTrigger::getNoiseFromFlight(Anita* anita1, int pol, int ant){
   phasors[0].setMagPhase(0,0);
   Double_t sigma, realPart, imPart;
 
-  for(int i=1;i<numFreqs;i++) {
-    sigma      = anita1->RayleighFits[pol][ant]->Eval(freqs[i])*4/TMath::Sqrt(numFreqs);
-    realPart   = anita1->fRand->Gaus(0,sigma);
-    imPart     = anita1->fRand->Gaus(0,sigma);
-    phasors[i] = FFTWComplex(realPart, imPart);
+  for (int ipol=0; ipol<2; ipol++){
+  
+    for(int i=1;i<numFreqs;i++) {
+      sigma      = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4/TMath::Sqrt(numFreqs);
+      realPart   = anita1->fRand->Gaus(0,sigma);
+      imPart     = anita1->fRand->Gaus(0,sigma);
+      phasors[i] = FFTWComplex(realPart, imPart);
+    }
+    
+    RFSignal *rfNoise = new RFSignal(numFreqs,freqs,phasors,1);
+    
+    Double_t *justNoise=rfNoise->GetY();
+
+    for (int i=0; i<anita1->HALFNFOUR; i++){
+      justNoise_digPath[ipol][i] = justNoise[i];
+      justNoise_trigPath[ipol][i] = justNoise[i];//*TMath::Power(10, 5./20.);
+    }
+    delete rfNoise;
   }
-    
-  RFSignal *rfNoise = new RFSignal(numFreqs,freqs,phasors,1);
-    
-  Double_t *justNoise=rfNoise->GetY();
 
   // Cleaning up
   delete[] phasors;
-  delete rfNoise;
+  
     
-  return justNoise;
+  // return justNoise;
   
 }
 
