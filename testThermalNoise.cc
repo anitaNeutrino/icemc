@@ -63,6 +63,7 @@
 #include "GlobalTrigger.h"
 #include "ChanTrigger.h"
 #include "SimulatedSignal.h"
+#include "EnvironmentVariable.h"
 
 #include <string>
 #include <sstream>
@@ -90,6 +91,8 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 #endif
 
 Taumodel* TauPtr = NULL;
+
+const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
 
 ClassImp(RX);
 
@@ -456,7 +459,7 @@ int main(int argc,  char **argv) {
 
   Settings* settings1 = new Settings();
 
-  string input="inputs.txt";
+  string input= ICEMC_SRC_DIR + "/inputs.conf";
   string run_num;//current run number as string
   int run_no = 0;//current run number as integer
   TString outputdir;
@@ -687,6 +690,16 @@ int main(int argc,  char **argv) {
   outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
+  TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
+  printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
+  unsigned int timenow = time(NULL);
+
+  TTree *configAnitaTree = new TTree("configIcemcTree", "Config file and settings information");
+  configAnitaTree->Branch("gitversion",   &icemcgitversion  );
+  configAnitaTree->Branch("startTime",    &timenow          );
+  // configAnitaTree->Branch("settings",  &settings1                    );
+  configAnitaTree->Fill();
+ 
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
 #endif

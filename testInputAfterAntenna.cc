@@ -63,6 +63,7 @@
 #include "GlobalTrigger.h"
 #include "ChanTrigger.h"
 #include "SimulatedSignal.h"
+#include "EnvironmentVariable.h"
 
 #include <string>
 #include <sstream>
@@ -90,6 +91,8 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 #endif
 
 Taumodel* TauPtr = NULL;
+
+const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
 
 ClassImp(RX);
 
@@ -455,7 +458,7 @@ int main(int argc,  char **argv) {
 
   Settings* settings1 = new Settings();
 
-  string input="inputs.txt";
+  string input= ICEMC_SRC_DIR + "/inputs.conf";
   string run_num;//current run number as string
   int run_no = 0;//current run number as integer
   TString outputdir;
@@ -872,8 +875,18 @@ int main(int argc,  char **argv) {
 #ifdef ANITA3_EVENTREADER
 
   // Set AnitaVersion so that the right payload geometry is used
-  AnitaVersion::set(settings1->ANITAVERSION);
+  AnitaVersion::set(settings1->ANITAVERSION); 
   
+  TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
+  printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
+  unsigned int timenow = time(NULL);
+
+  TTree *configAnitaTree = new TTree("configIcemcTree", "Config file and settings information");
+  configAnitaTree->Branch("gitversion",   &icemcgitversion  );
+  configAnitaTree->Branch("startTime",    &timenow          );
+  // configAnitaTree->Branch("settings",  &settings1                    );
+  configAnitaTree->Fill();
+    
   outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
@@ -1655,7 +1668,7 @@ double GetThisAirColumn(Settings* settings1,  Position r_in, Vector nnu, Positio
 
 void GetAir(double *col1) {
   double nothing;
-  ifstream air1("data/atmosphere.dat"); // length of chord in air vs. theta (deg)
+  ifstream air1(ICEMC_SRC_DIR+"/data/atmosphere.dat"); // length of chord in air vs. theta (deg)
   //where theta is respect to "up"
   // binned in 0.1 degrees
   for(int iii=0;iii<900;iii++) {

@@ -46,6 +46,8 @@
 #include "Math/Interpolator.h"
 #include "signal.h"
 
+#include "EnvironmentVariable.h"
+
 //#include "rx.hpp"
 #include "Constants.h"
 #include "Settings.h"
@@ -96,6 +98,8 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 #endif
 
 Taumodel* TauPtr = NULL;
+
+const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
 
 ClassImp(RX);
 
@@ -319,9 +323,24 @@ int main(int argc,  char **argv) {
   AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();
 
 #ifdef ANITA3_EVENTREADER
+ 
+  // Set AnitaVersion so that the right payload geometry is used
+  AnitaVersion::set(settings1->ANITAVERSION);
+
   outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
+  TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
+  printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
+  unsigned int timenow = time(NULL);
+
+  TTree *configAnitaTree = new TTree("configIcemcTree", "Config file and settings information");
+  configAnitaTree->Branch("gitversion",   &icemcgitversion  );
+  configAnitaTree->Branch("startTime",    &timenow          );
+  // configAnitaTree->Branch("settings",  &settings1                    );
+  configAnitaTree->Fill();
+
+  
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
 #endif
