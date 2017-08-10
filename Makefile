@@ -103,7 +103,7 @@ BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(Ex
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf)
 
-all:            $(BINARIES)
+all:            gitversion.c $(BINARIES)
 
 $(BINARIES): %: %.$(SrcSuf) $(OBJS)
 		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $< $(OutPutOpt) $@
@@ -111,7 +111,7 @@ $(BINARIES): %: %.$(SrcSuf) $(OBJS)
 
 .PHONY: clean
 clean:
-		@rm -f $(OBJS) classdict.* $(BINARIES)
+		@rm -f $(OBJS) classdict.* $(BINARIES) gitversion.c
 
 distclean:      clean
 		@rm -f $(OBJS) $(BINAIRES) $(DICT)* *.def *.exp \
@@ -122,6 +122,9 @@ $(DICT).C : $(HEADERS)
 		@echo "<**And here's the dictionary...**>" $<
 		@rm -f *Dict*
 		rootcint $@ -c -p -I./ $(INC_ANITA_UTIL) $(CLASS_HEADERS) LinkDef.h
+
+gitversion.c: .git/HEAD .git/index
+		echo "const char *gitversion = \"$(shell git rev-parse HEAD)\";" > $@
 
 %.$(ObjSuf) : %.$(SrcSuf) %.h
 	@echo "<**Compiling**> "$<
