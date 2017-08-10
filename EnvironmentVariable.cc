@@ -1,6 +1,8 @@
 #include "EnvironmentVariable.h"
 #include <iostream>
-
+#include <fstream>
+#include <stdlib.h>
+#include "TString.h"
 
 /** 
  * Get an environment variable with a nice wrapper function, that tells you what went wrong
@@ -64,4 +66,19 @@ const char* EnvironmentVariable::ICEMC_SRC_DIR(){
   return icemc_src_dir;
   
 #endif
+}
+
+const char* EnvironmentVariable::ICEMC_VERSION(TString outputdir){
+
+  system(Form("git rev-parse HEAD > %s/gitversion.txt", outputdir.Data()));
+  std::string gitversion;
+  std::ifstream gitversionfile (Form("%s/gitversion.txt", outputdir.Data()));
+  if (gitversionfile.is_open())
+    {
+      getline (gitversionfile,gitversion);
+      gitversionfile.close();
+    }
+
+  return gitversion.c_str();
+  
 }

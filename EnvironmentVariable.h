@@ -1,6 +1,7 @@
 #ifndef ICEMC_ENVIRONMENT_VARIABLES
 #define ICEMC_ENVIRONMENT_VARIABLES
 
+#include "TString.h"
 
 /** 
  * @namespace EnvironmentVariable
@@ -12,6 +13,8 @@
 namespace EnvironmentVariable {
 
   const char* ICEMC_SRC_DIR();
+  
+  const char* ICEMC_VERSION(TString outputdir);
 
 }
 #endif

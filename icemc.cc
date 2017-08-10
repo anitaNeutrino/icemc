@@ -1286,9 +1286,15 @@ int main(int argc,  char **argv) {
   
   outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
+  
+  TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
+  printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
+  unsigned int timenow = time(NULL);
 
   TTree *configAnitaTree = new TTree("configIcemcTree", "Config file and settings information");
-  configAnitaTree->Branch("settings",  &settings1                    );
+  configAnitaTree->Branch("gitversion",   &icemcgitversion  );
+  configAnitaTree->Branch("startTime",    &timenow          );
+  // configAnitaTree->Branch("settings",  &settings1                    );
   configAnitaTree->Fill();
     
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
