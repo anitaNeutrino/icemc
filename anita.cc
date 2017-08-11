@@ -275,20 +275,12 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   inu=thisInu;
     
   PERCENTBW=10; // subbands (not counting full band)
+
+  TIMESTEP=(1./2.6)*1.E-9; // time step between samples
+
+  for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
  
 
-#ifdef ANITA_UTIL_EXISTS
-  // when using impulse responses scaling factors are 1
-  if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
-    readImpulseResponseDigitizer(settings1);
-  }
-  if (settings1->APPLYIMPULSERESPONSETRIGGER){
-    readImpulseResponseTrigger(settings1);
-  }
-  if (settings1->TRIGGEREFFSCAN){
-    readTriggerEfficiencyScanPulser(settings1);
-  }
-#endif
   cout << "FREQ " << FREQ_LOW << " " << FREQ_HIGH << endl;
   for (int i=0;i<NFREQ;i++) {
     freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
@@ -312,9 +304,6 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   phase=90.; // phase for positive frequencies
   // assuming v(t) is real, then phase(neg)=-phase(pos)
   INTEGRATIONTIME=3.5E-9; // integration time of trigger diode
-  TIMESTEP=(1./2.6)*1.E-9; // time step between samples
-
-  for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
 
   DEADTIME=10.E-9; // dead time after a trigger
   energythreshold=3.;  // power threshold
@@ -458,21 +447,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
     }// end loop over bands
   }
     
-  double sumpower=0.;
-  stemp=string(outputdir.Data())+"/forandres.txt";
-  ofstream fforandres(stemp.c_str());
-  for (int j=0;j<5;j++) {
-    sumpower=0.;
-    fforandres << "Freq. (Hz) \t V/sqrt(Hz) \n";
-    for (int k=0;k<NFOUR/4;k++) {
-      sumpower+=freqdomain_rfcm_banding[j][k]; // V^2
-      fforandres << freq_forplotting[k] << "\t" << freqdomain_rfcm_banding[j][k] << "\n";
-    }
-    //cout << "band, sumpower is " << j << " " << sumpower << "\n";
-  }
-    
-   
-    
+  
+  
   double power=0.;
   for (int j=0;j<5;j++) {
     for (int k=0;k<NFOUR/4;k++) {
@@ -827,6 +803,22 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
     VNOISE[j]=1.52889E-5; // this comes from V^2/R=kT*bw -> V=sqrt(kT*bw*R)
     VNOISE[j]*=THERMALNOISE_FACTOR;
   }//for
+
+#ifdef ANITA_UTIL_EXISTS
+  if (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER){
+    readNoiseFromFlight(settings1);
+  }
+  if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
+    readImpulseResponseDigitizer(settings1);
+  }
+  if (settings1->APPLYIMPULSERESPONSETRIGGER){
+    readImpulseResponseTrigger(settings1);
+  }
+  if (settings1->TRIGGEREFFSCAN){
+    readTriggerEfficiencyScanPulser(settings1);
+  }
+#endif
+  
 
     
 }
@@ -2279,7 +2271,7 @@ void Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx){
   int firstNonZero = Tools::Getifreq(freq[0],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
   int lastNonZero  = Tools::Getifreq(freq[NFREQ-1],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
   double norm=TMath::Sqrt(double(lastNonZero-firstNonZero)/double(NFREQ));
-  //    cout << firstNonZero << " " << lastNonZero << " " << lastNonZero-firstNonZero << " " << norm << endl;
+  //  cout << firstNonZero << " " << lastNonZero << " " << lastNonZero-firstNonZero << " " << norm << endl;
 
   for (int ifreq=0;ifreq<NFOUR/4;ifreq++){
     tmp_fftvhz[ifreq]=TMath::Sqrt(tmp_fftvhz[2*ifreq]*tmp_fftvhz[2*ifreq] + tmp_fftvhz[2*ifreq+1]*tmp_fftvhz[2*ifreq+1]);
@@ -2288,9 +2280,8 @@ void Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx){
   for (int ifreq=0; ifreq<NFREQ; ifreq++){
       
     int ifour=Tools::Getifreq(freq[ifreq],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
-    //      cout << ifour << " " << ifour2 << endl;
     vhz_rx[ifreq]=tmp_fftvhz[ifour]*norm;
-    // cout << ifour << " " << freq[ifreq] << " " << vhz_rx[ifreq] << " " << endl;
+    //cout << ifour << " " << freq[ifreq] << " " << vhz_rx[ifreq] << " " << endl;
   }
 
 }
@@ -3838,7 +3829,7 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
 
 #ifdef ANITA_UTIL_EXISTS
 void Anita::readImpulseResponseDigitizer(Settings *settings1){
-
+  
   // Set deltaT to be used in the convolution
   deltaT = 1/(2.6*16);
   string graphNames[2][3][16];
@@ -3911,15 +3902,26 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 	  int paveNum = 8533;
 	  grTemp = new TGraph(nPoints,  newx, newy);
 	  
-	  fSignalChainResponseDigitizer[ipol][iring][iphi] = FFTtools::padWaveToLength(grTemp, paveNum);
+	  fSignalChainResponseDigitizer[ipol][iring][iphi] = new RFSignal(FFTtools::padWaveToLength(grTemp, paveNum));
 	  
 	  delete grInt;
 	  delete grTemp;
 
+	  TGraph *gDig  = fSignalChainResponseDigitizer[ipol][iring][iphi]->getFreqMagGraph();
+	  for(int i=1;i<numFreqs;i++) {
+	    fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]  = gDig->Eval(freqs[i]*1e6);
+	    // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]<< endl;
+	  }
+	  delete gDig;
+	  
 	}
       }
     }
   }
+
+}
+
+void Anita::readNoiseFromFlight(Settings *settings1){
   
   TFile *fRayleighAnita3 = new TFile((ICEMC_DATA_DIR+"/RayleighAmplitudesAnita3_noSun_Interp.root").c_str(), "read");
   
@@ -4016,10 +4018,19 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	  int paveNum = 8533;
 	  grTemp = new TGraph(nPoints,  newx, newy);
 	
-	  fSignalChainResponseTrigger[ipol][iring][iphi] = FFTtools::padWaveToLength(grTemp, paveNum);
+	  fSignalChainResponseTrigger[ipol][iring][iphi] = new RFSignal(FFTtools::padWaveToLength(grTemp, paveNum));
 	
 	  delete grInt;
 	  delete grTemp;
+
+	  
+	  TGraph *gTrig = fSignalChainResponseTrigger[ipol][iring][iphi]->getFreqMagGraph();
+	  for(int i=1;i<numFreqs;i++) {
+	    fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i]    = gTrig->Eval(freqs[i]*1e6);
+	    // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i] << " " << fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i] << endl;
+	  }
+	  delete gTrig;
+
 	}
       }
     }

@@ -583,14 +583,17 @@ public:
   void readImpulseResponseDigitizer(Settings *settings1);
   void readImpulseResponseTrigger(Settings *settings1);
   void readTriggerEfficiencyScanPulser(Settings *settings1);
+  void readNoiseFromFlight(Settings *settings1);
   TGraph *RayleighFits[2][48];
   Int_t numFreqs;
   Double_t *freqs;
   TRandom3 *fRand;
 #endif
   Double_t fTimes[HALFNFOUR];
-  TGraph *fSignalChainResponseDigitizer[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
-  TGraph *fSignalChainResponseTrigger[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
+  RFSignal *fSignalChainResponseDigitizer[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
+  RFSignal *fSignalChainResponseTrigger[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
+  Double_t fSignalChainResponseDigitizerFreqDomain[2][3][16][400];
+  Double_t fSignalChainResponseTriggerFreqDomain[2][3][16][400];
   double deltaT;
 
   // Trigger efficiency scan parameters

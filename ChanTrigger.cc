@@ -1653,33 +1653,50 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
 void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
 
   Int_t numFreqs = anita1->numFreqs;
-  FFTWComplex *phasors = new FFTWComplex[numFreqs];
+  FFTWComplex *phasorsDig  = new FFTWComplex[numFreqs];
+  FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
+  phasorsDig[0].setMagPhase(0,0);
+  phasorsTrig[0].setMagPhase(0,0);
   double *freqs = anita1->freqs;
-  phasors[0].setMagPhase(0,0);
-  Double_t sigma, realPart, imPart;
+  Double_t sigma, realPart, imPart, dig, trig, norm;
+  int iring=2;
+  if (ant<16) iring=0;
+  else if (ant<32) iring=1;
 
+  int iphi = ant - (iring*16);
+ 
   for (int ipol=0; ipol<2; ipol++){
-  
+
     for(int i=1;i<numFreqs;i++) {
-      sigma      = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4/TMath::Sqrt(numFreqs);
-      realPart   = anita1->fRand->Gaus(0,sigma);
-      imPart     = anita1->fRand->Gaus(0,sigma);
-      phasors[i] = FFTWComplex(realPart, imPart);
+      sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4/TMath::Sqrt(numFreqs);
+      realPart       = anita1->fRand->Gaus(0,sigma);
+      imPart         = anita1->fRand->Gaus(0,sigma);
+      dig            = anita1->fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
+      trig           = anita1->fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i];
+      norm           = 1; //trig/dig;
+      //cout << freqs[i] << " " << norm << " " << trig << " " << dig << endl;
+      phasorsDig[i]  = FFTWComplex(realPart, imPart);
+      phasorsTrig[i] = FFTWComplex(realPart*norm, imPart*norm);
     }
     
-    RFSignal *rfNoise = new RFSignal(numFreqs,freqs,phasors,1);
+    RFSignal *rfNoiseDig    = new RFSignal(numFreqs,freqs,phasorsDig,1);    
+    Double_t *justNoiseDig  = rfNoiseDig->GetY();
     
-    Double_t *justNoise=rfNoise->GetY();
+    RFSignal *rfNoiseTrig   = new RFSignal(numFreqs,freqs,phasorsTrig,1);
+    Double_t *justNoiseTrig = rfNoiseTrig->GetY();
 
     for (int i=0; i<anita1->HALFNFOUR; i++){
-      justNoise_digPath[ipol][i] = justNoise[i];
-      justNoise_trigPath[ipol][i] = justNoise[i];//*TMath::Power(10, 5./20.);
+      justNoise_digPath[ipol][i] = justNoiseDig[i];
+      justNoise_trigPath[ipol][i] = justNoiseTrig[i];
     }
-    delete rfNoise;
+    delete rfNoiseDig;
+    delete rfNoiseTrig;
+
   }
 
   // Cleaning up
-  delete[] phasors;
+  delete[] phasorsDig;
+  delete[] phasorsTrig;
   
   
 }
