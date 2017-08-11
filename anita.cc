@@ -280,8 +280,6 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
 
   for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
  
-
-  cout << "FREQ " << FREQ_LOW << " " << FREQ_HIGH << endl;
   for (int i=0;i<NFREQ;i++) {
     freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
     avgfreq_rfcm[i]=0.;
@@ -352,345 +350,44 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
     getPulserData();
   } 
     
-  double mindiodeconvl[5];
-  double onediodeconvl[5];
-    
-  double power_noise_eachband[5][NFOUR];
-  double timedomain_output[5][NFOUR];
-    
-  // average result of diode integrator during quiet time
-    
-  for (int i=0;i<5;i++) {
-    bwslice_enoise[i]=0.;
-    bwslice_rmsdiode[i]=0.;
-    bwslice_vrms[i]=0.;
-  }
-    
-  nnoiseevents=tdiode->GetEntries();
-  noiseeventcounter=0;
-    
-    
-  int nhnoisebins=100;
-  TH1F *hnoise[5];
-    
-  char histname[150];
-  for (int j=0;j<3;j++) {
-		
-    sprintf(histname,"hnoise_%d",j);
-    if (BANDING==2)
-      hnoise[j]=new TH1F(histname,histname,nhnoisebins,-40.,20.);
-    else
-      hnoise[j]=new TH1F(histname,histname,nhnoisebins,-80.,40.);
-  }
-  if (BANDING==2) {
-    sprintf(histname,"hnoise_3");
-    hnoise[3]=new TH1F(histname,histname,nhnoisebins,-60.0,40.0);
-    sprintf(histname,"hnoise_4");
-    hnoise[4]=new TH1F(histname,histname,nhnoisebins,-60.0,40.0);
-  }
-  else {
-    sprintf(histname,"hnoise_3");
-    hnoise[3]=new TH1F(histname,histname,nhnoisebins,-120.0,80.0);
-    sprintf(histname,"hnoise_4");
-    hnoise[4]=new TH1F(histname,histname,nhnoisebins,-120.0,80.0);
-		
-  }
-    
-  // double probability_npass[9];
-  // double probability_nplus1_pass[9];
-  // for (int j=0;j<9;j++) {
-  //   probability_npass[j]=0.;
-  //   probability_nplus1_pass[j]=0.;
-  // }
-    
-  // just take the average noise arrays from the tdiode tree
-  tdiode->GetEvent(0);
-    
-  cout << "after getting event, freqdomain_rfcm_banding is " << freqdomain_rfcm_banding[0][NFOUR/8-1] << "\n";
-    
-  TGraph *gfreqdomain_rfcm=new TGraph(NFOUR/4,freq_forplotting,freqdomain_rfcm);
-  TGraph *gavgfreqdomain_lab=new TGraph(NFOUR/4,freq_forplotting,avgfreqdomain_lab);
-  TGraph *gfreqdomain_rfcm_banding[5];
-
-  for (int i=0;i<5;i++) {
-    gfreqdomain_rfcm_banding[i]=new TGraph(NFOUR/4,freq_forplotting,freqdomain_rfcm_banding[i]);
-  }
-    
-    
-    
-  TCanvas *cfreq=new TCanvas("cfreq","cfreq",880,800);
-  cfreq->Divide(1,3);
-  cfreq->cd(1);
-  gfreqdomain_rfcm->Draw("al");
-  cfreq->cd(2);
-  gavgfreqdomain_lab->Draw("al");
-  cfreq->cd(3);
-  gfreqdomain_rfcm_banding[4]->Draw("al");
-  for (int i=0;i<5;i++) {
-    gfreqdomain_rfcm_banding[i]->Draw("l");
-  }
-  stemp=string(outputdir.Data())+"/freqdomainplots.eps";
-  cfreq->Print((TString)stemp);
-    
-    
-    
-  // do the box banding for BANDING==1
-  if (BANDING==1) {
-    for (int j=0;j<5;j++) {
-	
-      for (int k=0;k<NFOUR/4;k++) {
-	  
-	if (bwslice_min[j]>freq_forplotting[k] || bwslice_max[j]<freq_forplotting[k]) {
-	  freqdomain_rfcm_banding[j][k]=0.;
-	}
-      }
-    }// end loop over bands
-  }
-    
-  
-  
-  double power=0.;
-  for (int j=0;j<5;j++) {
-    for (int k=0;k<NFOUR/4;k++) {
-      power+=freqdomain_rfcm_banding[j][k]/((double)NFOUR/4); // in V^2
-    }
-    //  cout << "power is " << power << "\n";
-  }
-    
-    
-  //int count[5]={0,0,0,0,0};
-  int ngeneratedevents=1000;
-  int passes[5]={0,0,0,0,0};
-  //   //int ngeneratedevents=nnoiseevents;
-  double averageoutput[5]={0.,0.,0.,0.,0.};
-  for (int i=0;i<ngeneratedevents;i++) {
-    // put phases to freqdomain_rfcm_banding_rfcm array
-    // assign phases (w/ correlations) to freqdomain_rfcm_banding_rfmc_banding array
-    GetNoiseWaveforms();
-    for (int j=0;j<5;j++) {
-      //  GetNoiseWaveform(j);
-      //       //tdiode->GetEvent(i);
-      //       // timedomainnoise_rfcm_banding_e[j] contain noise waveforms for
-      //       // each band.  They come from taking the waveforms measured in
-      //       // the signal stream, removing the rfcm's and lab attn.,
-      //       // then reinserting rfcm's and band attn.
-      //       // so they should be narrow band
-      //       // myconvlv performs a convolution on that time domain waveform
-      //       // based on the function that you define in getDiodeModel
-	    
-      //       cout << "timedomainnoise_rfcm_banding_e is " << timedomainnoise_rfcm_banding_e[j][NFOUR/4-1] << "\n";
-      myconvlv(timedomainnoise_rfcm_banding[0][j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
-	    
-      //       GetNoiseWaveform(j,timedomainnoise_rfcm_banding_e[j]);
-	    
-      //       myconvlv(timedomainnoise_rfcm_banding_e[j],NFOUR,mindiodeconvl[j],onediodeconvl[j],power_noise,timedomain_output_h[j]);
-	    
-			
-      // 			if (i==0) {
-      // 				c2->cd(j+1);
-				
-      // 				// 	//for (int k=0;k<NFOUR/2;k++) {
-      // 				// 	//cout << "making graph: time is " << time[k] << "\n";j
-      // 				// 	//}
-				
-      // 				Tools::MakeGraph(j+120,NFOUR/2,time,timedomain_output_e[j],mygraph[j],h2,1.E9,1.,"Time (ns)","Diode Output (J)");
-      // 				//MakeGraph(NFOUR/2,time,timedomainnoise_rfcm_banding_e[j],mygraph,h2,1.E9,1.,"Time (ns)","Diode Output (J)");
-				
-      // 				h2->Draw();
-      // 				mygraph[j]->Draw();
-				
-      // 			}
-			
-      hnoise[j]->Fill(onediodeconvl[j]*1.E15);
-			
-      bwslice_enoise[j]+=onediodeconvl[j];
-			
-			
-      for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	bwslice_meandiode[j]+=timedomain_output[j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
-	bwslice_vrms[j]+=timedomainnoise_rfcm_banding[0][j][m]*timedomainnoise_rfcm_banding[0][j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)); // this is the rms of the diode input voltage
-	//bwslice_vrms[j]+=timedomainnoise_rfcm_banding[0][j][m]*timedomainnoise_rfcm_banding[0][j][m]; // this is the rms of the diode input voltage
-	averageoutput[j]+=timedomain_output[j][m]*timedomain_output[j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
-      } // end loop over samples where diode function is fully contained
-			
-    } // end loop over bands
-		
-    // 		if (i==1)
-    // 			c2->Print("simulatednoise.eps");
-  } // end loop over generated events
-    
-    
-  TCanvas *ctest=new TCanvas("ctest","ctest",880,800);
-  ctest->Divide(1,5);
-  TGraph *gtest[5];
-  for (int i=0;i<5;i++) {
-    ctest->cd(i+1);
-    gtest[i]=new TGraph(NFOUR,time_long,timedomain_output[i]);
-    gtest[i]->Draw("al");
-  }
-  stemp = string(outputdir.Data())+"/test.eps";
-  ctest->Print((TString)stemp);
-    
-  for (int j=0;j<5;j++) {
-      
-    bwslice_vrms[j]=sqrt(bwslice_vrms[j]); // this is the rms input voltage
-  }
-    
-    
-  for (int j=0;j<5;j++) {
-    bwslice_enoise[j]=hnoise[j]->GetMean()/1.E15; // mean diode output with no correlations
-      
-    bwslice_fwhmnoise[j]=Tools::GetFWHM(hnoise[j]);
-      
-  }
-    
-    
-  for (int i=0;i<ngeneratedevents;i++) {// now we need to get the rms
-    GetNoiseWaveforms();
-    for (int j=0;j<5;j++) {
-      //   GetNoiseWaveform(j);
-      //       //tdiode->GetEvent(i);
-      //       // timedomainnoise_rfcm_banding_e[j] contain noise waveforms for
-      //       // each band.  They come from taking the waveforms measured in
-      //       // the signal stream, removing the rfcm's and lab attn.,
-      //       // then reinserting rfcm's and band attn.
-      //       // so they should be narrow band
-      //       // myconvlv performs a convolution on that time domain waveform
-      //       // based on the function that you define in getDiodeModel
-	
-      myconvlv(timedomainnoise_rfcm_banding[0][j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
-	
-      for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	  
-	bwslice_rmsdiode[j]+=(timedomain_output[j][m]-bwslice_meandiode[j])*(timedomain_output[j][m]-bwslice_meandiode[j])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
-	  
-      }
-    }
-  }
-    
-  for (int j=0;j<5;j++) {
-    bwslice_rmsdiode[j]=sqrt(bwslice_rmsdiode[j]);
-    //cout << "mean, rms are " << bwslice_meandiode[j] << " " << bwslice_rmsdiode[j] << "\n";
-  }
-    
-    
-    
-  double thresh_begin=-1.;
-  double thresh_end=-11.;
-  double thresh_step=1.;
-    
-  // double relthresh[5][100];
-  double rate[5][100];
-  for (double testthresh=thresh_begin;testthresh>=thresh_end;testthresh-=thresh_step) {
-    for (int j=0;j<5;j++) {
-      passes[j]=0;
-    }
-    for (int i=0;i<ngeneratedevents;i++) {
-	
-      GetNoiseWaveforms();
-      for (int j=0;j<5;j++) {
-	//GetNoiseWaveform(j);
-	//       //tdiode->GetEvent(i);
-	//       // timedomainnoise_rfcm_banding_e[j] contain noise waveforms for
-	//       // each band.  They come from taking the waveforms measured in
-	//       // the signal stream, removing the rfcm's and lab attn.,
-	//       // then reinserting rfcm's and band attn.
-	//       // so they should be narrow band
-	//       // myconvlv performs a convolution on that time domain waveform
-	//       // based on the function that you define in getDiodeModel
-	  
-	// 	  for (int i=0;i<NFOUR/2;i++) {
-	// 	    cout << "timedomain_noise_rfcm_banding_e is " << timedomainnoise_rfcm_banding_e[j][i] << "\n";
-	// 	  }
-	myconvlv(timedomainnoise_rfcm_banding[0][j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
-	  	
+  // for antenna gains
+  reference_angle[0]=0.;
+  reference_angle[1]=5.;
+  reference_angle[2]=10.;
+  reference_angle[3]=20.;
+  reference_angle[4]=30.;
+  reference_angle[5]=45.;
+  reference_angle[6]=90.; // reference angles for finding gains of antennas
 
   
-	for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	    
-	  //	 if (timedomain_output_e[j][m]<bwslice_meandiode[j]*testthresh && timedomain_output_e[j][m+1]>bwslice_meandiode[j]*testthresh) {
-	  if (timedomain_output[j][m+1]<bwslice_rmsdiode[j]*testthresh) {
-	    passes[j]++;
-	    m+=(int)(DEADTIME/TIMESTEP);
-	  }
-	    	    
-	} // end loop over samples where diode function is fully contained
-      }
-    }
-    // brian m.
-    for (int j=0;j<5;j++) {
-      int ibin=(int)fabs((testthresh-thresh_begin)/thresh_step);
-      // relthresh[j][ibin]=fabs(testthresh);
-      rate[j][ibin]=passes[j]/((double)ngeneratedevents*((double)NFOUR/2*(TIMESTEP)-maxt_diode));
-      if (rate[j][ibin]!=0)
-	rate[j][ibin]=log10(rate[j][ibin]);
-      //cout << "Threshold " << testthresh << " For the " << j << "th band, rate is " << rate[j][ibin] << "\n";
-    }
+  THERMALNOISE_FACTOR=settings1->THERMALNOISE_FACTOR;
+  for (int j=0;j<settings1->NLAYERS;j++) {
+    // noise depends on cant angle of antenna
+    //     //   VNOISE[j]=ChanTrigger::GetNoise(altitude_bn,surface_under_balloon,THETA_ZENITH[j],BW_SEAVEYS,0.);
+    VNOISE[j]=1.52889E-5; // this comes from V^2/R=kT*bw -> V=sqrt(kT*bw*R)
+    VNOISE[j]*=THERMALNOISE_FACTOR;
+  }//for
+
+#ifdef ANITA_UTIL_EXISTS
+  if (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER){
+    readNoiseFromFlight(settings1);
   }
-    
-    
-    
-    
-  TF1 *frice[5];
-    
-  int jplot;
-  TCanvas *c4=new TCanvas("c4","c4",880,800);
-  c4->Divide(1,5);
-  for (int j=0;j<5;j++) {
-	
-	
-    //    cout << "cd to " << j+1 << "\n";
-    frice[j]=new TF1("frice","[2]*(-1.*x-[1])/[0]^2*exp(-1.*(-1.*x-[1])^2/2/[0]^2)",-50.,50.);
-    frice[j]->SetParameter(0,4.);
-    //    frice[j]->SetParameter(1,-5.);
-    frice[j]->SetParameter(1,5.);
-    frice[j]->SetParameter(2,400.);
-    //frice[j]->SetParameter(2,frice[j]->GetParameter(2)*hnoise[j]->GetEntries()/frice[j]->Integral(-500.,500.));
-    jplot=j;
-    //    if (BANDING==2 && j==4)
-    //jplot=j-1;
-	
-    if ((BANDING==2 && j!=3) ||
-	//	(BANDING!=2 && j!=4)) {
-	(BANDING!=2 && BANDING!=4) ||
-	((BANDING==4||BANDING==5) && j==4) ){
-      c4->cd(jplot+1);
-	    
-      if (j==0 && BANDING==2)
-	hnoise[j]->Fit(frice[j],"Q","",-20.,1.);
-      if (j==1 && BANDING==2)
-	hnoise[j]->Fit(frice[j],"Q","",-20.,2.);
-      if (j==2 && BANDING==2)
-	hnoise[j]->Fit(frice[j],"Q","",-20.,10.);
-      if (j==4 && (BANDING==2 || BANDING==4 || BANDING==5))
-	hnoise[j]->Fit(frice[j],"Q","",-15.,15.);
-	    
-      if (j==0 && BANDING==0)
-	hnoise[j]->Fit(frice[j],"Q","",-20.,5.);
-      if (j==1 && BANDING==0)
-	hnoise[j]->Fit(frice[j],"Q","",-20.,5.);
-      if (j==2 && BANDING==0)
-	hnoise[j]->Fit(frice[j],"Q","",-20.,15.);
-      if (j==3 && BANDING==0)
-	hnoise[j]->Fit(frice[j],"Q","",-20.,20.);
-	    
-      frice[j]->GetHistogram()->SetLineWidth(3);
-	    
-      hnoise[j]->SetLineWidth(3);
-      hnoise[j]->SetXTitle("Diode Output (10^{-15} Joules)");
-      hnoise[j]->SetYTitle("Number of Noise Waveforms");
-      hnoise[j]->SetTitleSize(0.05,"X");
-      hnoise[j]->SetTitleSize(0.05,"Y");
-	    
-      hnoise[j]->Draw();
-      frice[j]->Draw("same");
-      //    cout << "bwslice_enoise is " << bwslice_enoise[j] << "\n";
-    }
-	
+  if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
+    readImpulseResponseDigitizer(settings1);
   }
-  stemp=string(outputdir.Data())+"/hnoise.eps";
-  c4->Print((TString)stemp);
-    
+  if (settings1->APPLYIMPULSERESPONSETRIGGER){
+    readImpulseResponseTrigger(settings1);
+  }
+  if (settings1->TRIGGEREFFSCAN){
+    readTriggerEfficiencyScanPulser(settings1);
+  }
+#endif
+
+  setDiodeRMS(settings1, outputdir);
+
+  
+  // Setting up output files
+  
   string stemp=string(outputdir.Data())+"/signals.root";
   fsignals=new TFile(stemp.c_str(),"RECREATE");
   tsignals=new TTree("tsignals","tsignals");
@@ -780,46 +477,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   tglob->Branch("passglobtrig",&passglobtrig,"passglobtrig[2]/I");
   tglob->Branch("l1_passing_allantennas",&l1_passing_allantennas,"l1_passing_allantennas[48]/I");
   
-    
-    
-  // for antenna gains
-  reference_angle[0]=0.;
-  reference_angle[1]=5.;
-  reference_angle[2]=10.;
-  reference_angle[3]=20.;
-  reference_angle[4]=30.;
-  reference_angle[5]=45.;
-  reference_angle[6]=90.; // reference angles for finding gains of antennas
-    
-  // Antenna measured gain vs. frequency
-  //  ReadGains();
-  //   Set_gain_angle();
-    
-  //   SetDiffraction();
-  THERMALNOISE_FACTOR=settings1->THERMALNOISE_FACTOR;
-  for (int j=0;j<settings1->NLAYERS;j++) {
-    // noise depends on cant angle of antenna
-    //     //   VNOISE[j]=ChanTrigger::GetNoise(altitude_bn,surface_under_balloon,THETA_ZENITH[j],BW_SEAVEYS,0.);
-    VNOISE[j]=1.52889E-5; // this comes from V^2/R=kT*bw -> V=sqrt(kT*bw*R)
-    VNOISE[j]*=THERMALNOISE_FACTOR;
-  }//for
-
-#ifdef ANITA_UTIL_EXISTS
-  if (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER){
-    readNoiseFromFlight(settings1);
-  }
-  if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
-    readImpulseResponseDigitizer(settings1);
-  }
-  if (settings1->APPLYIMPULSERESPONSETRIGGER){
-    readImpulseResponseTrigger(settings1);
-  }
-  if (settings1->TRIGGEREFFSCAN){
-    readTriggerEfficiencyScanPulser(settings1);
-  }
-#endif
   
-
     
 }
 
@@ -1136,6 +794,420 @@ void Anita::getDiodeDataAndAttenuation(Settings *settings1, TString outputdir){
 
 
 
+void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
+
+  double mindiodeconvl[5];
+  double onediodeconvl[5];
+    
+  double power_noise_eachband[5][NFOUR];
+  double timedomain_output[5][NFOUR];
+    
+  // average result of diode integrator during quiet time
+    
+  for (int i=0;i<5;i++) {
+    bwslice_enoise[i]=0.;
+    bwslice_rmsdiode[i]=0.;
+    bwslice_vrms[i]=0.;
+  }
+    
+  nnoiseevents=tdiode->GetEntries();
+  noiseeventcounter=0;
+    
+    
+  int nhnoisebins=100;
+  TH1F *hnoise[5];
+    
+  char histname[150];
+  for (int j=0;j<3;j++) {
+		
+    sprintf(histname,"hnoise_%d",j);
+    if (BANDING==2)
+      hnoise[j]=new TH1F(histname,histname,nhnoisebins,-40.,20.);
+    else
+      hnoise[j]=new TH1F(histname,histname,nhnoisebins,-80.,40.);
+  }
+  if (BANDING==2) {
+    sprintf(histname,"hnoise_3");
+    hnoise[3]=new TH1F(histname,histname,nhnoisebins,-60.0,40.0);
+    sprintf(histname,"hnoise_4");
+    hnoise[4]=new TH1F(histname,histname,nhnoisebins,-60.0,40.0);
+  }
+  else {
+    sprintf(histname,"hnoise_3");
+    hnoise[3]=new TH1F(histname,histname,nhnoisebins,-120.0,80.0);
+    sprintf(histname,"hnoise_4");
+    hnoise[4]=new TH1F(histname,histname,nhnoisebins,-120.0,80.0);
+		
+  }
+    
+  // just take the average noise arrays from the tdiode tree
+  tdiode->GetEvent(0);
+    
+  cout << "after getting event, freqdomain_rfcm_banding is " << freqdomain_rfcm_banding[0][NFOUR/8-1] << "\n";
+    
+  // TGraph *gfreqdomain_rfcm=new TGraph(NFOUR/4,freq_forplotting,freqdomain_rfcm);
+  // TGraph *gavgfreqdomain_lab=new TGraph(NFOUR/4,freq_forplotting,avgfreqdomain_lab);
+  // TGraph *gfreqdomain_rfcm_banding[5];
+
+  // for (int i=0;i<5;i++) {
+  //   gfreqdomain_rfcm_banding[i]=new TGraph(NFOUR/4,freq_forplotting,freqdomain_rfcm_banding[i]);
+  // }
+    
+    
+    
+  // TCanvas *cfreq=new TCanvas("cfreq","cfreq",880,800);
+  // cfreq->Divide(1,3);
+  // cfreq->cd(1);
+  // gfreqdomain_rfcm->Draw("al");
+  // cfreq->cd(2);
+  // gavgfreqdomain_lab->Draw("al");
+  // cfreq->cd(3);
+  // gfreqdomain_rfcm_banding[4]->Draw("al");
+  // for (int i=0;i<5;i++) {
+  //   gfreqdomain_rfcm_banding[i]->Draw("l");
+  // }
+  // stemp=string(outputdir.Data())+"/freqdomainplots.eps";
+  // cfreq->Print((TString)stemp);
+    
+    
+    
+  // do the box banding for BANDING==1
+  if (BANDING==1) {
+    for (int j=0;j<5;j++) {
+	
+      for (int k=0;k<NFOUR/4;k++) {
+	  
+	if (bwslice_min[j]>freq_forplotting[k] || bwslice_max[j]<freq_forplotting[k]) {
+	  freqdomain_rfcm_banding[j][k]=0.;
+	}
+      }
+    }// end loop over bands
+  }
+    
+  
+  
+  double power=0.;
+  for (int j=0;j<5;j++) {
+    for (int k=0;k<NFOUR/4;k++) {
+      power+=freqdomain_rfcm_banding[j][k]/((double)NFOUR/4); // in V^2
+    }
+    //  cout << "power is " << power << "\n";
+  }
+    
+  int ngeneratedevents=1000;
+  int passes[5]={0,0,0,0,0};
+  double averageoutput[5]={0.,0.,0.,0.,0.};
+
+  if (!settings1->NOISEFROMFLIGHTTRIGGER){
+    for (int i=0;i<ngeneratedevents;i++) {
+      // put phases to freqdomain_rfcm_banding_rfcm array
+      // assign phases (w/ correlations) to freqdomain_rfcm_banding_rfmc_banding array
+      GetNoiseWaveforms();
+      for (int j=0;j<5;j++) {
+	//       // timedomainnoise_rfcm_banding_e[j] contain noise waveforms for
+	//       // each band.  They come from taking the waveforms measured in
+	//       // the signal stream, removing the rfcm's and lab attn.,
+	//       // then reinserting rfcm's and band attn.
+	//       // so they should be narrow band
+	//       // myconvlv performs a convolution on that time domain waveform
+	//       // based on the function that you define in getDiodeModel
+	    
+	//       cout << "timedomainnoise_rfcm_banding_e is " << timedomainnoise_rfcm_banding_e[j][NFOUR/4-1] << "\n";
+	myconvlv(timedomainnoise_rfcm_banding[0][j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
+			
+	hnoise[j]->Fill(onediodeconvl[j]*1.E15);
+			
+	bwslice_enoise[j]+=onediodeconvl[j];
+			
+			
+	for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+	  bwslice_meandiode[j]+=timedomain_output[j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	  bwslice_vrms[j]+=timedomainnoise_rfcm_banding[0][j][m]*timedomainnoise_rfcm_banding[0][j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)); // this is the rms of the diode input voltage
+	  averageoutput[j]+=timedomain_output[j][m]*timedomain_output[j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	} // end loop over samples where diode function is fully contained
+			
+      } // end loop over bands
+		
+    } // end loop over generated events
+    
+    
+    // TCanvas *ctest=new TCanvas("ctest","ctest",880,800);
+    // ctest->Divide(1,5);
+    // TGraph *gtest[5];
+    // for (int i=0;i<5;i++) {
+    //   ctest->cd(i+1);
+    //   gtest[i]=new TGraph(NFOUR,time_long,timedomain_output[i]);
+    //   gtest[i]->Draw("al");
+    // }
+    // stemp = string(outputdir.Data())+"/test.eps";
+    // ctest->Print((TString)stemp);
+    
+    for (int j=0;j<5;j++) {
+      
+      bwslice_vrms[j]=sqrt(bwslice_vrms[j]); // this is the rms input voltage
+    }
+    
+    
+    for (int j=0;j<5;j++) {
+      bwslice_enoise[j]=hnoise[j]->GetMean()/1.E15; // mean diode output with no correlations
+      
+      bwslice_fwhmnoise[j]=Tools::GetFWHM(hnoise[j]);
+      
+    }
+    
+    
+    for (int i=0;i<ngeneratedevents;i++) {// now we need to get the rms
+      GetNoiseWaveforms();
+      for (int j=0;j<5;j++) {
+	
+	myconvlv(timedomainnoise_rfcm_banding[0][j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
+	
+	for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {	  
+	  bwslice_rmsdiode[j]+=(timedomain_output[j][m]-bwslice_meandiode[j])*(timedomain_output[j][m]-bwslice_meandiode[j])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	}
+      
+      }
+    }
+    
+    for (int j=0;j<5;j++) {
+      bwslice_rmsdiode[j]=sqrt(bwslice_rmsdiode[j]);
+      //cout << "mean, rms are " << bwslice_meandiode[j] << " " << bwslice_rmsdiode[j] << "\n";
+    }
+  
+    double thresh_begin=-1.;
+    double thresh_end=-11.;
+    double thresh_step=1.;
+  
+    double rate[5][100];
+    for (double testthresh=thresh_begin;testthresh>=thresh_end;testthresh-=thresh_step) {
+      for (int j=0;j<5;j++) {
+	passes[j]=0;
+      }
+      for (int i=0;i<ngeneratedevents;i++) {
+  	
+	GetNoiseWaveforms();
+	for (int j=0;j<5;j++) {
+
+	  myconvlv(timedomainnoise_rfcm_banding[0][j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
+  	
+	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+  	    
+	    if (timedomain_output[j][m+1]<bwslice_rmsdiode[j]*testthresh) {
+	      passes[j]++;
+	      m+=(int)(DEADTIME/TIMESTEP);
+	    }
+  	    	    
+	  } // end loop over samples where diode function is fully contained
+	}
+      }
+      // brian m.
+      for (int j=0;j<5;j++) {
+	int ibin=(int)fabs((testthresh-thresh_begin)/thresh_step);
+	// relthresh[j][ibin]=fabs(testthresh);
+	rate[j][ibin]=passes[j]/((double)ngeneratedevents*((double)NFOUR/2*(TIMESTEP)-maxt_diode));
+	if (rate[j][ibin]!=0)
+	  rate[j][ibin]=log10(rate[j][ibin]);
+	//cout << "Threshold " << testthresh << " For the " << j << "th band, rate is " << rate[j][ibin] << "\n";
+      }
+    }
+    
+  } else { // IF WE HAVE NOISE FROM FLIGHT
+
+
+    for (int i=0;i<ngeneratedevents;i++) {
+      // put phases to freqdomain_rfcm_banding_rfcm array
+      // assign phases (w/ correlations) to freqdomain_rfcm_banding_rfmc_banding array
+      
+      // NOISE FROM FLIGHT ONLY AVAILABLE FOR FULL BAND
+      for (int j=4;j<5;j++) {	    
+
+	double *quickNoise = getQuickTrigNoiseFromFlight();
+	myconvlv(quickNoise,NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
+			
+	hnoise[j]->Fill(onediodeconvl[j]*1.E15);
+			
+	bwslice_enoise[j]+=onediodeconvl[j];
+			
+			
+	for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+	  bwslice_meandiode[j]+=timedomain_output[j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	  bwslice_vrms[j]+=timedomainnoise_rfcm_banding[0][j][m]*timedomainnoise_rfcm_banding[0][j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)); // this is the rms of the diode input voltage
+	  averageoutput[j]+=timedomain_output[j][m]*timedomain_output[j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	} // end loop over samples where diode function is fully contained
+			
+      } // end loop over bands
+		
+    } // end loop over generated events
+    
+    
+    
+    for (int j=4;j<5;j++) {
+      
+      bwslice_vrms[j]=sqrt(bwslice_vrms[j]); // this is the rms input voltage
+    }
+    
+    
+    for (int j=4;j<5;j++) {
+      bwslice_enoise[j]=hnoise[j]->GetMean()/1.E15; // mean diode output with no correlations
+      
+      bwslice_fwhmnoise[j]=Tools::GetFWHM(hnoise[j]);
+      
+    }
+    
+    
+    for (int i=0;i<ngeneratedevents;i++) {// now we need to get the rms
+
+      for (int j=4;j<5;j++) {
+	
+	double *quickNoise = getQuickTrigNoiseFromFlight();
+	
+	myconvlv(quickNoise,NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
+	
+	for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {	  
+	  bwslice_rmsdiode[j]+=(timedomain_output[j][m]-bwslice_meandiode[j])*(timedomain_output[j][m]-bwslice_meandiode[j])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	}
+      
+      }
+    }
+    
+    for (int j=4;j<5;j++) {
+      bwslice_rmsdiode[j]=sqrt(bwslice_rmsdiode[j]);
+      //cout << "mean, rms are " << bwslice_meandiode[j] << " " << bwslice_rmsdiode[j] << "\n";
+    }
+
+  
+    double thresh_begin=-1.;
+    double thresh_end=-11.;
+    double thresh_step=1.;
+  
+    double rate[5][100];
+    for (double testthresh=thresh_begin;testthresh>=thresh_end;testthresh-=thresh_step) {
+      for (int j=0;j<5;j++) {
+	passes[j]=0;
+      }
+      for (int i=0;i<ngeneratedevents;i++) {
+  	
+	for (int j=4;j<5;j++) {
+
+	  double *quickNoise = getQuickTrigNoiseFromFlight();
+	  myconvlv(quickNoise,NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
+  	
+	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+  	    
+	    if (timedomain_output[j][m+1]<bwslice_rmsdiode[j]*testthresh) {
+	      passes[j]++;
+	      m+=(int)(DEADTIME/TIMESTEP);
+	    }
+  	    	    
+	  } // end loop over samples where diode function is fully contained
+	}
+      }
+      // brian m.
+      for (int j=0;j<5;j++) {
+	int ibin=(int)fabs((testthresh-thresh_begin)/thresh_step);
+	// relthresh[j][ibin]=fabs(testthresh);
+	rate[j][ibin]=passes[j]/((double)ngeneratedevents*((double)NFOUR/2*(TIMESTEP)-maxt_diode));
+	if (rate[j][ibin]!=0)
+	  rate[j][ibin]=log10(rate[j][ibin]);
+	//cout << "Threshold " << testthresh << " For the " << j << "th band, rate is " << rate[j][ibin] << "\n";
+      }
+    }
+    
+  }
+    
+  TF1 *frice[5];
+    
+  int jplot;
+  TCanvas *c4=new TCanvas("c4","c4",880,800);
+  c4->Divide(1,5);
+  for (int j=0;j<5;j++) {
+	
+	
+    //    cout << "cd to " << j+1 << "\n";
+    frice[j]=new TF1("frice","[2]*(-1.*x-[1])/[0]^2*exp(-1.*(-1.*x-[1])^2/2/[0]^2)",-50.,50.);
+    frice[j]->SetParameter(0,4.);
+    //    frice[j]->SetParameter(1,-5.);
+    frice[j]->SetParameter(1,5.);
+    frice[j]->SetParameter(2,400.);
+    //frice[j]->SetParameter(2,frice[j]->GetParameter(2)*hnoise[j]->GetEntries()/frice[j]->Integral(-500.,500.));
+    jplot=j;
+    //    if (BANDING==2 && j==4)
+    //jplot=j-1;
+	
+    if ((BANDING==2 && j!=3) ||
+	//	(BANDING!=2 && j!=4)) {
+	(BANDING!=2 && BANDING!=4) ||
+	((BANDING==4||BANDING==5) && j==4) ){
+      c4->cd(jplot+1);
+	    
+      if (j==0 && BANDING==2)
+	hnoise[j]->Fit(frice[j],"Q","",-20.,1.);
+      if (j==1 && BANDING==2)
+	hnoise[j]->Fit(frice[j],"Q","",-20.,2.);
+      if (j==2 && BANDING==2)
+	hnoise[j]->Fit(frice[j],"Q","",-20.,10.);
+      if (j==4 && (BANDING==2 || BANDING==4 || BANDING==5))
+	hnoise[j]->Fit(frice[j],"Q","",-15.,15.);
+	    
+      if (j==0 && BANDING==0)
+	hnoise[j]->Fit(frice[j],"Q","",-20.,5.);
+      if (j==1 && BANDING==0)
+	hnoise[j]->Fit(frice[j],"Q","",-20.,5.);
+      if (j==2 && BANDING==0)
+	hnoise[j]->Fit(frice[j],"Q","",-20.,15.);
+      if (j==3 && BANDING==0)
+	hnoise[j]->Fit(frice[j],"Q","",-20.,20.);
+	    
+      frice[j]->GetHistogram()->SetLineWidth(3);
+	    
+      hnoise[j]->SetLineWidth(3);
+      hnoise[j]->SetXTitle("Diode Output (10^{-15} Joules)");
+      hnoise[j]->SetYTitle("Number of Noise Waveforms");
+      hnoise[j]->SetTitleSize(0.05,"X");
+      hnoise[j]->SetTitleSize(0.05,"Y");
+	    
+      hnoise[j]->Draw();
+      frice[j]->Draw("same");
+      //    cout << "bwslice_enoise is " << bwslice_enoise[j] << "\n";
+    }
+	
+  }
+  stemp=string(outputdir.Data())+"/hnoise.eps";
+  c4->Print((TString)stemp);
+
+  
+  
+}
+
+
+
+double* Anita::getQuickTrigNoiseFromFlight(){
+
+  FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
+  phasorsTrig[0].setMagPhase(0,0);
+  Double_t sigma, realPart, imPart, dig, trig, norm;
+
+  
+  for(int i=1;i<numFreqs;i++) {
+    sigma          = RayleighFits[0][0]->Eval(freqs[i])*4/TMath::Sqrt(numFreqs);
+    realPart       = fRand->Gaus(0,sigma);
+    imPart         = fRand->Gaus(0,sigma);
+    dig            = fSignalChainResponseDigitizerFreqDomain[0][0][0][i];
+    trig           = fSignalChainResponseTriggerFreqDomain[0][0][0][i];
+    //    norm           = (trig/dig)*THERMALNOISE_FACTOR;
+    norm           = (trig/dig);
+    phasorsTrig[i] = FFTWComplex(realPart*norm, imPart*norm);
+  }
+  
+  
+  RFSignal *rfNoiseTrig   = new RFSignal(numFreqs,freqs,phasorsTrig,1);
+  Double_t *justNoiseTrig = rfNoiseTrig->GetY();
+
+  delete rfNoiseTrig;
+  delete[] phasorsTrig;
+  
+  return justNoiseTrig;
+}
 
 
 void Anita::getPulserData(){

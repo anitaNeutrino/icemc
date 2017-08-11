@@ -350,6 +350,9 @@ public:
 
 
   void getDiodeModel();
+  void setDiodeRMS(Settings *settings1, TString outputdir);
+  
+  double* getQuickTrigNoiseFromFlight();
   TF1 fdiode;
   double maxt_diode;
   int idelaybeforepeak[5];

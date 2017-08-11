@@ -1557,7 +1557,7 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
     for (int i=0;i<nPoints;i++){
-      y[i]=newy[i] + justNoise_digPath[ipol][i]*anita1->THERMALNOISE_FACTOR;
+      y[i]=newy[i] + justNoise_digPath[ipol][i];
     }
   } else {
     for (int i=0;i<nPoints;i++)  y[i]=newy[i];
@@ -1616,7 +1616,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
     for (int i=0;i<nPoints;i++){
-      y[i] = voltsArray[i] = newy[i] + justNoise_trigPath[ipol][i]*anita1->THERMALNOISE_FACTOR;
+      y[i] = voltsArray[i] = newy[i] + justNoise_trigPath[ipol][i];
       //  std::cout << i << " " << justNoise_trigPath[ipol][i] << std::endl;
     }
   } else {
@@ -1673,7 +1673,8 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
       imPart         = anita1->fRand->Gaus(0,sigma);
       dig            = anita1->fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
       trig           = anita1->fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i];
-      norm           = 1; //trig/dig;
+      //      norm           = (trig/dig)*anita1->THERMALNOISE_FACTOR;
+      norm           = (trig/dig);
       //cout << freqs[i] << " " << norm << " " << trig << " " << dig << endl;
       phasorsDig[i]  = FFTWComplex(realPart, imPart);
       phasorsTrig[i] = FFTWComplex(realPart*norm, imPart*norm);
@@ -1686,8 +1687,8 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
     Double_t *justNoiseTrig = rfNoiseTrig->GetY();
 
     for (int i=0; i<anita1->HALFNFOUR; i++){
-      justNoise_digPath[ipol][i] = justNoiseDig[i];
-      justNoise_trigPath[ipol][i] = justNoiseTrig[i];
+      justNoise_digPath[ipol][i]  = justNoiseDig[i]; // *anita1->THERMALNOISE_FACTOR
+      justNoise_trigPath[ipol][i] = justNoiseTrig[i];// *anita1->THERMALNOISE_FACTOR
     }
     delete rfNoiseDig;
     delete rfNoiseTrig;
