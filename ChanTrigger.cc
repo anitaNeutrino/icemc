@@ -381,7 +381,6 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
       }
     }
   } // end loop over bands	
-
   
   // Translate Anita physical layer to Anita trigger layer and phi sector
   // (4 layers with 8,8,16,8 phi sector to 3 layers with 16 phi sectors each.
@@ -423,11 +422,9 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
     anita1->total_diodeinput_1_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][itime]=anita1->total_diodeinput_1_inanita[4][itime];
     anita1->total_diodeinput_2_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][itime]=anita1->total_diodeinput_2_inanita[4][itime];
   }
-  
   DiodeConvolution(settings1, anita1, globaltrig1, ilayer, ifold, mindiodeconvl[0], onediodeconvl[0], psignal[0], timedomain_output[0], ibinshift, 0, thresholds);
   DiodeConvolution(settings1, anita1, globaltrig1, ilayer, ifold, mindiodeconvl[1], onediodeconvl[1], psignal[1], timedomain_output[1], ibinshift, 1, thresholds);
 
-  
   // fill channels_passing
   //  } // end if the signal is big enough the be considered
   // now we've made the diode outputs
@@ -438,8 +435,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
 
   L1Trigger(anita1,timedomain_output[0],timedomain_output[1],thresholds, //inputs
 	    globaltrig1->channels_passing[ilayer][ifold][0],globaltrig1->channels_passing[ilayer][ifold][1],npass); //outputs
-
-      
+  
   // if it's the closest antenna,
   // save flag_e,h in anita class for writing to tsignals tree
   int startbin=TMath::MinElement(5,anita1->iminbin);
@@ -447,18 +443,17 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   if (ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
     for (int iband=0;iband<5;iband++) {
       if (anita1->bwslice_allowed[iband]!=1) continue; 
-
-      //	  cout << "zeroeing here 1.\n";
+      // cout << "zeroeing here 1.\n";
       anita1->ston[iband]=0.;
       for (int i=anita1->iminbin[iband];i<anita1->imaxbin[iband];i++) {
 	// 	    if (iband==0 && i==anita1->NFOUR/4) {
 	// 	      cout << "output is " << anita1->inu << "\t" << timedomain_output[0][iband][i] << "\n";
 	// 	    }
-	//	    cout << "output, bwslice_rmsdiode are " << timedomain_output[0][iband][i] << "\t" << anita1->bwslice_rmsdiode[iband] << "\n";
+	// cout << "output, bwslice_rmsdiode are " << timedomain_output[0][iband][i] << "\t" << anita1->bwslice_rmsdiode[iband] << "\n";
 	if (timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[iband]<anita1->ston[iband]) {
 	  anita1->ston[iband]=timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[iband];
-	  //  if (iband==4 && anita1->ston[iband]<0.)
-	  //cout << "ston is " << anita1->ston[iband] << "\n";
+	  // if (iband==4 && anita1->ston[iband]<0.)
+	  // cout << "ston is " << anita1->ston[iband] << "\n";
 	}
       }
 
@@ -1347,7 +1342,7 @@ void ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::N
     flag_h[j].clear();		
       
     for (int i=minsample;i<maxsample;i++) {
-	
+      //      std::cout << anita1->inu << " " << timedomain_output_1[j][i] << " " << powerthreshold[0][j] << " " << anita1->bwslice_rmsdiode[j] << std::endl;
       if (timedomain_output_1[j][i]<powerthreshold[0][j]*anita1->bwslice_rmsdiode[j] && anita1->bwslice_allowed[j]==1) {
 	flag_e[j].push_back(1);
 	  
@@ -1673,9 +1668,7 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
       imPart         = anita1->fRand->Gaus(0,sigma);
       dig            = anita1->fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
       trig           = anita1->fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i];
-      //      norm           = (trig/dig)*anita1->THERMALNOISE_FACTOR;
       norm           = (trig/dig);
-      //cout << freqs[i] << " " << norm << " " << trig << " " << dig << endl;
       phasorsDig[i]  = FFTWComplex(realPart, imPart);
       phasorsTrig[i] = FFTWComplex(realPart*norm, imPart*norm);
     }
@@ -1687,8 +1680,8 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
     Double_t *justNoiseTrig = rfNoiseTrig->GetY();
 
     for (int i=0; i<anita1->HALFNFOUR; i++){
-      justNoise_digPath[ipol][i]  = justNoiseDig[i]; // *anita1->THERMALNOISE_FACTOR
-      justNoise_trigPath[ipol][i] = justNoiseTrig[i];// *anita1->THERMALNOISE_FACTOR
+      justNoise_digPath[ipol][i]  = justNoiseDig[i]*anita1->THERMALNOISE_FACTOR;
+      justNoise_trigPath[ipol][i] = justNoiseTrig[i]*anita1->THERMALNOISE_FACTOR;
     }
     delete rfNoiseDig;
     delete rfNoiseTrig;

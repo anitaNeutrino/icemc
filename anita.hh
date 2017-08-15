@@ -352,7 +352,6 @@ public:
   void getDiodeModel();
   void setDiodeRMS(Settings *settings1, TString outputdir);
   
-  double* getQuickTrigNoiseFromFlight();
   TF1 fdiode;
   double maxt_diode;
   int idelaybeforepeak[5];
@@ -587,6 +586,7 @@ public:
   void readImpulseResponseTrigger(Settings *settings1);
   void readTriggerEfficiencyScanPulser(Settings *settings1);
   void readNoiseFromFlight(Settings *settings1);
+  void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR]);
   TGraph *RayleighFits[2][48];
   Int_t numFreqs;
   Double_t *freqs;
