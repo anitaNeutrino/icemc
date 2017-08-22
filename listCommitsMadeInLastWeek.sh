@@ -2,7 +2,7 @@
 
 theOriginalPwd=$(pwd);
 
-for component in ./ ../anitaBuildTool/RandomMacros/createIceMCinputs/; do
+for component in ./ ../anitaBuildTool/RandomMacros/createIceMCinputs/ ../anitaBuildTool/RandomMacros/makeMinBiasPlusIcemc/; do
     cd $component;
     echo $component | sed s,"components/",,;
 
