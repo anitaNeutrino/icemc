@@ -40,7 +40,8 @@
  * Default constructor
  *
  */
-Settings::Settings() {
+Settings::Settings() : jamieFactor(0), medium(0), askaryanParameterization(0)
+{
   Initialize();
 }
 

@@ -238,9 +238,11 @@ class Settings : public TObject {
   int TUFFSON;                             // Are the TUFFs on for the whole flight?
 
   int useLPM;
-  double jamieFactor = 0;
-  int medium = 0;
-  int askaryanParameterization = 0;
+
+  // In-header intialization is to old gcc as Domino's pizza is to real Italians
+  double jamieFactor;// = 0;
+  int medium;// = 0;
+  int askaryanParameterization;// = 0;
     
   //  TString outputdir; // directory where outputs go
   
