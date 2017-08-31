@@ -4158,28 +4158,31 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
       primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, 0, 0);
 
       // EdNdEdAdt is in #/cm^2/s
+      // need to be multiplied by 1e4 to change 1/cm2 to 1/m^2
       // can also be written dN/d(lnE)dAdt
       // = dN*log(10)/d(log E)dAdt
       // the bin spacing is 0.5
       // so # events ~ dN*log(10)*0.5/d(log E)dAdt
-      sum_events+=even_E*log(10.)*( spectra1->GetEdNdEdAdt(log10(thisenergy)) )/(thislen_int_kgm2/sig1->RHOH20);
-      //cout << "thisenergy,  EdNdEdAdt is " << thisenergy << " " << spectra1->EdNdEdAdt[i] << "\n";
+      sum_events+=even_E*log(10.)*( spectra1->GetEdNdEdAdt(log10(thisenergy))*1e4 )/(thislen_int_kgm2/sig1->RHOH20);
+      cout << "thisenergy,  EdNdEdAdt is " << thisenergy << " " <<  spectra1->GetEdNdEdAdt(log10(thisenergy)) << "\n";
       //foutput << "interaction length is " << thislen_int_kgm2/RHOH20 << "\n";
     }//end for N_even_E
-    for (int i=0;i<12;i++) {
-      thisenergy=pow(10., (spectra1->Getenergy())[0]+((double)i)*0.5);
-      primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, 0, 0);
-      // EdNdEdAdt is in #/cm^2/s
-      // can also be written dN/d(lnE)dAdt
-      // = dN*log(10)/d(log E)dAdt
-      // the bin spacing is 0.5
-      // so # events ~ dN*log(10)*0.5/d(log E)dAdt
-      sum_events+=0.5*log(10.)*(spectra1->GetEdNdEdAdt())[i]/(thislen_int_kgm2/sig1->RHOH20);
-      //cout << "thisenergy,  EdNdEdAdt is " << thisenergy << " " << spectra1->EdNdEdAdt[i] << "\n";
-      //foutput << "interaction length is " << thislen_int_kgm2/RHOH20 << "\n";
-    } //end for i
+     // for (int i=0;i<12;i++) {
+     //   thisenergy=pow(10., (spectra1->Getenergy())[0]+((double)i)*0.5);
+     //   primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, 0, 0);
+     //   // EdNdEdAdt is in #/cm^2/s
+     //   // can also be written dN/d(lnE)dAdt
+     //   // = dN*log(10)/d(log E)dAdt
+     //   // the bin spacing is 0.5
+     //   // so # events ~ dN*log(10)*0.5/d(log E)dAdt
+     //   sum_events+=0.5*log(10.)*(spectra1->GetEdNdEdAdt())[i]/(thislen_int_kgm2/sig1->RHOH20);
+     //   cout << "thisenergy,  EdNdEdAdt is " << thisenergy << " " << spectra1->EdNdEdAdt[i] << "\n";
+     //   //foutput << "interaction length is " << thislen_int_kgm2/RHOH20 << "\n";
+     // } //end for i
     //km3sr=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/RHOH20*sr*nevents/(double)NNU;
-    sum_events*=volume*anita1->LIVETIME*sig1->RHOMEDIUM/sig1->RHOH20*nevents/(double)NNU*sr*pow(10., 4);
+    cout << "SUM EVENTS IS " << sum_events << endl;
+    sum_events*=volume*anita1->LIVETIME*sig1->RHOMEDIUM/sig1->RHOH20*nevents/(double)NNU*sr;
+    // sum_events*=anita1->LIVETIME*km3sr*1e9;
     foutput << "volume,  LIVETIME,  sig1->RHOMEDIUM,  RHOH20,  nevents,  NNU,  sr are " << volume << " " << anita1->LIVETIME << " " << sig1->RHOMEDIUM << " " << sig1->RHOH20 << " " << nevents << " " << NNU << " " << sr << "\n";
     foutput << "Total events observed is " << sum_events << "\n";
   } //end if IsSpectrum
