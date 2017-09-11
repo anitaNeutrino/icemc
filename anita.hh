@@ -417,6 +417,7 @@ public:
   double bwslice_rmsdiode[5]; // average rms diode output across noise waveforms in each band
   double bwslice_meandiode[5]; // mean diode output across all samples in a sample of noise waveforms generated for each band
   double bwslice_vrms[5]; // rms noise voltage for this bandwidth slice
+  double bwslice_dioderms_fullband_allchan[2][48]; // diode rms for noise read from flight
   double freq_noise[5][NPOINTS_NOISE]; // frequency array that goes with vnoise array
 
 
@@ -587,7 +588,7 @@ public:
   void readImpulseResponseTrigger(Settings *settings1);
   void readTriggerEfficiencyScanPulser(Settings *settings1);
   void readNoiseFromFlight(Settings *settings1);
-  void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR]);
+  void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant);
   TGraph *RayleighFits[2][48];
   Int_t numFreqs;
   Double_t *freqs;

@@ -336,6 +336,13 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   double onediodeconvl[2][5];
   
   double timedomain_output[2][5][Anita::NFOUR];
+  int iant=anita1->GetRxTriggerNumbering(ilayer, ifold);
+  int ipol=0;
+
+  if (settings1->NOISEFROMFLIGHTTRIGGER){
+    anita1->bwslice_rmsdiode[4] = anita1->bwslice_dioderms_fullband_allchan[ipol][iant];
+  }
+
   
   // if we use the diode to perform an integral
   // this is the number of bins to the left of center where the diode function starts to be completely overlapping with the waveform in the convolution.
@@ -435,7 +442,9 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
 
   L1Trigger(anita1,timedomain_output[0],timedomain_output[1],thresholds, //inputs
 	    globaltrig1->channels_passing[ilayer][ifold][0],globaltrig1->channels_passing[ilayer][ifold][1],npass); //outputs
-  
+
+  //if (npass==1) std::cout << "L1 trigger " << ilayer << " " << ifold << " " << npass << std::endl;
+
   // if it's the closest antenna,
   // save flag_e,h in anita class for writing to tsignals tree
   int startbin=TMath::MinElement(5,anita1->iminbin);
