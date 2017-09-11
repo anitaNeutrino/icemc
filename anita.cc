@@ -39,6 +39,9 @@
 
 #ifdef ANITA_UTIL_EXISTS
 #include "FFTtools.h"
+#include "AnitaEventCalibrator.h"
+#include "AnitaGeomTool.h"
+#include "AnitaConventions.h"
 #endif
 
 const std::string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
@@ -3492,7 +3495,34 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     } 
     PhaseCenterFile.close();
 
-      
+    std::ifstream relativePhaseCenterToAmpaDelaysFile((ICEMC_DATA_DIR+"/relativePhaseCenterToAmpaDelaysAnita"+whichANITAcard+".dat").c_str());
+
+#ifdef ANITA_UTIL_EXISTS
+    AnitaEventCalibrator* cal = AnitaEventCalibrator::Instance();
+    AnitaGeomTool *fGeomTool = AnitaGeomTool::Instance(stoi(whichANITAcard));
+    int tempAnt, intTempPol;
+    AnitaPol::AnitaPol_t tempPol;
+    for(Int_t surf=0; surf<NUM_SURF; surf++){
+      for(Int_t chan=0; chan<NUM_CHAN; chan++){
+    	fGeomTool->getAntPolFromSurfChan(surf,chan, tempAnt, tempPol);
+    	if (tempAnt!=-1){
+	  // in EventReaderRoot 0: HPOL, 1: VPOL, in icemc it's the opposite
+	  intTempPol = (tempPol==0) ? 1 : 0;
+	  extraCableDelays[intTempPol][tempAnt] = cal->relativePhaseCenterToAmpaDelays[surf][chan]*1e-9 ; 
+	}
+      }
+    }
+
+#else
+    for(int ipol=0; ipol<2; ipol++){
+      for (int iant=0; iant<48; iant++){
+	extraCableDelays[ipol][iant] = 0;
+      }
+    }
+    
+#endif
+
+    
     double x, y, z, r, phi;
     for(int ilayer = 0; ilayer < 4; ilayer++){ 
       for(int ifold = 0; ifold < NRX_PHI[ilayer]; ifold++){
@@ -3768,7 +3798,9 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
   
   for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
     arrival_times[antenna_index] = (antenna_positions[antenna_index] * rf_direction) / CLIGHT;
-     
+
+    //arrival_times[antenna_index] += extraCableDelays[0][antenna_index];
+    
     // cout << "index is " << antenna_index << "\n";
     // cout << "antenna_positions are " << antenna_positions[antenna_index] << "\n";
     // cout << "rf direction is " << rf_direction << "\n";
@@ -3828,7 +3860,7 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
     // cout << "diff is ";
     // (antenna_positions[i]-one_antenna_position).Print();
 
-    arrival_times[i] -= first_trigger_time;
+     arrival_times[i] -= first_trigger_time;
     cout << "arrivaltimes is " << arrival_times[i] << "\n";
     // arrival_times[i] -= last_trigger_time;
 
@@ -3839,6 +3871,7 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
   // cout << "end of GetArrivalTimes.\n";
 } // GetArrivalTimes
 
+
 void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]) {
 
   for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
@@ -3846,9 +3879,13 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
     int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
     arrival_times[antenna_index] = (antenna_positions[antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
 
+    // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
+    //   arrival_times[antenna_index] -= extraCableDelays[0][antenna_index];
+    // cout << arrival_times[antenna_index] << endl;
+    
     //  arrival_times[antenna_index]=0;
   } // for: loop over antenna layers
-    
+  
   double first_trigger_time = Tools::dMin(arrival_times,(number_all_antennas));
   for (int i=0;i<(number_all_antennas);i++){
 

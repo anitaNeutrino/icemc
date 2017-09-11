@@ -581,6 +581,7 @@ public:
 
   double SIGMA_THETA; // resolution on the polar angle of the signal
 
+  double extraCableDelays[2][48];
 #ifdef ANITA_UTIL_EXISTS
   void readImpulseResponseDigitizer(Settings *settings1);
   void readImpulseResponseTrigger(Settings *settings1);
