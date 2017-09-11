@@ -1048,9 +1048,7 @@ Vector Balloon::RotatePayload(Vector ant_pos_pre) {
     pitch=-0.29; //ANITA-2 settings in ANALYSIS
     roll=0.89; //ANITA-2 settings in ANALYSIS
   }
-  
-  //double TWOPI = 6.283;
- 
+   
   Vector BalloonPos;
 
   BalloonPos=r_bn;
