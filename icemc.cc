@@ -1442,7 +1442,31 @@ int main(int argc,  char **argv) {
   // for comparing with Peter
   double average_altitude=0.;
   double average_rbn=0.;
- 
+
+  //if using energy spectrum
+  if ( spectra1->IsSpectrum() ){
+    TCanvas *ctemp = new TCanvas("ctemp");
+
+    TFile *out = new TFile("Temp.root", "recreate");
+    TGraph *g1 = spectra1->GetGEdNdEdAdt();
+    g1->Draw("Al");
+    ctemp->Print("Temp1.png");
+    int n = g1->GetN();
+    double *x = g1->GetX();
+    double x2[20];
+    for (int i=0;i<n;i++) x2[i] = TMath::Power(10., x[i]);
+    TGraph *g2 = new TGraph(n, x2, g1->GetY());
+    g2->Draw("Al");
+    ctemp->SetLogy();
+    ctemp->SetLogx();
+    cout << g2->Integral() << " " << g2->Integral(1, n) << endl;
+    ctemp->Print("Temp2.png");
+    g1->Write();
+    g2->Write();
+    out->Close();
+  }
+    
+  
   //  TRandom r(settings1->SEED); // use seed set as input
  
   signal(SIGINT,  interrupt_signal_handler);     // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
@@ -4152,6 +4176,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     // for models which don't have even spaced energy bin,
     double even_E;
     int N_even_E = 12;
+    double integral=0;
     even_E = ( spectra1->Getenergy()[spectra1->GetE_bin() - 1] - spectra1->Getenergy()[0] ) / ( (double) N_even_E );
     for (int i=0;i<N_even_E;i++) {
       thisenergy=pow(10., (spectra1->Getenergy())[0]+((double)i)*even_E);
@@ -4164,6 +4189,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
       // the bin spacing is 0.5
       // so # events ~ dN*log(10)*0.5/d(log E)dAdt
       sum_events+=even_E*log(10.)*( spectra1->GetEdNdEdAdt(log10(thisenergy))*1e4 )/(thislen_int_kgm2/sig1->RHOH20);
+      integral+=even_E*log(10.)*( spectra1->GetEdNdEdAdt(log10(thisenergy)) );
       cout << "thisenergy,  EdNdEdAdt is " << thisenergy << " " <<  spectra1->GetEdNdEdAdt(log10(thisenergy)) << "\n";
       //foutput << "interaction length is " << thislen_int_kgm2/RHOH20 << "\n";
     }//end for N_even_E
@@ -4181,6 +4207,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
      // } //end for i
     //km3sr=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/RHOH20*sr*nevents/(double)NNU;
     cout << "SUM EVENTS IS " << sum_events << endl;
+    cout << "INTEGRAL : " << integral << endl;
     sum_events*=volume*anita1->LIVETIME*sig1->RHOMEDIUM/sig1->RHOH20*nevents/(double)NNU*sr;
     // sum_events*=anita1->LIVETIME*km3sr*1e9;
     foutput << "volume,  LIVETIME,  sig1->RHOMEDIUM,  RHOH20,  nevents,  NNU,  sr are " << volume << " " << anita1->LIVETIME << " " << sig1->RHOMEDIUM << " " << sig1->RHOH20 << " " << nevents << " " << NNU << " " << sr << "\n";
