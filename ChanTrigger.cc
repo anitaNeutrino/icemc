@@ -773,10 +773,6 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
 	}
       } // end looping over frequencies.
 
-      // if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
-      //   injectImpulseAmplitudeAfterAntenna(anita1, tmp_vhz[0], tmp_vhz[1], ant);
-      // }
-
 
       anita1->MakeArraysforFFT(tmp_vhz[0],tmp_vhz[1],tmp_volts[0],tmp_volts[1], 90., true);
 
@@ -987,7 +983,7 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
       volts_rx_rfcm_lab[1][i] = volts_rx_forfft[1][4][i];
     }
     
-#ifdef ANITA_UTIL_EXISTS    
+#ifdef ANITA_UTIL_EXISTS
     applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[0], 0);
     applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[1], 1);
 #endif
@@ -1118,10 +1114,6 @@ void ChanTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, in
   //  for (int i=0;i<48;i++) std::cout << "Arrival times " << anita1->arrival_times[anita1->GetRx(ilayer,ifold)] << std::endl;
   Tools::ShiftRight(volts_rx_rfcm_lab[0],anita1->NFOUR/2, int(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
   Tools::ShiftRight(volts_rx_rfcm_lab[1],anita1->NFOUR/2, int(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-
-  // if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==1)){ 
-  //   injectImpulseAtSurf(anita1, volts_rx_rfcm_lab[0], volts_rx_rfcm_lab[1], ant);
-  // }
 
   for (int i=0;i<anita1->NFOUR/2;i++) {
     volts_rx_rfcm_lab_e_all[anita1->GetRx(ilayer, ifold)][i] = volts_rx_rfcm_lab[0][i];
@@ -1534,7 +1526,7 @@ double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStat
 #ifdef ANITA_UTIL_EXISTS    
 void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
 
-  TGraph *graph1 = graph1 = new TGraph(nPoints, x, y);
+  TGraph *graph1 = new TGraph(nPoints, x, y);
 
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
@@ -1592,7 +1584,8 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   int nPoints = anita1->HALFNFOUR;
   double *x   = anita1->fTimes;
 
-  TGraph *graph1 = graph1 = new TGraph(nPoints, x, y);
+  TGraph *graph1 = new TGraph(nPoints, x, y);
+  //  TGraph *graph1 = (TGraph*) anita1->gPulseAtAmpa->Clone();
 
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
@@ -1608,7 +1601,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
     
   //Calculate convolution
   TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring][iphi]);
-  
+
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
   
@@ -1668,7 +1661,7 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
   else if (ant<32) iring=1;
 
   int iphi = ant - (iring*16);
- 
+
   for (int ipol=0; ipol<2; ipol++){
 
     for(int i=1;i<numFreqs;i++) {
