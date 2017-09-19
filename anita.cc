@@ -1018,6 +1018,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
   } else { // IF WE HAVE NOISE FROM FLIGHT
 
 
+#ifdef ANITA_UTIL_EXISTS
     double quickNoise[HALFNFOUR];
 
     for (int i=0;i<ngeneratedevents;i++) {
@@ -1172,7 +1173,8 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 	//cout << "Threshold " << testthresh << " For the " << j << "th band, rate is " << rate[j][ibin] << "\n";
       }
     }
-    
+   
+#endif 
   }
     
   TF1 *frice[5];
@@ -1241,6 +1243,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 
 
+#ifdef ANITA_UTIL_EXISTS
 void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant){
 
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
@@ -1251,6 +1254,7 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
   else if (iant<32) iring=1;
 
   int iphi = iant - (iring*16);
+
   
   for(int i=1;i<numFreqs;i++) {
     sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4/TMath::Sqrt(numFreqs);
@@ -1275,7 +1279,7 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
   delete[] phasorsTrig;
   
 }
-
+#endif
 
 void Anita::getPulserData(){
       
@@ -4155,7 +4159,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     // norm *= sqrt(2);
 
     if (useDig) TMath::Power(10, +8/20.);
-    else norm *= TMath::Power(10, -7/20.);
+    //else norm *= TMath::Power(10, -7/20.);
     
   }
 
@@ -4220,8 +4224,9 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
     TFile *f = new TFile(fileName.c_str(), "read");
 
     // Get average pulse as measured by scope
-    TGraph *gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
-     
+    gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
+    //TGraph *gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
+    
     for (int i=0;i<gPulseAtAmpa->GetN();i++){
       // 7db fixed attenuation
       gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-7./20.);
@@ -4233,33 +4238,23 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
       gPulseAtAmpa->GetY()[i]*=TMath::Power(10, -10.8/20.);
 
       // Splitter between digitizer and trigger path
-      gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-3./20.);;
+      gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-3./20.);
        
     }
      
     TGraph *gPulseAtAmpaInt = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/2.6);
     double *y = gPulseAtAmpaInt->GetY();
     for (int i=0;i<HALFNFOUR;i++){
-      if (i<HALFNFOUR/2)  trigEffScanPulseAtAmpa[i]=0.;
-      else trigEffScanPulseAtAmpa[i]=y[i-HALFNFOUR/2];
+      // if (i<HALFNFOUR/2)  trigEffScanPulseAtAmpa[i]=0.;
+      // else trigEffScanPulseAtAmpa[i]=y[i-HALFNFOUR/2];
+      trigEffScanPulseAtAmpa[i] = gPulseAtAmpaInt->Eval(fTimes[i]);
     }
 
-    // TGraph *gPulseAtAmpaUp = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/(2.6*2));
-    // double *y2 = gPulseAtAmpaUp->GetY();
-    // for (int i=0;i<NFOUR;i++){
-    //   trigEffScanPulseAtAmpaUpsampled[i]=y2[i];
-    // }
 
-    // FFTWComplex *theFFT = FFTtools::doFFT(HALFNFOUR, trigEffScanPulseAtAmpa);
-    
-    // for (int i=0;i<NFREQ;i++){
-    //   trigEffScanAmplitudeAtAmpa[i]=FFTtools::getAbs(theFFT[i]);
-    // }
-     
     // delete []theFFT;
     delete gPulseAtAmpaInt;
     // delete gPulseAtAmpaUp;
-    delete gPulseAtAmpa;
+    // delete gPulseAtAmpa;
      
      
     for (int isample=0;isample<250;isample++){
@@ -4271,7 +4266,8 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
       // 20dB attenuation was applied at the scope
       for (int i=0;i<HALFNFOUR;i++){
 	trigEffScanPulseAtSurf[isample][i]=y2[i]/10.;
-      }	 
+      }
+      
       delete gPulseAtSurfInt;
       delete gPulseAtSurf;
         
