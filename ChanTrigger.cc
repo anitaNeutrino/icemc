@@ -830,9 +830,11 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
   } // end loop over bands
 
 
+#ifdef ANITA_UTIL_EXISTS
   if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
     getNoiseFromFlight(anita1, ant);
-
+#endif
+  
 }
 
 void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
@@ -924,9 +926,11 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
       Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
 
 
+#ifdef ANITA_UTIL_EXISTS
       // if applying the impulse response
       applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[0][iband], v_banding_rfcm[0][iband], 0);
       applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[1][iband], v_banding_rfcm[1][iband], 1);
+#endif
     }
     
     
