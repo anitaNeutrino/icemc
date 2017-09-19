@@ -1051,9 +1051,9 @@ int main(int argc,  char **argv) {
 	  
 	chantrig1->DigitizerPath(settings1, anita1, antNum);
 	
-	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
- 
 	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac, thresholdsAnt[antNum]);
+
+	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
 	//	cout << inu << " " << ilayer << " " << ifold << endl;
 	delete chantrig1;
@@ -1162,8 +1162,8 @@ int main(int argc,  char **argv) {
 	  realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
 	  // convert volts to millivolts
 	  realEvPtr->fVolts[UsefulChanIndexH][j] =  volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
-	  realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
 	  realEvPtr->fVolts[UsefulChanIndexV][j] =  volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
+	  realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
 	  realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
 	}//end int j
       }// end int iant
