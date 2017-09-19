@@ -8,6 +8,7 @@ TGraphAsymmErrors *getIceCube();
 
 TGraph *getLimit(double effArea[n_ANITA], double eff[n_ANITA], double livetime);
 
+TGraph *getLimitNoDelta(double effArea[n_ANITA], double eff[n_ANITA], double livetime);
 
 void tempLimit(){
 
@@ -55,6 +56,14 @@ void tempLimit(){
 					18.45390 ,     // E20.5		  
 					52.53270 };    // E21              
 
+  Double_t ANITA_2_effArea_published[n_ANITA] = {0.00043,
+						 0.05000,
+						 0.92000,
+						 6.60,
+						 36.00,
+						 108.00,
+						 259.00};
+  
   double ANITA_2_eff[n_ANITA] = { 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8};
 
   double ANITA_2_livetime = 28.5*24*3600.; 
@@ -63,7 +72,11 @@ void tempLimit(){
   TGraph *g_ANITA_2 = getLimit(ANITA_2_effArea, ANITA_2_eff, ANITA_2_livetime);
   g_ANITA_2->SetLineColor(kRed);
 
+  TGraph *g_ANITA_2_pub = getLimit(ANITA_2_effArea_published, ANITA_2_eff, ANITA_2_livetime);
+  g_ANITA_2_pub->SetLineColor(kBlue);
 
+  TGraph *g_ANITA_2_pub2 = getLimitNoDelta(ANITA_2_effArea_published, ANITA_2_eff, ANITA_2_livetime);
+  g_ANITA_2_pub2->SetLineColor(kViolet);
 
   double ANITA_all_effArea[n_ANITA];
   double ANITA_all_livetime = ANITA_1_livetime+ANITA_2_livetime+ANITA_3_livetime+ANITA_4_livetime;
@@ -112,17 +125,21 @@ void tempLimit(){
   g_ANITA_2_erratum->Draw("l");
 
   g_ANITA_2->Draw("l");
-  g_ANITA_3->Draw("l");
-  g_ANITA_4->Draw("l");
-  g_ANITA_all->Draw("l");
+  g_ANITA_2_pub->Draw("l");
+  g_ANITA_2_pub2->Draw("l");
+  // g_ANITA_3->Draw("l");
+  // g_ANITA_4->Draw("l");
+  // g_ANITA_all->Draw("l");
 
 
   TLegend *leg = new TLegend(0.6, 0.6, 0.89, 0.89);
   leg->AddEntry(g_ANITA_2_erratum, "A2 erratum",                  "lp" );
+  leg->AddEntry(g_ANITA_2_pub,     "A2 pub w/ #Delta icemc #epsilon_{ANA}=0.8",  "l" );
+  leg->AddEntry(g_ANITA_2_pub2,    "A2 pub w/o #Delta icemc #epsilon_{ANA}=0.8",  "l" );
   leg->AddEntry(g_ANITA_2,         "A2 icemc #epsilon_{ANA}=0.8",  "l" );
-  leg->AddEntry(g_ANITA_3,         "A3 icemc #epsilon_{ANA}=0.8",  "l" );
-  leg->AddEntry(g_ANITA_4,         "A4 icemc #epsilon_{ANA}=0.8",  "l" );
-  leg->AddEntry(g_ANITA_all,       "A1-4 icemc #epsilon_{ANA}=0.8",  "l" );
+  // leg->AddEntry(g_ANITA_3,         "A3 icemc #epsilon_{ANA}=0.8",  "l" );
+  // leg->AddEntry(g_ANITA_4,         "A4 icemc #epsilon_{ANA}=0.8",  "l" );
+  // leg->AddEntry(g_ANITA_all,       "A1-4 icemc #epsilon_{ANA}=0.8",  "l" );
   leg->Draw();
 
   
@@ -554,7 +571,7 @@ TGraph* getLimit(double effArea[n_ANITA], double eff[n_ANITA], double livetime){
 
     double exponent = TMath::Log10(ANITA_4_x[i]);
     
-    ANITA_4_y[i] *= TMath::Power(10, exponent)/(TMath::Power(10, exponent+0.25) - TMath::Power(10, exponent-0.25));
+    //  ANITA_4_y[i] *= TMath::Power(10, exponent)/(TMath::Power(10, exponent+0.25) - TMath::Power(10, exponent-0.25));
     
     // Divide by 4 
     ANITA_4_y[i] /= 4.;
@@ -571,6 +588,35 @@ TGraph* getLimit(double effArea[n_ANITA], double eff[n_ANITA], double livetime){
   
   return g_ANITA_4;
 }
+
+
+TGraph* getLimitNoDelta(double effArea[n_ANITA], double eff[n_ANITA], double livetime){
+
+  Double_t ANITA_4_y[n_ANITA];
+  
+  double N90 = 2.30; 
+
+  for (int i=0; i<n_ANITA; i++){
+    
+    ANITA_4_y[i] = N90/(effArea[i]*1e10*livetime*eff[i]*TMath::Log(10.));
+
+    double exponent = TMath::Log10(ANITA_4_x[i]);
+    
+    ANITA_4_y[i] *= TMath::Power(10, exponent)/(TMath::Power(10, exponent+0.25) - TMath::Power(10, exponent-0.25));
+
+    std::cout << ANITA_4_x[i] << " " << ANITA_4_y[i] << std::endl;
+  }
+      
+      
+  TGraph *g_ANITA_4 = new TGraph(n_ANITA, ANITA_4_x, ANITA_4_y);
+
+
+  g_ANITA_4->SetLineWidth(4);
+  g_ANITA_4->SetLineStyle(2);
+  
+  return g_ANITA_4;
+}
+
 
 void LogToLine(int N, double *Data) {
 
