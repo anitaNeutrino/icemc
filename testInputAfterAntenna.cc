@@ -845,6 +845,7 @@ int main(int argc,  char **argv) {
   double freq[Anita::NFREQ];
 
   int pdgcode=-999;
+  UInt_t eventNumber;
 
 #ifdef ANITA_UTIL_EXISTS
 
@@ -866,7 +867,6 @@ int main(int argc,  char **argv) {
   outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaGpsFile"+run_num+".root";
   TFile *anitafileGps = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
-  UInt_t eventNumber;
   TTree *adu5PatTree = new TTree("adu5PatTree", "adu5PatTree");
   adu5PatTree->Branch("pat",          &Adu5PatPtr                   );
   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
@@ -1042,11 +1042,14 @@ int main(int argc,  char **argv) {
 	  
 	//	  chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
 
+	
+#ifdef ANITA_UTIL_EXISTS
 	if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
 	  chantrig1->getNoiseFromFlight(anita1, antNum);
   
 	chantrig1->injectImpulseAfterAntenna(anita1, antNum);
-
+#endif
+	
 	chantrig1->TriggerPath(settings1, anita1, antNum);
 	  
 	chantrig1->DigitizerPath(settings1, anita1, antNum);

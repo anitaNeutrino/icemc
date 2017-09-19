@@ -294,6 +294,8 @@ int main(int argc,  char **argv) {
 
   Tools::Zero(count1->npass, 2); // sums events that pass,  without weights
 
+  UInt_t eventNumber;
+  
 #ifdef ANITA_UTIL_EXISTS
 
   string outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaEventFile"+run_num+".root";
@@ -314,7 +316,6 @@ int main(int argc,  char **argv) {
   outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaGpsFile"+run_num+".root";
   TFile *anitafileGps = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
-  UInt_t eventNumber;
   TTree *adu5PatTree = new TTree("adu5PatTree", "adu5PatTree");
   adu5PatTree->Branch("pat",          &Adu5PatPtr                   );
   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
