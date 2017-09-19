@@ -583,6 +583,7 @@ public:
   double SIGMA_THETA; // resolution on the polar angle of the signal
 
   double extraCableDelays[2][48];
+  TRandom3 *fRand;
 #ifdef ANITA_UTIL_EXISTS
   void readImpulseResponseDigitizer(Settings *settings1);
   void readImpulseResponseTrigger(Settings *settings1);
@@ -592,11 +593,11 @@ public:
   TGraph *RayleighFits[2][48];
   Int_t numFreqs;
   Double_t *freqs;
-  TRandom3 *fRand;
-#endif
-  Double_t fTimes[HALFNFOUR];
+  TGraph *gPulseAtAmpa;
   RFSignal *fSignalChainResponseDigitizer[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   RFSignal *fSignalChainResponseTrigger[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
+#endif
+  Double_t fTimes[HALFNFOUR];
   Double_t fSignalChainResponseDigitizerFreqDomain[2][3][16][400];
   Double_t fSignalChainResponseTriggerFreqDomain[2][3][16][400];
   double deltaT;
