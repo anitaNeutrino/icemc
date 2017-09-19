@@ -5,8 +5,11 @@
 #include "anita.hh"
 #include "SimulatedSignal.h"
 
-///< SimulatedSignal inherits from RFSignal
 
+
+#ifdef ANITA_UTIL_EXISTS
+
+///< SimulatedSignal inherits from RFSignal
 SimulatedSignal::SimulatedSignal()
  :RFSignal()
 {
@@ -156,3 +159,5 @@ void SimulatedSignal::getVmmhz(Anita *anita1, double *vmmhz){
   delete gfreq0;
   
 }
+
+#endif

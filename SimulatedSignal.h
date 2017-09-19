@@ -1,5 +1,8 @@
 #ifndef SIMULATEDSIGNAL_H
 #define SIMULATEDSIGNAL_H
+
+
+#ifdef ANITA_UTIL_EXISTS
 #include "RFSignal.h"
 
 //!  This is a wrapper class for an Simulated Signal
@@ -37,4 +40,7 @@ class SimulatedSignal : public RFSignal {
       
 };
 
+#endif 
+
 #endif // SIMULATEDSIGNAL_H
+
