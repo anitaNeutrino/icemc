@@ -162,7 +162,6 @@ int Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *
   } //if
   else {
    
-    nu_nubar=1;//default.
     //nu=0, nubar=1
     if(nu_nubar!=0 && nu_nubar!=1){   
       cout<<"nu_nubar is not defined correctly!\n";
