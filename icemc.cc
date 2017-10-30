@@ -573,7 +573,10 @@ int main(int argc,  char **argv) {
   settings1->ReadInputs(input.c_str(),  foutput, NNU, RANDOMISEPOL);
   settings1->ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
 
-
+  // Signal needs to be initialize with Askaryan parametrisation info
+  // After the inputs are read
+  sig1->Initialize();
+  
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);
 
@@ -1499,7 +1502,7 @@ int main(int argc,  char **argv) {
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
     TRandom3 r(eventNumber+7e8);
-    anita1->fRand->SetSeed(eventNumber+8e9);
+    if (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) anita1->fRand->SetSeed(eventNumber+8e9);
 
 
     //reset screen parameters (even for no roughness) for the new event
