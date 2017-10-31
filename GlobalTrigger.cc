@@ -43,8 +43,8 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
 
   // L1 coincidence window, in seconds  
   L1_COINCIDENCE_ANITA3[0]=16.E-9; // B->M or T
-  L1_COINCIDENCE_ANITA3[1]=22.E-9; // M->B or T
-  L1_COINCIDENCE_ANITA3[2]=5.E-9; // T->B or M 
+  L1_COINCIDENCE_ANITA3[1]=12.E-9; // M->B or T
+  L1_COINCIDENCE_ANITA3[2]=4.E-9; // T->B or M 
 
   // in this scenario B->M is the same as M->B for example
   // this needs to be generalized- using this same thing for all scenarios which isn't right
@@ -2317,8 +2317,8 @@ int GlobalTrigger::L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bot
   }
      
   if (vl0_realtime_middle[IZERO]==1) {
-    if (findahit(vl0_realtime_top,IZERO,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[1]/TRIGTIMESTEP)) ||
-	findahit(vl0_realtime_bottom,IZERO,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[1]/TRIGTIMESTEP))) {
+    if (findahit(vl0_realtime_top,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[1]/TRIGTIMESTEP)) ||
+	findahit(vl0_realtime_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[1]/TRIGTIMESTEP))) {
 	 
       vl1_realtime_middle.push_back(1);
 	 
@@ -2381,8 +2381,8 @@ int GlobalTrigger::L1Anita4_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bot
   }
 
   if (vl0_realtime_middle[IZERO]==1) {
-    if (findahit(vl0_realtime_top,IZERO,IZERO-nstepback+(int)(L1_COINCIDENCE_MOREGENERAL[1][0]/TRIGTIMESTEP)) ||
-	findahit(vl0_realtime_bottom,IZERO,IZERO-nstepback+(int)(L1_COINCIDENCE_MOREGENERAL[1][1]/TRIGTIMESTEP))) {
+    if (findahit(vl0_realtime_top,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_MOREGENERAL[1][0]/TRIGTIMESTEP)) ||
+	findahit(vl0_realtime_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_MOREGENERAL[1][1]/TRIGTIMESTEP))) {
 	 
       vl1_realtime_middle.push_back(1);
 	 
