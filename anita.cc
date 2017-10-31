@@ -3916,7 +3916,7 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
     // (antenna_positions[i]-one_antenna_position).Print();
 
      arrival_times[i] -= first_trigger_time;
-    cout << "arrivaltimes is " << arrival_times[i] << "\n";
+     // cout << "arrivaltimes is " << arrival_times[i] << "\n";
     // arrival_times[i] -= last_trigger_time;
 
     // if (arrival_times[i] == 0){

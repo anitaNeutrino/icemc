@@ -913,19 +913,17 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
 
     } else {
       
-      anita1->MakeArraysforFFT(v_banding_rfcm[0][iband],v_banding_rfcm[1][iband],v_banding_rfcm_forfft[0][iband],v_banding_rfcm_forfft[1][iband], 90., true);
-      
-      // now v_banding_rfcm_h_forfft is in the time domain
-      // and now it is really in units of V
-      Tools::realft(v_banding_rfcm_forfft[0][iband],-1,anita1->NFOUR/2);
-      Tools::realft(v_banding_rfcm_forfft[1][iband],-1,anita1->NFOUR/2);
+      for (int itime=0; itime<anita1->NFOUR/2 ; itime++){
+	v_banding_rfcm_forfft[0][iband][itime]=volts_rx_forfft[0][iband][itime];
+	v_banding_rfcm_forfft[1][iband][itime]=volts_rx_forfft[1][iband][itime];
+      }
       
       // put it in normal time ording -T to T
       // instead of 0 to T, -T to 0
       Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[0][iband]);
       Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
 
-
+      
 #ifdef ANITA_UTIL_EXISTS
       // if applying the impulse response
       applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[0][iband], v_banding_rfcm[0][iband], 0);

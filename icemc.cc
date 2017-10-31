@@ -371,6 +371,8 @@ int neutrinos_passing_all_cuts=0;
 double sum_weights=0;
 //End verification plot block
 
+int xsecParam_nutype = 0; // neutrino = 0, antineutrino = 1;
+int xsecParam_nuint  = 1; // NC = 0, CC = 1;
 
 // functions
 
@@ -571,7 +573,10 @@ int main(int argc,  char **argv) {
   settings1->ReadInputs(input.c_str(),  foutput, NNU, RANDOMISEPOL);
   settings1->ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
 
-
+  // Signal needs to be initialize with Askaryan parametrisation info
+  // After the inputs are read
+  sig1->Initialize();
+  
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);
 
@@ -1365,7 +1370,7 @@ int main(int argc,  char **argv) {
   // sets neutrino energy
   if ( spectra1->IsMonoenergetic() ){
     pnu=pow(10., settings1->EXPONENT);
-    primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, 0, 0);    // get cross section and interaction length.
+    primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);    // get cross section and interaction length.
     cout << "pnu,  sigma,  len_int_kgm2 are " << pnu << " " << sigma << " " << len_int_kgm2 << "\n";
   }
 
@@ -1497,7 +1502,7 @@ int main(int argc,  char **argv) {
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
     TRandom3 r(eventNumber+7e8);
-    anita1->fRand->SetSeed(eventNumber+8e9);
+    if (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) anita1->fRand->SetSeed(eventNumber+8e9);
 
 
     //reset screen parameters (even for no roughness) for the new event
@@ -1521,7 +1526,7 @@ int main(int argc,  char **argv) {
         // cout<<"using spectrum \n";
         pnu=spectra1->GetCDFEnergy();
         // cout<<"pnu is "<<pnu<<"\n";
-        ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, 0, 0);  // given neutrino momentum,  cross section and interaction length of neutrino.
+        ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
         // ierr=0 if the energy is too low for the parameterization
         // ierr=1 otherwise
         len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
@@ -4188,7 +4193,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     even_E = ( spectra1->Getenergy()[spectra1->GetE_bin() - 1] - spectra1->Getenergy()[0] ) / ( (double) N_even_E );
     for (int i=0;i<N_even_E;i++) {
       thisenergy=pow(10., (spectra1->Getenergy())[0]+((double)i)*even_E);
-      primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, 0, 0);
+      primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);
 
       // EdNdEdAdt is in #/cm^2/s
       // need to be multiplied by 1e4 to change 1/cm2 to 1/m^2
@@ -4203,7 +4208,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     }//end for N_even_E
      // for (int i=0;i<12;i++) {
      //   thisenergy=pow(10., (spectra1->Getenergy())[0]+((double)i)*0.5);
-     //   primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, 0, 0);
+     //   primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);
      //   // EdNdEdAdt is in #/cm^2/s
      //   // can also be written dN/d(lnE)dAdt
      //   // = dN*log(10)/d(log E)dAdt
