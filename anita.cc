@@ -4159,7 +4159,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     // norm *= sqrt(2);
 
     if (useDig) TMath::Power(10, +8/20.);
-    //else norm *= TMath::Power(10, -7/20.);
+    else if (!settings1->NOISEFROMFLIGHTTRIGGER) norm *= TMath::Power(10, -7/20.);
     
   }
 
