@@ -3288,9 +3288,9 @@ int main(int argc,  char **argv) {
             } //end if HIST & HISTMAXENTRIES
 
 #ifdef ANITA_UTIL_EXISTS
-            realEvPtr   = new UsefulAnitaEvent();
+            realEvPtr     = new UsefulAnitaEvent();
             rawHeaderPtr  = new RawAnitaHeader();
-            Adu5PatPtr  = new Adu5Pat();
+            Adu5PatPtr    = new Adu5Pat();	    
 
             Adu5PatPtr->latitude= bn1->latitude;
             Adu5PatPtr->longitude=bn1->longitude;
@@ -3301,13 +3301,11 @@ int main(int argc,  char **argv) {
             Adu5PatPtr->roll = bn1->roll;
             Adu5PatPtr->run = run_no;
 
+	    memset(realEvPtr->fNumPoints, 0, sizeof(realEvPtr->fNumPoints) );
+	    memset(realEvPtr->fVolts,     0, sizeof(realEvPtr->fVolts)     );
+	    memset(realEvPtr->fTimes,     0, sizeof(realEvPtr->fTimes)     );
+
             int fNumPoints = 260;
-            for (int i = 0; i < 96; i++){
-              for (int j = 0; j < 260; j++){
-                realEvPtr->fVolts[i][j] = 0.;
-                realEvPtr->fTimes[i][j] = 0.;
-              }
-            }
 
             for (int iant = 0; iant < settings1->NANTENNAS; iant++){
               //int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1,  AnitaGeom1,  iant);
