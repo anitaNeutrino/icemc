@@ -3306,21 +3306,29 @@ int main(int argc,  char **argv) {
 	    memset(realEvPtr->fTimes,     0, sizeof(realEvPtr->fTimes)     );
 
             int fNumPoints = 260;
+	    for (int ichan=0; ichan<108; ichan++){
+              realEvPtr->fNumPoints[ichan] = fNumPoints;
+
+              for (int j = 0; j < fNumPoints; j++) {
+                // convert seconds to nanoseconds
+                realEvPtr->fTimes[ichan][j] = j * anita1->TIMESTEP * 1.0E9;
+	      }
+	    }
 
             for (int iant = 0; iant < settings1->NANTENNAS; iant++){
               //int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1,  AnitaGeom1,  iant);
               int IceMCAnt = GetIceMCAntfromUsefulEventAnt(settings1,  iant);
               int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
               int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
-              realEvPtr->fNumPoints[UsefulChanIndexV] = fNumPoints;
-              realEvPtr->fNumPoints[UsefulChanIndexH] = fNumPoints;
+	      //              realEvPtr->fNumPoints[UsefulChanIndexV] = fNumPoints;
+	      //              realEvPtr->fNumPoints[UsefulChanIndexH] = fNumPoints;
               realEvPtr->chanId[UsefulChanIndexV] = UsefulChanIndexV;
               realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
               for (int j = 0; j < fNumPoints; j++) {
                 // convert seconds to nanoseconds
-                realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
-                realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
+		//                realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
+		//                realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
                 // convert volts to millivolts
                 realEvPtr->fVolts[UsefulChanIndexH][j] =  volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
                 realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
