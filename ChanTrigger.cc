@@ -760,12 +760,12 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
           bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
 
 	  anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
-
-	  if (settings1->TUFFSON){
+//begin keith edited
+/*	  if (settings1->TUFFSON){
 	    tmp_vhz[0][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
 	    tmp_vhz[1][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
 	  }
-	  
+*/ //end keith edited	  
 	} // end if (seavey frequencies)
 	else {
 	  tmp_vhz[0][k]=0;
@@ -913,11 +913,19 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
 
     } else {
       
-      for (int itime=0; itime<anita1->NFOUR/2 ; itime++){
-	v_banding_rfcm_forfft[0][iband][itime]=volts_rx_forfft[0][iband][itime];
-	v_banding_rfcm_forfft[1][iband][itime]=volts_rx_forfft[1][iband][itime];
-      }
+      anita1->MakeArraysforFFT(v_banding_rfcm[0][iband],v_banding_rfcm[1][iband],v_banding_rfcm_forfft[0][iband],v_banding_rfcm_forfft[1][iband], 90., true);
       
+      // now v_banding_rfcm_h_forfft is in the time domain
+      // and now it is really in units of V
+      Tools::realft(v_banding_rfcm_forfft[0][iband],-1,anita1->NFOUR/2);
+      Tools::realft(v_banding_rfcm_forfft[1][iband],-1,anita1->NFOUR/2);
+      
+      // put it in normal time ording -T to T
+      // instead of 0 to T, -T to 0
+      Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[0][iband]);
+      Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
+
+
 #ifdef ANITA_UTIL_EXISTS
       // if applying the impulse response
       applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[0][iband], v_banding_rfcm[0][iband], 0);
@@ -964,7 +972,7 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
 
 
 
-void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
+void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Balloon *bn1)
 {
   double vhz_rx_rfcm_e[Anita::NFREQ]; // V/Hz after rx, rfcm
   double vhz_rx_rfcm_h[Anita::NFREQ];
@@ -980,8 +988,8 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
     }
     
 #ifdef ANITA_UTIL_EXISTS
-    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[0], 0);
-    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[1], 1);
+    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[0], 0, bn1);
+    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[1], 1, bn1);
 #endif
     
     if (settings1->SIGNAL_FLUCT && !settings1->NOISEFROMFLIGHTDIGITIZER){
@@ -1496,8 +1504,8 @@ void ChanTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,dou
 
 
 
+/*begin keith edited
 double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStatus[3]){
-
   // Butterworth filter for two ANITA notches.
   // order0 = order1 = 1 may be closer to hardware notch
   //  but 2 gives better SW rejection in analysis spectrum.
@@ -1513,6 +1521,7 @@ double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStat
 
   return ampl/sqrt(denominator);
 }
+*/ // end keith edited 
 
 
 
@@ -1520,13 +1529,14 @@ double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStat
 
 
 #ifdef ANITA_UTIL_EXISTS    
-void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
+void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol, Balloon *bn1){
 
   TGraph *graph1 = new TGraph(nPoints, x, y);
 
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
-
+  //for debugging
+  TGraph *surfSignal = new TGraph(nPoints, x, y);
   int ipol=0;
   int iring=2;
   if (pol) ipol = 1;
@@ -1534,10 +1544,83 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   else if (ant<32) iring=1;
 
   int iphi = ant - (iring*16);
-  
-  //Calculate convolution
-  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizer[ipol][iring][iphi]);
 
+// begin Keith edited
+  //Calculate convolution
+
+  if(!settings1->TUFFSON){
+    surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizer[ipol][iring][iphi]);
+  }
+  // keith editing debugging
+//  cout << ant << endl;
+// begin keith added
+  else
+  {
+
+//    TString indir;
+    int Curr_time = bn1->realTime_flightdata;
+    int notch =0;
+// list of config times in sequential order (time). config A is on for the time between B_end_3 and A_end_1
+
+    int config_B_end_1 = 1480713195;
+    int config_P_end_1 = 1480730719;
+    int config_C_end_1 = 1480731802;
+    int config_P_end_2 = 1480807284;
+    int config_G_end_1 = 1481013795;
+    int config_O_end_1 = 1481100915;
+    int config_G_end_2 = 1481173515;
+    int config_O_end_2 = 1481490208;
+    int config_P_end_3 = 1481642754;
+    int config_B_end_2 = 1482121239;
+    int config_P_end_4 = 1482168627;
+    int config_B_end_3 = 1482205359;
+    int config_A_end_1 = 1482206201;
+    int config_B_end_4 = 1482286948;
+    int config_P_end_5 = 1482347440;
+    int config_B_end_5 = 1482445716;
+    int config_P_end_6 = 1482465408;
+    int config_B_end_6 = 1482964570;
+    int config_P_end_7 = 1482987942;
+
+// end of list of times for notch switching
+  
+   if((config_B_end_3 < Curr_time) && (Curr_time <= config_A_end_1)) // config A //folder notches_260_0_0
+    {
+       notch=0;
+    }
+    else if(((0 < Curr_time) && (Curr_time <= config_B_end_1)) || ((config_P_end_3 < Curr_time) && (Curr_time <= config_B_end_2)) || ((config_P_end_4 < Curr_time) && (Curr_time <= config_B_end_3)) || ((config_A_end_1 < Curr_time) && (Curr_time <= config_B_end_4)) || ((config_P_end_5 < Curr_time) && (Curr_time <= config_B_end_5)) || ((config_P_end_6 < Curr_time) && (Curr_time <= config_B_end_6)) || (config_P_end_7 < Curr_time) ) // config B notches_260_375_0
+    {
+       notch=1;
+    }
+    else if((config_P_end_1 < Curr_time) && (Curr_time <= config_C_end_1)) // config C notches_260_0_460
+    {
+       notch=2;
+    }
+    else if( ((config_P_end_2 < Curr_time) && (Curr_time <= config_G_end_1)) || ((config_O_end_1 < Curr_time) && (Curr_time <= config_G_end_2)) ) // config G notches_260_385_0
+    {
+       notch=3;
+    }
+/*
+    else if(config_j_low < Curr_time <= config_j_high) // config J notches_250_375_0 not used apparently?
+    {
+       indir= "notches_250_375_0";
+    }
+*/
+    else if( ((config_G_end_1 < Curr_time) && (Curr_time <= config_O_end_1)) || ((config_G_end_2 < Curr_time) && (Curr_time <= config_O_end_2)) ) // config O notches_260_365_0
+    {
+       notch=4;
+    }
+    else if( ((config_B_end_1 < Curr_time) && (Curr_time <= config_P_end_1)) || ((config_C_end_1 < Curr_time) && (Curr_time <= config_P_end_2)) || ((config_O_end_2 < Curr_time) && (Curr_time <= config_P_end_3)) || ((config_B_end_2 < Curr_time) && (Curr_time <= config_P_end_4)) || ((config_B_end_4 < Curr_time) && (Curr_time <= config_P_end_5)) || ((config_B_end_5 < Curr_time) && (Curr_time <= config_P_end_6)) || ((config_B_end_6 < Curr_time) && (Curr_time <= config_P_end_7)) ) // config P notches_260_375_460
+    {
+       notch=5;
+    }
+    surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][notch]); 
+    // convolve this loaded response with graphUp
+
+  }// end esle for ANITA-4
+// end keith added
+
+// end Keith edited
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
   
