@@ -264,6 +264,7 @@ void Settings::Initialize() {
   SCREENEDGELENGTH=25.;
   ROUGH_INTPOS_SHIFT=100000.;
   TUFFSON=0;
+  ADDCW=0;
 }
 
 
@@ -796,6 +797,10 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   getSetting("Simulate TUFFs", TUFFSON);
   getSetting("Which TUFFs are on", whichTUFFsON);
+  if (TUFFSON) cout << "TUFFs are simulated " << endl;
+  
+  getSetting("Add CW", ADDCW);
+  if(ADDCW) cout << "Adding CW " << endl;
 
   
 } //method ReadInputs

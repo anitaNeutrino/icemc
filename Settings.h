@@ -237,6 +237,8 @@ class Settings : public TObject {
 
   int TUFFSON;                             // Are the TUFFs on for the whole flight?
 
+  int ADDCW;                               // Add CW
+  
   int useLPM;
 
   // In-header intialization is to old gcc as Domino's pizza is to real Italians

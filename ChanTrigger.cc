@@ -833,6 +833,12 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
 #ifdef ANITA_UTIL_EXISTS
   if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
     getNoiseFromFlight(anita1, ant);
+
+  if (settings1->ADDCW){
+    memset(cw_digPath, 0, sizeof(cw_digPath));
+    calculateCW(anita1, 250E6, 0, 0.000005);
+  }
+  
 #endif
   
 }
@@ -1531,21 +1537,28 @@ double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStat
 #ifdef ANITA_UTIL_EXISTS    
 void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol, Balloon *bn1){
 
-  TGraph *graph1 = new TGraph(nPoints, x, y);
-
-  // Upsample waveform to same deltaT of the signal chain impulse response
-  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
-  //for debugging
-  TGraph *surfSignal = new TGraph(nPoints, x, y);
   int ipol=0;
   int iring=2;
   if (pol) ipol = 1;
   if (ant<16) iring=0;
   else if (ant<32) iring=1;
-
   int iphi = ant - (iring*16);
-
-// begin Keith edited
+  
+  if (settings1->ADDCW){
+    for (int i=0;i<nPoints;i++){
+      y[i]+=cw_digPath[ipol][i];
+    }
+  }
+  
+  TGraph *graph1 = new TGraph(nPoints, x, y);
+  
+  // Upsample waveform to same deltaT of the signal chain impulse response
+  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
+  //for debugging
+  TGraph *surfSignal = new TGraph(nPoints, x, y);
+  
+  
+  // begin Keith edited
   //Calculate convolution
 
   if(!settings1->TUFFSON){
@@ -1556,7 +1569,6 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
 // begin keith added
   else
   {
-
 //    TString indir;
     int Curr_time = bn1->realTime_flightdata;
     int notch =0;
@@ -1638,16 +1650,16 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
     for (int i=0;i<nPoints;i++)  y[i]=newy[i];
   }
 
-  // if (ant ==8 && pol==0){
+  // if (ant == 8 && pol==0){
   //   TCanvas *c = new TCanvas("c");
   //   graph1->Draw("Al");
-  //   c->Print("DigitPath_graph1.png");
+  //   c->Print(Form("DigitPath_%dgraph1.png", anita1->inu));
   //   graphUp->Draw("Al");
-  //   c->Print("DigitPath_graphUp.png");
+  //   c->Print(Form("DigitPath_%dgraphUp.png", anita1->inu));
   //   surfSignal->Draw("Al");
-  //   c->Print("DigitPath_surfSignal.png");
+  //   c->Print(Form("DigitPath_%dsurfSignal.png", anita1->inu));
   //   surfSignalDown->Draw("Al");
-  //   c->Print("DigitPath_surfSignalDown.png");
+  //   c->Print(Form("DigitPath_%dsurfSignalDown.png", anita1->inu));
   // }
   
   // Cleaning up
@@ -1776,7 +1788,17 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
   
 }
 
+void ChanTrigger::calculateCW(Anita *anita1, double frequency, double phase, double amplitude){
 
+  double omega;
+  
+  for (int itime=0; itime<anita1->HALFNFOUR; itime++){
+    omega=TMath::Pi()*2*frequency;
+    cw_digPath[0][itime]+=amplitude*TMath::Sin(omega*anita1->TIMESTEP*itime + phase);
+    cw_digPath[1][itime]+=amplitude*TMath::Sin(omega*anita1->TIMESTEP*itime + phase);
+  }
+  
+}
 
 
 void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){

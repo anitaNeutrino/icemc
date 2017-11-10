@@ -2696,13 +2696,16 @@ int main(int argc,  char **argv) {
 
       Tools::Zero(sumsignal_aftertaper, 5);
 
-      // // Create a pointer to the SimulatedSignal
-      // SimulatedSignal *simSignal = new SimulatedSignal();
-      // // Define the SimSignal from vmmhz
-      // simSignal->updateSimSignalFromVmmhz(Anita::NFREQ, anita1->freq, vmmhz);
-      // simSignal->addCW(250E6, 0, 0.01);
-      // simSignal->getVmmhz(anita1, vmmhz);
-      // delete simSignal;
+
+// #ifdef ANITA_UTIL_EXISTS  
+//       // Create a pointer to the SimulatedSignal
+//       SimulatedSignal *simSignal = new SimulatedSignal();
+//       // Define the SimSignal from vmmhz
+//       simSignal->updateSimSignalFromVmmhz(Anita::NFREQ, anita1->freq, vmmhz);
+//       simSignal->addCW(250E6, 0, 0.01);
+//       simSignal->getVmmhz(anita1, vmmhz);
+//       delete simSignal;
+// #endif
       
       //if no-roughness case, add its parameters to the saved screen parameters so specular and roughness simulations use the same code in the waveform construction
       if(!settings1->ROUGHNESS){

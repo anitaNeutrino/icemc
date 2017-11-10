@@ -384,7 +384,17 @@ class ChanTrigger {
    * @param  volts_triggerPath_h :: double[NFOUR] - time domain waveform at surf
    */
   void injectImpulseAtSurf(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant);
-  
+
+  //! Add CW
+  /**
+   * Add CW in time domain
+   *
+   * @param  anita1 :: Anita - anita payload object
+   * @param frequency at which to simulate cw
+   * @param phase
+   * @param amplitude
+   */  
+  void calculateCW(Anita *anita1, double frequency, double phase, double amplitude);
   //! Apply Butterworth Filter
   /**
    * This is an approximation of the notch filters flown during ANITA4
@@ -416,7 +426,8 @@ class ChanTrigger {
   double volts_rx_rfcm_lab_all[2][48][Anita::HALFNFOUR];       ///< For digitizer path, time domain voltage vs. time after rx, rfcm's and lab
   double volts_rx_rfcm[2][Anita::HALFNFOUR];                   ///< For digitizer path, time domain voltage vs. time after rx, rfcm's
   double justNoise_digPath[2][Anita::HALFNFOUR];               ///< For digitizer path, time domain noise from flight
-  double justNoise_trigPath[2][Anita::HALFNFOUR];               ///< For digitizer path, time domain noise from flight
+  double justNoise_trigPath[2][Anita::HALFNFOUR];              ///< For trigger path, time domain noise from flight
+  double cw_digPath[2][Anita::HALFNFOUR];                      ///< For digitizer path, time domain cw
        
   // these are filled for triggerscheme==0 and triggerscheme==1
   // frequency domain voltage and energy based
