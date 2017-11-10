@@ -1052,7 +1052,7 @@ int main(int argc,  char **argv) {
 	
 	chantrig1->TriggerPath(settings1, anita1, antNum);
 	  
-	chantrig1->DigitizerPath(settings1, anita1, antNum);
+	chantrig1->DigitizerPath(settings1, anita1, antNum, bn1);
 	
 	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac, thresholdsAnt[antNum]);
 
