@@ -4101,43 +4101,41 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 
 //begin Keith added 
 void Anita::readTuffResponseDigitizer(Settings *settings1){
-//keith added file outdir declared here for testing
-// for loops to make the RFSignal array that can be used in applyImpulseResponse of ChanTrigger.cc
+  //keith added file outdir declared here for testing
+  // for loops to make the RFSignal array that can be used in applyImpulseResponse of ChanTrigger.cc
   // ipol is the polarization "v" or "H" 
   // ring is the number 3 for tmb or bottom middle top
   // iphi is the antenna number
   // ituff is the notch directory
-//  if(){
-//    RFSignal *fSignalChainResponseDigitizerTuffs[][][][]
-    TString filename;
-//  string filenameV;
-    string snotch_dir[6]={"notches_260_0_0","notches_260_375_0","notches_260_0_460","notches_260_385_0","notches_260_365_0","notches_260_375_460"};
-    string spol[2] = {"V","H"};
-    string sring[3] = {"T","M","B"};
-    for(int ipol=0; ipol<=1; ipol++)
-    {
-      for(int iring = 0; iring<=2; iring++)
-          {
-            for(int iphi=0; iphi<=15; iphi++)
-            {
-              for(int ituff=0; ituff <=5; ituff++)
-              {
-                if(iphi+1 < 10)
-                {
-                  filename = Form("%s/data/%s/0%d%s%s.imp",getenv("ICEMC_BUILD_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
-//                       filenameV = Form("%s/data/%s/0%d%cV.imp",getenv("ICEMC_BUILD_DIR"), notch_files, ant, tmb);
-//                  cout << Form("%s/data/%s/0%d%s%s.imp",getenv("ICEMC_BUILD_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str()) << endl;
-                }
-                else
-                {
-                  filename = Form("%s/data/%s/%d%s%s.imp",getenv("ICEMC_BUILD_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
-//                     filenameV = Form("%s/data/%s/%d%cH.imp",getenv("ICEMC_BUILD_DIR"), notch_files, ant, tmb);
-                }
-          TGraph *gtemp = new TGraph(filename);
-              int paveNum=8533; // change for 0 to just signal back 
-          fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gtemp, paveNum)); // Linda help please
-          delete gtemp;
-        }// end for loop ituff
+  //  if(){
+  //    RFSignal *fSignalChainResponseDigitizerTuffs[][][][]
+  TString filename;
+  //  string filenameV;
+  string snotch_dir[6]={"notches_260_0_0","notches_260_375_0","notches_260_0_460","notches_260_385_0","notches_260_365_0","notches_260_375_460"};
+  string spol[2] = {"V","H"};
+  string sring[3] = {"T","M","B"};
+ // Set deltaT to be used in the convolution
+  deltaT = 1/(2.6*16);
+  for(int ipol=0; ipol<=1; ipol++) {
+    for(int iring = 0; iring<=2; iring++){
+      for(int iphi=0; iphi<=15; iphi++) {
+	for(int ituff=0; ituff <=5; ituff++) {
+	  if(iphi+1 < 10) {
+	    filename = Form("%s/data/%s/0%d%s%s.imp",getenv("ICEMC_BUILD_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+	    //                       filenameV = Form("%s/data/%s/0%d%cV.imp",getenv("ICEMC_BUILD_DIR"), notch_files, ant, tmb);
+	    //                  cout << Form("%s/data/%s/0%d%s%s.imp",getenv("ICEMC_BUILD_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str()) << endl;
+	  } else {
+	    filename = Form("%s/data/%s/%d%s%s.imp",getenv("ICEMC_BUILD_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+	    //                     filenameV = Form("%s/data/%s/%d%cH.imp",getenv("ICEMC_BUILD_DIR"), notch_files, ant, tmb);
+	  }
+	  TGraph *gtemp = new TGraph(filename);
+	  // interpolate
+	  TGraph *gint = Tools::getInterpolatedGraph(gtemp,deltaT); 
+	  int paveNum=8533; // change for 0 to just signal back 
+	  fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
+	  delete gint;
+	  delete gtemp;
+	}// end for loop ituff
       } // end for loop iphi
     }// end for loop iring
   }// end for loop ipol
