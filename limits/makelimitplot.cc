@@ -3408,7 +3408,7 @@ void MakePlot() {
   LogToLine(11, ANITA_erratum_y);
 
   // for (int i=0; i<11; i++) cout << ANITA_erratum_x[i] << " " << ANITA_erratum_y[i] << endl;
-  TGraph *g_ANITA_erratum = new TGraph( 11, ANITA_erratum_x, ANITA_erratum_y );
+  TGraph *g_ANITA_erratum = new TGraph( 8, ANITA_erratum_x, ANITA_erratum_y );
 
 
 
@@ -5107,7 +5107,7 @@ void MakePlot() {
   //g_Kotera_shade->GetHistogram()->SetMinimum(1.e-21);
   //g_Kotera_shade->GetHistogram()->SetMinimum(1.e-22);
 
-  g_Kotera_shade->GetXaxis()->SetLimits(3.2e14,1.e24);
+  g_Kotera_shade->GetXaxis()->SetLimits(3.2e14,1.e23);
   //g_Kotera_shade->GetXaxis()->SetLimits(9.9e14,1.e22); // zoom little bit
   g_Kotera_shade->GetHistogram()->SetTitleSize  ( 0.04,"X");
   g_Kotera_shade->GetHistogram()->SetLabelOffset( 0.006,"X");
@@ -5752,7 +5752,7 @@ void MakePlot() {
   g_NuMoon2014->SetMarkerColor(kOrange+2);
   //g_NuMoon2014->SetLineStyle(5);
   g_NuMoon2014->SetLineColor(kOrange+2);
-  g_NuMoon2014->Draw("lp");
+  // g_NuMoon2014->Draw("lp");
 
 
 
@@ -5851,14 +5851,14 @@ void MakePlot() {
 
   //  g_ANITA->SetLineColor(36);
   g_ANITA_4->SetLineColor(kBlue);
-  g_ANITA_4->SetLineWidth(3);
+  g_ANITA_4->SetLineWidth(4);
   g_ANITA_4->SetLineStyle(2);
   g_ANITA_4->Draw("l");
   //g_ANITA_4_shade->Draw("l");
 
 
   g_ANITA_all->SetLineColor(kMagenta);
-  g_ANITA_all->SetLineWidth(3);
+  g_ANITA_all->SetLineWidth(4);
   g_ANITA_all->SetLineStyle(2);
   g_ANITA_all->Draw("l");
   
@@ -6153,7 +6153,7 @@ void MakePlot() {
 
 
 
-  TLegend *Leg_Const_2 = new TLegend(0.48, 0.6, 0.75, 0.89); // for NOT little bit zoom in plot // L, B, R,
+  TLegend *Leg_Const_2 = new TLegend(0.48, 0.65, 0.75, 0.89); // for NOT little bit zoom in plot // L, B, R,
   //Leg_Const_2 -> AddEntry(g_ESS_base, "ESS base", "l");
   //Leg_Const_2 -> AddEntry(g_ARA3, "ARA3 (3yrs)", "lp");
   //Leg_Const_2 -> AddEntry(g_ARA6_2016, "ARA6 (2016)", "lp");
@@ -6170,7 +6170,7 @@ void MakePlot() {
   Leg_Const_2 -> AddEntry(g_Auger15, "Auger '15 (6.5 yrs)", "lp");
   //Leg_Const_2 -> AddEntry(g_ANITA, "ANITA II", "lp");
   Leg_Const_2 -> AddEntry(g_ANITA_erratum, "ANITA 2 '10 (28.5 days)", "lp");
-  Leg_Const_2 -> AddEntry(g_NuMoon2014, "NuMoon '10 (47.6 hrs) ", "lp");
+  // Leg_Const_2 -> AddEntry(g_NuMoon2014, "NuMoon '10 (47.6 hrs) ", "lp");
   Leg_Const_2 -> AddEntry(g_ANITA_4, "ANITA-4 sensitivity (27.3 days)", "lp");
   Leg_Const_2 -> AddEntry(g_ANITA_all, "ANITA 1-4 sensitivity (99.3 days)", "l");//27.3 days)", "lf");
 

@@ -48,7 +48,7 @@ void tempLimit(){
   g_ANITA_3->SetLineColor(kBlue);
 
   
-  Double_t ANITA_2_effArea[n_ANITA] = { 0.00029 ,      // E18     in km^2  
+  Double_t ANITA_2_effArea_now[n_ANITA] = { 0.00029 ,      // E18     in km^2  
 					0.02121 ,      // E18.5		  
 					0.22009 ,      // E19    	  
 					1.27190 ,      // E19.5		  
@@ -56,7 +56,29 @@ void tempLimit(){
 					18.45390 ,     // E20.5		  
 					52.53270 };    // E21              
 
-  Double_t ANITA_2_effArea_published[n_ANITA] = {0.00043,
+    Double_t intLength_CONNOLLY_nuCC[n_ANITA] = { 1544.84,
+						1065.44,
+						745.54,
+						528.431,
+						378.864,
+						 274.445,
+						 200.67}; // E21
+
+  
+  Double_t intLength_CONNOLLY_nubarNC[n_ANITA] = { 3868.47,
+						   2647.45,
+						   1840.89,
+						   1297.89,
+						   926.252,
+						   668.193 ,
+						   486.701 }; // E21
+  
+  Double_t ANITA_2_effArea[n_ANITA];
+    for (int i=0; i<n_ANITA; i++){
+    ANITA_2_effArea[i]    = ANITA_2_effArea_now[i]*intLength_CONNOLLY_nubarNC[i]/intLength_CONNOLLY_nuCC[i]; 
+  }
+
+    Double_t ANITA_2_effArea_published[n_ANITA] = {0.00043,
 						 0.05000,
 						 0.92000,
 						 6.60,
@@ -64,12 +86,13 @@ void tempLimit(){
 						 108.00,
 						 259.00};
   
-  double ANITA_2_eff[n_ANITA] = { 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8};
+  //  double ANITA_2_eff[n_ANITA] = { 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8};
+  double ANITA_2_eff[n_ANITA] = { 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6};
 
   double ANITA_2_livetime = 28.5*24*3600.; 
   double ANITA_1_livetime = 17.4*24*3600.;
   
-  TGraph *g_ANITA_2 = getLimit(ANITA_2_effArea, ANITA_2_eff, ANITA_2_livetime);
+  TGraph *g_ANITA_2 = getLimitNoDelta(ANITA_2_effArea, ANITA_2_eff, ANITA_2_livetime);
   g_ANITA_2->SetLineColor(kRed);
 
   TGraph *g_ANITA_2_pub = getLimit(ANITA_2_effArea_published, ANITA_2_eff, ANITA_2_livetime);
@@ -134,9 +157,9 @@ void tempLimit(){
 
   TLegend *leg = new TLegend(0.6, 0.6, 0.89, 0.89);
   leg->AddEntry(g_ANITA_2_erratum, "A2 erratum",                  "lp" );
-  leg->AddEntry(g_ANITA_2_pub,     "A2 pub w/ #Delta icemc #epsilon_{ANA}=0.8",  "l" );
-  leg->AddEntry(g_ANITA_2_pub2,    "A2 pub w/o #Delta icemc #epsilon_{ANA}=0.8",  "l" );
-  leg->AddEntry(g_ANITA_2,         "A2 icemc #epsilon_{ANA}=0.8",  "l" );
+  leg->AddEntry(g_ANITA_2_pub,     "A2 pub w/ #Delta=4, #epsilon_{ANA}=0.6",  "l" );
+  leg->AddEntry(g_ANITA_2_pub2,    "A2 pub w/ #Delta=1, #epsilon_{ANA}=0.6",  "l" );
+  leg->AddEntry(g_ANITA_2,         "A2 icemc w/ #Delta=1, #epsilon_{ANA}=0.6",  "l" );
   // leg->AddEntry(g_ANITA_3,         "A3 icemc #epsilon_{ANA}=0.8",  "l" );
   // leg->AddEntry(g_ANITA_4,         "A4 icemc #epsilon_{ANA}=0.8",  "l" );
   // leg->AddEntry(g_ANITA_all,       "A1-4 icemc #epsilon_{ANA}=0.8",  "l" );
