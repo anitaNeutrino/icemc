@@ -97,7 +97,7 @@ DICT = classdict
 OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o
 
 
-BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
+BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testWAIS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
 
 #------------------------------------------------------------------------------
 
