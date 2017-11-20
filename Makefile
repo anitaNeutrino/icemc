@@ -16,6 +16,7 @@ include Makefile.arch
 
 #BOOSTFLAGS = -I boost_1_48_0
 # commented out for kingbee and older versions of gcc
+# dummy change to test changed git origin.
 ANITA3_EVENTREADER=1
 
 
