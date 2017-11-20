@@ -77,13 +77,13 @@ ifdef ANITA3_EVENTREADER
 CXXFLAGS += -DANITA3_EVENTREADER
 endif
 
-GENERAL_FLAGS = -g -O2 -pipe -m64 -pthread
+GENERAL_FLAGS = -g3 -O0 -pipe -m64 -pthread
 WARN_FLAGS = -W -Wall -Wextra -Woverloaded-virtual
 # -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable
 
 CXXFLAGS += $(GENERAL_FLAGS) $(CPPSTD_FLAGS) $(WARN_FLAGS) $(ROOTCFLAGS) $(INC_ANITA_UTIL)
 
-DBGFLAGS  = -pipe -Wall -W -Woverloaded-virtual -g -ggdb -O0 -fno-inline
+DBGFLAGS  = -pipe -Wall -W -Woverloaded-virtual -g3 -O0 -fno-inline
 
 DBGCXXFLAGS = $(DBGFLAGS) $(ROOTCFLAGS) $(BOOSTFLAGS)
 LDFLAGS  += $(CPPSTD_FLAGS) $(LD_ANITA_UTIL) -I$(BOOST_ROOT) -L.

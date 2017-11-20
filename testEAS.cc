@@ -131,6 +131,7 @@ int main(int argc,  char **argv) {
   Settings* settings1 = new Settings();
 
   string input="inputs.txt";
+  string sim_inp="/nfs/data_disks/herc0a/users/bugaev/ANITA/SIMS/Event_4212/timefresnel-root.dat";
   string run_num;//current run number as string
   int run_no = 0;//current run number as integer
   TString outputdir;
@@ -144,7 +145,7 @@ int main(int argc,  char **argv) {
   double trig_thresh=0.;
   char clswitch; // command line switch
   if (argc>1) {
-    while ((clswitch = getopt(argc, argv, "t:i:o:r:n:e:")) != EOF) {
+    while ((clswitch = getopt(argc, argv, "t:i:o:r:n:e:s:")) != EOF) {
       switch(clswitch) {
       case 'n':
 	nnu_tmp=atoi(optarg);
@@ -168,9 +169,15 @@ int main(int argc,  char **argv) {
 	cout << "Changed neutrino energy exponent to " << exp_tmp << endl;
 	break;
       case 'r':
+      {	
         run_num=optarg;
         stringstream convert(run_num);
         convert>>run_no;
+        break;
+      }
+      case 's':
+        sim_inp=optarg;
+        cout << "Changed input simulation directory to: " << sim_inp << endl;
         break;
       } // end switch
     } // end while
