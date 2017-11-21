@@ -600,6 +600,7 @@ public:
   Double_t fTimes[HALFNFOUR];
   Double_t fSignalChainResponseDigitizerFreqDomain[2][3][16][400];
   Double_t fSignalChainResponseTriggerFreqDomain[2][3][16][400];
+  Double_t fRatioTriggerDigitizerFreqDomain[2][3][16][400];
   double deltaT;
 
   // Trigger efficiency scan parameters

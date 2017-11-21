@@ -711,13 +711,13 @@ void Anita::getDiodeDataAndAttenuation(Settings *settings1, TString outputdir){
     
   TCanvas *cdiode=new TCanvas("cdiode","cdiode",880,800);
   cdiode->Divide(1,2);
-  TGraph *gdiode=new TGraph(NFOUR/2,time,diode_real[0]);
+  TGraph *gdiode=new TGraph(NFOUR/2,time,diode_real[4]);
   cdiode->cd(1);
   gdiode->Draw("al");
-  gdiode=new TGraph(NFOUR/2,freq_forfft,fdiode_real[0]);
+  gdiode=new TGraph(NFOUR/2,freq_forfft,fdiode_real[4]);
   cdiode->cd(2);
   gdiode->Draw("al");
-    
+  
   stemp=string(outputdir.Data())+"/diode.eps";
   cdiode->Print((TString)stemp);
     
@@ -975,7 +975,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
     
     for (int j=0;j<5;j++) {
       bwslice_rmsdiode[j]=sqrt(bwslice_rmsdiode[j]);
-      //cout << "mean, rms are " << bwslice_meandiode[j] << " " << bwslice_rmsdiode[j] << "\n";
+      cout << "mean, rms are " << bwslice_meandiode[j] << " " << bwslice_rmsdiode[j] << "\n";
     }
   
     double thresh_begin=-1.;
@@ -1021,158 +1021,85 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 #ifdef ANITA_UTIL_EXISTS
     double quickNoise[HALFNFOUR];
 
-    for (int i=0;i<ngeneratedevents;i++) {
-      // put phases to freqdomain_rfcm_banding_rfcm array
-      // assign phases (w/ correlations) to freqdomain_rfcm_banding_rfmc_banding array
-      
-      // NOISE FROM FLIGHT ONLY AVAILABLE FOR FULL BAND
-      for (int j=4;j<5;j++) {	    
-
-	getQuickTrigNoiseFromFlight(quickNoise, 0, 0);
-	
-	// for (int i=0; i<NFOUR/2; i++){
-	//   cout << "NOISE " << i << " " << quickNoise[i] << endl;
-	// }
-
-	myconvlv(quickNoise,NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
-	
-	hnoise[j]->Fill(onediodeconvl[j]*1.E15);
-			
-	bwslice_enoise[j]+=onediodeconvl[j];
-			
-			
-	for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	  bwslice_meandiode[j]+=timedomain_output[j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
-	  //	  cout << m << " " << timedomain_output[j][m] << " " << ((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)) << endl;
-	  bwslice_vrms[j]+=quickNoise[m]*quickNoise[m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)); // this is the rms of the diode input voltage
-	  averageoutput[j]+=timedomain_output[j][m]*timedomain_output[j][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
-	} // end loop over samples where diode function is fully contained
-
-
-      } // end loop over bands
-		
-    } // end loop over generated events
-
     double meandiode_eachchan[2][48];
+    memset(meandiode_eachchan,                0, sizeof (meandiode_eachchan)                );
+    memset(bwslice_dioderms_fullband_allchan, 0, sizeof(bwslice_dioderms_fullband_allchan)  );
+
+    static double tempdiodeoutput[1000][NFOUR];
 
     for (int ipol=0; ipol<2; ipol++){
       for (int iant=0; iant<48; iant++){
-	meandiode_eachchan[ipol][iant]=0;
-	bwslice_dioderms_fullband_allchan[ipol][iant]=0;
-      }
-    }
-    for (int i=0;i<ngeneratedevents;i++) {
-      for (int ipol=0; ipol<2; ipol++){
-	for (int iant=0; iant<48; iant++){
+	
+	memset(tempdiodeoutput, 0, sizeof(tempdiodeoutput) );
+
+	for (int i=0;i<ngeneratedevents;i++) {
+	  
 	  getQuickTrigNoiseFromFlight(quickNoise, ipol, iant);
 	  
-	  // for (int i=0; i<NFOUR/2; i++){
-	  //   cout << "NOISE " << i << " " << quickNoise[i] << endl;
-	  // }
+	  myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
 
-	  myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],timedomain_output[4]);
-							
+	  // First calculate the mean
 	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	    meandiode_eachchan[ipol][iant]+=timedomain_output[4][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	    meandiode_eachchan[ipol][iant]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
 	    //	  cout << m << " " << timedomain_output[j][m] << " " << ((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)) << endl;
 	  
-	  } 
+	  }
 	}
-      }
-	
-    }
-    
-    
-    for (int j=4;j<5;j++) {
-      bwslice_vrms[j]=sqrt(bwslice_vrms[j]); // this is the rms input voltage
-      bwslice_enoise[j]=hnoise[j]->GetMean()/1.E15; // mean diode output with no correlations      
-      bwslice_fwhmnoise[j]=Tools::GetFWHM(hnoise[j]);
-    }
-    
-    
-    for (int i=0;i<ngeneratedevents;i++) {// now we need to get the rms
 
-      for (int j=4;j<5;j++) {
-	
-	getQuickTrigNoiseFromFlight(quickNoise, 0, 0);
-	
-	myconvlv(quickNoise,NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
-	
-	for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {	  
-	  //cout << timedomain_output[j][m] << " " << bwslice_meandiode[j] << " " << (double)ngeneratedevents << " " << ((double)NFOUR/2-maxt_diode/TIMESTEP) << endl;
-	  bwslice_rmsdiode[j]+=(timedomain_output[j][m]-bwslice_meandiode[j])*(timedomain_output[j][m]-bwslice_meandiode[j])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
-	}
-      
-      }
-    }
-    
-    for (int j=4;j<5;j++) {
-      bwslice_rmsdiode[j]=sqrt(bwslice_rmsdiode[j]);
-      cout << "mean, rms are " << bwslice_meandiode[j] << " " << bwslice_rmsdiode[j] << "\n";
-    }
-
-    for (int i=0;i<ngeneratedevents;i++) {// now we need to get the rms
-      for (int ipol=0; ipol<2; ipol++){
-	for (int iant=0; iant<48; iant++){
-	  getQuickTrigNoiseFromFlight(quickNoise, ipol, iant);
+	// Then get the RMS
+	for (int i=0;i<ngeneratedevents;i++) {
 	  
-	  // for (int i=0; i<NFOUR/2; i++){
-	  //   cout << "NOISE " << i << " " << quickNoise[i] << endl;
-	  // }
-
-	  myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],timedomain_output[4]);
-							
 	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	    bwslice_dioderms_fullband_allchan[ipol][iant]+=(timedomain_output[4][m]-meandiode_eachchan[ipol][iant])*(timedomain_output[4][m]-meandiode_eachchan[ipol][iant])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
-	  } 
+	    bwslice_dioderms_fullband_allchan[ipol][iant]+=(tempdiodeoutput[i][m]-meandiode_eachchan[ipol][iant])*(tempdiodeoutput[i][m]-meandiode_eachchan[ipol][iant])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	  }
+
 	}
-      } 
-    }
-    
-    for (int ipol=0; ipol<2; ipol++){
-      for (int iant=0; iant<48; iant++){
+	
 	bwslice_dioderms_fullband_allchan[ipol][iant]=sqrt(bwslice_dioderms_fullband_allchan[ipol][iant]);
-	cout << "EACH CHAN RMS " <<  ipol << " " << iant << " " << bwslice_dioderms_fullband_allchan[ipol][iant] << endl;
+	cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << meandiode_eachchan[ipol][iant] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant] << endl;  
+	
       }
+	
     }
     
-    double thresh_begin=-1.;
-    double thresh_end=-11.;
-    double thresh_step=1.;
+    
+    // double thresh_begin=-1.;
+    // double thresh_end=-11.;
+    // double thresh_step=1.;
   
-    double rate[5][100];
-    for (double testthresh=thresh_begin;testthresh>=thresh_end;testthresh-=thresh_step) {
-      for (int j=0;j<5;j++) {
-	passes[j]=0;
-      }
-      for (int i=0;i<ngeneratedevents;i++) {
+    // double rate[5][100];
+    // for (double testthresh=thresh_begin;testthresh>=thresh_end;testthresh-=thresh_step) {
+    //   for (int j=0;j<5;j++) {
+    // 	passes[j]=0;
+    //   }
+    //   for (int i=0;i<ngeneratedevents;i++) {
   	
-	for (int j=4;j<5;j++) {
+    // 	for (int j=4;j<5;j++) {
 
-	  getQuickTrigNoiseFromFlight(quickNoise, 0, 0);
+    // 	  getQuickTrigNoiseFromFlight(quickNoise, 0, 0);
 
-	  myconvlv(quickNoise,NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
+    // 	  myconvlv(quickNoise,NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
   	
-	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+    // 	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
   	    
-	    if (timedomain_output[j][m+1]<bwslice_rmsdiode[j]*testthresh) {
-	      passes[j]++;
-	      m+=(int)(DEADTIME/TIMESTEP);
-	    }
+    // 	    if (timedomain_output[j][m+1]<bwslice_rmsdiode[j]*testthresh) {
+    // 	      passes[j]++;
+    // 	      m+=(int)(DEADTIME/TIMESTEP);
+    // 	    }
   	    	    
-	  } // end loop over samples where diode function is fully contained
-	}
-      }
-      // brian m.
-      for (int j=0;j<5;j++) {
-	int ibin=(int)fabs((testthresh-thresh_begin)/thresh_step);
-	// relthresh[j][ibin]=fabs(testthresh);
-	rate[j][ibin]=passes[j]/((double)ngeneratedevents*((double)NFOUR/2*(TIMESTEP)-maxt_diode));
-	if (rate[j][ibin]!=0)
-	  rate[j][ibin]=log10(rate[j][ibin]);
-	//cout << "Threshold " << testthresh << " For the " << j << "th band, rate is " << rate[j][ibin] << "\n";
-      }
-    }
+    // 	  } // end loop over samples where diode function is fully contained
+    // 	}
+    //   }
+    //   // brian m.
+    //   for (int j=0;j<5;j++) {
+    // 	int ibin=(int)fabs((testthresh-thresh_begin)/thresh_step);
+    // 	// relthresh[j][ibin]=fabs(testthresh);
+    // 	rate[j][ibin]=passes[j]/((double)ngeneratedevents*((double)NFOUR/2*(TIMESTEP)-maxt_diode));
+    // 	if (rate[j][ibin]!=0)
+    // 	  rate[j][ibin]=log10(rate[j][ibin]);
+    // 	//cout << "Threshold " << testthresh << " For the " << j << "th band, rate is " << rate[j][ibin] << "\n";
+    //   }
+    // }
    
 #endif 
   }
@@ -1248,28 +1175,26 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
 
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
   phasorsTrig[0].setMagPhase(0,0);
-  Double_t sigma, realPart, imPart, dig, trig, norm;
+  Double_t sigma, realPart, imPart, norm;
   int iring=2;
   if (iant<16) iring=0;
   else if (iant<32) iring=1;
 
   int iphi = iant - (iring*16);
 
-  
   for(int i=1;i<numFreqs;i++) {
-    sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4/TMath::Sqrt(numFreqs);
+    norm           = fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i];
+    sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
+    sigma*=norm;
     realPart       = fRand->Gaus(0,sigma);
     imPart         = fRand->Gaus(0,sigma);
-    dig            = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
-    trig           = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i];
-    norm           = (trig/dig);
-    phasorsTrig[i] = FFTWComplex(realPart*norm, imPart*norm);
-  }
-  
-  
-  RFSignal *rfNoiseTrig   = new RFSignal(numFreqs,freqs,phasorsTrig,1);
-  Double_t *justNoiseTemp = rfNoiseTrig->GetY();
 
+    //    cout << " " << i << " " << trig << " " << dig << " " << trig/dig << " " << norm << endl;
+    phasorsTrig[i] = FFTWComplex(realPart, imPart);
+  }
+
+  RFSignal *rfNoiseTrig   = new RFSignal(numFreqs,freqs,phasorsTrig,1);  
+  Double_t *justNoiseTemp = rfNoiseTrig->GetY();
   
   for (int i=0; i<HALFNFOUR; i++){
     justNoise[i]  = justNoiseTemp[i]*THERMALNOISE_FACTOR;
@@ -2160,7 +2085,15 @@ void Anita::myconvlv(double *data,const int NFOUR,double *fdiode,double &mindiod
   for (int i=NFOUR/2;i<NFOUR;i++) {
     power_noise_copy[i]=0.;
   }
-    
+
+  
+  // TCanvas *c = new TCanvas("c");
+  // string name = "oldnoise";
+  // TGraph *gV = new TGraph(HALFNFOUR, fTimes, power_noise_copy);
+  // gV->Draw("Al");
+  // c->Print(Form("%s_%d_diodePower.png", name.c_str(), inu));
+  // delete gV;
+  // delete c;
     
   Tools::realft(power_noise_copy,1,length);
   //  realft(fdiode_real,1,length);
@@ -4042,9 +3975,10 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
       }
     }
 
-    // // Impulse response already accounts for trigger/digitizer splitter
-    // norm *= sqrt(2);
-
+    // Normalisation of digitizer impulse response might be off by 3dB
+    // See LC's talk at icemc meeting of 2017 Nov 13
+    norm *= TMath::Power(10., -3./20.);
+    
   }
 
   // Read in input file
@@ -4085,10 +4019,22 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 	  delete grTemp;
 
 	  TGraph *gDig  = fSignalChainResponseDigitizer[ipol][iring][iphi]->getFreqMagGraph();
+	  // Smooth out the high frequency 
+	  double temparray[512];
 	  for(int i=0;i<numFreqs;i++) {
-	    fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]  = gDig->Eval(freqs[i]*1e6);
+	    temparray[i] =  gDig->Eval(freqs[i]*1e6);
 	    // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]<< endl;
 	  }
+	  
+	  // Smoothing magnitude response a bit to avoid trig/dig ratio explodes
+	  for (int i=0; i<numFreqs;i++){
+	    if (freqs[i]<900.){
+	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]  = temparray[i];
+	    } else {
+	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
+	    }
+	  }
+	  
 	  delete gDig;
 	  
 	}
@@ -4135,13 +4081,9 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   string fileName;
   double norm=1;
 
-  bool useDig = false;
-  
   if(settings1->WHICH==9 || settings1->WHICH==10){
 
-    // Use response from Digitizer path for now
-    if (useDig) fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseDigitizer.root";
-    else fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseTrigger.root";
+    fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseTrigger.root";
 
     string spol[2] ={"V", "H"};
     string sring[3]={"T", "M", "B"};
@@ -4149,17 +4091,19 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
 	for (int iphi=0;iphi<16;iphi++){
-	  if (useDig) graphNames[ipol][iring][iphi] = Form("g%02d%s%s", iphi+1, sring[iring].c_str(), spol[ipol].c_str() ) ;
-	  else    graphNames[ipol][iring][iphi]= Form("gTrigPath") ;
+	  graphNames[ipol][iring][iphi]= Form("gTrigPath") ;
 	}
       }
     }
 
-    // // Impulse response already accounts for trigger/digitizer splitter
+    // Impulse response accounts for trigger/digitizer splitter
     // norm *= sqrt(2);
 
-    if (useDig) TMath::Power(10, +8/20.);
-    else if (!settings1->NOISEFROMFLIGHTTRIGGER) norm *= TMath::Power(10, -7/20.);
+
+    // if we are using the trigger impulse response and the old noise
+    // we need to add this 7dB attenuation to have sensible results
+    // see LC's talk on 2017 Nov 13
+    if (!settings1->NOISEFROMFLIGHTTRIGGER) norm *= TMath::Power(10, -7/20.);
     
   }
 
@@ -4212,6 +4156,37 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
       }
     }
   }
+
+
+  double dig, trig;
+  TFile *fout = new TFile("RatioTrigDigResponses.root", "recreate");
+  
+  for (int ipol=0; ipol<2; ipol++){
+    for (int iring=0; iring<3; iring++){
+      for (int iphi=0; iphi<16; iphi++){
+	
+	for(int i=0;i<numFreqs;i++) {
+	  if (freqs[i]<160.) {
+	    fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]=0.1;  
+	  } else {
+	    dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
+	    trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i];
+	    fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]    = (trig/dig);
+	  }
+	}
+	TGraph *temp = new TGraph (numFreqs, freqs, fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi]);
+	temp->Write(Form("gratio_%d_%d_%d", ipol, iring, iphi));
+	delete temp;
+    	
+      }
+    }
+  }
+  delete fout;
+
+
+  
+
+
   
 }
 
@@ -4241,20 +4216,18 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
       gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-3./20.);
        
     }
-     
+
     TGraph *gPulseAtAmpaInt = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/2.6);
-    double *y = gPulseAtAmpaInt->GetY();
+
     for (int i=0;i<HALFNFOUR;i++){
-      // if (i<HALFNFOUR/2)  trigEffScanPulseAtAmpa[i]=0.;
-      // else trigEffScanPulseAtAmpa[i]=y[i-HALFNFOUR/2];
       trigEffScanPulseAtAmpa[i] = gPulseAtAmpaInt->Eval(fTimes[i]);
     }
 
+    // TCanvas *c = new TCanvas("c");
+    // gPulseAtAmpa->Draw("Al");
+    // c->Print("PulseAtAMPA_readinbyicemc.png");
 
-    // delete []theFFT;
     delete gPulseAtAmpaInt;
-    // delete gPulseAtAmpaUp;
-    // delete gPulseAtAmpa;
      
      
     for (int isample=0;isample<250;isample++){
