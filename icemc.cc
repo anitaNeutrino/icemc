@@ -594,9 +594,7 @@ int main(int argc,  char **argv) {
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
   
-  Roughness *rough1=new Roughness(settings1->ROUGHSIZE); // create new instance of the roughness class
-  if(settings1->ROUGHNESS) // automatically disable firn if there is roughness
-    settings1->FIRN = 0;
+  Roughness *rough1=new Roughness(); // create new instance of the roughness class
 
   int fSCREEN_NUMPOINTS_EDGE = settings1->ROUGHNESS;
   Screen *panel1 = new Screen(fSCREEN_NUMPOINTS_EDGE);              // create new instance of the screen class
@@ -2142,11 +2140,11 @@ int main(int argc,  char **argv) {
           if (settings1->BORESIGHTS) {
             for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
               for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-		GetFresnel(rough1, settings1->ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold],
-			   n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[3][ilayer][ifold],
-			   vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy,
-			   fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
-		//    std::cout << fresnel1_eachboresight[ilayer][ifold] << std::endl;
+                GetFresnel(rough1, settings1->ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold],
+                  n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[3][ilayer][ifold],
+                  vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy,
+                  fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
+          //    std::cout << fresnel1_eachboresight[ilayer][ifold] << std::endl;
               } // end looping over phi sectors
             } // end looping over layers
           } // end if we are calculating for all boresights
@@ -2200,14 +2198,19 @@ int main(int argc,  char **argv) {
         Vector vec_specularnormal;      //normalized, normal vector at specular point
         Vector vec_localnormal;         //normalized, normal vector at projected ground point
         Vector vec_nnu_to_impactPoint;  //normalized
+        Vector vec_local_grnd_perp;     //normalized, vector perp. to incident and surface normal (out-of-inc place)
+        Vector vec_local_grnd_parl;     //normalized, vector parl. to incident and surface normal (in-inc plane)
+        Vector vec_grndcomp2bln;
 
         double pathlength_local;        // set for each screen point
         double viewangle_local;
-        double theta_local;             //angle between local surface normal and vector to balloon [radians]
-        double theta_0_local;                 //angle between 'inverted' local surface normal and incident direction [radians]
+        double azimuth_local;           // azimuthal angle between local surface normal and vector to balloon [radians]
+        double theta_local;             // polar angle between local surface normal and vector to balloon [radians]
+        double theta_0_local;                 //angle between local surface normal and incident direction [radians]
+        double tcoeff_perp, tcoeff_parl;
 
-        double element_sa;
-        double interpolatedPower;       // \muW for these angles
+        double HP_2048_binarea = 2.4967135219492856e-07;  // healpix nside=2048 bin area [sterad]
+        double antennalength = 0.96; // [m]
 
         Vector npol_local_inc, npol_local_trans;
         Vector temp_a;
@@ -2228,7 +2231,7 @@ int main(int argc,  char **argv) {
 
         //#########
         //iterate points on the screen, get their position and project back to find ground impact
-        //calculate incident and transmitted angles, look up power fraction and loss correction factor, and add to running total
+        //calculate incident and transmitted angles, look up power fraction, and add to running total
 
         //reset the counter and set the BASE screen properties based on current event/balloon geometry
         panel1->ResetParameters();
@@ -2270,15 +2273,19 @@ int main(int argc,  char **argv) {
           // local angles of transmission and incidence in their respective planes
           vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
           vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
+
+          vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
+          azimuth_local = vec_local_grnd_parl.Angle(vec_grndcomp2bln); //[rad]
+          if( vec_grndcomp2bln.Dot(vec_local_grnd_parl) > 0 )
+            azimuth_local *= -1.;
+
           theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
           theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
 
           /////
           // Field Magnitude
-          theta_local = rough1->AdjustTransmissionAngle(NFIRN, 1.5, theta_local); //for power look-up, re-adjust transmitted angle for what it "would be" for snow
-          interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
-          Emag_local = vmmhz1m_max
-	    * sqrt(interpolatedPower / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local)) / rough1->GetFresnelCorrectionFactor(theta_0_local);
+          rough1->InterpolatePowerValue(tcoeff_perp, tcoeff_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
+          Emag_local = vmmhz1m_max * sqrt((tcoeff_perp + tcoeff_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_2048_binarea);
           // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
           pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
           Emag_local /= pathlength_local ;
@@ -2353,6 +2360,12 @@ int main(int argc,  char **argv) {
             // local angles of transmission and incidence in their respective planes
             vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
             vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
+
+            vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
+            azimuth_local = vec_local_grnd_parl.Angle(vec_grndcomp2bln); //[rad]
+            if( vec_grndcomp2bln.Dot(vec_local_grnd_parl) > 0 )
+              azimuth_local *= -1.;
+
             theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
             theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
 
@@ -2360,12 +2373,8 @@ int main(int argc,  char **argv) {
 
             /////
             // Field Magnitude
-            element_sa = ( panel1->GetEdgeLength()/panel1->GetNsamples() / pos_projectedImpactPoint.Distance(pos_current) ) * 180./PI;
-            theta_local = rough1->AdjustTransmissionAngle(NFIRN, 1.5, theta_local); //for power look-up, re-adjust transmitted angle for what it "would be" for snow
-            interpolatedPower = rough1->InterpolatePowerValue(theta_0_local*180./PI, theta_local*180./PI);
-            // Loss factor is in power, Fresnel is the field coefficient
-            double transfactor= sqrt(interpolatedPower*element_sa / rough1->GetLaserPower() / rough1->GetLossCorrectionFactor(theta_0_local) ) / rough1->GetFresnelCorrectionFactor(theta_0_local);
-            Emag_local = vmmhz1m_max*transfactor;
+            rough1->InterpolatePowerValue(tcoeff_perp, tcoeff_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
+            Emag_local = vmmhz1m_max * sqrt((tcoeff_perp + tcoeff_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_2048_binarea);
             // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
             pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
             Emag_local /= pathlength_local ;
@@ -2382,14 +2391,21 @@ int main(int argc,  char **argv) {
               continue;
 
             /////
-            // Transmitted Polarization
+            // Incident and Transmitted Polarizations (T needs to be determined by tcoeff_perp and tcoeff_parl)
+            // set incident polarization
             npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint).Unit();
-            // calculate polarization transformation matrix coefficients (from Bahar 1995, page 535); treat a_y = normal at specular exit point
-            vec_specularnormal = antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit();
-            // transmitted polarization needs to be perpendicular to to-balloon vector, and the horizontal component is 'set', so need to find appropriate vector for the vertical component to ensure perpendicularity
-            npol_local_trans = rough1->CalculateTransmittedPolarization(interaction1->nnu, vec_specularnormal, vec_localnormal, vec_pos_current_to_balloon, vec_nnu_to_impactPoint, npol_local_inc);
+            //
+            vec_local_grnd_perp = (vec_localnormal.Cross(vec_pos_current_to_balloon)).Unit();
+            vec_local_grnd_parl = (vec_pos_current_to_balloon.Cross(vec_local_grnd_perp)).Unit();
+            //
+            vec_local_grnd_perp = sqrt(tcoeff_perp)*vec_local_grnd_perp;
+            vec_local_grnd_parl = sqrt(tcoeff_parl)*vec_local_grnd_parl;
+            // set transmitted polarization
+            npol_local_trans = vec_local_grnd_perp + vec_local_grnd_parl;
+
+            // check if transmitted polarization is undefined
             if(npol_local_trans[0]!=npol_local_trans[0]){
-              continue;   // skip if transmitted polarization is undefined
+              continue;
             }
 
             minE = Tools::dMin(minE, Emag_local);
