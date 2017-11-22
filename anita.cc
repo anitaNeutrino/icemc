@@ -4121,12 +4121,13 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
       for(int iphi=0; iphi<=15; iphi++) {
 	for(int ituff=0; ituff <=5; ituff++) {
 	  if(iphi+1 < 10) {
-	    filename = Form("%s/data/%s/0%d%s%s.imp",getenv("ICEMC_BUILD_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
-	    //                       filenameV = Form("%s/data/%s/0%d%cV.imp",getenv("ICEMC_BUILD_DIR"), notch_files, ant, tmb);
+//original	    filename = Form("%s/data/%s/0%d%s%s.imp",getenv("ICEMC_BUILD_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+	    filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s/0%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
 	    //                  cout << Form("%s/data/%s/0%d%s%s.imp",getenv("ICEMC_BUILD_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str()) << endl;
 	  } else {
-	    filename = Form("%s/data/%s/%d%s%s.imp",getenv("ICEMC_BUILD_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
-	    //                     filenameV = Form("%s/data/%s/%d%cH.imp",getenv("ICEMC_BUILD_DIR"), notch_files, ant, tmb);
+//original	    filename = Form("%s/data/%s/%d%s%s.imp",getenv("ICEMC_BUILD_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+	    filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s/%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+	  
 	  }
 	  TGraph *gtemp = new TGraph(filename);
 	  // interpolate
