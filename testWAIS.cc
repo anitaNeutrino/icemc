@@ -188,7 +188,7 @@ int main(int argc,  char **argv) {
   Balloon *bn1=new Balloon(); // instance of the balloon
   Anita *anita1=new Anita();// right now this constructor gets banding info
   Secondaries *sec1=new Secondaries();
-  // Primaries *primary1=new Primaries();
+  Primaries *primary1=new Primaries();
   Signal *sig1=new Signal();
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();
@@ -226,6 +226,10 @@ int main(int argc,  char **argv) {
   if (exp_tmp!=0)
     settings1->EXPONENT=exp_tmp;
 
+
+
+  Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
+  
   // create new instance of the screen class
   // only using the specular case as we are ignoring the ice
   Screen *panel1 = new Screen(0);              
@@ -405,6 +409,23 @@ int main(int argc,  char **argv) {
   int count_total=0;
   int count_rx=0;
   int antNum=0;
+
+  // ANITA-3 WAIS location by default
+  // If ANITA_UTIL_EXISTS then the appropriate location will be loaded
+  Double_t  latWAIS = - ( 79 + (27.93728/60) );
+  Double_t lonWAIS  = - (112 + ( 6.74974/60) );
+  Double_t altWAIS  = 1775.68;
+  
+#ifdef ANITA_UTIL_EXISTS
+  latWAIS = AnitaLocations::getWaisLatitude();
+  lonWAIS = AnitaLocations::getWaisLongitude();;
+  altWAIS = AnitaLocations::getWaisAltitude();;
+#endif
+  
+  Double_t phiWAIS       = EarthModel::LongtoPhi_0is180thMeridian(lonWAIS);
+  Double_t thetaWAIS     = latWAIS*RADDEG;
+  Double_t elevationWAIS = altWAIS; //antarctica1->SurfaceAboveGeoid(lonWAIS,latWAIS)-500.;
+  Double_t distanceFromWais = 0.;
   
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
@@ -435,19 +456,33 @@ int main(int argc,  char **argv) {
       vmmhz[i] = 0.; // the full signal with all factors accounted for (1/r,  atten. etc.)
       vmmhz_em[i]=0.; // for keeping track of just the em component of the shower
     } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
+
+ 
+    // Fix interaction position to WAIS location
+    interaction1->posnu = Position(lonWAIS, latWAIS, altWAIS);
     
-      // Picks the balloon position and at the same time sets the masks and thresholds
+    
+    // Picks the balloon position and at the same time sets the masks and thresholds
     bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
     
-    // BR: Here calculate the direction to the balloon
-    // And the polarization
+    
+    distanceFromWais =  (interaction1->posnu.Distance(bn1->r_bn));
+    // eliminate stuff when we are more than 1000km from WAIS
+    if (distanceFromWais > 1e6) {
+      std::cout << "Too far from WAIS " << interaction1->posnu << "  and ballon is " << (bn1->r_bn) << " \t " << distanceFromWais <<std::endl;
+      continue;
+    }
+    interaction1->nnu = (bn1->r_bn - interaction1->posnu);
+    interaction1->nnu = interaction1->nnu/interaction1->nnu.Mag();
+    
+
     // direction2bn = something something something
     // n_pol        = something something something
     // if you decide to evaluate a different direction per antenna, then you should define also
     // direction2bn_eachboresight = something something something
     // n_pol_eachboresight        = something something something
 
-    
+
     
     // make a global trigger object (but don't touch the electric fences)
     globaltrig1 = new GlobalTrigger(settings1, anita1);
