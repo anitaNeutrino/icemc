@@ -122,6 +122,8 @@ int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt);
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
 
+double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_bn);
+
 void interrupt_signal_handler(int sig);
 
 int main(int argc,  char **argv) {
@@ -199,6 +201,9 @@ int main(int argc,  char **argv) {
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
   // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
   double vmmhz_em[Anita::NFREQ];
+  double vmmhz_max;
+  double vmmhz1m;
+
   
   stemp=string(outputdir.Data())+"/output"+run_num+".txt";
   ofstream foutput(stemp.c_str(),  ios::app);
@@ -259,8 +264,6 @@ int main(int argc,  char **argv) {
 
   Vector n_pol; // direction of polarization
   Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
-  Vector direction2bn; // direction from EAS to balloon
-  Vector direction2bn_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction from EAS to balloon
 
   // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
   double e_component=0; // E comp along polarization
@@ -399,9 +402,6 @@ int main(int argc,  char **argv) {
   time_t raw_loop_start_time = time(NULL);
   cout<<"Starting loop over events.  Time required for setup is "<<(int)((raw_loop_start_time - raw_start_time)/60)<<":"<< ((raw_loop_start_time - raw_start_time)%60)<<endl;
 
-
-  //  TRandom r(settings1->SEED); // use seed set as input
-
   signal(SIGINT,  interrupt_signal_handler);     // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
 
   int passes_thisevent=0;
@@ -412,9 +412,9 @@ int main(int argc,  char **argv) {
 
   // ANITA-3 WAIS location by default
   // If ANITA_UTIL_EXISTS then the appropriate location will be loaded
-  Double_t latWAIS  = - ( 79 + (27.93728/60) ) ;
-  Double_t lonWAIS  = - (112 + ( 6.74974/60) ) ;
-  Double_t altWAIS  = 1775.68;
+  Double_t latWAIS  = sourceLat = - ( 79 + (27.93728/60) ) ;
+  Double_t lonWAIS  = sourceLon = - (112 + ( 6.74974/60) ) ;
+  Double_t altWAIS  = sourceAlt = 1775.68;
   
 #ifdef ANITA_UTIL_EXISTS
   latWAIS = AnitaLocations::getWaisLatitude()  ;
@@ -458,13 +458,10 @@ int main(int argc,  char **argv) {
       vmmhz[i] = 0.; // the full signal with all factors accounted for (1/r,  atten. etc.)
       vmmhz_em[i]=0.; // for keeping track of just the em component of the shower
     } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
-
- 
-    // Fix interaction position to WAIS location
+    
+     // Fix interaction position to WAIS location
     interaction1->posnu = positionWAIS;   
     
-    //    ray1->GetSurfaceNormal(settings1, antarctica, interaction1->posnu, slopeyangle, 0);
-
     // Picks the balloon position and at the same time sets the masks and thresholds
     bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
       
@@ -472,61 +469,46 @@ int main(int argc,  char **argv) {
 
     // eliminate stuff when we are more than 1000km from WAIS
     if (distanceFromWAIS > 1e6) {
-      std::cout << "Too far from WAIS " << interaction1->posnu  << " and ballon is " << (bn1->r_bn) << " \t " << distanceFromWAIS <<std::endl;
+      //      std::cout << "Too far from WAIS " << interaction1->posnu  << " and ballon is " << (bn1->r_bn) << " \t " << distanceFromWAIS <<std::endl;
       continue;
     }
     interaction1->nnu = (bn1->r_bn - interaction1->posnu);
     interaction1->nnu = interaction1->nnu/interaction1->nnu.Mag();
-    
-    //////////////////////////////////
 
-    // if (!ray1->TraceRay(settings1, anita1, 1, sig1->N_DEPTH)) {
-    //   continue;
-    // }
+    // TEMPORARY UNTIL WE HAVE MINI ALFA MODEL
+    vmmhz1m     = sig1->GetVmMHz1m(1e19, anita1->FREQ_HIGH);
+
+    vmmhz_max   = ScaleVmMHz(vmmhz1m, interaction1->posnu, bn1->r_bn);
+
+    // TEMPORARY UNTIL WE HAVE MINI ALFA MODEL
     
-    // //       // use snell's law to get the first guess at the
-    // //       // direction of the rf as it leaves ice surface.
-    // //       // 0th guess was simply radially outward from interaction position
-    // //       // this now takes into account balloon position and surface normal.
-    // ray1->GetRFExit(settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, bn1->r_bn, bn1->r_boresights, 1, antarctica); // fills ray1->n_exit2bn[1]
+    // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
+    //   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
+    // and making an array across frequency bins by putting in frequency dependence.
+    sig1->GetVmMHz(vmmhz_max, vmmhz1m, 1e19, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ);  
+
+    // TEMPORARY POLARIZATION
+    n_pol = Vector(0., 0., 1.);
+    if (settings1->BORESIGHTS) {
+      for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { 
+	for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+	  n_pol_eachboresight[ilayer][ifold]=Vector(0., 0., 1.);
+	} // end looping over antennas in phi
+      } // end looping over layers
+    } // if we are calculating for all boresights
     
-    // ray1->GetSurfaceNormal(settings1, antarctica, interaction1->posnu, slopeyangle, 1);
-    
-    // if (!ray1->TraceRay(settings1, anita1, 2, sig1->N_DEPTH)) {; // trace ray,  2nd iteration.
-    //   continue;
-    // }
-    
-    // // fills ray1->n_exit2bn[2] ?
-    // ray1->GetRFExit(settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, bn1->r_bn, bn1->r_boresights, 2, antarctica);
-    
-    // ray1->GetSurfaceNormal(settings1, antarctica, interaction1->posnu, slopeyangle, 2);
-    
-    // bestcase_atten=exp(interaction1->altitude_int/MAX_ATTENLENGTH); // the attenuation is obtained from the altitude of the interaction (shortest path is if the signal went straight up)
-    
-    // vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice, interaction1->posnu, bn1->r_bn);
 
 
-    
-    //   // Get Polarization vector.  See Jackson,  Cherenkov section.
-    //   n_pol = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4]);
-
-    //   if (settings1->BORESIGHTS) {
-    //     for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
-    //       for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-    //         n_pol_eachboresight[ilayer][ifold]=GetPolarization(interaction1->nnu, ray1->nrf_iceside_eachboresight[4][ilayer][ifold]);
-    //       } // end looping over antennas in phi
-    //     } // end looping over layers
-    //   } // if we are calculating for all boresights
-
-    //   ///////////////////////////////////
-
-    // direction2bn = something something something
-    // n_pol        = something something something
-    // if you decide to evaluate a different direction per antenna, then you should define also
-    // direction2bn_eachboresight = something something something
-    // n_pol_eachboresight        = something something something
-
-
+    // Find direction from pulser to balloon
+    ray1->rfexit[2]    = positionWAIS;
+    ray1->n_exit2bn[2] = (bn1->r_bn - ray1->rfexit[2]).Unit();
+    if (settings1->BORESIGHTS) { 
+      for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
+	for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+	  ray1->n_exit2bn_eachboresight[2][ilayer][ifold] = (bn1->r_boresights[ilayer][ifold] - ray1->rfexit[2]).Unit(); 
+	}
+      }
+    }
     
     // make a global trigger object (but don't touch the electric fences)
     globaltrig1 = new GlobalTrigger(settings1, anita1);
@@ -534,9 +516,9 @@ int main(int argc,  char **argv) {
     Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
     
     if(settings1->BORESIGHTS)
-      anita1->GetArrivalTimesBoresights(direction2bn_eachboresight);
+      anita1->GetArrivalTimesBoresights( ray1->n_exit2bn_eachboresight[2] );
     else
-      anita1->GetArrivalTimes(direction2bn,bn1,settings1);
+      anita1->GetArrivalTimes( ray1->n_exit2bn[2], bn1, settings1);
     
     anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times, settings1->NANTENNAS);
     
@@ -545,6 +527,23 @@ int main(int argc,  char **argv) {
     anita1->rms_rfcm_e_single_event = 0;
 
 
+
+    //reset screen parameters (even for no roughness) for the new event
+    panel1->ResetParameters();
+
+    panel1->SetNvalidPoints(1);
+
+    for (int k=0;k<Anita::NFREQ;k++) {
+      panel1->AddVmmhz_freq(vmmhz[k]);
+    }
+    panel1->AddDelay( 0. );
+    panel1->AddVec2bln(ray1->n_exit2bn[2]);
+    // Use this to add direction of polarization
+    panel1->AddPol(n_pol);
+    panel1->AddWeight( 1. );
+    panel1->SetWeightNorm( 1. );
+
+    
     count_rx=0;
     for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
       for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
@@ -552,33 +551,13 @@ int main(int argc,  char **argv) {
 	ChanTrigger *chantrig1 = new ChanTrigger();
 	chantrig1->InitializeEachBand(anita1);
 
-	//reset screen parameters (even for no roughness) for the new event
-	panel1->ResetParameters();
-
-	panel1->SetNvalidPoints(1);
-
-	// BR: Add here the electric field at the payload before it gets through the antennas
-	// For each antenna you need to define the electric field Vmmhz by doing
-        for (int k=0;k<Anita::NFREQ;k++) {
-          panel1->AddVmmhz_freq(vmmhz[k]);
-        }
-        panel1->AddDelay( 0. );
-	// Use this to add the direction
-	panel1->AddVec2bln(direction2bn);
-	// Use this to add direction of polarization
-	panel1->AddPol(n_pol);
-        panel1->AddWeight( 1. );
-        panel1->SetWeightNorm( 1. );
-
-	// set the position of the source
-	sourceLon=sourceLat=sourceAlt=0;
 	
 	bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
 
 	// for this (hitangle_h_all[count_rx]=hitangle_h;) and histogram fill, use specular case
 	//although the GetEcomp..() functions are called in ConvertInputWFtoAntennaWF() to calculate the actual waveforms
 	if (!settings1->BORESIGHTS) {
-	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  direction2bn, e_component_kvector,  h_component_kvector,  n_component_kvector);
+	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,   ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
 	  bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
 	}
 	else{ // i.e. if BORESIGHTS is true
@@ -651,12 +630,10 @@ int main(int argc,  char **argv) {
     // Minimum bias sample: save all events that we could see at the payload
     // Independentely from the fact that they generated an RF trigger
 
-    // if ( (thispasses[0]==1 && anita1->pol_allowed[0]==1)
-    // 	 || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
-    // 	 || (settings1->MINBIAS==1)) {
-
-    if (true){
-    
+    if ( (thispasses[0]==1 && anita1->pol_allowed[0]==1)
+    	 || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
+    	 || (settings1->MINBIAS==1)) {
+      
       //	cout << inu << endl;
 
       anita1->passglobtrig[0]=thispasses[0];
@@ -780,8 +757,8 @@ int main(int argc,  char **argv) {
       }
       for (int i=0;i<5;i++){
 	for (int j=0;j<3;j++){
-	  truthEvPtr->rfExitNor[i][j] = 0;//ray1->n_exit2bn[i][j];
-	  truthEvPtr->rfExitPos[i][j] = 0;//ray1->rfexit[i][j];
+	  truthEvPtr->rfExitNor[i][j] = ray1->n_exit2bn[i][j];
+	  truthEvPtr->rfExitPos[i][j] = ray1->rfexit[i][j];
 	}
       }
       for (int i=0;i<48;i++){
@@ -908,3 +885,12 @@ int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt){
 
 
 #endif
+
+double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_bn) {
+  double dtemp= r_bn.Distance(posnu1);
+  vmmhz1m_max= vmmhz1m_max/dtemp;
+  //  scalefactor_distance=1/dtemp;
+  //cout << "dtemp is " << dtemp << "\n";
+  return vmmhz1m_max;
+}
+//end ScaleVmMHz()
