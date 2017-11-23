@@ -412,21 +412,23 @@ int main(int argc,  char **argv) {
 
   // ANITA-3 WAIS location by default
   // If ANITA_UTIL_EXISTS then the appropriate location will be loaded
-  Double_t  latWAIS = - ( 79 + (27.93728/60) );
-  Double_t lonWAIS  = - (112 + ( 6.74974/60) );
+  Double_t latWAIS  = - ( 79 + (27.93728/60) ) ;
+  Double_t lonWAIS  = - (112 + ( 6.74974/60) ) ;
   Double_t altWAIS  = 1775.68;
   
 #ifdef ANITA_UTIL_EXISTS
-  latWAIS = AnitaLocations::getWaisLatitude();
-  lonWAIS = AnitaLocations::getWaisLongitude();;
-  altWAIS = AnitaLocations::getWaisAltitude();;
+  latWAIS = AnitaLocations::getWaisLatitude()  ;
+  lonWAIS = AnitaLocations::getWaisLongitude() ;
+  altWAIS = AnitaLocations::getWaisAltitude()  ;
 #endif
   
-  Double_t phiWAIS       = EarthModel::LongtoPhi_0is180thMeridian(lonWAIS);
-  Double_t thetaWAIS     = latWAIS*RADDEG;
-  Double_t elevationWAIS = altWAIS; //antarctica1->SurfaceAboveGeoid(lonWAIS,latWAIS)-500.;
-  Double_t distanceFromWais = 0.;
+  Double_t phiWAIS          = EarthModel::LongtoPhi_0isPrimeMeridian(lonWAIS);
+  Double_t thetaWAIS        = (90.+latWAIS)*RADDEG;
+  Double_t elevationWAIS    = altWAIS + antarctica->Geoid(latWAIS);
+  Double_t distanceFromWAIS = 0.;
   
+  Position positionWAIS     = Position(lonWAIS, 90.+latWAIS, elevationWAIS); 
+
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
 
@@ -459,22 +461,64 @@ int main(int argc,  char **argv) {
 
  
     // Fix interaction position to WAIS location
-    interaction1->posnu = Position(lonWAIS, latWAIS, altWAIS);
+    interaction1->posnu = positionWAIS;   
     
-    
+    //    ray1->GetSurfaceNormal(settings1, antarctica, interaction1->posnu, slopeyangle, 0);
+
     // Picks the balloon position and at the same time sets the masks and thresholds
     bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
-    
-    
-    distanceFromWais =  (interaction1->posnu.Distance(bn1->r_bn));
+      
+    distanceFromWAIS =  (interaction1->posnu.Distance(bn1->r_bn));
+
     // eliminate stuff when we are more than 1000km from WAIS
-    if (distanceFromWais > 1e6) {
-      std::cout << "Too far from WAIS " << interaction1->posnu << "  and ballon is " << (bn1->r_bn) << " \t " << distanceFromWais <<std::endl;
+    if (distanceFromWAIS > 1e6) {
+      std::cout << "Too far from WAIS " << interaction1->posnu  << " and ballon is " << (bn1->r_bn) << " \t " << distanceFromWAIS <<std::endl;
       continue;
     }
     interaction1->nnu = (bn1->r_bn - interaction1->posnu);
     interaction1->nnu = interaction1->nnu/interaction1->nnu.Mag();
     
+    //////////////////////////////////
+
+    // if (!ray1->TraceRay(settings1, anita1, 1, sig1->N_DEPTH)) {
+    //   continue;
+    // }
+    
+    // //       // use snell's law to get the first guess at the
+    // //       // direction of the rf as it leaves ice surface.
+    // //       // 0th guess was simply radially outward from interaction position
+    // //       // this now takes into account balloon position and surface normal.
+    // ray1->GetRFExit(settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, bn1->r_bn, bn1->r_boresights, 1, antarctica); // fills ray1->n_exit2bn[1]
+    
+    // ray1->GetSurfaceNormal(settings1, antarctica, interaction1->posnu, slopeyangle, 1);
+    
+    // if (!ray1->TraceRay(settings1, anita1, 2, sig1->N_DEPTH)) {; // trace ray,  2nd iteration.
+    //   continue;
+    // }
+    
+    // // fills ray1->n_exit2bn[2] ?
+    // ray1->GetRFExit(settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, bn1->r_bn, bn1->r_boresights, 2, antarctica);
+    
+    // ray1->GetSurfaceNormal(settings1, antarctica, interaction1->posnu, slopeyangle, 2);
+    
+    // bestcase_atten=exp(interaction1->altitude_int/MAX_ATTENLENGTH); // the attenuation is obtained from the altitude of the interaction (shortest path is if the signal went straight up)
+    
+    // vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice, interaction1->posnu, bn1->r_bn);
+
+
+    
+    //   // Get Polarization vector.  See Jackson,  Cherenkov section.
+    //   n_pol = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4]);
+
+    //   if (settings1->BORESIGHTS) {
+    //     for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
+    //       for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+    //         n_pol_eachboresight[ilayer][ifold]=GetPolarization(interaction1->nnu, ray1->nrf_iceside_eachboresight[4][ilayer][ifold]);
+    //       } // end looping over antennas in phi
+    //     } // end looping over layers
+    //   } // if we are calculating for all boresights
+
+    //   ///////////////////////////////////
 
     // direction2bn = something something something
     // n_pol        = something something something
@@ -607,10 +651,12 @@ int main(int argc,  char **argv) {
     // Minimum bias sample: save all events that we could see at the payload
     // Independentely from the fact that they generated an RF trigger
 
-    if ( (thispasses[0]==1 && anita1->pol_allowed[0]==1)
-	 || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
-	 || (settings1->MINBIAS==1)) {
+    // if ( (thispasses[0]==1 && anita1->pol_allowed[0]==1)
+    // 	 || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
+    // 	 || (settings1->MINBIAS==1)) {
 
+    if (true){
+    
       //	cout << inu << endl;
 
       anita1->passglobtrig[0]=thispasses[0];
@@ -729,8 +775,8 @@ int main(int argc,  char **argv) {
       for (int i=0;i<3;i++){
 	truthEvPtr->balloonPos[i]  = bn1->r_bn[i];
 	truthEvPtr->balloonDir[i]  = bn1->n_bn[i];
-	truthEvPtr->nuPos[i]       = 0; //interaction1->posnu[i];
-	truthEvPtr->nuDir[i]       = 0; //interaction1->nnu[i];
+	truthEvPtr->nuPos[i]       = interaction1->posnu[i];
+	truthEvPtr->nuDir[i]       = interaction1->nnu[i];
       }
       for (int i=0;i<5;i++){
 	for (int j=0;j<3;j++){
