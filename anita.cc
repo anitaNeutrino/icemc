@@ -58,7 +58,7 @@ Anita::Anita() {
   stemp = "";
 
   for (int irx=0;irx<Anita::NLAYERS_MAX*Anita::NPHI_MAX;irx++) {
-    arrival_times[irx]=0.;
+    arrival_times[0][irx]=arrival_times[1][irx]=0.;
   }
   NCH_PASS=4;
   rx_minarrivaltime=0.;
@@ -439,7 +439,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   tdata->Branch("total_diodeinput_1_allantennas",&total_diodeinput_1_allantennas,"total_diodeinput_1_allantennas[48][512]/D"); // this is the waveform that is input to the tunnel diode in the first (LCP or vertical) polarization
   tdata->Branch("total_diodeinput_2_allantennas",&total_diodeinput_2_allantennas,"total_diodeinput_2_allantennas[48][512]/D"); // this is the waveform that is input to the tunnel diode in the first (LCP or vertical) polarization
   tdata->Branch("timedomain_output_allantennas",&timedomain_output_allantennas,"timedomain_output_allantennas[2][48][512]/D"); // this is the waveform that is output to the tunnel diode in the first (LCP or vertical) polarization
-  tdata->Branch("arrival_times",&arrival_times,"arrival_times[48]/D");
+  tdata->Branch("arrival_times",&arrival_times,"arrival_times[2][48]/D");
   tdata->Branch("inu",&inu,"inu/I");
   tdata->Branch("powerthreshold",&powerthreshold,"powerthreshold[5]/D");
   tdata->Branch("bwslice_rmsdiode",&bwslice_rmsdiode,"bwslice_rmsdiode[5]/D");
@@ -2896,38 +2896,38 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     PHI_OFFSET[1]=0.;
     PHI_OFFSET[2]=0.;
 		
-    ANTENNA_POSITION_START[0][0] = MINCH * Vector(40.957,-39.29,125.38).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[0][1] = MINCH * Vector(57.608,0.606,124.97).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[0][2] = MINCH * Vector(41.049,40.605,124.896).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[0][3] = MINCH * Vector(1.032,57.128,124.93).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[0][4] = MINCH * Vector(-38.832,40.508,125.607).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[0][5] = MINCH * Vector(-55.545,0.549,125.851).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[0][6] = MINCH * Vector(-38.793,-39.423,126.105).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[0][7] = MINCH * Vector(1.113,-55.918,125.731).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[1][0] = MINCH * Vector(19.841,-45.739,87.738).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[1][1] = MINCH * Vector(46.959,-18.601,87.364).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[1][2] = MINCH * Vector(46.983,19.646,87.208).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[1][3] = MINCH * Vector(19.823,46.633,87.194).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[1][4] = MINCH * Vector(-18.429,46.496,87.486).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[1][5] = MINCH * Vector(-45.439,19.34,88.0).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[1][6] = MINCH * Vector(-45.446,-18.769,88.183).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[1][7] = MINCH * Vector(-18.297,-45.857,88.066).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][0] = MINCH * Vector(38.622,-94.184,-20.615).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][1] = MINCH * Vector(71.662,-72.036,-20.966).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][2] = MINCH * Vector(93.857,-39.130,-21.512).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][3] = MINCH * Vector(101.664,-0.202,-21.942).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][4] = MINCH * Vector(93.993,38.733,-22.351).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][5] = MINCH * Vector(71.92,71.815,-22.386).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][6] = MINCH * Vector(38.944,93.885,-22.274).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][7] = MINCH * Vector(0.036,101.619,-21.813).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][8] = MINCH * Vector(-38.991,93.809,-21.281).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][9] = MINCH * Vector(-71.899,71.704,-20.777).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][10] = MINCH * Vector(-94.121,38.754,-20.825).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][11] = MINCH * Vector(-101.986,-0.133,-20.71).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][12] = MINCH * Vector(-94.175,-39.024,-20.671).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][13] = MINCH * Vector(-72.138,-72.132,-20.295).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][14] = MINCH * Vector(-39.111,-94.25,-20.23).RotateZ(-gps_offset);
-    ANTENNA_POSITION_START[2][15] = MINCH * Vector(-0.163,-101.975,-20.229).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][0][0] = MINCH * Vector(40.957,-39.29,125.38).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][0][1] = MINCH * Vector(57.608,0.606,124.97).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][0][2] = MINCH * Vector(41.049,40.605,124.896).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][0][3] = MINCH * Vector(1.032,57.128,124.93).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][0][4] = MINCH * Vector(-38.832,40.508,125.607).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][0][5] = MINCH * Vector(-55.545,0.549,125.851).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][0][6] = MINCH * Vector(-38.793,-39.423,126.105).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][0][7] = MINCH * Vector(1.113,-55.918,125.731).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][1][0] = MINCH * Vector(19.841,-45.739,87.738).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][1][1] = MINCH * Vector(46.959,-18.601,87.364).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][1][2] = MINCH * Vector(46.983,19.646,87.208).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][1][3] = MINCH * Vector(19.823,46.633,87.194).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][1][4] = MINCH * Vector(-18.429,46.496,87.486).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][1][5] = MINCH * Vector(-45.439,19.34,88.0).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][1][6] = MINCH * Vector(-45.446,-18.769,88.183).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][1][7] = MINCH * Vector(-18.297,-45.857,88.066).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][0] = MINCH * Vector(38.622,-94.184,-20.615).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][1] = MINCH * Vector(71.662,-72.036,-20.966).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][2] = MINCH * Vector(93.857,-39.130,-21.512).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][3] = MINCH * Vector(101.664,-0.202,-21.942).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][4] = MINCH * Vector(93.993,38.733,-22.351).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][5] = MINCH * Vector(71.92,71.815,-22.386).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][6] = MINCH * Vector(38.944,93.885,-22.274).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][7] = MINCH * Vector(0.036,101.619,-21.813).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][8] = MINCH * Vector(-38.991,93.809,-21.281).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][9] = MINCH * Vector(-71.899,71.704,-20.777).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][10] = MINCH * Vector(-94.121,38.754,-20.825).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][11] = MINCH * Vector(-101.986,-0.133,-20.71).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][12] = MINCH * Vector(-94.175,-39.024,-20.671).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][13] = MINCH * Vector(-72.138,-72.132,-20.295).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][14] = MINCH * Vector(-39.111,-94.25,-20.23).RotateZ(-gps_offset);
+    ANTENNA_POSITION_START[0][2][15] = MINCH * Vector(-0.163,-101.975,-20.229).RotateZ(-gps_offset);
     PHI_EACHLAYER[0][0] = -45.103 * RADDEG - gps_offset;
     PHI_EACHLAYER[0][1] = -0.14 * RADDEG - gps_offset;
     PHI_EACHLAYER[0][2] = 44.559 * RADDEG - gps_offset;
@@ -2994,7 +2994,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     ANTENNA_DOWN[2][15] = 9.288 * RADDEG;
     for(int iii = 0; iii < 3; iii++) // move from the square centers to the phase centers
       for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++)
-	ANTENNA_POSITION_START[iii][jjj] = ANTENNA_POSITION_START[iii][jjj] - phase_center * Vector(cos(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), sin(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), cos(90.*RADDEG+ANTENNA_DOWN[iii][jjj]));
+	ANTENNA_POSITION_START[0][iii][jjj] = ANTENNA_POSITION_START[0][iii][jjj] - phase_center * Vector(cos(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), sin(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), cos(90.*RADDEG+ANTENNA_DOWN[iii][jjj]));
   }
   else if (settings1->WHICH==7) {
 		
@@ -3088,46 +3088,46 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     THETA_ZENITH[2]=PI/2+INCLINE_TOPTHREE*RADDEG;
     THETA_ZENITH[3]=PI/2+INCLINE_TOPTHREE*RADDEG;
 		
-    ANTENNA_POSITION_START[0][0] = MINCH * Vector(40.438,-36.958,147.227);
-    ANTENNA_POSITION_START[0][1] = MINCH * Vector(57.134,3.109,146.476);
-    ANTENNA_POSITION_START[0][2] = MINCH * Vector(40.549,43.106,145.871);
-    ANTENNA_POSITION_START[0][3] = MINCH * Vector(0.624,59.688,145.361);
-    ANTENNA_POSITION_START[0][4] = MINCH * Vector(-39.455,43.147,145.928);
-    ANTENNA_POSITION_START[0][5] = MINCH * Vector(-56.096,3.177,146.894);
-    ANTENNA_POSITION_START[0][6] = MINCH * Vector(-39.355,-36.753,147.757);
-    ANTENNA_POSITION_START[0][7] = MINCH * Vector(0.645,-53.539,147.876);
-    ANTENNA_POSITION_START[1][0] = MINCH * Vector(19.554,-43.890,109.531);
-    ANTENNA_POSITION_START[1][1] = MINCH * Vector(46.600,-16.625,108.889);
-    ANTENNA_POSITION_START[1][2] = MINCH * Vector(46.587,21.659,108.220);
-    ANTENNA_POSITION_START[1][3] = MINCH * Vector(19.476,48.539,107.671);
-    ANTENNA_POSITION_START[1][4] = MINCH * Vector(-18.798,48.502,107.852);
-    ANTENNA_POSITION_START[1][5] = MINCH * Vector(-45.899,21.424,108.516);
-    ANTENNA_POSITION_START[1][6] = MINCH * Vector(-45.895,-16.821,109.354);
-    ANTENNA_POSITION_START[1][7] = MINCH * Vector(-18.691,-43.864,109.843);
-    ANTENNA_POSITION_START[2][0] = MINCH * Vector(38.636,-93.988,2.636);
-    ANTENNA_POSITION_START[2][1] = MINCH * Vector(71.690,-72.108,1.953);
-    ANTENNA_POSITION_START[2][2] = MINCH * Vector(93.897,-39.211,0.498);
-    ANTENNA_POSITION_START[2][3] = MINCH * Vector(101.790,-0.212,-0.661);
-    ANTENNA_POSITION_START[2][4] = MINCH * Vector(94.047,38.773,-1.788);
-    ANTENNA_POSITION_START[2][5] = MINCH * Vector(72.080,71.816,-2.223);
-    ANTENNA_POSITION_START[2][6] = MINCH * Vector(39.065,93.999,-2.561);
-    ANTENNA_POSITION_START[2][7] = MINCH * Vector(0.121,101.815,-2.314);
-    ANTENNA_POSITION_START[2][8] = MINCH * Vector(-38.815,94.002,-2.034);
-    ANTENNA_POSITION_START[2][9] = MINCH * Vector(-71.809,71.912,-1.102);
-    ANTENNA_POSITION_START[2][10] = MINCH * Vector(-93.886,39.000,-0.673);
-    ANTENNA_POSITION_START[2][11] = MINCH * Vector(-101.885,0.048,0.102);
-    ANTENNA_POSITION_START[2][12] = MINCH * Vector(-94.017,-38.841,0.865);
-    ANTENNA_POSITION_START[2][13] = MINCH * Vector(-72.079,-71.902,1.864);
-    ANTENNA_POSITION_START[2][14] = MINCH * Vector(-39.152,-93.935,2.464);
-    ANTENNA_POSITION_START[2][15] = MINCH * Vector(-0.290,-101.771,2.991);
-    ANTENNA_POSITION_START[3][0] = MINCH * Vector(32.625,-82.045,-71.140);
-    ANTENNA_POSITION_START[3][1] = MINCH * Vector(79.071,-35.639,-72.809);
-    ANTENNA_POSITION_START[3][2] = MINCH * Vector(79.172,30.988,-74.893);
-    ANTENNA_POSITION_START[3][3] = MINCH * Vector(32.608,77.414,-75.342);
-    ANTENNA_POSITION_START[3][4] = MINCH * Vector(-33.398,78.088,-74.957);
-    ANTENNA_POSITION_START[3][5] = MINCH * Vector(-79.367,31.568,-73.922);
-    ANTENNA_POSITION_START[3][6] = MINCH * Vector(-78.900,-34.192,-72.645);
-    ANTENNA_POSITION_START[3][7] = MINCH * Vector(-33.046,-81.696,-70.907);
+    ANTENNA_POSITION_START[0][0][0] = MINCH * Vector(40.438,-36.958,147.227);
+    ANTENNA_POSITION_START[0][0][1] = MINCH * Vector(57.134,3.109,146.476);
+    ANTENNA_POSITION_START[0][0][2] = MINCH * Vector(40.549,43.106,145.871);
+    ANTENNA_POSITION_START[0][0][3] = MINCH * Vector(0.624,59.688,145.361);
+    ANTENNA_POSITION_START[0][0][4] = MINCH * Vector(-39.455,43.147,145.928);
+    ANTENNA_POSITION_START[0][0][5] = MINCH * Vector(-56.096,3.177,146.894);
+    ANTENNA_POSITION_START[0][0][6] = MINCH * Vector(-39.355,-36.753,147.757);
+    ANTENNA_POSITION_START[0][0][7] = MINCH * Vector(0.645,-53.539,147.876);
+    ANTENNA_POSITION_START[0][1][0] = MINCH * Vector(19.554,-43.890,109.531);
+    ANTENNA_POSITION_START[0][1][1] = MINCH * Vector(46.600,-16.625,108.889);
+    ANTENNA_POSITION_START[0][1][2] = MINCH * Vector(46.587,21.659,108.220);
+    ANTENNA_POSITION_START[0][1][3] = MINCH * Vector(19.476,48.539,107.671);
+    ANTENNA_POSITION_START[0][1][4] = MINCH * Vector(-18.798,48.502,107.852);
+    ANTENNA_POSITION_START[0][1][5] = MINCH * Vector(-45.899,21.424,108.516);
+    ANTENNA_POSITION_START[0][1][6] = MINCH * Vector(-45.895,-16.821,109.354);
+    ANTENNA_POSITION_START[0][1][7] = MINCH * Vector(-18.691,-43.864,109.843);
+    ANTENNA_POSITION_START[0][2][0] = MINCH * Vector(38.636,-93.988,2.636);
+    ANTENNA_POSITION_START[0][2][1] = MINCH * Vector(71.690,-72.108,1.953);
+    ANTENNA_POSITION_START[0][2][2] = MINCH * Vector(93.897,-39.211,0.498);
+    ANTENNA_POSITION_START[0][2][3] = MINCH * Vector(101.790,-0.212,-0.661);
+    ANTENNA_POSITION_START[0][2][4] = MINCH * Vector(94.047,38.773,-1.788);
+    ANTENNA_POSITION_START[0][2][5] = MINCH * Vector(72.080,71.816,-2.223);
+    ANTENNA_POSITION_START[0][2][6] = MINCH * Vector(39.065,93.999,-2.561);
+    ANTENNA_POSITION_START[0][2][7] = MINCH * Vector(0.121,101.815,-2.314);
+    ANTENNA_POSITION_START[0][2][8] = MINCH * Vector(-38.815,94.002,-2.034);
+    ANTENNA_POSITION_START[0][2][9] = MINCH * Vector(-71.809,71.912,-1.102);
+    ANTENNA_POSITION_START[0][2][10] = MINCH * Vector(-93.886,39.000,-0.673);
+    ANTENNA_POSITION_START[0][2][11] = MINCH * Vector(-101.885,0.048,0.102);
+    ANTENNA_POSITION_START[0][2][12] = MINCH * Vector(-94.017,-38.841,0.865);
+    ANTENNA_POSITION_START[0][2][13] = MINCH * Vector(-72.079,-71.902,1.864);
+    ANTENNA_POSITION_START[0][2][14] = MINCH * Vector(-39.152,-93.935,2.464);
+    ANTENNA_POSITION_START[0][2][15] = MINCH * Vector(-0.290,-101.771,2.991);
+    ANTENNA_POSITION_START[0][3][0] = MINCH * Vector(32.625,-82.045,-71.140);
+    ANTENNA_POSITION_START[0][3][1] = MINCH * Vector(79.071,-35.639,-72.809);
+    ANTENNA_POSITION_START[0][3][2] = MINCH * Vector(79.172,30.988,-74.893);
+    ANTENNA_POSITION_START[0][3][3] = MINCH * Vector(32.608,77.414,-75.342);
+    ANTENNA_POSITION_START[0][3][4] = MINCH * Vector(-33.398,78.088,-74.957);
+    ANTENNA_POSITION_START[0][3][5] = MINCH * Vector(-79.367,31.568,-73.922);
+    ANTENNA_POSITION_START[0][3][6] = MINCH * Vector(-78.900,-34.192,-72.645);
+    ANTENNA_POSITION_START[0][3][7] = MINCH * Vector(-33.046,-81.696,-70.907);
     PHI_EACHLAYER[0][0] = -45.012 * RADDEG ;//ant 7
     PHI_EACHLAYER[0][1] = -0.588 * RADDEG ;//ant 0
     PHI_EACHLAYER[0][2] = 45.694 * RADDEG ;//ant 1
@@ -3295,7 +3295,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++){
 			 
 	//ANTENNA_DOWN is measured from horiztonal. Put negatives in correct places. Verified with analysis code 
-	ANTENNA_POSITION_START[iii][jjj] = ANTENNA_POSITION_START[iii][jjj] - phase_center_anita2_analysis * Vector(cos(PHI_EACHLAYER[iii][jjj])*cos(-1*ANTENNA_DOWN[iii][jjj]), sin(PHI_EACHLAYER[iii][jjj])*cos(-1*ANTENNA_DOWN[iii][jjj]), sin(-1*ANTENNA_DOWN[iii][jjj]));
+	ANTENNA_POSITION_START[0][iii][jjj] = ANTENNA_POSITION_START[0][iii][jjj] - phase_center_anita2_analysis * Vector(cos(PHI_EACHLAYER[iii][jjj])*cos(-1*ANTENNA_DOWN[iii][jjj]), sin(PHI_EACHLAYER[iii][jjj])*cos(-1*ANTENNA_DOWN[iii][jjj]), sin(-1*ANTENNA_DOWN[iii][jjj]));
       }//jjj
     }//iii
     double r;
@@ -3308,19 +3308,19 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 	
     for(int iii = 0; iii < 4; iii++){ // move from the square centers to the phase centers
       for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++){
-	x = ANTENNA_POSITION_START[iii][jjj][0];
-	y = ANTENNA_POSITION_START[iii][jjj][1];
-	z = ANTENNA_POSITION_START[iii][jjj][2];
+	x = ANTENNA_POSITION_START[0][iii][jjj][0];
+	y = ANTENNA_POSITION_START[0][iii][jjj][1];
+	z = ANTENNA_POSITION_START[0][iii][jjj][2];
 
 	r = sqrt(pow(x,2)+pow(y,2));
 	phi = atan2(y,x);
 		   
-	ANTENNA_POSITION_START[iii][jjj]= Vector((r+SIMON_DELTA_R[iii][jjj])*cos(phi+SIMON_DELTA_PHI[iii][jjj]),(r+SIMON_DELTA_R[iii][jjj])*sin(phi+SIMON_DELTA_PHI[iii][jjj]),z);
+	ANTENNA_POSITION_START[0][iii][jjj]= Vector((r+SIMON_DELTA_R[iii][jjj])*cos(phi+SIMON_DELTA_PHI[iii][jjj]),(r+SIMON_DELTA_R[iii][jjj])*sin(phi+SIMON_DELTA_PHI[iii][jjj]),z);
 		   
-	ANTENNA_POSITION_START[iii][jjj]=ANTENNA_POSITION_START[iii][jjj].RotateZ(-gps_offset_anita2);
-	PHI_EACHLAYER[iii][jjj]=atan2(ANTENNA_POSITION_START[iii][jjj][1],ANTENNA_POSITION_START[iii][jjj][0]);//set phi of each antennas to correct starting position
+	ANTENNA_POSITION_START[0][iii][jjj]=ANTENNA_POSITION_START[0][iii][jjj].RotateZ(-gps_offset_anita2);
+	PHI_EACHLAYER[iii][jjj]=atan2(ANTENNA_POSITION_START[0][iii][jjj][1],ANTENNA_POSITION_START[0][iii][jjj][0]);//set phi of each antennas to correct starting position
 
-	//cout<<"Antenna pos is "<<ANTENNA_POSITION_START[iii][jjj]<<" PHI is "<<PHI_EACHLAYER[iii][jjj]<<"\n";
+	//cout<<"Antenna pos is "<<ANTENNA_POSITION_START[0][iii][jjj]<<" PHI is "<<PHI_EACHLAYER[iii][jjj]<<"\n";
       }
     }
 
@@ -3433,8 +3433,8 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 
     // Fill photogrammetry position for top rings
     for (int iant=0; iant<8;iant++){
-      ANTENNA_POSITION_START[0][iant] = MINCH * Vector(xAntPhoto[iant*2], yAntPhoto[iant*2], zAntPhoto[iant*2]).RotateZ(-gps_offset_anita3);	    // top ring top antennas
-      ANTENNA_POSITION_START[1][iant] = MINCH * Vector(xAntPhoto[iant*2+1], yAntPhoto[iant*2+1], zAntPhoto[iant*2+1]).RotateZ(-gps_offset_anita3);  // top ring bottom antennas
+      ANTENNA_POSITION_START[0][0][iant] = MINCH * Vector(xAntPhoto[iant*2], yAntPhoto[iant*2], zAntPhoto[iant*2]).RotateZ(-gps_offset_anita3);	    // top ring top antennas
+      ANTENNA_POSITION_START[0][1][iant] = MINCH * Vector(xAntPhoto[iant*2+1], yAntPhoto[iant*2+1], zAntPhoto[iant*2+1]).RotateZ(-gps_offset_anita3);  // top ring bottom antennas
 
       PHI_EACHLAYER[0][iant] = azCentrePhoto[iant*2] * RADDEG - gps_offset_anita3;
       PHI_EACHLAYER[1][iant] = azCentrePhoto[iant*2+1] * RADDEG - gps_offset_anita3;
@@ -3445,8 +3445,8 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 
     // Fill photogrammetry position for middle and bottom rings
     for (int iant=0; iant<16;iant++){
-      ANTENNA_POSITION_START[2][iant] = MINCH * Vector(xAntPhoto[iant+16], yAntPhoto[iant+16], zAntPhoto[iant+16]).RotateZ(-gps_offset_anita3);	    // middle ring antennas
-      ANTENNA_POSITION_START[3][iant] = MINCH * Vector(xAntPhoto[iant+32], yAntPhoto[iant+32], zAntPhoto[iant+32]).RotateZ(-gps_offset_anita3);  // bottom ring antennas
+      ANTENNA_POSITION_START[0][2][iant] = MINCH * Vector(xAntPhoto[iant+16], yAntPhoto[iant+16], zAntPhoto[iant+16]).RotateZ(-gps_offset_anita3);	    // middle ring antennas
+      ANTENNA_POSITION_START[0][3][iant] = MINCH * Vector(xAntPhoto[iant+32], yAntPhoto[iant+32], zAntPhoto[iant+32]).RotateZ(-gps_offset_anita3);  // bottom ring antennas
 
       PHI_EACHLAYER[2][iant] = azCentrePhoto[iant+16] * RADDEG - gps_offset_anita3;
       ANTENNA_DOWN[2][iant] = apertureElPhoto[iant+16] * RADDEG; 
@@ -3512,25 +3512,25 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 
     
     double x, y, z, r, phi;
-    for(int ilayer = 0; ilayer < 4; ilayer++){ 
-      for(int ifold = 0; ifold < NRX_PHI[ilayer]; ifold++){
+    for (int ipol = 0; ipol < 2; ipol++){
+      for(int ilayer = 0; ilayer < 4; ilayer++){ 
+	for(int ifold = 0; ifold < NRX_PHI[ilayer]; ifold++){
 	  
-	ANTENNA_POSITION_START[ilayer][ifold] = ANTENNA_POSITION_START[ilayer][ifold] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(ANTENNA_DOWN[ilayer][ifold]));
+	  ANTENNA_POSITION_START[ipol][ilayer][ifold] = ANTENNA_POSITION_START[ipol][ilayer][ifold] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(ANTENNA_DOWN[ilayer][ifold]));
 	  
-	x = ANTENNA_POSITION_START[ilayer][ifold].GetX();
-	y = ANTENNA_POSITION_START[ilayer][ifold].GetY();
+	  x = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetX();
+	  y = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetY();
 	  
-	// apply phase centers calibration (applying VPOL only for now) LINDATEMP
-	r = sqrt(pow(x,2)+pow(y,2)) + deltaRPhaseCentre[0][ilayer][ifold];
-	phi = atan2(y,x) + deltaPhiPhaseCentre[0][ilayer][ifold];
-	z = ANTENNA_POSITION_START[ilayer][ifold].GetZ() + deltaZPhaseCentre[0][ilayer][ifold];	  
+	  r = sqrt(pow(x,2)+pow(y,2)) + deltaRPhaseCentre[ipol][ilayer][ifold];
+	  phi = atan2(y,x) + deltaPhiPhaseCentre[ipol][ilayer][ifold];
+	  z = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetZ() + deltaZPhaseCentre[ipol][ilayer][ifold];	  
 
-	if(phi<0) phi+=TMath::TwoPi();
-	if(phi>TMath::TwoPi()) phi-=TMath::TwoPi();
+	  if(phi<0) phi+=TMath::TwoPi();
+	  if(phi>TMath::TwoPi()) phi-=TMath::TwoPi();
 	  
-	ANTENNA_POSITION_START[ilayer][ifold]= Vector(r*cos(phi),r*sin(phi),z);
-	PHI_EACHLAYER[ilayer][ifold]=phi;
-	  
+	  ANTENNA_POSITION_START[ipol][ilayer][ifold]= Vector(r*cos(phi),r*sin(phi),z);
+	  PHI_EACHLAYER[ilayer][ifold]=phi;
+	}
       }
     }
   }
@@ -3732,8 +3732,8 @@ void Anita::calculate_single_offset(const unsigned center_phi_sector_index, cons
   //    cout << "normal vector is ";
   //normal_vector.Print();
 
-  //    Vector first_antenna_pos = ANTENNA_POSITION_START[3][center_phi_sector_index];
-  Vector one_antenna_pos = antenna_positions[2*16+center_phi_sector_index];
+  //    Vector first_antenna_pos = ANTENNA_POSITION_START[0][3][center_phi_sector_index];
+  Vector one_antenna_pos = antenna_positions[0][2*16+center_phi_sector_index];
   //cout << "one_antenna_pos is ";
   //one_antenna_pos.Print();
 
@@ -3748,7 +3748,7 @@ void Anita::calculate_single_offset(const unsigned center_phi_sector_index, cons
     for (unsigned i_layer = 0; i_layer < N_SUMMED_LAYERS; ++i_layer) {
 	
 
-      Vector antenna_pos = antenna_positions[16*i_layer+i_sector];
+      Vector antenna_pos = antenna_positions[0][16*i_layer+i_sector];
       //cout << "i_layer, i_sector are " << i_layer << "\t" << i_sector << "\n";
       //cout << "antenna_pos is ";
       //antenna_pos.Print();
@@ -3783,78 +3783,86 @@ void Anita::calculate_single_offset(const unsigned center_phi_sector_index, cons
 void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *settings1) {
   //cout << "inside getarrivaltimes.\n";
   
+
+  for (int ipol=0; ipol<2; ipol++){
   
-  for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
-    arrival_times[antenna_index] = (antenna_positions[antenna_index] * rf_direction) / CLIGHT;
+    for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
+      arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index] * rf_direction) / CLIGHT;
 
-    //arrival_times[antenna_index] += extraCableDelays[0][antenna_index];
+      //arrival_times[antenna_index] += extraCableDelays[0][antenna_index];
     
-    // cout << "index is " << antenna_index << "\n";
-    // cout << "antenna_positions are " << antenna_positions[antenna_index] << "\n";
-    // cout << "rf direction is " << rf_direction << "\n";
-    // cout << "arrival_times is " << arrival_times[antenna_index] << "\n";
-  } // for: loop over antenna layers
+      // cout << "index is " << antenna_index << "\n";
+      // cout << "antenna_positions are " << antenna_positions[antenna_index] << "\n";
+      // cout << "rf direction is " << rf_direction << "\n";
+      // cout << "arrival_times is " << arrival_times[antenna_index] << "\n";
+    } // for: loop over antenna layers
     
-  if(settings1->WHICH==8){//ANITA-II offboresight delay
+    if(settings1->WHICH==8){//ANITA-II offboresight delay
       
-    Vector rf_tmp_dir = bn1->unRotatePayload(-1*rf_direction);
+      Vector rf_tmp_dir = bn1->unRotatePayload(-1*rf_direction);
      
-    double theta_deg =rf_tmp_dir.Theta() * DEGRAD;//
+      double theta_deg =rf_tmp_dir.Theta() * DEGRAD;//
      
-    double phi_deg = rf_tmp_dir.Phi() *DEGRAD;
-    double totalAngledeg;
-    double extra_delay;
+      double phi_deg = rf_tmp_dir.Phi() *DEGRAD;
+      double totalAngledeg;
+      double extra_delay;
      
-    double phi_eachlayer;
-    double theta_offset;
-    int ant_ctr=0;
+      double phi_eachlayer;
+      double theta_offset;
+      int ant_ctr=0;
 
-    theta_offset = 10;//boresight_vector[ant_ctr].Theta()*DEGRAD;
+      theta_offset = 10;//boresight_vector[ant_ctr].Theta()*DEGRAD;
        
-    theta_deg = theta_deg -90;
+      theta_deg = theta_deg -90;
        
      
-    theta_deg = theta_deg - theta_offset;
-    for(int iii = 0; iii < 4; iii++){ 
-      for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++){
+      theta_deg = theta_deg - theta_offset;
+      for(int iii = 0; iii < 4; iii++){ 
+	for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++){
 		   
-	phi_deg = rf_tmp_dir.Phi();
+	  phi_deg = rf_tmp_dir.Phi();
       
-	phi_eachlayer =atan2(ANTENNA_POSITION_START[iii][jjj][1],ANTENNA_POSITION_START[iii][jjj][0]);
+	  phi_eachlayer =atan2(ANTENNA_POSITION_START[ipol][iii][jjj][1],ANTENNA_POSITION_START[ipol][iii][jjj][0]);
        
-	phi_deg =phi_deg- phi_eachlayer;
+	  phi_deg =phi_deg- phi_eachlayer;
 	 
-	if(fabs(phi_deg) > fabs(phi_deg+2*PI)) phi_deg+=2*PI;
-	if(fabs(phi_deg) > fabs(phi_deg-2*PI)) phi_deg-=2*PI;
-	phi_deg =phi_deg*DEGRAD;
-	totalAngledeg = phi_deg*phi_deg + theta_deg*theta_deg;
-	if(totalAngledeg > 2500) totalAngledeg=2500;
+	  if(fabs(phi_deg) > fabs(phi_deg+2*PI)) phi_deg+=2*PI;
+	  if(fabs(phi_deg) > fabs(phi_deg-2*PI)) phi_deg-=2*PI;
+	  phi_deg =phi_deg*DEGRAD;
+	  totalAngledeg = phi_deg*phi_deg + theta_deg*theta_deg;
+	  if(totalAngledeg > 2500) totalAngledeg=2500;
 	 
-	extra_delay  = (totalAngledeg*totalAngledeg)*1.45676e-8;//pulled from Abby analysis
-	extra_delay -= (totalAngledeg)*5.01452e-6;//pulled from Abby analysis
+	  extra_delay  = (totalAngledeg*totalAngledeg)*1.45676e-8;//pulled from Abby analysis
+	  extra_delay -= (totalAngledeg)*5.01452e-6;//pulled from Abby analysis
 	
-	arrival_times[ant_ctr]+=extra_delay*1E-9;
-	ant_ctr++;
+	  arrival_times[ipol][ant_ctr]+=extra_delay*1E-9;
+	  ant_ctr++;
+	}
       }
     }
+
   }
-    
+  
   //    double last_trigger_time=Tools::dMax(arrival_times,(number_all_antennas));
   //cout << "last_trigger_time is " << last_trigger_time << "\n";
-  double first_trigger_time = Tools::dMin(arrival_times,(number_all_antennas));
-  for (int i=0;i<(number_all_antennas);i++){
-    // cout << "antenna_positions is ";
-    //  antenna_positions[i].Print();
-    // cout << "diff is ";
-    // (antenna_positions[i]-one_antenna_position).Print();
+  double minV = Tools::dMin(arrival_times[0],(number_all_antennas));
+  double minH = Tools::dMin(arrival_times[1],(number_all_antennas));
+  double first_trigger_time = Tools::dMin(minV, minH);
+  for (int ipol=0; ipol<2; ipol++){
+    for (int i=0;i<(number_all_antennas);i++){
+      // cout << "antenna_positions is ";
+      //  antenna_positions[i].Print();
+      // cout << "diff is ";
+      // (antenna_positions[i]-one_antenna_position).Print();
 
-     arrival_times[i] -= first_trigger_time;
-     // cout << "arrivaltimes is " << arrival_times[i] << "\n";
-    // arrival_times[i] -= last_trigger_time;
+      arrival_times[ipol][i] -= first_trigger_time;
+      // cout << "arrivaltimes is " << arrival_times[i] << "\n";
+      // arrival_times[i] -= last_trigger_time;
 
-    // if (arrival_times[i] == 0){
-    // 	 first_phi_sector_hit = (int)((double)i/16.);
-    //        }
+      // if (arrival_times[i] == 0){
+      // 	 first_phi_sector_hit = (int)((double)i/16.);
+      //        }
+    }
   }
   // cout << "end of GetArrivalTimes.\n";
 } // GetArrivalTimes
@@ -3862,23 +3870,29 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
 
 void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]) {
 
-  for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
-    int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
-    int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
-    arrival_times[antenna_index] = (antenna_positions[antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
+  for (int ipol=0; ipol<2; ipol++){
+    for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
+      int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
+      int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
+      arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
 
-    // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
-    //   arrival_times[antenna_index] -= extraCableDelays[0][antenna_index];
-    // cout << arrival_times[antenna_index] << endl;
+      // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
+      //   arrival_times[antenna_index] -= extraCableDelays[0][antenna_index];
+      // cout << arrival_times[antenna_index] << endl;
     
-    //  arrival_times[antenna_index]=0;
-  } // for: loop over antenna layers
+      //  arrival_times[antenna_index]=0;
+    } // for: loop over antenna layers
+  }
   
-  double first_trigger_time = Tools::dMin(arrival_times,(number_all_antennas));
-  for (int i=0;i<(number_all_antennas);i++){
-
-    arrival_times[i] -= first_trigger_time;
-    //cout<<"arrival_times boresight["<<i<<"] is "<<arrival_times[i]<<"\n";
+  double minV = Tools::dMin(arrival_times[0],(number_all_antennas));
+  double minH = Tools::dMin(arrival_times[1],(number_all_antennas));
+  double first_trigger_time = Tools::dMin(minV, minH);
+  for (int ipol=0; ipol<2; ipol++){
+    for (int i=0;i<(number_all_antennas);i++){
+      
+      arrival_times[ipol][i] -= first_trigger_time;
+      //cout<<"arrival_times boresight["<<i<<"] is "<<arrival_times[i]<<"\n";
+    }
   }
 } // GetArrivalTimesBoresights
 

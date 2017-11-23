@@ -452,14 +452,15 @@ int main(int argc,  char **argv) {
     // make a global trigger object (but don't touch the electric fences)
     globaltrig1 = new GlobalTrigger(settings1, anita1);
     
-    Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
+    Tools::Zero(anita1->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
+    Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
     
     if(settings1->BORESIGHTS)
       anita1->GetArrivalTimesBoresights(direction2bn_eachboresight);
     else
       anita1->GetArrivalTimes(direction2bn,bn1,settings1);
     
-    anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times, settings1->NANTENNAS);
+    anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times[0], settings1->NANTENNAS);
     
     
     globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));

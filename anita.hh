@@ -58,12 +58,12 @@ public:
   static const int NLAYERS_MAX=5;                                                                                ///< max number of layers (in smex design, it's 4)
   static const int NTRIGGERLAYERS_MAX=3;
   static const int NPHI_MAX=400;                                                                                 ///< max number of antennas around in phi (in smex, 16)
-  Vector ANTENNA_POSITION_START[NLAYERS_MAX][NPHI_MAX];                                                          ///< antenna positions from Kurt's measurements
+  Vector ANTENNA_POSITION_START[2][NLAYERS_MAX][NPHI_MAX];                                                          ///< antenna positions from Kurt's measurements
   double ANTENNA_DOWN[NLAYERS_MAX][NPHI_MAX];                                                                    ///< down angles of antennas from Kurt's measurements
   double SIMON_DELTA_R[NLAYERS_MAX][NPHI_MAX];                                                                   ///< measurements by Simon used in analysis ANITA-2
   double SIMON_DELTA_PHI[NLAYERS_MAX][NPHI_MAX];                                                                 ///< measurements by Simon used in analysis ANITA-2
 
-  Vector antenna_positions[NLAYERS_MAX * NPHI_MAX];                                                              ///< these are the antenna positions in space in a coordinate system where x=north and y=west and the origin is at the center of the payload
+  Vector antenna_positions[2][NLAYERS_MAX * NPHI_MAX];                                                              ///< these are the antenna positions in space in a coordinate system where x=north and y=west and the origin is at the center of the payload
 
   int NRX_PHI[NLAYERS_MAX];                                                                                      ///< number of antennas around in each layer. (radians)
   double PHI_EACHLAYER[NLAYERS_MAX][NPHI_MAX];                                                                   ///< phi of the center of each antenna on each layer
@@ -365,7 +365,7 @@ public:
   void GetArrivalTimes(const Vector& rf_direction,Balloon *bn1,Settings *settings1);
   void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]);
   int rx_minarrivaltime;
-  double arrival_times[NLAYERS_MAX*NPHI_MAX];
+  double arrival_times[2][NLAYERS_MAX*NPHI_MAX];
 
   static int SurfChanneltoBand(int isurf);
   int AntennaWaveformtoSurf(int ilayer,int ifold); // find surf that generates this antenna's waveform
