@@ -601,11 +601,15 @@ public:
   Double_t fSignalChainResponseDigitizerFreqDomain[2][3][16][400];
   Double_t fSignalChainResponseTriggerFreqDomain[2][3][16][400];
   Double_t fRatioTriggerDigitizerFreqDomain[2][3][16][400];
-  double deltaT;
+  Double_t deltaT;
 
   // Trigger efficiency scan parameters
-  int trigEffScanPhi;                      // central phi sector of trigger efficiency scan
-  double trigEffScanAtt[5];                // attenuations to apply to central and adjecent antennas
+  Int_t trigEffScanPhi;                      // central phi sector of trigger efficiency scan
+  Double_t trigEffScanAtt[5];                // attenuations to apply to central and adjecent antennas
+  Double_t trigEffScanPhiDelay[5];           // delays between phi sectors
+  Double_t trigEffScanRingDelay[3];          // delays between rings
+  Int_t    trigEffScanApplyRingDelay[5];     // to which phi sectors apply ring delays 
+  Int_t    trigEffScanRingsUsed[3];          // to which rings apply scan
   Double_t trigEffScanPulseAtAmpa[HALFNFOUR];
   Double_t trigEffScanPulseAtAmpaUpsampled[NFOUR];
   Double_t trigEffScanAmplitudeAtAmpa[NFREQ];

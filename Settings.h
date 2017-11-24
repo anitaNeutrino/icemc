@@ -259,7 +259,11 @@ class Settings : public TObject {
   void parseValueArray(const char* valueString, std::vector<double>& values);
   void parseSettingsFile(const char* fileName, std::ofstream& outputFile);
 
-  std::vector<double> effiencyScanOffAxisAttenuations;
+  std::vector<double> efficiencyScanOffAxisAttenuations;
+  std::vector<double> efficiencyScanPhiSectorDelay;
+  std::vector<double> efficiencyScanRingDelay;
+  std::vector<int> efficiencyScanRingsUsed;
+  std::vector<int> efficiencyScanApplyRingDelay;
   std::vector<int> whichTUFFsON;
   std::vector<double> tempThresholds;  
   std::vector<double> bandLowEdgesMHz;

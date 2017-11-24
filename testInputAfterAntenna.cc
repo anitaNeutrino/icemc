@@ -1029,17 +1029,18 @@ int main(int argc,  char **argv) {
 
     Tools::Zero(anita1->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
     Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-  
+
+    
     globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
     anita1->rms_rfcm_e_single_event = 0;
 
     for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
       for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
-          
-	ChanTrigger *chantrig1 = new ChanTrigger();
-	chantrig1->InitializeEachBand(anita1);
 
 	antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
+	
+	ChanTrigger *chantrig1 = new ChanTrigger();
+	chantrig1->InitializeEachBand(anita1);
 	  
 	//	  chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
 

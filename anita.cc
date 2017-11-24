@@ -4215,6 +4215,11 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
     // Get average pulse as measured by scope
     gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
     //TGraph *gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
+
+    bool useDelayGenerator = false;
+
+    int maxDelays = Tools::dMax(trigEffScanRingDelay, 3) + Tools::dMax(trigEffScanPhiDelay,5);
+
     
     for (int i=0;i<gPulseAtAmpa->GetN();i++){
       // 7db fixed attenuation
@@ -4225,6 +4230,12 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
 
       // Signal in a 12-way splitter 
       gPulseAtAmpa->GetY()[i]*=TMath::Power(10, -10.8/20.);
+
+      // Attenutation due to delay generator
+      if (useDelayGenerator){
+	cout << "DELAY GENERATOR"  << endl;
+	gPulseAtAmpa->GetY()[i]*=TMath::Power(10, -12/20.);
+      }
 
       // Splitter between digitizer and trigger path
       gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-3./20.);

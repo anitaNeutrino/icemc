@@ -1633,9 +1633,14 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
     int phiIndex = anita1->trigEffScanPhi - (ant%16);
     if (phiIndex>8) phiIndex=phiIndex-16;
     double norm = (anita1->trigEffScanAtt[phiIndex+2]==0)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=0)*1;
+    int iring=2;
+    if (ant<16)      iring=0;
+    else if (ant<32) iring=1;
+    norm*=anita1->trigEffScanRingsUsed[iring];
     if( (TMath::Abs(phiIndex)<=2) && norm>0 ){
       graph1 = new TGraph(anita1->gPulseAtAmpa->GetN()/4,  anita1->gPulseAtAmpa->GetX(), anita1->gPulseAtAmpa->GetY());
       Tools::NormalTimeOrdering(graph1->GetN(),graph1->GetY());
+      
     } else {
       graph1 = new TGraph(nPoints, x, y);
     }
@@ -1783,10 +1788,14 @@ void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
   if (phiIndex>8) phiIndex=phiIndex-16;
   int fNumPoints=anita1->HALFNFOUR;
   double tmp_volts[2][1000];
+  int iring=2;
+  if (ant<16) iring=0;
+  else if (ant<32) iring=1;
   // only 2 phi sectors adjecent to the central one are considered in efficiency scan
   if(TMath::Abs(phiIndex)<=2){
     double att = anita1->trigEffScanAtt[phiIndex+2]-anita1->trigEffScanAtt[2];
     double norm = (anita1->trigEffScanAtt[phiIndex+2]==0)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=0)*1;
+    norm*=anita1->trigEffScanRingsUsed[iring];
     for (int i=0;i<fNumPoints;i++){
       tmp_volts[0][i]=norm*anita1->trigEffScanPulseAtAmpa[i]*TMath::Power(10, att/20.);
       tmp_volts[1][i]=0;
@@ -1809,6 +1818,24 @@ void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
     //convert the V pol time waveform into frequency amplitudes
     anita1->GetArrayFromFFT(tmp_volts[0], vhz_rx[0][4]);
     anita1->GetArrayFromFFT(tmp_volts[1], vhz_rx[1][4]);
+
+    
+    int irx = ant;
+    if (ant<16) {
+      if (ant%2==0) irx = ant/2;
+      else          irx = 8 + ant/2;
+    }
+
+    // Add phi sector delay
+    anita1->arrival_times[0][irx] += anita1->trigEffScanPhiDelay[phiIndex+2];
+
+    // Check if we are adding the ring delay to this phi sector
+    if (anita1->trigEffScanApplyRingDelay[phiIndex+2]>0){
+      // Add ring delay (T-M, M-B, T-B)
+      if (ant<16)       anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[0] + anita1->trigEffScanRingDelay[2];
+      else if (ant<32)  anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[1];
+    }
+
     
   }else{
     for (int i=0;i<fNumPoints;i++){
