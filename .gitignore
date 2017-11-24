@@ -6,12 +6,14 @@
 classdict*
 icemc
 testEAS
+testWAIS
 testInputAfterAntenna
 testSettings
 testThermalNoise
 testTrigger
 limits/*.pdf
 limits/*.eps
+limits/*.png
 limits/makelimitplot
 gitversion.c
 setup.sh
