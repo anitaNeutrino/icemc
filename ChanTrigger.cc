@@ -624,10 +624,14 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
     //   delete g2;
     //   delete c;
     // }
+
     
     // now shift right to account for arrival times
-    Tools::ShiftRight(timedomain_output[iband],anita1->NFOUR,(int)(anita1->arrival_times[ipol][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-	
+    // this is done inside the impulse response function normally
+    // but if we don't use it, we need to apply it manually here
+    if (!settings1->APPLYIMPULSERESPONSETRIGGER){
+      Tools::ShiftRight(timedomain_output[iband],anita1->NFOUR,(int)(anita1->arrival_times[ipol][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+    }
 	
     if (settings1->TRIGGERSCHEME == 2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
       //      if (anita1->inu==1570)
@@ -1135,11 +1139,16 @@ void ChanTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, in
 {   
   int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
-  // now shift right to account for arrival times
-  //  for (int i=0;i<48;i++) std::cout << "Arrival times " << anita1->arrival_times[0][anita1->GetRx(ilayer,ifold)] << std::endl;
-  Tools::ShiftRight(volts_rx_rfcm_lab[0],anita1->NFOUR/2, int(anita1->arrival_times[0][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-  Tools::ShiftRight(volts_rx_rfcm_lab[1],anita1->NFOUR/2, int(anita1->arrival_times[1][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
 
+  // now shift right to account for arrival times
+  // this is done inside the impulse response function normally
+  // if we don't use it, we need to do it here
+  if (!settings1->APPLYIMPULSERESPONSEDIGITIZER){
+    //  for (int i=0;i<48;i++) std::cout << "Arrival times " << anita1->arrival_times[0][anita1->GetRx(ilayer,ifold)] << std::endl;
+    Tools::ShiftRight(volts_rx_rfcm_lab[0],anita1->NFOUR/2, int(anita1->arrival_times[0][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+    Tools::ShiftRight(volts_rx_rfcm_lab[1],anita1->NFOUR/2, int(anita1->arrival_times[1][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+  }
+  
   for (int i=0;i<anita1->NFOUR/2;i++) {
     volts_rx_rfcm_lab_e_all[anita1->GetRx(ilayer, ifold)][i] = volts_rx_rfcm_lab[0][i];
     volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][i] = volts_rx_rfcm_lab[1][i];      
@@ -1567,8 +1576,17 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   //Calculate convolution
   TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizer[ipol][iring][iphi]);
 
+  int irx = ant;
+  if (iring==0) {
+    if (ant%2==0) irx = ant/2;
+    else          irx = 8 + ant/2;
+  }
+
+  // Translate waveform according to arrival times
+  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx] ) ;
+  
   //Downsample again
-  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
   
   Double_t *newy = surfSignalDown->GetY();
   if (settings1->ZEROSIGNAL){
@@ -1598,6 +1616,7 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   
   // Cleaning up
   delete surfSignalDown;
+  delete surfTrans;
   delete surfSignal;
   delete graphUp;
   delete graph1;
@@ -1635,12 +1654,20 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   else if (ant<32) iring=1;
 
   int iphi = ant - (iring*16);
-    
+
   //Calculate convolution
   TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring][iphi]);
 
+  int irx = ant;
+  if (iring==0) {
+    if (ant%2==0) irx = ant/2;
+    else          irx = 8 + ant/2;
+  }
+  // Translate signal
+  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx] ) ;
+  
   //Downsample again
-  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
   
   Double_t *newy = surfSignalDown->GetY();
   if (settings1->ZEROSIGNAL){
@@ -1687,6 +1714,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   
   // Cleaning up
   delete surfSignalDown;
+  delete surfTrans;
   delete surfSignal;
   delete graphUp;
   delete graph1;
