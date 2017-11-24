@@ -4,6 +4,10 @@
 *bak
 *dSYM
 classdict*
+*png
+*sh
+*root
+*pdf
 icemc
 testEAS
 testWAIS
@@ -20,3 +24,4 @@ setup.sh
 doc/html
 doc/latex
 output*
+efficiencyScan*
