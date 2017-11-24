@@ -283,6 +283,9 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   getSetting("Number of neutrinos", NNU);
   getSetting("Energy exponent", EXPONENT);
+  if (EXPONENT>29){
+    getSetting("Energy CDF or dartboard", USEDARTBOARD);
+  }
   getSetting("Neutrino position", UNBIASED_SELECTION);
   getSetting("Write hists and trees", HIST);
   getSetting("Write ray", FILLRAYTREES);

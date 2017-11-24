@@ -72,6 +72,7 @@ class Settings : public TObject {
 
   double INCLINE_TOPTHREE;
   double INCLINE_NADIR;
+  int USEDARTBOARD;
   int GAINS;
   int BANDING;
   int NBANDS;

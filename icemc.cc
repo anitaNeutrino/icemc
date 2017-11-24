@@ -1519,12 +1519,13 @@ int main(int argc,  char **argv) {
       passes_thisevent=0;
       unmasked_thisevent=1;
       vmmhz_min_thatpasses=1000; // initializing.  want to find the minumum voltage that passes a
+
       if ( spectra1->IsSpectrum() ){//if using energy spectrum
-        //pnu=spectra1->GetNuEnergy();
-        // cout<<"using spectrum \n";
-        pnu=spectra1->GetCDFEnergy();
-        // cout<<"pnu is "<<pnu<<"\n";
-        ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
+
+	if(settings1->USEDARTBOARD) pnu=spectra1->GetNuEnergy();
+        else pnu=spectra1->GetCDFEnergy();
+
+	ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
         // ierr=0 if the energy is too low for the parameterization
         // ierr=1 otherwise
         len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
