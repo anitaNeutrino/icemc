@@ -1682,11 +1682,12 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
     for (int i=0;i<nPoints;i++){
+      justSig_trigPath[ipol][i] = newy[i];
       y[i] = voltsArray[i] = newy[i] + justNoise_trigPath[ipol][i];
       //  std::cout << i << " " << justNoise_trigPath[ipol][i] << std::endl;
     }
   } else {
-    for (int i=0;i<nPoints;i++)  y[i] = voltsArray[i] = newy[i];
+    for (int i=0;i<nPoints;i++)  justSig_trigPath[ipol][i] = y[i] = voltsArray[i] = newy[i];
   }
   
   // find back the frequency domain
@@ -1725,7 +1726,15 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   delete graph1;
 }
 
+void ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
 
+  for (int i=0; i<anita1->NFOUR/2; i++){
+    sig0[i]   = justSig_trigPath[0][i];
+    noise0[i] = justNoise_trigPath[0][i];
+    sig1[i]   = justSig_trigPath[1][i];
+    noise1[i] = justNoise_trigPath[1][i];
+  }
+}
 
 
 void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){

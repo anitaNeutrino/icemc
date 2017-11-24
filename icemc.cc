@@ -374,6 +374,10 @@ double sum_weights=0;
 int xsecParam_nutype = 0; // neutrino = 0, antineutrino = 1;
 int xsecParam_nuint  = 1; // NC = 0, CC = 1;
 
+
+double justNoise_trig[2][48][512];
+double justSignal_trig[2][48][512];
+
 // functions
 
 // set up array of viewing angles for making plots for seckel
@@ -2862,6 +2866,8 @@ int main(int argc,  char **argv) {
 
 	  chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
+	  chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
+	  
 	  Tools::Zero(sumsignal, 5);
 
 	  // now hopefully we have converted the signal to time domain waveforms
