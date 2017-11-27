@@ -11,6 +11,7 @@
 #include "TH2F.h"
 #include "TMath.h"
 #include "TVector3.h"
+#include "TLine.h"
 
 #include "rx.hpp"
 #include "Constants.h"
@@ -342,7 +343,6 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   if (settings1->NOISEFROMFLIGHTTRIGGER){
     anita1->bwslice_rmsdiode[4] = anita1->bwslice_dioderms_fullband_allchan[ipol][iant];
   }
-
   
   // if we use the diode to perform an integral
   // this is the number of bins to the left of center where the diode function starts to be completely overlapping with the waveform in the convolution.
@@ -351,7 +351,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   // now we have converted the signal to time domain waveforms for all the bands of the antenna
       
   double integrateenergy[5]={0.,0.,0.,0.,0.};
-      
+        
   for (int iband=0;iband<5;iband++) { // Only loop over allowed bands
     if (anita1->bwslice_allowed[iband]!=1) continue; 
   
@@ -366,7 +366,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   	anita1->total_vpol_inanita[iband][itime]=anita1->timedomainnoise_rfcm_banding[0][iband][itime]+anita1->signal_vpol_inanita[iband][itime];
 
   	integrateenergy[iband]+=anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->TIMESTEP;
-  	if (settings1->SIGNAL_FLUCT && (!settings1->NOISEFROMFLIGHTTRIGGER)) {
+   	if ( settings1->SIGNAL_FLUCT && (!settings1->NOISEFROMFLIGHTTRIGGER) ) {
   	  // this reverses the noise is time, and starts with bin anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)
   	  v_banding_rfcm_forfft[0][iband][itime]=v_banding_rfcm_forfft[0][iband][itime]+anita1->timedomainnoise_rfcm_banding[0][iband][itimenoisebin];
   	  v_banding_rfcm_forfft[1][iband][itime]=v_banding_rfcm_forfft[1][iband][itime]+anita1->timedomainnoise_rfcm_banding[1][iband][itimenoisebin];
@@ -378,7 +378,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   	v_banding_rfcm_forfft[1][iband][itime]=0.;
       }
     }
-    else if (settings1->SIGNAL_FLUCT && (!settings1->NOISEFROMFLIGHTTRIGGER)) {
+    else if ( settings1->SIGNAL_FLUCT && (!settings1->NOISEFROMFLIGHTTRIGGER) ) {
       for (unsigned int itime = 0; itime < anita1->HALFNFOUR; ++itime){
   	// this is just a straight sum
   	anita1->total_vpol_inanita[iband][itime]=anita1->timedomainnoise_rfcm_banding[0][iband][itime]+anita1->signal_vpol_inanita[iband][itime];
@@ -394,7 +394,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   // In the nadir layer, 8 of the 16 slots are empty on the trigger layer.)
   int whichlayer,whichphisector;
   globaltrig1->GetAnitaLayerPhiSector(settings1,ilayer,ifold,whichlayer,whichphisector); 
-  
+    
   for (int iband=0;iband<5;iband++) {
     if (anita1->bwslice_allowed[iband]!=1) continue; 
 
@@ -429,6 +429,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
     anita1->total_diodeinput_1_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][itime]=anita1->total_diodeinput_1_inanita[4][itime];
     anita1->total_diodeinput_2_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][itime]=anita1->total_diodeinput_2_inanita[4][itime];
   }
+
   DiodeConvolution(settings1, anita1, globaltrig1, ilayer, ifold, mindiodeconvl[0], onediodeconvl[0], psignal[0], timedomain_output[0], ibinshift, 0, thresholds);
   DiodeConvolution(settings1, anita1, globaltrig1, ilayer, ifold, mindiodeconvl[1], onediodeconvl[1], psignal[1], timedomain_output[1], ibinshift, 1, thresholds);
 
@@ -592,13 +593,45 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
     
     // myconvl
     // this performs the convolution with the diode response
-
     anita1->myconvlv(vm_banding_rfcm_forfft[ipol][iband],anita1->NFOUR,anita1->fdiode_real[iband],mindiodeconvl[iband],onediodeconvl[iband],psignal[iband],timedomain_output[iband]);
     // loop from the ibinshift left + some delay + 10 ns
-	
+    
+
+    // // TEMPORARY CODE FOR PRINTING DIODE INPUT/OUTPUT
+    // if (anita1->inu==1){
+    //   TCanvas *c = new TCanvas("c");
+    //   string name = "newnoise";
+    //   TGraph *gV = new TGraph(anita1->HALFNFOUR, anita1->fTimes, vm_banding_rfcm_forfft[ipol][iband]);
+    //   gV->SetTitle("Diode Input;Time [s];Amplitude [V]");
+    //   gV->Draw("Al");
+    //   c->Print(Form("%s_%d_%d_%d_%d_diodeInput.png",  name.c_str(), anita1->inu, ipol, ilayer, ifold));
+    //   c->Print(Form("%s_%d_%d_%d_%d_diodeInput.pdf",  name.c_str(), anita1->inu, ipol, ilayer, ifold));
+    //   c->Print(Form("%s_%d_%d_%d_%d_diodeInput.C",    name.c_str(), anita1->inu, ipol, ilayer, ifold));
+    //   c->Print(Form("%s_%d_%d_%d_%d_diodeInput.root", name.c_str(), anita1->inu, ipol, ilayer, ifold));
+    
+    	
+    //   TGraph *g2 = new TGraph(anita1->HALFNFOUR, anita1->fTimes, timedomain_output[iband]);
+    //   g2->SetTitle("Diode Output;Time [s];Diode Output [J]");
+    //   g2->Draw("Al");
+    //   TLine *l = new TLine (0, thresholds[ipol][iband] * anita1->bwslice_rmsdiode[iband], 200, thresholds[ipol][iband] * anita1->bwslice_rmsdiode[iband]);
+    //   l->SetLineColor(kRed);
+    //   l->Draw();
+    //   c->Print(Form("%s_%d_%d_%d_%d_diodeOutput.png",  name.c_str(), anita1->inu, ipol, ilayer, ifold));
+    //   c->Print(Form("%s_%d_%d_%d_%d_diodeOutput.pdf",  name.c_str(), anita1->inu, ipol, ilayer, ifold));
+    //   c->Print(Form("%s_%d_%d_%d_%d_diodeOutput.C",    name.c_str(), anita1->inu, ipol, ilayer, ifold));
+    //   c->Print(Form("%s_%d_%d_%d_%d_diodeOutput.root", name.c_str(), anita1->inu, ipol, ilayer, ifold));
+    //   delete gV;
+    //   delete g2;
+    //   delete c;
+    // }
+
+    
     // now shift right to account for arrival times
-    Tools::ShiftRight(timedomain_output[iband],anita1->NFOUR,(int)(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-	
+    // this is done inside the impulse response function normally
+    // but if we don't use it, we need to apply it manually here
+    if (!settings1->APPLYIMPULSERESPONSETRIGGER){
+      Tools::ShiftRight(timedomain_output[iband],anita1->NFOUR,(int)(anita1->arrival_times[ipol][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+    }
 	
     if (settings1->TRIGGERSCHEME == 2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
       //      if (anita1->inu==1570)
@@ -1118,11 +1151,16 @@ void ChanTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, in
 {   
   int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
-  // now shift right to account for arrival times
-  //  for (int i=0;i<48;i++) std::cout << "Arrival times " << anita1->arrival_times[anita1->GetRx(ilayer,ifold)] << std::endl;
-  Tools::ShiftRight(volts_rx_rfcm_lab[0],anita1->NFOUR/2, int(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-  Tools::ShiftRight(volts_rx_rfcm_lab[1],anita1->NFOUR/2, int(anita1->arrival_times[anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
 
+  // now shift right to account for arrival times
+  // this is done inside the impulse response function normally
+  // if we don't use it, we need to do it here
+  if (!settings1->APPLYIMPULSERESPONSEDIGITIZER){
+    //  for (int i=0;i<48;i++) std::cout << "Arrival times " << anita1->arrival_times[0][anita1->GetRx(ilayer,ifold)] << std::endl;
+    Tools::ShiftRight(volts_rx_rfcm_lab[0],anita1->NFOUR/2, int(anita1->arrival_times[0][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+    Tools::ShiftRight(volts_rx_rfcm_lab[1],anita1->NFOUR/2, int(anita1->arrival_times[1][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+  }
+  
   for (int i=0;i<anita1->NFOUR/2;i++) {
     volts_rx_rfcm_lab_e_all[anita1->GetRx(ilayer, ifold)][i] = volts_rx_rfcm_lab[0][i];
     volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][i] = volts_rx_rfcm_lab[1][i];      
@@ -1619,8 +1657,17 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
 
   }// end esle for ANITA-4
 
+  int irx = ant;
+  if (iring==0) {
+    if (ant%2==0) irx = ant/2;
+    else          irx = 8 + ant/2;
+  }
+
+  // Translate waveform according to arrival times
+  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx] ) ;
+  
   //Downsample again
-  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
   
   Double_t *newy = surfSignalDown->GetY();
   if (settings1->ZEROSIGNAL){
@@ -1650,6 +1697,7 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   
   // Cleaning up
   delete surfSignalDown;
+  delete surfTrans;
   delete surfSignal;
   delete graphUp;
   delete graph1;
@@ -1661,9 +1709,26 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   int nPoints = anita1->HALFNFOUR;
   double *x   = anita1->fTimes;
 
-  TGraph *graph1 = new TGraph(nPoints, x, y);
-  //  TGraph *graph1 = (TGraph*) anita1->gPulseAtAmpa->Clone();
-
+  TGraph *graph1;
+  if (settings1->TRIGGEREFFSCAN && !pol){
+    int phiIndex = anita1->trigEffScanPhi - (ant%16);
+    if (phiIndex>8) phiIndex=phiIndex-16;
+    double norm = (anita1->trigEffScanAtt[phiIndex+2]==0)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=0)*1;
+    int iring=2;
+    if (ant<16)      iring=0;
+    else if (ant<32) iring=1;
+    norm*=anita1->trigEffScanRingsUsed[iring];
+    if( (TMath::Abs(phiIndex)<=2) && norm>0 ){
+      graph1 = new TGraph(anita1->gPulseAtAmpa->GetN()/4,  anita1->gPulseAtAmpa->GetX(), anita1->gPulseAtAmpa->GetY());
+      Tools::NormalTimeOrdering(graph1->GetN(),graph1->GetY());
+      
+    } else {
+      graph1 = new TGraph(nPoints, x, y);
+    }
+  } else {
+    graph1 = new TGraph(nPoints, x, y);
+  }
+  
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
 
@@ -1675,12 +1740,20 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   else if (ant<32) iring=1;
 
   int iphi = ant - (iring*16);
-    
+
   //Calculate convolution
   TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring][iphi]);
 
+  int irx = ant;
+  if (iring==0) {
+    if (ant%2==0) irx = ant/2;
+    else          irx = 8 + ant/2;
+  }
+  // Translate signal
+  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx] ) ;
+  
   //Downsample again
-  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
   
   Double_t *newy = surfSignalDown->GetY();
   if (settings1->ZEROSIGNAL){
@@ -1690,11 +1763,12 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
     for (int i=0;i<nPoints;i++){
+      justSig_trigPath[ipol][i] = newy[i];
       y[i] = voltsArray[i] = newy[i] + justNoise_trigPath[ipol][i];
       //  std::cout << i << " " << justNoise_trigPath[ipol][i] << std::endl;
     }
   } else {
-    for (int i=0;i<nPoints;i++)  y[i] = voltsArray[i] = newy[i];
+    for (int i=0;i<nPoints;i++)  justSig_trigPath[ipol][i] = y[i] = voltsArray[i] = newy[i];
   }
   
   // find back the frequency domain
@@ -1703,7 +1777,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   //convert the V pol time waveform into frequency amplitudes
   anita1->GetArrayFromFFT(voltsArray, vhz);
   
-  // if (pol==0){
+  // if (anita1->inu==1 && pol==0 && ant==15){
   //   TCanvas *c = new TCanvas("c");
   //   graph1->Draw("Al");
   //   c->Print(Form("TriggerPath_ant%i_graph1.png", ant));
@@ -1713,15 +1787,35 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   //   c->Print(Form("TriggerPath_ant%i_surfSignal.png", ant));
   //   surfSignalDown->Draw("Al");
   //   c->Print(Form("TriggerPath_ant%i_surfSignalDown.png", ant));
+  //   TGraph *gtemp = new TGraph (nPoints, x, y);
+  //   gtemp->Draw("Al");
+  //   c->Print(Form("TriggerPath_ant%i_surfSignalDown_noise.png", ant));
+    // TFile *out = new TFile("Icemc_signalChainTrigger.root", "recreate");
+    // graph1->Write("gInput");
+    // graphUp->Write("gInputUp");
+    // surfSignal->Write("gImpResp");
+    // surfSignalDown->Write("gImpRespDown");
+    // gtemp->Write("gImpRespDownNoise");
+    // out->Close();
   // }
   
   // Cleaning up
   delete surfSignalDown;
+  delete surfTrans;
   delete surfSignal;
   delete graphUp;
   delete graph1;
 }
 
+void ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
+
+  for (int i=0; i<anita1->NFOUR/2; i++){
+    sig0[i]   = justSig_trigPath[0][i];
+    noise0[i] = justNoise_trigPath[0][i];
+    sig1[i]   = justSig_trigPath[1][i];
+    noise1[i] = justNoise_trigPath[1][i];
+  }
+}
 
 
 void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
@@ -1732,7 +1826,7 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
   phasorsDig[0].setMagPhase(0,0);
   phasorsTrig[0].setMagPhase(0,0);
   double *freqs = anita1->freqs;
-  Double_t sigma, realPart, imPart, dig, trig, norm;
+  Double_t sigma, realPart, imPart, norm;
   int iring=2;
   if (ant<16) iring=0;
   else if (ant<32) iring=1;
@@ -1742,26 +1836,28 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
   for (int ipol=0; ipol<2; ipol++){
 
     for(int i=1;i<numFreqs;i++) {
-      sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4/TMath::Sqrt(numFreqs);
+      norm           = anita1->fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i];
+      sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
+      sigma*=norm;
       realPart       = anita1->fRand->Gaus(0,sigma);
       imPart         = anita1->fRand->Gaus(0,sigma);
-      dig            = anita1->fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
-      trig           = anita1->fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i];
-      norm           = (trig/dig);
-      phasorsDig[i]  = FFTWComplex(realPart, imPart);
-      phasorsTrig[i] = FFTWComplex(realPart*norm, imPart*norm);
+      
+      phasorsDig[i]  = FFTWComplex(realPart/norm, imPart/norm);
+      phasorsTrig[i] = FFTWComplex(realPart,      imPart     );
     }
-    
+
     RFSignal *rfNoiseDig    = new RFSignal(numFreqs,freqs,phasorsDig,1);    
     Double_t *justNoiseDig  = rfNoiseDig->GetY();
     
     RFSignal *rfNoiseTrig   = new RFSignal(numFreqs,freqs,phasorsTrig,1);
     Double_t *justNoiseTrig = rfNoiseTrig->GetY();
 
+    
     for (int i=0; i<anita1->HALFNFOUR; i++){
       justNoise_digPath[ipol][i]  = justNoiseDig[i]*anita1->THERMALNOISE_FACTOR;
       justNoise_trigPath[ipol][i] = justNoiseTrig[i]*anita1->THERMALNOISE_FACTOR;
     }
+    
     delete rfNoiseDig;
     delete rfNoiseTrig;
 
@@ -1786,17 +1882,20 @@ void ChanTrigger::calculateCW(Anita *anita1, double frequency, double phase, dou
   
 }
 
-
 void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
   // phiIndex is 0 for central antenna in trigger efficiency scan
   int phiIndex = anita1->trigEffScanPhi - (ant%16);
   if (phiIndex>8) phiIndex=phiIndex-16;
   int fNumPoints=anita1->HALFNFOUR;
   double tmp_volts[2][1000];
+  int iring=2;
+  if (ant<16) iring=0;
+  else if (ant<32) iring=1;
   // only 2 phi sectors adjecent to the central one are considered in efficiency scan
   if(TMath::Abs(phiIndex)<=2){
     double att = anita1->trigEffScanAtt[phiIndex+2]-anita1->trigEffScanAtt[2];
     double norm = (anita1->trigEffScanAtt[phiIndex+2]==0)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=0)*1;
+    norm*=anita1->trigEffScanRingsUsed[iring];
     for (int i=0;i<fNumPoints;i++){
       tmp_volts[0][i]=norm*anita1->trigEffScanPulseAtAmpa[i]*TMath::Power(10, att/20.);
       tmp_volts[1][i]=0;
@@ -1805,6 +1904,12 @@ void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
       volts_rx_forfft[0][4][i]=tmp_volts[0][i];
       volts_rx_forfft[1][4][i]=tmp_volts[1][i];
     }
+    
+    // put it in normal time ording -T to T
+    // instead of 0 to T, -T to 0
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_forfft[0][4]);
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_forfft[1][4]);
+
 
     // find back the frequency domain
     Tools::realft(tmp_volts[0],1,anita1->NFOUR/2);
@@ -1813,6 +1918,24 @@ void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
     //convert the V pol time waveform into frequency amplitudes
     anita1->GetArrayFromFFT(tmp_volts[0], vhz_rx[0][4]);
     anita1->GetArrayFromFFT(tmp_volts[1], vhz_rx[1][4]);
+
+    
+    int irx = ant;
+    if (ant<16) {
+      if (ant%2==0) irx = ant/2;
+      else          irx = 8 + ant/2;
+    }
+
+    // Add phi sector delay
+    anita1->arrival_times[0][irx] += anita1->trigEffScanPhiDelay[phiIndex+2];
+
+    // Check if we are adding the ring delay to this phi sector
+    if (anita1->trigEffScanApplyRingDelay[phiIndex+2]>0){
+      // Add ring delay (T-M, M-B, T-B)
+      if (ant<16)       anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[0] + anita1->trigEffScanRingDelay[2];
+      else if (ant<32)  anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[1];
+    }
+
     
   }else{
     for (int i=0;i<fNumPoints;i++){

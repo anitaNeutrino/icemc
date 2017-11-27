@@ -74,7 +74,7 @@ void Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posn
       for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
         WhereDoesItLeave(posnu,nrf_iceside_eachboresight[2*whichtry][ilayer][ifold],antarctica,
         rfexit_eachboresight[whichtry][ilayer][ifold]);
-        n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit(); // Linda added this line
+        n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit(); 
       }
     }
   } // end if we are doing this for each boresight
