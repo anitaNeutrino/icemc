@@ -1300,6 +1300,7 @@ int main(int argc,  char **argv) {
 
   TTree *configAnitaTree = new TTree("configIcemcTree", "Config file and settings information");
   configAnitaTree->Branch("gitversion",        &icemcgitversion  );
+  configAnitaTree->Branch("nnu",               &NNU              );
   configAnitaTree->Branch("startTime",         &timenow          );
   // configAnitaTree->Branch("icemcSettings",     &settings1        );
   configAnitaTree->Fill();
@@ -3448,6 +3449,41 @@ int main(int argc,  char **argv) {
               for (int i=0;i<Anita::NFREQ;i++)
                 truthEvPtr->vmmhz[i]       = panel1->GetVmmhz_freq(i);
             }
+
+	    
+	    memset(truthEvPtr->SNRAtTrigger,     0, sizeof(truthEvPtr->SNRAtTrigger)     );
+	    memset(truthEvPtr->thresholds,       0, sizeof(truthEvPtr->thresholds)       );
+	    memset(truthEvPtr->fSignalAtTrigger, 0, sizeof(truthEvPtr->fSignalAtTrigger) );
+	    memset(truthEvPtr->fNoiseAtTrigger,  0, sizeof(truthEvPtr->fNoiseAtTrigger)  );
+	    memset(truthEvPtr->fDiodeOutput,     0, sizeof(truthEvPtr->fDiodeOutput)     );
+
+            for (int iant = 0; iant < settings1->NANTENNAS; iant++){
+              int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
+              int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
+
+	      truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = 0;
+	      truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = 0;
+	      truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[antNum][0][4];
+	      truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[antNum][1][4];
+	      int irx = iant;
+	      if (iant<16){
+		if (iant%2) irx = iant/2;
+		else        irx = iant/2 + 1;
+	      }
+	      
+              for (int j = 0; j < fNumPoints; j++) {
+		truthEvPtr->fTimes[UsefulChanIndexV][j]           = j * anita1->TIMESTEP * 1.0E9;
+		truthEvPtr->fTimes[UsefulChanIndexH][j]           = j * anita1->TIMESTEP * 1.0E9;
+                truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j] = justSignal_trig[0][antNum][j+128]*1000;
+                truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j] = justSignal_trig[1][antNum][j+128]*1000;
+                truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]  = justNoise_trig[0][antNum][j+128]*1000;
+                truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]  = justNoise_trig[1][antNum][j+128]*1000;
+		
+                truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]     = anita1->timedomain_output_allantennas[0][irx][j];
+                truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]     = anita1->timedomain_output_allantennas[1][irx][j];
+              }//end int j
+            }// end int iant
+
             truthAnitaTree->Fill();
             delete truthEvPtr;
 #endif
