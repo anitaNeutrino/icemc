@@ -432,6 +432,11 @@ int main(int argc,  char **argv) {
   
   Position positionWAIS     = Position(lonWAIS, 90.+latWAIS, elevationWAIS); 
 
+
+  // LC: If we turn on this flag, then we can use different phases when applying the antenna gain
+  // Eventually we will want to do it more elegantly
+  anita1->PULSER=1;
+  
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
 
@@ -490,6 +495,11 @@ int main(int argc,  char **argv) {
     // and making an array across frequency bins by putting in frequency dependence.
     sig1->GetVmMHz(vmmhz_max, vmmhz1m, 1e19, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ);  
 
+    // Here we need also to define the anita1->v_phases in DEGREES :/
+    for (int i=0; i<anita1->NFOUR/4; i++){
+      anita1->v_phases[i]=90.;
+    }
+    
     // TEMPORARY POLARIZATION
     n_pol = Vector(0., 0., 1.);
     if (settings1->BORESIGHTS) {
