@@ -3367,7 +3367,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     string photoFile;
 #ifdef ANITA_UTIL_EXISTS
     photoFile += ( (string)getenv("ANITA_UTIL_INSTALL_DIR") +"/share/anitaCalib/anita"+whichANITAroman+"Photogrammetry.csv");
-#elif
+#else
     photoFile += (ICEMC_DATA_DIR+"/anita"+whichANITAroman+"Photogrammetry.csv");
 #endif
     
@@ -3470,7 +3470,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     string phaseCenterName;
 #ifdef ANITA_UTIL_EXISTS
     phaseCenterName += ( (string)getenv("ANITA_UTIL_INSTALL_DIR") +"/share/anitaCalib/phaseCenterPositionsRelativeToPhotogrammetryAnita"+whichANITAcard+".dat");
-#elif
+#else
     phaseCenterName += (ICEMC_DATA_DIR+"/phaseCenterPositionsRelativeToPhotogrammetryAnita"+whichANITAcard+".dat");
 #endif
     
