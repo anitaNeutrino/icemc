@@ -46,7 +46,15 @@ public:
   */
   void InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, double T0, double T, double A);
 
-
+  //! Calculates the angular distance between two points on the sphere
+  /**
+  * @param long1 - first longitude [rad]
+  * @param lat1 - first latitude [rad]
+  * @param long2 - second longitude [rad]
+  * @param lat2 - second latitude [rad]
+  * @return double  - arclength between points [radians]
+  */
+  double greatCircleDist(double long1, double lat1, double long2, double lat2);
 
 };
 

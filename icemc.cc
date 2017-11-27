@@ -2218,6 +2218,7 @@ int main(int argc,  char **argv) {
         double theta_local;             // polar angle between local surface normal and vector to balloon [radians]
         double theta_0_local;                 //angle between local surface normal and incident direction [radians]
         double tcoeff_perp, tcoeff_parl;
+        double power_perp, power_parl;
 
         double HP_2048_binarea = 2.4967135219492856e-07;  // healpix nside=2048 bin area [sterad]
         double antennalength = 0.96; // [m]
@@ -2294,8 +2295,10 @@ int main(int argc,  char **argv) {
 
           /////
           // Field Magnitude
-          rough1->InterpolatePowerValue(tcoeff_perp, tcoeff_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
-          Emag_local = vmmhz1m_max * sqrt((tcoeff_perp + tcoeff_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_2048_binarea);
+          rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
+          tcoeff_perp = sqrt(power_perp);
+          tcoeff_parl = sqrt(power_parl);
+          Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_2048_binarea);
           // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
           pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
           Emag_local /= pathlength_local ;
@@ -2383,8 +2386,10 @@ int main(int argc,  char **argv) {
 
             /////
             // Field Magnitude
-            rough1->InterpolatePowerValue(tcoeff_perp, tcoeff_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
-            Emag_local = vmmhz1m_max * sqrt((tcoeff_perp + tcoeff_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_2048_binarea);
+            rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
+            tcoeff_perp = sqrt(power_perp);
+            tcoeff_parl = sqrt(power_parl);
+            Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_2048_binarea);
             // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
             pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
             Emag_local /= pathlength_local ;
@@ -2408,8 +2413,8 @@ int main(int argc,  char **argv) {
             vec_local_grnd_perp = (vec_localnormal.Cross(vec_pos_current_to_balloon)).Unit();
             vec_local_grnd_parl = (vec_pos_current_to_balloon.Cross(vec_local_grnd_perp)).Unit();
             //
-            vec_local_grnd_perp = sqrt(tcoeff_perp)*vec_local_grnd_perp;
-            vec_local_grnd_parl = sqrt(tcoeff_parl)*vec_local_grnd_parl;
+            vec_local_grnd_perp = tcoeff_perp * vec_local_grnd_perp;
+            vec_local_grnd_parl = tcoeff_parl * vec_local_grnd_parl;
             // set transmitted polarization
             npol_local_trans = vec_local_grnd_perp + vec_local_grnd_parl;
 
