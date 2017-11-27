@@ -2214,6 +2214,7 @@ int main(int argc,  char **argv) {
         double theta_0_local;                 //angle between local surface normal and incident direction [radians]
         double tcoeff_perp, tcoeff_parl;
         double power_perp, power_parl;
+        power_perp = power_parl = 0.;
 
         double HP_2048_binarea = 2.4967135219492856e-07;  // healpix nside=2048 bin area [sterad]
         double antennalength = 0.96; // [m]
@@ -2290,7 +2291,9 @@ int main(int argc,  char **argv) {
 
           /////
           // Field Magnitude
+#ifdef USE_HEALPIX
           rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
+#endif
           tcoeff_perp = sqrt(power_perp);
           tcoeff_parl = sqrt(power_parl);
           Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_2048_binarea);
@@ -2381,7 +2384,9 @@ int main(int argc,  char **argv) {
 
             /////
             // Field Magnitude
+#ifdef USE_HEALPIX
             rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
+#endif
             tcoeff_perp = sqrt(power_perp);
             tcoeff_parl = sqrt(power_parl);
             Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_2048_binarea);
