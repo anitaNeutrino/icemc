@@ -18,6 +18,8 @@ include Makefile.arch
 # commented out for kingbee and older versions of gcc
 ANITA3_EVENTREADER=1
 
+# Uncomment to enable healpix 
+#USE_HEALPIX=1
 
 
 
@@ -76,6 +78,13 @@ endif
 ifdef ANITA3_EVENTREADER
 CXXFLAGS += -DANITA3_EVENTREADER
 endif
+
+ifdef USE_HEALPIX
+	CXXFLAGS += -DUSE_HEALPIX `pkg-config --cflags healpix_cxx`
+	LDFLAGS  += `pkg-config --libs healpix_cxx` 
+endif
+
+
 
 GENERAL_FLAGS = -g -O2 -pipe -m64 -pthread
 WARN_FLAGS = -W -Wall -Wextra -Woverloaded-virtual
