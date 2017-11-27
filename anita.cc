@@ -3364,8 +3364,15 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     string whichANITAroman="";
     if (settings1->WHICH==9) whichANITAroman+="III";
     else whichANITAroman+="IV";
-    std::ifstream Anita3PhotoFile((ICEMC_DATA_DIR+"/anita"+whichANITAroman+"Photogrammetry.csv").c_str());
-    if (!Anita3PhotoFile){
+    string photoFile;
+#ifdef ANITA_UTIL_EXISTS
+    photoFile += ( (string)getenv("ANITA_UTIL_INSTALL_DIR") +"/share/anitaCalib/anita"+whichANITAroman+"Photogrammetry.csv");
+#elif
+    photoFile += (ICEMC_DATA_DIR+"/anita"+whichANITAroman+"Photogrammetry.csv");
+#endif
+    
+    std::ifstream Anita3PhotoFile(photoFile.c_str());
+      if (!Anita3PhotoFile){
       std::cerr << "Couldn't open photogrammetry!" << std::endl;
       return;
     }
@@ -3460,7 +3467,14 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     string whichANITAcard="";
     if (settings1->WHICH==9) whichANITAcard+="3";
     else whichANITAcard+="4";
-    std::ifstream PhaseCenterFile((ICEMC_DATA_DIR+"/phaseCenterPositionsRelativeToPhotogrammetryAnita"+whichANITAcard+".dat").c_str());
+    string phaseCenterName;
+#ifdef ANITA_UTIL_EXISTS
+    phaseCenterName += ( (string)getenv("ANITA_UTIL_INSTALL_DIR") +"/share/anitaCalib/phaseCenterPositionsRelativeToPhotogrammetryAnita"+whichANITAcard+".dat");
+#elif
+    phaseCenterName += (ICEMC_DATA_DIR+"/phaseCenterPositionsRelativeToPhotogrammetryAnita"+whichANITAcard+".dat");
+#endif
+    
+    std::ifstream PhaseCenterFile(phaseCenterName.c_str());
     Int_t antNum, tpol, pol;
     Double_t deltaR,deltaPhi,deltaZ;
     char firstLine[180];
