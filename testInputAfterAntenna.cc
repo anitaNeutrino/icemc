@@ -877,6 +877,9 @@ int main(int argc,  char **argv) {
   // Set AnitaVersion so that the right payload geometry is used
   AnitaVersion::set(settings1->ANITAVERSION); 
   
+  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
+  TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
+
   TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
   printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
   unsigned int timenow = time(NULL);
@@ -886,9 +889,10 @@ int main(int argc,  char **argv) {
   configAnitaTree->Branch("startTime",    &timenow          );
   // configAnitaTree->Branch("settings",  &settings1                    );
   configAnitaTree->Fill();
-    
-  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
-  TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
+  
+  TTree *triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
+  triggerSettingsTree->Branch("dioderms", anita1->bwslice_dioderms_fullband_allchan, "dioderms[2][48]/D");
+  triggerSettingsTree->Fill();
 
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
@@ -1027,18 +1031,20 @@ int main(int argc,  char **argv) {
     // make a global trigger object (but don't touch the electric fences)
     globaltrig1 = new GlobalTrigger(settings1, anita1);
 
-    Tools::Zero(anita1->arrival_times, Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-  
+    Tools::Zero(anita1->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
+    Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
+
+    
     globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
     anita1->rms_rfcm_e_single_event = 0;
 
     for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
       for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
-          
-	ChanTrigger *chantrig1 = new ChanTrigger();
-	chantrig1->InitializeEachBand(anita1);
 
 	antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
+	
+	ChanTrigger *chantrig1 = new ChanTrigger();
+	chantrig1->InitializeEachBand(anita1);
 	  
 	//	  chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
 
@@ -1313,7 +1319,9 @@ int main(int argc,  char **argv) {
 
 #ifdef ANITA3_EVENTREADER
   anitafileTruth->cd();
+  configAnitaTree->Write("configAnitaTree");
   truthAnitaTree->Write("truthAnitaTree");
+  triggerSettingsTree->Write("triggerSettingsTree");
   anitafileTruth->Close();
   delete anitafileTruth;
 #endif

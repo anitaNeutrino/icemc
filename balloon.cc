@@ -1000,7 +1000,7 @@ void Balloon::GetBoresights(Settings *settings1,Anita *anita1) {
   Vector ant_pos;
   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-      ant_pos=anita1->ANTENNA_POSITION_START[ilayer][ifold];
+      ant_pos=anita1->ANTENNA_POSITION_START[0][ilayer][ifold];
       ant_pos=RotatePayload(ant_pos);
       r_boresights[ilayer][ifold] = ant_pos+r_bn;
     }
@@ -1011,35 +1011,36 @@ void Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
   int number_all_antennas = 0;
   Vector antenna_position;
    
-   
-  for (int ilayer = 0; ilayer < settings1->NLAYERS; ilayer++){
-    for (int ifold = 0; ifold < anita1->NRX_PHI[ilayer]; ifold++){
-      double phi = 0;
-      if (settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH == 9 || settings1->WHICH == 10){ //If payload is either
-	antenna_position = anita1->ANTENNA_POSITION_START[ilayer][ifold];
-      }
-      else {
-	if (settings1->CYLINDRICALSYMMETRY==1){ // for timing code
-	  // phi is 0 for antenna 0 (0-31) and antenna 16 (0-31)
-	  // antenna 1 (1-32) and antenna 18 (1-32)
-	  phi = (double) ifold / (double) anita1->NRX_PHI[ilayer] * 2 * PI + anita1->PHI_OFFSET[ilayer];
-	}else{
-	  phi = anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer];
+
+  for (int ipol=0; ipol<2; ipol++){
+    for (int ilayer = 0; ilayer < settings1->NLAYERS; ilayer++){
+      for (int ifold = 0; ifold < anita1->NRX_PHI[ilayer]; ifold++){
+	double phi = 0;
+	if (settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH == 9 || settings1->WHICH == 10){ //If payload is either
+	  antenna_position = anita1->ANTENNA_POSITION_START[ipol][ilayer][ifold];
 	}
-	antenna_position = Vector(anita1->RRX[ilayer]*cos(phi) + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer]), anita1->RRX[ilayer]*sin(phi)+anita1->LAYER_HPOSITION[ilayer]*sin(anita1->LAYER_PHIPOSITION[ilayer]), anita1->LAYER_VPOSITION[ilayer]);
+	else {
+	  if (settings1->CYLINDRICALSYMMETRY==1){ // for timing code
+	    // phi is 0 for antenna 0 (0-31) and antenna 16 (0-31)
+	    // antenna 1 (1-32) and antenna 18 (1-32)
+	    phi = (double) ifold / (double) anita1->NRX_PHI[ilayer] * 2 * PI + anita1->PHI_OFFSET[ilayer];
+	  }else{
+	    phi = anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer];
+	  }
+	  antenna_position = Vector(anita1->RRX[ilayer]*cos(phi) + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer]), anita1->RRX[ilayer]*sin(phi)+anita1->LAYER_HPOSITION[ilayer]*sin(anita1->LAYER_PHIPOSITION[ilayer]), anita1->LAYER_VPOSITION[ilayer]);
 				
-      }//else
+	}//else
 			
-      //cout<<"antenna_position start for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
+	//cout<<"antenna_position start for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
 			
-      antenna_position=RotatePayload(antenna_position);
+	antenna_position=RotatePayload(antenna_position);
 		
-      anita1->antenna_positions[number_all_antennas] = antenna_position;
-      //cout<<"antenna_position for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
-      number_all_antennas++;
+	anita1->antenna_positions[ipol][number_all_antennas] = antenna_position;
+	//cout<<"antenna_position for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
+	number_all_antennas++;
+      }
     }
   }
-   
   return;
 }
 
@@ -1064,7 +1065,7 @@ Vector Balloon::RotatePayload(Vector ant_pos_pre) {
   Vector zaxis(0.,0.,-1.);
   Vector xaxis(1.,0.,0.);//roll axis
   Vector yaxis(0.,-1.,0.);//pitch axis for positive rotation to the clockwise of roll
-  // Vector ant_pos = anita1->ANTENNA_POSITION_START[ilayer][ifold];
+  // Vector ant_pos = anita1->ANTENNA_POSITION_START[0][ilayer][ifold];
   Vector northaxis(1,0,0);
   Vector eastaxis(0,-1,0);
   //rotate to correct heading, roll and pitch

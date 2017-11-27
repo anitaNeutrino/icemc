@@ -34,7 +34,7 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-
+ClassImp(Settings);
 
 /**
  * Default constructor
@@ -283,6 +283,9 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   getSetting("Number of neutrinos", NNU);
   getSetting("Energy exponent", EXPONENT);
+  if (EXPONENT>29){
+    getSetting("Energy CDF or dartboard", USEDARTBOARD);
+  }
   getSetting("Neutrino position", UNBIASED_SELECTION);
   getSetting("Write hists and trees", HIST);
   getSetting("Write ray", FILLRAYTREES);
@@ -788,12 +791,17 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   }
 
 
-  getSetting("Efficiency scan", TRIGGEREFFSCAN);
-  getSetting("Central phi-sector", trigEffScanPhi);
-  getSetting("Apply pulse at surf", TRIGGEREFFSCAPULSE);
-  getSetting("Off-axis attenuation", effiencyScanOffAxisAttenuations);
-
-
+  getSetting("Efficiency scan",      TRIGGEREFFSCAN                       );
+  if (TRIGGEREFFSCAN==1){
+    getSetting("Central phi-sector",   trigEffScanPhi                     );
+    getSetting("Apply pulse at surf",  TRIGGEREFFSCAPULSE                 );
+    getSetting("Off-axis attenuation", efficiencyScanOffAxisAttenuations  );
+    getSetting("Rings used",           efficiencyScanRingsUsed            );
+    getSetting("Phi-sectors delays",   efficiencyScanPhiSectorDelay       );
+    getSetting("Ring delays",          efficiencyScanRingDelay            );
+    getSetting("Ring delays to phi",   efficiencyScanApplyRingDelay       );
+  }
+  
   getSetting("Simulate TUFFs", TUFFSON);
   getSetting("Which TUFFs are on", whichTUFFsON);
 
@@ -936,16 +944,46 @@ for(unsigned int i=0; i < requiredBands.size(); i++){
   sec1->TAUDECAY=TAUDECAY;
 
   anita1->trigEffScanPhi = trigEffScanPhi;
-  for (unsigned int i=0; i < effiencyScanOffAxisAttenuations.size(); i++){
-    anita1->trigEffScanAtt[i] = effiencyScanOffAxisAttenuations.at(i);
+  for (unsigned int i=0; i < efficiencyScanOffAxisAttenuations.size(); i++){
+    anita1->trigEffScanAtt[i] = efficiencyScanOffAxisAttenuations.at(i);
   }
 
+  for (unsigned int i=0; i < efficiencyScanPhiSectorDelay.size(); i++){
+    anita1->trigEffScanPhiDelay[i] = efficiencyScanPhiSectorDelay.at(i);
+  }
+
+  for (unsigned int i=0; i < efficiencyScanRingDelay.size(); i++){
+    anita1->trigEffScanRingDelay[i] = efficiencyScanRingDelay.at(i);
+  }
+
+  for (unsigned int i=0; i < efficiencyScanApplyRingDelay.size(); i++){
+    anita1->trigEffScanApplyRingDelay[i] = efficiencyScanApplyRingDelay.at(i);
+  }
+
+  for (unsigned int i=0; i < efficiencyScanRingsUsed.size(); i++){
+    anita1->trigEffScanRingsUsed[i] = efficiencyScanRingsUsed.at(i);
+  }
+
+  
+  
   if (TRIGGEREFFSCAN){
     std::cout << "Let's do a trigger efficiency scan!" << std::endl;
     std::cout << "Apply pulse at AMPA (0) or SURF (1) : " << TRIGGEREFFSCAPULSE << std::endl;
     std::cout << "Central phi sector is " << anita1->trigEffScanPhi << std::endl;
     std::cout << "Attenuations are ";
     for (int i=0;i<5;i++) std::cout << anita1->trigEffScanAtt[i] << " ";
+    std::cout << std::endl;
+    std::cout << "Phi sector delays are ";
+    for (int i=0;i<5;i++) std::cout << anita1->trigEffScanPhiDelay[i] << " ";
+    std::cout << std::endl;
+    std::cout << "The rings used in this scan are ";
+    for (int i=0;i<3;i++) std::cout << anita1->trigEffScanRingsUsed[i] << " ";
+    std::cout << std::endl;
+    std::cout << "Ring delays are applie to";
+    for (int i=0;i<5;i++) std::cout << anita1->trigEffScanApplyRingDelay[i] << " ";
+    std::cout << std::endl;
+    std::cout << "Ring delays are for T-M, M-B, T-B";
+    for (int i=0;i<3;i++) std::cout << anita1->trigEffScanRingDelay[i] << " ";
     std::cout << std::endl;
   }
   
