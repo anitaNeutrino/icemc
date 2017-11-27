@@ -760,12 +760,10 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
           bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
 
 	  anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
-//begin keith edited
-/*	  if (settings1->TUFFSON){
+	  if (settings1->TUFFSON==2){
 	    tmp_vhz[0][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
 	    tmp_vhz[1][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
 	  }
-*/ //end keith edited	  
 	} // end if (seavey frequencies)
 	else {
 	  tmp_vhz[0][k]=0;
@@ -1510,7 +1508,6 @@ void ChanTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,dou
 
 
 
-/*begin keith edited
 double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStatus[3]){
   // Butterworth filter for two ANITA notches.
   // order0 = order1 = 1 may be closer to hardware notch
@@ -1527,7 +1524,6 @@ double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStat
 
   return ampl/sqrt(denominator);
 }
-*/ // end keith edited 
 
 
 
@@ -1558,22 +1554,15 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   TGraph *surfSignal = new TGraph(nPoints, x, y);
   
   
-  // begin Keith edited
   //Calculate convolution
-
   if(!settings1->TUFFSON){
     surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizer[ipol][iring][iphi]);
   }
-  // keith editing debugging
-//  cout << ant << endl;
-// begin keith added
   else
   {
-//    TString indir;
     int Curr_time = bn1->realTime_flightdata;
     int notch =0;
 // list of config times in sequential order (time). config A is on for the time between B_end_3 and A_end_1
-
     int config_B_end_1 = 1480713195;
     int config_P_end_1 = 1480730719;
     int config_C_end_1 = 1480731802;
@@ -1593,7 +1582,6 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
     int config_P_end_6 = 1482465408;
     int config_B_end_6 = 1482964570;
     int config_P_end_7 = 1482987942;
-
 // end of list of times for notch switching
   
    if((config_B_end_3 < Curr_time) && (Curr_time <= config_A_end_1)) // config A //folder notches_260_0_0
@@ -1630,9 +1618,7 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
     // convolve this loaded response with graphUp
 
   }// end esle for ANITA-4
-// end keith added
 
-// end Keith edited
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
   

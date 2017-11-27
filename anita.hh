@@ -585,14 +585,10 @@ public:
   double extraCableDelays[2][48];
   TRandom3 *fRand;
 #ifdef ANITA_UTIL_EXISTS
-//begin Keith added
   RFSignal *fSignalChainResponseDigitizerTuffs[2][3][16][6]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM------- 0:configA, 1:configB, 2:configC, 3:configG, 4:configO, 5:configP
-// end Keith added
   void readImpulseResponseDigitizer(Settings *settings1);
   void readImpulseResponseTrigger(Settings *settings1);
-//begin keith added
   void readTuffResponseDigitizer(Settings *settings1);
-//end keith added
   void readTriggerEfficiencyScanPulser(Settings *settings1);
   void readNoiseFromFlight(Settings *settings1);
   void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant);

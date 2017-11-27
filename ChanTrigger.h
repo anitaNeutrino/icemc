@@ -318,7 +318,6 @@ class ChanTrigger {
    * @return whether the channel and band are masked or not
    */
   static int IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int ilayer, int ifold, int ipol);
-// begin keith edited
   //! Apply impulse response to digitizer path
   /**
    * This can only work when FFTtools is also linked
@@ -332,7 +331,6 @@ class ChanTrigger {
    * @param  pol :: bool - which polarization
    */
   void applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol, Balloon *bn1);
-//end keith edited
 
   //! Apply impulse response to trigger path
   /**
@@ -404,9 +402,7 @@ class ChanTrigger {
    * @param filters :: array of three integers indicating notch status (on/off)
    * @return frequency domain amplitude scaled by the filter
    */
-/* keith edited
   double applyButterworthFilter(double ff, double ampl, int notchStatus[3]);
-*/ //end keith edited
   
   double vhz_rx[2][5][Anita::NFREQ];                           ///< Array of amplitudes in the Fourier domain (V/Hz) after the antenna gain. Indeces stand for [ipol][iband][ifreq] 
   double volts_rx_forfft[2][5][Anita::HALFNFOUR];              ///< Array of time domain after the antenna gain. Indeces stand for [ipol][iband][itime] 
