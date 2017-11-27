@@ -341,6 +341,9 @@ int main(int argc,  char **argv) {
   // configAnitaTree->Branch("settings",  &settings1                    );
   configAnitaTree->Fill();
 
+  TTree *triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
+  triggerSettingsTree->Branch("dioderms", anita1->bwslice_dioderms_fullband_allchan, "dioderms[2][48]/D");
+  triggerSettingsTree->Fill();
   
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
@@ -788,7 +791,9 @@ int main(int argc,  char **argv) {
 
 #ifdef ANITA3_EVENTREADER
   anitafileTruth->cd();
+  configAnitaTree->Write("configAnitaTree");
   truthAnitaTree->Write("truthAnitaTree");
+  triggerSettingsTree->Write("triggerSettingsTree");
   anitafileTruth->Close();
   delete anitafileTruth;
 #endif

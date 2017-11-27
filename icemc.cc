@@ -95,7 +95,7 @@ Taumodel* TauPtr = NULL;
 const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
 
 ClassImp(RX);
-ClassImp(Settings);
+//ClassImp(Settings);
 
 using namespace std;
 
@@ -1299,11 +1299,15 @@ int main(int argc,  char **argv) {
   unsigned int timenow = time(NULL);
 
   TTree *configAnitaTree = new TTree("configIcemcTree", "Config file and settings information");
-  configAnitaTree->Branch("gitversion",   &icemcgitversion  );
-  configAnitaTree->Branch("startTime",    &timenow          );
-  // configAnitaTree->Branch("settings",  &settings1                    );
+  configAnitaTree->Branch("gitversion",        &icemcgitversion  );
+  configAnitaTree->Branch("startTime",         &timenow          );
+  // configAnitaTree->Branch("icemcSettings",     &settings1        );
   configAnitaTree->Fill();
-    
+
+  TTree *triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
+  triggerSettingsTree->Branch("dioderms", anita1->bwslice_dioderms_fullband_allchan, "dioderms[2][48]/D");
+  triggerSettingsTree->Fill();
+  
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
 
@@ -3627,6 +3631,7 @@ int main(int argc,  char **argv) {
   anitafileTruth->cd();
   configAnitaTree->Write("configAnitaTree");
   truthAnitaTree->Write("truthAnitaTree");
+  triggerSettingsTree->Write("triggerSettingsTree");
   anitafileTruth->Close();
   delete anitafileTruth;
 #endif

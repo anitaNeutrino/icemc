@@ -877,6 +877,9 @@ int main(int argc,  char **argv) {
   // Set AnitaVersion so that the right payload geometry is used
   AnitaVersion::set(settings1->ANITAVERSION); 
   
+  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
+  TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
+
   TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
   printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
   unsigned int timenow = time(NULL);
@@ -886,9 +889,10 @@ int main(int argc,  char **argv) {
   configAnitaTree->Branch("startTime",    &timenow          );
   // configAnitaTree->Branch("settings",  &settings1                    );
   configAnitaTree->Fill();
-    
-  outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
-  TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
+  
+  TTree *triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
+  triggerSettingsTree->Branch("dioderms", anita1->bwslice_dioderms_fullband_allchan, "dioderms[2][48]/D");
+  triggerSettingsTree->Fill();
 
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
@@ -1315,7 +1319,9 @@ int main(int argc,  char **argv) {
 
 #ifdef ANITA3_EVENTREADER
   anitafileTruth->cd();
+  configAnitaTree->Write("configAnitaTree");
   truthAnitaTree->Write("truthAnitaTree");
+  triggerSettingsTree->Write("triggerSettingsTree");
   anitafileTruth->Close();
   delete anitafileTruth;
 #endif
