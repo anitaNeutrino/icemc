@@ -13,7 +13,9 @@
 
 #include "Constants.h"
 
-
+#ifdef USE_HEALPIX
+#include "healpix_base.h"
+#endif
 
 class TF2;
 class Ray;
@@ -29,12 +31,15 @@ class Roughness {
 private:
 
   std::string rough_dir_str;
-
+#ifdef USE_HEALPIX
+  Healpix_Base H;
+#endif
 
 public:
 
   Roughness();
 
+#ifdef USE_HEALPIX
   //! Interpolates the power value for the specified angles 
   /**
   * @param tcoeff_perp - perpendicular transmission coefficient
@@ -45,16 +50,7 @@ public:
   * @return double  - fractional transmitted power
   */
   void InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, double T0, double T, double A);
-
-  //! Calculates the angular distance between two points on the sphere
-  /**
-  * @param long1 - first longitude [rad]
-  * @param lat1 - first latitude [rad]
-  * @param long2 - second longitude [rad]
-  * @param lat2 - second latitude [rad]
-  * @return double  - arclength between points [radians]
-  */
-  double greatCircleDist(double long1, double lat1, double long2, double lat2);
+#endif
 
 };
 
