@@ -6,6 +6,7 @@
 #define SETTINGS_H_
 
 #include <fstream>
+#include <vector>
 
 class Anita;
 class Secondaries;
@@ -16,6 +17,7 @@ class Ray;
 using std::string;
 using std::ifstream;
 using std::ofstream;
+using std::vector;
 
 #include "TString.h"
 #include <TObject.h>
@@ -32,7 +34,6 @@ using std::ofstream;
 
 class Settings : public TObject {
 
-
   /* protected:  */
 
  public:
@@ -46,9 +47,9 @@ class Settings : public TObject {
   void getSetting(const char* key, float& value);
   void getSetting(const char* key, double& value);
 
-  void getSetting(const char* key, std::vector<int>& valueArray);
-  void getSetting(const char* key, std::vector<float>& valueArray);
-  void getSetting(const char* key, std::vector<double>& valueArray);
+  void getSetting(const char* key, vector<int>& valueArray);
+  void getSetting(const char* key, vector<float>& valueArray);
+  void getSetting(const char* key, vector<double>& valueArray);
 
   void ReadInputs(const char* fileName , ofstream &foutput,
 		  // Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1,
@@ -246,7 +247,7 @@ class Settings : public TObject {
   int askaryanParameterization;// = 0;
     
   //  TString outputdir; // directory where outputs go
-  
+
   ClassDef(Settings,1);
   
  private:
@@ -255,25 +256,26 @@ class Settings : public TObject {
   kvpMap keyValuePairStrings; //< The raw key value pairs as string, from parsing the config file
   Bool_t newKvpPassesSanityChecks(const TString& key, const TString& value, const char* fileName, int lineNum);
   void complainAboutNotFindingKey(const TString& key);
-  void parseValueArray(const char* valueString, std::vector<int>& values);
-  void parseValueArray(const char* valueString, std::vector<float>& values);
-  void parseValueArray(const char* valueString, std::vector<double>& values);
-  void parseSettingsFile(const char* fileName, std::ofstream& outputFile);
+  void parseValueArray(const char* valueString, vector<int>& values);
+  void parseValueArray(const char* valueString, vector<float>& values);
+  void parseValueArray(const char* valueString, vector<double>& values);
+  void parseSettingsFile(const char* fileName, ofstream& outputFile);
 
-  std::vector<double> efficiencyScanOffAxisAttenuations;
-  std::vector<double> efficiencyScanPhiSectorDelay;
-  std::vector<double> efficiencyScanRingDelay;
-  std::vector<int> efficiencyScanRingsUsed;
-  std::vector<int> efficiencyScanApplyRingDelay;
-  std::vector<int> whichTUFFsON;
-  std::vector<double> tempThresholds;  
-  std::vector<double> bandLowEdgesMHz;
-  std::vector<double> bandHighEdgesMHz;
-  std::vector<int> requiredBands;
-  std::vector<int> allowedBands;
-  std::vector<double> notchFilterLimitsMHz;
-  std::vector<int> channelRequirePol;
-  std::vector<int> channelAllowedPol;
+  vector<double> efficiencyScanOffAxisAttenuations;
+  vector<double> efficiencyScanPhiSectorDelay;
+  vector<double> efficiencyScanRingDelay;
+  vector<int> efficiencyScanRingsUsed;
+  vector<int> efficiencyScanApplyRingDelay;
+  vector<int> whichTUFFsON;
+  vector<double> tempThresholds;  
+  vector<double> bandLowEdgesMHz;
+  vector<double> bandHighEdgesMHz;
+  vector<int> requiredBands;
+  vector<int> allowedBands;
+  vector<double> notchFilterLimitsMHz;
+  vector<int> channelRequirePol;
+  vector<int> channelAllowedPol;
 
+    
 };
 #endif
