@@ -18,6 +18,8 @@ include Makefile.arch
 # commented out for kingbee and older versions of gcc
 ANITA3_EVENTREADER=1
 
+# Uncomment to enable healpix 
+#USE_HEALPIX=1
 
 
 
@@ -77,6 +79,13 @@ ifdef ANITA3_EVENTREADER
 CXXFLAGS += -DANITA3_EVENTREADER
 endif
 
+ifdef USE_HEALPIX
+	CXXFLAGS += -DUSE_HEALPIX `pkg-config --cflags healpix_cxx`
+	LDFLAGS  += `pkg-config --libs healpix_cxx` 
+endif
+
+
+
 GENERAL_FLAGS = -g -O2 -pipe -m64 -pthread
 WARN_FLAGS = -W -Wall -Wextra -Woverloaded-virtual
 # -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable
@@ -97,7 +106,7 @@ DICT = classdict
 OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o
 
 
-BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
+BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testWAIS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
 
 #------------------------------------------------------------------------------
 

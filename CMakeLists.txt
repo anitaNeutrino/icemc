@@ -81,8 +81,8 @@ if(DEFINED ENV{ANITA_UTIL_INSTALL_DIR})
     set(LD_ANITA_UTIL $ENV{ANITA_UTIL_INSTALL_DIR}/lib)
     set(INC_ANITA_UTIL $ENV{ANITA_UTIL_INSTALL_DIR}/include)
     set(ANITA_UTIL_ETC_DIR $ENV{ANITA_UTIL_INSTALL_DIR}/etc)
-    link_directories(${AITA_UTIL_LIB_DIR})
-    include_directories(${AITA_UTIL_LIB_DIR})
+    link_directories(${ANITA_UTIL_LIB_DIR})
+    include_directories(${ANITA_UTIL_LIB_DIR})
  endif()
 
 
@@ -99,6 +99,18 @@ if (NOT CMAKE_BUILD_TYPE)
     FORCE ) 
 endif()
 
+option (USE_HEALPIX "Enable Healpix Segmentation, requires healpix to be
+installed on your system in a place that can be found easily." OFF)
+
+if (USE_HEALPIX)
+  find_package(PkgConfig) 
+  pkg_search_module(HEALPIX REQUIRED healpix_cxx) 
+  add_definitions  (-DUSE_HEALPIX )
+  SET(LIBS ${LIBS} ${HEALPIX_LIBRARIES})
+  include_directories(${HEALPIX_INCLUDE_DIRS})
+  link_directories(${HEALPIX_LIBRARY_DIRS})
+endif()
+
 
 ##We need to compile stuff into a library unless we want it to be compiled a
 ##million times over 
@@ -113,5 +125,6 @@ add_binary(icemc)
 add_binary(testTrigger) 
 add_binary(testSettings) 
 add_binary(testEAS) 
+add_binary(testWAIS) 
 add_binary(testThermalNoise)
 add_binary(testInputAfterAntenna)

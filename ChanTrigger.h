@@ -370,6 +370,14 @@ class ChanTrigger {
    */
   void injectImpulseAfterAntenna(Anita *anita1, int ant);
 
+  //! Save signal and noise waveforms at trigger
+  /**
+   * @param anita1 :: Anita - anita payload object
+   * @param sig    :: double[2][NFOUR/2] - output 
+   * @param noise  :: double[2][NFOUR/2] - output
+   */
+  void saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]);
+
   //! Inject pulse at the surf (used for trigger efficiency scans)
   /**
    * Pulser waveforms are read in anita.cc
@@ -423,8 +431,8 @@ class ChanTrigger {
   double volts_rx_rfcm[2][Anita::HALFNFOUR];                   ///< For digitizer path, time domain voltage vs. time after rx, rfcm's
   double justNoise_digPath[2][Anita::HALFNFOUR];               ///< For digitizer path, time domain noise from flight
   double justNoise_trigPath[2][Anita::HALFNFOUR];              ///< For trigger path, time domain noise from flight
-  double cw_digPath[2][Anita::HALFNFOUR];                      ///< For digitizer path, time domain cw
-       
+  double cw_digPath[2][Anita::HALFNFOUR];                      ///< For digitizer path, time domain cw       
+  double justSig_trigPath[2][Anita::HALFNFOUR];                ///< Just signal in trigger path
   // these are filled for triggerscheme==0 and triggerscheme==1
   // frequency domain voltage and energy based
   double signal_eachband[2][Anita::NBANDS_MAX];               ///< Signal in each band			     

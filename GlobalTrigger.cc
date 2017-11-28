@@ -43,8 +43,8 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
 
   // L1 coincidence window, in seconds  
   L1_COINCIDENCE_ANITA3[0]=16.E-9; // B->M or T
-  L1_COINCIDENCE_ANITA3[1]=22.E-9; // M->B or T
-  L1_COINCIDENCE_ANITA3[2]=5.E-9; // T->B or M 
+  L1_COINCIDENCE_ANITA3[1]=12.E-9; // M->B or T
+  L1_COINCIDENCE_ANITA3[2]=4.E-9; // T->B or M 
 
   // in this scenario B->M is the same as M->B for example
   // this needs to be generalized- using this same thing for all scenarios which isn't right
@@ -861,9 +861,9 @@ void GlobalTrigger::PassesTriggerCoherentSum(Settings *settings1,Anita *anita1,i
 	if (fill_index_layer == 0) {
 	  physical_phi_index = unsigned(fill_index_phi_sector / 2.);   // Map {0, ..., 15} to {0, ..., 7}.
 	}
-	anita1->cwst_RXs[fill_index].x = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][0];
-	anita1->cwst_RXs[fill_index].y = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][1];
-	anita1->cwst_RXs[fill_index].z = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][2];
+	anita1->cwst_RXs[fill_index].x = anita1->ANTENNA_POSITION_START[0][physical_layer_index][physical_phi_index][0];
+	anita1->cwst_RXs[fill_index].y = anita1->ANTENNA_POSITION_START[0][physical_layer_index][physical_phi_index][1];
+	anita1->cwst_RXs[fill_index].z = anita1->ANTENNA_POSITION_START[0][physical_layer_index][physical_phi_index][2];
 	    
 	anita1->cwst_RXs[fill_index].waveform->assign(volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].begin(),volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].end());
 	  
@@ -895,9 +895,9 @@ void GlobalTrigger::PassesTriggerCoherentSum(Settings *settings1,Anita *anita1,i
 	      if (fill_index_layer == 0) {
 		physical_phi_index = unsigned(fill_index_phi_sector / 2.);   // Map {0, ..., 15} to {0, ..., 7}.
 	      }
-	      anita1->cwst_aligned_wfms[fill_index].x = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][0];
-	      anita1->cwst_aligned_wfms[fill_index].y = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][1];
-	      anita1->cwst_aligned_wfms[fill_index].z = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][2];
+	      anita1->cwst_aligned_wfms[fill_index].x = anita1->ANTENNA_POSITION_START[0][physical_layer_index][physical_phi_index][0];
+	      anita1->cwst_aligned_wfms[fill_index].y = anita1->ANTENNA_POSITION_START[0][physical_layer_index][physical_phi_index][1];
+	      anita1->cwst_aligned_wfms[fill_index].z = anita1->ANTENNA_POSITION_START[0][physical_layer_index][physical_phi_index][2];
 			  
 	      unsigned time_offset = anita1->hypothesis_offsets[center_phi_sector_index][index_phi][index_theta][fill_index_phi_sector_offset + 1][fill_index_layer];
 		
@@ -1013,9 +1013,9 @@ void GlobalTrigger::PassesTriggerSummedPower(Settings *settings1,Anita *anita1){
       }
 	
       //	Set antenna positions
-      anita1->cwst_RXs[fill_index].x = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][0];
-      anita1->cwst_RXs[fill_index].y = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][1];
-      anita1->cwst_RXs[fill_index].z = anita1->ANTENNA_POSITION_START[physical_layer_index][physical_phi_index][2];
+      anita1->cwst_RXs[fill_index].x = anita1->ANTENNA_POSITION_START[0][physical_layer_index][physical_phi_index][0];
+      anita1->cwst_RXs[fill_index].y = anita1->ANTENNA_POSITION_START[0][physical_layer_index][physical_phi_index][1];
+      anita1->cwst_RXs[fill_index].z = anita1->ANTENNA_POSITION_START[0][physical_layer_index][physical_phi_index][2];
 		  
       //	Fill the waveforms
       anita1->cwst_RXs[fill_index].waveform->assign(volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].begin(),volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].end());
@@ -1028,7 +1028,7 @@ void GlobalTrigger::PassesTriggerSummedPower(Settings *settings1,Anita *anita1){
   }
     
     
-  //  For whatever reason ANTENNA_POSITION_START is a c-array, with large dimensions (5 by 400).
+  //  For whatever reason ANTENNA_POSITION_START[0] is a c-array, with large dimensions (5 by 400).
   //  Most of these are initialized as a Vector with (0.,0.,1) for (x,y,z). These are non-existant antennas.
   //  
   //  Make sure that the antennas positions being copied are actually from a real antenna, and pay attention to the physical
@@ -1156,8 +1156,8 @@ void GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_threshold, in
   // now make each flag stay high for the required amount of time
     
 
-  minsample=(int)(anita1->maxt_diode/anita1->TIMESTEP)+(anita1->NFOUR/4-(int)(anita1->maxt_diode/anita1->TIMESTEP))+(int)(anita1->arrival_times[anita1->rx_minarrivaltime]/anita1->TIMESTEP);
-  maxsample=anita1->NFOUR/2-(int)(anita1->arrival_times[anita1->rx_minarrivaltime]/anita1->TIMESTEP);
+  minsample=(int)(anita1->maxt_diode/anita1->TIMESTEP)+(anita1->NFOUR/4-(int)(anita1->maxt_diode/anita1->TIMESTEP))+(int)(anita1->arrival_times[0][anita1->rx_minarrivaltime]/anita1->TIMESTEP);
+  maxsample=anita1->NFOUR/2-(int)(anita1->arrival_times[0][anita1->rx_minarrivaltime]/anita1->TIMESTEP);
 
   for (int i=0;i<5;i++) {
     anita1->iminbin[i]=minsample;
@@ -2317,8 +2317,8 @@ int GlobalTrigger::L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bot
   }
      
   if (vl0_realtime_middle[IZERO]==1) {
-    if (findahit(vl0_realtime_top,IZERO,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[1]/TRIGTIMESTEP)) ||
-	findahit(vl0_realtime_bottom,IZERO,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[1]/TRIGTIMESTEP))) {
+    if (findahit(vl0_realtime_top,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[1]/TRIGTIMESTEP)) ||
+	findahit(vl0_realtime_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA3[1]/TRIGTIMESTEP))) {
 	 
       vl1_realtime_middle.push_back(1);
 	 
@@ -2381,8 +2381,8 @@ int GlobalTrigger::L1Anita4_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bot
   }
 
   if (vl0_realtime_middle[IZERO]==1) {
-    if (findahit(vl0_realtime_top,IZERO,IZERO-nstepback+(int)(L1_COINCIDENCE_MOREGENERAL[1][0]/TRIGTIMESTEP)) ||
-	findahit(vl0_realtime_bottom,IZERO,IZERO-nstepback+(int)(L1_COINCIDENCE_MOREGENERAL[1][1]/TRIGTIMESTEP))) {
+    if (findahit(vl0_realtime_top,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_MOREGENERAL[1][0]/TRIGTIMESTEP)) ||
+	findahit(vl0_realtime_bottom,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_MOREGENERAL[1][1]/TRIGTIMESTEP))) {
 	 
       vl1_realtime_middle.push_back(1);
 	 

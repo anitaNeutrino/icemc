@@ -1,5 +1,7 @@
 #include <cmath>
 #include <algorithm>
+#include <cstdio>
+#include <fstream>
 
 #include "vector.hh"
 #include "position.hh"
@@ -18,339 +20,87 @@
 
 
 #include "ray.hh"
-#include "spline.h"
+#ifdef USE_HEALPIX
+#include "healpix_base.h"
+#include "pointing.h"
+#endif
 
-Roughness::Roughness(int a){
-  
-  
-  const std::string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
-  file_roughness = ICEMC_SRC_DIR+"/data/roughness_full_dPdtheta.txt";
-  froughsetting = a;
-  if (froughsetting==0){
-    gritvalue = -1;
-    Ntheta0 = 8;
+Roughness::Roughness(){
 
-    amplitude = 1112.67009843;
-    x_mean = -20.0115394201*PI/180.;
-    y_mean = -33.7371829382*PI/180.;
-    x_stddev = -34.497529739*PI/180.;
-    y_stddev = 0.231052092516*PI/180.;
-    gaustheta = 1.02432941913;
-    maxmeaspower = 99.006880;
-    fitfuncmax = 560.591438;
-  }
-  else if (froughsetting==1){
-    gritvalue = 400;
-    Ntheta0 = 8;
+  rough_dir_str = std::getenv("ICEMC_SRC_DIR");
+#ifdef USE_HEALPIX
+  H = Healpix_Base(2048, RING);
+#endif
 
-    amplitude = 0.798064953724;
-    x_mean = -4.84261442966*PI/180.;
-    y_mean = -7.05473728178*PI/180.;
-    x_stddev = 40.3467981404*PI/180.;
-    y_stddev = 3.49683983104*PI/180.;
-    gaustheta = 0.928258773739;
-    maxmeaspower = 0.874336;
-    fitfuncmax = 0.781501;
-  }
-  else if (froughsetting==2){
-    gritvalue = 1000;
-    Ntheta0 = 9;
+};
 
-    amplitude = 1.99315873416;
-    x_mean = -1.43758569242*PI/180.;
-    y_mean = -2.9617313585*PI/180.;
-    x_stddev = 32.2255020021*PI/180.;
-    y_stddev = 2.05472924304*PI/180.;
-    gaustheta = 0.97544239723;
-    maxmeaspower = 2.087395;
-    fitfuncmax = 1.985588;
-  }
-  else if (froughsetting==3){
-    gritvalue = 1500;
-    Ntheta0 = 9;
 
-    amplitude = 6.39968975801;
-    x_mean = -18.3706965926*PI/180.;
-    y_mean = -29.1330198008*PI/180.;
-    x_stddev = 41.5606379916*PI/180.;
-    y_stddev = 1.09720021655*PI/180.;
-    gaustheta = 1.00846567317;
-    maxmeaspower = 4.921467;
-    fitfuncmax = 4.539596;
-  }
-  else{
-    froughsetting = 1; //default to 400 grit
-    gritvalue = 400;
-    Ntheta0 = 8;
+#ifdef USE_HEALPIX
+void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, double T0, double T, double A){
+  // tcoeff_* are the transmission coefficients which will be copied by address for use in icemc.cc's main function
+  // T0 [degrees] is the incident angle of the ray-in-ice with respect to the surface normal
+  // T [degrees] is the exiting angle from the surface towards the balloon, measured with respect to the surface normal
+  // A [degrees] is the azimuthal ground angle towards the balloon, measured with respect to the incidence plane (negative azimuth lies to the right, if facing parallel to the direction of incidence)
 
-    amplitude = 0.798064953724;
-    x_mean = -4.84261442966*PI/180.;
-    y_mean = -7.05473728178*PI/180.;
-    x_stddev = 40.3467981404*PI/180.;
-    y_stddev = 3.49683983104*PI/180.;
-    gaustheta = 0.928258773739;
-    maxmeaspower = 0.874336;
-    fitfuncmax = 0.781501;
-  }
+  // in the new implementation, we will use HEALPix look-up tables and average the values for the incidence angle tables that bracket the T0 value (floor and ceil)
 
-  for (int ii=0; ii<8; ii++){
-    if(ii==0){
-      corrfactor_thetas.push_back(0.); corrfactor_fresnel.push_back(0.92); corrfactor_loss.push_back(0.91); theta_g2a.push_back(0.);
-    }
-    if(ii==1){
-      corrfactor_thetas.push_back(10.); corrfactor_fresnel.push_back(0.92); corrfactor_loss.push_back(0.91); theta_g2a.push_back(6.6);
-    }
-    if(ii==2){
-      corrfactor_thetas.push_back(20.); corrfactor_fresnel.push_back(0.92); corrfactor_loss.push_back(0.91); theta_g2a.push_back(13.2);
-    }
-    if(ii==3){
-      corrfactor_thetas.push_back(30.); corrfactor_fresnel.push_back(0.91); corrfactor_loss.push_back(0.91); theta_g2a.push_back(19.5);
-    }
-    if(ii==4){
-      corrfactor_thetas.push_back(40.); corrfactor_fresnel.push_back(0.90); corrfactor_loss.push_back(0.90); theta_g2a.push_back(25.4);
-    }
-    if(ii==5){
-      corrfactor_thetas.push_back(50.); corrfactor_fresnel.push_back(0.87); corrfactor_loss.push_back(0.90); theta_g2a.push_back(30.7);
-    }
-    if(ii==6){
-      corrfactor_thetas.push_back(60.); corrfactor_fresnel.push_back(0.80); corrfactor_loss.push_back(0.89); theta_g2a.push_back(35.3);
-    }
-    if(ii==7){
-      corrfactor_thetas.push_back(70.); corrfactor_fresnel.push_back(0.65); corrfactor_loss.push_back(0.89); theta_g2a.push_back(38.8);
-    }
-    if(ii==8){
-      corrfactor_thetas.push_back(90.); corrfactor_fresnel.push_back(0.); corrfactor_loss.push_back(0.); theta_g2a.push_back(41.81031489);
+  double T_g = 90. - T;  //convert to geographical latitude
+  // azimuth A is ok
+
+  // determine which pixel corresponds to (T, A)
+  pointing ptg = pointing(T_g*PI/180., A*PI/180.);
+  int thispixel = H.ang2pix( ptg );
+
+  int pixel;
+  double ptheta, ptheta_g, pphi, Tparl, Tperp;  // temporary values while reading file
+
+  double Tparl_down, Tperp_down, Tparl_up, Tperp_up;
+  Tparl_down = Tperp_down = Tparl_up = Tperp_up = 0.; //default to zero in case entry isn't present in file
+
+  char base_rough_file_down[100];
+  char base_rough_file_up[100];
+  std::string base_rough_file_str="";
+  ifstream ifs;
+  std::string full_rough_file;
+
+  // "lower" table: read through table and find 'nearest pixel center'
+  std::sprintf(base_rough_file_down, "/data/roughness_tables/combined_inc%dp0_nsims10000_hp2048_beckmann.hpx", floor(T0));
+  base_rough_file_str = base_rough_file_down;
+  full_rough_file = rough_dir_str + base_rough_file_str;
+  // open and read table
+  ifs.open (full_rough_file, std::ifstream::in);
+  while (ifs.good()) {
+    ifs >> pixel >> ptheta >> pphi >> Tparl >> Tperp;
+    ptheta_g = 90. - ptheta;
+    if(pixel == thispixel){
+      Tparl_down = Tparl;
+      Tperp_down = Tperp;
     }
   }
+  ifs.close();
 
-  //++++++++++++++++++++++++++++++++++++++
-  // use this for 1+1 interpolation
-  std::cerr<<"Reading roughness data file:  "<< file_roughness<<std::endl;
-  ReadDataFile();
-  std::cerr<<"Constructing roughness splines"<<std::endl;
-  ConstructSplines();
-
-};
-
-
-void Roughness::ReadDataFile(void){
-  std::ifstream in;
-  std::string line = "";
-
-  in.open(file_roughness.c_str());
-  // read the header
-  getline(in, line);
-
-  double pG, pT0, pT, pP;
-
-  for (int i = 0; i < 648; i++){ // we know there are X lines in the file
-    in >> pG >> pT0 >> pT >> pP;
-    if (pG != gritvalue)
-      continue;
-    theta_0.push_back(pT0);  //stores only those lines for specified grit value
-    theta.push_back(pT);
-    power.push_back(pP);
-    //std::cerr<<pT0<<"  "<<pT<<"  "<<pP<<std::endl;
-  }
-
-  for(unsigned int i=0; i<theta_0.size(); i++){
-    if(theta_0[i]!=theta_0[i+1])
-      theta_0_unique.push_back(theta_0[i]);
-  }
-
-};
-
-
-void Roughness::ConstructSplines(void){
-// make a spline for each theta0 and push it back onto 'spline_theta0'
-// read the theta and power vector by Ntheta, make a spline and push, then repeat
-  tk::spline *spl_ptr;
-
-  for (int j=0; j<Ntheta0; j++){
-    std::vector<double> X;
-    std::vector<double> Y;
-
-    
-    spl_ptr = new tk::spline;
-
-    if(froughsetting>0){
-      for (int i=0; i<19; i++){
-        X.push_back( theta[ j*19 + i ] );
-        Y.push_back( power[ j*19 + i ] );
-        //std::cerr<<theta[ j*19 + i ]<<"  "<<power[ j*19 + i ]<<std::endl;
-      }
+  // "upper" table filename: same procedure
+  base_rough_file_str="";
+  std::sprintf(base_rough_file_up, "/data/roughness_tables/combined_inc%dp0_nsims10000_hp2048_beckmann.hpx", ceil(T0));
+  base_rough_file_str = base_rough_file_up;
+  full_rough_file = rough_dir_str + base_rough_file_str;
+  // open and read table
+  ifs.open (full_rough_file, std::ifstream::in);
+  while (ifs.good()) {
+    ifs >> pixel >> ptheta >> pphi >> Tparl >> Tperp;
+    ptheta_g = 90. - ptheta;
+    if(pixel == thispixel){
+      Tparl_up = Tparl;
+      Tperp_up = Tperp;
     }
-    else{  //need to treat flat glass separately since some theta_0 have more than 19 measurements
-      if(j<2){
-        for (int i=0; i<19; i++){
-          X.push_back( theta[ j*19 + i ] );
-          Y.push_back( power[ j*19 + i ] );
-        }
-      }
-      if(j==2){
-        for (int i=0; i<20; i++){
-          X.push_back( theta[ j*19 + i ] );
-          Y.push_back( power[ j*19 + i ] );
-        }
-      }
-      if(j==3){
-        for (int i=0; i<19; i++){
-          X.push_back( theta[ 2*19 + 20 + i ] );
-          Y.push_back( power[ 2*19 + 20 + i ] );
-        }
-      }
-      if(j==4){
-        for (int i=0; i<20; i++){
-          X.push_back( theta[ 3*19 + 20 + i ] );
-          Y.push_back( power[ 3*19 + 20 + i ] );
-        }
-      }
-      if(j>4){
-        for (int i=0; i<19; i++){
-          X.push_back( theta[ (j-2)*19 + 2*20 + i ] );
-          Y.push_back( power[ (j-2)*19 + 2*20 + i ] );
-        }
-      }
-    }
-
-    // simple check that X is in increasing order (which it's not in the file),
-    //  which is required for tk::spline
-    if (X[1]<X[0]){
-      std::reverse(X.begin(), X.end());
-      std::reverse(Y.begin(), Y.end());
-    }
-
-    spl_ptr->set_points(X,Y);
-    //now push onto stack
-    spline_theta0.push_back( spl_ptr );
   }
+  ifs.close();
 
-
-
-  // generate the splines for the frensel and loss correction factors
-  spl_cf_fresnel_ptr = new tk::spline;
-  spl_cf_fresnel_ptr->set_points(corrfactor_thetas, corrfactor_fresnel);
-  //
-  spl_cf_loss_ptr = new tk::spline;
-  spl_cf_loss_ptr->set_points(corrfactor_thetas, corrfactor_loss);
-
-
-  //generate splines for converting incidence angle for air->glass interface of measurements, and back
-  // these values taken from Table 5 ELOG #077
-  spl_ag2ga_ptr = new tk::spline;
-  spl_ag2ga_ptr->set_points(corrfactor_thetas, theta_g2a);
-
-  spl_ga2ag_ptr = new tk::spline;
-  spl_ga2ag_ptr->set_points(theta_g2a, corrfactor_thetas);
-
+  // now, average
+  tcoeff_perp = (Tperp_down + Tperp_up)/2.;
+  tcoeff_parl = (Tparl_down + Tparl_up)/2.;
 };
+#endif
 
 
-double Roughness::GetLaserPower(){
-  return 580.; // \muW, taken from ELOG 077
-};
 
-
-double Roughness::InterpolatePowerValue(double T0, double T){
-  // T0 [degrees] is the incident angle of the ray-in-ice with respect the the surface normal pointed into the air
-  // theta [degrees] is the exiting angle from the surface towards the balloon, measured with respect to the surface normal pointing into the air
-  double p;
-
-  //++++++++++++++++++++++++++++++++++++++
-  // use this for 1+1 interpolation
-  // procedure: for theta, go through spline vector and get that value. write to a vector, then spline that and get value for the T0
-  // use Roughness::T0 for X proxy
-  //std::vector<double> spl_values; // Y proxy
-  //for (int j=0; j<Ntheta0; j++){
-  //  spl_values.push_back(  (*(spline_theta0[j]))(T)  );
-  //}
-  //tk::spline s;
-  //s.set_points(theta_0_unique, spl_values);
-  //p = s(T0);
-
-  //++++++++++++++++++++++++++++++++++++++
-  // use this for analytic evaluation
-  // get the fit value and renormalize to the maximum measured power
-  p = (evaluate2dGaussian(T0, T) * maxmeaspower / fitfuncmax);
-  return p;
-};
-
-
-double Roughness::evaluate2dGaussian(double T0, double T){
-  double x = T0*PI/180.;
-  double y = T*PI/180.;
-
-  double a = cos(gaustheta)*cos(gaustheta)/2./x_stddev/x_stddev + sin(gaustheta)*sin(gaustheta)/2./y_stddev/y_stddev;
-  
-  double b = sin(2.*gaustheta)/2./x_stddev/x_stddev - sin(2.*gaustheta)/2./y_stddev/y_stddev;
-  
-  double c = sin(gaustheta)*sin(gaustheta)/2./x_stddev/x_stddev + cos(gaustheta)*cos(gaustheta)/2./y_stddev/y_stddev;
-
-  double expvalue = -a*(x-x_mean)*(x-x_mean)-b*(x-x_mean)*(y-y_mean)-c*(y-y_mean)*(y-y_mean);
-
-  return (amplitude * exp(expvalue));
-};
-
-
-double Roughness::GetFresnelCorrectionFactor(double T0){
-   return (*spl_cf_fresnel_ptr)(T0);
-};
-
-
-double Roughness::GetLossCorrectionFactor(double T0){
-   return (*spl_cf_loss_ptr)(T0);
-};
-
-
-double Roughness::ConvertTheta0AirGlass_to_GlassAir(double T0){
-  return (*spl_ag2ga_ptr)(T0);
-};
-
-
-double Roughness::ConvertTheta0GlassAir_to_AirGlass(double T1){
-  return (*spl_ga2ag_ptr)(T1);
-};
-
-
-Vector Roughness::CalculateTransmittedPolarization(const Vector &nnu, Vector vec_specularnormal, Vector vec_localnormal, Vector vec_pos_current_to_balloon, Vector vec_nnu_to_impactPoint, Vector npol_local_inc){
-  Vector temp_a = nnu.Cross(vec_specularnormal).Unit();
-  Vector temp_b = nnu.Cross(vec_localnormal).Unit();
-  double mtrx_cos_inc = temp_a.Dot(temp_b) / temp_a.Mag() / temp_b.Mag();
-  double mtrx_sin_inc = sqrt(1. - mtrx_cos_inc*mtrx_cos_inc);
-
-  temp_a = vec_pos_current_to_balloon.Cross(vec_specularnormal).Unit();
-  temp_b = vec_pos_current_to_balloon.Cross(vec_localnormal).Unit();
-  double mtrx_cos_trans = temp_a.Dot(temp_b) / temp_a.Mag() / temp_b.Mag();
-  double mtrx_sin_trans = sqrt(1. - mtrx_cos_trans*mtrx_cos_trans);
-
-  // now define the incidence plane using int.point-imp.point vector and local surface normal
-  Vector vec_incplane_normal = vec_nnu_to_impactPoint.Cross( (const Vector)vec_localnormal ).Unit();
-
-  // now define the scattering plane using imp.point-balloon vector and local surface normal
-  Vector vec_scatplane_normal = vec_pos_current_to_balloon.Cross( (const Vector)vec_localnormal ).Unit();
-
-  // determine incident vertical and horizontal field components (vertical = in-plane)
-  Vector E_local_h_inc = npol_local_inc.Dot(vec_incplane_normal) * vec_incplane_normal;
-  Vector E_local_v_inc = npol_local_inc - E_local_h_inc;
-
-  // recast the values with the transformation matrix
-  double E_local_v_trans_mag = mtrx_cos_trans * (mtrx_cos_inc*E_local_v_inc.Mag() - mtrx_sin_inc*E_local_h_inc.Mag())
-          - mtrx_sin_trans * (mtrx_sin_inc*E_local_v_inc.Mag() + mtrx_cos_inc*E_local_h_inc.Mag());
-  double E_local_h_trans_mag = mtrx_sin_trans * (mtrx_cos_inc*E_local_v_inc.Mag() - mtrx_sin_inc*E_local_h_inc.Mag())
-          + mtrx_cos_trans * (mtrx_sin_inc*E_local_v_inc.Mag() + mtrx_cos_inc*E_local_h_inc.Mag());
-
-  // transmitted polarization needs to be perpendicular to to-balloon vector, and the horizontal component is 'set', so need to find appropriate vector for the vertical component to ensure perpendicularity
-  Vector npol_local_trans = (E_local_h_trans_mag*vec_scatplane_normal
-          + E_local_v_trans_mag* vec_pos_current_to_balloon.Cross( (const Vector)vec_scatplane_normal ).Unit() ).Unit();
-
-  return npol_local_trans;
-};
-
-
-double Roughness::AdjustTransmissionAngle(double n1_old, double n1_new, double trans_angle_old){
-  double temp = n1_new / n1_old * sin(trans_angle_old);
-  if(temp<1.)
-    return asin( temp );
-  else
-    return PI/2.;
-};
