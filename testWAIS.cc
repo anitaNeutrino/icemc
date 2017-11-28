@@ -538,7 +538,7 @@ int main(int argc,  char **argv) {
     Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
     
     if(settings1->BORESIGHTS)
-      anita1->GetArrivalTimesBoresights( ray1->n_exit2bn_eachboresight[2], bn1, settings1 );
+      anita1->GetArrivalTimesBoresights( ray1->n_exit2bn_eachboresight[2]);
     else
       anita1->GetArrivalTimes( ray1->n_exit2bn[2], bn1, settings1);
     
