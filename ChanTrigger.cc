@@ -1560,6 +1560,10 @@ double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStat
 #ifdef ANITA_UTIL_EXISTS    
 void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
 
+  if (settings1->ZEROSIGNAL){
+    for (int i=0;i<nPoints;i++) y[i]=0;
+  }
+  
   TGraph *graph1 = new TGraph(nPoints, x, y);
 
   // Upsample waveform to same deltaT of the signal chain impulse response
@@ -1583,23 +1587,18 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   }
 
   // Translate waveform according to arrival times
-  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx] ) ;
+  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx]*1e9 ) ;
   
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
   
-  Double_t *newy = surfSignalDown->GetY();
-  if (settings1->ZEROSIGNAL){
-    for (int i=0;i<nPoints;i++) newy[i]=0;
-  }
-
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
     for (int i=0;i<nPoints;i++){
-      y[i]=newy[i] + justNoise_digPath[ipol][i];
+      y[i]=surfSignalDown->Eval(x[i]) + justNoise_digPath[ipol][i];
     }
   } else {
-    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
+    for (int i=0;i<nPoints;i++)  y[i]=surfSignalDown->Eval(x[i]);
   }
 
   // if (ant ==8 && pol==0){
@@ -1627,7 +1626,11 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
 
   int nPoints = anita1->HALFNFOUR;
   double *x   = anita1->fTimes;
-
+  
+  if (settings1->ZEROSIGNAL){
+    for (int i=0;i<nPoints;i++) y[i]=0;
+  }
+  
   TGraph *graph1;
   if (settings1->TRIGGEREFFSCAN && !pol){
     int phiIndex = anita1->trigEffScanPhi - (ant%16);
@@ -1669,25 +1672,20 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
     else          irx = 8 + ant/2;
   }
   // Translate signal
-  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx] ) ;
+  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx]*1e9 ) ;
   
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
-  
-  Double_t *newy = surfSignalDown->GetY();
-  if (settings1->ZEROSIGNAL){
-    for (int i=0;i<nPoints;i++) newy[i]=0;
-  }
 
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
     for (int i=0;i<nPoints;i++){
-      justSig_trigPath[ipol][i] = newy[i];
-      y[i] = voltsArray[i] = newy[i] + justNoise_trigPath[ipol][i];
+      justSig_trigPath[ipol][i] = surfSignalDown->Eval(x[i]);
+      y[i] = voltsArray[i] = justSig_trigPath[ipol][i] + justNoise_trigPath[ipol][i];
       //  std::cout << i << " " << justNoise_trigPath[ipol][i] << std::endl;
     }
   } else {
-    for (int i=0;i<nPoints;i++)  justSig_trigPath[ipol][i] = y[i] = voltsArray[i] = newy[i];
+    for (int i=0;i<nPoints;i++)  justSig_trigPath[ipol][i] = y[i] = voltsArray[i] = surfSignalDown->Eval(x[i]);
   }
   
   // find back the frequency domain
