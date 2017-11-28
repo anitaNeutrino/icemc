@@ -4164,13 +4164,10 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 
     // Impulse response accounts for trigger/digitizer splitter
     // norm *= sqrt(2);
-
-
     // if we are using the trigger impulse response and the old noise
     // we need to add this 7dB attenuation to have sensible results
     // see LC's talk on 2017 Nov 13
     if (!settings1->NOISEFROMFLIGHTTRIGGER) norm *= TMath::Power(10, -7/20.);
-    
   }
 
   // Read in input file

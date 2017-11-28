@@ -431,7 +431,7 @@ class ChanTrigger {
   double volts_rx_rfcm[2][Anita::HALFNFOUR];                   ///< For digitizer path, time domain voltage vs. time after rx, rfcm's
   double justNoise_digPath[2][Anita::HALFNFOUR];               ///< For digitizer path, time domain noise from flight
   double justNoise_trigPath[2][Anita::HALFNFOUR];              ///< For trigger path, time domain noise from flight
-  double cw_digPath[2][Anita::HALFNFOUR];                      ///< For digitizer path, time domain cw       
+  double cw_digPath[2][Anita::HALFNFOUR];                      ///< For digitizer path, time domain cw
   double justSig_trigPath[2][Anita::HALFNFOUR];                ///< Just signal in trigger path
   // these are filled for triggerscheme==0 and triggerscheme==1
   // frequency domain voltage and energy based

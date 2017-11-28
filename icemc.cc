@@ -370,7 +370,6 @@ int core_entered=0;
 int neutrinos_passing_all_cuts=0;
 double sum_weights=0;
 //End verification plot block
-
 int xsecParam_nutype = 0; // neutrino = 0, antineutrino = 1;
 int xsecParam_nuint  = 1; // NC = 0, CC = 1;
 
