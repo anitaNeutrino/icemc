@@ -2,6 +2,9 @@
 #include <algorithm>
 #include <cstdio>
 #include <fstream>
+#include <math.h>
+#include <iostream>
+#include <string>
 
 #include "vector.hh"
 #include "position.hh"
@@ -29,7 +32,7 @@ Roughness::Roughness(){
 
   rough_dir_str = std::getenv("ICEMC_SRC_DIR");
 #ifdef USE_HEALPIX
-  H = Healpix_Base(2048, RING);
+  H = Healpix_Base(11, RING);
 #endif
 
 };
@@ -44,57 +47,58 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
 
   // in the new implementation, we will use HEALPix look-up tables and average the values for the incidence angle tables that bracket the T0 value (floor and ceil)
 
-  double T_g = 90. - T;  //convert to geographical latitude
-  // azimuth A is ok
-
   // determine which pixel corresponds to (T, A)
-  pointing ptg = pointing(T_g*PI/180., A*PI/180.);
+  pointing ptg = pointing(T*PI/180., A*PI/180.);
   int thispixel = H.ang2pix( ptg );
 
   int pixel;
   double ptheta, ptheta_g, pphi, Tparl, Tperp;  // temporary values while reading file
 
   double Tparl_down, Tperp_down, Tparl_up, Tperp_up;
-  Tparl_down = Tperp_down = Tparl_up = Tperp_up = 0.; //default to zero in case entry isn't present in file
+  Tparl_down = Tperp_down = Tparl_up = Tperp_up = 0.; //default to zeros in case entry isn't present in file
 
-  char base_rough_file_down[100];
-  char base_rough_file_up[100];
+  std::string header;
   std::string base_rough_file_str="";
   ifstream ifs;
   std::string full_rough_file;
 
-  // "lower" table: read through table and find 'nearest pixel center'
-  std::sprintf(base_rough_file_down, "/data/roughness_tables/combined_inc%dp0_nsims10000_hp2048_beckmann.hpx", floor(T0));
-  base_rough_file_str = base_rough_file_down;
+  // "lower" table: read through table looking for specific pixel
+  // open and read table, discard header
+  base_rough_file_str = "/data/roughness_tables/combined_inc"+std::to_string(int(floor(T0)))+"p0_nsims10000_hp2048_beckmann.hpx";
   full_rough_file = rough_dir_str + base_rough_file_str;
-  // open and read table
   ifs.open (full_rough_file, std::ifstream::in);
+  std::getline(ifs, header);
   while (ifs.good()) {
-    ifs >> pixel >> ptheta >> pphi >> Tparl >> Tperp;
-    ptheta_g = 90. - ptheta;
+    ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
     if(pixel == thispixel){
       Tparl_down = Tparl;
       Tperp_down = Tperp;
     }
   }
   ifs.close();
-
   // "upper" table filename: same procedure
-  base_rough_file_str="";
-  std::sprintf(base_rough_file_up, "/data/roughness_tables/combined_inc%dp0_nsims10000_hp2048_beckmann.hpx", ceil(T0));
-  base_rough_file_str = base_rough_file_up;
+  // open and read table, discard header
+  base_rough_file_str = base_rough_file_str = "/data/roughness_tables/combined_inc"+std::to_string(int(ceil(T0)))+"p0_nsims10000_hp2048_beckmann.hpx";;
   full_rough_file = rough_dir_str + base_rough_file_str;
-  // open and read table
   ifs.open (full_rough_file, std::ifstream::in);
+  std::getline(ifs, header);
   while (ifs.good()) {
-    ifs >> pixel >> ptheta >> pphi >> Tparl >> Tperp;
-    ptheta_g = 90. - ptheta;
+    ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
     if(pixel == thispixel){
       Tparl_up = Tparl;
       Tperp_up = Tperp;
     }
   }
   ifs.close();
+
+  /*std::cerr<<"Inter[: "<<T0<<"  "
+  <<T<<"  "
+  <<A<<"  "
+  <<thispixel<<"  "
+  <<Tparl_down<<"  "
+  <<Tparl_up<<"  "
+  <<Tperp_down<<"  "
+  <<Tperp_up<<std::endl;*/
 
   // now, average
   tcoeff_perp = (Tperp_down + Tperp_up)/2.;
