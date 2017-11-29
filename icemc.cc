@@ -1518,8 +1518,8 @@ int main(int argc,  char **argv) {
     anita1->inu=inu;
 
     std::string nunum = Form("%d",inu);    
-    stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
-    ofstream roughout(stemp.c_str());
+    //stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
+    //ofstream roughout(stemp.c_str());
     //stemp=string(outputdir.Data())+"/rough_evtweight_"+nunum+".dat";
     //ofstream evtwgtout(stemp.c_str());
     for (whichray = settings1->MINRAY; whichray <= settings1->MAXRAY; whichray++) {
@@ -2510,14 +2510,14 @@ int main(int argc,  char **argv) {
           Efield_local = panel1->GetVmmhz_freq(jj*Anita::NFREQ) * panel1->GetPol(jj);
           Efield_screentotal = Efield_screentotal + Efield_local;
 	  
-	    roughout << inu << "  "
+	    /*roughout << inu << "  "
 	    << panel1->GetImpactPt(jj).Lon() << "  "
 	    << -90+panel1->GetImpactPt(jj).Lat() << "  "
 	    << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << "  "
 	    << panel1->GetDelay(jj) << "  "
 	    << panel1->GetWeight(jj) << "  "
 	    << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
-	    << std::endl;
+	    << std::endl;*/
 	  
         }//end jj over panel Nvalid points
         panel1->SetWeightNorm(validScreenSummedArea);
@@ -3645,7 +3645,7 @@ int main(int argc,  char **argv) {
       }//end if
 
     } // end for WHICHRAY
-    roughout.close();
+    //roughout.close();
     //evtwgtout.close();
     //looping over two types of rays - upgoing and downgoing.
     if (ABORT_EARLY){
