@@ -32,6 +32,7 @@ private:
 
   std::string rough_dir_str;
 #ifdef USE_HEALPIX
+  int order;
   Healpix_Base H;
 #endif
 
