@@ -1597,54 +1597,35 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
     int Curr_time = bn1->realTime_flightdata;
     int notch =0;
 // list of config times in sequential order (time). config A is on for the time between B_end_3 and A_end_1
-    int config_B_end_1 = 1480713195;
-    int config_P_end_1 = 1480730719;
-    int config_C_end_1 = 1480731802;
-    int config_P_end_2 = 1480807284;
-    int config_G_end_1 = 1481013795;
-    int config_O_end_1 = 1481100915;
-    int config_G_end_2 = 1481173515;
-    int config_O_end_2 = 1481490208;
-    int config_P_end_3 = 1481642754;
-    int config_B_end_2 = 1482121239;
-    int config_P_end_4 = 1482168627;
-    int config_B_end_3 = 1482205359;
-    int config_A_end_1 = 1482206201;
-    int config_B_end_4 = 1482286948;
-    int config_P_end_5 = 1482347440;
-    int config_B_end_5 = 1482445716;
-    int config_P_end_6 = 1482465408;
-    int config_B_end_6 = 1482964570;
-    int config_P_end_7 = 1482987942;
 // end of list of times for notch switching
   
-   if((config_B_end_3 < Curr_time) && (Curr_time <= config_A_end_1)) // config A //folder notches_260_0_0
+   if((TUFFconfig_B_end_3 < Curr_time) && (Curr_time <= TUFFconfig_A_end_1)) // config A //folder notches_260_0_0
     {
        notch=0;
     }
-    else if(((0 < Curr_time) && (Curr_time <= config_B_end_1)) || ((config_P_end_3 < Curr_time) && (Curr_time <= config_B_end_2)) || ((config_P_end_4 < Curr_time) && (Curr_time <= config_B_end_3)) || ((config_A_end_1 < Curr_time) && (Curr_time <= config_B_end_4)) || ((config_P_end_5 < Curr_time) && (Curr_time <= config_B_end_5)) || ((config_P_end_6 < Curr_time) && (Curr_time <= config_B_end_6)) || (config_P_end_7 < Curr_time) ) // config B notches_260_375_0
+    else if(((0 < Curr_time) && (Curr_time <= TUFFconfig_B_end_1)) || ((TUFFconfig_P_end_3 < Curr_time) && (Curr_time <= TUFFconfig_B_end_2)) || ((TUFFconfig_P_end_4 < Curr_time) && (Curr_time <= TUFFconfig_B_end_3)) || ((TUFFconfig_A_end_1 < Curr_time) && (Curr_time <= TUFFconfig_B_end_4)) || ((TUFFconfig_P_end_5 < Curr_time) && (Curr_time <= TUFFconfig_B_end_5)) || ((TUFFconfig_P_end_6 < Curr_time) && (Curr_time <= TUFFconfig_B_end_6)) || (TUFFconfig_P_end_7 < Curr_time) ) // config B notches_260_375_0
     {
        notch=1;
     }
-    else if((config_P_end_1 < Curr_time) && (Curr_time <= config_C_end_1)) // config C notches_260_0_460
+    else if((TUFFconfig_P_end_1 < Curr_time) && (Curr_time <= TUFFconfig_C_end_1)) // config C notches_260_0_460
     {
        notch=2;
     }
-    else if( ((config_P_end_2 < Curr_time) && (Curr_time <= config_G_end_1)) || ((config_O_end_1 < Curr_time) && (Curr_time <= config_G_end_2)) ) // config G notches_260_385_0
+    else if( ((TUFFconfig_P_end_2 < Curr_time) && (Curr_time <= TUFFconfig_G_end_1)) || ((TUFFconfig_O_end_1 < Curr_time) && (Curr_time <= TUFFconfig_G_end_2)) ) // config G notches_260_385_0
     {
        notch=3;
     }
 /*
-    else if(config_j_low < Curr_time <= config_j_high) // config J notches_250_375_0 not used apparently?
+    else if(TUFFconfig_j_low < Curr_time <= TUFFconfig_j_high) // config J notches_250_375_0 not used apparently?
     {
        indir= "notches_250_375_0";
     }
 */
-    else if( ((config_G_end_1 < Curr_time) && (Curr_time <= config_O_end_1)) || ((config_G_end_2 < Curr_time) && (Curr_time <= config_O_end_2)) ) // config O notches_260_365_0
+    else if( ((TUFFconfig_G_end_1 < Curr_time) && (Curr_time <= TUFFconfig_O_end_1)) || ((TUFFconfig_G_end_2 < Curr_time) && (Curr_time <= TUFFconfig_O_end_2)) ) // config O notches_260_365_0
     {
        notch=4;
     }
-    else if( ((config_B_end_1 < Curr_time) && (Curr_time <= config_P_end_1)) || ((config_C_end_1 < Curr_time) && (Curr_time <= config_P_end_2)) || ((config_O_end_2 < Curr_time) && (Curr_time <= config_P_end_3)) || ((config_B_end_2 < Curr_time) && (Curr_time <= config_P_end_4)) || ((config_B_end_4 < Curr_time) && (Curr_time <= config_P_end_5)) || ((config_B_end_5 < Curr_time) && (Curr_time <= config_P_end_6)) || ((config_B_end_6 < Curr_time) && (Curr_time <= config_P_end_7)) ) // config P notches_260_375_460
+    else if( ((TUFFconfig_B_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_1)) || ((TUFFconfig_C_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_2)) || ((TUFFconfig_O_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_3)) || ((TUFFconfig_B_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_4)) || ((TUFFconfig_B_end_4 < Curr_time) && (Curr_time <= TUFFconfig_P_end_5)) || ((TUFFconfig_B_end_5 < Curr_time) && (Curr_time <= TUFFconfig_P_end_6)) || ((TUFFconfig_B_end_6 < Curr_time) && (Curr_time <= TUFFconfig_P_end_7)) ) // config P notches_260_375_460
     {
        notch=5;
     }
