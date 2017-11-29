@@ -19,7 +19,7 @@ include Makefile.arch
 ANITA3_EVENTREADER=1
 
 # Uncomment to enable healpix 
-#USE_HEALPIX=1
+USE_HEALPIX=1
 
 
 

@@ -950,19 +950,11 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
 
     } else {
       
-      anita1->MakeArraysforFFT(v_banding_rfcm[0][iband],v_banding_rfcm[1][iband],v_banding_rfcm_forfft[0][iband],v_banding_rfcm_forfft[1][iband], 90., true);
+      for (int itime=0; itime<anita1->NFOUR/2 ; itime++){
+	v_banding_rfcm_forfft[0][iband][itime]=volts_rx_forfft[0][iband][itime];
+	v_banding_rfcm_forfft[1][iband][itime]=volts_rx_forfft[1][iband][itime];
+      }
       
-      // now v_banding_rfcm_h_forfft is in the time domain
-      // and now it is really in units of V
-      Tools::realft(v_banding_rfcm_forfft[0][iband],-1,anita1->NFOUR/2);
-      Tools::realft(v_banding_rfcm_forfft[1][iband],-1,anita1->NFOUR/2);
-      
-      // put it in normal time ording -T to T
-      // instead of 0 to T, -T to 0
-      Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[0][iband]);
-      Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
-
-
 #ifdef ANITA_UTIL_EXISTS
       // if applying the impulse response
       applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[0][iband], v_banding_rfcm[0][iband], 0);
@@ -1571,6 +1563,10 @@ double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStat
 #ifdef ANITA_UTIL_EXISTS    
 void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol, Balloon *bn1){
 
+  if (settings1->ZEROSIGNAL){
+    for (int i=0;i<nPoints;i++) y[i]=0;
+  }
+  
   int ipol=0;
   int iring=2;
   if (pol) ipol = 1;
@@ -1589,7 +1585,7 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
   //for debugging
-  TGraph *surfSignal = new TGraph(nPoints, x, y);
+  TGraph *surfSignal;
   
   
   //Calculate convolution
@@ -1668,20 +1664,16 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
-  
-  Double_t *newy = surfSignalDown->GetY();
-  if (settings1->ZEROSIGNAL){
-    for (int i=0;i<nPoints;i++) newy[i]=0;
-  }
 
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
     for (int i=0;i<nPoints;i++){
-      y[i]=newy[i] + justNoise_digPath[ipol][i];
+      y[i]=surfSignalDown->Eval(x[i]) + justNoise_digPath[ipol][i];
     }
   } else {
-    for (int i=0;i<nPoints;i++)  y[i]=newy[i];
+    for (int i=0;i<nPoints;i++)  y[i]=surfSignalDown->Eval(x[i]);
   }
+  
 
   // if (ant == 8 && pol==0){
   //   TCanvas *c = new TCanvas("c");
@@ -1703,12 +1695,15 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   delete graph1;
 }
 
-
 void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol){
 
   int nPoints = anita1->HALFNFOUR;
   double *x   = anita1->fTimes;
-
+ 
+  if (settings1->ZEROSIGNAL){
+    for (int i=0;i<nPoints;i++) y[i]=0;
+  }
+  
   TGraph *graph1;
   if (settings1->TRIGGEREFFSCAN && !pol){
     int phiIndex = anita1->trigEffScanPhi - (ant%16);
@@ -1754,21 +1749,16 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
-  
-  Double_t *newy = surfSignalDown->GetY();
-  if (settings1->ZEROSIGNAL){
-    for (int i=0;i<nPoints;i++) newy[i]=0;
-  }
 
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
     for (int i=0;i<nPoints;i++){
-      justSig_trigPath[ipol][i] = newy[i];
-      y[i] = voltsArray[i] = newy[i] + justNoise_trigPath[ipol][i];
+      justSig_trigPath[ipol][i] = surfSignalDown->Eval(x[i]);
+      y[i] = voltsArray[i] = justSig_trigPath[ipol][i] + justNoise_trigPath[ipol][i];
       //  std::cout << i << " " << justNoise_trigPath[ipol][i] << std::endl;
     }
   } else {
-    for (int i=0;i<nPoints;i++)  justSig_trigPath[ipol][i] = y[i] = voltsArray[i] = newy[i];
+    for (int i=0;i<nPoints;i++)  justSig_trigPath[ipol][i] = y[i] = voltsArray[i] = surfSignalDown->Eval(x[i]);
   }
   
   // find back the frequency domain
@@ -1806,7 +1796,6 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   delete graphUp;
   delete graph1;
 }
-
 void ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
 
   for (int i=0; i<anita1->NFOUR/2; i++){

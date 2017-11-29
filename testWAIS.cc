@@ -432,7 +432,8 @@ int main(int argc,  char **argv) {
   
   Position positionWAIS     = Position(lonWAIS, 90.+latWAIS, elevationWAIS); 
 
-
+  Vector surfaceNormalWAIS  = antarctica->GetSurfaceNormal(positionWAIS);  
+  
   // LC: If we turn on this flag, then we can use different phases when applying the antenna gain
   // Eventually we will want to do it more elegantly
   anita1->PULSER=1;
@@ -481,7 +482,7 @@ int main(int argc,  char **argv) {
       continue;
     }
     interaction1->nnu = (bn1->r_bn - interaction1->posnu);
-    interaction1->nnu = interaction1->nnu/interaction1->nnu.Mag();
+    interaction1->nnu = interaction1->nnu.Unit();
 
     // TEMPORARY UNTIL WE HAVE MINI ALFA MODEL
     vmmhz1m     = sig1->GetVmMHz1m(1e19, anita1->FREQ_HIGH);
@@ -499,13 +500,20 @@ int main(int argc,  char **argv) {
     for (int i=0; i<anita1->NFOUR/4; i++){
       anita1->v_phases[i]=90.;
     }
+
+    // VPOL
+    Vector n_temp = interaction1->nnu.Cross(surfaceNormalWAIS);
+    n_pol = n_temp.Cross(interaction1->nnu);
+
+    // HPOL 
+    // n_pol = interaction1->nnu.Cross(surfaceNormalWAIS);
     
-    // TEMPORARY POLARIZATION
-    n_pol = Vector(0., 0., 1.);
+    n_pol = n_pol.Unit();
+    
     if (settings1->BORESIGHTS) {
       for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { 
 	for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-	  n_pol_eachboresight[ilayer][ifold]=Vector(0., 0., 1.);
+	  n_pol_eachboresight[ilayer][ifold]=n_pol;
 	} // end looping over antennas in phi
       } // end looping over layers
     } // if we are calculating for all boresights
@@ -530,7 +538,7 @@ int main(int argc,  char **argv) {
     Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
     
     if(settings1->BORESIGHTS)
-      anita1->GetArrivalTimesBoresights( ray1->n_exit2bn_eachboresight[2] );
+      anita1->GetArrivalTimesBoresights( ray1->n_exit2bn_eachboresight[2]);
     else
       anita1->GetArrivalTimes( ray1->n_exit2bn[2], bn1, settings1);
     

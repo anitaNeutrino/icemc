@@ -3320,7 +3320,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 		   
 	ANTENNA_POSITION_START[0][iii][jjj]= Vector((r+SIMON_DELTA_R[iii][jjj])*cos(phi+SIMON_DELTA_PHI[iii][jjj]),(r+SIMON_DELTA_R[iii][jjj])*sin(phi+SIMON_DELTA_PHI[iii][jjj]),z);
 		   
-	ANTENNA_POSITION_START[0][iii][jjj]=ANTENNA_POSITION_START[0][iii][jjj].RotateZ(-gps_offset_anita2);
+	ANTENNA_POSITION_START[1][iii][jjj]=ANTENNA_POSITION_START[0][iii][jjj]=ANTENNA_POSITION_START[0][iii][jjj].RotateZ(-gps_offset_anita2);
 	PHI_EACHLAYER[iii][jjj]=atan2(ANTENNA_POSITION_START[0][iii][jjj][1],ANTENNA_POSITION_START[0][iii][jjj][0]);//set phi of each antennas to correct starting position
 
 	//cout<<"Antenna pos is "<<ANTENNA_POSITION_START[0][iii][jjj]<<" PHI is "<<PHI_EACHLAYER[iii][jjj]<<"\n";
@@ -3533,14 +3533,14 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
       for(int ilayer = 0; ilayer < 4; ilayer++){ 
 	for(int ifold = 0; ifold < NRX_PHI[ilayer]; ifold++){
 	  
-	  ANTENNA_POSITION_START[ipol][ilayer][ifold] = ANTENNA_POSITION_START[ipol][ilayer][ifold] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(ANTENNA_DOWN[ilayer][ifold]));
+	  ANTENNA_POSITION_START[ipol][ilayer][ifold] = ANTENNA_POSITION_START[0][ilayer][ifold] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(ANTENNA_DOWN[ilayer][ifold]));
 	  
-	  x = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetX();
-	  y = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetY();
+	  x = ANTENNA_POSITION_START[0][ilayer][ifold].GetX();
+	  y = ANTENNA_POSITION_START[0][ilayer][ifold].GetY();
 	  
 	  r = sqrt(pow(x,2)+pow(y,2)) + deltaRPhaseCentre[ipol][ilayer][ifold];
 	  phi = atan2(y,x) + deltaPhiPhaseCentre[ipol][ilayer][ifold];
-	  z = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetZ() + deltaZPhaseCentre[ipol][ilayer][ifold];	  
+	  z = ANTENNA_POSITION_START[0][ilayer][ifold].GetZ() + deltaZPhaseCentre[ipol][ilayer][ifold];	  
 
 	  if(phi<0) phi+=TMath::TwoPi();
 	  if(phi>TMath::TwoPi()) phi-=TMath::TwoPi();
