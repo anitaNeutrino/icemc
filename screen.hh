@@ -41,6 +41,8 @@ private:
   std::vector<Vector> fPols;        ///< container of transmitted polarizations
   std::vector<Position> fImpactPt;  ///< container of ground impact points
   std::vector<double> fWeight;      ///< container for weight of a screen point ( == area of screen element), normalized when used
+  std::vector<double> fIncAngles;   ///< container for incidence angles
+  std::vector<double> fTransAngles; ///< container for transmission angle
   double fWeightNorm;               ///< normalization of the weights == simple weight sum
 
   
@@ -287,6 +289,32 @@ public:
   * @return double
   */
   double GetWeightNorm();
+
+  //! Appends an incidence angle value to the fIncAngles array
+  /**
+  * @param A - viewangle
+  */
+  void AddIncidenceAngle(double A);
+
+  //! Get the incidence angle value stored at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
+  double GetIncidenceAngle(int i);
+
+  //! Appends a transmission angle value to the fTransAngles array
+  /**
+  * @param A - viewangle
+  */
+  void AddTransmissionAngle(double A);
+
+  //! Get the transmission angle value stored at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
+  double GetTransmissionAngle(int i);
 
   //! Resets the following screen parameters (fNvalidpoints,fVmmhz_freq,fVmmhz0,fViewangle,fDelays,fVec2blns,fPols,fImpactPt,fWeight,fWeightNorm)
   void ResetParameters();
