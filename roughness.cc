@@ -32,7 +32,8 @@ Roughness::Roughness(){
 
   rough_dir_str = std::getenv("ICEMC_SRC_DIR");
 #ifdef USE_HEALPIX
-  H = Healpix_Base(11, RING);
+  order = 6;
+  H = Healpix_Base(order, RING);  // RING is an enum, and is the default used to make the maps with the microfacet python simulation
 #endif
 
 };
@@ -64,7 +65,7 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
 
   // "lower" table: read through table looking for specific pixel
   // open and read table, discard header
-  base_rough_file_str = "/data/roughness_tables/combined_inc"+std::to_string(int(floor(T0)))+"p0_nsims10000_hp2048_beckmann.hpx";
+  base_rough_file_str = "/data/roughness_tables/combined_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims10000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
   full_rough_file = rough_dir_str + base_rough_file_str;
   ifs.open (full_rough_file, std::ifstream::in);
   std::getline(ifs, header);
@@ -78,7 +79,7 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
   ifs.close();
   // "upper" table filename: same procedure
   // open and read table, discard header
-  base_rough_file_str = base_rough_file_str = "/data/roughness_tables/combined_inc"+std::to_string(int(ceil(T0)))+"p0_nsims10000_hp2048_beckmann.hpx";;
+  base_rough_file_str = base_rough_file_str = "/data/roughness_tables/combined_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims10000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";;
   full_rough_file = rough_dir_str + base_rough_file_str;
   ifs.open (full_rough_file, std::ifstream::in);
   std::getline(ifs, header);
