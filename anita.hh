@@ -590,6 +590,7 @@ public:
   void readImpulseResponseDigitizer(Settings *settings1);
   void readImpulseResponseTrigger(Settings *settings1);
   void readTuffResponseDigitizer(Settings *settings1);
+  void readTuffResponseTrigger(Settings *settings1);
   void readTriggerEfficiencyScanPulser(Settings *settings1);
   void readNoiseFromFlight(Settings *settings1);
   void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant);
