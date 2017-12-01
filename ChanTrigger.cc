@@ -1718,9 +1718,11 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   int iphi = ant - (iring*16);
 
   //Calculate convolution
+
 // begin keith edits
+  TGraph *surfSignal;
   if (!settings1->TUFFSON){
-    TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring][iphi]);
+    surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring][iphi]);
   }
   else
   {
