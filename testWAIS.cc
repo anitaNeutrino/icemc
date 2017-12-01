@@ -597,7 +597,7 @@ int main(int argc,  char **argv) {
 
 	chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
 	
-	chantrig1->TriggerPath(settings1, anita1, antNum);
+	chantrig1->TriggerPath(settings1, anita1, antNum, bn1);
 	
 	chantrig1->DigitizerPath(settings1, anita1, antNum, bn1);
 	

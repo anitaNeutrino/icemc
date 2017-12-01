@@ -1056,7 +1056,7 @@ int main(int argc,  char **argv) {
 	chantrig1->injectImpulseAfterAntenna(anita1, antNum);
 #endif
 	
-	chantrig1->TriggerPath(settings1, anita1, antNum);
+	chantrig1->TriggerPath(settings1, anita1, antNum, bn1);
 	  
 	chantrig1->DigitizerPath(settings1, anita1, antNum, bn1);
 	

@@ -379,6 +379,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
     readImpulseResponseDigitizer(settings1);
     if(settings1->TUFFSON){
       readTuffResponseDigitizer(settings1);
+      readTuffResponseTrigger(settings1);
     }
   }
   if (settings1->APPLYIMPULSERESPONSETRIGGER){
@@ -4076,7 +4077,7 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 }
 
 void Anita::readTuffResponseDigitizer(Settings *settings1){
-  // for loops to make the RFSignal array that can be used in applyImpulseResponse of ChanTrigger.cc
+  // for loops to make the RFSignal array that can be used in applyImpulseResponseDigitizer of ChanTrigger.cc
   // ipol is the polarization "v" or "H" 
   // ring is the number 3 for tmb or bottom middle top
   // iphi is the antenna number
@@ -4105,6 +4106,34 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 	  delete gint;
 	  delete gtemp;
 	}// end for loop ituff
+      } // end for loop iphi
+    }// end for loop iring
+  }// end for loop ipol
+}
+
+void Anita::readTuffResponseTrigger(Settings *settings1){
+  // for loops to make the RFSignal array that can be used in applyImpulseResponseTrigger of ChanTrigger.cc Do we need one for each antenna???
+  TString filename;
+  string snotch_dir[6]={"trigconfigA.imp","trigconfigB.imp","trigconfigC.imp","trigconfigG.imp","trigconfigO.imp","trigconfigP.imp"};
+  string spol[2] = {"V","H"};
+  string sring[3] = {"T","M","B"};
+ // Set deltaT to be used in the convolution
+  deltaT = 1/(2.6*16);
+  for(int ipol=0; ipol<=1; ipol++) {
+    for(int iring = 0; iring<=2; iring++){
+      for(int iphi=0; iphi<=15; iphi++) {
+        for(int ituff=0; ituff <=5; ituff++) {
+            filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str());
+            //debugging
+            cout << Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str()) << endl;
+          TGraph *gtemp = new TGraph(filename);
+          // interpolate
+          TGraph *gint = Tools::getInterpolatedGraph(gtemp,deltaT); 
+          int paveNum=8533; // change for 0 to just signal back 
+          fSignalChainResponseTriggerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
+          delete gint;
+          delete gtemp;
+        }// end for loop ituff
       } // end for loop iphi
     }// end for loop iring
   }// end for loop ipol

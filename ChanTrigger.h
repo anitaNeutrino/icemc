@@ -98,7 +98,7 @@ class ChanTrigger {
    * @param  anita1 :: Anita - anita object
    * @param  ant :: int - antenna number
    */ 
-  void TriggerPath(Settings *settings1, Anita *anita1, int ant);
+  void TriggerPath(Settings *settings1, Anita *anita1, int ant, Balloon *bn1);
 
   //! Apply digitizer path
   /**
@@ -344,7 +344,7 @@ class ChanTrigger {
    * @param  pol :: bool - which polarization
    * @param  bn1 :: Balloon - balloon object
    */
-  void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol);
+  void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol, Balloon *bn1);
 
   //! Add noise from ANITA-3 flight to the time domain waveforms
   /**
