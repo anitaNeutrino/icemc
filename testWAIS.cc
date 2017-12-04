@@ -413,6 +413,8 @@ int main(int argc,  char **argv) {
   int count_rx=0;
   int antNum=0;
 
+  double thresholds[2][5];
+  
   // ANITA-3 WAIS location by default
   // If ANITA_UTIL_EXISTS then the appropriate location will be loaded
   Double_t latWAIS  = sourceLat = - ( 79 + (27.93728/60) ) ;
@@ -603,8 +605,6 @@ int main(int argc,  char **argv) {
 	
 	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 	
-
-	double thresholds[2][5];
 	//+++++//+++++//+++++//+++++//+++++//+++++//+++++
 	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  0, 0, 0, thresholds);
 	

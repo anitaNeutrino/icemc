@@ -12,6 +12,7 @@
 #include "TMath.h"
 #include "TVector3.h"
 #include "TLine.h"
+#include "TFile.h"
 
 #include "rx.hpp"
 #include "Constants.h"
@@ -785,23 +786,25 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
       for (int k=0;k<Anita::NFREQ;k++) {
         if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
 
-	  //Copy frequency amplitude to screen point
-	  tmp_vhz[0][k]=tmp_vhz[1][k]=panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
-	  // cout << tmp_vhz[0][k] << endl;
-          bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
-          bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
-          bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
+          //Copy frequency amplitude to screen point
+          tmp_vhz[0][k]=tmp_vhz[1][k]=panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
+          // cout << tmp_vhz[0][k] << endl;
+                bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
+                bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
+                bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
 
-	  anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
-	  if (settings1->TUFFSON==2){
-	    tmp_vhz[0][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
-	    tmp_vhz[1][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
-	  }
-	} // end if (seavey frequencies)
-	else {
-	  tmp_vhz[0][k]=0;
-	  tmp_vhz[1][k]=0;
-	}
+          anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
+
+          if (settings1->TUFFSON==2){
+            tmp_vhz[0][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
+            tmp_vhz[1][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
+          }
+          
+        } // end if (seavey frequencies)
+        else {
+          tmp_vhz[0][k]=0;
+          tmp_vhz[1][k]=0;
+        }
       } // end looping over frequencies.
 
 
@@ -1566,12 +1569,24 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) y[i]=0;
   }
+
+  TGraph *graph1;
+  if (settings1->TRIGGEREFFSCAN && !pol){
+    graph1 = getPulserAtAMPA(anita1, ant);
+  } else {
+    graph1 = new TGraph(nPoints, x, y);
+  }
+
   
+  // Upsample waveform to same deltaT of the signal chain impulse response
+  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
+
   int ipol=0;
   int iring=2;
   if (pol) ipol = 1;
   if (ant<16) iring=0;
   else if (ant<32) iring=1;
+
   int iphi = ant - (iring*16);
   
   if (settings1->ADDCW){
@@ -1579,12 +1594,7 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
       y[i]+=cw_digPath[ipol][i];
     }
   }
-  
-  TGraph *graph1 = new TGraph(nPoints, x, y);
-  
-  // Upsample waveform to same deltaT of the signal chain impulse response
-  TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
-  //for debugging
+
   TGraph *surfSignal;
   
   
@@ -1641,11 +1651,11 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   }
 
   // Translate waveform according to arrival times
-  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx] ) ;
+  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx]*1e9 ) ;
   
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
-
+  
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
     for (int i=0;i<nPoints;i++){
@@ -1656,16 +1666,16 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   }
   
 
-  // if (ant == 8 && pol==0){
+  // if (ant ==8 && pol==0){
   //   TCanvas *c = new TCanvas("c");
   //   graph1->Draw("Al");
-  //   c->Print(Form("DigitPath_%dgraph1.png", anita1->inu));
+  //   c->Print("DigitPath_graph1.png");
   //   graphUp->Draw("Al");
-  //   c->Print(Form("DigitPath_%dgraphUp.png", anita1->inu));
+  //   c->Print("DigitPath_graphUp.png");
   //   surfSignal->Draw("Al");
-  //   c->Print(Form("DigitPath_%dsurfSignal.png", anita1->inu));
+  //   c->Print("DigitPath_surfSignal.png");
   //   surfSignalDown->Draw("Al");
-  //   c->Print(Form("DigitPath_%dsurfSignalDown.png", anita1->inu));
+  //   c->Print("DigitPath_surfSignalDown.png");
   // }
   
   // Cleaning up
@@ -1680,27 +1690,14 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
 
   int nPoints = anita1->HALFNFOUR;
   double *x   = anita1->fTimes;
- 
+  
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) y[i]=0;
   }
   
   TGraph *graph1;
   if (settings1->TRIGGEREFFSCAN && !pol){
-    int phiIndex = anita1->trigEffScanPhi - (ant%16);
-    if (phiIndex>8) phiIndex=phiIndex-16;
-    double norm = (anita1->trigEffScanAtt[phiIndex+2]==0)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=0)*1;
-    int iring=2;
-    if (ant<16)      iring=0;
-    else if (ant<32) iring=1;
-    norm*=anita1->trigEffScanRingsUsed[iring];
-    if( (TMath::Abs(phiIndex)<=2) && norm>0 ){
-      graph1 = new TGraph(anita1->gPulseAtAmpa->GetN()/4,  anita1->gPulseAtAmpa->GetX(), anita1->gPulseAtAmpa->GetY());
-      Tools::NormalTimeOrdering(graph1->GetN(),graph1->GetY());
-      
-    } else {
-      graph1 = new TGraph(nPoints, x, y);
-    }
+    graph1 = getPulserAtAMPA(anita1, ant);
   } else {
     graph1 = new TGraph(nPoints, x, y);
   }
@@ -1772,8 +1769,9 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
     if (ant%2==0) irx = ant/2;
     else          irx = 8 + ant/2;
   }
+  
   // Translate signal
-  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx] ) ;
+  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx]*1e9 ) ;
   
   //Downsample again
   TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
@@ -1808,14 +1806,14 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   //   TGraph *gtemp = new TGraph (nPoints, x, y);
   //   gtemp->Draw("Al");
   //   c->Print(Form("TriggerPath_ant%i_surfSignalDown_noise.png", ant));
-    // TFile *out = new TFile("Icemc_signalChainTrigger.root", "recreate");
-    // graph1->Write("gInput");
-    // graphUp->Write("gInputUp");
-    // surfSignal->Write("gImpResp");
-    // surfSignalDown->Write("gImpRespDown");
-    // gtemp->Write("gImpRespDownNoise");
-    // out->Close();
-  // }
+      // TFile *out = new TFile("Icemc_signalChainTrigger.root", "recreate");
+      // graph1->Write("gInput");
+      // graphUp->Write("gInputUp");
+      // surfSignal->Write("gImpResp");
+      // surfSignalDown->Write("gImpRespDown");
+      // gtemp->Write("gImpRespDownNoise");
+      // out->Close();
+   // }
   
   // Cleaning up
   delete surfSignalDown;
@@ -1896,7 +1894,34 @@ void ChanTrigger::calculateCW(Anita *anita1, double frequency, double phase, dou
     cw_digPath[0][itime]+=amplitude*TMath::Sin(omega*anita1->TIMESTEP*itime + phase);
     cw_digPath[1][itime]+=amplitude*TMath::Sin(omega*anita1->TIMESTEP*itime + phase);
   }
+
+}  
+
+TGraph *ChanTrigger::getPulserAtAMPA(Anita *anita1, int ant){
+
+  // phiIndex is 0 for central antenna in trigger efficiency scan
+  int phiIndex = anita1->trigEffScanPhi - (ant%16);
+  if (phiIndex>8) phiIndex=phiIndex-16;
+  double tmp_volts[10000];
+  int iring=2;
+  if (ant<16) iring=0;
+  else if (ant<32) iring=1;
+  double norm = 0;
+  double att = 0;
+  // only 2 phi sectors adjecent to the central one are considered in efficiency scan
+  if(TMath::Abs(phiIndex)<=2){
+    att   = anita1->trigEffScanAtt[phiIndex+2]-anita1->trigEffScanAtt[2];
+    norm  = (anita1->trigEffScanAtt[phiIndex+2]==0)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=0)*1;
+    norm *= anita1->trigEffScanRingsUsed[iring];
+  }
+  int n = anita1->gPulseAtAmpa->GetN();
+  n=n/4;
+  for (int i=0;i<n;i++){
+    tmp_volts[i]=norm*anita1->gPulseAtAmpa->GetY()[i]*TMath::Power(10, att/20.);
+  }
   
+  return new TGraph(n,  anita1->gPulseAtAmpa->GetX(), tmp_volts);
+ 
 }
 
 void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
@@ -1952,7 +1977,9 @@ void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
       if (ant<16)       anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[0] + anita1->trigEffScanRingDelay[2];
       else if (ant<32)  anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[1];
     }
-
+    
+    // convert to seconds
+    anita1->arrival_times[0][irx]*=1e-9;
     
   }else{
     for (int i=0;i<fNumPoints;i++){

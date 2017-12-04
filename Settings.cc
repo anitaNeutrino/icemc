@@ -984,10 +984,10 @@ for(unsigned int i=0; i < requiredBands.size(); i++){
     std::cout << "The rings used in this scan are ";
     for (int i=0;i<3;i++) std::cout << anita1->trigEffScanRingsUsed[i] << " ";
     std::cout << std::endl;
-    std::cout << "Ring delays are applie to";
+    std::cout << "Ring delays are applie to : ";
     for (int i=0;i<5;i++) std::cout << anita1->trigEffScanApplyRingDelay[i] << " ";
     std::cout << std::endl;
-    std::cout << "Ring delays are for T-M, M-B, T-B";
+    std::cout << "Ring delays are for T-M, M-B, T-B : ";
     for (int i=0;i<3;i++) std::cout << anita1->trigEffScanRingDelay[i] << " ";
     std::cout << std::endl;
   }

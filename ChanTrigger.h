@@ -361,14 +361,21 @@ class ChanTrigger {
   //! Inject pulse after the antenna (used for trigger efficiency scans)
   /**
    * Pulser waveform is read in anita.cc
-   * volts_rx_forfft is substituded with pulser waveform + noise
-   * vhz_rx : found with fft
-   * This can only work when FFTtools is also linked
+   * THIS FUNCTION IS ONLY USED WITH THE OLD TRIGGER IMPULSE RESPONSE
    * 
    * @param  anita1 :: Anita - anita payload object
    * @param  ant :: int - which antennta
    */
   void injectImpulseAfterAntenna(Anita *anita1, int ant);
+
+  //! Get time domain graph of pulse at AMPA (used for trigger efficiency scans)
+  /**
+   * Pulser waveform is read in anita.cc
+   * 
+   * @param  anita1 :: Anita - anita payload object
+   * @param  ant :: int - which antennta
+   */
+  TGraph *getPulserAtAMPA(Anita *anita1, int ant);
 
   //! Save signal and noise waveforms at trigger
   /**
