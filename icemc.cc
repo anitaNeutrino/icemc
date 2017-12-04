@@ -1518,8 +1518,9 @@ int main(int argc,  char **argv) {
     anita1->inu=inu;
 
     std::string nunum = Form("%d",inu);    
-    //stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
-    //ofstream roughout(stemp.c_str());
+    stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
+    ofstream roughout(stemp.c_str());
+    roughout << std::setprecision(20);
     //stemp=string(outputdir.Data())+"/rough_evtweight_"+nunum+".dat";
     //ofstream evtwgtout(stemp.c_str());
     for (whichray = settings1->MINRAY; whichray <= settings1->MAXRAY; whichray++) {
@@ -2193,10 +2194,10 @@ int main(int argc,  char **argv) {
         //these values are not optimized, and actually could be configured in the input file
         double basescreenedgelength = settings1->SCREENEDGELENGTH;
         int basescreenDivisions = settings1->ROUGHSCREENDIV_BASE;
-        int maximumSubscreenGeneration = settings1->ROUGHSCREENDIV_SUB;
+        int subscreenDivisions = settings1->ROUGHSCREENDIV_SUB;
+        int maximumSubscreenGeneration = settings1->ROUGHMAXGEN;
         double basescreenFractionLimit = settings1->ROUGHSCREENFRAC_BASE;
         double subscreenFractionLimit = settings1->ROUGHSCREENFRAC_SUB;
-        int subscreenDivisions = settings1->ROUGHMAXGEN;
 
         int num_validscreenpoints = 0;
         Position pos_basescreen_centralpos;
@@ -2221,6 +2222,7 @@ int main(int argc,  char **argv) {
         double power_perp, power_parl;
         power_perp = power_parl = 0.;
 
+        double HP_64_binarea = 2.5566346e-04;  // healpix nside=64 bin area [sterad]
         double HP_2048_binarea = 2.4967135219492856e-07;  // healpix nside=2048 bin area [sterad]
         double antennalength = 0.96; // [m]
 
@@ -2301,31 +2303,44 @@ int main(int argc,  char **argv) {
 #endif
           tcoeff_perp = sqrt(power_perp);
           tcoeff_parl = sqrt(power_parl);
-          cerr<<"+++++++++++++"<<endl;
-          cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
-          cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
-          cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
-          Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_2048_binarea);
-          cerr<<"E: "<<Emag_local<<std::endl;
+          //cerr<<"+++++++++++++"<<endl;
+          //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
+          //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
+          //cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
+          Emag_local_notaper = Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
+          //cerr<<"E: "<<Emag_local<<std::endl;
+          // preliminary taper check, use to determine if even visible
+          viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
+          deltheta_em[0]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[0];
+          deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
+          sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, Emag_local, vmmhz_em[0]);// this applies the angular dependence.
+          //if(Emag_local>0.){
+          //  cerr<<"--> "<<inu<<"  "<<Emag_local<<"  "<<Emag_local_notaper<<endl;
+          //}
+          if(Emag_local==0.){
+            continue;
+          }
+          //now keep using Emag_local_notaper, because we want the other relative effects and don't necessarily care about taper now
           // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
           pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
-          cerr<<"P: "<<pathlength_local<<std::endl;
-          Emag_local /= pathlength_local ;
-          Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
-          cerr<<"E: "<<Emag_local<<std::endl;
-          maxbaseE = Tools::dMax(maxbaseE, Emag_local);
-          basescrn_Emags.push_back(Emag_local);
+          //cerr<<"P: "<<pathlength_local<<std::endl;
+          Emag_local_notaper /= pathlength_local ;
+          Attenuate(antarctica, settings1, Emag_local_notaper,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
+          //cerr<<"E: "<<Emag_local<<std::endl;
+          maxbaseE = Tools::dMax(maxbaseE, Emag_local_notaper);
+          basescrn_Emags.push_back(Emag_local_notaper);
           basescrn_pos.push_back(pos_current);
           basescrn_length.push_back(panel1->GetEdgeLength() / (float)panel1->GetNsamples());
         }
 
         //#########
         // Second, now select those points in the base screen that contribute most of the signal strength
-        for (int ii=0; ii< panel1->GetNsamples()*panel1->GetNsamples(); ii++){
+        //cerr<<"Number of base screen points: "<< basescrn_Emags.size()<<endl;
+        for (int ii=0; ii< basescrn_Emags.size(); ii++){
           if (basescrn_Emags[ii]/maxbaseE < basescreenFractionLimit){
             continue;
           }
-          cerr<<basescrn_Emags[ii]/maxbaseE<<endl;
+          //cerr<<basescrn_Emags[ii]/maxbaseE<<endl;
           seedpositions.push_back(basescrn_pos[ii]);
           seedEdgeLengths.push_back(basescrn_length[ii]);
           seedGeneration.push_back(1);
@@ -2334,6 +2349,7 @@ int main(int argc,  char **argv) {
         //#########
         // Third, now loop over the seed positions, resetting the screen parameters for each seed position.
         //if the min(Efield) < fraction * max(Efield), then add these points to the seedposition vector to sample further
+        //cerr<<"Number of seed screen points: "<< seedpositions.size()<<endl;
         for (unsigned long ii=0; ii< seedpositions.size(); ii++){
           panel1->ResetPositionIndex();
           panel1->SetNsamples(subscreenDivisions);
@@ -2352,22 +2368,16 @@ int main(int argc,  char **argv) {
           std::vector<double> seedscreens_propdelay;
           std::vector<Position> seedscreens_impactpt;
           std::vector<double> seedscreens_viewangle;
+          std::vector<double> seedscreens_incangle;
+          std::vector<double> seedscreens_transangle;
 
           for (int jj=0; jj< panel1->GetNsamples()*panel1->GetNsamples(); jj++){
+            //cerr<<"+++++++++++++"<<endl;
+            //cerr<<"+ seed point: "<<jj<<" / "<<panel1->GetNsamples()*panel1->GetNsamples()<<endl;
             Emag_local = 0.;
             pos_current = panel1->GetNextPosition(jj);        // this gets the new screen position
             pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
             vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_current[0], bn1->r_bn[1] - pos_current[1], bn1->r_bn[2] - pos_current[2] );
-
-            //Determine ground impact position where the projected ray enters the ice
-            // reject if it enters beyond the borders of the continent.
-            // step size is 10 meters
-            //cout << pos_current.Lon()<<"  "<<pos_current.Lat()<<endl;
-            // ^
-            // check if pos_current gets placed below the ice surface
-            // -> why is IceModel::Surface failing ??
-
-
             if (!antarctica->WhereDoesItExitIce(pos_current, panel1->GetNormal(), 10., pos_projectedImpactPoint)){
               //std::cerr<<"Warning!  Projected ground impact position of screen point does NOT enter ice. Skipping this screen point."<<std::endl;
               continue;
@@ -2398,29 +2408,23 @@ int main(int argc,  char **argv) {
 #endif
             tcoeff_perp = sqrt(power_perp);
             tcoeff_parl = sqrt(power_parl);
-          cerr<<"+++++++++++++"<<endl;
-          cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
-          cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
-          cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
-          Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_2048_binarea);
-          cerr<<"E: "<<Emag_local<<std::endl;
-          // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
-          pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
-          cerr<<"P: "<<pathlength_local<<std::endl;
-          Emag_local /= pathlength_local ;
-          Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
-          cerr<<"E: "<<Emag_local<<std::endl;
-            Emag_local_notaper = Emag_local;
-
-            //check the vmmhz[0] component ONLY here
-            deltheta_em[0]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[0];
-            deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
-            //sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, Emag_local, vmmhz_em[0]);// this applies the angular dependence.
-          cerr<<"taper: "<<Emag_local<<std::endl;
-            //check if Taper would normally remove this because E=0
+            //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
+            //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
+            if( (tcoeff_parl==0.)|(tcoeff_perp==0.) ){
+              continue;
+            }
+            //cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
+            Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
+            //cerr<<"E: "<<Emag_local<<std::endl;
+            // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
+            pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
+            //cerr<<"P: "<<pathlength_local<<std::endl;
+            Emag_local /= pathlength_local ;
+            //cerr<<"E: "<<Emag_local<<std::endl;
+            Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
             if(Emag_local==0)
               continue;
-          cerr<<"past E=0 cut"<<endl;
+            //cerr<<"past E=0 cut"<<endl;
             /////
             // Incident and Transmitted Polarizations (T needs to be determined by tcoeff_perp and tcoeff_parl)
             // set incident polarization
@@ -2438,7 +2442,7 @@ int main(int argc,  char **argv) {
             if(npol_local_trans[0]!=npol_local_trans[0]){
               continue;
             }
-            cerr<<"past pol cut"<<endl;
+            //cerr<<"past pol cut"<<endl;
 
             minE = Tools::dMin(minE, Emag_local);
             maxE = Tools::dMax(maxE, Emag_local);
@@ -2446,15 +2450,18 @@ int main(int argc,  char **argv) {
             seedscreens_vmmhzlocal.push_back( Emag_local );
             seedscreens_2bln.push_back(vec_pos_current_to_balloon);
             seedscreens_pols.push_back(npol_local_trans);
-            seedscreens_propdelay.push_back( (pathlength_specular-pathlength_local) / CLIGHT ); //need to account for speed difference in ice versus in air? negligible?
+            seedscreens_propdelay.push_back( (pathlength_specular-pathlength_local) / CLIGHT );
             seedscreens_impactpt.push_back(pos_projectedImpactPoint);
             seedscreens_viewangle.push_back(viewangle_local);
-            cerr<<pos_current<<"  "
-            <<Emag_local<<"  "
-            <<npol_local_trans<<"  "
-            <<(pathlength_specular-pathlength_local) / CLIGHT<<"  "
-            <<pos_projectedImpactPoint<<"  "
-            <<viewangle_local<<std::endl;
+            seedscreens_incangle.push_back(theta_0_local);
+            seedscreens_transangle.push_back(theta_local);
+            //
+            //cerr<<pos_current<<"  "
+            //<<Emag_local<<"  "
+            //<<npol_local_trans<<"  "
+            //<<(pathlength_specular-pathlength_local) / CLIGHT<<"  "
+            //<<pos_projectedImpactPoint<<"  "
+            //<<viewangle_local<<std::endl;
           }// end for jj for this seed screen
 
           if( (minE >= subscreenFractionLimit*maxE) || (seedGeneration[ii] == maximumSubscreenGeneration) ){ // store these and move on to the next seed screen
@@ -2469,16 +2476,19 @@ int main(int argc,  char **argv) {
               panel1->AddDelay( seedscreens_propdelay[jj] );
               panel1->AddImpactPt(seedscreens_impactpt[jj]);
               panel1->AddViewangle(seedscreens_viewangle[jj]);
+              panel1->AddIncidenceAngle(seedscreens_incangle[jj]);
+              panel1->AddTransmissionAngle(seedscreens_transangle[jj]);
               panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
             }// end for jj<seedscreens_pos
-          }// end else
-          else { //if true, reject these points and pass the positions back into seedpositions so we sample at higher resolutions (smaller edge length)
+          }
+          else { // or reject these points and pass the positions back into seedpositions so we sample at higher resolutions (smaller edge length)
             for (unsigned long jj=0; jj<seedscreens_pos.size(); jj++){
               seedpositions.push_back(seedscreens_pos[jj]);
               seedEdgeLengths.push_back(panel1->GetEdgeLength()/panel1->GetNsamples());
               seedGeneration.push_back(seedGeneration[ii]+1);
             }
           }
+          // clear vectors for use with next screen point
           seedscreens_pos.clear();
           seedscreens_vmmhzlocal.clear();
           seedscreens_2bln.clear();
@@ -2486,6 +2496,8 @@ int main(int argc,  char **argv) {
           seedscreens_propdelay.clear();
           seedscreens_impactpt.clear();
           seedscreens_viewangle.clear();
+          seedscreens_incangle.clear();
+          seedscreens_transangle.clear();
         }// end for ii loop over seedpositions
 
         panel1->SetNvalidPoints(num_validscreenpoints);
@@ -2495,9 +2507,9 @@ int main(int argc,  char **argv) {
         double validScreenSummedArea = 0.;
         double vmmhz_local_array[Anita::NFREQ];
         for (int jj=0; jj<panel1->GetNvalidPoints(); jj++){
-	  sig1->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
-
-	  // apply the off-angle tapering
+          // fill the frequency array vmmhz_local_array
+          sig1->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
+          // apply the off-angle tapering
           for (int k=0;k<Anita::NFREQ;k++) {
             deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
             deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
@@ -2509,16 +2521,19 @@ int main(int argc,  char **argv) {
           
           Efield_local = panel1->GetVmmhz_freq(jj*Anita::NFREQ) * panel1->GetPol(jj);
           Efield_screentotal = Efield_screentotal + Efield_local;
-	  
-	    /*roughout << inu << "  "
-	    << panel1->GetImpactPt(jj).Lon() << "  "
-	    << -90+panel1->GetImpactPt(jj).Lat() << "  "
-	    << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << "  "
-	    << panel1->GetDelay(jj) << "  "
-	    << panel1->GetWeight(jj) << "  "
-	    << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
-	    << std::endl;*/
-	  
+        
+          roughout << inu << "  "
+          << panel1->GetImpactPt(jj).Lon() << "  "
+          << -90+panel1->GetImpactPt(jj).Lat() << "  "
+          << panel1->GetVmmhz0(jj) << "  "                  // PRE-taper vmmhz[0]
+          << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << "  " // POST-taper vmmhz[0]
+          << panel1->GetDelay(jj) << "  "
+          << panel1->GetWeight(jj) << "  "
+          << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
+          << panel1->GetIncidenceAngle(jj) << "  "
+          << panel1->GetTransmissionAngle(jj) << "  "
+          << std::endl;
+        
         }//end jj over panel Nvalid points
         panel1->SetWeightNorm(validScreenSummedArea);
         vmmhz_max = Efield_screentotal.Mag();
@@ -3645,7 +3660,7 @@ int main(int argc,  char **argv) {
       }//end if
 
     } // end for WHICHRAY
-    //roughout.close();
+    roughout.close();
     //evtwgtout.close();
     //looping over two types of rays - upgoing and downgoing.
     if (ABORT_EARLY){

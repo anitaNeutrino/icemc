@@ -1056,7 +1056,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 	}
 	
 	bwslice_dioderms_fullband_allchan[ipol][iant]=sqrt(bwslice_dioderms_fullband_allchan[ipol][iant]);
-	cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << meandiode_eachchan[ipol][iant] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant] << endl;  
+	//cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << meandiode_eachchan[ipol][iant] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant] << endl;  
 	
       }
 	

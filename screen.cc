@@ -214,6 +214,21 @@ double Screen::GetWeightNorm(){
   return fWeightNorm;
 };
 
+void Screen::AddIncidenceAngle(double A){
+  fIncAngles.push_back(A);
+};
+
+double Screen::GetIncidenceAngle(int i){
+  return fIncAngles[i];
+};
+
+void Screen::AddTransmissionAngle(double A){
+  fTransAngles.push_back(A);
+};
+
+double Screen::GetTransmissionAngle(int i){
+  return fTransAngles[i];
+};
 
 void Screen::ResetParameters(){
   // reset these in icemc:
