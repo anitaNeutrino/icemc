@@ -366,6 +366,9 @@ int neutrinos_passing_all_cuts=0;
 double sum_weights=0;
 //End verification plot block
 
+double justNoise_trig[2][48][512];
+double justSignal_trig[2][48][512];
+
 
 // functions
 
@@ -981,6 +984,7 @@ int main(int argc,  char **argv) {
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
     
     eventNumber=(UInt_t)(run_no)*NNU+inu;
+    anita1->inu = inu;
     
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
@@ -1064,6 +1068,8 @@ int main(int argc,  char **argv) {
 
 	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
+	chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
+	
 	//	cout << inu << " " << ilayer << " " << ifold << endl;
 	delete chantrig1;
 	       
@@ -1257,6 +1263,42 @@ int main(int argc,  char **argv) {
 	for (int i=0;i<Anita::NFREQ;i++)
 	  truthEvPtr->vmmhz[i]       = -999;
       }
+
+       
+      memset(truthEvPtr->SNRAtTrigger,     0, sizeof(truthEvPtr->SNRAtTrigger)     );
+      memset(truthEvPtr->thresholds,       0, sizeof(truthEvPtr->thresholds)       );
+      memset(truthEvPtr->fSignalAtTrigger, 0, sizeof(truthEvPtr->fSignalAtTrigger) );
+      memset(truthEvPtr->fNoiseAtTrigger,  0, sizeof(truthEvPtr->fNoiseAtTrigger)  );
+      memset(truthEvPtr->fDiodeOutput,     0, sizeof(truthEvPtr->fDiodeOutput)     );
+
+      for (int iant = 0; iant < settings1->NANTENNAS; iant++){
+	int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
+	int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
+
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = 0;
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = 0;
+	truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[antNum][0][4];
+	truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[antNum][1][4];
+	int irx = iant;
+	if (iant<16){
+	  if (iant%2) irx = iant/2;
+	  else        irx = iant/2 + 1;
+	}
+	      
+	for (int j = 0; j < fNumPoints; j++) {
+	  truthEvPtr->fTimes[UsefulChanIndexV][j]           = j * anita1->TIMESTEP * 1.0E9;
+	  truthEvPtr->fTimes[UsefulChanIndexH][j]           = j * anita1->TIMESTEP * 1.0E9;
+	  truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j] = justSignal_trig[0][antNum][j+128]*1000;
+	  truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j] = justSignal_trig[1][antNum][j+128]*1000;
+	  truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]  = justNoise_trig[0][antNum][j+128]*1000;
+	  truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]  = justNoise_trig[1][antNum][j+128]*1000;
+		
+	  truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]     = anita1->timedomain_output_allantennas[0][irx][j];
+	  truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]     = anita1->timedomain_output_allantennas[1][irx][j];
+	}//end int j
+      }// end int iant
+
+      
       truthAnitaTree->Fill();
       delete truthEvPtr;
 #endif
