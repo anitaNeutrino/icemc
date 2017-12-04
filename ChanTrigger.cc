@@ -12,6 +12,7 @@
 #include "TMath.h"
 #include "TVector3.h"
 #include "TLine.h"
+#include "TFile.h"
 
 #include "rx.hpp"
 #include "Constants.h"
@@ -1563,9 +1564,15 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) y[i]=0;
   }
-  
-  TGraph *graph1 = new TGraph(nPoints, x, y);
 
+  TGraph *graph1;
+  if (settings1->TRIGGEREFFSCAN && !pol){
+    graph1 = getPulserAtAMPA(anita1, ant);
+  } else {
+    graph1 = new TGraph(nPoints, x, y);
+  }
+
+  
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
 
@@ -1633,20 +1640,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   
   TGraph *graph1;
   if (settings1->TRIGGEREFFSCAN && !pol){
-    int phiIndex = anita1->trigEffScanPhi - (ant%16);
-    if (phiIndex>8) phiIndex=phiIndex-16;
-    double norm = (anita1->trigEffScanAtt[phiIndex+2]==0)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=0)*1;
-    int iring=2;
-    if (ant<16)      iring=0;
-    else if (ant<32) iring=1;
-    norm*=anita1->trigEffScanRingsUsed[iring];
-    if( (TMath::Abs(phiIndex)<=2) && norm>0 ){
-      graph1 = new TGraph(anita1->gPulseAtAmpa->GetN()/4,  anita1->gPulseAtAmpa->GetX(), anita1->gPulseAtAmpa->GetY());
-      Tools::NormalTimeOrdering(graph1->GetN(),graph1->GetY());
-      
-    } else {
-      graph1 = new TGraph(nPoints, x, y);
-    }
+    graph1 = getPulserAtAMPA(anita1, ant);
   } else {
     graph1 = new TGraph(nPoints, x, y);
   }
@@ -1671,6 +1665,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
     if (ant%2==0) irx = ant/2;
     else          irx = 8 + ant/2;
   }
+  
   // Translate signal
   TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx]*1e9 ) ;
   
@@ -1707,14 +1702,14 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   //   TGraph *gtemp = new TGraph (nPoints, x, y);
   //   gtemp->Draw("Al");
   //   c->Print(Form("TriggerPath_ant%i_surfSignalDown_noise.png", ant));
-    // TFile *out = new TFile("Icemc_signalChainTrigger.root", "recreate");
-    // graph1->Write("gInput");
-    // graphUp->Write("gInputUp");
-    // surfSignal->Write("gImpResp");
-    // surfSignalDown->Write("gImpRespDown");
-    // gtemp->Write("gImpRespDownNoise");
-    // out->Close();
-  // }
+      // TFile *out = new TFile("Icemc_signalChainTrigger.root", "recreate");
+      // graph1->Write("gInput");
+      // graphUp->Write("gInputUp");
+      // surfSignal->Write("gImpResp");
+      // surfSignalDown->Write("gImpRespDown");
+      // gtemp->Write("gImpRespDownNoise");
+      // out->Close();
+   // }
   
   // Cleaning up
   delete surfSignalDown;
@@ -1787,7 +1782,32 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
   
 }
 
+TGraph *ChanTrigger::getPulserAtAMPA(Anita *anita1, int ant){
 
+  // phiIndex is 0 for central antenna in trigger efficiency scan
+  int phiIndex = anita1->trigEffScanPhi - (ant%16);
+  if (phiIndex>8) phiIndex=phiIndex-16;
+  double tmp_volts[10000];
+  int iring=2;
+  if (ant<16) iring=0;
+  else if (ant<32) iring=1;
+  double norm = 0;
+  double att = 0;
+  // only 2 phi sectors adjecent to the central one are considered in efficiency scan
+  if(TMath::Abs(phiIndex)<=2){
+    att   = anita1->trigEffScanAtt[phiIndex+2]-anita1->trigEffScanAtt[2];
+    norm  = (anita1->trigEffScanAtt[phiIndex+2]==0)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=0)*1;
+    norm *= anita1->trigEffScanRingsUsed[iring];
+  }
+  int n = anita1->gPulseAtAmpa->GetN();
+  n=n/4;
+  for (int i=0;i<n;i++){
+    tmp_volts[i]=norm*anita1->gPulseAtAmpa->GetY()[i]*TMath::Power(10, att/20.);
+  }
+  
+  return new TGraph(n,  anita1->gPulseAtAmpa->GetX(), tmp_volts);
+ 
+}
 
 void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
   // phiIndex is 0 for central antenna in trigger efficiency scan

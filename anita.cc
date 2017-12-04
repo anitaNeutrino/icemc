@@ -3811,7 +3811,7 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
       // cout << "arrival_times is " << arrival_times[antenna_index] << "\n";
     } // for: loop over antenna layers
     
-    if(settings1->WHICH==8){//ANITA-II offboresight delay
+    if( settings1->WHICH==8 ){//ANITA-II offboresight delay
       
       Vector rf_tmp_dir = bn1->unRotatePayload(-1*rf_direction);
      
@@ -3882,6 +3882,77 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
 } // GetArrivalTimes
 
 
+void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX],Balloon *bn1, Settings *settings1) {
+
+  for (int ipol=0; ipol<2; ipol++){
+    for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
+      int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
+      int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
+      arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
+
+      // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
+      //      arrival_times[ipol][antenna_index] -= extraCableDelays[ipol][antenna_index];
+      // cout << arrival_times[antenna_index] << endl;
+    
+      //  arrival_times[antenna_index]=0;
+      
+
+      if(settings1->WHICH==8 ){//ANITA-II offboresight delay
+      
+	Vector rf_tmp_dir = bn1->unRotatePayload(-1*rf_direction[ilayer][ifold]);
+     
+	double theta_deg =rf_tmp_dir.Theta() * DEGRAD;//
+     
+	double phi_deg = rf_tmp_dir.Phi() *DEGRAD;
+	double totalAngledeg;
+	double extra_delay;
+     
+	double phi_eachlayer;
+	double theta_offset;
+	int ant_ctr=0;
+
+	theta_offset = 10;//boresight_vector[ant_ctr].Theta()*DEGRAD;
+       
+	theta_deg = theta_deg -90;
+       
+     
+	theta_deg = theta_deg - theta_offset;
+		   
+	phi_deg = rf_tmp_dir.Phi();
+      
+	phi_eachlayer =atan2(ANTENNA_POSITION_START[ipol][ilayer][ifold][1],ANTENNA_POSITION_START[ipol][ilayer][ifold][0]);
+       
+	phi_deg =phi_deg- phi_eachlayer;
+	 
+	if(fabs(phi_deg) > fabs(phi_deg+2*PI)) phi_deg+=2*PI;
+	if(fabs(phi_deg) > fabs(phi_deg-2*PI)) phi_deg-=2*PI;
+	phi_deg =phi_deg*DEGRAD;
+	totalAngledeg = phi_deg*phi_deg + theta_deg*theta_deg;
+	if(totalAngledeg > 2500) totalAngledeg=2500;
+	 
+	extra_delay  = (totalAngledeg*totalAngledeg)*1.45676e-8;//pulled from Abby analysis
+	extra_delay -= (totalAngledeg)*5.01452e-6;//pulled from Abby analysis
+	
+	arrival_times[ipol][ant_ctr]+=extra_delay*1E-9;
+	ant_ctr++;
+      
+      }  
+    }
+  }
+  
+  double minV = Tools::dMin(arrival_times[0],(number_all_antennas));
+  double minH = Tools::dMin(arrival_times[1],(number_all_antennas));
+  double first_trigger_time = Tools::dMin(minV, minH);
+  for (int ipol=0; ipol<2; ipol++){
+    for (int i=0;i<(number_all_antennas);i++){
+      
+      arrival_times[ipol][i] -= first_trigger_time;
+      //cout<<"arrival_times boresight["<<i<<"] is "<<arrival_times[i]<<"\n";
+    }
+  }
+} // GetArrivalTimesBoresights
+
+
 void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]) {
 
   for (int ipol=0; ipol<2; ipol++){
@@ -3897,6 +3968,7 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
       //  arrival_times[antenna_index]=0;
     } // for: loop over antenna layers
   }
+
   
   double minV = Tools::dMin(arrival_times[0],(number_all_antennas));
   double minH = Tools::dMin(arrival_times[1],(number_all_antennas));
@@ -3909,6 +3981,8 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
     }
   }
 } // GetArrivalTimesBoresights
+
+
 
 
 void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
@@ -4027,7 +4101,7 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 	    exit(0);
 	  }
 	  // Interpolate to high sampling rate that will be used for the convolution
-	  TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); 
+	  TGraph *grInt = FFTtools::getInterpolatedGraph(grTemp,deltaT); 
 	  Int_t nPoints  = grInt->GetN();
 	  Double_t *newx = grInt->GetX();
 	  Double_t *newy = grInt->GetY();
@@ -4153,7 +4227,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	    exit(0);
 	  }
 	  // Interpolate to high sampling rate that will be used for the convolution
-	  TGraph *grInt = Tools::getInterpolatedGraph(grTemp,deltaT); 
+	  TGraph *grInt = FFTtools::getInterpolatedGraph(grTemp,deltaT); 
 	  Int_t nPoints  = grInt->GetN();
 	  Double_t *newx = grInt->GetX();
 	  Double_t *newy = grInt->GetY();
@@ -4228,12 +4302,12 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
 
     // Get average pulse as measured by scope
     gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
-    //TGraph *gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
-
+    
     bool useDelayGenerator = false;
 
     int maxDelays = Tools::dMax(trigEffScanRingDelay, 3) + Tools::dMax(trigEffScanPhiDelay,5);
 
+    if (maxDelays!=0) useDelayGenerator=true;
     
     for (int i=0;i<gPulseAtAmpa->GetN();i++){
       // 7db fixed attenuation
@@ -4256,18 +4330,33 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
        
     }
 
-    TGraph *gPulseAtAmpaInt = FFTtools::getInterpolatedGraph(gPulseAtAmpa, 1/2.6);
-
+    // To get the correct interpolation we need to shift the waveform
+    // We shift it by 8*(1/(2.6*16)) ns
+    
+    double *x = gPulseAtAmpa->GetX();
+    double *y = gPulseAtAmpa->GetY();
+    double xnew[10000], ynew[10000];
+    int N = gPulseAtAmpa->GetN();
+    
+    int newn = N - 6;
+    
+    for (int j=6; j<N; j++){
+      xnew[j-6] = x[j];
+      ynew[j-6] = y[j];
+    }
+    
+    TGraph *gtemp = new TGraph (newn, xnew, ynew);
+    
+    TGraph *gPulseAtAmpaInt = FFTtools::getInterpolatedGraph(gtemp, 1/2.6);
+    
     for (int i=0;i<HALFNFOUR;i++){
       trigEffScanPulseAtAmpa[i] = gPulseAtAmpaInt->Eval(fTimes[i]);
     }
 
-    // TCanvas *c = new TCanvas("c");
-    // gPulseAtAmpa->Draw("Al");
-    // c->Print("PulseAtAMPA_readinbyicemc.png");
-
+    gPulseAtAmpa  = FFTtools::translateGraph(gPulseAtAmpa, 77.5721);
+    
     delete gPulseAtAmpaInt;
-     
+    delete gtemp;
      
     for (int isample=0;isample<250;isample++){
       // Get average waveform at SURF as measured by scope
