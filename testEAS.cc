@@ -96,6 +96,63 @@ Adu5Pat*         Adu5PatPtr   = NULL;
 TruthAnitaEvent*      truthEvPtr   = NULL;
 #endif
 #endif
+#include "TApplication.h"
+
+
+const double pi = atan(1)*4;
+
+// cpp'ed version of https://stackoverflow.com/questions/9210528/split-string-with-delimiters-in-c
+vector<string> str_split(char* a_str, const char a_delim)
+{
+  char delim[2];
+  delim[0] = a_delim;
+  delim[1] = 0;
+
+  vector<string> result;
+
+  char* token = strtok(a_str, delim);
+
+  while (token) {
+    result.push_back(token);
+    token = strtok(0, delim);
+  }
+
+  return result;
+}
+
+
+// https://stackoverflow.com/questions/3501338/c-read-file-line-by-line:
+#define WITH_LINES(_with_lines_name, _with_lines_ind, _with_lines_tokens, _with_lines_codeblock...) \
+  do									\
+    {									\
+      vector<string> _with_lines_tokens;				\
+      FILE * _with_lines_fp;						\
+      char * _with_lines_line = NULL;					\
+      size_t _with_lines_len = 0;					\
+      ssize_t _with_lines_read;						\
+      int _with_lines_ind = 0;						\
+      _with_lines_fp = fopen(_with_lines_name, "r");						\
+      if (_with_lines_fp == NULL)					\
+	exit(EXIT_FAILURE);						\
+      while ((_with_lines_read = getline(&_with_lines_line, &_with_lines_len, _with_lines_fp)) != -1) { \
+        _with_lines_ind++;						\
+	_with_lines_tokens = str_split(_with_lines_line,' ');		\
+	_with_lines_codeblock						\
+	  }								\
+      fclose(_with_lines_fp);						\
+      if (_with_lines_line)						\
+	free(_with_lines_line);						\
+    }									\
+  while(0)
+
+#define SET3_IND(_SET3_IND_TARGET_ROOT_NAME, _SET3_IND_NAME_SPECIFIER1, _SET3_IND_NAME_SPECIFIER2, _SET3_IND_NAME_SPECIFIER3, _SET3_IND_TARGET_CATEGORY, _SET3_IND_SRC_IND) \
+do									\
+{									\
+ _SET3_IND_TARGET_ROOT_NAME##_SET3_IND_NAME_SPECIFIER1##_SET3_IND_TARGET_CATEGORY = _SET3_IND_TARGET_ROOT_NAME##_SET3_IND_NAME_SPECIFIER1[_SET3_IND_SRC_IND]; \
+ _SET3_IND_TARGET_ROOT_NAME##_SET3_IND_NAME_SPECIFIER2##_SET3_IND_TARGET_CATEGORY = _SET3_IND_TARGET_ROOT_NAME##_SET3_IND_NAME_SPECIFIER2[_SET3_IND_SRC_IND]; \
+ _SET3_IND_TARGET_ROOT_NAME##_SET3_IND_NAME_SPECIFIER3##_SET3_IND_TARGET_CATEGORY = _SET3_IND_TARGET_ROOT_NAME##_SET3_IND_NAME_SPECIFIER3[_SET3_IND_SRC_IND]; \
+ } \
+while(0)
 
 Taumodel* TauPtr = NULL;
 
@@ -126,6 +183,12 @@ void interrupt_signal_handler(int sig);
 
 int main(int argc,  char **argv) {
 
+  extern void InitGui();
+  VoidFuncPtr_t initfuncs[] = { InitGui, 0 };
+  TROOT HSroot("HSroot", "Some very smart title", initfuncs);
+  TApplication theApp("App", 0, 0);
+  gROOT->SetStyle("Plain");
+
   string stemp;
 
   Settings* settings1 = new Settings();
@@ -135,6 +198,7 @@ int main(int argc,  char **argv) {
   string run_num;//current run number as string
   int run_no = 0;//current run number as integer
   TString outputdir;
+
   
   if( (argc%3!=1)&&(argc%2!=1)) {
     cout << "Syntax for options: -i inputfile -o outputdir -r run_number\n";
@@ -183,7 +247,70 @@ int main(int argc,  char **argv) {
     } // end while
   } // end if arg>1
 
+  
+  vector<double> Ex, Ey, Ez; 
+  vector<double> ZhsTimeArr;
+  WITH_LINES(
+     sim_inp.c_str(),
+     ind,
+     tokens,
+     if (ind > 19) {
+       // printf("linenum: %d, tokens: %lu, %s, %s, %s\n", ind, tokens.size(), tokens[11].c_str(), tokens[12].c_str(), tokens[13].c_str());
+       Ex.push_back(atof(tokens[11].c_str()));
+       Ey.push_back(atof(tokens[12].c_str()));
+       Ez.push_back(atof(tokens[13].c_str()));
+       ZhsTimeArr.push_back(atof(tokens[5].c_str()));
+     }
+  );
 
+  int ZhsTimeN = Ex.size();
+  double E2max = -1;
+  double Ex_max = 1e-99, Ey_max = 1e-99, Ez_max = 1e-99;
+  int Emax_ind = -1;
+  for (int i = 0; i < ZhsTimeN; i++){
+    double E2 = Ex[i] * Ex[i] + Ey[i] * Ey[i] + Ez[i] * Ez[i];
+    if (E2 > E2max) {
+      E2max = E2;
+      Emax_ind = i;
+    }
+  };
+  assert(Emax_ind > -1);
+
+  double Emax = sqrt(E2max);
+
+  SET3_IND(E, x, y, z, _max, Emax_ind);
+
+  vector<double> ZhsTimeE(ZhsTimeN), ZhsAlpha(ZhsTimeN);
+
+  for (int i = 0; i < ZhsTimeN; i++){
+    double E2 = Ex[i] * Ex[i] + Ey[i] * Ey[i] + Ez[i] * Ez[i];
+    double E = sqrt(E2);
+    double EEmax = (Ex[i] * Ex_max + Ey[i] * Ey_max + Ez[i] * Ez_max);
+    double Eproj = EEmax / Emax;
+    double cosEEmax = abs(E) > 1e-99 ? Eproj / E : 999.0;
+    double EEmaxAlpha = cosEEmax != 999.0 ? acos(cosEEmax) : 999;
+    ZhsTimeE[i] = Eproj;
+    printf("i: %d/%d, ZhsTimeE[i]: %11.4e, EEmaxAlpha: %11.4e\n", i, ZhsTimeN - 1, ZhsTimeE.at(i), EEmaxAlpha);
+    ZhsAlpha[i] = EEmaxAlpha * 180 / pi;
+  }
+
+  // Projections on the Emax:
+
+  printf("The maximal field Emax: %11.4e\n", Emax);
+  printf("The maximal index of Emax: %d\n", Emax_ind);
+  printf("The maximal components: (%11.4e, %11.4e, %11.4e)\n", Ex_max, Ey_max, Ez_max);
+
+  // TGraph *grZhsTimeE = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data());
+  // grZhsTimeE->Draw("AL*");
+
+  //  for (int i = 0; i < ZhsTimeN; i++){
+    // }
+
+  // TGraph *grZhsAlpha = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsAlpha.data());
+  // grZhsAlpha->Draw("AL*");
+
+  theApp.Run();
+
   settings1->SEED=settings1->SEED +run_no;
   cout <<"seed is " << settings1->SEED << endl;
 
@@ -835,3 +962,7 @@ int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt){
 
 
 #endif
+
+// Local Variables:
+// indent-tabs-mode: nil
+// End:
