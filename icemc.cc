@@ -2183,7 +2183,6 @@ int main(int argc,  char **argv) {
       }
       // OTHERWISE THERE IS ROUGHNESS SO DO MAGIC
       else{
-        //cout<<"Screening this event: "<<inu<<endl;
         //(vector) ray1->nsurf_rfexit:  surface normal at RFexit position
         //(pos)        ->rfexit[2]:     final iterated position of RF exit
         //(vector)     ->n_exit2bn[2]:  vector from RF exit position TO balloon
@@ -2191,7 +2190,6 @@ int main(int argc,  char **argv) {
         //(vector) n_pol:               polarization vector
         //(pos)    posnu:               position of neutrino interaction
 
-        //these values are not optimized, and actually could be configured in the input file
         double basescreenedgelength = settings1->SCREENEDGELENGTH;
         int basescreenDivisions = settings1->ROUGHSCREENDIV_BASE;
         int subscreenDivisions = settings1->ROUGHSCREENDIV_SUB;
@@ -2521,7 +2519,7 @@ int main(int argc,  char **argv) {
           
           Efield_local = panel1->GetVmmhz_freq(jj*Anita::NFREQ) * panel1->GetPol(jj);
           Efield_screentotal = Efield_screentotal + Efield_local;
-        /*
+/*
           roughout << inu << "  "
           << panel1->GetImpactPt(jj).Lon() << "  "
           << -90+panel1->GetImpactPt(jj).Lat() << "  "
@@ -2533,7 +2531,7 @@ int main(int argc,  char **argv) {
           << panel1->GetIncidenceAngle(jj) << "  "
           << panel1->GetTransmissionAngle(jj) << "  "
           << std::endl;
-        */
+*/
         }//end jj over panel Nvalid points
         panel1->SetWeightNorm(validScreenSummedArea);
         vmmhz_max = Efield_screentotal.Mag();
@@ -2647,7 +2645,7 @@ int main(int argc,  char **argv) {
           sig1->SetNDepth(sig1->NICE); // for making array of signal vs. frequency,  viewangle
         
         sig1->GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ); // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
-	//   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
+        //   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
         // and making an array across frequency bins by putting in frequency dependence.
       }
         
@@ -2687,7 +2685,6 @@ int main(int argc,  char **argv) {
           if (settings1->FORSECKEL==1) {// this is for making plots of the signal
             for (int iviewangle=0;iviewangle<NVIEWANGLE;iviewangle++) {// loop over viewing angles
               // remove the 1/r and attenuation factors that are contained in the ratio vmmhz1m_max/vmmhz_max
-	      //
               vmmhz_temp=vmmhz[k]*vmmhz1m_max/vmmhz_max;
 
               viewangle_temp=viewangles[iviewangle]; //grab the viewing angle from this array
@@ -2699,13 +2696,13 @@ int main(int argc,  char **argv) {
           } //if (settings1->FORSECKEL==1)
 
           sig1->TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz[k], vmmhz_em[k]);// this applies the angular dependence.
-	  // viewangle is which viewing angle we are at
-	  // deltheta_em is the width of the em component at this frequency
-	  // deltheta_had is the width of the had component at this frequency
-	  // emfrac is the em fraction of the shower
-	  // hadfrac is the hadronic fraction of the shower
-	  // vmmhz is the strength of the signal in V/m/MHz at this viewing angle
-	  // vmmhz_em is the strength of the em component
+              // viewangle is which viewing angle we are at
+              // deltheta_em is the width of the em component at this frequency
+              // deltheta_had is the width of the had component at this frequency
+              // emfrac is the em fraction of the shower
+              // hadfrac is the hadronic fraction of the shower
+              // vmmhz is the strength of the signal in V/m/MHz at this viewing angle
+              // vmmhz_em is the strength of the em component
 
           vmmhz_lowfreq=vmmhz[0]; // for plotting,  vmmhz at the lowest frequency
 
@@ -2742,8 +2739,6 @@ int main(int argc,  char **argv) {
         if (settings1->CHANCEINHELL_FACTOR*Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS) {
           continue;
         }
-
-
       }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
       
 
@@ -2776,8 +2771,8 @@ int main(int argc,  char **argv) {
       if(!settings1->ROUGHNESS){
         panel1->SetNvalidPoints(1);
         for (int k=0;k<Anita::NFREQ;k++) {
-	  //cout << anita1->freq[k] << " " << vmmhz[k] << " " << vmmhz2[k] << " " << vmmhz[k]/vmmhz2[k] << endl;
-	  panel1->AddVmmhz_freq(vmmhz[k]);
+      	  //cout << anita1->freq[k] << " " << vmmhz[k] << " " << vmmhz2[k] << " " << vmmhz[k]/vmmhz2[k] << endl;
+      	  panel1->AddVmmhz_freq(vmmhz[k]);
         }
         panel1->AddDelay( 0. );
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
@@ -2868,10 +2863,9 @@ int main(int argc,  char **argv) {
       globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
       anita1->rms_rfcm_e_single_event = 0;
 
-
       if (!settings1->BORESIGHTS) {
-	bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
-	bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
+        bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
+        bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
       }
       
       for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
@@ -2881,9 +2875,6 @@ int main(int argc,  char **argv) {
           chantrig1->InitializeEachBand(anita1);
 
           bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
-
-          // for this (hitangle_h_all[count_rx]=hitangle_h;) and histogram fill, use specular case
-          //although the GetEcomp..() functions are called in ConvertInputWFtoAntennaWF() to calculate the actual waveforms
  
           if (settings1->BORESIGHTS){ // i.e. if BORESIGHTS is true
             bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector,  h_component_kvector,  n_component_kvector);
@@ -2898,41 +2889,38 @@ int main(int argc,  char **argv) {
           if (h6->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
             h6->Fill(hitangle_h, ray1->n_exit2bn[2]*bn1->n_bn);
 
-	  antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
-	  
-	  chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
-	  
-	  chantrig1->TriggerPath(settings1, anita1, antNum);
-	  
-	  chantrig1->DigitizerPath(settings1, anita1, antNum);
+          antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
+          
+          chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
+          
+          chantrig1->TriggerPath(settings1, anita1, antNum);
+          
+          chantrig1->DigitizerPath(settings1, anita1, antNum);
 
-	  chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
+          chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
-	  chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
-	  
-	  Tools::Zero(sumsignal, 5);
-
-	  // now hopefully we have converted the signal to time domain waveforms
-          // for all the bands of the antenna and screen points
-
-
-	  /*
-	    std::string stemp=string(outputdir.Data())+"/rough_signalwaveforms_"+nunum+".dat";
-	    ofstream sigout(stemp.c_str(), ios::app);
-	    for (int iband=0;iband<5;iband++) {
-	    if (anita1->bwslice_allowed[iband]!=1) continue; 
-	    for (int k=0;k<anita1->NFOUR/2;k++) {
-	    sigout << ilayer << "  "
-	    << ifold << "  "
-	    << iband << "  "
-	    << k << "  "
-	    << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
-	    << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
-	    << std::endl;
-	    }
-	    }
-	    sigout.close();*/
-
+          chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
+          
+          Tools::Zero(sumsignal, 5);
+/*
+          ////// just some roughness output
+          std::string stemp=string(outputdir.Data())+"/rough_signalwaveforms_"+nunum+".dat";
+          ofstream sigout(stemp.c_str(), ios::app);
+          for (int iband=0;iband<5;iband++) {
+          if (anita1->bwslice_allowed[iband]!=1) continue; 
+          for (int k=0;k<anita1->NFOUR/2;k++) {
+          sigout << ilayer << "  "
+          << ifold << "  "
+          << iband << "  "
+          << k << "  "
+          << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
+          << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
+          << std::endl;
+          }
+          }
+          sigout.close();
+          //////
+*/
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
             for (int ibw=0;ibw<5;ibw++) {
               cout << "Just after Taper,  sumsignal is " << sumsignal_aftertaper[ibw] << "\n";
