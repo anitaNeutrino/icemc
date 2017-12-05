@@ -1110,7 +1110,6 @@ Vector Balloon::unRotatePayload(Vector ant_pos_pre) {//rotate back to Payload Ce
     pitch=roll=0;
   }
   
-  //double TWOPI = 6.283;
   
   Vector BalloonPos;
 
