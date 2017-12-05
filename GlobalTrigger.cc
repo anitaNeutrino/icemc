@@ -2149,7 +2149,9 @@ void GlobalTrigger::L1Anita3_AllPhiSectors(Anita *anita1,std::array<std::array<s
 						       arrayofhits[1][iphi][0][4], 
 						       arrayofhits[0][iphi][0][4],
 						       vl1_realtime_vbottom, vl1_realtime_vmiddle, vl1_realtime_vtop));
-      vl1trig[1][iphi].push_back(L1Anita3_OnePhiSector(itrigbin,arrayofhits[2][iphi][1][4], arrayofhits[1][iphi][1][4], arrayofhits[0][iphi][1][4],
+      vl1trig[1][iphi].push_back(L1Anita3_OnePhiSector(itrigbin,arrayofhits[2][iphi][1][4],
+						       arrayofhits[1][iphi][1][4],
+						       arrayofhits[0][iphi][1][4],
 						       vl1_realtime_hbottom, vl1_realtime_hmiddle, vl1_realtime_htop));
       itrigbin++;
       //      if (vl1trig[0][iphi][vl1trig[0][iphi].size()-1]==1) {
