@@ -4261,7 +4261,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 
 
   double dig, trig;
-  TFile *fout = new TFile("RatioTrigDigResponses.root", "recreate");
+  // TFile *fout = new TFile("RatioTrigDigResponses.root", "recreate");
   
   for (int ipol=0; ipol<2; ipol++){
     for (int iring=0; iring<3; iring++){
@@ -4276,14 +4276,14 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	    fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]    = (trig/dig);
 	  }
 	}
-	TGraph *temp = new TGraph (numFreqs, freqs, fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi]);
-	temp->Write(Form("gratio_%d_%d_%d", ipol, iring, iphi));
-	delete temp;
+	// TGraph *temp = new TGraph (numFreqs, freqs, fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi]);
+	// temp->Write(Form("gratio_%d_%d_%d", ipol, iring, iphi));
+	// delete temp;
     	
       }
     }
   }
-  delete fout;
+  // delete fout;
 
 
   
