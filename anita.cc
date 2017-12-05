@@ -3529,21 +3529,25 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     for (int ipol = 0; ipol < 2; ipol++){
       for(int ilayer = 0; ilayer < 4; ilayer++){ 
 	for(int ifold = 0; ifold < NRX_PHI[ilayer]; ifold++){
-	  
+
+	  // First attempt to define phase-centers is done by coming 20 cm
+	  // inwards from the antenna face end (that was only defined for VPOL)
+	  // that's why the initial ipol=0
 	  ANTENNA_POSITION_START[ipol][ilayer][ifold] = ANTENNA_POSITION_START[0][ilayer][ifold] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(ANTENNA_DOWN[ilayer][ifold]));
-	  
-	  x = ANTENNA_POSITION_START[0][ilayer][ifold].GetX();
-	  y = ANTENNA_POSITION_START[0][ilayer][ifold].GetY();
+	  x = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetX();
+	  y = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetY();
 	  
 	  r = sqrt(pow(x,2)+pow(y,2)) + deltaRPhaseCentre[ipol][ilayer][ifold];
 	  phi = atan2(y,x) + deltaPhiPhaseCentre[ipol][ilayer][ifold];
-	  z = ANTENNA_POSITION_START[0][ilayer][ifold].GetZ() + deltaZPhaseCentre[ipol][ilayer][ifold];	  
+	  z = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetZ() + deltaZPhaseCentre[ipol][ilayer][ifold];	  
 
 	  if(phi<0) phi+=TMath::TwoPi();
 	  if(phi>TMath::TwoPi()) phi-=TMath::TwoPi();
 	  
 	  ANTENNA_POSITION_START[ipol][ilayer][ifold]= Vector(r*cos(phi),r*sin(phi),z);
+
 	  PHI_EACHLAYER[ilayer][ifold]=phi;
+	  
 	}
       }
     }
@@ -3891,7 +3895,7 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
       arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
 
       // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
-      //      arrival_times[ipol][antenna_index] -= extraCableDelays[ipol][antenna_index];
+      //      arrival_times[ipol][antenna_index] += extraCableDelays[ipol][antenna_index];
       // cout << arrival_times[antenna_index] << endl;
     
       //  arrival_times[antenna_index]=0;
@@ -3962,7 +3966,7 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
       arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
 
       // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
-      //   arrival_times[antenna_index] -= extraCableDelays[0][antenna_index];
+      //      arrival_times[ipol][antenna_index] += extraCableDelays[ipol][antenna_index];
       // cout << arrival_times[antenna_index] << endl;
     
       //  arrival_times[antenna_index]=0;
