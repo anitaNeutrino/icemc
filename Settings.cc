@@ -949,11 +949,13 @@ for(unsigned int i=0; i < requiredBands.size(); i++){
   }
 
   for (unsigned int i=0; i < efficiencyScanPhiSectorDelay.size(); i++){
-    anita1->trigEffScanPhiDelay[i] = efficiencyScanPhiSectorDelay.at(i);
+    //convert ns to s
+    anita1->trigEffScanPhiDelay[i] = efficiencyScanPhiSectorDelay.at(i)*1e-9;
   }
 
   for (unsigned int i=0; i < efficiencyScanRingDelay.size(); i++){
-    anita1->trigEffScanRingDelay[i] = efficiencyScanRingDelay.at(i);
+    //convert ns to s
+    anita1->trigEffScanRingDelay[i] = efficiencyScanRingDelay.at(i)*1e-9;
   }
 
   for (unsigned int i=0; i < efficiencyScanApplyRingDelay.size(); i++){

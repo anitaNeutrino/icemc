@@ -1702,14 +1702,14 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   //   TGraph *gtemp = new TGraph (nPoints, x, y);
   //   gtemp->Draw("Al");
   //   c->Print(Form("TriggerPath_ant%i_surfSignalDown_noise.png", ant));
-      // TFile *out = new TFile("Icemc_signalChainTrigger.root", "recreate");
-      // graph1->Write("gInput");
-      // graphUp->Write("gInputUp");
-      // surfSignal->Write("gImpResp");
-      // surfSignalDown->Write("gImpRespDown");
-      // gtemp->Write("gImpRespDownNoise");
-      // out->Close();
-   // }
+  //  // TFile *out = new TFile("Icemc_signalChainTrigger.root", "recreate");
+  //  // graph1->Write("gInput");
+  //  // graphUp->Write("gInputUp");
+  //  // surfSignal->Write("gImpResp");
+  //  // surfSignalDown->Write("gImpRespDown");
+  //  // gtemp->Write("gImpRespDownNoise");
+  //  // out->Close();
+  //  }
   
   // Cleaning up
   delete surfSignalDown;
@@ -1862,9 +1862,6 @@ void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
       if (ant<16)       anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[0] + anita1->trigEffScanRingDelay[2];
       else if (ant<32)  anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[1];
     }
-    
-    // convert to seconds
-    anita1->arrival_times[0][irx]*=1e-9;
     
   }else{
     for (int i=0;i<fNumPoints;i++){
