@@ -1105,6 +1105,9 @@ Vector Balloon::unRotatePayload(Vector ant_pos_pre) {//rotate back to Payload Ce
   if(WHICHPATH==7){
     pitch=-0.29; //ANITA-2 settings in ANALYSIS
     roll=0.89; //ANITA-2 settings in ANALYSIS
+  } else if(WHICHPATH==8){
+    // ANITA-3 analysis forced pitch and roll to be 0
+    pitch=roll=0;
   }
   
   //double TWOPI = 6.283;
