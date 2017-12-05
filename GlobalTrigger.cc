@@ -310,8 +310,8 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
 	  // physically higher than the 1st antenna in the first trigger layer
 	  // which means that the nadirs are aligned with the antennas with indices 1,3,5 etc.
 	  // we will still use indices 0-7 for them though
-	  if (inu==672) cout << ilayer << " " << iphi << " " << ipolar << " " << iband << " " << channels_passing[ilayer][iphi][ipolar][iband] << endl;
 	  channels_compacted_passing[whichlayer][whichphisector][ipolar][iband]+=channels_passing[ilayer][iphi][ipolar][iband];
+	  // if (channels_compacted_passing[whichlayer][whichphisector][ipolar][iband]>0 && ipolar==0) cout << whichlayer << " " << whichphisector << endl;
 	} //for
       } //for
     } //for
@@ -362,7 +362,6 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
 	      }
 	    }
 	    antsum[ipolar] = antsum[ipolar] +1; // sum channels that pass for this antenna, polarization
-
 	  }
 	} // loop over bands
       } // end loop over polarizations
@@ -1460,11 +1459,11 @@ void GlobalTrigger::GetAnitaLayerPhiSector(Settings *settings1,int i,int j,int &
   else if (settings1->WHICH==9 || settings1->WHICH==10) { // anita 4
     if (i==0) {
       whichlayer=0;
-      whichphisector=2*j+1;
+      whichphisector=2*j;
     }
     else if (i==1) {
       whichlayer=0;
-      whichphisector=2*j;
+      whichphisector=2*j+1;
     }
     else if (i==2) {
       whichlayer=1;
