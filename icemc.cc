@@ -1518,11 +1518,7 @@ int main(int argc,  char **argv) {
     anita1->inu=inu;
 
     std::string nunum = Form("%d",inu);    
-    stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
-    //ofstream roughout(stemp.c_str());
-    //roughout << std::setprecision(20);
-    //stemp=string(outputdir.Data())+"/rough_evtweight_"+nunum+".dat";
-    //ofstream evtwgtout(stemp.c_str());
+
     for (whichray = settings1->MINRAY; whichray <= settings1->MAXRAY; whichray++) {
       anita1->passglobtrig[0]=0;
       anita1->passglobtrig[1]=0;
@@ -2293,7 +2289,7 @@ int main(int argc,  char **argv) {
 
           theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
           theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
-//std::cerr<<theta_0_local*180./PI<<"  "<<theta_local*180./PI<<std::endl;
+
           /////
           // Field Magnitude
 #ifdef USE_HEALPIX
@@ -2302,21 +2298,14 @@ int main(int argc,  char **argv) {
           tcoeff_perp = sqrt(power_perp);
           tcoeff_parl = sqrt(power_parl);
           //cerr<<"+++++++++++++"<<endl;
+          //std::cerr<<"thetas: "<<theta_0_local*180./PI<<"  "<<theta_local*180./PI<<std::endl;
           //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
           //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
           //cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
-          Emag_local_notaper = Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
+          Emag_local_notaper = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
           //cerr<<"E: "<<Emag_local<<std::endl;
-          // preliminary taper check, use to determine if even visible
-          viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
-          deltheta_em[0]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[0];
-          deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
-          sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, Emag_local, vmmhz_em[0]);// this applies the angular dependence.
-          //if(Emag_local>0.){
-          //  cerr<<"--> "<<inu<<"  "<<Emag_local<<"  "<<Emag_local_notaper<<endl;
-          //}
-          if(Emag_local==0.){
-            continue;
+          if(Emag_local==0.){ //this will kill any point that doesn't have transmitted power from the
+            continue;         // look-up table
           }
           //now keep using Emag_local_notaper, because we want the other relative effects and don't necessarily care about taper now
           // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
@@ -2329,6 +2318,10 @@ int main(int argc,  char **argv) {
           basescrn_Emags.push_back(Emag_local_notaper);
           basescrn_pos.push_back(pos_current);
           basescrn_length.push_back(panel1->GetEdgeLength() / (float)panel1->GetNsamples());
+        }
+
+        if(basescrn_Emags.size()==0){
+          continue;
         }
 
         //#########
@@ -2345,9 +2338,8 @@ int main(int argc,  char **argv) {
         }
 
         //#########
-        // Third, now loop over the seed positions, resetting the screen parameters for each seed position.
-        //if the min(Efield) < fraction * max(Efield), then add these points to the seedposition vector to sample further
-        //cerr<<"Number of seed screen points: "<< seedpositions.size()<<endl;
+        // Third, now loop over the seed positions; if certain criteria met, then add these points to the seedposition vector to sample further
+        cerr<<"Number of base / seed screen points: "<< basescrn_Emags.size()<< " / " <<seedpositions.size()<<endl;
         for (unsigned long ii=0; ii< seedpositions.size(); ii++){
           panel1->ResetPositionIndex();
           panel1->SetNsamples(subscreenDivisions);
@@ -2462,9 +2454,13 @@ int main(int argc,  char **argv) {
             //<<viewangle_local<<std::endl;
           }// end for jj for this seed screen
 
-          if( (minE >= subscreenFractionLimit*maxE) || (seedGeneration[ii] == maximumSubscreenGeneration) ){ // store these and move on to the next seed screen
+          // store these and move on to the next seed screen
+          if( (minE >= subscreenFractionLimit*maxE)                 //can set some fractional limit
+              || (seedGeneration[ii] == maximumSubscreenGeneration) //only go so far
+              || (panel1->GetEdgeLength() < 1.)                    //limit on physical size of 'facet'
+              ){
             for (unsigned long jj=0; jj<seedscreens_pos.size(); jj++){
-              // increment the valid point counter so we can track the size of the screen's vmmhz_freq vector
+              // increment counter so we can track the size of the screen's vector arrays
               num_validscreenpoints++;
 
               //add the contribution to the running total
@@ -2519,22 +2515,14 @@ int main(int argc,  char **argv) {
           
           Efield_local = panel1->GetVmmhz_freq(jj*Anita::NFREQ) * panel1->GetPol(jj);
           Efield_screentotal = Efield_screentotal + Efield_local;
-/*
-          roughout << inu << "  "
-          << panel1->GetImpactPt(jj).Lon() << "  "
-          << -90+panel1->GetImpactPt(jj).Lat() << "  "
-          << panel1->GetVmmhz0(jj) << "  "                  // PRE-taper vmmhz[0]
-          << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << "  " // POST-taper vmmhz[0]
-          << panel1->GetDelay(jj) << "  "
-          << panel1->GetWeight(jj) << "  "
-          << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
-          << panel1->GetIncidenceAngle(jj) << "  "
-          << panel1->GetTransmissionAngle(jj) << "  "
-          << std::endl;
-*/
         }//end jj over panel Nvalid points
         panel1->SetWeightNorm(validScreenSummedArea);
-        vmmhz_max = Efield_screentotal.Mag();
+        //vmmhz_max = Efield_screentotal.Mag();
+        vmmhz_max = 0.;
+        for(int jj=0; jj<panel1->GetNsamples(); jj++){
+          vmmhz_max = Tools::dMax(vmmhz_max, panel1->GetVmmhz_freq(jj*Anita::NFREQ));
+        }
+        //cerr<<vmmhz_max<<endl;
         n_pol = Efield_screentotal.Unit();
 
         basescrn_Emags.clear();
@@ -2543,6 +2531,29 @@ int main(int argc,  char **argv) {
         seedpositions.clear();
         seedEdgeLengths.clear();
         seedGeneration.clear();
+
+        if(vmmhz_max>0.){
+          cerr<<"-> We got a live one! "<<nunum<<endl;
+          stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
+          ofstream roughout(stemp.c_str());
+          roughout << std::setprecision(20);
+
+          for(int jj=0; jj<panel1->GetNsamples(); jj++){
+            roughout << inu << "  "
+            << panel1->GetImpactPt(jj).Lon() << "  "
+            << -90+panel1->GetImpactPt(jj).Lat() << "  "
+            << panel1->GetVmmhz0(jj) << "  "                  // PRE-taper vmmhz[0]
+            << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << "  " // POST-taper vmmhz[0]
+            << panel1->GetDelay(jj) << "  "
+            << panel1->GetWeight(jj) << "  "
+            << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
+            << panel1->GetIncidenceAngle(jj) << "  "
+            << panel1->GetTransmissionAngle(jj) << "  "
+            << std::endl;
+          }
+          roughout.close();
+        }
+
       }//end else roughness
       // the screen is now finished
       /////////////////////////////
@@ -2743,9 +2754,10 @@ int main(int argc,  char **argv) {
       
 
       // just for plotting
-      vmmhz_max=Tools::dMax(vmmhz, Anita::NFREQ);
-      vmmhz_min=Tools::dMin(vmmhz, Anita::NFREQ);
-      
+      if(!settings1->ROUGHNESS){
+        vmmhz_max=Tools::dMax(vmmhz, Anita::NFREQ);
+        vmmhz_min=Tools::dMin(vmmhz, Anita::NFREQ);
+      }
       // intermediate counting
       count1->nchanceinhell2[whichray]++;
       chanceinhell2=1;
@@ -2892,9 +2904,31 @@ int main(int argc,  char **argv) {
           antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
           
           chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
-          
+
           chantrig1->TriggerPath(settings1, anita1, antNum);
-          
+
+          ////// just some roughness output
+          if(settings1->ROUGHNESS){
+            if(vmmhz_max>0.){
+              std::string stemp=string(outputdir.Data())+"/rough_signalwaveforms_"+nunum+".dat";
+              ofstream sigout(stemp.c_str(), ios::app);
+              for (int iband=0;iband<5;iband++) {
+                if (anita1->bwslice_allowed[iband]!=1) continue; 
+                for (int k=0;k<anita1->NFOUR/2;k++) {
+                  sigout << ilayer << "  "
+                  << ifold << "  "
+                  << iband << "  "
+                  << k << "  "
+                  << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
+                  << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
+                  << std::endl;
+                }
+              }
+              sigout.close();
+            }
+          }
+          //////
+
           chantrig1->DigitizerPath(settings1, anita1, antNum);
 
           chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
@@ -2902,25 +2936,7 @@ int main(int argc,  char **argv) {
           chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
           
           Tools::Zero(sumsignal, 5);
-/*
-          ////// just some roughness output
-          std::string stemp=string(outputdir.Data())+"/rough_signalwaveforms_"+nunum+".dat";
-          ofstream sigout(stemp.c_str(), ios::app);
-          for (int iband=0;iband<5;iband++) {
-          if (anita1->bwslice_allowed[iband]!=1) continue; 
-          for (int k=0;k<anita1->NFOUR/2;k++) {
-          sigout << ilayer << "  "
-          << ifold << "  "
-          << iband << "  "
-          << k << "  "
-          << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
-          << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
-          << std::endl;
-          }
-          }
-          sigout.close();
-          //////
-*/
+
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
             for (int ibw=0;ibw<5;ibw++) {
               cout << "Just after Taper,  sumsignal is " << sumsignal_aftertaper[ibw] << "\n";
@@ -3608,26 +3624,30 @@ int main(int argc,  char **argv) {
       // WE GET HERE REGARDLESS OF WHETHER THE TRIGGER PASSES
       //
       /////////////
-
-      // Vector tempa = ray1->n_exit2bn[2].Unit() - antarctica->GetSurfaceNormal(bn1->r_bn).Dot(ray1->n_exit2bn[2].Unit()) * antarctica->GetSurfaceNormal(bn1->r_bn);
-      // Position posa = ray1->rfexit[2] + 300.*tempa;
-      // Vector tempb = interaction1->nnu.Unit() - antarctica->GetSurfaceNormal(interaction1->posnu).Dot(interaction1->nnu.Unit()) * antarctica->GetSurfaceNormal(interaction1->posnu);
-      // Position posb = interaction1->posnu + 300.*tempb;
-      /*
-	evtwgtout << weight << "  "
-	<< thispasses[0] << "  "
-	<< anita1->pol_allowed[0] << "  "
-	<< thispasses[1] << "  "
-	<< anita1->pol_allowed[1] << "  "
-	<< ray1->rfexit[2].Lon()<< "  "
-	<< -90+ray1->rfexit[2].Lat()<< "  "
-	<< posa.Lon() <<"  "
-	<< -90+posa.Lat()<<"  "
-	<< interaction1->posnu.Lon() << "  "
-	<< -90+interaction1->posnu.Lat() << "  "
-	<< posb.Lon() <<"  "
-	<<-90+posb.Lat()<<"  "
-	<<std::endl;*/
+/*
+      Vector tempa = ray1->n_exit2bn[2].Unit() - antarctica->GetSurfaceNormal(bn1->r_bn).Dot(ray1->n_exit2bn[2].Unit()) * antarctica->GetSurfaceNormal(bn1->r_bn);
+      Position posa = ray1->rfexit[2] + 300.*tempa;
+      Vector tempb = interaction1->nnu.Unit() - antarctica->GetSurfaceNormal(interaction1->posnu).Dot(interaction1->nnu.Unit()) * antarctica->GetSurfaceNormal(interaction1->posnu);
+      Position posb = interaction1->posnu + 300.*tempb;
+      if(vmmhz_max>0.){
+        stemp=string(outputdir.Data())+"/rough_evtweight_"+nunum+".dat";
+        ofstream evtwgtout(stemp.c_str());
+        evtwgtout << weight << "  "
+                  << thispasses[0] << "  "
+                  << anita1->pol_allowed[0] << "  "
+                  << thispasses[1] << "  "
+                  << anita1->pol_allowed[1] << "  "
+                  << ray1->rfexit[2].Lon()<< "  "
+                  << -90+ray1->rfexit[2].Lat()<< "  "
+                  << posa.Lon() <<"  "
+                  << -90+posa.Lat()<<"  "
+                  << interaction1->posnu.Lon() << "  "
+                  << -90+interaction1->posnu.Lat() << "  "
+                  << posb.Lon() <<"  "
+                  <<-90+posb.Lat()<<"  "
+                  <<std::endl;
+        evtwgtout.close();
+      }*/
       delete globaltrig1;
 
       // keeping track of intermediate counters,  incrementing by weight1.
@@ -3648,8 +3668,6 @@ int main(int argc,  char **argv) {
       }//end if
 
     } // end for WHICHRAY
-    //roughout.close();
-    //evtwgtout.close();
     //looping over two types of rays - upgoing and downgoing.
     if (ABORT_EARLY){
       std::cout << "\n***********************************************************";
