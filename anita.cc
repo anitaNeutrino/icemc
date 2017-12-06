@@ -4309,9 +4309,9 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
     
     bool useDelayGenerator = false;
 
-    int maxDelays =  (Tools::dMax(trigEffScanRingDelay, 3) + Tools::dMax(trigEffScanPhiDelay,5) );
-    maxDelays    -=  (Tools::dMin(trigEffScanRingDelay, 3) + Tools::dMin(trigEffScanPhiDelay,5) );
-
+    double maxDelays =  (Tools::dMax(trigEffScanRingDelay, 3) + Tools::dMax(trigEffScanPhiDelay,5) );
+    maxDelays       -=  (Tools::dMin(trigEffScanRingDelay, 3) + Tools::dMin(trigEffScanPhiDelay,5) );
+    
     if (maxDelays!=0) useDelayGenerator=true;
     
     for (int i=0;i<gPulseAtAmpa->GetN();i++){
