@@ -1456,7 +1456,7 @@ void GlobalTrigger::GetAnitaLayerPhiSector(Settings *settings1,int i,int j,int &
       whichphisector=2*j+1;
     }
   } // end anita 1 or anita 2
-  else if (settings1->WHICH==9 || settings1->WHICH==10) { // anita 4
+  else if (settings1->WHICH==9 || settings1->WHICH==10) { // anita 3 or anita 4
     if (i==0) {
       whichlayer=0;
       whichphisector=2*j;
@@ -1473,7 +1473,7 @@ void GlobalTrigger::GetAnitaLayerPhiSector(Settings *settings1,int i,int j,int &
       whichlayer=2;
       whichphisector=j;
     }
-  }  // end anita 3
+  }  // end anita 3 or 4
   else {
     whichlayer=i;
     whichphisector=j;
