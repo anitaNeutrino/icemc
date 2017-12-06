@@ -1804,6 +1804,22 @@ TGraph *ChanTrigger::getPulserAtAMPA(Anita *anita1, int ant){
   for (int i=0;i<n;i++){
     tmp_volts[i]=norm*anita1->gPulseAtAmpa->GetY()[i]*TMath::Power(10, att/20.);
   }
+
+  int irx = ant;
+  if (ant<16) {
+    if (ant%2==0) irx = ant/2;
+    else          irx = 8 + ant/2;
+  }
+
+  // Add phi sector delay
+  anita1->arrival_times[0][irx] += anita1->trigEffScanPhiDelay[phiIndex+2];
+
+  // Check if we are adding the ring delay to this phi sector
+  if (anita1->trigEffScanApplyRingDelay[phiIndex+2]>0){
+    // Add ring delay (T-M, M-B, T-B)
+    if (ant<16)       anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[0] + anita1->trigEffScanRingDelay[2];
+    else if (ant<32)  anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[1];
+  }
   
   return new TGraph(n,  anita1->gPulseAtAmpa->GetX(), tmp_volts);
  
@@ -1846,22 +1862,7 @@ void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
     anita1->GetArrayFromFFT(tmp_volts[0], vhz_rx[0][4]);
     anita1->GetArrayFromFFT(tmp_volts[1], vhz_rx[1][4]);
 
-    
-    int irx = ant;
-    if (ant<16) {
-      if (ant%2==0) irx = ant/2;
-      else          irx = 8 + ant/2;
-    }
-
-    // Add phi sector delay
-    anita1->arrival_times[0][irx] += anita1->trigEffScanPhiDelay[phiIndex+2];
-
-    // Check if we are adding the ring delay to this phi sector
-    if (anita1->trigEffScanApplyRingDelay[phiIndex+2]>0){
-      // Add ring delay (T-M, M-B, T-B)
-      if (ant<16)       anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[0] + anita1->trigEffScanRingDelay[2];
-      else if (ant<32)  anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[1];
-    }
+   
     
   }else{
     for (int i=0;i<fNumPoints;i++){
