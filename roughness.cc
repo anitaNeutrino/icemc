@@ -30,8 +30,6 @@
 
 Roughness::Roughness(){
 
-  std::cerr<<"Here is the current USE_HEALPIX setting: "<<USE_HEALPIX<<std::endl;
-
   rough_dir_str = std::getenv("ICEMC_SRC_DIR");
 #ifdef USE_HEALPIX
   order = 6;
