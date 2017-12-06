@@ -1046,8 +1046,12 @@ void Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
 
 Vector Balloon::RotatePayload(Vector ant_pos_pre) {
   if(WHICHPATH==7){
-    pitch=-0.29; //ANITA-2 settings in ANALYSIS
-    roll=0.89; //ANITA-2 settings in ANALYSIS
+    // ANITA-2 analysis fitted fixed pitch and roll
+    pitch=-0.29; 
+    roll=0.89; 
+  } else if(WHICHPATH==8){
+    // ANITA-3 analysis forced pitch and roll to be 0
+    pitch=roll=0;
   }
    
   Vector BalloonPos;
@@ -1065,7 +1069,7 @@ Vector Balloon::RotatePayload(Vector ant_pos_pre) {
   Vector zaxis(0.,0.,-1.);
   Vector xaxis(1.,0.,0.);//roll axis
   Vector yaxis(0.,-1.,0.);//pitch axis for positive rotation to the clockwise of roll
-  // Vector ant_pos = anita1->ANTENNA_POSITION_START[0][ilayer][ifold];
+
   Vector northaxis(1,0,0);
   Vector eastaxis(0,-1,0);
   //rotate to correct heading, roll and pitch
@@ -1073,7 +1077,7 @@ Vector Balloon::RotatePayload(Vector ant_pos_pre) {
   ant_pos=ant_pos.Rotate(heading*RADDEG,zaxis);
   xaxis=xaxis.Rotate(heading*RADDEG,zaxis);
   yaxis=yaxis.Rotate(heading*RADDEG,zaxis);
-
+  
   ant_pos=ant_pos.Rotate(pitch*RADDEG,yaxis);
   xaxis=xaxis.Rotate(pitch*RADDEG,yaxis);
 
@@ -1101,9 +1105,11 @@ Vector Balloon::unRotatePayload(Vector ant_pos_pre) {//rotate back to Payload Ce
   if(WHICHPATH==7){
     pitch=-0.29; //ANITA-2 settings in ANALYSIS
     roll=0.89; //ANITA-2 settings in ANALYSIS
+  } else if(WHICHPATH==8){
+    // ANITA-3 analysis forced pitch and roll to be 0
+    pitch=roll=0;
   }
   
-  //double TWOPI = 6.283;
   
   Vector BalloonPos;
 

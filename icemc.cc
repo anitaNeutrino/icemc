@@ -380,6 +380,8 @@ double justSignal_trig[2][48][512];
 
 // functions
 
+double calculateSNR(double justSig[512], double justNoise[512]);
+
 // set up array of viewing angles for making plots for seckel
 void SetupViewangles(Signal *sig1);
 
@@ -3497,13 +3499,20 @@ int main(int argc,  char **argv) {
 	    memset(truthEvPtr->fSignalAtTrigger, 0, sizeof(truthEvPtr->fSignalAtTrigger) );
 	    memset(truthEvPtr->fNoiseAtTrigger,  0, sizeof(truthEvPtr->fNoiseAtTrigger)  );
 	    memset(truthEvPtr->fDiodeOutput,     0, sizeof(truthEvPtr->fDiodeOutput)     );
+	    
+	    truthEvPtr->maxSNRAtTriggerV=0;
+	    truthEvPtr->maxSNRAtTriggerH=0;
 
             for (int iant = 0; iant < settings1->NANTENNAS; iant++){
               int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
               int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
 
-	      truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = 0;
-	      truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = 0;
+	      truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = calculateSNR(justSignal_trig[0][antNum], justNoise_trig[0][antNum]);
+	      truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = calculateSNR(justSignal_trig[1][antNum], justNoise_trig[1][antNum]);
+	      
+	      if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
+	      if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
+	      
 	      truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[antNum][0][4];
 	      truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[antNum][1][4];
 	      int irx = iant;
@@ -3523,6 +3532,7 @@ int main(int argc,  char **argv) {
                 truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]     = anita1->timedomain_output_allantennas[0][irx][j];
                 truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]     = anita1->timedomain_output_allantennas[1][irx][j];
               }//end int j
+	      
             }// end int iant
 
             truthAnitaTree->Fill();
@@ -3841,6 +3851,22 @@ int main(int argc,  char **argv) {
 //
 //
 //
+
+double calculateSNR(double justSig[512], double justNoise[512]){
+
+  double p2p = Tools::dMax(justSig, 512) - Tools::dMin(justNoise, 512) ;
+  double rms = 0;
+
+  for (int i=0; i<256; i++){
+    rms += justNoise[i]*justNoise[i];
+  }
+
+  rms/=256.;
+  rms=TMath::Sqrt(rms);
+
+  return p2p/(2*rms);
+
+}
 
 void IntegrateBands(Anita *anita1, int k, Screen *panel1, double *freq, double scalefactor, double *sumsignal) {
   for (int j=0;j<5;j++) {
