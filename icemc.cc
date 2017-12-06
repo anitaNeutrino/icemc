@@ -2225,7 +2225,7 @@ int main(int argc,  char **argv) {
         Vector npol_local_inc, npol_local_trans;
         Vector temp_a;
 
-        double Emag_local, Emag_local_notaper;
+        double Emag_local;
         Vector Efield_local;
         Vector Efield_screentotal = Vector(0,0,0);
 
@@ -2304,20 +2304,19 @@ int main(int argc,  char **argv) {
           //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
           //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
           //cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
-          Emag_local_notaper = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
+          Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
           //cerr<<"E: "<<Emag_local<<std::endl;
           if(Emag_local==0.){ //this will kill any point that doesn't have transmitted power from the
             continue;         // look-up table
           }
-          //now keep using Emag_local_notaper, because we want the other relative effects and don't necessarily care about taper now
           // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
           pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
           //cerr<<"P: "<<pathlength_local<<std::endl;
-          Emag_local_notaper /= pathlength_local ;
-          Attenuate(antarctica, settings1, Emag_local_notaper,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
+          Emag_local /= pathlength_local ;
+          Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
           //cerr<<"E: "<<Emag_local<<std::endl;
-          maxbaseE = Tools::dMax(maxbaseE, Emag_local_notaper);
-          basescrn_Emags.push_back(Emag_local_notaper);
+          maxbaseE = Tools::dMax(maxbaseE, Emag_local);
+          basescrn_Emags.push_back(Emag_local);
           basescrn_pos.push_back(pos_current);
           basescrn_length.push_back(panel1->GetEdgeLength() / (float)panel1->GetNsamples());
         }
@@ -2328,7 +2327,6 @@ int main(int argc,  char **argv) {
 
         //#########
         // Second, now select those points in the base screen that contribute most of the signal strength
-        //cerr<<"Number of base screen points: "<< basescrn_Emags.size()<<endl;
         for (int ii=0; ii< basescrn_Emags.size(); ii++){
           if (basescrn_Emags[ii]/maxbaseE < basescreenFractionLimit){
             continue;
@@ -2509,7 +2507,7 @@ int main(int argc,  char **argv) {
           for (int k=0;k<Anita::NFREQ;k++) {
             deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
             deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
-            sig1->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
+            //sig1->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
             panel1->AddVmmhz_freq(vmmhz_local_array[k]);
           }
 
@@ -2524,7 +2522,7 @@ int main(int argc,  char **argv) {
         for(int jj=0; jj<panel1->GetNsamples(); jj++){
           vmmhz_max = Tools::dMax(vmmhz_max, panel1->GetVmmhz_freq(jj*Anita::NFREQ));
         }
-        //cerr<<vmmhz_max<<endl;
+        cerr<<vmmhz_max<<endl;
         n_pol = Efield_screentotal.Unit();
 
         basescrn_Emags.clear();
