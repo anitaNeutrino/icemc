@@ -4203,7 +4203,7 @@ void Anita::readTuffResponseTrigger(Settings *settings1){
         for(int ituff=0; ituff <=5; ituff++) {
             filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str());
             //debugging
-            cout << Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str()) << endl;
+            //cout << Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str()) << endl;
           TGraph *gtemp = new TGraph(filename);
           // interpolate
           TGraph *gint = Tools::getInterpolatedGraph(gtemp,deltaT); 
