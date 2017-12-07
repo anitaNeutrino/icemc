@@ -1271,12 +1271,19 @@ int main(int argc,  char **argv) {
       memset(truthEvPtr->fNoiseAtTrigger,  0, sizeof(truthEvPtr->fNoiseAtTrigger)  );
       memset(truthEvPtr->fDiodeOutput,     0, sizeof(truthEvPtr->fDiodeOutput)     );
 
+      truthEvPtr->maxSNRAtTriggerV=0;
+      truthEvPtr->maxSNRAtTriggerH=0;
+      
       for (int iant = 0; iant < settings1->NANTENNAS; iant++){
 	int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
 	int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
 
-	truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = 0;
-	truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = 0;
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(justSignal_trig[0][antNum], justNoise_trig[0][antNum]);
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(justSignal_trig[1][antNum], justNoise_trig[1][antNum]);
+	
+	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
+	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
+	      
 	truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[antNum][0][4];
 	truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[antNum][1][4];
 	int irx = iant;
