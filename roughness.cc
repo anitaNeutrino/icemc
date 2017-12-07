@@ -53,7 +53,7 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
   int thispixel = H.ang2pix( ptg );
 
   int pixel;
-  double ptheta, ptheta_g, pphi, Tparl, Tperp;  // temporary values while reading file
+  double ptheta, pphi, Tparl, Tperp;  // temporary values while reading file
 
   double Tparl_down, Tperp_down, Tparl_up, Tperp_up;
   Tparl_down = Tperp_down = Tparl_up = Tperp_up = 0.; //default to zeros in case entry isn't present in file
@@ -68,30 +68,33 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
   base_rough_file_str = "/data/roughness_tables/combined_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims10000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
   full_rough_file = rough_dir_str + base_rough_file_str;
   ifs.open (full_rough_file, std::ifstream::in);
-  std::getline(ifs, header);
-  while (ifs.good()) {
-    ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
-    if(pixel == thispixel){
-      Tparl_down = Tparl;
-      Tperp_down = Tperp;
+  if(ifs.good()){
+    std::getline(ifs, header);
+    while (ifs.good()) {
+      ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
+      if(pixel == thispixel){
+        Tparl_down = Tparl;
+        Tperp_down = Tperp;
+      }
     }
+    ifs.close();
   }
-  ifs.close();
   // "upper" table filename: same procedure
   // open and read table, discard header
   base_rough_file_str = base_rough_file_str = "/data/roughness_tables/combined_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims10000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";;
   full_rough_file = rough_dir_str + base_rough_file_str;
   ifs.open (full_rough_file, std::ifstream::in);
-  std::getline(ifs, header);
-  while (ifs.good()) {
-    ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
-    if(pixel == thispixel){
-      Tparl_up = Tparl;
-      Tperp_up = Tperp;
+  if(ifs.good()){
+    std::getline(ifs, header);
+    while (ifs.good()) {
+      ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
+      if(pixel == thispixel){
+        Tparl_up = Tparl;
+        Tperp_up = Tperp;
+      }
     }
+    ifs.close();
   }
-  ifs.close();
-
   /*std::cerr<<"Inter[: "<<T0<<"  "
   <<T<<"  "
   <<A<<"  "

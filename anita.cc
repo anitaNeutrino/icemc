@@ -3533,21 +3533,25 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     for (int ipol = 0; ipol < 2; ipol++){
       for(int ilayer = 0; ilayer < 4; ilayer++){ 
 	for(int ifold = 0; ifold < NRX_PHI[ilayer]; ifold++){
-	  
+
+	  // First attempt to define phase-centers is done by coming 20 cm
+	  // inwards from the antenna face end (that was only defined for VPOL)
+	  // that's why the initial ipol=0
 	  ANTENNA_POSITION_START[ipol][ilayer][ifold] = ANTENNA_POSITION_START[0][ilayer][ifold] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(ANTENNA_DOWN[ilayer][ifold]));
-	  
-	  x = ANTENNA_POSITION_START[0][ilayer][ifold].GetX();
-	  y = ANTENNA_POSITION_START[0][ilayer][ifold].GetY();
+	  x = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetX();
+	  y = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetY();
 	  
 	  r = sqrt(pow(x,2)+pow(y,2)) + deltaRPhaseCentre[ipol][ilayer][ifold];
 	  phi = atan2(y,x) + deltaPhiPhaseCentre[ipol][ilayer][ifold];
-	  z = ANTENNA_POSITION_START[0][ilayer][ifold].GetZ() + deltaZPhaseCentre[ipol][ilayer][ifold];	  
+	  z = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetZ() + deltaZPhaseCentre[ipol][ilayer][ifold];	  
 
 	  if(phi<0) phi+=TMath::TwoPi();
 	  if(phi>TMath::TwoPi()) phi-=TMath::TwoPi();
 	  
 	  ANTENNA_POSITION_START[ipol][ilayer][ifold]= Vector(r*cos(phi),r*sin(phi),z);
+
 	  PHI_EACHLAYER[ilayer][ifold]=phi;
+	  
 	}
       }
     }
@@ -3895,7 +3899,7 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
       arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
 
       // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
-      //      arrival_times[ipol][antenna_index] -= extraCableDelays[ipol][antenna_index];
+      //      arrival_times[ipol][antenna_index] += extraCableDelays[ipol][antenna_index];
       // cout << arrival_times[antenna_index] << endl;
     
       //  arrival_times[antenna_index]=0;
@@ -3966,7 +3970,7 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
       arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
 
       // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
-      //   arrival_times[antenna_index] -= extraCableDelays[0][antenna_index];
+      //      arrival_times[ipol][antenna_index] += extraCableDelays[ipol][antenna_index];
       // cout << arrival_times[antenna_index] << endl;
     
       //  arrival_times[antenna_index]=0;
@@ -4325,7 +4329,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 
 
   double dig, trig;
-  TFile *fout = new TFile("RatioTrigDigResponses.root", "recreate");
+  // TFile *fout = new TFile("RatioTrigDigResponses.root", "recreate");
   
   for (int ipol=0; ipol<2; ipol++){
     for (int iring=0; iring<3; iring++){
@@ -4340,14 +4344,14 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	    fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]    = (trig/dig);
 	  }
 	}
-	TGraph *temp = new TGraph (numFreqs, freqs, fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi]);
-	temp->Write(Form("gratio_%d_%d_%d", ipol, iring, iphi));
-	delete temp;
+	// TGraph *temp = new TGraph (numFreqs, freqs, fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi]);
+	// temp->Write(Form("gratio_%d_%d_%d", ipol, iring, iphi));
+	// delete temp;
     	
       }
     }
   }
-  delete fout;
+  // delete fout;
 
 
   
@@ -4369,9 +4373,9 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
     
     bool useDelayGenerator = false;
 
-    int maxDelays =  (Tools::dMax(trigEffScanRingDelay, 3) + Tools::dMax(trigEffScanPhiDelay,5) );
-    maxDelays    -=  (Tools::dMin(trigEffScanRingDelay, 3) + Tools::dMin(trigEffScanPhiDelay,5) );
-
+    double maxDelays =  (Tools::dMax(trigEffScanRingDelay, 3) + Tools::dMax(trigEffScanPhiDelay,5) );
+    maxDelays       -=  (Tools::dMin(trigEffScanRingDelay, 3) + Tools::dMin(trigEffScanPhiDelay,5) );
+    
     if (maxDelays!=0) useDelayGenerator=true;
     
     for (int i=0;i<gPulseAtAmpa->GetN();i++){
@@ -4449,3 +4453,37 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
 }
 
 #endif
+
+
+void Anita::calculateDelaysForEfficiencyScan(){
+
+  int irx, phiIndex;
+
+  for (int iant=0; iant<48; iant++){
+    
+    phiIndex = trigEffScanPhi - (iant%16);
+    if (phiIndex>8) phiIndex=phiIndex-16;
+
+    if(TMath::Abs(phiIndex)<=2){
+
+      irx = iant;
+      if (iant<16) {
+	if (iant%2==0) irx = iant/2;
+	else          irx = 8 + iant/2;
+      }
+
+      // Add phi sector delay
+      arrival_times[0][irx] += trigEffScanPhiDelay[phiIndex+2];
+
+      // Check if we are adding the ring delay to this phi sector
+      if (trigEffScanApplyRingDelay[phiIndex+2]>0){
+	// Add ring delay (T-M, M-B, T-B)
+	if (iant<16)       arrival_times[0][irx] += trigEffScanRingDelay[0] + trigEffScanRingDelay[2];
+	else if (iant<32)  arrival_times[0][irx] += trigEffScanRingDelay[1];
+      
+      }
+    }
+    
+  }
+
+}

@@ -413,7 +413,11 @@ int main(int argc,  char **argv) {
   int count_rx=0;
   int antNum=0;
 
-  double thresholds[2][5];
+  
+  double justNoise_trig[2][48][512];
+  double justSignal_trig[2][48][512];
+  
+  double thresholdsAnt[48][2][5];
   
   // ANITA-3 WAIS location by default
   // If ANITA_UTIL_EXISTS then the appropriate location will be loaded
@@ -604,9 +608,11 @@ int main(int argc,  char **argv) {
 	chantrig1->DigitizerPath(settings1, anita1, antNum, bn1);
 	
 	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
+
+	chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
 	
 	//+++++//+++++//+++++//+++++//+++++//+++++//+++++
-	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  0, 0, 0, thresholds);
+	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  0, 0, 0, thresholdsAnt[antNum]);
 	
 		
 	delete chantrig1;
@@ -791,6 +797,49 @@ int main(int argc,  char **argv) {
 	for (int i=0;i<Anita::NFREQ;i++)
 	  truthEvPtr->vmmhz[i]       = panel1->GetVmmhz_freq(i);
       }
+
+
+       
+      memset(truthEvPtr->SNRAtTrigger,     0, sizeof(truthEvPtr->SNRAtTrigger)     );
+      memset(truthEvPtr->thresholds,       0, sizeof(truthEvPtr->thresholds)       );
+      memset(truthEvPtr->fSignalAtTrigger, 0, sizeof(truthEvPtr->fSignalAtTrigger) );
+      memset(truthEvPtr->fNoiseAtTrigger,  0, sizeof(truthEvPtr->fNoiseAtTrigger)  );
+      memset(truthEvPtr->fDiodeOutput,     0, sizeof(truthEvPtr->fDiodeOutput)     );
+
+      truthEvPtr->maxSNRAtTriggerV=0;
+      truthEvPtr->maxSNRAtTriggerH=0;
+      
+      for (int iant = 0; iant < settings1->NANTENNAS; iant++){
+	int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
+	int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
+
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(justSignal_trig[0][antNum], justNoise_trig[0][antNum]);
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(justSignal_trig[1][antNum], justNoise_trig[1][antNum]);
+	
+	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
+	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
+	      
+	truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[antNum][0][4];
+	truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[antNum][1][4];
+	int irx = iant;
+	if (iant<16){
+	  if (iant%2) irx = iant/2;
+	  else        irx = iant/2 + 1;
+	}
+	      
+	for (int j = 0; j < fNumPoints; j++) {
+	  truthEvPtr->fTimes[UsefulChanIndexV][j]           = j * anita1->TIMESTEP * 1.0E9;
+	  truthEvPtr->fTimes[UsefulChanIndexH][j]           = j * anita1->TIMESTEP * 1.0E9;
+	  truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j] = justSignal_trig[0][antNum][j+128]*1000;
+	  truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j] = justSignal_trig[1][antNum][j+128]*1000;
+	  truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]  = justNoise_trig[0][antNum][j+128]*1000;
+	  truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]  = justNoise_trig[1][antNum][j+128]*1000;
+		
+	  truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]     = anita1->timedomain_output_allantennas[0][irx][j];
+	  truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]     = anita1->timedomain_output_allantennas[1][irx][j];
+	}//end int j
+      }// end int iant
+      
       truthAnitaTree->Fill();
       delete truthEvPtr;
 #endif

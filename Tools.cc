@@ -720,3 +720,20 @@ TGraph *Tools::getInterpolatedGraph(TGraph *grIn, Double_t deltaT)
    return grInt;
 
 }
+
+
+double Tools::calculateSNR(double justSig[512], double justNoise[512]){
+
+  double p2p = Tools::dMax(justSig, 512) - Tools::dMin(justSig, 512) ;
+  double rms = 0;
+
+  for (int i=0; i<256; i++){
+    rms += justNoise[i]*justNoise[i];
+  }
+
+  rms/=256.;
+  rms=TMath::Sqrt(rms);
+
+  return p2p/(2*rms);
+
+}

@@ -604,6 +604,8 @@ public:
   RFSignal *fSignalChainResponseDigitizer[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
   RFSignal *fSignalChainResponseTrigger[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
 #endif
+  void calculateDelaysForEfficiencyScan();
+
   Double_t fTimes[HALFNFOUR];
   Double_t fSignalChainResponseDigitizerFreqDomain[2][3][16][400];
   Double_t fSignalChainResponseTriggerFreqDomain[2][3][16][400];
