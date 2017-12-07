@@ -1689,27 +1689,27 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   //convert the V pol time waveform into frequency amplitudes
   anita1->GetArrayFromFFT(voltsArray, vhz);
   
-  // if (anita1->inu==1 && pol==0 && ant==15){
-  //   TCanvas *c = new TCanvas("c");
-  //   graph1->Draw("Al");
-  //   c->Print(Form("TriggerPath_ant%i_graph1.png", ant));
-  //   graphUp->Draw("Al");
-  //   c->Print(Form("TriggerPath_ant%i_graphUp.png", ant));
-  //   surfSignal->Draw("Al");
-  //   c->Print(Form("TriggerPath_ant%i_surfSignal.png", ant));
-  //   surfSignalDown->Draw("Al");
-  //   c->Print(Form("TriggerPath_ant%i_surfSignalDown.png", ant));
-  //   TGraph *gtemp = new TGraph (nPoints, x, y);
-  //   gtemp->Draw("Al");
-  //   c->Print(Form("TriggerPath_ant%i_surfSignalDown_noise.png", ant));
-  //  // TFile *out = new TFile("Icemc_signalChainTrigger.root", "recreate");
-  //  // graph1->Write("gInput");
-  //  // graphUp->Write("gInputUp");
-  //  // surfSignal->Write("gImpResp");
-  //  // surfSignalDown->Write("gImpRespDown");
-  //  // gtemp->Write("gImpRespDownNoise");
-  //  // out->Close();
-  //  }
+  // if (anita1->inu==1 && pol==0 && (ant==16 || ant==31 || ant==32 || ant==47)){
+  //  TCanvas *c = new TCanvas("c");
+  //  graph1->Draw("Al");
+  //  c->Print(Form("TriggerPath_ant%i_graph1.png", ant));
+  //  graphUp->Draw("Al");
+  //  c->Print(Form("TriggerPath_ant%i_graphUp.png", ant));
+  //  surfSignal->Draw("Al");
+  //  c->Print(Form("TriggerPath_ant%i_surfSignal.png", ant));
+  //  surfSignalDown->Draw("Al");
+  //  c->Print(Form("TriggerPath_ant%i_surfSignalDown.png", ant));
+  //  TGraph *gtemp = new TGraph (nPoints, x, y);
+  //  gtemp->Draw("Al");
+  //  c->Print(Form("TriggerPath_ant%i_surfSignalDown_noise.png", ant));
+  // // TFile *out = new TFile("Icemc_signalChainTrigger.root", "recreate");
+  // // graph1->Write("gInput");
+  // // graphUp->Write("gInputUp");
+  // // surfSignal->Write("gImpResp");
+  // // surfSignalDown->Write("gImpRespDown");
+  // // gtemp->Write("gImpRespDownNoise");
+  // // out->Close();
+  // }
   
   // Cleaning up
   delete surfSignalDown;
@@ -1803,22 +1803,6 @@ TGraph *ChanTrigger::getPulserAtAMPA(Anita *anita1, int ant){
   n=n/4;
   for (int i=0;i<n;i++){
     tmp_volts[i]=norm*anita1->gPulseAtAmpa->GetY()[i]*TMath::Power(10, att/20.);
-  }
-
-  int irx = ant;
-  if (ant<16) {
-    if (ant%2==0) irx = ant/2;
-    else          irx = 8 + ant/2;
-  }
-
-  // Add phi sector delay
-  anita1->arrival_times[0][irx] += anita1->trigEffScanPhiDelay[phiIndex+2];
-
-  // Check if we are adding the ring delay to this phi sector
-  if (anita1->trigEffScanApplyRingDelay[phiIndex+2]>0){
-    // Add ring delay (T-M, M-B, T-B)
-    if (ant<16)       anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[0] + anita1->trigEffScanRingDelay[2];
-    else if (ant<32)  anita1->arrival_times[0][irx] += anita1->trigEffScanRingDelay[1];
   }
   
   return new TGraph(n,  anita1->gPulseAtAmpa->GetX(), tmp_volts);
