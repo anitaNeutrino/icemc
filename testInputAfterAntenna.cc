@@ -1038,6 +1038,7 @@ int main(int argc,  char **argv) {
     Tools::Zero(anita1->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
     Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
 
+    anita1->calculateDelaysForEfficiencyScan();
     
     globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
     anita1->rms_rfcm_e_single_event = 0;
@@ -1057,7 +1058,7 @@ int main(int argc,  char **argv) {
 	if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
 	  chantrig1->getNoiseFromFlight(anita1, antNum);
   
-	chantrig1->injectImpulseAfterAntenna(anita1, antNum);
+	if(!settings1->APPLYIMPULSERESPONSETRIGGER) chantrig1->injectImpulseAfterAntenna(anita1, antNum);
 #endif
 	
 	chantrig1->TriggerPath(settings1, anita1, antNum);
