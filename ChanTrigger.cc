@@ -369,6 +369,8 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   	integrateenergy[iband]+=anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->TIMESTEP;
    	if ( settings1->SIGNAL_FLUCT && (!settings1->NOISEFROMFLIGHTTRIGGER) ) {
   	  // this reverses the noise is time, and starts with bin anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)
+	  justNoise_trigPath[0][itime] = anita1->timedomainnoise_rfcm_banding[0][iband][itimenoisebin];
+	  justNoise_trigPath[1][itime] = anita1->timedomainnoise_rfcm_banding[1][iband][itimenoisebin];
   	  v_banding_rfcm_forfft[0][iband][itime]=v_banding_rfcm_forfft[0][iband][itime]+anita1->timedomainnoise_rfcm_banding[0][iband][itimenoisebin];
   	  v_banding_rfcm_forfft[1][iband][itime]=v_banding_rfcm_forfft[1][iband][itime]+anita1->timedomainnoise_rfcm_banding[1][iband][itimenoisebin];
   	  }
@@ -945,6 +947,12 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
       Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[0][iband]);
       Tools::NormalTimeOrdering(anita1->NFOUR/2,v_banding_rfcm_forfft[1][iband]);
 
+      for (int itime=0; itime<anita1->NFOUR/2; itime++){
+	justSig_trigPath[0][itime] = v_banding_rfcm_forfft[0][iband][itime];
+	justSig_trigPath[1][itime] = v_banding_rfcm_forfft[1][iband][itime];
+      }
+
+      
     } else {
       
       for (int itime=0; itime<anita1->NFOUR/2 ; itime++){
