@@ -724,7 +724,7 @@ TGraph *Tools::getInterpolatedGraph(TGraph *grIn, Double_t deltaT)
 
 double Tools::calculateSNR(double justSig[512], double justNoise[512]){
 
-  double p2p = Tools::dMax(justSig, 512) - Tools::dMin(justNoise, 512) ;
+  double p2p = Tools::dMax(justSig, 512) - Tools::dMin(justSig, 512) ;
   double rms = 0;
 
   for (int i=0; i<256; i++){
