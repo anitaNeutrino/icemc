@@ -4084,6 +4084,8 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
     // Normalisation of digitizer impulse response might be off by 3dB
     // See LC's talk at icemc meeting of 2017 Nov 13
     norm *= TMath::Power(10., -3./20.);
+
+    norm *= TMath::Power(10., +1./20.);
     
   }
 
@@ -4389,3 +4391,37 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
 }
 
 #endif
+
+
+void Anita::calculateDelaysForEfficiencyScan(){
+
+  int irx, phiIndex;
+
+  for (int iant=0; iant<48; iant++){
+    
+    phiIndex = trigEffScanPhi - (iant%16);
+    if (phiIndex>8) phiIndex=phiIndex-16;
+
+    if(TMath::Abs(phiIndex)<=2){
+
+      irx = iant;
+      if (iant<16) {
+	if (iant%2==0) irx = iant/2;
+	else          irx = 8 + iant/2;
+      }
+
+      // Add phi sector delay
+      arrival_times[0][irx] += trigEffScanPhiDelay[phiIndex+2];
+
+      // Check if we are adding the ring delay to this phi sector
+      if (trigEffScanApplyRingDelay[phiIndex+2]>0){
+	// Add ring delay (T-M, M-B, T-B)
+	if (iant<16)       arrival_times[0][irx] += trigEffScanRingDelay[0] + trigEffScanRingDelay[2];
+	else if (iant<32)  arrival_times[0][irx] += trigEffScanRingDelay[1];
+      
+      }
+    }
+    
+  }
+
+}
