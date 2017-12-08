@@ -4084,6 +4084,8 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
     // Normalisation of digitizer impulse response might be off by 3dB
     // See LC's talk at icemc meeting of 2017 Nov 13
     norm *= TMath::Power(10., -3./20.);
+
+    norm *= TMath::Power(10., +1./20.);
     
   }
 
