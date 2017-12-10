@@ -2238,8 +2238,9 @@ int main(int argc,  char **argv) {
         std::vector<int> seedGeneration;                // container for tracking generations for additional passes
 
         Vector vec_bln_vert = antarctica->GetSurfaceNormal( bn1->r_bn ).Unit();
-        double pathlength_specular = interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn);
-
+        //double pathlength_specular = interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn);
+        double time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*NFIRN / CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/CLIGHT);
+        double time_reference_local;
         //#########
         //iterate points on the screen, get their position and project back to find ground impact
         //calculate incident and transmitted angles, look up power fraction, and add to running total
@@ -2305,7 +2306,7 @@ int main(int argc,  char **argv) {
           //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
           //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
           //cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
-          Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
+          Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl));// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
           //cerr<<"E: "<<Emag_local<<std::endl;
           if(Emag_local==0.){ //this will kill any point that doesn't have transmitted power from the
             continue;         // look-up table
@@ -2321,7 +2322,7 @@ int main(int argc,  char **argv) {
           basescrn_pos.push_back(pos_current);
           basescrn_length.push_back(panel1->GetEdgeLength() / (float)panel1->GetNsamples());
         }
-
+        //cerr<<"Number of base screen points: "<< basescrn_Emags.size()<<endl;
         if(basescrn_Emags.size()==0){
           continue;
         }
@@ -2405,7 +2406,7 @@ int main(int argc,  char **argv) {
               continue;
             }
             //cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
-            Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl) * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
+            Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl));// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
             //cerr<<"E: "<<Emag_local<<std::endl;
             // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
             pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
@@ -2435,13 +2436,15 @@ int main(int argc,  char **argv) {
             }
             //cerr<<"past pol cut"<<endl;
 
+            time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*NFIRN / CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/CLIGHT);
+
             minE = Tools::dMin(minE, Emag_local);
             maxE = Tools::dMax(maxE, Emag_local);
             seedscreens_pos.push_back(pos_current);
             seedscreens_vmmhzlocal.push_back( Emag_local );
             seedscreens_2bln.push_back(vec_pos_current_to_balloon);
             seedscreens_pols.push_back(npol_local_trans);
-            seedscreens_propdelay.push_back( (pathlength_specular-pathlength_local) / CLIGHT );
+            seedscreens_propdelay.push_back( time_reference_specular - time_reference_local );
             seedscreens_impactpt.push_back(pos_projectedImpactPoint);
             seedscreens_viewangle.push_back(viewangle_local);
             seedscreens_incangle.push_back(theta_0_local);
@@ -2523,7 +2526,7 @@ int main(int argc,  char **argv) {
         for(int jj=0; jj<panel1->GetNsamples(); jj++){
           vmmhz_max = Tools::dMax(vmmhz_max, panel1->GetVmmhz_freq(jj*Anita::NFREQ));
         }
-        cerr<<vmmhz_max<<endl;
+        //cerr<<vmmhz_max<<endl;
         n_pol = Efield_screentotal.Unit();
 
         basescrn_Emags.clear();
@@ -2922,6 +2925,8 @@ int main(int argc,  char **argv) {
                   << k << "  "
                   << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
                   << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
+                  << chantrig1->volts_rx_forfft[0][iband][k]<< "  "
+                  << chantrig1->volts_rx_forfft[1][iband][k]<< "  "
                   << std::endl;
                 }
               }
