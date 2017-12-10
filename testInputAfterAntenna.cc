@@ -368,6 +368,8 @@ double sum_weights=0;
 
 double justNoise_trig[2][48][512];
 double justSignal_trig[2][48][512];
+double justNoise_dig[2][48][512];
+double justSignal_dig[2][48][512];
 
 
 // functions
@@ -1071,6 +1073,7 @@ int main(int argc,  char **argv) {
 	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
 	chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
+	chantrig1->saveDigitizerWaveforms(anita1, justSignal_dig[0][antNum], justSignal_dig[1][antNum], justNoise_dig[0][antNum], justNoise_dig[1][antNum]);
 	
 	//	cout << inu << " " << ilayer << " " << ifold << endl;
 	delete chantrig1;
@@ -1268,6 +1271,7 @@ int main(int argc,  char **argv) {
 
        
       memset(truthEvPtr->SNRAtTrigger,     0, sizeof(truthEvPtr->SNRAtTrigger)     );
+      memset(truthEvPtr->SNRAtDigitizer,     0, sizeof(truthEvPtr->SNRAtDigitizer)     );
       memset(truthEvPtr->thresholds,       0, sizeof(truthEvPtr->thresholds)       );
       memset(truthEvPtr->fSignalAtTrigger, 0, sizeof(truthEvPtr->fSignalAtTrigger) );
       memset(truthEvPtr->fNoiseAtTrigger,  0, sizeof(truthEvPtr->fNoiseAtTrigger)  );
@@ -1275,6 +1279,8 @@ int main(int argc,  char **argv) {
 
       truthEvPtr->maxSNRAtTriggerV=0;
       truthEvPtr->maxSNRAtTriggerH=0;
+      truthEvPtr->maxSNRAtDigitizerV=0;
+      truthEvPtr->maxSNRAtDigitizerH=0;
       
       for (int iant = 0; iant < settings1->NANTENNAS; iant++){
 	int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
@@ -1286,6 +1292,12 @@ int main(int argc,  char **argv) {
 	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
 	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
 	      
+	truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = Tools::calculateSNR(justSignal_dig[0][antNum], justNoise_dig[0][antNum]);
+	truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = Tools::calculateSNR(justSignal_dig[1][antNum], justNoise_dig[1][antNum]);
+	
+	if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexV]>truthEvPtr->maxSNRAtDigitizerV) truthEvPtr->maxSNRAtDigitizerV=truthEvPtr->SNRAtDigitizer[UsefulChanIndexV];
+	if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexH]>truthEvPtr->maxSNRAtDigitizerH) truthEvPtr->maxSNRAtDigitizerH=truthEvPtr->SNRAtDigitizer[UsefulChanIndexH];
+
 	truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[antNum][0][4];
 	truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[antNum][1][4];
 	int irx = iant;

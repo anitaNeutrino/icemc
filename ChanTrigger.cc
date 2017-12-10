@@ -1133,6 +1133,7 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
     if (settings1->SIGNAL_FLUCT) { 
       for (int i=0;i<anita1->NFOUR/2;i++) {
 	for (int ipol=0;ipol<2;ipol++){
+	  justSig_digPath[ipol][i] = volts_rx_rfcm_lab[ipol][i];
 	  volts_rx_rfcm_lab[ipol][i]+=anita1->timedomainnoise_lab[ipol][i]; // add noise
 	}
       }
@@ -1610,12 +1611,13 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
     for (int i=0;i<nPoints;i++){
-      y[i]=surfSignalDown->Eval(x[i]) + justNoise_digPath[ipol][i];
+      justSig_digPath[ipol][i] = surfSignalDown->Eval(x[i]);
+      y[i] = justSig_digPath[ipol][i] + justNoise_digPath[ipol][i];
     }
   } else {
-    for (int i=0;i<nPoints;i++)  y[i]=surfSignalDown->Eval(x[i]);
+    for (int i=0;i<nPoints;i++)  justSig_digPath[ipol][i] = y[i] = surfSignalDown->Eval(x[i]);
   }
-
+  
   // if (ant ==8 && pol==0){
   //   TCanvas *c = new TCanvas("c");
   //   graph1->Draw("Al");
@@ -1737,6 +1739,15 @@ void ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], double si
   }
 }
 
+void ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
+
+  for (int i=0; i<anita1->NFOUR/2; i++){
+    sig0[i]   = justSig_digPath[0][i];
+    noise0[i] = justNoise_digPath[0][i];
+    sig1[i]   = justSig_digPath[1][i];
+    noise1[i] = justNoise_digPath[1][i];
+  }
+}
 
 void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
 
