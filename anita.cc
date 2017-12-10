@@ -1021,9 +1021,8 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 #ifdef ANITA_UTIL_EXISTS
     double quickNoise[HALFNFOUR];
 
-    double meandiode_eachchan[2][48];
-    memset(meandiode_eachchan,                0, sizeof (meandiode_eachchan)                );
-    memset(bwslice_dioderms_fullband_allchan, 0, sizeof(bwslice_dioderms_fullband_allchan)  );
+    memset(bwslice_diodemean_fullband_allchan,  0, sizeof(bwslice_diodemean_fullband_allchan)  );
+    memset(bwslice_dioderms_fullband_allchan,   0, sizeof(bwslice_dioderms_fullband_allchan)   );
 
     static double tempdiodeoutput[1000][NFOUR];
 
@@ -1040,7 +1039,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 	  // First calculate the mean
 	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	    meandiode_eachchan[ipol][iant]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	    bwslice_diodemean_fullband_allchan[ipol][iant]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
 	    //	  cout << m << " " << timedomain_output[j][m] << " " << ((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)) << endl;
 	  
 	  }
@@ -1050,13 +1049,13 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 	for (int i=0;i<ngeneratedevents;i++) {
 	  
 	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	    bwslice_dioderms_fullband_allchan[ipol][iant]+=(tempdiodeoutput[i][m]-meandiode_eachchan[ipol][iant])*(tempdiodeoutput[i][m]-meandiode_eachchan[ipol][iant])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	    bwslice_dioderms_fullband_allchan[ipol][iant]+=(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant])*(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
 	  }
 
 	}
 	
 	bwslice_dioderms_fullband_allchan[ipol][iant]=sqrt(bwslice_dioderms_fullband_allchan[ipol][iant]);
-	//cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << meandiode_eachchan[ipol][iant] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant] << endl;  
+	//cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << bwslice_diodemean_fullband_allchan[ipol][iant] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant] << endl;  
 	
       }
 	
