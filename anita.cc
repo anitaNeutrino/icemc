@@ -533,7 +533,7 @@ void Anita::initializeFixedPowerThresholds(ofstream &foutput){
     powerthreshold[1]=-1; // not used 
     powerthreshold[2]=-1; // not used 
     powerthreshold[3]=-1; // not used
-    powerthreshold[4]=-5.; // Average Anita-3 scaler is 500kHz, which corresponds to this threshold as seen in
+    powerthreshold[4]=-5.40247; // Average Anita-3 scaler is 450kHz, which corresponds to this threshold as seen in
     // p. 9 of Ryan's talk at the Anita meeting 19th Feb 2008
 		
     foutput << "Thresholds are (in p/<p>):  " <<
