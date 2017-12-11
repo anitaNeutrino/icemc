@@ -389,12 +389,11 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 			
     }
     else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9) {  // For Anita 1 and Anita 2 and Anita 3:
-      if(settings1->TUFFSON) {
-        igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
-      }
-      else {
+
+//        igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
+
         igps = int(randomNumber*flightdatachain->GetEntries()); // pick random event in the tree
-      }
+
       //////////////////////////// TEMPORARY HACKS FOR ANITA4 !!!!!!      
       if (WHICHPATH==9 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660)) || (igps==17862) ) igps=igps+30;
       
