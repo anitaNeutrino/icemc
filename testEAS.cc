@@ -154,6 +154,10 @@ do									\
  } \
 while(0)
 
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
 Taumodel* TauPtr = NULL;
 
 const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
@@ -282,16 +286,32 @@ int main(int argc,  char **argv) {
 
   vector<double> ZhsTimeE(ZhsTimeN), ZhsAlpha(ZhsTimeN);
 
+  // Do not buffer output:
+  // setbuf(stdout, NULL);
   for (int i = 0; i < ZhsTimeN; i++){
     double E2 = Ex[i] * Ex[i] + Ey[i] * Ey[i] + Ez[i] * Ez[i];
     double E = sqrt(E2);
     double EEmax = (Ex[i] * Ex_max + Ey[i] * Ey_max + Ez[i] * Ez_max);
     double Eproj = EEmax / Emax;
-    double cosEEmax = abs(E) > 1e-99 ? Eproj / E : 999.0;
-    double EEmaxAlpha = cosEEmax != 999.0 ? acos(cosEEmax) : 999;
     ZhsTimeE[i] = Eproj;
-    printf("i: %d/%d, ZhsTimeE[i]: %11.4e, EEmaxAlpha: %11.4e\n", i, ZhsTimeN - 1, ZhsTimeE.at(i), EEmaxAlpha);
-    ZhsAlpha[i] = EEmaxAlpha * 180 / pi;
+    double cosEEmax; // = abs(E) > 1e-99 ? Eproj / E : 999.0;
+    double EEmaxAlpha = 190.0; // = cosEEmax != 999.0 ? acos(cosEEmax) * 180 / pi: 999;
+
+    if (abs(E) > 0) {
+      cosEEmax = Eproj / E;
+      if (cosEEmax >= 1.0) {
+        EEmaxAlpha = 0;
+      }
+      else if (cosEEmax <= -1.0) {
+        EEmaxAlpha = 180;
+      }
+      else {
+        EEmaxAlpha = std::acos(cosEEmax) * 180 / pi;
+      }
+    }
+      
+    ZhsAlpha[i] = EEmaxAlpha;
+    printf("i: %d/%d, Time: %11.4e, ZhsTimeE[i]: %11.4e, Eproj/E: %11.8e, EEmaxAlpha: %11.4e\n", i, ZhsTimeN - 1, ZhsTimeArr.at(i), ZhsTimeE.at(i), Eproj/E, EEmaxAlpha);
   }
 
   // Projections on the Emax:
@@ -300,16 +320,38 @@ int main(int argc,  char **argv) {
   printf("The maximal index of Emax: %d\n", Emax_ind);
   printf("The maximal components: (%11.4e, %11.4e, %11.4e)\n", Ex_max, Ey_max, Ez_max);
 
-  // TGraph *grZhsTimeE = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data());
-  // grZhsTimeE->Draw("AL*");
 
-  //  for (int i = 0; i < ZhsTimeN; i++){
-    // }
 
-  // TGraph *grZhsAlpha = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsAlpha.data());
-  // grZhsAlpha->Draw("AL*");
+  TCanvas *cZhsEAndAlpha = new TCanvas();
+  cZhsEAndAlpha = cZhsEAndAlpha;
 
+  TPad *px1 = new TPad("px1","",0,0,1,1);
+  px1->Draw();
+  px1->cd();
+  TGraph *grZhsTimeE = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data());
+  grZhsTimeE->Draw("AL");
+  double xmin = 183.95e+3;
+  double xmax = 183.98e+3;
+  grZhsTimeE->GetXaxis()->SetLimits(xmin, xmax);
+  grZhsTimeE->Draw("AL");
+  px1->Update();
+
+  TPad *px2 = new TPad("px2","",0,0,1,1);
+  px2->SetFillStyle(4000);
+  px2->SetFrameFillStyle(0);
+  px2->Draw();
+  px2->cd();
+  TGraph *grZhsAlpha = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsAlpha.data());
+  grZhsAlpha->GetXaxis()->SetLimits(xmin, xmax);
+  grZhsAlpha->GetHistogram()->SetMaximum(180);
+  grZhsAlpha->GetHistogram()->SetMinimum(0);
+
+  px2->Update();
+  grZhsAlpha->Draw("ALY+");
+
+  fflush(stdout);
   theApp.Run();
+
 
   settings1->SEED=settings1->SEED +run_no;
   cout <<"seed is " << settings1->SEED << endl;
