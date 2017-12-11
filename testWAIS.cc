@@ -350,6 +350,7 @@ int main(int argc,  char **argv) {
 
   TTree *triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
   triggerSettingsTree->Branch("dioderms", anita1->bwslice_dioderms_fullband_allchan, "dioderms[2][48]/D");
+  triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48]/D");
   triggerSettingsTree->Fill();
   
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");

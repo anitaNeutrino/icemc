@@ -318,6 +318,7 @@ class ChanTrigger {
    * @return whether the channel and band are masked or not
    */
   static int IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int ilayer, int ifold, int ipol);
+
   //! Apply impulse response to digitizer path
   /**
    * This can only work when FFTtools is also linked
@@ -385,6 +386,14 @@ class ChanTrigger {
    */
   void saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]);
 
+   //! Save signal and noise waveforms at digitizer
+  /**
+   * @param anita1 :: Anita - anita payload object
+   * @param sig    :: double[2][NFOUR/2] - output 
+   * @param noise  :: double[2][NFOUR/2] - output
+   */
+  void saveDigitizerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]);
+
   //! Inject pulse at the surf (used for trigger efficiency scans)
   /**
    * Pulser waveforms are read in anita.cc
@@ -418,6 +427,7 @@ class ChanTrigger {
    * @return frequency domain amplitude scaled by the filter
    */
   double applyButterworthFilter(double ff, double ampl, int notchStatus[3]);
+
   
   double vhz_rx[2][5][Anita::NFREQ];                           ///< Array of amplitudes in the Fourier domain (V/Hz) after the antenna gain. Indeces stand for [ipol][iband][ifreq] 
   double volts_rx_forfft[2][5][Anita::HALFNFOUR];              ///< Array of time domain after the antenna gain. Indeces stand for [ipol][iband][itime] 
@@ -440,6 +450,8 @@ class ChanTrigger {
   double justNoise_trigPath[2][Anita::HALFNFOUR];              ///< For trigger path, time domain noise from flight
   double cw_digPath[2][Anita::HALFNFOUR];                      ///< For digitizer path, time domain cw
   double justSig_trigPath[2][Anita::HALFNFOUR];                ///< Just signal in trigger path
+  double justSig_digPath[2][Anita::HALFNFOUR];                ///< Just signal in trigger path
+  
   // these are filled for triggerscheme==0 and triggerscheme==1
   // frequency domain voltage and energy based
   double signal_eachband[2][Anita::NBANDS_MAX];               ///< Signal in each band			     
