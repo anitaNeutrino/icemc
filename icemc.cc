@@ -1644,13 +1644,13 @@ int main(int argc,  char **argv) {
       count1->inhorizon[whichray]++;
      
       // cerenkov angle depends on depth because index of refraction depends on depth.
-      if(!settings1->ROUGHNESS){
+      //if(!settings1->ROUGHNESS){
         if (settings1->FIRN) {
           sig1->SetNDepth(antarctica->GetN(interaction1->altitude_int));
           //      changle = acos(1/N_DEPTH);
           changle_deg=sig1->changle*DEGRAD;
         }
-      }
+      //}
 
       if (settings1->FORSECKEL==1)
         sig1->SetChangle(acos(1/sig1->NICE));
