@@ -2294,7 +2294,7 @@ int main(int argc,  char **argv) {
 
           theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
           theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
-          if( isnan(theta_local) | isnan(theta_0_local) | isnan(azimuth_local) ){
+          if( ::isnan(theta_local) | ::isnan(theta_0_local) | ::isnan(azimuth_local) ){
             continue;
           }
           /////
@@ -2302,7 +2302,7 @@ int main(int argc,  char **argv) {
 #ifdef USE_HEALPIX
           rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
 #endif
-          if( isnan(tcoeff_perp) || isnan(tcoeff_parl) ){
+          if( ::isnan(tcoeff_perp) || ::isnan(tcoeff_parl) ){
             continue;
           }
           tcoeff_perp = sqrt(power_perp);
@@ -2397,7 +2397,7 @@ int main(int argc,  char **argv) {
 
             theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
             theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
-            if( isnan(theta_local) | isnan(theta_0_local) | isnan(azimuth_local) ){
+            if( ::isnan(theta_local) | ::isnan(theta_0_local) | ::isnan(azimuth_local) ){
               continue;
             }
             viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
@@ -2407,7 +2407,7 @@ int main(int argc,  char **argv) {
 #ifdef USE_HEALPIX
             rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
 #endif
-            if( isnan(tcoeff_perp) | isnan(tcoeff_parl) ){
+            if( ::isnan(tcoeff_perp) | ::isnan(tcoeff_parl) ){
               continue;
             }
             tcoeff_perp = sqrt(power_perp);
