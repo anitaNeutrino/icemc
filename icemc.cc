@@ -2802,9 +2802,14 @@ int main(int argc,  char **argv) {
       	  //cout << anita1->freq[k] << " " << vmmhz[k] << " " << vmmhz2[k] << " " << vmmhz[k]/vmmhz2[k] << endl;
       	  panel1->AddVmmhz_freq(vmmhz[k]);
         }
-        panel1->AddDelay( 0. );
+        panel1->AddVmmhz0(vmmhz[0]);
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
         panel1->AddPol(n_pol);
+        panel1->AddDelay( 0. );
+        panel1->AddImpactPt(ray1->rfexit[2]);
+        panel1->AddViewangle(viewangle);
+        panel1->AddIncidenceAngle(ray1->nsurf_rfexit.Angle(ray1->nrf_iceside[3]));
+        panel1->AddTransmissionAngle(ray1->nsurf_rfexit.Angle(ray1->n_exit2bn[2]));
         panel1->AddWeight( 1. );
         panel1->SetWeightNorm( 1. );
 
