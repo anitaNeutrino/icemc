@@ -73,6 +73,8 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
     while (ifs.good()) {
       ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
       if(pixel == thispixel){
+        if(Tparl<0) Tparl = 0.;
+        if(Tperp<0) Tperp = 0.;
         Tparl_down = Tparl;
         Tperp_down = Tperp;
       }
@@ -89,6 +91,8 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
     while (ifs.good()) {
       ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
       if(pixel == thispixel){
+        if(Tparl<0) Tparl = 0.;
+        if(Tperp<0) Tperp = 0.;
         Tparl_up = Tparl;
         Tperp_up = Tperp;
       }

@@ -2266,6 +2266,7 @@ int main(int argc,  char **argv) {
         double maxbaseE=-1.;
         for (int ii=0; ii<panel1->GetNsamples()*panel1->GetNsamples(); ii++){
           Emag_local = 0.;
+          tcoeff_perp = tcoeff_parl = 0.;
           pos_current = panel1->GetNextPosition(ii);        // this gets the new screen position
           pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
           vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_current[0], bn1->r_bn[1] - pos_current[1], bn1->r_bn[2] - pos_current[2] );
@@ -2293,12 +2294,17 @@ int main(int argc,  char **argv) {
 
           theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
           theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
-
+          if( ::isnan(theta_local) | ::isnan(theta_0_local) | ::isnan(azimuth_local) ){
+            continue;
+          }
           /////
           // Field Magnitude
 #ifdef USE_HEALPIX
           rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
 #endif
+          if( ::isnan(tcoeff_perp) || ::isnan(tcoeff_parl) ){
+            continue;
+          }
           tcoeff_perp = sqrt(power_perp);
           tcoeff_parl = sqrt(power_parl);
           //cerr<<"+++++++++++++"<<endl;
@@ -2367,6 +2373,7 @@ int main(int argc,  char **argv) {
             //cerr<<"+++++++++++++"<<endl;
             //cerr<<"+ seed point: "<<jj<<" / "<<panel1->GetNsamples()*panel1->GetNsamples()<<endl;
             Emag_local = 0.;
+            tcoeff_perp = tcoeff_parl = 0.;
             pos_current = panel1->GetNextPosition(jj);        // this gets the new screen position
             pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
             vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_current[0], bn1->r_bn[1] - pos_current[1], bn1->r_bn[2] - pos_current[2] );
@@ -2390,7 +2397,9 @@ int main(int argc,  char **argv) {
 
             theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
             theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
-
+            if( ::isnan(theta_local) | ::isnan(theta_0_local) | ::isnan(azimuth_local) ){
+              continue;
+            }
             viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
 
             /////
@@ -2398,6 +2407,9 @@ int main(int argc,  char **argv) {
 #ifdef USE_HEALPIX
             rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
 #endif
+            if( ::isnan(tcoeff_perp) | ::isnan(tcoeff_parl) ){
+              continue;
+            }
             tcoeff_perp = sqrt(power_perp);
             tcoeff_parl = sqrt(power_parl);
             //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
@@ -2790,9 +2802,14 @@ int main(int argc,  char **argv) {
       	  //cout << anita1->freq[k] << " " << vmmhz[k] << " " << vmmhz2[k] << " " << vmmhz[k]/vmmhz2[k] << endl;
       	  panel1->AddVmmhz_freq(vmmhz[k]);
         }
-        panel1->AddDelay( 0. );
+        panel1->AddVmmhz0(vmmhz[0]);
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
         panel1->AddPol(n_pol);
+        panel1->AddDelay( 0. );
+        panel1->AddImpactPt(ray1->rfexit[2]);
+        panel1->AddViewangle(viewangle);
+        panel1->AddIncidenceAngle(ray1->nsurf_rfexit.Angle(ray1->nrf_iceside[3]));
+        panel1->AddTransmissionAngle(ray1->nsurf_rfexit.Angle(ray1->n_exit2bn[2]));
         panel1->AddWeight( 1. );
         panel1->SetWeightNorm( 1. );
 
