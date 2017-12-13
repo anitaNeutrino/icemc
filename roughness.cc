@@ -65,7 +65,7 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
 
   // "lower" table: read through table looking for specific pixel
   // open and read table, discard header
-  base_rough_file_str = "/data/roughness_tables/combined_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims10000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
+  base_rough_file_str = "/data/roughness_tables/0p10/combined_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims10000000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
   full_rough_file = rough_dir_str + base_rough_file_str;
   ifs.open (full_rough_file, std::ifstream::in);
   if(ifs.good()){
@@ -73,6 +73,8 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
     while (ifs.good()) {
       ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
       if(pixel == thispixel){
+        if(Tparl<0) Tparl = 0.;
+        if(Tperp<0) Tperp = 0.;
         Tparl_down = Tparl;
         Tperp_down = Tperp;
       }
@@ -81,7 +83,7 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
   }
   // "upper" table filename: same procedure
   // open and read table, discard header
-  base_rough_file_str = base_rough_file_str = "/data/roughness_tables/combined_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims10000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";;
+  base_rough_file_str = base_rough_file_str = "/data/roughness_tables/0p10combined_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims10000000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";;
   full_rough_file = rough_dir_str + base_rough_file_str;
   ifs.open (full_rough_file, std::ifstream::in);
   if(ifs.good()){
@@ -89,6 +91,8 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
     while (ifs.good()) {
       ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
       if(pixel == thispixel){
+        if(Tparl<0) Tparl = 0.;
+        if(Tperp<0) Tperp = 0.;
         Tparl_up = Tparl;
         Tperp_up = Tperp;
       }
