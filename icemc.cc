@@ -74,6 +74,8 @@
 
 #include <typeinfo>
 
+#include <fenv.h> 
+
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
 #include "AnitaGeomTool.h"
@@ -469,6 +471,14 @@ int main(int argc,  char **argv) {
   // 12/01/03
   //
   //--------------------------------------------------------------
+
+  //floating point exceptions 
+  //
+  //
+ #ifdef ICEMC_FEEXCEPT
+  feenableexcept(FE_INVALID | FE_DIVBYZERO); 
+#endif
+  
 
 
   // for comparing with peter
