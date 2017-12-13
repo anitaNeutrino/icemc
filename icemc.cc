@@ -3554,15 +3554,19 @@ int main(int argc,  char **argv) {
 	      }
 	      
               for (int j = 0; j < fNumPoints; j++) {
-		truthEvPtr->fTimes[UsefulChanIndexV][j]           = j * anita1->TIMESTEP * 1.0E9;
-		truthEvPtr->fTimes[UsefulChanIndexH][j]           = j * anita1->TIMESTEP * 1.0E9;
-                truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j] = justSignal_trig[0][antNum][j+128]*1000;
-                truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j] = justSignal_trig[1][antNum][j+128]*1000;
-                truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]  = justNoise_trig[0][antNum][j+128]*1000;
-                truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]  = justNoise_trig[1][antNum][j+128]*1000;
+		truthEvPtr->fTimes[UsefulChanIndexV][j]             = j * anita1->TIMESTEP * 1.0E9;
+		truthEvPtr->fTimes[UsefulChanIndexH][j]             = j * anita1->TIMESTEP * 1.0E9;
+                truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j]   = justSignal_trig[0][antNum][j+128]*1000;
+                truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j]   = justSignal_trig[1][antNum][j+128]*1000;
+                truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]    = justNoise_trig[0][antNum][j+128]*1000;
+                truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]    = justNoise_trig[1][antNum][j+128]*1000;
+                truthEvPtr->fSignalAtDigitizer[UsefulChanIndexV][j] = justSignal_dig[0][antNum][j+128]*1000;
+                truthEvPtr->fSignalAtDigitizer[UsefulChanIndexH][j] = justSignal_dig[1][antNum][j+128]*1000;
+                truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexV][j]  = justNoise_dig[0][antNum][j+128]*1000;
+                truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexH][j]  = justNoise_dig[1][antNum][j+128]*1000;
 		
-                truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]     = anita1->timedomain_output_allantennas[0][irx][j];
-                truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]     = anita1->timedomain_output_allantennas[1][irx][j];
+                truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]       = anita1->timedomain_output_allantennas[0][irx][j];
+                truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]       = anita1->timedomain_output_allantennas[1][irx][j];
               }//end int j
 	      
             }// end int iant
