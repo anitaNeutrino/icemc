@@ -2209,6 +2209,7 @@ int main(int argc,  char **argv) {
         Vector vec_local_grnd_perp;     //normalized, vector perp. to incident and surface normal (out-of-inc place)
         Vector vec_local_grnd_parl;     //normalized, vector parl. to incident and surface normal (in-inc plane)
         Vector vec_grndcomp2bln;
+        Vector vec_grndcomp2IP;
 
         double pathlength_local;        // set for each screen point
         double viewangle_local;
@@ -2287,9 +2288,11 @@ int main(int argc,  char **argv) {
           vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
           vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
 
+          vec_grndcomp2IP = (vec_nnu_to_impactPoint - (vec_nnu_to_impactPoint.Dot(vec_localnormal)*vec_localnormal)).Unit();
           vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
-          azimuth_local = vec_local_grnd_parl.Angle(vec_grndcomp2bln); //[rad]
-          if( vec_grndcomp2bln.Dot(vec_local_grnd_parl) > 0 )
+          temp_a = vec_localnormal.Cross(vec_pos_current_to_balloon).Unit();
+          azimuth_local = vec_grndcomp2IP.Angle(vec_grndcomp2bln); //[rad]
+          if( temp_a.Dot(vec_nnu_to_impactPoint) > 0 )
             azimuth_local *= -1.;
 
           theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
@@ -2308,7 +2311,7 @@ int main(int argc,  char **argv) {
           tcoeff_perp = sqrt(power_perp);
           tcoeff_parl = sqrt(power_parl);
           //cerr<<"+++++++++++++"<<endl;
-          //std::cerr<<"thetas: "<<theta_0_local*180./PI<<"  "<<theta_local*180./PI<<std::endl;
+          //std::cerr<<"thetas: "<<theta_0_local*180./PI<<"  "<<theta_local*180./PI<<"  "<<azimuth_local*180./PI<< std::endl;
           //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
           //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
           //cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
@@ -2336,10 +2339,10 @@ int main(int argc,  char **argv) {
         //#########
         // Second, now select those points in the base screen that contribute most of the signal strength
         for (int ii=0; ii< basescrn_Emags.size(); ii++){
+          //cerr<<basescrn_Emags[ii]/maxbaseE<<endl;
           if (basescrn_Emags[ii]/maxbaseE < basescreenFractionLimit){
             continue;
           }
-          //cerr<<basescrn_Emags[ii]/maxbaseE<<endl;
           seedpositions.push_back(basescrn_pos[ii]);
           seedEdgeLengths.push_back(basescrn_length[ii]);
           seedGeneration.push_back(1);
@@ -2390,9 +2393,11 @@ int main(int argc,  char **argv) {
             vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
             vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
 
+            vec_grndcomp2IP = (vec_nnu_to_impactPoint - (vec_nnu_to_impactPoint.Dot(vec_localnormal)*vec_localnormal)).Unit();
             vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
-            azimuth_local = vec_local_grnd_parl.Angle(vec_grndcomp2bln); //[rad]
-            if( vec_grndcomp2bln.Dot(vec_local_grnd_parl) > 0 )
+            temp_a = vec_localnormal.Cross(vec_pos_current_to_balloon).Unit();
+            azimuth_local = vec_grndcomp2IP.Angle(vec_grndcomp2bln); //[rad]
+            if( temp_a.Dot(vec_nnu_to_impactPoint) > 0 )
               azimuth_local *= -1.;
 
             theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
