@@ -2461,7 +2461,7 @@ int main(int argc,  char **argv) {
             seedscreens_vmmhzlocal.push_back( Emag_local );
             seedscreens_2bln.push_back(vec_pos_current_to_balloon);
             seedscreens_pols.push_back(npol_local_trans);
-            seedscreens_propdelay.push_back( time_reference_specular - time_reference_local );
+            seedscreens_propdelay.push_back( time_reference_local - time_reference_specular );
             seedscreens_impactpt.push_back(pos_projectedImpactPoint);
             seedscreens_viewangle.push_back(viewangle_local);
             seedscreens_incangle.push_back(theta_0_local);
