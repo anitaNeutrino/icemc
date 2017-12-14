@@ -444,8 +444,7 @@ int main(int argc,  char **argv) {
   Vector surfaceNormalWAIS  = antarctica->GetSurfaceNormal(positionWAIS);  
   
   // LC: If we turn on this flag, then we can use different phases when applying the antenna gain
-  // Eventually we will want to do it more elegantly
-  anita1->PULSER=1;
+  anita1->USEPHASES=1;
   
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
@@ -603,10 +602,10 @@ int main(int argc,  char **argv) {
 	chantrig1->DigitizerPath(settings1, anita1, antNum);
 	
 	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
-
+	
 	chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
 	chantrig1->saveDigitizerWaveforms(anita1, justSignal_dig[0][antNum], justSignal_dig[1][antNum], justNoise_dig[0][antNum], justNoise_dig[1][antNum]);
-	
+
 	//+++++//+++++//+++++//+++++//+++++//+++++//+++++
 	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  0, 0, 0, thresholdsAnt[antNum]);
 	
