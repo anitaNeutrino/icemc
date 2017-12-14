@@ -868,7 +868,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
 
 #ifdef ANITA_UTIL_EXISTS
   if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
-    getNoiseFromFlight(anita1, ant);
+    getNoiseFromFlight(anita1, ant, settings1->SIGNAL_FLUCT > 0);
 #endif
   
 }
@@ -1027,7 +1027,7 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
     applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[1], 1);
 #endif
     
-    if (settings1->SIGNAL_FLUCT && !settings1->NOISEFROMFLIGHTDIGITIZER){
+    if (settings1->SIGNAL_FLUCT > 0 && !settings1->NOISEFROMFLIGHTDIGITIZER){
       for (int i=0;i<anita1->NFOUR/2;i++) {
      	for (int ipol=0;ipol<2;ipol++){
      	  volts_rx_rfcm_lab[ipol][i]+=anita1->timedomainnoise_lab[ipol][i]; // add noise
@@ -1133,7 +1133,7 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
     Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_rfcm_lab[0]); // EH, why only this has NormalTimeOrdering applied? Why not before?
     Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_rfcm_lab[1]);
 
-    if (settings1->SIGNAL_FLUCT) { 
+    if (settings1->SIGNAL_FLUCT > 0) { 
       for (int i=0;i<anita1->NFOUR/2;i++) {
 	for (int ipol=0;ipol<2;ipol++){
 	  justSig_digPath[ipol][i] = volts_rx_rfcm_lab[ipol][i];
@@ -1752,7 +1752,7 @@ void ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double 
   }
 }
 
-void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
+void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
 
   Int_t numFreqs = anita1->numFreqs;
   FFTWComplex *phasorsDig  = new FFTWComplex[numFreqs];
@@ -1788,7 +1788,7 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
 
     
     for (int i=0; i<anita1->HALFNFOUR; i++){
-      justNoise_digPath[ipol][i]  = justNoiseDig[i]*anita1->THERMALNOISE_FACTOR;
+      justNoise_digPath[ipol][i]  = also_digi ? justNoiseDig[i]*anita1->THERMALNOISE_FACTOR : 0;
       justNoise_trigPath[ipol][i] = justNoiseTrig[i]*anita1->THERMALNOISE_FACTOR;
     }
     

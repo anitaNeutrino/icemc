@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <math.h>
 #include <ctype.h>
 #include <string>
 #include <stdio.h>
@@ -38,6 +37,12 @@
 #include "Math/InterpolationTypes.h"
 #include "Math/Interpolator.h"
 #include "signal.h"
+#include <cmath>
+
+#if _cplusplus >=201103L 
+#define isnan stdisnan 
+#endif
+
 
 //#include "rx.hpp"
 #include "Constants.h"
@@ -73,6 +78,8 @@
 #endif
 
 #include <typeinfo>
+
+#include <fenv.h> 
 
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
@@ -469,6 +476,14 @@ int main(int argc,  char **argv) {
   // 12/01/03
   //
   //--------------------------------------------------------------
+
+  //floating point exceptions 
+  //
+  //
+ #ifdef ICEMC_FEEXCEPT
+  feenableexcept(FE_INVALID | FE_DIVBYZERO); 
+#endif
+  
 
 
   // for comparing with peter
@@ -2297,7 +2312,7 @@ int main(int argc,  char **argv) {
 
           theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
           theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
-          if( ::isnan(theta_local) | ::isnan(theta_0_local) | ::isnan(azimuth_local) ){
+          if( isnan(theta_local) | isnan(theta_0_local) | isnan(azimuth_local) ){
             continue;
           }
           /////
@@ -2305,7 +2320,7 @@ int main(int argc,  char **argv) {
 #ifdef USE_HEALPIX
           rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
 #endif
-          if( ::isnan(tcoeff_perp) || ::isnan(tcoeff_parl) ){
+          if( isnan(tcoeff_perp) || isnan(tcoeff_parl) ){
             continue;
           }
           tcoeff_perp = sqrt(power_perp);
@@ -2402,7 +2417,7 @@ int main(int argc,  char **argv) {
 
             theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
             theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
-            if( ::isnan(theta_local) | ::isnan(theta_0_local) | ::isnan(azimuth_local) ){
+            if( isnan(theta_local) | isnan(theta_0_local) | isnan(azimuth_local) ){
               continue;
             }
             viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
@@ -2412,7 +2427,7 @@ int main(int argc,  char **argv) {
 #ifdef USE_HEALPIX
             rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
 #endif
-            if( ::isnan(tcoeff_perp) | ::isnan(tcoeff_parl) ){
+            if( isnan(tcoeff_perp) | isnan(tcoeff_parl) ){
               continue;
             }
             tcoeff_perp = sqrt(power_perp);
