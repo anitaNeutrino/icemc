@@ -1014,6 +1014,7 @@ void Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
    
 
   for (int ipol=0; ipol<2; ipol++){
+    number_all_antennas=0;
     for (int ilayer = 0; ilayer < settings1->NLAYERS; ilayer++){
       for (int ifold = 0; ifold < anita1->NRX_PHI[ilayer]; ifold++){
 	double phi = 0;
@@ -1033,9 +1034,8 @@ void Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
 	}//else
 			
 	//cout<<"antenna_position start for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
-			
 	antenna_position=RotatePayload(antenna_position);
-		
+	
 	anita1->antenna_positions[ipol][number_all_antennas] = antenna_position;
 	//cout<<"antenna_position for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
 	number_all_antennas++;

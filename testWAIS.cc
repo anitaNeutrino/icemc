@@ -417,6 +417,8 @@ int main(int argc,  char **argv) {
   
   double justNoise_trig[2][48][512];
   double justSignal_trig[2][48][512];
+  double justNoise_dig[2][48][512];
+  double justSignal_dig[2][48][512];
   
   double thresholdsAnt[48][2][5];
   
@@ -476,7 +478,8 @@ int main(int argc,  char **argv) {
     } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
     
      // Fix interaction position to WAIS location
-    interaction1->posnu = positionWAIS;   
+    interaction1->posnu      = positionWAIS;   
+    interaction1->posnu_down = positionWAIS;
     
     // Picks the balloon position and at the same time sets the masks and thresholds
     bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
@@ -509,11 +512,11 @@ int main(int argc,  char **argv) {
     }
 
     // VPOL
-    Vector n_temp = interaction1->nnu.Cross(surfaceNormalWAIS);
-    n_pol = n_temp.Cross(interaction1->nnu);
+    // Vector n_temp = interaction1->nnu.Cross(surfaceNormalWAIS);
+    // n_pol = n_temp.Cross(interaction1->nnu);
 
     // HPOL 
-    // n_pol = interaction1->nnu.Cross(surfaceNormalWAIS);
+    n_pol = interaction1->nnu.Cross(surfaceNormalWAIS);
     
     n_pol = n_pol.Unit();
     
@@ -526,17 +529,8 @@ int main(int argc,  char **argv) {
     } // if we are calculating for all boresights
     
 
-
     // Find direction from pulser to balloon
-    ray1->rfexit[2]    = positionWAIS;
-    ray1->n_exit2bn[2] = (bn1->r_bn - ray1->rfexit[2]).Unit();
-    if (settings1->BORESIGHTS) { 
-      for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
-	for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-	  ray1->n_exit2bn_eachboresight[2][ilayer][ifold] = (bn1->r_boresights[ilayer][ifold] - ray1->rfexit[2]).Unit(); 
-	}
-      }
-    }
+    ray1->GetRFExit(settings1, anita1, 0, interaction1->posnu, interaction1->posnu_down, bn1->r_bn, bn1->r_boresights, 2, antarctica);
     
     // make a global trigger object (but don't touch the electric fences)
     globaltrig1 = new GlobalTrigger(settings1, anita1);
@@ -611,6 +605,7 @@ int main(int argc,  char **argv) {
 	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
 	chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
+	chantrig1->saveDigitizerWaveforms(anita1, justSignal_dig[0][antNum], justSignal_dig[1][antNum], justNoise_dig[0][antNum], justNoise_dig[1][antNum]);
 	
 	//+++++//+++++//+++++//+++++//+++++//+++++//+++++
 	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  0, 0, 0, thresholdsAnt[antNum]);
@@ -800,28 +795,37 @@ int main(int argc,  char **argv) {
       }
 
 
-       
-      memset(truthEvPtr->SNRAtTrigger,     0, sizeof(truthEvPtr->SNRAtTrigger)     );
-      memset(truthEvPtr->thresholds,       0, sizeof(truthEvPtr->thresholds)       );
-      memset(truthEvPtr->fSignalAtTrigger, 0, sizeof(truthEvPtr->fSignalAtTrigger) );
-      memset(truthEvPtr->fNoiseAtTrigger,  0, sizeof(truthEvPtr->fNoiseAtTrigger)  );
-      memset(truthEvPtr->fDiodeOutput,     0, sizeof(truthEvPtr->fDiodeOutput)     );
-
+      memset(truthEvPtr->SNRAtTrigger,       0, sizeof(truthEvPtr->SNRAtTrigger)       );
+      memset(truthEvPtr->fSignalAtTrigger,   0, sizeof(truthEvPtr->fSignalAtTrigger)   );
+      memset(truthEvPtr->fNoiseAtTrigger,    0, sizeof(truthEvPtr->fNoiseAtTrigger)    );
+      memset(truthEvPtr->SNRAtDigitizer,     0, sizeof(truthEvPtr->SNRAtDigitizer)     );
+      memset(truthEvPtr->thresholds,         0, sizeof(truthEvPtr->thresholds)         );
+      memset(truthEvPtr->fDiodeOutput,       0, sizeof(truthEvPtr->fDiodeOutput)       );
+	    
       truthEvPtr->maxSNRAtTriggerV=0;
       truthEvPtr->maxSNRAtTriggerH=0;
-      
+      truthEvPtr->maxSNRAtDigitizerV=0;
+      truthEvPtr->maxSNRAtDigitizerH=0;
+
       for (int iant = 0; iant < settings1->NANTENNAS; iant++){
 	int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
 	int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
 
-	truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(justSignal_trig[0][antNum], justNoise_trig[0][antNum]);
-	truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(justSignal_trig[1][antNum], justNoise_trig[1][antNum]);
-	
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(justSignal_trig[0][iant], justNoise_trig[0][iant]);
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(justSignal_trig[1][iant], justNoise_trig[1][iant]);
+	      
 	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
 	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
+
+	truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = Tools::calculateSNR(justSignal_dig[0][iant], justNoise_dig[0][iant]);
+	truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = Tools::calculateSNR(justSignal_dig[1][iant], justNoise_dig[1][iant]);
 	      
-	truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[antNum][0][4];
-	truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[antNum][1][4];
+	if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexV]>truthEvPtr->maxSNRAtDigitizerV) truthEvPtr->maxSNRAtDigitizerV=truthEvPtr->SNRAtDigitizer[UsefulChanIndexV];
+	if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexH]>truthEvPtr->maxSNRAtDigitizerH) truthEvPtr->maxSNRAtDigitizerH=truthEvPtr->SNRAtDigitizer[UsefulChanIndexH];
+
+	      
+	truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[iant][0][4];
+	truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[iant][1][4];
 	int irx = iant;
 	if (iant<16){
 	  if (iant%2) irx = iant/2;
@@ -829,17 +833,26 @@ int main(int argc,  char **argv) {
 	}
 	      
 	for (int j = 0; j < fNumPoints; j++) {
-	  truthEvPtr->fTimes[UsefulChanIndexV][j]           = j * anita1->TIMESTEP * 1.0E9;
-	  truthEvPtr->fTimes[UsefulChanIndexH][j]           = j * anita1->TIMESTEP * 1.0E9;
-	  truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j] = justSignal_trig[0][antNum][j+128]*1000;
-	  truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j] = justSignal_trig[1][antNum][j+128]*1000;
-	  truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]  = justNoise_trig[0][antNum][j+128]*1000;
-	  truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]  = justNoise_trig[1][antNum][j+128]*1000;
+	  truthEvPtr->fTimes[UsefulChanIndexV][j]             = j * anita1->TIMESTEP * 1.0E9;
+	  truthEvPtr->fTimes[UsefulChanIndexH][j]             = j * anita1->TIMESTEP * 1.0E9;
 		
-	  truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]     = anita1->timedomain_output_allantennas[0][irx][j];
-	  truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]     = anita1->timedomain_output_allantennas[1][irx][j];
+	  truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j]   = justSignal_trig[0][iant][j+128]*1000;
+	  truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j]   = justSignal_trig[1][iant][j+128]*1000;
+	  truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]    = justNoise_trig[0][iant][j+128]*1000;
+	  truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]    = justNoise_trig[1][iant][j+128]*1000;
+	  truthEvPtr->fSignalAtDigitizer[UsefulChanIndexV][j] = justSignal_dig[0][iant][j+128]*1000;
+	  truthEvPtr->fSignalAtDigitizer[UsefulChanIndexH][j] = justSignal_dig[1][iant][j+128]*1000;
+	  truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexV][j]  = justNoise_dig[0][iant][j+128]*1000;
+	  truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexH][j]  = justNoise_dig[1][iant][j+128]*1000;
+		
+	  truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]       = anita1->timedomain_output_allantennas[0][irx][j];
+	  truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]       = anita1->timedomain_output_allantennas[1][irx][j];
 	}//end int j
-      }// end int iant
+	      
+      }// end int iant 
+
+
+
       
       truthAnitaTree->Fill();
       delete truthEvPtr;

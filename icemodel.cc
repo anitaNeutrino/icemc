@@ -185,7 +185,7 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
     
     
     //in case of roughness, create an array of allowable indices for the lookup (so this stay local to this function and we don't modify *horizon[ibnposition] and fark up other things downstream)
-    if(settings1->ROUGHNESS){
+    /*if(settings1->ROUGHNESS){
 
       interaction1->noway=0;
       interaction1->wheredoesitleave_err=0;
@@ -219,7 +219,7 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
       phi=LongtoPhi_0is180thMeridian(lon); // convert longitude to phi
       //cout << rbn.Lon() << "  "<< rbn.Lat() << "  " <<temppos.Lon()<< "  "<<temppos.Lat()<< "  :: ";
     }
-    else{ // NO roughness case
+    else{ // NO roughness case*/
       //cout << "in pickinteractionlocation, size of ilat_inhorizon is " << ilat_inhorizon[ibnposition].size() << "\n";
       if (ice_model == 0) { // this is Crust 2.0
         //cout << "Inside Crust 2.0 if statement.\n";
@@ -267,7 +267,7 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
         theta = lat*RADDEG;
         phi=LongtoPhi_0is180thMeridian(lon); // convert longitude to phi
       } //end if(BEDMAP)
-    }
+    //}
 
     //all routines (roughness or no) \it{should} deliver a lon, lat, theta, phi
     //roughness may not sometimes, should add checks or something

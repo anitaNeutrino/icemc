@@ -1296,7 +1296,7 @@ int main(int argc,  char **argv) {
   outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
   
-  TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
+  static TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
   printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
   unsigned int timenow = time(NULL);
 
@@ -1644,13 +1644,13 @@ int main(int argc,  char **argv) {
       count1->inhorizon[whichray]++;
      
       // cerenkov angle depends on depth because index of refraction depends on depth.
-      if(!settings1->ROUGHNESS){
+      //if(!settings1->ROUGHNESS){
         if (settings1->FIRN) {
           sig1->SetNDepth(antarctica->GetN(interaction1->altitude_int));
           //      changle = acos(1/N_DEPTH);
           changle_deg=sig1->changle*DEGRAD;
         }
-      }
+      //}
 
       if (settings1->FORSECKEL==1)
         sig1->SetChangle(acos(1/sig1->NICE));
@@ -2209,6 +2209,7 @@ int main(int argc,  char **argv) {
         Vector vec_local_grnd_perp;     //normalized, vector perp. to incident and surface normal (out-of-inc place)
         Vector vec_local_grnd_parl;     //normalized, vector parl. to incident and surface normal (in-inc plane)
         Vector vec_grndcomp2bln;
+        Vector vec_grndcomp2IP;
 
         double pathlength_local;        // set for each screen point
         double viewangle_local;
@@ -2287,9 +2288,11 @@ int main(int argc,  char **argv) {
           vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
           vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
 
+          vec_grndcomp2IP = (vec_nnu_to_impactPoint - (vec_nnu_to_impactPoint.Dot(vec_localnormal)*vec_localnormal)).Unit();
           vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
-          azimuth_local = vec_local_grnd_parl.Angle(vec_grndcomp2bln); //[rad]
-          if( vec_grndcomp2bln.Dot(vec_local_grnd_parl) > 0 )
+          temp_a = vec_localnormal.Cross(vec_pos_current_to_balloon).Unit();
+          azimuth_local = vec_grndcomp2IP.Angle(vec_grndcomp2bln); //[rad]
+          if( temp_a.Dot(vec_nnu_to_impactPoint) > 0 )
             azimuth_local *= -1.;
 
           theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
@@ -2308,7 +2311,7 @@ int main(int argc,  char **argv) {
           tcoeff_perp = sqrt(power_perp);
           tcoeff_parl = sqrt(power_parl);
           //cerr<<"+++++++++++++"<<endl;
-          //std::cerr<<"thetas: "<<theta_0_local*180./PI<<"  "<<theta_local*180./PI<<std::endl;
+          //std::cerr<<"thetas: "<<theta_0_local*180./PI<<"  "<<theta_local*180./PI<<"  "<<azimuth_local*180./PI<< std::endl;
           //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
           //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
           //cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
@@ -2336,10 +2339,10 @@ int main(int argc,  char **argv) {
         //#########
         // Second, now select those points in the base screen that contribute most of the signal strength
         for (int ii=0; ii< basescrn_Emags.size(); ii++){
+          //cerr<<basescrn_Emags[ii]/maxbaseE<<endl;
           if (basescrn_Emags[ii]/maxbaseE < basescreenFractionLimit){
             continue;
           }
-          //cerr<<basescrn_Emags[ii]/maxbaseE<<endl;
           seedpositions.push_back(basescrn_pos[ii]);
           seedEdgeLengths.push_back(basescrn_length[ii]);
           seedGeneration.push_back(1);
@@ -2390,9 +2393,11 @@ int main(int argc,  char **argv) {
             vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
             vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
 
+            vec_grndcomp2IP = (vec_nnu_to_impactPoint - (vec_nnu_to_impactPoint.Dot(vec_localnormal)*vec_localnormal)).Unit();
             vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
-            azimuth_local = vec_local_grnd_parl.Angle(vec_grndcomp2bln); //[rad]
-            if( vec_grndcomp2bln.Dot(vec_local_grnd_parl) > 0 )
+            temp_a = vec_localnormal.Cross(vec_pos_current_to_balloon).Unit();
+            azimuth_local = vec_grndcomp2IP.Angle(vec_grndcomp2bln); //[rad]
+            if( temp_a.Dot(vec_nnu_to_impactPoint) > 0 )
               azimuth_local *= -1.;
 
             theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
@@ -2456,7 +2461,7 @@ int main(int argc,  char **argv) {
             seedscreens_vmmhzlocal.push_back( Emag_local );
             seedscreens_2bln.push_back(vec_pos_current_to_balloon);
             seedscreens_pols.push_back(npol_local_trans);
-            seedscreens_propdelay.push_back( time_reference_specular - time_reference_local );
+            seedscreens_propdelay.push_back( time_reference_specular - time_reference_local);
             seedscreens_impactpt.push_back(pos_projectedImpactPoint);
             seedscreens_viewangle.push_back(viewangle_local);
             seedscreens_incangle.push_back(theta_0_local);
@@ -2958,7 +2963,7 @@ int main(int argc,  char **argv) {
 
           chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
           chantrig1->saveDigitizerWaveforms(anita1, justSignal_dig[0][antNum], justSignal_dig[1][antNum], justNoise_dig[0][antNum], justNoise_dig[1][antNum]);
-          
+	  
           Tools::Zero(sumsignal, 5);
 
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
@@ -3532,21 +3537,21 @@ int main(int argc,  char **argv) {
               int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
               int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
 
-	      truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(justSignal_trig[0][antNum], justNoise_trig[0][antNum]);
-	      truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(justSignal_trig[1][antNum], justNoise_trig[1][antNum]);
+	      truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(justSignal_trig[0][iant], justNoise_trig[0][iant]);
+	      truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(justSignal_trig[1][iant], justNoise_trig[1][iant]);
 	      
 	      if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
 	      if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
 
-	      truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = Tools::calculateSNR(justSignal_dig[0][antNum], justNoise_dig[0][antNum]);
-	      truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = Tools::calculateSNR(justSignal_dig[1][antNum], justNoise_dig[1][antNum]);
+	      truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = Tools::calculateSNR(justSignal_dig[0][iant], justNoise_dig[0][iant]);
+	      truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = Tools::calculateSNR(justSignal_dig[1][iant], justNoise_dig[1][iant]);
 	      
 	      if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexV]>truthEvPtr->maxSNRAtDigitizerV) truthEvPtr->maxSNRAtDigitizerV=truthEvPtr->SNRAtDigitizer[UsefulChanIndexV];
 	      if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexH]>truthEvPtr->maxSNRAtDigitizerH) truthEvPtr->maxSNRAtDigitizerH=truthEvPtr->SNRAtDigitizer[UsefulChanIndexH];
 
 	      
-	      truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[antNum][0][4];
-	      truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[antNum][1][4];
+	      truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[iant][0][4];
+	      truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[iant][1][4];
 	      int irx = iant;
 	      if (iant<16){
 		if (iant%2) irx = iant/2;
@@ -3554,15 +3559,20 @@ int main(int argc,  char **argv) {
 	      }
 	      
               for (int j = 0; j < fNumPoints; j++) {
-		truthEvPtr->fTimes[UsefulChanIndexV][j]           = j * anita1->TIMESTEP * 1.0E9;
-		truthEvPtr->fTimes[UsefulChanIndexH][j]           = j * anita1->TIMESTEP * 1.0E9;
-                truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j] = justSignal_trig[0][antNum][j+128]*1000;
-                truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j] = justSignal_trig[1][antNum][j+128]*1000;
-                truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]  = justNoise_trig[0][antNum][j+128]*1000;
-                truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]  = justNoise_trig[1][antNum][j+128]*1000;
+		truthEvPtr->fTimes[UsefulChanIndexV][j]             = j * anita1->TIMESTEP * 1.0E9;
+		truthEvPtr->fTimes[UsefulChanIndexH][j]             = j * anita1->TIMESTEP * 1.0E9;
 		
-                truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]     = anita1->timedomain_output_allantennas[0][irx][j];
-                truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]     = anita1->timedomain_output_allantennas[1][irx][j];
+                truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j]   = justSignal_trig[0][iant][j+128]*1000;
+                truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j]   = justSignal_trig[1][iant][j+128]*1000;
+                truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]    = justNoise_trig[0][iant][j+128]*1000;
+                truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]    = justNoise_trig[1][iant][j+128]*1000;
+                truthEvPtr->fSignalAtDigitizer[UsefulChanIndexV][j] = justSignal_dig[0][iant][j+128]*1000;
+                truthEvPtr->fSignalAtDigitizer[UsefulChanIndexH][j] = justSignal_dig[1][iant][j+128]*1000;
+                truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexV][j]  = justNoise_dig[0][iant][j+128]*1000;
+                truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexH][j]  = justNoise_dig[1][iant][j+128]*1000;
+		
+                truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]       = anita1->timedomain_output_allantennas[0][irx][j];
+                truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]       = anita1->timedomain_output_allantennas[1][irx][j];
               }//end int j
 	      
             }// end int iant
