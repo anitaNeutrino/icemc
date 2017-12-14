@@ -862,7 +862,6 @@ void Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, Signal* sig1,
   anita1->BANDING = BANDING;
   anita1->NBANDS  = NBANDS;
   anita1->PERCENTBW = PERCENTBW;
-  anita1->PULSER    = PULSER;
   anita1->SIGMA_THETA = SIGMA_THETA;
   anita1->FREQ_LOW    = FREQ_LOW;
   anita1->FREQ_HIGH   = FREQ_HIGH;
