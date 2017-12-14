@@ -99,7 +99,6 @@ public:
   void getPulserData();
   
   // takes arrays that span NFREQ and turn them into arrays that span HALFNFOUR
-  void MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay);
   void MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay);
   
   void GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx);
