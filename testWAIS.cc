@@ -511,11 +511,11 @@ int main(int argc,  char **argv) {
     }
 
     // VPOL
-    Vector n_temp = interaction1->nnu.Cross(surfaceNormalWAIS);
-    n_pol = n_temp.Cross(interaction1->nnu);
+    // Vector n_temp = interaction1->nnu.Cross(surfaceNormalWAIS);
+    // n_pol = n_temp.Cross(interaction1->nnu);
 
     // HPOL 
-    // n_pol = interaction1->nnu.Cross(surfaceNormalWAIS);
+    n_pol = interaction1->nnu.Cross(surfaceNormalWAIS);
     
     n_pol = n_pol.Unit();
     
