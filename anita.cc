@@ -281,6 +281,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
 
   TIMESTEP=(1./2.6)*1.E-9; // time step between samples
 
+  USEPHASES=0;
+  
   for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
  
   for (int i=0;i<NFREQ;i++) {
@@ -1213,7 +1215,8 @@ void Anita::getPulserData(){
   TGraph *gphases=(TGraph*)fpulser->Get("phases");
   TGraph *gnoise=(TGraph*)fpulser->Get("noise");
 	
-	
+  USEPHASES=1;
+  
   double *temp1=gpulser->GetX();
   for (int i=0;i<NFOUR/4;i++) {
     f_pulser[i]=temp1[i];
@@ -2361,6 +2364,15 @@ void Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx){
 
 }
 
+
+void Anita::GetPhasesFromFFT(double *tmp_fftvhz, double *phases){
+  
+  for (int ifreq=0; ifreq<NFOUR/4; ifreq++){
+    phases[ifreq]=TMath::ATan2(tmp_fftvhz[ifreq+1], tmp_fftvhz[ifreq])*180./PI;
+  }
+
+}
+
 void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay) {
     
   Tools::Zero(vsignal_e_forfft,NFOUR/2);
@@ -2434,7 +2446,7 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
     double cosphase=cos(phasedelay*PI/180.);
     double sinphase=sin(phasedelay*PI/180.);
     for (int ifour=0;ifour<NFOUR/4;ifour++) {      
-      if (PULSER) {
+      if (USEPHASES) {
 	cosphase = cos(v_phases[ifour]*PI/180.);
 	sinphase = sin(v_phases[ifour]*PI/180.);
       }
@@ -2444,6 +2456,21 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
       vsignal_h_forfft[2*ifour+1]*=sinphase;	
     }
   }
+}
+
+
+void Anita::FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[NFREQ]){
+  
+  // find the frequency domain
+  Tools::realft(vsignalarray,1,NFOUR/2);
+
+  GetPhasesFromFFT(vsignalarray, v_phases);
+  
+  //convert the V pol time waveform into frequency amplitudes
+  GetArrayFromFFT(vsignalarray, vhz);
+
+
+
 }
 
 void Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay) {
@@ -2507,7 +2534,7 @@ void Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, dou
     double cosphase=cos(phasedelay*PI/180.);
     double sinphase=sin(phasedelay*PI/180.);
     for (int ifour=0;ifour<NFOUR/4;ifour++) {      
-      if (PULSER) {
+      if (USEPHASES) {
 	cosphase = cos(v_phases[ifour]*PI/180.);
 	sinphase = sin(v_phases[ifour]*PI/180.);
       }

@@ -457,7 +457,7 @@ public:
   double MIN_THETA_HYPOTHESIS;
   double MAX_THETA_HYPOTHESIS;
 
-  int PULSER;
+  int USEPHASES;
 
   int NTRIGGERLAYERS; // number of layers considered by the trigger.  may be different from nlayers, the number of physical layers on the payload.
   // In Anita 1 and Anita 2, the number of physical layers were 3 while the number of trigger layers were 2.
@@ -603,6 +603,10 @@ public:
 #endif
   void calculateDelaysForEfficiencyScan();
 
+  void GetPhasesFromFFT(double *tmp_fftvhz, double *phases);
+  void FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[NFREQ]);
+
+  
   Double_t fTimes[HALFNFOUR];
   Double_t fSignalChainResponseDigitizerFreqDomain[2][3][16][400];
   Double_t fSignalChainResponseTriggerFreqDomain[2][3][16][400];
