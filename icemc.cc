@@ -39,10 +39,6 @@
 #include "signal.h"
 #include <cmath>
 
-#if _cplusplus >=201103L 
-#define isnan stdisnan 
-#endif
-
 
 //#include "rx.hpp"
 #include "Constants.h"
@@ -74,6 +70,7 @@
 #include <sstream>
 
 #if __cplusplus > 199711L
+#define isnan std::isnan 
 #include <type_traits>
 #endif
 
