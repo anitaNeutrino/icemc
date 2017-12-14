@@ -1054,7 +1054,7 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
     
     double scale;
     double sumpower=0.;
-    if (anita1->PULSER) { // if we are using the pulser spectrum instead of simulating neutrinos
+    if (settings1->PULSER) { // if we are using the pulser spectrum instead of simulating neutrinos
       scale=Tools::dMax(vhz_rx_rfcm_e,Anita::NFREQ)/Tools::dMax(anita1->v_pulser,anita1->NFOUR/4);
       sumpower=0.;
       int ifour;// index for fourier transform
