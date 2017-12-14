@@ -478,7 +478,8 @@ int main(int argc,  char **argv) {
     } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
     
      // Fix interaction position to WAIS location
-    interaction1->posnu = positionWAIS;   
+    interaction1->posnu      = positionWAIS;   
+    interaction1->posnu_down = positionWAIS;
     
     // Picks the balloon position and at the same time sets the masks and thresholds
     bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
@@ -528,17 +529,8 @@ int main(int argc,  char **argv) {
     } // if we are calculating for all boresights
     
 
-
     // Find direction from pulser to balloon
-    ray1->rfexit[2]    = positionWAIS;
-    ray1->n_exit2bn[2] = (bn1->r_bn - ray1->rfexit[2]).Unit();
-    if (settings1->BORESIGHTS) { 
-      for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
-	for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-	  ray1->n_exit2bn_eachboresight[2][ilayer][ifold] = (bn1->r_boresights[ilayer][ifold] - ray1->rfexit[2]).Unit(); 
-	}
-      }
-    }
+    ray1->GetRFExit(settings1, anita1, 0, interaction1->posnu, interaction1->posnu_down, bn1->r_bn, bn1->r_boresights, 2, antarctica);
     
     // make a global trigger object (but don't touch the electric fences)
     globaltrig1 = new GlobalTrigger(settings1, anita1);
