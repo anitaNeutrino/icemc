@@ -809,8 +809,8 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
         }
       } // end looping over frequencies.
 
-
-      anita1->MakeArraysforFFT(tmp_vhz[0],tmp_vhz[1],tmp_volts[0],tmp_volts[1], 90., true);
+      anita1->MakeArrayforFFT(tmp_vhz[0],tmp_volts[0], 90., true);
+      anita1->MakeArrayforFFT(tmp_vhz[1],tmp_volts[1], 90., true);
 
       // now v_banding_rfcm_h_forfft is in the time domain
       // and now it is really in units of V
@@ -910,7 +910,8 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
       } // end loop over nfreq
       
       
-      anita1->MakeArraysforFFT(v_banding_rfcm[0][iband],v_banding_rfcm[1][iband],v_banding_rfcm_forfft[0][iband],v_banding_rfcm_forfft[1][iband], 90., true);
+      anita1->MakeArrayforFFT(v_banding_rfcm[0][iband],v_banding_rfcm_forfft[0][iband], 90., true);
+      anita1->MakeArrayforFFT(v_banding_rfcm[1][iband],v_banding_rfcm_forfft[1][iband], 90., true);
       
       // for some reason I'm averaging over 10 neighboring bins
       // to get rid of the zero bins
@@ -1071,7 +1072,8 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
     }
     
     // change their length from Anita::NFREQ to HALFNFOUR
-    anita1->MakeArraysforFFT(vhz_rx_rfcm_e,vhz_rx_rfcm_h,volts_rx_rfcm[0],volts_rx_rfcm[1], 90., true);
+    anita1->MakeArrayforFFT(vhz_rx_rfcm_e,volts_rx_rfcm[0], 90., true);
+    anita1->MakeArrayforFFT(vhz_rx_rfcm_h,volts_rx_rfcm[1], 90., true);
       
           
     // now the last two are in the frequency domain
@@ -1117,7 +1119,8 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
     }
 
     // change their length from Anita::NFREQ to HALFNFOUR
-    anita1->MakeArraysforFFT(vhz_rx_rfcm_lab_e,vhz_rx_rfcm_lab_h,volts_rx_rfcm_lab[0],volts_rx_rfcm_lab[1], 90., true);
+    anita1->MakeArrayforFFT(vhz_rx_rfcm_lab_e,volts_rx_rfcm_lab[0], 90., true);
+    anita1->MakeArrayforFFT(vhz_rx_rfcm_lab_h,volts_rx_rfcm_lab[1], 90., true);
       
     // now the last two are in the frequency domain
     // convert to the time domain
