@@ -44,6 +44,7 @@
 #include "TSpline.h"
 #include "Math/InterpolationTypes.h"
 #include "Math/Interpolator.h"
+#include "TGaxis.h"
 #include "signal.h"
 
 #include "EnvironmentVariable.h"
@@ -172,6 +173,37 @@ class Position;
 
 // functions
 
+bool FWHM(long int n, double *x, double *y, double &xmin, double &xmax, int &ind_maxval, double &xmaxval, double &ymaxval, double threshold_rel = 0.5){
+  long int ind_max = TMath::LocMax(n, y);
+  ind_maxval = ind_max;
+  double max_val = y[ind_max]; 
+  ymaxval = max_val;
+  xmaxval = x[ind_max];
+  double threshold_abs = max_val * threshold_rel;
+  bool found_xmin = false;
+  bool found_xmax = false;
+  for (int i = 0; i <= ind_max; i++){
+    double val = y[i];
+    if (val > threshold_abs){
+      xmin = (x[i] - x[i - 1]) / (y[i] - y[i - 1]) * (threshold_abs - y[i - 1]) + x[i - 1];
+      printf("ind_a: %d\n", i);
+      found_xmin = true;
+      break;
+    }
+  }
+  if (!found_xmin) return false;
+
+  for (int i = n-1; i >= ind_max; i--){
+    double val = y[i];
+    if (val > threshold_abs){
+      xmax = (x[i] - x[i + 1]) / (y[i] - y[i + 1]) * (threshold_abs - y[i + 1]) + x[i + 1];
+      printf("ind_b: %d\n", i);
+      found_xmax = true;
+      break;
+    }
+  }
+  return (found_xmax && found_xmin);
+}
 
 #ifdef ANITA_UTIL_EXISTS
 int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt);
@@ -322,6 +354,7 @@ int main(int argc,  char **argv) {
 
 
 
+  gStyle->SetOptTitle(0);
   TCanvas *cZhsEAndAlpha = new TCanvas();
   cZhsEAndAlpha = cZhsEAndAlpha;
 
@@ -329,12 +362,31 @@ int main(int argc,  char **argv) {
   px1->Draw();
   px1->cd();
   TGraph *grZhsTimeE = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data());
+  grZhsTimeE->SetLineColor(kRed);
+  grZhsTimeE->SetLineWidth(2);
   grZhsTimeE->Draw("AL");
   double xmin = 183.95e+3;
   double xmax = 183.98e+3;
-  grZhsTimeE->GetXaxis()->SetLimits(xmin, xmax);
+  double xmaxval;
+  double ymaxval;
+  int ind_maxval;
+  bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), xmin, xmax, ind_maxval, xmaxval, ymaxval);
+    // printf("ind_maxval: %d, xmaxval: %11.8e, maxval: %11.4e, xmin: %11.8e, xmax: %11.8e, (xmax - xmin) / dx: %11.8e, %11.8e", ind_maxval, xmaxval, ymaxval, xmin, xmax, (xmax - xmaxval) / (ZhsTimeArr[1] - ZhsTimeArr[0]), (xmaxval - xmin) / (ZhsTimeArr[1] - ZhsTimeArr[0]));
+  double vis_xmin = xmaxval - 100*(xmaxval - xmin);
+  double vis_xmax = xmaxval + 1500*(xmax - xmaxval); 
+  printf("Waveform xmax - xmin: %5.3f, (%5.3f%%)", vis_xmax - vis_xmin, (vis_xmax - vis_xmin) / (ZhsTimeArr[ZhsTimeN - 1] - ZhsTimeArr[0]));
+  grZhsTimeE->GetXaxis()->SetLimits(vis_xmin, vis_xmax);
+  TGaxis::SetExponentOffset(0.02, -0.04, "x");
+  grZhsTimeE->GetXaxis()->SetTitle("Time [ns]");
+  grZhsTimeE->GetYaxis()->SetTitle("E [V/m]");
+  // grZhsTimeE->GetXaxis()->SetTitleOffset(2.0);
   grZhsTimeE->Draw("AL");
-  px1->Update();
+  gPad->Update();
+  TLine *line_min = new TLine(xmin, gPad->GetUymin(), xmin, gPad->GetUymax());
+  TLine *line_max = new TLine(xmax, gPad->GetUymin(), xmax, gPad->GetUymax());
+  line_min->Draw();
+  line_max->Draw();
+  gPad->Update();
 
   TPad *px2 = new TPad("px2","",0,0,1,1);
   px2->SetFillStyle(4000);
@@ -342,12 +394,19 @@ int main(int argc,  char **argv) {
   px2->Draw();
   px2->cd();
   TGraph *grZhsAlpha = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsAlpha.data());
-  grZhsAlpha->GetXaxis()->SetLimits(xmin, xmax);
+  grZhsAlpha->SetLineColor(kBlue);
+  grZhsAlpha->SetLineWidth(2);
+  
+  grZhsAlpha->GetXaxis()->SetLimits(vis_xmin, vis_xmax);
   grZhsAlpha->GetHistogram()->SetMaximum(180);
   grZhsAlpha->GetHistogram()->SetMinimum(0);
-
+  
   px2->Update();
   grZhsAlpha->Draw("ALY+");
+  auto legend = new TLegend(0.1,0.8,0.3,0.9);
+  legend->AddEntry(grZhsTimeE, "E_{proj}","l");
+  legend->AddEntry(grZhsAlpha, "pol. angle","l");
+  legend->Draw();
 
   fflush(stdout);
   theApp.Run();
