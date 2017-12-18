@@ -613,9 +613,9 @@ int main(int argc,  char **argv) {
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
   
   Roughness *rough1=new Roughness(); // create new instance of the roughness class
+  rough1->SetRoughScale(settings1->ROUGHSIZE);
 
-  int fSCREEN_NUMPOINTS_EDGE = settings1->ROUGHNESS;
-  Screen *panel1 = new Screen(fSCREEN_NUMPOINTS_EDGE);              // create new instance of the screen class
+  Screen *panel1 = new Screen(settings1->ROUGHSCREENDIV_BASE);  // create new instance of the screen class
 
   if(spectra1->IsSpectrum()) cout<<" Lowest energy for spectrum is 10^18 eV! \n";
 
