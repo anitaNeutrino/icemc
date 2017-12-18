@@ -43,8 +43,12 @@ Roughness::Roughness(){
 
 void Roughness::SetRoughScale(double a){
   std::ostringstream strs;
+  strs.precision(2);
+  strs.setf( std::ios::fixed, std:: ios::floatfield );
   strs << a;
   roughscale_str = strs.str();
+  roughscale_str[1] = 'p';
+  //std::cerr<<"Roughness srms: "<<roughscale_str<<std::endl;
 };
 
 
@@ -76,6 +80,7 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
   // open and read table, discard header
   base_rough_file_str = "/data/roughness_tables/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims10000000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
   full_rough_file = rough_dir_str + base_rough_file_str;
+  //std::cerr<<full_rough_file<<std::endl;
   ifs.open (full_rough_file, std::ifstream::in);
   if(ifs.good()){
     std::getline(ifs, header);
@@ -94,6 +99,7 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
   // open and read table, discard header
   base_rough_file_str = base_rough_file_str = "/data/roughness_tables/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims10000000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";;
   full_rough_file = rough_dir_str + base_rough_file_str;
+  //std::cerr<<full_rough_file<<std::endl;
   ifs.open (full_rough_file, std::ifstream::in);
   if(ifs.good()){
     std::getline(ifs, header);
