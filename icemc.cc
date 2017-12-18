@@ -2556,7 +2556,7 @@ int main(int argc,  char **argv) {
         panel1->SetWeightNorm(validScreenSummedArea);
         //vmmhz_max = Efield_screentotal.Mag();
         vmmhz_max = 0.;
-        for(int jj=0; jj<panel1->GetNsamples(); jj++){
+        for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
           vmmhz_max = Tools::dMax(vmmhz_max, panel1->GetVmmhz_freq(jj*Anita::NFREQ));
         }
         //cerr<<vmmhz_max<<endl;
@@ -2574,7 +2574,7 @@ int main(int argc,  char **argv) {
           ofstream roughout(stemp.c_str());
           roughout << std::setprecision(20);
 
-          for(int jj=0; jj<panel1->GetNsamples(); jj++){
+          for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
             roughout << inu << "  "
             << panel1->GetImpactPt(jj).Lon() << "  "
             << -90+panel1->GetImpactPt(jj).Lat() << "  "
@@ -3190,7 +3190,7 @@ int main(int argc,  char **argv) {
 	if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 
-        //cerr<<"-> We got a live one! "<<nunum<<"    "<<panel1->GetNsamples()<<endl;
+        //cerr<<"-> We got a live one! "<<nunum<<"    "<<panel1->GetNvalidPoints()<<endl;
 
         anita1->passglobtrig[0]=thispasses[0];
         anita1->passglobtrig[1]=thispasses[1];
