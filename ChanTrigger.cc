@@ -838,8 +838,8 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
         }
     
         for (int k=0;k<anita1->NFOUR/2;k++) {
-          volts_rx_forfft[0][iband][k] += tmp_volts[0][k] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
-          volts_rx_forfft[1][iband][k] += tmp_volts[1][k] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+          volts_rx_forfft[0][iband][k] += tmp_volts[0][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+          volts_rx_forfft[1][iband][k] += tmp_volts[1][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
         }
       }
       

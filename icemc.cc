@@ -2239,7 +2239,7 @@ int main(int argc,  char **argv) {
         Vector npol_local_inc, npol_local_trans;
         Vector temp_a;
 
-        double Emag_local;
+        double Emag_local, Emag_local_notaper;
         Vector Efield_local;
         Vector Efield_screentotal = Vector(0,0,0);
 
@@ -2278,7 +2278,7 @@ int main(int argc,  char **argv) {
         // First treat the base screen to establish seed points for higher-res scans (we know that there will be sufficient variation across the base screen)
         double maxbaseE=-1.;
         for (int ii=0; ii<panel1->GetNsamples()*panel1->GetNsamples(); ii++){
-          Emag_local = 0.;
+          Emag_local_notaper = Emag_local = 0.;
           tcoeff_perp = tcoeff_parl = 0.;
           pos_current = panel1->GetNextPosition(ii);        // this gets the new screen position
           pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
@@ -2327,8 +2327,12 @@ int main(int argc,  char **argv) {
           //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
           //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
           //cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
-          Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl));// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
-          //cerr<<"E: "<<Emag_local<<std::endl;
+          Emag_local_notaper = Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl));// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
+          viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
+          deltheta_em[0]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[0];
+          deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
+          sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, Emag_local, vmmhz_em[0]);// this applies the angular dependence.
+          //cerr<<"E(preTaper): "<<Emag_local_notaper<< "   E(post): "<<Emag_local << "   viewangle_local[deg]: "<< viewangle_local*180./PI <<std::endl;
           if(Emag_local==0.){ //this will kill any point that doesn't have transmitted power from the
             continue;         // look-up table
           }
@@ -2362,7 +2366,7 @@ int main(int argc,  char **argv) {
 
         //#########
         // Third, now loop over the seed positions; if certain criteria met, then add these points to the seedposition vector to sample further
-        cerr<<"Number of base / seed screen points: "<< basescrn_Emags.size()<< " / " <<seedpositions.size()<<endl;
+        //cerr<<"Number of base / seed screen points: "<< basescrn_Emags.size()<< " / " <<seedpositions.size()<<endl;
         for (unsigned long ii=0; ii< seedpositions.size(); ii++){
           panel1->ResetPositionIndex();
           panel1->SetNsamples(subscreenDivisions);
@@ -2540,7 +2544,7 @@ int main(int argc,  char **argv) {
           for (int k=0;k<Anita::NFREQ;k++) {
             deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
             deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
-            //sig1->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
+            sig1->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
             panel1->AddVmmhz_freq(vmmhz_local_array[k]);
           }
 
@@ -2566,7 +2570,6 @@ int main(int argc,  char **argv) {
         seedGeneration.clear();
 
         if(vmmhz_max>0.){
-          cerr<<"-> We got a live one! "<<nunum<<endl;
           stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
           ofstream roughout(stemp.c_str());
           roughout << std::setprecision(20);
@@ -3187,8 +3190,7 @@ int main(int argc,  char **argv) {
 	if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 
-
-	//	cout << inu << endl;
+        //cerr<<"-> We got a live one! "<<nunum<<"    "<<panel1->GetNsamples()<<endl;
 
         anita1->passglobtrig[0]=thispasses[0];
         anita1->passglobtrig[1]=thispasses[1];
