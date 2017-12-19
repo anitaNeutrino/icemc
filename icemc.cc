@@ -1520,7 +1520,9 @@ int main(int argc,  char **argv) {
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
 
     eventNumber=(UInt_t)(run_no)*NNU+inu;
-
+//if( !( (inu==70)|(inu==152)|(inu==203) ) ){
+//  continue;
+//}
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
     TRandom3 r(eventNumber+7e8);
@@ -2205,8 +2207,6 @@ int main(int argc,  char **argv) {
         int basescreenDivisions = settings1->ROUGHSCREENDIV_BASE;
         int subscreenDivisions = settings1->ROUGHSCREENDIV_SUB;
         int maximumSubscreenGeneration = settings1->ROUGHMAXGEN;
-        double basescreenFractionLimit = settings1->ROUGHSCREENFRAC_BASE;
-        double subscreenFractionLimit = settings1->ROUGHSCREENFRAC_SUB;
 
         int num_validscreenpoints = 0;
         Position pos_basescreen_centralpos;
@@ -2355,10 +2355,6 @@ int main(int argc,  char **argv) {
         //#########
         // Second, now select those points in the base screen that contribute most of the signal strength
         for (int ii=0; ii< basescrn_Emags.size(); ii++){
-          //cerr<<basescrn_Emags[ii]/maxbaseE<<endl;
-          if (basescrn_Emags[ii]/maxbaseE < basescreenFractionLimit){
-            continue;
-          }
           seedpositions.push_back(basescrn_pos[ii]);
           seedEdgeLengths.push_back(basescrn_length[ii]);
           seedGeneration.push_back(1);
@@ -2366,7 +2362,7 @@ int main(int argc,  char **argv) {
 
         //#########
         // Third, now loop over the seed positions; if certain criteria met, then add these points to the seedposition vector to sample further
-        //cerr<<"Number of base / seed screen points: "<< basescrn_Emags.size()<< " / " <<seedpositions.size()<<endl;
+        cerr<<"Number of base / seed screen points: "<< basescrn_Emags.size()<< " / " <<seedpositions.size()<<endl;
         for (unsigned long ii=0; ii< seedpositions.size(); ii++){
           panel1->ResetPositionIndex();
           panel1->SetNsamples(subscreenDivisions);
@@ -2492,8 +2488,7 @@ int main(int argc,  char **argv) {
           }// end for jj for this seed screen
 
           // store these and move on to the next seed screen
-          if( (minE >= subscreenFractionLimit*maxE)                 //can set some fractional limit
-              || (seedGeneration[ii] == maximumSubscreenGeneration) //only go so far
+          if( (seedGeneration[ii] == maximumSubscreenGeneration) //only go so far
               || (panel1->GetEdgeLength() < 1.)                    //limit on physical size of 'facet'
               ){
             for (unsigned long jj=0; jj<seedscreens_pos.size(); jj++){
@@ -3190,8 +3185,6 @@ int main(int argc,  char **argv) {
 	if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 
-        //cerr<<"-> We got a live one! "<<nunum<<"    "<<panel1->GetNvalidPoints()<<endl;
-
         anita1->passglobtrig[0]=thispasses[0];
         anita1->passglobtrig[1]=thispasses[1];
 
@@ -3243,7 +3236,9 @@ int main(int argc,  char **argv) {
           // log of weight and chord for plotting
           logweight=log10(weight);
           interaction1->logchord=log10(interaction1->chord);
-
+//        cerr<<"-> We got a live one! "<<nunum
+//            <<"   Nscreenvalid: "<<panel1->GetNvalidPoints()
+//            <<"   weight: "<<weight<<endl;
           // if neutrino travels more than one meter in ice
           if (interaction1->d2>1) {
             // intermediate counter
