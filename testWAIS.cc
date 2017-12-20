@@ -496,7 +496,7 @@ int main(int argc,  char **argv) {
     // SAW: Adding pulser model
     // Not the most elegant...
     cout << "Reading pulser model: " <<endl;
-    string fname = ICEMC_SRC_DIR +"/var31_minialfa_icemc2icemc_input_electric_field_1m.dat";
+    string fname = ICEMC_SRC_DIR +"/data/var31_minialfa_icemc2icemc_input_electric_field_1m.dat";
     cout << fname << endl;
     //double *time = new double[1971];
     //double *voltsperm = new double[1971];
