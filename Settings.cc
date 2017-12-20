@@ -262,7 +262,6 @@ void Settings::Initialize() {
   // End of the once-global varibles.
   taumodes = 1; //Taumodes =1, taucreated in the rock.
   SCREENEDGELENGTH=25.;
-  ROUGH_INTPOS_SHIFT=100000.;
   TUFFSON=0;
 }
 
@@ -564,12 +563,9 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Enable surface roughness", ROUGHNESS);
   getSetting("Surface roughness", ROUGHSIZE);
   getSetting("Screen edge length [meters]", SCREENEDGELENGTH);
-  getSetting("Interaction position shift [meters]", ROUGH_INTPOS_SHIFT);
 
   getSetting("Base screen divisions", ROUGHSCREENDIV_BASE);
   getSetting("Subgrid divisions", ROUGHSCREENDIV_SUB);
-  getSetting("Base screen fraction threshold", ROUGHSCREENFRAC_BASE);
-  getSetting("Subgrid fraction threshold", ROUGHSCREENFRAC_SUB);
   getSetting("Number of subgrid generations", ROUGHMAXGEN);
 
   getSetting("FIRN", FIRN);
@@ -862,7 +858,6 @@ void Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, Signal* sig1,
   anita1->BANDING = BANDING;
   anita1->NBANDS  = NBANDS;
   anita1->PERCENTBW = PERCENTBW;
-  anita1->PULSER    = PULSER;
   anita1->SIGMA_THETA = SIGMA_THETA;
   anita1->FREQ_LOW    = FREQ_LOW;
   anita1->FREQ_HIGH   = FREQ_HIGH;

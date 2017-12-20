@@ -39,10 +39,6 @@
 #include "signal.h"
 #include <cmath>
 
-#if _cplusplus >=201103L 
-#define isnan stdisnan 
-#endif
-
 
 //#include "rx.hpp"
 #include "Constants.h"
@@ -74,6 +70,7 @@
 #include <sstream>
 
 #if __cplusplus > 199711L
+#define isnan std::isnan 
 #include <type_traits>
 #endif
 
@@ -616,9 +613,9 @@ int main(int argc,  char **argv) {
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
   
   Roughness *rough1=new Roughness(); // create new instance of the roughness class
+  rough1->SetRoughScale(settings1->ROUGHSIZE);
 
-  int fSCREEN_NUMPOINTS_EDGE = settings1->ROUGHNESS;
-  Screen *panel1 = new Screen(fSCREEN_NUMPOINTS_EDGE);              // create new instance of the screen class
+  Screen *panel1 = new Screen(settings1->ROUGHSCREENDIV_BASE);  // create new instance of the screen class
 
   if(spectra1->IsSpectrum()) cout<<" Lowest energy for spectrum is 10^18 eV! \n";
 
@@ -1523,7 +1520,9 @@ int main(int argc,  char **argv) {
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
 
     eventNumber=(UInt_t)(run_no)*NNU+inu;
-
+//if( !( (inu==70)|(inu==152)|(inu==203) ) ){
+//  continue;
+//}
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
     TRandom3 r(eventNumber+7e8);
@@ -2208,8 +2207,6 @@ int main(int argc,  char **argv) {
         int basescreenDivisions = settings1->ROUGHSCREENDIV_BASE;
         int subscreenDivisions = settings1->ROUGHSCREENDIV_SUB;
         int maximumSubscreenGeneration = settings1->ROUGHMAXGEN;
-        double basescreenFractionLimit = settings1->ROUGHSCREENFRAC_BASE;
-        double subscreenFractionLimit = settings1->ROUGHSCREENFRAC_SUB;
 
         int num_validscreenpoints = 0;
         Position pos_basescreen_centralpos;
@@ -2235,14 +2232,10 @@ int main(int argc,  char **argv) {
         double power_perp, power_parl;
         power_perp = power_parl = 0.;
 
-        double HP_64_binarea = 2.5566346e-04;  // healpix nside=64 bin area [sterad]
-        double HP_2048_binarea = 2.4967135219492856e-07;  // healpix nside=2048 bin area [sterad]
-        double antennalength = 0.96; // [m]
-
         Vector npol_local_inc, npol_local_trans;
         Vector temp_a;
 
-        double Emag_local;
+        double Emag_local, Emag_local_notaper;
         Vector Efield_local;
         Vector Efield_screentotal = Vector(0,0,0);
 
@@ -2281,7 +2274,8 @@ int main(int argc,  char **argv) {
         // First treat the base screen to establish seed points for higher-res scans (we know that there will be sufficient variation across the base screen)
         double maxbaseE=-1.;
         for (int ii=0; ii<panel1->GetNsamples()*panel1->GetNsamples(); ii++){
-          Emag_local = 0.;
+          //cerr<<"Base: "<<ii<<endl;
+          Emag_local_notaper = Emag_local = 0.;
           tcoeff_perp = tcoeff_parl = 0.;
           pos_current = panel1->GetNextPosition(ii);        // this gets the new screen position
           pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
@@ -2330,8 +2324,12 @@ int main(int argc,  char **argv) {
           //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
           //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
           //cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
-          Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl));// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
-          //cerr<<"E: "<<Emag_local<<std::endl;
+          Emag_local_notaper = Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl));// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
+          viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
+          deltheta_em[0]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[0];
+          deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
+          sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, Emag_local, vmmhz_em[0]);// this applies the angular dependence.
+          //cerr<<"E(preTaper): "<<Emag_local_notaper<< "   E(post): "<<Emag_local << "   viewangle_local[deg]: "<< viewangle_local*180./PI <<std::endl;
           if(Emag_local==0.){ //this will kill any point that doesn't have transmitted power from the
             continue;         // look-up table
           }
@@ -2354,10 +2352,6 @@ int main(int argc,  char **argv) {
         //#########
         // Second, now select those points in the base screen that contribute most of the signal strength
         for (int ii=0; ii< basescrn_Emags.size(); ii++){
-          //cerr<<basescrn_Emags[ii]/maxbaseE<<endl;
-          if (basescrn_Emags[ii]/maxbaseE < basescreenFractionLimit){
-            continue;
-          }
           seedpositions.push_back(basescrn_pos[ii]);
           seedEdgeLengths.push_back(basescrn_length[ii]);
           seedGeneration.push_back(1);
@@ -2367,6 +2361,7 @@ int main(int argc,  char **argv) {
         // Third, now loop over the seed positions; if certain criteria met, then add these points to the seedposition vector to sample further
         cerr<<"Number of base / seed screen points: "<< basescrn_Emags.size()<< " / " <<seedpositions.size()<<endl;
         for (unsigned long ii=0; ii< seedpositions.size(); ii++){
+          //cerr<<ii<<" / "<<seedpositions.size()<<" : "<<seedEdgeLengths[ii]/subscreenDivisions<<endl;
           panel1->ResetPositionIndex();
           panel1->SetNsamples(subscreenDivisions);
           panel1->SetEdgeLength( seedEdgeLengths[ii] );
@@ -2491,9 +2486,8 @@ int main(int argc,  char **argv) {
           }// end for jj for this seed screen
 
           // store these and move on to the next seed screen
-          if( (minE >= subscreenFractionLimit*maxE)                 //can set some fractional limit
-              || (seedGeneration[ii] == maximumSubscreenGeneration) //only go so far
-              || (panel1->GetEdgeLength() < 1.)                    //limit on physical size of 'facet'
+          if( (seedGeneration[ii] == maximumSubscreenGeneration) //only go so far
+              || (( panel1->GetEdgeLength()/panel1->GetNsamples() <= 2.) && ( panel1->GetEdgeLength()/panel1->GetNsamples() > 0.5)) //limit on physical size of 'facet'
               ){
             for (unsigned long jj=0; jj<seedscreens_pos.size(); jj++){
               // increment counter so we can track the size of the screen's vector arrays
@@ -2509,6 +2503,7 @@ int main(int argc,  char **argv) {
               panel1->AddIncidenceAngle(seedscreens_incangle[jj]);
               panel1->AddTransmissionAngle(seedscreens_transangle[jj]);
               panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
+              panel1->AddFacetLength(panel1->GetEdgeLength() / panel1->GetNsamples());
             }// end for jj<seedscreens_pos
           }
           else { // or reject these points and pass the positions back into seedpositions so we sample at higher resolutions (smaller edge length)
@@ -2543,7 +2538,7 @@ int main(int argc,  char **argv) {
           for (int k=0;k<Anita::NFREQ;k++) {
             deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
             deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
-            //sig1->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
+            sig1->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
             panel1->AddVmmhz_freq(vmmhz_local_array[k]);
           }
 
@@ -2555,7 +2550,7 @@ int main(int argc,  char **argv) {
         panel1->SetWeightNorm(validScreenSummedArea);
         //vmmhz_max = Efield_screentotal.Mag();
         vmmhz_max = 0.;
-        for(int jj=0; jj<panel1->GetNsamples(); jj++){
+        for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
           vmmhz_max = Tools::dMax(vmmhz_max, panel1->GetVmmhz_freq(jj*Anita::NFREQ));
         }
         //cerr<<vmmhz_max<<endl;
@@ -2569,12 +2564,11 @@ int main(int argc,  char **argv) {
         seedGeneration.clear();
 
         if(vmmhz_max>0.){
-          cerr<<"-> We got a live one! "<<nunum<<endl;
           stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
           ofstream roughout(stemp.c_str());
           roughout << std::setprecision(20);
 
-          for(int jj=0; jj<panel1->GetNsamples(); jj++){
+          for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
             roughout << inu << "  "
             << panel1->GetImpactPt(jj).Lon() << "  "
             << -90+panel1->GetImpactPt(jj).Lat() << "  "
@@ -2585,6 +2579,7 @@ int main(int argc,  char **argv) {
             << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
             << panel1->GetIncidenceAngle(jj) << "  "
             << panel1->GetTransmissionAngle(jj) << "  "
+            << panel1->GetFacetLength(jj) << "  "
             << std::endl;
           }
           roughout.close();
@@ -2832,6 +2827,7 @@ int main(int argc,  char **argv) {
         panel1->AddTransmissionAngle(ray1->nsurf_rfexit.Angle(ray1->n_exit2bn[2]));
         panel1->AddWeight( 1. );
         panel1->SetWeightNorm( 1. );
+        panel1->AddFacetLength( 1. );
 
         for (int k=0;k<Anita::NFREQ;k++) {
           if (bn1->WHICHPATH==4)
@@ -3190,9 +3186,6 @@ int main(int argc,  char **argv) {
 	if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 
-
-	//	cout << inu << endl;
-
         anita1->passglobtrig[0]=thispasses[0];
         anita1->passglobtrig[1]=thispasses[1];
 
@@ -3244,7 +3237,7 @@ int main(int argc,  char **argv) {
           // log of weight and chord for plotting
           logweight=log10(weight);
           interaction1->logchord=log10(interaction1->chord);
-
+//        cerr<<"-> We got a live one! "<<nunum<<"   Nscreenvalid: "<<panel1->GetNvalidPoints()<<"   weight: "<<weight<<endl;
           // if neutrino travels more than one meter in ice
           if (interaction1->d2>1) {
             // intermediate counter

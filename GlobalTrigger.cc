@@ -507,8 +507,13 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
       int vl3trig[2][16];
       L3Anita3and4(anita1,vl2trig,
 		   vl3trig,thispasses);
-
-
+      
+      for (int ipol=0;ipol<2;ipol++) {
+	for (int iphi=0;iphi<16;iphi++) {
+	  if (vl3trig[ipol][iphi]>0)    l3trig[ipol]+=(1<<iphi);
+	}
+      }
+      
     }
     else if (settings1->WHICH==10 && settings1->LCPRCP) {
 
@@ -681,10 +686,15 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
 	anita1->time_trig[ibin]=TRIGTIMESTEP*(double)ibin;
       }
 
-
-
-
-
+      // LC: not sure about this
+      for (int iphi=0;iphi<16;iphi++) {
+	for (unsigned int ibin=0; ibin<anita1->HALFNFOUR; ibin++){
+	  if (anita1->l3trig_anita4lr_inanita[iphi][ibin]>0){
+	    l3trig[0]+=(1<<iphi);
+	    ibin = anita1->HALFNFOUR;
+	  }
+	}
+      }
 
 
 

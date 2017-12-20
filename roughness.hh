@@ -36,9 +36,12 @@ private:
   Healpix_Base H;
 #endif
 
+  std::string roughscale_str;
 public:
 
   Roughness();
+
+  void SetRoughScale(double a);
 
 #ifdef USE_HEALPIX
   //! Interpolates the power value for the specified angles 
