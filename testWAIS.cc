@@ -126,6 +126,52 @@ double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_
 
 void interrupt_signal_handler(int sig);
 
+//void read_pulser_electric_field(string efield_file_name, double *&time, double *&voltsperm);
+//void read_pulser_electric_field(string efield_file_name, double *&time, double *&voltsperm){
+void read_pulser_electric_field(string efield_file_name, vector<double> &time, vector<double> &voltsperm);
+void read_pulser_electric_field(string efield_file_name, vector<double> &time, vector<double> &voltsperm){
+    
+    ifstream input_stream(efield_file_name.c_str());
+    
+    string buffer;
+    int c = 0;
+    
+    while(!input_stream.eof())
+    {
+        getline(input_stream,buffer,'\n');
+        //skip the header
+        if( c != 0){
+            //simple stringstream read which assumes each line is "index,volts,time" with no spaces
+            //or any other funny business. The ignore commands skip the commans
+            stringstream ss;
+            int ind=-999;
+            float v=-999., t=-999.;
+            ss << buffer;
+            
+            ss >> ind;
+            ss.ignore(1);
+            ss >> v;
+            ss.ignore(1);
+            ss >> t;
+            ss.ignore(1);
+            
+            if( ind != -999 )
+            {
+                voltsperm.push_back(v);
+                time.push_back(t);
+                //cout << buffer << endl;
+                cout << c-1 << "\t" << time[c-1] << "\t" << voltsperm[c-1] << endl;
+            }
+        }
+
+        if(!input_stream.eof())
+            c = c + 1;
+    }
+    cout << "Counted " << c << " rows from electric field file" << efield_file_name.c_str() << endl;
+    
+    input_stream.close();
+}
+
 int main(int argc,  char **argv) {
 
   string stemp;
@@ -446,7 +492,41 @@ int main(int argc,  char **argv) {
   // LC: If we turn on this flag, then we can use different phases when applying the antenna gain
   // Eventually we will want to do it more elegantly
   anita1->PULSER=1;
-  
+
+    // SAW: Adding pulser model
+    // Not the most elegant...
+    cout << "Reading pulser model: " <<endl;
+    string fname = ICEMC_SRC_DIR +"/var31_minialfa_icemc2icemc_input_electric_field_1m.dat";
+    cout << fname << endl;
+    //double *time = new double[1971];
+    //double *voltsperm = new double[1971];
+    vector<double> time;
+    vector<double> voltsperm;
+    read_pulser_electric_field(fname,time,voltsperm);
+    
+    TGraph *pulserGraph = new TGraph(time.size(), &time[0], &voltsperm[0]);
+    RFSignal wais_pulser(pulserGraph);
+    
+    // This is the correct spacing for the phase and electric field in volts/m/mhz
+    Int_t wais_nfreqs = 256;
+    Double_t wais_df = 5.07812;
+    double *wais_freqs = new double[256];
+    for(int i=0; i<wais_nfreqs; i++){
+        wais_freqs[i] = i*wais_df;
+    }
+    wais_pulser.setFreqs(wais_nfreqs, wais_freqs);
+    Double_t *wais_pulser_freqs = wais_pulser.getFreqs();
+    Double_t *wais_pulser_mags  = wais_pulser.getMags();
+    Double_t *wais_pulser_phases = wais_pulser.getPhases();
+    wais_nfreqs = wais_pulser.getNumFreqs() ;
+    
+    Double_t dt = time[1]-time[0];
+    Double_t df = wais_pulser_freqs[1] - wais_pulser_freqs[0];
+    cout << "Frequency spacing of the wais pulser model : " << wais_df << " "<< df << endl;
+    cout << "DeltaT of wais pulser model " << dt << endl;
+    cout << "N " << time.size() << " NFREQS " <<  wais_pulser.getNumFreqs() << endl;
+    //cout << "Phases " << wais_pulser_phases[0] << " " << wais_pulser_phases[10] << " " << wais_pulser_phases[100] << endl;
+    
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
 
@@ -495,12 +575,15 @@ int main(int argc,  char **argv) {
     interaction1->nnu = interaction1->nnu.Unit();
 
     // TEMPORARY UNTIL WE HAVE MINI ALFA MODEL
+    // FIRST PASS AT MINI ALFA MODEL
+    //vmmhz1m     = wais_pulser_mags;
     vmmhz1m     = sig1->GetVmMHz1m(1e19, anita1->FREQ_HIGH);
 
     vmmhz_max   = ScaleVmMHz(vmmhz1m, interaction1->posnu, bn1->r_bn);
 
     // TEMPORARY UNTIL WE HAVE MINI ALFA MODEL
-    
+    // FIRST PASS AT MINI ALFA MODEL
+      
     // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
     //   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
     // and making an array across frequency bins by putting in frequency dependence.
@@ -509,6 +592,7 @@ int main(int argc,  char **argv) {
     // Here we need also to define the anita1->v_phases in DEGREES :/
     for (int i=0; i<anita1->NFOUR/4; i++){
       anita1->v_phases[i]=90.;
+      //anita1->v_phases[i]=wais_pulser_phases[i];
     }
 
     // VPOL
