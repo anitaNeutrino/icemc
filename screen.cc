@@ -230,6 +230,14 @@ double Screen::GetTransmissionAngle(int i){
   return fTransAngles[i];
 };
 
+void Screen::AddFacetLength(double A){
+  fFacetLength.push_back(A);
+};
+
+double Screen::GetFacetLength(int i){
+  return fFacetLength[i];
+};
+
 void Screen::ResetParameters(){
   // reset these in icemc:
   // Nsamples

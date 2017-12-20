@@ -2232,10 +2232,6 @@ int main(int argc,  char **argv) {
         double power_perp, power_parl;
         power_perp = power_parl = 0.;
 
-        double HP_64_binarea = 2.5566346e-04;  // healpix nside=64 bin area [sterad]
-        double HP_2048_binarea = 2.4967135219492856e-07;  // healpix nside=2048 bin area [sterad]
-        double antennalength = 0.96; // [m]
-
         Vector npol_local_inc, npol_local_trans;
         Vector temp_a;
 
@@ -2278,6 +2274,7 @@ int main(int argc,  char **argv) {
         // First treat the base screen to establish seed points for higher-res scans (we know that there will be sufficient variation across the base screen)
         double maxbaseE=-1.;
         for (int ii=0; ii<panel1->GetNsamples()*panel1->GetNsamples(); ii++){
+          //cerr<<"Base: "<<ii<<endl;
           Emag_local_notaper = Emag_local = 0.;
           tcoeff_perp = tcoeff_parl = 0.;
           pos_current = panel1->GetNextPosition(ii);        // this gets the new screen position
@@ -2364,6 +2361,7 @@ int main(int argc,  char **argv) {
         // Third, now loop over the seed positions; if certain criteria met, then add these points to the seedposition vector to sample further
         cerr<<"Number of base / seed screen points: "<< basescrn_Emags.size()<< " / " <<seedpositions.size()<<endl;
         for (unsigned long ii=0; ii< seedpositions.size(); ii++){
+          //cerr<<ii<<" / "<<seedpositions.size()<<" : "<<seedEdgeLengths[ii]/subscreenDivisions<<endl;
           panel1->ResetPositionIndex();
           panel1->SetNsamples(subscreenDivisions);
           panel1->SetEdgeLength( seedEdgeLengths[ii] );
@@ -2489,7 +2487,7 @@ int main(int argc,  char **argv) {
 
           // store these and move on to the next seed screen
           if( (seedGeneration[ii] == maximumSubscreenGeneration) //only go so far
-              || (panel1->GetEdgeLength() < 1.)                    //limit on physical size of 'facet'
+              || (( panel1->GetEdgeLength()/panel1->GetNsamples() <= 2.) && ( panel1->GetEdgeLength()/panel1->GetNsamples() > 0.5)) //limit on physical size of 'facet'
               ){
             for (unsigned long jj=0; jj<seedscreens_pos.size(); jj++){
               // increment counter so we can track the size of the screen's vector arrays
@@ -2505,6 +2503,7 @@ int main(int argc,  char **argv) {
               panel1->AddIncidenceAngle(seedscreens_incangle[jj]);
               panel1->AddTransmissionAngle(seedscreens_transangle[jj]);
               panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
+              panel1->AddFacetLength(panel1->GetEdgeLength() / panel1->GetNsamples());
             }// end for jj<seedscreens_pos
           }
           else { // or reject these points and pass the positions back into seedpositions so we sample at higher resolutions (smaller edge length)
@@ -2580,6 +2579,7 @@ int main(int argc,  char **argv) {
             << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
             << panel1->GetIncidenceAngle(jj) << "  "
             << panel1->GetTransmissionAngle(jj) << "  "
+            << panel1->GetFacetLength(jj) << "  "
             << std::endl;
           }
           roughout.close();
@@ -2827,6 +2827,7 @@ int main(int argc,  char **argv) {
         panel1->AddTransmissionAngle(ray1->nsurf_rfexit.Angle(ray1->n_exit2bn[2]));
         panel1->AddWeight( 1. );
         panel1->SetWeightNorm( 1. );
+        panel1->AddFacetLength( 1. );
 
         for (int k=0;k<Anita::NFREQ;k++) {
           if (bn1->WHICHPATH==4)
@@ -3236,9 +3237,7 @@ int main(int argc,  char **argv) {
           // log of weight and chord for plotting
           logweight=log10(weight);
           interaction1->logchord=log10(interaction1->chord);
-//        cerr<<"-> We got a live one! "<<nunum
-//            <<"   Nscreenvalid: "<<panel1->GetNvalidPoints()
-//            <<"   weight: "<<weight<<endl;
+//        cerr<<"-> We got a live one! "<<nunum<<"   Nscreenvalid: "<<panel1->GetNvalidPoints()<<"   weight: "<<weight<<endl;
           // if neutrino travels more than one meter in ice
           if (interaction1->d2>1) {
             // intermediate counter
