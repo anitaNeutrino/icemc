@@ -174,11 +174,8 @@ class Settings : public TObject {
 
   double ROUGHSIZE; // roughness size
   double SCREENEDGELENGTH;        // edge length of screen used if there is roughness
-  double ROUGH_INTPOS_SHIFT;      // furthest distance to shift the neutrino interaction position from the balloon if roughness
   int ROUGHSCREENDIV_BASE;        // (N x N) grid for the base screen (to preselect)
   int ROUGHSCREENDIV_SUB;         // (n x n) subgrids for the preselected regions
-  int ROUGHSCREENFRAC_BASE;       // fraction threshold for ratio of minimum Efield to maximum Efield magnitude for the base screen
-  int ROUGHSCREENFRAC_SUB;        // fraction threshold for ratio of minimum Efield to maximum Efield magnitude for the subgrids
   int ROUGHMAXGEN;                // number of maximum generations (inclusive)
 
   int ICE_MODEL; //Select ice model to be used.  0 = Crust 2.0 , 1 = BEDMAP.

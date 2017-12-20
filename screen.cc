@@ -9,7 +9,7 @@ Screen::Screen(int a){
   if( !(a%2) )
     a++;                    // force 'a' odd to set screen steps correctly
 
-  std::cerr << "Generating default screen" << std::endl;
+  //std::cerr << "Generating default screen" << std::endl;
   fedgeLength=1.;
   fcentralPoint = Position(1.,1.,1.);
   fnormal = Vector(1.,1.,1.);
@@ -228,6 +228,14 @@ void Screen::AddTransmissionAngle(double A){
 
 double Screen::GetTransmissionAngle(int i){
   return fTransAngles[i];
+};
+
+void Screen::AddFacetLength(double A){
+  fFacetLength.push_back(A);
+};
+
+double Screen::GetFacetLength(int i){
+  return fFacetLength[i];
 };
 
 void Screen::ResetParameters(){

@@ -507,8 +507,13 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
       int vl3trig[2][16];
       L3Anita3and4(anita1,vl2trig,
 		   vl3trig,thispasses);
-
-
+      
+      for (int ipol=0;ipol<2;ipol++) {
+	for (int iphi=0;iphi<16;iphi++) {
+	  if (vl3trig[ipol][iphi]>0)    l3trig[ipol]+=(1<<iphi);
+	}
+      }
+      
     }
     else if (settings1->WHICH==10 && settings1->LCPRCP) {
 

@@ -791,9 +791,9 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
           //Copy frequency amplitude to screen point
           tmp_vhz[0][k]=tmp_vhz[1][k]=panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
           // cout << tmp_vhz[0][k] << endl;
-                bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
-                bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
-                bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
+	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
+	  bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
+	  bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
 
           anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
 
@@ -809,8 +809,8 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
         }
       } // end looping over frequencies.
 
-
-      anita1->MakeArraysforFFT(tmp_vhz[0],tmp_vhz[1],tmp_volts[0],tmp_volts[1], 90., true);
+      anita1->MakeArrayforFFT(tmp_vhz[0],tmp_volts[0], 90., true);
+      anita1->MakeArrayforFFT(tmp_vhz[1],tmp_volts[1], 90., true);
 
       // now v_banding_rfcm_h_forfft is in the time domain
       // and now it is really in units of V
@@ -838,8 +838,8 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
         }
     
         for (int k=0;k<anita1->NFOUR/2;k++) {
-          volts_rx_forfft[0][iband][k] += tmp_volts[0][k] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
-          volts_rx_forfft[1][iband][k] += tmp_volts[1][k] * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+          volts_rx_forfft[0][iband][k] += tmp_volts[0][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+          volts_rx_forfft[1][iband][k] += tmp_volts[1][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
         }
       }
       
@@ -868,7 +868,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
 
 #ifdef ANITA_UTIL_EXISTS
   if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
-    getNoiseFromFlight(anita1, ant);
+    getNoiseFromFlight(anita1, ant, settings1->SIGNAL_FLUCT > 0);
 
   if (settings1->ADDCW){
     memset(cw_digPath, 0, sizeof(cw_digPath));
@@ -916,7 +916,8 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant, Ballo
       } // end loop over nfreq
       
       
-      anita1->MakeArraysforFFT(v_banding_rfcm[0][iband],v_banding_rfcm[1][iband],v_banding_rfcm_forfft[0][iband],v_banding_rfcm_forfft[1][iband], 90., true);
+      anita1->MakeArrayforFFT(v_banding_rfcm[0][iband],v_banding_rfcm_forfft[0][iband], 90., true);
+      anita1->MakeArrayforFFT(v_banding_rfcm[1][iband],v_banding_rfcm_forfft[1][iband], 90., true);
       
       // for some reason I'm averaging over 10 neighboring bins
       // to get rid of the zero bins
@@ -1032,7 +1033,7 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Bal
     applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[1], 1, bn1);
 #endif
     
-    if (settings1->SIGNAL_FLUCT && !settings1->NOISEFROMFLIGHTDIGITIZER){
+    if (settings1->SIGNAL_FLUCT > 0 && !settings1->NOISEFROMFLIGHTDIGITIZER){
       for (int i=0;i<anita1->NFOUR/2;i++) {
      	for (int ipol=0;ipol<2;ipol++){
      	  volts_rx_rfcm_lab[ipol][i]+=anita1->timedomainnoise_lab[ipol][i]; // add noise
@@ -1059,7 +1060,7 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Bal
     
     double scale;
     double sumpower=0.;
-    if (anita1->PULSER) { // if we are using the pulser spectrum instead of simulating neutrinos
+    if (settings1->PULSER) { // if we are using the pulser spectrum instead of simulating neutrinos
       scale=Tools::dMax(vhz_rx_rfcm_e,Anita::NFREQ)/Tools::dMax(anita1->v_pulser,anita1->NFOUR/4);
       sumpower=0.;
       int ifour;// index for fourier transform
@@ -1077,7 +1078,8 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Bal
     }
     
     // change their length from Anita::NFREQ to HALFNFOUR
-    anita1->MakeArraysforFFT(vhz_rx_rfcm_e,vhz_rx_rfcm_h,volts_rx_rfcm[0],volts_rx_rfcm[1], 90., true);
+    anita1->MakeArrayforFFT(vhz_rx_rfcm_e,volts_rx_rfcm[0], 90., true);
+    anita1->MakeArrayforFFT(vhz_rx_rfcm_h,volts_rx_rfcm[1], 90., true);
       
           
     // now the last two are in the frequency domain
@@ -1123,7 +1125,8 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Bal
     }
 
     // change their length from Anita::NFREQ to HALFNFOUR
-    anita1->MakeArraysforFFT(vhz_rx_rfcm_lab_e,vhz_rx_rfcm_lab_h,volts_rx_rfcm_lab[0],volts_rx_rfcm_lab[1], 90., true);
+    anita1->MakeArrayforFFT(vhz_rx_rfcm_lab_e,volts_rx_rfcm_lab[0], 90., true);
+    anita1->MakeArrayforFFT(vhz_rx_rfcm_lab_h,volts_rx_rfcm_lab[1], 90., true);
       
     // now the last two are in the frequency domain
     // convert to the time domain
@@ -1136,7 +1139,7 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Bal
     Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_rfcm_lab[0]); // EH, why only this has NormalTimeOrdering applied? Why not before?
     Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_rfcm_lab[1]);
 
-    if (settings1->SIGNAL_FLUCT) { 
+    if (settings1->SIGNAL_FLUCT > 0) { 
       for (int i=0;i<anita1->NFOUR/2;i++) {
 	for (int ipol=0;ipol<2;ipol++){
 	  justSig_digPath[ipol][i] = volts_rx_rfcm_lab[ipol][i];
@@ -1853,7 +1856,7 @@ void ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double 
   }
 }
 
-void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
+void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
 
   Int_t numFreqs = anita1->numFreqs;
   FFTWComplex *phasorsDig  = new FFTWComplex[numFreqs];
@@ -1889,7 +1892,7 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant){
 
     
     for (int i=0; i<anita1->HALFNFOUR; i++){
-      justNoise_digPath[ipol][i]  = justNoiseDig[i]*anita1->THERMALNOISE_FACTOR;
+      justNoise_digPath[ipol][i]  = also_digi ? justNoiseDig[i]*anita1->THERMALNOISE_FACTOR : 0;
       justNoise_trigPath[ipol][i] = justNoiseTrig[i]*anita1->THERMALNOISE_FACTOR;
     }
     

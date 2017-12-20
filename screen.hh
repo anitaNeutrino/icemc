@@ -44,7 +44,7 @@ private:
   std::vector<double> fIncAngles;   ///< container for incidence angles
   std::vector<double> fTransAngles; ///< container for transmission angle
   double fWeightNorm;               ///< normalization of the weights == simple weight sum
-
+  std::vector<double> fFacetLength; ///< edge length [m] of individual contributing facet
   
 
 public:
@@ -315,6 +315,20 @@ public:
   * @return double
   */
   double GetTransmissionAngle(int i);
+
+
+  //! Appends a facet edge length value to the fFacetLength array
+  /**
+  * @param A - viewangle
+  */
+  void AddFacetLength(double A);
+
+  //! Get the facet edge length value stored at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
+  double GetFacetLength(int i);
 
   //! Resets the following screen parameters (fNvalidpoints,fVmmhz_freq,fVmmhz0,fViewangle,fDelays,fVec2blns,fPols,fImpactPt,fWeight,fWeightNorm)
   void ResetParameters();
