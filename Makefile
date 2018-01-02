@@ -66,7 +66,8 @@ ANITA_UTIL_EXISTS=1
 
 ANITA_UTIL_LIB_DIR=${ANITA_UTIL_INSTALL_DIR}/lib
 ANITA_UTIL_INC_DIR=${ANITA_UTIL_INSTALL_DIR}/include
-LD_ANITA_UTIL=-L$(ANITA_UTIL_LIB_DIR) -lAnitaEvent -lRootFftwWrapper
+LD_ANITA_UTIL=-L$(ANITA_UTIL_LIB_DIR)
+LIBS_ANITA_UTIL=-lAnitaEvent -lRootFftwWrapper
 INC_ANITA_UTIL=-I$(ANITA_UTIL_INC_DIR)
 ANITA_UTIL_ETC_DIR=$(ANITA_UTIL_INSTALL_DIR)/etc
 endif
@@ -81,7 +82,7 @@ endif
 
 ifdef USE_HEALPIX
 	CXXFLAGS += -DUSE_HEALPIX `pkg-config --cflags healpix_cxx`
-	LDFLAGS  += `pkg-config --libs healpix_cxx` 
+	LIBS  += `pkg-config --libs healpix_cxx` 
 endif
 
 
@@ -96,6 +97,7 @@ DBGFLAGS  = -pipe -Wall -W -Woverloaded-virtual -g -ggdb -O0 -fno-inline
 
 DBGCXXFLAGS = $(DBGFLAGS) $(ROOTCFLAGS) $(BOOSTFLAGS)
 LDFLAGS  += $(CPPSTD_FLAGS) $(LD_ANITA_UTIL) -I$(BOOST_ROOT) -L.
+LIBS += $(LIBS_ANITA_UTIL)
 
 # Mathmore not included in the standard ROOT libs
 LIBS += -lMathMore
@@ -115,7 +117,7 @@ BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(Ex
 all:            $(BINARIES)
 
 $(BINARIES): %: %.$(SrcSuf) $(OBJS)
-		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $< $(OutPutOpt) $@
+		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $< $(LIBS) $(OutPutOpt) $@
 		@echo "$@ done"
 
 .PHONY: clean
