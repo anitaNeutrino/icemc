@@ -2255,9 +2255,8 @@ int main(int argc,  char **argv) {
         panel1->SetNormal( vec_localnormal );
         panel1->SetCosineProjectionFactor( 1. );
 
-        temp_a = vec_localnormal.Cross( panel1->GetCentralPoint() );
-        panel1->SetUnitX( temp_a.Unit() );
-        panel1->SetUnitY( (vec_localnormal.Cross(temp_a)).Unit() );
+        panel1->SetUnitY( (vec_localnormal.Cross(ray1->n_exit2bn[2])).Unit() );
+        panel1->SetUnitX( (panel1->GetUnitY().Cross(vec_localnormal)).Unit() );
 //cerr<<panel1->GetCentralPoint()<<"  "<<  bn1->r_bn<<endl;
         // loop over grid point on ground and see if it's valid
         for (int jj=0; jj< panel1->GetNsamples()*panel1->GetNsamples(); jj++){
