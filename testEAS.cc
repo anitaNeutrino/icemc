@@ -98,6 +98,7 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 #endif
 #endif
 #include "TApplication.h"
+#include <fftw3.h>
 
 
 const double pi = atan(1)*4;
@@ -343,7 +344,7 @@ int main(int argc,  char **argv) {
     }
       
     ZhsAlpha[i] = EEmaxAlpha;
-    printf("i: %d/%d, Time: %11.4e, ZhsTimeE[i]: %11.4e, Eproj/E: %11.8e, EEmaxAlpha: %11.4e\n", i, ZhsTimeN - 1, ZhsTimeArr.at(i), ZhsTimeE.at(i), Eproj/E, EEmaxAlpha);
+    printf("i: %d/%d, Time: %11.8e, ZhsTimeE[i]: %11.4e, Eproj/E: %11.8e, EEmaxAlpha: %11.4e\n", i, ZhsTimeN - 1, ZhsTimeArr.at(i), ZhsTimeE.at(i), Eproj/E, EEmaxAlpha);
   }
 
   // Projections on the Emax:
@@ -351,6 +352,8 @@ int main(int argc,  char **argv) {
   printf("The maximal field Emax: %11.4e\n", Emax);
   printf("The maximal index of Emax: %d\n", Emax_ind);
   printf("The maximal components: (%11.4e, %11.4e, %11.4e)\n", Ex_max, Ey_max, Ez_max);
+  double ZhsTimeStart = ZhsTimeArr[0]; 
+  double ZhsTimeDelta = ZhsTimeArr[1] - ZhsTimeArr[0];
 
 
 
@@ -372,9 +375,14 @@ int main(int argc,  char **argv) {
   int ind_maxval;
   bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), xmin, xmax, ind_maxval, xmaxval, ymaxval);
     // printf("ind_maxval: %d, xmaxval: %11.8e, maxval: %11.4e, xmin: %11.8e, xmax: %11.8e, (xmax - xmin) / dx: %11.8e, %11.8e", ind_maxval, xmaxval, ymaxval, xmin, xmax, (xmax - xmaxval) / (ZhsTimeArr[1] - ZhsTimeArr[0]), (xmaxval - xmin) / (ZhsTimeArr[1] - ZhsTimeArr[0]));
-  double vis_xmin = xmaxval - 100*(xmaxval - xmin);
-  double vis_xmax = xmaxval + 1500*(xmax - xmaxval); 
-  printf("Waveform xmax - xmin: %5.3f, (%5.3f%%)", vis_xmax - vis_xmin, (vis_xmax - vis_xmin) / (ZhsTimeArr[ZhsTimeN - 1] - ZhsTimeArr[0]));
+  // double vis_xmin = xmaxval - 100*(xmaxval - xmin);
+  double vis_xmin = xmaxval - 20*(xmaxval - xmin);
+  double vis_xmax = xmaxval + 20*(xmax - xmaxval); 
+  int vis_xmin_bin = (vis_xmin - ZhsTimeStart) / ZhsTimeDelta;
+  int vis_xmax_bin = (vis_xmax - ZhsTimeStart) / ZhsTimeDelta;
+  int vis_nbins = vis_xmax_bin - vis_xmin_bin + 1;
+  
+  printf("Waveform xmax - xmin: %5.3f, (%5.3f%%)\n", vis_xmax - vis_xmin, (vis_xmax - vis_xmin) / ZhsTimeDelta);
   grZhsTimeE->GetXaxis()->SetLimits(vis_xmin, vis_xmax);
   TGaxis::SetExponentOffset(0.02, -0.04, "x");
   grZhsTimeE->GetXaxis()->SetTitle("Time [ns]");
@@ -409,6 +417,56 @@ int main(int argc,  char **argv) {
   legend->Draw();
 
   fflush(stdout);
+
+  double *ZhsFftInp = new double[vis_nbins];
+
+  printf("vis_nbins: %d, vis_xmin_bin: %d, ZhsTimeE.size(): %zu\n", vis_nbins, vis_xmin_bin, ZhsTimeE.size());
+  for (int i = 0; i < vis_nbins; i++) {
+    double val = *(ZhsTimeE.data() + vis_xmin_bin + i);
+    ZhsFftInp[i] = val;
+    printf("ZhsFftInp[%d]: %11.8e\n", i, val);
+  }
+
+
+  //  fftw_complex *in, *out;
+  //  fftw_plan p;
+  //  in = (fftw_complex*) malloc(sizeof(fftw_complex) * vis_nbins);
+  //  out = (fftw_complex*) malloc(sizeof(fftw_complex) * vis_nbins);
+  //  p = fftw_plan_dft_1d(vis_nbins, in, out, FFTW_FORWARD, FFTW_ESTIMATE); 
+    double xmax_normal = 5;
+   double xmin_normal = -5;
+   int N = vis_nbins;
+   double dx = (xmax_normal - xmin_normal) / N;
+    for (int i = 0; i < vis_nbins; i++){
+      double x = xmin_normal + dx * i;
+      double y = exp(-0.5 * x * x) / (sqrt(2.0) * sqrt(pi));
+      ZhsFftInp[i] = y;
+  //    in[i][0] = y; // ZhsFftInp[i]; 
+  //    in[i][1] = 0; 
+    }
+  //  fftw_execute(p); /* repeat as needed */
+  TGraph *grFft = new TGraph(vis_nbins / 2);
+  FFTWComplex *ZhsFft = FFTtools::doFFT(vis_nbins, ZhsFftInp);
+  for (int i = 0; i < vis_nbins / 2; i++){
+  // grFft->SetPoint(i, i, ZhsFft[i].getAbsSq() /* * ZhsFft[i].re */);
+    grFft->SetPoint(i, i / (xmax_normal - xmin_normal), ZhsFft[i].re * dx); // To get continuous ft values.
+  //   grFft->SetPoint(i, i / (xmax_normal - xmin_normal), out[i][0] * dx); // To get continuous ft values.
+  //   // printf("ZhsFft: %d, %11.4e\n", i, ZhsFft[i].re);
+  //   // printf("out: %d, %11.4e\n", i, ZhsFft[i].re);
+  //   printf("out: %d, %10.4e\n", i, out[i][0] * dx);
+  }
+
+  // fftw_destroy_plan(p);
+  // fftw_free(in); fftw_free(out);
+  // free(in); free(out);
+  
+
+
+  TCanvas *cZhsFft = new TCanvas();
+  grFft->Draw("AL");
+  cZhsFft->Update();
+  printf("Done");
+  
   theApp.Run();
 
 
