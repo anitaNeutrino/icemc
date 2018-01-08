@@ -174,9 +174,7 @@ class Settings : public TObject {
 
   double ROUGHSIZE; // roughness size
   double SCREENEDGELENGTH;        // edge length of screen used if there is roughness
-  int ROUGHSCREENDIV_BASE;        // (N x N) grid for the base screen (to preselect)
-  int ROUGHSCREENDIV_SUB;         // (n x n) subgrids for the preselected regions
-  int ROUGHMAXGEN;                // number of maximum generations (inclusive)
+  double SCREENSTEPSIZE;        // step size of screen grid if there is roughness
 
   int ICE_MODEL; //Select ice model to be used.  0 = Crust 2.0 , 1 = BEDMAP.
   int NOFZ; // 1=depth dependent index of refraction,0=off

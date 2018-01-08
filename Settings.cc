@@ -564,9 +564,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Surface roughness", ROUGHSIZE);
   getSetting("Screen edge length [meters]", SCREENEDGELENGTH);
 
-  getSetting("Base screen divisions", ROUGHSCREENDIV_BASE);
-  getSetting("Subgrid divisions", ROUGHSCREENDIV_SUB);
-  getSetting("Number of subgrid generations", ROUGHMAXGEN);
+  getSetting("Screen step size [meters]", SCREENSTEPSIZE);
 
   getSetting("FIRN", FIRN);
   if (FIRN==0){
