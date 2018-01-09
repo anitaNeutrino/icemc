@@ -131,7 +131,7 @@ $(SO_HOT_TARGET): $(SO_DEP)
 
 $(SO_TARGET) : $(SO_DEP) hot-api.h
 # g++ $(CXXFLAGS) -shared $(LDFLAGS) -fvisibility=hidden -o $@ $<
-	g++ $(CXXFLAGS) -shared $(LDFLAGS) -fvisibility=hidden -o $@ $<
+	g++ $(CXXFLAGS) -g3 -shared $(LDFLAGS) -fvisibility=hidden -o $@ $<
 
 
 hot-loop.o : hot-loop.cpp hot-api.h

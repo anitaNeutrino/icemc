@@ -161,7 +161,90 @@ static void game_finalize(struct game_state *state)
 static void game_reload(struct game_state *state)
 {
   // state->c->Clear();
-  cout << "Reloaded game" << endl;
+
+  // xmin, xmax: fwhm interval endpoints.
+  double xmin = 183.95e+3;
+  double xmax = 183.98e+3;
+  double xmaxval;
+  double ymaxval;
+  int ind_maxval;
+  bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), xmin, xmax, ind_maxval, xmaxval, ymaxval);
+  // vis_xmin, vis_xmax: which range to visualize, should encompass (xmin, xmax).
+  double vis_xmin = xmaxval - 200*(xmaxval - xmin);
+  double vis_xmax = xmaxval + 200*(xmax - xmaxval); 
+  int vis_xmin_bin = (vis_xmin - ZhsTimeStart) / ZhsTimeDelta;
+  int vis_xmax_bin = (vis_xmax - ZhsTimeStart) / ZhsTimeDelta;
+  int vis_nbins = vis_xmax_bin - vis_xmin_bin + 1;
+  printf("Waveform xmax - xmin: %5.3f, (%5.3f%%)\n", vis_xmax - vis_xmin, (vis_xmax - vis_xmin) / ZhsTimeDelta);
+  state->grZhsTimeE->GetXaxis()->SetLimits(vis_xmin, vis_xmax);
+  state->grZhsTimeE->GetXaxis()->SetTitle("Time [ns]");
+  state->grZhsTimeE->GetYaxis()->SetTitle("E [V/m]");
+  // state->grZhsTimeE->Draw("AL");
+  // state->px1->Update();
+
+
+  state->grZhsAlpha->GetXaxis()->SetLimits(vis_xmin, vis_xmax);
+  state->grZhsAlpha->GetHistogram()->SetMaximum(180);
+  state->grZhsAlpha->GetHistogram()->SetMinimum(0);
+  state->legend->SetX1NDC(0.12);
+  state->legend->SetX2NDC(0.3);
+  state->legend->SetY1NDC(0.75);
+  state->legend->SetY2NDC(0.88);
+  // state->px2->Update();
+
+  state->px1->Modified();
+  state->px2->Modified();
+  state->cZhsEAndAlpha->Modified();
+  state->cZhsEAndAlpha->Update();
+
+
+  state->cZhsFft->Clear();
+ 
+  delete[] state->ZhsFftInp;
+  state->ZhsFftInp = new double[vis_nbins];
+
+  // printf("vis_nbins: %d\n", vis_nbins);
+  // state->ZhsFftInp = new double[vis_nbins];
+  // for (int i = 0; i < vis_nbins; i++) {
+  //   double val = *(ZhsTimeE.data() + vis_xmin_bin + i);
+  //   state->ZhsFftInp[i] = val;
+  //   printf("ZhsFftInp[%d]: %11.8e\n", i, val);
+  // }
+
+   double xmin_normal = -30;
+   double xmax_normal = +30;
+   int N = vis_nbins;
+   double dx = (xmax_normal - xmin_normal) / N;
+    for (int i = 0; i < vis_nbins; i++){
+      double x = xmin_normal + dx * i;
+      double y = exp(-0.5 * x * x) / (sqrt(2.0) * sqrt(pi));
+      state->ZhsFftInp[i] = y;
+  //    in[i][0] = y; // ZhsFftInp[i]; 
+  //    in[i][1] = 0; 
+    }
+
+  if (state->grFft) delete state->grFft;
+  state->grFft = new TGraph(vis_nbins / 2);
+  printf("Before deleting ZhsFft\n");
+  // delete[]: Is it a right thing to do?
+  // http://www.fftw.org/fftw3_doc/Complex-One_002dDimensional-DFTs.html#Complex-One_002dDimensional-DFTs:
+  // If you allocate an array with fftw_malloc() you must deallocate it with fftw_free(). Do not use free() or, heaven forbid, _delete_. 
+  // doFFT is not using fftw_malloc() though, unless "new" is overloaded.
+  if (state->ZhsFft) delete[] state->ZhsFft;
+  printf("After deleting ZhsFft\n");
+  state->ZhsFft = FFTtools::doFFT(vis_nbins, state->ZhsFftInp);
+  for (int i = 0; i < vis_nbins / 2; i++){
+    state->grFft->SetPoint(i, i / (xmax_normal - xmin_normal), state->ZhsFft[i].re * dx); // To get continuous ft values.
+  }
+  state->cZhsFft->cd();
+  state->grFft->Draw("AL");
+
+  state->grFft->SetLineColor(kBlue);
+  state->grFft->SetLineWidth(1);
+  state->cZhsFft->Modified();
+  state->cZhsFft->Update();
+  cout << "reloaded dl" << endl;
+  
 }
 
 static void game_unload(struct game_state *state)
