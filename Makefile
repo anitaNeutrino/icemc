@@ -78,7 +78,7 @@ CXXFLAGS += -DANITA_UTIL_EXISTS
 endif
 
 ifdef VECTORIZE
-CXXFLAGS += -DVECTORIZE -march=native
+CXXFLAGS += -DVECTORIZE -march=native -fabi-version=0
 endif
 
 ifdef ANITA3_EVENTREADER
