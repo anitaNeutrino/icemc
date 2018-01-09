@@ -102,6 +102,10 @@ endif()
 option (USE_HEALPIX "Enable Healpix Segmentation, requires healpix to be
 installed on your system in a place that can be found easily." OFF)
 
+option (VECTORIZE "Enable manual vectorization, does nothing if ANITA_UTIL is not available." ON)
+
+
+
 if (USE_HEALPIX)
   find_package(PkgConfig) 
   pkg_search_module(HEALPIX REQUIRED healpix_cxx) 
@@ -110,6 +114,10 @@ if (USE_HEALPIX)
   include_directories(${HEALPIX_INCLUDE_DIRS})
   link_directories(${HEALPIX_LIBRARY_DIRS})
 endif()
+
+if (VECTORIZE) 
+  add_definitions(-DVECTORIZE -march=native) 
+endif() 
 
 
 ##We need to compile stuff into a library unless we want it to be compiled a

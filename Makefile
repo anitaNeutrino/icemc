@@ -22,6 +22,8 @@ ANITA3_EVENTREADER=1
 #USE_HEALPIX=1
 
 
+# Comment to disable explicit vectorization (but will do nothing if ANITA_UTIL is not available) 
+VECTORIZE=1
 
 
 # The ROOT flags are added to the CXXFLAGS in the .arch file
@@ -74,6 +76,10 @@ endif
 
 ifdef ANITA_UTIL_EXISTS
 CXXFLAGS += -DANITA_UTIL_EXISTS
+endif
+
+ifdef VECTORIZE
+CXXFLAGS += -DVECTORIZE -march=native
 endif
 
 ifdef ANITA3_EVENTREADER
