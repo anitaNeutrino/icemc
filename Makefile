@@ -5,6 +5,14 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
+include so-dep_.inc # Updated by emacs: SO_DEP := canvas.cpp
+SO_DEP_STEM = $(basename $(SO_DEP))
+SO_TARGET := $(SO_DEP_STEM).so
+HASH = $(shell md5sum $(SO_DEP) | gawk '{print $$1}')
+SO_HOT_TARGET := SO/$(SO_DEP_STEM)_$(HASH)_.so
+
+hot: $(SO_HOT_TARGET)
+
 include Makefile.arch
 
 #------------------------------------------------------------------------------
@@ -95,24 +103,50 @@ LIBS += -lMathMore
 CLASS_HEADERS = rx.hpp Taumodel.hh Settings.h
 DICT = classdict
 
-OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o
+OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o hot-loop.o
 
 
-BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
+# BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
+BINARIES = testEAS$(ExeSuf) main
+# BINARIES = main skel
+
+BVVCPPFLAGS =         -pedantic -Wall -O0 -g3 -fPIC $(shell root-config --cflags)
+BVVLDLIBS  = -ldl $(shell root-config --glibs)
+
 
 #------------------------------------------------------------------------------
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf)
 
-all:            $(BINARIES)
+all:            $(BINARIES) $(SO_TARGET)
 
+# testEAS : testEAS.cc hot-api.h hot-loop.o
+# 		g++ -pedantic -Wall -O0 -g3 -fPIC `root-config --cflags` -rdynamic -o $@ $< -ldl `root-config --glibs` hot-loop.o $(LIBS)
+
+
+$(SO_HOT_TARGET): $(SO_DEP)
+	g++ $(CXXFLAGS) -shared $(LDFLAGS) -ldl -fvisibility=hidden -o $@ $<
+	nm $@ > $(basename $(SO_HOT_TARGET)).txt
+	./notify.sh testEAS SO_LOCATION $@ || rm $(SO_HOT_TARGET) $(basename $(SO_HOT_TARGET)).txt # if default, "hot" target was called by mistake when program is not running.
+
+$(SO_TARGET) : $(SO_DEP) hot-api.h
+# g++ $(CXXFLAGS) -shared $(LDFLAGS) -fvisibility=hidden -o $@ $<
+	g++ $(CXXFLAGS) -shared $(LDFLAGS) -fvisibility=hidden -o $@ $<
+
+
+hot-loop.o : hot-loop.cpp hot-api.h
+		g++ -c $(BVVCPPFLAGS) $(BVVLDFLAGS) -rdynamic -o $@ $< $(BVVLDLIBS)
+
+# main : main.cpp hot-api.h hot-loop.o
+# 		c++ $(BVVCPPFLAGS) $(BVVLDFLAGS) -rdynamic -o $@ $< $(BVVLDLIBS) hot-loop.o
+# 
 $(BINARIES): %: %.$(SrcSuf) $(OBJS)
 		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $< $(OutPutOpt) $@
 		@echo "$@ done"
 
 .PHONY: clean
 clean:
-		@rm -f $(OBJS) classdict.* $(BINARIES)
+		@rm -f $(OBJS) classdict.* $(BINARIES) *.so
 
 distclean:      clean
 		@rm -f $(OBJS) $(BINAIRES) $(DICT)* *.def *.exp \
