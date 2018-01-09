@@ -615,7 +615,7 @@ int main(int argc,  char **argv) {
   Roughness *rough1=new Roughness(); // create new instance of the roughness class
   rough1->SetRoughScale(settings1->ROUGHSIZE);
 
-  Screen *panel1 = new Screen(settings1->ROUGHSCREENDIV_BASE);  // create new instance of the screen class
+  Screen *panel1 = new Screen(0);  // create new instance of the screen class
 
   if(spectra1->IsSpectrum()) cout<<" Lowest energy for spectrum is 10^18 eV! \n";
 
@@ -1520,7 +1520,7 @@ int main(int argc,  char **argv) {
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
 
     eventNumber=(UInt_t)(run_no)*NNU+inu;
-//if( !( (inu==70)|(inu==152)|(inu==203) ) ){
+//if( !( (inu==523) ) ){
 //  continue;
 //}
     // Set seed of all random number generators to be dependent on eventNumber
@@ -2204,18 +2204,14 @@ int main(int argc,  char **argv) {
         //(pos)    posnu:               position of neutrino interaction
 
         double basescreenedgelength = settings1->SCREENEDGELENGTH;
-        int basescreenDivisions = settings1->ROUGHSCREENDIV_BASE;
-        int subscreenDivisions = settings1->ROUGHSCREENDIV_SUB;
-        int maximumSubscreenGeneration = settings1->ROUGHMAXGEN;
+        double grd_stepsize = settings1->SCREENSTEPSIZE;
+        int grd_nsteps = int(basescreenedgelength / grd_stepsize);
 
         int num_validscreenpoints = 0;
-        Position pos_basescreen_centralpos;
         Position pos_current;
-        Vector pos_current_localnormal; // local normal at point on ground below screen current point
         Vector vec_pos_current_to_balloon;
 
         Position pos_projectedImpactPoint;
-        Vector vec_specularnormal;      //normalized, normal vector at specular point
         Vector vec_localnormal;         //normalized, normal vector at projected ground point
         Vector vec_nnu_to_impactPoint;  //normalized
         Vector vec_local_grnd_perp;     //normalized, vector perp. to incident and surface normal (out-of-inc place)
@@ -2235,18 +2231,11 @@ int main(int argc,  char **argv) {
         Vector npol_local_inc, npol_local_trans;
         Vector temp_a;
 
-        double Emag_local, Emag_local_notaper;
+        double Emag_local;
+        double taperfactor;
         Vector Efield_local;
         Vector Efield_screentotal = Vector(0,0,0);
 
-        std::vector<double> basescrn_Emags;             // container for base screen Efield
-        std::vector<Position> basescrn_pos;             // container for base screen points, will sample to pass along to seedpositions below
-        std::vector<double> basescrn_length;            // container for base screen edge lengths
-        std::vector<Position> seedpositions;            // container for seed positions for additional passes
-        std::vector<double> seedEdgeLengths;            // container for edge lengths for additional passes
-        std::vector<int> seedGeneration;                // container for tracking generations for additional passes
-
-        Vector vec_bln_vert = antarctica->GetSurfaceNormal( bn1->r_bn ).Unit();
         //double pathlength_specular = interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn);
         double time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*NFIRN / CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/CLIGHT);
         double time_reference_local;
@@ -2254,44 +2243,31 @@ int main(int argc,  char **argv) {
         //iterate points on the screen, get their position and project back to find ground impact
         //calculate incident and transmitted angles, look up power fraction, and add to running total
 
-        //reset the counter and set the BASE screen properties based on current event/balloon geometry
+        //reset
         panel1->ResetParameters();
         panel1->ResetPositionIndex();
 
-        panel1->SetNsamples(basescreenDivisions);
+        panel1->SetNsamples( grd_nsteps );
         panel1->SetEdgeLength( basescreenedgelength );
-        panel1->SetCentralPoint( ray1->rfexit[2] + 0.8*bn1->r_bn.Distance(ray1->rfexit[2])*ray1->n_exit2bn[2].Unit() ); //move towards balloon by 80% of distance to balloon
-        panel1->SetNormal( ray1->n_exit2bn[2].Unit() );
-        panel1->SetCosineProjectionFactor( ray1->n_exit2bn[2].Unit().Dot(antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit()) );
 
-        pos_current_localnormal = antarctica->GetSurfaceNormal( panel1->GetCentralPoint() ).Unit();
-        temp_a = pos_current_localnormal - ray1->n_exit2bn[2].Dot(pos_current_localnormal) * ray1->n_exit2bn[2].Unit();
-        panel1->SetUnitX( ray1->n_exit2bn[2].Cross(temp_a).Unit() );  // set screen y-hat as up 'perp.' to ground in the screen plane, define x-hat as perp.
-        panel1->SetUnitY( -1.*ray1->n_exit2bn[2].Cross(ray1->n_exit2bn[2].Cross(temp_a).Unit()) );
-        pos_basescreen_centralpos = panel1->GetCentralPoint();
+        panel1->SetCentralPoint( ray1->rfexit[2] );
+        vec_localnormal = antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit();
+        panel1->SetNormal( vec_localnormal );
+        panel1->SetCosineProjectionFactor( 1. );
 
-        //#########
-        // First treat the base screen to establish seed points for higher-res scans (we know that there will be sufficient variation across the base screen)
-        double maxbaseE=-1.;
-        for (int ii=0; ii<panel1->GetNsamples()*panel1->GetNsamples(); ii++){
-          //cerr<<"Base: "<<ii<<endl;
-          Emag_local_notaper = Emag_local = 0.;
+        panel1->SetUnitY( (vec_localnormal.Cross(ray1->n_exit2bn[2])).Unit() );
+        panel1->SetUnitX( (panel1->GetUnitY().Cross(vec_localnormal)).Unit() );
+//cerr<<panel1->GetCentralPoint()<<"  "<<  bn1->r_bn<<endl;
+        // loop over grid point on ground and see if it's valid
+        for (int jj=0; jj< panel1->GetNsamples()*panel1->GetNsamples(); jj++){
+//cerr<<"+++++++++++++"<<endl;
+//cerr<<"+ seed point: "<<jj<<" / "<<panel1->GetNsamples()*panel1->GetNsamples()<<endl;
+          Emag_local = vmmhz1m_max;
+          taperfactor = 1.;
           tcoeff_perp = tcoeff_parl = 0.;
-          pos_current = panel1->GetNextPosition(ii);        // this gets the new screen position
-          pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
-          vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_current[0], bn1->r_bn[1] - pos_current[1], bn1->r_bn[2] - pos_current[2] );
-
-          //Determine ground impact position where the projected ray enters the ice
-          // reject if it enters beyond the borders of the continent.
-          // step size is 10 meters
-          if (!antarctica->WhereDoesItExitIce(pos_current, panel1->GetNormal(), 10., pos_projectedImpactPoint)){
-            //std::cerr<<"Warning!  Projected ground impact position of screen point does NOT enter ice. Skipping this screen point."<<std::endl;
-            continue;
-          }
-          if (antarctica->OutsideAntarctica(pos_projectedImpactPoint)) {
-	    //std::cerr<<"Warning!  Projected ground impact position of screen point is off-continent. Skipping this screen point."<<std::endl;
-            continue;
-          }// end outside antarctica
+          pos_projectedImpactPoint = panel1->GetNextPosition(jj);        // this gets the new screen position
+//cerr<<jj<<"  "<<panel1->GetCentralPoint()<<"  "<<  pos_projectedImpactPoint<<endl;
+          vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_projectedImpactPoint[0], bn1->r_bn[1] - pos_projectedImpactPoint[1], bn1->r_bn[2] - pos_projectedImpactPoint[2] );
 
           // local angles of transmission and incidence in their respective planes
           vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
@@ -2306,227 +2282,87 @@ int main(int argc,  char **argv) {
 
           theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
           theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
+//cerr<< jj<<"  "<<theta_local*180./PI << "  "<< theta_0_local*180./PI<< "  "<<azimuth_local*180./PI<< endl;
           if( isnan(theta_local) | isnan(theta_0_local) | isnan(azimuth_local) ){
             continue;
           }
+          viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
+
+          // at this point, only figure out if taper will kill the geometry, but don't actually apply the factor
+          deltheta_em[0]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[0];
+          deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
+          sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, taperfactor, vmmhz_em[0]);// this applies the angular dependence.
+          if(taperfactor==0)
+            continue;
+//cerr<< "past E=0"<<endl;
           /////
           // Field Magnitude
 #ifdef USE_HEALPIX
           rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
 #endif
-          if( isnan(tcoeff_perp) || isnan(tcoeff_parl) ){
+          if( (power_perp==0.)|(power_parl==0.) ){
             continue;
           }
+//cerr<<"survived power cut"<<endl;
           tcoeff_perp = sqrt(power_perp);
           tcoeff_parl = sqrt(power_parl);
-          //cerr<<"+++++++++++++"<<endl;
-          //std::cerr<<"thetas: "<<theta_0_local*180./PI<<"  "<<theta_local*180./PI<<"  "<<azimuth_local*180./PI<< std::endl;
-          //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
-          //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
-          //cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
-          Emag_local_notaper = Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl));// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
-          viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
-          deltheta_em[0]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[0];
-          deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
-          sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, Emag_local, vmmhz_em[0]);// this applies the angular dependence.
-          //cerr<<"E(preTaper): "<<Emag_local_notaper<< "   E(post): "<<Emag_local << "   viewangle_local[deg]: "<< viewangle_local*180./PI <<std::endl;
-          if(Emag_local==0.){ //this will kill any point that doesn't have transmitted power from the
-            continue;         // look-up table
-          }
+//cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
+//cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
+          Emag_local *= sqrt((power_perp + power_parl));// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
+//cerr<<"E: "<<Emag_local<<std::endl;
           // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
           pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
-          //cerr<<"P: "<<pathlength_local<<std::endl;
+//cerr<<"P: "<<pathlength_local<<std::endl;
           Emag_local /= pathlength_local ;
+//cerr<<"E: "<<Emag_local<<std::endl;
           Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
-          //cerr<<"E: "<<Emag_local<<std::endl;
-          maxbaseE = Tools::dMax(maxbaseE, Emag_local);
-          basescrn_Emags.push_back(Emag_local);
-          basescrn_pos.push_back(pos_current);
-          basescrn_length.push_back(panel1->GetEdgeLength() / (float)panel1->GetNsamples());
-        }
-        //cerr<<"Number of base screen points: "<< basescrn_Emags.size()<<endl;
-        if(basescrn_Emags.size()==0){
-          continue;
-        }
 
-        //#########
-        // Second, now select those points in the base screen that contribute most of the signal strength
-        for (int ii=0; ii< basescrn_Emags.size(); ii++){
-          seedpositions.push_back(basescrn_pos[ii]);
-          seedEdgeLengths.push_back(basescrn_length[ii]);
-          seedGeneration.push_back(1);
-        }
+          /////
+          // Incident and Transmitted Polarizations (T needs to be determined by tcoeff_perp and tcoeff_parl)
+          // set incident polarization
+          npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint).Unit();
+          //
+          vec_local_grnd_perp = (vec_localnormal.Cross(vec_pos_current_to_balloon)).Unit();
+          vec_local_grnd_parl = (vec_pos_current_to_balloon.Cross(vec_local_grnd_perp)).Unit();
+          //
+          vec_local_grnd_perp = tcoeff_perp * vec_local_grnd_perp;
+          vec_local_grnd_parl = tcoeff_parl * vec_local_grnd_parl;
+          // set transmitted polarization
+          npol_local_trans = (vec_local_grnd_perp + vec_local_grnd_parl).Unit();
 
-        //#########
-        // Third, now loop over the seed positions; if certain criteria met, then add these points to the seedposition vector to sample further
-        cerr<<"Number of base / seed screen points: "<< basescrn_Emags.size()<< " / " <<seedpositions.size()<<endl;
-        for (unsigned long ii=0; ii< seedpositions.size(); ii++){
-          //cerr<<ii<<" / "<<seedpositions.size()<<" : "<<seedEdgeLengths[ii]/subscreenDivisions<<endl;
-          panel1->ResetPositionIndex();
-          panel1->SetNsamples(subscreenDivisions);
-          panel1->SetEdgeLength( seedEdgeLengths[ii] );
-          panel1->SetCentralPoint( seedpositions[ii] );
-          // the Nsamples, normal, cosine projection factor, and unit vectors are the same as for the base screen
-
-          double minE=1.e22;
-          double maxE = -1.;
-
-          //the vectors below are stored per-screen and will be cleared / written for each seed screen; used to store values before deciding if screen was 'valid'
-          std::vector<Position> seedscreens_pos;
-          std::vector<double> seedscreens_vmmhzlocal;  //use this to save Emag_local aka vmmhz[0] ONLY, the vmmhz array is calculated using only vmmhz[0] anyway
-          std::vector<Vector> seedscreens_2bln;
-          std::vector<Vector> seedscreens_pols;
-          std::vector<double> seedscreens_propdelay;
-          std::vector<Position> seedscreens_impactpt;
-          std::vector<double> seedscreens_viewangle;
-          std::vector<double> seedscreens_incangle;
-          std::vector<double> seedscreens_transangle;
-
-          for (int jj=0; jj< panel1->GetNsamples()*panel1->GetNsamples(); jj++){
-            //cerr<<"+++++++++++++"<<endl;
-            //cerr<<"+ seed point: "<<jj<<" / "<<panel1->GetNsamples()*panel1->GetNsamples()<<endl;
-            Emag_local = 0.;
-            tcoeff_perp = tcoeff_parl = 0.;
-            pos_current = panel1->GetNextPosition(jj);        // this gets the new screen position
-            pos_projectedImpactPoint = Position(1,1,1);     // placeholder, is set below in WhereDoesItEnterIce()
-            vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_current[0], bn1->r_bn[1] - pos_current[1], bn1->r_bn[2] - pos_current[2] );
-            if (!antarctica->WhereDoesItExitIce(pos_current, panel1->GetNormal(), 10., pos_projectedImpactPoint)){
-              //std::cerr<<"Warning!  Projected ground impact position of screen point does NOT enter ice. Skipping this screen point."<<std::endl;
-              continue;
-            }
-            if (antarctica->OutsideAntarctica(pos_projectedImpactPoint)) {
-	      //std::cerr<<"Warning!  Projected ground impact position of screen point is off-continent. Skipping this screen point."<<std::endl;
-              continue;
-            }// end outside antarctica
-
-            // local angles of transmission and incidence in their respective planes
-            vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
-            vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
-
-            vec_grndcomp2IP = (vec_nnu_to_impactPoint - (vec_nnu_to_impactPoint.Dot(vec_localnormal)*vec_localnormal)).Unit();
-            vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
-            temp_a = vec_localnormal.Cross(vec_pos_current_to_balloon).Unit();
-            azimuth_local = vec_grndcomp2IP.Angle(vec_grndcomp2bln); //[rad]
-            if( temp_a.Dot(vec_nnu_to_impactPoint) > 0 )
-              azimuth_local *= -1.;
-
-            theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
-            theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
-            if( isnan(theta_local) | isnan(theta_0_local) | isnan(azimuth_local) ){
-              continue;
-            }
-            viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
-
-            /////
-            // Field Magnitude
-#ifdef USE_HEALPIX
-            rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
-#endif
-            if( isnan(tcoeff_perp) | isnan(tcoeff_parl) ){
-              continue;
-            }
-            tcoeff_perp = sqrt(power_perp);
-            tcoeff_parl = sqrt(power_parl);
-            //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
-            //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
-            if( (tcoeff_parl==0.)|(tcoeff_perp==0.) ){
-              continue;
-            }
-            //cerr<<"V: "<<vec_pos_current_to_balloon.Mag()<<"  "<<(antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))<<std::endl;
-            Emag_local = vmmhz1m_max * sqrt((power_perp + power_parl));// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
-            //cerr<<"E: "<<Emag_local<<std::endl;
-            // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
-            pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
-            //cerr<<"P: "<<pathlength_local<<std::endl;
-            Emag_local /= pathlength_local ;
-            //cerr<<"E: "<<Emag_local<<std::endl;
-            Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
-            if(Emag_local==0)
-              continue;
-            //cerr<<"past E=0 cut"<<endl;
-            /////
-            // Incident and Transmitted Polarizations (T needs to be determined by tcoeff_perp and tcoeff_parl)
-            // set incident polarization
-            npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint).Unit();
-            //
-            vec_local_grnd_perp = (vec_localnormal.Cross(vec_pos_current_to_balloon)).Unit();
-            vec_local_grnd_parl = (vec_pos_current_to_balloon.Cross(vec_local_grnd_perp)).Unit();
-            //
-            vec_local_grnd_perp = tcoeff_perp * vec_local_grnd_perp;
-            vec_local_grnd_parl = tcoeff_parl * vec_local_grnd_parl;
-            // set transmitted polarization
-            npol_local_trans = (vec_local_grnd_perp + vec_local_grnd_parl).Unit();
-
-            // check if transmitted polarization is undefined
-            if(npol_local_trans[0]!=npol_local_trans[0]){
-              continue;
-            }
-            //cerr<<"past pol cut"<<endl;
-
-            time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*NFIRN / CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/CLIGHT);
-
-            minE = Tools::dMin(minE, Emag_local);
-            maxE = Tools::dMax(maxE, Emag_local);
-            seedscreens_pos.push_back(pos_current);
-            seedscreens_vmmhzlocal.push_back( Emag_local );
-            seedscreens_2bln.push_back(vec_pos_current_to_balloon);
-            seedscreens_pols.push_back(npol_local_trans);
-            seedscreens_propdelay.push_back( time_reference_specular - time_reference_local);
-            seedscreens_impactpt.push_back(pos_projectedImpactPoint);
-            seedscreens_viewangle.push_back(viewangle_local);
-            seedscreens_incangle.push_back(theta_0_local);
-            seedscreens_transangle.push_back(theta_local);
-            //
-            //cerr<<pos_current<<"  "
-            //<<Emag_local<<"  "
-            //<<npol_local_trans<<"  "
-            //<<(pathlength_specular-pathlength_local) / CLIGHT<<"  "
-            //<<pos_projectedImpactPoint<<"  "
-            //<<viewangle_local<<std::endl;
-          }// end for jj for this seed screen
-
-          // store these and move on to the next seed screen
-          if( (seedGeneration[ii] == maximumSubscreenGeneration) //only go so far
-              || (( panel1->GetEdgeLength()/panel1->GetNsamples() <= 2.) && ( panel1->GetEdgeLength()/panel1->GetNsamples() > 0.5)) //limit on physical size of 'facet'
-              ){
-            for (unsigned long jj=0; jj<seedscreens_pos.size(); jj++){
-              // increment counter so we can track the size of the screen's vector arrays
-              num_validscreenpoints++;
-
-              //add the contribution to the running total
-              panel1->AddVmmhz0(seedscreens_vmmhzlocal[jj]);
-              panel1->AddVec2bln(seedscreens_2bln[jj]);
-              panel1->AddPol(seedscreens_pols[jj]);
-              panel1->AddDelay( seedscreens_propdelay[jj] );
-              panel1->AddImpactPt(seedscreens_impactpt[jj]);
-              panel1->AddViewangle(seedscreens_viewangle[jj]);
-              panel1->AddIncidenceAngle(seedscreens_incangle[jj]);
-              panel1->AddTransmissionAngle(seedscreens_transangle[jj]);
-              panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
-              panel1->AddFacetLength(panel1->GetEdgeLength() / panel1->GetNsamples());
-            }// end for jj<seedscreens_pos
+          // check if transmitted polarization is undefined
+          if( isnan(npol_local_trans[0]) ){
+            continue;
           }
-          else { // or reject these points and pass the positions back into seedpositions so we sample at higher resolutions (smaller edge length)
-            for (unsigned long jj=0; jj<seedscreens_pos.size(); jj++){
-              seedpositions.push_back(seedscreens_pos[jj]);
-              seedEdgeLengths.push_back(panel1->GetEdgeLength()/panel1->GetNsamples());
-              seedGeneration.push_back(seedGeneration[ii]+1);
-            }
-          }
-          // clear vectors for use with next screen point
-          seedscreens_pos.clear();
-          seedscreens_vmmhzlocal.clear();
-          seedscreens_2bln.clear();
-          seedscreens_pols.clear();
-          seedscreens_propdelay.clear();
-          seedscreens_impactpt.clear();
-          seedscreens_viewangle.clear();
-          seedscreens_incangle.clear();
-          seedscreens_transangle.clear();
-        }// end for ii loop over seedpositions
+//cerr<<"past pol cut"<<endl;
+
+          time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*NFIRN / CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/CLIGHT);
+
+          // increment counter so we can track the size of the screen's vector arrays
+          num_validscreenpoints++;
+//cerr<<jj<<" / "<<panel1->GetNsamples()*panel1->GetNsamples()<<endl;
+          //add the contribution to the running total
+          panel1->AddVmmhz0(Emag_local);                // pre-taper Efield
+          panel1->AddVec2bln(vec_pos_current_to_balloon);
+          panel1->AddPol(npol_local_trans);
+          panel1->AddDelay( time_reference_specular - time_reference_local );
+          panel1->AddImpactPt(pos_projectedImpactPoint);
+          panel1->AddViewangle(viewangle_local);
+          panel1->AddIncidenceAngle(theta_0_local);
+          panel1->AddTransmissionAngle(theta_local);
+          panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
+          panel1->AddFacetLength(panel1->GetEdgeLength() / panel1->GetNsamples());
+          //
+//cerr<<pos_current<<"  "
+//<<Emag_local<<"  "
+//<<npol_local_trans<<"  "
+//<<(pathlength_specular-pathlength_local) / CLIGHT<<"  "
+//<<pos_projectedImpactPoint<<"  "
+//<<viewangle_local<<std::endl;
+        }// end for jj 
 
         panel1->SetNvalidPoints(num_validscreenpoints);
-
+//cerr<<"Npts: "<<num_validscreenpoints<<endl;
         //now construct the Screen's vmmhz array for all points, so it gets passed to the trigger object later to make the waveforms
         // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor) and making an array across frequency bins by putting in frequency dependence.
         double validScreenSummedArea = 0.;
@@ -2553,15 +2389,8 @@ int main(int argc,  char **argv) {
         for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
           vmmhz_max = Tools::dMax(vmmhz_max, panel1->GetVmmhz_freq(jj*Anita::NFREQ));
         }
-        //cerr<<vmmhz_max<<endl;
+//cerr<<vmmhz_max<<endl;
         n_pol = Efield_screentotal.Unit();
-
-        basescrn_Emags.clear();
-        basescrn_pos.clear();
-        basescrn_length.clear();
-        seedpositions.clear();
-        seedEdgeLengths.clear();
-        seedGeneration.clear();
 
         if(vmmhz_max>0.){
           stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
@@ -2589,6 +2418,9 @@ int main(int argc,  char **argv) {
       // the screen is now finished
       /////////////////////////////
 
+      if( settings1->ROUGHNESS && !panel1->GetNvalidPoints() ){
+        continue;
+      }
       
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
@@ -3233,7 +3065,7 @@ int main(int argc,  char **argv) {
           pieceofkm2sr=weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr/(double)NNU/len_int;
           if (h10->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST)
             h10->Fill(hitangle_e_all[0], weight);
-
+cerr << inu<<" passes. weight= "<<weight<<endl;
           // log of weight and chord for plotting
           logweight=log10(weight);
           interaction1->logchord=log10(interaction1->chord);

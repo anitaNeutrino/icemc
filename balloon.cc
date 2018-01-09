@@ -20,6 +20,11 @@
 #include "Primaries.h"
 #include "EnvironmentVariable.h"
 
+
+#if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
+#include "vectormath_trig.h"
+
+#endif
 using std::ifstream;
 
 const string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
@@ -631,20 +636,17 @@ void Balloon::GetEcompHcompEvector(Settings *settings1, Vector n_eplane, Vector 
 
 
 void Balloon::GetHitAngles(double e_component_kvector, double h_component_kvector, double n_component_kvector, double& hitangle_e, double& hitangle_h) {
-        
-  hitangle_e=atan(h_component_kvector/n_component_kvector);
-    
-  if (n_component_kvector<0 && h_component_kvector<0)
-    hitangle_e-=PI;
-  if (n_component_kvector<0 && h_component_kvector>0)
-    hitangle_e+=PI;
-    
-  hitangle_h=atan(e_component_kvector/n_component_kvector);
-    
-  if (n_component_kvector<0 && e_component_kvector<0)
-    hitangle_h-=PI;
-  if (n_component_kvector<0 && e_component_kvector>0)
-    hitangle_h+=PI;
+#if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
+  Vec2d y(e_component_kvector, h_component_kvector); 
+  Vec2d x(n_component_kvector, n_component_kvector); 
+  Vec2d answer = atan2(y,x); 
+  hitangle_h = answer[0]; 
+  hitangle_e = answer[1]; 
+
+#else
+  hitangle_e=atan2(h_component_kvector,n_component_kvector);
+  hitangle_h=atan2(e_component_kvector,n_component_kvector);
+#endif
         
 } //end void GetHitAngles
 
