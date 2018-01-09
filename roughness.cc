@@ -53,6 +53,15 @@ void Roughness::SetRoughScale(double a){
 
 
 #ifdef USE_HEALPIX
+
+
+//lower cache 
+
+//  map from path to map to pixel to TParl, Tperp 
+static std::map<std::string, std::map<int, std::pair<double,double> > >lower_cache; 
+static std::map<std::string, std::map<int, std::pair<double,double> > >upper_cache; 
+
+
 void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, double T0, double T, double A){
   // tcoeff_* are the transmission coefficients which will be copied by address for use in icemc.cc's main function
   // T0 [degrees] is the incident angle of the ray-in-ice with respect to the surface normal
@@ -81,39 +90,56 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
   base_rough_file_str = "/data/roughness_tables/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims10000000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
   full_rough_file = rough_dir_str + base_rough_file_str;
   //std::cerr<<full_rough_file<<std::endl;
-  ifs.open (full_rough_file, std::ifstream::in);
-  if(ifs.good()){
-    std::getline(ifs, header);
-    while (ifs.good()) {
-      ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
-      if(pixel == thispixel){
-        if(Tparl<0) Tparl = 0.;  // guard against accidental HEALPIX.UNSEEN values
-        if(Tperp<0) Tperp = 0.;
-        Tparl_down = Tparl;
-        Tperp_down = Tperp;
+  //
+  if (!lower_cache.count(full_rough_file))
+  {
+    ifs.open (full_rough_file, std::ifstream::in);
+    if(ifs.good())
+    {
+      //would be more efficient to use std::emplace, but meh
+      //also, could use a std::array for inner part but that requires a b tmore logic 
+      std::map<int, std::pair<double,double> > this_lower; 
+      std::getline(ifs, header);
+      while (ifs.good()) {
+        ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
+        if (Tparl < 0) Tparl = 0; 
+        if (Tperp < 0) Tperp = 0; 
+        this_lower[pixel]=std::pair<double,double>(Tparl,Tperp); 
       }
+      lower_cache[full_rough_file] = this_lower; 
     }
     ifs.close();
   }
+
   // "upper" table filename: same procedure
   // open and read table, discard header
   base_rough_file_str = base_rough_file_str = "/data/roughness_tables/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims10000000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";;
   full_rough_file = rough_dir_str + base_rough_file_str;
-  //std::cerr<<full_rough_file<<std::endl;
-  ifs.open (full_rough_file, std::ifstream::in);
-  if(ifs.good()){
-    std::getline(ifs, header);
-    while (ifs.good()) {
-      ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
-      if(pixel == thispixel){
-        if(Tparl<0) Tparl = 0.;
-        if(Tperp<0) Tperp = 0.;
-        Tparl_up = Tparl;
-        Tperp_up = Tperp;
+
+  if (!upper_cache.count(full_rough_file))
+  {
+    ifs.open (full_rough_file, std::ifstream::in);
+    if(ifs.good())
+    {
+      std::map<int, std::pair<double,double> > this_upper; 
+      std::getline(ifs, header);
+      while (ifs.good()) {
+        ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
+        if (Tparl < 0) Tparl = 0; 
+        if (Tperp < 0) Tperp = 0; 
+        this_upper[pixel]=std::pair<double,double>(Tparl,Tperp); 
       }
+      upper_cache[full_rough_file] = this_upper; 
     }
     ifs.close();
   }
+  Tparl_down = lower_cache[full_rough_file][thispixel].first; 
+  Tperp_down = lower_cache[full_rough_file][thispixel].second; 
+  Tparl_up = upper_cache[full_rough_file][thispixel].first; 
+  Tperp_up = upper_cache[full_rough_file][thispixel].second; 
+  
+
+
   /*std::cerr<<"Inter[: "<<T0<<"  "
   <<T<<"  "
   <<A<<"  "
