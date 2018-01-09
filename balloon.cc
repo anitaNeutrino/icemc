@@ -21,8 +21,7 @@
 #include "EnvironmentVariable.h"
 
 
-#ifdef ANITA_UTIL_EXISTS
-
+#if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
 #include "vectorclass/vectormath_trig.h"
 
 #endif
