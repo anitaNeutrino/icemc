@@ -102,7 +102,8 @@ endif()
 option (USE_HEALPIX "Enable Healpix Segmentation, requires healpix to be
 installed on your system in a place that can be found easily." OFF)
 
-option (VECTORIZE "Enable manual vectorization, does nothing if ANITA_UTIL is not available." ON)
+option (VECTORIZE "Enable manual vectorization, does nothing if ANITA_UTIL is
+not available." OFF)
 
 
 
