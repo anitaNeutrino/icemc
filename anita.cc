@@ -1205,14 +1205,22 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
     justNoise[i]  = justNoiseTemp[i]*THERMALNOISE_FACTOR;
   }
   // begin keith edits
-  TGraph *gtemp;
-  TString filename;
-
+//  TGraph *gtemp;
+//  TString filename;
+//  deltaT=1./(2.6*16.);
+  TGraph *conv_noise;
   if (settings1->TUFFSON)
   {
-    filename = Form("/share/AnitaAnalysisFramework/responses/TUFFs/trigconfigB.imp", getenv("ANITA_UTIL_INSTALL_DIR"));
-    gtemp = new TGraph(filename);
-    justNoise= FFTtools::getConvolution(gtemp,justNoise);
+    //filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/trigconfigB.imp", getenv("ANITA_UTIL_INSTALL_DIR"));
+    //gtemp = new TGraph(filename);
+    //TGraph *gint = Tools::getInterpolatedGraph(gtemp,deltaT);
+    
+    TGraph *gtemp_justNoise= new TGraph(HALFNFOUR, fTimes, justNoise);
+    conv_noise=FFTtools::getConvolution(gtemp_justNoise, anita1->fSignalChainResponseTriggerTuffs[ipol][iring][iphi][1]); // 1 for the configuration that was on most of the time which is configuration B.
+    
+    delete gtemp_justNoise;
+//    delete gint;
+    justNoise = conv_noise->GetY();
   }
 // end keith edits
   delete gtemp;
@@ -4003,7 +4011,7 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
 void Anita::readImpulseResponseDigitizer(Settings *settings1){
   
   // Set deltaT to be used in the convolution
-  deltaT = 1/(2.6*16);
+  deltaT = 1./(2.6*16.);
   string graphNames[2][3][16];
   string fileName;
   double norm=1;
@@ -4119,7 +4127,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
   string spol[2] = {"V","H"};
   string sring[3] = {"T","M","B"};
  // Set deltaT to be used in the convolution
-  deltaT = 1/(2.6*16);
+  deltaT = 1./(2.6*16.);
   for(int ipol=0; ipol<=1; ipol++) {
     for(int iring = 0; iring<=2; iring++){
       for(int iphi=0; iphi<=15; iphi++) {
@@ -4150,7 +4158,7 @@ void Anita::readTuffResponseTrigger(Settings *settings1){
   string spol[2] = {"V","H"};
   string sring[3] = {"T","M","B"};
  // Set deltaT to be used in the convolution
-  deltaT = 1/(2.6*16);
+  deltaT = 1./(2.6*16.);
   for(int ipol=0; ipol<=1; ipol++) {
     for(int iring = 0; iring<=2; iring++){
       for(int iphi=0; iphi<=15; iphi++) {
@@ -4203,7 +4211,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   // So far only available for ANITA-3
   
   // Set deltaT to be used in the convolution
-  deltaT = 1/(2.6*16);
+  deltaT = 1./(2.6*16.);
   string graphNames[2][3][16];
   string fileName;
   double norm=1;
