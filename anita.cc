@@ -1039,7 +1039,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 	for (int i=0;i<ngeneratedevents;i++) {
 	  
-	  getQuickTrigNoiseFromFlight(quickNoise, ipol, iant);
+	  getQuickTrigNoiseFromFlight(quickNoise, ipol, iant, settings1);
 	  
 	  myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
 
@@ -1176,7 +1176,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 
 #ifdef ANITA_UTIL_EXISTS
-void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant){
+void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, Settings* settings1){
 
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
   phasorsTrig[0].setMagPhase(0,0);
@@ -1204,7 +1204,18 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
   for (int i=0; i<HALFNFOUR; i++){
     justNoise[i]  = justNoiseTemp[i]*THERMALNOISE_FACTOR;
   }
-  
+  // begin keith edits
+  TGraph *gtemp;
+  TString filename;
+
+  if (settings1->TUFFSON)
+  {
+    filename = Form("/share/AnitaAnalysisFramework/responses/TUFFs/trigconfigB.imp", getenv("ANITA_UTIL_INSTALL_DIR"));
+    gtemp = new TGraph(filename);
+    justNoise= FFTtools::getConvolution(gtemp,justNoise);
+  }
+// end keith edits
+  delete gtemp;
   delete rfNoiseTrig;
   delete[] phasorsTrig;
   
