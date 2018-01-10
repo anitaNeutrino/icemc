@@ -1223,7 +1223,6 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
     justNoise = conv_noise->GetY();
   }
 // end keith edits
-  delete gtemp;
   delete rfNoiseTrig;
   delete[] phasorsTrig;
   
