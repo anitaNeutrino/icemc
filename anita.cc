@@ -1216,7 +1216,7 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
     //TGraph *gint = Tools::getInterpolatedGraph(gtemp,deltaT);
     
     TGraph *gtemp_justNoise= new TGraph(HALFNFOUR, fTimes, justNoise);
-    conv_noise=FFTtools::getConvolution(gtemp_justNoise, anita1->fSignalChainResponseTriggerTuffs[ipol][iring][iphi][1]); // 1 for the configuration that was on most of the time which is configuration B.
+    conv_noise=FFTtools::getConvolution(gtemp_justNoise, fSignalChainResponseTriggerTuffs[ipol][iring][iphi][1]); // 1 for the configuration that was on most of the time which is configuration B.
     
     delete gtemp_justNoise;
 //    delete gint;
