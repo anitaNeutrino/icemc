@@ -117,7 +117,7 @@ if (USE_HEALPIX)
 endif()
 
 if (VECTORIZE) 
-  add_definitions(-DVECTORIZE -march=native) 
+  add_definitions(-DVECTORIZE -march=native -fabi-version=0) 
 endif() 
 
 
