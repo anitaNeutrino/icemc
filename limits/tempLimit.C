@@ -32,31 +32,16 @@ void tempLimit(){
   
   TGraph *g_ANITA_4 = getLimit(ANITA_4_effArea, ANITA_4_eff, ANITA_4_livetime);
 
-  Double_t ANITA_3_effArea[n_ANITA] = { 0.00160,      // E18     in km^2  
-					0.03451,      // E18.5		  
-					0.34288,      // E19    	  
-					1.75735,      // E19.5		  
-					7.14396,      // E20		  
-					22.77670,     // E20.5		  
-					58.72190};    // E21              
+  Double_t ANITA_3_effVolume[n_ANITA] = { 0.355988,
+					  3.06133 ,
+					  87.2608 ,
+					  629.108 ,
+					  2380.92 ,
+					  6854.41 ,
+					  14669.5 
+  }; // in km^3 srt
 
-  double ANITA_3_eff[n_ANITA] = { 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8};
-
-  double ANITA_3_livetime = 17.4*24*3600.; // 17.4 days
-  
-  TGraph *g_ANITA_3 = getLimit(ANITA_3_effArea, ANITA_3_eff, ANITA_3_livetime);
-  g_ANITA_3->SetLineColor(kBlue);
-
-  
-  Double_t ANITA_2_effArea_now[n_ANITA] = { 0.00029 ,      // E18     in km^2  
-					0.02121 ,      // E18.5		  
-					0.22009 ,      // E19    	  
-					1.27190 ,      // E19.5		  
-					6.38188 ,      // E20		  
-					18.45390 ,     // E20.5		  
-					52.53270 };    // E21              
-
-    Double_t intLength_CONNOLLY_nuCC[n_ANITA] = { 1544.84,
+  Double_t intLength_CONNOLLY_nuCC[n_ANITA] = { 1544.84,
 						1065.44,
 						745.54,
 						528.431,
@@ -72,6 +57,35 @@ void tempLimit(){
 						   926.252,
 						   668.193 ,
 						   486.701 }; // E21
+  
+  
+  Double_t ANITA_3_effArea[n_ANITA]; // = { 0.00160,      // E18     in km^2  
+				     // 	0.03451,      // E18.5		  
+				     // 	0.34288,      // E19    	  
+				     // 	1.75735,      // E19.5		  
+				     // 	7.14396,      // E20		  
+				     // 	22.77670,     // E20.5		  
+				     // 	58.72190};    // E21              
+
+  for (int i=0; i<n_ANITA; i++){
+    ANITA_3_effArea[i]    = ANITA_3_effVolume[i]/intLength_CONNOLLY_nuCC[i]; 
+  }
+  double ANITA_3_eff[n_ANITA] = { 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8};
+
+  double ANITA_3_livetime = 17.4*24*3600.; // 17.4 days
+  
+  TGraph *g_ANITA_3 = getLimitNoDelta(ANITA_3_effArea, ANITA_3_eff, ANITA_3_livetime);
+  g_ANITA_3->SetLineColor(kBlue);
+
+  
+  Double_t ANITA_2_effArea_now[n_ANITA] = { 0.00029 ,      // E18     in km^2  
+					0.02121 ,      // E18.5		  
+					0.22009 ,      // E19    	  
+					1.27190 ,      // E19.5		  
+					6.38188 ,      // E20		  
+					18.45390 ,     // E20.5		  
+					52.53270 };    // E21              
+
   
   Double_t ANITA_2_effArea[n_ANITA];
     for (int i=0; i<n_ANITA; i++){
@@ -148,19 +162,20 @@ void tempLimit(){
   g_ANITA_2_erratum->Draw("l");
 
   g_ANITA_2->Draw("l");
-  g_ANITA_2_pub->Draw("l");
-  g_ANITA_2_pub2->Draw("l");
-  // g_ANITA_3->Draw("l");
+  // g_ANITA_2_pub->Draw("l");
+  // g_ANITA_2_pub2->Draw("l");
+  g_ANITA_3->SetLineStyle(3);
+  g_ANITA_3->Draw("l");
   // g_ANITA_4->Draw("l");
   // g_ANITA_all->Draw("l");
 
 
   TLegend *leg = new TLegend(0.6, 0.6, 0.89, 0.89);
   leg->AddEntry(g_ANITA_2_erratum, "A2 erratum",                  "lp" );
-  leg->AddEntry(g_ANITA_2_pub,     "A2 pub w/ #Delta=4, #epsilon_{ANA}=0.6",  "l" );
-  leg->AddEntry(g_ANITA_2_pub2,    "A2 pub w/ #Delta=1, #epsilon_{ANA}=0.6",  "l" );
+  // leg->AddEntry(g_ANITA_2_pub,     "A2 pub w/ #Delta=4, #epsilon_{ANA}=0.6",  "l" );
+  // leg->AddEntry(g_ANITA_2_pub2,    "A2 pub w/ #Delta=1, #epsilon_{ANA}=0.6",  "l" );
   leg->AddEntry(g_ANITA_2,         "A2 icemc w/ #Delta=1, #epsilon_{ANA}=0.6",  "l" );
-  // leg->AddEntry(g_ANITA_3,         "A3 icemc #epsilon_{ANA}=0.8",  "l" );
+  leg->AddEntry(g_ANITA_3,         "A3 icemc w/ #Delta=1, #epsilon_{ANA}=0.8",  "l" );
   // leg->AddEntry(g_ANITA_4,         "A4 icemc #epsilon_{ANA}=0.8",  "l" );
   // leg->AddEntry(g_ANITA_all,       "A1-4 icemc #epsilon_{ANA}=0.8",  "l" );
   leg->Draw();
