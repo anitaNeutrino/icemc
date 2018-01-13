@@ -117,7 +117,18 @@ if (USE_HEALPIX)
 endif()
 
 if (VECTORIZE) 
-  add_definitions(-DVECTORIZE -march=native -fabi-version=0) 
+  add_definitions(-DVECTORIZE) 
+  if(CMAKE_COMPILER_IS_GNUCXX) 
+      ### someone should do this for clang if they want it to be as fast as possible 
+      if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.1)
+        if(NATIVE_ARCH) 
+          add_definitions( -march=native)
+        endif()
+      endif()
+      add_definitions(  -fabi-version=0 ) 
+  endif() 
+
+
 endif() 
 
 
