@@ -596,7 +596,7 @@ public:
   void readTuffResponseTrigger(Settings *settings1);
   void readTriggerEfficiencyScanPulser(Settings *settings1);
   void readNoiseFromFlight(Settings *settings1);
-  void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, Settings* settings1);
+  void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant);
   TGraph *RayleighFits[2][48];
   Int_t numFreqs;
   Double_t *freqs;

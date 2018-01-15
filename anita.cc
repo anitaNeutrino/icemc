@@ -1039,7 +1039,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 	for (int i=0;i<ngeneratedevents;i++) {
 	  
-	  getQuickTrigNoiseFromFlight(quickNoise, ipol, iant, settings1);
+	  getQuickTrigNoiseFromFlight(quickNoise, ipol, iant);
 	  
 	  myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
 
@@ -1176,7 +1176,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 
 #ifdef ANITA_UTIL_EXISTS
-void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, Settings* settings1){
+void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant){
 
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
   phasorsTrig[0].setMagPhase(0,0);
@@ -1204,25 +1204,6 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
   for (int i=0; i<HALFNFOUR; i++){
     justNoise[i]  = justNoiseTemp[i]*THERMALNOISE_FACTOR;
   }
-  // begin keith edits
-//  TGraph *gtemp;
-//  TString filename;
-//  deltaT=1./(2.6*16.);
-  TGraph *conv_noise;
-  if (settings1->TUFFSON)
-  {
-    //filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/trigconfigB.imp", getenv("ANITA_UTIL_INSTALL_DIR"));
-    //gtemp = new TGraph(filename);
-    //TGraph *gint = Tools::getInterpolatedGraph(gtemp,deltaT);
-    
-    TGraph *gtemp_justNoise= new TGraph(HALFNFOUR, fTimes, justNoise);
-    conv_noise=FFTtools::getConvolution(gtemp_justNoise, fSignalChainResponseTriggerTuffs[ipol][iring][iphi][1]); // 1 for the configuration that was on most of the time which is configuration B.
-    
-    delete gtemp_justNoise;
-//    delete gint;
-    justNoise = conv_noise->GetY();
-  }
-// end keith edits
   delete rfNoiseTrig;
   delete[] phasorsTrig;
   
@@ -4301,7 +4282,12 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	    fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]=0.1;  
 	  } else {
 	    dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
+            if(settings1->TUFFs_on){
+              trig = fSignalChainResponseTriggerTuffs[ipol][iring][iphi][1][i];
+            }
+            else {
 	    trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i];
+            }
 	    fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]    = (trig/dig);
 	  }
 	}
