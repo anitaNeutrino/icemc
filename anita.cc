@@ -4290,7 +4290,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
               dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
               trig   = temp[i];
               fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]    = (trig/dig);
-              cout << "trig is " << endl;
+              cout << "trig is " << trig <<  endl;
 
             }
           }// end for loop to fill fRatioTriggerDigitizerFreqDomain
@@ -4303,7 +4303,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
               dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
               trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i];
               fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]    = (trig/dig);
-              cout << "trig is " << endl;
+              cout << "trig is " << trig << endl;
             }
           } // end for loop over numfreqs
         } //end else for tuffsoff
