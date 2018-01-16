@@ -4292,7 +4292,6 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
               fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]    = (trig/dig);
             }
           }// end for loop to fill fRatioTriggerDigitizerFreqDomain
-        delete temp;
         }// end if for tuffson
         else{
           for(int i=0;i<numFreqs;i++) {
