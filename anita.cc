@@ -4121,6 +4121,17 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 	  TGraph *gtemp = new TGraph(filename);
 	  // interpolate
 	  TGraph *gint = Tools::getInterpolatedGraph(gtemp,deltaT); 
+// edits for debugging volumes
+          Int_t nPoints  = gint->GetN();
+          Double_t *newx = gint->GetX();
+          Double_t *newy = gint->GetY();
+          // Normalise
+          for (int i=0;i<nPoints;i++){
+          // change time axis from ns to s
+          newx[i]=newx[i]*1E-9;
+          }
+          gint = TGraph(nPoints,newx,newy);
+// end edits for debugging volumes
 	  int paveNum=8533; // change for 0 to just signal back 
 	  fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
 	  delete gint;
@@ -4149,6 +4160,17 @@ void Anita::readTuffResponseTrigger(Settings *settings1){
           TGraph *gtemp = new TGraph(filename);
           // interpolate
           TGraph *gint = Tools::getInterpolatedGraph(gtemp,deltaT); 
+// edits for debugging volumes
+          Int_t nPoints  = gint->GetN();
+          Double_t *newx = gint->GetX();
+          Double_t *newy = gint->GetY();
+          // Normalise
+          for (int i=0;i<nPoints;i++){
+          // change time axis from ns to s
+          newx[i]=newx[i]*1E-9;
+          }
+          gint = TGraph(nPoints,newx,newy);
+// end edits for debugging volumes
           int paveNum=8533; // change for 0 to just signal back 
           fSignalChainResponseTriggerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
           delete gint;
