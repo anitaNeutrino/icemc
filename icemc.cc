@@ -1520,7 +1520,7 @@ int main(int argc,  char **argv) {
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
 
     eventNumber=(UInt_t)(run_no)*NNU+inu;
-//if( !( (inu==523) ) ){
+//if( !( (inu==5397) ) ){
 //  continue;
 //}
     // Set seed of all random number generators to be dependent on eventNumber
@@ -3065,7 +3065,15 @@ int main(int argc,  char **argv) {
           pieceofkm2sr=weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr/(double)NNU/len_int;
           if (h10->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST)
             h10->Fill(hitangle_e_all[0], weight);
-cerr << inu<<" passes. weight= "<<weight<<endl;
+//cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<endl;
+//cerr<<bn1->r_bn.Lat()<<"  "<<-90.+bn1->r_bn.Lat()<<endl;
+//cerr<<interaction1->posnu.Lon()<<"  "<<-90.+interaction1->posnu.Lat()<<endl;
+//cerr<<ray1->rfexit[2].Lon()<<"  "<<-90.+ray1->rfexit[2].Lat()<<endl;
+//cerr<<ray1->rfexit[2].Distance(interaction1->posnu)<<endl;
+//cerr<<interaction1->nnu.Angle(antarctica->GetSurfaceNormal(interaction1->posnu))<<endl;
+//cerr<<interaction1->nnu.Angle(ray1->n_exit2bn[2])<<endl;
+//cerr<<ray1->rfexit[2].Distance(bn1->r_bn)<<endl;
+//cerr<<interaction1->posnu.Distance(bn1->r_bn)<<endl;
           // log of weight and chord for plotting
           logweight=log10(weight);
           interaction1->logchord=log10(interaction1->chord);
