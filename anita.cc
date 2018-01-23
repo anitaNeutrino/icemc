@@ -2935,7 +2935,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     ANTENNA_DOWN[2][15] = 9.288 * RADDEG;
     for(int iii = 0; iii < 3; iii++) // move from the square centers to the phase centers
       for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++)
-	ANTENNA_POSITION_START[0][iii][jjj] = ANTENNA_POSITION_START[0][iii][jjj] - phase_center * Vector(cos(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), sin(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), cos(90.*RADDEG+ANTENNA_DOWN[iii][jjj]));
+	ANTENNA_POSITION_START[1][iii][jjj] = ANTENNA_POSITION_START[0][iii][jjj] = ANTENNA_POSITION_START[0][iii][jjj] - phase_center * Vector(cos(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), sin(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), cos(90.*RADDEG+ANTENNA_DOWN[iii][jjj]));
   }
   else if (settings1->WHICH==7) {
 		
