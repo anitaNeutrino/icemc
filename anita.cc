@@ -4131,7 +4131,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
           // change time axis from ns to s
           newx[i]=newx[i]*1E-9;
           }
-          gint = TGraph(nPoints,newx,newy);
+          *gint = TGraph(nPoints,newx,newy);
 // end edits for debugging volumes
 	  int paveNum=8533; // change for 0 to just signal back 
 	  fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
@@ -4147,8 +4147,6 @@ void Anita::readTuffResponseTrigger(Settings *settings1){
   // for loops to make the RFSignal array that can be used in applyImpulseResponseTrigger of ChanTrigger.cc Do we need one for each antenna???
   TString filename;
   string snotch_dir[6]={"trigconfigA.imp","trigconfigB.imp","trigconfigC.imp","trigconfigG.imp","trigconfigO.imp","trigconfigP.imp"};
-  string spol[2] = {"V","H"};
-  string sring[3] = {"T","M","B"};
  // Set deltaT to be used in the convolution
   deltaT = 1./(2.6*16.);
   for(int ipol=0; ipol<=1; ipol++) {
@@ -4170,7 +4168,7 @@ void Anita::readTuffResponseTrigger(Settings *settings1){
           // change time axis from ns to s
           newx[i]=newx[i]*1E-9;
           }
-          gint = TGraph(nPoints,newx,newy);
+          *gint = TGraph(nPoints,newx,newy);
 // end edits for debugging volumes
           int paveNum=8533; // change for 0 to just signal back 
           fSignalChainResponseTriggerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
