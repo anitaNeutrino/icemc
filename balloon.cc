@@ -368,6 +368,27 @@ void Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,Settin
     
 }
 
+// for tuffs for anita-4
+int getTuffIndex(int Curr_time) {
+  if((TUFFconfig_B_end_3 < Curr_time) && (Curr_time <= TUFFconfig_A_end_1)) {// config A trigconfigA.imp
+    return 0;
+  }
+  else if(((0 < Curr_time) && (Curr_time <= TUFFconfig_B_end_1)) || ((TUFFconfig_P_end_3 < Curr_time) && (Curr_time <= TUFFconfig_B_end_2)) || ((TUFFconfig_P_end_4 < Curr_time) && (Curr_time <= TUFFconfig_B_end_3)) || ((TUFFconfig_A_end_1 < Curr_time) && (Curr_time <= TUFFconfig_B_end_4)) || ((TUFFconfig_P_end_5 < Curr_time) && (Curr_time <= TUFFconfig_B_end_5)) || ((TUFFconfig_P_end_6 < Curr_time) && (Curr_time <= TUFFconfig_B_end_6)) || (TUFFconfig_P_end_7 < Curr_time) ) { // config B trigconfigB.imp
+    return 1;
+  }
+  else if((TUFFconfig_P_end_1 < Curr_time) && (Curr_time <= TUFFconfig_C_end_1)) { // config C trigconfigC.imp
+    return 2;
+  }
+  else if( ((TUFFconfig_P_end_2 < Curr_time) && (Curr_time <= TUFFconfig_G_end_1)) || ((TUFFconfig_O_end_1 < Curr_time) && (Curr_time <= TUFFconfig_G_end_2)) ) { // config G trigconfigG.imp
+    return 3;
+  }
+  else if( ((TUFFconfig_G_end_1 < Curr_time) && (Curr_time <= TUFFconfig_O_end_1)) || ((TUFFconfig_G_end_2 < Curr_time) && (Curr_time <= TUFFconfig_O_end_2)) ) { // config O trigconfigO.imp
+    return 4;
+  }
+  else if( ((TUFFconfig_B_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_1)) || ((TUFFconfig_C_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_2)) || ((TUFFconfig_O_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_3)) || ((TUFFconfig_B_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_4)) || ((TUFFconfig_B_end_4 < Curr_time) && (Curr_time <= TUFFconfig_P_end_5)) || ((TUFFconfig_B_end_5 < Curr_time) && (Curr_time <= TUFFconfig_P_end_6)) || ((TUFFconfig_B_end_6 < Curr_time) && (Curr_time <= TUFFconfig_P_end_7)) ) { // config P trigconfigP.imp
+    return 5;
+  }
+}
 // this is called for each neutrino
 void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int inu,Anita *anita1, double randomNumber) { // r_bn_shadow=position of spot under the balloon on earth's surface
   //cout << "calling pickballoonposition.\n";
@@ -1148,23 +1169,4 @@ Vector Balloon::unRotatePayload(Vector ant_pos_pre) {//rotate back to Payload Ce
   return ant_pos;
 }  
 
-int getTuffIndex(int Curr_time) {
-  if((TUFFconfig_B_end_3 < Curr_time) && (Curr_time <= TUFFconfig_A_end_1)) {// config A trigconfigA.imp
-    return 0;
-  }
-  else if(((0 < Curr_time) && (Curr_time <= TUFFconfig_B_end_1)) || ((TUFFconfig_P_end_3 < Curr_time) && (Curr_time <= TUFFconfig_B_end_2)) || ((TUFFconfig_P_end_4 < Curr_time) && (Curr_time <= TUFFconfig_B_end_3)) || ((TUFFconfig_A_end_1 < Curr_time) && (Curr_time <= TUFFconfig_B_end_4)) || ((TUFFconfig_P_end_5 < Curr_time) && (Curr_time <= TUFFconfig_B_end_5)) || ((TUFFconfig_P_end_6 < Curr_time) && (Curr_time <= TUFFconfig_B_end_6)) || (TUFFconfig_P_end_7 < Curr_time) ) { // config B trigconfigB.imp
-    return 1;
-  }
-  else if((TUFFconfig_P_end_1 < Curr_time) && (Curr_time <= TUFFconfig_C_end_1)) { // config C trigconfigC.imp
-    return 2;
-  }
-  else if( ((TUFFconfig_P_end_2 < Curr_time) && (Curr_time <= TUFFconfig_G_end_1)) || ((TUFFconfig_O_end_1 < Curr_time) && (Curr_time <= TUFFconfig_G_end_2)) ) { // config G trigconfigG.imp
-    return 3;
-  }
-  else if( ((TUFFconfig_G_end_1 < Curr_time) && (Curr_time <= TUFFconfig_O_end_1)) || ((TUFFconfig_G_end_2 < Curr_time) && (Curr_time <= TUFFconfig_O_end_2)) ) { // config O trigconfigO.imp
-    return 4;
-  }
-  else if( ((TUFFconfig_B_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_1)) || ((TUFFconfig_C_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_2)) || ((TUFFconfig_O_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_3)) || ((TUFFconfig_B_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_4)) || ((TUFFconfig_B_end_4 < Curr_time) && (Curr_time <= TUFFconfig_P_end_5)) || ((TUFFconfig_B_end_5 < Curr_time) && (Curr_time <= TUFFconfig_P_end_6)) || ((TUFFconfig_B_end_6 < Curr_time) && (Curr_time <= TUFFconfig_P_end_7)) ) { // config P trigconfigP.imp
-    return 5;
-  }
-}
+
