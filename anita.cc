@@ -270,6 +270,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
 {
     
     
+  tuffIndex=0; // keith edits
   count_getnoisewaveforms=0;
   rms_lab[0]=rms_lab[1]=0.;
   rms_rfcm[0]=rms_rfcm[1]=0.;
@@ -4245,7 +4246,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   TFile fImpulse(fileName.c_str());
   
   if(!fImpulse.IsOpen()) {
-    std::cerr << "Couldn't read siganl chain impulse response from " << fileName << "\n";
+    std::cerr << "Couldn't read signal chain impulse response from " << fileName << "\n";
     exit(0);
   } else {
 

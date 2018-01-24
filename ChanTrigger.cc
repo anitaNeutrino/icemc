@@ -969,8 +969,8 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant, Ballo
       
 #ifdef ANITA_UTIL_EXISTS
       // if applying the impulse response
-      applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[0][iband], v_banding_rfcm[0][iband], 0, bn1);
-      applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[1][iband], v_banding_rfcm[1][iband], 1, bn1);
+      applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[0][iband], v_banding_rfcm[0][iband], 0);
+      applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[1][iband], v_banding_rfcm[1][iband], 1);
 #endif
     }
     
@@ -1029,8 +1029,8 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Bal
     }
     
 #ifdef ANITA_UTIL_EXISTS
-    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[0], 0, bn1);
-    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[1], 1, bn1);
+    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[0], 0);
+    applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[1], 1);
 #endif
     
     if (settings1->SIGNAL_FLUCT > 0 && !settings1->NOISEFROMFLIGHTDIGITIZER){
@@ -1576,7 +1576,7 @@ double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStat
 
 
 #ifdef ANITA_UTIL_EXISTS    
-void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol, Balloon *bn1){
+void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
 
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) y[i]=0;
@@ -1616,45 +1616,10 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   }
   else
   {
-    int Curr_time = bn1->realTime_flightdata;
-    int notch =0;
-// list of config times in sequential order (time). config A is on for the time between B_end_3 and A_end_1
-// end of list of times for notch switching
-  
-   if((TUFFconfig_B_end_3 < Curr_time) && (Curr_time <= TUFFconfig_A_end_1)) // config A tuffconfigA.imp
-    {
-       notch=0;
-    }
-    else if(((0 < Curr_time) && (Curr_time <= TUFFconfig_B_end_1)) || ((TUFFconfig_P_end_3 < Curr_time) && (Curr_time <= TUFFconfig_B_end_2)) || ((TUFFconfig_P_end_4 < Curr_time) && (Curr_time <= TUFFconfig_B_end_3)) || ((TUFFconfig_A_end_1 < Curr_time) && (Curr_time <= TUFFconfig_B_end_4)) || ((TUFFconfig_P_end_5 < Curr_time) && (Curr_time <= TUFFconfig_B_end_5)) || ((TUFFconfig_P_end_6 < Curr_time) && (Curr_time <= TUFFconfig_B_end_6)) || (TUFFconfig_P_end_7 < Curr_time) ) // config B notches_260_375_0
-    {
-       notch=1;
-    }
-    else if((TUFFconfig_P_end_1 < Curr_time) && (Curr_time <= TUFFconfig_C_end_1)) // config C notches_260_0_460
-    {
-       notch=2;
-    }
-    else if( ((TUFFconfig_P_end_2 < Curr_time) && (Curr_time <= TUFFconfig_G_end_1)) || ((TUFFconfig_O_end_1 < Curr_time) && (Curr_time <= TUFFconfig_G_end_2)) ) // config G notches_260_385_0
-    {
-       notch=3;
-    }
-/*
-    else if(TUFFconfig_j_low < Curr_time <= TUFFconfig_j_high) // config J notches_250_375_0 not used apparently?
-    {
-       indir= "notches_250_375_0";
-    }
-*/
-    else if( ((TUFFconfig_G_end_1 < Curr_time) && (Curr_time <= TUFFconfig_O_end_1)) || ((TUFFconfig_G_end_2 < Curr_time) && (Curr_time <= TUFFconfig_O_end_2)) ) // config O notches_260_365_0
-    {
-       notch=4;
-    }
-    else if( ((TUFFconfig_B_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_1)) || ((TUFFconfig_C_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_2)) || ((TUFFconfig_O_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_3)) || ((TUFFconfig_B_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_4)) || ((TUFFconfig_B_end_4 < Curr_time) && (Curr_time <= TUFFconfig_P_end_5)) || ((TUFFconfig_B_end_5 < Curr_time) && (Curr_time <= TUFFconfig_P_end_6)) || ((TUFFconfig_B_end_6 < Curr_time) && (Curr_time <= TUFFconfig_P_end_7)) ) // config P notches_260_375_460
-    {
-       notch=5;
-    }
-    surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][notch]); 
-    // convolve this loaded response with graphUp
-
-  }// end esle for ANITA-4
+    // keith editing 1/24/18
+    surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][anita1->tuffIndex]);
+    // end keith editing
+  }// end else for ANITA-4
 
   int irx = ant;
   if (iring==0) {
@@ -1699,7 +1664,7 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   delete graph1;
 }
 
-void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol, Balloon *bn1){
+void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol){
 
   int nPoints = anita1->HALFNFOUR;
   double *x   = anita1->fTimes;
@@ -1736,44 +1701,9 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   }
   else
   {
-    int Curr_time = bn1->realTime_flightdata;
-    int notch =0;
-// list of config times in sequential order (time). config A is on for the time between B_end_3 and A_end_1
-// end of list of times for notch switching
-  
-   if((TUFFconfig_B_end_3 < Curr_time) && (Curr_time <= TUFFconfig_A_end_1)) // config A trigconfigA.imp
-    {
-       notch=0;
-    }
-    else if(((0 < Curr_time) && (Curr_time <= TUFFconfig_B_end_1)) || ((TUFFconfig_P_end_3 < Curr_time) && (Curr_time <= TUFFconfig_B_end_2)) || ((TUFFconfig_P_end_4 < Curr_time) && (Curr_time <= TUFFconfig_B_end_3)) || ((TUFFconfig_A_end_1 < Curr_time) && (Curr_time <= TUFFconfig_B_end_4)) || ((TUFFconfig_P_end_5 < Curr_time) && (Curr_time <= TUFFconfig_B_end_5)) || ((TUFFconfig_P_end_6 < Curr_time) && (Curr_time <= TUFFconfig_B_end_6)) || (TUFFconfig_P_end_7 < Curr_time) ) // config B trigconfigB.imp
-    {
-       notch=1;
-    }
-    else if((TUFFconfig_P_end_1 < Curr_time) && (Curr_time <= TUFFconfig_C_end_1)) // config C trigconfigC.imp
-    {
-       notch=2;
-    }
-    else if( ((TUFFconfig_P_end_2 < Curr_time) && (Curr_time <= TUFFconfig_G_end_1)) || ((TUFFconfig_O_end_1 < Curr_time) && (Curr_time <= TUFFconfig_G_end_2)) ) // config G trigconfigG.imp
-    {
-       notch=3;
-    }
-/*
-    else if(TUFFconfig_j_low < Curr_time <= TUFFconfig_j_high) // config J trigconfigJ.imp not used apparently?
-    {
-       indir= "notches_250_375_0";
-    }
-*/
-    else if( ((TUFFconfig_G_end_1 < Curr_time) && (Curr_time <= TUFFconfig_O_end_1)) || ((TUFFconfig_G_end_2 < Curr_time) && (Curr_time <= TUFFconfig_O_end_2)) ) // config O trigconfigO.imp
-    {
-       notch=4;
-    }
-    else if( ((TUFFconfig_B_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_1)) || ((TUFFconfig_C_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_2)) || ((TUFFconfig_O_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_3)) || ((TUFFconfig_B_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_4)) || ((TUFFconfig_B_end_4 < Curr_time) && (Curr_time <= TUFFconfig_P_end_5)) || ((TUFFconfig_B_end_5 < Curr_time) && (Curr_time <= TUFFconfig_P_end_6)) || ((TUFFconfig_B_end_6 < Curr_time) && (Curr_time <= TUFFconfig_P_end_7)) ) // config P trigconfigP.imp
-    {
-       notch=5;
-    }
-    surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTriggerTuffs[ipol][iring][iphi][notch]); 
-    // convolve this loaded response with graphUp
-  
+    // keith editing 1/24/18
+    surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTriggerTuffs[ipol][iring][iphi][anita1->tuffIndex]); 
+    // end keith editing 
   }// end else anita 4
 // end keith edits
 

@@ -44,6 +44,8 @@ private:
 public:
 
   
+
+  int tuffIndex // keith edits
   int number_all_antennas;                                                                                       ///< this keeps count of the number of antennas for use with timing calculations, etc.
 
   static const int NBANDS_MAX=100;                                                                               ///< max number of bands

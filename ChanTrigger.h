@@ -331,7 +331,7 @@ class ChanTrigger {
    * @param  y :: double[512] - output voltages
    * @param  pol :: bool - which polarization
    */
-  void applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol, Balloon *bn1);
+  void applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
 
   //! Apply impulse response to trigger path
   /**
@@ -343,9 +343,8 @@ class ChanTrigger {
    * @param  y :: double[512] - output voltages
    * @param  vhz :: double* - amplitude in Fourier domain
    * @param  pol :: bool - which polarization
-   * @param  bn1 :: Balloon - balloon object
    */
-  void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol, Balloon *bn1);
+  void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol);
 
   //! Add noise from ANITA-3 flight to the time domain waveforms
   /**
