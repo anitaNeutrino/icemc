@@ -1033,37 +1033,41 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
     static double tempdiodeoutput[1000][NFOUR];
 
+    int ntuff=1;
+    if (settings1->TUFFSON) ntuff=6;
     for (int ipol=0; ipol<2; ipol++){
       for (int iant=0; iant<48; iant++){
+	for (int ituff=0; ituff<ntuff; ituff++){
 	
-	memset(tempdiodeoutput, 0, sizeof(tempdiodeoutput) );
+	  memset(tempdiodeoutput, 0, sizeof(tempdiodeoutput) );
 
-	for (int i=0;i<ngeneratedevents;i++) {
+	  for (int i=0;i<ngeneratedevents;i++) {
 	  
-	  getQuickTrigNoiseFromFlight(quickNoise, ipol, iant);
+	    getQuickTrigNoiseFromFlight(quickNoise, ipol, iant);
 	  
-	  myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
+	    myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
 
-	  // First calculate the mean
-	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	    bwslice_diodemean_fullband_allchan[ipol][iant]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
-	    //	  cout << m << " " << timedomain_output[j][m] << " " << ((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)) << endl;
+	    // First calculate the mean
+	    for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+	      bwslice_diodemean_fullband_allchan[ipol][iant][ituff]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	      //	  cout << m << " " << timedomain_output[j][m] << " " << ((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)) << endl;
 	  
-	  }
-	}
-
-	// Then get the RMS
-	for (int i=0;i<ngeneratedevents;i++) {
-	  
-	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	    bwslice_dioderms_fullband_allchan[ipol][iant]+=(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant])*(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	    }
 	  }
 
+	  // Then get the RMS
+	  for (int i=0;i<ngeneratedevents;i++) {
+	  
+	    for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+	      bwslice_dioderms_fullband_allchan[ipol][iant][ituff]+=(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant][ituff])*(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant][ituff])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	    }
+
+	  }
+	
+	  bwslice_dioderms_fullband_allchan[ipol][iant][ituff]=sqrt(bwslice_dioderms_fullband_allchan[ipol][iant][ituff]);
+	  //cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << bwslice_diodemean_fullband_allchan[ipol][iant] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant][ituff] << endl;  
+	
 	}
-	
-	bwslice_dioderms_fullband_allchan[ipol][iant]=sqrt(bwslice_dioderms_fullband_allchan[ipol][iant]);
-	//cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << bwslice_diodemean_fullband_allchan[ipol][iant] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant] << endl;  
-	
       }
 	
     }

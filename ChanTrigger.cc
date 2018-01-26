@@ -342,7 +342,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   int ipol=0;
 
   if (settings1->NOISEFROMFLIGHTTRIGGER){
-    anita1->bwslice_rmsdiode[4] = anita1->bwslice_dioderms_fullband_allchan[ipol][iant];
+    anita1->bwslice_rmsdiode[4] = anita1->bwslice_dioderms_fullband_allchan[ipol][iant][anita1->tuffIndex];
   }
   
   // if we use the diode to perform an integral

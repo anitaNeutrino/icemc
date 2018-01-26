@@ -421,8 +421,8 @@ public:
   double bwslice_rmsdiode[5]; // average rms diode output across noise waveforms in each band
   double bwslice_meandiode[5]; // mean diode output across all samples in a sample of noise waveforms generated for each band
   double bwslice_vrms[5]; // rms noise voltage for this bandwidth slice
-  double bwslice_dioderms_fullband_allchan[2][48]; // diode rms for noise read from flight
-  double bwslice_diodemean_fullband_allchan[2][48]; // diode rms for noise read from flight
+  double bwslice_dioderms_fullband_allchan[2][48][6]; // diode rms for noise read from flight
+  double bwslice_diodemean_fullband_allchan[2][48][6]; // diode rms for noise read from flight
   double freq_noise[5][NPOINTS_NOISE]; // frequency array that goes with vnoise array
 
 
