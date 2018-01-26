@@ -2392,27 +2392,26 @@ int main(int argc,  char **argv) {
 //cerr<<vmmhz_max<<endl;
         n_pol = Efield_screentotal.Unit();
 
-        if(vmmhz_max>0.){
-          stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
-          ofstream roughout(stemp.c_str());
-          roughout << std::setprecision(20);
-
-          for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
-            roughout << inu << "  "
-            << panel1->GetImpactPt(jj).Lon() << "  "
-            << -90+panel1->GetImpactPt(jj).Lat() << "  "
-            << panel1->GetVmmhz0(jj) << "  "                  // PRE-taper vmmhz[0]
-            << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << "  " // POST-taper vmmhz[0]
-            << panel1->GetDelay(jj) << "  "
-            << panel1->GetWeight(jj) << "  "
-            << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
-            << panel1->GetIncidenceAngle(jj) << "  "
-            << panel1->GetTransmissionAngle(jj) << "  "
-            << panel1->GetFacetLength(jj) << "  "
-            << std::endl;
-          }
-          roughout.close();
-        }
+//        if(vmmhz_max>0.){
+//          stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
+//          ofstream roughout(stemp.c_str());
+//          roughout << std::setprecision(20);
+//          for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
+//            roughout << inu << "  "
+//            << panel1->GetImpactPt(jj).Lon() << "  "
+//            << -90+panel1->GetImpactPt(jj).Lat() << "  "
+//            << panel1->GetVmmhz0(jj) << "  "                  // PRE-taper vmmhz[0]
+//            << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << "  " // POST-taper vmmhz[0]
+//            << panel1->GetDelay(jj) << "  "
+//            << panel1->GetWeight(jj) << "  "
+//            << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
+//            << panel1->GetIncidenceAngle(jj) << "  "
+//            << panel1->GetTransmissionAngle(jj) << "  "
+//            << panel1->GetFacetLength(jj) << "  "
+//            << std::endl;
+//          }
+//          roughout.close();
+//        }
 
       }//end else roughness
       // the screen is now finished
@@ -2776,29 +2775,29 @@ int main(int argc,  char **argv) {
 
           chantrig1->TriggerPath(settings1, anita1, antNum);
 
-          ////// just some roughness output
-          if(settings1->ROUGHNESS){
-            if(vmmhz_max>0.){
-              std::string stemp=string(outputdir.Data())+"/rough_signalwaveforms_"+nunum+".dat";
-              ofstream sigout(stemp.c_str(), ios::app);
-              for (int iband=0;iband<5;iband++) {
-                if (anita1->bwslice_allowed[iband]!=1) continue; 
-                for (int k=0;k<anita1->NFOUR/2;k++) {
-                  sigout << ilayer << "  "
-                  << ifold << "  "
-                  << iband << "  "
-                  << k << "  "
-                  << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
-                  << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
-                  << chantrig1->volts_rx_forfft[0][iband][k]<< "  "
-                  << chantrig1->volts_rx_forfft[1][iband][k]<< "  "
-                  << std::endl;
-                }
-              }
-              sigout.close();
-            }
-          }
-          //////
+//          ////// just some roughness output
+//          if(settings1->ROUGHNESS){
+//            if(vmmhz_max>0.){
+//              std::string stemp=string(outputdir.Data())+"/rough_signalwaveforms_"+nunum+".dat";
+//              ofstream sigout(stemp.c_str(), ios::app);
+//              for (int iband=0;iband<5;iband++) {
+//                if (anita1->bwslice_allowed[iband]!=1) continue; 
+//                for (int k=0;k<anita1->NFOUR/2;k++) {
+//                  sigout << ilayer << "  "
+//                  << ifold << "  "
+//                  << iband << "  "
+//                  << k << "  "
+//                  << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
+//                  << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
+//                  << chantrig1->volts_rx_forfft[0][iband][k]<< "  "
+//                  << chantrig1->volts_rx_forfft[1][iband][k]<< "  "
+//                  << std::endl;
+//                }
+//              }
+//              sigout.close();
+//            }
+//          }
+//          //////
 
           chantrig1->DigitizerPath(settings1, anita1, antNum);
 
@@ -3363,7 +3362,7 @@ int main(int argc,  char **argv) {
               truthEvPtr->hitangle_e[i]  = hitangle_e_all[i];
               truthEvPtr->hitangle_h[i]  = hitangle_h_all[i];
             }
-            if(settings1->ROUGHNESS){
+            if(!settings1->ROUGHNESS){
               for (int i=0;i<Anita::NFREQ;i++)
                 truthEvPtr->vmmhz[i]       = panel1->GetVmmhz_freq(i);
             }
@@ -4452,7 +4451,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
 
   // in the roughness case we just want to pick a random allowable direction, so let's keep the original sampled neutrino direction from back in IceModel::PickUnbiased() inside Ray::PickRoughnessInteractionPoint()
 
-  if (!settings1->ROUGHNESS){ // no roughness, use the original routine
+  //if (!settings1->ROUGHNESS){ // no roughness, use the original routine
     int dont_count=0;
     double theta_test=0;
     double vmmhz1m_test=0;
@@ -4624,10 +4623,10 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
     } //else if
 
     return 0;
-  } // end NO ROUGHNESS
+  //} // end NO ROUGHNESS
 
   // treat the roughness case
-  else if(settings1->ROUGHNESS){
+  /*else if(settings1->ROUGHNESS){
     //copy SKIPCUTS and USEDIRECTIONWEIGHTS from earlier in this function
     double costhetanu2=1.;
     double costhetanu1=-1.;
@@ -4648,7 +4647,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
   else{ //something bad happened
     cout<<"Something bad happened in GetDirection."<<endl;
     return 1;
-  }
+  }*/
 }
 //end GetDirection()
 
