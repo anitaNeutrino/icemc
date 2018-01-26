@@ -27,8 +27,8 @@ void tempAcceptance(){
 					      20304   ,    // E20.5
 					      38143   };   // E21
 
-  Double_t ANITA_2_effVolume_new[n_ANITA] = { ,    // E18
-					      ,    // E18.5
+  Double_t ANITA_2_effVolume_new[n_ANITA] = { 0,    // E18
+					      0,    // E18.5
 					      207.579,    // E19
 					      1333.15,    // E19.5
 					      3624.32,    // E20
@@ -77,7 +77,10 @@ void tempAcceptance(){
 				       274.407,
 				       192.573 ,
 				       135.143 }; // E21
-
+  for (int i=0; i<n_ANITA; i++){
+    cout << ANITA_2_effArea_published[i]*intLength_RENO[i] << endl;
+  }
+  
   TGraph *g_intLength_RENO             = new TGraph(n_ANITA, ANITA_4_x, intLength_RENO);
   TGraph *g_intLength_CONNOLLY_nuNC    = new TGraph(n_ANITA, ANITA_4_x, intLength_CONNOLLY_nuNC);
   TGraph *g_intLength_CONNOLLY_nuCC    = new TGraph(n_ANITA, ANITA_4_x, intLength_CONNOLLY_nuCC);
