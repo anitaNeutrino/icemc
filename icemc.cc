@@ -4451,7 +4451,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
 
   // in the roughness case we just want to pick a random allowable direction, so let's keep the original sampled neutrino direction from back in IceModel::PickUnbiased() inside Ray::PickRoughnessInteractionPoint()
 
-  if (!settings1->ROUGHNESS){ // no roughness, use the original routine
+  //if (!settings1->ROUGHNESS){ // no roughness, use the original routine
     int dont_count=0;
     double theta_test=0;
     double vmmhz1m_test=0;
@@ -4623,10 +4623,10 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
     } //else if
 
     return 0;
-  } // end NO ROUGHNESS
+  //} // end NO ROUGHNESS
 
   // treat the roughness case
-  else if(settings1->ROUGHNESS){
+  /*else if(settings1->ROUGHNESS){
     //copy SKIPCUTS and USEDIRECTIONWEIGHTS from earlier in this function
     double costhetanu2=1.;
     double costhetanu1=-1.;
@@ -4647,7 +4647,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
   else{ //something bad happened
     cout<<"Something bad happened in GetDirection."<<endl;
     return 1;
-  }
+  }*/
 }
 //end GetDirection()
 
