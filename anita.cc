@@ -386,7 +386,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
     }
   }
   if (settings1->APPLYIMPULSERESPONSETRIGGER){
-    readImpulseResponseTrigger(settings1);
+    readImpulseResponseTrigger(settings1, tuffIndex);
   }
   if (settings1->TRIGGEREFFSCAN){
     readTriggerEfficiencyScanPulser(settings1);
@@ -1043,7 +1043,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 	  for (int i=0;i<ngeneratedevents;i++) {
 	  
-	    getQuickTrigNoiseFromFlight(quickNoise, ipol, iant);
+	    getQuickTrigNoiseFromFlight(quickNoise, ipol, iant, tuffIndex);
 	  
 	    myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
 
@@ -1181,7 +1181,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 
 #ifdef ANITA_UTIL_EXISTS
-void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant){
+void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int tuffIndex){
 
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
   phasorsTrig[0].setMagPhase(0,0);
@@ -1193,7 +1193,7 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
   int iphi = iant - (iring*16);
 
   for(int i=1;i<numFreqs;i++) {
-    norm           = fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i];
+    norm           = fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][tuffIndex][i];
     sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
     sigma*=norm;
     realPart       = fRand->Gaus(0,sigma);
@@ -4211,7 +4211,7 @@ void Anita::readNoiseFromFlight(Settings *settings1){
 
 
 
-void Anita::readImpulseResponseTrigger(Settings *settings1){
+void Anita::readImpulseResponseTrigger(Settings *settings1, int tuffIndex){
 
   // So far only available for ANITA-3
   
@@ -4302,7 +4302,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     for (int iring=0; iring<3; iring++){
       for (int iphi=0; iphi<16; iphi++){
         if(settings1->TUFFSON){
-          TGraph * gtemp = fSignalChainResponseTriggerTuffs[ipol][iring][iphi][1]->getFreqMagGraph();
+          TGraph * gtemp = fSignalChainResponseTriggerTuffs[ipol][iring][iphi][tuffIndex]->getFreqMagGraph();
           double temp[numFreqs];
           for(int j=0;j<numFreqs;j++){
             temp[j] = gtemp->Eval(freqs[j]*1e6);
@@ -4310,12 +4310,12 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
           delete gtemp;
           for(int i=0;i<numFreqs;i++){
             if (freqs[i]<160.) {
-              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]=0.1;  
+              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][tuffIndex][i]=0.1;  
             } else {
               dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
               trig   = temp[i];
-              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]    = (trig/dig);
-              cout << "trig is " << trig <<  endl;
+              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][tuffIndex][i]    = (trig/dig);
+              //cout << "trig is " << trig <<  endl;
 
             }
           }// end for loop to fill fRatioTriggerDigitizerFreqDomain
@@ -4323,12 +4323,12 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
         else{
           for(int i=0;i<numFreqs;i++) {
             if (freqs[i]<160.) {
-              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]=0.1;  
+              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][0][i]=0.1;  
             } else {
               dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
               trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i];
-              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]    = (trig/dig);
-              cout << "trig is " << trig << endl;
+              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][0][i]    = (trig/dig);
+              //cout << "trig is " << trig << endl;
             }
           } // end for loop over numfreqs
         } //end else for tuffsoff
