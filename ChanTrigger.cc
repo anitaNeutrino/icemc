@@ -1804,7 +1804,7 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
   for (int ipol=0; ipol<2; ipol++){
 
     for(int i=1;i<numFreqs;i++) {
-      norm           = anita1->fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i];
+      norm           = anita1->fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
       sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
       sigma*=norm;
       realPart       = anita1->fRand->Gaus(0,sigma);
