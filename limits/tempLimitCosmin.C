@@ -198,7 +198,7 @@ void tempLimitCosmin(){
   g_Kotera_shade->SetTitle(";E (eV);E dN/dE dA d#Omega dt (cm^{-2} sr ^{-1} s^{-1} )");
   g_Kotera_shade->GetHistogram()->SetMaximum(1.e-12);
   g_Kotera_shade->GetHistogram()->SetMinimum(1.e-19);
-  g_Kotera_shade->GetXaxis()->SetLimits(1e17,1.e22); // zoom little bit
+  g_Kotera_shade->GetXaxis()->SetLimits(1e17,1.e21); // zoom little bit
   g_Kotera_shade->GetHistogram()->SetTitleSize  ( 0.04,"X");
   g_Kotera_shade->GetHistogram()->SetLabelOffset( 0.006,"X");
   g_Kotera_shade->GetHistogram()->SetLabelSize( 0.04,"X");
@@ -220,11 +220,11 @@ void tempLimitCosmin(){
   // TGraphAsymmErrors *g_IceCube = getIceCube();
   // g_IceCube->Draw("p");
   
-  g_ANITA_2_erratum->Draw("l");
+//  g_ANITA_2_erratum->Draw("l");
 
   g_ANITA_2->Draw("l");
   // g_ANITA_2_pub->Draw("l");
-  // g_ANITA_2_pub2->Draw("l");
+//   g_ANITA_2_pub2->Draw("l");
   g_ANITA_3->Draw("l");
   // g_ANITA_3up->Draw("l");
   // g_ANITA_3low->Draw("l");
@@ -235,17 +235,17 @@ void tempLimitCosmin(){
 
 
   TLegend *leg = new TLegend(0.6, 0.6, 0.89, 0.89);
-  leg->AddEntry(g_ANITA_2_erratum, "ANITA-2 published",                  "lp" );
+//  leg->AddEntry(g_ANITA_2_erratum, "ANITA-2 (published)",                  "lp" );
   // leg->AddEntry(g_ANITA_2_pub,     "A2 pub w/ #Delta=4, #epsilon_{ANA}=0.6",  "l" );
-  // leg->AddEntry(g_ANITA_2_pub2,    "A2 pub w/ #Delta=1, #epsilon_{ANA}=0.6",  "l" );
-  leg->AddEntry(g_ANITA_2,         "Current ANITA-2 limit",  "l" );
-  leg->AddEntry(g_ANITA_3,         "ANITA-3 Limit (UChicago)",  "l" );
+ //  leg->AddEntry(g_ANITA_2_pub2,    "A2 pub w/ #Delta=1, #epsilon_{ANA}=0.6",  "l" );
+  leg->AddEntry(g_ANITA_2,         "ANITA-2 (updated)",  "l" );
+  leg->AddEntry(g_ANITA_3,         "ANITA-3 (UChicago)",  "l" );
   // leg->AddEntry(g_ANITA_3,    "#sigma Connolly et al, Nominal", "l");
   // leg->AddEntry(g_ANITA_3up,  "#sigma Connolly et al, Upper bound",   "l");
   // leg->AddEntry(g_ANITA_3low, "#sigma Connolly et al, Lower bound",   "l");
   // leg->AddEntry(g_ANITA_3Reno,        "#sigma Reno et al",     "l");
   // leg->AddEntry(g_ANITA_4,         "A4 icemc #epsilon_{ANA}=0.8",  "l" );
-  leg->AddEntry(g_ANITA_123,       "Combined ANITA 1-3 Limit",  "l" );
+  leg->AddEntry(g_ANITA_123,       "Combined ANITA 1-3",  "l" );
 //  leg->AddEntry(g_ANITA_all,       "ANITA-1-4 projected sensitivity",  "l" );
   leg->Draw();
 
