@@ -592,7 +592,7 @@ public:
 #ifdef ANITA_UTIL_EXISTS
   RFSignal *fSignalChainResponseDigitizerTuffs[2][3][16][6]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM------- 0:configA, 1:configB, 2:configC, 3:configG, 4:configO, 5:configP
   RFSignal *fSignalChainResponseTriggerTuffs[2][3][16][6];  // same as for DigitizerTuffs
-  void readImpulseResponseDigitizer(Settings *settings1);
+  void readImpulseResponseDigitizer(Settings *settings1, int tuffIndex);
   void readImpulseResponseTrigger(Settings *settings1);
   void readTuffResponseDigitizer(Settings *settings1);
   void readTuffResponseTrigger(Settings *settings1);
