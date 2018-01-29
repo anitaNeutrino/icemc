@@ -386,7 +386,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
     }
   }
   if (settings1->APPLYIMPULSERESPONSETRIGGER){
-    readImpulseResponseTrigger(settings1, tuffIndex);
+    readImpulseResponseTrigger(settings1);
   }
   if (settings1->TRIGGEREFFSCAN){
     readTriggerEfficiencyScanPulser(settings1);
@@ -4211,7 +4211,7 @@ void Anita::readNoiseFromFlight(Settings *settings1){
 
 
 
-void Anita::readImpulseResponseTrigger(Settings *settings1, int tuffIndex){
+void Anita::readImpulseResponseTrigger(Settings *settings1){
 
   // So far only available for ANITA-3
   
@@ -4302,40 +4302,41 @@ void Anita::readImpulseResponseTrigger(Settings *settings1, int tuffIndex){
     for (int iring=0; iring<3; iring++){
       for (int iphi=0; iphi<16; iphi++){
         if(settings1->TUFFSON){
-          TGraph * gtemp = fSignalChainResponseTriggerTuffs[ipol][iring][iphi][tuffIndex]->getFreqMagGraph();
-          double temp[numFreqs];
-          for(int j=0;j<numFreqs;j++){
-            temp[j] = gtemp->Eval(freqs[j]*1e6);
-          }// end for loop to fill temp
-          delete gtemp;
-          for(int i=0;i<numFreqs;i++){
-            if (freqs[i]<160.) {
-              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][tuffIndex][i]=0.1;  
-            } else {
-              dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
-              trig   = temp[i];
-              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][tuffIndex][i]    = (trig/dig);
-              //cout << "trig is " << trig <<  endl;
+          for(int ituff=0; ituff<6; ituff++){
+              TGraph * gtemp = fSignalChainResponseTriggerTuffs[ipol][iring][iphi][ituff]->getFreqMagGraph();
+              double temp[numFreqs];
+              for(int j=0;j<numFreqs;j++){
+                temp[j] = gtemp->Eval(freqs[j]*1e6);
+              }// end for loop to fill temp
+              delete gtemp;
+              for(int i=0;i<numFreqs;i++){
+                if (freqs[i]<160.) {
+                  fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][ituff][i]=0.1;  
+                } else {
+                  dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
+                  trig   = temp[i];
+                  fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][ituff][i]    = (trig/dig);
+                  //cout << "trig is " << trig <<  endl;
 
-            }
-          }// end for loop to fill fRatioTriggerDigitizerFreqDomain
+                  }
+              }// end for loop to fill fRatioTriggerDigitizerFreqDomain
+          }// end tuffIndex loop
         }// end if for tuffson
         else{
           for(int i=0;i<numFreqs;i++) {
             if (freqs[i]<160.) {
-              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][0][i]=0.1;  
+              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][0][i]=0.1;
             } else {
               dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
               trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i];
               fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][0][i]    = (trig/dig);
-              //cout << "trig is " << trig << endl;
+              //cout << "trig is " << trig << endl
             }
           } // end for loop over numfreqs
         } //end else for tuffsoff
-        // TGraph *temp = new TGraph (numFreqs, freqs, fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi]);
-        // temp->Write(Form("gratio_%d_%d_%d", ipol, iring, iphi));
-        // delete temp;
-
+    // TGraph *temp = new TGraph (numFreqs, freqs, fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi]);
+    // temp->Write(Form("gratio_%d_%d_%d", ipol, iring, iphi));
+    // delete temp;
       } // end for loop over iphi
     } // end for loop over iring
   } // end for loop over ipol
