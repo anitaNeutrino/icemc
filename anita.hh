@@ -598,7 +598,7 @@ public:
   void readTuffResponseTrigger(Settings *settings1);
   void readTriggerEfficiencyScanPulser(Settings *settings1);
   void readNoiseFromFlight(Settings *settings1);
-  void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant);
+  void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int tuffIndex);
   TGraph *RayleighFits[2][48];
   Int_t numFreqs;
   Double_t *freqs;
@@ -615,7 +615,7 @@ public:
   Double_t fTimes[HALFNFOUR];
   Double_t fSignalChainResponseDigitizerFreqDomain[2][3][16][400];
   Double_t fSignalChainResponseTriggerFreqDomain[2][3][16][400];
-  Double_t fRatioTriggerDigitizerFreqDomain[2][3][16][400];
+  Double_t fRatioTriggerDigitizerFreqDomain[2][3][16][400][6];
   Double_t deltaT;
 
   // Trigger efficiency scan parameters
