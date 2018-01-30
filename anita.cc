@@ -1043,7 +1043,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 	  for (int i=0;i<ngeneratedevents;i++) {
 	  
-	    getQuickTrigNoiseFromFlight(quickNoise, ipol, iant, tuffIndex);
+	    getQuickTrigNoiseFromFlight(quickNoise, ipol, iant, ituff);
 	  
 	    myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
 
