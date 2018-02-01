@@ -3277,7 +3277,7 @@ int main(int argc,  char **argv) {
                 realEvPtr->fTimes[ichan][j] = j * anita1->TIMESTEP * 1.0E9;
 	      }
 	    }
-
+	    	realEvPtr->fRFSpike = 0;// glitch does not likely happen in mc data.
             for (int iant = 0; iant < settings1->NANTENNAS; iant++){
               //int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1,  AnitaGeom1,  iant);
               int IceMCAnt = GetIceMCAntfromUsefulEventAnt(settings1,  iant);
