@@ -1520,7 +1520,7 @@ int main(int argc,  char **argv) {
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
 
     eventNumber=(UInt_t)(run_no)*NNU+inu;
-
+//if( inu!=2995) continue;
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
     TRandom3 r(eventNumber+7e8);
@@ -2203,6 +2203,10 @@ int main(int argc,  char **argv) {
 
         double basescreenedgelength = settings1->SCREENEDGELENGTH;
         double grd_stepsize = settings1->SCREENSTEPSIZE;
+        if( int(basescreenedgelength/grd_stepsize) < 3) {
+          cerr<<"Screen size too small. Changing to 3 * input stepsize."<<endl;
+          basescreenedgelength = 3.*grd_stepsize;
+        }
         int grd_nsteps = int(basescreenedgelength / grd_stepsize);
 
         int num_validscreenpoints = 0;
@@ -2271,7 +2275,6 @@ int main(int argc,  char **argv) {
           taperfactor = 1.;
           tcoeff_perp = tcoeff_parl = 0.;
           pos_projectedImpactPoint = panel1->GetNextPosition(jj);        // this gets the new screen position
-//cerr<<jj<<"  "<<panel1->GetCentralPoint()<<"  "<<  pos_projectedImpactPoint<<endl;
           vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_projectedImpactPoint[0], bn1->r_bn[1] - pos_projectedImpactPoint[1], bn1->r_bn[2] - pos_projectedImpactPoint[2] );
 
           // local angles of transmission and incidence in their respective planes
@@ -2294,12 +2297,16 @@ int main(int argc,  char **argv) {
           vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
           temp_a = vec_localnormal.Cross(vec_pos_current_to_balloon).Unit();
           azimuth_local = vec_grndcomp2IP.Angle(vec_grndcomp2bln); //[rad]
-          if( temp_a.Dot(vec_nnu_to_impactPoint) > 0 )
+          if( temp_a.Dot(vec_nnu_to_impactPoint) < 0 )
             azimuth_local *= -1.;
-//cerr<<azimuth_local*180./PI<<endl;
+          if( panel1->GetCentralPoint().Distance(pos_projectedImpactPoint)<0.75*grd_stepsize ){
+            azimuth_local = 0.;
+          }
+//cerr<<inu<<":  "<<jj<<"  "<<vec_grndcomp2IP<<" : "<<vec_grndcomp2bln<<" : "<<azimuth_local*180./PI<<endl;
           theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
           theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
-//cerr<< jj<<"  "<<theta_local*180./PI << "  "<< theta_0_local*180./PI<< "  "<<azimuth_local*180./PI<< endl;
+//cerr<<inu<<"  "<<jj<<";  "<<panel1->GetCentralPoint()<<" : "<<  pos_projectedImpactPoint<<" : "<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<< azimuth_local*180./PI<< endl;
+//cerr<< panel1->GetCentralPoint() - pos_projectedImpactPoint<<endl;
           if( isnan(theta_local) | isnan(theta_0_local) | isnan(azimuth_local) ){
             continue;
           }
@@ -2311,19 +2318,19 @@ int main(int argc,  char **argv) {
           sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, taperfactor, vmmhz_em[0]);// this applies the angular dependence.
           if(taperfactor==0)
             continue;
-//cerr<< "past E=0"<<endl;
+//cerr<<inu<< ": past E=0"<<endl;
           /////
           // Field Magnitude
 #ifdef USE_HEALPIX
           rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
 #endif
+//cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
           if( (power_perp==0.)|(power_parl==0.) ){
             continue;
           }
 //cerr<<"survived power cut"<<endl;
           tcoeff_perp = sqrt(power_perp);
           tcoeff_parl = sqrt(power_parl);
-//cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
 //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
           Emag_local *= sqrt((power_perp + power_parl));// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
 //cerr<<"E: "<<Emag_local<<std::endl;
@@ -2657,7 +2664,7 @@ int main(int argc,  char **argv) {
       // simSignal->addCW(250E6, 0, 0.01);
       // simSignal->getVmmhz(anita1, vmmhz);
       // delete simSignal;
-      
+
       //if no-roughness case, add its parameters to the saved screen parameters so specular and roughness simulations use the same code in the waveform construction
       if(!settings1->ROUGHNESS){
         panel1->SetNvalidPoints(1);
