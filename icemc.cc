@@ -1520,9 +1520,7 @@ int main(int argc,  char **argv) {
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
 
     eventNumber=(UInt_t)(run_no)*NNU+inu;
-//if( !( (inu==5397) ) ){
-//  continue;
-//}
+
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
     TRandom3 r(eventNumber+7e8);
@@ -2133,7 +2131,7 @@ int main(int argc,  char **argv) {
       count1->nconverges[whichray]++;
       // Get Polarization vector.  See Jackson,  Cherenkov section.
       n_pol = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4]);
-
+//cerr<<inu<<"  "<<ray1->rfexit[2]<<endl;
       if (settings1->BORESIGHTS) {
         for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
           for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
@@ -2239,6 +2237,13 @@ int main(int argc,  char **argv) {
         //double pathlength_specular = interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn);
         double time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*NFIRN / CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/CLIGHT);
         double time_reference_local;
+
+        double slopeyx, slopeyy, slopeyz, rtemp;
+        Vector ntemp2;
+        Vector xaxis = Vector(1.,0.,0.);
+        Vector yaxis = Vector(0.,1.,0.);
+        Vector zaxis = Vector(0.,0.,1.);
+
         //#########
         //iterate points on the screen, get their position and project back to find ground impact
         //calculate incident and transmitted angles, look up power fraction, and add to running total
@@ -2271,6 +2276,18 @@ int main(int argc,  char **argv) {
 
           // local angles of transmission and incidence in their respective planes
           vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
+          if (settings1->SLOPEY) {
+              slopeyx=ray1->slopeyx;
+              slopeyy=ray1->slopeyy;
+              slopeyz=ray1->slopeyz;
+              ntemp2 = vec_localnormal + slopeyx*xaxis + slopeyy*yaxis + slopeyz*zaxis;
+              ntemp2 = ntemp2 / ntemp2.Mag();
+              rtemp= ntemp2 * vec_localnormal;
+              if (rtemp<=1) {
+                vec_localnormal = ntemp2;
+              }//if
+          }//end local slopeyness
+//cerr<<inu<<"  "<<pos_projectedImpactPoint<<endl;
           vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
 
           vec_grndcomp2IP = (vec_nnu_to_impactPoint - (vec_nnu_to_impactPoint.Dot(vec_localnormal)*vec_localnormal)).Unit();
@@ -2279,7 +2296,7 @@ int main(int argc,  char **argv) {
           azimuth_local = vec_grndcomp2IP.Angle(vec_grndcomp2bln); //[rad]
           if( temp_a.Dot(vec_nnu_to_impactPoint) > 0 )
             azimuth_local *= -1.;
-
+//cerr<<azimuth_local*180./PI<<endl;
           theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
           theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
 //cerr<< jj<<"  "<<theta_local*180./PI << "  "<< theta_0_local*180./PI<< "  "<<azimuth_local*180./PI<< endl;
@@ -2392,27 +2409,27 @@ int main(int argc,  char **argv) {
 //cerr<<vmmhz_max<<endl;
         n_pol = Efield_screentotal.Unit();
 
-//        if(vmmhz_max>0.){
-//          stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
-//          ofstream roughout(stemp.c_str());
-//          roughout << std::setprecision(20);
-//          for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
-//            roughout << inu << "  "
-//            << panel1->GetImpactPt(jj).Lon() << "  "
-//            << -90+panel1->GetImpactPt(jj).Lat() << "  "
-//            << panel1->GetVmmhz0(jj) << "  "                  // PRE-taper vmmhz[0]
-//            << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << "  " // POST-taper vmmhz[0]
-//            << panel1->GetDelay(jj) << "  "
-//            << panel1->GetWeight(jj) << "  "
-//            << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
-//            << panel1->GetIncidenceAngle(jj) << "  "
-//            << panel1->GetTransmissionAngle(jj) << "  "
-//            << panel1->GetFacetLength(jj) << "  "
-//            << std::endl;
-//          }
-//          roughout.close();
-//        }
-
+/*        if(vmmhz_max>0.){
+          stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
+          ofstream roughout(stemp.c_str());
+          roughout << std::setprecision(20);
+          for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
+            roughout << inu << "  "
+            << panel1->GetImpactPt(jj).Lon() << "  "
+            << -90+panel1->GetImpactPt(jj).Lat() << "  "
+            << panel1->GetVmmhz0(jj) << "  "                  // PRE-taper vmmhz[0]
+            << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << "  " // POST-taper vmmhz[0]
+            << panel1->GetDelay(jj) << "  "
+            << panel1->GetWeight(jj) << "  "
+            << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
+            << panel1->GetIncidenceAngle(jj) << "  "
+            << panel1->GetTransmissionAngle(jj) << "  "
+            << panel1->GetFacetLength(jj) << "  "
+            << std::endl;
+          }
+          roughout.close();
+        }
+*/
       }//end else roughness
       // the screen is now finished
       /////////////////////////////
@@ -2775,29 +2792,29 @@ int main(int argc,  char **argv) {
 
           chantrig1->TriggerPath(settings1, anita1, antNum);
 
-//          ////// just some roughness output
-//          if(settings1->ROUGHNESS){
-//            if(vmmhz_max>0.){
-//              std::string stemp=string(outputdir.Data())+"/rough_signalwaveforms_"+nunum+".dat";
-//              ofstream sigout(stemp.c_str(), ios::app);
-//              for (int iband=0;iband<5;iband++) {
-//                if (anita1->bwslice_allowed[iband]!=1) continue; 
-//                for (int k=0;k<anita1->NFOUR/2;k++) {
-//                  sigout << ilayer << "  "
-//                  << ifold << "  "
-//                  << iband << "  "
-//                  << k << "  "
-//                  << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
-//                  << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
-//                  << chantrig1->volts_rx_forfft[0][iband][k]<< "  "
-//                  << chantrig1->volts_rx_forfft[1][iband][k]<< "  "
-//                  << std::endl;
-//                }
-//              }
-//              sigout.close();
-//            }
-//          }
-//          //////
+/*          ////// just some roughness output
+          if(settings1->ROUGHNESS){
+            if(vmmhz_max>0.){
+              std::string stemp=string(outputdir.Data())+"/rough_signalwaveforms_"+nunum+".dat";
+              ofstream sigout(stemp.c_str(), ios::app);
+              for (int iband=0;iband<5;iband++) {
+                if (anita1->bwslice_allowed[iband]!=1) continue; 
+                for (int k=0;k<anita1->NFOUR/2;k++) {
+                  sigout << ilayer << "  "
+                  << ifold << "  "
+                  << iband << "  "
+                  << k << "  "
+                  << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
+                  << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
+                  << chantrig1->volts_rx_forfft[0][iband][k]<< "  "
+                  << chantrig1->volts_rx_forfft[1][iband][k]<< "  "
+                  << std::endl;
+                }
+              }
+              sigout.close();
+            }
+          }*/
+          //////
 
           chantrig1->DigitizerPath(settings1, anita1, antNum);
 
