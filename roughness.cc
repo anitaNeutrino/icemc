@@ -29,7 +29,7 @@
 #include "pointing.h"
 #endif
 
-Roughness::Roughness(){
+Roughness::Roughness(int FIRN){
 
   rough_dir_str = std::getenv("ICEMC_SRC_DIR");
 #ifdef USE_HEALPIX
@@ -39,6 +39,11 @@ Roughness::Roughness(){
 
   roughscale_str = "0p10";
   roughnsims_str = "10000000";
+
+  if (FIRN)
+    roughmaterial_str="firn";
+  else
+    roughmaterial_str="ice";
 };
 
 
@@ -92,7 +97,7 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
 
   // "lower" table: read through table looking for specific pixel
   // open and read table, discard header
-  base_rough_file_str = "/data/roughness_tables/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
+  base_rough_file_str = "/data/roughness_tables/"+roughmaterial_str+"/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
   full_rough_file_lower = rough_dir_str + base_rough_file_str;
   //std::cerr<<full_rough_file_lower<<"  :  "<<lower_cache.count(full_rough_file_lower)<<std::endl;
   //
@@ -121,7 +126,7 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
 
   // "upper" table filename: same procedure
   // open and read table, discard header
-  base_rough_file_str = base_rough_file_str = "/data/roughness_tables/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_beckmann.hpx";;
+  base_rough_file_str = base_rough_file_str = "/data/roughness_tables/"+roughmaterial_str+"/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_beckmann.hpx";;
   full_rough_file_upper = rough_dir_str + base_rough_file_str;
 
   if (!upper_cache.count(full_rough_file_upper))
