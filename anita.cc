@@ -1181,7 +1181,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 
 #ifdef ANITA_UTIL_EXISTS
-void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int tuffIndex){
+void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int ituff){
 
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
   phasorsTrig[0].setMagPhase(0,0);
@@ -1193,7 +1193,7 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
   int iphi = iant - (iring*16);
 
   for(int i=1;i<numFreqs;i++) {
-    norm           = fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][tuffIndex][i];
+    norm           = fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][ituff][i];
     sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
     sigma*=norm;
     realPart       = fRand->Gaus(0,sigma);
