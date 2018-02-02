@@ -38,6 +38,7 @@ Roughness::Roughness(){
 #endif
 
   roughscale_str = "0p10";
+  roughnsims_str = "10000000";
 };
 
 
@@ -48,6 +49,9 @@ void Roughness::SetRoughScale(double a){
   strs << a;
   roughscale_str = strs.str();
   roughscale_str[1] = 'p';
+
+  if(roughscale_str=="0p00")
+    roughnsims_str = "1";
   //std::cerr<<"Roughness srms: "<<roughscale_str<<std::endl;
 };
 
@@ -83,17 +87,20 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
   std::string header;
   std::string base_rough_file_str="";
   ifstream ifs;
-  std::string full_rough_file;
+  std::string full_rough_file_lower;
+  std::string full_rough_file_upper;
 
   // "lower" table: read through table looking for specific pixel
   // open and read table, discard header
-  base_rough_file_str = "/data/roughness_tables/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims10000000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
-  full_rough_file = rough_dir_str + base_rough_file_str;
-  //std::cerr<<full_rough_file<<std::endl;
+  base_rough_file_str = "/data/roughness_tables/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
+  full_rough_file_lower = rough_dir_str + base_rough_file_str;
+  //std::cerr<<full_rough_file_lower<<"  :  "<<lower_cache.count(full_rough_file_lower)<<std::endl;
   //
-  if (!lower_cache.count(full_rough_file))
+  if (!lower_cache.count(full_rough_file_lower))
   {
-    ifs.open (full_rough_file, std::ifstream::in);
+    //std::cerr<<"Not in cache"<<std::endl;
+    ifs.open (full_rough_file_lower, std::ifstream::in);
+    //std::cerr<<ifs.good()<<std::endl;
     if(ifs.good())
     {
       //would be more efficient to use std::emplace, but meh
@@ -102,23 +109,24 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
       std::getline(ifs, header);
       while (ifs.good()) {
         ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
+        //std::cerr<<pphi<<"  "<<ptheta<<"  "<<Tparl<<"  "<<Tperp<<std::endl;
         if (Tparl < 0) Tparl = 0; 
         if (Tperp < 0) Tperp = 0; 
         this_lower[pixel]=std::pair<double,double>(Tparl,Tperp); 
       }
-      lower_cache[full_rough_file] = this_lower; 
+      lower_cache[full_rough_file_lower] = this_lower; 
     }
     ifs.close();
   }
 
   // "upper" table filename: same procedure
   // open and read table, discard header
-  base_rough_file_str = base_rough_file_str = "/data/roughness_tables/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims10000000_hp"+Form("%i",H.Nside())+"_beckmann.hpx";;
-  full_rough_file = rough_dir_str + base_rough_file_str;
+  base_rough_file_str = base_rough_file_str = "/data/roughness_tables/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_beckmann.hpx";;
+  full_rough_file_upper = rough_dir_str + base_rough_file_str;
 
-  if (!upper_cache.count(full_rough_file))
+  if (!upper_cache.count(full_rough_file_upper))
   {
-    ifs.open (full_rough_file, std::ifstream::in);
+    ifs.open (full_rough_file_upper, std::ifstream::in);
     if(ifs.good())
     {
       std::map<int, std::pair<double,double> > this_upper; 
@@ -129,25 +137,25 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
         if (Tperp < 0) Tperp = 0; 
         this_upper[pixel]=std::pair<double,double>(Tparl,Tperp); 
       }
-      upper_cache[full_rough_file] = this_upper; 
+      upper_cache[full_rough_file_upper] = this_upper; 
     }
     ifs.close();
   }
-  Tparl_down = lower_cache[full_rough_file][thispixel].first; 
-  Tperp_down = lower_cache[full_rough_file][thispixel].second; 
-  Tparl_up = upper_cache[full_rough_file][thispixel].first; 
-  Tperp_up = upper_cache[full_rough_file][thispixel].second; 
+  Tparl_down = lower_cache[full_rough_file_lower][thispixel].first; 
+  Tperp_down = lower_cache[full_rough_file_lower][thispixel].second; 
+  Tparl_up = upper_cache[full_rough_file_upper][thispixel].first; 
+  Tperp_up = upper_cache[full_rough_file_upper][thispixel].second; 
   
 
 
-  /*std::cerr<<"Inter[: "<<T0<<"  "
-  <<T<<"  "
-  <<A<<"  "
-  <<thispixel<<"  "
-  <<Tparl_down<<"  "
-  <<Tparl_up<<"  "
-  <<Tperp_down<<"  "
-  <<Tperp_up<<std::endl;*/
+  //std::cerr<<"Inter[: "<<T0<<"  "
+  //<<T<<"  "
+  //<<A<<"  "
+  //<<thispixel<<"  "
+  //<<Tparl_down<<"  "
+  //<<Tparl_up<<"  "
+  //<<Tperp_down<<"  "
+  //<<Tperp_up<<std::endl;
 
   // now, average
   tcoeff_perp = (Tperp_down + Tperp_up)/2.;

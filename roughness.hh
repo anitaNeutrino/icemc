@@ -37,6 +37,7 @@ private:
 #endif
 
   std::string roughscale_str;
+  std::string roughnsims_str;
 public:
 
   Roughness();
