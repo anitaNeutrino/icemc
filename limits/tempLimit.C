@@ -109,7 +109,7 @@ void tempLimit(){
   double ANITA_2_eff[n_ANITA] = { 0.67664 , 0.60748 , 0.60000 , 0.55701 , 0.47477, 0.40935 , 0.41495 };
   double ANITA_1_eff[n_ANITA] = { 0.62041 , 0.71429 , 0.75306 , 0.68571 , 0.64694, 0.50000 , 0.43878 };
   
-  double ANITA_3_livetime = 17.4*24*3600.*0.85; // 17.4 days
+  double ANITA_3_livetime = 17.4*24*3600.; // 17.4 days
   double ANITA_2_livetime = 28.5*24*3600.; 
   double ANITA_1_livetime = 17.4*24*3600.;  
 
