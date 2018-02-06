@@ -37,9 +37,11 @@ private:
 #endif
 
   std::string roughscale_str;
+  std::string roughnsims_str;
+  std::string roughmaterial_str;
 public:
 
-  Roughness();
+  Roughness(int FIRN);
 
   void SetRoughScale(double a);
 
