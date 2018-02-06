@@ -283,6 +283,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   TIMESTEP=(1./2.6)*1.E-9; // time step between samples
 
   USEPHASES=0;
+  ntuffs=1;
+  if (settings1->TUFFSON) ntuffs=6;
   
   for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
  
@@ -1033,11 +1035,9 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
     static double tempdiodeoutput[1000][NFOUR];
 
-    int ntuff=1;
-    if (settings1->TUFFSON) ntuff=6;
     for (int ipol=0; ipol<2; ipol++){
       for (int iant=0; iant<48; iant++){
-	for (int ituff=0; ituff<ntuff; ituff++){
+	for (int ituff=0; ituff<ntuffs; ituff++){
 	
 	  memset(tempdiodeoutput, 0, sizeof(tempdiodeoutput) );
 
@@ -1065,7 +1065,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 	  }
 	
 	  bwslice_dioderms_fullband_allchan[ipol][iant][ituff]=sqrt(bwslice_dioderms_fullband_allchan[ipol][iant][ituff]);
-	  //cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << bwslice_diodemean_fullband_allchan[ipol][iant] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant][ituff] << endl;  
+	  //	  cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << ituff << " " << bwslice_diodemean_fullband_allchan[ipol][iant][ituff] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant][ituff] << endl;  
 	
 	}
       }
@@ -4086,9 +4086,9 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 	  // Smoothing magnitude response a bit to avoid trig/dig ratio explodes
 	  for (int i=0; i<numFreqs;i++){
 	    if (freqs[i]<900.){
-	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]  = temparray[i];
+	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][0][i]  = temparray[i];
 	    } else {
-	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
+	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][0][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
 	    }
 	  }
 	  
@@ -4141,6 +4141,26 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 	  fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
 	  delete gint;
 	  delete gtemp;
+
+	  TGraph *gDig  = fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff]->getFreqMagGraph();
+	  // Smooth out the high frequency 
+	  double temparray[512];
+	  for(int i=0;i<numFreqs;i++) {
+	    temparray[i] =  gDig->Eval(freqs[i]*1e6);
+	    // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]<< endl;
+	  }
+	  
+	  // Smoothing magnitude response a bit to avoid trig/dig ratio explodes
+	  for (int i=0; i<numFreqs;i++){
+	    if (freqs[i]<900.){
+	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = temparray[i];
+	    } else {
+	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
+	    }
+	  }
+	  
+	  delete gDig;
+	  
 	}// end for loop ituff
       } // end for loop iphi
     }// end for loop iring
@@ -4178,6 +4198,26 @@ void Anita::readTuffResponseTrigger(Settings *settings1){
           fSignalChainResponseTriggerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
           delete gint;
           delete gtemp;
+
+	  
+	  TGraph *gTrig  = fSignalChainResponseTriggerTuffs[ipol][iring][iphi][ituff]->getFreqMagGraph();
+	  // Smooth out the high frequency 
+	  double temparray[512];
+	  for(int i=0;i<numFreqs;i++) {
+	    temparray[i] =  gTrig->Eval(freqs[i]*1e6);
+	    // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]<< endl;
+	  }
+	  
+	  // Smoothing magnitude response a bit to avoid trig/dig ratio explodes
+	  for (int i=0; i<numFreqs;i++){
+	    if (freqs[i]<900.){
+	      fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][ituff][i]  = temparray[i];
+	    } else {
+	      fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][ituff][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
+	    }
+	  }
+	  
+	  delete gTrig;
         }// end for loop ituff
       } // end for loop iphi
     }// end for loop iring
@@ -4281,14 +4321,15 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	  delete grInt;
 	  delete grTemp;
 
-	  
-	  TGraph *gTrig = fSignalChainResponseTrigger[ipol][iring][iphi]->getFreqMagGraph();
-	  for(int i=0;i<numFreqs;i++) {
-	    fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i]    = gTrig->Eval(freqs[i]*1e6);
-	    // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i] << " " << fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i] << endl;
+	  if (!settings1->TUFFSON){
+	    TGraph *gTrig = fSignalChainResponseTrigger[ipol][iring][iphi]->getFreqMagGraph();
+	    for(int i=0;i<numFreqs;i++) {
+	      fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][0][i]    = gTrig->Eval(freqs[i]*1e6);
+	      // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i] << " " << fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i] << endl;
+	    }
+	    delete gTrig;
 	  }
-	  delete gTrig;
-
+	  
 	}
       }
     }
@@ -4296,47 +4337,26 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 
 
   double dig, trig;
-  // TFile *fout = new TFile("RatioTrigDigResponses.root", "recreate");
   
   for (int ipol=0; ipol<2; ipol++){
     for (int iring=0; iring<3; iring++){
       for (int iphi=0; iphi<16; iphi++){
-        if(settings1->TUFFSON){
-          for(int ituff=0; ituff<6; ituff++){
-              TGraph * gtemp = fSignalChainResponseTriggerTuffs[ipol][iring][iphi][ituff]->getFreqMagGraph();
-              double temp[numFreqs];
-              for(int j=0;j<numFreqs;j++){
-                temp[j] = gtemp->Eval(freqs[j]*1e6);
-              }// end for loop to fill temp
-              delete gtemp;
-              for(int i=0;i<numFreqs;i++){
-                if (freqs[i]<160.) {
-                  fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][ituff][i]=0.1;  
-                } else {
-                  dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
-                  trig   = temp[i];
-                  fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][ituff][i]    = (trig/dig);
-                  //cout << "trig is " << trig <<  endl;
+	for(int ituff=0; ituff<ntuffs; ituff++){
+	    
+	  
+	  for(int i=0;i<numFreqs;i++){
+	    if (freqs[i]<160.) {
+	      fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][ituff][i]=0.1;  
+	    } else {
+	      dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i];
+	      trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][ituff][i];
+	      fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][ituff][i]    = (trig/dig);
+	      //cout << "trig is " << trig <<  endl;
 
-                  }
-              }// end for loop to fill fRatioTriggerDigitizerFreqDomain
-          }// end tuffIndex loop
-        }// end if for tuffson
-        else{
-          for(int i=0;i<numFreqs;i++) {
-            if (freqs[i]<160.) {
-              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][0][i]=0.1;
-            } else {
-              dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
-              trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i];
-              fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][0][i]    = (trig/dig);
-              //cout << "trig is " << trig << endl
-            }
-          } // end for loop over numfreqs
-        } //end else for tuffsoff
-    // TGraph *temp = new TGraph (numFreqs, freqs, fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi]);
-    // temp->Write(Form("gratio_%d_%d_%d", ipol, iring, iphi));
-    // delete temp;
+	    }
+	  }// end for loop to fill fRatioTriggerDigitizerFreqDomain
+	}// end tuffIndex loop
+     
       } // end for loop over iphi
     } // end for loop over iring
   } // end for loop over ipol
