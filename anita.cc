@@ -4086,9 +4086,9 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 	  // Smoothing magnitude response a bit to avoid trig/dig ratio explodes
 	  for (int i=0; i<numFreqs;i++){
 	    if (freqs[i]<900.){
-	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][0][i]  = temparray[i];
+	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]  = temparray[i];
 	    } else {
-	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][0][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
+	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
 	    }
 	  }
 	  
@@ -4142,24 +4142,6 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 	  delete gint;
 	  delete gtemp;
 
-	  TGraph *gDig  = fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff]->getFreqMagGraph();
-	  // Smooth out the high frequency 
-	  double temparray[512];
-	  for(int i=0;i<numFreqs;i++) {
-	    temparray[i] =  gDig->Eval(freqs[i]*1e6);
-	    // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]<< endl;
-	  }
-	  
-	  // Smoothing magnitude response a bit to avoid trig/dig ratio explodes
-	  for (int i=0; i<numFreqs;i++){
-	    if (freqs[i]<900.){
-	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = temparray[i];
-	    } else {
-	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
-	    }
-	  }
-	  
-	  delete gDig;
 	  
 	}// end for loop ituff
       } // end for loop iphi
@@ -4348,7 +4330,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	    if (freqs[i]<160.) {
 	      fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][ituff][i]=0.1;  
 	    } else {
-	      dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i];
+	      dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
 	      trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][ituff][i];
 	      fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][ituff][i]    = (trig/dig);
 	      //cout << "trig is " << trig <<  endl;
