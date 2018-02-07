@@ -90,6 +90,7 @@ public:
 
   double THERMALNOISE_FACTOR;                                                                                   ///< factor to multiply thermal noise for error analysis
 
+  double additionalDt;
 
   Anita(); // constructor
   ~Anita();

@@ -295,10 +295,13 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   } //for
 
   initializeFixedPowerThresholds(foutput);
-  
+
+  additionalDt=0;
   /// TEMP HACK FOR ANITA-4 !!!!
-  if (settings1->WHICH==10) powerthreshold[4] /= TMath::Sqrt(2.);
-  
+  if (settings1->WHICH==10){
+    powerthreshold[4] /= TMath::Sqrt(2.);
+    additionalDt=10.e-9;
+  }
   if (settings1->TRIGGERSCHEME==5)
     l1window=3.75E-9;
   else
@@ -3276,7 +3279,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 		
   } 
   else if (settings1->WHICH==9 || settings1->WHICH==10) { // ANITA-3 and ANITA-4
-    cout<<"initializing and using ANITA-III payload geometry"<<endl;
+    cout<<"initializing and using ANITA-III or IV payload geometry"<<endl;
     // layer 0 is antennas 1-8 on the payload
     // layer 1 is antennas 9-15
     // layer 2 is antennas 16-32
@@ -3929,7 +3932,7 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
   for (int ipol=0; ipol<2; ipol++){
     for (int i=0;i<(number_all_antennas);i++){
       
-      arrival_times[ipol][i] -= first_trigger_time;
+      arrival_times[ipol][i] = arrival_times[ipol][i] - first_trigger_time + additionalDt;
       //cout<<"arrival_times boresight["<<i<<"] is "<<arrival_times[i]<<"\n";
     }
   }
