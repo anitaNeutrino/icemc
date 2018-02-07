@@ -263,6 +263,10 @@ void Settings::Initialize() {
   taumodes = 1; //Taumodes =1, taucreated in the rock.
   SCREENEDGELENGTH=25.;
   TUFFSON=0;
+  ADDCW=0;
+  PAYLOAD_USE_SPECIFIC_TIME = 0; 
+  PAYLOAD_USE_SPECIFIC_TIME_DELTA = 3600; 
+
 }
 
 
@@ -797,7 +801,13 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   
   getSetting("Simulate TUFFs", TUFFSON);
   getSetting("Which TUFFs are on", whichTUFFsON);
+  if (TUFFSON) cout << "TUFFs are simulated " << endl;
+  
+  getSetting("Add CW", ADDCW);
+  if(ADDCW) cout << "Adding CW " << endl;
 
+  getSetting("Specific Payload Unix Time", PAYLOAD_USE_SPECIFIC_TIME); 
+  getSetting("Specific Payload Delta Time", PAYLOAD_USE_SPECIFIC_TIME_DELTA); 
   
 } //method ReadInputs
 

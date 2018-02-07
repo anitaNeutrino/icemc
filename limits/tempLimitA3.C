@@ -6,13 +6,23 @@ TGraph *getANITA2erratum();
 TGraph *getAhlers();
 TGraphAsymmErrors *getIceCube();
 
+double ANITA_3_eff_UC[n_ANITA] = { 0.802186, 0.812969, 0.875551, 0.798459, 0.73314, 0.674088, 0.6     };
+double ANITA_3_eff_UCLA[n_ANITA] = { 0.802186*0.85/0.72, 0.812969*0.85/0.72, 0.875551*0.85/0.72, 0.798459*0.85/0.72, 0.73314*0.85/0.72, 0.674088, 0.6*0.85/0.72     }; //WAG scale factor from mine
+double ANITA_3_eff_OSU[n_ANITA] = { 0.802186*2/7, 0.812969*2/7, 0.875551*2/7, 0.798459*2/7, 0.73314*2/7, 0.674088*2/7, 0.6*2/7     }; //WAG scale factor from mine
+//double N90_A3_UC = 1.37; // using my prescription, multiplied by mean efficiency
+double N90_A3_UC = 1.74; // using FC
+double N90_A3_UCLA = 3.86; //WAG assuming FC with 1 observed,  0.5 background
+double N90_A3_OSU = 3.39; //WAG assumign 1 observed, 1 background 
+
+
+
 TGraph *getLimit(double effArea[n_ANITA], double eff[n_ANITA], double livetime);
 
 TGraph *getLimitNoDelta(double N90, double effArea[n_ANITA], double eff[n_ANITA], double livetime);
 
 TGraph* getCombinedLimitNoDelta(double N90,  double denom[n_ANITA]);
 
-void tempLimitCosmin(){
+void tempLimitA3(){
 
   string outname = "ANITA3Limit";
   
@@ -115,14 +125,20 @@ void tempLimitCosmin(){
   double ANITA_1_livetime = 17.4*24*3600.;  
 
   double N90_A3 = 1.37; // using my prescription, multiplied by mean efficiency 
-  N90_A3 = 1.58; // using FC
+  N90_A3 = 1.74; // using FC
   double N90_A2 = 3.39;  // FC
   double N90_A1 = 3.26;  // FC
   double N90_combined = 2.94; 
 
   
-  TGraph *g_ANITA_3 = getLimitNoDelta(N90_A3,ANITA_3_effArea, ANITA_3_eff, ANITA_3_livetime);
-  g_ANITA_3->SetLineColor(kBlack);
+  TGraph *g_ANITA_3_UC = getLimitNoDelta(N90_A3_UC,ANITA_3_effArea, ANITA_3_eff_UC, ANITA_3_livetime);
+  g_ANITA_3_UC->SetLineColor(kBlack);
+
+  TGraph *g_ANITA_3_UCLA = getLimitNoDelta(N90_A3_UCLA,ANITA_3_effArea, ANITA_3_eff_UCLA, ANITA_3_livetime);
+  g_ANITA_3_UCLA->SetLineColor(kGray);
+
+  TGraph *g_ANITA_3_OSU = getLimitNoDelta(N90_A3_OSU,ANITA_3_effArea, ANITA_3_eff_OSU, ANITA_3_livetime);
+  g_ANITA_3_OSU->SetLineColor(kMagenta);
 
   TGraph *g_ANITA_3up = getLimitNoDelta(N90_A3,ANITA_3_effAreaUp, ANITA_3_eff, ANITA_3_livetime);
   g_ANITA_3up->SetLineColor(kRed);
@@ -225,7 +241,8 @@ void tempLimitCosmin(){
   g_ANITA_2->Draw("l");
   // g_ANITA_2_pub->Draw("l");
 //   g_ANITA_2_pub2->Draw("l");
-  g_ANITA_3->Draw("l");
+  g_ANITA_3_UC->Draw("l");
+  g_ANITA_3_UCLA->Draw("l");
   // g_ANITA_3up->Draw("l");
   // g_ANITA_3low->Draw("l");
   // g_ANITA_3Reno->Draw("l");
@@ -239,7 +256,8 @@ void tempLimitCosmin(){
   // leg->AddEntry(g_ANITA_2_pub,     "A2 pub w/ #Delta=4, #epsilon_{ANA}=0.6",  "l" );
  //  leg->AddEntry(g_ANITA_2_pub2,    "A2 pub w/ #Delta=1, #epsilon_{ANA}=0.6",  "l" );
   leg->AddEntry(g_ANITA_2,         "ANITA-2 (updated)",  "l" );
-  leg->AddEntry(g_ANITA_3,         "ANITA-3 (UChicago)",  "l" );
+  leg->AddEntry(g_ANITA_3_UC,         "ANITA-3 (UChicago)",  "l" );
+  leg->AddEntry(g_ANITA_3_UCLA,         "ANITA-3 (UCLA est.)",  "l" );
   // leg->AddEntry(g_ANITA_3,    "#sigma Connolly et al, Nominal", "l");
   // leg->AddEntry(g_ANITA_3up,  "#sigma Connolly et al, Upper bound",   "l");
   // leg->AddEntry(g_ANITA_3low, "#sigma Connolly et al, Lower bound",   "l");
