@@ -612,7 +612,7 @@ int main(int argc,  char **argv) {
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
   
-  Roughness *rough1=new Roughness(); // create new instance of the roughness class
+  Roughness *rough1=new Roughness(settings1->FIRN); // create new instance of the roughness class
   rough1->SetRoughScale(settings1->ROUGHSIZE);
 
   Screen *panel1 = new Screen(0);  // create new instance of the screen class

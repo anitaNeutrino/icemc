@@ -1,86 +1,12 @@
-const int n_ANITA = 7;
-Double_t ANITA_4_x[n_ANITA]       = {18, 18.5, 19, 19.5, 20, 20.5, 21};
+#include "Acceptances.h"
+
+Double_t ANITA_2_effArea[n_ANITA];              
+Double_t ANITA_3_effArea[n_ANITA];
 
 void tempAcceptance(){
-
- Double_t ANITA_2_effArea[n_ANITA] = { 0.00029 ,      // E18     in km^2  
-					0.02121 ,      // E18.5		  
-					0.22009 ,      // E19    	  
-					1.27190 ,      // E19.5		  
-					6.38188 ,      // E20		  
-					18.45390 ,     // E20.5		  
-					52.53270 };    // E21              
-
-  Double_t ANITA_2_effArea_published[n_ANITA] = {0.00043,
-						 0.05000,
-						 0.92000,
-						 6.60,
-						 36.00,
-						 108.00,
-						 259.00};
-
-  Double_t ANITA_2_effVolume_old[n_ANITA] = { 0.5,      // E18
-					      63.1341 ,    // E18.5
-					      633.598 ,    // E19
-					      3118.19 ,    // E19.5
-					      9414.39 ,    // E20
-					      20304   ,    // E20.5
-					      38143   };   // E21
-
-  Double_t ANITA_2_effVolume_new[n_ANITA] = { 0,    // E18
-					      0,    // E18.5
-					      207.579,    // E19
-					      1333.15,    // E19.5
-					      3624.32,    // E20
-					      15310.8,    // E20.5
-					      26217.4   };   // E21
    
 
-  Double_t intLength_CONNOLLY_nuNC[n_ANITA] = { 3826.5,
-						2617.44,
-						1817.98,
-						1279.9,
-						912.003,
-						 656.936,
-						 477.867}; // E21
 
-  
-  Double_t intLength_CONNOLLY_nuCC[n_ANITA] = { 1544.84,
-						1065.44,
-						745.54,
-						528.431,
-						378.864,
-						 274.445,
-						 200.67}; // E21
-
-  
-  Double_t intLength_CONNOLLY_nubarNC[n_ANITA] = { 3868.47,
-						   2647.45,
-						   1840.89,
-						   1297.89,
-						   926.252,
-						   668.193 ,
-						   486.701 }; // E21
-  
-  Double_t intLength_CONNOLLY_nubarCC[n_ANITA] = { 1671.17,
-						   1151.12,
-						   805.022,
-						   570.46,
-						   408.962,
-						   296.22,
-						   216.548}; // E21
-  
-  Double_t intLength_RENO[n_ANITA] = { 1131.34,
-				       793.952,
-				       557.179,
-				       391.016,
-				       274.407,
-				       192.573 ,
-				       135.143 }; // E21
-  for (int i=0; i<n_ANITA; i++){
-    cout << ANITA_2_effArea_published[i]*intLength_RENO[i] << endl;
-  }
-  
   TGraph *g_intLength_RENO             = new TGraph(n_ANITA, ANITA_4_x, intLength_RENO);
   TGraph *g_intLength_CONNOLLY_nuNC    = new TGraph(n_ANITA, ANITA_4_x, intLength_CONNOLLY_nuNC);
   TGraph *g_intLength_CONNOLLY_nuCC    = new TGraph(n_ANITA, ANITA_4_x, intLength_CONNOLLY_nuCC);

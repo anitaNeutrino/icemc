@@ -200,6 +200,8 @@ void Balloon::InitializeBalloon() {
   if (WHICHPATH==2)
     igps_previous=NPOINTS_MIN; // initialise here to avoid times during launch
     
+  flightdatachain = 0; 
+
   // This for Anita 1 flight
   if (WHICHPATH==6) {
 		
@@ -250,7 +252,7 @@ void Balloon::InitializeBalloon() {
 		
   }
     
-    
+
         
   for (int i=0;i<10000;i++) {
     latitude_bn_anitalite[i]=0;
@@ -396,6 +398,8 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
   roll=0.;
   phi_spin=0.;
 
+
+
   //flightdatatree->SetBranchAddress("surfTrigBandMask",&surfTrigBandMask);
   //unsigned short test[9][2];
     
@@ -415,10 +419,38 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 			
     }
     else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9) {  // For Anita 1 and Anita 2 and Anita 3:
+      //igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
+      
 
-//        igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
+      static int start_igps = 0; 
+      static int ngps = flightdatachain->GetEntries(); 
+      static int init_best = 0;
 
-        igps = int(randomNumber*flightdatachain->GetEntries()); // pick random event in the tree
+
+      if (settings1->PAYLOAD_USE_SPECIFIC_TIME && !init_best) 
+      {
+         int N = flightdatachain->Draw("realTime","","goff"); 
+         double * times = flightdatachain->GetV1(); 
+
+         int best_igps =  TMath::BinarySearch(N, times, (double) settings1->PAYLOAD_USE_SPECIFIC_TIME); 
+         start_igps = best_igps;
+         int end_igps = best_igps;
+
+         while (times[start_igps] > settings1->PAYLOAD_USE_SPECIFIC_TIME - settings1->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
+         {
+           start_igps--; 
+         }
+
+         while (times[end_igps] < settings1->PAYLOAD_USE_SPECIFIC_TIME + settings1->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
+         {
+           end_igps++; 
+         }
+
+         ngps = end_igps - start_igps + 1; 
+         init_best = 1; 
+      }
+
+      igps = start_igps + int(randomNumber*ngps); // use random position 
 
       //////////////////////////// TEMPORARY HACKS FOR ANITA4 !!!!!!      
       if (WHICHPATH==9 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660)) || (igps==17862) ) igps=igps+30;
@@ -443,7 +475,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
       if ((WHICHPATH==8 || WHICHPATH==9) && settings1->USETIMEDEPENDENTTHRESHOLDS==1) // set time-dependent thresholds
 	anita1->setTimeDependentThresholds(realTime_flightdata);
 		  
-    }// end else if.
+    }
     igps_previous=igps;
     latitude=(double)flatitude;
     longitude=(double)flongitude;
