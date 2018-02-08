@@ -757,7 +757,25 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
       
     }
     else{
-      interaction1->posnu = antarctica1->PickInteractionLocation(ibnposition, settings1, r_bn, interaction1);
+
+      // If we require neutrinos from a particular position
+      // we generate that cartesian position here
+
+      static Vector specific_position; 
+
+      if (settings1->SPECIFIC_NU_POSITION) 
+      {
+        double R = settings1->SPECIFIC_NU_POSITION_ALTITUDE + antarctica1->Geoid(settings1->SPECIFIC_NU_POSITION_LATITUDE); 
+        double theta = settings1->SPECIFIC_NU_POSITION_LATITUDE * RADDEG; 
+        double phi = EarthModel::LongtoPhi_0isPrimeMeridian(settings1->SPECIFIC_NU_POSITION_LONGITUDE); 
+        specific_position.SetXYZ(R * sin(theta) * cos(phi), R * sin(theta) * sin(phi), R * cos(theta)); 
+      }
+        
+      do
+      {
+        interaction1->posnu = antarctica1->PickInteractionLocation(ibnposition, settings1, r_bn, interaction1);
+      } while(settings1->SPECIFIC_NU_POSITION &&  (interaction1->posnu - specific_position).Mag() > settings1->SPECIFIC_NU_POSITION_DISTANCE); 
+
     }
   }
   
