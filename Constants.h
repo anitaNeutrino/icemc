@@ -47,5 +47,26 @@ const Vector const_y(0,1,0);
 const Vector const_x(1,0,0);
 
 
+// TUFF configuration switching times in ChanTrigger.cc
+const    int TUFFconfig_B_end_1 = 1480713195;
+const    int TUFFconfig_P_end_1 = 1480730719;
+const    int TUFFconfig_C_end_1 = 1480731802;
+const    int TUFFconfig_P_end_2 = 1480807284;
+const    int TUFFconfig_G_end_1 = 1481013795;
+const    int TUFFconfig_O_end_1 = 1481100915;
+const    int TUFFconfig_G_end_2 = 1481173515;
+const    int TUFFconfig_O_end_2 = 1481490208;
+const    int TUFFconfig_P_end_3 = 1481642754;
+const    int TUFFconfig_B_end_2 = 1482121239;
+const    int TUFFconfig_P_end_4 = 1482168627;
+const    int TUFFconfig_B_end_3 = 1482205359;
+const    int TUFFconfig_A_end_1 = 1482206201;
+const    int TUFFconfig_B_end_4 = 1482286948;
+const    int TUFFconfig_P_end_5 = 1482347440;
+const    int TUFFconfig_B_end_5 = 1482445716;
+const    int TUFFconfig_P_end_6 = 1482465408;
+const    int TUFFconfig_B_end_6 = 1482964570;
+const    int TUFFconfig_P_end_7 = 1482987942;
+
 
 #endif //CONSTANTS_H

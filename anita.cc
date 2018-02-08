@@ -270,6 +270,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
 {
     
     
+  tuffIndex=0; // keith edits
   count_getnoisewaveforms=0;
   rms_lab[0]=rms_lab[1]=0.;
   rms_rfcm[0]=rms_rfcm[1]=0.;
@@ -282,6 +283,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   TIMESTEP=(1./2.6)*1.E-9; // time step between samples
 
   USEPHASES=0;
+  ntuffs=1;
+  if (settings1->TUFFSON) ntuffs=6;
   
   for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
  
@@ -292,10 +295,13 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   } //for
 
   initializeFixedPowerThresholds(foutput);
-  
+
+  additionalDt=0;
   /// TEMP HACK FOR ANITA-4 !!!!
-  if (settings1->WHICH==10) powerthreshold[4] /= TMath::Sqrt(2.);
-  
+  if (settings1->WHICH==10){
+    powerthreshold[4] /= TMath::Sqrt(2.);
+    additionalDt=10.e-9;
+  }
   if (settings1->TRIGGERSCHEME==5)
     l1window=3.75E-9;
   else
@@ -379,6 +385,10 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   }
   if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
     readImpulseResponseDigitizer(settings1);
+    if(settings1->TUFFSON){
+      readTuffResponseDigitizer(settings1);
+      readTuffResponseTrigger(settings1);
+    }
   }
   if (settings1->APPLYIMPULSERESPONSETRIGGER){
     readImpulseResponseTrigger(settings1);
@@ -1030,35 +1040,37 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
     for (int ipol=0; ipol<2; ipol++){
       for (int iant=0; iant<48; iant++){
+	for (int ituff=0; ituff<ntuffs; ituff++){
 	
-	memset(tempdiodeoutput, 0, sizeof(tempdiodeoutput) );
+	  memset(tempdiodeoutput, 0, sizeof(tempdiodeoutput) );
 
-	for (int i=0;i<ngeneratedevents;i++) {
+	  for (int i=0;i<ngeneratedevents;i++) {
 	  
-	  getQuickTrigNoiseFromFlight(quickNoise, ipol, iant);
+	    getQuickTrigNoiseFromFlight(quickNoise, ipol, iant, ituff);
 	  
-	  myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
+	    myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
 
-	  // First calculate the mean
-	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	    bwslice_diodemean_fullband_allchan[ipol][iant]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
-	    //	  cout << m << " " << timedomain_output[j][m] << " " << ((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)) << endl;
+	    // First calculate the mean
+	    for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+	      bwslice_diodemean_fullband_allchan[ipol][iant][ituff]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	      //	  cout << m << " " << timedomain_output[j][m] << " " << ((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)) << endl;
 	  
-	  }
-	}
-
-	// Then get the RMS
-	for (int i=0;i<ngeneratedevents;i++) {
-	  
-	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	    bwslice_dioderms_fullband_allchan[ipol][iant]+=(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant])*(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	    }
 	  }
 
+	  // Then get the RMS
+	  for (int i=0;i<ngeneratedevents;i++) {
+	  
+	    for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+	      bwslice_dioderms_fullband_allchan[ipol][iant][ituff]+=(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant][ituff])*(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant][ituff])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	    }
+
+	  }
+	
+	  bwslice_dioderms_fullband_allchan[ipol][iant][ituff]=sqrt(bwslice_dioderms_fullband_allchan[ipol][iant][ituff]);
+	  //	  cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << ituff << " " << bwslice_diodemean_fullband_allchan[ipol][iant][ituff] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant][ituff] << endl;  
+	
 	}
-	
-	bwslice_dioderms_fullband_allchan[ipol][iant]=sqrt(bwslice_dioderms_fullband_allchan[ipol][iant]);
-	//cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << bwslice_diodemean_fullband_allchan[ipol][iant] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant] << endl;  
-	
       }
 	
     }
@@ -1172,7 +1184,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 
 #ifdef ANITA_UTIL_EXISTS
-void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant){
+void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int ituff){
 
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
   phasorsTrig[0].setMagPhase(0,0);
@@ -1184,7 +1196,7 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
   int iphi = iant - (iring*16);
 
   for(int i=1;i<numFreqs;i++) {
-    norm           = fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i];
+    norm           = fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i];
     sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
     sigma*=norm;
     realPart       = fRand->Gaus(0,sigma);
@@ -1200,7 +1212,6 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
   for (int i=0; i<HALFNFOUR; i++){
     justNoise[i]  = justNoiseTemp[i]*THERMALNOISE_FACTOR;
   }
-  
   delete rfNoiseTrig;
   delete[] phasorsTrig;
   
@@ -3268,7 +3279,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 		
   } 
   else if (settings1->WHICH==9 || settings1->WHICH==10) { // ANITA-3 and ANITA-4
-    cout<<"initializing and using ANITA-III payload geometry"<<endl;
+    cout<<"initializing and using ANITA-III or IV payload geometry"<<endl;
     // layer 0 is antennas 1-8 on the payload
     // layer 1 is antennas 9-15
     // layer 2 is antennas 16-32
@@ -3921,7 +3932,7 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
   for (int ipol=0; ipol<2; ipol++){
     for (int i=0;i<(number_all_antennas);i++){
       
-      arrival_times[ipol][i] -= first_trigger_time;
+      arrival_times[ipol][i] = arrival_times[ipol][i] - first_trigger_time + additionalDt;
       //cout<<"arrival_times boresight["<<i<<"] is "<<arrival_times[i]<<"\n";
     }
   }
@@ -3988,7 +3999,7 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
 void Anita::readImpulseResponseDigitizer(Settings *settings1){
   
   // Set deltaT to be used in the convolution
-  deltaT = 1/(2.6*16);
+  deltaT = 1./(2.6*16.);
   string graphNames[2][3][16];
   string fileName;
   double norm=1;
@@ -4072,16 +4083,16 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 	  double temparray[512];
 	  for(int i=0;i<numFreqs;i++) {
 	    temparray[i] =  gDig->Eval(freqs[i]*1e6);
-	    // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]<< endl;
 	  }
 	  
 	  // Smoothing magnitude response a bit to avoid trig/dig ratio explodes
 	  for (int i=0; i<numFreqs;i++){
 	    if (freqs[i]<900.){
-	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]  = temparray[i];
+	      fSignalChainResponseA3DigitizerFreqDomain[ipol][iring][iphi][i]  = temparray[i];
 	    } else {
-	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
+	      fSignalChainResponseA3DigitizerFreqDomain[ipol][iring][iphi][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
 	    }
+	    fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][0][i] = fSignalChainResponseA3DigitizerFreqDomain[ipol][iring][iphi][i];
 	  }
 	  
 	  delete gDig;
@@ -4091,6 +4102,127 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
     }
   }
 
+}
+
+void Anita::readTuffResponseDigitizer(Settings *settings1){
+  // for loops to make the RFSignal array that can be used in applyImpulseResponseDigitizer of ChanTrigger.cc
+  // ipol is the polarization "v" or "H" 
+  // ring is the number 3 for tmb or bottom middle top
+  // iphi is the antenna number
+  // ituff is the notch directory
+  TString filename;
+  string snotch_dir[6]={"notches_260_0_0","notches_260_375_0","notches_260_0_460","notches_260_385_0","notches_260_365_0","notches_260_375_460"};
+  string spol[2] = {"V","H"};
+  string sring[3] = {"T","M","B"};
+ // Set deltaT to be used in the convolution
+  deltaT = 1./(2.6*16.);
+  for(int ipol=0; ipol<=1; ipol++) {
+    for(int iring = 0; iring<=2; iring++){
+      for(int iphi=0; iphi<=15; iphi++) {
+	for(int ituff=0; ituff <=5; ituff++) {
+	  if(iphi+1 < 10) {
+	    filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s/0%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+	  } 
+          else {
+	    filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s/%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+	  }
+	  TGraph *gtemp = new TGraph(filename);
+	  // interpolate
+	  TGraph *gint = Tools::getInterpolatedGraph(gtemp,deltaT); 
+// edits for debugging volumes
+          Int_t nPoints  = gint->GetN();
+          Double_t *newx = gint->GetX();
+          Double_t *newy = gint->GetY();
+          // Normalise
+          for (int i=0;i<nPoints;i++){
+          // change time axis from ns to s
+          newx[i]=newx[i]*1E-9;
+          }
+          *gint = TGraph(nPoints,newx,newy);
+// end edits for debugging volumes
+	  int paveNum=8533; // change for 0 to just signal back 
+	  fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
+	  delete gint;
+	  delete gtemp;
+
+	  TGraph *gDig  = fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff]->getFreqMagGraph();
+	  // Smooth out the high frequency 
+	  double temparray[512];
+	  for(int i=0;i<numFreqs;i++) {
+	    temparray[i] =  gDig->Eval(freqs[i]*1e6);
+	  }
+	  
+	  // Smoothing magnitude response a bit to avoid trig/dig ratio explodes
+	  for (int i=0; i<numFreqs;i++){
+	    if (freqs[i]<900.){
+	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = temparray[i];
+	    } else {
+	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
+	    }
+	  }
+	  
+	  delete gDig;
+	  
+	}// end for loop ituff
+      } // end for loop iphi
+    }// end for loop iring
+  }// end for loop ipol
+}
+
+void Anita::readTuffResponseTrigger(Settings *settings1){
+  // for loops to make the RFSignal array that can be used in applyImpulseResponseTrigger of ChanTrigger.cc Do we need one for each antenna???
+  TString filename;
+  string snotch_dir[6]={"trigconfigA.imp","trigconfigB.imp","trigconfigC.imp","trigconfigG.imp","trigconfigO.imp","trigconfigP.imp"};
+ // Set deltaT to be used in the convolution
+  deltaT = 1./(2.6*16.);
+  for(int ipol=0; ipol<=1; ipol++) {
+    for(int iring = 0; iring<=2; iring++){
+      for(int iphi=0; iphi<=15; iphi++) {
+        for(int ituff=0; ituff <=5; ituff++) {
+            filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str());
+            //debugging
+            //cout << Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str()) << endl;
+          TGraph *gtemp = new TGraph(filename);
+          // interpolate
+          TGraph *gint = Tools::getInterpolatedGraph(gtemp,deltaT); 
+// edits for debugging volumes
+          Int_t nPoints  = gint->GetN();
+          Double_t *newx = gint->GetX();
+          Double_t *newy = gint->GetY();
+          // Normalise
+          for (int i=0;i<nPoints;i++){
+          // change time axis from ns to s
+          newx[i]=newx[i]*1E-9;
+          }
+          *gint = TGraph(nPoints,newx,newy);
+// end edits for debugging volumes
+          int paveNum=8533; // change for 0 to just signal back 
+          fSignalChainResponseTriggerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
+          delete gint;
+          delete gtemp;
+
+	  
+	  TGraph *gTrig  = fSignalChainResponseTriggerTuffs[ipol][iring][iphi][ituff]->getFreqMagGraph();
+	  // Smooth out the high frequency 
+	  double temparray[512];
+	  for(int i=0;i<numFreqs;i++) {
+	    temparray[i] =  gTrig->Eval(freqs[i]*1e6);
+	  }
+	  
+	  // Smoothing magnitude response a bit to avoid trig/dig ratio explodes
+	  for (int i=0; i<numFreqs;i++){
+	    if (freqs[i]<900.){
+	      fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][ituff][i]  = temparray[i];
+	    } else {
+	      fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][ituff][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
+	    }
+	  }
+	  
+	  delete gTrig;
+        }// end for loop ituff
+      } // end for loop iphi
+    }// end for loop iring
+  }// end for loop ipol
 }
 
 void Anita::readNoiseFromFlight(Settings *settings1){
@@ -4125,7 +4257,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   // So far only available for ANITA-3
   
   // Set deltaT to be used in the convolution
-  deltaT = 1/(2.6*16);
+  deltaT = 1./(2.6*16.);
   string graphNames[2][3][16];
   string fileName;
   double norm=1;
@@ -4147,20 +4279,17 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 
     // Impulse response accounts for trigger/digitizer splitter
     // norm *= sqrt(2);
-
-
     // if we are using the trigger impulse response and the old noise
     // we need to add this 7dB attenuation to have sensible results
     // see LC's talk on 2017 Nov 13
     if (!settings1->NOISEFROMFLIGHTTRIGGER) norm *= TMath::Power(10, -7/20.);
-    
   }
 
   // Read in input file
   TFile fImpulse(fileName.c_str());
   
   if(!fImpulse.IsOpen()) {
-    std::cerr << "Couldn't read siganl chain impulse response from " << fileName << "\n";
+    std::cerr << "Couldn't read signal chain impulse response from " << fileName << "\n";
     exit(0);
   } else {
 
@@ -4193,43 +4322,45 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	  delete grInt;
 	  delete grTemp;
 
-	  
-	  TGraph *gTrig = fSignalChainResponseTrigger[ipol][iring][iphi]->getFreqMagGraph();
-	  for(int i=0;i<numFreqs;i++) {
-	    fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i]    = gTrig->Eval(freqs[i]*1e6);
-	    // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i] << " " << fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i] << endl;
+	  if (!settings1->TUFFSON){
+	    TGraph *gTrig = fSignalChainResponseTrigger[ipol][iring][iphi]->getFreqMagGraph();
+	    for(int i=0;i<numFreqs;i++) {
+	      fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][0][i]    = gTrig->Eval(freqs[i]*1e6);
+	    }
+	    delete gTrig;
 	  }
-	  delete gTrig;
-
+	  
 	}
       }
     }
   }
 
 
-  double dig, trig;
-  // TFile *fout = new TFile("RatioTrigDigResponses.root", "recreate");
+  double denom, dig, trig;
   
   for (int ipol=0; ipol<2; ipol++){
     for (int iring=0; iring<3; iring++){
       for (int iphi=0; iphi<16; iphi++){
-	
-	for(int i=0;i<numFreqs;i++) {
-	  if (freqs[i]<160.) {
-	    fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]=0.1;  
-	  } else {
-	    dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
-	    trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i];
-	    fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i]    = (trig/dig);
-	  }
-	}
-	// TGraph *temp = new TGraph (numFreqs, freqs, fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi]);
-	// temp->Write(Form("gratio_%d_%d_%d", ipol, iring, iphi));
-	// delete temp;
-    	
-      }
-    }
-  }
+	for(int ituff=0; ituff<ntuffs; ituff++){
+	    
+	  for(int i=0;i<numFreqs;i++){
+	    if (freqs[i]<160.) {
+	      fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i]=0.1;  
+	    } else {
+	      denom  = fSignalChainResponseA3DigitizerFreqDomain[ipol][iring][iphi][i];
+	      trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][ituff][i];
+	      dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i];
+	      fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i]    = (trig/denom);
+	      fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = (dig/denom);
+	      //	      cout << "Numbers are " << dig <<  " " << trig << " " << denom  << " " << trig/denom << " " << dig/denom << endl;
+
+	    }
+	  }// end for loop to fill fRatioTriggerDigitizerFreqDomain
+	}// end tuffIndex loop
+     
+      } // end for loop over iphi
+    } // end for loop over iring
+  } // end for loop over ipol
   // delete fout;
 
 

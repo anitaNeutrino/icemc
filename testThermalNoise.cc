@@ -816,7 +816,7 @@ int main(int argc,  char **argv) {
 	}
     
 	
-	chantrig1->DigitizerPath(settings1, anita1, antNum);
+	chantrig1->DigitizerPath(settings1, anita1, antNum, bn1);
 	
 	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
  

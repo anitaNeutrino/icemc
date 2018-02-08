@@ -896,8 +896,8 @@ int main(int argc,  char **argv) {
   configAnitaTree->Fill();
   
   TTree *triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
-  triggerSettingsTree->Branch("dioderms", anita1->bwslice_dioderms_fullband_allchan, "dioderms[2][48]/D");
-  triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48]/D");
+  triggerSettingsTree->Branch("dioderms", anita1->bwslice_dioderms_fullband_allchan, "dioderms[2][48][6]/D");
+  triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48][6]/D");
   triggerSettingsTree->Fill();
 
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
@@ -1064,9 +1064,9 @@ int main(int argc,  char **argv) {
 	if(!settings1->APPLYIMPULSERESPONSETRIGGER) chantrig1->injectImpulseAfterAntenna(anita1, antNum);
 #endif
 	
-	chantrig1->TriggerPath(settings1, anita1, antNum);
+	chantrig1->TriggerPath(settings1, anita1, antNum, bn1);
 	  
-	chantrig1->DigitizerPath(settings1, anita1, antNum);
+	chantrig1->DigitizerPath(settings1, anita1, antNum, bn1);
 	
 	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac, thresholdsAnt[antNum]);
 
