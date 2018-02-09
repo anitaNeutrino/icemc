@@ -4344,17 +4344,18 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	for(int ituff=0; ituff<ntuffs; ituff++){
 	    
 	  for(int i=0;i<numFreqs;i++){
-	    if (freqs[i]<160.) {
-	      fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i]=0.1;  
-	    } else {
-	      denom  = fSignalChainResponseA3DigitizerFreqDomain[ipol][iring][iphi][i];
-	      trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][ituff][i];
-	      dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i];
-	      fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i]    = (trig/denom);
-	      fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = (dig/denom);
-	      //	      cout << "Numbers are " << dig <<  " " << trig << " " << denom  << " " << trig/denom << " " << dig/denom << endl;
+	    denom  = fSignalChainResponseA3DigitizerFreqDomain[ipol][iring][iphi][i];
+	    trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][ituff][i];
+	    dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i];
 
+	    if (freqs[i]<160.) {
+	      fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i] = 0.1;  
+	    } else {
+	      fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i] = (trig/denom);
 	    }
+	    
+	    fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = (dig/denom);
+	    cout << "Numbers are " << dig <<  " " << trig << " " << denom  << " " << trig/denom << " " << dig/denom << endl;
 	  }// end for loop to fill fRatioTriggerDigitizerFreqDomain
 	}// end tuffIndex loop
      
