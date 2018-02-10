@@ -4355,7 +4355,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	    }
 	    
 	    fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = (dig/denom);
-	    cout << "Numbers are " << dig <<  " " << trig << " " << denom  << " " << trig/denom << " " << dig/denom << endl;
+	    //	    cout << "Numbers are " << dig <<  " " << trig << " " << denom  << " " << trig/denom << " " << dig/denom << endl;
 	  }// end for loop to fill fRatioTriggerDigitizerFreqDomain
 	}// end tuffIndex loop
      
