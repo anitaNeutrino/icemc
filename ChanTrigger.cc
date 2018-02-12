@@ -1794,7 +1794,7 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
   phasorsDig[0].setMagPhase(0,0);
   phasorsTrig[0].setMagPhase(0,0);
   double *freqs = anita1->freqs;
-  Double_t sigma, realPart, imPart, norm;
+  Double_t sigma, realPart, imPart, trigNorm, digNorm;
   int iring=2;
   if (ant<16) iring=0;
   else if (ant<32) iring=1;
@@ -1804,14 +1804,14 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
   for (int ipol=0; ipol<2; ipol++){
 
     for(int i=1;i<numFreqs;i++) {
-      norm           = anita1->fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
+      trigNorm       = anita1->fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
+      digNorm        = anita1->fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
       sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
-      sigma*=norm;
       realPart       = anita1->fRand->Gaus(0,sigma);
       imPart         = anita1->fRand->Gaus(0,sigma);
       
-      phasorsDig[i]  = FFTWComplex(realPart/norm, imPart/norm);
-      phasorsTrig[i] = FFTWComplex(realPart,      imPart     );
+      phasorsDig[i]  = FFTWComplex(realPart*digNorm,  imPart*digNorm  );
+      phasorsTrig[i] = FFTWComplex(realPart*trigNorm, imPart*trigNorm );
     }
 
     RFSignal *rfNoiseDig    = new RFSignal(numFreqs,freqs,phasorsDig,1);    

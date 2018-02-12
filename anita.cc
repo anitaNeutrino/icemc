@@ -295,10 +295,13 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   } //for
 
   initializeFixedPowerThresholds(foutput);
-  
+
+  additionalDt=0;
   /// TEMP HACK FOR ANITA-4 !!!!
-  if (settings1->WHICH==10) powerthreshold[4] /= TMath::Sqrt(2.);
-  
+  if (settings1->WHICH==10){
+    powerthreshold[4] /= TMath::Sqrt(2.);
+    additionalDt=10.e-9;
+  }
   if (settings1->TRIGGERSCHEME==5)
     l1window=3.75E-9;
   else
@@ -1193,7 +1196,7 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
   int iphi = iant - (iring*16);
 
   for(int i=1;i<numFreqs;i++) {
-    norm           = fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][ituff][i];
+    norm           = fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i];
     sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
     sigma*=norm;
     realPart       = fRand->Gaus(0,sigma);
@@ -3276,7 +3279,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 		
   } 
   else if (settings1->WHICH==9 || settings1->WHICH==10) { // ANITA-3 and ANITA-4
-    cout<<"initializing and using ANITA-III payload geometry"<<endl;
+    cout<<"initializing and using ANITA-III or IV payload geometry"<<endl;
     // layer 0 is antennas 1-8 on the payload
     // layer 1 is antennas 9-15
     // layer 2 is antennas 16-32
@@ -3929,7 +3932,7 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
   for (int ipol=0; ipol<2; ipol++){
     for (int i=0;i<(number_all_antennas);i++){
       
-      arrival_times[ipol][i] -= first_trigger_time;
+      arrival_times[ipol][i] = arrival_times[ipol][i] - first_trigger_time + additionalDt;
       //cout<<"arrival_times boresight["<<i<<"] is "<<arrival_times[i]<<"\n";
     }
   }
@@ -4080,16 +4083,16 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 	  double temparray[512];
 	  for(int i=0;i<numFreqs;i++) {
 	    temparray[i] =  gDig->Eval(freqs[i]*1e6);
-	    // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]<< endl;
 	  }
 	  
 	  // Smoothing magnitude response a bit to avoid trig/dig ratio explodes
 	  for (int i=0; i<numFreqs;i++){
 	    if (freqs[i]<900.){
-	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]  = temparray[i];
+	      fSignalChainResponseA3DigitizerFreqDomain[ipol][iring][iphi][i]  = temparray[i];
 	    } else {
-	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
+	      fSignalChainResponseA3DigitizerFreqDomain[ipol][iring][iphi][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
 	    }
+	    fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][0][i] = fSignalChainResponseA3DigitizerFreqDomain[ipol][iring][iphi][i];
 	  }
 	  
 	  delete gDig;
@@ -4142,6 +4145,23 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 	  delete gint;
 	  delete gtemp;
 
+	  TGraph *gDig  = fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff]->getFreqMagGraph();
+	  // Smooth out the high frequency 
+	  double temparray[512];
+	  for(int i=0;i<numFreqs;i++) {
+	    temparray[i] =  gDig->Eval(freqs[i]*1e6);
+	  }
+	  
+	  // Smoothing magnitude response a bit to avoid trig/dig ratio explodes
+	  for (int i=0; i<numFreqs;i++){
+	    if (freqs[i]<900.){
+	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = temparray[i];
+	    } else {
+	      fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = (temparray[i-2] + temparray[i-1] + temparray[i] + temparray[i+1] + temparray[i+2])/5.;
+	    }
+	  }
+	  
+	  delete gDig;
 	  
 	}// end for loop ituff
       } // end for loop iphi
@@ -4187,7 +4207,6 @@ void Anita::readTuffResponseTrigger(Settings *settings1){
 	  double temparray[512];
 	  for(int i=0;i<numFreqs;i++) {
 	    temparray[i] =  gTrig->Eval(freqs[i]*1e6);
-	    // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i]<< endl;
 	  }
 	  
 	  // Smoothing magnitude response a bit to avoid trig/dig ratio explodes
@@ -4307,7 +4326,6 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	    TGraph *gTrig = fSignalChainResponseTrigger[ipol][iring][iphi]->getFreqMagGraph();
 	    for(int i=0;i<numFreqs;i++) {
 	      fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][0][i]    = gTrig->Eval(freqs[i]*1e6);
-	      // cout <<  i <<  " " << ipol << " " << iring << " " << iphi << " " << freqs[i] << " " << fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i] << " " << fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][i] << endl;
 	    }
 	    delete gTrig;
 	  }
@@ -4318,24 +4336,26 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   }
 
 
-  double dig, trig;
+  double denom, dig, trig;
   
   for (int ipol=0; ipol<2; ipol++){
     for (int iring=0; iring<3; iring++){
       for (int iphi=0; iphi<16; iphi++){
 	for(int ituff=0; ituff<ntuffs; ituff++){
 	    
-	  
 	  for(int i=0;i<numFreqs;i++){
-	    if (freqs[i]<160.) {
-	      fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][ituff][i]=0.1;  
-	    } else {
-	      dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][i];
-	      trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][ituff][i];
-	      fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][ituff][i]    = (trig/dig);
-	      //cout << "trig is " << trig <<  endl;
+	    denom  = fSignalChainResponseA3DigitizerFreqDomain[ipol][iring][iphi][i];
+	    trig   = fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][ituff][i];
+	    dig    = fSignalChainResponseDigitizerFreqDomain[ipol][iring][iphi][ituff][i];
 
+	    if (freqs[i]<160.) {
+	      fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i] = 0.1;  
+	    } else {
+	      fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i] = (trig/denom);
 	    }
+	    
+	    fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = (dig/denom);
+	    //	    cout << "Numbers are " << dig <<  " " << trig << " " << denom  << " " << trig/denom << " " << dig/denom << endl;
 	  }// end for loop to fill fRatioTriggerDigitizerFreqDomain
 	}// end tuffIndex loop
      

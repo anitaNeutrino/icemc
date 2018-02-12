@@ -90,6 +90,7 @@ public:
 
   double THERMALNOISE_FACTOR;                                                                                   ///< factor to multiply thermal noise for error analysis
 
+  double additionalDt;
 
   Anita(); // constructor
   ~Anita();
@@ -613,9 +614,11 @@ public:
 
   
   Double_t fTimes[HALFNFOUR];
-  Double_t fSignalChainResponseDigitizerFreqDomain[2][3][16][400];
+  Double_t fSignalChainResponseA3DigitizerFreqDomain[2][3][16][400];
+  Double_t fSignalChainResponseDigitizerFreqDomain[2][3][16][6][400];
   Double_t fSignalChainResponseTriggerFreqDomain[2][3][16][6][400];
-  Double_t fRatioTriggerDigitizerFreqDomain[2][3][16][6][400];
+  Double_t fRatioTriggerToA3DigitizerFreqDomain[2][3][16][6][400];
+  Double_t fRatioDigitizerToA3DigitizerFreqDomain[2][3][16][6][400];
   Double_t deltaT;
 
   // Trigger efficiency scan parameters
