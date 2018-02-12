@@ -1320,8 +1320,8 @@ int main(int argc,  char **argv) {
   configAnitaTree->Fill();
 
   TTree *triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
-  triggerSettingsTree->Branch("dioderms",  anita1->bwslice_dioderms_fullband_allchan,  "dioderms[2][48]/D" );
-  triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48]/D");
+  triggerSettingsTree->Branch("dioderms",  anita1->bwslice_dioderms_fullband_allchan,  "dioderms[2][48][6]/D" );
+  triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48][6]/D");
   triggerSettingsTree->Fill();
   
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
@@ -2819,7 +2819,7 @@ int main(int argc,  char **argv) {
           
           chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
 
-          chantrig1->TriggerPath(settings1, anita1, antNum);
+          chantrig1->TriggerPath(settings1, anita1, antNum, bn1);
 
           ////// just some roughness output
           //if(settings1->ROUGHNESS){
@@ -2845,7 +2845,7 @@ int main(int argc,  char **argv) {
           //}
 */          //////
 
-          chantrig1->DigitizerPath(settings1, anita1, antNum);
+          chantrig1->DigitizerPath(settings1, anita1, antNum, bn1);
 
           chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 

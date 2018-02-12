@@ -234,6 +234,14 @@ class Settings : public TObject {
 
   int TUFFSON;                             // Are the TUFFs on for the whole flight?
 
+  int ADDCW;                               // Add CW
+  
+  int PAYLOAD_USE_SPECIFIC_TIME;           //Instead of using the entire flight path, only generate neutrinos for a specific time for the paylaod (0 to disable). 
+  int PAYLOAD_USE_SPECIFIC_TIME_DELTA;     //How much before and after the specific time can we use payload locations? 
+  int SPECIFIC_NU_POSITION;                //Use a specific interaction position 
+  double SPECIFIC_NU_POSITION_LATITUDE, SPECIFIC_NU_POSITION_LONGITUDE, SPECIFIC_NU_POSITION_ALTITUDE; //the specific interaction position 
+  double SPECIFIC_NU_POSITION_DISTANCE; //Max distance from place
+
   int useLPM;
 
   // In-header intialization is to old gcc as Domino's pizza is to real Italians

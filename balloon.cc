@@ -200,6 +200,8 @@ void Balloon::InitializeBalloon() {
   if (WHICHPATH==2)
     igps_previous=NPOINTS_MIN; // initialise here to avoid times during launch
     
+  flightdatachain = 0; 
+
   // This for Anita 1 flight
   if (WHICHPATH==6) {
 		
@@ -250,7 +252,7 @@ void Balloon::InitializeBalloon() {
 		
   }
     
-    
+
         
   for (int i=0;i<10000;i++) {
     latitude_bn_anitalite[i]=0;
@@ -368,12 +370,35 @@ void Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,Settin
     
 }
 
+// for tuffs for anita-4
+int getTuffIndex(int Curr_time) {
+  if((TUFFconfig_B_end_3 < Curr_time) && (Curr_time <= TUFFconfig_A_end_1)) {// config A trigconfigA.imp
+    return 0;
+  }
+  else if(((0 < Curr_time) && (Curr_time <= TUFFconfig_B_end_1)) || ((TUFFconfig_P_end_3 < Curr_time) && (Curr_time <= TUFFconfig_B_end_2)) || ((TUFFconfig_P_end_4 < Curr_time) && (Curr_time <= TUFFconfig_B_end_3)) || ((TUFFconfig_A_end_1 < Curr_time) && (Curr_time <= TUFFconfig_B_end_4)) || ((TUFFconfig_P_end_5 < Curr_time) && (Curr_time <= TUFFconfig_B_end_5)) || ((TUFFconfig_P_end_6 < Curr_time) && (Curr_time <= TUFFconfig_B_end_6)) || (TUFFconfig_P_end_7 < Curr_time) ) { // config B trigconfigB.imp
+    return 1;
+  }
+  else if((TUFFconfig_P_end_1 < Curr_time) && (Curr_time <= TUFFconfig_C_end_1)) { // config C trigconfigC.imp
+    return 2;
+  }
+  else if( ((TUFFconfig_P_end_2 < Curr_time) && (Curr_time <= TUFFconfig_G_end_1)) || ((TUFFconfig_O_end_1 < Curr_time) && (Curr_time <= TUFFconfig_G_end_2)) ) { // config G trigconfigG.imp
+    return 3;
+  }
+  else if( ((TUFFconfig_G_end_1 < Curr_time) && (Curr_time <= TUFFconfig_O_end_1)) || ((TUFFconfig_G_end_2 < Curr_time) && (Curr_time <= TUFFconfig_O_end_2)) ) { // config O trigconfigO.imp
+    return 4;
+  }
+  else if( ((TUFFconfig_B_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_1)) || ((TUFFconfig_C_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_2)) || ((TUFFconfig_O_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_3)) || ((TUFFconfig_B_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_4)) || ((TUFFconfig_B_end_4 < Curr_time) && (Curr_time <= TUFFconfig_P_end_5)) || ((TUFFconfig_B_end_5 < Curr_time) && (Curr_time <= TUFFconfig_P_end_6)) || ((TUFFconfig_B_end_6 < Curr_time) && (Curr_time <= TUFFconfig_P_end_7)) ) { // config P trigconfigP.imp
+    return 5;
+  }
+}
 // this is called for each neutrino
 void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int inu,Anita *anita1, double randomNumber) { // r_bn_shadow=position of spot under the balloon on earth's surface
   //cout << "calling pickballoonposition.\n";
   pitch=0.;
   roll=0.;
   phi_spin=0.;
+
+
 
   //flightdatatree->SetBranchAddress("surfTrigBandMask",&surfTrigBandMask);
   //unsigned short test[9][2];
@@ -396,13 +421,46 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9) {  // For Anita 1 and Anita 2 and Anita 3:
       //igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
       
-      igps = int(randomNumber*flightdatachain->GetEntries()); // pick random event in the tree
+
+      static int start_igps = 0; 
+      static int ngps = flightdatachain->GetEntries(); 
+      static int init_best = 0;
+
+
+      if (settings1->PAYLOAD_USE_SPECIFIC_TIME && !init_best) 
+      {
+         int N = flightdatachain->Draw("realTime","","goff"); 
+         double * times = flightdatachain->GetV1(); 
+
+         int best_igps =  TMath::BinarySearch(N, times, (double) settings1->PAYLOAD_USE_SPECIFIC_TIME); 
+         start_igps = best_igps;
+         int end_igps = best_igps;
+
+         while (times[start_igps] > settings1->PAYLOAD_USE_SPECIFIC_TIME - settings1->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
+         {
+           start_igps--; 
+         }
+
+         while (times[end_igps] < settings1->PAYLOAD_USE_SPECIFIC_TIME + settings1->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
+         {
+           end_igps++; 
+         }
+
+         ngps = end_igps - start_igps + 1; 
+         init_best = 1; 
+      }
+
+      igps = start_igps + int(randomNumber*ngps); // use random position 
 
       //////////////////////////// TEMPORARY HACKS FOR ANITA4 !!!!!!      
       if (WHICHPATH==9 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660)) || (igps==17862) ) igps=igps+30;
       
       flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
       realTime_flightdata = realTime_flightdata_temp;
+      if(settings1->TUFFSON){
+       anita1->tuffIndex = getTuffIndex(realTime_flightdata);
+      }// end if tuffson 
+      
       while (faltitude<MINALTITUDE || fheading<0) { // if the altitude is too low, pick another event.
 		    
 	igps++; // increment by 1
@@ -724,7 +782,25 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
       
     }
     else{
-      interaction1->posnu = antarctica1->PickInteractionLocation(ibnposition, settings1, r_bn, interaction1);
+
+      // If we require neutrinos from a particular position
+      // we generate that cartesian position here
+
+      static Vector specific_position; 
+
+      if (settings1->SPECIFIC_NU_POSITION) 
+      {
+        double R = settings1->SPECIFIC_NU_POSITION_ALTITUDE + antarctica1->Geoid(settings1->SPECIFIC_NU_POSITION_LATITUDE); 
+        double theta = settings1->SPECIFIC_NU_POSITION_LATITUDE * RADDEG; 
+        double phi = EarthModel::LongtoPhi_0isPrimeMeridian(settings1->SPECIFIC_NU_POSITION_LONGITUDE); 
+        specific_position.SetXYZ(R * sin(theta) * cos(phi), R * sin(theta) * sin(phi), R * cos(theta)); 
+      }
+        
+      do
+      {
+        interaction1->posnu = antarctica1->PickInteractionLocation(ibnposition, settings1, r_bn, interaction1);
+      } while(settings1->SPECIFIC_NU_POSITION &&  (interaction1->posnu - specific_position).Mag() > settings1->SPECIFIC_NU_POSITION_DISTANCE); 
+
     }
   }
   
@@ -1142,3 +1218,5 @@ Vector Balloon::unRotatePayload(Vector ant_pos_pre) {//rotate back to Payload Ce
   ant_pos=ant_pos.Rotate(-1*heading*RADDEG,z_axis_rot);
   return ant_pos;
 }  
+
+
