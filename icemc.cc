@@ -612,7 +612,7 @@ int main(int argc,  char **argv) {
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
   
-  Roughness *rough1=new Roughness(settings1->FIRN); // create new instance of the roughness class
+  Roughness *rough1=new Roughness(settings1); // create new instance of the roughness class
   rough1->SetRoughScale(settings1->ROUGHSIZE);
 
   Screen *panel1 = new Screen(0);  // create new instance of the screen class
@@ -1520,7 +1520,8 @@ int main(int argc,  char **argv) {
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
 
     eventNumber=(UInt_t)(run_no)*NNU+inu;
-//if( inu!=2995) continue;
+//cerr<<inu<<endl;
+//if( inu!=246) continue;
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
     TRandom3 r(eventNumber+7e8);
@@ -1529,7 +1530,6 @@ int main(int argc,  char **argv) {
 
     //reset screen parameters (even for no roughness) for the new event
     panel1->ResetParameters();
-    panel1->ResetPositionIndex();
     anita1->inu=inu;
 
     std::string nunum = Form("%d",inu);    
@@ -1903,7 +1903,7 @@ int main(int argc,  char **argv) {
 
       // gets angle between ray and neutrino direction
       viewangle = GetViewAngle(ray1->nrf_iceside[4], interaction1->nnu);
-      if((!settings1->ROUGHNESS) && viewangle>1.57 && !settings1->SKIPCUTS) { //discard the event if viewangle is greater than 90 degrees
+      if(viewangle>1.57 && !settings1->SKIPCUTS) { //discard the event if viewangle is greater than 90 degrees
         continue;
       }
       count1->nviewangle_lt_90[whichray]++; // add to counter
@@ -2076,17 +2076,15 @@ int main(int argc,  char **argv) {
      
       double nbelowsurface;
       // reject if it is totally internally reflected at the surface AND NOT CONSIDERING ROUGHNESS
-      if (!settings1->ROUGHNESS) {
-        if (settings1->FIRN)
-          nbelowsurface=NFIRN;
-        else
-          nbelowsurface=sig1->NICE;
-        // this is purely a sanity check.
-        // if everything is working,  events should pass with 100% efficiency
-        if (TIR(ray1->nsurf_rfexit, ray1->nrf_iceside[3], nbelowsurface, sig1->N_AIR)) {
-          continue;
-        }
-      }// end !settings roughness
+      if (settings1->FIRN)
+        nbelowsurface=NFIRN;
+      else
+        nbelowsurface=sig1->NICE;
+      // this is purely a sanity check.
+      // if everything is working,  events should pass with 100% efficiency
+      if (!settings1->ROUGHNESS && TIR(ray1->nsurf_rfexit, ray1->nrf_iceside[3], nbelowsurface, sig1->N_AIR)) {
+        continue;
+      }
       count1->nnottir[whichray]++;
 
       // this sets n_exit2bn[2] to the ray from the exit point to the balloon,
@@ -2131,6 +2129,7 @@ int main(int argc,  char **argv) {
       count1->nconverges[whichray]++;
       // Get Polarization vector.  See Jackson,  Cherenkov section.
       n_pol = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4]);
+//cerr<<inu<<":(spec)  v_nu "<<interaction1->nnu<<" : 2IP "<<ray1->nrf_iceside[4]<<" : inc npol"<<n_pol<< endl;
 //cerr<<inu<<"  "<<ray1->rfexit[2]<<endl;
       if (settings1->BORESIGHTS) {
         for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
@@ -2140,7 +2139,7 @@ int main(int argc,  char **argv) {
         } // end looping over layers
       } // if we are calculating for all boresights
 
-      if(!settings1->ROUGHNESS){
+      //if(!settings1->ROUGHNESS){
         if (settings1->FIRN){
           // now rotate that polarization vector according to ray paths in firn and air.
           // fresnel factor at ice-firn interface
@@ -2191,23 +2190,15 @@ int main(int argc,  char **argv) {
             } // end looping over layers
           } // end if we are calculating for all boresights
         }//end else firn
-      }
+//cerr<<inu<<" -- here"<<endl;      //}
       // OTHERWISE THERE IS ROUGHNESS SO DO MAGIC
-      else{
+      if(settings1->ROUGHNESS){//else{
         //(vector) ray1->nsurf_rfexit:  surface normal at RFexit position
         //(pos)        ->rfexit[2]:     final iterated position of RF exit
         //(vector)     ->n_exit2bn[2]:  vector from RF exit position TO balloon
         //(pos)    bn1->r_bn:           position of balloon
         //(vector) n_pol:               polarization vector
         //(pos)    posnu:               position of neutrino interaction
-
-        double basescreenedgelength = settings1->SCREENEDGELENGTH;
-        double grd_stepsize = settings1->SCREENSTEPSIZE;
-        if( int(basescreenedgelength/grd_stepsize) < 3) {
-          cerr<<"Screen size too small. Changing to 3 * input stepsize."<<endl;
-          basescreenedgelength = 3.*grd_stepsize;
-        }
-        int grd_nsteps = int(basescreenedgelength / grd_stepsize);
 
         int num_validscreenpoints = 0;
         Position pos_current;
@@ -2216,11 +2207,16 @@ int main(int argc,  char **argv) {
         Position pos_projectedImpactPoint;
         Vector vec_localnormal;         //normalized, normal vector at projected ground point
         Vector vec_nnu_to_impactPoint;  //normalized
-        Vector vec_local_grnd_perp;     //normalized, vector perp. to incident and surface normal (out-of-inc place)
-        Vector vec_local_grnd_parl;     //normalized, vector parl. to incident and surface normal (in-inc plane)
+        Vector vec_inc_perp;            //normalized, vector perp. to incident and surface normal (out-of-inc place)
+        Vector vec_inc_parl;            //normalized, vector parl. to incident and surface normal (in-inc plane)
+        double pol_perp_inc, pol_parl_inc;  //component of incident polarization
+        Vector vec_local_grnd_perp;     //normalized, vector perp. to transmitted and surface normal (out-of-trans place)
+        Vector vec_local_grnd_parl;     //normalized, vector parl. to transmitted and surface normal (in-trans plane)
+        double pol_perp_trans, pol_parl_trans;  //component of transmitted polarization
         Vector vec_grndcomp2bln;
         Vector vec_grndcomp2IP;
 
+        double time_reference_specular, time_reference_local;
         double pathlength_local;        // set for each screen point
         double viewangle_local;
         double azimuth_local;           // azimuthal angle between local surface normal and vector to balloon [radians]
@@ -2229,18 +2225,20 @@ int main(int argc,  char **argv) {
         double tcoeff_perp, tcoeff_parl;
         double power_perp, power_parl;
         power_perp = power_parl = 0.;
+        double fresnel_r, mag_r;
 
         Vector npol_local_inc, npol_local_trans;
         Vector temp_a;
 
         double Emag_local;
         double taperfactor;
-        Vector Efield_local;
-        Vector Efield_screentotal = Vector(0,0,0);
+//cerr<<inu<<": "<<vmmhz1m_max<<endl;
 
         //double pathlength_specular = interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn);
-        double time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*NFIRN / CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/CLIGHT);
-        double time_reference_local;
+        if (settings1->FIRN)
+          time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*NFIRN / CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/CLIGHT);
+        else
+          time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*NICE / CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/CLIGHT);
 
         double slopeyx, slopeyy, slopeyz, rtemp;
         Vector ntemp2;
@@ -2248,13 +2246,20 @@ int main(int argc,  char **argv) {
         Vector yaxis = Vector(0.,1.,0.);
         Vector zaxis = Vector(0.,0.,1.);
 
+        double basescreenedgelength = settings1->SCREENEDGELENGTH;
+        double grd_stepsize = settings1->SCREENSTEPSIZE;
+        int grd_nsteps;
+        if(settings1->ROUGHSIZE>0)
+          grd_nsteps = int(basescreenedgelength/2. / grd_stepsize);
+        else
+          grd_nsteps = 0;
+
         //#########
         //iterate points on the screen, get their position and project back to find ground impact
         //calculate incident and transmitted angles, look up power fraction, and add to running total
 
         //reset
         panel1->ResetParameters();
-        panel1->ResetPositionIndex();
 
         panel1->SetNsamples( grd_nsteps );
         panel1->SetEdgeLength( basescreenedgelength );
@@ -2268,125 +2273,149 @@ int main(int argc,  char **argv) {
         panel1->SetUnitX( (panel1->GetUnitY().Cross(vec_localnormal)).Unit() );
 //cerr<<panel1->GetCentralPoint()<<"  "<<  bn1->r_bn<<endl;
         // loop over grid point on ground and see if it's valid
-        for (int jj=0; jj< panel1->GetNsamples()*panel1->GetNsamples(); jj++){
+        for (int ii= -2*panel1->GetNsamples(); ii< 2*panel1->GetNsamples()+1; ii++){
+          for (int jj= -2*panel1->GetNsamples(); jj< 2*panel1->GetNsamples()+1; jj++){
 //cerr<<"+++++++++++++"<<endl;
-//cerr<<"+ seed point: "<<jj<<" / "<<panel1->GetNsamples()*panel1->GetNsamples()<<endl;
-          Emag_local = vmmhz1m_max;
-          taperfactor = 1.;
-          tcoeff_perp = tcoeff_parl = 0.;
-          pos_projectedImpactPoint = panel1->GetNextPosition(jj);        // this gets the new screen position
-          vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_projectedImpactPoint[0], bn1->r_bn[1] - pos_projectedImpactPoint[1], bn1->r_bn[2] - pos_projectedImpactPoint[2] );
+//cerr<<inu<<": "<<ii<<"  "<<jj<<endl;
+  //cerr<<"+ seed point: "<<jj<<" / "<<panel1->GetNsamples()*panel1->GetNsamples()<<endl;
+            Emag_local = vmmhz1m_max;
+            taperfactor = fresnel_r = mag_r =  1.;
+            tcoeff_perp = tcoeff_parl = 0.;
+            pos_projectedImpactPoint = panel1->GetPosition(ii, jj);        // this gets the new screen position
+            vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_projectedImpactPoint[0], bn1->r_bn[1] - pos_projectedImpactPoint[1], bn1->r_bn[2] - pos_projectedImpactPoint[2] );
 
-          // local angles of transmission and incidence in their respective planes
-          vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
-          if (settings1->SLOPEY) {
-              slopeyx=ray1->slopeyx;
-              slopeyy=ray1->slopeyy;
-              slopeyz=ray1->slopeyz;
-              ntemp2 = vec_localnormal + slopeyx*xaxis + slopeyy*yaxis + slopeyz*zaxis;
-              ntemp2 = ntemp2 / ntemp2.Mag();
-              rtemp= ntemp2 * vec_localnormal;
-              if (rtemp<=1) {
-                vec_localnormal = ntemp2;
-              }//if
-          }//end local slopeyness
+            // local angles of transmission and incidence in their respective planes
+            vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
+            if (settings1->SLOPEY) {
+                slopeyx=ray1->slopeyx;
+                slopeyy=ray1->slopeyy;
+                slopeyz=ray1->slopeyz;
+                ntemp2 = vec_localnormal + slopeyx*xaxis + slopeyy*yaxis + slopeyz*zaxis;
+                ntemp2 = ntemp2 / ntemp2.Mag();
+                rtemp= ntemp2 * vec_localnormal;
+                if (rtemp<=1) {
+                  vec_localnormal = ntemp2;
+                }//if
+            }//end local slopeyness
 //cerr<<inu<<"  "<<pos_projectedImpactPoint<<endl;
-          vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
+            vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
 
-          vec_grndcomp2IP = (vec_nnu_to_impactPoint - (vec_nnu_to_impactPoint.Dot(vec_localnormal)*vec_localnormal)).Unit();
-          vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
-          temp_a = vec_localnormal.Cross(vec_pos_current_to_balloon).Unit();
-          azimuth_local = vec_grndcomp2IP.Angle(vec_grndcomp2bln); //[rad]
-          if( temp_a.Dot(vec_nnu_to_impactPoint) < 0 )
-            azimuth_local *= -1.;
-          if( panel1->GetCentralPoint().Distance(pos_projectedImpactPoint)<0.75*grd_stepsize ){
-            azimuth_local = 0.;
-          }
+            vec_grndcomp2IP = (vec_nnu_to_impactPoint - (vec_nnu_to_impactPoint.Dot(vec_localnormal)*vec_localnormal)).Unit();
+            vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
+            temp_a = vec_localnormal.Cross(vec_pos_current_to_balloon).Unit();
+            azimuth_local = vec_grndcomp2IP.Angle(vec_grndcomp2bln); //[rad]
+            if( temp_a.Dot(vec_nnu_to_impactPoint) < 0 )
+              azimuth_local *= -1.;
+            if( panel1->GetCentralPoint().Distance(pos_projectedImpactPoint)<0.75*grd_stepsize ){
+              azimuth_local = 0.;
+            }
 //cerr<<inu<<":  "<<jj<<"  "<<vec_grndcomp2IP<<" : "<<vec_grndcomp2bln<<" : "<<azimuth_local*180./PI<<endl;
-          theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
-          theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
-//cerr<<inu<<"  "<<jj<<";  "<<panel1->GetCentralPoint()<<" : "<<  pos_projectedImpactPoint<<" : "<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<< azimuth_local*180./PI<< endl;
+            theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
+            theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
+//cerr<<inu<<"  "<<ii<<"  "<<jj<<";  "<<panel1->GetCentralPoint()<<" : "<<  pos_projectedImpactPoint<<" : "<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<< azimuth_local*180./PI<< endl;
 //cerr<< panel1->GetCentralPoint() - pos_projectedImpactPoint<<endl;
-          if( isnan(theta_local) | isnan(theta_0_local) | isnan(azimuth_local) ){
-            continue;
-          }
-          viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
+            if( isnan(theta_local) | isnan(theta_0_local) | isnan(azimuth_local) ){
+              continue;
+            }
+            viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
 
-          // at this point, only figure out if taper will kill the geometry, but don't actually apply the factor
-          deltheta_em[0]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[0];
-          deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
-          sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, taperfactor, vmmhz_em[0]);// this applies the angular dependence.
-          if(taperfactor==0)
-            continue;
+            // at this point, only figure out if taper will kill the geometry, but don't actually apply the factor
+            deltheta_em[0]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[0];
+            deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
+            sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, taperfactor, vmmhz_em[0]);// this applies the angular dependence.
+            if(taperfactor==0)
+              continue;
 //cerr<<inu<< ": past E=0"<<endl;
-          /////
-          // Field Magnitude
-#ifdef USE_HEALPIX
-          rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
-#endif
+            /////
+            // Field Magnitude
+  #ifdef USE_HEALPIX
+            if (settings1->FIRN)
+              rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
+            else
+              rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
+  #endif
 //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
-          if( (power_perp==0.)|(power_parl==0.) ){
-            continue;
-          }
+            if( (power_perp==0.)|(power_parl==0.) ){
+              //continue;
+            }
 //cerr<<"survived power cut"<<endl;
-          tcoeff_perp = sqrt(power_perp);
-          tcoeff_parl = sqrt(power_parl);
+            if (settings1->FIRN){
+              tcoeff_perp = sqrt(power_perp*NFIRN*cos(theta_0_local)*cos(theta_local));
+              tcoeff_parl = sqrt(power_parl*NFIRN*cos(theta_0_local)*cos(theta_local));
+            }
+            else{
+              tcoeff_perp = sqrt(power_perp*NICE*cos(theta_0_local)*cos(theta_local));
+              tcoeff_parl = sqrt(power_parl*NICE*cos(theta_0_local)*cos(theta_local));
+            }
+            //
 //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
-          Emag_local *= sqrt((power_perp + power_parl));// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
+//cerr<<"T (spec): "<<t_coeff_slappy<<"  "<<t_coeff_pokey<<std::endl;
+            //Emag_local *= sqrt((tcoeff_perp*tcoeff_perp + tcoeff_parl*tcoeff_parl)) * mag_r;// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
 //cerr<<"E: "<<Emag_local<<std::endl;
-          // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
-          pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
+            // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
+            pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
 //cerr<<"P: "<<pathlength_local<<std::endl;
-          Emag_local /= pathlength_local ;
+            Emag_local /= pathlength_local ;
 //cerr<<"E: "<<Emag_local<<std::endl;
-          Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
-
-          /////
-          // Incident and Transmitted Polarizations (T needs to be determined by tcoeff_perp and tcoeff_parl)
-          // set incident polarization
-          npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint).Unit();
-          //
-          vec_local_grnd_perp = (vec_localnormal.Cross(vec_pos_current_to_balloon)).Unit();
-          vec_local_grnd_parl = (vec_pos_current_to_balloon.Cross(vec_local_grnd_perp)).Unit();
-          //
-          vec_local_grnd_perp = tcoeff_perp * vec_local_grnd_perp;
-          vec_local_grnd_parl = tcoeff_parl * vec_local_grnd_parl;
-          // set transmitted polarization
-          npol_local_trans = (vec_local_grnd_perp + vec_local_grnd_parl).Unit();
-
-          // check if transmitted polarization is undefined
-          if( isnan(npol_local_trans[0]) ){
-            continue;
-          }
+            Attenuate(antarctica, settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
+//cerr<<"E: "<<Emag_local<<std::endl;
+            /////
+            // Incident and Transmitted Polarizations
+            // set incident polarization
+            npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint).Unit();
+            vec_inc_perp = (vec_localnormal.Cross(vec_nnu_to_impactPoint)).Unit();
+            vec_inc_parl = (vec_nnu_to_impactPoint.Cross(vec_inc_perp)).Unit();
+            pol_perp_inc = npol_local_inc * vec_inc_perp;
+            pol_parl_inc = npol_local_inc * vec_inc_parl;
+            //
+            pol_perp_trans = pol_perp_inc * tcoeff_perp;
+            pol_parl_trans = pol_parl_inc * tcoeff_parl;
+            //
+            vec_local_grnd_perp = (vec_localnormal.Cross(vec_pos_current_to_balloon)).Unit();
+            vec_local_grnd_parl = (vec_pos_current_to_balloon.Cross(vec_local_grnd_perp)).Unit();
+            //
+            // set transmitted polarization
+            npol_local_trans= (pol_perp_trans*vec_local_grnd_perp + pol_parl_trans*vec_local_grnd_parl).Unit();
+//cerr<<inu<<":  v_nu "<<interaction1->nnu<<" : 2IP "<<vec_nnu_to_impactPoint<<" : npol "<<npol_local_trans<< endl;
+            // check if transmitted polarization is undefined
+            if( isnan(npol_local_trans[0]) ){
+              continue;
+            }
 //cerr<<"past pol cut"<<endl;
+            //
+            fresnel_r = sqrt( pow(vmmhz1m_max*pol_perp_trans,2) + pow(vmmhz1m_max*pol_parl_trans,2) ) / vmmhz1m_max;
+            //mag_r = sqrt( tan(theta_0_local) / tan(theta_local) );
+            Emag_local *= fresnel_r;// * mag_r;
+//cerr<<"E: "<<Emag_local<<std::endl;
+            if (settings1->FIRN)
+              time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*NFIRN / CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/CLIGHT);
+            else
+              time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*NICE / CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/CLIGHT);
+            // increment counter so we can track the size of the screen's vector arrays
+            num_validscreenpoints++;
 
-          time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*NFIRN / CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/CLIGHT);
-
-          // increment counter so we can track the size of the screen's vector arrays
-          num_validscreenpoints++;
-//cerr<<jj<<" / "<<panel1->GetNsamples()*panel1->GetNsamples()<<endl;
-          //add the contribution to the running total
-          panel1->AddVmmhz0(Emag_local);                // pre-taper Efield
-          panel1->AddVec2bln(vec_pos_current_to_balloon);
-          panel1->AddPol(npol_local_trans);
-          panel1->AddDelay( time_reference_specular - time_reference_local );
-          panel1->AddImpactPt(pos_projectedImpactPoint);
-          panel1->AddViewangle(viewangle_local);
-          panel1->AddIncidenceAngle(theta_0_local);
-          panel1->AddTransmissionAngle(theta_local);
-          panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
-          panel1->AddFacetLength(panel1->GetEdgeLength() / panel1->GetNsamples());
-          //
-//cerr<<pos_current<<"  "
-//<<Emag_local<<"  "
-//<<npol_local_trans<<"  "
-//<<(pathlength_specular-pathlength_local) / CLIGHT<<"  "
-//<<pos_projectedImpactPoint<<"  "
-//<<viewangle_local<<std::endl;
-        }// end for jj 
+            //add the contribution to the running total
+            panel1->AddVmmhz0(Emag_local);                // pre-taper Efield
+            panel1->AddVec2bln(vec_pos_current_to_balloon);
+            panel1->AddPol(npol_local_trans);
+            panel1->AddDelay( time_reference_specular - time_reference_local );
+            panel1->AddImpactPt(pos_projectedImpactPoint);
+            panel1->AddViewangle(viewangle_local);
+            panel1->AddIncidenceAngle(theta_0_local);
+            panel1->AddTransmissionAngle(theta_local);
+            panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
+            panel1->AddFacetLength(panel1->GetEdgeLength() / panel1->GetNsamples());
+            //
+  //cerr<<pos_current<<"  "
+  //<<Emag_local<<"  "
+  //<<npol_local_trans<<"  "
+  //<<(pathlength_specular-pathlength_local) / CLIGHT<<"  "
+  //<<pos_projectedImpactPoint<<"  "
+  //<<viewangle_local<<std::endl;
+          }// end for jj 
+        }// end for ii
 
         panel1->SetNvalidPoints(num_validscreenpoints);
-//cerr<<"Npts: "<<num_validscreenpoints<<endl;
         //now construct the Screen's vmmhz array for all points, so it gets passed to the trigger object later to make the waveforms
         // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor) and making an array across frequency bins by putting in frequency dependence.
         double validScreenSummedArea = 0.;
@@ -2403,18 +2432,12 @@ int main(int argc,  char **argv) {
           }
 
           validScreenSummedArea += panel1->GetWeight(jj);
-          
-          Efield_local = panel1->GetVmmhz_freq(jj*Anita::NFREQ) * panel1->GetPol(jj);
-          Efield_screentotal = Efield_screentotal + Efield_local;
         }//end jj over panel Nvalid points
         panel1->SetWeightNorm(validScreenSummedArea);
-        //vmmhz_max = Efield_screentotal.Mag();
         vmmhz_max = 0.;
         for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
           vmmhz_max = Tools::dMax(vmmhz_max, panel1->GetVmmhz_freq(jj*Anita::NFREQ));
         }
-//cerr<<vmmhz_max<<endl;
-        n_pol = Efield_screentotal.Unit();
 
 /*        if(vmmhz_max>0.){
           stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
@@ -2447,7 +2470,7 @@ int main(int argc,  char **argv) {
       
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
-      if (!settings1->ROUGHNESS){
+      //if (!settings1->ROUGHNESS){
         if(settings1->CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10.&& !settings1->SKIPCUTS) {
           if (bn1->WHICHPATH==3)
             cout<<"Event is undetectable.  Leaving loop."<<endl;
@@ -2455,7 +2478,7 @@ int main(int argc,  char **argv) {
           continue;
         }
         count1->nchanceinhell_fresnel[whichray]++;
-      } //end if CHANCEINHELL factor and SKIPCUTS
+      //} //end if CHANCEINHELL factor and SKIPCUTS
       //
 
       // for plotting
@@ -2689,7 +2712,6 @@ int main(int argc,  char **argv) {
             IntegrateBands(anita1, k, panel1, anita1->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
         }
       }
-
       
       // make a global trigger object (but don't touch the electric fences)
       globaltrig1 = new GlobalTrigger(settings1, anita1);
@@ -2799,9 +2821,9 @@ int main(int argc,  char **argv) {
 
           chantrig1->TriggerPath(settings1, anita1, antNum);
 
-/*          ////// just some roughness output
-          if(settings1->ROUGHNESS){
-            if(vmmhz_max>0.){
+          ////// just some roughness output
+          //if(settings1->ROUGHNESS){
+/*            if(vmmhz_max>0.){
               std::string stemp=string(outputdir.Data())+"/rough_signalwaveforms_"+nunum+".dat";
               ofstream sigout(stemp.c_str(), ios::app);
               for (int iband=0;iband<5;iband++) {
@@ -2820,8 +2842,8 @@ int main(int argc,  char **argv) {
               }
               sigout.close();
             }
-          }*/
-          //////
+          //}
+*/          //////
 
           chantrig1->DigitizerPath(settings1, anita1, antNum);
 
@@ -3088,7 +3110,7 @@ int main(int argc,  char **argv) {
           pieceofkm2sr=weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr/(double)NNU/len_int;
           if (h10->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST)
             h10->Fill(hitangle_e_all[0], weight);
-//cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<endl;
+cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<"   screenNpts="<<panel1->GetNvalidPoints()<< ":  vmmhz[0] = "<<panel1->GetVmmhz_freq(0)<<" : trans pol "<< panel1->GetPol(0)<< endl;
 //cerr<<bn1->r_bn.Lat()<<"  "<<-90.+bn1->r_bn.Lat()<<endl;
 //cerr<<interaction1->posnu.Lon()<<"  "<<-90.+interaction1->posnu.Lat()<<endl;
 //cerr<<ray1->rfexit[2].Lon()<<"  "<<-90.+ray1->rfexit[2].Lat()<<endl;
@@ -4888,20 +4910,20 @@ void GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING, const Vector &surface_
   double pol_parallel_firn = pol*firn_parallel; // this is the pokey component in the firn
   double pol_perp_air=0, pol_parallel_air=0;
 
-  if (!ROUGHNESS_SETTING) {
-    double r_coeff_pokey =  tan(incident_angle - transmitted_angle) / tan(incident_angle + transmitted_angle);
-    t_coeff_pokey = sqrt((1. - r_coeff_pokey*r_coeff_pokey));
-    pol_parallel_air = t_coeff_pokey * pol_parallel_firn; // find pokey component in the air
+  double r_coeff_pokey =  tan(incident_angle - transmitted_angle) / tan(incident_angle + transmitted_angle);
+  t_coeff_pokey = sqrt((1. - r_coeff_pokey*r_coeff_pokey));
+  pol_parallel_air = t_coeff_pokey * pol_parallel_firn; // find pokey component in the air
 
-    double r_coeff_slappy = sin(incident_angle - transmitted_angle) / sin(incident_angle + transmitted_angle);
-    t_coeff_slappy = sqrt((1. - r_coeff_slappy*r_coeff_slappy));
-    pol_perp_air = t_coeff_slappy * pol_perp_firn; // find slappy component in the firn
+  double r_coeff_slappy = sin(incident_angle - transmitted_angle) / sin(incident_angle + transmitted_angle);
+  t_coeff_slappy = sqrt((1. - r_coeff_slappy*r_coeff_slappy));
+  pol_perp_air = t_coeff_slappy * pol_perp_firn; // find slappy component in the firn
 
-    mag=sqrt( tan(incident_angle) / tan(transmitted_angle) );
+  mag=sqrt( tan(incident_angle) / tan(transmitted_angle) );
 
-    fresnel = sqrt( pow(efield * pol_perp_air, 2) + pow(efield * pol_parallel_air, 2)) / efield;
-  }//end roughness setting==0
+  fresnel = sqrt( pow(efield * pol_perp_air, 2) + pow(efield * pol_parallel_air, 2)) / efield;
+
   pol = (pol_perp_air * perp + pol_parallel_air * air_parallel).Unit();
+//cerr<<"(spec): inc "<<incident_angle*180./PI<<" : trans "<<transmitted_angle*180./PI<<" : tpokey "<<t_coeff_pokey<<" : tslappy "<<t_coeff_slappy<< endl;
 }
 //end GetFresnel()
 

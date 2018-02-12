@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "Constants.h"
+#include "Settings.h"
 
 #ifdef USE_HEALPIX
 #include "healpix_base.h"
@@ -39,9 +40,10 @@ private:
   std::string roughscale_str;
   std::string roughnsims_str;
   std::string roughmaterial_str;
+  double NINDEX;
 public:
 
-  Roughness(int FIRN);
+  Roughness(Settings *settings1);
 
   void SetRoughScale(double a);
 

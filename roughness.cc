@@ -29,21 +29,25 @@
 #include "pointing.h"
 #endif
 
-Roughness::Roughness(int FIRN){
+Roughness::Roughness(Settings *settings1){
 
   rough_dir_str = std::getenv("ICEMC_SRC_DIR");
 #ifdef USE_HEALPIX
-  order = 6;
+  order = 6;  // order=6 corresponds to nside = 64
   H = Healpix_Base(order, RING);  // RING is an enum, and is the default used to make the maps with the microfacet python simulation
 #endif
 
   roughscale_str = "0p10";
   roughnsims_str = "10000000";
 
-  if (FIRN)
+  if (settings1->FIRN){
     roughmaterial_str="firn";
-  else
+    NINDEX=NFIRN;
+  }
+  else{
     roughmaterial_str="ice";
+    NINDEX=NICE;
+  }
 };
 
 
@@ -80,7 +84,9 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
   // in the new implementation, we will use HEALPix look-up tables and average the values for the incidence angle tables that bracket the T0 value (floor and ceil)
 
   // determine which pixel corresponds to (T, A)
-  pointing ptg = pointing(T*PI/180., A*PI/180.);
+  T = asin(NINDEX * sin( floor(T0)*PI/180. ));
+  //std::cerr<<T0<<"  "<<floor(T0)*PI/180.<<"  "<<NINDEX<<"  "<<T<<std::endl;
+  pointing ptg = pointing(T, A*PI/180.);
   int thispixel = H.ang2pix( ptg );
 
   int pixel;

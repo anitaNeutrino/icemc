@@ -30,7 +30,6 @@ private:
   Vector funit_y;                   ///< Y unit vector in screen (~ perp. to ground surface, perp. to screen normal)
 
   int fNsamples;                    ///< number of samples in X-direction (and Y-, assuming symmetry)
-  int fpositionindex;               ///< current active index counter
   int fNvalidpoints;                ///< total number of points on the screen
 
   std::vector<double> fVmmhz_freq;  ///< container for the valid screen points giving the frequency dependence magnitude for each point; every anita::NFREQ will be each screen point; final size will be (anita::NFREQ * fNsamples)
@@ -138,9 +137,6 @@ public:
   */
   Vector GetUnitY();
 
-  //! Resets the internal position counter to 0
-  void ResetPositionIndex();
-
   //! Calculates the X index of the screen corresponding to the specified counter value
   /**
   * @param i - index
@@ -160,7 +156,7 @@ public:
   * @param i - index
   * @return double
   */
-  Position GetNextPosition(int i);
+  Position GetPosition(int i, int j);
 
   //! Appends a Vmmhz value to the fVmmhz_freq array
   /**
