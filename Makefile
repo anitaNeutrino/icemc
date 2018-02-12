@@ -98,7 +98,7 @@ DBGCXXFLAGS = $(DBGFLAGS) $(ROOTCFLAGS) $(BOOSTFLAGS)
 LDFLAGS  += $(CPPSTD_FLAGS) $(LD_ANITA_UTIL) -I$(BOOST_ROOT) -L.
 
 # Mathmore not included in the standard ROOT libs
-LIBS += -lMathMore
+LIBS += -lMathMore  -lX11
 
 CLASS_HEADERS = rx.hpp Taumodel.hh Settings.h
 DICT = classdict

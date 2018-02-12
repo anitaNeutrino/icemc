@@ -9,8 +9,19 @@
 # include "TH1F.h"
 # include "TLegend.h"
 # include "FFTtools.h"
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_IMPLEMENTATION
+#define NK_XLIB_IMPLEMENTATION
+#include "nuklear.h"
+#include "nuklear_xlib.h"
 
-// extern std::string some_imortant_str;
+// extern struct nk_context *gctx;
+extern struct xlibstruct *gxlib;
+
+
 using namespace std;
 
 struct game_state {
@@ -160,6 +171,7 @@ static void game_finalize(struct game_state *state)
 
 static void game_reload(struct game_state *state)
 {
+  // xlib.ctx = *gctx;
   // state->c->Clear();
 
   // xmin, xmax: fwhm interval endpoints.
@@ -189,7 +201,7 @@ static void game_reload(struct game_state *state)
   state->legend->SetX1NDC(0.12);
   state->legend->SetX2NDC(0.3);
   state->legend->SetY1NDC(0.75);
-  state->legend->SetY2NDC(0.88);
+  state->legend->SetY2NDC(0.85);
   // state->px2->Update();
 
   state->px1->Modified();
@@ -257,7 +269,42 @@ static bool game_step(struct game_state *state)
 {
   // state->c->Update();
 
+  // WARNING: I am not sure if this is sufficient!
+  // Keep an eye on window behavior. If anything odd happens,
+  // try uncommenting "*gxlib = xlib;" at the bottom.
+    
+  struct nk_context *ctx = &(gxlib->ctx);
+   
   gSystem->ProcessEvents();
+  
+  if (nk_begin(ctx, "Demo", nk_rect(50, 50, 200, 200),
+               NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
+               NK_WINDOW_CLOSABLE|NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
+    {
+      static int op = kBlue;
+      static int op_prev = op;
+
+      static int property = 20;
+
+      nk_layout_row_static(ctx, 30, 80, 1);
+      if (nk_button_label(ctx, "button"))
+        fprintf(stdout, "button pressed\n");
+      nk_layout_row_dynamic(ctx, 30, 2);
+      if (nk_option_label(ctx, "kBlue", op == kBlue)) { op = kBlue; }
+      if (nk_option_label(ctx, "kRed", op == kRed))   { op = kRed; }
+      if (op != op_prev) {
+        state->grFft->SetLineColor(op); state->cZhsFft->Modified(); state->cZhsFft->Update(); 
+        op_prev = op;
+      }
+      state->grFft->SetLineColor(op);
+      nk_layout_row_dynamic(ctx, 25, 1);
+      nk_property_int(ctx, "Compression:", 0, &property, 100, 10, 1);
+    } else cout << "nk_begin failed" << endl;
+    nk_end(ctx);
+
+    // Try something along these lines as NEXT STEP (causes segfault without changing):
+    // *gxlib = xlib;
+    
   return true;
 }
 
