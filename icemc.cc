@@ -2384,8 +2384,8 @@ int main(int argc,  char **argv) {
 //cerr<<"past pol cut"<<endl;
             //
             fresnel_r = sqrt( pow(vmmhz1m_max*pol_perp_trans,2) + pow(vmmhz1m_max*pol_parl_trans,2) ) / vmmhz1m_max;
-            //mag_r = sqrt( tan(theta_0_local) / tan(theta_local) );
-            Emag_local *= fresnel_r;// * mag_r;
+            mag_r = sqrt( tan(theta_0_local) / tan(theta_local) );
+            Emag_local *= fresnel_r * mag_r;
 //cerr<<"E: "<<Emag_local<<std::endl;
             if (settings1->FIRN)
               time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*NFIRN / CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/CLIGHT);

@@ -83,13 +83,8 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
 
   // in the new implementation, we will use HEALPix look-up tables and average the values for the incidence angle tables that bracket the T0 value (floor and ceil)
 
-  // determine which pixel corresponds to (T, A)
-  T = asin(NINDEX * sin( floor(T0)*PI/180. ));
-  //std::cerr<<T0<<"  "<<floor(T0)*PI/180.<<"  "<<NINDEX<<"  "<<T<<std::endl;
-  pointing ptg = pointing(T, A*PI/180.);
-  int thispixel = H.ang2pix( ptg );
-
-  int pixel;
+  pointing ptg;
+  int pixel, thispixel_up, thispixel_low;
   double ptheta, pphi, Tparl, Tperp;  // temporary values while reading file
 
   double Tparl_down, Tperp_down, Tparl_up, Tperp_up;
@@ -106,56 +101,68 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
   base_rough_file_str = "/data/roughness_tables/"+roughmaterial_str+"/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
   full_rough_file_lower = rough_dir_str + base_rough_file_str;
   //std::cerr<<full_rough_file_lower<<"  :  "<<lower_cache.count(full_rough_file_lower)<<std::endl;
-  //
-  if (!lower_cache.count(full_rough_file_lower))
-  {
-    //std::cerr<<"Not in cache"<<std::endl;
-    ifs.open (full_rough_file_lower, std::ifstream::in);
-    //std::cerr<<ifs.good()<<std::endl;
-    if(ifs.good())
-    {
-      //would be more efficient to use std::emplace, but meh
-      //also, could use a std::array for inner part but that requires a b tmore logic 
-      std::map<int, std::pair<double,double> > this_lower; 
-      std::getline(ifs, header);
-      while (ifs.good()) {
-        ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
-        //std::cerr<<pphi<<"  "<<ptheta<<"  "<<Tparl<<"  "<<Tperp<<std::endl;
-        if (Tparl < 0) Tparl = 0; 
-        if (Tperp < 0) Tperp = 0; 
-        this_lower[pixel]=std::pair<double,double>(Tparl,Tperp); 
+  // determine which pixel corresponds to (T, A)
+  T = asin(NINDEX * sin( floor(T0)*PI/180. ));
+  //std::cerr<<"low: "<<T0<<"  "<<floor(T0)*PI/180.<<"  "<<NINDEX<<"  "<<T<<std::endl;
+  if( !isnan(T)){
+    ptg = pointing(T, A*PI/180.);
+    thispixel_low = H.ang2pix( ptg );
+    //
+    if (!lower_cache.count(full_rough_file_lower)){
+      //std::cerr<<"Not in cache"<<std::endl;
+      ifs.open (full_rough_file_lower, std::ifstream::in);
+      //std::cerr<<ifs.good()<<std::endl;
+      if(ifs.good())
+      {
+        //would be more efficient to use std::emplace, but meh
+        //also, could use a std::array for inner part but that requires a b tmore logic 
+        std::map<int, std::pair<double,double> > this_lower; 
+        std::getline(ifs, header);
+        while (ifs.good()) {
+          ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
+          //std::cerr<<pphi<<"  "<<ptheta<<"  "<<Tparl<<"  "<<Tperp<<std::endl;
+          if (Tparl < 0) Tparl = 0; 
+          if (Tperp < 0) Tperp = 0; 
+          this_lower[pixel]=std::pair<double,double>(Tparl,Tperp); 
+        }
+        lower_cache[full_rough_file_lower] = this_lower; 
       }
-      lower_cache[full_rough_file_lower] = this_lower; 
+      ifs.close();
     }
-    ifs.close();
   }
 
   // "upper" table filename: same procedure
   // open and read table, discard header
   base_rough_file_str = base_rough_file_str = "/data/roughness_tables/"+roughmaterial_str+"/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_beckmann.hpx";;
   full_rough_file_upper = rough_dir_str + base_rough_file_str;
-
-  if (!upper_cache.count(full_rough_file_upper))
-  {
-    ifs.open (full_rough_file_upper, std::ifstream::in);
-    if(ifs.good())
-    {
-      std::map<int, std::pair<double,double> > this_upper; 
-      std::getline(ifs, header);
-      while (ifs.good()) {
-        ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
-        if (Tparl < 0) Tparl = 0; 
-        if (Tperp < 0) Tperp = 0; 
-        this_upper[pixel]=std::pair<double,double>(Tparl,Tperp); 
+  // determine which pixel corresponds to (T, A)
+  T = asin(NINDEX * sin( ceil(T0)*PI/180. ));
+  //std::cerr<<"low: "<<T0<<"  "<<ceil(T0)*PI/180.<<"  "<<NINDEX<<"  "<<T<<std::endl;
+  if( !isnan(T)){
+    ptg = pointing(T, A*PI/180.);
+    thispixel_up = H.ang2pix( ptg );
+    //
+    if (!upper_cache.count(full_rough_file_upper)){
+      ifs.open (full_rough_file_upper, std::ifstream::in);
+      if(ifs.good())
+      {
+        std::map<int, std::pair<double,double> > this_upper; 
+        std::getline(ifs, header);
+        while (ifs.good()) {
+          ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
+          if (Tparl < 0) Tparl = 0; 
+          if (Tperp < 0) Tperp = 0; 
+          this_upper[pixel]=std::pair<double,double>(Tparl,Tperp); 
+        }
+        upper_cache[full_rough_file_upper] = this_upper; 
       }
-      upper_cache[full_rough_file_upper] = this_upper; 
+      ifs.close();
     }
-    ifs.close();
   }
-  Tparl_down = lower_cache[full_rough_file_lower][thispixel].first; 
-  Tperp_down = lower_cache[full_rough_file_lower][thispixel].second; 
-  Tparl_up = upper_cache[full_rough_file_upper][thispixel].first; 
-  Tperp_up = upper_cache[full_rough_file_upper][thispixel].second; 
+  Tparl_down = lower_cache[full_rough_file_lower][thispixel_low].first; 
+  Tperp_down = lower_cache[full_rough_file_lower][thispixel_low].second; 
+  Tparl_up = upper_cache[full_rough_file_upper][thispixel_up].first; 
+  Tperp_up = upper_cache[full_rough_file_upper][thispixel_up].second; 
   
 
 
