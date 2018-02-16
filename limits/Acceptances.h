@@ -1,6 +1,18 @@
 const int n_ANITA = 7;
 Double_t ANITA_x[n_ANITA]       = {18, 18.5, 19, 19.5, 20, 20.5, 21};
 
+Double_t ANITA_1_effArea[n_ANITA] = {3.13E-4,
+				     1.60E-2,
+				     4.58E-1,
+				     4.60,
+				     2.45E1,
+				     7.31E1,
+				     1.85E2};
+/* 1021.5 eV 4.30 × 102 km2 sr */
+/* 1022 eV 8.23 × 102 km2 sr */
+/* 1022.5 eV 1.41 × 103 km2 sr */
+/* 1023 eV 2.54 × 103 km2 sr */
+
 // From ANITA-2 Erratum
 Double_t ANITA_2_effArea_published[n_ANITA] = {0.00043,
 					       0.05000,
