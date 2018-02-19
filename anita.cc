@@ -300,7 +300,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   /// TEMP HACK FOR ANITA-4 !!!!
   if (settings1->WHICH==10){
     powerthreshold[4] /= TMath::Sqrt(2.);
-    additionalDt=10.e-9;
+    additionalDt=30.e-9;
   }
   if (settings1->TRIGGERSCHEME==5)
     l1window=3.75E-9;
