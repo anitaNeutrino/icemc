@@ -65,10 +65,15 @@ void Roughness::SetRoughScale(double a){
 };
 
 
+std::string Roughness::incAngle_asString(double T0){
+  char s_f[10];
+  sprintf(s_f, "%.2f", T0);
+  std::string s = std::string() + s_f;
+  s.replace(s.find("."), 1, "p");
+  return s;
+};
+
 #ifdef USE_HEALPIX
-
-
-//lower cache 
 
 //  map from path to map to pixel to TParl, Tperp 
 static std::map<std::string, std::map<int, std::pair<double,double> > >lower_cache; 
@@ -98,11 +103,12 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
 
   // "lower" table: read through table looking for specific pixel
   // open and read table, discard header
-  base_rough_file_str = "/data/roughness_tables/"+roughmaterial_str+"/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
+  base_rough_file_str = "/data/roughness_tables/"+roughmaterial_str+"/"+roughscale_str+"/out_inc"+(std::string)Form("%i",int(floor(T0)))+"p0_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_0_beckmann.hpx";
+  T = asin(NINDEX * sin( floor(T0)*PI/180. ));
+  //base_rough_file_str = "/data/roughness_tables/"+roughmaterial_str+"/"+roughscale_str+"/out_inc"+incAngle_asString(T0)+"_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_0_beckmann.hpx";
+  //T = asin(NINDEX * sin( floor(T0*100.)/100.*PI/180. ));
   full_rough_file_lower = rough_dir_str + base_rough_file_str;
   //std::cerr<<full_rough_file_lower<<"  :  "<<lower_cache.count(full_rough_file_lower)<<std::endl;
-  // determine which pixel corresponds to (T, A)
-  T = asin(NINDEX * sin( floor(T0)*PI/180. ));
   //std::cerr<<"low: "<<T0<<"  "<<floor(T0)*PI/180.<<"  "<<NINDEX<<"  "<<T<<std::endl;
   if( !isnan(T)){
     ptg = pointing(T, A*PI/180.);
@@ -133,10 +139,12 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
 
   // "upper" table filename: same procedure
   // open and read table, discard header
-  base_rough_file_str = base_rough_file_str = "/data/roughness_tables/"+roughmaterial_str+"/"+roughscale_str+"/combined_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_beckmann.hpx";;
-  full_rough_file_upper = rough_dir_str + base_rough_file_str;
-  // determine which pixel corresponds to (T, A)
+  base_rough_file_str = base_rough_file_str = "/data/roughness_tables/"+roughmaterial_str+"/"+roughscale_str+"/out_inc"+(std::string)Form("%i",int(ceil(T0)))+"p0_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_0_beckmann.hpx";
   T = asin(NINDEX * sin( ceil(T0)*PI/180. ));
+  //base_rough_file_str = base_rough_file_str = "/data/roughness_tables/"+roughmaterial_str+"/"+roughscale_str+"/out_inc"+incAngle_asString(T0+0.01)+"_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_0_beckmann.hpx";;
+  //T = asin(NINDEX * sin( ceil(T0*100.)/100.*PI/180. ));
+  full_rough_file_upper = rough_dir_str + base_rough_file_str;
+  //std::cerr<<full_rough_file_upper<<"  :  "<<lower_cache.count(full_rough_file_upper)<<std::endl;
   //std::cerr<<"low: "<<T0<<"  "<<ceil(T0)*PI/180.<<"  "<<NINDEX<<"  "<<T<<std::endl;
   if( !isnan(T)){
     ptg = pointing(T, A*PI/180.);
