@@ -2340,12 +2340,12 @@ int main(int argc,  char **argv) {
             }
 //cerr<<"survived power cut"<<endl;
             if (settings1->FIRN){
-              tcoeff_perp = sqrt(power_perp*NFIRN*cos(theta_0_local)*cos(theta_local));
-              tcoeff_parl = sqrt(power_parl*NFIRN*cos(theta_0_local)*cos(theta_local));
+              tcoeff_perp = sqrt(power_perp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+              tcoeff_parl = sqrt(power_parl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
             }
             else{
-              tcoeff_perp = sqrt(power_perp*NICE*cos(theta_0_local)*cos(theta_local));
-              tcoeff_parl = sqrt(power_parl*NICE*cos(theta_0_local)*cos(theta_local));
+              tcoeff_perp = sqrt(power_perp);//*NICE*cos(theta_0_local)*cos(theta_local));
+              tcoeff_parl = sqrt(power_parl);//*NICE*cos(theta_0_local)*cos(theta_local));
             }
             //
 //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
@@ -2405,6 +2405,8 @@ int main(int argc,  char **argv) {
             panel1->AddTransmissionAngle(theta_local);
             panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
             panel1->AddFacetLength(panel1->GetEdgeLength() / panel1->GetNsamples());
+            panel1->AddTparallel(tcoeff_parl);
+            panel1->AddTperpendicular(tcoeff_perp);
             //
   //cerr<<pos_current<<"  "
   //<<Emag_local<<"  "
@@ -2706,6 +2708,8 @@ int main(int argc,  char **argv) {
         panel1->AddWeight( 1. );
         panel1->SetWeightNorm( 1. );
         panel1->AddFacetLength( 1. );
+        panel1->AddTparallel(t_coeff_pokey);
+        panel1->AddTperpendicular(t_coeff_slappy);
 
         for (int k=0;k<Anita::NFREQ;k++) {
           if (bn1->WHICHPATH==4)
@@ -3110,7 +3114,7 @@ int main(int argc,  char **argv) {
           pieceofkm2sr=weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr/(double)NNU/len_int;
           if (h10->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST)
             h10->Fill(hitangle_e_all[0], weight);
-cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<"   screenNpts="<<panel1->GetNvalidPoints()<< ":  vmmhz[0] = "<<panel1->GetVmmhz_freq(0)<<" : trans pol "<< panel1->GetPol(0)<< endl;
+//cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<"   screenNpts="<<panel1->GetNvalidPoints()<< ":  vmmhz[0] = "<<panel1->GetVmmhz_freq(0)<<" : trans pol "<< panel1->GetPol(0)<<" : IncAngle "<<panel1->GetIncidenceAngle(0)*180./PI<< " : TransAngle "<<panel1->GetTransmissionAngle(0)*180./PI<<" : Tslappy "<<panel1->GetTperpendicular(0)<<" : Tpokey "<<panel1->GetTparallel(0)<< endl;
 //cerr<<bn1->r_bn.Lat()<<"  "<<-90.+bn1->r_bn.Lat()<<endl;
 //cerr<<interaction1->posnu.Lon()<<"  "<<-90.+interaction1->posnu.Lat()<<endl;
 //cerr<<ray1->rfexit[2].Lon()<<"  "<<-90.+ray1->rfexit[2].Lat()<<endl;

@@ -230,6 +230,22 @@ double Screen::GetFacetLength(int i){
   return fFacetLength[i];
 };
 
+void Screen::AddTparallel(double A){
+  fTcoeff_parl.push_back(A);
+};
+
+double Screen::GetTparallel(int i){
+  return fTcoeff_parl[i];
+};
+
+void Screen::AddTperpendicular(double A){
+  fTcoeff_perp.push_back(A);
+};
+
+double Screen::GetTperpendicular(int i){
+  return fTcoeff_perp[i];
+};
+
 void Screen::ResetParameters(){
   // reset these in icemc:
   // Nsamples
@@ -251,5 +267,10 @@ void Screen::ResetParameters(){
   fImpactPt.clear();
   fWeight.clear();
   fWeightNorm = 1.;
+  fIncAngles.clear();
+  fTransAngles.clear();
+  fFacetLength.clear();
+  fTcoeff_parl.clear();
+  fTcoeff_perp.clear();
 };
 
