@@ -392,7 +392,7 @@ void SetupViewangles(Signal *sig1);
 void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
 double GetThisAirColumn(Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta);
 
-double ScaleVmMHz(double vmmhz1m_max,  const Position &posnu,  const Position &r_bn);
+double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_bn, const Position &rfexit);
 
 
 double IsItDoubleBang(double exitlength,  double plepton);
@@ -2492,9 +2492,9 @@ int main(int argc,  char **argv) {
       // ALREADY DEALT WITH IN CASE OF ROUGHNESS
       if (!settings1->ROUGHNESS) {
         if (whichray==0)
-          vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice, interaction1->posnu, bn1->r_bn);
+          vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice, interaction1->posnu, bn1->r_bn, ray1->rfexit[2]);
         if (whichray==1)
-          vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice, interaction1->posnu_down, bn1->r_bn);//use the mirror point
+          vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice, interaction1->posnu_down, bn1->r_bn, ray1->rfexit[2]);//use the mirror point
       }
 
       // reject if the event is undetectable.
@@ -4702,8 +4702,8 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
 //end GetDirection()
 
 
-double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_bn) {
-  double dtemp= r_bn.Distance(posnu1);
+double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_bn, const Position &rfexit) {
+  double dtemp= r_bn.Distance(rfexit) + rfexit.Distance(posnu1);
   vmmhz1m_max= vmmhz1m_max/dtemp;
   scalefactor_distance=1/dtemp;
   //cout << "dtemp is " << dtemp << "\n";
