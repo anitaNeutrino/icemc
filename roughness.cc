@@ -38,7 +38,7 @@ Roughness::Roughness(Settings *settings1){
 #endif
 
   roughscale_str = "0p10";      //just some defaults
-  roughnsims_str = "10000000";
+  roughnsims_str = "1000000";
 
   if (settings1->FIRN){
     roughmaterial_str="firn";
@@ -67,7 +67,7 @@ void Roughness::SetRoughScale(double a){
 
 std::string Roughness::incAngle_asString(double T0){
   char s_f[10];
-  sprintf(s_f, "%.2f", T0);
+  sprintf(s_f, "%.1f", T0);
   std::string s = std::string() + s_f;
   s.replace(s.find("."), 1, "p");
   return s;
