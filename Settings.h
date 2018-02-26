@@ -174,9 +174,7 @@ class Settings : public TObject {
 
   double ROUGHSIZE; // roughness size
   double SCREENEDGELENGTH;        // edge length of screen used if there is roughness
-  int ROUGHSCREENDIV_BASE;        // (N x N) grid for the base screen (to preselect)
-  int ROUGHSCREENDIV_SUB;         // (n x n) subgrids for the preselected regions
-  int ROUGHMAXGEN;                // number of maximum generations (inclusive)
+  double SCREENSTEPSIZE;        // step size of screen grid if there is roughness
 
   int ICE_MODEL; //Select ice model to be used.  0 = Crust 2.0 , 1 = BEDMAP.
   int NOFZ; // 1=depth dependent index of refraction,0=off
@@ -235,6 +233,14 @@ class Settings : public TObject {
   int TRIGGEREFFSCAPULSE;                  // Apply pulse at AMPA (0) or at SURF (1)
 
   int TUFFSON;                             // Are the TUFFs on for the whole flight?
+
+  int ADDCW;                               // Add CW
+  
+  int PAYLOAD_USE_SPECIFIC_TIME;           //Instead of using the entire flight path, only generate neutrinos for a specific time for the paylaod (0 to disable). 
+  int PAYLOAD_USE_SPECIFIC_TIME_DELTA;     //How much before and after the specific time can we use payload locations? 
+  int SPECIFIC_NU_POSITION;                //Use a specific interaction position 
+  double SPECIFIC_NU_POSITION_LATITUDE, SPECIFIC_NU_POSITION_LONGITUDE, SPECIFIC_NU_POSITION_ALTITUDE; //the specific interaction position 
+  double SPECIFIC_NU_POSITION_DISTANCE; //Max distance from place
 
   int useLPM;
 

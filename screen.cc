@@ -17,7 +17,6 @@ Screen::Screen(int a){
   funit_y = Vector(1.,1.,1.);
 
   fNsamples = a;
-  fpositionindex = 0;
 };
 
 
@@ -86,11 +85,6 @@ Vector Screen::GetUnitY(){
 };
 
 
-void Screen::ResetPositionIndex(){
-  fpositionindex = 0;
-};
-
-
 double Screen::CalcXindex(int i){
   return (double) (i % (fNsamples));
 };
@@ -101,21 +95,19 @@ double Screen::CalcYindex(int i){
 };
 
 
-Position Screen::GetNextPosition(int i){
+Position Screen::GetPosition(int i, int j){
   Position pos;
 
-  double yindex = CalcYindex(i);
-  double xindex = CalcXindex(i);
 
   // this picks points that are NOT on the edge
   pos = fcentralPoint                                       // base
-        - 0.5*fedgeLength*funit_x - 0.5*fedgeLength*fcosineProjectionFactor*funit_y   // shift to a corner
-        + (1./(2.*(double)(fNsamples)))*fedgeLength*(funit_x + fcosineProjectionFactor*funit_y)  // move off the edge
-        + (xindex/((double)(fNsamples)))*fedgeLength*funit_x   // move by x-increment
-        + (yindex/((double)(fNsamples)))*fedgeLength*fcosineProjectionFactor*funit_y;  // move by y-increment with the cosine projection correction
+        //- 0.5*fedgeLength*funit_x - 0.5*fedgeLength*fcosineProjectionFactor*funit_y   // shift to a corner
+        //+ (1./(2.*(double)(fNsamples)))*fedgeLength*(funit_x + fcosineProjectionFactor*funit_y)  // move off the edge
+        //+ (xindex/((double)(fNsamples)))*fedgeLength*funit_x   // move by x-increment
+        //+ (yindex/((double)(fNsamples)))*fedgeLength*fcosineProjectionFactor*funit_y;  // move by y-increment with the cosine projection correction
+        + i * fedgeLength*funit_x
+        + j * fedgeLength*funit_y;
 
-  fpositionindex++;
-  //std::cerr<<fpositionindex<<"  "<<yindex<<"  "<<xindex<<std::endl;
   return pos;
 };
 
@@ -238,6 +230,22 @@ double Screen::GetFacetLength(int i){
   return fFacetLength[i];
 };
 
+void Screen::AddTparallel(double A){
+  fTcoeff_parl.push_back(A);
+};
+
+double Screen::GetTparallel(int i){
+  return fTcoeff_parl[i];
+};
+
+void Screen::AddTperpendicular(double A){
+  fTcoeff_perp.push_back(A);
+};
+
+double Screen::GetTperpendicular(int i){
+  return fTcoeff_perp[i];
+};
+
 void Screen::ResetParameters(){
   // reset these in icemc:
   // Nsamples
@@ -259,5 +267,10 @@ void Screen::ResetParameters(){
   fImpactPt.clear();
   fWeight.clear();
   fWeightNorm = 1.;
+  fIncAngles.clear();
+  fTransAngles.clear();
+  fFacetLength.clear();
+  fTcoeff_parl.clear();
+  fTcoeff_perp.clear();
 };
 

@@ -1,18 +1,44 @@
-const int n_ANITA = 7;
-Double_t ANITA_4_x[n_ANITA]       = {18, 18.5, 19, 19.5, 20, 20.5, 21};
+#include "Acceptances.h"
+
 void LogToLine(int N, double *Data);
 TGraph *getKoteraShade();
 TGraph *getANITA2erratum();
 TGraph *getAhlers();
 TGraphAsymmErrors *getIceCube();
 
-TGraph *getLimit(double effArea[n_ANITA], double eff[n_ANITA], double livetime);
+TGraph *getLimitOldFormula(double N90, double effArea[n_ANITA], double eff[n_ANITA], double livetime);
 
-TGraph *getLimitNoDelta(double effArea[n_ANITA], double eff[n_ANITA], double livetime);
+TGraph *getLimitNewFormula(double N90, double effArea[n_ANITA], double eff[n_ANITA], double livetime);
+
+TGraph* getCombinedLimitNoDelta(double denom[n_ANITA]);
 
 void tempLimit(){
 
-  LogToLine(n_ANITA, ANITA_4_x);
+  string outname = "ANITA3limit_oldformula_geomAverage_shade";
+
+   if (!gROOT->GetClass("TFeldmanCousins")) gSystem->Load("libPhysics");
+
+   TFeldmanCousins f;
+
+   // calculate either the upper or lower limit for 10 observed
+   // events with an estimated background of 3.  The calculation of
+   // either upper or lower limit will return that limit and fill
+   // data members with both the upper and lower limit for you.
+   Double_t Nobserved   = 1.0;
+   Double_t Nbackground = 0.84;
+
+   Double_t ul = f.CalculateUpperLimit(Nobserved, Nbackground);
+   Double_t ll = f.GetLowerLimit();
+
+   cout << "For " <<  Nobserved << " data observed with and estimated background"<<endl;
+   cout << "of " << Nbackground << " candidates, the Feldman-Cousins method of "<<endl;
+   cout << "calculating confidence limits gives:"<<endl;
+   cout << "\tUpper Limit = " <<  ul << endl;
+   cout << "\tLower Limit = " <<  ll << endl;
+   cout << "at the 90% CL"<< endl;
+   
+  
+  LogToLine(n_ANITA, ANITA_x);
   TGraph *g_Kotera_shade = getKoteraShade();
   
   TGraph *g_ANITA_2_erratum = getANITA2erratum();
@@ -28,102 +54,124 @@ void tempLimit(){
   
   double ANITA_4_eff[n_ANITA] = { 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8};
 
-  double ANITA_4_livetime = 27.3*24*3600.; //27.3*24*3600; // 27.3 days
+  double ANITA_4_livetime = 27.3*24*3600.*0.85; //27.3*24*3600; // 27.3 days
+
+  double A4N90 = 2.3;
   
-  TGraph *g_ANITA_4 = getLimit(ANITA_4_effArea, ANITA_4_eff, ANITA_4_livetime);
+  TGraph *g_ANITA_4 = getLimitOldFormula(A4N90, ANITA_4_effArea, ANITA_4_eff, ANITA_4_livetime);
+  
+  
+  Double_t ANITA_3_effArea[n_ANITA];             
+  Double_t ANITA_3_effAreaUp[n_ANITA];
+  Double_t ANITA_3_effAreaLow[n_ANITA];
+  Double_t ANITA_3_effAreaReno[n_ANITA];
+  Double_t ANITA_3_geomAverage[n_ANITA];
+  
+  for (int i=0; i<n_ANITA; i++){
+    ANITA_3_effArea[i]     = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCC[i]; 
+    // ANITA_3_effAreaUp[i]   = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCCup[i];
+    // ANITA_3_effAreaLow[i]  = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCClow[i]; 
+    ANITA_3_effAreaReno[i] = ANITA_3_effVol[i]/intLength_RENO[i];
+    ANITA_2_effArea_Peter[i]  = ANITA_2_effArea_published[i]*ANITA_2_effArea_published[i]/ANITA_2_effArea_icemc2010[i];
+    ANITA_3_geomAverage[i] = TMath::Sqrt(ANITA_3_effArea[i]*ANITA_2_effArea_Peter[i]*ANITA_3_effArea[i]/ANITA_2_effArea_icemc2010[i]);
+    cout << ANITA_3_effArea[i] << " " << ANITA_3_geomAverage[i] << " " << ANITA_3_geomAverage[i]/ANITA_3_effArea[i] << endl;
+    ANITA_3_effAreaUp[i]   = ANITA_3_geomAverage[i]*intLength_CONNOLLY_nuCC[i]/intLength_CONNOLLY_nuCCup[i];
+    ANITA_3_effAreaLow[i]  = ANITA_3_geomAverage[i]*intLength_CONNOLLY_nuCC[i]/intLength_CONNOLLY_nuCClow[i];
+  }
+  double ANITA_3_eff[n_ANITA] = { 0.802186, 0.812969, 0.875551, 0.798459, 0.73314, 0.674088, 0.6     };
+  double ANITA_2_eff[n_ANITA] = { 0.67664 , 0.60748 , 0.60000 , 0.55701 , 0.47477, 0.40935 , 0.41495 };
+  double ANITA_1_eff[n_ANITA] = { 0.62041 , 0.71429 , 0.75306 , 0.68571 , 0.64694, 0.50000 , 0.43878 };
 
-  Double_t ANITA_3_effArea[n_ANITA] = { 0.00160,      // E18     in km^2  
-					0.03451,      // E18.5		  
-					0.34288,      // E19    	  
-					1.75735,      // E19.5		  
-					7.14396,      // E20		  
-					22.77670,     // E20.5		  
-					58.72190};    // E21              
-
-  double ANITA_3_eff[n_ANITA] = { 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8};
+  double ANITA_3_eff_combined[n_ANITA] = { 0.88, 0.88, 0.88, 0.88, 0.88, 0.88, 0.88     };
 
   double ANITA_3_livetime = 17.4*24*3600.; // 17.4 days
-  
-  TGraph *g_ANITA_3 = getLimit(ANITA_3_effArea, ANITA_3_eff, ANITA_3_livetime);
-  g_ANITA_3->SetLineColor(kBlue);
+  double ANITA_2_livetime = 28.5*24*3600.; 
+  double ANITA_1_livetime = 17.4*24*3600.;  
 
+  double N90A3 = ul;
   
-  Double_t ANITA_2_effArea_now[n_ANITA] = { 0.00029 ,      // E18     in km^2  
-					0.02121 ,      // E18.5		  
-					0.22009 ,      // E19    	  
-					1.27190 ,      // E19.5		  
-					6.38188 ,      // E20		  
-					18.45390 ,     // E20.5		  
-					52.53270 };    // E21              
+  TGraph *g_ANITA_3 = getLimitOldFormula(N90A3, ANITA_3_effArea, ANITA_3_eff, ANITA_3_livetime);
+  g_ANITA_3->SetLineColor(kBlack);
 
-    Double_t intLength_CONNOLLY_nuCC[n_ANITA] = { 1544.84,
-						1065.44,
-						745.54,
-						528.431,
-						378.864,
-						 274.445,
-						 200.67}; // E21
+  TGraph *g_ANITA_3up = getLimitOldFormula(N90A3, ANITA_3_effAreaUp, ANITA_3_eff, ANITA_3_livetime);
+  g_ANITA_3up->SetLineColor(kRed);
+  TGraph *g_ANITA_3low = getLimitOldFormula(N90A3, ANITA_3_effAreaLow, ANITA_3_eff, ANITA_3_livetime);
+  g_ANITA_3low->SetLineColor(kBlue);
+  
+  TGraph *g_ANITA_3_shade = new TGraph(n_ANITA*2);
+  for (int i=0; i<n_ANITA; i++){
+    g_ANITA_3_shade->SetPoint(i,         ANITA_x[i], g_ANITA_3up->Eval(ANITA_x[i]));
+    g_ANITA_3_shade->SetPoint(i+n_ANITA, ANITA_x[n_ANITA-i-1], g_ANITA_3low->Eval(ANITA_x[n_ANITA-i-1]));
+  }
+  g_ANITA_3_shade->SetFillColor(kGray);
+  g_ANITA_3_shade->SetFillStyle(1001);
+  
+  TGraph *g_ANITA_3Reno = getLimitOldFormula(N90A3, ANITA_3_effAreaReno, ANITA_3_eff, ANITA_3_livetime);
+  g_ANITA_3Reno->SetLineColor(kViolet);
+  
+  TGraph *g_ANITA_3_combined = getLimitOldFormula(N90A3, ANITA_3_geomAverage, ANITA_3_eff_combined, ANITA_3_livetime);
+  g_ANITA_3_combined->SetLineStyle(1);
+  g_ANITA_3_combined->SetLineColor(kBlack);
 
-  
-  Double_t intLength_CONNOLLY_nubarNC[n_ANITA] = { 3868.47,
-						   2647.45,
-						   1840.89,
-						   1297.89,
-						   926.252,
-						   668.193 ,
-						   486.701 }; // E21
-  
   Double_t ANITA_2_effArea[n_ANITA];
-    for (int i=0; i<n_ANITA; i++){
-    ANITA_2_effArea[i]    = ANITA_2_effArea_now[i]*intLength_CONNOLLY_nubarNC[i]/intLength_CONNOLLY_nuCC[i]; 
+  for (int i=0; i<n_ANITA; i++){
+    ANITA_2_effArea[i]    = ANITA_2_effVol[i]/intLength_CONNOLLY_nuCC[i];
+    // cout << ANITA_2_effVol[i]/intLength_RENO[i] << endl;
   }
 
-    Double_t ANITA_2_effArea_published[n_ANITA] = {0.00043,
-						 0.05000,
-						 0.92000,
-						 6.60,
-						 36.00,
-						 108.00,
-						 259.00};
-  
-  //  double ANITA_2_eff[n_ANITA] = { 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8};
-  double ANITA_2_eff[n_ANITA] = { 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6};
 
-  double ANITA_2_livetime = 28.5*24*3600.; 
-  double ANITA_1_livetime = 17.4*24*3600.;
+  double N90A2_sens = 2.3;
+  double N90A2_lim  = 3.39;
   
-  TGraph *g_ANITA_2 = getLimitNoDelta(ANITA_2_effArea, ANITA_2_eff, ANITA_2_livetime);
+  TGraph *g_ANITA_2 = getLimitOldFormula(N90A2_lim, ANITA_2_effArea, ANITA_2_eff, ANITA_2_livetime);
   g_ANITA_2->SetLineColor(kRed);
 
-  TGraph *g_ANITA_2_pub = getLimit(ANITA_2_effArea_published, ANITA_2_eff, ANITA_2_livetime);
+  TGraph *g_ANITA_2_pub = getLimitOldFormula(N90A2_lim, ANITA_2_effArea_published, ANITA_2_eff, ANITA_2_livetime);
   g_ANITA_2_pub->SetLineColor(kBlue);
 
-  TGraph *g_ANITA_2_pub2 = getLimitNoDelta(ANITA_2_effArea_published, ANITA_2_eff, ANITA_2_livetime);
+  TGraph *g_ANITA_2_pub2 = getLimitOldFormula(N90A2_lim, ANITA_2_effArea_published, ANITA_2_eff, ANITA_2_livetime);
   g_ANITA_2_pub2->SetLineColor(kViolet);
 
-  double ANITA_all_effArea[n_ANITA];
+  // for (int i=0; i<n_ANITA; i++){
+  //   double tmp1 = g_ANITA_2_pub->Eval(ANITA_x[i]);
+  //   double tmp2 = g_ANITA_2_erratum->Eval(ANITA_x[i]);
+  //   // cout << tmp1 << " " << tmp2 << " " << tmp1/tmp2 << endl;
+  // }
+  
+  double ANITA_all_denom[n_ANITA];
+  double ANITA_123_denom[n_ANITA];
   double ANITA_all_livetime = ANITA_1_livetime+ANITA_2_livetime+ANITA_3_livetime+ANITA_4_livetime;
   for (int ibin=0; ibin<n_ANITA; ibin++){
-    ANITA_all_effArea[ibin] = (
-			       (ANITA_1_livetime+ANITA_2_livetime)*ANITA_2_effArea[ibin] +
-			       ANITA_3_livetime*ANITA_3_effArea[ibin] +
-			       ANITA_4_livetime*ANITA_4_effArea[ibin]
-			       )/(ANITA_all_livetime);
+    ANITA_all_denom[ibin] = (
+			       ANITA_1_livetime*ANITA_2_effArea[ibin]*ANITA_1_eff[ibin] +
+			       ANITA_2_livetime*ANITA_2_effArea[ibin]*ANITA_2_eff[ibin] +
+			       ANITA_3_livetime*ANITA_3_effArea[ibin]*ANITA_3_eff[ibin] +
+			       ANITA_4_livetime*ANITA_3_effArea[ibin]*ANITA_4_eff[ibin]
+			       );
+    ANITA_123_denom[ibin] = (
+			       ANITA_1_livetime*ANITA_2_effArea[ibin]*ANITA_1_eff[ibin] +
+			       ANITA_2_livetime*ANITA_2_effArea[ibin]*ANITA_2_eff[ibin] +
+			       ANITA_3_livetime*ANITA_3_effArea[ibin]*ANITA_3_eff[ibin] 
+				  );
   }
 
 
-  TGraph *g_ANITA_all = getLimit(ANITA_all_effArea, ANITA_2_eff, ANITA_all_livetime);
+  TGraph *g_ANITA_all = getCombinedLimitNoDelta(ANITA_all_denom);
   g_ANITA_all->SetLineColor(kViolet);
+
+  TGraph *g_ANITA_123 = getCombinedLimitNoDelta(ANITA_123_denom);
+  g_ANITA_123->SetLineColor(kCyan);
   
-  TCanvas *cConst_2 = new TCanvas("cConst_2","A Simple Graph Example",200,10,1400,1400); // wider
+  TCanvas *cConst_2 = new TCanvas("cConst_2","A Simple Graph Example",800,800); // wider
 
   cConst_2->cd();
   cConst_2->SetLogy();
   cConst_2->SetLogx();
+  //  cConst_2->SetGrid();
   g_Kotera_shade->SetTitle(";E (eV);E dN/dE dA d#Omega dt (cm^{-2} sr ^{-1} s^{-1} )");
   g_Kotera_shade->GetHistogram()->SetMaximum(1.e-12);
   g_Kotera_shade->GetHistogram()->SetMinimum(1.e-19);
-  g_Kotera_shade->GetXaxis()->SetLimits(1e17,1.e22); // zoom little bit
+  g_Kotera_shade->GetXaxis()->SetLimits(1e16,1.e22); // zoom little bit
   g_Kotera_shade->GetHistogram()->SetTitleSize  ( 0.04,"X");
   g_Kotera_shade->GetHistogram()->SetLabelOffset( 0.006,"X");
   g_Kotera_shade->GetHistogram()->SetLabelSize( 0.04,"X");
@@ -145,24 +193,33 @@ void tempLimit(){
   // TGraphAsymmErrors *g_IceCube = getIceCube();
   // g_IceCube->Draw("p");
   
-  g_ANITA_2_erratum->Draw("l");
+  //  g_ANITA_2_erratum->Draw("l");
 
-  g_ANITA_2->Draw("l");
-  g_ANITA_2_pub->Draw("l");
-  g_ANITA_2_pub2->Draw("l");
-  // g_ANITA_3->Draw("l");
-  // g_ANITA_4->Draw("l");
+  // g_ANITA_2->Draw("l");
+  // g_ANITA_2_pub->Draw("l");
+  g_ANITA_3_shade->Draw("f");
+  g_ANITA_3_combined->Draw("l");
+  // // g_ANITA_3up->Draw("l");
+  // // g_ANITA_3low->Draw("l");
+  // // g_ANITA_3Reno->Draw("l");
+  // // g_ANITA_4->Draw("l");
+  // g_ANITA_123->Draw("l");
   // g_ANITA_all->Draw("l");
 
 
-  TLegend *leg = new TLegend(0.6, 0.6, 0.89, 0.89);
-  leg->AddEntry(g_ANITA_2_erratum, "A2 erratum",                  "lp" );
-  leg->AddEntry(g_ANITA_2_pub,     "A2 pub w/ #Delta=4, #epsilon_{ANA}=0.6",  "l" );
-  leg->AddEntry(g_ANITA_2_pub2,    "A2 pub w/ #Delta=1, #epsilon_{ANA}=0.6",  "l" );
-  leg->AddEntry(g_ANITA_2,         "A2 icemc w/ #Delta=1, #epsilon_{ANA}=0.6",  "l" );
-  // leg->AddEntry(g_ANITA_3,         "A3 icemc #epsilon_{ANA}=0.8",  "l" );
-  // leg->AddEntry(g_ANITA_4,         "A4 icemc #epsilon_{ANA}=0.8",  "l" );
-  // leg->AddEntry(g_ANITA_all,       "A1-4 icemc #epsilon_{ANA}=0.8",  "l" );
+  TLegend *leg = new TLegend(0.5, 0.7, 0.89, 0.89);
+  //  leg->AddEntry(g_ANITA_2_erratum, "ANITA-2 limit",                  "l" );
+  // leg->AddEntry(g_ANITA_2_pub,     "A2 pub acceptance old formula",  "l" );
+  //leg->AddEntry(g_ANITA_2_pub2,    "A2 pub acceptance N90=3.39, #Delta=4, no ln(10)",  "l" );
+  // leg->AddEntry(g_ANITA_2,         "A2 icemc 2018 old formula",  "l" );
+  leg->AddEntry(g_ANITA_3_combined,    "ANITA-3 limit",  "l" );
+  // // leg->AddEntry(g_ANITA_3,    "#sigma Connolly et al, Nominal", "l");
+  // // leg->AddEntry(g_ANITA_3up,  "#sigma Connolly et al, Upper bound",   "l");
+  // // leg->AddEntry(g_ANITA_3low, "#sigma Connolly et al, Lower bound",   "l");
+  // // leg->AddEntry(g_ANITA_3Reno,        "#sigma Reno et al",     "l");
+  // // leg->AddEntry(g_ANITA_4,         "A4 icemc #epsilon_{ANA}=0.8",  "l" );
+  // leg->AddEntry(g_ANITA_123,       "ANITA-1-3 projected sensitivity",  "l" );
+  // leg->AddEntry(g_ANITA_all,       "ANITA-1-4 projected sensitivity",  "l" );
   leg->Draw();
 
   
@@ -171,12 +228,13 @@ void tempLimit(){
   Leg_Const2_2 -> AddEntry(g_Ahlers, "Ahlers '11, E_{min}=10^{18.5} eV", "l");
   Leg_Const2_2 -> SetBorderSize(0);
   Leg_Const2_2 -> SetFillColor(0);
-  Leg_Const2_2 -> SetTextFont(42);
-  Leg_Const2_2 -> SetTextSize(0.03);
   Leg_Const2_2 -> Draw();
 
+  //  Preliminary();
   
-  
+  cConst_2->Print(Form("%s.png", outname.c_str()));
+  cConst_2->Print(Form("%s.pdf", outname.c_str()));
+  cConst_2->Print(Form("%s.C", outname.c_str()));
 }
 
 
@@ -582,38 +640,61 @@ TGraph *getANITA2erratum(){
 }
 
 
-TGraph* getLimit(double effArea[n_ANITA], double eff[n_ANITA], double livetime){
+TGraph* getLimitOldFormula(double N90, double effArea[n_ANITA], double eff[n_ANITA], double livetime){
 
   Double_t ANITA_4_y[n_ANITA];
-  
-  double N90 = 2.30; 
 
   for (int i=0; i<n_ANITA; i++){
     
-    ANITA_4_y[i] = N90/(effArea[i]*1e10*livetime*eff[i]*TMath::Log(10.));
+    ANITA_4_y[i] = N90/(effArea[i]*1e10*livetime*eff[i]);
 
-    double exponent = TMath::Log10(ANITA_4_x[i]);
+    double exponent = TMath::Log10(ANITA_x[i]);
     
     //  ANITA_4_y[i] *= TMath::Power(10, exponent)/(TMath::Power(10, exponent+0.25) - TMath::Power(10, exponent-0.25));
     
     // Divide by 4 
     ANITA_4_y[i] /= 4.;
 
-    std::cout << ANITA_4_x[i] << " " << ANITA_4_y[i] << std::endl;
+    // std::cout << ANITA_x[i] << " " << ANITA_4_y[i] << std::endl;
   }
       
       
-  TGraph *g_ANITA_4 = new TGraph(n_ANITA, ANITA_4_x, ANITA_4_y);
+  TGraph *g_ANITA_4 = new TGraph(n_ANITA, ANITA_x, ANITA_4_y);
 
 
-  g_ANITA_4->SetLineWidth(4);
+  g_ANITA_4->SetLineWidth(3);
   g_ANITA_4->SetLineStyle(2);
   
   return g_ANITA_4;
 }
 
 
-TGraph* getLimitNoDelta(double effArea[n_ANITA], double eff[n_ANITA], double livetime){
+TGraph* getLimitNewFormula(double N90, double effArea[n_ANITA], double eff[n_ANITA], double livetime){
+
+  Double_t ANITA_4_y[n_ANITA];
+  
+  for (int i=0; i<n_ANITA; i++){
+    
+    ANITA_4_y[i] = N90/(effArea[i]*1e10*livetime*eff[i]*TMath::Log(10.));
+
+    double exponent = TMath::Log10(ANITA_x[i]);
+    
+    ANITA_4_y[i] *= TMath::Power(10, exponent)/(TMath::Power(10, exponent+0.25) - TMath::Power(10, exponent-0.25));
+
+    //    std::cout << ANITA_x[i] << " " << ANITA_4_y[i] << std::endl;
+  }
+      
+      
+  TGraph *g_ANITA_4 = new TGraph(n_ANITA, ANITA_x, ANITA_4_y);
+
+
+  g_ANITA_4->SetLineWidth(3);
+  g_ANITA_4->SetLineStyle(2);
+  
+  return g_ANITA_4;
+}
+
+TGraph* getCombinedLimitNoDelta(double denom[n_ANITA]){
 
   Double_t ANITA_4_y[n_ANITA];
   
@@ -621,17 +702,17 @@ TGraph* getLimitNoDelta(double effArea[n_ANITA], double eff[n_ANITA], double liv
 
   for (int i=0; i<n_ANITA; i++){
     
-    ANITA_4_y[i] = N90/(effArea[i]*1e10*livetime*eff[i]*TMath::Log(10.));
+    ANITA_4_y[i] = N90/(denom[i]*1e10*TMath::Log(10.));
 
-    double exponent = TMath::Log10(ANITA_4_x[i]);
+    double exponent = TMath::Log10(ANITA_x[i]);
     
     ANITA_4_y[i] *= TMath::Power(10, exponent)/(TMath::Power(10, exponent+0.25) - TMath::Power(10, exponent-0.25));
 
-    std::cout << ANITA_4_x[i] << " " << ANITA_4_y[i] << std::endl;
+    // std::cout << ANITA_x[i] << " " << ANITA_4_y[i] << std::endl;
   }
       
       
-  TGraph *g_ANITA_4 = new TGraph(n_ANITA, ANITA_4_x, ANITA_4_y);
+  TGraph *g_ANITA_4 = new TGraph(n_ANITA, ANITA_x, ANITA_4_y);
 
 
   g_ANITA_4->SetLineWidth(4);
@@ -639,7 +720,6 @@ TGraph* getLimitNoDelta(double effArea[n_ANITA], double eff[n_ANITA], double liv
   
   return g_ANITA_4;
 }
-
 
 void LogToLine(int N, double *Data) {
 

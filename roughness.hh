@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "Constants.h"
+#include "Settings.h"
 
 #ifdef USE_HEALPIX
 #include "healpix_base.h"
@@ -37,11 +38,16 @@ private:
 #endif
 
   std::string roughscale_str;
+  std::string roughnsims_str;
+  std::string roughmaterial_str;
+  double NINDEX;
 public:
 
-  Roughness();
+  Roughness(Settings *settings1);
 
   void SetRoughScale(double a);
+
+  std::string incAngle_asString(double T0);
 
 #ifdef USE_HEALPIX
   //! Interpolates the power value for the specified angles 
