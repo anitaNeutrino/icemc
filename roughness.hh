@@ -47,6 +47,8 @@ public:
 
   void SetRoughScale(double a);
 
+  std::string incAngle_asString(double T0);
+
 #ifdef USE_HEALPIX
   //! Interpolates the power value for the specified angles 
   /**
