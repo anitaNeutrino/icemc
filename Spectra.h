@@ -45,6 +45,7 @@ public:
   double GetNuEnergy(); // get the neutrino energy which follows neutrino flux. 
   double GetCDFEnergy();//get Energy from 'CDF'
   void GetCDF();//set up CDF and inverse CDF;
+  double GetIntegral();//get integral of flux
   TGraph *GetGEdNdEdAdt();
   TGraph *GetGE2dNdEdAdt();
 

@@ -223,6 +223,7 @@ double costhetanu=-1000; // costheta of neutrino direction wrt earth (costheta=1
 // neutrino path
 double theta_in=0; // theta where neutrino enters earth (radians, south pole=0)
 double lat_in=0; // latitude where neutrino enters earth (degrees, south pole=-90)
+double phi_in=0; // phi where neutrino enters earth (radians, south pole=0)
 double nearthlayers=0; // how many layers (core, mantle, crust) does nnu traverse
 double weight_prob=0.;//event weight,  including probability it interacts somewhere in ice along its path
 double weight1=0; // event weight,  just based on absorption in earth,  see note
@@ -590,6 +591,8 @@ int main(int argc,  char **argv) {
   // input parameters
   settings1->ReadInputs(input.c_str(),  foutput, NNU, RANDOMISEPOL);
   settings1->ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
+
+  cout << "SKIP_CONTINUES is " << settings1->SKIP_CONTINUES << "\n";
 
   // Signal needs to be initialize with Askaryan parametrisation info
   // After the inputs are read
@@ -1232,6 +1235,7 @@ int main(int argc,  char **argv) {
   tree1->Branch("horizcoord", &horizcoord, "horizcoord/D");
   tree1->Branch("vertcoord", &vertcoord, "vertcoord/D");
   tree1->Branch("costhetanu", &costhetanu, "costhetanu/D");
+  tree1->Branch("cosalpha", &cosalpha, "cosalpha/D");
   tree1->Branch("vmmhz1m_max", &vmmhz1m_max, "vmmhz1m_max/D");
   tree1->Branch("volume_thishorizon", &volume_thishorizon, "volume_thishorizon/D");
   tree1->Branch("realtime", &realtime_this, "realtime/D");
@@ -1244,7 +1248,9 @@ int main(int argc,  char **argv) {
   tree1->Branch("weight", &weight, "weight/D");
   tree1->Branch("r_exit2bn", &interaction1->r_exit2bn, "r_exit2bn/D");
   tree1->Branch("bn1->igps", &bn1->igps, "bn1->igps/I");
-
+  tree1->Branch("theta_in", &theta_in, "theta_in/D");
+  tree1->Branch("phi_in", &phi_in, "phi_in/D");
+  
   // set up balloontree
 
   TTree *balloontree = new TTree("balloon", "balloon"); //filled for all events
@@ -1547,7 +1553,7 @@ int main(int argc,  char **argv) {
 
 	if(settings1->USEDARTBOARD) pnu=spectra1->GetNuEnergy();
         else pnu=spectra1->GetCDFEnergy();
-
+	
 	ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
         // ierr=0 if the energy is too low for the parameterization
         // ierr=1 otherwise
@@ -1621,38 +1627,38 @@ int main(int argc,  char **argv) {
 
       bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon);
 
-      if (interaction1->noway)
+      if (interaction1->noway && !settings1->SKIP_CONTINUES)
         continue;
       count1->noway[whichray]++;
 
-      if (interaction1->wheredoesitleave_err)
+      if (interaction1->wheredoesitleave_err && !settings1->SKIP_CONTINUES)
         continue;
       count1->wheredoesitleave_err[whichray]++;
 
-      if (interaction1->neverseesice)
+      if (interaction1->neverseesice && !settings1->SKIP_CONTINUES)
         continue;
       count1->neverseesice[whichray]++;
 
-      if (interaction1->wheredoesitenterice_err)
+      if (interaction1->wheredoesitenterice_err && !settings1->SKIP_CONTINUES)
         continue;
       count1->wheredoesitenterice_err[whichray]++;
 
-      if (interaction1->toohigh)
+      if (interaction1->toohigh && !settings1->SKIP_CONTINUES)
         continue;
       count1->toohigh[whichray]++;
 
-      if (interaction1->toolow)
+      if (interaction1->toolow && !settings1->SKIP_CONTINUES)
         continue;
       count1->toolow[whichray]++;
 
-      if (bn1->WHICHPATH==3)
+      if (bn1->WHICHPATH==3 && !settings1->SKIP_CONTINUES)
         interaction1=int_banana;
 
-      if (!interaction1->iceinteraction)
+      if (!interaction1->iceinteraction && !settings1->SKIP_CONTINUES)
         continue;
       count1->iceinteraction[whichray]++;
 
-      if (beyondhorizon) {
+      if (beyondhorizon && !settings1->SKIP_CONTINUES) {
         continue;
       }
       count1->inhorizon[whichray]++;
@@ -1684,7 +1690,7 @@ int main(int argc,  char **argv) {
       // just for plotting
       costheta_exit=cos(ray1->rfexit[0].Theta()); // just for plotting
 
-      if (!ray1->TraceRay(settings1, anita1, 1, sig1->N_DEPTH)) {
+      if (!ray1->TraceRay(settings1, anita1, 1, sig1->N_DEPTH) && !settings1->SKIP_CONTINUES) {
         continue;
       }
 
@@ -1696,7 +1702,7 @@ int main(int argc,  char **argv) {
 
       ray1->GetSurfaceNormal(settings1, antarctica, interaction1->posnu, slopeyangle, 1);
 
-      if (!ray1->TraceRay(settings1, anita1, 2, sig1->N_DEPTH)) {; // trace ray,  2nd iteration.
+      if (!ray1->TraceRay(settings1, anita1, 2, sig1->N_DEPTH) && !settings1->SKIP_CONTINUES) {; // trace ray,  2nd iteration.
         continue;
       }
 
@@ -1761,7 +1767,7 @@ int main(int argc,  char **argv) {
           err=1; // everything is a-okay
         }// end else if slac
 
-        if(err==0)
+        if(err==0 && !settings1->SKIP_CONTINUES)
           continue;//bad stuff has happened.
 
         interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
@@ -1859,7 +1865,7 @@ int main(int argc,  char **argv) {
         bestcase_atten=exp(interaction1->altitude_int_mirror/MAX_ATTENLENGTH);//use the real path which seems from the mirror point.
 
       // let's keep this even in the roughness case, since it still represents an ceiling value
-      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1->CHANCEINHELL_FACTOR && !settings1->SKIPCUTS) {
+      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1->CHANCEINHELL_FACTOR && !settings1->SKIPCUTS && !settings1->SKIP_CONTINUES) {
         continue; // by comparing highest possible signal to the lowest possible noise,  reject if there is just no way we could detect this event.
         // vmmhz1m_max=signal at highest frequency
         // bestcase_atten=best case attenuation
@@ -1905,12 +1911,12 @@ int main(int argc,  char **argv) {
 
       // gets angle between ray and neutrino direction
       viewangle = GetViewAngle(ray1->nrf_iceside[4], interaction1->nnu);
-      if((!settings1->ROUGHNESS) && viewangle>1.57 && !settings1->SKIPCUTS) { //discard the event if viewangle is greater than 90 degrees
+      if((!settings1->ROUGHNESS) && viewangle>1.57 && !settings1->SKIPCUTS && !settings1->SKIP_CONTINUES) { //discard the event if viewangle is greater than 90 degrees
         continue;
       }
       count1->nviewangle_lt_90[whichray]++; // add to counter
 
-      if (!Ray::WhereDoesItLeave(interaction1->posnu, interaction1->nnu, antarctica, interaction1->nuexit))
+      if (!Ray::WhereDoesItLeave(interaction1->posnu, interaction1->nnu, antarctica, interaction1->nuexit) && !settings1->SKIP_CONTINUES)
         continue; // doesn't give a real value from quadratic formula
       
       GetBalloonLocation(interaction1, ray1, bn1, antarctica);
@@ -1939,7 +1945,7 @@ int main(int argc,  char **argv) {
         ray1->nrf_iceside[4] = ray1->nrf_iceside[4] + 2*chengji*ray1->nrf_iceside[0];
       }
 
-      if (err==0) {
+      if (err==0 && !settings1->SKIP_CONTINUES) {
         count1->nbadfracs[whichray]++;
         cout<<"err==0,  so leaving.\n";
         continue;
@@ -1974,7 +1980,7 @@ int main(int argc,  char **argv) {
       IsAbsorbed(chord_kgm2_test, len_int_kgm2, weight_test);
       // if the probably the neutrino gets absorbed is almost 1,  throw it out.
 
-      if (bn1->WHICHPATH!=4 && settings1->FORSECKEL!=1 && !settings1->SKIPCUTS) {
+      if (bn1->WHICHPATH!=4 && settings1->FORSECKEL!=1 && !settings1->SKIPCUTS && !settings1->SKIP_CONTINUES) {
         if (weight_test<CUTONWEIGHTS) {
           continue;
         }
@@ -1985,6 +1991,7 @@ int main(int argc,  char **argv) {
       // and latitude
       theta_in=interaction1->r_in.Theta();
       lat_in=-90+theta_in*DEGRAD;
+      phi_in=interaction1->r_in.Phi();
 
       // find quantities relevent for studying impact of atmosphere
       // for black hole studies
@@ -1998,7 +2005,7 @@ int main(int argc,  char **argv) {
       if (!settings1->FORSECKEL && !settings1->UNBIASED_SELECTION) {
         if (!antarctica->WhereDoesItEnterIce(interaction1->posnu, interaction1->nnu, len_int_kgm2/sig1->RHOMEDIUM/10., interaction1->r_enterice)) {
           //r_enterice.Print();
-          if (antarctica->OutsideAntarctica(interaction1->r_enterice)) {
+          if (antarctica->OutsideAntarctica(interaction1->r_enterice) && !settings1->SKIP_CONTINUES) {
             cout<<"Warning!  Neutrino enters beyond continent,  program is rejecting neutrino! inu = "<<inu<<endl;
             if (bn1->WHICHPATH==3)
               cout<<"Warning!  Neutrino enters beyond continent,  program is rejecting neutrino!"<<endl;
@@ -2043,7 +2050,7 @@ int main(int argc,  char **argv) {
       IsAbsorbed(interaction1->chord_kgm2_bestcase, len_int_kgm2, interaction1->weight_bestcase);
 
       // if the probability that the neutrino gets absorbed is almost 1,  throw it out.
-      if (bn1->WHICHPATH!=4 && interaction1->weight_bestcase<CUTONWEIGHTS && !settings1->SKIPCUTS && !settings1->FORSECKEL) {
+      if (bn1->WHICHPATH!=4 && interaction1->weight_bestcase<CUTONWEIGHTS && !settings1->SKIPCUTS && !settings1->FORSECKEL && !settings1->SKIP_CONTINUES) {
         if (bn1->WHICHPATH==3)
           cout<<"Neutrino is getting absorbed and thrown out!"<<endl;
         //
@@ -2065,7 +2072,7 @@ int main(int argc,  char **argv) {
       if (whichray==1)
         bestcase_atten=exp(-1*ray1->rfexit[1].Distance(interaction1->posnu_down)/MAX_ATTENLENGTH);//use the real distance
 
-      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1->CHANCEINHELL_FACTOR && !settings1->SKIPCUTS && !settings1->FORSECKEL) {
+      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1->CHANCEINHELL_FACTOR && !settings1->SKIPCUTS && !settings1->FORSECKEL && !settings1->SKIP_CONTINUES) {
         if (bn1->WHICHPATH==3)
           cout<<"Event rejected.  Check."<<endl;
         //
@@ -2085,7 +2092,7 @@ int main(int argc,  char **argv) {
           nbelowsurface=sig1->NICE;
         // this is purely a sanity check.
         // if everything is working,  events should pass with 100% efficiency
-        if (TIR(ray1->nsurf_rfexit, ray1->nrf_iceside[3], nbelowsurface, sig1->N_AIR)) {
+        if (TIR(ray1->nsurf_rfexit, ray1->nrf_iceside[3], nbelowsurface, sig1->N_AIR) && !settings1->SKIP_CONTINUES) {
           continue;
         }
       }// end !settings roughness
@@ -2106,11 +2113,11 @@ int main(int argc,  char **argv) {
       interaction1->r_exit2bn=bn1->r_bn.Distance(ray1->rfexit[2]);
       interaction1->r_exit2bn_measured=bn1->altitude_bn/cos(theta_rf_atbn_measured);
 
-      if((settings1->WHICH == 2 || settings1->WHICH == 6) && theta_rf_atbn < 0.3790091) {
+      if((settings1->WHICH == 2 || settings1->WHICH == 6) && theta_rf_atbn < 0.3790091 && !settings1->SKIP_CONTINUES) {
         continue; // the deck will mess up the arrival times in the top ring
       }
       // reject if the rf leaves the ice where there is water,  for example.
-      if (!antarctica->AcceptableRfexit(ray1->nsurf_rfexit, ray1->rfexit[2], ray1->n_exit2bn[2])){
+      if (!antarctica->AcceptableRfexit(ray1->nsurf_rfexit, ray1->rfexit[2], ray1->n_exit2bn[2]) && !settings1->SKIP_CONTINUES){
         if (bn1->WHICHPATH==3)
           cout<<"Should look at this. Not expecting to be here."<<endl;
         continue;
@@ -2593,7 +2600,7 @@ int main(int argc,  char **argv) {
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
       if (!settings1->ROUGHNESS){
-        if(settings1->CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10.&& !settings1->SKIPCUTS) {
+        if(settings1->CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10.&& !settings1->SKIPCUTS && !settings1->SKIP_CONTINUES) {
           if (bn1->WHICHPATH==3)
             cout<<"Event is undetectable.  Leaving loop."<<endl;
 
@@ -2619,7 +2626,7 @@ int main(int argc,  char **argv) {
 
       // reject if the event is undetectable.
       if (!settings1->ROUGHNESS){
-        if (settings1->CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS) {
+        if (settings1->CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS && !settings1->SKIP_CONTINUES) {
           if (bn1->WHICHPATH==3)
             cout<<"Event is undetectable.  Leaving loop."<<endl;
           //
@@ -2658,7 +2665,7 @@ int main(int argc,  char **argv) {
 
       // reject if the event is undetectable.
       if (!settings1->ROUGHNESS){
-        if (settings1->CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS) {
+        if (settings1->CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS && !settings1->SKIP_CONTINUES) {
           if (bn1->WHICHPATH==3)
             cout<<"Event is undetectable.  Leaving loop."<<endl;
           //
@@ -2714,7 +2721,7 @@ int main(int argc,  char **argv) {
       if (!settings1->ROUGHNESS){
         // don't loop over frequencies if the viewing angle is too far off
         double rtemp=Tools::dMin((viewangle-sig1->changle)/(deltheta_em_max), (viewangle-sig1->changle)/(deltheta_had_max));
-        if (rtemp>Signal::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
+        if (rtemp>Signal::VIEWANGLE_CUT && !settings1->SKIPCUTS && !settings1->SKIP_CONTINUES) {
           //delete interaction1;
           continue;
         }
@@ -2778,7 +2785,7 @@ int main(int argc,  char **argv) {
         }
         // reject if it is undetectable now that we have accounted for viewing angle
 
-        if (settings1->CHANCEINHELL_FACTOR*Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS) {
+        if (settings1->CHANCEINHELL_FACTOR*Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS && !settings1->SKIP_CONTINUES) {
           continue;
         }
       }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
@@ -2795,10 +2802,18 @@ int main(int argc,  char **argv) {
 
       // Dead time
       if (settings1->USEDEADTIME){
-      	if ( (anita1->deadTime>0.9) || (r.Uniform(1)<anita1->deadTime) ) continue;
+      	if ( ((anita1->deadTime>0.9) || (r.Uniform(1)<anita1->deadTime)) && !settings1->SKIP_CONTINUES) continue;
       }
 	    
       count1->ndeadtime[whichray]++;
+
+     if (settings1->HIST==1
+	  && !settings1->ONLYFINAL
+	  && tree1->GetEntries()<settings1->HIST_MAX_ENTRIES
+	  && bn1->WHICHPATH != 3){ // all events
+
+        tree1->Fill();
+      }//end if
 
       Tools::Zero(sumsignal_aftertaper, 5);
 
@@ -3140,7 +3155,7 @@ int main(int argc,  char **argv) {
         weight1=interaction1->weight_nu_prob + taus1->weight_tau_prob;
       else
         weight1=interaction1->weight_nu_prob;
-
+      //AC - bookmark this line
       weight = weight1 / interaction1->dnutries * settings1->SIGMA_FACTOR;  // total weight is the earth absorption factor
       // divided by the factor accounting for the fact that we only chose our interaction point within the horizon of the balloon
       // then multiply by the cross section multiplier,  to account for the fact that we get more interactions when the cross section is higher
@@ -3720,12 +3735,8 @@ int main(int argc,  char **argv) {
 
       volume_thishorizon=antarctica->volume_inhorizon[bn1->Getibnposition()]/1.E9;
 
-      if (settings1->HIST==1
-	  && !settings1->ONLYFINAL
-	  && tree1->GetEntries()<settings1->HIST_MAX_ENTRIES
-	  && bn1->WHICHPATH != 3){ // all events
-        tree1->Fill();
-      }//end if
+
+ 
 
     } // end for WHICHRAY
     //looping over two types of rays - upgoing and downgoing.
@@ -3870,6 +3881,8 @@ int main(int argc,  char **argv) {
 
 
   cout << "closing file.\n";
+  hfile->cd();
+  tree1->Write();
   CloseTFile(hfile);
 
   time_t raw_end_time = time(NULL);
@@ -4448,6 +4461,7 @@ Vector GetPolarization(const Vector &nnu, const Vector &nrf2_iceside) {
 
 void CloseTFile(TFile *hfile) {
   hfile->cd();
+  
   hfile->Write();
   hfile->Close();
 }

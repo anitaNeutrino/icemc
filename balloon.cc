@@ -209,6 +209,7 @@ void Balloon::InitializeBalloon() {
     flightdatachain->SetBranchAddress("altitude",&faltitude);
     flightdatachain->SetBranchAddress("realTime_surfhk",&realTime_flightdata);
     flightdatachain->SetBranchAddress("heading",&fheading);
+    
   }
     
   // This for Anita 2 flight
@@ -252,7 +253,11 @@ void Balloon::InitializeBalloon() {
     longitude_bn_anitalite[i]=0;
     altitude_bn_anitalite[i]=0;
   }
-  NPOINTS=0;
+
+  NPOINTS=flightdatachain->GetEntries();
+  flightdatachain->GetEntry(0);
+  realTime_flightdata_first=realTime_flightdata_temp;
+
   REDUCEBALLOONPOSITIONS=100;
     
     
@@ -361,6 +366,54 @@ void Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,Settin
   if (settings1->BORESIGHTS)
     GetBoresights(settings1,anita1);
     
+}
+void Balloon::PickBalloonPositionAmySuperSimple() { 
+  
+  pitch=0.;
+  roll=0.;
+  phi_spin=0.;
+
+  if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9) { // anita-lite or anita-I or -II path
+    
+    if (WHICHPATH==2) {
+      igps=NPOINTS_MIN+(igps_previous+1-NPOINTS_MIN)%(NPOINTS_MAX-NPOINTS_MIN); //Note: ignore last 140 points, where balloon is falling - Stephen
+      flatitude=(float)latitude_bn_anitalite[igps];
+      flongitude=(float)longitude_bn_anitalite[igps];
+      faltitude=(float)altitude_bn_anitalite[igps];
+      fheading=(float)heading_bn_anitalite[igps];
+      
+      
+    }
+    else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9) {  // For Anita 1 and Anita 2 and Anita 3:
+      //igps=(igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
+      
+      igps = int(gRandom->Rndm()*flightdatachain->GetEntries()); // pick random event in the tree
+
+      //////////////////////////// TEMPORARY HACKS FOR ANITA4 !!!!!!      
+      if (WHICHPATH==9 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660)) || (igps==17862) ) igps=igps+30;
+      
+      flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
+      realTime_flightdata = realTime_flightdata_temp;
+      while (faltitude<MINALTITUDE || fheading<0) { // if the altitude is too low, pick another event.
+	
+	igps++; // increment by 1
+	igps=igps%flightdatachain->GetEntries(); // make sure it's not beyond the maximum entry number
+	
+	flightdatachain->GetEvent(igps);	  // get new event
+      }
+		  
+    }
+    igps_previous=igps;
+    latitude=(double)flatitude;
+    longitude=(double)flongitude;
+    altitude=(double)faltitude;
+    heading=(double)fheading;
+    roll=(double)froll;
+    pitch=(double)fpitch;
+
+
+
+  }
 }
 
 // this is called for each neutrino

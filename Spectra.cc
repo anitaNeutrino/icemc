@@ -387,6 +387,29 @@ void Spectra::GetCDF(){//set up CDF and inverse CDF;
   
 
 }
+double Spectra::GetIntegral(){//integral of the flux;
+  cout<<"in Integral \n";
+  double y_val=0.;
+  double E_min =18;//energy[0];
+ 
+  double E_max = energy[E_bin-1];
+  if(E_max > 21) E_max=21;
+  double step_size =.25;//in logE AC:is this lnE?
+  int n =(int) floor((E_max-E_min)/step_size);
+  double E[n];
+  double N[n];
+  double E_tmp=0.;
+  double integral=0.;
+
+  TGraph *hEdNdE = new TGraph(E_bin,energy,EdNdEdAdt);
+  //cout<<"E_min, Max, n are "<<E_min<<" "<<E_max<<" "<<n<<"\n";
+  for(int i=0;i<n;i++){
+    E_tmp = E_min+(double)i*step_size/log(10); // AC:then this turns it into stepping in log base 10?
+    y_val=hEdNdE->Eval(E_tmp,0,"s");//get interpolated value    
+    integral +=y_val*step_size;//integrate in log space AC:ln space?
+  }
+  return integral;
+}
 
 double Spectra::GetCDFEnergy(){//get Energy from 'CDF'
 

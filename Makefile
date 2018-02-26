@@ -105,16 +105,36 @@ DICT = classdict
 
 OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o
 
-
 BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testWAIS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
+
+STAUBINARIES = staus$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testWAIS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
+
+SATBINARIES = satellites$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testWAIS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
+
+TESTKOTERABINARIES = testkotera$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testWAIS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
 
 #------------------------------------------------------------------------------
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf)
 
 all:            $(BINARIES)
+allstau:      	$(STAUBINARIES)
+allsat:      	$(SATBINARIES)
+testkotera:	$(TESTKOTERABINARIES)
 
 $(BINARIES): %: %.$(SrcSuf) $(OBJS)
+		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $< $(OutPutOpt) $@
+		@echo "$@ done"
+
+$(STAUBINARIES): %: %.$(SrcSuf) $(OBJS)
+		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $< $(OutPutOpt) $@
+		@echo "$@ done"
+
+$(SATBINARIES): %: %.$(SrcSuf) $(OBJS)
+		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $< $(OutPutOpt) $@
+		@echo "$@ done"
+
+$(TESTKOTERABINARIES): %: %.$(SrcSuf) $(OBJS)
 		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $< $(OutPutOpt) $@
 		@echo "$@ done"
 

@@ -193,7 +193,7 @@ class Settings : public TObject {
   int horizontal_banana_points;
   int vertical_banana_points;
   double EXPONENT; //Select neutrino flux exponent value or flux model. Detail : READ_EXPONENT
-
+  int SKIP_CONTINUES; // Whether to skip continue commands so it generates everything
 
   // Bunch of variables which were global in icemc.cc but are settings:
   int FILLRAYTREES; // fill tree for each ray in roughness simulation

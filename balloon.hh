@@ -50,6 +50,7 @@ public:
   TTreeIndex *tindex;
   unsigned int realTime_flightdata_temp;                                     ///< realtime from the flight data file
   unsigned int realTime_flightdata;                                          ///< realtime from the flight data file
+  unsigned int realTime_flightdata_first;                                          ///< realtime of first entry in the flight data file
   float flatitude,flongitude,faltitude,fheading,froll, fpitch;
   double latitude,longitude,altitude,heading,roll,pitch;
   double MINALTITUDE;                                                        ///< minimum altitude balloon needs to be before we consider it a good event to read from the flight data file
@@ -159,6 +160,21 @@ public:
    */
   void CenterPayload(double& hitangle_e);
 
+
+  //! This function picks the balloon position
+  /**
+   * Picks balloon position from actual flight.
+   *
+   *
+   * @return returns void
+   */
+
+  void PickBalloonPositionAmySuperSimple();
+
+
+
+
+
     
   //! This function picks the balloon position
   /**
@@ -171,6 +187,7 @@ public:
    * @param  anita1 -
    * @return returns void
    */
+
   void PickBalloonPosition(Vector straightup,IceModel *antarctica,Settings *settings1, Anita *anita1);
     
   //! This function picks the balloon position

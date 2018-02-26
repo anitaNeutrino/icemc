@@ -280,6 +280,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   parseSettingsFile(inputFileName, foutput);
 
+  getSetting("Skip continues",SKIP_CONTINUES);
   getSetting("Number of neutrinos", NNU);
   getSetting("Energy exponent", EXPONENT);
   getSetting("Energy CDF or dartboard", USEDARTBOARD);
