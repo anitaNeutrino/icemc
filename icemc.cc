@@ -1652,7 +1652,7 @@ int main(int argc,  char **argv) {
       if (bn1->WHICHPATH==3 && !settings1->SKIP_CONTINUES)
         interaction1=int_banana;
 
-      if (!interaction1->iceinteraction && !settings1->SKIP_CONTINUES)
+      if (!interaction1->iceinteraction)
         continue;
       count1->iceinteraction[whichray]++;
 
