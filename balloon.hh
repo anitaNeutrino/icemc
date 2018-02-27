@@ -91,6 +91,9 @@ public:
   double BN_LATITUDE;                                                        ///< balloon latitude for fixed balloon location
 
 
+ 
+
+
   //!This function sets the observation location
   /**
    * This is a long description that I dont know yet

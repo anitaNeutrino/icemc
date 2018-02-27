@@ -616,7 +616,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     
   ibnposition=Getibnposition();
     
-  if (!settings1->UNBIASED_SELECTION && dtryingposition!=-999)
+  if ((!settings1->UNBIASED_SELECTION || !settings1->USEPOSITIONWEIGHTS) && dtryingposition!=-999)
     dtryingposition=antarctica1->GetBalloonPositionWeight(ibnposition);
   else
     dtryingposition=1.;
@@ -797,9 +797,18 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
     }
     else
       interaction1->iceinteraction=0;
-  } else {
+    
+  }
+
+else {
     interaction1->iceinteraction=1;
-    if (WHICHPATH==3) { //Force interaction point if we want to make a banana plot
+
+
+    if (!settings1->USEPOSITIONWEIGHTS) {
+      interaction1->posnu=antarctica1->PickPosnuUniformlyinVolume();
+    }
+
+    else if (WHICHPATH==3) { //Force interaction point if we want to make a banana plot
       interaction1->posnu = interaction1->nu_banana;
     } //if (making banana plot)
     else if (WHICHPATH==4) {// Force interaction point for comparison with Peter.
@@ -835,7 +844,7 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
       
     }
     else{
-
+      //      cout << "I'm here 2.\n";
       // If we require neutrinos from a particular position
       // we generate that cartesian position here
 
@@ -851,6 +860,7 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
         
       do
       {
+	//cout << "I'm here 3.\n";
         interaction1->posnu = antarctica1->PickInteractionLocation(ibnposition, settings1, r_bn, interaction1);
       } while(settings1->SPECIFIC_NU_POSITION &&  (interaction1->posnu - specific_position).Mag() > settings1->SPECIFIC_NU_POSITION_DISTANCE); 
 

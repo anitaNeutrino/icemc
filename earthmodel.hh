@@ -88,12 +88,13 @@ public:
 			 int& mantle_entered, // 1 or 0
 			 int& core_entered);
 
+ void convertBinIndextoIlonIlat(int ibinindex,int &ilon,int &ilat);
   Vector GetSurfaceNormal(const Position &r_out) ;
   static double LongtoPhi_0isPrimeMeridian(double longitude); // convert longitude to phiwith 0 longitude being the prime meridian
   static double LongtoPhi_0is180thMeridian(double longitude); // convert longitude to phi with 0 longitude being at the 180th meridian
   void EarthCurvature(double *array,double depth_temp); // adjusts coordinates within the mine to account for the curvature of the earth.
   Position WhereDoesItEnter(const Position &posnu,const Vector &nnu);
-
+  Vector PickPosnuUniformlyinVolume();
  
 private:
   TRandom3 Rand3;
@@ -117,6 +118,7 @@ protected:
   // parameters of the Crust 2.0 earth model
   static constexpr int NLON=180; // number of bins in longitude for crust 2.0
   static constexpr int NLAT=90;  // number of bins in latitude
+  static const int BININDEX=180*90; // index of bins with nonzero ice
   static constexpr int NPHI=180; // bins in longitude for visible ice in horizon
   static const double MAXTHETA; // maximum value of theta in degrees in polar coordinates
   double thetastep; // how big do you step in theta-> always 2deg with Crust 2.0
@@ -151,6 +153,7 @@ protected:
   double lowercrustdensityarray[NLON][NLAT]; // density of lower crust layer
   double area[NLAT]; // area of a bin at a given latitude- calculated once
   double average_iceth; // average ice thickness over the continent-calculated once
+  double volume_cdf[BININDEX]; //
 
   /////////////////////////////////////
   //methods
@@ -163,6 +166,14 @@ protected:
   double GetLat(double theta) ;
   double GetLon(double phi) ;
   Vector PickPosnuForaLonLat(double lon,double lat,double theta,double phi); // given that an interaction occurs at a lon and lat, pick an interaction position in the ice
+  //!This function sets the interaction position, picking uniformly in volume of ice across antarctica.
+  /**
+   *
+   *
+   *
+   * @return returns void
+   */
+
 
 }; //class EarthModel
 

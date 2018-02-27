@@ -161,6 +161,7 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
 //constructor IceModel(int model)
 
 
+
 Position IceModel::PickBalloonPosition() {
     Vector temp;
     return temp;
@@ -1244,6 +1245,9 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
     //cout<<"area at lat "<<(double)i/2<<" is "<<Area((double)i/2)<<endl;
   
     volume = 0.; // initialize volume to zero
+    for (int ibinindex=0;ibinindex<BININDEX;ibinindex++) {
+      volume_cdf[ibinindex]=0.;
+    }
     
     double total_area=0; // initialize total area to zero
     int NBALLOONPOSITIONS; // number of balloon positions considered here
@@ -1357,18 +1361,23 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	
 	
 	if (ice_model==0) { // Crust 2.0
+	  int ibinindex=0;
 	    for (int j=0;j<NLON;j++) { // loop over bins in longitude
 		for (int k=0;k<ILAT_COASTLINE;k++) { // loop over bins in latitude
-		    
+		  ibinindex++;
 		    // get position of each bin
 		    r_bin = Vector(sin(dGetTheta(k))*cos(dGetPhi(j))*(geoid[k]+surfacer[j][k]),
 				   sin(dGetTheta(k))*sin(dGetPhi(j))*(geoid[k]+surfacer[j][k]),
 				   cos(dGetTheta(k))*(geoid[k]+surfacer[j][k])); // vector from center of the earth to the surface of this bin
 		    
-		    
-		    if (!volume_found) 
-			volume += icethkarray[j][k]*1000*area[k]; // add this to the total volume of ice in antarctica
-		    if (!volume_found && icethkarray[j][k] > 0)
+		    //		    cout << "volume_found is " << volume_found << "\n";
+		    if (!volume_found) {
+		      volume_cdf[ibinindex]=volume+icethkarray[j][k]*1000*area[k];
+		      volume += icethkarray[j][k]*1000*area[k]; // add this to the total volume of ice in antarctica
+		      //cout << "volume_cdf is " << volume_cdf[ibinindex] << "\n";
+
+		    }
+		    if (!volume_found && icethkarray[j][k] > 0) 
 			total_area += area[k]; // add this to the total area of ice in antarctica
 		    
 		    // if the bin is within the maximum horizon of the balloon or if we don't care
@@ -1418,8 +1427,13 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	    if (ilon_inhorizon[i].size()==0) // for the ith balloon position, if it didn't find a longitude bin in horizon
 		ilon_inhorizon[i].push_back(ilon_bn); // force it to be the one below the balloon
 	    
-	    
-	    
+	    if (!volume_found) {
+	      for (int ibinindex=0;ibinindex<BININDEX;ibinindex++) {
+		volume_cdf[ibinindex]=volume_cdf[ibinindex]/volume;
+		//cout << "volume, volume_cdf is " << volume << "\t" << volume_cdf[ibinindex] << "\n";
+	      }
+	    }
+
 	} //end if (ice_model==0) Crust 2.0
 	
 	else if (ice_model==1 && !settings1->WRITE_FILE) { // for bedmap model
@@ -1492,8 +1506,9 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	} //end if (ice_model==1) && settings1->WRITE_FILE
 	
 	if (!volume_found) {
-	    cout<<"Total surface area covered with ice (in m^2) is : "<<total_area<<endl;
-	    volume_found=1;
+	  
+	  cout<<"Total surface area covered with ice (in m^2) is : "<<total_area<<endl;
+	  volume_found=1;
 	} //if
     } //end loop over balloon positions
     

@@ -85,6 +85,7 @@ int NODATA;
   const static int NBNPOSITIONS_MAX=26000;
   double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
   IceModel(int model=0,int earth_mode=0,int WEIGHTABSORPTION_SETTING=1);
+ 
   double IceThickness(double lon,double lat);
   double IceThickness(const Position& pos) ;
   double Surface(double lon,double lat) ;

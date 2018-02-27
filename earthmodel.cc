@@ -924,7 +924,34 @@ void EarthModel::ReadCrust(string test) {
     radii[1]=(Geoid(0.)+MIN_ALTITUDE_CRUST)*(Geoid(0.)+MIN_ALTITUDE_CRUST);
     
 }//ReadCrust
+Vector EarthModel::PickPosnuUniformlyinVolume(){
+  double rnd3=gRandom->Rndm();
+  int ibinindex=0;
+  int whichbin=0;
+  
+  for (ibinindex=0;ibinindex<BININDEX;ibinindex++) {
+    //cout << "ibinindex, rnd3, volume_cdf are " << ibinindex << "\t" << rnd3 << "\t" << volume_cdf[ibinindex] << "\n";
+    if (rnd3<volume_cdf[ibinindex]) {
+      whichbin=ibinindex;
+      ibinindex=BININDEX;
+    }
+  }
+  //  cout << "chosen ibinindex is " << whichbin << "\n";
+  int ilon_tmp,ilat_tmp;
+  double theta_tmp,phi_tmp;
+  convertBinIndextoIlonIlat(whichbin,ilon_tmp,ilat_tmp);
+  //cout << "ilon_tmp, ilat_tmp are " << ilon_tmp << "\t" << ilat_tmp << "\n";
 
+  //cout << "picking posnu at lat, lon of " << ilon_tmp << "\t" << ilat_tmp << "\n";
+
+  phi_tmp=SmearPhi(ilon_tmp, gRandom->Rndm());
+  theta_tmp=SmearTheta(ilat_tmp, gRandom->Rndm());
+  double lat_tmp= GetLat(theta_tmp) ;
+  double lon_tmp= GetLon(phi_tmp) ;
+  //cout << "picked interaction with lon, lat " << lon_tmp << "\t" << lat_tmp << "\n";
+  return PickPosnuForaLonLat(lon_tmp,lat_tmp,theta_tmp,phi_tmp);
+
+}
 
 Vector EarthModel::PickPosnuForaLonLat(double lon,double lat,double theta,double phi) {
     
@@ -979,6 +1006,12 @@ void EarthModel::GetILonILat(const Position &p,int& ilon,int& ilat) {
     ilat=(int)((p.Theta()*DEGRAD)/2.);
     
 } //method GetILonILat
+void EarthModel::convertBinIndextoIlonIlat(int ibinindex,int &ilon,int &ilat) {
+  
+  ilat=ibinindex%ILAT_COASTLINE;
+  ilon=(ibinindex-ilat)/ILAT_COASTLINE;
+  
+}
 void EarthModel::EarthCurvature(double *array,double depth_temp) {
     
     Position parray;

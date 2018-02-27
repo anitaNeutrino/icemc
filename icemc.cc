@@ -1961,6 +1961,7 @@ int main(int argc,  char **argv) {
       // an appropriate position,  and assume they are
       // independent.
       interaction1->dnutries=interaction1->dtryingdirection*bn1->dtryingposition;
+      //cout << "dtryingdirection, dtryingposition are " << interaction1->dtryingdirection << "\t" << bn1->dtryingposition << "\n";
 
       // for plotting aperture per ring radius from balloon
       index_distance=(int)(bn1->r_bn.SurfaceDistance(interaction1->posnu, bn1->surface_under_balloon) / (700000./(double)NBINS_DISTANCE));
