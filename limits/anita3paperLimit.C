@@ -19,7 +19,7 @@ void anita3paperLimit(){
 
   string outname = "ANITA3limit_paper";
 
-   if (!gROOT->GetClass("TFeldmanCousins")) gSystem->Load("libPhysics");
+//   if (!gROOT->GetClass("TFeldmanCousins")) gSystem->Load("libPhysics");
 
    TFeldmanCousins f;
 
@@ -31,20 +31,14 @@ void anita3paperLimit(){
    Double_t Nbackground = 0.7;
 
    Double_t NobsAll  = 3.0;
-   Double_t NbkgAll  = (0.5+0.98+1.1);
+   Double_t NbkgAll  = (0.7+0.98+1.1);
 
-   Double_t ul = f.CalculateUpperLimit(Nobserved, Nbackground);
-   Double_t ll = f.GetLowerLimit();
+   Double_t ul = 3.471 ; //; f.CalculateUpperLimit(Nobserved, Nbackground);
+//   Double_t ll = f.GetLowerLimit();
 
    
    Double_t ulAll = f.CalculateUpperLimit(NobsAll, NbkgAll);
 
-   cout << "For " <<  Nobserved << " data observed with and estimated background"<<endl;
-   cout << "of " << Nbackground << " candidates, the Feldman-Cousins method of "<<endl;
-   cout << "calculating confidence limits gives:"<<endl;
-   cout << "\tUpper Limit = " <<  ul << endl;
-   cout << "\tLower Limit = " <<  ll << endl;
-   cout << "at the 90% CL"<< endl;
    cout << "ANITA 1-3 Upper Limit = " <<  ulAll << endl;
    
   
@@ -118,7 +112,7 @@ void anita3paperLimit(){
   g_Kotera_shade->SetTitle(";E (eV);E dN/dE dA d#Omega dt (cm^{-2} sr ^{-1} s^{-1} )");
   g_Kotera_shade->GetHistogram()->SetMaximum(1.e-12);
   g_Kotera_shade->GetHistogram()->SetMinimum(1.e-19);
-  g_Kotera_shade->GetXaxis()->SetLimits(1e16,1.e22); // zoom little bit
+  g_Kotera_shade->GetXaxis()->SetLimits(1e16,1.e21); // zoom little bit
   g_Kotera_shade->GetHistogram()->SetTitleSize  ( 0.04,"X");
   g_Kotera_shade->GetHistogram()->SetLabelOffset( 0.006,"X");
   g_Kotera_shade->GetHistogram()->SetLabelSize( 0.04,"X");
@@ -170,7 +164,7 @@ void anita3paperLimit(){
   
   TLegend *Leg_Const2_2 = new TLegend(0.16, 0.12, 0.43, 0.254);
   Leg_Const2_2 -> AddEntry(g_Kotera_shade, "GZK, Kotera '10", "f");  
-  Leg_Const2_2 -> AddEntry(g_Ahlers, "Ahlers '11, E_{min}=10^{18.5} eV", "l");
+  Leg_Const2_2 -> AddEntry(g_Ahlers, "Ahlers '12, E_{min}=10^{18.5} eV", "l");
   Leg_Const2_2 -> SetBorderSize(0);
   Leg_Const2_2 -> SetFillColor(0);
   Leg_Const2_2 -> Draw();
