@@ -33,7 +33,6 @@ void getNumEvents(){
 
   if (debug){
     c = new TCanvas("c");
-    c->Divide(2,2);
   }
   
   for (int iexp=expMin;  iexp<expMax; iexp++){
@@ -46,14 +45,20 @@ void getNumEvents(){
     GetNumObs();
 
     if (debug){
-      c->cd(1);
+      c->SetLogy();
       gFluence->Draw("Al");
-      c->cd(2);
+      Simulation();
+      c->Print("Fluence.png");
       gEffArea->Draw("Al");
-      c->cd(3);
+      Simulation();
+      c->Print("Acceptance.png");
+      c->SetLogy(0);
       hRate->Draw("histo");
-      c->cd(4);
+      Simulation();
+      c->Print("Rate.png");
       hNumObs->Draw("histo");
+      Simulation();
+      c->Print("NumObs.png");
     }
     
     //  cout << "Expected number of events is " << hNumObs->Integral() << endl;
@@ -66,9 +71,10 @@ void getNumEvents(){
     } else {
       printf("%-*s %3.2e +/- %3.2e \n", 25, buffer, integral, error);
     }
-    delete hRate;
-    delete hNumObs;
-    
+    if (!debug){
+      delete hRate;
+      delete hNumObs;
+    }
   }
 }
 
@@ -86,7 +92,7 @@ void GetNumObs(){
     hNumObs->Fill(tempEnergy, tempRate*ANITA_3_livetime);
   }
 
-  hRate->SetTitle(";log_{10} #left(#frac{E_{#nu}}{eV}#right);Rate per bin, s^{-1}");
+  hNumObs->SetTitle(";log_{10} #left(#frac{E_{#nu}}{eV}#right);Number per Bin");
 }
 
 void GetRate(){
@@ -107,11 +113,15 @@ void GetRate(){
 
 void GetEffArea(){
 
+  
+  double ANITA_3_eff_combined[n_ANITA] = { 0.84, 0.84, 0.84, 0.84, 0.84, 0.84, 0.84 };
+  
   for (int i=0; i<n_ANITA; i++){
     
     ANITA_3_effArea[i] = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCC[i]; 
     ANITA_3_effArea[i] = TMath::Sqrt(ANITA_3_effArea[i]*ANITA_2_effArea_Peter[i]*ANITA_3_effArea[i]/ANITA_2_effArea_icemc2010[i]);
     ANITA_3_effArea[i] *= 1e10; // from km^2 to cm^2
+    ANITA_3_effArea[i] *= ANITA_3_eff_combined[i];
   }
   
   gEffArea = new TGraph (n_ANITA, ANITA_x, ANITA_3_effArea);
@@ -135,6 +145,9 @@ string GetFluxFromNumber(int EXPONENT){
 	break;
       case 40:
 	return ("ahlers.dat");
+	break;
+      case 41:
+	return ("ahlers2012.dat");
 	break;
       case 50:
 	return ("allard.dat");
@@ -221,6 +234,11 @@ string GetFluxFromNumber(int EXPONENT){
       return ("Kotera2010_mix_min.dat");
     }
   
+  else if (EXPONENT==224)
+    {
+      return ("Kotera2010_proton.dat");
+    }
+  
 
 
 
@@ -249,6 +267,7 @@ void GetFlux(string filename){
     //        EdNdEdAdt[i]=pow(10.,(flux[i]+9.-energy[i]));
     EdNdEdAdt[i] = E2dNdEdAdt[i] + 9. - energy[i];  // change from GeV to eV and E2dN -> EdN
     EdNdEdAdt[i] = TMath::Power(10,  EdNdEdAdt[i]);
+
   }
 
   EmaxModel = energy[NLINES-1];
