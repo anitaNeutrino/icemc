@@ -158,13 +158,13 @@ void anita3paperLimit(){
   
   TLegend *leg = new TLegend(0.5, 0.7, 0.89, 0.89);
   leg->AddEntry(gAuger,   "Auger 2015", "l");
-  leg->AddEntry(gIcecube, "Icecube 2017", "l");
-  leg->AddEntry(g_ANITA_3_combined,    "ANITA-III limit",  "l" );
+  leg->AddEntry(gIcecube, "IceCube 2017", "l");
+  leg->AddEntry(g_ANITA_3_combined,    "ANITA-III",  "l" );
   // // leg->AddEntry(g_ANITA_3,    "#sigma Connolly et al, Nominal", "l");
   // // leg->AddEntry(g_ANITA_3up,  "#sigma Connolly et al, Upper bound",   "l");
   // // leg->AddEntry(g_ANITA_3low, "#sigma Connolly et al, Lower bound",   "l");
   // // leg->AddEntry(g_ANITA_3Reno,        "#sigma Reno et al",     "l");
-  leg->AddEntry(g_ANITA_123,       "ANITA I-III limit",  "l" );
+  leg->AddEntry(g_ANITA_123,       "ANITA I-III",  "l" );
   leg->Draw();
 
   
@@ -1002,7 +1002,7 @@ TGraph *auger2015(){
 
   // multiply factor of 3 to account all three flavors
   for (int i=0; i<8; i++) {
-    Auger15_y[i] = (Auger15_y[i]*3.)/2.;
+    Auger15_y[i] = (Auger15_y[i]*3.);
     // cout <<"Aug x3 : " <<  Auger15_x[i] << " " << Auger15_y[i] << endl;
     // cout << "Aug xx : " << xtemp[i] << " " << ytemp[i] << endl;
   }
@@ -1017,42 +1017,15 @@ TGraph *auger2015(){
 
 
 TGraph *icecube(){
-  LogToLine(17, Icecube_x);
-  LogToLine(17, Icecube_y);
 
-
-  double newicecube_x[12] = { 5.209e+15, 
-			      1.282e+16, 
-			      3.223e+16, 
-			      8.100e+16, 
-			      2.034e+17, 
-			      5.109e+17, 
-			      1.284e+18, 
-			      3.162e+18, 
-			      7.936e+18, 
-			      1.996e+19,
-			      4.924e+19,
-			      1.036e+20};
+  LogToLine(11, IceCube2017x);
+  LogToLine(11, IceCube2017y);
   
-  double newicecube_y[12]={ 2.871e-15,  
-			    1.377e-15,  
-			    8.155e-16,  
-			    4.424e-16,  
-			    2.159e-16,  
-			    1.036e-16,  
-			    5.819e-17,  
-			    3.047e-17,  
-			    1.315e-17,  
-			    8.506e-18, 
-			    5.798e-18, 
-			    5.516e-18 };
-
   for (int i=0; i<12; i++) {
-    newicecube_y[i] = newicecube_y[i];
+    IceCube2017y[i]*=2;
   }
   
-  // TGraph *g_Icecube = new TGraph( 17, Icecube_x, Icecube_y );
-  TGraph *g_Icecube = new TGraph( 12, newicecube_x, newicecube_y );
+  TGraph *g_Icecube = new TGraph( 11, IceCube2017x, IceCube2017y );
 
   g_Icecube->SetLineWidth(3);
   
