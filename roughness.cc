@@ -75,12 +75,13 @@ std::string Roughness::incAngle_asString(double T0){
 
 #ifdef USE_HEALPIX
 
-//  map from path to map to pixel to TParl, Tperp 
-static std::map<std::string, std::map<int, std::pair<double,double> > >lower_cache; 
-static std::map<std::string, std::map<int, std::pair<double,double> > >upper_cache; 
+//  map from path to map to pixel to TParl, Tperp for each polarization
+static std::map<std::string, std::map<int, std::pair<double,double> > >lower_cache_polperp;
+//
+static std::map<std::string, std::map<int, std::pair<double,double> > >lower_cache_polparl;
 
 
-void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, double T0, double T, double A){
+void Roughness::InterpolatePowerValue(double &tcoeff_perp_polperp, double &tcoeff_parl_polperp, double &tcoeff_perp_polparl, double &tcoeff_parl_polparl, double T0, double T, double A){
   // tcoeff_* are the transmission coefficients which will be copied by address for use in icemc.cc's main function
   // T0 [degrees] is the incident angle of the ray-in-ice with respect to the surface normal
   // T [degrees] is the exiting angle from the surface towards the balloon, measured with respect to the surface normal
@@ -89,12 +90,12 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
   // in the new implementation, we will use HEALPix look-up tables and average the values for the incidence angle tables that bracket the T0 value (floor and ceil)
 
   pointing ptg;
-  int pixel, thispixel_up, thispixel_low;
-  double ptheta, pphi, Tparl, Tperp;  // temporary values while reading file
+  int pixel, thispixel_low;
+  // temporary values while reading file
+  double ptheta, pphi;
+  double Tparl_polperp, Tperp_polperp;
+  double Tparl_polparl, Tperp_polparl;
   double T0_i;
-
-  double Tparl_down, Tperp_down, Tparl_up, Tperp_up;
-  Tparl_down = Tperp_down = Tparl_up = Tperp_up = 0.; //default to zeros in case entry isn't present in file
 
   std::string header;
   std::string base_rough_file_str="";
@@ -102,14 +103,16 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
   std::string full_rough_file_lower;
   std::string full_rough_file_upper;
 
-  tk::spline spl_parl, spl_perp;
-  std::vector<double> X, Yperp, Yparl; // here X-> transmitted angle, Y-> T**2 entry
+  std::vector<double> X, Yperp_polparl, Yparl_polparl, Yperp_polperp, Yparl_polperp; // here X-> transmitted angle, Y-> T**2 entry
 
+  tk::spline spl_parl_polparl, spl_perp_polparl, spl_parl_polperp, spl_perp_polperp;
+
+  // Here is the header info from the table generation code:
+  // ## pixel  azimuth   hpx_theta   P_polparl_parl   P_polparl_perp   P_polperp_parl   P_polperp_perp
 
   for (double i=0; i<90; i+=.1){         // loop over incidence angle tables to read entries
     base_rough_file_str = "/data/roughness_tables/"+roughmaterial_str+"/"+roughscale_str+"/combined_inc"+incAngle_asString((double)i)+"_nsims"+roughnsims_str+"_hp"+Form("%i",H.Nside())+"_beckmann.hpx";
     full_rough_file_lower = rough_dir_str + base_rough_file_str;
-    //std::cerr<<full_rough_file_lower<<"  :  "<<lower_cache.count(full_rough_file_lower)<<std::endl;
 
     T0_i = asin(NINDEX * sin(i*PI/180.))*180./PI;
 
@@ -118,7 +121,7 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
       thispixel_low = H.ang2pix( ptg );
       //std::cerr<<T<<"  "<<thispixel_low<< std::endl;
       //
-      if (!lower_cache.count(full_rough_file_lower)){
+      if (!lower_cache_polperp.count(full_rough_file_lower)){
         //std::cerr<<"Not in cache"<<std::endl;
         ifs.open (full_rough_file_lower, std::ifstream::in);
         //std::cerr<<ifs.good()<<std::endl;
@@ -126,40 +129,53 @@ void Roughness::InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, 
         {
           //would be more efficient to use std::emplace, but meh
           //also, could use a std::array for inner part but that requires a b tmore logic 
-          std::map<int, std::pair<double,double> > this_lower; 
+          std::map<int, std::pair<double,double> > this_lower_polperp;
+          std::map<int, std::pair<double,double> > this_lower_polparl;
           std::getline(ifs, header);
           while (ifs.good()) {
-            ifs >> pixel >> pphi >> ptheta >> Tparl >> Tperp;
+            ifs >> pixel >> pphi >> ptheta >> Tparl_polparl >> Tperp_polparl >> Tparl_polperp >> Tperp_polperp;
             //std::cerr<<pphi<<"  "<<ptheta<<"  "<<Tparl<<"  "<<Tperp<<std::endl;
-            if (Tparl < 0) Tparl = 0; 
-            if (Tperp < 0) Tperp = 0; 
+            if (Tparl_polparl < 0) Tparl_polparl = 0; 
+            if (Tperp_polparl < 0) Tperp_polparl = 0; 
+            if (Tparl_polperp < 0) Tparl_polperp = 0; 
+            if (Tperp_polperp < 0) Tperp_polperp = 0; 
             //std::cerr<<Tparl<<"  "<<Tperp<<std::endl;
-            this_lower[pixel]=std::pair<double,double>(Tparl,Tperp); 
+            this_lower_polparl[pixel]=std::pair<double,double>(Tparl_polparl,Tperp_polparl);
+            this_lower_polperp[pixel]=std::pair<double,double>(Tparl_polperp,Tperp_polperp);
           }
-          lower_cache[full_rough_file_lower] = this_lower; 
+          lower_cache_polparl[full_rough_file_lower] = this_lower_polparl;
+          lower_cache_polperp[full_rough_file_lower] = this_lower_polperp;
         }
         ifs.close();
       }//end !lower_cache.count()
 
       //std::cerr<<i<<"  "<<lower_cache[full_rough_file_lower][thispixel_low].first<<"  "<<lower_cache[full_rough_file_lower][thispixel_low].second<<std::endl;
       X.push_back(T0_i);
-      Yparl.push_back( lower_cache[full_rough_file_lower][thispixel_low].first );
-      Yperp.push_back( lower_cache[full_rough_file_lower][thispixel_low].second );
+      Yparl_polparl.push_back( lower_cache_polparl[full_rough_file_lower][thispixel_low].first );
+      Yperp_polparl.push_back( lower_cache_polparl[full_rough_file_lower][thispixel_low].second );
+      Yparl_polperp.push_back( lower_cache_polperp[full_rough_file_lower][thispixel_low].first );
+      Yperp_polperp.push_back( lower_cache_polperp[full_rough_file_lower][thispixel_low].second );
     }//end !isnan(T)
   }//end for i loop
 
   X.push_back(90.);
-  Yparl.push_back( 0. );
-  Yperp.push_back( 0. );
+  Yparl_polparl.push_back( 0. );
+  Yperp_polparl.push_back( 0. );
+  Yparl_polperp.push_back( 0. );
+  Yperp_polperp.push_back( 0. );
 
   //std::cerr<<X.size()<<"  "<<Yparl.size()<<"  "<<Yperp.size()<<std::endl;
 
   if(X.size()>0){
-    spl_parl.set_points(X,Yparl);
-    spl_perp.set_points(X,Yperp);
+    spl_parl_polparl.set_points(X,Yparl_polparl);
+    spl_perp_polparl.set_points(X,Yperp_polparl);
+    spl_parl_polperp.set_points(X,Yparl_polperp);
+    spl_perp_polperp.set_points(X,Yperp_polperp);
 
-    tcoeff_parl = spl_parl(T);
-    tcoeff_perp = spl_perp(T);
+    tcoeff_perp_polperp = spl_perp_polperp(T);
+    tcoeff_parl_polperp = spl_parl_polperp(T);
+    tcoeff_perp_polparl = spl_perp_polparl(T);
+    tcoeff_parl_polparl = spl_parl_polparl(T);
   }
 
 };

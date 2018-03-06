@@ -230,20 +230,36 @@ double Screen::GetFacetLength(int i){
   return fFacetLength[i];
 };
 
-void Screen::AddTparallel(double A){
-  fTcoeff_parl.push_back(A);
+void Screen::AddTparallel_polParallel(double A){
+  fTcoeff_parl_polparl.push_back(A);
 };
 
-double Screen::GetTparallel(int i){
-  return fTcoeff_parl[i];
+double Screen::GetTparallel_polParallel(int i){
+  return fTcoeff_parl_polparl[i];
 };
 
-void Screen::AddTperpendicular(double A){
-  fTcoeff_perp.push_back(A);
+void Screen::AddTperpendicular_polParallel(double A){
+  fTcoeff_perp_polparl.push_back(A);
 };
 
-double Screen::GetTperpendicular(int i){
-  return fTcoeff_perp[i];
+double Screen::GetTperpendicular_polParallel(int i){
+  return fTcoeff_perp_polparl[i];
+};
+
+void Screen::AddTparallel_polPerpendicular(double A){
+  fTcoeff_parl_polperp.push_back(A);
+};
+
+double Screen::GetTparallel_polPerpendicular(int i){
+  return fTcoeff_parl_polperp[i];
+};
+
+void Screen::AddTperpendicular_polPerpendicular(double A){
+  fTcoeff_perp_polperp.push_back(A);
+};
+
+double Screen::GetTperpendicular_polPerpendicular(int i){
+  return fTcoeff_perp_polperp[i];
 };
 
 void Screen::ResetParameters(){
@@ -270,7 +286,9 @@ void Screen::ResetParameters(){
   fIncAngles.clear();
   fTransAngles.clear();
   fFacetLength.clear();
-  fTcoeff_parl.clear();
-  fTcoeff_perp.clear();
+  fTcoeff_parl_polparl.clear();
+  fTcoeff_perp_polparl.clear();
+  fTcoeff_parl_polperp.clear();
+  fTcoeff_perp_polperp.clear();
 };
 

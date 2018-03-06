@@ -1,2 +1,2 @@
-## pixel  azimuth   hpx_theta   T2_parl   T2_perp
-17024  0.000  72.417  0.955627  0.561980
+## pixel  azimuth   hpx_theta   P_polparl_parl   P_polparl_perp   P_polperp_parl   P_polperp_perp
+17024  0.000  72.417  0.955627  0.000000  0.000000  0.561980

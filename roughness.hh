@@ -59,7 +59,7 @@ public:
   * @param A - transmitted azimuthal angle [degrees]
   * @return double  - fractional transmitted power
   */
-  void InterpolatePowerValue(double &tcoeff_perp, double &tcoeff_parl, double T0, double T, double A);
+  void InterpolatePowerValue(double &tcoeff_perp_polperp, double &tcoeff_parl_polperp, double &tcoeff_perp_polparl, double &tcoeff_parl_polparl, double T0, double T, double A);
 #endif
 
 };

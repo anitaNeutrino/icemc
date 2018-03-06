@@ -1521,7 +1521,7 @@ int main(int argc,  char **argv) {
 
     eventNumber=(UInt_t)(run_no)*NNU+inu;
 //cerr<<inu<<endl;
-//if( inu!=246) continue;
+//if( !((inu==246) || (inu==2579) || (inu==5522) || (inu==11235) || (inu==11815) || (inu==19723) || (inu==21264) || (inu==28442) || (inu==36789) || (inu==36894) || (inu==38424) || (inu==45829) || (inu==45880) || (inu==52929) || (inu==56821) || (inu==64933) || (inu==73569) || (inu==73707) || (inu==78717) || (inu==92717) || (inu==99750))  ) continue;
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
     TRandom3 r(eventNumber+7e8);
@@ -2222,9 +2222,11 @@ int main(int argc,  char **argv) {
         double azimuth_local;           // azimuthal angle between local surface normal and vector to balloon [radians]
         double theta_local;             // polar angle between local surface normal and vector to balloon [radians]
         double theta_0_local;                 //angle between local surface normal and incident direction [radians]
-        double tcoeff_perp, tcoeff_parl;
-        double power_perp, power_parl;
-        power_perp = power_parl = 0.;
+        double tcoeff_perp_polperp, tcoeff_parl_polperp;  //for perpendicular polarization (in-ground comp)
+        double tcoeff_perp_polparl, tcoeff_parl_polparl;  //for parallel polarization
+        double power_perp_polperp, power_parl_polperp;
+        double power_perp_polparl, power_parl_polparl;
+        power_perp_polperp = power_parl_polperp = power_perp_polparl = power_parl_polparl = 0.;
         double fresnel_r, mag_r;
 
         Vector npol_local_inc, npol_local_trans;
@@ -2280,7 +2282,8 @@ int main(int argc,  char **argv) {
   //cerr<<"+ seed point: "<<jj<<" / "<<panel1->GetNsamples()*panel1->GetNsamples()<<endl;
             Emag_local = vmmhz1m_max;
             taperfactor = fresnel_r = mag_r =  1.;
-            tcoeff_perp = tcoeff_parl = 0.;
+            tcoeff_perp_polparl = tcoeff_parl_polparl = 0.;
+            tcoeff_perp_polperp = tcoeff_parl_polperp = 0.;
             pos_projectedImpactPoint = panel1->GetPosition(ii, jj);        // this gets the new screen position
             vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_projectedImpactPoint[0], bn1->r_bn[1] - pos_projectedImpactPoint[1], bn1->r_bn[2] - pos_projectedImpactPoint[2] );
 
@@ -2330,22 +2333,26 @@ int main(int argc,  char **argv) {
             // Field Magnitude
   #ifdef USE_HEALPIX
             if (settings1->FIRN)
-              rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
+              rough1->InterpolatePowerValue(power_perp_polperp, power_parl_polperp, power_perp_polparl, power_parl_polparl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
             else
-              rough1->InterpolatePowerValue(power_perp, power_parl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
+              rough1->InterpolatePowerValue(power_perp_polperp, power_parl_polperp, power_perp_polparl, power_parl_polparl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
   #endif
 //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
-            if( (power_perp==0.)|(power_parl==0.) ){
+            if( (power_perp_polperp==0.)&(power_parl_polperp==0.)&(power_perp_polparl==0.)&(power_parl_polparl==0.) ){
               //continue;
             }
 //cerr<<"survived power cut"<<endl;
             if (settings1->FIRN){
-              tcoeff_perp = sqrt(power_perp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
-              tcoeff_parl = sqrt(power_parl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+              tcoeff_perp_polparl = sqrt(power_perp_polparl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+              tcoeff_parl_polparl = sqrt(power_parl_polparl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+              tcoeff_perp_polperp = sqrt(power_perp_polperp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+              tcoeff_parl_polperp = sqrt(power_parl_polperp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
             }
             else{
-              tcoeff_perp = sqrt(power_perp);//*NICE*cos(theta_0_local)*cos(theta_local));
-              tcoeff_parl = sqrt(power_parl);//*NICE*cos(theta_0_local)*cos(theta_local));
+              tcoeff_perp_polparl = sqrt(power_perp_polparl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+              tcoeff_parl_polparl = sqrt(power_parl_polparl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+              tcoeff_perp_polperp = sqrt(power_perp_polperp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+              tcoeff_parl_polperp = sqrt(power_parl_polperp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
             }
             //
 //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
@@ -2368,8 +2375,8 @@ int main(int argc,  char **argv) {
             pol_perp_inc = npol_local_inc * vec_inc_perp;
             pol_parl_inc = npol_local_inc * vec_inc_parl;
             //
-            pol_perp_trans = pol_perp_inc * tcoeff_perp;
-            pol_parl_trans = pol_parl_inc * tcoeff_parl;
+            pol_perp_trans = pol_perp_inc * tcoeff_perp_polperp + pol_parl_inc * tcoeff_perp_polparl;
+            pol_parl_trans = pol_parl_inc * tcoeff_parl_polparl + pol_perp_inc * tcoeff_parl_polperp;
             //
             vec_local_grnd_perp = (vec_localnormal.Cross(vec_pos_current_to_balloon)).Unit();
             vec_local_grnd_parl = (vec_pos_current_to_balloon.Cross(vec_local_grnd_perp)).Unit();
@@ -2405,8 +2412,10 @@ int main(int argc,  char **argv) {
             panel1->AddTransmissionAngle(theta_local);
             panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
             panel1->AddFacetLength(panel1->GetEdgeLength() / panel1->GetNsamples());
-            panel1->AddTparallel(tcoeff_parl);
-            panel1->AddTperpendicular(tcoeff_perp);
+            panel1->AddTparallel_polParallel(tcoeff_parl_polparl);
+            panel1->AddTperpendicular_polParallel(tcoeff_perp_polparl);
+            panel1->AddTparallel_polPerpendicular(tcoeff_parl_polperp);
+            panel1->AddTperpendicular_polPerpendicular(tcoeff_perp_polperp);
             //
   //cerr<<pos_current<<"  "
   //<<Emag_local<<"  "
@@ -2440,28 +2449,6 @@ int main(int argc,  char **argv) {
         for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
           vmmhz_max = Tools::dMax(vmmhz_max, panel1->GetVmmhz_freq(jj*Anita::NFREQ));
         }
-
-/*        if(vmmhz_max>0.){
-          stemp=string(outputdir.Data())+"/rough_groundvalues_"+nunum+".dat";
-          ofstream roughout(stemp.c_str());
-          roughout << std::setprecision(20);
-          for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
-            roughout << inu << "  "
-            << panel1->GetImpactPt(jj).Lon() << "  "
-            << -90+panel1->GetImpactPt(jj).Lat() << "  "
-            << panel1->GetVmmhz0(jj) << "  "                  // PRE-taper vmmhz[0]
-            << panel1->GetVmmhz_freq(jj*Anita::NFREQ) << "  " // POST-taper vmmhz[0]
-            << panel1->GetDelay(jj) << "  "
-            << panel1->GetWeight(jj) << "  "
-            << panel1->GetPol(jj).Dot(vec_localnormal) << "  "
-            << panel1->GetIncidenceAngle(jj) << "  "
-            << panel1->GetTransmissionAngle(jj) << "  "
-            << panel1->GetFacetLength(jj) << "  "
-            << std::endl;
-          }
-          roughout.close();
-        }
-*/
       }//end else roughness
       // the screen is now finished
       /////////////////////////////
@@ -2708,8 +2695,11 @@ int main(int argc,  char **argv) {
         panel1->AddWeight( 1. );
         panel1->SetWeightNorm( 1. );
         panel1->AddFacetLength( 1. );
-        panel1->AddTparallel(t_coeff_pokey);
-        panel1->AddTperpendicular(t_coeff_slappy);
+        panel1->AddTparallel_polParallel(t_coeff_pokey);
+        panel1->AddTperpendicular_polPerpendicular(t_coeff_slappy);
+
+        panel1->AddTparallel_polPerpendicular(0.);
+        panel1->AddTperpendicular_polParallel(0.);
 
         for (int k=0;k<Anita::NFREQ;k++) {
           if (bn1->WHICHPATH==4)
@@ -2827,7 +2817,7 @@ int main(int argc,  char **argv) {
 
           ////// just some roughness output
           //if(settings1->ROUGHNESS){
-/*            if(vmmhz_max>0.){
+            if(vmmhz_max>0.){
               std::string stemp=string(outputdir.Data())+"/rough_signalwaveforms_"+nunum+".dat";
               ofstream sigout(stemp.c_str(), ios::app);
               for (int iband=0;iband<5;iband++) {
@@ -2847,7 +2837,7 @@ int main(int argc,  char **argv) {
               sigout.close();
             }
           //}
-*/          //////
+          //////
 
           chantrig1->DigitizerPath(settings1, anita1, antNum, bn1);
 
@@ -3114,7 +3104,7 @@ int main(int argc,  char **argv) {
           pieceofkm2sr=weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr/(double)NNU/len_int;
           if (h10->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST)
             h10->Fill(hitangle_e_all[0], weight);
-//cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<"   screenNpts="<<panel1->GetNvalidPoints()<< ":  vmmhz[0] = "<<panel1->GetVmmhz_freq(0)<<" : trans pol "<< panel1->GetPol(0)<<" : IncAngle "<<panel1->GetIncidenceAngle(0)*180./PI<< " : TransAngle "<<panel1->GetTransmissionAngle(0)*180./PI<<" : Tslappy "<<panel1->GetTperpendicular(0)<<" : Tpokey "<<panel1->GetTparallel(0)<< endl;
+cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<"   screenNpts="<<panel1->GetNvalidPoints()<< ":  vmmhz[0] = "<<panel1->GetVmmhz_freq(0)<<" : trans pol "<< panel1->GetPol(0)<<" : IncAngle "<<panel1->GetIncidenceAngle(0)*180./PI<< " : TransAngle "<<panel1->GetTransmissionAngle(0)*180./PI<<" : Tslappy "<<panel1->GetTperpendicular_polPerpendicular(0)<<" : Tpokey "<<panel1->GetTparallel_polParallel(0)<< endl;
 //cerr<<bn1->r_bn.Lat()<<"  "<<-90.+bn1->r_bn.Lat()<<endl;
 //cerr<<interaction1->posnu.Lon()<<"  "<<-90.+interaction1->posnu.Lat()<<endl;
 //cerr<<ray1->rfexit[2].Lon()<<"  "<<-90.+ray1->rfexit[2].Lat()<<endl;

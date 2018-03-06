@@ -44,8 +44,10 @@ private:
   std::vector<double> fTransAngles; ///< container for transmission angle
   double fWeightNorm;               ///< normalization of the weights == simple weight sum
   std::vector<double> fFacetLength; ///< edge length [m] of individual contributing facet
-  std::vector<double> fTcoeff_parl; ///< transmission coefficients of parallel components
-  std::vector<double> fTcoeff_perp; ///< transmission coefficients of perpendicular components
+  std::vector<double> fTcoeff_parl_polparl; ///< transmission coefficients of parallel components for parallel polarization
+  std::vector<double> fTcoeff_perp_polparl; ///< transmission coefficients of perpendicular components for parallel polarization
+  std::vector<double> fTcoeff_parl_polperp; ///< transmission coefficients of parallel components for perpendicular polarization
+  std::vector<double> fTcoeff_perp_polperp; ///< transmission coefficients of perpendicular components for perpendicular polarization
 
 public:
   //! Creates an instance of a screen
@@ -330,27 +332,53 @@ public:
   /**
   * @param A - coefficient
   */
-  void AddTparallel(double A);
+  void AddTparallel_polParallel(double A);
 
   //! Get the parallel transmission coefficient value stored at the specified index
   /**
   * @param i - index
   * @return double
   */
-  double GetTparallel(int i);
+  double GetTparallel_polParallel(int i);
 
   //! Appends a perpendicular transmission coefficient value to the fTcoeff_perp array
   /**
   * @param A - coefficient
   */
-  void AddTperpendicular(double A);
+  void AddTperpendicular_polParallel(double A);
 
   //! Get the perpendicular transmission coefficient value stored at the specified index
   /**
   * @param i - index
   * @return double
   */
-  double GetTperpendicular(int i);
+  double GetTperpendicular_polParallel(int i);
+
+  //! Appends a parallel transmission coefficient value to the fTcoeff_parl array
+  /**
+  * @param A - coefficient
+  */
+  void AddTparallel_polPerpendicular(double A);
+
+  //! Get the parallel transmission coefficient value stored at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
+  double GetTparallel_polPerpendicular(int i);
+
+  //! Appends a perpendicular transmission coefficient value to the fTcoeff_perp array
+  /**
+  * @param A - coefficient
+  */
+  void AddTperpendicular_polPerpendicular(double A);
+
+  //! Get the perpendicular transmission coefficient value stored at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
+  double GetTperpendicular_polPerpendicular(int i);
 
   //! Resets the following screen parameters (fNvalidpoints,fVmmhz_freq,fVmmhz0,fViewangle,fDelays,fVec2blns,fPols,fImpactPt,fWeight,fWeightNorm)
   void ResetParameters();
