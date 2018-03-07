@@ -8,10 +8,20 @@ Double_t ANITA_1_effArea[n_ANITA] = {3.13E-4,
 				     2.45E1,
 				     7.31E1,
 				     1.85E2};
+
 /* 1021.5 eV 4.30 × 102 km2 sr */
 /* 1022 eV 8.23 × 102 km2 sr */
 /* 1022.5 eV 1.41 × 103 km2 sr */
 /* 1023 eV 2.54 × 103 km2 sr */
+
+double ANITA_3_eff[n_ANITA] = { 0.84, 0.84, 0.84, 0.84, 0.84, 0.84, 0.84 };
+double ANITA_2_eff[n_ANITA] = { 0.67664 , 0.60748 , 0.60000 , 0.55701 , 0.47477, 0.40935 , 0.41495 };
+double ANITA_1_eff[n_ANITA] = { 0.62041 , 0.71429 , 0.75306 , 0.68571 , 0.64694, 0.50000 , 0.43878 };
+
+double ANITA_3_livetime = 17.4*24*3600.; // 17.4 days
+double ANITA_2_livetime = 28.5*24*3600.; 
+double ANITA_1_livetime = 17.4*24*3600.;
+
 
 // From ANITA-2 Erratum
 Double_t ANITA_2_effArea_published[n_ANITA] = {0.00043,
