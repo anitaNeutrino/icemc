@@ -545,7 +545,12 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   if (CONSTANTICETHICKNESS==1){
     std::cout << "Non-default setting:  CONSTANTICETHICKNESS= " << CONSTANTICETHICKNESS << std::endl;
   }
-
+  
+  getSetting("Fixed ice elevation", FIXEDELEVATION);
+  if (FIXEDELEVATION==1){
+    std::cout << "Non-default setting:  FIXEDELEVATION= " << FIXEDELEVATION << std::endl;
+  }
+  
   getSetting("Antarctic ice model", ICE_MODEL);
   if ((CONSTANTICETHICKNESS || FIXEDELEVATION) && ICE_MODEL != 0) {
     ICE_MODEL=0;
@@ -562,11 +567,6 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Flat surface", FLATSURFACE);
   if (FLATSURFACE==1){
     std::cout << "Non-default setting: all surface segments are flat." << std::endl;
-  }
-
-  getSetting("Fixed ice elevation", FIXEDELEVATION);
-  if (FIXEDELEVATION==1){
-    std::cout << "Non-default setting:  FIXEDELEVATION= " << FIXEDELEVATION << std::endl;
   }
 
   getSetting("Medium", medium);
