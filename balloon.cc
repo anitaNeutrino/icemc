@@ -789,7 +789,6 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
   double lon=0;
   double latfromSP=0;
   
-  
   if (settings1->UNBIASED_SELECTION==1) {
 
     if (antarctica1->PickUnbiased(interaction1,antarctica1)) { // pick neutrino direction and interaction point
@@ -807,6 +806,7 @@ else {
 
     if (!settings1->USEPOSITIONWEIGHTS) {
       interaction1->posnu=antarctica1->PickPosnuUniformlyinVolume();
+      if(antarctica1->IceThickness(interaction1->posnu.Lon(), interaction1->posnu.Lat())==0 ) interaction1->iceinteraction=0;
     }
 
     else if (WHICHPATH==3) { //Force interaction point if we want to make a banana plot
