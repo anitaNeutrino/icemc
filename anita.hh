@@ -422,8 +422,8 @@ public:
   double bwslice_rmsdiode[5]; // average rms diode output across noise waveforms in each band
   double bwslice_meandiode[5]; // mean diode output across all samples in a sample of noise waveforms generated for each band
   double bwslice_vrms[5]; // rms noise voltage for this bandwidth slice
-  double bwslice_dioderms_fullband_allchan[2][48][6]; // diode rms for noise read from flight
-  double bwslice_diodemean_fullband_allchan[2][48][6]; // diode rms for noise read from flight
+  double bwslice_dioderms_fullband_allchan[2][48][7]; // diode rms for noise read from flight last elements are tuffs
+  double bwslice_diodemean_fullband_allchan[2][48][7]; // diode rms for noise read from flight
   double freq_noise[5][NPOINTS_NOISE]; // frequency array that goes with vnoise array
 
 
@@ -591,15 +591,15 @@ public:
   double extraCableDelays[2][48];
   TRandom3 *fRand;
 #ifdef ANITA_UTIL_EXISTS
-  RFSignal *fSignalChainResponseDigitizerTuffs[2][3][16][6]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM------- 0:configA, 1:configB, 2:configC, 3:configG, 4:configO, 5:configP
-  RFSignal *fSignalChainResponseTriggerTuffs[2][3][16][6];  // same as for DigitizerTuffs
+  RFSignal *fSignalChainResponseDigitizerTuffs[2][3][16][7]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM------- 0:configA, 1:configB, 2:configC, 3:configG, 4:configO, 5:configP, 6:configK
+  RFSignal *fSignalChainResponseTriggerTuffs[2][3][16][7];  // same as for DigitizerTuffs
   void readImpulseResponseDigitizer(Settings *settings1);
   void readImpulseResponseTrigger(Settings *settings1);
   void readTuffResponseDigitizer(Settings *settings1);
   void readTuffResponseTrigger(Settings *settings1);
   void readTriggerEfficiencyScanPulser(Settings *settings1);
   void readNoiseFromFlight(Settings *settings1);
-  void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int tuffIndex);
+  void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int ituff);
   TGraph *RayleighFits[2][48];
   Int_t numFreqs;
   Double_t *freqs;
@@ -615,10 +615,10 @@ public:
   
   Double_t fTimes[HALFNFOUR];
   Double_t fSignalChainResponseA3DigitizerFreqDomain[2][3][16][400];
-  Double_t fSignalChainResponseDigitizerFreqDomain[2][3][16][6][400];
-  Double_t fSignalChainResponseTriggerFreqDomain[2][3][16][6][400];
-  Double_t fRatioTriggerToA3DigitizerFreqDomain[2][3][16][6][400];
-  Double_t fRatioDigitizerToA3DigitizerFreqDomain[2][3][16][6][400];
+  Double_t fSignalChainResponseDigitizerFreqDomain[2][3][16][7][400];
+  Double_t fSignalChainResponseTriggerFreqDomain[2][3][16][7][400];
+  Double_t fRatioTriggerToA3DigitizerFreqDomain[2][3][16][7][400];
+  Double_t fRatioDigitizerToA3DigitizerFreqDomain[2][3][16][7][400];
   Double_t deltaT;
 
   // Trigger efficiency scan parameters

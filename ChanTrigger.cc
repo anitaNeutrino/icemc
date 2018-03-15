@@ -1787,7 +1787,7 @@ void ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double 
 }
 
 void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
-
+//  std::cout << __FILE__ << " " << __FUNCTION__ << " " << __LINE__ << std::endl;
   Int_t numFreqs = anita1->numFreqs;
   FFTWComplex *phasorsDig  = new FFTWComplex[numFreqs];
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];

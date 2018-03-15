@@ -284,8 +284,12 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
 
   USEPHASES=0;
   ntuffs=1;
-  if (settings1->TUFFSON) ntuffs=6;
-  
+  if (settings1->WHICH==10 && settings1->TUFFSON){ 
+    ntuffs=6;
+    if(settings1->TRIGGEREFFSCAN){
+      ntuffs=7;
+    }
+  }
   for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
  
   for (int i=0;i<NFREQ;i++) {
@@ -4111,7 +4115,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
   // iphi is the antenna number
   // ituff is the notch directory
   TString filename;
-  string snotch_dir[6]={"notches_260_0_0","notches_260_375_0","notches_260_0_460","notches_260_385_0","notches_260_365_0","notches_260_375_460"};
+  string snotch_dir[7]={"notches_260_0_0","notches_260_375_0","notches_260_0_460","notches_260_385_0","notches_260_365_0","notches_260_375_460","notches_0_0_0"};
   string spol[2] = {"V","H"};
   string sring[3] = {"T","M","B"};
  // Set deltaT to be used in the convolution
@@ -4119,7 +4123,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
   for(int ipol=0; ipol<=1; ipol++) {
     for(int iring = 0; iring<=2; iring++){
       for(int iphi=0; iphi<=15; iphi++) {
-	for(int ituff=0; ituff <=5; ituff++) {
+	for(int ituff=0; ituff <=6; ituff++) {
 	  if(iphi+1 < 10) {
 	    filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s/0%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
 	  } 
@@ -4172,13 +4176,13 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 void Anita::readTuffResponseTrigger(Settings *settings1){
   // for loops to make the RFSignal array that can be used in applyImpulseResponseTrigger of ChanTrigger.cc Do we need one for each antenna???
   TString filename;
-  string snotch_dir[6]={"trigconfigA.imp","trigconfigB.imp","trigconfigC.imp","trigconfigG.imp","trigconfigO.imp","trigconfigP.imp"};
+  string snotch_dir[7]={"trigconfigA.imp","trigconfigB.imp","trigconfigC.imp","trigconfigG.imp","trigconfigO.imp","trigconfigP.imp","trigconfigK.imp"};
  // Set deltaT to be used in the convolution
   deltaT = 1./(2.6*16.);
   for(int ipol=0; ipol<=1; ipol++) {
     for(int iring = 0; iring<=2; iring++){
       for(int iphi=0; iphi<=15; iphi++) {
-        for(int ituff=0; ituff <=5; ituff++) {
+        for(int ituff=0; ituff <=6; ituff++) {
             filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str());
             //debugging
             //cout << Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str()) << endl;
