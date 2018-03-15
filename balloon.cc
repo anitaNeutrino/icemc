@@ -34,7 +34,7 @@ const string anitaflight=ICEMC_DATA_DIR+"/anitagps.txt";// gps path of anita fli
 
 
 Balloon::Balloon() {
-  volume_inanyhorizon=0.;
+  
   MAXHORIZON=800000.;                // pick the interaction within this distance from the balloon so that it is within the horizon
   ibnposition=0;
   igps=0;
