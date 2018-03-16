@@ -4393,9 +4393,9 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
       }
       *gPulseAtAmpa = TGraph(nPoints,newx,newy);
 // end change to ns
-      TCanvas *ctemp = new TCanvas("ctemp");
-      gPulseAtAmpa->Draw("AL");
-      ctemp->Print("pulse.png");
+//      TCanvas *ctemp = new TCanvas("ctemp");
+//      gPulseAtAmpa->Draw("AL");
+//      ctemp->Print("pulse.png");
       f->Close();
     }
     else{
@@ -4458,9 +4458,9 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
        
     }
 
-    TCanvas *ctemp2 = new TCanvas("ctemp2");
-    gPulseAtAmpa->Draw("AL");
-    ctemp2->Print("pulse_after_atten.png");
+//    TCanvas *ctemp2 = new TCanvas("ctemp2");
+//    gPulseAtAmpa->Draw("AL");
+//    ctemp2->Print("pulse_after_atten.png");
 
     // To get the correct interpolation we need to shift the waveform
     // We shift it by 8*(1/(2.6*16)) ns
@@ -4487,9 +4487,9 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
     if(settings1->WHICH==9){
       gPulseAtAmpa  = FFTtools::translateGraph(gPulseAtAmpa, 77.5721);
     }
-    TCanvas *ctemp1 = new TCanvas("ctemp1");
-    gPulseAtAmpa->Draw("AL");
-    ctemp1->Print("pulse_after_interp.png");
+//    TCanvas *ctemp1 = new TCanvas("ctemp1");
+//    gPulseAtAmpa->Draw("AL");
+//    ctemp1->Print("pulse_after_interp.png");
 
     delete gPulseAtAmpaInt;
     delete gtemp;
