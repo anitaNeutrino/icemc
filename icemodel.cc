@@ -5,6 +5,7 @@
 #include "Settings.h"
 #include "earthmodel.hh"
 #include "icemodel.hh"
+#include "Tools.h"
 
 
 #include "signal.hh"
@@ -54,8 +55,12 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
     yLowerLeft_water=-2500000;
     NODATA=-9999;
     
+    volume_inanyhorizon=0.;
+    avgvolume_inhorizon=0.;
     
-    
+    for (int i=0;i<NBNPOSITIONS_MAX;i++) {
+      volume_inhorizon[i]=0.;   
+    } 
     
     ice_model=model;
     DEPTH_DEPENDENT_N = (int) (model / 10);
@@ -998,13 +1003,13 @@ int IceModel::WestLand(const Position &pos) {
 }//WestLand
 
 double IceModel::GetBalloonPositionWeight(int ibnpos) {
-  //  cout << "ibnpos, volume_inhorizon, volume are " << ibnpos << " " << volume_inhorizon[ibnpos] << " " << volume << "\n";
+  //cout << "ibnpos, volume_inhorizon, volume are " << ibnpos << " " << volume_inhorizon[ibnpos] << " " << volume << "\n";
     if (volume_inhorizon[ibnpos]==0) {
 	cout << "volume in horizon is zero!\n";
 	exit(1);
     }
     
-    return volume/volume_inhorizon[ibnpos];
+    return avgvolume_inhorizon/volume_inhorizon[ibnpos];
 } //GetBalloonPositionWeight
 
 int IceModel::OutsideAntarctica(const Position &pos) {
@@ -1018,9 +1023,10 @@ int IceModel::OutsideAntarctica(double lat) {
 int IceModel::AcceptableRfexit(const Vector &nsurf_rfexit,const Position &rfexit,const Vector &n_exit2rx) {
     
     //Make sure there's actually ice where the ray leaves
+  //cout << "latitude, thickness are " << rfexit.Lon() << "\t" << rfexit.Lat() << "\t" << IceThickness(rfexit) << "\n";
     if (rfexit.Lat()>COASTLINE || IceThickness(rfexit)<0.0001) {
-	cout << "latitude is " << rfexit.Lat() << " compared to COASTLINE at " << COASTLINE << "\n";
-	cout << "ice thickness is " << IceThickness(rfexit) << "\n";
+      //cout << "latitude is " << rfexit.Lat() << " compared to COASTLINE at " << COASTLINE << "\n";
+      //cout << "ice thickness is " << IceThickness(rfexit) << "\n";
 	return 0;
 	
     } //if
@@ -1277,6 +1283,10 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
     //double r=0; // r,theta and phi are temporary variables
     double theta=0;
     double phi=0;
+
+    vector<int> ilat_inanyhorizon;
+    vector<int> ilon_inanyhorizon;
+
     int volume_found=0;
     char horizon_file[80];
     FILE *bedmap_horizons = new FILE();
@@ -1315,7 +1325,6 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	    if (phi_bn_temp<0) //correct phi_bn if it's negative
 		phi_bn_temp+=360.;
 	    phi_bn_temp*=RADDEG;// turn it into radians
-	    
 	    
 	    altitude_bn=bn1->altitude_bn_anitalite[i*100]*12.*CMINCH/100.; // get the altitude for this balloon posistion
 	    //altitude_bn=altitude_bn_anitalite[i*100]*12.*CMINCH/100.; // for anita, altitude in is meters
@@ -1364,7 +1373,10 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	  int ibinindex=0;
 	    for (int j=0;j<NLON;j++) { // loop over bins in longitude
 		for (int k=0;k<ILAT_COASTLINE;k++) { // loop over bins in latitude
-		  ibinindex++;
+		  
+		  ilat_inhorizon[i].push_back(k);
+		  ilon_inhorizon[i].push_back(j);
+
 		    // get position of each bin
 		    r_bin = Vector(sin(dGetTheta(k))*cos(dGetPhi(j))*(geoid[k]+surfacer[j][k]),
 				   sin(dGetTheta(k))*sin(dGetPhi(j))*(geoid[k]+surfacer[j][k]),
@@ -1385,31 +1397,45 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 		    //phi=dGetPhi(j);
 		    //theta=dGetTheta(k);
 		    
-		    //	  cout << "USEWEIGHTS is " << USEWEIGHTS << "\n";
-		    if ((settings1->USEPOSITIONWEIGHTS && r_bin.Distance(r_bn_temp)<bn1->MAXHORIZON)
-			|| !settings1->USEPOSITIONWEIGHTS) {
+		    if (r_bin.Distance(r_bn_temp)<bn1->MAXHORIZON) {
+		      if (ilon_inanyhorizon.size()!=0 && ilat_inanyhorizon.size()!=0) {
+			if (Tools::findLonLatPair(ilon_inanyhorizon,ilat_inanyhorizon,j,k)==-1) {
+			  
+			  volume_inanyhorizon+=icethkarray[j][k]*1000*area[k];
+			  //cout << "volume_inanyhorizon 1 is " << i << "\t" << j << "\t" << k << "\t" << volume_inanyhorizon << "\n";
+			  ilon_inanyhorizon.push_back(j);
+			  ilat_inanyhorizon.push_back(k);
+			}
+			
+		      }
+		      else {
+			//cout << "volume_inanyhorizon 2 is " << i << "\t" << j << "\t" << k << "\t" << volume_inanyhorizon << "\n";
+			volume_inanyhorizon+=icethkarray[j][k]*1000*area[k];
+			ilon_inanyhorizon.push_back(j);
+			ilat_inanyhorizon.push_back(k);
+		      }
+		    }
+		   
+		    //cout << "USEPOSITIONWEIGHTS is " << settings1->USEPOSITIONWEIGHTS << "\n";
+		    if (settings1->USEPOSITIONWEIGHTS && r_bin.Distance(r_bn_temp)<bn1->MAXHORIZON) {
+		
 			// then put this latitude and longitude in vector
-			
-			
-			ilat_inhorizon[i].push_back(k); 
-			ilon_inhorizon[i].push_back(j);
+						
 			// add up volume in horizon
-			
-			
+		      //cout << "volume_inhorizon is " << i << "\t" << volume_inhorizon[i] << "\n";
 			volume_inhorizon[i]+=icethkarray[j][k]*1000*area[k];
-			
-			
+		
 			// finding which bin in horizon has maximum volume
 			if (icethkarray[j][k]*1000*area[k]>maxvol_inhorizon[i]) {
 			    maxvol_inhorizon[i]=icethkarray[j][k]*1000.*area[k];
 			}
 		    } //end if (distance < 800 km)
 		    
-		    
+		  ibinindex++;  
 		} //end for (k loop)
 	    } //end for (j loop)   
 	    
-	    //      cout << "i, volume_inhorizon are " << i << " " << volume_inhorizon[i] << "\n";
+	    //	    cout << "i, volume_inhorizon are " << i << " " << volume_inhorizon[i] << "\n";
 	    
 	    // ifi the balloon is too close to the ice, it will think there aren't any
 	    // bins in the horizon, so force it the include the ones just below the balloon
@@ -1417,7 +1443,9 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	    GetILonILat(r_bn_temp,ilon_bn,ilat_bn); // find which longitude and latitude the balloon is above
 	    
 	    if (ilat_inhorizon[i].size()==0 || ilon_inhorizon[i].size()==0) {
-		maxvol_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // need to give it a maximum volume for a bin in horizon 
+		maxvol_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // need to give it a maximum volume for a bin in horizon
+		if (i==232)
+		  cout << "volume_inhorizon is " << volume_inhorizon[i] << "\n";
 		volume_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // and a total volume for the horizon
 	    }
 	    
@@ -1432,6 +1460,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 		volume_cdf[ibinindex]=volume_cdf[ibinindex]/volume;
 		//cout << "volume, volume_cdf is " << volume << "\t" << volume_cdf[ibinindex] << "\n";
 	      }
+
 	    }
 
 	} //end if (ice_model==0) Crust 2.0
@@ -1511,7 +1540,13 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	  volume_found=1;
 	} //if
     } //end loop over balloon positions
-    
+    cout << "getting avg volume.\n";
+    for (int i=0;i<NBALLOONPOSITIONS;i++) {
+      avgvolume_inhorizon+=volume_inhorizon[i];
+    }
+    avgvolume_inhorizon=avgvolume_inhorizon/(double)NBALLOONPOSITIONS;
+    cout << "avgvolume_inhorizon is " << avgvolume_inhorizon << "\n";
+
     // finding average volume in horizon over all balloon positions.
     volume_inhorizon_average=0;
     

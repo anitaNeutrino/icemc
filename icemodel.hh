@@ -23,8 +23,6 @@ using std::ofstream;
 using std::vector;
 using std::string;
 
-
-
 //Variables for conversion between BEDMAP polar stereographic coordinates and lat/lon.  Conversion equations from ftp://164.214.2.65/pub/gig/tm8358.2/TM8358_2.pdf
 const double scale_factor=0.97276901289;  //scale factor at pole corresponding to 71 deg S latitude of true scale (used in BEDMAP)
 const double ellipsoid_inv_f = 298.257223563; //of Earth
@@ -83,7 +81,9 @@ int NODATA;
 			double& lat);
 
   const static int NBNPOSITIONS_MAX=26000;
+  double volume_inanyhorizon;
   double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
+  double avgvolume_inhorizon;
   IceModel(int model=0,int earth_mode=0,int WEIGHTABSORPTION_SETTING=1);
  
   double IceThickness(double lon,double lat);

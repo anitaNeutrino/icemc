@@ -930,13 +930,14 @@ Vector EarthModel::PickPosnuUniformlyinVolume(){
   int whichbin=0;
   
   for (ibinindex=0;ibinindex<BININDEX;ibinindex++) {
-    //cout << "ibinindex, rnd3, volume_cdf are " << ibinindex << "\t" << rnd3 << "\t" << volume_cdf[ibinindex] << "\n";
+    //    cout << "ibinindex, rnd3, volume_cdf are " << ibinindex << "\t" << rnd3 << "\t" << volume_cdf[ibinindex] << "\n";
     if (rnd3<volume_cdf[ibinindex]) {
       whichbin=ibinindex;
       ibinindex=BININDEX;
     }
   }
   //  cout << "chosen ibinindex is " << whichbin << "\n";
+  //cout << "next volume was " << volume_cdf[whichbin+1] << "\n";
   int ilon_tmp,ilat_tmp;
   double theta_tmp,phi_tmp;
   convertBinIndextoIlonIlat(whichbin,ilon_tmp,ilat_tmp);
@@ -946,6 +947,9 @@ Vector EarthModel::PickPosnuUniformlyinVolume(){
 
   phi_tmp=SmearPhi(ilon_tmp, gRandom->Rndm());
   theta_tmp=SmearTheta(ilat_tmp, gRandom->Rndm());
+
+  //cout << "picking posnu at phi, theta of " << phi_tmp << "\t" << theta_tmp << "\n";
+
   double lat_tmp= GetLat(theta_tmp) ;
   double lon_tmp= GetLon(phi_tmp) ;
   //cout << "picked interaction with lon, lat " << lon_tmp << "\t" << lat_tmp << "\n";

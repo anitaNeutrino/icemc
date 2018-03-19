@@ -120,6 +120,8 @@ SATBINARIES = satellites$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) tes
 
 TESTKOTERABINARIES = testkotera$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testWAIS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
 
+STEVENANDDAVEBINARIES = forstevenanddave$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testWAIS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
+
 #------------------------------------------------------------------------------
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf)
@@ -128,6 +130,7 @@ all:            $(BINARIES)
 allstau:      	$(STAUBINARIES)
 allsat:      	$(SATBINARIES)
 testkotera:	$(TESTKOTERABINARIES)
+stevenanddave:	$(STEVENANDDAVEBINARIES)
 
 $(BINARIES): %: %.$(SrcSuf) $(OBJS)
 		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $< $(LIBS) $(OutPutOpt) $@
@@ -142,6 +145,10 @@ $(SATBINARIES): %: %.$(SrcSuf) $(OBJS)
 		@echo "$@ done"
 
 $(TESTKOTERABINARIES): %: %.$(SrcSuf) $(OBJS)
+		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $< $(OutPutOpt) $@
+		@echo "$@ done"
+
+$(STEVENANDDAVEBINARIES): %: %.$(SrcSuf) $(OBJS)
 		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $< $(OutPutOpt) $@
 		@echo "$@ done"
 

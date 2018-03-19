@@ -617,10 +617,13 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     
   ibnposition=Getibnposition();
     
-  if ((!settings1->UNBIASED_SELECTION || !settings1->USEPOSITIONWEIGHTS) && dtryingposition!=-999)
+
+  if (settings1->UNBIASED_SELECTION || settings1->USEPOSITIONWEIGHTS) {
     dtryingposition=antarctica1->GetBalloonPositionWeight(ibnposition);
+  }
   else
     dtryingposition=1.;
+ 
     
   phi_spin=GetBalloonSpin(heading); // get the azimuth of the balloon.
     

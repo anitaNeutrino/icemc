@@ -41,6 +41,7 @@ namespace Tools {
     double dMax(double,double);
     double dMax(const double*,int);
     double dvMax(const vector<double>);
+    int findLonLatPair(vector<int>,vector<int>,int,int);
     double dsMax(TSpline5 *sp);
     double dMin(const double*,int);
     double dMinNotZero(const double*,int);

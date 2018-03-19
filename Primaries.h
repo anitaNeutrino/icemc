@@ -202,7 +202,7 @@ public:
     double chord_kgm2_ice; //!< from ice entrance to interaction point
     double d1;  //!<same as chord in m (earth entrance to rock-ice boundary)
     double d2;  //!< ice-rock boundary to interaction point in m
-    
+    double ice_pathlength;  //!< length of trajectory that is in the ice
     
     static constexpr double pnu_banana=2.00E19;
     static constexpr double banana_y=0.2;//!<Elasticity.  0.2 is an average number.

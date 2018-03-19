@@ -432,7 +432,7 @@ void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  S
 
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double, double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
 
 void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  string,  string,  double,  ofstream &nu_out);
 
@@ -702,6 +702,7 @@ int main(int argc,  char **argv) {
   int currentint2=interaction1->currentint;
   double d12=interaction1->d1;
   double d22=interaction1->d2;
+  double ice_pathlength=interaction1->ice_pathlength;
   double dtryingdirection2=interaction1->dtryingdirection;
   double logchord2=interaction1->logchord;
   double r_fromballoon2=interaction1->r_fromballoon[0];
@@ -1030,7 +1031,7 @@ int main(int argc,  char **argv) {
   finaltree->Branch("e_component", &e_component, "e_component/D");
   finaltree->Branch("h_component", &h_component, "h_component/D");
   finaltree->Branch("dist_int_bn_2d", &dist_int_bn_2d, "dist_int_bn_2d/D");
-  finaltree->Branch("d1", &d12, "d1/D");
+  finaltree->Branch("ice_pathlength", &ice_pathlength, "ice_pathlength/D");
 
   finaltree->Branch("cosalpha", &cosalpha, "cosalpha/D");
   finaltree->Branch("mytheta", &mytheta, "mytheta/D");
@@ -1195,6 +1196,8 @@ int main(int argc,  char **argv) {
   tree11->Branch("loctrig11", &loctrig[1][1], "loctrig1/D");
   tree11->Branch("loctrig21", &loctrig[2][1], "loctrig1/D");
   tree11->Branch("loctrig_nadironly1", &loctrig_nadironly[1], "loctrig0/D");
+  //tree11->Branch("horizcoord", &horizcoord, "horizcoord/D");
+  //tree11->Branch("vertcoord", &vertcoord, "vertcoord/D");
 
   TTree *tree16 = new TTree("h16000", "h16000");
   tree16->Branch("pnu", &pnu, "pnu/D");
@@ -1250,7 +1253,8 @@ int main(int argc,  char **argv) {
   tree1->Branch("bn1->igps", &bn1->igps, "bn1->igps/I");
   tree1->Branch("theta_in", &theta_in, "theta_in/D");
   tree1->Branch("phi_in", &phi_in, "phi_in/D");
-  
+  tree1->Branch("ice_pathlength", &ice_pathlength, "ice_pathlength/D");
+
   // set up balloontree
 
   TTree *balloontree = new TTree("balloon", "balloon"); //filled for all events
@@ -1518,6 +1522,8 @@ int main(int argc,  char **argv) {
   // begin looping over NNU neutrinos doing the things
   for (inu = 0; inu < NNU; inu++) {
 
+    //    cout << "inbpos, volume_inhorizon, volume are " << 232 << "\t" << antarctica->volume_inhorizon[232] << antarctica->volume << "\n";
+
     if (NNU >= 100) {
       if (inu % (NNU / 100) == 0)
         cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
@@ -1624,6 +1630,7 @@ int main(int argc,  char **argv) {
         tautrigger=0;
 
       bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon);
+
 
       if (interaction1->noway && !settings1->SKIP_CONTINUES)
         continue;
@@ -2021,6 +2028,7 @@ int main(int argc,  char **argv) {
       // d2=rock-ice interface to position of neutrino interaction
       interaction1->d1=interaction1->r_enterice.Distance(interaction1->r_in);
       interaction1->d2=interaction1->r_enterice.Distance(interaction1->posnu);
+      
 
 
       // get a lower limit on the chord that the neutrino traverses,
@@ -3037,6 +3045,8 @@ int main(int argc,  char **argv) {
         interaction1->weight_nu_prob = -1.;
       }
 
+     
+
       if(tauweighttrigger==1)
         weight1=interaction1->weight_nu_prob + taus1->weight_tau_prob;
       else
@@ -3127,6 +3137,7 @@ int main(int argc,  char **argv) {
           else
             weight_prob=interaction1->weight_nu_prob;
 
+	  cout << "weight_nu_prob, weight_nu are " << interaction1->weight_nu_prob << "\t" << interaction1->weight_nu << "\n";
           weight1=interaction1->weight_nu;
           weight=weight1/interaction1->dnutries*settings1->SIGMA_FACTOR;
           weight_prob=weight_prob/interaction1->dnutries*settings1->SIGMA_FACTOR;
@@ -3288,6 +3299,9 @@ int main(int argc,  char **argv) {
               currentint2=interaction1->currentint;
               d12=interaction1->d1;
               d22=interaction1->d2;
+	      interaction1->ice_pathlength=interaction1->nuexitice.Distance(interaction1->r_enterice);
+	      
+	      ice_pathlength=interaction1->ice_pathlength;
               dtryingdirection2=interaction1->dtryingdirection;
               logchord2=interaction1->logchord;
               r_fromballoon2=interaction1->r_fromballoon[0];
@@ -3755,9 +3769,8 @@ int main(int argc,  char **argv) {
   cout << "Filling summarytree.  rms_rfcm_e is " << rms_rfcm_e << "\n";
   summarytree->Fill();
 
-
-  // maks the output file
-  Summarize(settings1, anita1, count1, spectra1, sig1, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb, sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, foutput, distanceout, outputdir);
+  // make the output file
+  Summarize(settings1, anita1, count1, spectra1, sig1, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb, sigma, sum, antarctica->volume, antarctica->volume_inanyhorizon,antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, foutput, distanceout, outputdir);
 
   veff_out << settings1->EXPONENT << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << settings1->SIGMA_FACTOR << endl;//this is for my convenience
 
@@ -3836,7 +3849,7 @@ void WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double a
 //end WriteNeutrinoInfo()
 
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, Signal *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir) {
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, Signal *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double volume_inanyhorizon,double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir) {
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
   double errordown_v_thresh[NTHRESHOLDS];
@@ -3934,8 +3947,12 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   cout << "Number of (weighted) neutrinos that pass both pol triggers is: " << allcuts_weighted_polarization[2] << "\n\n";
 
   foutput << "Volume of ice is " << volume << "\n";
+  foutput << "Volume of ice is in any horizon is " << volume_inanyhorizon<< "\n";
   foutput << "Value of 4*pi*pi*r_earth*r_earth in km^2 " << 4*PI*PI*(EarthModel::R_EARTH*EarthModel::R_EARTH/1.E6) << "\n";
 
+
+  if (settings1->USEPOSITIONWEIGHTS==1)
+    volume=volume_inanyhorizon;
 
   // single event sensitivity for 150 MHz array per year
   //  everything is normalized to the active volume
@@ -4021,6 +4038,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     error_distance_minus[j]=sqrt(error_distance_minus[j]);
   }
 
+  
 
   // account for efficiency
   if (NNU != 0 && nevents!=0) {

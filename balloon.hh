@@ -37,7 +37,7 @@ private:
 public:
   Balloon();
 
-  
+
   // GPS positions of Anita-lite balloon flight
   int igps;                                                                  ///< which balloon position do we use out of the 25000 anitalite GPS positions.
   int ibnposition;

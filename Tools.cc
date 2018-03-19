@@ -597,7 +597,20 @@ void Tools::reverseTimeOrdering(const int n, int* bitsin,int *bitsout) {
         bitsout[i]=bitsin[i];
     }
 }
+int Tools::findLonLatPair(vector<int> ilon,vector<int> ilat,int ilon_tofind, int ilat_tofind) {
+  
+  int foundone=0.;
+  for (int i=0;i<ilon.size();i++) {
+   
+    if (ilon_tofind==ilon[i] && ilat_tofind==ilat[i]) {
+      foundone++;
+      return i;
+    }
+  }
+  if (foundone==0)
+    return -1;
 
+}
 
 int Tools::findIndex(double *freqlab,double freq,int npoints,double min,double max) {
     

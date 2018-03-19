@@ -52,6 +52,7 @@ public:
   // = {1.2e13,(EarthModel::R_EARTH-4.0E4)*(EarthModel::R_EARTH-4.0E4),EarthModel::R_EARTH*EarthModel::R_EARTH}; // average radii of boundaries between earth layers
 
   double volume; // sums the volume of medium (ice or salt)
+  
   double ice_area; // sums the area of the earth's surface that has antarctic ice underneath
   double max_icevol_perbin; // maximum ice volume in any bin
   double max_icethk_perbin;
