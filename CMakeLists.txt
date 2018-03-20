@@ -15,7 +15,7 @@ find_package(ROOT REQUIRED COMPONENTS MathMore MathCore RIO Hist Tree Net)
 message("ROOT_VERSION is set to ${ROOT_VERSION}")
 include(${ROOT_USE_FILE})
 
-include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include)
 
 message("cmake_cxx_flags = ${CMAKE_CXX_FLAGS}")
 
@@ -51,10 +51,14 @@ set(CLASS_HEADERS rx.hpp Taumodel.hh Settings.h)
 ROOT_GENERATE_DICTIONARY(${DICT} ${CLASS_HEADERS} LINKDEF LinkDef.h)
 FILE (GLOB SOURCE_FILES "*.cc") 
 
-SET(SOURCES vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
-  ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc
-  counting.cc Settings.cc Taumodel.cc screen.cc GlobalTrigger.cc
-  ChanTrigger.cc SimulatedSignal.cc EnvironmentVariable.cc)
+#SET(SOURCES vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
+#  ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc
+#  counting.cc Settings.cc Taumodel.cc screen.cc GlobalTrigger.cc
+#  ChanTrigger.cc SimulatedSignal.cc EnvironmentVariable.cc)
+SET(SOURCES src/vector.cc src/position.cc src/earthmodel.cc src/balloon.cc src/icemodel.cc
+  src/signal.cc src/ray.cc src/Spectra.cc src/anita.cc src/roughness.cc src/secondaries.cc
+  src/Primaries.cc src/Tools.cc src/counting.cc src/Settings.cc src/Taumodel.cc src/screen.cc
+  src/GlobalTrigger.cc src/ChanTrigger.cc src/SimulatedSignal.cc src/EnvironmentVariable.cc)
 
 
 if( ${ROOT_VERSION} VERSION_GREATER "5.99.99")
@@ -137,7 +141,7 @@ endif()
 add_library(icemc_objs STATIC ${SOURCES} ${DICT}.cxx) 
 
 macro(add_binary bin) 
-  add_executable(${bin} ${bin}.cc)
+  add_executable(${bin} test/${bin}.cc)
   target_link_libraries(${bin} icemc_objs ${LIBS})
 endmacro() 
 
