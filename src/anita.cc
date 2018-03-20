@@ -9,7 +9,7 @@
 #include "icemodel.hh"
 #include "TF1.h"
 
-#include "rx.hpp"
+#include "rx.h"
 #include "anita.hh"
 
 #include "ChanTrigger.h"

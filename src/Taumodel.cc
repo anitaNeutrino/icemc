@@ -42,6 +42,9 @@
 #include "TRotation.h"
 #include "TSpline.h"
 #include "Taumodel.hh"
+
+ClassImp(Taumodel);
+
 using std::cout;
 using std::stringstream;
 using std::setprecision;

@@ -5,7 +5,7 @@
 #define ICEMC_ANITA_HH
 
 
-#include "rx.hpp"
+#include "rx.h"
 #include <array>
 
 #ifdef ANITA_UTIL_EXISTS

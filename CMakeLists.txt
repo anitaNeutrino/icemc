@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.10)
 project(icemc)
+set(libname "IceMC")
 
 ### Site-specific options
 
@@ -10,12 +11,14 @@ option(ANITA3_EVENTREADER "Load ANITA3 EventReader" ON)
 
 ## ROOT 
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
+
 find_package(ROOT REQUIRED COMPONENTS MathMore MathCore RIO Hist Tree Net)
 
 message("ROOT_VERSION is set to ${ROOT_VERSION}")
 include(${ROOT_USE_FILE})
 
 include_directories(${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include)
+
 
 message("cmake_cxx_flags = ${CMAKE_CXX_FLAGS}")
 
@@ -43,22 +46,18 @@ endif()
 #endif()
 
 
-
-
-set(DICT classdict)
-set(CLASS_HEADERS rx.hpp Taumodel.hh Settings.h)
-
-ROOT_GENERATE_DICTIONARY(${DICT} ${CLASS_HEADERS} LINKDEF LinkDef.h)
-FILE (GLOB SOURCE_FILES "*.cc") 
+FILE (GLOB SOURCE_FILES "src/*.cc")
+FILE (GLOB INCLUDE_FILES "include/*h") 
 
 #SET(SOURCES vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
 #  ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc
 #  counting.cc Settings.cc Taumodel.cc screen.cc GlobalTrigger.cc
 #  ChanTrigger.cc SimulatedSignal.cc EnvironmentVariable.cc)
-SET(SOURCES src/vector.cc src/position.cc src/earthmodel.cc src/balloon.cc src/icemodel.cc
-  src/signal.cc src/ray.cc src/Spectra.cc src/anita.cc src/roughness.cc src/secondaries.cc
-  src/Primaries.cc src/Tools.cc src/counting.cc src/Settings.cc src/Taumodel.cc src/screen.cc
-  src/GlobalTrigger.cc src/ChanTrigger.cc src/SimulatedSignal.cc src/EnvironmentVariable.cc)
+#SET(SOURCES src/vector.cc src/position.cc src/earthmodel.cc src/balloon.cc src/icemodel.cc
+#  src/signal.cc src/ray.cc src/Spectra.cc src/anita.cc src/roughness.cc src/secondaries.cc
+#  src/Primaries.cc src/Tools.cc src/counting.cc src/Settings.cc src/Taumodel.cc src/screen.cc
+#  src/GlobalTrigger.cc src/ChanTrigger.cc src/SimulatedSignal.cc src/EnvironmentVariable.cc
+#  src/IcemcRootOutput.cc)
 
 
 if( ${ROOT_VERSION} VERSION_GREATER "5.99.99")
@@ -137,12 +136,26 @@ endif()
 
 
 ##We need to compile stuff into a library unless we want it to be compiled a
-##million times over 
-add_library(icemc_objs STATIC ${SOURCES} ${DICT}.cxx) 
+##million times over
+#add_library(${libname} SHARED ${SOURCE} ${DICTNAME}.cxx)
+
+#add_library(icemc_objs STATIC ${SOURCES} ${DICT}.cxx)
+#target_link_libraries(${libname} ${ZLIB_LIBRARIES} ${ROOT_LIBRARIES})
+
+
+set(DICTNAME G__${libname})
+ROOT_GENERATE_DICTIONARY(${DICTNAME} rx.h Taumodel.hh Settings.h IcemcRootOutput.h LINKDEF LinkDef.h)
+
+
+#---Create a shared library with geneated dictionary
+add_library(${libname} SHARED ${SOURCE_FILES} ${DICTNAME}.cxx)
+target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
+
 
 macro(add_binary bin) 
   add_executable(${bin} test/${bin}.cc)
-  target_link_libraries(${bin} icemc_objs ${LIBS})
+  #target_link_libraries(${bin} icemc_objs ${LIBS})
+  target_link_libraries(${bin} ${LIBS} ${libname})
 endmacro() 
 
 add_binary(icemc)

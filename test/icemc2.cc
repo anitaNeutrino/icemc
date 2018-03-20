@@ -37,6 +37,7 @@
 #include "Math/InterpolationTypes.h"
 #include "Math/Interpolator.h"
 #include "signal.h"
+#include "IcemcRootOutput.h"
 #include <cmath>
 
 
@@ -433,8 +434,6 @@ bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_h
 void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
 
 void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  string,  string,  double,  ofstream &nu_out);
-
-void CloseTFile(TFile *hfile);
 
 int Getmine(double*,  double*,  double*,  double*);
 
@@ -850,15 +849,17 @@ int main(int argc,  char **argv) {
   TH1F *sampleweights=new TH1F("sampleweights",  "sampleweights",  100,  -5.,  0.);
 
   
-  stemp=string(outputdir.Data())+"/icefinal"+run_num+".root";
-  TFile *hfile = new TFile(stemp.c_str(), "RECREATE", "ice");
-  TTree *tree2 = new TTree("h2000", "h2000"); // tree2 filled for each event that is beyond the horizon.
+  // stemp=string(outputdir.Data())+"/icefinal"+run_num+".root";
+  // TFile *hfile = new TFile(stemp.c_str(), "RECREATE", "ice");
+  // TTree *tree2 = new TTree("h2000", "h2000"); // tree2 filled for each event that is beyond the horizon.
 
-  tree2->Branch("inu", &inu, "inu/I");
-  tree2->Branch("horizcoord", &horizcoord, "horizcoord/D");
-  tree2->Branch("vertcoord", &vertcoord, "vertcoord/D");
-  tree2->Branch("scalefactor_distance", &scalefactor_distance, "scalefactor_distance/D");
-  tree2->Branch("scalefactor_attenuation", &scalefactor_attenuation, "scalefactor_attenuation/D");
+  // tree2->Branch("inu", &inu, "inu/I");
+  // tree2->Branch("horizcoord", &horizcoord, "horizcoord/D");
+  // tree2->Branch("vertcoord", &vertcoord, "vertcoord/D");
+  // tree2->Branch("scalefactor_distance", &scalefactor_distance, "scalefactor_distance/D");
+  // tree2->Branch("scalefactor_attenuation", &scalefactor_attenuation, "scalefactor_attenuation/D");
+  icemc::RootOutput ro(outputdir, run_no);
+  ro.make_icefinal();
 
   TTree *tree3 = new TTree("h3000", "h3000"); // tree3 if signal is detectable.
   tree3->Branch("deltheta_em_max", &deltheta_em_max, "deltheta_em_max/D");
@@ -2545,8 +2546,10 @@ int main(int argc,  char **argv) {
       }
       // roughness attenuation already dealt with
       // fill for just 1/10 of the events.
-      if (tree2->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1 && bn1->WHICHPATH != 3)
+      TTree* tree2 = ro.fTree2;
+      if (tree2->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1 && bn1->WHICHPATH != 3){
         tree2->Fill();
+      }
 
       // intermediate counting
       count_dbexitsice++;
@@ -3776,8 +3779,7 @@ int main(int argc,  char **argv) {
   //tree17->Fill();
 
 
-  cout << "closing file.\n";
-  CloseTFile(hfile);
+  // cout << "closing file.\n";
 
   time_t raw_end_time = time(NULL);
   struct tm * end_time = localtime(&raw_end_time);

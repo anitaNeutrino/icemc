@@ -12,7 +12,7 @@
 #include "TMath.h"
 #include "TVector3.h"
 
-#include "rx.hpp"
+#include "rx.h"
 #include "Constants.h"
 #include "anita.hh"
 #include "balloon.hh"
