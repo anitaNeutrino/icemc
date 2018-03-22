@@ -502,10 +502,11 @@ int main(int argc,  char **argv) {
   int nnu_tmp=0;
   double exp_tmp=0;
   double trig_thresh=0.;
+  int startNu=0;
   TString outputdir;
   char clswitch; // command line switch
   if (argc>1) {
-    while ((clswitch = getopt(argc, argv, "t:i:o:r:n:e:")) != EOF) {
+    while ((clswitch = getopt(argc, argv, "t:i:o:r:n:e:x:")) != EOF) {
       switch(clswitch) {
       case 'n':
 	nnu_tmp=atoi(optarg);
@@ -528,6 +529,10 @@ int main(int argc,  char **argv) {
 	exp_tmp=atof(optarg);
 	cout << "Changed neutrino energy exponent to " << exp_tmp << endl;
 	break;
+      case 'x':
+	startNu=atoi(optarg);
+	cout << "Running icemc for just 1 event with eventNumber : " << startNu << endl;
+	break;
       case 'r':
         run_num=optarg;
         stringstream convert(run_num);
@@ -537,7 +542,10 @@ int main(int argc,  char **argv) {
     } // end while
   } // end if arg>1
 
-
+  if (startNu>0){
+    run_no = 0;
+    nnu_tmp = startNu+1;
+  }
   settings1->SEED=settings1->SEED +run_no;
   cout <<"seed is " << settings1->SEED << endl;
 
@@ -1510,7 +1518,7 @@ int main(int argc,  char **argv) {
   int antNum;
 
   // begin looping over NNU neutrinos doing the things
-  for (inu = 0; inu < NNU; inu++) {
+  for (inu = startNu; inu < NNU; inu++) {
 
     if (NNU >= 100) {
       if (inu % (NNU / 100) == 0)
@@ -2459,16 +2467,16 @@ int main(int argc,  char **argv) {
       
       // reject if the event is undetectable.
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
-      //if (!settings1->ROUGHNESS){
-        if(settings1->CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10.&& !settings1->SKIPCUTS) {
-          if (bn1->WHICHPATH==3)
-            cout<<"Event is undetectable.  Leaving loop."<<endl;
+      // if (!settings1->ROUGHNESS){
+      if(settings1->CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10.&& !settings1->SKIPCUTS) {
+	if (bn1->WHICHPATH==3)
+	  cout<<"Event is undetectable.  Leaving loop."<<endl;
 
-          continue;
-        }
-        count1->nchanceinhell_fresnel[whichray]++;
-      //} //end if CHANCEINHELL factor and SKIPCUTS
-      //
+	continue;
+      }
+      count1->nchanceinhell_fresnel[whichray]++;
+      // } //end if CHANCEINHELL factor and SKIPCUTS
+      
 
       // for plotting
       diffexit=ray1->rfexit[0].Distance(ray1->rfexit[1]);
