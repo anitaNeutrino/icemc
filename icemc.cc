@@ -2264,7 +2264,7 @@ int main(int argc,  char **argv) {
         panel1->ResetParameters();
 
         panel1->SetNsamples( grd_nsteps );
-        panel1->SetEdgeLength( basescreenedgelength );
+        panel1->SetEdgeLength( grd_stepsize );
 
         panel1->SetCentralPoint( ray1->rfexit[2] );
         vec_localnormal = antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit();
@@ -2375,8 +2375,8 @@ int main(int argc,  char **argv) {
             pol_perp_inc = npol_local_inc * vec_inc_perp;
             pol_parl_inc = npol_local_inc * vec_inc_parl;
             //
-            pol_perp_trans = pol_perp_inc * tcoeff_perp_polperp + pol_parl_inc * tcoeff_perp_polparl;
-            pol_parl_trans = pol_parl_inc * tcoeff_parl_polparl + pol_perp_inc * tcoeff_parl_polperp;
+            pol_perp_trans = pol_perp_inc * tcoeff_perp_polperp + pol_perp_inc * tcoeff_perp_polparl;
+            pol_parl_trans = pol_parl_inc * tcoeff_parl_polparl + pol_parl_inc * tcoeff_parl_polperp;
             //
             vec_local_grnd_perp = (vec_localnormal.Cross(vec_pos_current_to_balloon)).Unit();
             vec_local_grnd_parl = (vec_pos_current_to_balloon.Cross(vec_local_grnd_perp)).Unit();
