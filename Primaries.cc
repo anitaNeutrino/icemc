@@ -288,7 +288,7 @@ void Interaction::PickGrbDirection() {
   
   grb_tree.GetEntry(0);
 
-  cout << "GRB az and alt in degrees : " << grb_az << " " << grb_alt << "\n";    
+  cout << "<3<3<3<3<3<3<3<3<3  GRB az and alt in degrees : " << grb_az << " " << grb_alt << "\n";    
 
   // oindree -- setting cos of theta_nutraject (altitude) 
   costheta_nutraject = cos( ( grb_alt * ( PI/180. ) ) );

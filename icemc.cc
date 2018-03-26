@@ -619,7 +619,11 @@ int main(int argc,  char **argv) {
   Spectra *spectra1 = new Spectra((int)settings1->EXPONENT);
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
-  
+ 
+  //////////OINDREE TRYING THIS FOR GRBS/////////
+  ////////// could call PickGrbDirection() when SOURCE setting is true///////
+  if (settings1->SOURCE == 1) { interaction1->PickGrbDirection(); } 
+ 
   Roughness *rough1=new Roughness(settings1); // create new instance of the roughness class
   rough1->SetRoughScale(settings1->ROUGHSIZE);
 
