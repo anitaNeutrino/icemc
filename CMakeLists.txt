@@ -130,21 +130,12 @@ if (VECTORIZE)
       endif()
       add_definitions(  -fabi-version=0 ) 
   endif() 
-
-
 endif() 
 
 
-##We need to compile stuff into a library unless we want it to be compiled a
-##million times over
-#add_library(${libname} SHARED ${SOURCE} ${DICTNAME}.cxx)
-
-#add_library(icemc_objs STATIC ${SOURCES} ${DICT}.cxx)
-#target_link_libraries(${libname} ${ZLIB_LIBRARIES} ${ROOT_LIBRARIES})
-
-
+#We need to compile stuff into a library unless we want it to be compiled a million times over
 set(DICTNAME G__${libname})
-ROOT_GENERATE_DICTIONARY(${DICTNAME} rx.h Taumodel.hh Settings.h IcemcRootOutput.h LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(${DICTNAME} ${INCLUDE_FILES} LINKDEF LinkDef.h)
 
 
 #---Create a shared library with geneated dictionary

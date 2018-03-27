@@ -74,6 +74,28 @@
 
 #include <typeinfo>
 
+
+// hack hack hack
+using icemc::Signal;
+using icemc::EarthModel;
+using icemc::IceModel;
+using icemc::Counting;
+using icemc::Taumodel;
+using icemc::Ray;
+using icemc::Anita;
+using icemc::Balloon;
+using icemc::Settings;
+using icemc::Vector;
+using icemc::Position;
+using icemc::IceModel;
+using icemc::Primaries;
+using icemc::Secondaries;
+using icemc::Roughness;
+using icemc::Screen;
+using icemc::GlobalTrigger;
+using icemc::ChanTrigger;
+
+
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
 #include "AnitaGeomTool.h"
@@ -92,14 +114,9 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 
 Taumodel* TauPtr = NULL;
 
-const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
-
-ClassImp(RX);
+const string ICEMC_SRC_DIR = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 
 using namespace std;
-
-class EarthModel;
-class Position;
 
 /************MOVED FROM shared.hh and shared.cc*****************/
 // These need to be moved elsewhere.
@@ -573,16 +590,16 @@ int main(int argc,  char **argv) {
   cout << "Date and time at start of run are: " << asctime (start_time) << "\n";
 
   // zeroing global variables.
-  Tools::Zero(sum_frac, 3);
-  Tools::Zero(sum_frac_db, 3);
-  Tools::Zero(anita1->NRX_PHI, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(sum_frac, 3);
+  icemc::Tools::Zero(sum_frac_db, 3);
+  icemc::Tools::Zero(anita1->NRX_PHI, Anita::NLAYERS_MAX);
   for (int i=0;i<Anita::NLAYERS_MAX;i++) {
-    Tools::Zero(anita1->PHI_EACHLAYER[i], Anita::NPHI_MAX);
+    icemc::Tools::Zero(anita1->PHI_EACHLAYER[i], Anita::NPHI_MAX);
   }
-  Tools::Zero(anita1->PHI_OFFSET, Anita::NLAYERS_MAX);
-  Tools::Zero(anita1->THETA_ZENITH, Anita::NLAYERS_MAX);
-  Tools::Zero(anita1->LAYER_VPOSITION, Anita::NLAYERS_MAX);
-  Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->PHI_OFFSET, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->THETA_ZENITH, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->LAYER_VPOSITION, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
 
 
   // frequency binning
@@ -641,16 +658,16 @@ int main(int argc,  char **argv) {
 
   eventsfound=0.; // sums weights for events that pass
 
-  Tools::Zero(count1->npass, 2); // sums events that pass,  without weights
-  Tools::Zero(sum, 3);
+  icemc::Tools::Zero(count1->npass, 2); // sums events that pass,  without weights
+  icemc::Tools::Zero(sum, 3);
   eventsfound_db=0;
   eventsfound_nfb=0;
 
-  Tools::Zero(eventsfound_binned, NBINS);
-  Tools::Zero(eventsfound_binned_e, NBINS);
-  Tools::Zero(eventsfound_binned_mu, NBINS);
-  Tools::Zero(eventsfound_binned_tau, NBINS);
-  Tools::Zero(eventsfound_nfb_binned, NBINS);
+  icemc::Tools::Zero(eventsfound_binned, NBINS);
+  icemc::Tools::Zero(eventsfound_binned_e, NBINS);
+  icemc::Tools::Zero(eventsfound_binned_mu, NBINS);
+  icemc::Tools::Zero(eventsfound_binned_tau, NBINS);
+  icemc::Tools::Zero(eventsfound_nfb_binned, NBINS);
 
   //we pick both the interaction point and its corresponding mirror point
 
@@ -690,7 +707,7 @@ int main(int argc,  char **argv) {
   outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
-  TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
+  TString icemcgitversion = TString::Format("%s", icemc::EnvironmentVariable::ICEMC_VERSION(outputdir));  
   printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
   unsigned int timenow = time(NULL);
 

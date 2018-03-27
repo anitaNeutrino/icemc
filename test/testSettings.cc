@@ -31,16 +31,16 @@
 
 int main(){
 
-  Settings s;
+  icemc::Settings s;
 
 
   std::ofstream outputsFile("/tmp/outputs.txt");
 
-  Balloon *bn1=new Balloon(); // instance of the balloon
-  Anita *anita1=new Anita();// right now this constructor gets banding info
-  Secondaries *sec1=new Secondaries();
-  Signal *sig1=new Signal();
-  Ray *ray1=new Ray(); // create new instance of the ray class
+  icemc::Balloon *bn1 = new icemc::Balloon(); // instance of the balloon
+  icemc::Anita *anita1 = new icemc::Anita();// right now this constructor gets banding info
+  icemc::Secondaries *sec1 = new icemc::Secondaries();
+  icemc::Signal *sig1 = new icemc::Signal();
+  icemc::Ray *ray1 = new icemc::Ray(); // create new instance of the ray class
   // input parameters
   int NNU;
   double RANDOMISEPOL;

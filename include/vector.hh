@@ -21,6 +21,7 @@
 //#include <stdio.h>
 //#include <stdlib.h>
 
+
 namespace icemc {
 
   //! This class represents a three-vector.  Operators are overloaded to provide for the familiar operations of vector addition, subtraction, scalar multiplication and division, and the dot product.
@@ -83,7 +84,6 @@ namespace icemc {
       lhs/=a;
       return lhs;
     }
-    friend std::ostream& operator <<(std::ostream& outs, const Vector& vec);
 
     Vector(double x_inp,double y_inp,double z_inp);
     //Constructor: Initialize a new vector with given values of x, y, and z.
@@ -182,4 +182,7 @@ namespace icemc {
   static Vector z_axis = Vector(0,0,1);
 
 }
+
+std::ostream& operator <<(std::ostream& outs, const icemc::Vector& vec);
+
 #endif

@@ -90,16 +90,37 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 #endif
 #endif
 
+
+
+// hack hack hack
+using icemc::Signal;
+using icemc::EarthModel;
+using icemc::IceModel;
+using icemc::Counting;
+using icemc::Taumodel;
+using icemc::Ray;
+using icemc::Anita;
+using icemc::Balloon;
+using icemc::Settings;
+using icemc::Vector;
+using icemc::Position;
+using icemc::IceModel;
+using icemc::Primaries;
+using icemc::Secondaries;
+using icemc::Roughness;
+using icemc::Screen;
+using icemc::GlobalTrigger;
+using icemc::ChanTrigger;
+
+
+
 Taumodel* TauPtr = NULL;
 
-const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
+const string ICEMC_SRC_DIR = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 
-ClassImp(RX);
+// ClassImp(RX);
 
 using namespace std;
-
-class EarthModel;
-class Position;
 
 /************MOVED FROM shared.hh and shared.cc*****************/
 // These need to be moved elsewhere.
@@ -372,6 +393,7 @@ double justNoise_dig[2][48][512];
 double justSignal_dig[2][48][512];
 
 
+
 // functions
 
 // set up array of viewing angles for making plots for seckel
@@ -579,16 +601,16 @@ int main(int argc,  char **argv) {
   cout << "Date and time at start of run are: " << asctime (start_time) << "\n";
 
   // zeroing global variables.
-  Tools::Zero(sum_frac, 3);
-  Tools::Zero(sum_frac_db, 3);
-  Tools::Zero(anita1->NRX_PHI, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(sum_frac, 3);
+  icemc::Tools::Zero(sum_frac_db, 3);
+  icemc::Tools::Zero(anita1->NRX_PHI, Anita::NLAYERS_MAX);
   for (int i=0;i<Anita::NLAYERS_MAX;i++) {
-    Tools::Zero(anita1->PHI_EACHLAYER[i], Anita::NPHI_MAX);
+    icemc::Tools::Zero(anita1->PHI_EACHLAYER[i], Anita::NPHI_MAX);
   }
-  Tools::Zero(anita1->PHI_OFFSET, Anita::NLAYERS_MAX);
-  Tools::Zero(anita1->THETA_ZENITH, Anita::NLAYERS_MAX);
-  Tools::Zero(anita1->LAYER_VPOSITION, Anita::NLAYERS_MAX);
-  Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->PHI_OFFSET, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->THETA_ZENITH, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->LAYER_VPOSITION, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
 
 
   //added djg ////////////////////////////////////////////////////////
@@ -694,16 +716,16 @@ int main(int argc,  char **argv) {
 
   eventsfound=0.; // sums weights for events that pass
 
-  Tools::Zero(count1->npass, 2); // sums events that pass,  without weights
-  Tools::Zero(sum, 3);
+  icemc::Tools::Zero(count1->npass, 2); // sums events that pass,  without weights
+  icemc::Tools::Zero(sum, 3);
   eventsfound_db=0;
   eventsfound_nfb=0;
 
-  Tools::Zero(eventsfound_binned, NBINS);
-  Tools::Zero(eventsfound_binned_e, NBINS);
-  Tools::Zero(eventsfound_binned_mu, NBINS);
-  Tools::Zero(eventsfound_binned_tau, NBINS);
-  Tools::Zero(eventsfound_nfb_binned, NBINS);
+  icemc::Tools::Zero(eventsfound_binned, NBINS);
+  icemc::Tools::Zero(eventsfound_binned_e, NBINS);
+  icemc::Tools::Zero(eventsfound_binned_mu, NBINS);
+  icemc::Tools::Zero(eventsfound_binned_tau, NBINS);
+  icemc::Tools::Zero(eventsfound_nfb_binned, NBINS);
 
   //we pick both the interaction point and its corresponding mirror point
 
@@ -885,7 +907,7 @@ int main(int argc,  char **argv) {
   outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
-  TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
+  TString icemcgitversion = TString::Format("%s", icemc::EnvironmentVariable::ICEMC_VERSION(outputdir));  
   printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
   unsigned int timenow = time(NULL);
 
@@ -1038,8 +1060,8 @@ int main(int argc,  char **argv) {
     // make a global trigger object (but don't touch the electric fences)
     globaltrig1 = new GlobalTrigger(settings1, anita1);
 
-    Tools::Zero(anita1->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-    Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
+    icemc::Tools::Zero(anita1->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
+    icemc::Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
 
     anita1->calculateDelaysForEfficiencyScan();
     
@@ -1088,7 +1110,7 @@ int main(int argc,  char **argv) {
       nchannels_perrx_triggered[irx]=globaltrig1->nchannels_perrx_triggered[irx];
     }
 
-    nchannels_triggered=Tools::iSum(globaltrig1->nchannels_perrx_triggered, settings1->NANTENNAS); // find total number of antennas that were triggered.
+    nchannels_triggered=icemc::Tools::iSum(globaltrig1->nchannels_perrx_triggered, settings1->NANTENNAS); // find total number of antennas that were triggered.
     volts_rx_ave=GetAverageVoltageFromAntennasHit(settings1, globaltrig1->nchannels_perrx_triggered, voltagearray, volts_rx_sum);
 
    
@@ -1132,7 +1154,7 @@ int main(int argc,  char **argv) {
       anita1->passglobtrig[1]=thispasses[1];
 
       //calculate the phi angle wrt +x axis of the ray from exit to balloon
-      n_exit_phi = Tools::AbbyPhiCalc(ray1->n_exit2bn[2][0], ray1->n_exit2bn[2][1]);
+      n_exit_phi = icemc::Tools::AbbyPhiCalc(ray1->n_exit2bn[2][0], ray1->n_exit2bn[2][1]);
 
       // tags this event as passing
       passestrigger=1;
@@ -1285,14 +1307,14 @@ int main(int argc,  char **argv) {
 	int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
 	int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
 
-	truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(justSignal_trig[0][iant], justNoise_trig[0][iant]);
-	truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(justSignal_trig[1][iant], justNoise_trig[1][iant]);
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = icemc::Tools::calculateSNR(justSignal_trig[0][iant], justNoise_trig[0][iant]);
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = icemc::Tools::calculateSNR(justSignal_trig[1][iant], justNoise_trig[1][iant]);
 	      
 	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
 	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
 
-	truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = Tools::calculateSNR(justSignal_dig[0][iant], justNoise_dig[0][iant]);
-	truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = Tools::calculateSNR(justSignal_dig[1][iant], justNoise_dig[1][iant]);
+	truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = icemc::Tools::calculateSNR(justSignal_dig[0][iant], justNoise_dig[0][iant]);
+	truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = icemc::Tools::calculateSNR(justSignal_dig[1][iant], justNoise_dig[1][iant]);
 	      
 	if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexV]>truthEvPtr->maxSNRAtDigitizerV) truthEvPtr->maxSNRAtDigitizerV=truthEvPtr->SNRAtDigitizer[UsefulChanIndexV];
 	if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexH]>truthEvPtr->maxSNRAtDigitizerH) truthEvPtr->maxSNRAtDigitizerH=truthEvPtr->SNRAtDigitizer[UsefulChanIndexH];
@@ -1497,7 +1519,7 @@ void WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double a
 
 
 double GetAirDistance(double altitude_bn, double beta) { // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth
-  return EarthModel::R_EARTH*acos((altitude_bn+EarthModel::R_EARTH)/EarthModel::R_EARTH*(1-sin(beta)*sin(beta))+1/EarthModel::R_EARTH*sin(beta)*sqrt((altitude_bn+EarthModel::R_EARTH)*(altitude_bn+EarthModel::R_EARTH)*sin(beta)*sin(beta)-2*EarthModel::R_EARTH*altitude_bn-altitude_bn*altitude_bn));
+  return EarthModel::EarthRadiusMeters*acos((altitude_bn+EarthModel::EarthRadiusMeters)/EarthModel::EarthRadiusMeters*(1-sin(beta)*sin(beta))+1/EarthModel::EarthRadiusMeters*sin(beta)*sqrt((altitude_bn+EarthModel::EarthRadiusMeters)*(altitude_bn+EarthModel::EarthRadiusMeters)*sin(beta)*sin(beta)-2*EarthModel::EarthRadiusMeters*altitude_bn-altitude_bn*altitude_bn));
 }
 //end GetAirDistance()
 
@@ -1528,7 +1550,7 @@ Vector GetPolarization(const Vector &nnu, const Vector &nrf2_iceside) {
   Vector n_pol = n_bfield.Cross(nrf2_iceside);
   n_pol = n_pol.Unit();
   // check and make sure E-field is pointing in the right direction.
-  if (nnu*nrf2_iceside>0 && n_pol*nnu>0){
+  if (nnu.Dot(nrf2_iceside)>0 && n_pol.Dot(nnu)>0){
     cout << "error in GetPolarization.  Event is " << inu << "\n";
   }
   return n_pol;
@@ -1571,7 +1593,7 @@ int WhereIsSecondBang(const Position &posnu, const Vector &nnu, double nuexitlen
   // unit vector pointing to antenna from exit point.
   n_exit2bn_db = (r_bn - rfexit_db) / r_bn.Distance(rfexit_db);
 
-  double cosangle=(n_exit2bn_db * posnu2) / posnu2.Mag();
+  double cosangle=n_exit2bn_db.Dot(posnu2) / posnu2.Mag();
   if (cosangle<0){
     return 0;
   }
@@ -1681,7 +1703,7 @@ int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit, double n
   // this function performs snell's law in three dimensions
   double costh=0;
   double NRATIO=nexit/nenter;
-  costh=(n_exit2rx*nsurf_rfexit)/(n_exit2rx.Mag() * nsurf_rfexit.Mag()); // cos(theta) of the transmission angle
+  costh=(n_exit2rx.Dot(nsurf_rfexit))/(n_exit2rx.Mag() * nsurf_rfexit.Mag()); // cos(theta) of the transmission angle
 
   if (costh<0) {
     //cout << "returning 0.  inu is " << inu << "\n";
@@ -1722,7 +1744,7 @@ void SetupViewangles(Signal *sig1) {
 double GetThisAirColumn(Settings* settings1,  Position r_in, Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta, double& cosbeta0, double& mybeta) {
   double myair=0; // this is the output
   // it is the column of air in kg/m^2
-  cosalpha=(r_in * nnu) / r_in.Mag(); // cosangle that the neutrino enters the earth wrt surface normal at its entrry point
+  cosalpha=(r_in.Dot(nnu)) / r_in.Mag(); // cosangle that the neutrino enters the earth wrt surface normal at its entrry point
   mytheta=(double)(acos(cosalpha)*DEGRAD)-90.; // turn this into an angle
 
   //------------------added on Dec 8------------------------
@@ -1737,7 +1759,7 @@ double GetThisAirColumn(Settings* settings1,  Position r_in, Vector nnu, Positio
 
   //cout<<"mytheta="<<mytheta<<"; myair="<<myair<<endl;
   //------------------added on Dec 8------------------------
-  cosbeta0= (posnu * nnu) / posnu.Mag(); // cos angle of neutrino wrt person standing over the interaction point
+  cosbeta0= (posnu.Dot(nnu)) / posnu.Mag(); // cos angle of neutrino wrt person standing over the interaction point
   mybeta=(double)(acos(cosbeta0)*DEGRAD)-90.; // turn that into a theta
   return myair;
 }
@@ -1770,7 +1792,7 @@ int TIR(const Vector &n_surf, const Vector &nrf2_iceside,  double N_IN, double N
 
 double GetViewAngle(const Vector &nrf2_iceside, const Vector &nnu) {
   // get viewing angle of shower
-  double dtemp=nrf2_iceside*nnu;
+  double dtemp=nrf2_iceside.Dot(nnu);
   if (dtemp>=1 && dtemp<1.02)
     dtemp=0.999999;
   if (dtemp<=-1 && dtemp>-1.02)

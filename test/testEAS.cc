@@ -97,17 +97,34 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 #endif
 #endif
 
+
+// hack hack hack
+using icemc::Signal;
+using icemc::EarthModel;
+using icemc::IceModel;
+using icemc::Counting;
+using icemc::Interaction;
+using icemc::Taumodel;
+using icemc::Ray;
+using icemc::Anita;
+using icemc::Balloon;
+using icemc::Settings;
+using icemc::Vector;
+using icemc::Position;
+using icemc::IceModel;
+using icemc::Primaries;
+using icemc::Secondaries;
+using icemc::Roughness;
+using icemc::Screen;
+using icemc::GlobalTrigger;
+using icemc::ChanTrigger;
+using icemc::Spectra;
+
 Taumodel* TauPtr = NULL;
 
-const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
-
-ClassImp(RX);
+const string ICEMC_SRC_DIR = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 
 using namespace std;
-
-class EarthModel;
-class Position;
-
 
 // functions
 
@@ -236,14 +253,14 @@ int main(int argc,  char **argv) {
   cout << "Date and time at start of run are: " << asctime (start_time) << "\n";
 
 
-  Tools::Zero(anita1->NRX_PHI, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->NRX_PHI, Anita::NLAYERS_MAX);
   for (int i=0;i<Anita::NLAYERS_MAX;i++) {
-    Tools::Zero(anita1->PHI_EACHLAYER[i], Anita::NPHI_MAX);
+    icemc::Tools::Zero(anita1->PHI_EACHLAYER[i], Anita::NPHI_MAX);
   }
-  Tools::Zero(anita1->PHI_OFFSET, Anita::NLAYERS_MAX);
-  Tools::Zero(anita1->THETA_ZENITH, Anita::NLAYERS_MAX);
-  Tools::Zero(anita1->LAYER_VPOSITION, Anita::NLAYERS_MAX);
-  Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->PHI_OFFSET, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->THETA_ZENITH, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->LAYER_VPOSITION, Anita::NLAYERS_MAX);
+  icemc::Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
 
   double volts_rx_rfcm_lab_e_all[48][512];
   double volts_rx_rfcm_lab_h_all[48][512];
@@ -292,7 +309,7 @@ int main(int argc,  char **argv) {
   int nchannels_perrx_triggered[48]; // total number of channels triggered
 
 
-  Tools::Zero(count1->npass, 2); // sums events that pass,  without weights
+  icemc::Tools::Zero(count1->npass, 2); // sums events that pass,  without weights
 
   UInt_t eventNumber;
   
@@ -331,7 +348,7 @@ int main(int argc,  char **argv) {
   outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
-  TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
+  TString icemcgitversion = TString::Format("%s", icemc::EnvironmentVariable::ICEMC_VERSION(outputdir));  
   printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
   unsigned int timenow = time(NULL);
 
@@ -463,15 +480,15 @@ int main(int argc,  char **argv) {
     // make a global trigger object (but don't touch the electric fences)
     globaltrig1 = new GlobalTrigger(settings1, anita1);
     
-    Tools::Zero(anita1->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-    Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
+    icemc::Tools::Zero(anita1->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
+    icemc::Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
     
     if(settings1->BORESIGHTS)
       anita1->GetArrivalTimesBoresights(direction2bn_eachboresight);
     else
       anita1->GetArrivalTimes(direction2bn,bn1,settings1);
     
-    anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times[0], settings1->NANTENNAS);
+    anita1->rx_minarrivaltime=icemc::Tools::WhichIsMin(anita1->arrival_times[0], settings1->NANTENNAS);
     
     
     globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
@@ -539,7 +556,7 @@ int main(int argc,  char **argv) {
 	chantrig1->saveDigitizerWaveforms(anita1, justSignal_dig[0][antNum], justSignal_dig[1][antNum], justNoise_dig[0][antNum], justNoise_dig[1][antNum]);
 	
 
-	double thresholds[2][5];
+	// double thresholds[2][5];
 	//+++++//+++++//+++++//+++++//+++++//+++++//+++++
 	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  0, 0, 0, thresholdsAnt[antNum]);
 	
@@ -557,7 +574,7 @@ int main(int argc,  char **argv) {
       nchannels_perrx_triggered[irx]=globaltrig1->nchannels_perrx_triggered[irx];
     }
 
-    nchannels_triggered=Tools::iSum(globaltrig1->nchannels_perrx_triggered, settings1->NANTENNAS); // find total number of antennas that were triggered.
+    nchannels_triggered=icemc::Tools::iSum(globaltrig1->nchannels_perrx_triggered, settings1->NANTENNAS); // find total number of antennas that were triggered.
 
     //////////////////////////////////////
     //       EVALUATE GLOBAL TRIGGER    //
@@ -743,14 +760,14 @@ int main(int argc,  char **argv) {
 	int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
 	int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
 
-	truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(justSignal_trig[0][iant], justNoise_trig[0][iant]);
-	truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(justSignal_trig[1][iant], justNoise_trig[1][iant]);
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = icemc::Tools::calculateSNR(justSignal_trig[0][iant], justNoise_trig[0][iant]);
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = icemc::Tools::calculateSNR(justSignal_trig[1][iant], justNoise_trig[1][iant]);
 	      
 	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
 	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
 
-	truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = Tools::calculateSNR(justSignal_dig[0][iant], justNoise_dig[0][iant]);
-	truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = Tools::calculateSNR(justSignal_dig[1][iant], justNoise_dig[1][iant]);
+	truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = icemc::Tools::calculateSNR(justSignal_dig[0][iant], justNoise_dig[0][iant]);
+	truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = icemc::Tools::calculateSNR(justSignal_dig[1][iant], justNoise_dig[1][iant]);
 	      
 	if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexV]>truthEvPtr->maxSNRAtDigitizerV) truthEvPtr->maxSNRAtDigitizerV=truthEvPtr->SNRAtDigitizer[UsefulChanIndexV];
 	if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexH]>truthEvPtr->maxSNRAtDigitizerH) truthEvPtr->maxSNRAtDigitizerH=truthEvPtr->SNRAtDigitizer[UsefulChanIndexH];

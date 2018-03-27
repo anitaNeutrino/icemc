@@ -6,13 +6,14 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "TRandom3.h"
+#include "vector.hh"
+#include "anita.hh"
 
 // using std::vector;
 
 namespace icemc {
 
   class GlobalTrigger;
-  class Anita;
   class Balloon;
   class Screen;
   class IceModel;
