@@ -15,31 +15,29 @@
 #include "TCanvas.h"
 #include "TF3.h"
 #include "TH2D.h"
-#include "vector.hh"
+
 #include "position.hh"
+#include "vector.hh"
 
-class Vector;
-class Position;
-class Interaction;
-class Primaries;
-class IceModel;
-class Counting;
-class Settings;
+namespace icemc {
 
-//using namespace std;
-using std::string;
-//
-using std::cout;
+  class Interaction;
+  class Primaries;
+  class IceModel;
+  class Counting;
+  class Settings;
+
+  //using namespace std;
 
 
 
 
-//! Inelasticity distributions: stores parametrizations and picks inelasticities
-class Y {
+  //! Inelasticity distributions: stores parametrizations and picks inelasticities
+  class Y {
 
   
 
-private:
+  private:
     TF1* ffrac; //!< This is the fraction of the distribution in the low y region given by Equation 18. 
     
 
@@ -72,17 +70,17 @@ private:
     constexpr static double R2=0.63212056;  //!< 1-R1, used for Gandhi et al.
 
     
-public:
+  public:
     Y();
     double pickY(Settings *settings1,double pnu,int nu_nubar,int currentint);//!< pick inelasticity y according to chosen model
     double Getyweight(double pnu,double y,int nu_nubar,int currentint);
     //!< If you want to choose y from a flat distribution this is the weight it should have according to Connolly et al. (2011)
     
-};//Y
-//! Functions you need to generate a primary interaction including cross sections and picking charged current/neutral current and flavor
-class Primaries {
+  };//Y
+  //! Functions you need to generate a primary interaction including cross sections and picking charged current/neutral current and flavor
+  class Primaries {
     
-private:
+  private:
     TRandom3 Rand3;
     
     TH2D *m_hsigma; //!< plot of cross section vs. log(E/GeV)
@@ -90,7 +88,7 @@ private:
     Y *m_myY; 
     int run_old_code;
     
-public:
+  public:
     double pickY(Settings *settings1,double pnu,int nu_nubar,int currentint);//!<pick inelasticity y according to chosen model
     double Getyweight(double pnu,double y,int nu_nubar,int currentint);//!< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
 
@@ -122,23 +120,24 @@ public:
     ~Primaries();//!<destructor 
     //!<*primary1 must be manually deleted in icemc for deconstructor to actually be called.
     
-//! Neutrino-nucleon cross-sections using model chosen
+    //! Neutrino-nucleon cross-sections using model chosen
     int GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *settings1,int nu_nubar,int currentint);
 
 
 
     // string GetCurrent();
-    string GetNuFlavor();
-protected:
-};//!<Primaries
+    std::string GetNuFlavor();
+  protected:
+  };//!<Primaries
 
-//! Stores everything about a particular neutrino interaction.  
-class Interaction  {
+
+  
+
+  //! Stores everything about a particular neutrino interaction.  
+  class Interaction  {
     
-private:
-    
-    
-    
+  private:
+        
     Vector tmp_banana; //!<Intermediate vector
     
     //!<For banana plot
@@ -159,7 +158,7 @@ private:
     
     
     
-public:
+  public:
     
     static constexpr double phi_nu_banana=3.14159/4; //!<Location in phi
     
@@ -171,7 +170,7 @@ public:
 
     double banana_phi_obs;
     Vector banana_obs; //!<Vector from the neutrino interaction to the observation point
-    Interaction(string inttype,Primaries *primary1,Settings *settings1,int whichray,Counting *count1);//! Constructor
+    Interaction(std::string inttype,Primaries *primary1,Settings *settings1,int whichray,Counting *count1);//! Constructor
 
     void PickAnyDirection();
     
@@ -214,20 +213,20 @@ public:
     
     
     void  setNuFlavor(Primaries *primary1,Settings *settings1,int whichray,Counting *count1);
-    string GetCurrent();
+    std::string GetCurrent();
     void setCurrent();
     Position posnu;
     Position posnu_down;
-    string  nuflavor;                   //!< neutrino flavor
-    string  current;                    //!<  CC or NC?
+    std::string  nuflavor;                   //!< neutrino flavor
+    std::string  current;                    //!<  CC or NC?
     int nuflavorint;                //!< Added by Stephen for output purposes
     int currentint;                 //!< Ditto - Stephen
     
     
     double surface_over_banana_nu;
     
-    string banana_flavor; //!<Force interaction to be a muon neutrino
-    string banana_current;  //!<Force interaction to be a neutral current
+    std::string banana_flavor; //!<Force interaction to be a muon neutrino
+    std::string banana_current;  //!<Force interaction to be a neutral current
     
     Vector nnu_banana; //!<Forced neutrino direction 
     
@@ -249,6 +248,9 @@ public:
     int iceinteraction;//!< whether or not there is an interaction in the ice
     
     
-protected:
-};//!<Interaction
+  protected:
+  };//!<Interaction
+
+}
+
 #endif

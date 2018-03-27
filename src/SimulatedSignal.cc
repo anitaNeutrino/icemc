@@ -10,7 +10,7 @@
 #ifdef ANITA_UTIL_EXISTS
 
 ///< SimulatedSignal inherits from RFSignal
-SimulatedSignal::SimulatedSignal()
+icemc::SimulatedSignal::SimulatedSignal()
  :RFSignal()
 {
   // Default constructor
@@ -22,7 +22,7 @@ SimulatedSignal::SimulatedSignal()
 
 ///< Constructor from time domain values
 
-SimulatedSignal::SimulatedSignal(Int_t numPoints,Double_t *tVals,Double_t *vVals,Int_t mvNs)
+icemc::SimulatedSignal::SimulatedSignal(Int_t numPoints,Double_t *tVals,Double_t *vVals,Int_t mvNs)
   :RFSignal(numPoints,tVals,vVals,mvNs)
 {
   nfreqs = 257; //Anita::HALFNFOUR/2;
@@ -31,7 +31,7 @@ SimulatedSignal::SimulatedSignal(Int_t numPoints,Double_t *tVals,Double_t *vVals
 
 ///< Default destructor
 
-SimulatedSignal::~SimulatedSignal() 
+icemc::SimulatedSignal::~SimulatedSignal() 
 {
 //Default destructor
 }
@@ -47,7 +47,7 @@ SimulatedSignal::~SimulatedSignal()
 ///< amplitudes before and after
 ///< For the moment the phase is always -90 degrees
 
-void SimulatedSignal::updateSimSignalFromVmmhz(int nfreqs0, double *freqs0, double *freqAmp0)
+void icemc::SimulatedSignal::updateSimSignalFromVmmhz(int nfreqs0, double *freqs0, double *freqAmp0)
 {
 
   // First implementation of Askaryan field approximate all phases to -90 degrees
@@ -108,7 +108,7 @@ void SimulatedSignal::updateSimSignalFromVmmhz(int nfreqs0, double *freqs0, doub
 ///<        from the source to the antenna face
 ///< amplitude: is the CW amplitude (from power spectrum?) // good is 0.01
 
-void SimulatedSignal::addCW(double frequency, double phase, double amplitude){
+void icemc::SimulatedSignal::addCW(double frequency, double phase, double amplitude){
 
   // double deltaT = (1/2.6)*1e-9;
   double omega;
@@ -128,7 +128,7 @@ void SimulatedSignal::addCW(double frequency, double phase, double amplitude){
 }
 
 
-void SimulatedSignal::getVmmhz(Anita *anita1, double *vmmhz){
+void icemc::SimulatedSignal::getVmmhz(Anita *anita1, double *vmmhz){
 
 
   double *freqs = getFreqs();

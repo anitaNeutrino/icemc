@@ -42,9 +42,8 @@
 
 #include "EnvironmentVariable.h"
 
-const string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
+const string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const string ICEMC_SECONDARY_DIR=ICEMC_SRC_DIR+"/secondary/";
-
 
 
 using std::cout;
@@ -55,21 +54,21 @@ using std::max_element;
 using std::partial_sum;
 using std::max;
 
- Secondaries::Secondaries() {
-	//For Total Tau Survival probability equation
-	//n.b. not in SI units.
-	////from Tau neutrino propagaiton and tau energy loss 2005 Dutta, Huang, & Reno. 
-	//Equation 16  &  used in Equation 30. 
-	/////////////////////|Units////|Description////////////////////////
-        B0=1.2*std::pow(10.,-7.); //| m^2/kg  |
-	B1=0.16*std::pow(10.,-7.);//| m^2/kg  | }parameterization using a logarithmic dependence on energy for B,
-	E0=std::pow(10.,10.);     //| GeV     | the tau elecromagnetic energy loss parameter.
-	mT=1.777;	   //| GeV     |Mass of Tau
-	cT=0.00008693; 	   //| m       |Tau Decay length (86.93 microMeters)
+icemc::Secondaries::Secondaries() {
+  //For Total Tau Survival probability equation
+  //n.b. not in SI units.
+  ////from Tau neutrino propagaiton and tau energy loss 2005 Dutta, Huang, & Reno. 
+  //Equation 16  &  used in Equation 30. 
+  /////////////////////|Units////|Description////////////////////////
+  B0=1.2*std::pow(10.,-7.); //| m^2/kg  |
+  B1=0.16*std::pow(10.,-7.);//| m^2/kg  | }parameterization using a logarithmic dependence on energy for B,
+  E0=std::pow(10.,10.);     //| GeV     | the tau elecromagnetic energy loss parameter.
+  mT=1.777;	   //| GeV     |Mass of Tau
+  cT=0.00008693; 	   //| m       |Tau Decay length (86.93 microMeters)
 	                   //|         |
-	Mn=1.672622E-24;   //| g       |nucleon/ proton mass in grams,also equal to 0.938 GeV. 
-	A=1.;              //| none    |constant that sets the total probability to unity
-	//these last two constanst from Connolly Calc 2011, used in d_dzPsurvNu().
+  Mn=1.672622E-24;   //| g       |nucleon/ proton mass in grams,also equal to 0.938 GeV. 
+  A=1.;              //| none    |constant that sets the total probability to unity
+  //these last two constanst from Connolly Calc 2011, used in d_dzPsurvNu().
   
   flavors[0]="nue";
   flavors[1]="numu";
@@ -80,7 +79,7 @@ using std::max;
   // This is just the initialization, it is set in ReadInputs
 
 
-    // reading in tauola data file for tau decays
+  // reading in tauola data file for tau decays
   tauolainfile.open((ICEMC_SRC_DIR+"/data/tau_decay_tauola.dat").c_str(),ifstream::in);
   InitTauola();
   
@@ -137,7 +136,7 @@ using std::max;
 	
 }//Secondaries Constructor
 
- void Secondaries::readData(string nuflavor,string secndryType, double (*y)[NPROB_MAX], double (*dsdy)[NPROB_MAX])
+void icemc::Secondaries::readData(string nuflavor,string secndryType, double (*y)[NPROB_MAX], double (*dsdy)[NPROB_MAX])
 {
   
   stringstream senergy;
@@ -172,7 +171,7 @@ using std::max;
   
 }
 
- void Secondaries::ReadSecondaries() {
+void icemc::Secondaries::ReadSecondaries() {
   // reading in data for secondary interactions
   
   cout<<"Reading in data on secondary interactions.\n";
@@ -187,7 +186,7 @@ using std::max;
   readData("tauon","edecay",y_tauon_edecay,dsdy_tauon_edecay);
   readData("tauon","mudecay",y_tauon_mudecay,dsdy_tauon_mudecay);
   //cout << "NPROB=" << NPROB << ",  NPROB_MAX=" << NPROB_MAX << endl;
- for(int j=0;j<7;j++) {
+  for(int j=0;j<7;j++) {
     // integrating prob. distributions.
     int_muon_brems[j]=accumulate(dsdy_muon_brems[j],dsdy_muon_brems[j]+NPROB_MAX,0.);//very important to keep the initial value the same type as the elements type
     int_muon_epair[j]=accumulate(dsdy_muon_epair[j],dsdy_muon_epair[j]+NPROB_MAX,0.);
@@ -236,15 +235,15 @@ using std::max;
     partial_sum(dsdy_tauon_edecay[j],dsdy_tauon_edecay[j]+NPROB_MAX,y_cumulative_tauon_edecay[j]);
      
     for (int i=0;i<NPROB_MAX;i++) {
-       y_cumulative_muon_brems[j][i]      /= y_cumulative_muon_brems[j][NPROB_MAX-1];
-       y_cumulative_muon_epair[j][i]      /= y_cumulative_muon_epair[j][NPROB_MAX-1];
-       y_cumulative_muon_pn[j][i]         /= y_cumulative_muon_pn[j][NPROB_MAX-1];
-       y_cumulative_tauon_brems[j][i]     /= y_cumulative_tauon_brems[j][NPROB_MAX-1];
-       y_cumulative_tauon_epair[j][i]     /= y_cumulative_tauon_epair[j][NPROB_MAX-1];
-       y_cumulative_tauon_pn[j][i]        /= y_cumulative_tauon_pn[j][NPROB_MAX-1];
-       y_cumulative_tauon_hadrdecay[j][i] /= y_cumulative_tauon_hadrdecay[j][NPROB_MAX-1];
-       y_cumulative_tauon_mudecay[j][i]   /= y_cumulative_tauon_mudecay[j][NPROB_MAX-1];
-       y_cumulative_tauon_edecay[j][i]    /= y_cumulative_tauon_edecay[j][NPROB_MAX-1];
+      y_cumulative_muon_brems[j][i]      /= y_cumulative_muon_brems[j][NPROB_MAX-1];
+      y_cumulative_muon_epair[j][i]      /= y_cumulative_muon_epair[j][NPROB_MAX-1];
+      y_cumulative_muon_pn[j][i]         /= y_cumulative_muon_pn[j][NPROB_MAX-1];
+      y_cumulative_tauon_brems[j][i]     /= y_cumulative_tauon_brems[j][NPROB_MAX-1];
+      y_cumulative_tauon_epair[j][i]     /= y_cumulative_tauon_epair[j][NPROB_MAX-1];
+      y_cumulative_tauon_pn[j][i]        /= y_cumulative_tauon_pn[j][NPROB_MAX-1];
+      y_cumulative_tauon_hadrdecay[j][i] /= y_cumulative_tauon_hadrdecay[j][NPROB_MAX-1];
+      y_cumulative_tauon_mudecay[j][i]   /= y_cumulative_tauon_mudecay[j][NPROB_MAX-1];
+      y_cumulative_tauon_edecay[j][i]    /= y_cumulative_tauon_edecay[j][NPROB_MAX-1];
     } //for
 
   }
@@ -254,7 +253,7 @@ using std::max;
 } //end method ReadSecondaries
 
 
- void Secondaries::GetSecondaries(Settings *settings1,string nuflavor,double plepton,double &em_secondaries_max,double &had_secondaries_max,int &n_interactions,TH1F *hy) {
+void icemc::Secondaries::GetSecondaries(Settings *settings1,string nuflavor,double plepton,double &em_secondaries_max,double &had_secondaries_max,int &n_interactions,TH1F *hy) {
 
 
   em_secondaries_max=0.;
@@ -409,18 +408,18 @@ using std::max;
 
 
 
- int Secondaries::GetEMFrac(Settings *settings1,string nuflavor,
-		     string current,
-		     string taudecay,	      
-		     double y,
-		     TH1F *hy,
+int icemc::Secondaries::GetEMFrac(Settings *settings1,string nuflavor,
+				  string current,
+				  string taudecay,	      
+				  double y,
+				  TH1F *hy,
 				  double pnu,				  
 				  int inu,
 
 
-		     double& emfrac,
-		     double& hadfrac,
-			    int& n_interactions, int taumodes1) {
+				  double& emfrac,
+				  double& hadfrac,
+				  int& n_interactions, int taumodes1) {
 
 
 
@@ -444,8 +443,8 @@ using std::max;
       this->GetEMFracDB(emfrac,hadfrac);
     }
     else if (taumodes1 == 0){
-    emfrac=1.E-10;
-        hadfrac=y;
+      emfrac=1.E-10;
+      hadfrac=y;
     }
     
 
@@ -510,7 +509,7 @@ using std::max;
 //InitTauola()
 //Initializes the tau decay information
 
- void Secondaries::InitTauola() {
+void icemc::Secondaries::InitTauola() {
   for(int k=0;k<5;k++)
     tauolainfile >> tauola[0][k];
   for(int i=1;i<N_TAUOLA;i++)
@@ -520,7 +519,7 @@ using std::max;
   return;
 }//InitTauola
 
-void Secondaries::GetTauDecay(string nuflavor,string current,string& taudecay,double& emfrac_db,double& hadfrac_db) {
+void icemc::Secondaries::GetTauDecay(string nuflavor,string current,string& taudecay,double& emfrac_db,double& hadfrac_db) {
  
   if (!(nuflavor=="nutau" || current=="cc" || interestedintaus))
     return;
@@ -558,7 +557,7 @@ void Secondaries::GetTauDecay(string nuflavor,string current,string& taudecay,do
 //GetEMFracDB()
 //Gets the emfrac_db and hadfrac_db for a doublebang
 
- void Secondaries::GetEMFracDB(double& emfrac_db, double& hadfrac_db) {
+void icemc::Secondaries::GetEMFracDB(double& emfrac_db, double& hadfrac_db) {
 
 
   double rnd = gRandom->Rndm();
@@ -574,7 +573,7 @@ void Secondaries::GetTauDecay(string nuflavor,string current,string& taudecay,do
 //GetDBViewAngle()
 //Gets the viewangle of the second bang
 
- double Secondaries::GetDBViewAngle(const Vector &refr, const Vector &nnu) {
+double icemc::Secondaries::GetDBViewAngle(const Vector &refr, const Vector &nnu) {
 
   return ((nnu.ChangeCoord(refr)).Angle(z_axis));
 
@@ -584,7 +583,7 @@ void Secondaries::GetTauDecay(string nuflavor,string current,string& taudecay,do
 //GetFirstBang()
 //Gets the position of the first bang when the interaction point is the tau decay point
 
-//  void Secondaries::GetFirstBang(const Position &r_in, const Vector &nnu, Position &posnu, double len_int_kgm2, double chord, double &nuentrancelength) {
+//  void icemc::Secondaries::GetFirstBang(const Position &r_in, const Vector &nnu, Position &posnu, double len_int_kgm2, double chord, double &nuentrancelength) {
   
 //   double weightbang;
 //   double junk1;
@@ -619,7 +618,7 @@ void Secondaries::GetTauDecay(string nuflavor,string current,string& taudecay,do
 //---------------------------------------------------------
 //NFBWeight()
 //Gets the weight of the tau decay for second bang events
-  double Secondaries::NFBWeight(double ptau, double taulength) {
+double icemc::Secondaries::NFBWeight(double ptau, double taulength) {
   
   double gamma=ptau/MTAU;
   double D=TAUDECAY_TIME*CLIGHT*gamma;
@@ -627,7 +626,7 @@ void Secondaries::GetTauDecay(string nuflavor,string current,string& taudecay,do
   return exp(-taulength/D);
 
 }
-void Secondaries::Picky(double *y_cumulative,int NPROB,double rnd,double& y) {
+void icemc::Secondaries::Picky(double *y_cumulative,int NPROB,double rnd,double& y) {
   for (int i=0;i<NPROB;i++) {
     if (y_cumulative[i]<=rnd && y_cumulative[i+1]>rnd) {
       y=(double)i/(double)NPROB;

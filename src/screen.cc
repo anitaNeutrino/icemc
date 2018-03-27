@@ -5,7 +5,7 @@
 #include "position.hh"
 #include "screen.hh"
 
-Screen::Screen(int a){
+icemc::Screen::Screen(int a){
   if( !(a%2) )
     a++;                    // force 'a' odd to set screen steps correctly
 
@@ -20,82 +20,82 @@ Screen::Screen(int a){
 };
 
 
-void Screen::SetNsamples(int i){
+void icemc::Screen::SetNsamples(int i){
   fNsamples = i;
 };
 
 
-int Screen::GetNsamples(){
+int icemc::Screen::GetNsamples(){
   return fNsamples;
 };
 
 
-void Screen::SetEdgeLength(double a){
+void icemc::Screen::SetEdgeLength(double a){
   fedgeLength = a;
 };
 
 
-void Screen::SetCentralPoint(Position a){
+void icemc::Screen::SetCentralPoint(Position a){
   fcentralPoint = a;
 };
 
-void Screen::SetCosineProjectionFactor(double a){
+void icemc::Screen::SetCosineProjectionFactor(double a){
   fcosineProjectionFactor = a;
 };
 
 
-double Screen::GetCosineProjectionFactor(){
+double icemc::Screen::GetCosineProjectionFactor(){
   return fcosineProjectionFactor;
 };
 
-void Screen::SetNormal(Vector a){
+void icemc::Screen::SetNormal(Vector a){
   fnormal = a.Unit();
 };
 
-void Screen::SetUnitX(Vector a){
+void icemc::Screen::SetUnitX(Vector a){
   funit_x = a;
 };
 
-void Screen::SetUnitY(Vector a){
+void icemc::Screen::SetUnitY(Vector a){
   funit_y = a;
 };
 
-double Screen::GetEdgeLength(){
+double icemc::Screen::GetEdgeLength(){
   return fedgeLength;
 };
 
 
-Position Screen::GetCentralPoint(){
+icemc::Position icemc::Screen::GetCentralPoint(){
   return fcentralPoint;
 };
 
 
-Vector Screen::GetNormal(){
+icemc::Vector icemc::Screen::GetNormal(){
   return fnormal;
 };
 
 
-Vector Screen::GetUnitX(){
+icemc::Vector icemc::Screen::GetUnitX(){
   return funit_x;
 };
 
 
-Vector Screen::GetUnitY(){
+icemc::Vector icemc::Screen::GetUnitY(){
   return funit_y;
 };
 
 
-double Screen::CalcXindex(int i){
+double icemc::Screen::CalcXindex(int i){
   return (double) (i % (fNsamples));
 };
 
 
-double Screen::CalcYindex(int i){
+double icemc::Screen::CalcYindex(int i){
   return (double) floor(i / (fNsamples));
 };
 
 
-Position Screen::GetPosition(int i, int j){
+icemc::Position icemc::Screen::GetPosition(int i, int j){
   Position pos;
 
 
@@ -112,157 +112,157 @@ Position Screen::GetPosition(int i, int j){
 };
 
 
-void Screen::AddVmmhz_freq(double A){
+void icemc::Screen::AddVmmhz_freq(double A){
   //here i refers to the 'screen' loop
   fVmmhz_freq.push_back(A);
 };
 
 
-double Screen::GetVmmhz_freq(int i){
+double icemc::Screen::GetVmmhz_freq(int i){
   return fVmmhz_freq[i];
 };
 
 
-void Screen::AddVmmhz0(double A){
+void icemc::Screen::AddVmmhz0(double A){
   fVmmhz0.push_back(A);
 };
 
-double Screen::GetVmmhz0(int i){
+double icemc::Screen::GetVmmhz0(int i){
   return fVmmhz0[i];
 };
 
-void Screen::AddViewangle(double A){
+void icemc::Screen::AddViewangle(double A){
   fViewangle.push_back(A);
 };
 
-double Screen::GetViewangle(int i){
+double icemc::Screen::GetViewangle(int i){
   return fViewangle[i];
 };
 
 
-void Screen::AddDelay(double A){
+void icemc::Screen::AddDelay(double A){
   fDelays.push_back(A);
 };
 
 
-double Screen::GetDelay(int i){
+double icemc::Screen::GetDelay(int i){
   return fDelays[i];
 };
 
 
-void Screen::SetNvalidPoints(int i){
+void icemc::Screen::SetNvalidPoints(int i){
   fNvalidpoints = i;
 };
 
 
-double Screen::GetNvalidPoints(){
+double icemc::Screen::GetNvalidPoints(){
   return fNvalidpoints;
 };
 
 
-void Screen::AddVec2bln(Vector v){
+void icemc::Screen::AddVec2bln(Vector v){
   fVec2blns.push_back(v);
 };
 
 
-Vector Screen::GetVec2bln(int i){
+icemc::Vector icemc::Screen::GetVec2bln(int i){
   return fVec2blns[i];
 };
 
 
-void Screen::AddPol(Vector v){
+void icemc::Screen::AddPol(Vector v){
   fPols.push_back(v);
 };
 
 
-Vector Screen::GetPol(int i){
+icemc::Vector icemc::Screen::GetPol(int i){
   return fPols[i];
 };
 
 
-void Screen::AddImpactPt(Position p){
+void icemc::Screen::AddImpactPt(Position p){
   fImpactPt.push_back(p);
 };
 
 
-Position Screen::GetImpactPt(int i){
+icemc::Position icemc::Screen::GetImpactPt(int i){
   return fImpactPt[i];
 };
 
 
-void Screen::AddWeight(double a){
+void icemc::Screen::AddWeight(double a){
   fWeight.push_back(a);
 };
 
-double Screen::GetWeight(int i){
+double icemc::Screen::GetWeight(int i){
   return fWeight[i];
 };
 
-void Screen::SetWeightNorm(double a){
+void icemc::Screen::SetWeightNorm(double a){
   fWeightNorm = a;
 };
 
-double Screen::GetWeightNorm(){
+double icemc::Screen::GetWeightNorm(){
   return fWeightNorm;
 };
 
-void Screen::AddIncidenceAngle(double A){
+void icemc::Screen::AddIncidenceAngle(double A){
   fIncAngles.push_back(A);
 };
 
-double Screen::GetIncidenceAngle(int i){
+double icemc::Screen::GetIncidenceAngle(int i){
   return fIncAngles[i];
 };
 
-void Screen::AddTransmissionAngle(double A){
+void icemc::Screen::AddTransmissionAngle(double A){
   fTransAngles.push_back(A);
 };
 
-double Screen::GetTransmissionAngle(int i){
+double icemc::Screen::GetTransmissionAngle(int i){
   return fTransAngles[i];
 };
 
-void Screen::AddFacetLength(double A){
+void icemc::Screen::AddFacetLength(double A){
   fFacetLength.push_back(A);
 };
 
-double Screen::GetFacetLength(int i){
+double icemc::Screen::GetFacetLength(int i){
   return fFacetLength[i];
 };
 
-void Screen::AddTparallel_polParallel(double A){
+void icemc::Screen::AddTparallel_polParallel(double A){
   fTcoeff_parl_polparl.push_back(A);
 };
 
-double Screen::GetTparallel_polParallel(int i){
+double icemc::Screen::GetTparallel_polParallel(int i){
   return fTcoeff_parl_polparl[i];
 };
 
-void Screen::AddTperpendicular_polParallel(double A){
+void icemc::Screen::AddTperpendicular_polParallel(double A){
   fTcoeff_perp_polparl.push_back(A);
 };
 
-double Screen::GetTperpendicular_polParallel(int i){
+double icemc::Screen::GetTperpendicular_polParallel(int i){
   return fTcoeff_perp_polparl[i];
 };
 
-void Screen::AddTparallel_polPerpendicular(double A){
+void icemc::Screen::AddTparallel_polPerpendicular(double A){
   fTcoeff_parl_polperp.push_back(A);
 };
 
-double Screen::GetTparallel_polPerpendicular(int i){
+double icemc::Screen::GetTparallel_polPerpendicular(int i){
   return fTcoeff_parl_polperp[i];
 };
 
-void Screen::AddTperpendicular_polPerpendicular(double A){
+void icemc::Screen::AddTperpendicular_polPerpendicular(double A){
   fTcoeff_perp_polperp.push_back(A);
 };
 
-double Screen::GetTperpendicular_polPerpendicular(int i){
+double icemc::Screen::GetTperpendicular_polPerpendicular(int i){
   return fTcoeff_perp_polperp[i];
 };
 
-void Screen::ResetParameters(){
+void icemc::Screen::ResetParameters(){
   // reset these in icemc:
   // Nsamples
   // edge length

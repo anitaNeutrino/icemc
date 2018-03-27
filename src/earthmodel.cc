@@ -15,7 +15,7 @@
 #include "secondaries.hh"
 #include "EnvironmentVariable.h"
 
-const string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
+const string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
 // input files for Crust 2.0
 const string crust20_in=ICEMC_DATA_DIR+"/outcr"; // Crust 2.0 data
@@ -28,19 +28,19 @@ using std::ios;
 using std::fstream;
 
 
-const double EarthModel::COASTLINE(30.);
-const double EarthModel::MAXTHETA(180.);
-const int EarthModel::ILAT_COASTLINE((int)((COASTLINE/MAXTHETA)*(double)NLAT+0.00001)); // corresponding latitude bin to "coastline"
-const double EarthModel::GEOID_MAX(6.378137E6); // parameters of geoid model
-const double EarthModel::GEOID_MIN(6.356752E6); // from Geodetic Reference System 1980, Bulletin Geodesique, Vol 54:395,1980. // The previous reference gave issue number 3 instead of page number 395
+const double icemc::EarthModel::COASTLINE(30.);
+const double icemc::EarthModel::MAXTHETA(180.);
+const int icemc::EarthModel::ILAT_COASTLINE((int)((COASTLINE/MAXTHETA)*(double)NLAT+0.00001)); // corresponding latitude bin to "coastline"
+const double icemc::EarthModel::GEOID_MAX(6.378137E6); // parameters of geoid model
+const double icemc::EarthModel::GEOID_MIN(6.356752E6); // from Geodetic Reference System 1980, Bulletin Geodesique, Vol 54:395,1980. // The previous reference gave issue number 3 instead of page number 395
 
 
-EarthModel::EarthModel(int model,int WEIGHTABSORPTION_SETTING) {
+icemc::EarthModel::EarthModel(int model,int WEIGHTABSORPTION_SETTING) {
 
  
     radii[0]=1.2e13;
-    radii[1]=(EarthModel::R_EARTH-4.0E4)*(EarthModel::R_EARTH-4.0E4);
-    radii[2]=(EarthModel::R_EARTH*EarthModel::R_EARTH); // average radii of boundaries between earth layers
+    radii[1]=(EarthModel::EarthRadiusMeters-4.0E4)*(EarthModel::EarthRadiusMeters-4.0E4);
+    radii[2]=(EarthModel::EarthRadiusMeters*EarthModel::EarthRadiusMeters); // average radii of boundaries between earth layers
     
     
     //  cout << "In EarthModel, model is " << model << "\n";
@@ -112,10 +112,10 @@ EarthModel::EarthModel(int model,int WEIGHTABSORPTION_SETTING) {
     
 } //EarthModel constructor (int mode)
 
-EarthModel::~EarthModel() {} //EarthModel destructor - no dynamic variables, nothing to delete
+icemc::EarthModel::~EarthModel() {} //EarthModel destructor - no dynamic variables, nothing to delete
 
 
-double EarthModel::LongtoPhi_0isPrimeMeridian(double longitude) {
+double icemc::EarthModel::LongtoPhi_0isPrimeMeridian(double longitude) {
     
     double phi;
     // convert longitude (-180 to 180) to phi (0 to 2pi) wrt +x
@@ -128,7 +128,7 @@ double EarthModel::LongtoPhi_0isPrimeMeridian(double longitude) {
     
     return phi;
 }
-double EarthModel::LongtoPhi_0is180thMeridian(double longitude) {
+double icemc::EarthModel::LongtoPhi_0is180thMeridian(double longitude) {
     
     double phi;
     // convert longitude (0 to 360) to phi (0 to 2pi) wrt +x
@@ -143,7 +143,7 @@ double EarthModel::LongtoPhi_0is180thMeridian(double longitude) {
     return phi;
 }
 
-double EarthModel::Geoid(double latitude) {
+double icemc::EarthModel::Geoid(double latitude) {
     // latitude here is 0 at the south pole and 180 at the north pole
     
     return (GEOID_MIN*GEOID_MAX/
@@ -151,63 +151,63 @@ double EarthModel::Geoid(double latitude) {
 		 cos(latitude*RADDEG)*cos(latitude*RADDEG)));
 } //Geoid(lat)
 
-double EarthModel::Geoid(const Position &pos) {
+double icemc::EarthModel::Geoid(const Position &pos) {
     return Geoid(pos.Lat());
 } //Geoid(Position)
 
-double EarthModel::IceThickness(double lon,double lat) {
+double icemc::EarthModel::IceThickness(double lon,double lat) {
     return icethkarray[(int)(lon/2)][(int)(lat/2)]*1000.;
 } //IceThickness(lon,lat)
 
-double EarthModel::IceThickness(const Position& pos) {
+double icemc::EarthModel::IceThickness(const Position& pos) {
     return IceThickness(pos.Lon(),pos.Lat());
 } //IceThickness(Position)
-int EarthModel::InFirn(const Position& pos) {
+int icemc::EarthModel::InFirn(const Position& pos) {
     if (pos.Mag()-Surface(pos)<FIRNDEPTH)
 	return 0;
     return 1;
 } //InFirn(Position)
-double EarthModel::SurfaceDeepIce(const Position& pos) { // surface of the deep ice (where you reach the firn)
+double icemc::EarthModel::SurfaceDeepIce(const Position& pos) { // surface of the deep ice (where you reach the firn)
     return  surfacer[(int)(pos.Lon()/2)][(int)(pos.Lat()/2)] + geoid[(int)(pos.Lat()/2)] + FIRNDEPTH;
 } //Surface(lon,lat)
 
-double EarthModel::Surface(double lon,double lat) {
+double icemc::EarthModel::Surface(double lon,double lat) {
     return surfacer[(int)(lon/2)][(int)(lat/2)] + geoid[(int)(lat/2)];
 } //Surface(lon,lat)
 
-double EarthModel::Surface(const Position& pos) {
+double icemc::EarthModel::Surface(const Position& pos) {
     return surfacer[(int)(pos.Lon()/2)][(int)(pos.Lat()/2)] + geoid[(int)(pos.Lat()/2)];
 } //Surface(Position)
 
-double EarthModel::RockSurface(double lon,double lat) {
+double icemc::EarthModel::RockSurface(double lon,double lat) {
     return (Surface(lon,lat) - IceThickness(lon,lat) - WaterDepth(lon,lat));
 } //RockSurface(lon,lat)
 
-double EarthModel::RockSurface(const Position& pos) {
+double icemc::EarthModel::RockSurface(const Position& pos) {
     return RockSurface(pos.Lon(),pos.Lat());
 } //RockSurface(lon,lat)
 
-double EarthModel::SurfaceAboveGeoid(double lon,double lat) {
+double icemc::EarthModel::SurfaceAboveGeoid(double lon,double lat) {
     return surfacer[(int)(lon/2)][(int)(lat/2)];
 } //SurfaceAboveGeoid(lon,lat)
 
-double EarthModel::SurfaceAboveGeoid(const Position& pos) {
+double icemc::EarthModel::SurfaceAboveGeoid(const Position& pos) {
     return surfacer[(int)(pos.Lon()/2)][(int)(pos.Lat()/2)];
 } //SurfaceAboveGeoid(Position)
 
-double EarthModel::WaterDepth(double lon,double lat) {
+double icemc::EarthModel::WaterDepth(double lon,double lat) {
     return waterthkarray[(int)(lon/2)][(int)(lat/2)]*1000;
 } //WaterDepth(lon,lat)
 
-double EarthModel::WaterDepth(const Position& pos) {
+double icemc::EarthModel::WaterDepth(const Position& pos) {
     return WaterDepth(pos.Lon(),pos.Lat());
 } //WaterDepth(Position)
 
-double EarthModel::GetLat(double theta) {
+double icemc::EarthModel::GetLat(double theta) {
     return theta*DEGRAD;
 } //GetLat
 
-double EarthModel::GetLon(double phi) {
+double icemc::EarthModel::GetLon(double phi) {
     // input is phi in radians wrt +x
     double phi_deg = phi*DEGRAD; 
     if (phi_deg > 270)   
@@ -216,7 +216,7 @@ double EarthModel::GetLon(double phi) {
     return (360.*3./4. - phi_deg); // returns 0 to 360 degrees (going from -180 to 180 deg longitude like Crust 2.0 does)
 } //GetLon
 
-double EarthModel::GetDensity(double altitude, const Position earth_in,
+double icemc::EarthModel::GetDensity(double altitude, const Position earth_in,
 			      int& crust_entered // 1 or 0
 			      ){
   
@@ -271,7 +271,7 @@ double EarthModel::GetDensity(double altitude, const Position earth_in,
 
 
 
-int EarthModel::Getchord(Settings *settings1,
+int icemc::EarthModel::Getchord(Settings *settings1,
 			 double len_int_kgm2,
 			 const Position &earth_in, // place where neutrino entered the earth
 			 const Position &r_enterice,
@@ -309,7 +309,8 @@ int EarthModel::Getchord(Settings *settings1,
 	cout << "short chord " << chord << "\n";
 	return 0;
     }
-    if (chord>2.*R_EARTH+1000) {
+    // if (chord>2.*R_EARTH+1000) {
+    if (chord>2.*EarthRadiusMeters+1000) {      
 	cout << "bad chord" << " " << chord << ".  Event is " << inu << "\n";
     }
     
@@ -318,7 +319,7 @@ int EarthModel::Getchord(Settings *settings1,
     // the sin of the angle between the neutrino path and the 
     // radial vector to its earth entrance point determines
     // if it will get to the next layer down.
-    double costh=(where*nchord)/where.Mag();
+    double costh=where.Dot(nchord)/where.Mag();
     double sinth=sqrt(1-costh*costh);
     double distance=0;
     double halfchord=0;
@@ -357,7 +358,7 @@ int EarthModel::Getchord(Settings *settings1,
 	    where = earth_in + distance*nchord;
 	    
 	    // determine if it enters the core or not.
-	    costh=(where*nchord)/where.Mag();
+	    costh=(where.Dot(nchord))/where.Mag();
 	    sinth=sqrt(1-costh*costh);
 	    
 	    if (sinth>sqrt(radii[0]/radii[1])) {
@@ -439,11 +440,11 @@ int EarthModel::Getchord(Settings *settings1,
 	double ddensity=Signal::RHOAIR;
 	nearthlayers=1;
 	
-	if (where*nchord>0.)  { // look at direction of neutrino where it enters the earth.
+	if (where.Dot(nchord)>0.)  { // look at direction of neutrino where it enters the earth.
 	    cout << "This one's trouble.  Neutrino exit point looks more like an entrance point.  Event is " << inu << "\n";
 	    cout << "where is " << where[0] << " " << where[1] << " " << where[2] << "\n";
 	    cout << "nchord is " << nchord[0] << " " << nchord[1] << " " << nchord[2] << "\n";
-	    cout << "dot product is " << where*nchord/sqrt(where*where) << "\n";
+	    cout << "dot product is " << where.Dot(nchord)/sqrt(where.Dot(where)) << "\n";
 	    cout << "posnu is " << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\n";
 	    cout << "Length of chord is : "<<chord<<endl;
 	} //end if
@@ -596,7 +597,7 @@ int EarthModel::Getchord(Settings *settings1,
     return 1;
 } //end Getchord
 
-Vector EarthModel::GetSurfaceNormal(const Position &r_out)
+icemc::Vector icemc::EarthModel::GetSurfaceNormal(const Position &r_out)
 {
     Vector n_surf = r_out.Unit();
     if (FLATSURFACE)
@@ -643,7 +644,7 @@ Vector EarthModel::GetSurfaceNormal(const Position &r_out)
     
 } //method GetSurfaceNormal
 
-double EarthModel::SmearPhi(int ilon, double rand)  {
+double icemc::EarthModel::SmearPhi(int ilon, double rand)  {
     
     
     double phi=((double)(360.*3./4.-((double)ilon+rand)*360/180))*RADDEG;
@@ -654,7 +655,7 @@ double EarthModel::SmearPhi(int ilon, double rand)  {
     return phi;
 } //SmearPhi
 
-double EarthModel::SmearTheta(int ilat, double rand)  {
+double icemc::EarthModel::SmearTheta(int ilat, double rand)  {
     
     // remember that we should smear it evenly in cos(theta).
     // first get the cos(theta)'s at the boundaries.
@@ -674,7 +675,7 @@ double EarthModel::SmearTheta(int ilat, double rand)  {
     return theta;
 } //SmearTheta
 
-void EarthModel::ReadCrust(string test) {
+void icemc::EarthModel::ReadCrust(string test) {
     
     // reads in altitudes of 7 layers of crust, ice and water
     // puts data in arrays
@@ -926,7 +927,7 @@ void EarthModel::ReadCrust(string test) {
 }//ReadCrust
 
 
-Vector EarthModel::PickPosnuForaLonLat(double lon,double lat,double theta,double phi) {
+icemc::Vector icemc::EarthModel::PickPosnuForaLonLat(double lon,double lat,double theta,double phi) {
     
     
     double surface_above_geoid = this->SurfaceAboveGeoid(lon,lat);
@@ -955,18 +956,18 @@ Vector EarthModel::PickPosnuForaLonLat(double lon,double lat,double theta,double
     return posnu;
 }
 
-double EarthModel::dGetTheta(int ilat) {
+double icemc::EarthModel::dGetTheta(int ilat) {
     return (((double)ilat+0.5)/(double)NLAT*MAXTHETA)*RADDEG;
 } //dGetTheta(int)
 
-double EarthModel::dGetPhi(int ilon) {
+double icemc::EarthModel::dGetPhi(int ilon) {
     // this takes as an input the crust 2.0 index 0=-180 deg longitude to 179=+180 deg longitude
     // its output is phi in radians
     // from ~ -pi/2 to 3*pi/2 
     return (double)(-1*((double)ilon+0.5)+(double)NLON)*2*PI/(double)NLON-PI/2;
 } //dGetPhi(int)
 
-void EarthModel::GetILonILat(const Position &p,int& ilon,int& ilat) {
+void icemc::EarthModel::GetILonILat(const Position &p,int& ilon,int& ilat) {
     // Phi function outputs from 0 to 2*pi wrt +x
     double phi_deg=p.Phi()*DEGRAD;
     
@@ -979,7 +980,7 @@ void EarthModel::GetILonILat(const Position &p,int& ilon,int& ilat) {
     ilat=(int)((p.Theta()*DEGRAD)/2.);
     
 } //method GetILonILat
-void EarthModel::EarthCurvature(double *array,double depth_temp) {
+void icemc::EarthModel::EarthCurvature(double *array,double depth_temp) {
     
     Position parray;
     parray.SetXYZ(array[0],array[1],array[2]);
@@ -999,10 +1000,11 @@ void EarthModel::EarthCurvature(double *array,double depth_temp) {
     array[2]=length*cos(rxdtheta);
     
 }
-Position EarthModel::WhereDoesItEnter(const Position &posnu,const Vector &nnu) {
+
+icemc::Position icemc::EarthModel::WhereDoesItEnter(const Position &posnu,const Vector &nnu) {
     // now get neutrino entry point...
     double p = posnu.Mag(); // radius of interaction
-    double costheta = (nnu*posnu) / p; // theta of neutrino at interaction position
+    double costheta = (nnu.Dot(posnu)) / p; // theta of neutrino at interaction position
     double sintheta = sqrt(1-costheta*costheta);
     
     double lon = posnu.Lon();

@@ -1,72 +1,74 @@
 #ifndef SPECTRA_H_
 #define SPECTRA_H_
 
+
 #include "TSpline.h"
 #include <string>
 #include "TRandom3.h"
 
+namespace icemc{
 
-using namespace std;
+  //! Neutrino spectra
+  class Spectra {
 
-//! Neutrino spectra
-class Spectra {
-
-private:
-  TRandom3 Rand3;
-  double maxflux;   // max flux value
-//  static const int NSPECTRA_MAX=300;  // why need this??
-  static const int E_bin_max = 50;
-  int E_bin;   // initialize # of energy bins (max = 50)
+  private:
+    TRandom3 Rand3;
+    double maxflux;   // max flux value
+    //  static const int NSPECTRA_MAX=300;  // why need this??
+    static const int E_bin_max = 50;
+    int E_bin;   // initialize # of energy bins (max = 50)
   
-//  double energy[E_bin_max]; // energies that correspond to the fluxes in the previous array  
-//  double EdNdEdAdt[E_bin_max]; //flux of incident neutrinos vs. energy E*dN/dE/dA/dt
-//  double E2dNdEdAdt[E_bin_max]; //flux of incident neutrinos vs. energy E^2*dN/dE/dA/dt
+    //  double energy[E_bin_max]; // energies that correspond to the fluxes in the previous array  
+    //  double EdNdEdAdt[E_bin_max]; //flux of incident neutrinos vs. energy E*dN/dE/dA/dt
+    //  double E2dNdEdAdt[E_bin_max]; //flux of incident neutrinos vs. energy E^2*dN/dE/dA/dt
   
-  void GetFlux(string filename);    // read neutrino flux EdNdEdAdt (in GeV) from filename file
+    void GetFlux(std::string filename);    // read neutrino flux EdNdEdAdt (in GeV) from filename file
   
-  TGraph *gEdNdEdAdt;   //graph for EdNdEdAdt flux
-  TGraph *gE2dNdEdAdt;  //graph for E2dNdEdAdt flux
+    TGraph *gEdNdEdAdt;   //graph for EdNdEdAdt flux
+    TGraph *gE2dNdEdAdt;  //graph for E2dNdEdAdt flux
 
-  TGraph *CDF;
-  TGraph *inverse_CDF;
+    TGraph *CDF;
+    TGraph *inverse_CDF;
 
-  TSpline3 *sEdNdEdAdt; //spline of EdNdEdAdt
-  TSpline3 *sE2dNdEdAdt;    //spline of E2dNdEdAdt
-  int EXPONENT; // set flux model
+    TSpline3 *sEdNdEdAdt; //spline of EdNdEdAdt
+    TSpline3 *sE2dNdEdAdt;    //spline of E2dNdEdAdt
+    int EXPONENT; // set flux model
 
-public:  
+  public:  
 
-  double energy[E_bin_max]; // energies that correspond to the fluxes in the previous array  
-  double EdNdEdAdt[E_bin_max]; //flux of incident neutrinos vs. energy E*dN/dE/dA/dt
-  double E2dNdEdAdt[E_bin_max]; //flux of incident neutrinos vs. energy E^2*dN/dE/dA/dt
+    double energy[E_bin_max]; // energies that correspond to the fluxes in the previous array  
+    double EdNdEdAdt[E_bin_max]; //flux of incident neutrinos vs. energy E*dN/dE/dA/dt
+    double E2dNdEdAdt[E_bin_max]; //flux of incident neutrinos vs. energy E^2*dN/dE/dA/dt
   
-  Spectra(int EXPONENT); // constructor  
+    Spectra(int EXPONENT); // constructor  
   
-  double GetNuEnergy(); // get the neutrino energy which follows neutrino flux. 
-  double GetCDFEnergy();//get Energy from 'CDF'
-  void GetCDF();//set up CDF and inverse CDF;
-  TGraph *GetGEdNdEdAdt();
-  TGraph *GetGE2dNdEdAdt();
+    double GetNuEnergy(); // get the neutrino energy which follows neutrino flux. 
+    double GetCDFEnergy();//get Energy from 'CDF'
+    void GetCDF();//set up CDF and inverse CDF;
+    TGraph *GetGEdNdEdAdt();
+    TGraph *GetGE2dNdEdAdt();
 
-  TSpline3 *GetSEdNdEdAdt();
-  TSpline3 *GetSE2dNdEdAdt();
+    TSpline3 *GetSEdNdEdAdt();
+    TSpline3 *GetSE2dNdEdAdt();
 
-  double *Getenergy();
-  double *GetEdNdEdAdt();
-  double *GetE2dNdEdAdt();
-  double GetEdNdEdAdt(double E_val);    // return flux value from TSpline
-  double GetE2dNdEdAdt(double E_val);   // return flux value from TSpline
+    double *Getenergy();
+    double *GetEdNdEdAdt();
+    double *GetE2dNdEdAdt();
+    double GetEdNdEdAdt(double E_val);    // return flux value from TSpline
+    double GetE2dNdEdAdt(double E_val);   // return flux value from TSpline
 
-  double Getmaxflux();
+    double Getmaxflux();
   
-  int GetE_bin();   // return energy bin number
+    int GetE_bin();   // return energy bin number
 
 
-  int IsSpectrum(); // return 1 or 0 depend on EXPONENT value
-  int IsMonoenergetic();    // return 1 or 0 depend of EXPONENT value
+    int IsSpectrum(); // return 1 or 0 depend on EXPONENT value
+    int IsMonoenergetic();    // return 1 or 0 depend of EXPONENT value
 
-  // destructor
+    // destructor
 
-}; //class Spectra
+  }; //class Spectra
+}
+
 
 #endif

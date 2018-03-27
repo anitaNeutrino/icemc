@@ -43,7 +43,7 @@
 #include "TSpline.h"
 #include "Taumodel.hh"
 
-ClassImp(Taumodel);
+ClassImp(icemc::Taumodel);
 
 using std::cout;
 using std::stringstream;
@@ -53,7 +53,7 @@ using std::max_element;
 using std::partial_sum;
 using std::max;
 
-Taumodel::Taumodel() {
+icemc::Taumodel::Taumodel() {
 	/**For Total Tau Survival probability equation
 	//n.b. not in SI units.
 	////from Tau neutrino propagaiton and tau energy loss 2005 Dutta, Huang, & Reno. 
@@ -85,7 +85,7 @@ Taumodel::Taumodel() {
 /**
    GetTauWeight is the function that will calculate the probability that a tau neutrino will interact along its path through the earth,and the tau will survive the rest of the journey and decay in the ice. This probability is calculated for final energies from 10^15.5 to the energy of the neutrino.
 */
-double Taumodel::GetTauWeight(Primaries *primary1, Settings *settings1,IceModel *antarctica1,Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered){ // 1 or 0 
+double icemc::Taumodel::GetTauWeight(Primaries *primary1, Settings *settings1,IceModel *antarctica1,Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered){ // 1 or 0 
 			      // int& mantle_entered, // 1 or 0
 			      // int& core_entered){//add secondaries?
 
@@ -264,7 +264,7 @@ double Taumodel::GetTauWeight(Primaries *primary1, Settings *settings1,IceModel 
 Get Density Vectors sets two density vectors. One has the density at each step along the path, the other has an average density from the starting point to the current step.
  */
 
-void Taumodel::GetDensityVectors(IceModel *antarctica1,Interaction *interaction1, Vector nchord, double step, double Distance, int &totalnusteps,int &crust_entered){
+void icemc::Taumodel::GetDensityVectors(IceModel *antarctica1,Interaction *interaction1, Vector nchord, double step, double Distance, int &totalnusteps,int &crust_entered){
    
     Vector nchord1;
     double avgdensity =0;//initilize average density.
@@ -298,7 +298,7 @@ void Taumodel::GetDensityVectors(IceModel *antarctica1,Interaction *interaction1
 /**
    Get Energy Vector sets the energy of tau particle at every step along the path. It starts from the final energy and works back towards the nuetrino interaction point.
  */
-void Taumodel::GetEnergyVector(double Etau_final, double step,int totalnusteps, int &totalsteps, double &totaltaudistance, double pnu){
+void icemc::Taumodel::GetEnergyVector(double Etau_final, double step,int totalnusteps, int &totalsteps, double &totaltaudistance, double pnu){
   
   myenergyvector.clear();
   myenergyvector.push_back(Etau_final);
@@ -331,7 +331,7 @@ void Taumodel::GetEnergyVector(double Etau_final, double step,int totalnusteps, 
    Get Tau Surv Vector gets a vector that is filled with the probability the tau will survive from neutrino interaction point to the ice.
  */
 
-void Taumodel::GetTauSurvVector(double step, int totalsteps){
+void icemc::Taumodel::GetTauSurvVector(double step, int totalsteps){
   myPsurvvector.clear();
   double Etau_now;
   double tau_surv;

@@ -36,8 +36,10 @@ class TH2F;
 class TRandom3;
 class TTree;
 
-//! Functions to make life easier.  Many of these probably exist other places.
-namespace Tools {
+namespace icemc{
+
+  //! Functions to make life easier.  Many of these probably exist other places.
+  namespace Tools {
     double dMax(double,double);
     double dMax(const double*,int);
     double dvMax(const vector<double>);
@@ -95,19 +97,20 @@ namespace Tools {
     double calculateSNR(double justSig[512], double justNoise[512]);
     
     template <class T, class U> void vector_element_convert(const vector<T>& input, vector<U>& output){
-    output.clear();
-        for (unsigned int index = 0; index < input.size(); index++){
-            output.push_back(U (input[index]));
-        }
+      output.clear();
+      for (unsigned int index = 0; index < input.size(); index++){
+	output.push_back(U (input[index]));
+      }
     }
 
     template <class T, class U> void nested_vector_element_convert(const vector< vector<T> >& input, vector< vector<U> >& output){
-    output.clear();
-        for (unsigned int index = 0; index < input.size(); index++){
-            vector<U> temp;
-            vector_element_convert<T,U>(input[index], temp);
-            output.push_back(temp);
-        }
+      output.clear();
+      for (unsigned int index = 0; index < input.size(); index++){
+	vector<U> temp;
+	vector_element_convert<T,U>(input[index], temp);
+	output.push_back(temp);
+      }
     }
-};
+  };
+}
 #endif

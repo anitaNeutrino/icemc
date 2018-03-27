@@ -42,9 +42,9 @@ const double NICE=1.79;                      // index of refraction of ice
 
 // constant vectors used in balloon class - oindree 
 
-const Vector const_z(0,0,1);
-const Vector const_y(0,1,0);
-const Vector const_x(1,0,0);
+const icemc::Vector const_z(0,0,1);
+const icemc::Vector const_y(0,1,0);
+const icemc::Vector const_x(1,0,0);
 
 
 // TUFF configuration switching times in ChanTrigger.cc

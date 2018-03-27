@@ -53,7 +53,7 @@ const char* getEnv(const char* envName, const char* description, bool failHard=t
  * 
  * @return the value of the environment variable (e.g. ~/ANITA/anitaBuildTool/components/icemc)
  */
-const char* EnvironmentVariable::ICEMC_SRC_DIR(){
+const char* icemc::EnvironmentVariable::ICEMC_SRC_DIR(){
 
 #ifdef ANITA_BUILD_TOOL  
   const char* icemc_src_dir = getEnv("ICEMC_SRC_DIR", "Without this environment variable I can't find input data or config files!", true);
@@ -68,7 +68,7 @@ const char* EnvironmentVariable::ICEMC_SRC_DIR(){
 #endif
 }
 
-const char* EnvironmentVariable::ICEMC_VERSION(TString outputdir){
+const char* icemc::EnvironmentVariable::ICEMC_VERSION(TString outputdir){
 
   system(Form("git rev-parse HEAD > %s/gitversion.txt", outputdir.Data()));
   std::string gitversion;

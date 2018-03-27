@@ -44,7 +44,7 @@
 #include "AnitaConventions.h"
 #endif
 
-const std::string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
+const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
 
 
@@ -53,11 +53,11 @@ using std::cin;
 using std::endl;
 using std::vector;
 
-Anita::Anita() {
+icemc::Anita::Anita() {
 
   stemp = "";
 
-  for (int irx=0;irx<Anita::NLAYERS_MAX*Anita::NPHI_MAX;irx++) {
+  for (int irx=0;irx<icemc::Anita::NLAYERS_MAX*icemc::Anita::NPHI_MAX;irx++) {
     arrival_times[0][irx]=arrival_times[1][irx]=0.;
   }
   NCH_PASS=4;
@@ -191,7 +191,7 @@ Anita::Anita() {
   // End of preparition for the coherent sum trigger's data tree
 }
 
-Anita::~Anita(){
+icemc::Anita::~Anita(){
   coherent_datafile->cd();
     
   coherent_waveform_sum_tree->Write();
@@ -206,7 +206,7 @@ Anita::~Anita(){
   return;
 }
 
-int Anita::Match(int ilayer,int ifold,int rx_minarrivaltime) {
+int icemc::Anita::Match(int ilayer,int ifold,int rx_minarrivaltime) {
     
   if (ilayer==GetLayer(rx_minarrivaltime) && ifold==GetIfold(rx_minarrivaltime))
     return 1;
@@ -214,7 +214,7 @@ int Anita::Match(int ilayer,int ifold,int rx_minarrivaltime) {
     return 0;
     
 }
-int Anita::GetRx(int ilayer, int ifold) { // get antenna number based on which layer and position it is
+int icemc::Anita::GetRx(int ilayer, int ifold) { // get antenna number based on which layer and position it is
     
   int irx=0;
   for (int i=0;i<ilayer;i++) {
@@ -225,7 +225,7 @@ int Anita::GetRx(int ilayer, int ifold) { // get antenna number based on which l
     
 }
 
-int Anita::GetRxTriggerNumbering(int ilayer, int ifold) { // get antenna number based on which layer and position it is
+int icemc::Anita::GetRxTriggerNumbering(int ilayer, int ifold) { // get antenna number based on which layer and position it is
   // make the top trigger layer count 1-16 left to right
   if (ilayer==0)
     //cout << "ilayer, ifold, getrx are " << ilayer << "\t" << ifold << "\t" << 2*ifold+ilayer << "\n";
@@ -239,7 +239,7 @@ int Anita::GetRxTriggerNumbering(int ilayer, int ifold) { // get antenna number 
   }
 }
 
-void Anita::SetNoise(Settings *settings1,Balloon *bn1,IceModel *antarctica) {
+void icemc::Anita::SetNoise(Settings *settings1,Balloon *bn1,IceModel *antarctica) {
     
   // these should only be used for the frequency domain trigger.
   if (settings1->WHICH==2 || settings1->WHICH==6) { //this is for anita 1
@@ -266,7 +266,7 @@ void Anita::SetNoise(Settings *settings1,Balloon *bn1,IceModel *antarctica) {
     
     
 }
-void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TString outputdir)
+void icemc::Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TString outputdir)
 {
     
     
@@ -496,7 +496,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
     
 }
 
-void Anita::initializeFixedPowerThresholds(ofstream &foutput){
+void icemc::Anita::initializeFixedPowerThresholds(ofstream &foutput){
     
   if (BANDING==2) { //anita 2
 		
@@ -558,7 +558,7 @@ void Anita::initializeFixedPowerThresholds(ofstream &foutput){
   }
 }
 
-void Anita::readVariableThresholds(Settings *settings1){
+void icemc::Anita::readVariableThresholds(Settings *settings1){
 
   if (settings1->WHICH==8) { // ANITA-2
     fturf=new TFile((ICEMC_DATA_DIR+"/turfrate_icemc.root").c_str());
@@ -625,7 +625,7 @@ void Anita::readVariableThresholds(Settings *settings1){
 }
 
 
-void Anita::readAmplification(){
+void icemc::Anita::readAmplification(){
     
   // get rfcm amplification data
   // read from tree with amplification data
@@ -661,7 +661,7 @@ void Anita::readAmplification(){
 
 
 
-void Anita::getDiodeDataAndAttenuation(Settings *settings1, TString outputdir){
+void icemc::Anita::getDiodeDataAndAttenuation(Settings *settings1, TString outputdir){
 
   // get vnoise data
   string sdiode;
@@ -809,7 +809,7 @@ void Anita::getDiodeDataAndAttenuation(Settings *settings1, TString outputdir){
 
 
 
-void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
+void icemc::Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
   double mindiodeconvl[5];
   double onediodeconvl[5];
@@ -1184,7 +1184,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 
 #ifdef ANITA_UTIL_EXISTS
-void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int ituff){
+void icemc::Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int ituff){
 
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
   phasorsTrig[0].setMagPhase(0,0);
@@ -1218,7 +1218,7 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
 }
 #endif
 
-void Anita::getPulserData(){
+void icemc::Anita::getPulserData(){
       
   TFile *fpulser=new TFile((ICEMC_DATA_DIR+"/pulser.root").c_str());
 	
@@ -1315,7 +1315,7 @@ void Anita::getPulserData(){
 
 
 
-void Anita::ReadGains(void) {
+void icemc::Anita::ReadGains(void) {
   // gains from university of hawaii measurements.
   double sfrequency;
   int iii;
@@ -1369,7 +1369,7 @@ void Anita::ReadGains(void) {
 
 
 
-void Anita::AntennaGain(Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h) {
+void icemc::Anita::AntennaGain(Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h) {
     
   if (freq[k]>=settings1->FREQ_LOW_SEAVEYS && freq[k]<=settings1->FREQ_HIGH_SEAVEYS) {
 		
@@ -1419,7 +1419,7 @@ void Anita::AntennaGain(Settings *settings1,double hitangle_e,double hitangle_h,
 // The deck affects signals reaching the upper ring. These equations are for Fresnel diffraction around a half plane. The edge of the half plane passes just over and in front of the lower ring antenna that's facing the radio pulse. This assumption should be okay for the three upper ring antenns in the phi sector facing the pulse and should underestimate the effect of diffraction for the other upper ring antennas.
 // This only corrects for signal strength, not for changes in polarization and signal direction.
 // page and figure references are from Principles of Optics, by Born & Wolf, 7th edition
-void Anita::SetDiffraction() {
+void icemc::Anita::SetDiffraction() {
   const double cc = 299792458.0;
   const double height[2] = {3.21571, 2.25625}; // height of the phase centers of antennas 1 and 9 above the deck
   const double radius[2] = {1.40185, 1.5677}; // radius of the deck minus how far the phase centers of antennas 1 and 9 are from the payload's axis.
@@ -1450,14 +1450,14 @@ void Anita::SetDiffraction() {
   return;
 } // void SetDiffraction()
 
-double Anita::GetDiffraction(int ilayer, double zenith_angle, int ifreq) {
+double icemc::Anita::GetDiffraction(int ilayer, double zenith_angle, int ifreq) {
   double reference1 = (sin(zenith_angle)-0.37)*200.0;
   int whichbin = int(reference1);
   double factor = reference1 - double(whichbin);
   return factor*diffraction[ilayer][whichbin+1][ifreq] + (1.-factor)*diffraction[ilayer][whichbin][ifreq];
 }
 
-int Anita::SurfChanneltoBand(int ichan) {
+int icemc::Anita::SurfChanneltoBand(int ichan) {
     
   // takes surf channel (0-31) and finds what band it is
   if (ichan<0 || ichan>31) {
@@ -1472,7 +1472,7 @@ int Anita::SurfChanneltoBand(int ichan) {
     
 }
 
-//  int Anita::GetScalarNumber(int lr,int ibw, int ilayer,int ifold) {
+//  int icemc::Anita::GetScalarNumber(int lr,int ibw, int ilayer,int ifold) {
 
 //   int rx = GetAntennaNumber(ilayer,ifold);
 //   int rx_on_surf = (rx-1)%4 + 1; // surf holds four antennas.  This number is 1-4.
@@ -1481,12 +1481,12 @@ int Anita::SurfChanneltoBand(int ichan) {
 //   // returns the scalar number
 //   return scalar;
 // }
-int Anita::GetAntennaNumber(int ilayer,int ifold) {
+int icemc::Anita::GetAntennaNumber(int ilayer,int ifold) {
     
   return 8*(ilayer)+ifold+1; // antenna number 1-32
     
 }
-int Anita::GetLayer(int rx) {
+int icemc::Anita::GetLayer(int rx) {
   if (rx>=0 && rx<8)
     return 0;
   else if (rx>=8 && rx<16)
@@ -1496,7 +1496,7 @@ int Anita::GetLayer(int rx) {
     
   return -1;
 }
-int Anita::GetIfold(int rx) {
+int icemc::Anita::GetIfold(int rx) {
   if (rx>=0 && rx<16)
     return rx%8;
   else if (rx<32)
@@ -1504,30 +1504,30 @@ int Anita::GetIfold(int rx) {
     
   return -1;
 }
-int Anita::AntennaWaveformtoSurf(int ilayer,int ifold) {
+int icemc::Anita::AntennaWaveformtoSurf(int ilayer,int ifold) {
     
   int antenna=GetAntennaNumber(ilayer,ifold); // antenna number 1-32
     
   return antennatosurf[antenna-1]; // returns the surf number
     
 }
-int Anita::AntennaNumbertoSurfNumber(int ilayer,int ifold) {
+int icemc::Anita::AntennaNumbertoSurfNumber(int ilayer,int ifold) {
   int antenna=GetAntennaNumber(ilayer,ifold); // antenna number 1-32
     
   return (antenna-1-(antenna-1)%4)/4+1; // returns the surf number 1-9
     
     
 }
-int Anita::GetSurfChannel(int antenna,int ibw,int ipol) { // 1 to 32
+int icemc::Anita::GetSurfChannel(int antenna,int ibw,int ipol) { // 1 to 32
     
   return ((antenna-1)%4)*8+WhichBand(ibw,ipol);//which scalar channel, numbered 1 to 32
     
 }
-int Anita::WhichBand(int ibw,int ipol) {
+int icemc::Anita::WhichBand(int ibw,int ipol) {
     
   return 2*ibw+ipol+1; // from 1 to 8, which scalar channel on an antenna this band corresponds to, in order as they are on the surfs
 }
-void Anita::Banding(int j,double *freq_noise,double *vmmhz,int NPOINTS_NOISE) {
+void icemc::Anita::Banding(int j,double *freq_noise,double *vmmhz,int NPOINTS_NOISE) {
     
   if (j<0 || j>4) {
     cout << "Band out of range.\n";
@@ -1553,9 +1553,9 @@ void Anita::Banding(int j,double *freq_noise,double *vmmhz,int NPOINTS_NOISE) {
 		
   } // if it's choose-your-own banding
 }
-void Anita::RFCMs(int ilayer,int ifold,double *vmmhz) {
+void icemc::Anita::RFCMs(int ilayer,int ifold,double *vmmhz) {
     
-  int irx=Anita::GetAntennaNumber(ilayer,ifold)-1; // want this to be 0-31
+  int irx=icemc::Anita::GetAntennaNumber(ilayer,ifold)-1; // want this to be 0-31
     
   int iampl;
   for (int i=0;i<NFREQ;i++) {
@@ -1571,7 +1571,7 @@ void Anita::RFCMs(int ilayer,int ifold,double *vmmhz) {
 
 // reads in the effect of a signal not hitting the antenna straight on
 // also reads in gainxx_measured and sets xxgaintoheight
-void Anita::Set_gain_angle(Settings *settings1,double nmedium_receiver) {
+void icemc::Anita::Set_gain_angle(Settings *settings1,double nmedium_receiver) {
   string gain_null1, gain_null2;
   double sfrequency;
   int iii, jjj;
@@ -1691,7 +1691,7 @@ void Anita::Set_gain_angle(Settings *settings1,double nmedium_receiver) {
 // determines the effect of a signal not hitting the antenna straight on
 // for the gain type, 0 means V polarization and el angle, 1 means H polarization and el angle, 2 means H polarization and az angle, 3 means V polarization and az angle
 // gain_angle[gain_type][][] lists the decrease in gain for different frequencies and angles. This subroutine finds the two angles closest to hitangle and the two frequencies closest to freq. It then returns a linear interpolation in 2 dimensions.
-int Anita::GetBeamWidths(Settings *settings1) {
+int icemc::Anita::GetBeamWidths(Settings *settings1) {
     
   // first component is frequency
   // second component is which plane and which polarization
@@ -1952,7 +1952,7 @@ int Anita::GetBeamWidths(Settings *settings1) {
     
   return 1;
 } //GetBeamWidths
-double Anita::Get_gain_angle(int gain_type, int k, double hitangle) {
+double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) {
   double scaleh1, scaleh2;
   if(gain_type < 0 || gain_type > 3) {
     cout << "gain_type out of range\n";
@@ -2002,7 +2002,7 @@ double Anita::Get_gain_angle(int gain_type, int k, double hitangle) {
 } // double Get_gain_angle(int gain_type, double freq, double hitangle)
 
 
-void Anita::getDiodeModel( ) {
+void icemc::Anita::getDiodeModel( ) {
     
     
   //  this is our homegrown diode response function which is a downgoing gaussian followed by an upward step function
@@ -2078,7 +2078,7 @@ void Anita::getDiodeModel( ) {
   // diode_real is the time domain response of the diode
 }
 
-void Anita::myconvlv(double *data,const int NFOUR,double *fdiode,double &mindiodeconvl,double &onediodeconvl,double *power_noise,double *diodeconv) {
+void icemc::Anita::myconvlv(double *data,const int NFOUR,double *fdiode,double &mindiodeconvl,double &onediodeconvl,double *power_noise,double *diodeconv) {
     
   // NFOUR is the size array of fdiode_real, while data is NFOUR/2 sized array.
   // so we are going to make data array to NFOUR sized array with zero padding (see Numerical Recipes 3rd ED, 643 page)
@@ -2187,7 +2187,7 @@ void Anita::myconvlv(double *data,const int NFOUR,double *fdiode,double &mindiod
 // get the frequency bin for a given frequency, the lower and upper limits and the
 // number of bins
 
-void Anita::GetPhases() {
+void icemc::Anita::GetPhases() {
 
   int iband;
   double corr,uncorr;
@@ -2247,7 +2247,7 @@ void Anita::GetPhases() {
     
 }
 
-void Anita::normalize_for_nsamples(double *spectrum, double nsamples, double nsamp){
+void icemc::Anita::normalize_for_nsamples(double *spectrum, double nsamples, double nsamp){
   for (int k = 0; k < NFOUR / 4; k++){
     spectrum[2 * k] *= sqrt((double) nsamples / (double) nsamp);
     spectrum[2 * k + 1] *= sqrt((double) nsamples / (double) nsamp);
@@ -2255,7 +2255,7 @@ void Anita::normalize_for_nsamples(double *spectrum, double nsamples, double nsa
   return;
 }
 
-void Anita::convert_power_spectrum_to_voltage_spectrum_for_fft(int length,double *spectrum, double domain[], double phase[]){
+void icemc::Anita::convert_power_spectrum_to_voltage_spectrum_for_fft(int length,double *spectrum, double domain[], double phase[]){
   double current_amplitude, current_phase;
   //    for (int k = 0; k < NFOUR / 4; k++){
   for (int k = 0; k < length/2 ; k++){
@@ -2272,7 +2272,7 @@ void Anita::convert_power_spectrum_to_voltage_spectrum_for_fft(int length,double
   return;
 }
 
-void Anita::GetNoiseWaveforms() {
+void icemc::Anita::GetNoiseWaveforms() {
   GetPhases();
   int nsamples = NFOUR / 2;
   // int nsamples_long = NFOUR;
@@ -2355,7 +2355,7 @@ void Anita::GetNoiseWaveforms() {
   }
 }
 
-void Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx){
+void icemc::Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx){
   
   int firstNonZero = Tools::Getifreq(freq[0],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
   int lastNonZero  = Tools::Getifreq(freq[NFREQ-1],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
@@ -2376,7 +2376,7 @@ void Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx){
 }
 
 
-void Anita::GetPhasesFromFFT(double *tmp_fftvhz, double *phases){
+void icemc::Anita::GetPhasesFromFFT(double *tmp_fftvhz, double *phases){
   
   for (int ifreq=0; ifreq<NFOUR/4; ifreq++){
     phases[ifreq]=TMath::ATan2(tmp_fftvhz[ifreq+1], tmp_fftvhz[ifreq])*180./PI;
@@ -2385,7 +2385,7 @@ void Anita::GetPhasesFromFFT(double *tmp_fftvhz, double *phases){
 }
 
 
-void Anita::FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[NFREQ]){
+void icemc::Anita::FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[NFREQ]){
   
   // find the frequency domain
   Tools::realft(vsignalarray,1,NFOUR/2);
@@ -2399,7 +2399,7 @@ void Anita::FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[NFREQ]){
 
 }
 
-void Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay) {
+void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay) {
     
   Tools::Zero(vsignal_e_forfft,NFOUR/2);
     
@@ -2471,7 +2471,7 @@ void Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, dou
 }
 
 
-void Anita::BoxAverageComplex(double *array, const int n,int navg) {
+void icemc::Anita::BoxAverageComplex(double *array, const int n,int navg) {
   // to get rid of the zero bins
   double array_temp[2*n];
   for (int i=0;i<n;i++) {
@@ -2495,7 +2495,7 @@ void Anita::BoxAverageComplex(double *array, const int n,int navg) {
 		
   }
 }
-void Anita::BoxAverage(double *array, const int n,int navg) {
+void icemc::Anita::BoxAverage(double *array, const int n,int navg) {
   // to get rid of the zero bins
   double array_temp[n];
   for (int i=0;i<n;i++) {
@@ -2517,7 +2517,7 @@ void Anita::BoxAverage(double *array, const int n,int navg) {
 }
 
 
-void Anita::labAttn(double *vhz) {
+void icemc::Anita::labAttn(double *vhz) {
   for (int i=0;i<NFREQ;i++) {
     // next find the index of the lab attenuation array
     int ilab=Tools::findIndex(freqlab,freq[i],NPOINTS_LAB,freqlab[0],freqlab[NPOINTS_LAB-1]);
@@ -2530,7 +2530,7 @@ void Anita::labAttn(double *vhz) {
   }
 }
 
-int Anita::getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn) {
+int icemc::Anita::getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn) {
     
   ifstream flab((ICEMC_DATA_DIR+"/surfatten_run294_ch23v.dat").c_str());
   if (flab.fail()) {
@@ -2567,7 +2567,7 @@ int Anita::getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn) {
 }
 
 
-double Anita::GaintoHeight(double gain,double freq,double nmedium_receiver) {
+double icemc::Anita::GaintoHeight(double gain,double freq,double nmedium_receiver) {
     
   // from gain=4*pi*A_eff/lambda^2
   // and h_eff=2*sqrt(A_eff*Z_rx/Z_air)
@@ -2576,7 +2576,7 @@ double Anita::GaintoHeight(double gain,double freq,double nmedium_receiver) {
 } //GaintoHeight
 
 
-void Anita::fill_coherent_waveform_sum_tree(unsigned event_number, unsigned center_phi_sector_index, Settings* settings1, double rms_noise, double actual_rms, unsigned window_start, unsigned window_end, double deg_theta, double deg_phi, double actual_deg_theta, double actual_deg_phi, vector <double>& summed_wfm, vector <double>& power_of_summed_wfm, double power){
+void icemc::Anita::fill_coherent_waveform_sum_tree(unsigned event_number, unsigned center_phi_sector_index, Settings* settings1, double rms_noise, double actual_rms, unsigned window_start, unsigned window_end, double deg_theta, double deg_phi, double actual_deg_theta, double actual_deg_phi, vector <double>& summed_wfm, vector <double>& power_of_summed_wfm, double power){
     
   cwst_event_number = event_number;
   cwst_center_phi_sector = center_phi_sector_index;
@@ -2606,10 +2606,10 @@ void Anita::fill_coherent_waveform_sum_tree(unsigned event_number, unsigned cent
   return;
 }
 
-void Anita::GetPayload(Settings* settings1, Balloon* bn1){
+void icemc::Anita::GetPayload(Settings* settings1, Balloon* bn1){
   // anita-lite payload
   // see comments next to variable definitions
-  double temp_eachrx[Anita::NPHI_MAX]; // temperature of each antenna (for the anita-lite configuration)
+  double temp_eachrx[icemc::Anita::NPHI_MAX]; // temperature of each antenna (for the anita-lite configuration)
     
   const double gps_offset = atan2(-0.7042,0.71), MINCH = 0.0254, phase_center = 0.17;
   // const double phase_center_anita2=0.17;
@@ -3571,7 +3571,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
   }
 }//GetPayload
 
-void Anita::calculate_all_offsets(void) {
+void icemc::Anita::calculate_all_offsets(void) {
     
   double angle_phi, angle_theta;
     
@@ -3625,7 +3625,7 @@ void Anita::calculate_all_offsets(void) {
   printDifferentOffsets();
   return;
 }
-void Anita::printDifferentOffsets() {
+void icemc::Anita::printDifferentOffsets() {
   ofstream ofile("outputs/offsets.txt");
   ofile << "number of offsets is " << vdifferent_offsets.size() << "\n";
   
@@ -3646,7 +3646,7 @@ void Anita::printDifferentOffsets() {
   }
   ofile.close();
 }
-void Anita::getDifferentOffsets() {
+void icemc::Anita::getDifferentOffsets() {
  
   vector<int> vtmp;
   vector<double> vangles_tmp;
@@ -3692,7 +3692,7 @@ void Anita::getDifferentOffsets() {
     }  // end loop over hypotheses in phi
   } // end loop over center_phi_sector
 }
-void Anita::calculate_single_offset(const unsigned center_phi_sector_index, const double angle_phi, const double angle_theta, double hypothesis_offset[][3]) {
+void icemc::Anita::calculate_single_offset(const unsigned center_phi_sector_index, const double angle_phi, const double angle_theta, double hypothesis_offset[][3]) {
   double maximum_time = -2000E-9;
    
   double to_center_of_summed_phi_sectors=((double)N_SUMMED_PHI_SECTORS/2.)*22.5-11.25;
@@ -3723,7 +3723,7 @@ void Anita::calculate_single_offset(const unsigned center_phi_sector_index, cons
       //cout << "antenna_pos is ";
       //antenna_pos.Print();
 	
-      double offset = (-1. / CLIGHT) * normal_vector * (antenna_pos - one_antenna_pos);
+      double offset = (-1. / CLIGHT) * normal_vector.Dot(antenna_pos - one_antenna_pos);
 
       //	cout << "offset is " << offset << "\n";
       if (offset >= maximum_time) {
@@ -3750,14 +3750,14 @@ void Anita::calculate_single_offset(const unsigned center_phi_sector_index, cons
 }
 
 
-void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *settings1) {
+void icemc::Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *settings1) {
   //cout << "inside getarrivaltimes.\n";
   
 
   for (int ipol=0; ipol<2; ipol++){
   
     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
-      arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index] * rf_direction) / CLIGHT;
+      arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index].Dot(rf_direction)) / CLIGHT;
 
       //arrival_times[antenna_index] += extraCableDelays[0][antenna_index];
     
@@ -3838,13 +3838,13 @@ void Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, Settings *s
 } // GetArrivalTimes
 
 
-void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX],Balloon *bn1, Settings *settings1) {
+void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX],Balloon *bn1, Settings *settings1) {
 
   for (int ipol=0; ipol<2; ipol++){
     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
       int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
       int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
-      arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
+      arrival_times[ipol][antenna_index] = antenna_positions[ipol][antenna_index].Dot(rf_direction[ilayer][ifold]) / CLIGHT;
 
       // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
       //      arrival_times[ipol][antenna_index] += extraCableDelays[ipol][antenna_index];
@@ -3909,13 +3909,13 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
 } // GetArrivalTimesBoresights
 
 
-void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]) {
+void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]) {
 
   for (int ipol=0; ipol<2; ipol++){
     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
       int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
       int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
-      arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index] * rf_direction[ilayer][ifold]) / CLIGHT;
+      arrival_times[ipol][antenna_index] = antenna_positions[ipol][antenna_index].Dot(rf_direction[ilayer][ifold]) / CLIGHT;
 
       // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
       //      arrival_times[ipol][antenna_index] += extraCableDelays[ipol][antenna_index];
@@ -3941,7 +3941,7 @@ void Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPH
 
 
 
-void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
+void icemc::Anita::setphiTrigMask(UInt_t realTime_flightdata) {
 
   if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
     phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
@@ -3968,7 +3968,7 @@ void Anita::setphiTrigMask(UInt_t realTime_flightdata) {
 
 
 
-void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
+void icemc::Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
   
   if (realTime_flightdata<realTime_surf_min || realTime_flightdata>realTime_surf_max) {
     for(int ipol=0;ipol<2;ipol++){
@@ -3996,7 +3996,7 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
 
 
 #ifdef ANITA_UTIL_EXISTS
-void Anita::readImpulseResponseDigitizer(Settings *settings1){
+void icemc::Anita::readImpulseResponseDigitizer(Settings *settings1){
   
   // Set deltaT to be used in the convolution
   deltaT = 1./(2.6*16.);
@@ -4104,7 +4104,7 @@ void Anita::readImpulseResponseDigitizer(Settings *settings1){
 
 }
 
-void Anita::readTuffResponseDigitizer(Settings *settings1){
+void icemc::Anita::readTuffResponseDigitizer(Settings *settings1){
   // for loops to make the RFSignal array that can be used in applyImpulseResponseDigitizer of ChanTrigger.cc
   // ipol is the polarization "v" or "H" 
   // ring is the number 3 for tmb or bottom middle top
@@ -4169,7 +4169,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
   }// end for loop ipol
 }
 
-void Anita::readTuffResponseTrigger(Settings *settings1){
+void icemc::Anita::readTuffResponseTrigger(Settings *settings1){
   // for loops to make the RFSignal array that can be used in applyImpulseResponseTrigger of ChanTrigger.cc Do we need one for each antenna???
   TString filename;
   string snotch_dir[6]={"trigconfigA.imp","trigconfigB.imp","trigconfigC.imp","trigconfigG.imp","trigconfigO.imp","trigconfigP.imp"};
@@ -4225,7 +4225,7 @@ void Anita::readTuffResponseTrigger(Settings *settings1){
   }// end for loop ipol
 }
 
-void Anita::readNoiseFromFlight(Settings *settings1){
+void icemc::Anita::readNoiseFromFlight(Settings *settings1){
   
   TFile *fRayleighAnita3 = new TFile((ICEMC_DATA_DIR+"/RayleighAmplitudesAnita3_noSun_Interp.root").c_str(), "read");
   
@@ -4252,7 +4252,7 @@ void Anita::readNoiseFromFlight(Settings *settings1){
 
 
 
-void Anita::readImpulseResponseTrigger(Settings *settings1){
+void icemc::Anita::readImpulseResponseTrigger(Settings *settings1){
 
   // So far only available for ANITA-3
   
@@ -4372,7 +4372,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 }
 
 
-void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
+void icemc::Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
   
   if(settings1->WHICH==9){
      
@@ -4466,7 +4466,7 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
 #endif
 
 
-void Anita::calculateDelaysForEfficiencyScan(){
+void icemc::Anita::calculateDelaysForEfficiencyScan(){
 
   int irx, phiIndex;
 

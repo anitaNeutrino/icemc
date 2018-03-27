@@ -10,11 +10,8 @@
 #include "Constants.h"
 
 
-//using std::cout;
-using namespace std;
 
-
-void  Tools::MakeGraph(int index, const int n,double *time,double *volts,TGraph *&mygraph,TH2F *&h2, double scalex,double scaley,string xaxistitle,string yaxistitle) {
+void icemc::Tools::MakeGraph(int index, const int n,double *time,double *volts,TGraph *&mygraph,TH2F *&h2, double scalex,double scaley,string xaxistitle,string yaxistitle) {
     
     double maxtime=-1.E20;
     double maxv=-1.E20;
@@ -50,7 +47,7 @@ void  Tools::MakeGraph(int index, const int n,double *time,double *volts,TGraph 
 }
 
 
-int Tools::iSum(int* thisarray,int n) {
+int icemc::Tools::iSum(int* thisarray,int n) {
     
     int sum=0;
     for (int i=0;i<n;i++) {
@@ -60,7 +57,7 @@ int Tools::iSum(int* thisarray,int n) {
 } //iSum
 
 
-double Tools::getMaxMagnitude(vector<double> v) {
+double icemc::Tools::getMaxMagnitude(vector<double> v) {
     double mag=0.;
     for (int i=0;i<(int)v.size();i++) {
         if (v[i]>mag)
@@ -70,7 +67,7 @@ double Tools::getMaxMagnitude(vector<double> v) {
 }
 
 
-void Tools::ShiftLeft(double *x,const int n,int ishift) {
+void icemc::Tools::ShiftLeft(double *x,const int n,int ishift) {
     
     double x_temp[n];
     // shift the x array to the left by ishift bins and fill the gap with zeroes
@@ -86,7 +83,7 @@ void Tools::ShiftLeft(double *x,const int n,int ishift) {
 }
 
 
-void Tools::ShiftRight(double *x,const int n,int ishift) {
+void icemc::Tools::ShiftRight(double *x,const int n,int ishift) {
     
     double x_temp[n];
     // shift the x array to the right by ishift bins and fill the gap with zeroes
@@ -102,7 +99,7 @@ void Tools::ShiftRight(double *x,const int n,int ishift) {
 }
 
 
-void Tools::realft(double *data, const int isign, int nsize){
+void icemc::Tools::realft(double *data, const int isign, int nsize){
     int i, i1, i2, i3, i4;
     double c1=0.5,c2,h1r,h1i,h2r,h2i,wr,wi,wpr,wpi,wtemp,theta;
     theta=3.141592653589793238/(nsize>>1);
@@ -143,14 +140,14 @@ void Tools::realft(double *data, const int isign, int nsize){
 }
 
 
-void Tools::SWAP(double &a, double &b){
+void icemc::Tools::SWAP(double &a, double &b){
     double dum = a;
     a = b;
     b = dum;
 }
 
 
-void Tools::four1(double *data, const int isign,int nsize) {
+void icemc::Tools::four1(double *data, const int isign,int nsize) {
     int n,mmax,m,j,istep,i;
     double wtemp,wr,wpr,wpi,wi,theta,tempr,tempi;
     
@@ -196,12 +193,12 @@ void Tools::four1(double *data, const int isign,int nsize) {
 }
 
 
-double Tools::dSquare(double *p) {
+double icemc::Tools::dSquare(double *p) {
     return p[0]*p[0]+p[1]*p[1]+p[2]*p[2];
 } //dSquare
 
 
-int Tools::WhichIsMin(double *x,int n) {
+int icemc::Tools::WhichIsMin(double *x,int n) {
     double min=1.E22;
     int imin=0;
     for (int i=0;i<n;i++) {
@@ -214,23 +211,23 @@ int Tools::WhichIsMin(double *x,int n) {
 } //WhichIsMin
 
 
-void Tools::Print(double *p,int i) {
+void icemc::Tools::Print(double *p,int i) {
     for (int j=0;j<i;j++) {
-        cout << p[j] << " ";
+      std::cout << p[j] << " ";
     } //for
-    cout << "\n";
+    std::cout << "\n";
 } //Print (double*,int)
 
 
-void Tools::Print(int *p,int i) {
+void icemc::Tools::Print(int *p,int i) {
     for (int j=0;j<i;j++) {
-        cout << p[j] << " ";
+      std::cout << p[j] << " ";
     } //for
-    cout << "\n";
+    std::cout << "\n";
 } //Print (double*,int)
 
 
-void Tools::GetNextNumberAsString(ifstream& fin, ofstream& fout, string& number) {
+void icemc::Tools::GetNextNumberAsString(ifstream& fin, ofstream& fout, string& number) {
     string temp;
     getline(fin,temp); // get next line of the input file
     
@@ -243,7 +240,7 @@ void Tools::GetNextNumberAsString(ifstream& fin, ofstream& fout, string& number)
 } //GetNextNumberAsString
 
 
-void Tools::GetNumbersAsStringArray(ifstream& fin, ofstream& fout,vector<string>& vnumbers, int nelements) {
+void icemc::Tools::GetNumbersAsStringArray(ifstream& fin, ofstream& fout,vector<string>& vnumbers, int nelements) {
     string temp;
     //getline(fin,temp);
     
@@ -263,11 +260,11 @@ void Tools::GetNumbersAsStringArray(ifstream& fin, ofstream& fout,vector<string>
     }
     getline(fin,temp);
     fout << temp << "\n";
-    //  cout << "temp is " << temp << "\n";
+    //  std::cout << "temp is " << temp << "\n";
 }
 
 
-void Tools::GetNext2NumbersAsString(ifstream& fin,ofstream& fout,string& number1,string& number2, string& stherest) {
+void icemc::Tools::GetNext2NumbersAsString(ifstream& fin,ofstream& fout,string& number1,string& number2, string& stherest) {
     
     string temp;
     getline(fin,temp); // get next line of the input file
@@ -287,11 +284,11 @@ void Tools::GetNext2NumbersAsString(ifstream& fin,ofstream& fout,string& number1
 } //GetNext2NumbersAsString
 
 
-double Tools::GetFWHM(TH1 *h1) {
+double icemc::Tools::GetFWHM(TH1 *h1) {
     int imax=h1->GetMaximumBin();
     double max=h1->GetMaximum();
     
-    //  cout << "imax, max are " << imax << " " << max << "\n";
+    //  std::cout << "imax, max are " << imax << " " << max << "\n";
     int ibin_plus=0;
     int ibin_minus=0;
     // now step to the right until it's half
@@ -299,7 +296,7 @@ double Tools::GetFWHM(TH1 *h1) {
         if (h1->GetBinContent(ibin)<max/2.) {
             ibin_plus=ibin;
             ibin=h1->GetNbinsX()+1;
-            //  cout << "ibin_plus is " << ibin_plus << "\n";
+            //  std::cout << "ibin_plus is " << ibin_plus << "\n";
         }
     }
     // now step to the left
@@ -307,17 +304,17 @@ double Tools::GetFWHM(TH1 *h1) {
         if (h1->GetBinContent(ibin)<max/2.) {
             ibin_minus=ibin;
             ibin=0;
-            //  cout << "ibin_minus is " << ibin_minus << "\n";
+            //  std::cout << "ibin_minus is " << ibin_minus << "\n";
         }
     }
 
     if (ibin_plus>0 && ibin_minus==0) {
         ibin_minus=1;
-        //cout << "bin_minus is " << ibin_minus << "\n";
+        //std::cout << "bin_minus is " << ibin_minus << "\n";
     }
     
     if (ibin_plus==0 && ibin_minus==0) {
-        cout << "Found 0 FWHM.\n";
+        std::cout << "Found 0 FWHM.\n";
         return 0.;
     }
     
@@ -325,10 +322,10 @@ double Tools::GetFWHM(TH1 *h1) {
 }
 
 
-int Tools::NonZero(double *anarray,int n) { // how many bins are nonzero
+int icemc::Tools::NonZero(double *anarray,int n) { // how many bins are nonzero
   int count=0;
   for (int i=0;i<n;i++) {
-    cout << "i, anarray is " << i << "\t" << anarray[i] << "\n";
+    std::cout << "i, anarray is " << i << "\t" << anarray[i] << "\n";
     if (anarray[i]!=0)
       count++;
   }
@@ -336,19 +333,19 @@ int Tools::NonZero(double *anarray,int n) { // how many bins are nonzero
 }
 
 
-void Tools::Zero(int *anarray,int n) {
+void icemc::Tools::Zero(int *anarray,int n) {
     for (int i=0;i<n;i++) {
         anarray[i]=0;
     } //for
 } //Zero (int*,int)
 
 
-void Tools::Zero(double *anarray,int n) {
+void icemc::Tools::Zero(double *anarray,int n) {
     for (int i=0;i<n;i++) {
         anarray[i]=0.;
     } //for
 } //Zero (int*,int)
-double Tools::dSum(double *anarray,int n) {
+double icemc::Tools::dSum(double *anarray,int n) {
   double sum=0.;
     for (int i=0;i<n;i++) {
         sum+=anarray[i];
@@ -357,10 +354,10 @@ double Tools::dSum(double *anarray,int n) {
 } //Zero (int*,int)
 
 
-double Tools::dMinNotZero(const double *x,int n) {
+double icemc::Tools::dMinNotZero(const double *x,int n) {
     double min=dMax(x,n);
     if (min==0)
-        cout << "max is 0.\n";
+        std::cout << "max is 0.\n";
     for (int k=1;k<n;k++) {
         if (x[k]<min && x[k]!=0)
             min=x[k];
@@ -369,7 +366,7 @@ double Tools::dMinNotZero(const double *x,int n) {
 } //dMinNotZero(double*, int)
 
 
-double Tools::dMin(const double *x,int n) {
+double icemc::Tools::dMin(const double *x,int n) {
     double min=x[0];
     for (int k=1;k<n;k++) {
         if (x[k]<min)
@@ -379,7 +376,7 @@ double Tools::dMin(const double *x,int n) {
 } //dMin(double*, int)
 
 
-double Tools::dMin(double x,double y) {
+double icemc::Tools::dMin(double x,double y) {
     double min=1.E22;
     if (x<y)
         min=x;
@@ -390,7 +387,7 @@ double Tools::dMin(double x,double y) {
 } //dMin(double,double)
 
 
-double Tools::dMax(const double *x,int n) {
+double icemc::Tools::dMax(const double *x,int n) {
     
     double max=x[0];
     for (int k=1;k<n;k++) {
@@ -401,7 +398,7 @@ double Tools::dMax(const double *x,int n) {
 } //dMax(double*, int)
 
 
-double Tools::dvMax(const vector<double> x) {
+double icemc::Tools::dvMax(const vector<double> x) {
     
     double max=x[0];
     for (int k=1;k<(int)x.size();k++) {
@@ -412,7 +409,7 @@ double Tools::dvMax(const vector<double> x) {
 } //dMax(double*, int)
 
 
-double Tools::dsMax(TSpline5 *sp) {
+double icemc::Tools::dsMax(TSpline5 *sp) {
     vector<double> y;
     double maxn;
     double blah1,blah2;
@@ -420,12 +417,12 @@ double Tools::dsMax(TSpline5 *sp) {
         sp->GetKnot(i,blah1,blah2);
         y.push_back(blah2);
     }
-    maxn=Tools::dvMax(y);
+    maxn=icemc::Tools::dvMax(y);
     return maxn;
 }
 
 
-double Tools::dMax(double a,double b) {
+double icemc::Tools::dMax(double a,double b) {
     if (a>b)
         return a;
     else if (a<b)
@@ -436,7 +433,7 @@ double Tools::dMax(double a,double b) {
 } //dMax(double,double
 
 
-int Tools::Getifreq(double freq,double freq_low,double freq_high,int n) {
+int icemc::Tools::Getifreq(double freq,double freq_low,double freq_high,int n) {
     
     if (freq>=freq_high)
         return -1;
@@ -447,7 +444,7 @@ int Tools::Getifreq(double freq,double freq_low,double freq_high,int n) {
 } //Getifreq
 
 
-void Tools::InterpolateReal(double* array, const unsigned n){
+void icemc::Tools::InterpolateReal(double* array, const unsigned n){
     // to get rid of the zero bins
     double previous_nonzero = 0.;
     double next_nonzero = 0.;
@@ -507,7 +504,7 @@ void Tools::InterpolateReal(double* array, const unsigned n){
 }
 
 
-void Tools::InterpolateComplex(double *array, const unsigned n) {
+void icemc::Tools::InterpolateComplex(double *array, const unsigned n) {
     // to get rid of the zero bins
     double previous_nonzero = 0.;
     double next_nonzero = 0.;
@@ -568,7 +565,7 @@ void Tools::InterpolateComplex(double *array, const unsigned n) {
 }
 
 
-void Tools::NormalTimeOrdering(const int n, double* volts) {
+void icemc::Tools::NormalTimeOrdering(const int n, double* volts) {
     double volts_temp[n];
     for (int i=0;i<n/2;i++) {
         volts_temp[i]=volts[i+n/2];
@@ -579,7 +576,7 @@ void Tools::NormalTimeOrdering(const int n, double* volts) {
     }
 }
 
-void Tools::reverseTimeOrdering(const int n, double* bitsin,double *bitsout) {
+void icemc::Tools::reverseTimeOrdering(const int n, double* bitsin,double *bitsout) {
     double bits_temp[n];
     for (int i=0;i<n;i++) {
         bits_temp[i]=bitsin[n-i-1];
@@ -588,7 +585,7 @@ void Tools::reverseTimeOrdering(const int n, double* bitsin,double *bitsout) {
         bitsout[i]=bitsin[i];
     }
 }
-void Tools::reverseTimeOrdering(const int n, int* bitsin,int *bitsout) {
+void icemc::Tools::reverseTimeOrdering(const int n, int* bitsin,int *bitsout) {
     int bits_temp[n];
     for (int i=0;i<n;i++) {
         bits_temp[i]=bitsin[n-i-1];
@@ -599,9 +596,9 @@ void Tools::reverseTimeOrdering(const int n, int* bitsin,int *bitsout) {
 }
 
 
-int Tools::findIndex(double *freqlab,double freq,int npoints,double min,double max) {
+int icemc::Tools::findIndex(double *freqlab,double freq,int npoints,double min,double max) {
     
-    //  cout << "inside findIndex, freq, min are " << freq << " " << min << "\n";
+    //  std::cout << "inside findIndex, freq, min are " << freq << " " << min << "\n";
     
     if (freq<min)
         return -1;
@@ -615,7 +612,7 @@ int Tools::findIndex(double *freqlab,double freq,int npoints,double min,double m
 }
 
 
-void Tools::get_random_rician(double signal_amplitude, double signal_phase, double sigma, double &amplitude, double &phase){
+void icemc::Tools::get_random_rician(double signal_amplitude, double signal_phase, double sigma, double &amplitude, double &phase){
     double rand_gauss_a, rand_gauss_b;
     get_circular_bivariate_normal_random_variable(rand_gauss_a, rand_gauss_b);
     
@@ -635,7 +632,7 @@ void Tools::get_random_rician(double signal_amplitude, double signal_phase, doub
 }
 
 
-void Tools::get_circular_bivariate_normal_random_variable(double& rand_gauss_a, double& rand_gauss_b){
+void icemc::Tools::get_circular_bivariate_normal_random_variable(double& rand_gauss_a, double& rand_gauss_b){
     double rand_uni_a = gRandom->Rndm(); //gRandom->Rndm() produces uniformly-distributed floating points in ]0,1]
     double rand_uni_b = gRandom->Rndm();
     double first_term = sqrt(-2. * log(rand_uni_a));
@@ -646,12 +643,12 @@ void Tools::get_circular_bivariate_normal_random_variable(double& rand_gauss_a, 
 }
 
 
-int Tools::round(double number){
+int icemc::Tools::round(double number){
     return (number > 0.0) ? floor(number + 0.5) : ceil(number - 0.5);
 }
 
 
-double Tools::AbbyPhiCalc(double x_abby, double y_abby){
+double icemc::Tools::AbbyPhiCalc(double x_abby, double y_abby){
     double abbyanglephi = 0;
     
     if(x_abby>=0 && y_abby>=0) //first quadrant
@@ -667,11 +664,11 @@ double Tools::AbbyPhiCalc(double x_abby, double y_abby){
         abbyanglephi=90.;
     if(x_abby==0 && y_abby<=0)
         abbyanglephi=270.;
-    //cout<<"abby's phi is "<< abbyanglephi<<endl;
+    //std::cout<<"abby's phi is "<< abbyanglephi<<endl;
     return abbyanglephi;
 }
 
-TGraph *Tools::getInterpolatedGraph(TGraph *grIn, Double_t deltaT)
+TGraph *icemc::Tools::getInterpolatedGraph(TGraph *grIn, Double_t deltaT)
 {
   //Will use the ROOT::Math::Interpolator function to do this.
   std::vector<double> tVec;
@@ -722,9 +719,9 @@ TGraph *Tools::getInterpolatedGraph(TGraph *grIn, Double_t deltaT)
 }
 
 
-double Tools::calculateSNR(double justSig[512], double justNoise[512]){
+double icemc::Tools::calculateSNR(double justSig[512], double justNoise[512]){
 
-  double p2p = Tools::dMax(justSig, 512) - Tools::dMin(justSig, 512) ;
+  double p2p = icemc::Tools::dMax(justSig, 512) - Tools::dMin(justSig, 512) ;
   double rms = 0;
 
   for (int i=0; i<256; i++){

@@ -27,13 +27,13 @@ using std::string;
 using std::ifstream;
 using std::cerr;
 
-const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
+const string ICEMC_SRC_DIR = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
   
 
 
 
-IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : EarthModel(earth_model,WEIGHTABSORPTION_SETTING) {
+icemc::IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : EarthModel(earth_model,WEIGHTABSORPTION_SETTING) {
     
     bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(71*RADDEG)) / (1 - eccentricity*sin(71*RADDEG)) ),eccentricity/2) * tan((PI/4) - (71*RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
     bedmap_nu = bedmap_R / cos(71*RADDEG);
@@ -161,13 +161,13 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
 //constructor IceModel(int model)
 
 
-Position IceModel::PickBalloonPosition() {
+icemc::Position icemc::IceModel::PickBalloonPosition() {
     Vector temp;
     return temp;
     
 }
 
-Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1, const Position &rbn, Interaction *interaction1) {
+icemc::Position icemc::IceModel::PickInteractionLocation(int ibnposition, Settings *settings1, const Position &rbn, Interaction *interaction1) {
     
     // random numbers used
     double rnd1=0;
@@ -278,7 +278,7 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
 } //PickInteractionLocation
 
 
-int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica) {
+int icemc::IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica) {
     
     interaction1->PickAnyDirection(); // first pick the neutrino direction
     
@@ -304,7 +304,7 @@ int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica) {
     interaction1->toohigh=0;
     interaction1->toolow=0;
     
-    thisr_in.SetXYZ(R_EARTH*thissin*thiscos,R_EARTH*thissin*thissin,R_EARTH*thiscos);
+    thisr_in.SetXYZ(EarthModel::EarthRadiusMeters*thissin*thiscos,EarthModel::EarthRadiusMeters*thissin*thissin,EarthModel::EarthRadiusMeters*thiscos);
     // interaction1->r_in = thisr_in;
 
     if (thisr_in.Dot(interaction1->nnu)>0)
@@ -482,7 +482,7 @@ int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica) {
     
 }
 
-Vector IceModel::GetSurfaceNormal(const Position &r_out) {
+icemc::Vector icemc::IceModel::GetSurfaceNormal(const Position &r_out) {
     Vector n_surf = r_out.Unit();
     if (FLATSURFACE) 
 	return n_surf;
@@ -584,7 +584,7 @@ Vector IceModel::GetSurfaceNormal(const Position &r_out) {
     
 } //method GetSurfaceNormal
 
-int IceModel::WhereDoesItEnterIce(const Position &posnu,
+int icemc::IceModel::WhereDoesItEnterIce(const Position &posnu,
 				  const Vector &nnu,
 				  double stepsize,
 				  Position &r_enterice) {
@@ -601,7 +601,7 @@ int IceModel::WhereDoesItEnterIce(const Position &posnu,
     
     Position x_previous = posnu;
     
-    double x_previous2= x_previous * x_previous;
+    double x_previous2= x_previous.Dot(x_previous);
     x2=x_previous2;
     
     double lon = x.Lon(),lat = x.Lat();
@@ -621,7 +621,7 @@ int IceModel::WhereDoesItEnterIce(const Position &posnu,
 	distance+=stepsize;
 	
 	x -= stepsize*nnu;
-	x2=x*x;
+	x2=x.Dot(x);
 	//cout << "x2 is " << x2 << "\n";
 	lon = x.Lon();
 	lat = x.Lat();
@@ -673,7 +673,7 @@ int IceModel::WhereDoesItEnterIce(const Position &posnu,
     return foundit;
 }//WhereDoesItEnterIce
 
-int IceModel::WhereDoesItExitIce(const Position &posnu,
+int icemc::IceModel::WhereDoesItExitIce(const Position &posnu,
 				 const Vector &nnu,
 				 double stepsize,
 				 Position &r_enterice) {
@@ -690,7 +690,7 @@ int IceModel::WhereDoesItExitIce(const Position &posnu,
     
     Position x_previous = posnu;
     
-    double x_previous2= x_previous * x_previous;
+    double x_previous2= x_previous.Dot(x_previous);
     x2=x_previous2;
     
     double lon = x.Lon(),lat = x.Lat();
@@ -714,7 +714,7 @@ int IceModel::WhereDoesItExitIce(const Position &posnu,
 	nsteps++;
 	//    cout << "inu, nsteps is " << inu << " " << nsteps << "\n";
 	x -= stepsize*nnu;
-	x2=x*x;
+	x2=x.Dot(x);
 	//cout << "x2 is " << x2 << "\n";
 	lon = x.Lon();
 	lat = x.Lat();
@@ -764,7 +764,7 @@ int IceModel::WhereDoesItExitIce(const Position &posnu,
     
     return foundit;
 }//WhereDoesItExitIce
-int IceModel::WhereDoesItExitIceForward(const Position &posnu,
+int icemc::IceModel::WhereDoesItExitIceForward(const Position &posnu,
 					const Vector &nnu,
 					double stepsize,
 					Position &r_enterice) {
@@ -781,7 +781,7 @@ int IceModel::WhereDoesItExitIceForward(const Position &posnu,
     
     Position x_previous = posnu;
     
-    double x_previous2= x_previous * x_previous;
+    double x_previous2= x_previous.Dot(x_previous);
     x2=x_previous2;
     
     double lon = x.Lon(),lat = x.Lat();
@@ -801,7 +801,7 @@ int IceModel::WhereDoesItExitIceForward(const Position &posnu,
 	distance+=stepsize;
 	
 	x += stepsize*nnu;
-	x2=x*x;
+	x2=x.Dot(x);
 	//cout << "x2 is " << x2 << "\n";
 	lon = x.Lon();
 	lat = x.Lat();
@@ -853,7 +853,7 @@ int IceModel::WhereDoesItExitIceForward(const Position &posnu,
 }//WhereDoesItExitIceForward
 
 
-double IceModel::IceThickness(double lon, double lat) {
+double icemc::IceModel::IceThickness(double lon, double lat) {
     //This method returns the thickness of the ice in meters at a location specified by a latitude and longitude (in degrees).  A switch in the input file can be set to determine whether the Crust 2.0 model or the BEDMAP model is used to find the ice depth.  Code by Stephen Hoover.
     double ice_thickness=0;
     //cout << "ice_model is " << ice_model << "\n";
@@ -874,13 +874,13 @@ double IceModel::IceThickness(double lon, double lat) {
     
     return ice_thickness;
 } //method IceThickness
-double IceModel::IceThickness(const Position &pos) {
+double icemc::IceModel::IceThickness(const Position &pos) {
     //This method returns the thickness of the ice in meters at a location under a given position vector.  Code by Stephen Hoover.
     
     return IceThickness(pos.Lon(),pos.Lat());
 } //method IceThickness(position)
 
-double IceModel::SurfaceAboveGeoid(double lon, double lat)  {
+double icemc::IceModel::SurfaceAboveGeoid(double lon, double lat)  {
     //This method returns the elevation above the geoid of the surface of the ice (or bare ground, if no ice is present) in meters, at a location specified by a latitude and longitude (in degrees).  In areas covered by water where no ice present, the method returns 0.  A switch in the input file can be set to determine whether the Crust 2.0 model or the BEDMAP model is used to find the ice depth.  Code by Stephen Hoover.
     // lon must be 0 to 360
     double surface=0;
@@ -904,21 +904,21 @@ double IceModel::SurfaceAboveGeoid(double lon, double lat)  {
     return surface;
 } //method SurfaceAboveGeoid
 
-double IceModel::SurfaceAboveGeoid(const Position &pos)  {
+double icemc::IceModel::SurfaceAboveGeoid(const Position &pos)  {
     //This method returns the elevation above the geoid of the surface of the ice (or bare ground, if no ice is present) in meters, at a location specified by a position vector.  Code by Stephen Hoover.
     
     return SurfaceAboveGeoid(pos.Lon(),pos.Lat());
 } //method SurfaceAboveGeoid(position)
 
-double IceModel::Surface(double lon,double lat)  {
+double icemc::IceModel::Surface(double lon,double lat)  {
     return (SurfaceAboveGeoid(lon,lat) + Geoid(lat)); // distance from center of the earth to surface
 } //Surface
 
-double IceModel::Surface(const Position& pos)  {
+double icemc::IceModel::Surface(const Position& pos)  {
     return Surface(pos.Lon(),pos.Lat());
 } //Surface
 
-double IceModel::WaterDepth(double lon, double lat)  {
+double icemc::IceModel::WaterDepth(double lon, double lat)  {
     //This method returns the depth of water beneath ice shelves in meters, at a location specified by a latitude and longitude (in degrees).  A switch in the input file can be set to determine whether the Crust 2.0 model or the BEDMAP model is used to find the ice depth.  Code by Stephen Hoover.
     double water_depth_value=0;
     
@@ -937,19 +937,19 @@ double IceModel::WaterDepth(double lon, double lat)  {
     
     return water_depth_value;
 } //method WaterDepth(longitude, latitude)
-double IceModel::WaterDepth(const Position &pos) {
+double icemc::IceModel::WaterDepth(const Position &pos) {
     //This method returns the depth of water beneath ice shelves in meters, at a location specified by a position vector.  Code by Stephen Hoover.
     
     return WaterDepth(pos.Lon(),pos.Lat());
 } //method WaterDepth(position)
 
-int IceModel::IceOnWater(const Position &pos) {
+int icemc::IceModel::IceOnWater(const Position &pos) {
     if(IceThickness(pos)>0.&&WaterDepth(pos)>0.)
 	return 1;
     else return 0;
     
 }
-int IceModel::RossIceShelf(const Position &pos) {
+int icemc::IceModel::RossIceShelf(const Position &pos) {
     int ilon,ilat;
     
     GetILonILat(pos,ilon,ilat);
@@ -963,7 +963,7 @@ int IceModel::RossIceShelf(const Position &pos) {
 	return 0;
 }//RossIceShelf
 
-int IceModel::RossExcept(const Position &pos) {
+int icemc::IceModel::RossExcept(const Position &pos) {
     int ilon,ilat;
     GetILonILat(pos,ilon,ilat);
     if(ilon<=178&&ilon>=174&&ilat>=4&&ilat<=5)
@@ -973,7 +973,7 @@ int IceModel::RossExcept(const Position &pos) {
 }
 
 
-int IceModel::RonneIceShelf(const Position &pos) {
+int icemc::IceModel::RonneIceShelf(const Position &pos) {
     int ilon,ilat;
     
     GetILonILat(pos,ilon,ilat);
@@ -987,7 +987,7 @@ int IceModel::RonneIceShelf(const Position &pos) {
     
 }//RonneIceShelf
 
-int IceModel::WestLand(const Position &pos) {
+int icemc::IceModel::WestLand(const Position &pos) {
     double lon = pos.Lon() , lat = pos.Lat();
     
     if((lat>=4&&lat<=26)&&((lon>=0&&lon<=180)||lon>=336))
@@ -996,7 +996,7 @@ int IceModel::WestLand(const Position &pos) {
     
 }//WestLand
 
-double IceModel::GetBalloonPositionWeight(int ibnpos) {
+double icemc::IceModel::GetBalloonPositionWeight(int ibnpos) {
   //  cout << "ibnpos, volume_inhorizon, volume are " << ibnpos << " " << volume_inhorizon[ibnpos] << " " << volume << "\n";
     if (volume_inhorizon[ibnpos]==0) {
 	cout << "volume in horizon is zero!\n";
@@ -1006,15 +1006,15 @@ double IceModel::GetBalloonPositionWeight(int ibnpos) {
     return volume/volume_inhorizon[ibnpos];
 } //GetBalloonPositionWeight
 
-int IceModel::OutsideAntarctica(const Position &pos) {
+int icemc::IceModel::OutsideAntarctica(const Position &pos) {
     return (pos.Lat() >= COASTLINE);
 } //OutsideAntarctica(Position)
 
-int IceModel::OutsideAntarctica(double lat) {
+int icemc::IceModel::OutsideAntarctica(double lat) {
     return (lat >= COASTLINE);
 } //OutsideAntarctica(double lat)
 
-int IceModel::AcceptableRfexit(const Vector &nsurf_rfexit,const Position &rfexit,const Vector &n_exit2rx) {
+int icemc::IceModel::AcceptableRfexit(const Vector &nsurf_rfexit,const Position &rfexit,const Vector &n_exit2rx) {
     
     //Make sure there's actually ice where the ray leaves
     if (rfexit.Lat()>COASTLINE || IceThickness(rfexit)<0.0001) {
@@ -1024,7 +1024,7 @@ int IceModel::AcceptableRfexit(const Vector &nsurf_rfexit,const Position &rfexit
 	
     } //if
     
-    if (nsurf_rfexit*n_exit2rx<0) {
+    if (nsurf_rfexit.Dot(n_exit2rx)<0) {
 	//cout << "dot product is " << nsurf_rfexit*n_exit2rx << "\n";
 	return 0;
     } //if
@@ -1032,7 +1032,7 @@ int IceModel::AcceptableRfexit(const Vector &nsurf_rfexit,const Position &rfexit
     return 1;
 } //AcceptableRfexit
 
-double IceModel::GetN(double altitude) {
+double icemc::IceModel::GetN(double altitude) {
     // these are Peter's fit parameters
     double a1=0.463251;
     double b1=0.0140157;
@@ -1052,11 +1052,11 @@ double IceModel::GetN(double altitude) {
     return n;
 } //GetN(altitude)
 
-double IceModel::GetN(const Position &pos) {
+double icemc::IceModel::GetN(const Position &pos) {
     return GetN(pos.Mag() - Surface(pos.Lon(),pos.Lat()));
 } //GetN(Position)
 
-double IceModel::EffectiveAttenuationLength(Settings *settings1,const Position &pos,const int &whichray) {
+double icemc::IceModel::EffectiveAttenuationLength(Settings *settings1,const Position &pos,const int &whichray) {
     double localmaxdepth = IceThickness(pos);
     double depth = Surface(pos) - pos.Mag();
     //cout << "depth is " << depth << "\n";
@@ -1112,14 +1112,14 @@ double IceModel::EffectiveAttenuationLength(Settings *settings1,const Position &
     return attenuation_length;
 } //EffectiveAttenuationLengthUp
 
-double IceModel::Area(double latitude) {
+double icemc::IceModel::Area(double latitude) {
     //Returns the area of one square of the BEDMAP data at a given latitude. 
     double lat_rad = (90 - latitude) * RADDEG;
     
     return (pow(cellSize* ((1 + sin(71*RADDEG)) / (1 + sin(lat_rad))),2));
 } //method Area
 
-void IceModel::LonLattoEN(double lon, double lat, double xLowerLeft, double yLowerLeft, int& e_coord, int& n_coord) {
+void icemc::IceModel::LonLattoEN(double lon, double lat, double xLowerLeft, double yLowerLeft, int& e_coord, int& n_coord) {
     //takes as input a latitude and longitude (in degrees) and converts to indicies for BEDMAP matricies. Needs a location for the corner of the matrix, as not all the BEDMAP files cover the same area.  Code by Stephen Hoover.
     
     double easting=0;
@@ -1142,20 +1142,20 @@ void IceModel::LonLattoEN(double lon, double lat, double xLowerLeft, double yLow
     return;
 } //method LonLattoEN
 
-void IceModel::IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) {
+void icemc::IceModel::IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) {
     //Converts a latitude and longitude (in degrees) to indicies for BEDMAP ice thickness data.  Code by Stephen Hoover.
     LonLattoEN(lon, lat, xLowerLeft_ice, yLowerLeft_ice, e_coord, n_coord);
 }//IceLonLattoEN
-void IceModel::GroundLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) {
+void icemc::IceModel::GroundLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) {
     //Converts a latitude and longitude (in degrees) to indicies for BEDMAP ground elevation data.  Code by Stephen Hoover.
     LonLattoEN(lon, lat, xLowerLeft_ground, yLowerLeft_ground, e_coord, n_coord);
 }//GroundLonLattoEN
-void IceModel::WaterLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) {
+void icemc::IceModel::WaterLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) {
     //Converts a latitude and longitude (in degrees) to indicies for BEDMAP water depth data.  Code by Stephen Hoover.
     LonLattoEN(lon, lat, xLowerLeft_water, yLowerLeft_water, e_coord, n_coord);
 }//WaterLonLattoEN
 
-void IceModel::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, double yLowerLeft, double& lon, double& lat)  {
+void icemc::IceModel::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, double yLowerLeft, double& lon, double& lat)  {
     //Takes as input the indicies from a BEDMAP data set, and turns them into latitude and longitude coordinates.  Information on which data set (surface data, ice depth, water depth) is necessary, in the form of coordinates of a corner of the map.  Code by Stephen Hoover.
     
     double isometric_lat=0;
@@ -1204,32 +1204,32 @@ void IceModel::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, double yL
     
 } //method ENtoLonLat
 
-void IceModel::IceENtoLonLat(int e, int n, double& lon, double& lat) {
+void icemc::IceModel::IceENtoLonLat(int e, int n, double& lon, double& lat) {
     //Converts indicies of the BEDMAP ice thickness matrix into longitude and latitude.  Code by Stephen Hoover.
     // cout << "I'm inside IceENtoLonLat.\n";
     ENtoLonLat(e,n,xLowerLeft_ice,yLowerLeft_ice,lon,lat);
 }//IceENtoLonLat
-void IceModel::GroundENtoLonLat(int e, int n, double& lon, double& lat) {
+void icemc::IceModel::GroundENtoLonLat(int e, int n, double& lon, double& lat) {
     //Converts indicies of the BEDMAP ground elevation matrix into longitude and latitude.  Code by Stephen Hoover.
     ENtoLonLat(e,n,xLowerLeft_ground,yLowerLeft_ground,lon,lat);
 }//GroundENtoLonLat
-void IceModel::WaterENtoLonLat(int e, int n, double& lon, double& lat) {
+void icemc::IceModel::WaterENtoLonLat(int e, int n, double& lon, double& lat) {
     //Converts indicies of the BEDMAP water depth matrix into longitude and latitude.  Code by Stephen Hoover.
     ENtoLonLat(e,n,xLowerLeft_water,yLowerLeft_water,lon,lat);
 }//WaterENtoLonLat
 
-void IceModel::GetMAXHORIZON(Balloon *bn1) {
+void icemc::IceModel::GetMAXHORIZON(Balloon *bn1) {
     
     double altitude_inmeters=bn1->BN_ALTITUDE*12.*CMINCH/100.;
     if (bn1->BN_ALTITUDE==0.)
 	bn1->MAXHORIZON=8.E5; // if it is a standard flight then use a horizon of 800 km
     else
-	bn1->MAXHORIZON=(sqrt((R_EARTH+altitude_inmeters)*(R_EARTH+altitude_inmeters)-R_EARTH*R_EARTH))*1.1; // find distance from hrizon to balloon, increase it by 10% to be conservative.
+	bn1->MAXHORIZON=(sqrt((EarthModel::EarthRadiusMeters+altitude_inmeters)*(EarthModel::EarthRadiusMeters+altitude_inmeters)-EarthModel::EarthRadiusMeters*EarthModel::EarthRadiusMeters))*1.1; // find distance from hrizon to balloon, increase it by 10% to be conservative.
     cout << "MAXHORIZON is " << bn1->MAXHORIZON << "\n";
 }
 
 
-void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput) {
+void icemc::IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput) {
     
     // add up volume of ice within horizon of payload
     // goes a little beyond horizon.
@@ -1515,7 +1515,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 } //method CreateHorizons 
 
 
-void IceModel::ReadIceThickness() {
+void icemc::IceModel::ReadIceThickness() {
     //Reads the BEDMAP ice thickness data.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
     
   ifstream IceThicknessFile((ICEMC_DATA_DIR+"/icethic.asc").c_str());
@@ -1586,7 +1586,7 @@ void IceModel::ReadIceThickness() {
     return;
 } //method ReadIceThickness
 
-void IceModel::ReadGroundBed() {
+void icemc::IceModel::ReadGroundBed() {
     //Reads the BEDMAP data on the elevation of the ground beneath the ice.  If there is water beneath the ice, the ground elevation is given the value 0.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
   ifstream GroundBedFile((ICEMC_DATA_DIR+"/groundbed.asc").c_str());
     if(!GroundBedFile) {
@@ -1647,7 +1647,7 @@ void IceModel::ReadGroundBed() {
     return;
 } //method ReadGroundBed
 
-void IceModel::ReadWaterDepth() {
+void icemc::IceModel::ReadWaterDepth() {
     //Reads BEDMAP data on the depth of water beneath the ice.  Where no water is present, the value 0 is entered.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
   ifstream WaterDepthFile((ICEMC_DATA_DIR+"/water.asc").c_str());
     if(!WaterDepthFile) {

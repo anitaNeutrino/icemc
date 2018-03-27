@@ -36,20 +36,20 @@ using std::cout;
 
 
 
-void ChanTrigger::ConvertEHtoLREfield(double e_component,double h_component,double& lcp_component,double& rcp_component) {
+void icemc::ChanTrigger::ConvertEHtoLREfield(double e_component,double h_component,double& lcp_component,double& rcp_component) {
     
   lcp_component=sqrt((e_component*e_component+h_component*h_component)/2);
   rcp_component=lcp_component;
     
 } //ConvertEHtoLREfield
-void ChanTrigger::ConvertEHtoLREnergy(double e_component,double h_component,double& lcp_component,double& rcp_component) {
+void icemc::ChanTrigger::ConvertEHtoLREnergy(double e_component,double h_component,double& lcp_component,double& rcp_component) {
     
   lcp_component=(e_component+h_component)/2;
   rcp_component=lcp_component;
     
 } //ConvertEHtoLREnergy
 
-void ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
+void icemc::ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
 					  double *hvolts,
 					  double *left,double *right) {
     
@@ -97,7 +97,7 @@ void ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
 }
 
 
-void ChanTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
+void icemc::ChanTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
     
 
   if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==9) {
@@ -147,7 +147,7 @@ void ChanTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigg
  *
  *
  */
-void ChanTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){
+void icemc::ChanTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, icemc::GlobalTrigger *globaltrig1, icemc::Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){
 
   double volts_thischannel;
   double energy_thischannel;
@@ -177,7 +177,7 @@ void ChanTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, Glo
 	
     // first lcp or v pol (here called pole)
     // if we're implementing masking and the channel has been masked
-    if (settings1->CHMASKING && !ChanTrigger::IsItUnmasked(bn1->surfTrigBandMask,ibw,ilayer,ifold,0)) {
+    if (settings1->CHMASKING && !icemc::ChanTrigger::IsItUnmasked(bn1->surfTrigBandMask,ibw,ilayer,ifold,0)) {
 	  
       globaltrig1->channels_passing[ilayer][ifold][0][ibw]=0;// channel does not pass
       globaltrig1->vchannels_passing[ilayer][ifold][0][ibw]=0;// channel does not pass
@@ -259,7 +259,7 @@ void ChanTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, Glo
     // now rcp or h pol (here called polh)
     // if we're implementing masking and the channel has been masked
     if (!settings1->JUSTVPOL) { // if we're considering just vpol then there's not a second polarization to consider
-      if (settings1->CHMASKING && !ChanTrigger::IsItUnmasked(bn1->surfTrigBandMask,ibw,ilayer,ifold,1)) {
+      if (settings1->CHMASKING && !icemc::ChanTrigger::IsItUnmasked(bn1->surfTrigBandMask,ibw,ilayer,ifold,1)) {
 	globaltrig1->channels_passing[ilayer][ifold][1][ibw]=0;// channel does not pass
 	globaltrig1->vchannels_passing[ilayer][ifold][1][ibw]=0;// channel does not pass
 	    
@@ -329,7 +329,7 @@ void ChanTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, Glo
  *
  *
  */
-void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
+void icemc::ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
   
   double psignal[2][5][Anita::NFOUR];
   
@@ -495,14 +495,14 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
     if (anita1->bwslice_allowed[iband]!=1) continue; 
     // this is for the e polarization
     // if we're implementing masking and the channel has been masked
-    if (settings1->CHMASKING && !ChanTrigger::IsItUnmasked(bn1->surfTrigBandMask,iband,ilayer,ifold,0)) {
+    if (settings1->CHMASKING && !icemc::ChanTrigger::IsItUnmasked(bn1->surfTrigBandMask,iband,ilayer,ifold,0)) {
       if (globaltrig1->channels_passing[ilayer][ifold][0][iband])
 	globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]--;
       globaltrig1->channels_passing[ilayer][ifold][0][iband]=0;// channel does not pass
     }
 	
     // if we're implementing masking and the channel has been masked
-    if (settings1->CHMASKING && !ChanTrigger::IsItUnmasked(bn1->surfTrigBandMask,iband,ilayer,ifold,1)) {
+    if (settings1->CHMASKING && !icemc::ChanTrigger::IsItUnmasked(bn1->surfTrigBandMask,iband,ilayer,ifold,1)) {
       if (globaltrig1->channels_passing[ilayer][ifold][1][iband])
 	globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]--;
       globaltrig1->channels_passing[ilayer][ifold][1][iband]=0;// channel does not pass
@@ -577,7 +577,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
 
 
 
-void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]){
+void icemc::ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]){
 
   int tempChansPassing[5]={0,0,0,0,0};
 
@@ -723,7 +723,7 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
 }
 
 
-void ChanTrigger::InitializeEachBand(Anita *anita1)
+void icemc::ChanTrigger::InitializeEachBand(Anita *anita1)
 {
   unwarned=1;
   for (int ipol=0;ipol<2;ipol++) {
@@ -755,7 +755,7 @@ void ChanTrigger::InitializeEachBand(Anita *anita1)
 
 
 
-void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal){
+void icemc::ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal){
   
   e_component=0;
   h_component=0;
@@ -879,7 +879,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
   
 }
 
-void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant, Balloon *bn1){
+void icemc::ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant, Balloon *bn1){
 
 
   double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
@@ -1013,7 +1013,7 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant, Ballo
 
 
 
-void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Balloon *bn1)
+void icemc::ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Balloon *bn1)
 {
   double vhz_rx_rfcm_e[Anita::NFREQ]; // V/Hz after rx, rfcm
   double vhz_rx_rfcm_h[Anita::NFREQ];
@@ -1092,8 +1092,8 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Bal
     anita1->GetNoiseWaveforms(); // get noise waveforms
       
     // find the peak right here and it might be the numerator of the horizontal axis of matt's plot
-    anita1->peak_rx_rfcm_signalonly[0]=ChanTrigger::FindPeak(volts_rx_rfcm[0],anita1->HALFNFOUR); // with no noise
-    anita1->peak_rx_rfcm_signalonly[1]=ChanTrigger::FindPeak(volts_rx_rfcm[1],anita1->HALFNFOUR);
+    anita1->peak_rx_rfcm_signalonly[0]=icemc::ChanTrigger::FindPeak(volts_rx_rfcm[0],anita1->HALFNFOUR); // with no noise
+    anita1->peak_rx_rfcm_signalonly[1]=icemc::ChanTrigger::FindPeak(volts_rx_rfcm[1],anita1->HALFNFOUR);
       
     if (settings1->SIGNAL_FLUCT) {
       for (int i=0;i<anita1->NFOUR/2;i++) {
@@ -1104,8 +1104,8 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Bal
     }
     
     
-    anita1->peak_rx_rfcm[0]=ChanTrigger::FindPeak(volts_rx_rfcm[0],anita1->HALFNFOUR); // with noise 
-    anita1->peak_rx_rfcm[1]=ChanTrigger::FindPeak(volts_rx_rfcm[1],anita1->HALFNFOUR); // with noise
+    anita1->peak_rx_rfcm[0]=icemc::ChanTrigger::FindPeak(volts_rx_rfcm[0],anita1->HALFNFOUR); // with noise 
+    anita1->peak_rx_rfcm[1]=icemc::ChanTrigger::FindPeak(volts_rx_rfcm[1],anita1->HALFNFOUR); // with noise
       
 
     double vhz_rx_rfcm_lab_e[Anita::NFREQ]; // V/Hz after rx, rfcm and lab
@@ -1154,7 +1154,7 @@ void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Bal
 
 
 
-void ChanTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
+void icemc::ChanTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
 {   
   int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
@@ -1176,8 +1176,8 @@ void ChanTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, in
   // now vmmhz_rx_rfcm_lab_e,h_forfft are the time domain waveforms after the antenna and lab attenuation
   // now find peak voltage
   // these get written to a tree
-  anita1->peak_rx_rfcm_lab[0]=ChanTrigger::FindPeak(volts_rx_rfcm_lab[0],anita1->HALFNFOUR);
-  anita1->peak_rx_rfcm_lab[1]=ChanTrigger::FindPeak(volts_rx_rfcm_lab[1],anita1->HALFNFOUR);  
+  anita1->peak_rx_rfcm_lab[0]=icemc::ChanTrigger::FindPeak(volts_rx_rfcm_lab[0],anita1->HALFNFOUR);
+  anita1->peak_rx_rfcm_lab[1]=icemc::ChanTrigger::FindPeak(volts_rx_rfcm_lab[1],anita1->HALFNFOUR);  
 
 
   // END OF DIGITIZER PATH
@@ -1188,12 +1188,12 @@ void ChanTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, in
 
 
 
-ChanTrigger::ChanTrigger() {
+icemc::ChanTrigger::ChanTrigger() {
     
 }
 
 
-double ChanTrigger::FindPeak(double *waveform,int n) {
+double icemc::ChanTrigger::FindPeak(double *waveform,int n) {
     
   // find peak abs(voltage) of this waveform
     
@@ -1208,7 +1208,7 @@ double ChanTrigger::FindPeak(double *waveform,int n) {
 }
 
 
-void ChanTrigger::addToChannelSums(Settings *settings1,Anita *anita1,int ibw, int k) {
+void icemc::ChanTrigger::addToChannelSums(Settings *settings1,Anita *anita1,int ibw, int k) {
     
   double term_e= v_banding_rfcm[0][ibw][k]*    // for the integral over e-field
     (settings1->BW/(double)Anita::NFREQ/1.E6); // width of a frequency bin
@@ -1236,7 +1236,7 @@ void ChanTrigger::addToChannelSums(Settings *settings1,Anita *anita1,int ibw, in
 }
 
 
-double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant) {
+double icemc::ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant) {
   // first convert threshold in adc counts to the singles rate
   // do this using threshold scans taken before the flight
 
@@ -1304,14 +1304,14 @@ double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant)
 }
 
 
-double ChanTrigger::getRate() {
+double icemc::ChanTrigger::getRate() {
     
   return thisrate;
 }
 
 
 
-double ChanTrigger::rateToThreshold(double rate, int band)
+double icemc::ChanTrigger::rateToThreshold(double rate, int band)
 {
   double constant=0.;
   double slope=0.;
@@ -1347,7 +1347,7 @@ double ChanTrigger::rateToThreshold(double rate, int band)
 
 
 
-int ChanTrigger::IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int ilayer, int ifold, int ipol) {
+int icemc::ChanTrigger::IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int ilayer, int ifold, int ipol) {
     
   if (ibw>3)
     return 1;
@@ -1385,7 +1385,7 @@ int ChanTrigger::IsItUnmasked(unsigned short surfTrigBandMask[9][2],int ibw,int 
 
 
 
-void ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double powerthreshold[2][5],
+void icemc::ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double powerthreshold[2][5],
 			    int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass) {
    
   int maxsample=TMath::MaxElement(5,anita1->imaxbin);
@@ -1482,7 +1482,7 @@ void ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::N
   
 
 
-double ChanTrigger::GetNoise(Settings *settings1,double altitude_bn,double geoid,double theta_zenith,double bw,double temp) {
+double icemc::ChanTrigger::GetNoise(Settings *settings1,double altitude_bn,double geoid,double theta_zenith,double bw,double temp) {
     
   int NSTEPS=1000;
   //  double VSKY=150;
@@ -1537,7 +1537,7 @@ double ChanTrigger::GetNoise(Settings *settings1,double altitude_bn,double geoid
 
 
 
-void ChanTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]) {
+void icemc::ChanTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]) {
     
   if (ilayer==3 && settings1->DISCONES==2) // if it's a nadir layer
     for (int i=0;i<5;i++) {
@@ -1553,7 +1553,7 @@ void ChanTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,dou
 
 
 
-double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStatus[3]){
+double icemc::ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStatus[3]){
   // Butterworth filter for two ANITA notches.
   // order0 = order1 = 1 may be closer to hardware notch
   //  but 2 gives better SW rejection in analysis spectrum.
@@ -1576,7 +1576,7 @@ double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStat
 
 
 #ifdef ANITA_UTIL_EXISTS    
-void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
+void icemc::ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
 
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) y[i]=0;
@@ -1664,7 +1664,7 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   delete graph1;
 }
 
-void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol){
+void icemc::ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol){
 
   int nPoints = anita1->HALFNFOUR;
   double *x   = anita1->fTimes;
@@ -1766,7 +1766,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   delete graph1;
 }
 
-void ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
+void icemc::ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
 
   for (int i=0; i<anita1->NFOUR/2; i++){
     sig0[i]   = justSig_trigPath[0][i];
@@ -1776,7 +1776,7 @@ void ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], double si
   }
 }
 
-void ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
+void icemc::ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
 
   for (int i=0; i<anita1->NFOUR/2; i++){
     sig0[i]   = justSig_digPath[0][i];
@@ -1786,7 +1786,7 @@ void ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double 
   }
 }
 
-void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
+void icemc::ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
 
   Int_t numFreqs = anita1->numFreqs;
   FFTWComplex *phasorsDig  = new FFTWComplex[numFreqs];
@@ -1838,7 +1838,7 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
   
 }
 
-void ChanTrigger::calculateCW(Anita *anita1, double frequency, double phase, double amplitude){
+void icemc::ChanTrigger::calculateCW(Anita *anita1, double frequency, double phase, double amplitude){
 
   double omega;
   
@@ -1850,7 +1850,7 @@ void ChanTrigger::calculateCW(Anita *anita1, double frequency, double phase, dou
 
 }  
 
-TGraph *ChanTrigger::getPulserAtAMPA(Anita *anita1, int ant){
+TGraph *icemc::ChanTrigger::getPulserAtAMPA(Anita *anita1, int ant){
 
   // phiIndex is 0 for central antenna in trigger efficiency scan
   int phiIndex = anita1->trigEffScanPhi - (ant%16);
@@ -1877,7 +1877,7 @@ TGraph *ChanTrigger::getPulserAtAMPA(Anita *anita1, int ant){
  
 }
 
-void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
+void icemc::ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
   // phiIndex is 0 for central antenna in trigger efficiency scan
   int phiIndex = anita1->trigEffScanPhi - (ant%16);
   if (phiIndex>8) phiIndex=phiIndex-16;
@@ -1929,7 +1929,7 @@ void ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
   
 }
 
-void ChanTrigger::injectImpulseAtSurf(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant){
+void icemc::ChanTrigger::injectImpulseAtSurf(Anita *anita1, double volts_triggerPath_e[Anita::HALFNFOUR], double volts_triggerPath_h[Anita::HALFNFOUR], int ant){
   // phiIndex is 0 for central antenna in trigger efficiency scan
   int phiIndex = anita1->trigEffScanPhi - (ant%16);
   if (phiIndex>8) phiIndex=phiIndex-16;

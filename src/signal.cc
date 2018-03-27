@@ -4,61 +4,57 @@
 #include "TRandom3.h"
 #include "vector.hh"
 #include "position.hh"
-
-
-
 #include "Constants.h"
 
-using std::cout;
 
 
-const double Signal::N_AIR(1.);                      // index of refraction of air
-const double Signal::NICE(1.79);                      // index of refraction of ice
-const double Signal::CHANGLE_ICE(acos(1/NICE));                      // index of refraction of ice
-const double Signal::NSALT(2.45);                   // index of refracton for salt
+const double icemc::Signal::N_AIR(1.);                      // index of refraction of air
+const double icemc::Signal::NICE(1.79);                      // index of refraction of ice
+const double icemc::Signal::CHANGLE_ICE(acos(1/NICE));                      // index of refraction of ice
+const double icemc::Signal::NSALT(2.45);                   // index of refracton for salt
 //const double RHOSALT=2165;                 // density of salt (kg/m**3)
-const double Signal::RHOSALT(2050.);                 // density of salt (kg/m**3)
-const double Signal::RHOICE(917);                     // density of ice (kg/m**3)
-const double Signal::RHOH20(1000);          // density of water (kg/m**3)
-const double Signal::RHOAIR(1.25);          // density of air (kg/m**3)
-const double Signal::RM_ICE(10.35); // moliere radius, in g/cm^2
-const double Signal::RM_SALT(12.09); // moliere radius, in g/cm^2
-const double Signal::KR_SALT(1.33); // constant in jaime's parameterization
-const double Signal::KR_ICE(1.42); // constant in jaime's parameterization
-//const double Signal::X0SALT=0.1024;                // radiation length of salt (meters)
-const double Signal::X0SALT(0.1081);                // radiation length of salt (meters)
-//const double Signal::ECSALT=40.;                   // critical energy in salt (MeV)
-const double Signal::ECSALT(38.5);                   // critical energy in salt (MeV)
-const double Signal::X0ICE(0.403); 
-// //const double Signal::X0ICE=0.392; // radiation length of ice (meters)
-const double Signal::ECICE(63.7);                     // critical energy in ice (MeV)
-// //const double Signal::ECICE=73.0; // critical energy in ice (MeV)
-const double Signal::AEX_ICE(1.);  //efficiency for producing charge asymmetry relative to ice.  1 by definition
+const double icemc::Signal::RHOSALT(2050.);                 // density of salt (kg/m**3)
+const double icemc::Signal::RHOICE(917);                     // density of ice (kg/m**3)
+const double icemc::Signal::RHOH20(1000);          // density of water (kg/m**3)
+const double icemc::Signal::RHOAIR(1.25);          // density of air (kg/m**3)
+const double icemc::Signal::RM_ICE(10.35); // moliere radius, in g/cm^2
+const double icemc::Signal::RM_SALT(12.09); // moliere radius, in g/cm^2
+const double icemc::Signal::KR_SALT(1.33); // constant in jaime's parameterization
+const double icemc::Signal::KR_ICE(1.42); // constant in jaime's parameterization
+//const double icemc::Signal::X0SALT=0.1024;                // radiation length of salt (meters)
+const double icemc::Signal::X0SALT(0.1081);                // radiation length of salt (meters)
+//const double icemc::Signal::ECSALT=40.;                   // critical energy in salt (MeV)
+const double icemc::Signal::ECSALT(38.5);                   // critical energy in salt (MeV)
+const double icemc::Signal::X0ICE(0.403); 
+// //const double icemc::Signal::X0ICE=0.392; // radiation length of ice (meters)
+const double icemc::Signal::ECICE(63.7);                     // critical energy in ice (MeV)
+// //const double icemc::Signal::ECICE=73.0; // critical energy in ice (MeV)
+const double icemc::Signal::AEX_ICE(1.);  //efficiency for producing charge asymmetry relative to ice.  1 by definition
  
-const double Signal::ALPHAICE(1.32); // exponent that goes into cutting off the spectrum at high frequencies
-const double Signal::AEX_SALT(0.684);  // efficiency for producing charge asymmetry relative to ice
-const double Signal::ALPHASALT(1.27); // exponent that goes into cutting off the spectrum at high frequencies
-const double Signal::KE_SALT(3.2E-16); // constant in jaime's parameterization, in V/cm/MHz
-const double Signal::KL_SALT(21.12); //constant in jaime's parameterization
-const double Signal::KDELTA_SALT(14.95); // constant in jaime's parameterization
-const double Signal::KE_ICE(4.79E-16); // constant in jaime's parameterization, in V/cm/MHz
-const double Signal::KL_ICE(23.80); //constant in jaime's parameterization
-const double Signal::KDELTA_ICE(18.33); // constant in jaime's parameterization
+const double icemc::Signal::ALPHAICE(1.32); // exponent that goes into cutting off the spectrum at high frequencies
+const double icemc::Signal::AEX_SALT(0.684);  // efficiency for producing charge asymmetry relative to ice
+const double icemc::Signal::ALPHASALT(1.27); // exponent that goes into cutting off the spectrum at high frequencies
+const double icemc::Signal::KE_SALT(3.2E-16); // constant in jaime's parameterization, in V/cm/MHz
+const double icemc::Signal::KL_SALT(21.12); //constant in jaime's parameterization
+const double icemc::Signal::KDELTA_SALT(14.95); // constant in jaime's parameterization
+const double icemc::Signal::KE_ICE(4.79E-16); // constant in jaime's parameterization, in V/cm/MHz
+const double icemc::Signal::KL_ICE(23.80); //constant in jaime's parameterization
+const double icemc::Signal::KDELTA_ICE(18.33); // constant in jaime's parameterization
 
-const double Signal::KELVINS_ICE(250.+150.);          // temperature in Kelvin (ice+system)
-const double Signal::KELVINS_SALT(500.);            // temperature in salt (350) + receiver temp (150)
-const double Signal::BETAICE(2.25); // exponent, in jaime's parameterization
-// double Signal::NU0_MODIFIED=0.; // nu_0 modified for a specific medium
-// double Signal::NU_R;// parameter for signal parameterization
-const double Signal::BETASALT(2.60); // exponent, in jaime's parameterization
-const double Signal::VIEWANGLE_CUT(sqrt(5.)); // require viewangle is no more than 5 delta away from the cerenkov angle where
+const double icemc::Signal::KELVINS_ICE(250.+150.);          // temperature in Kelvin (ice+system)
+const double icemc::Signal::KELVINS_SALT(500.);            // temperature in salt (350) + receiver temp (150)
+const double icemc::Signal::BETAICE(2.25); // exponent, in jaime's parameterization
+// double icemc::Signal::NU0_MODIFIED=0.; // nu_0 modified for a specific medium
+// double icemc::Signal::NU_R;// parameter for signal parameterization
+const double icemc::Signal::BETASALT(2.60); // exponent, in jaime's parameterization
+const double icemc::Signal::VIEWANGLE_CUT(sqrt(5.)); // require viewangle is no more than 5 delta away from the cerenkov angle where
 
 
-Signal::Signal() : N_DEPTH(1.79) {
+icemc::Signal::Signal() : N_DEPTH(1.79) {
 
   Initialize();
 }
- void Signal::InitializeMedium() {
+ void icemc::Signal::InitializeMedium() {
   if (MEDIUM==1) {
     SetKelvins(KELVINS_SALT);
     
@@ -99,7 +95,7 @@ Signal::Signal() : N_DEPTH(1.79) {
  
 }
 
- void Signal::Initialize() {
+ void icemc::Signal::Initialize() {
 
   logscalefactor_taper=0.;
   JAIME_FACTOR=1.0; // factor to multiply Jaime's parameterization for error analysis
@@ -144,7 +140,7 @@ Signal::Signal() : N_DEPTH(1.79) {
       *pnu_reference/1.E6 // energy in MeV
       *1./sin(changle); 
 
-    cout << "multiplying by 1/changle which is " << 1./sin(changle) << "\n";
+    std::cout << "multiplying by 1/changle which is " << 1./sin(changle) << "\n";
 
     //    vmmhz1m*=1./(1.+pow(freq/NU_R,ALPHAMEDIUM));
     vmmhz1m_reference*=1./(1.+pow(freq_reference/nu_r,ALPHAMEDIUM));
@@ -155,7 +151,7 @@ Signal::Signal() : N_DEPTH(1.79) {
 
 
 }
-void Signal::GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max,double *vmmhz,int nfreq) {
+void icemc::Signal::GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max,double *vmmhz,int nfreq) {
 
   // parametrization from Jaime Alvarez Munhiz  
   //  here using astro-ph/0003315 
@@ -185,14 +181,14 @@ void Signal::GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,double *fre
 // 	  sum[j]+=GetVmMHz1m(pnu,freq[i],x0ice,ecice,N_DEPTH,AEXMEDIUM,WHICHPARAMETERIZATION)*(freq[i+1]-freq[i])/1.E6;
 // 	}
 //       }
-//       cout << "j, sum is " << j << " " << sum[j] << "\n";
+//       std::cout << "j, sum is " << j << " " << sum[j] << "\n";
 //     }
     
 //   }
   
 } //GetVmMHz
 
- double Signal::GetELPM() {
+ double icemc::Signal::GetELPM() {
 
   // LPM
   // elpm =7.7 TeV/cm * rho * X0 in PDG, but our x0 is in meters
@@ -204,12 +200,12 @@ void Signal::GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,double *fre
   double elpm=2.E15*(X0MEDIUM/x0ice);  // this is what Jaime uses.  see caption under figure 4 of 0003315.
   return elpm;
 } //GetELPM
- int Signal::GetLPM() {
+ int icemc::Signal::GetLPM() {
 
 
   return LPM;
 } //GetLPM
-void Signal::GetSpread(double pnu,
+void icemc::Signal::GetSpread(double pnu,
 	       double emfrac,
 	       double hadfrac,
 	       double freq,
@@ -219,9 +215,9 @@ void Signal::GetSpread(double pnu,
 	       double& deltheta_em_max,
 	       double& deltheta_had_max) {
   
-  //  cout << KR_MEDIUM << " " << RM_MEDIUM << " " << KL_MEDIUM << " " << KE_MEDIUM << " " << ECMEDIUM << " " << X0MEDIUM << " " << ALPHAMEDIUM << " " << AEXMEDIUM << " " << KDELTA_MEDIUM << " " << BETAMEDIUM << " " << KELVINS << " " << JAIME_FACTOR << "\n";
-  //cout << RHOSALT << " " << RHOICE << " " << RM_ICE << " " << RM_SALT << " " << KR_SALT << " " << KR_ICE << " " << X0SALT << " " << ECSALT << " " << X0ICE << " " << ECICE << " " << AEX_ICE << "\n";  
-  // cout << ALPHAICE << " " << AEX_SALT << " " << ALPHASALT << " " << KE_SALT << " " << KL_SALT << " " << KDELTA_SALT << " " << KE_ICE << " " << KL_ICE << " " << KDELTA_ICE << " " << KELVINS_SALT << " " << BETAICE << " " << BETASALT << "\n";
+  //  std::cout << KR_MEDIUM << " " << RM_MEDIUM << " " << KL_MEDIUM << " " << KE_MEDIUM << " " << ECMEDIUM << " " << X0MEDIUM << " " << ALPHAMEDIUM << " " << AEXMEDIUM << " " << KDELTA_MEDIUM << " " << BETAMEDIUM << " " << KELVINS << " " << JAIME_FACTOR << "\n";
+  //std::cout << RHOSALT << " " << RHOICE << " " << RM_ICE << " " << RM_SALT << " " << KR_SALT << " " << KR_ICE << " " << X0SALT << " " << ECSALT << " " << X0ICE << " " << ECICE << " " << AEX_ICE << "\n";  
+  // std::cout << ALPHAICE << " " << AEX_SALT << " " << ALPHASALT << " " << KE_SALT << " " << KL_SALT << " " << KDELTA_SALT << " " << KE_ICE << " " << KL_ICE << " " << KDELTA_ICE << " " << KELVINS_SALT << " " << BETAICE << " " << BETASALT << "\n";
   
   //  scale by how far off Cherenkov angle this viewing antenna is
   //  c.f. A-MZ  astro-ph/9706064 and astro-ph/0003315
@@ -231,17 +227,17 @@ void Signal::GetSpread(double pnu,
   //  the shower is different.  Get the angular thickness for
   //  both the EM and hadroic parts.
 
-//   cout << KR_MEDIUM << " " << RM_MEDIUM << " " << KL_MEDIUM << " " << KE_MEDIUM << " " << ECMEDIUM << " " << X0MEDIUM << " " << ALPHAMEDIUM << " " << AEXMEDIUM << " " << KDELTA_MEDIUM << " " << BETAMEDIUM << " " << KELVINS << " " << JAIME_FACTOR << "\n";
-//   cout << RHOSALT << " " << RHOICE << " " << RM_ICE << " " << RM_SALT << " " << KR_SALT << " " << KR_ICE << " " << X0SALT << " " << ECSALT << " " << X0ICE << " " << ECICE << " " << AEX_ICE << "\n";  
-//   cout << ALPHAICE << " " << AEX_SALT << " " << ALPHASALT << " " << KE_SALT << " " << KL_SALT << " " << KDELTA_SALT << " " << KE_ICE << " " << KL_ICE << " " << KDELTA_ICE << " " << KELVINS_SALT << " " << BETAICE << " " << BETASALT << "\n";
+//   std::cout << KR_MEDIUM << " " << RM_MEDIUM << " " << KL_MEDIUM << " " << KE_MEDIUM << " " << ECMEDIUM << " " << X0MEDIUM << " " << ALPHAMEDIUM << " " << AEXMEDIUM << " " << KDELTA_MEDIUM << " " << BETAMEDIUM << " " << KELVINS << " " << JAIME_FACTOR << "\n";
+//   std::cout << RHOSALT << " " << RHOICE << " " << RM_ICE << " " << RM_SALT << " " << KR_SALT << " " << KR_ICE << " " << X0SALT << " " << ECSALT << " " << X0ICE << " " << ECICE << " " << AEX_ICE << "\n";  
+//   std::cout << ALPHAICE << " " << AEX_SALT << " " << ALPHASALT << " " << KE_SALT << " " << KL_SALT << " " << KDELTA_SALT << " " << KE_ICE << " " << KL_ICE << " " << KDELTA_ICE << " " << KELVINS_SALT << " " << BETAICE << " " << BETASALT << "\n";
 
   //double elpm=GetLPM();
   double elpm=GetELPM();
 
-  //  cout << "elpm is " << elpm << "\n";
+  //  std::cout << "elpm is " << elpm << "\n";
 
 
-  //  cout << "elpm is " << elpm << "\n";
+  //  std::cout << "elpm is " << elpm << "\n";
   freq=freq/1.E6;  // frequency in MHz
   double showerlength=3.1;  //shower length in meters-gets a modification
                             //for em showers due to lpm effect.
@@ -269,7 +265,7 @@ void Signal::GetSpread(double pnu,
   else 
     showerlength/=pow(elpm/(0.14*(em_eshower)+elpm),0.3);
 
-  //  cout << "showerlength is " << showerlength << "\n";
+  //  std::cout << "showerlength is " << showerlength << "\n";
 
 
     if (WHICHPARAMETERIZATION==0) {
@@ -322,7 +318,7 @@ void Signal::GetSpread(double pnu,
     }
     else if (WHICHPARAMETERIZATION==1) {
 
-      //  cout << "I'm here inside GetSpread.\n";
+      //  std::cout << "I'm here inside GetSpread.\n";
       // we use the old parameterization for em showers
       nu0=500.E6/1.E6; // for rego (astro-ph/9706064)
 
@@ -359,7 +355,7 @@ void Signal::GetSpread(double pnu,
 } //GetSpread
 
 
- double Signal::GetVmMHz1m(double pnu,double freq) { // constructor
+ double icemc::Signal::GetVmMHz1m(double pnu,double freq) { // constructor
 
   if (WHICHPARAMETERIZATION==0) {
     // parametrization from Jaime Alvarez Munhiz  
@@ -400,7 +396,7 @@ void Signal::GetSpread(double pnu,
   vmmhz1m_max=vmmhz1m_max/2.;  // This factor of 2 is to account for the 2 in the definition of the fourier transform in Equation 8 of the Halzen, Stanev and Zas paper.  The same factor of 2 seems to have propagated through subsequent Jaime papers.
   vmmhz1m_max=vmmhz1m_max*sqrt(2.);  // This is to account for the fact that the E fields quoted in the theory papers are double-sided in frequency (they extend from -F to F) whereas we are using it as a single-sided E-field (only from 0 to F).
 
-  //  cout << "jaime_factor is " << JAIME_FACTOR << "\n";
+  //  std::cout << "jaime_factor is " << JAIME_FACTOR << "\n";
   return vmmhz1m_max*JAIME_FACTOR;
 
 
@@ -421,13 +417,13 @@ void Signal::GetSpread(double pnu,
 } //Signal constructor
 
 
- void Signal::SetParameterization(int whichparameterization) {
+ void icemc::Signal::SetParameterization(int whichparameterization) {
 
   WHICHPARAMETERIZATION=whichparameterization;
 }
 
 
-void Signal::TaperVmMHz(double viewangle,
+void icemc::Signal::TaperVmMHz(double viewangle,
 		double deltheta_em,
 		double deltheta_had,
 		double emfrac,
@@ -447,8 +443,8 @@ double vmmhz1m_had=0; // V/m/MHz at 1m due to HAD component of shower
   double rtemp=(viewangle-changle)*(viewangle-changle)/(deltheta_em*deltheta_em);
   
 
-  //cout << "dangle, deltheta_em is " << viewangle-changle << " " << deltheta_em << "\n";
-  //cout << "rtemp (em) is " << rtemp << "\n";
+  //std::cout << "dangle, deltheta_em is " << viewangle-changle << " " << deltheta_em << "\n";
+  //std::cout << "rtemp (em) is " << rtemp << "\n";
   // the power goes like exp(-(theta_v-theta_c)^2/Delta^2)
   // so the e-field is the same with a 1/2 in the exponential
 
@@ -468,7 +464,7 @@ double vmmhz1m_had=0; // V/m/MHz at 1m due to HAD component of shower
 
   rtemp=(viewangle-changle)*(viewangle-changle)/(deltheta_had*deltheta_had);
 
-  //cout << "rtemp (had) is " << rtemp << "\n";
+  //std::cout << "rtemp (had) is " << rtemp << "\n";
 
   if (hadfrac!=0) { // if there is a hadronic fraction
     if (rtemp<20) { // if we are less than 20 sigma from cerenkov angle
@@ -485,7 +481,7 @@ double vmmhz1m_had=0; // V/m/MHz at 1m due to HAD component of shower
   logscalefactor_taper=log10((emfrac*vmmhz1m_em+hadfrac*vmmhz1m_had)/vmmhz1m);
 
 
-  //cout << "emfrac, vmmhz1m_em, hadfrac, vmmhz1m_had are " << emfrac << " " << vmmhz1m_em << " " << hadfrac << " " << vmmhz1m_had << "\n";
+  //std::cout << "emfrac, vmmhz1m_em, hadfrac, vmmhz1m_had are " << emfrac << " " << vmmhz1m_em << " " << hadfrac << " " << vmmhz1m_had << "\n";
   vmmhz1m=sin(viewangle)*(emfrac*vmmhz1m_em+hadfrac*vmmhz1m_had);
 
   if (vmmhz1m==0)

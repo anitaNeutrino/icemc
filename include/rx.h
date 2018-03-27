@@ -18,16 +18,18 @@
 #include "TCint.h"
 #endif
 
-class RX : public TObject {
-public:
-  unsigned phi_sector;
-  unsigned layer;
-  double x, y, z;
-  std::vector <double>* waveform;
-  std::vector <double>* digitized;
-  RX (void) : waveform (NULL), digitized (NULL) {}
-  ~RX (void) {delete waveform; delete digitized;}
-  ClassDef(RX, 1);
-};
+namespace icemc{
+  class RX : public TObject {
+  public:
+    unsigned phi_sector;
+    unsigned layer;
+    double x, y, z;
+    std::vector <double>* waveform;
+    std::vector <double>* digitized;
+    RX (void) : waveform (NULL), digitized (NULL) {}
+    ~RX (void) {delete waveform; delete digitized;}
+    ClassDef(RX, 1);
+  };
+}
 
 #endif

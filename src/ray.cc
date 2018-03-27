@@ -1,4 +1,3 @@
-#include "vector.hh"
 #include "TF1.h"
 #include "TRandom3.h"
 
@@ -13,10 +12,9 @@
 #include "anita.hh"
 #include "ray.hh"
 #include <cmath>
- 
-using std::endl;
 
-Ray::Ray() {
+
+icemc::Ray::Ray() {
   sum_slopeyness=0.;
   xaxis=Vector(1.,0.,0.);
   yaxis=Vector(0.,1.,0.);
@@ -25,12 +23,12 @@ Ray::Ray() {
   slopeyy=0.;
   slopeyz=0.; // these are a measure of how much the surface is sloped in the x,y and z directions
 }
- void Ray::PrintAnglesofIncidence() {
+void icemc::Ray::PrintAnglesofIncidence() {
 
-  cout << "angle of incidence (firn-air) is " << nrf_iceside[3].Angle(nsurf_rfexit)*DEGRAD << "\n";
-  cout << "angle of incidence (ice-firn) is " << nrf_iceside[4].Angle(nsurf_rfexit)*DEGRAD << "\n";
+  std::cout << "angle of incidence (firn-air) is " << nrf_iceside[3].Angle(nsurf_rfexit)*DEGRAD << "\n";
+  std::cout << "angle of incidence (ice-firn) is " << nrf_iceside[4].Angle(nsurf_rfexit)*DEGRAD << "\n";
 }
- void Ray::Initialize() {
+void icemc::Ray::Initialize() {
   
   for (int i=0;i<3;i++) {
     n_exit2bn[i]=Vector(0.,0.,0.); // normal vector in direction of exit point to balloon - 5 iterations, 3 directions for eac
@@ -48,11 +46,11 @@ Ray::Ray() {
     }
     
   }
-    nsurf_rfexit=Vector(0.,0.,0.); // normal of the surface at the place where the rf leaves
-    nsurf_rfexit_db=Vector(0.,0.,0.);
+  nsurf_rfexit=Vector(0.,0.,0.); // normal of the surface at the place where the rf leaves
+  nsurf_rfexit_db=Vector(0.,0.,0.);
 
 }
-void Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry,IceModel *antarctica) {
+void icemc::Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry,IceModel *antarctica) {
 
 
 
@@ -69,11 +67,11 @@ void Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posn
   n_exit2bn[whichtry] = (r_bn - rfexit[whichtry]).Unit();
   
   if (settings1->BORESIGHTS) { // now find rfexit and n_exit2bn for each boresight, still first iteration
-    //cout << "first iteration.\n";
+    //std::cout << "first iteration.\n";
     for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
       for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
         WhereDoesItLeave(posnu,nrf_iceside_eachboresight[2*whichtry][ilayer][ifold],antarctica,
-        rfexit_eachboresight[whichtry][ilayer][ifold]);
+			 rfexit_eachboresight[whichtry][ilayer][ifold]);
         n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit(); 
       }
     }
@@ -103,10 +101,10 @@ void Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posn
 }
 
 //###########
-// Ray::WhereDoesItLeave() is defined in ray.hh since it is a statis member function // MS 2/1/2017
+// icemc::Ray::WhereDoesItLeave() is defined in ray.hh since it is a statis member function // MS 2/1/2017
 
 
-int Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,IceModel *antarctica,double &slopeyangle,int whichtry) {
+int icemc::Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,IceModel *antarctica,double &slopeyangle,int whichtry) {
 
   double howmuch=settings1->SLOPEYSIZE;
   Position nsurf_rfexit_temp;
@@ -119,7 +117,7 @@ int Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,
     nsurf_rfexit_temp=(rfexit_temp.Unit()).Rotate(-settings1->SLACSLOPE*RADDEG,posnu.Cross(zaxis));
   }
   
-    Position nsurf_rfexit_temp_copy=nsurf_rfexit_temp;
+  Position nsurf_rfexit_temp_copy=nsurf_rfexit_temp;
   // tilt local surface based on slopeyness.
   if (settings1->SLOPEY) {
     
@@ -142,7 +140,7 @@ int Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,
       
     ntemp2 = ntemp2 / ntemp2.Mag();
     
-    double rtemp= ntemp2*nsurf_rfexit_temp;
+    double rtemp= ntemp2.Dot(nsurf_rfexit_temp);
     
     if (rtemp<=1) {
       slopeyness=acos(rtemp);
@@ -155,7 +153,7 @@ int Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,
     if (settings1->DEBUG) {
       rtemp=nsurf_rfexit_temp.Mag(); 
       if (fabs(rtemp-1.0)>=0.01) {
-	cout << "error: nx,ny,nz_surf="<<nsurf_rfexit_temp<<endl;
+	std::cout << "error: nx,ny,nz_surf="<<nsurf_rfexit_temp<<std::endl;
 	return 0;
       }//if
     }//if
@@ -166,14 +164,14 @@ int Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,
       nsurf_rfexit_temp = Vector(sqrt(1.-0.99999*0.99999-nsurf_rfexit_temp[1]*nsurf_rfexit_temp[1]), nsurf_rfexit_temp[1], 0.99999);
     }//if
   }  
-  slopeyangle=DEGRAD*acos(nsurf_rfexit_temp*nsurf_rfexit_temp_copy);
+  slopeyangle=DEGRAD*acos(nsurf_rfexit_temp.Dot(nsurf_rfexit_temp_copy));
   nsurf_rfexit=nsurf_rfexit_temp;  
   return 1;
   
 }//RandomizeSurface
 
-    // int Ray::GetSurfaceNormal(IceModel *antarctica,Vector posnu,Position *rfexit) {
-    int Ray::GetSurfaceNormal(Settings *settings1,IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry) {
+// int icemc::Ray::GetSurfaceNormal(IceModel *antarctica,Vector posnu,Position *rfexit) {
+int icemc::Ray::GetSurfaceNormal(Settings *settings1,IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry) {
       
   Position rfexit_temp;
 
@@ -190,115 +188,115 @@ int Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,
 
 
 
-    return 1;
+  return 1;
 }
 
 
-int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth) { // iter is which iteration (1 or 2)
+int icemc::Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth) { // iter is which iteration (1 or 2)
 
    
-    // use snell's law to get the first guess at the 
-    // direction of the rf as it leaves ice surface.
-    // 0th guess was simply radially outward from interaction position
-    // this now takes into account balloon position and surface normal.
+  // use snell's law to get the first guess at the 
+  // direction of the rf as it leaves ice surface.
+  // 0th guess was simply radially outward from interaction position
+  // this now takes into account balloon position and surface normal.
     
-    if (settings1->FIRN) {
+  if (settings1->FIRN) {
 
     
-      if (!GetRayIceSide(n_exit2bn[iter-1],nsurf_rfexit,Signal::N_AIR,NFIRN,
-			 nrf_iceside[2*iter-1])) { // nrf_iceside[1] is the rf direction in the firn
+    if (!GetRayIceSide(n_exit2bn[iter-1],nsurf_rfexit,Signal::N_AIR,NFIRN,
+		       nrf_iceside[2*iter-1])) { // nrf_iceside[1] is the rf direction in the firn
 
-	return 0; // reject if TIR.
-      } 
-      // This could be throwing away events that the final guess would have kept
-      //  Need to look into this and update in the future
+      return 0; // reject if TIR.
+    } 
+    // This could be throwing away events that the final guess would have kept
+    //  Need to look into this and update in the future
       
-      // use snell's law again to get direction of rf ray emitted from
-      // interaction point.  Physically, it is a continuous bending
-      // through the firn but it turns out it obeys Snell's law (Seckel)
+    // use snell's law again to get direction of rf ray emitted from
+    // interaction point.  Physically, it is a continuous bending
+    // through the firn but it turns out it obeys Snell's law (Seckel)
             
-      if (!GetRayIceSide(nrf_iceside[2*iter-1],nsurf_rfexit,NFIRN,n_depth,
-			 nrf_iceside[2*iter])) { // nrf_iceside[2] is the rf direction in the ice
+    if (!GetRayIceSide(nrf_iceside[2*iter-1],nsurf_rfexit,NFIRN,n_depth,
+		       nrf_iceside[2*iter])) { // nrf_iceside[2] is the rf direction in the ice
 
-	return 0;   // note to self:  need to check whether rays are totally internally reflected within ice   
-      }
-
-
+      return 0;   // note to self:  need to check whether rays are totally internally reflected within ice   
+    }
 
 
-      // find where the refracted ray leaves.
-      // rejected if the rf leaves beyond the boundary of the 
-      // continent. Should never happen.
+
+
+    // find where the refracted ray leaves.
+    // rejected if the rf leaves beyond the boundary of the 
+    // continent. Should never happen.
       
-      if (settings1->BORESIGHTS) {
+    if (settings1->BORESIGHTS) {
 	
-	for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
-	  for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+      for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
+	for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
 	    
-	    if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,Signal::N_AIR,NFIRN,
-			       nrf_iceside_eachboresight[2*iter-1][ilayer][ifold])) // nrf_iceside[1] is the rf direction in the firn
-	      return 0; // reject if TIR.  
+	  if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,Signal::N_AIR,NFIRN,
+			     nrf_iceside_eachboresight[2*iter-1][ilayer][ifold])) // nrf_iceside[1] is the rf direction in the firn
+	    return 0; // reject if TIR.  
 
 
-	    //	    std::cout << "ITER " << iter-1 << " " << (n_exit2bn_eachboresight[iter-1][ilayer][ifold]) << std::endl;
+	  //	    std::cout << "ITER " << iter-1 << " " << (n_exit2bn_eachboresight[iter-1][ilayer][ifold]) << std::endl;
 
-	    // This could be throwing away events that the final guess would have kept
-	    //  Need to look into this and update in the future
+	  // This could be throwing away events that the final guess would have kept
+	  //  Need to look into this and update in the future
 	    
-	    // use snell's law again to get direction of rf ray emitted from
-	    // interaction point.  Physically, it is a continuous bending
-	    // through the firn but it turns out it obeys Snell's law (Seckel)
-	    
-	    
-	    if (!GetRayIceSide(nrf_iceside_eachboresight[2*iter-1][ilayer][ifold],nsurf_rfexit,NFIRN,n_depth,
-			       nrf_iceside_eachboresight[2*iter][ilayer][ifold])) // nrf_iceside[2] is the rf direction in the ice
-	      return 0;   // note to self:  need to check whether rays are totally internally reflected within ice   
-	    
-	    // find where the refracted ray leaves.
-	    // rejected if the rf leaves beyond the boundary of the 
-	    // continent. Should never happen.
+	  // use snell's law again to get direction of rf ray emitted from
+	  // interaction point.  Physically, it is a continuous bending
+	  // through the firn but it turns out it obeys Snell's law (Seckel)
 	    
 	    
-	  } // end phi foldings
-	} // end layers
-      } // end if doing this for all boresights
-    } // end if we are modeling the firn
+	  if (!GetRayIceSide(nrf_iceside_eachboresight[2*iter-1][ilayer][ifold],nsurf_rfexit,NFIRN,n_depth,
+			     nrf_iceside_eachboresight[2*iter][ilayer][ifold])) // nrf_iceside[2] is the rf direction in the ice
+	    return 0;   // note to self:  need to check whether rays are totally internally reflected within ice   
+	    
+	  // find where the refracted ray leaves.
+	  // rejected if the rf leaves beyond the boundary of the 
+	  // continent. Should never happen.
+	    
+	    
+	} // end phi foldings
+      } // end layers
+    } // end if doing this for all boresights
+  } // end if we are modeling the firn
     
-    else { // no firn
+  else { // no firn
 
-      if (!GetRayIceSide(n_exit2bn[iter-1],nsurf_rfexit,Signal::N_AIR,Signal::NICE,
-			 nrf_iceside[2*iter-1])) // nrf_iceside[1] is the rf direction in the ice
-	return 0; // reject if TIR.  
-      nrf_iceside[2*iter]=nrf_iceside[2*iter-1]; // no firn so the next element is the same
+    if (!GetRayIceSide(n_exit2bn[iter-1],nsurf_rfexit,Signal::N_AIR,Signal::NICE,
+		       nrf_iceside[2*iter-1])) // nrf_iceside[1] is the rf direction in the ice
+      return 0; // reject if TIR.  
+    nrf_iceside[2*iter]=nrf_iceside[2*iter-1]; // no firn so the next element is the same
       
-      if (settings1->BORESIGHTS) {
+    if (settings1->BORESIGHTS) {
 
-	for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
-	  for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+      for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
+	for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
 	    
-	    if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,Signal::N_AIR,Signal::NICE,
-			       nrf_iceside_eachboresight[2*iter-1][ilayer][ifold])) // nrf_iceside[1] is the rf direction in the ice
-	      return 0; // reject if TIR.  
-	    nrf_iceside_eachboresight[2*iter][ilayer][ifold]=nrf_iceside_eachboresight[2*iter-1][ilayer][ifold]; // no firn so the next element is the same
+	  if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,Signal::N_AIR,Signal::NICE,
+			     nrf_iceside_eachboresight[2*iter-1][ilayer][ifold])) // nrf_iceside[1] is the rf direction in the ice
+	    return 0; // reject if TIR.  
+	  nrf_iceside_eachboresight[2*iter][ilayer][ifold]=nrf_iceside_eachboresight[2*iter-1][ilayer][ifold]; // no firn so the next element is the same
 	    
 	    
-	  } // number of foldings in phi
-	} // number of layers
-      } // end if doing this for all boresights
+	} // number of foldings in phi
+      } // number of layers
+    } // end if doing this for all boresights
       
       
       
-    } // end if we are not modeling the firn
+  } // end if we are not modeling the firn
     
     
 
   return 1;
 }
- int Ray::GetRayIceSide(const Vector &n_exit2bn,
-			const Vector &nsurf_rfexit,
-			double nexit,
-			double nenter, 
-			Vector &nrf2_iceside) {
+int icemc::Ray::GetRayIceSide(const Vector &n_exit2bn,
+			      const Vector &nsurf_rfexit,
+			      double nexit,
+			      double nenter, 
+			      Vector &nrf2_iceside) {
 
   // this function performs snell's law in three dimensions
 
@@ -306,12 +304,12 @@ int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth) { /
 
   double NRATIO=nexit/nenter;
 
-  //  cout << " INPUT " << n_exit2bn << " " << nsurf_rfexit << " " << nexit << " " << nenter << endl;
+  //  std::cout << " INPUT " << n_exit2bn << " " << nsurf_rfexit << " " << nexit << " " << nenter << std::endl;
   
-  costh=(n_exit2bn*nsurf_rfexit)/(n_exit2bn.Mag() * nsurf_rfexit.Mag()); // cos(theta) of the transmission angle
+  costh=(n_exit2bn.Dot(nsurf_rfexit))/(n_exit2bn.Mag() * nsurf_rfexit.Mag()); // cos(theta) of the transmission angle
 
   if (costh<0) {
-    //    cout << "returning 0.  inu is " << inu << "\n";
+    //    std::cout << "returning 0.  inu is " << inu << "\n";
     return 0;
   
   }
@@ -322,9 +320,9 @@ int Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth) { /
   //  double angle=asin(sinth)-asin(sinth_i);
   
   
-  // cout << "sinth, sinth_i are " << sinth << " " << sinth_i << "\n";
-  // cout << "th, th_i are " << asin(sinth)*DEGRAD << " " << asin(sinth_i)*DEGRAD << "\n";
-  // cout << "angle is " << angle*DEGRAD << "\n";
+  // std::cout << "sinth, sinth_i are " << sinth << " " << sinth_i << "\n";
+  // std::cout << "th, th_i are " << asin(sinth)*DEGRAD << " " << asin(sinth_i)*DEGRAD << "\n";
+  // std::cout << "angle is " << angle*DEGRAD << "\n";
   
   //  nrf2_iceside=n_exit2rx.Rotate(angle,n_exit2rx.Cross(nsurf_rfexit));
 

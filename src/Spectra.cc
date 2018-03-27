@@ -8,10 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//class Tools;
-
-
-Spectra::Spectra(int EXPONENT_fromsettings) {
+icemc::Spectra::Spectra(int EXPONENT_fromsettings) {
 
   EXPONENT=EXPONENT_fromsettings;
   // initialize parameters!!
@@ -336,7 +333,7 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
 }
 
 
-double  Spectra::GetNuEnergy() {
+double  icemc::Spectra::GetNuEnergy() {
   double thisenergy=16.; // arbitrary initialisation
   double thisflux=2.; // initialise higher than max
   double max=1.;
@@ -359,7 +356,7 @@ double  Spectra::GetNuEnergy() {
   return pow(10.,thisenergy);
 } //Pick Neutrino Energy
 
-void Spectra::GetCDF(){//set up CDF and inverse CDF;
+void icemc::Spectra::GetCDF(){//set up CDF and inverse CDF;
   cout<<"in CDF \n";
   double y_val=0.;
   double E_min =18;//energy[0];
@@ -398,7 +395,7 @@ void Spectra::GetCDF(){//set up CDF and inverse CDF;
 
 }
 
-double Spectra::GetCDFEnergy(){//get Energy from 'CDF'
+double icemc::Spectra::GetCDFEnergy(){//get Energy from 'CDF'
 
   double ran = gRandom->Rndm();
  
@@ -419,7 +416,7 @@ double Spectra::GetCDFEnergy(){//get Energy from 'CDF'
   
 }
 
-inline void Spectra::GetFlux(string filename)
+inline void icemc::Spectra::GetFlux(string filename)
 {
   
   const string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
@@ -445,42 +442,42 @@ inline void Spectra::GetFlux(string filename)
 }
 
 
-TGraph *Spectra::GetGEdNdEdAdt() {
+TGraph *icemc::Spectra::GetGEdNdEdAdt() {
     return gEdNdEdAdt;
 }
 
 
-TGraph *Spectra::GetGE2dNdEdAdt() {
+TGraph *icemc::Spectra::GetGE2dNdEdAdt() {
     return gE2dNdEdAdt;
 }
 
 
-TSpline3 *Spectra::GetSEdNdEdAdt() {
+TSpline3 *icemc::Spectra::GetSEdNdEdAdt() {
     return sEdNdEdAdt;
 }
 
 
-TSpline3 *Spectra::GetSE2dNdEdAdt() {
+TSpline3 *icemc::Spectra::GetSE2dNdEdAdt() {
     return sE2dNdEdAdt;
 }
 
 
-double *Spectra::Getenergy() {
+double *icemc::Spectra::Getenergy() {
     return energy;
 }
 
 
-double *Spectra::GetEdNdEdAdt() {
+double *icemc::Spectra::GetEdNdEdAdt() {
     return EdNdEdAdt;
 }
 
 
-double *Spectra::GetE2dNdEdAdt() {
+double *icemc::Spectra::GetE2dNdEdAdt() {
     return E2dNdEdAdt;
 }
 
 
-double Spectra::GetEdNdEdAdt(double E_val) {
+double icemc::Spectra::GetEdNdEdAdt(double E_val) {
   double tmp_Get;
   if (E_val < energy[0]) {
       cout<<"Energy value is smaller than the energy boundary!\n";
@@ -499,7 +496,7 @@ double Spectra::GetEdNdEdAdt(double E_val) {
 }
 
 
-double Spectra::GetE2dNdEdAdt(double E_val) {
+double icemc::Spectra::GetE2dNdEdAdt(double E_val) {
   double tmp_Get;
   if (E_val < energy[0]) {
       cout<<"Energy value is smaller than the energy boundary!\n";
@@ -518,17 +515,17 @@ double Spectra::GetE2dNdEdAdt(double E_val) {
 }
 
 
-double Spectra::Getmaxflux() {
+double icemc::Spectra::Getmaxflux() {
     return maxflux;
 }
 
 
-int Spectra::GetE_bin() {
+int icemc::Spectra::GetE_bin() {
     return E_bin;
 }
 
 
-int Spectra::IsSpectrum() {
+int icemc::Spectra::IsSpectrum() {
   int out;
   if (EXPONENT<=10||EXPONENT>=30) {
       out = 1;
@@ -540,7 +537,7 @@ int Spectra::IsSpectrum() {
 }
 
 
-int Spectra::IsMonoenergetic() {
+int icemc::Spectra::IsMonoenergetic() {
   int out;
   if (EXPONENT>10&&EXPONENT<30) {
       out = 1;

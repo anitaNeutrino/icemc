@@ -27,13 +27,13 @@
 #endif
 using std::ifstream;
 
-const string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
+const string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
 const string anitaliteflight=ICEMC_DATA_DIR+"/BalloonGPS.txt"; // the gps path of the anita-lite flight
 const string anitaflight=ICEMC_DATA_DIR+"/anitagps.txt";// gps path of anita flight
 
 
-Balloon::Balloon() {
+icemc::Balloon::Balloon() {
   MAXHORIZON=800000.;                // pick the interaction within this distance from the balloon so that it is within the horizon
   ibnposition=0;
   igps=0;
@@ -43,7 +43,7 @@ Balloon::Balloon() {
   BN_LATITUDE=999; //balloon latitude for fixed balloon location
 }
 
-void  Balloon::setObservationLocation(Interaction *interaction1,int inu,IceModel *antarctica,Settings *settings1) {
+void  icemc::Balloon::setObservationLocation(Interaction *interaction1,int inu,IceModel *antarctica,Settings *settings1) {
   interaction1->banana_volts = 0; //Zero the variable
   interaction1->banana_obs = Vector(0,0,Interaction::banana_observation_distance);
     
@@ -72,11 +72,11 @@ void  Balloon::setObservationLocation(Interaction *interaction1,int inu,IceModel
     
   //Finished setting observation location
 }
-void Balloon::SetDefaultBalloonPosition(IceModel *antarctica1) { // position of surface of earth under balloon
+void icemc::Balloon::SetDefaultBalloonPosition(IceModel *antarctica1) { // position of surface of earth under balloon
     
   // set the default balloon position
   // if you are using real Anita-lite path, these get overwritten for each event
-  //cout << "BN_LATITUDE is " << BN_LATITUDE << "\n";
+  //std::cout << "BN_LATITUDE is " << BN_LATITUDE << "\n";
     
   int BN_LATITUDE_SETTING = BN_LATITUDE;
   int BN_LONGITUDE_SETTING = BN_LONGITUDE;
@@ -108,14 +108,14 @@ void Balloon::SetDefaultBalloonPosition(IceModel *antarctica1) { // position of 
 } // set default balloon position
 
 
-void Balloon::ReadAnitaliteFlight() {
+void icemc::Balloon::ReadAnitaliteFlight() {
     
     
     
     
   ifstream flightfile(anitaliteflight.c_str()); //set file to the right one
   if (!flightfile) {
-    cout << "Flight file not found.\n";
+    std::cout << "Flight file not found.\n";
     exit(1);
   }
     
@@ -150,8 +150,8 @@ void Balloon::ReadAnitaliteFlight() {
     flightfile >> srealtime >> junk >> slatitude >> slongitude >> saltitude >> sheading >> junk >> junk >> junk;
 		
 		
-    //cout << "they are " << NPOINTS << " " << srealtime << " " << junk << " " << slatitude << " " << slongitude << " " << saltitude << " " << sheading << "\n";
-    //cout << "slatitude is " << slatitude << "\n";
+    //std::cout << "they are " << NPOINTS << " " << srealtime << " " << junk << " " << slatitude << " " << slongitude << " " << saltitude << " " << sheading << "\n";
+    //std::cout << "slatitude is " << slatitude << "\n";
     latitude=(double)atof(slatitude.c_str());
     longitude=(double)atof(slongitude.c_str());
     altitude=(double)atof(saltitude.c_str());
@@ -170,7 +170,7 @@ void Balloon::ReadAnitaliteFlight() {
     NPOINTS++;
 		
 		
-    //    cout << "NPOINTS, altitude are " << NPOINTS << " " << altitude << "\n";
+    //    std::cout << "NPOINTS, altitude are " << NPOINTS << " " << altitude << "\n";
 		
     getline(flightfile,junk);
 		
@@ -184,7 +184,7 @@ void Balloon::ReadAnitaliteFlight() {
     
     
 }//ReadAnitaliteFlight
-void Balloon::InitializeBalloon() {
+void icemc::Balloon::InitializeBalloon() {
     
     
   // GPS positions of Anita or Anita-lite balloon flight
@@ -231,7 +231,7 @@ void Balloon::InitializeBalloon() {
     flightdatachain->SetBranchAddress("realTime",&realTime_flightdata_temp);
     flightdatachain->SetBranchAddress("pitch",&fpitch);
     flightdatachain->SetBranchAddress("roll",&froll);
-    //cout << "Loading file.  n events is " << flightdatachain->GetEntries() << "\n";
+    //std::cout << "Loading file.  n events is " << flightdatachain->GetEntries() << "\n";
 		
   } else if (WHICHPATH==8 || WHICHPATH==9) { // for anita-3 and 4 flights
 
@@ -281,7 +281,7 @@ void Balloon::InitializeBalloon() {
   }
 }
 
-double Balloon::GetBalloonSpin(double heading) { // get the azimuth of the balloon
+double icemc::Balloon::GetBalloonSpin(double heading) { // get the azimuth of the balloon
       
   double phi_spin;
   if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9)
@@ -297,7 +297,7 @@ double Balloon::GetBalloonSpin(double heading) { // get the azimuth of the ballo
 }
 
 
-int Balloon::Getibnposition() {
+int icemc::Balloon::Getibnposition() {
   int ibnposition_tmp;
   if (WHICHPATH==1)
     ibnposition_tmp = (int)(r_bn.Lon() / 2);
@@ -311,7 +311,7 @@ int Balloon::Getibnposition() {
     
 }
 
-void Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,Settings *settings1,Anita *anita1) {
+void icemc::Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,Settings *settings1,Anita *anita1) {
   // takes a 3d vector pointing along the z axis
   Vector thetazero(0.,0.,1.);
   Vector phizero(1.,0.,0.);
@@ -322,21 +322,21 @@ void Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,Settin
     phi_bn=0.;
   else
     phi_bn=acos((straightup.Cross(thetazero)).Dot(phizero)); // 1deg
-  // cout << "theta_bn, phi_bn are " << theta_bn << " " << phi_bn << "\n";
+  // std::cout << "theta_bn, phi_bn are " << theta_bn << " " << phi_bn << "\n";
   r_bn=Position(theta_bn,phi_bn); // sets r_bn
-  //cout << "r_bn is ";
+  //std::cout << "r_bn is ";
   //r_bn.Print();
   if (BN_ALTITUDE!=0)
     altitude_bn=BN_ALTITUDE*12.*CMINCH/100.; // set the altitude of the balloon to be what you pick.  This isn't in time for CreateHorizons though!
-  //cout << "altitude_bn is " << altitude_bn << "\n";
+  //std::cout << "altitude_bn is " << altitude_bn << "\n";
   surface_under_balloon = antarctica1->Surface(r_bn);
-  //cout << "surface_under_balloon is " << surface_under_balloon << "\n";
+  //std::cout << "surface_under_balloon is " << surface_under_balloon << "\n";
   r_bn_shadow = surface_under_balloon * r_bn.Unit();
-  //cout << "r_bn_shadow is " << r_bn_shadow << "\n";
+  //std::cout << "r_bn_shadow is " << r_bn_shadow << "\n";
   //    r_bn = (antarctica->Geoid(r_bn)+altitude_bn) * r_bn.Unit();
   
   r_bn = (antarctica1->Surface(r_bn)+altitude_bn) * r_bn.Unit();
-  //cout << "r_bn is ";
+  //std::cout << "r_bn is ";
   // r_bn.Print();
 
 
@@ -364,7 +364,7 @@ void Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,Settin
   
   
   calculate_antenna_positions(settings1,anita1);
-  //  cout << "calculated antenna positions.\n";
+  //  std::cout << "calculated antenna positions.\n";
   if (settings1->BORESIGHTS)
     GetBoresights(settings1,anita1);
     
@@ -390,10 +390,12 @@ int getTuffIndex(int Curr_time) {
   else if( ((TUFFconfig_B_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_1)) || ((TUFFconfig_C_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_2)) || ((TUFFconfig_O_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_3)) || ((TUFFconfig_B_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_4)) || ((TUFFconfig_B_end_4 < Curr_time) && (Curr_time <= TUFFconfig_P_end_5)) || ((TUFFconfig_B_end_5 < Curr_time) && (Curr_time <= TUFFconfig_P_end_6)) || ((TUFFconfig_B_end_6 < Curr_time) && (Curr_time <= TUFFconfig_P_end_7)) ) { // config P trigconfigP.imp
     return 5;
   }
+  std::cerr << "Error in" << __PRETTY_FUNCTION__ << ", could not get TUFF index from current time... returning -1" << std::endl;
+  return -1;
 }
 // this is called for each neutrino
-void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int inu,Anita *anita1, double randomNumber) { // r_bn_shadow=position of spot under the balloon on earth's surface
-  //cout << "calling pickballoonposition.\n";
+void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int inu,Anita *anita1, double randomNumber) { // r_bn_shadow=position of spot under the balloon on earth's surface
+  //std::cout << "calling pickballoonposition.\n";
   pitch=0.;
   roll=0.;
   phi_spin=0.;
@@ -405,7 +407,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     
   //double latitude,longitude,altitude;
     
-  //  cout << "I'm in pickballoonposition. whichpath is " << WHICHPATH << "\n";
+  //  std::cout << "I'm in pickballoonposition. whichpath is " << WHICHPATH << "\n";
   //Pick balloon position
   if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9) { // anita-lite or anita-I or -II path
         
@@ -593,7 +595,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     
     
 } // end PickBalloonPosition
-void Balloon::AdjustSlacBalloonPosition(int inu) { // move payload around like we did at slac
+void icemc::Balloon::AdjustSlacBalloonPosition(int inu) { // move payload around like we did at slac
     
   if (inu<=MAX_POSITIONS)  // use the event number for the position if we c an
     islacposition=inu;
@@ -605,7 +607,7 @@ void Balloon::AdjustSlacBalloonPosition(int inu) { // move payload around like w
     
 }
 
-void Balloon::CenterPayload(double& hitangle_e) {
+void icemc::Balloon::CenterPayload(double& hitangle_e) {
     
   // allow an option to rotate the payload so the signal is
   // always on the boresight of one phi sector
@@ -615,7 +617,7 @@ void Balloon::CenterPayload(double& hitangle_e) {
 }
 
 
-void Balloon::GetAntennaOrientation(Settings *settings1, Anita *anita1, int ilayer, int ifold, Vector& n_eplane, Vector& n_hplane, Vector& n_normal){
+void icemc::Balloon::GetAntennaOrientation(Settings *settings1, Anita *anita1, int ilayer, int ifold, Vector& n_eplane, Vector& n_hplane, Vector& n_normal){
 
   // rotate for antenna's orientation on payload
   // face of antenna starts out relative to +x because phi is relative to +x
@@ -656,33 +658,33 @@ void Balloon::GetAntennaOrientation(Settings *settings1, Anita *anita1, int ilay
 } //end void GetAntennaOrientation
 
 
-void Balloon::GetEcompHcompkvector(Vector n_eplane, Vector n_hplane, Vector n_normal, const Vector n_exit2bn, double& e_component_kvector, double& h_component_kvector, double& n_component_kvector){
+void icemc::Balloon::GetEcompHcompkvector(Vector n_eplane, Vector n_hplane, Vector n_normal, const Vector n_exit2bn, double& e_component_kvector, double& h_component_kvector, double& n_component_kvector){
     
      
   // find component along e-plane for the purpose of finding hit angles, that is, in direction of k vector, direction of radio wave)
-  e_component_kvector = -(n_exit2bn * n_eplane);
+  e_component_kvector = -(n_exit2bn.Dot(n_eplane));
   // find component along h-plane for the purpose of finding hit angles, that is, in direction of k vector, direction of radio wave)
-  h_component_kvector = -(n_exit2bn * n_hplane);
+  h_component_kvector = -(n_exit2bn.Dot(n_hplane));
   // find the component normal
-  n_component_kvector = -(n_exit2bn * n_normal);
+  n_component_kvector = -(n_exit2bn.Dot(n_normal));
 
 } // end GetEcompHcompkvector
 
 
 
-void Balloon::GetEcompHcompEvector(Settings *settings1, Vector n_eplane, Vector n_hplane, const Vector n_pol, double& e_component, double& h_component, double& n_component){
+void icemc::Balloon::GetEcompHcompEvector(Settings *settings1, Vector n_eplane, Vector n_hplane, const Vector n_pol, double& e_component, double& h_component, double& n_component){
 
   // find component along e-plane in direction of polarization, that is in direction of the E field   
-  e_component = n_pol*n_eplane;
+  e_component = n_pol.Dot(n_eplane);
   //    std::cout << "n_component : " << n_exit2bn << " " << n_normal << " " << n_component << std::endl;
     
   // find component along h-plane in direction of polarization, that is in direction of the E field 
-  h_component = n_pol*n_hplane;
+  h_component = n_pol.Dot(n_hplane);
 
 
   if (settings1->REMOVEPOLARIZATION) {
     //Trying to remove effects of polarization at antenna. Stephen
-    e_component = n_pol * n_pol;
+    e_component = n_pol.Dot(n_pol);
     h_component = 0.001;
     n_component = 0.001;
   } //if
@@ -692,7 +694,7 @@ void Balloon::GetEcompHcompEvector(Settings *settings1, Vector n_eplane, Vector 
 
 
 
-void Balloon::GetHitAngles(double e_component_kvector, double h_component_kvector, double n_component_kvector, double& hitangle_e, double& hitangle_h) {
+void icemc::Balloon::GetHitAngles(double e_component_kvector, double h_component_kvector, double n_component_kvector, double& hitangle_e, double& hitangle_h) {
 #if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
   Vec2d y(e_component_kvector, h_component_kvector); 
   Vec2d x(n_component_kvector, n_component_kvector); 
@@ -708,7 +710,7 @@ void Balloon::GetHitAngles(double e_component_kvector, double h_component_kvecto
 } //end void GetHitAngles
 
 
-void Balloon::setr_bn(double latitude,double longitude) {
+void icemc::Balloon::setr_bn(double latitude,double longitude) {
     
   // latitude is between -90 and 0.
   // theta_bn measured from the SP and is between 0 and PI/2.
@@ -728,7 +730,7 @@ void Balloon::setr_bn(double latitude,double longitude) {
 }
 
 
-void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, Settings *settings1, IceModel *antarctica1, Ray *ray1, int &beyondhorizon) {
+void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, Settings *settings1, IceModel *antarctica1, Ray *ray1, int &beyondhorizon) {
     
   // double distance=1.E7;
   double phi=0,theta=0;
@@ -774,7 +776,7 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
       
       Vector zaxis(0.,0.,1.); // start with vector pointing in the +z direction
       
-      interaction1->posnu=zaxis.RotateY(r_bn.Theta()-settings1->SLAC_HORIZDIST/EarthModel::R_EARTH); // rotate to theta of balloon, less the distance from the interaction to the balloon
+      interaction1->posnu=zaxis.RotateY(r_bn.Theta()-settings1->SLAC_HORIZDIST/EarthModel::EarthRadiusMeters); // rotate to theta of balloon, less the distance from the interaction to the balloon
       
       interaction1->posnu=interaction1->posnu.RotateZ(r_bn.Phi()); // rotate to phi of the balloon
       
@@ -804,9 +806,9 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
     }
   }
   
-  //cout<<interaction1->posnu<<"  "<<r_bn<<" :: "<<r_bn.Distance(interaction1->posnu)<<"\n";
+  //std::cout<<interaction1->posnu<<"  "<<r_bn<<" :: "<<r_bn.Distance(interaction1->posnu)<<"\n";
   // if (interaction1->iceinteraction) {
-  //   //cout << "posnu is ";interaction1->posnu.Print();
+  //   //std::cout << "posnu is ";interaction1->posnu.Print();
   // }
   // first guess at the rf exit point is just the point on the surface directly above the interaction
   ray1->rfexit[0] = antarctica1->Surface(interaction1->posnu) * interaction1->posnu.Unit();  
@@ -819,7 +821,7 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
       for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
 	ray1->rfexit_eachboresight[0][ilayer][ifold]=antarctica1->Surface(interaction1->posnu) * interaction1->posnu.Unit();// this first guess rfexit is the same for all antennas too
 	ray1->n_exit2bn_eachboresight[0][ilayer][ifold]=(r_boresights[ilayer][ifold]- ray1->rfexit_eachboresight[0][ilayer][ifold]).Unit();
-	// cout << "ilayer, ifold, n_exit2bn are " << ilayer << "\t" << ifold << " ";
+	// std::cout << "ilayer, ifold, n_exit2bn are " << ilayer << "\t" << ifold << " ";
       }
     }
   }
@@ -875,7 +877,7 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
 
 
 
-void Balloon::GetSlacPositions(Anita *anita1) {
+void icemc::Balloon::GetSlacPositions(Anita *anita1) {
     
   sslacpositions[0]="phi 4-5";
   slacpositions[0]=Vector(0.3,179.7,223.8);
@@ -981,11 +983,10 @@ void Balloon::GetSlacPositions(Anita *anita1) {
 			    slacpositions[i].GetZ()*CMINCH/100.);// inches to meters
     slacpositions[i].SetY(slacpositions[i].GetY()-BN_ALTITUDE*12.*CMINCH/100.-0.5584-anita1->LAYER_VPOSITION[2]+0.4); // subtract balloon altitude, add depth of beam relative to surface.  Use 0.4 m for the height of an antenna.
 		
-  }
-    
+  }    
 }
 
-void GetBoresights(Settings *settings1,Anita *anita1,Position r_bn,double phi_spin,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],Vector n_north,Vector n_east) {
+void icemc::Balloon::GetBoresights(Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]){//,Vector n_north,Vector n_east) {
     
   // this fills r_boresights with the position of the antenna boresights.
   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
@@ -1031,7 +1032,7 @@ void GetBoresights(Settings *settings1,Anita *anita1,Position r_bn,double phi_sp
 
 
 /*
-  void Balloon::GetBoresights(Settings *settings1,Anita *anita1) {
+  void icemc::Balloon::GetBoresights(Settings *settings1,Anita *anita1) {
     
   // this fills r_boresights with the position of the antenna boresights.
   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
@@ -1074,7 +1075,7 @@ void GetBoresights(Settings *settings1,Anita *anita1,Position r_bn,double phi_sp
   }
   }
 */
-void Balloon::GetBoresights(Settings *settings1,Anita *anita1) {
+void icemc::Balloon::GetBoresights(Settings *settings1,Anita *anita1) {
   Vector ant_pos;
   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
@@ -1085,7 +1086,7 @@ void Balloon::GetBoresights(Settings *settings1,Anita *anita1) {
   }
 }
 
-void Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
+void icemc::Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
   int number_all_antennas = 0;
   Vector antenna_position;
    
@@ -1110,11 +1111,11 @@ void Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
 				
 	}//else
 			
-	//cout<<"antenna_position start for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
+	//std::cout<<"antenna_position start for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
 	antenna_position=RotatePayload(antenna_position);
 	
 	anita1->antenna_positions[ipol][number_all_antennas] = antenna_position;
-	//cout<<"antenna_position for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
+	//std::cout<<"antenna_position for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
 	number_all_antennas++;
       }
     }
@@ -1122,7 +1123,7 @@ void Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
   return;
 }
 
-Vector Balloon::RotatePayload(Vector ant_pos_pre) {
+icemc::Vector icemc::Balloon::RotatePayload(Vector ant_pos_pre) {
   if(WHICHPATH==7){
     // ANITA-2 analysis fitted fixed pitch and roll
     pitch=-0.29; 
@@ -1172,14 +1173,15 @@ Vector Balloon::RotatePayload(Vector ant_pos_pre) {
   northaxis = northaxis.RotateZ(BalloonPhi);
   eastaxis = eastaxis.RotateZ(BalloonPhi);
   
-  // cout<<"northaxis is "<<northaxis<<" n_north is "<<n_north<<"\n";
-  // cout<<"eastaxis is "<<eastaxis<<" n_east is "<<n_east<<"\n";
+  // std::cout<<"northaxis is "<<northaxis<<" n_north is "<<n_north<<"\n";
+  // std::cout<<"eastaxis is "<<eastaxis<<" n_east is "<<n_east<<"\n";
   this->x_axis_rot = xaxis;
   this->y_axis_rot = yaxis;
   this->z_axis_rot = zaxis;
   return ant_pos;
 }  
-Vector Balloon::unRotatePayload(Vector ant_pos_pre) {//rotate back to Payload Centric coordinates
+
+icemc::Vector icemc::Balloon::unRotatePayload(Vector ant_pos_pre) {//rotate back to Payload Centric coordinates
   if(WHICHPATH==7){
     pitch=-0.29; //ANITA-2 settings in ANALYSIS
     roll=0.89; //ANITA-2 settings in ANALYSIS
@@ -1195,7 +1197,7 @@ Vector Balloon::unRotatePayload(Vector ant_pos_pre) {//rotate back to Payload Ce
   double BalloonTheta = BalloonPos.Theta();
   double BalloonPhi = BalloonPos.Phi();
   
-  //cout<<"BalloonTheta is "<<BalloonTheta<<" phi is "<<BalloonPhi<<"\n";
+  //std::cout <<"BalloonTheta is "<<BalloonTheta<<" phi is "<<BalloonPhi<<"\n";
   if(BalloonPhi > PI){
     BalloonPhi =BalloonPhi-TWOPI;
   }

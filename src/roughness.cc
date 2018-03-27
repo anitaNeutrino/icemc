@@ -29,7 +29,7 @@
 #include "pointing.h"
 #endif
 
-Roughness::Roughness(Settings *settings1){
+icemc::Roughness::Roughness(Settings *settings1){
 
   rough_dir_str = std::getenv("ICEMC_SRC_DIR");
 #ifdef USE_HEALPIX
@@ -51,7 +51,7 @@ Roughness::Roughness(Settings *settings1){
 };
 
 
-void Roughness::SetRoughScale(double a){
+void icemc::Roughness::SetRoughScale(double a){
   std::ostringstream strs;
   strs.precision(2);
   strs.setf( std::ios::fixed, std:: ios::floatfield );
@@ -65,7 +65,7 @@ void Roughness::SetRoughScale(double a){
 };
 
 
-std::string Roughness::incAngle_asString(double T0){
+std::string icemc::Roughness::incAngle_asString(double T0){
   char s_f[10];
   sprintf(s_f, "%.1f", T0);
   std::string s = std::string() + s_f;
@@ -81,7 +81,7 @@ static std::map<std::string, std::map<int, std::pair<double,double> > >lower_cac
 static std::map<std::string, std::map<int, std::pair<double,double> > >lower_cache_polparl;
 
 
-void Roughness::InterpolatePowerValue(double &tcoeff_perp_polperp, double &tcoeff_parl_polperp, double &tcoeff_perp_polparl, double &tcoeff_parl_polparl, double T0, double T, double A){
+void icemc::Roughness::InterpolatePowerValue(double &tcoeff_perp_polperp, double &tcoeff_parl_polperp, double &tcoeff_perp_polparl, double &tcoeff_parl_polparl, double T0, double T, double A){
   // tcoeff_* are the transmission coefficients which will be copied by address for use in icemc.cc's main function
   // T0 [degrees] is the incident angle of the ray-in-ice with respect to the surface normal
   // T [degrees] is the exiting angle from the surface towards the balloon, measured with respect to the surface normal

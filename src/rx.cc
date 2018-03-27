@@ -1,3 +1,3 @@
 #include "rx.h"
 
-ClassImp(RX);
+ClassImp(icemc::RX);

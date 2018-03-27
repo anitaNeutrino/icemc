@@ -34,13 +34,13 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-ClassImp(Settings);
+ClassImp(icemc::Settings);
 
 /**
  * Default constructor
  *
  */
-Settings::Settings() : jamieFactor(0), medium(0), askaryanParameterization(0)
+icemc::Settings::Settings() : jamieFactor(0), medium(0), askaryanParameterization(0)
 {
   Initialize();
 }
@@ -50,7 +50,7 @@ Settings::Settings() : jamieFactor(0), medium(0), askaryanParameterization(0)
  * Default destructor
  *
  */
-Settings::~Settings() {
+icemc::Settings::~Settings() {
 
 }
 
@@ -65,7 +65,7 @@ Settings::~Settings() {
  *
  * @param fileName the name of the settings file to read
  */
-void Settings::parseSettingsFile(const char* fileName, std::ofstream& outputFile){
+void icemc::Settings::parseSettingsFile(const char* fileName, std::ofstream& outputFile){
 
   std::ifstream settingsFile(fileName);
 
@@ -162,7 +162,7 @@ void Settings::parseSettingsFile(const char* fileName, std::ofstream& outputFile
  *
  * @return true if we should insert the key into the kvp map, false if there was a problem.
  */
-Bool_t Settings::newKvpPassesSanityChecks(const TString& key, const TString& value, const char* fileName, int lineNum){
+Bool_t icemc::Settings::newKvpPassesSanityChecks(const TString& key, const TString& value, const char* fileName, int lineNum){
 
   Bool_t isGood = true;
 
@@ -209,7 +209,7 @@ Bool_t Settings::newKvpPassesSanityChecks(const TString& key, const TString& val
  * For debugging and testing
  *
  */
-void Settings::printAllKeyValuePairStrings(){
+void icemc::Settings::printAllKeyValuePairStrings(){
 
   kvpMap::iterator it;
   for(it = keyValuePairStrings.begin(); it!=keyValuePairStrings.end(); ++it){
@@ -223,7 +223,7 @@ void Settings::printAllKeyValuePairStrings(){
  * Set member variables to default values
  *
  */
-void Settings::Initialize() {
+void icemc::Settings::Initialize() {
   NDISCONES_PASS=3;
   DEBUG=false;                   // debugging option
   // outputdir="outputs"; // directory where outputs go
@@ -284,7 +284,7 @@ void Settings::Initialize() {
 
 
 
-void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
+void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 			  // Anita* anita1, Secondaries* sec1, Signal* sig1,
 			  // Balloon* bn1, Ray* ray1,
 			  int& NNU, double& RANDOMISEPOL) {
@@ -834,7 +834,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   
 
-void Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, Signal* sig1,
+void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, Signal* sig1,
 			   Balloon* bn1, Ray* ray1){
   
    //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas. 
@@ -1035,13 +1035,13 @@ for(unsigned int i=0; i < requiredBands.size(); i++){
 
 
 
-void Settings::complainAboutNotFindingKey(const TString& key){
+void icemc::Settings::complainAboutNotFindingKey(const TString& key){
   std::cerr << "Warning in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET
 	    << ", unable to find setting " << ANSI_COLOR_RED << key << ANSI_COLOR_RESET << std::endl;
 }
 
 
-void Settings::getSetting(const char* key, int& value){
+void icemc::Settings::getSetting(const char* key, int& value){
 
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
@@ -1053,7 +1053,7 @@ void Settings::getSetting(const char* key, int& value){
   }
 }
 
-void Settings::getSetting(const char* key, float& value){
+void icemc::Settings::getSetting(const char* key, float& value){
 
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
@@ -1065,7 +1065,7 @@ void Settings::getSetting(const char* key, float& value){
   }
 }
 
-void Settings::getSetting(const char* key, double& value){
+void icemc::Settings::getSetting(const char* key, double& value){
 
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
@@ -1077,7 +1077,7 @@ void Settings::getSetting(const char* key, double& value){
   }
 }
 
-void Settings::getSetting(const char* key, std::vector<int>& valueArray){
+void icemc::Settings::getSetting(const char* key, std::vector<int>& valueArray){
 
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
@@ -1089,7 +1089,7 @@ void Settings::getSetting(const char* key, std::vector<int>& valueArray){
   }
 }
 
-void Settings::getSetting(const char* key, std::vector<float>& valueArray){
+void icemc::Settings::getSetting(const char* key, std::vector<float>& valueArray){
 
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
@@ -1101,7 +1101,7 @@ void Settings::getSetting(const char* key, std::vector<float>& valueArray){
   }
 }
 
-void Settings::getSetting(const char* key, std::vector<double>& valueArray){
+void icemc::Settings::getSetting(const char* key, std::vector<double>& valueArray){
 
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
@@ -1113,7 +1113,7 @@ void Settings::getSetting(const char* key, std::vector<double>& valueArray){
   }
 }
 
-void Settings::parseValueArray(const char* valueString, std::vector<int>& values){
+void icemc::Settings::parseValueArray(const char* valueString, std::vector<int>& values){
   TString theValueString(valueString);
 
   TObjArray* theValues = theValueString.Tokenize(",");
@@ -1125,7 +1125,7 @@ void Settings::parseValueArray(const char* valueString, std::vector<int>& values
   }
 }
 
-void Settings::parseValueArray(const char* valueString, std::vector<float>& values){
+void icemc::Settings::parseValueArray(const char* valueString, std::vector<float>& values){
   TString theValueString(valueString);
 
   TObjArray* theValues = theValueString.Tokenize(",");
@@ -1137,7 +1137,7 @@ void Settings::parseValueArray(const char* valueString, std::vector<float>& valu
   }
 }
 
-void Settings::parseValueArray(const char* valueString, std::vector<double>& values){
+void icemc::Settings::parseValueArray(const char* valueString, std::vector<double>& values){
   TString theValueString(valueString);
 
   TObjArray* theValues = theValueString.Tokenize(",");

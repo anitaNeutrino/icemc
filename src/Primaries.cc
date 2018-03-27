@@ -19,7 +19,7 @@
 #include "TH2D.h"
 #include "TCanvas.h"
 
-Primaries::Primaries(){//constructor
+icemc::Primaries::Primaries(){//constructor
 
   // This is for parametrizations in Connolly et al. 2011  
   //in the form of [i][j] where i is neutrino type(nu_nubar) and j is current type, "nc" vs "cc".
@@ -131,17 +131,17 @@ Primaries::Primaries(){//constructor
 }
 
 
-double Primaries::Getyweight(double pnu,double y,int nu_nubar,int currentint) {
+double icemc::Primaries::Getyweight(double pnu,double y,int nu_nubar,int currentint) {
   return m_myY->Getyweight(pnu,y,nu_nubar,currentint);
 }
 
 
-double Primaries::pickY(Settings *settings1,double pnu,int nu_nubar,int currentint) {
+double icemc::Primaries::pickY(Settings *settings1,double pnu,int nu_nubar,int currentint) {
   return m_myY->pickY(settings1,pnu,nu_nubar,currentint);
 }
 
 
-Primaries::~Primaries(){//default deconstructor
+icemc::Primaries::~Primaries(){//default deconstructor
   m_hsigma->Draw("same");
   m_csigma->Print("sigmaCrossSection.pdf");
   delete m_hsigma;
@@ -154,21 +154,21 @@ Primaries::~Primaries(){//default deconstructor
 }//deconstructor
 
 
-int Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *settings1,int nu_nubar,int currentint){
+int icemc::Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *settings1,int nu_nubar,int currentint){
   // calculate cross section
   if (pnu<mine[settings1->SIGMAPARAM] || pnu>maxe[settings1->SIGMAPARAM]) {
-    cout <<  "Need a parameterization for this energy region.\n";
+    std::cout <<  "Need a parameterization for this energy region.\n";
     return 0;
   } //if
   else {
    
     //nu=0, nubar=1
     if(nu_nubar!=0 && nu_nubar!=1){   
-      cout<<"nu_nubar is not defined correctly!\n";
+      std::cout<<"nu_nubar is not defined correctly!\n";
       return 0;
     }
     if (currentint!=Interaction::kcc && currentint!=Interaction::knc){//default "cc"
-      cout<<"Current is not cc or nc!\n";
+      std::cout<<"Current is not cc or nc!\n";
       return Interaction::kcc;
     }
     
@@ -195,7 +195,7 @@ int Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *
 
 
 //! pick a neutrino type, flavor ratio 1:1:1
-string Primaries::GetNuFlavor() {
+string icemc::Primaries::GetNuFlavor() {
   string nuflavor;
 
   double rnd=gRandom->Rndm();
@@ -210,12 +210,12 @@ string Primaries::GetNuFlavor() {
     nuflavor="nutau";
   } //else if
   else
-    cout << "unable to pick nu flavor\n";
+    std::cout << "unable to pick nu flavor\n";
   return nuflavor;
 } //GetNuFlavor
 
 
-Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,int whichray,Counting *count1) : banana_flavor("numu"), banana_current("nc"),  nu_banana(Position(theta_nu_banana,phi_nu_banana)) {
+icemc::Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,int whichray,Counting *count1) : banana_flavor("numu"), banana_current("nc"),  nu_banana(Position(theta_nu_banana,phi_nu_banana)) {
 
   noway=0;
   wheredoesitleave_err=0;
@@ -253,7 +253,7 @@ Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,
 }
 
 
-void Interaction::PickAnyDirection() {
+void icemc::Interaction::PickAnyDirection() {
   double rndlist[2];
   gRandom->RndmArray(2,rndlist);
   
@@ -275,7 +275,7 @@ void Interaction::PickAnyDirection() {
 }
 
 
-void  Interaction::setNuFlavor(Primaries *primary1,Settings *settings1,int whichray,Counting *counting1) {
+void  icemc::Interaction::setNuFlavor(Primaries *primary1,Settings *settings1,int whichray,Counting *counting1) {
   // pick the neutrino flavor,  type of tau decay when relevant,
   //  lpm energy.
   nuflavor=primary1->GetNuFlavor();
@@ -299,12 +299,12 @@ void  Interaction::setNuFlavor(Primaries *primary1,Settings *settings1,int which
   else if (nuflavor=="nutau")
     nuflavorint=3;
   else 
-    cout<<"nuflavor is "<<nuflavor<<"\n";
+    std::cout<<"nuflavor is "<<nuflavor<<"\n";
 }
 
 
 //! choose CC or NC: get from ratios in Ghandi etal paper, updated for the CTEQ6-DIS parton distribution functions (M.H. Reno, personal communication).  Need to add capability of using ratios from Connolly et al.
-string Interaction::GetCurrent() {
+string icemc::Interaction::GetCurrent() {
   string current;
   double rnd=gRandom->Rndm();
   if (rnd<=0.6865254) // 10^18 eV - 10^21 eV (use this one for ANITA)
@@ -315,7 +315,7 @@ string Interaction::GetCurrent() {
   return current;
 } //GetCurrent
 
-void  Interaction::setCurrent() {
+void icemc::Interaction::setCurrent() {
   // pick whether it is neutral current
   // or charged current
   current=this->GetCurrent();
@@ -326,8 +326,9 @@ void  Interaction::setCurrent() {
 }//setCurrent
 
 
+
 ///////////////// Y //////////////
-Y::Y() { // Constructor
+icemc::Y::Y() { // Constructor
   /**
    * The Y class contains all of the parameterizations for generating
    * inelasticity distributions
@@ -350,8 +351,8 @@ Y::Y() { // Constructor
     }
   }
 
-  int kcc = Interaction::kcc;
-  int knc = Interaction::knc;
+  int kcc = icemc::Interaction::kcc;
+  int knc = icemc::Interaction::knc;
 
   // parameter A_0 in Table V for the high y region
   fC1_high[1][kcc]->FixParameter(0,-0.0026);//nubar, CC
@@ -405,7 +406,7 @@ Y::Y() { // Constructor
 
 
 //! Pick an inelasticity y according to the model chosen
-double Y::pickY(Settings *settings1,double pnu,int nu_nubar,int currentint) {
+double icemc::Y::pickY(Settings *settings1,double pnu,int nu_nubar,int currentint) {
   if(settings1->YPARAM==0){
     return pickYGandhietal();
   }//old Gety
@@ -418,7 +419,7 @@ double Y::pickY(Settings *settings1,double pnu,int nu_nubar,int currentint) {
 
 
 //! THIS IS A ROUGH PARAMETRIZATION OF PLOT 6 FROM Ghandhi,Reno,Quigg,Sarcevic  hep-ph/9512364 (the curves are not in their later article).  There is also a slow energy dependence.
-double Y::pickYGandhietal() {
+double icemc::Y::pickYGandhietal() {
   double rnd;
   double x = 0;
   // generate according to Ghandi fig. 6 
@@ -432,7 +433,7 @@ double Y::pickYGandhietal() {
 }
 
 
-double Y::pickYConnollyetal2011(int NU,int CURRENT,double pnu) {
+double icemc::Y::pickYConnollyetal2011(int NU,int CURRENT,double pnu) {
   // Select a y according to recipe in Connolly et al. (2011)
   //pnu is in eV.
   double epsilon=log10(pnu/1.E9);
@@ -465,7 +466,7 @@ double Y::pickYConnollyetal2011(int NU,int CURRENT,double pnu) {
 }//pickY
 
 
-double Y::Getyweight(double pnu, double y, int nu_nubar, int currentint){
+double icemc::Y::Getyweight(double pnu, double y, int nu_nubar, int currentint){
   //from Connolly Calc 2011, Equations 9, 10, 11, 16, and 17.
   // double dy=0.;//default
   //Ev, cc or nc, nu or nubar.
@@ -501,7 +502,7 @@ double Y::Getyweight(double pnu, double y, int nu_nubar, int currentint){
     }
     else{
       dNdy=0.;
-      cout<<"y value is outside of the domain of y.\n";
+      std::cout<<"y value is outside of the domain of y.\n";
     }
   }
   else if(nu_nubar==1){
@@ -522,11 +523,11 @@ double Y::Getyweight(double pnu, double y, int nu_nubar, int currentint){
     }
     else{
       dNdy=0;
-      cout<<"y value is outside of the domain of y.\n";
+      std::cout<<"y value is outside of the domain of y.\n";
     }
   }
   else{
-    cout<<"Nu_nubar is not defined!\n";
+    std::cout<<"Nu_nubar is not defined!\n";
   }		
   weighty=dNdy;
   return weighty;

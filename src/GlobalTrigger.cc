@@ -27,7 +27,7 @@
 using std::cout;
 
 
-GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
+icemc::GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
     
   // 2=top,1=middle,0=bottom
   WHICHLAYERSLCPRCP[0]=0;
@@ -206,7 +206,7 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
  *			There is a decent amount of dead code which should be pruned, as well.
  */
 
-void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,  int *thispasses) {
+void icemc::GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,  int *thispasses) {
 
   double this_threshold= anita1->powerthreshold[4]; 
   return PassesTrigger(settings1,anita1,discones_passing,mode,l3trig,l2trig,l1trig,antennaclump,loctrig,loctrig_nadironly,inu,this_threshold, thispasses);   
@@ -215,7 +215,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 
 
 
-void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold, int *thispasses) {
+void icemc::GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold, int *thispasses) {
 
 
   //bool ishpol should only be used for anita3, by default do only vpol
@@ -250,7 +250,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 
 
 
-void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses, int inu){
+void  icemc::GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses, int inu){
 
   int ltsum=0;
   int channsum=0;
@@ -837,7 +837,7 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
 //		There will be several things hardcoded into the following method, feel free to change these to be variables within the Settings class, but for the sake of sanity, PLEASE no more global variables!
 //		This will be made to implement all types of payloads shortly, what exists below is only a temporary specialization for ANITA III.
 
-void GlobalTrigger::PassesTriggerCoherentSum(Settings *settings1,Anita *anita1,int inu, int *thispasses) {
+void icemc::GlobalTrigger::PassesTriggerCoherentSum(Settings *settings1,Anita *anita1,int inu, int *thispasses) {
     
   for (int center_phi_sector_offset = -1; center_phi_sector_offset <= 1; center_phi_sector_offset++){
     int center_phi_sector_index = first_phi_sector_hit + center_phi_sector_offset;
@@ -970,7 +970,7 @@ void GlobalTrigger::PassesTriggerCoherentSum(Settings *settings1,Anita *anita1,i
 
 
 
-void GlobalTrigger::PassesTriggerSummedPower(Settings *settings1,Anita *anita1){
+void icemc::GlobalTrigger::PassesTriggerSummedPower(Settings *settings1,Anita *anita1){
 				  
   //	TRIGGERSCHEME == 4 is the Summed Power Trigger.
   //	For every window, all of the phi sectors find the maximum coherently summed power.
@@ -1153,7 +1153,7 @@ void GlobalTrigger::PassesTriggerSummedPower(Settings *settings1,Anita *anita1){
 } // end of PassesTriggerSummedPower
 
 
-void GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_threshold, int *thispasses) {
+void icemc::GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_threshold, int *thispasses) {
   double threshold=this_threshold;
     
   // need to find how many in a set of 6 pass
@@ -1340,7 +1340,7 @@ void GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_threshold, in
  *			For this case specifically PayloadArray was designed to have iterators and accessors which
  *			"OR" the values of the neighboring antennas, and are optionally read-only.
  */
-void GlobalTrigger::FillInNadir(Settings *settings1,Anita *anita1,int ant) { //overloaded function
+void icemc::GlobalTrigger::FillInNadir(Settings *settings1,Anita *anita1,int ant) { //overloaded function
   int antarray[Anita::NPHI_MAX]={0};
   //here the ant array is an array of binary numbers
   int whichphi;
@@ -1383,7 +1383,7 @@ void GlobalTrigger::FillInNadir(Settings *settings1,Anita *anita1,int ant) { //o
  *			For this case specifically PayloadArray was designed to have iterators and accessors which
  *			"OR" the values of the neighboring antennas, and are optionally read-only.
  */
-void GlobalTrigger::FillInNadir(Anita *anita1,int *ant) {
+void icemc::GlobalTrigger::FillInNadir(Anita *anita1,int *ant) {
   int ileft,iright;
   //  cout << "ntrigphisectors is " << ntrigphisectors << "\n";
   //   for (int i=0;i<ntrigphisectors;i++) {
@@ -1414,7 +1414,7 @@ void GlobalTrigger::FillInNadir(Anita *anita1,int *ant) {
  *	\todo	Deprecate this function in favor of PayloadArray or boost::multi_array objects which provide the
  *			ability to have multiple indexing schemes for a given collection of objects.
  */
-int GlobalTrigger::GetPhiSector(Settings *settings1,int i,int j) { // given trigger layer and index, get phi sector.
+int icemc::GlobalTrigger::GetPhiSector(Settings *settings1,int i,int j) { // given trigger layer and index, get phi sector.
   // for the upper two layers, the phi sector is just j
   // for the nadir layer, the phi sector is 2*j+1
   // warning this counts from 0
@@ -1445,7 +1445,7 @@ int GlobalTrigger::GetPhiSector(Settings *settings1,int i,int j) { // given trig
  *	\todo	Deprecate this function in favor of PayloadArray or boost::multi_array objects which provide the
  *			ability to have multiple indexing schemes for a given collection of objects.
  */
-void GlobalTrigger::GetAnitaLayerPhiSector(Settings *settings1,int i,int j,int &whichlayer,int &whichphisector) {
+void icemc::GlobalTrigger::GetAnitaLayerPhiSector(Settings *settings1,int i,int j,int &whichlayer,int &whichphisector) {
     
     
   if (settings1->WHICH==6 || settings1->WHICH==2 || settings1->WHICH==8) {// If Anita 1 or Anita 2
@@ -1528,8 +1528,8 @@ void GlobalTrigger::GetAnitaLayerPhiSector(Settings *settings1,int i,int j,int &
  *			of integers into a bit shift, so nothing is lost by switching from explicit shifts to
  *			multiplication, and readability is gained.
  */
-void GlobalTrigger::L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int discones_passing,int *l3trig,
-			      int *thispasses) {
+void icemc::GlobalTrigger::L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int discones_passing,int *l3trig,
+				     int *thispasses) {
   
   int whichphipass[Anita::NPOL][Anita::NPHI_MAX]={{0}};
    
@@ -1654,7 +1654,7 @@ void GlobalTrigger::L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anit
     
  Finally, arrival times are shifted so that the first antenna triggered is at time 0.
 */
-// void GlobalTrigger::GetArrivalTimes(int inu, Anita *anita1, const Vector& rf_direction) {
+// void icemc::GlobalTrigger::GetArrivalTimes(int inu, Anita *anita1, const Vector& rf_direction) {
     
     
 //     for (int antenna_index = 0; antenna_index < (anita1->number_all_antennas); antenna_index++) { //loop over layers on the payload
@@ -1701,7 +1701,7 @@ void GlobalTrigger::L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anit
  *
  *			Realistically though, the delays should just be used to advance the iterators.
  */
-void GlobalTrigger::delay_align_antenna_waveforms(const vector< vector < vector <double> > >& waveforms, const vector < vector <unsigned int> >& delays, vector < vector <double> >& output){
+void icemc::GlobalTrigger::delay_align_antenna_waveforms(const vector< vector < vector <double> > >& waveforms, const vector < vector <unsigned int> >& delays, vector < vector <double> >& output){
   // The waveforms vector is accessed by waveforms[phi_sector_id][antenna_id][sample_id]
   // the delays are accessed by delays[phi_sector_id][antenna_id]
     
@@ -1738,7 +1738,7 @@ void GlobalTrigger::delay_align_antenna_waveforms(const vector< vector < vector 
  *			Also, the bounds of the for-loop should not be separately declared
  *			as it just adds another point of failure.
  */
-void GlobalTrigger::sum_aligned_waveforms(const vector < vector <double> >& waveforms, vector <double>& output){
+void icemc::GlobalTrigger::sum_aligned_waveforms(const vector < vector <double> >& waveforms, vector <double>& output){
   output.clear();
   unsigned waveform_size = waveforms[0].size();
   unsigned waveforms_size = waveforms.size();
@@ -1766,7 +1766,7 @@ void GlobalTrigger::sum_aligned_waveforms(const vector < vector <double> >& wave
  *		result = boost::transform(wfm, [](auto& x){x *= x});
  *
  */
-void GlobalTrigger::square_waveform_elements(const vector <double>& waveform, vector <double>& output){
+void icemc::GlobalTrigger::square_waveform_elements(const vector <double>& waveform, vector <double>& output){
   output.clear();
     
   for (unsigned int element_index = 0; element_index < waveform.size(); element_index++){
@@ -1783,7 +1783,7 @@ void GlobalTrigger::square_waveform_elements(const vector <double>& waveform, ve
  *		double sum = std::accumulate(wfm.begin(), wfm.end(), 0.); 
  *
  */
-double GlobalTrigger::summed_power_window(const vector <double>& waveform, unsigned int start_index, unsigned int length){
+double icemc::GlobalTrigger::summed_power_window(const vector <double>& waveform, unsigned int start_index, unsigned int length){
   double result = 0;
   for (unsigned int index = start_index; index < start_index + length; index++){
     result += waveform[index];
@@ -1800,7 +1800,7 @@ double GlobalTrigger::summed_power_window(const vector <double>& waveform, unsig
  *	This function takes a number and will round it to the closest integer multiple
  *	plus 0.5, using randomness to get distribute exact integers.
  */
-double GlobalTrigger::three_bit_round(double input, bool round_zero_up, bool allow_zero) {
+double icemc::GlobalTrigger::three_bit_round(double input, bool round_zero_up, bool allow_zero) {
   // 
   double result = 0.;
   if (input < -3.5){
@@ -1830,13 +1830,13 @@ double GlobalTrigger::three_bit_round(double input, bool round_zero_up, bool all
 /*	
  *	This function takes a waveform array as a parameter and returns a vector <double> of 3 bit waveforms
  */
-void GlobalTrigger::convert_wfm_to_3_bit(const vector <double>& wfm, double rms, vector <double>& output){
+void icemc::GlobalTrigger::convert_wfm_to_3_bit(const vector <double>& wfm, double rms, vector <double>& output){
   output.clear();
   for (unsigned int index = 0; index < wfm.size(); index++){
     output.push_back(three_bit_round(wfm[index]/rms));
   }
 }
-int GlobalTrigger::findahit(vector<int> myvector,int first,int last) {
+int icemc::GlobalTrigger::findahit(vector<int> myvector,int first,int last) {
 
   int yes=0;
   if ((int)myvector.size()<=last)
@@ -1850,7 +1850,7 @@ int GlobalTrigger::findahit(vector<int> myvector,int first,int last) {
   }
   return yes;
 }
-int GlobalTrigger::findanl3(int *l3,int NPHISECTORS) {
+int icemc::GlobalTrigger::findanl3(int *l3,int NPHISECTORS) {
 
   for (int j=0;j<NPHISECTORS;j++) {
     if (l3[j]==1)
@@ -1858,8 +1858,8 @@ int GlobalTrigger::findanl3(int *l3,int NPHISECTORS) {
   }
   return 0;
 }
-void GlobalTrigger::L2Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl1trig,
-				 std::array<std::array<std::vector<int>,16>,2> &vl2trig) {
+void icemc::GlobalTrigger::L2Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl1trig,
+					std::array<std::array<std::vector<int>,16>,2> &vl2trig) {
 
   
   for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
@@ -1878,8 +1878,8 @@ void GlobalTrigger::L2Anita3and4(Anita *anita1,std::array<std::array<std::vector
 
 
 }
-void GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
-				 int vl3trig[2][16],int *thispasses) {
+void icemc::GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
+					int vl3trig[2][16],int *thispasses) {
 
   int iphimod16_neighbor;
 
@@ -1916,8 +1916,8 @@ void GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std::vector
 }
 
 // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
-void GlobalTrigger::L1Anita4LR_ScB_OneBin(int IZERO,vector<int> vleft,vector<int> vright,
-					  vector<int> &vl1trig) {
+void icemc::GlobalTrigger::L1Anita4LR_ScB_OneBin(int IZERO,vector<int> vleft,vector<int> vright,
+						 vector<int> &vl1trig) {
 
   if ((vleft[IZERO] && findahit(vright,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA4LR_SCB/TRIGTIMESTEP))) ||
       
@@ -1931,7 +1931,7 @@ void GlobalTrigger::L1Anita4LR_ScB_OneBin(int IZERO,vector<int> vleft,vector<int
 
 }
 // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
-void GlobalTrigger::L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> &vl1trig_anita4lr_scb,int &npassesl1) {
+void icemc::GlobalTrigger::L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> &vl1trig_anita4lr_scb,int &npassesl1) {
  
 
   for (int itriglayer=0;itriglayer<anita1->NTRIGGERLAYERS;itriglayer++) {
@@ -1958,7 +1958,7 @@ void GlobalTrigger::L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *anita1,st
 }
 
 
-// void GlobalTrigger::L3Anita4LR_ScB(Anita *anita1,std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb,
+// void icemc::GlobalTrigger::L3Anita4LR_ScB(Anita *anita1,std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb,
 // 				   std::array<vector<int>,16> &vl3trig_type0, std::array<vector<int>,16> &vl3trig_type1,
 // 				   int &thispasses_l3type0,int &thispasses_l3type1) {
 //   thispasses_l3type0=0;
@@ -1998,7 +1998,7 @@ void GlobalTrigger::L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *anita1,st
 
 // }
 // for each phi sector, does 1, 2 or 3 pass
-// void GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
+// void icemc::GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
 // 						 std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb) {
 
 //   double time_thisbin=(double)nstepback*TRIGTIMESTEP;
@@ -2030,8 +2030,8 @@ void GlobalTrigger::L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *anita1,st
 // }
 
 // for each phi sector, does 1, 2 or 3 pass
-void GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
-							std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0) {
+void icemc::GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
+							       std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0) {
 
   for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
       
@@ -2051,7 +2051,7 @@ void GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,
 }
 
 // ask if L3 type 1 (2 and 2) or L3 type 0 (3 and 1 or 1 and 3) passes
-// int GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors(
+// int icemc::GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors(
 // 						    std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
 // 						    std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
 // 						    int npass1,int npass2,	
@@ -2083,7 +2083,7 @@ void GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,
   
 // }
 // ask if L3 type 1 (2 and 2) or L3 type 0 (3 and 1 or 1 and 3) passes
-// int GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( int IZERO,
+// int icemc::GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( int IZERO,
 // 						    std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
 // 						    std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
 // 						    int npass1,int npass2,	
@@ -2117,8 +2117,8 @@ void GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,
   
 // }
 
-void GlobalTrigger::L3Anita4LR_ScA(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
-				   int *thispasses) {
+void icemc::GlobalTrigger::L3Anita4LR_ScA(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
+					  int *thispasses) {
 
 
   for (int ipolar=0;ipolar<2;ipolar++) {
@@ -2140,7 +2140,7 @@ void GlobalTrigger::L3Anita4LR_ScA(Anita *anita1,std::array<std::array<std::vect
   }
 
 }
-void GlobalTrigger::L1Anita3_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig) {
+void icemc::GlobalTrigger::L1Anita3_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig) {
   vector<int> vl1_realtime_vbottom;
   vector<int> vl1_realtime_vmiddle; 
   vector<int> vl1_realtime_vtop;
@@ -2173,7 +2173,7 @@ void GlobalTrigger::L1Anita3_AllPhiSectors(Anita *anita1,std::array<std::array<s
   }
   //  cout << "inside, vl1trig is " << vl1trig[0][0].size() << "\n";
 }
-void GlobalTrigger::L1Anita4_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig) {
+void icemc::GlobalTrigger::L1Anita4_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig) {
   vector<int> vl1_realtime_vbottom;
   vector<int> vl1_realtime_vmiddle; 
   vector<int> vl1_realtime_vtop;
@@ -2222,7 +2222,7 @@ void GlobalTrigger::L1Anita4_AllPhiSectors(Anita *anita1,std::array<std::array<s
   }
   //  cout << "inside, vl1trig is " << vl1trig[0][0].size() << "\n";
 }
-void GlobalTrigger::L1Anita4LR_ScA_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig) {
+void icemc::GlobalTrigger::L1Anita4LR_ScA_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig) {
   vector<int> vl1_realtime_1bottom;
   vector<int> vl1_realtime_1middle; 
   vector<int> vl1_realtime_1top;
@@ -2300,8 +2300,8 @@ void GlobalTrigger::L1Anita4LR_ScA_AllPhiSectors(Anita *anita1,std::array<std::a
 }
 
 
-int GlobalTrigger::L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
-					 vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top) {
+int icemc::GlobalTrigger::L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
+						vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top) {
 
 
 
@@ -2367,8 +2367,8 @@ int GlobalTrigger::L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bot
   }
   else return 0;
 }
-int GlobalTrigger::L1Anita4_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
-					 vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top) {
+int icemc::GlobalTrigger::L1Anita4_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
+						vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top) {
 
 
 
@@ -2427,16 +2427,16 @@ int GlobalTrigger::L1Anita4_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bot
     return 1;
   else return 0;
 }
-int GlobalTrigger::L1Anita4LR_ScA_TwoPhiSectors(int IZERO,int ipolar,
-						vector<int> &v1l0_realtime_bottomleft, vector<int> &v2l0_realtime_bottomleft, 
-						vector<int> &v1l0_realtime_bottomright, vector<int> &v2l0_realtime_bottomright, 
-						vector<int> &v1l0_realtime_middleleft, vector<int> &v2l0_realtime_middleleft,
-						vector<int> &v1l0_realtime_middleright, vector<int> &v2l0_realtime_middleright,
-						vector<int> &v1l0_realtime_topleft, vector<int> &v2l0_realtime_topleft,
-						vector<int> &v1l0_realtime_topright, vector<int> &v2l0_realtime_topright,
-						vector<int> &vl1_realtime_bottom, 
-						vector<int> &vl1_realtime_middle, 
-						vector<int> &vl1_realtime_top) {
+int icemc::GlobalTrigger::L1Anita4LR_ScA_TwoPhiSectors(int IZERO,int ipolar,
+						       vector<int> &v1l0_realtime_bottomleft, vector<int> &v2l0_realtime_bottomleft, 
+						       vector<int> &v1l0_realtime_bottomright, vector<int> &v2l0_realtime_bottomright, 
+						       vector<int> &v1l0_realtime_middleleft, vector<int> &v2l0_realtime_middleleft,
+						       vector<int> &v1l0_realtime_middleright, vector<int> &v2l0_realtime_middleright,
+						       vector<int> &v1l0_realtime_topleft, vector<int> &v2l0_realtime_topleft,
+						       vector<int> &v1l0_realtime_topright, vector<int> &v2l0_realtime_topright,
+						       vector<int> &vl1_realtime_bottom, 
+						       vector<int> &vl1_realtime_middle, 
+						       vector<int> &vl1_realtime_top) {
 
   
   //if (IZERO>=42 && IZERO<=44 && iphi==13)
@@ -2485,10 +2485,10 @@ int GlobalTrigger::L1Anita4LR_ScA_TwoPhiSectors(int IZERO,int ipolar,
   
 
 
-int GlobalTrigger::PartofL1Anita4LR_ScA_TwoPhiSectors(int ilayerreverse,int ipolar,int IZERO,
-						      vector<int> &v1l0_realtime_left, vector<int> &v2l0_realtime_left, 
-						      vector<int> &v1l0_realtime_right, vector<int> &v2l0_realtime_right, 
-						      vector<int> &vl1_realtime) {
+int icemc::GlobalTrigger::PartofL1Anita4LR_ScA_TwoPhiSectors(int ilayerreverse,int ipolar,int IZERO,
+							     vector<int> &v1l0_realtime_left, vector<int> &v2l0_realtime_left, 
+							     vector<int> &v1l0_realtime_right, vector<int> &v2l0_realtime_right, 
+							     vector<int> &vl1_realtime) {
     
   //  if (iphi==13)
   //cout << "ilayerreverse is " << ilayerreverse << "\n";
@@ -2558,7 +2558,7 @@ int GlobalTrigger::PartofL1Anita4LR_ScA_TwoPhiSectors(int ilayerreverse,int ipol
   return 0;
 
 }
-void GlobalTrigger::L3Anita4LR_ScB_OneBin(int IZERO,Anita *anita1,std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb,
+void icemc::GlobalTrigger::L3Anita4LR_ScB_OneBin(int IZERO,Anita *anita1,std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb,
 					  std::array<vector<int>,16> &vl3trig_type0, std::array<vector<int>,16> &vl3trig_type1,
 					  int &thispasses_l3type0,int &thispasses_l3type1) {
 
@@ -2621,7 +2621,7 @@ void GlobalTrigger::L3Anita4LR_ScB_OneBin(int IZERO,Anita *anita1,std::array<std
 }
 
 
-void GlobalTrigger::L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,vector<int> vl1_bottom, 
+void icemc::GlobalTrigger::L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,vector<int> vl1_bottom, 
 						       vector<int> vl1_middle,
 						       vector<int> vl1_top,
 						       std::array<vector<int>,3> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0) {
@@ -2704,7 +2704,7 @@ void GlobalTrigger::L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,vector<int> vl1
   //}  
 }
 // ask if L3 type 1 (2 and 2) or L3 type 0 (3 and 1 or 1 and 3) passes
-int GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( int IZERO,
+int icemc::GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( int IZERO,
 							    std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
 							    std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
 							    int npass1,int npass2) {
@@ -2732,7 +2732,7 @@ int GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( int IZERO,
   
 }
 
-void GlobalTrigger::delayL0(vector<int> &vl0,double delay) {
+void icemc::GlobalTrigger::delayL0(vector<int> &vl0,double delay) {
   int ndelay=(int)(delay/TRIGTIMESTEP);
   for (int i=0;i<ndelay;i++) {
     vl0.insert(vl0.begin(),0);
@@ -2740,7 +2740,7 @@ void GlobalTrigger::delayL0(vector<int> &vl0,double delay) {
   }
   
 }
-void GlobalTrigger::delay_AllAntennas(Anita *anita1) {
+void icemc::GlobalTrigger::delay_AllAntennas(Anita *anita1) {
   for (int itriglayer=0;itriglayer<anita1->NTRIGGERLAYERS;itriglayer++) {
     for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
       for (int ipolar=0;ipolar<anita1->NPOL;ipolar++) {
@@ -2750,9 +2750,4 @@ void GlobalTrigger::delay_AllAntennas(Anita *anita1) {
       }
     }
   }
-
-
-
 }
-
-

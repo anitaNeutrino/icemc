@@ -4,7 +4,7 @@
 #include "Tools.h"
 #include "TMath.h"
 
-Counting::Counting() {
+icemc::Counting::Counting() {
 
   for (int i=0;i<2;i++) {
     for (int j=0;j<2;j++) {
@@ -53,14 +53,14 @@ Counting::Counting() {
 
 
 }
-void Counting::findCosthetaPhiBins(Position r_in,int &icostheta,int &iphi) {
+void icemc::Counting::findCosthetaPhiBins(Position r_in,int &icostheta,int &iphi) {
 
   icostheta=(int)((cos(r_in.Theta())-COSTHETAMIN)/(COSTHETAMAX-COSTHETAMIN)*(double)NCOSTHETA);
   iphi=(int)((r_in.Phi()-PHIMIN)/(PHIMAX-PHIMIN)*(double)NPHI);
 
 
 }
-void Counting::IncrementWeights_r_in(Position r_in,double weight) {
+void icemc::Counting::IncrementWeights_r_in(Position r_in,double weight) {
   int iphi,icostheta;
   findCosthetaPhiBins(r_in,icostheta,iphi);
   weights_rin[icostheta][iphi]+=weight;
