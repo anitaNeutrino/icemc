@@ -1,4 +1,5 @@
-
+*.txt
+*.dat
 *.o
 *.pcm
 *bak
