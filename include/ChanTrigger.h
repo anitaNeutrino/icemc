@@ -435,27 +435,27 @@ namespace icemc {
     double applyButterworthFilter(double ff, double ampl, int notchStatus[3]);
 
   
-    double vhz_rx[2][5][Anita::NFREQ];                           ///< Array of amplitudes in the Fourier domain (V/Hz) after the antenna gain. Indeces stand for [ipol][iband][ifreq] 
-    double volts_rx_forfft[2][5][Anita::HALFNFOUR];              ///< Array of time domain after the antenna gain. Indeces stand for [ipol][iband][itime] 
-    std::vector<int> flag_e[5];                                       ///< Which bands pass trigger e
-    std::vector<int> flag_h[5];                                       ///< Which bands pass trigger h
-    double bwslice_volts_pol0[5];                                ///< Sum voltage for each slice in bandwidth for the lcp polarization
-    double bwslice_volts_pol1[5];                                ///< Sum voltage for each slice in bandwidth for the rcp polarization
-    double bwslice_energy_pol0[5];                               ///< Square the sum of voltage for each slice in bandwidth for the 0th polarization
-    double bwslice_energy_pol1[5];                               ///< Square the sum of voltage for each slice in bandwidth for the 1st polarization
-    double bwslice_volts_pol0_em[5];                             ///< Component of the voltage that comes from the em shower for 0th polarization
-    double bwslice_volts_pol1_em[5];                             ///< Component of the voltage that comes from the em shower for 1st polarization
-    double bwslice_volts_pole[5];                                ///< Sum voltage for each slice in bandwidth for the e polarization
-    double bwslice_energy_pole[5];                               ///< Square the sum of voltage for each slice in bandwidth for e polarization.  The 5th element is the full band
-    double bwslice_volts_polh[5];                                ///< Sum voltage for each slice in bandwidth for the h polarization
-    double bwslice_energy_polh[5];                               ///< Square the sum of voltage for each slice in bandwidth for h polarization.  The 5th element is the full band
-    double volts_rx_rfcm_lab[2][Anita::HALFNFOUR];               ///< For digitizer path, time domain voltage vs. time after rx, rfcm's and lab
-    double volts_rx_rfcm_lab_all[2][48][Anita::HALFNFOUR];       ///< For digitizer path, time domain voltage vs. time after rx, rfcm's and lab
-    double volts_rx_rfcm[2][Anita::HALFNFOUR];                   ///< For digitizer path, time domain voltage vs. time after rx, rfcm's
-    double justNoise_digPath[2][Anita::HALFNFOUR];               ///< For digitizer path, time domain noise from flight
-    double justNoise_trigPath[2][Anita::HALFNFOUR];              ///< For trigger path, time domain noise from flight
-    double cw_digPath[2][Anita::HALFNFOUR];                      ///< For digitizer path, time domain cw
-    double justSig_trigPath[2][Anita::HALFNFOUR];                ///< Just signal in trigger path
+    double vhz_rx[2][5][Anita::NFREQ];                          ///< Array of amplitudes in the Fourier domain (V/Hz) after the antenna gain. Indeces stand for [ipol][iband][ifreq] 
+    double volts_rx_forfft[2][5][Anita::HALFNFOUR];             ///< Array of time domain after the antenna gain. Indeces stand for [ipol][iband][itime] 
+    std::vector<int> flag_e[5];                                 ///< Which bands pass trigger e
+    std::vector<int> flag_h[5];                                 ///< Which bands pass trigger h
+    double bwslice_volts_pol0[5];                               ///< Sum voltage for each slice in bandwidth for the lcp polarization
+    double bwslice_volts_pol1[5];                               ///< Sum voltage for each slice in bandwidth for the rcp polarization
+    double bwslice_energy_pol0[5];                              ///< Square the sum of voltage for each slice in bandwidth for the 0th polarization
+    double bwslice_energy_pol1[5];                              ///< Square the sum of voltage for each slice in bandwidth for the 1st polarization
+    double bwslice_volts_pol0_em[5];                            ///< Component of the voltage that comes from the em shower for 0th polarization
+    double bwslice_volts_pol1_em[5];                            ///< Component of the voltage that comes from the em shower for 1st polarization
+    double bwslice_volts_pole[5];                               ///< Sum voltage for each slice in bandwidth for the e polarization
+    double bwslice_energy_pole[5];                              ///< Square the sum of voltage for each slice in bandwidth for e polarization.  The 5th element is the full band
+    double bwslice_volts_polh[5];                               ///< Sum voltage for each slice in bandwidth for the h polarization
+    double bwslice_energy_polh[5];                              ///< Square the sum of voltage for each slice in bandwidth for h polarization.  The 5th element is the full band
+    double volts_rx_rfcm_lab[2][Anita::HALFNFOUR];              ///< For digitizer path, time domain voltage vs. time after rx, rfcm's and lab
+    double volts_rx_rfcm_lab_all[2][48][Anita::HALFNFOUR];      ///< For digitizer path, time domain voltage vs. time after rx, rfcm's and lab
+    double volts_rx_rfcm[2][Anita::HALFNFOUR];                  ///< For digitizer path, time domain voltage vs. time after rx, rfcm's
+    double justNoise_digPath[2][Anita::HALFNFOUR];              ///< For digitizer path, time domain noise from flight
+    double justNoise_trigPath[2][Anita::HALFNFOUR];             ///< For trigger path, time domain noise from flight
+    double cw_digPath[2][Anita::HALFNFOUR];                     ///< For digitizer path, time domain cw
+    double justSig_trigPath[2][Anita::HALFNFOUR];               ///< Just signal in trigger path
     double justSig_digPath[2][Anita::HALFNFOUR];                ///< Just signal in trigger path
   
     // these are filled for triggerscheme==0 and triggerscheme==1
@@ -464,10 +464,10 @@ namespace icemc {
     double threshold_eachband[2][Anita::NBANDS_MAX];            ///< Threshold in each band		     
     double noise_eachband[2][Anita::NBANDS_MAX];                ///< Noise in each band			     
     int passes_eachband[2][Anita::NBANDS_MAX];                  ///< Whether the signal passes or not each band
-    std::vector<double> vsignal_eachband[2];                         ///< Signal in each band			     
-    std::vector<double> vthreshold_eachband[2];                      ///< Threshold in each band		     
-    std::vector<double> vnoise_eachband[2];                          ///< Noise in each band			     
-    std::vector<int>    vpasses_eachband[2];                         ///< Whether the signal passes or not each band
+    std::vector<double> vsignal_eachband[2];                    ///< Signal in each band			     
+    std::vector<double> vthreshold_eachband[2];                 ///< Threshold in each band		     
+    std::vector<double> vnoise_eachband[2];                     ///< Noise in each band			     
+    std::vector<int>    vpasses_eachband[2];                    ///< Whether the signal passes or not each band
     
     double v_banding_rfcm[2][5][Anita::NFREQ];                  ///< This is Volts/m as a function of frequency after rfcm's and banding
     double v_banding_rfcm_forfft[2][5][HALFNFOUR];              ///< Starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t

@@ -1,5 +1,5 @@
 #include "EventGenerator.h"
-
+#include "CommandLineOpts.h"
 
 int main(int argc,  char **argv) {
   //--------------------------------------------------------------
@@ -16,7 +16,11 @@ int main(int argc,  char **argv) {
   feenableexcept(FE_INVALID | FE_DIVBYZERO); 
 #endif
 
-  icemc::EventGenerator uhen;
-  uhen.generateNeutrinos(argc, argv);
+  icemc::CommandLineOpts clo(argc, argv);
+
+  if(clo.are_good){
+    icemc::EventGenerator uhen;
+    uhen.generateNeutrinos(argc, argv);
+  }
   
 }
