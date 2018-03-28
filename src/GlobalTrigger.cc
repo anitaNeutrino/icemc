@@ -1073,8 +1073,8 @@ void icemc::GlobalTrigger::PassesTriggerSummedPower(const Settings *settings1,An
 	double power = 0.;
 	  	  
 	//	Calculate the vector for the hypothesis' direction.
-	double hypoth_theta_rad = (theta_hypotheses_deg[index_theta_hypothesis] + 45.) * RADDEG;
-	double hypoth_phi_rad = theta_zero.Phi() * RADDEG;
+	double hypoth_theta_rad = (theta_hypotheses_deg[index_theta_hypothesis] + 45.) * constants::RADDEG;
+	double hypoth_phi_rad = theta_zero.Phi() * constants::RADDEG;
 	TVector3 hypoth_vector (sin (hypoth_theta_rad) * cos (hypoth_phi_rad), sin (hypoth_theta_rad) * sin (hypoth_phi_rad), cos (hypoth_theta_rad));
 	  
 	//	There will be three antenna time offsets per phi sector:
@@ -1092,7 +1092,7 @@ void icemc::GlobalTrigger::PassesTriggerSummedPower(const Settings *settings1,An
 	  
 	//	Find time offsets from the relative path lengths
 	for (unsigned index_antenna = 0; index_antenna < 3; ++index_antenna) {
-	  offset[index_antenna] = dist[index_antenna] / CLIGHT;
+	  offset[index_antenna] = dist[index_antenna] / constants::CLIGHT;
 	}
 	  
 	//	Make the lowest time offset be the minoffset

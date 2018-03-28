@@ -757,9 +757,9 @@ int main(int argc,  char **argv) {
   double n_component_kvector=0; // component of the e-field along the normal
 
 
-  Vector n_eplane = const_z;
-  Vector n_hplane = -const_y;
-  Vector n_normal = const_x;
+  Vector n_eplane = icemc::constants::const_z;
+  Vector n_hplane = -icemc::constants::const_y;
+  Vector n_normal = icemc::constants::const_x;
 
   double chengji = 0;
   Vector ant_normal; //Vector normal to the face of the antenna
@@ -1472,9 +1472,9 @@ int main(int argc,  char **argv) {
     anita1->calculate_all_offsets();
     double angle_theta=16.;
     double angle_phi=0.;
-    Vector x = Vector(cos(angle_theta * RADDEG) * cos((angle_phi+11.25) * RADDEG),
-                      cos(angle_theta * RADDEG) * sin((angle_phi+11.25) * RADDEG),
-                      sin(angle_theta * RADDEG));
+    Vector x = Vector(cos(angle_theta * icemc::constants::RADDEG) * cos((angle_phi+11.25) * icemc::constants::RADDEG),
+                      cos(angle_theta * icemc::constants::RADDEG) * sin((angle_phi+11.25) * icemc::constants::RADDEG),
+                      sin(angle_theta * icemc::constants::RADDEG));
     anita1->GetArrivalTimes(x,bn1,settings1);
     cout << "end of getarrivaltimes\n";
   }
@@ -1548,9 +1548,9 @@ int main(int argc,  char **argv) {
 
   // Setting gps offset for plotting direction wrt north
   if (settings1->WHICH==7){
-    gps_offset=atan2(-0.7042,0.71)*DEGRAD;
+    gps_offset=atan2(-0.7042,0.71)*icemc::constants::DEGRAD;
   } else if(settings1->WHICH==8){
-    gps_offset=atan2(-0.7085,0.7056)*DEGRAD;
+    gps_offset=atan2(-0.7085,0.7056)*icemc::constants::DEGRAD;
   } else if (settings1->WHICH==9 || settings1->WHICH==10){
     gps_offset=45;
   } else gps_offset=0;
@@ -1597,7 +1597,7 @@ int main(int argc,  char **argv) {
 	ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
         // ierr=0 if the energy is too low for the parameterization
         // ierr=1 otherwise
-        len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
+        len_int=1.0/(sigma*sig1->RHOH20*(1./icemc::constants::M_NUCL)*1000); // in km (why interaction length in water?) //EH
       }// end IsSpectrum
       n_interactions=1;
       count_pass=0;
@@ -1708,7 +1708,7 @@ int main(int argc,  char **argv) {
         if (settings1->FIRN) {
           sig1->SetNDepth(antarctica->GetN(interaction1->altitude_int));
           //      changle = acos(1/N_DEPTH);
-          changle_deg=sig1->changle*DEGRAD;
+          changle_deg=sig1->changle*icemc::constants::DEGRAD;
         }
       //}
 
@@ -1800,7 +1800,7 @@ int main(int argc,  char **argv) {
             for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
               for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
                 viewangle_eachboresight[ilayer][ifold]=acos(interaction1->nnu.Dot(ray1->nrf_iceside_eachboresight[4][ilayer][ifold]));
-                fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-sig1->changle)*DEGRAD << "\n";
+                fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-sig1->changle)*icemc::constants::DEGRAD << "\n";
               }//end for ifold
             }//end for ilayer
           }//end if boresights
@@ -1941,7 +1941,7 @@ int main(int argc,  char **argv) {
             for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
               for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
                 viewangle_eachboresight[ilayer][ifold]=acos(interaction1->nnu.Dot(ray1->nrf_iceside_eachboresight[4][ilayer][ifold]));
-                fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-sig1->changle)*DEGRAD << "\n";
+                fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-sig1->changle)*icemc::constants::DEGRAD << "\n";
               }//end ifold
             }//end ilayer
           }//end boresight
@@ -1965,14 +1965,14 @@ int main(int argc,  char **argv) {
       // probability a tau would decay within this length at this
       // energy
       nuexitice=interaction1->posnu.Distance(interaction1->nuexitice);
-      theta_threshold_deg=theta_threshold*DEGRAD;
+      theta_threshold_deg=theta_threshold*icemc::constants::DEGRAD;
 
       // neutrino direction in frame where balloon is up,  0=east, 1=north, 2=up
       n_nutraject_ontheground = Vector(bn1->n_east.Dot(interaction1->nnu),  bn1->n_north.Dot(interaction1->nnu),  bn1->n_bn.Dot(interaction1->nnu));
 
       cosviewangle=cos(viewangle); // cosine angle
-      viewangle_deg=viewangle*DEGRAD; // same angle but in degrees
-      dviewangle_deg=(sig1->changle-viewangle)*DEGRAD; // deviation from cerenkov angle
+      viewangle_deg=viewangle*icemc::constants::DEGRAD; // same angle but in degrees
+      dviewangle_deg=(sig1->changle-viewangle)*icemc::constants::DEGRAD; // deviation from cerenkov angle
 
       if (viewangletree->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
         viewangletree->Fill(); // fills variables related to viewing angle
@@ -2030,7 +2030,7 @@ int main(int argc,  char **argv) {
       // theta of nu entrance point,  in earth frame
       // and latitude
       theta_in=interaction1->r_in.Theta();
-      lat_in=-90+theta_in*DEGRAD;
+      lat_in=-90+theta_in*icemc::constants::DEGRAD;
 
       // find quantities relevent for studying impact of atmosphere
       // for black hole studies
@@ -2125,7 +2125,7 @@ int main(int argc,  char **argv) {
       double nbelowsurface;
       // reject if it is totally internally reflected at the surface AND NOT CONSIDERING ROUGHNESS
       if (settings1->FIRN)
-        nbelowsurface=NFIRN;
+        nbelowsurface=icemc::constants::NFIRN;
       else
         nbelowsurface=sig1->NICE;
       // this is purely a sanity check.
@@ -2286,9 +2286,9 @@ int main(int argc,  char **argv) {
 
         //double pathlength_specular = interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn);
         if (settings1->FIRN)
-          time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*NFIRN / CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/CLIGHT);
+          time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*icemc::constants::NFIRN / icemc::constants::CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/icemc::constants::CLIGHT);
         else
-          time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*NICE / CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/CLIGHT);
+          time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*icemc::constants::NICE / icemc::constants::CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/icemc::constants::CLIGHT);
 
         double slopeyx, slopeyy, slopeyz, rtemp;
         Vector ntemp2;
@@ -2443,9 +2443,9 @@ int main(int argc,  char **argv) {
             Emag_local *= fresnel_r * mag_r;
 //cerr<<"E: "<<Emag_local<<std::endl;
             if (settings1->FIRN)
-              time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*NFIRN / CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/CLIGHT);
+              time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*icemc::constants::NFIRN / icemc::constants::CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/icemc::constants::CLIGHT);
             else
-              time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*NICE / CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/CLIGHT);
+              time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*icemc::constants::NICE / icemc::constants::CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/icemc::constants::CLIGHT);
             // increment counter so we can track the size of the screen's vector arrays
             num_validscreenpoints++;
 
@@ -2798,7 +2798,7 @@ int main(int argc,  char **argv) {
         fslac_hitangles << bn1->sslacpositions[bn1->islacposition] << "\n";
 
       if (RANDOMISEPOL) {
-        double rotateangle=gRandom->Gaus(RANDOMISEPOL*RADDEG);
+        double rotateangle=gRandom->Gaus(RANDOMISEPOL*icemc::constants::RADDEG);
         n_pol=n_pol.Rotate(rotateangle, ray1->n_exit2bn[2]);
       }
 
@@ -2817,14 +2817,14 @@ int main(int argc,  char **argv) {
         // rotate n_exit2bn too
         // rotation axis n_bn crossed with n_exit2bn
         Vector rotationaxis=ray1->n_exit2bn[2].Cross(bn1->n_bn);
-        double rotateangle=PI/2.-ray1->n_exit2bn[2].Dot(bn1->n_bn);
+        double rotateangle=icemc::constants::PI/2.-ray1->n_exit2bn[2].Dot(bn1->n_bn);
         ray1->n_exit2bn[2]=ray1->n_exit2bn[2].Rotate(rotateangle, rotationaxis);
 
         for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
           // ifold loops over phi
           for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
             Vector rotationaxis2=ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Cross(n_pol_eachboresight[ilayer][ifold]);
-            double rotateangle2=PI/2.-ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Dot(n_pol_eachboresight[ilayer][ifold]);
+            double rotateangle2=icemc::constants::PI/2.-ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Dot(n_pol_eachboresight[ilayer][ifold]);
             ray1->n_exit2bn_eachboresight[2][ilayer][ifold].Rotate(rotateangle2, rotationaxis2);
           } // end loop over phi
         } // end loop over layers
@@ -3011,8 +3011,8 @@ int main(int argc,  char **argv) {
             polarfactor_discone=n_pol.Dot(bn1->n_bn); // beam pattern
             for (int k=0;k<Anita::NFREQ;k++) {
               if (anita1->freq[k]>=FREQ_LOW_DISCONES && anita1->freq[k]<=FREQ_HIGH_DISCONES) {
-                thislambda=CLIGHT/sig1->N_AIR/anita1->freq[k];
-                heff_discone= thislambda*sqrt(2*Zr*gain_dipole/Z0/4/PI*sig1->N_AIR);   // effective height of dipole,  using formula from Ped's note
+                thislambda=icemc::constants::CLIGHT/sig1->N_AIR/anita1->freq[k];
+                heff_discone= thislambda*sqrt(2*icemc::constants::Zr*gain_dipole/icemc::constants::Z0/4/icemc::constants::PI*sig1->N_AIR);   // effective height of dipole,  using formula from Ped's note
 
                 volts_discone+=panel1->GetVmmhz_freq(k)*0.5*heff_discone*((settings1->BW/1E6)/(double)Anita::NFREQ)*polarfactor_discone;
               }
@@ -3151,7 +3151,7 @@ int main(int argc,  char **argv) {
           weight=weight1/interaction1->dnutries*settings1->SIGMA_FACTOR;
           weight_prob=weight_prob/interaction1->dnutries*settings1->SIGMA_FACTOR;
 
-          pieceofkm2sr=weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr/(double)NNU/len_int;
+          pieceofkm2sr=weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*icemc::constants::sr/(double)NNU/len_int;
           if (h10->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST)
             h10->Fill(hitangle_e_all[0], weight);
 //cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<"   screenNpts="<<panel1->GetNvalidPoints()<< ":  vmmhz[0] = "<<panel1->GetVmmhz_freq(0)<<" : trans pol "<< panel1->GetPol(0)<<" : IncAngle "<<panel1->GetIncidenceAngle(0)*180./PI<< " : TransAngle "<<panel1->GetTransmissionAngle(0)*180./PI<<" : Tslappy "<<panel1->GetTperpendicular_polPerpendicular(0)<<" : Tpokey "<<panel1->GetTparallel_polParallel(0)<< endl;
@@ -3741,15 +3741,15 @@ int main(int argc,  char **argv) {
     cout << "Average balloon altitude is " << average_altitude << "\n";
     cout << "Average distance from earth center is " << average_rbn << "\n";
     cout << "Average height of balloon above ice surface is " << average_rbn-antarctica->Surface(bn1->r_bn) << "\n";
-    cout << "theta_zenith are " << anita1->THETA_ZENITH[0]*DEGRAD << " " << anita1->THETA_ZENITH[1]*DEGRAD << " " << anita1->THETA_ZENITH[2]*DEGRAD << "\n";
+    cout << "theta_zenith are " << anita1->THETA_ZENITH[0]*icemc::constants::DEGRAD << " " << anita1->THETA_ZENITH[1]*icemc::constants::DEGRAD << " " << anita1->THETA_ZENITH[2]*icemc::constants::DEGRAD << "\n";
     cout << "Index of refraction at this depth is " << sig1->N_DEPTH << "\n";
-    cout << "Cerenkov angle is " << sig1->changle*DEGRAD << "\n";
-    cout << "Nadir angle to surface exit point is " << DEGRAD*bn1->r_bn.Angle(ray1->n_exit2bn[2]) << "\n";
+    cout << "Cerenkov angle is " << sig1->changle*icemc::constants::DEGRAD << "\n";
+    cout << "Nadir angle to surface exit point is " << icemc::constants::DEGRAD*bn1->r_bn.Angle(ray1->n_exit2bn[2]) << "\n";
     cout << "Distance from rfexit to balloon is " << (bn1->r_bn+ -1*ray1->rfexit[2]).Mag() << "\n";
-    cout << "Payload zenith angle at event source is " << DEGRAD*ray1->rfexit[2].Angle(ray1->n_exit2bn[2]) << "\n";
-    cout << "Angle of incidence just below surface is " << DEGRAD*ray1->rfexit[2].Angle(ray1->nrf_iceside[4]) << "\n";
-    cout << "Angle between neutrino and surface normal is " << DEGRAD*ray1->rfexit[0].Angle(interaction1->nnu)-90. << "\n";
-    cout << "Angle of incidence below firn surface is " << DEGRAD*ray1->rfexit[2].Angle(ray1->nrf_iceside[3]) << "\n";
+    cout << "Payload zenith angle at event source is " << icemc::constants::DEGRAD*ray1->rfexit[2].Angle(ray1->n_exit2bn[2]) << "\n";
+    cout << "Angle of incidence just below surface is " << icemc::constants::DEGRAD*ray1->rfexit[2].Angle(ray1->nrf_iceside[4]) << "\n";
+    cout << "Angle between neutrino and surface normal is " << icemc::constants::DEGRAD*ray1->rfexit[0].Angle(interaction1->nnu)-90. << "\n";
+    cout << "Angle of incidence below firn surface is " << icemc::constants::DEGRAD*ray1->rfexit[2].Angle(ray1->nrf_iceside[3]) << "\n";
   }
   cout << "about to Summarize.\n";
 
@@ -3955,7 +3955,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   cout << "Number of (weighted) neutrinos that pass both pol triggers is: " << allcuts_weighted_polarization[2] << "\n\n";
 
   foutput << "Volume of ice is " << volume << "\n";
-  foutput << "Value of 4*pi*pi*r_earth*r_earth in km^2 " << 4*PI*PI*(EarthModel::EarthRadiusMeters*EarthModel::EarthRadiusMeters/1.E6) << "\n";
+  foutput << "Value of 4*pi*pi*r_earth*r_earth in km^2 " << 4*icemc::constants::PI*icemc::constants::PI*(EarthModel::EarthRadiusMeters*EarthModel::EarthRadiusMeters/1.E6) << "\n";
 
 
   // single event sensitivity for 150 MHz array per year
@@ -4045,12 +4045,12 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
 
   // account for efficiency
   if (NNU != 0 && nevents!=0) {
-    km3sr=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr*nevents/(double)NNU/settings1->SIGMA_FACTOR;
+    km3sr=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*icemc::constants::sr*nevents/(double)NNU/settings1->SIGMA_FACTOR;
 
     cout << nevents << " events passed out of " << NNU << "\n";
 
-    error_plus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr*error_plus/(double)NNU/settings1->SIGMA_FACTOR;
-    error_minus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr*error_minus/(double)NNU/settings1->SIGMA_FACTOR;
+    error_plus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*icemc::constants::sr*error_plus/(double)NNU/settings1->SIGMA_FACTOR;
+    error_minus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*icemc::constants::sr*error_minus/(double)NNU/settings1->SIGMA_FACTOR;
 
     percent_increase_db=km3sr_db/km3sr*100;
     percent_increase_nfb=km3sr_nfb/km3sr*100;
@@ -4059,36 +4059,36 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
 
     percent_increase_total=percent_increase_db+percent_increase_nfb;
 
-    km3sr_e = (pow(1.e-3, 3))*volume*sr*(sum[0]/(double)count1->nnu_e)*sig1->RHOMEDIUM/sig1->RHOH20/settings1->SIGMA_FACTOR;
+    km3sr_e = (pow(1.e-3, 3))*volume*icemc::constants::sr*(sum[0]/(double)count1->nnu_e)*sig1->RHOMEDIUM/sig1->RHOH20/settings1->SIGMA_FACTOR;
 
     cout << sum[0]/(double)nevents*100. << "% are electron neutrinos\n";
 
-    error_e_plus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr*error_e_plus/(double)count1->nnu_e/settings1->SIGMA_FACTOR;
-    error_e_minus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr*error_e_minus/(double)count1->nnu_e/settings1->SIGMA_FACTOR;
+    error_e_plus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*icemc::constants::sr*error_e_plus/(double)count1->nnu_e/settings1->SIGMA_FACTOR;
+    error_e_minus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*icemc::constants::sr*error_e_minus/(double)count1->nnu_e/settings1->SIGMA_FACTOR;
 
-    km3sr_mu = (pow(1.e-3, 3))*volume*sr*(sum[1]/(double)count1->nnu_mu)*sig1->RHOMEDIUM/sig1->RHOH20/settings1->SIGMA_FACTOR;
+    km3sr_mu = (pow(1.e-3, 3))*volume*icemc::constants::sr*(sum[1]/(double)count1->nnu_mu)*sig1->RHOMEDIUM/sig1->RHOH20/settings1->SIGMA_FACTOR;
 
     cout << sum[1]/(double)nevents*100. << "% are muon neutrinos\n";
 
-    error_mu_plus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr*error_mu_plus/(double)count1->nnu_mu/settings1->SIGMA_FACTOR;
-    error_mu_minus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr*error_mu_minus/(double)count1->nnu_mu/settings1->SIGMA_FACTOR;
+    error_mu_plus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*icemc::constants::sr*error_mu_plus/(double)count1->nnu_mu/settings1->SIGMA_FACTOR;
+    error_mu_minus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*icemc::constants::sr*error_mu_minus/(double)count1->nnu_mu/settings1->SIGMA_FACTOR;
 
-    km3sr_tau = (pow(1.e-3, 3))*volume*sr*(sum[2]/(double)count1->nnu_tau)*sig1->RHOMEDIUM/sig1->RHOH20/settings1->SIGMA_FACTOR;
+    km3sr_tau = (pow(1.e-3, 3))*volume*icemc::constants::sr*(sum[2]/(double)count1->nnu_tau)*sig1->RHOMEDIUM/sig1->RHOH20/settings1->SIGMA_FACTOR;
 
     cout << sum[2]/(double)nevents*100. << "% are tau neutrinos\n";
 
-    error_tau_plus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr*error_tau_plus/(double)count1->nnu_tau/settings1->SIGMA_FACTOR;
-    error_tau_minus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr*error_tau_minus/(double)count1->nnu_tau/settings1->SIGMA_FACTOR;
+    error_tau_plus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*icemc::constants::sr*error_tau_plus/(double)count1->nnu_tau/settings1->SIGMA_FACTOR;
+    error_tau_minus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*icemc::constants::sr*error_tau_minus/(double)count1->nnu_tau/settings1->SIGMA_FACTOR;
 
     double sum_km3sr=0;
     double sum_km3sr_error_plus=0;
     double sum_km3sr_error_minus=0;
     for (int i=0;i<NBINS_DISTANCE;i++) {
-      sum_km3sr+= (pow(1.e-3, 3))*volume*sr*eventsfound_binned_distance[i]*sig1->RHOMEDIUM/sig1->RHOH20/(double)NNU/settings1->SIGMA_FACTOR;
+      sum_km3sr+= (pow(1.e-3, 3))*volume*icemc::constants::sr*eventsfound_binned_distance[i]*sig1->RHOMEDIUM/sig1->RHOH20/(double)NNU/settings1->SIGMA_FACTOR;
       km3sr_distance[i]=sum_km3sr;
-      sum_km3sr_error_plus+=pow(pow(1.E-3, 3)*volume*error_distance_plus[i]*sig1->RHOMEDIUM/sig1->RHOH20*sr/(double)NNU, 2)/settings1->SIGMA_FACTOR;
+      sum_km3sr_error_plus+=pow(pow(1.E-3, 3)*volume*error_distance_plus[i]*sig1->RHOMEDIUM/sig1->RHOH20*icemc::constants::sr/(double)NNU, 2)/settings1->SIGMA_FACTOR;
       error_distance_plus[i]=sqrt(sum_km3sr_error_plus);
-      sum_km3sr_error_minus+=pow(pow(1.E-3, 3)*volume*error_distance_minus[i]*sig1->RHOMEDIUM/sig1->RHOH20*sr/(double)NNU, 2)/settings1->SIGMA_FACTOR;
+      sum_km3sr_error_minus+=pow(pow(1.E-3, 3)*volume*error_distance_minus[i]*sig1->RHOMEDIUM/sig1->RHOH20*icemc::constants::sr/(double)NNU, 2)/settings1->SIGMA_FACTOR;
       error_distance_minus[i]=sqrt(sum_km3sr_error_minus);
       distanceout << 700000./(double)NBINS_DISTANCE*(double)i << "\t" << km3sr_distance[i] << "\t" << error_distance_plus[i] << "\t" << error_distance_minus[i] << "\n";
     } //for
@@ -4104,13 +4104,13 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
 
     if ( spectra1->IsMonoenergetic() )  {
       cout << "Cross section is " << sigma << "m^2\n";
-      double len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000);
+      double len_int=1.0/(sigma*sig1->RHOH20*(1./icemc::constants::M_NUCL)*1000);
       cout << "Interaction length is " << len_int << " km\n\n";
       foutput << "Interaction length is " << len_int << "\n";
       km2sr=km3sr/len_int;
       foutput << "Total area x steradians using km3sr/len_int is \t\t\t\t" << km2sr << " km^2 str\n\n";
       cout << "Total area x steradians is \t\t" << km2sr << " km^2 str\n\n";
-      km2sr=ice_area/(1.E6)*PI*eventsfound_prob/(double)NNU;
+      km2sr=ice_area/(1.E6)*icemc::constants::PI*eventsfound_prob/(double)NNU;
       foutput << "Total area x steradians using 4*PI*EarthRadiusMeters^2*eff. is \t" << km2sr << " km^2 str\n\n";
       foutput << "These are not the same because we are not throwing all directions on all points of the surface.  Believe the first one as an approximation,  we are working on this for high cross sections.\n";
       // ses=(pnu/1.E9)/(km2sr*3.16E7);
@@ -4324,9 +4324,9 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     //km3sr=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/RHOH20*sr*nevents/(double)NNU;
     cout << "SUM EVENTS IS " << sum_events << endl;
     cout << "INTEGRAL : " << integral << endl;
-    sum_events*=volume*anita1->LIVETIME*sig1->RHOMEDIUM/sig1->RHOH20*nevents/(double)NNU*sr;
+    sum_events*=volume*anita1->LIVETIME*sig1->RHOMEDIUM/sig1->RHOH20*nevents/(double)NNU*icemc::constants::sr;
     // sum_events*=anita1->LIVETIME*km3sr*1e9;
-    foutput << "volume,  LIVETIME,  sig1->RHOMEDIUM,  RHOH20,  nevents,  NNU,  sr are " << volume << " " << anita1->LIVETIME << " " << sig1->RHOMEDIUM << " " << sig1->RHOH20 << " " << nevents << " " << NNU << " " << sr << "\n";
+    foutput << "volume,  LIVETIME,  sig1->RHOMEDIUM,  RHOH20,  nevents,  NNU,  sr are " << volume << " " << anita1->LIVETIME << " " << sig1->RHOMEDIUM << " " << sig1->RHOH20 << " " << nevents << " " << NNU << " " << icemc::constants::sr << "\n";
     foutput << "Total events observed is " << sum_events << "\n";
   } //end if IsSpectrum
 
@@ -4383,8 +4383,8 @@ void CloseTFile(TFile *hfile) {
 
 
 double IsItDoubleBang(double exitlength, double plepton) {
-  double gamma=plepton/MTAU;
-  return 1-exp(-1*exitlength/(TAUDECAY_TIME*CLIGHT*gamma));
+  double gamma=plepton/icemc::constants::MTAU;
+  return 1-exp(-1*exitlength/(icemc::constants::TAUDECAY_TIME*icemc::constants::CLIGHT*gamma));
 }
 //end IsItDoubleBang()
 
@@ -4392,13 +4392,13 @@ double IsItDoubleBang(double exitlength, double plepton) {
 int WhereIsSecondBang(const Position &posnu, const Vector &nnu, double nuexitlength, double pnu, IceModel *antarctica1, const Position &r_bn, Position &posnu2, Position &rfexit_db, Vector &n_exit2bn_db) {
   double rnd1=0;
   double rnd2=2;
-  double gamma=pnu/MTAU;
+  double gamma=pnu/icemc::constants::MTAU;
 
-  if (exp(-1*nuexitlength/(TAUDECAY_TIME*CLIGHT*gamma))>0.999){
+  if (exp(-1*nuexitlength/(icemc::constants::TAUDECAY_TIME*icemc::constants::CLIGHT*gamma))>0.999){
     rnd1=gRandom->Rndm()*nuexitlength;
   }
   else {
-    while (rnd2>1-exp(-1*rnd1/(TAUDECAY_TIME*CLIGHT*gamma))) {
+    while (rnd2>1-exp(-1*rnd1/(icemc::constants::TAUDECAY_TIME*icemc::constants::CLIGHT*gamma))) {
       rnd1=gRandom->Rndm()*nuexitlength;
       rnd2=gRandom->Rndm();
     } //while
@@ -4565,7 +4565,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
           theta_threshold=-1;
         else {
           //theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(icemc::Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle))/ALOG2);
-          theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/ALOG2);
+          theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/icemc::constants::ALOG2);
           averaging_thetas1+=theta_threshold;
         } //else
         count_inthisloop1++;
@@ -4653,19 +4653,19 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
 
       theta_threshold*=settings1->THETA_TH_FACTOR; // multiply theta_threshold by scale factor if requested,  for testing purposes.
       if (theta_threshold>0) { // we only pick the angle between 0 and pi so set the upper and lower limits accordingly.
-        if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold> PI) {
+        if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold> icemc::constants::PI) {
           costhetanu2=1.;
           costhetanu1=-1.;
         } //if
-        else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold> PI) {
+        else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold> icemc::constants::PI) {
           costhetanu2=cos(sig1->changle-theta_threshold);
           costhetanu1=-1.;
         } //else if
-        else if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold< PI) {
+        else if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold< icemc::constants::PI) {
           costhetanu2=1.;
           costhetanu1=cos(sig1->changle+theta_threshold);
         } //else if
-        else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold< PI) {
+        else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold< icemc::constants::PI) {
           costhetanu2=cos(sig1->changle-theta_threshold);
           costhetanu1=cos(sig1->changle+theta_threshold);
         } //else if
@@ -4678,7 +4678,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
       // pick the neutrino direction,  in a coordinate system where the z axis lies along the cerenkov cone.
       costhetanu=costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
 
-      double phinu=TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
+      double phinu=icemc::constants::TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
       double sinthetanu=sqrt(1-costhetanu*costhetanu);
       // 3-vector of neutrino direction,  at that same coordinate system.
       nnu = Vector(sinthetanu*cos(phinu), sinthetanu*sin(phinu), costhetanu);
@@ -4690,10 +4690,10 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
       interaction1->dtryingdirection=1/((costhetanu2-costhetanu1)/2.);
       if (bn1->WHICHPATH==4) {
         //double angle=(PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4])+1.*RADDEG;
-        double angle=(PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4]);      // this will put the viewing angle at the cerenkov angle
+        double angle=(icemc::constants::PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4]);      // this will put the viewing angle at the cerenkov angle
         double thetaposnu=posnu.Theta();
         //double phiposnu=posnu.Phi();
-        costhetanu=cos(PI/2+(thetaposnu-angle));
+        costhetanu=cos(icemc::constants::PI/2+(thetaposnu-angle));
         sinthetanu=sqrt(1-costhetanu*costhetanu);
         //phinu=0.95993;
         phinu=-1.339; // this is the phi where it's coming *from.*
@@ -4752,13 +4752,13 @@ double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_
 
 
 void SetupViewangles(Signal *sig1) {
-  double viewangle_max=90.*RADDEG;
-  double viewangle_min=30.*RADDEG;
+  double viewangle_max=90.*icemc::constants::RADDEG;
+  double viewangle_min=30.*icemc::constants::RADDEG;
   for (int i=0;i<NVIEWANGLE-2;i++) {
     viewangles[i]=viewangle_max-(viewangle_max-viewangle_min)/(double)(NVIEWANGLE-2)*(double)i;
   }
   viewangles[NVIEWANGLE-2]=acos(1/sig1->N_DEPTH);
-  viewangles[NVIEWANGLE-1]=90.*RADDEG;
+  viewangles[NVIEWANGLE-1]=90.*icemc::constants::RADDEG;
 }
 //end SetupViewAngles()
 
@@ -4767,7 +4767,7 @@ double GetThisAirColumn(Settings* settings1,  Position r_in, Vector nnu, Positio
   double myair=0; // this is the output
   // it is the column of air in kg/m^2
   cosalpha=(r_in.Dot(nnu)) / r_in.Mag(); // cosangle that the neutrino enters the earth wrt surface normal at its entrry point
-  mytheta=(double)(acos(cosalpha)*DEGRAD)-90.; // turn this into an angle
+  mytheta=(double)(acos(cosalpha)*icemc::constants::DEGRAD)-90.; // turn this into an angle
 
   //------------------added on Dec 8------------------------
   if (settings1->ATMOSPHERE) {
@@ -4782,7 +4782,7 @@ double GetThisAirColumn(Settings* settings1,  Position r_in, Vector nnu, Positio
   //cout<<"mytheta="<<mytheta<<"; myair="<<myair<<endl;
   //------------------added on Dec 8------------------------
   cosbeta0= (posnu.Dot(nnu)) / posnu.Mag(); // cos angle of neutrino wrt person standing over the interaction point
-  mybeta=(double)(acos(cosbeta0)*DEGRAD)-90.; // turn that into a theta
+  mybeta=(double)(acos(cosbeta0)*icemc::constants::DEGRAD)-90.; // turn that into a theta
   return myair;
 }
 //end GetThisAirColumn()
@@ -5021,13 +5021,14 @@ void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceMode
     
   // double balloondist =r_bn_tmp.Mag();//this is above center of earth, if i understand correctly. Need above the surface of the earth. 
   double balloonphi = r_bn_tmp.Phi(); //phi position of the balloon
-  if (balloonphi>PI)
-    balloonphi=balloonphi-2*PI;
+  if (balloonphi>icemc::constants::PI){
+    balloonphi=balloonphi-2*icemc::constants::PI;
+  }
 
   double balloontheta = r_bn_tmp.Theta();// costheta position of the baloon
   // get this by dotting ray1->nsurf_rfexit with nnu?     
   // double thetainc = acos(interaction1->nnu[2])*180/PI; //nnu is unit vector; cos(thetainc) = z/r
-  balloontheta = PI-balloontheta;//walter.cc uses a pos z as down. this corrects for that.
+  balloontheta = icemc::constants::PI-balloontheta;//walter.cc uses a pos z as down. this corrects for that.
     
   // define a coordinate system with ray1->nsurf_rfexit defining +z
   // nnu direction defines the x-z plane

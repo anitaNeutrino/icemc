@@ -1,7 +1,7 @@
-#include "IcemcStatistics.h"
+#include "Constants.h"
 #include <iostream>
 
-void icemc::statistics::getPoissonError(int n, double& poissonErrorPlus, double& poissonErrorMinus){
+void icemc::constants::getPoissonError(int n, double& poissonErrorPlus, double& poissonErrorMinus){
 
   const int np = 21;
   static const double poissonerror_minus[np] = {0.-0.00, 1.-0.37, 2.-0.74, 3.-1.10, 4.-2.34,

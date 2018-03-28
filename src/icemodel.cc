@@ -34,8 +34,8 @@ const string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
 
 icemc::IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : EarthModel(earth_model,WEIGHTABSORPTION_SETTING) {
     
-    bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(71*RADDEG)) / (1 - eccentricity*sin(71*RADDEG)) ),eccentricity/2) * tan((PI/4) - (71*RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
-    bedmap_nu = bedmap_R / cos(71*RADDEG);
+  bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(71*constants::RADDEG)) / (1 - eccentricity*sin(71*constants::RADDEG)) ),eccentricity/2) * tan((constants::PI/4) - (71*constants::RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
+  bedmap_nu = bedmap_R / cos(71*constants::RADDEG);
     
     //Parameters of the BEDMAP ice model. (See http://www.antarctica.ac.uk/aedc/bedmap/download/)
     nCols_ice=1200; //number of columns in data, set by header file (should be 1200)
@@ -263,7 +263,7 @@ icemc::Position icemc::IceModel::PickInteractionLocation(int ibnposition, const 
           cout<<"Problem in PickDownward: e_coord, n_coord : "<<e_coord<<" , "<<n_coord<<endl;
           vol_bybin=IceThickness(lon,lat)*Area(lat);
         } //while
-        theta = lat*RADDEG;
+        theta = lat*constants::RADDEG;
         phi=LongtoPhi_0is180thMeridian(lon); // convert longitude to phi
       } //end if(BEDMAP)
     //}
@@ -281,10 +281,10 @@ int icemc::IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica
     
     interaction1->PickAnyDirection(); // first pick the neutrino direction
     
-    double mincos=cos(COASTLINE*RADDEG);
+    double mincos=cos(COASTLINE*constants::RADDEG);
     double maxcos=cos(0.);
     double minphi=0.;
-    double maxphi=2.*PI;
+    double maxphi=2.*constants::PI;
     double thisphi,thiscos,thissin;
         
     thisphi=gRandom->Rndm()*(maxphi-minphi)+minphi;
@@ -533,11 +533,11 @@ icemc::Vector icemc::IceModel::GetSurfaceNormal(const Position &r_out) {
 	lat = r_out.Lat(); //longitude and latitude of interaction
 	double local_surface_elevation = Surface(lon,lat);
 	
-	lat_next = lat + dist_to_check * (180 / (local_surface_elevation * PI)); //the latitude 7.5 km south of the interaction
-	lat_prev = lat - dist_to_check * (180 / (local_surface_elevation * PI)); //the latitude 7.5 km north of the interaction
+	lat_next = lat + dist_to_check * (180 / (local_surface_elevation * constants::PI)); //the latitude 7.5 km south of the interaction
+	lat_prev = lat - dist_to_check * (180 / (local_surface_elevation * constants::PI)); //the latitude 7.5 km north of the interaction
 	
-	lon_next = lon + dist_to_check * (180 / (sin(lat*RADDEG) * local_surface_elevation * PI)); 
-	lon_prev = lon - dist_to_check * (180 / (sin(lat*RADDEG) * local_surface_elevation * PI)); 
+	lon_next = lon + dist_to_check * (180 / (sin(lat*constants::RADDEG) * local_surface_elevation * constants::PI)); 
+	lon_prev = lon - dist_to_check * (180 / (sin(lat*constants::RADDEG) * local_surface_elevation * constants::PI)); 
 	
 	if (lat_next > 90) {
 	    //cout<<"lat_next is > 90"<<endl;
@@ -1042,11 +1042,11 @@ double icemc::IceModel::GetN(double altitude) {
     else if (altitude >= FIRNDEPTH && altitude <=0 && DEPTH_DEPENDENT_N) 
 	//    N_DEPTH=NFIRN-(4.6198+13.62*(altitude_int/1000.))*
 	//(altitude_int/1000.);   // Besson's equation for n(z)
-	n=NFIRN+a1*(1.0-exp(b1*altitude));   // Peter's equation for n(z)
+      n=constants::NFIRN+a1*(1.0-exp(b1*altitude));   // Peter's equation for n(z)
     else if (altitude > 0)
 	cout<<"Error!  N requested for position in air!\n";
     else if (!DEPTH_DEPENDENT_N)
-	n = NFIRN;
+      n = constants::NFIRN;
     
     return n;
 } //GetN(altitude)
@@ -1113,9 +1113,9 @@ double icemc::IceModel::EffectiveAttenuationLength(const Settings *settings1,con
 
 double icemc::IceModel::Area(double latitude) {
     //Returns the area of one square of the BEDMAP data at a given latitude. 
-    double lat_rad = (90 - latitude) * RADDEG;
+  double lat_rad = (90 - latitude) * constants::RADDEG;
     
-    return (pow(cellSize* ((1 + sin(71*RADDEG)) / (1 + sin(lat_rad))),2));
+  return (pow(cellSize* ((1 + sin(71*constants::RADDEG)) / (1 + sin(lat_rad))),2));
 } //method Area
 
 void icemc::IceModel::LonLattoEN(double lon, double lat, double xLowerLeft, double yLowerLeft, int& e_coord, int& n_coord) {
@@ -1124,10 +1124,10 @@ void icemc::IceModel::LonLattoEN(double lon, double lat, double xLowerLeft, doub
     double easting=0;
     double northing=0;
     
-    double lon_rad = (lon - 180) * RADDEG; //convert to radians, and shift origin to conventional spot
-    double lat_rad = (90 - lat) * RADDEG;
+    double lon_rad = (lon - 180) * constants::RADDEG; //convert to radians, and shift origin to conventional spot
+    double lat_rad = (90 - lat) * constants::RADDEG;
     
-    bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(lat_rad)) / (1 - eccentricity*sin(lat_rad)) ),eccentricity/2) * tan((PI/4) - lat_rad/2);
+    bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(lat_rad)) / (1 - eccentricity*sin(lat_rad)) ),eccentricity/2) * tan((constants::PI/4) - lat_rad/2);
     
     easting = bedmap_R * sin(lon_rad);
     northing = bedmap_R * cos(lon_rad);
@@ -1168,15 +1168,15 @@ void icemc::IceModel::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, do
     if (northing!=0)
 	lon = atan(easting/northing);
     else
-	lon = 90*RADDEG;
+      lon = 90*constants::RADDEG;
     
     // this puts lon between -pi and pi
     if (easting > 0 && lon < 0) //adjust sign of longitude
-	lon += PI;
+      lon += constants::PI;
     else if (easting < 0 && lon > 0)
-	lon -= PI;
+      lon -= constants::PI;
     else if (easting == 0 && northing < 0)
-	lon += PI;
+      lon += constants::PI;
     
     //  now find latitude
     
@@ -1186,16 +1186,16 @@ void icemc::IceModel::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, do
 	bedmap_R = fabs(northing);
     else {
 	lat = 0; //at the pole, set lat=0 degrees
-	lon = lon*DEGRAD; // now put lon between 180 and 180 (only at pol)
+	lon = lon*constants::DEGRAD; // now put lon between 180 and 180 (only at pol)
 	return;
     } //else
     
-    isometric_lat = (PI/2) - 2*atan(bedmap_R/(scale_factor*bedmap_c_0));
+    isometric_lat = (constants::PI/2) - 2*atan(bedmap_R/(scale_factor*bedmap_c_0));
     
     lat = isometric_lat + bedmap_a_bar*sin(2*isometric_lat) + bedmap_b_bar*sin(4*isometric_lat) + bedmap_c_bar*sin(6*isometric_lat) + bedmap_d_bar*sin(8*isometric_lat);
     
-    lon = lon * DEGRAD + 180;  //convert to degrees, shift 0 to line up with bin 0 of Crust 2.0
-    lat = 90 - lat*DEGRAD; //convert to degrees, with 0 degrees at the south pole
+    lon = lon * constants::DEGRAD + 180;  //convert to degrees, shift 0 to line up with bin 0 of Crust 2.0
+    lat = 90 - lat*constants::DEGRAD; //convert to degrees, with 0 degrees at the south pole
     
     //  if (lon>160 && lon<165)
     //cout << "e_coord, n_coord, easting, northing, lon are " << e_coord << " " << n_coord << " " << easting << " " << northing << " " << lon << "\n";
@@ -1219,7 +1219,7 @@ void icemc::IceModel::WaterENtoLonLat(int e, int n, double& lon, double& lat) {
 
 void icemc::IceModel::GetMAXHORIZON(Balloon *bn1) {
     
-    double altitude_inmeters=bn1->BN_ALTITUDE*12.*CMINCH/100.;
+  double altitude_inmeters=bn1->BN_ALTITUDE*12.*constants::CMINCH/100.;
     if (bn1->BN_ALTITUDE==0.)
 	bn1->MAXHORIZON=8.E5; // if it is a standard flight then use a horizon of 800 km
     else
@@ -1306,15 +1306,15 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
 	maxvol_inhorizon[i]=-1.; // volume of bin with the most ice in the horizon
 	
 	if (bn1->WHICHPATH==2) { // anita or anita-lite path
-	    theta_bn=(90+bn1->latitude_bn_anitalite[i*100])*RADDEG; //theta of the balloon wrt north pole
+	  theta_bn=(90+bn1->latitude_bn_anitalite[i*100])*constants::RADDEG; //theta of the balloon wrt north pole
 	    lat=GetLat(theta_bn); // latitude  
 	    phi_bn_temp=(-1*bn1->longitude_bn_anitalite[i*100]+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
 	    if (phi_bn_temp<0) //correct phi_bn if it's negative
 		phi_bn_temp+=360.;
-	    phi_bn_temp*=RADDEG;// turn it into radians
+	    phi_bn_temp*=constants::RADDEG;// turn it into radians
 	    
 	    
-	    altitude_bn=bn1->altitude_bn_anitalite[i*100]*12.*CMINCH/100.; // get the altitude for this balloon posistion
+	    altitude_bn=bn1->altitude_bn_anitalite[i*100]*12.*constants::CMINCH/100.; // get the altitude for this balloon posistion
 	    //altitude_bn=altitude_bn_anitalite[i*100]*12.*CMINCH/100.; // for anita, altitude in is meters
 	    
 	} // end if anita-lite
@@ -1325,12 +1325,12 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
 	    
 	    bn1->flightdatachain->GetEvent(i*100);
 	    
-	    theta_bn=(90+(double)bn1->flatitude)*RADDEG; //theta of the balloon wrt north pole
+	    theta_bn=(90+(double)bn1->flatitude)*constants::RADDEG; //theta of the balloon wrt north pole
 	    lat=GetLat(theta_bn); // latitude  
 	    phi_bn_temp=(-1*(double)bn1->flongitude+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
 	    if (phi_bn_temp<0) //correct phi_bn if it's negative
 		phi_bn_temp+=360.;
-	    phi_bn_temp*=RADDEG;// turn it into radians
+	    phi_bn_temp*=constants::RADDEG;// turn it into radians
 	    
 	    altitude_bn=(double)bn1->faltitude; // for anita, altitude in is meters
 	    
@@ -1449,7 +1449,7 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
 		    
 		    GroundENtoLonLat(e_coord,n_coord,lon,lat);
 		    
-		    theta = lat * RADDEG;
+		    theta = lat * constants::RADDEG;
 		    phi=LongtoPhi_0is180thMeridian(lon);
 		    
 		    surface_elevation = this->Surface(lon,lat);
@@ -1512,7 +1512,7 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
     
     foutput << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
     
-    foutput << "Average thickness of ice within horizon, averages over balloon positions " << volume_inhorizon_average/PI/pow(bn1->MAXHORIZON,2) << "\n";
+    foutput << "Average thickness of ice within horizon, averages over balloon positions " << volume_inhorizon_average/constants::PI/pow(bn1->MAXHORIZON,2) << "\n";
 } //method CreateHorizons 
 
 

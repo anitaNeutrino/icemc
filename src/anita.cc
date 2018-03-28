@@ -66,7 +66,7 @@ icemc::Anita::Anita() {
   Tools::Zero(VNOISE_ANITALITE,16);
   INCLINE_TOPTHREE = 10.; // cant angle of top three layers of antennas
   INCLINE_NADIR = 10.; // cant angle of nadir (bottom) layer of antennas
-  SIGMA_THETA=0.5*RADDEG; // resolution on the polar angle of the signal
+  SIGMA_THETA=0.5*constants::RADDEG; // resolution on the polar angle of the signal
     
   FREQ_LOW=0.;//200.E6;
   FREQ_HIGH=1300.E6; //1200.E6;
@@ -1376,7 +1376,7 @@ void icemc::Anita::AntennaGain(const Settings *settings1,double hitangle_e,doubl
     double relativegains[4]; // fill this for each frequency bin for each antenna.  It's the gain of the antenna given the angle that the signal hits the balloon, for vv, vh, hv, hh, relative to the gain at boresight
 		
     for (int pols=0;pols<2;pols++) {// loop over vv, hv
-      if (fabs(hitangle_e)<PI/2)
+      if (fabs(hitangle_e)<constants::PI/2)
 	relativegains[pols]=Get_gain_angle(pols,k,hitangle_e);//change here to be constant if need be (ABBY).  Add a setting to the code for use constant gain or dish or something.  Make this a member function.
       else
 	relativegains[pols]=0.;
@@ -1395,7 +1395,7 @@ void icemc::Anita::AntennaGain(const Settings *settings1,double hitangle_e,doubl
     //cout << "vsignalarray_e after is " << vsignalarray_e << "\n";
 		
     for (int pols=2;pols<4;pols++) { // loop over hh, vh
-      if (fabs(hitangle_h)<PI/2)
+      if (fabs(hitangle_h)<constants::PI/2)
 	relativegains[pols]=Get_gain_angle(pols,k,hitangle_h);
       else
 	relativegains[pols]=0.;
@@ -1894,13 +1894,13 @@ int icemc::Anita::GetBeamWidths(const Settings *settings1) {
     // if the frequency is below the lowest from the specs, just use the 300 MHz value
     if (freq[k]<freq_specs[0]) {
       for (int j=0;j<4;j++) {
-	flare[j][k]=specs[0][j]*RADDEG;
+	flare[j][k]=specs[0][j]*constants::RADDEG;
       } //for
     } //if
     // if the frequency is higher than the highest frequency from the specs, just use the 1500 MHz value
     else if (freq[k]>=freq_specs[NFREQ_FORGAINS-1]) {
       for (int j=0;j<4;j++) {
-	flare[j][k]=specs[NFREQ_FORGAINS-1][j]*RADDEG;
+	flare[j][k]=specs[NFREQ_FORGAINS-1][j]*constants::RADDEG;
 				
       } //for
     } //else if
@@ -1911,7 +1911,7 @@ int icemc::Anita::GetBeamWidths(const Settings *settings1) {
 	  scale = (freq[k]-freq_specs[i])/(freq_specs[i+1]-freq_specs[i]);
 					
 	  for (int j=0;j<4;j++) {
-	    flare[j][k]=(specs[i][j]+scale*(specs[i+1][j]-specs[i][j]))*RADDEG;
+	    flare[j][k]=(specs[i][j]+scale*(specs[i+1][j]-specs[i][j]))*constants::RADDEG;
 						
 	  } //for
 	  i=NFREQ_FORGAINS;
@@ -1959,8 +1959,8 @@ double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) {
     exit(1);
   }
     
-  hitangle = fabs(hitangle)*DEGRAD;
-  flare[gain_type][k]=flare[gain_type][k]*DEGRAD;
+  hitangle = fabs(hitangle)*constants::DEGRAD;
+  flare[gain_type][k]=flare[gain_type][k]*constants::DEGRAD;
   if(hitangle > 90.00001) {
     cout << "hitangle out of range\n";
     exit(1);
@@ -2045,7 +2045,7 @@ void icemc::Anita::getDiodeModel( ) {
   f_up->SetParameter(1,18.E-9);
   f_up->SetParameter(3,1.E9);
     
-  f_up->SetParameter(0,-1.*sqrt(2.*PI)*(fdiode.GetParameter(0)*fdiode.GetParameter(2)+fdown2->GetParameter(0)*fdown2->GetParameter(2))/(2.*pow(f_up->GetParameter(2),3.)*1.E18));
+  f_up->SetParameter(0,-1.*sqrt(2.*constants::PI)*(fdiode.GetParameter(0)*fdiode.GetParameter(2)+fdown2->GetParameter(0)*fdown2->GetParameter(2))/(2.*pow(f_up->GetParameter(2),3.)*1.E18));
     
   double sum=0.;
   for (int j=0;j<5;j++) {
@@ -2055,7 +2055,7 @@ void icemc::Anita::getDiodeModel( ) {
     else if (j==1)
       f_up->SetParameter(0,0.004544);
     else
-      f_up->SetParameter(0,-1.*sqrt(2.*PI)*(fdiode.GetParameter(0)*fdiode.GetParameter(2)+fdown2->GetParameter(0)*fdown2->GetParameter(2))/(2.*pow(f_up->GetParameter(2),3.)*1.E18));
+      f_up->SetParameter(0,-1.*sqrt(2.*constants::PI)*(fdiode.GetParameter(0)*fdiode.GetParameter(2)+fdown2->GetParameter(0)*fdown2->GetParameter(2))/(2.*pow(f_up->GetParameter(2),3.)*1.E18));
 		
     for (int i=0;i<NFOUR/2;i++) {
 			
@@ -2198,8 +2198,8 @@ void icemc::Anita::GetPhases() {
     iband=Tools::findIndex(freq_bands[0],freq_forfft[2*k],NPOINTS_BANDS,freq_bands[0][0],freq_bands[0][NPOINTS_BANDS-1]);
 		
 		
-    phases_rfcm[0][k]=2*PI*gRandom->Rndm(); // set phases at output of rfcm randoml
-    phases_rfcm[1][k]=2*PI*gRandom->Rndm(); // set phases at output of rfcm randomly
+    phases_rfcm[0][k]=2*constants::PI*gRandom->Rndm(); // set phases at output of rfcm randoml
+    phases_rfcm[1][k]=2*constants::PI*gRandom->Rndm(); // set phases at output of rfcm randomly
 		
 		
     // now set phases at the lab chip
@@ -2208,7 +2208,7 @@ void icemc::Anita::GetPhases() {
     else corr=correl_lab[iband];
     uncorr=1-corr;
     phase_corr=phases_rfcm[0][k];
-    phase_uncorr=2*PI*gRandom->Rndm();
+    phase_uncorr=2*constants::PI*gRandom->Rndm();
     phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
     phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
     phases_lab[0][k]=TMath::ATan2(phasor_y,phasor_x);
@@ -2216,7 +2216,7 @@ void icemc::Anita::GetPhases() {
 		
 		
     phase_corr=phases_rfcm[1][k];
-    phase_uncorr=2*PI*gRandom->Rndm();
+    phase_uncorr=2*constants::PI*gRandom->Rndm();
     phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
     phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
     phases_lab[1][k]=TMath::ATan2(phasor_y,phasor_x);
@@ -2229,12 +2229,12 @@ void icemc::Anita::GetPhases() {
       else corr=correl_banding[j][iband];
       uncorr=1-corr;
       phase_corr=phases_rfcm[0][k];
-      phase_uncorr=2*PI*gRandom->Rndm();
+      phase_uncorr=2*constants::PI*gRandom->Rndm();
       phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
       phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
       phases_rfcm_banding[0][j][k]=TMath::ATan2(phasor_y,phasor_x);
       phase_corr=phases_rfcm[1][k];
-      phase_uncorr=2*PI*gRandom->Rndm();
+      phase_uncorr=2*constants::PI*gRandom->Rndm();
       phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
       phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
       phases_rfcm_banding[1][j][k]=TMath::ATan2(phasor_y,phasor_x);
@@ -2379,7 +2379,7 @@ void icemc::Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx){
 void icemc::Anita::GetPhasesFromFFT(double *tmp_fftvhz, double *phases){
   
   for (int ifreq=0; ifreq<NFOUR/4; ifreq++){
-    phases[ifreq]=TMath::ATan2(tmp_fftvhz[ifreq+1], tmp_fftvhz[ifreq])*180./PI;
+    phases[ifreq]=TMath::ATan2(tmp_fftvhz[ifreq+1], tmp_fftvhz[ifreq])*180./constants::PI;
   }
 
 }
@@ -2457,12 +2457,12 @@ void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forf
   //  Tools::InterpolateComplex(vsignal_e_forfft,NFOUR/4);
 
   if (useconstantdelay){
-    double cosphase=cos(phasedelay*PI/180.);
-    double sinphase=sin(phasedelay*PI/180.);
+    double cosphase=cos(phasedelay*constants::PI/180.);
+    double sinphase=sin(phasedelay*constants::PI/180.);
     for (int ifour=0;ifour<NFOUR/4;ifour++) {      
       if (USEPHASES) {
-	cosphase = cos(v_phases[ifour]*PI/180.);
-	sinphase = sin(v_phases[ifour]*PI/180.);
+	cosphase = cos(v_phases[ifour]*constants::PI/180.);
+	sinphase = sin(v_phases[ifour]*constants::PI/180.);
       }
       vsignal_e_forfft[2*ifour]*=cosphase;
       vsignal_e_forfft[2*ifour+1]*=sinphase;
@@ -2572,7 +2572,7 @@ double icemc::Anita::GaintoHeight(double gain,double freq,double nmedium_receive
   // from gain=4*pi*A_eff/lambda^2
   // and h_eff=2*sqrt(A_eff*Z_rx/Z_air)
   // gain is in dB
-  return 2*sqrt(gain/4/PI*CLIGHT*CLIGHT/(freq*freq)*Zr/(Z0*nmedium_receiver));
+  return 2*sqrt(gain/4/constants::PI*constants::CLIGHT*constants::CLIGHT/(freq*freq)*constants::Zr/(constants::Z0*nmedium_receiver));
 } //GaintoHeight
 
 
@@ -2618,7 +2618,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
   const double phase_center_anita2_analysis=.2;
   //const double gps_offset_anita2=atan2(0.89,-0.29);
   const double gps_offset_anita2=atan2(-0.7085,0.7056); // from elog 473
-  const double gps_offset_anita3= 45*RADDEG; // Linda: 45 degrees from EventReader
+  const double gps_offset_anita3= 45*constants::RADDEG; // Linda: 45 degrees from EventReader
   const double phase_center_anita3=0.20; // Linda: phase-centers are around 20 cm inwards of antennas face-end
   
   for(int layer=0; layer < NLAYERS_MAX; layer++){
@@ -2631,10 +2631,10 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
 		
     // settings1->CYLINDRICALSYMMETRY=0;
     PHI_EACHLAYER[0][0]=0.;
-    PHI_EACHLAYER[0][1]=22.5*RADDEG;
+    PHI_EACHLAYER[0][1]=22.5*constants::RADDEG;
     // NRX_PHI[0]=2;
     PHI_OFFSET[0]=0;
-    THETA_ZENITH[0]=PI/2+10.*RADDEG;
+    THETA_ZENITH[0]=constants::PI/2+10.*constants::RADDEG;
     LAYER_VPOSITION[0]=0.; // vertical separation between layers
     LAYER_HPOSITION[0]=0.;  // position of layer relative to center axis in horizontal plane
     LAYER_PHIPOSITION[0]=0.; // phi of position of layer
@@ -2660,16 +2660,16 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     // NRX_PHI[4]=4;
 		
     PHI_OFFSET[0]=0;
-    PHI_OFFSET[1]=2*PI/(double)NRX_PHI[1]/2;
+    PHI_OFFSET[1]=2*constants::PI/(double)NRX_PHI[1]/2;
     PHI_OFFSET[2]=0;
-    PHI_OFFSET[3]=2*PI/(double)NRX_PHI[3]/2;
+    PHI_OFFSET[3]=2*constants::PI/(double)NRX_PHI[3]/2;
     PHI_OFFSET[4]=0;
 		
-    THETA_ZENITH[0]=PI/2+10.*RADDEG;
-    THETA_ZENITH[1]=PI/2+10.*RADDEG;
-    THETA_ZENITH[2]=PI/2+10.*RADDEG;
-    THETA_ZENITH[3]=PI/2+10.*RADDEG;
-    THETA_ZENITH[4]=3*PI/4;
+    THETA_ZENITH[0]=constants::PI/2+10.*constants::RADDEG;
+    THETA_ZENITH[1]=constants::PI/2+10.*constants::RADDEG;
+    THETA_ZENITH[2]=constants::PI/2+10.*constants::RADDEG;
+    THETA_ZENITH[3]=constants::PI/2+10.*constants::RADDEG;
+    THETA_ZENITH[4]=3*constants::PI/4;
 		
     // anita proposal "says that the separation between upper and lower
     // 2 layers of antennas is just under 4m.
@@ -2715,17 +2715,17 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     //these are physical layers again
     PHI_OFFSET[0]=0.; // antenna 1 on 0th layer is rotated in phi wrt antenna 9 and antenna 17
     // it's rotated by 1/2 the azimuth that separates two antennas on the 0th layer
-    PHI_OFFSET[1]=-2.*PI/(double)NRX_PHI[0]/2.;
-    PHI_OFFSET[2]=-2.*PI/(double)NRX_PHI[0]/2.;
-    PHI_OFFSET[3]=-2.*PI/(double)NRX_PHI[0]/4.;
+    PHI_OFFSET[1]=-2.*constants::PI/(double)NRX_PHI[0]/2.;
+    PHI_OFFSET[2]=-2.*constants::PI/(double)NRX_PHI[0]/2.;
+    PHI_OFFSET[3]=-2.*constants::PI/(double)NRX_PHI[0]/4.;
 		
     //double INCLINE_NADIR=55; // this is set in the input file now EWG: so why not remove it?
 		
     // sets their declination
-    THETA_ZENITH[0]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[1]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[2]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[3]=PI/2+INCLINE_NADIR*RADDEG;
+    THETA_ZENITH[0]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[1]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[2]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[3]=constants::PI/2+INCLINE_NADIR*constants::RADDEG;
 		
     // radius from center axis of the payload
     RRX[0] = 0.9210802;
@@ -2806,17 +2806,17 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     // NRX_PHI[1]=1; // for anita hill, we are calling each station a different "layer"
 		
 		
-    PHI_OFFSET[0]=(bn1->BN_LONGITUDE+0.)*RADDEG; // antenna 1 on 0th layer is rotated in phi wrt antenna 9 and antenna 17
+    PHI_OFFSET[0]=(bn1->BN_LONGITUDE+0.)*constants::RADDEG; // antenna 1 on 0th layer is rotated in phi wrt antenna 9 and antenna 17
     // it's rotated by 1/2 the azimuth that separates two antennas on the 0th layer
-    PHI_OFFSET[1]=(bn1->BN_LONGITUDE+0.)*RADDEG;
+    PHI_OFFSET[1]=(bn1->BN_LONGITUDE+0.)*constants::RADDEG;
 		
     cout << "phi_offsets are " << PHI_OFFSET[0] << " " << PHI_OFFSET[1] << "\n";
 		
     //double INCLINE_NADIR=55; SET IN INPUT NOW!!!!
 		
     // sets their declination
-    THETA_ZENITH[0]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[1]=PI/2+INCLINE_TOPTHREE*RADDEG;
+    THETA_ZENITH[0]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[1]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
 		
     // radius from center axis of the payload
     RRX[0] = 1.;
@@ -2830,7 +2830,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     LAYER_HPOSITION[1] = 100.; // in meters
 		
     LAYER_PHIPOSITION[0]=0.;
-    LAYER_PHIPOSITION[1] = 30.*RADDEG;// in radians
+    LAYER_PHIPOSITION[1] = 30.*constants::RADDEG;// in radians
   }
     
   else if(settings1->WHICH==6) { // Kurt's measurements for the first flight in elog 345
@@ -2846,9 +2846,9 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     PHITRIG[2]=8;
 		
 		
-    THETA_ZENITH[0]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[1]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[2]=PI/2+INCLINE_TOPTHREE*RADDEG;
+    THETA_ZENITH[0]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[1]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[2]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
 		
     PHI_OFFSET[0]=0.;
     PHI_OFFSET[1]=0.;
@@ -2886,73 +2886,73 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     ANTENNA_POSITION_START[0][2][13] = MINCH * Vector(-72.138,-72.132,-20.295).RotateZ(-gps_offset);
     ANTENNA_POSITION_START[0][2][14] = MINCH * Vector(-39.111,-94.25,-20.23).RotateZ(-gps_offset);
     ANTENNA_POSITION_START[0][2][15] = MINCH * Vector(-0.163,-101.975,-20.229).RotateZ(-gps_offset);
-    PHI_EACHLAYER[0][0] = -45.103 * RADDEG - gps_offset;
-    PHI_EACHLAYER[0][1] = -0.14 * RADDEG - gps_offset;
-    PHI_EACHLAYER[0][2] = 44.559 * RADDEG - gps_offset;
-    PHI_EACHLAYER[0][3] = 89.959 * RADDEG - gps_offset;
-    PHI_EACHLAYER[0][4] = 135.555 * RADDEG - gps_offset;
-    PHI_EACHLAYER[0][5] = 179.651 * RADDEG - gps_offset;
-    PHI_EACHLAYER[0][6] = -135.14 * RADDEG - gps_offset;
-    PHI_EACHLAYER[0][7] = -90.18 * RADDEG - gps_offset;
-    PHI_EACHLAYER[1][0] = -67.283 * RADDEG - gps_offset;
-    PHI_EACHLAYER[1][1] = -23.004 * RADDEG - gps_offset;
-    PHI_EACHLAYER[1][2] = 22.72 * RADDEG - gps_offset;
-    PHI_EACHLAYER[1][3] = 67.82 * RADDEG - gps_offset;
-    PHI_EACHLAYER[1][4] = 112.698 * RADDEG - gps_offset;
-    PHI_EACHLAYER[1][5] = 157.565 * RADDEG - gps_offset;
-    PHI_EACHLAYER[1][6] = -157.376 * RADDEG - gps_offset;
-    PHI_EACHLAYER[1][7] = -112.449 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][0] = -67.26 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][1] = -45.284 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][2] = -22.457 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][3] = 0.227 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][4] = 22.318 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][5] = 45.008 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][6] = 67.751 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][7] = 89.913 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][8] = 113.016 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][9] = 135.608 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][10] = 157.487 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][11] = 179.709 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][12] = -157.569 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][13] = -135.021 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][14] = -112.773 * RADDEG - gps_offset;
-    PHI_EACHLAYER[2][15] = -89.959 * RADDEG - gps_offset;
-    ANTENNA_DOWN[0][0] = 10.422 * RADDEG;
-    ANTENNA_DOWN[0][1] = 10.207 * RADDEG;
-    ANTENNA_DOWN[0][2] = 10.714 * RADDEG;
-    ANTENNA_DOWN[0][3] = 10.381 * RADDEG;
-    ANTENNA_DOWN[0][4] = 10.026 * RADDEG;
-    ANTENNA_DOWN[0][5] = 9.515 * RADDEG;
-    ANTENNA_DOWN[0][6] = 9.677 * RADDEG;
-    ANTENNA_DOWN[0][7] = 9.544 * RADDEG;
-    ANTENNA_DOWN[1][0] = 10.183 * RADDEG;
-    ANTENNA_DOWN[1][1] = 10.44 * RADDEG;
-    ANTENNA_DOWN[1][2] = 10.562 * RADDEG;
-    ANTENNA_DOWN[1][3] = 10.655 * RADDEG;
-    ANTENNA_DOWN[1][4] = 10.265 * RADDEG;
-    ANTENNA_DOWN[1][5] = 9.77 * RADDEG;
-    ANTENNA_DOWN[1][6] = 9.422 * RADDEG;
-    ANTENNA_DOWN[1][7] = 9.526 * RADDEG;
-    ANTENNA_DOWN[2][0] = 9.364 * RADDEG;
-    ANTENNA_DOWN[2][1] = 9.712 * RADDEG;
-    ANTENNA_DOWN[2][2] = 9.892 * RADDEG;
-    ANTENNA_DOWN[2][3] = 10.253 * RADDEG;
-    ANTENNA_DOWN[2][4] = 10.574 * RADDEG;
-    ANTENNA_DOWN[2][5] = 10.62 * RADDEG;
-    ANTENNA_DOWN[2][6] = 10.416 * RADDEG;
-    ANTENNA_DOWN[2][7] = 10.189 * RADDEG;
-    ANTENNA_DOWN[2][8] = 9.776 * RADDEG;
-    ANTENNA_DOWN[2][9] = 9.596 * RADDEG;
-    ANTENNA_DOWN[2][10] = 9.561 * RADDEG;
-    ANTENNA_DOWN[2][11] = 9.695 * RADDEG;
-    ANTENNA_DOWN[2][12] = 9.445 * RADDEG;
-    ANTENNA_DOWN[2][13] = 9.387 * RADDEG;
-    ANTENNA_DOWN[2][14] = 9.398 * RADDEG;
-    ANTENNA_DOWN[2][15] = 9.288 * RADDEG;
+    PHI_EACHLAYER[0][0] = -45.103 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[0][1] = -0.14 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[0][2] = 44.559 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[0][3] = 89.959 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[0][4] = 135.555 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[0][5] = 179.651 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[0][6] = -135.14 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[0][7] = -90.18 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[1][0] = -67.283 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[1][1] = -23.004 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[1][2] = 22.72 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[1][3] = 67.82 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[1][4] = 112.698 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[1][5] = 157.565 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[1][6] = -157.376 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[1][7] = -112.449 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][0] = -67.26 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][1] = -45.284 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][2] = -22.457 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][3] = 0.227 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][4] = 22.318 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][5] = 45.008 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][6] = 67.751 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][7] = 89.913 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][8] = 113.016 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][9] = 135.608 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][10] = 157.487 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][11] = 179.709 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][12] = -157.569 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][13] = -135.021 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][14] = -112.773 * constants::RADDEG - gps_offset;
+    PHI_EACHLAYER[2][15] = -89.959 * constants::RADDEG - gps_offset;
+    ANTENNA_DOWN[0][0] = 10.422 * constants::RADDEG;
+    ANTENNA_DOWN[0][1] = 10.207 * constants::RADDEG;
+    ANTENNA_DOWN[0][2] = 10.714 * constants::RADDEG;
+    ANTENNA_DOWN[0][3] = 10.381 * constants::RADDEG;
+    ANTENNA_DOWN[0][4] = 10.026 * constants::RADDEG;
+    ANTENNA_DOWN[0][5] = 9.515 * constants::RADDEG;
+    ANTENNA_DOWN[0][6] = 9.677 * constants::RADDEG;
+    ANTENNA_DOWN[0][7] = 9.544 * constants::RADDEG;
+    ANTENNA_DOWN[1][0] = 10.183 * constants::RADDEG;
+    ANTENNA_DOWN[1][1] = 10.44 * constants::RADDEG;
+    ANTENNA_DOWN[1][2] = 10.562 * constants::RADDEG;
+    ANTENNA_DOWN[1][3] = 10.655 * constants::RADDEG;
+    ANTENNA_DOWN[1][4] = 10.265 * constants::RADDEG;
+    ANTENNA_DOWN[1][5] = 9.77 * constants::RADDEG;
+    ANTENNA_DOWN[1][6] = 9.422 * constants::RADDEG;
+    ANTENNA_DOWN[1][7] = 9.526 * constants::RADDEG;
+    ANTENNA_DOWN[2][0] = 9.364 * constants::RADDEG;
+    ANTENNA_DOWN[2][1] = 9.712 * constants::RADDEG;
+    ANTENNA_DOWN[2][2] = 9.892 * constants::RADDEG;
+    ANTENNA_DOWN[2][3] = 10.253 * constants::RADDEG;
+    ANTENNA_DOWN[2][4] = 10.574 * constants::RADDEG;
+    ANTENNA_DOWN[2][5] = 10.62 * constants::RADDEG;
+    ANTENNA_DOWN[2][6] = 10.416 * constants::RADDEG;
+    ANTENNA_DOWN[2][7] = 10.189 * constants::RADDEG;
+    ANTENNA_DOWN[2][8] = 9.776 * constants::RADDEG;
+    ANTENNA_DOWN[2][9] = 9.596 * constants::RADDEG;
+    ANTENNA_DOWN[2][10] = 9.561 * constants::RADDEG;
+    ANTENNA_DOWN[2][11] = 9.695 * constants::RADDEG;
+    ANTENNA_DOWN[2][12] = 9.445 * constants::RADDEG;
+    ANTENNA_DOWN[2][13] = 9.387 * constants::RADDEG;
+    ANTENNA_DOWN[2][14] = 9.398 * constants::RADDEG;
+    ANTENNA_DOWN[2][15] = 9.288 * constants::RADDEG;
     for(int iii = 0; iii < 3; iii++) // move from the square centers to the phase centers
       for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++)
-	ANTENNA_POSITION_START[1][iii][jjj] = ANTENNA_POSITION_START[0][iii][jjj] = ANTENNA_POSITION_START[0][iii][jjj] - phase_center * Vector(cos(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), sin(PHI_EACHLAYER[iii][jjj])*sin(90.*RADDEG+ANTENNA_DOWN[iii][jjj]), cos(90.*RADDEG+ANTENNA_DOWN[iii][jjj]));
+	ANTENNA_POSITION_START[1][iii][jjj] = ANTENNA_POSITION_START[0][iii][jjj] = ANTENNA_POSITION_START[0][iii][jjj] - phase_center * Vector(cos(PHI_EACHLAYER[iii][jjj])*sin(90.*constants::RADDEG+ANTENNA_DOWN[iii][jjj]), sin(PHI_EACHLAYER[iii][jjj])*sin(90.*constants::RADDEG+ANTENNA_DOWN[iii][jjj]), cos(90.*constants::RADDEG+ANTENNA_DOWN[iii][jjj]));
   }
   else if (settings1->WHICH==7) {
 		
@@ -2985,11 +2985,11 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     // it's rotated by 1/2 the azimuth that separates two antennas on the 0th layer
 		
     // sets their declination
-    THETA_ZENITH[0]=PI/2+5.5*RADDEG;
-    THETA_ZENITH[1]=PI/2+7.5*RADDEG;
-    THETA_ZENITH[2]=PI/2+9.5*RADDEG;
-    THETA_ZENITH[3]=PI/2+11.5*RADDEG;
-    THETA_ZENITH[4]=PI/2+13.5*RADDEG;
+    THETA_ZENITH[0]=constants::PI/2+5.5*constants::RADDEG;
+    THETA_ZENITH[1]=constants::PI/2+7.5*constants::RADDEG;
+    THETA_ZENITH[2]=constants::PI/2+9.5*constants::RADDEG;
+    THETA_ZENITH[3]=constants::PI/2+11.5*constants::RADDEG;
+    THETA_ZENITH[4]=constants::PI/2+13.5*constants::RADDEG;
 		
 		
     // radius from center axis of the payload
@@ -3041,10 +3041,10 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     PHI_OFFSET[3]=0;
 		
     // sets their declination
-    THETA_ZENITH[0]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[1]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[2]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[3]=PI/2+INCLINE_TOPTHREE*RADDEG;
+    THETA_ZENITH[0]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[1]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[2]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[3]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
 		
     ANTENNA_POSITION_START[0][0][0] = MINCH * Vector(40.438,-36.958,147.227);
     ANTENNA_POSITION_START[0][0][1] = MINCH * Vector(57.134,3.109,146.476);
@@ -3086,86 +3086,86 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     ANTENNA_POSITION_START[0][3][5] = MINCH * Vector(-79.367,31.568,-73.922);
     ANTENNA_POSITION_START[0][3][6] = MINCH * Vector(-78.900,-34.192,-72.645);
     ANTENNA_POSITION_START[0][3][7] = MINCH * Vector(-33.046,-81.696,-70.907);
-    PHI_EACHLAYER[0][0] = -45.012 * RADDEG ;//ant 7
-    PHI_EACHLAYER[0][1] = -0.588 * RADDEG ;//ant 0
-    PHI_EACHLAYER[0][2] = 45.694 * RADDEG ;//ant 1
-    PHI_EACHLAYER[0][3] = 90.310 * RADDEG ;//ant 2
-    PHI_EACHLAYER[0][4] = 135.161 * RADDEG ;//ant3
-    PHI_EACHLAYER[0][5] = 179.861 * RADDEG ;//ant4
-    PHI_EACHLAYER[0][6] = -134.930 * RADDEG ;//ant5
-    PHI_EACHLAYER[0][7] = -90.638 * RADDEG ;//ant 6
-    PHI_EACHLAYER[1][0] = -67.412 * RADDEG ;//ant 15
-    PHI_EACHLAYER[1][1] = -23.005 * RADDEG ;//ant 8
-    PHI_EACHLAYER[1][2] = 22.503 * RADDEG ;//ant 9
-    PHI_EACHLAYER[1][3] = 67.722 * RADDEG ;//ant 10
-    PHI_EACHLAYER[1][4] = 112.614 * RADDEG ;//ant 11
-    PHI_EACHLAYER[1][5] = 157.685 * RADDEG ;//ant 12
-    PHI_EACHLAYER[1][6] = -156.639 * RADDEG ;//ant 13
-    PHI_EACHLAYER[1][7] = -112.587 * RADDEG ;//ant 14
-    PHI_EACHLAYER[2][0] = -67.365 * RADDEG ;//ant 29 
-    PHI_EACHLAYER[2][1] = -45.135 * RADDEG ;//ant 30
-    PHI_EACHLAYER[2][2] = -23.002 * RADDEG ;//ant 31
-    PHI_EACHLAYER[2][3] = -1.013 * RADDEG ;//ant 16
-    PHI_EACHLAYER[2][4] = 21.934 * RADDEG ;//ant 17
-    PHI_EACHLAYER[2][5] = 44.467 * RADDEG ;//ant 18
-    PHI_EACHLAYER[2][6] = 67.288 * RADDEG ;//ant 19
-    PHI_EACHLAYER[2][7] = 89.971 * RADDEG ;//ant 20
-    PHI_EACHLAYER[2][8] = 112.390 * RADDEG ;//ant 21
-    PHI_EACHLAYER[2][9] = 134.988 * RADDEG ;//ant 22
-    PHI_EACHLAYER[2][10] = 157.387 * RADDEG ;//ant 23
-    PHI_EACHLAYER[2][11] = 179.843 * RADDEG ;//ant 24
-    PHI_EACHLAYER[2][12] = -157.444 * RADDEG ;//ant 25
-    PHI_EACHLAYER[2][13] = -134.877 * RADDEG ;//ant 26
-    PHI_EACHLAYER[2][14] = -112.406 * RADDEG ;//ant 27
-    PHI_EACHLAYER[2][15] = -90.081 * RADDEG ;//ant 28
-    PHI_EACHLAYER[3][0] = -67.997 * RADDEG ;//ant 
-    PHI_EACHLAYER[3][1] = -22.948 * RADDEG ;//ant 
-    PHI_EACHLAYER[3][2] = 22.382 * RADDEG ;//ant
-    PHI_EACHLAYER[3][3] = 67.583 * RADDEG ;//ant
-    PHI_EACHLAYER[3][4] = 112.844 * RADDEG ;//ant
-    PHI_EACHLAYER[3][5] = 157.761 * RADDEG ;//ant 
-    PHI_EACHLAYER[3][6] = -157.896 * RADDEG ;//ant
-    PHI_EACHLAYER[3][7] = -112.791 * RADDEG ;//ant
-    ANTENNA_DOWN[0][0] = 9.637 * RADDEG;
-    ANTENNA_DOWN[0][1] = 10.108 * RADDEG;
-    ANTENNA_DOWN[0][2] = 11.245 * RADDEG;
-    ANTENNA_DOWN[0][3] = 11.291 * RADDEG;
-    ANTENNA_DOWN[0][4] = 10.988 * RADDEG;
-    ANTENNA_DOWN[0][5] = 9.491 * RADDEG;
-    ANTENNA_DOWN[0][6] = 9.027 * RADDEG;
-    ANTENNA_DOWN[0][7] = 8.743 * RADDEG;
-    ANTENNA_DOWN[1][0] = 9.445 * RADDEG;
-    ANTENNA_DOWN[1][1] = 10.061 * RADDEG;
-    ANTENNA_DOWN[1][2] = 10.772 * RADDEG;
-    ANTENNA_DOWN[1][3] = 11.484 * RADDEG;
-    ANTENNA_DOWN[1][4] = 11.122 * RADDEG;
-    ANTENNA_DOWN[1][5] = 10.376 * RADDEG;
-    ANTENNA_DOWN[1][6] = 9.410 * RADDEG;
-    ANTENNA_DOWN[1][7] = 9.039 * RADDEG;
-    ANTENNA_DOWN[2][0] = 8.233 * RADDEG;
-    ANTENNA_DOWN[2][1] = 8.807 * RADDEG;
-    ANTENNA_DOWN[2][2] = 9.120 * RADDEG;
-    ANTENNA_DOWN[2][3] = 10.352 * RADDEG;
-    ANTENNA_DOWN[2][4] = 10.889 * RADDEG;
-    ANTENNA_DOWN[2][5] = 11.315 * RADDEG;
-    ANTENNA_DOWN[2][6] = 11.402 * RADDEG;
-    ANTENNA_DOWN[2][7] = 11.379 * RADDEG;
-    ANTENNA_DOWN[2][8] = 10.842 * RADDEG;
-    ANTENNA_DOWN[2][9] = 10.725 * RADDEG;
-    ANTENNA_DOWN[2][10] = 10.143 * RADDEG;
-    ANTENNA_DOWN[2][11] = 10.067 * RADDEG;
-    ANTENNA_DOWN[2][12] = 9.503 * RADDEG;
-    ANTENNA_DOWN[2][13] = 9.021 * RADDEG;
-    ANTENNA_DOWN[2][14] = 8.453 * RADDEG;
-    ANTENNA_DOWN[2][15] = 8.268 * RADDEG;
-    ANTENNA_DOWN[3][0] = 8.007 * RADDEG;
-    ANTENNA_DOWN[3][1] = 9.817 * RADDEG;
-    ANTENNA_DOWN[3][2] = 10.259 * RADDEG;
-    ANTENNA_DOWN[3][3] = 11.648 * RADDEG;
-    ANTENNA_DOWN[3][4] = 10.271 * RADDEG;
-    ANTENNA_DOWN[3][5] = 10.015 * RADDEG;
-    ANTENNA_DOWN[3][6] = 10.889 * RADDEG;
-    ANTENNA_DOWN[3][7] = 7.314 * RADDEG;
+    PHI_EACHLAYER[0][0] = -45.012 * constants::RADDEG ;//ant 7
+    PHI_EACHLAYER[0][1] = -0.588 * constants::RADDEG ;//ant 0
+    PHI_EACHLAYER[0][2] = 45.694 * constants::RADDEG ;//ant 1
+    PHI_EACHLAYER[0][3] = 90.310 * constants::RADDEG ;//ant 2
+    PHI_EACHLAYER[0][4] = 135.161 * constants::RADDEG ;//ant3
+    PHI_EACHLAYER[0][5] = 179.861 * constants::RADDEG ;//ant4
+    PHI_EACHLAYER[0][6] = -134.930 * constants::RADDEG ;//ant5
+    PHI_EACHLAYER[0][7] = -90.638 * constants::RADDEG ;//ant 6
+    PHI_EACHLAYER[1][0] = -67.412 * constants::RADDEG ;//ant 15
+    PHI_EACHLAYER[1][1] = -23.005 * constants::RADDEG ;//ant 8
+    PHI_EACHLAYER[1][2] = 22.503 * constants::RADDEG ;//ant 9
+    PHI_EACHLAYER[1][3] = 67.722 * constants::RADDEG ;//ant 10
+    PHI_EACHLAYER[1][4] = 112.614 * constants::RADDEG ;//ant 11
+    PHI_EACHLAYER[1][5] = 157.685 * constants::RADDEG ;//ant 12
+    PHI_EACHLAYER[1][6] = -156.639 * constants::RADDEG ;//ant 13
+    PHI_EACHLAYER[1][7] = -112.587 * constants::RADDEG ;//ant 14
+    PHI_EACHLAYER[2][0] = -67.365 * constants::RADDEG ;//ant 29 
+    PHI_EACHLAYER[2][1] = -45.135 * constants::RADDEG ;//ant 30
+    PHI_EACHLAYER[2][2] = -23.002 * constants::RADDEG ;//ant 31
+    PHI_EACHLAYER[2][3] = -1.013 * constants::RADDEG ;//ant 16
+    PHI_EACHLAYER[2][4] = 21.934 * constants::RADDEG ;//ant 17
+    PHI_EACHLAYER[2][5] = 44.467 * constants::RADDEG ;//ant 18
+    PHI_EACHLAYER[2][6] = 67.288 * constants::RADDEG ;//ant 19
+    PHI_EACHLAYER[2][7] = 89.971 * constants::RADDEG ;//ant 20
+    PHI_EACHLAYER[2][8] = 112.390 * constants::RADDEG ;//ant 21
+    PHI_EACHLAYER[2][9] = 134.988 * constants::RADDEG ;//ant 22
+    PHI_EACHLAYER[2][10] = 157.387 * constants::RADDEG ;//ant 23
+    PHI_EACHLAYER[2][11] = 179.843 * constants::RADDEG ;//ant 24
+    PHI_EACHLAYER[2][12] = -157.444 * constants::RADDEG ;//ant 25
+    PHI_EACHLAYER[2][13] = -134.877 * constants::RADDEG ;//ant 26
+    PHI_EACHLAYER[2][14] = -112.406 * constants::RADDEG ;//ant 27
+    PHI_EACHLAYER[2][15] = -90.081 * constants::RADDEG ;//ant 28
+    PHI_EACHLAYER[3][0] = -67.997 * constants::RADDEG ;//ant 
+    PHI_EACHLAYER[3][1] = -22.948 * constants::RADDEG ;//ant 
+    PHI_EACHLAYER[3][2] = 22.382 * constants::RADDEG ;//ant
+    PHI_EACHLAYER[3][3] = 67.583 * constants::RADDEG ;//ant
+    PHI_EACHLAYER[3][4] = 112.844 * constants::RADDEG ;//ant
+    PHI_EACHLAYER[3][5] = 157.761 * constants::RADDEG ;//ant 
+    PHI_EACHLAYER[3][6] = -157.896 * constants::RADDEG ;//ant
+    PHI_EACHLAYER[3][7] = -112.791 * constants::RADDEG ;//ant
+    ANTENNA_DOWN[0][0] = 9.637 * constants::RADDEG;
+    ANTENNA_DOWN[0][1] = 10.108 * constants::RADDEG;
+    ANTENNA_DOWN[0][2] = 11.245 * constants::RADDEG;
+    ANTENNA_DOWN[0][3] = 11.291 * constants::RADDEG;
+    ANTENNA_DOWN[0][4] = 10.988 * constants::RADDEG;
+    ANTENNA_DOWN[0][5] = 9.491 * constants::RADDEG;
+    ANTENNA_DOWN[0][6] = 9.027 * constants::RADDEG;
+    ANTENNA_DOWN[0][7] = 8.743 * constants::RADDEG;
+    ANTENNA_DOWN[1][0] = 9.445 * constants::RADDEG;
+    ANTENNA_DOWN[1][1] = 10.061 * constants::RADDEG;
+    ANTENNA_DOWN[1][2] = 10.772 * constants::RADDEG;
+    ANTENNA_DOWN[1][3] = 11.484 * constants::RADDEG;
+    ANTENNA_DOWN[1][4] = 11.122 * constants::RADDEG;
+    ANTENNA_DOWN[1][5] = 10.376 * constants::RADDEG;
+    ANTENNA_DOWN[1][6] = 9.410 * constants::RADDEG;
+    ANTENNA_DOWN[1][7] = 9.039 * constants::RADDEG;
+    ANTENNA_DOWN[2][0] = 8.233 * constants::RADDEG;
+    ANTENNA_DOWN[2][1] = 8.807 * constants::RADDEG;
+    ANTENNA_DOWN[2][2] = 9.120 * constants::RADDEG;
+    ANTENNA_DOWN[2][3] = 10.352 * constants::RADDEG;
+    ANTENNA_DOWN[2][4] = 10.889 * constants::RADDEG;
+    ANTENNA_DOWN[2][5] = 11.315 * constants::RADDEG;
+    ANTENNA_DOWN[2][6] = 11.402 * constants::RADDEG;
+    ANTENNA_DOWN[2][7] = 11.379 * constants::RADDEG;
+    ANTENNA_DOWN[2][8] = 10.842 * constants::RADDEG;
+    ANTENNA_DOWN[2][9] = 10.725 * constants::RADDEG;
+    ANTENNA_DOWN[2][10] = 10.143 * constants::RADDEG;
+    ANTENNA_DOWN[2][11] = 10.067 * constants::RADDEG;
+    ANTENNA_DOWN[2][12] = 9.503 * constants::RADDEG;
+    ANTENNA_DOWN[2][13] = 9.021 * constants::RADDEG;
+    ANTENNA_DOWN[2][14] = 8.453 * constants::RADDEG;
+    ANTENNA_DOWN[2][15] = 8.268 * constants::RADDEG;
+    ANTENNA_DOWN[3][0] = 8.007 * constants::RADDEG;
+    ANTENNA_DOWN[3][1] = 9.817 * constants::RADDEG;
+    ANTENNA_DOWN[3][2] = 10.259 * constants::RADDEG;
+    ANTENNA_DOWN[3][3] = 11.648 * constants::RADDEG;
+    ANTENNA_DOWN[3][4] = 10.271 * constants::RADDEG;
+    ANTENNA_DOWN[3][5] = 10.015 * constants::RADDEG;
+    ANTENNA_DOWN[3][6] = 10.889 * constants::RADDEG;
+    ANTENNA_DOWN[3][7] = 7.314 * constants::RADDEG;
 
     SIMON_DELTA_R[0][0] = -0.0384839;
     SIMON_DELTA_R[0][1] = 0.00634697;
@@ -3305,17 +3305,17 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
       
     //these are physical layers again
     PHI_OFFSET[0]=0.; 
-    PHI_OFFSET[1]=0.; // 2.*PI/(double)NRX_PHI[0]/2.; // Linda: changed this offset to 0 as  it shouldn't be needed
+    PHI_OFFSET[1]=0.; // 2.*constants::PI/(double)NRX_PHI[0]/2.; // Linda: changed this offset to 0 as  it shouldn't be needed
     PHI_OFFSET[2]=0.;
     PHI_OFFSET[3]=0.;
       
     //double INCLINE_NADIR=55; // this is set in the input file now So should be removed
       
     // sets their declination
-    THETA_ZENITH[0]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[1]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[2]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[3]=PI/2+INCLINE_TOPTHREE*RADDEG;
+    THETA_ZENITH[0]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[1]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[2]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[3]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
       
     // Read photogrammetry positions
     string whichANITAroman="";
@@ -3400,10 +3400,10 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
       ANTENNA_POSITION_START[0][0][iant] = MINCH * Vector(xAntPhoto[iant*2], yAntPhoto[iant*2], zAntPhoto[iant*2]).RotateZ(-gps_offset_anita3);	    // top ring top antennas
       ANTENNA_POSITION_START[0][1][iant] = MINCH * Vector(xAntPhoto[iant*2+1], yAntPhoto[iant*2+1], zAntPhoto[iant*2+1]).RotateZ(-gps_offset_anita3);  // top ring bottom antennas
 
-      PHI_EACHLAYER[0][iant] = azCentrePhoto[iant*2] * RADDEG - gps_offset_anita3;
-      PHI_EACHLAYER[1][iant] = azCentrePhoto[iant*2+1] * RADDEG - gps_offset_anita3;
-      ANTENNA_DOWN[0][iant] = apertureElPhoto[iant*2] * RADDEG; 
-      ANTENNA_DOWN[1][iant] = apertureElPhoto[iant*2+1] * RADDEG; 
+      PHI_EACHLAYER[0][iant] = azCentrePhoto[iant*2] * constants::RADDEG - gps_offset_anita3;
+      PHI_EACHLAYER[1][iant] = azCentrePhoto[iant*2+1] * constants::RADDEG - gps_offset_anita3;
+      ANTENNA_DOWN[0][iant] = apertureElPhoto[iant*2] * constants::RADDEG; 
+      ANTENNA_DOWN[1][iant] = apertureElPhoto[iant*2+1] * constants::RADDEG; 
  
     }
 
@@ -3412,11 +3412,11 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
       ANTENNA_POSITION_START[0][2][iant] = MINCH * Vector(xAntPhoto[iant+16], yAntPhoto[iant+16], zAntPhoto[iant+16]).RotateZ(-gps_offset_anita3);	    // middle ring antennas
       ANTENNA_POSITION_START[0][3][iant] = MINCH * Vector(xAntPhoto[iant+32], yAntPhoto[iant+32], zAntPhoto[iant+32]).RotateZ(-gps_offset_anita3);  // bottom ring antennas
 
-      PHI_EACHLAYER[2][iant] = azCentrePhoto[iant+16] * RADDEG - gps_offset_anita3;
-      ANTENNA_DOWN[2][iant] = apertureElPhoto[iant+16] * RADDEG; 
+      PHI_EACHLAYER[2][iant] = azCentrePhoto[iant+16] * constants::RADDEG - gps_offset_anita3;
+      ANTENNA_DOWN[2][iant] = apertureElPhoto[iant+16] * constants::RADDEG; 
 
-      PHI_EACHLAYER[3][iant] = azCentrePhoto[iant+32] * RADDEG - gps_offset_anita3;
-      ANTENNA_DOWN[3][iant] = apertureElPhoto[iant+32] * RADDEG; 
+      PHI_EACHLAYER[3][iant] = azCentrePhoto[iant+32] * constants::RADDEG - gps_offset_anita3;
+      ANTENNA_DOWN[3][iant] = apertureElPhoto[iant+32] * constants::RADDEG; 
 
     }
       
@@ -3528,11 +3528,11 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     //these are physical layers again
     PHI_OFFSET[0]=0.; // antenna 1 on 0th layer is rotated in phi wrt antenna 9 and antenna 17
     // it's rotated by 1/2 the azimuth that separates two antennas on the 0th layer
-    PHI_OFFSET[1]=-2.*PI/(double)NRX_PHI[0]/2.;
+    PHI_OFFSET[1]=-2.*constants::PI/(double)NRX_PHI[0]/2.;
 		
     // sets their declination
-    THETA_ZENITH[0]=PI/2+INCLINE_TOPTHREE*RADDEG;
-    THETA_ZENITH[1]=PI/2+INCLINE_TOPTHREE*RADDEG;
+    THETA_ZENITH[0]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
+    THETA_ZENITH[1]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
 		
     // radius from center axis of the payload
     RRX[0] = 0.9210802;
@@ -3698,7 +3698,7 @@ void icemc::Anita::calculate_single_offset(const unsigned center_phi_sector_inde
    
   double to_center_of_summed_phi_sectors=((double)N_SUMMED_PHI_SECTORS/2.)*22.5-11.25;
   //    cout << "to_center_of_summed_phi_sectors is " << to_center_of_summed_phi_sectors << "\n";
-  Vector normal_vector = Vector(cos(angle_theta * RADDEG) * cos((angle_phi+to_center_of_summed_phi_sectors) * RADDEG), cos(angle_theta * RADDEG) * sin((angle_phi+to_center_of_summed_phi_sectors) * RADDEG), sin(angle_theta * RADDEG));
+  Vector normal_vector = Vector(cos(angle_theta * constants::RADDEG) * cos((angle_phi+to_center_of_summed_phi_sectors) * constants::RADDEG), cos(angle_theta * constants::RADDEG) * sin((angle_phi+to_center_of_summed_phi_sectors) * constants::RADDEG), sin(angle_theta * constants::RADDEG));
     
   //    cout << "normal vector is ";
   //normal_vector.Print();
@@ -3724,7 +3724,7 @@ void icemc::Anita::calculate_single_offset(const unsigned center_phi_sector_inde
       //cout << "antenna_pos is ";
       //antenna_pos.Print();
 	
-      double offset = (-1. / CLIGHT) * normal_vector.Dot(antenna_pos - one_antenna_pos);
+      double offset = (-1. / constants::CLIGHT) * normal_vector.Dot(antenna_pos - one_antenna_pos);
 
       //	cout << "offset is " << offset << "\n";
       if (offset >= maximum_time) {
@@ -3758,7 +3758,7 @@ void icemc::Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, cons
   for (int ipol=0; ipol<2; ipol++){
   
     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
-      arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index].Dot(rf_direction)) / CLIGHT;
+      arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index].Dot(rf_direction)) / constants::CLIGHT;
 
       //arrival_times[antenna_index] += extraCableDelays[0][antenna_index];
     
@@ -3772,9 +3772,9 @@ void icemc::Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, cons
       
       Vector rf_tmp_dir = bn1->unRotatePayload(-1*rf_direction);
      
-      double theta_deg =rf_tmp_dir.Theta() * DEGRAD;//
+      double theta_deg =rf_tmp_dir.Theta() * constants::DEGRAD;//
      
-      double phi_deg = rf_tmp_dir.Phi() *DEGRAD;
+      double phi_deg = rf_tmp_dir.Phi() *constants::DEGRAD;
       double totalAngledeg;
       double extra_delay;
      
@@ -3782,7 +3782,7 @@ void icemc::Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, cons
       double theta_offset;
       int ant_ctr=0;
 
-      theta_offset = 10;//boresight_vector[ant_ctr].Theta()*DEGRAD;
+      theta_offset = 10;//boresight_vector[ant_ctr].Theta()*constants::DEGRAD;
        
       theta_deg = theta_deg -90;
        
@@ -3797,9 +3797,9 @@ void icemc::Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, cons
        
 	  phi_deg =phi_deg- phi_eachlayer;
 	 
-	  if(fabs(phi_deg) > fabs(phi_deg+2*PI)) phi_deg+=2*PI;
-	  if(fabs(phi_deg) > fabs(phi_deg-2*PI)) phi_deg-=2*PI;
-	  phi_deg =phi_deg*DEGRAD;
+	  if(fabs(phi_deg) > fabs(phi_deg+2*constants::PI)) phi_deg+=2*constants::PI;
+	  if(fabs(phi_deg) > fabs(phi_deg-2*constants::PI)) phi_deg-=2*constants::PI;
+	  phi_deg =phi_deg*constants::DEGRAD;
 	  totalAngledeg = phi_deg*phi_deg + theta_deg*theta_deg;
 	  if(totalAngledeg > 2500) totalAngledeg=2500;
 	 
@@ -3845,7 +3845,7 @@ void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_M
     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
       int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
       int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
-      arrival_times[ipol][antenna_index] = antenna_positions[ipol][antenna_index].Dot(rf_direction[ilayer][ifold]) / CLIGHT;
+      arrival_times[ipol][antenna_index] = antenna_positions[ipol][antenna_index].Dot(rf_direction[ilayer][ifold]) / constants::CLIGHT;
 
       // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
       //      arrival_times[ipol][antenna_index] += extraCableDelays[ipol][antenna_index];
@@ -3858,9 +3858,9 @@ void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_M
       
 	Vector rf_tmp_dir = bn1->unRotatePayload(-1*rf_direction[ilayer][ifold]);
      
-	double theta_deg =rf_tmp_dir.Theta() * DEGRAD;//
+	double theta_deg =rf_tmp_dir.Theta() * constants::DEGRAD;//
      
-	double phi_deg = rf_tmp_dir.Phi() *DEGRAD;
+	double phi_deg = rf_tmp_dir.Phi() *constants::DEGRAD;
 	double totalAngledeg;
 	double extra_delay;
      
@@ -3868,7 +3868,7 @@ void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_M
 	double theta_offset;
 	int ant_ctr=0;
 
-	theta_offset = 10;//boresight_vector[ant_ctr].Theta()*DEGRAD;
+	theta_offset = 10;//boresight_vector[ant_ctr].Theta()*constants::DEGRAD;
        
 	theta_deg = theta_deg -90;
        
@@ -3881,9 +3881,9 @@ void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_M
        
 	phi_deg =phi_deg- phi_eachlayer;
 	 
-	if(fabs(phi_deg) > fabs(phi_deg+2*PI)) phi_deg+=2*PI;
-	if(fabs(phi_deg) > fabs(phi_deg-2*PI)) phi_deg-=2*PI;
-	phi_deg =phi_deg*DEGRAD;
+	if(fabs(phi_deg) > fabs(phi_deg+2*constants::PI)) phi_deg+=2*constants::PI;
+	if(fabs(phi_deg) > fabs(phi_deg-2*constants::PI)) phi_deg-=2*constants::PI;
+	phi_deg =phi_deg*constants::DEGRAD;
 	totalAngledeg = phi_deg*phi_deg + theta_deg*theta_deg;
 	if(totalAngledeg > 2500) totalAngledeg=2500;
 	 
@@ -3916,7 +3916,7 @@ void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_M
     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
       int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
       int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
-      arrival_times[ipol][antenna_index] = antenna_positions[ipol][antenna_index].Dot(rf_direction[ilayer][ifold]) / CLIGHT;
+      arrival_times[ipol][antenna_index] = antenna_positions[ipol][antenna_index].Dot(rf_direction[ilayer][ifold]) / constants::CLIGHT;
 
       // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
       //      arrival_times[ipol][antenna_index] += extraCableDelays[ipol][antenna_index];

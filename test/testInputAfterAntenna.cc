@@ -969,9 +969,9 @@ int main(int argc,  char **argv) {
     anita1->calculate_all_offsets();
     double angle_theta=16.;
     double angle_phi=0.;
-    Vector x = Vector(cos(angle_theta * RADDEG) * cos((angle_phi+11.25) * RADDEG),
-                      cos(angle_theta * RADDEG) * sin((angle_phi+11.25) * RADDEG),
-                      sin(angle_theta * RADDEG));
+    Vector x = Vector(cos(angle_theta * icemc::constants::RADDEG) * cos((angle_phi+11.25) * icemc::constants::RADDEG),
+                      cos(angle_theta * icemc::constants::RADDEG) * sin((angle_phi+11.25) * icemc::constants::RADDEG),
+                      sin(angle_theta * icemc::constants::RADDEG));
     anita1->GetArrivalTimes(x,bn1,settings1);
     cout << "end of getarrivaltimes\n";
   }
@@ -991,9 +991,9 @@ int main(int argc,  char **argv) {
 
   // Setting gps offset for plotting direction wrt north
   if (settings1->WHICH==7){
-    gps_offset=atan2(-0.7042,0.71)*DEGRAD;
+    gps_offset=atan2(-0.7042,0.71)*icemc::constants::DEGRAD;
   } else if(settings1->WHICH==8){
-    gps_offset=atan2(-0.7085,0.7056)*DEGRAD;
+    gps_offset=atan2(-0.7085,0.7056)*icemc::constants::DEGRAD;
   } else if (settings1->WHICH==9 || settings1->WHICH==10){
     gps_offset=45;
   } else gps_offset=0;
@@ -1569,8 +1569,8 @@ void CloseTFile(TFile *hfile) {
 
 
 double IsItDoubleBang(double exitlength, double plepton) {
-  double gamma=plepton/MTAU;
-  return 1-exp(-1*exitlength/(TAUDECAY_TIME*CLIGHT*gamma));
+  double gamma=plepton/icemc::constants::MTAU;
+  return 1-exp(-1*exitlength/(icemc::constants::TAUDECAY_TIME*icemc::constants::CLIGHT*gamma));
 }
 //end IsItDoubleBang()
 
@@ -1578,13 +1578,13 @@ double IsItDoubleBang(double exitlength, double plepton) {
 int WhereIsSecondBang(const Position &posnu, const Vector &nnu, double nuexitlength, double pnu, IceModel *antarctica1, const Position &r_bn, Position &posnu2, Position &rfexit_db, Vector &n_exit2bn_db) {
   double rnd1=0;
   double rnd2=2;
-  double gamma=pnu/MTAU;
+  double gamma=pnu/icemc::constants::MTAU;
 
-  if (exp(-1*nuexitlength/(TAUDECAY_TIME*CLIGHT*gamma))>0.999){
+  if (exp(-1*nuexitlength/(icemc::constants::TAUDECAY_TIME*icemc::constants::CLIGHT*gamma))>0.999){
     rnd1=gRandom->Rndm()*nuexitlength;
   }
   else {
-    while (rnd2>1-exp(-1*rnd1/(TAUDECAY_TIME*CLIGHT*gamma))) {
+    while (rnd2>1-exp(-1*rnd1/(icemc::constants::TAUDECAY_TIME*icemc::constants::CLIGHT*gamma))) {
       rnd1=gRandom->Rndm()*nuexitlength;
       rnd2=gRandom->Rndm();
     } //while
@@ -1732,13 +1732,13 @@ double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_
 
 
 void SetupViewangles(Signal *sig1) {
-  double viewangle_max=90.*RADDEG;
-  double viewangle_min=30.*RADDEG;
+  double viewangle_max=90.*icemc::constants::RADDEG;
+  double viewangle_min=30.*icemc::constants::RADDEG;
   for (int i=0;i<NVIEWANGLE-2;i++) {
     viewangles[i]=viewangle_max-(viewangle_max-viewangle_min)/(double)(NVIEWANGLE-2)*(double)i;
   }
   viewangles[NVIEWANGLE-2]=acos(1/sig1->N_DEPTH);
-  viewangles[NVIEWANGLE-1]=90.*RADDEG;
+  viewangles[NVIEWANGLE-1]=90.*icemc::constants::RADDEG;
 }
 //end SetupViewAngles()
 
@@ -1747,7 +1747,7 @@ double GetThisAirColumn(Settings* settings1,  Position r_in, Vector nnu, Positio
   double myair=0; // this is the output
   // it is the column of air in kg/m^2
   cosalpha=(r_in.Dot(nnu)) / r_in.Mag(); // cosangle that the neutrino enters the earth wrt surface normal at its entrry point
-  mytheta=(double)(acos(cosalpha)*DEGRAD)-90.; // turn this into an angle
+  mytheta=(double)(acos(cosalpha)*icemc::constants::DEGRAD)-90.; // turn this into an angle
 
   //------------------added on Dec 8------------------------
   if (settings1->ATMOSPHERE) {
@@ -1762,7 +1762,7 @@ double GetThisAirColumn(Settings* settings1,  Position r_in, Vector nnu, Positio
   //cout<<"mytheta="<<mytheta<<"; myair="<<myair<<endl;
   //------------------added on Dec 8------------------------
   cosbeta0= (posnu.Dot(nnu)) / posnu.Mag(); // cos angle of neutrino wrt person standing over the interaction point
-  mybeta=(double)(acos(cosbeta0)*DEGRAD)-90.; // turn that into a theta
+  mybeta=(double)(acos(cosbeta0)*icemc::constants::DEGRAD)-90.; // turn that into a theta
   return myair;
 }
 //end GetThisAirColumn()

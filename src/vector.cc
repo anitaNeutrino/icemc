@@ -19,7 +19,7 @@ icemc::Vector::Vector(double* xarray) {
 }
 icemc::Vector::Vector(double theta_inp, double phi_inp) {
 	
-  if (theta_inp < 0.0 || theta_inp > PI) {
+  if (theta_inp < 0.0 || theta_inp > constants::PI) {
 		
     cout<<"Error!  Attempt to construct Vector from invalid theta!\n";
 		
@@ -231,8 +231,9 @@ void icemc::Vector::UpdateThetaPhi() {
 	
   phi=atan2(y,x);
 	
-  if (phi<0)
-    phi+=2*PI;
+  if (phi<0){
+    phi+=2*constants::PI;
+  }
   // phi is now from 0 to 2*pi wrt +x
 	
 } //UpdateThetaPhi

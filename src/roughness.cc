@@ -42,11 +42,11 @@ icemc::Roughness::Roughness(const Settings *settings1){
 
   if (settings1->FIRN){
     roughmaterial_str="firn";
-    NINDEX=NFIRN;
+    NINDEX=constants::NFIRN;
   }
   else{
     roughmaterial_str="ice";
-    NINDEX=NICE;
+    NINDEX=constants::NICE;
   }
 };
 

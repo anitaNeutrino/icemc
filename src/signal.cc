@@ -131,7 +131,7 @@ icemc::Signal::Signal() : N_DEPTH(1.79) {
     nu_r=(RHOMEDIUM/1000.)
       //NU_R=(RHOMEDIUM/1000.) // density in g/cm^3
       /KR_MEDIUM/RM_MEDIUM*
-      CLIGHT*100./N_DEPTH/sin(acos(1/N_DEPTH));
+      constants::CLIGHT*100./N_DEPTH/sin(acos(1/N_DEPTH));
  
     vmmhz1m_reference=KE_MEDIUM/ECMEDIUM* // KE in V/cm/MHz^2, Ec in MeV
       (X0MEDIUM*100.) // radiation length in cm
@@ -280,7 +280,7 @@ void icemc::Signal::GetSpread(double pnu,
       // out the dependence on index of refraction and shower length. 
       // note that 12.32/sqrt(pow(n_depth,2)-1)*RADDEG/showerlength=2.7 degrees.
       // remember that Jaime has a factor of ln2 in the exponential here which we'll have to correct for further down
-      deltheta_em_max=12.32/sqrt(pow(N_DEPTH,2)-1)*(nu0/freq)*RADDEG/showerlength;
+      deltheta_em_max=12.32/sqrt(pow(N_DEPTH,2)-1)*(nu0/freq)*constants::RADDEG/showerlength;
 
       if (hadfrac>0.00001) { // if there is a hadronic component
 	
@@ -291,11 +291,11 @@ void icemc::Signal::GetSpread(double pnu,
 	// the exponential, which we account for further down
 	double epsilon=log10(had_eshower/1.E12);
 	if (had_eshower>=1E12 && had_eshower<100.E12) 
-	  deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*RADDEG*(2.07-0.33*epsilon+(7.5e-2)*epsilon*epsilon);
+	  deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(2.07-0.33*epsilon+(7.5e-2)*epsilon*epsilon);
 	else if (had_eshower<100.E15) 
-	  deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*RADDEG*(1.744-(1.21e-2)*epsilon);
+	  deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(1.744-(1.21e-2)*epsilon);
 	else if (had_eshower<10.E18)   
-	  deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*RADDEG*(4.23-0.785*epsilon+(5.5e-2)*epsilon*epsilon);
+	  deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(4.23-0.785*epsilon+(5.5e-2)*epsilon*epsilon);
 	else {
 	  //  beyond param, just use value at 10 EeV since slow variation
 	  //  and parameterization might diverge
@@ -303,7 +303,7 @@ void icemc::Signal::GetSpread(double pnu,
 	  //deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*RADDEG*(4.23-0.785*7.+5.5e-2*49.);  // the last part in parenthesis if the previous equation evaluated at epsilon=7.
 	  //deltheta_had_max=deltheta_had_max*(1.+(epsilon-7.)*0.075);
 	  // It doesn't increase deltheta_had_max by 7.5% per decade anymore. Now it decreases the energy factor by 0.07 per decade.
-	  deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*RADDEG*(4.23-0.785*7.+5.5e-2*49. - (epsilon-7.)*0.07);
+	  deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(4.23-0.785*7.+5.5e-2*49. - (epsilon-7.)*0.07);
 	} //else : beyond paramatrization
 	deltheta_had_max/=sqrt(log(2.)); // in astro-ph/9706064, Jaime uses exp(-0.5* (theta-theta_c)^2/delta_had^2)
 
@@ -322,7 +322,7 @@ void icemc::Signal::GetSpread(double pnu,
       // we use the old parameterization for em showers
       nu0=500.E6/1.E6; // for rego (astro-ph/9706064)
 
-      deltheta_em_max=12.32/sqrt(nice*nice-1)*(nu0/freq)*RADDEG/showerlength;
+      deltheta_em_max=12.32/sqrt(nice*nice-1)*(nu0/freq)*constants::RADDEG/showerlength;
 
 
       // and then scale it according to astro-ph/0512337
@@ -336,7 +336,7 @@ void icemc::Signal::GetSpread(double pnu,
       // for had showers, just use the one from astro-ph/0512337
       // Eq. 9
       // straight away
-	deltheta_had_max=CLIGHT*100.// speed of light in cm/s
+	deltheta_had_max=constants::CLIGHT*100.// speed of light in cm/s
 	  /(freq*1.E6)
 	  *1/KDELTA_MEDIUM
 	  /(X0MEDIUM*100.) // radiation length in cm

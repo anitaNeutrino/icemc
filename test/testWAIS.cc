@@ -324,9 +324,9 @@ int main(int argc,  char **argv) {
   double volts_rx_rfcm_lab_h_all[48][512];
 
  
-  Vector n_eplane = const_z;
-  Vector n_hplane = -const_y;
-  Vector n_normal = const_x;
+  Vector n_eplane = icemc::constants::const_z;
+  Vector n_hplane = -icemc::constants::const_y;
+  Vector n_normal = icemc::constants::const_x;
 
   Vector n_pol; // direction of polarization
   Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
@@ -462,9 +462,9 @@ int main(int argc,  char **argv) {
     anita1->calculate_all_offsets();
     double angle_theta=16.;
     double angle_phi=0.;
-    Vector x = Vector(cos(angle_theta * RADDEG) * cos((angle_phi+11.25) * RADDEG),
-                      cos(angle_theta * RADDEG) * sin((angle_phi+11.25) * RADDEG),
-                      sin(angle_theta * RADDEG));
+    Vector x = Vector(cos(angle_theta * icemc::constants::RADDEG) * cos((angle_phi+11.25) * icemc::constants::RADDEG),
+                      cos(angle_theta * icemc::constants::RADDEG) * sin((angle_phi+11.25) * icemc::constants::RADDEG),
+                      sin(angle_theta * icemc::constants::RADDEG));
     anita1->GetArrivalTimes(x,bn1,settings1);
     cout << "end of getarrivaltimes\n";
   }

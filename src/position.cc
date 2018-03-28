@@ -17,7 +17,7 @@
 
  icemc::Position::Position(double longitude, double latitude, double altitude) {
   Vector location = z_axis;
-  theta = latitude * RADDEG;
+  theta = latitude * constants::RADDEG;
 
   phi=EarthModel::LongtoPhi_0isPrimeMeridian(longitude); // convert longitude (-180 to 180) to phi (0 to 2pi wrt 90E, counter-clockwise)
 
@@ -46,11 +46,11 @@
 } //icemc::Position::SurfaceDistance
 
  double icemc::Position::Lat() const {
-  return theta*DEGRAD;
+   return theta*constants::DEGRAD;
 } //icemc::Position::Lat
 
  double icemc::Position::Lon() const {
-  double phi_deg = phi*DEGRAD;
+   double phi_deg = phi*constants::DEGRAD;
 
   if (phi_deg > 270.)
     phi_deg = phi_deg-360.;

@@ -652,13 +652,13 @@ double icemc::Tools::AbbyPhiCalc(double x_abby, double y_abby){
     double abbyanglephi = 0;
     
     if(x_abby>=0 && y_abby>=0) //first quadrant
-        abbyanglephi= atan(y_abby/x_abby)*DEGRAD;
+      abbyanglephi= atan(y_abby/x_abby)*constants::DEGRAD;
     if(x_abby<0 && y_abby>=0) //second quadrant
-        abbyanglephi= atan(y_abby/x_abby)*DEGRAD+180.;
+      abbyanglephi= atan(y_abby/x_abby)*constants::DEGRAD+180.;
     if(x_abby<0 && y_abby<0) //third quadrant
-        abbyanglephi= atan(y_abby/x_abby)*DEGRAD+180.;
+      abbyanglephi= atan(y_abby/x_abby)*constants::DEGRAD+180.;
     if(x_abby>=0 && y_abby<0) //fourth quadrant
-        abbyanglephi= atan(y_abby/x_abby)*DEGRAD+360.;
+      abbyanglephi= atan(y_abby/x_abby)*constants::DEGRAD+360.;
     //else abbyanglephi=0.;
     if(x_abby==0 && y_abby>=0)
         abbyanglephi=90.;

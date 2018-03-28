@@ -97,8 +97,8 @@ icemc::EarthModel::EarthModel(int model,int WEIGHTABSORPTION_SETTING) {
     
     // Crust 2.0 is binned in 2deg x 2deg bins, area of bin depends on latitude.
     // calculating surface area of bins
-    phistep=2*PI/(double)NLON;
-    thetastep=(MAXTHETA*RADDEG)/NLAT;
+    phistep=2*constants::PI/(double)NLON;
+    thetastep=(MAXTHETA*constants::RADDEG)/NLAT;
     for (int i=0;i<NLAT;i++) {
 	area[i]=phistep*(cos(dGetTheta(i))-cos(dGetTheta(i+1)))*pow(geoid[i],2.);
     } //for
@@ -124,7 +124,7 @@ double icemc::EarthModel::LongtoPhi_0isPrimeMeridian(double longitude) {
     if (phi<0.)
 	phi+=360.;
     
-    phi=phi*RADDEG;
+    phi=phi*constants::RADDEG;
     
     return phi;
 }
@@ -137,7 +137,7 @@ double icemc::EarthModel::LongtoPhi_0is180thMeridian(double longitude) {
     if (phi<0.)
 	phi+=360.;
     
-    phi=phi*RADDEG;
+    phi=phi*constants::RADDEG;
     // in radians
     
     return phi;
@@ -148,7 +148,7 @@ double icemc::EarthModel::Geoid(double latitude) {
     
     return (GEOID_MIN*GEOID_MAX/
 	    sqrt(GEOID_MIN*GEOID_MIN-(GEOID_MIN*GEOID_MIN-GEOID_MAX*GEOID_MAX)*
-		 cos(latitude*RADDEG)*cos(latitude*RADDEG)));
+		 cos(latitude*constants::RADDEG)*cos(latitude*constants::RADDEG)));
 } //Geoid(lat)
 
 double icemc::EarthModel::Geoid(const Position &pos) {
@@ -204,12 +204,12 @@ double icemc::EarthModel::WaterDepth(const Position& pos) {
 } //WaterDepth(Position)
 
 double icemc::EarthModel::GetLat(double theta) {
-    return theta*DEGRAD;
+  return theta*constants::DEGRAD;
 } //GetLat
 
 double icemc::EarthModel::GetLon(double phi) {
     // input is phi in radians wrt +x
-    double phi_deg = phi*DEGRAD; 
+  double phi_deg = phi*constants::DEGRAD; 
     if (phi_deg > 270)   
 	phi_deg = phi_deg - 360.; // this puts it from -90 to 270
     
@@ -647,9 +647,9 @@ icemc::Vector icemc::EarthModel::GetSurfaceNormal(const Position &r_out)
 double icemc::EarthModel::SmearPhi(int ilon, double rand)  {
     
     
-    double phi=((double)(360.*3./4.-((double)ilon+rand)*360/180))*RADDEG;
-    if (phi<0 && phi>-1*PI/2)
-	phi+=2*PI;
+  double phi=((double)(360.*3./4.-((double)ilon+rand)*360/180))*constants::RADDEG;
+  if (phi<0 && phi>-1*constants::PI/2)
+    phi+=2*constants::PI;
     
     
     return phi;
@@ -660,8 +660,8 @@ double icemc::EarthModel::SmearTheta(int ilat, double rand)  {
     // remember that we should smear it evenly in cos(theta).
     // first get the cos(theta)'s at the boundaries.
     
-    double theta1=dGetTheta(ilat)-PI/(double)NLAT/2.;
-    double theta2=dGetTheta(ilat+1)-PI/(double)NLAT/2.;
+  double theta1=dGetTheta(ilat)-constants::PI/(double)NLAT/2.;
+  double theta2=dGetTheta(ilat+1)-constants::PI/(double)NLAT/2.;
     
     double costheta1=cos(theta1);
     double costheta2=cos(theta2);
@@ -957,19 +957,19 @@ icemc::Vector icemc::EarthModel::PickPosnuForaLonLat(double lon,double lat,doubl
 }
 
 double icemc::EarthModel::dGetTheta(int ilat) {
-    return (((double)ilat+0.5)/(double)NLAT*MAXTHETA)*RADDEG;
+  return (((double)ilat+0.5)/(double)NLAT*MAXTHETA)*constants::RADDEG;
 } //dGetTheta(int)
 
 double icemc::EarthModel::dGetPhi(int ilon) {
     // this takes as an input the crust 2.0 index 0=-180 deg longitude to 179=+180 deg longitude
     // its output is phi in radians
     // from ~ -pi/2 to 3*pi/2 
-    return (double)(-1*((double)ilon+0.5)+(double)NLON)*2*PI/(double)NLON-PI/2;
+  return (double)(-1*((double)ilon+0.5)+(double)NLON)*2*constants::PI/(double)NLON-constants::PI/2;
 } //dGetPhi(int)
 
 void icemc::EarthModel::GetILonILat(const Position &p,int& ilon,int& ilat) {
     // Phi function outputs from 0 to 2*pi wrt +x
-    double phi_deg=p.Phi()*DEGRAD;
+  double phi_deg=p.Phi()*constants::DEGRAD;
     
     if (phi_deg>270)
 	phi_deg=phi_deg-360;
@@ -977,7 +977,7 @@ void icemc::EarthModel::GetILonILat(const Position &p,int& ilon,int& ilat) {
     
     ilon=(int)((360.*3./4.-phi_deg)*180./360.); // ilon is from 0 (at -180 longitude) to 180 (at 180 longitude)
     
-    ilat=(int)((p.Theta()*DEGRAD)/2.);
+    ilat=(int)((p.Theta()*constants::DEGRAD)/2.);
     
 } //method GetILonILat
 void icemc::EarthModel::EarthCurvature(double *array,double depth_temp) {

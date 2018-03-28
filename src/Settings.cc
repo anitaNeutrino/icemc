@@ -702,7 +702,7 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   if (SIGMA_THETA==1){
     std::cout << "Non-default setting:  SIGMA_THETA = 1" << std::endl;
   }
-  SIGMA_THETA*=RADDEG; // immediately convert degrees to radians
+  SIGMA_THETA*=constants::RADDEG; // immediately convert degrees to radians
   getSetting("Low frequency", FREQ_LOW);
 
   // if (FREQ_LOW_SEAVEYS>anita1->FREQ_LOW){
@@ -744,8 +744,8 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   getSetting("SLAC ice slope", SLACSLOPE);
   getSetting("SLAC block length", SLACICELENGTH);
   getSetting("SLAC interaction depth", SLAC_HORIZ_DEPTH);
-  SLAC_DEPTH=tan(SLACSLOPE*RADDEG)*(SLACICELENGTH-SLAC_HORIZ_DEPTH) // height from lowest point of ice
-    +21.375*CMINCH/100.; // height from beam to lowest point of ice
+  SLAC_DEPTH=tan(SLACSLOPE*constants::RADDEG)*(SLACICELENGTH-SLAC_HORIZ_DEPTH) // height from lowest point of ice
+    +21.375*constants::CMINCH/100.; // height from beam to lowest point of ice
 
 
 

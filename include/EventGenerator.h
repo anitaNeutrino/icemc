@@ -6,6 +6,8 @@
 #include "CommandLineOpts.h"
 #include "Settings.h"
 
+#include "NeutrinoPath.h"
+
 class TStyle;
 
 namespace icemc {
@@ -58,11 +60,13 @@ namespace icemc {
     int ierr=0; // integer for returning error from functions.
     double gain_dipole=2.15;  // antenna gain (nominal value for dipole is 2.15)
     double changle_deg=0; // same,  in degrees.
+
     // inputs
     int NNU;        // number of neutrinos
     int whichray=0; // indexes the rays that we look at (actually just used for ice but we use it in GetNuFlavor so keep it here)
     double RANDOMISEPOL=0.;
 
+    
     double volume_thishorizon; // for plotting volume within the horizon of the balloon
     int realtime_this;  // for plotting real unix time
     double longitude_this; // for plotting longitude
@@ -74,7 +78,6 @@ namespace icemc {
 
     double MEANX=0;
     double MEANY=0.;
-
     double SIGNALRADIUS=2.; // in degrees
 
     // frequency binning
@@ -125,15 +128,16 @@ namespace icemc {
     double costhetanu=-1000; // costheta of neutrino direction wrt earth (costheta=1 at south pole)
 
     // neutrino path
-    double theta_in=0; // theta where neutrino enters earth (radians, south pole=0)
-    double lat_in=0; // latitude where neutrino enters earth (degrees, south pole=-90)
-    double nearthlayers=0; // how many layers (core, mantle, crust) does nnu traverse
-    double weight_prob=0.;//event weight,  including probability it interacts somewhere in ice along its path
-    double weight1=0; // event weight,  just based on absorption in earth,  see note
-    double weight=0.; // total event weight (product of the previous 2)
-    double logweight=0.;// log of the previous number
-    double len_int=0;// interaction length in m
-    double pieceofkm2sr=0; // Use this for making plots comparing different cross sections.  The integral of a plot from a run will be the total Area*sr of the detector.  That way it is proportional to the cross section and the integral is something meaningful to people.
+    // double theta_in=0; // theta where neutrino enters earth (radians, south pole=0)
+    // double lat_in=0; // latitude where neutrino enters earth (degrees, south pole=-90)
+    // double nearthlayers=0; // how many layers (core, mantle, crust) does nnu traverse
+    // double weight_prob=0.;//event weight,  including probability it interacts somewhere in ice along its path
+    // double weight1=0; // event weight,  just based on absorption in earth,  see note
+    // double weight=0.; // total event weight (product of the previous 2)
+    // double logweight=0.;// log of the previous number
+    // double len_int=0;// interaction length in m
+    // double pieceofkm2sr=0; // Use this for making plots comparing different cross sections.  The integral of a plot from a run will be the total Area*sr of the detector.  That way it is proportional to the cross section and the integral is something meaningful to people.
+    NeutrinoPath np;
 
     double CUTONWEIGHTS=1.E-10; // cut out events with small enough weight that they don't matter,  to save time
 

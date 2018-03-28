@@ -619,8 +619,8 @@ double icemc::Secondaries::GetDBViewAngle(const Vector &refr, const Vector &nnu)
 //Gets the weight of the tau decay for second bang events
 double icemc::Secondaries::NFBWeight(double ptau, double taulength) {
   
-  double gamma=ptau/MTAU;
-  double D=TAUDECAY_TIME*CLIGHT*gamma;
+  double gamma=ptau/constants::MTAU;
+  double D=constants::TAUDECAY_TIME*constants::CLIGHT*gamma;
 
   return exp(-taulength/D);
 

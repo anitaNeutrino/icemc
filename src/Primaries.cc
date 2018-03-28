@@ -188,7 +188,7 @@ int icemc::Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,con
   }//if
   // interaction length in kg/m^2
   
-  len_int_kgm2=M_NUCL/sigma; // kg/m^2
+  len_int_kgm2=constants::M_NUCL/sigma; // kg/m^2
   return 1;
 } //GetSigma
 
@@ -235,7 +235,7 @@ icemc::Interaction::Interaction(string inttype,Primaries *primary1,const Setting
     nu_banana = (surface_over_banana_nu+altitude_nu_banana) * nu_banana;
 
     //Set neutrino direction
-    nnu_banana = Vector(nu_banana_theta_angle + PI,nu_banana_phi_angle);
+    nnu_banana = Vector(nu_banana_theta_angle + constants::PI,nu_banana_phi_angle);
     nnu_banana = nnu_banana.ChangeCoord(nu_banana);
          
     current = banana_current;
@@ -259,7 +259,7 @@ void icemc::Interaction::PickAnyDirection() {
   costheta_nutraject=2*rndlist[0]-1;
 
   // pick a neutrino azimuthal angle
-  phi_nutraject=2*PI*rndlist[1];
+  phi_nutraject=2*constants::PI*rndlist[1];
   
   // check that these give the right result
   double thetanu=acos(costheta_nutraject);

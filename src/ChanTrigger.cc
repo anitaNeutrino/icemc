@@ -1156,7 +1156,7 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
 
 void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
 {   
-  int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
+  // int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
 
   // now shift right to account for arrival times
@@ -1493,11 +1493,11 @@ double icemc::ChanTrigger::GetNoise(const Settings *settings1,double altitude_bn
   double sum=0;
   double theta_pos=0;
   double theta_signed=0;
-  double theta_cant=theta_zenith-PI/2;
+  double theta_cant=theta_zenith-constants::PI/2;
   double theta_horizon=acos(geoid/(geoid+altitude_bn)); // angle between horizontal on the payload and line of sight to horizon
   //  double theta_horizon=sqrt(2*altitude_bn/geoid);  // angle between horizontal on the payload and line of sight to horizon
   //double theta_horizon=-1;
-  double theta_0=50*RADDEG;
+  double theta_0=50*constants::RADDEG;
   double integral=0.;
   double integral_firsthalf=0;
   double integral_secondhalf=0;
@@ -1508,29 +1508,29 @@ double icemc::ChanTrigger::GetNoise(const Settings *settings1,double altitude_bn
     for (int i=0;i<NSTEPS;i++) {
 			
       // step in theta
-      theta_pos=(double)fabs(-PI+(double)i/(double)NSTEPS*2*PI); // this is always a positive number
-      theta_signed=(double)(-PI+(double)i/(double)NSTEPS*2*PI); // this is allowed to be signed
+      theta_pos=(double)fabs(-constants::PI+(double)i/(double)NSTEPS*2*constants::PI); // this is always a positive number
+      theta_signed=(double)(-constants::PI+(double)i/(double)NSTEPS*2*constants::PI); // this is allowed to be signed
 			
       if (theta_signed<theta_horizon-theta_cant) {
 	vnoise=VSKY+VSYSTEM;
-	integral_firsthalf+=exp(-2*ALOG2*pow(theta_pos/theta_0,2))*2*PI/NSTEPS;
+	integral_firsthalf+=exp(-2*constants::ALOG2*pow(theta_pos/theta_0,2))*2*constants::PI/NSTEPS;
       } //if
       else {
 	vnoise=VICE+VSYSTEM;
-	integral_secondhalf+=exp(-2*ALOG2*pow(theta_pos/theta_0,2))*2*PI/NSTEPS;
+	integral_secondhalf+=exp(-2*constants::ALOG2*pow(theta_pos/theta_0,2))*2*constants::PI/NSTEPS;
       } //else
 			
-      sum+=vnoise*exp(-2*ALOG2*pow(theta_pos/theta_0,2))*2*PI/NSTEPS;
-      integral+=exp(-2*ALOG2*pow(theta_pos/theta_0,2))*2*PI/NSTEPS;
+      sum+=vnoise*exp(-2*constants::ALOG2*pow(theta_pos/theta_0,2))*2*constants::PI/NSTEPS;
+      integral+=exp(-2*constants::ALOG2*pow(theta_pos/theta_0,2))*2*constants::PI/NSTEPS;
     } //if
 		
     sum=sum/integral;
 		
     //    cout << "sum, KBOLTZ, bw, sqrt are " << sum << " " << KBOLTZ << " " << bw << " " << sqrt(sum*50.*KBOLTZ*bw) << "\n";
-    return sqrt(sum*50.*KBOLTZ*bw);
+    return sqrt(sum*50.*constants::KBOLTZ*bw);
   } //if (settings1->WHICH != 0)
   else if (settings1->WHICH == 0)
-    return sqrt(temp*50.*KBOLTZ*bw);
+    return sqrt(temp*50.*constants::KBOLTZ*bw);
     
   return 0;
 }//GetNoise
