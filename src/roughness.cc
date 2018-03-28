@@ -29,7 +29,7 @@
 #include "pointing.h"
 #endif
 
-icemc::Roughness::Roughness(Settings *settings1){
+icemc::Roughness::Roughness(const Settings *settings1){
 
   rough_dir_str = std::getenv("ICEMC_SRC_DIR");
 #ifdef USE_HEALPIX

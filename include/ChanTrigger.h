@@ -91,7 +91,7 @@ namespace icemc {
      * @param  n_hplane :: Vector 
      * @param  n_normal :: Vector
      */  
-    void ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal);
+    void ApplyAntennaGain(const Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal);
 
     //! Apply trigger path
     /**
@@ -104,7 +104,7 @@ namespace icemc {
      * @param  anita1 :: Anita - anita object
      * @param  ant :: int - antenna number
      */ 
-    void TriggerPath(Settings *settings1, Anita *anita1, int ant, Balloon *bn1);
+    void TriggerPath(const Settings *settings1, Anita *anita1, int ant, Balloon *bn1);
 
     //! Apply digitizer path
     /**
@@ -117,7 +117,7 @@ namespace icemc {
      * @param  anita1 :: Anita - anita object
      * @param  ant :: int - antenna number
      */ 
-    void DigitizerPath(Settings *settings1, Anita *anita1, int ant, Balloon *bn1);
+    void DigitizerPath(const Settings *settings1, Anita *anita1, int ant, Balloon *bn1);
 
     //! Time shift and fluctuate signal
     /**
@@ -131,7 +131,7 @@ namespace icemc {
      * @param  volts_rx_rfcm_lab_e_all :: double [48][512] - time domain waveform for each channel (VPOL)
      * @param  volts_rx_rfcm_lab_h_all :: double [48][512] - time domain waveform for each channel (HPOL)
      */ 
-    void TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
+    void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
   
     //!  Convert E and H to left and right e field
     /**
@@ -219,7 +219,7 @@ namespace icemc {
      * @param  temp :: double -
      *
      */
-    static double GetNoise(Settings *settings1,double altitude_bn,double geoid,double theta,double bw,double temp);
+    static double GetNoise(const Settings *settings1,double altitude_bn,double geoid,double theta,double bw,double temp);
 
     //! Which bands passes the trigger
     /**
@@ -235,7 +235,7 @@ namespace icemc {
      * @param  hadfrac :: double - hadronic fraction of the shower
      * @param  thresholds :: double [2][5] - relative power thresholds for each pol and band
      */
-    void WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
+    void WhichBandsPass(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
 
     //! Which bands passes the trigger (for trigger scheme 0 and 1)
     /**
@@ -248,7 +248,7 @@ namespace icemc {
      * @param  ifold :: int - phi sector
      * @param  thresholds :: double [2][5] - relative power thresholds for each pol and band
      */
-    void WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]);
+    void WhichBandsPassTrigger1(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]);
 
     //! Which bands passes the trigger (for trigger scheme larger than 2)
     /**
@@ -264,7 +264,7 @@ namespace icemc {
      * @param  hadfrac :: double - hadronic fraction of the shower
      * @param  thresholds :: double [2][5] - relative power thresholds for each pol and band
      */
-    void WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
+    void WhichBandsPassTrigger2(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
 
     //! Find peak voltage of a waveform
     /**
@@ -282,7 +282,7 @@ namespace icemc {
      *	\todo	Deprecate in favor of the more robust boost::multi_array or the more specialized
      *			PayloadArray class. Both have multi-index access to the same items.
      */
-    void GetThresholds(Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]); // get thresholds for this layer
+    void GetThresholds(const Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]); // get thresholds for this layer
 
     //! Apply the diode convolution
     /**
@@ -299,7 +299,7 @@ namespace icemc {
      * @param  ipol :: int - which polarization
      * @param  thresholds :: double[2][5] - relative power thresholds for each pol and band
      */
-    void DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]);
+    void DiodeConvolution(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]);
 
 
     //! Increment the volts in each band 
@@ -310,7 +310,7 @@ namespace icemc {
      * @param  ibw :: int - which band
      * @param  k :: int - frequency bin
      */
-    void addToChannelSums(Settings *settings1,Anita *anita1,int ibw,int k);
+    void addToChannelSums(const Settings *settings1,Anita *anita1,int ibw,int k);
 
     //!	Returns whether the indicated antenna and band are "masked"
     /**
@@ -337,7 +337,7 @@ namespace icemc {
      * @param  y :: double[512] - output voltages
      * @param  pol :: bool - which polarization
      */
-    void applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
+    void applyImpulseResponseDigitizer(const Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
 
     //! Apply impulse response to trigger path
     /**
@@ -350,7 +350,7 @@ namespace icemc {
      * @param  vhz :: double* - amplitude in Fourier domain
      * @param  pol :: bool - which polarization
      */
-    void applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol);
+    void applyImpulseResponseTrigger(const Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol);
 
     //! Add noise from ANITA-3 flight to the time domain waveforms
     /**

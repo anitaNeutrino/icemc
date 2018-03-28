@@ -3,7 +3,7 @@
  Email: strutt@physics.ucla.edu
 
  Description:
-             This is a test program for the new input.yaml file format
+             This is a test program for the new input.conf file format
 ***********************************************************************************************************/
 
 #include <iostream>
@@ -42,10 +42,7 @@ int main(){
   icemc::Signal *sig1 = new icemc::Signal();
   icemc::Ray *ray1 = new icemc::Ray(); // create new instance of the ray class
   // input parameters
-  int NNU;
-  double RANDOMISEPOL;
-
-  s.ReadInputs("inputs.anita3.conf",  outputsFile, NNU, RANDOMISEPOL);
+  s.ReadInputs("inputs.anita3.conf",  outputsFile);
   s.ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
 
 

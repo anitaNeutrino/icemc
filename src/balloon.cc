@@ -43,7 +43,7 @@ icemc::Balloon::Balloon() {
   BN_LATITUDE=999; //balloon latitude for fixed balloon location
 }
 
-void  icemc::Balloon::setObservationLocation(Interaction *interaction1,int inu,IceModel *antarctica,Settings *settings1) {
+void  icemc::Balloon::setObservationLocation(Interaction *interaction1,int inu,IceModel *antarctica,const Settings *settings1) {
   interaction1->banana_volts = 0; //Zero the variable
   interaction1->banana_obs = Vector(0,0,Interaction::banana_observation_distance);
     
@@ -311,7 +311,7 @@ int icemc::Balloon::Getibnposition() {
     
 }
 
-void icemc::Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,Settings *settings1,Anita *anita1) {
+void icemc::Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,const Settings *settings1,Anita *anita1) {
   // takes a 3d vector pointing along the z axis
   Vector thetazero(0.,0.,1.);
   Vector phizero(1.,0.,0.);
@@ -394,7 +394,7 @@ int getTuffIndex(int Curr_time) {
   return -1;
 }
 // this is called for each neutrino
-void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int inu,Anita *anita1, double randomNumber) { // r_bn_shadow=position of spot under the balloon on earth's surface
+void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1,const Settings *settings1,int inu,Anita *anita1, double randomNumber) { // r_bn_shadow=position of spot under the balloon on earth's surface
   //std::cout << "calling pickballoonposition.\n";
   pitch=0.;
   roll=0.;
@@ -617,7 +617,7 @@ void icemc::Balloon::CenterPayload(double& hitangle_e) {
 }
 
 
-void icemc::Balloon::GetAntennaOrientation(Settings *settings1, Anita *anita1, int ilayer, int ifold, Vector& n_eplane, Vector& n_hplane, Vector& n_normal){
+void icemc::Balloon::GetAntennaOrientation(const Settings *settings1, Anita *anita1, int ilayer, int ifold, Vector& n_eplane, Vector& n_hplane, Vector& n_normal){
 
   // rotate for antenna's orientation on payload
   // face of antenna starts out relative to +x because phi is relative to +x
@@ -672,7 +672,7 @@ void icemc::Balloon::GetEcompHcompkvector(Vector n_eplane, Vector n_hplane, Vect
 
 
 
-void icemc::Balloon::GetEcompHcompEvector(Settings *settings1, Vector n_eplane, Vector n_hplane, const Vector n_pol, double& e_component, double& h_component, double& n_component){
+void icemc::Balloon::GetEcompHcompEvector(const Settings *settings1, Vector n_eplane, Vector n_hplane, const Vector n_pol, double& e_component, double& h_component, double& n_component){
 
   // find component along e-plane in direction of polarization, that is in direction of the E field   
   e_component = n_pol.Dot(n_eplane);
@@ -730,7 +730,7 @@ void icemc::Balloon::setr_bn(double latitude,double longitude) {
 }
 
 
-void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, Settings *settings1, IceModel *antarctica1, Ray *ray1, int &beyondhorizon) {
+void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, const Settings *settings1, IceModel *antarctica1, Ray *ray1, int &beyondhorizon) {
     
   // double distance=1.E7;
   double phi=0,theta=0;
@@ -986,7 +986,7 @@ void icemc::Balloon::GetSlacPositions(Anita *anita1) {
   }    
 }
 
-void icemc::Balloon::GetBoresights(Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]){//,Vector n_north,Vector n_east) {
+void icemc::Balloon::GetBoresights(const Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]){//,Vector n_north,Vector n_east) {
     
   // this fills r_boresights with the position of the antenna boresights.
   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
@@ -1032,7 +1032,7 @@ void icemc::Balloon::GetBoresights(Settings *settings1, Anita *anita1, Position 
 
 
 /*
-  void icemc::Balloon::GetBoresights(Settings *settings1,Anita *anita1) {
+  void icemc::Balloon::GetBoresights(const Settings *settings1,Anita *anita1) {
     
   // this fills r_boresights with the position of the antenna boresights.
   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
@@ -1075,7 +1075,7 @@ void icemc::Balloon::GetBoresights(Settings *settings1, Anita *anita1, Position 
   }
   }
 */
-void icemc::Balloon::GetBoresights(Settings *settings1,Anita *anita1) {
+void icemc::Balloon::GetBoresights(const Settings *settings1,Anita *anita1) {
   Vector ant_pos;
   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
@@ -1086,7 +1086,7 @@ void icemc::Balloon::GetBoresights(Settings *settings1,Anita *anita1) {
   }
 }
 
-void icemc::Balloon::calculate_antenna_positions(Settings *settings1, Anita *anita1){
+void icemc::Balloon::calculate_antenna_positions(const Settings *settings1, Anita *anita1){
   int number_all_antennas = 0;
   Vector antenna_position;
    

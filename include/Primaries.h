@@ -72,7 +72,7 @@ namespace icemc {
     
   public:
     Y();
-    double pickY(Settings *settings1,double pnu,int nu_nubar,int currentint);//!< pick inelasticity y according to chosen model
+    double pickY(const Settings *settings1,double pnu,int nu_nubar,int currentint);//!< pick inelasticity y according to chosen model
     double Getyweight(double pnu,double y,int nu_nubar,int currentint);
     //!< If you want to choose y from a flat distribution this is the weight it should have according to Connolly et al. (2011)
     
@@ -89,7 +89,7 @@ namespace icemc {
     int run_old_code;
     
   public:
-    double pickY(Settings *settings1,double pnu,int nu_nubar,int currentint);//!<pick inelasticity y according to chosen model
+    double pickY(const Settings *settings1,double pnu,int nu_nubar,int currentint);//!<pick inelasticity y according to chosen model
     double Getyweight(double pnu,double y,int nu_nubar,int currentint);//!< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
 
 
@@ -121,7 +121,7 @@ namespace icemc {
     //!<*primary1 must be manually deleted in icemc for deconstructor to actually be called.
     
     //! Neutrino-nucleon cross-sections using model chosen
-    int GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *settings1,int nu_nubar,int currentint);
+    int GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,int nu_nubar,int currentint);
 
 
 
@@ -170,7 +170,7 @@ namespace icemc {
 
     double banana_phi_obs;
     Vector banana_obs; //!<Vector from the neutrino interaction to the observation point
-    Interaction(std::string inttype,Primaries *primary1,Settings *settings1,int whichray,Counting *count1);//! Constructor
+    Interaction(std::string inttype,Primaries *primary1,const Settings *settings1,int whichray,Counting *count1);//! Constructor
 
     void PickAnyDirection();
     
@@ -212,7 +212,7 @@ namespace icemc {
     static constexpr double banana_sigma=0.;//!<NSIGMA in the case of a banana plot
     
     
-    void  setNuFlavor(Primaries *primary1,Settings *settings1,int whichray,Counting *count1);
+    void  setNuFlavor(Primaries *primary1,const Settings *settings1,int whichray,Counting *count1);
     std::string GetCurrent();
     void setCurrent();
     Position posnu;

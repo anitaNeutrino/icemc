@@ -271,7 +271,7 @@ double icemc::EarthModel::GetDensity(double altitude, const Position earth_in,
 
 
 
-int icemc::EarthModel::Getchord(Settings *settings1,
+int icemc::EarthModel::Getchord(const Settings *settings1,
 			 double len_int_kgm2,
 			 const Position &earth_in, // place where neutrino entered the earth
 			 const Position &r_enterice,

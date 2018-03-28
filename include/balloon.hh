@@ -92,7 +92,7 @@ namespace icemc {
      * @param  settings1 -
      * @return returns void
      */
-    void setObservationLocation(Interaction *interaction1,int inu,IceModel *antarctic,Settings *settings1);
+    void setObservationLocation(Interaction *interaction1,int inu,IceModel *antarctic,const Settings *settings1);
     
     //! This function gets the boresights
     /**
@@ -104,8 +104,8 @@ namespace icemc {
      * @param  r_boresights - [NLAYERS_MAX][NPHI_MAX] 
      * @return returns void
      */
-    // void GetBoresights(Settings *settings1,Anita *anita1,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]);
-    void GetBoresights(Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]);
+    // void GetBoresights(const Settings *settings1,Anita *anita1,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]);
+    void GetBoresights(const Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]);
     
     //! This function picks downward interaction point
     /**
@@ -120,7 +120,7 @@ namespace icemc {
      * @param  beyondhorizon -
      * @return returns void
      */
-    void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,Settings *settings1,IceModel *antarctica1,
+    void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,const Settings *settings1,IceModel *antarctica1,
 				      Ray *ray1, int &beyondhorizon); 
   
     //! This function initializes the balloon or the specific flight
@@ -163,7 +163,7 @@ namespace icemc {
      * @param  anita1 -
      * @return returns void
      */
-    void PickBalloonPosition(Vector straightup,IceModel *antarctica,Settings *settings1, Anita *anita1);
+    void PickBalloonPosition(Vector straightup,IceModel *antarctica,const Settings *settings1, Anita *anita1);
     
     //! This function picks the balloon position
     /**
@@ -177,7 +177,7 @@ namespace icemc {
      * @param  randomNumber -
      * @return returns void
      */
-    void PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int inu,Anita *anita1, double randomNumber);
+    void PickBalloonPosition(IceModel *antarctica1,const Settings *settings1,int inu,Anita *anita1, double randomNumber);
 
     //! This function gets ith balloon position
     /**
@@ -213,7 +213,7 @@ namespace icemc {
      * @param  n_normal -
      * @return returns void
      */
-    void GetAntennaOrientation(Settings *settings1,
+    void GetAntennaOrientation(const Settings *settings1,
 			       Anita *anita1, 
 			       int ilayer, int ifold, 
 			       Vector& n_eplane,
@@ -234,7 +234,7 @@ namespace icemc {
      * @param  n_component -
      * @return returns void
      */
-    void GetEcompHcompEvector(Settings *settings1,
+    void GetEcompHcompEvector(const Settings *settings1,
 			      Vector n_eplane, 
 			      Vector n_hplane, 
 			      const Vector n_pol, 
@@ -333,7 +333,7 @@ namespace icemc {
      * @param  anita1 -
      * @return returns void
      */
-    void GetBoresights(Settings *settings1,Anita *anita1);
+    void GetBoresights(const Settings *settings1,Anita *anita1);
     
     //! This function calculates antenna positions
     /**
@@ -344,7 +344,7 @@ namespace icemc {
      * @param  anita1 -
      * @return returns void
      */
-    void calculate_antenna_positions(Settings *settings1,Anita *anita1);
+    void calculate_antenna_positions(const Settings *settings1,Anita *anita1);
     
     //! This function rotates the payload
     /**

@@ -99,7 +99,7 @@ namespace icemc {
     double SurfaceAboveGeoid(const Position& pos) ;
     double WaterDepth(double lon,double lat);
     double WaterDepth(const Position& pos);
-    Position PickInteractionLocation(int ibnposition, Settings *settings1, const Position &rbn, Interaction *interaction1);
+    Position PickInteractionLocation(int ibnposition, const Settings *settings1, const Position &rbn, Interaction *interaction1);
     Position PickBalloonPosition();
     void GetMAXHORIZON(Balloon *bn1); // get upper limit on the horizon wrt the balloon.
     int RossIceShelf(const Position &position); 
@@ -124,11 +124,11 @@ namespace icemc {
 				  const Vector &nnu,
 				  double stepsize,
 				  Position &r_enterice);
-    void CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput);
+    void CreateHorizons(const Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput);
     Vector GetSurfaceNormal(const Position &r_out); //overloaded from EarthModel to include procedures for new ice models.
     double GetN(double depth);
     double GetN(const Position &pos);
-    double EffectiveAttenuationLength(Settings *settings1,const Position &pos, const int &whichray);
+    double EffectiveAttenuationLength(const Settings *settings1,const Position &pos, const int &whichray);
   
     void IceLonLattoEN(double lon, 
 		       double lat,

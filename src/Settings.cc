@@ -65,7 +65,7 @@ icemc::Settings::~Settings() {
  *
  * @param fileName the name of the settings file to read
  */
-void icemc::Settings::parseSettingsFile(const char* fileName, std::ofstream& outputFile){
+void icemc::Settings::parseSettingsFile(const char* fileName, std::ofstream& outputFile) {
 
   std::ifstream settingsFile(fileName);
 
@@ -162,7 +162,7 @@ void icemc::Settings::parseSettingsFile(const char* fileName, std::ofstream& out
  *
  * @return true if we should insert the key into the kvp map, false if there was a problem.
  */
-Bool_t icemc::Settings::newKvpPassesSanityChecks(const TString& key, const TString& value, const char* fileName, int lineNum){
+Bool_t icemc::Settings::newKvpPassesSanityChecks(const TString& key, const TString& value, const char* fileName, int lineNum) const{
 
   Bool_t isGood = true;
 
@@ -182,7 +182,7 @@ Bool_t icemc::Settings::newKvpPassesSanityChecks(const TString& key, const TStri
     isGood = false;
   }
   else{
-    kvpMap::iterator it = keyValuePairStrings.find(key);
+    kvpMap::const_iterator it = keyValuePairStrings.find(key);
 
     if(it!=keyValuePairStrings.end()){
     std::cerr << "Warning in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET << ", "
@@ -209,9 +209,9 @@ Bool_t icemc::Settings::newKvpPassesSanityChecks(const TString& key, const TStri
  * For debugging and testing
  *
  */
-void icemc::Settings::printAllKeyValuePairStrings(){
+void icemc::Settings::printAllKeyValuePairStrings() const {
 
-  kvpMap::iterator it;
+  kvpMap::const_iterator it;
   for(it = keyValuePairStrings.begin(); it!=keyValuePairStrings.end(); ++it){
     std::cout << it->first << "\t" << it->second << std::endl;
   }
@@ -284,10 +284,10 @@ void icemc::Settings::Initialize() {
 
 
 
-void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
-			  // Anita* anita1, Secondaries* sec1, Signal* sig1,
-			  // Balloon* bn1, Ray* ray1,
-			  int& NNU, double& RANDOMISEPOL) {
+void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput){
+				 // Anita* anita1, Secondaries* sec1, Signal* sig1,
+				 // Balloon* bn1, Ray* ray1,
+				 // int& NNU, double& RANDOMISEPOL) {
 
   parseSettingsFile(inputFileName, foutput);
 
@@ -326,10 +326,12 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   if (WHICH==9)       ANITAVERSION=3;
   else if (WHICH==10) ANITAVERSION=4;
   else                ANITAVERSION=0;
+
+  setNrxPhiAndNantennasFromWhich();
   
   if(((WHICH==1 || WHICH==6) && NLAYERS!=4) || (WHICH==0 && NLAYERS!=1) || (WHICH==7 && NLAYERS!=1)){
     std::cout << "Non-default setting: WHICH = " << WHICH << " and NLAYERS= " << NLAYERS << std::endl;
-  }
+  }  
 
 
   getSetting("Inclination top three layers", INCLINE_TOPTHREE);
@@ -345,6 +347,13 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   }
 
   getSetting("Flight path", WHICHPATH);
+
+  if(WHICHPATH==3){ // moved here from icemc main
+    SIGNAL_FLUCT = Interaction::banana_signal_fluct;
+    CONSTANTCRUST=1;  //Set ice depths and elevations all the same
+    CONSTANTICETHICKNESS=1;
+    FIXEDELEVATION=1;
+  }
 
   if((WHICH==0 && WHICHPATH!=2) || (WHICH==2 && WHICHPATH!=6)){
     std::cout << "Non-default setting: WHICHPATH = " << WHICHPATH << " and WHICH = "
@@ -668,6 +677,23 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   if (WHICHRAYS!=1){
     std::cout << "Non-default setting:  WHICHRAYS= " << WHICHRAYS << std::endl;
   }
+
+  // Set minray/maxray from whichrays, moved from icemc main
+  if (WHICHRAYS==1) {
+    MINRAY=0;
+    MAXRAY=0;
+  }
+  if (WHICHRAYS==2) {
+    MINRAY=0;
+    MAXRAY=1;
+  } 
+  if (WHICHRAYS==3) {
+    MINRAY=1;
+    MAXRAY=1;
+  }
+
+
+  
   getSetting("CreateHorizons file", WRITE_FILE);
   if (WRITE_FILE){
     std::cout<<"Writing CreateHorizons input file." << std::endl;
@@ -835,7 +861,7 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   
 
 void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, Signal* sig1,
-			   Balloon* bn1, Ray* ray1){
+				  Balloon* bn1, Ray* ray1) const {
   
    //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas. 
   if (WHICH==2 || WHICH==6 || WHICH==8 || WHICH==9 || WHICH==10){
@@ -1029,21 +1055,106 @@ for(unsigned int i=0; i < requiredBands.size(); i++){
 
 
 
+void icemc::Settings::setNrxPhiAndNantennasFromWhich(){
+  if (WHICH==0) { // anita-lite
+    NFOLD=3;
+    CYLINDRICALSYMMETRY=0;
+    NRX_PHI[0]=2;
+  }
+  else if (WHICH==1) {
+    CYLINDRICALSYMMETRY=1;
+    NRX_PHI[0]=5;
+    NRX_PHI[1]=5;
+    NRX_PHI[2]=5;
+    NRX_PHI[3]=5;
+    NRX_PHI[4]=4;
+  }
+  else if (WHICH==2) {
+    CYLINDRICALSYMMETRY=1;
+    NRX_PHI[0]=8;
+    NRX_PHI[1]=8;
+    NRX_PHI[2]=16;
+    NRX_PHI[3]=8;
+  }
+  else if (WHICH==3) {
+    cout << "Is this configuration cylindrically symmetric? Yes(1) or No(0)\n";
+    cin >> CYLINDRICALSYMMETRY;
+    cout << "How many layers?\n";
+    cin >> NLAYERS;
+    for (int i=0;i<NLAYERS;i++) {
+      cout << "How many antennas in the " << i << "th layer?\n";
+      cin >> NRX_PHI[i];
+    }
+    cout << "How many polarizations must pass a voltage threshold?\n";
+    cin >> NFOLD;
+
+  } //else if (custom payload)
+  else if (WHICH==4) {// anita hill
+    if (NLAYERS!=2){
+      std::cout << "Warning!!! Did not enter the right number of layers in the input file.  For Anita Hill, it's 2." << std::endl;
+    }
+    CYLINDRICALSYMMETRY=1;
+    NRX_PHI[0]=1; // this is how many antennas we have in phi on each "layer"
+    NRX_PHI[1]=1; // for anita hill, we are calling each station a different "layer"
+  }
+  else if(WHICH==6) { // Kurt's measurements for the first flight in elog 345
+    //NFOLD=8;
+    CYLINDRICALSYMMETRY=0;
+    NRX_PHI[0]=8;
+    NRX_PHI[1]=8;
+    NRX_PHI[2]=16;
+  }
+  else if (WHICH==7) {
+    CYLINDRICALSYMMETRY=1;
+    NRX_PHI[0]=360;
+    NRX_PHI[1]=360;
+    NRX_PHI[2]=360;
+    NRX_PHI[3]=360;
+    NRX_PHI[4]=360;
+  }
+  else if (WHICH==8) {
+    CYLINDRICALSYMMETRY=0;
+    NRX_PHI[0]=8;
+    NRX_PHI[1]=8;
+    NRX_PHI[2]=16;
+    NRX_PHI[3]=8;
+  }
+  else if (WHICH==9 || WHICH==10) { // ANITA-3 and ANITA-4
+    CYLINDRICALSYMMETRY=0;
+    //these are physical layers
+    NRX_PHI[0]=8;
+    NRX_PHI[1]=8;
+    NRX_PHI[2]=16;
+    NRX_PHI[3]=16;
+  }
+  else if (WHICH==11) { // satellite
+    CYLINDRICALSYMMETRY=1;
+    NRX_PHI[0]=8;
+    NRX_PHI[1]=8;
+
+  } //else if (satellite)
+
+  NANTENNAS=0;
+  for (int i=0;i<NLAYERS;i++){
+    NANTENNAS+=NRX_PHI[i];
+  }
+}
 
 
 
 
 
 
-void icemc::Settings::complainAboutNotFindingKey(const TString& key){
+
+void icemc::Settings::complainAboutNotFindingKey(const TString& key) const {
   std::cerr << "Warning in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET
 	    << ", unable to find setting " << ANSI_COLOR_RED << key << ANSI_COLOR_RESET << std::endl;
 }
 
 
-void icemc::Settings::getSetting(const char* key, int& value){
+void icemc::Settings::getSetting(const char* key, int& value) const {
 
-  kvpMap::iterator it = keyValuePairStrings.find(key);
+  kvpMap::const_iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
     complainAboutNotFindingKey(key);
   }
@@ -1053,9 +1164,9 @@ void icemc::Settings::getSetting(const char* key, int& value){
   }
 }
 
-void icemc::Settings::getSetting(const char* key, float& value){
+void icemc::Settings::getSetting(const char* key, float& value) const {
 
-  kvpMap::iterator it = keyValuePairStrings.find(key);
+  kvpMap::const_iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
     complainAboutNotFindingKey(key);
   }
@@ -1065,9 +1176,9 @@ void icemc::Settings::getSetting(const char* key, float& value){
   }
 }
 
-void icemc::Settings::getSetting(const char* key, double& value){
+void icemc::Settings::getSetting(const char* key, double& value) const { 
 
-  kvpMap::iterator it = keyValuePairStrings.find(key);
+  kvpMap::const_iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
     complainAboutNotFindingKey(key);
   }
@@ -1077,9 +1188,9 @@ void icemc::Settings::getSetting(const char* key, double& value){
   }
 }
 
-void icemc::Settings::getSetting(const char* key, std::vector<int>& valueArray){
+void icemc::Settings::getSetting(const char* key, std::vector<int>& valueArray) const {
 
-  kvpMap::iterator it = keyValuePairStrings.find(key);
+  kvpMap::const_iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
     complainAboutNotFindingKey(key);
   }
@@ -1089,9 +1200,9 @@ void icemc::Settings::getSetting(const char* key, std::vector<int>& valueArray){
   }
 }
 
-void icemc::Settings::getSetting(const char* key, std::vector<float>& valueArray){
+void icemc::Settings::getSetting(const char* key, std::vector<float>& valueArray) const {
 
-  kvpMap::iterator it = keyValuePairStrings.find(key);
+  kvpMap::const_iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
     complainAboutNotFindingKey(key);
   }
@@ -1101,9 +1212,9 @@ void icemc::Settings::getSetting(const char* key, std::vector<float>& valueArray
   }
 }
 
-void icemc::Settings::getSetting(const char* key, std::vector<double>& valueArray){
+void icemc::Settings::getSetting(const char* key, std::vector<double>& valueArray) const {
 
-  kvpMap::iterator it = keyValuePairStrings.find(key);
+  kvpMap::const_iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
     complainAboutNotFindingKey(key);
   }
@@ -1113,7 +1224,7 @@ void icemc::Settings::getSetting(const char* key, std::vector<double>& valueArra
   }
 }
 
-void icemc::Settings::parseValueArray(const char* valueString, std::vector<int>& values){
+void icemc::Settings::parseValueArray(const char* valueString, std::vector<int>& values) const{
   TString theValueString(valueString);
 
   TObjArray* theValues = theValueString.Tokenize(",");
@@ -1125,7 +1236,7 @@ void icemc::Settings::parseValueArray(const char* valueString, std::vector<int>&
   }
 }
 
-void icemc::Settings::parseValueArray(const char* valueString, std::vector<float>& values){
+void icemc::Settings::parseValueArray(const char* valueString, std::vector<float>& values) const{
   TString theValueString(valueString);
 
   TObjArray* theValues = theValueString.Tokenize(",");
@@ -1137,7 +1248,7 @@ void icemc::Settings::parseValueArray(const char* valueString, std::vector<float
   }
 }
 
-void icemc::Settings::parseValueArray(const char* valueString, std::vector<double>& values){
+void icemc::Settings::parseValueArray(const char* valueString, std::vector<double>& values) const{
   TString theValueString(valueString);
 
   TObjArray* theValues = theValueString.Tokenize(",");

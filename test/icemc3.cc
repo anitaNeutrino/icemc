@@ -16,11 +16,12 @@ int main(int argc,  char **argv) {
   feenableexcept(FE_INVALID | FE_DIVBYZERO); 
 #endif
 
-  icemc::CommandLineOpts clo(argc, argv);
+  icemc::Settings settings;
+  icemc::CommandLineOpts clOpts(argc, argv, settings);
 
-  if(clo.are_good){
+  if(clOpts.are_good){
     icemc::EventGenerator uhen;
-    uhen.generateNeutrinos(argc, argv);
+    uhen.generateNeutrinos(settings, clOpts);
   }
   
 }

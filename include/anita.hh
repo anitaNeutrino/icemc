@@ -93,11 +93,11 @@ namespace icemc {
 
     Anita(); // constructor
     ~Anita();
-    void Initialize(Settings *settings1,ofstream &foutput,int inu, TString outputdir);                                                ///< initialize a bunch of stuff
+    void Initialize(const Settings *settings1,ofstream &foutput,int inu, TString outputdir);                                                ///< initialize a bunch of stuff
     void initializeFixedPowerThresholds(ofstream &foutput);
-    void readVariableThresholds(Settings *settings1);
+    void readVariableThresholds(const Settings *settings1);
     void readAmplification();
-    void getDiodeDataAndAttenuation(Settings *settings1, TString outputdir);
+    void getDiodeDataAndAttenuation(const Settings *settings1, TString outputdir);
     void getPulserData();
   
     // takes arrays that span NFREQ and turn them into arrays that span HALFNFOUR
@@ -109,8 +109,8 @@ namespace icemc {
     int getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn);
 
     void labAttn(double *vhz);
-    void SetNoise(Settings *settings1,Balloon *bn1,IceModel *antarctica);
-    void calculate_antenna_positions(Settings *settings1,double pitch, double roll, double phi_spin,Vector n_north,Vector n_east);// this calculates the above
+    void SetNoise(const Settings *settings1,Balloon *bn1,IceModel *antarctica);
+    void calculate_antenna_positions(const Settings *settings1,double pitch, double roll, double phi_spin,Vector n_north,Vector n_east);// this calculates the above
 
     TFile *fnoise;
     TTree *tdiode;
@@ -351,7 +351,7 @@ namespace icemc {
 
 
     void getDiodeModel();
-    void setDiodeRMS(Settings *settings1, TString outputdir);
+    void setDiodeRMS(const Settings *settings1, TString outputdir);
   
     TF1 fdiode;
     double maxt_diode;
@@ -363,10 +363,10 @@ namespace icemc {
 
     void myconvlv(double *timedomain_forconvl,const int NFOUR,double *fdiode,double &maxdiodeconvl,double &onediodeconvl,double *power_noise,double *diodeconv);
 
-    void GetArrivalTimes(const Vector& rf_direction,Balloon *bn1,Settings *settings1);
+    void GetArrivalTimes(const Vector& rf_direction,Balloon *bn1,const Settings *settings1);
     void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]);
 
-    void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX],Balloon *bn1, Settings *settings1);
+    void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX],Balloon *bn1, const Settings *settings1);
 
     int rx_minarrivaltime;
     double arrival_times[2][NLAYERS_MAX*NPHI_MAX];
@@ -487,11 +487,11 @@ namespace icemc {
     double flare[4][NFREQ];  // for coarse antenna models:  beam width: e-plane: vp/hp, h-plane: vp/hp
     double gain[2][NFREQ];   // for coarse antenna models:  gain vert pol,h pol
 
-    int GetBeamWidths(Settings *settings1); // for getting beam widths using coarse models (horn specs or simple model for EeVA)
-    void Set_gain_angle(Settings *settings1,double nmedium_receiver);
+    int GetBeamWidths(const Settings *settings1); // for getting beam widths using coarse models (horn specs or simple model for EeVA)
+    void Set_gain_angle(const Settings *settings1,double nmedium_receiver);
     double Get_gain_angle(int gain_type, int k, double hitangle);
     void ReadGains();
-    void AntennaGain(Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h);
+    void AntennaGain(const Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h);
 
 
     double reference_angle[7]; // reference angles for finding gains of antenna
@@ -578,8 +578,8 @@ namespace icemc {
     vector <double> cwst_summed_wfm;
     vector <double> cwst_power_of_summed_wfm;
     double cwst_power;
-    void fill_coherent_waveform_sum_tree(unsigned inu, unsigned center_phi_sector, Settings* settings1, double rms_noise, double actual_rms, unsigned window_start, unsigned window_end, double deg_theta, double deg_phi, double actual_deg_theta, double actual_deg_phi, vector <double>& summed_wfm, vector <double>& power_of_summed_wfm, double power);
-    void GetPayload(Settings*, Balloon*);
+    void fill_coherent_waveform_sum_tree(unsigned inu, unsigned center_phi_sector, const Settings* settings1, double rms_noise, double actual_rms, unsigned window_start, unsigned window_end, double deg_theta, double deg_phi, double actual_deg_theta, double actual_deg_phi, vector <double>& summed_wfm, vector <double>& power_of_summed_wfm, double power);
+    void GetPayload(const Settings*, Balloon*);
     double VNOISE_ANITALITE[NPHI_MAX]; // noise for each antenna, for the anita-lite trigger configuration.
     double INCLINE_TOPTHREE; // cant angle of top three layers of antennas
     double INCLINE_NADIR; // cant angle of nadir (bottom) layer of antennas
@@ -592,12 +592,12 @@ namespace icemc {
 #ifdef ANITA_UTIL_EXISTS
     RFSignal *fSignalChainResponseDigitizerTuffs[2][3][16][6]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM------- 0:configA, 1:configB, 2:configC, 3:configG, 4:configO, 5:configP
     RFSignal *fSignalChainResponseTriggerTuffs[2][3][16][6];  // same as for DigitizerTuffs
-    void readImpulseResponseDigitizer(Settings *settings1);
-    void readImpulseResponseTrigger(Settings *settings1);
-    void readTuffResponseDigitizer(Settings *settings1);
-    void readTuffResponseTrigger(Settings *settings1);
-    void readTriggerEfficiencyScanPulser(Settings *settings1);
-    void readNoiseFromFlight(Settings *settings1);
+    void readImpulseResponseDigitizer(const Settings *settings1);
+    void readImpulseResponseTrigger(const Settings *settings1);
+    void readTuffResponseDigitizer(const Settings *settings1);
+    void readTuffResponseTrigger(const Settings *settings1);
+    void readTriggerEfficiencyScanPulser(const Settings *settings1);
+    void readNoiseFromFlight(const Settings *settings1);
     void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int tuffIndex);
     TGraph *RayleighFits[2][48];
     Int_t numFreqs;

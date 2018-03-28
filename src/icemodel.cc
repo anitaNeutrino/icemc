@@ -13,7 +13,6 @@
 #include "anita.hh"
 #include "ray.hh"
 #include "balloon.hh"
-#include "Settings.h"
 #include "EnvironmentVariable.h"
 
 
@@ -167,7 +166,7 @@ icemc::Position icemc::IceModel::PickBalloonPosition() {
     
 }
 
-icemc::Position icemc::IceModel::PickInteractionLocation(int ibnposition, Settings *settings1, const Position &rbn, Interaction *interaction1) {
+icemc::Position icemc::IceModel::PickInteractionLocation(int ibnposition, const Settings *settings1, const Position &rbn, Interaction *interaction1) {
     
     // random numbers used
     double rnd1=0;
@@ -1056,7 +1055,7 @@ double icemc::IceModel::GetN(const Position &pos) {
     return GetN(pos.Mag() - Surface(pos.Lon(),pos.Lat()));
 } //GetN(Position)
 
-double icemc::IceModel::EffectiveAttenuationLength(Settings *settings1,const Position &pos,const int &whichray) {
+double icemc::IceModel::EffectiveAttenuationLength(const Settings *settings1,const Position &pos,const int &whichray) {
     double localmaxdepth = IceThickness(pos);
     double depth = Surface(pos) - pos.Mag();
     //cout << "depth is " << depth << "\n";
@@ -1229,7 +1228,7 @@ void icemc::IceModel::GetMAXHORIZON(Balloon *bn1) {
 }
 
 
-void icemc::IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput) {
+void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput) {
     
     // add up volume of ice within horizon of payload
     // goes a little beyond horizon.
@@ -1281,19 +1280,21 @@ void icemc::IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double the
     int n_coord = 0;
     
     sprintf(horizon_file,"bedmap_horizons_whichpath%i_weights%i.dat",bn1->WHICHPATH,settings1->USEPOSITIONWEIGHTS);
-    
-    if (ice_model==1 && !settings1->WRITE_FILE) { // for bedmap model, need to be able to read file
+
+    bool writeFile = settings1->WRITE_FILE > 0;
+
+    if (ice_model==1 && !writeFile) { // for bedmap model, need to be able to read file
 	if(!(bedmap_horizons = fopen(horizon_file, "r"))) {
 	    printf("Error: unable to open %s.  Creating new file.\n", horizon_file);
-	    settings1->WRITE_FILE=1;
+	    writeFile=1;
 	}//if
     } //if
-    if (ice_model==1 && settings1->WRITE_FILE) { // for bedmap model, need to be able to write to file
+    if (ice_model==1 && writeFile) { // for bedmap model, need to be able to write to file
 	if(!(bedmap_horizons = fopen(horizon_file, "w"))) {
 	    printf("Error: unable to open %s\n", horizon_file);
 	    exit(1);
 	}//if
-    } //else if
+    } //if
     
     if (bn1->WHICHPATH!=2 && bn1->WHICHPATH!=6) // not anita and not anita-lite
 	lat=GetLat(theta_bn); //get index of latitude, same for all balloon positions
@@ -1422,7 +1423,7 @@ void icemc::IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double the
 	    
 	} //end if (ice_model==0) Crust 2.0
 	
-	else if (ice_model==1 && !settings1->WRITE_FILE) { // for bedmap model
+	else if (ice_model==1 && !writeFile) { // for bedmap model
 	    fgets(line,200,bedmap_horizons);
 	    while(line[0] != 'X') {
 		e_coord = atoi(strtok(line,","));
@@ -1439,9 +1440,9 @@ void icemc::IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double the
 		total_area = atof(fgets(line,200,bedmap_horizons)); // total area on the continent
 		volume = atof(fgets(line,200,bedmap_horizons)); // total volume on the continent
 	    } //if
-	} //end if (ice_model==1) && !settings1->WRITE_FILE
+	} //end if (ice_model==1) && !writeFile
 	
-	else if (ice_model==1 && settings1->WRITE_FILE) { //for BEDMAP model, look through all easting and northing coordinates in the groundbed map (our smallest).  Output what we find to a file for later use.
+	else if (ice_model==1 && writeFile) { //for BEDMAP model, look through all easting and northing coordinates in the groundbed map (our smallest).  Output what we find to a file for later use.
 	    
 	    for (int n_coord=0;n_coord<nRows_ground;n_coord++) {
 		for (int e_coord=0;e_coord<nCols_ground;e_coord++) {
@@ -1489,7 +1490,7 @@ void icemc::IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double the
 		fprintf(bedmap_horizons,"%f\n",volume);
 	    } //if
 	    
-	} //end if (ice_model==1) && settings1->WRITE_FILE
+	} //end if (ice_model==1) && writeFile
 	
 	if (!volume_found) {
 	    cout<<"Total surface area covered with ice (in m^2) is : "<<total_area<<endl;

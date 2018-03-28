@@ -27,7 +27,7 @@
 using std::cout;
 
 
-icemc::GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
+icemc::GlobalTrigger::GlobalTrigger(const Settings *settings1,Anita *anita1){
     
   // 2=top,1=middle,0=bottom
   WHICHLAYERSLCPRCP[0]=0;
@@ -206,7 +206,7 @@ icemc::GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
  *			There is a decent amount of dead code which should be pruned, as well.
  */
 
-void icemc::GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,  int *thispasses) {
+void icemc::GlobalTrigger::PassesTrigger(const Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,  int *thispasses) {
 
   double this_threshold= anita1->powerthreshold[4]; 
   return PassesTrigger(settings1,anita1,discones_passing,mode,l3trig,l2trig,l1trig,antennaclump,loctrig,loctrig_nadironly,inu,this_threshold, thispasses);   
@@ -215,7 +215,7 @@ void icemc::GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int d
 
 
 
-void icemc::GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold, int *thispasses) {
+void icemc::GlobalTrigger::PassesTrigger(const Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold, int *thispasses) {
 
 
   //bool ishpol should only be used for anita3, by default do only vpol
@@ -250,7 +250,7 @@ void icemc::GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int d
 
 
 
-void  icemc::GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses, int inu){
+void  icemc::GlobalTrigger::PassesTriggerBasic(const Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses, int inu){
 
   int ltsum=0;
   int channsum=0;
@@ -837,7 +837,7 @@ void  icemc::GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1
 //		There will be several things hardcoded into the following method, feel free to change these to be variables within the Settings class, but for the sake of sanity, PLEASE no more global variables!
 //		This will be made to implement all types of payloads shortly, what exists below is only a temporary specialization for ANITA III.
 
-void icemc::GlobalTrigger::PassesTriggerCoherentSum(Settings *settings1,Anita *anita1,int inu, int *thispasses) {
+void icemc::GlobalTrigger::PassesTriggerCoherentSum(const Settings *settings1,Anita *anita1,int inu, int *thispasses) {
     
   for (int center_phi_sector_offset = -1; center_phi_sector_offset <= 1; center_phi_sector_offset++){
     int center_phi_sector_index = first_phi_sector_hit + center_phi_sector_offset;
@@ -970,7 +970,7 @@ void icemc::GlobalTrigger::PassesTriggerCoherentSum(Settings *settings1,Anita *a
 
 
 
-void icemc::GlobalTrigger::PassesTriggerSummedPower(Settings *settings1,Anita *anita1){
+void icemc::GlobalTrigger::PassesTriggerSummedPower(const Settings *settings1,Anita *anita1){
 				  
   //	TRIGGERSCHEME == 4 is the Summed Power Trigger.
   //	For every window, all of the phi sectors find the maximum coherently summed power.
@@ -1340,7 +1340,7 @@ void icemc::GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_thresh
  *			For this case specifically PayloadArray was designed to have iterators and accessors which
  *			"OR" the values of the neighboring antennas, and are optionally read-only.
  */
-void icemc::GlobalTrigger::FillInNadir(Settings *settings1,Anita *anita1,int ant) { //overloaded function
+void icemc::GlobalTrigger::FillInNadir(const Settings *settings1,Anita *anita1,int ant) { //overloaded function
   int antarray[Anita::NPHI_MAX]={0};
   //here the ant array is an array of binary numbers
   int whichphi;
@@ -1414,7 +1414,7 @@ void icemc::GlobalTrigger::FillInNadir(Anita *anita1,int *ant) {
  *	\todo	Deprecate this function in favor of PayloadArray or boost::multi_array objects which provide the
  *			ability to have multiple indexing schemes for a given collection of objects.
  */
-int icemc::GlobalTrigger::GetPhiSector(Settings *settings1,int i,int j) { // given trigger layer and index, get phi sector.
+int icemc::GlobalTrigger::GetPhiSector(const Settings *settings1,int i,int j) { // given trigger layer and index, get phi sector.
   // for the upper two layers, the phi sector is just j
   // for the nadir layer, the phi sector is 2*j+1
   // warning this counts from 0
@@ -1445,7 +1445,7 @@ int icemc::GlobalTrigger::GetPhiSector(Settings *settings1,int i,int j) { // giv
  *	\todo	Deprecate this function in favor of PayloadArray or boost::multi_array objects which provide the
  *			ability to have multiple indexing schemes for a given collection of objects.
  */
-void icemc::GlobalTrigger::GetAnitaLayerPhiSector(Settings *settings1,int i,int j,int &whichlayer,int &whichphisector) {
+void icemc::GlobalTrigger::GetAnitaLayerPhiSector(const Settings *settings1,int i,int j,int &whichlayer,int &whichphisector) {
     
     
   if (settings1->WHICH==6 || settings1->WHICH==2 || settings1->WHICH==8) {// If Anita 1 or Anita 2
@@ -1528,7 +1528,7 @@ void icemc::GlobalTrigger::GetAnitaLayerPhiSector(Settings *settings1,int i,int 
  *			of integers into a bit shift, so nothing is lost by switching from explicit shifts to
  *			multiplication, and readability is gained.
  */
-void icemc::GlobalTrigger::L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int discones_passing,int *l3trig,
+void icemc::GlobalTrigger::L3Trigger(const Settings *settings1,Anita *anita1,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int discones_passing,int *l3trig,
 				     int *thispasses) {
   
   int whichphipass[Anita::NPOL][Anita::NPHI_MAX]={{0}};

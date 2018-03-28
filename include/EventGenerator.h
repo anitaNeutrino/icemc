@@ -3,6 +3,8 @@
 
 #include "anita.hh"
 #include "vector.hh"
+#include "CommandLineOpts.h"
+#include "Settings.h"
 
 class TStyle;
 
@@ -292,7 +294,7 @@ namespace icemc {
     void SetupViewangles(Signal *sig1);
 
     void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
-    double GetThisAirColumn(Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta);
+    double GetThisAirColumn(const Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta);
 
     double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_bn, const Position &rfexit);
 
@@ -302,15 +304,15 @@ namespace icemc {
     void GetCurrent(std::string& current);
 
 
-    double GetAverageVoltageFromAntennasHit(Settings *settings1,  int *nchannels_perrx_triggered,  double *voltagearray,  double& volts_rx_sum);
+    double GetAverageVoltageFromAntennasHit(const Settings *settings1,  int *nchannels_perrx_triggered,  double *voltagearray,  double& volts_rx_sum);
 
 
     // Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside, const int& inu);
     Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside);    
 
-    void Attenuate(IceModel *antartica1, Settings *settings1,  double& vmmhz_max,  double rflength,  const Position &posnu);
+    void Attenuate(IceModel *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const Position &posnu);
 
-    void Attenuate_down(IceModel *antarctica1,  Settings *settings1,  double& vmmhz_max,  const Position &rfexit2,  const Position &posnu,  const Position &posnu_down);
+    void Attenuate_down(IceModel *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const Position &rfexit2,  const Position &posnu,  const Position &posnu_down);
 
     void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight);
 
@@ -318,7 +320,7 @@ namespace icemc {
 
     int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside);
 
-    int GetDirection(Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
+    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
 
     void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  double emfrac,  double hadfrac,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag);
 
@@ -331,7 +333,7 @@ namespace icemc {
 
     static void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  SIGINT
 
-    void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
+    void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
 
     void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  std::string,  std::string,  double,  std::ofstream &nu_out);
 
@@ -339,14 +341,14 @@ namespace icemc {
 
     void Getearth(double*,  double*,  double*,  double*);
 
-    int GetIceMCAntfromUsefulEventAnt(Settings *settings1,  int UsefulEventAnt);
+    int GetIceMCAntfromUsefulEventAnt(const Settings *settings1,  int UsefulEventAnt);
 
     /** 
      * @brief Run the neutrino generation
      * 
      * This function does the work that used to be the main in the icemc executable
      */
-    void generateNeutrinos(int argc, char* argv[]);
+    void generateNeutrinos(const Settings& settings1, const CommandLineOpts& clOpts);
 
     TStyle* RootStyle();
 

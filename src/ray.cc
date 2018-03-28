@@ -50,7 +50,7 @@ void icemc::Ray::Initialize() {
   nsurf_rfexit_db=Vector(0.,0.,0.);
 
 }
-void icemc::Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry,IceModel *antarctica) {
+void icemc::Ray::GetRFExit(const Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry,IceModel *antarctica) {
 
 
 
@@ -104,7 +104,7 @@ void icemc::Ray::GetRFExit(Settings *settings1,Anita *anita1,int whichray,Positi
 // icemc::Ray::WhereDoesItLeave() is defined in ray.hh since it is a statis member function // MS 2/1/2017
 
 
-int icemc::Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,IceModel *antarctica,double &slopeyangle,int whichtry) {
+int icemc::Ray::RandomizeSurface(const Settings *settings1,Position rfexit_temp,Vector posnu,IceModel *antarctica,double &slopeyangle,int whichtry) {
 
   double howmuch=settings1->SLOPEYSIZE;
   Position nsurf_rfexit_temp;
@@ -171,7 +171,7 @@ int icemc::Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector
 }//RandomizeSurface
 
 // int icemc::Ray::GetSurfaceNormal(IceModel *antarctica,Vector posnu,Position *rfexit) {
-int icemc::Ray::GetSurfaceNormal(Settings *settings1,IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry) {
+int icemc::Ray::GetSurfaceNormal(const Settings *settings1,IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry) {
       
   Position rfexit_temp;
 
@@ -192,7 +192,7 @@ int icemc::Ray::GetSurfaceNormal(Settings *settings1,IceModel *antarctica,Vector
 }
 
 
-int icemc::Ray::TraceRay(Settings *settings1,Anita *anita1,int iter,double n_depth) { // iter is which iteration (1 or 2)
+int icemc::Ray::TraceRay(const Settings *settings1,Anita *anita1,int iter,double n_depth) { // iter is which iteration (1 or 2)
 
    
   // use snell's law to get the first guess at the 

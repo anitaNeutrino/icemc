@@ -620,7 +620,9 @@ int main(int argc,  char **argv) {
   GlobalTrigger *globaltrig1;
   Taumodel *taus1 = new Taumodel();
   // input parameters
-  settings1->ReadInputs(input.c_str(),  foutput, NNU, RANDOMISEPOL);
+  settings1->ReadInputs(input.c_str(),  foutput); //, NNU, RANDOMISEPOL);
+  NNU = settings1->NNU;
+  RANDOMISEPOL = settings1->RANDOMISEPOL;
   settings1->ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
 
   // Signal needs to be initialize with Askaryan parametrisation info

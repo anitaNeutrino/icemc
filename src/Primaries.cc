@@ -9,7 +9,6 @@
 #include "earthmodel.hh"
 #include "icemodel.hh"
 #include "Primaries.h"
-#include "Settings.h"
 #include "counting.hh"
 
 #include <cmath>
@@ -136,7 +135,7 @@ double icemc::Primaries::Getyweight(double pnu,double y,int nu_nubar,int current
 }
 
 
-double icemc::Primaries::pickY(Settings *settings1,double pnu,int nu_nubar,int currentint) {
+double icemc::Primaries::pickY(const Settings *settings1,double pnu,int nu_nubar,int currentint) {
   return m_myY->pickY(settings1,pnu,nu_nubar,currentint);
 }
 
@@ -154,7 +153,7 @@ icemc::Primaries::~Primaries(){//default deconstructor
 }//deconstructor
 
 
-int icemc::Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *settings1,int nu_nubar,int currentint){
+int icemc::Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,int nu_nubar,int currentint){
   // calculate cross section
   if (pnu<mine[settings1->SIGMAPARAM] || pnu>maxe[settings1->SIGMAPARAM]) {
     std::cout <<  "Need a parameterization for this energy region.\n";
@@ -215,7 +214,7 @@ string icemc::Primaries::GetNuFlavor() {
 } //GetNuFlavor
 
 
-icemc::Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,int whichray,Counting *count1) : banana_flavor("numu"), banana_current("nc"),  nu_banana(Position(theta_nu_banana,phi_nu_banana)) {
+icemc::Interaction::Interaction(string inttype,Primaries *primary1,const Settings *settings1,int whichray,Counting *count1) : banana_flavor("numu"), banana_current("nc"),  nu_banana(Position(theta_nu_banana,phi_nu_banana)) {
 
   noway=0;
   wheredoesitleave_err=0;
@@ -275,7 +274,7 @@ void icemc::Interaction::PickAnyDirection() {
 }
 
 
-void  icemc::Interaction::setNuFlavor(Primaries *primary1,Settings *settings1,int whichray,Counting *counting1) {
+void  icemc::Interaction::setNuFlavor(Primaries *primary1,const Settings *settings1,int whichray,Counting *counting1) {
   // pick the neutrino flavor,  type of tau decay when relevant,
   //  lpm energy.
   nuflavor=primary1->GetNuFlavor();
@@ -406,7 +405,7 @@ icemc::Y::Y() { // Constructor
 
 
 //! Pick an inelasticity y according to the model chosen
-double icemc::Y::pickY(Settings *settings1,double pnu,int nu_nubar,int currentint) {
+double icemc::Y::pickY(const Settings *settings1,double pnu,int nu_nubar,int currentint) {
   if(settings1->YPARAM==0){
     return pickYGandhietal();
   }//old Gety

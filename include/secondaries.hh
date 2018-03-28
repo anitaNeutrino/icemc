@@ -159,7 +159,7 @@ namespace icemc{
     int count_nfb;
     int secondary_e_noncons;
 
-    void GetSecondaries(Settings *settings1,std::string,double,double&,double&,int&,TH1F*);
+    void GetSecondaries(const Settings *settings1,std::string,double,double&,double&,int&,TH1F*);
 
     void InitTauola();
     void GetTauDecay(std::string nuflavor,std::string current,std::string& taudecay, double& emfrac_db, double& hadfrac_db);
@@ -169,7 +169,7 @@ namespace icemc{
     //void GetFirstBang(const Position &r_in, const icemc::Vector &nnu, Position &posnu, double len_int_kgm2, double d1, double &nuentrancelength);
     double NFBWeight(double ptau, double taulength);
 
-    int GetEMFrac(Settings *settings1,
+    int GetEMFrac(const Settings *settings1,
 		  std::string nuflavor,
 		  std::string current,
 		  std::string taudecay,

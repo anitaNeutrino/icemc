@@ -46,7 +46,7 @@ namespace icemc{
     double NINDEX;
   public:
 
-    Roughness(Settings *settings1);
+    Roughness(const Settings *settings1);
 
     void SetRoughScale(double a);
 

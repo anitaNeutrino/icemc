@@ -14,7 +14,6 @@
 
 #include "TH1F.h"
 #include "Constants.h"
-#include "Settings.h"
 #include "TTreeIndex.h"
 #include "TChain.h"
 #include "TF1.h"
@@ -253,7 +252,7 @@ void icemc::Secondaries::ReadSecondaries() {
 } //end method ReadSecondaries
 
 
-void icemc::Secondaries::GetSecondaries(Settings *settings1,string nuflavor,double plepton,double &em_secondaries_max,double &had_secondaries_max,int &n_interactions,TH1F *hy) {
+void icemc::Secondaries::GetSecondaries(const Settings *settings1,string nuflavor,double plepton,double &em_secondaries_max,double &had_secondaries_max,int &n_interactions,TH1F *hy) {
 
 
   em_secondaries_max=0.;
@@ -408,7 +407,7 @@ void icemc::Secondaries::GetSecondaries(Settings *settings1,string nuflavor,doub
 
 
 
-int icemc::Secondaries::GetEMFrac(Settings *settings1,string nuflavor,
+int icemc::Secondaries::GetEMFrac(const Settings *settings1,string nuflavor,
 				  string current,
 				  string taudecay,	      
 				  double y,

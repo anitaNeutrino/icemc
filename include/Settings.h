@@ -19,9 +19,10 @@
 #include "TCint.h"
 #endif
 
+#include "anita.hh"
+
 //! Reads in and stores input settings for the run
 namespace icemc{
-  class Anita;
   class Secondaries;
   class Signal;
   class Balloon;
@@ -36,23 +37,25 @@ namespace icemc{
     Settings();
     ~Settings(); 
     void Initialize();
-    void printAllKeyValuePairStrings();
+    void printAllKeyValuePairStrings() const;
 
-    void getSetting(const char* key, int& value);
-    void getSetting(const char* key, float& value);
-    void getSetting(const char* key, double& value);
+    void getSetting(const char* key, int& value) const;
+    void getSetting(const char* key, float& value) const;
+    void getSetting(const char* key, double& value) const;
 
-    void getSetting(const char* key, std::vector<int>& valueArray);
-    void getSetting(const char* key, std::vector<float>& valueArray);
-    void getSetting(const char* key, std::vector<double>& valueArray);
+    void getSetting(const char* key, std::vector<int>& valueArray) const;
+    void getSetting(const char* key, std::vector<float>& valueArray) const;
+    void getSetting(const char* key, std::vector<double>& valueArray) const;
 
-    void ReadInputs(const char* fileName , std::ofstream &foutput,
+    void ReadInputs(const char* fileName , std::ofstream &foutput);//,
 		    // Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1,
-		    int& NNU, double& RANDOMISEPOL);
+		    // int& NNU, double& RANDOMISEPOL);
 
-    void ApplyInputs(Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1);
+    void ApplyInputs(Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1) const;
 
-
+    int NNU; ///< The number of neutrinos
+    double RANDOMISEPOL; ///< Randomize the polarity?
+    
     int UNBIASED_SELECTION;
     int WHICH; // which payload to use 0=Anita-lite,1=Ross,2=Smex,3=make your own
     int ANITAVERSION;
@@ -121,6 +124,7 @@ namespace icemc{
 
     int NLAYERS;
     int NANTENNAS;
+    int NRX_PHI[Anita::NLAYERS_MAX];
 
     /* int ONLYFINAL=1; // only write to final histogram */
     /* int HIST_MAX_ENTRIES=10000; //maximum number of events to put in histograms */
@@ -249,14 +253,20 @@ namespace icemc{
     ClassDef(Settings,1);
   
   private:
+
+    /** 
+     * @brief Some of the logic from Anita moved to here to make Settings const correct
+     */
+    void setNrxPhiAndNantennasFromWhich();
+    
     typedef std::map<TString, TString> kvpMap;
 
     kvpMap keyValuePairStrings; //< The raw key value pairs as string, from parsing the config file
-    Bool_t newKvpPassesSanityChecks(const TString& key, const TString& value, const char* fileName, int lineNum);
-    void complainAboutNotFindingKey(const TString& key);
-    void parseValueArray(const char* valueString, std::vector<int>& values);
-    void parseValueArray(const char* valueString, std::vector<float>& values);
-    void parseValueArray(const char* valueString, std::vector<double>& values);
+    Bool_t newKvpPassesSanityChecks(const TString& key, const TString& value, const char* fileName, int lineNum) const;
+    void complainAboutNotFindingKey(const TString& key) const;
+    void parseValueArray(const char* valueString, std::vector<int>& values) const;
+    void parseValueArray(const char* valueString, std::vector<float>& values) const;
+    void parseValueArray(const char* valueString, std::vector<double>& values) const;
     void parseSettingsFile(const char* fileName, std::ofstream& outputFile);
 
     std::vector<double> efficiencyScanOffAxisAttenuations;

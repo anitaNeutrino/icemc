@@ -22,7 +22,6 @@
 class TH1F;
 
 namespace icemc{
-  class Settings;
   class Primaries;
   class Interaction;
   class IceModel;
@@ -77,7 +76,7 @@ namespace icemc{
     /** \brief GetTauWeight is the function that will calculate the probability that a tau neutrino will interact along its path through the earth,and the tau will survive the rest of the journey and decay in the ice. This probability is calculated for final energies from 10^15.5 to the energy of the neutrino.
      */
 
-    double GetTauWeight(Primaries *primary1, Settings *settings1, IceModel*antarctica1, Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered); // 1 or 0
+    double GetTauWeight(Primaries *primary1, const Settings *settings1, IceModel*antarctica1, Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered); // 1 or 0
     // int& mantle_entered, // 1 or 0
     // int& core_entered);//include secondaries?
  

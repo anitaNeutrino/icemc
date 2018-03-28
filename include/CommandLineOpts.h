@@ -2,29 +2,27 @@
 #define ICEMC_COMMAND_LINE_OPTIONS_H
 
 #include <string>
+#include "Settings.h"
 
 namespace icemc {
 
   /** 
    * @class CommandLineOpts 
-   * @brief A simple command line option parser.
+   * @brief A simple command line option parser, updates icemc::Settings
    * 
-   * Parses a default set of command line arguments for icemc executables
-   * Useage: In your executable, do
    * 
-   * int main(int argc, char* argv[]){
-   *   icemc::CommandLineOpts args(argc, argv);
-   *   args.run; // this is the run that was passed 
-   * 
+   * The job of this class is to parse the command line arguments to an icemc 
+   * executable and update the icemc::Settings appropriately.
+   * Also populates its public members with the things it found.
    */
   class CommandLineOpts {
 
   public:
-    CommandLineOpts(int argc, char* argv[]);
+    CommandLineOpts(int argc, char* argv[], icemc::Settings& settings);
     std::string executable; ///< derived from argv[0]
     int startNu;
-    int nnu_tmp=0;
-    double exp_tmp=0;    
+    int nnu_tmp;
+    double exp_tmp;
     std::string outputdir;
     std::string input;
     std::string run_num;

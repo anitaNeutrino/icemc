@@ -17,8 +17,8 @@ namespace icemc{
   private:
     
   public:
-    GlobalTrigger(Settings *settings1,Anita *anita1);
-    //  GlobalTrigger(Settings *settings1,Anita *anita1,Balloon* bn1);
+    GlobalTrigger(const Settings *settings1,Anita *anita1);
+    //  GlobalTrigger(const Settings *settings1,Anita *anita1,Balloon* bn1);
     void GetArrivalTimes(int inu,Anita *anita1, const Vector &rf_direction);
   
     // these are not really used now that we bin in frequency, but we keep them anyway.
@@ -99,31 +99,31 @@ namespace icemc{
     // for the nadir studies
     
     // this is L2 and L3 triggers
-    void PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,
+    void PassesTrigger(const Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,
 		       int *thispasses);
-    void PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold,
+    void PassesTrigger(const Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold,
 		       int *thispasses);
 
   
-    void PassesTriggerBasic(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses, int inu);
+    void PassesTriggerBasic(const Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses, int inu);
 
-    void PassesTriggerCoherentSum(Settings *settings1, Anita *anita1, int inu, int *thispasses);
+    void PassesTriggerCoherentSum(const Settings *settings1, Anita *anita1, int inu, int *thispasses);
 
-    void PassesTriggerSummedPower(Settings *settings1,Anita *anita1);
+    void PassesTriggerSummedPower(const Settings *settings1,Anita *anita1);
 
     void PassesTriggerScheme5(Anita *anita1, double this_threshold, int *thispasses);
   
   
-    void L3Trigger(Settings *settings1,Anita *anita1,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int discones_passing,int *l3trigy,
+    void L3Trigger(const Settings *settings1,Anita *anita1,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int discones_passing,int *l3trigy,
 		   int *thispasses);
     
     
-    int GetPhiSector(Settings *settings1,int i,int j); // given trigger layer and index, get phi sector.
+    int GetPhiSector(const Settings *settings1,int i,int j); // given trigger layer and index, get phi sector.
     // for the upper two layers, the phi sector is just j
     // for the nadir layer, the phi sector is 2*j+1
-    void GetAnitaLayerPhiSector(Settings *settings1,int i,int j,int &whichlayer,int &whichphisector);
+    void GetAnitaLayerPhiSector(const Settings *settings1,int i,int j,int &whichlayer,int &whichphisector);
     void FillInNadir(Anita *anita1,int *ant);
-    void FillInNadir(Settings *settings1,Anita *anita1,int ant);
+    void FillInNadir(const Settings *settings1,Anita *anita1,int ant);
     
     // The following functions are related to the coherent-sum trigger
     vector < vector < vector <double> > > volts_rx_rfcm_trigger; // This is used for easy access to the waveforms of specific phi sectors and layers, and it combines physical layers into their trigger layer.

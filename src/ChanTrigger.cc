@@ -97,7 +97,7 @@ void icemc::ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
 }
 
 
-void icemc::ChanTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
+void icemc::ChanTrigger::WhichBandsPass(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
     
 
   if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==9) {
@@ -147,7 +147,7 @@ void icemc::ChanTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, Glob
  *
  *
  */
-void icemc::ChanTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, icemc::GlobalTrigger *globaltrig1, icemc::Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){
+void icemc::ChanTrigger::WhichBandsPassTrigger1(const Settings *settings1, Anita *anita1, icemc::GlobalTrigger *globaltrig1, icemc::Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){
 
   double volts_thischannel;
   double energy_thischannel;
@@ -329,7 +329,7 @@ void icemc::ChanTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anit
  *
  *
  */
-void icemc::ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
+void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
   
   double psignal[2][5][Anita::NFOUR];
   
@@ -577,7 +577,7 @@ void icemc::ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anit
 
 
 
-void icemc::ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]){
+void icemc::ChanTrigger::DiodeConvolution(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]){
 
   int tempChansPassing[5]={0,0,0,0,0};
 
@@ -755,7 +755,7 @@ void icemc::ChanTrigger::InitializeEachBand(Anita *anita1)
 
 
 
-void icemc::ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal){
+void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal){
   
   e_component=0;
   h_component=0;
@@ -879,7 +879,7 @@ void icemc::ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Ba
   
 }
 
-void icemc::ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant, Balloon *bn1){
+void icemc::ChanTrigger::TriggerPath(const Settings *settings1, Anita *anita1, int ant, Balloon *bn1){
 
 
   double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
@@ -1013,7 +1013,7 @@ void icemc::ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant
 
 
 
-void icemc::ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Balloon *bn1)
+void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1, int ant, Balloon *bn1)
 {
   double vhz_rx_rfcm_e[Anita::NFREQ]; // V/Hz after rx, rfcm
   double vhz_rx_rfcm_h[Anita::NFREQ];
@@ -1154,7 +1154,7 @@ void icemc::ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int a
 
 
 
-void icemc::ChanTrigger::TimeShiftAndSignalFluct(Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
+void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
 {   
   int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
@@ -1208,7 +1208,7 @@ double icemc::ChanTrigger::FindPeak(double *waveform,int n) {
 }
 
 
-void icemc::ChanTrigger::addToChannelSums(Settings *settings1,Anita *anita1,int ibw, int k) {
+void icemc::ChanTrigger::addToChannelSums(const Settings *settings1,Anita *anita1,int ibw, int k) {
     
   double term_e= v_banding_rfcm[0][ibw][k]*    // for the integral over e-field
     (settings1->BW/(double)Anita::NFREQ/1.E6); // width of a frequency bin
@@ -1482,7 +1482,7 @@ void icemc::ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][A
   
 
 
-double icemc::ChanTrigger::GetNoise(Settings *settings1,double altitude_bn,double geoid,double theta_zenith,double bw,double temp) {
+double icemc::ChanTrigger::GetNoise(const Settings *settings1,double altitude_bn,double geoid,double theta_zenith,double bw,double temp) {
     
   int NSTEPS=1000;
   //  double VSKY=150;
@@ -1537,7 +1537,7 @@ double icemc::ChanTrigger::GetNoise(Settings *settings1,double altitude_bn,doubl
 
 
 
-void icemc::ChanTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]) {
+void icemc::ChanTrigger::GetThresholds(const Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]) {
     
   if (ilayer==3 && settings1->DISCONES==2) // if it's a nadir layer
     for (int i=0;i<5;i++) {
@@ -1576,7 +1576,7 @@ double icemc::ChanTrigger::applyButterworthFilter(double ff, double ampl, int no
 
 
 #ifdef ANITA_UTIL_EXISTS    
-void icemc::ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
+void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
 
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) y[i]=0;
@@ -1664,7 +1664,7 @@ void icemc::ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anit
   delete graph1;
 }
 
-void icemc::ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol){
+void icemc::ChanTrigger::applyImpulseResponseTrigger(const Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol){
 
   int nPoints = anita1->HALFNFOUR;
   double *x   = anita1->fTimes;

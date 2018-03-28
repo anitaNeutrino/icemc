@@ -60,15 +60,15 @@ namespace icemc {
 		      double nenter,
 		      Vector &nrf2_iceside);
     
-    int TraceRay(Settings *settings1,Anita *anita1,int whichiteration,double n_depth);
+    int TraceRay(const Settings *settings1,Anita *anita1,int whichiteration,double n_depth);
     
     
-    int GetSurfaceNormal(Settings *settings1,IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry);
+    int GetSurfaceNormal(const Settings *settings1,IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry);
     
-    int RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,IceModel *antarctica,double &slopeyangle,int whichtry);
+    int RandomizeSurface(const Settings *settings1,Position rfexit_temp,Vector posnu,IceModel *antarctica,double &slopeyangle,int whichtry);
     
     
-    void GetRFExit(Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry,IceModel *antarctica);
+    void GetRFExit(const Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry,IceModel *antarctica);
     
     //  void WhereDoesItLeave(const Position &posnu,
     //			      const Vector &nnu,Position &r_out);
