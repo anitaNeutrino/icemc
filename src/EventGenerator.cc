@@ -74,8 +74,7 @@ bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_h
  * 
  * @todo properly zero member variables
  */
-icemc::EventGenerator::EventGenerator() : fTauPtr(NULL){
-
+icemc::EventGenerator::EventGenerator() : fNeutrinoPath(NULL), fTauPtr(NULL) {
 
   
 }
@@ -1746,7 +1745,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   tree5->Branch("r_fromballoon", &interaction1->r_fromballoon[0], "r_fromballoon/F");
   // tree5->Branch("theta_in", &theta_in, "theta_in/D");
   // tree5->Branch("lat_in", &lat_in, "lat_in/D");
-  tree5->Branch("neutrinoPath", &np);
+  tree5->Branch("neutrinoPath", &fNeutrinoPath);
 
   TTree* tree6 = new TTree("h6000", "h6000"); // tree6 filled for neutrinos that enter S of 60 deg S latitude.
   tree6->Branch("volts_rx_0", &volts_rx_0, "volts_rx_0/D");
@@ -1762,7 +1761,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   tree6->Branch("whichray", &whichray, "whichray/I");
   tree6->Branch("mybeta", &mybeta, "mybeta/D");
   tree6->Branch("longitude", &longitude_this, "longitude/D");
-  tree6->Branch("neutrinoPath", &np);
+  tree6->Branch("neutrinoPath", &fNeutrinoPath);
 
   TTree* tree6b = new TTree("h6001", "h6001"); // tree6b filled for the closest antenna to the interaction
   tree6b->Branch("bwslice_vnoise", bwslice_vnoise_thislayer, "bwslice_vnoise_thislayer[4]/D");
@@ -1831,7 +1830,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // // this is the total weight - the one you want to use!
   // finaltree->Branch("weight", &weight, "weight/D");
   // finaltree->Branch("logweight", &logweight, "logweight/D");
-  finaltree->Branch("neutrinoPath", &np);
+  finaltree->Branch("neutrinoPath", &fNeutrinoPath);
   finaltree->Branch("posnu", &posnu_array, "posnu_array[3]/D");
   finaltree->Branch("costheta_nutraject", &costheta_nutraject2, "costheta_nutraject/D");
   finaltree->Branch("chord_kgm2_ice",  &chord_kgm2_ice2, "chord_kgm2_ice/D");
@@ -2047,7 +2046,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   tree16->Branch("ptau", &ptau, "ptau/D");
   tree16->Branch("taulength", &taulength, "taulength/D");
   // tree16->Branch("weight1", &weight1, "weight1/D");
-  tree16->Branch("neutrinoPath", &np);
+  tree16->Branch("neutrinoPath", &fNeutrinoPath);
   tree16->Branch("emfrac", &emfrac, "emfrac/D");
   tree16->Branch("hadfrac", &hadfrac, "hadfrac/D");
   tree16->Branch("nuentrancelength", &nuentrancelength, "nuentrancelength/D");
@@ -2092,7 +2091,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   tree1->Branch("passes_thisevent", &passes_thisevent, "passes_thisevent/I");
   tree1->Branch("igps", &bn1->igps, "igps/I");
   // tree1->Branch("weight", &weight, "weight/D");
-  tree1->Branch("neutrinoPath", &np);
+  tree1->Branch("neutrinoPath", &fNeutrinoPath);
   tree1->Branch("r_exit2bn", &interaction1->r_exit2bn, "r_exit2bn/D");
   tree1->Branch("bn1->igps", &bn1->igps, "bn1->igps/I");
 
@@ -2127,6 +2126,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   UInt_t eventNumber;
 
+  // for branch setting...
+  fNeutrinoPath = new NeutrinoPath();  
 
 #ifdef ANITA_UTIL_EXISTS
 
@@ -2136,14 +2137,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   TTree* eventTree = new TTree("eventTree", "eventTree");
   eventTree->Branch("event",             &realEvPtr           );
   // eventTree->Branch("run",               clOpts.run_no,   "run/I"   );
-  eventTree->Branch("weight",            &np.weight,   "weight/D");
+  eventTree->Branch("weight",            &fNeutrinoPath->weight,   "weight/D");
 
   outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaHeadFile"+clOpts.run_num+".root";
   TFile* anitafileHead = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
   TTree* headTree = new TTree("headTree", "headTree");
   headTree->Branch("header",  &rawHeaderPtr           );
-  headTree->Branch("weight",  &np.weight,      "weight/D");
+  headTree->Branch("weight",  &fNeutrinoPath->weight,      "weight/D");
 
   outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaGpsFile"+clOpts.run_num+".root";
   TFile* anitafileGps = new TFile(outputAnitaFile.c_str(), "RECREATE");
@@ -2151,7 +2152,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   TTree* adu5PatTree = new TTree("adu5PatTree", "adu5PatTree");
   adu5PatTree->Branch("pat",          &Adu5PatPtr                   );
   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
-  adu5PatTree->Branch("weight",       &np.weight,       "weight/D"     );
+  adu5PatTree->Branch("weight",       &fNeutrinoPath->weight,       "weight/D"     );
 
 #ifdef ANITA3_EVENTREADER
 
@@ -2365,8 +2366,16 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   int antNum;  
 
-  // begin looping over NNU neutrinos doing the things
+  /**
+   * Main analysis loop over generated neutrinos
+   * 
+   */
   for (inu = clOpts.startNu; inu < NNU; inu++) {
+
+    // generate a new one for each loop...
+    // is there a more elegant way to do this?
+    fNeutrinoPath->reset();
+    
 
     if (NNU >= 100) {
       if (inu % (NNU / 100) == 0)
@@ -2405,7 +2414,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, &settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
         // ierr=0 if the energy is too low for the parameterization
         // ierr=1 otherwise
-        np.len_int=1.0/(sigma*sig1->RHOH20*(1./constants::M_NUCL)*1000); // in km (why interaction length in water?) //EH
+        fNeutrinoPath->len_int=1.0/(sigma*sig1->RHOH20*(1./constants::M_NUCL)*1000); // in km (why interaction length in water?) //EH
       }// end IsSpectrum
       n_interactions=1;
       count_pass=0;
@@ -2626,7 +2635,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
         taus1->GetTauWeight(primary1,  &settings1,  antarctica,  interaction1,  pnu,  1,  ptauf, crust_entered);
 
-        antarctica->Getchord(&settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, np.nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
+        antarctica->Getchord(&settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, fNeutrinoPath->nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
 
         nutauweight = interaction1->weight_nu_prob;
         tauweight = taus1->weight_tau_prob;
@@ -2671,12 +2680,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // plots for debugging.
       if (interaction1->nuflavor=="numu" && bn1->WHICHPATH != 3 && !settings1.ONLYFINAL && settings1.HIST==1 && fraction_sec_muons->GetEntries()<settings1.HIST_MAX_ENTRIES) {
-        fraction_sec_muons->Fill(emfrac+hadfrac, np.weight);
+        fraction_sec_muons->Fill(emfrac+hadfrac, fNeutrinoPath->weight);
         n_sec_muons->Fill((double)n_interactions);
       }
 
       if (interaction1->nuflavor=="nutau" && bn1->WHICHPATH != 3 && !settings1.ONLYFINAL && settings1.HIST==1 && fraction_sec_taus->GetEntries()<settings1.HIST_MAX_ENTRIES) {
-        fraction_sec_taus->Fill(emfrac+hadfrac, np.weight);
+        fraction_sec_taus->Fill(emfrac+hadfrac, fNeutrinoPath->weight);
         n_sec_taus->Fill((double)n_interactions);
       }
 
@@ -2841,8 +2850,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // theta of nu entrance point,  in earth frame
       // and latitude
-      np.theta_in=interaction1->r_in.Theta();
-      np.lat_in=-90+np.theta_in*constants::DEGRAD;
+      fNeutrinoPath->theta_in=interaction1->r_in.Theta();
+      fNeutrinoPath->lat_in=-90+fNeutrinoPath->theta_in*constants::DEGRAD;
 
       // find quantities relevent for studying impact of atmosphere
       // for black hole studies
@@ -3805,7 +3814,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 
           if (settings1.TRIGTYPE==0 && ifold==1 && count_pass>=settings1.NFOLD) { //added djg --line below fills "direct" voltage output file
-            al_voltages_direct<<"0 0 0"<<"   "<<"    "<<globaltrig1->volts_original[1][0][0]<<"    "<<(globaltrig1->volts_original[0][0][0]/sqrt(2.))<<"     "<<globaltrig1->volts_original[1][0][1]<<"     "<<globaltrig1->volts_original[0][0][1]<<"      "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"  "<<np.weight<<endl;
+            al_voltages_direct<<"0 0 0"<<"   "<<"    "<<globaltrig1->volts_original[1][0][0]<<"    "<<(globaltrig1->volts_original[0][0][0]/sqrt(2.))<<"     "<<globaltrig1->volts_original[1][0][1]<<"     "<<globaltrig1->volts_original[0][0][1]<<"      "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"  "<<fNeutrinoPath->weight<<endl;
           }
           delete chantrig1;
         } //loop through the phi-fold antennas
@@ -3865,26 +3874,26 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       //this gets the weight due to stopping in earth
       //returns 0 if chord<1m
 
-      if (!antarctica->Getchord(&settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, np.nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered)){
+      if (!antarctica->Getchord(&settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, fNeutrinoPath->nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered)){
         interaction1->weight_nu_prob = -1.;
       }
 
       if(tauweighttrigger==1){
-        np.weight1=interaction1->weight_nu_prob + taus1->weight_tau_prob;
+        fNeutrinoPath->weight1=interaction1->weight_nu_prob + taus1->weight_tau_prob;
       }
       else{
-        np.weight1=interaction1->weight_nu_prob;
+        fNeutrinoPath->weight1=interaction1->weight_nu_prob;
       }
 
-      np.weight = np.weight1 / interaction1->dnutries * settings1.SIGMA_FACTOR;  // total weight is the earth absorption factor
+      fNeutrinoPath->weight = fNeutrinoPath->weight1 / interaction1->dnutries * settings1.SIGMA_FACTOR;  // total weight is the earth absorption factor
       // divided by the factor accounting for the fact that we only chose our interaction point within the horizon of the balloon
       // then multiply by the cross section multiplier,  to account for the fact that we get more interactions when the cross section is higher
-      if (np.weight<CUTONWEIGHTS) {
+      if (fNeutrinoPath->weight<CUTONWEIGHTS) {
         delete globaltrig1;
         continue;
       }
 
-      eventsfound_beforetrigger+=np.weight;
+      eventsfound_beforetrigger+=fNeutrinoPath->weight;
 
       //////////////////////////////////////
       //       EVALUATE GLOBAL TRIGGER    //
@@ -3946,7 +3955,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
         // this gets the weight due to stopping in earth
         // returns 0 if chord<1m
-        if (tautrigger==1 || antarctica->Getchord(&settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, np.nearthlayers, myair, total_kgm2, crust_entered, mantle_entered, core_entered)) {
+        if (tautrigger==1 || antarctica->Getchord(&settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, fNeutrinoPath->nearthlayers, myair, total_kgm2, crust_entered, mantle_entered, core_entered)) {
           //cout << "passes chord.\n";
           if (nupathtree->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
             nupathtree->Fill();
@@ -3956,18 +3965,18 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
           // divide phase space factor into weight1
           if(tauweighttrigger==1){
-            np.weight_prob=interaction1->weight_nu_prob + taus1->weight_tau_prob;
+            fNeutrinoPath->weight_prob=interaction1->weight_nu_prob + taus1->weight_tau_prob;
           }
           else
-            np.weight_prob=interaction1->weight_nu_prob;
+            fNeutrinoPath->weight_prob=interaction1->weight_nu_prob;
 
-          np.weight1=interaction1->weight_nu;
-          np.weight=np.weight1/interaction1->dnutries*settings1.SIGMA_FACTOR;
-          np.weight_prob=np.weight_prob/interaction1->dnutries*settings1.SIGMA_FACTOR;
+          fNeutrinoPath->weight1=interaction1->weight_nu;
+          fNeutrinoPath->weight=fNeutrinoPath->weight1/interaction1->dnutries*settings1.SIGMA_FACTOR;
+          fNeutrinoPath->weight_prob=fNeutrinoPath->weight_prob/interaction1->dnutries*settings1.SIGMA_FACTOR;
 
-          np.pieceofkm2sr=np.weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*constants::sr/(double)NNU/np.len_int;
+          fNeutrinoPath->pieceofkm2sr=fNeutrinoPath->weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*constants::sr/(double)NNU/fNeutrinoPath->len_int;
           if (h10->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST)
-            h10->Fill(hitangle_e_all[0], np.weight);
+            h10->Fill(hitangle_e_all[0], fNeutrinoPath->weight);
 //cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<"   screenNpts="<<panel1->GetNvalidPoints()<< ":  vmmhz[0] = "<<panel1->GetVmmhz_freq(0)<<" : trans pol "<< panel1->GetPol(0)<<" : IncAngle "<<panel1->GetIncidenceAngle(0)*180./PI<< " : TransAngle "<<panel1->GetTransmissionAngle(0)*180./PI<<" : Tslappy "<<panel1->GetTperpendicular_polPerpendicular(0)<<" : Tpokey "<<panel1->GetTparallel_polParallel(0)<< endl;
 //cerr<<bn1->r_bn.Lat()<<"  "<<-90.+bn1->r_bn.Lat()<<endl;
 //cerr<<interaction1->posnu.Lon()<<"  "<<-90.+interaction1->posnu.Lat()<<endl;
@@ -3978,7 +3987,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 //cerr<<ray1->rfexit[2].Distance(bn1->r_bn)<<endl;
 //cerr<<interaction1->posnu.Distance(bn1->r_bn)<<endl;
           // log of weight and chord for plotting
-          np.logweight=log10(np.weight);
+          fNeutrinoPath->logweight=log10(fNeutrinoPath->weight);
           interaction1->logchord=log10(interaction1->chord);
 //        cerr<<"-> We got a live one! "<<nunum<<"   Nscreenvalid: "<<panel1->GetNvalidPoints()<<"   weight: "<<weight<<endl;
           // if neutrino travels more than one meter in ice
@@ -3989,42 +3998,42 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             // for taus
             // add to tally of neutrinos found,  weighted.
             if(sec1->secondbang && sec1->interestedintaus) {
-              eventsfound_nfb+=np.weight;
-              index_weights=(int)(((np.logweight-MIN_LOGWEIGHT)/(MAX_LOGWEIGHT-MIN_LOGWEIGHT))*(double)NBINS);
+              eventsfound_nfb+=fNeutrinoPath->weight;
+              index_weights=(int)(((fNeutrinoPath->logweight-MIN_LOGWEIGHT)/(MAX_LOGWEIGHT-MIN_LOGWEIGHT))*(double)NBINS);
               eventsfound_nfb_binned[index_weights]++;
               if (tree16->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
                 tree16->Fill();
             }//end if secondbang & interestedintaus
             else {
               allcuts[whichray]++;
-              allcuts_weighted[whichray]+=np.weight;
+              allcuts_weighted[whichray]+=fNeutrinoPath->weight;
               if (thispasses[0] && thispasses[1]) {
-                allcuts_weighted_polarization[2]+=np.weight;
+                allcuts_weighted_polarization[2]+=fNeutrinoPath->weight;
               } else if (thispasses[0]){
-                allcuts_weighted_polarization[0]+=np.weight;
+                allcuts_weighted_polarization[0]+=fNeutrinoPath->weight;
               } else if (thispasses[1]){
-                allcuts_weighted_polarization[1]+=np.weight;
+                allcuts_weighted_polarization[1]+=fNeutrinoPath->weight;
               }
-              anita1->weight_inanita=np.weight;
+              anita1->weight_inanita=fNeutrinoPath->weight;
 
               if (h1mybeta->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
-                h1mybeta -> Fill(mybeta, np.weight); //get the angle distribution of mybeta
+                h1mybeta -> Fill(mybeta, fNeutrinoPath->weight); //get the angle distribution of mybeta
 
-              eventsfound+=np.weight; // counting events that pass,  weighted.
-              eventsfound_prob+=np.weight_prob; // counting events that pass,  probabilities.
+              eventsfound+=fNeutrinoPath->weight; // counting events that pass,  weighted.
+              eventsfound_prob+=fNeutrinoPath->weight_prob; // counting events that pass,  probabilities.
               if (cosalpha>0)
-                eventsfound_belowhorizon+=np.weight;
+                eventsfound_belowhorizon+=fNeutrinoPath->weight;
 
               count1->npass[whichray]++;  // counting events that pass,  unweighted.
               // for calculating errors on sensitivity
               // need to find how many events as a function of weight
               // here,  we find how to index weight
-              if (np.logweight<MIN_LOGWEIGHT)  // underflows,  set to 0th bin
+              if (fNeutrinoPath->logweight<MIN_LOGWEIGHT)  // underflows,  set to 0th bin
                 index_weights=0;
-              else if (np.logweight>MAX_LOGWEIGHT) // overflows,  set to last bin
+              else if (fNeutrinoPath->logweight>MAX_LOGWEIGHT) // overflows,  set to last bin
                 index_weights=NBINS-1;
               else // which index weight corresponds to.
-                index_weights=(int)(((np.logweight-MIN_LOGWEIGHT)/(MAX_LOGWEIGHT-MIN_LOGWEIGHT))*(double)NBINS);
+                index_weights=(int)(((fNeutrinoPath->logweight-MIN_LOGWEIGHT)/(MAX_LOGWEIGHT-MIN_LOGWEIGHT))*(double)NBINS);
 
               // count number of events that pass,  binned in weight
               if (index_weights<NBINS)
@@ -4032,27 +4041,27 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
               // number of events in a ring at distance from balloon
               if (index_distance<NBINS_DISTANCE)
-                eventsfound_binned_distance[index_distance]+= np.weight;
+                eventsfound_binned_distance[index_distance]+= fNeutrinoPath->weight;
 
               // same,  now binned in weight,  for calculating errors
               if (index_distance<NBINS_DISTANCE && index_weights<NBINS)
                 eventsfound_binned_distance_forerror[index_distance][index_weights]++;
               // for debugging
-              if (np.logweight>-3)
-                eventsfound_weightgt01+=np.weight;
+              if (fNeutrinoPath->logweight>-3)
+                eventsfound_weightgt01+=fNeutrinoPath->weight;
 
               // how many events just pass through crust,  for same purpose.
-              if (np.nearthlayers==1)
-                eventsfound_crust+=np.weight;
+              if (fNeutrinoPath->nearthlayers==1)
+                eventsfound_crust+=fNeutrinoPath->weight;
 
               if (h1mybeta->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1) {
-                h1mybeta -> Fill(mybeta, np.weight);
-                h1mytheta -> Fill(mytheta, np.weight);//fill mytheta
+                h1mybeta -> Fill(mybeta, fNeutrinoPath->weight);
+                h1mytheta -> Fill(mytheta, fNeutrinoPath->weight);//fill mytheta
               }
             }//end else secondbang & interestedintaus
 
             //for plotting events distribution map only
-            if(np.weight>0.0001){
+            if(fNeutrinoPath->weight>0.0001){
               double int_lon, int_lat;
               int event_e_coord=0, event_n_coord=0;
               float event_e, event_n;
@@ -4072,14 +4081,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             offaxis=(double)fabs(viewangle-sig1->changle);
             nsigma_offaxis=offaxis/deltheta_had_max;
 
-            hundogaintoheight_e->Fill(undogaintoheight_e, np.weight);
-            hundogaintoheight_h->Fill(undogaintoheight_h, np.weight);
-            rec_diff->Fill((rec_efield-true_efield)/true_efield, np.weight);
-            rec_diff0->Fill((rec_efield_array[0]-true_efield_array[0])/true_efield_array[0], np.weight);
-            rec_diff1->Fill((rec_efield_array[1]-true_efield_array[1])/true_efield_array[1], np.weight);
-            rec_diff2->Fill((rec_efield_array[2]-true_efield_array[2])/true_efield_array[2], np.weight);
-            rec_diff3->Fill((rec_efield_array[3]-true_efield_array[3])/true_efield_array[3], np.weight);
-            recsum_diff->Fill((rec_efield_array[0]+rec_efield_array[1]+rec_efield_array[2]+rec_efield_array[3]-true_efield)/true_efield, np.weight);
+            hundogaintoheight_e->Fill(undogaintoheight_e, fNeutrinoPath->weight);
+            hundogaintoheight_h->Fill(undogaintoheight_h, fNeutrinoPath->weight);
+            rec_diff->Fill((rec_efield-true_efield)/true_efield, fNeutrinoPath->weight);
+            rec_diff0->Fill((rec_efield_array[0]-true_efield_array[0])/true_efield_array[0], fNeutrinoPath->weight);
+            rec_diff1->Fill((rec_efield_array[1]-true_efield_array[1])/true_efield_array[1], fNeutrinoPath->weight);
+            rec_diff2->Fill((rec_efield_array[2]-true_efield_array[2])/true_efield_array[2], fNeutrinoPath->weight);
+            rec_diff3->Fill((rec_efield_array[3]-true_efield_array[3])/true_efield_array[3], fNeutrinoPath->weight);
+            recsum_diff->Fill((rec_efield_array[0]+rec_efield_array[1]+rec_efield_array[2]+rec_efield_array[3]-true_efield)/true_efield, fNeutrinoPath->weight);
 
             sourceLon = ray1->rfexit[2].Lon() - 180;
             sourceLat = ray1->rfexit[2].Lat() - 90;
@@ -4134,7 +4143,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               sourceMag = ray1->rfexit[2].Mag();
 
               finaltree->Fill();
-              count1->IncrementWeights_r_in(interaction1->r_in, np.weight);
+              count1->IncrementWeights_r_in(interaction1->r_in, fNeutrinoPath->weight);
             } //end if HIST & HISTMAXENTRIES
 
 #ifdef ANITA_UTIL_EXISTS
@@ -4249,7 +4258,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             truthEvPtr->sourceLon        = sourceLon;
             truthEvPtr->sourceLat        = sourceLat;
             truthEvPtr->sourceAlt        = sourceAlt;
-            truthEvPtr->weight           = np.weight;
+            truthEvPtr->weight           = fNeutrinoPath->weight;
             for (int i=0;i<3;i++){
               truthEvPtr->balloonPos[i]  = bn1->r_bn[i];
               truthEvPtr->balloonDir[i]  = bn1->n_bn[i];
@@ -4341,7 +4350,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             delete Adu5PatPtr;
 #endif
 
-            sum_weights+=np.weight;
+            sum_weights+=fNeutrinoPath->weight;
             neutrinos_passing_all_cuts++;
             times_crust_entered_det+=crust_entered;  //Increment counter for neutrino numbers in each earth layer - passing neutrinos
             times_mantle_entered_det+=mantle_entered;
@@ -4353,8 +4362,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
             // sample first 1000 events that pass to see the distribution of weights
             if (settings1.HIST && !settings1.ONLYFINAL && sampleweights->GetEntries()<settings1.HIST_MAX_ENTRIES) {
-              if (np.weight>1.E-6)
-                sampleweights->Fill(log10(np.weight));
+              if (fNeutrinoPath->weight>1.E-6)
+                sampleweights->Fill(log10(fNeutrinoPath->weight));
               else
                 sampleweights->Fill(-6.);
 
@@ -4382,20 +4391,20 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             }//end if HIST & ONLYFINAL & sampleweights HISTMAXENTRIES
 
             // outputs to text file variables relevant to sky map.
-            forbrian << interaction1->costheta_nutraject << " " << n_nutraject_ontheground.Phi() << " " << bn1->phi_bn << " " << np.logweight << "\n";
+            forbrian << interaction1->costheta_nutraject << " " << n_nutraject_ontheground.Phi() << " " << bn1->phi_bn << " " << fNeutrinoPath->logweight << "\n";
             // incrementing by flavor
             // also bin in weight for error calculation.
             if (interaction1->nuflavor=="nue") {
-              sum[0]+=np.weight;
+              sum[0]+=fNeutrinoPath->weight;
               eventsfound_binned_e[index_weights]++;
             } //if
             if (interaction1->nuflavor=="numu") {
-              sum[1]+=np.weight;
+              sum[1]+=fNeutrinoPath->weight;
               eventsfound_binned_mu[index_weights]++;
             } //if
             if(!sec1->secondbang || !sec1->interestedintaus) {
               if (interaction1->nuflavor=="nutau") {
-                sum[2]+=np.weight;
+                sum[2]+=fNeutrinoPath->weight;
                 eventsfound_binned_tau[index_weights]++;
               } //if
             } //if
@@ -4457,10 +4466,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // keeping track of intermediate counters,  incrementing by weight1.
       // weight1 was not yet determined when integer counters were incremented.
       if (chanceinhell2){
-        count_chanceinhell2_w += np.weight;
+        count_chanceinhell2_w += fNeutrinoPath->weight;
       }
       if (passestrigger){
-        count_passestrigger_w += np.weight;
+        count_passestrigger_w += fNeutrinoPath->weight;
       }
       volume_thishorizon=antarctica->volume_inhorizon[bn1->Getibnposition()]/1.E9;
 
@@ -4624,7 +4633,5 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   delete anita1;
   return;
-
-
 }
 

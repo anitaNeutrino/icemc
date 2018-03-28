@@ -137,7 +137,7 @@ namespace icemc {
     // double logweight=0.;// log of the previous number
     // double len_int=0;// interaction length in m
     // double pieceofkm2sr=0; // Use this for making plots comparing different cross sections.  The integral of a plot from a run will be the total Area*sr of the detector.  That way it is proportional to the cross section and the integral is something meaningful to people.
-    NeutrinoPath np;
+    NeutrinoPath* fNeutrinoPath;
 
     double CUTONWEIGHTS=1.E-10; // cut out events with small enough weight that they don't matter,  to save time
 
