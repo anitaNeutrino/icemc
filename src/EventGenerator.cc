@@ -1,52 +1,18 @@
 #include "EventGenerator.h"
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <ctype.h>
-#include <string>
-#include <stdio.h>
-#include <stdlib.h>
-#include <vector>
-#include <array>
-#include <time.h>
-#include "TTreeIndex.h"
-#include "TChain.h"
-// #include "TH1.h"
-// #include "TF1.h"
-#include "TF2.h"
-// #include "TFile.h"
-// #include "TRandom.h"
-// #include "TRandom2.h"
-#include "TTree.h"
-#include "TLegend.h"
-#include "TLine.h"
-#include "TROOT.h"
-#include "TPostScript.h"
-#include "TCanvas.h"
-#include "TH2F.h"
-#include "TText.h"
-#include "TProfile.h"
-#include "TGraphErrors.h"
+// system includes
+#include "signal.h"
+
+// ROOT includes
 #include "TGraphAsymmErrors.h"
 #include "TStyle.h"
-#include "TMath.h"
-#include <unistd.h>
-#include "TVector3.h"
-#include "TRotation.h"
-#include "TSpline.h"
-#include "Math/InterpolationTypes.h"
-#include "Math/Interpolator.h"
-#include "signal.h"
+
+// icemc includes
 #include "IcemcRootOutput.h"
-#include <cmath>
-
 #include "IcemcStatistics.h"
-
 #include "Constants.h"
 #include "Settings.h"
 #include "position.hh"
-
 #include "earthmodel.hh"
 #include "Tools.h"
 #include "vector.hh"
@@ -67,18 +33,8 @@
 #include "SimulatedSignal.h"
 #include "EnvironmentVariable.h"
 
-#include <string>
-#include <sstream>
 
-#if __cplusplus > 199711L
-#define isnan std::isnan 
-#include <type_traits>
-#endif
-
-#include <typeinfo>
-
-#include <fenv.h> 
-
+// ANITA software framework includes
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
 #include "AnitaGeomTool.h"
@@ -95,11 +51,28 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 #endif
 #endif
 
+#include <string>
+#include <sstream>
+
+#if __cplusplus > 199711L
+#define isnan std::isnan 
+#include <type_traits>
+#endif
+
+#include <typeinfo>
+#include <fenv.h> 
+
+
+
 std::string ICEMC_SRC_DIR = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
+
+
 icemc::EventGenerator::EventGenerator() : fTauPtr(NULL){
 
+
+  
 }
 
 
@@ -2010,7 +1983,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   double freq[Anita::NFREQ];
 
   TTree* summarytree = new TTree("summarytree", "summarytree"); // finaltree filled for all events that pass
-  // summarytree->Branch("NNU", settings1.NNU, "NNU/I");
+  // summarytree->Branch("NNU", (int*)&settings1.NNU, "NNU/I");
+  summarytree->Branch("NNU", const_cast<int*>(&settings1.NNU), "NNU/I");  
   // summarytree->Branch("EXPONENT", settings1.EXPONENT); //, "EXPONENT/D");
   summarytree->Branch("eventsfound_beforetrigger", &eventsfound_beforetrigger, "eventsfound_beforetrigger/D");
   summarytree->Branch("rms_rfcm_e", &rms_rfcm_e, "rms_rfcm_e/D");
