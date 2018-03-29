@@ -285,11 +285,13 @@ void icemc::Settings::Initialize() {
 
 
 void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput){
-				 // Anita* anita1, Secondaries* sec1, Signal* sig1,
-				 // Balloon* bn1, Ray* ray1,
-				 // int& NNU, double& RANDOMISEPOL) {
 
   parseSettingsFile(inputFileName, foutput);
+
+
+//################################################################################################
+//# Event input output
+//################################################################################################
 
   getSetting("Number of neutrinos", NNU);
   getSetting("Energy exponent", EXPONENT);
@@ -1187,6 +1189,84 @@ void icemc::Settings::getSetting(const char* key, double& value) const {
     value = atof(it->second.Data());
   }
 }
+
+void icemc::Settings::processStrings(const std::string& raw, std::vector<std::string >& processed) const {
+
+  bool stringAccumulation = false;
+  string::const_iterator it = raw.begin();
+
+  // empty the processed vector
+  processed.clear();
+  processed.push_back("");
+
+  while (it != raw.end()){
+    char c = *it++;
+    bool escapedDoubleQuote = false;
+    // we got an escape character...
+    if (c == '\\' && it != raw.end()){
+      // c is now the next char, decide what to do based on that
+      switch (*it++) {
+      case '\\':
+	c = '\\'; // this is just a \, but it needs escaping in this source code
+	break;
+      case 'n' :
+	c = '\n';
+	break;
+      case 't' :
+	c = '\t';
+	break;
+      case '"' :
+	c = '"';
+	escapedDoubleQuote = true;
+	break;
+
+	// Add any other escapes here?
+      default: 
+	break;
+      }
+    }
+
+    // if it's a double quote (that's not escaped)
+    if(c=='"' && !escapedDoubleQuote){
+      // toggle the string accumulation
+      stringAccumulation = !stringAccumulation;
+    }
+    else { // it's a normal character in the string
+
+      // if we're not storing this char, and it's an array delimiter, make a new string
+      if(!stringAccumulation && c==','){
+	processed.push_back("");
+      }
+      // if we're storing, just append it to the string...
+      else if(stringAccumulation){
+	processed.back().append(1, c);
+      }
+    }
+  }
+}
+
+
+void icemc::Settings::getSetting(const char* key, std::string& value) const {
+  std::vector<std::string> tempVec;
+  getSetting(key, tempVec);
+  value = tempVec[0];
+}
+
+
+void icemc::Settings::getSetting(const char* key, std::vector<std::string>& value) const {
+
+  kvpMap::const_iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    complainAboutNotFindingKey(key);
+  }
+  else{
+    // found a match for the key
+    std::string raw = it->second.Data();
+    processStrings(raw, value);
+  }
+}
+
+
 
 void icemc::Settings::getSetting(const char* key, std::vector<int>& valueArray) const {
 

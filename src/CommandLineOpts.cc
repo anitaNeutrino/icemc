@@ -44,7 +44,7 @@ icemc::CommandLineOpts::CommandLineOpts(int argc, char* argv[], Settings& settin
     while ((clswitch = getopt(argc, argv, "ht:i:o:r:n:e:x:")) != EOF && !got_h) { // abort early if -h passed
       switch(clswitch) {
       case 'h':
-	if(!got_h){
+	if(!got_h){ // print help message
 	  got_h = true;
 	}
 	break;
@@ -124,17 +124,17 @@ icemc::CommandLineOpts::CommandLineOpts(int argc, char* argv[], Settings& settin
   
   if(!are_good){ // print a pretty error message
     if(!got_h){
-      fprintf(stderr, "%sError in %s, insufficient command line arguments passed%s\n",  ANSI_COLOR_RED, __PRETTY_FUNCTION__,  ANSI_COLOR_RESET);
+      fprintf(stderr, "%sError in %s, insufficient command line arguments passed%s\n",    ANSI_COLOR_RED, __PRETTY_FUNCTION__,  ANSI_COLOR_RESET);
     }
-    fprintf(stderr, "%s%s basic options:%s\n",                                        ANSI_COLOR_BLUE, executable.c_str(), ANSI_COLOR_RESET);
+    fprintf(stderr, "%s%s basic options:%s\n",                                            ANSI_COLOR_BLUE, executable.c_str(), ANSI_COLOR_RESET);
     fprintf(stderr, "  %s-h%s print help message, do nothing else                  %s\n", ANSI_COLOR_RED, ANSI_COLOR_BLUE, ANSI_COLOR_RESET);
-    fprintf(stderr, "%s%s basic options:%s\n",                                        ANSI_COLOR_BLUE, executable.c_str(), ANSI_COLOR_RESET);
+    fprintf(stderr, "%s%s basic options:%s\n",                                            ANSI_COLOR_BLUE, executable.c_str(), ANSI_COLOR_RESET);
     fprintf(stderr, "  %s-n%s number of neutrinos to simulate                      %s\n", ANSI_COLOR_RED, ANSI_COLOR_BLUE, ANSI_COLOR_RESET);    
     fprintf(stderr, "  %s-r%s run number                                           %s\n", ANSI_COLOR_RED, ANSI_COLOR_BLUE, ANSI_COLOR_RESET);
     fprintf(stderr, "  %s-i%s config input file                                    %s\n", ANSI_COLOR_RED, ANSI_COLOR_BLUE, ANSI_COLOR_RESET);
     fprintf(stderr, "  %s-o%s output directory                                     %s\n", ANSI_COLOR_RED, ANSI_COLOR_BLUE, ANSI_COLOR_RESET);
     fprintf(stderr, "  %s-e%s neutrino exponent (e.g. 20 for 1e20 eV neutrinos)    %s\n", ANSI_COLOR_RED, ANSI_COLOR_BLUE, ANSI_COLOR_RESET);
-    fprintf(stderr, "%s%s advanced options:%s\n",                                     ANSI_COLOR_MAGENTA, executable.c_str(), ANSI_COLOR_RESET);
+    fprintf(stderr, "%s%s advanced options:%s\n",                                         ANSI_COLOR_MAGENTA, executable.c_str(), ANSI_COLOR_RESET);
     fprintf(stderr, "  %s-x%s simulate just one event with this eventNumber        %s\n", ANSI_COLOR_RED, ANSI_COLOR_MAGENTA, ANSI_COLOR_RESET);
     fprintf(stderr, "  %s-t%s trigger threshold                                    %s\n", ANSI_COLOR_RED, ANSI_COLOR_MAGENTA, ANSI_COLOR_RESET);
   }
@@ -145,11 +145,16 @@ icemc::CommandLineOpts::CommandLineOpts(int argc, char* argv[], Settings& settin
     settings.ReadInputs(input.c_str(),  foutput); //, NNU, RANDOMISEPOL);
 
     if (exp_tmp!=0){
+      // notify?
       settings.EXPONENT = exp_tmp;
     }
-    
-    
-    settings.SEED += run_no;
+    if(got_o){
+      // notify?
+      settings.outputDir = outputdir;
+    }
+
+
+    settings.SEED += run_no; // uniquify per-run seed by adding run number
   }
 
 }

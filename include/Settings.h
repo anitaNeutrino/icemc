@@ -42,10 +42,12 @@ namespace icemc{
     void getSetting(const char* key, int& value) const;
     void getSetting(const char* key, float& value) const;
     void getSetting(const char* key, double& value) const;
+    void getSetting(const char* key, std::string& value) const;
 
     void getSetting(const char* key, std::vector<int>& valueArray) const;
     void getSetting(const char* key, std::vector<float>& valueArray) const;
     void getSetting(const char* key, std::vector<double>& valueArray) const;
+    void getSetting(const char* key, std::vector<std::string>& valueArray) const;
 
     void ReadInputs(const char* fileName , std::ofstream &foutput);//,
 		    // Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1,
@@ -268,6 +270,7 @@ namespace icemc{
     void parseValueArray(const char* valueString, std::vector<float>& values) const;
     void parseValueArray(const char* valueString, std::vector<double>& values) const;
     void parseSettingsFile(const char* fileName, std::ofstream& outputFile);
+    void processStrings(const std::string& raw, std::vector<std::string>& processed) const;
 
     std::vector<double> efficiencyScanOffAxisAttenuations;
     std::vector<double> efficiencyScanPhiSectorDelay;
