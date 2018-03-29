@@ -15,10 +15,6 @@ namespace icemc {
 
   class RootOutput {
 
-
-
-
-
     
   public:
     RootOutput();

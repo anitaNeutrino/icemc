@@ -8,7 +8,7 @@
 #include "TStyle.h"
 
 // icemc includes
-#include "IcemcRootOutput.h"
+#include "RootOutput.h"
 #include "Constants.h"
 #include "Settings.h"
 #include "position.hh"
@@ -663,13 +663,6 @@ icemc::Vector icemc::EventGenerator::GetPolarization(const Vector &nnu, const Ve
 }
 //end GetPolarization()
 
-
-// void icemc::EventGenerator::CloseTFile(TFile *hfile) {
-//   hfile->cd();
-//   hfile->Write();
-//   hfile->Close();
-// }
-//end CloseTFile()
 
 
 double icemc::EventGenerator::IsItDoubleBang(double exitlength, double plepton) {

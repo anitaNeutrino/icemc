@@ -148,11 +148,6 @@ icemc::CommandLineOpts::CommandLineOpts(int argc, char* argv[], Settings& settin
       // notify?
       settings.EXPONENT = exp_tmp;
     }
-    if(got_o){
-      // notify?
-      settings.outputDir = outputdir;
-    }
-
 
     settings.SEED += run_no; // uniquify per-run seed by adding run number
   }

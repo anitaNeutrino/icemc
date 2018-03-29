@@ -21,12 +21,12 @@ namespace icemc {
     /** 
      * Get the Poisson error associated from n events, currently valid up to 20
      * 
-     * @param n the number of observed events
+     * @param n the number of observed events,  must be less than #maxPoissonStats
      * @param poissonErrorPlus the error in the positive direction
      * @param poissonErrorMinus the error in the negative direction
      */
     void getPoissonError(int n, double& poissonErrorPlus, double& poissonErrorMinus);
-    
+    const int maxPoissonStats = 20;
 
     // conversion constants
     const double CMINCH=2.54;          // inches to cm

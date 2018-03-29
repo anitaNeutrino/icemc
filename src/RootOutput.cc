@@ -1,4 +1,4 @@
-#include "IcemcRootOutput.h"
+#include "RootOutput.h"
 #include <iostream>
 
 icemc::RootOutput::RootOutput() : fOutputDir(""), fRun(0){

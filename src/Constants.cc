@@ -3,7 +3,7 @@
 
 void icemc::constants::getPoissonError(int n, double& poissonErrorPlus, double& poissonErrorMinus){
 
-  const int np = 21;
+  const int np = maxPoissonStats+1;
   static const double poissonerror_minus[np] = {0.-0.00, 1.-0.37, 2.-0.74, 3.-1.10, 4.-2.34,
 						5.-2.75, 6.-3.82, 7.-4.25, 8.-5.30, 9.-6.33,
 						10.-6.78, 11.-7.81, 12.-8.83, 13.-9.28,
@@ -19,7 +19,8 @@ void icemc::constants::getPoissonError(int n, double& poissonErrorPlus, double& 
     poissonErrorMinus = poissonerror_minus[n];
   }
   else{
-    std::cerr << "Error in " << __PRETTY_FUNCTION__ << ", don't have poisson errors for " << n << " events." << std::endl;
+    std::cerr << "Error in " << __PRETTY_FUNCTION__ << ", only have poisson errors for 0-"
+	      << maxPoissonStats << ", you asked for the Poisson error on " << n << std::endl;
     poissonErrorPlus = -1;
     poissonErrorMinus = -1;
   }

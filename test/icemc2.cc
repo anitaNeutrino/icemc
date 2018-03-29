@@ -37,7 +37,7 @@
 #include "Math/InterpolationTypes.h"
 #include "Math/Interpolator.h"
 #include "signal.h"
-#include "IcemcRootOutput.h"
+#include "RootOutput.h"
 #include <cmath>
 
 
