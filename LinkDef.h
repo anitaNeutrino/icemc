@@ -9,5 +9,6 @@
 #pragma link C++ class icemc::Taumodel+;
 #pragma link C++ class icemc::Settings+;
 #pragma link C++ class icemc::NeutrinoPath+;
+#pragma link C++ class icemc::VoltsRX+;
 #pragma link C++ class icemc::RootOutput::Tree2Output+;
 #endif

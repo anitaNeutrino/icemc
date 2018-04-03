@@ -7,6 +7,7 @@
 #include "Settings.h"
 
 #include "NeutrinoPath.h"
+#include "Constants.h"
 
 class TStyle;
 
@@ -291,7 +292,196 @@ namespace icemc {
     double justNoise_dig[2][48][512];
     double justSignal_dig[2][48][512];
 
-    // functions
+
+    // ray tracing
+    double viewangle=0;
+    double viewangle_temp=0; // angle of ray in ice relative to neutrino direction
+    double viewangle_deg=0; // viewing angle in degrees.
+    double cosviewangle=0; // cosine of viewing angle
+    double offaxis=0; // viewangle-changle,  for plotting
+    double nsigma_offaxis=0;// offaxis,  relative to deltheta_had,  for plotting
+    double theta_threshold=0; // maximum angle you can be away from the cerenkov angle and still have a chance of seeing the event.
+    double theta_threshold_deg=0; // maximum angle you can be away from the cerenkov angle and still have a chance of seeing the event.
+
+    double nsigma_em_threshold=0; //number of sigma away theta_threshold is.
+    double nsigma_had_threshold=0;// just for plotting
+    double slopeyangle=0; // angle between nominal surface normal and the surface normal after slopeyness is applied
+    //-------------------
+    int beyondhorizon = 0;  //Switch tells if neutrino interacts beyond the balloon's horizon. (0: inside horizon,  1: outside horizon)
+
+    // frequency binning
+    double vmmhz1m_max=0; // maximum V/m/MHz at 1m from Jaime (highest frequency)
+    double vmmhz_lowfreq=0.; // V/m/MHz after 1/r,  attenuation at the lowest freq.
+    double bestcase_atten=0;// attenuation factor,  best case
+    double vmmhz1m_fresneledonce=0; // above,  after fresnel factor applied for ice-air interface
+    double vmmhz1m_fresneledtwice=0; // above,  after fresnel factor applied for firn
+    double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
+
+    // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
+    double vmmhz_em[Anita::NFREQ];
+    double vmmhz_min_thatpasses=1000;
+    double vmmhz_min=0;   // minimum of the above array
+    double vmmhz_max=0;                        // maximum of the above array
+    double deltheta_em[Anita::NFREQ], deltheta_had[Anita::NFREQ];     // for ch angular distribution
+    double deltheta_em_max, deltheta_had_max;     // maximum value of above array angular distribution
+    double deltheta_em_mid2, deltheta_had_mid2;     // widths of cones for the mid2 band
+
+    // shower properties
+    double emfrac, hadfrac, sumfrac;               // em and had fractions
+    int n_interactions=1;           // count number of interactions for this event,  including secondaries.
+    double emfrac_db, hadfrac_db;
+    int nuflavorint2;
+    double costheta_nutraject2;
+    double phi_nutraject2;
+    double altitude_int2;
+    int currentint2;
+    double d12;
+    double d22;
+    double dtryingdirection2;
+    double logchord2;
+    double r_fromballoon2;
+    double chord_kgm2_bestcase2;
+    double chord_kgm2_ice2;
+    double weight_bestcase2;
+    double r_exit2bn2;
+    double r_exit2bn_measured2;
+    std::string taudecay;                   // tau decay type: e, m, h
+
+    double elast_y=0;                   // inelasticity
+    // double volts_rx_0=0;              // voltage on an individual antenna,  lc polarization
+    // double volts_rx_1=0;              // voltage on an individual antenna,  rc polarization
+    // double volts_rx_max=0; // max voltage seen on an antenna - just for debugging purposes
+    // double volts_rx_ave=0; // ave voltage seen on an antenna,  among hit antennas
+    // double volts_rx_sum=0; // ave voltage seen on an antenna,  among hit antennas
+
+    // double volts_rx_max_highband; // max voltage seen on an antenna - just for debugging purposes
+    // double volts_rx_max_lowband; // max voltage seen on an antenna - just for debugging purposes
+    // double volts_rx_rfcm_lab_e_all[48][512];
+    // double volts_rx_rfcm_lab_h_all[48][512];
+    // VoltsRX voltsRX;
+
+    // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
+    double e_component=0; // E comp along polarization
+    double h_component=0; // H comp along polarization
+    double n_component=0; // normal comp along polarization
+
+    double chengji = 0;
+    Vector ant_normal; //Vector normal to the face of the antenna
+
+    double hitangle_e, hitangle_h;       // angle the ray hits the antenna wrt e-plane, h-plane
+    double hitangle_e_all[Anita::NANTENNAS_MAX];         // hit angles rel. to e plane stored for each antenna
+    double hitangle_h_all[Anita::NANTENNAS_MAX];         // hit angles rel. to h plane stored for each antenna
+
+    double sigma = 0;                       // for cross section
+    double len_int_kgm2=0;              // interaction length in kg/m^2
+    double eventsfound_db=0; // same,  for double bang
+    double eventsfound_nfb=0; // for taus
+
+    // positions in earth frame
+    double horizcoord=0; // x component of interaction position
+    double vertcoord=0; // y component of interaction position
+
+    double dist_int_bn_2d=0; // 2-d (surface) distance between interaction and balloon
+    double dist_int_bn_2d_chord=0; //chord distance between interaction and balloon (between surface points)
+
+    double viewangle_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // viewing angle for each antenna
+
+    double cosalpha; // angle between nu momentum and surface normal at earth entrance point
+    double mytheta; //!< alpha minus 90 degrees
+    double cosbeta0; // angle between nu momentum and surface normal at interaction point.
+    double mybeta; //!< beta minus 90 degrees
+    double nuexitlength=0; // distance from interaction to where neutrino would leave
+    double nuexitice=0;
+    double nuentrancelength=0; // for taus
+    double taulength=0;  // distance tau travels in ice before decaying
+    double icethickness=0; // for taus
+    double theta_pol_measured; // theta of the polarization as measured at the payload (for now we don't correct for the 10 degree cant)
+
+    double ptaui=0;
+    double ptauf =0;
+    double tauweight=0;
+    double nutauweightsum=0;
+    double tauweightsum=0;
+    double nutauweight=0;
+    int tautrigger=0;
+    int tauweighttrigger=0;
+
+
+    double sourceLon;
+    double sourceAlt;
+    double sourceLat;
+    double sourceMag;
+
+    Vector n_nutraject_ontheground; //direction of the neutrino from the person standing on the ground just below the balloon.
+    Vector n_pol; // direction of polarization
+    Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
+    Vector n_pol_db; // same,  double bangs
+
+    int l3trig[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
+    // For each trigger layer,  which "clumps" pass L2.  16 bit,  16 bit and 8 bit for layers 1 & 2 and nadirs
+    int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
+    //For each trigger layer,  which antennas pass L1.  16 bit,  16 bit and 8 bit and layers 1,  2 and nadirs
+    int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
+
+    // these are declared here so that they can be stuck into trees
+    int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement
+
+    int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement
+
+    int nchannels_triggered = 0; // total number of channels triggered
+    int nchannels_perrx_triggered[48]; // total number of channels triggered
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+    void applyRoughness(const Settings& settings1, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, Signal* sig1, Anita* anita1);
+    
     void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE);
  
     double GetAirDistance(double altitude_bn,  double beta); // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth     // set up array of viewing angles for making plots for seckel

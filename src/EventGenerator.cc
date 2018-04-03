@@ -9,6 +9,7 @@
 
 // icemc includes
 #include "RootOutput.h"
+#include "VoltsRX.h"
 #include "Constants.h"
 #include "Settings.h"
 #include "position.hh"
@@ -74,13 +75,11 @@ bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_h
  * 
  * @todo properly zero member variables
  */
-icemc::EventGenerator::EventGenerator() : fNeutrinoPath(NULL), fTauPtr(NULL) {
+icemc::EventGenerator::EventGenerator() : fNeutrinoPath(NULL), fTauPtr(NULL)
+{
 
   
 }
-
-
-
 
 void icemc::EventGenerator::IntegrateBands(Anita *anita1, int k, Screen *panel1, double *freq, double scalefactor, double *sumsignal) {
   for (int j=0;j<5;j++) {
@@ -91,21 +90,15 @@ void icemc::EventGenerator::IntegrateBands(Anita *anita1, int k, Screen *panel1,
     }
   }
 }
-//end IntegrateBands()
 
 
 void icemc::EventGenerator::Integrate(Anita *anita1, int j, int k, double *vmmhz, double *freq, double scalefactor, double sumsignal) {
   // if this frequency is in this bandwidth slice
-  if (anita1->bwslice_min[j]<=freq[k] && anita1->bwslice_max[j]>freq[k])
+  if (anita1->bwslice_min[j]<=freq[k] && anita1->bwslice_max[j]>freq[k]){
     sumsignal+=vmmhz[k]*(freq[k+1]-freq[k])*scalefactor;
+  }
 }
-//end Integrate()
 
-
-// void WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double altitude_int,  string nuflavor,  string current,  double elast_y,  ofstream &nu_out) {
-
-// }
-//end WriteNeutrinoInfo()
 
 
 void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, Signal *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir) {
@@ -130,7 +123,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
       icemc::constants::getPoissonError(nv, err_plus, err_minus);
       errorup_v_thresh[i]=err_plus/denom_v_thresh[i];
       errordown_v_thresh[i]=err_minus/denom_v_thresh[i];
-      // std::cout << errorup_v_thresh[i] << " " << errordown_v_thresh[i] << endl;
+      // std::cout << errorup_v_thresh[i] << " " << errordown_v_thresh[i] << std::endl;
     }//end if
     if (settings1->WHICH==9 || settings1->WHICH==10){ // Anita-3
       rate_h_thresh[i]=npass_h_thresh[i]/denom_h_thresh[i];
@@ -612,8 +605,8 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
      //   //foutput << "interaction length is " << thislen_int_kgm2/RHOH20 << "\n";
      // } //end for i
     //km3sr=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/RHOH20*sr*nevents/(double)NNU;
-    std::cout << "SUM EVENTS IS " << sum_events << endl;
-    std::cout << "INTEGRAL : " << integral << endl;
+    std::cout << "SUM EVENTS IS " << sum_events << std::endl;
+    std::cout << "INTEGRAL : " << integral << std::endl;
     sum_events*=volume*anita1->LIVETIME*sig1->RHOMEDIUM/sig1->RHOH20*nevents/(double)NNU*constants::sr;
     // sum_events*=anita1->LIVETIME*km3sr*1e9;
     foutput << "volume,  LIVETIME,  sig1->RHOMEDIUM,  RHOH20,  nevents,  NNU,  sr are " << volume << " " << anita1->LIVETIME << " " << sig1->RHOMEDIUM << " " << sig1->RHOH20 << " " << nevents << " " << NNU << " " << constants::sr << "\n";
@@ -786,7 +779,6 @@ void icemc::EventGenerator::IsAbsorbed(double chord_kgm2, double len_int_kgm2, d
 
 
 void icemc::EventGenerator::GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE){
-  //  void GetSmearedIncidentAngle(Vector &specular, Vector &nsurf_rfexit, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE, double theta_inc_smeared) {
   // Smear the incident angle for roughness studies
   specular+=nrf_iceside; // specular is the ray that we got from Snell's law
   Vector parallel_to_surface; // find vector parallel to surface to rotate the vector around
@@ -824,187 +816,144 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
   // in the roughness case we just want to pick a random allowable direction, so let's keep the original sampled neutrino direction from back in IceModel::PickUnbiased() inside Ray::PickRoughnessInteractionPoint()
 
   //if (!settings1->ROUGHNESS){ // no roughness, use the original routine
-    int dont_count=0;
-    double theta_test=0;
-    double vmmhz1m_test=0;
-    double costhetanu1 = 0;
-    double costhetanu2 = 0;
+  int dont_count=0;
+  double theta_test=0;
+  double vmmhz1m_test=0;
+  double costhetanu1 = 0;
+  double costhetanu2 = 0;
 
-    if (bn1->WHICHPATH==3) { //To make a banana plot,  force neutrino direction
-      nnu = interaction1->nnu_banana;
-      theta_threshold = 0; //not used for anything in banana plots
-      return 1;
-    } //if (make banana plot)
+  if (bn1->WHICHPATH==3) { //To make a banana plot,  force neutrino direction
+    nnu = interaction1->nnu_banana;
+    theta_threshold = 0; //not used for anything in banana plots
+    return 1;
+  } //if (make banana plot)
 
-    if (settings1->SKIPCUTS || !settings1->USEDIRECTIONWEIGHTS) { // this is a setting that allows all neutrino angles,  no restriction.  Makes the code slower.
-      costhetanu2=1.;
-      costhetanu1=-1.;
-      theta_threshold=1;
-    } //end if (settings1->SKIPCUTS || !USEWEIGHTS)
-    else {
-      if (emfrac<=1.E-10 && deltheta_had >1.E-10) {
-        if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle)>1)
-          //if (Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle)>1)
-          theta_threshold=-1;
-        else {
-          //theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle))/ALOG2);
-          theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/constants::ALOG2);
-          averaging_thetas1+=theta_threshold;
-        } //else
-        count_inthisloop1++;
-      } //if
+  if (settings1->SKIPCUTS || !settings1->USEDIRECTIONWEIGHTS) { // this is a setting that allows all neutrino angles,  no restriction.  Makes the code slower.
+    costhetanu2=1.;
+    costhetanu1=-1.;
+    theta_threshold=1;
+  } //end if (settings1->SKIPCUTS || !USEWEIGHTS)
+  else {
+    if (emfrac<=1.E-10 && deltheta_had >1.E-10) {
+      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle)>1)
+	//if (Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle)>1)
+	theta_threshold=-1;
+      else {
+	//theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle))/ALOG2);
+	theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/constants::ALOG2);
+	averaging_thetas1+=theta_threshold;
+      } //else
+      count_inthisloop1++;
+    } //if
 
-      if (emfrac>1.E-10 && deltheta_had <=1.E-10) {
-        dont_count++;
-        if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle)>1)
-	  //if (Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle)>1)
-          theta_threshold=-1;
-        else {
-          //theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle))/0.5);
-          theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/0.5);
-          averaging_thetas2+=theta_threshold;
-        } //else
-        count_inthisloop2++;
-      } //if
+    if (emfrac>1.E-10 && deltheta_had <=1.E-10) {
+      dont_count++;
+      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle)>1)
+	//if (Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle)>1)
+	theta_threshold=-1;
+      else {
+	//theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle))/0.5);
+	theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/0.5);
+	averaging_thetas2+=theta_threshold;
+      } //else
+      count_inthisloop2++;
+    } //if
 
 
       //start big code block of ifs/elses
-      if (emfrac>1.E-10 && deltheta_had>1.E-10) {
-	// if the electromagnetic and hadronic components of the shower are both non-negligible
-	// then theta_threshold cannot be determined analytically so we step away from the cerenkov angle in steps equal to 1/2 * deltheta_em
-        if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
-	  //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*heff_max*bw/1.E6)>1.) {
-          theta_threshold=-1.; // if it's not detectable at all
-        }
-        else { // otherwise,  start stepping.
-          theta_test=deltheta_em; // this is the angle we start stepping at
-          vmmhz1m_test=vmmhz1m_max; // this will be the magnitude of the signal at theta_test away from the cerenkov cone.
-          // find the magnitude of the signal at theta_test away from the cerenkov cone.
-          sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
-          //  if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
-          if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
-            theta_threshold=theta_test; // then that is the maximum angular deviation
-          }
-          else { // otherwise increment by the step size and check again.
-            theta_test=1.5*deltheta_em;
-            vmmhz1m_test=vmmhz1m_max;
-            sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
+    if (emfrac>1.E-10 && deltheta_had>1.E-10) {
+      // if the electromagnetic and hadronic components of the shower are both non-negligible
+      // then theta_threshold cannot be determined analytically so we step away from the cerenkov angle in steps equal to 1/2 * deltheta_em
+      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
+	//if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*heff_max*bw/1.E6)>1.) {
+	theta_threshold=-1.; // if it's not detectable at all
+      }
+      else { // otherwise,  start stepping.
+	theta_test=deltheta_em; // this is the angle we start stepping at
+	vmmhz1m_test=vmmhz1m_max; // this will be the magnitude of the signal at theta_test away from the cerenkov cone.
+	// find the magnitude of the signal at theta_test away from the cerenkov cone.
+	sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
+	//  if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
+	if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
+	  theta_threshold=theta_test; // then that is the maximum angular deviation
+	}
+	else { // otherwise increment by the step size and check again.
+	  theta_test=1.5*deltheta_em;
+	  vmmhz1m_test=vmmhz1m_max;
+	  sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
 
-            if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
-	      //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) {
-              theta_threshold=theta_test;
-            }
-            else { // otherwise increment by the step size and check again.
-              theta_test=2*deltheta_em;
-              vmmhz1m_test=vmmhz1m_max;
-              sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
-              //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
-              if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
-                theta_threshold=theta_test;
-              else { // otherwise increment by the step size and check again.
-                theta_test=3*deltheta_em;
-                vmmhz1m_test=vmmhz1m_max;
-                sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
-                //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
+	  if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
+	    //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) {
+	    theta_threshold=theta_test;
+	  }
+	  else { // otherwise increment by the step size and check again.
+	    theta_test=2*deltheta_em;
+	    vmmhz1m_test=vmmhz1m_max;
+	    sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
+	    //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
+	    if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
+	      theta_threshold=theta_test;
+	    else { // otherwise increment by the step size and check again.
+	      theta_test=3*deltheta_em;
+	      vmmhz1m_test=vmmhz1m_max;
+	      sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
+	      //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
 
-                if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
-                  theta_threshold=theta_test;
-                else { // otherwise,  set is the the width of the hadronic component (much wider than the electromagnetic component)
-                  theta_test=deltheta_had;
-                  vmmhz1m_test=vmmhz1m_max;
-                  sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
-                  // if at the hadronic width,  you're below the threshold
-                  if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
-		    //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) // if at the hadronic width,  you're below the threshold
-                    theta_threshold=theta_test; // set theta_threshold
-                  else { // otherwise,  find theta_threshold considering the hadronic component alone.  This is conservative-- an electromagnetic component would only make it narrower.
-                    theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/0.5);
-                  } // else: not below threshold at deltheta_had
-                } // else: not below threshold at 3*deltheta_em
+	      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
+		theta_threshold=theta_test;
+	      else { // otherwise,  set is the the width of the hadronic component (much wider than the electromagnetic component)
+		theta_test=deltheta_had;
+		vmmhz1m_test=vmmhz1m_max;
+		sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
+		// if at the hadronic width,  you're below the threshold
+		if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
+		  //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) // if at the hadronic width,  you're below the threshold
+		  theta_threshold=theta_test; // set theta_threshold
+		else { // otherwise,  find theta_threshold considering the hadronic component alone.  This is conservative-- an electromagnetic component would only make it narrower.
+		  theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/0.5);
+		} // else: not below threshold at deltheta_had
+	      } // else: not below threshold at 3*deltheta_em
 
-              } // else: not below threshold at 2.5*deltheta_em
-            } // else: not below threshold at 2.0*deltheta_em
+	    } // else: not below threshold at 2.5*deltheta_em
+	  } // else: not below threshold at 2.0*deltheta_em
 
-          } // else: not below threshold at 1.5*deltheta_em
+	} // else: not below threshold at 1.5*deltheta_em
 
-        } // not below threshold at 1.0*deltheta_em
-        count_inthisloop3++;
-        averaging_thetas3+=theta_threshold;
+      } // not below threshold at 1.0*deltheta_em
+      count_inthisloop3++;
+      averaging_thetas3+=theta_threshold;
 
-      } // end if both the em and hadronic components are non-negligible.
+    } // end if both the em and hadronic components are non-negligible.
       //end big code block of ifs/elses
 
-      theta_threshold*=settings1->THETA_TH_FACTOR; // multiply theta_threshold by scale factor if requested,  for testing purposes.
-      if (theta_threshold>0) { // we only pick the angle between 0 and pi so set the upper and lower limits accordingly.
-        if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold> constants::PI) {
-          costhetanu2=1.;
-          costhetanu1=-1.;
-        } //if
-        else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold> constants::PI) {
-          costhetanu2=cos(sig1->changle-theta_threshold);
-          costhetanu1=-1.;
-        } //else if
-        else if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold< constants::PI) {
-          costhetanu2=1.;
-          costhetanu1=cos(sig1->changle+theta_threshold);
-        } //else if
-        else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold< constants::PI) {
-          costhetanu2=cos(sig1->changle-theta_threshold);
-          costhetanu1=cos(sig1->changle+theta_threshold);
-        } //else if
-      } // end if theta_threshold>0
+    theta_threshold*=settings1->THETA_TH_FACTOR; // multiply theta_threshold by scale factor if requested,  for testing purposes.
+    if (theta_threshold>0) { // we only pick the angle between 0 and pi so set the upper and lower limits accordingly.
+      if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold> constants::PI) {
+	costhetanu2=1.;
+	costhetanu1=-1.;
+      } //if
+      else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold> constants::PI) {
+	costhetanu2=cos(sig1->changle-theta_threshold);
+	costhetanu1=-1.;
+      } //else if
+      else if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold< constants::PI) {
+	costhetanu2=1.;
+	costhetanu1=cos(sig1->changle+theta_threshold);
+      } //else if
+      else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold< constants::PI) {
+	costhetanu2=cos(sig1->changle-theta_threshold);
+	costhetanu1=cos(sig1->changle+theta_threshold);
+      } //else if
+    } // end if theta_threshold>0
 
 
-    } // if SKIP_CUTS !=0
+  } // if SKIP_CUTS !=0
 
-    if (theta_threshold>0) {
-      // pick the neutrino direction,  in a coordinate system where the z axis lies along the cerenkov cone.
-      costhetanu=costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
+  if (theta_threshold>0) {
+    // pick the neutrino direction,  in a coordinate system where the z axis lies along the cerenkov cone.
+    costhetanu=costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
 
-      double phinu=constants::TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
-      double sinthetanu=sqrt(1-costhetanu*costhetanu);
-      // 3-vector of neutrino direction,  at that same coordinate system.
-      nnu = Vector(sinthetanu*cos(phinu), sinthetanu*sin(phinu), costhetanu);
-      nnu = nnu.ChangeCoord(refr); // rotate so it's in our normal coordinate system.
-      // now the ray is aligned along the cerenkov cone and
-      // the neutrino is rotated by that same angle
-
-      //dtryingdirection+=4*PI/(2.*theta_threshold*sin(sig1->changle)*2*PI);
-      interaction1->dtryingdirection=1/((costhetanu2-costhetanu1)/2.);
-      if (bn1->WHICHPATH==4) {
-        //double angle=(PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4])+1.*RADDEG;
-        double angle=(constants::PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4]);      // this will put the viewing angle at the cerenkov angle
-        double thetaposnu=posnu.Theta();
-        //double phiposnu=posnu.Phi();
-        costhetanu=cos(constants::PI/2+(thetaposnu-angle));
-        sinthetanu=sqrt(1-costhetanu*costhetanu);
-        //phinu=0.95993;
-        phinu=-1.339; // this is the phi where it's coming *from.*
-        // we want the neutrino to be headed north
-        nnu = Vector(-1.*sinthetanu*cos(phinu), -1.*sinthetanu*sin(phinu), -1.*costhetanu);// 3-vector of neutrino direction,  at that same coordinate system.
-      }
-      return 1;
-    } //end if theta_threshold
-    else if (theta_threshold==-1.) {
-      std::cout << "theta_threshold is " << theta_threshold << "\n";
-      return 0;
-    }
-    else if (emfrac<=1.E-10 && deltheta_had <= 1.E-10) {
-      std::cout << "Error:  emfrac, hadfrac are (1st place)" << emfrac << " " << hadfrac << " " << "\n";
-      return 0;
-    } //else if
-
-    return 0;
-  //} // end NO ROUGHNESS
-
-  // treat the roughness case
-  /*else if(settings1->ROUGHNESS){
-    //copy SKIPCUTS and USEDIRECTIONWEIGHTS from earlier in this function
-    double costhetanu2=1.;
-    double costhetanu1=-1.;
-    double costhetanu=costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
-
-    double phinu=TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
+    double phinu=constants::TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
     double sinthetanu=sqrt(1-costhetanu*costhetanu);
     // 3-vector of neutrino direction,  at that same coordinate system.
     nnu = Vector(sinthetanu*cos(phinu), sinthetanu*sin(phinu), costhetanu);
@@ -1014,11 +963,54 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
 
     //dtryingdirection+=4*PI/(2.*theta_threshold*sin(sig1->changle)*2*PI);
     interaction1->dtryingdirection=1/((costhetanu2-costhetanu1)/2.);
+    if (bn1->WHICHPATH==4) {
+      //double angle=(PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4])+1.*RADDEG;
+      double angle=(constants::PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4]);      // this will put the viewing angle at the cerenkov angle
+      double thetaposnu=posnu.Theta();
+      //double phiposnu=posnu.Phi();
+      costhetanu=cos(constants::PI/2+(thetaposnu-angle));
+      sinthetanu=sqrt(1-costhetanu*costhetanu);
+      //phinu=0.95993;
+      phinu=-1.339; // this is the phi where it's coming *from.*
+      // we want the neutrino to be headed north
+      nnu = Vector(-1.*sinthetanu*cos(phinu), -1.*sinthetanu*sin(phinu), -1.*costhetanu);// 3-vector of neutrino direction,  at that same coordinate system.
+    }
+    return 1;
+  } //end if theta_threshold
+  else if (theta_threshold==-1.) {
+    std::cout << "theta_threshold is " << theta_threshold << "\n";
+    return 0;
+  }
+  else if (emfrac<=1.E-10 && deltheta_had <= 1.E-10) {
+    std::cout << "Error:  emfrac, hadfrac are (1st place)" << emfrac << " " << hadfrac << " " << "\n";
+    return 0;
+  } //else if
+
+  return 0;
+  //} // end NO ROUGHNESS
+
+  // treat the roughness case
+  /*else if(settings1->ROUGHNESS){
+  //copy SKIPCUTS and USEDIRECTIONWEIGHTS from earlier in this function
+  double costhetanu2=1.;
+  double costhetanu1=-1.;
+  double costhetanu=costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
+
+  double phinu=TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
+  double sinthetanu=sqrt(1-costhetanu*costhetanu);
+  // 3-vector of neutrino direction,  at that same coordinate system.
+  nnu = Vector(sinthetanu*cos(phinu), sinthetanu*sin(phinu), costhetanu);
+  nnu = nnu.ChangeCoord(refr); // rotate so it's in our normal coordinate system.
+  // now the ray is aligned along the cerenkov cone and
+  // the neutrino is rotated by that same angle
+
+  //dtryingdirection+=4*PI/(2.*theta_threshold*sin(sig1->changle)*2*PI);
+  interaction1->dtryingdirection=1/((costhetanu2-costhetanu1)/2.);
   }
 
   else{ //something bad happened
-    std::cout<<"Something bad happened in GetDirection."<<endl;
-    return 1;
+  std::cout<<"Something bad happened in GetDirection."<<std::endl;
+  return 1;
   }*/
 }
 //end GetDirection()
@@ -1062,7 +1054,7 @@ double icemc::EventGenerator::GetThisAirColumn(const Settings* settings1,  Posit
   else
     myair=0.;//don't include effect of atmosphere
 
-  //cout<<"mytheta="<<mytheta<<"; myair="<<myair<<endl;
+  //cout<<"mytheta="<<mytheta<<"; myair="<<myair<<std::endl;
   //------------------added on Dec 8------------------------
   cosbeta0= (posnu.Dot(nnu)) / posnu.Mag(); // cos angle of neutrino wrt person standing over the interaction point
   mybeta=(double)(acos(cosbeta0)*constants::DEGRAD)-90.; // turn that into a theta
@@ -1201,19 +1193,24 @@ TStyle* icemc::EventGenerator::RootStyle() {
   RootStyle->SetMarkerStyle(20);
   RootStyle->SetMarkerSize(0.4);
 
-  //  std::cout << ">> Style initialized with the Root Style!" << endl;
-  //  std::cout << ">> " << modified << endl << endl;
+  //  std::cout << ">> Style initialized with the Root Style!" << std::endl;
+  //  std::cout << ">> " << modified << std::endl << std::endl;
   return RootStyle;
 }
 //end RootStyle()
 
 
-void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING, const Vector &surface_normal, 
+
+
+void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
+				       const Vector &surface_normal, 
 				       const Vector &air_rf, 
 				       Vector &pol, 
 				       const Vector &firn_rf, 
 				       double efield, 
-				       double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, 
+				       double emfrac,
+				       double hadfrac,
+				       double deltheta_em_max, double deltheta_had_max, 
 				       double &t_coeff_pokey, double &t_coeff_slappy,
 				       double &fresnel,
 				       double &mag) {
@@ -1249,7 +1246,7 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
   fresnel = sqrt( pow(efield * pol_perp_air, 2) + pow(efield * pol_parallel_air, 2)) / efield;
 
   pol = (pol_perp_air * perp + pol_parallel_air * air_parallel).Unit();
-//cerr<<"(spec): inc "<<incident_angle*180./PI<<" : trans "<<transmitted_angle*180./PI<<" : tpokey "<<t_coeff_pokey<<" : tslappy "<<t_coeff_slappy<< endl;
+  //cerr<<"(spec): inc "<<incident_angle*180./PI<<" : trans "<<transmitted_angle*180./PI<<" : tpokey "<<t_coeff_pokey<<" : tslappy "<<t_coeff_slappy<< std::endl;
 }
 //end GetFresnel()
 
@@ -1343,8 +1340,6 @@ int icemc::EventGenerator::GetIceMCAntfromUsefulEventAnt(const Settings *setting
   
 }
 
-
-
 void icemc::EventGenerator::WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double altitude_int,  std::string nuflavor,  std::string current,  double elast_y,  std::ofstream &nu_out) {
   nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
 }
@@ -1363,7 +1358,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   //floating point exceptions 
   //
   //
- #ifdef ICEMC_FEEXCEPT
+#ifdef ICEMC_FEEXCEPT
   feenableexcept(FE_INVALID | FE_DIVBYZERO); 
 #endif
   
@@ -1371,7 +1366,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   double sumsignal[5]={0.};
   double sumsignal_aftertaper[5]={0.};
 
-  std::cout <<"seed is " << settings1.SEED << endl;
+  std::cout <<"seed is " << settings1.SEED << std::endl;
 
   TRandom *rsave = gRandom;
   TRandom3 *Rand3 = new TRandom3(settings1.SEED);//for generating random numbers
@@ -1380,34 +1375,34 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   std::string stemp=clOpts.outputdir+"/nu_position"+clOpts.run_num+".txt";
   ofstream nu_out(stemp.c_str(),  ios::app); //Positions,  direction of momentum,  and neutrino type for Ryan.
 
-  stemp=clOpts.outputdir+"/veff"+clOpts.run_num+".txt";
+  stemp = clOpts.outputdir + "/veff" + clOpts.run_num + ".txt";
   ofstream veff_out(stemp.c_str(),  ios::app);//to output only energy and effective volume to veff.txt
 
-  stemp=clOpts.outputdir+"/distance"+clOpts.run_num+".txt";
+  stemp = clOpts.outputdir + "/distance" + clOpts.run_num + ".txt";
   ofstream distanceout(stemp.c_str());
 
-  stemp=clOpts.outputdir+"/debug"+clOpts.run_num+".txt";
+  stemp = clOpts.outputdir + "/debug" + clOpts.run_num + ".txt";
   fstream outfile(stemp.c_str(), ios::out);
 
-  stemp=clOpts.outputdir+"/forbrian"+clOpts.run_num+".txt";
+  stemp = clOpts.outputdir + "/forbrian" + clOpts.run_num + ".txt";
   fstream forbrian(stemp.c_str(), ios::out);
 
-  stemp=clOpts.outputdir+"/al_voltages_direct"+clOpts.run_num+".dat";
+  stemp = clOpts.outputdir + "/al_voltages_direct" + clOpts.run_num + ".dat";
   fstream al_voltages_direct(stemp.c_str(), ios::out); //added djg ------provide anita-lite voltages and noise from MC for anita-lite analysis
 
-  stemp=clOpts.outputdir+"/events"+clOpts.run_num+".txt";
+  stemp = clOpts.outputdir + "/events" + clOpts.run_num + ".txt";
   ofstream eventsthatpassfile(stemp.c_str());
 
-  stemp=clOpts.outputdir+"/numbers"+clOpts.run_num+".txt";
+  stemp = clOpts.outputdir + "/numbers" + clOpts.run_num + ".txt";
   ofstream fnumbers(stemp.c_str()); // debugging
 
-  stemp=clOpts.outputdir+"/output"+clOpts.run_num+".txt";
+  stemp = clOpts.outputdir + "/output" + clOpts.run_num + ".txt";
   ofstream foutput(stemp.c_str(),  ios::app);
 
-  stemp=clOpts.outputdir+"/slacviewangles"+clOpts.run_num+".dat";
+  stemp = clOpts.outputdir + "/slacviewangles" + clOpts.run_num + ".dat";
   ofstream fslac_viewangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
 
-  stemp=clOpts.outputdir+"/slac_hitangles"+clOpts.run_num+".dat";
+  stemp = clOpts.outputdir + "/slac_hitangles" + clOpts.run_num + ".dat";
   ofstream fslac_hitangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
 
   Balloon* bn1 = new Balloon(); // instance of the balloon
@@ -1423,7 +1418,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // input parameters
   NNU = settings1.NNU;
   RANDOMISEPOL = settings1.RANDOMISEPOL;
-  // settings1.ReadInputs(input.c_str(),  foutput, NNU, RANDOMISEPOL);
   settings1.ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
 
   // Signal needs to be initialize with Askaryan parametrisation info
@@ -1452,20 +1446,17 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   Screen* panel1 = new Screen(0);  // create new instance of the screen class
 
-  if(spectra1->IsSpectrum()) std::cout<<" Lowest energy for spectrum is 10^18 eV! \n";
-
-  // declare instance of trigger class.
-  // this constructor reads from files with info to parameterize the
-  // signal efficiency curves.
-  // and reads in scalar vs. threshold scans
+  if(spectra1->IsSpectrum()){
+    std::cout<<" Lowest energy for spectrum is 10^18 eV! \n";
+  }
 
   time_t raw_start_time = time(NULL);
   struct tm*  start_time = localtime(&raw_start_time);
 
   std::cout << "Date and time at start of run are: " << asctime (start_time) << "\n";
-
-  if (settings1.FORSECKEL)
+  if (settings1.FORSECKEL){
     SetupViewangles(sig1);// set up viewing angles for testing against jaime's parameterizations
+  }
 
   // for attenuation of neutrino in atmosphere
   // only important for black hole studies
@@ -1473,6 +1464,23 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   GetAir(col1);
   double myair;//air column density, kg/m^2
 
+  nuflavorint2=interaction1->nuflavorint;
+  costheta_nutraject2=interaction1->costheta_nutraject;
+  phi_nutraject2=interaction1->phi_nutraject;
+  altitude_int2=interaction1->altitude_int;
+  currentint2=interaction1->currentint;
+  d12=interaction1->d1;
+  d22=interaction1->d2;
+  dtryingdirection2=interaction1->dtryingdirection;
+  logchord2=interaction1->logchord;
+  r_fromballoon2=interaction1->r_fromballoon[0];
+  chord_kgm2_bestcase2=interaction1->chord_kgm2_bestcase;
+  chord_kgm2_ice2=interaction1->chord_kgm2_ice;
+  weight_bestcase2=interaction1->weight_bestcase;
+  r_exit2bn2=interaction1->r_exit2bn;
+  r_exit2bn_measured2=interaction1->r_exit2bn_measured;
+  VoltsRX voltsRX;
+  
   // zeroing global variables.
   icemc::Tools::Zero(sum_frac, 3);
   icemc::Tools::Zero(sum_frac_db, 3);
@@ -1486,156 +1494,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   icemc::Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
 
   //added djg ////////////////////////////////////////////////////////
-  al_voltages_direct<<"antenna #"<<"   "<<"volts chan 1"<<"   "<<"volts chan 2"<<"    "<<"volts chan 3"<<"    "<<"volts chan 4"<<"    "<<"noise chan 1"<<"    "<<"noise chan 2"<<"    "<<"noise chan 3"<<"   "<<"noise chan 4"<<"  "<<"weight"<<endl;
+  al_voltages_direct<<"antenna #"<<"   "<<"volts chan 1"<<"   "<<"volts chan 2"<<"    "<<"volts chan 3"<<"    "<<"volts chan 4"<<"    "<<"noise chan 1"<<"    "<<"noise chan 2"<<"    "<<"noise chan 3"<<"   "<<"noise chan 4"<<"  "<<"weight"<<std::endl;
   ////////////////////////////////////////////////////////////////////
 
-  // ray tracing
-  double viewangle=0;
-  double viewangle_temp=0; // angle of ray in ice relative to neutrino direction
-  double viewangle_deg=0; // viewing angle in degrees.
-  double cosviewangle=0; // cosine of viewing angle
-  double offaxis=0; // viewangle-changle,  for plotting
-  double nsigma_offaxis=0;// offaxis,  relative to deltheta_had,  for plotting
-  double theta_threshold=0; // maximum angle you can be away from the cerenkov angle and still have a chance of seeing the event.
-  double theta_threshold_deg=0; // maximum angle you can be away from the cerenkov angle and still have a chance of seeing the event.
-
-  double nsigma_em_threshold=0; //number of sigma away theta_threshold is.
-  double nsigma_had_threshold=0;// just for plotting
-  double slopeyangle=0; // angle between nominal surface normal and the surface normal after slopeyness is applied
-  //-------------------
-  int beyondhorizon = 0;  //Switch tells if neutrino interacts beyond the balloon's horizon. (0: inside horizon,  1: outside horizon)
-
-  // frequency binning
-  double vmmhz1m_max=0; // maximum V/m/MHz at 1m from Jaime (highest frequency)
-  double vmmhz_lowfreq=0.; // V/m/MHz after 1/r,  attenuation at the lowest freq.
-  double bestcase_atten=0;// attenuation factor,  best case
-  double vmmhz1m_fresneledonce=0; // above,  after fresnel factor applied for ice-air interface
-  double vmmhz1m_fresneledtwice=0; // above,  after fresnel factor applied for firn
-  double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
-
-  // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
-  double vmmhz_em[Anita::NFREQ];
-  double vmmhz_temp=1.;
-  double vmmhz_min_thatpasses=1000;
-  double vmmhz_min=0;   // minimum of the above array
-  double vmmhz_max=0;                        // maximum of the above array
-  double deltheta_em[Anita::NFREQ], deltheta_had[Anita::NFREQ];     // for ch angular distribution
-  double deltheta_em_max, deltheta_had_max;     // maximum value of above array angular distribution
-  double deltheta_em_mid2, deltheta_had_mid2;     // widths of cones for the mid2 band
-
-  // shower properties
-  double emfrac, hadfrac, sumfrac;               // em and had fractions
-  int n_interactions=1;            // count number of interactions for this event,  including secondaries.
-  double emfrac_db, hadfrac_db;
-  int nuflavorint2=interaction1->nuflavorint;
-  double costheta_nutraject2=interaction1->costheta_nutraject;
-  double phi_nutraject2=interaction1->phi_nutraject;
-  double altitude_int2=interaction1->altitude_int;
-  int currentint2=interaction1->currentint;
-  double d12=interaction1->d1;
-  double d22=interaction1->d2;
-  double dtryingdirection2=interaction1->dtryingdirection;
-  double logchord2=interaction1->logchord;
-  double r_fromballoon2=interaction1->r_fromballoon[0];
-  double chord_kgm2_bestcase2=interaction1->chord_kgm2_bestcase;
-  double chord_kgm2_ice2=interaction1->chord_kgm2_ice;
-  double weight_bestcase2=interaction1->weight_bestcase;
-  double r_exit2bn2=interaction1->r_exit2bn;
-  double r_exit2bn_measured2=interaction1->r_exit2bn_measured;
-
-  string taudecay;                   // tau decay type: e, m, h
-
-  double elast_y=0;                   // inelasticity
-  double volts_rx_0=0;              // voltage on an individual antenna,  lc polarization
-  double volts_rx_1=0;              // voltage on an individual antenna,  rc polarization
-  double volts_rx_max=0; // max voltage seen on an antenna - just for debugging purposes
-  double volts_rx_ave=0; // ave voltage seen on an antenna,  among hit antennas
-  double volts_rx_sum=0; // ave voltage seen on an antenna,  among hit antennas
-
-  double volts_rx_max_highband; // max voltage seen on an antenna - just for debugging purposes
-  double volts_rx_max_lowband; // max voltage seen on an antenna - just for debugging purposes
-  double volts_rx_rfcm_lab_e_all[48][512];
-  double volts_rx_rfcm_lab_h_all[48][512];
-
-  // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
-  double e_component=0; // E comp along polarization
-  double h_component=0; // H comp along polarization
-  double n_component=0; // normal comp along polarization
-
-  double e_component_kvector=0; // component of e-field along the rx e-plane
-  double h_component_kvector=0; // component of the e-field along the rx h-plane
-  double n_component_kvector=0; // component of the e-field along the normal
-
-
-  Vector n_eplane = constants::const_z;
-  Vector n_hplane = -constants::const_y;
-  Vector n_normal = constants::const_x;
-
-  double chengji = 0;
-  Vector ant_normal; //Vector normal to the face of the antenna
-
-  double hitangle_e, hitangle_h;       // angle the ray hits the antenna wrt e-plane, h-plane
-  double hitangle_e_all[Anita::NANTENNAS_MAX];         // hit angles rel. to e plane stored for each antenna
-  double hitangle_h_all[Anita::NANTENNAS_MAX];         // hit angles rel. to h plane stored for each antenna
-
-  double sigma = 0;                       // for cross section
-  double len_int_kgm2=0;              // interaction length in kg/m^2
-  double eventsfound_db=0; // same,  for double bang
-  double eventsfound_nfb=0; // for taus
-
-  // positions in earth frame
-  double horizcoord=0; // x component of interaction position
-  double vertcoord=0; // y component of interaction position
-
-  double dist_int_bn_2d=0; // 2-d (surface) distance between interaction and balloon
-  double dist_int_bn_2d_chord=0; //chord distance between interaction and balloon (between surface points)
-
-  double viewangle_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // viewing angle for each antenna
-
-  double cosalpha; // angle between nu momentum and surface normal at earth entrance point
-  double mytheta; //!< alpha minus 90 degrees
-  double cosbeta0; // angle between nu momentum and surface normal at interaction point.
-  double mybeta; //!< beta minus 90 degrees
-  double nuexitlength=0; // distance from interaction to where neutrino would leave
-  double nuexitice=0;
-  double nuentrancelength=0; // for taus
-  double taulength=0;  // distance tau travels in ice before decaying
-  double icethickness=0; // for taus
-  double theta_pol_measured; // theta of the polarization as measured at the payload (for now we don't correct for the 10 degree cant)
-
-  double ptaui=0;
-  double ptauf =0;
-  double tauweight=0;
-  double nutauweightsum=0;
-  double tauweightsum=0;
-  double nutauweight=0;
-  int tautrigger=0;
-  int tauweighttrigger=0;
-
-
-  double sourceLon;
-  double sourceAlt;
-  double sourceLat;
-  double sourceMag;
-
-  Vector n_nutraject_ontheground; //direction of the neutrino from the person standing on the ground just below the balloon.
-  Vector n_pol; // direction of polarization
-  Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
-  Vector n_pol_db; // same,  double bangs
-
-  int l3trig[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
-  // For each trigger layer,  which "clumps" pass L2.  16 bit,  16 bit and 8 bit for layers 1 & 2 and nadirs
-  int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
-  //For each trigger layer,  which antennas pass L1.  16 bit,  16 bit and 8 bit and layers 1,  2 and nadirs
-  int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
-
-  // these are declared here so that they can be stuck into trees
-  int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement
-
-  int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement
-
-  int nchannels_triggered = 0; // total number of channels triggered
-  int nchannels_perrx_triggered[48]; // total number of channels triggered
 
   // zeroing
   interaction1->dnutries=0;
@@ -1741,8 +1602,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   tree5->Branch("neutrinoPath", &fNeutrinoPath);
 
   TTree* tree6 = new TTree("h6000", "h6000"); // tree6 filled for neutrinos that enter S of 60 deg S latitude.
-  tree6->Branch("volts_rx_0", &volts_rx_0, "volts_rx_0/D");
-  tree6->Branch("volts_rx_1", &volts_rx_1, "volts_rx_1/D");
   tree6->Branch("horizcoord", &horizcoord, "horizcoord/D");
   tree6->Branch("vertcoord", &vertcoord, "vertcoord/D");
   // tree6->Branch("theta_in", &theta_in, "theta_in/D");
@@ -1900,13 +1759,16 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   finaltree->Branch("max_antenna_volts2", &max_antenna_volts2, "max_antenna_volts2/D");
   finaltree->Branch("triggers", &nchannels_perrx_triggered, "nchannels_perrx_triggered[48]/I");
   finaltree->Branch("nchannels_triggered", &nchannels_triggered, "nchannels_triggered/I");
-  finaltree->Branch("volts_rx_max", &volts_rx_max, "volts_rx_max/D");
-  finaltree->Branch("volts_rx_ave", &volts_rx_ave, "volts_rx_ave/D");
-  finaltree->Branch("volts_rx_sum", &volts_rx_sum, "volts_rx_sum/D");
+  finaltree->Branch("voltsRX", &voltsRX);
+  
+  // finaltree->Branch("volts_rx_max", &volts_rx_max, "volts_rx_max/D");
+  // finaltree->Branch("volts_rx_ave", &volts_rx_ave, "volts_rx_ave/D");
+  // finaltree->Branch("volts_rx_sum", &volts_rx_sum, "volts_rx_sum/D");
 
-  finaltree->Branch("volts_rx_max_highband", &volts_rx_max_highband, "volts_rx_max_highband/D");
-  finaltree->Branch("volts_rx_max_lowband", &volts_rx_max_lowband, "volts_rx_max_lowband/D");
-  finaltree->Branch("theta_pol_measured", &theta_pol_measured, "theta_pol_measured/D");
+  // finaltree->Branch("volts_rx_max_highband", &volts_rx_max_highband, "volts_rx_max_highband/D");
+  // finaltree->Branch("volts_rx_max_lowband", &volts_rx_max_lowband, "volts_rx_max_lowband/D");
+
+  finaltree->Branch("theta_pol_measured", &theta_pol_measured, "theta_pol_measured/D");  
   finaltree->Branch("theta_rf_atbn", &theta_rf_atbn, "theta_rf_atbn/D");
   finaltree->Branch("theta_rf_atbn_measured", &theta_rf_atbn_measured, "theta_rf_atbn_measured/D");
   finaltree->Branch("voltage", &voltagearray, "voltagearray[48]/D");
@@ -1959,8 +1821,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   finaltree->Branch("scalefactor_attenuation", &scalefactor_attenuation, "scalefactor_attenuation/D");
   finaltree->Branch("anita1->PHI_OFFSET", &anita1->PHI_OFFSET, "anita1->PHI_OFFSET/D");
   finaltree->Branch("igps", &bn1->igps, "igyps/I");
-  finaltree->Branch("volts_rx_rfcm_lab_e_all", &volts_rx_rfcm_lab_e_all, "volts_rx_rfcm_lab_e_all[48][512]/D");
-  finaltree->Branch("volts_rx_rfcm_lab_h_all", &volts_rx_rfcm_lab_h_all, "volts_rx_rfcm_lab_h_all[48][512]/D");
+  // finaltree->Branch("volts_rx_rfcm_lab_e_all", &volts_rx_rfcm_lab_e_all, "volts_rx_rfcm_lab_e_all[48][512]/D");
+  // finaltree->Branch("volts_rx_rfcm_lab_h_all", &volts_rx_rfcm_lab_h_all, "volts_rx_rfcm_lab_h_all[48][512]/D");
   finaltree->Branch("ptaui", &ptaui, "ptaui/D");
   finaltree->Branch("ptauf", &ptauf, "ptauf/D");
   finaltree->Branch("sourceLon", &sourceLon, "sourceLon/D");
@@ -2154,7 +2016,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   
   outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaTruthFile"+clOpts.run_num+".root";
   TFile* anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
-  
+
   static TString icemcgitversion = TString::Format("%s", icemc::EnvironmentVariable::ICEMC_VERSION(clOpts.outputdir));  
   printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
   unsigned int timenow = time(NULL);
@@ -2301,9 +2163,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // for (int j=0;j<settings1.NLAYERS;j++) { // loop over the layers of the payload
   //   // noise depends on cant angle of antenna
   // } //for loop over antenna layers
+  
 
   time_t raw_loop_start_time = time(NULL);
-  std::cout<<"Starting loop over events.  Time required for setup is "<<(int)((raw_loop_start_time - raw_start_time)/60)<<":"<< ((raw_loop_start_time - raw_start_time)%60)<<endl;
+  std::cout << "Starting loop over events. Time required for setup is "
+	    <<(int)((raw_loop_start_time - raw_start_time)/60) << ":"
+	    << ((raw_loop_start_time - raw_start_time)%60) << std::endl;
 
   TCanvas *ctest1 = new TCanvas("ctest1", "", 880, 800);
 
@@ -2312,9 +2177,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   spectra1->GetSEdNdEdAdt()->SetLineColor(2);
   spectra1->GetSEdNdEdAdt()->Draw("l same");
 
-  stemp = clOpts.outputdir +"/GetG_test1.pdf";
+  stemp = clOpts.outputdir + "/GetG_test1.pdf";
   ctest1->Print((TString)stemp);
 
+
+  
   // for averaging balloon altitude and distance from center of earth
   // for comparing with Peter
   double average_altitude=0.;
@@ -2336,29 +2203,37 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     g2->Draw("Al");
     ctemp->SetLogy();
     ctemp->SetLogx();
-    std::cout << g2->Integral() << " " << g2->Integral(1, n) << endl;
+    std::cout << g2->Integral() << " " << g2->Integral(1, n) << std::endl;
     ctemp->Print("Temp2.png");
     g1->Write();
     g2->Write();
     out->Close();
   }
-    
-  
-  //  TRandom r(settings1.SEED); // use seed set as input
- 
-  signal(SIGINT,  icemc::EventGenerator::interrupt_signal_handler);     // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
 
+  // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.  
+  signal(SIGINT,  icemc::EventGenerator::interrupt_signal_handler);
   // Setting gps offset for plotting direction wrt north
   if (settings1.WHICH==7){
     gps_offset=atan2(-0.7042,0.71)*constants::DEGRAD;
-  } else if(settings1.WHICH==8){
+  }
+  else if(settings1.WHICH==8){
     gps_offset=atan2(-0.7085,0.7056)*constants::DEGRAD;
-  } else if (settings1.WHICH==9 || settings1.WHICH==10){
+  }
+  else if (settings1.WHICH==9 || settings1.WHICH==10){
     gps_offset=45;
-  } else gps_offset=0;
+  }
+  else{
+    gps_offset=0;
+  }
 
   int antNum;  
 
+
+
+
+
+
+  
   /**
    * Main analysis loop over generated neutrinos
    * 
@@ -2378,8 +2253,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       std::cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
 
     eventNumber=(UInt_t)(clOpts.run_no)*NNU+inu;
-//cerr<<inu<<endl;
-//if( !((inu==246) || (inu==2579) || (inu==5522) || (inu==11235) || (inu==11815) || (inu==19723) || (inu==21264) || (inu==28442) || (inu==36789) || (inu==36894) || (inu==38424) || (inu==45829) || (inu==45880) || (inu==52929) || (inu==56821) || (inu==64933) || (inu==73569) || (inu==73707) || (inu==78717) || (inu==92717) || (inu==99750))  ) continue;
+    //cerr<<inu<<std::endl;
+    //if( !((inu==246) || (inu==2579) || (inu==5522) || (inu==11235) || (inu==11815) || (inu==19723) || (inu==21264) || (inu==28442) || (inu==36789) || (inu==36894) || (inu==38424) || (inu==45829) || (inu==45880) || (inu==52929) || (inu==56821) || (inu==64933) || (inu==73569) || (inu==73707) || (inu==78717) || (inu==92717) || (inu==99750))  ) continue;
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
     TRandom3 r(eventNumber+7e8);
@@ -2519,15 +2394,16 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
      
       // cerenkov angle depends on depth because index of refraction depends on depth.
       //if(!settings1.ROUGHNESS){
-        if (settings1.FIRN) {
-          sig1->SetNDepth(antarctica->GetN(interaction1->altitude_int));
-          //      changle = acos(1/N_DEPTH);
-          changle_deg=sig1->changle*constants::DEGRAD;
-        }
+      if (settings1.FIRN) {
+	sig1->SetNDepth(antarctica->GetN(interaction1->altitude_int));
+	//      changle = acos(1/N_DEPTH);
+	changle_deg=sig1->changle*constants::DEGRAD;
+      }
       //}
 
-      if (settings1.FORSECKEL==1)
+      if (settings1.FORSECKEL==1){
         sig1->SetChangle(acos(1/sig1->NICE));
+      }
 
       // x and y components of interaction in km.
       horizcoord=interaction1->posnu[0]/1000;
@@ -2582,10 +2458,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         interaction1->nuflavor="nue";
         interaction1->current="cc";
       }
-      if (bn1->WHICHPATH==3)
+      if (bn1->WHICHPATH==3){
         elast_y = Interaction::banana_y;
-      if (bn1->WHICHPATH==4)
+      }
+      if (bn1->WHICHPATH==4){
         elast_y=1.;
+      }
       if (settings1.FORSECKEL==1) {
         if (settings1.SHOWERTYPE==0) // all hadronic shower
           elast_y=1.;
@@ -2593,8 +2471,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           elast_y=0.;
       } //if (settings1.FORSECKEL)
 
-      if (ytree->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
+      if (ytree->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
         ytree->Fill();
+      }
 
       //TAU STUFF. Pick whether it will stay as a neutrino or create tau
       if(tautrigger==1){
@@ -2621,9 +2500,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           err=1; // everything is a-okay
         }// end else if slac
 
-        if(err==0)
+        if(err==0){
           continue;//bad stuff has happened.
-
+	}
         interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
 
         taus1->GetTauWeight(primary1,  &settings1,  antarctica,  interaction1,  pnu,  1,  ptauf, crust_entered);
@@ -2641,8 +2520,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           pnu=ptauf;//set the energy we are looking at to the final energy of the tau. cuts out alot of if-else statements
           tauweighttrigger=1;//From now on,  signifies a tau particle
         }
-        if(fTauPtr)
+        if(fTauPtr){
           delete fTauPtr;
+	}
 
         fTauPtr = new Taumodel();
         fTauPtr->inu = inu;
@@ -2665,7 +2545,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // for plotting
       sumfrac=emfrac+hadfrac;
-      //cout << "tree7 check" <<interaction1->nuflavorint << endl;
+      //cout << "tree7 check" <<interaction1->nuflavorint << std::endl;
       if (tree7->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
         tree7->Fill();
 
@@ -2705,18 +2585,21 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 			deltheta_em_max, deltheta_had_max);
       } //end else (not secondbang or not interested in taus)
 
-      if (jaimetree->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
+      if (jaimetree->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
         jaimetree->Fill();
+      }
 
       //  Using highest possible signal and minimum noise,
       // and accounting for distance from balloon,
       // and best case attenutation,
       // reject if signal is undetectable.
 
-      if (whichray==0) // if we are looking at direct rays
+      if (whichray==0){ // if we are looking at direct rays
         bestcase_atten=exp(interaction1->altitude_int/MAX_ATTENLENGTH); // the attenuation is obtained from the altitude of the interaction (shortest path is if the signal went straight up)
-      if (whichray==1) // if we are looking at reflected rays
+      }
+      if (whichray==1){ // if we are looking at reflected rays
         bestcase_atten=exp(interaction1->altitude_int_mirror/MAX_ATTENLENGTH);//use the real path which seems from the mirror point.
+      }
 
       // let's keep this even in the roughness case, since it still represents an ceiling value
       if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR && !settings1.SKIPCUTS) {
@@ -2859,9 +2742,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         if (!antarctica->WhereDoesItEnterIce(interaction1->posnu, interaction1->nnu, len_int_kgm2/sig1->RHOMEDIUM/10., interaction1->r_enterice)) {
           //r_enterice.Print();
           if (antarctica->OutsideAntarctica(interaction1->r_enterice)) {
-            std::cout<<"Warning!  Neutrino enters beyond continent,  program is rejecting neutrino! inu = "<<inu<<endl;
+            std::cout<<"Warning!  Neutrino enters beyond continent,  program is rejecting neutrino! inu = "<<inu<<std::endl;
             if (bn1->WHICHPATH==3)
-              std::cout<<"Warning!  Neutrino enters beyond continent,  program is rejecting neutrino!"<<endl;
+              std::cout<<"Warning!  Neutrino enters beyond continent,  program is rejecting neutrino!"<<std::endl;
             //
             continue;
           }// end outside antarctica
@@ -2905,7 +2788,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // if the probability that the neutrino gets absorbed is almost 1,  throw it out.
       if (bn1->WHICHPATH!=4 && interaction1->weight_bestcase<CUTONWEIGHTS && !settings1.SKIPCUTS && !settings1.FORSECKEL) {
         if (bn1->WHICHPATH==3)
-          std::cout<<"Neutrino is getting absorbed and thrown out!"<<endl;
+          std::cout<<"Neutrino is getting absorbed and thrown out!"<<std::endl;
         //
         continue;
       }
@@ -2927,7 +2810,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR && !settings1.SKIPCUTS && !settings1.FORSECKEL) {
         if (bn1->WHICHPATH==3)
-          std::cout<<"Event rejected.  Check."<<endl;
+          std::cout<<"Event rejected.  Check."<<std::endl;
         //
         continue;
       }
@@ -2970,7 +2853,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // reject if the rf leaves the ice where there is water,  for example.
       if (!antarctica->AcceptableRfexit(ray1->nsurf_rfexit, ray1->rfexit[2], ray1->n_exit2bn[2])){
         if (bn1->WHICHPATH==3)
-          std::cout<<"Should look at this. Not expecting to be here."<<endl;
+          std::cout<<"Should look at this. Not expecting to be here."<<std::endl;
         continue;
       }//end if acceptableRFexit
 
@@ -2991,8 +2874,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       count1->nconverges[whichray]++;
       // Get Polarization vector.  See Jackson,  Cherenkov section.
       n_pol = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4]);
-//cerr<<inu<<":(spec)  v_nu "<<interaction1->nnu<<" : 2IP "<<ray1->nrf_iceside[4]<<" : inc npol"<<n_pol<< endl;
-//cerr<<inu<<"  "<<ray1->rfexit[2]<<endl;
+      //cerr<<inu<<":(spec)  v_nu "<<interaction1->nnu<<" : 2IP "<<ray1->nrf_iceside[4]<<" : inc npol"<<n_pol<< std::endl;
+      //cerr<<inu<<"  "<<ray1->rfexit[2]<<std::endl;
       if (settings1.BORESIGHTS) {
         for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
           for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
@@ -3002,318 +2885,65 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       } // if we are calculating for all boresights
 
       //if(!settings1.ROUGHNESS){
-        if (settings1.FIRN){
-          // now rotate that polarization vector according to ray paths in firn and air.
-          // fresnel factor at ice-firn interface
-          GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->nrf_iceside[3], n_pol, ray1->nrf_iceside[4], vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1, mag1);
-          if (bn1->WHICHPATH==4)
-            std::cout << "Lentenin factor is " << 1./mag1 << "\n";
+      if (settings1.FIRN){
+	// now rotate that polarization vector according to ray paths in firn and air.
+	// fresnel factor at ice-firn interface
+	GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->nrf_iceside[3], n_pol, ray1->nrf_iceside[4], vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1, mag1);
+	if (bn1->WHICHPATH==4)
+	  std::cout << "Lentenin factor is " << 1./mag1 << "\n";
 
-          //The gradual transition in the firn means that there is no fresnel factor,  only magnification
-          // and the magnification factor is upside down compared to what it is
-          // for the firn-air interface
-          vmmhz1m_fresneledonce = vmmhz1m_max/mag1;
+	//The gradual transition in the firn means that there is no fresnel factor,  only magnification
+	// and the magnification factor is upside down compared to what it is
+	// for the firn-air interface
+	vmmhz1m_fresneledonce = vmmhz1m_max/mag1;
 
-          //  get fresnel factor at firn-air interface
-          GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn[2], n_pol, ray1->nrf_iceside[3], vmmhz1m_fresneledonce, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel2, mag2);
-          // use both fresnel and magnification factors at firn-air interface.  Notice that magnification factor is
-          //upside-down compared to what it is in the firn.
-          vmmhz1m_fresneledtwice=vmmhz1m_fresneledonce*fresnel2*mag2;
+	//  get fresnel factor at firn-air interface
+	GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn[2], n_pol, ray1->nrf_iceside[3], vmmhz1m_fresneledonce, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel2, mag2);
+	// use both fresnel and magnification factors at firn-air interface.  Notice that magnification factor is
+	//upside-down compared to what it is in the firn.
+	vmmhz1m_fresneledtwice=vmmhz1m_fresneledonce*fresnel2*mag2;
 
-          if (settings1.BORESIGHTS) {
-            for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
-              for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-                GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold],
-                  n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[3][ilayer][ifold],
-                  vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy,
-                  fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
-          //    std::cout << fresnel1_eachboresight[ilayer][ifold] << std::endl;
-              } // end looping over phi sectors
-            } // end looping over layers
-          } // end if we are calculating for all boresights
+	if (settings1.BORESIGHTS) {
+	  for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
+	    for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+	      GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold],
+			 n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[3][ilayer][ifold],
+			 vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy,
+			 fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
+	      //    std::cout << fresnel1_eachboresight[ilayer][ifold] << std::endl;
+	    } // end looping over phi sectors
+	  } // end looping over layers
+	} // end if we are calculating for all boresights
 
 
-          if (bn1->WHICHPATH==4)
-            std::cout<<"firn-air interface:  fresnel2,  mag2 are "<<fresnel2<<" "<< mag2 <<"\n";
+	if (bn1->WHICHPATH==4)
+	  std::cout<<"firn-air interface:  fresnel2,  mag2 are "<<fresnel2<<" "<< mag2 <<"\n";
 
-        }//end if firn
-        else {
-          sig1->GetSpread(pnu, emfrac, hadfrac, (anita1->bwslice_min[2]+anita1->bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
+      }//end if firn
+      else {
+	sig1->GetSpread(pnu, emfrac, hadfrac, (anita1->bwslice_min[2]+anita1->bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
 
-          GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn[2], n_pol, ray1->nrf_iceside[4], vmmhz1m_max, emfrac, hadfrac, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);
+	GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn[2], n_pol, ray1->nrf_iceside[4], vmmhz1m_max, emfrac, hadfrac, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);
 
-          vmmhz1m_fresneledtwice = vmmhz1m_max*fresnel1*mag1;  //  only the ice-air interface
+	vmmhz1m_fresneledtwice = vmmhz1m_max*fresnel1*mag1;  //  only the ice-air interface
 
-          if (settings1.BORESIGHTS) {
-            for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
-              for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-                GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold], n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[4][ilayer][ifold], vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
-              } // end looping over phi sectors
-            } // end looping over layers
-          } // end if we are calculating for all boresights
-        }//end else firn
-//cerr<<inu<<" -- here"<<endl;      //}
+	if (settings1.BORESIGHTS) {
+	  for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
+	    for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+	      GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold], n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[4][ilayer][ifold], vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
+	    } // end looping over phi sectors
+	  } // end looping over layers
+	} // end if we are calculating for all boresights
+      }//end else firn
+      //cerr<<inu<<" -- here"<<std::endl;      //}
+
+
       // OTHERWISE THERE IS ROUGHNESS SO DO MAGIC
-      if(settings1.ROUGHNESS){//else{
-        //(vector) ray1->nsurf_rfexit:  surface normal at RFexit position
-        //(pos)        ->rfexit[2]:     final iterated position of RF exit
-        //(vector)     ->n_exit2bn[2]:  vector from RF exit position TO balloon
-        //(pos)    bn1->r_bn:           position of balloon
-        //(vector) n_pol:               polarization vector
-        //(pos)    posnu:               position of neutrino interaction
 
-        int num_validscreenpoints = 0;
-        Position pos_current;
-        Vector vec_pos_current_to_balloon;
-
-        Position pos_projectedImpactPoint;
-        Vector vec_localnormal;         //normalized, normal vector at projected ground point
-        Vector vec_nnu_to_impactPoint;  //normalized
-        Vector vec_inc_perp;            //normalized, vector perp. to incident and surface normal (out-of-inc place)
-        Vector vec_inc_parl;            //normalized, vector parl. to incident and surface normal (in-inc plane)
-        double pol_perp_inc, pol_parl_inc;  //component of incident polarization
-        Vector vec_local_grnd_perp;     //normalized, vector perp. to transmitted and surface normal (out-of-trans place)
-        Vector vec_local_grnd_parl;     //normalized, vector parl. to transmitted and surface normal (in-trans plane)
-        double pol_perp_trans, pol_parl_trans;  //component of transmitted polarization
-        Vector vec_grndcomp2bln;
-        Vector vec_grndcomp2IP;
-
-        double time_reference_specular, time_reference_local;
-        double pathlength_local;        // set for each screen point
-        double viewangle_local;
-        double azimuth_local;           // azimuthal angle between local surface normal and vector to balloon [radians]
-        double theta_local;             // polar angle between local surface normal and vector to balloon [radians]
-        double theta_0_local;                 //angle between local surface normal and incident direction [radians]
-        double tcoeff_perp_polperp, tcoeff_parl_polperp;  //for perpendicular polarization (in-ground comp)
-        double tcoeff_perp_polparl, tcoeff_parl_polparl;  //for parallel polarization
-        double power_perp_polperp, power_parl_polperp;
-        double power_perp_polparl, power_parl_polparl;
-        power_perp_polperp = power_parl_polperp = power_perp_polparl = power_parl_polparl = 0.;
-        double fresnel_r, mag_r;
-
-        Vector npol_local_inc, npol_local_trans;
-        Vector temp_a;
-
-        double Emag_local;
-        double taperfactor;
-//cerr<<inu<<": "<<vmmhz1m_max<<endl;
-
-        //double pathlength_specular = interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn);
-        if (settings1.FIRN)
-          time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*constants::NFIRN / constants::CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/constants::CLIGHT);
-        else
-          time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*constants::NICE / constants::CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/constants::CLIGHT);
-
-        double slopeyx, slopeyy, slopeyz, rtemp;
-        Vector ntemp2;
-        Vector xaxis = Vector(1.,0.,0.);
-        Vector yaxis = Vector(0.,1.,0.);
-        Vector zaxis = Vector(0.,0.,1.);
-
-        double basescreenedgelength = settings1.SCREENEDGELENGTH;
-        double grd_stepsize = settings1.SCREENSTEPSIZE;
-        int grd_nsteps;
-        if(settings1.ROUGHSIZE>0)
-          grd_nsteps = int(basescreenedgelength/2. / grd_stepsize);
-        else
-          grd_nsteps = 0;
-
-        //#########
-        //iterate points on the screen, get their position and project back to find ground impact
-        //calculate incident and transmitted angles, look up power fraction, and add to running total
-
-        //reset
-        panel1->ResetParameters();
-
-        panel1->SetNsamples( grd_nsteps );
-        panel1->SetEdgeLength( basescreenedgelength );
-
-        panel1->SetCentralPoint( ray1->rfexit[2] );
-        vec_localnormal = antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit();
-        panel1->SetNormal( vec_localnormal );
-        panel1->SetCosineProjectionFactor( 1. );
-
-        panel1->SetUnitY( (vec_localnormal.Cross(ray1->n_exit2bn[2])).Unit() );
-        panel1->SetUnitX( (panel1->GetUnitY().Cross(vec_localnormal)).Unit() );
-//cerr<<panel1->GetCentralPoint()<<"  "<<  bn1->r_bn<<endl;
-        // loop over grid point on ground and see if it's valid
-        for (int ii= -2*panel1->GetNsamples(); ii< 2*panel1->GetNsamples()+1; ii++){
-          for (int jj= -2*panel1->GetNsamples(); jj< 2*panel1->GetNsamples()+1; jj++){
-//cerr<<"+++++++++++++"<<endl;
-//cerr<<inu<<": "<<ii<<"  "<<jj<<endl;
-  //cerr<<"+ seed point: "<<jj<<" / "<<panel1->GetNsamples()*panel1->GetNsamples()<<endl;
-            Emag_local = vmmhz1m_max;
-            taperfactor = fresnel_r = mag_r =  1.;
-            tcoeff_perp_polparl = tcoeff_parl_polparl = 0.;
-            tcoeff_perp_polperp = tcoeff_parl_polperp = 0.;
-            pos_projectedImpactPoint = panel1->GetPosition(ii, jj);        // this gets the new screen position
-            vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_projectedImpactPoint[0], bn1->r_bn[1] - pos_projectedImpactPoint[1], bn1->r_bn[2] - pos_projectedImpactPoint[2] );
-
-            // local angles of transmission and incidence in their respective planes
-            vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
-            if (settings1.SLOPEY) {
-                slopeyx=ray1->slopeyx;
-                slopeyy=ray1->slopeyy;
-                slopeyz=ray1->slopeyz;
-                ntemp2 = vec_localnormal + slopeyx*xaxis + slopeyy*yaxis + slopeyz*zaxis;
-                ntemp2 = ntemp2 / ntemp2.Mag();
-                rtemp= ntemp2.Dot(vec_localnormal);
-                if (rtemp<=1) {
-                  vec_localnormal = ntemp2;
-                }//if
-            }//end local slopeyness
-//cerr<<inu<<"  "<<pos_projectedImpactPoint<<endl;
-            vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
-
-            vec_grndcomp2IP = (vec_nnu_to_impactPoint - (vec_nnu_to_impactPoint.Dot(vec_localnormal)*vec_localnormal)).Unit();
-            vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
-            temp_a = vec_localnormal.Cross(vec_pos_current_to_balloon).Unit();
-            azimuth_local = vec_grndcomp2IP.Angle(vec_grndcomp2bln); //[rad]
-            if( temp_a.Dot(vec_nnu_to_impactPoint) < 0 )
-              azimuth_local *= -1.;
-            if( panel1->GetCentralPoint().Distance(pos_projectedImpactPoint)<0.75*grd_stepsize ){
-              azimuth_local = 0.;
-            }
-//cerr<<inu<<":  "<<jj<<"  "<<vec_grndcomp2IP<<" : "<<vec_grndcomp2bln<<" : "<<azimuth_local*180./PI<<endl;
-            theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
-            theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
-//cerr<<inu<<"  "<<ii<<"  "<<jj<<";  "<<panel1->GetCentralPoint()<<" : "<<  pos_projectedImpactPoint<<" : "<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<< azimuth_local*180./PI<< endl;
-//cerr<< panel1->GetCentralPoint() - pos_projectedImpactPoint<<endl;
-            if( isnan(theta_local) | isnan(theta_0_local) | isnan(azimuth_local) ){
-              continue;
-            }
-            viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
-
-            // at this point, only figure out if taper will kill the geometry, but don't actually apply the factor
-            deltheta_em[0]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[0];
-            deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
-            sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, taperfactor, vmmhz_em[0]);// this applies the angular dependence.
-            if(taperfactor==0)
-              continue;
-//cerr<<inu<< ": past E=0"<<endl;
-            /////
-            // Field Magnitude
-  #ifdef USE_HEALPIX
-            if (settings1.FIRN)
-              rough1->InterpolatePowerValue(power_perp_polperp, power_parl_polperp, power_perp_polparl, power_parl_polparl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
-            else
-              rough1->InterpolatePowerValue(power_perp_polperp, power_parl_polperp, power_perp_polparl, power_parl_polparl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
-  #endif
-//cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
-            if( (power_perp_polperp==0.)&(power_parl_polperp==0.)&(power_perp_polparl==0.)&(power_parl_polparl==0.) ){
-              //continue;
-            }
-//cerr<<"survived power cut"<<endl;
-            if (settings1.FIRN){
-              tcoeff_perp_polparl = sqrt(power_perp_polparl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
-              tcoeff_parl_polparl = sqrt(power_parl_polparl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
-              tcoeff_perp_polperp = sqrt(power_perp_polperp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
-              tcoeff_parl_polperp = sqrt(power_parl_polperp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
-            }
-            else{
-              tcoeff_perp_polparl = sqrt(power_perp_polparl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
-              tcoeff_parl_polparl = sqrt(power_parl_polparl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
-              tcoeff_perp_polperp = sqrt(power_perp_polperp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
-              tcoeff_parl_polperp = sqrt(power_parl_polperp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
-            }
-            //
-//cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
-//cerr<<"T (spec): "<<t_coeff_slappy<<"  "<<t_coeff_pokey<<std::endl;
-            //Emag_local *= sqrt((tcoeff_perp*tcoeff_perp + tcoeff_parl*tcoeff_parl)) * mag_r;// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
-//cerr<<"E: "<<Emag_local<<std::endl;
-            // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
-            pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
-//cerr<<"P: "<<pathlength_local<<std::endl;
-            Emag_local /= pathlength_local ;
-//cerr<<"E: "<<Emag_local<<std::endl;
-            Attenuate(antarctica, &settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
-//cerr<<"E: "<<Emag_local<<std::endl;
-            /////
-            // Incident and Transmitted Polarizations
-            // set incident polarization
-            npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint).Unit();
-            vec_inc_perp = (vec_localnormal.Cross(vec_nnu_to_impactPoint)).Unit();
-            vec_inc_parl = (vec_nnu_to_impactPoint.Cross(vec_inc_perp)).Unit();
-            pol_perp_inc = npol_local_inc.Dot(vec_inc_perp);
-            pol_parl_inc = npol_local_inc.Dot(vec_inc_parl);
-            //
-            pol_perp_trans = pol_perp_inc * tcoeff_perp_polperp + pol_parl_inc * tcoeff_perp_polparl;
-            pol_parl_trans = pol_parl_inc * tcoeff_parl_polparl + pol_perp_inc * tcoeff_parl_polperp;
-            //
-            vec_local_grnd_perp = (vec_localnormal.Cross(vec_pos_current_to_balloon)).Unit();
-            vec_local_grnd_parl = (vec_pos_current_to_balloon.Cross(vec_local_grnd_perp)).Unit();
-            //
-            // set transmitted polarization
-            npol_local_trans= (pol_perp_trans*vec_local_grnd_perp + pol_parl_trans*vec_local_grnd_parl).Unit();
-//cerr<<inu<<":  v_nu "<<interaction1->nnu<<" : 2IP "<<vec_nnu_to_impactPoint<<" : npol "<<npol_local_trans<< endl;
-            // check if transmitted polarization is undefined
-            if( isnan(npol_local_trans[0]) ){
-              continue;
-            }
-//cerr<<"past pol cut"<<endl;
-            //
-            fresnel_r = sqrt( pow(vmmhz1m_max*pol_perp_trans,2) + pow(vmmhz1m_max*pol_parl_trans,2) ) / vmmhz1m_max;
-            mag_r = sqrt( tan(theta_0_local) / tan(theta_local) );
-            Emag_local *= fresnel_r * mag_r;
-//cerr<<"E: "<<Emag_local<<std::endl;
-            if (settings1.FIRN)
-              time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*constants::NFIRN / constants::CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/constants::CLIGHT);
-            else
-              time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*constants::NICE / constants::CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/constants::CLIGHT);
-            // increment counter so we can track the size of the screen's vector arrays
-            num_validscreenpoints++;
-
-            //add the contribution to the running total
-            panel1->AddVmmhz0(Emag_local);                // pre-taper Efield
-            panel1->AddVec2bln(vec_pos_current_to_balloon);
-            panel1->AddPol(npol_local_trans);
-            panel1->AddDelay( time_reference_specular - time_reference_local );
-            panel1->AddImpactPt(pos_projectedImpactPoint);
-            panel1->AddViewangle(viewangle_local);
-            panel1->AddIncidenceAngle(theta_0_local);
-            panel1->AddTransmissionAngle(theta_local);
-            panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
-            panel1->AddFacetLength(panel1->GetEdgeLength() / panel1->GetNsamples());
-            panel1->AddTparallel_polParallel(tcoeff_parl_polparl);
-            panel1->AddTperpendicular_polParallel(tcoeff_perp_polparl);
-            panel1->AddTparallel_polPerpendicular(tcoeff_parl_polperp);
-            panel1->AddTperpendicular_polPerpendicular(tcoeff_perp_polperp);
-            //
-  //cerr<<pos_current<<"  "
-  //<<Emag_local<<"  "
-  //<<npol_local_trans<<"  "
-  //<<(pathlength_specular-pathlength_local) / CLIGHT<<"  "
-  //<<pos_projectedImpactPoint<<"  "
-  //<<viewangle_local<<std::endl;
-          }// end for jj 
-        }// end for ii
-
-        panel1->SetNvalidPoints(num_validscreenpoints);
-        //now construct the Screen's vmmhz array for all points, so it gets passed to the trigger object later to make the waveforms
-        // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor) and making an array across frequency bins by putting in frequency dependence.
-        double validScreenSummedArea = 0.;
-        double vmmhz_local_array[Anita::NFREQ];
-        for (int jj=0; jj<panel1->GetNvalidPoints(); jj++){
-          // fill the frequency array vmmhz_local_array
-          sig1->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
-          // apply the off-angle tapering
-          for (int k=0;k<Anita::NFREQ;k++) {
-            deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
-            deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
-            sig1->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
-            panel1->AddVmmhz_freq(vmmhz_local_array[k]);
-          }
-
-          validScreenSummedArea += panel1->GetWeight(jj);
-        }//end jj over panel Nvalid points
-        panel1->SetWeightNorm(validScreenSummedArea);
-        vmmhz_max = 0.;
-        for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
-          vmmhz_max = icemc::Tools::dMax(vmmhz_max, panel1->GetVmmhz_freq(jj*Anita::NFREQ));
-        }
-      }//end else roughness
-      // the screen is now finished
-      /////////////////////////////
+      
+      if(settings1.ROUGHNESS){
+	applyRoughness(settings1, interaction1, ray1, panel1, antarctica, bn1, sig1, anita1);
+      }
 
       if( settings1.ROUGHNESS && !panel1->GetNvalidPoints() ){
         continue;
@@ -3323,19 +2953,18 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
       // if (!settings1.ROUGHNESS){
       if(settings1.CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10.&& !settings1.SKIPCUTS) {
-	if (bn1->WHICHPATH==3)
-	  std::cout<<"Event is undetectable.  Leaving loop."<<endl;
-
+	if (bn1->WHICHPATH==3){
+	  std::cout<<"Event is undetectable.  Leaving loop."<<std::endl;
+	}
 	continue;
       }
       count1->nchanceinhell_fresnel[whichray]++;
-      // } //end if CHANCEINHELL factor and SKIPCUTS
       
 
       // for plotting
-      diffexit=ray1->rfexit[0].Distance(ray1->rfexit[1]);
-      diffnorm=acos(ray1->nsurf_rfexit[0]*ray1->nsurf_rfexit[1]);
-      diffrefr=acos(ray1->nrf_iceside[4].Dot(ray1->nrf_iceside[0]));
+      diffexit = ray1->rfexit[0].Distance(ray1->rfexit[1]);
+      diffnorm = acos(ray1->nsurf_rfexit[0]*ray1->nsurf_rfexit[1]);
+      diffrefr = acos(ray1->nrf_iceside[4].Dot(ray1->nrf_iceside[0]));
 
       // scale by 1/r once you've found the 3rd iteration exit point
       // ALREADY DEALT WITH IN CASE OF ROUGHNESS
@@ -3350,7 +2979,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       if (!settings1.ROUGHNESS){
         if (settings1.CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1.SKIPCUTS) {
           if (bn1->WHICHPATH==3)
-            std::cout<<"Event is undetectable.  Leaving loop."<<endl;
+            std::cout<<"Event is undetectable.  Leaving loop."<<std::endl;
           //
           continue;
         } //if
@@ -3367,16 +2996,20 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         }
       }
 
-      if (bn1->WHICHPATH==4)
+      if (bn1->WHICHPATH==4){
         std::cout << "rflength is " << rflength << "\n";
-
+      }
+      
       // applying ice attenuation factor
       if (!settings1.ROUGHNESS) {
-        if (whichray==0)
+        if (whichray==0){
           Attenuate(antarctica, &settings1, vmmhz_max,  rflength,  interaction1->posnu);
-        if (whichray==1)
+	}
+        if (whichray==1){
           Attenuate_down(antarctica, &settings1, vmmhz_max,  ray1->rfexit[2],  interaction1->posnu, interaction1->posnu_down);
+	}
       }
+      
       // roughness attenuation already dealt with
       // fill for just 1/10 of the events.
       TTree* tree2 = ro.fTree2;
@@ -3390,11 +3023,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // reject if the event is undetectable.
       if (!settings1.ROUGHNESS){
         if (settings1.CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1.SKIPCUTS) {
-          if (bn1->WHICHPATH==3)
-            std::cout<<"Event is undetectable.  Leaving loop."<<endl;
+          if (bn1->WHICHPATH==3){
+            std::cout<<"Event is undetectable.  Leaving loop."<<std::endl;
           //
+	  }
           continue;
-        } //if
+        }
       }
 
       count1->nchanceinhell[whichray]++;
@@ -3406,7 +3040,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // index for each antenna so you can use it to fill arrays
       count_rx=0;
       // keeps track of maximum voltage seen on either polarization of any antenna
-      volts_rx_max=0;
+      voltsRX.max=0;
 
       // Make a vector of V/m/MHz scaled by 1/r and attenuated.
       // Calculates Jaime's V/m/MHz at 1 m for each frequency
@@ -3414,11 +3048,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // this will need to be improved once frequency-dependent
       // attenuation length is included.
       if (!settings1.ROUGHNESS){
-        if (settings1.FORSECKEL==1)
+        if (settings1.FORSECKEL==1){
           sig1->SetNDepth(sig1->NICE); // for making array of signal vs. frequency,  viewangle
-        
-        sig1->GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ); // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
-        //   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
+	}
+
+        sig1->GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ);
+	// here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
+        // vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
         // and making an array across frequency bins by putting in frequency dependence.
       }
         
@@ -3426,7 +3062,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // and size of signal once position of viewing angle is taken into account
 
       // these variables are for energy reconstruction studies
-        
+
       undogaintoheight_e=0;
       undogaintoheight_h=0;
 
@@ -3458,7 +3094,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           if (settings1.FORSECKEL==1) {// this is for making plots of the signal
             for (int iviewangle=0;iviewangle<NVIEWANGLE;iviewangle++) {// loop over viewing angles
               // remove the 1/r and attenuation factors that are contained in the ratio vmmhz1m_max/vmmhz_max
-              vmmhz_temp=vmmhz[k]*vmmhz1m_max/vmmhz_max;
+              double vmmhz_temp=vmmhz[k]*vmmhz1m_max/vmmhz_max;
 
               viewangle_temp=viewangles[iviewangle]; //grab the viewing angle from this array
               //apply the gaussian dependence away from the cerenkov angle.  vmmhz_temp is both an input and an output.
@@ -3545,7 +3181,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       if(!settings1.ROUGHNESS){
         panel1->SetNvalidPoints(1);
         for (int k=0;k<Anita::NFREQ;k++) {
-      	  //cout << anita1->freq[k] << " " << vmmhz[k] << " " << vmmhz2[k] << " " << vmmhz[k]/vmmhz2[k] << endl;
+      	  //cout << anita1->freq[k] << " " << vmmhz[k] << " " << vmmhz2[k] << " " << vmmhz[k]/vmmhz2[k] << std::endl;
       	  panel1->AddVmmhz_freq(vmmhz[k]);
         }
         panel1->AddVmmhz0(vmmhz[0]);
@@ -3647,11 +3283,20 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
       anita1->rms_rfcm_e_single_event = 0;
 
+
+      // This seems to be where Oindree's stuff is used...
+      Vector n_eplane = constants::const_z;
+      Vector n_hplane = -constants::const_y;
+      Vector n_normal = constants::const_x;
+      double e_component_kvector=0; // component of e-field along the rx e-plane
+      double h_component_kvector=0; // component of the e-field along the rx h-plane
+      double n_component_kvector=0; // component of the e-field along the normal      
+      
       if (!settings1.BORESIGHTS) {
         bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
         bn1->GetEcompHcompEvector(&settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
       }
-      
+
       for (int ilayer=0; ilayer < settings1.NLAYERS; ilayer++) { // loop over layers on the payload
         for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
           
@@ -3693,8 +3338,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
                   << k << "  "
                   << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
                   << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
-                  << chantrig1->volts_rx_forfft[0][iband][k]<< "  "
-                  << chantrig1->volts_rx_forfft[1][iband][k]<< "  "
+                  << chantrig1->voltsRX.forfft[0][iband][k]<< "  "
+                  << chantrig1->voltsRX.forfft[1][iband][k]<< "  "
                   << std::endl;
                 }
               }
@@ -3705,7 +3350,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 */
           chantrig1->DigitizerPath(&settings1, anita1, antNum, bn1);
 
-          chantrig1->TimeShiftAndSignalFluct(&settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
+          chantrig1->TimeShiftAndSignalFluct(&settings1, anita1, ilayer, ifold, voltsRX.rfcm_lab_e_all,  voltsRX.rfcm_lab_h_all);
 
           chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
           chantrig1->saveDigitizerWaveforms(anita1, justSignal_dig[0][antNum], justSignal_dig[1][antNum], justNoise_dig[0][antNum], justNoise_dig[1][antNum]);
@@ -3778,7 +3423,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             h_comp_max1 = h_component;
           }
           else if (ilayer == 0 && globaltrig1->volts[0][ilayer][ifold] == max_antenna_volts0 && globaltrig1->volts[0][ilayer][ifold] != 0){
-            std::cout<<"Equal voltage on two antennas!  Event : "<<inu<<endl;
+            std::cout<<"Equal voltage on two antennas!  Event : "<<inu<<std::endl;
           }
           else if (ilayer == 1 && globaltrig1->volts[0][ilayer][ifold] > max_antenna_volts1) {
             max_antenna1 = count_rx;
@@ -3788,7 +3433,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             h_comp_max2 = h_component;
           }
           else if (ilayer == 1 && globaltrig1->volts[0][ilayer][ifold] == max_antenna_volts1 && globaltrig1->volts[0][ilayer][ifold] != 0){
-            std::cout<<"Equal voltage on two antennas!  Event : "<<inu<<endl;
+            std::cout<<"Equal voltage on two antennas!  Event : "<<inu<<std::endl;
           }
           else if (ilayer == 2 && globaltrig1->volts[0][ilayer][ifold] > max_antenna_volts2) {
             max_antenna2 = count_rx;
@@ -3798,7 +3443,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             h_comp_max3 = h_component;
           }
           else if (ilayer == 2 && globaltrig1->volts[0][ilayer][ifold] == max_antenna_volts2 && globaltrig1->volts[0][ilayer][ifold] != 0){
-            std::cout<<"Equal voltage on two antennas!  Event : "<<inu<<endl;
+            std::cout<<"Equal voltage on two antennas!  Event : "<<inu<<std::endl;
           }
           voltagearray[count_rx] = globaltrig1->volts[0][ilayer][ifold];
           //End verification plot block
@@ -3807,7 +3452,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 
           if (settings1.TRIGTYPE==0 && ifold==1 && count_pass>=settings1.NFOLD) { //added djg --line below fills "direct" voltage output file
-            al_voltages_direct<<"0 0 0"<<"   "<<"    "<<globaltrig1->volts_original[1][0][0]<<"    "<<(globaltrig1->volts_original[0][0][0]/sqrt(2.))<<"     "<<globaltrig1->volts_original[1][0][1]<<"     "<<globaltrig1->volts_original[0][0][1]<<"      "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"  "<<fNeutrinoPath->weight<<endl;
+            al_voltages_direct<<"0 0 0"<<"   "<<"    "<<globaltrig1->volts_original[1][0][0]<<"    "<<(globaltrig1->volts_original[0][0][0]/sqrt(2.))<<"     "<<globaltrig1->volts_original[1][0][1]<<"     "<<globaltrig1->volts_original[0][0][1]<<"      "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"  "<<fNeutrinoPath->weight<<std::endl;
           }
           delete chantrig1;
         } //loop through the phi-fold antennas
@@ -3850,7 +3495,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
 
       nchannels_triggered=icemc::Tools::iSum(globaltrig1->nchannels_perrx_triggered, settings1.NANTENNAS); // find total number of antennas that were triggered.
-      volts_rx_ave=GetAverageVoltageFromAntennasHit(&settings1, globaltrig1->nchannels_perrx_triggered, voltagearray, volts_rx_sum);
+      voltsRX.ave=GetAverageVoltageFromAntennasHit(&settings1, globaltrig1->nchannels_perrx_triggered, voltagearray, voltsRX.sum);
 
       // if it passes the trigger,  then go ahead and
       // calculate the chord length,  etc.
@@ -3970,19 +3615,19 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           fNeutrinoPath->pieceofkm2sr=fNeutrinoPath->weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*constants::sr/(double)NNU/fNeutrinoPath->len_int;
           if (h10->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST)
             h10->Fill(hitangle_e_all[0], fNeutrinoPath->weight);
-//cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<"   screenNpts="<<panel1->GetNvalidPoints()<< ":  vmmhz[0] = "<<panel1->GetVmmhz_freq(0)<<" : trans pol "<< panel1->GetPol(0)<<" : IncAngle "<<panel1->GetIncidenceAngle(0)*180./PI<< " : TransAngle "<<panel1->GetTransmissionAngle(0)*180./PI<<" : Tslappy "<<panel1->GetTperpendicular_polPerpendicular(0)<<" : Tpokey "<<panel1->GetTparallel_polParallel(0)<< endl;
-//cerr<<bn1->r_bn.Lat()<<"  "<<-90.+bn1->r_bn.Lat()<<endl;
-//cerr<<interaction1->posnu.Lon()<<"  "<<-90.+interaction1->posnu.Lat()<<endl;
-//cerr<<ray1->rfexit[2].Lon()<<"  "<<-90.+ray1->rfexit[2].Lat()<<endl;
-//cerr<<ray1->rfexit[2].Distance(interaction1->posnu)<<endl;
-//cerr<<interaction1->nnu.Angle(antarctica->GetSurfaceNormal(interaction1->posnu))<<endl;
-//cerr<<interaction1->nnu.Angle(ray1->n_exit2bn[2])<<endl;
-//cerr<<ray1->rfexit[2].Distance(bn1->r_bn)<<endl;
-//cerr<<interaction1->posnu.Distance(bn1->r_bn)<<endl;
+//cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<"   screenNpts="<<panel1->GetNvalidPoints()<< ":  vmmhz[0] = "<<panel1->GetVmmhz_freq(0)<<" : trans pol "<< panel1->GetPol(0)<<" : IncAngle "<<panel1->GetIncidenceAngle(0)*180./PI<< " : TransAngle "<<panel1->GetTransmissionAngle(0)*180./PI<<" : Tslappy "<<panel1->GetTperpendicular_polPerpendicular(0)<<" : Tpokey "<<panel1->GetTparallel_polParallel(0)<< std::endl;
+//cerr<<bn1->r_bn.Lat()<<"  "<<-90.+bn1->r_bn.Lat()<<std::endl;
+//cerr<<interaction1->posnu.Lon()<<"  "<<-90.+interaction1->posnu.Lat()<<std::endl;
+//cerr<<ray1->rfexit[2].Lon()<<"  "<<-90.+ray1->rfexit[2].Lat()<<std::endl;
+//cerr<<ray1->rfexit[2].Distance(interaction1->posnu)<<std::endl;
+//cerr<<interaction1->nnu.Angle(antarctica->GetSurfaceNormal(interaction1->posnu))<<std::endl;
+//cerr<<interaction1->nnu.Angle(ray1->n_exit2bn[2])<<std::endl;
+//cerr<<ray1->rfexit[2].Distance(bn1->r_bn)<<std::endl;
+//cerr<<interaction1->posnu.Distance(bn1->r_bn)<<std::endl;
           // log of weight and chord for plotting
           fNeutrinoPath->logweight=log10(fNeutrinoPath->weight);
           interaction1->logchord=log10(interaction1->chord);
-//        cerr<<"-> We got a live one! "<<nunum<<"   Nscreenvalid: "<<panel1->GetNvalidPoints()<<"   weight: "<<weight<<endl;
+//        cerr<<"-> We got a live one! "<<nunum<<"   Nscreenvalid: "<<panel1->GetNvalidPoints()<<"   weight: "<<weight<<std::endl;
           // if neutrino travels more than one meter in ice
           if (interaction1->d2>1) {
             // intermediate counter
@@ -4166,7 +3811,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
                 realEvPtr->fTimes[ichan][j] = j * anita1->TIMESTEP * 1.0E9;
 	      }
 	    }
-	    	realEvPtr->fRFSpike = 0;// glitch does not likely happen in mc data.
+	    realEvPtr->fRFSpike = 0;// when we get as far as simulating this, we're doing well
+
             for (int iant = 0; iant < settings1.NANTENNAS; iant++){
               //int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1,  AnitaGeom1,  iant);
               int IceMCAnt = GetIceMCAntfromUsefulEventAnt(&settings1,  iant);
@@ -4182,9 +3828,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 		//                realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
 		//                realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
                 // convert volts to millivolts
-                realEvPtr->fVolts[UsefulChanIndexH][j] =  volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
+		const double voltsToMilliVolts = 1000;
+                realEvPtr->fVolts[UsefulChanIndexH][j] =  voltsRX.rfcm_lab_h_all[IceMCAnt][j+128]*voltsToMilliVolts;
                 realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
-                realEvPtr->fVolts[UsefulChanIndexV][j] =  volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
+                realEvPtr->fVolts[UsefulChanIndexV][j] =  voltsRX.rfcm_lab_e_all[IceMCAnt][j+128]*voltsToMilliVolts;
                 realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
               }//end int j
             }// end int iant
@@ -4600,7 +4247,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // maks the output file
   Summarize(&settings1, anita1, count1, spectra1, sig1, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb, sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, foutput, distanceout, clOpts.outputdir);
 
-  veff_out << settings1.EXPONENT << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << settings1.SIGMA_FACTOR << endl;//this is for my convenience
+  veff_out << settings1.EXPONENT << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << settings1.SIGMA_FACTOR << std::endl;//this is for my convenience
 
   // for each neutrino flavor,  fraction each contributes to sensitivity.
   sum_frac[0]=sum[0]/eventsfound;
@@ -4620,11 +4267,271 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   time_t raw_end_time = time(NULL);
   struct tm * end_time = localtime(&raw_end_time);
   std::cout << "Date and time at end of run are: " << asctime (end_time) << "\n";
-  std::cout<<"Total time elapsed is "<<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<endl;
+  std::cout<<"Total time elapsed is "<<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<std::endl;
 
-  foutput << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<endl;
+  foutput << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<std::endl;
 
   delete anita1;
   return;
 }
 
+
+
+
+
+void icemc::EventGenerator::applyRoughness(const Settings& settings1, Interaction* interaction1,
+					   Ray* ray1, Screen* panel1, IceModel* antarctica,
+					   Balloon* bn1, Signal* sig1, Anita* anita1){
+  
+  //(vector) ray1->nsurf_rfexit:  surface normal at RFexit position
+  //(pos)        ->rfexit[2]:     final iterated position of RF exit
+  //(vector)     ->n_exit2bn[2]:  vector from RF exit position TO balloon
+  //(pos)    bn1->r_bn:           position of balloon
+  //(vector) n_pol:               polarization vector
+  //(pos)    posnu:               position of neutrino interaction
+
+  int num_validscreenpoints = 0;
+  Position pos_current;
+  Vector vec_pos_current_to_balloon;
+
+  Position pos_projectedImpactPoint;
+  Vector vec_localnormal;         //normalized, normal vector at projected ground point
+  Vector vec_nnu_to_impactPoint;  //normalized
+  Vector vec_inc_perp;            //normalized, vector perp. to incident and surface normal (out-of-inc place)
+  Vector vec_inc_parl;            //normalized, vector parl. to incident and surface normal (in-inc plane)
+  double pol_perp_inc, pol_parl_inc;  //component of incident polarization
+  Vector vec_local_grnd_perp;     //normalized, vector perp. to transmitted and surface normal (out-of-trans place)
+  Vector vec_local_grnd_parl;     //normalized, vector parl. to transmitted and surface normal (in-trans plane)
+  double pol_perp_trans, pol_parl_trans;  //component of transmitted polarization
+  Vector vec_grndcomp2bln;
+  Vector vec_grndcomp2IP;
+
+  double time_reference_specular, time_reference_local;
+  double pathlength_local;        // set for each screen point
+  double viewangle_local;
+  double azimuth_local;           // azimuthal angle between local surface normal and vector to balloon [radians]
+  double theta_local;             // polar angle between local surface normal and vector to balloon [radians]
+  double theta_0_local;                 //angle between local surface normal and incident direction [radians]
+  double tcoeff_perp_polperp, tcoeff_parl_polperp;  //for perpendicular polarization (in-ground comp)
+  double tcoeff_perp_polparl, tcoeff_parl_polparl;  //for parallel polarization
+  double power_perp_polperp, power_parl_polperp;
+  double power_perp_polparl, power_parl_polparl;
+  power_perp_polperp = power_parl_polperp = power_perp_polparl = power_parl_polparl = 0.;
+  double fresnel_r, mag_r;
+
+  Vector npol_local_inc, npol_local_trans;
+  Vector temp_a;
+
+  double Emag_local;
+  double taperfactor;
+  //cerr<<inu<<": "<<vmmhz1m_max<<std::endl;
+
+  //double pathlength_specular = interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(bn1->r_bn);
+  if (settings1.FIRN){
+    time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*constants::NFIRN / constants::CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/constants::CLIGHT);
+  }
+  else{
+    time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*constants::NICE / constants::CLIGHT) + (ray1->rfexit[2].Distance(bn1->r_bn)/constants::CLIGHT);
+  }
+
+  double slopeyx, slopeyy, slopeyz, rtemp;
+  Vector ntemp2;
+  Vector xaxis = Vector(1.,0.,0.);
+  Vector yaxis = Vector(0.,1.,0.);
+  Vector zaxis = Vector(0.,0.,1.);
+
+  double basescreenedgelength = settings1.SCREENEDGELENGTH;
+  double grd_stepsize = settings1.SCREENSTEPSIZE;
+  int grd_nsteps;
+  if(settings1.ROUGHSIZE>0)
+    grd_nsteps = int(basescreenedgelength/2. / grd_stepsize);
+  else
+    grd_nsteps = 0;
+
+  //#########
+  //iterate points on the screen, get their position and project back to find ground impact
+  //calculate incident and transmitted angles, look up power fraction, and add to running total
+
+  //reset
+  panel1->ResetParameters();
+
+  panel1->SetNsamples( grd_nsteps );
+  panel1->SetEdgeLength( basescreenedgelength );
+
+  panel1->SetCentralPoint( ray1->rfexit[2] );
+  vec_localnormal = antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit();
+  panel1->SetNormal( vec_localnormal );
+  panel1->SetCosineProjectionFactor( 1. );
+
+  panel1->SetUnitY( (vec_localnormal.Cross(ray1->n_exit2bn[2])).Unit() );
+  panel1->SetUnitX( (panel1->GetUnitY().Cross(vec_localnormal)).Unit() );
+  //cerr<<panel1->GetCentralPoint()<<"  "<<  bn1->r_bn<<std::endl;
+  // loop over grid point on ground and see if it's valid
+  for (int ii= -2*panel1->GetNsamples(); ii< 2*panel1->GetNsamples()+1; ii++){
+    for (int jj= -2*panel1->GetNsamples(); jj< 2*panel1->GetNsamples()+1; jj++){
+      //cerr<<"+++++++++++++"<<std::endl;
+      //cerr<<inu<<": "<<ii<<"  "<<jj<<std::endl;
+      //cerr<<"+ seed point: "<<jj<<" / "<<panel1->GetNsamples()*panel1->GetNsamples()<<std::endl;
+      Emag_local = vmmhz1m_max;
+      taperfactor = fresnel_r = mag_r =  1.;
+      tcoeff_perp_polparl = tcoeff_parl_polparl = 0.;
+      tcoeff_perp_polperp = tcoeff_parl_polperp = 0.;
+      pos_projectedImpactPoint = panel1->GetPosition(ii, jj);        // this gets the new screen position
+      vec_pos_current_to_balloon = Vector( bn1->r_bn[0] - pos_projectedImpactPoint[0], bn1->r_bn[1] - pos_projectedImpactPoint[1], bn1->r_bn[2] - pos_projectedImpactPoint[2] );
+
+      // local angles of transmission and incidence in their respective planes
+      vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
+      if (settings1.SLOPEY) {
+	slopeyx=ray1->slopeyx;
+	slopeyy=ray1->slopeyy;
+	slopeyz=ray1->slopeyz;
+	ntemp2 = vec_localnormal + slopeyx*xaxis + slopeyy*yaxis + slopeyz*zaxis;
+	ntemp2 = ntemp2 / ntemp2.Mag();
+	rtemp= ntemp2.Dot(vec_localnormal);
+	if (rtemp<=1) {
+	  vec_localnormal = ntemp2;
+	}//if
+      }//end local slopeyness
+      //cerr<<inu<<"  "<<pos_projectedImpactPoint<<std::endl;
+      vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
+
+      vec_grndcomp2IP = (vec_nnu_to_impactPoint - (vec_nnu_to_impactPoint.Dot(vec_localnormal)*vec_localnormal)).Unit();
+      vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
+      temp_a = vec_localnormal.Cross(vec_pos_current_to_balloon).Unit();
+      azimuth_local = vec_grndcomp2IP.Angle(vec_grndcomp2bln); //[rad]
+      if( temp_a.Dot(vec_nnu_to_impactPoint) < 0 )
+	azimuth_local *= -1.;
+      if( panel1->GetCentralPoint().Distance(pos_projectedImpactPoint)<0.75*grd_stepsize ){
+	azimuth_local = 0.;
+      }
+      //cerr<<inu<<":  "<<jj<<"  "<<vec_grndcomp2IP<<" : "<<vec_grndcomp2bln<<" : "<<azimuth_local*180./PI<<std::endl;
+      theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
+      theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
+      //cerr<<inu<<"  "<<ii<<"  "<<jj<<";  "<<panel1->GetCentralPoint()<<" : "<<  pos_projectedImpactPoint<<" : "<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<< azimuth_local*180./PI<< std::endl;
+      //cerr<< panel1->GetCentralPoint() - pos_projectedImpactPoint<<std::endl;
+      if( isnan(theta_local) | isnan(theta_0_local) | isnan(azimuth_local) ){
+	continue;
+      }
+      viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
+
+      // at this point, only figure out if taper will kill the geometry, but don't actually apply the factor
+      deltheta_em[0]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[0];
+      deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
+      sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, taperfactor, vmmhz_em[0]);// this applies the angular dependence.
+      if(taperfactor==0)
+	continue;
+      //cerr<<inu<< ": past E=0"<<std::endl;
+      /////
+      // Field Magnitude
+#ifdef USE_HEALPIX
+      if (settings1.FIRN)
+	rough1->InterpolatePowerValue(power_perp_polperp, power_parl_polperp, power_perp_polparl, power_parl_polparl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
+      else
+	rough1->InterpolatePowerValue(power_perp_polperp, power_parl_polperp, power_perp_polparl, power_parl_polparl, theta_0_local*180./PI, theta_local*180./PI, azimuth_local *180./PI);
+#endif
+      //cerr<<"P: "<<power_perp<<"  "<<power_parl<<std::endl;
+      if( (power_perp_polperp==0.)&(power_parl_polperp==0.)&(power_perp_polparl==0.)&(power_parl_polparl==0.) ){
+	//continue;
+      }
+      //cerr<<"survived power cut"<<std::endl;
+      if (settings1.FIRN){
+	tcoeff_perp_polparl = sqrt(power_perp_polparl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+	tcoeff_parl_polparl = sqrt(power_parl_polparl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+	tcoeff_perp_polperp = sqrt(power_perp_polperp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+	tcoeff_parl_polperp = sqrt(power_parl_polperp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+      }
+      else{
+	tcoeff_perp_polparl = sqrt(power_perp_polparl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+	tcoeff_parl_polparl = sqrt(power_parl_polparl);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+	tcoeff_perp_polperp = sqrt(power_perp_polperp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+	tcoeff_parl_polperp = sqrt(power_parl_polperp);//*NFIRN*cos(theta_0_local)*cos(theta_local));
+      }
+      //
+      //cerr<<"T: "<<tcoeff_perp<<"  "<<tcoeff_parl<<std::endl;
+      //cerr<<"T (spec): "<<t_coeff_slappy<<"  "<<t_coeff_pokey<<std::endl;
+      //Emag_local *= sqrt((tcoeff_perp*tcoeff_perp + tcoeff_parl*tcoeff_parl)) * mag_r;// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
+      //cerr<<"E: "<<Emag_local<<std::endl;
+      // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
+      pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(bn1->r_bn);
+      //cerr<<"P: "<<pathlength_local<<std::endl;
+      Emag_local /= pathlength_local ;
+      //cerr<<"E: "<<Emag_local<<std::endl;
+      Attenuate(antarctica, &settings1, Emag_local,  interaction1->posnu.Distance(pos_projectedImpactPoint),  interaction1->posnu);
+      //cerr<<"E: "<<Emag_local<<std::endl;
+      /////
+      // Incident and Transmitted Polarizations
+      // set incident polarization
+      npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint).Unit();
+      vec_inc_perp = (vec_localnormal.Cross(vec_nnu_to_impactPoint)).Unit();
+      vec_inc_parl = (vec_nnu_to_impactPoint.Cross(vec_inc_perp)).Unit();
+      pol_perp_inc = npol_local_inc.Dot(vec_inc_perp);
+      pol_parl_inc = npol_local_inc.Dot(vec_inc_parl);
+      //
+      pol_perp_trans = pol_perp_inc * tcoeff_perp_polperp + pol_parl_inc * tcoeff_perp_polparl;
+      pol_parl_trans = pol_parl_inc * tcoeff_parl_polparl + pol_perp_inc * tcoeff_parl_polperp;
+      //
+      vec_local_grnd_perp = (vec_localnormal.Cross(vec_pos_current_to_balloon)).Unit();
+      vec_local_grnd_parl = (vec_pos_current_to_balloon.Cross(vec_local_grnd_perp)).Unit();
+      //
+      // set transmitted polarization
+      npol_local_trans= (pol_perp_trans*vec_local_grnd_perp + pol_parl_trans*vec_local_grnd_parl).Unit();
+      //cerr<<inu<<":  v_nu "<<interaction1->nnu<<" : 2IP "<<vec_nnu_to_impactPoint<<" : npol "<<npol_local_trans<< std::endl;
+      // check if transmitted polarization is undefined
+      if( isnan(npol_local_trans[0]) ){
+	continue;
+      }
+      //cerr<<"past pol cut"<<std::endl;
+      //
+      fresnel_r = sqrt( pow(vmmhz1m_max*pol_perp_trans,2) + pow(vmmhz1m_max*pol_parl_trans,2) ) / vmmhz1m_max;
+      mag_r = sqrt( tan(theta_0_local) / tan(theta_local) );
+      Emag_local *= fresnel_r * mag_r;
+      //cerr<<"E: "<<Emag_local<<std::endl;
+      if (settings1.FIRN)
+	time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*constants::NFIRN / constants::CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/constants::CLIGHT);
+      else
+	time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*constants::NICE / constants::CLIGHT) + (pos_projectedImpactPoint.Distance(bn1->r_bn)/constants::CLIGHT);
+      // increment counter so we can track the size of the screen's vector arrays
+      num_validscreenpoints++;
+
+      //add the contribution to the running total
+      panel1->AddVmmhz0(Emag_local);                // pre-taper Efield
+      panel1->AddVec2bln(vec_pos_current_to_balloon);
+      panel1->AddPol(npol_local_trans);
+      panel1->AddDelay( time_reference_specular - time_reference_local );
+      panel1->AddImpactPt(pos_projectedImpactPoint);
+      panel1->AddViewangle(viewangle_local);
+      panel1->AddIncidenceAngle(theta_0_local);
+      panel1->AddTransmissionAngle(theta_local);
+      panel1->AddWeight( (panel1->GetEdgeLength() / panel1->GetNsamples()) * (panel1->GetEdgeLength() / panel1->GetNsamples()) );
+      panel1->AddFacetLength(panel1->GetEdgeLength() / panel1->GetNsamples());
+      panel1->AddTparallel_polParallel(tcoeff_parl_polparl);
+      panel1->AddTperpendicular_polParallel(tcoeff_perp_polparl);
+      panel1->AddTparallel_polPerpendicular(tcoeff_parl_polperp);
+      panel1->AddTperpendicular_polPerpendicular(tcoeff_perp_polperp);
+    }
+  }
+
+  panel1->SetNvalidPoints(num_validscreenpoints);
+  //now construct the Screen's vmmhz array for all points, so it gets passed to the trigger object later to make the waveforms
+  // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor) and making an array across frequency bins by putting in frequency dependence.
+  double validScreenSummedArea = 0.;
+  double vmmhz_local_array[Anita::NFREQ];
+  for (int jj=0; jj<panel1->GetNvalidPoints(); jj++){
+    // fill the frequency array vmmhz_local_array
+    sig1->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
+    // apply the off-angle tapering
+    for (int k=0;k<Anita::NFREQ;k++) {
+      deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
+      deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
+      sig1->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
+      panel1->AddVmmhz_freq(vmmhz_local_array[k]);
+    }
+
+    validScreenSummedArea += panel1->GetWeight(jj);
+  }//end jj over panel Nvalid points
+  panel1->SetWeightNorm(validScreenSummedArea);
+  vmmhz_max = 0.;
+  for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
+    vmmhz_max = icemc::Tools::dMax(vmmhz_max, panel1->GetVmmhz_freq(jj*Anita::NFREQ));
+  }
+}
