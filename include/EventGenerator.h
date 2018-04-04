@@ -8,6 +8,7 @@
 
 #include "NeutrinoPath.h"
 #include "Constants.h"
+#include "VoltsRX.h"
 
 class TStyle;
 
@@ -27,6 +28,7 @@ namespace icemc {
   public:
 
     EventGenerator();
+    virtual ~EventGenerator();
 
     static const int NVIEWANGLE=100; // number of viewing angles to look at the signal, on Seckel's request
     int inu; // counts neutrinos as they are generated
@@ -75,7 +77,7 @@ namespace icemc {
     double altitude_this; // for plotting altitude
     double heading_this=0.;// for plotting heading
     double gps_offset=0;    
-    double pnu=pow(10., 20);   //!< energy of neutrinos
+    double pnu;   ///< energy of neutrinos
 
     double MEANX=0;
     double MEANY=0.;
@@ -101,9 +103,9 @@ namespace icemc {
     double BW_DISCONES=300.E6-120.E6; // bandwidth of the discones
 
     // ray tracing
-    double fresnel1=0;  //!< net fresnel factor on field at ice-firn interface
+    double fresnel1=0;  ///< net fresnel factor on field at ice-firn interface
     double fresnel1_eachboresight[icemc::Anita::NLAYERS_MAX][icemc::Anita::NPHI_MAX];  // for slac simulation
-    double fresnel2=0;  //!< net fresnel factor on field at firn-air
+    double fresnel2=0;  ///< net fresnel factor on field at firn-air
     double mag1=0;  // magnification factor on field at ice-firn interface
     double mag1_eachboresight[icemc::Anita::NLAYERS_MAX][icemc::Anita::NPHI_MAX];// for slac simulation
     double mag2=0;  // magnification factor on field in firn-air
@@ -221,7 +223,7 @@ namespace icemc {
     double MAX_ATTENLENGTH=1671;
     double maxtaper=0; // this is just for plotting - maximum you are ever off cerenkov cone while
     //an event is detectable
-    double dviewangle_deg=0; //!< deviation from the cherenkov angle
+    double dviewangle_deg=0; ///< deviation from the cherenkov angle
 
     double forseckel[NVIEWANGLE][Anita::NFREQ];// Per Seckel's request,  get strength of signal across frequencies for different viewing angles.
     double viewangles[NVIEWANGLE];
@@ -358,7 +360,7 @@ namespace icemc {
     // double volts_rx_max_lowband; // max voltage seen on an antenna - just for debugging purposes
     // double volts_rx_rfcm_lab_e_all[48][512];
     // double volts_rx_rfcm_lab_h_all[48][512];
-    // VoltsRX voltsRX;
+    VoltsRX voltsRX;
 
     // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
     double e_component=0; // E comp along polarization
@@ -387,9 +389,9 @@ namespace icemc {
     double viewangle_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // viewing angle for each antenna
 
     double cosalpha; // angle between nu momentum and surface normal at earth entrance point
-    double mytheta; //!< alpha minus 90 degrees
+    double mytheta; ///< alpha minus 90 degrees
     double cosbeta0; // angle between nu momentum and surface normal at interaction point.
-    double mybeta; //!< beta minus 90 degrees
+    double mybeta; ///< beta minus 90 degrees
     double nuexitlength=0; // distance from interaction to where neutrino would leave
     double nuexitice=0;
     double nuentrancelength=0; // for taus
@@ -398,7 +400,7 @@ namespace icemc {
     double theta_pol_measured; // theta of the polarization as measured at the payload (for now we don't correct for the 10 degree cant)
 
     double ptaui=0;
-    double ptauf =0;
+    double ptauf=0;
     double tauweight=0;
     double nutauweightsum=0;
     double tauweightsum=0;
@@ -431,53 +433,26 @@ namespace icemc {
     int nchannels_triggered = 0; // total number of channels triggered
     int nchannels_perrx_triggered[48]; // total number of channels triggered
 
+    double icethck;
+    double elev;
+    double lon_ground;
+    double lat_ground;
+    double lon_ice;
+    double lat_ice;
+    double h20_depth;
+    double lon_water;
+    double lat_water;
 
+    int pdgcode;
 
+    double rms_rfcm_e;
+    double rms_rfcm_h;
+    double rms_lab_e;
+    double rms_lab_h;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    double avgfreq_rfcm[Anita::NFREQ];
+    double avgfreq_rfcm_lab[Anita::NFREQ];
+    double freq[Anita::NFREQ];
     
 
     void applyRoughness(const Settings& settings1, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, Signal* sig1, Anita* anita1);
@@ -562,9 +537,11 @@ namespace icemc {
     double denom_h_thresh[NTHRESHOLDS]={0.};
     double thresholds[NTHRESHOLDS];
 
-
+    Interaction* interaction1;
+    Balloon* bn1;
+    Anita* anita1;
+    Taumodel* fTauPtr;    
   private:
-    Taumodel* fTauPtr;
 
     
 

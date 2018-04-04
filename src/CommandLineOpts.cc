@@ -105,6 +105,7 @@ icemc::CommandLineOpts::CommandLineOpts(int argc, char* argv[], Settings& settin
   }
 
   // post parsing logic...
+
   if(got_x){ // change the total so we only do 1 neutrino
     nnu_tmp = startNu+1;
   }
@@ -140,13 +141,18 @@ icemc::CommandLineOpts::CommandLineOpts(int argc, char* argv[], Settings& settin
   }
   else{
 
+    /// @todo use proper output for settings ReadInputs
     // update the settings object with the extracted info    
     std::ofstream foutput("temp.txt"); // need to replace this with the proper output at some point...
     settings.ReadInputs(input.c_str(),  foutput); //, NNU, RANDOMISEPOL);
 
+    /// @todo pass all the proper values onto settings.temp
     if (exp_tmp!=0){
       // notify?
       settings.EXPONENT = exp_tmp;
+    }
+    if(got_n){
+      settings.NNU = nnu_tmp;
     }
 
     settings.SEED += run_no; // uniquify per-run seed by adding run number

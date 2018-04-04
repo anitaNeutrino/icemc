@@ -146,7 +146,7 @@ icemc::Anita::Anita() {
     
   /*** Used for the Coherent Sum Trigger ***/
   summed_power_trigger_digitizer_zero_random = new TRandom3();
-  // Prepare the file and tree for the coherent sum trigger's data tree
+  // Prepare the file and tree for the coherent sum trigger's data tree  
   coherent_datafile = new TFile("outputs/coherent_sum_data_file.root","RECREATE");
   coherent_waveform_sum_tree = new TTree("coherent_waveform_sum_tree", "Coherent Waveform Sum");
   coherent_waveform_sum_tree->Branch("event_number", &cwst_event_number);
@@ -191,28 +191,30 @@ icemc::Anita::Anita() {
   // End of preparition for the coherent sum trigger's data tree
 }
 
+
 icemc::Anita::~Anita(){
+
+  std::cout << coherent_datafile << std::endl;
   coherent_datafile->cd();
     
   coherent_waveform_sum_tree->Write();
   coherent_datafile->Write();
-    
+
   coherent_waveform_sum_tree->Delete();
   coherent_datafile->Close();
   coherent_datafile->Delete();
-    
+
   delete summed_power_trigger_digitizer_zero_random;
-	
-  return;
 }
 
 int icemc::Anita::Match(int ilayer,int ifold,int rx_minarrivaltime) {
     
-  if (ilayer==GetLayer(rx_minarrivaltime) && ifold==GetIfold(rx_minarrivaltime))
+  if (ilayer==GetLayer(rx_minarrivaltime) && ifold==GetIfold(rx_minarrivaltime)){
     return 1;
-  else
+  }
+  else{
     return 0;
-    
+  }    
 }
 int icemc::Anita::GetRx(int ilayer, int ifold) { // get antenna number based on which layer and position it is
     

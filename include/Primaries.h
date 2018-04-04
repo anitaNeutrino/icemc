@@ -231,6 +231,8 @@ namespace icemc {
     void setNuFlavor(Primaries *primary1, const Settings *settings1, int whichray, Counting *count1);
     std::string GetCurrent();
     void setCurrent();
+    int getPdgCode() const;
+
     Position posnu;
     Position posnu_down;
     std::string  nuflavor;	  ///< neutrino flavor

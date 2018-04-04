@@ -325,6 +325,20 @@ void icemc::Interaction::setCurrent() {
 }//setCurrent
 
 
+int icemc::Interaction::getPdgCode() const {
+  int pdgcode = -1;
+  if (nuflavor=="nue"){
+    pdgcode = 12;
+  }
+  else if (nuflavor=="numu"){
+    pdgcode = 14;
+  }
+  else if (nuflavor=="nutau"){
+    pdgcode = 16;
+  }
+  return pdgcode;
+}
+
 
 ///////////////// Y //////////////
 icemc::Y::Y() { // Constructor

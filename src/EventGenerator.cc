@@ -42,12 +42,12 @@
 #include "RawAnitaHeader.h"
 #include "Adu5Pat.h"
 #include "FFTtools.h"
-UsefulAnitaEvent* realEvPtr    = NULL;
+UsefulAnitaEvent* realEvPtr = NULL;
 RawAnitaHeader* rawHeaderPtr = NULL;
-Adu5Pat* Adu5PatPtr   = NULL;
+Adu5Pat* Adu5PatPtr = NULL;
 #ifdef ANITA3_EVENTREADER
 #include "TruthAnitaEvent.h"
-TruthAnitaEvent*      truthEvPtr   = NULL;
+TruthAnitaEvent* truthEvPtr = NULL;
 #endif
 #endif
 
@@ -75,11 +75,36 @@ bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_h
  * 
  * @todo properly zero member variables
  */
-icemc::EventGenerator::EventGenerator() : fNeutrinoPath(NULL), fTauPtr(NULL)
+icemc::EventGenerator::EventGenerator() : fNeutrinoPath(NULL), interaction1(NULL), bn1(NULL), anita1(NULL), fTauPtr(NULL)
 {
-
-  
+  pnu = pow(10., 20);   //!< energy of neutrinos
+  inu = 0;
 }
+
+
+/** 
+ * Destructor
+ * 
+ */
+icemc::EventGenerator::~EventGenerator()
+{
+  if(fNeutrinoPath){
+    delete fNeutrinoPath;
+  }
+  if(interaction1){
+    delete interaction1;
+  }
+  if(bn1){
+    delete bn1;
+  }
+  if(anita1){
+    delete anita1;
+  }
+  if(fTauPtr){
+    delete fTauPtr;
+  }  
+}
+
 
 void icemc::EventGenerator::IntegrateBands(Anita *anita1, int k, Screen *panel1, double *freq, double scalefactor, double *sumsignal) {
   for (int j=0;j<5;j++) {
@@ -150,7 +175,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
   TGraph *gdenom=new TGraph(NTHRESHOLDS, thresholds, denom_v_thresh);
   gdenom->SetName("denom");
 
-  TGraphAsymmErrors *g=new TGraphAsymmErrors(NTHRESHOLDS, thresholds, rate_v_thresh, zeroes, zeroes, errorup_v_thresh, errordown_v_thresh);
+  TGraphAsymmErrors* g = new TGraphAsymmErrors(NTHRESHOLDS, thresholds, rate_v_thresh, zeroes, zeroes, errorup_v_thresh, errordown_v_thresh);
   g->SetName("rate");
 
   g->SetLineWidth(2);
@@ -1051,8 +1076,9 @@ double icemc::EventGenerator::GetThisAirColumn(const Settings* settings1,  Posit
     // find column of air at this theta
     myair=(col1[index11]+(col1[index12]-col1[index11])*(mytheta*10.-double(index11)))*10.;//unit is kg/m^2
   }
-  else
+  else{
     myair=0.;//don't include effect of atmosphere
+  }
 
   //cout<<"mytheta="<<mytheta<<"; myair="<<myair<<std::endl;
   //------------------added on Dec 8------------------------
@@ -1325,7 +1351,6 @@ void icemc::EventGenerator::interrupt_signal_handler(int sig){
 }
 
 
-//int GetIceMCAntfromUsefulEventAnt(Anita *anita1,  AnitaGeomTool *AnitaGeom1,  int UsefulEventAnt){
 int icemc::EventGenerator::GetIceMCAntfromUsefulEventAnt(const Settings *settings1,  int UsefulEventAnt){
 
 #ifdef ANITA_UTIL_EXISTS  
@@ -1343,6 +1368,8 @@ int icemc::EventGenerator::GetIceMCAntfromUsefulEventAnt(const Settings *setting
 void icemc::EventGenerator::WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double altitude_int,  std::string nuflavor,  std::string current,  double elast_y,  std::ofstream &nu_out) {
   nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
 }
+
+
 
 
 
@@ -1405,8 +1432,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   stemp = clOpts.outputdir + "/slac_hitangles" + clOpts.run_num + ".dat";
   ofstream fslac_hitangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
 
-  Balloon* bn1 = new Balloon(); // instance of the balloon
-  Anita* anita1 = new Anita();// right now this constructor gets banding info
+  if(!bn1){
+    bn1 = new Balloon();
+  }
+  
+  if(!anita1){
+    anita1 = new Anita();
+  }
+  
   Secondaries* sec1 = new Secondaries();
   Primaries* primary1 = new Primaries();
   Signal* sig1 = new Signal();
@@ -1438,7 +1471,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   }
 
   Spectra* spectra1 = new Spectra((int)settings1.EXPONENT);
-  Interaction* interaction1=new Interaction("nu", primary1, &settings1, 0, count1);
+  if(!interaction1){
+    interaction1 = new Interaction("nu", primary1, &settings1, 0, count1);
+  }
   Interaction* int_banana=new Interaction("banana", primary1, &settings1, 0, count1);
   
   Roughness* rough1=new Roughness(&settings1); // create new instance of the roughness class
@@ -1464,22 +1499,21 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   GetAir(col1);
   double myair;//air column density, kg/m^2
 
-  nuflavorint2=interaction1->nuflavorint;
-  costheta_nutraject2=interaction1->costheta_nutraject;
-  phi_nutraject2=interaction1->phi_nutraject;
-  altitude_int2=interaction1->altitude_int;
-  currentint2=interaction1->currentint;
-  d12=interaction1->d1;
-  d22=interaction1->d2;
-  dtryingdirection2=interaction1->dtryingdirection;
-  logchord2=interaction1->logchord;
-  r_fromballoon2=interaction1->r_fromballoon[0];
-  chord_kgm2_bestcase2=interaction1->chord_kgm2_bestcase;
-  chord_kgm2_ice2=interaction1->chord_kgm2_ice;
-  weight_bestcase2=interaction1->weight_bestcase;
-  r_exit2bn2=interaction1->r_exit2bn;
-  r_exit2bn_measured2=interaction1->r_exit2bn_measured;
-  VoltsRX voltsRX;
+  nuflavorint2 = interaction1->nuflavorint;
+  costheta_nutraject2 = interaction1->costheta_nutraject;
+  phi_nutraject2 = interaction1->phi_nutraject;
+  altitude_int2 = interaction1->altitude_int;
+  currentint2 = interaction1->currentint;
+  d12 = interaction1->d1;
+  d22 = interaction1->d2;
+  dtryingdirection2 = interaction1->dtryingdirection;
+  logchord2 = interaction1->logchord;
+  r_fromballoon2 = interaction1->r_fromballoon[0];
+  chord_kgm2_bestcase2 = interaction1->chord_kgm2_bestcase;
+  chord_kgm2_ice2 = interaction1->chord_kgm2_ice;
+  weight_bestcase2 = interaction1->weight_bestcase;
+  r_exit2bn2 = interaction1->r_exit2bn;
+  r_exit2bn_measured2 = interaction1->r_exit2bn_measured;
   
   // zeroing global variables.
   icemc::Tools::Zero(sum_frac, 3);
@@ -1512,457 +1546,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   icemc::Tools::Zero(eventsfound_binned_mu, NBINS);
   icemc::Tools::Zero(eventsfound_binned_tau, NBINS);
   icemc::Tools::Zero(eventsfound_nfb_binned, NBINS);
-
-  //we pick both the interaction point and its corresponding mirror point
-
-  //for drawing the events on the events map
-  TH2F* ref_int_coord=new TH2F("ref_int_coord",  "",  600,  -3000,  3000,  500,  -2500,  2500);
-  ref_int_coord->SetMarkerSize(0.7);;
-  ref_int_coord->SetMarkerStyle(30);
-  ref_int_coord->SetMarkerColor(kBlue);
-
-  TH2F* dir_int_coord=new TH2F("dir_int_coord",  "",  600,  -3000,  3000,  500,  -2500,  2500);
-  dir_int_coord->SetMarkerSize(0.7);
-  dir_int_coord->SetMarkerStyle(30);
-
-  TH1F* prob_eachphi_bn=new TH1F("prob_eachphi_bn",  "prob_eachphi_bn",  100,  0.,  6.3);
-  TH1F* prob_eachilon_bn=new TH1F("prob_eachilon_bn",  "prob_eachilon_bn",  180,  0.,  180.);
-  TH2F* h6=new TH2F("theta_vs_hitangle_h",  "theta_vs_hitangle_h",  100,  -3.14,  3.14,  100,  -1.1,  1.1);
-  TH1F* h10=new TH1F("hitangle_e",  "hitangle_e",  20,  -1.6,  1.6);
-  TH1F* hy=new TH1F("hy",  "hy",  100,  0.,  1.);
-  TH1F* fraction_sec_muons = new TH1F("fraction_sec_muons",  "fraction_sec_muons",  100,  0.,  1.);
-  TH1F* fraction_sec_taus=new TH1F("fraction_sec_taus",  "fraction_sec_taus",  100,  0.,  1.);
-  TH1F* n_sec_muons= new TH1F("n_sec_muons",  "n_sec_muons",  100,  0.,  10.);
-  TH1F* n_sec_taus= new TH1F("n_sec_taus",  "n_sec_taus",  100,  0.,  10.);
-  // we sample weights for early events and save
-  // them in this histogram, to determine where the cut should be.
-  TH1F* sampleweights=new TH1F("sampleweights",  "sampleweights",  100,  -5.,  0.);
-
   
-  // stemp=clOpts.outputdir+"/icefinal"+clOpts.run_num+".root";
-  // TFile* hfile = new TFile(stemp.c_str(), "RECREATE", "ice");
-  // TTree* tree2 = new TTree("h2000", "h2000"); // tree2 filled for each event that is beyond the horizon.
-
-  // tree2->Branch("inu", &inu, "inu/I");
-  // tree2->Branch("horizcoord", &horizcoord, "horizcoord/D");
-  // tree2->Branch("vertcoord", &vertcoord, "vertcoord/D");
-  // tree2->Branch("scalefactor_distance", &scalefactor_distance, "scalefactor_distance/D");
-  // tree2->Branch("scalefactor_attenuation", &scalefactor_attenuation, "scalefactor_attenuation/D");
-  icemc::RootOutput ro(clOpts.outputdir.c_str(), clOpts.run_no);
-  ro.make_icefinal();
-
-  TTree* tree3 = new TTree("h3000", "h3000"); // tree3 if signal is detectable.
-  tree3->Branch("deltheta_em_max", &deltheta_em_max, "deltheta_em_max/D");
-  tree3->Branch("deltheta_had_max", &deltheta_had_max, "deltheta_had_max/D");
-  tree3->Branch("theta_threshold_deg", &theta_threshold_deg, "theta_threshold_deg/D");
-  tree3->Branch("nsigma_em_threshold", &nsigma_em_threshold, "nsigma_em_threshold/D");
-  tree3->Branch("nsigma_had_threshold", &nsigma_had_threshold, "nsigma_had_threshold/D");
-  tree3->Branch("horizcoord", &horizcoord, "horizcoord/D");
-  tree3->Branch("vertcoord", &vertcoord, "vertcoord/D");
-  tree3->Branch("vmmhz_max", &vmmhz_max, "vmmhz_max/D");
-  tree3->Branch("vmmhz_min", &vmmhz_min, "vmmhz_min/D");
-  tree3->Branch("dviewangle_deg", &dviewangle_deg, "dviewangle_deg/D");
-  tree3->Branch("viewangle_deg", &viewangle_deg, "viewangle_deg/D");
-  tree3->Branch("changle_deg", &changle_deg, "changle_deg/D");
-  tree3->Branch("cosviewangle", &cosviewangle, "cosviewangle/D");
-  tree3->Branch("emfrac", &emfrac, "emfrac/D");
-  tree3->Branch("hadfrac", &hadfrac, "hadfrac/D");
-
-  TTree* tree5 = new TTree("h5000", "h5000"); // tree5 filled for each nutau.
-  tree5->Branch("vmmhz1m_max", &vmmhz1m_max, "vmmhz1m_max/D");
-  tree5->Branch("inu", &inu, "inu/I");
-  tree5->Branch("nuexitlength", &nuexitlength, "nuexitlength/D");
-  tree5->Branch("nuexitice",  &nuexitice,  "nuexitice");
-  tree5->Branch("vmmhz_max", &vmmhz_max, "vmmhz_max");
-  tree5->Branch("maxtaper", &maxtaper, "maxtaper");
-  tree5->Branch("inu", &inu, "inu/I");
-  tree5->Branch("whichray", &whichray, "whichray/I");
-  tree5->Branch("pnu", &pnu, "pnu/D");
-  tree5->Branch("costhetanu", &costhetanu, "costhetanu/D");
-  tree5->Branch("viewangle", &viewangle, "viewangle/D");
-  tree5->Branch("offaxis", &offaxis, "offaxis/D");
-  tree5->Branch("nsigma_offaxis", &nsigma_offaxis, "nsigma_offaxis/D");
-  tree5->Branch("hadfrac", &hadfrac, "hadfrac/D");
-  tree5->Branch("emfrac", &emfrac, "emfrac/D");
-  tree5->Branch("sumfrac", &sumfrac, "sumfrac/D");
-  tree5->Branch("horizcoord", &horizcoord, "horizcoord/D");
-  tree5->Branch("vertcoord", &vertcoord, "vertcoord/D");
-  // tree5->Branch("weight1", &weight1, "weight1/D");
-  // tree5->Branch("nearthlayers", &nearthlayers, "nearthlayers/D");
-  tree5->Branch("logchord", &logchord2, "interaction1->logchord/D");
-  tree5->Branch("diff_3tries", &diff_3tries, "diff_3tries/D");
-  tree5->Branch("fresnel2", &fresnel2, "fresnel2/D");
-  tree5->Branch("costheta_inc", &costheta_inc, "costheta_inc/D");
-  tree5->Branch("costheta_exit", &costheta_exit, "costheta_exit/D");
-  tree5->Branch("deltheta_em", &deltheta_em[0], "deltheta_em/D");
-  tree5->Branch("deltheta_had", &deltheta_had[0], "deltheta_had/F");
-  tree5->Branch("r_fromballoon", &interaction1->r_fromballoon[0], "r_fromballoon/F");
-  // tree5->Branch("theta_in", &theta_in, "theta_in/D");
-  // tree5->Branch("lat_in", &lat_in, "lat_in/D");
-  tree5->Branch("neutrinoPath", &fNeutrinoPath);
-
-  TTree* tree6 = new TTree("h6000", "h6000"); // tree6 filled for neutrinos that enter S of 60 deg S latitude.
-  tree6->Branch("horizcoord", &horizcoord, "horizcoord/D");
-  tree6->Branch("vertcoord", &vertcoord, "vertcoord/D");
-  // tree6->Branch("theta_in", &theta_in, "theta_in/D");
-  tree6->Branch("chord_kgm2_bestcase", &chord_kgm2_bestcase2, "chord_kgm2_bestcase/D");
-  tree6->Branch("chord_kgm2_ice", &interaction1->chord_kgm2_ice, "chord_kgm2_ice/D");
-  tree6->Branch("costheta_nutraject", &interaction1->costheta_nutraject, "costheta_nutraject/D");
-  // tree6->Branch("weight1", &weight1, "weight1/D");
-  tree6->Branch("weight_bestcase", &weight_bestcase2, "weight_bestcase/D");
-  tree6->Branch("whichray", &whichray, "whichray/I");
-  tree6->Branch("mybeta", &mybeta, "mybeta/D");
-  tree6->Branch("longitude", &longitude_this, "longitude/D");
-  tree6->Branch("neutrinoPath", &fNeutrinoPath);
-
-  TTree* tree6b = new TTree("h6001", "h6001"); // tree6b filled for the closest antenna to the interaction
-  tree6b->Branch("bwslice_vnoise", bwslice_vnoise_thislayer, "bwslice_vnoise_thislayer[4]/D");
-
-  TTree* tree7 = new TTree("h7000", "h7000"); // tree6 filled just after flavor is set
-  tree7->Branch("emfrac", &emfrac, "emfrac/D");
-  tree7->Branch("hadfrac", &hadfrac, "hadfrac/D");
-  tree7->Branch("current", &interaction1->currentint, "currentint/I");
-  tree7->Branch("nuflavor", &interaction1->nuflavorint, "nuflavorint/I");
-  tree7->Branch("sumfrac", &sumfrac, "sumfrac/D");
-  tree7->Branch("slopeyangle", &slopeyangle, "slopeyangle/D");
-
-  TTree* jaimetree=new TTree("jaimetree", "jaimetree"); // signal as it is produced at the interaction
-  jaimetree->Branch("vmmhz1m_max", &vmmhz1m_max, "vmmhz1m_max/D");
-  jaimetree->Branch("emfrac", &emfrac, "emfrac/D");
-  jaimetree->Branch("hadfrac", &hadfrac, "hadfrac/D");
-  jaimetree->Branch("deltheta_em_max", &deltheta_em_max, "deltheta_em_max/D");
-  jaimetree->Branch("deltheta_had_max", &deltheta_had_max, "deltheta_had_max/D");
-  jaimetree->Branch("sumfrac", &sumfrac, "sumfrac/D");
-  jaimetree->Branch("vmmhz1m_visible", &vmmhz1m_visible, "vmmhz1m_visible/D");
-
-  TTree* viewangletree=new TTree("viewangletree", "viewangletree"); // signal as it is produced at the interaction
-  viewangletree->Branch("dviewangle_deg", &dviewangle_deg, "dviewangle_deg/D");
-  viewangletree->Branch("emfrac", &emfrac, "emfrac/D");
-  viewangletree->Branch("hadfrac", &hadfrac, "hadfrac/D");
-  viewangletree->Branch("deltheta_em_max", &deltheta_em_max, "deltheta_em_max/D");
-  viewangletree->Branch("deltheta_had_max", &deltheta_had_max, "deltheta_had_max/D");
-  viewangletree->Branch("theta_threshold_deg", &theta_threshold_deg, "theta_threshold_deg/D");
-  viewangletree->Branch("dnutries", &interaction1->dnutries, "dnutries/D");
-  viewangletree->Branch("viewangle", &viewangle, "viewangle/D");
-  viewangletree->Branch("chord", &interaction1->chord, "dnutries/D");
-
-  TTree* neutrino_positiontree=new TTree("neutrino_positiontree", "neutrino_positiontree");
-  neutrino_positiontree->Branch("nnu", &interaction1->nnu, "nnu[3]/D");
-  neutrino_positiontree->Branch("dtryingdirection", &interaction1->dtryingdirection, "dtryingdirection/D");
-  neutrino_positiontree->Branch("bn1->dtryingposition", &bn1->dtryingposition, "bn1->dtryingposition/D");
-
-  //Filled just after Getchord,  where we find the neutrino's path through the Earth
-  TTree* nupathtree=new TTree("nupathtree", "nupathtree");
-  nupathtree->Branch("total_kgm2", &total_kgm2, "total_kgm2/D");
-  nupathtree->Branch("chord", &interaction1->chord, "chord/D");
-  nupathtree->Branch("crust_entered", &crust_entered, "crust_entered/I");
-  nupathtree->Branch("mantle_entered", &mantle_entered, "mantle_entered/I");
-  nupathtree->Branch("core_entered", &core_entered, "core_entered/I");
-  nupathtree->Branch("mybeta", &mybeta, "mybeta/D");
-  nupathtree->Branch("costheta_nutraject", &interaction1->costheta_nutraject, "costheta_nutraject/D");
-
-  TTree* finaltree = new TTree("passing_events", "passing_events"); // finaltree filled for all events that pass
-  finaltree->Branch("inu", &inu, "inu/I");
-  finaltree->Branch("vmmhz_min", &vmmhz_min, "vmmhz_min/D");
-  finaltree->Branch("vmmhz_max", &vmmhz_max, "vmmhz_max/D");
-  finaltree->Branch("thresholdsAnt", &thresholdsAnt, "thresholdsAnt[48][2][5]/D");
-  finaltree->Branch("thresholdsAntPass", &thresholdsAntPass, "thresholdsAntPass[48][2][5]/D");
-  finaltree->Branch("deadTime", &anita1->deadTime, "deadTime/D");
-  finaltree->Branch("horizcoord", &horizcoord, "horizcoord/D");
-  finaltree->Branch("vertcoord", &vertcoord, "vertcoord/D");
-  finaltree->Branch("horizcoord_bn", &bn1->horizcoord_bn, "horizcoord_bn/D");
-  finaltree->Branch("vertcoord_bn", &bn1->vertcoord_bn, "vertcoord_bn/D");
-  finaltree->Branch("r_bn", &r_bn_array, "r_bn_array[3]/D");
-  finaltree->Branch("n_bn", &n_bn_array, "n_bn_array[3]/D");
-  finaltree->Branch("longitude_bn", &longitude_this, "longitude_bn/D");
-  finaltree->Branch("heading_bn", &heading_this, "heading_bn/D");
-  finaltree->Branch("gps_offset", &gps_offset, "gps_offset/D");
-  // this one is just weight due to earth absorption
-  // finaltree->Branch("weight1", &weight1, "weight1/D");
-  // // this is the total weight - the one you want to use!
-  // finaltree->Branch("weight", &weight, "weight/D");
-  // finaltree->Branch("logweight", &logweight, "logweight/D");
-  finaltree->Branch("neutrinoPath", &fNeutrinoPath);
-  finaltree->Branch("posnu", &posnu_array, "posnu_array[3]/D");
-  finaltree->Branch("costheta_nutraject", &costheta_nutraject2, "costheta_nutraject/D");
-  finaltree->Branch("chord_kgm2_ice",  &chord_kgm2_ice2, "chord_kgm2_ice/D");
-  finaltree->Branch("phi_nutraject", &phi_nutraject2, "phi_nutraject/D");
-  finaltree->Branch("altitude_int", &altitude_int2, "altitude_int/D");
-  finaltree->Branch("nnu", &nnu_array, "nnu_array[3]/D");
-  finaltree->Branch("n_exit2bn", &n_exit2bn_array, "n_exit2bn_array[5][3]/D");
-  finaltree->Branch("n_exit_phi", &n_exit_phi, "n_exit_phi/D");
-  finaltree->Branch("rfexit", &rfexit_array, "rfexit_array[5][3]/D");
-
-  finaltree->Branch("pnu", &pnu, "pnu/D");
-  finaltree->Branch("elast_y", &elast_y, "elast_y/D");
-  finaltree->Branch("emfrac", &emfrac, "emfrac/D");
-  finaltree->Branch("hadfrac", &hadfrac, "hadfrac/D");
-  finaltree->Branch("sumfrac", &sumfrac, "sumfrac/D");
-  finaltree->Branch("nuflavor", &nuflavorint2, "nuflavorint/I");//1=electron,  2=muon,  3=tau
-  finaltree->Branch("current", &currentint2, "currentint/I");//0=charged current,  1=neutral current
-  finaltree->Branch("logchord",  &logchord2,  "logchord/D");
-  finaltree->Branch("nuexitice",  &nuexitice,  "nuexitice/D");
-  finaltree->Branch("weight_bestcase",  &weight_bestcase2,  "weight_bestcase/D");
-  finaltree->Branch("chord_kgm2_bestcase",  &chord_kgm2_bestcase2,  "chord_kgm2_bestcase/D");
-  finaltree->Branch("dtryingdirection",  &dtryingdirection2,  "dtryingdirection/D");
-  finaltree->Branch("l3trig", &l3trig, "l3trig[2]/I");
-  finaltree->Branch("l2trig", &l2trig, "l2trig[2][3]/I");
-  finaltree->Branch("l1trig", &l1trig, "l1trig[2][3]/I");
-  finaltree->Branch("phiTrigMask", &anita1->phiTrigMask, "phiTrigMask/s");
-  finaltree->Branch("phiTrigMaskH", &anita1->phiTrigMaskH, "phiTrigMaskH/s");
-  finaltree->Branch("l1TrigMask", &anita1->l1TrigMask, "l1TrigMask/s");
-  finaltree->Branch("l1TrigMaskH", &anita1->l1TrigMaskH, "l1TrigMaskH/s");
-  finaltree->Branch("max_antenna0", &max_antenna0, "max_antenna0/I");
-  finaltree->Branch("max_antenna1", &max_antenna1, "max_antenna1/I");
-  finaltree->Branch("max_antenna2", &max_antenna2, "max_antenna2/I");
-
-  finaltree->Branch("viewangle", &viewangle, "viewangle/D");
-  finaltree->Branch("offaxis", &offaxis, "offaxis/D");
-  finaltree->Branch("rx0_signal_eachband", &rx0_signal_eachband, "rx0_signal_eachband[2][5]/D");
-  finaltree->Branch("rx0_threshold_eachband", &rx0_threshold_eachband, "rx0_threshold_eachband[2][5]/D");
-  finaltree->Branch("rx0_noise_eachband", &rx0_noise_eachband, "rx0_noise_eachband[2][5]/D");
-  finaltree->Branch("rx0_passes_eachband", &rx0_passes_eachband, "rx0_passes_eachband[2][5]/I");
-  finaltree->Branch("e_component", &e_component, "e_component/D");
-  finaltree->Branch("h_component", &h_component, "h_component/D");
-  finaltree->Branch("dist_int_bn_2d", &dist_int_bn_2d, "dist_int_bn_2d/D");
-  finaltree->Branch("d1", &d12, "d1/D");
-
-  finaltree->Branch("cosalpha", &cosalpha, "cosalpha/D");
-  finaltree->Branch("mytheta", &mytheta, "mytheta/D");
-  finaltree->Branch("cosbeta0", &cosbeta0, "cosbeta0/D");
-  finaltree->Branch("mybeta", &mybeta, "mybeta/D");
-  finaltree->Branch("d1", &d12, "d1/D");
-  finaltree->Branch("d2", &d22, "d2/D");
-
-  //Begin block added by Stephen for verification plots
-  finaltree->Branch("fresnel1", &fresnel1, "fresnel1/D");
-  finaltree->Branch("fresnel2", &fresnel2, "fresnel2/D");
-  finaltree->Branch("mag1", &mag1, "mag1/D");
-  finaltree->Branch("mag2", &mag2, "mag2/D");
-  finaltree->Branch("t_coeff_pokey", &t_coeff_pokey, "t_coeff_pokey/D");
-  finaltree->Branch("t_coeff_slappy", &t_coeff_slappy, "t_coeff_slappy/D");
-  // finaltree->Branch("exponent", settings1.EXPONENT); //, "EXPONENT/D");
-  // finaltree->Branch("exponent", &settings1.EXPONENT, "EXPONENT/D");
-
-  finaltree->Branch("hitangle_e_all", &hitangle_e_all, "hitangle_e_all[48]/D");
-  finaltree->Branch("hitangle_h_all", &hitangle_h_all, "hitangle_h_all[48]/D");
-
-  finaltree->Branch("e_comp_max1", &e_comp_max1, "e_comp_max1/D");
-  finaltree->Branch("h_comp_max1", &h_comp_max1, "h_comp_max1/D");
-  finaltree->Branch("e_comp_max2", &e_comp_max2, "e_comp_max2/D");
-  finaltree->Branch("h_comp_max2", &h_comp_max2, "h_comp_max2/D");
-  finaltree->Branch("e_comp_max3", &e_comp_max3, "e_comp_max3/D");
-  finaltree->Branch("h_comp_max3", &h_comp_max3, "h_comp_max3/D");
-  finaltree->Branch("max_antenna_volts0", &max_antenna_volts0, "max_antenna_volts0/D");
-  finaltree->Branch("max_antenna_volts0_em", &max_antenna_volts0_em, "max_antenna_volts0_em/D");
-  finaltree->Branch("max_antenna_volts1", &max_antenna_volts1, "max_antenna_volts1/D");
-  finaltree->Branch("max_antenna_volts2", &max_antenna_volts2, "max_antenna_volts2/D");
-  finaltree->Branch("triggers", &nchannels_perrx_triggered, "nchannels_perrx_triggered[48]/I");
-  finaltree->Branch("nchannels_triggered", &nchannels_triggered, "nchannels_triggered/I");
-  finaltree->Branch("voltsRX", &voltsRX);
+  icemc::RootOutput ro(this, &settings1, clOpts.outputdir.c_str(), clOpts.run_no);
   
-  // finaltree->Branch("volts_rx_max", &volts_rx_max, "volts_rx_max/D");
-  // finaltree->Branch("volts_rx_ave", &volts_rx_ave, "volts_rx_ave/D");
-  // finaltree->Branch("volts_rx_sum", &volts_rx_sum, "volts_rx_sum/D");
-
-  // finaltree->Branch("volts_rx_max_highband", &volts_rx_max_highband, "volts_rx_max_highband/D");
-  // finaltree->Branch("volts_rx_max_lowband", &volts_rx_max_lowband, "volts_rx_max_lowband/D");
-
-  finaltree->Branch("theta_pol_measured", &theta_pol_measured, "theta_pol_measured/D");  
-  finaltree->Branch("theta_rf_atbn", &theta_rf_atbn, "theta_rf_atbn/D");
-  finaltree->Branch("theta_rf_atbn_measured", &theta_rf_atbn_measured, "theta_rf_atbn_measured/D");
-  finaltree->Branch("voltage", &voltagearray, "voltagearray[48]/D");
-  // finaltree->Branch("nlayers", settings1.NLAYERS, "NLAYERS/I");
-
-  finaltree->Branch("vmmhz1m_max", &vmmhz1m_max, "vmmhz1m_max/D");
-  finaltree->Branch("vmmhz_lowfreq", &vmmhz_lowfreq, "vmmhz_lowfreq/D");
-
-  finaltree->Branch("deltheta_em_max", &deltheta_em_max, "deltheta_em_max/D");
-  finaltree->Branch("deltheta_had_max", &deltheta_had_max, "deltheta_had_max/D");
-  finaltree->Branch("r_enterice", &r_enterice_array, "r_enterice_array[3]/D");
-  finaltree->Branch("n_exit2bn_db", &n_exit2bn_db_array, "n_exit2bn_db_array[5][3]/D");
-
-  finaltree->Branch("rfexit_db", &rfexit_db_array, "rfexit_db_array[5][3]/D");
-  finaltree->Branch("r_in", &r_in_array, "r_in_array[3]/D");
-  finaltree->Branch("nsurf_rfexit", &nsurf_rfexit_array, "nsurf_rfexit_array[3]/D");
-  finaltree->Branch("nsurf_rfexit_db", &nsurf_rfexit_db_array, "nsurf_rfexit_db_array[3]/D");
-  finaltree->Branch("r_fromballoon", &r_fromballoon2, "r_fromballoon/D");
-  finaltree->Branch("r_fromballoon_db", &interaction1->r_fromballoon_db, "r_fromballoon_db/D");
-
-  finaltree->Branch("nuexitlength", &nuexitlength, "nuexitlength/D");
-  finaltree->Branch("nuentrancelength", &nuentrancelength, "nuentrancelength/D");
-  finaltree->Branch("taulength", &taulength, "taulength/D");
-  finaltree->Branch("icethickness", &icethickness, "icethickness/D");
-  finaltree->Branch("nrf_iceside", &nrf_iceside_array, "nrf_iceside_array[5][3]/D");
-  finaltree->Branch("nrf_iceside_db", &nrf_iceside_db_array, "nrf_iceside_db_array[5][3]/D");
-  finaltree->Branch("ant_normal0", &ant_max_normal0_array, "ant_max_normal0_array[3]/D");
-  finaltree->Branch("ant_normal1", &ant_max_normal1_array, "ant_max_normal1_array[3]/D");
-  finaltree->Branch("ant_normal2", &ant_max_normal2_array, "ant_max_normal2_array[3]/D");
-  finaltree->Branch("vmmhz1m_visible", &vmmhz1m_visible, "vmmhz1m_visible/D");
-  finaltree->Branch("freq_bins", &freq_bins, "freq_bins/I");
-  finaltree->Branch("vmmhz", &vmmhz, "vmmhz[freq_bins]/D");
-
-  finaltree->Branch("dist_int_bn_2d_chord", &dist_int_bn_2d_chord, "dist_int_bn_2d_chord/D");
-
-  finaltree->Branch("dviewangle_deg", &dviewangle_deg, "dviewangle_deg/D");
-  finaltree->Branch("theta_threshold_deg", &theta_threshold_deg, "theta_threshold_deg/D");
-  finaltree->Branch("total_kgm2", &total_kgm2, "total_kgm2/D");
-  finaltree->Branch("chord", &interaction1->chord, "chord/D");
-  finaltree->Branch("crust_entered", &crust_entered, "crust_entered/I");
-  finaltree->Branch("mantle_entered", &mantle_entered, "mantle_entered/I");
-  finaltree->Branch("core_entered", &core_entered, "core_entered/I");
-  finaltree->Branch("n_pol", &n_pol_array, "n_pol_array[3]/D");
-  finaltree->Branch("vmmhz_min_thatpasses", &vmmhz_min_thatpasses, "vmmhz_min_thatpasses/D");
-
-  // finaltree->Branch("pieceofkm2sr", &pieceofkm2sr, "pieceofkm2sr/D");
-  //finaltree->Branch("volts_original", &volts_original, "volts_original[10][20][2]/D");
-  finaltree->Branch("r_exit2bn", &r_exit2bn2, "r_exit2bn/D");
-  finaltree->Branch("r_exit2bn_measured", &r_exit2bn_measured2, "r_exit2bn_measured/D");
-  finaltree->Branch("scalefactor_attenuation", &scalefactor_attenuation, "scalefactor_attenuation/D");
-  finaltree->Branch("anita1->PHI_OFFSET", &anita1->PHI_OFFSET, "anita1->PHI_OFFSET/D");
-  finaltree->Branch("igps", &bn1->igps, "igyps/I");
-  // finaltree->Branch("volts_rx_rfcm_lab_e_all", &volts_rx_rfcm_lab_e_all, "volts_rx_rfcm_lab_e_all[48][512]/D");
-  // finaltree->Branch("volts_rx_rfcm_lab_h_all", &volts_rx_rfcm_lab_h_all, "volts_rx_rfcm_lab_h_all[48][512]/D");
-  finaltree->Branch("ptaui", &ptaui, "ptaui/D");
-  finaltree->Branch("ptauf", &ptauf, "ptauf/D");
-  finaltree->Branch("sourceLon", &sourceLon, "sourceLon/D");
-  finaltree->Branch("sourceLat", &sourceLat, "sourceLat/D");
-  finaltree->Branch("sourceAlt", &sourceAlt, "sourceAlt/D");
-  finaltree->Branch("sourceMag", &sourceMag, "sourceMag/D");
-
-  TTree* mytaus_tree = new TTree("mytaus", "mytaus");
-  mytaus_tree->Branch("taus",  &fTauPtr);
-
-  double rms_rfcm_e;
-  double rms_rfcm_h;
-  double rms_lab_e;
-  double rms_lab_h;
-
-  double avgfreq_rfcm[Anita::NFREQ];
-  double avgfreq_rfcm_lab[Anita::NFREQ];
-  double freq[Anita::NFREQ];
-
-  TTree* summarytree = new TTree("summarytree", "summarytree"); // finaltree filled for all events that pass
-  // summarytree->Branch("NNU", (int*)&settings1.NNU, "NNU/I");
-  summarytree->Branch("NNU", const_cast<int*>(&settings1.NNU), "NNU/I");  
-  // summarytree->Branch("EXPONENT", settings1.EXPONENT); //, "EXPONENT/D");
-  summarytree->Branch("eventsfound_beforetrigger", &eventsfound_beforetrigger, "eventsfound_beforetrigger/D");
-  summarytree->Branch("rms_rfcm_e", &rms_rfcm_e, "rms_rfcm_e/D");
-  summarytree->Branch("rms_rfcm_h", &rms_rfcm_h, "rms_rfcm_h/D");
-  summarytree->Branch("rms_lab_e", &rms_lab_e, "rms_lab_e/D");
-  summarytree->Branch("rms_lab_h", &rms_lab_h, "rms_lab_h/D");
-  summarytree->Branch("avgfreq_rfcm", &avgfreq_rfcm, "avgfreq_rfcm[128]/D");
-  summarytree->Branch("avgfreq_rfcm_lab", &avgfreq_rfcm_lab, "avgfreq_rfcm_lab[128]/D");
-  summarytree->Branch("freq", &freq, "freq[128]/D");
-
-  TTree* banana_tree = new TTree("banana_tree", "banana_tree");  //To record banana plot info - Stephen
-  banana_tree->Branch("r_bn", &bn1->r_bn, "r_bn[3]/D");
-
-  TTree* ytree = new TTree("ytree", "ytree"); //To record y distributions
-  ytree->Branch("elast_y", &elast_y, "elast_y/D");
-
-  double icethck;
-  double elev;
-  double lon_ground;
-  double lat_ground;
-  double lon_ice;
-  double lat_ice;
-  double h20_depth;
-  double lon_water;
-  double lat_water;
-
-  TTree* icetree = new TTree("icetree", "icetree");
-  icetree->Branch("icethck", &icethck, "icethck/D");
-  icetree->Branch("lon_ice", &lon_ice, "lon_ice/D");
-  icetree->Branch("lat_ice", &lat_ice, "lat_ice/D");
-  icetree->Branch("lon_water", &lon_water, "lon_water/D");
-  icetree->Branch("lat_water", &lat_water, "lat_water/D");
-  icetree->Branch("h20_depth", &h20_depth, "h20_depth/D");
-
-  TTree* groundtree = new TTree("groundtree", "groundtree");
-  groundtree->Branch("elev", &elev, "elev/D");
-  groundtree->Branch("lon_ground", &lon_ground, "lon_ground/D");
-  groundtree->Branch("lat_ground", &lat_ground, "lat_ground/D");
-
-  //End block added by Stephen
-
-  TTree* tree11 = new TTree("h11000", "h11000"); // tree11
-  tree11->Branch("loctrig00", &loctrig[0][0], "loctrig0/D");
-  tree11->Branch("loctrig10", &loctrig[1][0], "loctrig0/D");
-  tree11->Branch("loctrig20", &loctrig[2][0], "loctrig0/D");
-  tree11->Branch("loctrig_nadironly0", &loctrig_nadironly[0], "loctrig_nadironly0/D");
-  tree11->Branch("loctrig01", &loctrig[0][1], "loctrig1/D");
-  tree11->Branch("loctrig11", &loctrig[1][1], "loctrig1/D");
-  tree11->Branch("loctrig21", &loctrig[2][1], "loctrig1/D");
-  tree11->Branch("loctrig_nadironly1", &loctrig_nadironly[1], "loctrig0/D");
-
-  TTree* tree16 = new TTree("h16000", "h16000");
-  tree16->Branch("pnu", &pnu, "pnu/D");
-  tree16->Branch("ptau", &ptau, "ptau/D");
-  tree16->Branch("taulength", &taulength, "taulength/D");
-  // tree16->Branch("weight1", &weight1, "weight1/D");
-  tree16->Branch("neutrinoPath", &fNeutrinoPath);
-  tree16->Branch("emfrac", &emfrac, "emfrac/D");
-  tree16->Branch("hadfrac", &hadfrac, "hadfrac/D");
-  tree16->Branch("nuentrancelength", &nuentrancelength, "nuentrancelength/D");
-
-  int pdgcode;
-
-  TTree* tree18 = new TTree("h18000", "h18000");
-  tree18->Branch("emfrac",  &emfrac,  "emfrac/D");
-  tree18->Branch("hadfrac", &hadfrac, "hadfrac/D");
-  tree18->Branch("pdgcode", &pdgcode, "pdgcode/I");
-
-
-  TH1D* h1mybeta = new TH1D("betaforall", "betaforall(deg)", 180, -15, 15);
-  TH1D* h1mytheta= new TH1D("mytheta", "mytheta(deg)", 180, -90, 90);//90-incidentangle when neutrinos enter the Earth.
-  TH1F* hundogaintoheight_e=new TH1F("undogaintoheight_e", "undogaintoheight_e", 100, 0., 1.);
-  TH1F* hundogaintoheight_h=new TH1F("undogaintoheight_h", "undogaintoheight_h", 100, 0., 1.);
-  TH1F* rec_diff=new TH1F("rec_diff", "rec_diff", 100, -1., 1.);
-  TH1F* recsum_diff=new TH1F("recsum_diff", "recsum_diff", 100, -1., 1.);
-  TH1F* rec_diff0=new TH1F("rec_diff0", "rec_diff0", 100, -1., 1.);
-  TH1F* rec_diff1=new TH1F("rec_diff1", "rec_diff1", 100, -1., 1.);
-  TH1F* rec_diff2=new TH1F("rec_diff2", "rec_diff2", 100, -1., 1.);
-  TH1F* rec_diff3=new TH1F("rec_diff3", "rec_diff3", 100, -1., 1.);
-
-  TTree* vmmhz_tree = new TTree("vmmhz_tree", "vmmhz_tree"); //To record frequency spread at point where it is first filled
-  vmmhz_tree->Branch("freq_bins", &freq_bins, "freq_bins/I");
-  vmmhz_tree->Branch("vmmhz", &vmmhz, "vmmhz[freq_bins]/D");
-
-  TTree* tree1 = new TTree("h1000", "h1000"); // tree1 filled for each neutrino
-  tree1->Branch("inu", &inu, "inu/I");
-  tree1->Branch("diffexit", &diffexit, "diffexit/D");
-  tree1->Branch("diffrefr", &diffrefr, "diffrefr/D");
-  tree1->Branch("horizcoord", &horizcoord, "horizcoord/D");
-  tree1->Branch("vertcoord", &vertcoord, "vertcoord/D");
-  tree1->Branch("costhetanu", &costhetanu, "costhetanu/D");
-  tree1->Branch("vmmhz1m_max", &vmmhz1m_max, "vmmhz1m_max/D");
-  tree1->Branch("volume_thishorizon", &volume_thishorizon, "volume_thishorizon/D");
-  tree1->Branch("realtime", &realtime_this, "realtime/D");
-  tree1->Branch("longitude", &longitude_this, "longitude/D");
-  tree1->Branch("latitude", &latitude_this, "latitude/D");
-  tree1->Branch("MAXHORIZON", &bn1->MAXHORIZON, "MAXHORIZON/D");
-  tree1->Branch("igps", &bn1->igps, "igps/I");
-  tree1->Branch("passes_thisevent", &passes_thisevent, "passes_thisevent/I");
-  tree1->Branch("igps", &bn1->igps, "igps/I");
-  // tree1->Branch("weight", &weight, "weight/D");
-  tree1->Branch("neutrinoPath", &fNeutrinoPath);
-  tree1->Branch("r_exit2bn", &interaction1->r_exit2bn, "r_exit2bn/D");
-  tree1->Branch("bn1->igps", &bn1->igps, "bn1->igps/I");
-
-  // set up balloontree
-
-  TTree* balloontree = new TTree("balloon", "balloon"); //filled for all events
-  balloontree->Branch("heading", &bn1->heading, "heading/D");
-  balloontree->Branch("pitch", &bn1->pitch, "pitch/D");
-  balloontree->Branch("roll", &bn1->roll, "roll/D");
-  balloontree->Branch("realTime_flightdata", &bn1->realTime_flightdata, "realTime_flightdata/I");
-  balloontree->Branch("latitude", &bn1->latitude, "latitude/D");
-  balloontree->Branch("longitude", &bn1->longitude, "longitude/D");
-  balloontree->Branch("altitude", &bn1->altitude, "altitude/D");
-  balloontree->Branch("horizcoord_bn", &bn1->horizcoord_bn, "horizcoord_bn/D");
-  balloontree->Branch("vertcoord_bn", &bn1->vertcoord_bn, "vertcoord_bn/D");
-
   // these variables are for energy reconstruction studies
   double undogaintoheight_e=0;
   double undogaintoheight_h=0;
@@ -2070,14 +1656,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       antarctica->IceENtoLonLat(j, i, lon_ice, lat_ice);
       icethck=antarctica->IceThickness(lon_ice, lat_ice);
       h20_depth=antarctica->water_depth[j][i];
-      icetree->Fill();
+      ro.icetree.Fill();
     }
   }
   for (int i=0;i<antarctica->nRows_ground;i++) {
     for (int j=0;j<antarctica->nCols_ground;j++) {
       antarctica->GroundENtoLonLat(j, i, lon_ground, lat_ground);
       elev=antarctica->SurfaceAboveGeoid(lon_ground, lat_ground);
-      groundtree->Fill();
+      ro.groundtree.Fill();
     }
   }
 
@@ -2229,6 +1815,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   int antNum;  
 
 
+  
+
 
 
 
@@ -2236,7 +1824,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   
   /**
    * Main analysis loop over generated neutrinos
-   * 
    */
   for (inu = clOpts.startNu; inu < NNU; inu++) {
 
@@ -2246,44 +1833,53 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     
 
     if (NNU >= 100) {
-      if (inu % (NNU / 100) == 0)
+      if (inu % (NNU / 100) == 0){
         std::cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
+      }
     }
-    else
+    else{
       std::cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
-
+    }
     eventNumber=(UInt_t)(clOpts.run_no)*NNU+inu;
     //cerr<<inu<<std::endl;
     //if( !((inu==246) || (inu==2579) || (inu==5522) || (inu==11235) || (inu==11815) || (inu==19723) || (inu==21264) || (inu==28442) || (inu==36789) || (inu==36894) || (inu==38424) || (inu==45829) || (inu==45880) || (inu==52929) || (inu==56821) || (inu==64933) || (inu==73569) || (inu==73707) || (inu==78717) || (inu==92717) || (inu==99750))  ) continue;
+    
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
     TRandom3 r(eventNumber+7e8);
-    if (settings1.NOISEFROMFLIGHTDIGITIZER || settings1.NOISEFROMFLIGHTTRIGGER) anita1->fRand->SetSeed(eventNumber+8e9);
+    if (settings1.NOISEFROMFLIGHTDIGITIZER || settings1.NOISEFROMFLIGHTTRIGGER) {
+      anita1->fRand->SetSeed(eventNumber+8e9);
+    }
 
 
     //reset screen parameters (even for no roughness) for the new event
     panel1->ResetParameters();
     anita1->inu=inu;
 
-    std::string nunum = Form("%d",inu);    
+    std::string nunum = Form("%d",inu);
 
     for (whichray = settings1.MINRAY; whichray <= settings1.MAXRAY; whichray++) {
-      anita1->passglobtrig[0]=0;
-      anita1->passglobtrig[1]=0;
-      passes_thisevent=0;
-      unmasked_thisevent=1;
-      vmmhz_min_thatpasses=1000; // initializing.  want to find the minumum voltage that passes a
+      anita1->passglobtrig[0] = 0;
+      anita1->passglobtrig[1] = 0;
+      passes_thisevent = 0;
+      unmasked_thisevent = 1;
+      vmmhz_min_thatpasses = 1000; // initializing.  want to find the minumum voltage that passes a
 
-      if ( spectra1->IsSpectrum() ){//if using energy spectrum
+      if (spectra1->IsSpectrum()){//if using energy spectrum
 
-	if(settings1.USEDARTBOARD) pnu=spectra1->GetNuEnergy();
-        else pnu=spectra1->GetCDFEnergy();
+	if(settings1.USEDARTBOARD){
+	  pnu=spectra1->GetNuEnergy();
+	}
+        else{
+	  pnu=spectra1->GetCDFEnergy();
+	}
 
-	ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, &settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
+	ierr = primary1->GetSigma(pnu, sigma, len_int_kgm2, &settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
         // ierr=0 if the energy is too low for the parameterization
         // ierr=1 otherwise
         fNeutrinoPath->len_int=1.0/(sigma*sig1->RHOH20*(1./constants::M_NUCL)*1000); // in km (why interaction length in water?) //EH
       }// end IsSpectrum
+      
       n_interactions=1;
       count_pass=0;
       passestrigger=0;
@@ -2312,17 +1908,16 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       altitude_this=bn1->altitude;
       heading_this=bn1->heading;
 
-      if (settings1.HIST && !settings1.ONLYFINAL
-	  && prob_eachphi_bn->GetEntries() < settings1.HIST_MAX_ENTRIES) {
-        prob_eachphi_bn->Fill(bn1->phi_bn);
-        prob_eachilon_bn->Fill(bn1->r_bn.Lon());
+      if (settings1.HIST && !settings1.ONLYFINAL && ro.prob_eachphi_bn.GetEntries() < settings1.HIST_MAX_ENTRIES) {
+        ro.prob_eachphi_bn.Fill(bn1->phi_bn);
+        ro.prob_eachilon_bn.Fill(bn1->r_bn.Lon());
       }
 
       if (bn1->WHICHPATH==3) { // for banana plot
         //Set observation location
         bn1->setObservationLocation(int_banana, inu, antarctica, &settings1);
       } //End else if (WHICHPATH==3) : Banana plot locations
-      balloontree->Fill();
+      ro.balloontree.Fill();
 
       // pick random point in ice.
       // also get initial guess shower exit position
@@ -2333,11 +1928,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       if (interaction1){
         delete interaction1;
+	interaction1 = NULL;
       }
       interaction1 = new Interaction("nu",  primary1,  &settings1,  whichray,  count1);
 
       if(taus1){
         delete taus1;
+	taus1 = NULL;
       }
       taus1 = new Taumodel();
 
@@ -2356,35 +1953,42 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       bn1->PickDownwardInteractionPoint(interaction1,  anita1,  &settings1,  antarctica,  ray1,  beyondhorizon);
 
-      if (interaction1->noway)
+      if (interaction1->noway){
         continue;
+      }
       count1->noway[whichray]++;
 
-      if (interaction1->wheredoesitleave_err)
+      if (interaction1->wheredoesitleave_err){
         continue;
+      }
       count1->wheredoesitleave_err[whichray]++;
 
-      if (interaction1->neverseesice)
+      if (interaction1->neverseesice){
         continue;
+      }
       count1->neverseesice[whichray]++;
 
-      if (interaction1->wheredoesitenterice_err)
+      if (interaction1->wheredoesitenterice_err){
         continue;
+      }
       count1->wheredoesitenterice_err[whichray]++;
 
-      if (interaction1->toohigh)
+      if (interaction1->toohigh){
         continue;
+      }
       count1->toohigh[whichray]++;
 
-      if (interaction1->toolow)
+      if (interaction1->toolow){
         continue;
+      }
       count1->toolow[whichray]++;
 
-      if (bn1->WHICHPATH==3)
+      if (bn1->WHICHPATH==3){
         interaction1=int_banana;
-
-      if (!interaction1->iceinteraction)
+      }
+      if (!interaction1->iceinteraction){
         continue;
+      }
       count1->iceinteraction[whichray]++;
 
       if (beyondhorizon) {
@@ -2436,8 +2040,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         continue;
       }
 
-      
-
       // fills ray1->n_exit2bn[2] ?
       ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, bn1->r_bn, bn1->r_boresights, 2, antarctica);
 
@@ -2465,14 +2067,16 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         elast_y=1.;
       }
       if (settings1.FORSECKEL==1) {
-        if (settings1.SHOWERTYPE==0) // all hadronic shower
+        if (settings1.SHOWERTYPE==0){ // all hadronic shower
           elast_y=1.;
-        if (settings1.SHOWERTYPE==1) // all em shower
+	}
+        if (settings1.SHOWERTYPE==1){ // all em shower
           elast_y=0.;
+	}
       } //if (settings1.FORSECKEL)
 
-      if (ytree->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
-        ytree->Fill();
+      if (ro.ytree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+        ro.ytree.Fill();
       }
 
       //TAU STUFF. Pick whether it will stay as a neutrino or create tau
@@ -2522,6 +2126,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         }
         if(fTauPtr){
           delete fTauPtr;
+	  fTauPtr = NULL;
 	}
 
         fTauPtr = new Taumodel();
@@ -2529,7 +2134,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         fTauPtr->ptauf = ptauf;
         fTauPtr->weight_nu_prob = interaction1->weight_nu_prob;
         fTauPtr->weight_tau_prob = taus1->weight_tau_prob;
-        mytaus_tree->Fill();
+        ro.mytaus_tree.Fill();
 
         //delete TauPtr;
       }//end tautrigger ==1
@@ -2537,7 +2142,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // get fraction of shower that is electromagnetic.
       // pi^0's are counted as hadronic.
-      sec1->GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
+      sec1->GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
 
       if (emfrac+hadfrac>1.000001) {
         std::cout << "Warning:  " << inu << " " << emfrac+hadfrac << "\n";
@@ -2546,20 +2151,20 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // for plotting
       sumfrac=emfrac+hadfrac;
       //cout << "tree7 check" <<interaction1->nuflavorint << std::endl;
-      if (tree7->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
-        tree7->Fill();
-
+      if (ro.tree7.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+        ro.tree7.Fill();
+      }
       vmmhz1m_visible = (emfrac+hadfrac)*vmmhz1m_max; //Stephen - Record actual V/m/Mhz for display
 
       // plots for debugging.
-      if (interaction1->nuflavor=="numu" && bn1->WHICHPATH != 3 && !settings1.ONLYFINAL && settings1.HIST==1 && fraction_sec_muons->GetEntries()<settings1.HIST_MAX_ENTRIES) {
-        fraction_sec_muons->Fill(emfrac+hadfrac, fNeutrinoPath->weight);
-        n_sec_muons->Fill((double)n_interactions);
+      if (interaction1->nuflavor=="numu" && bn1->WHICHPATH != 3 && !settings1.ONLYFINAL && settings1.HIST==1 && ro.fraction_sec_muons.GetEntries()<settings1.HIST_MAX_ENTRIES) {
+        ro.fraction_sec_muons.Fill(emfrac+hadfrac, fNeutrinoPath->weight);
+        ro.n_sec_muons.Fill((double)n_interactions);
       }
 
-      if (interaction1->nuflavor=="nutau" && bn1->WHICHPATH != 3 && !settings1.ONLYFINAL && settings1.HIST==1 && fraction_sec_taus->GetEntries()<settings1.HIST_MAX_ENTRIES) {
-        fraction_sec_taus->Fill(emfrac+hadfrac, fNeutrinoPath->weight);
-        n_sec_taus->Fill((double)n_interactions);
+      if (interaction1->nuflavor=="nutau" && bn1->WHICHPATH != 3 && !settings1.ONLYFINAL && settings1.HIST==1 && ro.fraction_sec_taus.GetEntries()<settings1.HIST_MAX_ENTRIES) {
+        ro.fraction_sec_taus.Fill(emfrac+hadfrac, fNeutrinoPath->weight);
+        ro.n_sec_taus.Fill((double)n_interactions);
       }
 
       // for double bangs
@@ -2585,8 +2190,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 			deltheta_em_max, deltheta_had_max);
       } //end else (not secondbang or not interested in taus)
 
-      if (jaimetree->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
-        jaimetree->Fill();
+      if (ro.jaimetree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+        ro.jaimetree.Fill();
       }
 
       //  Using highest possible signal and minimum noise,
@@ -2671,12 +2276,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       viewangle_deg=viewangle*constants::DEGRAD; // same angle but in degrees
       dviewangle_deg=(sig1->changle-viewangle)*constants::DEGRAD; // deviation from cerenkov angle
 
-      if (viewangletree->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
-        viewangletree->Fill(); // fills variables related to viewing angle
-
-      if (neutrino_positiontree->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
-        neutrino_positiontree->Fill(); // fills variables related to neutrino position
-
+      if (ro.viewangletree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+        ro.viewangletree.Fill(); // fills variables related to viewing angle
+      }
+      if (ro.neutrino_positiontree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+        ro.neutrino_positiontree.Fill(); // fills variables related to neutrino position
+      }
       if (whichray==1) {
         //return it to the upgoing direction that is after being reflected
         ray1->nrf_iceside[4] = ray1->nrf_iceside[4] + 2*chengji*ray1->nrf_iceside[0];
@@ -2779,9 +2384,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // chord just through ice.
       interaction1->chord_kgm2_ice=interaction1->d2*sig1->RHOMEDIUM;
 
-      if (tree6->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
-        tree6->Fill();
-
+      if (ro.tree6.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+        ro.tree6.Fill();
+      }
       // take best case scenario chord length and find corresponding weight
       IsAbsorbed(interaction1->chord_kgm2_bestcase, len_int_kgm2, interaction1->weight_bestcase);
 
@@ -2852,8 +2457,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       // reject if the rf leaves the ice where there is water,  for example.
       if (!antarctica->AcceptableRfexit(ray1->nsurf_rfexit, ray1->rfexit[2], ray1->n_exit2bn[2])){
-        if (bn1->WHICHPATH==3)
-          std::cout<<"Should look at this. Not expecting to be here."<<std::endl;
+        if (bn1->WHICHPATH==3){
+          std::cout << "Should look at this. Not expecting to be here." << std::endl;
+	}
         continue;
       }//end if acceptableRFexit
 
@@ -2863,9 +2469,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // difference between exit points of 2nd and 3rd iterations.
       diff_3tries=ray1->rfexit[1].Distance(ray1->rfexit[2]);
 
-      if (tree5->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1  && bn1->WHICHPATH != 3)
-        tree5->Fill();
-
+      if (ro.tree5.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1  && bn1->WHICHPATH != 3){
+        ro.tree5.Fill();
+      }
       // reject if 2nd and 3rd tries
       // don't converge within 10m.
       if (diff_3tries>10) {
@@ -3012,9 +2618,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       
       // roughness attenuation already dealt with
       // fill for just 1/10 of the events.
-      TTree* tree2 = ro.fTree2;
-      if (tree2->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1 && bn1->WHICHPATH != 3){
-        tree2->Fill();
+      // TTree* tree2 = ro.fTree2;
+      if (ro.tree2.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1 && bn1->WHICHPATH != 3){
+        ro.tree2.Fill();
       }
 
       // intermediate counting
@@ -3034,9 +2640,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       count1->nchanceinhell[whichray]++;
       
       // for plotting
-      if (tree3->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1 && bn1->WHICHPATH != 3)
-        tree3->Fill();
-
+      if (ro.tree3.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1 && bn1->WHICHPATH != 3){
+        ro.tree3.Fill();
+      }
       // index for each antenna so you can use it to fill arrays
       count_rx=0;
       // keeps track of maximum voltage seen on either polarization of any antenna
@@ -3119,25 +2725,25 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           // should be at highest frequency
           // just for plotting
           maxtaper=-1000;
-          if (sig1->logscalefactor_taper>maxtaper)
+          if (sig1->logscalefactor_taper>maxtaper){
             maxtaper=sig1->logscalefactor_taper;
+	  }
+	  
+          pdgcode = interaction1->getPdgCode();
 
-          if (interaction1->nuflavor=="nue")        pdgcode = 12;
-          else if (interaction1->nuflavor=="numu")  pdgcode = 14;
-          else if (interaction1->nuflavor=="nutau") pdgcode = 16;
+          if (settings1.HIST==1 && !settings1.ONLYFINAL && bn1->WHICHPATH != 3 && k==Anita::NFREQ/2 && ro.tree18.GetEntries()<settings1.HIST_MAX_ENTRIES) {
 
-          if (settings1.HIST==1 && !settings1.ONLYFINAL && bn1->WHICHPATH != 3 && k==Anita::NFREQ/2 && tree18->GetEntries()<settings1.HIST_MAX_ENTRIES) {
-
-            tree18->Fill();
+            ro.tree18.Fill();
           }
 
-          if (bn1->WHICHPATH == 3)
+          if (bn1->WHICHPATH == 3){
             interaction1->banana_volts += vmmhz[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
+	  }
         }//end for (int k=0;k<Anita::NFREQ;k++)
 
 
-        if (bn1->WHICHPATH==3 && interaction1->banana_volts != 0 && settings1.HIST && banana_tree->GetEntries()<settings1.HIST_MAX_ENTRIES) {
-          banana_tree->Fill();
+        if (bn1->WHICHPATH==3 && interaction1->banana_volts != 0 && settings1.HIST && ro.banana_tree.GetEntries()<settings1.HIST_MAX_ENTRIES) {
+          ro.banana_tree.Fill();
           continue;
         } //This is all the data needed for the banana plot - we now have the final value of vmmhz[]
         else if (bn1->WHICHPATH==3 && interaction1->banana_volts == 0) {
@@ -3244,9 +2850,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // start looping over antennnas.
       // ilayer loops through vertical layers
 
-      if (settings1.SLAC)
+      if (settings1.SLAC){
         fslac_hitangles << bn1->sslacpositions[bn1->islacposition] << "\n";
-
+      }
       if (RANDOMISEPOL) {
         double rotateangle=gRandom->Gaus(RANDOMISEPOL*constants::RADDEG);
         n_pol=n_pol.Rotate(rotateangle, ray1->n_exit2bn[2]);
@@ -3315,8 +2921,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           hitangle_h_all[count_rx]=hitangle_h;
           hitangle_e_all[count_rx]=hitangle_e;
           // for debugging
-          if (h6->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
-            h6->Fill(hitangle_h, ray1->n_exit2bn[2].Dot(bn1->n_bn));
+          if (ro.h6.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
+            ro.h6.Fill(hitangle_h, ray1->n_exit2bn[2].Dot(bn1->n_bn));
 
           antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
           
@@ -3394,7 +3000,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               rec_efield_array[ibw]=sqrt(pow(chantrig1->bwslice_volts_pole[ibw]/(undogaintoheight_e_array[ibw]*0.5), 2)+pow(chantrig1->bwslice_volts_polh[ibw]/(undogaintoheight_h_array[ibw]*0.5), 2));
               bwslice_vnoise_thislayer[ibw]=anita1->bwslice_vnoise[ilayer][ibw];// this is just for filling into a tree
             } // end loop over bandwidth slices
-            tree6b->Fill();
+            ro.tree6b.Fill();
           } // end if this is the closest antenna
 
           //+++++//+++++//+++++//+++++//+++++//+++++//+++++
@@ -3455,6 +3061,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             al_voltages_direct<<"0 0 0"<<"   "<<"    "<<globaltrig1->volts_original[1][0][0]<<"    "<<(globaltrig1->volts_original[0][0][0]/sqrt(2.))<<"     "<<globaltrig1->volts_original[1][0][1]<<"     "<<globaltrig1->volts_original[0][0][1]<<"      "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"     "<<anita1->VNOISE[0]<<"  "<<fNeutrinoPath->weight<<std::endl;
           }
           delete chantrig1;
+	  chantrig1 = NULL;
         } //loop through the phi-fold antennas
       }  //loop through the layers of antennas
 
@@ -3487,6 +3094,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               discones_passing++;
 
             delete chantrig1;
+	    chantrig1 = NULL;
           } // end looping through discones
         } //end if settings discones==1
       }
@@ -3528,6 +3136,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // then multiply by the cross section multiplier,  to account for the fact that we get more interactions when the cross section is higher
       if (fNeutrinoPath->weight<CUTONWEIGHTS) {
         delete globaltrig1;
+	globaltrig1 = NULL;
         continue;
       }
 
@@ -3580,13 +3189,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         passestrigger=1;
 
         // for plotting
-        if (tree11->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
-          tree11->Fill();
-
+        if (ro.tree11.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+          ro.tree11.Fill();
+	}
         // for taus
-        if(sec1->secondbang && sec1->interestedintaus)
+        if(sec1->secondbang && sec1->interestedintaus){
           count_passestrigger_nfb++;
-
+	}
         crust_entered=0; //These are switches that let us tell how far a given neutrino penetrated.  Clear them before entering Getchord.
         mantle_entered=0;
         core_entered=0;
@@ -3595,9 +3204,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         // returns 0 if chord<1m
         if (tautrigger==1 || antarctica->Getchord(&settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, fNeutrinoPath->nearthlayers, myair, total_kgm2, crust_entered, mantle_entered, core_entered)) {
           //cout << "passes chord.\n";
-          if (nupathtree->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
-            nupathtree->Fill();
-
+          if (ro.nupathtree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+            ro.nupathtree.Fill();
+	  }
           // counts how many have a good chord length
           count_chordgoodlength++;
 
@@ -3605,17 +3214,18 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           if(tauweighttrigger==1){
             fNeutrinoPath->weight_prob=interaction1->weight_nu_prob + taus1->weight_tau_prob;
           }
-          else
+          else{
             fNeutrinoPath->weight_prob=interaction1->weight_nu_prob;
-
+	  }
           fNeutrinoPath->weight1=interaction1->weight_nu;
           fNeutrinoPath->weight=fNeutrinoPath->weight1/interaction1->dnutries*settings1.SIGMA_FACTOR;
           fNeutrinoPath->weight_prob=fNeutrinoPath->weight_prob/interaction1->dnutries*settings1.SIGMA_FACTOR;
 
           fNeutrinoPath->pieceofkm2sr=fNeutrinoPath->weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*constants::sr/(double)NNU/fNeutrinoPath->len_int;
-          if (h10->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST)
-            h10->Fill(hitangle_e_all[0], fNeutrinoPath->weight);
-//cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<"   screenNpts="<<panel1->GetNvalidPoints()<< ":  vmmhz[0] = "<<panel1->GetVmmhz_freq(0)<<" : trans pol "<< panel1->GetPol(0)<<" : IncAngle "<<panel1->GetIncidenceAngle(0)*180./PI<< " : TransAngle "<<panel1->GetTransmissionAngle(0)*180./PI<<" : Tslappy "<<panel1->GetTperpendicular_polPerpendicular(0)<<" : Tpokey "<<panel1->GetTparallel_polParallel(0)<< std::endl;
+          if (ro.h10.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST){
+            ro.h10.Fill(hitangle_e_all[0], fNeutrinoPath->weight);
+	  }
+	  //cerr << inu<<" passes. weight= "<<weight<<"    El.Angle= "<<(antarctica->GetSurfaceNormal(bn1->r_bn).Cross(ray1->n_exit2bn[2])).Cross(antarctica->GetSurfaceNormal(bn1->r_bn)).Unit().Angle(ray1->n_exit2bn[2].Unit())*180./PI<<"    Distance= "<< bn1->r_bn.Distance(ray1->rfexit[2])<<"   screenNpts="<<panel1->GetNvalidPoints()<< ":  vmmhz[0] = "<<panel1->GetVmmhz_freq(0)<<" : trans pol "<< panel1->GetPol(0)<<" : IncAngle "<<panel1->GetIncidenceAngle(0)*180./PI<< " : TransAngle "<<panel1->GetTransmissionAngle(0)*180./PI<<" : Tslappy "<<panel1->GetTperpendicular_polPerpendicular(0)<<" : Tpokey "<<panel1->GetTparallel_polParallel(0)<< std::endl;
 //cerr<<bn1->r_bn.Lat()<<"  "<<-90.+bn1->r_bn.Lat()<<std::endl;
 //cerr<<interaction1->posnu.Lon()<<"  "<<-90.+interaction1->posnu.Lat()<<std::endl;
 //cerr<<ray1->rfexit[2].Lon()<<"  "<<-90.+ray1->rfexit[2].Lat()<<std::endl;
@@ -3639,8 +3249,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               eventsfound_nfb+=fNeutrinoPath->weight;
               index_weights=(int)(((fNeutrinoPath->logweight-MIN_LOGWEIGHT)/(MAX_LOGWEIGHT-MIN_LOGWEIGHT))*(double)NBINS);
               eventsfound_nfb_binned[index_weights]++;
-              if (tree16->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
-                tree16->Fill();
+              if (ro.tree16.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+                ro.tree16.Fill();
+	      }
             }//end if secondbang & interestedintaus
             else {
               allcuts[whichray]++;
@@ -3654,47 +3265,50 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               }
               anita1->weight_inanita=fNeutrinoPath->weight;
 
-              if (h1mybeta->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
-                h1mybeta -> Fill(mybeta, fNeutrinoPath->weight); //get the angle distribution of mybeta
-
+              if (ro.h1mybeta.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+                ro.h1mybeta.Fill(mybeta, fNeutrinoPath->weight); //get the angle distribution of mybeta
+	      }
               eventsfound+=fNeutrinoPath->weight; // counting events that pass,  weighted.
               eventsfound_prob+=fNeutrinoPath->weight_prob; // counting events that pass,  probabilities.
-              if (cosalpha>0)
+              if (cosalpha>0){
                 eventsfound_belowhorizon+=fNeutrinoPath->weight;
-
+	      }
               count1->npass[whichray]++;  // counting events that pass,  unweighted.
               // for calculating errors on sensitivity
               // need to find how many events as a function of weight
               // here,  we find how to index weight
-              if (fNeutrinoPath->logweight<MIN_LOGWEIGHT)  // underflows,  set to 0th bin
+              if (fNeutrinoPath->logweight<MIN_LOGWEIGHT){  // underflows,  set to 0th bin
                 index_weights=0;
-              else if (fNeutrinoPath->logweight>MAX_LOGWEIGHT) // overflows,  set to last bin
+	      }
+              else if (fNeutrinoPath->logweight>MAX_LOGWEIGHT){ // overflows,  set to last bin
                 index_weights=NBINS-1;
-              else // which index weight corresponds to.
+	      }
+              else{ // which index weight corresponds to.
                 index_weights=(int)(((fNeutrinoPath->logweight-MIN_LOGWEIGHT)/(MAX_LOGWEIGHT-MIN_LOGWEIGHT))*(double)NBINS);
-
+	      }
               // count number of events that pass,  binned in weight
-              if (index_weights<NBINS)
+              if (index_weights<NBINS){
                 eventsfound_binned[index_weights]++;
-
+	      }
               // number of events in a ring at distance from balloon
-              if (index_distance<NBINS_DISTANCE)
+              if (index_distance<NBINS_DISTANCE){
                 eventsfound_binned_distance[index_distance]+= fNeutrinoPath->weight;
-
+	      }
               // same,  now binned in weight,  for calculating errors
-              if (index_distance<NBINS_DISTANCE && index_weights<NBINS)
+              if (index_distance<NBINS_DISTANCE && index_weights<NBINS){
                 eventsfound_binned_distance_forerror[index_distance][index_weights]++;
+	      }
               // for debugging
-              if (fNeutrinoPath->logweight>-3)
+              if (fNeutrinoPath->logweight>-3){
                 eventsfound_weightgt01+=fNeutrinoPath->weight;
-
+	      }
               // how many events just pass through crust,  for same purpose.
-              if (fNeutrinoPath->nearthlayers==1)
+              if (fNeutrinoPath->nearthlayers==1){
                 eventsfound_crust+=fNeutrinoPath->weight;
-
-              if (h1mybeta->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1) {
-                h1mybeta -> Fill(mybeta, fNeutrinoPath->weight);
-                h1mytheta -> Fill(mytheta, fNeutrinoPath->weight);//fill mytheta
+	      }
+              if (ro.h1mybeta.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1) {
+                ro.h1mybeta.Fill(mybeta, fNeutrinoPath->weight);
+                ro.h1mytheta.Fill(mytheta, fNeutrinoPath->weight);//fill mytheta
               }
             }//end else secondbang & interestedintaus
 
@@ -3710,30 +3324,30 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               event_e=float(antarctica->xLowerLeft_ice+event_e_coord*antarctica->cellSize)/1000.;
               event_n=float(-1*(antarctica->yLowerLeft_ice+(antarctica->cellSize*event_n_coord)))/1000.;
               if(whichray==0)//direct
-                dir_int_coord->Fill(event_e, event_n);
+                ro.dir_int_coord.Fill(event_e, event_n);
               if(whichray==1)
-                ref_int_coord->Fill(event_e, event_n);
+                ro.ref_int_coord.Fill(event_e, event_n);
             }
 
             // just for plotting.
             offaxis=(double)fabs(viewangle-sig1->changle);
             nsigma_offaxis=offaxis/deltheta_had_max;
-
-            hundogaintoheight_e->Fill(undogaintoheight_e, fNeutrinoPath->weight);
-            hundogaintoheight_h->Fill(undogaintoheight_h, fNeutrinoPath->weight);
-            rec_diff->Fill((rec_efield-true_efield)/true_efield, fNeutrinoPath->weight);
-            rec_diff0->Fill((rec_efield_array[0]-true_efield_array[0])/true_efield_array[0], fNeutrinoPath->weight);
-            rec_diff1->Fill((rec_efield_array[1]-true_efield_array[1])/true_efield_array[1], fNeutrinoPath->weight);
-            rec_diff2->Fill((rec_efield_array[2]-true_efield_array[2])/true_efield_array[2], fNeutrinoPath->weight);
-            rec_diff3->Fill((rec_efield_array[3]-true_efield_array[3])/true_efield_array[3], fNeutrinoPath->weight);
-            recsum_diff->Fill((rec_efield_array[0]+rec_efield_array[1]+rec_efield_array[2]+rec_efield_array[3]-true_efield)/true_efield, fNeutrinoPath->weight);
+	    
+            ro.hundogaintoheight_e.Fill(undogaintoheight_e, fNeutrinoPath->weight);
+            ro.hundogaintoheight_h.Fill(undogaintoheight_h, fNeutrinoPath->weight);
+            ro.rec_diff.Fill((rec_efield-true_efield)/true_efield, fNeutrinoPath->weight);
+            ro.rec_diff0.Fill((rec_efield_array[0]-true_efield_array[0])/true_efield_array[0], fNeutrinoPath->weight);
+            ro.rec_diff1.Fill((rec_efield_array[1]-true_efield_array[1])/true_efield_array[1], fNeutrinoPath->weight);
+            ro.rec_diff2.Fill((rec_efield_array[2]-true_efield_array[2])/true_efield_array[2], fNeutrinoPath->weight);
+            ro.rec_diff3.Fill((rec_efield_array[3]-true_efield_array[3])/true_efield_array[3], fNeutrinoPath->weight);
+            ro.recsum_diff.Fill((rec_efield_array[0]+rec_efield_array[1]+rec_efield_array[2]+rec_efield_array[3]-true_efield)/true_efield, fNeutrinoPath->weight);
 
             sourceLon = ray1->rfexit[2].Lon() - 180;
             sourceLat = ray1->rfexit[2].Lat() - 90;
             sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon+180, sourceLat+90);
 
             //Now put data in Vectors and Positions into arrays for output to the ROOT file.
-            if (settings1.HIST && finaltree->GetEntries()<settings1.HIST_MAX_ENTRIES) {
+            if (settings1.HIST && ro.finaltree.GetEntries()<settings1.HIST_MAX_ENTRIES) {
               for (int i=0;i<3;i++) {
                 nnu_array[i] = interaction1->nnu[i];
                 r_in_array[i] = interaction1->r_in[i];
@@ -3758,8 +3372,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
                   rfexit_db_array[j][i] = ray1->rfexit_db[j][i];
                 } //end for
               } //end for
-              if (vmmhz_tree->GetEntries()<20) {
-                vmmhz_tree->Fill();
+              if (ro.vmmhz_tree.GetEntries()<20) {
+                ro.vmmhz_tree.Fill();
               }
 
               nuflavorint2 = interaction1->nuflavorint;
@@ -3780,7 +3394,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
               sourceMag = ray1->rfexit[2].Mag();
 
-              finaltree->Fill();
+              ro.finaltree.Fill();
               count1->IncrementWeights_r_in(interaction1->r_in, fNeutrinoPath->weight);
             } //end if HIST & HISTMAXENTRIES
 
@@ -4001,28 +3615,30 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	    }
 
             // sample first 1000 events that pass to see the distribution of weights
-            if (settings1.HIST && !settings1.ONLYFINAL && sampleweights->GetEntries()<settings1.HIST_MAX_ENTRIES) {
-              if (fNeutrinoPath->weight>1.E-6)
-                sampleweights->Fill(log10(fNeutrinoPath->weight));
-              else
-                sampleweights->Fill(-6.);
+            if (settings1.HIST && !settings1.ONLYFINAL && ro.sampleweights.GetEntries()<settings1.HIST_MAX_ENTRIES) {
+              if (fNeutrinoPath->weight>1.E-6){
+                ro.sampleweights.Fill(log10(fNeutrinoPath->weight));
+	      }
+              else{
+                ro.sampleweights.Fill(-6.);
+	      }
 
               // on the 1000th one,  see how low you should make the cut so that you catch 99% of the events (weighted)
-              if (sampleweights->GetEntries()==1000) {
+              if (ro.sampleweights.GetEntries()==1000) {
                 double sum_sampleintegral=0.;
                 double sum_sample=0.;
                 // first calculate total integral of all the weights
-                for (int k=sampleweights->GetNbinsX();k>=1;k--) {
-                  sum_sampleintegral+=sampleweights->GetBinContent(k)*pow(10., sampleweights->GetBinLowEdge(k));
+                for (int k=ro.sampleweights.GetNbinsX();k>=1;k--) {
+                  sum_sampleintegral+=ro.sampleweights.GetBinContent(k)*pow(10., ro.sampleweights.GetBinLowEdge(k));
                 }
                 // treat the underflow bin specially
-                sum_sampleintegral+=sampleweights->GetBinContent(0)*pow(10., sampleweights->GetBinLowEdge(1));
+                sum_sampleintegral+=ro.sampleweights.GetBinContent(0)*pow(10., ro.sampleweights.GetBinLowEdge(1));
                 // now sum until you reach 99% of the integral.
-                for (int k=sampleweights->GetNbinsX();k>=1;k--) {
-                  sum_sample+=sampleweights->GetBinContent(k)*pow(10., sampleweights->GetBinLowEdge(k));
+                for (int k=ro.sampleweights.GetNbinsX();k>=1;k--) {
+                  sum_sample+=ro.sampleweights.GetBinContent(k)*pow(10., ro.sampleweights.GetBinLowEdge(k));
                   if (sum_sample>0.99*sum_sampleintegral) {
                     // reset the cut value.
-                    CUTONWEIGHTS=pow(10., sampleweights->GetBinLowEdge(k));
+                    CUTONWEIGHTS=pow(10., ro.sampleweights.GetBinLowEdge(k));
                     std::cout << "CUTONWEIGHTS is " << CUTONWEIGHTS << "\n";
                     k=0;
                   }
@@ -4102,6 +3718,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         evtwgtout.close();
       }*/
       delete globaltrig1;
+      globaltrig1 = NULL;
 
       // keeping track of intermediate counters,  incrementing by weight1.
       // weight1 was not yet determined when integer counters were incremented.
@@ -4115,9 +3732,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       if (settings1.HIST==1
 	  && !settings1.ONLYFINAL
-	  && tree1->GetEntries()<settings1.HIST_MAX_ENTRIES
+	  && ro.tree1.GetEntries() < settings1.HIST_MAX_ENTRIES
 	  && bn1->WHICHPATH != 3){ // all events
-        tree1->Fill();
+        ro.tree1.Fill();
       }//end if
 
     } // end for WHICHRAY
@@ -4241,7 +3858,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     freq[i]=anita1->freq[i];
   }
   std::cout << "Filling summarytree.  rms_rfcm_e is " << rms_rfcm_e << "\n";
-  summarytree->Fill();
+  ro.summarytree.Fill();
 
 
   // maks the output file
@@ -4271,7 +3888,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   foutput << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<std::endl;
 
+  
   delete anita1;
+  anita1 = NULL;
+  
   return;
 }
 

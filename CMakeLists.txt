@@ -150,7 +150,6 @@ macro(add_binary bin)
 endmacro() 
 
 add_binary(icemc)
-add_binary(icemc2)
 add_binary(icemc3)
 add_binary(testTrigger) 
 add_binary(testSettings) 

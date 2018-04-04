@@ -4,63 +4,90 @@
 #include "TString.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TH1D.h"
+#include "TH1F.h"
+#include "TH2F.h"
+
 
 namespace icemc {
 
+  class EventGenerator;
+  class Settings;
+
   /**
    * @class RootOutput
-   * @brief Looks after all ROOT output from running icemc
+   * @brief Looks after all ROOT output from running icemc.
+   *
+   * If stuff needs to be added, make sure it's a member of the 
+   * event generator class.
    */
-
-
   class RootOutput {
 
-    
+
   public:
-    RootOutput();
-    RootOutput(const char* outputDir, int run);
+    RootOutput(const EventGenerator* uhen = NULL, const Settings* settings = NULL, const char* outputDir = ".", int run = 0);
     virtual ~RootOutput();
-    
-    /** 
-     * Generate the icefinal file and contained trees
-     */
-    void make_icefinal();
 
-    class Tree2Output  {
-      int inu;
-      double horizcoord;
-      double vertcoord;
-      double scalefactor_distance;
-      double scalefactor_attenuation;
-      ClassDefNV(Tree2Output, 1);
-    } fTree2Output;
-    // struct Tree2Output {
-    //   int inu;
-    //   double horizcoord;
-    //   double vertcoord;
-    //   double scalefactor_distance;
-    //   double scalefactor_attenuation;
-    //   ClassDefNV(Tree2Output, 1);
-    // };
+    TTree tree2;		///< Filled for each event that is beyond the horizon.
+    TTree tree18;
+    TTree tree16;
+    TTree tree11;		///< tree11
+    TTree groundtree;
+    TTree icetree;
+    TTree ytree;		///<To record y distributions
+    TTree banana_tree;		///<To record banana plot info - Stephen
+    TTree summarytree;		///< finaltree filled for all events that pass
+    TTree mytaus_tree;
+    TTree finaltree;		///< finaltree filled for all events that pass
+    TTree nupathtree;
+    TTree neutrino_positiontree;
+    TTree viewangletree;	///< signal as it is produced at the interaction
+    TTree jaimetree;		///< signal as it is produced at the interaction
+    TTree tree7;		///< tree6 filled just after flavor is set
+    TTree tree6b;		///< tree6b filled for the closest antenna to the interaction
+    TTree tree6;		///< tree6 filled for neutrinos that enter S of 60 deg S latitude.
+    TTree tree5;		///< tree5 filled for each nutau.
+    TTree tree3;		///< tree3 if signal is detectable.
+    TTree balloontree;		///< filled for all events
+    TTree vmmhz_tree;           ///< To record frequency spread at point where it is first filled
+    TTree tree1;                ///< tree1 filled for each neutrino
+    
+    TH1D h1mybeta;
+    TH1D h1mytheta;             ///< 90-incidentangle when neutrinos enter the Earth.
+    TH1F hundogaintoheight_e;
+    TH1F hundogaintoheight_h;
+    TH1F rec_diff;
+    TH1F recsum_diff;
+    TH1F rec_diff0;
+    TH1F rec_diff1;
+    TH1F rec_diff2;
+    TH1F rec_diff3;
+    TH1F sampleweights;         ///< we sample weights for early events and save them in this histogram, to determine where the cut should be.
+    TH2F ref_int_coord;
+    TH2F dir_int_coord;
+    TH1F prob_eachphi_bn;
+    TH1F prob_eachilon_bn;
+    TH2F h6;
+    TH1F h10;
+    TH1F hy;
+    TH1F fraction_sec_muons ;
+    TH1F fraction_sec_taus;
+    TH1F n_sec_muons;
+    TH1F n_sec_taus;    
 
-    TFile* fIceFinalFile; ///< icefinal output file
-    TTree* fTree2;
-    //Tree2Output* fTree2Output;
-    
-    
   private:
     TString fOutputDir; ///< The output directory
     int fRun; ///< The simulated run number (used to uniquely name output files)
-    
+    TFile* fIceFinal;
+
+    void initAll(const EventGenerator* uhen, const Settings* settings);
+    void initHist(TH1* h, const char* name, const char* title, int nx, double xMin, double xMax);
+    void initHist(TH2* h, const char* name, const char* title, int nx, double xMin, double xMax, int ny, double yMin, double yMax);
+    void initTree(TTree* t, const char* name, const char* title);
 
 
-    void zeroFilePointers();
-    
+
   };
-
-  
-
-
 
 }
 
