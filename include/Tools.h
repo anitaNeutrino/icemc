@@ -94,7 +94,7 @@ namespace icemc{
 
     TGraph *getInterpolatedGraph(TGraph *grIn, Double_t deltaT);
 
-    double calculateSNR(double justSig[512], double justNoise[512]);
+    double calculateSNR(const double justSig[512], const double justNoise[512]);
     
     template <class T, class U> void vector_element_convert(const vector<T>& input, vector<U>& output){
       output.clear();

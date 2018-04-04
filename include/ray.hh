@@ -11,14 +11,15 @@
 
 #include "vector.hh"
 #include "anita.hh"
+#include "position.hh"
+#include "icemodel.hh"
 
 //! Ray tracing
 
 namespace icemc {
-  class IceModel;
+
   class Settings;
   class Anita;
-  class Position;
   class Signal;
 
   

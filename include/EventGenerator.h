@@ -366,6 +366,10 @@ namespace icemc {
     double e_component=0; // E comp along polarization
     double h_component=0; // H comp along polarization
     double n_component=0; // normal comp along polarization
+    double e_component_kvector=0; // component of e-field along the rx e-plane
+    double h_component_kvector=0; // component of the e-field along the rx h-plane
+    double n_component_kvector=0; // component of the e-field along the normal
+
 
     double chengji = 0;
     Vector ant_normal; //Vector normal to the face of the antenna
@@ -453,7 +457,8 @@ namespace icemc {
     double avgfreq_rfcm[Anita::NFREQ];
     double avgfreq_rfcm_lab[Anita::NFREQ];
     double freq[Anita::NFREQ];
-    
+
+    UInt_t eventNumber;
 
     void applyRoughness(const Settings& settings1, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, Signal* sig1, Anita* anita1);
     

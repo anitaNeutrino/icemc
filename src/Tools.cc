@@ -719,7 +719,7 @@ TGraph *icemc::Tools::getInterpolatedGraph(TGraph *grIn, Double_t deltaT)
 }
 
 
-double icemc::Tools::calculateSNR(double justSig[512], double justNoise[512]){
+double icemc::Tools::calculateSNR(const double justSig[512], const double justNoise[512]){
 
   double p2p = icemc::Tools::dMax(justSig, 512) - Tools::dMin(justSig, 512) ;
   double rms = 0;

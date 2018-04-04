@@ -1351,19 +1351,6 @@ void icemc::EventGenerator::interrupt_signal_handler(int sig){
 }
 
 
-int icemc::EventGenerator::GetIceMCAntfromUsefulEventAnt(const Settings *settings1,  int UsefulEventAnt){
-
-#ifdef ANITA_UTIL_EXISTS  
-  int IceMCAnt = UsefulEventAnt;
-  if ((settings1->WHICH==9 || settings1->WHICH==10) && UsefulEventAnt<16) {
-    IceMCAnt = (UsefulEventAnt%2==0)*UsefulEventAnt/2 + (UsefulEventAnt%2==1)*(UsefulEventAnt/2+8);
-  }
-  return IceMCAnt;
-#else  
-  return -1;
-#endif
-  
-}
 
 void icemc::EventGenerator::WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double altitude_int,  std::string nuflavor,  std::string current,  double elast_y,  std::ofstream &nu_out) {
   nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
@@ -1565,68 +1552,66 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   double true_efield_array[4];
   // end energy reconstruction variables
 
-  UInt_t eventNumber;
-
   // for branch setting...
   fNeutrinoPath = new NeutrinoPath();  
 
-#ifdef ANITA_UTIL_EXISTS
+// #ifdef ANITA_UTIL_EXISTS
 
-  string outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaEventFile"+clOpts.run_num+".root";
-  TFile* anitafileEvent = new TFile(outputAnitaFile.c_str(), "RECREATE");
+//   string outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaEventFile"+clOpts.run_num+".root";
+//   TFile* anitafileEvent = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
-  TTree* eventTree = new TTree("eventTree", "eventTree");
-  eventTree->Branch("event",             &realEvPtr           );
-  // eventTree->Branch("run",               clOpts.run_no,   "run/I"   );
-  eventTree->Branch("weight",            &fNeutrinoPath->weight,   "weight/D");
+//   TTree* eventTree = new TTree("eventTree", "eventTree");
+//   eventTree->Branch("event",             &realEvPtr           );
+//   // eventTree->Branch("run",               clOpts.run_no,   "run/I"   );
+//   eventTree->Branch("weight",            &fNeutrinoPath->weight,   "weight/D");
 
-  outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaHeadFile"+clOpts.run_num+".root";
-  TFile* anitafileHead = new TFile(outputAnitaFile.c_str(), "RECREATE");
+//   outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaHeadFile"+clOpts.run_num+".root";
+//   TFile* anitafileHead = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
-  TTree* headTree = new TTree("headTree", "headTree");
-  headTree->Branch("header",  &rawHeaderPtr           );
-  headTree->Branch("weight",  &fNeutrinoPath->weight,      "weight/D");
+//   TTree* headTree = new TTree("headTree", "headTree");
+//   headTree->Branch("header",  &rawHeaderPtr           );
+//   headTree->Branch("weight",  &fNeutrinoPath->weight,      "weight/D");
 
-  outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaGpsFile"+clOpts.run_num+".root";
-  TFile* anitafileGps = new TFile(outputAnitaFile.c_str(), "RECREATE");
+//   outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaGpsFile"+clOpts.run_num+".root";
+//   TFile* anitafileGps = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
-  TTree* adu5PatTree = new TTree("adu5PatTree", "adu5PatTree");
-  adu5PatTree->Branch("pat",          &Adu5PatPtr                   );
-  adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
-  adu5PatTree->Branch("weight",       &fNeutrinoPath->weight,       "weight/D"     );
+//   TTree* adu5PatTree = new TTree("adu5PatTree", "adu5PatTree");
+//   adu5PatTree->Branch("pat",          &Adu5PatPtr                   );
+//   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
+//   adu5PatTree->Branch("weight",       &fNeutrinoPath->weight,       "weight/D"     );
 
-#ifdef ANITA3_EVENTREADER
+// #ifdef ANITA3_EVENTREADER
 
-  // Set AnitaVersion so that the right payload geometry is used
-  AnitaVersion::set(settings1.ANITAVERSION);
+//   // Set AnitaVersion so that the right payload geometry is used
+//   AnitaVersion::set(settings1.ANITAVERSION);
   
-  outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaTruthFile"+clOpts.run_num+".root";
-  TFile* anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
+//   outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaTruthFile"+clOpts.run_num+".root";
+//   TFile* anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
-  static TString icemcgitversion = TString::Format("%s", icemc::EnvironmentVariable::ICEMC_VERSION(clOpts.outputdir));  
-  printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
-  unsigned int timenow = time(NULL);
+//   static TString icemcgitversion = TString::Format("%s", icemc::EnvironmentVariable::ICEMC_VERSION(clOpts.outputdir));  
+//   printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
+//   unsigned int timenow = time(NULL);
 
-  TTree* configAnitaTree = new TTree("configIcemcTree", "Config file and settings information");
-  configAnitaTree->Branch("gitversion",        &icemcgitversion  );
-  configAnitaTree->Branch("nnu",               &NNU              );
-  configAnitaTree->Branch("startTime",         &timenow          );
-  // configAnitaTree->Branch("icemcSettings",     &settings1        );
-  configAnitaTree->Fill();
+//   TTree* configAnitaTree = new TTree("configIcemcTree", "Config file and settings information");
+//   configAnitaTree->Branch("gitversion",        &icemcgitversion  );
+//   configAnitaTree->Branch("nnu",               &NNU              );
+//   configAnitaTree->Branch("startTime",         &timenow          );
+//   // configAnitaTree->Branch("icemcSettings",     &settings1        );
+//   configAnitaTree->Fill();
 
-  TTree* triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
-  triggerSettingsTree->Branch("dioderms",  anita1->bwslice_dioderms_fullband_allchan,  "dioderms[2][48][6]/D" );
-  triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48][6]/D");
-  triggerSettingsTree->Fill();
+//   TTree* triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
+//   triggerSettingsTree->Branch("dioderms",  anita1->bwslice_dioderms_fullband_allchan,  "dioderms[2][48][6]/D" );
+//   triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48][6]/D");
+//   triggerSettingsTree->Fill();
   
-  TTree* truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
-  truthAnitaTree->Branch("truth",     &truthEvPtr                   );
+//   TTree* truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
+//   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
 
-#endif
+// #endif
 
-  AnitaGeomTool* AnitaGeom1 = AnitaGeomTool::Instance();
+//   AnitaGeomTool* AnitaGeom1 = AnitaGeomTool::Instance();
   
-#endif
+// #endif
   //end ROOT variable definitions
   ///////////////////////////////////////////////////////////////////////
 
@@ -2407,12 +2392,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // pretty close to the right answer.
       // now get our best case attenuation again,
       // and see if we can reject the event.
-      if (whichray==0)
+      if (whichray==0){
         bestcase_atten=exp(-1*ray1->rfexit[1].Distance(interaction1->posnu)/MAX_ATTENLENGTH);
-
-      if (whichray==1)
+      }
+      if (whichray==1){
         bestcase_atten=exp(-1*ray1->rfexit[1].Distance(interaction1->posnu_down)/MAX_ATTENLENGTH);//use the real distance
-
+      }
       if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR && !settings1.SKIPCUTS && !settings1.FORSECKEL) {
         if (bn1->WHICHPATH==3)
           std::cout<<"Event rejected.  Check."<<std::endl;
@@ -2426,10 +2411,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
      
       double nbelowsurface;
       // reject if it is totally internally reflected at the surface AND NOT CONSIDERING ROUGHNESS
-      if (settings1.FIRN)
+      if (settings1.FIRN){
         nbelowsurface=constants::NFIRN;
-      else
+      }
+      else{
         nbelowsurface=sig1->NICE;
+      }
       // this is purely a sanity check.
       // if everything is working,  events should pass with 100% efficiency
       if (!settings1.ROUGHNESS && TIR(ray1->nsurf_rfexit, ray1->nrf_iceside[3], nbelowsurface, sig1->N_AIR)) {
@@ -2894,9 +2881,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       Vector n_eplane = constants::const_z;
       Vector n_hplane = -constants::const_y;
       Vector n_normal = constants::const_x;
-      double e_component_kvector=0; // component of e-field along the rx e-plane
-      double h_component_kvector=0; // component of the e-field along the rx h-plane
-      double n_component_kvector=0; // component of the e-field along the normal      
       
       if (!settings1.BORESIGHTS) {
         bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
@@ -3398,211 +3382,213 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               count1->IncrementWeights_r_in(interaction1->r_in, fNeutrinoPath->weight);
             } //end if HIST & HISTMAXENTRIES
 
-#ifdef ANITA_UTIL_EXISTS
-            realEvPtr     = new UsefulAnitaEvent();
-            rawHeaderPtr  = new RawAnitaHeader();
-            Adu5PatPtr    = new Adu5Pat();	    
+	    ro.fillRootifiedAnitaDataTrees(this, settings1, ray1, panel1);
+	    
+// #ifdef ANITA_UTIL_EXISTS
+//             realEvPtr     = new UsefulAnitaEvent();
+//             rawHeaderPtr  = new RawAnitaHeader();
+//             Adu5PatPtr    = new Adu5Pat();	    
 
-            Adu5PatPtr->latitude= bn1->latitude;
-            Adu5PatPtr->longitude=bn1->longitude;
-            Adu5PatPtr->altitude=bn1->altitude;
-            Adu5PatPtr->realTime=bn1->realTime_flightdata;
-            Adu5PatPtr->heading = bn1->heading;
-            Adu5PatPtr->pitch = bn1->pitch;
-            Adu5PatPtr->roll = bn1->roll;
-            Adu5PatPtr->run = clOpts.run_no;
+//             Adu5PatPtr->latitude= bn1->latitude;
+//             Adu5PatPtr->longitude=bn1->longitude;
+//             Adu5PatPtr->altitude=bn1->altitude;
+//             Adu5PatPtr->realTime=bn1->realTime_flightdata;
+//             Adu5PatPtr->heading = bn1->heading;
+//             Adu5PatPtr->pitch = bn1->pitch;
+//             Adu5PatPtr->roll = bn1->roll;
+//             Adu5PatPtr->run = clOpts.run_no;
 
-	    memset(realEvPtr->fNumPoints, 0, sizeof(realEvPtr->fNumPoints) );
-	    memset(realEvPtr->fVolts,     0, sizeof(realEvPtr->fVolts)     );
-	    memset(realEvPtr->fTimes,     0, sizeof(realEvPtr->fTimes)     );
+// 	    memset(realEvPtr->fNumPoints, 0, sizeof(realEvPtr->fNumPoints) );
+// 	    memset(realEvPtr->fVolts,     0, sizeof(realEvPtr->fVolts)     );
+// 	    memset(realEvPtr->fTimes,     0, sizeof(realEvPtr->fTimes)     );
 
-            int fNumPoints = 260;
-	    for (int ichan=0; ichan<108; ichan++){
-              realEvPtr->fNumPoints[ichan] = fNumPoints;
+//             int fNumPoints = 260;
+// 	    for (int ichan=0; ichan<108; ichan++){
+//               realEvPtr->fNumPoints[ichan] = fNumPoints;
 
-              for (int j = 0; j < fNumPoints; j++) {
-                // convert seconds to nanoseconds
-                realEvPtr->fTimes[ichan][j] = j * anita1->TIMESTEP * 1.0E9;
-	      }
-	    }
-	    realEvPtr->fRFSpike = 0;// when we get as far as simulating this, we're doing well
+//               for (int j = 0; j < fNumPoints; j++) {
+//                 // convert seconds to nanoseconds
+//                 realEvPtr->fTimes[ichan][j] = j * anita1->TIMESTEP * 1.0E9;
+// 	      }
+// 	    }
+// 	    realEvPtr->fRFSpike = 0;// when we get as far as simulating this, we're doing well
 
-            for (int iant = 0; iant < settings1.NANTENNAS; iant++){
-              //int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1,  AnitaGeom1,  iant);
-              int IceMCAnt = GetIceMCAntfromUsefulEventAnt(&settings1,  iant);
-              int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
-              int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
-	      //              realEvPtr->fNumPoints[UsefulChanIndexV] = fNumPoints;
-	      //              realEvPtr->fNumPoints[UsefulChanIndexH] = fNumPoints;
-              realEvPtr->chanId[UsefulChanIndexV] = UsefulChanIndexV;
-              realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
+//             for (int iant = 0; iant < settings1.NANTENNAS; iant++){
+//               //int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1,  AnitaGeom1,  iant);
+//               int IceMCAnt = GetIceMCAntfromUsefulEventAnt(&settings1,  iant);
+//               int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
+//               int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
+// 	      //              realEvPtr->fNumPoints[UsefulChanIndexV] = fNumPoints;
+// 	      //              realEvPtr->fNumPoints[UsefulChanIndexH] = fNumPoints;
+//               realEvPtr->chanId[UsefulChanIndexV] = UsefulChanIndexV;
+//               realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
-              for (int j = 0; j < fNumPoints; j++) {
-                // convert seconds to nanoseconds
-		//                realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
-		//                realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
-                // convert volts to millivolts
-		const double voltsToMilliVolts = 1000;
-                realEvPtr->fVolts[UsefulChanIndexH][j] =  voltsRX.rfcm_lab_h_all[IceMCAnt][j+128]*voltsToMilliVolts;
-                realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
-                realEvPtr->fVolts[UsefulChanIndexV][j] =  voltsRX.rfcm_lab_e_all[IceMCAnt][j+128]*voltsToMilliVolts;
-                realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
-              }//end int j
-            }// end int iant
+//               for (int j = 0; j < fNumPoints; j++) {
+//                 // convert seconds to nanoseconds
+// 		//                realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
+// 		//                realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
+//                 // convert volts to millivolts
+// 		const double voltsToMilliVolts = 1000;
+//                 realEvPtr->fVolts[UsefulChanIndexH][j] =  voltsRX.rfcm_lab_h_all[IceMCAnt][j+128]*voltsToMilliVolts;
+//                 realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
+//                 realEvPtr->fVolts[UsefulChanIndexV][j] =  voltsRX.rfcm_lab_e_all[IceMCAnt][j+128]*voltsToMilliVolts;
+//                 realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
+//               }//end int j
+//             }// end int iant
 
-            realEvPtr->eventNumber = eventNumber;
+//             realEvPtr->eventNumber = eventNumber;
 
-            rawHeaderPtr->eventNumber = eventNumber;
-            rawHeaderPtr->surfSlipFlag = 0;
-            rawHeaderPtr->errorFlag = 0;
+//             rawHeaderPtr->eventNumber = eventNumber;
+//             rawHeaderPtr->surfSlipFlag = 0;
+//             rawHeaderPtr->errorFlag = 0;
 
-            if (settings1.MINBIAS==1)
-              rawHeaderPtr->trigType = 8; // soft-trigger
-            else
-              rawHeaderPtr->trigType = 1; // RF trigger
+//             if (settings1.MINBIAS==1)
+//               rawHeaderPtr->trigType = 8; // soft-trigger
+//             else
+//               rawHeaderPtr->trigType = 1; // RF trigger
 
 	    
-            rawHeaderPtr->run = clOpts.run_no;
-            // put the vpol only as a placeholder - these are only used in Anita-2 anyway
-            rawHeaderPtr->upperL1TrigPattern = l1trig[0][0];
-            rawHeaderPtr->lowerL1TrigPattern = l1trig[0][1];
-            rawHeaderPtr->nadirL1TrigPattern = l1trig[0][2];
+//             rawHeaderPtr->run = clOpts.run_no;
+//             // put the vpol only as a placeholder - these are only used in Anita-2 anyway
+//             rawHeaderPtr->upperL1TrigPattern = l1trig[0][0];
+//             rawHeaderPtr->lowerL1TrigPattern = l1trig[0][1];
+//             rawHeaderPtr->nadirL1TrigPattern = l1trig[0][2];
 
-            rawHeaderPtr->upperL2TrigPattern = l2trig[0][0];
-            rawHeaderPtr->lowerL2TrigPattern = l2trig[0][1];
-            rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
+//             rawHeaderPtr->upperL2TrigPattern = l2trig[0][0];
+//             rawHeaderPtr->lowerL2TrigPattern = l2trig[0][1];
+//             rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
 
-            if (settings1.WHICH<9){
-              rawHeaderPtr->phiTrigMask  = (short) anita1->phiTrigMask;
-              rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
-            }
+//             if (settings1.WHICH<9){
+//               rawHeaderPtr->phiTrigMask  = (short) anita1->phiTrigMask;
+//               rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
+//             }
 
-            rawHeaderPtr->calibStatus = 31;
-            rawHeaderPtr->realTime = bn1->realTime_flightdata;
-	    rawHeaderPtr->triggerTime = bn1->realTime_flightdata;
-            Adu5PatPtr->latitude= bn1->latitude;
-            Adu5PatPtr->longitude=bn1->longitude;
-            Adu5PatPtr->altitude=bn1->altitude;
-            Adu5PatPtr->realTime=bn1->realTime_flightdata;
-            Adu5PatPtr->heading = bn1->heading;
-            Adu5PatPtr->pitch = bn1->pitch;
-            Adu5PatPtr->roll = bn1->roll;
-            Adu5PatPtr->run = clOpts.run_no;
+//             rawHeaderPtr->calibStatus = 31;
+//             rawHeaderPtr->realTime = bn1->realTime_flightdata;
+// 	    rawHeaderPtr->triggerTime = bn1->realTime_flightdata;
+//             Adu5PatPtr->latitude= bn1->latitude;
+//             Adu5PatPtr->longitude=bn1->longitude;
+//             Adu5PatPtr->altitude=bn1->altitude;
+//             Adu5PatPtr->realTime=bn1->realTime_flightdata;
+//             Adu5PatPtr->heading = bn1->heading;
+//             Adu5PatPtr->pitch = bn1->pitch;
+//             Adu5PatPtr->roll = bn1->roll;
+//             Adu5PatPtr->run = clOpts.run_no;
 
-#ifdef ANITA3_EVENTREADER
-            if (settings1.WHICH==9 || settings1.WHICH==10) {
-              rawHeaderPtr->setTrigPattern((short) l3trig[0], AnitaPol::kVertical);
-              rawHeaderPtr->setTrigPattern((short) l3trig[1], AnitaPol::kHorizontal);
-              rawHeaderPtr->setMask( (short) anita1->l1TrigMask,  (short) anita1->phiTrigMask,  AnitaPol::kVertical);
-              rawHeaderPtr->setMask( (short) anita1->l1TrigMaskH, (short) anita1->phiTrigMaskH, AnitaPol::kHorizontal);
-            }
+// #ifdef ANITA3_EVENTREADER
+//             if (settings1.WHICH==9 || settings1.WHICH==10) {
+//               rawHeaderPtr->setTrigPattern((short) l3trig[0], AnitaPol::kVertical);
+//               rawHeaderPtr->setTrigPattern((short) l3trig[1], AnitaPol::kHorizontal);
+//               rawHeaderPtr->setMask( (short) anita1->l1TrigMask,  (short) anita1->phiTrigMask,  AnitaPol::kVertical);
+//               rawHeaderPtr->setMask( (short) anita1->l1TrigMaskH, (short) anita1->phiTrigMaskH, AnitaPol::kHorizontal);
+//             }
 
-            truthEvPtr        = new TruthAnitaEvent();
-            truthEvPtr->eventNumber      = eventNumber;
-            truthEvPtr->realTime         = bn1->realTime_flightdata;
-            truthEvPtr->run              = clOpts.run_no;
-            truthEvPtr->nuMom            = pnu;
-            truthEvPtr->nu_pdg           = pdgcode;
-            truthEvPtr->e_component      = e_component;
-            truthEvPtr->h_component      = h_component;
-            truthEvPtr->n_component      = n_component;
-            truthEvPtr->e_component_k    = e_component_kvector;
-            truthEvPtr->h_component_k    = h_component_kvector;
-            truthEvPtr->n_component_k    = n_component_kvector;
-            truthEvPtr->sourceLon        = sourceLon;
-            truthEvPtr->sourceLat        = sourceLat;
-            truthEvPtr->sourceAlt        = sourceAlt;
-            truthEvPtr->weight           = fNeutrinoPath->weight;
-            for (int i=0;i<3;i++){
-              truthEvPtr->balloonPos[i]  = bn1->r_bn[i];
-              truthEvPtr->balloonDir[i]  = bn1->n_bn[i];
-              truthEvPtr->nuPos[i]       = interaction1->posnu[i];
-              truthEvPtr->nuDir[i]       = interaction1->nnu[i];
-            }
-            for (int i=0;i<5;i++){
-              for (int j=0;j<3;j++){
-                truthEvPtr->rfExitNor[i][j] = ray1->n_exit2bn[i][j];
-                truthEvPtr->rfExitPos[i][j] = ray1->rfexit[i][j];
-              }
-            }
-            for (int i=0;i<48;i++){
-              truthEvPtr->hitangle_e[i]  = hitangle_e_all[i];
-              truthEvPtr->hitangle_h[i]  = hitangle_h_all[i];
-            }
-            if(!settings1.ROUGHNESS){
-              for (int i=0;i<Anita::NFREQ;i++)
-                truthEvPtr->vmmhz[i]       = panel1->GetVmmhz_freq(i);
-            }
+//             truthEvPtr        = new TruthAnitaEvent();
+//             truthEvPtr->eventNumber      = eventNumber;
+//             truthEvPtr->realTime         = bn1->realTime_flightdata;
+//             truthEvPtr->run              = clOpts.run_no;
+//             truthEvPtr->nuMom            = pnu;
+//             truthEvPtr->nu_pdg           = pdgcode;
+//             truthEvPtr->e_component      = e_component;
+//             truthEvPtr->h_component      = h_component;
+//             truthEvPtr->n_component      = n_component;
+//             truthEvPtr->e_component_k    = e_component_kvector;
+//             truthEvPtr->h_component_k    = h_component_kvector;
+//             truthEvPtr->n_component_k    = n_component_kvector;
+//             truthEvPtr->sourceLon        = sourceLon;
+//             truthEvPtr->sourceLat        = sourceLat;
+//             truthEvPtr->sourceAlt        = sourceAlt;
+//             truthEvPtr->weight           = fNeutrinoPath->weight;
+//             for (int i=0;i<3;i++){
+//               truthEvPtr->balloonPos[i]  = bn1->r_bn[i];
+//               truthEvPtr->balloonDir[i]  = bn1->n_bn[i];
+//               truthEvPtr->nuPos[i]       = interaction1->posnu[i];
+//               truthEvPtr->nuDir[i]       = interaction1->nnu[i];
+//             }
+//             for (int i=0;i<5;i++){
+//               for (int j=0;j<3;j++){
+//                 truthEvPtr->rfExitNor[i][j] = ray1->n_exit2bn[i][j];
+//                 truthEvPtr->rfExitPos[i][j] = ray1->rfexit[i][j];
+//               }
+//             }
+//             for (int i=0;i<48;i++){
+//               truthEvPtr->hitangle_e[i]  = hitangle_e_all[i];
+//               truthEvPtr->hitangle_h[i]  = hitangle_h_all[i];
+//             }
+//             if(!settings1.ROUGHNESS){
+//               for (int i=0;i<Anita::NFREQ;i++)
+//                 truthEvPtr->vmmhz[i]       = panel1->GetVmmhz_freq(i);
+//             }
 
 	    
-	    memset(truthEvPtr->SNRAtTrigger,       0, sizeof(truthEvPtr->SNRAtTrigger)       );
-	    memset(truthEvPtr->fSignalAtTrigger,   0, sizeof(truthEvPtr->fSignalAtTrigger)   );
-	    memset(truthEvPtr->fNoiseAtTrigger,    0, sizeof(truthEvPtr->fNoiseAtTrigger)    );
-	    memset(truthEvPtr->SNRAtDigitizer,     0, sizeof(truthEvPtr->SNRAtDigitizer)     );
-	    memset(truthEvPtr->thresholds,         0, sizeof(truthEvPtr->thresholds)         );
-	    memset(truthEvPtr->fDiodeOutput,       0, sizeof(truthEvPtr->fDiodeOutput)       );
+// 	    memset(truthEvPtr->SNRAtTrigger,       0, sizeof(truthEvPtr->SNRAtTrigger)       );
+// 	    memset(truthEvPtr->fSignalAtTrigger,   0, sizeof(truthEvPtr->fSignalAtTrigger)   );
+// 	    memset(truthEvPtr->fNoiseAtTrigger,    0, sizeof(truthEvPtr->fNoiseAtTrigger)    );
+// 	    memset(truthEvPtr->SNRAtDigitizer,     0, sizeof(truthEvPtr->SNRAtDigitizer)     );
+// 	    memset(truthEvPtr->thresholds,         0, sizeof(truthEvPtr->thresholds)         );
+// 	    memset(truthEvPtr->fDiodeOutput,       0, sizeof(truthEvPtr->fDiodeOutput)       );
 	    
-	    truthEvPtr->maxSNRAtTriggerV=0;
-	    truthEvPtr->maxSNRAtTriggerH=0;
-	    truthEvPtr->maxSNRAtDigitizerV=0;
-	    truthEvPtr->maxSNRAtDigitizerH=0;
+// 	    truthEvPtr->maxSNRAtTriggerV=0;
+// 	    truthEvPtr->maxSNRAtTriggerH=0;
+// 	    truthEvPtr->maxSNRAtDigitizerV=0;
+// 	    truthEvPtr->maxSNRAtDigitizerH=0;
 
-            for (int iant = 0; iant < settings1.NANTENNAS; iant++){
-              int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
-              int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
+//             for (int iant = 0; iant < settings1.NANTENNAS; iant++){
+//               int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
+//               int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
 
-	      truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = icemc::Tools::calculateSNR(justSignal_trig[0][iant], justNoise_trig[0][iant]);
-	      truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = icemc::Tools::calculateSNR(justSignal_trig[1][iant], justNoise_trig[1][iant]);
+// 	      truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = icemc::Tools::calculateSNR(justSignal_trig[0][iant], justNoise_trig[0][iant]);
+// 	      truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = icemc::Tools::calculateSNR(justSignal_trig[1][iant], justNoise_trig[1][iant]);
 	      
-	      if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
-	      if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
+// 	      if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
+// 	      if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
 
-	      truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = icemc::Tools::calculateSNR(justSignal_dig[0][iant], justNoise_dig[0][iant]);
-	      truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = icemc::Tools::calculateSNR(justSignal_dig[1][iant], justNoise_dig[1][iant]);
+// 	      truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = icemc::Tools::calculateSNR(justSignal_dig[0][iant], justNoise_dig[0][iant]);
+// 	      truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = icemc::Tools::calculateSNR(justSignal_dig[1][iant], justNoise_dig[1][iant]);
 	      
-	      if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexV]>truthEvPtr->maxSNRAtDigitizerV) truthEvPtr->maxSNRAtDigitizerV=truthEvPtr->SNRAtDigitizer[UsefulChanIndexV];
-	      if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexH]>truthEvPtr->maxSNRAtDigitizerH) truthEvPtr->maxSNRAtDigitizerH=truthEvPtr->SNRAtDigitizer[UsefulChanIndexH];
+// 	      if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexV]>truthEvPtr->maxSNRAtDigitizerV) truthEvPtr->maxSNRAtDigitizerV=truthEvPtr->SNRAtDigitizer[UsefulChanIndexV];
+// 	      if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexH]>truthEvPtr->maxSNRAtDigitizerH) truthEvPtr->maxSNRAtDigitizerH=truthEvPtr->SNRAtDigitizer[UsefulChanIndexH];
 
 	      
-	      truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[iant][0][4];
-	      truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[iant][1][4];
-	      int irx = iant;
-	      if (iant<16){
-		if (iant%2) irx = iant/2;
-		else        irx = iant/2 + 1;
-	      }
+// 	      truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[iant][0][4];
+// 	      truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[iant][1][4];
+// 	      int irx = iant;
+// 	      if (iant<16){
+// 		if (iant%2) irx = iant/2;
+// 		else        irx = iant/2 + 1;
+// 	      }
 	      
-              for (int j = 0; j < fNumPoints; j++) {
-		truthEvPtr->fTimes[UsefulChanIndexV][j]             = j * anita1->TIMESTEP * 1.0E9;
-		truthEvPtr->fTimes[UsefulChanIndexH][j]             = j * anita1->TIMESTEP * 1.0E9;
+//               for (int j = 0; j < fNumPoints; j++) {
+// 		truthEvPtr->fTimes[UsefulChanIndexV][j]             = j * anita1->TIMESTEP * 1.0E9;
+// 		truthEvPtr->fTimes[UsefulChanIndexH][j]             = j * anita1->TIMESTEP * 1.0E9;
 		
-                truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j]   = justSignal_trig[0][iant][j+128]*1000;
-                truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j]   = justSignal_trig[1][iant][j+128]*1000;
-                truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]    = justNoise_trig[0][iant][j+128]*1000;
-                truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]    = justNoise_trig[1][iant][j+128]*1000;
-                truthEvPtr->fSignalAtDigitizer[UsefulChanIndexV][j] = justSignal_dig[0][iant][j+128]*1000;
-                truthEvPtr->fSignalAtDigitizer[UsefulChanIndexH][j] = justSignal_dig[1][iant][j+128]*1000;
-                truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexV][j]  = justNoise_dig[0][iant][j+128]*1000;
-                truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexH][j]  = justNoise_dig[1][iant][j+128]*1000;
+//                 truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j]   = justSignal_trig[0][iant][j+128]*1000;
+//                 truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j]   = justSignal_trig[1][iant][j+128]*1000;
+//                 truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]    = justNoise_trig[0][iant][j+128]*1000;
+//                 truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]    = justNoise_trig[1][iant][j+128]*1000;
+//                 truthEvPtr->fSignalAtDigitizer[UsefulChanIndexV][j] = justSignal_dig[0][iant][j+128]*1000;
+//                 truthEvPtr->fSignalAtDigitizer[UsefulChanIndexH][j] = justSignal_dig[1][iant][j+128]*1000;
+//                 truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexV][j]  = justNoise_dig[0][iant][j+128]*1000;
+//                 truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexH][j]  = justNoise_dig[1][iant][j+128]*1000;
 		
-                truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]       = anita1->timedomain_output_allantennas[0][irx][j];
-                truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]       = anita1->timedomain_output_allantennas[1][irx][j];
-              }//end int j
+//                 truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]       = anita1->timedomain_output_allantennas[0][irx][j];
+//                 truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]       = anita1->timedomain_output_allantennas[1][irx][j];
+//               }//end int j
 	      
-            }// end int iant
+//             }// end int iant
 
-            truthAnitaTree->Fill();
-            delete truthEvPtr;
-#endif
+//             truthAnitaTree->Fill();
+//             delete truthEvPtr;
+// #endif
 
-            headTree->Fill();
-            eventTree->Fill();
-            adu5PatTree->Fill();
+//             headTree->Fill();
+//             eventTree->Fill();
+//             adu5PatTree->Fill();
 
-            delete realEvPtr;
-            delete rawHeaderPtr;
-            delete Adu5PatPtr;
-#endif
+//             delete realEvPtr;
+//             delete rawHeaderPtr;
+//             delete Adu5PatPtr;
+// #endif
 
             sum_weights+=fNeutrinoPath->weight;
             neutrinos_passing_all_cuts++;
@@ -3759,33 +3745,33 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   delete Rand3;
 
 
-#ifdef ANITA_UTIL_EXISTS
+// #ifdef ANITA_UTIL_EXISTS
 
-  anitafileEvent->cd();
-  eventTree->Write("eventTree");
-  anitafileEvent->Close();
-  delete anitafileEvent;
+//   anitafileEvent->cd();
+//   eventTree->Write("eventTree");
+//   anitafileEvent->Close();
+//   delete anitafileEvent;
 
-  anitafileHead->cd();
-  headTree->Write("headTree");
-  anitafileHead->Close();
-  delete anitafileHead;
+//   anitafileHead->cd();
+//   headTree->Write("headTree");
+//   anitafileHead->Close();
+//   delete anitafileHead;
 
-  anitafileGps->cd();
-  adu5PatTree->Write("adu5PatTree");
-  anitafileGps->Close();
-  delete anitafileGps;
+//   anitafileGps->cd();
+//   adu5PatTree->Write("adu5PatTree");
+//   anitafileGps->Close();
+//   delete anitafileGps;
 
-#ifdef ANITA3_EVENTREADER
-  anitafileTruth->cd();
-  configAnitaTree->Write("configAnitaTree");
-  truthAnitaTree->Write("truthAnitaTree");
-  triggerSettingsTree->Write("triggerSettingsTree");
-  anitafileTruth->Close();
-  delete anitafileTruth;
-#endif
+// #ifdef ANITA3_EVENTREADER
+//   anitafileTruth->cd();
+//   configAnitaTree->Write("configAnitaTree");
+//   truthAnitaTree->Write("truthAnitaTree");
+//   triggerSettingsTree->Write("triggerSettingsTree");
+//   anitafileTruth->Close();
+//   delete anitafileTruth;
+// #endif
 
-#endif
+// #endif
 
 
 
