@@ -68,17 +68,17 @@ const char* icemc::EnvironmentVariable::ICEMC_SRC_DIR(){
 #endif
 }
 
-const char* icemc::EnvironmentVariable::ICEMC_VERSION(TString outputdir){
+std::string icemc::EnvironmentVariable::ICEMC_VERSION(TString outputdir){
 
   system(Form("git rev-parse HEAD > %s/gitversion.txt", outputdir.Data()));
   std::string gitversion;
   std::ifstream gitversionfile (Form("%s/gitversion.txt", outputdir.Data()));
-  if (gitversionfile.is_open())
-    {
-      getline (gitversionfile,gitversion);
-      gitversionfile.close();
-    }
+  if (gitversionfile.is_open()){
+    getline (gitversionfile, gitversion);
+    gitversionfile.close();
+  }
+  std::cout << gitversion << std::endl;
 
-  return gitversion.c_str();
+  return gitversion;
   
 }

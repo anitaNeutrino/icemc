@@ -1,6 +1,8 @@
 #ifndef ICEMC_ROOT_OUTPUT
 #define ICEMC_ROOT_OUTPUT
 
+#include "IcemcLog.h"
+
 #include "TString.h"
 #include "TFile.h"
 #include "TTree.h"
@@ -35,7 +37,7 @@ namespace icemc {
 
 
   public:
-    RootOutput(const EventGenerator* uhen = NULL, const Settings* settings = NULL, const char* outputDir = ".", int run = 0);
+    RootOutput(Log& iLog, const EventGenerator* uhen = NULL, const Settings* settings = NULL, const char* outputDir = ".", int run = 0);
     virtual ~RootOutput();
 
     TTree tree2;		///< Filled for each event that is beyond the horizon.
@@ -110,7 +112,7 @@ namespace icemc {
     void initHist(TH1* h, const char* name, const char* title, int nx, double xMin, double xMax);
     void initHist(TH2* h, const char* name, const char* title, int nx, double xMin, double xMax, int ny, double yMin, double yMax);
     void initTree(TTree* t, const char* name, const char* title, TFile* f);
-    void initRootifiedAnitaDataFiles(const EventGenerator* uhen, const Settings* settings1);
+    void initRootifiedAnitaDataFiles(Log& iLog, const EventGenerator* uhen, const Settings* settings1);
     int getIceMCAntfromUsefulEventAnt(const Settings *settings1,  int UsefulEventAnt);
 
   };

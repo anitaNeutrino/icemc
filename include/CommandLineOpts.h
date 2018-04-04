@@ -3,6 +3,7 @@
 
 #include <string>
 #include "Settings.h"
+#include "IcemcLog.h"
 
 namespace icemc {
 
@@ -18,7 +19,7 @@ namespace icemc {
   class CommandLineOpts {
 
   public:
-    CommandLineOpts(int argc, char* argv[], icemc::Settings& settings);
+    CommandLineOpts(int argc, char* argv[], icemc::Settings& settings, icemc::Log& log);
     std::string executable; ///< derived from argv[0]
     int startNu;
     int nnu_tmp;

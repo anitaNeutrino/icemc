@@ -5,6 +5,7 @@
 #include "vector.hh"
 #include "CommandLineOpts.h"
 #include "Settings.h"
+#include "IcemcLog.h"
 
 #include "NeutrinoPath.h"
 #include "Constants.h"
@@ -507,7 +508,7 @@ namespace icemc {
 
     static void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  SIGINT
 
-    void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
+    void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  Log&, TString);
 
     void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  std::string,  std::string,  double,  std::ofstream &nu_out);
 
@@ -522,7 +523,7 @@ namespace icemc {
      * 
      * This function does the work that used to be the main in the icemc executable
      */
-    void generateNeutrinos(const Settings& settings1, const CommandLineOpts& clOpts);
+    void generateNeutrinos(const Settings& settings1, const CommandLineOpts& clOpts, icemc::Log& iLog);
 
 
 

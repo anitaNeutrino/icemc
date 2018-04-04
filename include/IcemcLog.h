@@ -48,12 +48,21 @@ namespace icemc {
      * @param outputDir The directory in which all the contained logs will be written
      * @param run The current run, used for naming files
      */
-    Log(const char* outputDir, int run);
+    Log(const char* outputDir = ".", int run = 0);
 
     /** 
      * Destructor, makes sure the terminal colors are reset
      */
     virtual ~Log();
+
+
+    /**
+     * Actually open the logging files
+     *
+     * @param outputDir is the outputDir, if NULL then uses fOutputDir, if non-NULL then updated fOutputDir
+     * @param run is the run (for file naming), if -1 then uses fRun, if >-1 then updated fRun
+     */
+    void openLogFiles(const char* outputDir = NULL, int run = -1);
 
     /** 
      * Prints the output stream to std::cout and the default output file (foutput)

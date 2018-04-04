@@ -17,7 +17,7 @@ namespace icemc{
 
     const char* ICEMC_SRC_DIR();
   
-    const char* ICEMC_VERSION(TString outputdir);
+    std::string ICEMC_VERSION(TString outputdir);
 
   }
 }

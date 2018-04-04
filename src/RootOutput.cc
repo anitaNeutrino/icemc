@@ -32,14 +32,14 @@
 
 
 
-icemc::RootOutput::RootOutput(const EventGenerator* uhen, const Settings* settings, const char* outputDir, int run)
+icemc::RootOutput::RootOutput(Log& iLog, const EventGenerator* uhen, const Settings* settings, const char* outputDir, int run)
   : fOutputDir(outputDir), fRun(run), fIceFinal(NULL),
     realEvPtr(NULL), rawHeaderPtr(NULL), Adu5PatPtr(NULL), truthEvPtr(NULL),
     fHeadFile(NULL), fGpsFile(NULL), fEventFile(NULL), fTruthFile(NULL)
 {
 
   initIceFinal(uhen, settings);
-  initRootifiedAnitaDataFiles(uhen, settings);
+  initRootifiedAnitaDataFiles(iLog, uhen, settings);
 }
 
 
@@ -527,7 +527,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
 
 
 
-void icemc::RootOutput::initRootifiedAnitaDataFiles(const EventGenerator* uhen2, const Settings* settings1){
+void icemc::RootOutput::initRootifiedAnitaDataFiles(Log& iLog, const EventGenerator* uhen2, const Settings* settings1){
 
   EventGenerator* uhen = const_cast<EventGenerator*>(uhen2);
   
@@ -565,8 +565,8 @@ void icemc::RootOutput::initRootifiedAnitaDataFiles(const EventGenerator* uhen2,
   TString truthFileName = fOutputDir + TString::Format("/SimulatedAnitaTruthFile%d.root",  fRun);
   fTruthFile = new TFile(truthFileName, "RECREATE");
 
-  TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(fOutputDir)); 
-  printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
+  std::string icemcgitversion = EnvironmentVariable::ICEMC_VERSION(fOutputDir); 
+  iLog << Log::info << "ICEMC GIT Repository Version: " <<  icemcgitversion << std::endl;
   unsigned int timenow = time(NULL);
 
   initTree(&configTree, "configIcemcTree", "Config file and settings information", fTruthFile);
@@ -586,13 +586,11 @@ void icemc::RootOutput::initRootifiedAnitaDataFiles(const EventGenerator* uhen2,
   truthTree.Branch("truth", &truthEvPtr);
 
 #else
-  std::cerr << "Need ANITA EventReader version at least 3 to produce Truth output." << std::endl;    
+  iLog << Log::warning << "Need ANITA EventReader version at least 3 to produce Truth output." << std::endl;    
 #endif
 
 #else
-
-  std::cerr << "Can't generate ROOTified output without satisfying ANITA_UTIL_EXISTS at compile time" << std::endl;
-
+  iLog << Log::warning << "Can't generate ROOTified output without satisfying ANITA_UTIL_EXISTS at compile time" << std::endl;
 #endif  
 
 }

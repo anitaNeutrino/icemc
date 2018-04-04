@@ -19,7 +19,7 @@
 
 
 
-icemc::CommandLineOpts::CommandLineOpts(int argc, char* argv[], Settings& settings) :
+icemc::CommandLineOpts::CommandLineOpts(int argc, char* argv[], Settings& settings, Log& log) :
   outputdir("."), input(""), run_no(0)
 {
 
@@ -141,10 +141,11 @@ icemc::CommandLineOpts::CommandLineOpts(int argc, char* argv[], Settings& settin
   }
   else{
 
-    /// @todo use proper output for settings ReadInputs
-    // update the settings object with the extracted info    
-    std::ofstream foutput("temp.txt"); // need to replace this with the proper output at some point...
-    settings.ReadInputs(input.c_str(),  foutput); //, NNU, RANDOMISEPOL);
+    // open files for logging...
+    log.openLogFiles(outputdir.c_str(), run_no);
+
+    // update the settings object with the extracted info
+    settings.ReadInputs(input.c_str(), log.foutput);
 
     /// @todo pass all the proper values onto settings.temp
     if (exp_tmp!=0){
