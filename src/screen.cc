@@ -25,7 +25,7 @@ void icemc::Screen::SetNsamples(int i){
 };
 
 
-int icemc::Screen::GetNsamples(){
+int icemc::Screen::GetNsamples() const{
   return fNsamples;
 };
 
@@ -44,7 +44,7 @@ void icemc::Screen::SetCosineProjectionFactor(double a){
 };
 
 
-double icemc::Screen::GetCosineProjectionFactor(){
+double icemc::Screen::GetCosineProjectionFactor() const {
   return fcosineProjectionFactor;
 };
 
@@ -60,42 +60,42 @@ void icemc::Screen::SetUnitY(Vector a){
   funit_y = a;
 };
 
-double icemc::Screen::GetEdgeLength(){
+double icemc::Screen::GetEdgeLength() const {
   return fedgeLength;
 };
 
 
-icemc::Position icemc::Screen::GetCentralPoint(){
+icemc::Position icemc::Screen::GetCentralPoint() const {
   return fcentralPoint;
 };
 
 
-icemc::Vector icemc::Screen::GetNormal(){
+icemc::Vector icemc::Screen::GetNormal() const {
   return fnormal;
 };
 
 
-icemc::Vector icemc::Screen::GetUnitX(){
+icemc::Vector icemc::Screen::GetUnitX() const {
   return funit_x;
 };
 
 
-icemc::Vector icemc::Screen::GetUnitY(){
+icemc::Vector icemc::Screen::GetUnitY() const {
   return funit_y;
 };
 
 
-double icemc::Screen::CalcXindex(int i){
+double icemc::Screen::CalcXindex(int i) const {
   return (double) (i % (fNsamples));
 };
 
 
-double icemc::Screen::CalcYindex(int i){
+double icemc::Screen::CalcYindex(int i) const {
   return (double) floor(i / (fNsamples));
 };
 
 
-icemc::Position icemc::Screen::GetPosition(int i, int j){
+icemc::Position icemc::Screen::GetPosition(int i, int j) const {
   Position pos;
 
 
@@ -118,7 +118,7 @@ void icemc::Screen::AddVmmhz_freq(double A){
 };
 
 
-double icemc::Screen::GetVmmhz_freq(int i){
+double icemc::Screen::GetVmmhz_freq(int i) const {
   return fVmmhz_freq[i];
 };
 
@@ -127,7 +127,7 @@ void icemc::Screen::AddVmmhz0(double A){
   fVmmhz0.push_back(A);
 };
 
-double icemc::Screen::GetVmmhz0(int i){
+double icemc::Screen::GetVmmhz0(int i) const {
   return fVmmhz0[i];
 };
 
@@ -135,7 +135,7 @@ void icemc::Screen::AddViewangle(double A){
   fViewangle.push_back(A);
 };
 
-double icemc::Screen::GetViewangle(int i){
+double icemc::Screen::GetViewangle(int i) const {
   return fViewangle[i];
 };
 
@@ -145,7 +145,7 @@ void icemc::Screen::AddDelay(double A){
 };
 
 
-double icemc::Screen::GetDelay(int i){
+double icemc::Screen::GetDelay(int i) const {
   return fDelays[i];
 };
 
@@ -155,7 +155,7 @@ void icemc::Screen::SetNvalidPoints(int i){
 };
 
 
-double icemc::Screen::GetNvalidPoints(){
+double icemc::Screen::GetNvalidPoints() const {
   return fNvalidpoints;
 };
 
@@ -165,7 +165,7 @@ void icemc::Screen::AddVec2bln(Vector v){
 };
 
 
-icemc::Vector icemc::Screen::GetVec2bln(int i){
+icemc::Vector icemc::Screen::GetVec2bln(int i) const {
   return fVec2blns[i];
 };
 
@@ -175,7 +175,7 @@ void icemc::Screen::AddPol(Vector v){
 };
 
 
-icemc::Vector icemc::Screen::GetPol(int i){
+icemc::Vector icemc::Screen::GetPol(int i) const {
   return fPols[i];
 };
 
@@ -185,7 +185,7 @@ void icemc::Screen::AddImpactPt(Position p){
 };
 
 
-icemc::Position icemc::Screen::GetImpactPt(int i){
+icemc::Position icemc::Screen::GetImpactPt(int i) const {
   return fImpactPt[i];
 };
 
@@ -194,7 +194,7 @@ void icemc::Screen::AddWeight(double a){
   fWeight.push_back(a);
 };
 
-double icemc::Screen::GetWeight(int i){
+double icemc::Screen::GetWeight(int i) const {
   return fWeight[i];
 };
 
@@ -202,7 +202,7 @@ void icemc::Screen::SetWeightNorm(double a){
   fWeightNorm = a;
 };
 
-double icemc::Screen::GetWeightNorm(){
+double icemc::Screen::GetWeightNorm() const {
   return fWeightNorm;
 };
 
@@ -210,7 +210,7 @@ void icemc::Screen::AddIncidenceAngle(double A){
   fIncAngles.push_back(A);
 };
 
-double icemc::Screen::GetIncidenceAngle(int i){
+double icemc::Screen::GetIncidenceAngle(int i) const {
   return fIncAngles[i];
 };
 
@@ -218,7 +218,7 @@ void icemc::Screen::AddTransmissionAngle(double A){
   fTransAngles.push_back(A);
 };
 
-double icemc::Screen::GetTransmissionAngle(int i){
+double icemc::Screen::GetTransmissionAngle(int i) const {
   return fTransAngles[i];
 };
 
@@ -226,7 +226,7 @@ void icemc::Screen::AddFacetLength(double A){
   fFacetLength.push_back(A);
 };
 
-double icemc::Screen::GetFacetLength(int i){
+double icemc::Screen::GetFacetLength(int i) const {
   return fFacetLength[i];
 };
 
@@ -234,7 +234,7 @@ void icemc::Screen::AddTparallel_polParallel(double A){
   fTcoeff_parl_polparl.push_back(A);
 };
 
-double icemc::Screen::GetTparallel_polParallel(int i){
+double icemc::Screen::GetTparallel_polParallel(int i) const {
   return fTcoeff_parl_polparl[i];
 };
 
@@ -242,7 +242,7 @@ void icemc::Screen::AddTperpendicular_polParallel(double A){
   fTcoeff_perp_polparl.push_back(A);
 };
 
-double icemc::Screen::GetTperpendicular_polParallel(int i){
+double icemc::Screen::GetTperpendicular_polParallel(int i) const {
   return fTcoeff_perp_polparl[i];
 };
 
@@ -250,7 +250,7 @@ void icemc::Screen::AddTparallel_polPerpendicular(double A){
   fTcoeff_parl_polperp.push_back(A);
 };
 
-double icemc::Screen::GetTparallel_polPerpendicular(int i){
+double icemc::Screen::GetTparallel_polPerpendicular(int i) const {
   return fTcoeff_parl_polperp[i];
 };
 
@@ -258,7 +258,7 @@ void icemc::Screen::AddTperpendicular_polPerpendicular(double A){
   fTcoeff_perp_polperp.push_back(A);
 };
 
-double icemc::Screen::GetTperpendicular_polPerpendicular(int i){
+double icemc::Screen::GetTperpendicular_polPerpendicular(int i) const {
   return fTcoeff_perp_polperp[i];
 };
 

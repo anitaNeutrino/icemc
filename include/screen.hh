@@ -67,7 +67,7 @@ namespace icemc{
     /**
      * @return integer
      */
-    int GetNsamples();
+    int GetNsamples() const;
 
     //! Sets the physical length of a side of the screen
     /**
@@ -91,7 +91,7 @@ namespace icemc{
     /**
      * @return double
      */
-    double GetCosineProjectionFactor();
+    double GetCosineProjectionFactor() const;
 
     //! Sets the screen normal
     /**
@@ -115,52 +115,52 @@ namespace icemc{
     /**
      * @return double
      */
-    double GetEdgeLength();
+    double GetEdgeLength() const ;
 
     //! Gets the position of the screen's central point
     /**
      * @return Position
      */
-    Position GetCentralPoint();
+    Position GetCentralPoint() const;
 
     //! Gets the screen normal
     /**
      * @return Vector
      */
-    Vector GetNormal();
+    Vector GetNormal() const;
 
     //! Gets an orientation vector
     /**
      * @return Vector
      */
-    Vector GetUnitX();
+    Vector GetUnitX() const;
 
     //! Gets another orientation vector
     /**
      * @return Vector
      */
-    Vector GetUnitY();
+    Vector GetUnitY() const;
 
     //! Calculates the X index of the screen corresponding to the specified counter value
     /**
      * @param i - index
      * @return double
      */
-    double CalcXindex(int i);
+    double CalcXindex(int i) const ;
 
     //! Calculates the Y index of the screen corresponding to the specified counter value
     /**
      * @param i - index
      * @return double
      */
-    double CalcYindex(int i);
+    double CalcYindex(int i) const ;
 
     //! Calculates the physical position of the screen corresponding to the specified counter value
     /**
      * @param i - index
      * @return double
      */
-    Position GetPosition(int i, int j);
+    Position GetPosition(int i, int j) const;
 
     //! Appends a Vmmhz value to the fVmmhz_freq array
     /**
@@ -173,7 +173,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    double GetVmmhz_freq(int i);
+    double GetVmmhz_freq(int i) const;
 
     //! Appends a Vmmhz value (for the lowest Anita frequency) to the fVmmhz0 array
     /**
@@ -186,7 +186,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    double GetVmmhz0(int i);
+    double GetVmmhz0(int i) const;
 
     //! Appends a viewangle value to the fViewangle array
     /**
@@ -199,7 +199,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    double GetViewangle(int i);
+    double GetViewangle(int i) const;
 
     //! Appends a delay value to the fDelays array
     /**
@@ -212,7 +212,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    double GetDelay(int i);
+    double GetDelay(int i) const;
 
     //! Sets the total number of points on the screen
     /**
@@ -224,7 +224,7 @@ namespace icemc{
     /**
      * @return int
      */
-    double GetNvalidPoints();
+    double GetNvalidPoints() const;
 
     //! Appends a vector to the fVec2blns array
     /**
@@ -237,7 +237,7 @@ namespace icemc{
      * @param i - index
      * @return Vector
      */
-    Vector GetVec2bln(int i);
+    Vector GetVec2bln(int i) const;
 
     //! Appends a vector to the fPols array
     /**
@@ -250,7 +250,7 @@ namespace icemc{
      * @param i - index
      * @return Vector
      */
-    Vector GetPol(int i);
+    Vector GetPol(int i) const;
 
     //! Appends a vector to the fImpactPt array
     /**
@@ -263,7 +263,7 @@ namespace icemc{
      * @param i - index
      * @return Position
      */
-    Position GetImpactPt(int i);
+    Position GetImpactPt(int i) const;
 
     //! Appends a weight value to the fWeight array
     /**
@@ -276,7 +276,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    double GetWeight(int i);
+    double GetWeight(int i) const;
 
     //! Sets the normalization factor for the weights (so they sum to 1)
     /**
@@ -288,7 +288,7 @@ namespace icemc{
     /**
      * @return double
      */
-    double GetWeightNorm();
+    double GetWeightNorm() const;
 
     //! Appends an incidence angle value to the fIncAngles array
     /**
@@ -301,7 +301,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    double GetIncidenceAngle(int i);
+    double GetIncidenceAngle(int i) const;
 
     //! Appends a transmission angle value to the fTransAngles array
     /**
@@ -314,7 +314,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    double GetTransmissionAngle(int i);
+    double GetTransmissionAngle(int i) const;
 
     //! Appends a facet edge length value to the fFacetLength array
     /**
@@ -327,7 +327,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    double GetFacetLength(int i);
+    double GetFacetLength(int i) const;
 
     //! Appends a parallel transmission coefficient value to the fTcoeff_parl array
     /**
@@ -340,7 +340,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    double GetTparallel_polParallel(int i);
+    double GetTparallel_polParallel(int i) const;
 
     //! Appends a perpendicular transmission coefficient value to the fTcoeff_perp array
     /**
@@ -353,7 +353,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    double GetTperpendicular_polParallel(int i);
+    double GetTperpendicular_polParallel(int i) const;
 
     //! Appends a parallel transmission coefficient value to the fTcoeff_parl array
     /**
@@ -366,7 +366,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    double GetTparallel_polPerpendicular(int i);
+    double GetTparallel_polPerpendicular(int i) const;
 
     //! Appends a perpendicular transmission coefficient value to the fTcoeff_perp array
     /**
@@ -379,7 +379,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    double GetTperpendicular_polPerpendicular(int i);
+    double GetTperpendicular_polPerpendicular(int i) const;
 
     //! Resets the following screen parameters (fNvalidpoints,fVmmhz_freq,fVmmhz0,fViewangle,fDelays,fVec2blns,fPols,fImpactPt,fWeight,fWeightNorm)
     void ResetParameters();
