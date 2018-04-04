@@ -33,24 +33,6 @@
 #include "SimulatedSignal.h"
 #include "EnvironmentVariable.h"
 
-
-// ANITA software framework includes
-#ifdef ANITA_UTIL_EXISTS
-#include "UsefulAnitaEvent.h"
-#include "AnitaGeomTool.h"
-#include "AnitaConventions.h"
-#include "RawAnitaHeader.h"
-#include "Adu5Pat.h"
-#include "FFTtools.h"
-UsefulAnitaEvent* realEvPtr = NULL;
-RawAnitaHeader* rawHeaderPtr = NULL;
-Adu5Pat* Adu5PatPtr = NULL;
-#ifdef ANITA3_EVENTREADER
-#include "TruthAnitaEvent.h"
-TruthAnitaEvent* truthEvPtr = NULL;
-#endif
-#endif
-
 #include <string>
 #include <sstream>
 
@@ -1503,16 +1485,16 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   r_exit2bn_measured2 = interaction1->r_exit2bn_measured;
   
   // zeroing global variables.
-  icemc::Tools::Zero(sum_frac, 3);
-  icemc::Tools::Zero(sum_frac_db, 3);
-  icemc::Tools::Zero(anita1->NRX_PHI, Anita::NLAYERS_MAX);
+  Tools::Zero(sum_frac, 3);
+  Tools::Zero(sum_frac_db, 3);
+  Tools::Zero(anita1->NRX_PHI, Anita::NLAYERS_MAX);
   for (int i=0;i<Anita::NLAYERS_MAX;i++) {
-    icemc::Tools::Zero(anita1->PHI_EACHLAYER[i], Anita::NPHI_MAX);
+    Tools::Zero(anita1->PHI_EACHLAYER[i], Anita::NPHI_MAX);
   }
-  icemc::Tools::Zero(anita1->PHI_OFFSET, Anita::NLAYERS_MAX);
-  icemc::Tools::Zero(anita1->THETA_ZENITH, Anita::NLAYERS_MAX);
-  icemc::Tools::Zero(anita1->LAYER_VPOSITION, Anita::NLAYERS_MAX);
-  icemc::Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
+  Tools::Zero(anita1->PHI_OFFSET, Anita::NLAYERS_MAX);
+  Tools::Zero(anita1->THETA_ZENITH, Anita::NLAYERS_MAX);
+  Tools::Zero(anita1->LAYER_VPOSITION, Anita::NLAYERS_MAX);
+  Tools::Zero(anita1->RRX, Anita::NLAYERS_MAX);
 
   //added djg ////////////////////////////////////////////////////////
   al_voltages_direct<<"antenna #"<<"   "<<"volts chan 1"<<"   "<<"volts chan 2"<<"    "<<"volts chan 3"<<"    "<<"volts chan 4"<<"    "<<"noise chan 1"<<"    "<<"noise chan 2"<<"    "<<"noise chan 3"<<"   "<<"noise chan 4"<<"  "<<"weight"<<std::endl;
@@ -1523,17 +1505,18 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   interaction1->dnutries=0;
   eventsfound=0.; // sums weights for events that pass
 
-  icemc::Tools::Zero(count1->npass, 2); // sums events that pass,  without weights
-  icemc::Tools::Zero(sum, 3);
+  Tools::Zero(count1->npass, 2); // sums events that pass,  without weights
+  Tools::Zero(sum, 3);
   eventsfound_db=0;
   eventsfound_nfb=0;
 
-  icemc::Tools::Zero(eventsfound_binned, NBINS);
-  icemc::Tools::Zero(eventsfound_binned_e, NBINS);
-  icemc::Tools::Zero(eventsfound_binned_mu, NBINS);
-  icemc::Tools::Zero(eventsfound_binned_tau, NBINS);
-  icemc::Tools::Zero(eventsfound_nfb_binned, NBINS);
-  
+  Tools::Zero(eventsfound_binned, NBINS);
+  Tools::Zero(eventsfound_binned_e, NBINS);
+  Tools::Zero(eventsfound_binned_mu, NBINS);
+  Tools::Zero(eventsfound_binned_tau, NBINS);
+  Tools::Zero(eventsfound_nfb_binned, NBINS);
+
+  fNeutrinoPath = new NeutrinoPath(); // init here for branch setting
   icemc::RootOutput ro(this, &settings1, clOpts.outputdir.c_str(), clOpts.run_no);
   
   // these variables are for energy reconstruction studies
@@ -1551,84 +1534,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   double rec_efield_array[4];
   double true_efield_array[4];
   // end energy reconstruction variables
-
-  // for branch setting...
-  fNeutrinoPath = new NeutrinoPath();  
-
-// #ifdef ANITA_UTIL_EXISTS
-
-//   string outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaEventFile"+clOpts.run_num+".root";
-//   TFile* anitafileEvent = new TFile(outputAnitaFile.c_str(), "RECREATE");
-
-//   TTree* eventTree = new TTree("eventTree", "eventTree");
-//   eventTree->Branch("event",             &realEvPtr           );
-//   // eventTree->Branch("run",               clOpts.run_no,   "run/I"   );
-//   eventTree->Branch("weight",            &fNeutrinoPath->weight,   "weight/D");
-
-//   outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaHeadFile"+clOpts.run_num+".root";
-//   TFile* anitafileHead = new TFile(outputAnitaFile.c_str(), "RECREATE");
-
-//   TTree* headTree = new TTree("headTree", "headTree");
-//   headTree->Branch("header",  &rawHeaderPtr           );
-//   headTree->Branch("weight",  &fNeutrinoPath->weight,      "weight/D");
-
-//   outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaGpsFile"+clOpts.run_num+".root";
-//   TFile* anitafileGps = new TFile(outputAnitaFile.c_str(), "RECREATE");
-
-//   TTree* adu5PatTree = new TTree("adu5PatTree", "adu5PatTree");
-//   adu5PatTree->Branch("pat",          &Adu5PatPtr                   );
-//   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
-//   adu5PatTree->Branch("weight",       &fNeutrinoPath->weight,       "weight/D"     );
-
-// #ifdef ANITA3_EVENTREADER
-
-//   // Set AnitaVersion so that the right payload geometry is used
-//   AnitaVersion::set(settings1.ANITAVERSION);
-  
-//   outputAnitaFile =clOpts.outputdir+"/SimulatedAnitaTruthFile"+clOpts.run_num+".root";
-//   TFile* anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
-
-//   static TString icemcgitversion = TString::Format("%s", icemc::EnvironmentVariable::ICEMC_VERSION(clOpts.outputdir));  
-//   printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
-//   unsigned int timenow = time(NULL);
-
-//   TTree* configAnitaTree = new TTree("configIcemcTree", "Config file and settings information");
-//   configAnitaTree->Branch("gitversion",        &icemcgitversion  );
-//   configAnitaTree->Branch("nnu",               &NNU              );
-//   configAnitaTree->Branch("startTime",         &timenow          );
-//   // configAnitaTree->Branch("icemcSettings",     &settings1        );
-//   configAnitaTree->Fill();
-
-//   TTree* triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
-//   triggerSettingsTree->Branch("dioderms",  anita1->bwslice_dioderms_fullband_allchan,  "dioderms[2][48][6]/D" );
-//   triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48][6]/D");
-//   triggerSettingsTree->Fill();
-  
-//   TTree* truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
-//   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
-
-// #endif
-
-//   AnitaGeomTool* AnitaGeom1 = AnitaGeomTool::Instance();
-  
-// #endif
-  //end ROOT variable definitions
-  ///////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1797,10 +1702,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     gps_offset=0;
   }
 
-  int antNum;  
-
-
-  
 
 
 
@@ -1980,7 +1881,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         continue;
       }
       count1->inhorizon[whichray]++;
-     
+
       // cerenkov angle depends on depth because index of refraction depends on depth.
       //if(!settings1.ROUGHNESS){
       if (settings1.FIRN) {
@@ -2356,14 +2257,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         std::cout << "Need to bring back GetFirstBang before you can simulate taus.\n";
         std::cout << "I removed it because it required EarthModel and I wanted Secondaries to be a stand-alone class to use in the embedded simulation.\n";
         icethickness=interaction1->r_enterice.Distance(interaction1->nuexit);
-        interaction1->chord_kgm2_bestcase=nuentrancelength*icemc::Tools::dMin(icemc::densities, 3);
+        interaction1->chord_kgm2_bestcase=nuentrancelength*Tools::dMin(icemc::densities, 3);
       }
       else {
         // finds minimum chord (in kg/m^2) traversed by neutrino
         // only keeping events with weight > 10^-3
         // periodically need to make sure this is still valid
         // chord_kgm2_bestcase=(d1+d2)*sig1->RHOMEDIUM;
-        interaction1->chord_kgm2_bestcase=(interaction1->d1+interaction1->d2)*icemc::Tools::dMin(icemc::densities, 3);
+        interaction1->chord_kgm2_bestcase=(interaction1->d1+interaction1->d2)*Tools::dMin(icemc::densities, 3);
       }
 
       // chord just through ice.
@@ -2673,7 +2574,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       
       if (!settings1.ROUGHNESS){
         // don't loop over frequencies if the viewing angle is too far off
-        double rtemp=icemc::Tools::dMin((viewangle-sig1->changle)/(deltheta_em_max), (viewangle-sig1->changle)/(deltheta_had_max));
+        double rtemp=Tools::dMin((viewangle-sig1->changle)/(deltheta_em_max), (viewangle-sig1->changle)/(deltheta_had_max));
         if (rtemp>Signal::VIEWANGLE_CUT && !settings1.SKIPCUTS) {
           //delete interaction1;
           continue;
@@ -2738,7 +2639,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         }
         // reject if it is undetectable now that we have accounted for viewing angle
 
-        if (settings1.CHANCEINHELL_FACTOR*icemc::Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1.SKIPCUTS) {
+        if (settings1.CHANCEINHELL_FACTOR*Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1.SKIPCUTS) {
           continue;
         }
       }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
@@ -2746,8 +2647,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // just for plotting
       if(!settings1.ROUGHNESS){
-        vmmhz_max=icemc::Tools::dMax(vmmhz, Anita::NFREQ);
-        vmmhz_min=icemc::Tools::dMin(vmmhz, Anita::NFREQ);
+        vmmhz_max=Tools::dMax(vmmhz, Anita::NFREQ);
+        vmmhz_min=Tools::dMin(vmmhz, Anita::NFREQ);
       }
       // intermediate counting
       count1->nchanceinhell2[whichray]++;
@@ -2760,7 +2661,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	    
       count1->ndeadtime[whichray]++;
 
-      icemc::Tools::Zero(sumsignal_aftertaper, 5);
+      Tools::Zero(sumsignal_aftertaper, 5);
 
       // // Create a pointer to the SimulatedSignal
       // SimulatedSignal *simSignal = new SimulatedSignal();
@@ -2803,15 +2704,15 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // make a global trigger object (but don't touch the electric fences)
       globaltrig1 = new GlobalTrigger(&settings1, anita1);
 
-      icemc::Tools::Zero(anita1->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-      icemc::Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
+      Tools::Zero(anita1->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
+      Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
       if (!settings1.TRIGGEREFFSCAN){
         if(settings1.BORESIGHTS)
           anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2]);
         else
           anita1->GetArrivalTimes(ray1->n_exit2bn[2],bn1,&settings1);
       }
-      anita1->rx_minarrivaltime=icemc::Tools::WhichIsMin(anita1->arrival_times[0], settings1.NANTENNAS);
+      anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times[0], settings1.NANTENNAS);
 
       //Zeroing
       for (int i=0;i<settings1.NANTENNAS;i++) {
@@ -2846,7 +2747,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
 
       if (bn1->WHICHPATH==4) {
-        icemc::Tools::Zero(sumsignal, 5);
+        Tools::Zero(sumsignal, 5);
         for (int k=0;k<Anita::NFREQ;k++)
           IntegrateBands(anita1, k, panel1, anita1->freq, bn1->r_bn.Distance(interaction1->posnu)/1.E6, sumsignal);
       }//end if whichpath==4
@@ -2908,7 +2809,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           if (ro.h6.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1)
             ro.h6.Fill(hitangle_h, ray1->n_exit2bn[2].Dot(bn1->n_bn));
 
-          antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
+          int antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
           
           chantrig1->ApplyAntennaGain(&settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
 
@@ -2945,7 +2846,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
           chantrig1->saveDigitizerWaveforms(anita1, justSignal_dig[0][antNum], justSignal_dig[1][antNum], justNoise_dig[0][antNum], justNoise_dig[1][antNum]);
 	  
-          icemc::Tools::Zero(sumsignal, 5);
+          Tools::Zero(sumsignal, 5);
 
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
             for (int ibw=0;ibw<5;ibw++) {
@@ -3086,7 +2987,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         nchannels_perrx_triggered[irx]=globaltrig1->nchannels_perrx_triggered[irx];
       }
 
-      nchannels_triggered=icemc::Tools::iSum(globaltrig1->nchannels_perrx_triggered, settings1.NANTENNAS); // find total number of antennas that were triggered.
+      nchannels_triggered=Tools::iSum(globaltrig1->nchannels_perrx_triggered, settings1.NANTENNAS); // find total number of antennas that were triggered.
       voltsRX.ave=GetAverageVoltageFromAntennasHit(&settings1, globaltrig1->nchannels_perrx_triggered, voltagearray, voltsRX.sum);
 
       // if it passes the trigger,  then go ahead and
@@ -3165,7 +3066,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         anita1->passglobtrig[1]=thispasses[1];
 
         //calculate the phi angle wrt +x axis of the ray from exit to balloon
-        n_exit_phi = icemc::Tools::AbbyPhiCalc(ray1->n_exit2bn[2][0], ray1->n_exit2bn[2][1]);
+        n_exit_phi = Tools::AbbyPhiCalc(ray1->n_exit2bn[2][0], ray1->n_exit2bn[2][1]);
 
         // keep track of events passing trigger
         count1->npassestrigger[whichray]++;
@@ -3382,213 +3283,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               count1->IncrementWeights_r_in(interaction1->r_in, fNeutrinoPath->weight);
             } //end if HIST & HISTMAXENTRIES
 
-	    ro.fillRootifiedAnitaDataTrees(this, settings1, ray1, panel1);
-	    
-// #ifdef ANITA_UTIL_EXISTS
-//             realEvPtr     = new UsefulAnitaEvent();
-//             rawHeaderPtr  = new RawAnitaHeader();
-//             Adu5PatPtr    = new Adu5Pat();	    
-
-//             Adu5PatPtr->latitude= bn1->latitude;
-//             Adu5PatPtr->longitude=bn1->longitude;
-//             Adu5PatPtr->altitude=bn1->altitude;
-//             Adu5PatPtr->realTime=bn1->realTime_flightdata;
-//             Adu5PatPtr->heading = bn1->heading;
-//             Adu5PatPtr->pitch = bn1->pitch;
-//             Adu5PatPtr->roll = bn1->roll;
-//             Adu5PatPtr->run = clOpts.run_no;
-
-// 	    memset(realEvPtr->fNumPoints, 0, sizeof(realEvPtr->fNumPoints) );
-// 	    memset(realEvPtr->fVolts,     0, sizeof(realEvPtr->fVolts)     );
-// 	    memset(realEvPtr->fTimes,     0, sizeof(realEvPtr->fTimes)     );
-
-//             int fNumPoints = 260;
-// 	    for (int ichan=0; ichan<108; ichan++){
-//               realEvPtr->fNumPoints[ichan] = fNumPoints;
-
-//               for (int j = 0; j < fNumPoints; j++) {
-//                 // convert seconds to nanoseconds
-//                 realEvPtr->fTimes[ichan][j] = j * anita1->TIMESTEP * 1.0E9;
-// 	      }
-// 	    }
-// 	    realEvPtr->fRFSpike = 0;// when we get as far as simulating this, we're doing well
-
-//             for (int iant = 0; iant < settings1.NANTENNAS; iant++){
-//               //int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1,  AnitaGeom1,  iant);
-//               int IceMCAnt = GetIceMCAntfromUsefulEventAnt(&settings1,  iant);
-//               int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
-//               int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
-// 	      //              realEvPtr->fNumPoints[UsefulChanIndexV] = fNumPoints;
-// 	      //              realEvPtr->fNumPoints[UsefulChanIndexH] = fNumPoints;
-//               realEvPtr->chanId[UsefulChanIndexV] = UsefulChanIndexV;
-//               realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
-
-//               for (int j = 0; j < fNumPoints; j++) {
-//                 // convert seconds to nanoseconds
-// 		//                realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
-// 		//                realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
-//                 // convert volts to millivolts
-// 		const double voltsToMilliVolts = 1000;
-//                 realEvPtr->fVolts[UsefulChanIndexH][j] =  voltsRX.rfcm_lab_h_all[IceMCAnt][j+128]*voltsToMilliVolts;
-//                 realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
-//                 realEvPtr->fVolts[UsefulChanIndexV][j] =  voltsRX.rfcm_lab_e_all[IceMCAnt][j+128]*voltsToMilliVolts;
-//                 realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
-//               }//end int j
-//             }// end int iant
-
-//             realEvPtr->eventNumber = eventNumber;
-
-//             rawHeaderPtr->eventNumber = eventNumber;
-//             rawHeaderPtr->surfSlipFlag = 0;
-//             rawHeaderPtr->errorFlag = 0;
-
-//             if (settings1.MINBIAS==1)
-//               rawHeaderPtr->trigType = 8; // soft-trigger
-//             else
-//               rawHeaderPtr->trigType = 1; // RF trigger
-
-	    
-//             rawHeaderPtr->run = clOpts.run_no;
-//             // put the vpol only as a placeholder - these are only used in Anita-2 anyway
-//             rawHeaderPtr->upperL1TrigPattern = l1trig[0][0];
-//             rawHeaderPtr->lowerL1TrigPattern = l1trig[0][1];
-//             rawHeaderPtr->nadirL1TrigPattern = l1trig[0][2];
-
-//             rawHeaderPtr->upperL2TrigPattern = l2trig[0][0];
-//             rawHeaderPtr->lowerL2TrigPattern = l2trig[0][1];
-//             rawHeaderPtr->nadirL2TrigPattern = l2trig[0][2];
-
-//             if (settings1.WHICH<9){
-//               rawHeaderPtr->phiTrigMask  = (short) anita1->phiTrigMask;
-//               rawHeaderPtr->l3TrigPattern = (short) l3trig[0];
-//             }
-
-//             rawHeaderPtr->calibStatus = 31;
-//             rawHeaderPtr->realTime = bn1->realTime_flightdata;
-// 	    rawHeaderPtr->triggerTime = bn1->realTime_flightdata;
-//             Adu5PatPtr->latitude= bn1->latitude;
-//             Adu5PatPtr->longitude=bn1->longitude;
-//             Adu5PatPtr->altitude=bn1->altitude;
-//             Adu5PatPtr->realTime=bn1->realTime_flightdata;
-//             Adu5PatPtr->heading = bn1->heading;
-//             Adu5PatPtr->pitch = bn1->pitch;
-//             Adu5PatPtr->roll = bn1->roll;
-//             Adu5PatPtr->run = clOpts.run_no;
-
-// #ifdef ANITA3_EVENTREADER
-//             if (settings1.WHICH==9 || settings1.WHICH==10) {
-//               rawHeaderPtr->setTrigPattern((short) l3trig[0], AnitaPol::kVertical);
-//               rawHeaderPtr->setTrigPattern((short) l3trig[1], AnitaPol::kHorizontal);
-//               rawHeaderPtr->setMask( (short) anita1->l1TrigMask,  (short) anita1->phiTrigMask,  AnitaPol::kVertical);
-//               rawHeaderPtr->setMask( (short) anita1->l1TrigMaskH, (short) anita1->phiTrigMaskH, AnitaPol::kHorizontal);
-//             }
-
-//             truthEvPtr        = new TruthAnitaEvent();
-//             truthEvPtr->eventNumber      = eventNumber;
-//             truthEvPtr->realTime         = bn1->realTime_flightdata;
-//             truthEvPtr->run              = clOpts.run_no;
-//             truthEvPtr->nuMom            = pnu;
-//             truthEvPtr->nu_pdg           = pdgcode;
-//             truthEvPtr->e_component      = e_component;
-//             truthEvPtr->h_component      = h_component;
-//             truthEvPtr->n_component      = n_component;
-//             truthEvPtr->e_component_k    = e_component_kvector;
-//             truthEvPtr->h_component_k    = h_component_kvector;
-//             truthEvPtr->n_component_k    = n_component_kvector;
-//             truthEvPtr->sourceLon        = sourceLon;
-//             truthEvPtr->sourceLat        = sourceLat;
-//             truthEvPtr->sourceAlt        = sourceAlt;
-//             truthEvPtr->weight           = fNeutrinoPath->weight;
-//             for (int i=0;i<3;i++){
-//               truthEvPtr->balloonPos[i]  = bn1->r_bn[i];
-//               truthEvPtr->balloonDir[i]  = bn1->n_bn[i];
-//               truthEvPtr->nuPos[i]       = interaction1->posnu[i];
-//               truthEvPtr->nuDir[i]       = interaction1->nnu[i];
-//             }
-//             for (int i=0;i<5;i++){
-//               for (int j=0;j<3;j++){
-//                 truthEvPtr->rfExitNor[i][j] = ray1->n_exit2bn[i][j];
-//                 truthEvPtr->rfExitPos[i][j] = ray1->rfexit[i][j];
-//               }
-//             }
-//             for (int i=0;i<48;i++){
-//               truthEvPtr->hitangle_e[i]  = hitangle_e_all[i];
-//               truthEvPtr->hitangle_h[i]  = hitangle_h_all[i];
-//             }
-//             if(!settings1.ROUGHNESS){
-//               for (int i=0;i<Anita::NFREQ;i++)
-//                 truthEvPtr->vmmhz[i]       = panel1->GetVmmhz_freq(i);
-//             }
-
-	    
-// 	    memset(truthEvPtr->SNRAtTrigger,       0, sizeof(truthEvPtr->SNRAtTrigger)       );
-// 	    memset(truthEvPtr->fSignalAtTrigger,   0, sizeof(truthEvPtr->fSignalAtTrigger)   );
-// 	    memset(truthEvPtr->fNoiseAtTrigger,    0, sizeof(truthEvPtr->fNoiseAtTrigger)    );
-// 	    memset(truthEvPtr->SNRAtDigitizer,     0, sizeof(truthEvPtr->SNRAtDigitizer)     );
-// 	    memset(truthEvPtr->thresholds,         0, sizeof(truthEvPtr->thresholds)         );
-// 	    memset(truthEvPtr->fDiodeOutput,       0, sizeof(truthEvPtr->fDiodeOutput)       );
-	    
-// 	    truthEvPtr->maxSNRAtTriggerV=0;
-// 	    truthEvPtr->maxSNRAtTriggerH=0;
-// 	    truthEvPtr->maxSNRAtDigitizerV=0;
-// 	    truthEvPtr->maxSNRAtDigitizerH=0;
-
-//             for (int iant = 0; iant < settings1.NANTENNAS; iant++){
-//               int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
-//               int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
-
-// 	      truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = icemc::Tools::calculateSNR(justSignal_trig[0][iant], justNoise_trig[0][iant]);
-// 	      truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = icemc::Tools::calculateSNR(justSignal_trig[1][iant], justNoise_trig[1][iant]);
-	      
-// 	      if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
-// 	      if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
-
-// 	      truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = icemc::Tools::calculateSNR(justSignal_dig[0][iant], justNoise_dig[0][iant]);
-// 	      truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = icemc::Tools::calculateSNR(justSignal_dig[1][iant], justNoise_dig[1][iant]);
-	      
-// 	      if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexV]>truthEvPtr->maxSNRAtDigitizerV) truthEvPtr->maxSNRAtDigitizerV=truthEvPtr->SNRAtDigitizer[UsefulChanIndexV];
-// 	      if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexH]>truthEvPtr->maxSNRAtDigitizerH) truthEvPtr->maxSNRAtDigitizerH=truthEvPtr->SNRAtDigitizer[UsefulChanIndexH];
-
-	      
-// 	      truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[iant][0][4];
-// 	      truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[iant][1][4];
-// 	      int irx = iant;
-// 	      if (iant<16){
-// 		if (iant%2) irx = iant/2;
-// 		else        irx = iant/2 + 1;
-// 	      }
-	      
-//               for (int j = 0; j < fNumPoints; j++) {
-// 		truthEvPtr->fTimes[UsefulChanIndexV][j]             = j * anita1->TIMESTEP * 1.0E9;
-// 		truthEvPtr->fTimes[UsefulChanIndexH][j]             = j * anita1->TIMESTEP * 1.0E9;
-		
-//                 truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j]   = justSignal_trig[0][iant][j+128]*1000;
-//                 truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j]   = justSignal_trig[1][iant][j+128]*1000;
-//                 truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]    = justNoise_trig[0][iant][j+128]*1000;
-//                 truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]    = justNoise_trig[1][iant][j+128]*1000;
-//                 truthEvPtr->fSignalAtDigitizer[UsefulChanIndexV][j] = justSignal_dig[0][iant][j+128]*1000;
-//                 truthEvPtr->fSignalAtDigitizer[UsefulChanIndexH][j] = justSignal_dig[1][iant][j+128]*1000;
-//                 truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexV][j]  = justNoise_dig[0][iant][j+128]*1000;
-//                 truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexH][j]  = justNoise_dig[1][iant][j+128]*1000;
-		
-//                 truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]       = anita1->timedomain_output_allantennas[0][irx][j];
-//                 truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]       = anita1->timedomain_output_allantennas[1][irx][j];
-//               }//end int j
-	      
-//             }// end int iant
-
-//             truthAnitaTree->Fill();
-//             delete truthEvPtr;
-// #endif
-
-//             headTree->Fill();
-//             eventTree->Fill();
-//             adu5PatTree->Fill();
-
-//             delete realEvPtr;
-//             delete rawHeaderPtr;
-//             delete Adu5PatPtr;
-// #endif
+	    ro.fillRootifiedAnitaDataTrees(this, settings1, ray1, panel1);	    
 
             sum_weights+=fNeutrinoPath->weight;
             neutrinos_passing_all_cuts++;
@@ -3740,40 +3435,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     }
   }//end NNU neutrino loop
 
-
-  gRandom=rsave;
+  gRandom = rsave;
   delete Rand3;
-
-
-// #ifdef ANITA_UTIL_EXISTS
-
-//   anitafileEvent->cd();
-//   eventTree->Write("eventTree");
-//   anitafileEvent->Close();
-//   delete anitafileEvent;
-
-//   anitafileHead->cd();
-//   headTree->Write("headTree");
-//   anitafileHead->Close();
-//   delete anitafileHead;
-
-//   anitafileGps->cd();
-//   adu5PatTree->Write("adu5PatTree");
-//   anitafileGps->Close();
-//   delete anitafileGps;
-
-// #ifdef ANITA3_EVENTREADER
-//   anitafileTruth->cd();
-//   configAnitaTree->Write("configAnitaTree");
-//   truthAnitaTree->Write("truthAnitaTree");
-//   triggerSettingsTree->Write("triggerSettingsTree");
-//   anitafileTruth->Close();
-//   delete anitafileTruth;
-// #endif
-
-// #endif
-
-
 
   std::cout << "about to close tsignals tree.\n";
   anita1->fsignals=anita1->tsignals->GetCurrentFile();
@@ -3864,7 +3527,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   //if (tree17->GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && HIST==1)
   //tree17->Fill();
 
-
   // std::cout << "closing file.\n";
 
   time_t raw_end_time = time(NULL);
@@ -3874,10 +3536,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   foutput << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<std::endl;
 
-  
-  delete anita1;
-  anita1 = NULL;
-  
+  if(sec1)        delete sec1;
+  if(primary1)    delete primary1;
+  if(sig1)        delete sig1;
+  if(ray1)        delete ray1;
+  if(count1)      delete count1;
+  if(globaltrig1) delete globaltrig1;
+  if(taus1)       delete taus1;
+
   return;
 }
 
@@ -4138,6 +3804,6 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, Interactio
   panel1->SetWeightNorm(validScreenSummedArea);
   vmmhz_max = 0.;
   for(int jj=0; jj<panel1->GetNvalidPoints(); jj++){
-    vmmhz_max = icemc::Tools::dMax(vmmhz_max, panel1->GetVmmhz_freq(jj*Anita::NFREQ));
+    vmmhz_max = Tools::dMax(vmmhz_max, panel1->GetVmmhz_freq(jj*Anita::NFREQ));
   }
 }
