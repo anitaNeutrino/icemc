@@ -1424,7 +1424,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   Tools::Zero(eventsfound_nfb_binned, NBINS);
 
   fNeutrinoPath = new NeutrinoPath(); // init here for branch setting
-  icemc::RootOutput ro(this, &settings1, clOpts.outputdir.c_str(), clOpts.run_no);
+  icemc::RootOutput ro(this, &settings1, clOpts.outputdir.c_str(), clOpts.run_no);  
   
   // these variables are for energy reconstruction studies
   double undogaintoheight_e=0;

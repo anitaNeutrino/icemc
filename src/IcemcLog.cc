@@ -1,13 +1,16 @@
-#include "IcemcTextFileOutput.h"
+#include "IcemcLog.h"
 
-#include <sstream>
-#include <string>
+icemc::Log::~Log(){
+  std::cout << getColorReset() << std::flush;
+  std::cerr << getColorReset() << std::flush;
+}
 
-icemc::TextFileOutput::TextFileOutput(const char* outputDir, int run)
-  : fOutputDir(outputDir), fRun(run)
+
+icemc::Log::Log(const char* outputDir, int run)
+  : fOutputDir(outputDir), fRun(run), fMustReset(false), fUseStdErr(false), fUseColorCodes(true)
 {
   std::stringstream ss;
-  ss << run;
+  ss << fRun;
   std::string run_num;
   ss >> run_num;
   
@@ -46,3 +49,29 @@ icemc::TextFileOutput::TextFileOutput(const char* outputDir, int run)
   
 }
 
+icemc::Log& icemc::Log::message(icemc::Log::severity s){
+
+  const char* red     = fUseColorCodes ? "\x1b[31m" : "";
+  const char* blue    = fUseColorCodes ? "\x1b[34m" : "";
+  const char* magenta = fUseColorCodes ? "\x1b[35m" : "";
+
+  fMustReset = true;
+  switch(s){
+  case info:
+    fUseStdErr = false;
+    getStream() << blue << "Info! ";
+    foutput << "Info! ";
+    break;
+  case warning:
+    fUseStdErr = true;
+    getStream() << magenta << "Warning! ";
+    foutput << "Warning! ";
+    break;
+  case error:
+    fUseStdErr = true;
+    getStream() << red << "Error! ";
+    foutput << "Error! ";
+    break;
+  }
+  return *this;
+}
