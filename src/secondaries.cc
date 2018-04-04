@@ -79,7 +79,7 @@ icemc::Secondaries::Secondaries() {
 
 
   // reading in tauola data file for tau decays
-  tauolainfile.open((ICEMC_SRC_DIR+"/data/tau_decay_tauola.dat").c_str(),ifstream::in);
+  tauolainfile.open((ICEMC_SRC_DIR+"/data/tau_decay_tauola.dat").c_str(),std::ifstream::in);
   InitTauola();
   
   TAUFRAC=.5; //fraction of tau neutrino-cc current events where the primare interaction point is the first bang   
@@ -138,9 +138,9 @@ icemc::Secondaries::Secondaries() {
 void icemc::Secondaries::readData(string nuflavor,string secndryType, double (*y)[NPROB_MAX], double (*dsdy)[NPROB_MAX])
 {
   
-  stringstream senergy;
+  std::stringstream senergy;
   
-  ifstream ifile;
+  std::ifstream ifile;
   string suffix=".vec";
   if(nuflavor=="tauon")
     suffix="_tau.vec";

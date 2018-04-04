@@ -836,10 +836,10 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   
   getSetting("Simulate TUFFs", TUFFSON);
   getSetting("Which TUFFs are on", whichTUFFsON);
-  if (TUFFSON) cout << "TUFFs are simulated " << endl;
+  if (TUFFSON) std::cout << "TUFFs are simulated " << std::endl;
   
   getSetting("Add CW", ADDCW);
-  if(ADDCW) cout << "Adding CW " << endl;
+  if(ADDCW) std::cout << "Adding CW " << std::endl;
 
   getSetting("Specific Payload Unix Time", PAYLOAD_USE_SPECIFIC_TIME); 
   getSetting("Specific Payload Delta Time", PAYLOAD_USE_SPECIFIC_TIME_DELTA); 
@@ -1079,16 +1079,16 @@ void icemc::Settings::setNrxPhiAndNantennasFromWhich(){
     NRX_PHI[3]=8;
   }
   else if (WHICH==3) {
-    cout << "Is this configuration cylindrically symmetric? Yes(1) or No(0)\n";
-    cin >> CYLINDRICALSYMMETRY;
-    cout << "How many layers?\n";
-    cin >> NLAYERS;
+    std::cout << "Is this configuration cylindrically symmetric? Yes(1) or No(0)\n";
+    std::cin >> CYLINDRICALSYMMETRY;
+    std::cout << "How many layers?\n";
+    std::cin >> NLAYERS;
     for (int i=0;i<NLAYERS;i++) {
-      cout << "How many antennas in the " << i << "th layer?\n";
-      cin >> NRX_PHI[i];
+      std::cout << "How many antennas in the " << i << "th layer?\n";
+      std::cin >> NRX_PHI[i];
     }
-    cout << "How many polarizations must pass a voltage threshold?\n";
-    cin >> NFOLD;
+    std::cout << "How many polarizations must pass a voltage threshold?\n";
+    std::cin >> NFOLD;
 
   } //else if (custom payload)
   else if (WHICH==4) {// anita hill

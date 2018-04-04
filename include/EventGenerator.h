@@ -524,7 +524,7 @@ namespace icemc {
      */
     void generateNeutrinos(const Settings& settings1, const CommandLineOpts& clOpts);
 
-    TStyle* RootStyle();
+
 
     double thresholdsAnt[48][2][5];
     double thresholdsAntPass[48][2][5];

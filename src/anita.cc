@@ -1321,7 +1321,7 @@ void icemc::Anita::ReadGains(void) {
   // gains from university of hawaii measurements.
   double sfrequency;
   int iii;
-  ifstream gainsfile;
+  std::ifstream gainsfile;
   gainsfile.open((ICEMC_DATA_DIR+"/hh_0").c_str()); // gains for horizontal polarization
   if(gainsfile.fail()) {
     cout << "can't open `$ICEMC_DATA_DIR`/hh_0\n";
@@ -1577,7 +1577,7 @@ void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_recei
   string gain_null1, gain_null2;
   double sfrequency;
   int iii, jjj;
-  ifstream anglefile;
+  std::ifstream anglefile;
   for(jjj = 0; jjj < 4; jjj++)
     for(iii = 0; iii < 131; iii++)
       gain_angle[jjj][iii][0] = 1.;
@@ -2534,7 +2534,7 @@ void icemc::Anita::labAttn(double *vhz) {
 
 int icemc::Anita::getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn) {
     
-  ifstream flab((ICEMC_DATA_DIR+"/surfatten_run294_ch23v.dat").c_str());
+  std::ifstream flab((ICEMC_DATA_DIR+"/surfatten_run294_ch23v.dat").c_str());
   if (flab.fail()) {
     cout << "Cannot open lab data file.\n";
     exit(1);

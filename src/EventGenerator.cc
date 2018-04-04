@@ -49,6 +49,19 @@
 std::string ICEMC_SRC_DIR = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
+void icemc::EventGenerator::interrupt_signal_handler(int sig){
+  signal(sig,  SIG_IGN);
+  ABORT_EARLY = true;
+  static int numSignals = 0;
+  numSignals++;
+  const int maxSignals = 3;
+  if(numSignals >= maxSignals){
+    std::cerr << "Got " <<  numSignals << " interrupts, quitting more aggressively!" << std::endl;
+    raise(SIGINT);
+  }
+  return;
+}
+
 
 
 
@@ -86,6 +99,7 @@ icemc::EventGenerator::~EventGenerator()
     delete fTauPtr;
   }  
 }
+
 
 
 void icemc::EventGenerator::IntegrateBands(Anita *anita1, int k, Screen *panel1, double *freq, double scalefactor, double *sumsignal) {
@@ -1073,7 +1087,7 @@ double icemc::EventGenerator::GetThisAirColumn(const Settings* settings1,  Posit
 
 void icemc::EventGenerator::GetAir(double *col1) {
   double nothing;
-  ifstream air1(ICEMC_SRC_DIR+"/data/atmosphere.dat"); // length of chord in air vs. theta (deg)
+  std::ifstream air1(ICEMC_SRC_DIR+"/data/atmosphere.dat"); // length of chord in air vs. theta (deg)
   //where theta is respect to "up"
   // binned in 0.1 degrees
   for(int iii=0;iii<900;iii++) {
@@ -1108,104 +1122,6 @@ double icemc::EventGenerator::GetViewAngle(const Vector &nrf2_iceside, const Vec
 //end ())etViewAngle
 
 
-TStyle* icemc::EventGenerator::RootStyle() {
-  TStyle *RootStyle = new TStyle("Root-Style", "The Perfect Style for Plots ;-)");
-
-#ifdef __CINT__
-  TStyle *GloStyle;
-  GloStyle = gStyle;                  // save the global style reference
-  gStyle = RootStyle;
-#endif
-  // otherwise you need to call TROOT::SetStyle("Root-Style")
-
-  // Paper size
-  RootStyle->SetPaperSize(TStyle::kUSLetter);
-
-  // Canvas
-  RootStyle->SetCanvasColor     (0);
-  RootStyle->SetCanvasBorderSize(10);
-  RootStyle->SetCanvasBorderMode(0);
-  RootStyle->SetCanvasDefH      (600);
-  RootStyle->SetCanvasDefW      (600);
-  RootStyle->SetCanvasDefX      (10);
-  RootStyle->SetCanvasDefY      (10);
-
-  // Pads
-  RootStyle->SetPadColor       (0);
-  RootStyle->SetPadBorderSize  (10);
-  RootStyle->SetPadBorderMode  (0);
-  //  RootStyle->SetPadBottomMargin(0.13);
-  RootStyle->SetPadBottomMargin(0.16);
-  RootStyle->SetPadTopMargin   (0.08);
-  RootStyle->SetPadLeftMargin  (0.18);
-  RootStyle->SetPadRightMargin (0.05);
-  RootStyle->SetPadGridX       (0);
-  RootStyle->SetPadGridY       (0);
-  RootStyle->SetPadTickX       (1);
-  RootStyle->SetPadTickY       (1);
-
-  // Frames
-  RootStyle->SetFrameFillStyle ( 0);
-  RootStyle->SetFrameFillColor ( 0);
-  RootStyle->SetFrameLineColor ( 1);
-  RootStyle->SetFrameLineStyle ( 0);
-  RootStyle->SetFrameLineWidth ( 2);
-  RootStyle->SetFrameBorderSize(10);
-  RootStyle->SetFrameBorderMode( 0);
-
-
-  // Histograms
-  RootStyle->SetHistFillColor(0);
-  RootStyle->SetHistFillStyle(1);
-  RootStyle->SetHistLineColor(1);
-  RootStyle->SetHistLineStyle(0);
-  RootStyle->SetHistLineWidth(2);
-
-  // Functions
-  RootStyle->SetFuncColor(1);
-  RootStyle->SetFuncStyle(0);
-  RootStyle->SetFuncWidth(1);
-
-  //Legends
-  RootStyle->SetStatBorderSize(2);
-  RootStyle->SetStatFont      (42);
-  //  RootStyle->SetOptStat       (111111);
-  RootStyle->SetOptStat       (0);
-  RootStyle->SetStatColor     (0);
-  RootStyle->SetStatX         (0.93);
-  RootStyle->SetStatY         (0.90);
-  RootStyle->SetStatFontSize  (0.07);
-  //  RootStyle->SetStatW         (0.2);
-  //  RootStyle->SetStatH         (0.15);
-
-  // Labels,  Ticks,  and Titles
-  RootStyle->SetTickLength ( 0.015, "X");
-  RootStyle->SetTitleSize  ( 0.10, "X");
-  RootStyle->SetTitleOffset( 1.20, "X");
-  RootStyle->SetTitleBorderSize(0);
-  //  RootStyle->SetTitleFontSize((double)3.);
-  RootStyle->SetLabelOffset( 0.015, "X");
-  RootStyle->SetLabelSize  ( 0.050, "X");
-  RootStyle->SetLabelFont  ( 42   , "X");
-  RootStyle->SetTickLength ( 0.015, "Y");
-  RootStyle->SetTitleSize  ( 0.10, "Y");
-  RootStyle->SetTitleOffset( 0.600, "Y");
-  RootStyle->SetLabelOffset( 0.015, "Y");
-  RootStyle->SetLabelSize  ( 0.050, "Y");
-  RootStyle->SetLabelFont  ( 42   , "Y");
-  RootStyle->SetTitleFont  (42, "XY");
-  RootStyle->SetTitleColor  (1);
-
-  // Options
-  RootStyle->SetOptFit     (0);
-  RootStyle->SetMarkerStyle(20);
-  RootStyle->SetMarkerSize(0.4);
-
-  //  std::cout << ">> Style initialized with the Root Style!" << std::endl;
-  //  std::cout << ">> " << modified << std::endl << std::endl;
-  return RootStyle;
-}
-//end RootStyle()
 
 
 
@@ -1326,18 +1242,12 @@ void icemc::EventGenerator::GetBalloonLocation(Interaction *interaction1,Ray *ra
 }
 
 
-void icemc::EventGenerator::interrupt_signal_handler(int sig){
-  signal(sig,  SIG_IGN);
-  ABORT_EARLY = true;
-  return;
-}
 
 
 
 void icemc::EventGenerator::WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double altitude_int,  std::string nuflavor,  std::string current,  double elast_y,  std::ofstream &nu_out) {
   nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
 }
-
 
 
 
@@ -1369,44 +1279,46 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   gRandom=Rand3;
 
   std::string stemp=clOpts.outputdir+"/nu_position"+clOpts.run_num+".txt";
-  ofstream nu_out(stemp.c_str(),  ios::app); //Positions,  direction of momentum,  and neutrino type for Ryan.
+  std::ofstream nu_out(stemp.c_str(),  std::ios::app); //Positions,  direction of momentum,  and neutrino type for Ryan.
 
   stemp = clOpts.outputdir + "/veff" + clOpts.run_num + ".txt";
-  ofstream veff_out(stemp.c_str(),  ios::app);//to output only energy and effective volume to veff.txt
+  std::ofstream veff_out(stemp.c_str(),  std::ios::app);//to output only energy and effective volume to veff.txt
 
   stemp = clOpts.outputdir + "/distance" + clOpts.run_num + ".txt";
-  ofstream distanceout(stemp.c_str());
+  std::ofstream distanceout(stemp.c_str());
 
   stemp = clOpts.outputdir + "/debug" + clOpts.run_num + ".txt";
-  fstream outfile(stemp.c_str(), ios::out);
+  std::fstream outfile(stemp.c_str(), std::ios::out);
 
   stemp = clOpts.outputdir + "/forbrian" + clOpts.run_num + ".txt";
-  fstream forbrian(stemp.c_str(), ios::out);
+  std::fstream forbrian(stemp.c_str(), std::ios::out);
 
   stemp = clOpts.outputdir + "/al_voltages_direct" + clOpts.run_num + ".dat";
-  fstream al_voltages_direct(stemp.c_str(), ios::out); //added djg ------provide anita-lite voltages and noise from MC for anita-lite analysis
+  std::fstream al_voltages_direct(stemp.c_str(), std::ios::out); //added djg ------provide anita-lite voltages and noise from MC for anita-lite analysis
 
   stemp = clOpts.outputdir + "/events" + clOpts.run_num + ".txt";
-  ofstream eventsthatpassfile(stemp.c_str());
+  std::ofstream eventsthatpassfile(stemp.c_str());
 
   stemp = clOpts.outputdir + "/numbers" + clOpts.run_num + ".txt";
-  ofstream fnumbers(stemp.c_str()); // debugging
+  std::ofstream fnumbers(stemp.c_str()); // debugging
 
   stemp = clOpts.outputdir + "/output" + clOpts.run_num + ".txt";
-  ofstream foutput(stemp.c_str(),  ios::app);
+  std::ofstream foutput(stemp.c_str(),  std::ios::app);
 
   stemp = clOpts.outputdir + "/slacviewangles" + clOpts.run_num + ".dat";
-  ofstream fslac_viewangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
+  std::ofstream fslac_viewangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
 
   stemp = clOpts.outputdir + "/slac_hitangles" + clOpts.run_num + ".dat";
-  ofstream fslac_hitangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
+  std::ofstream fslac_hitangles(stemp.c_str()); // this outputs numbers that we need for analyzing slac data
 
   if(!bn1){
     bn1 = new Balloon();
+    bn1->InitializeBalloon();
   }
   
   if(!anita1){
     anita1 = new Anita();
+    anita1->Initialize(&settings1, foutput, inu, clOpts.outputdir);
   }
   
   Secondaries* sec1 = new Secondaries();
@@ -1429,23 +1341,18 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // settings1.SEED=settings1.SEED + clOpts.run_no;
   gRandom->SetSeed(settings1.SEED);
 
-  bn1->InitializeBalloon();
-  anita1->Initialize(&settings1, foutput, inu, clOpts.outputdir);
 
   if (clOpts.trig_thresh!=0){
     anita1->powerthreshold[4]=clOpts.trig_thresh;
-  }
-  if (clOpts.nnu_tmp!=0){
-    NNU=clOpts.nnu_tmp;
   }
 
   Spectra* spectra1 = new Spectra((int)settings1.EXPONENT);
   if(!interaction1){
     interaction1 = new Interaction("nu", primary1, &settings1, 0, count1);
   }
-  Interaction* int_banana=new Interaction("banana", primary1, &settings1, 0, count1);
+  Interaction* int_banana = new Interaction("banana", primary1, &settings1, 0, count1);
   
-  Roughness* rough1=new Roughness(&settings1); // create new instance of the roughness class
+  Roughness* rough1 = new Roughness(&settings1); // create new instance of the roughness class
   rough1->SetRoughScale(settings1.ROUGHSIZE);
 
   Screen* panel1 = new Screen(0);  // create new instance of the screen class
@@ -1634,60 +1541,27 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // get positions of the anita payload during the slac test
   if (settings1.SLAC){
     bn1->GetSlacPositions(anita1);
-  }
-
-  // for (int j=0;j<settings1.NLAYERS;j++) { // loop over the layers of the payload
-  //   // noise depends on cant angle of antenna
-  // } //for loop over antenna layers
-  
+  }  
 
   time_t raw_loop_start_time = time(NULL);
   std::cout << "Starting loop over events. Time required for setup is "
 	    <<(int)((raw_loop_start_time - raw_start_time)/60) << ":"
 	    << ((raw_loop_start_time - raw_start_time)%60) << std::endl;
 
-  TCanvas *ctest1 = new TCanvas("ctest1", "", 880, 800);
-
-  spectra1->GetGEdNdEdAdt()->Draw("al");
-  spectra1->GetGEdNdEdAdt()->GetHistogram()->SetMinimum(-0.2*spectra1->Getmaxflux());
-  spectra1->GetSEdNdEdAdt()->SetLineColor(2);
-  spectra1->GetSEdNdEdAdt()->Draw("l same");
-
-  stemp = clOpts.outputdir + "/GetG_test1.pdf";
-  ctest1->Print((TString)stemp);
-
+  
+  spectra1->savePlots2(clOpts.outputdir + "/GetG_test1.pdf");
+  //if using energy spectrum
+  if (spectra1->IsSpectrum()){
+    spectra1->savePlots("Temp");
+  }
 
   
   // for averaging balloon altitude and distance from center of earth
   // for comparing with Peter
   double average_altitude=0.;
-  double average_rbn=0.;
+  double average_rbn=0.;  
 
-  //if using energy spectrum
-  if ( spectra1->IsSpectrum() ){
-    TCanvas *ctemp = new TCanvas("ctemp");
-
-    TFile *out = new TFile("Temp.root", "recreate");
-    TGraph *g1 = spectra1->GetGEdNdEdAdt();
-    g1->Draw("Al");
-    ctemp->Print("Temp1.png");
-    int n = g1->GetN();
-    double *x = g1->GetX();
-    double x2[20];
-    for (int i=0;i<n;i++) x2[i] = TMath::Power(10., x[i]);
-    TGraph *g2 = new TGraph(n, x2, g1->GetY());
-    g2->Draw("Al");
-    ctemp->SetLogy();
-    ctemp->SetLogx();
-    std::cout << g2->Integral() << " " << g2->Integral(1, n) << std::endl;
-    ctemp->Print("Temp2.png");
-    g1->Write();
-    g2->Write();
-    out->Close();
-  }
-
-  // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.  
-  signal(SIGINT,  icemc::EventGenerator::interrupt_signal_handler);
+  
   // Setting gps offset for plotting direction wrt north
   if (settings1.WHICH==7){
     gps_offset=atan2(-0.7042,0.71)*constants::DEGRAD;
@@ -1708,6 +1582,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 
   
+  // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.  
+  signal(SIGINT,  icemc::EventGenerator::interrupt_signal_handler);  
+
   /**
    * Main analysis loop over generated neutrinos
    */
@@ -1869,8 +1746,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       count1->toolow[whichray]++;
 
-      if (bn1->WHICHPATH==3){
-        interaction1=int_banana;
+      if (bn1->WHICHPATH==3){	
+        interaction1=int_banana; // this is fucking madness
       }
       if (!interaction1->iceinteraction){
         continue;
@@ -3536,6 +3413,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   foutput << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<std::endl;
 
+
+  // anything not a member variable should be deleted here
   if(sec1)        delete sec1;
   if(primary1)    delete primary1;
   if(sig1)        delete sig1;
@@ -3543,6 +3422,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   if(count1)      delete count1;
   if(globaltrig1) delete globaltrig1;
   if(taus1)       delete taus1;
+  if(rough1)      delete rough1;
+  if(panel1)      delete panel1;
 
   return;
 }

@@ -65,6 +65,20 @@ namespace icemc{
     int IsSpectrum(); // return 1 or 0 depend on EXPONENT value
     int IsMonoenergetic();    // return 1 or 0 depend of EXPONENT value
 
+    /** 
+     * Save ROOT TGraphs and png images of the energy spectra used to generate neutrinos
+     * 
+     * @param fileNameNoSuffix is the base name WITHOUT any suffix, e.g. "temp" will produce temp.root, temp1.png, temp2.png
+     */
+    void savePlots(const TString& fileNameNoSuffix);
+
+    /** 
+     * Saves
+     * 
+     * @param fileName 
+     */
+    void savePlots2(const TString& fileName);
+
     // destructor
 
   }; //class Spectra

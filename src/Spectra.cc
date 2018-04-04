@@ -8,6 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "TFile.h"
+#include "TCanvas.h"
+#include "TH1F.h"
+
+
 icemc::Spectra::Spectra(int EXPONENT_fromsettings) {
 
   EXPONENT=EXPONENT_fromsettings;
@@ -163,14 +168,14 @@ icemc::Spectra::Spectra(int EXPONENT_fromsettings) {
     
     for(int i=0;i<E_bin;i++) {
       Eelectrons[i]=Emuons[i]*emuratio[i];
-      cout << "Eelectrons, Emuons are " << Eelectrons[i] << " " << Emuons[i] << "\n";
+      std::cout << "Eelectrons, Emuons are " << Eelectrons[i] << " " << Emuons[i] << "\n";
     }
   
     for (int i=0;i<E_bin;i++) {
       energy[i] = 16.+((double)i)/2.;   // in log, in eV
       EdNdEdAdt[i]=log10( pow(10.,Eelectrons[i]) + pow(10.,Emuons[i]) );  // in log.
       E2dNdEdAdt[i] = EdNdEdAdt[i] + (energy[i] - 9.);    // in log, in GeV
-      cout << "EdNdEdAdt are " << EdNdEdAdt[i] << "\n";
+      std::cout << "EdNdEdAdt are " << EdNdEdAdt[i] << "\n";
     }
     
   } // end if ESS-cosmological constant
@@ -231,7 +236,7 @@ icemc::Spectra::Spectra(int EXPONENT_fromsettings) {
 //              GetFlux("berezinsky_saturate.dat");
 //              break;
           default:
-              cout<<"Error: Wrong input of EXPONENT!"<<endl;
+	    std::cout<<"Error: Wrong input of EXPONENT!"<<std::endl;
       }
   }
 
@@ -357,7 +362,7 @@ double  icemc::Spectra::GetNuEnergy() {
 } //Pick Neutrino Energy
 
 void icemc::Spectra::GetCDF(){//set up CDF and inverse CDF;
-  cout<<"in CDF \n";
+  std::cout<<"in CDF \n";
   double y_val=0.;
   double E_min =18;//energy[0];
  
@@ -416,29 +421,29 @@ double icemc::Spectra::GetCDFEnergy(){//get Energy from 'CDF'
   
 }
 
-inline void icemc::Spectra::GetFlux(string filename)
+inline void icemc::Spectra::GetFlux(std::string filename)
 {
   
-  const string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
-    ifstream influx((ICEMC_SRC_DIR+"/fluxes/"+filename).c_str());
-    int NLINES;
-    influx >> NLINES;   // Read how much lines in the file.
-    cout<<"We are using "<<filename.c_str()<<" as the flux data."<<endl;
-    cout<<"total lines in the file are "<<NLINES<<endl;
-    E_bin = NLINES;
+  const std::string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
+  std::ifstream influx((ICEMC_SRC_DIR+"/fluxes/"+filename).c_str());
+  int NLINES;
+  influx >> NLINES;   // Read how much lines in the file.
+  std::cout<<"We are using "<<filename.c_str()<<" as the flux data."<<std::endl;
+  std::cout<<"total lines in the file are "<<NLINES<<std::endl;
+  E_bin = NLINES;
     
-//    double flux[NLINES];//E2dNdE GeV cm^-2 s^-1 sr^-1
+  //    double flux[NLINES];//E2dNdE GeV cm^-2 s^-1 sr^-1
     
-    for(int i=0;i<NLINES;i++) {
-        influx>>energy[i]>>E2dNdEdAdt[i];
-    }
+  for(int i=0;i<NLINES;i++) {
+    influx>>energy[i]>>E2dNdEdAdt[i];
+  }
     
-    for(int i=0;i<E_bin;i++) {
-//        EdNdEdAdt[i]=pow(10.,(flux[i]+9.-energy[i]));
-        EdNdEdAdt[i] = E2dNdEdAdt[i] + 9. - energy[i];  // change from GeV to eV and E2dN -> EdN
-    }
- // maxflux=Tools::dMax(EdNdEdAdt,12);
- // cout<<maxflux<<endl;
+  for(int i=0;i<E_bin;i++) {
+    //        EdNdEdAdt[i]=pow(10.,(flux[i]+9.-energy[i]));
+    EdNdEdAdt[i] = E2dNdEdAdt[i] + 9. - energy[i];  // change from GeV to eV and E2dN -> EdN
+  }
+  // maxflux=Tools::dMax(EdNdEdAdt,12);
+  // cout<<maxflux<<endl;
 }
 
 
@@ -480,17 +485,17 @@ double *icemc::Spectra::GetE2dNdEdAdt() {
 double icemc::Spectra::GetEdNdEdAdt(double E_val) {
   double tmp_Get;
   if (E_val < energy[0]) {
-      cout<<"Energy value is smaller than the energy boundary!\n";
-      cout<<"Energy value is replaced to minimum value of energy bound : "<<energy[0]<<"\n";
-      tmp_Get = sEdNdEdAdt->Eval(energy[0]);
+    std::cout<<"Energy value is smaller than the energy boundary!\n";
+    std::cout<<"Energy value is replaced to minimum value of energy bound : "<<energy[0]<<"\n";
+    tmp_Get = sEdNdEdAdt->Eval(energy[0]);
   }
   else if (E_val > energy[E_bin-1]) {
-      cout<<"Energy value is bigger than the energy boundary!\n";
-      cout<<"Energy value is replaced to maximum value of energy bound : "<<energy[E_bin-1]<<"\n";
-      tmp_Get = sEdNdEdAdt->Eval(energy[E_bin-1]);
+    std::cout<<"Energy value is bigger than the energy boundary!\n";
+    std::cout<<"Energy value is replaced to maximum value of energy bound : "<<energy[E_bin-1]<<"\n";
+    tmp_Get = sEdNdEdAdt->Eval(energy[E_bin-1]);
   }
   else {
-      tmp_Get = sEdNdEdAdt->Eval(E_val);
+    tmp_Get = sEdNdEdAdt->Eval(E_val);
   }
   return tmp_Get;
 }
@@ -499,24 +504,24 @@ double icemc::Spectra::GetEdNdEdAdt(double E_val) {
 double icemc::Spectra::GetE2dNdEdAdt(double E_val) {
   double tmp_Get;
   if (E_val < energy[0]) {
-      cout<<"Energy value is smaller than the energy boundary!\n";
-      cout<<"Energy value is replaced to minimum value of energy bound : "<<energy[0]<<"\n";
-      tmp_Get = sE2dNdEdAdt->Eval(energy[0]);
+    std::cout<<"Energy value is smaller than the energy boundary!\n";
+    std::cout<<"Energy value is replaced to minimum value of energy bound : "<<energy[0]<<"\n";
+    tmp_Get = sE2dNdEdAdt->Eval(energy[0]);
   }
   else if (E_val > energy[E_bin-1]) {
-      cout<<"Energy value is bigger than the energy boundary!\n";
-      cout<<"Energy value is replaced to maximum value of energy bound : "<<energy[E_bin-1]<<"\n";
-      tmp_Get = sE2dNdEdAdt->Eval(energy[E_bin-1]);
+    std::cout<<"Energy value is bigger than the energy boundary!\n";
+    std::cout<<"Energy value is replaced to maximum value of energy bound : "<<energy[E_bin-1]<<"\n";
+    tmp_Get = sE2dNdEdAdt->Eval(energy[E_bin-1]);
   }
   else {
-      tmp_Get = sE2dNdEdAdt->Eval(E_val);
+    tmp_Get = sE2dNdEdAdt->Eval(E_val);
   }
   return tmp_Get;
 }
 
 
 double icemc::Spectra::Getmaxflux() {
-    return maxflux;
+  return maxflux;
 }
 
 
@@ -546,4 +551,44 @@ int icemc::Spectra::IsMonoenergetic() {
       out = 0;
   }
   return out;
+}
+
+
+void icemc::Spectra::savePlots2(const TString& fileName){
+  TCanvas *ctest1 = new TCanvas("ctest1", "", 880, 800);
+
+  GetGEdNdEdAdt()->Draw("al");
+  GetGEdNdEdAdt()->GetHistogram()->SetMinimum(-0.2*Getmaxflux());
+  GetSEdNdEdAdt()->SetLineColor(2);
+  GetSEdNdEdAdt()->Draw("l same");
+ 
+  ctest1->Print(fileName);
+  delete ctest1;
+
+}
+
+void icemc::Spectra::savePlots(const TString& fileNameNoSuffix){
+
+  TCanvas *ctemp = new TCanvas(fileNameNoSuffix);
+
+  TFile *out = new TFile(fileNameNoSuffix + ".root", "recreate");
+  TGraph *g1 = GetGEdNdEdAdt();
+  g1->Draw("Al");
+  ctemp->Print(fileNameNoSuffix + "1.png");
+  int n = g1->GetN();
+  double *x = g1->GetX();
+  double x2[20];
+  for (int i=0;i<n;i++) x2[i] = TMath::Power(10., x[i]);
+  TGraph *g2 = new TGraph(n, x2, g1->GetY());
+  g2->Draw("Al");
+  ctemp->SetLogy();  
+  ctemp->SetLogx();
+  std::cout << g2->Integral() << " " << g2->Integral(1, n) << std::endl;  
+  ctemp->Print(fileNameNoSuffix + "2.png");
+  g1->Write();
+  g2->Write();
+
+  out->Close();
+  delete out;
+  delete ctemp;
 }
