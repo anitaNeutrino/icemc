@@ -667,15 +667,19 @@ void icemc::Anita::getDiodeDataAndAttenuation(const Settings *settings1, TString
 
   // get vnoise data
   string sdiode;
-  if (BANDING==0)
+  if (BANDING==0){
     sdiode=ICEMC_DATA_DIR+"/diode_anita1.root";
-  else if (BANDING==1) 
+  }
+  else if (BANDING==1){
     sdiode=ICEMC_DATA_DIR+"diode_nobanding.root";
-  else if (BANDING==2)
+  }
+  else if (BANDING==2){
     sdiode=ICEMC_DATA_DIR+"/diode_anita2.root";
-  else if (BANDING==4 || BANDING==5) // Linda
+  }
+  else if (BANDING==4 || BANDING==5){ // Linda
     sdiode=ICEMC_DATA_DIR+"/diode_anita3.root";
-    
+  }
+
   fnoise=new TFile(sdiode.c_str());
   tdiode=(TTree*)fnoise->Get("diodeoutputtree");
     

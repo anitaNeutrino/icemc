@@ -1259,14 +1259,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   if(!bn1){
     bn1 = new Balloon();
-    bn1->InitializeBalloon();
   }
-  
   if(!anita1){
     anita1 = new Anita();
-    anita1->Initialize(&settings1, iLog.foutput, inu, clOpts.outputdir);
   }
-  
   Secondaries* sec1 = new Secondaries();
   Primaries* primary1 = new Primaries();
   Signal* sig1 = new Signal();
@@ -1276,9 +1272,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   Taumodel* taus1 = new Taumodel();
 
   // input parameters
+  settings1.ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);  
+  bn1->InitializeBalloon();
+  anita1->Initialize(&settings1, iLog.foutput, inu, clOpts.outputdir);
+
   NNU = settings1.NNU;
   RANDOMISEPOL = settings1.RANDOMISEPOL;
-  settings1.ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
+  iLog << Log::info << "settings1.BANDING = " << settings1.BANDING << ", anita1->BANDING = " << anita1->BANDING << std::endl;
 
   // Signal needs to be initialize with Askaryan parametrisation info
   // After the inputs are read
