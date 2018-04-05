@@ -619,7 +619,11 @@ int main(int argc,  char **argv) {
   Spectra *spectra1 = new Spectra((int)settings1->EXPONENT);
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
-  
+ 
+  //////////OINDREE TRYING THIS FOR GRBS/////////
+  ////////// could call PickGrbDirection() when SOURCE setting is true///////
+  if (settings1->SOURCE == 1) { interaction1->PickGrbDirection(); } 
+ 
   Roughness *rough1=new Roughness(settings1); // create new instance of the roughness class
   rough1->SetRoughScale(settings1->ROUGHSIZE);
 
@@ -2272,7 +2276,7 @@ int main(int argc,  char **argv) {
         panel1->ResetParameters();
 
         panel1->SetNsamples( grd_nsteps );
-        panel1->SetEdgeLength( basescreenedgelength );
+        panel1->SetEdgeLength( grd_stepsize );
 
         panel1->SetCentralPoint( ray1->rfexit[2] );
         vec_localnormal = antarctica->GetSurfaceNormal(ray1->rfexit[2]).Unit();
@@ -2383,8 +2387,8 @@ int main(int argc,  char **argv) {
             pol_perp_inc = npol_local_inc * vec_inc_perp;
             pol_parl_inc = npol_local_inc * vec_inc_parl;
             //
-            pol_perp_trans = pol_perp_inc * tcoeff_perp_polperp + pol_parl_inc * tcoeff_perp_polparl;
-            pol_parl_trans = pol_parl_inc * tcoeff_parl_polparl + pol_perp_inc * tcoeff_parl_polperp;
+            pol_perp_trans = pol_perp_inc * tcoeff_perp_polperp + pol_perp_inc * tcoeff_perp_polparl;
+            pol_parl_trans = pol_parl_inc * tcoeff_parl_polparl + pol_parl_inc * tcoeff_parl_polperp;
             //
             vec_local_grnd_perp = (vec_localnormal.Cross(vec_pos_current_to_balloon)).Unit();
             vec_local_grnd_parl = (vec_pos_current_to_balloon.Cross(vec_local_grnd_perp)).Unit();

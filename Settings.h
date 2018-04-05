@@ -149,6 +149,8 @@ class Settings : public TObject {
   double SLAC_DEPTH; // vertical depth of interaction at slac beam test
   double SLAC_HORIZ_DEPTH; // horizontal depth of interaction at slac
 
+  int SOURCE;  // get direction of neutrino from specified sources 
+
   int ROUGHNESS; // include effects of surface roughness
   int FIRN; // whether or not to include the firn
 

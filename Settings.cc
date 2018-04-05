@@ -583,11 +583,8 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   }
   getSetting("Which attenuation length", MOOREBAY);
 
-
-
-
-
-
+  /////////////////oindree adding this to do source (GRB) search////////////////////////////
+  getSetting("Get neutrino direction from specified source", SOURCE); 
 
 
   getSetting("Cross-section factor", SIGMA_FACTOR);
