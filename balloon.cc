@@ -789,20 +789,16 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
       // If we require neutrinos from a particular position
       // we generate that cartesian position here
 
-      static Vector specific_position; 
-
-      if (settings1->SPECIFIC_NU_POSITION) 
-      {
-        double R = settings1->SPECIFIC_NU_POSITION_ALTITUDE + antarctica1->Geoid(settings1->SPECIFIC_NU_POSITION_LATITUDE); 
-        double theta = settings1->SPECIFIC_NU_POSITION_LATITUDE * RADDEG; 
-        double phi = EarthModel::LongtoPhi_0isPrimeMeridian(settings1->SPECIFIC_NU_POSITION_LONGITUDE); 
-        specific_position.SetXYZ(R * sin(theta) * cos(phi), R * sin(theta) * sin(phi), R * cos(theta)); 
-      }
+      static Position specific_position(settings1->SPECIFIC_NU_POSITION_LONGITUDE, 90 + settings1->SPECIFIC_NU_POSITION_LATITUDE, settings1->SPECIFIC_NU_POSITION_ALTITUDE + antarctica1->Geoid(settings1->SPECIFIC_NU_POSITION_LATITUDE)); 
         
+      int nattempts = 0; 
       do
       {
         interaction1->posnu = antarctica1->PickInteractionLocation(ibnposition, settings1, r_bn, interaction1);
-      } while(settings1->SPECIFIC_NU_POSITION &&  (interaction1->posnu - specific_position).Mag() > settings1->SPECIFIC_NU_POSITION_DISTANCE); 
+ //       std::cout << nattempts <<":" << specific_position << " / " <<  interaction1->posnu << " | " <<  interaction1->posnu.Distance(specific_position) << std::endl; 
+        nattempts++; 
+      } while(settings1->SPECIFIC_NU_POSITION &&  interaction1->posnu.Distance(specific_position) > settings1->SPECIFIC_NU_POSITION_DISTANCE); 
+//      printf("====Took %d attempts to find a position====\n", nattempts); 
 
     }
   }
