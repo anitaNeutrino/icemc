@@ -795,10 +795,10 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
       do
       {
         interaction1->posnu = antarctica1->PickInteractionLocation(ibnposition, settings1, r_bn, interaction1);
- //       std::cout << nattempts <<":" << specific_position << " / " <<  interaction1->posnu << " | " <<  interaction1->posnu.Distance(specific_position) << std::endl; 
+	//  std::cout << nattempts <<":" << specific_position << " / " <<  interaction1->posnu << " | " <<  interaction1->posnu.Distance(specific_position) << std::endl; 
         nattempts++; 
-      } while(settings1->SPECIFIC_NU_POSITION &&  interaction1->posnu.Distance(specific_position) > settings1->SPECIFIC_NU_POSITION_DISTANCE); 
-//      printf("====Took %d attempts to find a position====\n", nattempts); 
+      } while(settings1->SPECIFIC_NU_POSITION &&  interaction1->posnu.Distance(specific_position) > settings1->SPECIFIC_NU_POSITION_DISTANCE  && nattempts<100000000); 
+      // printf("====Took %d attempts to find a position====\n", nattempts); 
 
     }
   }
