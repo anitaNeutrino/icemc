@@ -598,8 +598,7 @@ void Anita::readVariableThresholds(Settings *settings1){
     turfratechain->SetBranchAddress("l1TrigMask",&l1TrigMask);
     turfratechain->SetBranchAddress("l1TrigMaskH",&l1TrigMaskH);
 
-    /////////// DEAD TIME ONLY DEFINED FOR ANITA-3 !!!!!!!!!!!!
-    if (settings1->WHICH==9) turfratechain->SetBranchAddress("deadTime",&deadTime);
+    turfratechain->SetBranchAddress("deadTime",&deadTime);
     turfratechain->SetBranchAddress("realTime",&realTime_turfrate);
     turfratechain->BuildIndex("realTime");
     turfratechain->GetEvent(0);
