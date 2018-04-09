@@ -272,28 +272,28 @@ double icemc::EarthModel::GetDensity(double altitude, const Position earth_in,
 
 
 int icemc::EarthModel::Getchord(const Settings *settings1,
-			 double len_int_kgm2,
-			 const Position &earth_in, // place where neutrino entered the earth
-			 const Position &r_enterice,
-			 const Position &nuexitice,
-			 
-			 const Position &posnu, // position of the interaction
-			 int inu,
-			 double& chord, // chord length
-			 double& probability_tmp, // weight
-			 double& weight1_tmp,
-			 double& nearthlayers, // core, mantle, crust
-			 double myair,
-			 double& total_kgm2, // length in kg m^2
-			 int& crust_entered, // 1 or 0
-			 int& mantle_entered, // 1 or 0
-			 int& core_entered)  {
+				double len_int_kgm2,
+				const Position &earth_in, // place where neutrino entered the earth
+				const Position &r_enterice,
+				const Position &nuexitice,
+				const Position &posnu, // position of the interaction
+				int inu,
+				// ChordInfo& chordInfo){
+				double& chord, // chord length
+				double& probability_tmp, // weight
+				double& weight1_tmp,
+				double& nearthlayers, // core, mantle, crust
+				double myair,
+				double& total_kgm2, // length in kg m^2
+				int& crust_entered, // 1 or 0
+				int& mantle_entered, // 1 or 0
+				int& core_entered)  {
     
-    Vector chord3;
-    Vector nchord;
-    double x=0;
-    double lat,lon;
-    // int ilon,ilat;
+  Vector chord3;
+  Vector nchord;
+  double x=0;
+  double lat,lon;
+  // int ilon,ilat;
     
     total_kgm2 = 0; //Initialize column density
     nearthlayers=0; // this counts the number of earth layers the neutrino traverses.
@@ -326,8 +326,9 @@ int icemc::EarthModel::Getchord(const Settings *settings1,
    
 
 
-    if (getchord_method<1 || getchord_method>3)
-	cout << "Bogus method!\n";
+    if (getchord_method<1 || getchord_method>3){
+      std::cout << "Bogus method!\n";
+    }
     
     // we are really focusing on method 2 - method 1 has not been maintenanced in a long time!!
     // use at your own risk.
@@ -578,22 +579,19 @@ int icemc::EarthModel::Getchord(const Settings *settings1,
     //cout <<"probability_tmp(non-tau) is "<<probability_tmp<<".\n";
     
     if (weightabsorption==0) {
-	if (gRandom->Rndm()>weight1_tmp) { 
-	    
-	    weight1_tmp=0.;
-	    return 0;
-	}
-	else {
-	    
-	    weight1_tmp=1.;
-	    return 1;
-	}
-    }
-    else 
+      if (gRandom->Rndm()>weight1_tmp) { 
+	weight1_tmp=0.;
+	return 0;
+      }
+      else {
+	weight1_tmp=1.;
 	return 1;
-    
-    cout << "made it this far.\n";
-    
+      }
+    }
+    else {
+      return 1;
+    }
+    std::cout << "made it this far.\n";    
     return 1;
 } //end Getchord
 

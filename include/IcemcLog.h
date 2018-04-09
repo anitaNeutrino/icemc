@@ -8,8 +8,20 @@
 
 namespace icemc {
 
+
   /**
-   * @class Log
+   * @enum severity for tweaking the warning message
+   * 
+   */
+  enum severity {
+    info,
+    warning,
+    error
+  };
+
+  
+  /**
+   * @class Logger
    * @brief A pretty (and probably over-engineered) logger for icemc, 
    * which can potentially hold a number of text files.
    * 
@@ -33,14 +45,8 @@ namespace icemc {
    * 
    */
 
-  class Log {
+  class Logger {
   public:
-
-    enum severity {
-      info,
-      warning,
-      error
-    };
 
     /** 
      * Constructor
@@ -48,12 +54,12 @@ namespace icemc {
      * @param outputDir The directory in which all the contained logs will be written
      * @param run The current run, used for naming files
      */
-    Log(const char* outputDir = ".", int run = 0);
+    Logger(const char* outputDir = ".", int run = 0);
 
     /** 
      * Destructor, makes sure the terminal colors are reset
      */
-    virtual ~Log();
+    virtual ~Logger();
 
 
     /**
@@ -70,7 +76,7 @@ namespace icemc {
      * @param s is a streamable type
      */
     template <typename Streamable>
-    Log& operator<<(const Streamable& s){      
+    Logger& operator<<(const Streamable& s){      
       return message(s);
     }
 
@@ -83,7 +89,7 @@ namespace icemc {
      */
     typedef std::basic_ostream<char, std::char_traits<char> > CoutType;
     typedef CoutType& (*StandardEndLine)(CoutType&);
-    Log& operator<<(StandardEndLine manip){
+    Logger& operator<<(StandardEndLine manip){
       manip(getStream());
 
       if(fMustReset){	
@@ -133,7 +139,7 @@ namespace icemc {
      * 
      * @return reference to self
      */
-    Log& message(severity s);
+    Logger& message(severity s);
 
 
     /** 
@@ -144,7 +150,7 @@ namespace icemc {
      * @return reference to self
      */
     template<typename Streamable>
-    Log& message(const Streamable& s) {      
+    Logger& message(const Streamable& s) {      
       getStream() << s;
       foutput << s;
       return *this;
@@ -180,6 +186,22 @@ namespace icemc {
     bool fUseStdErr;
     bool fUseColorCodes;
   };
+
+
+  
+
+  /** 
+   * Access a global log, you should be able to call this anywhere.
+   * 
+   * @todo if icemc ever becomes fancy multi-threaded this will need to be made thread safe.
+   * 
+   * @param outputdir The output directory (for first time initalization)
+   * @param run The run (for first time initalization)
+   * 
+   * @return The log
+   */
+  Logger& Log(const char* outputdir=NULL, int run=0);
+  
 }
 
 

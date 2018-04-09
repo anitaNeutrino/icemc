@@ -694,7 +694,6 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
     MAXRAY=1;
   }
 
-
   
   getSetting("CreateHorizons file", WRITE_FILE);
   if (WRITE_FILE){

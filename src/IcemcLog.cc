@@ -1,7 +1,12 @@
 #include "IcemcLog.h"
 
+icemc::Logger& icemc::Log(const char* outputdir, int run){
+  static icemc::Logger log(outputdir, run);
+  return log;
+}
 
-icemc::Log::Log(const char* outputDir, int run)
+
+icemc::Logger::Logger(const char* outputDir, int run)
   : fOutputDir(outputDir), fRun(run), fMustReset(false), fUseStdErr(false), fUseColorCodes(true)
 {
 
@@ -9,14 +14,14 @@ icemc::Log::Log(const char* outputDir, int run)
 }
 
 
-icemc::Log::~Log(){
+icemc::Logger::~Logger(){
   std::cout << getColorReset() << std::flush;
   std::cerr << getColorReset() << std::flush;
 }
 
 
 
-void icemc::Log::openLogFiles(const char* outputDir, int run){
+void icemc::Logger::openLogFiles(const char* outputDir, int run){
 
   // Update member vars if non-default arguments passed
   if(outputDir){
@@ -70,7 +75,7 @@ void icemc::Log::openLogFiles(const char* outputDir, int run){
   
 }
 
-icemc::Log& icemc::Log::message(icemc::Log::severity s){
+icemc::Logger& icemc::Logger::message(icemc::severity s){
 
   const char* red     = fUseColorCodes ? "\x1b[31m" : "";
   const char* blue    = fUseColorCodes ? "\x1b[34m" : "";

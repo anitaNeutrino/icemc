@@ -3,15 +3,14 @@
 
 #include "anita.hh"
 #include "vector.hh"
-#include "CommandLineOpts.h"
+
 #include "Settings.h"
-#include "IcemcLog.h"
 
 #include "NeutrinoPath.h"
 #include "Constants.h"
 #include "VoltsRX.h"
+#include "CommandLineOpts.h"
 
-class TStyle;
 
 namespace icemc {
 
@@ -23,10 +22,15 @@ namespace icemc {
   class Screen;
   class Counting;
   class Spectra;
-  class Primaries;  
+  class Primaries;
 
   class EventGenerator {
   public:
+
+    enum RayDirection {
+      direct = 0,
+      downgoing = 1
+    };
 
     EventGenerator();
     virtual ~EventGenerator();
@@ -196,7 +200,7 @@ namespace icemc {
     int eventsfound_binned_distance_forerror[NBINS_DISTANCE][NBINS] = {{0}}; // for propagation of errors
 
     //taus
-    double km3sr_db = 0;
+    double km3sr_db=0;
     double km3sr_nfb=0;
     double ptau=0;
     int count_passestrigger_nfb=0;
@@ -256,6 +260,7 @@ namespace icemc {
     Vector ant_max_normal2; //Vector normal to the face of the antenna with the maximum signal for a single neutrino,  bottom layer
     double vmmhz1m_visible = 0; //Actual V/m/Mhz at 1m
     int freq_bins = Anita::NFREQ; //Because the compiler objected to using the const directly
+    
     double total_kgm2 = 0; // output of Getchord
     double nnu_array[3];
     double r_in_array[3];
@@ -279,9 +284,11 @@ namespace icemc {
     int times_crust_entered_det=0;  //Counter for total times each Earth layer is entered for detected neutrinos only
     int times_mantle_entered_det=0;
     int times_core_entered_det=0;
+
     int crust_entered=0;
     int mantle_entered=0;
     int core_entered=0;
+
     int neutrinos_passing_all_cuts=0;
     double sum_weights=0;
     //End verification plot block
@@ -466,7 +473,7 @@ namespace icemc {
     void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE);
  
     double GetAirDistance(double altitude_bn,  double beta); // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth     // set up array of viewing angles for making plots for seckel
-    void SetupViewangles(Signal *sig1);
+    void SetupViewangles(const Signal *sig1);
 
     void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
     double GetThisAirColumn(const Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta);
@@ -508,7 +515,7 @@ namespace icemc {
 
     static void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  SIGINT
 
-    void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  Log&, TString);
+    void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
 
     void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  std::string,  std::string,  double,  std::ofstream &nu_out);
 
@@ -521,11 +528,9 @@ namespace icemc {
     /** 
      * @brief Run the neutrino generation
      * 
-     * This function does the work that used to be the main in the icemc executable
+     * This function does the stuff that used to be the main in the icemc executable
      */
-    void generateNeutrinos(const Settings& settings1, const CommandLineOpts& clOpts, icemc::Log& iLog);
-
-
+    void generateNeutrinos(const Settings& settings1, const CommandLineOpts& clOpts);
 
     double thresholdsAnt[48][2][5];
     double thresholdsAntPass[48][2][5];

@@ -21,12 +21,17 @@
 
 #include "anita.hh"
 
-//! Reads in and stores input settings for the run
 namespace icemc{
+  
   class Secondaries;
   class Signal;
   class Balloon;
   class Ray;
+
+  /**
+   * @class Settings
+   * @brief Reads in and stores input settings for the run
+   */
 
   class Settings : public TObject {
 
@@ -186,6 +191,8 @@ namespace icemc{
     int USEPOSITIONWEIGHTS;// whether or not to restrict the neutrino position so it is within the horizon of the balloon
     int WRITE_FILE; //Select whether or not to write a new input file for CreateHorizons
 
+    // EventGenerator::RayDirection MINRAY;
+    // EventGenerator::RayDirection MAXRAY;
     int MINRAY;
     int MAXRAY;
 

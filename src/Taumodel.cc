@@ -53,29 +53,29 @@ using std::partial_sum;
 using std::max;
 
 icemc::Taumodel::Taumodel() {
-	/**For Total Tau Survival probability equation
-	//n.b. not in SI units.
-	////from Tau neutrino propagaiton and tau energy loss 2005 Dutta, Huang, & Reno. 
-	//Equation 16  &  used in Equation 30. 
-	*/
+  /**For Total Tau Survival probability equation
+   //n.b. not in SI units.
+   ////from Tau neutrino propagaiton and tau energy loss 2005 Dutta, Huang, & Reno. 
+   //Equation 16  &  used in Equation 30. 
+   */
 
-  //////////////////////|Units////|Description////////////////////////
-  B0=1.2*pow(10.,-7); ///| m^2/kg  |
-	B1=0.16*pow(10.,-7);///| m^2/kg  | }parameterization using a logarithmic dependence on energy for B,
-	E0=pow(10.,19);     ///| eV      | the tau elecromagnetic energy loss parameter.
-	mT=1.777E9;	   ///| eV      |Mass of Tau
-	cT=0.00008693; 	   ///| m       |Tau Decay length (86.93 microMeters)
-	                   ///|         |
-	Mn=1.672622E-24;   ///| g       |nucleon/ proton mass in grams,also equal to 0.938 GeV. 
-	A=1.;              ///| none    |constant that sets the total probability to unity
+  //////////////////////////|Units////|Description////////////////////////
+  B0 = 1.2*pow(10.,-7);  ///| m^2/kg  |
+  B1 = 0.16*pow(10.,-7); ///| m^2/kg  | }parameterization using a logarithmic dependence on energy for B,
+  E0 = pow(10.,19);      ///| eV      | the tau elecromagnetic energy loss parameter.
+  mT = 1.777E9;          ///| eV      |Mass of Tau
+  cT = 0.00008693;       ///| m       |Tau Decay length (86.93 microMeters)
+                         ///|         |
+  Mn = 1.672622E-24;     ///| g       |nucleon/ proton mass in grams,also equal to 0.938 GeV. 
+  A = 1.;                ///| none    |constant that sets the total probability to unity
 		
-	///these last two constants from Connolly Calc 2011, used in d_dzPsurvNu().
-	mydensityvector.clear();
-	myavgdensityvector.clear();
-	myenergyvector.clear();
-	myPsurvvector.clear();
-	etaufarray.clear();
-	PDFarray.clear();
+  /// these last two constants from Connolly Calc 2011, used in d_dzPsurvNu().
+  mydensityvector.clear();
+  myavgdensityvector.clear();
+  myenergyvector.clear();
+  myPsurvvector.clear();
+  etaufarray.clear();
+  PDFarray.clear();
 	
 }//
 

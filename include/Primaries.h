@@ -116,22 +116,22 @@ namespace icemc {
     double Getyweight(double pnu,double y,int nu_nubar,int currentint);///< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
 
 
-    double A_low[4];///< Table V of Connolly et al. for use in Eq. 16.  Same for any nu_nubar and current type.
-    double A0_high[2][2];///< Table V of Connolly et al. for use in Eq. 16.  
-    double A1_high[2][2];///< Table V of Connolly et al. for use in Eq. 16.  
-    double A2_high[2][2];///< Table V of Connolly et al. for use in Eq. 16.  
-    double A3_high[2][2];///< Table V of Connolly et al. for use in Eq. 16.  
-    double b0; ///<  Eq. 17 of Connolly et al.
-    double b1; ///<  Eq. 17 of Connolly et al.
+    double A_low[4];      ///< Table V of Connolly et al. for use in Eq. 16.  Same for any nu_nubar and current type.
+    double A0_high[2][2]; ///< Table V of Connolly et al. for use in Eq. 16.  
+    double A1_high[2][2]; ///< Table V of Connolly et al. for use in Eq. 16.  
+    double A2_high[2][2]; ///< Table V of Connolly et al. for use in Eq. 16.  
+    double A3_high[2][2]; ///< Table V of Connolly et al. for use in Eq. 16.  
+    double b0;            ///<  Eq. 17 of Connolly et al.
+    double b1;            ///<  Eq. 17 of Connolly et al.
     
     TF1* m_fy[2][2];
     TF1* m_fsigma[2][2];
     
-    double c0[2][2];///< Table V of Connolly et al. for Eq. 7
-    double c1[2][2];///< Table V of Connolly et al. for Eq. 7
-    double c2[2][2];///< Table V of Connolly et al. for Eq. 7
-    double c3[2][2];///< Table V of Connolly et al. for Eq. 7
-    double c4[2][2];///< Table V of Connolly et al. for Eq. 7
+    double c0[2][2];      ///< Table V of Connolly et al. for Eq. 7
+    double c1[2][2];      ///< Table V of Connolly et al. for Eq. 7
+    double c2[2][2];      ///< Table V of Connolly et al. for Eq. 7
+    double c3[2][2];      ///< Table V of Connolly et al. for Eq. 7
+    double c4[2][2];      ///< Table V of Connolly et al. for Eq. 7
     
     static constexpr int NSIGMAS=2;///< number of possible cross section models
     ///< 0=Gandhi et al.
@@ -199,24 +199,24 @@ namespace icemc {
     
     double pathlength_inice;
     
-    Vector nnu;			///< direction of neutrino (+z in south pole direction)
-    double costheta_nutraject;	///< theta of nnu with earth center to balloon as z axis 
-    double phi_nutraject;	///< phi of nnu with earth center to balloon as z axis
+    Vector nnu;                 ///< direction of neutrino (+z in south pole direction)
+    double costheta_nutraject;  ///< theta of nnu with earth center to balloon as z axis 
+    double phi_nutraject;       ///< phi of nnu with earth center to balloon as z axis
 
-    double weight_nu;		///< Weight for neutrino that survives to posnu
-    double weight_nu_prob;	///< Weight for neutrino that survives to posnu and interacts in the ice
+    double weight_nu;           ///< Weight for neutrino that survives to posnu
+    double weight_nu_prob;      ///< Weight for neutrino that survives to posnu and interacts in the ice
     
-    Position r_in;		///< position where neutrino enters the earth
-    Position r_enterice;	///< position where neutrino enters the ice
-    Position nuexit;		///< place where neutrino would have left the earth
-    Position nuexitice;		///< place where neutrino would have left the ice
-    double chord;		///< chord in m from earth entrance to rock-ice boundary
-    double logchord;		///< log_10 of chord length earth entrance to where it enters ice
-    double weight_bestcase;	///< what weight1 would be if whole earth had density of crust - for quick and dirty calculation of best case scenario
-    double chord_kgm2_bestcase;	///< the chord the neutrino would traverse if it all was crust density
-    double chord_kgm2_ice;	///< from ice entrance to interaction point
-    double d1;			///< same as chord in m (earth entrance to rock-ice boundary)
-    double d2;			///< ice-rock boundary to interaction point in m
+    Position r_in;              ///< position where neutrino enters the earth
+    Position r_enterice;        ///< position where neutrino enters the ice
+    Position nuexit;            ///< place where neutrino would have left the earth
+    Position nuexitice;         ///< place where neutrino would have left the ice
+    double chord;               ///< chord in m from earth entrance to rock-ice boundary
+    double logchord;            ///< log_10 of chord length earth entrance to where it enters ice
+    double weight_bestcase;     ///< what weight1 would be if whole earth had density of crust - for quick and dirty calculation of best case scenario
+    double chord_kgm2_bestcase; ///< the chord the neutrino would traverse if it all was crust density
+    double chord_kgm2_ice;      ///< from ice entrance to interaction point
+    double d1;                  ///< same as chord in m (earth entrance to rock-ice boundary)
+    double d2;                  ///< ice-rock boundary to interaction point in m
     
     
     static constexpr double pnu_banana=2.00E19;

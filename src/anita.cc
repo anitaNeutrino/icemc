@@ -121,7 +121,6 @@ icemc::Anita::Anita() {
   pol_required[0]=1;// which polarisations are required to have channels that fire (V,H)
   pol_required[1]=0;// which polarisations are required to have channels that fire (V,H)
     
-    
   bwslice_center[0]=265.e6;
   bwslice_center[1]=435.e6;
   bwslice_center[2]=650.e6;
@@ -156,13 +155,10 @@ icemc::Anita::Anita() {
   coherent_waveform_sum_tree->Branch("threshold", &cwst_threshold);
   coherent_waveform_sum_tree->Branch("window_start", &cwst_window_start);
   coherent_waveform_sum_tree->Branch("window_end", &cwst_window_end);
-    
   coherent_waveform_sum_tree->Branch("deg_theta", &cwst_deg_theta);
   coherent_waveform_sum_tree->Branch("deg_phi", &cwst_deg_phi);
-    
   coherent_waveform_sum_tree->Branch("actual_deg_theta", &cwst_actual_deg_theta);
   coherent_waveform_sum_tree->Branch("actual_deg_phi", &cwst_actual_deg_phi);
-    
   coherent_waveform_sum_tree->Branch("timesteps", cwst_timesteps);
     
   for (unsigned i = 0; i < 48; ++i) {
@@ -214,7 +210,7 @@ int icemc::Anita::Match(int ilayer,int ifold,int rx_minarrivaltime) {
   }
   else{
     return 0;
-  }    
+  }
 }
 int icemc::Anita::GetRx(int ilayer, int ifold) { // get antenna number based on which layer and position it is
     
@@ -263,15 +259,12 @@ void icemc::Anita::SetNoise(const Settings *settings1,Balloon *bn1,IceModel *ant
 	bwslice_vnoise[il][ibw]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,antarctica->SurfaceAboveGeoid(bn1->latitude,bn1->longitude),THETA_ZENITH[il],bwslice_max[ibw]-bwslice_min[ibw],0.);
       }
     }
-  }
-    
-    
-    
+  }    
 }
+
+
 void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int thisInu, TString outputdir)
 {
-    
-    
   tuffIndex=0; // keith edits
   count_getnoisewaveforms=0;
   rms_lab[0]=rms_lab[1]=0.;
@@ -361,8 +354,8 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
 
   if (settings1->PULSER==1) {
     getPulserData();
-  } 
-    
+  }
+
   // for antenna gains
   reference_angle[0]=0.;
   reference_angle[1]=5.;
@@ -371,7 +364,6 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
   reference_angle[4]=30.;
   reference_angle[5]=45.;
   reference_angle[6]=90.; // reference angles for finding gains of antennas
-
   
   THERMALNOISE_FACTOR=settings1->THERMALNOISE_FACTOR;
   for (int j=0;j<settings1->NLAYERS;j++) {
@@ -409,10 +401,9 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
   fsignals=new TFile(stemp.c_str(),"RECREATE");
   tsignals=new TTree("tsignals","tsignals");
     
-  stemp=string(outputdir.Data())+"/data.root";
-  fdata=new TFile(stemp.c_str(),"RECREATE");
-  tdata=new TTree("tdata","tdata");
-    
+  stemp = string(outputdir.Data())+"/data.root";
+  fdata = new TFile(stemp.c_str(),"RECREATE");
+  tdata = new TTree("tdata","tdata");    
     
   tsignals->Branch("signal_vpol_inanita",&signal_vpol_inanita,"signal_vpol_inanita[5][512]/D");
   tsignals->Branch("timedomainnoise_rfcm_banding",&timedomainnoise_rfcm_banding,"timedomainnoise_rfcm_banding[2][5][512]/D");
@@ -421,8 +412,7 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
   tsignals->Branch("total_diodeinput_2_inanita",&total_diodeinput_2_inanita,"total_diodeinput_2_inanita[5][512]/D"); // this is the waveform that is input to the tunnel diode in the first (RCP or horizontal) polarization
   tsignals->Branch("timedomain_output_corrected_forplotting",&timedomain_output_corrected_forplotting,"timedomain_output_1_corrected_forplotting[2][6][512]/D"); 
   tsignals->Branch("timedomain_output_inanita",&timedomain_output_inanita,"timedomain_output_inanita[2][5][512]/D");
-    
-    
+
   tsignals->Branch("peak_rx_rfcm_lab",&peak_rx_rfcm_lab,"peak_rx_rfcm_lab[2]/D");
   tsignals->Branch("inu",&inu,"inu/I");
   tsignals->Branch("dangle",&dangle_inanita,"dangle/D");
@@ -449,7 +439,7 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
   tsignals->Branch("flag_h_inanita",&flag_h_inanita,"flag_h_inanita[5][512]/I");
     
     
-  tdata=new TTree("tdata","tdata");
+  tdata = new TTree("tdata","tdata");
   tdata->Branch("total_diodeinput_1_allantennas",&total_diodeinput_1_allantennas,"total_diodeinput_1_allantennas[48][512]/D"); // this is the waveform that is input to the tunnel diode in the first (LCP or vertical) polarization
   tdata->Branch("total_diodeinput_2_allantennas",&total_diodeinput_2_allantennas,"total_diodeinput_2_allantennas[48][512]/D"); // this is the waveform that is input to the tunnel diode in the first (LCP or vertical) polarization
   tdata->Branch("timedomain_output_allantennas",&timedomain_output_allantennas,"timedomain_output_allantennas[2][48][512]/D"); // this is the waveform that is output to the tunnel diode in the first (LCP or vertical) polarization
@@ -489,7 +479,7 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
   tgaryanderic->Branch("time",&time_trig,"time_trig[512]/D");
 
 
-  tglob=new TTree("tglob","tglob");
+  tglob = new TTree("tglob","tglob");
   tglob->Branch("inu",&inu,"inu/I");
   tglob->Branch("passglobtrig",&passglobtrig,"passglobtrig[2]/I");
   tglob->Branch("l1_passing_allantennas",&l1_passing_allantennas,"l1_passing_allantennas[48]/I");
@@ -519,13 +509,12 @@ void icemc::Anita::initializeFixedPowerThresholds(ofstream &foutput){
     powerthreshold_nadir[2]=-5.1; // high band
     powerthreshold_nadir[3]=-1.; // not used for Anita 2
     powerthreshold_nadir[4]=-6.7; // full band - use this threshold when other bands are used
-		
-		
-    foutput << "Thresholds are (in p/<p>):  " <<
-      powerthreshold[0] << " (L)\t" <<
-      powerthreshold[1] << " (M)\t" <<
-      powerthreshold[2] << " (H)\t" <<
-      powerthreshold[4] << " (F)\n";
+
+    foutput << "Thresholds are (in p/<p>):  "
+	    << powerthreshold[0] << " (L)\t"
+	    << powerthreshold[1] << " (M)\t"
+	    << powerthreshold[2] << " (H)\t"
+	    << powerthreshold[4] << " (F)\n";
   }
   else if (BANDING==0 || BANDING==1) { // anita 1 or set your own
 		
@@ -535,35 +524,35 @@ void icemc::Anita::initializeFixedPowerThresholds(ofstream &foutput){
     powerthreshold[3]=-2.56;
     powerthreshold[4]=-3.;
 		
-    foutput << "Thresholds are (in p/<p>):  " <<
-      powerthreshold[0] << " (L)\t" <<
-      powerthreshold[1] << " (M1)\t" <<
-      powerthreshold[2] << " (M2)\t" <<
-      powerthreshold[3] << " (H)\t" <<
-      powerthreshold[4] << " \n";
+    foutput << "Thresholds are (in p/<p>):  "
+	    << powerthreshold[0] << " (L)\t"
+	    << powerthreshold[1] << " (M1)\t"
+	    << powerthreshold[2] << " (M2)\t"
+	    << powerthreshold[3] << " (H)\t"
+	    << powerthreshold[4] << " \n";
 		
   } else if (BANDING==4 || BANDING==5){ // anita-3
-    powerthreshold[0]=-1; // not used 
-    powerthreshold[1]=-1; // not used 
-    powerthreshold[2]=-1; // not used 
+    powerthreshold[0]=-1; // not used
+    powerthreshold[1]=-1; // not used
+    powerthreshold[2]=-1; // not used
     powerthreshold[3]=-1; // not used
     powerthreshold[4]=-5.40247; // Average Anita-3 scaler is 450kHz, which corresponds to this threshold as seen in
     // p. 9 of Ryan's talk at the Anita meeting 19th Feb 2008
 		
-    foutput << "Thresholds are (in p/<p>):  " <<
-      powerthreshold[0] << " (L)\t" <<
-      powerthreshold[1] << " (M1)\t" <<
-      powerthreshold[2] << " (M2)\t" <<
-      powerthreshold[3] << " (H)\t" <<
-      powerthreshold[4] << " \n";
-      
+    foutput << "Thresholds are (in p/<p>):  "
+	    << powerthreshold[0] << " (L)\t"
+	    << powerthreshold[1] << " (M1)\t"
+	    << powerthreshold[2] << " (M2)\t"
+	    << powerthreshold[3] << " (H)\t"
+	    << powerthreshold[4] << " \n";
   }
 }
+
 
 void icemc::Anita::readVariableThresholds(const Settings *settings1){
 
   if (settings1->WHICH==8) { // ANITA-2
-    fturf=new TFile((ICEMC_DATA_DIR+"/turfrate_icemc.root").c_str());
+    fturf = new TFile((ICEMC_DATA_DIR+"/turfrate_icemc.root").c_str());
     turfratechain=(TTree*)fturf->Get("turfrate_icemc");
     turfratechain->SetMakeClass(1);
     turfratechain->SetBranchAddress("phiTrigMask",&phiTrigMask);
@@ -575,7 +564,8 @@ void icemc::Anita::readVariableThresholds(const Settings *settings1){
     realTime_tr_max=realTime_turfrate; // realTime of last event in file
 
     
-  }else if (settings1->WHICH==9 || settings1->WHICH==10){ // ANITA-3 and 4
+  }
+  else if (settings1->WHICH==9 || settings1->WHICH==10){ // ANITA-3 and 4
     
     string turfFile="";
     string surfFile="";
@@ -632,8 +622,8 @@ void icemc::Anita::readAmplification(){
   // get rfcm amplification data
   // read from tree with amplification data
   // this tree contains a different event for each antenna and polarization
-  TFile *f2=new TFile((ICEMC_DATA_DIR+"/gains.root").c_str());
-  TTree *tgain=(TTree*)f2->Get("tree1");
+  TFile* f2 = new TFile((ICEMC_DATA_DIR+"/gains.root").c_str());
+  TTree* tgain = (TTree*)f2->Get("tree1");
     
   float freq_ampl_eachantenna[NPOINTS_AMPL];
   float ampl_eachantenna[NPOINTS_AMPL];
@@ -646,14 +636,14 @@ void icemc::Anita::readAmplification(){
   for (int iant=0;iant<48;iant++) {
     tgain->GetEvent(iant);
     for (int j=0;j<NPOINTS_AMPL;j++) {
-	
+
       freq_ampl[iant][j]=(double)freq_ampl_eachantenna[j];
-	
+
       ampl[iant][j]=(double)ampl_eachantenna[j];
-	
+
       ampl[iant][j]+=32.; // add 32 dB to correct for attenuation that was used during the test
       ampl_notdb[iant][j]=pow(10.,ampl[iant][j]/10.); // convert to regular fraction
-	
+
       noisetemp[iant][j]=(double)noisetemp_eachantenna[j]; // so far we don't use this for anything
     }
   }
@@ -661,6 +651,14 @@ void icemc::Anita::readAmplification(){
 }
 
 
+void icemc::Anita::saveGainsPlot(const std::string& fileName){
+  TCanvas* cgains = new TCanvas("cgains", "cgains", 880, 800);
+  TGraph* ggains = new TGraph(this->NPOINTS_GAIN, this->frequency_forgain_measured, this->vvGaintoHeight);
+  ggains->Draw("al");
+  cgains->Print(fileName.c_str());
+  delete ggains;
+  delete cgains;
+}
 
 
 void icemc::Anita::getDiodeDataAndAttenuation(const Settings *settings1, TString outputdir){
@@ -686,15 +684,18 @@ void icemc::Anita::getDiodeDataAndAttenuation(const Settings *settings1, TString
     
     
   string sbands;
-  if (BANDING==0)
+  if (BANDING==0){
     sbands=ICEMC_DATA_DIR+"/bands_anita1.root";
-  else if (BANDING==1)   
+  }
+  else if (BANDING==1){
     sbands=ICEMC_DATA_DIR+"/bands_nobanding.root";
-  else if (BANDING==2)
+  }
+  else if (BANDING==2){
     sbands=ICEMC_DATA_DIR+"/bands_anita2.root";
-  else if (BANDING==4 || BANDING==5) // Linda 
+  }
+  else if (BANDING==4 || BANDING==5){ // Linda 
     sbands=ICEMC_DATA_DIR+"/bands_anita2.root";
-    
+  }
   TFile *fbands=new TFile(sbands.c_str());
   TTree *tbands=(TTree*)fbands->Get("bandstree");
     

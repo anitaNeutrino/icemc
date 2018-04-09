@@ -59,12 +59,12 @@ namespace icemc {
     static const int NLAYERS_MAX=5;                                                                                ///< max number of layers (in smex design, it's 4)
     static const int NTRIGGERLAYERS_MAX=3;
     static const int NPHI_MAX=400;                                                                                 ///< max number of antennas around in phi (in smex, 16)
-    Vector ANTENNA_POSITION_START[2][NLAYERS_MAX][NPHI_MAX];                                                          ///< antenna positions from Kurt's measurements
+    Vector ANTENNA_POSITION_START[NPOL][NLAYERS_MAX][NPHI_MAX];                                                          ///< antenna positions from Kurt's measurements
     double ANTENNA_DOWN[NLAYERS_MAX][NPHI_MAX];                                                                    ///< down angles of antennas from Kurt's measurements
     double SIMON_DELTA_R[NLAYERS_MAX][NPHI_MAX];                                                                   ///< measurements by Simon used in analysis ANITA-2
     double SIMON_DELTA_PHI[NLAYERS_MAX][NPHI_MAX];                                                                 ///< measurements by Simon used in analysis ANITA-2
 
-    Vector antenna_positions[2][NLAYERS_MAX * NPHI_MAX];                                                              ///< these are the antenna positions in space in a coordinate system where x=north and y=west and the origin is at the center of the payload
+    Vector antenna_positions[NPOL][NLAYERS_MAX * NPHI_MAX];                                                              ///< these are the antenna positions in space in a coordinate system where x=north and y=west and the origin is at the center of the payload
 
     int NRX_PHI[NLAYERS_MAX];                                                                                      ///< number of antennas around in each layer. (radians)
     double PHI_EACHLAYER[NLAYERS_MAX][NPHI_MAX];                                                                   ///< phi of the center of each antenna on each layer
@@ -85,7 +85,7 @@ namespace icemc {
     double LAYER_HPOSITION[Anita::NLAYERS_MAX];                                                                   ///< distance in horizontal plane between center axis of the "payload" and each "layer".
     double LAYER_PHIPOSITION[Anita::NLAYERS_MAX];                                                                 ///< phi corresponding to the position of each "layer" on the "payload"
     double RRX[Anita::NLAYERS_MAX];                                                                               ///< radius that the antenna sits from the axis of the payload (feedpoint)
-    Double_t deltaTPhaseCentre[2][NLAYERS_MAX][NPHI_MAX];                                                         ///< Relative to photogrammetry + ring offset
+    Double_t deltaTPhaseCentre[NPOL][NLAYERS_MAX][NPHI_MAX];                                                         ///< Relative to photogrammetry + ring offset
 
     double THERMALNOISE_FACTOR;                                                                                   ///< factor to multiply thermal noise for error analysis
 
@@ -111,6 +111,8 @@ namespace icemc {
     void labAttn(double *vhz);
     void SetNoise(const Settings *settings1,Balloon *bn1,IceModel *antarctica);
     void calculate_antenna_positions(const Settings *settings1,double pitch, double roll, double phi_spin,Vector n_north,Vector n_east);// this calculates the above
+
+    void saveGainsPlot(const std::string& fileName);
 
     TFile *fnoise;
     TTree *tdiode;
@@ -147,21 +149,21 @@ namespace icemc {
     unsigned int realTime_surf;                                                                        ///< realtime from the surf file
     unsigned int realTime_surf_min;                                                                    ///< min realtime from the surf file
     unsigned int realTime_surf_max;                                                                    ///< max realtime from the surf file
-    UShort_t thresholds[2][48];                                                                        ///< thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
-    UShort_t scalers[2][48];                                                                           ///< scalers as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
-    Double_t fakeThresholds[2][48];                                                                    ///< Fake thresholds (coming from converting fake scalers to thresholds)
-    Double_t fakeThresholds2[2][48];                                                                   ///< Fake thresholds 2 (coming from converting flight scalers to thresholds)
-    Double_t fakeScalers[2][48];                                                                       ///< Fake scalers (coming from converting threhsolds during flight to scalers using threshold scan)
+    UShort_t thresholds[NPOL][48];                                                                        ///< thresholds as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
+    UShort_t scalers[NPOL][48];                                                                           ///< scalers as read from the surf file: first index is pol, second is antenna number (only working for Anita3)
+    Double_t fakeThresholds[NPOL][48];                                                                    ///< Fake thresholds (coming from converting fake scalers to thresholds)
+    Double_t fakeThresholds2[NPOL][48];                                                                   ///< Fake thresholds 2 (coming from converting flight scalers to thresholds)
+    Double_t fakeScalers[NPOL][48];                                                                       ///< Fake scalers (coming from converting threhsolds during flight to scalers using threshold scan)
 
     int iturf;// for indexing
     int isurf;
     int iturfevent;
 
     static const int npointThresh = 1640;
-    Float_t threshScanThresh[2][48][npointThresh];                                                     ///< adc thresholds from threshold scan
-    Float_t threshScanScaler[2][48][npointThresh];                                                     ///< scalers from threshold scan
-    Float_t minadcthresh[2][48];
-    Float_t maxadcthresh[2][48];
+    Float_t threshScanThresh[NPOL][48][npointThresh];                                                     ///< adc thresholds from threshold scan
+    Float_t threshScanScaler[NPOL][48][npointThresh];                                                     ///< scalers from threshold scan
+    Float_t minadcthresh[NPOL][48];
+    Float_t maxadcthresh[NPOL][48];
 
     void setphiTrigMaskAnita3(UInt_t realTime_flightdata);
     void setphiTrigMask(UInt_t realTime_flightdata);
@@ -174,7 +176,7 @@ namespace icemc {
     double total_diodeinput_2_allantennas[48][HALFNFOUR];                                              ///< needs comment
 
     // these are just for the antenna that receives the signal first
-    double timedomain_output_inanita[2][5][HALFNFOUR];                                                 ///< this is just for writing out to the following tree
+    double timedomain_output_inanita[NPOL][5][HALFNFOUR];                                                 ///< this is just for writing out to the following tree
 
     double time_trig[HALFNFOUR];
     double weight_inanita; // weight of the event
@@ -188,7 +190,7 @@ namespace icemc {
     int arrayofhits_forgaryanderic[3][16][2][HALFNFOUR];
     //std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhits_inanita;
 
-    int l1trig_anita3and4_inanita[2][16][HALFNFOUR];
+    int l1trig_anita3and4_inanita[NPOL][16][HALFNFOUR];
 
 
 
@@ -301,7 +303,7 @@ namespace icemc {
 
     // for filling tglob
     // for each polarization
-    int passglobtrig[2];
+    int passglobtrig[NPOL];
     double integral_vmmhz_foranita;
 
 
@@ -527,8 +529,8 @@ namespace icemc {
     double bwslice_thresholds[5]; // thresholds for each band -- this is just an initialization- this is set in the input file
     int bwslice_allowed[5]; // these bands are allowed to contribute to the trigger sum -- this is set in the input file
     int bwslice_required[5]; // these bands are required to be among the channels that pass -- this is set in the input file
-    int pol_allowed[2];// which polarisations are allowed to have channels that fire (V,H)
-    int pol_required[2];// which polarisations are required to have channels that fire (V,H)
+    int pol_allowed[NPOL];// which polarisations are allowed to have channels that fire (V,H)
+    int pol_required[NPOL];// which polarisations are required to have channels that fire (V,H)
 
 
 
@@ -587,11 +589,11 @@ namespace icemc {
 
     double SIGMA_THETA; // resolution on the polar angle of the signal
 
-    double extraCableDelays[2][48];
+    double extraCableDelays[NPOL][48];
     TRandom3 *fRand;
 #ifdef ANITA_UTIL_EXISTS
-    RFSignal *fSignalChainResponseDigitizerTuffs[2][3][16][6]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM------- 0:configA, 1:configB, 2:configC, 3:configG, 4:configO, 5:configP
-    RFSignal *fSignalChainResponseTriggerTuffs[2][3][16][6];  // same as for DigitizerTuffs
+    RFSignal *fSignalChainResponseDigitizerTuffs[NPOL][3][16][6]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM------- 0:configA, 1:configB, 2:configC, 3:configG, 4:configO, 5:configP
+    RFSignal *fSignalChainResponseTriggerTuffs[NPOL][3][16][6];  // same as for DigitizerTuffs
     void readImpulseResponseDigitizer(const Settings *settings1);
     void readImpulseResponseTrigger(const Settings *settings1);
     void readTuffResponseDigitizer(const Settings *settings1);
@@ -599,12 +601,12 @@ namespace icemc {
     void readTriggerEfficiencyScanPulser(const Settings *settings1);
     void readNoiseFromFlight(const Settings *settings1);
     void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int tuffIndex);
-    TGraph *RayleighFits[2][48];
+    TGraph *RayleighFits[NPOL][48];
     Int_t numFreqs;
     Double_t *freqs;
     TGraph *gPulseAtAmpa;
-    RFSignal *fSignalChainResponseDigitizer[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
-    RFSignal *fSignalChainResponseTrigger[2][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
+    RFSignal *fSignalChainResponseDigitizer[NPOL][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
+    RFSignal *fSignalChainResponseTrigger[NPOL][3][16]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM
 #endif
     void calculateDelaysForEfficiencyScan();
 
@@ -613,11 +615,11 @@ namespace icemc {
 
   
     Double_t fTimes[HALFNFOUR];
-    Double_t fSignalChainResponseA3DigitizerFreqDomain[2][3][16][400];
-    Double_t fSignalChainResponseDigitizerFreqDomain[2][3][16][6][400];
-    Double_t fSignalChainResponseTriggerFreqDomain[2][3][16][6][400];
-    Double_t fRatioTriggerToA3DigitizerFreqDomain[2][3][16][6][400];
-    Double_t fRatioDigitizerToA3DigitizerFreqDomain[2][3][16][6][400];
+    Double_t fSignalChainResponseA3DigitizerFreqDomain[NPOL][3][16][400];
+    Double_t fSignalChainResponseDigitizerFreqDomain[NPOL][3][16][6][400];
+    Double_t fSignalChainResponseTriggerFreqDomain[NPOL][3][16][6][400];
+    Double_t fRatioTriggerToA3DigitizerFreqDomain[NPOL][3][16][6][400];
+    Double_t fRatioDigitizerToA3DigitizerFreqDomain[NPOL][3][16][6][400];
     Double_t deltaT;
 
     // Trigger efficiency scan parameters

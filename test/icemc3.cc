@@ -1,6 +1,6 @@
-#include "EventGenerator.h"
+#include "Settings.h"
 #include "CommandLineOpts.h"
-#include "IcemcLog.h"
+#include "EventGenerator.h"
 
 int main(int argc,  char **argv) {
 
@@ -11,13 +11,12 @@ int main(int argc,  char **argv) {
   //
   //--------------------------------------------------------------
 
-  icemc::Log iLog;
   icemc::Settings settings;
-  icemc::CommandLineOpts clOpts(argc, argv, settings, iLog);
+  icemc::CommandLineOpts clOpts(argc, argv, settings);
 
   if(clOpts.are_good){
     icemc::EventGenerator uhen;
-    uhen.generateNeutrinos(settings, clOpts, iLog);
+    uhen.generateNeutrinos(settings, clOpts);
   }
   
   return 0;
