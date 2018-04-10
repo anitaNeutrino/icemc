@@ -2702,7 +2702,12 @@ int main(int argc,  char **argv) {
         panel1->AddDelay( 0. );
         panel1->AddImpactPt(ray1->rfexit[2]);
         panel1->AddViewangle(viewangle);
-        panel1->AddIncidenceAngle(ray1->nsurf_rfexit.Angle(ray1->nrf_iceside[3]));
+        if(settings1->FIRN){
+          panel1->AddIncidenceAngle(ray1->nsurf_rfexit.Angle(ray1->nrf_iceside[3]));
+        }
+        else{
+          panel1->AddIncidenceAngle(ray1->nsurf_rfexit.Angle(ray1->nrf_iceside[4]));
+        }
         panel1->AddTransmissionAngle(ray1->nsurf_rfexit.Angle(ray1->n_exit2bn[2]));
         panel1->AddWeight( 1. );
         panel1->SetWeightNorm( 1. );
