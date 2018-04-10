@@ -21,6 +21,9 @@
 
 #include "anita.hh"
 
+
+class TNamed;
+
 namespace icemc{
   
   class Secondaries;
@@ -259,6 +262,8 @@ namespace icemc{
     
     //  TString outputdir; // directory where outputs go
 
+    TNamed* makeRootSaveableSettings() const;
+
     ClassDef(Settings,1);
   
   private:
@@ -278,6 +283,7 @@ namespace icemc{
     void parseValueArray(const char* valueString, std::vector<double>& values) const;
     void parseSettingsFile(const char* fileName, std::ofstream& outputFile);
     void processStrings(const std::string& raw, std::vector<std::string>& processed) const;
+    void processLine(const std::string& thisLine, std::ofstream& outputFile, const char* fileName, int lineNum);
 
     std::vector<double> efficiencyScanOffAxisAttenuations;
     std::vector<double> efficiencyScanPhiSectorDelay;
@@ -294,7 +300,8 @@ namespace icemc{
     std::vector<int> channelRequirePol;
     std::vector<int> channelAllowedPol;
 
-    
+    TString wholeSettingsFile;
+
   };
 }
 #endif

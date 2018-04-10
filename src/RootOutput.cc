@@ -95,6 +95,10 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   TString fileName = fOutputDir + TString::Format("/icefinal%d.root", fRun);
   fIceFinal = new TFile(fileName, "RECREATE", "ice");
 
+  TNamed* ss = settings2->makeRootSaveableSettings();
+  ss->Write();
+  delete ss;
+  ss = NULL;
 
   // histograms
   initHist(&ref_int_coord, "ref_int_coord", "", 600, -3000, 3000, 500, -2500, 2500);

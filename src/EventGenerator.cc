@@ -107,7 +107,7 @@ void icemc::EventGenerator::IntegrateBands(Anita *anita1, int k, Screen *panel1,
     // if this frequency is in this bandwidth slice
     for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
       if (anita1->bwslice_min[j]<=freq[k] && anita1->bwslice_max[j]>freq[k])
-        sumsignal[j]+=panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)*(freq[k+1]-freq[k])*scalefactor;
+        sumsignal[j] += panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)*(freq[k+1]-freq[k])*scalefactor;
     }
   }
 }

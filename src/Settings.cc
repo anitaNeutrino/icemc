@@ -1,4 +1,5 @@
 #include "TF1.h"
+#include "TFile.h"
 #include <array>
 #include "position.hh"
 #include "Constants.h"
@@ -22,7 +23,6 @@
 #include "TString.h"
 #include "TRegexp.h"
 #include "TObjString.h"
-
 
 
 // Prettify warnings because, why not?
@@ -67,87 +67,133 @@ icemc::Settings::~Settings() {
  */
 void icemc::Settings::parseSettingsFile(const char* fileName, std::ofstream& outputFile) {
 
-  std::ifstream settingsFile(fileName);
 
-  // Print error message if I can't read the file
-  if(!settingsFile.is_open()){
-    std::cerr << "Error in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET
-	      << ", could not open file " << ANSI_COLOR_RED << fileName << ANSI_COLOR_RESET << std::endl;
-    exit(1);
-  }
-  else{
+  time_t rawtime;
+  struct tm * timeinfo;
+  time (&rawtime);
+  timeinfo = localtime (&rawtime);
+  outputFile << "Current date and time are: " << asctime(timeinfo) << std::endl;
 
-    time_t rawtime;
-    struct tm * timeinfo;
-    time (&rawtime);
-    timeinfo = localtime (&rawtime);
-    outputFile << "Current date and time are: " << asctime(timeinfo) << std::endl;
+  int lineNum = 1;
+  wholeSettingsFile = "";
 
+  TString fileName2(fileName);
+  TObjArray* tkns = NULL;
 
-    int lineNum = 1;
+  if(fileName2.Contains(".root")){
+    TFile* f = TFile::Open(fileName);
+    TNamed* n = (TNamed*) f->Get("Settings");
 
-    // Read every line in the file...
-    while(!settingsFile.eof()){
+    if(n){
+      TString oldSettings = n->GetTitle();
+      tkns = oldSettings.Tokenize("\n");
 
-      std::string thisLine;
-      std::getline(settingsFile, thisLine);
-
-      // Copy to output file
-      outputFile << thisLine << std::endl;
-
-      // First cut out the comment, which is all characters after the first #, including the #
-      std::size_t found = thisLine.find("#");
-
-
-      // Here we switch to TString because of its lovely tokenization methods
-      TString thisLineCommentsRemoved(thisLine.substr(0, found));
-
-      // Now have a TObjArray of TObjStrings split by out delimeter :
-      TObjArray* tokens = thisLineCommentsRemoved.Tokenize(":");
-
-      int nTokens = tokens->GetEntries();
-
-      // If there are two tokens, then there was one delimeter
-      if(nTokens == 2){
-
-	TString key = ((TObjString*) tokens->At(0))->GetString();
-	TString value = ((TObjString*) tokens->At(1))->GetString();
-
-	Bool_t addVariable = newKvpPassesSanityChecks(key, value, fileName, lineNum);
-
-	if(addVariable){
-	  keyValuePairStrings[key.Data()] = value.Data();
-	}
-
+      for(int i=0; i < tkns->GetEntries(); i++){
+	TObjString* tkn = (TObjString*) tkns->At(i);
+	std::string thisLine(tkn->String().Data());
+	processLine(thisLine, outputFile, fileName, lineNum);
+	lineNum++;
       }
-      else{
+    }
 
-	TRegexp reggie("[a-zA-Z0-9]");
-	Ssiz_t len = thisLineCommentsRemoved.Length();
-
-	Bool_t isAlphaNumeric = reggie.Index(thisLineCommentsRemoved, &len) != -1;
-
-	if(nTokens > 2 || isAlphaNumeric){
-	  // complain if there are more than two tokens, i.e. more that one colon.
-	  // complain if there are non whitespace characters but no colon.
-	  std::cerr << "Warning in " ANSI_COLOR_RED << __FILE__ << ANSI_COLOR_RESET
-		    << ". I couldn't parse line " << ANSI_COLOR_RED << lineNum << ANSI_COLOR_RESET
-		    << " in " << fileName << ". It said: " << std::endl;
-	  std::cerr << ANSI_COLOR_BLUE << thisLine << ANSI_COLOR_RESET << std::endl;
-	}
-      }
-      delete tokens;
-
-      lineNum++;
+    if(n){
+      delete n;
+      n = NULL;
+    }
+    if(f){
+      f->Close();
+      delete f;
+      f = NULL;
     }
   }
 
+  if(!tkns){ // if we never got anything useful from the ROOT file attempt, try to parse as a text file
+    std::ifstream settingsFile(fileName);
+    // Print error message if I can't read the file
+    if(!settingsFile.is_open()){
+      std::cerr << "Error in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET
+		<< ", could not open file " << ANSI_COLOR_RED << fileName << ANSI_COLOR_RESET << std::endl;
+      exit(1);
+    }
+
+    else {
+      while(!settingsFile.eof()){
+	std::string thisLine;
+	std::getline(settingsFile, thisLine);
+	processLine(thisLine, outputFile, fileName, lineNum);
+	lineNum++;
+      }
+    }
+  }
+
+  if(tkns){
+    delete tkns;
+  }
 
   outputFile << std::endl << std::endl;
   outputFile << __FILE__ << " has finished parsing " << fileName << std::endl;
   outputFile << std::endl << std::endl;
 
+  
+
 }
+
+
+
+void icemc::Settings::processLine(const std::string& thisLine, std::ofstream& outputFile, const char* fileName, int lineNum){
+
+  // here we keep track of the whole file so we can store it as a TNamed later
+  wholeSettingsFile += thisLine + "\n";
+
+  // Copy to silly text output file
+  outputFile << thisLine << std::endl;
+
+  // First cut out the comment, which is all characters after the first #, including the #
+  std::size_t found = thisLine.find("#");
+
+
+  // Here we switch to TString because of its lovely tokenization methods
+  TString thisLineCommentsRemoved(thisLine.substr(0, found));
+
+  // Now have a TObjArray of TObjStrings split by out delimeter :
+  TObjArray* tokens = thisLineCommentsRemoved.Tokenize(":");
+
+  int nTokens = tokens->GetEntries();
+
+  // If there are two tokens, then there was one delimeter
+  if(nTokens == 2){
+
+    TString key = ((TObjString*) tokens->At(0))->GetString();
+    TString value = ((TObjString*) tokens->At(1))->GetString();
+
+    Bool_t addVariable = newKvpPassesSanityChecks(key, value, fileName, lineNum);
+
+    if(addVariable){
+      keyValuePairStrings[key.Data()] = value.Data();
+    }
+
+  }
+  else{
+
+    TRegexp reggie("[a-zA-Z0-9]");
+    Ssiz_t len = thisLineCommentsRemoved.Length();
+
+    Bool_t isAlphaNumeric = reggie.Index(thisLineCommentsRemoved, &len) != -1;
+
+    if(nTokens > 2 || isAlphaNumeric){
+      // complain if there are more than two tokens, i.e. more that one colon.
+      // complain if there are non whitespace characters but no colon.
+      std::cerr << "Warning in " ANSI_COLOR_RED << __FILE__ << ANSI_COLOR_RESET
+		<< ". I couldn't parse line " << ANSI_COLOR_RED << lineNum << ANSI_COLOR_RESET
+		<< " in " << fileName << ". It said: " << std::endl;
+      std::cerr << ANSI_COLOR_BLUE << thisLine << ANSI_COLOR_RESET << std::endl;
+    }
+  }
+  delete tokens;
+
+}
+
+
 
 
 
@@ -1337,4 +1383,9 @@ void icemc::Settings::parseValueArray(const char* valueString, std::vector<doubl
     double value = atof(token->GetString().Data());
     values.push_back(value);
   }
+}
+
+
+TNamed* icemc::Settings::makeRootSaveableSettings() const {
+  return new TNamed("Settings", wholeSettingsFile.Data());
 }
