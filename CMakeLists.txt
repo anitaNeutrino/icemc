@@ -140,7 +140,7 @@ ROOT_GENERATE_DICTIONARY(${DICTNAME} ${INCLUDE_FILES} LINKDEF LinkDef.h)
 
 #---Create a shared library with geneated dictionary
 add_library(${libname} SHARED ${SOURCE_FILES} ${DICTNAME}.cxx)
-target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
+target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper AnitaEvent ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
 
 
 macro(add_binary bin) 
