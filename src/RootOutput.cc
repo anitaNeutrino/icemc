@@ -569,17 +569,25 @@ void icemc::RootOutput::initRootifiedAnitaDataFiles(const EventGenerator* uhen2,
   
   TString truthFileName = fOutputDir + TString::Format("/SimulatedAnitaTruthFile%d.root",  fRun);
   fTruthFile = new TFile(truthFileName, "RECREATE");
+  TNamed* ss = settings1->makeRootSaveableSettings();
+  ss->Write();
+  delete ss;
+  ss = NULL;
 
-  std::string icemcgitversion = EnvironmentVariable::ICEMC_VERSION(fOutputDir); 
-  Log() << icemc::info << "ICEMC GIT Repository Version: " <<  icemcgitversion << std::endl;
-  unsigned int timenow = time(NULL);
+  TNamed gitversion("GitVersion", EnvironmentVariable::ICEMC_VERSION(fOutputDir).c_str());
+  gitversion.Write();
 
-  initTree(&configTree, "configIcemcTree", "Config file and settings information", fTruthFile);
-  configTree.Branch("gitversion", &icemcgitversion);
-  configTree.Branch("nnu", (int*)&settings1->NNU, "NNU/I");
-  configTree.Branch("startTime", &timenow);
-  // configTree->Branch("icemcSettings",     &settings1        );
-  configTree.Fill();
+  TNamed nnu("NNU", TString::Format("%d", settings1->NNU).Data());
+  nnu.Write();
+
+  time_t rawtime;
+  struct tm * timeinfo;
+  time (&rawtime);
+  timeinfo = localtime (&rawtime);
+  TNamed starttime("StartTime", asctime(timeinfo));
+  starttime.Write();
+
+  Log() << icemc::info << "ICEMC GIT Repository Version: " <<  gitversion.GetTitle() << std::endl;
 
   initTree(&triggerSettingsTree, "triggerSettingsTree", "Trigger settings", fTruthFile);
   Anita* anita2 = const_cast<Anita*>(uhen->anita1);
