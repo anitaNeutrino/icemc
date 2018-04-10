@@ -789,7 +789,8 @@ int main(int argc,  char **argv) {
   int tautrigger=0;
   int tauweighttrigger=0;
 
-
+  bool isDead;
+  
   double sourceLon;
   double sourceAlt;
   double sourceLat;
@@ -2672,9 +2673,13 @@ int main(int argc,  char **argv) {
       count1->nchanceinhell2[whichray]++;
       chanceinhell2=1;
 
+      isDead = false;
       // Dead time
       if (settings1->USEDEADTIME){
-      	if ( (anita1->deadTime>0.9) || (r.Uniform(1)<anita1->deadTime) ) continue;
+      	if ( (r.Uniform(1)<anita1->deadTime) ){
+	  isDead = true;
+	  if (settings1->MINBIAS!=1) continue;
+	}
       }
 	    
       count1->ndeadtime[whichray]++;
@@ -3046,9 +3051,11 @@ int main(int argc,  char **argv) {
       
       int thispasses[Anita::NPOL]={0,0};
 
-      globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
-				 thispasses);
-
+      if (!isDead){
+	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
+				   thispasses);
+      }
+      
       for (int i=0;i<2;i++) {
         for (int j=0;j<16;j++) {
           for (int k=0;k<anita1->HALFNFOUR;k++) {

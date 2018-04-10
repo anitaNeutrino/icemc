@@ -1341,7 +1341,7 @@ int main(int argc,  char **argv) {
 
       sum_weights+=weight;
       neutrinos_passing_all_cuts++;
-
+      anita1->tdata->Fill();
     } // end if passing global trigger conditions
     else {
       passes_thisevent=0; // flag this event as not passing
@@ -1445,6 +1445,8 @@ int main(int argc,  char **argv) {
   cout<<"Total time elapsed is "<<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<endl;
 
   foutput << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<endl;
+  anita1->fdata->Write();
+  anita1->fdata->Close();
 
   delete anita1;
   return 0;

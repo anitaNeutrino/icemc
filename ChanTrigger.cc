@@ -1644,17 +1644,18 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   }
   
 
-  // if (ant ==8 && pol==0){
-  //   TCanvas *c = new TCanvas("c");
-  //   graph1->Draw("Al");
-  //   c->Print("DigitPath_graph1.png");
-  //   graphUp->Draw("Al");
-  //   c->Print("DigitPath_graphUp.png");
-  //   surfSignal->Draw("Al");
-  //   c->Print("DigitPath_surfSignal.png");
-  //   surfSignalDown->Draw("Al");
-  //   c->Print("DigitPath_surfSignalDown.png");
-  // }
+//  if ((iphi ==11 && pol==0)){
+//    TCanvas *c = new TCanvas("c");
+//    graph1->Draw("Al");
+//    c->Print("DigitPath_graph1.png");
+//    graphUp->Draw("Al");
+//    c->Print("DigitPath_graphUp.png");
+//    surfSignal->Draw("Al");
+//    c->Print("DigitPath_surfSignal.png");
+//    surfSignalDown->Draw("Al");
+//    c->Print("DigitPath_surfSignalDown.png");
+//  }
+
   
   // Cleaning up
   delete surfSignalDown;
@@ -1703,6 +1704,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   {
     // keith editing 1/24/18
     surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTriggerTuffs[ipol][iring][iphi][anita1->tuffIndex]); 
+//    cout << anita1->tuffIndex << " is the tuff Index" << endl;
     // end keith editing 
   }// end else anita 4
 // end keith edits
@@ -1757,7 +1759,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   // // gtemp->Write("gImpRespDownNoise");
   // // out->Close();
   // }
-  
+
   // Cleaning up
   delete surfSignalDown;
   delete surfTrans;
@@ -1787,7 +1789,7 @@ void ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double 
 }
 
 void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
-
+//  std::cout << __FILE__ << " " << __FUNCTION__ << " " << __LINE__ << std::endl;
   Int_t numFreqs = anita1->numFreqs;
   FFTWComplex *phasorsDig  = new FFTWComplex[numFreqs];
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];

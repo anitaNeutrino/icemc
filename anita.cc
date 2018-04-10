@@ -284,8 +284,12 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
 
   USEPHASES=0;
   ntuffs=1;
-  if (settings1->TUFFSON) ntuffs=6;
-  
+  if (settings1->WHICH==10 && settings1->TUFFSON){ 
+    ntuffs=6;
+    if(settings1->TRIGGEREFFSCAN){
+      ntuffs=7;
+    }
+  }
   for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
  
   for (int i=0;i<NFREQ;i++) {
@@ -594,8 +598,7 @@ void Anita::readVariableThresholds(Settings *settings1){
     turfratechain->SetBranchAddress("l1TrigMask",&l1TrigMask);
     turfratechain->SetBranchAddress("l1TrigMaskH",&l1TrigMaskH);
 
-    /////////// DEAD TIME ONLY DEFINED FOR ANITA-3 !!!!!!!!!!!!
-    if (settings1->WHICH==9) turfratechain->SetBranchAddress("deadTime",&deadTime);
+    turfratechain->SetBranchAddress("deadTime",&deadTime);
     turfratechain->SetBranchAddress("realTime",&realTime_turfrate);
     turfratechain->BuildIndex("realTime");
     turfratechain->GetEvent(0);
@@ -4111,7 +4114,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
   // iphi is the antenna number
   // ituff is the notch directory
   TString filename;
-  string snotch_dir[6]={"notches_260_0_0","notches_260_375_0","notches_260_0_460","notches_260_385_0","notches_260_365_0","notches_260_375_460"};
+  string snotch_dir[7]={"notches_260_0_0","notches_260_375_0","notches_260_0_460","notches_260_385_0","notches_260_365_0","notches_260_375_460","notches_0_0_0"};
   string spol[2] = {"V","H"};
   string sring[3] = {"T","M","B"};
  // Set deltaT to be used in the convolution
@@ -4119,7 +4122,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
   for(int ipol=0; ipol<=1; ipol++) {
     for(int iring = 0; iring<=2; iring++){
       for(int iphi=0; iphi<=15; iphi++) {
-	for(int ituff=0; ituff <=5; ituff++) {
+	for(int ituff=0; ituff <=6; ituff++) {
 	  if(iphi+1 < 10) {
 	    filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s/0%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
 	  } 
@@ -4172,13 +4175,13 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 void Anita::readTuffResponseTrigger(Settings *settings1){
   // for loops to make the RFSignal array that can be used in applyImpulseResponseTrigger of ChanTrigger.cc Do we need one for each antenna???
   TString filename;
-  string snotch_dir[6]={"trigconfigA.imp","trigconfigB.imp","trigconfigC.imp","trigconfigG.imp","trigconfigO.imp","trigconfigP.imp"};
+  string snotch_dir[7]={"trigconfigA.imp","trigconfigB.imp","trigconfigC.imp","trigconfigG.imp","trigconfigO.imp","trigconfigP.imp","trigconfigK.imp"};
  // Set deltaT to be used in the convolution
   deltaT = 1./(2.6*16.);
   for(int ipol=0; ipol<=1; ipol++) {
     for(int iring = 0; iring<=2; iring++){
       for(int iphi=0; iphi<=15; iphi++) {
-        for(int ituff=0; ituff <=5; ituff++) {
+        for(int ituff=0; ituff <=6; ituff++) {
             filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str());
             //debugging
             //cout << Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str()) << endl;
@@ -4373,15 +4376,39 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 
 
 void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
-  
-  if(settings1->WHICH==9){
-     
-    string fileName = ICEMC_DATA_DIR+"/TriggerEfficiencyScanPulser_anita3.root";
-    TFile *f = new TFile(fileName.c_str(), "read");
+  if(settings1->WHICH==10 || settings1->WHICH==9){
+    if(settings1->WHICH==10){
+      string fileName = ICEMC_DATA_DIR+"/TriggerEfficiencyScanPulser_anita4_33dB_avg_trimmed.root";
+      TFile *f = new TFile(fileName.c_str(), "read");
+      gPulseAtAmpa  = (TGraph*)f->Get("Phisector_3_33dBCh1_trimmed");
 
+// change to nanoseconds from seconds
+      Int_t nPoints  = gPulseAtAmpa->GetN();
+      Double_t *newx = gPulseAtAmpa->GetX();
+      Double_t *newy = gPulseAtAmpa->GetY();
+      for (int i=0;i<nPoints;i++){
+      // change time axis s to ns
+        newx[i]=newx[i]*1E9;
+      }
+      *gPulseAtAmpa = TGraph(nPoints,newx,newy);
+// end change to ns
+//      TCanvas *ctemp = new TCanvas("ctemp");
+//      gPulseAtAmpa->Draw("AL");
+//      ctemp->Print("pulse.png");
+      f->Close();
+    }
+    else{
+      string fileName = ICEMC_DATA_DIR+"/TriggerEfficiencyScanPulser_anita3.root";
+      TFile *f = new TFile(fileName.c_str(), "read");
     // Get average pulse as measured by scope
-    gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
-    
+      gPulseAtAmpa  = (TGraph*)f->Get("gAvgPulseAtAmpa");
+//      TCanvas *ctemp = new TCanvas("ctemp");
+//      gPulseAtAmpa->Draw("AL");
+//      ctemp->Print("pulse.png");
+      f->Close();
+//      cout << "Pulse has this many points " << gPulseAtAmpa->GetN() << endl;
+
+    }
     bool useDelayGenerator = false;
 
     double maxDelays =  (Tools::dMax(trigEffScanRingDelay, 3) + Tools::dMax(trigEffScanPhiDelay,5) );
@@ -4390,14 +4417,35 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
     if (maxDelays!=0) useDelayGenerator=true;
     
     for (int i=0;i<gPulseAtAmpa->GetN();i++){
-      // 7db fixed attenuation
-      gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-7./20.);
+      if(settings1->WHICH==9){
+        // 7db fixed attenuation
+        gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-7./20.);
+      }
+      if(settings1->WHICH==10){
+
+        // 0db fixed attenuation
+//        if(i==1000){
+//          cout << "y value for entry 1000 before attenuation of 0db is  " << gPulseAtAmpa->GetY()[i] << endl;
+//        }
+        gPulseAtAmpa->GetY()[i]*=TMath::Power(10,(-25.0+33.0)/20.);
+
+//        if(i==1000){
+//          cout << "y value for entry 1000 is after attenuation of 0db is " << gPulseAtAmpa->GetY()[i] << endl;
+//        }
+
+      }
 
       // Variable attenuation of central phi sector
       gPulseAtAmpa->GetY()[i]*=TMath::Power(10, trigEffScanAtt[2]*1./20.);
 
-      // Signal in a 12-way splitter 
-      gPulseAtAmpa->GetY()[i]*=TMath::Power(10, -10.8/20.);
+      if(settings1->WHICH==9){
+        // Signal in a 12-way splitter 
+        gPulseAtAmpa->GetY()[i]*=TMath::Power(10, -10.8/20.);
+      }
+      if(settings1->WHICH==10){
+        // Signal in a 16-way splitter 
+        gPulseAtAmpa->GetY()[i]*=TMath::Power(10, -12./20.);
+      }
 
       // Attenutation due to delay generator
       if (useDelayGenerator){
@@ -4408,6 +4456,10 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
       gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-3./20.);
        
     }
+
+//    TCanvas *ctemp2 = new TCanvas("ctemp2");
+//    gPulseAtAmpa->Draw("AL");
+//    ctemp2->Print("pulse_after_atten.png");
 
     // To get the correct interpolation we need to shift the waveform
     // We shift it by 8*(1/(2.6*16)) ns
@@ -4431,33 +4483,40 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
     for (int i=0;i<HALFNFOUR;i++){
       trigEffScanPulseAtAmpa[i] = gPulseAtAmpaInt->Eval(fTimes[i]);
     }
+    if(settings1->WHICH==9){
+      gPulseAtAmpa  = FFTtools::translateGraph(gPulseAtAmpa, 77.5721);
+    }
+//    TCanvas *ctemp1 = new TCanvas("ctemp1");
+//    gPulseAtAmpa->Draw("AL");
+//    ctemp1->Print("pulse_after_interp.png");
 
-    gPulseAtAmpa  = FFTtools::translateGraph(gPulseAtAmpa, 77.5721);
-    
     delete gPulseAtAmpaInt;
     delete gtemp;
      
-    for (int isample=0;isample<250;isample++){
-      // Get average waveform at SURF as measured by scope
-      TGraph *gPulseAtSurf = (TGraph*)f->Get(Form("gSamplePulseAtSurf_%i", isample));
+    if(settings1->WHICH==9){
+      string fileName = ICEMC_DATA_DIR+"/TriggerEfficiencyScanPulser_anita3.root";
+      TFile *f = new TFile(fileName.c_str(), "read");
+
+      for (int isample=0;isample<250;isample++){
+        // Get average waveform at SURF as measured by scope
+        TGraph *gPulseAtSurf = (TGraph*)f->Get(Form("gSamplePulseAtSurf_%i", isample));
      
-      TGraph *gPulseAtSurfInt = FFTtools::getInterpolatedGraph(gPulseAtSurf, 1/(2.6));
-      double *y2 = gPulseAtSurfInt->GetY();
-      // 20dB attenuation was applied at the scope
-      for (int i=0;i<HALFNFOUR;i++){
-	trigEffScanPulseAtSurf[isample][i]=y2[i]/10.;
-      }
+        TGraph *gPulseAtSurfInt = FFTtools::getInterpolatedGraph(gPulseAtSurf, 1/(2.6));
+        double *y2 = gPulseAtSurfInt->GetY();
+        // 20dB attenuation was applied at the scope
+        for (int i=0;i<HALFNFOUR;i++){
+	  trigEffScanPulseAtSurf[isample][i]=y2[i]/10.;
+        }
       
-      delete gPulseAtSurfInt;
-      delete gPulseAtSurf;
-        
+        delete gPulseAtSurfInt;
+        delete gPulseAtSurf;
+      }
+      f->Close();
+
     }
-
-
-     
-    f->Close();
-  }else{
-    cout << "Impulse response on trigger path can only be used with ANITA-3" << endl;
+  }
+  else {
+    cout << "Impulse response on trigger path can only be used with ANITA-3 or ANITA-4" << endl;
     exit(1);
   }
  
