@@ -4114,7 +4114,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
   // iphi is the antenna number
   // ituff is the notch directory
   TString filename;
-  string snotch_dir[7]={"notches_260_0_0","notches_260_375_0","notches_260_0_460","notches_260_385_0","notches_260_365_0","notches_260_375_460","notches_0_0_0"};
+  string snotch_dir[6]={"notches_260_0_0","notches_260_375_0","notches_260_0_460","notches_260_385_0","notches_260_365_0","notches_260_375_460"};
   string spol[2] = {"V","H"};
   string sring[3] = {"T","M","B"};
  // Set deltaT to be used in the convolution
@@ -4123,12 +4123,26 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
     for(int iring = 0; iring<=2; iring++){
       for(int iphi=0; iphi<=15; iphi++) {
 	for(int ituff=0; ituff <=6; ituff++) {
-	  if(iphi+1 < 10) {
-	    filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s/0%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
-	  } 
+          if(ituff==6){
+            if(iphi+1 < 10) {
+	      filename = Form("%s/share/AnitaAnalysisFramework/responses/A4noNotches/fullTF_0%d%s%s.txt",getenv("ANITA_UTIL_INSTALL_DIR"), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+  // old A3	    filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s/0%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+            } 
+            else {
+	      filename = Form("%s/share/AnitaAnalysisFramework/responses/A4noNotches/fullTF_%d%s%s.txt",getenv("ANITA_UTIL_INSTALL_DIR"), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+  // old A3	    filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s/%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+            }
+          }// if tuffs notches off but tuffs on, these files are loaded and in different directory than other tuff notch configurations
           else {
-	    filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s/%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
-	  }
+            if(iphi+1 < 10) {
+	      filename = Form("%s/share/AnitaAnalysisFramework/responses/A4ImpulseTUFFs/%s/0%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+  // old A3	    filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s/0%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+            } 
+            else {
+              filename = Form("%s/share/AnitaAnalysisFramework/responses/A4ImpulseTUFFs/%s/%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+  // old A3	    filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s/%d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());
+            }
+          }// tuff responses with notches on are in different directory than with notches off
 	  TGraph *gtemp = new TGraph(filename);
 	  // interpolate
 	  TGraph *gint = Tools::getInterpolatedGraph(gtemp,deltaT); 
