@@ -4280,9 +4280,12 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
   double norm=1;
 
   if(settings1->WHICH==9 || settings1->WHICH==10){
-
-    fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseTrigger.root";
-
+    if(settings1->WHICH==9){
+      fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseTrigger.root";
+    }
+    else{
+      fileName = ICEMC_DATA_DIR+"/Anita4_ImpulseResponseTrigger.root";
+    }
     string spol[2] ={"V", "H"};
     string sring[3]={"T", "M", "B"};
     
