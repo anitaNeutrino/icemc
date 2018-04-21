@@ -1314,10 +1314,6 @@ void Anita::getPulserData(){
 
 
 
-
-
-
-
 void Anita::ReadGains(void) {
   // gains from university of hawaii measurements.
   double sfrequency;
@@ -1372,51 +1368,181 @@ void Anita::ReadGains(void) {
 
 
 
-void Anita::AntennaGain(Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h) {
+// TODO: Write the function to read in the gain files from the
+//       ARA style format, to be used in the AntennaGain function.
+void ReadARAGainFile() {
+	
+	string line;
+
+	// Input stream for the antenna's H-pol channel
+	ifstream inHPolFile;
+	inHPolFile.open((ICEMC_DATA_DIR+"/hPolAntennaDef.uan").c_str());
+
+	if(!inHPolFile.is_open()) {
+		cout << "ReadARAGainFile Error; File cannot be read" << endl;
+	}
+
+	while(inHPolFile.is_open() && inHPolFile.good()) {
+		
+		// See the header file for information about NPOINTS_GAIN
+		for (int i = 0; i < NPOINTS_GAIN; i++) {
+			getline(inHPolFile, line);
+			
+			if (line.substr(0, line.find_first_of(":")) == "freq "){
+				hFreq[i] = atof(line.substr(6, line.find_first_of("M")).c_str());
+				// TODO: Consider adding script to throw
+				//       an error if hFreq is not in the
+				//       frequency bins as defined.
+
+				getline(inHPolFile, line);  //read SWR
+				getline(inHPolFile, line);  //read names
+				
+				// Note here that j is just one angle, but in
+				// reality the value of j encodes both the
+				// theta and phi angle that the line
+				// corresponds to. Study the example antenna
+				// file and the code in AntennaGains for more
+				// info. See the header file for information
+				// on NPOINTS_GAINANGSTEP.
+				for (int j = 0; j < NPOINTS_GAINANGSTEP; j++) {
+					getline(inHPolFile, line);
+					
+					// Reads a line's gain
+					hGain[i][j]  = atof(line.substr(20, 33).c_str());
+					// Reads a line's phase
+					hPhase[i][j] = atof(line.substr(34).c_str());
+				} // Loop over the angles of the gain file
+			}
+		}  // End the loop over the frequencies
+	}  // End the check on the input file stream's condition.
+
+	inHPolFile.close();
+		
+	// Input stream for the antenna's V-pol channel
+	ifstream inVPolFile;
+	
+	if(!inVPolFile.is_open()) {
+		cout << "V-Pol Gain File Error; File cannot be read" << endl;
+	}
+
+	while(inVPolFile.is_open() && inVPolFile.good()) {
+		
+		// See the header file for information about NPOINTS_GAIN
+		for (int i = 0; i < NPOINTS_GAIN; i++) {
+			getline(inVPolFile, line);
+			
+			if (line.substr(0, line.find_first_of(":")) == "freq "){
+				vFreq[i] = atof(line.substr(6, line.find_first_of("M")).c_str());
+				// TODO: Consider adding script to throw
+				//       an error if vFreq is not in the
+				//       frequency bins as defined.
+
+				getline(inVPolFile, line);  //read SWR
+				getline(inVPolFile, line);  //read names
+				
+				// Note here that j is just one angle, but in
+				// reality the value of j encodes both the
+				// theta and phi angle that the line
+				// corresponds to. Study the example antenna
+				// file and the code in AntennaGains for more
+				// info. See the header file for information
+				// on NPOINTS_GAINANGSTEP.
+				for (int j = 0; j < NPOINTS_GAINANGSTEP; j++) {
+					getline(inVPolFile, line);
+					
+					// Reads a line's gain
+					vGain[i][j]  = atof(line.substr(20, 33).c_str());
+					// Reads a line's phase
+					vPhase[i][j] = atof(line.substr(34).c_str());
+				} // Loop over the angles of the gain file
+			}
+		}  // End the loop over the frequencies
+	}  // End the check on the input file stream's condition.
+
+	inVPolFile.close();
+	
+
+}
+
+void Anita::AntennaGain(Settings *settings1,    
+                        double hitangle_e,      double hitangle_h,
+                        double e_component,     double h_component,
+                        int k,
+                        double &vsignalarray_e, double &vsignalarray_h) {
     
-  if (freq[k]>=settings1->FREQ_LOW_SEAVEYS && freq[k]<=settings1->FREQ_HIGH_SEAVEYS) {
-		
-    double relativegains[4]; // fill this for each frequency bin for each antenna.  It's the gain of the antenna given the angle that the signal hits the balloon, for vv, vh, hv, hh, relative to the gain at boresight
-		
-    for (int pols=0;pols<2;pols++) {// loop over vv, hv
-      if (fabs(hitangle_e)<PI/2)
-	relativegains[pols]=Get_gain_angle(pols,k,hitangle_e);//change here to be constant if need be (ABBY).  Add a setting to the code for use constant gain or dish or something.  Make this a member function.
-      else
-	relativegains[pols]=0.;
-      //if (fabs(hitangle_e)<PI/12)
-      //cout << "relative gains is " << relativegains[pols] << "\n";
+  if ((freq[k] >= settings1->FREQ_LOW_SEAVEYS)
+   && (freq[k] <= settings1->FREQ_HIGH_SEAVEYS)) {
+    
+    // Fill this for each frequency bin for each antenna.
+    // It's the gain of the antenna given the angle that the
+    // signal hits the balloon, for vv, vh, hv, hh, relative to
+    // the gain at boresight   
+    double relativegains[4];
+
+    // loop over vv, hv
+    for (int pols = 0; pols < 2; pols++) {
+      if ((fabs(hitangle_e)) < (PI/2)){
+        
+        // Change here to be constant if need be (ABBY).
+        // Add a setting to the code for use constant gain
+        // or dish or something.
+        // Make this a member function.
+        relativegains[pols] = Get_gain_angle(pols, k, hitangle_e);
+      } else {
+        relativegains[pols]=0.;
+      }
+      
+      // if (fabs(hitangle_e)<PI/12)
+      // cout << "relative gains is " << relativegains[pols] << "\n";
     }
 		
 		
-    //      if (fabs(hitangle_e)<PI/12)
-    //cout << "vsignalarray_e before is " << vsignalarray_e << "\n";
-    vsignalarray_e = vsignalarray_e * 0.5 * sqrt(vvGaintoHeight[k] * vvGaintoHeight[k] * e_component * e_component * relativegains[0] + hvGaintoHeight[k] * hvGaintoHeight[k] * h_component * h_component * relativegains[1]); // 0.5 is for voltage dividing
+    // if (fabs(hitangle_e)<PI/12)
+    // cout << "vsignalarray_e before is " << vsignalarray_e << "\n";
+        
+    // 0.5 is for voltage dividing
+    // The vv and hv gain to height is using the gain along the
+    // boresight, per info from patrick. See equations in
+    // icemc.ps for the written equations ~idb
+    vsignalarray_e = vsignalarray_e * 0.5 
+      * sqrt(vvGaintoHeight[k] * vvGaintoHeight[k]
+             * e_component * e_component * relativegains[0]
+             + hvGaintoHeight[k] * hvGaintoHeight[k]
+             * h_component * h_component * relativegains[1]);
 		
     //cout << "In AntennaGain, vsignalarray_e is " << vsignalarray_e << "\n";
 		
     //if (fabs(hitangle_e)<PI/12)
     //cout << "vsignalarray_e after is " << vsignalarray_e << "\n";
 		
-    for (int pols=2;pols<4;pols++) { // loop over hh, vh
-      if (fabs(hitangle_h)<PI/2)
-	relativegains[pols]=Get_gain_angle(pols,k,hitangle_h);
-      else
-	relativegains[pols]=0.;
+    // loop over hh, vh
+    for (int pols=2; pols<4; pols++) {
+      if ((fabs(hitangle_h)) < (PI/2)) {
+        relativegains[pols] = Get_gain_angle(pols, k, hitangle_h);
+      } else {
+        relativegains[pols] = 0.;
+      }
     }
-		
+
     // V/MHz
 		
     //if (fabs(hitangle_h)<PI/12)
     //cout << "vsignalarray_h before is " << vsignalarray_h << "\n";
 		
-    vsignalarray_h=vsignalarray_h*0.5*
-      sqrt(hhGaintoHeight[k]*hhGaintoHeight[k]*h_component*h_component*relativegains[2] + vhGaintoHeight[k]*vhGaintoHeight[k]*e_component*e_component*relativegains[3]);
+    // h counterpart to the vsignalarray_e function. ~idb
+    vsignalarray_h = vsignalarray_h * 0.5
+      * sqrt(hhGaintoHeight[k] * hhGaintoHeight[k]
+             * h_component * h_component * relativegains[2]
+             + vhGaintoHeight[k] * vhGaintoHeight[k]
+             * e_component * e_component * relativegains[3]);
 		
-    //      if (fabs(hitangle_h)<PI/12)
-    //cout << "vsignalarray_h after is " << vsignalarray_h << "\n";
+    // if (fabs(hitangle_h)<PI/12)
+    // cout << "vsignalarray_h after is " << vsignalarray_h << "\n";
 		
   }
 }
+
+
 
 
 // The deck affects signals reaching the upper ring. These equations are for Fresnel diffraction around a half plane. The edge of the half plane passes just over and in front of the lower ring antenna that's facing the radio pulse. This assumption should be okay for the three upper ring antenns in the phi sector facing the pulse and should underestimate the effect of diffraction for the other upper ring antennas.
