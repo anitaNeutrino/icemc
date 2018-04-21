@@ -1,0 +1,60 @@
+####################################################################
+##
+##
+## 20180420, idb
+##
+## Notes on how the coordinate system works re. icemc's definitions
+## of the antennas and their gain
+##
+##
+##
+####################################################################
+
+Oindree was the last person to touch this portion of the
+code, based on the comments. Around line 740 of icemc.cc, all the
+numbers relating to the vectorization of the signals are declared.
+
+e_component is "E comp along polarization".
+h_component is "H comp along polarization".
+n_component is "normal comp along polarization".
+
+e_component_kvector is "component of e-field along the rx e-plane".
+h_component_kvector is "component of e-field along the rx h-plane".
+n_component_kvector is "component of e-field along the normal".
+^^^^ These are all doubles ^^^^ 
+
+On line 735 of icemc.cc; n_eplane, n_hplane, and n_normal are
+defined as std:vectors. 
+
+	n_eplane is in the          z-hat direction
+	n_hplane is in the negative y-hat direction
+	n_normal is in the          x-hat direction
+
+Based on the comments present in balloon.cc, around line 620,
+the normal vector is the vector pointing out, along the boresight
+of the antenna.
+
+Further, ant_normal is a std:vector which is the direction of the
+boresight, "Vector normal to the face of the antenna". ant_normal
+doesn't seem to be used in anything that's related to the antenna
+gain.
+                                             
+############
+Program flow
+############
+
+icemc.cc ln ~730;  Variables declared.
+icemc.cc ln ~2800; GetAntennaOrientaiton called in a loop over
+                   layers and phi ('ifold').
+
+In the GetAntennaOrientation call;
+balloon.cc ln ~630; n_eplane/hplane/normal are rotated about the
+                    y-axis.
+
+                        This is to account for the fact that lower
+                    rings of ANITA antennas are pointed down. Note
+		    in the balloon.cc code that, depending on the
+                    settings, there is a factor of Pi/2 to account
+                    for a different coordinate system (presumably
+                    for the payload, though I haven't checked). 
+

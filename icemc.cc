@@ -2816,6 +2816,10 @@ int main(int argc,  char **argv) {
           ChanTrigger *chantrig1 = new ChanTrigger();
           chantrig1->InitializeEachBand(anita1);
 
+	  // AFAICT, as the loop is going over all of the different
+	  // sectors, this function updates n_eplane, n_hplane,
+	  // and n_normal to match that of the antenna in the
+	  // sector currently being considered. ~idb
           bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
  
           if (settings1->BORESIGHTS){ // i.e. if BORESIGHTS is true
