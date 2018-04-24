@@ -1015,9 +1015,12 @@ for(unsigned int i=0; i < requiredBands.size(); i++){
 
   if (TUFFSON){
     std::cout << "The TUFFs are ON for the whole flight!" << std::endl;
-    std::cout << "Notch 0 status " << anita1->TUFFstatus[0] << std::endl;
-    std::cout << "Notch 1 status " << anita1->TUFFstatus[1] << std::endl;
-    std::cout << "Notch 2 status " << anita1->TUFFstatus[2] << std::endl;
+    if (TUFFSON==2){
+      std::cout << "Using Butterworth filters approximation " << std::endl;
+      std::cout << "Notch 0 status " << anita1->TUFFstatus[0] << std::endl;
+      std::cout << "Notch 1 status " << anita1->TUFFstatus[1] << std::endl;
+      std::cout << "Notch 2 status " << anita1->TUFFstatus[2] << std::endl;
+    }
   }
 
 
