@@ -3395,8 +3395,8 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 
     // Fill photogrammetry position for top rings
     for (int iant=0; iant<8;iant++){
-      ANTENNA_POSITION_START[0][0][iant] = MINCH * Vector(xAntPhoto[iant*2], yAntPhoto[iant*2], zAntPhoto[iant*2]).RotateZ(-gps_offset_anita3);	    // top ring top antennas
-      ANTENNA_POSITION_START[0][1][iant] = MINCH * Vector(xAntPhoto[iant*2+1], yAntPhoto[iant*2+1], zAntPhoto[iant*2+1]).RotateZ(-gps_offset_anita3);  // top ring bottom antennas
+      ANTENNA_POSITION_START[1][0][iant] = ANTENNA_POSITION_START[0][0][iant] = MINCH * Vector(xAntPhoto[iant*2], yAntPhoto[iant*2], zAntPhoto[iant*2]).RotateZ(-gps_offset_anita3);	    // top ring top antennas
+      ANTENNA_POSITION_START[1][1][iant] = ANTENNA_POSITION_START[0][1][iant] = MINCH * Vector(xAntPhoto[iant*2+1], yAntPhoto[iant*2+1], zAntPhoto[iant*2+1]).RotateZ(-gps_offset_anita3);  // top ring bottom antennas
 
       PHI_EACHLAYER[0][iant] = azCentrePhoto[iant*2] * RADDEG - gps_offset_anita3;
       PHI_EACHLAYER[1][iant] = azCentrePhoto[iant*2+1] * RADDEG - gps_offset_anita3;
@@ -3407,8 +3407,8 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 
     // Fill photogrammetry position for middle and bottom rings
     for (int iant=0; iant<16;iant++){
-      ANTENNA_POSITION_START[0][2][iant] = MINCH * Vector(xAntPhoto[iant+16], yAntPhoto[iant+16], zAntPhoto[iant+16]).RotateZ(-gps_offset_anita3);	    // middle ring antennas
-      ANTENNA_POSITION_START[0][3][iant] = MINCH * Vector(xAntPhoto[iant+32], yAntPhoto[iant+32], zAntPhoto[iant+32]).RotateZ(-gps_offset_anita3);  // bottom ring antennas
+      ANTENNA_POSITION_START[1][2][iant] = ANTENNA_POSITION_START[0][2][iant] = MINCH * Vector(xAntPhoto[iant+16], yAntPhoto[iant+16], zAntPhoto[iant+16]).RotateZ(-gps_offset_anita3);	    // middle ring antennas
+      ANTENNA_POSITION_START[1][3][iant] = ANTENNA_POSITION_START[0][3][iant] = MINCH * Vector(xAntPhoto[iant+32], yAntPhoto[iant+32], zAntPhoto[iant+32]).RotateZ(-gps_offset_anita3);  // bottom ring antennas
 
       PHI_EACHLAYER[2][iant] = azCentrePhoto[iant+16] * RADDEG - gps_offset_anita3;
       ANTENNA_DOWN[2][iant] = apertureElPhoto[iant+16] * RADDEG; 
@@ -3466,6 +3466,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 	  // in EventReaderRoot 0: HPOL, 1: VPOL, in icemc it's the opposite
 	  intTempPol = (tempPol==0) ? 1 : 0;
 	  extraCableDelays[intTempPol][tempAnt] = cal->relativePhaseCenterToAmpaDelays[surf][chan]*1e-9 ; 
+	  //	  extraCableDelays[intTempPol][tempAnt] -= cal->relativeCableDelays[surf][chan][0]*1e-9 ; 
 	}
       }
     }
@@ -3481,14 +3482,13 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 
     
     double x, y, z, r, phi;
-    for (int ipol = 0; ipol < 2; ipol++){
+    for (int ipol = 1; ipol >= 0; ipol--){
       for(int ilayer = 0; ilayer < 4; ilayer++){ 
 	for(int ifold = 0; ifold < NRX_PHI[ilayer]; ifold++){
 
 	  // First attempt to define phase-centers is done by coming 20 cm
-	  // inwards from the antenna face end (that was only defined for VPOL)
-	  // that's why the initial ipol=0
-	  ANTENNA_POSITION_START[ipol][ilayer][ifold] = ANTENNA_POSITION_START[0][ilayer][ifold] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(ANTENNA_DOWN[ilayer][ifold]));
+	  // inwards from the antenna face end 
+	  ANTENNA_POSITION_START[ipol][ilayer][ifold] = ANTENNA_POSITION_START[ipol][ilayer][ifold] - phase_center_anita3 * Vector(cos(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(PHI_EACHLAYER[ilayer][ifold])*cos(ANTENNA_DOWN[ilayer][ifold]), sin(ANTENNA_DOWN[ilayer][ifold]));
 	  x = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetX();
 	  y = ANTENNA_POSITION_START[ipol][ilayer][ifold].GetY();
 	  
@@ -3501,7 +3501,7 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 	  
 	  ANTENNA_POSITION_START[ipol][ilayer][ifold]= Vector(r*cos(phi),r*sin(phi),z);
 
-	  PHI_EACHLAYER[ilayer][ifold]=phi;
+	  if (ipol==0) PHI_EACHLAYER[ilayer][ifold]=phi;
 	  
 	}
       }

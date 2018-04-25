@@ -626,7 +626,7 @@ void Balloon::GetAntennaOrientation(Settings *settings1, Anita *anita1, int ilay
   // const vectors const_z (n_eplane), const_y (-n_hplane), const_x (n_normal) defined under Constants.h   -- oindree
 
 
-  if(settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH==9) {
+  if(settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH==9 || settings1->WHICH==10) {
     n_eplane = const_z.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
     n_hplane = (-const_y).RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
     n_normal = const_x.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
