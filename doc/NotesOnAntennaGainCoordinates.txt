@@ -49,12 +49,16 @@ icemc.cc ln ~2800; GetAntennaOrientaiton called in a loop over
 
 In the GetAntennaOrientation call;
 balloon.cc ln ~630; n_eplane/hplane/normal are rotated about the
-                    y-axis.
+                    y-axis to point the antenna's boresight down
+                    towards the earth. 
+                    
+                    Then, based on the phi-sector location of the 
+                    antenna on anita, the antenna is rotated about
+                    the z-axis.
+                    
+                    Finally, the antenna, now having it's axis
+                    rotated to be consistent with it's place on
+                    anita, is rotated to account for pitch, roll,
+                    yaw, etc. of the payload.
 
-                        This is to account for the fact that lower
-                    rings of ANITA antennas are pointed down. Note
-		    in the balloon.cc code that, depending on the
-                    settings, there is a factor of Pi/2 to account
-                    for a different coordinate system (presumably
-                    for the payload, though I haven't checked). 
 
