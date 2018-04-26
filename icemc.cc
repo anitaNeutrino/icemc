@@ -1448,22 +1448,21 @@ int main(int argc,  char **argv) {
   if (settings1->SLAC)
     bn1->GetSlacPositions(anita1);
 
-  for (int j=0;j<settings1->NLAYERS;j++) { // loop over the layers of the payload
-    // noise depends on cant angle of antenna
-  } //for loop over antenna layers
-
-  if (settings1->WHICHRAYS==1) {
+  switch (settings1->WHICHRAYS){
+  case 1:
     settings1->MINRAY=0;
     settings1->MAXRAY=0;
-  } //if (settings1->WHICHRAYS==1)
-  if (settings1->WHICHRAYS==2) {
+    break;
+  case 2:
     settings1->MINRAY=0;
     settings1->MAXRAY=1;
-  } //if (settings1->WHICHRAYS==2)
-  if (settings1->WHICHRAYS==3) {
+    break;
+  case 3:
     settings1->MINRAY=1;
     settings1->MAXRAY=1;
-  } //if (settings1->WHICHRAYS==3)
+    break;
+  }
+  
 
   time_t raw_loop_start_time = time(NULL);
   cout<<"Starting loop over events.  Time required for setup is "<<(int)((raw_loop_start_time - raw_start_time)/60)<<":"<< ((raw_loop_start_time - raw_start_time)%60)<<endl;
