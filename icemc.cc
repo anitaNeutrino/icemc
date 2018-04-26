@@ -3922,12 +3922,26 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput << "Number of (weighted) neutrinos that pass only VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
   foutput << "Number of (weighted) neutrinos that pass only HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
   foutput << "Number of (weighted) neutrinos that pass both pol triggers is: " << allcuts_weighted_polarization[2] << "\n\n";
-
+  
   cout << "Number of (weighted) neutrinos that pass (with weight>0.001) is: " << eventsfound_weightgt01 << "\n";
   cout << "Number of (weighted) neutrinos that only traverse the crust is " << eventsfound_crust << " -> " << eventsfound_crust/eventsfound*100 << "%\n\n";
   cout << "Number of (weighted) neutrinos that pass only VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
   cout << "Number of (weighted) neutrinos that pass only HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
   cout << "Number of (weighted) neutrinos that pass both pol triggers is: " << allcuts_weighted_polarization[2] << "\n\n";
+
+  foutput << "Total number of thrown electron neutrinos is : " << (double)count1->nnu_e   << "\n";
+  foutput << "Total number of thrown muon neutrinos is :     " << (double)count1->nnu_mu  << "\n";
+  foutput << "Total number of thrown tau neutrinos is :      " << (double)count1->nnu_tau << "\n";
+  foutput << "Number of (weighted) electron neutrinos that pass trigger is : " << sum[0] << "\n";
+  foutput << "Number of (weighted) muon neutrinos that pass trigger is     : " << sum[1] << "\n";
+  foutput << "Number of (weighted) tau neutrinos that pass trigger is      : " << sum[2] << "\n\n";
+  
+  cout << "Total number of thrown electron neutrinos is : " << (double)count1->nnu_e   << "\n";
+  cout << "Total number of thrown muon neutrinos is :     " << (double)count1->nnu_mu  << "\n";
+  cout << "Total number of thrown tau neutrinos is :      " << (double)count1->nnu_tau << "\n";
+  cout << "Number of (weighted) electron neutrinos that pass trigger is : " << sum[0] << "\n";
+  cout << "Number of (weighted) muon neutrinos that pass trigger is     : " << sum[1] << "\n";
+  cout << "Number of (weighted) tau neutrinos that pass trigger is      : " << sum[2] << "\n\n";
 
   foutput << "Volume of ice is " << volume << "\n";
   foutput << "Value of 4*pi*pi*r_earth*r_earth in km^2 " << 4*PI*PI*(EarthModel::R_EARTH*EarthModel::R_EARTH/1.E6) << "\n";
