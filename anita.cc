@@ -3282,7 +3282,13 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 		
   } 
   else if (settings1->WHICH==9 || settings1->WHICH==10) { // ANITA-3 and ANITA-4
-    cout<<"initializing and using ANITA-III or IV payload geometry"<<endl;
+    
+    // Read photogrammetry positions
+    string whichANITAroman="";
+    if (settings1->WHICH==9) whichANITAroman+="III";
+    else whichANITAroman+="IV";
+    cout<<"Initializing and using ANITA-" << whichANITAroman << " payload geometry"<<endl;
+    
     // layer 0 is antennas 1-8 on the payload
     // layer 1 is antennas 9-15
     // layer 2 is antennas 16-32
@@ -3315,10 +3321,6 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
     THETA_ZENITH[2]=PI/2+INCLINE_TOPTHREE*RADDEG;
     THETA_ZENITH[3]=PI/2+INCLINE_TOPTHREE*RADDEG;
       
-    // Read photogrammetry positions
-    string whichANITAroman="";
-    if (settings1->WHICH==9) whichANITAroman+="III";
-    else whichANITAroman+="IV";
     string photoFile;
 #ifdef ANITA_UTIL_EXISTS
     photoFile += ( (string)getenv("ANITA_UTIL_INSTALL_DIR") +"/share/anitaCalib/anita"+whichANITAroman+"Photogrammetry.csv");
@@ -3482,9 +3484,9 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 
     
     double x, y, z, r, phi;
-    for (int ipol = 1; ipol >= 0; ipol--){
-      for(int ilayer = 0; ilayer < 4; ilayer++){ 
-	for(int ifold = 0; ifold < NRX_PHI[ilayer]; ifold++){
+    for(int ilayer = 0; ilayer < 4; ilayer++){ 
+      for(int ifold = 0; ifold < NRX_PHI[ilayer]; ifold++){
+	for (int ipol = 1; ipol >= 0; ipol--){
 
 	  // First attempt to define phase-centers is done by coming 20 cm
 	  // inwards from the antenna face end 
@@ -3504,6 +3506,11 @@ void Anita::GetPayload(Settings* settings1, Balloon* bn1){
 	  if (ipol==0) PHI_EACHLAYER[ilayer][ifold]=phi;
 	  
 	}
+	// Temp hack for ANITA-4
+	// The different phase-centers between H and V create problems when
+	// Making the LCP and RCP triggers
+	// This hack uses the VPOL phase-centers for both VPOL and HPOL channels
+	if (settings1->WHICH==10)  ANTENNA_POSITION_START[1][ilayer][ifold] = ANTENNA_POSITION_START[0][ilayer][ifold];
       }
     }
   }
