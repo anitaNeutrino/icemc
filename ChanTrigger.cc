@@ -1763,25 +1763,6 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   delete graph1;
 }
 
-void ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
-
-  for (int i=0; i<anita1->NFOUR/2; i++){
-    sig0[i]   = justSig_trigPath[0][i];
-    noise0[i] = justNoise_trigPath[0][i];
-    sig1[i]   = justSig_trigPath[1][i];
-    noise1[i] = justNoise_trigPath[1][i];
-  }
-}
-
-void ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
-
-  for (int i=0; i<anita1->NFOUR/2; i++){
-    sig0[i]   = justSig_digPath[0][i];
-    noise0[i] = justNoise_digPath[0][i];
-    sig1[i]   = justSig_digPath[1][i];
-    noise1[i] = justNoise_digPath[1][i];
-  }
-}
 
 void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
 //  std::cout << __FILE__ << " " << __FUNCTION__ << " " << __LINE__ << std::endl;
@@ -1949,3 +1930,24 @@ void ChanTrigger::injectImpulseAtSurf(Anita *anita1, double volts_triggerPath_e[
   }
 }
 #endif
+
+
+void ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
+
+  for (int i=0; i<anita1->NFOUR/2; i++){
+    sig0[i]   = justSig_trigPath[0][i];
+    noise0[i] = justNoise_trigPath[0][i];
+    sig1[i]   = justSig_trigPath[1][i];
+    noise1[i] = justNoise_trigPath[1][i];
+  }
+}
+
+void ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
+
+  for (int i=0; i<anita1->NFOUR/2; i++){
+    sig0[i]   = justSig_digPath[0][i];
+    noise0[i] = justNoise_digPath[0][i];
+    sig1[i]   = justSig_digPath[1][i];
+    noise1[i] = justNoise_digPath[1][i];
+  }
+}

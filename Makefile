@@ -113,7 +113,12 @@ DICT = classdict
 OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o
 
 
-BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testWAIS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
+BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) 
+
+ifdef ANITA_UTIL_EXISTS
+BINARIES += testEAS$(ExeSuf) testWAIS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
+endif
+
 
 #------------------------------------------------------------------------------
 
@@ -124,6 +129,8 @@ all:            $(BINARIES)
 $(BINARIES): %: %.$(SrcSuf) $(OBJS)
 		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $< $(LIBS) $(OutPutOpt) $@
 		@echo "$@ done"
+
+
 
 .PHONY: clean
 clean:
