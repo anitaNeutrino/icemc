@@ -175,7 +175,7 @@ public:
 
     void PickAnyDirection();
     
-    void PickGrbDirection();
+    int PickGrbDirection();
     
     int noway;
     int wheredoesitleave_err;

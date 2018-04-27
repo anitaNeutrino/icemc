@@ -275,7 +275,7 @@ void Interaction::PickAnyDirection() {
   nnu.SetZ(costheta_nutraject);
 }
 
-void Interaction::PickGrbDirection() {
+int Interaction::PickGrbDirection() {
   
   TTree grb_tree("grb_tree","grb_tree");
   grb_tree.ReadFile("data/grb_alt_az_for_icemc.txt","grb_az/D:grb_alt/D");
@@ -306,6 +306,8 @@ void Interaction::PickGrbDirection() {
   nnu.SetX(sinthetanu * cos(phi_nutraject));
   nnu.SetY(sinthetanu * sin(phi_nutraject));
   nnu.SetZ(costheta_nutraject);
+
+  return 1;
  
 }
 

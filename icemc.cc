@@ -1794,7 +1794,9 @@ int main(int argc,  char **argv) {
           err = 1; // everything is a-okay
         }// end else if slac
         else if ( settings1->SOURCE ) {
-          err = 1; 
+          err = interaction1->PickGrbDirection(); 
+          //cout << "err is " << err << endl; 
+          costhetanu=cos(interaction1->nnu.Theta());
         }
 
         if ( err == 0 )
@@ -1918,8 +1920,10 @@ int main(int argc,  char **argv) {
       } //if whichray==1
 
       if ( tautrigger == 0 ) {//did this for cc- taus already,  do again for all other particles
-        if (  ( !settings1->UNBIASED_SELECTION ) && ( !settings1->SLAC ) && ( !settings1->SOURCE )  )
+        if (  ( !settings1->UNBIASED_SELECTION ) && ( !settings1->SLAC ) && ( !settings1->SOURCE )  ) {
           err = GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
+        //cout << "costhetanu is " << costhetanu << endl; 
+        }
         else if (settings1->SLAC) {
           Vector xaxis(1., 0., 0.);
           interaction1->nnu = xaxis.RotateY(bn1->theta_bn-settings1->SLAC_HORIZDIST/EarthModel::R_EARTH);  //direction of neutrino- for slac,  that's the direction of the beam
@@ -1938,7 +1942,10 @@ int main(int argc,  char **argv) {
           err = 1; // everything is a-okay
         }//end else if slac
         else if ( settings1->SOURCE ) {
-          err = 1; 
+          err = interaction1->PickGrbDirection(); 
+          //cout << "err is " << err << endl; 
+          costhetanu = cos(interaction1->nnu.Theta());
+          cout << "costhetanu is " << costhetanu << endl; 
         }
       }//end tau trigger ==0
 
