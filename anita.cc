@@ -4191,7 +4191,7 @@ void Anita::readTuffResponseTrigger(Settings *settings1){
     for(int iring = 0; iring<=2; iring++){
       for(int iphi=0; iphi<=15; iphi++) {
         for(int ituff=0; ituff <=6; ituff++) {
-            filename = Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str());
+            filename = Form("%s/share/AnitaAnalysisFramework/responses/A4ImpulseTUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str());
             //debugging
             //cout << Form("%s/share/AnitaAnalysisFramework/responses/TUFFs/%s",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str()) << endl;
           TGraph *gtemp = new TGraph(filename);
