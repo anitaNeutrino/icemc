@@ -17,6 +17,7 @@
 #define NK_XLIB_IMPLEMENTATION
 #include "nuklear.h"
 #include "nuklear_xlib.h"
+#include "buffer.hh"
 
 // extern struct nk_context *gctx;
 extern struct xlibstruct *gxlib;
@@ -48,6 +49,13 @@ extern vector<double> ZhsTimeE;
 extern vector<double> ZhsAlpha;
 bool FWHM(long int n, double *x, double *y, double &xmin, double &xmax, int &ind_maxval, double &xmaxval, double &ymaxval, double threshold_rel = 0.5);
 
+
+void property_int(struct nk_context* ctx, const char *name, int min, bvv::TBuffer <int> &buf, int max, int step, float inc_per_pixel){
+  int val = buf; 
+  nk_property_int(ctx, name, min, &val, max, step, inc_per_pixel);
+  // cout << "val: " << val << endl;
+  buf = val;
+}
 
 static struct game_state *game_init()
 {
@@ -281,10 +289,12 @@ static bool game_step(struct game_state *state)
                NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
                NK_WINDOW_CLOSABLE|NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
     {
-      static int op = kBlue;
-      static int op_prev = op;
+      // static int op = kBlue;
+      static bvv::TBuffer <int> op(kBlue);
+      static bvv::TBuffer <int> line_width(1);
+      // static int op_prev = op;
 
-      static int property = 20;
+      static int property = 1;
 
       nk_layout_row_static(ctx, 30, 80, 1);
       if (nk_button_label(ctx, "button"))
@@ -292,13 +302,18 @@ static bool game_step(struct game_state *state)
       nk_layout_row_dynamic(ctx, 30, 2);
       if (nk_option_label(ctx, "kBlue", op == kBlue)) { op = kBlue; }
       if (nk_option_label(ctx, "kRed", op == kRed))   { op = kRed; }
-      if (op != op_prev) {
-        state->grFft->SetLineColor(op); state->cZhsFft->Modified(); state->cZhsFft->Update(); 
-        op_prev = op;
+      if (*op) {
+        state->grFft->SetLineColor(op);
       }
-      state->grFft->SetLineColor(op);
+      // state->grFft->SetLineColor(op);
       nk_layout_row_dynamic(ctx, 25, 1);
-      nk_property_int(ctx, "Compression:", 0, &property, 100, 10, 1);
+      property_int(ctx, "width: ", 0, line_width, 10 /*max*/, 1 /*increment*/, 0.8 /*sensitivity*/);
+      if (*line_width) {
+        state->grFft->SetLineWidth(line_width);
+      }
+      if (*op || *line_width) {
+         state->cZhsFft->Modified(); state->cZhsFft->Update(); 
+      }
     } else cout << "nk_begin failed" << endl;
     nk_end(ctx);
 

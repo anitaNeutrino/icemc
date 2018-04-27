@@ -124,7 +124,7 @@ all:            $(BINARIES) $(SO_TARGET)
 # 		g++ -pedantic -Wall -O0 -g3 -fPIC `root-config --cflags` -rdynamic -o $@ $< -ldl `root-config --glibs` hot-loop.o $(LIBS)
 
 
-$(SO_HOT_TARGET): $(SO_DEP)
+$(SO_HOT_TARGET): $(SO_DEP) hot-api.h
 	g++ $(CXXFLAGS) -shared $(LDFLAGS) -ldl -fvisibility=hidden -o $@ $<
 	nm $@ > $(basename $(SO_HOT_TARGET)).txt
 	./notify.sh testEAS SO_LOCATION $@ || rm $(SO_HOT_TARGET) $(basename $(SO_HOT_TARGET)).txt # if default, "hot" target was called by mistake when program is not running.
