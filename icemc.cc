@@ -1287,6 +1287,10 @@ int main(int argc,  char **argv) {
   double true_efield_array[4];
   // end energy reconstruction variables
 
+
+  IceModel *antarctica = new IceModel(settings1->ICE_MODEL + settings1->NOFZ*10, settings1->CONSTANTICETHICKNESS * 1000 + settings1->CONSTANTCRUST * 100 + settings1->FIXEDELEVATION * 10 + 0, settings1->WEIGHTABSORPTION);
+  cout << "area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << "\n";
+  
   UInt_t eventNumber;
 #ifdef ANITA_UTIL_EXISTS
 
@@ -1336,6 +1340,29 @@ int main(int argc,  char **argv) {
   triggerSettingsTree->Branch("dioderms",  anita1->bwslice_dioderms_fullband_allchan,  "dioderms[2][48][6]/D" );
   triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48][6]/D");
   triggerSettingsTree->Fill();
+
+  
+  TTree *summaryAnitaTree = new TTree("summaryAnitaTree", "summaryAnitaTree"); // finaltree filled for all events that pass
+  summaryAnitaTree->Branch("EXPONENT", &settings1->EXPONENT, "EXPONENT/D" );
+  summaryAnitaTree->Branch("total_nu",      &NNU,                 "total_nu/I" );
+  summaryAnitaTree->Branch("total_nue",     &count1->nnu_e,       "total_nue/I" );
+  summaryAnitaTree->Branch("total_numu",    &count1->nnu_mu,      "total_numu/I" );
+  summaryAnitaTree->Branch("total_nutau",   &count1->nnu_tau,     "total_nutau/I" );
+  summaryAnitaTree->Branch("pass_nu",       &count1->npass[0],     "pass_nu/I"    );
+
+
+  summaryAnitaTree->Branch("weighted_nu",    &eventsfound,          "weighted_nu/D"    );
+  summaryAnitaTree->Branch("weighted_nue",   &sum[0],               "weighted_nue/D"    );
+  summaryAnitaTree->Branch("weighted_numu",  &sum[1],               "weighted_numu/D"    );
+  summaryAnitaTree->Branch("weighted_nutau", &sum[2],               "weighted_nutau/D"    );
+
+  summaryAnitaTree->Branch("int_length",      &len_int_kgm2,         "int_length/D");
+  summaryAnitaTree->Branch("total_volume",   &antarctica->volume,    "total_volume/D");
+  summaryAnitaTree->Branch("rho_medium",     &sig1->RHOMEDIUM,       "rho_medium/D");
+  // summaryAnitaTree->Branch("rho_h20",        &(sig1->RHOH20),          "rho_water/D");
+  
+  summaryAnitaTree->Branch("effVol_nu",    &km3sr,                  "effVol_nu/D" );
+  //  summaryAnitaTree->Branch("effArea_nu",   &km2sr,                  "effArea_nu/D");
   
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
@@ -1354,8 +1381,6 @@ int main(int argc,  char **argv) {
     settings1->FIXEDELEVATION = 1;
   }
 
-  IceModel *antarctica = new IceModel(settings1->ICE_MODEL + settings1->NOFZ*10, settings1->CONSTANTICETHICKNESS * 1000 + settings1->CONSTANTCRUST * 100 + settings1->FIXEDELEVATION * 10 + 0, settings1->WEIGHTABSORPTION);
-  cout << "area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << "\n";
 
   for (int i=0;i<antarctica->nRows_ice;i++) {
     for (int j=0;j<antarctica->nCols_ice;j++) {
@@ -1448,22 +1473,21 @@ int main(int argc,  char **argv) {
   if (settings1->SLAC)
     bn1->GetSlacPositions(anita1);
 
-  for (int j=0;j<settings1->NLAYERS;j++) { // loop over the layers of the payload
-    // noise depends on cant angle of antenna
-  } //for loop over antenna layers
-
-  if (settings1->WHICHRAYS==1) {
+  switch (settings1->WHICHRAYS){
+  case 1:
     settings1->MINRAY=0;
     settings1->MAXRAY=0;
-  } //if (settings1->WHICHRAYS==1)
-  if (settings1->WHICHRAYS==2) {
+    break;
+  case 2:
     settings1->MINRAY=0;
     settings1->MAXRAY=1;
-  } //if (settings1->WHICHRAYS==2)
-  if (settings1->WHICHRAYS==3) {
+    break;
+  case 3:
     settings1->MINRAY=1;
     settings1->MAXRAY=1;
-  } //if (settings1->WHICHRAYS==3)
+    break;
+  }
+  
 
   time_t raw_loop_start_time = time(NULL);
   cout<<"Starting loop over events.  Time required for setup is "<<(int)((raw_loop_start_time - raw_start_time)/60)<<":"<< ((raw_loop_start_time - raw_start_time)%60)<<endl;
@@ -1506,8 +1530,6 @@ int main(int argc,  char **argv) {
     out->Close();
   }
     
-  
-  //  TRandom r(settings1->SEED); // use seed set as input
  
   signal(SIGINT,  interrupt_signal_handler);     // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
 
@@ -3657,37 +3679,6 @@ int main(int argc,  char **argv) {
   gRandom=rsave;
   delete Rand3;
 
-
-#ifdef ANITA_UTIL_EXISTS
-
-  anitafileEvent->cd();
-  eventTree->Write("eventTree");
-  anitafileEvent->Close();
-  delete anitafileEvent;
-
-  anitafileHead->cd();
-  headTree->Write("headTree");
-  anitafileHead->Close();
-  delete anitafileHead;
-
-  anitafileGps->cd();
-  adu5PatTree->Write("adu5PatTree");
-  anitafileGps->Close();
-  delete anitafileGps;
-
-#ifdef ANITA3_EVENTREADER
-  anitafileTruth->cd();
-  configAnitaTree->Write("configAnitaTree");
-  truthAnitaTree->Write("truthAnitaTree");
-  triggerSettingsTree->Write("triggerSettingsTree");
-  anitafileTruth->Close();
-  delete anitafileTruth;
-#endif
-
-#endif
-
-
-
   cout << "about to close tsignals tree.\n";
   anita1->fsignals=anita1->tsignals->GetCurrentFile();
   anita1->fdata=anita1->tdata->GetCurrentFile();
@@ -3778,6 +3769,38 @@ int main(int argc,  char **argv) {
   //tree17->Fill();
 
 
+
+
+#ifdef ANITA_UTIL_EXISTS
+
+  anitafileEvent->cd();
+  eventTree->Write("eventTree");
+  anitafileEvent->Close();
+  delete anitafileEvent;
+
+  anitafileHead->cd();
+  headTree->Write("headTree");
+  anitafileHead->Close();
+  delete anitafileHead;
+
+  anitafileGps->cd();
+  adu5PatTree->Write("adu5PatTree");
+  anitafileGps->Close();
+  delete anitafileGps;
+
+#ifdef ANITA3_EVENTREADER
+  anitafileTruth->cd();
+  configAnitaTree->Write("configAnitaTree");
+  truthAnitaTree->Write("truthAnitaTree");
+  triggerSettingsTree->Write("triggerSettingsTree");
+  summaryAnitaTree->Fill();
+  summaryAnitaTree->Write("summaryAnitaTree");
+  anitafileTruth->Close();
+  delete anitafileTruth;
+#endif
+
+#endif
+  
   cout << "closing file.\n";
   CloseTFile(hfile);
 
@@ -3928,12 +3951,26 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput << "Number of (weighted) neutrinos that pass only VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
   foutput << "Number of (weighted) neutrinos that pass only HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
   foutput << "Number of (weighted) neutrinos that pass both pol triggers is: " << allcuts_weighted_polarization[2] << "\n\n";
-
+  
   cout << "Number of (weighted) neutrinos that pass (with weight>0.001) is: " << eventsfound_weightgt01 << "\n";
   cout << "Number of (weighted) neutrinos that only traverse the crust is " << eventsfound_crust << " -> " << eventsfound_crust/eventsfound*100 << "%\n\n";
   cout << "Number of (weighted) neutrinos that pass only VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
   cout << "Number of (weighted) neutrinos that pass only HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
   cout << "Number of (weighted) neutrinos that pass both pol triggers is: " << allcuts_weighted_polarization[2] << "\n\n";
+
+  foutput << "Total number of thrown electron neutrinos is : " << (double)count1->nnu_e   << "\n";
+  foutput << "Total number of thrown muon neutrinos is :     " << (double)count1->nnu_mu  << "\n";
+  foutput << "Total number of thrown tau neutrinos is :      " << (double)count1->nnu_tau << "\n";
+  foutput << "Number of (weighted) electron neutrinos that pass trigger is : " << sum[0] << "\n";
+  foutput << "Number of (weighted) muon neutrinos that pass trigger is     : " << sum[1] << "\n";
+  foutput << "Number of (weighted) tau neutrinos that pass trigger is      : " << sum[2] << "\n\n";
+  
+  cout << "Total number of thrown electron neutrinos is : " << (double)count1->nnu_e   << "\n";
+  cout << "Total number of thrown muon neutrinos is :     " << (double)count1->nnu_mu  << "\n";
+  cout << "Total number of thrown tau neutrinos is :      " << (double)count1->nnu_tau << "\n";
+  cout << "Number of (weighted) electron neutrinos that pass trigger is : " << sum[0] << "\n";
+  cout << "Number of (weighted) muon neutrinos that pass trigger is     : " << sum[1] << "\n";
+  cout << "Number of (weighted) tau neutrinos that pass trigger is      : " << sum[2] << "\n\n";
 
   foutput << "Volume of ice is " << volume << "\n";
   foutput << "Value of 4*pi*pi*r_earth*r_earth in km^2 " << 4*PI*PI*(EarthModel::R_EARTH*EarthModel::R_EARTH/1.E6) << "\n";
