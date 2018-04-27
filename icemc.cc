@@ -319,7 +319,7 @@ double viewangles[NVIEWANGLE];
 double GetAirDistance(double altitude_bn,  double beta); // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth
 
 //Input files
-int err=0; // errors from GetDirection function
+int err = 0; // errors from GetDirection function
 
 double djunk; // junk variable
 
@@ -622,9 +622,9 @@ int main(int argc,  char **argv) {
  
   //////////OINDREE TRYING THIS FOR GRBS/////////
   ////////// could call PickGrbDirection() when SOURCE setting is true///////
-  if (settings1->SOURCE == 1) { interaction1->PickGrbDirection(); } 
+  if ( settings1->SOURCE == 1 ) { interaction1->PickGrbDirection(); } 
  
-  Roughness *rough1=new Roughness(settings1); // create new instance of the roughness class
+  Roughness *rough1 = new Roughness(settings1); // create new instance of the roughness class
   rough1->SetRoughScale(settings1->ROUGHSIZE);
 
   Screen *panel1 = new Screen(0);  // create new instance of the screen class
@@ -1748,12 +1748,12 @@ int main(int argc,  char **argv) {
         ytree->Fill();
 
       //TAU STUFF. Pick whether it will stay as a neutrino or create tau
-      if(tautrigger==1){
-        if (( !settings1->UNBIASED_SELECTION) && !settings1->SLAC ) {
-          err=GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
+      if ( tautrigger == 1 ) {
+        if (  ( !settings1->UNBIASED_SELECTION ) && ( !settings1->SLAC ) && ( !settings1->SOURCE )  ) {
+          err = GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
           //cout<<"UNBIASED_SELECTION IS "<<settings1->UNBIASED_SELECTION<<"\n";
         }
-        else if (settings1->SLAC) {
+        else if ( settings1->SLAC ) {
           Vector xaxis(1., 0., 0.);
           //nnu=(rfexit[0].Unit()).Rotate(-10.*RADDEG, interaction1->posnu.Cross(zaxis));
           interaction1->nnu = xaxis.RotateY(bn1->theta_bn-settings1->SLAC_HORIZDIST/EarthModel::R_EARTH);  //direction of neutrino- for slac,  that's the direction of the beam
@@ -1769,10 +1769,13 @@ int main(int argc,  char **argv) {
               }//end for ifold
             }//end for ilayer
           }//end if boresights
-          err=1; // everything is a-okay
+          err = 1; // everything is a-okay
         }// end else if slac
+        else if ( settings1->SOURCE ) {
+          err = 1; 
+        }
 
-        if(err==0)
+        if ( err == 0 )
           continue;//bad stuff has happened.
 
         interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
@@ -1892,9 +1895,9 @@ int main(int argc,  char **argv) {
         ray1->nrf_iceside[4] = ray1->nrf_iceside[4] - 2*chengji*ray1->nrf_iceside[0];
       } //if whichray==1
 
-      if(tautrigger==0){//did this for cc- taus already,  do again for all other particles
-        if (( !settings1->UNBIASED_SELECTION) && !settings1->SLAC )
-          err=GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
+      if ( tautrigger == 0 ) {//did this for cc- taus already,  do again for all other particles
+        if (  ( !settings1->UNBIASED_SELECTION ) && ( !settings1->SLAC ) && ( !settings1->SOURCE )  )
+          err = GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
         else if (settings1->SLAC) {
           Vector xaxis(1., 0., 0.);
           interaction1->nnu = xaxis.RotateY(bn1->theta_bn-settings1->SLAC_HORIZDIST/EarthModel::R_EARTH);  //direction of neutrino- for slac,  that's the direction of the beam
@@ -1910,8 +1913,11 @@ int main(int argc,  char **argv) {
               }//end ifold
             }//end ilayer
           }//end boresight
-          err=1; // everything is a-okay
+          err = 1; // everything is a-okay
         }//end else if slac
+        else if ( settings1->SOURCE ) {
+          err = 1; 
+        }
       }//end tau trigger ==0
 
       // gets angle between ray and neutrino direction
@@ -1950,7 +1956,7 @@ int main(int argc,  char **argv) {
         ray1->nrf_iceside[4] = ray1->nrf_iceside[4] + 2*chengji*ray1->nrf_iceside[0];
       }
 
-      if (err==0) {
+      if ( err == 0 ) {
         count1->nbadfracs[whichray]++;
         cout<<"err==0,  so leaving.\n";
         continue;
