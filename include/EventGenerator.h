@@ -23,6 +23,10 @@ namespace icemc {
   class Counting;
   class Spectra;
   class Primaries;
+  class GeneratedNeutrino;
+  class PassingNeutrino;
+
+
 
   class EventGenerator {
   public:
@@ -36,7 +40,7 @@ namespace icemc {
     virtual ~EventGenerator();
 
     static const int NVIEWANGLE=100; // number of viewing angles to look at the signal, on Seckel's request
-    int inu; // counts neutrinos as they are generated
+    // int inu; // counts neutrinos as they are generated
     double eventsfound_beforetrigger=0.;
     double eventsfound_crust=0; //number of events that only traverse the crust
     double eventsfound_weightgt01=0; // summing weights > 0.1
@@ -71,7 +75,7 @@ namespace icemc {
 
     // inputs
     int NNU;        // number of neutrinos
-    int whichray=0; // indexes the rays that we look at (actually just used for ice but we use it in GetNuFlavor so keep it here)
+    // int whichray=0; // indexes the rays that we look at (actually just used for ice but we use it in GetNuFlavor so keep it here)
     double RANDOMISEPOL=0.;
 
     
@@ -468,7 +472,7 @@ namespace icemc {
 
     UInt_t eventNumber;
 
-    void applyRoughness(const Settings& settings1, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, Signal* sig1, Anita* anita1);
+    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, Signal* sig1, Anita* anita1);
     
     void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE);
  
@@ -489,8 +493,8 @@ namespace icemc {
     double GetAverageVoltageFromAntennasHit(const Settings *settings1,  int *nchannels_perrx_triggered,  double *voltagearray,  double& volts_rx_sum);
 
 
-    // Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside, const int& inu);
-    Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside);    
+    Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside, const int& inu);
+    // Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside);    
 
     void Attenuate(IceModel *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const Position &posnu);
 
@@ -517,7 +521,7 @@ namespace icemc {
 
     void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
 
-    void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  std::string,  std::string,  double,  std::ofstream &nu_out);
+    void WriteNeutrinoInfo(const int& inu, Position&,  Vector&,  Position&,  double,  std::string,  std::string,  double,  std::ofstream &nu_out);
 
     int Getmine(double*,  double*,  double*,  double*);
 
@@ -551,7 +555,11 @@ namespace icemc {
     Interaction* interaction1;
     Balloon* bn1;
     Anita* anita1;
-    Taumodel* fTauPtr;    
+    Taumodel* fTauPtr;
+
+    GeneratedNeutrino* fGenNu;
+    PassingNeutrino* fPassNu;
+    
   private:
 
     

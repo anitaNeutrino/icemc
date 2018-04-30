@@ -31,6 +31,7 @@
 #include "GlobalTrigger.h"
 #include "ChanTrigger.h"
 #include "SimulatedSignal.h"
+#include "GeneratedNeutrino.h"
 #include "EnvironmentVariable.h"
 #include "IcemcLog.h"
 
@@ -47,7 +48,6 @@
 
 
 
-std::string ICEMC_SRC_DIR = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
 void icemc::EventGenerator::interrupt_signal_handler(int sig){
@@ -71,10 +71,10 @@ void icemc::EventGenerator::interrupt_signal_handler(int sig){
  * 
  * @todo properly zero member variables
  */
-icemc::EventGenerator::EventGenerator() : fNeutrinoPath(NULL), interaction1(NULL), bn1(NULL), anita1(NULL), fTauPtr(NULL)
+icemc::EventGenerator::EventGenerator() : fNeutrinoPath(NULL), interaction1(NULL), bn1(NULL), anita1(NULL), fTauPtr(NULL), fGenNu(NULL),  fPassNu(NULL)
 {
   pnu = pow(10., 20);   //!< energy of neutrinos
-  inu = 0;
+  // inu = 0;
 }
 
 
@@ -123,6 +123,7 @@ void icemc::EventGenerator::Integrate(Anita *anita1, int j, int k, double *vmmhz
 
 
 void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, Signal *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
+
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
   double errordown_v_thresh[NTHRESHOLDS];
@@ -647,7 +648,7 @@ double icemc::EventGenerator::GetAverageVoltageFromAntennasHit(const Settings *s
 //end GetAverageVoltageFromAntennasHit()
 
 
-icemc::Vector icemc::EventGenerator::GetPolarization(const Vector &nnu, const Vector &nrf2_iceside){//}, const int& inu) {
+icemc::Vector icemc::EventGenerator::GetPolarization(const Vector &nnu, const Vector &nrf2_iceside, const int& inu) {
   // Want to find a unit vector in the same plane as nnu and n_refr,
   // but perpendicular to n_refr,  pointing away from nnu.
 
@@ -658,7 +659,7 @@ icemc::Vector icemc::EventGenerator::GetPolarization(const Vector &nnu, const Ve
   n_pol = n_pol.Unit();
   // check and make sure E-field is pointing in the right direction.
   if (nnu.Dot(nrf2_iceside)>0 && n_pol.Dot(nnu)>0){
-    Log() << icemc::error << "In GetPolarization.  Event is " << inu << std::endl;
+    Log() << icemc::error << "In GetPolarization.  inu = " << inu << std::endl;
   }
   return n_pol;
 }
@@ -1076,7 +1077,9 @@ double icemc::EventGenerator::GetThisAirColumn(const Settings* settings1,  Posit
 
 void icemc::EventGenerator::GetAir(double *col1) {
   double nothing;
-  std::ifstream air1(ICEMC_SRC_DIR+"/data/atmosphere.dat"); // length of chord in air vs. theta (deg)
+  std::string icemcSrcDir = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
+  
+  std::ifstream air1(icemcSrcDir+"/data/atmosphere.dat"); // length of chord in air vs. theta (deg)
   //where theta is respect to "up"
   // binned in 0.1 degrees
   for(int iii=0;iii<900;iii++) {
@@ -1214,9 +1217,10 @@ void icemc::EventGenerator::GetBalloonLocation(Interaction *interaction1,Ray *ra
     
   // double balloondist =r_bn_tmp.Mag();//this is above center of earth, if i understand correctly. Need above the surface of the earth. 
   double balloonphi = r_bn_tmp.Phi(); //phi position of the balloon
-  if (balloonphi>constants::PI)
+  if (balloonphi>constants::PI){
     balloonphi=balloonphi-2*constants::PI;
-
+  }
+  
   double balloontheta = r_bn_tmp.Theta();// costheta position of the baloon
   // get this by dotting ray1->nsurf_rfexit with nnu?     
   // double thetainc = acos(interaction1->nnu[2])*180/PI; //nnu is unit vector; cos(thetainc) = z/r
@@ -1234,7 +1238,7 @@ void icemc::EventGenerator::GetBalloonLocation(Interaction *interaction1,Ray *ra
 
 
 
-void icemc::EventGenerator::WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double altitude_int,  std::string nuflavor,  std::string current,  double elast_y,  std::ofstream &nu_out) {
+void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, Position &posnu,  Vector &nnu,  Position &r_bn,  double altitude_int,  std::string nuflavor,  std::string current,  double elast_y,  std::ofstream &nu_out) {
   nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
 }
 
@@ -1274,7 +1278,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // input parameters
   settings1.ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
   bn1->InitializeBalloon();
-  anita1->Initialize(&settings1, Log().foutput, inu, clOpts.outputdir);
+  anita1->Initialize(&settings1, Log().foutput, 0, clOpts.outputdir);
   sig1->Initialize();
 
   NNU = settings1.NNU;
@@ -1508,14 +1512,28 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
        <<(int)((raw_loop_start_time - raw_start_time)/60) << ":"
        << ((raw_loop_start_time - raw_start_time)%60) << std::endl;
 
+
+
+
+
+
+
   /**
-   * Main analysis loop over generated neutrinos
+   * Main loop over generated neutrinos
    */
-  for (inu = clOpts.startNu; inu < NNU; inu++) {
+  for (int inu = clOpts.startNu; inu < NNU; inu++) {
 
     // generate a new one for each loop...
     // is there a more elegant way to do this?
     fNeutrinoPath->reset();
+
+    if(fGenNu) {delete fGenNu;}
+    fGenNu = new GeneratedNeutrino(inu);
+
+    if(fPassNu) {
+      delete fPassNu;
+      fPassNu = NULL;
+    }
 
     if (NNU >= 100) {
       if (inu % (NNU / 100) == 0){
@@ -1527,17 +1545,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     }
     
     eventNumber=(UInt_t)(clOpts.run_no)*NNU+inu;
-    //cerr<<inu<<std::endl;
-    //if( !((inu==246) || (inu==2579) || (inu==5522) || (inu==11235) || (inu==11815) || (inu==19723) || (inu==21264) || (inu==28442) || (inu==36789) || (inu==36894) || (inu==38424) || (inu==45829) || (inu==45880) || (inu==52929) || (inu==56821) || (inu==64933) || (inu==73569) || (inu==73707) || (inu==78717) || (inu==92717) || (inu==99750))  ) continue;
-    
+
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
     TRandom3 r(eventNumber+7e8);
     if (settings1.NOISEFROMFLIGHTDIGITIZER || settings1.NOISEFROMFLIGHTTRIGGER) {
       anita1->fRand->SetSeed(eventNumber+8e9);
     }
-
-
+    
     //reset screen parameters (even for no roughness) for the new event
     panel1->ResetParameters();
     anita1->inu=inu;
@@ -1545,7 +1560,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     std::string nunum = Form("%d",inu);
 
     // loop over minray = direct,  maxray = reflected
-    for (whichray = settings1.MINRAY; whichray <= settings1.MAXRAY; whichray++) {
+    for (int whichray = settings1.MINRAY; whichray <= settings1.MAXRAY; whichray++) {
       anita1->passglobtrig[0] = 0;
       anita1->passglobtrig[1] = 0;
       passes_thisevent = 0;
@@ -1641,11 +1656,17 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       bn1->PickDownwardInteractionPoint(interaction1,  anita1,  &settings1,  antarctica,  ray1,  beyondhorizon);
 
       if (interaction1->noway){
+	fGenNu->passCutNoWay = 0;
+	std::cerr << "All tree filled!" << ro.allTree.GetEntries() << "\n";
+	ro.allTree.Fill();
         continue;
+      }
+      else{
+	fGenNu->passCutNoWay = 1;
       }
       count1->noway[whichray]++;
 
-      if (interaction1->wheredoesitleave_err){
+      if (interaction1->wheredoesitleave_err){	
         continue;
       }
       count1->wheredoesitleave_err[whichray]++;
@@ -1679,7 +1700,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       count1->iceinteraction[whichray]++;
 
       if (beyondhorizon) {
+	fGenNu->passCutWithinHorizon = 0;
+	std::cout << "Beyond horizon" << std::endl;
+	ro.allTree.Fill();
         continue;
+      }
+      else{
+	fGenNu->passCutWithinHorizon = 1;
       }
       count1->inhorizon[whichray]++;
 
@@ -2170,13 +2197,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       count1->nconverges[whichray]++;
       // Get Polarization vector.  See Jackson,  Cherenkov section.
-      n_pol = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4]);
+      n_pol = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4], inu);
       //cerr<<inu<<":(spec)  v_nu "<<interaction1->nnu<<" : 2IP "<<ray1->nrf_iceside[4]<<" : inc npol"<<n_pol<< std::endl;
       //cerr<<inu<<"  "<<ray1->rfexit[2]<<std::endl;
       if (settings1.BORESIGHTS) {
         for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
           for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-            n_pol_eachboresight[ilayer][ifold]=GetPolarization(interaction1->nnu, ray1->nrf_iceside_eachboresight[4][ilayer][ifold]);
+            n_pol_eachboresight[ilayer][ifold]=GetPolarization(interaction1->nnu, ray1->nrf_iceside_eachboresight[4][ilayer][ifold], inu);
           } // end looping over antennas in phi
         } // end looping over layers
       } // if we are calculating for all boresights
@@ -2239,7 +2266,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       
       if(settings1.ROUGHNESS){
-	applyRoughness(settings1, interaction1, ray1, panel1, antarctica, bn1, sig1, anita1);
+	applyRoughness(settings1, inu, interaction1, ray1, panel1, antarctica, bn1, sig1, anita1);
       }
 
       if( settings1.ROUGHNESS && !panel1->GetNvalidPoints() ){
@@ -2842,6 +2869,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
            || (settings1.TRIGTYPE==0 && count_pass>=settings1.NFOLD)
            || (settings1.MINBIAS==1)){
 
+	// the neutrino has passed the trigger...
+	fPassNu = new PassingNeutrino(*fGenNu); // forced to be NULL at loop start
+
 	if (bn1->WHICHPATH==4){
           std::cout << "This event passes.\n";
 	}
@@ -3074,7 +3104,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             times_core_entered_det += core_entered;
 
             if (settings1.WRITEPOSFILE==1){
-              WriteNeutrinoInfo(interaction1->posnu, interaction1->nnu, bn1->r_bn, interaction1->altitude_int, interaction1->nuflavor, interaction1->current, elast_y, Log().nu_out);
+              WriteNeutrinoInfo(inu, interaction1->posnu, interaction1->nnu, bn1->r_bn, interaction1->altitude_int, interaction1->nuflavor, interaction1->current, elast_y, Log().nu_out);
 	    }
 
             // sample first 1000 events that pass to see the distribution of weights
@@ -3195,6 +3225,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
     } // end for WHICHRAY
     //looping over two types of rays - upgoing and downgoing.
+
+    if(fPassNu){
+      ro.passTree.Fill();
+    }
+    ro.allTree.Fill(); // should be called at each "continue" inu loop, but we made it though.    
+    
     if (ABORT_EARLY){
       Log() << "\n***********************************************************";
       Log() << "\n* SIGINT received,  aborting loop over events early.";
@@ -3202,7 +3238,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       Log() << "\n* Any output which relied on NNU should be corrected for.";
       Log() << "\n***********************************************************\n";
       break;
-    }
+    }    
   }//end NNU neutrino loop
 
   gRandom = rsave;
@@ -3306,6 +3342,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   Log() << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<std::endl;
 
   // anything not a member variable should be deleted here
+  // (no need to NULL set since not a member var)
   if(sec1)        delete sec1;
   if(primary1)    delete primary1;
   if(sig1)        delete sig1;
@@ -3323,7 +3360,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 
 
-void icemc::EventGenerator::applyRoughness(const Settings& settings1, Interaction* interaction1,
+void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,
 					   Ray* ray1, Screen* panel1, IceModel* antarctica,
 					   Balloon* bn1, Signal* sig1, Anita* anita1){
   
@@ -3505,7 +3542,7 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, Interactio
       /////
       // Incident and Transmitted Polarizations
       // set incident polarization
-      npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint).Unit();
+      npol_local_inc = GetPolarization(interaction1->nnu, vec_nnu_to_impactPoint, inu).Unit();
       vec_inc_perp = (vec_localnormal.Cross(vec_nnu_to_impactPoint)).Unit();
       vec_inc_parl = (vec_nnu_to_impactPoint.Cross(vec_inc_perp)).Unit();
       pol_perp_inc = npol_local_inc.Dot(vec_inc_perp);

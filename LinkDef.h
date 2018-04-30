@@ -10,4 +10,6 @@
 #pragma link C++ class icemc::Settings+;
 #pragma link C++ class icemc::NeutrinoPath+;
 #pragma link C++ class icemc::VoltsRX+;
+#pragma link C++ class icemc::GeneratedNeutrino+;
+#pragma link C++ class icemc::PassingNeutrino+;
 #endif

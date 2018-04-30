@@ -38,6 +38,17 @@ namespace icemc {
     RootOutput(const EventGenerator* uhen = NULL, const Settings* settings = NULL, const char* outputDir = ".", int run = 0);
     virtual ~RootOutput();
 
+    /**
+     * The goal is to have all info in these trees.
+     * 
+     */
+    TTree allTree;  ///< Every neutrino generated
+    TTree passTree; ///< Everything that passes the instrument trigger, very detailed
+
+
+    /**
+     * Keep for now while we move to new tree format
+     */
     TTree ytree;		///<To record y distributions
     TTree summarytree;		///< finaltree filled for all events that pass
     TTree mytaus_tree;
@@ -46,6 +57,8 @@ namespace icemc {
     TTree viewangletree;	///< signal as it is produced at the interaction
     TTree balloontree;		///< filled for all events
     
+
+
     TH1D h1mybeta;
     TH1D h1mytheta;             ///< 90-incidentangle when neutrinos enter the Earth.
     TH1F hundogaintoheight_e;
@@ -68,6 +81,7 @@ namespace icemc {
     TH1F fraction_sec_taus;
     TH1F n_sec_muons;
     TH1F n_sec_taus;
+
 
     void fillRootifiedAnitaDataTrees(const EventGenerator* uhen, const Settings& settings1, const Ray* ray1, const Screen* panel1);
 

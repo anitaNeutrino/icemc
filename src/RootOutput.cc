@@ -14,6 +14,8 @@
 #include "icemodel.hh"
 #include "IcemcLog.h"
 
+#include "GeneratedNeutrino.h"
+
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
 #include "AnitaGeomTool.h"
@@ -88,6 +90,11 @@ void icemc::RootOutput::initHist(TH1* h, const char* name, const char* title,
 
 void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings* settings2){
 
+  if(fIceFinal){
+    Log() << icemc::warning << "IceFinal already initialized!"  << std::endl;
+    return;
+  }
+
   EventGenerator* uhen = const_cast<EventGenerator*>(uhen2);
   Settings* settings = const_cast<Settings*>(settings2);
 
@@ -99,6 +106,12 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   ss->Write();
   delete ss;
   ss = NULL;
+
+  initTree(&allTree, "allTree", "allTree", fIceFinal);
+  allTree.Branch("genNu", &uhen->fGenNu);
+
+  initTree(&passTree, "passTree", "passTree", fIceFinal);
+  passTree.Branch("passNu", &uhen->fPassNu);
 
   // histograms
   initHist(&ref_int_coord, "ref_int_coord", "", 600, -3000, 3000, 500, -2500, 2500);
@@ -159,7 +172,8 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
 
   
   initTree(&finaltree, "passing_events", "passing_events", fIceFinal); // finaltree filled for all events that pass
-  finaltree.Branch("inu", &uhen->inu, "inu/I");
+  
+  // finaltree.Branch("inu", &uhen->inu, "inu/I"); @todo TEMPORARILY COMMENT OUT DURING REFACTOR, if abandon refactor then uncomment
   finaltree.Branch("vmmhz_min", &uhen->vmmhz_min, "vmmhz_min/D");
   finaltree.Branch("vmmhz_max", &uhen->vmmhz_max, "vmmhz_max/D");
   finaltree.Branch("thresholdsAnt", &uhen->thresholdsAnt, "thresholdsAnt[48][2][5]/D");
