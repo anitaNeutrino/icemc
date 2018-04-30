@@ -2,6 +2,7 @@
 #define ICEMC_GENERATED_NEUTRINOS_H
 
 #include "TObject.h" ///< ClassDef/ClassImp
+#include "balloon.hh" /// < For BalloonInfo
 
 namespace icemc {
 
@@ -34,12 +35,13 @@ namespace icemc {
      */
     GeneratedNeutrino(int ithLoop = -1); ///< Set everything to -1
     virtual ~GeneratedNeutrino();
+    BalloonInfo balloon;
     double weight;
     int inu;
     int passCutNoWay;
     int passCut2;
     int passCut3;
-    int passCutWithinHorizon;
+    int passCutWithinHorizon;    
 
     ClassDef(GeneratedNeutrino, 1)
   };

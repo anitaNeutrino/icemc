@@ -21,10 +21,51 @@
 #include "EnvironmentVariable.h"
 
 
+ClassImp(icemc::BalloonInfo)
+
+
 #if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
 #include "vectormath_trig.h"
 
 #endif
+
+
+
+
+#ifdef ANITA_UTIL_EXISTS
+icemc::BalloonInfo::operator Adu5Pat() const{
+  Adu5Pat pat;
+  pat.latitude = latitude;
+  pat.longitude = longitude;
+  pat.altitude = altitude;
+  pat.heading = heading;
+  pat.pitch = pitch;
+  pat.roll = roll;
+  pat.realTime = realTime;
+  return pat;
+}
+
+#endif
+
+icemc::BalloonInfo::BalloonInfo(){
+  heading = -999;
+  pitch = -999;
+  roll = -999;
+  realTime = -999;
+  latitude = -999;
+  longitude = -999;
+  altitude = -999;
+  horizcoord_bn = -999;
+  vertcoord_bn = -999;
+}
+
+
+
+
+
+
+
+
 using std::ifstream;
 
 const string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
@@ -304,8 +345,10 @@ int icemc::Balloon::Getibnposition() {
   else if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9){
     ibnposition_tmp=(int)((double)igps/(double)REDUCEBALLOONPOSITIONS);
     // std::cout << __FUNCTION__ << " " << igps << " " << REDUCEBALLOONPOSITIONS << " " << ibnposition_tmp << std::endl;
-  } else
+  }
+  else{
     ibnposition_tmp=0;
+  }
     
   return ibnposition_tmp;
     
@@ -318,26 +361,20 @@ void icemc::Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1
   igps=0;
   theta_bn=acos(straightup.Dot(thetazero)); // 1deg
  
-  if (straightup.GetX()==0 && straightup.GetY()==0)
+  if (straightup.GetX()==0 && straightup.GetY()==0){
     phi_bn=0.;
-  else
+  }
+  else{
     phi_bn=acos((straightup.Cross(thetazero)).Dot(phizero)); // 1deg
-  // std::cout << "theta_bn, phi_bn are " << theta_bn << " " << phi_bn << "\n";
+  }
+
   r_bn=Position(theta_bn,phi_bn); // sets r_bn
-  //std::cout << "r_bn is ";
-  //r_bn.Print();
-  if (BN_ALTITUDE!=0)
+  if (BN_ALTITUDE!=0){
     altitude_bn=BN_ALTITUDE*12.*constants::CMINCH/100.; // set the altitude of the balloon to be what you pick.  This isn't in time for CreateHorizons though!
-  //std::cout << "altitude_bn is " << altitude_bn << "\n";
+  }
   surface_under_balloon = antarctica1->Surface(r_bn);
-  //std::cout << "surface_under_balloon is " << surface_under_balloon << "\n";
   r_bn_shadow = surface_under_balloon * r_bn.Unit();
-  //std::cout << "r_bn_shadow is " << r_bn_shadow << "\n";
-  //    r_bn = (antarctica->Geoid(r_bn)+altitude_bn) * r_bn.Unit();
-  
   r_bn = (antarctica1->Surface(r_bn)+altitude_bn) * r_bn.Unit();
-  //std::cout << "r_bn is ";
-  // r_bn.Print();
 
 
   ibnposition=Getibnposition();
@@ -393,13 +430,17 @@ int getTuffIndex(int Curr_time) {
   std::cerr << "Error in" << __PRETTY_FUNCTION__ << ", could not get TUFF index from current time... returning -1" << std::endl;
   return -1;
 }
+
+
 // this is called for each neutrino
-void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1,const Settings *settings1,int inu,Anita *anita1, double randomNumber) { // r_bn_shadow=position of spot under the balloon on earth's surface
+void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1,const Settings *settings1,int inu,Anita *anita1, double randomNumber, BalloonInfo* bi) {
+
+  // r_bn_shadow=position of spot under the balloon on earth's surface
+
   //std::cout << "calling pickballoonposition.\n";
   pitch=0.;
   roll=0.;
   phi_spin=0.;
-
 
 
   //flightdatatree->SetBranchAddress("surfTrigBandMask",&surfTrigBandMask);
@@ -490,13 +531,14 @@ void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1,const Settings *s
 		
 		
 		
-    if (WHICHPATH==2)
+    if (WHICHPATH==2){
       altitude_bn=altitude*12.*constants::CMINCH/100.;
-    else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9)
+    }
+    else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9){
       altitude_bn=altitude; // get the altitude of the balloon in the right units
-		
+    }		
     surface_under_balloon = antarctica1->Surface(r_bn); // get altitude of the surface under the balloon
-		
+
     r_bn_shadow = surface_under_balloon * r_bn.Unit(); // this is a vector pointing to spot just under the balloon on the surface (its shadow at high noon)
     r_bn = (antarctica1->Geoid(r_bn)+altitude_bn) * r_bn.Unit();
     //r_bn = (antarctica->Surface(r_bn)+altitude_bn) * r_bn.Unit(); //this points to balloon position (not a unit vector)
@@ -565,11 +607,12 @@ void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1,const Settings *s
     
   ibnposition=Getibnposition();
     
-  if (!settings1->UNBIASED_SELECTION && dtryingposition!=-999)
+  if (!settings1->UNBIASED_SELECTION && dtryingposition!=-999){
     dtryingposition=antarctica1->GetBalloonPositionWeight(ibnposition);
-  else
+  }
+  else{
     dtryingposition=1.;
-    
+  }
   phi_spin=GetBalloonSpin(heading); // get the azimuth of the balloon.
     
   // normalized balloon position
@@ -578,8 +621,9 @@ void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1,const Settings *s
   // finding which direction is east under the balloon
   n_east = Vector(sin(phi_bn), -1*cos(phi_bn), 0.);
     
-  if (settings1->SLAC)
+  if (settings1->SLAC){
     AdjustSlacBalloonPosition(inu); // move payload around like we did at slac
+  }
   // find position of each antenna boresight
    
   // now finding north
@@ -588,13 +632,34 @@ void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1,const Settings *s
   // these coordinates are for filling ntuples.
   horizcoord_bn=r_bn[0]/1000.; //m to km
   vertcoord_bn=r_bn[1]/1000.;
-    
+
   calculate_antenna_positions(settings1,anita1);
-  if (settings1->BORESIGHTS)
+  if (settings1->BORESIGHTS){
     GetBoresights(settings1,anita1);
-    
-    
+  }
+
+
+  if(bi){
+    fillBalloonInfo(*bi); // Fill the BalloonInfo summary object with the position we picked
+  }
+
 } // end PickBalloonPosition
+
+
+void icemc::Balloon::fillBalloonInfo(BalloonInfo& bi) const {
+
+  bi.heading = heading;
+  bi.pitch = pitch;
+  bi.roll = roll;
+  bi.realTime = realTime_flightdata;
+  bi.latitude = latitude;
+  bi.longitude = longitude;
+  bi.altitude = altitude;
+  bi.horizcoord_bn = horizcoord_bn;
+  bi.vertcoord_bn = vertcoord_bn;  
+}
+
+
 void icemc::Balloon::AdjustSlacBalloonPosition(int inu) { // move payload around like we did at slac
     
   if (inu<=MAX_POSITIONS)  // use the event number for the position if we c an

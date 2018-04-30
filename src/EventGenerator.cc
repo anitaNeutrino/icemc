@@ -34,6 +34,7 @@
 #include "GeneratedNeutrino.h"
 #include "EnvironmentVariable.h"
 #include "IcemcLog.h"
+// #include "RadioSignal.h"
 
 #include <string>
 #include <sstream>
@@ -1557,9 +1558,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     panel1->ResetParameters();
     anita1->inu=inu;
 
-    std::string nunum = Form("%d",inu);
-
-    // loop over minray = direct,  maxray = reflected
+    // minray = direct,  maxray = reflected
     for (int whichray = settings1.MINRAY; whichray <= settings1.MAXRAY; whichray++) {
       anita1->passglobtrig[0] = 0;
       anita1->passglobtrig[1] = 0;
@@ -1591,24 +1590,20 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // initializing the voltage seen by each polarization of each antenna
       interaction1->dtryingdirection=0;
       bn1->dtryingposition=0;
+
+      // RadioSignal radioSignal;
       for (int i=0; i<Anita::NFREQ;i++) {
         vmmhz[i] = 0.; // the full signal with all factors accounted for (1/r,  atten. etc.)
         vmmhz_em[i]=0.; // for keeping track of just the em component of the shower
       } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
 
       // Picks the balloon position and at the same time sets the masks and thresholds
-      bn1->PickBalloonPosition(antarctica,  &settings1,  inu,  anita1,  r.Rndm());
+      bn1->PickBalloonPosition(antarctica,  &settings1,  inu,  anita1,  r.Rndm(), &fGenNu->balloon);
 
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter
       average_altitude+=bn1->altitude_bn/(double)NNU;
       average_rbn+=bn1->r_bn.Mag()/(double)NNU;
-
-      realtime_this=bn1->realTime_flightdata;
-      longitude_this=bn1->longitude;
-      latitude_this=bn1->latitude;
-      altitude_this=bn1->altitude;
-      heading_this=bn1->heading;
 
       if (settings1.HIST && !settings1.ONLYFINAL && ro.prob_eachphi_bn.GetEntries() < settings1.HIST_MAX_ENTRIES) {
         ro.prob_eachphi_bn.Fill(bn1->phi_bn);
@@ -1618,8 +1613,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       if (bn1->WHICHPATH==3) { // for banana plot
         //Set observation location
         bn1->setObservationLocation(int_banana, inu, antarctica, &settings1);
-      } //End else if (WHICHPATH==3) : Banana plot locations
-      ro.balloontree.Fill();
+      }
 
       // pick random point in ice.
       // also get initial guess shower exit position
@@ -1654,6 +1648,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
 
       bn1->PickDownwardInteractionPoint(interaction1,  anita1,  &settings1,  antarctica,  ray1,  beyondhorizon);
+
+      
 
       if (interaction1->noway){
 	fGenNu->passCutNoWay = 0;
@@ -1691,8 +1687,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       count1->toolow[whichray]++;
 
-      if (bn1->WHICHPATH==3){	
-        interaction1=int_banana; // this is fucking madness
+      if (bn1->WHICHPATH==3){
+	// this is fucking madness... why would someone do this!?!?
+        interaction1 = int_banana;
       }
       if (!interaction1->iceinteraction){
         continue;
@@ -1701,7 +1698,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       if (beyondhorizon) {
 	fGenNu->passCutWithinHorizon = 0;
-	std::cout << "Beyond horizon" << std::endl;
 	ro.allTree.Fill();
         continue;
       }
@@ -2143,7 +2139,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // intermediate counting
       count1->nraypointsup2[whichray]++;
      
-      double nbelowsurface;
+      double nbelowsurface = 0;
       // reject if it is totally internally reflected at the surface AND NOT CONSIDERING ROUGHNESS
       if (settings1.FIRN){
         nbelowsurface=constants::NFIRN;
@@ -2213,9 +2209,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	// now rotate that polarization vector according to ray paths in firn and air.
 	// fresnel factor at ice-firn interface
 	GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->nrf_iceside[3], n_pol, ray1->nrf_iceside[4], vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1, mag1);
-	if (bn1->WHICHPATH==4)
+	if (bn1->WHICHPATH==4){
 	  std::cout << "Lentenin factor is " << 1./mag1 << "\n";
-
+	}
 	//The gradual transition in the firn means that there is no fresnel factor,  only magnification
 	// and the magnification factor is upside down compared to what it is
 	// for the firn-air interface
@@ -2240,9 +2236,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	} // end if we are calculating for all boresights
 
 
-	if (bn1->WHICHPATH==4)
+	if (bn1->WHICHPATH==4){
 	  std::cout<<"firn-air interface:  fresnel2,  mag2 are "<<fresnel2<<" "<< mag2 <<"\n";
-
+	}
       }//end if firn
       else {
 	sig1->GetSpread(pnu, emfrac, hadfrac, (anita1->bwslice_min[2]+anita1->bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
@@ -2262,9 +2258,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       //cerr<<inu<<" -- here"<<std::endl;      //}
 
 
-      // OTHERWISE THERE IS ROUGHNESS SO DO MAGIC
-
-      
       if(settings1.ROUGHNESS){
 	applyRoughness(settings1, inu, interaction1, ray1, panel1, antarctica, bn1, sig1, anita1);
       }
@@ -2293,10 +2286,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // scale by 1/r once you've found the 3rd iteration exit point
       // ALREADY DEALT WITH IN CASE OF ROUGHNESS
       if (!settings1.ROUGHNESS) {
-        if (whichray==direct)
+        if (whichray==direct){
           vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice, interaction1->posnu, bn1->r_bn, ray1->rfexit[2]);
-        if (whichray==downgoing)
+	}
+        if (whichray==downgoing){
           vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice, interaction1->posnu_down, bn1->r_bn, ray1->rfexit[2]);//use the mirror point
+	}
       }
 
       // reject if the event is undetectable.
@@ -2592,7 +2587,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       anita1->rms_rfcm_e_single_event = 0;
 
 
-      // This seems to be where Oindree's stuff is used...
       Vector n_eplane = constants::const_z;
       Vector n_hplane = -constants::const_y;
       Vector n_normal = constants::const_x;
@@ -2628,31 +2622,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           chantrig1.ApplyAntennaGain(&settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
 
           chantrig1.TriggerPath(&settings1, anita1, antNum, bn1);
-
-          ////// just some roughness output
-          //if(settings1.ROUGHNESS){
-/*            if(vmmhz_max>0.){
-              std::string stemp=clOpts.outputdir+"/rough_signalwaveforms_"+nunum+".dat";
-              ofstream sigout(stemp.c_str(), ios::app);
-              for (int iband=0;iband<5;iband++) {
-                if (anita1->bwslice_allowed[iband]!=1) continue; 
-                for (int k=0;k<anita1->NFOUR/2;k++) {
-                  sigout << ilayer << "  "
-                  << ifold << "  "
-                  << iband << "  "
-                  << k << "  "
-                  << chantrig1->v_banding_rfcm_forfft[0][iband][k]<< "  "
-                  << chantrig1->v_banding_rfcm_forfft[1][iband][k]<< "  "
-                  << chantrig1->voltsRX.forfft[0][iband][k]<< "  "
-                  << chantrig1->voltsRX.forfft[1][iband][k]<< "  "
-                  << std::endl;
-                }
-              }
-              sigout.close();
-            }
-          //}
-          //////
-*/
           chantrig1.DigitizerPath(&settings1, anita1, antNum, bn1);
 
           chantrig1.TimeShiftAndSignalFluct(&settings1, anita1, ilayer, ifold, voltsRX.rfcm_lab_e_all,  voltsRX.rfcm_lab_h_all);
@@ -3186,30 +3155,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // WE GET HERE REGARDLESS OF WHETHER THE TRIGGER PASSES
       //
       /////////////
-/*
-      Vector tempa = ray1->n_exit2bn[2].Unit() - antarctica->GetSurfaceNormal(bn1->r_bn).Dot(ray1->n_exit2bn[2].Unit()) * antarctica->GetSurfaceNormal(bn1->r_bn);
-      Position posa = ray1->rfexit[2] + 300.*tempa;
-      Vector tempb = interaction1->nnu.Unit() - antarctica->GetSurfaceNormal(interaction1->posnu).Dot(interaction1->nnu.Unit()) * antarctica->GetSurfaceNormal(interaction1->posnu);
-      Position posb = interaction1->posnu + 300.*tempb;
-      if(vmmhz_max>0.){
-        stemp=clOpts.outputdir+"/rough_evtweight_"+nunum+".dat";
-        ofstream evtwgtout(stemp.c_str());
-        evtwgtout << weight << "  "
-                  << thispasses[0] << "  "
-                  << anita1->pol_allowed[0] << "  "
-                  << thispasses[1] << "  "
-                  << anita1->pol_allowed[1] << "  "
-                  << ray1->rfexit[2].Lon()<< "  "
-                  << -90+ray1->rfexit[2].Lat()<< "  "
-                  << posa.Lon() <<"  "
-                  << -90+posa.Lat()<<"  "
-                  << interaction1->posnu.Lon() << "  "
-                  << -90+interaction1->posnu.Lat() << "  "
-                  << posb.Lon() <<"  "
-                  <<-90+posb.Lat()<<"  "
-                  <<std::endl;
-        evtwgtout.close();
-      }*/
+      
       delete globaltrig1;
       globaltrig1 = NULL;
 

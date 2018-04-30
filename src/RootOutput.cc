@@ -185,8 +185,8 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   finaltree.Branch("vertcoord_bn", &uhen->bn1->vertcoord_bn, "vertcoord_bn/D");
   finaltree.Branch("r_bn", &uhen->r_bn_array, "r_bn_array[3]/D");
   finaltree.Branch("n_bn", &uhen->n_bn_array, "n_bn_array[3]/D");
-  finaltree.Branch("longitude_bn", &uhen->longitude_this, "longitude_bn/D");
-  finaltree.Branch("heading_bn", &uhen->heading_this, "heading_bn/D");
+  // finaltree.Branch("longitude_bn", &uhen->longitude_this, "longitude_bn/D"); @todo TEMPORARILY COMMENT OUT DURING REFACTOR, if abandon refactor then uncomment
+  // finaltree.Branch("heading_bn", &uhen->heading_this, "heading_bn/D"); @todo TEMPORARILY COMMENT OUT DURING REFACTOR, if abandon refactor then uncomment
   finaltree.Branch("gps_offset", &uhen->gps_offset, "gps_offset/D");
   // this one is just weight due to earth absorption
   // finaltree.Branch("weight1", &weight1, "weight1/D");
@@ -360,16 +360,6 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   initTree(&ytree, "ytree", "ytree", fIceFinal); //To record y distributions
   ytree.Branch("elast_y", &uhen->elast_y, "elast_y/D");
 
-  initTree(&balloontree, "balloon", "balloon", fIceFinal); //filled for all events
-  balloontree.Branch("heading", &uhen->bn1->heading, "heading/D");
-  balloontree.Branch("pitch", &uhen->bn1->pitch, "pitch/D");
-  balloontree.Branch("roll", &uhen->bn1->roll, "roll/D");
-  balloontree.Branch("realTime_flightdata", &uhen->bn1->realTime_flightdata, "realTime_flightdata/I");
-  balloontree.Branch("latitude", &uhen->bn1->latitude, "latitude/D");
-  balloontree.Branch("longitude", &uhen->bn1->longitude, "longitude/D");
-  balloontree.Branch("altitude", &uhen->bn1->altitude, "altitude/D");
-  balloontree.Branch("horizcoord_bn", &uhen->bn1->horizcoord_bn, "horizcoord_bn/D");
-  balloontree.Branch("vertcoord_bn", &uhen->bn1->vertcoord_bn, "vertcoord_bn/D");
 }
 
 

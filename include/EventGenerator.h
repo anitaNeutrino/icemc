@@ -80,11 +80,11 @@ namespace icemc {
 
     
     double volume_thishorizon; // for plotting volume within the horizon of the balloon
-    int realtime_this;  // for plotting real unix time
-    double longitude_this; // for plotting longitude
-    double latitude_this; // for plotting latitude
-    double altitude_this; // for plotting altitude
-    double heading_this=0.;// for plotting heading
+    // int realtime_this;  // for plotting real unix time
+    // double longitude_this; // for plotting longitude
+    // double latitude_this; // for plotting latitude
+    // double altitude_this; // for plotting altitude
+    // double heading_this=0.;// for plotting heading
     double gps_offset=0;    
     double pnu;   ///< energy of neutrinos
 
