@@ -1,10 +1,9 @@
-/* -*- C++ -*-.*********************************************************************************************
-   Author: Linda Cremonesi
-   Email: l.cremonesi@ucl.ac.uk
+//saw   Author: Linda Cremonesi
+  // Email: l.cremonesi@ucl.ac.uk
 
-   Description:
-   Template to generate triggers coming from WAIS pulses
-***********************************************************************************************************/
+   //Description:
+   //Template to generate triggers coming from WAIS pulses
+//***********************************************************************************************************/
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -495,39 +494,46 @@ int main(int argc,  char **argv) {
     // SAW: Adding pulser model
     // Not the most elegant...
     cout << "Reading pulser model: " <<endl;
-    string fname = ICEMC_SRC_DIR +"/data/var31_minialfa_icemc2icemc_input_electric_field_1m.dat";
+    //SAW sample rate on this model is not quite right.
+    //string fname = ICEMC_SRC_DIR +"/data/var31_minialfa_icemc2icemc_input_electric_field_1m.dat";
+    //
+    // SAW The file below has the correct spacing for the phase and electric field in volts/m/mhz
+    //
+    // We need the frequency spectrum to have 256 frequency bins with a bin spacing of 5.07812 MHz
+    // so that it can be properly convolved with the ANITA signal electronics.
+    //
+    // Since RFSignal calculates a the frequency binning from the length of the waveform and the deltaT,
+    // that sets the requirements on the waveform to be
+    // length = 2 x NFREQ - 1 = 511
+    // deltaT = 1/(length x df ) = 3.85368436041e-10 s
+    
+    string fname = ICEMC_SRC_DIR + "/data/var31_minialfa_icemc2icemc_input_electric_field_1m_511points.dat";
     cout << fname << endl;
-    //double *time = new double[1971];
-    //double *voltsperm = new double[1971];
+
     vector<double> time;
     vector<double> voltsperm;
     read_pulser_electric_field(fname,time,voltsperm);
-    
-    TGraph *pulserGraph = new TGraph(time.size(), &time[0], &voltsperm[0]);
-    RFSignal wais_pulser(pulserGraph);
-    
-    // This is the correct spacing for the phase and electric field in volts/m/mhz
-    Int_t wais_nfreqs = 256;
-    Double_t wais_df = 5.07812;
-    double *wais_freqs = new double[256];
-    for(int i=0; i<wais_nfreqs; i++){
-        wais_freqs[i] = i*wais_df;
-    }
-    wais_pulser.setFreqs(wais_nfreqs, wais_freqs);
-    Double_t *wais_pulser_freqs = wais_pulser.getFreqs();
-    Double_t *wais_pulser_mags  = wais_pulser.getMags();
-    Double_t *wais_pulser_phases = wais_pulser.getPhases();
-    wais_nfreqs = wais_pulser.getNumFreqs() ;
+    RFSignal *wais_pulser = new RFSignal(time.size(), &time[0], &voltsperm[0], 0);
+
+    Double_t *wais_pulser_freqs = wais_pulser->getFreqs();
+    Double_t *wais_pulser_mags  = wais_pulser->getMags();
+    Double_t *wais_pulser_phases = wais_pulser->getPhases();
+    Int_t wais_nfreqs = wais_pulser->getNumFreqs() ;
     
     Double_t dt = time[1]-time[0];
     Double_t df = wais_pulser_freqs[1] - wais_pulser_freqs[0];
-    cout << "Frequency spacing of the wais pulser model : " << wais_df << " "<< df << endl;
+    cout << "Frequency spacing of the wais pulser model :  "<< df << endl;
     cout << "DeltaT of wais pulser model " << dt << endl;
-    cout << "N " << time.size() << " NFREQS " <<  wais_pulser.getNumFreqs() << endl;
-    //cout << "Phases " << wais_pulser_phases[0] << " " << wais_pulser_phases[10] << " " << wais_pulser_phases[100] << endl;
-    
+    cout << "N " << time.size() << " NFREQS " <<  wais_pulser->getNumFreqs() << " " << endl;
+    TGraph *gwaisFreqMagGraph = wais_pulser->getFreqMagGraph();
+    gwaisFreqMagGraph->Print();
+    cout << "Phases " << wais_pulser_phases[0] << " " << wais_pulser_phases[10] << " " << wais_pulser_phases[100] << endl;
+    //wais_pulser->fillFreqStuff(); //JS: edited
+    //cout <<wais_pulser_mags[1]<< endl; //JS: edited
   // begin looping over NNU neutrinos doing the things
-  for (inu = 0; inu < NNU; inu++) {
+   int a = 0;
+   //for (a = 1; a < run_no; a++) { //JS: trying to get it to do all runs at once
+   for (inu = 0; inu < NNU; inu++) {
 
     if (NNU >= 100) {
       if (inu % (NNU / 100) == 0)
@@ -537,7 +543,7 @@ int main(int argc,  char **argv) {
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
     
 
-    eventNumber=(UInt_t)(run_no)*NNU+inu;
+    eventNumber=(UInt_t)(run_no)*NNU+inu; //replaced a where run_no was
     
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
@@ -549,13 +555,14 @@ int main(int argc,  char **argv) {
     passes_thisevent=0;
     passestrigger=0;
     count_total++;
+    //cout << "got to number 1!" << endl;
     // initializing the voltage seen by each polarization of each antenna
     bn1->dtryingposition=0;
     for (int i=0; i<Anita::NFREQ;i++) {
       vmmhz[i] = 0.; // the full signal with all factors accounted for (1/r,  atten. etc.)
       vmmhz_em[i]=0.; // for keeping track of just the em component of the shower
     } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
-    
+     //cout << "got to number 2!" << endl;
      // Fix interaction position to WAIS location
     interaction1->posnu      = positionWAIS;   
     interaction1->posnu_down = positionWAIS;
@@ -564,10 +571,10 @@ int main(int argc,  char **argv) {
     bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
       
     distanceFromWAIS =  (interaction1->posnu.Distance(bn1->r_bn));
-
+   // cout << "distance is" << distanceFromWAIS << endl;
     // eliminate stuff when we are more than 1000km from WAIS
     if (distanceFromWAIS > 1e6) {
-      //      std::cout << "Too far from WAIS " << interaction1->posnu  << " and ballon is " << (bn1->r_bn) << " \t " << distanceFromWAIS <<std::endl;
+     //     std::cout << "Too far from WAIS " << interaction1->posnu  << " and ballon is " << (bn1->r_bn) << " \t " << distanceFromWAIS <<std::endl;
       continue;
     }
     interaction1->nnu = (bn1->r_bn - interaction1->posnu);
@@ -575,25 +582,45 @@ int main(int argc,  char **argv) {
 
     // TEMPORARY UNTIL WE HAVE MINI ALFA MODEL
     // FIRST PASS AT MINI ALFA MODEL
-    //vmmhz1m     = wais_pulser_mags;
-    vmmhz1m     = sig1->GetVmMHz1m(1e19, anita1->FREQ_HIGH);
-
-    vmmhz_max   = ScaleVmMHz(vmmhz1m, interaction1->posnu, bn1->r_bn);
-
+    // SAW: REPLACE THIS CODE WITH WAIS PULSER MODEL
+    // ELECTRIC FIELD AT 1 m
+    
+    vmmhz1m     = 0;  //JS: edited
+    for (int i=0; i<wais_nfreqs; i++) {
+	if (wais_pulser_mags[i]>vmmhz1m) {
+ 		vmmhz1m = wais_pulser_mags[i];
+		//cout << wais_pulser_mags[i] << endl;
+	}
+    }
+cout << "vmmhz1m"<< vmmhz1m << endl;
+   ; //JS: edited
+    //trying to calculate attenuation JS
+    //Atdb = a*100*distanceFromWais*frequency/100000
+    //Gaindb = 80
+    // SAW: REPLACE THIS CODE WITH WAIS PULSER MODEL --> CONFUSING CHECK WITH EMAILS / LINDA ABOUT WHAT THIS MEANS
+    // ELECTRIC FIELD AT THE PAYLOAD CORRECTED FOR 1/R FACTOR. REPLACE NEUTRINO POSITION WITH WAIS POSITION AND VERIFY THAT
+    // bn1->r_bn is the position of ANITA
+    vmmhz_max   = ScaleVmMHz(vmmhz1m, interaction1->posnu, bn1->r_bn);//JS: looks to me like "interaction1->posnu" is already the Wais position, "bn1->r_bn" is balloon position and radius 
+    //cout << bn1->r_bn << endl ; //Anita position JS
+    //cout << interaction1->posnu << endl ; //Wais position JS
     // TEMPORARY UNTIL WE HAVE MINI ALFA MODEL
     // FIRST PASS AT MINI ALFA MODEL
       
     // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
     //   vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
     // and making an array across frequency bins by putting in frequency dependence.
+      // SAW: REPLACE THIS CODE WITH WAIS PULSER MODEL
+    // SET THE SIGNAL USING vmmhz_max and vmmhz1m
     sig1->GetVmMHz(vmmhz_max, vmmhz1m, 1e19, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ);  
 
     // Here we need also to define the anita1->v_phases in DEGREES :/
     for (int i=0; i<anita1->NFOUR/4; i++){
-      anita1->v_phases[i]=90.;
-      //anita1->v_phases[i]=wais_pulser_phases[i];
+        // SAW: REPLACE THIS CODE WITH WAIS PULSER MODEL
+      // USE THE PHASES FROM THE WAIS PULSER MODEL
+      
+      anita1->v_phases[i]=wais_pulser_phases[i]; //JS: edited
     }
-
+    
     // VPOL
     // Vector n_temp = interaction1->nnu.Cross(surfaceNormalWAIS);
     // n_pol = n_temp.Cross(interaction1->nnu);
@@ -601,7 +628,7 @@ int main(int argc,  char **argv) {
     // HPOL 
     n_pol = interaction1->nnu.Cross(surfaceNormalWAIS);
     
-    n_pol = n_pol.Unit();
+n_pol = n_pol.Unit();
     
     if (settings1->BORESIGHTS) {
       for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { 
@@ -1029,7 +1056,7 @@ int main(int argc,  char **argv) {
 
 } //END MAIN PROGRAM
 
-
+//} //JS
 
 void interrupt_signal_handler(int sig){
   signal(sig,  SIG_IGN);
@@ -1063,4 +1090,4 @@ double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_
   //cout << "dtemp is " << dtemp << "\n";
   return vmmhz1m_max;
 }
-//end ScaleVmMHz()
+//end ScaleVmMHz()tryin
