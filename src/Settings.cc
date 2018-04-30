@@ -672,6 +672,10 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   getSetting("Phi points banana", horizontal_banana_points);
   getSetting("Theta points banana", vertical_banana_points);
   getSetting("Signal across frequencies", FORSECKEL);
+  if(FORSECKEL > 0){
+    std::cerr << "Warning! FORSECKEL has been deprecated!" << std::endl;
+  }
+
   getSetting("Shower type", SHOWERTYPE);
   getSetting("Loop over boresights", BORESIGHTS);
   if (BORESIGHTS==0){

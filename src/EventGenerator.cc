@@ -1038,16 +1038,6 @@ double icemc::EventGenerator::ScaleVmMHz(double vmmhz1m_max, const Position &pos
 //end ScaleVmMHz()
 
 
-void icemc::EventGenerator::SetupViewangles(const RadioSignalGenerator *radioGenerator) {
-  double viewangle_max=90.*constants::RADDEG;
-  double viewangle_min=30.*constants::RADDEG;
-  for (int i=0;i<NVIEWANGLE-2;i++) {
-    viewangles[i]=viewangle_max-(viewangle_max-viewangle_min)/(double)(NVIEWANGLE-2)*(double)i;
-  }
-  viewangles[NVIEWANGLE-2]=acos(1/radioGenerator->N_DEPTH);
-  viewangles[NVIEWANGLE-1]=90.*constants::RADDEG;
-}
-//end SetupViewAngles()
 
 
 double icemc::EventGenerator::GetThisAirColumn(const Settings* settings1,  Position r_in, Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta, double& cosbeta0, double& mybeta) {
@@ -1307,9 +1297,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   time_t raw_start_time = time(NULL);
   struct tm*  start_time = localtime(&raw_start_time);
   Log() << "Date and time at start of run are: " << asctime (start_time) << "\n";
-  if (settings1.FORSECKEL){
-    SetupViewangles(radioGenerator);// set up viewing angles for testing against jaime's parameterizations
-  }
+
 
   // for attenuation of neutrino in atmosphere
   // only important for black hole studies
@@ -1714,10 +1702,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       //}
 
-      if (settings1.FORSECKEL==1){
-        radioGenerator->SetChangle(acos(1/radioGenerator->NICE));
-      }
-
       // x and y components of interaction in km.
       horizcoord=interaction1->posnu[0]/1000;
       vertcoord=interaction1->posnu[1]/1000;
@@ -1776,14 +1760,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       else  if (bn1->WHICHPATH==4){
         elast_y=1.;
       }
-      if (settings1.FORSECKEL==1) {
-        if (settings1.SHOWERTYPE==0){ // all hadronic shower
-          elast_y=1.;
-	}
-        else if (settings1.SHOWERTYPE==1){ // all em shower
-          elast_y=0.;
-	}
-      } //if (settings1.FORSECKEL)
 
       if (ro.ytree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
         ro.ytree.Fill();
@@ -2038,7 +2014,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       IsAbsorbed(chord_kgm2_test, len_int_kgm2, weight_test);
       // if the probably the neutrino gets absorbed is almost 1,  throw it out.
 
-      if (bn1->WHICHPATH!=4 && settings1.FORSECKEL!=1 && !settings1.SKIPCUTS) {
+      if (bn1->WHICHPATH!=4 && !settings1.SKIPCUTS) {
         if (weight_test<CUTONWEIGHTS) {
           continue;
         }
@@ -2059,7 +2035,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // where the neutrino enters the ice
       // reject if it enters beyond the borders of the continent.
       // step size is 1/10 of interaction length
-      if (!settings1.FORSECKEL && !settings1.UNBIASED_SELECTION) {
+      if (!settings1.UNBIASED_SELECTION) {
         if (!antarctica->WhereDoesItEnterIce(interaction1->posnu, interaction1->nnu, len_int_kgm2/radioGenerator->RHOMEDIUM/10., interaction1->r_enterice)) {
           //r_enterice.Print();
           if (antarctica->OutsideAntarctica(interaction1->r_enterice)) {
@@ -2070,7 +2046,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             continue;
           }// end outside antarctica
         }// end wheredoesitenterice
-      }// end if !settings forseckel && unbiased
+      }// end if unbiased
       // intermediate counter
       count1->nentersice[whichray]++;
 
@@ -2104,7 +2080,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       IsAbsorbed(interaction1->chord_kgm2_bestcase, len_int_kgm2, interaction1->weight_bestcase);
 
       // if the probability that the neutrino gets absorbed is almost 1,  throw it out.
-      if (bn1->WHICHPATH!=4 && interaction1->weight_bestcase<CUTONWEIGHTS && !settings1.SKIPCUTS && !settings1.FORSECKEL) {
+      if (bn1->WHICHPATH!=4 && interaction1->weight_bestcase<CUTONWEIGHTS && !settings1.SKIPCUTS) {
         if (bn1->WHICHPATH==3)
           std::cout<<"Neutrino is getting absorbed and thrown out!"<<std::endl;
         //
@@ -2126,7 +2102,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       if (whichray==downgoing){
         bestcase_atten=exp(-1*ray1->rfexit[1].Distance(interaction1->posnu_down)/MAX_ATTENLENGTH);//use the real distance
       }
-      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR && !settings1.SKIPCUTS && !settings1.FORSECKEL) {
+      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR && !settings1.SKIPCUTS) {
         if (bn1->WHICHPATH==3){
           std::cout<<"Event rejected.  Check."<<std::endl;
 	}
@@ -2356,9 +2332,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // this will need to be improved once frequency-dependent
       // attenuation length is included.
       if (!settings1.ROUGHNESS){
-        if (settings1.FORSECKEL==1){
-          radioGenerator->SetNDepth(radioGenerator->NICE); // for making array of signal vs. frequency,  viewangle
-	}
         radioSignal = radioGenerator->getRadioSignal(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX);
 
 	// here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
@@ -2399,23 +2372,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           deltheta_em[k] = deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
           deltheta_had[k] = deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
 
-          if (settings1.FORSECKEL==1) {// this is for making plots of the signal
-            for (int iviewangle=0;iviewangle<NVIEWANGLE;iviewangle++) {// loop over viewing angles
-              // remove the 1/r and attenuation factors that are contained in the ratio vmmhz1m_max/vmmhz_max
-              // double vmmhz_temp=vmmhz[k]*vmmhz1m_max/vmmhz_max;
-              double vmmhz_temp=radioSignal[k]*vmmhz1m_max/vmmhz_max;
-
-              viewangle_temp=viewangles[iviewangle]; //grab the viewing angle from this array
-              //apply the gaussian dependence away from the cerenkov angle.  vmmhz_temp is both an input and an output.
-              //vmmhz_temp as an output is the signal with the angular dependence applied.
-              radioGenerator->TaperVmMHz(viewangle_temp, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_temp, djunk);
-              forseckel[iviewangle][k]=vmmhz_temp;// put this in an array which we will plot later.
-            } //for (loop over viewing angles)
-          } //if (settings1.FORSECKEL==1)
-
-	  // double vmmhz_k = vmmhz[k]; /// @todo rename this once the refactor definitely works
-	  
-	  // so this is where the vmmhz is being modified...
 	  radioGenerator->TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, radioSignal, k, vmmhz_em[k]);// this applies the angular dependence.
               // viewangle is which viewing angle we are at
               // deltheta_em is the width of the em component at this frequency

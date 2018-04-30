@@ -476,7 +476,7 @@ namespace icemc {
     void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE);
  
     double GetAirDistance(double altitude_bn,  double beta); // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth     // set up array of viewing angles for making plots for seckel
-    void SetupViewangles(const RadioSignalGenerator *radioGenerator);
+
 
     void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
     double GetThisAirColumn(const Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta);
