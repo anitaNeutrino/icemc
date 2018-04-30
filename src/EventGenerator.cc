@@ -99,6 +99,12 @@ icemc::EventGenerator::~EventGenerator()
   }
   if(fTauPtr){
     delete fTauPtr;
+  }
+  if(fGenNu){
+    delete fGenNu;
+  }
+  if(fPassNu){
+    delete fPassNu;
   }  
 }
 
@@ -602,19 +608,6 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
       std::cout << "thisenergy,  EdNdEdAdt is " << thisenergy << " " <<  spectra1->GetEdNdEdAdt(log10(thisenergy)) << "\n";
       //foutput << "interaction length is " << thislen_int_kgm2/RHOH20 << "\n";
     }//end for N_even_E
-     // for (int i=0;i<12;i++) {
-     //   thisenergy=pow(10., (spectra1->Getenergy())[0]+((double)i)*0.5);
-     //   primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);
-     //   // EdNdEdAdt is in #/cm^2/s
-     //   // can also be written dN/d(lnE)dAdt
-     //   // = dN*log(10)/d(Log() E)dAdt
-     //   // the bin spacing is 0.5
-     //   // so # events ~ dN*log(10)*0.5/d(Log() E)dAdt
-     //   sum_events+=0.5*log(10.)*(spectra1->GetEdNdEdAdt())[i]/(thislen_int_kgm2/radioGenerator->RHOH20);
-     //   std::cout << "thisenergy,  EdNdEdAdt is " << thisenergy << " " << spectra1->EdNdEdAdt[i] << "\n";
-     //   //foutput << "interaction length is " << thislen_int_kgm2/RHOH20 << "\n";
-     // } //end for i
-    //km3sr=volume*pow(1.E-3, 3)*radioGenerator->RHOMEDIUM/RHOH20*sr*nevents/(double)NNU;
     std::cout << "SUM EVENTS IS " << sum_events << std::endl;
     std::cout << "INTEGRAL : " << integral << std::endl;
     sum_events*=volume*anita1->LIVETIME*radioGenerator->RHOMEDIUM/radioGenerator->RHOH20*nevents/(double)NNU*constants::sr;
@@ -705,7 +698,7 @@ int icemc::EventGenerator::WhereIsSecondBang(const Position &posnu, const Vector
 
 
 //the following is  a new function only for reflected case.
-void icemc::EventGenerator::Attenuate_down(IceModel *antarctica1, const Settings *settings1, double& vmmhz_max, const Position &rfexit2, const Position &posnu, const Position &posnu_down) {
+void icemc::EventGenerator::Attenuate_down(IceModel *antarctica1, const Settings *settings1, double& vmmhz_max, const Position &rfexit2, const Position &posnu, const Position &posnu_down) const {
   double ATTENLENGTH=700;
   if(!settings1->VARIABLE_ATTEN){
     ATTENLENGTH=antarctica1->EffectiveAttenuationLength(settings1, posnu, 1);
@@ -716,7 +709,7 @@ void icemc::EventGenerator::Attenuate_down(IceModel *antarctica1, const Settings
   // int position_in_ross = antarctica->RossIceShelf(posnu);
   // int position_in_ronne = antarctica->RonneIceShelf(posnu);
   double dtemp=posnu_down.Distance(rfexit2)/ATTENLENGTH;
-
+  double scalefactor_attenuation = 0;
   if (dtemp<20) {
     // if(position_in_ross || position_in_ronne) {
     if(position_in_iceshelves && (!position_in_rossexcept)){
@@ -742,13 +735,14 @@ void icemc::EventGenerator::Attenuate_down(IceModel *antarctica1, const Settings
 //end Attenuate_down()
 
 
-void icemc::EventGenerator::Attenuate(IceModel *antarctica1, const Settings *settings1, double& vmmhz_max,  double rflength, const Position &posnu) {
+void icemc::EventGenerator::Attenuate(IceModel *antarctica1, const Settings *settings1, double& vmmhz_max,  double rflength, const Position &posnu) const {
   double ATTENLENGTH=700;  // constant attenuation length for now.
   if (!settings1->VARIABLE_ATTEN){
     ATTENLENGTH = antarctica1->EffectiveAttenuationLength(settings1, posnu, 0);
   }
 
   double dtemp=(rflength/ATTENLENGTH);
+  double scalefactor_attenuation = 0;
   if(!settings1->ROUGHNESS){
     if (dtemp<20) {
       scalefactor_attenuation=exp(-dtemp);
@@ -819,6 +813,8 @@ int icemc::EventGenerator::GetRayIceSide(const Vector &n_exit2rx,  const Vector 
   return 1;
 }
 //end GetRayIceSide()
+
+
 
 
 int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *interaction1, const Vector &refr,  double deltheta_em,  double deltheta_had, double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  RadioSignalGenerator *radioGenerator,  Position posnu,  Anita *anita1,  Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) {
@@ -999,31 +995,6 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
   } //else if
 
   return 0;
-  //} // end NO ROUGHNESS
-
-  // treat the roughness case
-  /*else if(settings1->ROUGHNESS){
-  //copy SKIPCUTS and USEDIRECTIONWEIGHTS from earlier in this function
-  double costhetanu2=1.;
-  double costhetanu1=-1.;
-  double costhetanu=costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
-
-  double phinu=TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
-  double sinthetanu=sqrt(1-costhetanu*costhetanu);
-  // 3-vector of neutrino direction,  at that same coordinate system.
-  nnu = Vector(sinthetanu*cos(phinu), sinthetanu*sin(phinu), costhetanu);
-  nnu = nnu.ChangeCoord(refr); // rotate so it's in our normal coordinate system.
-  // now the ray is aligned along the cerenkov cone and
-  // the neutrino is rotated by that same angle
-
-  //dtryingdirection+=4*PI/(2.*theta_threshold*sin(radioGenerator->changle)*2*PI);
-  interaction1->dtryingdirection=1/((costhetanu2-costhetanu1)/2.);
-  }
-
-  else{ //something bad happened
-  std::cout<<"Something bad happened in GetDirection."<<std::endl;
-  return 1;
-  }*/
 }
 //end GetDirection()
 

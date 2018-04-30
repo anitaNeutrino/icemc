@@ -329,7 +329,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   //finaltree.Branch("volts_original", &volts_original, "volts_original[10][20][2]/D");
   finaltree.Branch("r_exit2bn", &uhen->r_exit2bn2, "r_exit2bn/D");
   finaltree.Branch("r_exit2bn_measured", &uhen->r_exit2bn_measured2, "r_exit2bn_measured/D");
-  finaltree.Branch("scalefactor_attenuation", &uhen->scalefactor_attenuation, "scalefactor_attenuation/D");
+  // finaltree.Branch("scalefactor_attenuation", &uhen->scalefactor_attenuation, "scalefactor_attenuation/D"); @todo TEMPORARILY COMMENT OUT DURING REFACTOR, if abandon refactor then uncomment
   finaltree.Branch("anita1->PHI_OFFSET", &uhen->anita1->PHI_OFFSET, "anita1->PHI_OFFSET/D");
   finaltree.Branch("igps", &uhen->bn1->igps, "igyps/I");
   // finaltree.Branch("volts_rx_rfcm_lab_e_all", &uhen->volts_rx_rfcm_lab_e_all, "volts_rx_rfcm_lab_e_all[48][512]/D");

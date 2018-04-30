@@ -110,7 +110,7 @@ namespace icemc{
 		    double& vmmhz1m,
 		    double& vmmhz_em);
 
-    ///@todo make this more elegent once you understand it better, (maybe put the loop over k inside the function)
+    ///@todo make this more elegent once you understand it better, (move to RadioSignal class and maybe put the loop over k inside the function)
     void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had, double emfrac, double hadfrac, RadioSignal& radioSignal, int k, double& vmmhz1m_em_obs) {
       TaperVmMHz(viewangle,  deltheta_em, deltheta_had,  emfrac, hadfrac, radioSignal.vmmhz[k],  vmmhz1m_em_obs);  
     }

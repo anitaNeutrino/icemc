@@ -495,9 +495,9 @@ namespace icemc {
     Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside, const int& inu);
     // Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside);    
 
-    void Attenuate(IceModel *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const Position &posnu);
+    void Attenuate(IceModel *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const Position &posnu) const ;
 
-    void Attenuate_down(IceModel *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const Position &rfexit2,  const Position &posnu,  const Position &posnu_down);
+    void Attenuate_down(IceModel *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const Position &rfexit2,  const Position &posnu,  const Position &posnu_down) const ;
 
     void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight);
 
