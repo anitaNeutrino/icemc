@@ -38,12 +38,12 @@ namespace icemc{
   namespace Tools {
     double dMax(double,double);
     double dMax(const double*,int);
-    double dvMax(const std::vector<double>);
+    double dvMax(const std::vector<double>& );
     double dsMax(TSpline5 *sp);
     double dMin(const double*,int);
     double dMinNotZero(const double*,int);
     double dMin(double,double);
-    double getMaxMagnitude(std::vector<double> v);
+    double getMaxMagnitude(const std::vector<double>& v);
     int Getifreq(double freq,double freq_low,double freq_high,int n);
     void InterpolateReal(double* array, const unsigned n);
     void InterpolateComplex(double *array, const unsigned n);

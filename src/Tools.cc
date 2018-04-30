@@ -62,7 +62,7 @@ int icemc::Tools::iSum(int* thisarray,int n) {
 } //iSum
 
 
-double icemc::Tools::getMaxMagnitude(std::vector<double> v) {
+double icemc::Tools::getMaxMagnitude(const std::vector<double>& v) {
   double mag=0.;
   for (int i=0;i<(int)v.size();i++) {
     if (v[i]>mag)
@@ -396,14 +396,15 @@ double icemc::Tools::dMax(const double *x,int n) {
     
   double max=x[0];
   for (int k=1;k<n;k++) {
-    if (x[k]>max)
+    if (x[k]>max){
       max=x[k];
+    }
   }
   return max;
 } //dMax(double*, int)
 
 
-double icemc::Tools::dvMax(const std::vector<double> x) {
+double icemc::Tools::dvMax(const std::vector<double>& x) {
     
   double max=x[0];
   for (int k=1;k<(int)x.size();k++) {

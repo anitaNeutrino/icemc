@@ -311,7 +311,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   finaltree.Branch("ant_normal2", &uhen->ant_max_normal2_array, "ant_max_normal2_array[3]/D");
   finaltree.Branch("vmmhz1m_visible", &uhen->vmmhz1m_visible, "vmmhz1m_visible/D");
   finaltree.Branch("freq_bins", &uhen->freq_bins, "freq_bins/I");
-  finaltree.Branch("vmmhz", &uhen->vmmhz, "vmmhz[freq_bins]/D");
+  // finaltree.Branch("vmmhz", &uhen->vmmhz, "vmmhz[freq_bins]/D");@todo TEMPORARILY COMMENT OUT DURING REFACTOR, if abandon refactor then uncomment
 
   finaltree.Branch("dist_int_bn_2d_chord", &uhen->dist_int_bn_2d_chord, "dist_int_bn_2d_chord/D");
 

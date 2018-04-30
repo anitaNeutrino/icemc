@@ -329,7 +329,6 @@ namespace icemc {
     double bestcase_atten=0;// attenuation factor,  best case
     double vmmhz1m_fresneledonce=0; // above,  after fresnel factor applied for ice-air interface
     double vmmhz1m_fresneledtwice=0; // above,  after fresnel factor applied for firn
-    double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
 
     // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
     double vmmhz_em[Anita::NFREQ];

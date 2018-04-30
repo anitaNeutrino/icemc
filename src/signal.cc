@@ -5,7 +5,7 @@
 #include "vector.hh"
 #include "position.hh"
 #include "Constants.h"
-
+#include "anita.hh"
 
 
 const double icemc::Signal::N_AIR(1.);                      // index of refraction of air
@@ -151,6 +151,18 @@ icemc::Signal::Signal() : N_DEPTH(1.79) {
 
 
 }
+
+
+
+
+icemc::RadioSignal icemc::Signal::getRadioSignal(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max){
+  double tempArray[Anita::NFREQ] = {0};
+  GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, freq, notch_min, notch_max, tempArray, Anita::NFREQ);
+  RadioSignal rs(Anita::NFREQ, tempArray);
+  return rs;
+}
+
+
 void icemc::Signal::GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max,double *vmmhz,int nfreq) {
 
   // parametrization from Jaime Alvarez Munhiz  
@@ -160,32 +172,17 @@ void icemc::Signal::GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,doub
   
     vmmhz[i]=vmmhz_max
       //*1./FREQ_LOW*freq[i];
-
-      
       *GetVmMHz1m(pnu,freq[i])/vmmhz1m_max;
+
     //if (WHICHPARAMETERIZATION==0)
     //vmmhz[i]*=(1./(1.+pow(freq[i]/NU0_MODIFIED,ALPHAMEDIUM)));
     //if (WHICHPARAMETERIZATION==1)
     //vmmhz[i]*=1./(1.+pow(freq[i]/NU_R,ALPHAMEDIUM));
-
     
-    if (notch_min!=0 && notch_max!=0 && freq[i]>notch_min && freq[i]<notch_max)
+    if (notch_min!=0 && notch_max!=0 && freq[i]>notch_min && freq[i]<notch_max){
       vmmhz[i]=0.;
-  } //for
-
-//   double sum[5]={0.};
-//   if (WHICHPATH==4) {
-//     for (int j=0;j<5;j++) {
-//       for (int i=0;i<NFREQ;i++) {
-// 	if (bwslice_min[j]<=freq[i] && bwslice_max[j]>freq[i]) { 
-// 	  sum[j]+=GetVmMHz1m(pnu,freq[i],x0ice,ecice,N_DEPTH,AEXMEDIUM,WHICHPARAMETERIZATION)*(freq[i+1]-freq[i])/1.E6;
-// 	}
-//       }
-//       std::cout << "j, sum is " << j << " " << sum[j] << "\n";
-//     }
-    
-//   }
-  
+    }
+  }
 } //GetVmMHz
 
  double icemc::Signal::GetELPM() {
@@ -355,7 +352,7 @@ void icemc::Signal::GetSpread(double pnu,
 } //GetSpread
 
 
- double icemc::Signal::GetVmMHz1m(double pnu,double freq) { // constructor
+double icemc::Signal::GetVmMHz1m(double pnu,double freq) {
 
   if (WHICHPARAMETERIZATION==0) {
     // parametrization from Jaime Alvarez Munhiz  
@@ -383,38 +380,20 @@ void icemc::Signal::GetSpread(double pnu,
   }
   else if (WHICHPARAMETERIZATION==1) {
 
- 
-    vmmhz1m_max=vmmhz1m_reference
-      *freq/freq_reference
-      *pnu/pnu_reference
-      *1./(1.+pow(freq/nu_r,ALPHAMEDIUM))
-      *(1.+pow(freq_reference/nu_r,ALPHAMEDIUM));
-
+    vmmhz1m_max= (vmmhz1m_reference
+		  *freq/freq_reference
+		  *pnu/pnu_reference
+		  *1./(1.+pow(freq/nu_r,ALPHAMEDIUM))
+		  *(1.+pow(freq_reference/nu_r,ALPHAMEDIUM)));
   }
 
 
   vmmhz1m_max=vmmhz1m_max/2.;  // This factor of 2 is to account for the 2 in the definition of the fourier transform in Equation 8 of the Halzen, Stanev and Zas paper.  The same factor of 2 seems to have propagated through subsequent Jaime papers.
   vmmhz1m_max=vmmhz1m_max*sqrt(2.);  // This is to account for the fact that the E fields quoted in the theory papers are double-sided in frequency (they extend from -F to F) whereas we are using it as a single-sided E-field (only from 0 to F).
 
-  //  std::cout << "jaime_factor is " << JAIME_FACTOR << "\n";
   return vmmhz1m_max*JAIME_FACTOR;
 
-
-  //  vmmhz1m=vmmhz1m/sqrt(1.E6/(BW/(double)NFREQ)); //THIS IS NEEDED TO CONSERVE ENERGY FOR DIFFERENT BIN WIDTHS.
-
-
-
-
-//      // this is the old version
-//      double factor=
-//        X0MEDIUM/X0ICE  // track length
-//        *(1-1/(N_DEPTH*N_DEPTH))/(1-1/(NICE*NICE)) // cerenkov index of refraction factor
-//        *N_DEPTH/NICE // to account for cerenkov threshold
-//        *ECICE/ECMEDIUM;  // to account for critical energy
-    
-//      double vmmhz1m=factor*(2.53E-7)*(pnu/1.E12)*(freq/nu0)*(1./(1.+pow(freq/nu0_modified,1.44)))*JAIME_FACTOR;
-
-} //Signal constructor
+} 
 
 
  void icemc::Signal::SetParameterization(int whichparameterization) {
@@ -423,42 +402,46 @@ void icemc::Signal::GetSpread(double pnu,
 }
 
 
+
+
+
+
 void icemc::Signal::TaperVmMHz(double viewangle,
-		double deltheta_em,
-		double deltheta_had,
-		double emfrac,
-		double hadfrac,
+			       double deltheta_em,
+			       double deltheta_had,
+			       double emfrac,
+			       double hadfrac,
+			       double& vmmhz1m,
+			       double& vmmhz1m_em_obs) {
 
-		double& vmmhz1m,
-		double& vmmhz1m_em_obs) {
-
-  //--EM
-  
-
+  //--EM 
   double vmmhz1m_em=0; // V/m/MHz at 1m due to EM component of shower
-double vmmhz1m_had=0; // V/m/MHz at 1m due to HAD component of shower
+  double vmmhz1m_had=0; // V/m/MHz at 1m due to HAD component of shower
 
   // this is the number that get exponentiated
   //  double rtemp=0.5*(viewangle-changle)*(viewangle-changle)/(deltheta_em*deltheta_em);
   double rtemp=(viewangle-changle)*(viewangle-changle)/(deltheta_em*deltheta_em);
   
 
-  //std::cout << "dangle, deltheta_em is " << viewangle-changle << " " << deltheta_em << "\n";
-  //std::cout << "rtemp (em) is " << rtemp << "\n";
   // the power goes like exp(-(theta_v-theta_c)^2/Delta^2)
   // so the e-field is the same with a 1/2 in the exponential
-
   if (emfrac>pow(10.,-10.)) { // if there is an em component
-    if (rtemp<=20) { // if the viewing angle is less than 20 sigma away from the cerankov angle
+    if (rtemp<=20) {
+      // if the viewing angle is less than 20 sigma away from the cerankov angle
       // this is the effect of the em width on the signal
       vmmhz1m_em=vmmhz1m*exp(-rtemp);
     }
-    else // if it's more than 20 sigma just set it to zero 
+    else{
+      // if it's more than 20 sigma just set it to zero 
       vmmhz1m_em=0.;
+    }
   }
-  else // if the em component is essentially zero than set this to zero
+  else{ // if the em component is essentially zero than set this to zero
     vmmhz1m_em=0;
+  }
 
+
+  
   //--HAD
   // this is the quantity that gets exponentiated
 
@@ -469,14 +452,14 @@ double vmmhz1m_had=0; // V/m/MHz at 1m due to HAD component of shower
   if (hadfrac!=0) { // if there is a hadronic fraction
     if (rtemp<20) { // if we are less than 20 sigma from cerenkov angle
       vmmhz1m_had=vmmhz1m*exp(-rtemp); // this is the effect of the hadronic width of the signal
-   
     }
-    else // if we're more than 20 sigma from cerenkov angle
+    else{ // if we're more than 20 sigma from cerenkov angle
       vmmhz1m_had=0.; // just set it to zero
+    }
   }
-  else 
+  else {
     vmmhz1m_had=0.;
-
+  }
 
   logscalefactor_taper=log10((emfrac*vmmhz1m_em+hadfrac*vmmhz1m_had)/vmmhz1m);
 
@@ -484,11 +467,12 @@ double vmmhz1m_had=0; // V/m/MHz at 1m due to HAD component of shower
   //std::cout << "emfrac, vmmhz1m_em, hadfrac, vmmhz1m_had are " << emfrac << " " << vmmhz1m_em << " " << hadfrac << " " << vmmhz1m_had << "\n";
   vmmhz1m=sin(viewangle)*(emfrac*vmmhz1m_em+hadfrac*vmmhz1m_had);
 
-  if (vmmhz1m==0)
+  if (vmmhz1m==0){
     vmmhz1m_em_obs=0.;
-  else
+  }
+  else{
     vmmhz1m_em_obs=sin(viewangle)*emfrac*vmmhz1m_em/vmmhz1m;
-
+  }
 
 
 } //TaperVmMHz

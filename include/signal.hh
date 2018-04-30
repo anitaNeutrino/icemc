@@ -5,10 +5,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #include <cmath>
 #include <iostream>
+#include "RadioSignal.h"
 
 namespace icemc{
 
-  //! Radiation from interaction
+  ///< Radiation from interaction
   class Signal {
 
   protected:
@@ -105,9 +106,18 @@ namespace icemc{
     Signal();
     void TaperVmMHz(double viewangle,double deltheta_em,double deltheta_had,double emfrac,double hadfrac,
 		    double& vmmhz1m,
-		    double& vmmhz_em); // returns 1 if viewangle-changle<20*width for both em and had showers
+		    double& vmmhz_em);
+
+    ///@todo make this more elegent once you understand it better, (maybe put the loop over k inside the function)
+    void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had, double emfrac, double hadfrac, RadioSignal& radioSignal, int k, double& vmmhz1m_em_obs) {
+      TaperVmMHz(viewangle,  deltheta_em, deltheta_had,  emfrac, hadfrac, radioSignal.vmmhz[k],  vmmhz1m_em_obs);  
+    }
+
     double GetVmMHz1m(double pnu,double freq); // constructor
+
+    RadioSignal getRadioSignal(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max);
     void GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max,double *vmmhz,int nfreq);
+
     void Initialize();
   
     void SetParameterization(int whichparameterization);

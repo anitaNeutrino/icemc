@@ -34,7 +34,7 @@
 #include "GeneratedNeutrino.h"
 #include "EnvironmentVariable.h"
 #include "IcemcLog.h"
-// #include "RadioSignal.h"
+#include "RadioSignal.h"
 
 #include <string>
 #include <sstream>
@@ -1307,7 +1307,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   time_t raw_start_time = time(NULL);
   struct tm*  start_time = localtime(&raw_start_time);
   Log() << "Date and time at start of run are: " << asctime (start_time) << "\n";
-    if (settings1.FORSECKEL){
+  if (settings1.FORSECKEL){
     SetupViewangles(sig1);// set up viewing angles for testing against jaime's parameterizations
   }
 
@@ -1533,7 +1533,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
     if(fPassNu) {
       delete fPassNu;
-      fPassNu = NULL;
+      fPassNu = NULL; // will be initialized in the case that a neutrino triggers the detector
     }
 
     if (NNU >= 100) {
@@ -1591,9 +1591,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       interaction1->dtryingdirection=0;
       bn1->dtryingposition=0;
 
-      // RadioSignal radioSignal;
+      RadioSignal radioSignal;
       for (int i=0; i<Anita::NFREQ;i++) {
-        vmmhz[i] = 0.; // the full signal with all factors accounted for (1/r,  atten. etc.)
         vmmhz_em[i]=0.; // for keeping track of just the em component of the shower
       } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
 
@@ -1870,7 +1869,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       sec1->GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
 
       if (emfrac+hadfrac>1.000001) {
-        std::cout << "Warning:  " << inu << " " << emfrac+hadfrac << "\n";
+	Log() << icemc::warning << inu << " " << emfrac+hadfrac << "\n";
       }
 
       // for plotting
@@ -2318,7 +2317,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       if (bn1->WHICHPATH==4){
         std::cout << "rflength is " << rflength << "\n";
       }
-      
+
       // applying ice attenuation factor
       if (!settings1.ROUGHNESS) {
         if (whichray==direct){
@@ -2360,8 +2359,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         if (settings1.FORSECKEL==1){
           sig1->SetNDepth(sig1->NICE); // for making array of signal vs. frequency,  viewangle
 	}
+        radioSignal = sig1->getRadioSignal(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX);
 
-        sig1->GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ);
 	// here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
         // vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
         // and making an array across frequency bins by putting in frequency dependence.
@@ -2397,13 +2396,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         count1->nviewanglecut[whichray]++;
 
         for (int k=0;k<Anita::NFREQ;k++) {
-          deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
-          deltheta_had[k]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
+          deltheta_em[k] = deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
+          deltheta_had[k] = deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
 
           if (settings1.FORSECKEL==1) {// this is for making plots of the signal
             for (int iviewangle=0;iviewangle<NVIEWANGLE;iviewangle++) {// loop over viewing angles
               // remove the 1/r and attenuation factors that are contained in the ratio vmmhz1m_max/vmmhz_max
-              double vmmhz_temp=vmmhz[k]*vmmhz1m_max/vmmhz_max;
+              // double vmmhz_temp=vmmhz[k]*vmmhz1m_max/vmmhz_max;
+              double vmmhz_temp=radioSignal[k]*vmmhz1m_max/vmmhz_max;
 
               viewangle_temp=viewangles[iviewangle]; //grab the viewing angle from this array
               //apply the gaussian dependence away from the cerenkov angle.  vmmhz_temp is both an input and an output.
@@ -2413,7 +2413,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             } //for (loop over viewing angles)
           } //if (settings1.FORSECKEL==1)
 
-          sig1->TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz[k], vmmhz_em[k]);// this applies the angular dependence.
+	  // double vmmhz_k = vmmhz[k]; /// @todo rename this once the refactor definitely works
+	  
+	  // so this is where the vmmhz is being modified...
+	  sig1->TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, radioSignal, k, vmmhz_em[k]);// this applies the angular dependence.
               // viewangle is which viewing angle we are at
               // deltheta_em is the width of the em component at this frequency
               // deltheta_had is the width of the had component at this frequency
@@ -2422,7 +2425,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               // vmmhz is the strength of the signal in V/m/MHz at this viewing angle
               // vmmhz_em is the strength of the em component
 
-          vmmhz_lowfreq=vmmhz[0]; // for plotting,  vmmhz at the lowest frequency
+          vmmhz_lowfreq=radioSignal[0]; // for plotting,  vmmhz at the lowest frequency
 
           // just want to see the maximum effect of viewing angle being off cerenkov cone
           // should be at highest frequency
@@ -2435,7 +2438,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           pdgcode = interaction1->getPdgCode();
 
           if (bn1->WHICHPATH == 3){
-            interaction1->banana_volts += vmmhz[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
+            interaction1->banana_volts += radioSignal[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
+            // interaction1->banana_volts += vmmhz[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
 	  }
         }//end for (int k=0;k<Anita::NFREQ;k++)
 
@@ -2448,7 +2452,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         }
         // reject if it is undetectable now that we have accounted for viewing angle
 
-        if (settings1.CHANCEINHELL_FACTOR*Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1.SKIPCUTS) {
+        if (settings1.CHANCEINHELL_FACTOR*radioSignal.max()*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1.SKIPCUTS) {
           continue;
         }
       }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
@@ -2456,8 +2460,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // just for plotting
       if(!settings1.ROUGHNESS){
-        vmmhz_max=Tools::dMax(vmmhz, Anita::NFREQ);
-        vmmhz_min=Tools::dMin(vmmhz, Anita::NFREQ);
+        vmmhz_max=radioSignal.max();
+        vmmhz_min=radioSignal.min();
       }
       // intermediate counting
       count1->nchanceinhell2[whichray]++;
@@ -2485,9 +2489,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         panel1->SetNvalidPoints(1);
         for (int k=0;k<Anita::NFREQ;k++) {
       	  //cout << anita1->freq[k] << " " << vmmhz[k] << " " << vmmhz2[k] << " " << vmmhz[k]/vmmhz2[k] << std::endl;
-      	  panel1->AddVmmhz_freq(vmmhz[k]);
+      	  panel1->AddVmmhz_freq(radioSignal[k]);
+      	  // panel1->AddVmmhz_freq(vmmhz[k]);
         }
-        panel1->AddVmmhz0(vmmhz[0]);
+        panel1->AddVmmhz0(radioSignal[0]);
+        // panel1->AddVmmhz0(vmmhz[0]);
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
         panel1->AddPol(n_pol);
         panel1->AddDelay( 0. );
@@ -2839,7 +2845,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
            || (settings1.MINBIAS==1)){
 
 	// the neutrino has passed the trigger...
-	fPassNu = new PassingNeutrino(*fGenNu); // forced to be NULL at loop start
+	RadioSignal radioSignal;
+	fPassNu = new PassingNeutrino(*fGenNu, radioSignal); // forced to be NULL at loop start
 
 	if (bn1->WHICHPATH==4){
           std::cout << "This event passes.\n";

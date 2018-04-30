@@ -21,8 +21,8 @@ icemc::GeneratedNeutrino::~GeneratedNeutrino(){
 
 
 
-icemc::PassingNeutrino::PassingNeutrino(const icemc::GeneratedNeutrino& gNu)
-  : GeneratedNeutrino(gNu)
+icemc::PassingNeutrino::PassingNeutrino(const icemc::GeneratedNeutrino& gNu, const icemc::RadioSignal& radioSignal)
+  : GeneratedNeutrino(gNu), signal(radioSignal)
 {
   
 }
