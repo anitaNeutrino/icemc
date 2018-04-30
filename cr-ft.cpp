@@ -289,12 +289,10 @@ static bool game_step(struct game_state *state)
                NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
                NK_WINDOW_CLOSABLE|NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
     {
-      // static int op = kBlue;
-      static bvv::TBuffer <int> op(kBlue);
-      static bvv::TBuffer <int> line_width(1);
-      // static int op_prev = op;
 
-      static int property = 1;
+
+      static bvv::TBuffer <int> op(kBlue);
+      static bvv::TBuffer <int> ZhsTimePlotHalfWidth(100);
 
       nk_layout_row_static(ctx, 30, 80, 1);
       if (nk_button_label(ctx, "button"))
@@ -304,15 +302,33 @@ static bool game_step(struct game_state *state)
       if (nk_option_label(ctx, "kRed", op == kRed))   { op = kRed; }
       if (*op) {
         state->grFft->SetLineColor(op);
+        state->cZhsFft->Modified(); state->cZhsFft->Update(); 
       }
       // state->grFft->SetLineColor(op);
       nk_layout_row_dynamic(ctx, 25, 1);
-      property_int(ctx, "width: ", 0, line_width, 10 /*max*/, 1 /*increment*/, 0.8 /*sensitivity*/);
-      if (*line_width) {
-        state->grFft->SetLineWidth(line_width);
-      }
-      if (*op || *line_width) {
-         state->cZhsFft->Modified(); state->cZhsFft->Update(); 
+      property_int(ctx, "Plt wid: ", 0, ZhsTimePlotHalfWidth, 1000 /*max*/, 10 /*increment*/, 1.0 /*sensitivity*/);
+      if (*ZhsTimePlotHalfWidth) {
+        double xmin;
+        double xmax;
+        double xmaxval;
+        double ymaxval;
+        int ind_maxval;
+        bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), xmin, xmax, ind_maxval, xmaxval, ymaxval);
+        // vis_xmin, vis_xmax: which range to visualize, should encompass (xmin, xmax).
+
+        double vis_xmin = xmaxval - ZhsTimePlotHalfWidth*(xmaxval - xmin);
+        double vis_xmax = xmaxval + ZhsTimePlotHalfWidth*(xmax - xmaxval); 
+        int vis_xmin_bin = (vis_xmin - ZhsTimeStart) / ZhsTimeDelta;
+        int vis_xmax_bin = (vis_xmax - ZhsTimeStart) / ZhsTimeDelta;
+        int vis_nbins = vis_xmax_bin - vis_xmin_bin + 1;
+        printf("Waveform xmax - xmin: %5.3f, (%5.3f%%)\n", vis_xmax - vis_xmin, (vis_xmax - vis_xmin) / ZhsTimeDelta);
+        state->grZhsTimeE->GetXaxis()->SetLimits(vis_xmin, vis_xmax);
+        state->grZhsAlpha->GetXaxis()->SetLimits(vis_xmin, vis_xmax);
+
+        state->px1->Modified();
+        state->px2->Modified();
+        state->cZhsEAndAlpha->Modified();
+        state->cZhsEAndAlpha->Update();
       }
     } else cout << "nk_begin failed" << endl;
     nk_end(ctx);

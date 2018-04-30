@@ -178,6 +178,7 @@ class Position;
 // functions
 
 bool FWHM(long int n, double *x, double *y, double &xmin, double &xmax, int &ind_maxval, double &xmaxval, double &ymaxval, double threshold_rel = 0.5){
+  // xmin, xmax: interval where y > ymaxval * threshold_rel;
   long int ind_max = TMath::LocMax(n, y);
   ind_maxval = ind_max;
   double max_val = y[ind_max]; 
