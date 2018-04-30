@@ -133,82 +133,8 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   initHist(&sampleweights, "sampleweights", "sampleweights", 100, -5., 0.);
   
   
-  // tree2
-  initTree(&tree2, "h2000", "h2000",  fIceFinal);
-  tree2.Branch("inu", &uhen->inu, "inu/I");
-  tree2.Branch("horizcoord", &uhen->horizcoord, "horizcoord/D");
-  tree2.Branch("vertcoord", &uhen->vertcoord, "vertcoord/D");
-  tree2.Branch("scalefactor_distance", &uhen->scalefactor_distance, "scalefactor_distance/D");
-  tree2.Branch("scalefactor_attenuation", (float*)&uhen->scalefactor_attenuation, "scalefactor_attenuation/D");
-
   
-  initTree(&tree5, "h5000", "h5000", fIceFinal); // tree5 filled for each nutau.
-  tree5.Branch("vmmhz1m_max", &uhen->vmmhz1m_max, "vmmhz1m_max/D");
-  tree5.Branch("inu", &uhen->inu, "inu/I");
-  tree5.Branch("nuexitlength", &uhen->nuexitlength, "nuexitlength/D");
-  tree5.Branch("nuexitice",  &uhen->nuexitice);//,  "nuexitice");
-  tree5.Branch("vmmhz_max", &uhen->vmmhz_max); //, "vmmhz_max");
-  tree5.Branch("maxtaper", &uhen->maxtaper); //, "maxtaper");
-  tree5.Branch("inu", &uhen->inu, "inu/I");
-  tree5.Branch("whichray", &uhen->whichray, "whichray/I");
-  tree5.Branch("pnu", &uhen->pnu, "pnu/D");
-  tree5.Branch("costhetanu", &uhen->costhetanu, "costhetanu/D");
-  tree5.Branch("viewangle", &uhen->viewangle, "viewangle/D");
-  tree5.Branch("offaxis", &uhen->offaxis, "offaxis/D");
-  tree5.Branch("nsigma_offaxis", &uhen->nsigma_offaxis, "nsigma_offaxis/D");
-  tree5.Branch("hadfrac", &uhen->hadfrac, "hadfrac/D");
-  tree5.Branch("emfrac", &uhen->emfrac, "emfrac/D");
-  tree5.Branch("sumfrac", &uhen->sumfrac, "sumfrac/D");
-  tree5.Branch("horizcoord", &uhen->horizcoord, "horizcoord/D");
-  tree5.Branch("vertcoord", &uhen->vertcoord, "vertcoord/D");
-  // tree5.Branch("weight1", &uhen->weight1, "weight1/D");
-  // tree5.Branch("nearthlayers", &uhen->nearthlayers, "nearthlayers/D");
-  tree5.Branch("logchord", &uhen->logchord2, "interaction1->logchord/D");
-  tree5.Branch("diff_3tries", &uhen->diff_3tries, "diff_3tries/D");
-  tree5.Branch("fresnel2", &uhen->fresnel2, "fresnel2/D");
-  tree5.Branch("costheta_inc", &uhen->costheta_inc, "costheta_inc/D");
-  tree5.Branch("costheta_exit", &uhen->costheta_exit, "costheta_exit/D");
-  tree5.Branch("deltheta_em", &uhen->deltheta_em[0], "deltheta_em/D");
-  tree5.Branch("deltheta_had", &uhen->deltheta_had[0], "deltheta_had/D");
-  tree5.Branch("r_fromballoon", &uhen->interaction1->r_fromballoon[0], "r_fromballoon/D");
-  // tree5.Branch("theta_in", &uhen->theta_in, "theta_in/D");
-  // tree5.Branch("lat_in", &uhen->lat_in, "lat_in/D");
-  tree5.Branch("neutrinoPath", &uhen->fNeutrinoPath);
 
-  
-  initTree(&tree6, "h6000", "h6000", fIceFinal); // tree6 filled for neutrinos that enter S of 60 deg S latitude.
-  tree6.Branch("horizcoord", &uhen->horizcoord, "horizcoord/D");
-  tree6.Branch("vertcoord", &uhen->vertcoord, "vertcoord/D");
-  // tree6.Branch("theta_in", &uhen->theta_in, "theta_in/D");
-  tree6.Branch("chord_kgm2_bestcase", &uhen->chord_kgm2_bestcase2, "chord_kgm2_bestcase/D");
-  tree6.Branch("chord_kgm2_ice", &uhen->interaction1->chord_kgm2_ice, "chord_kgm2_ice/D");
-  tree6.Branch("costheta_nutraject", &uhen->interaction1->costheta_nutraject, "costheta_nutraject/D");
-  // tree6.Branch("weight1", &uhen->weight1, "weight1/D");
-  tree6.Branch("weight_bestcase", &uhen->weight_bestcase2, "weight_bestcase/D");
-  tree6.Branch("whichray", &uhen->whichray, "whichray/I");
-  tree6.Branch("mybeta", &uhen->mybeta, "mybeta/D");
-  tree6.Branch("longitude", &uhen->longitude_this, "longitude/D");
-  tree6.Branch("neutrinoPath", &uhen->fNeutrinoPath);
-
-  initTree(&tree6b, "h6001", "h6001", fIceFinal); // tree6b filled for the closest antenna to the interaction
-  tree6b.Branch("bwslice_vnoise", uhen->bwslice_vnoise_thislayer, "bwslice_vnoise_thislayer[4]/D");
-
-  initTree(&tree7, "h7000", "h7000", fIceFinal); // tree6 filled just after flavor is set
-  tree7.Branch("emfrac", &uhen->emfrac, "emfrac/D");
-  tree7.Branch("hadfrac", &uhen->hadfrac, "hadfrac/D");
-  tree7.Branch("current", &uhen->interaction1->currentint, "currentint/I");
-  tree7.Branch("nuflavor", &uhen->interaction1->nuflavorint, "nuflavorint/I");
-  tree7.Branch("sumfrac", &uhen->sumfrac, "sumfrac/D");
-  tree7.Branch("slopeyangle", &uhen->slopeyangle, "slopeyangle/D");
-
-  initTree(&jaimetree, "jaimetree", "jaimetree", fIceFinal); // signal as it is produced at the interaction
-  jaimetree.Branch("vmmhz1m_max", &uhen->vmmhz1m_max, "vmmhz1m_max/D");
-  jaimetree.Branch("emfrac", &uhen->emfrac, "emfrac/D");
-  jaimetree.Branch("hadfrac", &uhen->hadfrac, "hadfrac/D");
-  jaimetree.Branch("deltheta_em_max", &uhen->deltheta_em_max, "deltheta_em_max/D");
-  jaimetree.Branch("deltheta_had_max", &uhen->deltheta_had_max, "deltheta_had_max/D");
-  jaimetree.Branch("sumfrac", &uhen->sumfrac, "sumfrac/D");
-  jaimetree.Branch("vmmhz1m_visible", &uhen->vmmhz1m_visible, "vmmhz1m_visible/D");
 
   initTree(&viewangletree, "viewangletree", "viewangletree", fIceFinal); // signal as it is produced at the interaction
   viewangletree.Branch("dviewangle_deg", &uhen->dviewangle_deg, "dviewangle_deg/D");
@@ -220,11 +146,6 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   viewangletree.Branch("dnutries", &uhen->interaction1->dnutries, "dnutries/D");
   viewangletree.Branch("viewangle", &uhen->viewangle, "viewangle/D");
   viewangletree.Branch("chord", &uhen->interaction1->chord, "chord/D");
-
-  initTree(&neutrino_positiontree, "neutrino_positiontree", "neutrino_positiontree", fIceFinal);
-  neutrino_positiontree.Branch("nnu", &uhen->interaction1->nnu, "nnu[3]/D");
-  neutrino_positiontree.Branch("dtryingdirection", &uhen->interaction1->dtryingdirection, "dtryingdirection/D");
-  neutrino_positiontree.Branch("bn1->dtryingposition", &uhen->bn1->dtryingposition, "bn1->dtryingposition/D");
 
   //Filled just after Getchord,  where we find the neutrino's path through the Earth
   initTree(&nupathtree, "nupathtree", "nupathtree", fIceFinal);
@@ -422,98 +343,9 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   summarytree.Branch("avgfreq_rfcm_lab", &uhen->avgfreq_rfcm_lab, "avgfreq_rfcm_lab[128]/D");
   summarytree.Branch("freq", &uhen->freq, "freq[128]/D");
 
-  initTree(&banana_tree, "banana_tree", "banana_tree", fIceFinal);  //To record banana plot info - Stephen
-  banana_tree.Branch("r_bn", &uhen->bn1->r_bn, "r_bn[3]/D");
-
   initTree(&ytree, "ytree", "ytree", fIceFinal); //To record y distributions
   ytree.Branch("elast_y", &uhen->elast_y, "elast_y/D");
 
-  initTree(&icetree, "icetree", "icetree", fIceFinal);
-  icetree.Branch("icethck", &uhen->icethck, "icethck/D");
-  icetree.Branch("lon_ice", &uhen->lon_ice, "lon_ice/D");
-  icetree.Branch("lat_ice", &uhen->lat_ice, "lat_ice/D");
-  icetree.Branch("lon_water", &uhen->lon_water, "lon_water/D");
-  icetree.Branch("lat_water", &uhen->lat_water, "lat_water/D");
-  icetree.Branch("h20_depth", &uhen->h20_depth, "h20_depth/D");
-
-  initTree(&groundtree, "groundtree", "groundtree", fIceFinal);
-  groundtree.Branch("elev", &uhen->elev, "elev/D");
-  groundtree.Branch("lon_ground", &uhen->lon_ground, "lon_ground/D");
-  groundtree.Branch("lat_ground", &uhen->lat_ground, "lat_ground/D");
-
-  //End block added by Stephen
-
-  initTree(&tree11, "h11000", "h11000", fIceFinal); // tree11
-  tree11.Branch("loctrig00", &uhen->loctrig[0][0], "loctrig0/D");
-  tree11.Branch("loctrig10", &uhen->loctrig[1][0], "loctrig0/D");
-  tree11.Branch("loctrig20", &uhen->loctrig[2][0], "loctrig0/D");
-  tree11.Branch("loctrig_nadironly0", &uhen->loctrig_nadironly[0], "loctrig_nadironly0/D");
-  tree11.Branch("loctrig01", &uhen->loctrig[0][1], "loctrig1/D");
-  tree11.Branch("loctrig11", &uhen->loctrig[1][1], "loctrig1/D");
-  tree11.Branch("loctrig21", &uhen->loctrig[2][1], "loctrig1/D");
-  tree11.Branch("loctrig_nadironly1", &uhen->loctrig_nadironly[1], "loctrig0/D");
-
-  initTree(&tree16, "h16000", "h16000", fIceFinal);
-  tree16.Branch("pnu", &uhen->pnu, "pnu/D");
-  tree16.Branch("ptau", &uhen->ptau, "ptau/D");
-  tree16.Branch("taulength", &uhen->taulength, "taulength/D");
-  // tree16.Branch("weight1", &weight1, "weight1/D");
-  tree16.Branch("neutrinoPath", uhen->fNeutrinoPath);
-  tree16.Branch("emfrac", &uhen->emfrac, "emfrac/D");
-  tree16.Branch("hadfrac", &uhen->hadfrac, "hadfrac/D");
-  tree16.Branch("nuentrancelength", &uhen->nuentrancelength, "nuentrancelength/D");
-
-  initTree(&tree18, "h18000", "h18000", fIceFinal);
-  tree18.Branch("emfrac",  &uhen->emfrac,  "emfrac/D");
-  tree18.Branch("hadfrac", &uhen->hadfrac, "hadfrac/D");
-  tree18.Branch("pdgcode", &uhen->pdgcode, "pdgcode/I");
-
-
-  initTree(&vmmhz_tree, "vmmhz_tree", "vmmhz_tree", fIceFinal);
-  vmmhz_tree.Branch("freq_bins", &uhen->freq_bins, "freq_bins/I");
-  vmmhz_tree.Branch("vmmhz", &uhen->vmmhz, "vmmhz[freq_bins]/D");
-
-  
-  initTree(&tree1, "h1000", "h1000", fIceFinal);
-  tree1.Branch("inu", &uhen->inu, "inu/I");
-  tree1.Branch("diffexit", &uhen->diffexit, "diffexit/D");
-  tree1.Branch("diffrefr", &uhen->diffrefr, "diffrefr/D");
-  tree1.Branch("horizcoord", &uhen->horizcoord, "horizcoord/D");
-  tree1.Branch("vertcoord", &uhen->vertcoord, "vertcoord/D");
-  tree1.Branch("costhetanu", &uhen->costhetanu, "costhetanu/D");
-  tree1.Branch("vmmhz1m_max", &uhen->vmmhz1m_max, "vmmhz1m_max/D");
-  tree1.Branch("volume_thishorizon", &uhen->volume_thishorizon, "volume_thishorizon/D");
-  tree1.Branch("realtime", &uhen->realtime_this, "realtime/D");
-  tree1.Branch("longitude", &uhen->longitude_this, "longitude/D");
-  tree1.Branch("latitude", &uhen->latitude_this, "latitude/D");
-  tree1.Branch("MAXHORIZON", &uhen->bn1->MAXHORIZON, "MAXHORIZON/D");
-  tree1.Branch("igps", &uhen->bn1->igps, "igps/I");
-  tree1.Branch("passes_thisevent", &uhen->passes_thisevent, "passes_thisevent/I");
-  tree1.Branch("igps", &uhen->bn1->igps, "igps/I");
-  // tree1.Branch("weight", &weight, "weight/D");
-  tree1.Branch("neutrinoPath", uhen->fNeutrinoPath);
-  tree1.Branch("r_exit2bn", &uhen->interaction1->r_exit2bn, "r_exit2bn/D");
-  tree1.Branch("bn1->igps", &uhen->bn1->igps, "bn1->igps/I");
-
-
-  initTree(&tree3, "h3000", "h3000", fIceFinal); // tree3 if signal is detectable.
-  tree3.Branch("deltheta_em_max", &uhen->deltheta_em_max, "deltheta_em_max/D");
-  tree3.Branch("deltheta_had_max", &uhen->deltheta_had_max, "deltheta_had_max/D");
-  tree3.Branch("theta_threshold_deg", &uhen->theta_threshold_deg, "theta_threshold_deg/D");
-  tree3.Branch("nsigma_em_threshold", &uhen->nsigma_em_threshold, "nsigma_em_threshold/D");
-  tree3.Branch("nsigma_had_threshold", &uhen->nsigma_had_threshold, "nsigma_had_threshold/D");
-  tree3.Branch("horizcoord", &uhen->horizcoord, "horizcoord/D");
-  tree3.Branch("vertcoord", &uhen->vertcoord, "vertcoord/D");
-  tree3.Branch("vmmhz_max", &uhen->vmmhz_max, "vmmhz_max/D");
-  tree3.Branch("vmmhz_min", &uhen->vmmhz_min, "vmmhz_min/D");
-  tree3.Branch("dviewangle_deg", &uhen->dviewangle_deg, "dviewangle_deg/D");
-  tree3.Branch("viewangle_deg", &uhen->viewangle_deg, "viewangle_deg/D");
-  tree3.Branch("changle_deg", &uhen->changle_deg, "changle_deg/D");
-  tree3.Branch("cosviewangle", &uhen->cosviewangle, "cosviewangle/D");
-  tree3.Branch("emfrac", &uhen->emfrac, "emfrac/D");
-  tree3.Branch("hadfrac", &uhen->hadfrac, "hadfrac/D");
-  
-  
   initTree(&balloontree, "balloon", "balloon", fIceFinal); //filled for all events
   balloontree.Branch("heading", &uhen->bn1->heading, "heading/D");
   balloontree.Branch("pitch", &uhen->bn1->pitch, "pitch/D");
@@ -524,7 +356,6 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   balloontree.Branch("altitude", &uhen->bn1->altitude, "altitude/D");
   balloontree.Branch("horizcoord_bn", &uhen->bn1->horizcoord_bn, "horizcoord_bn/D");
   balloontree.Branch("vertcoord_bn", &uhen->bn1->vertcoord_bn, "vertcoord_bn/D");
-  
 }
 
 

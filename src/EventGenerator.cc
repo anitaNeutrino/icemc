@@ -1390,22 +1390,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 				      settings1.WEIGHTABSORPTION);
   Log() << "area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
 
-  for (int i=0;i<antarctica->nRows_ice;i++) {
-    for (int j=0;j<antarctica->nCols_ice;j++) {
-      antarctica->IceENtoLonLat(j, i, lon_ice, lat_ice);
-      icethck = antarctica->IceThickness(lon_ice, lat_ice);
-      h20_depth = antarctica->water_depth[j][i];
-      ro.icetree.Fill();
-    }
-  }
-  for (int i=0;i<antarctica->nRows_ground;i++) {
-    for (int j=0;j<antarctica->nCols_ground;j++) {
-      antarctica->GroundENtoLonLat(j, i, lon_ground, lat_ground);
-      elev=antarctica->SurfaceAboveGeoid(lon_ground, lat_ground);
-      ro.groundtree.Fill();
-    }
-  }
-
   // fills arrays according to antenna specs
   anita1->GetBeamWidths(&settings1); // this is used if GAINS set to 0
   // Antenna measured gain vs. frequency
@@ -1869,9 +1853,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // for plotting
       sumfrac=emfrac+hadfrac;
       //cout << "tree7 check" <<interaction1->nuflavorint << std::endl;
-      if (ro.tree7.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
-        ro.tree7.Fill();
-      }
       vmmhz1m_visible = (emfrac+hadfrac)*vmmhz1m_max; //Stephen - Record actual V/m/Mhz for display
 
       // plots for debugging.
@@ -1908,9 +1889,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 			deltheta_em_max, deltheta_had_max);
       } //end else (not secondbang or not interested in taus)
 
-      if (ro.jaimetree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
-        ro.jaimetree.Fill();
-      }
 
       //  Using highest possible signal and minimum noise,
       // and accounting for distance from balloon,
@@ -1997,9 +1975,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       if (ro.viewangletree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
         ro.viewangletree.Fill(); // fills variables related to viewing angle
-      }
-      if (ro.neutrino_positiontree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
-        ro.neutrino_positiontree.Fill(); // fills variables related to neutrino position
       }
       if (whichray==downgoing) {
         //return it to the upgoing direction that is after being reflected
@@ -2103,9 +2078,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // chord just through ice.
       interaction1->chord_kgm2_ice=interaction1->d2*sig1->RHOMEDIUM;
 
-      if (ro.tree6.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
-        ro.tree6.Fill();
-      }
       // take best case scenario chord length and find corresponding weight
       IsAbsorbed(interaction1->chord_kgm2_bestcase, len_int_kgm2, interaction1->weight_bestcase);
 
@@ -2191,9 +2163,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // difference between exit points of 2nd and 3rd iterations.
       diff_3tries=ray1->rfexit[1].Distance(ray1->rfexit[2]);
 
-      if (ro.tree5.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1  && bn1->WHICHPATH != 3){
-        ro.tree5.Fill();
-      }
       // reject if 2nd and 3rd tries
       // don't converge within 10m.
       if (diff_3tries>10) {
@@ -2338,12 +2307,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	}
       }
       
-      // roughness attenuation already dealt with
-      // fill for just 1/10 of the events.
-      // TTree* tree2 = ro.fTree2;
-      if (ro.tree2.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1 && bn1->WHICHPATH != 3){
-        ro.tree2.Fill();
-      }
 
       // intermediate counting
       count_dbexitsice++;
@@ -2361,10 +2324,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       count1->nchanceinhell[whichray]++;
       
-      // for plotting
-      if (ro.tree3.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1 && bn1->WHICHPATH != 3){
-        ro.tree3.Fill();
-      }
       // index for each antenna so you can use it to fill arrays
       count_rx=0;
       // keeps track of maximum voltage seen on either polarization of any antenna
@@ -2453,21 +2412,15 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	  
           pdgcode = interaction1->getPdgCode();
 
-          if (settings1.HIST==1 && !settings1.ONLYFINAL && bn1->WHICHPATH != 3 && k==Anita::NFREQ/2 && ro.tree18.GetEntries()<settings1.HIST_MAX_ENTRIES) {
-
-            ro.tree18.Fill();
-          }
-
           if (bn1->WHICHPATH == 3){
             interaction1->banana_volts += vmmhz[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
 	  }
         }//end for (int k=0;k<Anita::NFREQ;k++)
 
 
-        if (bn1->WHICHPATH==3 && interaction1->banana_volts != 0 && settings1.HIST && ro.banana_tree.GetEntries()<settings1.HIST_MAX_ENTRIES) {
-          ro.banana_tree.Fill();
+        if (bn1->WHICHPATH==3 && interaction1->banana_volts != 0 && settings1.HIST) {
           continue;
-        } //This is all the data needed for the banana plot - we now have the final value of vmmhz[]
+        }
         else if (bn1->WHICHPATH==3 && interaction1->banana_volts == 0) {
           continue; //Exit the loop if there's no voltage here - no value at a point is the same as zero,  and this will save HD space
         }
@@ -2719,7 +2672,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               rec_efield_array[ibw]=sqrt(pow(chantrig1.bwslice_volts_pole[ibw]/(undogaintoheight_e_array[ibw]*0.5), 2)+pow(chantrig1.bwslice_volts_polh[ibw]/(undogaintoheight_h_array[ibw]*0.5), 2));
               bwslice_vnoise_thislayer[ibw]=anita1->bwslice_vnoise[ilayer][ibw];// this is just for filling into a tree
             } // end loop over bandwidth slices
-            ro.tree6b.Fill();
           } // end if this is the closest antenna
 
           //+++++//+++++//+++++//+++++//+++++//+++++//+++++
@@ -2905,10 +2857,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         // tags this event as passing
         passestrigger=1;
 
-        // for plotting
-        if (ro.tree11.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
-          ro.tree11.Fill();
-	}
         // for taus
         if(sec1->secondbang && sec1->interestedintaus){
           count_passestrigger_nfb++;
@@ -2971,9 +2919,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               eventsfound_nfb+=fNeutrinoPath->weight;
               index_weights=(int)(((fNeutrinoPath->logweight-MIN_LOGWEIGHT)/(MAX_LOGWEIGHT-MIN_LOGWEIGHT))*(double)NBINS);
               eventsfound_nfb_binned[index_weights]++;
-              if (ro.tree16.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
-                ro.tree16.Fill();
-	      }
             }//end if secondbang & interestedintaus
             else {
               allcuts[whichray]++;
@@ -3096,9 +3041,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
                   rfexit_db_array[j][i] = ray1->rfexit_db[j][i];
                 } //end for
               } //end for
-              if (ro.vmmhz_tree.GetEntries()<20) {
-                ro.vmmhz_tree.Fill();
-              }
 
               nuflavorint2		= interaction1->nuflavorint;
               costheta_nutraject2	= interaction1->costheta_nutraject;
@@ -3250,13 +3192,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         count_passestrigger_w += fNeutrinoPath->weight;
       }
       volume_thishorizon=antarctica->volume_inhorizon[bn1->Getibnposition()]/1.E9;
-
-      if (settings1.HIST==1
-	  && !settings1.ONLYFINAL
-	  && ro.tree1.GetEntries() < settings1.HIST_MAX_ENTRIES
-	  && bn1->WHICHPATH != 3){ // all events
-        ro.tree1.Fill();
-      }//end if
 
     } // end for WHICHRAY
     //looping over two types of rays - upgoing and downgoing.

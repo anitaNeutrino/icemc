@@ -38,29 +38,13 @@ namespace icemc {
     RootOutput(const EventGenerator* uhen = NULL, const Settings* settings = NULL, const char* outputDir = ".", int run = 0);
     virtual ~RootOutput();
 
-    TTree tree2;		///< Filled for each event that is beyond the horizon.
-    TTree tree18;
-    TTree tree16;
-    TTree tree11;		///< tree11
-    TTree groundtree;
-    TTree icetree;
     TTree ytree;		///<To record y distributions
-    TTree banana_tree;		///<To record banana plot info - Stephen
     TTree summarytree;		///< finaltree filled for all events that pass
     TTree mytaus_tree;
-    TTree finaltree;		///< finaltree filled for all events that pass
+    TTree finaltree;		///< finaltree filled for all events that pass // move to pass tree?
     TTree nupathtree;
-    TTree neutrino_positiontree;
     TTree viewangletree;	///< signal as it is produced at the interaction
-    TTree jaimetree;		///< signal as it is produced at the interaction
-    TTree tree7;		///< tree6 filled just after flavor is set
-    TTree tree6b;		///< tree6b filled for the closest antenna to the interaction
-    TTree tree6;		///< tree6 filled for neutrinos that enter S of 60 deg S latitude.
-    TTree tree5;		///< tree5 filled for each nutau.
-    TTree tree3;		///< tree3 if signal is detectable.
     TTree balloontree;		///< filled for all events
-    TTree vmmhz_tree;           ///< To record frequency spread at point where it is first filled
-    TTree tree1;                ///< tree1 filled for each neutrino
     
     TH1D h1mybeta;
     TH1D h1mytheta;             ///< 90-incidentangle when neutrinos enter the Earth.
