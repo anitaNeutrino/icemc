@@ -21,7 +21,7 @@
 #include "balloon.hh"
 #include "icemodel.hh"
 #include "Spectra.h"
-#include "signal.hh"
+#include "RadioSignalGenerator.h"
 #include "secondaries.hh"
 #include "ray.hh"
 #include "counting.hh"
@@ -39,7 +39,7 @@ int main(){
   icemc::Balloon *bn1 = new icemc::Balloon(); // instance of the balloon
   icemc::Anita *anita1 = new icemc::Anita();// right now this constructor gets banding info
   icemc::Secondaries *sec1 = new icemc::Secondaries();
-  icemc::Signal *sig1 = new icemc::Signal();
+  icemc::RadioSignalGenerator *sig1 = new icemc::RadioSignalGenerator();
   icemc::Ray *ray1 = new icemc::Ray(); // create new instance of the ray class
   // input parameters
   s.ReadInputs("inputs.anita3.conf",  outputsFile);

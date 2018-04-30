@@ -15,7 +15,7 @@
 namespace icemc {
 
   class Taumodel;
-  class Signal;
+  class RadioSignalGenerator;
   class Interaction;
   class Ray;
   class Roughness;
@@ -471,12 +471,12 @@ namespace icemc {
 
     UInt_t eventNumber;
 
-    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, Signal* sig1, Anita* anita1);
+    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, RadioSignalGenerator* radioGenerator, Anita* anita1);
     
     void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE);
  
     double GetAirDistance(double altitude_bn,  double beta); // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth     // set up array of viewing angles for making plots for seckel
-    void SetupViewangles(const Signal *sig1);
+    void SetupViewangles(const RadioSignalGenerator *radioGenerator);
 
     void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
     double GetThisAirColumn(const Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta);
@@ -505,7 +505,7 @@ namespace icemc {
 
     int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside);
 
-    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
+    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  RadioSignalGenerator *radioGenerator,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
 
     void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  double emfrac,  double hadfrac,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag);
 
@@ -518,7 +518,7 @@ namespace icemc {
 
     static void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  SIGINT
 
-    void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
+    void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, RadioSignalGenerator *radioGenerator,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
 
     void WriteNeutrinoInfo(const int& inu, Position&,  Vector&,  Position&,  double,  std::string,  std::string,  double,  std::ofstream &nu_out);
 

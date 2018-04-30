@@ -54,7 +54,7 @@
 #include "icemodel.hh"
 // #include "trigger.hh"
 #include "Spectra.h"
-#include "signal.hh"
+#include "RadioSignalGenerator.h"
 #include "secondaries.hh"
 #include "ray.hh"
 #include "counting.hh"
@@ -80,7 +80,7 @@
 
 
 // hack hack hack
-using icemc::Signal;
+using icemc::RadioSignalGenerator;
 using icemc::EarthModel;
 using icemc::IceModel;
 using icemc::Counting;
@@ -411,7 +411,7 @@ double justSignal_dig[2][48][512];
 // functions
 
 // set up array of viewing angles for making plots for seckel
-void SetupViewangles(Signal *sig1);
+void SetupViewangles(RadioSignalGenerator *sig1);
 
 void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
 double GetThisAirColumn(Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta);
@@ -440,7 +440,7 @@ void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceMode
 
 int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside);
 
-int GetDirection(Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
+int GetDirection(Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  RadioSignalGenerator *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
 
 void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  double emfrac,  double hadfrac,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag);
 
@@ -455,7 +455,7 @@ void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  S
 
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, RadioSignalGenerator *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
 
 void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  string,  string,  double,  ofstream &nu_out);
 
@@ -614,7 +614,7 @@ int main(int argc,  char **argv) {
   Anita *anita1=new Anita();// right now this constructor gets banding info
   Secondaries *sec1=new Secondaries();
   Primaries *primary1=new Primaries();
-  Signal *sig1=new Signal();
+  RadioSignalGenerator *sig1=new RadioSignalGenerator();
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();
   GlobalTrigger *globaltrig1;
@@ -2615,7 +2615,7 @@ int main(int argc,  char **argv) {
       if (!settings1->ROUGHNESS){
         // don't loop over frequencies if the viewing angle is too far off
         double rtemp=icemc::Tools::dMin((viewangle-sig1->changle)/(deltheta_em_max), (viewangle-sig1->changle)/(deltheta_had_max));
-        if (rtemp>Signal::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
+        if (rtemp>RadioSignalGenerator::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
           //delete interaction1;
           continue;
         }
@@ -3842,7 +3842,7 @@ void WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double a
 //end WriteNeutrinoInfo()
 
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, Signal *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir) {
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, RadioSignalGenerator *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir) {
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
   double errordown_v_thresh[NTHRESHOLDS];
@@ -4519,7 +4519,7 @@ int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit, double n
 //end GetRayIceSide()
 
 
-int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &refr,  double deltheta_em,  double deltheta_had, double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  Signal *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) {
+int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &refr,  double deltheta_em,  double deltheta_had, double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  RadioSignalGenerator *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) {
 
   // in the specular (settings1->ROUGHNESS = 0) this function sets the neutrino direction according to a selection routine based on veiweing within the Cerenkov cone
 
@@ -4736,7 +4736,7 @@ double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_
 //end ScaleVmMHz()
 
 
-void SetupViewangles(Signal *sig1) {
+void SetupViewangles(RadioSignalGenerator *sig1) {
   double viewangle_max=90.*icemc::constants::RADDEG;
   double viewangle_min=30.*icemc::constants::RADDEG;
   for (int i=0;i<NVIEWANGLE-2;i++) {

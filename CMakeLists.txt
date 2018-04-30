@@ -151,7 +151,6 @@ endmacro()
 
 add_binary(icemc)
 add_binary(icemc3)
-add_binary(testTrigger) 
 add_binary(testSettings) 
 add_binary(testEAS) 
 add_binary(testWAIS) 

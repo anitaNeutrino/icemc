@@ -1,16 +1,18 @@
-#ifndef SIGNAL_H_
-#define SIGNAL_H_
-////////////////////////////////////////////////////////////////////////////////////////////////
-//class Signal:
-////////////////////////////////////////////////////////////////////////////////////////////////
+#ifndef RADIO_SIGNAL_GENERATOR_H
+#define RADIO_SIGNAL_GENERATOR_H
+
 #include <cmath>
 #include <iostream>
+
 #include "RadioSignal.h"
 
 namespace icemc{
 
-  ///< Radiation from interaction
-  class Signal {
+  /**
+   * @class RadioSignalGenerator
+   * @brief Generate Askaryan radiation from an interaction
+   */
+  class RadioSignalGenerator {
 
   protected:
     // properties of ice
@@ -103,7 +105,7 @@ namespace icemc{
 
 
   public:
-    Signal();
+    RadioSignalGenerator();
     void TaperVmMHz(double viewangle,double deltheta_em,double deltheta_had,double emfrac,double hadfrac,
 		    double& vmmhz1m,
 		    double& vmmhz_em);
@@ -233,6 +235,6 @@ namespace icemc{
     }
 
 
-  }; //class Position
+  };
 }
-#endif
+#endif // RADIO_SIGNAL_GENERATOR_H

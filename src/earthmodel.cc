@@ -10,7 +10,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "signal.hh"
+#include "RadioSignalGenerator.h"
 #include "Primaries.h"
 #include "secondaries.hh"
 #include "EnvironmentVariable.h"
@@ -431,14 +431,14 @@ int icemc::EarthModel::Getchord(const Settings *settings1,
 	
 	
 	
-	double L_ice=len_int_kgm2/Signal::RHOICE;
+	double L_ice=len_int_kgm2/RadioSignalGenerator::RHOICE;
 	
 	if (settings1->UNBIASED_SELECTION)
 	    probability_tmp*=1.-exp(-1.*(r_enterice.Distance(nuexitice)/L_ice)); // probability it interacts in ice along its path
 	
 	double L=0;
 	
-	double ddensity=Signal::RHOAIR;
+	double ddensity=RadioSignalGenerator::RHOAIR;
 	nearthlayers=1;
 	
 	if (where.Dot(nchord)>0.)  { // look at direction of neutrino where it enters the earth.

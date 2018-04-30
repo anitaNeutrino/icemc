@@ -1,4 +1,4 @@
-#include "signal.hh"
+#include "RadioSignalGenerator.h"
 #include "vector.hh"
 #include "TF1.h"
 #include "TRandom3.h"
@@ -8,53 +8,53 @@
 #include "anita.hh"
 
 
-const double icemc::Signal::N_AIR(1.);                      // index of refraction of air
-const double icemc::Signal::NICE(1.79);                      // index of refraction of ice
-const double icemc::Signal::CHANGLE_ICE(acos(1/NICE));                      // index of refraction of ice
-const double icemc::Signal::NSALT(2.45);                   // index of refracton for salt
+const double icemc::RadioSignalGenerator::N_AIR(1.);                      // index of refraction of air
+const double icemc::RadioSignalGenerator::NICE(1.79);                      // index of refraction of ice
+const double icemc::RadioSignalGenerator::CHANGLE_ICE(acos(1/NICE));                      // index of refraction of ice
+const double icemc::RadioSignalGenerator::NSALT(2.45);                   // index of refracton for salt
 //const double RHOSALT=2165;                 // density of salt (kg/m**3)
-const double icemc::Signal::RHOSALT(2050.);                 // density of salt (kg/m**3)
-const double icemc::Signal::RHOICE(917);                     // density of ice (kg/m**3)
-const double icemc::Signal::RHOH20(1000);          // density of water (kg/m**3)
-const double icemc::Signal::RHOAIR(1.25);          // density of air (kg/m**3)
-const double icemc::Signal::RM_ICE(10.35); // moliere radius, in g/cm^2
-const double icemc::Signal::RM_SALT(12.09); // moliere radius, in g/cm^2
-const double icemc::Signal::KR_SALT(1.33); // constant in jaime's parameterization
-const double icemc::Signal::KR_ICE(1.42); // constant in jaime's parameterization
-//const double icemc::Signal::X0SALT=0.1024;                // radiation length of salt (meters)
-const double icemc::Signal::X0SALT(0.1081);                // radiation length of salt (meters)
-//const double icemc::Signal::ECSALT=40.;                   // critical energy in salt (MeV)
-const double icemc::Signal::ECSALT(38.5);                   // critical energy in salt (MeV)
-const double icemc::Signal::X0ICE(0.403); 
-// //const double icemc::Signal::X0ICE=0.392; // radiation length of ice (meters)
-const double icemc::Signal::ECICE(63.7);                     // critical energy in ice (MeV)
-// //const double icemc::Signal::ECICE=73.0; // critical energy in ice (MeV)
-const double icemc::Signal::AEX_ICE(1.);  //efficiency for producing charge asymmetry relative to ice.  1 by definition
+const double icemc::RadioSignalGenerator::RHOSALT(2050.);                 // density of salt (kg/m**3)
+const double icemc::RadioSignalGenerator::RHOICE(917);                     // density of ice (kg/m**3)
+const double icemc::RadioSignalGenerator::RHOH20(1000);          // density of water (kg/m**3)
+const double icemc::RadioSignalGenerator::RHOAIR(1.25);          // density of air (kg/m**3)
+const double icemc::RadioSignalGenerator::RM_ICE(10.35); // moliere radius, in g/cm^2
+const double icemc::RadioSignalGenerator::RM_SALT(12.09); // moliere radius, in g/cm^2
+const double icemc::RadioSignalGenerator::KR_SALT(1.33); // constant in jaime's parameterization
+const double icemc::RadioSignalGenerator::KR_ICE(1.42); // constant in jaime's parameterization
+//const double icemc::RadioSignalGenerator::X0SALT=0.1024;                // radiation length of salt (meters)
+const double icemc::RadioSignalGenerator::X0SALT(0.1081);                // radiation length of salt (meters)
+//const double icemc::RadioSignalGenerator::ECSALT=40.;                   // critical energy in salt (MeV)
+const double icemc::RadioSignalGenerator::ECSALT(38.5);                   // critical energy in salt (MeV)
+const double icemc::RadioSignalGenerator::X0ICE(0.403); 
+// //const double icemc::RadioSignalGenerator::X0ICE=0.392; // radiation length of ice (meters)
+const double icemc::RadioSignalGenerator::ECICE(63.7);                     // critical energy in ice (MeV)
+// //const double icemc::RadioSignalGenerator::ECICE=73.0; // critical energy in ice (MeV)
+const double icemc::RadioSignalGenerator::AEX_ICE(1.);  //efficiency for producing charge asymmetry relative to ice.  1 by definition
  
-const double icemc::Signal::ALPHAICE(1.32); // exponent that goes into cutting off the spectrum at high frequencies
-const double icemc::Signal::AEX_SALT(0.684);  // efficiency for producing charge asymmetry relative to ice
-const double icemc::Signal::ALPHASALT(1.27); // exponent that goes into cutting off the spectrum at high frequencies
-const double icemc::Signal::KE_SALT(3.2E-16); // constant in jaime's parameterization, in V/cm/MHz
-const double icemc::Signal::KL_SALT(21.12); //constant in jaime's parameterization
-const double icemc::Signal::KDELTA_SALT(14.95); // constant in jaime's parameterization
-const double icemc::Signal::KE_ICE(4.79E-16); // constant in jaime's parameterization, in V/cm/MHz
-const double icemc::Signal::KL_ICE(23.80); //constant in jaime's parameterization
-const double icemc::Signal::KDELTA_ICE(18.33); // constant in jaime's parameterization
+const double icemc::RadioSignalGenerator::ALPHAICE(1.32); // exponent that goes into cutting off the spectrum at high frequencies
+const double icemc::RadioSignalGenerator::AEX_SALT(0.684);  // efficiency for producing charge asymmetry relative to ice
+const double icemc::RadioSignalGenerator::ALPHASALT(1.27); // exponent that goes into cutting off the spectrum at high frequencies
+const double icemc::RadioSignalGenerator::KE_SALT(3.2E-16); // constant in jaime's parameterization, in V/cm/MHz
+const double icemc::RadioSignalGenerator::KL_SALT(21.12); //constant in jaime's parameterization
+const double icemc::RadioSignalGenerator::KDELTA_SALT(14.95); // constant in jaime's parameterization
+const double icemc::RadioSignalGenerator::KE_ICE(4.79E-16); // constant in jaime's parameterization, in V/cm/MHz
+const double icemc::RadioSignalGenerator::KL_ICE(23.80); //constant in jaime's parameterization
+const double icemc::RadioSignalGenerator::KDELTA_ICE(18.33); // constant in jaime's parameterization
 
-const double icemc::Signal::KELVINS_ICE(250.+150.);          // temperature in Kelvin (ice+system)
-const double icemc::Signal::KELVINS_SALT(500.);            // temperature in salt (350) + receiver temp (150)
-const double icemc::Signal::BETAICE(2.25); // exponent, in jaime's parameterization
-// double icemc::Signal::NU0_MODIFIED=0.; // nu_0 modified for a specific medium
-// double icemc::Signal::NU_R;// parameter for signal parameterization
-const double icemc::Signal::BETASALT(2.60); // exponent, in jaime's parameterization
-const double icemc::Signal::VIEWANGLE_CUT(sqrt(5.)); // require viewangle is no more than 5 delta away from the cerenkov angle where
+const double icemc::RadioSignalGenerator::KELVINS_ICE(250.+150.);          // temperature in Kelvin (ice+system)
+const double icemc::RadioSignalGenerator::KELVINS_SALT(500.);            // temperature in salt (350) + receiver temp (150)
+const double icemc::RadioSignalGenerator::BETAICE(2.25); // exponent, in jaime's parameterization
+// double icemc::RadioSignalGenerator::NU0_MODIFIED=0.; // nu_0 modified for a specific medium
+// double icemc::RadioSignalGenerator::NU_R;// parameter for signal parameterization
+const double icemc::RadioSignalGenerator::BETASALT(2.60); // exponent, in jaime's parameterization
+const double icemc::RadioSignalGenerator::VIEWANGLE_CUT(sqrt(5.)); // require viewangle is no more than 5 delta away from the cerenkov angle where
 
 
-icemc::Signal::Signal() : N_DEPTH(1.79) {
+icemc::RadioSignalGenerator::RadioSignalGenerator() : N_DEPTH(1.79) {
 
   Initialize();
 }
- void icemc::Signal::InitializeMedium() {
+ void icemc::RadioSignalGenerator::InitializeMedium() {
   if (MEDIUM==1) {
     SetKelvins(KELVINS_SALT);
     
@@ -95,7 +95,7 @@ icemc::Signal::Signal() : N_DEPTH(1.79) {
  
 }
 
- void icemc::Signal::Initialize() {
+ void icemc::RadioSignalGenerator::Initialize() {
 
   logscalefactor_taper=0.;
   JAIME_FACTOR=1.0; // factor to multiply Jaime's parameterization for error analysis
@@ -155,7 +155,7 @@ icemc::Signal::Signal() : N_DEPTH(1.79) {
 
 
 
-icemc::RadioSignal icemc::Signal::getRadioSignal(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max){
+icemc::RadioSignal icemc::RadioSignalGenerator::getRadioSignal(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max){
   double tempArray[Anita::NFREQ] = {0};
   GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, freq, notch_min, notch_max, tempArray, Anita::NFREQ);
   RadioSignal rs(Anita::NFREQ, tempArray);
@@ -163,7 +163,7 @@ icemc::RadioSignal icemc::Signal::getRadioSignal(double vmmhz_max,double vmmhz1m
 }
 
 
-void icemc::Signal::GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max,double *vmmhz,int nfreq) {
+void icemc::RadioSignalGenerator::GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max,double *vmmhz,int nfreq) {
 
   // parametrization from Jaime Alvarez Munhiz  
   //  here using astro-ph/0003315 
@@ -185,7 +185,7 @@ void icemc::Signal::GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,doub
   }
 } //GetVmMHz
 
- double icemc::Signal::GetELPM() {
+ double icemc::RadioSignalGenerator::GetELPM() {
 
   // LPM
   // elpm =7.7 TeV/cm * rho * X0 in PDG, but our x0 is in meters
@@ -197,12 +197,12 @@ void icemc::Signal::GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,doub
   double elpm=2.E15*(X0MEDIUM/x0ice);  // this is what Jaime uses.  see caption under figure 4 of 0003315.
   return elpm;
 } //GetELPM
- int icemc::Signal::GetLPM() {
+ int icemc::RadioSignalGenerator::GetLPM() {
 
 
   return LPM;
 } //GetLPM
-void icemc::Signal::GetSpread(double pnu,
+void icemc::RadioSignalGenerator::GetSpread(double pnu,
 	       double emfrac,
 	       double hadfrac,
 	       double freq,
@@ -352,7 +352,7 @@ void icemc::Signal::GetSpread(double pnu,
 } //GetSpread
 
 
-double icemc::Signal::GetVmMHz1m(double pnu,double freq) {
+double icemc::RadioSignalGenerator::GetVmMHz1m(double pnu,double freq) {
 
   if (WHICHPARAMETERIZATION==0) {
     // parametrization from Jaime Alvarez Munhiz  
@@ -396,7 +396,7 @@ double icemc::Signal::GetVmMHz1m(double pnu,double freq) {
 } 
 
 
- void icemc::Signal::SetParameterization(int whichparameterization) {
+ void icemc::RadioSignalGenerator::SetParameterization(int whichparameterization) {
 
   WHICHPARAMETERIZATION=whichparameterization;
 }
@@ -406,13 +406,13 @@ double icemc::Signal::GetVmMHz1m(double pnu,double freq) {
 
 
 
-void icemc::Signal::TaperVmMHz(double viewangle,
-			       double deltheta_em,
-			       double deltheta_had,
-			       double emfrac,
-			       double hadfrac,
-			       double& vmmhz1m,
-			       double& vmmhz1m_em_obs) {
+void icemc::RadioSignalGenerator::TaperVmMHz(double viewangle,
+					     double deltheta_em,
+					     double deltheta_had,
+					     double emfrac,
+					     double hadfrac,
+					     double& vmmhz1m,
+					     double& vmmhz1m_em_obs) {
 
   //--EM 
   double vmmhz1m_em=0; // V/m/MHz at 1m due to EM component of shower

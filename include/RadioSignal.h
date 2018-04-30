@@ -7,7 +7,7 @@
 
 namespace icemc {
 
-  class Signal; ///< Let the linker worry about finding Signal
+  class RadioSignalGenerator; ///< Let the linker worry about finding Signal
 
   /**
    * @class RadioSignal
@@ -19,7 +19,7 @@ namespace icemc {
 
   class RadioSignal {
 
-    friend Signal; ///< Allow this generating class to manipulate the private members of the RadioSignal class
+    friend RadioSignalGenerator; ///< Allow this generating class to manipulate the private members of the RadioSignal class
 
   public:
 

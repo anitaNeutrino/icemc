@@ -2,7 +2,7 @@
 #include "TRandom3.h"
 #include "vector.hh"
 #include "position.hh"
-#include "signal.hh"
+#include "RadioSignalGenerator.h"
 #include "Primaries.h"
 #include "secondaries.hh"
 #include "icemodel.hh"
