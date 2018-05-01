@@ -263,6 +263,17 @@ void Settings::Initialize() {
   taumodes = 1; //Taumodes =1, taucreated in the rock.
   SCREENEDGELENGTH=25.;
   TUFFSON=0;
+  ADDCW=0;
+  PAYLOAD_USE_SPECIFIC_TIME = 0; 
+  PAYLOAD_USE_SPECIFIC_TIME_DELTA = 3600; 
+
+  SPECIFIC_NU_POSITION = 0; 
+  SPECIFIC_NU_POSITION_LATITUDE = -77.7; 
+  SPECIFIC_NU_POSITION_LONGITUDE = 166.7; 
+  SPECIFIC_NU_POSITION_ALTITUDE = 0; 
+  SPECIFIC_NU_POSITION_DISTANCE = 100e3; 
+
+
 }
 
 
@@ -534,7 +545,12 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   if (CONSTANTICETHICKNESS==1){
     std::cout << "Non-default setting:  CONSTANTICETHICKNESS= " << CONSTANTICETHICKNESS << std::endl;
   }
-
+  
+  getSetting("Fixed ice elevation", FIXEDELEVATION);
+  if (FIXEDELEVATION==1){
+    std::cout << "Non-default setting:  FIXEDELEVATION= " << FIXEDELEVATION << std::endl;
+  }
+  
   getSetting("Antarctic ice model", ICE_MODEL);
   if ((CONSTANTICETHICKNESS || FIXEDELEVATION) && ICE_MODEL != 0) {
     ICE_MODEL=0;
@@ -553,20 +569,13 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
     std::cout << "Non-default setting: all surface segments are flat." << std::endl;
   }
 
-  getSetting("Fixed ice elevation", FIXEDELEVATION);
-  if (FIXEDELEVATION==1){
-    std::cout << "Non-default setting:  FIXEDELEVATION= " << FIXEDELEVATION << std::endl;
-  }
-
   getSetting("Medium", medium);
 
   getSetting("Enable surface roughness", ROUGHNESS);
   getSetting("Surface roughness", ROUGHSIZE);
   getSetting("Screen edge length [meters]", SCREENEDGELENGTH);
 
-  getSetting("Base screen divisions", ROUGHSCREENDIV_BASE);
-  getSetting("Subgrid divisions", ROUGHSCREENDIV_SUB);
-  getSetting("Number of subgrid generations", ROUGHMAXGEN);
+  getSetting("Screen step size [meters]", SCREENSTEPSIZE);
 
   getSetting("FIRN", FIRN);
   if (FIRN==0){
@@ -574,11 +583,8 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   }
   getSetting("Which attenuation length", MOOREBAY);
 
-
-
-
-
-
+  /////////////////oindree adding this to do source (GRB) search////////////////////////////
+  getSetting("Get neutrino direction from specified source", SOURCE); 
 
 
   getSetting("Cross-section factor", SIGMA_FACTOR);
@@ -799,8 +805,26 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   
   getSetting("Simulate TUFFs", TUFFSON);
   getSetting("Which TUFFs are on", whichTUFFsON);
-
+  if (TUFFSON) cout << "TUFFs are simulated " << endl;
   
+  getSetting("Add CW", ADDCW);
+  if(ADDCW) cout << "Adding CW " << endl;
+
+  getSetting("Specific Payload Unix Time", PAYLOAD_USE_SPECIFIC_TIME); 
+  getSetting("Specific Payload Delta Time", PAYLOAD_USE_SPECIFIC_TIME_DELTA); 
+  
+  getSetting("Use Specific Interaction Location", SPECIFIC_NU_POSITION); 
+  std::vector<double> specific_place; 
+  getSetting("Specific Interaction Location", specific_place); 
+  if (specific_place.size() == 3)
+  {
+    SPECIFIC_NU_POSITION_LATITUDE = specific_place[0];
+    SPECIFIC_NU_POSITION_LONGITUDE = specific_place[1]; 
+    SPECIFIC_NU_POSITION_ALTITUDE = specific_place[2]; 
+  }
+     
+  getSetting("Specific Interaction Location Maximum Distance", SPECIFIC_NU_POSITION_DISTANCE); 
+
 } //method ReadInputs
 
 
@@ -991,9 +1015,12 @@ for(unsigned int i=0; i < requiredBands.size(); i++){
 
   if (TUFFSON){
     std::cout << "The TUFFs are ON for the whole flight!" << std::endl;
-    std::cout << "Notch 0 status " << anita1->TUFFstatus[0] << std::endl;
-    std::cout << "Notch 1 status " << anita1->TUFFstatus[1] << std::endl;
-    std::cout << "Notch 2 status " << anita1->TUFFstatus[2] << std::endl;
+    if (TUFFSON==2){
+      std::cout << "Using Butterworth filters approximation " << std::endl;
+      std::cout << "Notch 0 status " << anita1->TUFFstatus[0] << std::endl;
+      std::cout << "Notch 1 status " << anita1->TUFFstatus[1] << std::endl;
+      std::cout << "Notch 2 status " << anita1->TUFFstatus[2] << std::endl;
+    }
   }
 
 

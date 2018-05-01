@@ -3,8 +3,10 @@
 #include "vector.hh"
 #include "position.hh"
 #include "TF1.h"
+#include "TTree.h"
 #include <fstream>
 #include <iostream>
+#include <stdio.h> 
 #include "Settings.h"
 #include "earthmodel.hh"
 #include "icemodel.hh"
@@ -252,7 +254,6 @@ Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,
   }
 }
 
-
 void Interaction::PickAnyDirection() {
   double rndlist[2];
   gRandom->RndmArray(2,rndlist);
@@ -274,6 +275,41 @@ void Interaction::PickAnyDirection() {
   nnu.SetZ(costheta_nutraject);
 }
 
+int Interaction::PickGrbDirection() {
+  
+  TTree grb_tree("grb_tree","grb_tree");
+  grb_tree.ReadFile("data/grb_alt_az_for_icemc.txt","grb_az/D:grb_alt/D");
+  
+  double grb_az;
+  double grb_alt; 
+  
+  grb_tree.SetBranchAddress("grb_az",&grb_az);
+  grb_tree.SetBranchAddress("grb_alt",&grb_alt);
+  
+  grb_tree.GetEntry(0);
+
+  //cout << "<3<3<3<3<3<3<3<3<3  GRB az and alt in degrees : " << grb_az << " " << grb_alt << "\n";    
+
+  // oindree -- setting cos of theta_nutraject (altitude) 
+  costheta_nutraject = cos( ( grb_alt * ( PI/180. ) ) );
+
+  // oindree -- setting phi of nutraject (azimuth) 
+  phi_nutraject = grb_az * ( PI/180. ); 
+  
+  // check that these give the right result
+  double thetanu=acos(costheta_nutraject);
+  
+  double sinthetanu=sin(thetanu);
+  
+  // find direction vector of neutrino
+  // **** are cosine and sine flipped?
+  nnu.SetX(sinthetanu * cos(phi_nutraject));
+  nnu.SetY(sinthetanu * sin(phi_nutraject));
+  nnu.SetZ(costheta_nutraject);
+
+  return 1;
+ 
+}
 
 void  Interaction::setNuFlavor(Primaries *primary1,Settings *settings1,int whichray,Counting *counting1) {
   // pick the neutrino flavor,  type of tau decay when relevant,

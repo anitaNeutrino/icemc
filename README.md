@@ -1,4 +1,5 @@
-# [icemc](https://github.com/anitaNeutrino/icemc) is a tool to simulate neutrino interactions in the ice #
+# icemc
+[icemc](https://github.com/anitaNeutrino/icemc) is a tool to simulate neutrino interactions in the ice
 
 ## Prerequisites ##
 

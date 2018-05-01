@@ -896,8 +896,8 @@ int main(int argc,  char **argv) {
   configAnitaTree->Fill();
   
   TTree *triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
-  triggerSettingsTree->Branch("dioderms", anita1->bwslice_dioderms_fullband_allchan, "dioderms[2][48]/D");
-  triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48]/D");
+  triggerSettingsTree->Branch("dioderms", anita1->bwslice_dioderms_fullband_allchan, "dioderms[2][48][6]/D");
+  triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48][6]/D");
   triggerSettingsTree->Fill();
 
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
@@ -1064,9 +1064,9 @@ int main(int argc,  char **argv) {
 	if(!settings1->APPLYIMPULSERESPONSETRIGGER) chantrig1->injectImpulseAfterAntenna(anita1, antNum);
 #endif
 	
-	chantrig1->TriggerPath(settings1, anita1, antNum);
+	chantrig1->TriggerPath(settings1, anita1, antNum, bn1);
 	  
-	chantrig1->DigitizerPath(settings1, anita1, antNum);
+	chantrig1->DigitizerPath(settings1, anita1, antNum, bn1);
 	
 	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac, thresholdsAnt[antNum]);
 
@@ -1341,7 +1341,7 @@ int main(int argc,  char **argv) {
 
       sum_weights+=weight;
       neutrinos_passing_all_cuts++;
-
+      anita1->tdata->Fill();
     } // end if passing global trigger conditions
     else {
       passes_thisevent=0; // flag this event as not passing
@@ -1445,6 +1445,8 @@ int main(int argc,  char **argv) {
   cout<<"Total time elapsed is "<<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<endl;
 
   foutput << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<endl;
+  anita1->fdata->Write();
+  anita1->fdata->Close();
 
   delete anita1;
   return 0;

@@ -14,6 +14,8 @@ and from the second line, first column : energy in log, second column : flux E^2
 
 40. ahlers.dat------Ahlers' paper in PHYSICAL REVIEW D 72, 023001 (2005) FIG 4b
 
+41. ahlers2012.dat------Ahlers 2012 paper (PHYSICAL REVIEW D 86, 083010 (2012))
+
 50. allard.dat------Allard's paper in astro-ph/0605327 v2 22 May 2006  FIG 11 slim solid line
 
 60. ave_max.dat-----Ave's paper in astro-ph/0409316v2 6 Nov 2004 FIG 6 solid curve(upper)
@@ -27,6 +29,8 @@ and from the second line, first column : energy in log, second column : flux E^2
 90. waxgzk.dat-----Waxman GZK flux taken from David Seckel's ftp GZK_update.ps page 1, the green curve in the right plot
 
 100. e-2.dat-----E-2 model I used,which is the experimental limit Steve Barwick told me
+
+101. e-2_icecube.dat-----E-2 model digitized from Icecube 2016 paper (Phys. Rev. Lett. 117, 241101)
 
 110. yuksel_grb.dat-----Yuksel's paper from astro-ph/0610481v2 9 Nov 2006 FIG4
 
@@ -55,5 +59,6 @@ and from the second line, first column : energy in log, second column : flux E^2
 
 223. Kotera2010_mix_min.dat-----Kotera's paper from arXiv:1009.1382v2, Fig.9 bottom shaded area
 
+224. Kotera2010_proton.dat------Kotera's paper from arXiv:1009.1382v2, Fig.9 top pink dashed line
 
 

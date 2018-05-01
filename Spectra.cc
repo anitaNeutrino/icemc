@@ -194,6 +194,9 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
           case 40:
               GetFlux("ahlers.dat");
               break;
+      case 41:
+	GetFlux("ahlers2012.dat");
+	break;
           case 50:
               GetFlux("allard.dat");
               break;
@@ -214,6 +217,9 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
               break;
           case 100:
               GetFlux("e-2.dat");
+              break;
+          case 101:
+              GetFlux("e-2_icecube.dat");
               break;
           case 110:
               GetFlux("yuksel_grb.dat");
@@ -280,6 +286,10 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   else if (EXPONENT==223)
   {
       GetFlux("Kotera2010_mix_min.dat");
+  }
+  else if (EXPONENT==224)
+  {
+      GetFlux("Kotera2010_proton.dat");
   }
   
 

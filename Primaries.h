@@ -175,6 +175,8 @@ public:
 
     void PickAnyDirection();
     
+    int PickGrbDirection();
+    
     int noway;
     int wheredoesitleave_err;
     int neverseesice;

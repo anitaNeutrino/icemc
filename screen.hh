@@ -30,7 +30,6 @@ private:
   Vector funit_y;                   ///< Y unit vector in screen (~ perp. to ground surface, perp. to screen normal)
 
   int fNsamples;                    ///< number of samples in X-direction (and Y-, assuming symmetry)
-  int fpositionindex;               ///< current active index counter
   int fNvalidpoints;                ///< total number of points on the screen
 
   std::vector<double> fVmmhz_freq;  ///< container for the valid screen points giving the frequency dependence magnitude for each point; every anita::NFREQ will be each screen point; final size will be (anita::NFREQ * fNsamples)
@@ -45,7 +44,10 @@ private:
   std::vector<double> fTransAngles; ///< container for transmission angle
   double fWeightNorm;               ///< normalization of the weights == simple weight sum
   std::vector<double> fFacetLength; ///< edge length [m] of individual contributing facet
-  
+  std::vector<double> fTcoeff_parl_polparl; ///< transmission coefficients of parallel components for parallel polarization
+  std::vector<double> fTcoeff_perp_polparl; ///< transmission coefficients of perpendicular components for parallel polarization
+  std::vector<double> fTcoeff_parl_polperp; ///< transmission coefficients of parallel components for perpendicular polarization
+  std::vector<double> fTcoeff_perp_polperp; ///< transmission coefficients of perpendicular components for perpendicular polarization
 
 public:
   //! Creates an instance of a screen
@@ -138,9 +140,6 @@ public:
   */
   Vector GetUnitY();
 
-  //! Resets the internal position counter to 0
-  void ResetPositionIndex();
-
   //! Calculates the X index of the screen corresponding to the specified counter value
   /**
   * @param i - index
@@ -160,7 +159,7 @@ public:
   * @param i - index
   * @return double
   */
-  Position GetNextPosition(int i);
+  Position GetPosition(int i, int j);
 
   //! Appends a Vmmhz value to the fVmmhz_freq array
   /**
@@ -316,7 +315,6 @@ public:
   */
   double GetTransmissionAngle(int i);
 
-
   //! Appends a facet edge length value to the fFacetLength array
   /**
   * @param A - viewangle
@@ -329,6 +327,58 @@ public:
   * @return double
   */
   double GetFacetLength(int i);
+
+  //! Appends a parallel transmission coefficient value to the fTcoeff_parl array
+  /**
+  * @param A - coefficient
+  */
+  void AddTparallel_polParallel(double A);
+
+  //! Get the parallel transmission coefficient value stored at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
+  double GetTparallel_polParallel(int i);
+
+  //! Appends a perpendicular transmission coefficient value to the fTcoeff_perp array
+  /**
+  * @param A - coefficient
+  */
+  void AddTperpendicular_polParallel(double A);
+
+  //! Get the perpendicular transmission coefficient value stored at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
+  double GetTperpendicular_polParallel(int i);
+
+  //! Appends a parallel transmission coefficient value to the fTcoeff_parl array
+  /**
+  * @param A - coefficient
+  */
+  void AddTparallel_polPerpendicular(double A);
+
+  //! Get the parallel transmission coefficient value stored at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
+  double GetTparallel_polPerpendicular(int i);
+
+  //! Appends a perpendicular transmission coefficient value to the fTcoeff_perp array
+  /**
+  * @param A - coefficient
+  */
+  void AddTperpendicular_polPerpendicular(double A);
+
+  //! Get the perpendicular transmission coefficient value stored at the specified index
+  /**
+  * @param i - index
+  * @return double
+  */
+  double GetTperpendicular_polPerpendicular(int i);
 
   //! Resets the following screen parameters (fNvalidpoints,fVmmhz_freq,fVmmhz0,fViewangle,fDelays,fVec2blns,fPols,fImpactPt,fWeight,fWeightNorm)
   void ResetParameters();

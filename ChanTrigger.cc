@@ -65,20 +65,15 @@ void ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
     hvolts_f[i]=hvolts[i];
     vvolts_f[i]=vvolts[i];
   }
-    
-  //  double *hvolts_f=hvolts;
-  //double *vvolts_f=vvolts;
-    
+  
   Tools::realft(hvolts_f,1,nfour/2);
   Tools::realft(vvolts_f,1,nfour/2);
     
   for (int i=0;i<nfour/4;i++) {
-    //right[2*i]=1/sqrt(2.)*(hvolts_f[2*i]+vvolts_f[2*i+1]); //This is what was being done, until Jacob declared it wrong
-    right[2*i]=1/sqrt(2.)*(vvolts_f[2*i]-hvolts_f[2*i+1]); //The thing Jacob declared right
+    right[2*i]=1/sqrt(2.)*(vvolts_f[2*i]-hvolts_f[2*i+1]); 
     left[2*i]=1/sqrt(2.)*(hvolts_f[2*i]-vvolts_f[2*i+1]);
 		
-    //right[2*i+1]=1/sqrt(2.)*(hvolts_f[2*i+1]-vvolts_f[2*i]); //This is what was being done, until Jacob declared it wrong
-    right[2*i+1]=1/sqrt(2.)*(vvolts_f[2*i+1]+hvolts_f[2*i]); //The thing Jacob declared right
+    right[2*i+1]=1/sqrt(2.)*(vvolts_f[2*i+1]+hvolts_f[2*i]); 
     left[2*i+1]=1/sqrt(2.)*(hvolts_f[2*i+1]+vvolts_f[2*i]);
 		
 
@@ -342,7 +337,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   int ipol=0;
 
   if (settings1->NOISEFROMFLIGHTTRIGGER){
-    anita1->bwslice_rmsdiode[4] = anita1->bwslice_dioderms_fullband_allchan[ipol][iant];
+    anita1->bwslice_rmsdiode[4] = anita1->bwslice_dioderms_fullband_allchan[ipol][iant][anita1->tuffIndex];
   }
   
   // if we use the diode to perform an integral
@@ -797,7 +792,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
 
           anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
 
-          if (settings1->TUFFSON){
+          if (settings1->TUFFSON==2){
             tmp_vhz[0][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
             tmp_vhz[1][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
           }
@@ -869,11 +864,17 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
 #ifdef ANITA_UTIL_EXISTS
   if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
     getNoiseFromFlight(anita1, ant, settings1->SIGNAL_FLUCT > 0);
+
+  if (settings1->ADDCW){
+    memset(cw_digPath, 0, sizeof(cw_digPath));
+    calculateCW(anita1, 250E6, 0, 0.000005);
+  }
+  
 #endif
   
 }
 
-void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
+void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant, Balloon *bn1){
 
 
   double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
@@ -1007,7 +1008,7 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
 
 
 
-void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)
+void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant, Balloon *bn1)
 {
   double vhz_rx_rfcm_e[Anita::NFREQ]; // V/Hz after rx, rfcm
   double vhz_rx_rfcm_h[Anita::NFREQ];
@@ -1548,7 +1549,6 @@ void ChanTrigger::GetThresholds(Settings *settings1,Anita *anita1,int ilayer,dou
 
 
 double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStatus[3]){
-
   // Butterworth filter for two ANITA notches.
   // order0 = order1 = 1 may be closer to hardware notch
   //  but 2 gives better SW rejection in analysis spectrum.
@@ -1596,8 +1596,25 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
 
   int iphi = ant - (iring*16);
   
+  if (settings1->ADDCW){
+    for (int i=0;i<nPoints;i++){
+      y[i]+=cw_digPath[ipol][i];
+    }
+  }
+
+  TGraph *surfSignal;
+  
+  
   //Calculate convolution
-  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizer[ipol][iring][iphi]);
+  if(!settings1->TUFFSON){
+    surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizer[ipol][iring][iphi]);
+  }
+  else
+  {
+    // keith editing 1/24/18
+    surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][anita1->tuffIndex]);
+    // end keith editing
+  }// end else for ANITA-4
 
   int irx = ant;
   if (iring==0) {
@@ -1621,17 +1638,19 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
     for (int i=0;i<nPoints;i++)  justSig_digPath[ipol][i] = y[i] = surfSignalDown->Eval(x[i]);
   }
   
-  // if (ant ==8 && pol==0){
-  //   TCanvas *c = new TCanvas("c");
-  //   graph1->Draw("Al");
-  //   c->Print("DigitPath_graph1.png");
-  //   graphUp->Draw("Al");
-  //   c->Print("DigitPath_graphUp.png");
-  //   surfSignal->Draw("Al");
-  //   c->Print("DigitPath_surfSignal.png");
-  //   surfSignalDown->Draw("Al");
-  //   c->Print("DigitPath_surfSignalDown.png");
-  // }
+
+//  if ((iphi ==11 && pol==0)){
+//    TCanvas *c = new TCanvas("c");
+//    graph1->Draw("Al");
+//    c->Print("DigitPath_graph1.png");
+//    graphUp->Draw("Al");
+//    c->Print("DigitPath_graphUp.png");
+//    surfSignal->Draw("Al");
+//    c->Print("DigitPath_surfSignal.png");
+//    surfSignalDown->Draw("Al");
+//    c->Print("DigitPath_surfSignalDown.png");
+//  }
+
   
   // Cleaning up
   delete surfSignalDown;
@@ -1640,7 +1659,6 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   delete graphUp;
   delete graph1;
 }
-
 
 void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol){
 
@@ -1671,7 +1689,20 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   int iphi = ant - (iring*16);
 
   //Calculate convolution
-  TGraph *surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring][iphi]);
+
+// begin keith edits
+  TGraph *surfSignal;
+  if (!settings1->TUFFSON){
+    surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring][iphi]);
+  }
+  else
+  {
+    // keith editing 1/24/18
+    surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTriggerTuffs[ipol][iring][iphi][anita1->tuffIndex]); 
+//    cout << anita1->tuffIndex << " is the tuff Index" << endl;
+    // end keith editing 
+  }// end else anita 4
+// end keith edits
 
   int irx = ant;
   if (iring==0) {
@@ -1723,7 +1754,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   // // gtemp->Write("gImpRespDownNoise");
   // // out->Close();
   // }
-  
+
   // Cleaning up
   delete surfSignalDown;
   delete surfTrans;
@@ -1732,35 +1763,16 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   delete graph1;
 }
 
-void ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
-
-  for (int i=0; i<anita1->NFOUR/2; i++){
-    sig0[i]   = justSig_trigPath[0][i];
-    noise0[i] = justNoise_trigPath[0][i];
-    sig1[i]   = justSig_trigPath[1][i];
-    noise1[i] = justNoise_trigPath[1][i];
-  }
-}
-
-void ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
-
-  for (int i=0; i<anita1->NFOUR/2; i++){
-    sig0[i]   = justSig_digPath[0][i];
-    noise0[i] = justNoise_digPath[0][i];
-    sig1[i]   = justSig_digPath[1][i];
-    noise1[i] = justNoise_digPath[1][i];
-  }
-}
 
 void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
-
+//  std::cout << __FILE__ << " " << __FUNCTION__ << " " << __LINE__ << std::endl;
   Int_t numFreqs = anita1->numFreqs;
   FFTWComplex *phasorsDig  = new FFTWComplex[numFreqs];
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
   phasorsDig[0].setMagPhase(0,0);
   phasorsTrig[0].setMagPhase(0,0);
   double *freqs = anita1->freqs;
-  Double_t sigma, realPart, imPart, norm;
+  Double_t sigma, realPart, imPart, trigNorm, digNorm;
   int iring=2;
   if (ant<16) iring=0;
   else if (ant<32) iring=1;
@@ -1770,14 +1782,14 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
   for (int ipol=0; ipol<2; ipol++){
 
     for(int i=1;i<numFreqs;i++) {
-      norm           = anita1->fRatioTriggerDigitizerFreqDomain[ipol][iring][iphi][i];
+      trigNorm       = anita1->fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
+      digNorm        = anita1->fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
       sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
-      sigma*=norm;
       realPart       = anita1->fRand->Gaus(0,sigma);
       imPart         = anita1->fRand->Gaus(0,sigma);
       
-      phasorsDig[i]  = FFTWComplex(realPart/norm, imPart/norm);
-      phasorsTrig[i] = FFTWComplex(realPart,      imPart     );
+      phasorsDig[i]  = FFTWComplex(realPart*digNorm,  imPart*digNorm  );
+      phasorsTrig[i] = FFTWComplex(realPart*trigNorm, imPart*trigNorm );
     }
 
     RFSignal *rfNoiseDig    = new RFSignal(numFreqs,freqs,phasorsDig,1);    
@@ -1803,6 +1815,18 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
   
   
 }
+
+void ChanTrigger::calculateCW(Anita *anita1, double frequency, double phase, double amplitude){
+
+  double omega;
+  
+  for (int itime=0; itime<anita1->HALFNFOUR; itime++){
+    omega=TMath::Pi()*2*frequency;
+    cw_digPath[0][itime]+=amplitude*TMath::Sin(omega*anita1->TIMESTEP*itime + phase);
+    cw_digPath[1][itime]+=amplitude*TMath::Sin(omega*anita1->TIMESTEP*itime + phase);
+  }
+
+}  
 
 TGraph *ChanTrigger::getPulserAtAMPA(Anita *anita1, int ant){
 
@@ -1906,3 +1930,24 @@ void ChanTrigger::injectImpulseAtSurf(Anita *anita1, double volts_triggerPath_e[
   }
 }
 #endif
+
+
+void ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
+
+  for (int i=0; i<anita1->NFOUR/2; i++){
+    sig0[i]   = justSig_trigPath[0][i];
+    noise0[i] = justNoise_trigPath[0][i];
+    sig1[i]   = justSig_trigPath[1][i];
+    noise1[i] = justNoise_trigPath[1][i];
+  }
+}
+
+void ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
+
+  for (int i=0; i<anita1->NFOUR/2; i++){
+    sig0[i]   = justSig_digPath[0][i];
+    noise0[i] = justNoise_digPath[0][i];
+    sig1[i]   = justSig_digPath[1][i];
+    noise1[i] = justNoise_digPath[1][i];
+  }
+}
