@@ -136,12 +136,11 @@ namespace icemc {
     static constexpr int NSIGMAS=2;///< number of possible cross section models
     ///< 0=Gandhi et al.
     ///< 1=Connolly et al. 2011
-    double mine[NSIGMAS];///< minimum energy for cross section parametrizations, in eV
-    double maxe[NSIGMAS]; ///<minimum energy for cross section parametrizations, in eV
+    double mine[NSIGMAS]; ///< minimum energy for cross section parametrizations, in eV
+    double maxe[NSIGMAS]; ///< maximum energy for cross section parametrizations, in eV
     
-    Primaries();///<constructor 
-    ~Primaries();///<destructor 
-    ///<*primary1 must be manually deleted in icemc for deconstructor to actually be called.
+    Primaries(); ///< Constructor 
+    ~Primaries();///< Destructor 
     
     /// Neutrino-nucleon cross-sections using model chosen
     int GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,int nu_nubar,int currentint);
@@ -187,7 +186,7 @@ namespace icemc {
     /** 
      * Constructor
      */
-    Interaction(std::string inttype,Primaries *primary1, const Settings *settings1, int whichray, Counting *count1);
+    Interaction(std::string inttype, Primaries *primary1, const Settings *settings1, int whichray, Counting *count1);
     void PickAnyDirection();
     
     int noway;

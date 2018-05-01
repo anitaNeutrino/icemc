@@ -289,16 +289,19 @@ void  icemc::Interaction::setNuFlavor(Primaries *primary1,const Settings *settin
       counting1->nnu_tau++;      
   }
       
-  if (settings1->FORSECKEL==1) // For making array of signal vs. freq, viewangle, just use muon neutrinos
-    nuflavor="nue";
-  if (nuflavor=="nue")  //For outputting to file
+
+  if (nuflavor=="nue"){  //For outputting to file
     nuflavorint=1;
-  else if (nuflavor=="numu")
+  }
+  else if (nuflavor=="numu"){
     nuflavorint=2;
-  else if (nuflavor=="nutau")
+  }
+  else if (nuflavor=="nutau"){
     nuflavorint=3;
-  else 
+  }
+  else {
     std::cout<<"nuflavor is "<<nuflavor<<"\n";
+  }
 }
 
 

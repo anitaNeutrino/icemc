@@ -1645,7 +1645,7 @@ void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_recei
   cout << "GAINS is " << GAINS << "\n";
   for (int k = 0; k < NFREQ; ++k) {
     whichbin[k] = int((freq[k] - frequency_forgain_measured[0]) / gain_step); // finds the gains that were measured for the frequencies closest to the frequency being considered here
-    if((whichbin[k] >= NPOINTS_GAIN || whichbin[k] < 0) && !settings1->FORSECKEL) {
+    if((whichbin[k] >= NPOINTS_GAIN || whichbin[k] < 0)) {
       cout << "Set_gain_angle out of range, freq = " << freq[k] << endl;
       exit(1);
     }

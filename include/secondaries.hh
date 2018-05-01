@@ -159,7 +159,7 @@ namespace icemc{
     int count_nfb;
     int secondary_e_noncons;
 
-    void GetSecondaries(const Settings *settings1,std::string,double,double&,double&,int&,TH1F*);
+    void GetSecondaries(const Settings *settings1, const std::string& ,double, double&, double&, int&, TH1F*);
 
     void InitTauola();
     void GetTauDecay(std::string nuflavor,std::string current,std::string& taudecay, double& emfrac_db, double& hadfrac_db);

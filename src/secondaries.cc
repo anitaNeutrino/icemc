@@ -252,17 +252,18 @@ void icemc::Secondaries::ReadSecondaries() {
 } //end method ReadSecondaries
 
 
-void icemc::Secondaries::GetSecondaries(const Settings *settings1,string nuflavor,double plepton,double &em_secondaries_max,double &had_secondaries_max,int &n_interactions,TH1F *hy) {
-
+void icemc::Secondaries::GetSecondaries(const Settings *settings1, const string& nuflavor, double plepton, double &em_secondaries_max, double &had_secondaries_max,int &n_interactions, TH1F *hy) {
 
   em_secondaries_max=0.;
   had_secondaries_max=0.;
 
   int i=(int)((log10(plepton)-18.)*2.);
-  if (i>6)
+  if (i>6){
     i=6;
-  if (i<0)
+  }
+  else if (i<0){
     i=0;
+  }
 
   int n_brems,n_epair,n_pn; // number of interactions of each type.
   // int index_y; // index along the horizontal axis of ped's plots
@@ -423,10 +424,13 @@ int icemc::Secondaries::GetEMFrac(const Settings *settings1,string nuflavor,
 
 
 
-  if (current=="cc")
+  if (current=="cc"){
     plepton=(1.-y)*pnu;
-  else
+  }
+  else{
     plepton=0.;
+  }
+
   
   if (nuflavor=="nue" && current=="cc") {
     emfrac=1.-y;
@@ -445,9 +449,6 @@ int icemc::Secondaries::GetEMFrac(const Settings *settings1,string nuflavor,
       emfrac=1.E-10;
       hadfrac=y;
     }
-    
-
-
   }
   else if (current=="nc") {
     emfrac=1.E-10;
@@ -455,12 +456,12 @@ int icemc::Secondaries::GetEMFrac(const Settings *settings1,string nuflavor,
   }
 
 
-  em_secondaries_max =emfrac; // initialize search for maximum signal among primary, secondary interactions.
-  had_secondaries_max=hadfrac;
+  em_secondaries_max = emfrac; // initialize search for maximum signal among primary, secondary interactions.
+  had_secondaries_max = hadfrac;
 
   
   
-  if (SECONDARIES==1 && current=="cc" && settings1->FORSECKEL!=1) {
+  if (SECONDARIES==1 && current=="cc") {
 
     while (1) {
 
