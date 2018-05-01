@@ -39,6 +39,7 @@ namespace icemc {
 
     EventGenerator();
     virtual ~EventGenerator();
+    static void interrupt_signal_handler(int);  // This catches ctrl-C interrupt (SIGINT)
 
     static const int NVIEWANGLE=100; // number of viewing angles to look at the signal, on Seckel's request
     // int inu; // counts neutrinos as they are generated
@@ -228,7 +229,7 @@ namespace icemc {
     double heff_max=0.62639; // maximum value of the effective height based on antenna specs
 
     // event geometry
-    double scalefactor_distance=0; // 1/r scalefactor
+    // double scalefactor_distance=0; // 1/r scalefactor
     double scalefactor_attenuation=0; //scalefactor due to attenuation in ice
     double MAX_ATTENLENGTH=1671;
     // double maxtaper=0; // this is just for plotting - maximum you are ever off cerenkov cone while
@@ -472,55 +473,57 @@ namespace icemc {
 
     UInt_t eventNumber;
 
+
+
+
+
+
+    
+
     void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, const AskaryanFreqsGenerator* askFreqGen, Anita* anita1, const ShowerProperties& showerProps);
     
-    void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE);
+    void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE) const;
  
-    double GetAirDistance(double altitude_bn,  double beta); // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth     // set up array of viewing angles for making plots for seckel
+    double GetAirDistance(double altitude_bn,  double beta) const; // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth     // set up array of viewing angles for making plots for seckel
 
 
-    void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
-    double GetThisAirColumn(const Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta);
+    void GetAir(double *col1) const; // get air column as a function of theta- only important for black hole studies
+    double GetThisAirColumn(const Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta) const;
 
-    double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_bn, const Position &rfexit);
+    double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_bn, const Position &rfexit) const;
 
-    double IsItDoubleBang(double exitlength,  double plepton);
+    double IsItDoubleBang(double exitlength,  double plepton) const;
 
-    int WhereIsSecondBang(const Position& posnu,  const Vector& nnu,  double nuexitlength,  double pnu,  IceModel *antarctica1,  const Position& r_bn, Position &posnu2,  Position &rfexit_db,  Vector &n_exit2bn_db);
-    void GetCurrent(std::string& current);
+    int WhereIsSecondBang(const Position& posnu,  const Vector& nnu,  double nuexitlength,  double pnu,  IceModel *antarctica1,  const Position& r_bn, Position &posnu2,  Position &rfexit_db,  Vector &n_exit2bn_db) const;
 
+    double GetAverageVoltageFromAntennasHit(const Settings *settings1,  int *nchannels_perrx_triggered,  double *voltagearray,  double& volts_rx_sum) const;
 
-    double GetAverageVoltageFromAntennasHit(const Settings *settings1,  int *nchannels_perrx_triggered,  double *voltagearray,  double& volts_rx_sum);
-
-
-    Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside, int inu);
+    Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside, int inu) const;
     // Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside);    
 
     void Attenuate(IceModel *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const Position &posnu) const ;
 
     void Attenuate_down(IceModel *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const Position &rfexit2,  const Position &posnu,  const Position &posnu_down) const ;
 
-    void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight);
+    void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight) const;
 
-    void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceModel *antarctica);
+    void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceModel *antarctica) const;
 
-    int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside);
+    int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside) const;
 
     // int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  const AskaryanFreqsGenerator* askFreqGen,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
-    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  const ShowerProperties& sp,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  const AskaryanFreqsGenerator* askFreqGen,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);    
+    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  const ShowerProperties& sp,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  const AskaryanFreqsGenerator* askFreqGen,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold) ;
 
     // void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  double emfrac,  double hadfrac,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag);
 
-    void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  const ShowerProperties& ,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag);    
+    void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  const ShowerProperties& ,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag) const;
 
-    double GetViewAngle(const Vector &nrf2_iceside,  const Vector &nnu);
-    int TIR(const Vector &n_surf,  const Vector &nrf2_iceside,  double N_IN,  double N_OUT);
+    double GetViewAngle(const Vector &nrf2_iceside,  const Vector &nnu) const;
+    int TIR(const Vector &n_surf,  const Vector &nrf2_iceside,  double N_IN,  double N_OUT) const;
 
-    void IntegrateBands(Anita *anita1,  int k,  Screen *panel1,  double *freq,  double scalefactor,  double *sumsignal);
+    void IntegrateBands(Anita *anita1,  int k,  Screen *panel1,  double *freq,  double scalefactor,  double *sumsignal) const;
 
     // void Integrate(Anita *anita1,  int j,  int k,  double *vmmhz,  double *freq,  double scalefactor,  double sumsignal);
-
-    static void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  SIGINT
 
     void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, const AskaryanFreqsGenerator* askFreqGen,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
 

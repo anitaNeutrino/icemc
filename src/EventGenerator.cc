@@ -109,7 +109,7 @@ icemc::EventGenerator::~EventGenerator()
 }
 
 
-void icemc::EventGenerator::IntegrateBands(Anita *anita1, int k, Screen *panel1, double *freq, double scalefactor, double *sumsignal) {
+void icemc::EventGenerator::IntegrateBands(Anita *anita1, int k, Screen *panel1, double *freq, double scalefactor, double *sumsignal) const {
   for (int j=0;j<5;j++) {
     // if this frequency is in this bandwidth slice
     for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
@@ -301,17 +301,17 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
       error_tau_minus+=pow(err_tau_minus*pow(10., ((double)i+0.5)/(double)NBINS*(MAX_LOGWEIGHT-MIN_LOGWEIGHT)+MIN_LOGWEIGHT), 2);
     }
     else {
-      error_plus+=eventsfound_binned[i]*pow(pow(10., ((double)i+0.5)/(double)NBINS*(MAX_LOGWEIGHT-MIN_LOGWEIGHT)+MIN_LOGWEIGHT), 2);
-      error_e_plus+=eventsfound_binned_e[i]*pow(pow(10., ((double)i+0.5)/(double)NBINS*(MAX_LOGWEIGHT-MIN_LOGWEIGHT)+MIN_LOGWEIGHT), 2);
-      error_mu_plus+=eventsfound_binned_mu[i]*pow(pow(10., ((double)i+0.5)/(double)NBINS*(MAX_LOGWEIGHT-MIN_LOGWEIGHT)+MIN_LOGWEIGHT), 2);
-      error_tau_plus+=eventsfound_binned_tau[i]*pow(pow(10., ((double)i+0.5)/(double)NBINS*(MAX_LOGWEIGHT-MIN_LOGWEIGHT)+MIN_LOGWEIGHT), 2);
-      error_minus=error_plus;
-      error_e_minus=error_e_plus;
-      error_mu_minus=error_mu_plus;
-      error_tau_minus=error_tau_plus;
+      error_plus     += eventsfound_binned[i]*pow(pow(10., ((double)i+0.5)/(double)NBINS*(MAX_LOGWEIGHT-MIN_LOGWEIGHT)+MIN_LOGWEIGHT), 2);
+      error_e_plus   += eventsfound_binned_e[i]*pow(pow(10., ((double)i+0.5)/(double)NBINS*(MAX_LOGWEIGHT-MIN_LOGWEIGHT)+MIN_LOGWEIGHT), 2);
+      error_mu_plus  += eventsfound_binned_mu[i]*pow(pow(10., ((double)i+0.5)/(double)NBINS*(MAX_LOGWEIGHT-MIN_LOGWEIGHT)+MIN_LOGWEIGHT), 2);
+      error_tau_plus += eventsfound_binned_tau[i]*pow(pow(10., ((double)i+0.5)/(double)NBINS*(MAX_LOGWEIGHT-MIN_LOGWEIGHT)+MIN_LOGWEIGHT), 2);
+      error_minus     = error_plus;
+      error_e_minus   = error_e_plus;
+      error_mu_minus  = error_mu_plus;
+      error_tau_minus = error_tau_plus;
     }
 
-    error_nfb+=eventsfound_nfb_binned[i]*pow(pow(10., ((double)i+0.5)/(double)NBINS*4.+-5.), 2);
+    error_nfb += eventsfound_nfb_binned[i]*pow(pow(10., ((double)i+0.5)/(double)NBINS*4.+-5.), 2);
     for (int j=0;j<NBINS_DISTANCE;j++) {
       if (eventsfound_binned_distance_forerror[j][i]<=20) {
 
@@ -620,13 +620,13 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
 //end Summarize()
 
 
-double icemc::EventGenerator::GetAirDistance(double altitude_bn, double beta) { // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth
+double icemc::EventGenerator::GetAirDistance(double altitude_bn, double beta) const { // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth
   return EarthModel::EarthRadiusMeters*acos((altitude_bn+EarthModel::EarthRadiusMeters)/EarthModel::EarthRadiusMeters*(1-sin(beta)*sin(beta))+1/EarthModel::EarthRadiusMeters*sin(beta)*sqrt((altitude_bn+EarthModel::EarthRadiusMeters)*(altitude_bn+EarthModel::EarthRadiusMeters)*sin(beta)*sin(beta)-2*EarthModel::EarthRadiusMeters*altitude_bn-altitude_bn*altitude_bn));
 }
 //end GetAirDistance()
 
 
-double icemc::EventGenerator::GetAverageVoltageFromAntennasHit(const Settings *settings1, int *nchannels_perrx_triggered, double *voltagearray, double& volts_rx_sum) {
+double icemc::EventGenerator::GetAverageVoltageFromAntennasHit(const Settings *settings1, int *nchannels_perrx_triggered, double *voltagearray, double& volts_rx_sum) const {
   double sum=0;
   int count_hitantennas=0;
   for (int i=0;i<settings1->NANTENNAS;i++) {
@@ -642,7 +642,7 @@ double icemc::EventGenerator::GetAverageVoltageFromAntennasHit(const Settings *s
 //end GetAverageVoltageFromAntennasHit()
 
 
-icemc::Vector icemc::EventGenerator::GetPolarization(const Vector &nnu, const Vector &nrf2_iceside, int inu) {
+icemc::Vector icemc::EventGenerator::GetPolarization(const Vector &nnu, const Vector &nrf2_iceside, int inu) const {
   // Want to find a unit vector in the same plane as nnu and n_refr,
   // but perpendicular to n_refr,  pointing away from nnu.
 
@@ -661,14 +661,14 @@ icemc::Vector icemc::EventGenerator::GetPolarization(const Vector &nnu, const Ve
 
 
 
-double icemc::EventGenerator::IsItDoubleBang(double exitlength, double plepton) {
+double icemc::EventGenerator::IsItDoubleBang(double exitlength, double plepton) const {
   double gamma=plepton/constants::MTAU;
   return 1-exp(-1*exitlength/(constants::TAUDECAY_TIME*constants::CLIGHT*gamma));
 }
 //end IsItDoubleBang()
 
 
-int icemc::EventGenerator::WhereIsSecondBang(const Position &posnu, const Vector &nnu, double nuexitlength, double pnu, IceModel *antarctica1, const Position &r_bn, Position &posnu2, Position &rfexit_db, Vector &n_exit2bn_db) {
+int icemc::EventGenerator::WhereIsSecondBang(const Position &posnu, const Vector &nnu, double nuexitlength, double pnu, IceModel *antarctica1, const Position &r_bn, Position &posnu2, Position &rfexit_db, Vector &n_exit2bn_db) const {
   double rnd1=0;
   double rnd2=2;
   double gamma=pnu/constants::MTAU;
@@ -767,7 +767,7 @@ void icemc::EventGenerator::Attenuate(IceModel *antarctica1, const Settings *set
 //end Attenuate()
 
 
-void icemc::EventGenerator::IsAbsorbed(double chord_kgm2, double len_int_kgm2, double &weight1) {
+void icemc::EventGenerator::IsAbsorbed(double chord_kgm2, double len_int_kgm2, double &weight1) const {
   // see if neutrino is absorbed
   //  weighting works,  but not to much purpose since nu's always
   //   interact at these energies.
@@ -784,7 +784,7 @@ void icemc::EventGenerator::IsAbsorbed(double chord_kgm2, double len_int_kgm2, d
 //end IsAbsorbed()
 
 
-void icemc::EventGenerator::GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE){
+void icemc::EventGenerator::GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE) const{
   // Smear the incident angle for roughness studies
   specular+=nrf_iceside; // specular is the ray that we got from Snell's law
   Vector parallel_to_surface; // find vector parallel to surface to rotate the vector around
@@ -796,7 +796,7 @@ void icemc::EventGenerator::GetSmearedIncidentAngle(Vector &specular, Vector &nr
 //end GetSmearedIncidentAngle()
 
 
-int icemc::EventGenerator::GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit, double nexit,  double nenter,  Vector &nrf2_iceside) {
+int icemc::EventGenerator::GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit, double nexit,  double nenter,  Vector &nrf2_iceside) const {
   // this function performs snell's law in three dimensions
   double costh=0;
   double NRATIO=nexit/nenter;
@@ -827,9 +827,9 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
   // In the roughness case we just want to pick a random allowable direction,
   // so let's keep the original sampled neutrino direction from back in IceModel::PickUnbiased() inside Ray::PickRoughnessInteractionPoint()
 
-  int dont_count=0;
-  double theta_test=0;
-  double vmmhz1m_test=0;
+  int dont_count = 0;
+  double theta_test = 0;
+  double vmmhz1m_test = 0;
   double costhetanu1 = 0;
   double costhetanu2 = 0;
 
@@ -1002,10 +1002,10 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
 //end GetDirection()
 
 
-double icemc::EventGenerator::ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_bn, const Position &rfexit) {
+double icemc::EventGenerator::ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_bn, const Position &rfexit) const {
   double dtemp= r_bn.Distance(rfexit) + rfexit.Distance(posnu1);
   vmmhz1m_max= vmmhz1m_max/dtemp;
-  scalefactor_distance=1/dtemp;
+  double scalefactor_distance=1/dtemp;
   //cout << "dtemp is " << dtemp << "\n";
   return vmmhz1m_max;
 }
@@ -1014,7 +1014,7 @@ double icemc::EventGenerator::ScaleVmMHz(double vmmhz1m_max, const Position &pos
 
 
 
-double icemc::EventGenerator::GetThisAirColumn(const Settings* settings1,  Position r_in, Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta, double& cosbeta0, double& mybeta) {
+double icemc::EventGenerator::GetThisAirColumn(const Settings* settings1,  Position r_in, Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta, double& cosbeta0, double& mybeta) const {
   double myair=0; // this is the output
   // it is the column of air in kg/m^2
   cosalpha=(r_in.Dot(nnu)) / r_in.Mag(); // cosangle that the neutrino enters the earth wrt surface normal at its entrry point
@@ -1040,7 +1040,7 @@ double icemc::EventGenerator::GetThisAirColumn(const Settings* settings1,  Posit
 //end GetThisAirColumn()
 
 
-void icemc::EventGenerator::GetAir(double *col1) {
+void icemc::EventGenerator::GetAir(double *col1) const {
   double nothing;
   std::string icemcSrcDir = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
   
@@ -1054,7 +1054,7 @@ void icemc::EventGenerator::GetAir(double *col1) {
 //end GetAir()
 
 
-int icemc::EventGenerator::TIR(const Vector &n_surf, const Vector &nrf2_iceside,  double N_IN, double N_OUT) {
+int icemc::EventGenerator::TIR(const Vector &n_surf, const Vector &nrf2_iceside,  double N_IN, double N_OUT) const {
   double test=sin(nrf2_iceside.Angle(n_surf))*N_IN/N_OUT;
   if(test>=1){
     return 1;
@@ -1066,7 +1066,7 @@ int icemc::EventGenerator::TIR(const Vector &n_surf, const Vector &nrf2_iceside,
 //end TIR()
 
 
-double icemc::EventGenerator::GetViewAngle(const Vector &nrf2_iceside, const Vector &nnu) {
+double icemc::EventGenerator::GetViewAngle(const Vector &nrf2_iceside, const Vector &nnu) const {
   // get viewing angle of shower
   double dtemp=nrf2_iceside.Dot(nnu);
   if (dtemp>=1 && dtemp<1.02)
@@ -1095,7 +1095,7 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 				       double deltheta_em_max, double deltheta_had_max, 
 				       double &t_coeff_pokey, double &t_coeff_slappy,
 				       double &fresnel,
-				       double &mag) {
+				       double &mag) const {
 
   // find angle of incidence and angle of transmission
   double incident_angle = surface_normal.Angle(firn_rf);
@@ -1133,7 +1133,7 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 //end GetFresnel()
 
 
-void icemc::EventGenerator::GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceModel *antarctica) {
+void icemc::EventGenerator::GetBalloonLocation(Interaction *interaction1, Ray *ray1, Balloon *bn1, IceModel *antarctica) const {
   // brian enter function to calculate balloon position on your map.
   // use interaction1->posnu // location of neutrino interaction
   // coordinate system:  +z="up" at the south pole
@@ -1162,21 +1162,22 @@ void icemc::EventGenerator::GetBalloonLocation(Interaction *interaction1,Ray *ra
     
   Vector xcoordvector = nuvector-(zcoordvector.Dot(nuvector))*zcoordvector;//xcoordvector is such that nnu lies in the x-z plane
   xcoordvector = xcoordvector.Unit();
-    
+
   const Vector ycoordvector = zcoordvector.Cross(xcoordvector);//Need this for ChangeCoord. 
-    
-    
+
   Vector origin_brian_tmp;
-  if (interaction1->nnu.Dot(zcoordvector)>0) // up  going
+  if (interaction1->nnu.Dot(zcoordvector)>0){ // up  going
     origin_brian_tmp=interaction1->nuexit; // the origin is the neutrino exit point 
+  }
   else {     
     Vector nnu_flipped=interaction1->nnu;
     nnu_flipped=nnu_flipped-2.*nnu_flipped.Dot(zcoordvector)*zcoordvector; // take it's upgoing reflection from surface
       
     Position nuexit_flipped;
-    if (Ray::WhereDoesItLeave(interaction1->posnu,nnu_flipped,antarctica,nuexit_flipped))
+    if (Ray::WhereDoesItLeave(interaction1->posnu,nnu_flipped,antarctica,nuexit_flipped)){
       origin_brian_tmp=nuexit_flipped;
-  }// end else
+    }
+  }
 
   Vector r_bn_tmp=bn1->r_bn-origin_brian_tmp;
   r_bn_tmp=r_bn_tmp.ChangeCoord(xcoordvector,ycoordvector);//change coordinates
@@ -1554,8 +1555,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       interaction1->dtryingdirection=0;
       bn1->dtryingposition=0;
 
-      AskaryanFreqs askFreqs;
       // Picks the balloon position and at the same time sets the masks and thresholds
+      
       bn1->PickBalloonPosition(antarctica,  &settings1,  inu,  anita1,  r.Rndm(), &fGenNu->balloon);
 
       // find average balloon altitude and distance from center of earth for
@@ -1599,15 +1600,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       taus1->weight_tau_prob=0;
       
       if (taumodes==1 && interaction1->nuflavor=="nutau" && interaction1->current=="cc"){
-        tautrigger=1;//!< tau trigger sets the chance to create tau particle
+        tautrigger = 1;///< tau trigger sets the chance to create tau particle
       }
       else{
         tautrigger=0;
       }
 
       bn1->PickDownwardInteractionPoint(interaction1,  anita1,  &settings1,  antarctica,  ray1,  beyondhorizon);
-
-      
 
       if (interaction1->noway){
 	fGenNu->passCutNoWay = 0;
@@ -1665,6 +1664,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       count1->inhorizon[whichray]++;
 
       // cerenkov angle depends on depth because index of refraction depends on depth.
+
       if (settings1.FIRN) {
 	askFreqGen.SetNDepth(antarctica->GetN(interaction1->altitude_int));
 	changle_deg=askFreqGen.GetChangle()*constants::DEGRAD;
@@ -1736,14 +1736,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         if (( !settings1.UNBIASED_SELECTION) && !settings1.SLAC ) {
 
 	  /**
-	   * @todo @warning bug discovered during nicemc refactor!
-	   * The original, unrefactored version of this code passed emfrac and hadfrac to GetDirection (which used those numbers)
-	   * These values were not set in this iteration of the loop, and were likely nonsense or 0 on the first loop iteration.
-	   * To make this code =compile= I've added a ShowerPropertiesTemp here, the emFrac/hadFrac contained will be zero and
-	   * and the GetDirection code will therefore likely be broken.
+	   * @todo @warning bug discovered during =nicemc= refactor?
+	   * The original, unrefactored version of this code passed emfrac and hadfrac to GetDirection (which uses those numbers)
+	   * These values were not set in this iteration of the event loop, and so were probably the values from the last loop.
 	   * It seems likely that emfrac_db and hadfrac_db were meant to be used here based on how emfrac & hadfrac are set to these
 	   * values in the tau case later.
-	   * I'll put these in now, but since I didn't write the original code I'm not sure of the author's intent.
+	   * I'll put these in now, but since I didn't write the original code I'm not 100% sure of the author's intent.
 	   */
 	  ShowerProperties showerPropsTemp;
 	  showerPropsTemp.emFrac = emfrac_db;
@@ -1796,13 +1794,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         nutauweight = interaction1->weight_nu_prob;
         tauweight = taus1->weight_tau_prob;
 
-        nutauweightsum +=nutauweight;
-        tauweightsum +=tauweight;
-        double xrndm=gRandom->Rndm();
+        nutauweightsum += nutauweight;
+        tauweightsum += tauweight;
+        double xrndm = gRandom->Rndm();
 
         if(xrndm <=taus1->weight_tau_prob/(taus1->weight_tau_prob+interaction1->weight_nu_prob)){
-          pnu=ptauf;//set the energy we are looking at to the final energy of the tau. cuts out alot of if-else statements
-          tauweighttrigger=1;//From now on,  signifies a tau particle
+          pnu = ptauf;//set the energy we are looking at to the final energy of the tau. cuts out alot of if-else statements
+          tauweighttrigger=1; //From now on, signifies a tau particle
         }
         if(fTauPtr){
           delete fTauPtr;
@@ -1819,31 +1817,31 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }//end tautrigger ==1
       /////////////////////// end of tau stuff
 
-
       
       // get fraction of shower that is electromagnetic.
       // pi^0's are counted as hadronic.
       // sec1->GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
+      
       ShowerProperties showerProps = sec1.GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu, tauweighttrigger);
 
-      // plots for debugging.
-      if (interaction1->nuflavor=="numu" && bn1->WHICHPATH != 3 && !settings1.ONLYFINAL && settings1.HIST==1 && ro.fraction_sec_muons.GetEntries()<settings1.HIST_MAX_ENTRIES) {
-        ro.fraction_sec_muons.Fill(showerProps.sumFrac(), fNeutrinoPath->weight);
-        ro.n_sec_muons.Fill((double)showerProps.nInteractions);
-      }
+      // // plots for debugging.
+      // if (interaction1->nuflavor=="numu" && bn1->WHICHPATH != 3 && !settings1.ONLYFINAL && settings1.HIST==1 && ro.fraction_sec_muons.GetEntries()<settings1.HIST_MAX_ENTRIES) {
+      //   ro.fraction_sec_muons.Fill(showerProps.sumFrac(), fNeutrinoPath->weight);
+      //   ro.n_sec_muons.Fill((double)showerProps.nInteractions);
+      // }
 
-      if (interaction1->nuflavor=="nutau" && bn1->WHICHPATH != 3 && !settings1.ONLYFINAL && settings1.HIST==1 && ro.fraction_sec_taus.GetEntries()<settings1.HIST_MAX_ENTRIES) {
-        ro.fraction_sec_taus.Fill(showerProps.sumFrac(), fNeutrinoPath->weight);
-        ro.n_sec_taus.Fill((double)showerProps.nInteractions);
-      }
+      // if (interaction1->nuflavor=="nutau" && bn1->WHICHPATH != 3 && !settings1.ONLYFINAL && settings1.HIST==1 && ro.fraction_sec_taus.GetEntries()<settings1.HIST_MAX_ENTRIES) {
+      //   ro.fraction_sec_taus.Fill(showerProps.sumFrac(), fNeutrinoPath->weight);
+      //   ro.n_sec_taus.Fill((double)showerProps.nInteractions);
+      // }
 
-      // for double bangs, surely this should be in Secondaries...
+
+      // for double bangs, surely this should be in Secondaries?
       if(sec1.secondbang && sec1.interestedintaus) {
         ptau=(1-elast_y)*pnu;
         showerProps.emFrac=emfrac_db;
         showerProps.hadFrac=hadfrac_db;
       }
-
 
       /**
        * Find the highest possible electric field emitted at this energy
@@ -1851,33 +1849,37 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
        * Also find the maximum width of Cerenkov cone (which is at lowest frequency)
        * These are used to find the maximum angular deviation from Cerenkov
        * cone where signal is still detectable.
-       */      
+       */
       if(sec1.secondbang && sec1.interestedintaus) {
-	 vmmhz1m_max=askFreqGen.GetVmMHz1m(ptau, anita1->FREQ_HIGH);
+	 vmmhz1m_max = askFreqGen.GetVmMHz1m(ptau, anita1->FREQ_HIGH);
 	 askFreqGen.GetSpread(ptau, showerProps, anita1->FREQ_LOW, deltheta_em_max, deltheta_had_max);
-      } //if (secondbang && interestedintaus)
-      else {// get peak signal at highest edge of frequency band because that is where it is highest
-        vmmhz1m_max=askFreqGen.GetVmMHz1m(pnu, anita1->FREQ_HIGH);
-        askFreqGen.GetSpread(pnu, showerProps, anita1->FREQ_LOW,
-			deltheta_em_max, deltheta_had_max);
+      }
+      else {
+	// get peak signal at highest edge of frequency band because that is where it is highest
+        vmmhz1m_max = askFreqGen.GetVmMHz1m(pnu, anita1->FREQ_HIGH);
+        askFreqGen.GetSpread(pnu, showerProps, anita1->FREQ_LOW, deltheta_em_max, deltheta_had_max);
       } //end else (not secondbang or not interested in taus)
 
 
-      //  Using highest possible signal and minimum noise,
-      // and accounting for distance from balloon,
-      // and best case attenutation,
-      // reject if signal is undetectable.
-
-      if (whichray==direct){ // if we are looking at direct rays
-        bestcase_atten=exp(interaction1->altitude_int/MAX_ATTENLENGTH); // the attenuation is obtained from the altitude of the interaction (shortest path is if the signal went straight up)
+      /*
+       * Using highest possible signal and minimum noise, accounting for distance from balloon,
+       * and best case attenutation... reject if signal is undetectable.
+       */
+      if (whichray==direct){ // if we are looking at direct rays	
+	// the attenuation is obtained from the altitude of the interaction (shortest path is if the signal went straight up)	
+        bestcase_atten = exp(interaction1->altitude_int/MAX_ATTENLENGTH);
       }
       if (whichray==downgoing){ // if we are looking at reflected rays
-        bestcase_atten=exp(interaction1->altitude_int_mirror/MAX_ATTENLENGTH);//use the real path which seems from the mirror point.
+	//use the real path which seems from the mirror point.
+        bestcase_atten=exp(interaction1->altitude_int_mirror/MAX_ATTENLENGTH);
       }
 
-      // let's keep this even in the roughness case, since it still represents an ceiling value
-      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((showerProps.sumFrac())*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR && !settings1.SKIPCUTS) {
-        continue; // by comparing highest possible signal to the lowest possible noise,  reject if there is just no way we could detect this event.
+      // let's keep this even in the roughness case, since it still represents a ceiling value
+      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((showerProps.sumFrac())*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR
+	  && !settings1.SKIPCUTS) {
+	// by comparing highest possible signal to the lowest possible noise, reject if there is just no way we could detect this event.	
+        continue;
+
         // vmmhz1m_max=signal at highest frequency
         // bestcase_atten=best case attenuation
         // r_fromballoon=distance from interaction to balloon
@@ -1900,7 +1902,16 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       if(tautrigger==0){//did this for cc- taus already,  do again for all other particles
         if (( !settings1.UNBIASED_SELECTION) && !settings1.SLAC ){
-          err=GetDirection(&settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, showerProps, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, &askFreqGen, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
+          err = GetDirection(&settings1, interaction1, ray1->nrf_iceside[4],
+			     deltheta_em_max, deltheta_had_max,
+			     showerProps,
+			     vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray],
+			     ray1, &askFreqGen,
+			     interaction1->posnu,
+			     anita1, bn1,
+			     interaction1->nnu,
+			     costhetanu,
+			     theta_threshold);
 	}
         else if (settings1.SLAC) {
           Vector xaxis(1., 0., 0.);
@@ -1917,7 +1928,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               }//end ifold
             }//end ilayer
           }//end boresight
-          err=1; // everything is a-okay
+          err = 1; // everything is a-okay
         }//end else if slac
       }//end tau trigger ==0
 
@@ -2143,14 +2154,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         continue;
       }
       count1->nconverges[whichray]++;
+
       // Get Polarization vector.  See Jackson,  Cherenkov section.
       n_pol = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4], inu);
-      //cerr<<inu<<":(spec)  v_nu "<<interaction1->nnu<<" : 2IP "<<ray1->nrf_iceside[4]<<" : inc npol"<<n_pol<< std::endl;
-      //cerr<<inu<<"  "<<ray1->rfexit[2]<<std::endl;
       if (settings1.BORESIGHTS) {
         for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
           for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-            n_pol_eachboresight[ilayer][ifold]=GetPolarization(interaction1->nnu, ray1->nrf_iceside_eachboresight[4][ilayer][ifold], inu);
+            n_pol_eachboresight[ilayer][ifold] = GetPolarization(interaction1->nnu, ray1->nrf_iceside_eachboresight[4][ilayer][ifold], inu);
           } // end looping over antennas in phi
         } // end looping over layers
       } // if we are calculating for all boresights
@@ -2310,13 +2320,16 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // then multiplies by scale factor vmmhz_max/vmmhz1m_max
       // this will need to be improved once frequency-dependent
       // attenuation length is included.
+      AskaryanFreqs askFreqs;
       if (!settings1.ROUGHNESS){
-        askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX);
+        askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, anita1->NFREQ, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX);
 
 	// here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
         // vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
         // and making an array across frequency bins by putting in frequency dependence.
+	
       }
+      
         
       // For each frequency,  get the width of Cerenkov cone
       // and size of signal once position of viewing angle is taken into account
@@ -2335,31 +2348,47 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
 
       rec_efield=0;
-      true_efield=0;      
+      true_efield=0;
       
       if (!settings1.ROUGHNESS){
         // don't loop over frequencies if the viewing angle is too far off
-        double rtemp=Tools::dMin((viewangle-askFreqGen.GetChangle())/(deltheta_em_max), (viewangle-askFreqGen.GetChangle())/(deltheta_had_max));
-        if (rtemp>AskaryanFreqsGenerator::VIEWANGLE_CUT && !settings1.SKIPCUTS) {
+        double rtemp = Tools::dMin((viewangle-askFreqGen.GetChangle())/(deltheta_em_max), (viewangle-askFreqGen.GetChangle())/(deltheta_had_max));
+        if (rtemp > AskaryanFreqsGenerator::VIEWANGLE_CUT && !settings1.SKIPCUTS) {
           continue;
         }
         count1->nviewanglecut[whichray]++;
+
+
+	// static bool drawnGraph = false;
+	// TFile* fTest = NULL;
+	// if(!drawnGraph){
+	//   fTest = new TFile("fTest.root","recreate");
+	//   TGraph gr = askFreqs.makeGraph();
+	//   gr.SetName("grTest");
+	//   std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	//   std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	//   std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	//   std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	//   gr.Write();
+	//   // // fTest->Close();
+	//   // drawnGraph = true;
+	// }	
 
         for (int k=0;k<Anita::NFREQ;k++) {
           deltheta_em[k] = deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
           deltheta_had[k] = deltheta_had_max*anita1->FREQ_LOW/anita1->freq[k];
 
 	  // askFreqGen.TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, askFreqs, k, vmmhz_em[k]);// this applies the angular dependence.
-	  askFreqGen.TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], showerProps, askFreqs, k);// this applies the angular dependence.	  
-              // viewangle is which viewing angle we are at
-              // deltheta_em is the width of the em component at this frequency
-              // deltheta_had is the width of the had component at this frequency
-              // emfrac is the em fraction of the shower
-              // hadfrac is the hadronic fraction of the shower
-              // vmmhz is the strength of the signal in V/m/MHz at this viewing angle
-              // vmmhz_em is the strength of the em component
+	  askFreqGen.TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], showerProps, askFreqs, k);// this applies the angular dependence.
 
-          vmmhz_lowfreq=askFreqs[0]; // for plotting,  vmmhz at the lowest frequency
+	  // viewangle is which viewing angle we are at
+	  // deltheta_em is the width of the em component at this frequency
+	  // deltheta_had is the width of the had component at this frequency
+	  // emfrac is the em fraction of the shower
+	  // hadfrac is the hadronic fraction of the shower
+	  // vmmhz is the strength of the signal in V/m/MHz at this viewing angle
+	  // vmmhz_em is the strength of the em component
+
 
           // just want to see the maximum effect of viewing angle being off cerenkov cone
           // should be at highest frequency
@@ -2369,7 +2398,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           //   maxtaper=askFreqGen.logscalefactor_taper;
 	  // }
 	  
-          pdgcode = interaction1->getPdgCode();
 
           if (bn1->WHICHPATH == 3){
             interaction1->banana_volts += askFreqs[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
@@ -2377,6 +2405,23 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	  }
         }//end for (int k=0;k<Anita::NFREQ;k++)
 
+	
+	// if(!drawnGraph){
+	//   TGraph gr = askFreqs.makeGraph();
+	//   gr.SetName("grTest2");
+	//   std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
+	//   std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
+	//   std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
+	//   std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
+	//   gr.Write();
+	//   fTest->Close();
+	//   drawnGraph = true;
+	// }
+	
+
+	// store low frequency post-tapering
+	vmmhz_lowfreq=askFreqs[0]; // for plotting,  vmmhz at the lowest frequency
+	pdgcode = interaction1->getPdgCode();
 
         if (bn1->WHICHPATH==3 && interaction1->banana_volts != 0 && settings1.HIST) {
           continue;
@@ -2386,7 +2431,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         }
         // reject if it is undetectable now that we have accounted for viewing angle
 
-        if (settings1.CHANCEINHELL_FACTOR*askFreqs.max_element()*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1.SKIPCUTS) {
+        if (settings1.CHANCEINHELL_FACTOR*askFreqs.maxElement()*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1.SKIPCUTS) {
           continue;
         }
       }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
@@ -2394,8 +2439,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // just for plotting
       if(!settings1.ROUGHNESS){
-        vmmhz_max=askFreqs.max_element();
-        vmmhz_min=askFreqs.min_element();
+        vmmhz_max=askFreqs.maxElement();
+        vmmhz_min=askFreqs.minElement();
       }
       // intermediate counting
       count1->nchanceinhell2[whichray]++;
@@ -2456,10 +2501,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       Tools::Zero(anita1->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
       Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
       if (!settings1.TRIGGEREFFSCAN){
-        if(settings1.BORESIGHTS)
+        if(settings1.BORESIGHTS){
           anita1->GetArrivalTimesBoresights(ray1->n_exit2bn_eachboresight[2]);
-        else
+	}
+        else{
           anita1->GetArrivalTimes(ray1->n_exit2bn[2],bn1,&settings1);
+	}	
       }
       anita1->rx_minarrivaltime=Tools::WhichIsMin(anita1->arrival_times[0], settings1.NANTENNAS);
 
@@ -2587,15 +2634,18 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
               undogaintoheight_h_array[k]/=(double)nbins_array[k];
             }
           }
-          if (settings1.SCALEDOWNLCPRX1)
+          if (settings1.SCALEDOWNLCPRX1){
             globaltrig1->volts[0][ilayer][0]=globaltrig1->volts[0][ilayer][0]/sqrt(2.);
+	  }
 
-          if (settings1.RCPRX2ZERO)
+          if (settings1.RCPRX2ZERO){
             globaltrig1->volts[1][ilayer][1]=0.;
-
-          if (settings1.LCPRX2ZERO)
+	  }
+	  
+          if (settings1.LCPRX2ZERO){
             globaltrig1->volts[0][ilayer][1]=0.;
-
+	  }
+	  
           if (settings1.SIGNAL_FLUCT) {
             if (settings1.WHICH==0) {
               globaltrig1->volts[ilayer][ifold][0]+=gRandom->Gaus(0., anita1->VNOISE_ANITALITE[ifold]);
@@ -2780,7 +2830,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
            || (settings1.MINBIAS==1)){
 
 	// the neutrino has passed the trigger...
-	AskaryanFreqs askFreqs;
 	fPassNu = new PassingNeutrino(*fGenNu, askFreqs, showerProps); // forced to be NULL at loop start
 
 	if (bn1->WHICHPATH==4){

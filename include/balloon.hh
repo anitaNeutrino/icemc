@@ -25,7 +25,7 @@ namespace icemc {
 
   /**
    * @class BalloonInfo
-   * @brief Where is the payload? A very minimalistic  class for RootOutput::allTree
+   * @brief Where is our detector? A very minimalistic class for RootOutput::allTree
    * 
    * Just like an Adu5Pat, but if this is stand alone icemc, that won't exist
    */
@@ -50,12 +50,11 @@ namespace icemc {
   };
   
 
-  ///< Handles everything related to balloon positions, payload orientation over the course of a flight.
-  class Balloon {    
-
-  private:
-    //  std::string anitaliteflight; // the gps path of the anita-lite flight
-    //std::string anitaflight;// gps path of anita flight
+  /**
+   * @class Balloon
+   * @brief Handles everything related to balloon positions, payload orientation over the course of a flight.
+   */
+  class Balloon {
  
   public:
     Balloon();

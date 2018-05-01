@@ -42,6 +42,8 @@
 #include "EnvironmentVariable.h"
 #include "IcemcLog.h"
 
+ClassImp(icemc::ShowerProperties)
+
 const string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const string ICEMC_SECONDARY_DIR=ICEMC_SRC_DIR+"/secondary/";
 

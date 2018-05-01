@@ -61,7 +61,7 @@ namespace icemc {
   class PassingNeutrino : public GeneratedNeutrino {
   public:    
     PassingNeutrino(const GeneratedNeutrino& genNu, const AskaryanFreqs& askFreqs, const ShowerProperties& sp);
-    ~PassingNeutrino();
+    virtual ~PassingNeutrino();
 
     AskaryanFreqs askaryanFreqs;
     ShowerProperties showerProps;

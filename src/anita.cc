@@ -279,9 +279,13 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
 
   USEPHASES=0;
   ntuffs=1;
-  if (settings1->TUFFSON) ntuffs=6;
+  if (settings1->TUFFSON) {
+    ntuffs=6;
+  }
   
-  for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
+  for (int i=0;i<HALFNFOUR;i++){
+    fTimes[i] = i * TIMESTEP * 1.0E9;
+  }
  
   for (int i=0;i<NFREQ;i++) {
     freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.

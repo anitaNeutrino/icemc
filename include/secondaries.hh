@@ -25,19 +25,27 @@ namespace icemc{
   class Settings;
   class Primaries;
 
-
   /**
    * @class ShowerProperties
-   * @brief Shower properties needed by other classes
+   * @brief The shower properties that determine the Askaryan frequency content
+   * 
+   * Everything created by Secondaries needed by AskaryanFreqs to the off-Cherenkov cone tapering.
    */
-
   class ShowerProperties {
   public:
-    ShowerProperties() : emFrac(0), hadFrac(0), nInteractions(1) {;}
+    ShowerProperties()
+      : // emDeltaThetaMax(0), hadDeltaThetaMax(0),
+	emFrac(0), hadFrac(0),
+	nInteractions(1)
+    {;}
+
     double sumFrac() const {return emFrac + hadFrac;}
+    // double emDeltaThetaMax;
+    // double hadDeltaThetaMax;
     double emFrac;
     double hadFrac;
     int nInteractions;
+    ClassDef(ShowerProperties ,1)
   };
   
 

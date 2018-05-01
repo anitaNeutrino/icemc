@@ -84,6 +84,7 @@ icemc::Balloon::Balloon() {
   BN_LATITUDE=999; //balloon latitude for fixed balloon location
 }
 
+
 void  icemc::Balloon::setObservationLocation(Interaction *interaction1,int inu,IceModel *antarctica,const Settings *settings1) {
   interaction1->banana_volts = 0; //Zero the variable
   interaction1->banana_obs = Vector(0,0,Interaction::banana_observation_distance);

@@ -134,16 +134,17 @@ void icemc::AskaryanFreqsGenerator::InitializeMedium() {
 
 
 
-
-icemc::AskaryanFreqs icemc::AskaryanFreqsGenerator::generateAskaryanFreqs(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max) const {
-  double tempArray[Anita::NFREQ] = {0};
-  GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, freq, notch_min, notch_max, tempArray, Anita::NFREQ);
-  AskaryanFreqs rs(Anita::NFREQ, tempArray);
-  return rs;
+icemc::AskaryanFreqs icemc::AskaryanFreqsGenerator::generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, double *freq_Hz, double notch_min, double notch_max) const {
+  std::vector<double> tempArray(numFreqs, 0);
+  GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, freq_Hz, notch_min, notch_max, &tempArray[0], numFreqs);
+  double minFreq = freq_Hz[0];
+  double maxFreq = numFreqs*(freq_Hz[1] - freq_Hz[0]);
+  AskaryanFreqs af(numFreqs, minFreq, maxFreq, &tempArray[0]);
+  return af;
 }
 
 
-void icemc::AskaryanFreqsGenerator::GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max,double *vmmhz,int nfreq) const {
+void icemc::AskaryanFreqsGenerator::GetVmMHz(double vmmhz_max,double vmmhz1m_max, double pnu, double *freq, double notch_min, double notch_max, double *vmmhz, int nfreq) const {
 
   // parametrization from Jaime Alvarez Munhiz  
   //  here using astro-ph/0003315 
@@ -180,7 +181,7 @@ double icemc::AskaryanFreqsGenerator::GetELPM() const {
 } //GetELPM
 
 
- int icemc::AskaryanFreqsGenerator::GetLPM() const {
+int icemc::AskaryanFreqsGenerator::GetLPM() const {
 
 
   return LPM;
@@ -188,19 +189,16 @@ double icemc::AskaryanFreqsGenerator::GetELPM() const {
 
 
 void icemc::AskaryanFreqsGenerator::GetSpread(double pnu,
-	       double emfrac,
-	       double hadfrac,
-	       double freq,
-		       //	       double n_depth,
-		       //double X0DEPTH,
+					      double emfrac,
+					      double hadfrac,
+					      double freq,
+					      double& deltheta_em_max,
+					      double& deltheta_had_max) const {
 
-	       double& deltheta_em_max,
-	       double& deltheta_had_max) const {
-  
   //  scale by how far off Cherenkov angle this viewing antenna is
   //  c.f. A-MZ  astro-ph/9706064 and astro-ph/0003315
   //  and for non-LPM (non-EM) showers from 
-  // Phys.Lett.B434,396 (1998)  (astro-ph/9806098)
+  //  Phys.Lett.B434,396 (1998)  (astro-ph/9806098)
   //  The lengths are different hence the angular thickness of 
   //  the shower is different.  Get the angular thickness for
   //  both the EM and hadroic parts.
@@ -214,6 +212,8 @@ void icemc::AskaryanFreqsGenerator::GetSpread(double pnu,
   freq=freq/1.E6;  // frequency in MHz
   double showerlength=3.1;  //shower length in meters-gets a modification
                             //for em showers due to lpm effect.
+
+  
   // this shower length is chosen somewhat arbitrarily, but is 
   // approximately the length of a shower in ice.
   // Then, the coefficient out front of the equations for
@@ -228,20 +228,19 @@ void icemc::AskaryanFreqsGenerator::GetSpread(double pnu,
   double had_eshower; // had shower energy
   double nu0; // reference frequency
 
-  em_eshower=emfrac*pnu; // first, consider the electromagnetic shower.
-  had_eshower=hadfrac*pnu;  // just the energy of the hadronic component of the shower
+  em_eshower = emfrac*pnu; // first, consider the electromagnetic shower.
+  had_eshower = hadfrac*pnu;  // just the energy of the hadronic component of the shower
 
   // lengthen the shower to account for the lpm effect.
   // from astro-ph/9706064
   if (em_eshower<1.E15 || !LPM) {
-    showerlength/=pow((em_eshower/1.e15),-0.03);
+    showerlength /= pow((em_eshower/1.e15),-0.03);
   }
   else {
-    showerlength/=pow(elpm/(0.14*(em_eshower)+elpm),0.3);
+    showerlength /= pow(elpm/(0.14*(em_eshower)+elpm),0.3);
   }
 
   //  std::cout << "showerlength is " << showerlength << "\n";
-
 
   if (WHICHPARAMETERIZATION==0) {
 
@@ -264,17 +263,21 @@ void icemc::AskaryanFreqsGenerator::GetSpread(double pnu,
       // out the dependence on index of refraction and shower length.
       // remember that in this paper he includes a factor of ln2 in
       // the exponential, which we account for further down
-      double epsilon=log10(had_eshower/1.E12);
-      if (had_eshower>=1E12 && had_eshower<100.E12) 
+      const double epsilon=log10(had_eshower/1.E12);
+      if (had_eshower>=1E12 && had_eshower<100.E12) {
 	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(2.07-0.33*epsilon+(7.5e-2)*epsilon*epsilon);
-      else if (had_eshower<100.E15) 
+      }
+      else if (had_eshower<100.E15) {
 	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(1.744-(1.21e-2)*epsilon);
-      else if (had_eshower<10.E18)   
+      }
+      else if (had_eshower<10.E18){
 	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(4.23-0.785*epsilon+(5.5e-2)*epsilon*epsilon);
+      }
       else {
 	//  beyond param, just use value at 10 EeV since slow variation
 	//  and parameterization might diverge
 	//  so scale from 10 EeV at 7.5% per decade (30/4=7.5)
+	
 	//deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*RADDEG*(4.23-0.785*7.+5.5e-2*49.);  // the last part in parenthesis if the previous equation evaluated at epsilon=7.
 	//deltheta_had_max=deltheta_had_max*(1.+(epsilon-7.)*0.075);
 	// It doesn't increase deltheta_had_max by 7.5% per decade anymore. Now it decreases the energy factor by 0.07 per decade.
@@ -289,7 +292,6 @@ void icemc::AskaryanFreqsGenerator::GetSpread(double pnu,
       deltheta_had_max=1.E-10;
     }
     deltheta_em_max/=sqrt(log(2.)); // in astro-ph/9706064, Jaime uses exp(-0.5 (theta-theta_c)^2/delta_had^2)
-
   }
   else if (WHICHPARAMETERIZATION==1) {
 

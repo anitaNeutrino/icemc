@@ -20,12 +20,6 @@ namespace icemc{
    */
   class AskaryanFreqsGenerator {
 
-    enum medium {
-      kIce = 0,
-      kSalt = 1
-    };
-    
-
   public:
     // double vmmhz1m_max; // V/m/MHz at 1m
     double X0MEDIUM;                  // radiation length of medium
@@ -35,7 +29,7 @@ namespace icemc{
     double X0_DEPTH;                  // density at the interaction depth
     double NMEDIUM_RECEIVER;          // index of refraction at receiver
     double RHOMEDIUM;                 // density of medium
-    // double logscalefactor_taper;
+
     static const double RHOICE;       // density of ice (kg/m**3)
     static const double RHOAIR;       // density of air (kg/m**3)
     static const double RHOH20;       // density of water (kg/m**3) 
@@ -45,9 +39,8 @@ namespace icemc{
     static const double CHANGLE_ICE;  // cherenkov angle in ice
     static const double VIEWANGLE_CUT;
 
-
     AskaryanFreqsGenerator(); ///< Default constructor
-    
+
     void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had,
 		    double emfrac, double hadfrac, double& vmmhz1m, double& vmmhz_em) const;
 
@@ -61,9 +54,19 @@ namespace icemc{
     void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had, const ShowerProperties& sp, AskaryanFreqs& radioSignal, int k) const {
       TaperVmMHz(viewangle,  deltheta_em, deltheta_had,  sp, radioSignal.vmmhz[k], radioSignal.vmmhz_em[k]);
     }
+
+    void GetSpread(double pnu, double emfrac, double hadfrac, double freq,
+		   double& deltheta_em_max, double& deltheta_had_max) const;
+
+    void GetSpread(double pnu, const ShowerProperties& sp, double freq,
+		   double& deltheta_em_max, double& deltheta_had_max) const {
+      GetSpread(pnu, sp.emFrac,  sp.hadFrac, freq, deltheta_em_max, deltheta_had_max);
+    }
+    
     
     double GetVmMHz1m(double pnu, double freq) const;
-    AskaryanFreqs generateAskaryanFreqs(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max) const;
+    AskaryanFreqs generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, double *freq_Hz, double notch_min, double notch_max) const;
+    
     void GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max,double *vmmhz,int nfreq) const;
     int GetLPM() const;
     double GetELPM() const;
@@ -72,17 +75,9 @@ namespace icemc{
 
     void SetParameterization(int whichparameterization);
 
-    void GetSpread(double pnu, double emfrac, double hadfrac, double freq,
-		   double& deltheta_em_max, double& deltheta_had_max) const;
-    
-    void GetSpread(double pnu, const ShowerProperties& sp, double freq,
-		   double& deltheta_em_max, double& deltheta_had_max) const{
-      GetSpread(pnu, sp.emFrac,  sp.hadFrac, freq, deltheta_em_max, deltheta_had_max);
-    }
- 
 
     void SetMedium(int medium) {
-      MEDIUM=medium;
+      MEDIUM = medium;
       if (MEDIUM!=0) {
 	Log() << icemc::info << "Medium is " << MEDIUM << ", which is a non-default setting:  Not ice!\n";
       }
