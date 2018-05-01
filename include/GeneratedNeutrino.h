@@ -3,7 +3,7 @@
 
 #include "TObject.h" ///< ClassDef/ClassImp
 #include "balloon.hh" /// < For BalloonInfo
-#include "RadioSignal.h" ///< For RadioSignal
+#include "AskaryanFreqs.h" ///< For AskaryanFreqs
 
 namespace icemc {
 
@@ -59,10 +59,10 @@ namespace icemc {
 
   class PassingNeutrino : public GeneratedNeutrino {
   public:    
-    PassingNeutrino(const GeneratedNeutrino& genNu, const RadioSignal& radioSignal);
+    PassingNeutrino(const GeneratedNeutrino& genNu, const AskaryanFreqs& askFreqs);
     ~PassingNeutrino();
 
-    RadioSignal signal;
+    AskaryanFreqs askaryanFreqs;
 
     ClassDef(PassingNeutrino, 1)    
   };

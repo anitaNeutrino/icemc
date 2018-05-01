@@ -1,5 +1,5 @@
-#ifndef ICEMC_RADIO_SIGNAL_H
-#define ICEMC_RADIO_SIGNAL_H
+#ifndef ICEMC_ASKARYAN_FREQS_H
+#define ICEMC_ASKARYAN_FREQS_H
 
 #include <vector>
 #include <algorithm>
@@ -7,26 +7,28 @@
 
 namespace icemc {
 
-  class RadioSignalGenerator; ///< Let the linker worry about finding Signal
+  class AskaryanFreqsGenerator; ///< The generator class can access the private elements
 
   /**
-   * @class RadioSignal
-   * @brief The full signal with all factors accounted for (1/r,  atten. etc.)
+   * @class AskaryanFreqs
+   * @brief The frequencies of the signal with all factors accounted for (1/r,  atten. etc.)
    * 
+   * Currently this class does not contain any phase information although, 
+   * spoiler alert, the frequencies will be peak aligned to make an impulse.
    * Wraps the stupidly name vmmhz array with somethings a bit more humanly readable.
    * And stops people passing raw c-style arrays around.
    */
 
-  class RadioSignal {
+  class AskaryanFreqs {
 
-    friend RadioSignalGenerator; ///< Allow this generating class to manipulate the private members of the RadioSignal class
+    friend AskaryanFreqsGenerator; ///< Allow this generating class to manipulate the private members of the AskaryanFreqs class
 
   public:
 
     /** 
      * Default constructor
      */    
-    RadioSignal();
+    AskaryanFreqs();
 
     /** 
      * Constructor from c-style array
@@ -34,11 +36,11 @@ namespace icemc {
      * @param nf is the number of frequencies
      * @param vmmhz_input points to the first element of an array of length nf
      */
-    RadioSignal(int nf, const double* vmmhz_input);
+    AskaryanFreqs(int nf, const double* vmmhz_input);
 
 
     /** 
-     * Access the i-th element of the frequency represenation of the signal. Does a bounds check.
+     * Access the i-th element of the frequency magnitudes of the signal. Does a bounds check.
      * 
      * @param i is the element to access
      * 
@@ -50,7 +52,7 @@ namespace icemc {
      * @brief Get the largest value in the frequency array 
      * @return the maximum value
      */
-    double max() const {
+    double max_element() const {
       return *std::max_element(vmmhz.begin(), vmmhz.end());
     }
 
@@ -59,16 +61,14 @@ namespace icemc {
      * @brief Get the smallest value in the frequency array 
      * @return the minimum value
      */
-    double min() const {
+    double min_element() const {
       return *std::min_element(vmmhz.begin(), vmmhz.end());
     }
     
   private:
 
-    std::vector<double> vmmhz;
+    std::vector<double> vmmhz; ///< Binned frequencies in V/m/MHz  (Volts per meter per MHz)
 
-    
-    // double vmmhz[Anita::NFREQ]; // never again
   };
 
 
@@ -77,4 +77,4 @@ namespace icemc {
 }
 
 
-#endif // ICEMC_RADIO_SIGNAL_H
+#endif // ICEMC_ASKARYAN_FREQS_H

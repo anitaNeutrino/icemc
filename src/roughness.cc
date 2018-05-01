@@ -14,7 +14,6 @@
 #include "TF2.h"
 #include "TCanvas.h"
 #include "TRandom3.h"
-#include "RadioSignalGenerator.h"
 #include "Settings.h"
 #include "Primaries.h"
 #include "anita.hh"

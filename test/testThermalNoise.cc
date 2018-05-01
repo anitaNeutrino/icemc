@@ -53,7 +53,7 @@
 #include "icemodel.hh"
 // #include "trigger.hh"
 #include "Spectra.h"
-#include "RadioSignalGenerator.h"
+#include "AskaryanFreqsGenerator.h"
 #include "secondaries.hh"
 #include "ray.hh"
 #include "counting.hh"
@@ -76,7 +76,7 @@
 
 
 // hack hack hack
-using icemc::RadioSignalGenerator;
+using icemc::AskaryanFreqsGenerator;
 using icemc::EarthModel;
 using icemc::IceModel;
 using icemc::Counting;
@@ -388,7 +388,7 @@ double sum_weights=0;
 // functions
 
 // set up array of viewing angles for making plots for seckel
-void SetupViewangles(RadioSignalGenerator *sig1);
+void SetupViewangles(AskaryanFreqsGenerator *sig1);
 
 void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
 double GetThisAirColumn(Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta);
@@ -562,7 +562,7 @@ int main(int argc,  char **argv) {
   Balloon *bn1=new Balloon(); // instance of the balloon
   Anita *anita1=new Anita();// right now this constructor gets banding info
   Secondaries *sec1=new Secondaries();
-  RadioSignalGenerator *sig1=new RadioSignalGenerator();
+  AskaryanFreqsGenerator *sig1=new AskaryanFreqsGenerator();
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();
 

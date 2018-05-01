@@ -27,7 +27,7 @@ class TNamed;
 namespace icemc{
   
   class Secondaries;
-  class RadioSignalGenerator;
+  class AskaryanFreqsGenerator;
   class Balloon;
   class Ray;
 
@@ -58,10 +58,10 @@ namespace icemc{
     void getSetting(const char* key, std::vector<std::string>& valueArray) const;
 
     void ReadInputs(const char* fileName , std::ofstream &foutput);//,
-		    // Anita* anita1, Secondaries* sec1, RadioSignalGenerator* radioGenerator, Balloon* bn1, Ray* ray1,
+		    // Anita* anita1, Secondaries* sec1, AskaryanFreqsGenerator* askFreqGen, Balloon* bn1, Ray* ray1,
 		    // int& NNU, double& RANDOMISEPOL);
 
-    void ApplyInputs(Anita* anita1, Secondaries* sec1, RadioSignalGenerator* radioGenerator, Balloon* bn1, Ray* ray1) const;
+    void ApplyInputs(Anita* anita1, Secondaries* sec1, AskaryanFreqsGenerator* askFreqGen, Balloon* bn1, Ray* ray1) const;
 
     int NNU; ///< The number of neutrinos
     double RANDOMISEPOL; ///< Randomize the polarity?

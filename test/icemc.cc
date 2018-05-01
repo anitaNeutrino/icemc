@@ -54,7 +54,7 @@
 #include "icemodel.hh"
 // #include "trigger.hh"
 #include "Spectra.h"
-#include "RadioSignalGenerator.h"
+#include "AskaryanFreqsGenerator.h"
 #include "secondaries.hh"
 #include "ray.hh"
 #include "counting.hh"
@@ -80,7 +80,7 @@
 
 
 // hack hack hack
-using icemc::RadioSignalGenerator;
+using icemc::AskaryanFreqsGenerator;
 using icemc::EarthModel;
 using icemc::IceModel;
 using icemc::Counting;
@@ -411,7 +411,7 @@ double justSignal_dig[2][48][512];
 // functions
 
 // set up array of viewing angles for making plots for seckel
-void SetupViewangles(RadioSignalGenerator *sig1);
+void SetupViewangles(AskaryanFreqsGenerator *sig1);
 
 void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
 double GetThisAirColumn(Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta);
@@ -440,7 +440,7 @@ void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceMode
 
 int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside);
 
-int GetDirection(Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  RadioSignalGenerator *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
+int GetDirection(Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  AskaryanFreqsGenerator *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
 
 void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  double emfrac,  double hadfrac,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag);
 
@@ -455,7 +455,7 @@ void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  S
 
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, RadioSignalGenerator *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, AskaryanFreqsGenerator *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
 
 void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  string,  string,  double,  ofstream &nu_out);
 
@@ -614,7 +614,7 @@ int main(int argc,  char **argv) {
   Anita *anita1=new Anita();// right now this constructor gets banding info
   Secondaries *sec1=new Secondaries();
   Primaries *primary1=new Primaries();
-  RadioSignalGenerator *sig1=new RadioSignalGenerator();
+  AskaryanFreqsGenerator *sig1=new AskaryanFreqsGenerator();
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();
   GlobalTrigger *globaltrig1;
@@ -1694,7 +1694,7 @@ int main(int argc,  char **argv) {
         if (settings1->FIRN) {
           sig1->SetNDepth(antarctica->GetN(interaction1->altitude_int));
           //      changle = acos(1/N_DEPTH);
-          changle_deg=sig1->changle*icemc::constants::DEGRAD;
+          changle_deg=sig1->GetChangle()*icemc::constants::DEGRAD;
         }
       //}
 
@@ -1786,7 +1786,7 @@ int main(int argc,  char **argv) {
             for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
               for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
                 viewangle_eachboresight[ilayer][ifold]=acos(interaction1->nnu.Dot(ray1->nrf_iceside_eachboresight[4][ilayer][ifold]));
-                fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-sig1->changle)*icemc::constants::DEGRAD << "\n";
+                fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-sig1->GetChangle())*icemc::constants::DEGRAD << "\n";
               }//end for ifold
             }//end for ilayer
           }//end if boresights
@@ -1927,7 +1927,7 @@ int main(int argc,  char **argv) {
             for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
               for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
                 viewangle_eachboresight[ilayer][ifold]=acos(interaction1->nnu.Dot(ray1->nrf_iceside_eachboresight[4][ilayer][ifold]));
-                fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-sig1->changle)*icemc::constants::DEGRAD << "\n";
+                fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-sig1->GetChangle())*icemc::constants::DEGRAD << "\n";
               }//end ifold
             }//end ilayer
           }//end boresight
@@ -1958,7 +1958,7 @@ int main(int argc,  char **argv) {
 
       cosviewangle=cos(viewangle); // cosine angle
       viewangle_deg=viewangle*icemc::constants::DEGRAD; // same angle but in degrees
-      dviewangle_deg=(sig1->changle-viewangle)*icemc::constants::DEGRAD; // deviation from cerenkov angle
+      dviewangle_deg=(sig1->GetChangle()-viewangle)*icemc::constants::DEGRAD; // deviation from cerenkov angle
 
       if (viewangletree->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
         viewangletree->Fill(); // fills variables related to viewing angle
@@ -2614,8 +2614,8 @@ int main(int argc,  char **argv) {
       
       if (!settings1->ROUGHNESS){
         // don't loop over frequencies if the viewing angle is too far off
-        double rtemp=icemc::Tools::dMin((viewangle-sig1->changle)/(deltheta_em_max), (viewangle-sig1->changle)/(deltheta_had_max));
-        if (rtemp>RadioSignalGenerator::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
+        double rtemp=icemc::Tools::dMin((viewangle-sig1->GetChangle())/(deltheta_em_max), (viewangle-sig1->GetChangle())/(deltheta_had_max));
+        if (rtemp>AskaryanFreqsGenerator::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
           //delete interaction1;
           continue;
         }
@@ -2924,7 +2924,7 @@ int main(int argc,  char **argv) {
 
           //+++++//+++++//+++++//+++++//+++++//+++++//+++++
 
-          chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac, thresholdsAnt[antNum]);
+          chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->GetChangle(), emfrac, hadfrac, thresholdsAnt[antNum]);
 
 	  
           if (Anita::GetAntennaNumber(ilayer, ifold)==anita1->rx_minarrivaltime) {
@@ -3239,7 +3239,7 @@ int main(int argc,  char **argv) {
             }
 
             // just for plotting.
-            offaxis=(double)fabs(viewangle-sig1->changle);
+            offaxis=(double)fabs(viewangle-sig1->GetChangle());
             nsigma_offaxis=offaxis/deltheta_had_max;
 
             hundogaintoheight_e->Fill(undogaintoheight_e, weight);
@@ -3727,7 +3727,7 @@ int main(int argc,  char **argv) {
     cout << "Average height of balloon above ice surface is " << average_rbn-antarctica->Surface(bn1->r_bn) << "\n";
     cout << "theta_zenith are " << anita1->THETA_ZENITH[0]*icemc::constants::DEGRAD << " " << anita1->THETA_ZENITH[1]*icemc::constants::DEGRAD << " " << anita1->THETA_ZENITH[2]*icemc::constants::DEGRAD << "\n";
     cout << "Index of refraction at this depth is " << sig1->N_DEPTH << "\n";
-    cout << "Cerenkov angle is " << sig1->changle*icemc::constants::DEGRAD << "\n";
+    cout << "Cerenkov angle is " << sig1->GetChangle()*icemc::constants::DEGRAD << "\n";
     cout << "Nadir angle to surface exit point is " << icemc::constants::DEGRAD*bn1->r_bn.Angle(ray1->n_exit2bn[2]) << "\n";
     cout << "Distance from rfexit to balloon is " << (bn1->r_bn+ -1*ray1->rfexit[2]).Mag() << "\n";
     cout << "Payload zenith angle at event source is " << icemc::constants::DEGRAD*ray1->rfexit[2].Angle(ray1->n_exit2bn[2]) << "\n";
@@ -3842,7 +3842,7 @@ void WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double a
 //end WriteNeutrinoInfo()
 
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, RadioSignalGenerator *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir) {
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, AskaryanFreqsGenerator *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir) {
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
   double errordown_v_thresh[NTHRESHOLDS];
@@ -4519,7 +4519,7 @@ int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit, double n
 //end GetRayIceSide()
 
 
-int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &refr,  double deltheta_em,  double deltheta_had, double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  RadioSignalGenerator *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) {
+int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &refr,  double deltheta_em,  double deltheta_had, double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  AskaryanFreqsGenerator *sig1,  Position posnu,  Anita *anita1,  Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) {
 
   // in the specular (settings1->ROUGHNESS = 0) this function sets the neutrino direction according to a selection routine based on veiweing within the Cerenkov cone
 
@@ -4545,12 +4545,12 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
     } //end if (settings1->SKIPCUTS || !USEWEIGHTS)
     else {
       if (emfrac<=1.E-10 && deltheta_had >1.E-10) {
-        if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle)>1)
-          //if (icemc::Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle)>1)
+        if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->GetChangle())>1)
+          //if (icemc::Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->GetChangle())>1)
           theta_threshold=-1;
         else {
-          //theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(icemc::Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle))/ALOG2);
-          theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/icemc::constants::ALOG2);
+          //theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(icemc::Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->GetChangle()))/ALOG2);
+          theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->GetChangle()))/icemc::constants::ALOG2);
           averaging_thetas1+=theta_threshold;
         } //else
         count_inthisloop1++;
@@ -4558,12 +4558,12 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
 
       if (emfrac>1.E-10 && deltheta_had <=1.E-10) {
         dont_count++;
-        if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle)>1)
-	  //if (icemc::Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle)>1)
+        if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->GetChangle())>1)
+	  //if (icemc::Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->GetChangle())>1)
           theta_threshold=-1;
         else {
-          //theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(icemc::Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle))/0.5);
-          theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/0.5);
+          //theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(icemc::Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->GetChangle()))/0.5);
+          theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->GetChangle()))/0.5);
           averaging_thetas2+=theta_threshold;
         } //else
         count_inthisloop2++;
@@ -4582,7 +4582,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
           theta_test=deltheta_em; // this is the angle we start stepping at
           vmmhz1m_test=vmmhz1m_max; // this will be the magnitude of the signal at theta_test away from the cerenkov cone.
           // find the magnitude of the signal at theta_test away from the cerenkov cone.
-          sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
+          sig1->TaperVmMHz(sig1->GetChangle()+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
           //  if (icemc::Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
           if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
             theta_threshold=theta_test; // then that is the maximum angular deviation
@@ -4590,7 +4590,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
           else { // otherwise increment by the step size and check again.
             theta_test=1.5*deltheta_em;
             vmmhz1m_test=vmmhz1m_max;
-            sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
+            sig1->TaperVmMHz(sig1->GetChangle()+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
 
             if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
 	      //if (icemc::Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) {
@@ -4599,14 +4599,14 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
             else { // otherwise increment by the step size and check again.
               theta_test=2*deltheta_em;
               vmmhz1m_test=vmmhz1m_max;
-              sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
+              sig1->TaperVmMHz(sig1->GetChangle()+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
               //if (icemc::Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
               if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
                 theta_threshold=theta_test;
               else { // otherwise increment by the step size and check again.
                 theta_test=3*deltheta_em;
                 vmmhz1m_test=vmmhz1m_max;
-                sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
+                sig1->TaperVmMHz(sig1->GetChangle()+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
                 //if (icemc::Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
 
                 if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
@@ -4614,13 +4614,13 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
                 else { // otherwise,  set is the the width of the hadronic component (much wider than the electromagnetic component)
                   theta_test=deltheta_had;
                   vmmhz1m_test=vmmhz1m_max;
-                  sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
+                  sig1->TaperVmMHz(sig1->GetChangle()+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
                   // if at the hadronic width,  you're below the threshold
                   if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
 		    //if (icemc::Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) // if at the hadronic width,  you're below the threshold
                     theta_threshold=theta_test; // set theta_threshold
                   else { // otherwise,  find theta_threshold considering the hadronic component alone.  This is conservative-- an electromagnetic component would only make it narrower.
-                    theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/0.5);
+                    theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->GetChangle()))/0.5);
                   } // else: not below threshold at deltheta_had
                 } // else: not below threshold at 3*deltheta_em
 
@@ -4638,21 +4638,21 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
 
       theta_threshold*=settings1->THETA_TH_FACTOR; // multiply theta_threshold by scale factor if requested,  for testing purposes.
       if (theta_threshold>0) { // we only pick the angle between 0 and pi so set the upper and lower limits accordingly.
-        if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold> icemc::constants::PI) {
+        if (sig1->GetChangle()-theta_threshold<0 && sig1->GetChangle()+theta_threshold> icemc::constants::PI) {
           costhetanu2=1.;
           costhetanu1=-1.;
         } //if
-        else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold> icemc::constants::PI) {
-          costhetanu2=cos(sig1->changle-theta_threshold);
+        else if (sig1->GetChangle()-theta_threshold>0 && sig1->GetChangle()+theta_threshold> icemc::constants::PI) {
+          costhetanu2=cos(sig1->GetChangle()-theta_threshold);
           costhetanu1=-1.;
         } //else if
-        else if (sig1->changle-theta_threshold<0 && sig1->changle+theta_threshold< icemc::constants::PI) {
+        else if (sig1->GetChangle()-theta_threshold<0 && sig1->GetChangle()+theta_threshold< icemc::constants::PI) {
           costhetanu2=1.;
-          costhetanu1=cos(sig1->changle+theta_threshold);
+          costhetanu1=cos(sig1->GetChangle()+theta_threshold);
         } //else if
-        else if (sig1->changle-theta_threshold>0 && sig1->changle+theta_threshold< icemc::constants::PI) {
-          costhetanu2=cos(sig1->changle-theta_threshold);
-          costhetanu1=cos(sig1->changle+theta_threshold);
+        else if (sig1->GetChangle()-theta_threshold>0 && sig1->GetChangle()+theta_threshold< icemc::constants::PI) {
+          costhetanu2=cos(sig1->GetChangle()-theta_threshold);
+          costhetanu1=cos(sig1->GetChangle()+theta_threshold);
         } //else if
       } // end if theta_threshold>0
 
@@ -4671,11 +4671,11 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
       // now the ray is aligned along the cerenkov cone and
       // the neutrino is rotated by that same angle
 
-      //dtryingdirection+=4*PI/(2.*theta_threshold*sin(sig1->changle)*2*PI);
+      //dtryingdirection+=4*PI/(2.*theta_threshold*sin(sig1->GetChangle())*2*PI);
       interaction1->dtryingdirection=1/((costhetanu2-costhetanu1)/2.);
       if (bn1->WHICHPATH==4) {
-        //double angle=(PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4])+1.*RADDEG;
-        double angle=(icemc::constants::PI/2.-sig1->changle)-ray1->rfexit[0].Angle(ray1->nrf_iceside[4]);      // this will put the viewing angle at the cerenkov angle
+        //double angle=(PI/2.-sig1->GetChangle())-ray1->rfexit[0].Angle(ray1->nrf_iceside[4])+1.*RADDEG;
+        double angle=(icemc::constants::PI/2.-sig1->GetChangle())-ray1->rfexit[0].Angle(ray1->nrf_iceside[4]);      // this will put the viewing angle at the cerenkov angle
         double thetaposnu=posnu.Theta();
         //double phiposnu=posnu.Phi();
         costhetanu=cos(icemc::constants::PI/2+(thetaposnu-angle));
@@ -4714,7 +4714,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
     // now the ray is aligned along the cerenkov cone and
     // the neutrino is rotated by that same angle
 
-    //dtryingdirection+=4*PI/(2.*theta_threshold*sin(sig1->changle)*2*PI);
+    //dtryingdirection+=4*PI/(2.*theta_threshold*sin(sig1->GetChangle())*2*PI);
     interaction1->dtryingdirection=1/((costhetanu2-costhetanu1)/2.);
   }
 
@@ -4736,7 +4736,7 @@ double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_
 //end ScaleVmMHz()
 
 
-void SetupViewangles(RadioSignalGenerator *sig1) {
+void SetupViewangles(AskaryanFreqsGenerator *sig1) {
   double viewangle_max=90.*icemc::constants::RADDEG;
   double viewangle_min=30.*icemc::constants::RADDEG;
   for (int i=0;i<NVIEWANGLE-2;i++) {

@@ -11,7 +11,7 @@
 #include "balloon.hh"
 #include "icemodel.hh"
 #include "Spectra.h"
-#include "RadioSignalGenerator.h"
+#include "AskaryanFreqsGenerator.h"
 #include "secondaries.hh"
 #include "ray.hh"
 #include "counting.hh"
@@ -911,7 +911,7 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
 
   
 
-void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, RadioSignalGenerator* radioGenerator,
+void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, AskaryanFreqsGenerator* askFreqGen,
 				  Balloon* bn1, Ray* ray1) const {
   
    //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas. 
@@ -1029,13 +1029,13 @@ for(unsigned int i=0; i < requiredBands.size(); i++){
 
 
 
-  radioGenerator->SetLPM(useLPM);
-  if (radioGenerator->GetLPM()!=1){
-    std::cout << "Non-default setting:  LPM= " << radioGenerator->GetLPM() << std::endl;
+  askFreqGen->SetLPM(useLPM);
+  if (askFreqGen->GetLPM()!=1){
+    std::cout << "Non-default setting:  LPM= " << askFreqGen->GetLPM() << std::endl;
   }
-  radioGenerator->SetParameterization(askaryanParameterization);
-  radioGenerator->SetJaime_Factor(jamieFactor);
-  radioGenerator->SetMedium(medium);
+  askFreqGen->SetParameterization(askaryanParameterization);
+  askFreqGen->SetJaime_Factor(jamieFactor);
+  askFreqGen->SetMedium(medium);
 
 
   sec1->SECONDARIES=SECONDARIES;

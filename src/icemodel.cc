@@ -7,7 +7,7 @@
 #include "icemodel.hh"
 
 
-#include "RadioSignalGenerator.h"
+#include "AskaryanFreqsGenerator.h"
 #include "position.hh"
 #include "Primaries.h"
 #include "anita.hh"
@@ -1038,7 +1038,7 @@ double icemc::IceModel::GetN(double altitude) {
     double n=0;
     
     if (altitude < FIRNDEPTH) 
-	n=RadioSignalGenerator::NICE;
+	n=AskaryanFreqsGenerator::NICE;
     else if (altitude >= FIRNDEPTH && altitude <=0 && DEPTH_DEPENDENT_N) 
 	//    N_DEPTH=NFIRN-(4.6198+13.62*(altitude_int/1000.))*
 	//(altitude_int/1000.);   // Besson's equation for n(z)

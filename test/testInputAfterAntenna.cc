@@ -53,7 +53,7 @@
 #include "icemodel.hh"
 // #include "trigger.hh"
 #include "Spectra.h"
-#include "RadioSignalGenerator.h"
+#include "AskaryanFreqsGenerator.h"
 #include "secondaries.hh"
 #include "ray.hh"
 #include "counting.hh"
@@ -93,7 +93,7 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 
 
 // hack hack hack
-using icemc::RadioSignalGenerator;
+using icemc::AskaryanFreqsGenerator;
 using icemc::EarthModel;
 using icemc::IceModel;
 using icemc::Counting;
@@ -397,7 +397,7 @@ double justSignal_dig[2][48][512];
 // functions
 
 // set up array of viewing angles for making plots for seckel
-void SetupViewangles(RadioSignalGenerator *sig1);
+void SetupViewangles(AskaryanFreqsGenerator *sig1);
 
 void GetAir(double *col1); // get air column as a function of theta- only important for black hole studies
 double GetThisAirColumn(Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta);
@@ -575,7 +575,7 @@ int main(int argc,  char **argv) {
   Balloon *bn1=new Balloon(); // instance of the balloon
   Anita *anita1=new Anita();// right now this constructor gets banding info
   Secondaries *sec1=new Secondaries();
-  RadioSignalGenerator *sig1=new RadioSignalGenerator();
+  AskaryanFreqsGenerator *sig1=new AskaryanFreqsGenerator();
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();
   GlobalTrigger *globaltrig1;
@@ -1092,7 +1092,7 @@ int main(int argc,  char **argv) {
 	  
 	chantrig1->DigitizerPath(settings1, anita1, antNum, bn1);
 	
-	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac, thresholdsAnt[antNum]);
+	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->GetChangle(), emfrac, hadfrac, thresholdsAnt[antNum]);
 
 	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 
@@ -1731,7 +1731,7 @@ double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_
 //end ScaleVmMHz()
 
 
-void SetupViewangles(RadioSignalGenerator *sig1) {
+void SetupViewangles(AskaryanFreqsGenerator *sig1) {
   double viewangle_max=90.*icemc::constants::RADDEG;
   double viewangle_min=30.*icemc::constants::RADDEG;
   for (int i=0;i<NVIEWANGLE-2;i++) {

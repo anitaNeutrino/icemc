@@ -62,7 +62,7 @@
 #include "icemodel.hh"
 // #include "trigger.hh"
 #include "Spectra.h"
-#include "RadioSignalGenerator.h"
+#include "AskaryanFreqsGenerator.h"
 #include "secondaries.hh"
 #include "ray.hh"
 #include "counting.hh"
@@ -83,7 +83,7 @@
 
 
 // hack hack hack
-using icemc::RadioSignalGenerator;
+using icemc::AskaryanFreqsGenerator;
 using icemc::EarthModel;
 using icemc::IceModel;
 using icemc::Counting;
@@ -255,7 +255,7 @@ int main(int argc,  char **argv) {
   Anita *anita1=new Anita();// right now this constructor gets banding info
   Secondaries *sec1=new Secondaries();
   Primaries *primary1=new Primaries();
-  RadioSignalGenerator *sig1=new RadioSignalGenerator();
+  AskaryanFreqsGenerator *sig1=new AskaryanFreqsGenerator();
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();
   GlobalTrigger *globaltrig1;

@@ -6,7 +6,7 @@
 #include "Settings.h"
 #include "earthmodel.hh"
 #include "icemodel.hh"
-#include "RadioSignalGenerator.h"
+#include "AskaryanFreqsGenerator.h"
 #include "vector.hh"
 #include "position.hh"
 #include "anita.hh"
@@ -203,7 +203,7 @@ int icemc::Ray::TraceRay(const Settings *settings1,Anita *anita1,int iter,double
   if (settings1->FIRN) {
 
     
-    if (!GetRayIceSide(n_exit2bn[iter-1],nsurf_rfexit,RadioSignalGenerator::N_AIR,constants::NFIRN,
+    if (!GetRayIceSide(n_exit2bn[iter-1],nsurf_rfexit,AskaryanFreqsGenerator::N_AIR,constants::NFIRN,
 		       nrf_iceside[2*iter-1])) { // nrf_iceside[1] is the rf direction in the firn
 
       return 0; // reject if TIR.
@@ -233,7 +233,7 @@ int icemc::Ray::TraceRay(const Settings *settings1,Anita *anita1,int iter,double
       for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
 	for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
 	    
-	  if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,RadioSignalGenerator::N_AIR,constants::NFIRN,
+	  if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,AskaryanFreqsGenerator::N_AIR,constants::NFIRN,
 			     nrf_iceside_eachboresight[2*iter-1][ilayer][ifold])) // nrf_iceside[1] is the rf direction in the firn
 	    return 0; // reject if TIR.  
 
@@ -264,7 +264,7 @@ int icemc::Ray::TraceRay(const Settings *settings1,Anita *anita1,int iter,double
     
   else { // no firn
 
-    if (!GetRayIceSide(n_exit2bn[iter-1],nsurf_rfexit,RadioSignalGenerator::N_AIR,RadioSignalGenerator::NICE,
+    if (!GetRayIceSide(n_exit2bn[iter-1],nsurf_rfexit,AskaryanFreqsGenerator::N_AIR,AskaryanFreqsGenerator::NICE,
 		       nrf_iceside[2*iter-1])) // nrf_iceside[1] is the rf direction in the ice
       return 0; // reject if TIR.  
     nrf_iceside[2*iter]=nrf_iceside[2*iter-1]; // no firn so the next element is the same
@@ -274,7 +274,7 @@ int icemc::Ray::TraceRay(const Settings *settings1,Anita *anita1,int iter,double
       for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
 	for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
 	    
-	  if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,RadioSignalGenerator::N_AIR,RadioSignalGenerator::NICE,
+	  if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,AskaryanFreqsGenerator::N_AIR,AskaryanFreqsGenerator::NICE,
 			     nrf_iceside_eachboresight[2*iter-1][ilayer][ifold])) // nrf_iceside[1] is the rf direction in the ice
 	    return 0; // reject if TIR.  
 	  nrf_iceside_eachboresight[2*iter][ilayer][ifold]=nrf_iceside_eachboresight[2*iter-1][ilayer][ifold]; // no firn so the next element is the same

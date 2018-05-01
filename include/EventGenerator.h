@@ -15,7 +15,7 @@
 namespace icemc {
 
   class Taumodel;
-  class RadioSignalGenerator;
+  class AskaryanFreqsGenerator;
   class Interaction;
   class Ray;
   class Roughness;
@@ -471,7 +471,7 @@ namespace icemc {
 
     UInt_t eventNumber;
 
-    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, RadioSignalGenerator* radioGenerator, Anita* anita1);
+    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, AskaryanFreqsGenerator* radioGenerator, Anita* anita1);
     
     void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE);
  
@@ -505,7 +505,7 @@ namespace icemc {
 
     int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside);
 
-    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  RadioSignalGenerator *radioGenerator,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
+    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  AskaryanFreqsGenerator *radioGenerator,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
 
     void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  double emfrac,  double hadfrac,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag);
 
@@ -514,11 +514,11 @@ namespace icemc {
 
     void IntegrateBands(Anita *anita1,  int k,  Screen *panel1,  double *freq,  double scalefactor,  double *sumsignal);
 
-    void Integrate(Anita *anita1,  int j,  int k,  double *vmmhz,  double *freq,  double scalefactor,  double sumsignal);
+    // void Integrate(Anita *anita1,  int j,  int k,  double *vmmhz,  double *freq,  double scalefactor,  double sumsignal);
 
     static void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  SIGINT
 
-    void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, RadioSignalGenerator *radioGenerator,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
+    void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, AskaryanFreqsGenerator *radioGenerator,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
 
     void WriteNeutrinoInfo(const int& inu, Position&,  Vector&,  Position&,  double,  std::string,  std::string,  double,  std::ofstream &nu_out);
 
