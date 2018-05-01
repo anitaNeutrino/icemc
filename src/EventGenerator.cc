@@ -1133,7 +1133,7 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 //end GetFresnel()
 
 
-void icemc::EventGenerator::GetBalloonLocation(Interaction *interaction1, Ray *ray1, Balloon *bn1, IceModel *antarctica) const {
+void icemc::EventGenerator::GetBalloonLocation(const Interaction *interaction1, const Ray *ray1, const Balloon *bn1, IceModel *antarctica) const {
   // brian enter function to calculate balloon position on your map.
   // use interaction1->posnu // location of neutrino interaction
   // coordinate system:  +z="up" at the south pole
@@ -1942,7 +1942,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       if (!Ray::WhereDoesItLeave(interaction1->posnu, interaction1->nnu, antarctica, interaction1->nuexit)){
         continue; // doesn't give a real value from quadratic formula
       }
-      GetBalloonLocation(interaction1, ray1, bn1, antarctica);
+
+      // // does this do anything?
+      // GetBalloonLocation(interaction1, ray1, bn1, antarctica);
       
       nuexitlength=interaction1->posnu.Distance(interaction1->nuexit);
       // probability a tau would decay within this length at this
@@ -2010,14 +2012,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // theta of nu entrance point,  in earth frame
       // and latitude
-      fNeutrinoPath->theta_in=interaction1->r_in.Theta();
-      fNeutrinoPath->lat_in=-90+fNeutrinoPath->theta_in*constants::DEGRAD;
+      fNeutrinoPath->theta_in = interaction1->r_in.Theta();
+      fNeutrinoPath->lat_in = -90+fNeutrinoPath->theta_in*constants::DEGRAD;
 
       // find quantities relevent for studying impact of atmosphere
       // for black hole studies
       // costheta and mytheta: theta of neutrino wrt surface normal where neutrino enters earth
       // cosbeta0, mybeta: theta of neutrino wrt surface normal for a person standing above the interaction point
-      myair=GetThisAirColumn(&settings1,  interaction1->r_in, interaction1->nnu, interaction1->posnu, col1, cosalpha, mytheta, cosbeta0, mybeta);
+      myair = GetThisAirColumn(&settings1,  interaction1->r_in, interaction1->nnu, interaction1->posnu, col1, cosalpha, mytheta, cosbeta0, mybeta);
 
       // where the neutrino enters the ice
       // reject if it enters beyond the borders of the continent.
@@ -2027,9 +2029,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           //r_enterice.Print();
           if (antarctica->OutsideAntarctica(interaction1->r_enterice)) {
             std::cout<<"Warning!  Neutrino enters beyond continent,  program is rejecting neutrino! inu = "<<inu<<std::endl;
-            if (bn1->WHICHPATH==3)
-              std::cout<<"Warning!  Neutrino enters beyond continent,  program is rejecting neutrino!"<<std::endl;
-            //
             continue;
           }// end outside antarctica
         }// end wheredoesitenterice
@@ -2084,10 +2083,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // now get our best case attenuation again,
       // and see if we can reject the event.
       if (whichray==direct){
-        bestcase_atten=exp(-1*ray1->rfexit[1].Distance(interaction1->posnu)/MAX_ATTENLENGTH);
+        bestcase_atten = exp(-1*ray1->rfexit[1].Distance(interaction1->posnu)/MAX_ATTENLENGTH);
       }
       if (whichray==downgoing){
-        bestcase_atten=exp(-1*ray1->rfexit[1].Distance(interaction1->posnu_down)/MAX_ATTENLENGTH);//use the real distance
+        bestcase_atten = exp(-1*ray1->rfexit[1].Distance(interaction1->posnu_down)/MAX_ATTENLENGTH);//use the real distance
       }
       if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((showerProps.sumFrac())*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR && !settings1.SKIPCUTS) {
         if (bn1->WHICHPATH==3){
@@ -2179,11 +2178,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	vmmhz1m_fresneledonce = vmmhz1m_max/mag1;
 
 	//  get fresnel factor at firn-air interface
-	// GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn[2], n_pol, ray1->nrf_iceside[3], vmmhz1m_fresneledonce, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel2, mag2);
 	GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn[2], n_pol, ray1->nrf_iceside[3], vmmhz1m_fresneledonce, showerProps, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel2, mag2);	
 	// use both fresnel and magnification factors at firn-air interface.  Notice that magnification factor is
 	//upside-down compared to what it is in the firn.
-	vmmhz1m_fresneledtwice=vmmhz1m_fresneledonce*fresnel2*mag2;
+	vmmhz1m_fresneledtwice = vmmhz1m_fresneledonce*fresnel2*mag2;
 
 	if (settings1.BORESIGHTS) {
 	  for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
@@ -2205,7 +2203,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       else {
 	askFreqGen.GetSpread(pnu, showerProps, (anita1->bwslice_min[2]+anita1->bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
 
-	// GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn[2], n_pol, ray1->nrf_iceside[4], vmmhz1m_max, emfrac, hadfrac, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);
 	GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn[2], n_pol, ray1->nrf_iceside[4], vmmhz1m_max, showerProps, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);	
 
 	vmmhz1m_fresneledtwice = vmmhz1m_max*fresnel1*mag1;  //  only the ice-air interface
@@ -2490,8 +2487,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         panel1->AddTperpendicular_polParallel(0.);
 
         for (int k=0;k<Anita::NFREQ;k++) {
-          if (bn1->WHICHPATH==4)
+          if (bn1->WHICHPATH==4){
             IntegrateBands(anita1, k, panel1, anita1->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
+	  }
         }
       }
       
@@ -2572,7 +2570,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
       anita1->rms_rfcm_e_single_event = 0;
-
 
       Vector n_eplane = constants::const_z;
       Vector n_hplane = -constants::const_y;

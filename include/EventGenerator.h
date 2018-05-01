@@ -495,7 +495,7 @@ namespace icemc {
     void Attenuate(IceModel *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const Position &posnu) const ;
     void Attenuate_down(IceModel *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const Position &rfexit2,  const Position &posnu,  const Position &posnu_down) const ;
     void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight) const;
-    void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceModel *antarctica) const;
+    void GetBalloonLocation(const Interaction *interaction1, const Ray *ray1, const Balloon *bn1, IceModel *antarctica) const;
     int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside) const;
 
     // @todo constify... needs some love to constify
