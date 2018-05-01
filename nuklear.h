@@ -4509,12 +4509,15 @@ nk_inv_sqrt(float number)
     return conv.f;
 }
 
+NK_INTERN float nk_sqrt(float x) __attribute__ ((unused)); // bvv: to suppress compiler warning that the function is not used.
+
 NK_INTERN float
 nk_sqrt(float x)
 {
     return x * nk_inv_sqrt(x);
 }
 
+NK_INTERN float nk_sin(float x) __attribute__ ((unused)); // bvv: to suppress compiler warning that the function is not used.
 NK_INTERN float
 nk_sin(float x)
 {
@@ -4529,6 +4532,7 @@ nk_sin(float x)
     return a0 + x*(a1 + x*(a2 + x*(a3 + x*(a4 + x*(a5 + x*(a6 + x*a7))))));
 }
 
+NK_INTERN float nk_cos(float x) __attribute__ ((unused)); // bvv: to supress compiler warning that the function is not used.
 NK_INTERN float
 nk_cos(float x)
 {
@@ -5717,6 +5721,7 @@ nk_murmur_hash(const void * key, int len, nk_hash seed)
 }
 
 #ifdef NK_INCLUDE_STANDARD_IO
+NK_INTERN char* nk_file_load(const char* path, nk_size* siz, struct nk_allocator *alloc) __attribute__ ((unused));
 NK_INTERN char*
 nk_file_load(const char* path, nk_size* siz, struct nk_allocator *alloc)
 {
@@ -15040,6 +15045,7 @@ NK_INTERN nk_size
 nk_progress_behavior(nk_flags *state, struct nk_input *in,
     struct nk_rect r, struct nk_rect cursor, nk_size max, nk_size value, int modifiable)
 {
+    modifiable = modifiable; // bvv: to silence compilers.
     int left_mouse_down = 0;
     int left_mouse_click_in_cursor = 0;
 

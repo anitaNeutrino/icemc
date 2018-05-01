@@ -38,6 +38,10 @@ struct game_state {
   TGraph *grFft;
   FFTWComplex *ZhsFft;
   TCanvas *cZhsFft;
+  double fwhm_xmin;
+  double fwhm_xmax;
+  double fwhm_xmaxval;
+  double fwhm_ymaxval;
 };
 
 extern const double pi;
@@ -67,21 +71,18 @@ static struct game_state *game_init()
   state->px1->cd();
   state->grZhsTimeE = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data());
   state->grZhsTimeE->Draw("AL");
-  double xmin; // = 183.95e+3;
-  double xmax; // = 183.98e+3;
-  double xmaxval;
-  double ymaxval;
   int ind_maxval;
-  bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), xmin, xmax, ind_maxval, xmaxval, ymaxval);
-  double vis_xmin = xmaxval - 20*(xmaxval - xmin);
-  double vis_xmax = xmaxval + 20*(xmax - xmaxval); 
+  bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), state->fwhm_xmin, state->fwhm_xmax, ind_maxval, state->fwhm_xmaxval, state->fwhm_ymaxval);
+  if (!fwhm_res) printf("FWHM was not successful\n");
+  double vis_xmin = state->fwhm_xmaxval - 20*(state->fwhm_xmaxval - state->fwhm_xmin);
+  double vis_xmax = state->fwhm_xmaxval + 20*(state->fwhm_xmax - state->fwhm_xmaxval); 
   int vis_xmin_bin = (vis_xmin - ZhsTimeStart) / ZhsTimeDelta;
   int vis_xmax_bin = (vis_xmax - ZhsTimeStart) / ZhsTimeDelta;
   int vis_nbins = vis_xmax_bin - vis_xmin_bin + 1;
   // This update is needed here to get coordinates for the lines marking FWHM:
   gPad->Update(); 
-  state->line_min = new TLine(xmin, gPad->GetUymin(), xmin, gPad->GetUymax());
-  state->line_max = new TLine(xmax, gPad->GetUymin(), xmax, gPad->GetUymax());
+  state->line_min = new TLine(state->fwhm_xmin, gPad->GetUymin(), state->fwhm_xmin, gPad->GetUymax());
+  state->line_max = new TLine(state->fwhm_xmax, gPad->GetUymin(), state->fwhm_xmax, gPad->GetUymax());
   state->line_min->Draw();
   state->line_max->Draw();
 
@@ -163,16 +164,9 @@ static void game_finalize(struct game_state *state)
 
 static void game_reload(struct game_state *state)
 {
-  // xmin, xmax: fwhm interval endpoints.
-  double xmin = 183.95e+3;
-  double xmax = 183.98e+3;
-  double xmaxval;
-  double ymaxval;
-  int ind_maxval;
-  bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), xmin, xmax, ind_maxval, xmaxval, ymaxval);
-  // vis_xmin, vis_xmax: which range to visualize, should encompass (xmin, xmax).
-  double vis_xmin = xmaxval - 200*(xmaxval - xmin);
-  double vis_xmax = xmaxval + 200*(xmax - xmaxval); 
+  // vis_xmin, vis_xmax: which range to visualize, should encompass (fwhm_xmin, fwhm_xmax).
+  double vis_xmin = state->fwhm_xmaxval - 200*(state->fwhm_xmaxval - state->fwhm_xmin);
+  double vis_xmax = state->fwhm_xmaxval + 200*(state->fwhm_xmax - state->fwhm_xmaxval); 
   int vis_xmin_bin = (vis_xmin - ZhsTimeStart) / ZhsTimeDelta;
   int vis_xmax_bin = (vis_xmax - ZhsTimeStart) / ZhsTimeDelta;
   int vis_nbins = vis_xmax_bin - vis_xmin_bin + 1;
@@ -217,8 +211,8 @@ static void game_reload(struct game_state *state)
   //   printf("ZhsFftInp[%d]: %11.8e\n", i, val);
   // }
 
-   double xmin_normal = -30;
-   double xmax_normal = +30;
+   double xmin_normal = -10;
+   double xmax_normal = +10;
    int N = vis_nbins;
    double dx = (xmax_normal - xmin_normal) / N;
     for (int i = 0; i < vis_nbins; i++){
@@ -255,6 +249,7 @@ static void game_reload(struct game_state *state)
 
 static void game_unload(struct game_state *state)
 {
+  state = state; // bvv: to silence compiler warnings.
   cout << "game unloaded" << endl;
 }
 
@@ -293,20 +288,9 @@ static bool game_step(struct game_state *state)
       // state->grFft->SetLineColor(op);
       nk_layout_row_dynamic(ctx, 25, 1);
       if (*ZhsTimePlotHalfWidth) {
-        printf("ZhsTimePlotHalfWidth is new.\n");
-        double xmin;
-        double xmax;
-        double xmaxval;
-        double ymaxval;
-        int ind_maxval;
-        bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), xmin, xmax, ind_maxval, xmaxval, ymaxval);
-        // vis_xmin, vis_xmax: which range to visualize, should encompass (xmin, xmax).
-
-        double vis_xmin = xmaxval - ZhsTimePlotHalfWidth*(xmaxval - xmin);
-        double vis_xmax = xmaxval + ZhsTimePlotHalfWidth*(xmax - xmaxval); 
-        int vis_xmin_bin = (vis_xmin - ZhsTimeStart) / ZhsTimeDelta;
-        int vis_xmax_bin = (vis_xmax - ZhsTimeStart) / ZhsTimeDelta;
-        int vis_nbins = vis_xmax_bin - vis_xmin_bin + 1;
+        // vis_xmin, vis_xmax: which range to visualize, should encompass (xmin, xmax):
+        double vis_xmin = state->fwhm_xmaxval - ZhsTimePlotHalfWidth*(state->fwhm_xmaxval - state->fwhm_xmin);
+        double vis_xmax = state->fwhm_xmaxval + ZhsTimePlotHalfWidth*(state->fwhm_xmax - state->fwhm_xmaxval); 
         printf("Waveform xmax - xmin: %5.3f, (%5.3f%%)\n", vis_xmax - vis_xmin, (vis_xmax - vis_xmin) / ZhsTimeDelta);
         state->grZhsTimeE->GetXaxis()->SetLimits(vis_xmin, vis_xmax);
         state->grZhsAlpha->GetXaxis()->SetLimits(vis_xmin, vis_xmax);

@@ -496,6 +496,7 @@ NK_INTERN void
 nk_xsurf_draw_image(XSurface *surf, short x, short y, unsigned short w, unsigned short h,
     struct nk_image img, struct nk_color col)
 {
+    col = col; // bvv: to silence compilers.
     XImageWithAlpha *aimage = (XImageWithAlpha *) img.handle.ptr;
     if (aimage){
         if (aimage->clipMask){
@@ -579,6 +580,7 @@ nk_xfont_create(Display *dpy, const char *name)
 NK_INTERN float
 nk_xfont_get_text_width(nk_handle handle, float height, const char *text, int len)
 {
+    height = height;
     XFont *font = (XFont*)handle.ptr;
     XRectangle r;
     if(!font || !text)
@@ -685,6 +687,7 @@ nk_xlib_copy(nk_handle handle, const char* str, int len)
 NK_API int
 nk_xlib_handle_event(Display *dpy, int screen, Window win, XEvent *evt)
 {
+    screen = screen; // bvv: to silence compiler warnings.
     struct nk_context *ctx = &xlib.ctx;
 
     /* optional grabbing behavior */
