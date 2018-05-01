@@ -58,7 +58,7 @@ void icemc::AskaryanFreqsGenerator::InitializeMedium() {
     SetAlphaMedium(ALPHASALT);
     SetRmMedium(RM_SALT);
     SetKeMedium(KE_SALT);          // constant in jaime's parameterization, in V/cm/MHz
-    SetKlMedium(KL_SALT);          //constant in jaime's parameterization
+    SetKlMedium(KL_SALT);          // constant in jaime's parameterization
     SetKdelta_Medium(KDELTA_SALT); // constant in jaime's parameterization
     SetKrMedium(KR_SALT);          // constant in jaime's parameterization
     SetBetaMedium(BETASALT);       // exponent, in jaime's parameterization
@@ -75,7 +75,7 @@ void icemc::AskaryanFreqsGenerator::InitializeMedium() {
     SetAlphaMedium(ALPHAICE);
     SetRmMedium(RM_ICE);
     SetKeMedium(KE_ICE);           // constant in jaime's parameterization, in V/cm/MHz
-    SetKlMedium(KL_ICE);           //constant in jaime's parameterization
+    SetKlMedium(KL_ICE);           // constant in jaime's parameterization
     SetKdelta_Medium(KDELTA_ICE);  // constant in jaime's parameterization
     SetKrMedium(KR_ICE);           // constant in jaime's parameterization
     SetBetaMedium(BETAICE);        // exponent, in jaime's parameterization
@@ -85,7 +85,6 @@ void icemc::AskaryanFreqsGenerator::InitializeMedium() {
 
  void icemc::AskaryanFreqsGenerator::Initialize() {
 
-  logscalefactor_taper=0.;
   JAIME_FACTOR=1.0;          // factor to multiply Jaime's parameterization for error analysis
 
   x0ice=0.403; 
@@ -387,7 +386,7 @@ double icemc::AskaryanFreqsGenerator::GetVmMHz1m(double pnu,double freq) const {
 } 
 
 
- void icemc::AskaryanFreqsGenerator::SetParameterization(int whichparameterization) {
+void icemc::AskaryanFreqsGenerator::SetParameterization(int whichparameterization) {
 
   WHICHPARAMETERIZATION=whichparameterization;
 }
@@ -398,12 +397,12 @@ double icemc::AskaryanFreqsGenerator::GetVmMHz1m(double pnu,double freq) const {
 
 
 void icemc::AskaryanFreqsGenerator::TaperVmMHz(double viewangle,
-					     double deltheta_em,
-					     double deltheta_had,
-					     double emfrac,
-					     double hadfrac,
-					     double& vmmhz1m,
-					     double& vmmhz1m_em_obs) {
+					       double deltheta_em,
+					       double deltheta_had,
+					       double emfrac,
+					       double hadfrac,
+					       double& vmmhz1m,
+					       double& vmmhz1m_em_obs) const {
 
   //--EM 
   double vmmhz1m_em=0;  // V/m/MHz at 1m due to EM component of shower
@@ -451,7 +450,7 @@ void icemc::AskaryanFreqsGenerator::TaperVmMHz(double viewangle,
     vmmhz1m_had=0.;
   }
 
-  logscalefactor_taper=log10((emfrac*vmmhz1m_em+hadfrac*vmmhz1m_had)/vmmhz1m);
+  // logscalefactor_taper=log10((emfrac*vmmhz1m_em+hadfrac*vmmhz1m_had)/vmmhz1m);
 
 
   //std::cout << "emfrac, vmmhz1m_em, hadfrac, vmmhz1m_had are " << emfrac << " " << vmmhz1m_em << " " << hadfrac << " " << vmmhz1m_had << "\n";

@@ -334,7 +334,7 @@ double heff_max=0.62639; // maximum value of the effective height based on anten
 double scalefactor_distance=0; // 1/r scalefactor
 double scalefactor_attenuation=0; //scalefactor due to attenuation in ice
 double MAX_ATTENLENGTH=1671;
-double maxtaper=0; // this is just for plotting - maximum you are ever off cerenkov cone while
+// double maxtaper=0; // this is just for plotting - maximum you are ever off cerenkov cone while
 //an event is detectable
 double dviewangle_deg=0; //!< deviation from the cherenkov angle
 
@@ -909,7 +909,7 @@ int main(int argc,  char **argv) {
   tree5->Branch("nuexitlength", &nuexitlength, "nuexitlength/D");
   tree5->Branch("nuexitice",  &nuexitice,  "nuexitice");
   tree5->Branch("vmmhz_max", &vmmhz_max, "vmmhz_max");
-  tree5->Branch("maxtaper", &maxtaper, "maxtaper");
+  // tree5->Branch("maxtaper", &maxtaper, "maxtaper");
   tree5->Branch("inu", &inu, "inu/I");
   tree5->Branch("whichray", &whichray, "whichray/I");
   tree5->Branch("pnu", &pnu, "pnu/D");
@@ -2652,9 +2652,9 @@ int main(int argc,  char **argv) {
           // just want to see the maximum effect of viewing angle being off cerenkov cone
           // should be at highest frequency
           // just for plotting
-          maxtaper=-1000;
-          if (sig1->logscalefactor_taper>maxtaper)
-            maxtaper=sig1->logscalefactor_taper;
+          // maxtaper=-1000;
+          // if (sig1->logscalefactor_taper>maxtaper)
+          //   maxtaper=sig1->logscalefactor_taper;
 
           if (interaction1->nuflavor=="nue")        pdgcode = 12;
           else if (interaction1->nuflavor=="numu")  pdgcode = 14;

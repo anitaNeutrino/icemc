@@ -34,7 +34,7 @@ namespace icemc{
     double X0_DEPTH;                  // density at the interaction depth
     double NMEDIUM_RECEIVER;          // index of refraction at receiver
     double RHOMEDIUM;                 // density of medium
-    double logscalefactor_taper;
+    // double logscalefactor_taper;
     static const double RHOICE;       // density of ice (kg/m**3)
     static const double RHOAIR;       // density of air (kg/m**3)
     static const double RHOH20;       // density of water (kg/m**3) 
@@ -48,10 +48,10 @@ namespace icemc{
     AskaryanFreqsGenerator(); ///< Default constructor
     
     void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had,
-		    double emfrac, double hadfrac, double& vmmhz1m, double& vmmhz_em);
+		    double emfrac, double hadfrac, double& vmmhz1m, double& vmmhz_em) const;
 
     ///@todo make this more elegent once you understand it better, (move to AskaryanFreqs class and maybe put the loop over k inside the function)
-    void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had, double emfrac, double hadfrac, AskaryanFreqs& radioSignal, int k, double& vmmhz1m_em_obs) {
+    void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had, double emfrac, double hadfrac, AskaryanFreqs& radioSignal, int k, double& vmmhz1m_em_obs) const {
       TaperVmMHz(viewangle,  deltheta_em, deltheta_had,  emfrac, hadfrac, radioSignal.vmmhz[k],  vmmhz1m_em_obs);
     }
     double GetVmMHz1m(double pnu, double freq) const;

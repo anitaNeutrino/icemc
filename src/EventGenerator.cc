@@ -129,7 +129,7 @@ void icemc::EventGenerator::IntegrateBands(Anita *anita1, int k, Screen *panel1,
 
 
 
-void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, AskaryanFreqsGenerator *askFreqGen, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
+void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, const AskaryanFreqsGenerator *askFreqGen, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
 
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
@@ -642,7 +642,7 @@ double icemc::EventGenerator::GetAverageVoltageFromAntennasHit(const Settings *s
 //end GetAverageVoltageFromAntennasHit()
 
 
-icemc::Vector icemc::EventGenerator::GetPolarization(const Vector &nnu, const Vector &nrf2_iceside, const int& inu) {
+icemc::Vector icemc::EventGenerator::GetPolarization(const Vector &nnu, const Vector &nrf2_iceside, int inu) {
   // Want to find a unit vector in the same plane as nnu and n_refr,
   // but perpendicular to n_refr,  pointing away from nnu.
 
@@ -817,7 +817,7 @@ int icemc::EventGenerator::GetRayIceSide(const Vector &n_exit2rx,  const Vector 
 
 
 
-int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *interaction1, const Vector &refr,  double deltheta_em,  double deltheta_had, double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  AskaryanFreqsGenerator *askFreqGen,  Position posnu,  Anita *anita1,  Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) {
+int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *interaction1, const Vector &refr,  double deltheta_em,  double deltheta_had, double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  const AskaryanFreqsGenerator *askFreqGen,  Position posnu,  Anita *anita1,  Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) {
 
   // in the specular (settings1->ROUGHNESS = 0) this function sets the neutrino direction according to a selection routine based on veiweing within the Cerenkov cone
 
@@ -2356,10 +2356,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           // just want to see the maximum effect of viewing angle being off cerenkov cone
           // should be at highest frequency
           // just for plotting
-          maxtaper=-1000;
-          if (askFreqGen.logscalefactor_taper>maxtaper){
-            maxtaper=askFreqGen.logscalefactor_taper;
-	  }
+          // maxtaper=-1000;
+          // if (askFreqGen.logscalefactor_taper>maxtaper){
+          //   maxtaper=askFreqGen.logscalefactor_taper;
+	  // }
 	  
           pdgcode = interaction1->getPdgCode();
 
@@ -3240,7 +3240,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,
 					   Ray* ray1, Screen* panel1, IceModel* antarctica,
-					   Balloon* bn1, AskaryanFreqsGenerator* askFreqGen, Anita* anita1){
+					   Balloon* bn1, const AskaryanFreqsGenerator* askFreqGen, Anita* anita1){
   
   //(vector) ray1->nsurf_rfexit:  surface normal at RFexit position
   //(pos)        ->rfexit[2]:     final iterated position of RF exit
