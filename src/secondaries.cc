@@ -40,6 +40,7 @@
 #include "TSpline.h"
 
 #include "EnvironmentVariable.h"
+#include "IcemcLog.h"
 
 const string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const string ICEMC_SECONDARY_DIR=ICEMC_SRC_DIR+"/secondary/";
@@ -408,21 +409,21 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, const string&
 
 
 
-int icemc::Secondaries::GetEMFrac(const Settings *settings1,string nuflavor,
-				  string current,
-				  string taudecay,	      
-				  double y,
-				  TH1F *hy,
-				  double pnu,				  
-				  int inu,
+icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
+						      const string& nuflavor,
+						      const string& current,
+						      const string& taudecay,
+						      double y,
+						      TH1F *hy,
+						      double pnu,
+						      int inu,
+						      // double& emfrac,
+						      // double& hadfrac,
+						      // int& n_interactions,
+						      int taumodes1) {
 
 
-				  double& emfrac,
-				  double& hadfrac,
-				  int& n_interactions, int taumodes1) {
-
-
-
+  ShowerProperties sp;
 
   if (current=="cc"){
     plepton=(1.-y)*pnu;
@@ -431,76 +432,79 @@ int icemc::Secondaries::GetEMFrac(const Settings *settings1,string nuflavor,
     plepton=0.;
   }
 
-  
+
+  const double negligible = 1e-10;
   if (nuflavor=="nue" && current=="cc") {
-    emfrac=1.-y;
-    hadfrac=y;
+    sp.emFrac=1.-y;
+    sp.hadFrac=y;
   }
   else if(nuflavor=="numu" && current=="cc") {
-    emfrac=1.E-10;
-    hadfrac=y;
+    sp.emFrac=negligible;
+    sp.hadFrac=y;
   }
   else if(nuflavor=="nutau" && current=="cc") {
     // behaves like a muon
     if(taumodes1 ==1){//taumodes==1; tau created somewhere in rock and decays at posnu.
-      this->GetEMFracDB(emfrac,hadfrac);
+      this->GetEMFracDB(sp.emFrac,sp.hadFrac);
     }
     else if (taumodes1 == 0){
-      emfrac=1.E-10;
-      hadfrac=y;
+      sp.emFrac=negligible;
+      sp.hadFrac=y;
     }
   }
   else if (current=="nc") {
-    emfrac=1.E-10;
-    hadfrac=y;
+    sp.emFrac=negligible;
+    sp.hadFrac=y;
   }
 
 
-  em_secondaries_max = emfrac; // initialize search for maximum signal among primary, secondary interactions.
-  had_secondaries_max = hadfrac;
+  em_secondaries_max = sp.emFrac; // initialize search for maximum signal among primary, secondary interactions.
+  had_secondaries_max = sp.hadFrac;
 
-  
-  
   if (SECONDARIES==1 && current=="cc") {
 
     while (1) {
 
-      GetSecondaries(settings1,nuflavor,plepton,em_secondaries_max,had_secondaries_max,n_interactions,hy); // find how much em and hadronic energies comes from secondary interactions.  keep picking until you get a bunch of secondary interactions that conserve energy
+      // find how much em and hadronic energies comes from secondary interactions.
+      // keep picking until you get a bunch of secondary interactions that conserve energy
+      GetSecondaries(settings1,nuflavor,plepton,em_secondaries_max,had_secondaries_max,sp.nInteractions,hy); 
 
       if (em_secondaries_max+had_secondaries_max<=plepton*(1.+1.E-5)) // if conserves energy, break.
 	break;
       else {
 	secondary_e_noncons++; //Record how many times we come up with something that doesn't conserve energy
-	em_secondaries_max=emfrac;
-	had_secondaries_max=hadfrac;
+	em_secondaries_max=sp.emFrac;
+	had_secondaries_max=sp.hadFrac;
       } //else
     } //while(1)
 
-    if ((em_secondaries_max+had_secondaries_max)>(emfrac+hadfrac)*pnu) { // if maximum signal from secondaries is larger than
+    if ((em_secondaries_max+had_secondaries_max)>(sp.sumFrac())*pnu) { // if maximum signal from secondaries is larger than
                                                                          // signal from primary interaction
-      emfrac=em_secondaries_max/pnu; // then use that one.
-      hadfrac=had_secondaries_max/pnu;
-      if (emfrac <= 1.E-10)
-	emfrac=1.E-10;
-      if (hadfrac<= 1.E-10)
-	hadfrac=1.E-10;
+      sp.emFrac=em_secondaries_max/pnu; // then use that one.
+      sp.hadFrac=had_secondaries_max/pnu;
+      if (sp.emFrac <= negligible){
+	sp.emFrac=negligible;
+      }
+      if (sp.hadFrac<= negligible){
+	sp.hadFrac=negligible;
+      }
     } //if
   } //if (charged current, secondaries on)
 
-  if (nuflavor=="numu" && current=="cc" && n_interactions==0)
-    cout << "Look at this one.  inu is " << inu << "\n";
-  
+  if (nuflavor=="numu" && current=="cc" && sp.nInteractions==0){
+    Log() << icemc::warning << "Look at this one.  inu is " << inu << "\n";
+  }  
 
-
-  if ((y<0 || y>1) && y != -999.) 
-    cout <<  "illegal y=" << y << "\n";
-          
-  if (emfrac+hadfrac>1.00001) {
-    cout << "error emfrac,hadfrac=" << emfrac << " " << hadfrac << " " << emfrac+hadfrac << "\n";
-    cout << "nuflavor,taudecay=" << nuflavor << " " << taudecay << "\n";
-  } //if
+  if ((y<0 || y>1) && y != -999.) {
+    Log() << icemc::error <<  "Illegal value of y, y =" << y << "\n";
+  }
   
-  return 1;
+  if (sp.sumFrac()>1.00001) {
+    Log() << icemc::error << "emFrac,hadfrac=" << sp.emFrac << "," << sp.hadFrac << ": sum = " << sp.sumFrac() << "\n";
+    Log() << "nuflavor,taudecay=" << nuflavor << " " << taudecay << "\n";
+  }
+  
+  return sp;
 
 } //GetEMFrac
 
@@ -519,11 +523,13 @@ void icemc::Secondaries::InitTauola() {
   return;
 }//InitTauola
 
-void icemc::Secondaries::GetTauDecay(string nuflavor,string current,string& taudecay,double& emfrac_db,double& hadfrac_db) {
- 
-  if (!(nuflavor=="nutau" || current=="cc" || interestedintaus))
-    return;
 
+void icemc::Secondaries::GetTauDecay(const string& nuflavor, const string& current, string& taudecay, double& emfrac_db, double& hadfrac_db) {
+ 
+  if (!(nuflavor=="nutau" || current=="cc" || interestedintaus)){
+    return;
+  }
+  
   // if nu_tau choose tau decay type
   
   double rnd = gRandom->Rndm();
@@ -557,7 +563,7 @@ void icemc::Secondaries::GetTauDecay(string nuflavor,string current,string& taud
 //GetEMFracDB()
 //Gets the emfrac_db and hadfrac_db for a doublebang
 
-void icemc::Secondaries::GetEMFracDB(double& emfrac_db, double& hadfrac_db) {
+void icemc::Secondaries::GetEMFracDB(double& emfrac_db, double& hadfrac_db) const {
 
 
   double rnd = gRandom->Rndm();

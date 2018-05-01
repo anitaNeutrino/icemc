@@ -149,16 +149,16 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   
 
 
-  initTree(&viewangletree, "viewangletree", "viewangletree", fIceFinal); // signal as it is produced at the interaction
-  viewangletree.Branch("dviewangle_deg", &uhen->dviewangle_deg, "dviewangle_deg/D");
-  viewangletree.Branch("emfrac", &uhen->emfrac, "emfrac/D");
-  viewangletree.Branch("hadfrac", &uhen->hadfrac, "hadfrac/D");
-  viewangletree.Branch("deltheta_em_max", &uhen->deltheta_em_max, "deltheta_em_max/D");
-  viewangletree.Branch("deltheta_had_max", &uhen->deltheta_had_max, "deltheta_had_max/D");
-  viewangletree.Branch("theta_threshold_deg", &uhen->theta_threshold_deg, "theta_threshold_deg/D");
-  viewangletree.Branch("dnutries", &uhen->interaction1->dnutries, "dnutries/D");
-  viewangletree.Branch("viewangle", &uhen->viewangle, "viewangle/D");
-  viewangletree.Branch("chord", &uhen->interaction1->chord, "chord/D");
+  // initTree(&viewangletree, "viewangletree", "viewangletree", fIceFinal); // signal as it is produced at the interaction
+  // viewangletree.Branch("dviewangle_deg", &uhen->dviewangle_deg, "dviewangle_deg/D");
+  // viewangletree.Branch("emfrac", &uhen->emfrac, "emfrac/D");
+  // viewangletree.Branch("hadfrac", &uhen->hadfrac, "hadfrac/D");
+  // viewangletree.Branch("deltheta_em_max", &uhen->deltheta_em_max, "deltheta_em_max/D");
+  // viewangletree.Branch("deltheta_had_max", &uhen->deltheta_had_max, "deltheta_had_max/D");
+  // viewangletree.Branch("theta_threshold_deg", &uhen->theta_threshold_deg, "theta_threshold_deg/D");
+  // viewangletree.Branch("dnutries", &uhen->interaction1->dnutries, "dnutries/D");
+  // viewangletree.Branch("viewangle", &uhen->viewangle, "viewangle/D");
+  // viewangletree.Branch("chord", &uhen->interaction1->chord, "chord/D");
 
   //Filled just after Getchord,  where we find the neutrino's path through the Earth
   initTree(&nupathtree, "nupathtree", "nupathtree", fIceFinal);
@@ -206,9 +206,9 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
 
   finaltree.Branch("pnu", &uhen->pnu, "pnu/D");
   finaltree.Branch("elast_y", &uhen->elast_y, "elast_y/D");
-  finaltree.Branch("emfrac", &uhen->emfrac, "emfrac/D");
-  finaltree.Branch("hadfrac", &uhen->hadfrac, "hadfrac/D");
-  finaltree.Branch("sumfrac", &uhen->sumfrac, "sumfrac/D");
+  // finaltree.Branch("emfrac", &uhen->emfrac, "emfrac/D");
+  // finaltree.Branch("hadfrac", &uhen->hadfrac, "hadfrac/D");
+  // finaltree.Branch("sumfrac", &uhen->sumfrac, "sumfrac/D");
   finaltree.Branch("nuflavor", &uhen->nuflavorint2, "nuflavorint/I");//1=electron,  2=muon,  3=tau
   finaltree.Branch("current", &uhen->currentint2, "currentint/I");//0=charged current,  1=neutral current
   finaltree.Branch("logchord",  &uhen->logchord2,  "logchord/D");
@@ -309,7 +309,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   finaltree.Branch("ant_normal0", &uhen->ant_max_normal0_array, "ant_max_normal0_array[3]/D");
   finaltree.Branch("ant_normal1", &uhen->ant_max_normal1_array, "ant_max_normal1_array[3]/D");
   finaltree.Branch("ant_normal2", &uhen->ant_max_normal2_array, "ant_max_normal2_array[3]/D");
-  finaltree.Branch("vmmhz1m_visible", &uhen->vmmhz1m_visible, "vmmhz1m_visible/D");
+  // finaltree.Branch("vmmhz1m_visible", &uhen->vmmhz1m_visible, "vmmhz1m_visible/D");
   finaltree.Branch("freq_bins", &uhen->freq_bins, "freq_bins/I");
   // finaltree.Branch("vmmhz", &uhen->vmmhz, "vmmhz[freq_bins]/D");@todo TEMPORARILY COMMENT OUT DURING REFACTOR, if abandon refactor then uncomment
 

@@ -25,6 +25,22 @@ namespace icemc{
   class Settings;
   class Primaries;
 
+
+  /**
+   * @class ShowerProperties
+   * @brief Shower properties needed by other classes
+   */
+
+  class ShowerProperties {
+  public:
+    ShowerProperties() : emFrac(0), hadFrac(0), nInteractions(1) {;}
+    double sumFrac() const {return emFrac + hadFrac;}
+    double emFrac;
+    double hadFrac;
+    int nInteractions;
+  };
+  
+
   //! Secondary interactions
   class Secondaries {
 
@@ -162,31 +178,30 @@ namespace icemc{
     void GetSecondaries(const Settings *settings1, const std::string& ,double, double&, double&, int&, TH1F*);
 
     void InitTauola();
-    void GetTauDecay(std::string nuflavor,std::string current,std::string& taudecay, double& emfrac_db, double& hadfrac_db);
+    void GetTauDecay(const std::string& nuflavor, const std::string& current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);
 
-    void GetEMFracDB(double& emfrac_db, double& hadfrac_db);
+    void GetEMFracDB(double& emfrac_db, double& hadfrac_db) const;
     double GetDBViewAngle(const icemc::Vector &refr, const icemc::Vector &nnu);
     //void GetFirstBang(const Position &r_in, const icemc::Vector &nnu, Position &posnu, double len_int_kgm2, double d1, double &nuentrancelength);
     double NFBWeight(double ptau, double taulength);
 
-    int GetEMFrac(const Settings *settings1,
-		  std::string nuflavor,
-		  std::string current,
-		  std::string taudecay,
-		  double y,
-		  TH1F *hy,
-		  double pnu,
-		  int inu,
-
-		  double& emfrac,
-		  double& hadfrac,
-		  int& n_interactions, int taumodes1);
+    ShowerProperties GetEMFrac(const Settings *settings1,
+			       const std::string& nuflavor,
+			       const std::string& current,
+			       const std::string& taudecay,
+			       double y,
+			       TH1F *hy,
+			       double pnu,
+			       int inu,			       
+			       // double& emfrac,
+			       // double& hadfrac,
+			       // int& n_interactions,
+			       int taumodes1);
 
     bool secondbang;
     static const bool interestedintaus=false;
 
-    //string flavors[3]={"nue","numu","nutau"}; // the gps path of the anita-lite flight
-    std::string flavors[3]; // the gps path of the anita-lite flight
+    std::string flavors[3];
 
   }; //class Secondaries
 }

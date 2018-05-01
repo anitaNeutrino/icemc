@@ -54,7 +54,7 @@ namespace icemc {
     TTree mytaus_tree;
     TTree finaltree;		///< finaltree filled for all events that pass // move to pass tree?
     TTree nupathtree;
-    TTree viewangletree;	///< signal as it is produced at the interaction
+    // TTree viewangletree;	///< signal as it is produced at the interaction
     // TTree balloontree;		///< filled for all events
     
 

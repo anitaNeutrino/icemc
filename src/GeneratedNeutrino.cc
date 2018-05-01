@@ -21,8 +21,8 @@ icemc::GeneratedNeutrino::~GeneratedNeutrino(){
 
 
 
-icemc::PassingNeutrino::PassingNeutrino(const icemc::GeneratedNeutrino& gNu, const icemc::AskaryanFreqs& askFreqs)
-  : GeneratedNeutrino(gNu), askaryanFreqs(askFreqs)
+icemc::PassingNeutrino::PassingNeutrino(const icemc::GeneratedNeutrino& gNu, const icemc::AskaryanFreqs& askFreqs, const icemc::ShowerProperties& sp)
+  : GeneratedNeutrino(gNu), askaryanFreqs(askFreqs), showerProps(sp)
 {
   
 }

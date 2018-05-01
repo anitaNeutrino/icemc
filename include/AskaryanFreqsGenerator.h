@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iostream>
 #include "AskaryanFreqs.h"
+#include "secondaries.hh"
 #include "IcemcLog.h"
 
 
@@ -50,10 +51,17 @@ namespace icemc{
     void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had,
 		    double emfrac, double hadfrac, double& vmmhz1m, double& vmmhz_em) const;
 
-    ///@todo make this more elegent once you understand it better, (move to AskaryanFreqs class and maybe put the loop over k inside the function)
-    void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had, double emfrac, double hadfrac, AskaryanFreqs& radioSignal, int k, double& vmmhz1m_em_obs) const {
-      TaperVmMHz(viewangle,  deltheta_em, deltheta_had,  emfrac, hadfrac, radioSignal.vmmhz[k],  vmmhz1m_em_obs);
+    void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had,
+		    const ShowerProperties& sp, double& vmmhz1m, double& vmmhz_em) const {
+      TaperVmMHz(viewangle, deltheta_em, deltheta_had,
+		 sp.emFrac, sp.hadFrac, vmmhz1m, vmmhz_em);
     }
+
+    ///@todo make this more elegent once you understand it better, (move to AskaryanFreqs class and maybe put the loop over k inside the function)
+    void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had, const ShowerProperties& sp, AskaryanFreqs& radioSignal, int k) const {
+      TaperVmMHz(viewangle,  deltheta_em, deltheta_had,  sp, radioSignal.vmmhz[k], radioSignal.vmmhz_em[k]);
+    }
+    
     double GetVmMHz1m(double pnu, double freq) const;
     AskaryanFreqs generateAskaryanFreqs(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max) const;
     void GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max,double *vmmhz,int nfreq) const;
@@ -66,6 +74,11 @@ namespace icemc{
 
     void GetSpread(double pnu, double emfrac, double hadfrac, double freq,
 		   double& deltheta_em_max, double& deltheta_had_max) const;
+    
+    void GetSpread(double pnu, const ShowerProperties& sp, double freq,
+		   double& deltheta_em_max, double& deltheta_had_max) const{
+      GetSpread(pnu, sp.emFrac,  sp.hadFrac, freq, deltheta_em_max, deltheta_had_max);
+    }
  
 
     void SetMedium(int medium) {

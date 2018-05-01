@@ -3,17 +3,23 @@
 #include "anita.hh"
 
 icemc::AskaryanFreqs::AskaryanFreqs()
-  :  vmmhz(Anita::NFREQ, 0)
+  :  vmmhz(Anita::NFREQ, 0), vmmhz_em(Anita::NFREQ, 0)
 {
   
   
 }
 
 
-icemc::AskaryanFreqs::AskaryanFreqs(int nf, const double* vmmhz_input)
+icemc::AskaryanFreqs::AskaryanFreqs(int nf, const double* vmmhz_input, const double* vmmhz_em_input)
   :  vmmhz(vmmhz_input, vmmhz_input + nf)
 {
   
+  if(vmmhz_em_input){
+    vmmhz_em.assign(vmmhz_em_input, vmmhz_em_input + nf);
+  }
+  else{
+    vmmhz_em.assign(nf, 0);
+  }
   
 }
 

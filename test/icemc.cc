@@ -1829,8 +1829,11 @@ int main(int argc,  char **argv) {
 
       // get fraction of shower that is electromagnetic.
       // pi^0's are counted as hadronic.
-      sec1->GetEMFrac(settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
-
+      icemc::ShowerProperties sp = sec1->GetEMFrac(settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, hy, pnu, inu,tauweighttrigger);
+      emfrac= sp.emFrac;
+      hadfrac = sp.hadFrac;
+      n_interactions = sp.nInteractions;
+	
       if (emfrac+hadfrac>1.000001) {
         cout << "Warning:  " << inu << " " << emfrac+hadfrac << "\n";
       }

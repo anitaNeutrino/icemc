@@ -9,6 +9,7 @@
 #include "earthmodel.hh"
 #include "icemodel.hh"
 #include "Primaries.h"
+#include "IcemcLog.h"
 #include "counting.hh"
 
 #include <cmath>
@@ -156,9 +157,9 @@ icemc::Primaries::~Primaries(){//default deconstructor
 int icemc::Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,int nu_nubar,int currentint){
   // calculate cross section
   if (pnu<mine[settings1->SIGMAPARAM] || pnu>maxe[settings1->SIGMAPARAM]) {
-    std::cout <<  "Need a parameterization for this energy region.\n";
+    Log() <<  icemc::error << "Need a parameterization for this energy region.\n";
     return 0;
-  } //if
+  }
   else {
    
     //nu=0, nubar=1
@@ -281,12 +282,15 @@ void  icemc::Interaction::setNuFlavor(Primaries *primary1,const Settings *settin
 
   if (settings1->MINRAY==whichray) {
     // only increment neutrino flavor on first ray so you don't count twice
-    if (nuflavor=="nue")
+    if (nuflavor=="nue"){
       counting1->nnu_e++;      
-    if (nuflavor=="numu")
+    }
+    else if (nuflavor=="numu"){
       counting1->nnu_mu++;      
-    if (nuflavor=="nutau")
-      counting1->nnu_tau++;      
+    }
+    else if (nuflavor=="nutau"){
+      counting1->nnu_tau++;
+    }
   }
       
 

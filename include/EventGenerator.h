@@ -10,6 +10,7 @@
 #include "Constants.h"
 #include "VoltsRX.h"
 #include "CommandLineOpts.h"
+#include "secondaries.hh"
 
 
 namespace icemc {
@@ -262,7 +263,7 @@ namespace icemc {
     Vector ant_max_normal0; //Vector normal to the face of the antenna with the maximum signal for a single neutrino,  top layer
     Vector ant_max_normal1; //Vector normal to the face of the antenna with the maximum signal for a single neutrino,  middle layer
     Vector ant_max_normal2; //Vector normal to the face of the antenna with the maximum signal for a single neutrino,  bottom layer
-    double vmmhz1m_visible = 0; //Actual V/m/Mhz at 1m
+    // double vmmhz1m_visible = 0; //Actual V/m/Mhz at 1m
     int freq_bins = Anita::NFREQ; //Because the compiler objected to using the const directly
     
     double total_kgm2 = 0; // output of Getchord
@@ -331,7 +332,7 @@ namespace icemc {
     double vmmhz1m_fresneledtwice=0; // above,  after fresnel factor applied for firn
 
     // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
-    double vmmhz_em[Anita::NFREQ];
+    // double vmmhz_em[Anita::NFREQ];
     double vmmhz_min_thatpasses=1000;
     double vmmhz_min=0;   // minimum of the above array
     double vmmhz_max=0;                        // maximum of the above array
@@ -340,9 +341,9 @@ namespace icemc {
     double deltheta_em_mid2, deltheta_had_mid2;     // widths of cones for the mid2 band
 
     // shower properties
-    double emfrac, hadfrac, sumfrac;               // em and had fractions
-    int n_interactions=1;           // count number of interactions for this event,  including secondaries.
-    double emfrac_db, hadfrac_db;
+    // double emfrac, hadfrac, sumfrac;               // em and had fractions
+    // int n_interactions=1;           // count number of interactions for this event,  including secondaries.
+    // double emfrac_db, hadfrac_db; //db stands for "double bang"
     int nuflavorint2;
     double costheta_nutraject2;
     double phi_nutraject2;
@@ -471,7 +472,7 @@ namespace icemc {
 
     UInt_t eventNumber;
 
-    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, const AskaryanFreqsGenerator* askFreqGen, Anita* anita1);
+    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, const AskaryanFreqsGenerator* askFreqGen, Anita* anita1, const ShowerProperties& showerProps);
     
     void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE);
  
@@ -505,9 +506,12 @@ namespace icemc {
 
     int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside);
 
-    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  const AskaryanFreqsGenerator* askFreqGen,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
+    // int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  double emfrac,  double hadfrac,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  const AskaryanFreqsGenerator* askFreqGen,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);
+    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  const ShowerProperties& sp,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  const AskaryanFreqsGenerator* askFreqGen,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold);    
 
-    void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  double emfrac,  double hadfrac,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag);
+    // void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  double emfrac,  double hadfrac,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag);
+
+    void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  const ShowerProperties& ,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag);    
 
     double GetViewAngle(const Vector &nrf2_iceside,  const Vector &nnu);
     int TIR(const Vector &n_surf,  const Vector &nrf2_iceside,  double N_IN,  double N_OUT);

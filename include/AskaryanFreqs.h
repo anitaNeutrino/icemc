@@ -31,13 +31,13 @@ namespace icemc {
     AskaryanFreqs();
 
     /** 
-     * Constructor from c-style array
+     * Constructor from c-style array(s)
      * 
      * @param nf is the number of frequencies
      * @param vmmhz_input points to the first element of an array of length nf
+     * @param vmmz_em_input optional pointer to an array of length nf, just the electromagnetic shower contribution to the askaryan frequencies
      */
-    AskaryanFreqs(int nf, const double* vmmhz_input);
-
+    AskaryanFreqs(int nf, const double* vmmhz_input, const double* vmmz_em_input = NULL);
 
     /** 
      * Access the i-th element of the frequency magnitudes of the signal. Does a bounds check.
@@ -54,8 +54,7 @@ namespace icemc {
      */
     double max_element() const {
       return *std::max_element(vmmhz.begin(), vmmhz.end());
-    }
-
+    }    
 
     /** 
      * @brief Get the smallest value in the frequency array 
@@ -68,6 +67,7 @@ namespace icemc {
   private:
 
     std::vector<double> vmmhz; ///< Binned frequencies in V/m/MHz  (Volts per meter per MHz)
+    std::vector<double> vmmhz_em; ///< Just from the EM component of the shower,  also binned frequencies in V/m/MHz  (Volts per meter per MHz)    
 
   };
 
