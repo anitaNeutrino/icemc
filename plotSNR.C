@@ -10,8 +10,8 @@ void plotSNR(){
   string path = "/datapool/software/anitaBuildTool/build/components/icemc/outputs";
 
   // Change first and last run number appropriately
-  int firstRun = 10;
-  int lastRun  = 250;
+  int firstRun = 321;
+  int lastRun  = 348;
 
 
   // Define TChains for the head and truth Trees
@@ -56,7 +56,7 @@ void plotSNR(){
     tTrue->GetEntry(ientry);
 
     // Get SNR value at Digitizer (change V to H in case of using HPOL)
-    snr = truth->maxSNRAtDigitizerV;
+    snr = truth->maxSNRAtDigitizerH;
     if (snr>snrmax) snr=snrmax*0.9999;
     
     hDenom->Fill(snr, 1);
@@ -64,7 +64,7 @@ void plotSNR(){
     // if there is a trigger add the event to the numerator
     // NB l3TrigPattern is for VPOL
     //    l3TrigPatternH is for HPOL
-    if (header->l3TrigPattern>0)   hNum->Fill(snr, 1);
+    if (header->l3TrigPatternH>0)   hNum->Fill(snr, 1);
   
     // cout << header->eventNumber << " " << truth->maxSNRAtDigitizerH << " " << 1 << endl;
   }
