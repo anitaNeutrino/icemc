@@ -19,9 +19,10 @@
 #include "nuklear_xlib.h"
 #include "buffer.hh"
 
-// extern struct nk_context *gctx;
 extern struct xlibstruct *gxlib;
+struct nk_context *ctx = &(gxlib->ctx);
 
+enum RunMode { m_init, m_reload, m_step, NRunModes };
 
 using namespace std;
 
@@ -42,6 +43,11 @@ struct game_state {
   double fwhm_xmax;
   double fwhm_xmaxval;
   double fwhm_ymaxval;
+  double vis_xmin;
+  double vis_xmax;
+  int vis_xmin_bin;
+  int vis_xmax_bin;
+  int vis_nbins;
 };
 
 extern const double pi;
@@ -61,54 +67,105 @@ void property_int(struct nk_context* ctx, const char *name, int min, bvv::TBuffe
   buf = val;
 }
 
+void property_double(struct nk_context* ctx, const char *name, double min, bvv::TBuffer <double> &buf, double max, double step, float inc_per_pixel){
+  double val = buf; 
+  nk_property_double(ctx, name, min, &val, max, step, inc_per_pixel);
+  buf = val;
+}
+
+void PlotWaveform(struct game_state *state, RunMode mode, struct nk_context *ctx){
+  if (mode == m_init) {
+    state->cZhsEAndAlpha = new TCanvas();
+    state->px1 = new TPad("px1","",0,0,1,1);
+    state->px1->Draw();
+    state->px1->cd();
+    state->grZhsTimeE = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data());
+    state->grZhsTimeE->Draw("AL");
+    int ind_maxval;
+    bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), state->fwhm_xmin, state->fwhm_xmax, ind_maxval, state->fwhm_xmaxval, state->fwhm_ymaxval);
+    if (!fwhm_res) printf("FWHM was not successful\n");
+
+    // This update is needed here to get coordinates for the lines marking FWHM:
+    gPad->Update(); 
+    state->line_min = new TLine(state->fwhm_xmin, gPad->GetUymin(), state->fwhm_xmin, gPad->GetUymax());
+    state->line_max = new TLine(state->fwhm_xmax, gPad->GetUymin(), state->fwhm_xmax, gPad->GetUymax());
+    state->line_min->Draw();
+    state->line_max->Draw();
+
+    // Transparent panel on the top of px1:
+    state->px2 = new TPad("px2","",0,0,1,1);
+    state->px2->SetFillStyle(4000);
+    state->px2->SetFrameFillStyle(0);
+    state->px2->Draw();
+    state->px2->cd();
+
+    state->grZhsAlpha = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsAlpha.data());
+  
+    state->grZhsAlpha->Draw("ALY+");
+    state->legend = new TLegend(0.1,0.8,0.3,0.9);
+    state->legend->AddEntry(state->grZhsTimeE, "E_{proj}","l");
+    state->legend->AddEntry(state->grZhsAlpha, "pol. angle","l");
+    state->legend->Draw();
+  }
+
+  if (mode == m_reload) {
+    TGaxis::SetExponentOffset(0.02, -0.04, "x");
+
+    state->grZhsTimeE->SetLineColor(kRed);
+    state->grZhsTimeE->SetLineWidth(2);
+    state->grZhsTimeE->GetXaxis()->SetTitle("Time [ns]");
+    state->grZhsTimeE->GetYaxis()->SetTitle("E [V/m]");
+
+    state->grZhsAlpha->SetLineColor(kBlue);
+    state->grZhsAlpha->SetLineWidth(2);
+    state->grZhsAlpha->GetHistogram()->SetMaximum(180);
+    state->grZhsAlpha->GetHistogram()->SetMinimum(0);
+    state->legend->SetX1NDC(0.12);
+    state->legend->SetX2NDC(0.3);
+    state->legend->SetY1NDC(0.75);
+  }
+
+  static bvv::TBuffer <int> ZhsTimePlotHalfWidth(100);
+  static bvv::TBuffer <double> ZhsTimePlotY2NDC(0.85);
+  if (mode == m_step) {
+    nk_layout_row_dynamic(ctx, 25, 1);
+    property_int(ctx, "Plt wid: ", 0, ZhsTimePlotHalfWidth, 2000 /*max*/, 10 /*increment*/, 1.0 /*sensitivity*/);
+    property_double(ctx, "Y2NDC: ", 0.0, ZhsTimePlotY2NDC, 1.0 /*max*/, 0.02 /*increment*/, 0.002 /*sensitivity*/);
+  }
+
+  if (mode == m_reload || *ZhsTimePlotHalfWidth || *ZhsTimePlotY2NDC) {
+    // vis_xmin, vis_xmax: which range to visualize, should encompass (fwhm_xmin, fwhm_xmax):
+    state->vis_xmin = state->fwhm_xmaxval - ZhsTimePlotHalfWidth*(state->fwhm_xmaxval - state->fwhm_xmin);
+    state->vis_xmax = state->fwhm_xmaxval + ZhsTimePlotHalfWidth*(state->fwhm_xmax - state->fwhm_xmaxval); 
+
+    state->vis_xmin_bin = (state->vis_xmin - ZhsTimeStart) / ZhsTimeDelta;
+    state->vis_xmax_bin = (state->vis_xmax - ZhsTimeStart) / ZhsTimeDelta;
+    state->vis_nbins = state->vis_xmax_bin - state->vis_xmin_bin + 1;
+
+    state->grZhsTimeE->GetXaxis()->SetLimits(state->vis_xmin, state->vis_xmax);
+    state->grZhsAlpha->GetXaxis()->SetLimits(state->vis_xmin, state->vis_xmax);
+
+    state->legend->SetY2NDC(ZhsTimePlotY2NDC);
+
+    state->px1->Modified();
+    state->px2->Modified();
+    state->cZhsEAndAlpha->Modified();
+    state->cZhsEAndAlpha->Update();
+  }
+
+  fflush(stdout);
+  
+}
+
 static struct game_state *game_init()
 {
   struct game_state *state = (game_state *) malloc(sizeof(*state));
-  state->cZhsEAndAlpha = new TCanvas();
-  // state->c = new TCanvas("c", "c", 800, 600);
-  state->px1 = new TPad("px1","",0,0,1,1);
-  state->px1->Draw();
-  state->px1->cd();
-  state->grZhsTimeE = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data());
-  state->grZhsTimeE->Draw("AL");
-  int ind_maxval;
-  bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), state->fwhm_xmin, state->fwhm_xmax, ind_maxval, state->fwhm_xmaxval, state->fwhm_ymaxval);
-  if (!fwhm_res) printf("FWHM was not successful\n");
-  double vis_xmin = state->fwhm_xmaxval - 20*(state->fwhm_xmaxval - state->fwhm_xmin);
-  double vis_xmax = state->fwhm_xmaxval + 20*(state->fwhm_xmax - state->fwhm_xmaxval); 
-  int vis_xmin_bin = (vis_xmin - ZhsTimeStart) / ZhsTimeDelta;
-  int vis_xmax_bin = (vis_xmax - ZhsTimeStart) / ZhsTimeDelta;
-  int vis_nbins = vis_xmax_bin - vis_xmin_bin + 1;
-  // This update is needed here to get coordinates for the lines marking FWHM:
-  gPad->Update(); 
-  state->line_min = new TLine(state->fwhm_xmin, gPad->GetUymin(), state->fwhm_xmin, gPad->GetUymax());
-  state->line_max = new TLine(state->fwhm_xmax, gPad->GetUymin(), state->fwhm_xmax, gPad->GetUymax());
-  state->line_min->Draw();
-  state->line_max->Draw();
+  PlotWaveform(state, m_init, NULL);
 
-  // Transparent panel on the top of px1:
-  state->px2 = new TPad("px2","",0,0,1,1);
-  state->px2->SetFillStyle(4000);
-  state->px2->SetFrameFillStyle(0);
-  state->px2->Draw();
-  state->px2->cd();
+  state->ZhsFftInp = new double[state->vis_nbins];
 
-
-  state->grZhsAlpha = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsAlpha.data());
-  
-  state->grZhsAlpha->Draw("ALY+");
-  state->legend = new TLegend(0.1,0.8,0.3,0.9);
-  state->legend->AddEntry(state->grZhsTimeE, "E_{proj}","l");
-  state->legend->AddEntry(state->grZhsAlpha, "pol. angle","l");
-  state->legend->Draw();
-
-  fflush(stdout);
-
-  state->ZhsFftInp = new double[vis_nbins];
-
-  printf("vis_nbins: %d, vis_xmin_bin: %d, ZhsTimeE.size(): %zu\n", vis_nbins, vis_xmin_bin, ZhsTimeE.size());
-  for (int i = 0; i < vis_nbins; i++) {
-    double val = *(ZhsTimeE.data() + vis_xmin_bin + i);
+  for (int i = 0; i < state->vis_nbins; i++) {
+    double val = *(ZhsTimeE.data() + state->vis_xmin_bin + i);
     state->ZhsFftInp[i] = val;
     printf("ZhsFftInp[%d]: %11.8e\n", i, val);
   }
@@ -121,9 +178,9 @@ static struct game_state *game_init()
   //  p = fftw_plan_dft_1d(vis_nbins, in, out, FFTW_FORWARD, FFTW_ESTIMATE); 
    double xmax_normal = 5;
    double xmin_normal = -5;
-   int N = vis_nbins;
+   int N = state->vis_nbins;
    double dx = (xmax_normal - xmin_normal) / N;
-    for (int i = 0; i < vis_nbins; i++){
+    for (int i = 0; i < state->vis_nbins; i++){
       double x = xmin_normal + dx * i;
       double y = exp(-0.5 * x * x) / (sqrt(2.0) * sqrt(pi));
       state->ZhsFftInp[i] = y;
@@ -131,9 +188,9 @@ static struct game_state *game_init()
   //    in[i][1] = 0; 
     }
   //  fftw_execute(p); /* repeat as needed */
-  state->grFft = new TGraph(vis_nbins / 2);
-  state->ZhsFft = FFTtools::doFFT(vis_nbins, state->ZhsFftInp);
-  for (int i = 0; i < vis_nbins / 2; i++){
+  state->grFft = new TGraph(state->vis_nbins / 2);
+  state->ZhsFft = FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp);
+  for (int i = 0; i < state->vis_nbins / 2; i++){
   // grFft->SetPoint(i, i, ZhsFft[i].getAbsSq() /* * ZhsFft[i].re */);
     state->grFft->SetPoint(i, i / (xmax_normal - xmin_normal), state->ZhsFft[i].re * dx); // To get continuous ft values.
   //   grFft->SetPoint(i, i / (xmax_normal - xmin_normal), out[i][0] * dx); // To get continuous ft values.
@@ -164,44 +221,12 @@ static void game_finalize(struct game_state *state)
 
 static void game_reload(struct game_state *state)
 {
-  // vis_xmin, vis_xmax: which range to visualize, should encompass (fwhm_xmin, fwhm_xmax).
-  double vis_xmin = state->fwhm_xmaxval - 200*(state->fwhm_xmaxval - state->fwhm_xmin);
-  double vis_xmax = state->fwhm_xmaxval + 200*(state->fwhm_xmax - state->fwhm_xmaxval); 
-  int vis_xmin_bin = (vis_xmin - ZhsTimeStart) / ZhsTimeDelta;
-  int vis_xmax_bin = (vis_xmax - ZhsTimeStart) / ZhsTimeDelta;
-  int vis_nbins = vis_xmax_bin - vis_xmin_bin + 1;
-  printf("Waveform xmax - xmin: %5.3f, (%5.3f%%)\n", vis_xmax - vis_xmin, (vis_xmax - vis_xmin) / ZhsTimeDelta);
-  state->grZhsTimeE->GetXaxis()->SetLimits(vis_xmin, vis_xmax);
-  state->grZhsTimeE->SetLineColor(kRed);
-  state->grZhsTimeE->SetLineWidth(2);
-  state->grZhsTimeE->GetXaxis()->SetTitle("Time [ns]");
-  state->grZhsTimeE->GetYaxis()->SetTitle("E [V/m]");
-  TGaxis::SetExponentOffset(0.02, -0.04, "x");
-  // state->grZhsTimeE->Draw("AL");
-  // state->px1->Update();
-
-
-  state->grZhsAlpha->SetLineColor(kBlue);
-  state->grZhsAlpha->SetLineWidth(2);
-  state->grZhsAlpha->GetXaxis()->SetLimits(vis_xmin, vis_xmax);
-  state->grZhsAlpha->GetHistogram()->SetMaximum(180);
-  state->grZhsAlpha->GetHistogram()->SetMinimum(0);
-  state->legend->SetX1NDC(0.12);
-  state->legend->SetX2NDC(0.3);
-  state->legend->SetY1NDC(0.75);
-  state->legend->SetY2NDC(0.85);
-  // state->px2->Update();
-
-  state->px1->Modified();
-  state->px2->Modified();
-  state->cZhsEAndAlpha->Modified();
-  state->cZhsEAndAlpha->Update();
-
+  PlotWaveform(state, m_reload, ctx);
 
   state->cZhsFft->Clear();
  
   delete[] state->ZhsFftInp;
-  state->ZhsFftInp = new double[vis_nbins];
+  state->ZhsFftInp = new double[state->vis_nbins];
 
   // printf("vis_nbins: %d\n", vis_nbins);
   // state->ZhsFftInp = new double[vis_nbins];
@@ -213,9 +238,9 @@ static void game_reload(struct game_state *state)
 
    double xmin_normal = -10;
    double xmax_normal = +10;
-   int N = vis_nbins;
+   int N = state->vis_nbins;
    double dx = (xmax_normal - xmin_normal) / N;
-    for (int i = 0; i < vis_nbins; i++){
+    for (int i = 0; i < state->vis_nbins; i++){
       double x = xmin_normal + dx * i;
       double y = exp(-0.5 * x * x) / (sqrt(2.0) * sqrt(pi));
       state->ZhsFftInp[i] = y;
@@ -224,7 +249,7 @@ static void game_reload(struct game_state *state)
     }
 
   if (state->grFft) delete state->grFft;
-  state->grFft = new TGraph(vis_nbins / 2);
+  state->grFft = new TGraph(state->vis_nbins / 2);
   printf("Before deleting ZhsFft\n");
   // delete[]: Is it a right thing to do?
   // http://www.fftw.org/fftw3_doc/Complex-One_002dDimensional-DFTs.html#Complex-One_002dDimensional-DFTs:
@@ -232,8 +257,8 @@ static void game_reload(struct game_state *state)
   // doFFT is not using fftw_malloc() though, unless "new" is overloaded.
   if (state->ZhsFft) delete[] state->ZhsFft;
   printf("After deleting ZhsFft\n");
-  state->ZhsFft = FFTtools::doFFT(vis_nbins, state->ZhsFftInp);
-  for (int i = 0; i < vis_nbins / 2; i++){
+  state->ZhsFft = FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp);
+  for (int i = 0; i < state->vis_nbins / 2; i++){
     state->grFft->SetPoint(i, i / (xmax_normal - xmin_normal), state->ZhsFft[i].re * dx); // To get continuous ft values.
   }
   state->cZhsFft->cd();
@@ -262,8 +287,6 @@ static bool game_step(struct game_state *state)
   // Keep an eye on window behavior. If anything odd happens,
   // try uncommenting "*gxlib = xlib;" at the bottom.
     
-  struct nk_context *ctx = &(gxlib->ctx);
-   
   gSystem->ProcessEvents();
   
   if (nk_begin(ctx, "Demo", nk_rect(50, 50, 200, 200),
@@ -271,9 +294,7 @@ static bool game_step(struct game_state *state)
                NK_WINDOW_CLOSABLE|NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
     {
 
-
       static bvv::TBuffer <int> op(kBlue);
-      static bvv::TBuffer <int> ZhsTimePlotHalfWidth(100);
 
       nk_layout_row_static(ctx, 30, 80, 1);
       if (nk_button_label(ctx, "button"))
@@ -285,24 +306,7 @@ static bool game_step(struct game_state *state)
         state->grFft->SetLineColor(op);
         state->cZhsFft->Modified(); state->cZhsFft->Update(); 
       }
-      // state->grFft->SetLineColor(op);
-      nk_layout_row_dynamic(ctx, 25, 1);
-      if (*ZhsTimePlotHalfWidth) {
-        // vis_xmin, vis_xmax: which range to visualize, should encompass (xmin, xmax):
-        double vis_xmin = state->fwhm_xmaxval - ZhsTimePlotHalfWidth*(state->fwhm_xmaxval - state->fwhm_xmin);
-        double vis_xmax = state->fwhm_xmaxval + ZhsTimePlotHalfWidth*(state->fwhm_xmax - state->fwhm_xmaxval); 
-        printf("Waveform xmax - xmin: %5.3f, (%5.3f%%)\n", vis_xmax - vis_xmin, (vis_xmax - vis_xmin) / ZhsTimeDelta);
-        state->grZhsTimeE->GetXaxis()->SetLimits(vis_xmin, vis_xmax);
-        state->grZhsAlpha->GetXaxis()->SetLimits(vis_xmin, vis_xmax);
-
-        state->px1->Modified();
-        state->px2->Modified();
-        state->cZhsEAndAlpha->Modified();
-        state->cZhsEAndAlpha->Update();
-      }
-      // The next line is placed after the above condition in order to preserve
-      // the "modified" state of ZhsTimePlotHalfWidth for the first iteration of the loop:
-      property_int(ctx, "Plt wid: ", 0, ZhsTimePlotHalfWidth, 1000 /*max*/, 10 /*increment*/, 1.0 /*sensitivity*/);
+      PlotWaveform(state, m_step, ctx);
     } else cout << "nk_begin failed" << endl;
     nk_end(ctx);
 
