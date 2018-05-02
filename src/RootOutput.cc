@@ -2,8 +2,9 @@
 #include <iostream>
 #include "EventGenerator.h"
 #include "Primaries.h"
-#include "balloon.hh"
-#include "anita.hh"
+// #include "balloon.hh"
+// #include "anita.hh"
+#include "ANITA.h"
 #include "Settings.h"
 #include "Taumodel.hh"
 #include "EnvironmentVariable.h"
@@ -178,11 +179,11 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   finaltree.Branch("vmmhz_max", &uhen->vmmhz_max, "vmmhz_max/D");
   finaltree.Branch("thresholdsAnt", &uhen->thresholdsAnt, "thresholdsAnt[48][2][5]/D");
   finaltree.Branch("thresholdsAntPass", &uhen->thresholdsAntPass, "thresholdsAntPass[48][2][5]/D");
-  finaltree.Branch("deadTime", &uhen->anita1->deadTime, "deadTime/D");
+  // finaltree.Branch("deadTime", &uhen->anita1->deadTime, "deadTime/D");
   finaltree.Branch("horizcoord", &uhen->horizcoord, "horizcoord/D");
   finaltree.Branch("vertcoord", &uhen->vertcoord, "vertcoord/D");
-  finaltree.Branch("horizcoord_bn", &uhen->bn1->horizcoord_bn, "horizcoord_bn/D");
-  finaltree.Branch("vertcoord_bn", &uhen->bn1->vertcoord_bn, "vertcoord_bn/D");
+  // finaltree.Branch("horizcoord_bn", &uhen->bn1->horizcoord_bn, "horizcoord_bn/D");
+  // finaltree.Branch("vertcoord_bn", &uhen->bn1->vertcoord_bn, "vertcoord_bn/D");
   finaltree.Branch("r_bn", &uhen->r_bn_array, "r_bn_array[3]/D");
   finaltree.Branch("n_bn", &uhen->n_bn_array, "n_bn_array[3]/D");
   // finaltree.Branch("longitude_bn", &uhen->longitude_this, "longitude_bn/D"); @todo TEMPORARILY COMMENT OUT DURING REFACTOR, if abandon refactor then uncomment
@@ -219,10 +220,10 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   finaltree.Branch("l3trig", &uhen->l3trig, "l3trig[2]/I");
   finaltree.Branch("l2trig", &uhen->l2trig, "l2trig[2][3]/I");
   finaltree.Branch("l1trig", &uhen->l1trig, "l1trig[2][3]/I");
-  finaltree.Branch("phiTrigMask", &uhen->anita1->phiTrigMask, "phiTrigMask/s");
-  finaltree.Branch("phiTrigMaskH", &uhen->anita1->phiTrigMaskH, "phiTrigMaskH/s");
-  finaltree.Branch("l1TrigMask", &uhen->anita1->l1TrigMask, "l1TrigMask/s");
-  finaltree.Branch("l1TrigMaskH", &uhen->anita1->l1TrigMaskH, "l1TrigMaskH/s");
+  // finaltree.Branch("phiTrigMask", &uhen->anita1->phiTrigMask, "phiTrigMask/s");
+  // finaltree.Branch("phiTrigMaskH", &uhen->anita1->phiTrigMaskH, "phiTrigMaskH/s");
+  // finaltree.Branch("l1TrigMask", &uhen->anita1->l1TrigMask, "l1TrigMask/s");
+  // finaltree.Branch("l1TrigMaskH", &uhen->anita1->l1TrigMaskH, "l1TrigMaskH/s");
   finaltree.Branch("max_antenna0", &uhen->max_antenna0, "max_antenna0/I");
   finaltree.Branch("max_antenna1", &uhen->max_antenna1, "max_antenna1/I");
   finaltree.Branch("max_antenna2", &uhen->max_antenna2, "max_antenna2/I");
@@ -330,8 +331,8 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   finaltree.Branch("r_exit2bn", &uhen->r_exit2bn2, "r_exit2bn/D");
   finaltree.Branch("r_exit2bn_measured", &uhen->r_exit2bn_measured2, "r_exit2bn_measured/D");
   // finaltree.Branch("scalefactor_attenuation", &uhen->scalefactor_attenuation, "scalefactor_attenuation/D"); @todo TEMPORARILY COMMENT OUT DURING REFACTOR, if abandon refactor then uncomment
-  finaltree.Branch("anita1->PHI_OFFSET", &uhen->anita1->PHI_OFFSET, "anita1->PHI_OFFSET/D");
-  finaltree.Branch("igps", &uhen->bn1->igps, "igyps/I");
+  // finaltree.Branch("anita1->PHI_OFFSET", &uhen->anita1->PHI_OFFSET, "anita1->PHI_OFFSET/D");
+  // finaltree.Branch("igps", &uhen->bn1->igps, "igyps/I");
   // finaltree.Branch("volts_rx_rfcm_lab_e_all", &uhen->volts_rx_rfcm_lab_e_all, "volts_rx_rfcm_lab_e_all[48][512]/D");
   // finaltree.Branch("volts_rx_rfcm_lab_h_all", &volts_rx_rfcm_lab_h_all, "volts_rx_rfcm_lab_h_all[48][512]/D");
   finaltree.Branch("ptaui", &uhen->ptaui, "ptaui/D");
@@ -425,7 +426,9 @@ void icemc::RootOutput::initRootifiedAnitaDataFiles(const EventGenerator* uhen2,
   Log() << icemc::info << "ICEMC GIT Repository Version: " <<  gitversion.GetTitle() << std::endl;
 
   initTree(&triggerSettingsTree, "triggerSettingsTree", "Trigger settings", fTruthFile);
-  Anita* anita2 = const_cast<Anita*>(uhen->anita1);
+  // Anita* anita2 = const_cast<Anita*>(uhen->anita1);
+  ANITA* anita2 = const_cast<ANITA*>(uhen->fDetector);
+  
   triggerSettingsTree.Branch("dioderms",  anita2->bwslice_dioderms_fullband_allchan,  "dioderms[2][48][6]/D" );
   triggerSettingsTree.Branch("diodemean", anita2->bwslice_diodemean_fullband_allchan, "diodemean[2][48][6]/D");
   triggerSettingsTree.Fill();
@@ -463,8 +466,12 @@ void icemc::RootOutput::fillRootifiedAnitaDataTrees(const EventGenerator* uhen, 
   
 #ifdef ANITA_UTIL_EXISTS
   AnitaGeomTool* geom = AnitaGeomTool::Instance();
-  const Balloon* bn1 = uhen->bn1;
-  const Anita* anita1 = uhen->anita1;  
+
+  // const Balloon* bn1 = uhen->bn1;
+  // const Anita* anita1 = uhen->anita1;
+  ///@todo Make this into something proper!!!!
+  const ANITA* bn1 = uhen->fDetector;
+  const ANITA* anita1 = uhen->fDetector;
   
   realEvPtr     = new UsefulAnitaEvent();
   rawHeaderPtr  = new RawAnitaHeader();

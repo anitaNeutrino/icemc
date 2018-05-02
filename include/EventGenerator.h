@@ -26,6 +26,7 @@ namespace icemc {
   class Primaries;
   class GeneratedNeutrino;
   class PassingNeutrino;
+  class ANITA;
 
   class EventGenerator {
   public:
@@ -533,8 +534,9 @@ namespace icemc {
     double thresholds[NTHRESHOLDS];
 
     Interaction* interaction1;
-    Balloon* bn1;
-    Anita* anita1;
+    // Balloon* bn1;
+    // Anita* anita1;
+    ANITA* fDetector;
     Taumodel* fTauPtr;
 
     GeneratedNeutrino* fGenNu;

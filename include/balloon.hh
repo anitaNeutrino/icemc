@@ -26,12 +26,13 @@ namespace icemc {
   /**
    * @class BalloonInfo
    * @brief Where is our detector? A very minimalistic class for RootOutput::allTree
+   * @todo Is the redundent in the new paradime?
    * 
    * Just like an Adu5Pat, but if this is stand alone icemc, that won't exist
    */
   class BalloonInfo {
   public:
-    BalloonInfo();
+    BalloonInfo();    
     UInt_t realTime;    
     float heading;
     float pitch;
@@ -58,6 +59,7 @@ namespace icemc {
  
   public:
     Balloon();
+    virtual ~Balloon() {;}
 
   
     // GPS positions of Anita-lite balloon flight

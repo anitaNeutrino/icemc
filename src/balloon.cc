@@ -434,7 +434,7 @@ int getTuffIndex(int Curr_time) {
 
 
 // this is called for each neutrino
-void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1,const Settings *settings1,int inu,Anita *anita1, double randomNumber, BalloonInfo* bi) {
+void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1, const Settings *settings1, int inu, Anita *anita1, double randomNumber, BalloonInfo* bi) {
 
   // r_bn_shadow=position of spot under the balloon on earth's surface
 
@@ -529,9 +529,7 @@ void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1,const Settings *s
     pitch=(double)fpitch;
 
     setr_bn(latitude,longitude); // sets theta_bn, phi_bn and r_bn.  r_bn is a unit vector pointing in the right direction
-		
-		
-		
+
     if (WHICHPATH==2){
       altitude_bn=altitude*12.*constants::CMINCH/100.;
     }

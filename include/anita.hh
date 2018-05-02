@@ -94,7 +94,7 @@ namespace icemc {
     double additionalDt;
 
     Anita(); // constructor
-    ~Anita();
+    virtual ~Anita();
     void Initialize(const Settings *settings1,ofstream &foutput,int inu, TString outputdir); ///< initialize a bunch of stuff
     void initializeFixedPowerThresholds(ofstream &foutput);
     void readVariableThresholds(const Settings *settings1);
