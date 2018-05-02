@@ -1092,7 +1092,8 @@ int main(int argc,  char **argv) {
 	  
 	chantrig1->DigitizerPath(settings1, anita1, antNum, bn1);
 	
-	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->GetChangle(), emfrac, hadfrac, thresholdsAnt[antNum]);
+	// chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->GetChangle(), emfrac, hadfrac, thresholdsAnt[antNum]);
+	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  thresholdsAnt[antNum]);	
 
 	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
 

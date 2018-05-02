@@ -2927,7 +2927,8 @@ int main(int argc,  char **argv) {
 
           //+++++//+++++//+++++//+++++//+++++//+++++//+++++
 
-          chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->GetChangle(), emfrac, hadfrac, thresholdsAnt[antNum]);
+          // chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->GetChangle(), emfrac, hadfrac, thresholdsAnt[antNum]);
+          chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold, thresholdsAnt[antNum]);
 
 	  
           if (Anita::GetAntennaNumber(ilayer, ifold)==anita1->rx_minarrivaltime) {

@@ -212,7 +212,7 @@ int icemc::Anita::Match(int ilayer,int ifold,int rx_minarrivaltime) {
     return 0;
   }
 }
-int icemc::Anita::GetRx(int ilayer, int ifold) { // get antenna number based on which layer and position it is
+int icemc::Anita::GetRx(int ilayer, int ifold) const { // get antenna number based on which layer and position it is
     
   int irx=0;
   for (int i=0;i<ilayer;i++) {
@@ -223,7 +223,7 @@ int icemc::Anita::GetRx(int ilayer, int ifold) { // get antenna number based on 
     
 }
 
-int icemc::Anita::GetRxTriggerNumbering(int ilayer, int ifold) { // get antenna number based on which layer and position it is
+int icemc::Anita::GetRxTriggerNumbering(int ilayer, int ifold) const { // get antenna number based on which layer and position it is
   // make the top trigger layer count 1-16 left to right
   if (ilayer==0)
     //cout << "ilayer, ifold, getrx are " << ilayer << "\t" << ifold << "\t" << 2*ifold+ilayer << "\n";
@@ -419,9 +419,9 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
 
   tsignals->Branch("peak_rx_rfcm_lab",&peak_rx_rfcm_lab,"peak_rx_rfcm_lab[2]/D");
   tsignals->Branch("inu",&inu,"inu/I");
-  tsignals->Branch("dangle",&dangle_inanita,"dangle/D");
-  tsignals->Branch("emfrac",&emfrac_inanita,"emfrac/D");
-  tsignals->Branch("hadfrac",&hadfrac_inanita,"hadfrac/D");
+  // tsignals->Branch("dangle",&dangle_inanita,"dangle/D");
+  // tsignals->Branch("emfrac",&emfrac_inanita,"emfrac/D");
+  // tsignals->Branch("hadfrac",&hadfrac_inanita,"hadfrac/D");
   tsignals->Branch("ston",&ston,"ston[5]/D");
 
   tsignals->Branch("peak",                     &peak_v_banding_rfcm,      "peak_v_banding_rfcm[2][5]/D"   );

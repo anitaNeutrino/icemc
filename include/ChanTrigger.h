@@ -230,12 +230,9 @@ namespace icemc {
      * @param  bn1 :: Balloon - balloon object
      * @param  ilayer :: int - layer number
      * @param  ifold :: int - phi sector
-     * @param  dangle :: int - 
-     * @param  emfrac :: double - electromagnetic fraction of the shower
-     * @param  hadfrac :: double - hadronic fraction of the shower
      * @param  thresholds :: double [2][5] - relative power thresholds for each pol and band
      */
-    void WhichBandsPass(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
+    void WhichBandsPass(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]);
 
     //! Which bands passes the trigger (for trigger scheme 0 and 1)
     /**
@@ -259,12 +256,9 @@ namespace icemc {
      * @param  bn1 :: Balloon - balloon object
      * @param  ilayer :: int - layer number
      * @param  ifold :: int - phi sector
-     * @param  dangle :: int - 
-     * @param  emfrac :: double - electromagnetic fraction of the shower
-     * @param  hadfrac :: double - hadronic fraction of the shower
      * @param  thresholds :: double [2][5] - relative power thresholds for each pol and band
      */
-    void WhichBandsPassTrigger2(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]);
+    void WhichBandsPassTrigger2(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]);
 
     //! Find peak voltage of a waveform
     /**
@@ -282,7 +276,7 @@ namespace icemc {
      *	\todo	Deprecate in favor of the more robust boost::multi_array or the more specialized
      *			PayloadArray class. Both have multi-index access to the same items.
      */
-    void GetThresholds(const Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]); // get thresholds for this layer
+    void GetThresholds(const Settings *settings1, const Anita *anita1,int ilayer,double thresholds[2][5]) const ; // get thresholds for this layer
 
     //! Apply the diode convolution
     /**

@@ -97,7 +97,7 @@ void icemc::ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
 }
 
 
-void icemc::ChanTrigger::WhichBandsPass(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
+void icemc::ChanTrigger::WhichBandsPass(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){
     
 
   if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==9) {
@@ -133,7 +133,7 @@ void icemc::ChanTrigger::WhichBandsPass(const Settings *settings1, Anita *anita1
   } else  if (settings1->TRIGGERSCHEME >= 2){
     // this scheme is used for ANITA 2 on.
     //cout << "i'm here.\n";
-    WhichBandsPassTrigger2(settings1, anita1, globaltrig1, bn1, ilayer, ifold, dangle, emfrac, hadfrac, thresholds);
+    WhichBandsPassTrigger2(settings1, anita1, globaltrig1, bn1, ilayer, ifold, thresholds);
 
   }
 } // end which bands pass
@@ -329,7 +329,7 @@ void icemc::ChanTrigger::WhichBandsPassTrigger1(const Settings *settings1, Anita
  *
  *
  */
-void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
+void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){
   
   double psignal[2][5][Anita::NFOUR];
   
@@ -518,11 +518,6 @@ void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita
     anita1->l1_passing=0;
     anita1->l1_passing_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)]=0;
   }
-      
-  anita1->dangle_inanita=dangle; // viewangle - changle
-  anita1->emfrac_inanita=emfrac; // viewangle - changle
-  anita1->hadfrac_inanita=hadfrac; // viewangle - changle
-      
 
       
   anita1->irx=anita1->GetRx(ilayer,ifold);
@@ -1537,7 +1532,7 @@ double icemc::ChanTrigger::GetNoise(const Settings *settings1,double altitude_bn
 
 
 
-void icemc::ChanTrigger::GetThresholds(const Settings *settings1,Anita *anita1,int ilayer,double thresholds[2][5]) {
+void icemc::ChanTrigger::GetThresholds(const Settings *settings1, const Anita *anita1,int ilayer,double thresholds[2][5]) const {
     
   if (ilayer==3 && settings1->DISCONES==2) // if it's a nadir layer
     for (int i=0;i<5;i++) {

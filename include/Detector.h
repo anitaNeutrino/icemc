@@ -3,6 +3,7 @@
 
 #include "TGraph.h"
 #include "TVector.h" ///@todo use TVector or icemc::Vector?
+#include "vector.hh" ///@todo use TVector or icemc::Vector?
 
 namespace icemc {
 
@@ -17,6 +18,16 @@ namespace icemc {
     UInt_t unixTime;
   };
   
+
+  /**
+   * @todo move this to somewhere more sensible and pick coordinate system for vectors
+   */
+  class AskaryanSignal {
+  public:
+    TGraph waveform; ///< Volts vs. time
+    icemc::Vector poynting; /// < Direction of signal travel
+    icemc::Vector polarization; ///< Polarization vector
+  };
 
 
   /**
@@ -44,8 +55,6 @@ namespace icemc {
      */
     virtual GeographicCoordinate getCenterOfDetector() = 0;
 
-
-
     /** 
      * @brief Where and how many places should the Askaryan field be calculated relative to the "average" detector position?
      * 
@@ -55,22 +64,17 @@ namespace icemc {
      */
     virtual const std::vector<TVector>& getFieldCalcLocationsRelativeToAveDetPos() = 0;
 
-    
-
     /**
      * @brief Detect (or not) the Askaryan radiation arriving at the payload.
      * 
      * @todo figure out what else is required, polarization and direction?
      * 
-     * @param pureSignalVoltageTimeGraphs A set of voltage/time Askaryan signals arriving at the locations specified by getFieldCalcLocationsRelativeToAveDetPos.
+     * @param signals Askaryan signals arriving at the locations specified by getFieldCalcLocationsRelativeToAveDetPos.
      * The size of the parameter should be equal to the size of the what was returned by getFieldCalcLocationsRelativeToAveDetPos.
-     *
-     * @param poyntingVector The direction of travel of the waveform (@todo in what coordinate system?)
-     * @param polarizationVector The polarization vector of the waveform (@todo in what coordinate system?)
      * 
      * @return true if the waveform triggered the instrument, false if it did not.
      */
-    virtual bool applyTrigger(const std::vector<TGraph>& pureSignalVoltageTimeGraphs, const TVector& poyntingVector, const TVector& polarizationVector) = 0;
+    virtual bool applyTrigger(const std::vector<AskaryanSignal>& signals) = 0;
 
     /** 
      * @brief Tell icemc how you like your Askaryan signals.

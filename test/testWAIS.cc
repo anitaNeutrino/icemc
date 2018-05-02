@@ -711,7 +711,8 @@ int main(int argc,  char **argv) {
 	chantrig1->saveDigitizerWaveforms(anita1, justSignal_dig[0][antNum], justSignal_dig[1][antNum], justNoise_dig[0][antNum], justNoise_dig[1][antNum]);
 
 	//+++++//+++++//+++++//+++++//+++++//+++++//+++++
-	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  0, 0, 0, thresholdsAnt[antNum]);
+	// chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  0, 0, 0, thresholdsAnt[antNum]);
+	chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  thresholdsAnt[antNum]);	
 	
 		
 	delete chantrig1;

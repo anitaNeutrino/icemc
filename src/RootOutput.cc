@@ -177,8 +177,8 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   // finaltree.Branch("inu", &uhen->inu, "inu/I"); @todo TEMPORARILY COMMENT OUT DURING REFACTOR, if abandon refactor then uncomment
   finaltree.Branch("vmmhz_min", &uhen->vmmhz_min, "vmmhz_min/D");
   finaltree.Branch("vmmhz_max", &uhen->vmmhz_max, "vmmhz_max/D");
-  finaltree.Branch("thresholdsAnt", &uhen->thresholdsAnt, "thresholdsAnt[48][2][5]/D");
-  finaltree.Branch("thresholdsAntPass", &uhen->thresholdsAntPass, "thresholdsAntPass[48][2][5]/D");
+  // finaltree.Branch("thresholdsAnt", &uhen->thresholdsAnt, "thresholdsAnt[48][2][5]/D");
+  // finaltree.Branch("thresholdsAntPass", &uhen->thresholdsAntPass, "thresholdsAntPass[48][2][5]/D");
   // finaltree.Branch("deadTime", &uhen->anita1->deadTime, "deadTime/D");
   finaltree.Branch("horizcoord", &uhen->horizcoord, "horizcoord/D");
   finaltree.Branch("vertcoord", &uhen->vertcoord, "vertcoord/D");
@@ -217,25 +217,25 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   finaltree.Branch("weight_bestcase",  &uhen->weight_bestcase2,  "weight_bestcase/D");
   finaltree.Branch("chord_kgm2_bestcase",  &uhen->chord_kgm2_bestcase2,  "chord_kgm2_bestcase/D");
   finaltree.Branch("dtryingdirection",  &uhen->dtryingdirection2,  "dtryingdirection/D");
-  finaltree.Branch("l3trig", &uhen->l3trig, "l3trig[2]/I");
-  finaltree.Branch("l2trig", &uhen->l2trig, "l2trig[2][3]/I");
-  finaltree.Branch("l1trig", &uhen->l1trig, "l1trig[2][3]/I");
+  // finaltree.Branch("l3trig", &uhen->l3trig, "l3trig[2]/I");
+  // finaltree.Branch("l2trig", &uhen->l2trig, "l2trig[2][3]/I");
+  // finaltree.Branch("l1trig", &uhen->l1trig, "l1trig[2][3]/I");
   // finaltree.Branch("phiTrigMask", &uhen->anita1->phiTrigMask, "phiTrigMask/s");
   // finaltree.Branch("phiTrigMaskH", &uhen->anita1->phiTrigMaskH, "phiTrigMaskH/s");
   // finaltree.Branch("l1TrigMask", &uhen->anita1->l1TrigMask, "l1TrigMask/s");
   // finaltree.Branch("l1TrigMaskH", &uhen->anita1->l1TrigMaskH, "l1TrigMaskH/s");
-  finaltree.Branch("max_antenna0", &uhen->max_antenna0, "max_antenna0/I");
-  finaltree.Branch("max_antenna1", &uhen->max_antenna1, "max_antenna1/I");
-  finaltree.Branch("max_antenna2", &uhen->max_antenna2, "max_antenna2/I");
+  // finaltree.Branch("max_antenna0", &uhen->max_antenna0, "max_antenna0/I");
+  // finaltree.Branch("max_antenna1", &uhen->max_antenna1, "max_antenna1/I");
+  // finaltree.Branch("max_antenna2", &uhen->max_antenna2, "max_antenna2/I");
 
   finaltree.Branch("viewangle", &uhen->viewangle, "viewangle/D");
   finaltree.Branch("offaxis", &uhen->offaxis, "offaxis/D");
-  finaltree.Branch("rx0_signal_eachband", &uhen->rx0_signal_eachband, "rx0_signal_eachband[2][5]/D");
-  finaltree.Branch("rx0_threshold_eachband", &uhen->rx0_threshold_eachband, "rx0_threshold_eachband[2][5]/D");
-  finaltree.Branch("rx0_noise_eachband", &uhen->rx0_noise_eachband, "rx0_noise_eachband[2][5]/D");
-  finaltree.Branch("rx0_passes_eachband", &uhen->rx0_passes_eachband, "rx0_passes_eachband[2][5]/I");
-  finaltree.Branch("e_component", &uhen->e_component, "e_component/D");
-  finaltree.Branch("h_component", &uhen->h_component, "h_component/D");
+  // finaltree.Branch("rx0_signal_eachband", &uhen->rx0_signal_eachband, "rx0_signal_eachband[2][5]/D");
+  // finaltree.Branch("rx0_threshold_eachband", &uhen->rx0_threshold_eachband, "rx0_threshold_eachband[2][5]/D");
+  // finaltree.Branch("rx0_noise_eachband", &uhen->rx0_noise_eachband, "rx0_noise_eachband[2][5]/D");
+  // finaltree.Branch("rx0_passes_eachband", &uhen->rx0_passes_eachband, "rx0_passes_eachband[2][5]/I");
+  // finaltree.Branch("e_component", &uhen->e_component, "e_component/D");
+  // finaltree.Branch("h_component", &uhen->h_component, "h_component/D");
   finaltree.Branch("dist_int_bn_2d", &uhen->dist_int_bn_2d, "dist_int_bn_2d/D");
   finaltree.Branch("d1", &uhen->d12, "d1/D");
 
@@ -256,22 +256,22 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   // finaltree.Branch("exponent", settings1.EXPONENT); //, "EXPONENT/D");
   finaltree.Branch("exponent", &settings->EXPONENT, "EXPONENT/D");
 
-  finaltree.Branch("hitangle_e_all", &uhen->hitangle_e_all, "hitangle_e_all[48]/D");
-  finaltree.Branch("hitangle_h_all", &uhen->hitangle_h_all, "hitangle_h_all[48]/D");
+  // finaltree.Branch("hitangle_e_all", &uhen->hitangle_e_all, "hitangle_e_all[48]/D");
+  // finaltree.Branch("hitangle_h_all", &uhen->hitangle_h_all, "hitangle_h_all[48]/D");
 
-  finaltree.Branch("e_comp_max1", &uhen->e_comp_max1, "e_comp_max1/D");
-  finaltree.Branch("h_comp_max1", &uhen->h_comp_max1, "h_comp_max1/D");
-  finaltree.Branch("e_comp_max2", &uhen->e_comp_max2, "e_comp_max2/D");
-  finaltree.Branch("h_comp_max2", &uhen->h_comp_max2, "h_comp_max2/D");
-  finaltree.Branch("e_comp_max3", &uhen->e_comp_max3, "e_comp_max3/D");
-  finaltree.Branch("h_comp_max3", &uhen->h_comp_max3, "h_comp_max3/D");
-  finaltree.Branch("max_antenna_volts0", &uhen->max_antenna_volts0, "max_antenna_volts0/D");
-  finaltree.Branch("max_antenna_volts0_em", &uhen->max_antenna_volts0_em, "max_antenna_volts0_em/D");
-  finaltree.Branch("max_antenna_volts1", &uhen->max_antenna_volts1, "max_antenna_volts1/D");
-  finaltree.Branch("max_antenna_volts2", &uhen->max_antenna_volts2, "max_antenna_volts2/D");
-  finaltree.Branch("triggers", &uhen->nchannels_perrx_triggered, "nchannels_perrx_triggered[48]/I");
-  finaltree.Branch("nchannels_triggered", &uhen->nchannels_triggered, "nchannels_triggered/I");
-  finaltree.Branch("voltsRX", &uhen->voltsRX);
+  // finaltree.Branch("e_comp_max1", &uhen->e_comp_max1, "e_comp_max1/D");
+  // finaltree.Branch("h_comp_max1", &uhen->h_comp_max1, "h_comp_max1/D");
+  // finaltree.Branch("e_comp_max2", &uhen->e_comp_max2, "e_comp_max2/D");
+  // finaltree.Branch("h_comp_max2", &uhen->h_comp_max2, "h_comp_max2/D");
+  // finaltree.Branch("e_comp_max3", &uhen->e_comp_max3, "e_comp_max3/D");
+  // finaltree.Branch("h_comp_max3", &uhen->h_comp_max3, "h_comp_max3/D");
+  // finaltree.Branch("max_antenna_volts0", &uhen->max_antenna_volts0, "max_antenna_volts0/D");
+  // finaltree.Branch("max_antenna_volts0_em", &uhen->max_antenna_volts0_em, "max_antenna_volts0_em/D");
+  // finaltree.Branch("max_antenna_volts1", &uhen->max_antenna_volts1, "max_antenna_volts1/D");
+  // finaltree.Branch("max_antenna_volts2", &uhen->max_antenna_volts2, "max_antenna_volts2/D");
+  // finaltree.Branch("triggers", &uhen->nchannels_perrx_triggered, "nchannels_perrx_triggered[48]/I");
+  // finaltree.Branch("nchannels_triggered", &uhen->nchannels_triggered, "nchannels_triggered/I");
+  // finaltree.Branch("voltsRX", &uhen->voltsRX);
   
   // finaltree.Branch("volts_rx_max", &volts_rx_max, "volts_rx_max/D");
   // finaltree.Branch("volts_rx_ave", &volts_rx_ave, "volts_rx_ave/D");
@@ -283,7 +283,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   finaltree.Branch("theta_pol_measured", &uhen->theta_pol_measured, "theta_pol_measured/D");  
   finaltree.Branch("theta_rf_atbn", &uhen->theta_rf_atbn, "theta_rf_atbn/D");
   finaltree.Branch("theta_rf_atbn_measured", &uhen->theta_rf_atbn_measured, "theta_rf_atbn_measured/D");
-  finaltree.Branch("voltage", &uhen->voltagearray, "voltagearray[48]/D");
+  // finaltree.Branch("voltage", &uhen->voltagearray, "voltagearray[48]/D");
   // finaltree.Branch("nlayers", settings1.NLAYERS, "NLAYERS/I");
 
   finaltree.Branch("vmmhz1m_max", &uhen->vmmhz1m_max, "vmmhz1m_max/D");
@@ -504,6 +504,7 @@ void icemc::RootOutput::fillRootifiedAnitaDataTrees(const EventGenerator* uhen, 
   for (int iant = 0; iant < settings1.NANTENNAS; iant++){
     //int IceMCAnt = getIceMCAntfromUsefulEventAnt(anita1,  AnitaGeom1,  iant);
     int IceMCAnt = getIceMCAntfromUsefulEventAnt(&settings1,  iant);
+    (void) IceMCAnt;
     int UsefulChanIndexH = geom->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
     int UsefulChanIndexV = geom->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
     //              realEvPtr->fNumPoints[UsefulChanIndexV] = fNumPoints;
@@ -517,10 +518,13 @@ void icemc::RootOutput::fillRootifiedAnitaDataTrees(const EventGenerator* uhen, 
       //                realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
       // convert volts to millivolts
       const double voltsToMilliVolts = 1000;
-      realEvPtr->fVolts[UsefulChanIndexH][j] =  uhen->voltsRX.rfcm_lab_h_all[IceMCAnt][j+128]*voltsToMilliVolts;
-      realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
-      realEvPtr->fVolts[UsefulChanIndexV][j] =  uhen->voltsRX.rfcm_lab_e_all[IceMCAnt][j+128]*voltsToMilliVolts;
-      realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
+      (void) voltsToMilliVolts;
+      ///@todo FIX ME URGENTLY!!!
+      // realEvPtr->fVolts[UsefulChanIndexH][j] =  uhen->voltsRX.rfcm_lab_h_all[IceMCAnt][j+128]*voltsToMilliVolts;
+      // realEvPtr->fVolts[UsefulChanIndexV][j] =  uhen->voltsRX.rfcm_lab_e_all[IceMCAnt][j+128]*voltsToMilliVolts;
+      
+      realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = j;
+      realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = j;
     }//end int j
   }// end int iant
 
@@ -539,17 +543,19 @@ void icemc::RootOutput::fillRootifiedAnitaDataTrees(const EventGenerator* uhen, 
 	    
   rawHeaderPtr->run = fRun; //clOpts.run_no;
   // put the vpol only as a placeholder - these are only used in Anita-2 anyway
-  rawHeaderPtr->upperL1TrigPattern = uhen->l1trig[0][0];
-  rawHeaderPtr->lowerL1TrigPattern = uhen->l1trig[0][1];
-  rawHeaderPtr->nadirL1TrigPattern = uhen->l1trig[0][2];
+  //@todo URGENT FIX ME
+  // rawHeaderPtr->upperL1TrigPattern = uhen->l1trig[0][0];
+  // rawHeaderPtr->lowerL1TrigPattern = uhen->l1trig[0][1];
+  // rawHeaderPtr->nadirL1TrigPattern = uhen->l1trig[0][2];
 
-  rawHeaderPtr->upperL2TrigPattern = uhen->l2trig[0][0];
-  rawHeaderPtr->lowerL2TrigPattern = uhen->l2trig[0][1];
-  rawHeaderPtr->nadirL2TrigPattern = uhen->l2trig[0][2];
+  // rawHeaderPtr->upperL2TrigPattern = uhen->l2trig[0][0];
+  // rawHeaderPtr->lowerL2TrigPattern = uhen->l2trig[0][1];
+  // rawHeaderPtr->nadirL2TrigPattern = uhen->l2trig[0][2];
 
   if (settings1.WHICH<9){
     rawHeaderPtr->phiTrigMask  = (short) anita1->phiTrigMask;
-    rawHeaderPtr->l3TrigPattern = (short) uhen->l3trig[0];
+    //@todo URGENT FIX ME
+    // rawHeaderPtr->l3TrigPattern = (short) uhen->l3trig[0];
   }
 
   rawHeaderPtr->calibStatus = 31;
@@ -566,8 +572,9 @@ void icemc::RootOutput::fillRootifiedAnitaDataTrees(const EventGenerator* uhen, 
 
 #ifdef ANITA3_EVENTREADER
   if (settings1.WHICH==9 || settings1.WHICH==10) {
-    rawHeaderPtr->setTrigPattern((short) uhen->l3trig[0], AnitaPol::kVertical);
-    rawHeaderPtr->setTrigPattern((short) uhen->l3trig[1], AnitaPol::kHorizontal);
+    //@todo URGENT FIX ME    
+    // rawHeaderPtr->setTrigPattern((short) uhen->l3trig[0], AnitaPol::kVertical);
+    // rawHeaderPtr->setTrigPattern((short) uhen->l3trig[1], AnitaPol::kHorizontal);
     rawHeaderPtr->setMask( (short) anita1->l1TrigMask,  (short) anita1->phiTrigMask,  AnitaPol::kVertical);
     rawHeaderPtr->setMask( (short) anita1->l1TrigMaskH, (short) anita1->phiTrigMaskH, AnitaPol::kHorizontal);
   }
@@ -578,12 +585,13 @@ void icemc::RootOutput::fillRootifiedAnitaDataTrees(const EventGenerator* uhen, 
   truthEvPtr->run              = fRun; //clOpts.run_no;
   truthEvPtr->nuMom            = uhen->pnu;
   truthEvPtr->nu_pdg           = uhen->pdgcode;
-  truthEvPtr->e_component      = uhen->e_component;
-  truthEvPtr->h_component      = uhen->h_component;
-  truthEvPtr->n_component      = uhen->n_component;
-  truthEvPtr->e_component_k    = uhen->e_component_kvector;
-  truthEvPtr->h_component_k    = uhen->h_component_kvector;
-  truthEvPtr->n_component_k    = uhen->n_component_kvector;
+  //@todo URGENT FIX ME!
+  // truthEvPtr->e_component      = uhen->e_component;
+  // truthEvPtr->h_component      = uhen->h_component;
+  // truthEvPtr->n_component      = uhen->n_component;
+  // truthEvPtr->e_component_k    = uhen->e_component_kvector;
+  // truthEvPtr->h_component_k    = uhen->h_component_kvector;
+  // truthEvPtr->n_component_k    = uhen->n_component_kvector;
   truthEvPtr->sourceLon        = uhen->sourceLon;
   truthEvPtr->sourceLat        = uhen->sourceLat;
   truthEvPtr->sourceAlt        = uhen->sourceAlt;
@@ -601,8 +609,9 @@ void icemc::RootOutput::fillRootifiedAnitaDataTrees(const EventGenerator* uhen, 
     }
   }
   for (int i=0;i<48;i++){
-    truthEvPtr->hitangle_e[i]  = uhen->hitangle_e_all[i];
-    truthEvPtr->hitangle_h[i]  = uhen->hitangle_h_all[i];
+    // @todo URGENT FIX ME!
+    // truthEvPtr->hitangle_e[i]  = uhen->hitangle_e_all[i];
+    // truthEvPtr->hitangle_h[i]  = uhen->hitangle_h_all[i];
   }
   if(!settings1.ROUGHNESS){
     for (int i=0;i<Anita::NFREQ;i++)
@@ -626,21 +635,23 @@ void icemc::RootOutput::fillRootifiedAnitaDataTrees(const EventGenerator* uhen, 
     int UsefulChanIndexH = geom->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
     int UsefulChanIndexV = geom->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
 
-    truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(uhen->justSignal_trig[0][iant], uhen->justNoise_trig[0][iant]);
-    truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(uhen->justSignal_trig[1][iant], uhen->justNoise_trig[1][iant]);
+    // @todo URGENT FIX ME!    
+    // truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(uhen->justSignal_trig[0][iant], uhen->justNoise_trig[0][iant]);
+    // truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(uhen->justSignal_trig[1][iant], uhen->justNoise_trig[1][iant]);
 	      
     if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
     if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
 
-    truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = Tools::calculateSNR(uhen->justSignal_dig[0][iant], uhen->justNoise_dig[0][iant]);
-    truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = Tools::calculateSNR(uhen->justSignal_dig[1][iant], uhen->justNoise_dig[1][iant]);
+    // @todo URGENT FIX ME!    
+    // truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = Tools::calculateSNR(uhen->justSignal_dig[0][iant], uhen->justNoise_dig[0][iant]);
+    // truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = Tools::calculateSNR(uhen->justSignal_dig[1][iant], uhen->justNoise_dig[1][iant]);
 	      
     if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexV]>truthEvPtr->maxSNRAtDigitizerV) truthEvPtr->maxSNRAtDigitizerV=truthEvPtr->SNRAtDigitizer[UsefulChanIndexV];
     if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexH]>truthEvPtr->maxSNRAtDigitizerH) truthEvPtr->maxSNRAtDigitizerH=truthEvPtr->SNRAtDigitizer[UsefulChanIndexH];
 
-	      
-    truthEvPtr->thresholds[UsefulChanIndexV] = uhen->thresholdsAnt[iant][0][4];
-    truthEvPtr->thresholds[UsefulChanIndexH] = uhen->thresholdsAnt[iant][1][4];
+    // @todo URGENT FIX ME!	      
+    // truthEvPtr->thresholds[UsefulChanIndexV] = uhen->thresholdsAnt[iant][0][4];
+    // truthEvPtr->thresholds[UsefulChanIndexH] = uhen->thresholdsAnt[iant][1][4];
     int irx = iant;
     if (iant<16){
       if (iant%2) irx = iant/2;
@@ -650,15 +661,17 @@ void icemc::RootOutput::fillRootifiedAnitaDataTrees(const EventGenerator* uhen, 
     for (int j = 0; j < fNumPoints; j++) {
       truthEvPtr->fTimes[UsefulChanIndexV][j]             = j * anita1->TIMESTEP * 1.0E9;
       truthEvPtr->fTimes[UsefulChanIndexH][j]             = j * anita1->TIMESTEP * 1.0E9;
-		
-      truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j]   = uhen->justSignal_trig[0][iant][j+128]*1000;
-      truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j]   = uhen->justSignal_trig[1][iant][j+128]*1000;
-      truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]    = uhen->justNoise_trig[0][iant][j+128]*1000;
-      truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]    = uhen->justNoise_trig[1][iant][j+128]*1000;
-      truthEvPtr->fSignalAtDigitizer[UsefulChanIndexV][j] = uhen->justSignal_dig[0][iant][j+128]*1000;
-      truthEvPtr->fSignalAtDigitizer[UsefulChanIndexH][j] = uhen->justSignal_dig[1][iant][j+128]*1000;
-      truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexV][j]  = uhen->justNoise_dig[0][iant][j+128]*1000;
-      truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexH][j]  = uhen->justNoise_dig[1][iant][j+128]*1000;
+
+    // @todo URGENT FIX ME!
+      
+      // truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j]   = uhen->justSignal_trig[0][iant][j+128]*1000;
+      // truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j]   = uhen->justSignal_trig[1][iant][j+128]*1000;
+      // truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]    = uhen->justNoise_trig[0][iant][j+128]*1000;
+      // truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]    = uhen->justNoise_trig[1][iant][j+128]*1000;
+      // truthEvPtr->fSignalAtDigitizer[UsefulChanIndexV][j] = uhen->justSignal_dig[0][iant][j+128]*1000;
+      // truthEvPtr->fSignalAtDigitizer[UsefulChanIndexH][j] = uhen->justSignal_dig[1][iant][j+128]*1000;
+      // truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexV][j]  = uhen->justNoise_dig[0][iant][j+128]*1000;
+      // truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexH][j]  = uhen->justNoise_dig[1][iant][j+128]*1000;
 		
       truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]       = anita1->timedomain_output_allantennas[0][irx][j];
       truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]       = anita1->timedomain_output_allantennas[1][irx][j];

@@ -97,16 +97,15 @@ namespace icemc {
     const double FREQ_LOW_DISCONES=120.E6; // min frequency for discones
     const double FREQ_HIGH_DISCONES=1000.E6; // max frequency for discones
 
-    double bwslice_vnoise_thislayer[4];// for filling tree6b,  noise for each bandwidth on each layer
     int passes_thisevent=0; // this event passes
     int unmasked_thisevent=0; // this event is unmasked
 
-    int discones_passing;  // number of discones that pass
+
     int NDISCONES=8;
     double heff_discone=0; // effective height of a discone antenna
     double polarfactor_discone=0.;// factor to account for antenna beam pattern.
     double thislambda=0;// for finding wavelength at each frequency
-    double volts_discone=0.;// for finding voltage at each discone
+    // double volts_discone=0.;// for finding voltage at each discone
     double vnoise_discone=0.; // noise on each discone
 
 
@@ -121,13 +120,6 @@ namespace icemc {
     double mag2=0;  // magnification factor on field in firn-air
     double t_coeff_pokey, t_coeff_slappy;
     double rflength=0;  // distance from interaction to ice-air exit point
-
-    double e_comp_max1=0;
-    double h_comp_max1=0;
-    double e_comp_max2=0;
-    double h_comp_max2=0;
-    double e_comp_max3=0;
-    double h_comp_max3=0;
 
     double diffexit=0;  // checking exit point between_MAX interations
     double diff_3tries=0;
@@ -167,7 +159,6 @@ namespace icemc {
 
     int count_asktrigger=0;
     int count_asktrigger_nfb=0;
-    int count_pass=0;  // how many total trigger channels pass (4 bandwidth slices*2 pol * nrx)
 
     double count_passestrigger_w=0; // same as above,  but sum weights
     int passestrigger=0; // 1=this event passes trigger, 0=does not
@@ -191,7 +182,7 @@ namespace icemc {
 
     int count_chordgoodlength=0; // Incremented if neutrino path through earth is more than 1m
     int count_d2goodlength=0; // neutrino path through ice is more than 1m
-    int count_rx=0; // counting antennas we loop through them
+    // int count_rx=0; // counting antennas we loop through them
 
     double sum_frac[3]; // fraction of passing events that are e, mu, tau adding weights
     double sum_frac_db[3]; // same for double bangs
@@ -243,26 +234,10 @@ namespace icemc {
 
     double djunk; // junk variable
 
-    //For verification plots - added by Stephen
-    int max_antenna0 = -1;  //antenna with the peak voltage,  top layer
-    int max_antenna1 = -1;  //antenna with the peak voltage,  middle layer
-    int max_antenna2 = -1;  //antenna with the peak voltage,  bottom layer
-    double max_antenna_volts0 = 0; //Voltage on the antenna with maximum signal,  top layer
-    double max_antenna_volts0_em = 0; //Component of voltage from em shower on the antenna with maximum signal,  top layer
 
-    double max_antenna_volts1 = 0; //Voltage on the antenna with maximum signal,  middle layer
-    double max_antenna_volts2 = 0; //Voltage on the antenna with maximum signal,  bottom layer
 
-    double rx0_signal_eachband[2][5];
-    double rx0_threshold_eachband[2][5];
-    double rx0_noise_eachband[2][5];
-    int rx0_passes_eachband[2][5];
 
-    double voltagearray[Anita::NLAYERS_MAX*Anita::NPHI_MAX]; //Records max voltages on each antenna for one neutrino
 
-    Vector ant_max_normal0; //Vector normal to the face of the antenna with the maximum signal for a single neutrino,  top layer
-    Vector ant_max_normal1; //Vector normal to the face of the antenna with the maximum signal for a single neutrino,  middle layer
-    Vector ant_max_normal2; //Vector normal to the face of the antenna with the maximum signal for a single neutrino,  bottom layer
     // double vmmhz1m_visible = 0; //Actual V/m/Mhz at 1m
     int freq_bins = Anita::NFREQ; //Because the compiler objected to using the const directly
     
@@ -301,11 +276,6 @@ namespace icemc {
     int xsecParam_nutype = 0; // neutrino = 0, antineutrino = 1;
     int xsecParam_nuint  = 1; // NC = 0, CC = 1;
 
-
-    double justNoise_trig[2][48][512];
-    double justSignal_trig[2][48][512];
-    double justNoise_dig[2][48][512];
-    double justSignal_dig[2][48][512];
 
 
     // ray tracing
@@ -372,23 +342,11 @@ namespace icemc {
     // double volts_rx_max_lowband; // max voltage seen on an antenna - just for debugging purposes
     // double volts_rx_rfcm_lab_e_all[48][512];
     // double volts_rx_rfcm_lab_h_all[48][512];
-    VoltsRX voltsRX;
 
-    // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
-    double e_component=0; // E comp along polarization
-    double h_component=0; // H comp along polarization
-    double n_component=0; // normal comp along polarization
-    double e_component_kvector=0; // component of e-field along the rx e-plane
-    double h_component_kvector=0; // component of the e-field along the rx h-plane
-    double n_component_kvector=0; // component of the e-field along the normal
 
 
     double chengji = 0;
-    Vector ant_normal; //Vector normal to the face of the antenna
 
-    double hitangle_e, hitangle_h;       // angle the ray hits the antenna wrt e-plane, h-plane
-    double hitangle_e_all[Anita::NANTENNAS_MAX];         // hit angles rel. to e plane stored for each antenna
-    double hitangle_h_all[Anita::NANTENNAS_MAX];         // hit angles rel. to h plane stored for each antenna
 
     double sigma = 0;                       // for cross section
     double len_int_kgm2=0;              // interaction length in kg/m^2
@@ -430,24 +388,18 @@ namespace icemc {
     double sourceLat;
     double sourceMag;
 
-    Vector n_nutraject_ontheground; //direction of the neutrino from the person standing on the ground just below the balloon.
-    Vector n_pol; // direction of polarization
-    Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
-    Vector n_pol_db; // same,  double bangs
+    // Vector n_nutraject_ontheground; //direction of the neutrino from the person standing on the ground just below the balloon.
+    // Vector n_pol; // direction of polarization
+    // Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
+    // Vector n_pol_db; // same,  double bangs
 
-    int l3trig[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
-    // For each trigger layer,  which "clumps" pass L2.  16 bit,  16 bit and 8 bit for layers 1 & 2 and nadirs
-    int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
-    //For each trigger layer,  which antennas pass L1.  16 bit,  16 bit and 8 bit and layers 1,  2 and nadirs
-    int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
+    // int l3trig[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
+    // // For each trigger layer,  which "clumps" pass L2.  16 bit,  16 bit and 8 bit for layers 1 & 2 and nadirs
+    // int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
+    // //For each trigger layer,  which antennas pass L1.  16 bit,  16 bit and 8 bit and layers 1,  2 and nadirs
+    // int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
 
-    // these are declared here so that they can be stuck into trees
-    int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement
 
-    int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement
-
-    int nchannels_triggered = 0; // total number of channels triggered
-    int nchannels_perrx_triggered[48]; // total number of channels triggered
 
     double icethck;
     double elev;
@@ -491,7 +443,7 @@ namespace icemc {
     double IsItDoubleBang(double exitlength,  double plepton) const;
     int WhereIsSecondBang(const Position& posnu,  const Vector& nnu,  double nuexitlength,  double pnu,  IceModel *antarctica1,
 			  const Position& r_bn, Position &posnu2,  Position &rfexit_db,  Vector &n_exit2bn_db) const;
-    double GetAverageVoltageFromAntennasHit(const Settings *settings1,  int *nchannels_perrx_triggered,  double *voltagearray,  double& volts_rx_sum) const;
+
     Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside, int inu) const;
     void Attenuate(IceModel *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const Position &posnu) const ;
     void Attenuate_down(IceModel *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const Position &rfexit2,  const Position &posnu,  const Position &posnu_down) const ;
@@ -504,7 +456,7 @@ namespace icemc {
     void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  const ShowerProperties& ,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag) const;
     double GetViewAngle(const Vector &nrf2_iceside,  const Vector &nnu) const;
     int TIR(const Vector &n_surf,  const Vector &nrf2_iceside,  double N_IN,  double N_OUT) const;
-    void IntegrateBands(Anita *anita1,  int k,  Screen *panel1,  double *freq,  double scalefactor,  double *sumsignal) const;
+    // void IntegrateBands(Anita *anita1,  int k,  Screen *panel1,  double *freq,  double scalefactor,  double *sumsignal) const;
 
     // @todo constify... needs some love to constify
     void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, const AskaryanFreqsGenerator* askFreqGen,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
@@ -518,8 +470,6 @@ namespace icemc {
      */    
     void generateNeutrinos(const Settings& settings1, const CommandLineOpts& clOpts);
 
-    double thresholdsAnt[48][2][5];
-    double thresholdsAntPass[48][2][5];
 
     //do a threshold scan
     double threshold_start=-1.;
