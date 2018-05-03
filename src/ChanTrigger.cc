@@ -750,7 +750,7 @@ void icemc::ChanTrigger::InitializeEachBand(Anita *anita1)
 
 
 
-void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal){
+void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal) {
   
   e_component=0;
   h_component=0;
@@ -768,23 +768,23 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
   double tmp_volts[2][anita1->NFOUR/2];
   
   for (int iband=0;iband<5;iband++) { // loop over bands
-    
+
     Tools::Zero(volts_rx_forfft[0][iband], anita1->NFOUR/2);
     Tools::Zero(volts_rx_forfft[1][iband], anita1->NFOUR/2);
     Tools::Zero(vhz_rx[0][iband],          anita1->NFREQ);
     Tools::Zero(vhz_rx[1][iband],          anita1->NFREQ);
-    
+
     if (anita1->bwslice_allowed[iband]!=1) continue;
-    
+
     anita1->iminbin[iband]=0.;
     anita1->imaxbin[iband]=anita1->NFOUR/2;
-        
+
     for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
       for (int k=0;k<Anita::NFREQ;k++) {
         if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
 
           //Copy frequency amplitude to screen point
-          tmp_vhz[0][k]=tmp_vhz[1][k]=panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
+          tmp_vhz[0][k] = tmp_vhz[1][k] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
           // cout << tmp_vhz[0][k] << endl;
 	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
 	  bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
@@ -793,8 +793,8 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
           anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
 
           if (settings1->TUFFSON==2){
-            tmp_vhz[0][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
-            tmp_vhz[1][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
+            tmp_vhz[0][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
+            tmp_vhz[1][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
           }
           
         } // end if (seavey frequencies)
@@ -862,9 +862,9 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 
 
 #ifdef ANITA_UTIL_EXISTS
-  if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
+  if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) ){
     getNoiseFromFlight(anita1, ant, settings1->SIGNAL_FLUCT > 0);
-
+  }
   if (settings1->ADDCW){
     memset(cw_digPath, 0, sizeof(cw_digPath));
     calculateCW(anita1, 250E6, 0, 0.000005);

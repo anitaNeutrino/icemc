@@ -4,6 +4,9 @@
 #include "vector.hh"
 #include "position.hh"
 #include "screen.hh"
+#include "Detector.h"
+#include "anita.hh"
+#include "Tools.h"
 
 icemc::Screen::Screen(int a){
   if( !(a%2) )
@@ -292,3 +295,61 @@ void icemc::Screen::ResetParameters(){
   fTcoeff_perp_polperp.clear();
 };
 
+
+void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, Detector* d) const {
+
+  double tmp_vhz[Anita::NFREQ];
+  double tmp_volts[Anita::NFOUR/2];
+
+  // int n;
+  // double dt;
+  // d->getDesiredNDt(n, dt);
+
+  ///@todo remove hardcoding here!
+  double TIMESTEP=(1./2.6)*1.E-9; // time step between samples
+
+  for(int rx = 0; rx < d->getNumRX(); rx++){  
+    for (int jpt=0; jpt<GetNvalidPoints(); jpt++){
+      for (int k=0;k<Anita::NFREQ;k++) {
+
+	//Copy frequency amplitude to screen point
+	// tmp_vhz[0][k] = tmp_vhz[1][k] = GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
+	tmp_vhz[k] = GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(TIMESTEP*1.E6);
+
+      } // end looping over frequencies.
+
+      Anita::MakeArrayforFFT(tmp_vhz,tmp_volts, 90., true);
+
+      // and now it is really in units of V
+      Tools::realft(tmp_volts,-1,Anita::NFOUR/2);
+
+      // put it in normal time ording -T to T
+      // instead of 0 to T, -T to 0
+      Tools::NormalTimeOrdering(Anita::NFOUR/2,tmp_volts);
+
+      int numBinShift = int(this->GetDelay(jpt) / TIMESTEP);
+      if(fabs(numBinShift) >= Anita::HALFNFOUR){
+	//cout<<"skipping"<<"\n";
+	//don't bother adding it to the total since it's shifted out of range
+      }
+      else{
+	if( GetDelay(jpt)>0 ){
+	  Tools::ShiftLeft(tmp_volts, Anita::NFOUR/2, numBinShift );
+	}
+	else if( GetDelay(jpt)<0 ){
+	  Tools::ShiftRight(tmp_volts, Anita::NFOUR/2, -1*numBinShift );
+	}
+      }
+
+      AskaryanSignal s;
+      //@todo verify what is a complete guess at the geometry
+      for(int i=0; i < Anita::NFOUR/2; i++){
+	s.waveform.SetPoint(i, i*TIMESTEP, tmp_volts[i]);
+      }
+      s.polarization = GetPol(jpt);
+      s.poynting = d->getPositionRX(rx) - GetImpactPt(jpt);
+
+      d->addSignalToRX(s, rx);
+    }
+  }
+}

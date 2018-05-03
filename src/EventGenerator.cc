@@ -2464,6 +2464,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // delete simSignal;
 
       //if no-roughness case, add its parameters to the saved screen parameters so specular and roughness simulations use the same code in the waveform construction
+
       if(!settings1.ROUGHNESS){
         panel1->SetNvalidPoints(1);
         for (int k=0;k<Anita::NFREQ;k++) {

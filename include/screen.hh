@@ -15,11 +15,12 @@
 #include "position.hh"
 
 
-
 namespace icemc{
   class Position;
+  class Detector;
+  class Settings;
 
-
+  
   class Screen {
   private:
     double fedgeLength;               ///< the full length of one side
@@ -384,6 +385,16 @@ namespace icemc{
     //! Resets the following screen parameters (fNvalidpoints,fVmmhz_freq,fVmmhz0,fViewangle,fDelays,fVec2blns,fPols,fImpactPt,fWeight,fWeightNorm)
     void ResetParameters();
 
+
+
+    /** 
+     * Propagate the signals from the surface to the detector
+     * 
+     * @param d is the abstract detector class
+     */
+    void PropagateSignalsToDetector(const Settings* settings1, Detector* d) const;
+
   };
 }
+
 #endif

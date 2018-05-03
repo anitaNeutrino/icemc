@@ -19,15 +19,18 @@ namespace icemc {
   };
   
 
+
   /**
-   * @todo move this to somewhere more sensible and pick coordinate system for vectors
+   * @class AskaryanSignal
+   * @brief A waveform traveling along a particular direction with a particular polarization
    */
+
   class AskaryanSignal {
   public:
-    TGraph waveform; ///< Volts vs. time
-    icemc::Vector poynting; /// < Direction of signal travel
-    icemc::Vector polarization; ///< Polarization vector
-  };
+    TGraph waveform; ///< E-field (Volts/m) vs. time (seconds)
+    icemc::Vector poynting; /// < Direction of signal travel (in the icemc coordinate system).
+    icemc::Vector polarization; ///< Polarization vector (in the icemc coordinate system).
+  };  
 
 
   /**
@@ -38,11 +41,11 @@ namespace icemc {
    * All detectors that interact with icemc *MUST* inherit from this class 
    * and implement the pure virtual functions.
    * 
-   */  
-
+   */
   class Detector {
-  public:
+  public:    
 
+    
     /** 
      * @brief Where is the detector?
      * 
@@ -55,29 +58,53 @@ namespace icemc {
      */
     virtual GeographicCoordinate getCenterOfDetector() = 0;
 
+
     /** 
-     * @brief Where and how many places should the Askaryan field be calculated relative to the "average" detector position?
+     * How many antennas does the detector have? For looping.
      * 
-     * You might want to calculate the Askaryan E-field separately at each antenna, or just the center of the detector.
-     * 
-     * @return A const reference to 
+     * @return The total number of receivers (one per polarization per antenna).
      */
-    virtual const std::vector<TVector>& getFieldCalcLocationsRelativeToAveDetPos() = 0;
+    virtual int getNumRX() const = 0;
+
+
+    /** 
+     * Get the antennna position in the icemc coordinate system
+     * 
+     * @param rx is the index of the receiver
+     * 
+     * @return a reference to the relative position
+     */
+    virtual const icemc::Vector& getPositionRX(int rx) const = 0;
+    
+
+
+
+    /** 
+     * @brief Add a time domain signal to a receiver
+     * 
+     * This function should be called at least once per receiver per trigger.
+     * Any application of off-axis gain (and delay) should be handled internally by the detector.
+     * This function can be called an arbitrary number of times before the trigger is run.
+     * This allows for the implementation of multipath signals from the Screen class.
+     * @see icemc::Screen
+     * 
+     * @param signal is the signal to add.
+     * @param i is the index of the receiver 
+     */    
+    virtual void addSignalToRX(const AskaryanSignal& signal, int i) = 0;
+    
 
     /**
-     * @brief Detect (or not) the Askaryan radiation arriving at the payload.
+     * @brief Run the propagate the accumulated signals at each receiver through the detector trigger
      * 
-     * @todo figure out what else is required, polarization and direction?
-     * 
-     * @param signals Askaryan signals arriving at the locations specified by getFieldCalcLocationsRelativeToAveDetPos.
-     * The size of the parameter should be equal to the size of the what was returned by getFieldCalcLocationsRelativeToAveDetPos.
-     * 
-     * @return true if the waveform triggered the instrument, false if it did not.
+     * @return true if event passes trigger, false otherwise.
      */
-    virtual bool applyTrigger(const std::vector<AskaryanSignal>& signals) = 0;
+    virtual bool applyTrigger() = 0;
+
+
 
     /** 
-     * @brief Tell icemc how you like your Askaryan signals.
+     * @brief Tell icemc how you like your time-domain Askaryan signals.
      * 
      * icemc will generate time domain Askaryan signals for your detector of any length and time-step.
      * Tell it what you want here.
@@ -86,9 +113,14 @@ namespace icemc {
      * @param n number of samples for the generated time-domain Askaryan signal
      * @param dt time step (@todo units?) for the generated time-domain Askaryan signal
      */
-    virtual void getNDtForTimeDomainAskaryanSignals(int& n, double& dt) const = 0;
+    virtual void getDesiredNDt(int& n, double& dt) const = 0;
+
     
-  };  
+  protected:
+    std::vector<TGraph> fWaveformsRX; ///< Time domain signals at each receiver
+    
+  };
+  
 
 }
 

@@ -225,9 +225,10 @@ int icemc::Anita::GetRx(int ilayer, int ifold) const { // get antenna number bas
 
 int icemc::Anita::GetRxTriggerNumbering(int ilayer, int ifold) const { // get antenna number based on which layer and position it is
   // make the top trigger layer count 1-16 left to right
-  if (ilayer==0)
+  if (ilayer==0){
     //cout << "ilayer, ifold, getrx are " << ilayer << "\t" << ifold << "\t" << 2*ifold+ilayer << "\n";
     return 2*ifold;
+  }
   else if(ilayer==1) {
     return 2*ifold+1;
   }
@@ -1381,16 +1382,21 @@ void icemc::Anita::ReadGains(void) {
 
 
 void icemc::Anita::AntennaGain(const Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h) {
-    
+
   if (freq[k]>=settings1->FREQ_LOW_SEAVEYS && freq[k]<=settings1->FREQ_HIGH_SEAVEYS) {
-		
+
     double relativegains[4]; // fill this for each frequency bin for each antenna.  It's the gain of the antenna given the angle that the signal hits the balloon, for vv, vh, hv, hh, relative to the gain at boresight
-		
+
     for (int pols=0;pols<2;pols++) {// loop over vv, hv
-      if (fabs(hitangle_e)<constants::PI/2)
-	relativegains[pols]=Get_gain_angle(pols,k,hitangle_e);//change here to be constant if need be (ABBY).  Add a setting to the code for use constant gain or dish or something.  Make this a member function.
-      else
+      if (fabs(hitangle_e)<constants::PI/2){
+	// Change here to be constant if need be (ABBY).
+	// Add a setting to the code for use constant gain or dish or something.
+	// Make this a member function.	
+	relativegains[pols]=Get_gain_angle(pols,k,hitangle_e);
+      }
+      else{
 	relativegains[pols]=0.;
+      }
       //if (fabs(hitangle_e)<PI/12)
       //cout << "relative gains is " << relativegains[pols] << "\n";
     }
@@ -1406,10 +1412,12 @@ void icemc::Anita::AntennaGain(const Settings *settings1,double hitangle_e,doubl
     //cout << "vsignalarray_e after is " << vsignalarray_e << "\n";
 		
     for (int pols=2;pols<4;pols++) { // loop over hh, vh
-      if (fabs(hitangle_h)<constants::PI/2)
+      if (fabs(hitangle_h)<constants::PI/2){
 	relativegains[pols]=Get_gain_angle(pols,k,hitangle_h);
-      else
+      }
+      else{
 	relativegains[pols]=0.;
+      }
     }
 		
     // V/MHz
@@ -2366,7 +2374,7 @@ void icemc::Anita::GetNoiseWaveforms() {
   }
 }
 
-void icemc::Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx){
+void icemc::Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx) const {
   
   int firstNonZero = Tools::Getifreq(freq[0],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
   int lastNonZero  = Tools::Getifreq(freq[NFREQ-1],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
@@ -2387,7 +2395,7 @@ void icemc::Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx){
 }
 
 
-void icemc::Anita::GetPhasesFromFFT(double *tmp_fftvhz, double *phases){
+void icemc::Anita::GetPhasesFromFFT(double *tmp_fftvhz, double *phases) const {
   
   for (int ifreq=0; ifreq<NFOUR/4; ifreq++){
     phases[ifreq]=TMath::ATan2(tmp_fftvhz[ifreq+1], tmp_fftvhz[ifreq])*180./constants::PI;
@@ -2396,7 +2404,7 @@ void icemc::Anita::GetPhasesFromFFT(double *tmp_fftvhz, double *phases){
 }
 
 
-void icemc::Anita::FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[NFREQ]){
+void icemc::Anita::FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[NFREQ]) {
   
   // find the frequency domain
   Tools::realft(vsignalarray,1,NFOUR/2);
@@ -2409,6 +2417,7 @@ void icemc::Anita::FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[N
 
 
 }
+
 
 void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay) {
     

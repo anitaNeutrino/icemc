@@ -22,28 +22,26 @@ namespace icemc {
   public:
     ANITA(const Settings* settings, Counting* retardedClass, Ray* sillyRay, Screen* sillyPanel);
     virtual ~ANITA();
-    
+
+    virtual int getNumRX() const {return 96;} ///@todo make this proper
+    virtual const icemc::Vector& getPositionOfRX(int i) const;
     virtual GeographicCoordinate getCenterOfDetector();
-    virtual const std::vector<TVector>& getFieldCalcLocationsRelativeToAveDetPos();
-    virtual bool applyTrigger(const std::vector<AskaryanSignal>& signals);    
-    virtual void getNDtForTimeDomainAskaryanSignals(int& n, double& dt) const;
+    virtual bool applyTrigger();
+    virtual void getDesiredNDt(int& n, double& dt) const {
+      n = 128;
+      dt = 0.1;
+    }
+
+    virtual void addSignalToRX(const AskaryanSignal& signal, int rx);
 
 
     double GetAverageVoltageFromAntennasHit(const Settings *settings1,  int *nchannels_perrx_triggered,  double *voltagearray,  double& volts_rx_sum) const;
   private:
-    std::vector<TVector> testVecNotRealYet;
+    std::vector<icemc::Vector> testVecNotRealYet;
     const Settings* fSettingsPtrIDontOwn;
     Counting* fCountingPtrIDontOwn;
     Ray* fRayPtrIDontOwn;
-    Screen* fScreenPtrIDontOwn;    
-
-
-
-
-
-
-
-
+    Screen* fScreenPtrIDontOwn;
 
 
     // Complete junk from EventGenerator.h

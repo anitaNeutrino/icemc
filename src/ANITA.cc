@@ -14,8 +14,12 @@
 icemc::ANITA::ANITA(const Settings* settings, Counting* retardedClass, Ray* sillyRay, Screen* sillyPanel)
   : fSettingsPtrIDontOwn(settings), fCountingPtrIDontOwn(retardedClass), fRayPtrIDontOwn(sillyRay), fScreenPtrIDontOwn(sillyPanel)
 {
-  TVector v;
+  Vector v;
   testVecNotRealYet.push_back(v);
+  
+  for(int ant=0; ant < getNumRX(); ant++){
+    fWaveformsRX.push_back(TGraph());
+  }
 }
   
 icemc::ANITA::~ANITA(){
@@ -23,16 +27,6 @@ icemc::ANITA::~ANITA(){
 }
 
 
-/** 
- * @todo Make the match the current icemc implementation
- * 
- * @param n ANITA's desired n (for trigger and digitizer paths both!)
- * @param dt ANITA's desired dt (for trigger and digitizer paths both!)
- */
-void icemc::ANITA::getNDtForTimeDomainAskaryanSignals(int& n, double& dt) const {
-  n = 10000;
-  dt = 0.01;
-}
 
 
 
@@ -41,15 +35,46 @@ icemc::GeographicCoordinate icemc::ANITA::getCenterOfDetector(){
   return gc;
 }
 
-const std::vector<TVector>&  icemc::ANITA::getFieldCalcLocationsRelativeToAveDetPos(){
-  return testVecNotRealYet;
+
+
+void icemc::ANITA::addSignalToRX(const icemc::AskaryanSignal& signal, int rx){
+
+  TGraph& gr = fWaveformsRX.at(rx);
+  // apply the antenna gain...
+
+  double e_component=0;
+  double h_component=0;
+  double n_component=0;
+  double e_component_kvector=0;
+  double h_component_kvector=0;
+  double n_component_kvector=0;
+  double hitangle_e=0;
+  double hitangle_h=0;
+
+
+  Vector n_eplane;
+  Vector n_hplane;
+  Vector n_normal;
+
+
+  this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);  
+  
+  //this->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
+  this->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  signal.poynting, e_component_kvector,  h_component_kvector,  n_component_kvector);
+  // this->GetEcompHcompEvector(fSettingsPtrIDontOwn,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
+  this->GetEcompHcompEvector(fSettingsPtrIDontOwn,  n_eplane,  n_hplane,  signal.polarization,  e_component,  h_component,  n_component);  
+  this->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
+
+  // this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
+
 }
 
 
 
 
+
 // bool icemc::ANITA::applyTrigger(const std::vector<TGraph>& pureSignalVoltageTimeGraphs, const TVector& poyntingVector, const TVector& polarizationVector){
-bool icemc::ANITA::applyTrigger(const std::vector<AskaryanSignal>& signals){
+bool icemc::ANITA::applyTrigger(){
   
   //////////////////////////////////////
   //       EVALUATE GLOBAL TRIGGER    //
@@ -253,14 +278,14 @@ bool icemc::ANITA::applyTrigger(const std::vector<AskaryanSignal>& signals){
   int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement
 
   double thresholdsAnt[48][2][5] = {{{0}}};
-  double thresholdsAntPass[48][2][5] = {{{0}}};
+  // double thresholdsAntPass[48][2][5] = {{{0}}};
   
   
-  if (!fSettingsPtrIDontOwn->BORESIGHTS) {
-    this->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  fRayPtrIDontOwn->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
-    const icemc::Vector& n_pol = signals.back().polarization;
-    this->GetEcompHcompEvector(fSettingsPtrIDontOwn,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
-  }
+  // if (!fSettingsPtrIDontOwn->BORESIGHTS) {
+  //   this->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  fRayPtrIDontOwn->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
+  //   const icemc::Vector& n_pol = fWaveformsRX.back().polarization;
+  //   this->GetEcompHcompEvector(fSettingsPtrIDontOwn,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
+  // }
 
   int count_rx = 0;
   VoltsRX voltsRX;
@@ -269,10 +294,10 @@ bool icemc::ANITA::applyTrigger(const std::vector<AskaryanSignal>& signals){
           
       ChanTrigger chantrig1;
       // chantrig1.InitializeEachBand(anita1);
-      chantrig1.InitializeEachBand(this);	  
+      chantrig1.InitializeEachBand(this);
 
       // this->GetAntennaOrientation(fSettingsPtrIDontOwn,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
-      this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);	  
+      this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
  
       // if (fSettingsPtrIDontOwn->BORESIGHTS){ // i.e. if BORESIGHTS is true
       // 	this->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  fRayPtrIDontOwn->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector,  h_component_kvector,  n_component_kvector);
@@ -290,11 +315,11 @@ bool icemc::ANITA::applyTrigger(const std::vector<AskaryanSignal>& signals){
       // }
       
       int antNum = this->GetRxTriggerNumbering(ilayer, ifold);
-          
+
       // chantrig1.ApplyAntennaGain(fSettingsPtrIDontOwn, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
       // chantrig1.ApplyAntennaGain(fSettingsPtrIDontOwn, this, this, panel1, antNum, n_eplane, n_hplane, n_normal);
       // chantrig1.ApplyAntennaGain(fSettingsPtrIDontOwn, this, this, panel1, antNum, n_eplane, n_hplane, n_normal);
-      chantrig1.ApplyAntennaGain(fSettingsPtrIDontOwn, this, this, fScreenPtrIDontOwn, antNum, n_eplane, n_hplane, n_normal);	              
+      chantrig1.ApplyAntennaGain(fSettingsPtrIDontOwn, this, this, fScreenPtrIDontOwn, antNum, n_eplane, n_hplane, n_normal);
 
       // chantrig1.TriggerPath(fSettingsPtrIDontOwn, anita1, antNum, bn1);
       // chantrig1.DigitizerPath(fSettingsPtrIDontOwn, anita1, antNum, bn1);

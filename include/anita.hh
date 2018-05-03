@@ -46,6 +46,30 @@ namespace icemc {
 
   public:
 
+
+    Anita(); // constructor
+    virtual ~Anita();
+    void Initialize(const Settings *settings1,ofstream &foutput,int inu, TString outputdir); ///< initialize a bunch of stuff
+    void initializeFixedPowerThresholds(ofstream &foutput);
+    void readVariableThresholds(const Settings *settings1);
+    void readAmplification();
+    void getDiodeDataAndAttenuation(const Settings *settings1, TString outputdir);
+    void getPulserData();
+
+    // takes arrays that span NFREQ and turn them into arrays that span HALFNFOUR
+    static void MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay);
+
+    void GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx) const;
+ 
+    int Match(int ilayer,int ifold,int rx_minarrivaltime);
+    int getLabAttn(int NPOINTS_LAB, double *freqlab, double *labattn);
+
+    void labAttn(double *vhz);
+    void SetNoise(const Settings *settings1, Balloon *bn1, IceModel *antarctica);
+    void calculate_antenna_positions(const Settings *settings1,double pitch, double roll, double phi_spin,Vector n_north,Vector n_east);// this calculates the above
+
+    void saveGainsPlot(const std::string& fileName);
+    
     int tuffIndex; // keith edits
     int number_all_antennas;                                    ///< this keeps count of the number of antennas for use with timing calculations, etc.
 
@@ -93,28 +117,6 @@ namespace icemc {
 
     double additionalDt;
 
-    Anita(); // constructor
-    virtual ~Anita();
-    void Initialize(const Settings *settings1,ofstream &foutput,int inu, TString outputdir); ///< initialize a bunch of stuff
-    void initializeFixedPowerThresholds(ofstream &foutput);
-    void readVariableThresholds(const Settings *settings1);
-    void readAmplification();
-    void getDiodeDataAndAttenuation(const Settings *settings1, TString outputdir);
-    void getPulserData();
-  
-    // takes arrays that span NFREQ and turn them into arrays that span HALFNFOUR
-    void MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay);
-  
-    void GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx);
-  
-    int Match(int ilayer,int ifold,int rx_minarrivaltime);
-    int getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn);
-
-    void labAttn(double *vhz);
-    void SetNoise(const Settings *settings1,Balloon *bn1,IceModel *antarctica);
-    void calculate_antenna_positions(const Settings *settings1,double pitch, double roll, double phi_spin,Vector n_north,Vector n_east);// this calculates the above
-
-    void saveGainsPlot(const std::string& fileName);
 
     TFile *fnoise;
     TTree *tdiode;
@@ -246,7 +248,7 @@ namespace icemc {
     int l1_passing; // l1 passing
     int l1_passing_allantennas[48]; // l1 passing
     
-    int irx;
+    // int irx;
     void BoxAverageComplex(double *array,const int n,int navg);
     void BoxAverage(double *array,const int n,int navg);
     int GetRx(int ilayer, int ifold) const;                                                                           ///< get antenna number based on which layer and position it is
@@ -612,8 +614,8 @@ namespace icemc {
 #endif
     void calculateDelaysForEfficiencyScan();
 
-    void GetPhasesFromFFT(double *tmp_fftvhz, double *phases);
-    void FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[NFREQ]);
+    void GetPhasesFromFFT(double *tmp_fftvhz, double *phases) const;
+    void FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[NFREQ]) ;
 
   
     Double_t fTimes[HALFNFOUR];

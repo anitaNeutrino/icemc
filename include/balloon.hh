@@ -269,13 +269,13 @@ namespace icemc {
      * @param  n_component -
      * @return returns void
      */
-    void GetEcompHcompEvector(const Settings *settings1,
-			      Vector n_eplane, 
-			      Vector n_hplane, 
-			      const Vector n_pol, 
-			      double& e_component, 
-			      double& h_component, 
-			      double& n_component);
+    static void GetEcompHcompEvector(const Settings *settings1,
+				     Vector n_eplane, 
+				     Vector n_hplane, 
+				     const Vector n_pol, 
+				     double& e_component, 
+				     double& h_component, 
+				     double& n_component);
 		
     ///< This function gets the e-component, h-component and k-vector
     /**
@@ -291,21 +291,21 @@ namespace icemc {
      * @param  n_component_kvector -
      * @return returns void
      */
-    void GetEcompHcompkvector(Vector n_eplane,
+    static void GetEcompHcompkvector(Vector n_eplane,
 			      Vector n_hplane, 
 			      Vector n_normal, 
 			      const Vector n_exit2bn, 
 			      double& e_component_kvector, 
 			      double& h_component_kvector, 
 			      double& n_component_kvector);
-    
+
     ///< This function gets the hit angles
-    void GetHitAngles(
-		      double e_component_kvector,
-		      double h_component_kvector,
-		      double n_component_kvector, 
-		      double& hitangle_e,
-		      double& hitangle_h); 
+    static void GetHitAngles(
+			     double e_component_kvector,
+			     double h_component_kvector,
+			     double n_component_kvector, 
+			     double& hitangle_e,
+			     double& hitangle_h); 
  
     ///< This function sets the default balloon position
     /**
