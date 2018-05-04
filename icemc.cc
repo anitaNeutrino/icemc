@@ -232,6 +232,7 @@ double len_int=0;// interaction length in m
 double pieceofkm2sr=0; // Use this for making plots comparing different cross sections.  The integral of a plot from a run will be the total Area*sr of the detector.  That way it is proportional to the cross section and the integral is something meaningful to people.
 
 double CUTONWEIGHTS=1.E-10; // cut out events with small enough weight that they don't matter,  to save time
+//double CUTONWEIGHTS = 0.0000; // cut out events with small enough weight that they don't matter,  to save time
 
 // counting variables
 int count_inthisloop1=0; // for debugging
@@ -547,7 +548,7 @@ int main(int argc,  char **argv) {
     nnu_tmp = startNu+1;
   }
   settings1->SEED=settings1->SEED +run_no;
-  cout <<"seed is " << settings1->SEED << endl;
+  cout << "seed is " << settings1->SEED << endl;
 
   TRandom *rsave = gRandom;
   TRandom3 *Rand3 = new TRandom3(settings1->SEED);//for generating random numbers
@@ -622,8 +623,11 @@ int main(int argc,  char **argv) {
  
   //////////OINDREE TRYING THIS FOR GRBS/////////
   ////////// could call PickGrbDirection() when SOURCE setting is true///////
-  if ( settings1->SOURCE == 1 ) { interaction1->PickGrbDirection(); } 
- 
+  if ( settings1->SOURCE == 1 ) {
+    cout << "Source setting is ON!" << endl;  
+    interaction1->PickGrbDirection(); 
+  }
+  
   Roughness *rough1 = new Roughness(settings1); // create new instance of the roughness class
   rough1->SetRoughScale(settings1->ROUGHSIZE);
 
@@ -1945,7 +1949,7 @@ int main(int argc,  char **argv) {
           err = interaction1->PickGrbDirection(); 
           //cout << "err is " << err << endl; 
           costhetanu = cos(interaction1->nnu.Theta());
-          cout << "costhetanu is " << costhetanu << endl; 
+          //cout << "costhetanu is " << costhetanu << endl; 
         }
       }//end tau trigger ==0
 
@@ -2020,8 +2024,8 @@ int main(int argc,  char **argv) {
       IsAbsorbed(chord_kgm2_test, len_int_kgm2, weight_test);
       // if the probably the neutrino gets absorbed is almost 1,  throw it out.
 
-      if (bn1->WHICHPATH!=4 && settings1->FORSECKEL!=1 && !settings1->SKIPCUTS) {
-        if (weight_test<CUTONWEIGHTS) {
+      if ( bn1->WHICHPATH != 4 && settings1->FORSECKEL != 1 && !settings1->SKIPCUTS && !settings1->SOURCE) {
+        if (weight_test < CUTONWEIGHTS) {
           continue;
         }
       }
@@ -2089,7 +2093,7 @@ int main(int argc,  char **argv) {
       IsAbsorbed(interaction1->chord_kgm2_bestcase, len_int_kgm2, interaction1->weight_bestcase);
 
       // if the probability that the neutrino gets absorbed is almost 1,  throw it out.
-      if (bn1->WHICHPATH!=4 && interaction1->weight_bestcase<CUTONWEIGHTS && !settings1->SKIPCUTS && !settings1->FORSECKEL) {
+      if (bn1->WHICHPATH!=4 && interaction1->weight_bestcase<CUTONWEIGHTS && !settings1->SKIPCUTS && !settings1->FORSECKEL && !settings1->SOURCE) {
         if (bn1->WHICHPATH==3)
           cout<<"Neutrino is getting absorbed and thrown out!"<<endl;
         //
@@ -3072,7 +3076,7 @@ int main(int argc,  char **argv) {
       weight = weight1 / interaction1->dnutries * settings1->SIGMA_FACTOR;  // total weight is the earth absorption factor
       // divided by the factor accounting for the fact that we only chose our interaction point within the horizon of the balloon
       // then multiply by the cross section multiplier,  to account for the fact that we get more interactions when the cross section is higher
-      if (weight<CUTONWEIGHTS) {
+      if (weight < CUTONWEIGHTS && !settings1->SOURCE) {
         delete globaltrig1;
         continue;
       }

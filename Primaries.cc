@@ -228,7 +228,12 @@ Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,
   toolow=0;
 
   iceinteraction=0;
-  dtryingdirection=0.;
+
+  if (settings1->SOURCE == 1) {
+    dtryingdirection = 1.;
+  }
+  else dtryingdirection = 0.;
+  
   dnutries=0.;
 
   weight_nu=0;
@@ -286,7 +291,7 @@ int Interaction::PickGrbDirection() {
   grb_tree.SetBranchAddress("grb_az",&grb_az);
   grb_tree.SetBranchAddress("grb_alt",&grb_alt);
   
-  grb_tree.GetEntry(0);
+  grb_tree.GetEntry(1);
 
   //cout << "<3<3<3<3<3<3<3<3<3  GRB az and alt in degrees : " << grb_az << " " << grb_alt << "\n";    
 
