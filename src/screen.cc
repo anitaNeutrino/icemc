@@ -5,7 +5,9 @@
 #include "position.hh"
 #include "screen.hh"
 #include "Detector.h"
+#include "ANITA.h"
 #include "anita.hh"
+#include "FTPair.h"
 #include "Tools.h"
 
 icemc::Screen::Screen(int a){
@@ -296,7 +298,7 @@ void icemc::Screen::ResetParameters(){
 };
 
 
-void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, Detector* d) const {
+void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA* d) const {
 
   double tmp_vhz[Anita::NFREQ];
   double tmp_volts[Anita::NFOUR/2];
@@ -318,10 +320,10 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, Detect
 
       } // end looping over frequencies.
 
-      Anita::MakeArrayforFFT(tmp_vhz,tmp_volts, 90., true);
+      d->MakeArrayforFFT(tmp_vhz,tmp_volts, 90., true);
 
       // and now it is really in units of V
-      Tools::realft(tmp_volts,-1,Anita::NFOUR/2);
+      FTPair::realft(tmp_volts,-1,Anita::NFOUR/2);
 
       // put it in normal time ording -T to T
       // instead of 0 to T, -T to 0

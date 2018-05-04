@@ -22,6 +22,7 @@
 #include "ChanTrigger.h"
 #include <cmath>
 #include "Tools.h"
+#include "FTPair.h"
 #include "Settings.h"
 #include "screen.hh"
 #include "GlobalTrigger.h"
@@ -69,8 +70,8 @@ void icemc::ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
   //  double *hvolts_f=hvolts;
   //double *vvolts_f=vvolts;
     
-  Tools::realft(hvolts_f,1,nfour/2);
-  Tools::realft(vvolts_f,1,nfour/2);
+  FTPair::realft(hvolts_f,1,nfour/2);
+  FTPair::realft(vvolts_f,1,nfour/2);
     
   for (int i=0;i<nfour/4;i++) {
     //right[2*i]=1/sqrt(2.)*(hvolts_f[2*i]+vvolts_f[2*i+1]); //This is what was being done, until Jacob declared it wrong
@@ -89,8 +90,8 @@ void icemc::ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
     right[2*i+1]=right[2*i+1]*2./((double)nfour/2.);
   }
     
-  Tools::realft(left,-1,nfour/2);
-  Tools::realft(right,-1,nfour/2);
+  FTPair::realft(left,-1,nfour/2);
+  FTPair::realft(right,-1,nfour/2);
     
   // now take fft back
     
@@ -520,7 +521,7 @@ void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita
   }
 
       
-  anita1->irx=anita1->GetRx(ilayer,ifold);
+  // anita1->irx=anita1->GetRx(ilayer,ifold);
       
   if (Anita::GetLayer(anita1->rx_minarrivaltime)==ilayer && Anita::GetIfold(anita1->rx_minarrivaltime)==ifold && anita1->tsignals->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1) {
     anita1->tsignals->Fill();
@@ -809,8 +810,8 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 
       // now v_banding_rfcm_h_forfft is in the time domain
       // and now it is really in units of V
-      Tools::realft(tmp_volts[0],-1,anita1->NFOUR/2);
-      Tools::realft(tmp_volts[1],-1,anita1->NFOUR/2);
+      FTPair::realft(tmp_volts[0],-1,anita1->NFOUR/2);
+      FTPair::realft(tmp_volts[1],-1,anita1->NFOUR/2);
 
       // put it in normal time ording -T to T
       // instead of 0 to T, -T to 0
@@ -849,8 +850,8 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 
     
     // find back the frequency domain
-    Tools::realft(tmp_volts[0],1,anita1->NFOUR/2);
-    Tools::realft(tmp_volts[1],1,anita1->NFOUR/2);
+    FTPair::realft(tmp_volts[0],1,anita1->NFOUR/2);
+    FTPair::realft(tmp_volts[1],1,anita1->NFOUR/2);
 
 
     // Convert FFT arrays into standard icemc frequency amplitudes array
@@ -941,8 +942,8 @@ void icemc::ChanTrigger::TriggerPath(const Settings *settings1, Anita *anita1, i
 
       // now v_banding_rfcm_h_forfft is in the time domain
       // and now it is really in units of V
-      Tools::realft(v_banding_rfcm_forfft[0][iband],-1,anita1->NFOUR/2);
-      Tools::realft(v_banding_rfcm_forfft[1][iband],-1,anita1->NFOUR/2);
+      FTPair::realft(v_banding_rfcm_forfft[0][iband],-1,anita1->NFOUR/2);
+      FTPair::realft(v_banding_rfcm_forfft[1][iband],-1,anita1->NFOUR/2);
       
       // put it in normal time ording -T to T
       // instead of 0 to T, -T to 0
@@ -1081,8 +1082,8 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
     // convert to the time domain
     // still don't have any noise
       
-    Tools::realft(volts_rx_rfcm[0],-1,anita1->HALFNFOUR);
-    Tools::realft(volts_rx_rfcm[1],-1,anita1->HALFNFOUR);
+    FTPair::realft(volts_rx_rfcm[0],-1,anita1->HALFNFOUR);
+    FTPair::realft(volts_rx_rfcm[1],-1,anita1->HALFNFOUR);
       
     anita1->GetNoiseWaveforms(); // get noise waveforms
       
@@ -1126,8 +1127,8 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
     // now the last two are in the frequency domain
     // convert to the time domain
     // still don't have any noise
-    Tools::realft(volts_rx_rfcm_lab[0],-1,anita1->HALFNFOUR); 
-    Tools::realft(volts_rx_rfcm_lab[1],-1,anita1->HALFNFOUR);
+    FTPair::realft(volts_rx_rfcm_lab[0],-1,anita1->HALFNFOUR); 
+    FTPair::realft(volts_rx_rfcm_lab[1],-1,anita1->HALFNFOUR);
 
     // put it in normal time ording -T to T
     // instead of 0 to T, -T to 0 
@@ -1726,7 +1727,7 @@ void icemc::ChanTrigger::applyImpulseResponseTrigger(const Settings *settings1, 
   }
   
   // find back the frequency domain
-  Tools::realft(voltsArray,1,anita1->NFOUR/2);
+  FTPair::realft(voltsArray,1,anita1->NFOUR/2);
   
   //convert the V pol time waveform into frequency amplitudes
   anita1->GetArrayFromFFT(voltsArray, vhz);
@@ -1902,8 +1903,8 @@ void icemc::ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
 
 
     // find back the frequency domain
-    Tools::realft(tmp_volts[0],1,anita1->NFOUR/2);
-    Tools::realft(tmp_volts[1],1,anita1->NFOUR/2);
+    FTPair::realft(tmp_volts[0],1,anita1->NFOUR/2);
+    FTPair::realft(tmp_volts[1],1,anita1->NFOUR/2);
     
     //convert the V pol time waveform into frequency amplitudes
     anita1->GetArrayFromFFT(tmp_volts[0], vhz_rx[0][4]);

@@ -21,6 +21,7 @@
 #include <string>
 
 #include "Tools.h"
+#include "FTPair.h"
 
 #include "TTree.h"
 #include "TH1F.h"
@@ -728,7 +729,7 @@ void icemc::Anita::getDiodeDataAndAttenuation(const Settings *settings1, TString
       fdiode_real[j][i]=0.;   // now fdiode_real is NFOUR array which is double sized then the signal we have. This is for zero padding for later convolution.
     }
       
-    Tools::realft(fdiode_real[j],1,NFOUR);  // now fdiode_real is in freq domain
+    FTPair::realft(fdiode_real[j],1,NFOUR);  // now fdiode_real is in freq domain
   }
   // try applying an exponential to the frequency domain
     
@@ -2110,7 +2111,7 @@ void icemc::Anita::myconvlv(double *data,const int NFOUR,double *fdiode,double &
   //double fdiode_real[length];
   double power_noise_copy[length];
     
-    
+
   for (int i=0;i<NFOUR/2;i++) {
     power_noise_copy[i]=(data[i]*data[i])/impedence*TIMESTEP;
   }
@@ -2127,7 +2128,7 @@ void icemc::Anita::myconvlv(double *data,const int NFOUR,double *fdiode,double &
   // delete gV;
   // delete c;
     
-  Tools::realft(power_noise_copy,1,length);
+  FTPair::realft(power_noise_copy,1,length);
   //  realft(fdiode_real,1,length);
     
   double ans_copy[length];
@@ -2147,7 +2148,7 @@ void icemc::Anita::myconvlv(double *data,const int NFOUR,double *fdiode,double &
    
     
     
-  Tools::realft(ans_copy,-1,length);
+  FTPair::realft(ans_copy,-1,length);
     
     
   // even if there are NFOUR array in diodeconv, only first NFOUR/2 is meaningful for us.
@@ -2336,11 +2337,11 @@ void icemc::Anita::GetNoiseWaveforms() {
       sumfreqdomain += avgfreqdomain_lab[k];
     }
     
-    Tools::realft(timedomainnoise_rfcm[ipol], -1, NFOUR / 2);
-    Tools::realft(timedomainnoise_lab[ipol],  -1, NFOUR / 2);
+    FTPair::realft(timedomainnoise_rfcm[ipol], -1, NFOUR / 2);
+    FTPair::realft(timedomainnoise_lab[ipol],  -1, NFOUR / 2);
 
-    //    Tools::realft(timedomainnoise_rfcm_long[ipol], -1, NFOUR );
-    //     Tools::realft(timedomainnoise_lab_long[ipol],-1, NFOUR );
+    //    FTPair::realft(timedomainnoise_rfcm_long[ipol], -1, NFOUR );
+    //     FTPair::realft(timedomainnoise_lab_long[ipol],-1, NFOUR );
     
     for (int k = 0; k < NFOUR / 2; k++) {
       timedomainnoise_lab[ipol][k] *=THERMALNOISE_FACTOR;
@@ -2363,11 +2364,11 @@ void icemc::Anita::GetNoiseWaveforms() {
     for (int ipol=0;ipol<2;ipol++)
       normalize_for_nsamples(timedomainnoise_rfcm_banding[ipol][iband], (double) nsamples, (double) nsamp);
     for (int ipol=0;ipol<2;ipol++)
-      Tools::realft(timedomainnoise_rfcm_banding[ipol][iband], -1, NFOUR / 2);
+      FTPair::realft(timedomainnoise_rfcm_banding[ipol][iband], -1, NFOUR / 2);
 
     //      convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR,timedomainnoise_rfcm_banding_long[ipol][iband], freqdomain_rfcm_banding_long[iband], phases_rfcm_banding_e_long[iband]);
     //       normalize_for_nsamples(timedomainnoise_rfcm_banding_long[ipol][iband], (double) nsamples_long, (double) nsamp);
-    //       Tools::realft(timedomainnoise_rfcm_banding_long[ipol][iband], -1, NFOUR);
+    //       FTPair::realft(timedomainnoise_rfcm_banding_long[ipol][iband], -1, NFOUR);
 
     
     
@@ -2407,7 +2408,7 @@ void icemc::Anita::GetPhasesFromFFT(double *tmp_fftvhz, double *phases) const {
 void icemc::Anita::FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[NFREQ]) {
   
   // find the frequency domain
-  Tools::realft(vsignalarray,1,NFOUR/2);
+  FTPair::realft(vsignalarray,1,NFOUR/2);
 
   GetPhasesFromFFT(vsignalarray, v_phases);
   
@@ -2419,7 +2420,7 @@ void icemc::Anita::FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[N
 }
 
 
-void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay) {
+void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay) const {
     
   Tools::Zero(vsignal_e_forfft,NFOUR/2);
     
@@ -2446,9 +2447,9 @@ void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forf
       //      cout << "ifour, vsignal is " << ifour << " " << vsignal_e_forfft[2*ifour] << "\n";
 
       vsignal_e_forfft[2*ifour+1]=vsignalarray_e[i]*2/((double)NFOUR/2); // phase is 90 deg.
-      // the 2/(nfour/2) needs to be included since were using Tools::realft with the -1 setting
+      // the 2/(nfour/2) needs to be included since were using FTPair::realft with the -1 setting
 
-      // the 2/(nfour/2) needs to be included since were using Tools::realft with the -1 setting
+      // the 2/(nfour/2) needs to be included since were using FTPair::realft with the -1 setting
       // how about we interpolate instead of doing a box average
 
       for (int j=iprevious+1;j<ifour;j++) {

@@ -14,10 +14,12 @@
 icemc::ANITA::ANITA(const Settings* settings, Counting* retardedClass, Ray* sillyRay, Screen* sillyPanel)
   : fSettingsPtrIDontOwn(settings), fCountingPtrIDontOwn(retardedClass), fRayPtrIDontOwn(sillyRay), fScreenPtrIDontOwn(sillyPanel)
 {
-  Vector v;
-  testVecNotRealYet.push_back(v);
+  for(int i=0; i < getNumRX(); i++){
+    Vector v;
+    testVecNotRealYet.push_back(v);
+  }
   
-  for(int ant=0; ant < getNumRX(); ant++){
+  for(int i=0; i < getNumRX(); i++){
     fWaveformsRX.push_back(TGraph());
   }
 }
@@ -28,12 +30,6 @@ icemc::ANITA::~ANITA(){
 
 
 
-
-
-icemc::GeographicCoordinate icemc::ANITA::getCenterOfDetector(){
-  GeographicCoordinate gc;
-  return gc;
-}
 
 
 
@@ -57,7 +53,7 @@ void icemc::ANITA::addSignalToRX(const icemc::AskaryanSignal& signal, int rx){
   Vector n_normal;
 
 
-  this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);  
+  // this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);  
   
   //this->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
   this->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  signal.poynting, e_component_kvector,  h_component_kvector,  n_component_kvector);

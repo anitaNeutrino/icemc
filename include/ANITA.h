@@ -24,8 +24,13 @@ namespace icemc {
     virtual ~ANITA();
 
     virtual int getNumRX() const {return 96;} ///@todo make this proper
-    virtual const icemc::Vector& getPositionOfRX(int i) const;
-    virtual GeographicCoordinate getCenterOfDetector();
+    virtual const icemc::Vector& getPositionRX(int i) const{
+      return testVecNotRealYet[i];
+    }
+    virtual GeographicCoordinate getCenterOfDetector(){
+      GeographicCoordinate gc;
+      return gc;
+    }
     virtual bool applyTrigger();
     virtual void getDesiredNDt(int& n, double& dt) const {
       n = 128;

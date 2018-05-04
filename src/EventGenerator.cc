@@ -2539,7 +2539,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // this seems to be where the neutrino simulation ends
       // everything in here should end up in the ANITA class.      
       ///@todo HHEEERRRREEE!!!!!
-      bool eventPassedTrigger = fDetector->applyTrigger(signals);
+      bool eventPassedTrigger = fDetector->applyTrigger();
       if(eventPassedTrigger){
 
 	

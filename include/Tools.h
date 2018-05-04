@@ -48,10 +48,10 @@ namespace icemc{
     void InterpolateReal(double* array, const unsigned n);
     void InterpolateComplex(double *array, const unsigned n);
 
-    void four1(double *data, const int isign,int nsize);
-    void realft(double *data, const int isign, int nsize);
-
-    void SWAP(double &a, double &b);// swaps two numbers
+    // void four1(double *data, const int isign,int nsize);
+    // void realft(double *data, const int isign, int 
+    // void SWAP(double &a, double &b);// swaps two numbers
+    
     void NormalTimeOrdering(const int n,double *volts);
     void reverseTimeOrdering(const int n,double *bitsin,double *bitsout);
     void reverseTimeOrdering(const int n,int *bitsin,int *bitsout);
