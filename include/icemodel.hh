@@ -56,8 +56,8 @@ namespace icemc {
     double water_depth[1200][1000]; //depth of water under ice
 
 
-    double bedmap_R; //varies with latitude, defined here for 71 deg S latitude
-    double bedmap_nu;
+    // double bedmap_R; //varies with latitude, defined here for 71 deg S latitude
+    // double bedmap_nu;
 
 
     //Parameters of the BEDMAP ice model. (See http://www.antarctica.ac.uk/aedc/bedmap/download/)
@@ -77,67 +77,54 @@ namespace icemc {
     int NODATA;
 
 
-    void IceENtoLonLat(int e,
-		       int n,
-		     
-		       double& lon,
-		       double& lat);  
-    void GroundENtoLonLat(int e,
-			  int n,
-			
-			  double& lon,
-			  double& lat);
+    void IceENtoLonLat(int e, int n, double& lon, double& lat) const;  
+    void GroundENtoLonLat(int e, int n,	double& lon, double& lat) const;
 
     const static int NBNPOSITIONS_MAX=26000;
     double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
     IceModel(int model=0,int earth_mode=0,int WEIGHTABSORPTION_SETTING=1);
-    double IceThickness(double lon,double lat);
-    double IceThickness(const Position& pos) ;
-    double Surface(double lon,double lat) ;
-    double Surface(const Position& pos) ;
-    double SurfaceAboveGeoid(double lon,double lat);
-    double SurfaceAboveGeoid(const Position& pos) ;
-    double WaterDepth(double lon,double lat);
-    double WaterDepth(const Position& pos);
-    Position PickInteractionLocation(int ibnposition, const Settings *settings1, const Position &rbn, Interaction *interaction1);
-    Position PickBalloonPosition();
-    void GetMAXHORIZON(Balloon *bn1); // get upper limit on the horizon wrt the balloon.
-    int RossIceShelf(const Position &position); 
-    int IceOnWater(const Position &postition);
-    int RossExcept(const Position &position);
-    int RonneIceShelf(const Position &position);
-    int WestLand(const Position &pos); 
+    double IceThickness(double lon,double lat) const;
+    double IceThickness(const Position& pos) const;
+    double Surface(double lon,double lat) const;
+    double Surface(const Position& pos) const;
+    double SurfaceAboveGeoid(double lon,double lat) const;
+    double SurfaceAboveGeoid(const Position& pos) const;
+    double WaterDepth(double lon,double lat) const;
+    double WaterDepth(const Position& pos) const;
+    Position PickInteractionLocation(int ibnposition, const Settings *settings1, const Position &rbn, Interaction *interaction1) const;
+    Position PickBalloonPosition() const;
+    void GetMAXHORIZON(Balloon *bn1) const; // get upper limit on the horizon wrt the balloon.
+    int RossIceShelf(const Position &position) const; 
+    int IceOnWater(const Position &postition) const;
+    int RossExcept(const Position &position) const;
+    int RonneIceShelf(const Position &position) const;
+    int WestLand(const Position &pos) const; 
     int AcceptableRfexit(const Vector &nsurf_rfexit,const Position &rfexit,const Vector &n_exit2rx); 
-    double GetBalloonPositionWeight(int ibnpos);
-    int OutsideAntarctica(const Position &pos);
-    int OutsideAntarctica(double lat);
+    double GetBalloonPositionWeight(int ibnpos) const;
+    int OutsideAntarctica(const Position &pos) const;
+    int OutsideAntarctica(double lat) const;
     int WhereDoesItEnterIce(const Position &posnu,
 			    const Vector &nnu,
 			    double stepsize,
-			    Position &r_enterice);
+			    Position &r_enterice) const;
 
     int WhereDoesItExitIce(const Position &posnu,
 			   const Vector &nnu,
 			   double stepsize,
-			   Position &r_enterice);
+			   Position &r_enterice) const;
     int WhereDoesItExitIceForward(const Position &posnu,
 				  const Vector &nnu,
 				  double stepsize,
-				  Position &r_enterice);
+				  Position &r_enterice) const;
     void CreateHorizons(const Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput);
-    Vector GetSurfaceNormal(const Position &r_out); //overloaded from EarthModel to include procedures for new ice models.
-    double GetN(double depth);
-    double GetN(const Position &pos);
-    double EffectiveAttenuationLength(const Settings *settings1,const Position &pos, const int &whichray);
+    Vector GetSurfaceNormal(const Position &r_out) const; //overloaded from EarthModel to include procedures for new ice models.
+    double GetN(double depth) const;
+    double GetN(const Position &pos) const;
+    double EffectiveAttenuationLength(const Settings *settings1,const Position &pos, const int &whichray) const;
   
-    void IceLonLattoEN(double lon, 
-		       double lat,
-		     
-		       int& e_coord, 
-		       int& n_coord);
+    void IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const;
 
-    void FillArraysforTree(double lon_ground[1068][869],double lat_ground[1068][869],double lon_ice[1200][1000],double lat_ice[1200][1000],double lon_water[1200][1000],double lat_water[1200][1000]);
-    int PickUnbiased(Interaction *interaction1,IceModel *antarctica);
+    int PickUnbiased(Interaction *interaction1, const IceModel *antarctica) const;
 
 
   protected:
@@ -156,15 +143,9 @@ namespace icemc {
     double maxvol_inhorizon[NBNPOSITIONS_MAX]; // maximum volume of ice for a bin 
 
     //BEDMAP utility methods
-    double Area(double latitude);
+    double Area(double latitude) const;
 
-    void ENtoLonLat(int e_coord, 
-		    int n_coord,
-		    double xLowerLeft,
-		    double yLowerLeft,
-		  
-		    double& lon, 
-		    double& lat) ;
+    void ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, double yLowerLeft, double& lon, double& lat) const;
 
 
 
@@ -172,25 +153,25 @@ namespace icemc {
 			 int n,
 		       
 			 double& lon,
-			 double& lat);
+			 double& lat) const;
     void LonLattoEN(double lon, 
 		    double lat,
 		    double xLowerLeft,
 		    double yLowerLeft,
 		
 		    int& e_coord, 
-		    int& n_coord);
+		    int& n_coord) const;
  
     void GroundLonLattoEN(double lon, 
 			  double lat,
 			
 			  int& e_coord, 
-			  int& n_coord) ;
+			  int& n_coord) const;
     void WaterLonLattoEN(double lon,
 			 double lat,
 		       
 			 int& e_coord,
-			 int& n_coord) ;
+			 int& n_coord) const;
 
     //BEDMAP data input methods
     void ReadIceThickness();

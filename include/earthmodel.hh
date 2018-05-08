@@ -3,18 +3,13 @@
 
 #include <string>
 #include <cstdlib>
-//#include "Primaries.h"
 #include "TRandom3.h"
 #include "vector.hh"
-
-using std::string;
 
 namespace icemc{
 
   class Primaries;
   class Position;
-  //class Vector
-  //class TRandom3;
   class Interaction;
   class IceModel;
 
@@ -84,21 +79,21 @@ namespace icemc{
     double ice_area; // sums the area of the earth's surface that has antarctic ice underneath
     double max_icevol_perbin; // maximum ice volume in any bin
     double max_icethk_perbin;
-    virtual double Geoid(double latitude) ;
-    virtual double Geoid(const Position &pos) ;
-    virtual double IceThickness(double lon,double lat) ;
-    virtual double IceThickness(const Position& pos) ;
-    virtual double Surface(double lon,double lat) ;
-    virtual double Surface(const Position& pos) ;
-    virtual int InFirn(const Position& pos) ;
-    virtual double SurfaceDeepIce(const Position& pos) ;
-    virtual double SurfaceAboveGeoid(double lon,double lat) ;
-    virtual double SurfaceAboveGeoid(const Position& pos) ;
-    virtual double WaterDepth(double lon,double lat) ;
-    virtual double WaterDepth(const Position& pos) ;
-    virtual double RockSurface(double lon,double lat) ;
-    virtual double RockSurface(const Position& pos) ;    
-    double GetDensity(double altitude, const Position earth_in, int& crust_entered);
+    virtual double Geoid(double latitude) const;
+    virtual double Geoid(const Position &pos) const;
+    virtual double IceThickness(double lon,double lat) const;
+    virtual double IceThickness(const Position& pos) const;
+    virtual double Surface(double lon,double lat) const;
+    virtual double Surface(const Position& pos) const;
+    virtual int InFirn(const Position& pos) const;
+    virtual double SurfaceDeepIce(const Position& pos) const;
+    virtual double SurfaceAboveGeoid(double lon,double lat) const;
+    virtual double SurfaceAboveGeoid(const Position& pos) const;
+    virtual double WaterDepth(double lon,double lat) const;
+    virtual double WaterDepth(const Position& pos) const;
+    virtual double RockSurface(double lon,double lat) const;
+    virtual double RockSurface(const Position& pos) const;
+    double GetDensity(double altitude, const Position earth_in, int& crust_entered) const;
 
     /** 
      * Figures out whether a neutrino will make it through the Earth along a chord
@@ -138,11 +133,11 @@ namespace icemc{
 		 double& nearthlayers, double myair, double& total_kgm2, int& crust_entered, int& mantle_entered, int& core_entered);
     
 
-    Vector GetSurfaceNormal(const Position &r_out) ;
+    Vector GetSurfaceNormal(const Position &r_out) const;
     static double LongtoPhi_0isPrimeMeridian(double longitude); // convert longitude to phiwith 0 longitude being the prime meridian
     static double LongtoPhi_0is180thMeridian(double longitude); // convert longitude to phi with 0 longitude being at the 180th meridian
-    void EarthCurvature(double *array,double depth_temp); // adjusts coordinates within the mine to account for the curvature of the earth.
-    Position WhereDoesItEnter(const Position &posnu,const Vector &nnu);
+    void EarthCurvature(double *array,double depth_temp) const; // adjusts coordinates within the mine to account for the curvature of the earth.
+    Position WhereDoesItEnter(const Position &posnu,const Vector &nnu) const;
 
  
   private:
@@ -204,19 +199,22 @@ namespace icemc{
 
     /////////////////////////////////////
     //methods
-    void ReadCrust(string);
-    double SmearPhi(int ilon, double rand);
-    double SmearTheta(int ilat, double rand) ;
-    double dGetTheta(int itheta) ;
-    double dGetPhi(int ilon) ;
-    void GetILonILat(const Position&,int& ilon,int& ilat) ;
-    double GetLat(double theta) ;
-    double GetLon(double phi) ;
-    Vector PickPosnuForaLonLat(double lon,double lat,double theta,double phi); // given that an interaction occurs at a lon and lat, pick an interaction position in the ice
+    void ReadCrust(std::string);
+    double SmearPhi(int ilon, double rand) const;
+    double SmearTheta(int ilat, double rand) const;
+    double dGetTheta(int itheta) const;
+    double dGetPhi(int ilon) const;
+    void GetILonILat(const Position&,int& ilon,int& ilat) const;
+    double GetLat(double theta) const;
+    double GetLon(double phi) const;
+    Vector PickPosnuForaLonLat(double lon,double lat,double theta,double phi) const; // given that an interaction occurs at a lon and lat, pick an interaction position in the ice
 
   }; //class EarthModel
 
-
+  /**
+   * @todo put this somewhere in a function so it gets accessed by a descriptive name
+   * And maybe with a bounds check too...
+   */
   constexpr double densities[3]={14000.,3400.,2900.}; // average density of each earth layer
 }
 

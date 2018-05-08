@@ -50,7 +50,7 @@ void icemc::Ray::Initialize() {
   nsurf_rfexit_db=Vector(0.,0.,0.);
 
 }
-void icemc::Ray::GetRFExit(const Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry,IceModel *antarctica) {
+void icemc::Ray::GetRFExit(const Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry,const IceModel *antarctica) {
 
 
 
@@ -104,14 +104,15 @@ void icemc::Ray::GetRFExit(const Settings *settings1,Anita *anita1,int whichray,
 // icemc::Ray::WhereDoesItLeave() is defined in ray.hh since it is a statis member function // MS 2/1/2017
 
 
-int icemc::Ray::RandomizeSurface(const Settings *settings1,Position rfexit_temp,Vector posnu,IceModel *antarctica,double &slopeyangle,int whichtry) {
+int icemc::Ray::RandomizeSurface(const Settings *settings1,Position rfexit_temp,Vector posnu,const IceModel *antarctica,double &slopeyangle,int whichtry) {
 
   double howmuch=settings1->SLOPEYSIZE;
   Position nsurf_rfexit_temp;
   
   // rotate the surface normal according to the local slope.
-  if (!settings1->SLAC)
+  if (!settings1->SLAC){
     nsurf_rfexit_temp = antarctica->GetSurfaceNormal(rfexit_temp); // find the normal to the surface taking into account the tilt from the differential heights between neighboring bins
+  }
   else if (settings1->SLAC) { // if we are simulating the slac test, rotate the surface by 10 degrees away from the south pole
     Vector zaxis(0.,0.,1.);
     nsurf_rfexit_temp=(rfexit_temp.Unit()).Rotate(-settings1->SLACSLOPE*constants::RADDEG,posnu.Cross(zaxis));
@@ -171,7 +172,7 @@ int icemc::Ray::RandomizeSurface(const Settings *settings1,Position rfexit_temp,
 }//RandomizeSurface
 
 // int icemc::Ray::GetSurfaceNormal(IceModel *antarctica,Vector posnu,Position *rfexit) {
-int icemc::Ray::GetSurfaceNormal(const Settings *settings1,IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry) {
+int icemc::Ray::GetSurfaceNormal(const Settings *settings1,const IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry) {
       
   Position rfexit_temp;
 

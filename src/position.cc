@@ -5,17 +5,18 @@
 #include "earthmodel.hh"
 #include <cmath>
 #include "Constants.h"
- icemc::Position::Position() : Vector() 
+
+icemc::Position::Position() : Vector() 
 {
   //This method intentionally left blank.
 } //Position default constructor
 
- icemc::Position::Position(Vector vec) : Vector(vec[0],vec[1],vec[2]) 
+icemc::Position::Position(const Vector& vec) : Vector(vec[0],vec[1],vec[2]) 
 {
   //This method intentionally left blank.
 } //Position constructor from Vector
 
- icemc::Position::Position(double longitude, double latitude, double altitude) {
+icemc::Position::Position(double longitude, double latitude, double altitude) {
   Vector location = z_axis;
   theta = latitude * constants::RADDEG;
 
@@ -30,27 +31,27 @@
   z = location[2];
 } //Position constructor from longitude and latitude
 
- icemc::Position::Position(double theta_inp, double phi_inp) : Vector(theta_inp,phi_inp) 
+icemc::Position::Position(double theta_inp, double phi_inp) : Vector(theta_inp,phi_inp) 
 {
   //This method intentionally left blank.
 } //Constructor Position(theta,phi)
 
- double icemc::Position::Distance(const Position &second) const {
-  return sqrt((x - second.x)*(x-second.x) 
+double icemc::Position::Distance(const Position &second) const {
+  return sqrt(  (x - second.x)*(x-second.x) 
 	      + (y - second.y)*(y-second.y) 
 	      + (z - second.z)*(z-second.z)); // it saves time to multiply them like this rather than use pow
 } //icemc::Position::Distance
 
- double icemc::Position::SurfaceDistance(const Position &second, double local_surface) const {
+double icemc::Position::SurfaceDistance(const Position &second, double local_surface) const {
   return  this->Angle(second) * local_surface;
 } //icemc::Position::SurfaceDistance
 
- double icemc::Position::Lat() const {
-   return theta*constants::DEGRAD;
+double icemc::Position::Lat() const {
+  return theta*constants::DEGRAD;
 } //icemc::Position::Lat
 
- double icemc::Position::Lon() const {
-   double phi_deg = phi*constants::DEGRAD;
+double icemc::Position::Lon() const {
+  double phi_deg = phi*constants::DEGRAD;
 
   if (phi_deg > 270.)
     phi_deg = phi_deg-360.;

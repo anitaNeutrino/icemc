@@ -66,7 +66,7 @@ namespace icemc {
 
     void labAttn(double *vhz);
     void SetNoise(const Settings *settings1, Balloon *bn1, IceModel *antarctica);
-    void calculate_antenna_positions(const Settings *settings1,double pitch, double roll, double phi_spin,Vector n_north,Vector n_east);// this calculates the above
+    void calculate_antenna_positions(const Settings *settings1,double pitch, double roll, double phi_spin,Vector n_north,Vector n_east);
 
     void saveGainsPlot(const std::string& fileName);
     

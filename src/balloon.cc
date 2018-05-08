@@ -75,17 +75,17 @@ const string anitaflight=ICEMC_DATA_DIR+"/anitagps.txt";// gps path of anita fli
 
 
 icemc::Balloon::Balloon() {
-  MAXHORIZON=800000.;                // pick the interaction within this distance from the balloon so that it is within the horizon
+  MAXHORIZON=800000.; // pick the interaction within this distance from the balloon so that it is within the horizon
   ibnposition=0;
   igps=0;
-  horizcoord_bn=0; // x component of balloon position
-  vertcoord_bn=0; // y component of balloon position
-  BN_LONGITUDE=999; //balloon longitude for fixed balloon location
-  BN_LATITUDE=999; //balloon latitude for fixed balloon location
+  horizcoord_bn=0;    // x component of balloon position
+  vertcoord_bn=0;     // y component of balloon position
+  BN_LONGITUDE=999;   // balloon longitude for fixed balloon location
+  BN_LATITUDE=999;    // balloon latitude for fixed balloon location
 }
 
 
-void  icemc::Balloon::setObservationLocation(Interaction *interaction1,int inu,IceModel *antarctica,const Settings *settings1) {
+void  icemc::Balloon::setObservationLocation(Interaction *interaction1,int inu, const IceModel *antarctica, const Settings *settings1) {
   interaction1->banana_volts = 0; //Zero the variable
   interaction1->banana_obs = Vector(0,0,Interaction::banana_observation_distance);
     
@@ -114,7 +114,7 @@ void  icemc::Balloon::setObservationLocation(Interaction *interaction1,int inu,I
     
   //Finished setting observation location
 }
-void icemc::Balloon::SetDefaultBalloonPosition(IceModel *antarctica1) { // position of surface of earth under balloon
+void icemc::Balloon::SetDefaultBalloonPosition(const IceModel *antarctica1) { // position of surface of earth under balloon
     
   // set the default balloon position
   // if you are using real Anita-lite path, these get overwritten for each event
@@ -355,7 +355,7 @@ int icemc::Balloon::Getibnposition() {
     
 }
 
-void icemc::Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,const Settings *settings1,Anita *anita1) {
+void icemc::Balloon::PickBalloonPosition(Vector straightup,const IceModel *antarctica1,const Settings *settings1,Anita *anita1) {
   // takes a 3d vector pointing along the z axis
   Vector thetazero(0.,0.,1.);
   Vector phizero(1.,0.,0.);
@@ -434,7 +434,7 @@ int getTuffIndex(int Curr_time) {
 
 
 // this is called for each neutrino
-void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1, const Settings *settings1, int inu, Anita *anita1, double randomNumber, BalloonInfo* bi) {
+void icemc::Balloon::PickBalloonPosition(const IceModel *antarctica1, const Settings *settings1, int inu, Anita *anita1, double randomNumber, BalloonInfo* bi) {
 
   // r_bn_shadow=position of spot under the balloon on earth's surface
 
@@ -497,7 +497,10 @@ void icemc::Balloon::PickBalloonPosition(IceModel *antarctica1, const Settings *
       igps = start_igps + int(randomNumber*ngps); // use random position 
 
       //////////////////////////// TEMPORARY HACKS FOR ANITA4 !!!!!!      
-      if (WHICHPATH==9 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660)) || (igps==17862) ) igps=igps+30;
+      if (WHICHPATH==9 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660)) || (igps==17862) ){
+	igps=igps+30;
+      }
+
       
       flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
       realTime_flightdata = realTime_flightdata_temp;
@@ -792,7 +795,7 @@ void icemc::Balloon::setr_bn(double latitude,double longitude) {
 }
 
 
-void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, const Settings *settings1, IceModel *antarctica1, Ray *ray1, int &beyondhorizon) {
+void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, const Settings *settings1, const IceModel *antarctica1, Ray *ray1, int &beyondhorizon) {
     
   // double distance=1.E7;
   double phi=0,theta=0;

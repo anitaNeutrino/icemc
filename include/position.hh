@@ -31,7 +31,7 @@ namespace icemc {
     //! Default constructor: calls default constructor of Vector
     Position();
 
-    Position(Vector vec);
+    Position(const Vector& vec);
 
     //! Identical to the Vector constructor with the same inputs.
     Position(double theta_inp, double phi_inp);

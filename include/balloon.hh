@@ -115,46 +115,9 @@ namespace icemc {
     double BN_LATITUDE;                                         ///< balloon latitude for fixed balloon location
 
 
-    ///<This function sets the observation location
-    /**
-     * This is a long description that I dont know yet
-     *
-     *
-     * @param  interaction1 -
-     * @param  inu -
-     * @param  antarctic -
-     * @param  settings1 -
-     * @return returns void
-     */
-    void setObservationLocation(Interaction *interaction1,int inu,IceModel *antarctic,const Settings *settings1);
-    
-    ///< This function gets the boresights
-    /**
-     * This is a long description that I dont know yet
-     *
-     *
-     * @param  settings1 -
-     * @param  anita1 -
-     * @param  r_boresights - [NLAYERS_MAX][NPHI_MAX] 
-     * @return returns void
-     */
-    // void GetBoresights(const Settings *settings1,Anita *anita1,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]);
+    void setObservationLocation(Interaction *interaction1,int inu, const IceModel *antarctic, const Settings *settings1);
     void GetBoresights(const Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]);
-    
-    ///< This function picks downward interaction point
-    /**
-     * This is a long description that I dont know yet
-     *
-     *
-     * @param  interaction1 -
-     * @param  anita1 -
-     * @param  settings1 -
-     * @param  antarctica1 -
-     * @param  ray1 -
-     * @param  beyondhorizon -
-     * @return returns void
-     */
-    void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,const Settings *settings1,IceModel *antarctica1,
+    void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,const Settings *settings1, const IceModel *antarctica1,
 				      Ray *ray1, int &beyondhorizon); 
   
     ///< This function initializes the balloon or the specific flight
@@ -197,7 +160,7 @@ namespace icemc {
      * @param  anita1 -
      * @return returns void
      */
-    void PickBalloonPosition(Vector straightup,IceModel *antarctica,const Settings *settings1, Anita *anita1);
+    void PickBalloonPosition(Vector straightup, const IceModel *antarctica, const Settings *settings1, Anita *anita1);
     
     ///< This function picks the balloon position
     /**
@@ -212,7 +175,7 @@ namespace icemc {
      * @return returns void
      */
     /// @todo Default NULL ptr for BalloonInfo won't be required when we're not supporting all the silly "copy programs" and just have simple programs calling class functions
-    void PickBalloonPosition(IceModel *antarctica1,const Settings *settings1,int inu,Anita *anita1, double randomNumber, BalloonInfo* bi = NULL);
+    void PickBalloonPosition(const IceModel *antarctica1, const Settings *settings1,int inu,Anita *anita1, double randomNumber, BalloonInfo* bi = NULL);
 
     ///< This function gets ith balloon position
     /**
@@ -315,7 +278,7 @@ namespace icemc {
      * @param  antarctica1 -
      * @return returns void
      */
-    void SetDefaultBalloonPosition(IceModel *antarctica1);
+    void SetDefaultBalloonPosition(const IceModel *antarctica1);
 
     ///< This function sets r of the balloon
     /**

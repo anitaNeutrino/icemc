@@ -64,12 +64,12 @@ namespace icemc {
     int TraceRay(const Settings *settings1,Anita *anita1,int whichiteration,double n_depth);
     
     
-    int GetSurfaceNormal(const Settings *settings1,IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry);
+    int GetSurfaceNormal(const Settings *settings1, const IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry);
     
-    int RandomizeSurface(const Settings *settings1,Position rfexit_temp,Vector posnu,IceModel *antarctica,double &slopeyangle,int whichtry);
+    int RandomizeSurface(const Settings *settings1,Position rfexit_temp,Vector posnu, const IceModel *antarctica,double &slopeyangle,int whichtry);
     
     
-    void GetRFExit(const Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry,IceModel *antarctica);
+    void GetRFExit(const Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry, const IceModel *antarctica);
     
     //  void WhereDoesItLeave(const Position &posnu,
     //			      const Vector &nnu,Position &r_out);
@@ -77,7 +77,7 @@ namespace icemc {
     //  static void WhereDoesItLeave(const Position &posnu,
     //		       const Vector &nnu,Position &r_out);
     
-    static int WhereDoesItLeave(const Position &posnu, const Vector &ntemp,IceModel *antarctica, Position &r_out) {
+    static int WhereDoesItLeave(const Position &posnu, const Vector &ntemp, const IceModel *antarctica, Position &r_out) {
       double distance=0;
       double posnu_length=posnu.Mag(); // distance from center of earth to interaction
       double lon,lat;//,lon_old,lat_old; //latitude, longitude indices for 1st and 2nd iteration
