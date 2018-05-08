@@ -241,7 +241,7 @@ int hot_loop(std::string arg_so_location)
       if (!game.api.step(game.state))
         break;
 
-    if (nk_window_is_hidden(ctx, "Demo")) break;
+    if (nk_window_is_hidden(ctx, "Plot Controls")) break;
 
     /* -------------- EXAMPLES ---------------- */
     /* calculator(ctx); */

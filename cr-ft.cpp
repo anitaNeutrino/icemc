@@ -47,7 +47,7 @@ struct game_state {
   double vis_xmax;
   int vis_xmin_bin;
   int vis_xmax_bin;
-  int vis_nbins;
+  bvv::TBuffer <int> vis_nbins;
 };
 
 extern const double pi;
@@ -71,6 +71,60 @@ void property_double(struct nk_context* ctx, const char *name, double min, bvv::
   double val = buf; 
   nk_property_double(ctx, name, min, &val, max, step, inc_per_pixel);
   buf = val;
+}
+
+void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
+  if (mode == m_init) {
+    state->cZhsFft   = new TCanvas();
+    state->ZhsFftInp = NULL;
+    state->grFft     = NULL;
+    state->ZhsFft    = NULL;
+    return;
+  }
+
+  static bvv::TBuffer <int> op(kBlue);
+
+  // if (mode == m_reload) {
+  // }
+  if (mode == m_step) {
+    nk_layout_row_dynamic(ctx, 30, 2);
+    if (nk_option_label(ctx, "kBlue", op == kBlue)) { op = kBlue; /* printf("op = kBlue\n"); */ }
+    if (nk_option_label(ctx, "kRed", op == kRed))   { op = kRed; /* printf("op = kRed\n"); */}
+  }
+
+  if (mode == m_reload || *op || *state->vis_nbins) {
+    state->cZhsFft->Clear();
+    if (state->ZhsFftInp) delete[] state->ZhsFftInp;
+    state->ZhsFftInp = new double[state->vis_nbins];
+    double xmin_normal = -10;
+    double xmax_normal = +10;
+    int N = state->vis_nbins;
+    double dx = (xmax_normal - xmin_normal) / N;
+    for (int i = 0; i < state->vis_nbins; i++){
+      double x = xmin_normal + dx * i;
+      double y = exp(-0.5 * x * x) / (sqrt(2.0) * sqrt(pi));
+      state->ZhsFftInp[i] = y;
+    }
+    printf("*op, *state->vis_nbins: %d, %d\n", *op, *state->vis_nbins);
+    if (state->grFft) delete state->grFft;
+    state->grFft = new TGraph(state->vis_nbins / 2);
+    // delete[]: Is it a right thing to do?
+    // http://www.fftw.org/fftw3_doc/Complex-One_002dDimensional-DFTs.html#Complex-One_002dDimensional-DFTs:
+    // If you allocate an array with fftw_malloc() you must deallocate it with fftw_free(). Do not use free() or, heaven forbid, _delete_. 
+    // doFFT is not using fftw_malloc() though, unless "new" is overloaded.
+    if (state->ZhsFft) delete[] state->ZhsFft;
+    // printf("After deleting ZhsFft\n");
+    state->ZhsFft = FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp);
+    for (int i = 0; i < state->vis_nbins / 2; i++){
+      state->grFft->SetPoint(i, i / (xmax_normal - xmin_normal), state->ZhsFft[i].re * dx); // To get continuous ft values.
+    }
+    state->cZhsFft->cd();
+    state->grFft->Draw("AL");
+
+    state->grFft->SetLineWidth(1);
+    state->grFft->SetLineColor(op);
+    state->cZhsFft->Modified(); state->cZhsFft->Update(); 
+  }
 }
 
 void PlotWaveform(struct game_state *state, RunMode mode, struct nk_context *ctx){
@@ -106,6 +160,7 @@ void PlotWaveform(struct game_state *state, RunMode mode, struct nk_context *ctx
     state->legend->AddEntry(state->grZhsTimeE, "E_{proj}","l");
     state->legend->AddEntry(state->grZhsAlpha, "pol. angle","l");
     state->legend->Draw();
+    return;
   }
 
   if (mode == m_reload) {
@@ -133,6 +188,7 @@ void PlotWaveform(struct game_state *state, RunMode mode, struct nk_context *ctx
     property_double(ctx, "Y2NDC: ", 0.0, ZhsTimePlotY2NDC, 1.0 /*max*/, 0.02 /*increment*/, 0.002 /*sensitivity*/);
   }
 
+
   if (mode == m_reload || *ZhsTimePlotHalfWidth || *ZhsTimePlotY2NDC) {
     // vis_xmin, vis_xmax: which range to visualize, should encompass (fwhm_xmin, fwhm_xmax):
     state->vis_xmin = state->fwhm_xmaxval - ZhsTimePlotHalfWidth*(state->fwhm_xmaxval - state->fwhm_xmin);
@@ -140,7 +196,8 @@ void PlotWaveform(struct game_state *state, RunMode mode, struct nk_context *ctx
 
     state->vis_xmin_bin = (state->vis_xmin - ZhsTimeStart) / ZhsTimeDelta;
     state->vis_xmax_bin = (state->vis_xmax - ZhsTimeStart) / ZhsTimeDelta;
-    state->vis_nbins = state->vis_xmax_bin - state->vis_xmin_bin + 1;
+    // state->vis_nbins = state->vis_xmax_bin - state->vis_xmin_bin + 1;
+    state->vis_nbins.set_val(state->vis_xmax_bin - state->vis_xmin_bin + 1);
 
     state->grZhsTimeE->GetXaxis()->SetLimits(state->vis_xmin, state->vis_xmax);
     state->grZhsAlpha->GetXaxis()->SetLimits(state->vis_xmin, state->vis_xmax);
@@ -153,63 +210,25 @@ void PlotWaveform(struct game_state *state, RunMode mode, struct nk_context *ctx
     state->cZhsEAndAlpha->Update();
   }
 
+  if (mode == m_step) {
+    // To detect "unmodified" state of vis_nbins.
+    // Without this statement, vis_nbins will stay in "modified" state.
+    state->vis_nbins.modified = ZhsTimePlotHalfWidth.modified;
+  }
+
   fflush(stdout);
   
 }
 
 static struct game_state *game_init()
 {
-  struct game_state *state = (game_state *) malloc(sizeof(*state));
+  // struct game_state *state = (game_state *) malloc(sizeof(*state));
+  struct game_state *state = new game_state;
   PlotWaveform(state, m_init, NULL);
 
-  state->ZhsFftInp = new double[state->vis_nbins];
+  PlotFT(state, m_init, NULL);
 
-  for (int i = 0; i < state->vis_nbins; i++) {
-    double val = *(ZhsTimeE.data() + state->vis_xmin_bin + i);
-    state->ZhsFftInp[i] = val;
-    printf("ZhsFftInp[%d]: %11.8e\n", i, val);
-  }
-
-
-  //  fftw_complex *in, *out;
-  //  fftw_plan p;
-  //  in = (fftw_complex*) malloc(sizeof(fftw_complex) * vis_nbins);
-  //  out = (fftw_complex*) malloc(sizeof(fftw_complex) * vis_nbins);
-  //  p = fftw_plan_dft_1d(vis_nbins, in, out, FFTW_FORWARD, FFTW_ESTIMATE); 
-   double xmax_normal = 5;
-   double xmin_normal = -5;
-   int N = state->vis_nbins;
-   double dx = (xmax_normal - xmin_normal) / N;
-    for (int i = 0; i < state->vis_nbins; i++){
-      double x = xmin_normal + dx * i;
-      double y = exp(-0.5 * x * x) / (sqrt(2.0) * sqrt(pi));
-      state->ZhsFftInp[i] = y;
-  //    in[i][0] = y; // ZhsFftInp[i]; 
-  //    in[i][1] = 0; 
-    }
-  //  fftw_execute(p); /* repeat as needed */
-  state->grFft = new TGraph(state->vis_nbins / 2);
-  state->ZhsFft = FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp);
-  for (int i = 0; i < state->vis_nbins / 2; i++){
-  // grFft->SetPoint(i, i, ZhsFft[i].getAbsSq() /* * ZhsFft[i].re */);
-    state->grFft->SetPoint(i, i / (xmax_normal - xmin_normal), state->ZhsFft[i].re * dx); // To get continuous ft values.
-  //   grFft->SetPoint(i, i / (xmax_normal - xmin_normal), out[i][0] * dx); // To get continuous ft values.
-  //   // printf("ZhsFft: %d, %11.4e\n", i, ZhsFft[i].re);
-  //   // printf("out: %d, %11.4e\n", i, ZhsFft[i].re);
-  //   printf("out: %d, %10.4e\n", i, out[i][0] * dx);
-  }
-
-  // fftw_destroy_plan(p);
-  // fftw_free(in); fftw_free(out);
-  // free(in); free(out);
-  
-
-
-  state->cZhsFft = new TCanvas();
-  state->grFft->Draw("AL");
-  state->cZhsFft->Update();
-  printf("Done");
-  
+  printf("Init Done\n");
 
   return state;
 }
@@ -222,52 +241,8 @@ static void game_finalize(struct game_state *state)
 static void game_reload(struct game_state *state)
 {
   PlotWaveform(state, m_reload, ctx);
-
-  state->cZhsFft->Clear();
- 
-  delete[] state->ZhsFftInp;
-  state->ZhsFftInp = new double[state->vis_nbins];
-
-  // printf("vis_nbins: %d\n", vis_nbins);
-  // state->ZhsFftInp = new double[vis_nbins];
-  // for (int i = 0; i < vis_nbins; i++) {
-  //   double val = *(ZhsTimeE.data() + vis_xmin_bin + i);
-  //   state->ZhsFftInp[i] = val;
-  //   printf("ZhsFftInp[%d]: %11.8e\n", i, val);
-  // }
-
-   double xmin_normal = -10;
-   double xmax_normal = +10;
-   int N = state->vis_nbins;
-   double dx = (xmax_normal - xmin_normal) / N;
-    for (int i = 0; i < state->vis_nbins; i++){
-      double x = xmin_normal + dx * i;
-      double y = exp(-0.5 * x * x) / (sqrt(2.0) * sqrt(pi));
-      state->ZhsFftInp[i] = y;
-  //    in[i][0] = y; // ZhsFftInp[i]; 
-  //    in[i][1] = 0; 
-    }
-
-  if (state->grFft) delete state->grFft;
-  state->grFft = new TGraph(state->vis_nbins / 2);
-  printf("Before deleting ZhsFft\n");
-  // delete[]: Is it a right thing to do?
-  // http://www.fftw.org/fftw3_doc/Complex-One_002dDimensional-DFTs.html#Complex-One_002dDimensional-DFTs:
-  // If you allocate an array with fftw_malloc() you must deallocate it with fftw_free(). Do not use free() or, heaven forbid, _delete_. 
-  // doFFT is not using fftw_malloc() though, unless "new" is overloaded.
-  if (state->ZhsFft) delete[] state->ZhsFft;
-  printf("After deleting ZhsFft\n");
-  state->ZhsFft = FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp);
-  for (int i = 0; i < state->vis_nbins / 2; i++){
-    state->grFft->SetPoint(i, i / (xmax_normal - xmin_normal), state->ZhsFft[i].re * dx); // To get continuous ft values.
-  }
-  state->cZhsFft->cd();
-  state->grFft->Draw("AL");
-
-  state->grFft->SetLineColor(kBlue);
-  state->grFft->SetLineWidth(1);
-  state->cZhsFft->Modified();
-  state->cZhsFft->Update();
+  PlotFT(state, m_reload, ctx);
+  
   cout << "reloaded dl" << endl;
   
 }
@@ -289,29 +264,21 @@ static bool game_step(struct game_state *state)
     
   gSystem->ProcessEvents();
   
-  if (nk_begin(ctx, "Demo", nk_rect(50, 50, 200, 200),
+  // Strangely enough, the next line doesn't like renaming of "Demo" into anything else:
+  if (nk_begin(ctx, "Plot Controls", nk_rect(50, 50, 200, 200),
                NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
                NK_WINDOW_CLOSABLE|NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
     {
-
-      static bvv::TBuffer <int> op(kBlue);
-
       nk_layout_row_static(ctx, 30, 80, 1);
       if (nk_button_label(ctx, "button"))
         fprintf(stdout, "button pressed\n");
-      nk_layout_row_dynamic(ctx, 30, 2);
-      if (nk_option_label(ctx, "kBlue", op == kBlue)) { op = kBlue; }
-      if (nk_option_label(ctx, "kRed", op == kRed))   { op = kRed; }
-      if (*op) {
-        state->grFft->SetLineColor(op);
-        state->cZhsFft->Modified(); state->cZhsFft->Update(); 
-      }
       PlotWaveform(state, m_step, ctx);
+      PlotFT(state, m_step, ctx);
     } else cout << "nk_begin failed" << endl;
-    nk_end(ctx);
+  nk_end(ctx);
 
-    // Try something along these lines as NEXT STEP (causes segfault without changing):
-    // *gxlib = xlib;
+  // Try something along these lines as NEXT STEP (causes segfault without changing):
+  // *gxlib = xlib;
     
   return true;
 }
