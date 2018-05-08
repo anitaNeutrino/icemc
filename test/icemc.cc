@@ -2617,7 +2617,8 @@ int main(int argc,  char **argv) {
       
       if (!settings1->ROUGHNESS){
         // don't loop over frequencies if the viewing angle is too far off
-        double rtemp=icemc::Tools::dMin((viewangle-sig1->GetChangle())/(deltheta_em_max), (viewangle-sig1->GetChangle())/(deltheta_had_max));
+        // double rtemp=icemc::Tools::dMin((viewangle-sig1->GetChangle())/(deltheta_em_max), (viewangle-sig1->GetChangle())/(deltheta_had_max));
+        double rtemp=TMath::Min((viewangle-sig1->GetChangle())/(deltheta_em_max), (viewangle-sig1->GetChangle())/(deltheta_had_max));	
         if (rtemp>AskaryanFreqsGenerator::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
           //delete interaction1;
           continue;
@@ -4579,7 +4580,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
 	// if the electromagnetic and hadronic components of the shower are both non-negligible
 	// then theta_threshold cannot be determined analytically so we step away from the cerenkov angle in steps equal to 1/2 * deltheta_em
         if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
-	  //if (icemc::Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*heff_max*bw/1.E6)>1.) {
+	  //if (TMath::Min(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*heff_max*bw/1.E6)>1.) {
           theta_threshold=-1.; // if it's not detectable at all
         }
         else { // otherwise,  start stepping.
@@ -4587,7 +4588,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
           vmmhz1m_test=vmmhz1m_max; // this will be the magnitude of the signal at theta_test away from the cerenkov cone.
           // find the magnitude of the signal at theta_test away from the cerenkov cone.
           sig1->TaperVmMHz(sig1->GetChangle()+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
-          //  if (icemc::Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
+          //  if (TMath::Min(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
           if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) { // is this electric field already too low to have a chance of passing the trigger threshold?
             theta_threshold=theta_test; // then that is the maximum angular deviation
           }
@@ -4597,21 +4598,21 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
             sig1->TaperVmMHz(sig1->GetChangle()+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
 
             if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
-	      //if (icemc::Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) {
+	      //if (TMath::Min(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) {
               theta_threshold=theta_test;
             }
             else { // otherwise increment by the step size and check again.
               theta_test=2*deltheta_em;
               vmmhz1m_test=vmmhz1m_max;
               sig1->TaperVmMHz(sig1->GetChangle()+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
-              //if (icemc::Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
+              //if (TMath::Min(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
               if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
                 theta_threshold=theta_test;
               else { // otherwise increment by the step size and check again.
                 theta_test=3*deltheta_em;
                 vmmhz1m_test=vmmhz1m_max;
                 sig1->TaperVmMHz(sig1->GetChangle()+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
-                //if (icemc::Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
+                //if (TMath::Min(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
 
                 if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
                   theta_threshold=theta_test;
@@ -4621,7 +4622,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
                   sig1->TaperVmMHz(sig1->GetChangle()+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
                   // if at the hadronic width,  you're below the threshold
                   if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
-		    //if (icemc::Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) // if at the hadronic width,  you're below the threshold
+		    //if (TMath::Min(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) // if at the hadronic width,  you're below the threshold
                     theta_threshold=theta_test; // set theta_threshold
                   else { // otherwise,  find theta_threshold considering the hadronic component alone.  This is conservative-- an electromagnetic component would only make it narrower.
                     theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->GetChangle()))/0.5);

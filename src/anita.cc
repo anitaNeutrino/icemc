@@ -3837,9 +3837,11 @@ void icemc::Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, cons
   
   //    double last_trigger_time=Tools::dMax(arrival_times,(number_all_antennas));
   //cout << "last_trigger_time is " << last_trigger_time << "\n";
-  double minV = Tools::dMin(arrival_times[0],(number_all_antennas));
-  double minH = Tools::dMin(arrival_times[1],(number_all_antennas));
-  double first_trigger_time = Tools::dMin(minV, minH);
+  // double minV = TMath::Min(arrival_times[0],(number_all_antennas));
+  // double minH = TMath::Min(arrival_times[1],(number_all_antennas));
+  double minV = TMath::MinElement(number_all_antennas, arrival_times[0]);
+  double minH = TMath::MinElement(number_all_antennas, arrival_times[1]);
+  double first_trigger_time = TMath::Min(minV, minH);
   for (int ipol=0; ipol<2; ipol++){
     for (int i=0;i<(number_all_antennas);i++){
       // cout << "antenna_positions is ";
@@ -3918,9 +3920,12 @@ void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_M
     }
   }
   
-  double minV = Tools::dMin(arrival_times[0],(number_all_antennas));
-  double minH = Tools::dMin(arrival_times[1],(number_all_antennas));
-  double first_trigger_time = Tools::dMin(minV, minH);
+  // double minV = TMath::Min(arrival_times[0],(number_all_antennas));
+  // double minH = TMath::Min(arrival_times[1],(number_all_antennas));
+  double minV = TMath::MinElement(number_all_antennas, arrival_times[0]);
+  double minH = TMath::MinElement(number_all_antennas, arrival_times[1]);
+  
+  double first_trigger_time = TMath::Min(minV, minH);
   for (int ipol=0; ipol<2; ipol++){
     for (int i=0;i<(number_all_antennas);i++){
       
@@ -3948,9 +3953,11 @@ void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_M
   }
 
   
-  double minV = Tools::dMin(arrival_times[0],(number_all_antennas));
-  double minH = Tools::dMin(arrival_times[1],(number_all_antennas));
-  double first_trigger_time = Tools::dMin(minV, minH);
+  // double minV = TMath::Min(arrival_times[0],(number_all_antennas));
+  // double minH = TMath::Min(arrival_times[1],(number_all_antennas));
+  double minV = TMath::MinElement(number_all_antennas, arrival_times[0]);
+  double minH = TMath::MinElement(number_all_antennas, arrival_times[1]);
+  double first_trigger_time = TMath::Min(minV, minH);
   for (int ipol=0; ipol<2; ipol++){
     for (int i=0;i<(number_all_antennas);i++){
       
@@ -4407,7 +4414,7 @@ void icemc::Anita::readTriggerEfficiencyScanPulser(const Settings *settings1){
     bool useDelayGenerator = false;
 
     double maxDelays =  (Tools::dMax(trigEffScanRingDelay, 3) + Tools::dMax(trigEffScanPhiDelay,5) );
-    maxDelays       -=  (Tools::dMin(trigEffScanRingDelay, 3) + Tools::dMin(trigEffScanPhiDelay,5) );
+    maxDelays       -=  (TMath::MinElement(3, trigEffScanRingDelay) + TMath::MinElement(5, trigEffScanPhiDelay) );
     
     if (maxDelays!=0) useDelayGenerator=true;
     

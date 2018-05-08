@@ -126,7 +126,7 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
   
   primary1->GetSigma(pnu,sigma,len_int_kgm2,settings1,nu_nubar,currentint);
   
-  double step=Tools::dMin(len_int_kgm2/densities[1]/10,25); ///how big is the step size
+  double step=TMath::Min(len_int_kgm2/densities[1]/10,25.0); ///how big is the step size
   
   ///set up stuff to be used later.
   Position posnunow;

@@ -1207,10 +1207,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 #ifdef ICEMC_FEEXCEPT
   feenableexcept(FE_INVALID | FE_DIVBYZERO); 
 #endif
-  
-  // for comparing with peter
-  double sumsignal[5]={0.};
-  double sumsignal_aftertaper[5]={0.};
 
   Log() << icemc::info << "Seed is " << settings1.SEED << std::endl;
 
@@ -2156,12 +2152,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       count1->nconverges[whichray]++;
 
       // Time to start assembling signal information...      
-      std::vector<AskaryanSignal> signals;
-      signals.push_back(AskaryanSignal());
-      
+
       // Get Polarization vector.  See Jackson,  Cherenkov section.
-      // n_pol = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4], inu);
-      signals.back().polarization = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4], inu);
+      Vector n_pol = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4], inu);
+      // signals.back().polarization = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4], inu);
 
       // if (settings1.BORESIGHTS) {
       //   for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
@@ -2181,7 +2175,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	// now rotate that polarization vector according to ray paths in firn and air.
 	// fresnel factor at ice-firn interface
 
-	icemc::Vector& n_pol = signals.back().polarization; ///@todo this is not general!!!	
+	// icemc::Vector& n_pol = signals.back().polarization; ///@todo this is not general!!!	
 	GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->nrf_iceside[3], n_pol, ray1->nrf_iceside[4], vmmhz1m_max, showerProps, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1, mag1);
 	if (fDetector->WHICHPATH==4){
 	  std::cout << "Lentenin factor is " << 1./mag1 << "\n";
@@ -2217,7 +2211,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       else {
 	askFreqGen.GetSpread(pnu, showerProps, (fDetector->bwslice_min[2]+fDetector->bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
 
-	icemc::Vector& n_pol = signals.back().polarization; ///@todo this is not general!!!
+	// icemc::Vector& n_pol = signals.back().polarization; ///@todo this is not general!!!
 	GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn[2], n_pol, ray1->nrf_iceside[4], vmmhz1m_max, showerProps, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);	
 
 	vmmhz1m_fresneledtwice = vmmhz1m_max*fresnel1*mag1;  //  only the ice-air interface
@@ -2344,8 +2338,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         // and making an array across frequency bins by putting in frequency dependence.
 	
       }
-      
-        
+
       // For each frequency,  get the width of Cerenkov cone
       // and size of signal once position of viewing angle is taken into account
 
@@ -2354,7 +2347,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       
       if (!settings1.ROUGHNESS){
         // don't loop over frequencies if the viewing angle is too far off
-        double rtemp = Tools::dMin((viewangle-askFreqGen.GetChangle())/(deltheta_em_max), (viewangle-askFreqGen.GetChangle())/(deltheta_had_max));
+        double rtemp = TMath::Min((viewangle-askFreqGen.GetChangle())/(deltheta_em_max), (viewangle-askFreqGen.GetChangle())/(deltheta_had_max));
         if (rtemp > AskaryanFreqsGenerator::VIEWANGLE_CUT && !settings1.SKIPCUTS) {
           continue;
         }
@@ -2475,7 +2468,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         panel1->AddVmmhz0(askFreqs[0]);
         // panel1->AddVmmhz0(vmmhz[0]);
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
-	icemc::Vector& n_pol = signals.back().polarization;
+	// icemc::Vector& n_pol = signals.back().polarization;
         panel1->AddPol(n_pol);
         panel1->AddDelay( 0. );
         panel1->AddImpactPt(ray1->rfexit[2]);

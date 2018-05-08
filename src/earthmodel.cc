@@ -421,7 +421,7 @@ int icemc::EarthModel::Getchord(const Settings *settings1,
 	double altitude=0;
 	weight1_tmp=1;
 	probability_tmp=1;
-	double step=Tools::dMin(len_int_kgm2/densities[1]/10,500.); //how big is the step size
+	double step=TMath::Min(len_int_kgm2/densities[1]/10,500.); //how big is the step size
 	// either 1/10 of an interaction length in the mantle or 500 m, whichever is smaller.
 	// 500 m is approximately the feature size in Crust 2.0.
 	//------------------added on Dec 8------------------------
