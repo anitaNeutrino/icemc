@@ -7,7 +7,6 @@
 
 namespace icemc {
 
-
   /**
    * @class FTPair
    * @brief A coupled time domain and frequency domain representation of a waveform.
@@ -16,7 +15,8 @@ namespace icemc {
    * domain representations of waveforms and swaps between them on demand as either representation
    * changes.
    * 
-   * It's probably not a good class for writing to disk as it has a lot of internal state.
+   * It's probably not a good class to write to disk, as it has a lot of internal state.
+   * Maybe just store the time domain graph?
    */
   class FTPair {
   public:
@@ -32,7 +32,7 @@ namespace icemc {
     FTPair(int n, const double* timeDomainAmplitude,  double dt, double t0 = 0);
 
     /** 
-     * Time domain c-style array constructor
+     * Time domain std::vector constructor
      * 
      * @param n number of time domain points
      * @param dt time between samples 
@@ -42,13 +42,41 @@ namespace icemc {
     FTPair(const std::vector<double>& timeDomainAmplitude, double dt, double t0 = 0);
 
     /** 
-     * TGraph constructor
+     * Time domain TGraph constructor
      * 
      * @param grTimeDomain 
      */
     FTPair(const TGraph& grTimeDomain);
 
 
+
+
+    /** 
+     * Freq domain array constructor
+     * 
+     * @param nf 
+     * @param freqDomainPhasors 
+     * @param deltaF 
+     */    
+    FTPair(int nf,  const std::complex<double>* freqDomainPhasors, double deltaF);
+
+
+    /** 
+     * Freq domain std::vector constructor
+     * 
+     * 
+     * @param freqDomainPhasors 
+     * @param deltaF 
+     */    
+    FTPair(const std::vector<std::complex<double> >& freqDomainPhasors, double deltaF);
+    
+    
+
+
+
+
+
+    
     /** 
      * Use this to view, but not change the signal in the time domain.
      * (TGraph::Draw is actually non-const so not sure how useful this is)
@@ -66,10 +94,13 @@ namespace icemc {
      * }
      * Then the next time you ask for the frequency domain,
      * 
-     *   std::vector<std::complex<double> > yourFtPair.getFreqDomain();
+     *   const std::vector<std::complex<double> >&  constFreqs = yourFtPair.getFreqDomain();
      * 
-     * all the FTs are done internally and the frequency bins
-     * are updated automagically.
+     * or
+     * 
+     *   std::vector<std::complex<double> >&  nonConstFreqs = yourFtPair.changeFreqDomain();
+     * 
+     * The frequency  array is updated automagically and all the FTs are done internally.
      * 
      * @return non-const reference to the binned frequencies.
      */    
@@ -79,7 +110,7 @@ namespace icemc {
     /** 
      * Use this to view, but not change the signal in the frequency domain.
      * @return const reference to the binned frequencies.
-     */    
+     */
     const std::vector<std::complex<double> >& getFreqDomain() const;
 
     /** 
@@ -112,12 +143,37 @@ namespace icemc {
      * @brief Make a power spectrum graph from the complex frequency domain
      * 
      * @todo make sure units make sense here!
+     * @todo enforce Ryan style normalization options via Parseval's theorem.
      * 
      * @return new TGraph showing power per unit frequency
      */
     TGraph makePowerSpectrumGraph() const;
     
 
+    /** 
+     * Get the number of times from the current state of the FTPair
+     * @return the length of the time domain (after doing internal updates)
+     */
+    inline int getNumTimes() const {return getTimeDomain().GetN();}
+
+    /** 
+     * Get the deltaT from the current state of the FTPair
+     * @return the time domain sample separation (after doing internal updates)
+     */
+    inline double getDeltaT() const {return getTimeDomain().GetX()[1] - getTimeDomain().GetX()[0];}
+
+
+    /** 
+     * Get the number of frequency bins from the current state of the FTPair
+     * @return the length of the frequency domain (after doing internal updates)
+     */
+    inline int getNumFreqs() const {return getFreqDomain().size();}
+
+    /** 
+     * Get the deltaF from the current state of the FTPair
+     * @return the frequency domain bin separation (after doing internal updates)
+     */
+    inline double getDeltaF() const {return getDeltaF(getNumTimes(), getDeltaT());}
 
 
     
@@ -127,11 +183,13 @@ namespace icemc {
      * NOTE: nsize MUST be a power of 2 otherwise this function 
      * will give you nonsense and cause undefined behaviour!
      * This is not checked inside this function.
-     * 
+     *
      * Also the outputted data is formatted a little differently to 
      * the FFTW convention.
      * 
      * Perhaps you should use the FTPair class to do all the hard work for you?
+     * 
+     * @todo hide this function inside the cc file when the refactor is complete.
      * 
      * @param data array to transform 
      * @param isign +1 for real to complex, -1 for inverse
@@ -160,7 +218,12 @@ namespace icemc {
        *    n     = 100000... (some number of 0s)
        *    n - 1 = 011111.... (number of 1s)
        * therefore (n & n-1) should give 0 for a power of 2
-       * (where & is the bitwise AND operator)
+       * (where & is the bitwise AND operator).
+       * 
+       * Put another way, in general subtracting 1 will 
+       * set the lowest 1 to 0 and all bits below that will 
+       * be set to 1. In a power of two, that lowest 1 bit is
+       * the only 1 bit.
        */
       return  (n > 0) && ((n & (n - 1)) == 0);
     }
@@ -180,12 +243,52 @@ namespace icemc {
       return nOut;
     }
 
-    static inline int getFreqInfo(int n, double dt, double& df) {
-      // once and only once...
-      df = 1./(n*dt);
-      int nf = (n/2)+1;
-      return nf;
-    }    
+
+    /** 
+     * How many frequency bins will there be given this many time bins?
+     * 
+     * @param nt is the number of time samples
+     * 
+     * @return the number of frequency bins
+     */
+    inline static int getNumFreqs(int nt){return 1 + nt/2;}
+
+    /** 
+     * How many time points will there be given this many frequency bins?
+     * 
+     * @param nf is the number of frequency bins
+     * 
+     * @return the number of time points
+     */
+    inline static int getNumTimes(int nf){return 2*(nf - 1);}
+
+
+    /** 
+     * What is the frequency bin spacing for a generic DFT?
+     * 
+     * @param nt is the number of time points
+     * @param dt is the separation between time points
+     * 
+     * @return the frequency bin spacing
+     */
+    inline static double getDeltaF(int nt, double dt){return 1./(nt*dt);}
+
+
+
+    /** 
+     * What is the time point spacing for a generic inverse DFT?
+     * 
+     * @param nf is the number of frequency bins
+     * @param df is the separation between frequency bins
+     * 
+     * @return the time bins spacing
+     */
+    inline static double getDeltaT(int nf, double df){
+      int nt = getNumTimes(nf);      
+      return 1./(nt*df);
+    }
+
+    
 
 
     /** 
@@ -205,10 +308,8 @@ namespace icemc {
     bool fDebug; ///< Toggle debug output, probably not useful unless you're developing and there's problem.
     void maybeUpdateFreqDomain() const; ///< If fNeedToUpdateFreqDomain is true, does the appropriate forward FTs
     void maybeUpdateTimeDomain() const; ///< If fNeedToUpdateTimeDomain is true, does the appropriate inverse FTs
-    int zeroPadTimeDomainToNearestPowerOf2() const; ///< Because numerical recipes is less good than FFTW
-
-
-    
+    int zeroPadTimeDomainLengthToPowerOf2() const; ///< Because numerical recipes is less good than FFTW
+    int zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(double df) const; ///< Because numerical recipes is less good than FFTW
   };
 }
 

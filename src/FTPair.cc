@@ -1,6 +1,17 @@
 #include "FTPair.h"
 
+/** 
+ * Print the state of the updater variables
+ * 
+ * @param funcName must be cout-able, is supposed to be the __PRETTY_FUNCTION__ macro
+ */
 
+#define PRINT_STATE_IF_DEBUG(funcName)                                               \
+  if(fDebug){                                                                        \
+    std::cerr << "In " << (funcName)						     \
+              << ": fMustUpdateTimeDomain = " << fNeedToUpdateTimeDomain << ", "     \
+              << "fMustUpdateFreqDomain = " << fNeedToUpdateFreqDomain << std::endl; \
+   }
 
 
 
@@ -11,13 +22,12 @@ icemc::FTPair::FTPair(int n, const double* timeDomainAmplitude,  double dt, doub
     fNeedToUpdateFreqDomain(true),
     fDebug(false)
 {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
   for(int i=0; i < n; i++){
     fTimeDomainGraph.GetX()[i] = t0 + dt*i;
   }
 
-  zeroPadTimeDomainToNearestPowerOf2();
-  fNeedToUpdateTimeDomain = false;
-  fNeedToUpdateFreqDomain = true;
+  zeroPadTimeDomainLengthToPowerOf2();
 }
 
 
@@ -29,12 +39,12 @@ icemc::FTPair::FTPair(const std::vector<double>& timeDomainAmplitude, double dt,
     fNeedToUpdateFreqDomain(true),
     fDebug(false)
 {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
+  
   for(int i=0; i < timeDomainAmplitude.size(); i++){
     fTimeDomainGraph.GetX()[i] = t0 + dt*i;
   }
-  zeroPadTimeDomainToNearestPowerOf2();
-  fNeedToUpdateTimeDomain = false;
-  fNeedToUpdateFreqDomain = true;
+  zeroPadTimeDomainLengthToPowerOf2();
 }
 
 
@@ -46,9 +56,40 @@ icemc::FTPair::FTPair(const TGraph& grTimeDomain)
     fNeedToUpdateFreqDomain(true),
     fDebug(false)
 {
-  zeroPadTimeDomainToNearestPowerOf2();
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__) 
+  zeroPadTimeDomainLengthToPowerOf2();
 }
 
+
+
+
+
+
+
+
+icemc::FTPair::FTPair(const std::vector<std::complex<double> >& freqDomainPhasors, double df)
+  : fTimeDomainGraph(),
+    fFreqDomain(freqDomainPhasors),
+    fNeedToUpdateTimeDomain(true),
+    fNeedToUpdateFreqDomain(false),
+    fDebug(false)
+{
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
+  zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(df);
+}
+
+
+
+icemc::FTPair::FTPair(int nf, const std::complex<double>* freqDomainPhasors, double df)
+  : fTimeDomainGraph(),
+    fFreqDomain(freqDomainPhasors, freqDomainPhasors+nf),
+    fNeedToUpdateTimeDomain(true),
+    fNeedToUpdateFreqDomain(false),
+    fDebug(false)
+{
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
+  zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(df);
+}
 
 
 
@@ -57,22 +98,26 @@ icemc::FTPair::FTPair(const TGraph& grTimeDomain)
 
 
 const TGraph& icemc::FTPair::getTimeDomain() const{
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
   maybeUpdateTimeDomain();
   return fTimeDomainGraph;
 }
 
 TGraph& icemc::FTPair::changeTimeDomain() {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
   maybeUpdateTimeDomain();
   fNeedToUpdateFreqDomain = true;
   return fTimeDomainGraph;
 }
 
 const std::vector<std::complex<double> >& icemc::FTPair::getFreqDomain() const {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
   maybeUpdateFreqDomain();
   return fFreqDomain;
 }
 
 std::vector<std::complex<double> >& icemc::FTPair::changeFreqDomain() {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
   maybeUpdateFreqDomain();
   fNeedToUpdateTimeDomain = true;
   return fFreqDomain;
@@ -80,21 +125,22 @@ std::vector<std::complex<double> >& icemc::FTPair::changeFreqDomain() {
 
 
 void icemc::FTPair::forceUpdateTimeDomain() const {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
   fNeedToUpdateTimeDomain = true;
   maybeUpdateTimeDomain();
 };
 
 void icemc::FTPair::forceUpdateFreqDomain() const {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
   fNeedToUpdateFreqDomain = true;
   maybeUpdateFreqDomain();
 };
 
 TGraph icemc::FTPair::makePowerSpectrumGraph() const {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
   maybeUpdateFreqDomain();
-  double dt = fTimeDomainGraph.GetX()[1] - fTimeDomainGraph.GetX()[0];
-  int n = fTimeDomainGraph.GetN();
-  double df;
-  getFreqInfo(n, dt, df);
+  double df = getDeltaF();
+
   TGraph gr(fFreqDomain.size());
   for(int j=0; j < gr.GetN(); j++){
     gr.GetY()[j] = std::norm(fFreqDomain[j]);
@@ -116,24 +162,64 @@ TGraph icemc::FTPair::makePowerSpectrumGraph() const {
 
 
 
+int icemc::FTPair::zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(double df) const {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
+  
+  // assume freq domain vector is not dirty, but everything else is...
+  
+  int nt = FTPair::getNumTimes(fFreqDomain.size()); 
+  if(!isPowerOf2(nt)){
+    int newNt = nextPowerOf2(nt);
 
 
+    int newNf = FTPair::getNumFreqs(newNt);
+    if(fDebug){
+      std::cerr << "Info in " << __PRETTY_FUNCTION__ << ": "
+		<< "Padding freq domain: "
+		<< fFreqDomain.size() << "->" << newNf << std::endl;
+    }
+
+    while(fFreqDomain.size() < newNf){
+      fFreqDomain.push_back(0);
+    }
+
+    // make sure there are at least 2 points in the time graph...
+    if(fTimeDomainGraph.GetN() < 2){
+      fTimeDomainGraph.Set(2);
+    }
+    // so we can encode deltaT as the difference between the first two points
+
+    double dt = FTPair::getDeltaT(newNf, df);
+    fTimeDomainGraph.GetX()[1] = fTimeDomainGraph.GetX()[0] + dt;
+  }
+  return fFreqDomain.size();
+}
 
 
-
-int icemc::FTPair::zeroPadTimeDomainToNearestPowerOf2() const {
+ 
+int icemc::FTPair::zeroPadTimeDomainLengthToPowerOf2() const {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
+  
+  // asssume unpadded time domain is good, everything else is dirty
+  
   int n  = fTimeDomainGraph.GetN();
+  if(isPowerOf2(n)){
+    return n;
+  }
+
   int n2 = nextPowerOf2(n);
-  if(n!=n2){
+
+  if(fDebug){
     std::cerr << "Info in " << __PRETTY_FUNCTION__ << ": " 
 	      << "Padding time domain waveform to next power of 2: "
 	      << n << "->" << n2 << std::endl;
-    double t0 = fTimeDomainGraph.GetX()[0];
-    double dt = fTimeDomainGraph.GetX()[1] - t0;
-    for(int i=n; i < n2; i++){
-      fTimeDomainGraph.SetPoint(i, t0 + dt*i, 0);
-    }
   }
+  double t0 = fTimeDomainGraph.GetX()[0];
+  double dt = fTimeDomainGraph.GetX()[1] - t0;
+  for(int i=n; i < n2; i++){
+    fTimeDomainGraph.SetPoint(i, t0 + dt*i, 0);
+  }
+
   return n2;
 }
 
@@ -142,17 +228,15 @@ int icemc::FTPair::zeroPadTimeDomainToNearestPowerOf2() const {
 
 
 void icemc::FTPair::maybeUpdateFreqDomain() const {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
+  
   if(fNeedToUpdateFreqDomain){
-    if(fDebug){
-      std::cerr << __PRETTY_FUNCTION__ << ", updating frequency domain!"  << std::endl;
-    }
 
     // time domain has been mucked around with
     // ... so it could be any length, let's sort that out
-    zeroPadTimeDomainToNearestPowerOf2();
+    zeroPadTimeDomainLengthToPowerOf2();
+
     
-    double df;
-    int nf = getFreqInfo(fTimeDomainGraph.GetN(), fTimeDomainGraph.GetX()[1] - fTimeDomainGraph.GetX()[0], df);
     std::vector<double> temp;
     temp.reserve(fTimeDomainGraph.GetN());
 
@@ -165,8 +249,10 @@ void icemc::FTPair::maybeUpdateFreqDomain() const {
     }
 
     realft(&temp[0], 1,  temp.size());
+
     
     fFreqDomain.clear();
+    int nf = getNumFreqs(fTimeDomainGraph.GetN());
     fFreqDomain.reserve(nf);
 
     // unpack the 0th bin...
@@ -185,6 +271,8 @@ void icemc::FTPair::maybeUpdateFreqDomain() const {
 
 
 void icemc::FTPair::maybeUpdateTimeDomain() const {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__)
+
   if(fNeedToUpdateTimeDomain){
     if(fDebug){
       std::cerr << __PRETTY_FUNCTION__ << ", updating time domain!"  << std::endl;
@@ -192,36 +280,15 @@ void icemc::FTPair::maybeUpdateTimeDomain() const {
 
     int n = fTimeDomainGraph.GetN();
     double dt = fTimeDomainGraph.GetX()[1] - fTimeDomainGraph.GetX()[0];
-    double df;
-    int nf = getFreqInfo(n, dt,df);
-
+    double df = getDeltaF(n, dt);
 
     // frequency domain is dirty! it could be of any length.
-    // let's make sure it's the right length!
-    if(fFreqDomain.size()!=nf){
-      if(fFreqDomain.size()!=0){
-	std::cerr << "Warning in " << __PRETTY_FUNCTION__ << ": unexpected number of frequency bins!";
-      }
-      
-      if(fFreqDomain.size() < nf ){
-	if(fDebug) {
-	  std::cerr << " Zero padding frequency bins " << fFreqDomain.size() << "->" << nf << std::endl;
-	}
-	fFreqDomain.reserve(nf);
-	while(fFreqDomain.size() < nf){
-	  fFreqDomain.push_back(0);
-	}
-      }
-      else {
-	if(fDebug) {	
-	  std::cerr << " Truncating frequency bins " << fFreqDomain.size() << "->" << nf << std::endl;
-	}
-	fFreqDomain.resize(nf);
-      }
-    }
+    // let's make sure it's an accepatable length for a dft.
+    int nf = zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(df);
+    int nNew = getNumTimes(nf); // this the the required power of 2
 
     std::vector<double> temp;
-    temp.reserve(n);
+    temp.reserve(nNew);
     temp.push_back(fFreqDomain.at(0).real()); // DC offset
     temp.push_back(fFreqDomain.at(nf-1).real()); // nqyuist
     for(int j=1; j < nf-1; j++){
@@ -230,10 +297,14 @@ void icemc::FTPair::maybeUpdateTimeDomain() const {
     }
     realft(&temp[0], -1, temp.size());
 
-    for(int i=0;  i < n; i++){
+
+    double t0 = fTimeDomainGraph.GetX()[0];
+    double dtNew = fTimeDomainGraph.GetX()[1] - t0;
+    for(int i=0;  i < nNew; i++){
       fTimeDomainGraph.GetY()[i] = temp.at(i);
+      fTimeDomainGraph.GetX()[i] = t0 + i*dtNew;
     }
-	
+
     fNeedToUpdateTimeDomain = false;
   }
 }
