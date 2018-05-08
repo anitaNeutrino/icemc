@@ -25,19 +25,18 @@ namespace icemc {
      * Time domain c-style array constructor
      * 
      * @param n number of time domain points
-     * @param dt time between samples 
-     * @param t0 time of first sample
-     * @param timeDomainAmplitude array of length n of amplitudes
+     * @param timeDomainAmplitude is an array of length n, containing the time domain amplitudes
+     * @param dt is the time between samples
+     * @param t0 is the time of first sample
      */
     FTPair(int n, const double* timeDomainAmplitude,  double dt, double t0 = 0);
 
     /** 
-     * Time domain std::vector constructor
+     * Time domain vector constructor
      * 
-     * @param n number of time domain points
-     * @param dt time between samples 
-     * @param t0 time of first sample
-     * @param timeDomainAmplitude array of length n of amplitudes
+     * @param timeDomainAmplitude vector containing the time domain amplitudes
+     * @param dt is the time between samples
+     * @param t0 is the time of the first sample
      */
     FTPair(const std::vector<double>& timeDomainAmplitude, double dt, double t0 = 0);
 
@@ -54,21 +53,23 @@ namespace icemc {
     /** 
      * Freq domain array constructor
      * 
-     * @param nf 
-     * @param freqDomainPhasors 
-     * @param deltaF 
-     */    
-    FTPair(int nf,  const std::complex<double>* freqDomainPhasors, double deltaF);
+     * @param nf is the length of the freqDomainPhasors array
+     * @param freqDomainPhasors is the array of complex numbers characterizing the signal in the frequency domain (length nf)
+     * @param deltaF is the time between frequency bins
+     * @param t0 time of first sample (in the time domain)
+     */
+    FTPair(int nf,  const std::complex<double>* freqDomainPhasors, double deltaF, double t0 = 0);
 
 
     /** 
      * Freq domain std::vector constructor
      * 
      * 
-     * @param freqDomainPhasors 
-     * @param deltaF 
+     * @param freqDomainPhasors is the vector of complex numbers characterizing the signal in the frequency domain
+     * @param deltaF is the time between frequency bins
+     * @param t0 time of first sample (in the time domain)
      */    
-    FTPair(const std::vector<std::complex<double> >& freqDomainPhasors, double deltaF);
+    FTPair(const std::vector<std::complex<double> >& freqDomainPhasors, double deltaF, double t0 = 0);
     
     
 
@@ -143,7 +144,7 @@ namespace icemc {
      * @brief Make a power spectrum graph from the complex frequency domain
      * 
      * @todo make sure units make sense here!
-     * @todo enforce Ryan style normalization options via Parseval's theorem.
+     * @todo allow Ryan style normalization options
      * 
      * @return new TGraph showing power per unit frequency
      */
@@ -305,7 +306,7 @@ namespace icemc {
     mutable std::vector<std::complex<double> > fFreqDomain; ///< The frequency domain representation
     mutable bool fNeedToUpdateTimeDomain; ///< If you call changeFreqDomain, this is set to true, set to false after maybeUpdateFreqDomain
     mutable bool fNeedToUpdateFreqDomain; ///< If you call changeTimeDomain, this is set to true, set to false after maybeUpdateTimeDomain
-    bool fDebug; ///< Toggle debug output, probably not useful unless you're developing and there's problem.
+    bool fDebug; ///< To toggle debug output, probably not useful unless you're developing and there's problem.
     void maybeUpdateFreqDomain() const; ///< If fNeedToUpdateFreqDomain is true, does the appropriate forward FTs
     void maybeUpdateTimeDomain() const; ///< If fNeedToUpdateTimeDomain is true, does the appropriate inverse FTs
     int zeroPadTimeDomainLengthToPowerOf2() const; ///< Because numerical recipes is less good than FFTW
