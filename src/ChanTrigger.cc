@@ -751,7 +751,7 @@ void icemc::ChanTrigger::InitializeEachBand(Anita *anita1)
 
 
 
-void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal) {
+void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, Balloon *bn1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, const TGraph* gr) {
   
   e_component=0;
   h_component=0;
@@ -764,103 +764,158 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
   
   int numBinShift;
 
+  if(panel1){
 
-  double tmp_vhz[2][anita1->NFREQ];
-  double tmp_volts[2][anita1->NFOUR/2];
+    double tmp_vhz[2][anita1->NFREQ];
+    double tmp_volts[2][anita1->NFOUR/2];
   
-  for (int iband=0;iband<5;iband++) { // loop over bands
+    for (int iband=0;iband<5;iband++) { // loop over bands
 
-    Tools::Zero(volts_rx_forfft[0][iband], anita1->NFOUR/2);
-    Tools::Zero(volts_rx_forfft[1][iband], anita1->NFOUR/2);
-    Tools::Zero(vhz_rx[0][iband],          anita1->NFREQ);
-    Tools::Zero(vhz_rx[1][iband],          anita1->NFREQ);
+      Tools::Zero(volts_rx_forfft[0][iband], anita1->NFOUR/2);
+      Tools::Zero(volts_rx_forfft[1][iband], anita1->NFOUR/2);
+      Tools::Zero(vhz_rx[0][iband],          anita1->NFREQ);
+      Tools::Zero(vhz_rx[1][iband],          anita1->NFREQ);
 
-    if (anita1->bwslice_allowed[iband]!=1) continue;
+      if (anita1->bwslice_allowed[iband]!=1) continue;
 
-    anita1->iminbin[iband]=0.;
-    anita1->imaxbin[iband]=anita1->NFOUR/2;
+      anita1->iminbin[iband]=0.;
+      anita1->imaxbin[iband]=anita1->NFOUR/2;
 
-    for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
-      for (int k=0;k<Anita::NFREQ;k++) {
-        if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
+      if(panel1){
+	for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
+	  for (int k=0;k<Anita::NFREQ;k++) {
+	    if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
 
-          //Copy frequency amplitude to screen point
-          tmp_vhz[0][k] = tmp_vhz[1][k] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
-          // cout << tmp_vhz[0][k] << endl;
-	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
-	  bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
-	  bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
+	      //Copy frequency amplitude to screen point
+	      tmp_vhz[0][k] = tmp_vhz[1][k] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
+	      // cout << tmp_vhz[0][k] << endl;
+	      bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
+	      bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
+	      bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
 
-          anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
+	      anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
 
-          if (settings1->TUFFSON==2){
-            tmp_vhz[0][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
-            tmp_vhz[1][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
-          }
-          
-        } // end if (seavey frequencies)
-        else {
-          tmp_vhz[0][k]=0;
-          tmp_vhz[1][k]=0;
-        }
-      } // end looping over frequencies.
+	      if (settings1->TUFFSON==2){
+		tmp_vhz[0][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
+		tmp_vhz[1][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
+	      }
+	    } // end if (seavey frequencies)
+	    else {
+	      tmp_vhz[0][k]=0;
+	      tmp_vhz[1][k]=0;
+	    }
+	  } // end looping over frequencies.
 
-      anita1->MakeArrayforFFT(tmp_vhz[0],tmp_volts[0], 90., true);
-      anita1->MakeArrayforFFT(tmp_vhz[1],tmp_volts[1], 90., true);
+	  anita1->MakeArrayforFFT(tmp_vhz[0],tmp_volts[0], 90., true);
+	  anita1->MakeArrayforFFT(tmp_vhz[1],tmp_volts[1], 90., true);
 
-      // now v_banding_rfcm_h_forfft is in the time domain
-      // and now it is really in units of V
-      FTPair::realft(tmp_volts[0],-1,anita1->NFOUR/2);
-      FTPair::realft(tmp_volts[1],-1,anita1->NFOUR/2);
+	  // now v_banding_rfcm_h_forfft is in the time domain
+	  // and now it is really in units of V
+	  FTPair::realft(tmp_volts[0],-1,anita1->NFOUR/2);
+	  FTPair::realft(tmp_volts[1],-1,anita1->NFOUR/2);
 
-      // put it in normal time ording -T to T
-      // instead of 0 to T, -T to 0
-      Tools::NormalTimeOrdering(anita1->NFOUR/2,tmp_volts[0]);
-      Tools::NormalTimeOrdering(anita1->NFOUR/2,tmp_volts[1]);
+	  // put it in normal time ording -T to T
+	  // instead of 0 to T, -T to 0
+	  Tools::NormalTimeOrdering(anita1->NFOUR/2,tmp_volts[0]);
+	  Tools::NormalTimeOrdering(anita1->NFOUR/2,tmp_volts[1]);
 
-      numBinShift = int(panel1->GetDelay(jpt) / anita1->TIMESTEP);
-      if(fabs(numBinShift) >= anita1->HALFNFOUR){
-        //cout<<"skipping"<<"\n";
-        //don't bother adding it to the total since it's shifted out of range
+	  numBinShift = int(panel1->GetDelay(jpt) / anita1->TIMESTEP);
+	  if(fabs(numBinShift) >= anita1->HALFNFOUR){
+	    //cout<<"skipping"<<"\n";
+	    //don't bother adding it to the total since it's shifted out of range
+	  }
+	  else{
+	    if( panel1->GetDelay(jpt)>0 ){
+	      Tools::ShiftLeft(tmp_volts[0], anita1->NFOUR/2, numBinShift );
+	      Tools::ShiftLeft(tmp_volts[1], anita1->NFOUR/2, numBinShift );
+	    }
+	    else if( panel1->GetDelay(jpt)<0 ){
+	      Tools::ShiftRight(tmp_volts[0], anita1->NFOUR/2, -1*numBinShift );
+	      Tools::ShiftRight(tmp_volts[1], anita1->NFOUR/2, -1*numBinShift );
+	    }
+    
+	    for (int k=0;k<anita1->NFOUR/2;k++) {
+	      volts_rx_forfft[0][iband][k] += tmp_volts[0][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+	      volts_rx_forfft[1][iband][k] += tmp_volts[1][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+	    }
+	  }
+      
+	} // end loop over screen points
+      
+	// Now need to convert time domain to frequency domain
+	for (int k=0; k<anita1->NFOUR/2;k++){
+	  tmp_volts[0][k]=volts_rx_forfft[0][iband][k];
+	  tmp_volts[1][k]=volts_rx_forfft[1][iband][k];
+	  // cout << anita1->fTimes[k] << " " << tmp_volts[0][k] << endl;
+	}
+
+	// find back the frequency domain
+	FTPair::realft(tmp_volts[0],1,anita1->NFOUR/2);
+	FTPair::realft(tmp_volts[1],1,anita1->NFOUR/2);
+
+	// Convert FFT arrays into standard icemc frequency amplitudes array
+	anita1->GetArrayFromFFT(tmp_volts[0], vhz_rx[0][iband]);
+	anita1->GetArrayFromFFT(tmp_volts[1], vhz_rx[1][iband]);
+
+
+
+	// devel debug stuff!
+	static bool firstTime = true;
+	static int lastAnt = -1;
+	static TFile* f = NULL;
+	static std::vector<double> times;
+	if(times.size()==0){
+	  const double dt = anita1->TIMESTEP;
+	  times.reserve(Anita::HALFNFOUR);
+	  for(int i=0; i < Anita::HALFNFOUR; i++){
+	    times.push_back(i*dt);
+	  }
+	}
+	
+	if(firstTime){
+	  if(!f){
+	    f = new TFile("oldChanTrigger.root", "recreate");
+	  }
+
+	  
+	  TGraph gr0(times.size(), &times[0], volts_rx_forfft[0][iband]);
+	  TGraph gr1(times.size(), &times[0], volts_rx_forfft[1][iband]);
+	  // TGraph gr0(times.size(), &times[0], vhz_rx[0][iband]);
+	  // TGraph gr1(times.size(), &times[0], vhz_rx[1][iband]);
+	  
+	  
+	  gr0.SetName(TString::Format("gr0_ant%d_iband%d_aftergain", ant, iband));
+	  gr1.SetName(TString::Format("gr1_ant%d_iband%d_aftergain", ant, iband));
+	  gr0.SetTitle(TString::Format("gr0_ant%d_iband%d_aftergain", ant, iband));
+	  gr1.SetTitle(TString::Format("gr1_ant%d_iband%d_aftergain", ant, iband));
+
+	  gr0.Write();
+	  gr1.Write();
+	  
+	  lastAnt = ant;
+	  if(lastAnt == 47){
+	    f->Write();
+	    f->Close();
+	    f = NULL;
+	    firstTime = false;
+	  }
+	}
+
+
+	
+      }
+      else if(gr==NULL){
+	std::cerr << "ERROR! in " << __PRETTY_FUNCTION__ << ": you must pass non-NULL panel1 or gr" << std::endl;
       }
       else{
-        if( panel1->GetDelay(jpt)>0 ){
-          Tools::ShiftLeft(tmp_volts[0], anita1->NFOUR/2, numBinShift );
-          Tools::ShiftLeft(tmp_volts[1], anita1->NFOUR/2, numBinShift );
-        }
-        else if( panel1->GetDelay(jpt)<0 ){
-          Tools::ShiftRight(tmp_volts[0], anita1->NFOUR/2, -1*numBinShift );
-          Tools::ShiftRight(tmp_volts[1], anita1->NFOUR/2, -1*numBinShift );
-        }
-    
-        for (int k=0;k<anita1->NFOUR/2;k++) {
-          volts_rx_forfft[0][iband][k] += tmp_volts[0][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
-          volts_rx_forfft[1][iband][k] += tmp_volts[1][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
-        }
+	
       }
+
       
-    } // end loop over screen points
-
-    // Now need to convert time domain to frequency domain
-    for (int k=0; k<anita1->NFOUR/2;k++){
-      tmp_volts[0][k]=volts_rx_forfft[0][iband][k];
-      tmp_volts[1][k]=volts_rx_forfft[1][iband][k];
-      // cout << anita1->fTimes[k] << " " << tmp_volts[0][k] << endl;
-    }
-
-    
-    // find back the frequency domain
-    FTPair::realft(tmp_volts[0],1,anita1->NFOUR/2);
-    FTPair::realft(tmp_volts[1],1,anita1->NFOUR/2);
-
-
-    // Convert FFT arrays into standard icemc frequency amplitudes array
-    anita1->GetArrayFromFFT(tmp_volts[0], vhz_rx[0][iband]);
-    anita1->GetArrayFromFFT(tmp_volts[1], vhz_rx[1][iband]);
-    
-     
-  } // end loop over bands
-
+    } // end loop over bands
+  }
+  
+  
 
 #ifdef ANITA_UTIL_EXISTS
   if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) ){

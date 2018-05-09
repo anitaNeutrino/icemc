@@ -121,8 +121,8 @@ namespace icemc {
     TFile *fnoise;
     TTree *tdiode;
 
-    static const int NFOUR=1024;
-    static const int HALFNFOUR=512;
+    static const int NFOUR=1024; // Number of fourier points
+    static const int HALFNFOUR=512; // Half of the number of fourier points
 
     // these are used for the satellite thing
     int NBANDS;                                                                                        ///< number of frequency sub-bands (not counting full band)
@@ -495,9 +495,9 @@ namespace icemc {
 
     int GetBeamWidths(const Settings *settings1); // for getting beam widths using coarse models (horn specs or simple model for EeVA)
     void Set_gain_angle(const Settings *settings1,double nmedium_receiver);
-    double Get_gain_angle(int gain_type, int k, double hitangle);
+    double Get_gain_angle(int gain_type, int k, double hitangle) const;
     void ReadGains();
-    void AntennaGain(const Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h);
+    void AntennaGain(const Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h) const;
 
 
     double reference_angle[7]; // reference angles for finding gains of antenna

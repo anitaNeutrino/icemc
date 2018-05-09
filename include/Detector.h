@@ -1,44 +1,39 @@
 #ifndef ICEMC_DETECTOR_H
 #define ICEMC_DETECTOR_H
 
-#include "TGraph.h"
-#include "TVector.h" ///@todo use TVector or icemc::Vector?
 #include "vector.hh" ///@todo use TVector or icemc::Vector?
+#include "position.hh" ///@todo use TVector or icemc::Vector?
+#include "FTPair.h"
 
 namespace icemc {
 
-  /**
-   * @todo Move this to the EarthModel class?
-   * 
-   */
-  struct GeographicCoordinate {
-    double longitude;
-    double latitude;
-    double altitude;
-    UInt_t unixTime;
-  };
-  
-
 
   /**
-   * @class AskaryanSignal
+   * @class PropagatingSignal
    * @brief A waveform traveling along a particular direction with a particular polarization
    */
-
-  class AskaryanSignal {
+  class PropagatingSignal {
   public:
-    TGraph waveform; ///< E-field (Volts/m) vs. time (seconds)
+    PropagatingSignal (const FTPair& sig, const Vector& direction,  const Vector& pol)
+      : waveform(sig), poynting(direction), polarization(pol) {;}
+    
+    icemc::FTPair waveform; ///< E-field (Volts/m) vs. time (seconds).
     icemc::Vector poynting; /// < Direction of signal travel (in the icemc coordinate system).
     icemc::Vector polarization; ///< Polarization vector (in the icemc coordinate system).
   };  
 
+
+
+
+
+  
 
   /**
    * @class Detector
    * @brief Abstract detector class 
 
    * Enforces separation of detector simulation from UHEN and Askaryan RF simulation.
-   * All detectors that interact with icemc *MUST* inherit from this class 
+   * All detectors that interact with icemc must inherit from this class 
    * and implement the pure virtual functions.
    * 
    */
@@ -48,15 +43,8 @@ namespace icemc {
     
     /** 
      * @brief Where is the detector?
-     * 
-     * icemc will try to generate neutrinos inside the horizon of your detector.
-     * That depends on where your detector is.
-     * For in-ice detectors this should be trivial to implement.
-     * For moving detectors, like ANITA, you can return the GPS position (and time) to generate the neutrino.
-     * 
-     * @return lon/lat/alt/unixTime 
      */
-    virtual GeographicCoordinate getCenterOfDetector() = 0;
+    virtual icemc::Position getCenterOfDetector(UInt_t* unixTime = NULL) = 0;
 
 
     /** 
@@ -72,9 +60,9 @@ namespace icemc {
      * 
      * @param rx is the index of the receiver
      * 
-     * @return a reference to the relative position
+     * @return a vector containing the position in the icemc coordinate system
      */
-    virtual const icemc::Vector& getPositionRX(int rx) const = 0;
+    virtual icemc::Vector getPositionRX(int rx) const = 0;
     
 
 
@@ -91,7 +79,7 @@ namespace icemc {
      * @param signal is the signal to add.
      * @param i is the index of the receiver 
      */    
-    virtual void addSignalToRX(const AskaryanSignal& signal, int i) = 0;
+    virtual void addSignalToRX(const PropagatingSignal& signal, int i) = 0;
     
 
     /**
@@ -104,11 +92,7 @@ namespace icemc {
 
 
     /** 
-     * @brief Tell icemc how you like your time-domain Askaryan signals.
-     * 
-     * icemc will generate time domain Askaryan signals for your detector of any length and time-step.
-     * Tell it what you want here.
-     * @todo specify units of dt.
+     * @brief Tell icemc how you like your Askaryan signals.
      * 
      * @param n number of samples for the generated time-domain Askaryan signal
      * @param dt time step (@todo units?) for the generated time-domain Askaryan signal
@@ -121,7 +105,7 @@ namespace icemc {
     
   };
   
-
+  
 }
 
 

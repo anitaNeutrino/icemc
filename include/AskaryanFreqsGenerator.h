@@ -65,9 +65,11 @@ namespace icemc{
     
     
     double GetVmMHz1m(double pnu, double freq) const;
-    AskaryanFreqs generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, double *freq_Hz, double notch_min, double notch_max) const;
+    AskaryanFreqs generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max) const;
+
+    void GetVmMHz(double vmmhz_max, double vmmhz1m_max, double pnu, const double *freq,
+		  double notch_min,double notch_max, double *vmmhz, int nfreq) const;
     
-    void GetVmMHz(double vmmhz_max,double vmmhz1m_max,double pnu,double *freq,double notch_min,double notch_max,double *vmmhz,int nfreq) const;
     int GetLPM() const;
     double GetELPM() const;
 

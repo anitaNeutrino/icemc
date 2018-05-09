@@ -134,7 +134,7 @@ void icemc::AskaryanFreqsGenerator::InitializeMedium() {
 
 
 
-icemc::AskaryanFreqs icemc::AskaryanFreqsGenerator::generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, double *freq_Hz, double notch_min, double notch_max) const {
+icemc::AskaryanFreqs icemc::AskaryanFreqsGenerator::generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max) const {
   std::vector<double> tempArray(numFreqs, 0);
   GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, freq_Hz, notch_min, notch_max, &tempArray[0], numFreqs);
   double minFreq = freq_Hz[0];
@@ -144,7 +144,7 @@ icemc::AskaryanFreqs icemc::AskaryanFreqsGenerator::generateAskaryanFreqs(double
 }
 
 
-void icemc::AskaryanFreqsGenerator::GetVmMHz(double vmmhz_max,double vmmhz1m_max, double pnu, double *freq, double notch_min, double notch_max, double *vmmhz, int nfreq) const {
+void icemc::AskaryanFreqsGenerator::GetVmMHz(double vmmhz_max,double vmmhz1m_max, double pnu, const double *freq, double notch_min, double notch_max, double *vmmhz, int nfreq) const {
 
   // parametrization from Jaime Alvarez Munhiz  
   //  here using astro-ph/0003315 
@@ -194,6 +194,17 @@ void icemc::AskaryanFreqsGenerator::GetSpread(double pnu,
 					      double freq,
 					      double& deltheta_em_max,
 					      double& deltheta_had_max) const {
+
+  /**
+   * Ultimately, it seems this follows a some_constant/freq dependence
+   * and so diverges if freq = 0. Not quite sure how to handle this...
+   * but for now I'll just set these to zero. This may need to be revised.
+   */
+  deltheta_em_max = 0;
+  deltheta_had_max = 0;
+  if(freq <= 0){
+    return;
+  }
 
   //  scale by how far off Cherenkov angle this viewing antenna is
   //  c.f. A-MZ  astro-ph/9706064 and astro-ph/0003315
@@ -358,6 +369,12 @@ double icemc::AskaryanFreqsGenerator::GetVmMHz1m(double pnu,double freq) const {
     vmmhz1m_max = factor*(2.53E-7)*(pnu/1.E12)*freq
       //      *(1./(1.+pow(freq/NU0_MODIFIED,ALPHAMEDIUM)))
       *(1./(1.+pow(freq/nu0_modified,1.44)));
+
+    static bool firstTime = true;
+    if(firstTime && freq==0){
+      std::cout << "inside " << __PRETTY_FUNCTION__ << " with freq = " << freq <<  ", " << "vmmhz1m_max = " << vmmhz1m_max << std::endl;
+      firstTime = false;
+    }
   }
   else if (WHICHPARAMETERIZATION==1) {
 

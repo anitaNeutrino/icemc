@@ -18,7 +18,8 @@ namespace icemc {
   class Screen;
   class IceModel;
   class Settings;
-  class RX;
+  //  class RX;
+  class ANITA;
   
 
   //! Class that handles the channel trigger
@@ -91,7 +92,7 @@ namespace icemc {
      * @param  n_hplane :: Vector 
      * @param  n_normal :: Vector
      */  
-    void ApplyAntennaGain(const Settings *settings1, Anita *anita1, Balloon *bn1, Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal);
+    void ApplyAntennaGain(const Settings *settings1, Anita *anita1, Balloon *bn1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, const TGraph* gr = NULL);
 
     //! Apply trigger path
     /**

@@ -35,6 +35,7 @@
 #include "GeneratedNeutrino.h"
 #include "EnvironmentVariable.h"
 #include "IcemcLog.h"
+#include "FTPair.h"
 
 #include <string>
 #include <sstream>
@@ -1546,7 +1547,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // Picks the balloon position and at the same time sets the masks and thresholds
       
       // fDetector->PickBalloonPosition(antarctica,  &settings1,  inu,  anita1,  r.Rndm(), &fGenNu->balloon);
-      fDetector->PickBalloonPosition(antarctica,  &settings1,  inu,  fDetector,  r.Rndm(), &fGenNu->balloon);            
+      fDetector->PickBalloonPosition(antarctica,  &settings1,  inu,  fDetector,  r.Rndm(), &fGenNu->balloon);
 
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter
@@ -1845,15 +1846,44 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
        * These are used to find the maximum angular deviation from Cerenkov
        * cone where signal is still detectable.
        */
+
+
+      //@todo this could be better!
+      const double testTaperFreqHz = fDetector->freq[0] > 0 ? fDetector->freq[0] : fDetector->freq[1];
+      
       if(sec1.secondbang && sec1.interestedintaus) {
 	 vmmhz1m_max = askFreqGen.GetVmMHz1m(ptau, fDetector->FREQ_HIGH);
-	 askFreqGen.GetSpread(ptau, showerProps, fDetector->FREQ_LOW, deltheta_em_max, deltheta_had_max);
+	 askFreqGen.GetSpread(ptau, showerProps, testTaperFreqHz, deltheta_em_max, deltheta_had_max);
       }
       else {
 	// get peak signal at highest edge of frequency band because that is where it is highest
         vmmhz1m_max = askFreqGen.GetVmMHz1m(pnu, fDetector->FREQ_HIGH);
-        askFreqGen.GetSpread(pnu, showerProps, fDetector->FREQ_LOW, deltheta_em_max, deltheta_had_max);
+        askFreqGen.GetSpread(pnu, showerProps, testTaperFreqHz, deltheta_em_max, deltheta_had_max);
       } //end else (not secondbang or not interested in taus)
+
+
+
+      static bool firstTimeSpread = true;
+      TFile* fTestSpread = NULL;
+      if(firstTimeSpread){
+	fTestSpread = new TFile("fTestSpread.root","recreate");	
+	TGraph gr;
+	for(int j=0; j < Anita::NFREQ; j++){
+	  askFreqGen.GetSpread(pnu, showerProps, fDetector->freq[j], deltheta_em_max, deltheta_had_max);
+	  gr.SetPoint(j, fDetector->freq[j], deltheta_em_max);
+	  std::cout << j << "\t" <<  fDetector->freq[j] << "\t" << deltheta_em_max << "\t" << deltheta_had_max << std::endl;
+	}
+
+	gr.SetName("grTest");
+	std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	gr.Write();
+	fTestSpread->Close();
+	firstTimeSpread = false;
+      }
+      
 
 
       /*
@@ -1904,7 +1934,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 			     ray1, &askFreqGen,
 			     interaction1->posnu,
 			     // anita1, bn1,
-			     fDetector, fDetector,			     
+			     fDetector, fDetector,
 			     interaction1->nnu,
 			     costhetanu,
 			     theta_threshold);
@@ -2045,14 +2075,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         std::cout << "Need to bring back GetFirstBang before you can simulate taus.\n";
         std::cout << "I removed it because it required EarthModel and I wanted Secondaries to be a stand-alone class to use in the embedded simulation.\n";
         icethickness=interaction1->r_enterice.Distance(interaction1->nuexit);
-        interaction1->chord_kgm2_bestcase=nuentrancelength*Tools::dMin(icemc::densities, 3);
+        interaction1->chord_kgm2_bestcase=nuentrancelength*TMath::MinElement(3, icemc::densities);
       }
       else {
         // finds minimum chord (in kg/m^2) traversed by neutrino
         // only keeping events with weight > 10^-3
         // periodically need to make sure this is still valid
         // chord_kgm2_bestcase=(d1+d2)*askFreqGen->RHOMEDIUM;
-        interaction1->chord_kgm2_bestcase=(interaction1->d1+interaction1->d2)*Tools::dMin(icemc::densities, 3);
+        interaction1->chord_kgm2_bestcase=(interaction1->d1+interaction1->d2)*TMath::MinElement(3, icemc::densities);
       }
 
       // chord just through ice.
@@ -2331,12 +2361,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // attenuation length is included.
       AskaryanFreqs askFreqs;
       if (!settings1.ROUGHNESS){
-        askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, fDetector->NFREQ, fDetector->freq, fDetector->NOTCH_MIN, fDetector->NOTCH_MAX);
+        askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, fDetector->NFREQ, fDetector->freq, fDetector->NOTCH_MIN, fDetector->NOTCH_MAX);	
 
 	// here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
         // vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
         // and making an array across frequency bins by putting in frequency dependence.
-	
       }
 
       // For each frequency,  get the width of Cerenkov cone
@@ -2354,24 +2383,38 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         count1->nviewanglecut[whichray]++;
 
 
-	// static bool drawnGraph = false;
-	// TFile* fTest = NULL;
-	// if(!drawnGraph){
-	//   fTest = new TFile("fTest.root","recreate");
-	//   TGraph gr = askFreqs.makeGraph();
-	//   gr.SetName("grTest");
-	//   std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
-	//   std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
-	//   std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
-	//   std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
-	//   gr.Write();
-	//   // // fTest->Close();
-	//   // drawnGraph = true
-	// }	
+	static bool drawnGraph = false;
+	TFile* fTest = NULL;
+	if(!drawnGraph){
+	  fTest = new TFile("fTest.root","recreate");
+	  TGraph gr = askFreqs.makeGraph();
+	  gr.SetName("grTest");
+	  std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	  std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	  std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	  std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	  gr.Write();
+	  fTest->Close();
+	  drawnGraph = true;
+	}
 
+	// std::cout << "tapering..." << std::endl;
+	// std::cout << deltheta_em[0]  << "\t"  << deltheta_em_max << "\t" << std::endl;
+	// std::cout << deltheta_had[0]  << "\t"  << deltheta_had_max << "\t" << std::endl;
+	
         for (int k=0;k<Anita::NFREQ;k++) {
-          deltheta_em[k] = deltheta_em_max*fDetector->FREQ_LOW/fDetector->freq[k];
-          deltheta_had[k] = deltheta_had_max*fDetector->FREQ_LOW/fDetector->freq[k];
+
+	  // so, this just encodes the 1/f dependence of the taper after you find it for a single frequency
+	  // but, if  we force the frequencies to extend to zero, then this isn't valid.
+
+	  if(fDetector->freq[k] > 0){
+	    deltheta_em[k] = deltheta_em_max*testTaperFreqHz/fDetector->freq[k];
+	    deltheta_had[k] = deltheta_had_max*testTaperFreqHz/fDetector->freq[k];
+	  }
+	  else{
+	    deltheta_em[k] = 1e99; // very large but not infinite? is this the right thing to do?
+	    deltheta_had[k] = 1e99; // very large but not infinite? is this the right thing to do?
+	  }
 
 	  // askFreqGen.TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, askFreqs, k, vmmhz_em[k]);// this applies the angular dependence.
 	  askFreqGen.TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], showerProps, askFreqs, k);// this applies the angular dependence.
@@ -2400,8 +2443,22 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	  }
         }//end for (int k=0;k<Anita::NFREQ;k++)
 
+
 	
-	// if(!drawnGraph){
+	
+       	// if(!drawnGraph){
+
+	//   std::vector<std::complex<double> > complexFreqs;
+	//   complexFreqs.reserve(fDetector->NFREQ);
+	//   for(int j=0; j < fDetector->NFREQ; j++){
+	//     complexFreqs.push_back(std::complex<double>(askFreqs[j], 0));
+	//   }
+	//   FTPair a(complexFreqs, fDetector->freq[1] - fDetector->freq[0]);
+	//   a.setDebug();
+	//   TGraph grTest3 = a.getTimeDomain();
+	//   grTest3.SetName("grTest3");
+	//   grTest3.Write();
+	  
 	//   TGraph gr = askFreqs.makeGraph();
 	//   gr.SetName("grTest2");
 	//   std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
@@ -2528,6 +2585,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       else{
 	count_asktrigger++;
       }
+
+      panel1->PropagateSignalsToDetector(&settings1, fDetector);
       
       // this seems to be where the neutrino simulation ends
       // everything in here should end up in the ANITA class.      
@@ -3141,8 +3200,9 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int&
       viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
 
       // at this point, only figure out if taper will kill the geometry, but don't actually apply the factor
-      deltheta_em[0]=deltheta_em_max*fDetector->FREQ_LOW/fDetector->freq[0];
-      deltheta_had[0]=deltheta_had_max*fDetector->FREQ_LOW/fDetector->freq[0];
+      deltheta_em[0] = deltheta_em_max*fDetector->FREQ_LOW/fDetector->freq[0];
+      deltheta_had[0] = deltheta_had_max*fDetector->FREQ_LOW/fDetector->freq[0];
+
       // askFreqGen->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], showerProps, taperfactor, vmmhz_em[0]);// this applies the angular dependence.
       double dummy_vmmhz_em_0 = 0;
       askFreqGen->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], showerProps, taperfactor, dummy_vmmhz_em_0);// this applies the angular dependence.

@@ -288,13 +288,17 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
   for (int i=0;i<HALFNFOUR;i++){
     fTimes[i] = i * TIMESTEP * 1.0E9;
   }
- 
+
   for (int i=0;i<NFREQ;i++) {
-    freq[i]=FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
+    freq[i] = FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
+    
+    std::cout << "Anita::freq[" << i << "] = " << freq[i] << std::endl;
     avgfreq_rfcm[i]=0.;
     avgfreq_rfcm_lab[i]=0.;
   } //for
-
+  std::cout << "df = " << freq[1] - freq[0] << ", so the bin for f=0 is at " << freq[0]/(freq[1] - freq[0]) << std::endl;
+  
+  // exit(1);
   initializeFixedPowerThresholds(foutput);
 
   additionalDt=0;
@@ -1382,7 +1386,7 @@ void icemc::Anita::ReadGains(void) {
 
 
 
-void icemc::Anita::AntennaGain(const Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h) {
+void icemc::Anita::AntennaGain(const Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h) const {
 
   if (freq[k]>=settings1->FREQ_LOW_SEAVEYS && freq[k]<=settings1->FREQ_HIGH_SEAVEYS) {
 
@@ -1393,31 +1397,25 @@ void icemc::Anita::AntennaGain(const Settings *settings1,double hitangle_e,doubl
 	// Change here to be constant if need be (ABBY).
 	// Add a setting to the code for use constant gain or dish or something.
 	// Make this a member function.	
-	relativegains[pols]=Get_gain_angle(pols,k,hitangle_e);
+	relativegains[pols] = Get_gain_angle(pols,k,hitangle_e);
       }
       else{
-	relativegains[pols]=0.;
+	relativegains[pols] = 0.;
       }
       //if (fabs(hitangle_e)<PI/12)
       //cout << "relative gains is " << relativegains[pols] << "\n";
     }
-		
-		
+
     //      if (fabs(hitangle_e)<PI/12)
     //cout << "vsignalarray_e before is " << vsignalarray_e << "\n";
     vsignalarray_e = vsignalarray_e * 0.5 * sqrt(vvGaintoHeight[k] * vvGaintoHeight[k] * e_component * e_component * relativegains[0] + hvGaintoHeight[k] * hvGaintoHeight[k] * h_component * h_component * relativegains[1]); // 0.5 is for voltage dividing
-		
-    //cout << "In AntennaGain, vsignalarray_e is " << vsignalarray_e << "\n";
-		
-    //if (fabs(hitangle_e)<PI/12)
-    //cout << "vsignalarray_e after is " << vsignalarray_e << "\n";
-		
-    for (int pols=2;pols<4;pols++) { // loop over hh, vh
+
+    for (int pols = 2;pols < 4;pols++) { // loop over hh, vh
       if (fabs(hitangle_h)<constants::PI/2){
-	relativegains[pols]=Get_gain_angle(pols,k,hitangle_h);
+	relativegains[pols] = Get_gain_angle(pols, k, hitangle_h);
       }
       else{
-	relativegains[pols]=0.;
+	relativegains[pols] = 0.;
       }
     }
 		
@@ -1426,12 +1424,7 @@ void icemc::Anita::AntennaGain(const Settings *settings1,double hitangle_e,doubl
     //if (fabs(hitangle_h)<PI/12)
     //cout << "vsignalarray_h before is " << vsignalarray_h << "\n";
 		
-    vsignalarray_h=vsignalarray_h*0.5*
-      sqrt(hhGaintoHeight[k]*hhGaintoHeight[k]*h_component*h_component*relativegains[2] + vhGaintoHeight[k]*vhGaintoHeight[k]*e_component*e_component*relativegains[3]);
-		
-    //      if (fabs(hitangle_h)<PI/12)
-    //cout << "vsignalarray_h after is " << vsignalarray_h << "\n";
-		
+    vsignalarray_h=(vsignalarray_h*0.5*sqrt(hhGaintoHeight[k]*hhGaintoHeight[k]*h_component*h_component*relativegains[2] + vhGaintoHeight[k]*vhGaintoHeight[k]*e_component*e_component*relativegains[3]));
   }
 }
 
@@ -1655,31 +1648,38 @@ void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_recei
   double gainhv, gainhh, gainvh, gainvv;
   double gain_step = frequency_forgain_measured[1]-frequency_forgain_measured[0]; // how wide are the steps in frequency;
     
-  cout << "GAINS is " << GAINS << "\n";
+  std::cout << "GAINS is " << GAINS << "\n";
   for (int k = 0; k < NFREQ; ++k) {
     whichbin[k] = int((freq[k] - frequency_forgain_measured[0]) / gain_step); // finds the gains that were measured for the frequencies closest to the frequency being considered here
     if((whichbin[k] >= NPOINTS_GAIN || whichbin[k] < 0)) {
-      cout << "Set_gain_angle out of range, freq = " << freq[k] << endl;
-      exit(1);
+      std::cout << "Set_gain_angle out of range, freq = " << freq[k] << "\twhichbin[k] = " << whichbin[k] << std::endl;
+      // no longer exit, just set antenna gain to 0 outside band
+      // @todo verify this works
+      // exit(1);
+      scalef2[k] = 0;
+      scalef1[k] = 0;
     }
+    else{
+
+      //now a linear interpolation for the frequency
+      scalef2[k] = (freq[k] - frequency_forgain_measured[whichbin[k]]) / gain_step;
+      // how far from the lower frequency
+      scalef1[k] = 1. - scalef2[k]; // how far from the higher frequency
 		
-    //now a linear interpolation for the frequency
-    scalef2[k] = (freq[k] - frequency_forgain_measured[whichbin[k]]) / gain_step;
-    // how far from the lower frequency
-    scalef1[k] = 1. - scalef2[k]; // how far from the higher frequency
-		
-    // convert the gain at 0 degrees to the effective antenna height at 0 degrees for every frequency
-    if(whichbin[k] == NPOINTS_GAIN - 1) { // if the frequency is 1.5e9 or goes a little over due to rounding
-      gainhv = gainhv_measured[whichbin[k]];
-      gainhh = gainh_measured[whichbin[k]];
-      gainvh = gainvh_measured[whichbin[k]];
-      gainvv = gainv_measured[whichbin[k]];
-    } else {
-      // These gains should be dimensionless numbers, not in dBi
-      gainhv = scalef1[k] * gainhv_measured[whichbin[k]] + scalef2[k] * gainhv_measured[whichbin[k] + 1];
-      gainhh = scalef1[k] * gainh_measured[whichbin[k]] + scalef2[k] * gainh_measured[whichbin[k] + 1];
-      gainvh = scalef1[k] * gainvh_measured[whichbin[k]] + scalef2[k] * gainvh_measured[whichbin[k] + 1];
-      gainvv = scalef1[k] * gainv_measured[whichbin[k]] + scalef2[k] * gainv_measured[whichbin[k] + 1];
+      // convert the gain at 0 degrees to the effective antenna height at 0 degrees for every frequency
+      if(whichbin[k] == NPOINTS_GAIN - 1) { // if the frequency is 1.5e9 or goes a little over due to rounding
+	gainhv = gainhv_measured[whichbin[k]];
+	gainhh = gainh_measured[whichbin[k]];
+	gainvh = gainvh_measured[whichbin[k]];
+	gainvv = gainv_measured[whichbin[k]];
+      }
+      else {
+	// These gains should be dimensionless numbers, not in dBi
+	gainhv = scalef1[k] * gainhv_measured[whichbin[k]] + scalef2[k] * gainhv_measured[whichbin[k] + 1];
+	gainhh = scalef1[k] * gainh_measured[whichbin[k]] + scalef2[k] * gainh_measured[whichbin[k] + 1];
+	gainvh = scalef1[k] * gainvh_measured[whichbin[k]] + scalef2[k] * gainvh_measured[whichbin[k] + 1];
+	gainvv = scalef1[k] * gainv_measured[whichbin[k]] + scalef2[k] * gainv_measured[whichbin[k] + 1];
+      }
     }
     if (GAINS==0) {
 			
@@ -1972,7 +1972,8 @@ int icemc::Anita::GetBeamWidths(const Settings *settings1) {
     
   return 1;
 } //GetBeamWidths
-double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) {
+
+double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) const {
   double scaleh1, scaleh2;
   if(gain_type < 0 || gain_type > 3) {
     cout << "gain_type out of range\n";
@@ -1980,7 +1981,15 @@ double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) {
   }
     
   hitangle = fabs(hitangle)*constants::DEGRAD;
-  flare[gain_type][k]=flare[gain_type][k]*constants::DEGRAD;
+
+
+  /**
+   * @todo @warning this looks like a bug? you scale the flare down each time you call Get_gain_angle?
+   * flare[gain_type][k] = flare[gain_type][k]*constants::DEGRAD
+   * It is set inside GetBeamWidths, which is only called once?
+   * Replace it with a local var thisFlareRads, which also allows this function to be const
+   */
+  double thisFlareRads = flare[gain_type][k]*constants::DEGRAD; // this seems really stupid?
   if(hitangle > 90.00001) {
     cout << "hitangle out of range\n";
     exit(1);
@@ -1995,8 +2004,9 @@ double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) {
 		
     //    cout << "gain_type, k, flare, gain are " << gain_type << " " << k << " " << flare[gain_type][k] << " " << gain[pol][k] << "\n";
     //cout << "hitangle, flare, factor are " << hitangle << " " << flare[gain_type][k] << " " << exp(-1.*(hitangle*hitangle)/(2*flare[gain_type][k]*flare[gain_type][k])) << "\n";
-    return exp(-1.*(hitangle*hitangle)/(2*flare[gain_type][k]*flare[gain_type][k]));
-  } else {
+    return exp(-1.*(hitangle*hitangle)/(2*thisFlareRads*thisFlareRads));
+  }
+  else {
     for(int iii = 1; iii < 7; iii++) { // linear interpolation for the angle
       if(hitangle <= reference_angle[iii]) {
 	scaleh2 = (hitangle - reference_angle[iii-1]) *
@@ -2434,7 +2444,10 @@ void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forf
     // freq_forfft has NFOUR/2 elements because it is meant to cover real and imaginary values
     // but there are only NFOUR/4 different values
     // it's the index among the NFOUR/4 that we're interested in
-    int ifour=Tools::Getifreq(freq[i],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
+
+    // this translate the actual frequency, 
+    int ifour = Tools::Getifreq(freq[i],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
+    // std::cout << "make array..."<< i << "\t" << ifour << std::endl;
       
     if (ifour!=-1 && 2*ifour+1<NFOUR/2) {
       count_nonzero++;
@@ -2442,21 +2455,17 @@ void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forf
 	ifirstnonzero=ifour;
       }
 
-      vsignal_e_forfft[2*ifour]=vsignalarray_e[i]*2/((double)NFOUR/2); // phases is 90 deg.
-
-      //      cout << "ifour, vsignal is " << ifour << " " << vsignal_e_forfft[2*ifour] << "\n";
-
-      vsignal_e_forfft[2*ifour+1]=vsignalarray_e[i]*2/((double)NFOUR/2); // phase is 90 deg.
-      // the 2/(nfour/2) needs to be included since were using FTPair::realft with the -1 setting
+      // They are doing the inverse FT normalization here, since numerical recipes FT does not normalize
+      // that's the factor of 2/(nfour/2) (so  the icemc convention does this with -1)
+      // but if 2*ifour and 2*ifour + 1 are the re, im then that isn't 90 degree phase, it's 45?
+      vsignal_e_forfft[2*ifour]  = vsignalarray_e[i]*2/((double)NFOUR/2); // phase is 90 deg???
+      vsignal_e_forfft[2*ifour+1]= vsignalarray_e[i]*2/((double)NFOUR/2); // phase is 90 deg???
 
       // the 2/(nfour/2) needs to be included since were using FTPair::realft with the -1 setting
       // how about we interpolate instead of doing a box average
-
       for (int j=iprevious+1;j<ifour;j++) {
-        vsignal_e_forfft[2*j]=previous_value_e_even+(vsignal_e_forfft[2*ifour]-previous_value_e_even)*(double)(j-iprevious)/(double)(ifour-iprevious);
-        //	cout << "j, vsignal is " << j << " " << vsignal_e_forfft[2*j] << "\n";
-
-        vsignal_e_forfft[2*j+1]=previous_value_e_odd+(vsignal_e_forfft[2*ifour+1]-previous_value_e_odd)*(double)(j-iprevious)/(double)(ifour-iprevious);
+        vsignal_e_forfft[2*j]   = previous_value_e_even+(vsignal_e_forfft[2*ifour]   - previous_value_e_even) * (double)(j-iprevious)/(double)(ifour-iprevious);
+        vsignal_e_forfft[2*j+1] = previous_value_e_odd +(vsignal_e_forfft[2*ifour+1] - previous_value_e_odd ) * (double)(j-iprevious)/(double)(ifour-iprevious);
       }
 
       ilastnonzero=ifour;
@@ -2464,7 +2473,7 @@ void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forf
       previous_value_e_even=vsignal_e_forfft[2*ifour];
       previous_value_e_odd=vsignal_e_forfft[2*ifour+1];
     }
-      
+
   } // end loop over nfreq
     
     // EH check

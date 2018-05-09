@@ -24,41 +24,31 @@ namespace icemc {
     virtual ~ANITA();
 
     virtual int getNumRX() const {return 96;} ///@todo make this proper
-    virtual const icemc::Vector& getPositionRX(int i) const{
-      return testVecNotRealYet[i];
-    }
-    virtual GeographicCoordinate getCenterOfDetector(){
-      GeographicCoordinate gc;
-      return gc;
-    }
+    virtual icemc::Vector getPositionRX(int i) const;
+
+    virtual icemc::Position getCenterOfDetector(UInt_t* unixTime = NULL);
     virtual bool applyTrigger();
     virtual void getDesiredNDt(int& n, double& dt) const {
-      n = 128;
-      dt = 0.1;
+      n = 1024;
+      dt = 1e-9*1./2.6;
     }
 
-    virtual void addSignalToRX(const AskaryanSignal& signal, int rx);
+    virtual void addSignalToRX(const PropagatingSignal& signal, int rx);
 
 
     double GetAverageVoltageFromAntennasHit(const Settings *settings1,  int *nchannels_perrx_triggered,  double *voltagearray,  double& volts_rx_sum) const;
   private:
-    std::vector<icemc::Vector> testVecNotRealYet;
+
     const Settings* fSettingsPtrIDontOwn;
     Counting* fCountingPtrIDontOwn;
     Ray* fRayPtrIDontOwn;
     Screen* fScreenPtrIDontOwn;
 
+    // Indices... uuurrrggghh
+    void getAntPolFromRX(int rx, int&ant, int& pol) const;
+    void getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const;
 
-    // Complete junk from EventGenerator.h
-
-
-    
   };
-
-
-
-
-};
-
+}
 
 #endif //ICEMC_ANITA_FULL_H
