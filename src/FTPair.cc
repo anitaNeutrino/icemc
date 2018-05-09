@@ -20,7 +20,8 @@ icemc::FTPair::FTPair(int n, const double* timeDomainAmplitude,  double dt, doub
     fFreqDomain(),
     fNeedToUpdateTimeDomain(false),
     fNeedToUpdateFreqDomain(true),
-    fDebug(false)
+    fDebug(false),
+    fDoNormalTimeDomainOrdering(false)
 {
   PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
   for(int i=0; i < n; i++){
@@ -37,7 +38,8 @@ icemc::FTPair::FTPair(const std::vector<double>& timeDomainAmplitude, double dt,
     fFreqDomain(),
     fNeedToUpdateTimeDomain(false),
     fNeedToUpdateFreqDomain(true),
-    fDebug(false)
+    fDebug(false),
+    fDoNormalTimeDomainOrdering(false)
 {
   PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
   
@@ -54,7 +56,8 @@ icemc::FTPair::FTPair(const TGraph& grTimeDomain)
     fFreqDomain(),
     fNeedToUpdateTimeDomain(false),
     fNeedToUpdateFreqDomain(true),
-    fDebug(false)
+    fDebug(false),
+    fDoNormalTimeDomainOrdering(false)
 {
   PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
   zeroPadTimeDomainLengthToPowerOf2();
@@ -72,7 +75,8 @@ icemc::FTPair::FTPair(const std::vector<std::complex<double> >& freqDomainPhasor
     fFreqDomain(freqDomainPhasors),
     fNeedToUpdateTimeDomain(true),
     fNeedToUpdateFreqDomain(false),
-    fDebug(false)
+    fDebug(false),
+    fDoNormalTimeDomainOrdering(true)    
 {
   PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
   int nf = zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(df);
@@ -90,7 +94,8 @@ icemc::FTPair::FTPair(int nf, const std::complex<double>* freqDomainPhasors, dou
     fFreqDomain(freqDomainPhasors, freqDomainPhasors+nf),
     fNeedToUpdateTimeDomain(true),
     fNeedToUpdateFreqDomain(false),
-    fDebug(false)
+    fDebug(false),
+    fDoNormalTimeDomainOrdering(true)    
 {
   PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
   nf = zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(df);
@@ -164,8 +169,36 @@ TGraph icemc::FTPair::makePowerSpectrumGraph() const {
 
 
 
+void icemc::FTPair::doNormalTimeDomainOrdering() const {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  
+  TGraph grOld = getTimeDomain();
+  TGraph& grNew = fTimeDomainGraph;
+
+  const double t0 = grOld.GetX()[0];
+  const double dt = grOld.GetX()[1] - t0;  
+  const int offset = grOld.GetN()/2;
+  const double timeOffset = -offset*dt;
+  for(int i=0; i < offset; i++){
+    grNew.GetX()[i] += timeOffset;
+    grNew.GetY()[i] = grOld.GetY()[i+offset];
+  }
+  for(int i=offset; i < grNew.GetN(); i++){
+    grNew.GetX()[i] += timeOffset;
+    grNew.GetY()[i] = grOld.GetY()[i-offset];
+  }
+}
 
 
+
+void icemc::FTPair::delayTimeDomain(double delay) {
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  
+  TGraph& gr = changeTimeDomain();
+  for(int i=0; i < gr.GetN(); i++){
+    gr.GetX()[i] += delay;
+  }
+}
 
 
 
@@ -250,16 +283,17 @@ void icemc::FTPair::maybeUpdateFreqDomain() const {
     zeroPadTimeDomainLengthToPowerOf2();
 
     
-    std::vector<double> temp;
-    temp.reserve(fTimeDomainGraph.GetN());
+    std::vector<double> temp(fTimeDomainGraph.GetY(), fTimeDomainGraph.GetY() + fTimeDomainGraph.GetN());
+    // temp.reserve(fTimeDomainGraph.GetN());
 
-    // Forward and then inv FFT scales output by N/2
-    // here we take that out by scaling down just before the forward
-    int n = fTimeDomainGraph.GetN();
-    double scaleFactor = 2./n; // numerical recipes scaling
-    for(int i=0; i < n; i++){
-      temp.push_back(fTimeDomainGraph.GetY()[i]*scaleFactor);
-    }
+    // // Forward and then inv FFT scales output by N/2
+    // // here we take that out by scaling down just before the forward
+    // int n = fTimeDomainGraph.GetN();
+    // double scaleFactor = 2./n; // numerical recipes scaling
+    // for(int i=0; i < n; i++){
+    //   temp.push_back(fTimeDomainGraph.GetY()[i]*scaleFactor);
+    // }
+    
 
     realft(&temp[0], 1,  temp.size());
 
@@ -300,16 +334,20 @@ void icemc::FTPair::maybeUpdateTimeDomain() const {
     int nf = zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(df);
     int nNew = getNumTimes(nf); // this the the required power of 2
 
+    // Here we follow the conventional place for the normalization as used in icemc.
+    // Forward and then inv FFT scales output by N/2
+    // here we take that out by scaling down just before the inverse FT
+    double scaleFactor = 2./nNew; // numerical recipes scaling
+    
     std::vector<double> temp;
     temp.reserve(nNew);
     temp.push_back(fFreqDomain.at(0).real()); // DC offset
     temp.push_back(fFreqDomain.at(nf-1).real()); // nqyuist
     for(int j=1; j < nf-1; j++){
-      temp.push_back(fFreqDomain.at(j).real());
-      temp.push_back(fFreqDomain.at(j).imag());
+      temp.push_back(fFreqDomain.at(j).real()*scaleFactor);
+      temp.push_back(fFreqDomain.at(j).imag()*scaleFactor);
     }
     realft(&temp[0], -1, temp.size());
-
 
     double t0 = fTimeDomainGraph.GetX()[0];
     double dtNew = fTimeDomainGraph.GetX()[1] - t0;
@@ -319,6 +357,12 @@ void icemc::FTPair::maybeUpdateTimeDomain() const {
     }
 
     fNeedToUpdateTimeDomain = false;
+    
+    if(fDoNormalTimeDomainOrdering){
+      doNormalTimeDomainOrdering();
+      // Unset the flag since it probably only makes sense to do this on the first inverse FT
+      fDoNormalTimeDomainOrdering = false; 
+    }    
   }
 }
 

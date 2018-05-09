@@ -70,10 +70,6 @@ namespace icemc {
      * @param t0 time of first sample (in the time domain)
      */    
     FTPair(const std::vector<std::complex<double> >& freqDomainPhasors, double deltaF, double t0 = 0);
-    
-    
-
-
 
 
 
@@ -149,6 +145,23 @@ namespace icemc {
      * @return new TGraph showing power per unit frequency
      */
     TGraph makePowerSpectrumGraph() const;
+
+    /** 
+     * This can be done automatically on the next inverse FT, @see setAutoNormalTimeDomainOrdering(bool)
+     * 
+     * Puts the back half of the time domain array at the front.
+     * One can interpret the output of an inverse FT as going 0->T/2, -T/2->0
+     * After reordering, the array goes -T/2->T/2.
+     */
+    void doNormalTimeDomainOrdering() const;
+
+
+    /** 
+     * Applies a delay to the time axis of the graph.
+     * 
+     * @param delay is the amount to delay the signal by
+     */
+    void delayTimeDomain(double delay);
     
 
     /** 
@@ -297,7 +310,17 @@ namespace icemc {
      * 
      * @param db desired state of debug statement switch.
      */
-    void setDebug(bool db = true){fDebug = true;}
+    void setDebug(bool db = true){fDebug = db;}
+
+
+    /** 
+     * Set to always automatically call doNormalTimeDomainOrdering after an inverse FT
+     * 
+     * @param autoCycle set to true if you want to automatically swap the time ordering
+     */
+    void setAutoNormalTimeDomainOrdering(bool autoCycle = true){fDoNormalTimeDomainOrdering = autoCycle;}
+    
+
 
     
   private:
@@ -307,6 +330,8 @@ namespace icemc {
     mutable bool fNeedToUpdateTimeDomain; ///< If you call changeFreqDomain, this is set to true, set to false after maybeUpdateFreqDomain
     mutable bool fNeedToUpdateFreqDomain; ///< If you call changeTimeDomain, this is set to true, set to false after maybeUpdateTimeDomain
     bool fDebug; ///< To toggle debug output, probably not useful unless you're developing and there's problem.
+    mutable bool fDoNormalTimeDomainOrdering; ///< Optionally call doNormalTimeDomainOrdering once after an inverse FT
+    
     void maybeUpdateFreqDomain() const; ///< If fNeedToUpdateFreqDomain is true, does the appropriate forward FTs
     void maybeUpdateTimeDomain() const; ///< If fNeedToUpdateTimeDomain is true, does the appropriate inverse FTs
     int zeroPadTimeDomainLengthToPowerOf2() const; ///< Because numerical recipes is less good than FFTW
