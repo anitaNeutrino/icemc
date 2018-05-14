@@ -804,8 +804,14 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
         }
       } // end looping over frequencies.
 
-      anita1->MakeArrayforFFT(tmp_vhz[0],tmp_volts[0], 90., true);
-      anita1->MakeArrayforFFT(tmp_vhz[1],tmp_volts[1], 90., true);
+      // figure out fractional delays
+      float fractionalDelay = panel1->GetDelay(jpt)-int(panel1->GetDelay(jpt)/anita1->TIMESTEP);
+      // scale the fractional delay to the maximum frequency (timestep/2).
+      // Note that this assumes that (NFOUR/4)/(timestep/2) == max frequency-ish.
+      float scaledFractionalDelay = (fractionalDelay)/(anita1->TIMESTEP/2);
+      
+      anita1->MakeArrayforFFT(tmp_vhz[0],tmp_volts[0], 90., true, fractionalDelay, true);
+      anita1->MakeArrayforFFT(tmp_vhz[1],tmp_volts[1], 90., true, fractionalDelay, true);
 
       // now v_banding_rfcm_h_forfft is in the time domain
       // and now it is really in units of V
