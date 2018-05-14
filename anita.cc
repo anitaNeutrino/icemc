@@ -2402,7 +2402,9 @@ void Anita::FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[NFREQ]){
 
 }
 
-void Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay) {
+// groupdelay here is scaled to NFOUR/4. As in, if you pass it "1", you'll add
+// something like (1/highest frequency).
+void Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay, double groupdelay, bool usegroupdelay) {
     
   Tools::Zero(vsignal_e_forfft,NFOUR/2);
     
@@ -2458,8 +2460,22 @@ void Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, dou
   }
     
   //  Tools::InterpolateComplex(vsignal_e_forfft,NFOUR/4);
-
-  if (useconstantdelay){
+  if (usegroupdelay) {
+    for (int ifour=0;ifour<NFOUR/4;ifour++) {
+      double cosphase;
+      double sinphase;
+      
+      if (USEPHASES) {
+	cosphase = cos(v_phases[ifour]*PI/180.+2*PI*groupdelay*ifour);
+	sinphase = sin(v_phases[ifour]*PI/180.+2*PI*groupdelay*ifour);
+      } else {
+	cosphase = cos(phasedelay*PI/180. + 2*PI*groupdelay*ifour);
+	sinphase = sin(phasedelay*PI/180. + 2*PI*groupdelay*ifour);	
+      }
+      vsignal_e_forfft[2*ifour]*= cosphase;
+      vsignal_e_forfft[2*ifour+1]*= sinphase;
+    }
+  } else if (useconstantdelay){
     double cosphase=cos(phasedelay*PI/180.);
     double sinphase=sin(phasedelay*PI/180.);
     for (int ifour=0;ifour<NFOUR/4;ifour++) {      
