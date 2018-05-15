@@ -6,10 +6,10 @@
 #include "TObject.h"
 #include "TGraph.h"
 
-
 namespace icemc {
 
-  class AskaryanFreqsGenerator; ///< The generator class can access the private elements
+  class AskaryanFreqsGenerator;
+  class ShowerProperties;
 
   /**
    * @class AskaryanFreqs
@@ -29,28 +29,33 @@ namespace icemc {
 
     /** 
      * Default constructor
-     */    
+     */
     AskaryanFreqs();
 
     /** 
      * Constructor from c-style array(s)
      * 
      * @param nf is the number of frequencies
-     * @param fMinHz lower bound frequency (Hz)
-     * @param fMaxHz upper bound frequency (Hz)
+     * @param minFreqHz lower bound frequency (Hz)
+     * @param deltaFreqHz change between bins
      * @param vmmhz_input points to the first element of an array of length nf
-     * @param vmmz_em_input optional pointer to an array of length nf, just the electromagnetic shower contribution to the askaryan frequencies
      */
-    AskaryanFreqs(int nf, double fMinHz, double fMaxHz, const double* vmmhz_input, const double* vmmz_em_input = NULL);
+    AskaryanFreqs(int nf, double minFreqHz, double deltaFreqHz, double cherenkovAngle, const ShowerProperties* sp, const double* vmmhz_input);
 
 
+
+    
     /** 
-     * Apply tapering frequency dependent tapering to take account of the fact that you're viewing the RF off the Cherenkov cone
+     * @brief When you view the Askaryan frequencies off cone, how much of each frequency you see will depend on the view angle.
+     * This function takes in a viewAngle relative to the shower axis (@todo check it is relative to that!) and reduces
+     * the amplitude in each frequency bin accordingly.
      * 
-     * @param viewAngleRadians is the viewing angle relative to the shower axis? Or the Cherenkov angle? (Radians)
+     * @param viewAngleRadians view angle relative to shower axis
+     * @param deltaThetaEmTest 
+     * @param deltaThetaHadTest 
+     * @param testFreqHz 
      */
-    void applyTapering(double viewAngleRadians);
-
+    void taperAmplitudesForOffConeViewing(double viewAngleRadians, double deltaThetaEmTest=0, double deltaThetaHadTest=0, double testFreqHz=0);
 
     /** 
      * Access the i-th element of the frequency magnitudes of the signal. Does a bounds check.
@@ -60,12 +65,13 @@ namespace icemc {
      * @return the i_th element of the frequency representation
      */
     double operator[](int i) const;
+    
 
     /** 
      * @brief Get the largest value in the frequency array 
      * @return the maximum value
      */
-    double maxElement() const {
+    inline double maxElement() const {
       return *std::max_element(vmmhz.begin(), vmmhz.end());
     }    
 
@@ -73,7 +79,7 @@ namespace icemc {
      * @brief Get the smallest value in the frequency array 
      * @return the minimum value
      */
-    double minElement() const {
+    inline double minElement() const {
       return *std::min_element(vmmhz.begin(), vmmhz.end());
     }
 
@@ -82,16 +88,26 @@ namespace icemc {
      * @return the created TGraph
      */
     TGraph makeGraph() const;
-    
+
   private:
-    
+
     std::vector<double> vmmhz; ///< Binned frequencies in V/m/MHz  (Volts per meter per MHz)
-    std::vector<double> vmmhz_em; ///< Just from the EM component of the shower, also binned frequencies in V/m/MHz  (Volts per meter per MHz)
-    double minFreqHz; ///< Frequency of vmmhz[0] (Hz)
-    double maxFreqHz; ///< Looking at anita.cc, this would be the frequency in vmmhz[size+1], if it existed (Hz)    
-    double deltaThetaEmMax;
-    double deltaThetaHadMax;
+    double fMinFreqHz; ///< Frequency of vmmhz[0] (Hz)
+    double fDeltaFreqHz; ///< Space between frequency bins (Hz)
+
+    /// for tapering... (a.k.a viewing the frequencies of the shower off-cone)
     
+    double fCherenkovAngleRad; ///< Cherenkov angle of frequencies
+    
+    double fEmFrac; // fraction of the shower from EM component 
+    double fHadFrac; // fraction of the shower from hadronic component
+
+    // the tapering goes as 1/frequency, therefore only need to find a single frequency
+    // to know the tapering at all frequencies...
+    double fSpreadTestFreqHz; // frequency at which to do full tapering calculation
+    double fDeltaThetaEmTest; // angular spread of test frequency from EM component
+    double fDeltaThetaHadTest;// angular spread of test frequency from Had component
+
     ClassDef(AskaryanFreqs, 1)
   };
 

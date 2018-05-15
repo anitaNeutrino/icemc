@@ -10,7 +10,6 @@
 namespace icemc {
 
   class Ray;
-  class Counting;
   class Screen;
 
   /**
@@ -20,7 +19,7 @@ namespace icemc {
 
   class ANITA : public Detector, public Anita, public Balloon {
   public:
-    ANITA(const Settings* settings, Counting* retardedClass, Ray* sillyRay, Screen* sillyPanel);
+    ANITA(const Settings* settings, Ray* sillyRay, Screen* sillyPanel);
     virtual ~ANITA();
 
     virtual int getNumRX() const {return 96;} ///@todo make this proper
@@ -40,7 +39,6 @@ namespace icemc {
   private:
 
     const Settings* fSettingsPtrIDontOwn;
-    Counting* fCountingPtrIDontOwn;
     Ray* fRayPtrIDontOwn;
     Screen* fScreenPtrIDontOwn;
 

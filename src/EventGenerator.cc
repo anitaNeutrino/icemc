@@ -993,15 +993,6 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
 //end GetDirection()
 
 
-double icemc::EventGenerator::ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_bn, const Position &rfexit) const {
-  double dtemp= r_bn.Distance(rfexit) + rfexit.Distance(posnu1);
-  vmmhz1m_max= vmmhz1m_max/dtemp;
-  // double scalefactor_distance=1/dtemp;
-  //cout << "dtemp is " << dtemp << "\n";
-  return vmmhz1m_max;
-}
-//end ScaleVmMHz()
-
 
 
 
@@ -1235,7 +1226,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   ///@todo make passing these pointers (except maybe settings?) unnecessary!!!
   if(!fDetector){
-    fDetector = new ANITA(&settings1, count1, ray1, panel1);
+    fDetector = new ANITA(&settings1, ray1, panel1);
   }
   
 
@@ -1258,9 +1249,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   Spectra* nuSpectra = new Spectra((int)settings1.EXPONENT);
   if(!interaction1){
-    interaction1 = new Interaction("nu", primary1, &settings1, 0, count1);
+    interaction1 = new Interaction("nu", primary1, &settings1); //, 0, count1);
   }
-  Interaction* int_banana = new Interaction("banana", primary1, &settings1, 0, count1);  
+  Interaction* int_banana = new Interaction("banana", primary1, &settings1); //, 0, count1);  
   Roughness* rough1 = new Roughness(&settings1); // create new instance of the roughness class
   rough1->SetRoughScale(settings1.ROUGHSIZE);
 
@@ -1575,7 +1566,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         delete interaction1;
 	interaction1 = NULL;
       }
-      interaction1 = new Interaction("nu",  primary1,  &settings1,  whichray,  count1);
+      interaction1 = new Interaction("nu",  primary1,  &settings1); //,  whichray,  count1);
 
       if(taus1){
         delete taus1;
@@ -1843,10 +1834,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
        * Find the highest possible electric field emitted at this energy
        * (this corresponds to the electric field at the highest frequency detectable by the antennas.
        * Also find the maximum width of Cerenkov cone (which is at lowest frequency)
-       * These are used to find the maximum angular deviation from Cerenkov
-       * cone where signal is still detectable.
+       * These are used to find the maximum angular deviation from Cerenkov cone where signal is still detectable.
        */
-
 
       //@todo this could be better!
       const double testTaperFreqHz = fDetector->freq[0] > 0 ? fDetector->freq[0] : fDetector->freq[1];
@@ -1860,8 +1849,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         vmmhz1m_max = askFreqGen.GetVmMHz1m(pnu, fDetector->FREQ_HIGH);
         askFreqGen.GetSpread(pnu, showerProps, testTaperFreqHz, deltheta_em_max, deltheta_had_max);
       } //end else (not secondbang or not interested in taus)
-
-
 
       static bool firstTimeSpread = true;
       TFile* fTestSpread = NULL;
@@ -2205,7 +2192,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	// now rotate that polarization vector according to ray paths in firn and air.
 	// fresnel factor at ice-firn interface
 
-	// icemc::Vector& n_pol = signals.back().polarization; ///@todo this is not general!!!	
 	GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->nrf_iceside[3], n_pol, ray1->nrf_iceside[4], vmmhz1m_max, showerProps, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1, mag1);
 	if (fDetector->WHICHPATH==4){
 	  std::cout << "Lentenin factor is " << 1./mag1 << "\n";
@@ -2269,9 +2255,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         continue;
       }
       
-      // reject if the event is undetectable.
-      // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
-      // if (!settings1.ROUGHNESS){
       if(settings1.CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10.&& !settings1.SKIPCUTS) {
 	if (fDetector->WHICHPATH==3){
 	  std::cout<<"Event is undetectable.  Leaving loop."<<std::endl;
@@ -2280,21 +2263,18 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       count1->nchanceinhell_fresnel[whichray]++;
       
+      // // for plotting
+      // diffexit = ray1->rfexit[0].Distance(ray1->rfexit[1]);
+      // diffnorm = acos(ray1->nsurf_rfexit[0]*ray1->nsurf_rfexit[1]);
+      // diffrefr = acos(ray1->nrf_iceside[4].Dot(ray1->nrf_iceside[0]));
 
-      // for plotting
-      diffexit = ray1->rfexit[0].Distance(ray1->rfexit[1]);
-      diffnorm = acos(ray1->nsurf_rfexit[0]*ray1->nsurf_rfexit[1]);
-      diffrefr = acos(ray1->nrf_iceside[4].Dot(ray1->nrf_iceside[0]));
-
+      
       // scale by 1/r once you've found the 3rd iteration exit point
       // ALREADY DEALT WITH IN CASE OF ROUGHNESS
       if (!settings1.ROUGHNESS) {
-        if (whichray==direct){
-          vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice, interaction1->posnu, fDetector->r_bn, ray1->rfexit[2]);
-	}
-        if (whichray==downgoing){
-          vmmhz_max=ScaleVmMHz(vmmhz1m_fresneledtwice, interaction1->posnu_down, fDetector->r_bn, ray1->rfexit[2]);//use the mirror point
-	}
+	const Position& posnu = whichray == direct ? interaction1->posnu : interaction1->posnu_down;
+	double r_meters = fDetector->r_bn.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(posnu);
+	vmmhz1m_max /= r_meters;
       }
 
       // reject if the event is undetectable.
@@ -2361,7 +2341,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // attenuation length is included.
       AskaryanFreqs askFreqs;
       if (!settings1.ROUGHNESS){
-        askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, fDetector->NFREQ, fDetector->freq, fDetector->NOTCH_MIN, fDetector->NOTCH_MAX);	
+        askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, fDetector->NFREQ, fDetector->freq, fDetector->NOTCH_MIN, fDetector->NOTCH_MAX, &showerProps);
 
 	// here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
         // vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
@@ -2398,9 +2378,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	  drawnGraph = true;
 	}
 
-	// std::cout << "tapering..." << std::endl;
-	// std::cout << deltheta_em[0]  << "\t"  << deltheta_em_max << "\t" << std::endl;
-	// std::cout << deltheta_had[0]  << "\t"  << deltheta_had_max << "\t" << std::endl;
+	askFreqs.taperAmplitudesForOffConeViewing(viewangle);
 	
         for (int k=0;k<Anita::NFREQ;k++) {
 
@@ -2412,8 +2390,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	    deltheta_had[k] = deltheta_had_max*testTaperFreqHz/fDetector->freq[k];
 	  }
 	  else{
-	    deltheta_em[k] = 1e99; // very large but not infinite? is this the right thing to do?
-	    deltheta_had[k] = 1e99; // very large but not infinite? is this the right thing to do?
+	    deltheta_em[k] = DBL_MAX; // very large but not infinite? is this the right thing to do?
+	    deltheta_had[k] = DBL_MAX; // very large but not infinite? is this the right thing to do?
 	  }
 
 	  // askFreqGen.TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, askFreqs, k, vmmhz_em[k]);// this applies the angular dependence.
@@ -2435,7 +2413,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           // if (askFreqGen.logscalefactor_taper>maxtaper){
           //   maxtaper=askFreqGen.logscalefactor_taper;
 	  // }
-	  
 
           if (fDetector->WHICHPATH == 3){
             interaction1->banana_volts += askFreqs[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
@@ -2446,30 +2423,28 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 	
 	
-       	// if(!drawnGraph){
-
-	//   std::vector<std::complex<double> > complexFreqs;
-	//   complexFreqs.reserve(fDetector->NFREQ);
-	//   for(int j=0; j < fDetector->NFREQ; j++){
-	//     complexFreqs.push_back(std::complex<double>(askFreqs[j], 0));
-	//   }
-	//   FTPair a(complexFreqs, fDetector->freq[1] - fDetector->freq[0]);
-	//   a.setDebug();
-	//   TGraph grTest3 = a.getTimeDomain();
-	//   grTest3.SetName("grTest3");
-	//   grTest3.Write();
+       	if(!drawnGraph){
+	  std::vector<std::complex<double> > complexFreqs;
+	  complexFreqs.reserve(fDetector->NFREQ);
+	  for(int j=0; j < fDetector->NFREQ; j++){
+	    complexFreqs.push_back(std::complex<double>(askFreqs[j], 0));
+	  }
+	  FTPair a(complexFreqs, fDetector->freq[1] - fDetector->freq[0]);
+	  a.setDebug();
+	  TGraph grTest3 = a.getTimeDomain();
+	  grTest3.SetName("grTest3");
+	  grTest3.Write();
 	  
-	//   TGraph gr = askFreqs.makeGraph();
-	//   gr.SetName("grTest2");
-	//   std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
-	//   std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
-	//   std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
-	//   std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
-	//   gr.Write();
-	//   fTest->Close();
-	//   drawnGraph = true;
-	// }
-	
+	  TGraph gr = askFreqs.makeGraph();
+	  gr.SetName("grTest2");
+	  std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
+	  std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
+	  std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
+	  std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
+	  gr.Write();
+	  fTest->Close();
+	  drawnGraph = true;
+	}	
 
 	// store low frequency post-tapering
 	vmmhz_lowfreq=askFreqs[0]; // for plotting,  vmmhz at the lowest frequency

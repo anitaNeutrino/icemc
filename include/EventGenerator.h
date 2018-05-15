@@ -439,7 +439,6 @@ namespace icemc {
     double GetAirDistance(double altitude_bn,  double beta) const;
     void   GetAir(double *col1) const;
     double GetThisAirColumn(const Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta) const;
-    double ScaleVmMHz(double vmmhz1m_max, const Position &posnu1, const Position &r_bn, const Position &rfexit) const;
     double IsItDoubleBang(double exitlength,  double plepton) const;
     int WhereIsSecondBang(const Position& posnu,  const Vector& nnu,  double nuexitlength,  double pnu,  IceModel *antarctica1,
 			  const Position& r_bn, Position &posnu2,  Position &rfexit_db,  Vector &n_exit2bn_db) const;

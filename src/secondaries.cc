@@ -426,6 +426,7 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
 
 
   ShowerProperties sp;
+  sp.pnu = pnu;
 
   if (current=="cc"){
     plepton=(1.-y)*pnu;

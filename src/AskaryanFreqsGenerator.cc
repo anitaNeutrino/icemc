@@ -133,13 +133,17 @@ void icemc::AskaryanFreqsGenerator::InitializeMedium() {
 }
 
 
+icemc::AskaryanFreqs icemc::AskaryanFreqsGenerator::generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max, const ShowerProperties* sp) const {
 
-icemc::AskaryanFreqs icemc::AskaryanFreqsGenerator::generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max) const {
+  // this is a fucking mess and really needs improvement
+  // perhaps all this shit should be in the constructor for AskaryanFreqs?
   std::vector<double> tempArray(numFreqs, 0);
   GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, freq_Hz, notch_min, notch_max, &tempArray[0], numFreqs);
-  double minFreq = freq_Hz[0];
-  double maxFreq = numFreqs*(freq_Hz[1] - freq_Hz[0]);
-  AskaryanFreqs af(numFreqs, minFreq, maxFreq, &tempArray[0]);
+  AskaryanFreqs af(numFreqs, freq_Hz[0], freq_Hz[1] - freq_Hz[0], GetChangle(), sp, &tempArray[0]);
+  GetSpread(sp->pnu, sp->emFrac, sp->hadFrac, af.fSpreadTestFreqHz, af.fDeltaThetaEmTest,  af.fDeltaThetaHadTest);
+  af.fEmFrac = sp->emFrac;
+  af.fHadFrac = sp->hadFrac;
+  
   return af;
 }
 
@@ -198,10 +202,10 @@ void icemc::AskaryanFreqsGenerator::GetSpread(double pnu,
   /**
    * Ultimately, it seems this follows a some_constant/freq dependence
    * and so diverges if freq = 0. Not quite sure how to handle this...
-   * but for now I'll just set these to zero. This may need to be revised.
+   * but for now I'll just set these to as high as possible. This may need to be revised.
    */
-  deltheta_em_max = 0;
-  deltheta_had_max = 0;
+  deltheta_em_max = DBL_MAX;
+  deltheta_had_max = DBL_MAX;
   if(freq <= 0){
     return;
   }
@@ -223,7 +227,6 @@ void icemc::AskaryanFreqsGenerator::GetSpread(double pnu,
   freq=freq/1.E6;  // frequency in MHz
   double showerlength=3.1;  //shower length in meters-gets a modification
                             //for em showers due to lpm effect.
-
   
   // this shower length is chosen somewhat arbitrarily, but is 
   // approximately the length of a shower in ice.
@@ -344,12 +347,12 @@ void icemc::AskaryanFreqsGenerator::GetSpread(double pnu,
 
 
 
-double icemc::AskaryanFreqsGenerator::GetVmMHz1m(double pnu,double freq) const {
+double icemc::AskaryanFreqsGenerator::GetVmMHz1m(double pnu, double freq) const {
 
   double vmmhz1m_max = 0;
   if (WHICHPARAMETERIZATION==0) {
     // parametrization from Jaime Alvarez Munhiz  
-    //  here using astro-ph/0003315 
+    // here using astro-ph/0003315 
     double nu0=1150.E6/1.E6;
     //NU0_MODIFIED=nu0
     double nu0_modified=(nu0

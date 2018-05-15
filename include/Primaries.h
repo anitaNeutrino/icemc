@@ -148,7 +148,7 @@ namespace icemc {
 
 
     // string GetCurrent();
-    std::string GetNuFlavor();
+    std::string GetNuFlavor() const;
   protected:
   };///<Primaries
 
@@ -186,7 +186,7 @@ namespace icemc {
     /** 
      * Constructor
      */
-    Interaction(std::string inttype, Primaries *primary1, const Settings *settings1, int whichray, Counting *count1);
+    Interaction(std::string inttype, Primaries *primary1, const Settings *settings1); //, int whichray); //, Counting *count1);
     void PickAnyDirection();
     
     int noway;
@@ -227,7 +227,7 @@ namespace icemc {
     static constexpr double banana_sigma=0.;	    ///< NSIGMA in the case of a banana plot
     
     
-    void setNuFlavor(Primaries *primary1, const Settings *settings1, int whichray, Counting *count1);
+    void setNuFlavor(const Primaries *primary1, const Settings *settings1);//, int whichray, Counting *count1);
     std::string GetCurrent();
     void setCurrent();
     int getPdgCode() const;

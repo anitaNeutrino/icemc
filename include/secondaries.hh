@@ -36,7 +36,7 @@ namespace icemc{
     ShowerProperties()
       : // emDeltaThetaMax(0), hadDeltaThetaMax(0),
 	emFrac(0), hadFrac(0),
-	nInteractions(1)
+	nInteractions(1), pnu(0)
     {;}
 
     double sumFrac() const {return emFrac + hadFrac;}
@@ -45,6 +45,7 @@ namespace icemc{
     double emFrac;
     double hadFrac;
     int nInteractions;
+    double pnu;
     ClassDef(ShowerProperties ,1)
   };
   

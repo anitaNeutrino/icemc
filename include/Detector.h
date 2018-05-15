@@ -22,10 +22,6 @@ namespace icemc {
     icemc::Vector polarization; ///< Polarization vector (in the icemc coordinate system).
   };  
 
-
-
-
-
   
 
   /**

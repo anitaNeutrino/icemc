@@ -14,8 +14,8 @@
 #include "TFile.h" ///@todo remove after done debugging
 
 
-icemc::ANITA::ANITA(const Settings* settings, Counting* retardedClass, Ray* sillyRay, Screen* sillyPanel)
-  : fSettingsPtrIDontOwn(settings), fCountingPtrIDontOwn(retardedClass), fRayPtrIDontOwn(sillyRay), fScreenPtrIDontOwn(sillyPanel)
+icemc::ANITA::ANITA(const Settings* settings, Ray* sillyRay, Screen* sillyPanel)
+  : fSettingsPtrIDontOwn(settings), fRayPtrIDontOwn(sillyRay), fScreenPtrIDontOwn(sillyPanel)
 {
   for(int i=0; i < getNumRX(); i++){
     fWaveformsRX.push_back(TGraph());

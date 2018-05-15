@@ -195,7 +195,7 @@ int icemc::Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,con
 
 
 //! pick a neutrino type, flavor ratio 1:1:1
-string icemc::Primaries::GetNuFlavor() {
+string icemc::Primaries::GetNuFlavor() const {
   string nuflavor;
 
   double rnd=gRandom->Rndm();
@@ -215,7 +215,7 @@ string icemc::Primaries::GetNuFlavor() {
 } //GetNuFlavor
 
 
-icemc::Interaction::Interaction(string inttype,Primaries *primary1,const Settings *settings1,int whichray,Counting *count1) : banana_flavor("numu"), banana_current("nc"),  nu_banana(Position(theta_nu_banana,phi_nu_banana)) {
+icemc::Interaction::Interaction(string inttype,Primaries *primary1,const Settings *settings1) : banana_flavor("numu"), banana_current("nc"),  nu_banana(Position(theta_nu_banana,phi_nu_banana)) {
 
   noway=0;
   wheredoesitleave_err=0;
@@ -246,7 +246,7 @@ icemc::Interaction::Interaction(string inttype,Primaries *primary1,const Setting
 
   }
   else {
-  setNuFlavor(primary1,settings1,whichray,count1);
+  setNuFlavor(primary1,settings1);
   setCurrent();
   //    setnu_nubar(primary1);//same function for inttype "banna" or otherwise.
   }
@@ -275,23 +275,25 @@ void icemc::Interaction::PickAnyDirection() {
 }
 
 
-void  icemc::Interaction::setNuFlavor(Primaries *primary1,const Settings *settings1,int whichray,Counting *counting1) {
+void  icemc::Interaction::setNuFlavor(const Primaries *primary1, const Settings *settings1) {
   // pick the neutrino flavor,  type of tau decay when relevant,
   //  lpm energy.
   nuflavor=primary1->GetNuFlavor();
 
-  if (settings1->MINRAY==whichray) {
-    // only increment neutrino flavor on first ray so you don't count twice
-    if (nuflavor=="nue"){
-      counting1->nnu_e++;      
-    }
-    else if (nuflavor=="numu"){
-      counting1->nnu_mu++;      
-    }
-    else if (nuflavor=="nutau"){
-      counting1->nnu_tau++;
-    }
-  }
+  // if(counting1){
+  //   if (settings1->MINRAY==whichray) {
+  //     // only increment neutrino flavor on first ray so you don't count twice
+  //     if (nuflavor=="nue"){
+  // 	counting1->nnu_e++;      
+  //     }
+  //     else if (nuflavor=="numu"){
+  // 	counting1->nnu_mu++;      
+  //     }
+  //     else if (nuflavor=="nutau"){
+  // 	counting1->nnu_tau++;
+  //     }
+  //   }
+  // }
       
 
   if (nuflavor=="nue"){  //For outputting to file
