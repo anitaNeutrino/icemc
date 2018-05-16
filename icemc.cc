@@ -652,7 +652,7 @@ int main(int argc,  char **argv) {
   // only important for black hole studies
   double col1[900];
   GetAir(col1);
-  double myair;//air column density, kg/m^2
+  double myair = 0.;//air column density, kg/m^2
 
   // zeroing global variables.
   Tools::Zero(sum_frac, 3);
@@ -3684,6 +3684,10 @@ int main(int argc,  char **argv) {
       foutput << "\n***********************************************************\n";
       break;
     }
+
+
+  //cout << "Oindree: weight1 is " << weight1 << "\n"; 
+
   }//end NNU neutrino loop
 
 
