@@ -24,11 +24,13 @@ icemc::RayTracer::RayTracer() {
   slopeyz=0.; // these are a measure of how much the surface is sloped in the x,y and z directions
 }
 
-void icemc::RayTracer::PrintAnglesofIncidence() {
+void icemc::RayTracer::PrintAnglesofIncidence() const {
 
   std::cout << "angle of incidence (firn-air) is " << nrf_iceside[3].Angle(nsurf_rfexit)*constants::DEGRAD << "\n";
   std::cout << "angle of incidence (ice-firn) is " << nrf_iceside[4].Angle(nsurf_rfexit)*constants::DEGRAD << "\n";
 }
+
+
 
 void icemc::RayTracer::Initialize() {
   
@@ -55,7 +57,7 @@ void icemc::RayTracer::Initialize() {
 
 
 void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int whichray, Position posnu, Position posnu_down, Position r_bn,
-				 Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int whichtry, const IceModel *antarctica) {
+				 Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int whichtry, const IceModel *antarctica){
 
 
 
@@ -109,7 +111,7 @@ void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int w
 // icemc::RayTracer::WhereDoesItLeave() is defined in ray.hh since it is a statis member function // MS 2/1/2017
 
 
-int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Position rfexit_temp, Vector posnu, const IceModel *antarctica, double &slopeyangle, int whichtry) {
+int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Position rfexit_temp, Vector posnu, const IceModel *antarctica, double &slopeyangle, int whichtry){
 
   double howmuch=settings1->SLOPEYSIZE;
   Position nsurf_rfexit_temp;
@@ -176,8 +178,9 @@ int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Position rfexi
   
 }//RandomizeSurface
 
+
 // int icemc::RayTracer::GetSurfaceNormal(IceModel *antarctica,Vector posnu,Position *rfexit) {
-int icemc::RayTracer::GetSurfaceNormal(const Settings *settings1,const IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry) {
+int icemc::RayTracer::GetSurfaceNormal(const Settings *settings1,const IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry){
       
   Position rfexit_temp;
 
@@ -196,6 +199,7 @@ int icemc::RayTracer::GetSurfaceNormal(const Settings *settings1,const IceModel 
 
   return 1;
 }
+
 
 
 int icemc::RayTracer::TraceRay(const Settings *settings1,Anita *anita1,int iter,double n_depth) { // iter is which iteration (1 or 2)
@@ -298,11 +302,13 @@ int icemc::RayTracer::TraceRay(const Settings *settings1,Anita *anita1,int iter,
 
   return 1;
 }
+
+
 int icemc::RayTracer::GetRayIceSide(const Vector &n_exit2bn,
 				    const Vector &nsurf_rfexit,
 				    double nexit,
 				    double nenter, 
-				    Vector &nrf2_iceside) {
+				    Vector &nrf2_iceside) const {
 
   // this function performs snell's law in three dimensions
 
@@ -348,8 +354,9 @@ int icemc::RayTracer::GetRayIceSide(const Vector &n_exit2bn,
 
 
 
-
-int icemc::RayTracer::WhereDoesItLeave(const Position &posnu, const Vector &ntemp, const IceModel *antarctica, Position &r_out) {
+// static
+int icemc::RayTracer::WhereDoesItLeave(const Position &posnu, const Vector &ntemp, const IceModel *antarctica, Position &r_out){
+  
   double distance=0;
   double posnu_length=posnu.Mag(); // distance from center of earth to interaction
   double lon,lat;//,lon_old,lat_old; //latitude, longitude indices for 1st and 2nd iteration

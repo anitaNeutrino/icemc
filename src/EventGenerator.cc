@@ -1128,8 +1128,7 @@ void icemc::EventGenerator::GetBalloonLocation(const Interaction *interaction1, 
   // use interaction1->posnu // location of neutrino interaction
   // coordinate system:  +z="up" at the south pole
   // fDetector->r_bn
-  // nnu
-    
+  // nnu    
     
   // balloonvector = balloonvector - nuvector;//change origin to the nuetrino interaction point
     

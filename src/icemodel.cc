@@ -314,7 +314,6 @@ int icemc::IceModel::PickUnbiased(Interaction *interaction1, const IceModel *ant
   int count1=0;
   int count2=0;
     
-    
   if (RayTracer::WhereDoesItLeave(thisr_in,interaction1->nnu,antarctica,thisnuexitearth)) { // where does it leave Earth
     // really want to find where it leaves ice
     // Does it leave in an ice bin
