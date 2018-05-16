@@ -96,8 +96,9 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
     state->cZhsFft->Clear();
     if (state->ZhsFftInp) delete[] state->ZhsFftInp;
     state->ZhsFftInp = new double[state->vis_nbins];
-    double xmin_normal = -10;
-    double xmax_normal = +10;
+    /*
+    double xmin_normal = -5;
+    double xmax_normal = +5;
     int N = state->vis_nbins;
     double dx = (xmax_normal - xmin_normal) / N;
     for (int i = 0; i < state->vis_nbins; i++){
@@ -105,7 +106,12 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
       double y = exp(-0.5 * x * x) / (sqrt(2.0) * sqrt(pi));
       state->ZhsFftInp[i] = y;
     }
-    printf("*op, *state->vis_nbins: %d, %d\n", *op, *state->vis_nbins);
+    */
+    for (int i = 0; i < state->vis_nbins; i++) {
+      state->ZhsFftInp[i] = ZhsTimeE[int(state->vis_xmin_bin) + i];
+      printf("state->vis_xmin_bin: %d, state->ZhsFftInp[i]: %11.4e\n", state->vis_xmin_bin + i, state->ZhsFftInp[i]);
+    }
+    printf("*op, *state->vis_nbins, state->vis_nbins: %d, %d, %d\n", *op, *state->vis_nbins, int(state->vis_nbins));
     if (state->grFft) delete state->grFft;
     state->grFft = new TGraph(state->vis_nbins / 2);
     // delete[]: Is it a right thing to do?
@@ -115,8 +121,9 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
     if (state->ZhsFft) delete[] state->ZhsFft;
     // printf("After deleting ZhsFft\n");
     state->ZhsFft = FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp);
+    double dx = (state->vis_xmax - state->vis_xmin) / state->vis_nbins;
     for (int i = 0; i < state->vis_nbins / 2; i++){
-      state->grFft->SetPoint(i, i / (xmax_normal - xmin_normal), state->ZhsFft[i].re * dx); // To get continuous ft values.
+      state->grFft->SetPoint(i, i / ((state->vis_xmax - state->vis_xmin) * 1e-9), state->ZhsFft[i].re * dx * 1e-9); // To get continuous ft values.
     }
     state->cZhsFft->cd();
     state->grFft->Draw("AL");
