@@ -1891,7 +1891,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       if (fDetector->VNOISE[0]/10.*fDetector->maxthreshold/((showerProps.sumFrac())*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*fDetector->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR
 	  && !settings1.SKIPCUTS) {
 	// by comparing highest possible signal to the lowest possible noise, reject if there is just no way we could detect this event.
-	std::cout << "Fails at noise bit!" << std::endl;
         continue;
 
         // vmmhz1m_max=signal at highest frequency
@@ -2277,7 +2276,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       if (!settings1.ROUGHNESS) {
 	const Position& posnu = whichray == direct ? interaction1->posnu : interaction1->posnu_down;
 	double r_meters = fDetector->r_bn.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(posnu);
-	vmmhz1m_max /= r_meters;
+	vmmhz_max = vmmhz1m_fresneledtwice/r_meters;
       }
 
       // reject if the event is undetectable.
