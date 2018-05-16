@@ -3070,11 +3070,22 @@ int main(int argc,  char **argv) {
         interaction1->weight_nu_prob = -1.;
       }
 
-      if(tauweighttrigger==1)
-        weight1=interaction1->weight_nu_prob + taus1->weight_tau_prob;
-      else
-        weight1=interaction1->weight_nu_prob;
-
+      if(tauweighttrigger==1) {
+        if (!settings1->SOURCE) {
+          weight1=interaction1->weight_nu_prob + taus1->weight_tau_prob;
+        }
+        else { 
+          weight1 = IsAbsorbedSource(interaction1->chord_kgm2_bestcase, len_int_kgm2, weight1);
+        }
+      }
+      else {
+        if (!settings1->SOURCE) { 
+          weight1=interaction1->weight_nu_prob;
+        }
+        else {
+          weight1 = IsAbsorbedSource(interaction1->chord_kgm2_bestcase, len_int_kgm2, weight1); 
+        }
+      }
       weight = weight1 / interaction1->dnutries * settings1->SIGMA_FACTOR;  // total weight is the earth absorption factor
       // divided by the factor accounting for the fact that we only chose our interaction point within the horizon of the balloon
       // then multiply by the cross section multiplier,  to account for the fact that we get more interactions when the cross section is higher
@@ -3162,7 +3173,12 @@ int main(int argc,  char **argv) {
           else
             weight_prob=interaction1->weight_nu_prob;
 
-          weight1=interaction1->weight_nu;
+          if (!settings1->SOURCE) {
+            weight1 = interaction1->weight_nu;
+          }
+          else {
+            weight1 = IsAbsorbedSource(interaction1->chord_kgm2_bestcase, len_int_kgm2, weight1);
+          }
           weight=weight1/interaction1->dnutries*settings1->SIGMA_FACTOR;
           weight_prob=weight_prob/interaction1->dnutries*settings1->SIGMA_FACTOR;
 
@@ -3687,11 +3703,10 @@ int main(int argc,  char **argv) {
       break;
     }
 
-
-  //cout << "Oindree: weight1 is " << weight1 << "\n"; 
+    //cout << "Oindree: weight1 is " << weight1 << "\n"; 
 
   }//end NNU neutrino loop
-
+  
 
   gRandom=rsave;
   delete Rand3;
