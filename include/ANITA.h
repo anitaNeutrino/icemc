@@ -26,13 +26,17 @@ namespace icemc {
     virtual icemc::Vector getPositionRX(int i) const;
 
     virtual icemc::Position getCenterOfDetector(UInt_t* unixTime = NULL);
-    virtual bool applyTrigger();
+    virtual bool applyTrigger(){return  applyTrigger(-1);}
+    virtual bool applyTrigger(int inu);
     virtual void getDesiredNDt(int& n, double& dt) const {
       n = 1024;
       dt = 1e-9*1./2.6;
     }
 
-    virtual void addSignalToRX(const PropagatingSignal& signal, int rx);
+    virtual void addSignalToRX(const PropagatingSignal& signal, int rx){
+      addSignalToRX(signal, rx, -1);
+    }
+    virtual void addSignalToRX(const PropagatingSignal& signal, int rx, int inu); // just for debugging
 
 
     double GetAverageVoltageFromAntennasHit(const Settings *settings1,  int *nchannels_perrx_triggered,  double *voltagearray,  double& volts_rx_sum) const;

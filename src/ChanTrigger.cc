@@ -783,15 +783,20 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 
       if(panel1){
 	for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
+	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
+	  bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
+	  bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
+
+	  if(jpt==0 && gr && gr->GetY()[0]==397){
+	    std::cout << "In ChanTrigger::ApplyAntennaGain..." << ant << "\t(" << n_normal << ")" << std::endl;
+	  }
+
 	  for (int k=0;k<Anita::NFREQ;k++) {
 	    if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
 
 	      //Copy frequency amplitude to screen point
 	      tmp_vhz[0][k] = tmp_vhz[1][k] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
 	      // cout << tmp_vhz[0][k] << endl;
-	      bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
-	      bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
-	      bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
 
 	      anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
 
@@ -860,7 +865,7 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 
 
 	// devel debug stuff!
-	static bool firstTime = true;
+	static bool firstTime = true;	
 	static int lastAnt = -1;
 	static TFile* f = NULL;
 	static std::vector<double> times;
@@ -872,22 +877,20 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	  }
 	}
 	
-	if(firstTime){
+	if(firstTime && gr &&  gr->GetY()[0]==397){
 	  if(!f){
 	    f = new TFile("oldChanTrigger.root", "recreate");
 	  }
 
-	  
 	  TGraph gr0(times.size(), &times[0], volts_rx_forfft[0][iband]);
 	  TGraph gr1(times.size(), &times[0], volts_rx_forfft[1][iband]);
 	  // TGraph gr0(times.size(), &times[0], vhz_rx[0][iband]);
 	  // TGraph gr1(times.size(), &times[0], vhz_rx[1][iband]);
-	  
-	  
-	  gr0.SetName(TString::Format("gr0_ant%d_iband%d_aftergain", ant, iband));
-	  gr1.SetName(TString::Format("gr1_ant%d_iband%d_aftergain", ant, iband));
-	  gr0.SetTitle(TString::Format("gr0_ant%d_iband%d_aftergain", ant, iband));
-	  gr1.SetTitle(TString::Format("gr1_ant%d_iband%d_aftergain", ant, iband));
+
+	  gr0.SetName(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, iband));
+	  gr1.SetName(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, iband));
+	  gr0.SetTitle(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, iband));
+	  gr1.SetTitle(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, iband));
 
 	  gr0.Write();
 	  gr1.Write();

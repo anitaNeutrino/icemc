@@ -263,8 +263,7 @@ namespace icemc {
 			      double& n_component_kvector);
 
     ///< This function gets the hit angles
-    static void GetHitAngles(
-			     double e_component_kvector,
+    static void GetHitAngles(double e_component_kvector,
 			     double h_component_kvector,
 			     double n_component_kvector, 
 			     double& hitangle_e,

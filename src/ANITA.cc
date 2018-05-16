@@ -41,7 +41,7 @@ icemc::Vector icemc::ANITA::getPositionRX(Int_t rx) const {
 
 inline void icemc::ANITA::getAntPolFromRX(int rx, int&ant, int& pol) const {
   pol = rx & 1;
-  ant = rx/2;  
+  ant = rx/2;
 }
 
 inline void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const {
@@ -49,13 +49,15 @@ inline void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) co
   int antNum = -1, pol = -1;
   getAntPolFromRX(rx, antNum, pol);
 
+  // std::cout << rx << "\t"  << antNum << "\t" << pol <<  std::endl;
+  
   // This is not the best way to do things...
   ilayer = -1;
   ifold = -1;
   for (int ilayerTemp=0 ;ilayerTemp < fSettingsPtrIDontOwn->NLAYERS; ilayerTemp++) { // loop over layers on the payload
-    for (int ifoldTemp=0;ifoldTemp<this->NRX_PHI[ilayer];ifoldTemp++) { // ifold loops over phi
-      antNum = this->GetRxTriggerNumbering(ilayerTemp, ifoldTemp);
-      if(antNum==rx){
+    for (int ifoldTemp=0;ifoldTemp<this->NRX_PHI[ilayerTemp];ifoldTemp++) { // ifold loops over phi
+      Int_t antNum2 = this->GetRxTriggerNumbering(ilayerTemp, ifoldTemp);
+      if(antNum==antNum2){
 	ilayer = ilayerTemp;
 	ifold = ifoldTemp;
 	break;
@@ -69,32 +71,33 @@ inline void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) co
 
 
 
-void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx){
+void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx, int inu){
 
-  double e_component=0;
-  double h_component=0;
-  double n_component=0;
-  double e_component_kvector=0;
-  double h_component_kvector=0;
-  double n_component_kvector=0;
-  double hitangle_e=0;
-  double hitangle_h=0;
+
+  int ifold, ilayer;
+  getLayerFoldFromRX(rx, ilayer, ifold);
 
   Vector n_eplane;
   Vector n_hplane;
   Vector n_normal;
-
-  int antNum, pol;
-  getAntPolFromRX(rx, antNum, pol);
-  int ifold, ilayer;
-  getLayerFoldFromRX(rx, ifold, ilayer);
+  this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
 
   
-  this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);  
+  double e_component_kvector=0;
+  double h_component_kvector=0;
+  double n_component_kvector=0;
   this->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  signal.poynting, e_component_kvector,  h_component_kvector,  n_component_kvector);
-  this->GetEcompHcompEvector(fSettingsPtrIDontOwn,  n_eplane,  n_hplane,  signal.polarization,  e_component,  h_component,  n_component);  
-  this->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
+
+  double e_component=0;
+  double h_component=0;
+  double n_component=0;  
+  this->GetEcompHcompEvector(fSettingsPtrIDontOwn,  n_eplane,  n_hplane,  signal.polarization,  e_component,  h_component,  n_component);
   
+
+  double hitangle_e=0;
+  double hitangle_h=0;  
+  this->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);  
+
   // // @todo acually make this a sum rather than the last thing we give it
   FTPair afterGain = signal.waveform;
   std::vector<std::complex<double> >& freqDomain = afterGain.changeFreqDomain();
@@ -106,11 +109,14 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx)
   /// @todo here we are hacking around the current FFT implementation inside the anita detector bits of icemc.
   /// The hard coded arrays are 128 freq bins wide, but a sensible FFT implementation will have 129 (256/2 + 1)
   const int numFreqLoop = TMath::Min((int)freqDomain.size(), Anita::NFREQ);
-  
+
   // and here we make a clumsy antenna gain interface interface even clumsier for the sake of trying to modularize code...
   // this could easily be improved.
   const double lowFreqSeavey = fSettingsPtrIDontOwn->FREQ_LOW_SEAVEYS;
   const double highFreqSeavey = fSettingsPtrIDontOwn->FREQ_HIGH_SEAVEYS;
+
+  int antNum, pol;
+  getAntPolFromRX(rx, antNum, pol);
   for(int j=0; j < numFreqLoop; j++){
     if (this->freq[j]>= lowFreqSeavey && this->freq[j]<=highFreqSeavey){ // note: this bounds check is also done inside the antenna gain so this redundent
       double dummyValueForOppositePol = 0;
@@ -129,16 +135,21 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx)
 
   //@todo make this a sum rather than just assigning the last waveform received!
   // (this means the multi-path refraction from screen is currently broken)
-  fWaveformsRX.at(rx) = afterGain.getTimeDomain();  
-  
+  fWaveformsRX.at(rx) = afterGain.getTimeDomain();
+
   static bool firstTime = true;
   static int lastRX = -1;
   static TFile* f = NULL;
-  if(firstTime){
+  if(inu == 397 && firstTime){
     if(!f){
       f = new TFile("testRX.root", "recreate");
     }
 
+    // std::cout << rx << "\t" << ilayer << "\t" << ifold << "\t" << n_normal << std::endl;
+    if(pol==0){
+      std::cout << "In ANITA::addSignalToRX..." << antNum << "\t" << ilayer << "\t" << ifold << "\t(" << n_normal << ")"  <<  std::endl;    
+    }
+    
     TGraph gr = signal.waveform.getTimeDomain();
     gr.SetName(TString::Format("grRX%d_beforeGain", rx));
     gr.SetTitle(TString::Format("RX %d before antenna gain", rx));
@@ -163,7 +174,7 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx)
 
 
 // bool icemc::ANITA::applyTrigger(const std::vector<TGraph>& pureSignalVoltageTimeGraphs, const TVector& poyntingVector, const TVector& polarizationVector){
-bool icemc::ANITA::applyTrigger(){
+bool icemc::ANITA::applyTrigger(int inu){
 
 
   
@@ -214,9 +225,6 @@ bool icemc::ANITA::applyTrigger(){
   double h_comp_max3=0;
 
   double hitangle_e = 0; // angle the ray hits the antenna wrt e-plane
-  double hitangle_h = 0; // angle the ray hits the antenna wrt h-plane
-  double hitangle_e_all[Anita::NANTENNAS_MAX] = {0};         // hit angles rel. to e plane stored for each antenna
-  double hitangle_h_all[Anita::NANTENNAS_MAX] = {0};         // hit angles rel. to h plane stored for each antenna
 
   // for comparing with peter
   double sumsignal[5]={0.};
@@ -345,9 +353,6 @@ bool icemc::ANITA::applyTrigger(){
   double e_component=0; // E comp along polarization
   double h_component=0; // H comp along polarization
   double n_component=0; // normal comp along polarization
-  double e_component_kvector=0; // component of e-field along the rx e-plane
-  double h_component_kvector=0; // component of the e-field along the rx h-plane
-  double n_component_kvector=0; // component of the e-field along the normal
   double bwslice_vnoise_thislayer[4];// for filling tree6b,  noise for each bandwidth on each layer
   
   double rx0_signal_eachband[2][5];
@@ -395,22 +400,17 @@ bool icemc::ANITA::applyTrigger(){
       // 	this->GetEcompHcompEvector(fSettingsPtrIDontOwn,  n_eplane,  n_hplane,  n_pol_eachboresight[ilayer][ifold], e_component,  h_component,  n_component);
       // 	Log().fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold] << " " << mag1_eachboresight[ilayer][ifold] << "\n";
       // }
-      
-      this->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
-      // store hitangles for plotting
-      hitangle_h_all[count_rx]=hitangle_h;
-      hitangle_e_all[count_rx]=hitangle_e;
-      // for debugging
-      // if (ro.h6.GetEntries()<fSettingsPtrIDontOwn->HIST_MAX_ENTRIES && !fSettingsPtrIDontOwn->ONLYFINAL && fSettingsPtrIDontOwn->HIST==1){
-      // 	ro.h6.Fill(hitangle_h, fRayPtrIDontOwn->n_exit2bn[2].Dot(this->n_bn));
-      // }
-      
+
       int antNum = this->GetRxTriggerNumbering(ilayer, ifold);
 
       // ct.ApplyAntennaGain(fSettingsPtrIDontOwn, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
       // ct.ApplyAntennaGain(fSettingsPtrIDontOwn, this, this, panel1, antNum, n_eplane, n_hplane, n_normal);
       // ct.ApplyAntennaGain(fSettingsPtrIDontOwn, this, this, panel1, antNum, n_eplane, n_hplane, n_normal);
-      ct.ApplyAntennaGain(fSettingsPtrIDontOwn, this, this, fScreenPtrIDontOwn, antNum, n_eplane, n_hplane, n_normal);
+      TGraph grHack(1, &inu, &inu);
+      if(inu==397){
+	std::cout << "outside ChanTrigger::applyAntennaGain..." << antNum << "\t"  << ilayer << "\t" << ifold << std::endl;
+      }      
+      ct.ApplyAntennaGain(fSettingsPtrIDontOwn, this, this, fScreenPtrIDontOwn, antNum, n_eplane, n_hplane, n_normal, &grHack);
 
       // ct.TriggerPath(fSettingsPtrIDontOwn, anita1, antNum, bn1);
       // ct.DigitizerPath(fSettingsPtrIDontOwn, anita1, antNum, bn1);

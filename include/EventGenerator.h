@@ -296,7 +296,7 @@ namespace icemc {
 
     // frequency binning
     double vmmhz1m_max=0; // maximum V/m/MHz at 1m from Jaime (highest frequency)
-    double vmmhz_lowfreq=0.; // V/m/MHz after 1/r,  attenuation at the lowest freq.
+    // double vmmhz_lowfreq=0.; // V/m/MHz after 1/r,  attenuation at the lowest freq.
     double bestcase_atten=0;// attenuation factor,  best case
     double vmmhz1m_fresneledonce=0; // above,  after fresnel factor applied for ice-air interface
     double vmmhz1m_fresneledtwice=0; // above,  after fresnel factor applied for firn

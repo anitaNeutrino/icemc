@@ -214,7 +214,7 @@ int icemc::Anita::Match(int ilayer,int ifold,int rx_minarrivaltime) {
   }
 }
 int icemc::Anita::GetRx(int ilayer, int ifold) const { // get antenna number based on which layer and position it is
-    
+
   int irx=0;
   for (int i=0;i<ilayer;i++) {
     irx+=NRX_PHI[i];

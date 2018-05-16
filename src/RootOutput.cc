@@ -287,7 +287,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   // finaltree.Branch("nlayers", settings1.NLAYERS, "NLAYERS/I");
 
   finaltree.Branch("vmmhz1m_max", &uhen->vmmhz1m_max, "vmmhz1m_max/D");
-  finaltree.Branch("vmmhz_lowfreq", &uhen->vmmhz_lowfreq, "vmmhz_lowfreq/D");
+  // finaltree.Branch("vmmhz_lowfreq", &uhen->vmmhz_lowfreq, "vmmhz_lowfreq/D");
 
   finaltree.Branch("deltheta_em_max", &uhen->deltheta_em_max, "deltheta_em_max/D");
   finaltree.Branch("deltheta_had_max", &uhen->deltheta_had_max, "deltheta_had_max/D");

@@ -393,7 +393,7 @@ namespace icemc{
      * 
      * @param d is the abstract detector class
      */
-    void PropagateSignalsToDetector(const Settings* settings1, ANITA* d) const;
+    void PropagateSignalsToDetector(const Settings* settings1, ANITA* d, int inu) const;
 
   };
 }

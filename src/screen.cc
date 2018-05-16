@@ -298,7 +298,7 @@ void icemc::Screen::ResetParameters(){
 };
 
 
-void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA* d) const {
+void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA* d, int inu) const {
 
   // double tmp_vhz[Anita::NFREQ];
   // double tmp_volts[Anita::NFOUR/2];
@@ -328,8 +328,7 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
       // is that the correct geometry?
       PropagatingSignal s(signal, GetPol(jpt), d->getPositionRX(rx) - GetImpactPt(jpt));
 
-      // std::cout << "here" << rx << std::endl;
-      d->addSignalToRX(s, rx);
+      d->addSignalToRX(s, rx, inu);
     }
   }
 }

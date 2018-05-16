@@ -2380,49 +2380,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 	askFreqs.taperAmplitudesForOffConeViewing(viewangle);
 	
-        for (int k=0;k<Anita::NFREQ;k++) {
-
-	  // // so, this just encodes the 1/f dependence of the taper after you find it for a single frequency
-	  // // but, if  we force the frequencies to extend to zero, then this isn't valid.
-
-	  // if(fDetector->freq[k] > 0){
-	  //   deltheta_em[k] = deltheta_em_max*testTaperFreqHz/fDetector->freq[k];
-	  //   deltheta_had[k] = deltheta_had_max*testTaperFreqHz/fDetector->freq[k];
-	  // }
-	  // else{
-	  //   deltheta_em[k] = DBL_MAX; // very large but not infinite? is this the right thing to do?
-	  //   deltheta_had[k] = DBL_MAX; // very large but not infinite? is this the right thing to do?
-	  // }
-
-	  // // askFreqGen.TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, askFreqs, k, vmmhz_em[k]);// this applies the angular dependence.
-	  // askFreqGen.TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], showerProps, askFreqs, k);// this applies the angular dependence.
-
-	  // viewangle is which viewing angle we are at
-	  // deltheta_em is the width of the em component at this frequency
-	  // deltheta_had is the width of the had component at this frequency
-	  // emfrac is the em fraction of the shower
-	  // hadfrac is the hadronic fraction of the shower
-	  // vmmhz is the strength of the signal in V/m/MHz at this viewing angle
-	  // vmmhz_em is the strength of the em component
-
-
-          // just want to see the maximum effect of viewing angle being off cerenkov cone
-          // should be at highest frequency
-          // just for plotting
-          // maxtaper=-1000;
-          // if (askFreqGen.logscalefactor_taper>maxtaper){
-          //   maxtaper=askFreqGen.logscalefactor_taper;
-	  // }
-
-          if (fDetector->WHICHPATH == 3){
+	if (fDetector->WHICHPATH == 3){
+	  for (int k=0;k<Anita::NFREQ;k++) {
             interaction1->banana_volts += askFreqs[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
             // interaction1->banana_volts += vmmhz[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
 	  }
         }//end for (int k=0;k<Anita::NFREQ;k++)
 
-
-	
-	
        	if(!drawnGraph){
 	  std::vector<std::complex<double> > complexFreqs;
 	  complexFreqs.reserve(fDetector->NFREQ);
@@ -2447,7 +2411,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	}	
 
 	// store low frequency post-tapering
-	vmmhz_lowfreq=askFreqs[0]; // for plotting,  vmmhz at the lowest frequency
+	// vmmhz_lowfreq=askFreqs[0]; // for plotting,  vmmhz at the lowest frequency
 	pdgcode = interaction1->getPdgCode();
 
         if (fDetector->WHICHPATH==3 && interaction1->banana_volts != 0 && settings1.HIST) {
@@ -2480,16 +2444,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	    
       count1->ndeadtime[whichray]++;
 
-      // // Create a pointer to the SimulatedSignal
-      // SimulatedSignal *simSignal = new SimulatedSignal();
-      // // Define the SimSignal from vmmhz
-      // simSignal->updateSimSignalFromVmmhz(Anita::NFREQ, fDetector->freq, vmmhz);
-      // simSignal->addCW(250E6, 0, 0.01);
-      // simSignal->getVmmhz(anita1, vmmhz);
-      // delete simSignal;
 
       //if no-roughness case, add its parameters to the saved screen parameters so specular and roughness simulations use the same code in the waveform construction
-
       if(!settings1.ROUGHNESS){
         panel1->SetNvalidPoints(1);
         for (int k=0;k<Anita::NFREQ;k++) {
@@ -2524,14 +2480,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         // }
       }
 
-      // dist_int_bn_2d_chord = ray1->rfexit[0].Distance(fDetector->r_bn_shadow)/1000; // for sensitivity vs. distance plot
-      // //distance across the surface - Stephen
-      // dist_int_bn_2d = ray1->rfexit[0].SurfaceDistance(fDetector->r_bn_shadow, fDetector->surface_under_balloon) / 1000;
-      //---------------------
       //just added this temporarily - will make it run slower
       //this gets the weight due to stopping in earth
       //returns 0 if chord<1m
-
       if (!antarctica->Getchord(&settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, fNeutrinoPath->nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered)){
 	interaction1->weight_nu_prob = -1.;
       }
@@ -2561,17 +2512,16 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	count_asktrigger++;
       }
 
-      panel1->PropagateSignalsToDetector(&settings1, fDetector);
-      
+      panel1->PropagateSignalsToDetector(&settings1, fDetector, inu);
+
       // this seems to be where the neutrino simulation ends
-      // everything in here should end up in the ANITA class.      
+      // everything in here should end up in the ANITA class.
       ///@todo HHEEERRRREEE!!!!!
-      bool eventPassedTrigger = fDetector->applyTrigger();
+      bool eventPassedTrigger = fDetector->applyTrigger(inu);
       if(eventPassedTrigger){
 
 	
-	std::cout << "It passed!" << std::endl;
-
+	std::cout << "inu " <<  inu << ", eventNumber = " << eventNumber << "... It passed!" << std::endl;
 
 	// the neutrino has passed the trigger...
 	fPassNu = new PassingNeutrino(*fGenNu, askFreqs, showerProps); // forced to be NULL at loop start
