@@ -413,6 +413,8 @@ void Attenuate_down(IceModel *antarctica1,  Settings *settings1,  double& vmmhz_
 
 void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight);
 
+double IsAbsorbedSource(double chord_kgm2,  double len_int_kgm2,  double& weight);
+
 void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceModel *antarctica);
 
 int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside);
@@ -4534,6 +4536,20 @@ void IsAbsorbed(double chord_kgm2, double len_int_kgm2, double &weight1) {
 }
 //end IsAbsorbed()
 
+double IsAbsorbedSource(double chord_kgm2, double len_int_kgm2, double &weight1) {
+  // see if neutrino is absorbed
+  //  weighting works,  but not to much purpose since nu's always
+  //   interact at these energies.
+  double rtemp;
+
+  rtemp=chord_kgm2/len_int_kgm2;  
+  
+  weight1=exp(-rtemp);
+ 
+  return weight1; 
+
+}
+//end IsAbsorbedSource()
 
 void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE){
   //  void GetSmearedIncidentAngle(Vector &specular, Vector &nsurf_rfexit, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE, double theta_inc_smeared) {
