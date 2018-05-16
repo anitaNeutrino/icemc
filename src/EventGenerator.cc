@@ -1567,6 +1567,20 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       interaction1 = new Interaction("nu",  primary1,  &settings1); //,  whichray,  count1);
 
+      // moved from deep inside interaction
+      if (settings1.MINRAY==whichray) {
+	// only increment neutrino flavor on first ray so you don't count twice
+	if (interaction1->nuflavor=="nue"){
+	  count1->nnu_e++;
+	}
+	else if (interaction1->nuflavor=="numu"){
+	  count1->nnu_mu++;
+	}
+	else if (interaction1->nuflavor=="nutau"){
+	  count1->nnu_tau++;
+	}
+      }
+
       if(taus1){
         delete taus1;
 	taus1 = NULL;
@@ -1810,18 +1824,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       
       ShowerProperties showerProps = sec1.GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu, tauweighttrigger);
 
-      // // plots for debugging.
-      // if (interaction1->nuflavor=="numu" && fDetector->WHICHPATH != 3 && !settings1.ONLYFINAL && settings1.HIST==1 && ro.fraction_sec_muons.GetEntries()<settings1.HIST_MAX_ENTRIES) {
-      //   ro.fraction_sec_muons.Fill(showerProps.sumFrac(), fNeutrinoPath->weight);
-      //   ro.n_sec_muons.Fill((double)showerProps.nInteractions);
-      // }
-
-      // if (interaction1->nuflavor=="nutau" && fDetector->WHICHPATH != 3 && !settings1.ONLYFINAL && settings1.HIST==1 && ro.fraction_sec_taus.GetEntries()<settings1.HIST_MAX_ENTRIES) {
-      //   ro.fraction_sec_taus.Fill(showerProps.sumFrac(), fNeutrinoPath->weight);
-      //   ro.n_sec_taus.Fill((double)showerProps.nInteractions);
-      // }
-
-
       // for double bangs, surely this should be in Secondaries?
       if(sec1.secondbang && sec1.interestedintaus) {
         ptau=(1-elast_y)*pnu;
@@ -1860,11 +1862,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	  std::cout << j << "\t" <<  fDetector->freq[j] << "\t" << deltheta_em_max << "\t" << deltheta_had_max << std::endl;
 	}
 
-	gr.SetName("grTest");
-	std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
-	std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
-	std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
-	std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
+	gr.SetName("grTestSpread");
+	std::cout << "grTestSpread!!!!!!!!!!!!!" << std::endl;
+	std::cout << "grTestSpread!!!!!!!!!!!!!" << std::endl;
+	std::cout << "grTestSpread!!!!!!!!!!!!!" << std::endl;
+	std::cout << "grTestSpread!!!!!!!!!!!!!" << std::endl;
 	gr.Write();
 	fTestSpread->Close();
 	firstTimeSpread = false;
@@ -1888,7 +1890,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // let's keep this even in the roughness case, since it still represents a ceiling value
       if (fDetector->VNOISE[0]/10.*fDetector->maxthreshold/((showerProps.sumFrac())*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*fDetector->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR
 	  && !settings1.SKIPCUTS) {
-	// by comparing highest possible signal to the lowest possible noise, reject if there is just no way we could detect this event.	
+	// by comparing highest possible signal to the lowest possible noise, reject if there is just no way we could detect this event.
+	std::cout << "Fails at noise bit!" << std::endl;
         continue;
 
         // vmmhz1m_max=signal at highest frequency
@@ -1946,12 +1949,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // gets angle between ray and neutrino direction
       viewangle = GetViewAngle(ray1->nrf_iceside[4], interaction1->nnu);
-      if(viewangle>1.57 && !settings1.SKIPCUTS) { //discard the event if viewangle is greater than 90 degrees
+      if(viewangle>1.57 && !settings1.SKIPCUTS) { //discard the event if viewangle is greater than 90 degrees	
         continue;
       }
       count1->nviewangle_lt_90[whichray]++; // add to counter
 
       if (!RayTracer::WhereDoesItLeave(interaction1->posnu, interaction1->nnu, antarctica, interaction1->nuexit)){
+	std::cout << "You fucked up the ray tracer!?!?!?!" << std::endl;
         continue; // doesn't give a real value from quadratic formula
       }
 
@@ -2352,7 +2356,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // these variables are for energy reconstruction studies
 
-      
       if (!settings1.ROUGHNESS){
         // don't loop over frequencies if the viewing angle is too far off
         double rtemp = TMath::Min((viewangle-askFreqGen.GetChangle())/(deltheta_em_max), (viewangle-askFreqGen.GetChangle())/(deltheta_had_max));
@@ -2360,7 +2363,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           continue;
         }
         count1->nviewanglecut[whichray]++;
-
 
 	static bool drawnGraph = false;
 	TFile* fTest = NULL;
@@ -2373,28 +2375,28 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	  std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
 	  std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
 	  gr.Write();
-	  fTest->Close();
-	  drawnGraph = true;
+	  // fTest->Close();
+	  // drawnGraph = true;
 	}
 
 	askFreqs.taperAmplitudesForOffConeViewing(viewangle);
 	
         for (int k=0;k<Anita::NFREQ;k++) {
 
-	  // so, this just encodes the 1/f dependence of the taper after you find it for a single frequency
-	  // but, if  we force the frequencies to extend to zero, then this isn't valid.
+	  // // so, this just encodes the 1/f dependence of the taper after you find it for a single frequency
+	  // // but, if  we force the frequencies to extend to zero, then this isn't valid.
 
-	  if(fDetector->freq[k] > 0){
-	    deltheta_em[k] = deltheta_em_max*testTaperFreqHz/fDetector->freq[k];
-	    deltheta_had[k] = deltheta_had_max*testTaperFreqHz/fDetector->freq[k];
-	  }
-	  else{
-	    deltheta_em[k] = DBL_MAX; // very large but not infinite? is this the right thing to do?
-	    deltheta_had[k] = DBL_MAX; // very large but not infinite? is this the right thing to do?
-	  }
+	  // if(fDetector->freq[k] > 0){
+	  //   deltheta_em[k] = deltheta_em_max*testTaperFreqHz/fDetector->freq[k];
+	  //   deltheta_had[k] = deltheta_had_max*testTaperFreqHz/fDetector->freq[k];
+	  // }
+	  // else{
+	  //   deltheta_em[k] = DBL_MAX; // very large but not infinite? is this the right thing to do?
+	  //   deltheta_had[k] = DBL_MAX; // very large but not infinite? is this the right thing to do?
+	  // }
 
-	  // askFreqGen.TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, askFreqs, k, vmmhz_em[k]);// this applies the angular dependence.
-	  askFreqGen.TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], showerProps, askFreqs, k);// this applies the angular dependence.
+	  // // askFreqGen.TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], emfrac, hadfrac, askFreqs, k, vmmhz_em[k]);// this applies the angular dependence.
+	  // askFreqGen.TaperVmMHz(viewangle, deltheta_em[k], deltheta_had[k], showerProps, askFreqs, k);// this applies the angular dependence.
 
 	  // viewangle is which viewing angle we are at
 	  // deltheta_em is the width of the em component at this frequency
