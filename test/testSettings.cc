@@ -16,14 +16,14 @@
 #include "earthmodel.hh"
 #include "Tools.h"
 #include "vector.hh"
-#include "roughness.hh"
+#include "RayTracer.h"
 #include "anita.hh"
 #include "balloon.hh"
 #include "icemodel.hh"
 #include "Spectra.h"
 #include "AskaryanFreqsGenerator.h"
 #include "secondaries.hh"
-#include "ray.hh"
+#include "RayTracer.h"
 #include "counting.hh"
 #include "Primaries.h"
 #include "Taumodel.hh"
@@ -40,7 +40,7 @@ int main(){
   icemc::Anita *anita1 = new icemc::Anita();// right now this constructor gets banding info
   icemc::Secondaries *sec1 = new icemc::Secondaries();
   icemc::AskaryanFreqsGenerator *sig1 = new icemc::AskaryanFreqsGenerator();
-  icemc::Ray *ray1 = new icemc::Ray(); // create new instance of the ray class
+  icemc::RayTracer *ray1 = new icemc::RayTracer();
   // input parameters
   s.ReadInputs("inputs.anita3.conf",  outputsFile);
   s.ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);

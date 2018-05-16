@@ -22,7 +22,6 @@
 class TF2;
 
 namespace icemc{
-  class Ray;
   // class Vector;
   class Settings;
   class IceModel;

@@ -11,7 +11,7 @@
 #include "position.hh"
 #include "Primaries.h"
 #include "anita.hh"
-#include "ray.hh"
+#include "RayTracer.h"
 #include "balloon.hh"
 #include "EnvironmentVariable.h"
 
@@ -315,7 +315,7 @@ int icemc::IceModel::PickUnbiased(Interaction *interaction1, const IceModel *ant
   int count2=0;
     
     
-  if (Ray::WhereDoesItLeave(thisr_in,interaction1->nnu,antarctica,thisnuexitearth)) { // where does it leave Earth
+  if (RayTracer::WhereDoesItLeave(thisr_in,interaction1->nnu,antarctica,thisnuexitearth)) { // where does it leave Earth
     // really want to find where it leaves ice
     // Does it leave in an ice bin
     if (IceThickness(thisnuexitearth) && thisnuexitearth.Lat()<COASTLINE) { // if this is an ice bin in the Antarctic

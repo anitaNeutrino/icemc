@@ -13,7 +13,7 @@
 
 #include "position.hh"
 #include "anita.hh"
-#include "ray.hh"
+#include "RayTracer.h"
 
 #include "balloon.hh"
 #include "Settings.h"
@@ -795,7 +795,7 @@ void icemc::Balloon::setr_bn(double latitude,double longitude) {
 }
 
 
-void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, const Settings *settings1, const IceModel *antarctica1, Ray *ray1, int &beyondhorizon) {
+void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, const Settings *settings1, const IceModel *antarctica1, RayTracer *ray1, int &beyondhorizon) {
     
   // double distance=1.E7;
   double phi=0,theta=0;

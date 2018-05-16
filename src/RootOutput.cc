@@ -9,7 +9,7 @@
 #include "Taumodel.hh"
 #include "EnvironmentVariable.h"
 #include "Tools.h"
-#include "ray.hh"
+#include "RayTracer.h"
 #include "screen.hh"
 #include "position.hh"
 #include "icemodel.hh"
@@ -462,7 +462,7 @@ int icemc::RootOutput::getIceMCAntfromUsefulEventAnt(const Settings *settings1, 
 }
 
 
-void icemc::RootOutput::fillRootifiedAnitaDataTrees(const EventGenerator* uhen, const Settings& settings1, const Ray* ray1, const Screen* panel1){  
+void icemc::RootOutput::fillRootifiedAnitaDataTrees(const EventGenerator* uhen, const Settings& settings1, const RayTracer* ray1, const Screen* panel1){  
   
 #ifdef ANITA_UTIL_EXISTS
   AnitaGeomTool* geom = AnitaGeomTool::Instance();

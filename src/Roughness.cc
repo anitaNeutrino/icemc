@@ -9,7 +9,7 @@
 
 #include "vector.hh"
 #include "position.hh"
-#include "roughness.hh"
+#include "Roughness.h"
 #include "Constants.h"
 #include "TF2.h"
 #include "TCanvas.h"
@@ -21,7 +21,7 @@
 #include "earthmodel.hh"
 #include "icemodel.hh"
 #include "spline.h"
-#include "ray.hh"
+#include "RayTracer.h"
 
 #ifdef USE_HEALPIX
 #include "healpix_base.h"

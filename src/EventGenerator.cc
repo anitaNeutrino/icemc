@@ -15,7 +15,7 @@
 #include "earthmodel.hh"
 #include "Tools.h"
 #include "vector.hh"
-#include "roughness.hh"
+#include "Roughness.h"
 // #include "anita.hh"
 // #include "balloon.hh"
 #include "ANITA.h"
@@ -24,7 +24,7 @@
 #include "AskaryanFreqsGenerator.h"
 #include "AskaryanFreqs.h"
 #include "secondaries.hh"
-#include "ray.hh"
+#include "RayTracer.h"
 #include "counting.hh"
 #include "Primaries.h"
 #include "Taumodel.hh"
@@ -810,7 +810,7 @@ int icemc::EventGenerator::GetRayIceSide(const Vector &n_exit2rx,  const Vector 
 
 int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *interaction1, const Vector &refr,
 					double deltheta_em,  double deltheta_had, const ShowerProperties& showerProps,
-					double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,
+					double vmmhz1m_max,  double r_fromballoon,  RayTracer *ray1,
 					const AskaryanFreqsGenerator *askFreqGen,  Position posnu,  Anita *anita1,
 					Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) { 
 
@@ -1115,7 +1115,7 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 //end GetFresnel()
 
 
-void icemc::EventGenerator::GetBalloonLocation(const Interaction *interaction1, const Ray *ray1, const Balloon *bn1, IceModel *antarctica) const {
+void icemc::EventGenerator::GetBalloonLocation(const Interaction *interaction1, const RayTracer *ray1, const Balloon *bn1, IceModel *antarctica) const {
   // brian enter function to calculate balloon position on your map.
   // use interaction1->posnu // location of neutrino interaction
   // coordinate system:  +z="up" at the south pole
@@ -1156,7 +1156,7 @@ void icemc::EventGenerator::GetBalloonLocation(const Interaction *interaction1, 
     nnu_flipped=nnu_flipped-2.*nnu_flipped.Dot(zcoordvector)*zcoordvector; // take it's upgoing reflection from surface
       
     Position nuexit_flipped;
-    if (Ray::WhereDoesItLeave(interaction1->posnu,nnu_flipped,antarctica,nuexit_flipped)){
+    if (RayTracer::WhereDoesItLeave(interaction1->posnu,nnu_flipped,antarctica,nuexit_flipped)){
       origin_brian_tmp=nuexit_flipped;
     }
   }
@@ -1218,7 +1218,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   Secondaries sec1;
   Primaries* primary1 = new Primaries();
   AskaryanFreqsGenerator askFreqGen;
-  Ray* ray1 = new Ray();
+  RayTracer* ray1 = new RayTracer();
   Counting* count1 = new Counting();
   // GlobalTrigger* globaltrig1 = NULL;
   Taumodel* taus1 = new Taumodel();
@@ -1952,7 +1952,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       count1->nviewangle_lt_90[whichray]++; // add to counter
 
-      if (!Ray::WhereDoesItLeave(interaction1->posnu, interaction1->nnu, antarctica, interaction1->nuexit)){
+      if (!RayTracer::WhereDoesItLeave(interaction1->posnu, interaction1->nnu, antarctica, interaction1->nuexit)){
         continue; // doesn't give a real value from quadratic formula
       }
 
@@ -3040,7 +3040,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 
 void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,
-					   Ray* ray1, Screen* panel1, IceModel* antarctica,
+					   RayTracer* ray1, Screen* panel1, IceModel* antarctica,
 					   Balloon* bn1, const AskaryanFreqsGenerator* askFreqGen, Anita* anita1, const ShowerProperties& showerProps){
   
   //(vector) ray1->nsurf_rfexit:  surface normal at RFexit position

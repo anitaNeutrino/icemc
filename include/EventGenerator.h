@@ -18,7 +18,7 @@ namespace icemc {
   class Taumodel;
   class AskaryanFreqsGenerator;
   class Interaction;
-  class Ray;
+  class RayTracer;
   class Roughness;
   class Screen;
   class Counting;
@@ -431,7 +431,7 @@ namespace icemc {
 
     
     // @todo constify... if I can const this, then we're probably near the end of the refactor...
-    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  Ray* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, const AskaryanFreqsGenerator* askFreqGen, Anita* anita1, const ShowerProperties& showerProps);
+    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  RayTracer* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, const AskaryanFreqsGenerator* askFreqGen, Anita* anita1, const ShowerProperties& showerProps);
 
 
     
@@ -447,11 +447,11 @@ namespace icemc {
     void Attenuate(IceModel *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const Position &posnu) const ;
     void Attenuate_down(IceModel *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const Position &rfexit2,  const Position &posnu,  const Position &posnu_down) const ;
     void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight) const;
-    void GetBalloonLocation(const Interaction *interaction1, const Ray *ray1, const Balloon *bn1, IceModel *antarctica) const;
+    void GetBalloonLocation(const Interaction *interaction1, const RayTracer *ray1, const Balloon *bn1, IceModel *antarctica) const;
     int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside) const;
 
     // @todo constify... needs some love to constify
-    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  const ShowerProperties& sp,  double vmmhz1m_max,  double r_fromballoon,  Ray *ray1,  const AskaryanFreqsGenerator* askFreqGen,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold) ;
+    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  const ShowerProperties& sp,  double vmmhz1m_max,  double r_fromballoon,  RayTracer *ray1,  const AskaryanFreqsGenerator* askFreqGen,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold) ;
     void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  const ShowerProperties& ,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag) const;
     double GetViewAngle(const Vector &nrf2_iceside,  const Vector &nnu) const;
     int TIR(const Vector &n_surf,  const Vector &nrf2_iceside,  double N_IN,  double N_OUT) const;

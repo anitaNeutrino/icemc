@@ -19,7 +19,7 @@ class TChain;
 class TTreeIndex;
 
 namespace icemc {
-  class Ray;
+  class RayTracer;
   class Interaction;
 
 
@@ -118,7 +118,7 @@ namespace icemc {
     void setObservationLocation(Interaction *interaction1,int inu, const IceModel *antarctic, const Settings *settings1);
     void GetBoresights(const Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]);
     void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,const Settings *settings1, const IceModel *antarctica1,
-				      Ray *ray1, int &beyondhorizon); 
+				      RayTracer *ray1, int &beyondhorizon); 
   
     ///< This function initializes the balloon or the specific flight
     /**

@@ -21,7 +21,7 @@ namespace icemc {
   class EventGenerator;
   class Settings;
   class Anita;
-  class Ray;
+  class RayTracer;
   class Screen;
 
   /**
@@ -83,7 +83,7 @@ namespace icemc {
     TH1F n_sec_taus;
 
 
-    void fillRootifiedAnitaDataTrees(const EventGenerator* uhen, const Settings& settings1, const Ray* ray1, const Screen* panel1);
+    void fillRootifiedAnitaDataTrees(const EventGenerator* uhen, const Settings& settings1, const RayTracer* ray1, const Screen* panel1);
 
   private:
     TString fOutputDir; ///< The output directory

@@ -47,7 +47,7 @@
 #include "earthmodel.hh"
 #include "Tools.h"
 #include "vector.hh"
-#include "roughness.hh"
+#include "Roughness.h"
 #include "anita.hh"
 #include "balloon.hh"
 #include "icemodel.hh"
@@ -55,7 +55,7 @@
 #include "Spectra.h"
 #include "AskaryanFreqsGenerator.h"
 #include "secondaries.hh"
-#include "ray.hh"
+#include "RayTracer.h"
 #include "counting.hh"
 #include "Primaries.h"
 #include "Taumodel.hh"
@@ -98,7 +98,7 @@ using icemc::EarthModel;
 using icemc::IceModel;
 using icemc::Counting;
 using icemc::Taumodel;
-using icemc::Ray;
+using icemc::RayTracer;
 using icemc::Anita;
 using icemc::Balloon;
 using icemc::Settings;
@@ -576,7 +576,7 @@ int main(int argc,  char **argv) {
   Anita *anita1=new Anita();// right now this constructor gets banding info
   Secondaries *sec1=new Secondaries();
   AskaryanFreqsGenerator *sig1=new AskaryanFreqsGenerator();
-  Ray *ray1=new Ray(); // create new instance of the ray class
+  RayTracer *ray1=new RayTracer(); // create new instance of the ray class
   Counting *count1=new Counting();
   GlobalTrigger *globaltrig1;
 

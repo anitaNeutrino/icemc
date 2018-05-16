@@ -6,14 +6,14 @@
 #include "Settings.h"
 #include "Tools.h"
 #include "vector.hh"
-#include "roughness.hh"
+#include "Roughness.h"
 #include "anita.hh"
 #include "balloon.hh"
 #include "icemodel.hh"
 #include "Spectra.h"
 #include "AskaryanFreqsGenerator.h"
 #include "secondaries.hh"
-#include "ray.hh"
+#include "RayTracer.h"
 #include "counting.hh"
 #include "Primaries.h"
 
@@ -912,7 +912,7 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   
 
 void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, AskaryanFreqsGenerator* askFreqGen,
-				  Balloon* bn1, Ray* ray1) const {
+				  Balloon* bn1, RayTracer* ray1) const {
   
    //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas. 
   if (WHICH==2 || WHICH==6 || WHICH==8 || WHICH==9 || WHICH==10){

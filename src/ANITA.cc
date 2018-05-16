@@ -8,13 +8,13 @@
 #include "IcemcLog.h"
 #include "Constants.h"
 #include "screen.hh"
-#include "ray.hh"
+#include "RayTracer.h"
 #include "VoltsRX.h"
 
 #include "TFile.h" ///@todo remove after done debugging
 
 
-icemc::ANITA::ANITA(const Settings* settings, Ray* sillyRay, Screen* sillyPanel)
+icemc::ANITA::ANITA(const Settings* settings, RayTracer* sillyRay, Screen* sillyPanel)
   : fSettingsPtrIDontOwn(settings), fRayPtrIDontOwn(sillyRay), fScreenPtrIDontOwn(sillyPanel)
 {
   for(int i=0; i < getNumRX(); i++){

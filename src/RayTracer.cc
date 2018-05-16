@@ -10,11 +10,11 @@
 #include "vector.hh"
 #include "position.hh"
 #include "anita.hh"
-#include "ray.hh"
+#include "RayTracer.h"
 #include <cmath>
 
 
-icemc::Ray::Ray() {
+icemc::RayTracer::RayTracer() {
   sum_slopeyness=0.;
   xaxis=Vector(1.,0.,0.);
   yaxis=Vector(0.,1.,0.);
@@ -23,12 +23,14 @@ icemc::Ray::Ray() {
   slopeyy=0.;
   slopeyz=0.; // these are a measure of how much the surface is sloped in the x,y and z directions
 }
-void icemc::Ray::PrintAnglesofIncidence() {
+
+void icemc::RayTracer::PrintAnglesofIncidence() {
 
   std::cout << "angle of incidence (firn-air) is " << nrf_iceside[3].Angle(nsurf_rfexit)*constants::DEGRAD << "\n";
   std::cout << "angle of incidence (ice-firn) is " << nrf_iceside[4].Angle(nsurf_rfexit)*constants::DEGRAD << "\n";
 }
-void icemc::Ray::Initialize() {
+
+void icemc::RayTracer::Initialize() {
   
   for (int i=0;i<3;i++) {
     n_exit2bn[i]=Vector(0.,0.,0.); // normal vector in direction of exit point to balloon - 5 iterations, 3 directions for eac
@@ -50,7 +52,10 @@ void icemc::Ray::Initialize() {
   nsurf_rfexit_db=Vector(0.,0.,0.);
 
 }
-void icemc::Ray::GetRFExit(const Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry,const IceModel *antarctica) {
+
+
+void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int whichray, Position posnu, Position posnu_down, Position r_bn,
+				 Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int whichtry, const IceModel *antarctica) {
 
 
 
@@ -101,10 +106,10 @@ void icemc::Ray::GetRFExit(const Settings *settings1,Anita *anita1,int whichray,
 }
 
 //###########
-// icemc::Ray::WhereDoesItLeave() is defined in ray.hh since it is a statis member function // MS 2/1/2017
+// icemc::RayTracer::WhereDoesItLeave() is defined in ray.hh since it is a statis member function // MS 2/1/2017
 
 
-int icemc::Ray::RandomizeSurface(const Settings *settings1,Position rfexit_temp,Vector posnu,const IceModel *antarctica,double &slopeyangle,int whichtry) {
+int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Position rfexit_temp, Vector posnu, const IceModel *antarctica, double &slopeyangle, int whichtry) {
 
   double howmuch=settings1->SLOPEYSIZE;
   Position nsurf_rfexit_temp;
@@ -171,8 +176,8 @@ int icemc::Ray::RandomizeSurface(const Settings *settings1,Position rfexit_temp,
   
 }//RandomizeSurface
 
-// int icemc::Ray::GetSurfaceNormal(IceModel *antarctica,Vector posnu,Position *rfexit) {
-int icemc::Ray::GetSurfaceNormal(const Settings *settings1,const IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry) {
+// int icemc::RayTracer::GetSurfaceNormal(IceModel *antarctica,Vector posnu,Position *rfexit) {
+int icemc::RayTracer::GetSurfaceNormal(const Settings *settings1,const IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry) {
       
   Position rfexit_temp;
 
@@ -193,7 +198,7 @@ int icemc::Ray::GetSurfaceNormal(const Settings *settings1,const IceModel *antar
 }
 
 
-int icemc::Ray::TraceRay(const Settings *settings1,Anita *anita1,int iter,double n_depth) { // iter is which iteration (1 or 2)
+int icemc::RayTracer::TraceRay(const Settings *settings1,Anita *anita1,int iter,double n_depth) { // iter is which iteration (1 or 2)
 
    
   // use snell's law to get the first guess at the 
@@ -293,11 +298,11 @@ int icemc::Ray::TraceRay(const Settings *settings1,Anita *anita1,int iter,double
 
   return 1;
 }
-int icemc::Ray::GetRayIceSide(const Vector &n_exit2bn,
-			      const Vector &nsurf_rfexit,
-			      double nexit,
-			      double nenter, 
-			      Vector &nrf2_iceside) {
+int icemc::RayTracer::GetRayIceSide(const Vector &n_exit2bn,
+				    const Vector &nsurf_rfexit,
+				    double nexit,
+				    double nenter, 
+				    Vector &nrf2_iceside) {
 
   // this function performs snell's law in three dimensions
 
@@ -340,4 +345,145 @@ int icemc::Ray::GetRayIceSide(const Vector &n_exit2bn,
 
   return 1;
 }//GetRayIceSide
+
+
+
+
+int icemc::RayTracer::WhereDoesItLeave(const Position &posnu, const Vector &ntemp, const IceModel *antarctica, Position &r_out) {
+  double distance=0;
+  double posnu_length=posnu.Mag(); // distance from center of earth to interaction
+  double lon,lat;//,lon_old,lat_old; //latitude, longitude indices for 1st and 2nd iteration
+  lon = posnu.Lon(); // what latitude, longitude does interaction occur at
+  lat = posnu.Lat();
+  // lon_old=lon; // save this longitude and latitude so we can refer to it later
+  // lat_old=lat;
+
+  // use law of cosines to get distance from interaction to exit point for the ray
+  // need to solve for that distance using the quadratic formula
+
+  // angle between posnu and ntemp vector for law of cosines.
+  double costheta=-1*(posnu.Dot(ntemp))/posnu_length;
+
+  // a,b,c for quadratic formula, needed to solve for 
+  double a=1;
+  double b=-1*2*posnu_length*costheta;
+  double c=posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2);
+
+  if (b*b-4*a*c<0.) {
+    return 0;
+  }
+
+  // use the "+" solution because the other one is where the ray is headed downward toward the rock
+  distance=(-1*b+sqrt(b*b-4*a*c))/2;
+				
+  // now here is the exit point for the ray
+  r_out = posnu + distance*ntemp;
+				
+  lon = r_out.Lon(); // latitude and longitude of exit point
+  lat = r_out.Lat();
+				
+  c = posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2); // redo the law of cosines
+  // sometimes though the new surface is lower than the one over posnu which causes a problem.
+  if (b*b-4*a*c<0.) {
+    //std::cout << "inu is " << inu << "\n";  
+    // try halving the distance
+    distance=distance/2.;
+    //std::cout << "bad.  distance 1/2 is " << distance << "\n";
+    r_out = posnu + distance*ntemp;
+    lon = r_out.Lon(); // latitude and longitude of exit point
+    lat = r_out.Lat();
+    c = posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2); // redo the law of cosines
+    if (b*b-4*a*c<0.) { // if we still have the problem back up more
+      distance=distance/2.; // now we are at 1/4 the distance
+      //std::cout << "bad.  distance 1/4 is " << distance << "\n";
+      r_out = posnu + distance*ntemp;
+      lon = r_out.Lon(); // latitude and longitude of exit point
+      lat = r_out.Lat();
+      c = posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2); // redo the law of cosines
+      if (b*b-4*a*c<0.) { // the problem is less then 1/4 of the way in
+	distance=distance/2.; // now we are at 1/8 the distance
+	//std::cout << "bad.  distance 1/8 is " << distance << "\n";
+	r_out = posnu + distance*ntemp;
+	lon = r_out.Lon(); // latitude and longitude of exit point
+	lat = r_out.Lat();
+	c = posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2); // redo the law of cosines
+	if (b*b-4*a*c<0.) {
+	  // still have the problem so just make the distance 0
+	  distance=0.; // now we are at 1/8 the distance
+	  //std::cout << "bad.  distance is " << distance << "\n";
+	  lon = posnu.Lon(); // latitude and longitude of exit point
+	  lat = posnu.Lat();
+	  r_out=antarctica->Surface(lon,lat)/posnu.Mag()*posnu;
+	}
+      } // now we are at 1/8 the distance
+      else {// if this surface is ok problem is between 1/4 and 1/2
+	distance=distance*1.5; // now we are at 3/8 the distance
+	//	std::cout << "good.  distance 3/8 is " << distance << "\n";
+	r_out = posnu + distance*ntemp;
+	lon = r_out.Lon(); // latitude and longitude of exit point
+	lat = r_out.Lat();
+	c = posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2); // redo the law of cosines
+	if (b*b-4.*a*c<0.) {
+	  distance=distance*2./3.; // go back to 1/4
+	  r_out = posnu + distance*ntemp;
+	  lon = r_out.Lon(); // latitude and longitude of exit point
+	  lat = r_out.Lat();
+	  c = posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2); // redo the law of cosines
+	  //std::cout << "good at distance 1/4 is " << distance << "\n";
+	}
+      } // now we are at 3/8 the distance
+		
+		
+    } // now we are at 1/4 the distance
+    else { // if this surface at 1/2 distance is ok see if we can go a little further
+      distance=distance*1.5; // now we are at 3/4 the distance
+      //std::cout << "good.  distance 3/4 is " << distance << "\n";
+      r_out = posnu + distance*ntemp;
+      lon = r_out.Lon(); // latitude and longitude of exit point
+      lat = r_out.Lat();
+      c = posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2); // redo the law of cosines
+      if (b*b-4*a*c<0.) { // the problem is between 1/2 and 3/4 of the way in
+	distance=distance*5./6.; // now we are at 5/8 the distance
+	//std::cout << "bad.  distance 5/8 is " << distance << "\n";
+	r_out = posnu + distance*ntemp;
+	lon = r_out.Lon(); // latitude and longitude of exit point
+	lat = r_out.Lat();
+	c = posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2); // redo the law of cosines
+	if (b*b-4*a*c<0.) {
+	  distance=distance*4./5.;
+	  r_out = posnu + distance*ntemp;
+	  lon = r_out.Lon(); // latitude and longitude of exit point
+	  lat = r_out.Lat();
+	  c = posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2); // redo the law of cosines
+	  //std::cout << "good at distance 3/4 is " << distance << "\n";
+	}
+      } // now we are at 1/8 the distance
+      else {// if this surface is ok problem is between 1/4 and 1/2
+	distance=distance*7./6.; // now we are at 7/8 the distance
+	//std::cout << "good.  distance 7/8 is " << distance << "\n";
+	r_out = posnu + distance*ntemp;
+	lon = r_out.Lon(); // latitude and longitude of exit point
+	lat = r_out.Lat();
+	c = posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2); // redo the law of cosines
+	if (b*b-4*a*c<0) {
+	  // now found the problem so go back to 3/4 distance
+	  distance=distance*6./7.;
+	  //std::cout << "good at  distance 3/4 is " << distance << "\n";
+	  r_out = posnu + distance*ntemp;
+	  lon = r_out.Lon(); // latitude and longitude of exit point
+	  lat = r_out.Lat();
+	  c = posnu_length*posnu_length - pow(antarctica->Surface(lon,lat),2); // redo the law of cosines
+	}
+      } // now we are at 3/8 the distance
+    } // now we are at 3/4 distance
+  } // if exit point we initially found was not ok
+  else {
+    distance=(-1*b+sqrt(b*b-4*a*c))/2; // and quadratic formula
+    r_out = posnu + distance*ntemp;
+  }
+  return 1;
+}
+
+
+
 
