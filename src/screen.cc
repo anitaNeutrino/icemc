@@ -322,11 +322,24 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
 	tmp_vhz[k] = GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(TIMESTEP*1.E6);
       } // end looping over frequencies.
 
+      if(inu==397){
+	int ant=0,  pol=0;
+	d->getAntPolFromRX(rx, ant, pol);
+	if(ant==2){
+	  std::cout  << "In screen... pol = " << pol << "\n";
+	  for(auto v : tmp_vhz){
+	    std::cout << std::abs(v) << " ";
+	  }
+	  std::cout << "\n\n";
+	}
+      }
+
       FTPair signal(tmp_vhz, df);
       signal.delayTimeDomain(GetDelay(jpt));
 
       // is that the correct geometry?
-      PropagatingSignal s(signal, GetPol(jpt), d->getPositionRX(rx) - GetImpactPt(jpt));
+      // PropagatingSignal s(signal, d->getPositionRX(rx) - GetImpactPt(jpt), GetPol(jpt));
+      PropagatingSignal s(signal, GetVec2bln(jpt), GetPol(jpt));
 
       d->addSignalToRX(s, rx, inu);
     }

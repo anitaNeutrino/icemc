@@ -271,10 +271,10 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
   count_getnoisewaveforms=0;
   rms_lab[0]=rms_lab[1]=0.;
   rms_rfcm[0]=rms_rfcm[1]=0.;
-    
+
   NBANDS=4; // subbands (not counting full band)
   inu=thisInu;
-    
+
   PERCENTBW=10; // subbands (not counting full band)
 
   TIMESTEP=(1./2.6)*1.E-9; // time step between samples
@@ -1386,11 +1386,17 @@ void icemc::Anita::ReadGains(void) {
 
 
 
-void icemc::Anita::AntennaGain(const Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h) const {
+void icemc::Anita::AntennaGain(const Settings *settings1,
+			       double hitangle_e, double hitangle_h,
+			       double e_component, double h_component,
+			       int k,
+			       double &vsignalarray_e, double &vsignalarray_h) const {
 
   if (freq[k]>=settings1->FREQ_LOW_SEAVEYS && freq[k]<=settings1->FREQ_HIGH_SEAVEYS) {
-
-    double relativegains[4]; // fill this for each frequency bin for each antenna.  It's the gain of the antenna given the angle that the signal hits the balloon, for vv, vh, hv, hh, relative to the gain at boresight
+    // fill this for each frequency bin for each antenna.
+    // It's the gain of the antenna given the angle that the signal hits the balloon,
+    // for vv, vh, hv, hh, relative to the gain at boresight
+    double relativegains[4] = {0};
 
     for (int pols=0;pols<2;pols++) {// loop over vv, hv
       if (fabs(hitangle_e)<constants::PI/2){
@@ -2430,10 +2436,10 @@ void icemc::Anita::FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[N
 }
 
 
-void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay) const {
-    
+void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay, bool debug) const {
+
   Tools::Zero(vsignal_e_forfft,NFOUR/2);
-    
+
   double previous_value_e_even=0.;
   double previous_value_e_odd=0.;
   int count_nonzero=0;
@@ -2445,10 +2451,10 @@ void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forf
     // but there are only NFOUR/4 different values
     // it's the index among the NFOUR/4 that we're interested in
 
-    // this translate the actual frequency, 
+    // this translate the actual frequency
     int ifour = Tools::Getifreq(freq[i],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
     // std::cout << "make array..."<< i << "\t" << ifour << std::endl;
-      
+
     if (ifour!=-1 && 2*ifour+1<NFOUR/2) {
       count_nonzero++;
       if (ifirstnonzero==-1){
@@ -2457,23 +2463,29 @@ void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forf
 
       // They are doing the inverse FT normalization here, since numerical recipes FT does not normalize
       // that's the factor of 2/(nfour/2) (so  the icemc convention does this with -1)
-      // but if 2*ifour and 2*ifour + 1 are the re, im then that isn't 90 degree phase, it's 45?
-      vsignal_e_forfft[2*ifour]  = vsignalarray_e[i]*2/((double)NFOUR/2); // phase is 90 deg???
-      vsignal_e_forfft[2*ifour+1]= vsignalarray_e[i]*2/((double)NFOUR/2); // phase is 90 deg???
+      // the factor of 2 means that just the reals are written to for now, phase considerations are done later
+      vsignal_e_forfft[2*ifour]  = vsignalarray_e[i]*2/((double)NFOUR/2);
+      vsignal_e_forfft[2*ifour+1]= vsignalarray_e[i]*2/((double)NFOUR/2);
 
       // the 2/(nfour/2) needs to be included since were using FTPair::realft with the -1 setting
       // how about we interpolate instead of doing a box average
       for (int j=iprevious+1;j<ifour;j++) {
+	if(debug){
+	  std::cout << j << "\t" << ifour << "\n";
+	  std::cout << 2*j << "\t" << 2*ifour << "\n";
+	  std::cout << 2*j+1 << "\t" << 2*ifour+1 << "\n";
+	  std::cout << "\n";
+	}
+	
         vsignal_e_forfft[2*j]   = previous_value_e_even+(vsignal_e_forfft[2*ifour]   - previous_value_e_even) * (double)(j-iprevious)/(double)(ifour-iprevious);
         vsignal_e_forfft[2*j+1] = previous_value_e_odd +(vsignal_e_forfft[2*ifour+1] - previous_value_e_odd ) * (double)(j-iprevious)/(double)(ifour-iprevious);
       }
 
-      ilastnonzero=ifour;
-      iprevious=ifour;
-      previous_value_e_even=vsignal_e_forfft[2*ifour];
-      previous_value_e_odd=vsignal_e_forfft[2*ifour+1];
+      ilastnonzero = ifour;
+      iprevious = ifour;
+      previous_value_e_even = vsignal_e_forfft[2*ifour];
+      previous_value_e_odd  = vsignal_e_forfft[2*ifour+1];
     }
-
   } // end loop over nfreq
     
     // EH check
@@ -2483,13 +2495,13 @@ void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forf
     vsignal_e_forfft[2*j]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
     vsignal_e_forfft[2*j+1]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
   }
-    
+
   //  Tools::InterpolateComplex(vsignal_e_forfft,NFOUR/4);
 
   if (useconstantdelay){
     double cosphase=cos(phasedelay*constants::PI/180.);
     double sinphase=sin(phasedelay*constants::PI/180.);
-    for (int ifour=0;ifour<NFOUR/4;ifour++) {      
+    for (int ifour=0;ifour<NFOUR/4;ifour++) {
       if (USEPHASES) {
 	cosphase = cos(v_phases[ifour]*constants::PI/180.);
 	sinphase = sin(v_phases[ifour]*constants::PI/180.);

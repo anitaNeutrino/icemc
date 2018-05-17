@@ -36,7 +36,7 @@ namespace icemc {
     Vector nsurf_rfexit_db;
     Vector nrf_iceside[5];  // direction of rf [tries][3d]
     
-    Vector nrf_iceside_eachboresight[5][Anita::NLAYERS_MAX][Anita::NPHI_MAX];  // direction of rf [tries][3d]
+    Vector nrf_iceside_eachboresight[5][Anita::NLAYERS_MAX][Anita::NPHI_MAX];
     Vector n_exit2bn_eachboresight[5][Anita::NLAYERS_MAX][Anita::NPHI_MAX];
     Position rfexit_eachboresight[5][Anita::NLAYERS_MAX][Anita::NPHI_MAX];
     

@@ -8,7 +8,6 @@ ClassImp(icemc::AskaryanFreqs)
 
 
 icemc::AskaryanFreqs::AskaryanFreqs()
-: vmmhz(Anita::NFREQ, 0), fMinFreqHz(0), fDeltaFreqHz(0), fCherenkovAngleRad(0)
 {
 
 }
@@ -39,39 +38,39 @@ void icemc::AskaryanFreqs::taperAmplitudesForOffConeViewing(double viewAngleRadi
     deltaThetaEmTest = fDeltaThetaEmTest;
     deltaThetaHadTest = fDeltaThetaHadTest;
   }
-  
-  for(UInt_t j=0; j < vmmhz.size(); j++){
 
-    // the angular spread (deltaTheta) type variables follow a 1/freq dependence
+  double freq = fMinFreqHz;
+  for(double& amp : vmmhz){
+    // the angular spread (deltaTheta) type variables follow a 1/freq dependence    
     // so it can just be calculated once and scaled.
 
-    double freq = fMinFreqHz + j*fDeltaFreqHz;
-    if(freq <= 0){
+    if(freq > 0){
       // there should be 0 power in a DC offset bin, so skip
       // (it would cause a division by 0...)
-      continue;
+
+      // here we encode the 1/f  dependence... for the freq in the j-th element
+      double deltaThetaEm = deltaThetaEmTest*testFreqHz/freq;
+      double deltaThetaHad = deltaThetaHadTest*testFreqHz/freq;
+
+      constexpr double maxSigma = 20; // ignore anything more than 20 sigma away from cone
+    
+      // V/m/MHz at 1m due to EM component of shower        
+      double nSigmaEm = (viewAngleRadians-fCherenkovAngleRad)*(viewAngleRadians-fCherenkovAngleRad)/(deltaThetaEm*deltaThetaEm);
+      double vmmhz1m_em = (fEmFrac > epsilon && nSigmaEm < maxSigma) ? amp*exp(-nSigmaEm) : 0;
+
+      // V/m/MHz at 1m due to HAD component of shower
+      double nSigmaHad = (viewAngleRadians-fCherenkovAngleRad)*(viewAngleRadians-fCherenkovAngleRad)/(deltaThetaHad*deltaThetaHad);
+      double vmmhz1m_had = (fHadFrac != 0 && nSigmaHad) < maxSigma ? amp*exp(-nSigmaHad) : 0;
+
+      // Sum the EM and hadronic components
+      amp = sin_viewAngle*(fEmFrac*vmmhz1m_em + fHadFrac*vmmhz1m_had);
     }
 
-    // here we encode the 1/f  dependence... for the freq in the j-th element
-    double deltaThetaEm = deltaThetaEmTest*testFreqHz/freq;
-    double deltaThetaHad = deltaThetaHadTest*testFreqHz/freq;
-
-    const double maxSigma = 20; // ignore anything more than 20 sigma away from cone
-    
-    // V/m/MHz at 1m due to EM component of shower        
-    double nSigmaEm = (viewAngleRadians-fCherenkovAngleRad)*(viewAngleRadians-fCherenkovAngleRad)/(deltaThetaEm*deltaThetaEm);
-    double vmmhz1m_em = (fEmFrac > epsilon && nSigmaEm < maxSigma) ? vmmhz[j]*exp(-nSigmaEm) : 0;
-
-    // V/m/MHz at 1m due to HAD component of shower
-    double nSigmaHad = (viewAngleRadians-fCherenkovAngleRad)*(viewAngleRadians-fCherenkovAngleRad)/(deltaThetaHad*deltaThetaHad);
-    double vmmhz1m_had = (fHadFrac != 0 && nSigmaHad) < maxSigma ? vmmhz[j]*exp(-nSigmaHad) : 0;
-
-    // Sum the EM and hadronic components
-    vmmhz[j] = sin_viewAngle*(fEmFrac*vmmhz1m_em + fHadFrac*vmmhz1m_had);
+    freq += fDeltaFreqHz;
   }
+
+  fTotalPowerDirty = true;
 }
-
-
 
 
 double icemc::AskaryanFreqs::operator[](int i) const {

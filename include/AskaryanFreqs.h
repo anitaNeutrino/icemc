@@ -89,24 +89,48 @@ namespace icemc {
      */
     TGraph makeGraph() const;
 
+
+    /** 
+     * Get the total power in the frequency array
+     * 
+     * @return 
+     */
+    double power() const {
+      if(fTotalPowerDirty){
+	fTotalPower = 0;
+	for(auto amp : vmmhz){
+	  //@todo confirm a power normalization scheme
+	  fTotalPower += amp*amp*fDeltaFreqHz;
+	}
+	fTotalPowerDirty = false;
+      }
+      return fTotalPower;
+    }
+
+
   private:
 
     std::vector<double> vmmhz; ///< Binned frequencies in V/m/MHz  (Volts per meter per MHz)
-    double fMinFreqHz; ///< Frequency of vmmhz[0] (Hz)
-    double fDeltaFreqHz; ///< Space between frequency bins (Hz)
+    double fMinFreqHz = 0; ///< Frequency of vmmhz[0] (Hz)
+    double fDeltaFreqHz = 0; ///< Space between frequency bins (Hz)
 
     /// for tapering... (a.k.a viewing the frequencies of the shower off-cone)
     
-    double fCherenkovAngleRad; ///< Cherenkov angle of frequencies
+    double fCherenkovAngleRad = 0; ///< Cherenkov angle of frequencies
     
-    double fEmFrac; // fraction of the shower from EM component 
-    double fHadFrac; // fraction of the shower from hadronic component
+    double fEmFrac = 0; // fraction of the shower from EM component 
+    double fHadFrac = 0; // fraction of the shower from hadronic component
 
     // the tapering goes as 1/frequency, therefore only need to find a single frequency
     // to know the tapering at all frequencies...
-    double fSpreadTestFreqHz; // frequency at which to do full tapering calculation
-    double fDeltaThetaEmTest; // angular spread of test frequency from EM component
-    double fDeltaThetaHadTest;// angular spread of test frequency from Had component
+    double fSpreadTestFreqHz = 0; // frequency at which to do full tapering calculation
+    double fDeltaThetaEmTest = 0; // angular spread of test frequency from EM component
+    double fDeltaThetaHadTest = 0;// angular spread of test frequency from Had component
+
+
+    
+    mutable double fTotalPower = 0;
+    mutable bool fTotalPowerDirty = true;
 
     ClassDef(AskaryanFreqs, 1)
   };

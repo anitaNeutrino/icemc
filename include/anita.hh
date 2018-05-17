@@ -57,7 +57,7 @@ namespace icemc {
     void getPulserData();
 
     // takes arrays that span NFREQ and turn them into arrays that span HALFNFOUR
-    void MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay) const;
+    void MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay, bool debug=false) const;
 
     void GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx) const;
  

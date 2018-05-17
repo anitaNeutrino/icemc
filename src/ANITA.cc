@@ -27,9 +27,10 @@ icemc::ANITA::~ANITA(){
 }
 
 
-icemc::Position icemc::ANITA::getCenterOfDetector(UInt_t* unixTime){
-  UInt_t theUnixTime = unixTime ? 1 : 0;  
-  return Position();  
+icemc::Position icemc::ANITA::getCenterOfDetector(UInt_t unixTime){
+  (void) unixTime;
+  // UInt_t theUnixTime = unixTime ? 1 : 0;  
+  return r_bn;
 }
 
 
@@ -39,12 +40,12 @@ icemc::Vector icemc::ANITA::getPositionRX(Int_t rx) const {
 }
 
 
-inline void icemc::ANITA::getAntPolFromRX(int rx, int&ant, int& pol) const {
+void icemc::ANITA::getAntPolFromRX(int rx, int&ant, int& pol) const {
   pol = rx & 1;
   ant = rx/2;
 }
 
-inline void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const {
+void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const {
   //  there's waaay too many indices here, I really should simplify them.
   int antNum = -1, pol = -1;
   getAntPolFromRX(rx, antNum, pol);
@@ -77,6 +78,11 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   int ifold, ilayer;
   getLayerFoldFromRX(rx, ilayer, ifold);
 
+  int antNum, pol;
+  getAntPolFromRX(rx, antNum, pol);
+  static bool firstTime = true;
+  
+
   Vector n_eplane;
   Vector n_hplane;
   Vector n_normal;
@@ -86,7 +92,13 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   double e_component_kvector=0;
   double h_component_kvector=0;
   double n_component_kvector=0;
-  this->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  signal.poynting, e_component_kvector,  h_component_kvector,  n_component_kvector);
+  this->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal, signal.poynting, e_component_kvector,  h_component_kvector,  n_component_kvector);
+
+  if(inu == 397 && firstTime && antNum==2){
+    std::cout << "Orientation in " << __PRETTY_FUNCTION__ << "...\n";
+    std::cout << n_eplane << "\n" << n_hplane << "\n" << n_normal << "\n\n";
+    std::cout << signal.poynting << "\n" << e_component_kvector<< "\n" << h_component_kvector<< "\n" << n_component_kvector << "\n\n";  
+  }  
 
   double e_component=0;
   double h_component=0;
@@ -102,42 +114,61 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   FTPair afterGain = signal.waveform;
   std::vector<std::complex<double> >& freqDomain = afterGain.changeFreqDomain();
 
+
+  if(inu == 397 && firstTime && antNum==2){
+    std::cout << "In " << __PRETTY_FUNCTION__ << " (before gain) pol = "  << pol << ":\n";
+    for(auto c : freqDomain){
+      // std::complex<double> c2 {fabs(c.real()) > 1e-18 ? c.real() : 0,  fabs(c.imag()) > 1e-18 ? c.imag() : 0  };
+      // std::cout << c2 <<  " ";
+      std::cout << std::abs(c) <<  " ";
+    }
+    std::cout << "\n\n";
+  }
+
   // if(!(freqDomain.size() == Anita::NFREQ || freqDomain.size() == Anita::NFREQ - 1)){
   //   std::cerr << "Uh oh! " << freqDomain.size()  << "\t" << Anita::NFREQ << std::endl;
   // }
 
   /// @todo here we are hacking around the current FFT implementation inside the anita detector bits of icemc.
-  /// The hard coded arrays are 128 freq bins wide, but a sensible FFT implementation will have 129 (256/2 + 1)
-  const int numFreqLoop = TMath::Min((int)freqDomain.size(), Anita::NFREQ);
+  /// The hard coded arrays are 128 freq bins wide, but a sensible FFT implementation will have 129 (256/2 + 1) bins.
+  const int numSafe = TMath::Min((int)freqDomain.size(), Anita::NFREQ);
+  const int numFreqLoop = TMath::Max((int)freqDomain.size(), Anita::NFREQ);
 
   // and here we make a clumsy antenna gain interface interface even clumsier for the sake of trying to modularize code...
   // this could easily be improved.
   const double lowFreqSeavey = fSettingsPtrIDontOwn->FREQ_LOW_SEAVEYS;
   const double highFreqSeavey = fSettingsPtrIDontOwn->FREQ_HIGH_SEAVEYS;
 
-  int antNum, pol;
-  getAntPolFromRX(rx, antNum, pol);
   for(int j=0; j < numFreqLoop; j++){
-    if (this->freq[j]>= lowFreqSeavey && this->freq[j]<=highFreqSeavey){ // note: this bounds check is also done inside the antenna gain so this redundent
+    if (j < numSafe && this->freq[j]>= lowFreqSeavey && this->freq[j]<=highFreqSeavey){ // note: this bounds check is also done inside the antenna gain so this redundent
       double dummyValueForOppositePol = 0;
       if(pol==0){
-	double realPartOfFreq = freqDomain.at(j).real();
-	this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, realPartOfFreq, dummyValueForOppositePol);
-	freqDomain.at(j).real(realPartOfFreq);
+	double absMag = std::abs(freqDomain.at(j));
+	double phase = std::arg(freqDomain.at(j));
+	if(inu==397 && antNum == 2 && j==22) {
+	  std::cout << "CHECK SCALING ADDSIGNALTORX: pol = 0, before = " << absMag << " " << freqDomain.at(j) << " with "  << hitangle_e << ", " <<  hitangle_h <<  ", " << e_component  << ", " <<  h_component << "\n";
+	}
+	
+	this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, absMag, dummyValueForOppositePol);
+	if(inu==397 && antNum == 2 && j==22) std::cout << ", after = " << absMag << "\n";
+	freqDomain.at(j) = std::polar(absMag, phase);
       }
       else{
-	double realPartOfFreq = freqDomain.at(j).real();
-	this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, dummyValueForOppositePol, realPartOfFreq);
-	freqDomain.at(j).real(realPartOfFreq);
+	double absMag = std::abs(freqDomain.at(j));
+	double phase = std::arg(freqDomain.at(j));
+	this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, dummyValueForOppositePol, absMag);
+	freqDomain.at(j) = std::polar(absMag, phase);
       }
     }
-  }
+    else{
+      freqDomain.at(j) = {0., 0.};
+    }
+  }  
 
   //@todo make this a sum rather than just assigning the last waveform received!
   // (this means the multi-path refraction from screen is currently broken)
   fWaveformsRX.at(rx) = afterGain.getTimeDomain();
 
-  static bool firstTime = true;
   static int lastRX = -1;
   static TFile* f = NULL;
   if(inu == 397 && firstTime){
@@ -145,20 +176,41 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
       f = new TFile("testRX.root", "recreate");
     }
 
-    // std::cout << rx << "\t" << ilayer << "\t" << ifold << "\t" << n_normal << std::endl;
-    if(pol==0){
-      std::cout << "In ANITA::addSignalToRX..." << antNum << "\t" << ilayer << "\t" << ifold << "\t(" << n_normal << ")"  <<  std::endl;    
+    if(antNum==2){
+      std::cout << "In " << __PRETTY_FUNCTION__ << " (after gain) pol = "  << pol << ":\n";
+      for(auto c : freqDomain){
+	std::cout << std::abs(c) <<  " ";
+      }
+      std::cout << "\n\n";
     }
-    
+    // std::cout << rx << "\t" << ilayer << "\t" << ifold << "\t" << n_normal << std::endl;
+    // if(pol==0){
+    //   std::cout << "In ANITA::addSignalToRX..." << antNum << "\t" << ilayer << "\t" << ifold << "\t(" << n_normal << ")"  <<  std::endl;    
+    // }
+
     TGraph gr = signal.waveform.getTimeDomain();
-    gr.SetName(TString::Format("grRX%d_beforeGain", rx));
-    gr.SetTitle(TString::Format("RX %d before antenna gain", rx));
+    gr.SetName(TString::Format("grRX_%d_%d_beforeGain", pol, antNum));
+    gr.SetTitle(TString::Format("Pol %d Ant %d before antenna gain", pol, antNum));
     gr.Write();
 
-    fWaveformsRX.at(rx).SetName(TString::Format("grRX%d_afterGain", rx));
-    fWaveformsRX.at(rx).SetTitle(TString::Format("RX %d after antenna gain", rx));
+    fWaveformsRX.at(rx).SetName(TString::Format("grRX_%d_%d_afterGain", pol, antNum));
+    fWaveformsRX.at(rx).SetTitle(TString::Format("Pol %d Ant %d after antenna gain", pol, antNum));
     fWaveformsRX.at(rx).Write();
 
+    TGraph gr_re, gr_im, gr_abs;
+    for(auto amp : afterGain.getFreqDomain()) {
+      gr_re.SetPoint(gr_re.GetN(),   gr_re.GetN(),  amp.real());
+      gr_im.SetPoint(gr_im.GetN(),   gr_im.GetN(),  amp.imag());
+      gr_abs.SetPoint(gr_abs.GetN(), gr_abs.GetN(), std::abs(amp));
+    }
+    gr_re.SetName(TString::Format("grRX_%d_%d_real_after_gain",  pol, antNum));
+    gr_im.SetName(TString::Format("grRX_%d_%d_imag_after_gain",  pol, antNum));
+    gr_abs.SetName(TString::Format("grRX_%d_%d_amp_after_gain",  pol, antNum));
+
+    gr_re.Write();
+    gr_im.Write();
+    gr_abs.Write();
+    
     lastRX = rx;
     if(lastRX == getNumRX() - 1){
       f->Write();
@@ -175,8 +227,6 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
 
 // bool icemc::ANITA::applyTrigger(const std::vector<TGraph>& pureSignalVoltageTimeGraphs, const TVector& poyntingVector, const TVector& polarizationVector){
 bool icemc::ANITA::applyTrigger(int inu){
-
-
   
   //////////////////////////////////////
   //       EVALUATE GLOBAL TRIGGER    //
@@ -407,9 +457,9 @@ bool icemc::ANITA::applyTrigger(int inu){
       // ct.ApplyAntennaGain(fSettingsPtrIDontOwn, this, this, panel1, antNum, n_eplane, n_hplane, n_normal);
       // ct.ApplyAntennaGain(fSettingsPtrIDontOwn, this, this, panel1, antNum, n_eplane, n_hplane, n_normal);
       TGraph grHack(1, &inu, &inu);
-      if(inu==397){
-	std::cout << "outside ChanTrigger::applyAntennaGain..." << antNum << "\t"  << ilayer << "\t" << ifold << std::endl;
-      }      
+      // if(inu==397){
+      // 	std::cout << "outside ChanTrigger::applyAntennaGain..." << antNum << "\t"  << ilayer << "\t" << ifold << std::endl;
+      // }      
       ct.ApplyAntennaGain(fSettingsPtrIDontOwn, this, this, fScreenPtrIDontOwn, antNum, n_eplane, n_hplane, n_normal, &grHack);
 
       // ct.TriggerPath(fSettingsPtrIDontOwn, anita1, antNum, bn1);

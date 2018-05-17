@@ -901,7 +901,6 @@ void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Ani
     // this is the same for all of the antennas too
     for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { // loop over layers on the payload
       for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-	
 	ray1->nrf_iceside_eachboresight[0][ilayer][ifold]=interaction1->posnu.Unit();
       } // end loop over fold
     } // end loop over payload layers

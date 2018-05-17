@@ -40,7 +40,7 @@ namespace icemc {
     /** 
      * @brief Where is the detector?
      */
-    virtual icemc::Position getCenterOfDetector(UInt_t* unixTime = NULL) = 0;
+    virtual icemc::Position getCenterOfDetector(UInt_t unixTime = 0) = 0;
 
 
     /** 

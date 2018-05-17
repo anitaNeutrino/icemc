@@ -94,12 +94,11 @@ void icemc::ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
   FTPair::realft(right,-1,nfour/2);
     
   // now take fft back
-    
+
 }
 
 
-void icemc::ChanTrigger::WhichBandsPass(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){
-    
+void icemc::ChanTrigger::WhichBandsPass(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){    
 
   if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==9) {
     for(int i=0;i<4;i++) thresholds[0][i] = thresholds[1][i] = anita1->powerthreshold[i];
@@ -764,159 +763,233 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
   
   int numBinShift;
 
-  if(panel1){
-
-    double tmp_vhz[2][anita1->NFREQ];
-    double tmp_volts[2][anita1->NFOUR/2];
-  
-    for (int iband=0;iband<5;iband++) { // loop over bands
-
-      Tools::Zero(volts_rx_forfft[0][iband], anita1->NFOUR/2);
-      Tools::Zero(volts_rx_forfft[1][iband], anita1->NFOUR/2);
-      Tools::Zero(vhz_rx[0][iband],          anita1->NFREQ);
-      Tools::Zero(vhz_rx[1][iband],          anita1->NFREQ);
-
-      if (anita1->bwslice_allowed[iband]!=1) continue;
-
-      anita1->iminbin[iband]=0.;
-      anita1->imaxbin[iband]=anita1->NFOUR/2;
-
-      if(panel1){
-	for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
-	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
-	  bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
-	  bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
-
-	  if(jpt==0 && gr && gr->GetY()[0]==397){
-	    std::cout << "In ChanTrigger::ApplyAntennaGain..." << ant << "\t(" << n_normal << ")" << std::endl;
-	  }
-
-	  for (int k=0;k<Anita::NFREQ;k++) {
-	    if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
-
-	      //Copy frequency amplitude to screen point
-	      tmp_vhz[0][k] = tmp_vhz[1][k] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
-	      // cout << tmp_vhz[0][k] << endl;
-
-	      anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
-
-	      if (settings1->TUFFSON==2){
-		tmp_vhz[0][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
-		tmp_vhz[1][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
-	      }
-	    } // end if (seavey frequencies)
-	    else {
-	      tmp_vhz[0][k]=0;
-	      tmp_vhz[1][k]=0;
-	    }
-	  } // end looping over frequencies.
-
-	  anita1->MakeArrayforFFT(tmp_vhz[0],tmp_volts[0], 90., true);
-	  anita1->MakeArrayforFFT(tmp_vhz[1],tmp_volts[1], 90., true);
-
-	  // now v_banding_rfcm_h_forfft is in the time domain
-	  // and now it is really in units of V
-	  FTPair::realft(tmp_volts[0],-1,anita1->NFOUR/2);
-	  FTPair::realft(tmp_volts[1],-1,anita1->NFOUR/2);
-
-	  // put it in normal time ording -T to T
-	  // instead of 0 to T, -T to 0
-	  Tools::NormalTimeOrdering(anita1->NFOUR/2,tmp_volts[0]);
-	  Tools::NormalTimeOrdering(anita1->NFOUR/2,tmp_volts[1]);
-
-	  numBinShift = int(panel1->GetDelay(jpt) / anita1->TIMESTEP);
-	  if(fabs(numBinShift) >= anita1->HALFNFOUR){
-	    //cout<<"skipping"<<"\n";
-	    //don't bother adding it to the total since it's shifted out of range
-	  }
-	  else{
-	    if( panel1->GetDelay(jpt)>0 ){
-	      Tools::ShiftLeft(tmp_volts[0], anita1->NFOUR/2, numBinShift );
-	      Tools::ShiftLeft(tmp_volts[1], anita1->NFOUR/2, numBinShift );
-	    }
-	    else if( panel1->GetDelay(jpt)<0 ){
-	      Tools::ShiftRight(tmp_volts[0], anita1->NFOUR/2, -1*numBinShift );
-	      Tools::ShiftRight(tmp_volts[1], anita1->NFOUR/2, -1*numBinShift );
-	    }
+  /**
+   * static const int NFOUR = 1024; // Number of fourier points
+   * static const int HALFNFOUR = 512; // Half of the number of fourier points
+   * static const int NFREQ =  128;
+   */
     
-	    for (int k=0;k<anita1->NFOUR/2;k++) {
-	      volts_rx_forfft[0][iband][k] += tmp_volts[0][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
-	      volts_rx_forfft[1][iband][k] += tmp_volts[1][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+  double tmp_vhz[2][anita1->NFREQ];
+  double tmp_volts[2][anita1->NFOUR/2];
+
+    
+  
+  for (int iband=0;iband<5;iband++) { // loop over bands
+
+    Tools::Zero(volts_rx_forfft[0][iband], anita1->NFOUR/2);
+    Tools::Zero(volts_rx_forfft[1][iband], anita1->NFOUR/2);
+    Tools::Zero(vhz_rx[0][iband],          anita1->NFREQ);
+    Tools::Zero(vhz_rx[1][iband],          anita1->NFREQ);
+
+    if (anita1->bwslice_allowed[iband]!=1) continue;
+
+    anita1->iminbin[iband]=0.;
+    anita1->imaxbin[iband]=anita1->NFOUR/2;
+
+    if(panel1){
+
+      for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
+
+	bool debugInMakeArray = gr && gr->GetY()[0] == 397 && ant==2;
+	if(debugInMakeArray){
+	  std::cout << "In ApplyAntennaGain: Pure screen\n";
+	  for (int k=0;k<Anita::NFREQ;k++){
+	    std::cout << panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6) << " ";
+	  }
+	  std::cout  << "\n\n";
+	}
+
+	bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
+	bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
+	bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
+
+	if(debugInMakeArray){
+	  std::cout << "Orientation in " << __PRETTY_FUNCTION__ << "...\n";
+	  std::cout << n_eplane << "\n" << n_hplane << "\n" << n_normal << "\n\n";
+	  std::cout << panel1->GetVec2bln(jpt) << "\n" << e_component_kvector<< "\n" << h_component_kvector<< "\n" << n_component_kvector << "\n\n";
+	}
+
+	// if(jpt==0 && gr && gr->GetY()[0]==397){
+	//   std::cout << "In ChanTrigger::ApplyAntennaGain..." << ant << "\t(" << n_normal << ")" << std::endl;
+	// }
+
+	for (int k=0;k<Anita::NFREQ;k++) {
+	  if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
+
+	    //Copy frequency amplitude to screen point
+	    tmp_vhz[0][k] = tmp_vhz[1][k] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
+
+	    if(debugInMakeArray && ant == 2 && k==22) {
+	      std::cout << "CHECK SCALING CHANTRIGGER: pol = 0, before = " << tmp_vhz[0][k] << " with "  << hitangle_e << ", " <<  hitangle_h <<  ", " << e_component  << ", " <<  h_component << "\n";
+	    }
+	    anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
+	    if(debugInMakeArray && ant == 2 && k==22) std::cout << "pol = 0, after = " << tmp_vhz[0][k] << "\n";
+
+	    if (settings1->TUFFSON==2){
+	      tmp_vhz[0][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
+	      tmp_vhz[1][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
+	    }
+	  } // end if (seavey frequencies)
+	  else {
+	    tmp_vhz[0][k]=0;
+	    tmp_vhz[1][k]=0;
+	  }
+	} // end looping over frequencies.	  
+
+	anita1->MakeArrayforFFT(tmp_vhz[0], tmp_volts[0], 90., true);
+	anita1->MakeArrayforFFT(tmp_vhz[1], tmp_volts[1], 90., true);
+	// anita1->MakeArrayforFFT(tmp_vhz[0], tmp_volts[0], 90., true, debugInMakeArray);
+	// anita1->MakeArrayforFFT(tmp_vhz[1], tmp_volts[1], 90., true, debugInMakeArray);
+
+	if(debugInMakeArray){
+
+	  const TString theRootPwd = gDirectory->GetPath();
+	  std::shared_ptr<TFile> fHackHackHack = std::make_shared<TFile>("fUnderstandingMakeArrayForFFT.root", "recreate");
+	  TGraph gr0_re, gr1_re, gr0_im, gr1_im;
+
+	  for(int i=0; i < anita1->NFOUR/2; i++){
+	    if((i%2)==0){
+	      gr0_re.SetPoint(gr0_re.GetN(), gr0_re.GetN(), tmp_volts[0][i]);
+	      gr1_re.SetPoint(gr1_re.GetN(), gr1_re.GetN(), tmp_volts[1][i]);
+	    }
+	    else{
+	      gr0_im.SetPoint(gr0_im.GetN(), gr0_im.GetN(), tmp_volts[0][i]);
+	      gr1_im.SetPoint(gr1_im.GetN(), gr1_im.GetN(), tmp_volts[1][i]);
 	    }
 	  }
+	  gr0_re.SetName("gr0_re"); gr0_re.SetTitle("gr0_re"); gr0_re.Write();
+	  gr1_re.SetName("gr1_re"); gr1_re.SetTitle("gr1_re"); gr1_re.Write();
+	  gr0_im.SetName("gr0_im"); gr0_im.SetTitle("gr0_im"); gr0_im.Write();
+	  gr1_im.SetName("gr1_im"); gr1_im.SetTitle("gr1_im"); gr1_im.Write();
+
+	  TGraph grTmpVhz0,  grTmpVhz1;
+	  std::cout << "In ApplyAntennaGain (after gain)... pol = " << 0 << "\n";
+	  for(auto v : tmp_vhz[0]){
+	    std::cout << v << " ";
+	    grTmpVhz0.SetPoint(grTmpVhz0.GetN(), grTmpVhz0.GetN(), v);
+	  }
+
+	  std::cout << "\n\nIn ApplyAntennaGain (after gain)... pol = " << 1 << "\n";	    
+	  for(auto v : tmp_vhz[1]) {
+	    std::cout << v << " ";	      
+	    grTmpVhz1.SetPoint(grTmpVhz1.GetN(), grTmpVhz1.GetN(), v);
+	  }
+	  std::cout << "\n\n";
+
+	  grTmpVhz0.SetName("grTmpVhz0");
+	  grTmpVhz0.SetTitle("grTmpVhz0");
+	  grTmpVhz0.Write();
+	  grTmpVhz1.SetName("grTmpVhz1");
+	  grTmpVhz1.SetTitle("grTmpVhz1");
+	  grTmpVhz1.Write();
+ 
+	  fHackHackHack->Write();
+	  fHackHackHack->Close();
+	  gDirectory->cd(theRootPwd);
+	}
+
+	// now v_banding_rfcm_h_forfft is in the time domain
+	// and now it is really in units of V
+	FTPair::realft(tmp_volts[0],-1,anita1->NFOUR/2);
+	FTPair::realft(tmp_volts[1],-1,anita1->NFOUR/2);
+
+	// put it in normal time ording -T to T
+	// instead of 0 to T, -T to 0
+	Tools::NormalTimeOrdering(anita1->NFOUR/2,tmp_volts[0]);
+	Tools::NormalTimeOrdering(anita1->NFOUR/2,tmp_volts[1]);
+	  
+	numBinShift = int(panel1->GetDelay(jpt) / anita1->TIMESTEP);
+	if(fabs(numBinShift) >= anita1->HALFNFOUR){
+	  //cout<<"skipping"<<"\n";
+	  //don't bother adding it to the total since it's shifted out of range
+	}
+	else{
+	  if( panel1->GetDelay(jpt)>0 ){
+	    Tools::ShiftLeft(tmp_volts[0], anita1->NFOUR/2, numBinShift );
+	    Tools::ShiftLeft(tmp_volts[1], anita1->NFOUR/2, numBinShift );
+	  }
+	  else if( panel1->GetDelay(jpt)<0 ){
+	    Tools::ShiftRight(tmp_volts[0], anita1->NFOUR/2, -1*numBinShift );
+	    Tools::ShiftRight(tmp_volts[1], anita1->NFOUR/2, -1*numBinShift );
+	  }
+    
+	  for (int k=0;k<anita1->NFOUR/2;k++) {
+	    volts_rx_forfft[0][iband][k] += tmp_volts[0][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+	    volts_rx_forfft[1][iband][k] += tmp_volts[1][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
+	  }
+	}
       
-	} // end loop over screen points
+      } // end loop over screen points
       
 	// Now need to convert time domain to frequency domain
-	for (int k=0; k<anita1->NFOUR/2;k++){
-	  tmp_volts[0][k]=volts_rx_forfft[0][iband][k];
-	  tmp_volts[1][k]=volts_rx_forfft[1][iband][k];
-	  // cout << anita1->fTimes[k] << " " << tmp_volts[0][k] << endl;
+      for (int k=0; k<anita1->NFOUR/2;k++){
+	tmp_volts[0][k]=volts_rx_forfft[0][iband][k];
+	tmp_volts[1][k]=volts_rx_forfft[1][iband][k];
+	// cout << anita1->fTimes[k] << " " << tmp_volts[0][k] << endl;
+      }
+
+      // find back the frequency domain
+      FTPair::realft(tmp_volts[0],1,anita1->NFOUR/2);
+      FTPair::realft(tmp_volts[1],1,anita1->NFOUR/2);
+
+      // Convert FFT arrays into standard icemc frequency amplitudes array
+      anita1->GetArrayFromFFT(tmp_volts[0], vhz_rx[0][iband]);
+      anita1->GetArrayFromFFT(tmp_volts[1], vhz_rx[1][iband]);
+
+
+
+      // devel debug stuff!
+      static bool firstTime = true;	
+      static int lastAnt = -1;
+      static TFile* f = NULL;
+      static std::vector<double> times;
+      if(times.size()==0){
+	const double dt = anita1->TIMESTEP;
+	times.reserve(Anita::HALFNFOUR);
+	for(int i=0; i < Anita::HALFNFOUR; i++){
+	  times.push_back(i*dt);
 	}
-
-	// find back the frequency domain
-	FTPair::realft(tmp_volts[0],1,anita1->NFOUR/2);
-	FTPair::realft(tmp_volts[1],1,anita1->NFOUR/2);
-
-	// Convert FFT arrays into standard icemc frequency amplitudes array
-	anita1->GetArrayFromFFT(tmp_volts[0], vhz_rx[0][iband]);
-	anita1->GetArrayFromFFT(tmp_volts[1], vhz_rx[1][iband]);
-
-
-
-	// devel debug stuff!
-	static bool firstTime = true;	
-	static int lastAnt = -1;
-	static TFile* f = NULL;
-	static std::vector<double> times;
-	if(times.size()==0){
-	  const double dt = anita1->TIMESTEP;
-	  times.reserve(Anita::HALFNFOUR);
-	  for(int i=0; i < Anita::HALFNFOUR; i++){
-	    times.push_back(i*dt);
-	  }
-	}
+      }
 	
-	if(firstTime && gr &&  gr->GetY()[0]==397){
-	  if(!f){
-	    f = new TFile("oldChanTrigger.root", "recreate");
-	  }
+      if(firstTime && gr &&  gr->GetY()[0]==397){
+	if(!f){
+	  f = new TFile("oldChanTrigger.root", "recreate");
+	}
 
-	  TGraph gr0(times.size(), &times[0], volts_rx_forfft[0][iband]);
-	  TGraph gr1(times.size(), &times[0], volts_rx_forfft[1][iband]);
-	  // TGraph gr0(times.size(), &times[0], vhz_rx[0][iband]);
-	  // TGraph gr1(times.size(), &times[0], vhz_rx[1][iband]);
+	TGraph gr0(times.size(), &times[0], volts_rx_forfft[0][iband]);
+	TGraph gr1(times.size(), &times[0], volts_rx_forfft[1][iband]);
+	// TGraph gr0(times.size(), &times[0], vhz_rx[0][iband]);
+	// TGraph gr1(times.size(), &times[0], vhz_rx[1][iband]);
 
-	  gr0.SetName(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, iband));
-	  gr1.SetName(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, iband));
-	  gr0.SetTitle(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, iband));
-	  gr1.SetTitle(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, iband));
+	gr0.SetName(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, iband));
+	gr1.SetName(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, iband));
+	gr0.SetTitle(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, iband));
+	gr1.SetTitle(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, iband));
 
-	  gr0.Write();
-	  gr1.Write();
+	gr0.Write();
+	gr1.Write();
 	  
-	  lastAnt = ant;
-	  if(lastAnt == 47){
-	    f->Write();
-	    f->Close();
-	    f = NULL;
-	    firstTime = false;
-	  }
+	lastAnt = ant;
+	if(lastAnt == 47){
+	  f->Write();
+	  f->Close();
+	  f = NULL;
+	  firstTime = false;
 	}
+      }
 
 
 	
-      }
-      else if(gr==NULL){
-	std::cerr << "ERROR! in " << __PRETTY_FUNCTION__ << ": you must pass non-NULL panel1 or gr" << std::endl;
-      }
-      else{
+    }
+    else if(gr==NULL){
+      std::cerr << "ERROR! in " << __PRETTY_FUNCTION__ << ": you must pass non-NULL panel1 or gr" << std::endl;
+    }
+    else{
 	
-      }
+    }
 
       
-    } // end loop over bands
-  }
+  } // end loop over bands
   
   
 
