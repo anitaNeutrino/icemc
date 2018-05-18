@@ -140,11 +140,21 @@ namespace icemc {
      * @brief Make a power spectrum graph from the complex frequency domain
      * 
      * @todo make sure units make sense here!
-     * @todo allow Ryan style normalization options
      * 
-     * @return new TGraph showing power per unit frequency
+     * @return TGraph showing power over all frequencies
      */
     TGraph makePowerSpectrumGraph() const;
+
+    /**
+     * @brief Scaled version of makePowerSpectrumGraph showing power per unit frequency
+     *
+     * Sum over bins and multiply by frequency bin width to get total power.
+     * This version does not change if you zero pad in the time domain.
+     * @see http://www.hep.ucl.ac.uk/~rjn/saltStuff/fftNormalisation.pdf
+     *
+     * @return new TGraph showing power per unit frequency
+     */
+    TGraph makePowerSpectralDensityGraph() const;
 
     /** 
      * This can be done automatically on the next inverse FT, @see setAutoNormalTimeDomainOrdering(bool)
@@ -152,6 +162,7 @@ namespace icemc {
      * Puts the back half of the time domain array at the front.
      * One can interpret the output of an inverse FT as going 0->T/2, -T/2->0
      * After reordering, the array goes -T/2->T/2.
+     * Clearly this changes the phasors in the complex domain, but not the power.
      */
     void doNormalTimeDomainOrdering() const;
 

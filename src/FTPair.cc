@@ -7,7 +7,7 @@
  */
 
 #define PRINT_STATE_IF_DEBUG(funcName)                                               \
-  if(fDebug){                                                                        \
+  if(fDebug && (fNeedToUpdateTimeDomain > 0 || fNeedToUpdateFreqDomain > 0)){        \
     std::cerr << "In " << (funcName)						     \
               << ": fMustUpdateTimeDomain = " << fNeedToUpdateTimeDomain << ", "     \
               << "fMustUpdateFreqDomain = " << fNeedToUpdateFreqDomain << std::endl; \
@@ -152,17 +152,64 @@ void icemc::FTPair::forceUpdateFreqDomain() const {
   maybeUpdateFreqDomain();
 };
 
+
+
+TGraph icemc::FTPair::makePowerSpectralDensityGraph() const {
+  TGraph grPowerSpectrum = makePowerSpectrumGraph();
+  double df = grPowerSpectrum.GetX()[1] - grPowerSpectrum.GetX()[0];
+  for(int j=0; j < grPowerSpectrum.GetN(); j++){
+    grPowerSpectrum.GetY()[j]/=df;
+  }
+  return grPowerSpectrum;
+}
+
+
 TGraph icemc::FTPair::makePowerSpectrumGraph() const {
+
   PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
   maybeUpdateFreqDomain();
-  double df = getDeltaF();
 
-  TGraph gr(fFreqDomain.size());
-  for(int j=0; j < gr.GetN(); j++){
-    gr.GetY()[j] = std::norm(fFreqDomain[j]);
-    gr.GetX()[j] = df*j;
+  double df = getDeltaF();
+  const TGraph& grT = getTimeDomain();
+  const double dt = grT.GetX()[1] - grT.GetX()[0];
+  const int N = grT.GetN();
+
+  // the factor of two comes from using the numerical methods FFT
+  // @todo if you implement FFTW change this!
+  double scaleFactor = 2.0*dt/N;
+
+  TGraph grF(fFreqDomain.size());
+
+  for(int j=0; j < grF.GetN(); j++){
+    grF.GetY()[j] = scaleFactor*std::norm(fFreqDomain[j]);
+    grF.GetX()[j] = df*j;
   }
-  return gr;
+
+  if(fDebug){
+    // let's check we've got a normalization consistent with Parseval's Theorem
+    // http://www.hep.ucl.ac.uk/~rjn/saltStuff/fftNormalisation.pdf
+
+    double sumSqTime = 0;
+    // double dt = grT.GetX()[1] - grT.GetX()[0];
+    for(int i=0; i < grT.GetN(); i++){
+      sumSqTime += grT.GetY()[i]*grT.GetY()[i]*dt;
+    }
+
+    double sumSqFreq = 0;
+    for(int j=0; j < grF.GetN(); j++){
+      // std::norm gives the square of the magnitude,
+      // so don't square here
+      sumSqFreq += grF.GetY()[j];
+    }
+
+    std::cerr << "Debug info in "  << __PRETTY_FUNCTION__
+	      << ", difference in powers is " << sumSqTime - sumSqFreq
+	      << ", time domain power = " << sumSqTime
+	      << ", freq domain power = " << sumSqFreq << std::endl;
+
+  }
+
+  return grF;
 }
 
 
@@ -210,7 +257,7 @@ int icemc::FTPair::zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(double df) cons
   PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
   
   // assume freq domain vector is not dirty, but everything else is...
-  
+
   int nt = FTPair::getNumTimes(fFreqDomain.size()); 
   if(!isPowerOf2(nt)){
     int newNt = nextPowerOf2(nt);
@@ -225,6 +272,31 @@ int icemc::FTPair::zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(double df) cons
 
     while(fFreqDomain.size() < newNf){
       fFreqDomain.push_back(0);
+    }
+
+    /**
+     * OK, here's an FFT normalization subtlety.
+     * Without any normalization, a forward FFT then an inverse FFT
+     * would give you the original signal scaled up by some factor.
+     * For the numerical methods implementation, this factor is N/2.
+     * This is accouted for as a scaleFactor=2/N in maybeUpdateTimeDomain(),
+     * and scaleFactor=2/N in makePowerSpectrumGraph.
+     *
+     * This is all fine if you don't do any padding in the frequency domain.
+     * However, if you have a time domain signal, FFT for the set of complex
+     * frequencies and zero pad the frequencies, then do an inverse FFT you
+     * need to account for the fact that your inverse FFT will scale down your
+     * signal by a different amount than it was scaled up by the forward FFT.
+     *
+     * i.e. I'm treating time domain power as definitive, and you only ever
+     * see the frequency domain values scaled by some implied scale factor.
+     *
+     * This is a long winded way of saying that the complex frequencies
+     * need to get scaled as you pad, which is done here.
+     */
+    double scaleFactorInPadding = double(newNt)/nt;
+    for(auto& c : fFreqDomain){
+      c *= scaleFactorInPadding;
     }
     
     // make sure there are at least 2 points in the time graph...
