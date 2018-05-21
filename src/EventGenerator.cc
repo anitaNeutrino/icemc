@@ -1226,6 +1226,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   ///@todo make passing these pointers (except maybe settings?) unnecessary!!!
   if(!fDetector){
     fDetector = new ANITA(&settings1, &rayTracer, panel1);
+    std::cout << "Constructed fDetector at " << fDetector << std::endl;
   }
   
 
@@ -2516,6 +2517,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // this seems to be where the neutrino simulation ends
       // everything in here should end up in the ANITA class.
       ///@todo HHEEERRRREEE!!!!!
+      std::cout << "About to applyTrigger " << fDetector << std::endl;
       bool eventPassedTrigger = fDetector->applyTrigger(inu);
       if(eventPassedTrigger){
 

@@ -1929,19 +1929,26 @@ void icemc::ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], 
 void icemc::ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
 
   Int_t numFreqs = anita1->numFreqs;
-  FFTWComplex *phasorsDig  = new FFTWComplex[numFreqs];
-  FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
-  phasorsDig[0].setMagPhase(0,0);
-  phasorsTrig[0].setMagPhase(0,0);
   double *freqs = anita1->freqs;
   Double_t sigma, realPart, imPart, trigNorm, digNorm;
   int iring=2;
-  if (ant<16) iring=0;
-  else if (ant<32) iring=1;
+  if (ant<16){
+    iring=0;
+  }
+  else if (ant<32) {
+    iring=1;
+  }
 
   int iphi = ant - (iring*16);
 
   for (int ipol=0; ipol<2; ipol++){
+    std::vector<FFTWComplex> phasorsDig;
+    std::vector<FFTWComplex> phasorsTrig;
+    phasorsDig.reserve(numFreqs);
+    phasorsTrig.reserve(numFreqs);
+
+    phasorsDig.emplace_back(FFTWComplex(0, 0));
+    phasorsTrig.emplace_back(FFTWComplex(0, 0));
 
     for(int i=1;i<numFreqs;i++) {
       trigNorm       = anita1->fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
@@ -1950,32 +1957,23 @@ void icemc::ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_di
       realPart       = anita1->fRand->Gaus(0,sigma);
       imPart         = anita1->fRand->Gaus(0,sigma);
       
-      phasorsDig[i]  = FFTWComplex(realPart*digNorm,  imPart*digNorm  );
-      phasorsTrig[i] = FFTWComplex(realPart*trigNorm, imPart*trigNorm );
+      phasorsDig.emplace_back(  FFTWComplex(realPart*digNorm,  imPart*digNorm  ));
+      phasorsTrig.emplace_back( FFTWComplex(realPart*trigNorm, imPart*trigNorm ));
     }
 
-    RFSignal *rfNoiseDig    = new RFSignal(numFreqs,freqs,phasorsDig,1);    
-    Double_t *justNoiseDig  = rfNoiseDig->GetY();
-    
-    RFSignal *rfNoiseTrig   = new RFSignal(numFreqs,freqs,phasorsTrig,1);
-    Double_t *justNoiseTrig = rfNoiseTrig->GetY();
-
-    
-    for (int i=0; i<anita1->HALFNFOUR; i++){
-      justNoise_digPath[ipol][i]  = also_digi ? justNoiseDig[i]*anita1->THERMALNOISE_FACTOR : 0;
-      justNoise_trigPath[ipol][i] = justNoiseTrig[i]*anita1->THERMALNOISE_FACTOR;
+    RFSignal rfNoiseDig(numFreqs,freqs,&phasorsDig[0],1);
+    RFSignal rfNoiseTrig(numFreqs,freqs,&phasorsTrig[0],1);
+    for (int i=numFreqs; i<anita1->HALFNFOUR; i++){
+      if(i < numFreqs){
+	justNoise_digPath[ipol][i]  = also_digi ? rfNoiseDig.GetY()[i]*anita1->THERMALNOISE_FACTOR : 0;
+	justNoise_trigPath[ipol][i] = rfNoiseTrig.GetY()[i]*anita1->THERMALNOISE_FACTOR;
+      }
+      else{
+	justNoise_digPath[ipol][i]  = 0;
+	justNoise_trigPath[ipol][i] = 0;
+      }
     }
-    
-    delete rfNoiseDig;
-    delete rfNoiseTrig;
-
   }
-
-  // Cleaning up
-  delete[] phasorsDig;
-  delete[] phasorsTrig;
-  
-  
 }
 
 void icemc::ChanTrigger::calculateCW(Anita *anita1, double frequency, double phase, double amplitude){

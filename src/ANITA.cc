@@ -294,13 +294,12 @@ bool icemc::ANITA::applyTrigger(int inu){
   //For each trigger layer,  which antennas pass L1.  16 bit,  16 bit and 8 bit and layers 1,  2 and nadirs
   int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
 
-
-  double justNoise_trig[2][48][512] = {{{0}}};
-  double justSignal_trig[2][48][512] = {{{0}}};
-  double justNoise_dig[2][48][512] = {{{0}}};
-  double justSignal_dig[2][48][512] = {{{0}}};
-
   
+  double justNoise_trig[2][48][Anita::HALFNFOUR] = {{{0}}};
+  double justSignal_trig[2][48][Anita::HALFNFOUR] = {{{0}}};
+  double justNoise_dig[2][48][Anita::HALFNFOUR] = {{{0}}};
+  double justSignal_dig[2][48][Anita::HALFNFOUR] = {{{0}}};
+
   // these variables are for energy reconstruction studies
   double undogaintoheight_e=0;
   double undogaintoheight_h=0;

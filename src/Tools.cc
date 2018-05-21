@@ -79,10 +79,17 @@ void icemc::Tools::ShiftLeft(double *x,const int n,int ishift) {
   for (int i=0;i<n;i++) {
     x_temp[i]=x[i];
   }
+
   for (int i=0;i<n-ishift;i++) {
+    if(i+ishift >= n || i+ishift < 0 || i < 0 || i >= n){
+      std::cerr << "It's retard 1 with " << i+ishift << ", " << i << std::endl;
+    }
     x[i]=x_temp[i+ishift];
   }
   for (int i=n-ishift;i<n;i++) {
+    if(i >= n || i < 0){
+      std::cerr << "It's retard 2 with " << i << std::endl;
+    }
     x[i]=0.;
   }
 }
@@ -347,13 +354,13 @@ double icemc::Tools::dMax(double a,double b) {
 } //dMax(double,double
 
 
-int icemc::Tools::Getifreq(double freq,double freq_low,double freq_high,int n) {
-    
-  if (freq>=freq_high)
+int icemc::Tools::Getifreq(double freq, double freq_low, double freq_high, int n) {
+
+  if (freq>=freq_high || freq < freq_low){
+    std::cerr << "Error in " << __PRETTY_FUNCTION__ << " requested out of bounds frequency " << freq
+	      << " when bounds are " << freq_low << "->" << freq_high << "\n";
     return -1;
-  if (freq<freq_low)
-    return -1;
-    
+  }
   return (int)((freq-freq_low)/(freq_high-freq_low)*(double)n);
 } //Getifreq
 

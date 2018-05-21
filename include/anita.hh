@@ -121,10 +121,12 @@ namespace icemc {
     TFile *fnoise;
     TTree *tdiode;
 
-    static const int NFOUR=2048; // Number of fourier points
-    static const int HALFNFOUR=1024; // Half of the number of fourier points
-    // static const int NFOUR=1024; // Number of fourier points
-    // static const int HALFNFOUR=512; // Half of the number of fourier points
+    static constexpr int NFOUR=1024; // Number of fourier point
+    static constexpr int HALFNFOUR=NFOUR/2; // Half of the number of fourier points 
+    // static constexpr int NFOUR=2048; // Number of fourier points
+    // static constexpr int HALFNFOUR=NFOUR/2; // Half of the number of fourier points
+    // static const int NFOUR=512; // Number of fourier points
+    // static const int HALFNFOUR=256; // Half of the number of fourier points    
 
     // these are used for the satellite thing
     int NBANDS;                                                                                        ///< number of frequency sub-bands (not counting full band)
@@ -606,7 +608,7 @@ namespace icemc {
     void readTuffResponseTrigger(const Settings *settings1);
     void readTriggerEfficiencyScanPulser(const Settings *settings1);
     void readNoiseFromFlight(const Settings *settings1);
-    void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int tuffIndex);
+    void getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int ituff);
     TGraph *RayleighFits[NPOL][48];
     Int_t numFreqs;
     Double_t *freqs;

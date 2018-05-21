@@ -482,14 +482,14 @@ namespace icemc {
     double denom_h_thresh[NTHRESHOLDS]={0.};
     double thresholds[NTHRESHOLDS];
 
-    Interaction* interaction1;
+    Interaction* interaction1 = nullptr;
     // Balloon* bn1;
     // Anita* anita1;
-    ANITA* fDetector;
-    Taumodel* fTauPtr;
+    ANITA* fDetector = nullptr;
+    Taumodel* fTauPtr = nullptr;
 
-    GeneratedNeutrino* fGenNu;
-    PassingNeutrino* fPassNu;
+    GeneratedNeutrino* fGenNu = nullptr;
+    PassingNeutrino* fPassNu = nullptr;
     
   private:
 
