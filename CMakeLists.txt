@@ -128,7 +128,12 @@ if (VECTORIZE)
           add_definitions( -march=native)
         endif()
       endif()
-      add_definitions(  -fabi-version=0 ) 
+      if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
+	# Vectorize docs...
+	# If you are using the Gnu compiler version 3.x or 4.x then you must
+	# set the ABI version to 4 or more, or 0 for a reasonable default
+	add_definitions(-fabi-version=0)
+      endif()
   endif() 
 endif() 
 
