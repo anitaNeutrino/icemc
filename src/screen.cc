@@ -304,7 +304,8 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
   std::vector<std::complex<double> > tmp_vhz(Anita::NFREQ, 0);
   const double df = d->freq[1] - d->freq[0];
 
-  std::cout << " in screen df = " << df << std::endl;
+
+  // std::cout << " in screen df = " << df << std::endl;
   // int n;
   // double dt;
   // d->getDesiredNDt(n, dt);

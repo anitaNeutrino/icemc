@@ -1203,12 +1203,19 @@ void icemc::Anita::setDiodeRMS(const Settings *settings1, TString outputdir){
 #ifdef ANITA_UTIL_EXISTS
 void icemc::Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int ituff){
 
-  FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
-  phasorsTrig[0].setMagPhase(0,0);
+  // FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
+  std::vector<FFTWComplex> phasorsTrig;
+  phasorsTrig.reserve(numFreqs);
+
+  phasorsTrig.emplace_back(FFTWComplex(0, 0));
   Double_t sigma, realPart, imPart, norm;
   int iring=2;
-  if (iant<16) iring=0;
-  else if (iant<32) iring=1;
+  if (iant<16){
+    iring=0;
+  }
+  else if (iant<32) {
+    iring=1;
+  }
 
   int iphi = iant - (iring*16);
 
@@ -1220,17 +1227,18 @@ void icemc::Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int 
     imPart         = fRand->Gaus(0,sigma);
 
     //    cout << " " << i << " " << trig << " " << dig << " " << trig/dig << " " << norm << endl;
-    phasorsTrig[i] = FFTWComplex(realPart, imPart);
+    phasorsTrig.emplace_back(FFTWComplex(realPart, imPart));
   }
 
-  RFSignal *rfNoiseTrig   = new RFSignal(numFreqs,freqs,phasorsTrig,1);  
-  Double_t *justNoiseTemp = rfNoiseTrig->GetY();
-  
+  RFSignal rfNoiseTrig(numFreqs,freqs,&phasorsTrig[0],1);
   for (int i=0; i<HALFNFOUR; i++){
-    justNoise[i]  = justNoiseTemp[i]*THERMALNOISE_FACTOR;
+    if(i < rfNoiseTrig.GetN()){
+      justNoise[i]  = rfNoiseTrig.GetY()[i]*THERMALNOISE_FACTOR;
+    }
+    else{
+      justNoise[i] = 0;
+    }
   }
-  delete rfNoiseTrig;
-  delete[] phasorsTrig;
   
 }
 #endif
@@ -2377,11 +2385,12 @@ void icemc::Anita::GetNoiseWaveforms() {
   for (int iband=0; iband<5; iband++) {
     for (int ipol=0;ipol<2;ipol++)
       convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR/2,timedomainnoise_rfcm_banding[ipol][iband], freqdomain_rfcm_banding[iband], phases_rfcm_banding[ipol][iband]);
-    for (int ipol=0;ipol<2;ipol++)
+    for (int ipol=0;ipol<2;ipol++){
       normalize_for_nsamples(timedomainnoise_rfcm_banding[ipol][iband], (double) nsamples, (double) nsamp);
-    for (int ipol=0;ipol<2;ipol++)
+    }
+    for (int ipol=0;ipol<2;ipol++){
       FTPair::realft(timedomainnoise_rfcm_banding[ipol][iband], -1, NFOUR / 2);
-
+    }
     //      convert_power_spectrum_to_voltage_spectrum_for_fft(NFOUR,timedomainnoise_rfcm_banding_long[ipol][iband], freqdomain_rfcm_banding_long[iband], phases_rfcm_banding_e_long[iband]);
     //       normalize_for_nsamples(timedomainnoise_rfcm_banding_long[ipol][iband], (double) nsamples_long, (double) nsamp);
     //       FTPair::realft(timedomainnoise_rfcm_banding_long[ipol][iband], -1, NFOUR);
@@ -2401,11 +2410,18 @@ void icemc::Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx) const {
   for (int ifreq=0;ifreq<NFOUR/4;ifreq++){
     tmp_fftvhz[ifreq]=TMath::Sqrt(tmp_fftvhz[2*ifreq]*tmp_fftvhz[2*ifreq] + tmp_fftvhz[2*ifreq+1]*tmp_fftvhz[2*ifreq+1]);
   }
-    
+
   for (int ifreq=0; ifreq<NFREQ; ifreq++){
-      
-    int ifour=Tools::Getifreq(freq[ifreq],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
-    vhz_rx[ifreq]=tmp_fftvhz[ifour]*norm;
+    int ifour = Tools::Getifreq(freq[ifreq],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
+
+    if(ifour >= 0 ){
+      vhz_rx[ifreq] = tmp_fftvhz[ifour]*norm;
+    }
+    else{
+      std::cerr << "Error in " << __PRETTY_FUNCTION__ << ", unexpected ifreq!" << std::endl;
+      std::cerr << ifour << "\t" << ifreq << "\t" << freq[ifreq] << "\t" << freq_forfft[0] << "\t" << freq_forfft[NFOUR/2-1] << "\t" << NFOUR/4 << std::endl;
+      vhz_rx[ifreq] = 0;
+    }
     //cout << ifour << " " << freq[ifreq] << " " << vhz_rx[ifreq] << " " << endl;
   }
 
