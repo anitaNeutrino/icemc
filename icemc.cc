@@ -413,8 +413,6 @@ void Attenuate_down(IceModel *antarctica1,  Settings *settings1,  double& vmmhz_
 
 void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight);
 
-double IsAbsorbedSource(double chord_kgm2,  double len_int_kgm2,  double& weight);
-
 void GetBalloonLocation(Interaction *interaction1,Ray *ray1,Balloon *bn1,IceModel *antarctica);
 
 int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside);
@@ -623,11 +621,8 @@ int main(int argc,  char **argv) {
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
  
-  //////////OINDREE TRYING THIS FOR GRBS/////////
-  ////////// could call PickGrbDirection() when SOURCE setting is true///////
   if ( settings1->SOURCE == 1 ) {
     cout << "Source setting is ON!" << endl;  
-    interaction1->PickGrbDirection(); 
   }
   
   Roughness *rough1 = new Roughness(settings1); // create new instance of the roughness class
@@ -1774,6 +1769,10 @@ int main(int argc,  char **argv) {
 
       if (ytree->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
         ytree->Fill();
+  
+      if ( settings1->SOURCE == 1 ) {
+        interaction1->PickGrbDirection(interaction1->nnu);  
+      }
 
       //TAU STUFF. Pick whether it will stay as a neutrino or create tau
       if ( tautrigger == 1 ) {
@@ -1800,7 +1799,7 @@ int main(int argc,  char **argv) {
           err = 1; // everything is a-okay
         }// end else if slac
         else if ( settings1->SOURCE ) {
-          err = interaction1->PickGrbDirection(); 
+          err = interaction1->PickGrbDirection(interaction1->nnu); 
           //cout << "err is " << err << endl; 
           costhetanu=cos(interaction1->nnu.Theta());
         }
@@ -1948,7 +1947,7 @@ int main(int argc,  char **argv) {
           err = 1; // everything is a-okay
         }//end else if slac
         else if ( settings1->SOURCE ) {
-          err = interaction1->PickGrbDirection(); 
+          err = interaction1->PickGrbDirection(interaction1->nnu); 
           //cout << "err is " << err << endl; 
           costhetanu = cos(interaction1->nnu.Theta());
           //cout << "costhetanu is " << costhetanu << endl; 
@@ -2014,7 +2013,12 @@ int main(int argc,  char **argv) {
 
       // where the neutrino enters the earth
       if (tautrigger==0){//did for cc-taus already,  do for all other particles
+        if ( settings1->SOURCE == 1 ) {
+          interaction1->PickGrbDirection(interaction1->nnu);  
+        }
         interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
+        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
+        //cout << "interaction1->chord is " << interaction1->chord << "\n"; 
       }
 
       // total chord
@@ -3071,20 +3075,11 @@ int main(int argc,  char **argv) {
       }
 
       if(tauweighttrigger==1) {
-        if (!settings1->SOURCE) {
-          weight1=interaction1->weight_nu_prob + taus1->weight_tau_prob;
-        }
-        else { 
-          weight1 = IsAbsorbedSource(interaction1->chord_kgm2_bestcase, len_int_kgm2, weight1);
-        }
+        weight1=interaction1->weight_nu_prob + taus1->weight_tau_prob;
       }
+      
       else {
-        if (!settings1->SOURCE) { 
-          weight1=interaction1->weight_nu_prob;
-        }
-        else {
-          weight1 = IsAbsorbedSource(interaction1->chord_kgm2_bestcase, len_int_kgm2, weight1); 
-        }
+        weight1=interaction1->weight_nu_prob;
       }
       weight = weight1 / interaction1->dnutries * settings1->SIGMA_FACTOR;  // total weight is the earth absorption factor
       // divided by the factor accounting for the fact that we only chose our interaction point within the horizon of the balloon
@@ -3173,12 +3168,7 @@ int main(int argc,  char **argv) {
           else
             weight_prob=interaction1->weight_nu_prob;
 
-          if (!settings1->SOURCE) {
-            weight1 = interaction1->weight_nu;
-          }
-          else {
-            weight1 = IsAbsorbedSource(interaction1->chord_kgm2_bestcase, len_int_kgm2, weight1);
-          }
+          weight1 = interaction1->weight_nu;
           weight=weight1/interaction1->dnutries*settings1->SIGMA_FACTOR;
           weight_prob=weight_prob/interaction1->dnutries*settings1->SIGMA_FACTOR;
 
@@ -4551,20 +4541,6 @@ void IsAbsorbed(double chord_kgm2, double len_int_kgm2, double &weight1) {
 }
 //end IsAbsorbed()
 
-double IsAbsorbedSource(double chord_kgm2, double len_int_kgm2, double &weight1) {
-  // see if neutrino is absorbed
-  //  weighting works,  but not to much purpose since nu's always
-  //   interact at these energies.
-  double rtemp;
-
-  rtemp=chord_kgm2/len_int_kgm2;  
-  
-  weight1=exp(-rtemp);
- 
-  return weight1; 
-
-}
-//end IsAbsorbedSource()
 
 void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE){
   //  void GetSmearedIncidentAngle(Vector &specular, Vector &nsurf_rfexit, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE, double theta_inc_smeared) {

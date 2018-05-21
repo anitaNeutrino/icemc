@@ -280,23 +280,32 @@ void Interaction::PickAnyDirection() {
   nnu.SetZ(costheta_nutraject);
 }
 
-int Interaction::PickGrbDirection() {
-  
+int Interaction::PickGrbDirection(Vector &nnu) {
+ 
+  Position pos; 
+ 
   TTree grb_tree("grb_tree","grb_tree");
   grb_tree.ReadFile("data/grb_alt_az_for_icemc.txt","grb_az/D:grb_alt/D");
   
   double grb_az;
-  double grb_alt; 
+  double grb_alt;
+  double grb_alt_icemc;  
   
   grb_tree.SetBranchAddress("grb_az",&grb_az);
   grb_tree.SetBranchAddress("grb_alt",&grb_alt);
   
-  grb_tree.GetEntry(1);
-
-  //cout << "<3<3<3<3<3<3<3<3<3  GRB az and alt in degrees : " << grb_az << " " << grb_alt << "\n";    
+  //for (int igrb = 0; igrb < grb_tree.GetEntries(); igrb++) {
+  for (int igrb = 1; igrb < 2; igrb++) {
+    grb_tree.GetEntry(igrb);
+    //cout << "pos Lat is " << pos.Lat() << "\n"; 
+    //grb_alt_icemc = grb_alt - 90. + pos.Lat(); 
+    grb_alt_icemc = grb_alt - 90. + (-80.69+90.); //will fix 
+    //grb_alt_icemc = grb_alt; 
+    //cout << "grb_alt is " << grb_alt << " grb_alt_icemc is " << grb_alt_icemc << "\n"; 
+  }
 
   // oindree -- setting cos of theta_nutraject (altitude) 
-  costheta_nutraject = cos( ( grb_alt * ( PI/180. ) ) );
+  costheta_nutraject = cos( ( grb_alt_icemc * ( PI/180. ) ) );
 
   // oindree -- setting phi of nutraject (azimuth) 
   phi_nutraject = grb_az * ( PI/180. ); 
