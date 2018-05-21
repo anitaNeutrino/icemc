@@ -3,6 +3,7 @@
 
 
 #include "TObject.h"
+#include "anita.hh"
 
 namespace icemc {
 
@@ -22,10 +23,9 @@ namespace icemc {
     double max_lowband;	///< max voltage seen on an antenna - just for debugging purposes
 
     static const int nRX = 48;
-    static const int nSamp = 512;
     
-    double rfcm_lab_e_all[nRX][nSamp];
-    double rfcm_lab_h_all[nRX][nSamp];
+    double rfcm_lab_e_all[nRX][Anita::HALFNFOUR];
+    double rfcm_lab_h_all[nRX][Anita::HALFNFOUR];
 
     ClassDef(VoltsRX, 1);
   };

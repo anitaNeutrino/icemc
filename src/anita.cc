@@ -3994,26 +3994,25 @@ void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_M
 void icemc::Anita::setphiTrigMask(UInt_t realTime_flightdata) {
 
   if (realTime_flightdata<realTime_tr_min || realTime_flightdata>realTime_tr_max) {
-    phiTrigMask=0; // if the realTime for this balloon position is out of range then just set mask to 0
-    phiTrigMaskH=0;
-    l1TrigMask=0;
-    l1TrigMaskH=0;
-    deadTime=0;
+    phiTrigMask = 0; // if the realTime for this balloon position is out of range then just set mask to 0
+    phiTrigMaskH = 0;
+    l1TrigMask = 0;
+    l1TrigMaskH = 0;
+    deadTime = 0;
   }
   else { // if it's in range
-		
-    iturf=turfratechain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in turfratechain that is closest to this realTime_flightdata
+    iturf = turfratechain->GetEntryNumberWithBestIndex(realTime_flightdata); // find entry in turfratechain that is closest to this realTime_flightdata
     if (iturf<0){ // if it didn't find one
-      phiTrigMask=0; // set to zero
-      phiTrigMaskH=0;
-      l1TrigMask=0;
-      l1TrigMaskH=0;
-      deadTime=0;
-    }else{
+      phiTrigMask = 0; // set to zero
+      phiTrigMaskH = 0;
+      l1TrigMask = 0;
+      l1TrigMaskH = 0;
+      deadTime = 0;
+    }
+    else{
       turfratechain->GetEvent(iturf);
     }
   } // end if it's in range
-  
 }
 
 
@@ -4036,7 +4035,8 @@ void icemc::Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
 	  scalers[ipol][iant]=thresholds[ipol][iant]=0.;
 	}
       }
-    }else{
+    }
+    else{
       surfchain->GetEvent(isurf);
     }
   } // end if it's in range

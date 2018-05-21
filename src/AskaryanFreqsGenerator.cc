@@ -133,10 +133,13 @@ void icemc::AskaryanFreqsGenerator::InitializeMedium() {
 }
 
 
-icemc::AskaryanFreqs icemc::AskaryanFreqsGenerator::generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max, const ShowerProperties* sp) const {
+icemc::AskaryanFreqs icemc::AskaryanFreqsGenerator::generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu,
+									  int numFreqs, const double *freq_Hz,
+									  double notch_min, double notch_max,
+									  const ShowerProperties* sp) const {
 
-  // this is a fucking mess and really needs improvement
-  // perhaps all this shit should be in the constructor for AskaryanFreqs?
+  // @todo this is a fucking mess and really needs improvement
+  // @todo perhaps all this shit should be in the constructor for AskaryanFreqs?
   std::vector<double> tempArray(numFreqs, 0);
   GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, freq_Hz, notch_min, notch_max, &tempArray[0], numFreqs);
   AskaryanFreqs af(numFreqs, freq_Hz[0], freq_Hz[1] - freq_Hz[0], GetChangle(), sp, &tempArray[0]);
@@ -148,7 +151,9 @@ icemc::AskaryanFreqs icemc::AskaryanFreqsGenerator::generateAskaryanFreqs(double
 }
 
 
-void icemc::AskaryanFreqsGenerator::GetVmMHz(double vmmhz_max,double vmmhz1m_max, double pnu, const double *freq, double notch_min, double notch_max, double *vmmhz, int nfreq) const {
+void icemc::AskaryanFreqsGenerator::GetVmMHz(double vmmhz_max,double vmmhz1m_max, double pnu,
+					     const double *freq, double notch_min, double notch_max,
+					     double *vmmhz, int nfreq) const {
 
   // parametrization from Jaime Alvarez Munhiz  
   //  here using astro-ph/0003315 
@@ -202,7 +207,8 @@ void icemc::AskaryanFreqsGenerator::GetSpread(double pnu,
   /**
    * Ultimately, it seems this follows a some_constant/freq dependence
    * and so diverges if freq = 0. Not quite sure how to handle this...
-   * but for now I'll just set these to as high as possible. This may need to be revised.
+   * but for now I'll just set these to as high as possible. 
+   * @todo this may need to be revised.
    */
   deltheta_em_max = DBL_MAX;
   deltheta_had_max = DBL_MAX;

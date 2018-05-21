@@ -121,8 +121,10 @@ namespace icemc {
     TFile *fnoise;
     TTree *tdiode;
 
-    static const int NFOUR=1024; // Number of fourier points
-    static const int HALFNFOUR=512; // Half of the number of fourier points
+    static const int NFOUR=2048; // Number of fourier points
+    static const int HALFNFOUR=1024; // Half of the number of fourier points
+    // static const int NFOUR=1024; // Number of fourier points
+    // static const int HALFNFOUR=512; // Half of the number of fourier points
 
     // these are used for the satellite thing
     int NBANDS;                                                                                        ///< number of frequency sub-bands (not counting full band)
@@ -616,7 +618,6 @@ namespace icemc {
 
     void GetPhasesFromFFT(double *tmp_fftvhz, double *phases) const;
     void FromTimeDomainToIcemcArray(double *vsignalarray, double vhz[NFREQ]);
-
   
     Double_t fTimes[HALFNFOUR];
     Double_t fSignalChainResponseA3DigitizerFreqDomain[NPOL][3][16][400];

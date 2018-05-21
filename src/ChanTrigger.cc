@@ -27,13 +27,9 @@
 #include "screen.hh"
 #include "GlobalTrigger.h"
 
-using std::cout;
-
 #ifdef ANITA_UTIL_EXISTS
 #include "FFTtools.h"
-#include "SimulatedSignal.h"
 #endif
-
 
 
 
@@ -542,7 +538,8 @@ void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita
     if (ilayer <= 1){
       iphisector_trigger = ifold * 2 + ilayer;
       ilayer_trigger = 0;
-    }else{
+    }
+    else{
       iphisector_trigger = ifold;
       ilayer_trigger = ilayer - 1;
     }
@@ -968,7 +965,22 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 
 	gr0.Write();
 	gr1.Write();
-	  
+
+	FTPair check0(gr0);
+	FTPair check1(gr1);
+
+	check0.setDebug(true);
+	check1.setDebug(true);
+	TGraph grF0 = check0.makePowerSpectralDensityGraph();
+	TGraph grF1 = check0.makePowerSpectralDensityGraph();
+	grF0.SetName(TString::Format("grF_pol0_ant%d_iband%d_aftergain", ant, iband));
+	grF1.SetName(TString::Format("grF_pol1_ant%d_iband%d_aftergain", ant, iband));
+	grF0.SetTitle(TString::Format("grF_pol0_ant%d_iband%d_aftergain", ant, iband));
+	grF1.SetTitle(TString::Format("grF_pol1_ant%d_iband%d_aftergain", ant, iband));
+
+	grF0.Write();
+	grF1.Write();
+
 	lastAnt = ant;
 	if(lastAnt == 47){
 	  f->Write();
@@ -977,9 +989,6 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	  firstTime = false;
 	}
       }
-
-
-	
     }
     else if(gr==NULL){
       std::cerr << "ERROR! in " << __PRETTY_FUNCTION__ << ": you must pass non-NULL panel1 or gr" << std::endl;
@@ -1281,7 +1290,8 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
 
 
 
-void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
+// void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
+void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][Anita::HALFNFOUR], double volts_rx_rfcm_lab_h_all[48][Anita::HALFNFOUR])  
 {   
   // int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
@@ -1387,16 +1397,16 @@ double icemc::ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, in
   
   if (threshadc<anita1->minadcthresh[ipol][iant]) {
     if (unwarned) {
-      cout << "Warning! ADC threshold is outside range of measured threshold scans.";
-      cout << "It is below the minimum so set it to the minimum.  Will not be warned again.\n";
+      std::cout << "Warning! ADC threshold is outside range of measured threshold scans.";
+      std::cout << "It is below the minimum so set it to the minimum.  Will not be warned again.\n";
       unwarned=0;
     }
     threshadc=anita1->minadcthresh[ipol][iant];
   }
   if (threshadc>anita1->maxadcthresh[ipol][iant]) {
     if (unwarned) {
-      cout << "Warning! ADC threshold is outside range of measured threshold scans.";
-      cout << "It is higher than the maximum so set it to the maximum.  Will not be warned again.\n";
+      std::cout << "Warning! ADC threshold is outside range of measured threshold scans.";
+      std::cout << "It is higher than the maximum so set it to the maximum.  Will not be warned again.\n";
       unwarned=0;
     }
     threshadc=anita1->maxadcthresh[ipol][iant];
@@ -1703,7 +1713,8 @@ double icemc::ChanTrigger::applyButterworthFilter(double ff, double ampl, int no
 
 
 #ifdef ANITA_UTIL_EXISTS    
-void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
+// void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
+void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[Anita::HALFNFOUR], bool pol){  
 
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) y[i]=0;
@@ -1791,7 +1802,8 @@ void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1
   delete graph1;
 }
 
-void icemc::ChanTrigger::applyImpulseResponseTrigger(const Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol){
+
+void icemc::ChanTrigger::applyImpulseResponseTrigger(const Settings *settings1, Anita *anita1, int ant, double y[Anita::HALFNFOUR], double *vhz, bool pol){
 
   int nPoints = anita1->HALFNFOUR;
   double *x   = anita1->fTimes;
@@ -1800,17 +1812,18 @@ void icemc::ChanTrigger::applyImpulseResponseTrigger(const Settings *settings1, 
     for (int i=0;i<nPoints;i++) y[i]=0;
   }
   
-  TGraph *graph1;
+  TGraph *graph1 = nullptr;
   if (settings1->TRIGGEREFFSCAN && !pol){
     graph1 = getPulserAtAMPA(anita1, ant);
-  } else {
+  }
+  else {
     graph1 = new TGraph(nPoints, x, y);
   }
   
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
 
-  double voltsArray[512];
+  double voltsArray[Anita::HALFNFOUR];
   int ipol=0;
   int iring=2;
   if (pol) ipol = 1;
@@ -1822,7 +1835,7 @@ void icemc::ChanTrigger::applyImpulseResponseTrigger(const Settings *settings1, 
   //Calculate convolution
 
 // begin keith edits
-  TGraph *surfSignal;
+  TGraph *surfSignal = nullptr;
   if (!settings1->TUFFSON){
     surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring][iphi]);
   }

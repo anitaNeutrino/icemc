@@ -46,8 +46,10 @@ namespace icemc {
     const static int NSURFMINUSONE=8;                             ///< Number of surfs minus on1
     const static int NCHANNELS=32;                                ///< Number of channells on each surf
     const static int NPOINTS=4073;                                ///< Max number of points from surf measurements
-    static const unsigned NFOUR = 1024;                           ///< Number of points in Fourier space
-    static const unsigned HALFNFOUR = 512;                        ///< Half of the number of points in the Fourier space
+    static const unsigned NFOUR = Anita::NFOUR;                           ///< Number of points in Fourier space
+    static const unsigned HALFNFOUR = Anita::HALFNFOUR;                        ///< Half of the number of points in the Fourier space
+    // static const unsigned NFOUR = 1024;                           ///< Number of points in Fourier space
+    // static const unsigned HALFNFOUR = 512;                        ///< Half of the number of points in the Fourier space
 
     TRandom3 Rand3;                                               ///< Random number generator instance
     double thisrate;                                              ///< Rate in MHz
@@ -132,7 +134,8 @@ namespace icemc {
      * @param  volts_rx_rfcm_lab_e_all :: double [48][512] - time domain waveform for each channel (VPOL)
      * @param  volts_rx_rfcm_lab_h_all :: double [48][512] - time domain waveform for each channel (HPOL)
      */ 
-    void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
+    // void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
+    void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][Anita::HALFNFOUR], double volts_rx_rfcm_lab_h_all[48][Anita::HALFNFOUR]);    
   
     //!  Convert E and H to left and right e field
     /**
@@ -332,7 +335,8 @@ namespace icemc {
      * @param  y :: double[512] - output voltages
      * @param  pol :: bool - which polarization
      */
-    void applyImpulseResponseDigitizer(const Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
+    // void applyImpulseResponseDigitizer(const Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol);
+    void applyImpulseResponseDigitizer(const Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[Anita::HALFNFOUR], bool pol);    
 
     //! Apply impulse response to trigger path
     /**
@@ -345,7 +349,8 @@ namespace icemc {
      * @param  vhz :: double* - amplitude in Fourier domain
      * @param  pol :: bool - which polarization
      */
-    void applyImpulseResponseTrigger(const Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol);
+    // void applyImpulseResponseTrigger(const Settings *settings1, Anita *anita1, int ant, double y[512], double *vhz, bool pol);
+    void applyImpulseResponseTrigger(const Settings *settings1, Anita *anita1, int ant, double y[Anita::HALFNFOUR], double *vhz, bool pol);    
 
     //! Add noise from ANITA-3 flight to the time domain waveforms
     /**

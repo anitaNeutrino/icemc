@@ -6,7 +6,6 @@
 #include "balloon.hh"
 
 
-
 namespace icemc {
 
   class RayTracer;
@@ -22,18 +21,18 @@ namespace icemc {
     ANITA(const Settings* settings, RayTracer* sillyRay, Screen* sillyPanel);
     virtual ~ANITA();
 
-    virtual int getNumRX() const {return 96;} ///@todo make this proper
-    virtual icemc::Vector getPositionRX(int i) const;
+    virtual int getNumRX() const override {return 96;} ///@todo make this proper
+    virtual icemc::Vector getPositionRX(int i) const override;
 
-    virtual icemc::Position getCenterOfDetector(UInt_t unixTime = 0);
-    virtual bool applyTrigger(){return  applyTrigger(-1);}
+    virtual icemc::Position getCenterOfDetector(UInt_t unixTime = 0) override;
+    virtual bool applyTrigger() override {return  applyTrigger(-1);}
     virtual bool applyTrigger(int inu);
-    virtual void getDesiredNDt(int& n, double& dt) const {
+    virtual void getDesiredNDt(int& n, double& dt) const override {
       n = 1024;
       dt = 1e-9*1./2.6;
     }
 
-    virtual void addSignalToRX(const PropagatingSignal& signal, int rx){
+    virtual void addSignalToRX(const PropagatingSignal& signal, int rx) override {
       addSignalToRX(signal, rx, -1);
     }
     virtual void addSignalToRX(const PropagatingSignal& signal, int rx, int inu); // just for debugging

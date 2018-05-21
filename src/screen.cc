@@ -300,12 +300,11 @@ void icemc::Screen::ResetParameters(){
 
 void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA* d, int inu) const {
 
-  // double tmp_vhz[Anita::NFREQ];
-  // double tmp_volts[Anita::NFOUR/2];
-
   //@todo remove hardcoded number of frequencies!
   std::vector<std::complex<double> > tmp_vhz(Anita::NFREQ, 0);
-  const double df = d->freqs[1] - d->freqs[0];
+  const double df = d->freq[1] - d->freq[0];
+
+  std::cout << " in screen df = " << df << std::endl;
   // int n;
   // double dt;
   // d->getDesiredNDt(n, dt);
@@ -315,30 +314,19 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
 
   for(int rx = 0; rx < d->getNumRX(); rx++){
     for (int jpt=0; jpt<GetNvalidPoints(); jpt++){
-      for (int k=0;k<Anita::NFREQ;k++) { ///@todo remove hardcoded number of frequencies!
+      ///@todo remove hardcoded number of frequencies!
+      for (int k=0;k<Anita::NFREQ;k++) {
 
-	//Copy frequency amplitude to screen point
-	// tmp_vhz[0][k] = tmp_vhz[1][k] = GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
+	/// @todo put this scaling inside ChanTrigger because it's a change in units the ChanTrigger
+	// cares about, but it has nothing to do with the Screen
 	tmp_vhz[k] = GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(TIMESTEP*1.E6);
-      } // end looping over frequencies.
-
-      if(inu==397){
-	int ant=0,  pol=0;
-	d->getAntPolFromRX(rx, ant, pol);
-	if(ant==2){
-	  std::cout  << "In screen... pol = " << pol << "\n";
-	  for(auto v : tmp_vhz){
-	    std::cout << std::abs(v) << " ";
-	  }
-	  std::cout << "\n\n";
-	}
       }
 
       FTPair signal(tmp_vhz, df);
       signal.delayTimeDomain(GetDelay(jpt));
 
       // is that the correct geometry?
-      // PropagatingSignal s(signal, d->getPositionRX(rx) - GetImpactPt(jpt), GetPol(jpt));
+      // @todo find out where we get vec2bln from... and see if Screen really needs to know
       PropagatingSignal s(signal, GetVec2bln(jpt), GetPol(jpt));
 
       d->addSignalToRX(s, rx, inu);
