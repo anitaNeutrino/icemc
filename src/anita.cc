@@ -3057,7 +3057,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
   } //else if (EeVEX)
     //anitaII or satellite
   else if (settings1->WHICH==8) {
-    cout<<"initializing and using anitaII payload geometry"<<endl;
+    std::cout << "initializing and using anitaII payload geometry" << std::endl;
 		
     // layer 0 is antennas 1-8 on the payload
     // layer 1 is antennas 9-15
@@ -3327,7 +3327,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
 		
   } 
   else if (settings1->WHICH==9 || settings1->WHICH==10) { // ANITA-3 and ANITA-4
-    cout<<"initializing and using ANITA-III or IV payload geometry"<<endl;
+    std::cout << "initializing and using ANITA-III or IV payload geometry" << std::endl;
     // layer 0 is antennas 1-8 on the payload
     // layer 1 is antennas 9-15
     // layer 2 is antennas 16-32
@@ -3504,12 +3504,12 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     int tempAnt, intTempPol;
     AnitaPol::AnitaPol_t tempPol;
     for(Int_t surf=0; surf<NUM_SURF; surf++){
-      for(Int_t chan=0; chan<NUM_CHAN; chan++){
-    	fGeomTool->getAntPolFromSurfChan(surf,chan, tempAnt, tempPol);
+      for(Int_t chan=0; chan<RFCHAN_PER_SURF; chan++){
+	AnitaGeomTool::getAntPolFromSurfChan(surf,chan, tempAnt, tempPol);
     	if (tempAnt!=-1){
 	  // in EventReaderRoot 0: HPOL, 1: VPOL, in icemc it's the opposite
 	  intTempPol = (tempPol==0) ? 1 : 0;
-	  extraCableDelays[intTempPol][tempAnt] = cal->relativePhaseCenterToAmpaDelays[surf][chan]*1e-9 ; 
+	  extraCableDelays[intTempPol][tempAnt] = cal->relativePhaseCenterToAmpaDelays[surf][chan]*1e-9;
 	}
       }
     }
