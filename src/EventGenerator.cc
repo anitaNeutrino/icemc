@@ -2517,7 +2517,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // this seems to be where the neutrino simulation ends
       // everything in here should end up in the ANITA class.
       ///@todo HHEEERRRREEE!!!!!
-      std::cout << "About to applyTrigger " << fDetector << std::endl;
+      std::cout << "About to applyTrigger " << fDetector << "\t" << sizeof(icemc::ANITA) << std::endl;
       bool eventPassedTrigger = fDetector->applyTrigger(inu);
       if(eventPassedTrigger){
 
@@ -2975,13 +2975,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   Log() << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<std::endl;
 
   // heap allocated non members need deleting
-  if(primary1)    delete primary1;
+  if(primary1)       delete primary1;
   // if(ray1)        delete ray1;
-  if(count1)      delete count1;
+  if(count1)         delete count1;
   // if(globaltrig1) delete globaltrig1;
-  if(taus1)       delete taus1;
-  if(rough1)      delete rough1;
-  if(panel1)      delete panel1;
+  if(taus1)          delete taus1;
+  if(rough1)         delete rough1;
+  if(panel1)         delete panel1;
+  if(antarctica)     delete antarctica;
 
   return;
 }

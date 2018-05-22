@@ -292,11 +292,11 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
   for (int i=0;i<NFREQ;i++) {
     freq[i] = FREQ_LOW+(FREQ_HIGH-FREQ_LOW)*(double)i/(double)NFREQ; // freq. of each bin.
     
-    std::cout << "Anita::freq[" << i << "] = " << freq[i] << std::endl;
+    // std::cout << "Anita::freq[" << i << "] = " << freq[i] << std::endl;
     avgfreq_rfcm[i]=0.;
     avgfreq_rfcm_lab[i]=0.;
   } //for
-  std::cout << "df = " << freq[1] - freq[0] << ", so the bin for f=0 is at " << freq[0]/(freq[1] - freq[0]) << std::endl;
+  // std::cout << "df = " << freq[1] - freq[0] << ", so the bin for f=0 is at " << freq[0]/(freq[1] - freq[0]) << std::endl;
   
   // exit(1);
   initializeFixedPowerThresholds(foutput);

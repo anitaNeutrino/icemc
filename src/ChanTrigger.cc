@@ -347,7 +347,7 @@ void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita
   
   // now we have converted the signal to time domain waveforms for all the bands of the antenna
       
-  double integrateenergy[5]={0.,0.,0.,0.,0.};
+  double integrateenergy[5] = {0.,0.,0.,0.,0.};
         
   for (int iband=0;iband<5;iband++) { // Only loop over allowed bands
     if (anita1->bwslice_allowed[iband]!=1) continue; 
@@ -358,16 +358,16 @@ void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita
   	
   	// The below line seems to shorten the length of the waveform to less than HALFNFOUR
   	int itimenoisebin=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)-itime;
-  	
+
   	// this is just the straight sum of the two
-  	anita1->total_vpol_inanita[iband][itime]=anita1->timedomainnoise_rfcm_banding[0][iband][itime]+anita1->signal_vpol_inanita[iband][itime];
+  	anita1->total_vpol_inanita[iband][itime] = anita1->timedomainnoise_rfcm_banding[0][iband][itime]+anita1->signal_vpol_inanita[iband][itime];
 
   	integrateenergy[iband]+=anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->timedomainnoise_rfcm_banding[0][iband][itime]*anita1->TIMESTEP;
    	if ( settings1->SIGNAL_FLUCT && (!settings1->NOISEFROMFLIGHTTRIGGER) ) {
   	  // this reverses the noise is time, and starts with bin anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP)
 	  justNoise_trigPath[0][itime] = anita1->timedomainnoise_rfcm_banding[0][iband][itimenoisebin];
 	  justNoise_trigPath[1][itime] = anita1->timedomainnoise_rfcm_banding[1][iband][itimenoisebin];
-  	  v_banding_rfcm_forfft[0][iband][itime]=v_banding_rfcm_forfft[0][iband][itime]+anita1->timedomainnoise_rfcm_banding[0][iband][itimenoisebin];
+	  v_banding_rfcm_forfft[0][iband][itime]=v_banding_rfcm_forfft[0][iband][itime]+anita1->timedomainnoise_rfcm_banding[0][iband][itimenoisebin];
   	  v_banding_rfcm_forfft[1][iband][itime]=v_banding_rfcm_forfft[1][iband][itime]+anita1->timedomainnoise_rfcm_banding[1][iband][itimenoisebin];
   	  }
       }

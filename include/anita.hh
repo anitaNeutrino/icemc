@@ -117,16 +117,13 @@ namespace icemc {
 
     double additionalDt;
 
-
     TFile *fnoise;
     TTree *tdiode;
 
-    static constexpr int NFOUR=1024; // Number of fourier point
-    static constexpr int HALFNFOUR=NFOUR/2; // Half of the number of fourier points 
+    // static constexpr int NFOUR=1024; // Number of fourier point
     // static constexpr int NFOUR=2048; // Number of fourier points
-    // static constexpr int HALFNFOUR=NFOUR/2; // Half of the number of fourier points
-    // static const int NFOUR=512; // Number of fourier points
-    // static const int HALFNFOUR=256; // Half of the number of fourier points    
+    static constexpr int NFOUR=4096; // Number of fourier points    
+    static constexpr int HALFNFOUR=NFOUR/2; // Half of the number of fourier points
 
     // these are used for the satellite thing
     int NBANDS;                                                                                        ///< number of frequency sub-bands (not counting full band)
