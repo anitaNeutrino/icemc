@@ -94,11 +94,11 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   double n_component_kvector=0;
   icemc::Balloon::GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal, signal.poynting, e_component_kvector,  h_component_kvector,  n_component_kvector);
 
-  if(inu == 397 && firstTime && antNum==2){
-    std::cout << "Orientation in " << __PRETTY_FUNCTION__ << "...\n";
-    std::cout << n_eplane << "\n" << n_hplane << "\n" << n_normal << "\n\n";
-    std::cout << signal.poynting << "\n" << e_component_kvector<< "\n" << h_component_kvector<< "\n" << n_component_kvector << "\n\n";  
-  }  
+  // if(inu == 397 && firstTime && antNum==2){
+  //   std::cout << "Orientation in " << __PRETTY_FUNCTION__ << "...\n";
+  //   std::cout << n_eplane << "\n" << n_hplane << "\n" << n_normal << "\n\n";
+  //   std::cout << signal.poynting << "\n" << e_component_kvector<< "\n" << h_component_kvector<< "\n" << n_component_kvector << "\n\n";  
+  // }  
 
   double e_component=0;
   double h_component=0;
@@ -115,15 +115,15 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   FTPair afterGain = signal.waveform;
   std::vector<std::complex<double> >& freqDomain = afterGain.changeFreqDomain();
 
-  if(inu == 397 && firstTime && antNum==2){
-    std::cout << "In " << __PRETTY_FUNCTION__ << " (before gain) pol = "  << pol << ":\n";
-    for(auto c : freqDomain){
-      // std::complex<double> c2 {fabs(c.real()) > 1e-18 ? c.real() : 0,  fabs(c.imag()) > 1e-18 ? c.imag() : 0  };
-      // std::cout << c2 <<  " ";
-      std::cout << std::abs(c) <<  " ";
-    }
-    std::cout << "\n\n";
-  }
+  // if(inu == 397 && firstTime && antNum==2){
+  //   std::cout << "In " << __PRETTY_FUNCTION__ << " (before gain) pol = "  << pol << ":\n";
+  //   for(auto c : freqDomain){
+  //     // std::complex<double> c2 {fabs(c.real()) > 1e-18 ? c.real() : 0,  fabs(c.imag()) > 1e-18 ? c.imag() : 0  };
+  //     // std::cout << c2 <<  " ";
+  //     std::cout << std::abs(c) <<  " ";
+  //   }
+  //   std::cout << "\n\n";
+  // }
 
   // if(!(freqDomain.size() == Anita::NFREQ || freqDomain.size() == Anita::NFREQ - 1)){
   //   std::cerr << "Uh oh! " << freqDomain.size()  << "\t" << Anita::NFREQ << std::endl;
@@ -141,24 +141,24 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
 
   for(int j=0; j < numFreqLoop; j++){
     if (j < numSafe && this->freq[j]>= lowFreqSeavey && this->freq[j]<=highFreqSeavey){ // note: this bounds check is also done inside the antenna gain so this redundent
-      double dummyValueForOppositePol = 0;
+      // double dummyValueForOppositePol = 0;
       if(pol==0){
 	double absMag = std::abs(freqDomain.at(j));
 	double phase = std::arg(freqDomain.at(j));
-	if(inu==397 && antNum == 2 && j==22) {
-	  std::cout << "CHECK SCALING ADDSIGNALTORX: pol = 0, before = " << absMag << " " << freqDomain.at(j) << " with "  << hitangle_e << ", " <<  hitangle_h <<  ", " << e_component  << ", " <<  h_component << "\n";
-	}
+	// if(inu==397 && antNum == 2 && j==22) {
+	//   std::cout << "CHECK SCALING ADDSIGNALTORX: pol = 0, before = " << absMag << " " << freqDomain.at(j) << " with "  << hitangle_e << ", " <<  hitangle_h <<  ", " << e_component  << ", " <<  h_component << "\n";
+	// }
 	
-	this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, absMag, dummyValueForOppositePol);
-	if(inu==397 && antNum == 2 && j==22){
-	  std::cout << ", after = " << absMag << "\n";
-	}
+	// this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, absMag, dummyValueForOppositePol);
+	// if(inu==397 && antNum == 2 && j==22){
+	//   std::cout << ", after = " << absMag << "\n";
+	// }
 	freqDomain.at(j) = std::polar(absMag, phase);
       }
       else{
 	double absMag = std::abs(freqDomain.at(j));
 	double phase = std::arg(freqDomain.at(j));
-	this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, dummyValueForOppositePol, absMag);
+	// this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, dummyValueForOppositePol, absMag);
 	freqDomain.at(j) = std::polar(absMag, phase);
       }
     }
@@ -178,13 +178,13 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
       f = new TFile("testRX.root", "recreate");
     }
 
-    if(antNum==2){
-      std::cout << "In " << __PRETTY_FUNCTION__ << " (after gain) pol = "  << pol << ":\n";
-      for(auto c : freqDomain){
-	std::cout << std::abs(c) <<  " ";
-      }
-      std::cout << "\n\n";
-    }
+    // if(antNum==2){
+    //   std::cout << "In " << __PRETTY_FUNCTION__ << " (after gain) pol = "  << pol << ":\n";
+    //   for(auto c : freqDomain){
+    // 	std::cout << std::abs(c) <<  " ";
+    //   }
+    //   std::cout << "\n\n";
+    // }
     // std::cout << rx << "\t" << ilayer << "\t" << ifold << "\t" << n_normal << std::endl;
     // if(pol==0){
     //   std::cout << "In ANITA::addSignalToRX..." << antNum << "\t" << ilayer << "\t" << ifold << "\t(" << n_normal << ")"  <<  std::endl;    

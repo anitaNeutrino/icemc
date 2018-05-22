@@ -768,7 +768,6 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
     
   double tmp_vhz[2][anita1->NFREQ];
   double tmp_volts[2][anita1->NFOUR/2];
-
     
   
   for (int iband=0;iband<5;iband++) { // loop over bands
@@ -777,6 +776,10 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
     Tools::Zero(volts_rx_forfft[1][iband], anita1->NFOUR/2);
     Tools::Zero(vhz_rx[0][iband],          anita1->NFREQ);
     Tools::Zero(vhz_rx[1][iband],          anita1->NFREQ);
+    Tools::Zero(tmp_vhz[0],                anita1->NFREQ);
+    Tools::Zero(tmp_vhz[1],                anita1->NFREQ);
+    Tools::Zero(tmp_volts[0],              anita1->NFOUR/2);
+    Tools::Zero(tmp_volts[1],              anita1->NFOUR/2);
 
     if (anita1->bwslice_allowed[iband]!=1) continue;
 
@@ -788,23 +791,23 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
       for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
 
 	bool debugInMakeArray = gr && gr->GetY()[0] == 397 && ant==2;
-	if(debugInMakeArray){
-	  std::cout << "In ApplyAntennaGain: Pure screen\n";
-	  for (int k=0;k<Anita::NFREQ;k++){
-	    std::cout << panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6) << " ";
-	  }
-	  std::cout  << "\n\n";
-	}
+	// if(debugInMakeArray){
+	//   std::cout << "In ApplyAntennaGain: Pure screen\n";
+	//   for (int k=0;k<Anita::NFREQ;k++){
+	//     std::cout << panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6) << " ";
+	//   }
+	//   std::cout  << "\n\n";
+	// }
 
 	bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
 	bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
 	bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
 
-	if(debugInMakeArray){
-	  std::cout << "Orientation in " << __PRETTY_FUNCTION__ << "...\n";
-	  std::cout << n_eplane << "\n" << n_hplane << "\n" << n_normal << "\n\n";
-	  std::cout << panel1->GetVec2bln(jpt) << "\n" << e_component_kvector<< "\n" << h_component_kvector<< "\n" << n_component_kvector << "\n\n";
-	}
+	// if(debugInMakeArray){
+	//   std::cout << "Orientation in " << __PRETTY_FUNCTION__ << "...\n";
+	//   std::cout << n_eplane << "\n" << n_hplane << "\n" << n_normal << "\n\n";
+	//   std::cout << panel1->GetVec2bln(jpt) << "\n" << e_component_kvector<< "\n" << h_component_kvector<< "\n" << n_component_kvector << "\n\n";
+	// }
 
 	// if(jpt==0 && gr && gr->GetY()[0]==397){
 	//   std::cout << "In ChanTrigger::ApplyAntennaGain..." << ant << "\t(" << n_normal << ")" << std::endl;
@@ -816,32 +819,69 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	    //Copy frequency amplitude to screen point
 	    tmp_vhz[0][k] = tmp_vhz[1][k] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
 
-	    if(debugInMakeArray && ant == 2 && k==22) {
-	      std::cout << "CHECK SCALING CHANTRIGGER: pol = 0, before = " << tmp_vhz[0][k] << " with "  << hitangle_e << ", " <<  hitangle_h <<  ", " << e_component  << ", " <<  h_component << "\n";
-	    }
-	    anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
-	    if(debugInMakeArray && ant == 2 && k==22) std::cout << "pol = 0, after = " << tmp_vhz[0][k] << "\n";
+	    // if(debugInMakeArray && k==22) {
+	    //   std::cout << "CHECK SCALING CHANTRIGGER: pol = 0, before = " << tmp_vhz[0][k] << " with "  << hitangle_e << ", " <<  hitangle_h <<  ", " << e_component  << ", " <<  h_component << "\n";
+	    // }
+	    // anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
+	    // if(debugInMakeArray && k==22) std::cout << "pol = 0, after = " << tmp_vhz[0][k] << "\n";
 
 	    if (settings1->TUFFSON==2){
 	      tmp_vhz[0][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
 	      tmp_vhz[1][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
 	    }
-	  } // end if (seavey frequencies)
-	  else {
-	    tmp_vhz[0][k]=0;
-	    tmp_vhz[1][k]=0;
 	  }
-	} // end looping over frequencies.	  
+	  else {
+	    tmp_vhz[0][k] = 0;
+	    tmp_vhz[1][k] = 0;
+	  }
+	}
+
+	// right, let's get the power
+	if(debugInMakeArray){
+	  std::vector<double> powerSumFreqDomain(anita1->NPOL, 0);
+	  std::vector<double> powerIntegralFreqDomain(anita1->NPOL, 0);
+	  const double df = anita1->freq[1] - anita1->freq[0]; // = 1/(dt*N);
+	  const double dt = 1./(df*anita1->NFOUR);
+	  for(int pol=0; pol < anita1->NPOL; pol++){
+	    for(int j=0; j < anita1->NFREQ; j++){
+	      powerSumFreqDomain.at(pol) += tmp_vhz[pol][j]*tmp_vhz[pol][j]/anita1->NFOUR;
+	      powerIntegralFreqDomain.at(pol) += dt*tmp_vhz[pol][j]*tmp_vhz[pol][j]/anita1->NFOUR;
+	    }
+	    std::cout << "powerSumFreqDomain.at(" << pol << ") = " << powerSumFreqDomain.at(pol) << std::endl;
+	    std::cout << "powerIntegralFreqDomain.at(" << pol << ") = " << powerIntegralFreqDomain.at(pol) << std::endl;
+	  }
+	}
 
 	anita1->MakeArrayforFFT(tmp_vhz[0], tmp_volts[0], 90., true);
 	anita1->MakeArrayforFFT(tmp_vhz[1], tmp_volts[1], 90., true);
+
+	// right, let's get the power
+	if(debugInMakeArray){
+	  std::vector<double> powerSumFreqDomain2(anita1->NPOL, 0);
+	  std::vector<double> powerIntegralFreqDomain2(anita1->NPOL, 0);
+	  const double df = anita1->freq[1] - anita1->freq[0]; // = 1/(dt*N);
+	  const double dt = 1./(df*anita1->NFOUR);
+	  
+	  for(int pol=0; pol < anita1->NPOL; pol++){
+	    powerSumFreqDomain2.at(pol) += tmp_vhz[pol][0]*tmp_vhz[pol][0];
+	    powerSumFreqDomain2.at(pol) += tmp_vhz[pol][1]*tmp_vhz[pol][1];
+	    for(int j=2; j < anita1->NFREQ; j+=2){
+	      powerSumFreqDomain2.at(pol) += tmp_vhz[pol][j]*tmp_vhz[pol][j] - tmp_vhz[pol][j+1]*tmp_vhz[pol][j+1];
+	    }
+	    powerSumFreqDomain2.at(pol)/=anita1->NFOUR;
+	    powerIntegralFreqDomain2.at(pol) = powerSumFreqDomain2.at(pol)*dt;
+	    std::cout << "powerSumFreqDomain2.at(" << pol << ") = " << powerSumFreqDomain2.at(pol) << std::endl;
+	    std::cout << "powerIntegralFreqDomain2.at(" << pol << ") = " << powerIntegralFreqDomain2.at(pol) << std::endl;
+	  }
+	}
+
 	// anita1->MakeArrayforFFT(tmp_vhz[0], tmp_volts[0], 90., true, debugInMakeArray);
 	// anita1->MakeArrayforFFT(tmp_vhz[1], tmp_volts[1], 90., true, debugInMakeArray);
 
 	if(debugInMakeArray){
 
 	  const TString theRootPwd = gDirectory->GetPath();
-	  std::shared_ptr<TFile> fHackHackHack = std::make_shared<TFile>("fUnderstandingMakeArrayForFFT.root", "recreate");
+	  auto fHackHackHack = std::unique_ptr<TFile>(new TFile("fUnderstandingMakeArrayForFFT.root", "recreate"));
 	  TGraph gr0_re, gr1_re, gr0_im, gr1_im;
 
 	  for(int i=0; i < anita1->NFOUR/2; i++){
@@ -860,18 +900,18 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	  gr1_im.SetName("gr1_im"); gr1_im.SetTitle("gr1_im"); gr1_im.Write();
 
 	  TGraph grTmpVhz0,  grTmpVhz1;
-	  std::cout << "In ApplyAntennaGain (after gain)... pol = " << 0 << "\n";
-	  for(auto v : tmp_vhz[0]){
-	    std::cout << v << " ";
-	    grTmpVhz0.SetPoint(grTmpVhz0.GetN(), grTmpVhz0.GetN(), v);
-	  }
+	  // std::cout << "In ApplyAntennaGain (after gain)... pol = " << 0 << "\n";
+	  // for(auto v : tmp_vhz[0]){
+	  //   std::cout << v << " ";
+	  //   grTmpVhz0.SetPoint(grTmpVhz0.GetN(), grTmpVhz0.GetN(), v);
+	  // }
 
-	  std::cout << "\n\nIn ApplyAntennaGain (after gain)... pol = " << 1 << "\n";	    
-	  for(auto v : tmp_vhz[1]) {
-	    std::cout << v << " ";	      
-	    grTmpVhz1.SetPoint(grTmpVhz1.GetN(), grTmpVhz1.GetN(), v);
-	  }
-	  std::cout << "\n\n";
+	  // std::cout << "\n\nIn ApplyAntennaGain (after gain)... pol = " << 1 << "\n";
+	  // for(auto v : tmp_vhz[1]) {
+	  //   std::cout << v << " ";	      
+	  //   grTmpVhz1.SetPoint(grTmpVhz1.GetN(), grTmpVhz1.GetN(), v);
+	  // }
+	  // std::cout << "\n\n";
 
 	  grTmpVhz0.SetName("grTmpVhz0");
 	  grTmpVhz0.SetTitle("grTmpVhz0");
@@ -894,7 +934,24 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	// instead of 0 to T, -T to 0
 	Tools::NormalTimeOrdering(anita1->NFOUR/2,tmp_volts[0]);
 	Tools::NormalTimeOrdering(anita1->NFOUR/2,tmp_volts[1]);
+
+	if(debugInMakeArray){
+	  std::vector<double> powerSumTimeDomain(anita1->NPOL, 0);
+	  std::vector<double> powerIntegralTimeDomain(anita1->NPOL, 0);
+	  const double df = anita1->freq[1] - anita1->freq[0]; // = 1/(dt*N);
+	  const double dt = 1./(df*anita1->NFOUR);
 	  
+	  for(int pol=0; pol < anita1->NPOL; pol++){
+	    for(int i=0; i < anita1->NFOUR/2; i++){
+	      powerSumTimeDomain.at(pol) += tmp_volts[pol][i]*tmp_volts[pol][i];
+	    }
+	    powerIntegralTimeDomain.at(pol) = dt*powerSumTimeDomain.at(pol);
+	    std::cout << "powerSumTimeDomain.at(" << pol << ") = " << powerSumTimeDomain.at(pol) << std::endl;
+	    std::cout << "powerIntegralTimeDomain.at(" << pol << ") = " << powerIntegralTimeDomain.at(pol) << std::endl;
+	  }
+	  exit(1);
+	}
+
 	numBinShift = int(panel1->GetDelay(jpt) / anita1->TIMESTEP);
 	if(fabs(numBinShift) >= anita1->HALFNFOUR){
 	  //cout<<"skipping"<<"\n";
@@ -909,13 +966,13 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	    Tools::ShiftRight(tmp_volts[0], anita1->NFOUR/2, -1*numBinShift );
 	    Tools::ShiftRight(tmp_volts[1], anita1->NFOUR/2, -1*numBinShift );
 	  }
-    
+
 	  for (int k=0;k<anita1->NFOUR/2;k++) {
 	    volts_rx_forfft[0][iband][k] += tmp_volts[0][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
 	    volts_rx_forfft[1][iband][k] += tmp_volts[1][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
 	  }
+
 	}
-      
       } // end loop over screen points
       
 	// Now need to convert time domain to frequency domain
