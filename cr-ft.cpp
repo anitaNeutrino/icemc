@@ -48,6 +48,10 @@ struct game_state {
   int vis_xmin_bin;
   int vis_xmax_bin;
   bvv::TBuffer <int> vis_nbins;
+  TCanvas *cZhsIFft;
+  TGraph *grIFft;
+  TGraph *grZhsTimeERec;
+  double *ZhsIFft;
 };
 
 extern const double pi;
@@ -71,6 +75,39 @@ void property_double(struct nk_context* ctx, const char *name, double min, bvv::
   double val = buf; 
   nk_property_double(ctx, name, min, &val, max, step, inc_per_pixel);
   buf = val;
+}
+
+void PlotIFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
+  if (mode == m_init) {
+    state->cZhsIFft = new TCanvas();
+    state->grIFft = NULL;
+    state->ZhsIFft = NULL;
+    state->grZhsTimeERec = NULL;
+  }
+
+  if (mode == m_reload || *state->vis_nbins) {
+    state->cZhsIFft->Clear();
+    state->ZhsIFft = FFTtools::doInvFFT(state->vis_nbins, state->ZhsFft);
+    if (state->grIFft) delete state->grIFft;
+    state->grIFft = new TGraph(state->vis_nbins);
+    for (int i = 0; i < state->vis_nbins; i++){
+      state->grIFft->SetPoint(i, (i + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, state->ZhsIFft[i]);
+    }
+    state->grIFft->SetLineColor(kBlue);
+    state->grIFft->SetLineWidth(3);
+    state->grIFft->Draw("AL");
+    if (state->grZhsTimeERec) delete state->grZhsTimeERec;
+    state->grZhsTimeERec = new TGraph(state->vis_nbins);
+    for (int i = 0; i < state->vis_nbins; i++) {
+      state->grZhsTimeERec->SetPoint(i, (i + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, ZhsTimeE[state->vis_xmin_bin + i]);
+      // printf("row: %i, ZhsTimeE.data() vs i * ZhsTimeDelta + ZhsTimeStart: %12.7e, %12.7e\n", i + state->vis_xmin_bin,
+             ZhsTimeArr[i + state->vis_xmin_bin],
+             ZhsTimeDelta * (i + state->vis_xmin_bin) + ZhsTimeStart);
+    }
+    state->grZhsTimeERec->Draw("L");
+    state->grZhsTimeERec->SetLineColor(kRed);
+    state->cZhsIFft->Modified(); state->cZhsIFft->Update(); 
+  }
 }
 
 void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
@@ -109,11 +146,11 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
     */
     for (int i = 0; i < state->vis_nbins; i++) {
       state->ZhsFftInp[i] = ZhsTimeE[int(state->vis_xmin_bin) + i];
-      printf("state->vis_xmin_bin: %d, state->ZhsFftInp[i]: %11.4e\n", state->vis_xmin_bin + i, state->ZhsFftInp[i]);
+      // printf("state->vis_xmin_bin: %d, state->ZhsFftInp[i]: %11.4e\n", state->vis_xmin_bin + i, state->ZhsFftInp[i]);
     }
     printf("*op, *state->vis_nbins, state->vis_nbins: %d, %d, %d\n", *op, *state->vis_nbins, int(state->vis_nbins));
     if (state->grFft) delete state->grFft;
-    state->grFft = new TGraph(state->vis_nbins / 2);
+    state->grFft = new TGraph(state->vis_nbins / 2 + 1);
     // delete[]: Is it a right thing to do?
     // http://www.fftw.org/fftw3_doc/Complex-One_002dDimensional-DFTs.html#Complex-One_002dDimensional-DFTs:
     // If you allocate an array with fftw_malloc() you must deallocate it with fftw_free(). Do not use free() or, heaven forbid, _delete_. 
@@ -121,9 +158,8 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
     if (state->ZhsFft) delete[] state->ZhsFft;
     // printf("After deleting ZhsFft\n");
     state->ZhsFft = FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp);
-    double dx = (state->vis_xmax - state->vis_xmin) / state->vis_nbins;
-    for (int i = 0; i < state->vis_nbins / 2; i++){
-      state->grFft->SetPoint(i, i / ((state->vis_xmax - state->vis_xmin) * 1e-9), state->ZhsFft[i].re * dx * 1e-9); // To get continuous ft values.
+    for (int i = 0; i < state->vis_nbins / 2 + 1; i++){
+      state->grFft->SetPoint(i, i / ((state->vis_xmax_bin - state->vis_xmin_bin) * ZhsTimeDelta * 1e-9), state->ZhsFft[i].re * ZhsTimeDelta * 1e-9); // To get continuous ft values.
     }
     state->cZhsFft->cd();
     state->grFft->Draw("AL");
@@ -235,6 +271,8 @@ static struct game_state *game_init()
 
   PlotFT(state, m_init, NULL);
 
+  PlotIFT(state, m_init, NULL);
+
   printf("Init Done\n");
 
   return state;
@@ -249,6 +287,7 @@ static void game_reload(struct game_state *state)
 {
   PlotWaveform(state, m_reload, ctx);
   PlotFT(state, m_reload, ctx);
+  PlotIFT(state, m_reload, ctx);
   
   cout << "reloaded dl" << endl;
   
@@ -281,6 +320,7 @@ static bool game_step(struct game_state *state)
         fprintf(stdout, "button pressed\n");
       PlotWaveform(state, m_step, ctx);
       PlotFT(state, m_step, ctx);
+      PlotIFT(state, m_step, ctx);
     } else cout << "nk_begin failed" << endl;
   nk_end(ctx);
 
