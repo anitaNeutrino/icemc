@@ -373,7 +373,9 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Balloon altitude", BN_ALTITUDE);
 
 
-  // whether to use constant gains as entered in GetBeamWidths (0) or to use Ped's measurements as entered in ReadGains (1)
+  // Use constant gains as entered in GetBeamWidths           (0)
+  // Use Ped's measurements as entered in ReadGains           (1)
+  // Use 3D-defined gain pattern with quadratic interpolation (3)
   // GAINS is actually an int, not a double...
   getSetting("Gain setting", GAINS);
 
