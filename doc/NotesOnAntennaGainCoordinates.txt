@@ -10,8 +10,17 @@
 ##
 ################################################################
 
-Oindree was the last person to touch this portion of the code,
-based on the comments. Around line 740 of icemc.cc, all the
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+What I found:
+
+hitangle_e is the angle in the hn/yx plane
+towards (h)/(-y)-hat, from the x-hat vector.
+
+hitangle_h is the angle in the en/zx plane
+towards (e)/(z)-hat, from the x-hat vector.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Around line 740 of icemc.cc, all the
 numbers relating to the vectorization of the signals are
 declared.
 
@@ -98,10 +107,10 @@ balloon.cc ln ~700; hitangle_e is assigned as
     atan2(e_component_kvector, n_component_kvector)
 
 
-    Meaning that hitangle_e is the angle in the hn/yx plane
-    towards (h)/(-y)-hat, from the x-hat vector.
+Meaning that hitangle_e is the angle in the hn/yx plane
+towards (h)/(-y)-hat, from the x-hat vector.
 
-    hitangle_h is the angle in the en/zx plane
-    towards (e)/(z)-hat, from the x-hat vector.
+hitangle_h is the angle in the en/zx plane
+towards (e)/(z)-hat, from the x-hat vector.
 
 
