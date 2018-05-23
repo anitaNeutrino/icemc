@@ -23,6 +23,10 @@ extern struct xlibstruct *gxlib;
 struct nk_context *ctx = &(gxlib->ctx);
 
 enum RunMode { m_init, m_reload, m_step, NRunModes };
+enum ComplexNumForm { cf_polar, cf_rect, NComplexNumForm };
+namespace unit {
+  const double ns = 1e-9;
+}
 
 using namespace std;
 
@@ -36,7 +40,10 @@ struct game_state {
   TGraph *grZhsAlpha;
   TLegend *legend;
   double *ZhsFftInp;
-  TGraph *grFft;
+  TGraph *grFftRe;
+  TGraph *grFftIm; 
+  TGraph *grFftRho;
+  TGraph *grFftPhi;
   FFTWComplex *ZhsFft;
   TCanvas *cZhsFft;
   double fwhm_xmin;
@@ -100,9 +107,7 @@ void PlotIFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
     state->grZhsTimeERec = new TGraph(state->vis_nbins);
     for (int i = 0; i < state->vis_nbins; i++) {
       state->grZhsTimeERec->SetPoint(i, (i + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, ZhsTimeE[state->vis_xmin_bin + i]);
-      // printf("row: %i, ZhsTimeE.data() vs i * ZhsTimeDelta + ZhsTimeStart: %12.7e, %12.7e\n", i + state->vis_xmin_bin,
-             ZhsTimeArr[i + state->vis_xmin_bin],
-             ZhsTimeDelta * (i + state->vis_xmin_bin) + ZhsTimeStart);
+      // printf("row: %i, ZhsTimeE.data() vs i * ZhsTimeDelta + ZhsTimeStart: %12.7e, %12.7e\n", i + state->vis_xmin_bin, ZhsTimeArr[i + state->vis_xmin_bin],                     ZhsTimeDelta * (i + state->vis_xmin_bin) + ZhsTimeStart);
     }
     state->grZhsTimeERec->Draw("L");
     state->grZhsTimeERec->SetLineColor(kRed);
@@ -114,58 +119,69 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
   if (mode == m_init) {
     state->cZhsFft   = new TCanvas();
     state->ZhsFftInp = NULL;
-    state->grFft     = NULL;
+    state->grFftRe   = NULL;
+    state->grFftIm   = NULL;
+    state->grFftRho  = NULL;
+    state->grFftPhi  = NULL;
     state->ZhsFft    = NULL;
     return;
   }
 
-  static bvv::TBuffer <int> op(kBlue);
-
-  // if (mode == m_reload) {
-  // }
+  static bvv::TBuffer <int> cf(cf_polar);
   if (mode == m_step) {
     nk_layout_row_dynamic(ctx, 30, 2);
-    if (nk_option_label(ctx, "kBlue", op == kBlue)) { op = kBlue; /* printf("op = kBlue\n"); */ }
-    if (nk_option_label(ctx, "kRed", op == kRed))   { op = kRed; /* printf("op = kRed\n"); */}
+    if (nk_option_label(ctx, "Polar", cf == cf_polar )) { cf = cf_polar; }
+    if (nk_option_label(ctx, "Rectg", cf == cf_rect))   { cf = cf_rect; }
   }
 
-  if (mode == m_reload || *op || *state->vis_nbins) {
-    state->cZhsFft->Clear();
-    if (state->ZhsFftInp) delete[] state->ZhsFftInp;
-    state->ZhsFftInp = new double[state->vis_nbins];
-    /*
-    double xmin_normal = -5;
-    double xmax_normal = +5;
-    int N = state->vis_nbins;
-    double dx = (xmax_normal - xmin_normal) / N;
-    for (int i = 0; i < state->vis_nbins; i++){
-      double x = xmin_normal + dx * i;
-      double y = exp(-0.5 * x * x) / (sqrt(2.0) * sqrt(pi));
-      state->ZhsFftInp[i] = y;
-    }
-    */
-    for (int i = 0; i < state->vis_nbins; i++) {
-      state->ZhsFftInp[i] = ZhsTimeE[int(state->vis_xmin_bin) + i];
-      // printf("state->vis_xmin_bin: %d, state->ZhsFftInp[i]: %11.4e\n", state->vis_xmin_bin + i, state->ZhsFftInp[i]);
-    }
-    printf("*op, *state->vis_nbins, state->vis_nbins: %d, %d, %d\n", *op, *state->vis_nbins, int(state->vis_nbins));
-    if (state->grFft) delete state->grFft;
-    state->grFft = new TGraph(state->vis_nbins / 2 + 1);
-    // delete[]: Is it a right thing to do?
-    // http://www.fftw.org/fftw3_doc/Complex-One_002dDimensional-DFTs.html#Complex-One_002dDimensional-DFTs:
-    // If you allocate an array with fftw_malloc() you must deallocate it with fftw_free(). Do not use free() or, heaven forbid, _delete_. 
-    // doFFT is not using fftw_malloc() though, unless "new" is overloaded.
-    if (state->ZhsFft) delete[] state->ZhsFft;
-    // printf("After deleting ZhsFft\n");
-    state->ZhsFft = FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp);
-    for (int i = 0; i < state->vis_nbins / 2 + 1; i++){
-      state->grFft->SetPoint(i, i / ((state->vis_xmax_bin - state->vis_xmin_bin) * ZhsTimeDelta * 1e-9), state->ZhsFft[i].re * ZhsTimeDelta * 1e-9); // To get continuous ft values.
-    }
-    state->cZhsFft->cd();
-    state->grFft->Draw("AL");
 
-    state->grFft->SetLineWidth(1);
-    state->grFft->SetLineColor(op);
+  if (mode == m_reload || *cf || *state->vis_nbins) {
+    state->cZhsFft->Clear();
+    if (*state->vis_nbins) {
+      delete[] state->ZhsFftInp;
+      delete[] state->ZhsFft;
+      delete   state->grFftRe;
+      delete   state->grFftIm;
+      delete   state->grFftRho;
+      delete   state->grFftPhi;
+    }
+    if (*state->vis_nbins || mode == m_reload) {
+      state->ZhsFftInp = new double[state->vis_nbins];
+      state->grFftRe   = new TGraph(state->vis_nbins / 2 + 1);
+      state->grFftIm   = new TGraph(state->vis_nbins / 2 + 1);
+      state->grFftRho  = new TGraph(state->vis_nbins / 2 + 1);
+      state->grFftPhi  = new TGraph(state->vis_nbins / 2 + 1);
+
+      for (int i = 0; i < state->vis_nbins; i++) {
+        state->ZhsFftInp[i] = ZhsTimeE[int(state->vis_xmin_bin) + i];
+      }
+      state->ZhsFft = FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp);
+      for (int i = 0; i < state->vis_nbins / 2 + 1; i++){
+        double dfreq = 1.0 / ((state->vis_xmax_bin - state->vis_xmin_bin) * ZhsTimeDelta * unit::ns);
+        double re = state->ZhsFft[i].re * /* --> */ ZhsTimeDelta  * unit::ns /* <-- to make discrete ft comparable to analytical one */;
+        double im = state->ZhsFft[i].im * /* --> */ ZhsTimeDelta  * unit::ns /* <-- to make discrete ft comparable to analytical one */;
+        state->grFftRe->SetPoint(i, i * dfreq, re);
+        state->grFftIm->SetPoint(i, i * dfreq, im);
+        state->grFftRho->SetPoint(i, i * dfreq, TMath::Sqrt(im * im + re * re));
+      }
+    }
+
+    printf("*cf, *state->vis_nbins, state->vis_nbins: %d, %d, %d\n", *cf, *state->vis_nbins, int(state->vis_nbins));
+    state->cZhsFft->cd();
+    if (cf == cf_rect) {
+      state->grFftRe->Draw("AL");
+      state->grFftIm->Draw("L");
+
+      state->grFftIm->SetLineWidth(2);
+      state->grFftIm->SetLineColor(kMagenta);
+
+      state->grFftRe->SetLineWidth(2);
+      state->grFftRe->SetLineColor(kBlue);
+    } else {
+      state->grFftRho->Draw("AL");
+      state->grFftRho->SetLineWidth(2);
+      state->grFftRho->SetLineColor(kBlue);
+    }
     state->cZhsFft->Modified(); state->cZhsFft->Update(); 
   }
 }
