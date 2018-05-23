@@ -1,25 +1,26 @@
-####################################################################
+################################################################
 ##
 ##
 ## 20180420, idb
 ##
-## Notes on how the coordinate system works re. icemc's definitions
-## of the antennas and their gain
+## Notes on how the coordinate system works re. icemc's
+## definitions of the antennas and their gain
 ##
 ##
 ##
-####################################################################
+################################################################
 
-Oindree was the last person to touch this portion of the
-code, based on the comments. Around line 740 of icemc.cc, all the
-numbers relating to the vectorization of the signals are declared.
+Oindree was the last person to touch this portion of the code,
+based on the comments. Around line 740 of icemc.cc, all the
+numbers relating to the vectorization of the signals are
+declared.
 
 e_component is "E comp along polarization".
 h_component is "H comp along polarization".
 n_component is "normal comp along polarization".
 
-e_component_kvector is "component of e-field along the rx e-plane".
-h_component_kvector is "component of e-field along the rx h-plane".
+e_component_kvector; "component of e-field along the rx eplane".
+h_component_kvector; "component of e-field along the rx hplane".
 n_component_kvector is "component of e-field along the normal".
 ^^^^ These are all doubles ^^^^ 
 
@@ -31,14 +32,26 @@ defined as std:vectors.
 	n_normal is in the          x-hat direction
 
 Based on the comments present in balloon.cc, around line 620,
-the normal vector is the vector pointing out, along the boresight
-of the antenna.
+the normal vector is the vector pointing out, along the
+boresight of the antenna.
 
-Further, ant_normal is a std:vector which is the direction of the
-boresight, "Vector normal to the face of the antenna". ant_normal
-doesn't seem to be used in anything that's related to the antenna
-gain.
-                                             
+Further, ant_normal is a std:vector which is the direction of
+the boresight, "Vector normal to the face of the antenna".
+ant_normal doesn't seem to be used in anything that's related
+to the antenna gain.
+
+###############################
+About the Ray Class (n_exit2bn)
+###############################
+
+In ray.cc ln ~30, it is written, that the n_exit2bn is simply
+the normal vector from the event to the balloon.
+
+Similarly, the n_exit2bn_eachboresight vector is the normal
+vector from the event to the boresight of each individual
+antenna.
+
+
 ############
 Program flow
 ############
@@ -49,16 +62,46 @@ icemc.cc ln ~2800; GetAntennaOrientaiton called in a loop over
 
 In the GetAntennaOrientation call;
 balloon.cc ln ~630; n_eplane/hplane/normal are rotated about the
-                    y-axis to point the antenna's boresight down
-                    towards the earth. 
+                    y-axis to point the antenna's boresight
+                    (n_normal) down towards the earth. 
                     
-                    Then, based on the phi-sector location of the 
-                    antenna on anita, the antenna is rotated about
-                    the z-axis.
+		    Then, based on the phi-sector location of
+                    the antenna on anita, the antenna is rotated
+                    about the z-axis.
                     
                     Finally, the antenna, now having it's axis
                     rotated to be consistent with it's place on
-                    anita, is rotated to account for pitch, roll,
-                    yaw, etc. of the payload.
+                    anita, is rotated to account for pitch,
+                    roll, yaw, etc. of the payload.
+
+
+icemc.cc ln ~2825; GetEcompHcompkvector called
+
+In GetEcompHcompkvector call;
+balloon.cc ln ~660; e/h/n_component_kvector are the components
+                    of the vector from the balloon to the signal
+                    decomposed into the e/h/n-plane unit
+                    vectors.
+
+
+icemc.cc ln ~2825; GetEcompHcompEvector called
+                   Not necessarily relevant to the GetHitAngles
+                   call.
+
+icemc.cc ln ~2830; GetHitAngles called
+
+In the GetHitAngles call;
+balloon.cc ln ~700; hitangle_e is assigned as
+    atan2(h_component_kvector, n_component_kvector)
+    
+                    hitangle_h is assigned as
+    atan2(e_component_kvector, n_component_kvector)
+
+
+    Meaning that hitangle_e is the angle in the hn/yx plane
+    towards (h)/(-y)-hat, from the x-hat vector.
+
+    hitangle_h is the angle in the en/zx plane
+    towards (e)/(z)-hat, from the x-hat vector.
 
 
