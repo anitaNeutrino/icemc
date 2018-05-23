@@ -1369,33 +1369,33 @@ void Anita::ReadGains(void) {
 
 
 // TODO: Write the function to read in the gain files from the
-//       ARA style format, to be used in the AntennaGain function.
-void ReadARAGainFile() {
+//       spherical gain format, to be used in the AntennaGain function.
+void Read3DGainFile() {
 	
 	string line;
 
 	// Input stream for the antenna's H-pol channel
-	ifstream inHPolFile;
-	inHPolFile.open((ICEMC_DATA_DIR+"/hPolAntennaDef.uan").c_str());
+	ifstream inHChanFile;
+	inHChanFile.open((ICEMC_DATA_DIR+"/hChanAntennaDef.dat").c_str());
 
-	if(!inHPolFile.is_open()) {
+	if(!inHChanFile.is_open()) {
 		cout << "ReadARAGainFile Error; File cannot be read" << endl;
 	}
 
-	while(inHPolFile.is_open() && inHPolFile.good()) {
+	while(inHChanFile.is_open() && inHChanFile.good()) {
 		
 		// See the header file for information about NPOINTS_GAIN
 		for (int i = 0; i < NPOINTS_GAIN; i++) {
-			getline(inHPolFile, line);
-			
+			getline(inHChanFile, line);
+//TODO: Left off here	
 			if (line.substr(0, line.find_first_of(":")) == "freq "){
 				hFreq[i] = atof(line.substr(6, line.find_first_of("M")).c_str());
 				// TODO: Consider adding script to throw
 				//       an error if hFreq is not in the
 				//       frequency bins as defined.
 
-				getline(inHPolFile, line);  //read SWR
-				getline(inHPolFile, line);  //read names
+				getline(inHChanFile, line);  //read SWR
+				getline(inHChanFile, line);  //read names
 				
 				// Note here that j is just one angle, but in
 				// reality the value of j encodes both the
@@ -1405,7 +1405,7 @@ void ReadARAGainFile() {
 				// info. See the header file for information
 				// on NPOINTS_GAINANGSTEP.
 				for (int j = 0; j < NPOINTS_GAINANGSTEP; j++) {
-					getline(inHPolFile, line);
+					getline(inHChanFile, line);
 					
 					// Reads a line's gain
 					hGain[i][j]  = atof(line.substr(20, 33).c_str());
@@ -1470,8 +1470,16 @@ void Anita::AntennaGain(Settings *settings1,
                         int k,
                         double &vsignalarray_e, double &vsignalarray_h) {
     
-  if ((freq[k] >= settings1->FREQ_LOW_SEAVEYS)
-   && (freq[k] <= settings1->FREQ_HIGH_SEAVEYS)) {
+	if ((
+	    (freq[k] >= settings1->FREQ_LOW_SEAVEYS)
+         && (freq[k] <= settings1->FREQ_HIGH_SEAVEYS)) {
+
+	
+	
+	
+	
+	else if ((freq[k] >= settings1->FREQ_LOW_SEAVEYS)
+              && (freq[k] <= settings1->FREQ_HIGH_SEAVEYS)) {
     
     // Fill this for each frequency bin for each antenna.
     // It's the gain of the antenna given the angle that the
