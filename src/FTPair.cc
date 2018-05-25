@@ -413,7 +413,7 @@ void icemc::FTPair::maybeUpdateTimeDomain() const {
     // Forward and then inv FFT scales output by N/2
     // here we take that out by scaling down just before the inverse FT
     double scaleFactor = 2./nNew; // numerical recipes scaling
-    
+
     std::vector<double> temp;
     temp.reserve(nNew);
     temp.push_back(fFreqDomain.at(0).real()); // DC offset
@@ -424,11 +424,11 @@ void icemc::FTPair::maybeUpdateTimeDomain() const {
     }
     realft(&temp[0], -1, temp.size());
 
+    fTimeDomainGraph.Set(nNew);
     double t0 = fTimeDomainGraph.GetX()[0];
     double dtNew = fTimeDomainGraph.GetX()[1] - t0;
     for(int i=0;  i < nNew; i++){
-      fTimeDomainGraph.GetY()[i] = temp.at(i);
-      fTimeDomainGraph.GetX()[i] = t0 + i*dtNew;
+      fTimeDomainGraph.SetPoint(i, t0 + i*dtNew,  temp.at(i));
     }
 
     fNeedToUpdateTimeDomain = false;
