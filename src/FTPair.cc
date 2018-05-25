@@ -202,11 +202,14 @@ TGraph icemc::FTPair::makePowerSpectrumGraph() const {
       sumSqFreq += grF.GetY()[j];
     }
 
-    std::cerr << "Debug info in "  << __PRETTY_FUNCTION__
-	      << ", difference in powers is " << sumSqTime - sumSqFreq
-	      << ", time domain power = " << sumSqTime
-	      << ", freq domain power = " << sumSqFreq << std::endl;
-
+    const double fractionalDifferenceInPowers = (sumSqTime - sumSqFreq)/sumSqTime;
+    const double tolerance = 1e-10;
+    if(TMath::Abs(fractionalDifferenceInPowers) > tolerance){
+      std::cerr << "Debug info in "  << __PRETTY_FUNCTION__
+		<< ", fractional difference in powers is " << (sumSqTime - sumSqFreq)/sumSqTime
+		<< ", time domain power = " << sumSqTime
+		<< ", freq domain power = " << sumSqFreq << std::endl;
+    }
   }
 
   return grF;
