@@ -40,10 +40,12 @@ struct game_state {
   TGraph *grZhsAlpha;
   TLegend *legend;
   double *ZhsFftInp;
-  TGraph *grFftRe;
-  TGraph *grFftIm; 
-  TGraph *grFftRho;
-  TGraph *grFftPhi;
+  unique_ptr<TGraph> grFftRe;
+  unique_ptr<TGraph> grFftIm; 
+  unique_ptr<TGraph> grFftRho;
+  unique_ptr<TGraph> grFftPhi;
+  TPad *panel_ft_rho;
+  TPad *panel_ft_phi;
   FFTWComplex *ZhsFft;
   TCanvas *cZhsFft;
   double fwhm_xmin;
@@ -94,6 +96,16 @@ void PlotIFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
 
   if (mode == m_reload || *state->vis_nbins) {
     state->cZhsIFft->Clear();
+    double phi = 35;
+    for (int i = 0; i < state->vis_nbins / 2 + 1; i++) {
+      double re = state->ZhsFft[i].re;
+      double im = state->ZhsFft[i].im;
+      double rho = TMath::Sqrt(re * re + im * im);
+      double new_re = rho * TMath::Cos(phi * TMath::Pi() / 180.);
+      double new_im = rho * TMath::Sin(phi * TMath::Pi() / 180.);
+      state->ZhsFft[i].re = new_re;
+      state->ZhsFft[i].im = new_im;
+    }
     state->ZhsIFft = FFTtools::doInvFFT(state->vis_nbins, state->ZhsFft);
     if (state->grIFft) delete state->grIFft;
     state->grIFft = new TGraph(state->vis_nbins);
@@ -119,11 +131,8 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
   if (mode == m_init) {
     state->cZhsFft   = new TCanvas();
     state->ZhsFftInp = NULL;
-    state->grFftRe   = NULL;
-    state->grFftIm   = NULL;
-    state->grFftRho  = NULL;
-    state->grFftPhi  = NULL;
     state->ZhsFft    = NULL;
+
     return;
   }
 
@@ -140,17 +149,14 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
     if (*state->vis_nbins) {
       delete[] state->ZhsFftInp;
       delete[] state->ZhsFft;
-      delete   state->grFftRe;
-      delete   state->grFftIm;
-      delete   state->grFftRho;
-      delete   state->grFftPhi;
     }
     if (*state->vis_nbins || mode == m_reload) {
       state->ZhsFftInp = new double[state->vis_nbins];
-      state->grFftRe   = new TGraph(state->vis_nbins / 2 + 1);
-      state->grFftIm   = new TGraph(state->vis_nbins / 2 + 1);
-      state->grFftRho  = new TGraph(state->vis_nbins / 2 + 1);
-      state->grFftPhi  = new TGraph(state->vis_nbins / 2 + 1);
+      state->grFftRe.reset(new TGraph(state->vis_nbins / 2 + 1));
+      state->grFftIm.reset(new TGraph(state->vis_nbins / 2 + 1));
+      state->grFftRho.reset(new TGraph(state->vis_nbins / 2 + 1));
+      // state->grFftRho = make_unique<TGraph>(state->vis_nbins / 2 + 1); // Wait for c++14.
+      state->grFftPhi.reset(new TGraph(state->vis_nbins / 2 + 1));
 
       for (int i = 0; i < state->vis_nbins; i++) {
         state->ZhsFftInp[i] = ZhsTimeE[int(state->vis_xmin_bin) + i];
@@ -163,6 +169,7 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
         state->grFftRe->SetPoint(i, i * dfreq, re);
         state->grFftIm->SetPoint(i, i * dfreq, im);
         state->grFftRho->SetPoint(i, i * dfreq, TMath::Sqrt(im * im + re * re));
+        state->grFftPhi->SetPoint(i, i * dfreq, TMath::ATan2(re, im) * 180.0 / TMath::Pi());
       }
     }
 
@@ -178,9 +185,25 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
       state->grFftRe->SetLineWidth(2);
       state->grFftRe->SetLineColor(kBlue);
     } else {
-      state->grFftRho->Draw("AL");
+      state->panel_ft_rho = new TPad("ft_rho","",0,0,1,1);
+      state->panel_ft_rho->cd();
       state->grFftRho->SetLineWidth(2);
       state->grFftRho->SetLineColor(kBlue);
+      state->grFftRho->Draw("AL");
+      state->panel_ft_rho->Modified();
+      state->cZhsFft->cd();
+      state->panel_ft_rho->Draw();
+
+      state->panel_ft_phi = new TPad("ft_phi","",0,0,1,1);
+      state->panel_ft_phi->SetFillStyle(4000);
+      state->panel_ft_phi->SetFrameFillStyle(0);
+      state->panel_ft_phi->cd();
+      state->grFftPhi->SetLineWidth(2);
+      state->grFftPhi->SetLineColor(kMagenta);
+      state->grFftPhi->Draw("ALY+");
+      state->panel_ft_phi->Modified();
+      state->cZhsFft->cd();
+      state->panel_ft_phi->Draw();
     }
     state->cZhsFft->Modified(); state->cZhsFft->Update(); 
   }
@@ -243,7 +266,7 @@ void PlotWaveform(struct game_state *state, RunMode mode, struct nk_context *ctx
   static bvv::TBuffer <double> ZhsTimePlotY2NDC(0.85);
   if (mode == m_step) {
     nk_layout_row_dynamic(ctx, 25, 1);
-    property_int(ctx, "Plt wid: ", 0, ZhsTimePlotHalfWidth, 2000 /*max*/, 10 /*increment*/, 1.0 /*sensitivity*/);
+    property_int(ctx, "Plt wid: ", 0, ZhsTimePlotHalfWidth, 3000 /*max*/, 10 /*increment*/, 1.0 /*sensitivity*/);
     property_double(ctx, "Y2NDC: ", 0.0, ZhsTimePlotY2NDC, 1.0 /*max*/, 0.02 /*increment*/, 0.002 /*sensitivity*/);
   }
 
