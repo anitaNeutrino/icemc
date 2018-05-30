@@ -75,6 +75,7 @@ struct game_state {
   unique_ptr<TGraph> grIFft;
   unique_ptr<TGraph> grZhsTimeERec;
   unique_ptr<double[]> ZhsIFft;
+  bvv::TBuffer <int> BinShift;
 };
 
 extern const double pi;
@@ -108,10 +109,10 @@ void PlotIFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
   static bvv::TBuffer <int> Phi(0);
   if (mode == m_step) {
     nk_layout_row_dynamic(ctx, 25, 1);
-    property_int(ctx, "Phi: ", -180 /*min*/, Phi, +180 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
+    property_int(ctx, "Phase: ", -180 /*min*/, Phi, +180 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
   }
 
-  if (mode == m_reload || *state->vis_nbins || *Phi) {
+  if (mode == m_reload || *state->vis_nbins || *Phi || *state->BinShift) {
     state->cZhsIFft->Clear();
     for (int i = 0; i < state->vis_nbins / 2 + 1; i++) {
       double re = state->ZhsFft[i].re;
@@ -132,7 +133,7 @@ void PlotIFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
     state->grIFft->Draw("AL");
     state->grZhsTimeERec.reset(new TGraph(state->vis_nbins));
     for (int i = 0; i < state->vis_nbins; i++) {
-      state->grZhsTimeERec->SetPoint(i, (i + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, ZhsTimeE[state->vis_xmin_bin + i]);
+      state->grZhsTimeERec->SetPoint(i, ((i + state->BinShift) % state->vis_nbins + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, ZhsTimeE[state->vis_xmin_bin + i]);
       // printf("row: %i, ZhsTimeE.data() vs i * ZhsTimeDelta + ZhsTimeStart: %12.7e, %12.7e\n", i + state->vis_xmin_bin, ZhsTimeArr[i + state->vis_xmin_bin],                     ZhsTimeDelta * (i + state->vis_xmin_bin) + ZhsTimeStart);
     }
     state->grZhsTimeERec->Draw("L");
@@ -149,32 +150,36 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
     return;
   }
 
-  static bvv::TBuffer <int> cf(cf_rect);
+  static bvv::TBuffer <int> cf(cf_polar);
   if (mode == m_step) {
     nk_layout_row_dynamic(ctx, 30, 2);
     if (nk_option_label(ctx, "Polar", cf == cf_polar )) { cf = cf_polar; }
     if (nk_option_label(ctx, "Rectg", cf == cf_rect))   { cf = cf_rect; }
+    nk_layout_row_dynamic(ctx, 30, 1);
+    property_int(ctx, "BinShift: ", -1000 /*min*/, state->BinShift, +1000 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
   }
 
 
-  if (mode == m_reload || *cf || *state->vis_nbins) {
+  if (mode == m_reload || *cf || *state->BinShift || *state->vis_nbins) {
     // printf("Before state->cZhsFft->Clear()\n");
     // I want to start from fresh: clean canvas cZhsFft, no panels that can or cannot go into cZhsFft.
     // Panels will be _deleted_ (object destruction) as a result of TCanvas.Clear(). Graphs need to be deleted manually.
     state->cZhsFft->Clear(); // No panels any more if there were any.
     // printf("After state->cZhsFft->Clear()\n");
-    if (*state->vis_nbins || mode == m_reload) {
+    if (true) {
       // We compute plots that may or may not be needed for the chosen visualization options.
       state->ZhsFftInp.reset( new double[state->vis_nbins]);
 
       for (int i = 0; i < state->vis_nbins; i++) {
-        state->ZhsFftInp[i] = ZhsTimeE[int(state->vis_xmin_bin) + i];
+        state->ZhsFftInp[(i + state->BinShift) % state->vis_nbins] = ZhsTimeE[int(state->vis_xmin_bin) + i];
       }
       state->ZhsFft.reset(FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp.get()));
       if (cf == cf_polar) {
+        printf("Polar mode\n");
         state->grFftRho.reset( new TGraph(state->vis_nbins / 2 + 1));
         state->grFftPhi.reset( new TGraph(state->vis_nbins / 2 + 1));
       } else {
+        printf("Rect mode\n");
         state->grFftRe.reset(  new TGraph1(state->vis_nbins / 2 + 1));
         state->grFftIm.reset(  new TGraph1(state->vis_nbins / 2 + 1));
       }
@@ -183,9 +188,11 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
         double re = state->ZhsFft[i].re * /* --> */ ZhsTimeDelta  * unit::ns /* <-- to make discrete ft comparable to analytical one */;
         double im = state->ZhsFft[i].im * /* --> */ ZhsTimeDelta  * unit::ns /* <-- to make discrete ft comparable to analytical one */;
         if (cf == cf_polar) {
+          printf("Polar mode\n");
           state->grFftRho->SetPoint(i, i * dfreq, TMath::Sqrt(im * im + re * re));
           state->grFftPhi->SetPoint(i, i * dfreq, TMath::ATan2(re, im) * 180.0 / TMath::Pi());
         } else {
+          printf("Rect mode\n");
           state->grFftRe->SetPoint(i, i * dfreq, re);
           state->grFftIm->SetPoint(i, i * dfreq, im);
         }
