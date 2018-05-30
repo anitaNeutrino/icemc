@@ -30,6 +30,18 @@ namespace unit {
 
 using namespace std;
 
+class TGraph1: public TGraph {
+public:
+  using TGraph::TGraph;
+  ~TGraph1() { cout<<"Destructing TGraph1 " << fName << endl; } 
+};
+
+class TPad1: public TPad {
+public:
+  using TPad::TPad;
+  ~TPad1() { cout<<"Destructing TPad1!!!" << endl; } 
+};
+
 struct game_state {
   TCanvas *cZhsEAndAlpha;
   TPad *px1;
@@ -39,14 +51,16 @@ struct game_state {
   TPad *px2;
   TGraph *grZhsAlpha;
   TLegend *legend;
-  double *ZhsFftInp;
+  unique_ptr<double[]> ZhsFftInp;
   unique_ptr<TGraph> grFftRe;
   unique_ptr<TGraph> grFftIm; 
   unique_ptr<TGraph> grFftRho;
   unique_ptr<TGraph> grFftPhi;
-  TPad *panel_ft_rho;
-  TPad *panel_ft_phi;
-  FFTWComplex *ZhsFft;
+  TPad1 *panel_ft_rho;
+  //unique_ptr<TPad> panel_ft_rho;
+  TPad1 *panel_ft_phi;
+  //unique_ptr<TPad> panel_ft_phi;
+  unique_ptr<FFTWComplex[]> ZhsFft;
   TCanvas *cZhsFft;
   double fwhm_xmin;
   double fwhm_xmax;
@@ -58,9 +72,9 @@ struct game_state {
   int vis_xmax_bin;
   bvv::TBuffer <int> vis_nbins;
   TCanvas *cZhsIFft;
-  TGraph *grIFft;
-  TGraph *grZhsTimeERec;
-  double *ZhsIFft;
+  unique_ptr<TGraph> grIFft;
+  unique_ptr<TGraph> grZhsTimeERec;
+  unique_ptr<double[]> ZhsIFft;
 };
 
 extern const double pi;
@@ -89,34 +103,34 @@ void property_double(struct nk_context* ctx, const char *name, double min, bvv::
 void PlotIFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
   if (mode == m_init) {
     state->cZhsIFft = new TCanvas();
-    state->grIFft = NULL;
-    state->ZhsIFft = NULL;
-    state->grZhsTimeERec = NULL;
   }
 
-  if (mode == m_reload || *state->vis_nbins) {
+  static bvv::TBuffer <int> Phi(0);
+  if (mode == m_step) {
+    nk_layout_row_dynamic(ctx, 25, 1);
+    property_int(ctx, "Phi: ", -180 /*min*/, Phi, +180 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
+  }
+
+  if (mode == m_reload || *state->vis_nbins || *Phi) {
     state->cZhsIFft->Clear();
-    double phi = 35;
     for (int i = 0; i < state->vis_nbins / 2 + 1; i++) {
       double re = state->ZhsFft[i].re;
       double im = state->ZhsFft[i].im;
       double rho = TMath::Sqrt(re * re + im * im);
-      double new_re = rho * TMath::Cos(phi * TMath::Pi() / 180.);
-      double new_im = rho * TMath::Sin(phi * TMath::Pi() / 180.);
+      double new_re = rho * TMath::Cos(Phi * TMath::Pi() / 180.);
+      double new_im = rho * TMath::Sin(Phi * TMath::Pi() / 180.);
       state->ZhsFft[i].re = new_re;
       state->ZhsFft[i].im = new_im;
     }
-    state->ZhsIFft = FFTtools::doInvFFT(state->vis_nbins, state->ZhsFft);
-    if (state->grIFft) delete state->grIFft;
-    state->grIFft = new TGraph(state->vis_nbins);
+    state->ZhsIFft.reset(FFTtools::doInvFFT(state->vis_nbins, state->ZhsFft.get()));
+    state->grIFft.reset(new TGraph(state->vis_nbins));
     for (int i = 0; i < state->vis_nbins; i++){
       state->grIFft->SetPoint(i, (i + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, state->ZhsIFft[i]);
     }
     state->grIFft->SetLineColor(kBlue);
     state->grIFft->SetLineWidth(3);
     state->grIFft->Draw("AL");
-    if (state->grZhsTimeERec) delete state->grZhsTimeERec;
-    state->grZhsTimeERec = new TGraph(state->vis_nbins);
+    state->grZhsTimeERec.reset(new TGraph(state->vis_nbins));
     for (int i = 0; i < state->vis_nbins; i++) {
       state->grZhsTimeERec->SetPoint(i, (i + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, ZhsTimeE[state->vis_xmin_bin + i]);
       // printf("row: %i, ZhsTimeE.data() vs i * ZhsTimeDelta + ZhsTimeStart: %12.7e, %12.7e\n", i + state->vis_xmin_bin, ZhsTimeArr[i + state->vis_xmin_bin],                     ZhsTimeDelta * (i + state->vis_xmin_bin) + ZhsTimeStart);
@@ -130,13 +144,12 @@ void PlotIFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
 void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
   if (mode == m_init) {
     state->cZhsFft   = new TCanvas();
-    state->ZhsFftInp = NULL;
-    state->ZhsFft    = NULL;
-
+    state->panel_ft_phi = NULL;
+    state->panel_ft_rho = NULL;
     return;
   }
 
-  static bvv::TBuffer <int> cf(cf_polar);
+  static bvv::TBuffer <int> cf(cf_rect);
   if (mode == m_step) {
     nk_layout_row_dynamic(ctx, 30, 2);
     if (nk_option_label(ctx, "Polar", cf == cf_polar )) { cf = cf_polar; }
@@ -145,34 +158,43 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
 
 
   if (mode == m_reload || *cf || *state->vis_nbins) {
-    state->cZhsFft->Clear();
-    if (*state->vis_nbins) {
-      delete[] state->ZhsFftInp;
-      delete[] state->ZhsFft;
-    }
+    // printf("Before state->cZhsFft->Clear()\n");
+    // I want to start from fresh: clean canvas cZhsFft, no panels that can or cannot go into cZhsFft.
+    // Panels will be _deleted_ (object destruction) as a result of TCanvas.Clear(). Graphs need to be deleted manually.
+    state->cZhsFft->Clear(); // No panels any more if there were any.
+    // printf("After state->cZhsFft->Clear()\n");
     if (*state->vis_nbins || mode == m_reload) {
-      state->ZhsFftInp = new double[state->vis_nbins];
-      state->grFftRe.reset(new TGraph(state->vis_nbins / 2 + 1));
-      state->grFftIm.reset(new TGraph(state->vis_nbins / 2 + 1));
-      state->grFftRho.reset(new TGraph(state->vis_nbins / 2 + 1));
-      // state->grFftRho = make_unique<TGraph>(state->vis_nbins / 2 + 1); // Wait for c++14.
-      state->grFftPhi.reset(new TGraph(state->vis_nbins / 2 + 1));
+      // We compute plots that may or may not be needed for the chosen visualization options.
+      state->ZhsFftInp.reset( new double[state->vis_nbins]);
 
       for (int i = 0; i < state->vis_nbins; i++) {
         state->ZhsFftInp[i] = ZhsTimeE[int(state->vis_xmin_bin) + i];
       }
-      state->ZhsFft = FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp);
+      state->ZhsFft.reset(FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp.get()));
+      if (cf == cf_polar) {
+        state->grFftRho.reset( new TGraph(state->vis_nbins / 2 + 1));
+        state->grFftPhi.reset( new TGraph(state->vis_nbins / 2 + 1));
+      } else {
+        state->grFftRe.reset(  new TGraph1(state->vis_nbins / 2 + 1));
+        state->grFftIm.reset(  new TGraph1(state->vis_nbins / 2 + 1));
+      }
       for (int i = 0; i < state->vis_nbins / 2 + 1; i++){
         double dfreq = 1.0 / ((state->vis_xmax_bin - state->vis_xmin_bin) * ZhsTimeDelta * unit::ns);
         double re = state->ZhsFft[i].re * /* --> */ ZhsTimeDelta  * unit::ns /* <-- to make discrete ft comparable to analytical one */;
         double im = state->ZhsFft[i].im * /* --> */ ZhsTimeDelta  * unit::ns /* <-- to make discrete ft comparable to analytical one */;
-        state->grFftRe->SetPoint(i, i * dfreq, re);
-        state->grFftIm->SetPoint(i, i * dfreq, im);
-        state->grFftRho->SetPoint(i, i * dfreq, TMath::Sqrt(im * im + re * re));
-        state->grFftPhi->SetPoint(i, i * dfreq, TMath::ATan2(re, im) * 180.0 / TMath::Pi());
+        if (cf == cf_polar) {
+          state->grFftRho->SetPoint(i, i * dfreq, TMath::Sqrt(im * im + re * re));
+          state->grFftPhi->SetPoint(i, i * dfreq, TMath::ATan2(re, im) * 180.0 / TMath::Pi());
+        } else {
+          state->grFftRe->SetPoint(i, i * dfreq, re);
+          state->grFftIm->SetPoint(i, i * dfreq, im);
+        }
       }
     }
-
+    // At this point, we have all plots that are chosen for
+    // visualization and even those that are not needed for the
+    // visualization (to simplify logic).  Lets visualize those that are
+    // chosen.
     printf("*cf, *state->vis_nbins, state->vis_nbins: %d, %d, %d\n", *cf, *state->vis_nbins, int(state->vis_nbins));
     state->cZhsFft->cd();
     if (cf == cf_rect) {
@@ -185,7 +207,8 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
       state->grFftRe->SetLineWidth(2);
       state->grFftRe->SetLineColor(kBlue);
     } else {
-      state->panel_ft_rho = new TPad("ft_rho","",0,0,1,1);
+      // Memory is conserved because of the previous call to state->cZhsFft->Clear():
+      state->panel_ft_rho = new TPad1("ft_rho","",0,0,1,1);
       state->panel_ft_rho->cd();
       state->grFftRho->SetLineWidth(2);
       state->grFftRho->SetLineColor(kBlue);
@@ -194,7 +217,8 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
       state->cZhsFft->cd();
       state->panel_ft_rho->Draw();
 
-      state->panel_ft_phi = new TPad("ft_phi","",0,0,1,1);
+      // Memory is conserved because of the previous call to state->cZhsFft->Clear().
+      state->panel_ft_phi = new TPad1("ft_phi","",0,0,1,1);
       state->panel_ft_phi->SetFillStyle(4000);
       state->panel_ft_phi->SetFrameFillStyle(0);
       state->panel_ft_phi->cd();
@@ -267,7 +291,7 @@ void PlotWaveform(struct game_state *state, RunMode mode, struct nk_context *ctx
   if (mode == m_step) {
     nk_layout_row_dynamic(ctx, 25, 1);
     property_int(ctx, "Plt wid: ", 0, ZhsTimePlotHalfWidth, 3000 /*max*/, 10 /*increment*/, 1.0 /*sensitivity*/);
-    property_double(ctx, "Y2NDC: ", 0.0, ZhsTimePlotY2NDC, 1.0 /*max*/, 0.02 /*increment*/, 0.002 /*sensitivity*/);
+    //    property_double(ctx, "Y2NDC: ", 0.0, ZhsTimePlotY2NDC, 1.0 /*max*/, 0.02 /*increment*/, 0.002 /*sensitivity*/);
   }
 
 
@@ -354,9 +378,10 @@ static bool game_step(struct game_state *state)
                NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
                NK_WINDOW_CLOSABLE|NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
     {
-      nk_layout_row_static(ctx, 30, 80, 1);
+      /* nk_layout_row_static(ctx, 30, 80, 1);
       if (nk_button_label(ctx, "button"))
         fprintf(stdout, "button pressed\n");
+      */
       PlotWaveform(state, m_step, ctx);
       PlotFT(state, m_step, ctx);
       PlotIFT(state, m_step, ctx);
