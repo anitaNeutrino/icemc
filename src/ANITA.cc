@@ -133,8 +133,8 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
 	// if(inu==397 && antNum == 2 && j==22) {
 	//   std::cout << "CHECK SCALING ADDSIGNALTORX: pol = 0, before = " << absMag << " " << freqDomain.at(j) << " with "  << hitangle_e << ", " <<  hitangle_h <<  ", " << e_component  << ", " <<  h_component << "\n";
 	// }
-	// double dummyValueForOppositePol = 0;
-        // this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, absMag, dummyValueForOppositePol);
+	double dummyValueForOppositePol = 0;
+        this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, absMag, dummyValueForOppositePol);
 	// if(inu==397 && antNum == 2 && j==22){
 	//   std::cout << ", after = " << absMag << "\n";
 	// }
@@ -143,8 +143,8 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
       else{
 	double absMag = std::abs(freqDomain.at(j));
 	double phase = std::arg(freqDomain.at(j));
- 	// double dummyValueForOppositePol = 0;
-	// this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, dummyValueForOppositePol, absMag);
+ 	double dummyValueForOppositePol = 0;
+	this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, dummyValueForOppositePol, absMag);
 	freqDomain.at(j) = std::polar(absMag, phase);
       }
     }
