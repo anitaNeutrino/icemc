@@ -321,6 +321,23 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
 	/// @todo put this scaling inside ChanTrigger because it's a change in units the ChanTrigger
 	// cares about, but it has nothing to do with the Screen
 	tmp_vhz[k] = GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(TIMESTEP*1.E6);
+
+
+	/**
+	 * @todo this is the most disgusting fudge factor hack and needs to be dealt with comprehensively in the future.
+	 * When migrating to FTPair from stupid raw frequency arrays icemc pads 128 frequency bins to 1024.
+	 * i.e. It has 128 frequency bins (what would be 129 if the nyquist was properly handled), as if there were 256 time samples.
+	 * MakeArrayForFFT pads things for there to be 256 frequency bins (257 w/ nyquist) i.e. 512 time samples.
+	 * The inverse FFT (correctly) scales things down by a factor of N.
+	 * But is the correct N 256, or 512, or something else?
+	 * The FTPair class does this normalization properly but I'm not sure icemc does.
+	 * (Maybe it does, I don't know where all the random factors are.)
+	 * Anyway I need to apply this factor to make sure the PSDs agree before and after during the factor.
+	 * (Where the PSD accounts for the difference in length correctly.)
+	 * But I need to fudge the amplitudes here so the PSDs agree during the factor.
+	 * Before doing this the new PSD had twice the amplitude of the old chanTrigger, as you would expect.
+	 */
+	tmp_vhz[k] /= sqrt(2);
       }
 
       FTPair signal(tmp_vhz, df);

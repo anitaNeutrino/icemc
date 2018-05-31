@@ -822,7 +822,7 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	    // if(debugInMakeArray && k==22) {
 	    //   std::cout << "CHECK SCALING CHANTRIGGER: pol = 0, before = " << tmp_vhz[0][k] << " with "  << hitangle_e << ", " <<  hitangle_h <<  ", " << e_component  << ", " <<  h_component << "\n";
 	    // }
-	    // anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
+	    anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
 	    // if(debugInMakeArray && k==22) std::cout << "pol = 0, after = " << tmp_vhz[0][k] << "\n";
 
 	    if (settings1->TUFFSON==2){
@@ -949,7 +949,6 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	    std::cout << "powerSumTimeDomain.at(" << pol << ") = " << powerSumTimeDomain.at(pol) << std::endl;
 	    std::cout << "powerIntegralTimeDomain.at(" << pol << ") = " << powerIntegralTimeDomain.at(pol) << std::endl;
 	  }
-	  exit(1);
 	}
 
 	numBinShift = int(panel1->GetDelay(jpt) / anita1->TIMESTEP);
