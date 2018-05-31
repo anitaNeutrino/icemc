@@ -322,7 +322,6 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
 	// cares about, but it has nothing to do with the Screen
 	tmp_vhz[k] = GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(TIMESTEP*1.E6);
 
-
 	/**
 	 * @todo this is the most disgusting fudge factor hack and needs to be dealt with comprehensively in the future.
 	 * When migrating to FTPair from stupid raw frequency arrays icemc pads 128 frequency bins to 1024.
