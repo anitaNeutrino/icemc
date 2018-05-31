@@ -852,9 +852,6 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	  }
 	}
 
-	anita1->MakeArrayforFFT(tmp_vhz[0], tmp_volts[0], 90., true);
-	anita1->MakeArrayforFFT(tmp_vhz[1], tmp_volts[1], 90., true);
-
 	// right, let's get the power
 	if(debugInMakeArray){
 	  std::vector<double> powerSumFreqDomain2(anita1->NPOL, 0);
@@ -875,8 +872,8 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	  }
 	}
 
-	// anita1->MakeArrayforFFT(tmp_vhz[0], tmp_volts[0], 90., true, debugInMakeArray);
-	// anita1->MakeArrayforFFT(tmp_vhz[1], tmp_volts[1], 90., true, debugInMakeArray);
+	anita1->MakeArrayforFFT(tmp_vhz[0], tmp_volts[0], 90., true, debugInMakeArray);
+	anita1->MakeArrayforFFT(tmp_vhz[1], tmp_volts[1], 90., true, debugInMakeArray);
 
 	if(debugInMakeArray){
 
