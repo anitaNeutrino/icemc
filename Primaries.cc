@@ -282,45 +282,55 @@ void Interaction::PickAnyDirection() {
 
 int Interaction::PickGrbDirection(Vector &nnu) {
  
-  Position pos; 
- 
   TTree grb_tree("grb_tree","grb_tree");
-  grb_tree.ReadFile("data/grb_alt_az_for_icemc.txt","grb_az/D:grb_alt/D");
+  grb_tree.ReadFile("data/grb_az_alt_from_astropy.txt","grb_az/D:grb_alt/D");
   
   double grb_az;
   double grb_alt;
-  double grb_alt_icemc;  
-  
+  double grb_alt_icemc; 
+  double grb_az_icemc; 
+   
   grb_tree.SetBranchAddress("grb_az",&grb_az);
   grb_tree.SetBranchAddress("grb_alt",&grb_alt);
   
   //for (int igrb = 0; igrb < grb_tree.GetEntries(); igrb++) {
-  for (int igrb = 1; igrb < 2; igrb++) {
-    grb_tree.GetEntry(igrb);
-    //cout << "pos Lat is " << pos.Lat() << "\n"; 
-    //grb_alt_icemc = grb_alt - 90. + pos.Lat(); 
-    grb_alt_icemc = grb_alt - 90. + (-80.69+90.); //will fix 
-    //grb_alt_icemc = grb_alt; 
-    //cout << "grb_alt is " << grb_alt << " grb_alt_icemc is " << grb_alt_icemc << "\n"; 
-  }
 
-  // oindree -- setting cos of theta_nutraject (altitude) 
-  costheta_nutraject = cos( ( grb_alt_icemc * ( PI/180. ) ) );
+  grb_tree.GetEntry(1);
+
+  grb_alt_icemc = (90. - grb_alt) * (PI / 180.); 
+  //cout << "grb_alt is " << grb_alt << " grb_alt_icemc is " << grb_alt_icemc << "\n";
+
+  grb_az_icemc = 450. - grb_az;
+  if (grb_az_icemc > 360.) grb_az_icemc = grb_az_icemc - 360.; 
+  grb_az_icemc = grb_az_icemc * (PI / 180.);  
+  //cout << "grb_az is " << grb_az << " grb_az_icemc is " << grb_az_icemc << "\n";
+
+  //}
+
+  costheta_nutraject = cos(grb_alt_icemc); 
+
+  double thetanu = acos(costheta_nutraject);
 
   // oindree -- setting phi of nutraject (azimuth) 
-  phi_nutraject = grb_az * ( PI/180. ); 
+  phi_nutraject = grb_az_icemc; 
   
-  // check that these give the right result
-  double thetanu=acos(costheta_nutraject);
-  
-  double sinthetanu=sin(thetanu);
+  //cout << "thetanu is " << thetanu * (180./PI) << "\n";  
+
+  double sinthetanu = sin(thetanu);
   
   // find direction vector of neutrino
   // **** are cosine and sine flipped?
   nnu.SetX(sinthetanu * cos(phi_nutraject));
   nnu.SetY(sinthetanu * sin(phi_nutraject));
   nnu.SetZ(costheta_nutraject);
+ 
+  //testing 
+  //nnu.SetX(-1.0);
+  //nnu.SetY(0.0);
+  //nnu.SetZ(0.0);
 
+  //cout << "nnu is " << nnu << " grb alt is " << grb_alt << " grb az is " << grb_az << " grb # is " << igrb << "\n"; 
+  //}
   return 1;
  
 }

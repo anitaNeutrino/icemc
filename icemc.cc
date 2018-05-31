@@ -1603,6 +1603,10 @@ int main(int argc,  char **argv) {
 
       // Picks the balloon position and at the same time sets the masks and thresholds
       bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
+      if ( settings1->SOURCE == 1 ) {
+        interaction1->PickGrbDirection(interaction1->nnu); 
+        //cout << "First time: I called PickGrb " << "\n";  
+      }
       
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter
@@ -1654,7 +1658,11 @@ int main(int argc,  char **argv) {
         tautrigger=0;
 
       bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon);
-
+      if ( settings1->SOURCE == 1 ) {
+        interaction1->PickGrbDirection(interaction1->nnu); 
+        //cout << "Second time: I called PickGrb " << "\n";  
+      }
+      
       if (interaction1->noway)
         continue;
       count1->noway[whichray]++;
@@ -1690,7 +1698,6 @@ int main(int argc,  char **argv) {
         continue;
       }
       count1->inhorizon[whichray]++;
-     
       // cerenkov angle depends on depth because index of refraction depends on depth.
       //if(!settings1->ROUGHNESS){
         if (settings1->FIRN) {
@@ -1769,9 +1776,10 @@ int main(int argc,  char **argv) {
 
       if (ytree->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
         ytree->Fill();
-  
+ 
       if ( settings1->SOURCE == 1 ) {
-        interaction1->PickGrbDirection(interaction1->nnu);  
+        interaction1->PickGrbDirection(interaction1->nnu); 
+        //cout << "I called PickGrb " << "\n";  
       }
 
       //TAU STUFF. Pick whether it will stay as a neutrino or create tau
@@ -2014,7 +2022,8 @@ int main(int argc,  char **argv) {
       // where the neutrino enters the earth
       if (tautrigger==0){//did for cc-taus already,  do for all other particles
         if ( settings1->SOURCE == 1 ) {
-          interaction1->PickGrbDirection(interaction1->nnu);  
+          interaction1->PickGrbDirection(interaction1->nnu); 
+          //cout << "I called PickGrb " << "\n";  
         }
         interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
         antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
@@ -2028,6 +2037,9 @@ int main(int argc,  char **argv) {
       // take best case scenario chord length and find corresponding weight
 
       IsAbsorbed(chord_kgm2_test, len_int_kgm2, weight_test);
+
+
+
       // if the probably the neutrino gets absorbed is almost 1,  throw it out.
 
       if ( bn1->WHICHPATH != 4 && settings1->FORSECKEL != 1 && !settings1->SKIPCUTS && !settings1->SOURCE) {
@@ -2095,8 +2107,16 @@ int main(int argc,  char **argv) {
       if (tree6->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
         tree6->Fill();
 
+      //cout << "interaction1->chord_kgm2_bestcase = " << interaction1->chord_kgm2_bestcase << "\n"; 
+      //cout << "len_int_kgm2 = " << len_int_kgm2 << "\n"; 
+
+
       // take best case scenario chord length and find corresponding weight
       IsAbsorbed(interaction1->chord_kgm2_bestcase, len_int_kgm2, interaction1->weight_bestcase);
+
+
+      //cout << "interaction1->weight_bestcase = " << interaction1->weight_bestcase << "\n"; 
+
 
       // if the probability that the neutrino gets absorbed is almost 1,  throw it out.
       if (bn1->WHICHPATH!=4 && interaction1->weight_bestcase<CUTONWEIGHTS && !settings1->SKIPCUTS && !settings1->FORSECKEL && !settings1->SOURCE) {
@@ -3693,8 +3713,10 @@ int main(int argc,  char **argv) {
       break;
     }
 
-    //cout << "Oindree: weight1 is " << weight1 << "\n"; 
+    //cout << "Oindree: nnu is " << interaction1->nnu << "\n";
 
+    //cout << "theta_nutraject in deg is " << (180./PI) * acos(interaction1->costheta_nutraject) << "\n";  
+    //cout << "phi nutraject in deg is " << (180./PI) * (interaction1->phi_nutraject) << "\n"; 
   }//end NNU neutrino loop
   
 
