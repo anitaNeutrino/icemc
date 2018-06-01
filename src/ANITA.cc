@@ -50,10 +50,8 @@ void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const {
   //  there's waaay too many indices here, I really should simplify them.
   int antNum = -1, pol = -1;
   getAntPolFromRX(rx, antNum, pol);
-
-  // std::cout << rx << "\t"  << antNum << "\t" << pol <<  std::endl;
   
-  // This is not the best way to do things...
+  // This is NOT how to do things...
   ilayer = -1;
   ifold = -1;
   for (int ilayerTemp=0 ;ilayerTemp < fSettingsPtrIDontOwn->NLAYERS; ilayerTemp++) { // loop over layers on the payload
@@ -97,8 +95,8 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   // if(inu == 397 && firstTime && antNum==2){
   //   std::cout << "Orientation in " << __PRETTY_FUNCTION__ << "...\n";
   //   std::cout << n_eplane << "\n" << n_hplane << "\n" << n_normal << "\n\n";
-  //   std::cout << signal.poynting << "\n" << e_component_kvector<< "\n" << h_component_kvector<< "\n" << n_component_kvector << "\n\n";  
-  // }  
+  //   std::cout << signal.poynting << "\n" << e_component_kvector<< "\n" << h_component_kvector<< "\n" << n_component_kvector << "\n\n";
+  // }
 
   double e_component=0;
   double h_component=0;
@@ -116,7 +114,7 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   std::vector<std::complex<double> >& freqDomain = afterGain.changeFreqDomain();
 
   /// @todo here we are hacking around the current FFT implementation inside the anita detector bits of icemc.
-  /// The hard coded arrays are 128 freq bins wide, but a sensible FFT implementation will have 129 (256/2 + 1) bins.
+  /// The hard coded arrays are 128 freq bins wide, but a sensible FFT implementation (like FTPair) should have 129 (256/2 + 1) bins.
   const int numSafe = TMath::Min((int)freqDomain.size(), Anita::NFREQ);
   const int numFreqLoop = TMath::Max((int)freqDomain.size(), Anita::NFREQ);
 

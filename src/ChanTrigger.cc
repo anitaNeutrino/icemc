@@ -309,7 +309,6 @@ void icemc::ChanTrigger::WhichBandsPassTrigger1(const Settings *settings1, Anita
 	    passes_eachband[1][ibw]=1;
 	  } // is this band and polarization allowed to pass
 	} //does this channel pass
-	    
       } // end of the else (channel isn't masked)
 	  
     } // if not justvpol
@@ -702,16 +701,11 @@ void icemc::ChanTrigger::DiodeConvolution(const Settings *settings1, Anita *anit
 
     anita1->channels_passing[ipol][iband]=tempChansPassing[iband];
 
-    
     if (tempChansPassing[iband]) {
       //Records number of first level triggers on each antenna for a single neutrino
       globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]++; 
-	  
     }
   } // end loop over bands
-
- 
-
 }
 
 
@@ -725,14 +719,14 @@ void icemc::ChanTrigger::InitializeEachBand(Anita *anita1)
       vthreshold_eachband[ipol].push_back(0.);
       vnoise_eachband[ipol].push_back(0.);
       vpasses_eachband[ipol].push_back(0);
-			
+
       signal_eachband[ipol][iband]=0.;
       threshold_eachband[ipol][iband]=0.;
       noise_eachband[ipol][iband]=0.;
       passes_eachband[ipol][iband]=0;
     }
   }
-    
+
   Tools::Zero(bwslice_volts_pol0,5);
   Tools::Zero(bwslice_volts_pol1,5);
   Tools::Zero(bwslice_energy_pol0,5);

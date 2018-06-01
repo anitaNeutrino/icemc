@@ -1394,6 +1394,7 @@ void icemc::Anita::ReadGains(void) {
 
 
 
+
 void icemc::Anita::AntennaGain(const Settings *settings1,
 			       double hitangle_e, double hitangle_h,
 			       double e_component, double h_component,
