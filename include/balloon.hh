@@ -216,58 +216,10 @@ namespace icemc {
 			       int ilayer, int ifold, 
 			       Vector& n_eplane,
 			       Vector& n_hplane, 
-			       Vector& n_normal); 
+			       Vector& n_normal);
 
-    ///< This function gets the e-component, h-component and e-vector
-    /**
-     * Long description
-     *
-     *
-     * @param  settings1 -
-     * @param  n_eplane -
-     * @param  n_hplane -
-     * @param  n_pol
-     * @param  e_component -
-     * @param  h_component -
-     * @param  n_component -
-     * @return returns void
-     */
-    static void GetEcompHcompEvector(const Settings *settings1,
-				     Vector n_eplane, 
-				     Vector n_hplane, 
-				     const Vector n_pol, 
-				     double& e_component, 
-				     double& h_component, 
-				     double& n_component);
-		
-    ///< This function gets the e-component, h-component and k-vector
-    /**
-     * Long description
-     *
-     *
-     * @param  n_eplane -
-     * @param  n_hplane -
-     * @param  n_normal -
-     * @param  n_exit2bn -
-     * @param  e_component_kvector -
-     * @param  h_component_kvector - 
-     * @param  n_component_kvector -
-     * @return returns void
-     */
-    static void GetEcompHcompkvector(Vector n_eplane,
-			      Vector n_hplane, 
-			      Vector n_normal, 
-			      const Vector n_exit2bn, 
-			      double& e_component_kvector, 
-			      double& h_component_kvector, 
-			      double& n_component_kvector);
+    
 
-    ///< This function gets the hit angles
-    static void GetHitAngles(double e_component_kvector,
-			     double h_component_kvector,
-			     double n_component_kvector, 
-			     double& hitangle_e,
-			     double& hitangle_h); 
  
     ///< This function sets the default balloon position
     /**

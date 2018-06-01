@@ -26,6 +26,7 @@
 #include "Settings.h"
 #include "screen.hh"
 #include "GlobalTrigger.h"
+#include "Seavey.h"
 
 #ifdef ANITA_UTIL_EXISTS
 #include "FFTtools.h"
@@ -793,9 +794,10 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	//   std::cout  << "\n\n";
 	// }
 
-	bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
-	bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
-	bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
+	Seavey::GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
+	// Seavey::GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
+	Seavey::GetEcompHcompEvector(n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);	
+	Seavey::GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
 
 	// if(debugInMakeArray){
 	//   std::cout << "Orientation in " << __PRETTY_FUNCTION__ << "...\n";

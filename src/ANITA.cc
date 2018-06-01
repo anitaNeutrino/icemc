@@ -10,6 +10,8 @@
 #include "screen.hh"
 #include "RayTracer.h"
 #include "VoltsRX.h"
+#include "Seavey.h"
+
 #include <memory>
 
 #include "TFile.h" ///@todo remove after done debugging
@@ -90,7 +92,7 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   double e_component_kvector=0;
   double h_component_kvector=0;
   double n_component_kvector=0;
-  icemc::Balloon::GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal, signal.poynting, e_component_kvector,  h_component_kvector,  n_component_kvector);
+  icemc::Seavey::GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal, signal.poynting, e_component_kvector,  h_component_kvector,  n_component_kvector);
 
   // if(inu == 397 && firstTime && antNum==2){
   //   std::cout << "Orientation in " << __PRETTY_FUNCTION__ << "...\n";
@@ -101,13 +103,12 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   double e_component=0;
   double h_component=0;
   double n_component=0;
-  icemc::Balloon::GetEcompHcompEvector(fSettingsPtrIDontOwn, n_eplane, n_hplane,
-                             signal.polarization, e_component, h_component,
-                             n_component);
+  // icemc::Seavey::GetEcompHcompEvector(fSettingsPtrIDontOwn, n_eplane, n_hplane,
+  icemc::Seavey::GetEcompHcompEvector(n_eplane, n_hplane, signal.polarization, e_component, h_component, n_component);
 
   double hitangle_e=0;
   double hitangle_h=0;  
-  icemc::Balloon::GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);  
+  icemc::Seavey::GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);  
 
   // // @todo acually make this a sum rather than the last thing we give it
   FTPair afterGain = signal.waveform;

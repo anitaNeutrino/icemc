@@ -6,12 +6,16 @@
 #include "TLegend.h"
 #include "TMultiGraph.h"
 
+#if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
+#include "vectormath_trig.h"
+#endif
+
+
 std::vector<double> freq_measured;
 std::vector<double> gain_h_measured;
 std::vector<double> gain_v_measured;
 std::vector<double> gain_hv_measured;
 std::vector<double> gain_vh_measured;
-
 
 /** 
  * Utility function for loadGains
@@ -37,7 +41,7 @@ std::ifstream openCarefully(const char* fileName, bool failHard = true){
 
 /** 
  * Read the gains into the vectors.
- * NOT THREAD SAFE!
+ * @todo This is NOT THREAD SAFE, some locking functions would be required to make it so.
  */
 void loadGains(){
   if(freq_measured.size()==0){
@@ -109,7 +113,7 @@ void loadGains(){
 }
 
 
-TCanvas* icemc::Seavey::plotGains() const {
+TCanvas* icemc::Seavey::plotGains() {
   loadGains();
 
   auto c = new TCanvas();
@@ -149,3 +153,70 @@ TCanvas* icemc::Seavey::plotGains() const {
   return c;
 }
 
+
+
+void icemc::Seavey::applyAntennaGain(icemc::PropagatingSignal& s) const {
+  
+  
+}
+
+
+
+
+
+
+
+
+
+
+void icemc::Seavey::GetEcompHcompkvector(const Vector& n_eplane, const Vector& n_hplane, const Vector& n_normal,
+					 const Vector n_exit2bn,
+					 double& e_component_kvector, double& h_component_kvector, double& n_component_kvector) {
+
+  // find component along e-plane for the purpose of finding hit angles, that is, in direction of k vector, direction of radio wave)
+  e_component_kvector = -(n_exit2bn.Dot(n_eplane));
+  // find component along h-plane for the purpose of finding hit angles, that is, in direction of k vector, direction of radio wave)
+  h_component_kvector = -(n_exit2bn.Dot(n_hplane));
+  // find the component normal
+  n_component_kvector = -(n_exit2bn.Dot(n_normal));
+
+} // end GetEcompHcompkvector
+
+
+
+void icemc::Seavey::GetEcompHcompEvector(const Vector& n_eplane, const Vector& n_hplane, const Vector& n_pol,
+					 double& e_component, double& h_component, double& n_component) {
+
+  // find component along e-plane in direction of polarization, that is in direction of the E field   
+  e_component = n_pol.Dot(n_eplane);
+  //    std::cout << "n_component : " << n_exit2bn << " " << n_normal << " " << n_component << std::endl;
+    
+  // find component along h-plane in direction of polarization, that is in direction of the E field 
+  h_component = n_pol.Dot(n_hplane);
+
+
+  ///@todo maybe restore this at some point?
+  // if (settings1->REMOVEPOLARIZATION) {
+  //   //Trying to remove effects of polarization at antenna. Stephen
+  //   e_component = n_pol.Dot(n_pol);
+  //   h_component = 0.001;
+  //   n_component = 0.001;
+  // } //if
+  
+} // end GetEcompHcompEvector
+
+
+void icemc::Seavey::GetHitAngles(double e_component_kvector, double h_component_kvector, double n_component_kvector, double& hitangle_e, double& hitangle_h) {
+#if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
+  Vec2d y(e_component_kvector, h_component_kvector); 
+  Vec2d x(n_component_kvector, n_component_kvector); 
+  Vec2d answer = atan2(y,x); 
+  hitangle_h = answer[0]; 
+  hitangle_e = answer[1]; 
+
+#else
+  hitangle_e=atan2(h_component_kvector,n_component_kvector);
+  hitangle_h=atan2(e_component_kvector,n_component_kvector);
+#endif
+
+}
