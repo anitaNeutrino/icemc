@@ -4,6 +4,7 @@
 #include "Detector.h"
 #include "anita.hh"
 #include "balloon.hh"
+#include "Seavey.h"
 
 
 namespace icemc {
@@ -52,6 +53,7 @@ namespace icemc {
     RayTracer* fRayPtrIDontOwn;
     Screen* fScreenPtrIDontOwn;
 
+    std::vector<Seavey> fSeaveys; ///< The set of Seavey antennas on the payload
 
   };
 }

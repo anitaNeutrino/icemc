@@ -20,8 +20,20 @@
 icemc::ANITA::ANITA(const Settings* settings, RayTracer* sillyRay, Screen* sillyPanel)
   : fSettingsPtrIDontOwn(settings), fRayPtrIDontOwn(sillyRay), fScreenPtrIDontOwn(sillyPanel)
 {
-  for(int i=0; i < getNumRX(); i++){
+  const int n = 96;
+  for(int rx=0; rx < n; rx++){
     fWaveformsRX.emplace_back(TGraph());
+
+    int ifold, ilayer;
+    getLayerFoldFromRX(rx, ilayer, ifold);
+
+    Vector ePlane;
+    Vector hPlane;
+    Vector normal;
+    this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold, ePlane,  hPlane,  normal);
+
+    Vector pos;
+    fSeaveys.emplace_back(icemc::Seavey(pos, ePlane, hPlane, normal));
   }
 }
   
@@ -87,7 +99,6 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   Vector n_hplane;
   Vector n_normal;
   this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
-
   
   double e_component_kvector=0;
   double h_component_kvector=0;

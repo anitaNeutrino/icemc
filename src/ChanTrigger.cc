@@ -78,7 +78,6 @@ void icemc::ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
     //right[2*i+1]=1/sqrt(2.)*(hvolts_f[2*i+1]-vvolts_f[2*i]); //This is what was being done, until Jacob declared it wrong
     right[2*i+1]=1/sqrt(2.)*(vvolts_f[2*i+1]+hvolts_f[2*i]); //The thing Jacob declared right
     left[2*i+1]=1/sqrt(2.)*(hvolts_f[2*i+1]+vvolts_f[2*i]);
-		
 
     left[2*i]=left[2*i]*2./((double)nfour/2.);
     left[2*i+1]=left[2*i+1]*2./((double)nfour/2.);
@@ -86,10 +85,10 @@ void icemc::ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
     right[2*i]=right[2*i]*2./((double)nfour/2.);
     right[2*i+1]=right[2*i+1]*2./((double)nfour/2.);
   }
-    
+
   FTPair::realft(left,-1,nfour/2);
   FTPair::realft(right,-1,nfour/2);
-    
+
   // now take fft back
 
 }

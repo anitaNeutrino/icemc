@@ -1988,6 +1988,7 @@ int icemc::Anita::GetBeamWidths(const Settings *settings1) {
   return 1;
 } //GetBeamWidths
 
+
 double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) const {
   double scaleh1, scaleh2;
   if(gain_type < 0 || gain_type > 3) {
@@ -2004,7 +2005,7 @@ double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) const
    * It is set inside GetBeamWidths, which is only called once?
    * Replace it with a local var thisFlareRads, which also allows this function to be const
    */
-  double thisFlareRads = flare[gain_type][k]*constants::DEGRAD; // this seems really stupid?
+  double thisFlareRads = flare[gain_type][k]*constants::DEGRAD;
   if(hitangle > 90.00001) {
     cout << "hitangle out of range\n";
     exit(1);
