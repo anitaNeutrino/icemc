@@ -136,7 +136,10 @@ void PlotIFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
       state->grZhsTimeERec->SetPoint(i, ((i + state->BinShift) % state->vis_nbins + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, ZhsTimeE[state->vis_xmin_bin + i]);
       // printf("row: %i, ZhsTimeE.data() vs i * ZhsTimeDelta + ZhsTimeStart: %12.7e, %12.7e\n", i + state->vis_xmin_bin, ZhsTimeArr[i + state->vis_xmin_bin],                     ZhsTimeDelta * (i + state->vis_xmin_bin) + ZhsTimeStart);
     }
-    state->grZhsTimeERec->Draw("L");
+    // state->grZhsTimeERec->Draw("L");
+    state->grZhsTimeERec->SetMarkerSize(1);
+    state->grZhsTimeERec->SetMarkerStyle(6);
+    state->grZhsTimeERec->Draw("LP");
     state->grZhsTimeERec->SetLineColor(kRed);
     state->cZhsIFft->Modified(); state->cZhsIFft->Update(); 
   }
