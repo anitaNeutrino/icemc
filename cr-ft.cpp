@@ -42,6 +42,7 @@ public:
   ~TPad1() { cout<<"Destructing TPad1!!!" << endl; } 
 };
 
+
 struct game_state {
   TCanvas *cZhsEAndAlpha;
   TPad *px1;
@@ -62,6 +63,7 @@ struct game_state {
   //unique_ptr<TPad> panel_ft_phi;
   unique_ptr<FFTWComplex[]> ZhsFft;
   TCanvas *cZhsFft;
+  int ind_maxval;
   double fwhm_xmin;
   double fwhm_xmax;
   double fwhm_xmaxval;
@@ -98,6 +100,12 @@ void property_int(struct nk_context* ctx, const char *name, int min, bvv::TBuffe
 void property_double(struct nk_context* ctx, const char *name, double min, bvv::TBuffer <double> &buf, double max, double step, float inc_per_pixel){
   double val = buf; 
   nk_property_double(ctx, name, min, &val, max, step, inc_per_pixel);
+  buf = val;
+}
+
+void checkbox_label(struct nk_context *ctx, const char *name, bvv::TBuffer <int> &buf) {
+  int val = buf;
+  nk_checkbox_label(ctx, name, &val);
   buf = val;
 }
 
@@ -152,14 +160,20 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
     state->panel_ft_rho = NULL;
     return;
   }
-
+  static bvv::TBuffer <int> ShiftPeakToZero;
   static bvv::TBuffer <int> cf(cf_polar);
   if (mode == m_step) {
     nk_layout_row_dynamic(ctx, 30, 2);
     if (nk_option_label(ctx, "Polar", cf == cf_polar )) { cf = cf_polar; }
     if (nk_option_label(ctx, "Rectg", cf == cf_rect))   { cf = cf_rect; }
-    nk_layout_row_dynamic(ctx, 30, 1);
-    property_int(ctx, "BinShift: ", -1000 /*min*/, state->BinShift, +1000 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
+    nk_layout_row_dynamic(ctx, 30, 2);
+    checkbox_label(ctx, "To Zero", ShiftPeakToZero);
+    if (*ShiftPeakToZero) {
+      state->BinShift = state->vis_nbins - (state->ind_maxval - state->vis_xmin_bin);
+      printf("state->ind_maxval: %d, vis_xmin_bin: %d\n", state->ind_maxval, state->vis_xmin_bin);
+      printf("ShiftPeakToZero: %d, by %d\n", int(ShiftPeakToZero), int(state->BinShift));
+    }
+    property_int(ctx, "BinShift: ", 0 /*min*/, state->BinShift, +1000 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
   }
 
 
@@ -178,11 +192,9 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
       }
       state->ZhsFft.reset(FFTtools::doFFT(state->vis_nbins, state->ZhsFftInp.get()));
       if (cf == cf_polar) {
-        printf("Polar mode\n");
         state->grFftRho.reset( new TGraph(state->vis_nbins / 2 + 1));
         state->grFftPhi.reset( new TGraph(state->vis_nbins / 2 + 1));
       } else {
-        printf("Rect mode\n");
         state->grFftRe.reset(  new TGraph1(state->vis_nbins / 2 + 1));
         state->grFftIm.reset(  new TGraph1(state->vis_nbins / 2 + 1));
       }
@@ -191,11 +203,9 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
         double re = state->ZhsFft[i].re * /* --> */ ZhsTimeDelta  * unit::ns /* <-- to make discrete ft comparable to analytical one */;
         double im = state->ZhsFft[i].im * /* --> */ ZhsTimeDelta  * unit::ns /* <-- to make discrete ft comparable to analytical one */;
         if (cf == cf_polar) {
-          printf("Polar mode\n");
           state->grFftRho->SetPoint(i, i * dfreq, TMath::Sqrt(im * im + re * re));
           state->grFftPhi->SetPoint(i, i * dfreq, TMath::ATan2(re, im) * 180.0 / TMath::Pi());
         } else {
-          printf("Rect mode\n");
           state->grFftRe->SetPoint(i, i * dfreq, re);
           state->grFftIm->SetPoint(i, i * dfreq, im);
         }
@@ -251,9 +261,9 @@ void PlotWaveform(struct game_state *state, RunMode mode, struct nk_context *ctx
     state->px1->cd();
     state->grZhsTimeE = new TGraph(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data());
     state->grZhsTimeE->Draw("AL");
-    int ind_maxval;
-    bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), state->fwhm_xmin, state->fwhm_xmax, ind_maxval, state->fwhm_xmaxval, state->fwhm_ymaxval);
+    bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), state->fwhm_xmin, state->fwhm_xmax, state->ind_maxval, state->fwhm_xmaxval, state->fwhm_ymaxval);
     if (!fwhm_res) printf("FWHM was not successful\n");
+    printf("PlotWaveform: state->ind_maxval = %d\n", state->ind_maxval);
 
     // This update is needed here to get coordinates for the lines marking FWHM:
     gPad->Update(); 
