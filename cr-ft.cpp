@@ -168,16 +168,17 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
     if (nk_option_label(ctx, "Rectg", cf == cf_rect))   { cf = cf_rect; }
     nk_layout_row_dynamic(ctx, 30, 2);
     checkbox_label(ctx, "To Zero", ShiftPeakToZero);
-    if (*ShiftPeakToZero) {
-      state->BinShift = state->vis_nbins - (state->ind_maxval - state->vis_xmin_bin);
-      printf("state->ind_maxval: %d, vis_xmin_bin: %d\n", state->ind_maxval, state->vis_xmin_bin);
-      printf("ShiftPeakToZero: %d, by %d\n", int(ShiftPeakToZero), int(state->BinShift));
+    if (ShiftPeakToZero == 1) {
+      state->BinShift = state->vis_nbins - (state->ind_maxval - state->vis_xmin_bin) -1; 
+      // printf("state->ind_maxval: %d, vis_xmin_bin: %d\n", state->ind_maxval, state->vis_xmin_bin);
+      // printf("ShiftPeakToZero: %d, by %d\n", int(ShiftPeakToZero), int(state->BinShift));
+    } else {
+      property_int(ctx, "BinShift: ", 0 /*min*/, state->BinShift, +1000 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
     }
-    property_int(ctx, "BinShift: ", 0 /*min*/, state->BinShift, +1000 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
   }
 
 
-  if (mode == m_reload || *cf || *state->BinShift || *state->vis_nbins) {
+  if (mode == m_reload || *cf || *state->BinShift || *state->vis_nbins || *ShiftPeakToZero) {
     // printf("Before state->cZhsFft->Clear()\n");
     // I want to start from fresh: clean canvas cZhsFft, no panels that can or cannot go into cZhsFft.
     // Panels will be _deleted_ (object destruction) as a result of TCanvas.Clear(). Graphs need to be deleted manually.
