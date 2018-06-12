@@ -196,8 +196,8 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
         state->grFftRho.reset( new TGraph(state->vis_nbins / 2 + 1));
         state->grFftPhi.reset( new TGraph(state->vis_nbins / 2 + 1));
       } else {
-        state->grFftRe.reset(  new TGraph1(state->vis_nbins / 2 + 1));
-        state->grFftIm.reset(  new TGraph1(state->vis_nbins / 2 + 1));
+        state->grFftRe.reset(  new TGraph(state->vis_nbins / 2 + 1));
+        state->grFftIm.reset(  new TGraph(state->vis_nbins / 2 + 1));
       }
       for (int i = 0; i < state->vis_nbins / 2 + 1; i++){
         double dfreq = 1.0 / ((state->vis_xmax_bin - state->vis_xmin_bin) * ZhsTimeDelta * unit::ns);

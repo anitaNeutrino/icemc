@@ -167,11 +167,12 @@ void game_unload(struct game *game)
     }
 }
 
-int hot_loop(std::string arg_so_location)
-{
+int hot_loop_batch(std::string arg_so_location) {
+  return 42;
+}
+
+int hot_loop_interactive(std::string arg_so_location) {
   strcpy(SO_LOCATION, arg_so_location.c_str());
-  // TApplication *theApp = new TApplication("tapp", NULL, NULL);
-  // theApp = theApp;
   struct game game = {0};
 
   long dt;
@@ -243,12 +244,6 @@ int hot_loop(std::string arg_so_location)
 
     if (nk_window_is_hidden(ctx, "Plot Controls")) break;
 
-    /* -------------- EXAMPLES ---------------- */
-    /* calculator(ctx); */
-    /* overview(ctx); */
-    /*node_editor(ctx);*/
-    /* ----------------------------------------- */
-
     /* Draw */
     XClearWindow(xw.dpy, xw.win);
     nk_xlib_render(xw.win, nk_rgb(30,30,30));
@@ -277,4 +272,13 @@ int hot_loop(std::string arg_so_location)
 
   game_unload(&game);
   return 0;
+}
+
+int hot_loop(std::string arg_so_location, bool bInteractive) {
+  int result = 0;
+  if (bInteractive)
+    result = hot_loop_interactive(arg_so_location);
+  else
+    result = hot_loop_batch(arg_so_location);
+  return result;
 }
