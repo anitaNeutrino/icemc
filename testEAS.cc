@@ -374,7 +374,9 @@ int main(int argc,  char **argv) {
   // cZhsEAndAlpha = cZhsEAndAlpha;
 
   // hot_loop("./cr-ft.so");
-  hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so");
+  void *cr_ft_result = NULL;
+  cr_ft_result = hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
+  cout << "cr_ft_result: " << cr_ft_result << endl;
   // hot_loop("/nfs/data_disks/scratch1/bugaev/PROGS/INTER_C/canvas.so");
  // theApp.Run();
 

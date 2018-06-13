@@ -167,23 +167,26 @@ void game_unload(struct game *game)
     }
 }
 
-int hot_loop_batch(std::string arg_so_location) {
+void* hot_loop_batch(std::string arg_so_location) {
+  strcpy(SO_LOCATION, arg_so_location.c_str());
   struct game game = {0};
-  if (arg_so_location.c_str()) {
+  if (SO_LOCATION[0]) {
     game_load(&game, false /* bInteractive */);
-  } else
+  }
+  else {
     printf("In hot_loop_batch: handle is not valid --> exit;\n");
     exit(1);
+  }
   if (game.handle)
     game.api.step(game.state);
   else {
     printf("In hot_loop_batch: handle is not valid --> exit;\n");
     exit(1);
   }
-  return 42;
+  return game.state;
 }
 
-int hot_loop_interactive(std::string arg_so_location) {
+void* hot_loop_interactive(std::string arg_so_location) {
   strcpy(SO_LOCATION, arg_so_location.c_str());
   struct game game = {0};
 
@@ -275,14 +278,15 @@ int hot_loop_interactive(std::string arg_so_location) {
   XFreeColormap(xw.dpy, xw.cmap);
   XDestroyWindow(xw.dpy, xw.win);
   XCloseDisplay(xw.dpy);
-  return 0;
+  return game.state;
 }
 
-int hot_loop(std::string arg_so_location, bool bInteractive) {
-  int result = 0;
+void *hot_loop(std::string arg_so_location, bool bInteractive) {
+  void *result = NULL;
   if (bInteractive)
     result = hot_loop_interactive(arg_so_location);
   else
     result = hot_loop_batch(arg_so_location);
+  printf("In hot_loop...\n");
   return result;
 }
