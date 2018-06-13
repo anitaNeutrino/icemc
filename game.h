@@ -8,7 +8,7 @@ struct game_api {
     /**
      * @return a fresh game state
      */
-    struct game_state *(*init)();
+    struct game_state *(*init)(bool bInteractive);
 
     /**
      * Destroys a game state.
