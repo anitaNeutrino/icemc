@@ -4142,7 +4142,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 	  // interpolate
 	  TGraph *gint = Tools::getInterpolatedGraph(gtemp,deltaT); 
 // edits for debugging volumes
-/*          Int_t nPoints  = gint->GetN();
+          Int_t nPoints  = gint->GetN();
           Double_t *newx = gint->GetX();
           Double_t *newy = gint->GetY();
           // Normalise
@@ -4151,7 +4151,6 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
           newx[i]=newx[i]*1E-9;
           }
           *gint = TGraph(nPoints,newx,newy);
-*/
 // end edits for debugging volumes
 	  int paveNum=8533; // change for 0 to just signal back 
 	  fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
