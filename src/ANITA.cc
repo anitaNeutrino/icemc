@@ -20,50 +20,49 @@
 icemc::ANITA::ANITA(const Settings* settings, RayTracer* sillyRay, Screen* sillyPanel)
   : fSettingsPtrIDontOwn(settings), fRayPtrIDontOwn(sillyRay), fScreenPtrIDontOwn(sillyPanel)
 {
-  const int n = 96;
+  const int n = 48;
   for(int rx=0; rx < n; rx++){
     fWaveformsRX.emplace_back(TGraph());
 
-    int ifold, ilayer;
-    getLayerFoldFromRX(rx, ilayer, ifold);
+    // int ifold, ilayer;
+    // getLayerFoldFromRX(rx, ilayer, ifold);
 
-    Vector ePlane;
-    Vector hPlane;
-    Vector normal;
-    this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold, ePlane,  hPlane,  normal);
+    // Vector ePlane;
+    // Vector hPlane;
+    // Vector normal;
+    // this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold, ePlane,  hPlane,  normal);
 
-    Vector pos;
-    fSeaveys.emplace_back(icemc::Seavey(pos, ePlane, hPlane, normal));
+    // Vector pos;
+    fSeaveys.emplace_back(icemc::Seavey());//pos, ePlane, hPlane, normal));
   }
 }
   
 icemc::ANITA::~ANITA(){
-  // does nothing
+  fWaveformsRX.clear();
 }
 
 
 icemc::Position icemc::ANITA::getCenterOfDetector(UInt_t unixTime){
   (void) unixTime;
-  // UInt_t theUnixTime = unixTime ? 1 : 0;  
+
+  // UInt_t theUnixTime = unixTime ? 1 : 0;
+  for(int rx=0; rx < static_cast<int>(fSeaveys.size()); rx++){
+    int layer, fold;
+    getLayerFoldFromRX(rx, layer, fold);
+  }
+  
   return r_bn;
 }
 
 
-icemc::Vector icemc::ANITA::getPositionRX(Int_t rx) const {
+icemc::Vector icemc::ANITA::getPositionRX(Int_t rx) const {  
 
   return Position();
 }
 
 
-void icemc::ANITA::getAntPolFromRX(int rx, int&ant, int& pol) const {
-  pol = rx & 1;
-  ant = rx/2;
-}
-
 void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const {
-  //  there's waaay too many indices here, I really should simplify them.
-  int antNum = -1, pol = -1;
-  getAntPolFromRX(rx, antNum, pol);
+  int antNum = rx;
   
   // This is NOT how to do things...
   ilayer = -1;
@@ -87,19 +86,37 @@ void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const {
 
 void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx, int inu){
 
-
   int ifold, ilayer;
   getLayerFoldFromRX(rx, ilayer, ifold);
-
-  int antNum, pol;
-  getAntPolFromRX(rx, antNum, pol);
+  
   static bool firstTime = true;
+  if(inu == 397 && firstTime){
+    fSeaveys.at(2).setDebug(true);
+  }
+  else{
+    fSeaveys.at(2).setDebug(false);
+  }
+  
+  if(rx < fSeaveys.size()){
+
+    this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold,
+				fSeaveys.at(rx).fEPlane, fSeaveys.at(rx).fHPlane, fSeaveys.at(rx).fNormal);
+    
+    fSeaveys.at(rx).addSignal(signal);
+  }
+
+  
+
+
+
+  int antNum = rx;//, pol;
+  int pol=0;
 
   Vector n_eplane;
   Vector n_hplane;
   Vector n_normal;
   this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
-  
+
   double e_component_kvector=0;
   double h_component_kvector=0;
   double n_component_kvector=0;
@@ -134,26 +151,25 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   // this could easily be improved.
   const double lowFreqSeavey = fSettingsPtrIDontOwn->FREQ_LOW_SEAVEYS;
   const double highFreqSeavey = fSettingsPtrIDontOwn->FREQ_HIGH_SEAVEYS;
-
   for(int j=0; j < numFreqLoop; j++){
     if (j < numSafe && this->freq[j]>= lowFreqSeavey && this->freq[j]<=highFreqSeavey){ // note: this bounds check is also done inside the antenna gain so this redundent
       if(pol==0){
 	double absMag = std::abs(freqDomain.at(j));
 	double phase = std::arg(freqDomain.at(j));
-	// if(inu==397 && antNum == 2 && j==22) {
-	//   std::cout << "CHECK SCALING ADDSIGNALTORX: pol = 0, before = " << absMag << " " << freqDomain.at(j) << " with "  << hitangle_e << ", " <<  hitangle_h <<  ", " << e_component  << ", " <<  h_component << "\n";
-	// }
+	if(inu==397 && antNum == 2 && j==22) {
+	  std::cout << "CHECK SCALING ADDSIGNALTORX: pol = 0, before = " << absMag << " " << freqDomain.at(j) << " with "  << hitangle_e << ", " <<  hitangle_h <<  ", " << e_component  << ", " <<  h_component << "\n";
+	}
 	double dummyValueForOppositePol = 0;
-        this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, absMag, dummyValueForOppositePol);
-	// if(inu==397 && antNum == 2 && j==22){
-	//   std::cout << ", after = " << absMag << "\n";
-	// }
+	this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, absMag, dummyValueForOppositePol);
+ 	if(inu==397 && antNum == 2 && j==22){
+	  std::cout << ", after = " << absMag << "\n";
+	}
 	freqDomain.at(j) = std::polar(absMag, phase);
       }
       else{
 	double absMag = std::abs(freqDomain.at(j));
 	double phase = std::arg(freqDomain.at(j));
- 	double dummyValueForOppositePol = 0;
+	double dummyValueForOppositePol = 0;
 	this->AntennaGain(fSettingsPtrIDontOwn, hitangle_e, hitangle_h, e_component, h_component, j, dummyValueForOppositePol, absMag);
 	freqDomain.at(j) = std::polar(absMag, phase);
       }
@@ -162,7 +178,7 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
       freqDomain.at(j) = {0., 0.};
     }
   }
-
+    
   /// @todo make this a sum rather than just assigning the last waveform received!
   // (this means the multi-path refraction from screen is currently broken)
   fWaveformsRX.at(rx) = afterGain.getTimeDomain();
@@ -200,6 +216,13 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
     grD.SetName(TString::Format("gr_PSD_RX_%d_%d_afterGain", pol, antNum));
     grD.SetTitle(TString::Format("PSD Pol %d Ant %d after antenna gain", pol, antNum));
     grD.Write();
+
+
+
+    TGraph grInSeavey = fSeaveys.at(rx).getSignal(Seavey::Pol::V).getTimeDomain();
+    grInSeavey.SetName(TString::Format("grSeavey%d", rx));
+    grInSeavey.SetTitle(grInSeavey.GetName());
+    grInSeavey.Write();
 
     // TGraph gr_re, gr_im, gr_abs;
     // for(auto amp : afterGain.getFreqDomain()) {

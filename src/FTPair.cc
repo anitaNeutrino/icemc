@@ -15,6 +15,29 @@
 
 
 
+icemc::FTPair::FTPair()
+  : fTimeDomainGraph(),
+    fFreqDomain(),
+    fNeedToUpdateTimeDomain(false),
+    fNeedToUpdateFreqDomain(true),
+    fDebug(false),
+    fDoNormalTimeDomainOrdering(false)
+{
+  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+
+  // we need to put some kind of state in here as
+  // otherwise things can go very wrong.
+  const int n = 8;
+  const double t0 = 0;
+  const double dt = 1e-9;
+  for(int i=0; i < n; i++){
+    fTimeDomainGraph.SetPoint(i, t0 + dt*i, 0);
+  }
+
+  zeroPadTimeDomainLengthToPowerOf2();
+}
+
+
 icemc::FTPair::FTPair(int n, const double* timeDomainAmplitude,  double dt, double t0)
   : fTimeDomainGraph(n, timeDomainAmplitude, timeDomainAmplitude),
     fFreqDomain(),

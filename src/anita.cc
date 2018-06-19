@@ -48,7 +48,6 @@
 const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
 
-
 using std::cout;
 using std::cin;
 using std::endl;
@@ -1992,7 +1991,7 @@ int icemc::Anita::GetBeamWidths(const Settings *settings1) {
 double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) const {
   double scaleh1, scaleh2;
   if(gain_type < 0 || gain_type > 3) {
-    cout << "gain_type out of range\n";
+    std::cerr << "gain_type out of range\n";
     exit(1);
   }
     
@@ -2030,13 +2029,13 @@ double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) const
 	scaleh1 = 1. - scaleh2; // how far from the larger angle
 				
 	if(whichbin[k] == NPOINTS_GAIN - 1) // if the frequency is 1.5e9 or goes a little over due to rounding
-	  return scaleh1 * gain_angle[gain_type][whichbin[k]][iii-1] +
-	    scaleh2 * gain_angle[gain_type][whichbin[k]][iii];
+	  return (scaleh1 * gain_angle[gain_type][whichbin[k]][iii-1] +
+		  scaleh2 * gain_angle[gain_type][whichbin[k]][iii]);
 				
-	return scaleh1 * scalef1[k] * gain_angle[gain_type][whichbin[k]][iii-1] +
-	  scaleh1 * scalef2[k] * gain_angle[gain_type][whichbin[k]+1][iii-1] +
-	  scaleh2 * scalef1[k] * gain_angle[gain_type][whichbin[k]][iii] +
-	  scaleh2 * scalef2[k] * gain_angle[gain_type][whichbin[k]+1][iii];
+	return (scaleh1 * scalef1[k] * gain_angle[gain_type][whichbin[k]  ][iii-1] +
+		scaleh1 * scalef2[k] * gain_angle[gain_type][whichbin[k]+1][iii-1] +
+		scaleh2 * scalef1[k] * gain_angle[gain_type][whichbin[k]  ][iii] +
+		scaleh2 * scalef2[k] * gain_angle[gain_type][whichbin[k]+1][iii]);
 				
       }
     }

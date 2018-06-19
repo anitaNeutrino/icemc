@@ -22,7 +22,7 @@ namespace icemc {
     ANITA(const Settings* settings, RayTracer* sillyRay, Screen* sillyPanel);
     virtual ~ANITA();
 
-    virtual int getNumRX() const override {return 96;} ///@todo make this proper
+    virtual int getNumRX() const override {return fSeaveys.size();}
     virtual icemc::Vector getPositionRX(int i) const override;
 
     virtual icemc::Position getCenterOfDetector(UInt_t unixTime = 0) override;
@@ -44,7 +44,6 @@ namespace icemc {
 
     // Indices... uuurrrggghh
     // @todo make these private again after debugging complete.
-    void getAntPolFromRX(int rx, int&ant, int& pol) const;
     void getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const;
 
   private:

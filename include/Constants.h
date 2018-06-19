@@ -11,13 +11,13 @@ namespace icemc {
    */
   namespace constants {
   
-    // constants in math    
-    const double TWOPI=6.2831852;
-    const double PI=3.141592654;
-    const double ALOG2=0.693147;        // natural log of 2
-    const double INV_E=0.36787944;      // 1/e
-    const double sr=4*PI;
-
+    // Mathematical constants     
+    const double TWOPI = 6.2831852;
+    const double PI    = 3.141592654;
+    const double ALOG2 = 0.693147;        // natural log of 2
+    const double INV_E = 0.36787944;      // 1/e
+    const double sr    = 4*PI;
+    
     /** 
      * Get the Poisson error associated from n events, currently valid up to 20
      * 
@@ -28,6 +28,7 @@ namespace icemc {
     void getPoissonError(int n, double& poissonErrorPlus, double& poissonErrorMinus);
     const int maxPoissonStats = 20;
 
+    
     // conversion constants
     const double CMINCH=2.54;          // inches to cm
     const double RADDEG=0.017453292;   // radians/degree  

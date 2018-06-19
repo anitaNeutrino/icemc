@@ -1,12 +1,16 @@
 #include "Seavey.h"
 #include "EnvironmentVariable.h"
 #include "IcemcLog.h"
+#include "balloon.hh"
+#include "Constants.h"
+
+#include "TH2D.h"
 #include "TCanvas.h"
 #include "TGraph.h"
 #include "TLegend.h"
 #include "TMultiGraph.h"
-#include "balloon.hh"
-#include "Constants.h"
+
+#include <algorithm>
 
 #if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
 #include "vectormath_trig.h"
@@ -24,14 +28,33 @@
 
  // number of points within bandwidth that gain is measured.
 constexpr int numGainPoints = 131;
-std::array<double, numGainPoints> freqHz_measured; // from 200 MHz to 1.5 GHz with step size of 10 MHz (units in Hz)
-std::array<double, numGainPoints> gain_h_measured;
-std::array<double, numGainPoints> gain_v_measured;
-std::array<double, numGainPoints> gain_hv_measured;
-std::array<double, numGainPoints> gain_vh_measured;
+std::array<double, numGainPoints> freqHz_measured; ///< Frequency values for arrays with numGainPoints, goes from 200 MHz to 1.5 GHz with step size of 10 MHz (units in Hz)
+
+/**
+ * Ped's famous gains
+ */
+std::array<double, numGainPoints> gain_dBi_hh_measured; ///< gain for HPol component of signal to HPol feed (co-pol)
+std::array<double, numGainPoints> gain_dBi_vv_measured; ///< gain for VPol component of signal to VPol feed (co-pol)
+std::array<double, numGainPoints> gain_dBi_hv_measured; ///< gain for HPol component of signal to VPol feed (cross-pol)
+std::array<double, numGainPoints> gain_dBi_vh_measured; ///< gain for VPol component of signal to HPol feed (cross-pol)
+
+
+/**
+ * The antenna heights (m), calculated from Ped's gains, converts an E-field (V/m) to a voltage (V)
+ */
+std::array<double, numGainPoints> heightHH_m; ///< converted from gain_dBi_hh_measured
+std::array<double, numGainPoints> heightVV_m; ///< converted from gain_dBi_vv_measured
+std::array<double, numGainPoints> heightHV_m; ///< converted from gain_dBi_hv_measured
+std::array<double, numGainPoints> heightVH_m; ///< converted from gain_dBi_vh_measured
+
+// if you come up with some geometry where some are in ice and others not or something
+// refractiveIndexUsedForHeightArrays will need to change to be a per-antenna member variable
+// maybe it should be anyway because this is a wee bit ugly.
+double refractiveIndexUsedForHeightArrays = 0; ///< Required to find height from gains
+
 
 constexpr int numAnglePoints = 7;
-const std::array<double, numAnglePoints> referenceAnglesDeg {0, 5, 10, 20, 30, 45, 90}; // the off axis measurements are have these step sizes
+const std::array<double, numAnglePoints> referenceAnglesDeg {0, 5, 10, 20, 30, 45, 90}; // the off axis measurements are have these step sizes (Degrees)
 const std::array<double, numAnglePoints> referenceAnglesRad {referenceAnglesDeg[0]*icemc::constants::RADDEG,
                                                              referenceAnglesDeg[1]*icemc::constants::RADDEG,
                                                              referenceAnglesDeg[2]*icemc::constants::RADDEG,
@@ -39,13 +62,24 @@ const std::array<double, numAnglePoints> referenceAnglesRad {referenceAnglesDeg[
                                                              referenceAnglesDeg[4]*icemc::constants::RADDEG,
                                                              referenceAnglesDeg[5]*icemc::constants::RADDEG,
                                                              referenceAnglesDeg[6]*icemc::constants::RADDEG};
+const std::array<double,  numAnglePoints-1> invAngleBinSize {referenceAnglesDeg[1] - referenceAnglesDeg[0],
+                                                             referenceAnglesDeg[2] - referenceAnglesDeg[1],
+                                                             referenceAnglesDeg[3] - referenceAnglesDeg[2],
+                                                             referenceAnglesDeg[4] - referenceAnglesDeg[3],
+                                                             referenceAnglesDeg[5] - referenceAnglesDeg[4],
+                                                             referenceAnglesDeg[6] - referenceAnglesDeg[5]};
 
-std::array<std::array<double, numAnglePoints>, numGainPoints> gain_v_angle_az; //[numGainPoints][numAnglePoints]
-std::array<std::array<double, numAnglePoints>, numGainPoints> gain_h_angle_az; //[numGainPoints][numAnglePoints]
-std::array<std::array<double, numAnglePoints>, numGainPoints> gain_v_angle_el; //[numGainPoints][numAnglePoints]
-std::array<std::array<double, numAnglePoints>, numGainPoints> gain_h_angle_el; //[numGainPoints][numAnglePoints]
+std::array<std::array<double, numGainPoints>, numAnglePoints> gain_v_angle_az; //[numAnglePoints][numGainPoints]
+std::array<std::array<double, numGainPoints>, numAnglePoints> gain_h_angle_az; //[numAnglePoints][numGainPoints]
+std::array<std::array<double, numGainPoints>, numAnglePoints> gain_v_angle_el; //[numAnglePoints][numGainPoints]
+std::array<std::array<double, numGainPoints>, numAnglePoints> gain_h_angle_el; //[numAnglePoints][numGainPoints]
 
-bool doneLoadGains = false;
+bool doneLoadGains = false; ///< So we only read the Seavey gains and calculate derived quantities once.
+
+
+
+
+
 
 
 /** 
@@ -73,8 +107,10 @@ std::ifstream openCarefully(const char* fileName, bool failHard = true){
 
 
 
+
+
 /** 
- * Read the gains into the vectors.
+ * Read the gains into the arrays.
  * @todo This is NOT THREAD SAFE, some locking functions would be required to make it so.
  */
 void loadGains(){
@@ -89,11 +125,10 @@ void loadGains(){
       std::string fullPath = ICEMC_DATA_DIR + fileName;
       std::ifstream boresight_file = openCarefully(fullPath.c_str());
 
-      auto& boresightGain = (fileName == "vv_0" ? gain_h_measured :
-			     fileName == "hh_0" ? gain_v_measured :
-			     fileName == "hv_0" ? gain_hv_measured :
-			                          gain_vh_measured);
-
+      auto& boresightGain = (fileName == "vv_0" ? gain_dBi_hh_measured :
+			     fileName == "hh_0" ? gain_dBi_vv_measured :
+			     fileName == "hv_0" ? gain_dBi_hv_measured :
+			                          gain_dBi_vh_measured);
       
       for(int i = 0; i < numGainPoints; ++i) {
 	double f;
@@ -105,7 +140,6 @@ void loadGains(){
 	  icemc::Log() << icemc::warning << "frequency = " << f << ", freqHz_measured[i] = " << freqHz_measured.at(i) << "\n";
 	}
       }
-
       firstFile = false;
     }
 
@@ -117,26 +151,28 @@ void loadGains(){
 			   fileName == "hh_az" ? gain_h_angle_az :
 			   fileName == "vv_el" ? gain_v_angle_el :
 			                         gain_h_angle_el );
-      // fileName == "hh_el" ? gain_h_angle_el : 
 
       std::string filePath = ICEMC_DATA_DIR + fileName;
       std::ifstream angle_file = openCarefully(filePath.c_str());
 
-      for(int i = 0; i < numGainPoints; i++){      
-	gainVsAngle.at(i).at(0) = 1; // 0th bin is on boresight, so no off-axis effects... so set to 1.
+      for(auto& g0 : gainVsAngle.at(0)){
+	g0 = 1; // 0th bin is on boresight, so no off-axis effects... so set to 1.
       }
 
       for(int j = 1; j < numAnglePoints; j++){
-	for(int i = 0; i < numGainPoints; i++){
-	  double f;
-	  angle_file >> f >> gainVsAngle.at(i).at(j);
-	  if(f != freqHz_measured.at(i)){
-	    icemc::Log() << icemc::warning << "Check frequencies for " << filePath << std::endl;
+	int k = 0;
+	double f = 0;
+	for(auto& g : gainVsAngle.at(j)){	  
+	  angle_file >> f >> g;
+	  if(f != freqHz_measured.at(k)){
+	    icemc::Log() << icemc::warning << "Check off-axis frequencies for " << filePath << std::endl;
 	  }
+	  k++;
 	}
       }
       
       angle_file.close();
+
     }
 
     doneLoadGains = true;
@@ -144,72 +180,59 @@ void loadGains(){
 }
 
 
+/** 
+ * Convert a gain in dBi to antenna height, requires knowing the refractive index of the receiving material
+ * 
+ * @param gain_dB 
+ * @param freq 
+ * @param nmedium_receiver 
+ * 
+ * @return 
+ */
+inline double getAntennaHeightFromGain_dB(double gain_dB, double freq, double nmedium_receiver) {
+  // from gain=4*pi*A_eff/lambda^2
+  // and h_eff=2*sqrt(A_eff*Z_rx/Z_air)
+  // gain_dB is in dB
+  return 2*sqrt(gain_dB/4/icemc::constants::PI*icemc::constants::CLIGHT*icemc::constants::CLIGHT/(freq*freq)*icemc::constants::Zr/(icemc::constants::Z0*nmedium_receiver));      
+}
 
 
 
-// // reads in the effect of a signal not hitting the antenna straight on
-// // also reads in gainxx_measured and sets xxgaintoheight
-// void icemc::Seavey::Set_gain_angle(const Settings *settings1,double nmedium_receiver) {
-//   loadGains();
+
+/** 
+ * We need the refractive index of the antenna medium to calculate the heights.
+ * 
+ * @param refractiveIndex is the refractive index of the medium
+ * @todo This also isn't thread safe
+ * 
+ */
+void fillHeightArrays(double refractiveIndex){
   
-//   std::string gain_null1, gain_null2;
+  loadGains();
 
-//   const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
-//   const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
-
+  
+  // then we recalculate everything
+  if(refractiveIndex != refractiveIndexUsedForHeightArrays){
     
-  // double gainhv, gainhh, gainvh, gainvv;
-  // double gain_step = freqHz_measured[1]-freqHz_measured[0]; // how wide are the steps in frequency;
-    
-  // icemc::Log() << "GAINS is " << GAINS << "\n";
-  // for (int k = 0; k < NFREQ; ++k) {
-  //   whichbin[k] = int((freq[k] - freqHz_measured[0]) / gain_step); // finds the gains that were measured for the frequencies closest to the frequency being considered here
-  //   if((whichbin[k] >= numGainPoints || whichbin[k] < 0)) {
-  //     icemc::Log() << "Set_gain_angle out of range, freq = " << freq[k] << "\twhichbin[k] = " << whichbin[k] << std::endl;
-  //     // no longer exit, just set antenna gain to 0 outside band
-  //     // @todo verify this works
-  //     // exit(1);
-  //     scalef2[k] = 0;
-  //     scalef1[k] = 0;
-  //   }
-  //   else{
+    for(const std::string& polString : {"vv", "hh", "hv",  "vh"}){
 
-  //     //now a linear interpolation for the frequency
-  //     scalef2[k] = (freq[k] - freqHz_measured[whichbin[k]]) / gain_step;
-  //     // how far from the lower frequency
-  //     scalef1[k] = 1. - scalef2[k]; // how far from the higher frequency
-		
-  //     // convert the gain at 0 degrees to the effective antenna height at 0 degrees for every frequency
-  //     if(whichbin[k] == numGainPoints - 1) { // if the frequency is 1.5e9 or goes a little over due to rounding
-  // 	gainhv = gainhv_measured[whichbin[k]];
-  // 	gainhh = gainh_measured[whichbin[k]];
-  // 	gainvh = gainvh_measured[whichbin[k]];
-  // 	gainvv = gainv_measured[whichbin[k]];
-  //     }
-  //     else {
-  // 	// These gains should be dimensionless numbers, not in dBi
-  // 	gainhv = scalef1[k] * gainhv_measured[whichbin[k]] + scalef2[k] * gainhv_measured[whichbin[k] + 1];
-  // 	gainhh = scalef1[k] * gainh_measured[whichbin[k]] + scalef2[k] * gainh_measured[whichbin[k] + 1];
-  // 	gainvh = scalef1[k] * gainvh_measured[whichbin[k]] + scalef2[k] * gainvh_measured[whichbin[k] + 1];
-  // 	gainvv = scalef1[k] * gainv_measured[whichbin[k]] + scalef2[k] * gainv_measured[whichbin[k] + 1];
-  //     }
-  //   }
-  //   if (GAINS==0) {
-			
-  //     gainhv=0.;
-  //     gainhh=gain[1][k];
-  //     gainvh=0.;
-  //     gainvv=gain[0][k];
-			
-  //   }
-		
-  //   hvGaintoHeight[k] = GaintoHeight(gainhv,freq[k],nmedium_receiver);
-  //   hhGaintoHeight[k] = GaintoHeight(gainhh,freq[k],nmedium_receiver);
-  //   vhGaintoHeight[k] = GaintoHeight(gainvh,freq[k],nmedium_receiver);
-  //   vvGaintoHeight[k] = GaintoHeight(gainvv,freq[k],nmedium_receiver);
-		
-  // } // loop through frequency bins
-// } // void Set_gain_angle()
+      auto& boresightGain = (polString == "vv" ? gain_dBi_vv_measured :
+    			     polString == "hh" ? gain_dBi_hh_measured :
+    			     polString == "hv" ? gain_dBi_hv_measured :
+      			                         gain_dBi_vh_measured);
+
+      auto& antennaHeight = (polString == "hh" ? heightHH_m :
+    			     polString == "vv" ? heightVV_m :
+    			     polString == "hv" ? heightHV_m :
+        			                 heightVH_m);
+      int i=0;
+      for(auto g : boresightGain){
+	antennaHeight.at(i) = getAntennaHeightFromGain_dB(g, freqHz_measured.at(i), refractiveIndex);
+	i++;
+      }
+    }
+  }
+}
 
 
 
@@ -218,6 +241,36 @@ void loadGains(){
 
 
 
+
+
+
+
+
+TCanvas* icemc::Seavey::plotInterpolatedGains(double freq, const int nBins){
+
+  auto c = new TCanvas();
+
+  double minAngle = *std::min_element(referenceAnglesDeg.begin(), referenceAnglesDeg.end());
+  double maxAngle = *std::max_element(referenceAnglesDeg.begin(), referenceAnglesDeg.end());
+ 
+  TString hName = TString::Format("hInterpGains_%d_%d", nBins, nBins);
+  auto hH = new TH2D(hName, "HPol Gain;#deltaAzimuth(Degree);#deltaElevation(degree);Gain factor (no units)", nBins, minAngle, maxAngle,  nBins, minAngle, maxAngle);
+  // auto hV = new TH2D("hV", "VPol Gain;#deltaAzimuth(Degree);#deltaElevation(degree);Gain factor (no units)", nBins, minAngle, maxAngle,  nBins, minAngle, maxAngle);
+
+  for(int by=1; by <= hH->GetNbinsY(); by++){
+    double dEl = hH->GetYaxis()->GetBinCenter(by);
+    for(int bx=1; bx <= hH->GetNbinsX(); bx++){
+      double dAz = hH->GetXaxis()->GetBinCenter(bx);
+      double w = dAz + dEl;
+      hH->Fill(dEl, dAz, w);
+    }
+  }  
+  
+  hH->Draw("colz");
+  c->SetLogz(1);
+  
+  return c;
+}
 
 
 
@@ -231,10 +284,10 @@ TCanvas* icemc::Seavey::plotGains() {
 
   TMultiGraph* grBoresight = new TMultiGraph();
 
-  TGraph* gr_h =  new TGraph(freqHz_measured.size(), freqHz_measured.data(), gain_h_measured.data());  
-  TGraph* gr_v =  new TGraph(freqHz_measured.size(), freqHz_measured.data(), gain_v_measured.data());
-  TGraph* gr_hv = new TGraph(freqHz_measured.size(), freqHz_measured.data(), gain_hv_measured.data());
-  TGraph* gr_vh = new TGraph(freqHz_measured.size(), freqHz_measured.data(), gain_vh_measured.data());
+  TGraph* gr_h =  new TGraph(freqHz_measured.size(), freqHz_measured.data(), gain_dBi_hh_measured.data());  
+  TGraph* gr_v =  new TGraph(freqHz_measured.size(), freqHz_measured.data(), gain_dBi_vv_measured.data());
+  TGraph* gr_hv = new TGraph(freqHz_measured.size(), freqHz_measured.data(), gain_dBi_hv_measured.data());
+  TGraph* gr_vh = new TGraph(freqHz_measured.size(), freqHz_measured.data(), gain_dBi_vh_measured.data());
 
   gr_h->SetLineColor(kRed);
   gr_v->SetLineColor(kBlue);
@@ -273,11 +326,11 @@ TCanvas* icemc::Seavey::plotGains() {
   auto l2_2 = new TLegend();
   l2_2->SetNColumns(2);
   for(int j=0; j < numAnglePoints; j++){
-    TGraph* grH = new TGraph(freqHz_measured.size());
-    TGraph* grV = new TGraph(freqHz_measured.size());
+    TGraph* grH = new TGraph(freqHz_measured.size(), freqHz_measured.data(), gain_h_angle_az.at(j).data());
+    TGraph* grV = new TGraph(freqHz_measured.size(), freqHz_measured.data(), gain_v_angle_az.at(j).data());
 
-    TGraph* grH2 = new TGraph(freqHz_measured.size());
-    TGraph* grV2 = new TGraph(freqHz_measured.size());
+    TGraph* grH2 = new TGraph(freqHz_measured.size(), freqHz_measured.data(), gain_h_angle_el.at(j).data());
+    TGraph* grV2 = new TGraph(freqHz_measured.size(), freqHz_measured.data(), gain_v_angle_el.at(j).data());
     
     grH->SetLineColor(kRed);
     grV->SetLineColor(kBlue);
@@ -288,12 +341,6 @@ TCanvas* icemc::Seavey::plotGains() {
     grH2->SetLineStyle(j+1);
     grV2->SetLineStyle(j+1);
     
-    for(int i=0; i < freqHz_measured.size(); ++i){
-      grH->SetPoint(i, freqHz_measured.at(i), gain_h_angle_az.at(i).at(j));
-      grV->SetPoint(i, freqHz_measured.at(i), gain_v_angle_az.at(i).at(j));
-      grH2->SetPoint(i, freqHz_measured.at(i), gain_h_angle_el.at(i).at(j));
-      grV2->SetPoint(i, freqHz_measured.at(i), gain_v_angle_el.at(i).at(j));
-    }
     grAz->Add(grV);
     grAz->Add(grH);
     grEl->Add(grV2);
@@ -328,16 +375,304 @@ TCanvas* icemc::Seavey::plotGains() {
 }
 
 
+TCanvas* icemc::Seavey::plotHeights(double refractiveIndex) {
+  fillHeightArrays(refractiveIndex);
 
+  auto c = new TCanvas();
 
+  TMultiGraph* grBoresight = new TMultiGraph();
 
+  TGraph* gr_h =  new TGraph(freqHz_measured.size(), freqHz_measured.data(), heightHH_m.data());  
+  TGraph* gr_v =  new TGraph(freqHz_measured.size(), freqHz_measured.data(), heightVV_m.data());
+  TGraph* gr_hv = new TGraph(freqHz_measured.size(), freqHz_measured.data(), heightHV_m.data());
+  TGraph* gr_vh = new TGraph(freqHz_measured.size(), freqHz_measured.data(), heightVH_m.data());
 
-
-void icemc::Seavey::applyAntennaGain(icemc::PropagatingSignal& s) const {
+  gr_h->SetLineColor(kRed);
+  gr_v->SetLineColor(kBlue);
+  gr_hv->SetLineColor(kGreen);
+  gr_vh->SetLineColor(kYellow);
   
+  grBoresight->Add(gr_h);
+  grBoresight->Add(gr_v);
+  grBoresight->Add(gr_hv);
+  grBoresight->Add(gr_vh);
+
+  grBoresight->SetTitle(TString::Format("Seavey Antenna Heights in icemc with n=%4.2lf;Frequency (Hz);Height (m)", refractiveIndex));
+  
+  auto l1 = new TLegend();
+  l1->AddEntry(gr_h, "HPol Height", "l");
+  l1->AddEntry(gr_v, "VPol Height", "l");
+  l1->AddEntry(gr_hv, "H->V cross-pol Height", "l");
+  l1->AddEntry(gr_vh, "V->H cross-pol Height", "l");  
+
+  grBoresight->SetBit(kCanDelete);
+  grBoresight->Draw("al");
+
+  l1->SetBit(kCanDelete);
+  l1->Draw();
+
+  c->SetLogy(1);
+  return c;
+}
+
+
+/** 
+ * Linearly interpolate in one of the arrays of length numPoints
+ * 
+ * @param arr some type with .at() and .size() members whose values correspond to the freqHz_measured array (try std::vector or std::array)
+ * @param freqHz the frequency at which to interpolate for
+ */
+
+template <typename T>
+double linearInterp(const T& arr, double freqHz) {
+
+  const double f0 = freqHz_measured.at(0);
+  const double df = freqHz_measured.at(1) - f0;
+  
+  const int i1 = floor((freqHz - f0)/df);
+  const int i2 = i1 + 1;
+
+  const double f1 = f0 + i1*df;
+
+  const double a1 = i1 < 0 || i1 >= arr.size() ? 0 : arr.at(i1);
+  const double a2 = i2 < 0 || i2 >= arr.size() ? 0 : arr.at(i2);
+
+  const double m = (a2 - a1)/df;
+  const double a_interp = a1 + m*(freqHz - f1);
+
+  return a_interp;
+}
+
+
+double icemc::Seavey::getHeight(Pol pol, double freqHz) const { 
+  fillHeightArrays(fRefractiveIndex);
+
+  switch(pol){
+  case Pol::V:
+    return linearInterp(heightVV_m, freqHz);
+  case Pol::H:
+    return linearInterp(heightHH_m, freqHz);
+  default:
+    icemc::Log() << icemc::warning << "Requested height for unknown pol, return 0" << std::endl;
+    return 0;
+  }
+}
+
+
+double icemc::Seavey::getHeight(XPol xPol, double freqHz) const {
+  fillHeightArrays(fRefractiveIndex);
+
+  switch(xPol){
+  case XPol::VtoH:
+    return linearInterp(heightVH_m, freqHz);
+  case XPol::HtoV:
+    return linearInterp(heightHV_m, freqHz);
+  default:
+    icemc::Log() << icemc::warning << "Requested height for unknown cross-pol, returning 0" << std::endl;
+    return 0;
+  }
+}
+
+
+/** 
+ * Gets the index of the last reference angle less than angleRad
+ * 
+ * Whether you want Az/El doesn't matter since both are the same.
+ * To be used for interpolating off-axis response.
+ * If this returns j, then interpolate between j and j+1
+ *  
+ * @param angleRad is the off-axis angle in radians
+ * 
+ * @return the index of the last reference angle
+ */
+int getLowerAngleBin(double angleRad){
+
+  int j1 = -1;
+  angleRad = fabs(angleRad);
+  for(int j=0; j < referenceAnglesRad.size(); j++){
+    if(angleRad >= referenceAnglesRad.at(j)){
+      j1 = j;
+    }
+    else {
+      break;
+    }
+  }
+  return j1;
+}
+
+
+
+double icemc::Seavey::getOffAxisResponse(Pol pol,  AngleDir dir, double freqHz, double angleRad) const {
+  loadGains();
+
+  const int j1 = getLowerAngleBin(angleRad);
+  const int j2 = j1 + 1;
+
+  if(j1 < 0 || j2 >= referenceAnglesRad.size()){
+    return 0;
+  }
+  
+  double g1 = 0;
+  double g2 = 0;
+  switch(pol){
+  case Pol::V:
+    g1 = dir == AngleDir::Azimuth ? linearInterp(gain_v_angle_az.at(j1), freqHz) : linearInterp(gain_v_angle_az.at(j1), freqHz);
+    g2 = dir == AngleDir::Azimuth ? linearInterp(gain_v_angle_az.at(j2), freqHz) : linearInterp(gain_v_angle_az.at(j2), freqHz);
+    break;
+  case Pol::H:
+    g1 = dir == AngleDir::Azimuth ? linearInterp(gain_h_angle_az.at(j1), freqHz) : linearInterp(gain_h_angle_az.at(j1), freqHz);
+    g2 = dir == AngleDir::Azimuth ? linearInterp(gain_h_angle_az.at(j2), freqHz) : linearInterp(gain_h_angle_az.at(j2), freqHz);
+    break;    
+  default:
+    icemc::Log() << icemc::warning << "Requested off-axis gain for for unknown pol, " << (int)pol <<", returning 0\n";
+    break;    
+  }
+
+  const double a1 = referenceAnglesRad.at(j1);
+  const double a2 = referenceAnglesRad.at(j2);
+
+  const double da = a2 - a1;
+  const double m = (g2 - g1)/da;
+  const double g = m*(angleRad - a1) + g1;
+
+  return g;
+}
+
+
+
+
+
+void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {  
+
+  double e_component_kvector = 0;
+  double h_component_kvector = 0;
+  double n_component_kvector = 0;
+  icemc::Seavey::GetEcompHcompkvector(fEPlane,  fHPlane,  fNormal, s.poynting,
+				      e_component_kvector, h_component_kvector, n_component_kvector);
+
+  double e_component = 0;
+  double h_component = 0;
+  double n_component = 0;
+  icemc::Seavey::GetEcompHcompEvector(fEPlane, fHPlane, s.polarization, e_component, h_component, n_component);
+
+  double hitangle_e = 0;
+  double hitangle_h = 0;
+  icemc::Seavey::GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector,
+			      hitangle_e, hitangle_h);
+
+  const double df_Hz = s.waveform.getDeltaF();
+
+  // Make copies for the VPol and HPol feeds
+  FTPair thisHPol = s.waveform;
+  FTPair thisVPol = s.waveform;
+
+
+  if(fDebug){
+    const TGraph& grV = thisVPol.getTimeDomain();
+    std::cout << "The pre-gain VPol V/m are... \n";
+    for(int i=0; i < grV.GetN(); i++){
+      std::cout << grV.GetY()[i] <<", ";
+    }
+    std::cout << "\n\n";
+  }
+  
+  
+  
+  std::vector<std::complex<double> >& vPolFreqs = thisVPol.changeFreqDomain();
+  std::vector<std::complex<double> >& hPolFreqs = thisHPol.changeFreqDomain();  
+
+  double freqHz = 0;
+
+  // In anita, they loop over 0,1 for get_gain_angle(hitangle_e)
+  // then they loop over 2, 3 for get_gain_angle(hitangle_h)
+  // the old index over looping variables goes into the gain_angle arrays
+  // 0 is vv_az, 1 is hh_az, 2 is hh_el, 3 is vv_el.
+
+  // @todo So this is what I think anita.cc was doing
+  // I'm not sure it's right, but if it's wrong, it's the wrong off-axis response of the cross-pol
+  // Which is probably a small effect
+
+  for(auto& c : vPolFreqs){
+    const double heightVV = getHeight(Pol::V, freqHz); // VPol component of signal to VPol feed
+    const double heightHV = getHeight(XPol::HtoV, freqHz); // HPol component of signal to VPol feed via cross-pol antenna response
+
+    const double offAxisResponseV = getOffAxisResponse(Pol::V, AngleDir::Azimuth, freqHz, hitangle_e);
+    const double offAxisResponseHV = getOffAxisResponse(Pol::H, AngleDir::Azimuth, freqHz, hitangle_e);
+
+    if(fDebug){
+      std::cout << freqHz << "\t"
+		<< heightVV << "\t" << heightHV << "\t"
+		<< offAxisResponseV << "\t" << offAxisResponseHV << "\t"
+		<< e_component << "\t" << h_component << "\t"
+		<< hitangle_e << "\t" << "\n";      
+    }
+
+    // 0.5 is for voltage dividing, apparently
+    const double totalGainFactorV = 0.5*sqrt(  heightVV*heightVV*e_component*e_component*offAxisResponseV
+					     + heightHV*heightHV*h_component*h_component*offAxisResponseHV );
+
+    c *= totalGainFactorV;
+    
+    freqHz += df_Hz;
+
+  }
+
+  freqHz = 0;
+  for(auto& c : hPolFreqs){  
+
+    // get everything going into the HPol feed... via direct and cross-pol.
+    const double heightHH = getHeight(Pol::H, freqHz);
+    const double heightVH = getHeight(XPol::VtoH, freqHz);
+
+    // then you need to take accout of how far off boresight you are... i.e. the off-axis reponse of the antennas.
+    const double offAxisResponseH = getOffAxisResponse(Pol::H, AngleDir::Elevation, freqHz, hitangle_e);
+    const double offAxisResponseVH = getOffAxisResponse(Pol::V, AngleDir::Elevation, freqHz, hitangle_e);
+
+    // 0.5 is for voltage dividing     
+    double totalGainFactorH = 0.5*sqrt(  heightHH*heightHH*e_component*e_component*offAxisResponseH
+				       + heightVH*heightVH*h_component*h_component*offAxisResponseVH);    
+
+    c *= totalGainFactorH;
+    freqHz += df_Hz;
+  }
+
+  /**
+   * @todo In order to make SCREEN stuff work, make this additive rather than just the most recent
+   * This will require doing some addition of the waveform. FTPair doesn't do += yet.
+   */
+  fHPol = thisHPol;
+  fVPol = thisVPol;
+
+  if(fDebug){
+    const TGraph& grV = fVPol.getTimeDomain();
+    std::cout << "The post-gain VPol voltages are... \n";
+    for(int i=0; i < grV.GetN(); i++){
+      std::cout << grV.GetY()[i] <<", ";
+    }
+    std::cout << "\n\n";
+  }
+
+  // std::cout << fVPol.getTimeDomain().GetN() << std::endl;  
   
 }
 
+
+
+
+
+const icemc::FTPair& icemc::Seavey::getSignal(Pol pol){
+  
+  if(pol==Pol::V){
+    return fVPol;
+  }
+  else if(pol==Pol::H){
+    return fHPol;
+  }
+  else{
+    icemc::Log() << icemc::warning << "Pol for unknown pol requested, returning V.\n";
+    return fVPol;
+  }  
+}
 
 
 

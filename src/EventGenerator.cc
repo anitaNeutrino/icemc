@@ -1321,12 +1321,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   Tools::Zero(eventsfound_nfb_binned, NBINS);
 
   fNeutrinoPath = new NeutrinoPath(); // init here for branch setting
-  icemc::RootOutput ro(this, &settings1, clOpts.outputdir.c_str(), clOpts.run_no);  
-  
-
-
-
-
+  icemc::RootOutput ro(this, &settings1, clOpts.outputdir.c_str(), clOpts.run_no);
 
   IceModel* antarctica = new IceModel(settings1.ICE_MODEL + settings1.NOFZ*10,
 				      settings1.CONSTANTICETHICKNESS * 1000 + settings1.CONSTANTCRUST * 100 + settings1.FIXEDELEVATION * 10 + 0,

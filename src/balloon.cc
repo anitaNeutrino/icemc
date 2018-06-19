@@ -110,6 +110,7 @@ void  icemc::Balloon::setObservationLocation(Interaction *interaction1,int inu, 
     
   //Finished setting observation location
 }
+
 void icemc::Balloon::SetDefaultBalloonPosition(const IceModel *antarctica1) { // position of surface of earth under balloon
     
   // set the default balloon position
@@ -119,24 +120,28 @@ void icemc::Balloon::SetDefaultBalloonPosition(const IceModel *antarctica1) { //
   int BN_LATITUDE_SETTING = BN_LATITUDE;
   int BN_LONGITUDE_SETTING = BN_LONGITUDE;
     
-  if(BN_LATITUDE_SETTING==999)
+  if(BN_LATITUDE_SETTING==999){
     theta_bn=10*constants::RADDEG; // wrt south pole
-  else
+  }
+  else{
     theta_bn=(90-BN_LATITUDE_SETTING)*constants::RADDEG;
-    
-  if(BN_LONGITUDE_SETTING==999)
+  }
+  
+  if(BN_LONGITUDE_SETTING==999){
     phi_bn=constants::PI/4; //wrt 90E longitude
-  else
+  }
+  else {
     phi_bn=EarthModel::LongtoPhi_0isPrimeMeridian(BN_LONGITUDE_SETTING); //remember input of LongtoPhi is between -180 and 180
-    
+  }    
     
   r_bn = Position(theta_bn,phi_bn); // direction of balloon- right now this is a unit vector
     
-  if (BN_ALTITUDE==0) // if the altitude isn't set in the input file
+  if (BN_ALTITUDE==0){ // if the altitude isn't set in the input file
     altitude_bn=120000*12.*constants::CMINCH/100.; // 120000 ft.=36.6 m
-  else
+  }
+  else{
     altitude_bn=BN_ALTITUDE*12.*constants::CMINCH/100.; // converts the altitude in the input file to meters
-    
+  }    
   surface_under_balloon = antarctica1->Surface(r_bn); // distance between center of earth and surface under balloon
     
   r_bn_shadow = surface_under_balloon * r_bn.Unit(); // position of surface under balloon
@@ -687,7 +692,6 @@ void icemc::Balloon::GetAntennaOrientation(const Settings *settings1, Anita *ani
   // n_normal points northwards for antenna 0 (0-31)
   // const vectors const_z (n_eplane), const_y (-n_hplane), const_x (n_normal) defined under Constants.h   -- oindree
 
-
   if(settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH==9) {
     n_eplane = constants::const_z.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
     n_hplane = (-constants::const_y).RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
@@ -708,11 +712,11 @@ void icemc::Balloon::GetAntennaOrientation(const Settings *settings1, Anita *ani
     //phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer] +phi_spin;
     phi=anita1->PHI_EACHLAYER[ilayer][ifold];
   }
-        
+
   n_eplane = n_eplane.RotateZ(phi);
   n_hplane = n_hplane.RotateZ(phi);
   n_normal = n_normal.RotateZ(phi);
-   
+
   n_eplane = RotatePayload(n_eplane); 
   n_hplane = RotatePayload(n_hplane);
   n_normal = RotatePayload(n_normal);

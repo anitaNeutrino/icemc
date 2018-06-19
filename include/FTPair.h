@@ -20,6 +20,12 @@ namespace icemc {
    */
   class FTPair {
   public:
+
+    /** 
+     * Default constructor
+     */
+    FTPair();
+    
     
     /** 
      * Time domain c-style array constructor
