@@ -100,6 +100,7 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 #include "TApplication.h"
 #include <fftw3.h>
 #include "hot-loop.h"
+#include "cr-ft.h"
 
 std::string some_imortant_str = "some_important_str value";
 
@@ -232,11 +233,11 @@ vector<double> ZhsAlpha(25000);
 int main(int argc,  char **argv) {
 
   extern void InitGui();
-  VoidFuncPtr_t initfuncs[] = { InitGui, 0 };
+  // VoidFuncPtr_t initfuncs[] = { InitGui, 0 };
   // TROOT HSroot("HSroot", "Some very smart title", initfuncs);
   // TApplication theApp("App", 0, 0);
-  TApplication *theApp = new TApplication("tapp", NULL, NULL);
-  theApp = theApp;
+  TApplication *theApp __attribute__((unused)) = new TApplication("tapp", NULL, NULL);
+  // theApp = theApp;
   gROOT->SetStyle("Plain");
 
   string stemp;
@@ -375,8 +376,11 @@ int main(int argc,  char **argv) {
 
   // hot_loop("./cr-ft.so");
   void *cr_ft_result = NULL;
+  struct cr_ft_state *cr_ft_struct;
   cr_ft_result = hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
   cout << "cr_ft_result: " << cr_ft_result << endl;
+  cr_ft_struct = (struct cr_ft_state *) cr_ft_result; 
+  cout << "ind_maxval: " << cr_ft_struct->ind_maxval << endl;
   // hot_loop("/nfs/data_disks/scratch1/bugaev/PROGS/INTER_C/canvas.so");
  // theApp.Run();
 

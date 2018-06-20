@@ -8,6 +8,7 @@
 include so-dep_.inc # Updated by emacs: SO_DEP := canvas.cpp
 SO_DEP_STEM = $(basename $(SO_DEP))
 SO_TARGET := $(SO_DEP_STEM).so
+SO_DEP_HEADER := $(SO_DEP_STEM).h
 HASH = $(shell md5sum $(SO_DEP) | gawk '{print $$1}')
 SO_HOT_TARGET := SO/$(SO_DEP_STEM)_$(HASH)_.so
 
@@ -124,12 +125,12 @@ all:            $(BINARIES) $(SO_TARGET)
 # 		g++ -pedantic -Wall -O0 -g3 -fPIC `root-config --cflags` -rdynamic -o $@ $< -ldl `root-config --glibs` hot-loop.o $(LIBS)
 
 
-$(SO_HOT_TARGET): $(SO_DEP) hot-api.h
+$(SO_HOT_TARGET): $(SO_DEP) $(SO_DEP_HEADER) hot-api.h
 	g++ $(CXXFLAGS) -shared $(LDFLAGS) -ldl -fvisibility=hidden -o $@ $<
 	nm $@ > $(basename $(SO_HOT_TARGET)).txt
 	./notify.sh testEAS SO_LOCATION $@ || rm $(SO_HOT_TARGET) $(basename $(SO_HOT_TARGET)).txt # if default, "hot" target was called by mistake when program is not running.
 
-$(SO_TARGET) : $(SO_DEP) hot-api.h
+$(SO_TARGET) : $(SO_DEP) $(SO_DEP_HEADER) hot-api.h
 # g++ $(CXXFLAGS) -shared $(LDFLAGS) -fvisibility=hidden -o $@ $<
 	g++ $(CXXFLAGS) -g3 -shared $(LDFLAGS) -fvisibility=hidden -o $@ $<
 

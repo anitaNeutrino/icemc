@@ -105,7 +105,7 @@ struct game {
     void *handle;
     ino_t id;
     struct game_api api;
-    struct game_state *state;
+    struct cr_ft_state *state;
 };
 
 static void game_load(struct game *game, bool bInteractive)

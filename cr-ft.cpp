@@ -18,6 +18,7 @@
 #include "nuklear.h"
 #include "nuklear_xlib.h"
 #include "buffer.hh"
+#include "cr-ft.h"
 
 extern struct xlibstruct *gxlib;
 struct nk_context *ctx = &(gxlib->ctx);
@@ -48,42 +49,6 @@ public:
 };
 
 
-struct game_state {
-  TCanvas *cZhsEAndAlpha;
-  TPad *px1;
-  TGraph *grZhsTimeE;
-  TLine *line_min;
-  TLine *line_max;
-  TPad *px2;
-  TGraph *grZhsAlpha;
-  TLegend *legend;
-  unique_ptr<double[]> ZhsFftInp;
-  unique_ptr<TGraph> grFftRe;
-  unique_ptr<TGraph> grFftIm; 
-  unique_ptr<TGraph> grFftRho;
-  unique_ptr<TGraph> grFftPhi;
-  TPad1 *panel_ft_rho;
-  //unique_ptr<TPad> panel_ft_rho;
-  TPad1 *panel_ft_phi;
-  //unique_ptr<TPad> panel_ft_phi;
-  unique_ptr<FFTWComplex[]> ZhsFft;
-  TCanvas *cZhsFft;
-  int ind_maxval;
-  double fwhm_xmin;
-  double fwhm_xmax;
-  double fwhm_xmaxval;
-  double fwhm_ymaxval;
-  double vis_xmin;
-  double vis_xmax;
-  int vis_xmin_bin;
-  int vis_xmax_bin;
-  bvv::TBuffer <int> vis_nbins;
-  TCanvas *cZhsIFft;
-  unique_ptr<TGraph> grIFft;
-  unique_ptr<TGraph> grZhsTimeERec;
-  unique_ptr<double[]> ZhsIFft;
-  bvv::TBuffer <int> BinShift;
-};
 
 extern const double pi;
 extern int ZhsTimeN;
@@ -114,7 +79,7 @@ void checkbox_label(struct nk_context *ctx, const char *name, bvv::TBuffer <int>
   buf = val;
 }
 
-void PlotIFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
+void PlotIFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
   // We shouldn't be here if in batch mode:
   if (!bInteractive) return;
 
@@ -162,7 +127,7 @@ void PlotIFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
   }
 }
 
-void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
+void PlotFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
   if (mode == m_init) {
     if (!bInteractive) return;
 
@@ -275,7 +240,7 @@ void PlotFT(struct game_state *state, RunMode mode, struct nk_context *ctx){
   }
 }
 
-void PlotWaveform(struct game_state *state, RunMode mode, struct nk_context *ctx){
+void PlotWaveform(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
   if (mode == m_init) {
     bool fwhm_res = FWHM(ZhsTimeN, ZhsTimeArr.data(), ZhsTimeE.data(), state->fwhm_xmin, state->fwhm_xmax, state->ind_maxval, state->fwhm_xmaxval, state->fwhm_ymaxval);
     if (!fwhm_res) printf("FWHM was not successful\n");
@@ -372,12 +337,12 @@ void PlotWaveform(struct game_state *state, RunMode mode, struct nk_context *ctx
   
 }
 
-static struct game_state *game_init(bool bInteractive_arg)
+static struct cr_ft_state *game_init(bool bInteractive_arg)
 {
   bInteractive = bInteractive_arg;
 
-  // struct game_state *state = (game_state *) malloc(sizeof(*state));
-  struct game_state *state = new game_state;
+  // struct cr_ft_state *state = (cr_ft_state *) malloc(sizeof(*state));
+  struct cr_ft_state *state = new cr_ft_state;
   PlotWaveform(state, m_init, NULL);
 
   PlotFT(state, m_init, NULL);
@@ -389,12 +354,12 @@ static struct game_state *game_init(bool bInteractive_arg)
   return state;
 }
 
-static void game_finalize(struct game_state *state)
+static void game_finalize(struct cr_ft_state *state)
 {
   delete state;
 }
 
-static void game_reload(struct game_state *state)
+static void game_reload(struct cr_ft_state *state)
 {
   PlotWaveform(state, m_reload, ctx);
   PlotFT(state, m_reload, ctx);
@@ -404,20 +369,20 @@ static void game_reload(struct game_state *state)
   
 }
 
-static void game_unload(struct game_state *state)
+static void game_unload(struct cr_ft_state *state)
 {
   state = state; // bvv: to silence compiler warnings.
   cout << "game unloaded" << endl;
 }
 
-static bool game_step_core(struct game_state *state) {
+static bool game_step_core(struct cr_ft_state *state) {
   PlotWaveform(state, m_step, ctx);
   PlotFT(state, m_step, ctx);
   if (bInteractive) PlotIFT(state, m_step, ctx);
   return true;
 }
 
-static bool game_step(struct game_state *state)
+static bool game_step(struct cr_ft_state *state)
 {
   if (bInteractive) {
     gSystem->ProcessEvents();

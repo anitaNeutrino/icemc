@@ -747,7 +747,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
     
     anita1->iminbin[iband]=0.;
     anita1->imaxbin[iband]=anita1->NFOUR/2;
-        
+
     for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
       for (int k=0;k<Anita::NFREQ;k++) {
         if (anita1->freq[k]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[k]<=settings1->FREQ_HIGH_SEAVEYS){
