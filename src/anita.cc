@@ -2487,12 +2487,12 @@ void icemc::Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forf
       // the 2/(nfour/2) needs to be included since were using FTPair::realft with the -1 setting
       // how about we interpolate instead of doing a box average
       for (int j=iprevious+1;j<ifour;j++) {
-	if(debug){
-	  std::cout << j << "\t" << ifour << "\n";
-	  std::cout << 2*j << "\t" << 2*ifour << "\n";
-	  std::cout << 2*j+1 << "\t" << 2*ifour+1 << "\n";
-	  std::cout << "\n";
-	}
+	// if(debug){
+	//   std::cout << j << "\t" << ifour << "\n";
+	//   std::cout << 2*j << "\t" << 2*ifour << "\n";
+	//   std::cout << 2*j+1 << "\t" << 2*ifour+1 << "\n";
+	//   std::cout << "\n";
+	// }
 	
         vsignal_e_forfft[2*j]   = previous_value_e_even+(vsignal_e_forfft[2*ifour]   - previous_value_e_even) * (double)(j-iprevious)/(double)(ifour-iprevious);
         vsignal_e_forfft[2*j+1] = previous_value_e_odd +(vsignal_e_forfft[2*ifour+1] - previous_value_e_odd ) * (double)(j-iprevious)/(double)(ifour-iprevious);
@@ -3518,6 +3518,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
 #ifdef ANITA_UTIL_EXISTS
     AnitaEventCalibrator* cal = AnitaEventCalibrator::Instance();
     AnitaGeomTool *fGeomTool = AnitaGeomTool::Instance(stoi(whichANITAcard));
+    (void) fGeomTool;
     int tempAnt, intTempPol;
     AnitaPol::AnitaPol_t tempPol;
     for(Int_t surf=0; surf<NUM_SURF; surf++){

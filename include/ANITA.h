@@ -5,12 +5,13 @@
 #include "anita.hh"
 #include "balloon.hh"
 #include "Seavey.h"
-
+#include "AnitaSimOutput.h"
 
 namespace icemc {
 
   class RayTracer;
   class Screen;
+  class RootOutput;
 
   /**
    * @class ANITA
@@ -19,7 +20,7 @@ namespace icemc {
 
   class ANITA : public Detector, public Anita, public Balloon {
   public:
-    ANITA(const Settings* settings, RayTracer* sillyRay, Screen* sillyPanel);
+    ANITA(const Settings* settings, RayTracer* sillyRay, Screen* sillyPanel, const RootOutput* ro);
     virtual ~ANITA();
 
     virtual int getNumRX() const override {return fSeaveys.size();}
@@ -42,6 +43,8 @@ namespace icemc {
     double GetAverageVoltageFromAntennasHit(const Settings *settings1,  int *nchannels_perrx_triggered,  double *voltagearray,  double& volts_rx_sum) const;
 
 
+    UInt_t getLastEventNumber() const {return fEventNumber;}
+
     // Indices... uuurrrggghh
     // @todo make these private again after debugging complete.
     void getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const;
@@ -53,6 +56,18 @@ namespace icemc {
     Screen* fScreenPtrIDontOwn;
 
     std::vector<Seavey> fSeaveys; ///< The set of Seavey antennas on the payload
+    UInt_t fEventNumber = 0;
+
+    VoltsRX fVoltsRX;
+    int fL3trig[Anita::NPOL] = {0};  // 16 bit number which says which phi sectors pass L3 V-POL
+    // For each trigger layer,  which "clumps" pass L2.  16 bit,  16 bit and 8 bit for layers 1 & 2 and nadirs
+    int fL2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX] = {{0}};
+    //For each trigger layer,  which antennas pass L1.  16 bit,  16 bit and 8 bit and layers 1,  2 and nadirs
+    int fL1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX] = {{0}};
+
+
+    friend class AnitaSimOutput; ///@todo Can I do this and respect privacy with getters?
+    AnitaSimOutput fAnitaOutput; ///< Handles converting the MC output into the same format as real ANITA data
 
   };
 }

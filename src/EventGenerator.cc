@@ -1223,9 +1223,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   Taumodel* taus1 = new Taumodel();
   Screen* panel1 = new Screen(0);  // create new instance of the screen class
 
+  icemc::RootOutput ro(this, &settings1, clOpts.outputdir.c_str(), clOpts.run_no);
+
   ///@todo make passing these pointers (except maybe settings?) unnecessary!!!
   if(!fDetector){
-    fDetector = new ANITA(&settings1, &rayTracer, panel1);
+    fDetector = new ANITA(&settings1, &rayTracer, panel1, &ro);
     std::cout << "Constructed fDetector at " << fDetector << std::endl;
   }
   
@@ -1321,7 +1323,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   Tools::Zero(eventsfound_nfb_binned, NBINS);
 
   fNeutrinoPath = new NeutrinoPath(); // init here for branch setting
-  icemc::RootOutput ro(this, &settings1, clOpts.outputdir.c_str(), clOpts.run_no);
 
   IceModel* antarctica = new IceModel(settings1.ICE_MODEL + settings1.NOFZ*10,
 				      settings1.CONSTANTICETHICKNESS * 1000 + settings1.CONSTANTCRUST * 100 + settings1.FIXEDELEVATION * 10 + 0,
@@ -1534,11 +1535,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       
       // fDetector->PickBalloonPosition(antarctica,  &settings1,  inu,  anita1,  r.Rndm(), &fGenNu->balloon);
       fDetector->PickBalloonPosition(antarctica,  &settings1,  inu,  fDetector,  r.Rndm(), &fGenNu->balloon);
+      // std::cout << fDetector->r_bn.Lat() << "\t" << fDetector->r_bn.Lon() << std::endl;
 
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter
-      average_altitude+=fDetector->altitude_bn/(double)NNU;
-      average_rbn+=fDetector->r_bn.Mag()/(double)NNU;
+      average_altitude += fDetector->altitude_bn/(double)NNU;
+      average_rbn += fDetector->r_bn.Mag()/(double)NNU;
 
       if (settings1.HIST && !settings1.ONLYFINAL && ro.prob_eachphi_bn.GetEntries() < settings1.HIST_MAX_ENTRIES) {
         ro.prob_eachphi_bn.Fill(fDetector->phi_bn);
@@ -2359,21 +2361,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         }
         count1->nviewanglecut[whichray]++;
 
-	static bool drawnGraph = false;
-	TFile* fTest = NULL;
-	if(!drawnGraph){
-	  fTest = new TFile("fTest.root","recreate");
-	  TGraph gr = askFreqs.makeGraph();
-	  gr.SetName("grTest");
-	  std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
-	  std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
-	  std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
-	  std::cout << "grTest!!!!!!!!!!!!!" << std::endl;
-	  gr.Write();
-	  // fTest->Close();
-	  // drawnGraph = true;
-	}
-
 	askFreqs.taperAmplitudesForOffConeViewing(viewangle);
 	
 	if (fDetector->WHICHPATH == 3){
@@ -2382,29 +2369,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
             // interaction1->banana_volts += vmmhz[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
 	  }
         }//end for (int k=0;k<Anita::NFREQ;k++)
-
-       	if(!drawnGraph){
-	  std::vector<std::complex<double> > complexFreqs;
-	  complexFreqs.reserve(fDetector->NFREQ);
-	  for(int j=0; j < fDetector->NFREQ; j++){
-	    complexFreqs.push_back(std::complex<double>(askFreqs[j], 0));
-	  }
-	  FTPair a(complexFreqs, fDetector->freq[1] - fDetector->freq[0]);
-	  a.setDebug();
-	  TGraph grTest3 = a.getTimeDomain();
-	  grTest3.SetName("grTest3");
-	  grTest3.Write();
-	  
-	  TGraph gr = askFreqs.makeGraph();
-	  gr.SetName("grTest2");
-	  std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
-	  std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
-	  std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
-	  std::cout << "grTest2!!!!!!!!!!!!!" << std::endl;
-	  gr.Write();
-	  fTest->Close();
-	  drawnGraph = true;
-	}	
 
 	// store low frequency post-tapering
 	// vmmhz_lowfreq=askFreqs[0]; // for plotting,  vmmhz at the lowest frequency
@@ -2744,7 +2708,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	    } //end if HIST & HISTMAXENTRIES
 
 	    // Adds an entry to header, event, gps and truth trees
-	    ro.fillRootifiedAnitaDataTrees(this, settings1, &rayTracer, panel1);
+	    // ro.fillRootifiedAnitaDataTrees(this, settings1, &rayTracer, panel1);
 
 	    sum_weights += fNeutrinoPath->weight;
 	    neutrinos_passing_all_cuts++;

@@ -490,7 +490,7 @@ namespace icemc {
 
     GeneratedNeutrino* fGenNu = nullptr;
     PassingNeutrino* fPassNu = nullptr;
-    
+
   private:
 
     

@@ -85,8 +85,6 @@ namespace icemc {
      */
     virtual bool applyTrigger() = 0;
 
-
-
     /** 
      * @brief Tell icemc how you like your Askaryan signals.
      * 
@@ -94,11 +92,10 @@ namespace icemc {
      * @param dt time step (@todo units?) for the generated time-domain Askaryan signal
      */
     virtual void getDesiredNDt(int& n, double& dt) const = 0;
+    
 
-    
   protected:
-    std::vector<TGraph> fWaveformsRX; ///< Time domain signals at each receiver
-    
+
   };
   
   

@@ -9,6 +9,7 @@
 #include "TGraph.h"
 #include "TLegend.h"
 #include "TMultiGraph.h"
+#include "TFile.h" // @todo for debugging
 
 #include <algorithm>
 
@@ -62,12 +63,12 @@ const std::array<double, numAnglePoints> referenceAnglesRad {referenceAnglesDeg[
                                                              referenceAnglesDeg[4]*icemc::constants::RADDEG,
                                                              referenceAnglesDeg[5]*icemc::constants::RADDEG,
                                                              referenceAnglesDeg[6]*icemc::constants::RADDEG};
-const std::array<double,  numAnglePoints-1> invAngleBinSize {referenceAnglesDeg[1] - referenceAnglesDeg[0],
-                                                             referenceAnglesDeg[2] - referenceAnglesDeg[1],
-                                                             referenceAnglesDeg[3] - referenceAnglesDeg[2],
-                                                             referenceAnglesDeg[4] - referenceAnglesDeg[3],
-                                                             referenceAnglesDeg[5] - referenceAnglesDeg[4],
-                                                             referenceAnglesDeg[6] - referenceAnglesDeg[5]};
+// const std::array<double,  numAnglePoints-1> invAngleBinSize {referenceAnglesDeg[1] - referenceAnglesDeg[0],
+//                                                              referenceAnglesDeg[2] - referenceAnglesDeg[1],
+//                                                              referenceAnglesDeg[3] - referenceAnglesDeg[2],
+//                                                              referenceAnglesDeg[4] - referenceAnglesDeg[3],
+//                                                              referenceAnglesDeg[5] - referenceAnglesDeg[4],
+//                                                              referenceAnglesDeg[6] - referenceAnglesDeg[5]};
 
 std::array<std::array<double, numGainPoints>, numAnglePoints> gain_v_angle_az; //[numAnglePoints][numGainPoints]
 std::array<std::array<double, numGainPoints>, numAnglePoints> gain_h_angle_az; //[numAnglePoints][numGainPoints]
@@ -566,7 +567,6 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
   FTPair thisHPol = s.waveform;
   FTPair thisVPol = s.waveform;
 
-
   if(fDebug){
     const TGraph& grV = thisVPol.getTimeDomain();
     std::cout << "The pre-gain VPol V/m are... \n";
@@ -607,7 +607,7 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
 		<< hitangle_e << "\t" << "\n";      
     }
 
-    // 0.5 is for voltage dividing, apparently
+    // 0.5 is for voltage dividing apparently, it doesn't happen in the Seavey... but it does happen downstream... maybe
     const double totalGainFactorV = 0.5*sqrt(  heightVV*heightVV*e_component*e_component*offAxisResponseV
 					     + heightHV*heightHV*h_component*h_component*offAxisResponseHV );
 
@@ -617,7 +617,7 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
 
   }
 
-  freqHz = 0;
+  freqHz = 0; // freqHz is incremented in the loop, so reset
   for(auto& c : hPolFreqs){  
 
     // get everything going into the HPol feed... via direct and cross-pol.
@@ -628,29 +628,43 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
     const double offAxisResponseH = getOffAxisResponse(Pol::H, AngleDir::Elevation, freqHz, hitangle_e);
     const double offAxisResponseVH = getOffAxisResponse(Pol::V, AngleDir::Elevation, freqHz, hitangle_e);
 
-    // 0.5 is for voltage dividing     
+    // 0.5 is for voltage dividing apparently, it doesn't happen in the Seavey... but it does happen downstream... maybe
     double totalGainFactorH = 0.5*sqrt(  heightHH*heightHH*e_component*e_component*offAxisResponseH
-				       + heightVH*heightVH*h_component*h_component*offAxisResponseVH);    
+				       + heightVH*heightVH*h_component*h_component*offAxisResponseVH);
 
     c *= totalGainFactorH;
     freqHz += df_Hz;
   }
 
+
+  
   /**
    * @todo In order to make SCREEN stuff work, make this additive rather than just the most recent
-   * This will require doing some addition of the waveform. FTPair doesn't do += yet.
+   * This will require doing some addition of the waveform. And FTPair doesn't do a simple +=.
    */
   fHPol = thisHPol;
   fVPol = thisVPol;
 
   if(fDebug){
-    const TGraph& grV = fVPol.getTimeDomain();
+    TGraph grV = fVPol.getTimeDomain();
     std::cout << "The post-gain VPol voltages are... \n";
     for(int i=0; i < grV.GetN(); i++){
       std::cout << grV.GetY()[i] <<", ";
     }
     std::cout << "\n\n";
+
+    static int ant = -1;
+    ant++;
+    const char* opt = ant == 0 ? "recreate" : "update";
+    TFile* f = TFile::Open("fSeaveysDebug.root", opt);
+    std::cout << ant << "th seavey!" << std::endl;
+    grV.SetName(TString::Format("grV_%d", ant));
+    grV.Write();
+    f->Write();
+    f->Close();
   }
+
+  
 
   // std::cout << fVPol.getTimeDomain().GetN() << std::endl;  
   

@@ -56,8 +56,6 @@ namespace icemc {
     TTree nupathtree;
     // TTree viewangletree;	///< signal as it is produced at the interaction
     // TTree balloontree;		///< filled for all events
-    
-
 
     TH1D h1mybeta;
     TH1D h1mytheta;             ///< 90-incidentangle when neutrinos enter the Earth.
@@ -82,34 +80,19 @@ namespace icemc {
     TH1F n_sec_muons;
     TH1F n_sec_taus;
 
+    static void initHist(TH1* h, const char* name, const char* title, int nx, double xMin, double xMax, TFile* f);
+    static void initHist(TH2* h, const char* name, const char* title, int nx, double xMin, double xMax, int ny, double yMin, double yMax, TFile* f);
+    static void initTree(TTree* t, const char* name, const char* title, TFile* f);
 
-    void fillRootifiedAnitaDataTrees(const EventGenerator* uhen, const Settings& settings1, const RayTracer* ray1, const Screen* panel1);
+    const TString& getOutputDir() const {return fOutputDir;}
+    int getRun() const {return fRun;}
 
   private:
     TString fOutputDir; ///< The output directory
     int fRun; ///< The simulated run number (used to uniquely name output files)
     TFile* fIceFinal;
-    UsefulAnitaEvent* realEvPtr;
-    RawAnitaHeader* rawHeaderPtr;
-    Adu5Pat* Adu5PatPtr;
-    TruthAnitaEvent* truthEvPtr;
-    TFile* fHeadFile;
-    TFile* fGpsFile;
-    TFile* fEventFile;
-    TFile* fTruthFile;
-    TTree eventTree;
-    TTree headTree;
-    TTree adu5PatTree;
-    TTree triggerSettingsTree;
-    TTree configTree;
-    TTree truthTree;
 
     void initIceFinal(const EventGenerator* uhen, const Settings* settings);
-    void initHist(TH1* h, const char* name, const char* title, int nx, double xMin, double xMax);
-    void initHist(TH2* h, const char* name, const char* title, int nx, double xMin, double xMax, int ny, double yMin, double yMax);
-    void initTree(TTree* t, const char* name, const char* title, TFile* f);
-    void initRootifiedAnitaDataFiles(const EventGenerator* uhen, const Settings* settings1);
-    int getIceMCAntfromUsefulEventAnt(const Settings *settings1,  int UsefulEventAnt);
 
   };
 
