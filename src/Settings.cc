@@ -16,7 +16,7 @@
 #include "RayTracer.h"
 #include "counting.hh"
 #include "Primaries.h"
-
+#include "EnvironmentVariable.h"
 
 #include <string.h>
 
@@ -77,65 +77,79 @@ void icemc::Settings::parseSettingsFile(const char* fileName, std::ofstream& out
   int lineNum = 1;
   wholeSettingsFile = "";
 
-  TString fileName2(fileName);
-  TObjArray* tkns = NULL;
 
-  if(fileName2.Contains(".root")){
-    TFile* f = TFile::Open(fileName);
-    TNamed* n = (TNamed*) f->Get("Settings");
+  bool foundFile = false;
+  const TString prettyFileName = TString(ANSI_COLOR_BLUE) + fileName + ANSI_COLOR_RESET;
+  const TString prettySourceFile = TString(ANSI_COLOR_RED) + __FILE__ + ANSI_COLOR_RESET;
 
-    if(n){
-      TString oldSettings = n->GetTitle();
-      tkns = oldSettings.Tokenize("\n");
+  // here we loop through possible prefixes for a text settings file or a root output file containing settings
+  TString icemc_src_dir = EnvironmentVariable::ICEMC_SRC_DIR();
+  std::vector<TString> prefixes {".", "./config", icemc_src_dir + "/config"};
+  for(const auto& prefix : prefixes){
 
-      for(int i=0; i < tkns->GetEntries(); i++){
-	TObjString* tkn = (TObjString*) tkns->At(i);
-	std::string thisLine(tkn->String().Data());
-	processLine(thisLine, outputFile, fileName, lineNum);
-	lineNum++;
-      }
-    }
-
-    if(n){
-      delete n;
-      n = NULL;
-    }
-    if(f){
-      f->Close();
-      delete f;
-      f = NULL;
-    }
-  }
-
-  if(!tkns){ // if we never got anything useful from the ROOT file attempt, try to parse as a text file
-    std::ifstream settingsFile(fileName);
-    // Print error message if I can't read the file
-    if(!settingsFile.is_open()){
-      std::cerr << "Error in " << ANSI_COLOR_BLUE << __FILE__ << ANSI_COLOR_RESET
-		<< ", could not open file " << ANSI_COLOR_RED << fileName << ANSI_COLOR_RESET << std::endl;
-      exit(1);
-    }
-
-    else {
-      while(!settingsFile.eof()){
-	std::string thisLine;
-	std::getline(settingsFile, thisLine);
-	processLine(thisLine, outputFile, fileName, lineNum);
-	lineNum++;
-      }
-    }
-  }
-
-  if(tkns){
-    delete tkns;
-  }
-
-  outputFile << std::endl << std::endl;
-  outputFile << __FILE__ << " has finished parsing " << fileName << std::endl;
-  outputFile << std::endl << std::endl;
-
+    std::cout << prettySourceFile << " is searching for " << prettyFileName << " in " << prefix << "/ \n";
+    
+    TString fileName2 = prefix + "/" + fileName;
+    std::ifstream testExists(fileName2.Data());
+    
+    TObjArray* tkns = NULL;
   
+    if(fileName2.Contains(".root")){
+      TFile* f = TFile::Open(fileName);
+      TNamed* n = (TNamed*) f->Get("Settings");
 
+      if(n){
+	std::cout << "Found " << prettyFileName << " in " << prefix << "/!"  << std::endl;
+	foundFile=true;
+	
+	TString oldSettings = n->GetTitle();
+	tkns = oldSettings.Tokenize("\n");
+
+	for(int i=0; i < tkns->GetEntries(); i++){
+	  TObjString* tkn = (TObjString*) tkns->At(i);
+	  std::string thisLine(tkn->String().Data());
+	  processLine(thisLine, outputFile, fileName, lineNum);
+	  lineNum++;
+	}
+      }
+
+      if(n){
+	delete n;
+	n = NULL;
+      }
+      if(f){
+	f->Close();
+	delete f;
+	f = NULL;
+      }
+    }
+
+    if(!tkns){ // if we never got anything useful from the ROOT file attempt, try to parse as a text file
+      std::ifstream settingsFile(fileName2);
+      // Print error message if I can't read the file
+      if(settingsFile.is_open()){
+	std::cout << "Found " << prettyFileName << " in " << prefix << "/!"  << std::endl;
+	foundFile=true;
+	while(!settingsFile.eof()){
+	  std::string thisLine;
+	  std::getline(settingsFile, thisLine);
+	  processLine(thisLine, outputFile, fileName, lineNum);
+	  lineNum++;
+	}
+      }
+    }
+
+    if(tkns){
+      delete tkns;
+    }
+
+    if(foundFile){
+      outputFile << std::endl << std::endl;
+      outputFile << __FILE__ << " has finished parsing " << fileName << std::endl;
+      outputFile << std::endl << std::endl;
+      break;
+    }
+  }
 }
 
 
