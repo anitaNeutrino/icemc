@@ -73,7 +73,7 @@ void icemc::RootOutput::initHist(TH1* h, const char* name, const char* title,
 void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings* settings2){
 
   if(fIceFinal){
-    Log() << icemc::warning << "IceFinal already initialized!"  << std::endl;
+    icemcLog() << icemc::warning << "IceFinal already initialized!"  << std::endl;
     return;
   }
 

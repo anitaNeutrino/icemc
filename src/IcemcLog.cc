@@ -1,15 +1,18 @@
 #include "IcemcLog.h"
+#include <map>
 
-icemc::Logger& icemc::Log(const char* outputdir, int run){
-  static icemc::Logger log(outputdir, run);
+// std::map<std::pair<const char*, int>, icemc::Logger> logs;
+
+icemc::Logger& icemc::getLog(const char* file, int line){
+
+  static icemc::Logger log;
+  log.setCallPoint(file, line);
+  // log << file << ":" << line << " ";
   return log;
 }
 
 
-icemc::Logger::Logger(const char* outputDir, int run)
-  : fOutputDir(outputDir), fRun(run), fMustReset(false), fUseStdErr(false), fUseColorCodes(true)
-{
-
+icemc::Logger::Logger(){
 
 }
 
@@ -20,16 +23,13 @@ icemc::Logger::~Logger(){
 }
 
 
+void icemc::Logger::setCallPoint(const char* file, int line){
+  fSourceFile = file;
+  fSourceLine = line;
+}
 
-void icemc::Logger::openLogFiles(const char* outputDir, int run){
 
-  // Update member vars if non-default arguments passed
-  if(outputDir){
-    fOutputDir = outputDir;
-  }
-  if(run > -1){
-    fRun = run;
-  }
+void icemc::Logger::openLogFiles(){
 
   // convert the run to a string
   std::stringstream ss;
@@ -75,28 +75,31 @@ void icemc::Logger::openLogFiles(const char* outputDir, int run){
   
 }
 
+
 icemc::Logger& icemc::Logger::message(icemc::severity s){
 
   const char* red     = fUseColorCodes ? "\x1b[31m" : "";
   const char* blue    = fUseColorCodes ? "\x1b[34m" : "";
   const char* magenta = fUseColorCodes ? "\x1b[35m" : "";
 
+  std::string::size_type n = fSourceFile.rfind("/");
+
   fMustReset = true;
   switch(s){
   case info:
     fUseStdErr = false;
-    getStream() << blue << "Info! ";
-    foutput << "Info! ";
+    getStream() << blue << "[Info at " << fSourceFile.substr(n+1) << ":" << fSourceLine << "] ";
+    foutput << "[Info at " << fSourceFile.substr(n+1) << ":" << fSourceLine << "] ";
     break;
   case warning:
     fUseStdErr = true;
-    getStream() << magenta << "Warning! ";
-    foutput << "Warning! ";
+    getStream() << magenta << "[Warning at " << fSourceFile.substr(n+1) << ":" << fSourceLine << "] ";
+    foutput << "[Warning at " << fSourceFile.substr(n+1) << ":" << fSourceLine << "] ";
     break;
   case error:
     fUseStdErr = true;
-    getStream() << red << "Error! ";
-    foutput << "Error! ";
+    getStream() << red << "[Error at " << fSourceFile.substr(n+1) << ":" << fSourceLine << "] ";
+    foutput << "[Error at " << fSourceFile.substr(n+1) << ":" << fSourceLine << "] ";
     break;
   }
   return *this;

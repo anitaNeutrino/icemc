@@ -78,9 +78,9 @@ double icemc::AskaryanFreqs::operator[](int i) const {
     return vmmhz[i];
   }
   else {
-    Log() << icemc::error << "Attempt to access icemc::AskaryanFreqs at index "
-	  << i << ", which is out of bounds. (min=0, max="
-	  << vmmhz.size() <<"). Returning 0.\n";
+    icemcLog() << icemc::error << "Attempt to access icemc::AskaryanFreqs at index "
+	       << i << ", which is out of bounds. (min=0, max="
+	       << vmmhz.size() <<"). Returning 0.\n";
     return 0;
   }
 }

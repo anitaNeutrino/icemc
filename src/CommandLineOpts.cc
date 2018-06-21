@@ -143,8 +143,9 @@ icemc::CommandLineOpts::CommandLineOpts(int argc, char* argv[], Settings& settin
   else{
 
     // open files for logging...
-    Logger& log = icemc::Log(outputdir.c_str(), run_no);
-    log.openLogFiles(outputdir.c_str(), run_no);
+    Logger& log = icemcLog();
+    log.setOutputDir(outputdir.c_str());
+    log.setRun(run_no);
 
     // update the settings object with the extracted info
     settings.ReadInputs(input.c_str(), log.foutput);

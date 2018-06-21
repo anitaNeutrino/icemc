@@ -50,11 +50,8 @@ namespace icemc {
 
     /** 
      * Constructor
-     * 
-     * @param outputDir The directory in which all the contained logs will be written
-     * @param run The current run, used for naming files
      */
-    Logger(const char* outputDir = ".", int run = 0);
+    Logger();
 
     /** 
      * Destructor, makes sure the terminal colors are reset
@@ -62,13 +59,6 @@ namespace icemc {
     virtual ~Logger();
 
 
-    /**
-     * Actually open the logging files
-     *
-     * @param outputDir is the outputDir, if NULL then uses fOutputDir, if non-NULL then updated fOutputDir
-     * @param run is the run (for file naming), if -1 then uses fRun, if >-1 then updated fRun
-     */
-    void openLogFiles(const char* outputDir = NULL, int run = -1);
 
     /** 
      * Prints the output stream to std::cout and the default output file (foutput)
@@ -76,8 +66,9 @@ namespace icemc {
      * @param s is a streamable type
      */
     template <typename Streamable>
-    Logger& operator<<(const Streamable& s){      
-      return message(s);
+    Logger& operator<<(const Streamable& s){
+      fStartedWriting = true;
+      return message(s);      
     }
 
     /** 
@@ -115,7 +106,56 @@ namespace icemc {
      * 
      * @return true if they are, false otherwise
      */
-    bool getUseColorCodes() const { return fUseColorCodes;}    
+    bool getUseColorCodes() const { return fUseColorCodes;}
+
+
+
+    /** 
+     * Change the output directory for the text files
+     * @warning Only works if you've not written any text yet!
+     * 
+     * @param outputDir 
+     * 
+     * @return 
+     */
+    bool setOutputDir(const char* outputDir){
+      if(fStartedWriting) {
+	return false;
+      }
+      else{
+	fOutputDir = outputDir;
+	return true;
+      }
+    }
+
+
+
+    /** 
+     * Change the output directory for the text files
+     * @warning Only works if you've not written any text yet!
+     * 
+     * @param outputDir 
+     * 
+     * @return 
+     */
+    bool setRun(int run){
+      if(fStartedWriting) {
+	return false;
+      }
+      else{
+	fRun = run;
+	return true;
+      }
+    }
+    
+    /** 
+     * Where shall we say this log message came from?
+     * For use with pre-processor macros __FILE__ and __LINE__
+     * @param file should be __FILE__
+     * @param line should be __LINE__
+     */
+    void setCallPoint(const char* file, int line);
+
     
 
     std::ofstream foutput;
@@ -150,11 +190,20 @@ namespace icemc {
      * @return reference to self
      */
     template<typename Streamable>
-    Logger& message(const Streamable& s) {      
+    Logger& message(const Streamable& s) {
+      if(!fStartedWriting){
+	openLogFiles();
+      }
       getStream() << s;
       foutput << s;
       return *this;
     }
+
+    /**
+     * Actually open the logging files
+     */
+    void openLogFiles();
+    
 
     /** 
      * Get the terminal color reset code
@@ -178,29 +227,28 @@ namespace icemc {
 	return std::cerr;
       }
     }
-    
 
-    std::string fOutputDir;
-    int fRun;
-    bool fMustReset;
-    bool fUseStdErr;
-    bool fUseColorCodes;
+    std::string fOutputDir = "./";
+    int fRun = 0;
+    bool fMustReset = false;
+    bool fUseStdErr = false;
+    bool fUseColorCodes = true;
+    bool fStartedWriting = false;
+    std::string fSourceFile;
+    int fSourceLine;
   };
 
 
   
 
   /** 
-   * Access a global log, you should be able to call this anywhere.
-   * 
-   * @todo if icemc ever becomes fancy multi-threaded this will need to be made thread safe.
-   * 
-   * @param outputdir The output directory (for first time initalization)
-   * @param run The run (for first time initalization)
-   * 
+   * Access the global log, you should be able to call this anywhere.
+   * However, it's better to use the macro!
    * @return The log
    */
-  Logger& Log(const char* outputdir=NULL, int run=0);
+  Logger& getLog(const char* file, int line);
+  
+#define icemcLog() icemc::getLog(__FILE__, __LINE__)
   
 }
 

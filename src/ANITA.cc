@@ -243,7 +243,7 @@ bool icemc::ANITA::applyTrigger(int inu){
   // ilayer loops through vertical layers
 
   if (fSettingsPtrIDontOwn->SLAC){
-    Log().fslac_hitangles << this->sslacpositions[this->islacposition] << "\n";
+    icemcLog().fslac_hitangles << this->sslacpositions[this->islacposition] << "\n";
   }
 
   if (fSettingsPtrIDontOwn->CENTER){

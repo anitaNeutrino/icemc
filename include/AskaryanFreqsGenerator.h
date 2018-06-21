@@ -81,7 +81,7 @@ namespace icemc {
     void SetMedium(int medium) {
       MEDIUM = medium;
       if (MEDIUM!=0) {
-	Log() << icemc::info << "Medium is " << MEDIUM << ", which is a non-default setting:  Not ice!\n";
+	icemcLog() << icemc::info << "Medium is " << MEDIUM << ", which is a non-default setting:  Not ice!\n";
       }
       InitializeMedium();
     }
@@ -154,7 +154,7 @@ namespace icemc {
     void SetJaime_Factor(double jaime_factor) {
       JAIME_FACTOR=jaime_factor;
       if (JAIME_FACTOR!=1){
-	Log() << icemc::info << "Non-default setting: JAIME_FACTOR = " << JAIME_FACTOR << "\n";
+	icemcLog() << icemc::info << "Non-default setting: JAIME_FACTOR = " << JAIME_FACTOR << "\n";
       }
     }
 

@@ -79,8 +79,13 @@ void icemc::Settings::parseSettingsFile(const char* fileName, std::ofstream& out
 
 
   bool foundFile = false;
+
+  const std::string thisFile = __FILE__;
+  const std::string::size_type n = thisFile.rfind("/");  
+
   const TString prettyFileName = TString(ANSI_COLOR_BLUE) + fileName + ANSI_COLOR_RESET;
-  const TString prettySourceFile = TString(ANSI_COLOR_RED) + __FILE__ + ANSI_COLOR_RESET;
+  const TString prettySourceFile = TString(ANSI_COLOR_RED) + thisFile.substr(n+1) + ANSI_COLOR_RESET;
+
 
   // here we loop through possible prefixes for a text settings file or a root output file containing settings
   TString icemc_src_dir = EnvironmentVariable::ICEMC_SRC_DIR();

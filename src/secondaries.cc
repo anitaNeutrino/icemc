@@ -495,16 +495,16 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
   } //if (charged current, secondaries on)
 
   if (nuflavor=="numu" && current=="cc" && sp.nInteractions==0){
-    Log() << icemc::warning << "Look at this one.  inu is " << inu << "\n";
+    icemcLog() << icemc::warning << "Look at this one.  inu is " << inu << "\n";
   }  
 
   if ((y<0 || y>1) && y != -999.) {
-    Log() << icemc::error <<  "Illegal value of y, y =" << y << "\n";
+    icemcLog() << icemc::error <<  "Illegal value of y, y =" << y << "\n";
   }
   
   if (sp.sumFrac()>1.00001) {
-    Log() << icemc::error << "emFrac,hadfrac=" << sp.emFrac << "," << sp.hadFrac << ": sum = " << sp.sumFrac() << "\n";
-    Log() << "nuflavor,taudecay=" << nuflavor << " " << taudecay << "\n";
+    icemcLog() << icemc::error << "emFrac,hadfrac=" << sp.emFrac << "," << sp.hadFrac << ": sum = " << sp.sumFrac() << "\n";
+    icemcLog() << "nuflavor,taudecay=" << nuflavor << " " << taudecay << "\n";
   }
   
   return sp;

@@ -157,7 +157,7 @@ icemc::Primaries::~Primaries(){//default deconstructor
 int icemc::Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,int nu_nubar,int currentint){
   // calculate cross section
   if (pnu<mine[settings1->SIGMAPARAM] || pnu>maxe[settings1->SIGMAPARAM]) {
-    Log() <<  icemc::error << "Need a parameterization for this energy region.\n";
+    icemcLog() <<  icemc::error << "Need a parameterization for this energy region.\n";
     return 0;
   }
   else {

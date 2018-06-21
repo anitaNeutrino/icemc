@@ -53,9 +53,6 @@ icemc::AnitaSimOutput::~AnitaSimOutput(){
 
 void icemc::AnitaSimOutput::initRootifiedAnitaDataFiles(const Settings* settings1){
 
-  // EventGenerator* uhen = const_cast<EventGenerator*>(uhen2);  
-  
-  
 #ifdef ANITA_UTIL_EXISTS
 
   TString eventFileName = fOutputDir + TString::Format("/SimulatedAnitaEventFile%d.root", fRun);
@@ -78,9 +75,9 @@ void icemc::AnitaSimOutput::initRootifiedAnitaDataFiles(const Settings* settings
   fGpsFile = new TFile(gpsFileName, "RECREATE");
 
   RootOutput::initTree(&adu5PatTree, "adu5PatTree", "adu5PatTree", fGpsFile);
-  adu5PatTree.Branch("pat",          &fGps                   );
-  // adu5PatTree.Branch("eventNumber",  &uhen->eventNumber,  "eventNumber/I"); ///@todo restore eventNumber here
-  // adu5PatTree.Branch("weight",       &uhen->fNeutrinoPath->weight,       "weight/D"     ); ///@todo restore eventNumber here
+  adu5PatTree.Branch("pat",          &fGps);
+  adu5PatTree.Branch("eventNumber",  &(const_cast<ANITA*>(fDetector)->fEventNumber),  "eventNumber/I");
+  // adu5PatTree.Branch("weight",       &uhen->fNeutrinoPath->weight,       "weight/D"     ); ///@todo restore weight here
   
 #ifdef ANITA3_EVENTREADER
 
@@ -107,7 +104,7 @@ void icemc::AnitaSimOutput::initRootifiedAnitaDataFiles(const Settings* settings
   TNamed starttime("StartTime", asctime(timeinfo));
   starttime.Write();
 
-  Log() << icemc::info << "ICEMC GIT Repository Version: " <<  gitversion.GetTitle() << std::endl;
+  icemcLog() << icemc::info << "ICEMC GIT Repository Version: " <<  gitversion.GetTitle() << std::endl;
 
   RootOutput::initTree(&triggerSettingsTree, "triggerSettingsTree", "Trigger settings", fTruthFile);
   // Anita* anita2 = const_cast<Anita*>(uhen->anita1);
