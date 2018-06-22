@@ -85,7 +85,9 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
     for(int i=0; i < fSeaveys.size(); i++){
       fSeaveys.at(i).setDebug(true);
     }
-    firstTime = false;
+    if(rx==fSeaveys.size()-1){
+      firstTime = false;
+    }
   }
   else{
     for(int i=0; i < fSeaveys.size(); i++){

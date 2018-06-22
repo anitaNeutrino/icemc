@@ -5,16 +5,15 @@
 #ifndef TOOLS_H_
 #define TOOLS_H_
 
-#include "TRandom3.h" 
-#include <vector>
-
 // c++ libraries thingies
+#include <vector>
 #include <map>
 #include <algorithm>
 #include <iostream>
 #include <fstream>
 
 // ROOT
+#include "TRandom3.h" 
 #include "TGraph.h"
 #include "TROOT.h"
 #include "TMath.h"
@@ -48,10 +47,6 @@ namespace icemc{
     void InterpolateReal(double* array, const unsigned n);
     void InterpolateComplex(double *array, const unsigned n);
 
-    // void four1(double *data, const int isign,int nsize);
-    // void realft(double *data, const int isign, int 
-    // void SWAP(double &a, double &b);// swaps two numbers
-    
     void NormalTimeOrdering(const int n,double *volts);
     void reverseTimeOrdering(const int n,double *bitsin,double *bitsout);
     void reverseTimeOrdering(const int n,int *bitsin,int *bitsout);
@@ -96,6 +91,7 @@ namespace icemc{
     
     template <class T, class U> void vector_element_convert(const std::vector<T>& input, std::vector<U>& output){
       output.clear();
+      output.reserve(input.size());
       for (unsigned int index = 0; index < input.size(); index++){
 	output.push_back(U (input[index]));
       }
@@ -103,6 +99,7 @@ namespace icemc{
 
     template <class T, class U> void nested_vector_element_convert(const std::vector< std::vector<T> >& input, std::vector< std::vector<U> >& output){
       output.clear();
+      output.reserve(input.size());
       for (unsigned int index = 0; index < input.size(); index++){
 	std::vector<U> temp;
 	vector_element_convert<T,U>(input[index], temp);

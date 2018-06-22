@@ -323,6 +323,7 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
 
 	double amp = GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(TIMESTEP*1.E6);
 	// here we mimic the "putting everything in imag" as done in MakeArrayForFFT
+	// the normal ordering nonsense (which hugely affects the phase) is done in FTPair
 	tmp_vhz[k].real(0);
 	tmp_vhz[k].imag(amp);
 
@@ -338,7 +339,7 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
 	 * Anyway I need to apply this factor to make sure the PSDs agree before and after during the factor.
 	 * (Where the PSD accounts for the difference in length correctly.)
 	 * But I need to fudge the amplitudes here so the PSDs agree during the factor.
-	 * Before doing this the new PSD had twice the amplitude of the old chanTrigger, as you would expect.
+	 * Before doing this the new PSD (which squares the voltages) had twice the amplitude of the old chanTrigger, as you would expect.
 	 */
 	tmp_vhz[k] /= sqrt(2);
       }
@@ -351,6 +352,9 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
       PropagatingSignal s(signal, GetVec2bln(jpt), GetPol(jpt));
 
       d->addSignalToRX(s, rx, inu);
+      if(inu==397){
+	std::cout << "here " << inu << ", rx = " << rx << std::endl;
+      }
     }
   }
 }

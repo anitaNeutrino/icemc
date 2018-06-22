@@ -24,9 +24,6 @@
 
 
 
-
-
-
  // number of points within bandwidth that gain is measured.
 constexpr int numGainPoints = 131;
 std::array<double, numGainPoints> freqHz_measured; ///< Frequency values for arrays with numGainPoints, goes from 200 MHz to 1.5 GHz with step size of 10 MHz (units in Hz)
@@ -567,14 +564,14 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
   FTPair thisHPol = s.waveform;
   FTPair thisVPol = s.waveform;
 
-  if(fDebug){
-    const TGraph& grV = thisVPol.getTimeDomain();
-    std::cout << "The pre-gain VPol V/m are... \n";
-    for(int i=0; i < grV.GetN(); i++){
-      std::cout << grV.GetY()[i] <<", ";
-    }
-    std::cout << "\n\n";
-  }
+  // if(fDebug){
+  //   const TGraph& grV = thisVPol.getTimeDomain();
+  //   std::cout << "The pre-gain VPol V/m are... \n";
+  //   for(int i=0; i < grV.GetN(); i++){
+  //     std::cout << grV.GetY()[i] <<", ";
+  //   }
+  //   std::cout << "\n\n";
+  // }
   
   
   
@@ -647,16 +644,17 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
 
   if(fDebug){
     TGraph grV = fVPol.getTimeDomain();
-    std::cout << "The post-gain VPol voltages are... \n";
-    for(int i=0; i < grV.GetN(); i++){
-      std::cout << grV.GetY()[i] <<", ";
-    }
-    std::cout << "\n\n";
+    // std::cout << "The post-gain VPol voltages are... \n";
+    // for(int i=0; i < grV.GetN(); i++){
+    //   std::cout << grV.GetY()[i] <<", ";
+    // }
+    // std::cout << "\n\n";
 
     static int ant = -1;
     ant++;
     const char* opt = ant == 0 ? "recreate" : "update";
     TFile* f = TFile::Open("fSeaveysDebug.root", opt);
+    f->cd();
     std::cout << ant << "th seavey!" << std::endl;
     grV.SetName(TString::Format("grV_%d", ant));
     grV.Write();
