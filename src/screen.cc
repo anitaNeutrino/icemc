@@ -347,6 +347,16 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
       FTPair signal(tmp_vhz, df);
       signal.delayTimeDomain(GetDelay(jpt));
 
+      // TGraph& gr = signal.changeTimeDomain();
+      // // add a point to force  up to next power of 2...
+      // gr.SetPoint(gr.GetN(), gr.GetX()[gr.GetN()-1] + gr.GetX()[1] - gr.GetX()[0], 0);
+
+      // add a point to force  up to next power of 2...
+      // auto& cs = signal.changeFreqDomain();
+      // for(int i=0; i < 10; i++){
+      // 	cs.push_back(0);
+      // }
+
       // is that the correct geometry?
       // @todo find out where we get vec2bln from... and see if Screen really needs to know
       PropagatingSignal s(signal, GetVec2bln(jpt), GetPol(jpt));
