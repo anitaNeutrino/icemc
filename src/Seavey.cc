@@ -3,6 +3,7 @@
 #include "IcemcLog.h"
 #include "balloon.hh"
 #include "Constants.h"
+#include "Settings.h"
 
 #include "TH2D.h"
 #include "TCanvas.h"
@@ -500,6 +501,41 @@ int getLowerAngleBin(double angleRad){
 
 
 
+
+
+
+bool icemc::Seavey::freqAllowedByPassBands(double freqHz) const {
+
+  if(fPassBandsHz.size()==0){
+    return true;
+  }
+
+  for(auto p : fPassBandsHz){
+    if(freqHz >= p.first && freqHz < p.second){
+      return true;
+    }
+  }
+  return false;
+}
+
+
+
+
+
+icemc::Seavey::Seavey(const Settings* settings, double refractiveIndexOfMedium) : // remove include if you move this
+  fRefractiveIndex(refractiveIndexOfMedium)
+{
+  if(settings){
+    fPassBandsHz.emplace_back(std::make_pair(settings->FREQ_LOW_SEAVEYS, settings->FREQ_HIGH_SEAVEYS));
+    std::cout << "The pass band (Hz) is " << fPassBandsHz.back().first << "\t" << fPassBandsHz.back().second << std::endl;
+  }
+}
+
+
+
+
+
+
 double icemc::Seavey::getOffAxisResponse(Pol pol,  AngleDir dir, double freqHz, double angleRad) const {
   loadGains();
 
@@ -564,6 +600,20 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
   FTPair thisHPol = s.waveform;
   FTPair thisVPol = s.waveform;
 
+  if(fDebug){
+    TGraph grV = thisVPol.getTimeDomain();
+    static int ant = -1;
+    ant++;
+    const char* opt = ant == 0 ? "recreate" : "update";
+    TFile* f = TFile::Open("fSeaveysDebug.root", opt);
+    f->cd();
+    grV.SetName(TString::Format("grV_before_%d", ant));
+    grV.Write();
+    f->Write();
+    f->Close();
+  }
+
+
   // if(fDebug){
   //   const TGraph& grV = thisVPol.getTimeDomain();
   //   std::cout << "The pre-gain VPol V/m are... \n";
@@ -580,56 +630,74 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
 
   double freqHz = 0;
 
-  // In anita, they loop over 0,1 for get_gain_angle(hitangle_e)
-  // then they loop over 2, 3 for get_gain_angle(hitangle_h)
-  // the old index over looping variables goes into the gain_angle arrays
-  // 0 is vv_az, 1 is hh_az, 2 is hh_el, 3 is vv_el.
+  /**
+   * In anita, they loop over 0,1 for get_gain_angle(hitangle_e)	 
+   * then they loop over 2, 3 for get_gain_angle(hitangle_h)		 
+   * the old index over looping variables goes into the gain_angle arrays
+   * 0 is vv_az, 1 is hh_az, 2 is hh_el, 3 is vv_el.			 
+   */
 
-  // @todo So this is what I think anita.cc was doing
-  // I'm not sure it's right, but if it's wrong, it's the wrong off-axis response of the cross-pol
-  // Which is probably a small effect
+  /**
+   * @todo So this is what I think anita.cc was doing			
+   * I'm not sure it's right, but if it's wrong, it's the wrong off-axis
+   * response of the cross-pol, so probably a small effect		
+   */
 
-  for(auto& c : vPolFreqs){
-    const double heightVV = getHeight(Pol::V, freqHz); // VPol component of signal to VPol feed
-    const double heightHV = getHeight(XPol::HtoV, freqHz); // HPol component of signal to VPol feed via cross-pol antenna response
+  for(auto& c : vPolFreqs){    
 
-    const double offAxisResponseV = getOffAxisResponse(Pol::V, AngleDir::Azimuth, freqHz, hitangle_e);
-    const double offAxisResponseHV = getOffAxisResponse(Pol::H, AngleDir::Azimuth, freqHz, hitangle_e);
+    if(freqAllowedByPassBands(freqHz)){
+    
+      const double heightVV = getHeight(Pol::V, freqHz); // VPol component of signal to VPol feed
+      const double heightHV = getHeight(XPol::HtoV, freqHz); // HPol component of signal to VPol feed via cross-pol antenna response
 
-    if(fDebug){
-      std::cout << freqHz << "\t"
-		<< heightVV << "\t" << heightHV << "\t"
-		<< offAxisResponseV << "\t" << offAxisResponseHV << "\t"
-		<< e_component << "\t" << h_component << "\t"
-		<< hitangle_e << "\t" << "\n";      
+      const double offAxisResponseV = getOffAxisResponse(Pol::V, AngleDir::Azimuth, freqHz, hitangle_e);
+      const double offAxisResponseHV = getOffAxisResponse(Pol::H, AngleDir::Azimuth, freqHz, hitangle_e);    
+
+      // if(fDebug){
+      //   std::cout << freqHz << "\t"
+      // 		<< heightVV << "\t" << heightHV << "\t"
+      // 		<< offAxisResponseV << "\t" << offAxisResponseHV << "\t"
+      // 		<< e_component << "\t" << h_component << "\t"
+      // 		<< hitangle_e << "\t" << "\n";
+      // }
+
+      // 0.5 is for voltage dividing apparently, it doesn't happen in the Seavey... but it does happen downstream... maybe
+      const double totalGainFactorV = 0.5*sqrt(  heightVV*heightVV*e_component*e_component*offAxisResponseV
+						 + heightHV*heightHV*h_component*h_component*offAxisResponseHV );
+
+      c *= totalGainFactorV;
     }
-
-    // 0.5 is for voltage dividing apparently, it doesn't happen in the Seavey... but it does happen downstream... maybe
-    const double totalGainFactorV = 0.5*sqrt(  heightVV*heightVV*e_component*e_component*offAxisResponseV
-					     + heightHV*heightHV*h_component*h_component*offAxisResponseHV );
-
-    c *= totalGainFactorV;
+    else{
+      c = 0;
+    }
     
     freqHz += df_Hz;
-
   }
 
+  
   freqHz = 0; // freqHz is incremented in the loop, so reset
   for(auto& c : hPolFreqs){  
 
-    // get everything going into the HPol feed... via direct and cross-pol.
-    const double heightHH = getHeight(Pol::H, freqHz);
-    const double heightVH = getHeight(XPol::VtoH, freqHz);
+    if(freqAllowedByPassBands(freqHz)){
+    
+      // get everything going into the HPol feed... via direct and cross-pol.
+      const double heightHH = getHeight(Pol::H, freqHz);
+      const double heightVH = getHeight(XPol::VtoH, freqHz);
 
-    // then you need to take accout of how far off boresight you are... i.e. the off-axis reponse of the antennas.
-    const double offAxisResponseH = getOffAxisResponse(Pol::H, AngleDir::Elevation, freqHz, hitangle_e);
-    const double offAxisResponseVH = getOffAxisResponse(Pol::V, AngleDir::Elevation, freqHz, hitangle_e);
+      // then you need to take accout of how far off boresight you are... i.e. the off-axis reponse of the antennas.
+      const double offAxisResponseH = getOffAxisResponse(Pol::H, AngleDir::Elevation, freqHz, hitangle_e);
+      const double offAxisResponseVH = getOffAxisResponse(Pol::V, AngleDir::Elevation, freqHz, hitangle_e);    
 
-    // 0.5 is for voltage dividing apparently, it doesn't happen in the Seavey... but it does happen downstream... maybe
-    double totalGainFactorH = 0.5*sqrt(  heightHH*heightHH*e_component*e_component*offAxisResponseH
-				       + heightVH*heightVH*h_component*h_component*offAxisResponseVH);
+      // 0.5 is for voltage dividing apparently, it doesn't happen in the Seavey... but it does happen downstream... maybe
+      double totalGainFactorH = 0.5*sqrt(  heightHH*heightHH*e_component*e_component*offAxisResponseH
+					   + heightVH*heightVH*h_component*h_component*offAxisResponseVH);
 
-    c *= totalGainFactorH;
+      c *= totalGainFactorH;
+    }
+    else{
+      c = 0;
+    }
+    
     freqHz += df_Hz;
   }
 
@@ -644,19 +712,12 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
 
   if(fDebug){
     TGraph grV = fVPol.getTimeDomain();
-    // std::cout << "The post-gain VPol voltages are... \n";
-    // for(int i=0; i < grV.GetN(); i++){
-    //   std::cout << grV.GetY()[i] <<", ";
-    // }
-    // std::cout << "\n\n";
-
     static int ant = -1;
     ant++;
-    const char* opt = ant == 0 ? "recreate" : "update";
+    const char* opt = "update";
     TFile* f = TFile::Open("fSeaveysDebug.root", opt);
     f->cd();
-    std::cout << ant << "th seavey!" << std::endl;
-    grV.SetName(TString::Format("grV_%d", ant));
+    grV.SetName(TString::Format("grV_after_%d", ant));
     grV.Write();
     f->Write();
     f->Close();

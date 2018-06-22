@@ -72,17 +72,17 @@ void plotCompare(){
   auto c = new TCanvas();
   c->Divide(16, 3);
 
-  const int pick = 7;
   const int markerStyle = 2;
   for(int i=0; i < 48; i++){
     c->cd(i+1);
-    TString name1 = TString::Format("gr_pol1_ant%d_iband4_aftergain", i);
+    TString name1 = TString::Format("gr_pol0_ant%d_iband4_aftergain", i);
     TGraph* gr1 = (TGraph*) f1->Get(name1);
     gr1->Draw("alp");
     gr1->SetMarkerStyle(markerStyle);
 
 
-    TString name2 = TString::Format("grV_%d", i);
+    TString name2 = TString::Format("grV_after_%d", i);
+    // TString name2 = TString::Format("grV_before_%d", i);
     TGraph* gr2 = (TGraph*) f2->Get(name2);
     gr2->SetLineColor(kRed);
     gr2->SetMarkerStyle(markerStyle);
@@ -111,9 +111,10 @@ void plotCompare(){
       gr2->GetX()[j] -= tMax2;
       p2 += gr2->GetY()[j]*gr2->GetY()[j]*dt2;
     }
-    std::cout << (p1 > 0 ? (p1 - p2)/p1 : 0) << std::endl;
 
-    if(i==pick){
+    if(p1 > 0){
+      std::cout << (p1 > 0 ? (p1 - p2)/p1 : 0) << std::endl;
+
       new TCanvas();
       gr1->Draw("alp");
       gr2->Draw("lpsame");

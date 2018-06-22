@@ -29,9 +29,7 @@ namespace icemc {
     enum class XPol     {VtoH,    HtoV,      NotAnXPol};
     enum class AngleDir {Azimuth, Elevation};
     
-    Seavey(double refractiveIndexOfMedium = icemc::AskaryanFreqsGenerator::N_AIR) : // remove include if you move this
-      fRefractiveIndex(refractiveIndexOfMedium), fDebug(false)
-    {;}
+    Seavey(const Settings* settings = NULL, double refractiveIndexOfMedium = icemc::AskaryanFreqsGenerator::N_AIR);
 
     
     void addSignal(const PropagatingSignal& incomingSignal);
@@ -40,6 +38,7 @@ namespace icemc {
     double getHeight(XPol xPol, double freqHz) const;
     double getOffAxisResponse(Pol pol,  AngleDir dir, double freqHz, double angleRad) const;
 
+    bool freqAllowedByPassBands(double freqHz) const;
     
     const FTPair& getSignal(Pol pol); //resets the input?
     
@@ -121,22 +120,20 @@ namespace icemc {
      */
     bool getDebug() const {return fDebug;}
 
-
     ///@todo make these all private
     icemc::Vector fPosition; ///< Position in payload centered coordinates
     icemc::Vector fEPlane; ///< Seavey E-plane
     icemc::Vector fHPlane; ///< Seavey H-plane
     icemc::Vector fNormal; ///< Normal to the antenna
-
     
   private:
 
     FTPair fVPol;
     FTPair fHPol;
 
-    double fRefractiveIndex = 1.0; ///< This is the refractive index at the antenna (formerly known as nmedium_receiver)
-
+    double fRefractiveIndex = icemc::AskaryanFreqsGenerator::N_AIR; ///< This is the refractive index at the antenna (formerly known as nmedium_receiver)
     bool fDebug = false;
+    std::vector<std::pair<double, double> > fPassBandsHz; ///< Frequencies (Hz) will pass if they satisfy ANY passband (or if this vector is empty)
   };
   
 

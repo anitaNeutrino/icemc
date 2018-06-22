@@ -23,7 +23,7 @@ icemc::ANITA::ANITA(const Settings* settings, RayTracer* sillyRay, Screen* silly
 {
   const int n = 48; ///@todo don't hardcode this 
   for(int rx=0; rx < n; rx++){
-    fSeaveys.emplace_back(icemc::Seavey());//pos, ePlane, hPlane, normal));
+    fSeaveys.emplace_back(icemc::Seavey(fSettingsPtrIDontOwn));
   }
 }
 
