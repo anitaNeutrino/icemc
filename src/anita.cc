@@ -7,6 +7,7 @@
 #include "Settings.h"
 #include "earthmodel.hh"
 #include "icemodel.hh"
+#include "IcemcLog.h"
 #include "TF1.h"
 
 #include "rx.h"
@@ -1398,7 +1399,8 @@ void icemc::Anita::AntennaGain(const Settings *settings1,
 			       double hitangle_e, double hitangle_h,
 			       double e_component, double h_component,
 			       int k,
-			       double &vsignalarray_e, double &vsignalarray_h) const {
+			       double &vsignalarray_e, double &vsignalarray_h,
+			       bool debug) const {
 
   if (freq[k]>=settings1->FREQ_LOW_SEAVEYS && freq[k]<=settings1->FREQ_HIGH_SEAVEYS) {
     // fill this for each frequency bin for each antenna.
@@ -1424,6 +1426,15 @@ void icemc::Anita::AntennaGain(const Settings *settings1,
     //cout << "vsignalarray_e before is " << vsignalarray_e << "\n";
     vsignalarray_e = vsignalarray_e * 0.5 * sqrt(vvGaintoHeight[k] * vvGaintoHeight[k] * e_component * e_component * relativegains[0] + hvGaintoHeight[k] * hvGaintoHeight[k] * h_component * h_component * relativegains[1]); // 0.5 is for voltage dividing
 
+    if(debug){
+      std::cout << "AntennaGain\t" << freq[k] << "\t"
+      		<< vvGaintoHeight[k] << "\t" << hvGaintoHeight[k]  << "\t"
+      		<< relativegains[0] << "\t" << relativegains[1] << "\t"
+      		<< e_component << "\t" << h_component << "\t"
+      		<< hitangle_e << "\t" << "\n";
+    }
+
+
     for (int pols = 2;pols < 4;pols++) { // loop over hh, vh
       if (fabs(hitangle_h)<constants::PI/2){
 	relativegains[pols] = Get_gain_angle(pols, k, hitangle_h);
@@ -1432,7 +1443,7 @@ void icemc::Anita::AntennaGain(const Settings *settings1,
 	relativegains[pols] = 0.;
       }
     }
-		
+
     // V/MHz
 		
     //if (fabs(hitangle_h)<PI/12)
@@ -1662,7 +1673,7 @@ void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_recei
   double gainhv, gainhh, gainvh, gainvv;
   double gain_step = frequency_forgain_measured[1]-frequency_forgain_measured[0]; // how wide are the steps in frequency;
     
-  std::cout << "GAINS is " << GAINS << "\n";
+  icemcLog() << "GAINS is " << GAINS << "\n";
   for (int k = 0; k < NFREQ; ++k) {
     whichbin[k] = int((freq[k] - frequency_forgain_measured[0]) / gain_step); // finds the gains that were measured for the frequencies closest to the frequency being considered here
     if((whichbin[k] >= NPOINTS_GAIN || whichbin[k] < 0)) {
@@ -2024,10 +2035,13 @@ double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) const
   else {
     for(int iii = 1; iii < 7; iii++) { // linear interpolation for the angle
       if(hitangle <= reference_angle[iii]) {
-	scaleh2 = (hitangle - reference_angle[iii-1]) *
-	  inv_angle_bin_size[iii-1]; // how far from the smaller angle
+	scaleh2 = (hitangle - reference_angle[iii-1])*inv_angle_bin_size[iii-1]; // how far from the smaller angle
 	scaleh1 = 1. - scaleh2; // how far from the larger angle
-				
+
+	// if(debug){
+	//   std::cout << "Get_gain_angle\t" << scaleh2 <<  "\t" << scaleh1 << "\t" << gain_angle[gain_type][whichbin[k]][iii-1] << "\t" << gain_angle[gain_type][whichbin[k]][iii] << "\n";
+	// }
+	
 	if(whichbin[k] == NPOINTS_GAIN - 1) // if the frequency is 1.5e9 or goes a little over due to rounding
 	  return (scaleh1 * gain_angle[gain_type][whichbin[k]][iii-1] +
 		  scaleh2 * gain_angle[gain_type][whichbin[k]][iii]);

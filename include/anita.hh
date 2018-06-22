@@ -498,7 +498,7 @@ namespace icemc {
     void Set_gain_angle(const Settings *settings1,double nmedium_receiver);
     double Get_gain_angle(int gain_type, int k, double hitangle) const;
     void ReadGains();
-    void AntennaGain(const Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h) const;
+    void AntennaGain(const Settings *settings1,double hitangle_e,double hitangle_h,double e_component,double h_component,int k,double &vsignalarray_e,double &vsignalarray_h, bool debug = false) const;
 
 
     double reference_angle[7]; // reference angles for finding gains of antenna

@@ -511,7 +511,8 @@ bool icemc::Seavey::freqAllowedByPassBands(double freqHz) const {
   }
 
   for(auto p : fPassBandsHz){
-    if(freqHz >= p.first && freqHz < p.second){
+    // if(freqHz >= p.first && freqHz < p.second){
+    if(freqHz >= p.first && freqHz <= p.second){ ///@todo make a choice here
       return true;
     }
   }
@@ -527,7 +528,7 @@ icemc::Seavey::Seavey(const Settings* settings, double refractiveIndexOfMedium) 
 {
   if(settings){
     fPassBandsHz.emplace_back(std::make_pair(settings->FREQ_LOW_SEAVEYS, settings->FREQ_HIGH_SEAVEYS));
-    std::cout << "The pass band (Hz) is " << fPassBandsHz.back().first << "\t" << fPassBandsHz.back().second << std::endl;
+    // std::cout << "The pass band (Hz) is " << fPassBandsHz.back().first << "\t" << fPassBandsHz.back().second << std::endl;
   }
 }
 
@@ -556,19 +557,20 @@ double icemc::Seavey::getOffAxisResponse(Pol pol,  AngleDir dir, double freqHz, 
   case Pol::H:
     g1 = dir == AngleDir::Azimuth ? linearInterp(gain_h_angle_az.at(j1), freqHz) : linearInterp(gain_h_angle_az.at(j1), freqHz);
     g2 = dir == AngleDir::Azimuth ? linearInterp(gain_h_angle_az.at(j2), freqHz) : linearInterp(gain_h_angle_az.at(j2), freqHz);
-    break;    
+    break;
   default:
     icemcLog() << icemc::warning << "Requested off-axis gain for for unknown pol, " << (int)pol <<", returning 0\n";
     break;    
   }
+
 
   const double a1 = referenceAnglesRad.at(j1);
   const double a2 = referenceAnglesRad.at(j2);
 
   const double da = a2 - a1;
   const double m = (g2 - g1)/da;
-  const double g = m*(angleRad - a1) + g1;
-
+  const double g = m*(fabs(angleRad) - a1) + g1;
+  
   return g;
 }
 
@@ -613,28 +615,16 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
     f->Close();
   }
 
-
-  // if(fDebug){
-  //   const TGraph& grV = thisVPol.getTimeDomain();
-  //   std::cout << "The pre-gain VPol V/m are... \n";
-  //   for(int i=0; i < grV.GetN(); i++){
-  //     std::cout << grV.GetY()[i] <<", ";
-  //   }
-  //   std::cout << "\n\n";
-  // }
-  
-  
-  
   std::vector<std::complex<double> >& vPolFreqs = thisVPol.changeFreqDomain();
-  std::vector<std::complex<double> >& hPolFreqs = thisHPol.changeFreqDomain();  
+  std::vector<std::complex<double> >& hPolFreqs = thisHPol.changeFreqDomain();
 
   double freqHz = 0;
 
   /**
-   * In anita, they loop over 0,1 for get_gain_angle(hitangle_e)	 
+   * In anita.cc, they loop over 0,1 for get_gain_angle(hitangle_e)
    * then they loop over 2, 3 for get_gain_angle(hitangle_h)		 
    * the old index over looping variables goes into the gain_angle arrays
-   * 0 is vv_az, 1 is hh_az, 2 is hh_el, 3 is vv_el.			 
+   * 0 is vv_az, 1 is hh_az, 2 is hh_el, 3 is vv_el.
    */
 
   /**
@@ -650,16 +640,16 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
       const double heightVV = getHeight(Pol::V, freqHz); // VPol component of signal to VPol feed
       const double heightHV = getHeight(XPol::HtoV, freqHz); // HPol component of signal to VPol feed via cross-pol antenna response
 
-      const double offAxisResponseV = getOffAxisResponse(Pol::V, AngleDir::Azimuth, freqHz, hitangle_e);
-      const double offAxisResponseHV = getOffAxisResponse(Pol::H, AngleDir::Azimuth, freqHz, hitangle_e);    
+      const double offAxisResponseV  = getOffAxisResponse(Pol::V, AngleDir::Azimuth, freqHz, hitangle_e);
+      const double offAxisResponseHV = getOffAxisResponse(Pol::H, AngleDir::Azimuth, freqHz, hitangle_e);
 
-      // if(fDebug){
-      //   std::cout << freqHz << "\t"
-      // 		<< heightVV << "\t" << heightHV << "\t"
-      // 		<< offAxisResponseV << "\t" << offAxisResponseHV << "\t"
-      // 		<< e_component << "\t" << h_component << "\t"
-      // 		<< hitangle_e << "\t" << "\n";
-      // }
+      if(fDebug){
+        std::cout << "Seavey     \t" << freqHz << "\t"
+      		<< heightVV << "\t" << heightHV << "\t"
+      		<< offAxisResponseV << "\t" << offAxisResponseHV << "\t"
+      		<< e_component << "\t" << h_component << "\t"
+      		<< hitangle_e << "\t" << "\n";
+      }
 
       // 0.5 is for voltage dividing apparently, it doesn't happen in the Seavey... but it does happen downstream... maybe
       const double totalGainFactorV = 0.5*sqrt(  heightVV*heightVV*e_component*e_component*offAxisResponseV
@@ -674,6 +664,10 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
     freqHz += df_Hz;
   }
 
+  bool temp = fDebug;
+  fDebug = false;
+  // fDebug = false;
+
   
   freqHz = 0; // freqHz is incremented in the loop, so reset
   for(auto& c : hPolFreqs){  
@@ -685,8 +679,8 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
       const double heightVH = getHeight(XPol::VtoH, freqHz);
 
       // then you need to take accout of how far off boresight you are... i.e. the off-axis reponse of the antennas.
-      const double offAxisResponseH = getOffAxisResponse(Pol::H, AngleDir::Elevation, freqHz, hitangle_e);
-      const double offAxisResponseVH = getOffAxisResponse(Pol::V, AngleDir::Elevation, freqHz, hitangle_e);    
+      const double offAxisResponseH  = getOffAxisResponse(Pol::H, AngleDir::Elevation, freqHz, hitangle_h);
+      const double offAxisResponseVH = getOffAxisResponse(Pol::V, AngleDir::Elevation, freqHz, hitangle_h);
 
       // 0.5 is for voltage dividing apparently, it doesn't happen in the Seavey... but it does happen downstream... maybe
       double totalGainFactorH = 0.5*sqrt(  heightHH*heightHH*e_component*e_component*offAxisResponseH
@@ -710,6 +704,7 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
   fHPol = thisHPol;
   fVPol = thisVPol;
 
+  fDebug = temp;
   if(fDebug){
     TGraph grV = fVPol.getTimeDomain();
     static int ant = -1;

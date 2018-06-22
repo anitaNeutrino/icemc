@@ -12,7 +12,7 @@ class TCanvas;
 namespace icemc {
 
   class Settings;
-  class ANITA;  
+  class ANITA;
 
   /**
    * @class Seavey
@@ -23,12 +23,13 @@ namespace icemc {
   public:
 
     /**
-     * The Pol enum class is the opposite convention from eventReaderRoot and all downstream ANITA tools! Be warned!
+     * The Pol enum class is the opposite (!) convention from eventReaderRoot and all downstream ANITA tools!
+     * You have been warned!
      */
     enum class Pol      {V,       H,         NotAPol};
     enum class XPol     {VtoH,    HtoV,      NotAnXPol};
     enum class AngleDir {Azimuth, Elevation};
-    
+
     Seavey(const Settings* settings = NULL, double refractiveIndexOfMedium = icemc::AskaryanFreqsGenerator::N_AIR);
 
     
@@ -38,6 +39,15 @@ namespace icemc {
     double getHeight(XPol xPol, double freqHz) const;
     double getOffAxisResponse(Pol pol,  AngleDir dir, double freqHz, double angleRad) const;
 
+
+    /** 
+     * Is this frequency allowed by the passbands?
+     * @see #fPassBandsHz
+     * 
+     * @param freqHz is the frequency in question
+     * 
+     * @return true if allowed by any (or no passbands are specified), false otherwise
+     */
     bool freqAllowedByPassBands(double freqHz) const;
     
     const FTPair& getSignal(Pol pol); //resets the input?
@@ -133,12 +143,8 @@ namespace icemc {
 
     double fRefractiveIndex = icemc::AskaryanFreqsGenerator::N_AIR; ///< This is the refractive index at the antenna (formerly known as nmedium_receiver)
     bool fDebug = false;
-    std::vector<std::pair<double, double> > fPassBandsHz; ///< Frequencies (Hz) will pass if they satisfy ANY passband (or if this vector is empty)
+    std::vector<std::pair<double, double> > fPassBandsHz; ///< Passbands frequencies (Hz) pairs go(low, high), filled in constructor if icemc::Settings are passed
   };
-  
-
 }
-
-
 
 #endif // ICEMC_SEAVEY_H
