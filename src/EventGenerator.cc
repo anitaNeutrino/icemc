@@ -1411,8 +1411,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   // get positions of the anita payload during the slac test
   if (settings1.SLAC){
-    // fDetector->GetSlacPositions(anita1);
-    fDetector->GetSlacPositions(fDetector);    
+    icemcLog() << icemc::error << "SLAC is no longer supported!" << std::endl;
+    exit(1);
   }
 
   nuSpectra->savePlots2(clOpts.outputdir + "/GetG_test1.pdf");
@@ -1747,24 +1747,23 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           err = GetDirection(&settings1, interaction1, rayTracer.nrf_iceside[4], deltheta_em_max, deltheta_had_max, showerPropsTemp, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], &rayTracer, &askFreqGen, interaction1->posnu, fDetector, fDetector, interaction1->nnu, costhetanu, theta_threshold);	  
           //cout<<"UNBIASED_SELECTION IS "<<settings1.UNBIASED_SELECTION<<"\n";
         }
-        else if (settings1.SLAC) {
-          Vector xaxis(1., 0., 0.);
-          //nnu=(rfexit[0].Unit()).Rotate(-10.*RADDEG, interaction1->posnu.Cross(zaxis));
-          interaction1->nnu = xaxis.RotateY(fDetector->theta_bn-settings1.SLAC_HORIZDIST/EarthModel::EarthRadiusMeters);  //direction of neutrino- for slac,  that's the direction of the beam
-          interaction1->nnu = interaction1->nnu.RotateZ(fDetector->phi_bn);
-          costhetanu=cos(interaction1->nnu.Theta());
-          theta_threshold=1.; // this is a bogus theta_threshold but it is only used for plotting anyway
-          if (settings1.BORESIGHTS) {
-            icemcLog().fslac_viewangles << fDetector->sslacpositions[fDetector->islacposition] << "\n";
-            for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
-              for(int ifold=0;ifold<fDetector->NRX_PHI[ilayer];ifold++) {
-                viewangle_eachboresight[ilayer][ifold]=acos(interaction1->nnu.Dot(rayTracer.nrf_iceside_eachboresight[4][ilayer][ifold]));
-                icemcLog().fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-askFreqGen.GetChangle())*constants::DEGRAD << "\n";
-              }//end for ifold
-            }//end for ilayer
-          }//end if boresights
-          err=1; // everything is a-okay
-        }// end else if slac
+        // else if (settings1.SLAC) {
+        //   Vector xaxis(1., 0., 0.);
+        //   //nnu=(rfexit[0].Unit()).Rotate(-10.*RADDEG, interaction1->posnu.Cross(zaxis));
+        //   interaction1->nnu = xaxis.RotateY(fDetector->theta_bn-settings1.SLAC_HORIZDIST/EarthModel::EarthRadiusMeters);  //direction of neutrino- for slac,  that's the direction of the beam
+        //   interaction1->nnu = interaction1->nnu.RotateZ(fDetector->phi_bn);
+        //   costhetanu=cos(interaction1->nnu.Theta());
+        //   theta_threshold=1.; // this is a bogus theta_threshold but it is only used for plotting anyway
+        //   if (settings1.BORESIGHTS) {	    
+        //     for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
+        //       for(int ifold=0;ifold<fDetector->NRX_PHI[ilayer];ifold++) {
+        //         viewangle_eachboresight[ilayer][ifold]=acos(interaction1->nnu.Dot(rayTracer.nrf_iceside_eachboresight[4][ilayer][ifold]));
+        //         icemcLog().fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-askFreqGen.GetChangle())*constants::DEGRAD << "\n";
+        //       }//end for ifold
+        //     }//end for ilayer
+        //   }//end if boresights
+        //   err=1; // everything is a-okay
+        // }// end else if slac
 
         if(err==0){
           continue;//bad stuff has happened.
@@ -1926,23 +1925,24 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 			     costhetanu,
 			     theta_threshold);
 	}
-        else if (settings1.SLAC) {
-          Vector xaxis(1., 0., 0.);
-          interaction1->nnu = xaxis.RotateY(fDetector->theta_bn-settings1.SLAC_HORIZDIST/EarthModel::EarthRadiusMeters);  //direction of neutrino- for slac,  that's the direction of the beam
-          interaction1->nnu = interaction1->nnu.RotateZ(fDetector->phi_bn);
-          costhetanu=cos(interaction1->nnu.Theta());
-          theta_threshold=1.; // this is a bogus theta_threshold but it is only used for plotting anyway
-          if (settings1.BORESIGHTS) {
-            icemcLog().fslac_viewangles << fDetector->sslacpositions[fDetector->islacposition] << "\n";
-            for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
-              for(int ifold=0;ifold<fDetector->NRX_PHI[ilayer];ifold++) {
-                viewangle_eachboresight[ilayer][ifold]=acos(interaction1->nnu.Dot(rayTracer.nrf_iceside_eachboresight[4][ilayer][ifold]));
-                icemcLog().fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-askFreqGen.GetChangle())*constants::DEGRAD << "\n";
-              }//end ifold
-            }//end ilayer
-          }//end boresight
-          err = 1; // everything is a-okay
-        }//end else if slac
+        // else if (settings1.SLAC)  {
+        //   Vector xaxis(1., 0., 0.);
+        //   interaction1->nnu = xaxis.RotateY(fDetector->theta_bn-settings1.SLAC_HORIZDIST/EarthModel::EarthRadiusMeters);  //direction of neutrino- for slac,  that's the direction of the beam
+        //   interaction1->nnu = interaction1->nnu.RotateZ(fDetector->phi_bn);
+        //   costhetanu=cos(interaction1->nnu.Theta());
+        //   theta_threshold=1.; // this is a bogus theta_threshold but it is only used for plotting anyway
+        //   if (settings1.BORESIGHTS) {
+        //     icemcLog().fslac_viewangles << fDetector->sslacpositions[fDetector->islacposition] << "\n";
+        //     for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
+        //       for(int ifold=0;ifold<fDetector->NRX_PHI[ilayer];ifold++) {
+        //         viewangle_eachboresight[ilayer][ifold]=acos(interaction1->nnu.Dot(rayTracer.nrf_iceside_eachboresight[4][ilayer][ifold]));
+        //         icemcLog().fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-askFreqGen.GetChangle())*constants::DEGRAD << "\n";
+        //       }//end ifold
+        //     }//end ilayer
+        //   }//end boresight
+        //   err = 1; // everything is a-okay
+        // }
+	//end else if slac
       }//end tau trigger ==0
 
       // gets angle between ray and neutrino direction

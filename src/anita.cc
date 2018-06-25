@@ -1445,7 +1445,7 @@ void icemc::Anita::AntennaGain(const Settings *settings1,
     }
 
     // V/MHz
-		
+
     //if (fabs(hitangle_h)<PI/12)
     //cout << "vsignalarray_h before is " << vsignalarray_h << "\n";
 

@@ -2,7 +2,6 @@
 #define ICEMC_GENERATED_NEUTRINOS_H
 
 #include "TObject.h" ///< ClassDef/ClassImp
-#include "balloon.hh" /// < For BalloonInfo
 #include "AskaryanFreqs.h" ///< For AskaryanFreqs
 #include "secondaries.hh" ///< For AskaryanFreqs
 
@@ -37,7 +36,6 @@ namespace icemc {
      */
     GeneratedNeutrino(int ithLoop = -1); ///< Set everything to -1
     virtual ~GeneratedNeutrino();
-    BalloonInfo balloon;
     double weight;
     int inu;
     int passCutNoWay;

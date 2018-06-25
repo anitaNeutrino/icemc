@@ -46,11 +46,10 @@ std::array<double, numGainPoints> heightVV_m; ///< converted from gain_dBi_vv_me
 std::array<double, numGainPoints> heightHV_m; ///< converted from gain_dBi_hv_measured
 std::array<double, numGainPoints> heightVH_m; ///< converted from gain_dBi_vh_measured
 
-// if you come up with some geometry where some are in ice and others not or something
-// refractiveIndexUsedForHeightArrays will need to change to be a per-antenna member variable
-// maybe it should be anyway because this is a wee bit ugly.
+// If one day icemc becomes even more modular, you come up with some geometry where some are in ice and others not or something
+// refractiveIndexUsedForHeightArrays will need to change to be a per-antenna member variable (rather than a global)
+// maybe it should be anyway because this is a wee bit ugly
 double refractiveIndexUsedForHeightArrays = 0; ///< Required to find height from gains
-
 
 constexpr int numAnglePoints = 7;
 const std::array<double, numAnglePoints> referenceAnglesDeg {0, 5, 10, 20, 30, 45, 90}; // the off axis measurements are have these step sizes (Degrees)
@@ -298,7 +297,7 @@ TCanvas* icemc::Seavey::plotGains() {
   grBoresight->Add(gr_hv);
   grBoresight->Add(gr_vh);
 
-  grBoresight->SetTitle("Seavey Boresight Gains Model in icemc;Frequency (Hz);Gain (dBi?)");
+  grBoresight->SetTitle("Seavey Boresight Gains Model in icemc;Frequency (Hz);Gain (dBi)");
   
   auto l1 = new TLegend();
   l1->AddEntry(gr_h, "HPol Gain", "l");
@@ -356,14 +355,14 @@ TCanvas* icemc::Seavey::plotGains() {
     l2_2->AddEntry(grH2, legTextH2, "l");
   }
   
-  grAz->SetTitle("Off boresight gains - Azimuth;Frequency (Hz); Gain (dBi?)");
+  grAz->SetTitle("Off boresight gains - Azimuth;Frequency (Hz); Relative gain (unitless)");
   grAz->Draw("al");
   grAz->SetBit(kCanDelete);
   l2_1->SetBit(kCanDelete);
   l2_1->Draw();
   c2_1->SetLogy(1);
   auto c2_2 = c2->cd(2);
-  grEl->SetTitle("Off boresight gains - Elevation;Frequency (Hz); Gain (dBi?)");
+  grEl->SetTitle("Off boresight gains - Elevation;Frequency (Hz); Relative gain (unitless)");
   grEl->Draw("al");
   grEl->SetBit(kCanDelete);
   l2_2->SetBit(kCanDelete);
@@ -540,7 +539,7 @@ icemc::Seavey::Seavey(const Settings* settings, double refractiveIndexOfMedium) 
 double icemc::Seavey::getOffAxisResponse(Pol pol,  AngleDir dir, double freqHz, double angleRad) const {
   loadGains();
 
-  const int j1 = getLowerAngleBin(angleRad);
+  const int j1 = getLowerAngleBin(angleRad); // calls fabs()
   const int j2 = j1 + 1;
 
   if(j1 < 0 || j2 >= referenceAnglesRad.size()){
@@ -563,16 +562,18 @@ double icemc::Seavey::getOffAxisResponse(Pol pol,  AngleDir dir, double freqHz, 
     break;    
   }
 
-  const double a1 = referenceAnglesRad.at(j1);
-  const double a2 = referenceAnglesRad.at(j2);
+  const double a1 = referenceAnglesRad.at(j1); // since looked up from j1, fabs() has been called...
+  const double a2 = referenceAnglesRad.at(j2); // since looked up from j2, fabs() has been called...
 
   const double da = a2 - a1;
   const double m = (g2 - g1)/da;
+
+  //... so don't forget to put a fabs() in here!
   const double g = m*(fabs(angleRad) - a1) + g1;
 
-  if(fDebug){
-    std::cout << a2 << "\t" << a1 << "\t" << g2 << "\t" << g1 << "\t" << m << "\t" << fabs(angleRad) << std::endl;
-  }
+  // if(fDebug){
+  //   std::cout << a2 << "\t" << a1 << "\t" << g2 << "\t" << g1 << "\t" << m << "\t" << fabs(angleRad) << std::endl;
+  // }
   
   return g;
 }
@@ -581,7 +582,9 @@ double icemc::Seavey::getOffAxisResponse(Pol pol,  AngleDir dir, double freqHz, 
 
 
 
-void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {  
+void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
+
+  ///@todo Put the factor of 0.5 for "voltage dividing" elsewhere, like in an actual splitter class downstream of the Seavey...
 
   double e_component_kvector = 0;
   double h_component_kvector = 0;
@@ -655,13 +658,13 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
       const double offAxisResponseV  = getOffAxisResponse(Pol::V, AngleDir::Azimuth, freqHz, hitangle_e);
       const double offAxisResponseHV = getOffAxisResponse(Pol::H, AngleDir::Azimuth, freqHz, hitangle_e);
 
-      if(fDebug){
-        std::cout << "Seavey     \t" << TMath::Nint(freqHz) << "\t" << std::fixed << std::setprecision(7)
-      		<< heightVV << "\t" << heightHV << "\t"
-      		<< offAxisResponseV << "\t" << offAxisResponseHV << "\t"
-      		<< e_component << "\t" << h_component << "\t"
-      		<< hitangle_e << "\t" << "\n";
-      }
+      // if(fDebug){
+      //   std::cout << "Seavey     \t" << TMath::Nint(freqHz) << "\t" << std::fixed << std::setprecision(7)
+      // 		<< heightVV << "\t" << heightHV << "\t"
+      // 		<< offAxisResponseV << "\t" << offAxisResponseHV << "\t"
+      // 		<< e_component << "\t" << h_component << "\t"
+      // 		<< hitangle_e << "\t" << "\n";
+      // }
 
       // 0.5 is for voltage dividing apparently, it doesn't happen in the Seavey... but it does happen downstream... maybe
       const double totalGainFactorV = 0.5*sqrt(  heightVV*heightVV*e_component*e_component*offAxisResponseV
@@ -696,13 +699,13 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
       double totalGainFactorH = 0.5*sqrt(  heightHH*heightHH*h_component*h_component*offAxisResponseH
 					   + heightVH*heightVH*e_component*e_component*offAxisResponseVH);
 
-      if(fDebug){
-        std::cout << "Seavey     \t" << TMath::Nint(freqHz) << "\t" << std::fixed << std::setprecision(7)
-      		<< heightHH << "\t" << heightVH << "\t"
-      		<< offAxisResponseH << "\t" << offAxisResponseVH << "\t"
-      		<< e_component << "\t" << h_component << "\t"
-      		<< hitangle_e << "\t" << "\n";
-      }
+      // if(fDebug){
+      //   std::cout << "Seavey     \t" << TMath::Nint(freqHz) << "\t" << std::fixed << std::setprecision(7)
+      // 		<< heightHH << "\t" << heightVH << "\t"
+      // 		<< offAxisResponseH << "\t" << offAxisResponseVH << "\t"
+      // 		<< e_component << "\t" << h_component << "\t"
+      // 		<< hitangle_e << "\t" << "\n";
+      // }
       
 
       c *= totalGainFactorH;
@@ -741,12 +744,7 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
 
     f->Write();
     f->Close();
-  }
-
-  
-
-  // std::cout << fVPol.getTimeDomain().GetN() << std::endl;  
-  
+  }  
 }
 
 

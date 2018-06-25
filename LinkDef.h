@@ -12,7 +12,6 @@
 #pragma link C++ class icemc::VoltsRX+;
 #pragma link C++ class icemc::GeneratedNeutrino+;
 #pragma link C++ class icemc::PassingNeutrino+;
-#pragma link C++ class icemc::BalloonInfo+;
 #pragma link C++ class icemc::AskaryanFreqs+;
 #pragma link C++ class icemc::ShowerProperties+;
 #pragma link C++ class icemc::Seavey+;

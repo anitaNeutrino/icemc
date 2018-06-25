@@ -46,7 +46,7 @@ namespace icemc {
 
   private:
 
-    const Settings* fSettingsPtrIDontOwn;
+    const Settings* fSettings;
     RayTracer* fRayPtrIDontOwn;
     Screen* fScreenPtrIDontOwn;
 

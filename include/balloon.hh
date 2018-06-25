@@ -21,34 +21,6 @@ class TTreeIndex;
 namespace icemc {
   class RayTracer;
   class Interaction;
-
-
-  /**
-   * @class BalloonInfo
-   * @brief Where is our detector? A very minimalistic class for RootOutput::allTree
-   * @todo Is the redundent in the new paradime?
-   * 
-   * Just like an Adu5Pat, but if this is stand alone icemc, that won't exist
-   */
-  class BalloonInfo {
-  public:
-    BalloonInfo();    
-    UInt_t realTime;    
-    float heading;
-    float pitch;
-    float roll;
-    float latitude;
-    float longitude;
-    float altitude;
-    float horizcoord_bn;
-    float vertcoord_bn;
-
-    #ifdef ANITA_UTIL_EXISTS
-    operator Adu5Pat() const; /// Type conversion to a Adu5Pat
-    #endif
-
-    ClassDef(BalloonInfo, 1);    
-  };
   
 
   /**
@@ -66,10 +38,10 @@ namespace icemc {
     int igps;                                                   ///< which balloon position do we use out of the 25000 anitalite GPS positions.
     int ibnposition;
     double dtryingposition;                                     ///< weighting factor: how many equivalent tries each neutrino counts for after having reduced possible interaction positions to within horizon
-    static const int MAX_POSITIONS=50;                          ///< for the slac beam test
-    Vector slacpositions[MAX_POSITIONS];
-    std::string sslacpositions[MAX_POSITIONS];
-    int islacposition;
+    // static const int MAX_POSITIONS=50;                          ///< for the slac beam test
+    // Vector slacpositions[MAX_POSITIONS];
+    // std::string sslacpositions[MAX_POSITIONS];
+    // int islacposition;
     TChain *flightdatachain;
     TTreeIndex *tindex;
     unsigned int realTime_flightdata_temp;                      ///< realtime from the flight data file
@@ -92,10 +64,10 @@ namespace icemc {
     Position r_bn;                                              ///< position of balloon
     double horizcoord_bn;                                       ///< x component of balloon position
     double vertcoord_bn;                                        ///< y component of balloon position
-    Position r_boresights[icemc::Anita::NLAYERS_MAX][icemc::Anita::NPHI_MAX]; ///< position of antenna boresights
-    Vector x_axis_rot;
-    Vector y_axis_rot;
-    Vector z_axis_rot;
+    Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; ///< position of antenna boresights
+    // Vector x_axis_rot;
+    // Vector y_axis_rot;
+    // Vector z_axis_rot;
     Vector n_bn;                                                ///< normalized r_bn
     Vector n_east;                                              ///< east, as seen from the balloon position
     Vector n_north;                                             ///< north, as seen from the balloon position
@@ -106,11 +78,13 @@ namespace icemc {
     int NPOINTS;                                                ///< number of GPS positions we're picking from.
     int NPOINTS_MIN;                                            ///< min and max index for gps positions we want to include in the simulation (to exclude launch and fall).  These are set in ReadFlight
     int NPOINTS_MAX;
-    double latitude_bn_anitalite[100000];                       ///< latitude at times along flightpath, equally distributed among gps data. This is filled with anita or anita-lite data, depending on which the user specifies
-    double longitude_bn_anitalite[100000];                      ///< same for longitude
-    double altitude_bn_anitalite[100000];                       ///< same for altitude
-    double heading_bn_anitalite[100000];                        ///< same for heading of the balloon
-    double realtime_bn_anitalite[100000];                       ///< same for real life time
+
+    std::vector<double> latitude_bn_anitalite;                       ///< latitude at times along flightpath, equally distributed among gps data. This is filled with anita or anita-lite data, depending on which the user specifies
+    std::vector<double> longitude_bn_anitalite;                      ///< same for longitude
+    std::vector<double> altitude_bn_anitalite;                       ///< same for altitude
+    std::vector<double> heading_bn_anitalite;                        ///< same for heading of the balloon
+    std::vector<double> realtime_bn_anitalite;                       ///< same for real life time
+    
     double BN_LONGITUDE;                                        ///< balloon longitude for fixed balloon location
     double BN_LATITUDE;                                         ///< balloon latitude for fixed balloon location
 
@@ -120,66 +94,42 @@ namespace icemc {
     void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,const Settings *settings1, const IceModel *antarctica1,
 				      RayTracer *ray1, int &beyondhorizon); 
   
-    ///< This function initializes the balloon or the specific flight
-    /**
-     * This is a long description that I dont know yet
-     *
-     *
-     * @return returns void
-     */
     void InitializeBalloon();
-    
-    ///< This function reads in the ANITA LITE flight
-    /**
-     * ANITA Lite is the first prototype ANITA flight
-     *
-     *
-     * @return returns void
-     */
     void ReadAnitaliteFlight();
     
-    ///< This function centers the payload
+
     /**
-     * Long description
-     *
-     *
-     * @param  hitangle_e -
-     * @return returns void
+     * This function centers the payload
+     * 
+     * @param  hitangle_e 
      */
     void CenterPayload(double& hitangle_e);
 
     
-    ///< This function picks the balloon position
     /**
-     * Long description
-     *
+     * This function picks the balloon position
      *
      * @param  straightup -
      * @param  antarctica -
      * @param  settings1 -
      * @param  anita1 -
-     * @return returns void
      */
     void PickBalloonPosition(Vector straightup, const IceModel *antarctica, const Settings *settings1, Anita *anita1);
+
     
-    ///< This function picks the balloon position
     /**
      * Position of spot under balloon
-     *
      *
      * @param  antarctica1 -
      * @param  settings1 -
      * @param  inu -
      * @param  anita1 -
      * @param  randomNumber -
-     * @return returns void
      */
-    /// @todo Default NULL ptr for BalloonInfo won't be required when we're not supporting all the silly "copy programs" and just have simple programs calling class functions
-    void PickBalloonPosition(const IceModel *antarctica1, const Settings *settings1,int inu,Anita *anita1, double randomNumber, BalloonInfo* bi = NULL);
+    void PickBalloonPosition(const IceModel *antarctica1, const Settings *settings1,int inu,Anita *anita1, double randomNumber);
 
-    ///< This function gets ith balloon position
     /**
-     * Long description
+     * Gets ith balloon position
      *
      *
      * @return returns int
@@ -216,7 +166,7 @@ namespace icemc {
 			       int ilayer, int ifold, 
 			       Vector& n_eplane,
 			       Vector& n_hplane, 
-			       Vector& n_normal);
+			       Vector& n_normal) const;
 
     
 
@@ -242,25 +192,25 @@ namespace icemc {
      */
     void setr_bn(double latitude,double longitude);
 
-    ///< This function adjusts the slac balloon position
-    /**
-     * move payload around like we did at slac
-     *
-     *
-     * @param  inu -
-     * @return returns void
-     */
-    void AdjustSlacBalloonPosition(int inu);
+    // ///< This function adjusts the slac balloon position
+    // /**
+    //  * move payload around like we did at slac
+    //  *
+    //  *
+    //  * @param  inu -
+    //  * @return returns void
+    //  */
+    // void AdjustSlacBalloonPosition(int inu);
     
-    ///< This function gets the slac balloon positions
-    /**
-     * Long description
-     *
-     *
-     * @param  anita1 -
-     * @return returns void
-     */
-    void GetSlacPositions(Anita *anita1);
+    // ///< This function gets the slac balloon positions
+    // /**
+    //  * Long description
+    //  *
+    //  *
+    //  * @param  anita1 -
+    //  * @return returns void
+    //  */
+    // void GetSlacPositions(Anita *anita1);
 
     ///< This function gets boresights
     /**
@@ -282,7 +232,7 @@ namespace icemc {
      * @param  anita1 -
      * @return returns void
      */
-    void calculate_antenna_positions(const Settings *settings1,Anita *anita1);
+    void calculate_antenna_positions(const Settings *settings1,Anita *anita1) const ;
     
     ///< This function rotates the payload
     /**
@@ -292,7 +242,7 @@ namespace icemc {
      * @param  ant_pos -
      * @return returns vector
      */
-    Vector RotatePayload(Vector ant_pos);
+    Vector RotatePayload(Vector ant_pos) const;
     
     ///< This function UN-rotates the payload
     /**
@@ -302,18 +252,9 @@ namespace icemc {
      * @param  ant_pos -
      * @return returns vector
      */
-    Vector unRotatePayload(Vector ant_pos);
+    Vector unRotatePayload(Vector ant_pos) const;
 
 
-
-    /** 
-     * Pass on the balloon info for storage in allTree, 
-     * to be used after the Balloon position has been picked.
-     * @see PickBalloonPosition
-     * 
-     * @param bi 
-     */
-    void fillBalloonInfo(BalloonInfo& bi) const ;
    
   }; //class Balloon
 }
