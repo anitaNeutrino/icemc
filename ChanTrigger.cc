@@ -1634,8 +1634,13 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
     for (int i=0;i<nPoints;i++){
       justSig_digPath[ipol][i] = surfSignalDown->Eval(x[i]);
-      y[i] += justSig_digPath[ipol][i];
-      y[i] += justNoise_digPath[ipol][i];
+      if(settings1->ADDCW){
+        y[i] += justSig_digPath[ipol][i];
+        y[i] += justNoise_digPath[ipol][i];
+      }
+      else{
+        y[i] = justSig_digPath[ipol][i] + justNoise_digPath[ipol][i];
+      }
     }
   } else {
     for (int i=0;i<nPoints;i++)  justSig_digPath[ipol][i] = y[i] = surfSignalDown->Eval(x[i]);
