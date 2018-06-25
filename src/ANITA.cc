@@ -83,7 +83,8 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   static bool firstTime = true;
   if(inu == 397 && firstTime){
     for(int i=0; i < fSeaveys.size(); i++){
-      if(i==34){
+      // if(true || i==34){
+      if(true || i==41){
 	fSeaveys.at(i).setDebug(true);
       }
     }
@@ -96,9 +97,9 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
       fSeaveys.at(i).setDebug(false);
     }
   }
-  
+
   if(rx >= 0 && rx < fSeaveys.size()){
-    // @todo It makes much more sense to do this when the balloon position is updated!
+    // @todo It makes much more sense to do this just once when the balloon position is updated!
     this->GetAntennaOrientation(fSettingsPtrIDontOwn,  this,  ilayer,  ifold,
 				fSeaveys.at(rx).fEPlane, fSeaveys.at(rx).fHPlane, fSeaveys.at(rx).fNormal);
 

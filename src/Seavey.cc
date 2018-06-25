@@ -563,13 +563,16 @@ double icemc::Seavey::getOffAxisResponse(Pol pol,  AngleDir dir, double freqHz, 
     break;    
   }
 
-
   const double a1 = referenceAnglesRad.at(j1);
   const double a2 = referenceAnglesRad.at(j2);
 
   const double da = a2 - a1;
   const double m = (g2 - g1)/da;
   const double g = m*(fabs(angleRad) - a1) + g1;
+
+  if(fDebug){
+    std::cout << a2 << "\t" << a1 << "\t" << g2 << "\t" << g1 << "\t" << m << "\t" << fabs(angleRad) << std::endl;
+  }
   
   return g;
 }
@@ -603,14 +606,20 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
   FTPair thisVPol = s.waveform;
 
   if(fDebug){
-    TGraph grV = thisVPol.getTimeDomain();
     static int ant = -1;
     ant++;
     const char* opt = ant == 0 ? "recreate" : "update";
     TFile* f = TFile::Open("fSeaveysDebug.root", opt);
     f->cd();
+
+    TGraph grV = thisVPol.getTimeDomain();
     grV.SetName(TString::Format("grV_before_%d", ant));
     grV.Write();
+
+    TGraph grH = thisHPol.getTimeDomain();
+    grH.SetName(TString::Format("grH_before_%d", ant));
+    grH.Write();
+    
     f->Write();
     f->Close();
   }
@@ -633,6 +642,9 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
    * response of the cross-pol, so probably a small effect		
    */
 
+  bool temp = fDebug;
+  fDebug = false;
+
   for(auto& c : vPolFreqs){    
 
     if(freqAllowedByPassBands(freqHz)){
@@ -644,7 +656,7 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
       const double offAxisResponseHV = getOffAxisResponse(Pol::H, AngleDir::Azimuth, freqHz, hitangle_e);
 
       if(fDebug){
-        std::cout << "Seavey     \t" << freqHz << "\t"
+        std::cout << "Seavey     \t" << TMath::Nint(freqHz) << "\t" << std::fixed << std::setprecision(7)
       		<< heightVV << "\t" << heightHV << "\t"
       		<< offAxisResponseV << "\t" << offAxisResponseHV << "\t"
       		<< e_component << "\t" << h_component << "\t"
@@ -664,27 +676,34 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
     freqHz += df_Hz;
   }
 
-  bool temp = fDebug;
-  fDebug = false;
-  // fDebug = false;
+  fDebug = temp;
 
   
   freqHz = 0; // freqHz is incremented in the loop, so reset
   for(auto& c : hPolFreqs){  
 
     if(freqAllowedByPassBands(freqHz)){
-    
+
       // get everything going into the HPol feed... via direct and cross-pol.
       const double heightHH = getHeight(Pol::H, freqHz);
       const double heightVH = getHeight(XPol::VtoH, freqHz);
 
-      // then you need to take accout of how far off boresight you are... i.e. the off-axis reponse of the antennas.
+      // then you need to take acconut of how far off boresight you are... i.e. the off-axis reponse of the antennas.
       const double offAxisResponseH  = getOffAxisResponse(Pol::H, AngleDir::Elevation, freqHz, hitangle_h);
       const double offAxisResponseVH = getOffAxisResponse(Pol::V, AngleDir::Elevation, freqHz, hitangle_h);
-
+      
       // 0.5 is for voltage dividing apparently, it doesn't happen in the Seavey... but it does happen downstream... maybe
-      double totalGainFactorH = 0.5*sqrt(  heightHH*heightHH*e_component*e_component*offAxisResponseH
-					   + heightVH*heightVH*h_component*h_component*offAxisResponseVH);
+      double totalGainFactorH = 0.5*sqrt(  heightHH*heightHH*h_component*h_component*offAxisResponseH
+					   + heightVH*heightVH*e_component*e_component*offAxisResponseVH);
+
+      if(fDebug){
+        std::cout << "Seavey     \t" << TMath::Nint(freqHz) << "\t" << std::fixed << std::setprecision(7)
+      		<< heightHH << "\t" << heightVH << "\t"
+      		<< offAxisResponseH << "\t" << offAxisResponseVH << "\t"
+      		<< e_component << "\t" << h_component << "\t"
+      		<< hitangle_e << "\t" << "\n";
+      }
+      
 
       c *= totalGainFactorH;
     }
@@ -706,14 +725,20 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
 
   fDebug = temp;
   if(fDebug){
-    TGraph grV = fVPol.getTimeDomain();
     static int ant = -1;
     ant++;
     const char* opt = "update";
     TFile* f = TFile::Open("fSeaveysDebug.root", opt);
     f->cd();
+
+    TGraph grV = fVPol.getTimeDomain();
     grV.SetName(TString::Format("grV_after_%d", ant));
     grV.Write();
+
+    TGraph grH = fHPol.getTimeDomain();
+    grH.SetName(TString::Format("grH_after_%d", ant));
+    grH.Write();
+
     f->Write();
     f->Close();
   }

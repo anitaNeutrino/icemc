@@ -783,7 +783,8 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 
       for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
 
-	bool debugInMakeArray = gr && gr->GetY()[0] == 397 && ant==34;
+	// bool debugInMakeArray = gr && gr->GetY()[0] == 397 && ant==34;
+	bool debugInMakeArray = gr && gr->GetY()[0] == 397 && ant==41;
 
 	Seavey::GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
 	// Seavey::GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);

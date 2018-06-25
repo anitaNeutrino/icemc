@@ -1426,13 +1426,13 @@ void icemc::Anita::AntennaGain(const Settings *settings1,
     //cout << "vsignalarray_e before is " << vsignalarray_e << "\n";
     vsignalarray_e = vsignalarray_e * 0.5 * sqrt(vvGaintoHeight[k] * vvGaintoHeight[k] * e_component * e_component * relativegains[0] + hvGaintoHeight[k] * hvGaintoHeight[k] * h_component * h_component * relativegains[1]); // 0.5 is for voltage dividing
 
-    if(debug){
-      std::cout << "AntennaGain\t" << freq[k] << "\t"
-      		<< vvGaintoHeight[k] << "\t" << hvGaintoHeight[k]  << "\t"
-      		<< relativegains[0] << "\t" << relativegains[1] << "\t"
-      		<< e_component << "\t" << h_component << "\t"
-      		<< hitangle_e << "\t" << "\n";
-    }
+    // if(debug){
+    //   std::cout << "AntennaGain\t" << TMath::Nint(freq[k]) << "\t" << std::fixed << std::setprecision(7)
+    //   		<< vvGaintoHeight[k] << "\t" << hvGaintoHeight[k]  << "\t"
+    //   		<< relativegains[0] << "\t" << relativegains[1] << "\t"
+    //   		<< e_component << "\t" << h_component << "\t"
+    //   		<< hitangle_e << "\t" << "\n";
+    // }
 
 
     for (int pols = 2;pols < 4;pols++) { // loop over hh, vh
@@ -1448,7 +1448,15 @@ void icemc::Anita::AntennaGain(const Settings *settings1,
 		
     //if (fabs(hitangle_h)<PI/12)
     //cout << "vsignalarray_h before is " << vsignalarray_h << "\n";
-		
+
+    if(debug){
+      std::cout << "AntennaGain\t" << TMath::Nint(freq[k]) << "\t" << std::fixed << std::setprecision(7)
+      		<< vvGaintoHeight[k] << "\t" << hvGaintoHeight[k]  << "\t"
+      		<< relativegains[2] << "\t" << relativegains[3] << "\t"
+      		<< e_component << "\t" << h_component << "\t"
+      		<< hitangle_e << "\t" << "\n";
+    }
+
     vsignalarray_h=(vsignalarray_h*0.5*sqrt(hhGaintoHeight[k]*hhGaintoHeight[k]*h_component*h_component*relativegains[2] + vhGaintoHeight[k]*vhGaintoHeight[k]*e_component*e_component*relativegains[3]));
   }
 }
@@ -1677,9 +1685,8 @@ void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_recei
   for (int k = 0; k < NFREQ; ++k) {
     whichbin[k] = int((freq[k] - frequency_forgain_measured[0]) / gain_step); // finds the gains that were measured for the frequencies closest to the frequency being considered here
     if((whichbin[k] >= NPOINTS_GAIN || whichbin[k] < 0)) {
-      std::cout << "Set_gain_angle out of range, freq = " << freq[k] << "\twhichbin[k] = " << whichbin[k] << std::endl;
+      icemcLog() << "Set_gain_angle out of range, freq = " << freq[k] << "\twhichbin[k] = " << whichbin[k] << std::endl;
       // no longer exit, just set antenna gain to 0 outside band
-      // @todo verify this works
       // exit(1);
       scalef2[k] = 0;
       scalef1[k] = 0;
@@ -1690,7 +1697,7 @@ void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_recei
       scalef2[k] = (freq[k] - frequency_forgain_measured[whichbin[k]]) / gain_step;
       // how far from the lower frequency
       scalef1[k] = 1. - scalef2[k]; // how far from the higher frequency
-		
+
       // convert the gain at 0 degrees to the effective antenna height at 0 degrees for every frequency
       if(whichbin[k] == NPOINTS_GAIN - 1) { // if the frequency is 1.5e9 or goes a little over due to rounding
 	gainhv = gainhv_measured[whichbin[k]];
@@ -1707,20 +1714,19 @@ void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_recei
       }
     }
     if (GAINS==0) {
-			
+
       gainhv=0.;
       gainhh=gain[1][k];
       gainvh=0.;
       gainvv=gain[0][k];
-			
+
     }
-		
-		
+
     hvGaintoHeight[k] = GaintoHeight(gainhv,freq[k],nmedium_receiver);
     hhGaintoHeight[k] = GaintoHeight(gainhh,freq[k],nmedium_receiver);
     vhGaintoHeight[k] = GaintoHeight(gainvh,freq[k],nmedium_receiver);
     vvGaintoHeight[k] = GaintoHeight(gainvv,freq[k],nmedium_receiver);
-		
+
   } // loop through frequency bins
     
     

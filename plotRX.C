@@ -75,14 +75,15 @@ void plotCompare(){
   const int markerStyle = 2;
   for(int i=0; i < 48; i++){
     c->cd(i+1);
-    TString name1 = TString::Format("gr_pol0_ant%d_iband4_aftergain", i);
+    // TString name1 = TString::Format("gr_pol0_ant%d_iband4_aftergain", i);
+    TString name1 = TString::Format("gr_pol1_ant%d_iband4_aftergain", i);
     TGraph* gr1 = (TGraph*) f1->Get(name1);
     gr1->Draw("alp");
     gr1->SetMarkerStyle(markerStyle);
 
 
-    TString name2 = TString::Format("grV_after_%d", i);
-    // TString name2 = TString::Format("grV_before_%d", i);
+    // TString name2 = TString::Format("grV_after_%d", i);
+    TString name2 = TString::Format("grH_after_%d", i);
     TGraph* gr2 = (TGraph*) f2->Get(name2);
     gr2->SetLineColor(kRed);
     gr2->SetMarkerStyle(markerStyle);
