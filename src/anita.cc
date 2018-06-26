@@ -56,7 +56,7 @@ using std::vector;
 
 icemc::Anita::Anita() {
 
-  stemp = "";
+  std::string stemp = "";
 
   for (int irx=0;irx<icemc::Anita::NLAYERS_MAX*icemc::Anita::NPHI_MAX;irx++) {
     arrival_times[0][irx]=arrival_times[1][irx]=0.;
@@ -71,7 +71,7 @@ icemc::Anita::Anita() {
     
   FREQ_LOW=0.;//200.E6;
   FREQ_HIGH=1300.E6; //1200.E6;
-    
+
   antennatosurf[0]=2;
   antennatosurf[1]=4;
   antennatosurf[2]=6;
@@ -258,7 +258,7 @@ void icemc::Anita::SetNoise(const Settings *settings1,Balloon *bn1,IceModel *ant
   else { // if not anita 1
     for (int il=0;il<NLAYERS_MAX;il++) {
       for (int ibw=0;ibw<5;ibw++) {
-	bwslice_vnoise[il][ibw]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,antarctica->SurfaceAboveGeoid(bn1->latitude,bn1->longitude),THETA_ZENITH[il],bwslice_max[ibw]-bwslice_min[ibw],0.);
+	bwslice_vnoise[il][ibw]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,antarctica->SurfaceAboveGeoid(bn1->getLatitude(),bn1->getLongitude()),THETA_ZENITH[il],bwslice_max[ibw]-bwslice_min[ibw],0.);
       }
     }
   }    
@@ -747,7 +747,7 @@ void icemc::Anita::getDiodeDataAndAttenuation(const Settings *settings1, TString
   cdiode->cd(2);
   gdiode->Draw("al");
   
-  stemp=string(outputdir.Data())+"/diode.eps";
+  std::string stemp = string(outputdir.Data())+"/diode.eps";
   cdiode->Print((TString)stemp);
     
   tdiode->SetBranchAddress("avgfreqdomain_lab",&(avgfreqdomain_lab[0]));
@@ -1191,7 +1191,7 @@ void icemc::Anita::setDiodeRMS(const Settings *settings1, TString outputdir){
     }
 	
   }
-  stemp=string(outputdir.Data())+"/hnoise.eps";
+  std::string stemp = string(outputdir.Data())+"/hnoise.eps";
   c4->Print((TString)stemp);
 
   
@@ -1550,25 +1550,27 @@ int icemc::Anita::GetIfold(int rx) {
     
   return -1;
 }
-int icemc::Anita::AntennaWaveformtoSurf(int ilayer,int ifold) {
+
+int icemc::Anita::AntennaWaveformtoSurf(int ilayer,int ifold) const {
     
   int antenna=GetAntennaNumber(ilayer,ifold); // antenna number 1-32
     
   return antennatosurf[antenna-1]; // returns the surf number
     
 }
+
 int icemc::Anita::AntennaNumbertoSurfNumber(int ilayer,int ifold) {
   int antenna=GetAntennaNumber(ilayer,ifold); // antenna number 1-32
     
   return (antenna-1-(antenna-1)%4)/4+1; // returns the surf number 1-9
-    
-    
 }
+
 int icemc::Anita::GetSurfChannel(int antenna,int ibw,int ipol) { // 1 to 32
     
   return ((antenna-1)%4)*8+WhichBand(ibw,ipol);//which scalar channel, numbered 1 to 32
     
 }
+
 int icemc::Anita::WhichBand(int ibw,int ipol) {
     
   return 2*ibw+ipol+1; // from 1 to 8, which scalar channel on an antenna this band corresponds to, in order as they are on the surfs

@@ -459,7 +459,7 @@ namespace icemc {
 
     // @todo constify... needs some love to constify
     void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, const AskaryanFreqsGenerator* askFreqGen,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
-    void WriteNeutrinoInfo(const int& inu, Position&,  Vector&,  Position&,  double,  std::string,  std::string,  double,  std::ofstream &nu_out) const;
+    void WriteNeutrinoInfo(const int& inu, const Position&,  const Vector&,  const Position&,  double,  std::string,  std::string,  double,  std::ofstream &nu_out) const;
 
     /** 
      * @brief Run the neutrino generation

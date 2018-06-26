@@ -377,9 +377,8 @@ namespace icemc {
 
     int rx_minarrivaltime;
     double arrival_times[2][NLAYERS_MAX*NPHI_MAX];
-
     static int SurfChanneltoBand(int isurf);
-    int AntennaWaveformtoSurf(int ilayer,int ifold); // find surf that generates this antenna's waveform
+    int AntennaWaveformtoSurf(int ilayer,int ifold) const; // find surf that generates this antenna's waveform
     static int AntennaNumbertoSurfNumber(int ilayer,int ifold); // find surf where this antenna is triggered
     static int GetAntennaNumber(int ilayer,int ifold); // given icemc indices ilayer, ifold, find antenna number as defined officially on anita
     static int GetLayer(int rx);

@@ -1312,15 +1312,15 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
     maxvol_inhorizon[i]=-1.; // volume of bin with the most ice in the horizon
 	
     if (bn1->whichPath()==FlightPath::AnitaLite) { // anita or anita-lite path
-      theta_bn=(90+bn1->latitude_bn_anitalite[i*100])*constants::RADDEG; //theta of the balloon wrt north pole
+      theta_bn=(90+bn1->latitude_bn_anitalite.at(i*100))*constants::RADDEG; //theta of the balloon wrt north pole
       lat=GetLat(theta_bn); // latitude  
-      phi_bn_temp=(-1*bn1->longitude_bn_anitalite[i*100]+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
+      phi_bn_temp=(-1*bn1->longitude_bn_anitalite.at(i*100)+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
       if (phi_bn_temp<0) //correct phi_bn if it's negative
 	phi_bn_temp+=360.;
       phi_bn_temp*=constants::RADDEG;// turn it into radians
 	    
 	    
-      altitude_bn=bn1->altitude_bn_anitalite[i*100]*12.*constants::CMINCH/100.; // get the altitude for this balloon posistion
+      altitude_bn=bn1->altitude_bn_anitalite.at(i*100)*12.*constants::CMINCH/100.; // get the altitude for this balloon posistion
       //altitude_bn=altitude_bn_anitalite[i*100]*12.*CMINCH/100.; // for anita, altitude in is meters
 	    
     } // end if anita-lite

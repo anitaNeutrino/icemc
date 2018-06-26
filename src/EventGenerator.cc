@@ -1160,7 +1160,7 @@ void icemc::EventGenerator::GetBalloonLocation(const Interaction *interaction1, 
     }
   }
 
-  Vector r_bn_tmp=fDetector->r_bn-origin_brian_tmp;
+  Vector r_bn_tmp=fDetector->position()-origin_brian_tmp;
   r_bn_tmp=r_bn_tmp.ChangeCoord(xcoordvector,ycoordvector);//change coordinates
     
   // double balloondist =r_bn_tmp.Mag();//this is above center of earth, if i understand correctly. Need above the surface of the earth. 
@@ -1186,7 +1186,7 @@ void icemc::EventGenerator::GetBalloonLocation(const Interaction *interaction1, 
 
 
 
-void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, Position &posnu,  Vector &nnu,  Position &r_bn,  double altitude_int,  std::string nuflavor,  std::string current,  double elast_y,  std::ofstream &nu_out) const {
+void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, const Position &posnu,  const Vector &nnu,  const Position &r_bn,  double altitude_int,  std::string nuflavor,  std::string current,  double elast_y,  std::ofstream &nu_out) const {
   nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
 }
 
@@ -1539,11 +1539,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter
       average_altitude += fDetector->altitude_bn/(double)NNU;
-      average_rbn += fDetector->r_bn.Mag()/(double)NNU;
+      average_rbn += fDetector->position().Mag()/(double)NNU;
 
       if (settings1.HIST && !settings1.ONLYFINAL && ro.prob_eachphi_bn.GetEntries() < settings1.HIST_MAX_ENTRIES) {
         ro.prob_eachphi_bn.Fill(fDetector->phi_bn);
-        ro.prob_eachilon_bn.Fill(fDetector->r_bn.Lon());
+        ro.prob_eachilon_bn.Fill(fDetector->position().Lon());
       }
 
       if (fDetector->whichPath()==FlightPath::Custom) { // for banana plot
@@ -1683,7 +1683,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // 0th guess was simply radially outward from interaction position
       // this now takes into account balloon position and surface normal.
       // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 1, antarctica); // fills ray1->n_exit2bn[1]
-      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 1, antarctica); // fills ray1->n_exit2bn[1]      
+      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 1, antarctica); // fills ray1->n_exit2bn[1]      
 
       rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 1);
 
@@ -1694,7 +1694,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // fills ray1->n_exit2bn[2] ?
       // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 2, antarctica);
-      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 2, antarctica);      
+      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);      
 
       rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 2);
 
@@ -1999,8 +1999,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // independent.
       interaction1->dnutries=interaction1->dtryingdirection*fDetector->dtryingposition;
 
-      // for plotting aperture per ring radius from balloon
-      index_distance=(int)(fDetector->r_bn.SurfaceDistance(interaction1->posnu, fDetector->surface_under_balloon) / (700000./(double)NBINS_DISTANCE));
+      // // for plotting aperture per ring radius from balloon
+      index_distance=(int)(fDetector->position().SurfaceDistance(interaction1->posnu, fDetector->surface_under_balloon) / (700000./(double)NBINS_DISTANCE));
 
       // where the neutrino enters the earth
       if (tautrigger==0){//did for cc-taus already,  do for all other particles
@@ -2131,17 +2131,17 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // this sets n_exit2bn[2] to the ray from the exit point to the balloon,
       // last iteration.  Now we're ready to do some calculations!!!!
       // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 2, antarctica);
-      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 2, antarctica);      
+      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);      
 
       count1->nraywithincontinent2[whichray]++;
 
       // for plotting- cos(theta) of neutrino direction standing on earth below balloon.
-      interaction1->costheta_nutraject=(interaction1->nnu.Dot(fDetector->r_bn))/sqrt(fDetector->r_bn.Dot(fDetector->r_bn));
+      interaction1->costheta_nutraject=(interaction1->nnu.Dot(fDetector->position()))/sqrt(fDetector->position().Dot(fDetector->position()));
 
-      theta_rf_atbn = rayTracer.n_exit2bn[2].Angle(fDetector->r_bn); // polar angle of the rf signal as seen at the balloon.
+      theta_rf_atbn = rayTracer.n_exit2bn[2].Angle(fDetector->position()); // polar angle of the rf signal as seen at the balloon.
       // measured theta of the rf,  which is actual smeared by SIGMA_THETA,  whose default is 0.5 degrees.
       theta_rf_atbn_measured = theta_rf_atbn+gRandom->Gaus()*fDetector->SIGMA_THETA;
-      interaction1->r_exit2bn=fDetector->r_bn.Distance(rayTracer.rfexit[2]);
+      interaction1->r_exit2bn=fDetector->position().Distance(rayTracer.rfexit[2]);
       interaction1->r_exit2bn_measured=fDetector->altitude_bn/cos(theta_rf_atbn_measured);
 
       if((settings1.WHICH == 2 || settings1.WHICH == 6) && theta_rf_atbn < 0.3790091) {
@@ -2272,7 +2272,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // ALREADY DEALT WITH IN CASE OF ROUGHNESS
       if (!settings1.ROUGHNESS) {
 	const Position& posnu = whichray == direct ? interaction1->posnu : interaction1->posnu_down;
-	double r_meters = fDetector->r_bn.Distance(rayTracer.rfexit[2]) + rayTracer.rfexit[2].Distance(posnu);
+	double r_meters = fDetector->position().Distance(rayTracer.rfexit[2]) + rayTracer.rfexit[2].Distance(posnu);
 	vmmhz_max = vmmhz1m_fresneledtwice/r_meters;
       }
 
@@ -2600,13 +2600,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 		eventsfound_binned[index_weights]++;
 	      }
 	      // number of events in a ring at distance from balloon
-	      if (index_distance<NBINS_DISTANCE){
-		eventsfound_binned_distance[index_distance]+= fNeutrinoPath->weight;
-	      }
-	      // same,  now binned in weight,  for calculating errors
-	      if (index_distance<NBINS_DISTANCE && index_weights<NBINS){
-		eventsfound_binned_distance_forerror[index_distance][index_weights]++;
-	      }
+	      // if (index_distance<NBINS_DISTANCE){
+	      // 	eventsfound_binned_distance[index_distance]+= fNeutrinoPath->weight;
+	      // }
+	      // // same,  now binned in weight,  for calculating errors
+	      // if (index_distance<NBINS_DISTANCE && index_weights<NBINS){
+	      // 	eventsfound_binned_distance_forerror[index_distance][index_weights]++;
+	      // }
 	      // for debugging
 	      if (fNeutrinoPath->logweight>-3){
 		eventsfound_weightgt01+=fNeutrinoPath->weight;
@@ -2659,11 +2659,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 	    //Now put data in Vectors and Positions into arrays for output to the ROOT file.
 	    if (settings1.HIST && ro.finaltree.GetEntries()<settings1.HIST_MAX_ENTRIES) {
+	      Vector n_bn = fDetector->position().Unit();
 	      for (int i=0;i<3;i++) {
 		nnu_array[i] = interaction1->nnu[i];
 		r_in_array[i] = interaction1->r_in[i];
-		r_bn_array[i] = fDetector->r_bn[i];
-		n_bn_array[i] = fDetector->n_bn[i];
+		r_bn_array[i] = fDetector->position()[i];
+		n_bn_array[i] = n_bn[i];
 		posnu_array[i] = interaction1->posnu[i];
 		// ant_max_normal0_array[i] = ant_max_normal0[i];
 		// ant_max_normal1_array[i] = ant_max_normal1[i];
@@ -2716,7 +2717,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	    times_core_entered_det += core_entered;
 
 	    if (settings1.WRITEPOSFILE==1){
-	      WriteNeutrinoInfo(inu, interaction1->posnu, interaction1->nnu, fDetector->r_bn, interaction1->altitude_int, interaction1->nuflavor, interaction1->current, elast_y, icemcLog().nu_out);
+	      WriteNeutrinoInfo(inu, interaction1->posnu, interaction1->nnu, fDetector->position(), interaction1->altitude_int, interaction1->nuflavor, interaction1->current, elast_y, icemcLog().nu_out);
 	    }
 
 	    // sample first 1000 events that pass to see the distribution of weights
@@ -2864,12 +2865,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     icemcLog() << "Surface of ice at the South Pole: " << antarctica->Surface(posnu_temp) << "\n";
     icemcLog() << "Average balloon altitude is " << average_altitude << "\n";
     icemcLog() << "Average distance from earth center is " << average_rbn << "\n";
-    icemcLog() << "Average height of balloon above ice surface is " << average_rbn-antarctica->Surface(fDetector->r_bn) << "\n";
+    icemcLog() << "Average height of balloon above ice surface is " << average_rbn-antarctica->Surface(fDetector->position()) << "\n";
     icemcLog() << "theta_zenith are " << fDetector->THETA_ZENITH[0]*constants::DEGRAD << " " << fDetector->THETA_ZENITH[1]*constants::DEGRAD << " " << fDetector->THETA_ZENITH[2]*constants::DEGRAD << "\n";
     icemcLog() << "Index of refraction at this depth is " << askFreqGen.N_DEPTH << "\n";
     icemcLog() << "Cerenkov angle is " << askFreqGen.GetChangle()*constants::DEGRAD << "\n";
-    icemcLog() << "Nadir angle to surface exit point is " << constants::DEGRAD*fDetector->r_bn.Angle(rayTracer.n_exit2bn[2]) << "\n";
-    icemcLog() << "Distance from rfexit to balloon is " << (fDetector->r_bn+ -1*rayTracer.rfexit[2]).Mag() << "\n";
+    icemcLog() << "Nadir angle to surface exit point is " << constants::DEGRAD*fDetector->position().Angle(rayTracer.n_exit2bn[2]) << "\n";
+    icemcLog() << "Distance from rfexit to balloon is " << (fDetector->position()+ -1*rayTracer.rfexit[2]).Mag() << "\n";
     icemcLog() << "Payload zenith angle at event source is " << constants::DEGRAD*rayTracer.rfexit[2].Angle(rayTracer.n_exit2bn[2]) << "\n";
     icemcLog() << "Angle of incidence just below surface is " << constants::DEGRAD*rayTracer.rfexit[2].Angle(rayTracer.nrf_iceside[4]) << "\n";
     icemcLog() << "Angle between neutrino and surface normal is " << constants::DEGRAD*rayTracer.rfexit[0].Angle(interaction1->nnu)-90. << "\n";
@@ -2997,10 +2998,10 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int&
 
   //double pathlength_specular = interaction1->posnu.Distance(ray1->rfexit[2]) + ray1->rfexit[2].Distance(fDetector->r_bn);
   if (settings1.FIRN){
-    time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*constants::NFIRN / constants::CLIGHT) + (ray1->rfexit[2].Distance(fDetector->r_bn)/constants::CLIGHT);
+    time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*constants::NFIRN / constants::CLIGHT) + (ray1->rfexit[2].Distance(fDetector->position())/constants::CLIGHT);
   }
   else{
-    time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*constants::NICE / constants::CLIGHT) + (ray1->rfexit[2].Distance(fDetector->r_bn)/constants::CLIGHT);
+    time_reference_specular = (interaction1->posnu.Distance(ray1->rfexit[2])*constants::NICE / constants::CLIGHT) + (ray1->rfexit[2].Distance(fDetector->position())/constants::CLIGHT);
   }
 
   double slopeyx, slopeyy, slopeyz, rtemp;
@@ -3046,7 +3047,7 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int&
       tcoeff_perp_polparl = tcoeff_parl_polparl = 0.;
       tcoeff_perp_polperp = tcoeff_parl_polperp = 0.;
       pos_projectedImpactPoint = panel1->GetPosition(ii, jj);        // this gets the new screen position
-      vec_pos_current_to_balloon = Vector( fDetector->r_bn[0] - pos_projectedImpactPoint[0], fDetector->r_bn[1] - pos_projectedImpactPoint[1], fDetector->r_bn[2] - pos_projectedImpactPoint[2] );
+      vec_pos_current_to_balloon = Vector( fDetector->position()[0] - pos_projectedImpactPoint[0], fDetector->position()[1] - pos_projectedImpactPoint[1], fDetector->position()[2] - pos_projectedImpactPoint[2] );
 
       // local angles of transmission and incidence in their respective planes
       vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
@@ -3125,7 +3126,7 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int&
       //Emag_local *= sqrt((tcoeff_perp*tcoeff_perp + tcoeff_parl*tcoeff_parl)) * mag_r;// * (antennalength*antennalength/(vec_pos_current_to_balloon.Mag()*vec_pos_current_to_balloon.Mag()))/HP_64_binarea);
       //cerr<<"E: "<<Emag_local<<std::endl;
       // account for 1/r for 1)interaction point to impact point and 2)impact point to balloon, and attenuation in ice
-      pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(fDetector->r_bn);
+      pathlength_local = interaction1->posnu.Distance(pos_projectedImpactPoint) + pos_projectedImpactPoint.Distance(fDetector->position());
       //cerr<<"P: "<<pathlength_local<<std::endl;
       Emag_local /= pathlength_local ;
       //cerr<<"E: "<<Emag_local<<std::endl;
@@ -3160,10 +3161,10 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int&
       Emag_local *= fresnel_r * mag_r;
       //cerr<<"E: "<<Emag_local<<std::endl;
       if (settings1.FIRN){
-	time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*constants::NFIRN / constants::CLIGHT) + (pos_projectedImpactPoint.Distance(fDetector->r_bn)/constants::CLIGHT);
+	time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*constants::NFIRN / constants::CLIGHT) + (pos_projectedImpactPoint.Distance(fDetector->position())/constants::CLIGHT);
       }
       else{
-	time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*constants::NICE / constants::CLIGHT) + (pos_projectedImpactPoint.Distance(fDetector->r_bn)/constants::CLIGHT);
+	time_reference_local = (interaction1->posnu.Distance(pos_projectedImpactPoint)*constants::NICE / constants::CLIGHT) + (pos_projectedImpactPoint.Distance(fDetector->position())/constants::CLIGHT);
       // increment counter so we can track the size of the screen's vector arrays
       }
       num_validscreenpoints++;

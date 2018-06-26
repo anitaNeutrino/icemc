@@ -45,7 +45,7 @@ icemc::Position icemc::ANITA::getCenterOfDetector(UInt_t unixTime){
     getLayerFoldFromRX(rx, layer, fold);
   }
   
-  return r_bn;
+  return position();
 }
 
 

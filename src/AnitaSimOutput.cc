@@ -157,15 +157,8 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
   
   fEvent  = new UsefulAnitaEvent();
   fHeader = new RawAnitaHeader();
-  fGps    = new Adu5Pat();	    
-
-  fGps->latitude= bn1->latitude;
-  fGps->longitude=bn1->longitude;
-  fGps->altitude=bn1->altitude;
-  fGps->realTime=bn1->realTime_flightdata;
-  fGps->heading = bn1->heading;
-  fGps->pitch = bn1->pitch;
-  fGps->roll = bn1->roll;
+  Adu5Pat gps = fDetector->pat();
+  fGps    = &gps;
   fGps->run = fRun;//clOpts.run_no;
 
   memset(fEvent->fNumPoints, 0, sizeof(fEvent->fNumPoints) );
@@ -236,16 +229,8 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
   }
 
   fHeader->calibStatus = 31;
-  fHeader->realTime = bn1->realTime_flightdata;
-  fHeader->triggerTime = bn1->realTime_flightdata;
-  fGps->latitude= bn1->latitude;
-  fGps->longitude=bn1->longitude;
-  fGps->altitude=bn1->altitude;
-  fGps->realTime=bn1->realTime_flightdata;
-  fGps->heading = bn1->heading;
-  fGps->pitch = bn1->pitch;
-  fGps->roll = bn1->roll;
-  fGps->run = fRun; //clOpts.run_no;
+  fHeader->realTime = bn1->realTime();//realTime_flightdata;
+  fHeader->triggerTime = bn1->realTime(); //realTime_flightdata;
 
 #ifdef ANITA3_EVENTREADER
   if (settings1.WHICH==9 || settings1.WHICH==10) {
@@ -257,7 +242,7 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
 
   fTruth                   = new TruthAnitaEvent();
   fTruth->eventNumber      = fDetector->getLastEventNumber();
-  fTruth->realTime         = bn1->realTime_flightdata;
+  fTruth->realTime         = bn1->realTime(); //realTime_flightdata;
   fTruth->run              = fRun; //clOpts.run_no;
 
   //@todo URGENT RESTORE these parameters to the truth tree! FIX ME!  
@@ -273,9 +258,13 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
   // fTruth->sourceLat        = uhen->sourceLat;
   // fTruth->sourceAlt        = uhen->sourceAlt;
   // fTruth->weight           = uhen->fNeutrinoPath->weight;
+  Vector n_bn = bn1->position().Unit();
+  
   for (int i=0;i<3;i++){
-    fTruth->balloonPos[i]  = bn1->r_bn[i];
-    fTruth->balloonDir[i]  = bn1->n_bn[i];
+    fTruth->balloonPos[i]  = bn1->position()[i];
+    // fTruth->balloonPos[i]  = bn1->r_bn[i];    
+    // fTruth->balloonDir[i]  = bn1->n_bn[i];
+    fTruth->balloonDir[i]  = n_bn[i];    
     // fTruth->nuPos[i]       = uhen->interaction1->posnu[i];
     // fTruth->nuDir[i]       = uhen->interaction1->nnu[i];
   }
@@ -359,6 +348,7 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
 
   truthTree.Fill();
   delete fTruth;
+  fTruth = nullptr;
 #endif
 
   headTree.Fill();
@@ -369,7 +359,12 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
 
   delete fEvent;
   delete fHeader;
-  delete fGps;
+  // delete fGps; // now on stack, don't delete!
+
+  fEvent = nullptr;
+  fHeader = nullptr;
+  fGps = nullptr;
+  
 #endif
 
 }

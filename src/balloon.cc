@@ -410,7 +410,7 @@ void icemc::Balloon::PickBalloonPosition(Vector straightup,const IceModel *antar
   phi_spin=0.; // get the azimuth of the balloon.
     
   // normalized balloon position
-  n_bn = r_bn.Unit();
+  Vector n_bn = r_bn.Unit();
   
   // finding which direction is east under the balloon
   n_east = Vector(sin(phi_bn), -1*cos(phi_bn), 0.);
@@ -651,8 +651,8 @@ void icemc::Balloon::PickBalloonPosition(const IceModel *antarctica1, const Sett
   }
   phi_spin=GetBalloonSpin(heading); // get the azimuth of the balloon.
     
-  // normalized balloon position
-  n_bn = r_bn.Unit();
+  // // normalized balloon position
+  Vector n_bn = r_bn.Unit();
     
   // finding which direction is east under the balloon
   n_east = Vector(sin(phi_bn), -1*cos(phi_bn), 0.);
@@ -1064,6 +1064,7 @@ icemc::Vector icemc::Balloon::unRotatePayload(Vector ant_pos_pre) const {//rotat
   Vector ant_pos = ant_pos_pre;
 
   // regenerate the pitch/roll axes here to allow constification...
+  //@todo the pitch roll axes should probably be calculated only once at fChain read time
   const Vector zaxis(0.,0.,-1.);
   Vector xaxis(1.,0.,0.);  // roll axis
   Vector yaxis(0.,-1.,0.); // pitch axis for positive rotation to the clockwise of roll
@@ -1091,3 +1092,18 @@ icemc::Vector icemc::Balloon::unRotatePayload(Vector ant_pos_pre) const {//rotat
 }  
 
 
+
+#ifdef ANITA_UTIL_EXISTS
+Adu5Pat icemc::Balloon::pat() const{
+  Adu5Pat pat;
+  pat.latitude  =  latitude;
+  pat.longitude = longitude;
+  pat.altitude  = altitude;
+  pat.realTime  = realTime_flightdata;
+  pat.heading   = heading;
+  pat.pitch     = pitch;
+  pat.roll      = roll;
+  pat.run       = -1;
+  return pat;
+}
+#endif
