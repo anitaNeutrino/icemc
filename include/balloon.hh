@@ -37,7 +37,6 @@ namespace icemc {
 			 Anita3               = 8,
 			 Anita4               = 9
   };  
-  
 
   /**
    * @class Balloon
@@ -222,7 +221,7 @@ namespace icemc {
     Adu5Pat pat() const;
 #endif
     
-    TChain *fChain;
+    TChain *fChain = nullptr;
     double BN_ALTITUDE;                                         ///< pick balloon altitude
     double MAXHORIZON;                                          ///< pick the interaction within this distance from the balloon so that it is within the horizon
     double BN_LONGITUDE;                                        ///< balloon longitude for fixed balloon location

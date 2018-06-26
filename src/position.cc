@@ -18,43 +18,39 @@ icemc::Position::Position(const Vector& vec) : Vector(vec[0],vec[1],vec[2])
 
 icemc::Position::Position(double longitude, double latitude, double altitude) {
   Vector location = z_axis;
-  theta = latitude * constants::RADDEG;
-
-  phi=EarthModel::LongtoPhi_0isPrimeMeridian(longitude); // convert longitude (-180 to 180) to phi (0 to 2pi wrt 90E, counter-clockwise)
-
+  double theta = latitude * constants::RADDEG;
+  double phi = EarthModel::LongtoPhi_0isPrimeMeridian(longitude); // convert longitude (-180 to 180) to phi (0 to 2pi wrt 90E, counter-clockwise)
   location = location.RotateY(theta);
   location = location.RotateZ(phi);
-  location = altitude * location;
-
-  x = location[0];
-  y = location[1];
-  z = location[2];
+  location = location*altitude;
+  SetXYZ(location[0], location[1], location[2]);
 } //Position constructor from longitude and latitude
 
-icemc::Position::Position(double theta_inp, double phi_inp) : Vector(theta_inp,phi_inp) 
+icemc::Position::Position(double theta, double phi)
+  : Vector(theta,phi)
 {
-  //This method intentionally left blank.
-} //Constructor Position(theta,phi)
+}
 
 double icemc::Position::Distance(const Position &second) const {
-  return sqrt(  (x - second.x)*(x-second.x) 
-	      + (y - second.y)*(y-second.y) 
-	      + (z - second.z)*(z-second.z)); // it saves time to multiply them like this rather than use pow
-} //icemc::Position::Distance
+  double dx = GetX()-second.GetX();
+  double dy = GetY()-second.GetY();
+  double dz = GetZ()-second.GetZ();  
+  return sqrt(dx*dx + dy*dy + dz*dz);
+}
 
 double icemc::Position::SurfaceDistance(const Position &second, double local_surface) const {
   return  this->Angle(second) * local_surface;
 } //icemc::Position::SurfaceDistance
 
 double icemc::Position::Lat() const {
-  return theta*constants::DEGRAD;
+  return Theta()*constants::DEGRAD;
 } //icemc::Position::Lat
 
 double icemc::Position::Lon() const {
-  double phi_deg = phi*constants::DEGRAD;
+  double phi_deg = Phi()*constants::DEGRAD;
 
-  if (phi_deg > 270.)
+  if (phi_deg > 270.){
     phi_deg = phi_deg-360.;
-  
+  }  
   return (270. - phi_deg);
-} //icemc::Position::Lon
+}

@@ -24,6 +24,7 @@
 
 
 namespace icemc {
+
   //! This class is a 3-vector that represents a position on the Earth's surface.
   class Position : public Vector {
   public:

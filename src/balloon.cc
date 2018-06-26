@@ -245,14 +245,14 @@ void icemc::Balloon::InitializeBalloon() {
   const string ICEMC_SRC_DIR = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
   const string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
   const string anitaflight = ICEMC_DATA_DIR+"/anitagps.txt";// gps path of anita flight    
-    
+
   // GPS positions of Anita or Anita-lite balloon flight
   if (WHICHPATH==FlightPath::AnitaLite){
     ReadAnitaliteFlight();
   }
-    
+
   MINALTITUDE=30000; // balloon has to be 30 km altitude at least for us to read the event from the flight data file
-    
+
   // initialisation of igps_previous
   if (WHICHPATH==FlightPath::Anita1 || WHICHPATH==FlightPath::Anita2 || WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4){
     igps_previous=0; // which entry from the flight data file the previous event was
@@ -260,14 +260,14 @@ void icemc::Balloon::InitializeBalloon() {
   if (WHICHPATH==FlightPath::AnitaLite){
     igps_previous=NPOINTS_MIN; // initialise here to avoid times during launch
   }
-  fChain = nullptr; 
+  fChain = nullptr;
 
   // This for Anita 1 flight
   if (WHICHPATH==FlightPath::Anita1) {
 
     fChain = new TChain("foricemc");
     fChain->Add((ICEMC_DATA_DIR+"/anita1flightdata.root").c_str());
-		
+
     fChain->SetBranchAddress("surfTrigBandMask",surfTrigBandMask);
     fChain->SetBranchAddress("powerthresh",powerthresh);
     fChain->SetBranchAddress("meanp",meanp);
@@ -277,10 +277,10 @@ void icemc::Balloon::InitializeBalloon() {
     fChain->SetBranchAddress("realTime_surfhk",&realTime_flightdata);
     fChain->SetBranchAddress("heading",&fheading);
   }
-    
+
   // This for Anita 2 flight
   if (WHICHPATH==FlightPath::Anita2) {
-		
+
     fChain = new TChain("adu5PatTree");
     fChain->SetMakeClass(1);
     fChain->Add((ICEMC_DATA_DIR+"/anita2gps_pitchandroll.root").c_str());//created to include pitch and roll.
@@ -292,7 +292,7 @@ void icemc::Balloon::InitializeBalloon() {
     fChain->SetBranchAddress("pitch",&fpitch);
     fChain->SetBranchAddress("roll",&froll);
     //std::cout << "Loading file.  n events is " << fChain->GetEntries() << "\n";
-		
+
   }
   else if (WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4) { // for anita-3 and 4 flights
 
@@ -306,7 +306,7 @@ void icemc::Balloon::InitializeBalloon() {
       balloonFile+="/anita4gps_pitchroll.root";
       break;
     }
-    
+
     fChain = new TChain("adu5PatTree");
     fChain->SetMakeClass(1);
     fChain->Add(balloonFile.c_str());//created to include pitch and roll.
@@ -319,11 +319,6 @@ void icemc::Balloon::InitializeBalloon() {
     fChain->SetBranchAddress("roll",&froll);
   }
 
-  // for (int i=0;i<10000;i++) {
-  //   latitude_bn_anitalite[i]=0;
-  //   longitude_bn_anitalite[i]=0;
-  //   altitude_bn_anitalite[i]=0;
-  // }
   NPOINTS=0;
   REDUCEBALLOONPOSITIONS=100;
 
@@ -436,25 +431,31 @@ void icemc::Balloon::PickBalloonPosition(Vector straightup,const IceModel *antar
 
 // for tuffs for anita-4
 int getTuffIndex(int Curr_time) {
-  if((icemc::constants::TUFFconfig_B_end_3 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_A_end_1)) {// config A trigconfigA.imp
+  // all the Tuffconfig stuff is in the icemc::constants namespace
+  // but the following gets a bit verbose if you actually specify it
+  using namespace icemc::constants;
+  
+  if((TUFFconfig_B_end_3 < Curr_time) && (Curr_time <= TUFFconfig_A_end_1)) {// config A trigconfigA.imp
     return 0;
   }
-  else if(((0 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_B_end_1)) || ((icemc::constants::TUFFconfig_P_end_3 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_B_end_2)) || ((icemc::constants::TUFFconfig_P_end_4 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_B_end_3)) || ((icemc::constants::TUFFconfig_A_end_1 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_B_end_4)) || ((icemc::constants::TUFFconfig_P_end_5 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_B_end_5)) || ((icemc::constants::TUFFconfig_P_end_6 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_B_end_6)) || (icemc::constants::TUFFconfig_P_end_7 < Curr_time) ) { // config B trigconfigB.imp
+  else if(((0 < Curr_time) && (Curr_time <= TUFFconfig_B_end_1)) || ((TUFFconfig_P_end_3 < Curr_time) && (Curr_time <= TUFFconfig_B_end_2)) || ((TUFFconfig_P_end_4 < Curr_time) && (Curr_time <= TUFFconfig_B_end_3)) || ((TUFFconfig_A_end_1 < Curr_time) && (Curr_time <= TUFFconfig_B_end_4)) || ((TUFFconfig_P_end_5 < Curr_time) && (Curr_time <= TUFFconfig_B_end_5)) || ((TUFFconfig_P_end_6 < Curr_time) && (Curr_time <= TUFFconfig_B_end_6)) || (TUFFconfig_P_end_7 < Curr_time) ) { // config B trigconfigB.imp
     return 1;
   }
-  else if((icemc::constants::TUFFconfig_P_end_1 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_C_end_1)) { // config C trigconfigC.imp
+  else if((TUFFconfig_P_end_1 < Curr_time) && (Curr_time <= TUFFconfig_C_end_1)) { // config C trigconfigC.imp
     return 2;
   }
-  else if( ((icemc::constants::TUFFconfig_P_end_2 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_G_end_1)) || ((icemc::constants::TUFFconfig_O_end_1 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_G_end_2)) ) { // config G trigconfigG.imp
+  else if( ((TUFFconfig_P_end_2 < Curr_time) && (Curr_time <= TUFFconfig_G_end_1)) || ((TUFFconfig_O_end_1 < Curr_time) && (Curr_time <= TUFFconfig_G_end_2)) ) { // config G trigconfigG.imp
     return 3;
   }
-  else if( ((icemc::constants::TUFFconfig_G_end_1 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_O_end_1)) || ((icemc::constants::TUFFconfig_G_end_2 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_O_end_2)) ) { // config O trigconfigO.imp
+  else if( ((TUFFconfig_G_end_1 < Curr_time) && (Curr_time <= TUFFconfig_O_end_1)) || ((TUFFconfig_G_end_2 < Curr_time) && (Curr_time <= TUFFconfig_O_end_2)) ) { // config O trigconfigO.imp
     return 4;
   }
-  else if( ((icemc::constants::TUFFconfig_B_end_1 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_P_end_1)) || ((icemc::constants::TUFFconfig_C_end_1 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_P_end_2)) || ((icemc::constants::TUFFconfig_O_end_2 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_P_end_3)) || ((icemc::constants::TUFFconfig_B_end_2 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_P_end_4)) || ((icemc::constants::TUFFconfig_B_end_4 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_P_end_5)) || ((icemc::constants::TUFFconfig_B_end_5 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_P_end_6)) || ((icemc::constants::TUFFconfig_B_end_6 < Curr_time) && (Curr_time <= icemc::constants::TUFFconfig_P_end_7)) ) { // config P trigconfigP.imp
+  else if( ((TUFFconfig_B_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_1)) || ((TUFFconfig_C_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_2)) || ((TUFFconfig_O_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_3)) || ((TUFFconfig_B_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_4)) || ((TUFFconfig_B_end_4 < Curr_time) && (Curr_time <= TUFFconfig_P_end_5)) || ((TUFFconfig_B_end_5 < Curr_time) && (Curr_time <= TUFFconfig_P_end_6)) || ((TUFFconfig_B_end_6 < Curr_time) && (Curr_time <= TUFFconfig_P_end_7)) ) { // config P trigconfigP.imp
     return 5;
   }
-  std::cerr << "Error in" << __PRETTY_FUNCTION__ << ", could not get TUFF index from current time... returning -1" << std::endl;
+  icemcLog() << icemc::warning << __PRETTY_FUNCTION__
+	     << " could not get TUFF index from current time "
+	     << Curr_time << ", returning -1." << std::endl;
   return -1;
 }
 
