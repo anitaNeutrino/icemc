@@ -69,7 +69,6 @@ namespace icemc {
     double MINALTITUDE;                                         ///< minimum altitude balloon needs to be before we consider it a good event to read from the flight data file
     int igps_previous;                                          ///< which entry from the flight data file the previous event was so we can just take the next one.
     int REDUCEBALLOONPOSITIONS;                                 ///< only take every 100th entry in the flight data file
-    FlightPath WHICHPATH;                                       ///< 0=fixed balloon position,1=randomized,2=ANITA-lite GPS data,3=banana plot
     int RANDOMIZE_BN_ORIENTATION;                               ///< 0=fixed balloon orientation,1=randomized
     double BN_ALTITUDE;                                         ///< pick balloon altitude
     unsigned short surfTrigBandMask[9][2];                      ///< Ryan's 16 bit masks for 9 surfs.  2x16 bit masks gives 32 channels per surf
@@ -271,6 +270,10 @@ namespace icemc {
      */
     Vector unRotatePayload(Vector ant_pos) const;
 
+    inline FlightPath whichPath() const {return WHICHPATH;}
+
+  private:
+    const FlightPath WHICHPATH;                                 ///< 0=fixed balloon position,1=randomized,2=ANITA-lite GPS data,3=banana plot
 
    
   }; //class Balloon

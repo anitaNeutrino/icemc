@@ -22,7 +22,6 @@
 #include "IcemcLog.h"
 
 
-
 std::ostream& operator<<(std::ostream& os, const icemc::FlightPath& fp){
   switch (fp){
   case icemc::FlightPath::FixedPosition:

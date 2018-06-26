@@ -945,23 +945,25 @@ void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, AskaryanFreq
   anita1->INCLINE_TOPTHREE=INCLINE_TOPTHREE;
   anita1->INCLINE_NADIR=INCLINE_NADIR;
 
-  bn1->WHICHPATH=static_cast<icemc::FlightPath>(WHICHPATH);
+  FlightPath fp = static_cast<FlightPath>(WHICHPATH);
 
-  if(bn1->WHICHPATH==FlightPath::AnitaLite){
+  if(fp==FlightPath::AnitaLite){
     anita1->LIVETIME=45.*24.*3600.*0.75; // 45 days for anita-lite
   }
-  else if (bn1->WHICHPATH==FlightPath::FixedPosition){
+  else if (fp==FlightPath::FixedPosition){
     anita1->LIVETIME=6.02*24.*3600.; // anita-lite
-  } else if (bn1->WHICHPATH==FlightPath::Anita1){
+  } else if (fp==FlightPath::Anita1){
     // kim's livetime for anita
     anita1->LIVETIME=17.*24.*3600.; // for anita, take 34.78 days * 0.75 efficiency
   }
-  else if (bn1->WHICHPATH==FlightPath::Anita2){
+  else if (fp==FlightPath::Anita2){
     anita1->LIVETIME=28.5*24*3600;  // Anita-2 livetime taken from paper
   }
-  else if (bn1->WHICHPATH==FlightPath::Anita3){
+  else if (fp==FlightPath::Anita3){
     anita1->LIVETIME=17.4*24*3600;  // Anita-3 livetime taken from Ben Strutt's thesis (elog note 698)
-  } else {
+  }
+  else {
+    ///@todo warn here?
     anita1->LIVETIME=14.*24.*3600.; // otherwise use 2 weeks by default
   }
   
