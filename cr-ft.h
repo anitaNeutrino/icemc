@@ -21,6 +21,8 @@ struct cr_ft_state {
   std::unique_ptr<TGraph> grFftIm; 
   std::unique_ptr<TGraph> grFftRho;
   std::unique_ptr<TGraph> grFftPhi;
+  double *FftRho; //!< Amplitude of ZHS FT.
+  double *FftPhi; //!< Phase of ZHS FT.
   TPad *panel_ft_rho;
   //unique_ptr<TPad> panel_ft_rho;
   TPad *panel_ft_phi;

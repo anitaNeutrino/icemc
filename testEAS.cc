@@ -104,6 +104,17 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 
 std::string some_imortant_str = "some_important_str value";
 
+namespace bvv {
+  
+  //! Fill amplitude and phase arrays given FT of a ZHS waveform.
+  int interpolate_zhs_ft (
+    double (&amp)[Anita::NFREQ] /*!< [out] ft amplitude */,
+    double (&phase)[Anita::NFREQ] /*!< [out] ft phase */,
+    double *FftRho /*!<[in]*/, double *FftPhi /*!<[in]*/, int NBins /*! <[in] Number of bins in the input arrays */) {
+    return FftRho[0] + FftPhi[0];
+  }
+}
+
 
 extern const double pi = atan(1)*4;
 
@@ -236,7 +247,7 @@ int main(int argc,  char **argv) {
   // VoidFuncPtr_t initfuncs[] = { InitGui, 0 };
   // TROOT HSroot("HSroot", "Some very smart title", initfuncs);
   // TApplication theApp("App", 0, 0);
-  TApplication *theApp __attribute__((unused)) = new TApplication("tapp", NULL, NULL);
+  TApplication *theApp __attribute__ ((unused)) = new TApplication("tapp", NULL, NULL);
   // theApp = theApp;
   gROOT->SetStyle("Plain");
 
@@ -284,12 +295,12 @@ int main(int argc,  char **argv) {
 	cout << "Changed neutrino energy exponent to " << exp_tmp << endl;
 	break;
       case 'r':
-      {	
-        run_num=optarg;
-        stringstream convert(run_num);
-        convert>>run_no;
-        break;
-      }
+        {	
+          run_num=optarg;
+          stringstream convert(run_num);
+          convert>>run_no;
+          break;
+        }
       case 's':
         sim_inp=optarg;
         cout << "Changed input simulation directory to: " << sim_inp << endl;
@@ -301,17 +312,16 @@ int main(int argc,  char **argv) {
   
   vector<double> Ex, Ey, Ez; 
   WITH_LINES(
-     sim_inp.c_str(),
-     ind,
-     tokens,
-     if (ind > 19) {
-       // printf("linenum: %d, tokens: %lu, %s, %s, %s\n", ind, tokens.size(), tokens[11].c_str(), tokens[12].c_str(), tokens[13].c_str());
-       Ex.push_back(atof(tokens[11].c_str()));
-       Ey.push_back(atof(tokens[12].c_str()));
-       Ez.push_back(atof(tokens[13].c_str()));
-       ZhsTimeArr.push_back(atof(tokens[5].c_str()));
-     }
-  );
+             sim_inp.c_str(),
+             ind,
+             tokens,
+             if (ind > 19) {
+               Ex.push_back(atof(tokens[11].c_str()));
+               Ey.push_back(atof(tokens[12].c_str()));
+               Ez.push_back(atof(tokens[13].c_str()));
+               ZhsTimeArr.push_back(atof(tokens[5].c_str()));
+             }
+             );
 
   ZhsTimeN = Ex.size();
   double E2max = -1;
@@ -372,18 +382,19 @@ int main(int argc,  char **argv) {
 
 
   gStyle->SetOptTitle(0);
-  // cZhsEAndAlpha = cZhsEAndAlpha;
 
-  // hot_loop("./cr-ft.so");
-  void *cr_ft_result = NULL;
-  struct cr_ft_state *cr_ft_struct;
-  cr_ft_result = hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
-  cout << "cr_ft_result: " << cr_ft_result << endl;
-  cr_ft_struct = (struct cr_ft_state *) cr_ft_result; 
-  cout << "ind_maxval: " << cr_ft_struct->ind_maxval << endl;
-  // hot_loop("/nfs/data_disks/scratch1/bugaev/PROGS/INTER_C/canvas.so");
- // theApp.Run();
+  struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
 
+  
+  double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
+  // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
+  double phase[Anita::NFREQ];
+  double vmmhz_em[Anita::NFREQ];
+   
+  bvv::interpolate_zhs_ft(vmmhz, phase, cr_ft_result->FftRho, cr_ft_result->FftPhi, cr_ft_result->vis_nbins / 2 + 1);
+
+  cout << "testEAS reached the end of the development block" << endl;
+  exit(0);
 
   settings1->SEED=settings1->SEED +run_no;
   cout <<"seed is " << settings1->SEED << endl;
@@ -404,10 +415,6 @@ int main(int argc,  char **argv) {
   // Taumodel *taus1 = new Taumodel();
   // input parameters
 
-  double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
-  // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
-  double vmmhz_em[Anita::NFREQ];
-  
   stemp=string(outputdir.Data())+"/output"+run_num+".txt";
   ofstream foutput(stemp.c_str(),  ios::app);
 
@@ -638,6 +645,7 @@ int main(int argc,  char **argv) {
     count_total++;
     // initializing the voltage seen by each polarization of each antenna
     bn1->dtryingposition=0;
+
     for (int i=0; i<Anita::NFREQ;i++) {
       vmmhz[i] = 0.; // the full signal with all factors accounted for (1/r,  atten. etc.)
       vmmhz_em[i]=0.; // for keeping track of just the em component of the shower

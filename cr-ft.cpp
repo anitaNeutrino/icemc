@@ -177,6 +177,10 @@ void PlotFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
         state->grFftIm.reset(  new TGraph(state->vis_nbins / 2 + 1));
       }
     }
+    else { // Non-interactive mode:
+      state->FftRho = new double[state->vis_nbins / 2 + 1];
+      state->FftPhi = new double[state->vis_nbins / 2 + 1];
+    }
 
     for (int i = 0; i < state->vis_nbins / 2 + 1; i++){
       double dfreq = 1.0 / ((state->vis_xmax_bin - state->vis_xmin_bin) * ZhsTimeDelta * unit::ns);
@@ -186,10 +190,15 @@ void PlotFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
         if (cf == cf_polar) {
           state->grFftRho->SetPoint(i, i * dfreq, TMath::Sqrt(im * im + re * re));
           state->grFftPhi->SetPoint(i, i * dfreq, TMath::ATan2(re, im) * 180.0 / TMath::Pi());
-        } else {
+        }
+        else {
           state->grFftRe->SetPoint(i, i * dfreq, re);
           state->grFftIm->SetPoint(i, i * dfreq, im);
         }
+      }
+      else { // Non-interactive:
+        state->FftRho[i] = TMath::Sqrt(im * im + re * re);
+        state->FftPhi[i] = TMath::ATan2(re, im) * 180.0 / TMath::Pi();
       }
     }
 
@@ -369,9 +378,8 @@ static void game_reload(struct cr_ft_state *state)
   
 }
 
-static void game_unload(struct cr_ft_state *state)
+static void game_unload(struct cr_ft_state *state __attribute__ ((unused)))
 {
-  state = state; // bvv: to silence compiler warnings.
   cout << "game unloaded" << endl;
 }
 
