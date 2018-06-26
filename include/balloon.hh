@@ -18,9 +18,26 @@
 class TChain;
 class TTreeIndex;
 
+
 namespace icemc {
   class RayTracer;
   class Interaction;
+
+  /**
+   * @class FlightPath
+   * @brief Make a little enum for the flight path for easier human reading of code
+   */
+  enum class FlightPath {FixedPosition        = 0,
+			 Circle80DegreesSouth = 1,
+			 AnitaLite            = 2,
+			 Custom               = 3,
+			 PeterEvent           = 4,
+			 SLAC                 = 5,
+			 Anita1               = 6,
+			 Anita2               = 7,
+			 Anita3               = 8,
+			 Anita4               = 9
+  };  
   
 
   /**
@@ -30,7 +47,7 @@ namespace icemc {
   class Balloon {
  
   public:
-    Balloon();
+    Balloon(const Settings* settings);
     virtual ~Balloon() {;}
 
   
@@ -52,7 +69,7 @@ namespace icemc {
     double MINALTITUDE;                                         ///< minimum altitude balloon needs to be before we consider it a good event to read from the flight data file
     int igps_previous;                                          ///< which entry from the flight data file the previous event was so we can just take the next one.
     int REDUCEBALLOONPOSITIONS;                                 ///< only take every 100th entry in the flight data file
-    int WHICHPATH;                                              ///< 0=fixed balloon position,1=randomized,2=ANITA-lite GPS data,3=banana plot
+    FlightPath WHICHPATH;                                       ///< 0=fixed balloon position,1=randomized,2=ANITA-lite GPS data,3=banana plot
     int RANDOMIZE_BN_ORIENTATION;                               ///< 0=fixed balloon orientation,1=randomized
     double BN_ALTITUDE;                                         ///< pick balloon altitude
     unsigned short surfTrigBandMask[9][2];                      ///< Ryan's 16 bit masks for 9 surfs.  2x16 bit masks gives 32 channels per surf
@@ -258,6 +275,16 @@ namespace icemc {
    
   }; //class Balloon
 }
+
+/** 
+ * For a nice cout/logging experience
+ * 
+ * @param os is a output string stream
+ * @param fp is the FlightPath class enum
+ * 
+ * @return the updated output string stream
+ */
+std::ostream& operator<<(std::ostream& os, const icemc::FlightPath& fp);
 
 #endif
 

@@ -36,7 +36,7 @@ int main(){
 
   std::ofstream outputsFile("/tmp/outputs.txt");
 
-  icemc::Balloon *bn1 = new icemc::Balloon(); // instance of the balloon
+  icemc::Balloon *bn1 = new icemc::Balloon(&s); // instance of the balloon
   icemc::Anita *anita1 = new icemc::Anita();// right now this constructor gets banding info
   icemc::Secondaries *sec1 = new icemc::Secondaries();
   icemc::AskaryanFreqsGenerator *sig1 = new icemc::AskaryanFreqsGenerator();

@@ -1251,12 +1251,12 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
     
   double total_area=0; // initialize total area to zero
   int NBALLOONPOSITIONS; // number of balloon positions considered here
-  if (bn1->WHICHPATH==2) // if anita-lite
+  if (bn1->WHICHPATH==FlightPath::AnitaLite) // if anita-lite
     NBALLOONPOSITIONS=(int)((double)bn1->NPOINTS/(double)bn1->REDUCEBALLOONPOSITIONS); //only take 1/100 of the total balloon positions that we have because otherwise it's overkill.
-  else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8 || bn1->WHICHPATH==9) {
+  else if (bn1->WHICHPATH==FlightPath::Anita1 || bn1->WHICHPATH==FlightPath::Anita2 || bn1->WHICHPATH==FlightPath::Anita3 || bn1->WHICHPATH==FlightPath::Anita4) {
     NBALLOONPOSITIONS=(int)((double)bn1->flightdatachain->GetEntries()/(double)bn1->REDUCEBALLOONPOSITIONS)+1;
   }
-  else if (bn1->WHICHPATH==1) // for picking random point along 80 deg south
+  else if (bn1->WHICHPATH==FlightPath::Circle80DegreesSouth) // for picking random point along 80 deg south
     NBALLOONPOSITIONS=NPHI; // NPHI is the number of bins in phi for the visible ice in the horizon.  This is not the same as NLON, the number of bins in longitude for crust 2.0
   else // includes fixed position (bn1->WHICHPATH=0)
     NBALLOONPOSITIONS=1;
@@ -1300,8 +1300,9 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
       exit(1);
     }//if
   } //if
-    
-  if (bn1->WHICHPATH!=2 && bn1->WHICHPATH!=6) // not anita and not anita-lite
+
+  //@todo does this if statement make sense?
+  if (bn1->WHICHPATH!=FlightPath::AnitaLite && bn1->WHICHPATH!=FlightPath::Anita1) // not anita and not anita-lite
     lat=GetLat(theta_bn); //get index of latitude, same for all balloon positions
     
     
@@ -1310,7 +1311,7 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
 	
     maxvol_inhorizon[i]=-1.; // volume of bin with the most ice in the horizon
 	
-    if (bn1->WHICHPATH==2) { // anita or anita-lite path
+    if (bn1->WHICHPATH==FlightPath::AnitaLite) { // anita or anita-lite path
       theta_bn=(90+bn1->latitude_bn_anitalite[i*100])*constants::RADDEG; //theta of the balloon wrt north pole
       lat=GetLat(theta_bn); // latitude  
       phi_bn_temp=(-1*bn1->longitude_bn_anitalite[i*100]+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
@@ -1326,7 +1327,10 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
 	
        
 	
-    else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8 || bn1->WHICHPATH==9) {
+    else if (bn1->WHICHPATH==FlightPath::Anita1 || 
+	     bn1->WHICHPATH==FlightPath::Anita2 || 
+	     bn1->WHICHPATH==FlightPath::Anita3 || 
+	     bn1->WHICHPATH==FlightPath::Anita4) {
 	    
       bn1->flightdatachain->GetEvent(i*100);
 	    
@@ -1340,12 +1344,13 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
       altitude_bn=(double)bn1->faltitude; // for anita, altitude in is meters
 	    
     } // end if anita or anita-lite
-    else if (bn1->WHICHPATH==1) // for picking random position along 80 deg south
+    else if (bn1->WHICHPATH==FlightPath::Circle80DegreesSouth){ // for picking random position along 80 deg south
       phi_bn_temp=dGetPhi(i); //get phi of the balloon just based on the balloon positions.  Remember nballoonpositions runs from 0 to 179 here.
     // the output of dGetPhi is in radians and runs from -pi/2 to 3*pi/2 relative to 
-    else // includes bn1->WHICHPATH=0 
+    }
+    else{ // includes bn1->WHICHPATH=0 
       phi_bn_temp=phi_bn;
-	
+    }	
     // altitude_bn has already been set in SetDefaultBalloonPosition 
     // same for theta_bn
     // lat set above

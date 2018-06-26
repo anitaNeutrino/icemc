@@ -21,6 +21,38 @@
 #include "EnvironmentVariable.h"
 #include "IcemcLog.h"
 
+
+
+std::ostream& operator<<(std::ostream& os, const icemc::FlightPath& fp){
+  switch (fp){
+  case icemc::FlightPath::FixedPosition:
+    return os << "FlightPath::FixedPosition";
+  case icemc::FlightPath::Circle80DegreesSouth:
+    return os << "FlightPath::Circle80DegreesSouth";
+  case icemc::FlightPath::AnitaLite:
+    return os << "FlightPath::AnitaLite";
+  case icemc::FlightPath::Custom:
+    return os << "FlightPath::Custom";
+  case icemc::FlightPath::PeterEvent:
+    return os << "FlightPath::PeterEvent";
+  case icemc::FlightPath::SLAC:
+    return os << "FlightPath::SLAC";
+  case icemc::FlightPath::Anita1:
+    return os << "FlightPath::Anita1";
+  case icemc::FlightPath::Anita2:
+    return os << "FlightPath::Anita2";
+  case icemc::FlightPath::Anita3:
+    return os << "FlightPath::Anita3";
+  case icemc::FlightPath::Anita4:
+    return os << "FlightPath::Anita4";
+  default:
+    return os << "Unknown FlightPath";
+  }
+}
+
+
+
+
 // ANITA-2 (WHICHPATH 7) analysis fitted fixed const pitch (-0.29) and const roll (0.89)
 constexpr double fixedAnita2Pitch = -0.29; // degrees
 constexpr double fixedAnita2Roll  =  0.89; // degrees
@@ -30,7 +62,10 @@ constexpr double fixedAnita3Roll  =  0.00; // degrees
 // @todo have we got ANITA-4 pitch and roll numbers?
 
 
-icemc::Balloon::Balloon() {
+icemc::Balloon::Balloon(const Settings* settings)
+  : WHICHPATH(settings ? static_cast<icemc::FlightPath>(settings->WHICHPATH) : FlightPath::FixedPosition){
+
+  
   MAXHORIZON=800000.; // pick the interaction within this distance from the balloon so that it is within the horizon
   ibnposition=0;
   igps=0;
@@ -38,6 +73,19 @@ icemc::Balloon::Balloon() {
   vertcoord_bn=0;     // y component of balloon position
   BN_LONGITUDE=999;   // balloon longitude for fixed balloon location
   BN_LATITUDE=999;    // balloon latitude for fixed balloon location
+  if(!settings){
+    icemcLog() << icemc::warning << __PRETTY_FUNCTION__ << " was given nullptr for const Settings*. "
+	       << "Assuming " << FlightPath::FixedPosition << std::endl;
+  }
+  else{
+    BN_LATITUDE              = settings->BN_LATITUDE;
+    BN_LONGITUDE             = settings->BN_LONGITUDE;
+    BN_ALTITUDE              = settings->BN_ALTITUDE;
+    RANDOMIZE_BN_ORIENTATION = settings->RANDOMIZE_BN_ORIENTATION;
+    MAXHORIZON               = settings->MAXHORIZON;    
+  }
+
+  InitializeBalloon();
 }
 
 
@@ -47,6 +95,7 @@ void  icemc::Balloon::setObservationLocation(Interaction *interaction1,int inu, 
   interaction1->banana_obs = Vector(0,0,Interaction::banana_observation_distance);
     
   // First pick theta of the obs vector from nu vector
+
   interaction1->banana_theta_obs = -0.5*constants::PI/settings1->vertical_banana_points * ((int)(inu/settings1->horizontal_banana_points));
   interaction1->banana_phi_obs = 2*constants::PI/settings1->horizontal_banana_points * (inu%settings1->horizontal_banana_points);
   interaction1->banana_weight = (double)fabs(sin(interaction1->banana_theta_obs)); //Set "weight" - purely a phase factor
@@ -199,23 +248,23 @@ void icemc::Balloon::InitializeBalloon() {
   const string anitaflight = ICEMC_DATA_DIR+"/anitagps.txt";// gps path of anita flight    
     
   // GPS positions of Anita or Anita-lite balloon flight
-  if (WHICHPATH==2){
+  if (WHICHPATH==FlightPath::AnitaLite){
     ReadAnitaliteFlight();
   }
     
   MINALTITUDE=30000; // balloon has to be 30 km altitude at least for us to read the event from the flight data file
     
   // initialisation of igps_previous
-  if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9){
+  if (WHICHPATH==FlightPath::Anita1 || WHICHPATH==FlightPath::Anita2 || WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4){
     igps_previous=0; // which entry from the flight data file the previous event was
   }
-  if (WHICHPATH==2){
+  if (WHICHPATH==FlightPath::AnitaLite){
     igps_previous=NPOINTS_MIN; // initialise here to avoid times during launch
   }
   flightdatachain = nullptr; 
 
   // This for Anita 1 flight
-  if (WHICHPATH==6) {
+  if (WHICHPATH==FlightPath::Anita1) {
 
     flightdatachain = new TChain("foricemc");
     flightdatachain->Add((ICEMC_DATA_DIR+"/anita1flightdata.root").c_str());
@@ -231,7 +280,7 @@ void icemc::Balloon::InitializeBalloon() {
   }
     
   // This for Anita 2 flight
-  if (WHICHPATH==7) {
+  if (WHICHPATH==FlightPath::Anita2) {
 		
     flightdatachain = new TChain("adu5PatTree");
     flightdatachain->SetMakeClass(1);
@@ -246,14 +295,14 @@ void icemc::Balloon::InitializeBalloon() {
     //std::cout << "Loading file.  n events is " << flightdatachain->GetEntries() << "\n";
 		
   }
-  else if (WHICHPATH==8 || WHICHPATH==9) { // for anita-3 and 4 flights
+  else if (WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4) { // for anita-3 and 4 flights
 
     std::string balloonFile = ICEMC_DATA_DIR;
     switch(WHICHPATH){
-    case 8:
+    case FlightPath::Anita3:
       balloonFile+="/anita3gps_pitchroll.root";
       break;
-    case 9:
+    case FlightPath::Anita4:
     default:
       balloonFile+="/anita4gps_pitchroll.root";
       break;
@@ -279,7 +328,7 @@ void icemc::Balloon::InitializeBalloon() {
   NPOINTS=0;
   REDUCEBALLOONPOSITIONS=100;
 
-  if (WHICHPATH!=6) {
+  if (WHICHPATH!=FlightPath::Anita1) { // @todo is this if statement correct?
     // if it's not the anita path, you won't be able to read in thresholds and masks
     for (int i=0;i<9;i++) {
       for (int j=0;j<2;j++) {
@@ -296,7 +345,7 @@ void icemc::Balloon::InitializeBalloon() {
 double icemc::Balloon::GetBalloonSpin(double heading) { // get the azimuth of the balloon
       
   double phi_spin;
-  if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9)
+  if (WHICHPATH==FlightPath::AnitaLite     || WHICHPATH==FlightPath::Anita1        || WHICHPATH==FlightPath::Anita2        || WHICHPATH==FlightPath::Anita3        || WHICHPATH==FlightPath::Anita4       )
     phi_spin=heading*constants::RADDEG;
   else {
     if (RANDOMIZE_BN_ORIENTATION==1){
@@ -313,10 +362,14 @@ double icemc::Balloon::GetBalloonSpin(double heading) { // get the azimuth of th
 
 int icemc::Balloon::Getibnposition() {
   int ibnposition_tmp;
-  if (WHICHPATH==1){
+  if (WHICHPATH==FlightPath::Circle80DegreesSouth){
     ibnposition_tmp = (int)(r_bn.Lon() / 2);
   }
-  else if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9){
+  else if (WHICHPATH==FlightPath::AnitaLite ||
+	   WHICHPATH==FlightPath::Anita1 ||
+	   WHICHPATH==FlightPath::Anita2 ||
+	   WHICHPATH==FlightPath::Anita3 ||
+	   WHICHPATH==FlightPath::Anita4){
     ibnposition_tmp=(int)((double)igps/(double)REDUCEBALLOONPOSITIONS);
     // std::cout << __FUNCTION__ << " " << igps << " " << REDUCEBALLOONPOSITIONS << " " << ibnposition_tmp << std::endl;
   }
@@ -424,16 +477,23 @@ void icemc::Balloon::PickBalloonPosition(const IceModel *antarctica1, const Sett
     
   //  std::cout << "I'm in pickballoonposition. whichpath is " << WHICHPATH << "\n";
   //Pick balloon position
-  if (WHICHPATH==2 || WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9) { // anita-lite or anita-I or -II path
+  if (WHICHPATH==FlightPath::AnitaLite ||
+      WHICHPATH==FlightPath::Anita1 ||
+      WHICHPATH==FlightPath::Anita2 ||
+      WHICHPATH==FlightPath::Anita3 ||
+      WHICHPATH==FlightPath::Anita4) { // anita-lite or anita-I or -II path
         
-    if (WHICHPATH==2) {
+    if (WHICHPATH==FlightPath::AnitaLite) {
       igps = NPOINTS_MIN+(igps_previous+1-NPOINTS_MIN)%(NPOINTS_MAX-NPOINTS_MIN); //Note: ignore last 140 points, where balloon is falling - Stephen
       flatitude=(float)latitude_bn_anitalite.at(igps);
       flongitude=(float)longitude_bn_anitalite.at(igps);
       faltitude=(float)altitude_bn_anitalite.at(igps);
       fheading=(float)heading_bn_anitalite.at(igps);
     }
-    else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9) {
+    else if (WHICHPATH==FlightPath::Anita1 ||
+	     WHICHPATH==FlightPath::Anita2 ||
+	     WHICHPATH==FlightPath::Anita3 ||
+	     WHICHPATH==FlightPath::Anita4) {
       // For Anita 1 and Anita 2 and Anita 3:
       // igps = (igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
       static int start_igps = 0; 
@@ -466,7 +526,7 @@ void icemc::Balloon::PickBalloonPosition(const IceModel *antarctica1, const Sett
       igps = start_igps + int(randomNumber*ngps); // use random position 
 
       //////////////////////////// TEMPORARY HACKS FOR ANITA4 !!!!!!      
-      if (WHICHPATH==9 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660)) || (igps==17862) ){
+      if (WHICHPATH==FlightPath::Anita4 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660)) || (igps==17862) ){
 	igps = igps+30;
       }
 
@@ -486,11 +546,15 @@ void icemc::Balloon::PickBalloonPosition(const IceModel *antarctica1, const Sett
       }
       // set phi Masking for Anita 2 or Anita 3
       // the deadtime is read from the same tree
-      if ((WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9) && (settings1->PHIMASKING==1 || settings1->USEDEADTIME))  
+      if ((WHICHPATH==FlightPath::Anita2 ||
+	   WHICHPATH==FlightPath::Anita3 ||
+	   WHICHPATH==FlightPath::Anita4) &&
+	  (settings1->PHIMASKING==1 || settings1->USEDEADTIME)){
 	anita1->setphiTrigMask(realTime_flightdata);
-      if ((WHICHPATH==8 || WHICHPATH==9) && settings1->USETIMEDEPENDENTTHRESHOLDS==1) // set time-dependent thresholds
+      }
+      if ((WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4) && settings1->USETIMEDEPENDENTTHRESHOLDS==1){ // set time-dependent thresholds
 	anita1->setTimeDependentThresholds(realTime_flightdata);
-		  
+      }		  
     }
     igps_previous=igps;
     latitude  = (double) flatitude;
@@ -502,10 +566,13 @@ void icemc::Balloon::PickBalloonPosition(const IceModel *antarctica1, const Sett
 
     setr_bn(latitude,longitude); // sets theta_bn, phi_bn and r_bn.  r_bn is a unit vector pointing in the right direction
 
-    if (WHICHPATH==2){
+    if (WHICHPATH==FlightPath::AnitaLite){
       altitude_bn=altitude*12.*constants::CMINCH/100.;
     }
-    else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9){
+    else if (WHICHPATH==FlightPath::Anita1 ||
+	     WHICHPATH==FlightPath::Anita2 ||
+	     WHICHPATH==FlightPath::Anita3 ||
+	     WHICHPATH==FlightPath::Anita4){
       altitude_bn=altitude; // get the altitude of the balloon in the right units
     }		
     surface_under_balloon = antarctica1->Surface(r_bn); // get altitude of the surface under the balloon
@@ -517,7 +584,7 @@ void icemc::Balloon::PickBalloonPosition(const IceModel *antarctica1, const Sett
     
     
     
-  else if (WHICHPATH==1){ // pick random phi at 80 deg S
+  else if (WHICHPATH==FlightPath::Circle80DegreesSouth){ // pick random phi at 80 deg S
     phi_bn=gRandom->Rndm()*constants::TWOPI;
 		
     r_bn = Position(theta_bn,phi_bn);
@@ -528,12 +595,12 @@ void icemc::Balloon::PickBalloonPosition(const IceModel *antarctica1, const Sett
     r_bn = (antarctica1->Surface(r_bn)+altitude_bn) * r_bn.Unit();
     igps=0;
   } //else if(random position at 80 deg S)
-  else if (WHICHPATH==0){
+  else if (WHICHPATH==FlightPath::FixedPosition){
 		
     igps=0; // set gps position to be zero - we're at a fixed balloon position
 		
   }
-  else if (WHICHPATH==5) { // for slac?
+  else if (WHICHPATH==FlightPath::SLAC) { // for slac?
     igps=0;
     theta_bn=1.*constants::RADDEG; // 1deg
     phi_bn=1.*constants::RADDEG; // 1deg
@@ -547,7 +614,7 @@ void icemc::Balloon::PickBalloonPosition(const IceModel *antarctica1, const Sett
 		
     r_bn = (antarctica1->Surface(r_bn)+altitude_bn) * r_bn.Unit();
   } // you pick it
-  else if (WHICHPATH==4){ // for making comparison with Peter's event
+  else if (WHICHPATH==FlightPath::PeterEvent){ // for making comparison with Peter's event
     //phi_bn=0.767945;
     // phi_bn=0.95993;
     //166.73 longitude
@@ -720,10 +787,10 @@ void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Ani
   }
   else {
     interaction1->iceinteraction=1;
-    if (WHICHPATH==3) { //Force interaction point if we want to make a banana plot
+    if (WHICHPATH==FlightPath::Custom) { //Force interaction point if we want to make a banana plot
       interaction1->posnu = interaction1->nu_banana;
     } //if (making banana plot)
-    else if (WHICHPATH==4) {// Force interaction point for comparison with Peter.
+    else if (WHICHPATH==FlightPath::PeterEvent) {// Force interaction point for comparison with Peter.
       
       // want interaction location at Taylor Dome
       // According to lab book it's 77 deg, 52.818' S=77.8803
@@ -742,7 +809,7 @@ void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Ani
 			
       
       
-    } //if (WHICHPATH==4)
+    } //if (WHICHPATH==FlightPath::PeterEvent)
     
     else if (settings1->SLAC) {
       
@@ -834,7 +901,8 @@ void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Ani
   
   
   // std::cout << (interaction1->posnu) << std::endl;
-  if (ray1->n_exit2bn[0].Angle(interaction1->posnu) > constants::PI/2  && !(WHICHPATH==3 || WHICHPATH==4)){
+  if (ray1->n_exit2bn[0].Angle(interaction1->posnu) > constants::PI/2 &&
+      !(WHICHPATH==FlightPath::Custom || WHICHPATH==FlightPath::PeterEvent)){
     beyondhorizon = 1;
   }
   
@@ -937,8 +1005,8 @@ void icemc::Balloon::calculate_antenna_positions(const Settings *settings1, Anit
 
 icemc::Vector icemc::Balloon::RotatePayload(Vector ant_pos_pre) const {
 
-  const double thisPitch = WHICHPATH == 7 ? fixedAnita2Pitch : WHICHPATH == 8 ? fixedAnita3Pitch : pitch;
-  const double thisRoll  = WHICHPATH == 7 ? fixedAnita2Roll  : WHICHPATH == 8 ? fixedAnita3Roll  : roll;
+  const double thisPitch = WHICHPATH == FlightPath::Anita2 ? fixedAnita2Pitch : WHICHPATH == FlightPath::Anita3 ? fixedAnita3Pitch : pitch;
+  const double thisRoll  = WHICHPATH == FlightPath::Anita2 ? fixedAnita2Roll  : WHICHPATH == FlightPath::Anita3 ? fixedAnita3Roll  : roll;
 
   const Vector BalloonPos = r_bn;
   const double BalloonTheta = BalloonPos.Theta();
@@ -979,8 +1047,8 @@ icemc::Vector icemc::Balloon::RotatePayload(Vector ant_pos_pre) const {
 
 icemc::Vector icemc::Balloon::unRotatePayload(Vector ant_pos_pre) const {//rotate back to Payload Centric coordinates
   ///@todo does we have static pitch and roll offsets for A4?
-  const double thisPitch = WHICHPATH == 7 ? fixedAnita2Pitch : WHICHPATH == 8 ? fixedAnita3Pitch : pitch;
-  const double thisRoll  = WHICHPATH == 7 ? fixedAnita2Roll  : WHICHPATH == 8 ? fixedAnita3Roll  : roll;
+  const double thisPitch = WHICHPATH == FlightPath::Anita2 ? fixedAnita2Pitch : WHICHPATH == FlightPath::Anita3 ? fixedAnita3Pitch : pitch;
+  const double thisRoll  = WHICHPATH == FlightPath::Anita2 ? fixedAnita2Roll  : WHICHPATH == FlightPath::Anita3 ? fixedAnita3Roll  : roll;
   
   Vector BalloonPos;
 

@@ -18,7 +18,8 @@
 
 
 icemc::ANITA::ANITA(const Settings* settings, RayTracer* sillyRay, Screen* sillyPanel, const RootOutput* ro)
-  : fSettings(settings), fRayPtrIDontOwn(sillyRay), fScreenPtrIDontOwn(sillyPanel),
+  : Balloon(settings),
+    fSettings(settings), fRayPtrIDontOwn(sillyRay), fScreenPtrIDontOwn(sillyPanel),
     fAnitaOutput(this, settings, ro->getOutputDir(), ro->getRun())
 {
   if(settings){
@@ -300,7 +301,7 @@ bool icemc::ANITA::applyTrigger(int inu){
 
       Tools::Zero(sumsignal, 5);
 
-      if (this->WHICHPATH==4 && ilayer==this->GetLayer(this->rx_minarrivaltime) && ifold==this->GetIfold(this->rx_minarrivaltime)) {
+      if (this->WHICHPATH==FlightPath::PeterEvent && ilayer==this->GetLayer(this->rx_minarrivaltime) && ifold==this->GetIfold(this->rx_minarrivaltime)) {
 	for (int ibw=0;ibw<5;ibw++) {
 	  std::cout << "Just after Taper,  sumsignal is " << sumsignal_aftertaper[ibw] << "\n";
 	  std::cout << "Just after antennagain,  sumsignal is " << sumsignal[ibw] << "\n";
