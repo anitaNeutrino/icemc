@@ -59,8 +59,7 @@ namespace icemc {
     // Vector slacpositions[MAX_POSITIONS];
     // std::string sslacpositions[MAX_POSITIONS];
     // int islacposition;
-    TChain *flightdatachain;
-    TTreeIndex *tindex;
+    TChain *fChain;
     unsigned int realTime_flightdata_temp;                      ///< realtime from the flight data file
     unsigned int realTime_flightdata;                           ///< realtime from the flight data file
     float flatitude,flongitude,faltitude,fheading,froll, fpitch;

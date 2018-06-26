@@ -931,7 +931,7 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   
 
 void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, AskaryanFreqsGenerator* askFreqGen,
-				  Balloon* bn1, RayTracer* ray1) const {
+				  RayTracer* ray1) const {
   
    //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas. 
   if (WHICH==2 || WHICH==6 || WHICH==8 || WHICH==9 || WHICH==10){

@@ -1254,7 +1254,7 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
   if (bn1->whichPath()==FlightPath::AnitaLite) // if anita-lite
     NBALLOONPOSITIONS=(int)((double)bn1->NPOINTS/(double)bn1->REDUCEBALLOONPOSITIONS); //only take 1/100 of the total balloon positions that we have because otherwise it's overkill.
   else if (bn1->whichPath()==FlightPath::Anita1 || bn1->whichPath()==FlightPath::Anita2 || bn1->whichPath()==FlightPath::Anita3 || bn1->whichPath()==FlightPath::Anita4) {
-    NBALLOONPOSITIONS=(int)((double)bn1->flightdatachain->GetEntries()/(double)bn1->REDUCEBALLOONPOSITIONS)+1;
+    NBALLOONPOSITIONS=(int)((double)bn1->fChain->GetEntries()/(double)bn1->REDUCEBALLOONPOSITIONS)+1;
   }
   else if (bn1->whichPath()==FlightPath::Circle80DegreesSouth) // for picking random point along 80 deg south
     NBALLOONPOSITIONS=NPHI; // NPHI is the number of bins in phi for the visible ice in the horizon.  This is not the same as NLON, the number of bins in longitude for crust 2.0
@@ -1332,7 +1332,7 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
 	     bn1->whichPath()==FlightPath::Anita3 || 
 	     bn1->whichPath()==FlightPath::Anita4) {
 	    
-      bn1->flightdatachain->GetEvent(i*100);
+      bn1->fChain->GetEvent(i*100);
 	    
       theta_bn=(90+(double)bn1->flatitude)*constants::RADDEG; //theta of the balloon wrt north pole
       lat=GetLat(theta_bn); // latitude  

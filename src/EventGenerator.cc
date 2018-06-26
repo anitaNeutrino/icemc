@@ -1233,9 +1233,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   
 
   // input parameters
-  // settings1.ApplyInputs(anita1,  &sec1,  &askFreqGen,  bn1,  ray1);
-  settings1.ApplyInputs(fDetector,  &sec1,  &askFreqGen,  fDetector,  &rayTracer);  
-  fDetector->InitializeBalloon();
+  settings1.ApplyInputs(fDetector,  &sec1,  &askFreqGen,  &rayTracer);
+  // fDetector->InitializeBalloon();
   fDetector->Initialize(&settings1, icemcLog().foutput, 0, clOpts.outputdir);
   askFreqGen.Initialize();
 

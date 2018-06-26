@@ -43,7 +43,7 @@ int main(){
   icemc::RayTracer *ray1 = new icemc::RayTracer();
   // input parameters
   s.ReadInputs("inputs.anita3.conf",  outputsFile);
-  s.ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
+  s.ApplyInputs(anita1,  sec1,  sig1,  ray1);
 
 
 

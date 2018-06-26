@@ -260,38 +260,38 @@ void icemc::Balloon::InitializeBalloon() {
   if (WHICHPATH==FlightPath::AnitaLite){
     igps_previous=NPOINTS_MIN; // initialise here to avoid times during launch
   }
-  flightdatachain = nullptr; 
+  fChain = nullptr; 
 
   // This for Anita 1 flight
   if (WHICHPATH==FlightPath::Anita1) {
 
-    flightdatachain = new TChain("foricemc");
-    flightdatachain->Add((ICEMC_DATA_DIR+"/anita1flightdata.root").c_str());
+    fChain = new TChain("foricemc");
+    fChain->Add((ICEMC_DATA_DIR+"/anita1flightdata.root").c_str());
 		
-    flightdatachain->SetBranchAddress("surfTrigBandMask",surfTrigBandMask);
-    flightdatachain->SetBranchAddress("powerthresh",powerthresh);
-    flightdatachain->SetBranchAddress("meanp",meanp);
-    flightdatachain->SetBranchAddress("longitude",&flongitude);
-    flightdatachain->SetBranchAddress("latitude",&flatitude);
-    flightdatachain->SetBranchAddress("altitude",&faltitude);
-    flightdatachain->SetBranchAddress("realTime_surfhk",&realTime_flightdata);
-    flightdatachain->SetBranchAddress("heading",&fheading);
+    fChain->SetBranchAddress("surfTrigBandMask",surfTrigBandMask);
+    fChain->SetBranchAddress("powerthresh",powerthresh);
+    fChain->SetBranchAddress("meanp",meanp);
+    fChain->SetBranchAddress("longitude",&flongitude);
+    fChain->SetBranchAddress("latitude",&flatitude);
+    fChain->SetBranchAddress("altitude",&faltitude);
+    fChain->SetBranchAddress("realTime_surfhk",&realTime_flightdata);
+    fChain->SetBranchAddress("heading",&fheading);
   }
     
   // This for Anita 2 flight
   if (WHICHPATH==FlightPath::Anita2) {
 		
-    flightdatachain = new TChain("adu5PatTree");
-    flightdatachain->SetMakeClass(1);
-    flightdatachain->Add((ICEMC_DATA_DIR+"/anita2gps_pitchandroll.root").c_str());//created to include pitch and roll.
-    flightdatachain->SetBranchAddress("longitude",&flongitude);
-    flightdatachain->SetBranchAddress("latitude",&flatitude);
-    flightdatachain->SetBranchAddress("altitude",&faltitude);
-    flightdatachain->SetBranchAddress("heading",&fheading);
-    flightdatachain->SetBranchAddress("realTime",&realTime_flightdata_temp);
-    flightdatachain->SetBranchAddress("pitch",&fpitch);
-    flightdatachain->SetBranchAddress("roll",&froll);
-    //std::cout << "Loading file.  n events is " << flightdatachain->GetEntries() << "\n";
+    fChain = new TChain("adu5PatTree");
+    fChain->SetMakeClass(1);
+    fChain->Add((ICEMC_DATA_DIR+"/anita2gps_pitchandroll.root").c_str());//created to include pitch and roll.
+    fChain->SetBranchAddress("longitude",&flongitude);
+    fChain->SetBranchAddress("latitude",&flatitude);
+    fChain->SetBranchAddress("altitude",&faltitude);
+    fChain->SetBranchAddress("heading",&fheading);
+    fChain->SetBranchAddress("realTime",&realTime_flightdata_temp);
+    fChain->SetBranchAddress("pitch",&fpitch);
+    fChain->SetBranchAddress("roll",&froll);
+    //std::cout << "Loading file.  n events is " << fChain->GetEntries() << "\n";
 		
   }
   else if (WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4) { // for anita-3 and 4 flights
@@ -307,16 +307,16 @@ void icemc::Balloon::InitializeBalloon() {
       break;
     }
     
-    flightdatachain = new TChain("adu5PatTree");
-    flightdatachain->SetMakeClass(1);
-    flightdatachain->Add(balloonFile.c_str());//created to include pitch and roll.
-    flightdatachain->SetBranchAddress("longitude",&flongitude);
-    flightdatachain->SetBranchAddress("latitude",&flatitude);
-    flightdatachain->SetBranchAddress("altitude",&faltitude);
-    flightdatachain->SetBranchAddress("heading",&fheading);
-    flightdatachain->SetBranchAddress("realTime",&realTime_flightdata_temp);
-    flightdatachain->SetBranchAddress("pitch",&fpitch);
-    flightdatachain->SetBranchAddress("roll",&froll);
+    fChain = new TChain("adu5PatTree");
+    fChain->SetMakeClass(1);
+    fChain->Add(balloonFile.c_str());//created to include pitch and roll.
+    fChain->SetBranchAddress("longitude",&flongitude);
+    fChain->SetBranchAddress("latitude",&flatitude);
+    fChain->SetBranchAddress("altitude",&faltitude);
+    fChain->SetBranchAddress("heading",&fheading);
+    fChain->SetBranchAddress("realTime",&realTime_flightdata_temp);
+    fChain->SetBranchAddress("pitch",&fpitch);
+    fChain->SetBranchAddress("roll",&froll);
   }
 
   // for (int i=0;i<10000;i++) {
@@ -494,15 +494,15 @@ void icemc::Balloon::PickBalloonPosition(const IceModel *antarctica1, const Sett
 	     WHICHPATH==FlightPath::Anita3 ||
 	     WHICHPATH==FlightPath::Anita4) {
       // For Anita 1 and Anita 2 and Anita 3:
-      // igps = (igps_previous+1)%flightdatachain->GetEntries(); // pick which event in the tree we want
+      // igps = (igps_previous+1)%fChain->GetEntries(); // pick which event in the tree we want
       static int start_igps = 0; 
-      static int ngps = flightdatachain->GetEntries(); 
+      static int ngps = fChain->GetEntries(); 
       static int init_best = 0;
       
       if (settings1->PAYLOAD_USE_SPECIFIC_TIME && !init_best) 
       {
-         int N = flightdatachain->Draw("realTime","","goff"); 
-         double * times = flightdatachain->GetV1(); 
+         int N = fChain->Draw("realTime","","goff"); 
+         double * times = fChain->GetV1(); 
 
          int best_igps =  TMath::BinarySearch(N, times, (double) settings1->PAYLOAD_USE_SPECIFIC_TIME); 
          start_igps = best_igps;
@@ -530,7 +530,7 @@ void icemc::Balloon::PickBalloonPosition(const IceModel *antarctica1, const Sett
       }
 
       
-      flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
+      fChain->GetEvent(igps); // this grabs the balloon position data for this event
       realTime_flightdata = realTime_flightdata_temp;
       if(settings1->TUFFSON){
        anita1->tuffIndex = getTuffIndex(realTime_flightdata);
@@ -539,9 +539,9 @@ void icemc::Balloon::PickBalloonPosition(const IceModel *antarctica1, const Sett
       while (faltitude<MINALTITUDE || fheading<0) { // if the altitude is too low, pick another event.
 		    
 	igps++; // increment by 1
-	igps=igps%flightdatachain->GetEntries(); // make sure it's not beyond the maximum entry number
+	igps=igps%fChain->GetEntries(); // make sure it's not beyond the maximum entry number
 		    
-	flightdatachain->GetEvent(igps);	  // get new event
+	fChain->GetEvent(igps);	  // get new event
       }
       // set phi Masking for Anita 2 or Anita 3
       // the deadtime is read from the same tree

@@ -61,7 +61,7 @@ namespace icemc{
 		    // Anita* anita1, Secondaries* sec1, AskaryanFreqsGenerator* askFreqGen, Balloon* bn1, Ray* ray1,
 		    // int& NNU, double& RANDOMISEPOL);
 
-    void ApplyInputs(Anita* anita1, Secondaries* sec1, AskaryanFreqsGenerator* askFreqGen, Balloon* bn1, RayTracer* ray1) const;
+    void ApplyInputs(Anita* anita1, Secondaries* sec1, AskaryanFreqsGenerator* askFreqGen, RayTracer* ray1) const;
 
     int NNU; ///< The number of neutrinos
     double RANDOMISEPOL; ///< Randomize the polarity?
