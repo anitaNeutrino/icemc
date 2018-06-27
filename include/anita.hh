@@ -30,7 +30,7 @@ namespace icemc {
   class RX;
   class Position;
   class Balloon;
-  class IceModel;
+  class Antarctica;
   class Settings;
   
   //! Contains everything about positions within payload and signals it sees for each event, in both the trigger and signal paths.
@@ -65,7 +65,7 @@ namespace icemc {
     int getLabAttn(int NPOINTS_LAB, double *freqlab, double *labattn);
 
     void labAttn(double *vhz);
-    void SetNoise(const Settings *settings1, Balloon *bn1, IceModel *antarctica);
+    void SetNoise(const Settings *settings1, Balloon *bn1, const Antarctica *antarctica);
     void calculate_antenna_positions(const Settings *settings1,double pitch, double roll, double phi_spin,Vector n_north,Vector n_east);
 
     void saveGainsPlot(const std::string& fileName);
@@ -90,19 +90,19 @@ namespace icemc {
 
     Vector antenna_positions[NPOL][NLAYERS_MAX * NPHI_MAX];     ///< these are the antenna positions in space in a coordinate system where x=north and y=west and the origin is at the center of the payload
 
-    int NRX_PHI[NLAYERS_MAX];                                   ///< number of antennas around in each layer. (radians)
-    double PHI_EACHLAYER[NLAYERS_MAX][NPHI_MAX];                ///< phi of the center of each antenna on each layer
+    int NRX_PHI[NLAYERS_MAX] = {0};                                   ///< number of antennas around in each layer. (radians)
+    double PHI_EACHLAYER[NLAYERS_MAX][NPHI_MAX] = {{0}};                ///< phi of the center of each antenna on each layer
   
     //before correcting for offset for the layer.
     //only used if it is cylindrically symmetric (radians)
-    double PHI_OFFSET[NLAYERS_MAX];                             ///< antenna offset in phi for each layer (radians)
-    double THETA_ZENITH[NLAYERS_MAX];                           ///< how the antenna is tilted in theta (in radians with 0=up)
+    double PHI_OFFSET[NLAYERS_MAX] = {0};                             ///< antenna offset in phi for each layer (radians)
+    double THETA_ZENITH[NLAYERS_MAX] = {0};                           ///< how the antenna is tilted in theta (in radians with 0=up)
     // 0=horizontal,+90=down
 
     int inu;                                                    ///< Neutrino number
     // what the payload looks like
 
-    double LAYER_VPOSITION[Anita::NLAYERS_MAX];                 ///< position of layers in z relative to vertical center of the payload
+    double LAYER_VPOSITION[Anita::NLAYERS_MAX] = {0};                 ///< position of layers in z relative to vertical center of the payload
 
     // anita proposal "says that the separation between upper and lower
     // 2 layers of antennas is just under 4m.
@@ -110,7 +110,7 @@ namespace icemc {
     
     double LAYER_HPOSITION[Anita::NLAYERS_MAX];                 ///< distance in horizontal plane between center axis of the "payload" and each "layer".
     double LAYER_PHIPOSITION[Anita::NLAYERS_MAX];               ///< phi corresponding to the position of each "layer" on the "payload"
-    double RRX[Anita::NLAYERS_MAX];                             ///< radius that the antenna sits from the axis of the payload (feedpoint)
+    double RRX[Anita::NLAYERS_MAX] = {0};                             ///< radius that the antenna sits from the axis of the payload (feedpoint)
     Double_t deltaTPhaseCentre[NPOL][NLAYERS_MAX][NPHI_MAX];    ///< Relative to photogrammetry + ring offset
 
     double THERMALNOISE_FACTOR;                                 ///< factor to multiply thermal noise for error analysis

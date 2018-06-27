@@ -4,8 +4,8 @@
 #include "Constants.h"
 #include "TRandom3.h"
 #include "Settings.h"
-#include "earthmodel.hh"
-#include "icemodel.hh"
+#include "Earth.h"
+#include "Antarctica.h"
 #include "AskaryanFreqsGenerator.h"
 #include "vector.hh"
 #include "position.hh"
@@ -57,7 +57,7 @@ void icemc::RayTracer::Initialize() {
 
 
 void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int whichray, Position posnu, Position posnu_down, Position r_bn,
-				 Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int whichtry, const IceModel *antarctica){
+				 Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int whichtry, const Antarctica *antarctica){
 
 
 
@@ -111,7 +111,7 @@ void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int w
 // icemc::RayTracer::WhereDoesItLeave() is defined in ray.hh since it is a statis member function // MS 2/1/2017
 
 
-int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Position rfexit_temp, Vector posnu, const IceModel *antarctica, double &slopeyangle, int whichtry){
+int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Position rfexit_temp, Vector posnu, const Antarctica *antarctica, double &slopeyangle, int whichtry){
 
   double howmuch=settings1->SLOPEYSIZE;
   Position nsurf_rfexit_temp;
@@ -179,8 +179,8 @@ int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Position rfexi
 }//RandomizeSurface
 
 
-// int icemc::RayTracer::GetSurfaceNormal(IceModel *antarctica,Vector posnu,Position *rfexit) {
-int icemc::RayTracer::GetSurfaceNormal(const Settings *settings1,const IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry){
+// int icemc::RayTracer::GetSurfaceNormal(Antarctica *antarctica,Vector posnu,Position *rfexit) {
+int icemc::RayTracer::GetSurfaceNormal(const Settings *settings1,const Antarctica *antarctica,Vector posnu,double &slopeyangle,int whichtry){
       
   Position rfexit_temp;
 
@@ -355,7 +355,7 @@ int icemc::RayTracer::GetRayIceSide(const Vector &n_exit2bn,
 
 
 // static
-int icemc::RayTracer::WhereDoesItLeave(const Position &posnu, const Vector &ntemp, const IceModel *antarctica, Position &r_out){
+int icemc::RayTracer::WhereDoesItLeave(const Position &posnu, const Vector &ntemp, const Antarctica *antarctica, Position &r_out){
   
   double distance=0;
   double posnu_length=posnu.Mag(); // distance from center of earth to interaction

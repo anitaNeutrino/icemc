@@ -1,14 +1,11 @@
-#ifndef ICEMODEL_HH_
-#define ICEMODEL_HH_
+#ifndef ICEMC_ANTARCTICA_H
+#define ICEMC_ANTARCTICA_H
 
 #include <cmath>
 #include <iostream>
 #include <fstream>
 #include <vector>
-
-#include "earthmodel.hh"
-
-
+#include "Earth.h"
 
 class TRandom3;
 
@@ -24,28 +21,24 @@ namespace icemc {
   class Balloon;
   class Position;
   class Vector;
-  class EarthModel;
+  class Earth;
 
-  //Constants relating to all ice models
-  const double FIRNDEPTH=-150.;                // depth of the firn, in meters: currently a constant over all ice
 
   //Variables for conversion between BEDMAP polar stereographic coordinates and lat/lon.  Conversion equations from ftp://164.214.2.65/pub/gig/tm8358.2/TM8358_2.pdf
   const double scale_factor=0.97276901289;  //scale factor at pole corresponding to 71 deg S latitude of true scale (used in BEDMAP)
   const double ellipsoid_inv_f = 298.257223563; //of Earth
-  // const double ellipsoid_b = EarthModel::R_EARTH*(1-(1/ellipsoid_inv_f));
-  const double ellipsoid_b = EarthModel::EarthRadiusMeters*(1-(1/ellipsoid_inv_f));  
+  // const double ellipsoid_b = Earth::R_EARTH*(1-(1/ellipsoid_inv_f));
+  const double ellipsoid_b = Earth::BulgeRadius*(1-(1/ellipsoid_inv_f));  
   const double eccentricity = sqrt((1/ellipsoid_inv_f)*(2-(1/ellipsoid_inv_f)));
   const double bedmap_a_bar = pow(eccentricity,2)/2 + 5*pow(eccentricity,4)/24 + pow(eccentricity,6)/12 + 13*pow(eccentricity,8)/360;
   const double bedmap_b_bar = 7*pow(eccentricity,4)/48 + 29*pow(eccentricity,6)/240 + 811*pow(eccentricity,8)/11520;
   const double bedmap_c_bar = 7*pow(eccentricity,6)/120 + 81*pow(eccentricity,8)/1120;
   const double bedmap_d_bar = 4279*pow(eccentricity,8)/161280;
-  const double bedmap_c_0 = (2*EarthModel::EarthRadiusMeters / sqrt(1-pow(eccentricity,2))) * pow(( (1-eccentricity) / (1+eccentricity) ),eccentricity/2);
-  // const double bedmap_c_0 = (2*EarthModel::R_EARTH / sqrt(1-pow(eccentricity,2))) * pow(( (1-eccentricity) / (1+eccentricity) ),eccentricity/2);  
-
-
+  const double bedmap_c_0 = (2*Earth::BulgeRadius / sqrt(1-pow(eccentricity,2))) * pow(( (1-eccentricity) / (1+eccentricity) ),eccentricity/2);
+  // const double bedmap_c_0 = (2*Earth::R_EARTH / sqrt(1-pow(eccentricity,2))) * pow(( (1-eccentricity) / (1+eccentricity) ),eccentricity/2);  
 
   //! Ice thicknesses and water depth
-  class IceModel : public EarthModel {
+  class Antarctica : public Earth {
 
 
   public:
@@ -82,7 +75,7 @@ namespace icemc {
 
     const static int NBNPOSITIONS_MAX=26000;
     double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
-    IceModel(int model=0,int earth_mode=0,int WEIGHTABSORPTION_SETTING=1);
+    Antarctica(int model=0,int earth_mode=0,int WEIGHTABSORPTION_SETTING=1);
     double IceThickness(double lon,double lat) const;
     double IceThickness(const Position& pos) const;
     double Surface(double lon,double lat) const;
@@ -116,18 +109,19 @@ namespace icemc {
 				  const Vector &nnu,
 				  double stepsize,
 				  Position &r_enterice) const;
-    void CreateHorizons(const Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput);
-    Vector GetSurfaceNormal(const Position &r_out) const; //overloaded from EarthModel to include procedures for new ice models.
+    void CreateHorizons(const Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn);
+    Vector GetSurfaceNormal(const Position &r_out) const; //overloaded from Earth to include procedures for new ice models.
     double GetN(double depth) const;
     double GetN(const Position &pos) const;
     double EffectiveAttenuationLength(const Settings *settings1,const Position &pos, const int &whichray) const;
   
     void IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const;
 
-    int PickUnbiased(Interaction *interaction1, const IceModel *antarctica) const;
+    int PickUnbiased(Interaction *interaction1, const Antarctica *antarctica) const;
 
 
   protected:
+    std::string fDataDir;
     int ice_model;
     int DEPTH_DEPENDENT_N;
 
@@ -197,8 +191,8 @@ namespace icemc {
     double d_westlanddown[N_westlanddown],l_westlanddown[N_westlanddown];
 
 
-  }; //class IceModel
+  };
 }
 
 
-#endif
+#endif //ICEMC_ANTARCTICA_H

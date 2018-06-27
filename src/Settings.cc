@@ -9,7 +9,7 @@
 #include "Roughness.h"
 #include "anita.hh"
 #include "balloon.hh"
-#include "icemodel.hh"
+#include "Antarctica.h"
 #include "Spectra.h"
 #include "AskaryanFreqsGenerator.h"
 #include "secondaries.hh"

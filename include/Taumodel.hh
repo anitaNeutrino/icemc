@@ -24,7 +24,7 @@ class TH1F;
 namespace icemc{
   class Primaries;
   class Interaction;
-  class IceModel;
+  class Antarctica;
 
   class Taumodel: public TObject
   {
@@ -58,7 +58,7 @@ namespace icemc{
   
     /** \brief  Get Density Vectors sets two density vectors. One has the density at each step along the path, the other has an average density from the starting point to the current step.
      */
-    void GetDensityVectors(IceModel *antarctica1, Interaction *interaction1, Vector nchord, double step, double Distance, int &totalnusteps, int &crust_entered);
+    void GetDensityVectors(const Antarctica *antarctica1, Interaction *interaction1, Vector nchord, double step, double Distance, int &totalnusteps, int &crust_entered);
     /** \brief   Get Energy Vector sets the energy of tau particle at every step along the path. It starts from the final energy and works back towards the nuetrino interaction point.
      */
     void GetEnergyVector(double Etau_final, double step,int totalnusteps, int &totalsteps, double &totaltaudistance, double pnu);
@@ -76,7 +76,7 @@ namespace icemc{
     /** \brief GetTauWeight is the function that will calculate the probability that a tau neutrino will interact along its path through the earth,and the tau will survive the rest of the journey and decay in the ice. This probability is calculated for final energies from 10^15.5 to the energy of the neutrino.
      */
 
-    double GetTauWeight(Primaries *primary1, const Settings *settings1, IceModel*antarctica1, Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered); // 1 or 0
+    double GetTauWeight(Primaries *primary1, const Settings *settings1, const Antarctica* antarctica1, Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered); // 1 or 0
     // int& mantle_entered, // 1 or 0
     // int& core_entered);//include secondaries?
  

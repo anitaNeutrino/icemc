@@ -8,18 +8,17 @@
 
 #include <iostream>
 
-
 #include "Constants.h"
 #include "Settings.h"
 #include "position.hh"
 
-#include "earthmodel.hh"
+#include "Earth.h"
 #include "Tools.h"
 #include "vector.hh"
 #include "RayTracer.h"
 #include "anita.hh"
 #include "balloon.hh"
-#include "icemodel.hh"
+#include "Antarctica.h"
 #include "Spectra.h"
 #include "AskaryanFreqsGenerator.h"
 #include "secondaries.hh"
@@ -32,7 +31,6 @@
 int main(){
 
   icemc::Settings s;
-
 
   std::ofstream outputsFile("/tmp/outputs.txt");
 

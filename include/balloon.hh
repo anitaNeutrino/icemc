@@ -21,6 +21,7 @@ class TTreeIndex;
 namespace icemc {
   class RayTracer;
   class Interaction;
+  class Antarctica;
 
   /**
    * @class FlightPath
@@ -51,9 +52,9 @@ namespace icemc {
   
 
 
-    void setObservationLocation(Interaction *interaction1,int inu, const IceModel *antarctic, const Settings *settings1);
+    void setObservationLocation(Interaction *interaction1,int inu, const Antarctica *antarctic, const Settings *settings1);
     void GetBoresights(const Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]);
-    void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,const Settings *settings1, const IceModel *antarctica1,
+    void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,const Settings *settings1, const Antarctica *antarctica1,
 				      RayTracer *ray1, int &beyondhorizon); 
   
     
@@ -74,7 +75,7 @@ namespace icemc {
      * @param  settings1 -
      * @param  anita1 -
      */
-    void PickBalloonPosition(Vector straightup, const IceModel *antarctica, const Settings *settings1, Anita *anita1);
+    void PickBalloonPosition(Vector straightup, const Antarctica *antarctica, const Settings *settings1, Anita *anita1);
 
     
     /**
@@ -86,7 +87,7 @@ namespace icemc {
      * @param  anita1 -
      * @param  randomNumber -
      */
-    void PickBalloonPosition(const IceModel *antarctica1, const Settings *settings1,int inu,Anita *anita1, double randomNumber);
+    void PickBalloonPosition(const Antarctica *antarctica1, const Settings *settings1,int inu,Anita *anita1, double randomNumber);
 
     /**
      * Gets ith balloon position
@@ -104,7 +105,7 @@ namespace icemc {
      * @param  heading -
      * @return returns double
      */
-    double GetBalloonSpin(double heading);
+    double GetBalloonSpin(double heading) const;
 
     
     ///< This function gets the antenna orientation
@@ -139,7 +140,7 @@ namespace icemc {
      * @param  antarctica1 -
      * @return returns void
      */
-    void SetDefaultBalloonPosition(const IceModel *antarctica1);
+    void SetDefaultBalloonPosition(const Antarctica *antarctica1);
 
 
     // ///< This function adjusts the slac balloon position

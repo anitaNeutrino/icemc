@@ -2,7 +2,7 @@
 #include "TRandom3.h"
 #include "Settings.h"
 #include "position.hh"
-#include "earthmodel.hh"
+#include "Earth.h"
 #include <cmath>
 #include "Constants.h"
 
@@ -19,7 +19,7 @@ icemc::Position::Position(const Vector& vec) : Vector(vec[0],vec[1],vec[2])
 icemc::Position::Position(double longitude, double latitude, double altitude) {
   Vector location = z_axis;
   double theta = latitude * constants::RADDEG;
-  double phi = EarthModel::LongtoPhi_0isPrimeMeridian(longitude); // convert longitude (-180 to 180) to phi (0 to 2pi wrt 90E, counter-clockwise)
+  double phi = Earth::LongtoPhi_0isPrimeMeridian(longitude); // convert longitude (-180 to 180) to phi (0 to 2pi wrt 90E, counter-clockwise)
   location = location.RotateY(theta);
   location = location.RotateZ(phi);
   location = location*altitude;

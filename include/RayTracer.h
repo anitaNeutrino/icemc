@@ -12,7 +12,7 @@
 #include "vector.hh"
 #include "anita.hh"
 #include "position.hh"
-#include "icemodel.hh"
+#include "Antarctica.h"
 
 
 namespace icemc {
@@ -55,13 +55,13 @@ namespace icemc {
     
     int TraceRay(const Settings *settings1,Anita *anita1,int whichiteration,double n_depth);
     
-    int GetSurfaceNormal(const Settings *settings1, const IceModel *antarctica,Vector posnu,double &slopeyangle,int whichtry);
+    int GetSurfaceNormal(const Settings *settings1, const Antarctica *antarctica,Vector posnu,double &slopeyangle,int whichtry);
     
-    int RandomizeSurface(const Settings *settings1,Position rfexit_temp,Vector posnu, const IceModel *antarctica,double &slopeyangle,int whichtry);
+    int RandomizeSurface(const Settings *settings1,Position rfexit_temp,Vector posnu, const Antarctica *antarctica,double &slopeyangle,int whichtry);
 
     
-    void GetRFExit(const Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry, const IceModel *antarctica);
-    static int WhereDoesItLeave(const Position &posnu, const Vector &ntemp, const IceModel *antarctica, Position &r_out);
+    void GetRFExit(const Settings *settings1,Anita *anita1,int whichray,Position posnu,Position posnu_down,Position r_bn,Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry, const Antarctica *antarctica);
+    static int WhereDoesItLeave(const Position &posnu, const Vector &ntemp, const Antarctica *antarctica, Position &r_out);
 
     Vector xaxis;
     Vector yaxis;

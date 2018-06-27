@@ -3,9 +3,8 @@
 #include "Constants.h"
 #include "TRandom3.h"
 #include "Settings.h"
-#include "earthmodel.hh"
-#include "icemodel.hh"
-
+#include "Earth.h"
+#include "Antarctica.h"
 
 #include "AskaryanFreqsGenerator.h"
 #include "position.hh"
@@ -13,51 +12,44 @@
 #include "anita.hh"
 #include "RayTracer.h"
 #include "balloon.hh"
+#include "Constants.h"
 #include "EnvironmentVariable.h"
-
-
 
 #include <fstream>
 #include <iostream>
 
 const std::string ICEMC_SRC_DIR = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const std::string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
-  
 
+icemc::Antarctica::Antarctica(int model,int earth_model,int WEIGHTABSORPTION_SETTING)
+  : Earth(earth_model,WEIGHTABSORPTION_SETTING){
 
-
-icemc::IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : EarthModel(earth_model,WEIGHTABSORPTION_SETTING) {
-    
   // double bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(71*constants::RADDEG)) / (1 - eccentricity*sin(71*constants::RADDEG)) ),eccentricity/2) * tan((constants::PI/4) - (71*constants::RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
   
   // bedmap_nu = bedmap_R / cos(71*constants::RADDEG);
     
   //Parameters of the BEDMAP ice model. (See http://www.antarctica.ac.uk/aedc/bedmap/download/)
-  nCols_ice=1200; //number of columns in data, set by header file (should be 1200)
-  nRows_ice=1000; //number of rows in data, set by header file (should be 1000)
-  cellSize=5000; //in meters, set by header file (should be 5000) - same for both files
-  xLowerLeft_ice=-3000000; 
-  yLowerLeft_ice=-2500000;
-  nCols_ground=1068;
-  nRows_ground=869;
-  xLowerLeft_ground=-2661600;
-  yLowerLeft_ground=-2149967;
-  nCols_water=1200;
-  nRows_water=1000;
-  xLowerLeft_water=-3000000;
-  yLowerLeft_water=-2500000;
-  NODATA=-9999;
-    
-    
-    
-    
+  nCols_ice         = 1200; //number of columns in data, set by header file (should be 1200)
+  nRows_ice         = 1000; //number of rows in data, set by header file (should be 1000)
+  cellSize          = 5000; //in meters, set by header file (should be 5000) - same for both files
+  xLowerLeft_ice    = -3000000;
+  yLowerLeft_ice    = -2500000;
+  nCols_ground      = 1068;
+  nRows_ground      = 869;
+  xLowerLeft_ground = -2661600;
+  yLowerLeft_ground = -2149967;
+  nCols_water       = 1200;
+  nRows_water       = 1000;
+  xLowerLeft_water  = -3000000;
+  yLowerLeft_water  = -2500000;
+  NODATA            = -9999;
+
   ice_model=model;
   DEPTH_DEPENDENT_N = (int) (model / 10);
   ice_model -= DEPTH_DEPENDENT_N * 10;
-    
-    
+
   if (ice_model != 0 && ice_model != 1) {
-    std::cout<<"Error!  Unknown ice model requested!  Defaulting to Crust 2.0.\n";
+    icemcLog() << icemc::error << "Unknown ice model requested!  Defaulting to Crust 2.0." << std::endl;
     ice_model = 0;
   } //if
   else if (ice_model==1) {
@@ -76,24 +68,21 @@ icemc::IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING
     }
     
   i=0;
-  while(sheetup>>d_sheetup[i]>>l_sheetup[i])
-    {
-      i++;
-    }
+  while(sheetup>>d_sheetup[i]>>l_sheetup[i]){
+    i++;
+  }
   sheetup.close();
     
   std::ifstream shelfup((ICEMC_DATA_DIR+"/iceshelf_attenlength_up.txt").c_str());
-  if(shelfup.fail())
-    {
-      std::cerr << "Failed to open iceshelf_attenlength_up.txt" << std::endl;
-      exit(1);
-    }
+  if(shelfup.fail()){
+    std::cerr << "Failed to open iceshelf_attenlength_up.txt" << std::endl;
+    exit(1);
+  }
     
   i=0;
-  while(shelfup>>d_shelfup[i]>>l_shelfup[i])
-    {
-      i++;
-    }
+  while(shelfup>>d_shelfup[i]>>l_shelfup[i]){
+    i++;
+  }
   shelfup.close();
     
   std::ifstream westlandup((ICEMC_DATA_DIR+"/westland_attenlength_up.txt").c_str());
@@ -152,16 +141,16 @@ icemc::IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING
   westlanddown.close();
 
 }
-//constructor IceModel(int model)
+//constructor Antarctica(int model)
 
 
-icemc::Position icemc::IceModel::PickBalloonPosition() const {
+icemc::Position icemc::Antarctica::PickBalloonPosition() const {
   Vector temp;
   return temp;  
 }
 
 
-icemc::Position icemc::IceModel::PickInteractionLocation(int ibnposition, const Settings *settings1, const Position &rbn, Interaction *interaction1) const {
+icemc::Position icemc::Antarctica::PickInteractionLocation(int ibnposition, const Settings *settings1, const Position &rbn, Interaction *interaction1) const {
     
   // random numbers used
   double rnd1=0;
@@ -272,7 +261,7 @@ icemc::Position icemc::IceModel::PickInteractionLocation(int ibnposition, const 
 } //PickInteractionLocation
 
 
-int icemc::IceModel::PickUnbiased(Interaction *interaction1, const IceModel *antarctica) const {
+int icemc::Antarctica::PickUnbiased(Interaction *interaction1, const Antarctica *antarctica) const {
     
   interaction1->PickAnyDirection(); // first pick the neutrino direction
     
@@ -298,7 +287,7 @@ int icemc::IceModel::PickUnbiased(Interaction *interaction1, const IceModel *ant
   interaction1->toohigh=0;
   interaction1->toolow=0;
     
-  thisr_in.SetXYZ(EarthModel::EarthRadiusMeters*thissin*thiscos,EarthModel::EarthRadiusMeters*thissin*thissin,EarthModel::EarthRadiusMeters*thiscos);
+  thisr_in.SetXYZ(Earth::BulgeRadius*thissin*thiscos,Earth::BulgeRadius*thissin*thissin,Earth::BulgeRadius*thiscos);
   // interaction1->r_in = thisr_in;
 
   if (thisr_in.Dot(interaction1->nnu)>0)
@@ -475,7 +464,7 @@ int icemc::IceModel::PickUnbiased(Interaction *interaction1, const IceModel *ant
     
 }
 
-icemc::Vector icemc::IceModel::GetSurfaceNormal(const Position &r_out) const {
+icemc::Vector icemc::Antarctica::GetSurfaceNormal(const Position &r_out) const {
   Vector n_surf = r_out.Unit();
   if (FLATSURFACE) {
     return n_surf;
@@ -577,7 +566,7 @@ icemc::Vector icemc::IceModel::GetSurfaceNormal(const Position &r_out) const {
     
 } //method GetSurfaceNormal
 
-int icemc::IceModel::WhereDoesItEnterIce(const Position &posnu,
+int icemc::Antarctica::WhereDoesItEnterIce(const Position &posnu,
 					 const Vector &nnu,
 					 double stepsize,
 					 Position &r_enterice) const {
@@ -666,7 +655,7 @@ int icemc::IceModel::WhereDoesItEnterIce(const Position &posnu,
   return foundit;
 }//WhereDoesItEnterIce
 
-int icemc::IceModel::WhereDoesItExitIce(const Position &posnu,
+int icemc::Antarctica::WhereDoesItExitIce(const Position &posnu,
 					const Vector &nnu,
 					double stepsize,
 					Position &r_enterice) const {
@@ -758,7 +747,7 @@ int icemc::IceModel::WhereDoesItExitIce(const Position &posnu,
   return foundit;
 }//WhereDoesItExitIce
 
-int icemc::IceModel::WhereDoesItExitIceForward(const Position &posnu,
+int icemc::Antarctica::WhereDoesItExitIceForward(const Position &posnu,
 					       const Vector &nnu,
 					       double stepsize,
 					       Position &r_enterice) const {
@@ -847,7 +836,7 @@ int icemc::IceModel::WhereDoesItExitIceForward(const Position &posnu,
 }//WhereDoesItExitIceForward
 
 
-double icemc::IceModel::IceThickness(double lon, double lat) const {
+double icemc::Antarctica::IceThickness(double lon, double lat) const {
   //This method returns the thickness of the ice in meters at a location specified by a latitude and longitude (in degrees).  A switch in the input file can be set to determine whether the Crust 2.0 model or the BEDMAP model is used to find the ice depth.  Code by Stephen Hoover.
   double ice_thickness=0;
   //std::cout << "ice_model is " << ice_model << "\n";
@@ -856,10 +845,12 @@ double icemc::IceModel::IceThickness(double lon, double lat) const {
     int e_coord=0;
     int n_coord=0;
     IceLonLattoEN(lon,lat,e_coord,n_coord);
-    if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord > 0)
+    if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord > 0){
       ice_thickness = ice_thickness_array[e_coord][n_coord]; //if this region has BEDMAP data, use it.
-    else
+    }
+    else{
       ice_thickness = icethkarray[(int)(lon/2)][(int)(lat/2)]*1000.; //if the location given is not covered by BEDMAP, use Crust 2.0 data
+    }
   } //BEDMAP ice thickness
   else if (ice_model==0) {
     ice_thickness = icethkarray[(int)(lon/2)][(int)(lat/2)]*1000.;
@@ -869,17 +860,17 @@ double icemc::IceModel::IceThickness(double lon, double lat) const {
   return ice_thickness;
 } //method IceThickness
 
-double icemc::IceModel::IceThickness(const Position &pos) const {
+double icemc::Antarctica::IceThickness(const Position &pos) const {
   //This method returns the thickness of the ice in meters at a location under a given position vector.  Code by Stephen Hoover.
     
   return IceThickness(pos.Lon(),pos.Lat());
 } //method IceThickness(position)
 
-double icemc::IceModel::SurfaceAboveGeoid(double lon, double lat) const {
+double icemc::Antarctica::SurfaceAboveGeoid(double lon, double lat) const {
   //This method returns the elevation above the geoid of the surface of the ice (or bare ground, if no ice is present) in meters, at a location specified by a latitude and longitude (in degrees).  In areas covered by water where no ice present, the method returns 0.  A switch in the input file can be set to determine whether the Crust 2.0 model or the BEDMAP model is used to find the ice depth.  Code by Stephen Hoover.
   // lon must be 0 to 360
   double surface=0;
-    
+
   if (ice_model==1) {
     int e_coord_ice=0;
     int n_coord_ice=0;
@@ -887,10 +878,12 @@ double icemc::IceModel::SurfaceAboveGeoid(double lon, double lat) const {
     int n_coord_ground=0;
     IceLonLattoEN(lon,lat,e_coord_ice,n_coord_ice);
     GroundLonLattoEN(lon,lat,e_coord_ground,n_coord_ground);
-    if (e_coord_ground <= 1068 && e_coord_ground >= 0 && n_coord_ground <= 869 && n_coord_ground >= 0 && e_coord_ice <= 1200 && e_coord_ice >= 0 && n_coord_ice <= 1000 && n_coord_ice >= 0)
+    if (e_coord_ground <= 1068 && e_coord_ground >= 0 && n_coord_ground <= 869 && n_coord_ground >= 0 && e_coord_ice <= 1200 && e_coord_ice >= 0 && n_coord_ice <= 1000 && n_coord_ice >= 0){
       surface = ground_elevation[e_coord_ground][n_coord_ground] + ice_thickness_array[e_coord_ice][n_coord_ice] + water_depth[e_coord_ice][n_coord_ice];
-    else
+    }
+    else{
       surface = surfacer[(int)(lon/2)][(int)(lat/2)]; //If the position requested is outside the bounds of the BEDMAP data, use the Crust 2.0 data, regardless of the ice_model flag.
+    }
   } //Elevation of surface above geoid according to BEDMAP
   else if (ice_model==0) {
     surface = surfacer[(int)(lon/2)][(int)(lat/2)];
@@ -899,21 +892,21 @@ double icemc::IceModel::SurfaceAboveGeoid(double lon, double lat) const {
   return surface;
 } //method SurfaceAboveGeoid
 
-double icemc::IceModel::SurfaceAboveGeoid(const Position &pos) const {
+double icemc::Antarctica::SurfaceAboveGeoid(const Position &pos) const {
   //This method returns the elevation above the geoid of the surface of the ice (or bare ground, if no ice is present) in meters, at a location specified by a position vector.  Code by Stephen Hoover.
     
   return SurfaceAboveGeoid(pos.Lon(),pos.Lat());
 } //method SurfaceAboveGeoid(position)
 
-double icemc::IceModel::Surface(double lon,double lat) const {
+double icemc::Antarctica::Surface(double lon,double lat) const {
   return (SurfaceAboveGeoid(lon,lat) + Geoid(lat)); // distance from center of the earth to surface
 } //Surface
 
-double icemc::IceModel::Surface(const Position& pos) const {
+double icemc::Antarctica::Surface(const Position& pos) const {
   return Surface(pos.Lon(),pos.Lat());
 } //Surface
 
-double icemc::IceModel::WaterDepth(double lon, double lat) const {
+double icemc::Antarctica::WaterDepth(double lon, double lat) const {
   //This method returns the depth of water beneath ice shelves in meters, at a location specified by a latitude and longitude (in degrees).  A switch in the input file can be set to determine whether the Crust 2.0 model or the BEDMAP model is used to find the ice depth.  Code by Stephen Hoover.
   double water_depth_value=0;
     
@@ -932,19 +925,19 @@ double icemc::IceModel::WaterDepth(double lon, double lat) const {
     
   return water_depth_value;
 } //method WaterDepth(longitude, latitude)
-double icemc::IceModel::WaterDepth(const Position &pos) const {
+double icemc::Antarctica::WaterDepth(const Position &pos) const {
   //This method returns the depth of water beneath ice shelves in meters, at a location specified by a position vector.  Code by Stephen Hoover.
     
   return WaterDepth(pos.Lon(),pos.Lat());
 } //method WaterDepth(position)
 
-int icemc::IceModel::IceOnWater(const Position &pos) const{
+int icemc::Antarctica::IceOnWater(const Position &pos) const{
   if(IceThickness(pos)>0.&&WaterDepth(pos)>0.)
     return 1;
   else return 0;
     
 }
-int icemc::IceModel::RossIceShelf(const Position &pos) const {
+int icemc::Antarctica::RossIceShelf(const Position &pos) const {
   int ilon,ilat;
     
   GetILonILat(pos,ilon,ilat);
@@ -952,37 +945,42 @@ int icemc::IceModel::RossIceShelf(const Position &pos) const {
   if ((ilat==2 && ilon>=5 && ilon<=14) ||
       (ilat==3 && (ilon>=168 || ilon<=14)) ||
       (ilat==4 && (ilon>=168 || ilon<=13)) ||
-      (ilat==5 && (ilon>=168 || ilon<=14)))
+      (ilat==5 && (ilon>=168 || ilon<=14))){
     return 1;
-  else
+  }
+  else{
     return 0;
+  }
 }//RossIceShelf
 
-int icemc::IceModel::RossExcept(const Position &pos) const{
+int icemc::Antarctica::RossExcept(const Position &pos) const{
   int ilon,ilat;
   GetILonILat(pos,ilon,ilat);
-  if(ilon<=178&&ilon>=174&&ilat>=4&&ilat<=5)
+  if(ilon<=178&&ilon>=174&&ilat>=4&&ilat<=5){
     return 1;
-  else 
+  }
+  else {
     return 0;
+  }
 }
 
 
-int icemc::IceModel::RonneIceShelf(const Position &pos) const {
+int icemc::Antarctica::RonneIceShelf(const Position &pos) const {
   int ilon,ilat;
     
   GetILonILat(pos,ilon,ilat);
     
   if ((ilat==4 && ilon>=52 && ilon<=74) ||
       (ilat==5 && ilon>=50 && ilon<=71) ||
-      (ilat==6 && ilon>=55 && ilon<=64))
+      (ilat==6 && ilon>=55 && ilon<=64)){
     return 1;
-  else
+  }
+  else{
     return 0;
-    
+  }    
 }//RonneIceShelf
 
-int icemc::IceModel::WestLand(const Position &pos) const {
+int icemc::Antarctica::WestLand(const Position &pos) const {
   double lon = pos.Lon() , lat = pos.Lat();
     
   if((lat>=4&&lat<=26)&&((lon>=0&&lon<=180)||lon>=336))
@@ -991,32 +989,35 @@ int icemc::IceModel::WestLand(const Position &pos) const {
     
 }//WestLand
 
-double icemc::IceModel::GetBalloonPositionWeight(int ibnpos) const {
+
+double icemc::Antarctica::GetBalloonPositionWeight(int ibnpos) const {
   //  std::cout << "ibnpos, volume_inhorizon, volume are " << ibnpos << " " << volume_inhorizon[ibnpos] << " " << volume << "\n";
   if (volume_inhorizon[ibnpos]==0) {
-    std::cout << "volume in horizon is zero!\n";
+    icemcLog() << icemc::error << "Volume in horizon is zero!\n";
     exit(1);
   }
-    
+
   return volume/volume_inhorizon[ibnpos];
 } //GetBalloonPositionWeight
 
-int icemc::IceModel::OutsideAntarctica(const Position &pos) const {
+
+int icemc::Antarctica::OutsideAntarctica(const Position &pos) const {
   return (pos.Lat() >= COASTLINE);
 } //OutsideAntarctica(Position)
 
-int icemc::IceModel::OutsideAntarctica(double lat) const {
+
+int icemc::Antarctica::OutsideAntarctica(double lat) const {
   return (lat >= COASTLINE);
 } //OutsideAntarctica(double lat)
 
-int icemc::IceModel::AcceptableRfexit(const Vector &nsurf_rfexit,const Position &rfexit,const Vector &n_exit2rx) {
-    
+
+int icemc::Antarctica::AcceptableRfexit(const Vector &nsurf_rfexit,const Position &rfexit,const Vector &n_exit2rx) {
+
   //Make sure there's actually ice where the ray leaves
   if (rfexit.Lat()>COASTLINE || IceThickness(rfexit)<0.0001) {
     std::cout << "latitude is " << rfexit.Lat() << " compared to COASTLINE at " << COASTLINE << "\n";
     std::cout << "ice thickness is " << IceThickness(rfexit) << "\n";
     return 0;
-	
   } //if
     
   if (nsurf_rfexit.Dot(n_exit2rx)<0) {
@@ -1027,94 +1028,100 @@ int icemc::IceModel::AcceptableRfexit(const Vector &nsurf_rfexit,const Position 
   return 1;
 } //AcceptableRfexit
 
-double icemc::IceModel::GetN(double altitude) const {
+double icemc::Antarctica::GetN(double altitude) const {
   // these are Peter's fit parameters
   double a1=0.463251;
   double b1=0.0140157;
   double n=0;
-    
-  if (altitude < FIRNDEPTH) 
+
+  if (altitude < constants::FIRNDEPTH) {
     n=AskaryanFreqsGenerator::NICE;
-  else if (altitude >= FIRNDEPTH && altitude <=0 && DEPTH_DEPENDENT_N) 
+  }
+  else if (altitude >= constants::FIRNDEPTH && altitude <=0 && DEPTH_DEPENDENT_N) {
     //    N_DEPTH=NFIRN-(4.6198+13.62*(altitude_int/1000.))*
     //(altitude_int/1000.);   // Besson's equation for n(z)
     n=constants::NFIRN+a1*(1.0-exp(b1*altitude));   // Peter's equation for n(z)
-  else if (altitude > 0)
+  }
+  else if (altitude > 0){
     std::cout<<"Error!  N requested for position in air!\n";
-  else if (!DEPTH_DEPENDENT_N)
+  }
+  else if (!DEPTH_DEPENDENT_N){
     n = constants::NFIRN;
-    
+  }    
   return n;
 } //GetN(altitude)
 
-double icemc::IceModel::GetN(const Position &pos) const {
+double icemc::Antarctica::GetN(const Position &pos) const {
   return GetN(pos.Mag() - Surface(pos.Lon(),pos.Lat()));
 } //GetN(Position)
 
-double icemc::IceModel::EffectiveAttenuationLength(const Settings *settings1,const Position &pos,const int &whichray) const {
+double icemc::Antarctica::EffectiveAttenuationLength(const Settings *settings1,const Position &pos,const int &whichray) const {
   double localmaxdepth = IceThickness(pos);
   double depth = Surface(pos) - pos.Mag();
   //std::cout << "depth is " << depth << "\n";
   int depth_index=0;
   double attenuation_length=0.0;
     
-  if(WestLand(pos) && !CONSTANTICETHICKNESS) 
-    {
-      depth_index=int(depth*419.9/localmaxdepth);//use 420 m ice shelf attenuation length data as the standard, squeeze or stretch if localmaxdepth is longer or shorter than 420m.
-      if(RossIceShelf(pos) || RonneIceShelf(pos)) 
-	{	  
-	  if(whichray==0)
-	    attenuation_length=l_shelfup[depth_index];
-	  else if(whichray==1)
-	    attenuation_length=l_shelfdown[depth_index];
-	  else
-	    std::cerr << " wrong attenuation length " <<std::endl;
-	    
-	  //for sanity check
-	  if((depth_index+0.5)!=d_shelfup[depth_index])
-	    {
-	      std::cerr << "the index of the array l_iceshelfup is wrong!" << std::endl;
-	      exit(1);
-	    }
-	}
-      else //in ice sheet of westland
-	{
-	  if(whichray==0)
-	    attenuation_length=l_westlandup[depth_index]; 
-	  else if(whichray==1)
-	    attenuation_length=l_westlanddown[depth_index];
-	  else
-	    std::cerr << " wrong attenuation length " <<std::endl;
-      	}
-	
-      if(settings1->MOOREBAY)//if use Moore's Bay measured data for the west land
-	attenuation_length*=1.717557; //about 450 m (field attenuation length) for one whole way when assuming -3dB for the power loss at the bottom
-    }
-  else //in east antarctica or constant ice thickness
-    { 
-	
-      depth_index =int(depth*(2809.9/localmaxdepth));
-	
-	
-      if(whichray==0)
-	attenuation_length =l_sheetup[depth_index];
-      else if(whichray==1)
-	attenuation_length =l_sheetdown[depth_index];
-      else
+  if(WestLand(pos) && !CONSTANTICETHICKNESS) {
+    depth_index=int(depth*419.9/localmaxdepth);//use 420 m ice shelf attenuation length data as the standard, squeeze or stretch if localmaxdepth is longer or shorter than 420m.
+    if(RossIceShelf(pos) || RonneIceShelf(pos)) {	  
+      if(whichray==0){
+	attenuation_length=l_shelfup[depth_index];
+      }
+      else if(whichray==1){
+	attenuation_length=l_shelfdown[depth_index];
+      }
+      else{
 	std::cerr << " wrong attenuation length " <<std::endl;
-    } //else
+      }	    
+      //for sanity check
+      if((depth_index+0.5)!=d_shelfup[depth_index])
+	{
+	  std::cerr << "the index of the array l_iceshelfup is wrong!" << std::endl;
+	  exit(1);
+	}
+    }
+    else{ //in ice sheet of westland
+      if(whichray==0){
+	attenuation_length=l_westlandup[depth_index]; 
+      }
+      else if(whichray==1){
+	attenuation_length=l_westlanddown[depth_index];
+      }
+      else{
+	std::cerr << " wrong attenuation length " <<std::endl;
+      }
+    }
+	
+    if(settings1->MOOREBAY)//if use Moore's Bay measured data for the west land
+      attenuation_length*=1.717557; //about 450 m (field attenuation length) for one whole way when assuming -3dB for the power loss at the bottom
+  }
+  else{ //in east antarctica or constant ice thickness
+
+    depth_index =int(depth*(2809.9/localmaxdepth));
+
+    if(whichray==0){
+      attenuation_length =l_sheetup[depth_index];
+    }
+    else if(whichray==1){
+      attenuation_length =l_sheetdown[depth_index];
+    }
+    else {
+      std::cerr << " wrong attenuation length " <<std::endl;
+    }
+  }
     
   return attenuation_length;
 } //EffectiveAttenuationLengthUp
 
-double icemc::IceModel::Area(double latitude) const {
+double icemc::Antarctica::Area(double latitude) const {
   //Returns the area of one square of the BEDMAP data at a given latitude. 
   double lat_rad = (90 - latitude) * constants::RADDEG;
     
   return (pow(cellSize* ((1 + sin(71*constants::RADDEG)) / (1 + sin(lat_rad))),2));
 } //method Area
 
-void icemc::IceModel::LonLattoEN(double lon, double lat, double xLowerLeft, double yLowerLeft, int& e_coord, int& n_coord) const {
+void icemc::Antarctica::LonLattoEN(double lon, double lat, double xLowerLeft, double yLowerLeft, int& e_coord, int& n_coord) const {
   //takes as input a latitude and longitude (in degrees) and converts to indicies for BEDMAP matricies. Needs a location for the corner of the matrix, as not all the BEDMAP files cover the same area.  Code by Stephen Hoover.
     
   double easting=0;
@@ -1137,20 +1144,20 @@ void icemc::IceModel::LonLattoEN(double lon, double lat, double xLowerLeft, doub
   return;
 } //method LonLattoEN
 
-void icemc::IceModel::IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const {
+void icemc::Antarctica::IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const {
   //Converts a latitude and longitude (in degrees) to indicies for BEDMAP ice thickness data.  Code by Stephen Hoover.
   LonLattoEN(lon, lat, xLowerLeft_ice, yLowerLeft_ice, e_coord, n_coord);
 }//IceLonLattoEN
-void icemc::IceModel::GroundLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const {
+void icemc::Antarctica::GroundLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const {
   //Converts a latitude and longitude (in degrees) to indicies for BEDMAP ground elevation data.  Code by Stephen Hoover.
   LonLattoEN(lon, lat, xLowerLeft_ground, yLowerLeft_ground, e_coord, n_coord);
 }//GroundLonLattoEN
-void icemc::IceModel::WaterLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const {
+void icemc::Antarctica::WaterLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const {
   //Converts a latitude and longitude (in degrees) to indicies for BEDMAP water depth data.  Code by Stephen Hoover.
   LonLattoEN(lon, lat, xLowerLeft_water, yLowerLeft_water, e_coord, n_coord);
 }//WaterLonLattoEN
 
-void icemc::IceModel::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, double yLowerLeft, double& lon, double& lat) const {
+void icemc::Antarctica::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, double yLowerLeft, double& lon, double& lat) const {
   //Takes as input the indicies from a BEDMAP data set, and turns them into latitude and longitude coordinates.  Information on which data set (surface data, ice depth, water depth) is necessary, in the form of coordinates of a corner of the map.  Code by Stephen Hoover.
     
   double isometric_lat=0;
@@ -1205,67 +1212,76 @@ void icemc::IceModel::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, do
     
 } //method ENtoLonLat
 
-void icemc::IceModel::IceENtoLonLat(int e, int n, double& lon, double& lat) const {
+void icemc::Antarctica::IceENtoLonLat(int e, int n, double& lon, double& lat) const {
   //Converts indicies of the BEDMAP ice thickness matrix into longitude and latitude.  Code by Stephen Hoover.
   // std::cout << "I'm inside IceENtoLonLat.\n";
   ENtoLonLat(e,n,xLowerLeft_ice,yLowerLeft_ice,lon,lat);
 }//IceENtoLonLat
-void icemc::IceModel::GroundENtoLonLat(int e, int n, double& lon, double& lat) const {
+void icemc::Antarctica::GroundENtoLonLat(int e, int n, double& lon, double& lat) const {
   //Converts indicies of the BEDMAP ground elevation matrix into longitude and latitude.  Code by Stephen Hoover.
   ENtoLonLat(e,n,xLowerLeft_ground,yLowerLeft_ground,lon,lat);
 }//GroundENtoLonLat
-void icemc::IceModel::WaterENtoLonLat(int e, int n, double& lon, double& lat) const {
+void icemc::Antarctica::WaterENtoLonLat(int e, int n, double& lon, double& lat) const {
   //Converts indicies of the BEDMAP water depth matrix into longitude and latitude.  Code by Stephen Hoover.
   ENtoLonLat(e,n,xLowerLeft_water,yLowerLeft_water,lon,lat);
 }//WaterENtoLonLat
 
-void icemc::IceModel::GetMAXHORIZON(Balloon *bn1) const {
-    
+void icemc::Antarctica::GetMAXHORIZON(Balloon *bn1) const {
+
   double altitude_inmeters=bn1->BN_ALTITUDE*12.*constants::CMINCH/100.;
   if (bn1->BN_ALTITUDE==0.){
     bn1->MAXHORIZON=8.E5; // if it is a standard flight then use a horizon of 800 km
   }
   else{
-    bn1->MAXHORIZON=(sqrt((EarthModel::EarthRadiusMeters+altitude_inmeters)*(EarthModel::EarthRadiusMeters+altitude_inmeters)-EarthModel::EarthRadiusMeters*EarthModel::EarthRadiusMeters))*1.1;
+    bn1->MAXHORIZON=(sqrt((Earth::BulgeRadius+altitude_inmeters)*(Earth::BulgeRadius+altitude_inmeters)-Earth::BulgeRadius*Earth::BulgeRadius))*1.1;
     // find distance from hrizon to balloon, increase it by 10% to be conservative.
   }
-  std::cout << "MAXHORIZON is " << bn1->MAXHORIZON << "\n";
+  icemcLog() << icemc::info << "MAXHORIZON is " << bn1->MAXHORIZON << std::endl;
 }
 
 
-void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput) {
-    
+void icemc::Antarctica::CreateHorizons(const Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn) {
+
   // add up volume of ice within horizon of payload
   // goes a little beyond horizon.
-    
+
   // when we select a path in a circle at 80deg S latitude,
   // vectors are binned in phi (longitude).
-    
-  // when we select the Anita-lite path, 
+
+  // when we select the Anita-lite path,
   // vectors are binned in time.
-    
+
   //for (int i=0; i<60;i++)
   //cout<<"area at lat "<<(double)i/2<<" is "<<Area((double)i/2)<<std::endl;
-  
+
   volume = 0.; // initialize volume to zero
-    
+
   double total_area=0; // initialize total area to zero
   int NBALLOONPOSITIONS; // number of balloon positions considered here
-  if (bn1->whichPath()==FlightPath::AnitaLite) // if anita-lite
+  if (bn1->whichPath()==FlightPath::AnitaLite){ // if anita-lite
     NBALLOONPOSITIONS=(int)((double)bn1->NPOINTS/(double)bn1->REDUCEBALLOONPOSITIONS); //only take 1/100 of the total balloon positions that we have because otherwise it's overkill.
-  else if (bn1->whichPath()==FlightPath::Anita1 || bn1->whichPath()==FlightPath::Anita2 || bn1->whichPath()==FlightPath::Anita3 || bn1->whichPath()==FlightPath::Anita4) {
+  }
+  else if (bn1->whichPath()==FlightPath::Anita1 ||
+	   bn1->whichPath()==FlightPath::Anita2 ||
+	   bn1->whichPath()==FlightPath::Anita3 ||
+	   bn1->whichPath()==FlightPath::Anita4) {
+
     NBALLOONPOSITIONS=(int)((double)bn1->fChain->GetEntries()/(double)bn1->REDUCEBALLOONPOSITIONS)+1;
   }
-  else if (bn1->whichPath()==FlightPath::Circle80DegreesSouth) // for picking random point along 80 deg south
+
+  else if (bn1->whichPath()==FlightPath::Circle80DegreesSouth){ // for picking random point along 80 deg south
+
     NBALLOONPOSITIONS=NPHI; // NPHI is the number of bins in phi for the visible ice in the horizon.  This is not the same as NLON, the number of bins in longitude for crust 2.0
-  else // includes fixed position (bn1->whichPath()=0)
-    NBALLOONPOSITIONS=1;
-    
+  }
+  else{ // includes fixed position (bn1->whichPath()=0)
+    NBALLOONPOSITIONS = 1;
+  }
+
   if (NBALLOONPOSITIONS>NBNPOSITIONS_MAX) {
-    std::cout << "Number of balloon positions is greater than max allowed.\n";
+    icemcLog() << icemc::error << "Number of balloon positions is greater than max allowed.\n";
     exit(1);
   }
-    
+
   double phi_bn_temp=0; //phi of balloon, temporary variable
   Position r_bn_temp; //position of balloon
   Position r_bin; // position of each bin
@@ -1284,7 +1300,10 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
   int e_coord = 0;
   int n_coord = 0;
     
-  sprintf(horizon_file,"bedmap_horizons_whichpath%i_weights%i.dat",bn1->whichPath(),settings1->USEPOSITIONWEIGHTS);
+  sprintf(horizon_file,
+	  "bedmap_horizons_whichpath%i_weights%i.dat",
+	  bn1->whichPath(),
+	  settings1->USEPOSITIONWEIGHTS);
 
   bool writeFile = settings1->WRITE_FILE > 0;
 
@@ -1302,47 +1321,46 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
   } //if
 
   //@todo does this if statement make sense?
-  if (bn1->whichPath()!=FlightPath::AnitaLite && bn1->whichPath()!=FlightPath::Anita1) // not anita and not anita-lite
-    lat=GetLat(theta_bn); //get index of latitude, same for all balloon positions
-    
-    
-    
+  if (bn1->whichPath()!=FlightPath::AnitaLite && bn1->whichPath()!=FlightPath::Anita1){ // not anita and not anita-lite
+    lat = GetLat(theta_bn); //get index of latitude, same for all balloon positions
+  }    
+
   for (int i=0;i<NBALLOONPOSITIONS;i++) { // loop over balloon positions
 	
     maxvol_inhorizon[i]=-1.; // volume of bin with the most ice in the horizon
 	
     if (bn1->whichPath()==FlightPath::AnitaLite) { // anita or anita-lite path
       theta_bn=(90+bn1->latitude_bn_anitalite.at(i*100))*constants::RADDEG; //theta of the balloon wrt north pole
-      lat=GetLat(theta_bn); // latitude  
-      phi_bn_temp=(-1*bn1->longitude_bn_anitalite.at(i*100)+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
-      if (phi_bn_temp<0) //correct phi_bn if it's negative
+      lat = GetLat(theta_bn); // latitude  
+      phi_bn_temp =  (-1*bn1->longitude_bn_anitalite.at(i*100)+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
+      if (phi_bn_temp<0){ //correct phi_bn if it's negative
 	phi_bn_temp+=360.;
+      }
       phi_bn_temp*=constants::RADDEG;// turn it into radians
-	    
-	    
+
       altitude_bn=bn1->altitude_bn_anitalite.at(i*100)*12.*constants::CMINCH/100.; // get the altitude for this balloon posistion
       //altitude_bn=altitude_bn_anitalite[i*100]*12.*CMINCH/100.; // for anita, altitude in is meters
 	    
     } // end if anita-lite
-	
-       
-	
+
     else if (bn1->whichPath()==FlightPath::Anita1 || 
 	     bn1->whichPath()==FlightPath::Anita2 || 
 	     bn1->whichPath()==FlightPath::Anita3 || 
 	     bn1->whichPath()==FlightPath::Anita4) {
-	    
+
       bn1->fChain->GetEvent(i*100);
-	    
-      theta_bn=(90+(double)bn1->flatitude)*constants::RADDEG; //theta of the balloon wrt north pole
+
+      theta_bn = (90+(double)bn1->flatitude)*constants::RADDEG; //theta of the balloon wrt north pole
+
       lat=GetLat(theta_bn); // latitude  
       phi_bn_temp=(-1*(double)bn1->flongitude+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
-      if (phi_bn_temp<0) //correct phi_bn if it's negative
+      if (phi_bn_temp<0){ //correct phi_bn if it's negative
 	phi_bn_temp+=360.;
+      }
       phi_bn_temp*=constants::RADDEG;// turn it into radians
-	    
-      altitude_bn=(double)bn1->faltitude; // for anita, altitude in is meters
-	    
+
+      altitude_bn = (double) bn1->faltitude; // for anita, altitude in is meters
+
     } // end if anita or anita-lite
     else if (bn1->whichPath()==FlightPath::Circle80DegreesSouth){ // for picking random position along 80 deg south
       phi_bn_temp=dGetPhi(i); //get phi of the balloon just based on the balloon positions.  Remember nballoonpositions runs from 0 to 179 here.
@@ -1350,89 +1368,78 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
     }
     else{ // includes bn1->whichPath()=0 
       phi_bn_temp=phi_bn;
-    }	
-    // altitude_bn has already been set in SetDefaultBalloonPosition 
+    }
+    // altitude_bn has already been set in SetDefaultBalloonPosition
     // same for theta_bn
     // lat set above
-	
-    lon=GetLon(phi_bn_temp); //get longitude for this phi position
+    lon = GetLon(phi_bn_temp); //get longitude for this phi position
     // lon goes from 0 (at -180 longitude) to 360 (at 180 longitude)
-	
+
     // position of balloon
     surface_elevation = this->Surface(lon,lat); // distance from center of the earth to surface at this lon and lat
+    
     r_bn_temp = Vector(sin(theta_bn)*cos(phi_bn_temp)*(surface_elevation+altitude_bn),
 		       sin(theta_bn)*sin(phi_bn_temp)*(surface_elevation+altitude_bn),
 		       cos(theta_bn)*(surface_elevation+altitude_bn)); // vector from center of the earth to balloon
 	
-    // cout << "MAXHORIZON is " << MAXHORIZON << "\n";
-	
-	
     if (ice_model==0) { // Crust 2.0
       for (int j=0;j<NLON;j++) { // loop over bins in longitude
 	for (int k=0;k<ILAT_COASTLINE;k++) { // loop over bins in latitude
-		    
+
 	  // get position of each bin
 	  r_bin = Vector(sin(dGetTheta(k))*cos(dGetPhi(j))*(geoid[k]+surfacer[j][k]),
 			 sin(dGetTheta(k))*sin(dGetPhi(j))*(geoid[k]+surfacer[j][k]),
 			 cos(dGetTheta(k))*(geoid[k]+surfacer[j][k])); // vector from center of the earth to the surface of this bin
-		    
-		    
-	  if (!volume_found) 
+
+	  if (!volume_found){ 
 	    volume += icethkarray[j][k]*1000*area[k]; // add this to the total volume of ice in antarctica
-	  if (!volume_found && icethkarray[j][k] > 0)
+	  }
+	  if (!volume_found && icethkarray[j][k] > 0){
 	    total_area += area[k]; // add this to the total area of ice in antarctica
-		    
+	  }
 	  // if the bin is within the maximum horizon of the balloon or if we don't care
 	  //r=(geoid[k]+surfacer[j][k]);
 	  //phi=dGetPhi(j);
 	  //theta=dGetTheta(k);
 		    
 	  //	  cout << "USEWEIGHTS is " << USEWEIGHTS << "\n";
-	  if ((settings1->USEPOSITIONWEIGHTS && r_bin.Distance(r_bn_temp)<bn1->MAXHORIZON)
+	  if ((settings1->USEPOSITIONWEIGHTS && r_bin.Distance(r_bn_temp) < bn1->MAXHORIZON)
 	      || !settings1->USEPOSITIONWEIGHTS) {
 	    // then put this latitude and longitude in vector
-			
-			
+
 	    ilat_inhorizon[i].push_back(k); 
 	    ilon_inhorizon[i].push_back(j);
 	    // add up volume in horizon
 			
-			
 	    volume_inhorizon[i]+=icethkarray[j][k]*1000*area[k];
-			
-			
+
 	    // finding which bin in horizon has maximum volume
 	    if (icethkarray[j][k]*1000*area[k]>maxvol_inhorizon[i]) {
 	      maxvol_inhorizon[i]=icethkarray[j][k]*1000.*area[k];
 	    }
 	  } //end if (distance < 800 km)
-		    
-		    
 	} //end for (k loop)
-      } //end for (j loop)   
-	    
+      } //end for (j loop)
       //      cout << "i, volume_inhorizon are " << i << " " << volume_inhorizon[i] << "\n";
-	    
+
       // ifi the balloon is too close to the ice, it will think there aren't any
       // bins in the horizon, so force it the include the ones just below the balloon
       int ilat_bn,ilon_bn;
       GetILonILat(r_bn_temp,ilon_bn,ilat_bn); // find which longitude and latitude the balloon is above
-	    
+
       if (ilat_inhorizon[i].size()==0 || ilon_inhorizon[i].size()==0) {
 	maxvol_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // need to give it a maximum volume for a bin in horizon 
 	volume_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // and a total volume for the horizon
       }
-	    
-      if (ilat_inhorizon[i].size()==0) // for the ith balloon position, if it didn't find a latitude bin in horizon
+
+      if (ilat_inhorizon[i].size()==0){ // for the ith balloon position, if it didn't find a latitude bin in horizon
 	ilat_inhorizon[i].push_back(ilat_bn); // force it to be the one below the balloon       
-	    
-      if (ilon_inhorizon[i].size()==0) // for the ith balloon position, if it didn't find a longitude bin in horizon
+      }	    
+      if (ilon_inhorizon[i].size()==0){ // for the ith balloon position, if it didn't find a longitude bin in horizon
 	ilon_inhorizon[i].push_back(ilon_bn); // force it to be the one below the balloon
-	    
-	    
-	    
+      }
     } //end if (ice_model==0) Crust 2.0
-	
+
     else if (ice_model==1 && !writeFile) { // for bedmap model
       fgets(line,200,bedmap_horizons);
       while(line[0] != 'X') {
@@ -1445,23 +1452,22 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
       strtok(line,",");
       volume_inhorizon[i] = atof(strtok(NULL,",")); // volume in the horizon
       maxvol_inhorizon[i] = atof(strtok(NULL,","));
-	    
+
       if (!volume_found) {
 	total_area = atof(fgets(line,200,bedmap_horizons)); // total area on the continent
 	volume = atof(fgets(line,200,bedmap_horizons)); // total volume on the continent
       } //if
     } //end if (ice_model==1) && !writeFile
-	
+
     else if (ice_model==1 && writeFile) { //for BEDMAP model, look through all easting and northing coordinates in the groundbed map (our smallest).  Output what we find to a file for later use.
-	    
       for (int n_coord=0;n_coord<nRows_ground;n_coord++) {
 	for (int e_coord=0;e_coord<nCols_ground;e_coord++) {
-		    
+
 	  GroundENtoLonLat(e_coord,n_coord,lon,lat);
-		    
+
 	  theta = lat * constants::RADDEG;
 	  phi=LongtoPhi_0is180thMeridian(lon);
-		    
+
 	  surface_elevation = this->Surface(lon,lat);
 	  local_ice_thickness = this->IceThickness(lon,lat);
 		    
@@ -1470,22 +1476,23 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
 			 sin(theta)*sin(phi)*surface_elevation,
 			 cos(theta)*surface_elevation);
 		    
-	  if (!volume_found)
+	  if (!volume_found){
 	    volume += local_ice_thickness*Area(lat);
-	  if (!volume_found && local_ice_thickness > 5)
+	  }
+	  if (!volume_found && local_ice_thickness > 5){
 	    total_area += Area(lat);
+	  }
 	  if ((settings1->USEPOSITIONWEIGHTS && r_bn_temp.Distance(r_bin)<bn1->MAXHORIZON) || !settings1->USEPOSITIONWEIGHTS) {
 	    fprintf(bedmap_horizons,"%i,%i,\n",e_coord,n_coord);
 	    // then put this latitude and longitude in vector
 	    easting_inhorizon[i].push_back(e_coord);
 	    northing_inhorizon[i].push_back(n_coord);
 	    // add up volume in horizon
-			
+
 	    GroundENtoLonLat(e_coord,n_coord,lon,lat);
-			
-			
+
 	    volume_inhorizon[i]+=local_ice_thickness*Area(lat);
-			
+
 	    // finding which bin in horizon has maximum volumey
 	    if (local_ice_thickness*Area(lat)>maxvol_inhorizon[i]) {
 	      maxvol_inhorizon[i]=local_ice_thickness*Area(lat);
@@ -1493,15 +1500,14 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
 	  } //end if (distance < 800 km & ice present)
 	} //end for (e_coord loop)
       } //end for (n_coord loop)
-	    
+
       fprintf(bedmap_horizons,"X,%f,%f,\n",volume_inhorizon[i],maxvol_inhorizon[i]);
       if (!volume_found) {
 	fprintf(bedmap_horizons,"%f\n",total_area);
 	fprintf(bedmap_horizons,"%f\n",volume);
       } //if
-	    
     } //end if (ice_model==1) && writeFile
-	
+
     if (!volume_found) {
       std::cout << "Total surface area covered with ice (in m^2) is : "<<total_area<<std::endl;
       volume_found=1;
@@ -1520,13 +1526,13 @@ void icemc::IceModel::CreateHorizons(const Settings *settings1,Balloon *bn1,doub
   //cout << "Total volume of ice in Antarctica with this ice model (m^3): " << volume << "\n";
   //cout << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
     
-  foutput << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
+  icemcLog() << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
     
-  foutput << "Average thickness of ice within horizon, averages over balloon positions " << volume_inhorizon_average/constants::PI/pow(bn1->MAXHORIZON,2) << "\n";
+  icemcLog() << "Average thickness of ice within horizon, averages over balloon positions " << volume_inhorizon_average/constants::PI/pow(bn1->MAXHORIZON,2) << "\n";
 } //method CreateHorizons 
 
 
-void icemc::IceModel::ReadIceThickness() {
+void icemc::Antarctica::ReadIceThickness() {
   //Reads the BEDMAP ice thickness data.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
     
   std::ifstream IceThicknessFile((ICEMC_DATA_DIR+"/icethic.asc").c_str());
@@ -1596,7 +1602,7 @@ void icemc::IceModel::ReadIceThickness() {
   return;
 } //method ReadIceThickness
 
-void icemc::IceModel::ReadGroundBed() {
+void icemc::Antarctica::ReadGroundBed() {
   //Reads the BEDMAP data on the elevation of the ground beneath the ice.  If there is water beneath the ice, the ground elevation is given the value 0.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
   std::ifstream GroundBedFile((ICEMC_DATA_DIR+"/groundbed.asc").c_str());
   if(!GroundBedFile) {
@@ -1657,7 +1663,7 @@ void icemc::IceModel::ReadGroundBed() {
   return;
 } //method ReadGroundBed
 
-void icemc::IceModel::ReadWaterDepth() {
+void icemc::Antarctica::ReadWaterDepth() {
   //Reads BEDMAP data on the depth of water beneath the ice.  Where no water is present, the value 0 is entered.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
   std::ifstream WaterDepthFile((ICEMC_DATA_DIR+"/water.asc").c_str());
   if(!WaterDepthFile) {

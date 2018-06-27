@@ -12,8 +12,8 @@ namespace icemc{
   class Position;
   class Interaction;
   class IceModel;
-
-
+  class Settings;
+  
 
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,17 +63,17 @@ namespace icemc{
   };
 
   //! Shape of the earth, ice thicknesses, profiles of earth layers, densities, neutrino absorption
-  class EarthModel {
+  class Earth {
 
   public:
-    EarthModel(int model = 0,int WEIGHTABSORPTION_SETTING=1);
-    virtual ~EarthModel();
+    Earth(int model = 0,int WEIGHTABSORPTION_SETTING=1);
+    virtual ~Earth();
 
     // Rename to avoid collision with AnitaGeomTool, although it's that lib's fault
-    static constexpr double EarthRadiusMeters=6.378140E6; ///< radius of Earth in m at bulge 
+    static constexpr double BulgeRadius=6.378140E6; ///< radius of Earth in m at bulge
   
     double radii[3];
-    // = {1.2e13,(EarthModel::EarthRadiusMeters-4.0E4)*(EarthModel::EarthRadiusMeters-4.0E4),EarthModel::EarthRadiusMeters*EarthModel::EarthRadiusMeters}; // average radii of boundaries between earth layers
+    // = {1.2e13,(Earth::EarthRadiusMeters-4.0E4)*(Earth::EarthRadiusMeters-4.0E4),Earth::EarthRadiusMeters*Earth::EarthRadiusMeters}; // average radii of boundaries between earth layers
 
     double volume; // sums the volume of medium (ice or salt)
     double ice_area; // sums the area of the earth's surface that has antarctic ice underneath
@@ -96,7 +96,7 @@ namespace icemc{
     double GetDensity(double altitude, const Position earth_in, int& crust_entered) const;
 
     /** 
-     * Figures out whether a neutrino will make it through the Earth along a chord
+     * Figures out whether a neutrino will make it through thea Earth along a chord
      * (Or gives the journey a weight)
      * 
      * @param settings1 The simulation settings
@@ -209,7 +209,7 @@ namespace icemc{
     double GetLon(double phi) const;
     Vector PickPosnuForaLonLat(double lon,double lat,double theta,double phi) const; // given that an interaction occurs at a lon and lat, pick an interaction position in the ice
 
-  }; //class EarthModel
+  }; //class Earth
 
   /**
    * @todo put this somewhere in a function so it gets accessed by a descriptive name

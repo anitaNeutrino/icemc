@@ -5,7 +5,7 @@
 //#include "AskaryanFreqsGenerator.h"
 #include "Primaries.h"
 #include "secondaries.hh"
-#include "icemodel.hh"
+#include "Antarctica.h"
 #include "Tools.h"
 #include <sstream>
 #include <iostream>
@@ -84,7 +84,7 @@ icemc::Taumodel::Taumodel() {
 /**
    GetTauWeight is the function that will calculate the probability that a tau neutrino will interact along its path through the earth,and the tau will survive the rest of the journey and decay in the ice. This probability is calculated for final energies from 10^15.5 to the energy of the neutrino.
 */
-double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settings1,IceModel *antarctica1,Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered){ // 1 or 0 
+double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered){ // 1 or 0 
 			      // int& mantle_entered, // 1 or 0
 			      // int& core_entered){//add secondaries?
 
@@ -263,7 +263,7 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
 Get Density Vectors sets two density vectors. One has the density at each step along the path, the other has an average density from the starting point to the current step.
  */
 
-void icemc::Taumodel::GetDensityVectors(IceModel *antarctica1,Interaction *interaction1, Vector nchord, double step, double Distance, int &totalnusteps,int &crust_entered){
+void icemc::Taumodel::GetDensityVectors(const Antarctica *antarctica1,Interaction *interaction1, Vector nchord, double step, double Distance, int &totalnusteps,int &crust_entered){
    
     Vector nchord1;
     double avgdensity =0;//initilize average density.

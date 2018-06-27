@@ -6,8 +6,8 @@
 #include <fstream>
 #include <iostream>
 #include "Settings.h"
-#include "earthmodel.hh"
-#include "icemodel.hh"
+#include "Earth.h"
+#include "Antarctica.h"
 #include "Primaries.h"
 #include "IcemcLog.h"
 #include "counting.hh"

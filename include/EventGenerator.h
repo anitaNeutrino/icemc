@@ -8,7 +8,6 @@
 
 #include "NeutrinoPath.h"
 #include "Constants.h"
-#include "VoltsRX.h"
 #include "CommandLineOpts.h"
 #include "secondaries.hh"
 
@@ -28,12 +27,20 @@ namespace icemc {
   class PassingNeutrino;
   class ANITA;
 
+
+  /**
+   * @class EventGenerator
+   * @brief The glue that brings the simulation together
+   * 
+   * Contains the main neutrino generation loop in generateNeutrinos()
+   */
+
   class EventGenerator {
   public:
 
     enum RayDirection {
       direct = 0,
-      downgoing = 1
+      downgoing = 1,
     };
 
     EventGenerator();
@@ -49,7 +56,6 @@ namespace icemc {
     double eventsfound=0;   // how many events found
     double eventsfound_prob=0;   // how many events found,  probabilities
     double sum[3]; // sum of weight for events found for 3 flavors
-    // These numbers are from Feldman and Cousins wonderful paper:  physics/9711021
     static const int NBINS=10; // keep track of the number of events found,  binned by weights
     double MIN_LOGWEIGHT=-3;
     double MAX_LOGWEIGHT=-1;
@@ -166,8 +172,6 @@ namespace icemc {
     int allcuts[2]={0, 0}; // index is which ray (upward or downward)
     // 1=this ray for this event passes all cuts,  0=does not
     double allcuts_weighted[2]={0, 0}; // same as above but weighted
-    double allcuts_weighted_polarization[3]={0, 0, 0}; // same as above but divided into [0] vpol, [1] hpol, [2] both vpol and hpol
-
 
     //signal has a chance to pass after accounting for 1/r
     int count_chanceofsurviving=0; // based on neutrino direction,  has a chance of making it through earth.
@@ -184,8 +188,8 @@ namespace icemc {
     int count_d2goodlength=0; // neutrino path through ice is more than 1m
     // int count_rx=0; // counting antennas we loop through them
 
-    double sum_frac[3]; // fraction of passing events that are e, mu, tau adding weights
-    double sum_frac_db[3]; // same for double bangs
+    double sum_frac[3] = {0}; // fraction of passing events that are e, mu, tau adding weights
+    double sum_frac_db[3] = {0}; // same for double bangs
 
     static const int NBINS_DISTANCE=28; // keep track of number that pass as a function of distance to make Peter's plot
     double eventsfound_binned_distance[NBINS_DISTANCE] = {0.};  // binning cumulative events found vs. distance
@@ -431,7 +435,7 @@ namespace icemc {
 
     
     // @todo constify... if I can const this, then we're probably near the end of the refactor...
-    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  RayTracer* ray1, Screen* panel1, IceModel* antarctica1, Balloon* bn1, const AskaryanFreqsGenerator* askFreqGen, Anita* anita1, const ShowerProperties& showerProps);
+    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  RayTracer* ray1, Screen* panel1, Antarctica* antarctica1, Balloon* bn1, const AskaryanFreqsGenerator* askFreqGen, Anita* anita1, const ShowerProperties& showerProps);
 
 
     
@@ -440,14 +444,14 @@ namespace icemc {
     void   GetAir(double *col1) const;
     double GetThisAirColumn(const Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta) const;
     double IsItDoubleBang(double exitlength,  double plepton) const;
-    int WhereIsSecondBang(const Position& posnu,  const Vector& nnu,  double nuexitlength,  double pnu,  IceModel *antarctica1,
+    int WhereIsSecondBang(const Position& posnu,  const Vector& nnu,  double nuexitlength,  double pnu,  Antarctica *antarctica1,
 			  const Position& r_bn, Position &posnu2,  Position &rfexit_db,  Vector &n_exit2bn_db) const;
 
     Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside, int inu) const;
-    void Attenuate(IceModel *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const Position &posnu) const ;
-    void Attenuate_down(IceModel *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const Position &rfexit2,  const Position &posnu,  const Position &posnu_down) const ;
+    void Attenuate(const Antarctica *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const Position &posnu) const ;
+    void Attenuate_down(Antarctica *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const Position &rfexit2,  const Position &posnu,  const Position &posnu_down) const ;
     void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight) const;
-    void GetBalloonLocation(const Interaction *interaction1, const RayTracer *ray1, const Balloon *bn1, IceModel *antarctica) const;
+    void GetBalloonLocation(const Interaction *interaction1, const RayTracer *ray1, const Balloon *bn1, const Antarctica *antarctica) const;
     int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside) const;
 
     // @todo constify... needs some love to constify

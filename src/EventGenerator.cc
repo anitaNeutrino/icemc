@@ -12,14 +12,14 @@
 #include "Constants.h"
 #include "Settings.h"
 #include "position.hh"
-#include "earthmodel.hh"
+#include "Earth.h"
 #include "Tools.h"
 #include "vector.hh"
 #include "Roughness.h"
 // #include "anita.hh"
 // #include "balloon.hh"
 #include "ANITA.h"
-#include "icemodel.hh"
+#include "Antarctica.h"
 #include "Spectra.h"
 #include "AskaryanFreqsGenerator.h"
 #include "AskaryanFreqs.h"
@@ -232,11 +232,8 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
   icemcLog() << "Number of weighted direct,  reflected that pass is: " << allcuts_weighted[0] << "\t" << allcuts_weighted[1] << "\n";
   icemcLog() << "Number of (weighted) neutrinos that pass (with weight>0.001) is: " << eventsfound_weightgt01 << "\n";
   icemcLog() << "Number of (weighted) neutrinos that only traverse the crust is " << eventsfound_crust << " -> " << eventsfound_crust/eventsfound*100 << "%\n\n";
-  icemcLog() << "Number of (weighted) neutrinos that pass only VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
-  icemcLog() << "Number of (weighted) neutrinos that pass only HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
-  icemcLog() << "Number of (weighted) neutrinos that pass both pol triggers is: " << allcuts_weighted_polarization[2] << "\n\n";
   icemcLog() << "Volume of ice is " << volume << "\n";
-  icemcLog() << "Value of 4*pi*pi*r_earth*r_earth in km^2 " << 4*constants::PI*constants::PI*(icemc::EarthModel::EarthRadiusMeters*icemc::EarthModel::EarthRadiusMeters/1.E6) << "\n";
+  icemcLog() << "Value of 4*pi*pi*r_earth*r_earth in km^2 " << 4*constants::PI*constants::PI*(Earth::BulgeRadius*Earth::BulgeRadius/1.E6) << "\n";
 
 
   // single event sensitivity for 150 MHz array per year
@@ -626,7 +623,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
 
 
 double icemc::EventGenerator::GetAirDistance(double altitude_bn, double beta) const { // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth
-  return EarthModel::EarthRadiusMeters*acos((altitude_bn+EarthModel::EarthRadiusMeters)/EarthModel::EarthRadiusMeters*(1-sin(beta)*sin(beta))+1/EarthModel::EarthRadiusMeters*sin(beta)*sqrt((altitude_bn+EarthModel::EarthRadiusMeters)*(altitude_bn+EarthModel::EarthRadiusMeters)*sin(beta)*sin(beta)-2*EarthModel::EarthRadiusMeters*altitude_bn-altitude_bn*altitude_bn));
+  return Earth::BulgeRadius*acos((altitude_bn+Earth::BulgeRadius)/Earth::BulgeRadius*(1-sin(beta)*sin(beta))+1/Earth::BulgeRadius*sin(beta)*sqrt((altitude_bn+Earth::BulgeRadius)*(altitude_bn+Earth::BulgeRadius)*sin(beta)*sin(beta)-2*Earth::BulgeRadius*altitude_bn-altitude_bn*altitude_bn));
 }
 //end GetAirDistance()
 
@@ -659,7 +656,7 @@ double icemc::EventGenerator::IsItDoubleBang(double exitlength, double plepton) 
 //end IsItDoubleBang()
 
 
-int icemc::EventGenerator::WhereIsSecondBang(const Position &posnu, const Vector &nnu, double nuexitlength, double pnu, IceModel *antarctica1, const Position &r_bn, Position &posnu2, Position &rfexit_db, Vector &n_exit2bn_db) const {
+int icemc::EventGenerator::WhereIsSecondBang(const Position &posnu, const Vector &nnu, double nuexitlength, double pnu, Antarctica *antarctica1, const Position &r_bn, Position &posnu2, Position &rfexit_db, Vector &n_exit2bn_db) const {
   double rnd1=0;
   double rnd2=2;
   double gamma=pnu/constants::MTAU;
@@ -689,7 +686,7 @@ int icemc::EventGenerator::WhereIsSecondBang(const Position &posnu, const Vector
 
 
 //the following is  a new function only for reflected case.
-void icemc::EventGenerator::Attenuate_down(IceModel *antarctica1, const Settings *settings1, double& vmmhz_max, const Position &rfexit2, const Position &posnu, const Position &posnu_down) const {
+void icemc::EventGenerator::Attenuate_down(Antarctica *antarctica1, const Settings *settings1, double& vmmhz_max, const Position &rfexit2, const Position &posnu, const Position &posnu_down) const {
   double ATTENLENGTH=700;
   if(!settings1->VARIABLE_ATTEN){
     ATTENLENGTH=antarctica1->EffectiveAttenuationLength(settings1, posnu, 1);
@@ -726,7 +723,7 @@ void icemc::EventGenerator::Attenuate_down(IceModel *antarctica1, const Settings
 //end Attenuate_down()
 
 
-void icemc::EventGenerator::Attenuate(IceModel *antarctica1, const Settings *settings1, double& vmmhz_max,  double rflength, const Position &posnu) const {
+void icemc::EventGenerator::Attenuate(const Antarctica *antarctica1, const Settings *settings1, double& vmmhz_max,  double rflength, const Position &posnu) const {
   double ATTENLENGTH=700;  // constant attenuation length for now.
   if (!settings1->VARIABLE_ATTEN){
     ATTENLENGTH = antarctica1->EffectiveAttenuationLength(settings1, posnu, 0);
@@ -816,7 +813,7 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
 
   // In the specular (settings1->ROUGHNESS = 0) this function sets the neutrino direction according to a selection routine based on viewing within the Cerenkov cone
   // In the roughness case we just want to pick a random allowable direction,
-  // so let's keep the original sampled neutrino direction from back in IceModel::PickUnbiased() inside Ray::PickRoughnessInteractionPoint()
+  // so let's keep the original sampled neutrino direction from back in Antarctica::PickUnbiased() inside Ray::PickRoughnessInteractionPoint()
 
   int dont_count = 0;
   double theta_test = 0;
@@ -1115,7 +1112,7 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 //end GetFresnel()
 
 
-void icemc::EventGenerator::GetBalloonLocation(const Interaction *interaction1, const RayTracer *ray1, const Balloon *bn1, IceModel *antarctica) const {
+void icemc::EventGenerator::GetBalloonLocation(const Interaction *interaction1, const RayTracer *ray1, const Balloon *bn1, const Antarctica *antarctica) const {
   // brian enter function to calculate balloon position on your map.
   // use interaction1->posnu // location of neutrino interaction
   // coordinate system:  +z="up" at the south pole
@@ -1288,19 +1285,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   r_exit2bn2 = interaction1->r_exit2bn;
   r_exit2bn_measured2 = interaction1->r_exit2bn_measured;
 
-
-  
-  Tools::Zero(sum_frac, 3);
-  Tools::Zero(sum_frac_db, 3);
-  Tools::Zero(fDetector->NRX_PHI, Anita::NLAYERS_MAX);
-  for (int i=0;i<Anita::NLAYERS_MAX;i++) {
-    Tools::Zero(fDetector->PHI_EACHLAYER[i], Anita::NPHI_MAX);
-  }
-  Tools::Zero(fDetector->PHI_OFFSET, Anita::NLAYERS_MAX);
-  Tools::Zero(fDetector->THETA_ZENITH, Anita::NLAYERS_MAX);
-  Tools::Zero(fDetector->LAYER_VPOSITION, Anita::NLAYERS_MAX);
-  Tools::Zero(fDetector->RRX, Anita::NLAYERS_MAX);
-
   //added djg ////////////////////////////////////////////////////////
   icemcLog().al_voltages_direct<<"antenna #"<<"   "<<"volts chan 1"<<"   "<<"volts chan 2"<<"    "<<"volts chan 3"<<"    "<<"volts chan 4"<<"    "<<"noise chan 1"<<"    "<<"noise chan 2"<<"    "<<"noise chan 3"<<"   "<<"noise chan 4"<<"  "<<"weight"<<std::endl;
   ////////////////////////////////////////////////////////////////////
@@ -1323,7 +1307,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   fNeutrinoPath = new NeutrinoPath(); // init here for branch setting
 
-  IceModel* antarctica = new IceModel(settings1.ICE_MODEL + settings1.NOFZ*10,
+  Antarctica* antarctica = new Antarctica(settings1.ICE_MODEL + settings1.NOFZ*10,
 				      settings1.CONSTANTICETHICKNESS * 1000 + settings1.CONSTANTCRUST * 100 + settings1.FIXEDELEVATION * 10 + 0,
 				      settings1.WEIGHTABSORPTION);
   icemcLog() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
@@ -1355,7 +1339,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   // calculate the volume of ice seen by the balloon for all balloon positions
   // antarctica->CreateHorizons(&settings1, bn1, fDetector->theta_bn, fDetector->phi_bn, fDetector->altitude_bn, icemcLog().foutput);
-  antarctica->CreateHorizons(&settings1, fDetector, fDetector->theta_bn, fDetector->phi_bn, fDetector->altitude_bn, icemcLog().foutput);  
+  antarctica->CreateHorizons(&settings1, fDetector, fDetector->theta_bn, fDetector->phi_bn, fDetector->altitude_bn);
   icemcLog() << "Done with CreateHorizons.\n";
 
 
@@ -1380,7 +1364,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // settings1.CONSTANTCRUST=1;  //Set ice depths and elevations all the same
     // settings1.CONSTANTICETHICKNESS=1;
     // settings1.FIXEDELEVATION=1;
-    
+
     pnu = Interaction::pnu_banana; 
     int_banana->surface_over_banana_nu=antarctica->Surface(int_banana->nu_banana);
     int_banana->nu_banana_surface=(int_banana->surface_over_banana_nu) * (int_banana->nu_banana);
@@ -1749,7 +1733,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         // else if (settings1.SLAC) {
         //   Vector xaxis(1., 0., 0.);
         //   //nnu=(rfexit[0].Unit()).Rotate(-10.*RADDEG, interaction1->posnu.Cross(zaxis));
-        //   interaction1->nnu = xaxis.RotateY(fDetector->theta_bn-settings1.SLAC_HORIZDIST/EarthModel::EarthRadiusMeters);  //direction of neutrino- for slac,  that's the direction of the beam
+        //   interaction1->nnu = xaxis.RotateY(fDetector->theta_bn-settings1.SLAC_HORIZDIST/Earth::BulgeRadius);  //direction of neutrino- for slac,  that's the direction of the beam
         //   interaction1->nnu = interaction1->nnu.RotateZ(fDetector->phi_bn);
         //   costhetanu=cos(interaction1->nnu.Theta());
         //   theta_threshold=1.; // this is a bogus theta_threshold but it is only used for plotting anyway
@@ -1926,7 +1910,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	}
         // else if (settings1.SLAC)  {
         //   Vector xaxis(1., 0., 0.);
-        //   interaction1->nnu = xaxis.RotateY(fDetector->theta_bn-settings1.SLAC_HORIZDIST/EarthModel::EarthRadiusMeters);  //direction of neutrino- for slac,  that's the direction of the beam
+        //   interaction1->nnu = xaxis.RotateY(fDetector->theta_bn-settings1.SLAC_HORIZDIST/Earth::BulgeRadius);  //direction of neutrino- for slac,  that's the direction of the beam
         //   interaction1->nnu = interaction1->nnu.RotateZ(fDetector->phi_bn);
         //   costhetanu=cos(interaction1->nnu.Theta());
         //   theta_threshold=1.; // this is a bogus theta_threshold but it is only used for plotting anyway
@@ -2060,7 +2044,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // the best case scenario.
       if(sec1.secondbang && sec1.interestedintaus) {
         std::cout << "Need to bring back GetFirstBang before you can simulate taus.\n";
-        std::cout << "I removed it because it required EarthModel and I wanted Secondaries to be a stand-alone class to use in the embedded simulation.\n";
+        std::cout << "I removed it because it required Earth and I wanted Secondaries to be a stand-alone class to use in the embedded simulation.\n";
         icethickness=interaction1->r_enterice.Distance(interaction1->nuexit);
         interaction1->chord_kgm2_bestcase=nuentrancelength*TMath::MinElement(3, icemc::densities);
       }
@@ -2297,7 +2281,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         }
       }
 
-      if (fDetector->whichPath()==FlightPath::PeterEvent   ){
+      if (fDetector->whichPath()==FlightPath::PeterEvent){
         std::cout << "rflength is " << rflength << "\n";
       }
 
@@ -2791,7 +2775,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       } // end if passing global trigger conditions
       else {
 	passes_thisevent = 0; // flag this event as not passing
-	if (fDetector->whichPath()==FlightPath::PeterEvent   ){
+	if (fDetector->whichPath()==FlightPath::PeterEvent){
 	  std::cout << "This event does not pass.\n";
 	}
       }// end else event does not pass trigger
@@ -2827,7 +2811,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       icemcLog() << "\n* Any output which relied on NNU should be corrected for.";
       icemcLog() << "\n***********************************************************\n";
       break;
-    }    
+    }
   }//end NNU neutrino loop
 
   gRandom = rsave;
@@ -2932,7 +2916,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   icemcLog() << "Date and time at end of run are: " << asctime (end_time) << "\n";
   icemcLog() << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<std::endl;
 
-  // heap allocated non members need deleting
+  // heap allocated non-members need deleting
   if(primary1)       delete primary1;
   // if(ray1)        delete ray1;
   if(count1)         delete count1;
@@ -2950,7 +2934,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 
 void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,
-					   RayTracer* ray1, Screen* panel1, IceModel* antarctica,
+					   RayTracer* ray1, Screen* panel1, Antarctica* antarctica,
 					   Balloon* bn1, const AskaryanFreqsGenerator* askFreqGen, Anita* anita1, const ShowerProperties& showerProps){
   
   //(vector) ray1->nsurf_rfexit:  surface normal at RFexit position

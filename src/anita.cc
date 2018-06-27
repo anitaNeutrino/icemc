@@ -5,8 +5,8 @@
 #include "Constants.h"
 #include "TRandom3.h"
 #include "Settings.h"
-#include "earthmodel.hh"
-#include "icemodel.hh"
+#include "Earth.h"
+#include "Antarctica.h"
 #include "IcemcLog.h"
 #include "TF1.h"
 
@@ -239,7 +239,7 @@ int icemc::Anita::GetRxTriggerNumbering(int ilayer, int ifold) const { // get an
   }
 }
 
-void icemc::Anita::SetNoise(const Settings *settings1,Balloon *bn1,IceModel *antarctica) {
+void icemc::Anita::SetNoise(const Settings *settings1,Balloon *bn1,const Antarctica *antarctica) {
     
   // these should only be used for the frequency domain trigger.
   if (settings1->WHICH==2 || settings1->WHICH==6) { //this is for anita 1

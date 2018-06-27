@@ -12,7 +12,7 @@
 #include "RayTracer.h"
 #include "screen.hh"
 #include "position.hh"
-#include "icemodel.hh"
+#include "Antarctica.h"
 #include "IcemcLog.h"
 
 #include "GeneratedNeutrino.h"

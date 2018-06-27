@@ -18,8 +18,8 @@
 #include "Primaries.h"
 #include "anita.hh"
 #include "balloon.hh"
-#include "earthmodel.hh"
-#include "icemodel.hh"
+#include "Earth.h"
+#include "Antarctica.h"
 #include "spline.h"
 #include "RayTracer.h"
 
