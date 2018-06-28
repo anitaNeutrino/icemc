@@ -751,7 +751,7 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
 
 
 
-const icemc::FTPair& icemc::Seavey::getSignal(Pol pol){
+const icemc::FTPair& icemc::Seavey::get(Pol pol) const {
   
   if(pol==Pol::V){
     return fVPol;

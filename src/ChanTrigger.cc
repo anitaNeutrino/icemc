@@ -670,8 +670,6 @@ void icemc::ChanTrigger::DiodeConvolution(const Settings *settings1, Anita *anit
       if (timedomain_output[iband][ibin] < thresholds[ipol][iband] * anita1->bwslice_rmsdiode[iband] && anita1->pol_allowed[ipol] && anita1->bwslice_allowed[iband]) { // is this polarization and bw slice allowed to pass
 	//std::cout << "VPOL : " << iband << " " << timedomain_output_1[iband][ibin]  << " " <<  thresholds[0][iband] << " " <<  anita1->bwslice_rmsdiode[iband] << std::endl;
 	tempChansPassing[iband] = 1;// channel passes
-    
-	
 	thisisaone=1;
 	//	  cout << "got a hit.\n";
       }
@@ -740,8 +738,108 @@ void icemc::ChanTrigger::InitializeEachBand(Anita *anita1)
 
 
 
-void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, Balloon *bn1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, const TGraph* gr) {
+
+void icemc::ChanTrigger::readInSeavey(const Settings* settings1, const Seavey* s, int ant, Anita* anita1, const TGraph* gr){
+
+  const int band = 4;
+  for(auto pol : {Seavey::Pol::V, Seavey::Pol::H}){
+    const FTPair& signal = s->get(pol);
+
+    int polInd = static_cast<int>(pol);
+    {
+      const TGraph& gr = signal.getTimeDomain();
+
+      ///@todo Make this offset nonsense unnecessary! A hack to force things to be read in to the middle of the array
+      const int n1 = gr.GetN();
+      const int n2 = volts_rx_forfft.at(polInd).at(band).size();
+      const int offset = (n2 - n1)/2;
+      int i=-offset;
+      // for(auto& vt : volts_rx_forfft[polInd][band]){
+      for(auto& vt : volts_rx_forfft.at(polInd).at(band)){
+	vt = i >= 0 && i < gr.GetN() ? gr.GetY()[i] : 0;
+	i++;
+      }
+    }
+
+    {
+      const auto& freqs = signal.getFreqDomain();
+      int j=0;
+      for(auto& vf : vhz_rx[polInd][band]){
+	vf = j < freqs.size() ? std::abs(freqs.at(j)) : 0;
+	j++;
+      }
+    }
+  }
+
+
+  // devel debug stuff!
+  static bool firstTime = true;
+  static int lastAnt = -1;
+  static TFile* f = nullptr;
+  static std::vector<double> times;
+  if(times.size()==0){
+    const double dt = anita1->TIMESTEP;
+    times.reserve(Anita::HALFNFOUR);
+    for(int i=0; i < Anita::HALFNFOUR; i++){
+      times.push_back(i*dt);
+    }
+  }
+
+  if(firstTime && gr && gr->GetY()[0]==522){
+    if(!f){
+      f = new TFile("newChanTrigger.root", "recreate");
+    }
+    f->cd();
+
+    TGraph gr0(times.size(), &times[0], volts_rx_forfft[0][band].data());
+    TGraph gr1(times.size(), &times[0], volts_rx_forfft[1][band].data());
+
+    TGraph gr2(Anita::NFREQ, &times[0], vhz_rx[0][band]);
+    TGraph gr3(Anita::NFREQ, &times[0], vhz_rx[1][band]);
+
+    // TGraph gr0(times.size(), &times[0], vhz_rx[0][band]);
+    // TGraph gr1(times.size(), &times[0], vhz_rx[1][band]);
+
+    gr0.SetName(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, band));
+    gr1.SetName(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, band));
+    gr0.SetTitle(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, band));
+    gr1.SetTitle(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, band));
+
+    gr2.SetName(TString::Format("gr_freq_pol0_ant%d_iband%d_aftergain", ant, band));
+    gr3.SetName(TString::Format("gr_freq_pol1_ant%d_iband%d_aftergain", ant, band));
+    gr2.SetTitle(TString::Format("gr_freq_pol0_ant%d_iband%d_aftergain", ant, band));
+    gr3.SetTitle(TString::Format("gr_freq_pol1_ant%d_iband%d_aftergain", ant, band));
+
+    gr0.Write();
+    gr1.Write();
+    gr2.Write();
+    gr3.Write();
+
+    lastAnt = ant;
+    if(lastAnt == 47){
+      f->Write();
+      f->Close();
+      f = nullptr;
+      firstTime = false;
+    }
+  }
+
+#ifdef ANITA_UTIL_EXISTS
+  if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) ){
+    getNoiseFromFlight(anita1, ant, settings1->SIGNAL_FLUCT > 0);
+  }
+  if (settings1->ADDCW){
+    memset(cw_digPath, 0, sizeof(cw_digPath));
+    calculateCW(anita1, 250E6, 0, 0.000005);
+  }
   
+#endif
+}
+
+
+
+void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, const TGraph* gr) {
+
   e_component=0;
   h_component=0;
   n_component=0;
@@ -751,8 +849,6 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
   hitangle_e=0;
   hitangle_h=0;
   
-  int numBinShift;
-
   /**
    * static const int NFOUR = 1024; // Number of fourier points
    * static const int HALFNFOUR = 512; // Half of the number of fourier points
@@ -765,16 +861,17 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
   
   for (int iband=0;iband<5;iband++) { // loop over bands
 
-    Tools::Zero(volts_rx_forfft[0][iband], anita1->NFOUR/2);
-    Tools::Zero(volts_rx_forfft[1][iband], anita1->NFOUR/2);
-    Tools::Zero(vhz_rx[0][iband],          anita1->NFREQ);
-    Tools::Zero(vhz_rx[1][iband],          anita1->NFREQ);
-    Tools::Zero(tmp_vhz[0],                anita1->NFREQ);
-    Tools::Zero(tmp_vhz[1],                anita1->NFREQ);
-    Tools::Zero(tmp_volts[0],              anita1->NFOUR/2);
-    Tools::Zero(tmp_volts[1],              anita1->NFOUR/2);
+    for(auto pol : {Seavey::Pol::V, Seavey::Pol::H}){
+      int polInd = static_cast<int>(pol);
+      Tools::Zero(volts_rx_forfft[polInd][iband].data(), anita1->NFOUR/2);
+      Tools::Zero(vhz_rx[polInd][iband],          anita1->NFREQ);
+      Tools::Zero(tmp_vhz[polInd],                anita1->NFREQ);
+      Tools::Zero(tmp_volts[polInd],              anita1->NFOUR/2);
+    }
 
-    if (anita1->bwslice_allowed[iband]!=1) continue;
+    if (anita1->bwslice_allowed[iband]!=1) {
+      continue;
+    }
 
     anita1->iminbin[iband]=0.;
     anita1->imaxbin[iband]=anita1->NFOUR/2;
@@ -784,7 +881,7 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
       for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
 
 	// bool debugInMakeArray = gr && gr->GetY()[0] == 397 && ant==34;
-	bool debugInMakeArray = gr && gr->GetY()[0] == 397 && ant==41;
+	bool debugInMakeArray = gr && gr->GetY()[0] == 522 && ant==41;
 
 	Seavey::GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
 	// Seavey::GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
@@ -823,7 +920,7 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	Tools::NormalTimeOrdering(anita1->NFOUR/2,tmp_volts[0]);
 	Tools::NormalTimeOrdering(anita1->NFOUR/2,tmp_volts[1]);
 
-	numBinShift = int(panel1->GetDelay(jpt) / anita1->TIMESTEP);
+	int numBinShift = int(panel1->GetDelay(jpt) / anita1->TIMESTEP);
 	if(fabs(numBinShift) >= anita1->HALFNFOUR){
 	  //cout<<"skipping"<<"\n";
 	  //don't bother adding it to the total since it's shifted out of range
@@ -842,7 +939,6 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	    volts_rx_forfft[0][iband][k] += tmp_volts[0][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
 	    volts_rx_forfft[1][iband][k] += tmp_volts[1][k];// * panel1->GetWeight(jpt) / panel1->GetWeightNorm();
 	  }
-
 	}
       } // end loop over screen points
       
@@ -860,12 +956,10 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
       anita1->GetArrayFromFFT(tmp_volts[0], vhz_rx[0][iband]);
       anita1->GetArrayFromFFT(tmp_volts[1], vhz_rx[1][iband]);
 
-
-
       // devel debug stuff!
       static bool firstTime = true;	
       static int lastAnt = -1;
-      static TFile* f = NULL;
+      static TFile* f = nullptr;
       static std::vector<double> times;
       if(times.size()==0){
 	const double dt = anita1->TIMESTEP;
@@ -874,14 +968,18 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	  times.push_back(i*dt);
 	}
       }
-	
-      if(firstTime && gr &&  gr->GetY()[0]==397){
+
+      if(firstTime && gr &&  gr->GetY()[0]==522){
 	if(!f){
 	  f = new TFile("oldChanTrigger.root", "recreate");
 	}
+	f->cd();
+	TGraph gr0(times.size(), &times[0], volts_rx_forfft[0][iband].data());
+	TGraph gr1(times.size(), &times[0], volts_rx_forfft[1][iband].data());
 
-	TGraph gr0(times.size(), &times[0], volts_rx_forfft[0][iband]);
-	TGraph gr1(times.size(), &times[0], volts_rx_forfft[1][iband]);
+	TGraph gr2(Anita::NFREQ, &times[0], vhz_rx[0][iband]);
+	TGraph gr3(Anita::NFREQ, &times[0], vhz_rx[1][iband]);
+	
 	// TGraph gr0(times.size(), &times[0], vhz_rx[0][iband]);
 	// TGraph gr1(times.size(), &times[0], vhz_rx[1][iband]);
 
@@ -890,24 +988,29 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	gr0.SetTitle(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, iband));
 	gr1.SetTitle(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, iband));
 
-	gr0.Write();
+	gr2.SetName(TString::Format("gr_freq_pol0_ant%d_iband%d_aftergain", ant, iband));
+	gr3.SetName(TString::Format("gr_freq_pol1_ant%d_iband%d_aftergain", ant, iband));
+	gr2.SetTitle(TString::Format("gr_freq_pol0_ant%d_iband%d_aftergain", ant, iband));
+	gr3.SetTitle(TString::Format("gr_freq_pol1_ant%d_iband%d_aftergain", ant, iband));
+	
+ 	gr0.Write();
 	gr1.Write();
+ 	gr2.Write();
+	gr3.Write();
 
 	lastAnt = ant;
 	if(lastAnt == 47){
 	  f->Write();
 	  f->Close();
-	  f = NULL;
+	  f = nullptr;
 	  firstTime = false;
 	}
       }
     }
     else if(gr==NULL){
       std::cerr << "ERROR! in " << __PRETTY_FUNCTION__ << ": you must pass non-NULL panel1 or gr" << std::endl;
-    }      
+    }
   } // end loop over bands
-  
-  
 
 #ifdef ANITA_UTIL_EXISTS
   if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) ){
@@ -1003,7 +1106,8 @@ void icemc::ChanTrigger::TriggerPath(const Settings *settings1, Anita *anita1, i
       }
 
       
-    } else {
+    }
+    else {
       
       for (int itime=0; itime<anita1->NFOUR/2 ; itime++){
 	v_banding_rfcm_forfft[0][iband][itime]=volts_rx_forfft[0][iband][itime];
@@ -1046,9 +1150,6 @@ void icemc::ChanTrigger::TriggerPath(const Settings *settings1, Anita *anita1, i
       }
     }
   } // end loop over bands
-  
-    
-
 }
 
 
@@ -1075,7 +1176,7 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
     applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[0], 0);
     applyImpulseResponseDigitizer(settings1, anita1, fNumPoints, ant, anita1->fTimes, volts_rx_rfcm_lab[1], 1);
 #endif
-    
+
     if (settings1->SIGNAL_FLUCT > 0 && !settings1->NOISEFROMFLIGHTDIGITIZER){
       for (int i=0;i<anita1->NFOUR/2;i++) {
      	for (int ipol=0;ipol<2;ipol++){
@@ -1083,7 +1184,6 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
      	}
       }
     }
-    
   }
   else {
     for (int ifreq=0; ifreq<anita1->NFREQ; ifreq++){
@@ -1099,7 +1199,7 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
       anita1->RFCMs(1,1,vhz_rx_rfcm_e);
       anita1->RFCMs(1,1,vhz_rx_rfcm_h);
     }
-    
+
     double scale;
     double sumpower=0.;
     if (settings1->PULSER) { // if we are using the pulser spectrum instead of simulating neutrinos
@@ -1113,24 +1213,22 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
         sumpower+=vhz_rx_rfcm_e[i]*vhz_rx_rfcm_e[i];
       }
     } // end if we are just using the pulser spectrum
-      
-      
+
     for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
       anita1->avgfreq_rfcm[ifreq]+=vhz_rx_rfcm_e[ifreq];
     }
-    
+
     // change their length from Anita::NFREQ to HALFNFOUR
     anita1->MakeArrayforFFT(vhz_rx_rfcm_e,volts_rx_rfcm[0], 90., true);
     anita1->MakeArrayforFFT(vhz_rx_rfcm_h,volts_rx_rfcm[1], 90., true);
-      
-          
+
     // now the last two are in the frequency domain
     // convert to the time domain
     // still don't have any noise
       
     FTPair::realft(volts_rx_rfcm[0],-1,anita1->HALFNFOUR);
     FTPair::realft(volts_rx_rfcm[1],-1,anita1->HALFNFOUR);
-      
+
     anita1->GetNoiseWaveforms(); // get noise waveforms
 
     // find the peak right here and it might be the numerator of the horizontal axis of matt's plot
@@ -1142,7 +1240,7 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
 	for (int ipol=0;ipol<2;ipol++){
 	  volts_rx_rfcm[ipol][i]+=anita1->timedomainnoise_rfcm[ipol][i]; // add noise.
 	}
-      } 
+      }
     }
     
     
@@ -1178,7 +1276,7 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
 
     // put it in normal time ording -T to T
     // instead of 0 to T, -T to 0 
-    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_rfcm_lab[0]); // EH, why only this has NormalTimeOrdering applied? Why not before?
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_rfcm_lab[0]);
     Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_rfcm_lab[1]);
 
     if (settings1->SIGNAL_FLUCT > 0) { 
@@ -1189,7 +1287,6 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
 	}
       }
     }//end if signal_fluct
-
   } // END ELSE IMPULSE RESPONSE
 }// end DigitizerPath()
 
@@ -1197,10 +1294,9 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
 
 
 // void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
-void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][Anita::HALFNFOUR], double volts_rx_rfcm_lab_h_all[48][Anita::HALFNFOUR])  
-{   
+void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][Anita::HALFNFOUR], double volts_rx_rfcm_lab_h_all[48][Anita::HALFNFOUR], int inu)
+{
   // int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
-
 
   // now shift right to account for arrival times
   // this is done inside the impulse response function normally
@@ -1210,18 +1306,23 @@ void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anit
     Tools::ShiftRight(volts_rx_rfcm_lab[0],anita1->NFOUR/2, int(anita1->arrival_times[0][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
     Tools::ShiftRight(volts_rx_rfcm_lab[1],anita1->NFOUR/2, int(anita1->arrival_times[1][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
   }
-  
+
+  const int rx = anita1->GetRx(ilayer, ifold);
   for (int i=0;i<anita1->NFOUR/2;i++) {
-    volts_rx_rfcm_lab_e_all[anita1->GetRx(ilayer, ifold)][i] = volts_rx_rfcm_lab[0][i];
-    volts_rx_rfcm_lab_h_all[anita1->GetRx(ilayer, ifold)][i] = volts_rx_rfcm_lab[1][i];
+    volts_rx_rfcm_lab_e_all[rx][i] = volts_rx_rfcm_lab[0][i];
+    volts_rx_rfcm_lab_h_all[rx][i] = volts_rx_rfcm_lab[1][i];
   }
 
+  if(inu == 522){
+    std::cout << "Peak volts VPol! " << rx << "\t" << 1000*TMath::MaxElement(Anita::HALFNFOUR, volts_rx_rfcm_lab_e_all[rx]) << "\n";
+    // std::cout << "Peak volts HPol! " << rx << "\t" << 1000*TMath::MaxElement(Anita::HALFNFOUR, volts_rx_rfcm_lab_h_all[rx]) << "\n";
+  }
+  
   // now vmmhz_rx_rfcm_lab_e,h_forfft are the time domain waveforms after the antenna and lab attenuation
   // now find peak voltage
   // these get written to a tree
-  anita1->peak_rx_rfcm_lab[0]=icemc::ChanTrigger::FindPeak(volts_rx_rfcm_lab[0],anita1->HALFNFOUR);
-  anita1->peak_rx_rfcm_lab[1]=icemc::ChanTrigger::FindPeak(volts_rx_rfcm_lab[1],anita1->HALFNFOUR);  
-
+  anita1->peak_rx_rfcm_lab[0] = icemc::ChanTrigger::FindPeak(volts_rx_rfcm_lab[0],anita1->HALFNFOUR);
+  anita1->peak_rx_rfcm_lab[1] = icemc::ChanTrigger::FindPeak(volts_rx_rfcm_lab[1],anita1->HALFNFOUR);
 
   // END OF DIGITIZER PATH
   ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1241,13 +1342,12 @@ double icemc::ChanTrigger::FindPeak(double *waveform,int n) {
   // find peak abs(voltage) of this waveform
     
   double peak=0.; // positive peak
-    
   for (int i=0;i<n;i++) {
-    if (fabs(waveform[i])>peak)
+    if (fabs(waveform[i])>peak){
       peak=fabs(waveform[i]);
+    }
   }
   return peak;
-    
 }
 
 
@@ -1572,9 +1672,9 @@ double icemc::ChanTrigger::GetNoise(const Settings *settings1,double altitude_bn
     //    cout << "sum, KBOLTZ, bw, sqrt are " << sum << " " << KBOLTZ << " " << bw << " " << sqrt(sum*50.*KBOLTZ*bw) << "\n";
     return sqrt(sum*50.*constants::KBOLTZ*bw);
   } //if (settings1->WHICH != 0)
-  else if (settings1->WHICH == 0)
+  else if (settings1->WHICH == 0){
     return sqrt(temp*50.*constants::KBOLTZ*bw);
-    
+  }
   return 0;
 }//GetNoise
 
@@ -1620,16 +1720,17 @@ double icemc::ChanTrigger::applyButterworthFilter(double ff, double ampl, int no
 
 #ifdef ANITA_UTIL_EXISTS    
 // void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
-void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[Anita::HALFNFOUR], bool pol){  
+void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[Anita::HALFNFOUR], bool pol){
 
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) y[i]=0;
   }
 
-  TGraph *graph1;
+  TGraph *graph1 = nullptr;
   if (settings1->TRIGGEREFFSCAN && !pol){
     graph1 = getPulserAtAMPA(anita1, ant);
-  } else {
+  }
+  else {
     graph1 = new TGraph(nPoints, x, y);
   }
 
@@ -1651,7 +1752,7 @@ void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1
     }
   }
 
-  TGraph *surfSignal;
+  TGraph *surfSignal = nullptr;
   
   
   //Calculate convolution
@@ -1686,7 +1787,9 @@ void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1
   }
   else {
     for (int i=0;i<nPoints;i++){
-      justSig_digPath[ipol][i] = y[i] = surfSignalDown->Eval(x[i]);
+      double v = surfSignalDown->Eval(x[i]);
+      y[i] = v;
+      justSig_digPath[ipol][i] = v;
     }
   }
   
@@ -1815,9 +1918,9 @@ void icemc::ChanTrigger::applyImpulseResponseTrigger(const Settings *settings1, 
   delete graph1;
 }
 
-void icemc::ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
+void icemc::ChanTrigger::saveTriggerWaveforms(double* sig0, double* sig1, double* noise0, double* noise1) const {
 
-  for (int i=0; i<anita1->NFOUR/2; i++){
+  for (int i=0; i<Anita::NFOUR/2; i++){
     sig0[i]   = justSig_trigPath[0][i];
     noise0[i] = justNoise_trigPath[0][i];
     sig1[i]   = justSig_trigPath[1][i];
@@ -1825,9 +1928,9 @@ void icemc::ChanTrigger::saveTriggerWaveforms(Anita *anita1, double sig0[48], do
   }
 }
 
-void icemc::ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]){
+void icemc::ChanTrigger::saveDigitizerWaveforms(double* sig0, double* sig1, double* noise0, double* noise1) const {
 
-  for (int i=0; i<anita1->NFOUR/2; i++){
+  for (int i=0; i<Anita::NFOUR/2; i++){
     sig0[i]   = justSig_digPath[0][i];
     noise0[i] = justNoise_digPath[0][i];
     sig1[i]   = justSig_digPath[1][i];
@@ -1835,7 +1938,7 @@ void icemc::ChanTrigger::saveDigitizerWaveforms(Anita *anita1, double sig0[48], 
   }
 }
 
-void icemc::ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
+void icemc::ChanTrigger::getNoiseFromFlight(const Anita* anita1, int ant, bool also_digi){
   
   Int_t numFreqs = anita1->numFreqs;
   double *freqs = anita1->freqs;
@@ -1949,8 +2052,8 @@ void icemc::ChanTrigger::injectImpulseAfterAntenna(Anita *anita1, int ant){
     
     // put it in normal time ording -T to T
     // instead of 0 to T, -T to 0
-    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_forfft[0][4]);
-    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_forfft[1][4]);
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_forfft[0][4].data());
+    Tools::NormalTimeOrdering(anita1->NFOUR/2,volts_rx_forfft[1][4].data());
 
 
     // find back the frequency domain

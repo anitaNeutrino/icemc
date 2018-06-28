@@ -198,6 +198,13 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
       fEvent->fCapacitorNum[UsefulChanIndexH][j] = j;
       fEvent->fCapacitorNum[UsefulChanIndexV][j] = j;
     }//end int j
+
+    // if(headTree.GetEntries()==0){
+    //   std::cout << "in output " << iant << "\t" << IceMCAnt << "\t"
+    // 		<< TMath::MaxElement(Anita::HALFNFOUR, fDetector->fVoltsRX.rfcm_lab_e_all[IceMCAnt]) << "\t"
+    // 		<< TMath::MaxElement(fNumPoints, fEvent->fVolts[UsefulChanIndexV]) << std::endl;
+    // }
+
   }// end int iant
 
   fEvent->eventNumber = fDetector->getLastEventNumber();
@@ -329,8 +336,8 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
       fTruth->fTimes[UsefulChanIndexV][j]             = j * anita1->TIMESTEP * 1.0E9;
       fTruth->fTimes[UsefulChanIndexH][j]             = j * anita1->TIMESTEP * 1.0E9;
 
-    // @todo URGENT RESTORE THESE PARAMETERS!
-      
+      // @todo URGENT RESTORE THESE PARAMETERS!
+
       // fTruth->fSignalAtTrigger[UsefulChanIndexV][j]   = uhen->justSignal_trig[0][iant][j+128]*1000;
       // fTruth->fSignalAtTrigger[UsefulChanIndexH][j]   = uhen->justSignal_trig[1][iant][j+128]*1000;
       // fTruth->fNoiseAtTrigger[UsefulChanIndexV][j]    = uhen->justNoise_trig[0][iant][j+128]*1000;

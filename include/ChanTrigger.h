@@ -18,9 +18,7 @@ namespace icemc {
   class Screen;
   class IceModel;
   class Settings;
-  //  class RX;
-  class ANITA;
-  
+  class Seavey;
 
   //! Class that handles the channel trigger
   class ChanTrigger {
@@ -41,33 +39,36 @@ namespace icemc {
      */
     double ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant);
 
-    const static int NSURF=9;                                     ///< Number of surfs
-    const static int NSURFPLUSONE=10;                             ///< Number of surfs plus one
-    const static int NSURFMINUSONE=8;                             ///< Number of surfs minus on1
-    const static int NCHANNELS=32;                                ///< Number of channells on each surf
-    const static int NPOINTS=4073;                                ///< Max number of points from surf measurements
-    static const unsigned NFOUR = Anita::NFOUR;                           ///< Number of points in Fourier space
-    static const unsigned HALFNFOUR = Anita::HALFNFOUR;                        ///< Half of the number of points in the Fourier space
-    // static const unsigned NFOUR = 1024;                           ///< Number of points in Fourier space
-    // static const unsigned HALFNFOUR = 512;                        ///< Half of the number of points in the Fourier space
+    const static int NSURF=9;                           ///< Number of surfs
+    const static int NSURFPLUSONE=10;                   ///< Number of surfs plus one
+    const static int NSURFMINUSONE=8;                   ///< Number of surfs minus on1
+    const static int NCHANNELS=32;                      ///< Number of channells on each surf
+    const static int NPOINTS=4073;                      ///< Max number of points from surf measurements
+    static const unsigned NFOUR = Anita::NFOUR;         ///< Number of points in Fourier space
+    static const unsigned HALFNFOUR = Anita::HALFNFOUR; ///< Half of the number of points in the Fourier space
+    // static const unsigned NFOUR = 1024;              ///< Number of points in Fourier space
+    // static const unsigned HALFNFOUR = 512;           ///< Half of the number of points in the Fourier space
 
-    TRandom3 Rand3;                                               ///< Random number generator instance
-    double thisrate;                                              ///< Rate in MHz
-    double thispowerthresh;                                       ///< Relative power threshold
-    double e_component;                                           ///< E comp along polarization
-    double h_component;                                           ///< H comp along polarization
-    double n_component;                                           ///< normal comp along polarization
-    double e_component_kvector;                                   ///< component of e-field along the rx e-plane
-    double h_component_kvector;                                   ///< component of the e-field along the rx h-plane
-    double n_component_kvector;                                   ///< component of the e-field along the normal  
-    double hitangle_e;                                            ///< angle the ray hits the antenna wrt e-plane
-    double hitangle_h;                                            ///< angle the ray hits the antenna wrt h-plane
+    // TRandom3 Rand3;                                     ///< Random number generator instance
+    double thisrate;                                    ///< Rate in MHz
+    double thispowerthresh;                             ///< Relative power threshold
+    double e_component;                                 ///< E comp along polarization
+    double h_component;                                 ///< H comp along polarization
+    double n_component;                                 ///< normal comp along polarization
+    double e_component_kvector;                         ///< component of e-field along the rx e-plane
+    double h_component_kvector;                         ///< component of the e-field along the rx h-plane
+    double n_component_kvector;                         ///< component of the e-field along the normal  
+    double hitangle_e;                                  ///< angle the ray hits the antenna wrt e-plane
+    double hitangle_h;                                  ///< angle the ray hits the antenna wrt h-plane
       
   public:
 
     //!  Channel trigger constructur
     ChanTrigger(); 
 
+    
+    // void readInSeavey(const Seavey* s);
+    void readInSeavey(const Settings* settings1, const Seavey* s, int ant, Anita* anita1, const TGraph* gr = nullptr);
   
     //! Initialize trigger bands
     /**
@@ -94,7 +95,7 @@ namespace icemc {
      * @param  n_hplane :: Vector 
      * @param  n_normal :: Vector
      */  
-    void ApplyAntennaGain(const Settings *settings1, Anita *anita1, Balloon *bn1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, const TGraph* gr = NULL);
+    void ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, const TGraph* gr = NULL);
 
     //! Apply trigger path
     /**
@@ -135,7 +136,7 @@ namespace icemc {
      * @param  volts_rx_rfcm_lab_h_all :: double [48][512] - time domain waveform for each channel (HPOL)
      */ 
     // void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
-    void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][Anita::HALFNFOUR], double volts_rx_rfcm_lab_h_all[48][Anita::HALFNFOUR]);    
+    void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][Anita::HALFNFOUR], double volts_rx_rfcm_lab_h_all[48][Anita::HALFNFOUR], int inu);    
   
     //!  Convert E and H to left and right e field
     /**
@@ -363,7 +364,7 @@ namespace icemc {
      * @param  ant :: int - which antennta
      * @param  also_digi :: bool - also fill in digitizer 
      */
-    void getNoiseFromFlight(Anita* anita1, int ant, bool also_digi = true);
+    void getNoiseFromFlight(const Anita* anita1, int ant, bool also_digi = true);
 
     //! Inject pulse after the antenna (used for trigger efficiency scans)
     /**
@@ -390,7 +391,7 @@ namespace icemc {
      * @param sig    :: double[2][NFOUR/2] - output 
      * @param noise  :: double[2][NFOUR/2] - output
      */
-    void saveTriggerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]);
+    void saveTriggerWaveforms(double* sig0, double* sig1, double* noise0, double* noise1) const;
 
     //! Save signal and noise waveforms at digitizer
     /**
@@ -398,7 +399,7 @@ namespace icemc {
      * @param sig    :: double[2][NFOUR/2] - output 
      * @param noise  :: double[2][NFOUR/2] - output
      */
-    void saveDigitizerWaveforms(Anita *anita1, double sig0[48], double sig1[48], double noise0[48], double noise1[48]);
+    void saveDigitizerWaveforms(double* sig0, double* sig1, double* noise0, double* noise1) const;
 
     //! Inject pulse at the surf (used for trigger efficiency scans)
     /**
@@ -434,9 +435,9 @@ namespace icemc {
      */
     double applyButterworthFilter(double ff, double ampl, int notchStatus[3]);
 
-  
     double vhz_rx[2][5][Anita::NFREQ];                          ///< Array of amplitudes in the Fourier domain (V/Hz) after the antenna gain. Indeces stand for [ipol][iband][ifreq] 
-    double volts_rx_forfft[2][5][Anita::HALFNFOUR];             ///< Array of time domain after the antenna gain. Indeces stand for [ipol][iband][itime] 
+    // double volts_rx_forfft[2][5][Anita::HALFNFOUR];             ///< Array of time domain after the antenna gain. Indeces stand for [ipol][iband][itime]
+    std::array<std::array<std::array<double, Anita::HALFNFOUR>, 5>, 2> volts_rx_forfft;
     std::vector<int> flag_e[5];                                 ///< Which bands pass trigger e
     std::vector<int> flag_h[5];                                 ///< Which bands pass trigger h
     double bwslice_volts_pol0[5];                               ///< Sum voltage for each slice in bandwidth for the lcp polarization

@@ -66,24 +66,28 @@ void plotQuick(){
 
 
 void plotCompare(){
-  TFile* f1 = TFile::Open("oldChanTrigger.root");
-  TFile* f2 = TFile::Open("fSeaveysDebug.root");
+  // TFile* f1 = TFile::Open("oldChanTrigger.root");
+  TFile* f1 = TFile::Open("newChanTrigger.root");
+  TFile* f2 = TFile::Open("oldChanTrigger.root");
+  // TFile* f2 = TFile::Open("fSeaveysDebug.root");
 
   auto c = new TCanvas();
   c->Divide(16, 3);
+  // gPad->SetLogy(1);
 
   const int markerStyle = 2;
   for(int i=0; i < 48; i++){
     c->cd(i+1);
     // TString name1 = TString::Format("gr_pol0_ant%d_iband4_aftergain", i);
-    TString name1 = TString::Format("gr_pol1_ant%d_iband4_aftergain", i);
+    TString name1 = TString::Format("gr_pol0_ant%d_iband4_aftergain", i);
+    // TString name1 = TString::Format("gr_freq_pol0_ant%d_iband4_aftergain", i);
     TGraph* gr1 = (TGraph*) f1->Get(name1);
     gr1->Draw("alp");
     gr1->SetMarkerStyle(markerStyle);
 
-
     // TString name2 = TString::Format("grV_after_%d", i);
-    TString name2 = TString::Format("grH_after_%d", i);
+    // TString name2 = TString::Format("grH_after_%d", i);
+    TString name2 = name1; 
     TGraph* gr2 = (TGraph*) f2->Get(name2);
     gr2->SetLineColor(kRed);
     gr2->SetMarkerStyle(markerStyle);
@@ -105,20 +109,21 @@ void plotCompare(){
     double dt2 = gr1->GetX()[1] - gr1->GetX()[0];
 
     for(int j=0; j < gr1->GetN(); j++){
-      gr1->GetX()[j] -= tMax1;
+      // gr1->GetX()[j] -= tMax1;
       p1 += gr1->GetY()[j]*gr1->GetY()[j]*dt1;
     }
     for(int j=0; j < gr2->GetN(); j++){
-      gr2->GetX()[j] -= tMax2;
+      // gr2->GetX()[j] -= tMax2;
       p2 += gr2->GetY()[j]*gr2->GetY()[j]*dt2;
     }
 
     if(p1 > 0){
-      std::cout << (p1 > 0 ? (p1 - p2)/p1 : 0) << std::endl;
+      std::cout << i << "\t" << p1 << "\t" << p2 << "\t" << (p1 > 0 ? (p1 - p2)/p1 : 0) << std::endl;
 
       new TCanvas();
       gr1->Draw("alp");
       gr2->Draw("lpsame");
+      // gPad->SetLogy(1);
 
       // for(int k=0; k < gr2->GetN(); k++){
       // 	double t = gr2->GetX()[k];

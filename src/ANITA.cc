@@ -83,23 +83,23 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   int ifold, ilayer;
   getLayerFoldFromRX(rx, ilayer, ifold);
   
-  // static bool firstTime = true;
-  // if(inu == 397 && firstTime){
-  //   for(int i=0; i < fSeaveys.size(); i++){
-  //     // if(true || i==34){
-  //     if(true || i==41){
-  // 	fSeaveys.at(i).setDebug(true);
-  //     }
-  //   }
-  //   if(rx==fSeaveys.size()-1){
-  //     firstTime = false;
-  //   }
-  // }
-  // else{
-  //   for(int i=0; i < fSeaveys.size(); i++){
-  //     fSeaveys.at(i).setDebug(false);
-  //   }
-  // }
+  static bool firstTime = true;
+  if(inu == 522 && firstTime){
+    for(int i=0; i < fSeaveys.size(); i++){
+      // if(true || i==34){
+      if(true || i==41){
+  	fSeaveys.at(i).setDebug(true);
+      }
+    }
+    if(rx==fSeaveys.size()-1){
+      firstTime = false;
+    }
+  }
+  else{
+    for(int i=0; i < fSeaveys.size(); i++){
+      fSeaveys.at(i).setDebug(false);
+    }
+  }
 
   if(rx >= 0 && rx < fSeaveys.size()){
     // @todo It makes much more sense to do this just once when the balloon position is updated!
@@ -289,15 +289,25 @@ bool icemc::ANITA::applyTrigger(int inu){
 
       ChanTrigger ct;
       ct.InitializeEachBand(this);
-      this->GetAntennaOrientation(fSettings,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
+
       int antNum = this->GetRxTriggerNumbering(ilayer, ifold);
       TGraph grHack(1, &inu, &inu);
-      ct.ApplyAntennaGain(fSettings, this, this, fScreenPtrIDontOwn, antNum, n_eplane, n_hplane, n_normal, &grHack);
+
+      ct.readInSeavey(fSettings,  &fSeaveys.at(antNum), antNum, this, &grHack);
+
+      // this->GetAntennaOrientation(fSettings,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
+      // ct.ApplyAntennaGain(fSettings, this, fScreenPtrIDontOwn, antNum, n_eplane, n_hplane, n_normal, &grHack);
+
       ct.TriggerPath(fSettings, this, antNum, this);
       ct.DigitizerPath(fSettings, this, antNum, this);
-      ct.TimeShiftAndSignalFluct(fSettings, this, ilayer, ifold, fVoltsRX.rfcm_lab_e_all,  fVoltsRX.rfcm_lab_h_all);	  
-      ct.saveTriggerWaveforms(this, &justSignal_trig[0][antNum][0], &justSignal_trig[1][antNum][0], &justNoise_trig[0][antNum][0], &justNoise_trig[1][antNum][0]);
-      ct.saveDigitizerWaveforms(this, &justSignal_dig[0][antNum][0], &justSignal_dig[1][antNum][0], &justNoise_dig[0][antNum][0], &justNoise_dig[1][antNum][0]);
+      ct.TimeShiftAndSignalFluct(fSettings, this, ilayer, ifold, fVoltsRX.rfcm_lab_e_all,  fVoltsRX.rfcm_lab_h_all, inu);
+      ct.saveTriggerWaveforms(&justSignal_trig[0][antNum][0], &justSignal_trig[1][antNum][0], &justNoise_trig[0][antNum][0], &justNoise_trig[1][antNum][0]);
+      ct.saveDigitizerWaveforms(&justSignal_dig[0][antNum][0], &justSignal_dig[1][antNum][0], &justNoise_dig[0][antNum][0], &justNoise_dig[1][antNum][0]);
+
+      if(inu==522){
+	int j = TMath::LocMax(Anita::HALFNFOUR, fVoltsRX.rfcm_lab_e_all[count_rx]);
+	std::cout << Anita::HALFNFOUR << "\t" << count_rx << "\t" << j << "\t" <<  1000*fVoltsRX.rfcm_lab_e_all[count_rx][j] << "\n";
+      }
 
       Tools::Zero(sumsignal, 5);
 
@@ -449,7 +459,7 @@ bool icemc::ANITA::applyTrigger(int inu){
 
 
 
-double icemc::ANITA::GetAverageVoltageFromAntennasHit(const Settings *settings1, int *nchannels_perrx_triggered, double *voltagearray, double& volts_rx_sum) const {
+double icemc::ANITA::GetAverageVoltageFromAntennasHit(const Settings *settings1, int *nchannels_perrx_triggered, const double *voltagearray, double& volts_rx_sum) const {
   double sum=0;
   int count_hitantennas=0;
   for (int i=0;i<settings1->NANTENNAS;i++) {

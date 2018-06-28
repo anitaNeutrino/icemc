@@ -26,9 +26,9 @@ namespace icemc {
      * The Pol enum class is the opposite (!) convention from eventReaderRoot and all downstream ANITA tools!
      * You have been warned!
      */
-    enum class Pol      {V,       H,         NotAPol};
-    enum class XPol     {VtoH,    HtoV,      NotAnXPol};
-    enum class AngleDir {Azimuth, Elevation};
+    enum class Pol : int      {V,       H};
+    enum class XPol : int      {VtoH,    HtoV};
+    enum class AngleDir : int  {Azimuth, Elevation};
 
     Seavey(const Settings* settings = NULL, double refractiveIndexOfMedium = icemc::AskaryanFreqsGenerator::N_AIR);
 
@@ -49,10 +49,9 @@ namespace icemc {
      * @return true if allowed by any (or no passbands are specified), false otherwise
      */
     bool freqAllowedByPassBands(double freqHz) const;
-    
-    const FTPair& getSignal(Pol pol); //resets the input?
-    
 
+    const FTPair& get(Pol pol) const;
+    
     /** 
      * Since ANITA moves and freely rotates, the antenna position needs to be updated.
      * 

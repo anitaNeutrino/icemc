@@ -39,7 +39,7 @@ namespace icemc {
     }
     virtual void addSignalToRX(const PropagatingSignal& signal, int rx, int inu); // just for debugging
 
-    double GetAverageVoltageFromAntennasHit(const Settings *settings1,  int *nchannels_perrx_triggered,  double *voltagearray,  double& volts_rx_sum) const;
+    double GetAverageVoltageFromAntennasHit(const Settings *settings1,  int *nchannels_perrx_triggered,  const double *voltagearray,  double& volts_rx_sum) const;
 
 
     UInt_t getLastEventNumber() const {return fEventNumber;}
