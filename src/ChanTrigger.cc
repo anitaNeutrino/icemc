@@ -142,7 +142,7 @@ void icemc::ChanTrigger::WhichBandsPass(const Settings *settings1, Anita *anita1
  *
  *
  */
-void icemc::ChanTrigger::WhichBandsPassTrigger1(const Settings *settings1, Anita *anita1, icemc::GlobalTrigger *globaltrig1, icemc::Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){
+void icemc::ChanTrigger::WhichBandsPassTrigger1(const Settings *settings1, const Anita *anita1, icemc::GlobalTrigger *globaltrig1, icemc::Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){
 
   double volts_thischannel;
   double energy_thischannel;
@@ -749,7 +749,8 @@ void icemc::ChanTrigger::readInSeavey(const Settings* settings1, const Seavey* s
     {
       const TGraph& gr = signal.getTimeDomain();
 
-      ///@todo Make this offset nonsense unnecessary! A hack to force things to be read in to the middle of the array
+      ///@todo Make this offset nonsense unnecessary!
+      /// This is a hack to force things to be read in to the middle of the array
       const int n1 = gr.GetN();
       const int n2 = volts_rx_forfft.at(polInd).at(band).size();
       const int offset = (n2 - n1)/2;
@@ -835,7 +836,6 @@ void icemc::ChanTrigger::readInSeavey(const Settings* settings1, const Seavey* s
   
 #endif
 }
-
 
 
 void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, const TGraph* gr) {
@@ -1294,7 +1294,7 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
 
 
 // void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
-void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][Anita::HALFNFOUR], double volts_rx_rfcm_lab_h_all[48][Anita::HALFNFOUR], int inu)
+void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double* volts_rx_rfcm_lab_e_all, double* volts_rx_rfcm_lab_h_all, int inu)
 {
   // int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
@@ -1309,12 +1309,12 @@ void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anit
 
   const int rx = anita1->GetRx(ilayer, ifold);
   for (int i=0;i<anita1->NFOUR/2;i++) {
-    volts_rx_rfcm_lab_e_all[rx][i] = volts_rx_rfcm_lab[0][i];
-    volts_rx_rfcm_lab_h_all[rx][i] = volts_rx_rfcm_lab[1][i];
+    volts_rx_rfcm_lab_e_all[i] = volts_rx_rfcm_lab[0][i];
+    volts_rx_rfcm_lab_h_all[i] = volts_rx_rfcm_lab[1][i];
   }
 
   if(inu == 522){
-    std::cout << "Peak volts VPol! " << rx << "\t" << 1000*TMath::MaxElement(Anita::HALFNFOUR, volts_rx_rfcm_lab_e_all[rx]) << "\n";
+    std::cout << "Peak volts VPol! " << rx << "\t" << 1000*TMath::MaxElement(Anita::HALFNFOUR, volts_rx_rfcm_lab_e_all) << "\n";
     // std::cout << "Peak volts HPol! " << rx << "\t" << 1000*TMath::MaxElement(Anita::HALFNFOUR, volts_rx_rfcm_lab_h_all[rx]) << "\n";
   }
   

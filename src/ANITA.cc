@@ -20,6 +20,7 @@
 icemc::ANITA::ANITA(const Settings* settings, RayTracer* sillyRay, Screen* sillyPanel, const RootOutput* ro)
   : Balloon(settings),
     fSettings(settings), fRayPtrIDontOwn(sillyRay), fScreenPtrIDontOwn(sillyPanel),
+    fVoltsRX(settings ? settings->NANTENNAS : 0),
     fAnitaOutput(this, settings, ro->getOutputDir(), ro->getRun())
 {
   if(settings){
@@ -123,6 +124,7 @@ bool icemc::ANITA::applyTrigger(int inu){
   //          FOR VPOL AND HPOL       //
   //////////////////////////////////////
 
+  fVoltsRX.reset();
   int thispasses[Anita::NPOL]={0,0};
 
   auto globalTrigger = std::unique_ptr<GlobalTrigger>(new GlobalTrigger(fSettings, dynamic_cast<Anita*>(this)));
@@ -143,8 +145,6 @@ bool icemc::ANITA::applyTrigger(int inu){
     }	
   }
   this->rx_minarrivaltime=Tools::WhichIsMin(this->arrival_times[0], fSettings->NANTENNAS);
-
-
 
   //For verification plots - added by Stephen
   int max_antenna0 = -1;  //antenna with the peak voltage,  top layer
@@ -300,12 +300,14 @@ bool icemc::ANITA::applyTrigger(int inu){
 
       ct.TriggerPath(fSettings, this, antNum, this);
       ct.DigitizerPath(fSettings, this, antNum, this);
-      ct.TimeShiftAndSignalFluct(fSettings, this, ilayer, ifold, fVoltsRX.rfcm_lab_e_all,  fVoltsRX.rfcm_lab_h_all, inu);
+      ct.TimeShiftAndSignalFluct(fSettings, this, ilayer, ifold,
+				 fVoltsRX.rfcm_lab_e_all.at(count_rx).data(),
+				 fVoltsRX.rfcm_lab_h_all.at(count_rx).data(), inu);
       ct.saveTriggerWaveforms(&justSignal_trig[0][antNum][0], &justSignal_trig[1][antNum][0], &justNoise_trig[0][antNum][0], &justNoise_trig[1][antNum][0]);
       ct.saveDigitizerWaveforms(&justSignal_dig[0][antNum][0], &justSignal_dig[1][antNum][0], &justNoise_dig[0][antNum][0], &justNoise_dig[1][antNum][0]);
 
       if(inu==522){
-	int j = TMath::LocMax(Anita::HALFNFOUR, fVoltsRX.rfcm_lab_e_all[count_rx]);
+	int j = TMath::LocMax(Anita::HALFNFOUR, fVoltsRX.rfcm_lab_e_all.at(count_rx).data());
 	std::cout << Anita::HALFNFOUR << "\t" << count_rx << "\t" << j << "\t" <<  1000*fVoltsRX.rfcm_lab_e_all[count_rx][j] << "\n";
       }
 

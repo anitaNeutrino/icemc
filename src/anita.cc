@@ -2355,11 +2355,12 @@ void icemc::Anita::GetNoiseWaveforms() {
   // LC, 16/02/17
 
   
-  for (int ipol=0;ipol<2;ipol++)
+  for (int ipol=0;ipol<2;ipol++){
     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples, timedomainnoise_rfcm[ipol], freqdomain_rfcm,   phases_rfcm[ipol] );
-  for (int ipol=0;ipol<2;ipol++)
+  }
+  for (int ipol=0;ipol<2;ipol++){
     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples, timedomainnoise_lab[ipol],  avgfreqdomain_lab, phases_lab[ipol]  );
-
+  }
   //     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long, timedomainnoise_rfcm_long[ipol], freqdomain_rfcm_long,   phases_rfcm_long[ipol] );
   //     convert_power_spectrum_to_voltage_spectrum_for_fft(nsamples_long, timedomainnoise_lab_long[ipol],  avgfreqdomain_lab_long, phases_lab_long[ipol]  );
     

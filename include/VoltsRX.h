@@ -13,7 +13,8 @@ namespace icemc {
    */
   class VoltsRX {
   public:
-    VoltsRX();
+    VoltsRX(int nRX);
+    void reset();
     
     double max;		///< max voltage seen on an antenna - just for debugging purposes
     double ave;		///< ave voltage seen on an antenna,  among hit antennas
@@ -22,12 +23,11 @@ namespace icemc {
     double max_highband;	///< max voltage seen on an antenna - just for debugging purposes
     double max_lowband;	///< max voltage seen on an antenna - just for debugging purposes
 
-    static const int nRX = 48;
+    const int fNRX;
+    std::vector<std::array<double, Anita::HALFNFOUR> > rfcm_lab_e_all;
+    std::vector<std::array<double, Anita::HALFNFOUR> > rfcm_lab_h_all;
     
-    double rfcm_lab_e_all[nRX][Anita::HALFNFOUR];
-    double rfcm_lab_h_all[nRX][Anita::HALFNFOUR];
-
-    ClassDef(VoltsRX, 1);
+    ClassDef(VoltsRX, 2);
   };
 }
 

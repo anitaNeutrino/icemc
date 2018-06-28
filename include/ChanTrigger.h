@@ -136,7 +136,8 @@ namespace icemc {
      * @param  volts_rx_rfcm_lab_h_all :: double [48][512] - time domain waveform for each channel (HPOL)
      */ 
     // void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
-    void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][Anita::HALFNFOUR], double volts_rx_rfcm_lab_h_all[48][Anita::HALFNFOUR], int inu);    
+    // void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][Anita::HALFNFOUR], double volts_rx_rfcm_lab_h_all[48][Anita::HALFNFOUR], int inu);
+    void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double* volts_rx_rfcm_lab_e_all, double* volts_rx_rfcm_lab_h_all, int inu);
   
     //!  Convert E and H to left and right e field
     /**
@@ -250,7 +251,7 @@ namespace icemc {
      * @param  ifold :: int - phi sector
      * @param  thresholds :: double [2][5] - relative power thresholds for each pol and band
      */
-    void WhichBandsPassTrigger1(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]);
+    void WhichBandsPassTrigger1(const Settings *settings1, const Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]);
 
     //! Which bands passes the trigger (for trigger scheme larger than 2)
     /**

@@ -186,14 +186,16 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
     fEvent->chanId[UsefulChanIndexV] = UsefulChanIndexV;
     fEvent->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
+    const int offset = (fDetector->fVoltsRX.rfcm_lab_h_all[IceMCAnt].size() - fNumPoints)/2;
+    std::cout << offset << std::endl;
     for (int j = 0; j < fNumPoints; j++) {
       // convert seconds to nanoseconds
       fEvent->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
       fEvent->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
 
       const double voltsToMilliVolts = 1000; // volts to millivolts
-      fEvent->fVolts[UsefulChanIndexH][j] = fDetector->fVoltsRX.rfcm_lab_h_all[IceMCAnt][j+128]*voltsToMilliVolts;
-      fEvent->fVolts[UsefulChanIndexV][j] = fDetector->fVoltsRX.rfcm_lab_e_all[IceMCAnt][j+128]*voltsToMilliVolts;
+      fEvent->fVolts[UsefulChanIndexH][j] = fDetector->fVoltsRX.rfcm_lab_h_all[IceMCAnt][j+offset]*voltsToMilliVolts;
+      fEvent->fVolts[UsefulChanIndexV][j] = fDetector->fVoltsRX.rfcm_lab_e_all[IceMCAnt][j+offset]*voltsToMilliVolts;
       
       fEvent->fCapacitorNum[UsefulChanIndexH][j] = j;
       fEvent->fCapacitorNum[UsefulChanIndexV][j] = j;

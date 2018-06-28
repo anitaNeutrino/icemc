@@ -12,7 +12,6 @@
 #include "TMath.h"
 #include "TVector3.h"
 
-#include "rx.h"
 #include "Constants.h"
 #include "anita.hh"
 #include "balloon.hh"
@@ -23,8 +22,6 @@
 #include "screen.hh"
 #include "ChanTrigger.h"
 #include "GlobalTrigger.h"
-
-using std::cout;
 
 
 icemc::GlobalTrigger::GlobalTrigger(const Settings *settings1,Anita *anita1){
@@ -74,8 +71,9 @@ icemc::GlobalTrigger::GlobalTrigger(const Settings *settings1,Anita *anita1){
   LASTTIMETOTESTL1_ANITA4=0.;
   for (int i=0;i<3;i++) {
     for (int j=0;j<2;j++) {
-      if (L1_COINCIDENCE_MOREGENERAL[i][j]>LASTTIMETOTESTL1_ANITA4)
+      if (L1_COINCIDENCE_MOREGENERAL[i][j]>LASTTIMETOTESTL1_ANITA4){
 	LASTTIMETOTESTL1_ANITA4=L1_COINCIDENCE_MOREGENERAL[i][j];
+      }
     }
   }
   
@@ -182,7 +180,23 @@ icemc::GlobalTrigger::GlobalTrigger(const Settings *settings1,Anita *anita1){
  *	coherent-summing-group, though this more recent trigger is referred to as the "Summed Power Trigger"
  *
  *
- *	\todo	This function needs to be heavily refactored into either functions which perform some smaller part of
+ *	@todo	This function needs to be heavily refactored into either functions which perform some smaller part of
+ *			every trigger, or some functions which perform one triggering system in its entirely, or a combination
+ *			of the two.
+ *
+ *			The longer a function gets, the less confidence can be had in it because instead of many small, well-tested
+ *			modular functions, functions of this length develop into massive hacks which may appear to perform the same
+ *			but no such guarantee can be made.
+ *
+ *			There are a lot of functions and code snippets which could be very easily replaced by standard library
+ *			functions, or by embracing "RAII" ("Resource Acquisition Is Initialization") and using fewer C arrays and
+ *			more of the standard library functions (particularly those in "algorithm", "functional", and "numeric"
+ *			and above all the container libraries. Those libraries will help (along with the refactor) alleviate the
+ *			difficult-to-follow nesting of for-loops within conditional statements.
+ *			
+ *			Many of the combinatoric triggers can have a logical mask made in order to very clearly define and later
+ *			comprehend the requirements of the triggers, and less nesting of loops is necessary.
+ * *	@todo	This function needs to be heavily refactored into either functions which perform some smaller part of
  *			every trigger, or some functions which perform one triggering system in its entirely, or a combination
  *			of the two.
  *
@@ -199,6 +213,7 @@ icemc::GlobalTrigger::GlobalTrigger(const Settings *settings1,Anita *anita1){
  *			Many of the combinatoric triggers can have a logical mask made in order to very clearly define and later
  *			comprehend the requirements of the triggers, and less nesting of loops is necessary.
  *
+
  *			Using scoped accumulators for calculating statistics is also a good idea here, as it reduces the number of
  *			functions and the number of objects needed to produce a distribution of values to just one object, making
  *			mistakes/errors much less likely. *			
@@ -1428,7 +1443,7 @@ int icemc::GlobalTrigger::GetPhiSector(const Settings *settings1,int i,int j) { 
   }
   else
     {
-      cout << "Input non-existent layer!\n";
+      std::cout << "Input non-existent layer!\n";
       return -1;
 		
     }
@@ -1442,7 +1457,7 @@ int icemc::GlobalTrigger::GetPhiSector(const Settings *settings1,int i,int j) { 
  *	where the antennas were located physically and how they were considered to by positioned
  *	logically by the triggering system.
  *
- *	\todo	Deprecate this function in favor of PayloadArray or boost::multi_array objects which provide the
+ *	@todo	Deprecate this function in favor of PayloadArray or boost::multi_array objects which provide the
  *			ability to have multiple indexing schemes for a given collection of objects.
  */
 void icemc::GlobalTrigger::GetAnitaLayerPhiSector(const Settings *settings1,int i,int j,int &whichlayer,int &whichphisector) {
@@ -1504,7 +1519,7 @@ void icemc::GlobalTrigger::GetAnitaLayerPhiSector(const Settings *settings1,int 
  *	"OR" of the two nadir antennas closest to that phi sector. Finally, two neighboring phi
  *	sectors must have accomplished this in order to produce a triggered L3.
  *
- *	\todo	The organization of this function needs to be changed so that a single variables
+ *	@todo	The organization of this function needs to be changed so that a single variables
  *			turns on (or off) a single component of the trigger/simulation. The organization
  *			as it stands makes it difficult to know what features a particular trigger should
  *			be exhibiting.
@@ -1682,7 +1697,7 @@ void icemc::GlobalTrigger::L3Trigger(const Settings *settings1,Anita *anita1,int
  *	The output is assembled and then truncated to prevent uneven array lengths post-shifting.
  *
  *
- *	\todo	Instead of accepting nested vectors, boost::multi_array/_views or
+ *	@todo	Instead of accepting nested vectors, boost::multi_array/_views or
  *			PayloadArray objects should be passed in and out.
  *			
  *			Something to keep in mind is that RVO (Return Value Optimization) can
@@ -1731,7 +1746,7 @@ void icemc::GlobalTrigger::delay_align_antenna_waveforms(const vector< vector < 
 
 //!	Given a number of waveforms (usually 3) which are delay-aligned, it sums them.
 /*!
- *	\todo	This should not take nested vectors as a parameter but rather
+ *	@todo	This should not take nested vectors as a parameter but rather
  *			a boost::multi_array or boost::multi_array_view, or an instance of
  *			the PayloadArray class, which is a multi_array container modified to
  *			have circular indices.
@@ -1756,7 +1771,7 @@ void icemc::GlobalTrigger::sum_aligned_waveforms(const vector < vector <double> 
 
 //!	Performs an element-wise squaring of the values of the input array
 /*!
- *	\todo	This function should be deprecated because the same functionality
+ *	@todo	This function should be deprecated because the same functionality
  *			is provided by the standard library:
  *
  *		std::transform(wfm.begin(), wfm.end(), result.begin(), [](auto& x){x *= x});
@@ -1777,7 +1792,7 @@ void icemc::GlobalTrigger::square_waveform_elements(const vector <double>& wavef
 
 //!	Sum a window from the specified starting index
 /*!
- *	\todo	This function should be replaced as it is unnecessary -- the same
+ *	@todo	This function should be replaced as it is unnecessary -- the same
  *			thing can be done more legibly with std::accumulate(...) :
  *
  *		double sum = std::accumulate(wfm.begin(), wfm.end(), 0.); 
