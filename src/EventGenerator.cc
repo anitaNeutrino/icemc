@@ -1201,22 +1201,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   TRandom *rsave = gRandom;
   TRandom3 *Rand3 = new TRandom3(settings1.SEED);//for generating random numbers
   gRandom=Rand3;
-
-  // if(!bn1){
-  //   bn1 = new Balloon();
-  // }
-  // if(!anita1){
-  //   anita1 = new Anita();
-  // }
   
-  
-  // Secondaries* sec1 = new Secondaries();
   Secondaries sec1;
   Primaries* primary1 = new Primaries();
   AskaryanFreqsGenerator askFreqGen;
   RayTracer rayTracer;
   Counting* count1 = new Counting();
-  // GlobalTrigger* globaltrig1 = NULL;
   Taumodel* taus1 = new Taumodel();
   Screen* panel1 = new Screen(0);  // create new instance of the screen class
 
@@ -1224,10 +1214,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   ///@todo make passing these pointers (except maybe settings?) unnecessary!!!
   if(!fDetector){
-    fDetector = new ANITA(&settings1, &rayTracer, panel1, &ro);
-    std::cout << "Constructed fDetector at " << fDetector << std::endl;
+    fDetector = new ANITA(&settings1, &rayTracer, &ro);
   }
-  
 
   // input parameters
   settings1.ApplyInputs(fDetector,  &sec1,  &askFreqGen,  &rayTracer);
@@ -2387,7 +2375,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	    
       count1->ndeadtime[whichray]++;
 
-
       //if no-roughness case, add its parameters to the saved screen parameters so specular and roughness simulations use the same code in the waveform construction
       if(!settings1.ROUGHNESS){
         panel1->SetNvalidPoints(1);
@@ -2456,9 +2443,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       panel1->PropagateSignalsToDetector(&settings1, fDetector, inu);
 
-      // this seems to be where the neutrino simulation ends
-      // everything in here should end up in the ANITA class.
-      ///@todo HHEEERRRREEE!!!!!
       bool eventPassedTrigger = fDetector->applyTrigger(inu);
       if(eventPassedTrigger){
 

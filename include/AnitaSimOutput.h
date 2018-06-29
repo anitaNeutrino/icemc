@@ -26,11 +26,11 @@ namespace icemc {
     AnitaSimOutput(const ANITA* detector, const Settings* settings, const char* outputDir, int run);
     virtual ~AnitaSimOutput();
 
-    ///@todo remove these default parameters
-    void fillRootifiedAnitaDataTrees(const Settings& settings1, const RayTracer* ray1, const Screen* panel1);
+    void fillRootifiedAnitaDataTrees();
 
   private:
-    const ANITA* fDetector; ///< The ANITA detector, parent and owner of this class
+    const ANITA* fDetector; ///< The ANITA detector, parent and owner of this object
+    const Settings* fSettings; ///< The simulation settings
     TString fOutputDir; ///< The output directory
     int fRun; ///< The simulated run number (used to uniquely name output files)
     
@@ -53,8 +53,8 @@ namespace icemc {
     TTree truthTree;
 
 
-    void initRootifiedAnitaDataFiles(const Settings* settings1);
-    int getIceMCAntfromUsefulEventAnt(const Settings *settings1,  int UsefulEventAnt);    
+    void initRootifiedAnitaDataFiles();
+    int getIceMCAntfromUsefulEventAnt(int UsefulEventAnt);
     
   };
 

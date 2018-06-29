@@ -20,7 +20,7 @@ namespace icemc {
 
   class ANITA : public Detector, public Anita, public Balloon {
   public:
-    ANITA(const Settings* settings, RayTracer* sillyRay, Screen* sillyPanel, const RootOutput* ro);
+    ANITA(const Settings* settings, const RayTracer* sillyRay, const RootOutput* ro);
     virtual ~ANITA();
 
     virtual int getNumRX() const override {return fSeaveys.size();}
@@ -47,12 +47,10 @@ namespace icemc {
   private:
 
     const Settings* fSettings;
-    RayTracer* fRayPtrIDontOwn;
-    Screen* fScreenPtrIDontOwn;
+    const RayTracer* fRayPtrIDontOwn;
 
     std::vector<Seavey> fSeaveys; ///< The set of Seavey antennas on the payload
     UInt_t fEventNumber = 0;
-
 
     ///@todo maybe move or remove these things...? Although they are used in the ROOTified ANITA style data trees...
     VoltsRX fVoltsRX;

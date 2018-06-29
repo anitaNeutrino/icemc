@@ -26,10 +26,11 @@
 
 
 icemc::AnitaSimOutput::AnitaSimOutput(const ANITA* detector, const Settings* settings, const char* outputDir, int run)
-  : fDetector(detector), fOutputDir(outputDir), fRun(run),
+  : fDetector(detector), fSettings(settings),
+    fOutputDir(outputDir), fRun(run),
     fEvent(nullptr), fHeader(nullptr), fGps(nullptr)
 {
-  initRootifiedAnitaDataFiles(settings);
+  initRootifiedAnitaDataFiles();
 }
 
 
@@ -51,7 +52,7 @@ icemc::AnitaSimOutput::~AnitaSimOutput(){
 
 
 
-void icemc::AnitaSimOutput::initRootifiedAnitaDataFiles(const Settings* settings1){
+void icemc::AnitaSimOutput::initRootifiedAnitaDataFiles(){
 
 #ifdef ANITA_UTIL_EXISTS
 
@@ -82,11 +83,11 @@ void icemc::AnitaSimOutput::initRootifiedAnitaDataFiles(const Settings* settings
 #ifdef ANITA3_EVENTREADER
 
   // Set AnitaVersion so that the right payload geometry is used
-  AnitaVersion::set(settings1->ANITAVERSION);
+  AnitaVersion::set(fSettings->ANITAVERSION);
   
   TString truthFileName = fOutputDir + TString::Format("/SimulatedAnitaTruthFile%d.root",  fRun);
   fTruthFile = new TFile(truthFileName, "RECREATE");
-  TNamed* ss = settings1->makeRootSaveableSettings();
+  TNamed* ss = fSettings->makeRootSaveableSettings();
   ss->Write();
   delete ss;
   ss = NULL;
@@ -94,7 +95,7 @@ void icemc::AnitaSimOutput::initRootifiedAnitaDataFiles(const Settings* settings
   TNamed gitversion("GitVersion", EnvironmentVariable::ICEMC_VERSION(fOutputDir).c_str());
   gitversion.Write();
 
-  TNamed nnu("NNU", TString::Format("%d", settings1->NNU).Data());
+  TNamed nnu("NNU", TString::Format("%d", fSettings->NNU).Data());
   nnu.Write();
 
   time_t rawtime;
@@ -128,11 +129,11 @@ void icemc::AnitaSimOutput::initRootifiedAnitaDataFiles(const Settings* settings
 }
 
 
-int icemc::AnitaSimOutput::getIceMCAntfromUsefulEventAnt(const Settings *settings1,  int UsefulEventAnt){
+int icemc::AnitaSimOutput::getIceMCAntfromUsefulEventAnt(int UsefulEventAnt){
 
 #ifdef ANITA_UTIL_EXISTS  
   int IceMCAnt = UsefulEventAnt;
-  if ((settings1->WHICH==9 || settings1->WHICH==10) && UsefulEventAnt<16) {
+  if ((fSettings->WHICH==9 || fSettings->WHICH==10) && UsefulEventAnt<16) {
     IceMCAnt = (UsefulEventAnt%2==0)*UsefulEventAnt/2 + (UsefulEventAnt%2==1)*(UsefulEventAnt/2+8);
   }
   return IceMCAnt;
@@ -147,7 +148,7 @@ int icemc::AnitaSimOutput::getIceMCAntfromUsefulEventAnt(const Settings *setting
 
 
 
-void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings1, const RayTracer* ray1, const Screen* panel1){
+void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(){
   
 #ifdef ANITA_UTIL_EXISTS
   AnitaGeomTool* geom = AnitaGeomTool::Instance();
@@ -176,9 +177,9 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
   }
   fEvent->fRFSpike = 0;// when we get as far as simulating this, we're doing well
 
-  for (int iant = 0; iant < settings1.NANTENNAS; iant++){
+  for (int iant = 0; iant < fSettings->NANTENNAS; iant++){
     //int IceMCAnt = getIceMCAntfromUsefulEventAnt(anita1,  AnitaGeom1,  iant);
-    int IceMCAnt = getIceMCAntfromUsefulEventAnt(&settings1,  iant);
+    int IceMCAnt = getIceMCAntfromUsefulEventAnt(iant);
     int UsefulChanIndexH = geom->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
     int UsefulChanIndexV = geom->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
     fEvent->fNumPoints[UsefulChanIndexV] = fNumPoints;
@@ -187,7 +188,6 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
     fEvent->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
     const int offset = (fDetector->fVoltsRX.rfcm_lab_h_all[IceMCAnt].size() - fNumPoints)/2;
-    std::cout << offset << std::endl;
     for (int j = 0; j < fNumPoints; j++) {
       // convert seconds to nanoseconds
       fEvent->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
@@ -214,7 +214,7 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
   fHeader->surfSlipFlag = 0;
   fHeader->errorFlag = 0;
 
-  if (settings1.MINBIAS==1){
+  if (fSettings->MINBIAS==1){
     fHeader->trigType = 8; // soft-trigger
   }
   else{
@@ -231,7 +231,7 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
   fHeader->lowerL2TrigPattern = fDetector->fL2trig[0][1];
   fHeader->nadirL2TrigPattern = fDetector->fL2trig[0][2];
 
-  if (settings1.WHICH<9){
+  if (fSettings->WHICH<9){
     fHeader->phiTrigMask  = (short) anita1->phiTrigMask;
     fHeader->l3TrigPattern = (short) fDetector->fL3trig[0];
     // fHeader->l3TrigPattern = (short) uhen->l3trig[0];        
@@ -242,7 +242,7 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
   fHeader->triggerTime = bn1->realTime(); //realTime_flightdata;
 
 #ifdef ANITA3_EVENTREADER
-  if (settings1.WHICH==9 || settings1.WHICH==10) {
+  if (fSettings->WHICH==9 || fSettings->WHICH==10) {
     fHeader->setTrigPattern((short) fDetector->fL3trig[0], AnitaPol::kVertical);
     fHeader->setTrigPattern((short) fDetector->fL3trig[1], AnitaPol::kHorizontal);
     fHeader->setMask( (short) anita1->l1TrigMask,  (short) anita1->phiTrigMask,  AnitaPol::kVertical);
@@ -277,22 +277,22 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
     // fTruth->nuPos[i]       = uhen->interaction1->posnu[i];
     // fTruth->nuDir[i]       = uhen->interaction1->nnu[i];
   }
-  for (int i=0;i<5;i++){
-    for (int j=0;j<3;j++){
-      fTruth->rfExitNor[i][j] = ray1->n_exit2bn[i][j];
-      fTruth->rfExitPos[i][j] = ray1->rfexit[i][j];
-    }
-  }
-  for (int i=0;i<48;i++){
-    // @todo URGENT RESTORE THESE PARAMETERS!
-    // fTruth->hitangle_e[i]  = uhen->hitangle_e_all[i];
-    // fTruth->hitangle_h[i]  = uhen->hitangle_h_all[i];
-  }
-  if(!settings1.ROUGHNESS){
-    for (int i=0;i<Anita::NFREQ;i++){
-      fTruth->vmmhz[i]       = panel1->GetVmmhz_freq(i);
-    }
-  }
+  // for (int i=0;i<5;i++){
+  //   for (int j=0;j<3;j++){
+  //     fTruth->rfExitNor[i][j] = ray1->n_exit2bn[i][j];
+  //     fTruth->rfExitPos[i][j] = ray1->rfexit[i][j];
+  //   }
+  // }
+  // for (int i=0;i<48;i++){
+  // @todo URGENT RESTORE THESE PARAMETERS!
+  // fTruth->hitangle_e[i]  = uhen->hitangle_e_all[i];
+  // fTruth->hitangle_h[i]  = uhen->hitangle_h_all[i];
+  // }
+  // if(!settings1.ROUGHNESS){
+  //   for (int i=0;i<Anita::NFREQ;i++){
+  //     fTruth->vmmhz[i]       = panel1->GetVmmhz_freq(i);
+  //   }
+  // }
 
 	    
   memset(fTruth->SNRAtTrigger,       0, sizeof(fTruth->SNRAtTrigger)       );
@@ -307,7 +307,7 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
   fTruth->maxSNRAtDigitizerV=0;
   fTruth->maxSNRAtDigitizerH=0;
 
-  for (int iant = 0; iant < settings1.NANTENNAS; iant++){
+  for (int iant = 0; iant < fSettings->NANTENNAS; iant++){
     int UsefulChanIndexH = geom->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
     int UsefulChanIndexV = geom->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
 
@@ -340,6 +340,7 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(const Settings& settings
 
       // @todo URGENT RESTORE THESE PARAMETERS!
 
+      ///@todo replace this 128 with offset as in event->fVolts filling loop
       // fTruth->fSignalAtTrigger[UsefulChanIndexV][j]   = uhen->justSignal_trig[0][iant][j+128]*1000;
       // fTruth->fSignalAtTrigger[UsefulChanIndexH][j]   = uhen->justSignal_trig[1][iant][j+128]*1000;
       // fTruth->fNoiseAtTrigger[UsefulChanIndexV][j]    = uhen->justNoise_trig[0][iant][j+128]*1000;

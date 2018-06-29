@@ -172,14 +172,12 @@ namespace icemc {
      */
     void doNormalTimeDomainOrdering() const;
 
-
     /** 
-     * Applies a delay to the time axis of the graph.
+     * Applies a constant (and circular) group delay in the frequency domain
      * 
-     * @param delay is the amount to delay the signal by
+     * @param delaySeconds is the amount of time to delay the signal by
      */
-    void delayTimeDomain(double delay);
-    
+    void applyConstantGroupDelay(double delaySeconds);
 
     /** 
      * Get the number of times from the current state of the FTPair

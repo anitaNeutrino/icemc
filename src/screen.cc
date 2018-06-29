@@ -336,16 +336,16 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
 	 * But is the correct N 256, or 512, or something else?
 	 * The FTPair class does this normalization properly but I'm not sure icemc does.
 	 * (It must  be one of the random factors of 2 or sqrt(2) littered around?)
-	 * Anyway I need to apply this factor to make sure the PSDs agree before and after during the factor.
+	 * Anyway I need to apply this factor to make sure the PSDs agree before and after.
 	 * (Where the PSD accounts for the difference in length correctly.)
-	 * But I need to fudge the amplitudes here so the PSDs agree during the factor.
+	 * But I need to fudge the amplitudes here so the PSDs agree during the refactor.
 	 * Before doing this the new PSD (which squares the voltages) had twice the amplitude of the old chanTrigger, as you would expect.
 	 */
 	tmp_vhz[k] /= sqrt(2);
       }
 
       FTPair signal(tmp_vhz, df);
-      signal.delayTimeDomain(GetDelay(jpt));
+      signal.applyConstantGroupDelay(GetDelay(jpt));
 
       // TGraph& gr = signal.changeTimeDomain();
       // // add a point to force  up to next power of 2...

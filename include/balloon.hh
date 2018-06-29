@@ -53,7 +53,7 @@ namespace icemc {
 
 
     void setObservationLocation(Interaction *interaction1,int inu, const Antarctica *antarctic, const Settings *settings1);
-    void GetBoresights(const Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]);
+    // void GetBoresights(const Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]);
     void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,const Settings *settings1, const Antarctica *antarctica1,
 				      RayTracer *ray1, int &beyondhorizon); 
   
@@ -172,7 +172,7 @@ namespace icemc {
      * @param  anita1 -
      * @return returns void
      */
-    void GetBoresights(const Settings *settings1,Anita *anita1);
+    void GetBoresights(const Settings *settings1, const Anita *anita1);
     
     ///< This function calculates antenna positions
     /**
@@ -249,8 +249,7 @@ namespace icemc {
 
     void InitializeBalloon();
     void ReadAnitaliteFlight();
-    void setr_bn(double latitude,double longitude); 
-    
+    void setr_bn(double latitude,double longitude);
     
     const FlightPath WHICHPATH;                                 ///< 0=fixed balloon position,1=randomized,2=ANITA-lite GPS data,3=banana plot
     // GPS positions of Anita-lite balloon flight
@@ -293,7 +292,7 @@ namespace icemc {
 }
 
 /** 
- * For a nice cout/logging experience
+ * For a nice cout/cerr/logging experience
  * 
  * @param os is a output string stream
  * @param fp is the FlightPath class enum

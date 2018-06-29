@@ -1240,7 +1240,7 @@ void icemc::Antarctica::GetMAXHORIZON(Balloon *bn1) const {
 }
 
 
-void icemc::Antarctica::CreateHorizons(const Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn) {
+void icemc::Antarctica::CreateHorizons(const Settings *settings1, Balloon *bn1, double theta_bn, double phi_bn, double altitude_bn) {
 
   // add up volume of ice within horizon of payload
   // goes a little beyond horizon.

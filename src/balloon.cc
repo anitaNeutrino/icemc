@@ -900,49 +900,49 @@ void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Ani
 
 
 
-void icemc::Balloon::GetBoresights(const Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]){//,Vector n_north,Vector n_east) {
+// void icemc::Balloon::GetBoresights(const Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]){//,Vector n_north,Vector n_east) {
     
-  // this fills r_boresights with the position of the antenna boresights.
-  for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
-    for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+//   // this fills r_boresights with the position of the antenna boresights.
+//   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
+//     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
       
-      Vector n_boresight(1,0,0); // this will be a unit vector that points from the center axis of the payload to the boresight on each level of the payload (it will stay in the x-y plane)
+//       Vector n_boresight(1,0,0); // this will be a unit vector that points from the center axis of the payload to the boresight on each level of the payload (it will stay in the x-y plane)
       
-      double phi;
-      // rotate about z axis for phi
-      if (settings1->CYLINDRICALSYMMETRY==1) {
-	phi=(double)ifold/(double)anita1->NRX_PHI[ilayer]*2*constants::PI + anita1->PHI_OFFSET[ilayer]+phi_spin;
-      }
-      else{
-	phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer] +phi_spin;
-      }
+//       double phi;
+//       // rotate about z axis for phi
+//       if (settings1->CYLINDRICALSYMMETRY==1) {
+// 	phi=(double)ifold/(double)anita1->NRX_PHI[ilayer]*2*constants::PI + anita1->PHI_OFFSET[ilayer]+phi_spin;
+//       }
+//       else{
+// 	phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer] +phi_spin;
+//       }
       
       
-      n_boresight = n_boresight.RotateZ(phi);
+//       n_boresight = n_boresight.RotateZ(phi);
       
-      // start with a vector that points in the +z direction but with the same length as r_bn
-      r_boresights[ilayer][ifold].SetX(0.); // this will be a unit vector that points from the center axis of the payload to the boresight on each level of the payload (it will stay in the x-y plane)
-      r_boresights[ilayer][ifold].SetY(0.);
-      r_boresights[ilayer][ifold].SetZ(r_bn.Mag());
+//       // start with a vector that points in the +z direction but with the same length as r_bn
+//       r_boresights[ilayer][ifold].SetX(0.); // this will be a unit vector that points from the center axis of the payload to the boresight on each level of the payload (it will stay in the x-y plane)
+//       r_boresights[ilayer][ifold].SetY(0.);
+//       r_boresights[ilayer][ifold].SetZ(r_bn.Mag());
       
-      Vector zaxis(0.,0.,1.);
-      Vector xaxis(1.,0.,0.);
-      Vector yaxis(0.,1.,0.);
+//       Vector zaxis(0.,0.,1.);
+//       Vector xaxis(1.,0.,0.);
+//       Vector yaxis(0.,1.,0.);
       
-      // Add the positions of the antennas relative to the center of the payload
-      r_boresights[ilayer][ifold] += (anita1->RRX[ilayer]*n_boresight
-				      + anita1->LAYER_VPOSITION[ilayer]*zaxis
-				      + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer])*xaxis
-				      + anita1->LAYER_HPOSITION[ilayer]*sin(anita1->LAYER_PHIPOSITION[ilayer])*yaxis);
+//       // Add the positions of the antennas relative to the center of the payload
+//       r_boresights[ilayer][ifold] += (anita1->RRX[ilayer]*n_boresight
+// 				      + anita1->LAYER_VPOSITION[ilayer]*zaxis
+// 				      + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer])*xaxis
+// 				      + anita1->LAYER_HPOSITION[ilayer]*sin(anita1->LAYER_PHIPOSITION[ilayer])*yaxis);
 
-      //   now rotate to balloon's position on the continent
-      r_boresights[ilayer][ifold] = r_boresights[ilayer][ifold].ChangeCoord(n_north,-1.*n_east);
-    }
-  }
-}
+//       //   now rotate to balloon's position on the continent
+//       r_boresights[ilayer][ifold] = r_boresights[ilayer][ifold].ChangeCoord(n_north,-1.*n_east);
+//     }
+//   }
+// }
 
 
-void icemc::Balloon::GetBoresights(const Settings *settings1,Anita *anita1) {
+void icemc::Balloon::GetBoresights(const Settings *settings1, const Anita *anita1) {
   Vector ant_pos;
   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {

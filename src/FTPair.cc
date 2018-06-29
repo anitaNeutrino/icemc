@@ -10,7 +10,7 @@
   if(fDebug && (fNeedToUpdateTimeDomain > 0 || fNeedToUpdateFreqDomain > 0)){        \
     std::cerr << "In " << (funcName)						     \
               << ": fMustUpdateTimeDomain = " << fNeedToUpdateTimeDomain << ", "     \
-              << "fMustUpdateFreqDomain = " << fNeedToUpdateFreqDomain << std::endl; \
+              << "fMustUpdateFreqDomain = " << fNeedToUpdateFreqDomain  << std::endl;\
    }
 
 
@@ -118,7 +118,7 @@ icemc::FTPair::FTPair(int nf, const std::complex<double>* freqDomainPhasors, dou
     fNeedToUpdateTimeDomain(true),
     fNeedToUpdateFreqDomain(false),
     fDebug(false),
-    fDoNormalTimeDomainOrdering(true)    
+    fDoNormalTimeDomainOrdering(true)
 {
   PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
   nf = zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(df);
@@ -264,16 +264,24 @@ void icemc::FTPair::doNormalTimeDomainOrdering() const {
 
 
 
-void icemc::FTPair::delayTimeDomain(double delay) {
+
+
+void icemc::FTPair::applyConstantGroupDelay(double delaySeconds){
   PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
-  
-  TGraph& gr = changeTimeDomain();
-  for(int i=0; i < gr.GetN(); i++){
-    gr.GetX()[i] += delay;
+
+  auto& cs = changeFreqDomain();
+  double dfHz = getDeltaF();
+
+  double freqHz = 0;
+
+  for(auto& c : cs){
+    // for each frequency bin, a phase delay of pi radians delays that frequency by 1./f
+    const double phaseShift = TMath::TwoPi()*delaySeconds*freqHz;
+    std::complex<double> phasor = std::polar(1.0,  phaseShift);
+    c *= phasor;
+    freqHz += dfHz;
   }
 }
-
-
 
 
 
@@ -391,11 +399,8 @@ void icemc::FTPair::maybeUpdateFreqDomain() const {
     // for(int i=0; i < n; i++){
     //   temp.push_back(fTimeDomainGraph.GetY()[i]*scaleFactor);
     // }
-    
 
     realft(&temp[0], 1,  temp.size());
-
-    
     fFreqDomain.clear();
     int nf = getNumFreqs(fTimeDomainGraph.GetN());
     fFreqDomain.reserve(nf);
@@ -439,8 +444,9 @@ void icemc::FTPair::maybeUpdateTimeDomain() const {
 
     std::vector<double> temp;
     temp.reserve(nNew);
-    temp.push_back(fFreqDomain.at(0).real()); // DC offset
-    temp.push_back(fFreqDomain.at(nf-1).real()); // nqyuist
+    temp.push_back(fFreqDomain.at(0   ).real()*scaleFactor); // DC offset
+    temp.push_back(fFreqDomain.at(nf-1).real()*scaleFactor); // nqyuist
+
     for(int j=1; j < nf-1; j++){
       temp.push_back(fFreqDomain.at(j).real()*scaleFactor);
       temp.push_back(fFreqDomain.at(j).imag()*scaleFactor);
@@ -611,5 +617,7 @@ void icemc::FTPair::realft(double *data, const int isign, int nsize){
     four1(data,-1,nsize);
   }
 }
+
+
 
 

@@ -17,9 +17,9 @@
 #include "TFile.h" ///@todo remove after done debugging
 
 
-icemc::ANITA::ANITA(const Settings* settings, RayTracer* sillyRay, Screen* sillyPanel, const RootOutput* ro)
+icemc::ANITA::ANITA(const Settings* settings, const RayTracer* sillyRay, const RootOutput* ro)
   : Balloon(settings),
-    fSettings(settings), fRayPtrIDontOwn(sillyRay), fScreenPtrIDontOwn(sillyPanel),
+    fSettings(settings), fRayPtrIDontOwn(sillyRay),
     fVoltsRX(settings ? settings->NANTENNAS : 0),
     fAnitaOutput(this, settings, ro->getOutputDir(), ro->getRun())
 {
@@ -451,7 +451,7 @@ bool icemc::ANITA::applyTrigger(int inu){
   }
 
   if(eventPassesTrigger){
-    fAnitaOutput.fillRootifiedAnitaDataTrees(*fSettings, fRayPtrIDontOwn, fScreenPtrIDontOwn);
+    fAnitaOutput.fillRootifiedAnitaDataTrees();
   }
 
   return eventPassesTrigger;
