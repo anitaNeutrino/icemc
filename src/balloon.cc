@@ -29,12 +29,12 @@ std::ostream& operator<<(std::ostream& os, const icemc::FlightPath& fp){
     return os << "FlightPath::Circle80DegreesSouth";
   case icemc::FlightPath::AnitaLite:
     return os << "FlightPath::AnitaLite";
-  case icemc::FlightPath::Custom:
-    return os << "FlightPath::Custom";
+  case icemc::FlightPath::BananaPlot:
+    return os << "FlightPath::BananaPlot";
   case icemc::FlightPath::PeterEvent:
     return os << "FlightPath::PeterEvent";
-  case icemc::FlightPath::SLAC:
-    return os << "FlightPath::SLAC";
+  case icemc::FlightPath::Custom:
+    return os << "FlightPath::Custom";
   case icemc::FlightPath::Anita1:
     return os << "FlightPath::Anita1";
   case icemc::FlightPath::Anita2:
@@ -589,7 +589,7 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
     igps=0; // set gps position to be zero - we're at a fixed balloon position
 		
   }
-  else if (WHICHPATH==FlightPath::SLAC) { // for slac?
+  else if (WHICHPATH==FlightPath::Custom) { // for slac?
     igps=0;
     theta_bn=1.*constants::RADDEG; // 1deg
     phi_bn=1.*constants::RADDEG; // 1deg
@@ -689,7 +689,7 @@ void icemc::Balloon::CenterPayload(double& hitangle_e) {
     
   // allow an option to rotate the payload so the signal is
   // always on the boresight of one phi sector
-    
+
   phi_spin-=hitangle_e;
 
 }
@@ -776,7 +776,7 @@ void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Ani
   }
   else {
     interaction1->iceinteraction=1;
-    if (WHICHPATH==FlightPath::Custom) { //Force interaction point if we want to make a banana plot
+    if (WHICHPATH==FlightPath::BananaPlot) { //Force interaction point if we want to make a banana plot
       interaction1->posnu = interaction1->nu_banana;
     } //if (making banana plot)
     else if (WHICHPATH==FlightPath::PeterEvent) {// Force interaction point for comparison with Peter.
@@ -891,7 +891,7 @@ void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Ani
   
   // std::cout << (interaction1->posnu) << std::endl;
   if (ray1->n_exit2bn[0].Angle(interaction1->posnu) > constants::PI/2 &&
-      !(WHICHPATH==FlightPath::Custom || WHICHPATH==FlightPath::PeterEvent)){
+      !(WHICHPATH==FlightPath::BananaPlot || WHICHPATH==FlightPath::PeterEvent)){
     beyondhorizon = 1;
   }
   
@@ -976,7 +976,9 @@ void icemc::Balloon::calculate_antenna_positions(const Settings *settings1, Anit
 	  else{
 	    phi = anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer];
 	  }
-	  antenna_position = Vector(anita1->RRX[ilayer]*cos(phi) + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer]), anita1->RRX[ilayer]*sin(phi)+anita1->LAYER_HPOSITION[ilayer]*sin(anita1->LAYER_PHIPOSITION[ilayer]), anita1->LAYER_VPOSITION[ilayer]);
+	  antenna_position = Vector(anita1->RRX[ilayer]*cos(phi) + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer]),
+				    anita1->RRX[ilayer]*sin(phi) + anita1->LAYER_HPOSITION[ilayer]*sin(anita1->LAYER_PHIPOSITION[ilayer]),
+				    anita1->LAYER_VPOSITION[ilayer]);
 
 	}//else
 

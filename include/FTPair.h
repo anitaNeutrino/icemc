@@ -64,7 +64,7 @@ namespace icemc {
      * @param deltaF is the time between frequency bins
      * @param t0 time of first sample (in the time domain)
      */
-    FTPair(int nf,  const std::complex<double>* freqDomainPhasors, double deltaF, double t0 = 0);
+    FTPair(int nf,  const std::complex<double>* freqDomainPhasors, double deltaF, bool doNormalTimeOrdering = false, double t0 = 0);
 
 
     /** 
@@ -75,7 +75,7 @@ namespace icemc {
      * @param deltaF is the time between frequency bins
      * @param t0 time of first sample (in the time domain)
      */    
-    FTPair(const std::vector<std::complex<double> >& freqDomainPhasors, double deltaF, double t0 = 0);
+    FTPair(const std::vector<std::complex<double> >& freqDomainPhasors, double deltaF, bool doNormalTimeOrdering = false, double t0 = 0);
 
 
 
@@ -173,11 +173,12 @@ namespace icemc {
     void doNormalTimeDomainOrdering() const;
 
     /** 
-     * Applies a constant (and circular) group delay in the frequency domain
+     * Applies a constant group delay in the frequency domain
      * 
      * @param delaySeconds is the amount of time to delay the signal by
+     * @param circularDelay if true, things that fall off the back (or front) of the waveform will appear at the front (or back), if false zeros will appear instead
      */
-    void applyConstantGroupDelay(double delaySeconds);
+    void applyConstantGroupDelay(double delaySeconds, bool circularDelay);
 
     /** 
      * Get the number of times from the current state of the FTPair
@@ -334,8 +335,6 @@ namespace icemc {
      * @param autoCycle set to true if you want to automatically swap the time ordering
      */
     void setAutoNormalTimeDomainOrdering(bool autoCycle = true){fDoNormalTimeDomainOrdering = autoCycle;}
-    
-
 
     
   private:

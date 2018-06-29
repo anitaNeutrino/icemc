@@ -7,7 +7,7 @@
  */
 
 #define PRINT_STATE_IF_DEBUG(funcName)                                               \
-  if(fDebug && (fNeedToUpdateTimeDomain > 0 || fNeedToUpdateFreqDomain > 0)){        \
+  if(fDebug /*&& (fNeedToUpdateTimeDomain > 0 || fNeedToUpdateFreqDomain > 0)*/){    \
     std::cerr << "In " << (funcName)						     \
               << ": fMustUpdateTimeDomain = " << fNeedToUpdateTimeDomain << ", "     \
               << "fMustUpdateFreqDomain = " << fNeedToUpdateFreqDomain  << std::endl;\
@@ -93,13 +93,13 @@ icemc::FTPair::FTPair(const TGraph& grTimeDomain)
 
 
 
-icemc::FTPair::FTPair(const std::vector<std::complex<double> >& freqDomainPhasors, double df, double t0)
+icemc::FTPair::FTPair(const std::vector<std::complex<double> >& freqDomainPhasors, double df, bool doNormalTimeOrdering, double t0)
   : fTimeDomainGraph(),
     fFreqDomain(freqDomainPhasors),
     fNeedToUpdateTimeDomain(true),
     fNeedToUpdateFreqDomain(false),
     fDebug(false),
-    fDoNormalTimeDomainOrdering(true)    
+    fDoNormalTimeDomainOrdering(doNormalTimeOrdering)    
 {
   PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
   int nf = zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(df);
@@ -112,13 +112,13 @@ icemc::FTPair::FTPair(const std::vector<std::complex<double> >& freqDomainPhasor
 }
 
 
-icemc::FTPair::FTPair(int nf, const std::complex<double>* freqDomainPhasors, double df, double t0)
+icemc::FTPair::FTPair(int nf, const std::complex<double>* freqDomainPhasors, double df, bool doNormalTimeOrdering, double t0)
   : fTimeDomainGraph(),
     fFreqDomain(freqDomainPhasors, freqDomainPhasors+nf),
     fNeedToUpdateTimeDomain(true),
     fNeedToUpdateFreqDomain(false),
     fDebug(false),
-    fDoNormalTimeDomainOrdering(true)
+    fDoNormalTimeDomainOrdering(doNormalTimeOrdering)
 {
   PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
   nf = zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(df);
@@ -249,7 +249,7 @@ void icemc::FTPair::doNormalTimeDomainOrdering() const {
   TGraph& grNew = fTimeDomainGraph;
 
   const double t0 = grOld.GetX()[0];
-  const double dt = grOld.GetX()[1] - t0;  
+  const double dt = grOld.GetX()[1] - t0;
   const int offset = grOld.GetN()/2;
   const double timeOffset = -offset*dt;
   for(int i=0; i < offset; i++){
@@ -260,26 +260,89 @@ void icemc::FTPair::doNormalTimeDomainOrdering() const {
     grNew.GetX()[i] += timeOffset;
     grNew.GetY()[i] = grOld.GetY()[i-offset];
   }
+  fNeedToUpdateFreqDomain = true;
 }
 
 
 
 
 
-void icemc::FTPair::applyConstantGroupDelay(double delaySeconds){
+void icemc::FTPair::applyConstantGroupDelay(double delaySeconds, bool circularDelay){
   PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
 
-  auto& cs = changeFreqDomain();
-  double dfHz = getDeltaF();
+  if(delaySeconds==0) {
+    // then we don't do anything
+    return;
+  }
 
-  double freqHz = 0;
+  if(circularDelay){
+    double freqHz = 0;
+    double dfHz = getDeltaF();
+    for(auto& c : changeFreqDomain()){
+      // for each frequency bin, a phase delay of pi radians delays that frequency by 1./f
+      const double phaseShift = TMath::TwoPi()*delaySeconds*freqHz;
+      std::complex<double> phasor = std::polar(1.0,  phaseShift);
+      c *= phasor;
+      freqHz += dfHz;
+    }
+  }
+  else{
+    // For a non-circular delay, the strategy is this:
+    // 1. construct a longer graph,
+    // 2. apply the group delay,
+    // 3. copy the portion of the extended graph corresponding
+    // to the original time window back in
+    // 4. profit
 
-  for(auto& c : cs){
-    // for each frequency bin, a phase delay of pi radians delays that frequency by 1./f
-    const double phaseShift = TMath::TwoPi()*delaySeconds*freqHz;
-    std::complex<double> phasor = std::polar(1.0,  phaseShift);
-    c *= phasor;
-    freqHz += dfHz;
+    const int n = getNumTimes();
+    const double T = n*getDeltaT();
+    if(TMath::Abs(delaySeconds) >= T){
+      if(fDebug){
+	std::cerr << "Requested non-circular group delay of " << delaySeconds
+		  << " but whole graph is only " << T << " long. "
+		  << " This results in an empty graph!" << std::endl;
+      }
+      TGraph& grChange = changeTimeDomain();
+      for(int i=0; i < grChange.GetN(); i++){
+	grChange.GetY()[i] = 0;
+      }
+      return;
+    }
+
+    const int padFactor = 2;
+    const int n2 = padFactor*n;
+    TGraph gr2(n2); // padded graph
+    const TGraph& gr = getTimeDomain();
+    double t0 = gr.GetX()[0];
+    const double dt = gr.GetX()[1] - t0;
+    if(delaySeconds > 0){
+      // shifting forwards in time, so pad at the back
+      for(int i=0; i < n; i++){
+	gr2.SetPoint(i, t0 + i*dt, gr.GetY()[i]);
+      }
+      for(int i=n; i < n2; i++){
+	gr2.SetPoint(i, t0 + i*dt, 0);
+      }
+    }
+    else { // pad at the front
+      t0 = t0 - T;
+      for(int i=0; i < n; i++){
+	gr2.SetPoint(i, t0 + i*dt, 0);
+      }
+      for(int i=n; i < n2; i++){
+	gr2.SetPoint(i, t0 + i*dt, gr.GetY()[i-n]);
+      }
+    }
+
+    FTPair extended(gr2);
+    extended.applyConstantGroupDelay(delaySeconds, true);
+    const TGraph& grDelayed = extended.getTimeDomain();
+    int offset = delaySeconds > 0 ? 0 : n;
+
+    TGraph& grChange = changeTimeDomain();
+    for(int i=0; i < n; i++){
+      grChange.GetY()[i] = grDelayed.GetY()[i + offset];
+    }
   }
 }
 
@@ -466,7 +529,7 @@ void icemc::FTPair::maybeUpdateTimeDomain() const {
       doNormalTimeDomainOrdering();
       // Unset the flag since it probably only makes sense to do this on the first inverse FT
       fDoNormalTimeDomainOrdering = false; 
-    }    
+    }
   }
 }
 

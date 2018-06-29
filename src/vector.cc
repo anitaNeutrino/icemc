@@ -41,7 +41,6 @@ double icemc::Vector::Dot(const Vector &vec) const {
 }
 
 
-//Takes the dot product  this x vec.
 
 double icemc::Vector::Mag() const {
   return sqrt(fX*fX + fY*fY + fZ*fZ);

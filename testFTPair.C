@@ -49,20 +49,25 @@ std::vector<double> makeDelta(int maxSamp = 10){
 
 void testFTPair(){
 
-  std::vector<EColor> cols {kBlack, kRed, kOrange, kYellow, kGreen, kCyan, kBlue, kViolet, kMagenta};
+  std::vector<EColor> cols {kRed, kOrange, kYellow, kGreen, kCyan, kBlue, kViolet, kMagenta};
 
   const double dt = 0.5;
-  const double maxTime = 10;
-  
+  const double maxTime = 30;
+  bool separateCans = true;
   icemc::FTPair p(makeDelta(TMath::Nint(maxTime/dt)), dt);
-  auto c1 = new TCanvas();
+  // p.setDebug();
+
   for(int i=0; i < cols.size(); i++){
+    TCanvas* c  = separateCans || i == 0 ? new TCanvas() : nullptr;
+
     double delaySec = -10;
-    p.applyConstantGroupDelay(delaySec);
+    p.applyConstantGroupDelay(delaySec, false);
     auto gr = new TGraph();
     *gr = p.getTimeDomain();
 
-    TString opt = i == 0 ? "al" : "lsame";
+    TString opt = separateCans || i == 0 ? "al" : "lsame";
+    // TString opt = "lsame";
+
     gr->SetLineColor(cols.at(i));
     gr->Draw(opt);
   }

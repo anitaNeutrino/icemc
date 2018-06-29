@@ -821,7 +821,7 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
   double costhetanu1 = 0;
   double costhetanu2 = 0;
 
-  if (fDetector->whichPath()==FlightPath::Custom) { //To make a banana plot,  force neutrino direction
+  if (fDetector->whichPath()==FlightPath::BananaPlot) { //To make a banana plot,  force neutrino direction
     nnu = interaction1->nnu_banana;
     theta_threshold = 0; //not used for anything in banana plots
     return 1;
@@ -1343,7 +1343,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     icemcLog().nu_out << "nu #,  position of nu interaction,  depth of int.,  Direction of nu momentum,  Position of balloon,  nu flavour,  current type,  elasticity\n\n\n\n";
   }
 
-  if (fDetector->whichPath()==FlightPath::Custom) { //Force certain parameters if we're doing a banana plot
+  if (fDetector->whichPath()==FlightPath::BananaPlot) { //Force certain parameters if we're doing a banana plot
     NNU = settings1.horizontal_banana_points*settings1.vertical_banana_points; //Total number of points to look at
     fDetector->maxthreshold = Interaction::banana_sigma;
 
@@ -1518,7 +1518,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         ro.prob_eachilon_bn.Fill(fDetector->position().Lon());
       }
 
-      if (fDetector->whichPath()==FlightPath::Custom) { // for banana plot
+      if (fDetector->whichPath()==FlightPath::BananaPlot) { // for banana plot
         //Set observation location
         fDetector->setObservationLocation(int_banana, inu, antarctica, &settings1);
       }
@@ -1608,7 +1608,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       count1->toolow[whichray]++;
 
-      if (fDetector->whichPath()==FlightPath::Custom){
+      if (fDetector->whichPath()==FlightPath::BananaPlot){
 	// this is fucking madness... why would someone do this!?!?
         interaction1 = int_banana;
       }
@@ -1688,7 +1688,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         interaction1->current = "cc";
       }
       
-      if (fDetector->whichPath()==FlightPath::Custom){
+      if (fDetector->whichPath()==FlightPath::BananaPlot){
         elast_y = Interaction::banana_y;
       }
       else  if (fDetector->whichPath()==FlightPath::PeterEvent   ){
@@ -2052,7 +2052,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // if the probability that the neutrino gets absorbed is almost 1,  throw it out.
       if (fDetector->whichPath()!=FlightPath::PeterEvent && interaction1->weight_bestcase<CUTONWEIGHTS && !settings1.SKIPCUTS) {
-        if (fDetector->whichPath()==FlightPath::Custom)
+        if (fDetector->whichPath()==FlightPath::BananaPlot)
           std::cout<<"Neutrino is getting absorbed and thrown out!"<<std::endl;
         //
         continue;
@@ -2074,7 +2074,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         bestcase_atten = exp(-1*rayTracer.rfexit[1].Distance(interaction1->posnu_down)/MAX_ATTENLENGTH);//use the real distance
       }
       if (fDetector->VNOISE[0]/10.*fDetector->maxthreshold/((showerProps.sumFrac())*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*fDetector->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR && !settings1.SKIPCUTS) {
-        if (fDetector->whichPath()==FlightPath::Custom){
+        if (fDetector->whichPath()==FlightPath::BananaPlot){
           std::cout << "Event rejected.  Check." << std::endl;
 	}
         //
@@ -2121,7 +2121,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       // reject if the rf leaves the ice where there is water,  for example.
       if (!antarctica->AcceptableRfexit(rayTracer.nsurf_rfexit, rayTracer.rfexit[2], rayTracer.n_exit2bn[2])){
-        if (fDetector->whichPath()==FlightPath::Custom){
+        if (fDetector->whichPath()==FlightPath::BananaPlot){
           std::cout << "Should look at this. Not expecting to be here." << std::endl;
 	}
         continue;
@@ -2156,8 +2156,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       //     } // end looping over antennas in phi
       //   } // end looping over layers
       // } // if we are calculating for all boresights
-
-      
 
       //if(!settings1.ROUGHNESS){
       if (settings1.FIRN){
@@ -2199,7 +2197,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       else {
 	askFreqGen.GetSpread(pnu, showerProps, (fDetector->bwslice_min[2]+fDetector->bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
 
-	GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.n_exit2bn[2], n_pol, rayTracer.nrf_iceside[4], vmmhz1m_max, showerProps, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);	
+	GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.n_exit2bn[2], n_pol, rayTracer.nrf_iceside[4], vmmhz1m_max, showerProps, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);
 
 	vmmhz1m_fresneledtwice = vmmhz1m_max*fresnel1*mag1;  //  only the ice-air interface
 
@@ -2216,7 +2214,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }//end else firn
       //cerr<<inu<<" -- here"<<std::endl;      //}
 
-
       if(settings1.ROUGHNESS){
 	// applyRoughness(settings1, inu, interaction1, ray1, panel1, antarctica, bn1, &askFreqGen, anita1, showerProps);
 	applyRoughness(settings1, inu, interaction1, &rayTracer, panel1, antarctica, fDetector, &askFreqGen, fDetector, showerProps);	
@@ -2227,7 +2224,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       
       if(settings1.CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10.&& !settings1.SKIPCUTS) {
-	if (fDetector->whichPath()==FlightPath::Custom){
+	if (fDetector->whichPath()==FlightPath::BananaPlot){
 	  std::cout<<"Event is undetectable.  Leaving loop."<<std::endl;
 	}
 	continue;
@@ -2251,7 +2248,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // reject if the event is undetectable.
       if (!settings1.ROUGHNESS){
         if (settings1.CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10. && !settings1.SKIPCUTS) {
-          if (fDetector->whichPath()==FlightPath::Custom)
+          if (fDetector->whichPath()==FlightPath::BananaPlot)
             std::cout<<"Event is undetectable.  Leaving loop."<<std::endl;
           //
           continue;
@@ -2290,7 +2287,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // reject if the event is undetectable.
       if (!settings1.ROUGHNESS){
         if (settings1.CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10. && !settings1.SKIPCUTS) {
-          if (fDetector->whichPath()==FlightPath::Custom){
+          if (fDetector->whichPath()==FlightPath::BananaPlot){
             std::cout<<"Event is undetectable.  Leaving loop."<<std::endl;
           //
 	  }
@@ -2334,7 +2331,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 	askFreqs.taperAmplitudesForOffConeViewing(viewangle);
 
-	if (fDetector->whichPath() == FlightPath::Custom){
+	if (fDetector->whichPath() == FlightPath::BananaPlot){
 	  for (int k=0;k<Anita::NFREQ;k++) {
             interaction1->banana_volts += askFreqs[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
             // interaction1->banana_volts += vmmhz[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
@@ -2345,10 +2342,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	// vmmhz_lowfreq=askFreqs[0]; // for plotting,  vmmhz at the lowest frequency
 	pdgcode = interaction1->getPdgCode();
 
-        if (fDetector->whichPath()==FlightPath::Custom && interaction1->banana_volts != 0 && settings1.HIST) {
+        if (fDetector->whichPath()==FlightPath::BananaPlot && interaction1->banana_volts != 0 && settings1.HIST) {
           continue;
         }
-        else if (fDetector->whichPath()==FlightPath::Custom && interaction1->banana_volts == 0) {
+        else if (fDetector->whichPath()==FlightPath::BananaPlot && interaction1->banana_volts == 0) {
           continue; //Exit the loop if there's no voltage here - no value at a point is the same as zero,  and this will save HD space
         }
         // reject if it is undetectable now that we have accounted for viewing angle
@@ -2370,7 +2367,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // Dead time
       if (settings1.USEDEADTIME){
-      	if ( (fDetector->deadTime>0.9) || (r.Uniform(1)<fDetector->deadTime) ) continue;
+      	if ( (fDetector->deadTime>0.9) || (r.Uniform(1)<fDetector->deadTime) ){
+	  continue;
+	}
       }
 	    
       count1->ndeadtime[whichray]++;
@@ -2382,7 +2381,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       	  panel1->AddVmmhz_freq(askFreqs[k]);
         }
         panel1->AddVmmhz0(askFreqs[0]);
-        panel1->AddVec2bln(rayTracer.n_exit2bn[2]); // 
+        panel1->AddVec2bln(rayTracer.n_exit2bn[2]); //
         panel1->AddPol(n_pol);
         panel1->AddDelay( 0. );
         panel1->AddImpactPt(rayTracer.rfexit[2]); // impact point is the surface position?
@@ -2402,7 +2401,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         panel1->AddTperpendicular_polParallel(0.);
 
         // for (int k=0;k<Anita::NFREQ;k++) {
-        //   if (fDetector->whichPath()==FlightPath::PeterEvent   ){
+        //   if (fDetector->whichPath()==FlightPath::PeterEvent){
         //     // IntegrateBands(anita1, k, panel1, fDetector->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
         //     IntegrateBands(fDetector, k, panel1, fDetector->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);	    
 	//   }

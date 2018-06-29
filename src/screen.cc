@@ -344,8 +344,9 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
 	tmp_vhz[k] /= sqrt(2);
       }
 
-      FTPair signal(tmp_vhz, df);
-      signal.applyConstantGroupDelay(GetDelay(jpt));
+      FTPair signal(tmp_vhz, df, true);
+      //@todo set up delay to antennas
+      // signal.applyConstantGroupDelay(GetDelay(jpt));
 
       // TGraph& gr = signal.changeTimeDomain();
       // // add a point to force  up to next power of 2...
@@ -362,9 +363,6 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
       PropagatingSignal s(signal, GetVec2bln(jpt), GetPol(jpt));
 
       d->addSignalToRX(s, rx, inu);
-      if(inu==397){
-	std::cout << "here " << inu << ", rx = " << rx << std::endl;
-      }
     }
   }
 }
