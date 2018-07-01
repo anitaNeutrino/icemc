@@ -23,7 +23,7 @@ namespace icemc {
     ANITA(const Settings* settings, const RayTracer* sillyRay, const RootOutput* ro);
     virtual ~ANITA();
 
-    virtual int getNumRX() const override {return fSeaveys.size();}
+    virtual int getNumRX() const override {return fNumRX;}
     virtual icemc::Vector getPositionRX(int i) const override;
 
     virtual icemc::Position getCenterOfDetector(UInt_t unixTime = 0) override;
@@ -41,13 +41,13 @@ namespace icemc {
 
     double GetAverageVoltageFromAntennasHit(const Settings *settings1,  int *nchannels_perrx_triggered,  const double *voltagearray,  double& volts_rx_sum) const;
 
-
     UInt_t getLastEventNumber() const {return fEventNumber;}
 
   private:
 
     const Settings* fSettings;
     const RayTracer* fRayPtrIDontOwn;
+    int fNumRX;
 
     std::vector<Seavey> fSeaveys; ///< The set of Seavey antennas on the payload
     UInt_t fEventNumber = 0;
@@ -71,6 +71,9 @@ namespace icemc {
      * @param ifold index in phi, maybe...
      */
     void getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const;
+
+
+    void initSeaveys(const Settings *settings1, const Anita *anita1);
   };
 }
 

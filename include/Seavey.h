@@ -30,7 +30,9 @@ namespace icemc {
     enum class XPol : int      {VtoH,    HtoV};
     enum class AngleDir : int  {Azimuth, Elevation};
 
-    Seavey(const Settings* settings = NULL, double refractiveIndexOfMedium = icemc::AskaryanFreqsGenerator::N_AIR);
+    Seavey(const Vector& positionV, const Vector& positionH,
+	   const Vector& ePlane, const Vector& hPlane, const Vector& normal,
+	   const Settings* settings = NULL, double refractiveIndexOfMedium = icemc::AskaryanFreqsGenerator::N_AIR);
 
     
     void addSignal(const PropagatingSignal& incomingSignal);
@@ -52,24 +54,22 @@ namespace icemc {
 
     const FTPair& get(Pol pol) const;
     
+
     /** 
-     * Since ANITA moves and freely rotates, the antenna position needs to be updated.
+     * Where is the Seavey (after accounting for payload movement and position)
      * 
-     * @param position Put the antenna in this position.
-     */
-    void setPosition(const icemc::Vector& position){ fPosition = position;}
-
-    /** 
-     * What position is the antenna in?
-     * @return const reference to #fPosition
-     */
-    const icemc::Vector& getPosition() const {return fPosition;}
-    
-    const icemc::Vector& getEPlane() const {return fEPlane;}
-    const icemc::Vector& getHPlane() const {return fHPlane;}
-    const icemc::Vector& getNormal() const {return fNormal;}
-    
-
+     * @param pol is the desired polarization (defaults to VPol)
+     * 
+     * @return the position of the phase center
+     */    
+    const icemc::Vector& getPosition(Pol pol = Pol::V) const {
+      switch(pol){
+      case Pol::H: return fPositionH.global;
+      case Pol::V: // is also the default...
+      default:
+	return fPositionV.global;
+      }
+    }
     
     ///@todo  make this private when the refactor is complete?
     static void GetEcompHcompEvector(const Vector& n_eplane, const Vector& n_hplane, const Vector& n_pol,
@@ -121,22 +121,47 @@ namespace icemc {
       fDebug = b;
     }
 
-
-    /** 
+    /**
      * Is the debugging turned on?
      * 
      * @return the current state of #fDebug
      */
     bool getDebug() const {return fDebug;}
 
-    ///@todo make these all private
-    icemc::Vector fPosition; ///< Position in payload centered coordinates
-    icemc::Vector fEPlane; ///< Seavey E-plane
-    icemc::Vector fHPlane; ///< Seavey H-plane
-    icemc::Vector fNormal; ///< Normal to the antenna
-    
-  private:
 
+    /** 
+     * @todo finish this
+     * Move everything representing the Seavey into a new position
+     * 
+     * @param anitaPos 
+     * @param heading 
+     * @param pitch 
+     * @param roll 
+     */
+    void updatePosition(const Position& anitaPos, double heading, double pitch, double roll);
+
+  private:
+    
+    /**
+     * @struct VectorPair, a pair of vectors
+     * 
+     * This is just to group the two representations of the Seavey positions together
+     * (payload coordinates and Earth centered (global) coordinates)
+     */
+    struct VectorPair {
+      const icemc::Vector payload;
+      icemc::Vector global;
+      VectorPair(const Vector& v) : payload(v){
+	global = payload;
+      }
+    };
+
+    VectorPair fPositionV; ///< VPol phase center position 
+    VectorPair fPositionH; ///< HPol phase center position
+    VectorPair fEPlane; ///< Seavey E-plane 
+    VectorPair fHPlane; ///< Seavey H-plane
+    VectorPair fNormal; ///< Normal to the antenna
+    
     FTPair fVPol;
     FTPair fHPol;
 

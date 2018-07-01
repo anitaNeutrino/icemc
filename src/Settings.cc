@@ -36,6 +36,39 @@
 
 ClassImp(icemc::Settings);
 
+std::ostream& operator<<(std::ostream& os, const icemc::Payload& which){
+  switch(which){
+  case icemc::Payload::AnitaLite:
+    return os << "Payload::AnitaLite";
+  case icemc::Payload::Ross:
+    return os << "Payload::Ross";
+  case icemc::Payload::Anita1Simple:
+    return os << "Payload::Anita1Simple";
+  case icemc::Payload::Custom:
+    return os << "Payload::Custom";
+  case icemc::Payload::AntHill:
+    return os << "Payload::AntHill";
+  case icemc::Payload::SLAC:
+    return os << "Payload::SLAC";
+  case icemc::Payload::Anita1:
+    return os << "Payload::Anita1";
+  case icemc::Payload::EeVEX:
+    return os << "Payload::EeVEX";
+  case icemc::Payload::Anita2:
+    return os << "Payload::Anita2";
+  case icemc::Payload::Anita3:
+    return os << "Payload::Anita3";
+  case icemc::Payload::Anita4:
+    return os << "Payload::Anita4";
+  case icemc::Payload::Satellite:
+    return os << "Payload::Satellite";
+  }
+
+
+}
+
+
+
 /**
  * Default constructor
  *
@@ -386,20 +419,28 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
 // ################################################################################################
 
 
-
-  getSetting("Which payload", WHICH);
+  int whichInt = 0;
+  getSetting("Which payload", whichInt);
+  WHICH = static_cast<Payload>(whichInt);
   getSetting("Antenna layers", NLAYERS);
 
-  if (WHICH==9)       ANITAVERSION=3;
-  else if (WHICH==10) ANITAVERSION=4;
-  else                ANITAVERSION=0;
+  switch(WHICH){
+  case Payload::Anita3:
+    ANITAVERSION = 3;
+    break;
+  case Payload::Anita4:
+    ANITAVERSION = 4;
+    break;
+  default:
+    ANITAVERSION = 0;
+    break;
+  }
 
   setNrxPhiAndNantennasFromWhich();
   
-  if(((WHICH==1 || WHICH==6) && NLAYERS!=4) || (WHICH==0 && NLAYERS!=1) || (WHICH==7 && NLAYERS!=1)){
+  if(((WHICH==Payload::Ross || WHICH==Payload::Anita1) && NLAYERS!=4) || (WHICH==Payload::AnitaLite && NLAYERS!=1) || (WHICH==Payload::EeVEX && NLAYERS!=1)){
     std::cout << "Non-default setting: WHICH = " << WHICH << " and NLAYERS= " << NLAYERS << std::endl;
   }  
-
 
   getSetting("Inclination top three layers", INCLINE_TOPTHREE);
 
@@ -413,25 +454,32 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
     std::cout << "Non-default setting: INCLINE_NADIR= " << INCLINE_NADIR << std::endl;
   }
 
-  getSetting("Flight path", WHICHPATH);
+  int whichPathInt = 0;
+  getSetting("Flight path", whichPathInt);
+  WHICHPATH = static_cast<FlightPath>(whichPathInt);
 
-  if(WHICHPATH==3){ // moved here from icemc main
+  if(WHICHPATH==FlightPath::BananaPlot){ // moved here from icemc main
     SIGNAL_FLUCT = Interaction::banana_signal_fluct;
     CONSTANTCRUST=1;  //Set ice depths and elevations all the same
     CONSTANTICETHICKNESS=1;
     FIXEDELEVATION=1;
   }
 
-  if((WHICH==0 && WHICHPATH!=2) || (WHICH==2 && WHICHPATH!=6)){
-    std::cout << "Non-default setting: WHICHPATH = " << WHICHPATH << " and WHICH = "
-	      << WHICH << std::endl;
+  if((WHICH==Payload::AnitaLite    && WHICHPATH!=FlightPath::AnitaLite) ||
+     (WHICH==Payload::Anita1Simple && WHICHPATH!=FlightPath::Anita1) || 
+     (WHICH==Payload::Anita1       && WHICHPATH!=FlightPath::Anita1) ||
+     (WHICH==Payload::Anita2       && WHICHPATH!=FlightPath::Anita2) ||
+     (WHICH==Payload::Anita3       && WHICHPATH!=FlightPath::Anita3) ||
+     (WHICH==Payload::Anita4       && WHICHPATH!=FlightPath::Anita4)){
+    std::cout << "Non-default setting: WHICHPATH = " << WHICHPATH
+	      << " and WHICH = " << WHICH << std::endl;
   }
 
   getSetting("Balloon latitude", BN_LATITUDE);
 
   getSetting("Balloon longitude", BN_LATITUDE);
 
-  if((BN_LONGITUDE!=999 || BN_LATITUDE!=999) && WHICHPATH==0){
+  if((BN_LONGITUDE!=999 || BN_LATITUDE!=999) && WHICHPATH==FlightPath::FixedPosition){
     std::cout << "BN_LATITUDE: "<< BN_LATITUDE << ", BN_LONGITUDE: " << BN_LONGITUDE << std::endl;
   }
 
@@ -441,8 +489,12 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   getSetting("Balloon orientation", RANDOMIZE_BN_ORIENTATION);
 
 
-  if (RANDOMIZE_BN_ORIENTATION==1 && (WHICHPATH==2 || WHICHPATH==6 ||
-					   WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9)){
+  if (RANDOMIZE_BN_ORIENTATION==1 &&
+      (WHICHPATH==FlightPath::AnitaLite ||
+       WHICHPATH==FlightPath::Anita1 ||
+       WHICHPATH==FlightPath::Anita2 ||
+       WHICHPATH==FlightPath::Anita3 ||
+       WHICHPATH==FlightPath::Anita4)){
     std::cout << "Warning:: Strangely you asked for a real flight path but a randomized balloon orientation.  WILL BE OVERRIDDEN." << std::endl;
   }
 
@@ -509,7 +561,7 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
 
   getSetting("ANITA-1 channel masking", CHMASKING);
 
-  if (WHICHPATH!=6 && CHMASKING==1) {
+  if (WHICHPATH!=FlightPath::Anita1 && CHMASKING==1) {
     std::cout << "Cannot include masking for flights other than the ANITA-1 flight." << std::endl;
     std::cout << "For the ANITA-3 channel masking, it is implemented together with the phi masking and it's turned on whenever the PHIMASKING is ON." << std::endl;
     std::cout << "CHMASKING set to 0." << std::endl;
@@ -531,7 +583,7 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   getSetting("RCP 2nd ant dead", RCPRX2ZERO);
   getSetting("LCP 2nd ant dead", LCPRX2ZERO);
 
-  if (WHICH==0 && !(SCALEDOWNEPOLRX1==1 && RCPRX2ZERO==1)){
+  if (WHICH==Payload::AnitaLite && !(SCALEDOWNEPOLRX1==1 && RCPRX2ZERO==1)){
     std::cout << "Non-default setting:  WHICH= " << WHICH << " and EPOLRX2ZERO= " << EPOLRX2ZERO << std::endl;
   }
 
@@ -839,8 +891,8 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   std::cout << "Apply impulse response to trigger path: " << APPLYIMPULSERESPONSETRIGGER << std::endl;
 
 #ifdef ANITA_UTIL_EXISTS
-  if ( (APPLYIMPULSERESPONSEDIGITIZER || APPLYIMPULSERESPONSETRIGGER) && WHICH!=8 && WHICH!=9 && WHICH!=10) {
-    std::cout << "Signal chain impulse response is only available for anita-2 and anita-3." << std::endl;
+  if ( (APPLYIMPULSERESPONSEDIGITIZER || APPLYIMPULSERESPONSETRIGGER) && WHICH!=Payload::Anita2 && WHICH!=Payload::Anita3 && WHICH!=Payload::Anita4) {
+    std::cout << "Signal chain impulse response is only available for " << Payload::Anita2  << ", " << Payload::Anita3 << ", and " << Payload::Anita4 << std::endl;
     exit(1);
   }
 #endif
@@ -855,8 +907,8 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   getSetting("Dead time", USEDEADTIME);
   std::cout << "Use dead time from flight: " << USEDEADTIME << std::endl;
   
-  if ( (USETIMEDEPENDENTTHRESHOLDS || USEDEADTIME) && WHICH!=9 && WHICH!=10) {
-    std::cout << "Time-dependent thresholds are only available for anita-3." << std::endl;
+  if ( (USETIMEDEPENDENTTHRESHOLDS || USEDEADTIME) && WHICH!=Payload::Anita3 && WHICH!=Payload::Anita4) {
+    std::cout << "Time-dependent thresholds are only available for " << Payload::Anita3 << " and " << Payload::Anita4 << std::endl;
     exit(1);
   }
 
@@ -868,8 +920,8 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   std::cout << "Use noise from flight for trigger path: " << NOISEFROMFLIGHTTRIGGER << std::endl;
 
 #ifdef ANITA3_EVENTREADER
-  if ( (NOISEFROMFLIGHTDIGITIZER || NOISEFROMFLIGHTTRIGGER) && (WHICH!=9 && WHICH!=10)) {
-    std::cout << "Noise from flight only available for anita-3." << std::endl;
+  if ( (NOISEFROMFLIGHTDIGITIZER || NOISEFROMFLIGHTTRIGGER) && (WHICH!=Payload::Anita3 && WHICH!=Payload::Anita4)) {
+    std::cout << "Noise from flight only available for " << Payload::Anita3 << " and " << Payload::Anita4 << std::endl;
     exit(1);
   }
   if (!APPLYIMPULSERESPONSETRIGGER && NOISEFROMFLIGHTTRIGGER ){
@@ -930,11 +982,12 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
 
   
 
-void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, AskaryanFreqsGenerator* askFreqGen,
+void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1,
+				  AskaryanFreqsGenerator* askFreqGen,
 				  RayTracer* ray1) const {
   
    //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas. 
-  if (WHICH==2 || WHICH==6 || WHICH==8 || WHICH==9 || WHICH==10){
+  if (WHICH==Payload::Anita1Simple || WHICH==Payload::Anita1 || WHICH==Payload::Anita2 || WHICH==Payload::Anita3 || WHICH==Payload::Anita4){
     anita1->NTRIGGERLAYERS = NLAYERS - 1;
   }
   else{
@@ -945,21 +998,19 @@ void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, AskaryanFreq
   anita1->INCLINE_TOPTHREE=INCLINE_TOPTHREE;
   anita1->INCLINE_NADIR=INCLINE_NADIR;
 
-  FlightPath fp = static_cast<FlightPath>(WHICHPATH);
-
-  if(fp==FlightPath::AnitaLite){
+  if(WHICHPATH==FlightPath::AnitaLite){
     anita1->LIVETIME=45.*24.*3600.*0.75; // 45 days for anita-lite
   }
-  else if (fp==FlightPath::FixedPosition){
+  else if (WHICHPATH==FlightPath::FixedPosition){
     anita1->LIVETIME=6.02*24.*3600.; // anita-lite
-  } else if (fp==FlightPath::Anita1){
+  } else if (WHICHPATH==FlightPath::Anita1){
     // kim's livetime for anita
     anita1->LIVETIME=17.*24.*3600.; // for anita, take 34.78 days * 0.75 efficiency
   }
-  else if (fp==FlightPath::Anita2){
+  else if (WHICHPATH==FlightPath::Anita2){
     anita1->LIVETIME=28.5*24*3600;  // Anita-2 livetime taken from paper
   }
-  else if (fp==FlightPath::Anita3){
+  else if (WHICHPATH==FlightPath::Anita3){
     anita1->LIVETIME=17.4*24*3600;  // Anita-3 livetime taken from Ben Strutt's thesis (elog note 698)
   }
   else {
@@ -967,7 +1018,7 @@ void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1, AskaryanFreq
     anita1->LIVETIME=14.*24.*3600.; // otherwise use 2 weeks by default
   }
   
-  if (WHICH==7){
+  if (WHICH==Payload::EeVEX){
     // EeVEX
     anita1->LIVETIME=100.*24.*3600.; // ultra-long duration balloon flight of 100 days
   }
@@ -1127,12 +1178,12 @@ for(unsigned int i=0; i < requiredBands.size(); i++){
 
 
 void icemc::Settings::setNrxPhiAndNantennasFromWhich(){
-  if (WHICH==0) { // anita-lite
+  if (WHICH==Payload::AnitaLite) { // anita-lite
     NFOLD=3;
     CYLINDRICALSYMMETRY=0;
     NRX_PHI[0]=2;
   }
-  else if (WHICH==1) {
+  else if (WHICH==Payload::Ross) {
     CYLINDRICALSYMMETRY=1;
     NRX_PHI[0]=5;
     NRX_PHI[1]=5;
@@ -1140,14 +1191,14 @@ void icemc::Settings::setNrxPhiAndNantennasFromWhich(){
     NRX_PHI[3]=5;
     NRX_PHI[4]=4;
   }
-  else if (WHICH==2) {
+  else if (WHICH==Payload::Anita1Simple) {
     CYLINDRICALSYMMETRY=1;
     NRX_PHI[0]=8;
     NRX_PHI[1]=8;
     NRX_PHI[2]=16;
     NRX_PHI[3]=8;
   }
-  else if (WHICH==3) {
+  else if (WHICH==Payload::Custom) {
     std::cout << "Is this configuration cylindrically symmetric? Yes(1) or No(0)\n";
     std::cin >> CYLINDRICALSYMMETRY;
     std::cout << "How many layers?\n";
@@ -1160,7 +1211,7 @@ void icemc::Settings::setNrxPhiAndNantennasFromWhich(){
     std::cin >> NFOLD;
 
   } //else if (custom payload)
-  else if (WHICH==4) {// anita hill
+  else if (WHICH==Payload::AntHill) {// anita hill
     if (NLAYERS!=2){
       std::cout << "Warning!!! Did not enter the right number of layers in the input file.  For Anita Hill, it's 2." << std::endl;
     }
@@ -1168,14 +1219,14 @@ void icemc::Settings::setNrxPhiAndNantennasFromWhich(){
     NRX_PHI[0]=1; // this is how many antennas we have in phi on each "layer"
     NRX_PHI[1]=1; // for anita hill, we are calling each station a different "layer"
   }
-  else if(WHICH==6) { // Kurt's measurements for the first flight in elog 345
+  else if(WHICH==Payload::Anita1) { // Kurt's measurements for the first flight in elog 345
     //NFOLD=8;
     CYLINDRICALSYMMETRY=0;
     NRX_PHI[0]=8;
     NRX_PHI[1]=8;
     NRX_PHI[2]=16;
   }
-  else if (WHICH==7) {
+  else if (WHICH==Payload::EeVEX) {
     CYLINDRICALSYMMETRY=1;
     NRX_PHI[0]=360;
     NRX_PHI[1]=360;
@@ -1183,14 +1234,14 @@ void icemc::Settings::setNrxPhiAndNantennasFromWhich(){
     NRX_PHI[3]=360;
     NRX_PHI[4]=360;
   }
-  else if (WHICH==8) {
+  else if (WHICH==Payload::Anita2) {
     CYLINDRICALSYMMETRY=0;
     NRX_PHI[0]=8;
     NRX_PHI[1]=8;
     NRX_PHI[2]=16;
     NRX_PHI[3]=8;
   }
-  else if (WHICH==9 || WHICH==10) { // ANITA-3 and ANITA-4
+  else if (WHICH==Payload::Anita3 || WHICH==Payload::Anita4) { // ANITA-3 and ANITA-4
     CYLINDRICALSYMMETRY=0;
     //these are physical layers
     NRX_PHI[0]=8;
@@ -1198,7 +1249,7 @@ void icemc::Settings::setNrxPhiAndNantennasFromWhich(){
     NRX_PHI[2]=16;
     NRX_PHI[3]=16;
   }
-  else if (WHICH==11) { // satellite
+  else if (WHICH==Payload::Satellite) { // satellite
     CYLINDRICALSYMMETRY=1;
     NRX_PHI[0]=8;
     NRX_PHI[1]=8;

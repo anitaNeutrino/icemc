@@ -702,7 +702,10 @@ void icemc::Balloon::GetAntennaOrientation(const Settings *settings1, Anita *ani
   // n_normal points northwards for antenna 0 (0-31)
   // const vectors const_z (n_eplane), const_y (-n_hplane), const_x (n_normal) defined under Constants.h   -- oindree
 
-  if(settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH==9) {
+  if(settings1->WHICH==Payload::Anita1 ||
+     settings1->WHICH==Payload::Anita2 ||
+     settings1->WHICH==Payload::Anita3 ||
+     settings1->WHICH==Payload::Anita4) {    
     n_eplane = constants::const_z.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
     n_hplane = (-constants::const_y).RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
     n_normal = constants::const_x.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
@@ -764,9 +767,8 @@ void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Ani
   double latfromSP=0;
   
   
-  if (settings1->UNBIASED_SELECTION==1) {
-
-    if (antarctica1->PickUnbiased(interaction1,antarctica1)) { // pick neutrino direction and interaction point
+  if(settings1->UNBIASED_SELECTION==1){
+    if(antarctica1->PickUnbiased(interaction1, antarctica1)){ // pick neutrino direction and interaction point
       interaction1->dtryingdirection=1.;
       interaction1->iceinteraction=1;
     }
@@ -774,7 +776,7 @@ void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Ani
       interaction1->iceinteraction=0;
     }
   }
-  else {
+  else{
     interaction1->iceinteraction=1;
     if (WHICHPATH==FlightPath::BananaPlot) { //Force interaction point if we want to make a banana plot
       interaction1->posnu = interaction1->nu_banana;
@@ -784,11 +786,11 @@ void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Ani
       // want interaction location at Taylor Dome
       // According to lab book it's 77 deg, 52.818' S=77.8803
       // 158 deg, 27.555' east=158.45925
-      latfromSP=12.1197; // this is degrees latitude from the south pole
+      latfromSP = 12.1197; // this is degrees latitude from the south pole
       //lon=180.+166.73;
-      lon=180.+158.45925;
+      lon = 180.+158.45925;
       //lon=180.+120.
-      phi=Earth::LongtoPhi_0is180thMeridian(lon);
+      phi = Earth::LongtoPhi_0is180thMeridian(lon);
       
       theta = latfromSP*constants::RADDEG;
       
@@ -826,19 +828,18 @@ void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Ani
         specific_position.SetXYZ(R * sin(theta) * cos(phi), R * sin(theta) * sin(phi), R * cos(theta)); 
       }
         
-      do
-      {
+      do{
         interaction1->posnu = antarctica1->PickInteractionLocation(ibnposition, settings1, r_bn, interaction1);
-      } while(settings1->SPECIFIC_NU_POSITION &&  (interaction1->posnu - specific_position).Mag() > settings1->SPECIFIC_NU_POSITION_DISTANCE); 
+      } while(settings1->SPECIFIC_NU_POSITION &&  (interaction1->posnu - specific_position).Mag() > settings1->SPECIFIC_NU_POSITION_DISTANCE);
 
     }
   }
-  
-  ray1->rfexit[0] = antarctica1->Surface(interaction1->posnu) * interaction1->posnu.Unit();  
-  
+
+  ray1->rfexit[0] = antarctica1->Surface(interaction1->posnu) * interaction1->posnu.Unit();
+
   // unit vector pointing to antenna from exit point.
   ray1->n_exit2bn[0] = (r_bn - ray1->rfexit[0]).Unit();
-  
+
   if (settings1->BORESIGHTS) {
     for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
       for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
@@ -964,7 +965,10 @@ void icemc::Balloon::calculate_antenna_positions(const Settings *settings1, Anit
     for (int ilayer = 0; ilayer < settings1->NLAYERS; ilayer++){
       for (int ifold = 0; ifold < anita1->NRX_PHI[ilayer]; ifold++){
 	double phi = 0;
-	if (settings1->WHICH==6 || settings1->WHICH==8 || settings1->WHICH == 9 || settings1->WHICH == 10){ //If payload is either
+	if (settings1->WHICH == Payload::Anita1 ||
+	    settings1->WHICH == Payload::Anita2 ||
+	    settings1->WHICH == Payload::Anita3 ||
+	    settings1->WHICH == Payload::Anita4 ){ //If payload is either
 	  antenna_position = anita1->ANTENNA_POSITION_START[ipol][ilayer][ifold];
 	}
 	else {
@@ -1004,7 +1008,7 @@ icemc::Vector icemc::Balloon::RotatePayload(Vector ant_pos_pre) const {
   double BalloonPhi = BalloonPos.Phi();
   
   if(BalloonPhi > constants::PI){
-    BalloonPhi = BalloonPhi-constants::TWOPI;
+    BalloonPhi = BalloonPhi - constants::TWOPI;
   }
   
   Vector ant_pos = ant_pos_pre;

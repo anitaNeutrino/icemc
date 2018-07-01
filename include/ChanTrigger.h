@@ -68,7 +68,7 @@ namespace icemc {
 
     
     // void readInSeavey(const Seavey* s);
-    void readInSeavey(const Settings* settings1, const Seavey* s, int ant, Anita* anita1, const TGraph* gr = nullptr);
+    void readInSeavey(const Settings* settings1, const Seavey* s, int ant, Anita* anita1, int inu = -1);
   
     //! Initialize trigger bands
     /**
@@ -95,7 +95,7 @@ namespace icemc {
      * @param  n_hplane :: Vector 
      * @param  n_normal :: Vector
      */  
-    void ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, const TGraph* gr = NULL);
+    void ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, int inu = -1);
 
     //! Apply trigger path
     /**

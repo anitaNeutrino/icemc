@@ -124,8 +124,7 @@ void icemc::AnitaSimOutput::initRootifiedAnitaDataFiles(){
 
 #else
   Log() << icemc::warning << "Can't generate ROOTified output without satisfying ANITA_UTIL_EXISTS at compile time" << std::endl;
-#endif  
-
+#endif
 }
 
 
@@ -133,7 +132,7 @@ int icemc::AnitaSimOutput::getIceMCAntfromUsefulEventAnt(int UsefulEventAnt){
 
 #ifdef ANITA_UTIL_EXISTS  
   int IceMCAnt = UsefulEventAnt;
-  if ((fSettings->WHICH==9 || fSettings->WHICH==10) && UsefulEventAnt<16) {
+  if ((fSettings->WHICH==Payload::Anita3 || fSettings->WHICH==Payload::Anita4) && UsefulEventAnt<16) {
     IceMCAnt = (UsefulEventAnt%2==0)*UsefulEventAnt/2 + (UsefulEventAnt%2==1)*(UsefulEventAnt/2+8);
   }
   return IceMCAnt;
@@ -187,7 +186,7 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(){
     fEvent->chanId[UsefulChanIndexV] = UsefulChanIndexV;
     fEvent->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
-    const int offset = (fDetector->fVoltsRX.rfcm_lab_h_all[IceMCAnt].size() - fNumPoints)/2;
+    const int offset = (fDetector->fVoltsRX.rfcm_lab_h_all[IceMCAnt].size() - fNumPoints)/2; ///@todo find a better way to do this...
     for (int j = 0; j < fNumPoints; j++) {
       // convert seconds to nanoseconds
       fEvent->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
@@ -231,7 +230,7 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(){
   fHeader->lowerL2TrigPattern = fDetector->fL2trig[0][1];
   fHeader->nadirL2TrigPattern = fDetector->fL2trig[0][2];
 
-  if (fSettings->WHICH<9){
+  if (fSettings->WHICH<Payload::Anita3){
     fHeader->phiTrigMask  = (short) anita1->phiTrigMask;
     fHeader->l3TrigPattern = (short) fDetector->fL3trig[0];
     // fHeader->l3TrigPattern = (short) uhen->l3trig[0];        
@@ -242,7 +241,7 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(){
   fHeader->triggerTime = bn1->realTime(); //realTime_flightdata;
 
 #ifdef ANITA3_EVENTREADER
-  if (fSettings->WHICH==9 || fSettings->WHICH==10) {
+  if (fSettings->WHICH==Payload::Anita3 || fSettings->WHICH==Payload::Anita4) {
     fHeader->setTrigPattern((short) fDetector->fL3trig[0], AnitaPol::kVertical);
     fHeader->setTrigPattern((short) fDetector->fL3trig[1], AnitaPol::kHorizontal);
     fHeader->setMask( (short) anita1->l1TrigMask,  (short) anita1->phiTrigMask,  AnitaPol::kVertical);

@@ -96,7 +96,7 @@ void icemc::ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
 
 void icemc::ChanTrigger::WhichBandsPass(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){    
 
-  if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==9) {
+  if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==Payload::Anita3) {
     for(int i=0;i<4;i++) thresholds[0][i] = thresholds[1][i] = anita1->powerthreshold[i];
     int iring = (ilayer<2)*0 + (ilayer==2)*1 + (ilayer==3)*2;
     int iphi = ifold;
@@ -739,7 +739,7 @@ void icemc::ChanTrigger::InitializeEachBand(Anita *anita1)
 
 
 
-void icemc::ChanTrigger::readInSeavey(const Settings* settings1, const Seavey* s, int ant, Anita* anita1, const TGraph* gr){
+void icemc::ChanTrigger::readInSeavey(const Settings* settings1, const Seavey* s, int ant, Anita* anita1, int inu){
 
   const int band = 4;
   for(auto pol : {Seavey::Pol::V, Seavey::Pol::H}){
@@ -786,7 +786,7 @@ void icemc::ChanTrigger::readInSeavey(const Settings* settings1, const Seavey* s
     }
   }
 
-  if(firstTime && gr && gr->GetY()[0]==522){
+  if(firstTime && inu){
     if(!f){
       f = new TFile("newChanTrigger.root", "recreate");
     }
@@ -838,7 +838,7 @@ void icemc::ChanTrigger::readInSeavey(const Settings* settings1, const Seavey* s
 }
 
 
-void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, const TGraph* gr) {
+void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, int inu) {
 
   e_component=0;
   h_component=0;
@@ -880,8 +880,7 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 
       for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
 
-	// bool debugInMakeArray = gr && gr->GetY()[0] == 397 && ant==34;
-	bool debugInMakeArray = gr && gr->GetY()[0] == 522 && ant==41;
+	bool debugInMakeArray = inu == 522 && ant==41;
 
 	Seavey::GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
 	// Seavey::GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
@@ -969,7 +968,7 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	}
       }
 
-      if(firstTime && gr &&  gr->GetY()[0]==522){
+      if(firstTime && inu==522){
 	if(!f){
 	  f = new TFile("oldChanTrigger.root", "recreate");
 	}
@@ -1006,9 +1005,6 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	  firstTime = false;
 	}
       }
-    }
-    else if(gr==NULL){
-      std::cerr << "ERROR! in " << __PRETTY_FUNCTION__ << ": you must pass non-NULL panel1 or gr" << std::endl;
     }
   } // end loop over bands
 
@@ -1646,8 +1642,7 @@ double icemc::ChanTrigger::GetNoise(const Settings *settings1,double altitude_bn
   double integral_secondhalf=0;
   double vnoise=0;
     
-  if (settings1->WHICH != 0) {
-		
+  if (settings1->WHICH != Payload::AnitaLite) {		
     for (int i=0;i<NSTEPS;i++) {
 			
       // step in theta
@@ -1672,7 +1667,7 @@ double icemc::ChanTrigger::GetNoise(const Settings *settings1,double altitude_bn
     //    cout << "sum, KBOLTZ, bw, sqrt are " << sum << " " << KBOLTZ << " " << bw << " " << sqrt(sum*50.*KBOLTZ*bw) << "\n";
     return sqrt(sum*50.*constants::KBOLTZ*bw);
   } //if (settings1->WHICH != 0)
-  else if (settings1->WHICH == 0){
+  else if (settings1->WHICH ==Payload::AnitaLite){
     return sqrt(temp*50.*constants::KBOLTZ*bw);
   }
   return 0;
@@ -1752,8 +1747,7 @@ void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1
     }
   }
 
-  TGraph *surfSignal = nullptr;
-  
+  TGraph *surfSignal = nullptr;  
   
   //Calculate convolution
   if(!settings1->TUFFSON){

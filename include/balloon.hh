@@ -213,6 +213,9 @@ namespace icemc {
 
     inline double getLatitude() const {return latitude;}
     inline double getLongitude() const {return longitude;}
+    inline double getHeading() const {return heading;}
+    inline double getPitch() const {return pitch;} ///@todo enforced fixed!
+    inline double getRoll() const {return roll;} ///@todo enforced fixed!
 
 #ifdef ANITA_UTIL_EXISTS
     /** 
@@ -243,7 +246,7 @@ namespace icemc {
 
     float flatitude,flongitude,faltitude,fheading,froll, fpitch;
 
-    double surface_under_balloon;                               ///< distance between center of the earth and the surface of earth under balloon    
+    double surface_under_balloon;                               ///< distance between center of the earth and the surface of earth under balloon        
     
   private:
 

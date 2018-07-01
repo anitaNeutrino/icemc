@@ -20,15 +20,11 @@
 icemc::ANITA::ANITA(const Settings* settings, const RayTracer* sillyRay, const RootOutput* ro)
   : Balloon(settings),
     fSettings(settings), fRayPtrIDontOwn(sillyRay),
+    fNumRX(settings ? settings->NANTENNAS : 48),
     fVoltsRX(settings ? settings->NANTENNAS : 0),
     fAnitaOutput(this, settings, ro->getOutputDir(), ro->getRun())
 {
-  if(settings){
-    const int n = settings->NANTENNAS;
-    for(int rx=0; rx < n; rx++){
-      fSeaveys.emplace_back(icemc::Seavey(settings));
-    }
-  }
+  initSeaveys(settings, this);
 }
 
 
@@ -41,18 +37,24 @@ icemc::Position icemc::ANITA::getCenterOfDetector(UInt_t unixTime){
   (void) unixTime;
 
   // UInt_t theUnixTime = unixTime ? 1 : 0;
-  for(int rx=0; rx < static_cast<int>(fSeaveys.size()); rx++){
-    int layer, fold;
-    getLayerFoldFromRX(rx, layer, fold);
+  // for(int rx=0; rx < static_cast<int>(fSeaveys.size()); rx++){
+  //   int layer, fold;
+  //   getLayerFoldFromRX(rx, layer, fold);
+  // }
+
+  for(auto& s : fSeaveys){
+    s.updatePosition(Balloon::position(),
+		     Balloon::getHeading(),
+		     Balloon::getPitch(),
+		     Balloon::getRoll());
   }
-  
-  return position();
+
+  return Balloon::position();
 }
 
 
-icemc::Vector icemc::ANITA::getPositionRX(Int_t rx) const {  
-
-  return Position();
+icemc::Vector icemc::ANITA::getPositionRX(Int_t rx) const {
+  return fSeaveys.at(rx).getPosition(Seavey::Pol::V);
 }
 
 
@@ -76,6 +78,80 @@ void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const {
     }
   }
 }
+
+
+void icemc::ANITA::initSeaveys(const Settings *settings1, const Anita *anita1) {
+
+  for(int rx = 0; rx < getNumRX(); rx++){
+    int ilayer = -1;
+    int ifold = -1;
+    getLayerFoldFromRX(rx, ilayer, ifold);
+    std::cout << rx << "\t" << ilayer << "\t" << ifold << std::endl;    
+
+    Vector n_eplane;
+    Vector n_hplane;
+    Vector n_normal;
+    
+    if(settings1->WHICH==Payload::Anita1 || settings1->WHICH==Payload::Anita2 || settings1->WHICH==Payload::Anita3) {
+      n_eplane = constants::const_z.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
+      n_hplane = (-constants::const_y).RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
+      n_normal = constants::const_x.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
+    }
+    else {
+      n_eplane = constants::const_z.RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
+      n_hplane = (-constants::const_y).RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
+      n_normal = constants::const_x.RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
+    }
+
+    double phi = 0;
+    // rotate about z axis for phi
+    if (settings1->CYLINDRICALSYMMETRY==1) {
+      phi=(double)ifold/(double)anita1->NRX_PHI[ilayer]*2*constants::PI + anita1->PHI_OFFSET[ilayer]; // + phi_spin;
+    }
+    else{
+      //phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer] +phi_spin;
+      phi=anita1->PHI_EACHLAYER[ilayer][ifold];
+    }
+
+    n_eplane = n_eplane.RotateZ(phi);
+    n_hplane = n_hplane.RotateZ(phi);
+    n_normal = n_normal.RotateZ(phi);
+    
+    Vector positionH;
+    Vector positionV;    
+    for(auto pol : {Seavey::Pol::V, Seavey::Pol::H}){
+      int ipol = static_cast<int>(pol);
+      Vector& seaveyPayloadPos = pol == Seavey::Pol::V ? positionV : positionH;
+
+      double phi = 0;
+      if (settings1->WHICH == Payload::Anita1 ||
+	  settings1->WHICH == Payload::Anita2 ||
+	  settings1->WHICH == Payload::Anita3 ||
+	  settings1->WHICH == Payload::Anita4 ){
+	///@todo Anita needs to be instantiated with these arrays filled!
+	/// currently they are done in "apply settings", this needs to change
+	seaveyPayloadPos = anita1->ANTENNA_POSITION_START[ipol][ilayer][ifold];
+      }
+      else {
+	if (settings1->CYLINDRICALSYMMETRY==1){ // for timing code
+	  // phi is 0 for antenna 0 (0-31) and antenna 16 (0-31)
+	  // antenna 1 (1-32) and antenna 18 (1-32)
+	  phi = (double) ifold / (double) anita1->NRX_PHI[ilayer] * 2 * constants::PI + anita1->PHI_OFFSET[ilayer];
+	}
+	else{
+	  phi = anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer];
+	}
+	seaveyPayloadPos = Vector(anita1->RRX[ilayer]*cos(phi) + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer]),
+			   anita1->RRX[ilayer]*sin(phi) + anita1->LAYER_HPOSITION[ilayer]*sin(anita1->LAYER_PHIPOSITION[ilayer]),
+			   anita1->LAYER_VPOSITION[ilayer]);
+
+      }
+     
+    } 
+    fSeaveys.emplace_back(Seavey(positionV, positionH,  n_eplane,  n_hplane, n_normal, settings1));
+  }
+}
+
 
 
 
@@ -103,9 +179,8 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   }
 
   if(rx >= 0 && rx < fSeaveys.size()){
-    // @todo It makes much more sense to do this just once when the balloon position is updated!
-    this->GetAntennaOrientation(fSettings,  this,  ilayer,  ifold,
-				fSeaveys.at(rx).fEPlane, fSeaveys.at(rx).fHPlane, fSeaveys.at(rx).fNormal);
+    // this->GetAntennaOrientation(fSettings,  this,  ilayer,  ifold,
+    // 				fSeaveys.at(rx).fEPlane, fSeaveys.at(rx).fHPlane, fSeaveys.at(rx).fNormal);
 
     // actually we add the signal to the new Seavey class
     fSeaveys.at(rx).addSignal(signal);
@@ -128,7 +203,6 @@ bool icemc::ANITA::applyTrigger(int inu){
   int thispasses[Anita::NPOL]={0,0};
 
   auto globalTrigger = std::unique_ptr<GlobalTrigger>(new GlobalTrigger(fSettings, dynamic_cast<Anita*>(this)));
-
   // make a global trigger object (but don't touch the electric fences)
   // globaltrig1 = new GlobalTrigger(fSettings, anita1);
   // globaltrig1 = new GlobalTrigger(fSettings, fDetector);
@@ -140,32 +214,38 @@ bool icemc::ANITA::applyTrigger(int inu){
       this->GetArrivalTimesBoresights(fRayPtrIDontOwn->n_exit2bn_eachboresight[2]);
     }
     else{
-      // this->GetArrivalTimes(fRayPtrIDontOwn->n_exit2bn[2],bn1,fSettings);
       this->GetArrivalTimes(fRayPtrIDontOwn->n_exit2bn[2],this,fSettings);
-    }	
+    }
   }
-  this->rx_minarrivaltime=Tools::WhichIsMin(this->arrival_times[0], fSettings->NANTENNAS);
+  this->rx_minarrivaltime = Tools::WhichIsMin(this->arrival_times[0], fSettings->NANTENNAS);
 
+  if(inu==522){
+    for(int rx = 0; rx < fSeaveys.size(); rx++){
+      int ifold, ilayer;
+      getLayerFoldFromRX(rx, ilayer, ifold);
+      int rx2 = GetRx(ilayer,ifold);
+      std::cout << "Arrival times " << rx << "\t"
+		<< arrival_times[0][rx2] - arrival_times[0][0] << std::endl;//"\t"
+		// << arrival_times[1][rx] << std::endl;
+    }
+ }
   //For verification plots - added by Stephen
-  int max_antenna0 = -1;  //antenna with the peak voltage,  top layer
-  int max_antenna1 = -1;  //antenna with the peak voltage,  middle layer
-  int max_antenna2 = -1;  //antenna with the peak voltage,  bottom layer
-  double voltagearray[Anita::NLAYERS_MAX*Anita::NPHI_MAX]; //Records max voltages on each antenna for one neutrino
-  int discones_passing;  // number of discones that pass
+  double voltagearray[Anita::NLAYERS_MAX*Anita::NPHI_MAX] = {0}; //Records max voltages on each antenna for one neutrino
+  int discones_passing = 0;  // number of discones that pass
 
-  double max_antenna_volts0 = 0; //Voltage on the antenna with maximum signal,  top layer
-  double max_antenna_volts0_em = 0; //Component of voltage from em shower on the antenna with maximum signal,  top layer
-  double max_antenna_volts1 = 0; //Voltage on the antenna with maximum signal,  middle layer
-  double max_antenna_volts2 = 0; //Voltage on the antenna with maximum signal,  bottom layer
+  // double max_antenna_volts0 = 0; //Voltage on the antenna with maximum signal,  top layer
+  // // double max_antenna_volts0_em = 0; //Component of voltage from em shower on the antenna with maximum signal,  top layer
+  // double max_antenna_volts1 = 0; //Voltage on the antenna with maximum signal,  middle layer
+  // double max_antenna_volts2 = 0; //Voltage on the antenna with maximum signal,  bottom layer
 
-  double e_comp_max1=0;
-  double h_comp_max1=0;
-  double e_comp_max2=0;
-  double h_comp_max2=0;
-  double e_comp_max3=0;
-  double h_comp_max3=0;
+  // double e_comp_max1=0;
+  // double h_comp_max1=0;
+  // double e_comp_max2=0;
+  // double h_comp_max2=0;
+  // double e_comp_max3=0;
+  // double h_comp_max3=0;
 
-  double hitangle_e = 0; // angle the ray hits the antenna wrt e-plane
+  // double hitangle_e = 0; // angle the ray hits the antenna wrt e-plane
 
   // for comparing with peter
   double sumsignal[5]={0.};
@@ -225,26 +305,6 @@ bool icemc::ANITA::applyTrigger(int inu){
   rec_efield=0;
   true_efield=0;
   
-  
-  //Zeroing
-  for (int i=0;i<fSettings->NANTENNAS;i++) {
-    voltagearray[i]=0;
-    discones_passing=0;
-  } //Zero the trigger array
-
-  max_antenna0=-1;
-  max_antenna1=-1;
-  max_antenna2=-1;
-  max_antenna_volts0 =0;
-  max_antenna_volts1 =0;
-  max_antenna_volts2 =0;
-  e_comp_max1 = 0;
-  h_comp_max1 = 0;
-  e_comp_max2 = 0;
-  h_comp_max2 = 0;
-  e_comp_max3 = 0;
-  h_comp_max3 = 0;
-  //End zeroing
 
 
   // start looping over antennnas.
@@ -256,6 +316,7 @@ bool icemc::ANITA::applyTrigger(int inu){
     // icemcLog().fslac_hitangles << this->sslacpositions[this->islacposition] << "\n";    
   }
 
+  double hitangle_e;
   if (fSettings->CENTER){
     this->CenterPayload(hitangle_e);
   }
@@ -263,22 +324,11 @@ bool icemc::ANITA::applyTrigger(int inu){
   globalTrigger->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
   this->rms_rfcm_e_single_event = 0;
 
-  Vector n_eplane = constants::const_z;
-  Vector n_hplane = -constants::const_y;
-  Vector n_normal = constants::const_x;
-  double e_component=0; // E comp along polarization
-  double h_component=0; // H comp along polarization
   double bwslice_vnoise_thislayer[4];// for filling tree6b,  noise for each bandwidth on each layer  
   double rx0_signal_eachband[2][5];
   double rx0_threshold_eachband[2][5];
   double rx0_noise_eachband[2][5];
   int rx0_passes_eachband[2][5];
-  Vector ant_max_normal0; //Vector normal to the face of the antenna with the maximum signal for a single neutrino,  top layer
-  Vector ant_max_normal1; //Vector normal to the face of the antenna with the maximum signal for a single neutrino,  middle layer
-  Vector ant_max_normal2; //Vector normal to the face of the antenna with the maximum signal for a single neutrino,  bottom layer
-  Vector ant_normal; //Vector normal to the face of the antenna
-  int nchannels_triggered = 0; // total number of channels triggered
-  int nchannels_perrx_triggered[48]; // total number of channels triggered
   int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement
   int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement
   double thresholdsAnt[48][2][5] = {{{0}}};
@@ -291,12 +341,10 @@ bool icemc::ANITA::applyTrigger(int inu){
       ct.InitializeEachBand(this);
 
       int antNum = this->GetRxTriggerNumbering(ilayer, ifold);
-      TGraph grHack(1, &inu, &inu);
-
-      ct.readInSeavey(fSettings,  &fSeaveys.at(antNum), antNum, this, &grHack);
+      ct.readInSeavey(fSettings,  &fSeaveys.at(antNum), antNum, this, inu);
 
       // this->GetAntennaOrientation(fSettings,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
-      // ct.ApplyAntennaGain(fSettings, this, fScreenPtrIDontOwn, antNum, n_eplane, n_hplane, n_normal, &grHack);
+      // ct.ApplyAntennaGain(fSettings, this, fScreenPtrIDontOwn, antNum, n_eplane, n_hplane, n_normal, inu);
 
       ct.TriggerPath(fSettings, this, antNum, this);
       ct.DigitizerPath(fSettings, this, antNum, this);
@@ -342,7 +390,7 @@ bool icemc::ANITA::applyTrigger(int inu){
       }
 
       if (fSettings->SIGNAL_FLUCT) {
-	if (fSettings->WHICH==0) {
+	if (fSettings->WHICH==Payload::AnitaLite) {
 	  globalTrigger->volts[ilayer][ifold][0]+=gRandom->Gaus(0., this->VNOISE_ANITALITE[ifold]);
 	  globalTrigger->volts[ilayer][ifold][1]+=gRandom->Gaus(0., this->VNOISE_ANITALITE[ifold]);
 	} //else
@@ -369,38 +417,6 @@ bool icemc::ANITA::applyTrigger(int inu){
 	}
       }
 
-      //For verification plots: find antenna with max signal - added by Stephen
-      if (ilayer == 0 && globalTrigger->volts[0][ilayer][ifold] > max_antenna_volts0) {
-	max_antenna0 = count_rx;
-	max_antenna_volts0 = globalTrigger->volts[0][ilayer][ifold];
-	max_antenna_volts0_em=globalTrigger->volts_em[0][ilayer][ifold];
-	ant_max_normal0 = ant_normal;
-	e_comp_max1 = e_component;
-	h_comp_max1 = h_component;
-      }
-      else if (ilayer == 0 && globalTrigger->volts[0][ilayer][ifold] == max_antenna_volts0 && globalTrigger->volts[0][ilayer][ifold] != 0){
-	std::cout<<"Equal voltage on two antennas!  Event : "<<inu<<std::endl;
-      }
-      else if (ilayer == 1 && globalTrigger->volts[0][ilayer][ifold] > max_antenna_volts1) {
-	max_antenna1 = count_rx;
-	max_antenna_volts1 = globalTrigger->volts[0][ilayer][ifold];
-	ant_max_normal1 = ant_normal;
-	e_comp_max2 = e_component;
-	h_comp_max2 = h_component;
-      }
-      else if (ilayer == 1 && globalTrigger->volts[0][ilayer][ifold] == max_antenna_volts1 && globalTrigger->volts[0][ilayer][ifold] != 0){
-	std::cout<<"Equal voltage on two antennas!  Event : "<<inu<<std::endl;
-      }
-      else if (ilayer == 2 && globalTrigger->volts[0][ilayer][ifold] > max_antenna_volts2) {
-	max_antenna2 = count_rx;
-	max_antenna_volts2 = globalTrigger->volts[0][ilayer][ifold];
-	ant_max_normal2 = ant_normal;
-	e_comp_max3 = e_component;
-	h_comp_max3 = h_component;
-      }
-      else if (ilayer == 2 && globalTrigger->volts[0][ilayer][ifold] == max_antenna_volts2 && globalTrigger->volts[0][ilayer][ifold] != 0){
-	std::cout<<"Equal voltage on two antennas!  Event : "<<inu<<std::endl;
-      }
       voltagearray[count_rx] = globalTrigger->volts[0][ilayer][ifold];
       //End verification plot block
 
@@ -415,11 +431,12 @@ bool icemc::ANITA::applyTrigger(int inu){
 
   this->rms_rfcm_e_single_event = sqrt(this->rms_rfcm_e_single_event / (this->HALFNFOUR * fSettings->NANTENNAS));
 
-  for (int irx=0;irx<fSettings->NANTENNAS;irx++) {
-    nchannels_perrx_triggered[irx]=globalTrigger->nchannels_perrx_triggered[irx];
-  }
+  // for (int irx=0;irx<fSettings->NANTENNAS;irx++) {
+  //   nchannels_perrx_triggered[irx]=globalTrigger->nchannels_perrx_triggered[irx];
+  // }
 
-  nchannels_triggered = Tools::iSum(globalTrigger->nchannels_perrx_triggered, fSettings->NANTENNAS); // find total number of antennas that were triggered.
+  // nchannels_triggered = Tools::iSum(globalTrigger->nchannels_perrx_triggered, fSettings->NANTENNAS); // find total number of antennas that were triggered.
+
   fVoltsRX.ave = GetAverageVoltageFromAntennasHit(fSettings, globalTrigger->nchannels_perrx_triggered, voltagearray, fVoltsRX.sum);
 
   globalTrigger->PassesTrigger(fSettings, this, discones_passing, 2, fL3trig, fL2trig, fL1trig, fSettings->antennaclump, loctrig, loctrig_nadironly, inu, thispasses);

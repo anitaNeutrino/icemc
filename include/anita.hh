@@ -4,7 +4,6 @@
 #ifndef ICEMC_ANITA_HH
 #define ICEMC_ANITA_HH
 
-
 #include "rx.h"
 #include <array>
 #include "vector.hh"
@@ -366,7 +365,6 @@ namespace icemc {
     int iwindow[5];
     double diode_real[5][NFOUR]; // This is the time domain of the diode response. (actually NFOUR/2 array is used.)
     double fdiode_real[5][NFOUR]; // This is the fft of the diode response. (use all NFOUR array. This is for doubling array size for zero padding)
-
 
     void myconvlv(double *timedomain_forconvl,const int NFOUR,double *fdiode,double &maxdiodeconvl,double &onediodeconvl,double *power_noise,double *diodeconv);
 

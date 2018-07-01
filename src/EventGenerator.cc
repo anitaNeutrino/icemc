@@ -159,7 +159,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
       errordown_v_thresh[i]=err_minus/denom_v_thresh[i];
       // std::cout << errorup_v_thresh[i] << " " << errordown_v_thresh[i] << std::endl;
     }//end if
-    if (settings1->WHICH==9 || settings1->WHICH==10){ // Anita-3
+    if (settings1->WHICH==Payload::Anita3 || settings1->WHICH==Payload::Anita4){ // Anita-3
       rate_h_thresh[i]=npass_h_thresh[i]/denom_h_thresh[i];
       if (npass_h_thresh[i]<=20) {
 	const int nh = (int)npass_h_thresh[i];
@@ -198,7 +198,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
   gnpass->Write();
 
 
-  if (settings1->WHICH==9 || settings1->WHICH==10){ // Anita-3 or Anita-4
+  if (settings1->WHICH==Payload::Anita3 || settings1->WHICH==Payload::Anita4){ // Anita-3 or Anita-4
     TGraph *gnpassH=new TGraph(NTHRESHOLDS, thresholds, npass_h_thresh);
     gnpassH->SetName("npassH");
     TGraph *gdenomH=new TGraph(NTHRESHOLDS, thresholds, denom_h_thresh);
@@ -1305,7 +1305,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // Antenna measured gain vs. frequency
   fDetector->ReadGains(); // this is used if GAINS set to 1
   fDetector->Set_gain_angle(&settings1, askFreqGen.NMEDIUM_RECEIVER);
-  if(settings1.WHICH == 2 || settings1.WHICH == 6){
+  if(settings1.WHICH == Payload::Anita1Simple ||
+     settings1.WHICH == Payload::Anita1){
     fDetector->SetDiffraction(); // for the upper ring
   }
 
@@ -1400,13 +1401,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   
   // Setting gps offset for plotting direction wrt north
-  if (settings1.WHICH==7){
+  if (settings1.WHICH==Payload::EeVEX){
     gps_offset=atan2(-0.7042,0.71)*constants::DEGRAD;
   }
-  else if(settings1.WHICH==8){
+  else if(settings1.WHICH==Payload::Anita2){
     gps_offset=atan2(-0.7085,0.7056)*constants::DEGRAD;
   }
-  else if (settings1.WHICH==9 || settings1.WHICH==10){
+  else if (settings1.WHICH==Payload::Anita3 ||
+	   settings1.WHICH==Payload::Anita4){
     gps_offset=45;
   }
   else{
@@ -2116,7 +2118,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       interaction1->r_exit2bn=fDetector->position().Distance(rayTracer.rfexit[2]);
       interaction1->r_exit2bn_measured=fDetector->altitude_bn/cos(theta_rf_atbn_measured);
 
-      if((settings1.WHICH == 2 || settings1.WHICH == 6) && theta_rf_atbn < 0.3790091) {
+      if((settings1.WHICH==Payload::Anita1Simple || settings1.WHICH==Payload::Anita1)
+	 && theta_rf_atbn < 0.3790091) {
         continue; // the deck will mess up the arrival times in the top ring
       }
       // reject if the rf leaves the ice where there is water,  for example.

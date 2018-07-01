@@ -221,7 +221,6 @@ int icemc::Anita::GetRx(int ilayer, int ifold) const { // get antenna number bas
   }
   irx+=ifold;
   return irx;
-    
 }
 
 int icemc::Anita::GetRxTriggerNumbering(int ilayer, int ifold) const { // get antenna number based on which layer and position it is
@@ -242,7 +241,7 @@ int icemc::Anita::GetRxTriggerNumbering(int ilayer, int ifold) const { // get an
 void icemc::Anita::SetNoise(const Settings *settings1,Balloon *bn1,const Antarctica *antarctica) {
     
   // these should only be used for the frequency domain trigger.
-  if (settings1->WHICH==2 || settings1->WHICH==6) { //this is for anita 1
+  if (settings1->WHICH==Payload::Anita1Simple || settings1->WHICH==Payload::Anita1) { //this is for anita 1
     for (int il=0;il<NLAYERS_MAX;il++) {
       bwslice_vnoise[il][0]=5.5125E-6;
       bwslice_vnoise[il][1]=6.1157E-6;
@@ -303,7 +302,7 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
 
   additionalDt=0;
   /// TEMP HACK FOR ANITA-4 !!!!
-  if (settings1->WHICH==10){
+  if  (settings1->WHICH==Payload::Anita4){
     powerthreshold[4] /= TMath::Sqrt(2.);
     additionalDt=30.e-9;
   }
@@ -561,7 +560,7 @@ void icemc::Anita::initializeFixedPowerThresholds(ofstream &foutput){
 
 void icemc::Anita::readVariableThresholds(const Settings *settings1){
 
-  if (settings1->WHICH==8) { // ANITA-2
+  if (settings1->WHICH==Payload::Anita2) { // ANITA-2
     fturf = new TFile((ICEMC_DATA_DIR+"/turfrate_icemc.root").c_str());
     turfratechain=(TTree*)fturf->Get("turfrate_icemc");
     turfratechain->SetMakeClass(1);
@@ -575,11 +574,11 @@ void icemc::Anita::readVariableThresholds(const Settings *settings1){
 
     
   }
-  else if (settings1->WHICH==9 || settings1->WHICH==10){ // ANITA-3 and 4
+  else if (settings1->WHICH==Payload::Anita3 || settings1->WHICH==Payload::Anita4){ // ANITA-3 and 4
     
     string turfFile="";
     string surfFile="";
-    if (settings1->WHICH==9){
+    if (settings1->WHICH==Payload::Anita3){
       turfFile+=ICEMC_DATA_DIR+"/SampleTurf_icemc_anita3.root";
       surfFile+=ICEMC_DATA_DIR+"/SampleSurf_icemc_anita3.root";
     }else{
@@ -597,7 +596,7 @@ void icemc::Anita::readVariableThresholds(const Settings *settings1){
     turfratechain->SetBranchAddress("l1TrigMaskH",&l1TrigMaskH);
 
     /////////// DEAD TIME ONLY DEFINED FOR ANITA-3 !!!!!!!!!!!!
-    if (settings1->WHICH==9) turfratechain->SetBranchAddress("deadTime",&deadTime);
+    if (settings1->WHICH==Payload::Anita3) turfratechain->SetBranchAddress("deadTime",&deadTime);
     turfratechain->SetBranchAddress("realTime",&realTime_turfrate);
     turfratechain->BuildIndex("realTime");
     turfratechain->GetEvent(0);
@@ -612,7 +611,7 @@ void icemc::Anita::readVariableThresholds(const Settings *settings1){
     surfchain->SetBranchAddress("thresholds",       &thresholds       );
     surfchain->SetBranchAddress("scalers",          &scalers          );
     ///////////// FAKE SCALERS AND THRESHOLDS ONLY FOR ANITA 3 !!!!!!!!!!
-    if (settings1->WHICH==9){
+    if (settings1->WHICH==Payload::Anita3){
       surfchain->SetBranchAddress("fakeThreshold",    &fakeThresholds   );
       surfchain->SetBranchAddress("fakeThreshold2",   &fakeThresholds2  );
       surfchain->SetBranchAddress("fakeScaler",       &fakeScalers      );
@@ -1757,7 +1756,7 @@ int icemc::Anita::GetBeamWidths(const Settings *settings1) {
   double freq_specs[5];
   int NFREQ_FORGAINS; // Number of
     
-  if (settings1->WHICH==7) { // EeVa
+  if (settings1->WHICH==Payload::EeVEX) { // EeVa
     NFREQ_FORGAINS=4;
     freq_specs[0]=265.E6; // lower edge of
     freq_specs[1]=435.E6;
@@ -1766,7 +1765,7 @@ int icemc::Anita::GetBeamWidths(const Settings *settings1) {
 		
 		
   }
-  else if (settings1->WHICH==11) { // Satellite
+  else if (settings1->WHICH==Payload::Satellite) { // Satellite
     NFREQ_FORGAINS=4;
     freq_specs[0]=265.E6; // lower edge of
     freq_specs[1]=435.E6;
@@ -1789,9 +1788,8 @@ int icemc::Anita::GetBeamWidths(const Settings *settings1) {
     
   double specs[5][4];
     
-  if (settings1->WHICH==7) { // EeVA
-		
-		
+  if (settings1->WHICH==Payload::EeVEX) { // EeVA
+
     // these are all for 200 MHz
     specs[0][0]=2.5; // eplane, vp
     specs[0][1]=2.5;// eplane, hp
@@ -1854,7 +1852,7 @@ int icemc::Anita::GetBeamWidths(const Settings *settings1) {
   // These are gains, which are not used because we use Ped's numbers instead
   double specs2[5][2];
     
-  if (settings1->WHICH==7) {// EeVA
+  if (settings1->WHICH==Payload::EeVEX) {// EeVA
     // this is in dBi
     // 200 MHz
     specs2[0][0]=26.85; // vp
@@ -1874,7 +1872,7 @@ int icemc::Anita::GetBeamWidths(const Settings *settings1) {
 		
 		
   }
-  else if (settings1->WHICH==11) { // satellite
+  else if (settings1->WHICH==Payload::Satellite) { // satellite
 		
     // this is in dBi
     // 40 MHz
@@ -2650,7 +2648,7 @@ int icemc::Anita::getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn) {
 
 
 double icemc::Anita::GaintoHeight(double gain,double freq,double nmedium_receiver) {
-    
+
   // from gain=4*pi*A_eff/lambda^2
   // and h_eff=2*sqrt(A_eff*Z_rx/Z_air)
   // gain is in dB
@@ -2678,7 +2676,7 @@ void icemc::Anita::fill_coherent_waveform_sum_tree(unsigned event_number, unsign
   for (int i = 0; i < HALFNFOUR; i++){
     cwst_timesteps[i] = i;
   }
-    
+
   cwst_summed_wfm = summed_wfm;
   cwst_power_of_summed_wfm = power_of_summed_wfm;
   cwst_power = power;
@@ -2707,7 +2705,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     NRX_PHI[layer] = settings1->NRX_PHI[layer];
   }
 
-  if (settings1->WHICH==0) { // anita-lite
+  if (settings1->WHICH==Payload::AnitaLite) { // anita-lite
 		
     // settings1->NFOLD=3;
 		
@@ -2731,7 +2729,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
   } //if (ANITA-lite)
     
     //Ross Payload
-  else if (settings1->WHICH==1) {
+  else if (settings1->WHICH==Payload::Ross) {
     //settings1->NFOLD=8;
     // settings1->CYLINDRICALSYMMETRY=1;
 		
@@ -2781,7 +2779,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
 		
   } //else if (Ross payload)
     // Smex payload (full ANITA flown 2006-2007)
-  else if (settings1->WHICH==2) {
+  else if (settings1->WHICH==Payload::Anita1Simple) {
     // settings1->CYLINDRICALSYMMETRY=1;
 		
     //these are physical layers
@@ -2828,7 +2826,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
 		
 		
   } //else if (SMEX payload - default)
-  else if (settings1->WHICH==3) {
+  else if (settings1->WHICH==Payload::Custom) {
 		
     // cout << "Is this configuration cylindrically symmetric? Yes(1) or No(0)\n";
     // cin >> settings1->CYLINDRICALSYMMETRY;
@@ -2873,25 +2871,24 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     cout << "How many times the expected noise level should the voltage threshold be?\n";
     cin >> maxthreshold;
   } //else if (custom payload)
-    
-  else if (settings1->WHICH==4) {// anita hill
+
+  else if (settings1->WHICH==Payload::AntHill) {// anita hill
 		
     //settings1->NFOLD=1; // how many channels must pass the trigger
     //maxthreshold=2.3;
-		
+
     // if (settings1->NLAYERS!=2)
     //   cout << "Warning!!! Did not enter the right number of layers in the input file.  For Anita Hill, it's 2.";
-		
+
     // settings1->CYLINDRICALSYMMETRY=1;
-		
+
     // NRX_PHI[0]=1; // this is how many antennas we have in phi on each "layer"
     // NRX_PHI[1]=1; // for anita hill, we are calling each station a different "layer"
-		
-		
+
     PHI_OFFSET[0]=(bn1->BN_LONGITUDE+0.)*constants::RADDEG; // antenna 1 on 0th layer is rotated in phi wrt antenna 9 and antenna 17
     // it's rotated by 1/2 the azimuth that separates two antennas on the 0th layer
     PHI_OFFSET[1]=(bn1->BN_LONGITUDE+0.)*constants::RADDEG;
-		
+
     cout << "phi_offsets are " << PHI_OFFSET[0] << " " << PHI_OFFSET[1] << "\n";
 		
     //double INCLINE_NADIR=55; SET IN INPUT NOW!!!!
@@ -2915,7 +2912,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     LAYER_PHIPOSITION[1] = 30.*constants::RADDEG;// in radians
   }
     
-  else if(settings1->WHICH==6) { // Kurt's measurements for the first flight in elog 345
+  else if(settings1->WHICH==Payload::Anita1) { // Kurt's measurements for the first flight in elog 345
     //settings1->NFOLD=8;
     // settings1->CYLINDRICALSYMMETRY=0;
 		
@@ -3036,7 +3033,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
       for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++)
 	ANTENNA_POSITION_START[1][iii][jjj] = ANTENNA_POSITION_START[0][iii][jjj] = ANTENNA_POSITION_START[0][iii][jjj] - phase_center * Vector(cos(PHI_EACHLAYER[iii][jjj])*sin(90.*constants::RADDEG+ANTENNA_DOWN[iii][jjj]), sin(PHI_EACHLAYER[iii][jjj])*sin(90.*constants::RADDEG+ANTENNA_DOWN[iii][jjj]), cos(90.*constants::RADDEG+ANTENNA_DOWN[iii][jjj]));
   }
-  else if (settings1->WHICH==7) {
+  else if (settings1->WHICH==Payload::EeVEX) {
 		
     // Just one layer of antennas around balloon
     // EeVEX
@@ -3096,7 +3093,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
 		
   } //else if (EeVEX)
     //anitaII or satellite
-  else if (settings1->WHICH==8) {
+  else if (settings1->WHICH==Payload::Anita2) {
     std::cout << "initializing and using anitaII payload geometry" << std::endl;
 		
     // layer 0 is antennas 1-8 on the payload
@@ -3366,7 +3363,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
 
 		
   } 
-  else if (settings1->WHICH==9 || settings1->WHICH==10) { // ANITA-3 and ANITA-4
+  else if (settings1->WHICH==Payload::Anita3 || settings1->WHICH==Payload::Anita4) { // ANITA-3 and ANITA-4
     std::cout << "initializing and using ANITA-III or IV payload geometry" << std::endl;
     // layer 0 is antennas 1-8 on the payload
     // layer 1 is antennas 9-15
@@ -3401,7 +3398,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
       
     // Read photogrammetry positions
     string whichANITAroman="";
-    if (settings1->WHICH==9) whichANITAroman+="III";
+    if (settings1->WHICH==Payload::Anita3) whichANITAroman+="III";
     else whichANITAroman+="IV";
     string photoFile;
 #ifdef ANITA_UTIL_EXISTS
@@ -3504,8 +3501,12 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
       
     // HERE HPOL IS 0 AND VPOL IS 1
     string whichANITAcard="";
-    if (settings1->WHICH==9) whichANITAcard+="3";
-    else whichANITAcard+="4";
+    if (settings1->WHICH==Payload::Anita3) {
+      whichANITAcard+="3";
+    }
+    else{
+      whichANITAcard+="4";
+    }
     string phaseCenterName;
 #ifdef ANITA_UTIL_EXISTS
     phaseCenterName += ( (string)getenv("ANITA_UTIL_INSTALL_DIR") +"/share/anitaCalib/phaseCenterPositionsRelativeToPhotogrammetryAnita"+whichANITAcard+".dat");
@@ -3594,9 +3595,8 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
   }
     
     
-  else if (settings1->WHICH==11) { // satellite
-      
-		
+  else if (settings1->WHICH==Payload::Satellite) { // satellite
+
     // layer 0 is antennas 1-8 on the payload
     // layer 1 is antennas 9-15
     // settings1->CYLINDRICALSYMMETRY=1;
@@ -3636,7 +3636,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     
   // gets noise (vrms) for each bandwidth slice and antenna layer according to antenna theta
     
-  if (settings1->WHICH==0) {
+  if (settings1->WHICH==Payload::AnitaLite) {
     temp_eachrx[0]=919.4;
     temp_eachrx[1]=1051.8;
     for (int j=2;j<16;j++) {
@@ -3649,18 +3649,18 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
       temp_eachrx[j]=(240.+200.); // temp of each antenna in kelvin
     }
   }
-    
+
   for (int i=0;i<NRX_PHI[0];i++) {
     VNOISE_ANITALITE[i]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,bn1->surface_under_balloon,THETA_ZENITH[0],settings1->BW_SEAVEYS,temp_eachrx[i]);
   }
 }//GetPayload
 
 void icemc::Anita::calculate_all_offsets(void) {
-    
+
   double angle_phi, angle_theta;
-    
+
   double hypothesis_offset[3][3];
-    
+
   vector<double> angles_tmp;
   vector< vector <double> > angles_diffthetas_tmp;
 
@@ -3835,11 +3835,10 @@ void icemc::Anita::calculate_single_offset(const unsigned center_phi_sector_inde
 
 
 void icemc::Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, const Settings *settings1) {
-  //cout << "inside getarrivaltimes.\n";
-  
+  //cout << "inside getarrivaltimes.\n";  
 
   for (int ipol=0; ipol<2; ipol++){
-  
+
     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
       arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index].Dot(rf_direction)) / constants::CLIGHT;
 
@@ -3851,12 +3850,12 @@ void icemc::Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, cons
       // cout << "arrival_times is " << arrival_times[antenna_index] << "\n";
     } // for: loop over antenna layers
     
-    if( settings1->WHICH==8 ){//ANITA-II offboresight delay
-      
+    if( settings1->WHICH==Payload::Anita2 ){//ANITA-II offboresight delay
+
       Vector rf_tmp_dir = bn1->unRotatePayload(-1*rf_direction);
-     
+
       double theta_deg =rf_tmp_dir.Theta() * constants::DEGRAD;//
-     
+
       double phi_deg = rf_tmp_dir.Phi() *constants::DEGRAD;
       double totalAngledeg;
       double extra_delay;
@@ -3867,8 +3866,7 @@ void icemc::Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, cons
 
       theta_offset = 10;//boresight_vector[ant_ctr].Theta()*constants::DEGRAD;
        
-      theta_deg = theta_deg -90;
-       
+      theta_deg = theta_deg - 90;
      
       theta_deg = theta_deg - theta_offset;
       for(int iii = 0; iii < 4; iii++){ 
@@ -3876,13 +3874,13 @@ void icemc::Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, cons
 		   
 	  phi_deg = rf_tmp_dir.Phi();
       
-	  phi_eachlayer =atan2(ANTENNA_POSITION_START[ipol][iii][jjj][1],ANTENNA_POSITION_START[ipol][iii][jjj][0]);
+	  phi_eachlayer = atan2(ANTENNA_POSITION_START[ipol][iii][jjj][1],ANTENNA_POSITION_START[ipol][iii][jjj][0]);
        
-	  phi_deg =phi_deg- phi_eachlayer;
+	  phi_deg = phi_deg- phi_eachlayer;
 	 
 	  if(fabs(phi_deg) > fabs(phi_deg+2*constants::PI)) phi_deg+=2*constants::PI;
 	  if(fabs(phi_deg) > fabs(phi_deg-2*constants::PI)) phi_deg-=2*constants::PI;
-	  phi_deg =phi_deg*constants::DEGRAD;
+	  phi_deg = phi_deg*constants::DEGRAD;
 	  totalAngledeg = phi_deg*phi_deg + theta_deg*theta_deg;
 	  if(totalAngledeg > 2500) totalAngledeg=2500;
 	 
@@ -3929,7 +3927,7 @@ void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_M
   for (int ipol=0; ipol<2; ipol++){
     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
       int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
-      int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
+      int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);      
       arrival_times[ipol][antenna_index] = antenna_positions[ipol][antenna_index].Dot(rf_direction[ilayer][ifold]) / constants::CLIGHT;
 
       // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
@@ -3939,7 +3937,7 @@ void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_M
       //  arrival_times[antenna_index]=0;
       
 
-      if(settings1->WHICH==8 ){//ANITA-II offboresight delay
+      if(settings1->WHICH==Payload::Anita2 ){//ANITA-II offboresight delay
       
 	Vector rf_tmp_dir = bn1->unRotatePayload(-1*rf_direction[ilayer][ifold]);
      
@@ -4098,7 +4096,7 @@ void icemc::Anita::readImpulseResponseDigitizer(const Settings *settings1){
   // For ANITA-2 we have 1 impulse response for VPOL and 1 for HPOL
   // For ANITA-3 we have 3 impulse responses (Top, Middle, Bottom ring) for VPOL and 3 for HPOL.
   // Set Graph names for ANITA-2 and ANITA-3
-  if (settings1->WHICH==8){
+  if (settings1->WHICH==Payload::Anita2){
     fileName = ICEMC_DATA_DIR+"/sumPicoImpulse.root";
     
     for (int iring=0;iring<3;iring++){
@@ -4109,7 +4107,7 @@ void icemc::Anita::readImpulseResponseDigitizer(const Settings *settings1){
     }
     //Now need to scale our impulse response from unit areas to the area of kronecker-delta (i.e dt)
     norm*=0.1;
-  } else if(settings1->WHICH==9 || settings1->WHICH==10){
+  } else if(settings1->WHICH==Payload::Anita3 || settings1->WHICH==Payload::Anita4){
 
     fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseDigitizer.root";
 
@@ -4353,7 +4351,7 @@ void icemc::Anita::readImpulseResponseTrigger(const Settings *settings1){
   string fileName;
   double norm=1;
 
-  if(settings1->WHICH==9 || settings1->WHICH==10){
+  if(settings1->WHICH==Payload::Anita3 || settings1->WHICH==Payload::Anita4){
 
     fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseTrigger.root";
 
@@ -4465,7 +4463,7 @@ void icemc::Anita::readImpulseResponseTrigger(const Settings *settings1){
 
 void icemc::Anita::readTriggerEfficiencyScanPulser(const Settings *settings1){
   
-  if(settings1->WHICH==9){
+  if(settings1->WHICH==Payload::Anita3){
      
     string fileName = ICEMC_DATA_DIR+"/TriggerEfficiencyScanPulser_anita3.root";
     TFile *f = new TFile(fileName.c_str(), "read");

@@ -370,7 +370,7 @@ void  icemc::GlobalTrigger::PassesTriggerBasic(const Settings *settings1,Anita *
 	  if(channels_compacted_passing[iloc][iphitrig][ipolar][iband] == 1
 	     && anita1->bwslice_allowed[iband]==1 && anita1->pol_allowed[ipolar]==1) { // only increment if it's one of the allowed bands and allowed polarizations.
 	      
-	    if (settings1->PHIMASKING && settings1->WHICH==9){ // only applying channel masking like this if it's Anita-3
+	    if (settings1->PHIMASKING && settings1->WHICH==Payload::Anita3){ // only applying channel masking like this if it's Anita-3
 	      //		if ((ipolar==0 && (1<<iphitrig & l1TrigMask[0])) || (ipolar==1 && (1<<iphitrig & l1TrigMask[1])) ){
 	      if  (1<<iphitrig & l1TrigMask[ipolar])  {
 		continue; // was this channel masked?
@@ -439,7 +439,7 @@ void  icemc::GlobalTrigger::PassesTriggerBasic(const Settings *settings1,Anita *
   } else if (mode == 2) { // TRIGTYPE=1 ->
 
     // ANITA-3
-    if (settings1->WHICH==9) {
+    if (settings1->WHICH==Payload::Anita3) {
       // for each of these, need to set 
       // loctrig, l2trig
 
@@ -491,7 +491,7 @@ void  icemc::GlobalTrigger::PassesTriggerBasic(const Settings *settings1,Anita *
 	
     }
     // ANITA-4
-    else if (settings1->WHICH==10 && !(settings1->LCPRCP)) {
+    else if (settings1->WHICH==Payload::Anita4 && !(settings1->LCPRCP)) {
 
       std::array<std::array<std::vector<int>,16>,2> vl1trig;
 	
@@ -530,7 +530,7 @@ void  icemc::GlobalTrigger::PassesTriggerBasic(const Settings *settings1,Anita *
       }
       
     }
-    else if (settings1->WHICH==10 && settings1->LCPRCP) {
+    else if (settings1->WHICH==Payload::Anita4 && settings1->LCPRCP) {
 
 
       // 	std::array<std::array<std::vector<int>,16>,2> vl1trig;
@@ -784,7 +784,7 @@ void  icemc::GlobalTrigger::PassesTriggerBasic(const Settings *settings1,Anita *
       }
       // only difference between these is whether they implement masking in both polarizations
       // can we simplify it
-      if (settings1->PHIMASKING && settings1->WHICH!=9) { // not for Anita3
+      if (settings1->PHIMASKING && settings1->WHICH!=Payload::Anita3) { // not for Anita3
 	// nadir antennas are aligned with the second physical layer of antennas
 	for (int iphi=0;iphi<anita1->NTRIGPHISECTORS;iphi++) { // loop over phi sectors
 	  if ((1<<iphi) & phiTrigMask[0]) { // if this phi sector is masked
@@ -796,7 +796,7 @@ void  icemc::GlobalTrigger::PassesTriggerBasic(const Settings *settings1,Anita *
 	    } // end loop over polarizations
 	  } // if this phi sector is masked
 	}
-      } else if (settings1->PHIMASKING && settings1->WHICH==9) { // only for Anita3
+      } else if (settings1->PHIMASKING && settings1->WHICH==Payload::Anita3) { // only for Anita3
 	// nadir antennas are aligned with the second physical layer of antennas
 	for (int iphi=0;iphi<anita1->NTRIGPHISECTORS;iphi++) { // loop over phi sectors
 
@@ -1463,7 +1463,9 @@ int icemc::GlobalTrigger::GetPhiSector(const Settings *settings1,int i,int j) { 
 void icemc::GlobalTrigger::GetAnitaLayerPhiSector(const Settings *settings1,int i,int j,int &whichlayer,int &whichphisector) {
     
     
-  if (settings1->WHICH==6 || settings1->WHICH==2 || settings1->WHICH==8) {// If Anita 1 or Anita 2
+  if (settings1->WHICH==Payload::Anita1 ||
+      settings1->WHICH==Payload::Anita1Simple ||
+      settings1->WHICH==Payload::Anita2) {// If Anita 1 or Anita 2
     if (i==0) {
       whichlayer=0;
       whichphisector=2*j+1;
@@ -1481,7 +1483,8 @@ void icemc::GlobalTrigger::GetAnitaLayerPhiSector(const Settings *settings1,int 
       whichphisector=2*j+1;
     }
   } // end anita 1 or anita 2
-  else if (settings1->WHICH==9 || settings1->WHICH==10) { // anita 3 or anita 4
+  else if (settings1->WHICH==Payload::Anita3 ||
+	   settings1->WHICH==Payload::Anita4) { // anita 3 or anita 4
     if (i==0) {
       whichlayer=0;
       whichphisector=2*j;
@@ -1590,7 +1593,9 @@ void icemc::GlobalTrigger::L3Trigger(const Settings *settings1,Anita *anita1,int
     
     // anita 1, anita 1 kurt, anita 2 kurt, anita 3
     // but this is inside a set of brackets for !anita3 
-    if (settings1->WHICH==2 || settings1->WHICH==6 || settings1->WHICH==8) { // Anita 1, 2
+    if (settings1->WHICH==Payload::Anita1Simple ||
+	settings1->WHICH==Payload::Anita1 ||
+	settings1->WHICH==Payload::Anita2) { // Anita 1, 2
 				
       for (int ipolar=0;ipolar<2;ipolar++) {
 	if (((settings1->DISCONES==2) && (loctrig[ipolar][1][i]>0 && loctrig[ipolar][2][i]>0)) || // second layer and nadir?

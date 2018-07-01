@@ -522,7 +522,14 @@ bool icemc::Seavey::freqAllowedByPassBands(double freqHz) const {
 
 
 
-icemc::Seavey::Seavey(const Settings* settings, double refractiveIndexOfMedium) : // remove include if you move this
+icemc::Seavey::Seavey(const Vector& positionV, const Vector& positionH,
+		      const Vector& ePlane, const Vector& hPlane, const Vector& normal,
+		      const Settings* settings, double refractiveIndexOfMedium) : // remove include if you move this
+  fPositionV(positionV),
+  fPositionH(positionH),
+  fEPlane(ePlane),
+  fHPlane(hPlane),
+  fNormal(normal),
   fRefractiveIndex(refractiveIndexOfMedium)
 {
   if(settings){
@@ -589,13 +596,13 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
   double e_component_kvector = 0;
   double h_component_kvector = 0;
   double n_component_kvector = 0;
-  icemc::Seavey::GetEcompHcompkvector(fEPlane,  fHPlane,  fNormal, s.poynting,
+  icemc::Seavey::GetEcompHcompkvector(fEPlane.global,  fHPlane.global,  fNormal.global, s.poynting,
 				      e_component_kvector, h_component_kvector, n_component_kvector);
 
   double e_component = 0;
   double h_component = 0;
   double n_component = 0;
-  icemc::Seavey::GetEcompHcompEvector(fEPlane, fHPlane, s.polarization, e_component, h_component, n_component);
+  icemc::Seavey::GetEcompHcompEvector(fEPlane.global, fHPlane.global, s.polarization, e_component, h_component, n_component);
 
   double hitangle_e = 0;
   double hitangle_h = 0;
@@ -706,7 +713,6 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
       // 		<< e_component << "\t" << h_component << "\t"
       // 		<< hitangle_e << "\t" << "\n";
       // }
-      
 
       c *= totalGainFactorH;
     }
@@ -717,8 +723,6 @@ void icemc::Seavey::addSignal(const icemc::PropagatingSignal& s) {
     freqHz += df_Hz;
   }
 
-
-  
   /**
    * @todo In order to make SCREEN stuff work, make this additive rather than just the most recent
    * This will require doing some addition of the waveform. And FTPair doesn't do a simple +=.
@@ -824,3 +828,51 @@ void icemc::Seavey::GetHitAngles(double e_component_kvector, double h_component_
 #endif
 
 }
+
+
+void icemc::Seavey::updatePosition(const Position& position, double heading, double pitch, double roll){
+
+  std::vector<VectorPair*> forRotation {&fPositionV, &fPositionH, &fEPlane,  &fHPlane,  &fNormal};
+
+  for(auto& vp : forRotation){
+
+    const double BalloonTheta = position.Theta();
+    double BalloonPhi = position.Phi();
+  
+    if(BalloonPhi > constants::PI){
+      BalloonPhi = BalloonPhi - constants::TWOPI;
+    }
+
+    vp->global = vp->payload;
+
+    const Vector zaxis(0.,0.,-1.);
+    Vector xaxis(1.,0.,0.);  // roll axis
+    Vector yaxis(0.,-1.,0.); // pitch axis for positive rotation to the clockwise of roll
+
+    // do heading...
+    vp->global = vp->global.Rotate(heading*constants::RADDEG,zaxis);
+    xaxis = xaxis.Rotate(heading*constants::RADDEG,zaxis);
+    yaxis = yaxis.Rotate(heading*constants::RADDEG,zaxis);
+
+    // do pitch...
+    vp->global = vp->global.Rotate(pitch*constants::RADDEG,yaxis);
+    xaxis = xaxis.Rotate(pitch*constants::RADDEG,yaxis);
+
+    // do roll...
+    vp->global = vp->global.Rotate(roll*constants::RADDEG,xaxis);//roll and pitch
+
+    ////now place balloon at proper lat and lon
+    // BalloonPhi =latitude*constants::RADDEG;
+    vp->global = vp->global.RotateY(BalloonTheta);
+    vp->global = vp->global.RotateZ(BalloonPhi);    
+  }
+  
+  // finally translate to payload position
+  std::vector<VectorPair*> forTranslation {&fPositionV, &fPositionH};  
+  for(auto& vp : forTranslation){
+    vp->global += position;
+  }  
+}
+
+
+

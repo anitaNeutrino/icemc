@@ -313,8 +313,17 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
   ///@todo remove hardcoding here!
   double TIMESTEP=(1./2.6)*1.E-9; // time step between samples
 
-  for(int rx = 0; rx < d->getNumRX(); rx++){
-    for (int jpt=0; jpt<GetNvalidPoints(); jpt++){
+  const Position& detPos = d->getCenterOfDetector(inu);
+  double firstDelay = 0;
+
+  for (int jpt=0; jpt<GetNvalidPoints(); jpt++){
+    const Position& rfExit = GetImpactPt(jpt);
+    const double nominalTimeOfFlightSeconds = (detPos - rfExit).Mag()/constants::CLIGHT;
+
+    for(int rx = 0; rx < d->getNumRX(); rx++){
+      Vector rxPos = d->getPositionRX(rx);
+      const double rxTimeOfFlightSeconds = (rxPos - rfExit).Mag()/constants::CLIGHT;
+
       ///@todo remove hardcoded number of frequencies!
       for (int k=0;k<Anita::NFREQ;k++) {
 
@@ -345,8 +354,18 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
       }
 
       FTPair signal(tmp_vhz, df, true);
+
+      double relativeDelaySeconds = rxTimeOfFlightSeconds - nominalTimeOfFlightSeconds;
+      if(rx==0){
+	firstDelay = relativeDelaySeconds;
+      }
+      relativeDelaySeconds -= firstDelay;
+      if(inu==522){
+	std::cout << rx << "\t" << relativeDelaySeconds << std::endl;
+      }
+      
       //@todo set up delay to antennas
-      // signal.applyConstantGroupDelay(GetDelay(jpt));
+      // signal.applyConstantGroupDelay(relativeDelaySeconds + 20e-9, false);
 
       // TGraph& gr = signal.changeTimeDomain();
       // // add a point to force  up to next power of 2...

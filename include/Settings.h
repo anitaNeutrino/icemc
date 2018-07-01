@@ -10,6 +10,7 @@
 
 #include "TString.h"
 #include <TObject.h>
+#include "balloon.hh"
 #include <map>
 
 // from RVersion.h
@@ -25,6 +26,24 @@
 class TNamed;
 
 namespace icemc{
+
+
+
+  enum class Payload : int
+    {
+     AnitaLite    = 0,
+     Ross         = 1,
+     Anita1Simple = 2,
+     Custom       = 3,
+     AntHill      = 4,
+     SLAC         = 5, //?
+     Anita1       = 6,
+     EeVEX        = 7,
+     Anita2       = 8,
+     Anita3       = 9,
+     Anita4       = 10,
+     Satellite    = 11
+  };
   
   class Secondaries;
   class AskaryanFreqsGenerator;
@@ -67,7 +86,7 @@ namespace icemc{
     double RANDOMISEPOL; ///< Randomize the polarity?
     
     int UNBIASED_SELECTION;
-    int WHICH; // which payload to use 0=Anita-lite,1=Ross,2=Smex,3=make your own
+    Payload WHICH; // which payload to use 0=Anita-lite,1=Ross,2=Smex,3=make your own
     int ANITAVERSION;
     int CYLINDRICALSYMMETRY; // is it cylindrically symmetric =1 if which=1,2, =0 if which=0
     // if which=3 then 0 or 1
@@ -102,7 +121,7 @@ namespace icemc{
     int trigEffScanPhi;                      // central phi sector of trigger efficiency scan
 
   
-    int WHICHPATH;
+    FlightPath WHICHPATH;
     int BN_LATITUDE;
     int BN_LONGITUDE;
     int BN_ALTITUDE;
@@ -304,4 +323,17 @@ namespace icemc{
 
   };
 }
+
+/** 
+ * For a nice cout/cerr/logging experience
+ * 
+ * @param os is a output string stream
+ * @param which is the Payload class enum
+ * 
+ * @return the updated output string stream
+ */
+std::ostream& operator<<(std::ostream& os, const icemc::Payload& which);
+
+
+
 #endif
