@@ -1218,9 +1218,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   }
 
   // input parameters
-  settings1.ApplyInputs(fDetector,  &sec1,  &askFreqGen,  &rayTracer);
+  settings1.ApplyInputs(fDetector,  &sec1,  &askFreqGen);
   // fDetector->InitializeBalloon();
-  fDetector->Initialize(&settings1, icemcLog().foutput, 0, clOpts.outputdir);
+  // fDetector->Initialize(&settings1, icemcLog().foutput, 0, clOpts.outputdir);
   askFreqGen.Initialize();
 
   NNU = settings1.NNU;

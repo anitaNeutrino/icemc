@@ -37,8 +37,6 @@ namespace icemc {
 
   private:
 
-    std::string stemp;
-
     double GaintoHeight(double gain,double freq,double nmedium_receiver);
     TGraph *gshort[4];
     void setTrigRequirement(int WHICH);
@@ -46,9 +44,10 @@ namespace icemc {
   public:
 
 
-    Anita(); // constructor
+    ///@todo find a way to remove the balloon from this constructor!
+    Anita(const Settings* settings, const char* outputdir, const Balloon* bn1); // constructor
     virtual ~Anita();
-    void Initialize(const Settings *settings1,ofstream &foutput,int inu, TString outputdir); ///< initialize a bunch of stuff
+    void Initialize(const Settings *settings1, ofstream &foutput, TString outputdir); ///< initialize a bunch of stuff
     void initializeFixedPowerThresholds(ofstream &foutput);
     void readVariableThresholds(const Settings *settings1);
     void readAmplification();
@@ -583,7 +582,7 @@ namespace icemc {
     vector <double> cwst_power_of_summed_wfm;
     double cwst_power;
     void fill_coherent_waveform_sum_tree(unsigned inu, unsigned center_phi_sector, const Settings* settings1, double rms_noise, double actual_rms, unsigned window_start, unsigned window_end, double deg_theta, double deg_phi, double actual_deg_theta, double actual_deg_phi, vector <double>& summed_wfm, vector <double>& power_of_summed_wfm, double power);
-    void GetPayload(const Settings*, Balloon*);
+    void GetPayload(const Settings*, const Balloon*);
     double VNOISE_ANITALITE[NPHI_MAX]; // noise for each antenna, for the anita-lite trigger configuration.
     double INCLINE_TOPTHREE; // cant angle of top three layers of antennas
     double INCLINE_NADIR; // cant angle of nadir (bottom) layer of antennas

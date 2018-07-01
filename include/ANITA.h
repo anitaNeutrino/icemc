@@ -18,7 +18,7 @@ namespace icemc {
    * @brief Implements the Detector virtual functions and combines the different aspects of the simulated ANITA payload into a single class.
    */
 
-  class ANITA : public Detector, public Anita, public Balloon {
+  class ANITA : public Detector, public Balloon, public Anita {
   public:
     ANITA(const Settings* settings, const RayTracer* sillyRay, const RootOutput* ro);
     virtual ~ANITA();

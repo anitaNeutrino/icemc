@@ -54,7 +54,7 @@ using std::cin;
 using std::endl;
 using std::vector;
 
-icemc::Anita::Anita() {
+icemc::Anita::Anita(const Settings* settings, const char* outputDir, const Balloon* bn1) {
 
   std::string stemp = "";
 
@@ -186,7 +186,13 @@ icemc::Anita::Anita() {
   coherent_waveform_sum_tree->Branch("power_of_summed_wfm", &cwst_power_of_summed_wfm);
   coherent_waveform_sum_tree->Branch("power", &cwst_power);
   // End of preparition for the coherent sum trigger's data tree
+
+  // Initialize(settings, icemcLog().foutput, settings->getOutputDir());
+  Initialize(settings, icemcLog().foutput, outputDir);
+  GetPayload(settings, bn1);
 }
+
+
 
 
 icemc::Anita::~Anita(){
@@ -260,11 +266,11 @@ void icemc::Anita::SetNoise(const Settings *settings1,Balloon *bn1,const Antarct
 	bwslice_vnoise[il][ibw]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,antarctica->SurfaceAboveGeoid(bn1->getLatitude(),bn1->getLongitude()),THETA_ZENITH[il],bwslice_max[ibw]-bwslice_min[ibw],0.);
       }
     }
-  }    
+  }
 }
 
 
-void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int thisInu, TString outputdir)
+void icemc::Anita::Initialize(const Settings *settings1, ofstream &foutput, TString outputdir)
 {
   tuffIndex=0; // keith edits
   count_getnoisewaveforms=0;
@@ -272,7 +278,7 @@ void icemc::Anita::Initialize(const Settings *settings1,ofstream &foutput,int th
   rms_rfcm[0]=rms_rfcm[1]=0.;
 
   NBANDS=4; // subbands (not counting full band)
-  inu=thisInu;
+  inu=0;
 
   PERCENTBW=10; // subbands (not counting full band)
 
@@ -2688,7 +2694,7 @@ void icemc::Anita::fill_coherent_waveform_sum_tree(unsigned event_number, unsign
 
 
 
-void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
+void icemc::Anita::GetPayload(const Settings* settings1, const Balloon* bn1){
   // anita-lite payload
   // see comments next to variable definitions
   double temp_eachrx[icemc::Anita::NPHI_MAX]; // temperature of each antenna (for the anita-lite configuration)
@@ -2872,8 +2878,8 @@ void icemc::Anita::GetPayload(const Settings* settings1, Balloon* bn1){
     cin >> maxthreshold;
   } //else if (custom payload)
 
-  else if (settings1->WHICH==Payload::AntHill) {// anita hill
-		
+  else if (settings1->WHICH==Payload::AnitaHill) {// anita hill
+
     //settings1->NFOLD=1; // how many channels must pass the trigger
     //maxthreshold=2.3;
 

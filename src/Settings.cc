@@ -46,8 +46,8 @@ std::ostream& operator<<(std::ostream& os, const icemc::Payload& which){
     return os << "Payload::Anita1Simple";
   case icemc::Payload::Custom:
     return os << "Payload::Custom";
-  case icemc::Payload::AntHill:
-    return os << "Payload::AntHill";
+  case icemc::Payload::AnitaHill:
+    return os << "Payload::AnitaHill";
   case icemc::Payload::SLAC:
     return os << "Payload::SLAC";
   case icemc::Payload::Anita1:
@@ -62,9 +62,9 @@ std::ostream& operator<<(std::ostream& os, const icemc::Payload& which){
     return os << "Payload::Anita4";
   case icemc::Payload::Satellite:
     return os << "Payload::Satellite";
+  default:
+    return os << "Unknown Payload";
   }
-
-
 }
 
 
@@ -983,8 +983,7 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   
 
 void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1,
-				  AskaryanFreqsGenerator* askFreqGen,
-				  RayTracer* ray1) const {
+				  AskaryanFreqsGenerator* askFreqGen) const {
   
    //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas. 
   if (WHICH==Payload::Anita1Simple || WHICH==Payload::Anita1 || WHICH==Payload::Anita2 || WHICH==Payload::Anita3 || WHICH==Payload::Anita4){
@@ -1211,7 +1210,7 @@ void icemc::Settings::setNrxPhiAndNantennasFromWhich(){
     std::cin >> NFOLD;
 
   } //else if (custom payload)
-  else if (WHICH==Payload::AntHill) {// anita hill
+  else if (WHICH==Payload::AnitaHill) {// anita hill
     if (NLAYERS!=2){
       std::cout << "Warning!!! Did not enter the right number of layers in the input file.  For Anita Hill, it's 2." << std::endl;
     }

@@ -35,13 +35,12 @@ int main(){
   std::ofstream outputsFile("/tmp/outputs.txt");
 
   icemc::Balloon *bn1 = new icemc::Balloon(&s); // instance of the balloon
-  icemc::Anita *anita1 = new icemc::Anita();// right now this constructor gets banding info
+  icemc::Anita *anita1 = new icemc::Anita(&s, "/tmp/", bn1);// right now this constructor gets banding info
   icemc::Secondaries *sec1 = new icemc::Secondaries();
   icemc::AskaryanFreqsGenerator *sig1 = new icemc::AskaryanFreqsGenerator();
-  icemc::RayTracer *ray1 = new icemc::RayTracer();
   // input parameters
   s.ReadInputs("inputs.anita3.conf",  outputsFile);
-  s.ApplyInputs(anita1,  sec1,  sig1,  ray1);
+  s.ApplyInputs(anita1,  sec1,  sig1);
 
 
 
@@ -73,7 +72,6 @@ int main(){
   s.getSetting(nonExistentKey, shouldBeEmpty);
   std::cout << std::endl;
 
-  delete ray1;
   delete sig1;
   delete sec1;
   delete anita1;

@@ -18,7 +18,7 @@
 
 
 icemc::ANITA::ANITA(const Settings* settings, const RayTracer* sillyRay, const RootOutput* ro)
-  : Balloon(settings),
+  : Balloon(settings), Anita(settings, ro->getOutputDir(), this),
     fSettings(settings), fRayPtrIDontOwn(sillyRay),
     fNumRX(settings ? settings->NANTENNAS : 48),
     fVoltsRX(settings ? settings->NANTENNAS : 0),
@@ -92,7 +92,10 @@ void icemc::ANITA::initSeaveys(const Settings *settings1, const Anita *anita1) {
     Vector n_hplane;
     Vector n_normal;
     
-    if(settings1->WHICH==Payload::Anita1 || settings1->WHICH==Payload::Anita2 || settings1->WHICH==Payload::Anita3) {
+    if(settings1->WHICH==Payload::Anita1 ||
+       settings1->WHICH==Payload::Anita2 ||
+       settings1->WHICH==Payload::Anita3 ||
+       settings1->WHICH==Payload::Anita4) { /// @todo presumably this is also correct for ANITA-4
       n_eplane = constants::const_z.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
       n_hplane = (-constants::const_y).RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
       n_normal = constants::const_x.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
