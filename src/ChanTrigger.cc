@@ -94,14 +94,18 @@ void icemc::ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
 }
 
 
-void icemc::ChanTrigger::WhichBandsPass(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){    
+void icemc::ChanTrigger::WhichBandsPass(const Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double thresholds[2][5]){
 
   if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==Payload::Anita3) {
-    for(int i=0;i<4;i++) thresholds[0][i] = thresholds[1][i] = anita1->powerthreshold[i];
+    for(int i=0;i<4;i++) {
+      thresholds[0][i] = thresholds[1][i] = anita1->powerthreshold[i];
+    }
     int iring = (ilayer<2)*0 + (ilayer==2)*1 + (ilayer==3)*2;
     int iphi = ifold;
     if (ilayer==0) iphi = ifold*2;
-    else if (ilayer==1) iphi = ifold*2+1;
+    else if (ilayer==1) {
+      iphi = ifold*2+1;
+    }
     // we invert VPOL and HPOL because in AnitaEventReader (0:HPOL 1:VPOL) and in icemc (0:VPOL 1:HPOL)
     // convert scalers to power thresholds using fitted function got from ANITA-1, are they too old?
     // thresholds[1][4] = ADCCountstoPowerThreshold(anita1,0,iring*16+iphi)*(-1.);
@@ -113,7 +117,8 @@ void icemc::ChanTrigger::WhichBandsPass(const Settings *settings1, Anita *anita1
     thresholds[1][4] = anita1->fakeThresholds2[1][iring*16+iphi]*(-1.);
 
     //    cout << thresholds[0][4] << " " <<  thresholds[0][4] << " \n";
-  } else {
+  }
+  else {
     GetThresholds(settings1,anita1,ilayer,thresholds); // get the right thresholds for this layer
   }
   globaltrig1->volts[0][ilayer][ifold]=0.;
@@ -367,7 +372,7 @@ void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita
 	  justNoise_trigPath[1][itime] = anita1->timedomainnoise_rfcm_banding[1][iband][itimenoisebin];
 	  v_banding_rfcm_forfft[0][iband][itime]=v_banding_rfcm_forfft[0][iband][itime]+anita1->timedomainnoise_rfcm_banding[0][iband][itimenoisebin];
   	  v_banding_rfcm_forfft[1][iband][itime]=v_banding_rfcm_forfft[1][iband][itime]+anita1->timedomainnoise_rfcm_banding[1][iband][itimenoisebin];
-  	  }
+	}
       }
       for (int itime=anita1->NFOUR/2-(int)(anita1->maxt_diode/anita1->TIMESTEP);itime<anita1->NFOUR/2;itime++) {
   	anita1->total_vpol_inanita[iband][itime]=0.;
@@ -426,7 +431,7 @@ void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita
     anita1->total_diodeinput_1_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][itime]=anita1->total_diodeinput_1_inanita[4][itime];
     anita1->total_diodeinput_2_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][itime]=anita1->total_diodeinput_2_inanita[4][itime];
   }
-
+  
   DiodeConvolution(settings1, anita1, globaltrig1, ilayer, ifold, mindiodeconvl[0], onediodeconvl[0], psignal[0], timedomain_output[0], ibinshift, 0, thresholds);
   DiodeConvolution(settings1, anita1, globaltrig1, ilayer, ifold, mindiodeconvl[1], onediodeconvl[1], psignal[1], timedomain_output[1], ibinshift, 1, thresholds);
 
@@ -441,47 +446,48 @@ void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita
   L1Trigger(anita1,timedomain_output[0],timedomain_output[1],thresholds, //inputs
 	    globaltrig1->channels_passing[ilayer][ifold][0],globaltrig1->channels_passing[ilayer][ifold][1],npass); //outputs
 
+  
   //if (npass==1) std::cout << "L1 trigger " << ilayer << " " << ifold << " " << npass << std::endl;
 
   // if it's the closest antenna,
   // save flag_e,h in anita class for writing to tsignals tree
-  int startbin=TMath::MinElement(5,anita1->iminbin);
+  // int startbin=TMath::MinElement(5,anita1->iminbin);
       
-  if (ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
-    for (int iband=0;iband<5;iband++) {
-      if (anita1->bwslice_allowed[iband]!=1) continue; 
-      // cout << "zeroeing here 1.\n";
-      anita1->ston[iband]=0.;
-      for (int i=anita1->iminbin[iband];i<anita1->imaxbin[iband];i++) {
-	// 	    if (iband==0 && i==anita1->NFOUR/4) {
-	// 	      cout << "output is " << anita1->inu << "\t" << timedomain_output[0][iband][i] << "\n";
-	// 	    }
-	// cout << "output, bwslice_rmsdiode are " << timedomain_output[0][iband][i] << "\t" << anita1->bwslice_rmsdiode[iband] << "\n";
-	if (timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[iband]<anita1->ston[iband]) {
-	  anita1->ston[iband]=timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[iband];
-	  // if (iband==4 && anita1->ston[iband]<0.)
-	  // cout << "ston is " << anita1->ston[iband] << "\n";
-	}
-      }
+  // if (ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
+  //   for (int iband=0;iband<5;iband++) {
+  //     if (anita1->bwslice_allowed[iband]!=1) continue; 
+  //     // cout << "zeroeing here 1.\n";
+  //     anita1->ston[iband]=0.;
+  //     for (int i=anita1->iminbin[iband];i<anita1->imaxbin[iband];i++) {
+  // 	// 	    if (iband==0 && i==anita1->NFOUR/4) {
+  // 	// 	      cout << "output is " << anita1->inu << "\t" << timedomain_output[0][iband][i] << "\n";
+  // 	// 	    }
+  // 	// cout << "output, bwslice_rmsdiode are " << timedomain_output[0][iband][i] << "\t" << anita1->bwslice_rmsdiode[iband] << "\n";
+  // 	if (timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[iband]<anita1->ston[iband]) {
+  // 	  anita1->ston[iband]=timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[iband];
+  // 	  // if (iband==4 && anita1->ston[iband]<0.)
+  // 	  // cout << "ston is " << anita1->ston[iband] << "\n";
+  // 	}
+  //     }
 
 
-      for (int i=0;i<anita1->HALFNFOUR;i++) {
-	anita1->flag_e_inanita[iband][i]=0;
-	anita1->flag_h_inanita[iband][i]=0;
-	anita1->timedomain_output_inanita[0][iband][i]=timedomain_output[0][iband][i];
-	anita1->timedomain_output_inanita[1][iband][i]=timedomain_output[1][iband][i];
+  //     for (int i=0;i<anita1->HALFNFOUR;i++) {
+  // 	anita1->flag_e_inanita[iband][i]=0;
+  // 	anita1->flag_h_inanita[iband][i]=0;
+  // 	anita1->timedomain_output_inanita[0][iband][i]=timedomain_output[0][iband][i];
+  // 	anita1->timedomain_output_inanita[1][iband][i]=timedomain_output[1][iband][i];
 
-      }
-      for (int i=0;i<(int)flag_e[iband].size();i++) {
-	anita1->flag_e_inanita[iband][i+startbin]=flag_e[iband][i];
-      }
-      for (int i=0;i<(int)flag_h[iband].size();i++) {
-	anita1->flag_h_inanita[iband][i+startbin]=flag_h[iband][i];
+  //     }
+  //     for (int i=0;i<(int)flag_e[iband].size();i++) {
+  // 	anita1->flag_e_inanita[iband][i+startbin]=flag_e[iband][i];
+  //     }
+  //     for (int i=0;i<(int)flag_h[iband].size();i++) {
+  // 	anita1->flag_h_inanita[iband][i+startbin]=flag_h[iband][i];
 	    
-      }
-    }
+  //     }
+  //   }
 
-  }
+  // }
       
       
       
@@ -508,7 +514,8 @@ void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita
   if (npass>=anita1->trigRequirements[0]) {
     anita1->l1_passing=1;
     anita1->l1_passing_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)]=1;
-  } else {
+  }
+  else {
     anita1->l1_passing=0;
     anita1->l1_passing_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)]=0;
   }
@@ -516,9 +523,9 @@ void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita
       
   // anita1->irx=anita1->GetRx(ilayer,ifold);
       
-  if (Anita::GetLayer(anita1->rx_minarrivaltime)==ilayer && Anita::GetIfold(anita1->rx_minarrivaltime)==ifold && anita1->tsignals->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1) {
-    anita1->tsignals->Fill();
-  }
+  // if (Anita::GetLayer(anita1->rx_minarrivaltime)==ilayer && Anita::GetIfold(anita1->rx_minarrivaltime)==ifold && anita1->tsignals->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1) {
+  //   anita1->tsignals->Fill();
+  // }
       
       
   if (settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
@@ -622,9 +629,9 @@ void icemc::ChanTrigger::DiodeConvolution(const Settings *settings1, Anita *anit
     // now shift right to account for arrival times
     // this is done inside the impulse response function normally
     // but if we don't use it, we need to apply it manually here
-    if (!settings1->APPLYIMPULSERESPONSETRIGGER){
-      Tools::ShiftRight(timedomain_output[iband],anita1->NFOUR,(int)(anita1->arrival_times[ipol][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-    }
+    // if (!settings1->APPLYIMPULSERESPONSETRIGGER){
+    //   Tools::ShiftRight(timedomain_output[iband],anita1->NFOUR,(int)(anita1->arrival_times[ipol][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+    // }
 	
     if (settings1->TRIGGERSCHEME == 2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
       //      if (anita1->inu==1570)
@@ -739,7 +746,7 @@ void icemc::ChanTrigger::InitializeEachBand(Anita *anita1)
 
 
 
-void icemc::ChanTrigger::readInSeavey(const Settings* settings1, const Seavey* s, int ant, Anita* anita1, int inu){
+void icemc::ChanTrigger::readInSeavey(const Settings* settings1, const Seavey* s, int ant, Anita* anita1){
 
   const int band = 4;
   for(auto pol : {Seavey::Pol::V, Seavey::Pol::H}){
@@ -773,58 +780,6 @@ void icemc::ChanTrigger::readInSeavey(const Settings* settings1, const Seavey* s
   }
 
 
-  // devel debug stuff!
-  static bool firstTime = true;
-  static int lastAnt = -1;
-  static TFile* f = nullptr;
-  static std::vector<double> times;
-  if(times.size()==0){
-    const double dt = anita1->TIMESTEP;
-    times.reserve(Anita::HALFNFOUR);
-    for(int i=0; i < Anita::HALFNFOUR; i++){
-      times.push_back(i*dt);
-    }
-  }
-
-  if(firstTime && inu){
-    if(!f){
-      f = new TFile("newChanTrigger.root", "recreate");
-    }
-    f->cd();
-
-    TGraph gr0(times.size(), &times[0], volts_rx_forfft[0][band].data());
-    TGraph gr1(times.size(), &times[0], volts_rx_forfft[1][band].data());
-
-    TGraph gr2(Anita::NFREQ, &times[0], vhz_rx[0][band]);
-    TGraph gr3(Anita::NFREQ, &times[0], vhz_rx[1][band]);
-
-    // TGraph gr0(times.size(), &times[0], vhz_rx[0][band]);
-    // TGraph gr1(times.size(), &times[0], vhz_rx[1][band]);
-
-    gr0.SetName(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, band));
-    gr1.SetName(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, band));
-    gr0.SetTitle(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, band));
-    gr1.SetTitle(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, band));
-
-    gr2.SetName(TString::Format("gr_freq_pol0_ant%d_iband%d_aftergain", ant, band));
-    gr3.SetName(TString::Format("gr_freq_pol1_ant%d_iband%d_aftergain", ant, band));
-    gr2.SetTitle(TString::Format("gr_freq_pol0_ant%d_iband%d_aftergain", ant, band));
-    gr3.SetTitle(TString::Format("gr_freq_pol1_ant%d_iband%d_aftergain", ant, band));
-
-    gr0.Write();
-    gr1.Write();
-    gr2.Write();
-    gr3.Write();
-
-    lastAnt = ant;
-    if(lastAnt == 47){
-      f->Write();
-      f->Close();
-      f = nullptr;
-      firstTime = false;
-    }
-  }
-
 #ifdef ANITA_UTIL_EXISTS
   if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) ){
     getNoiseFromFlight(anita1, ant, settings1->SIGNAL_FLUCT > 0);
@@ -838,7 +793,7 @@ void icemc::ChanTrigger::readInSeavey(const Settings* settings1, const Seavey* s
 }
 
 
-void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, int inu) {
+void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal) {
 
   e_component=0;
   h_component=0;
@@ -880,8 +835,6 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 
       for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
 
-	bool debugInMakeArray = inu == 522 && ant==41;
-
 	Seavey::GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
 	// Seavey::GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
 	Seavey::GetEcompHcompEvector(n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
@@ -893,7 +846,7 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	    //Copy frequency amplitude to screen point
 	    tmp_vhz[0][k] = tmp_vhz[1][k] = panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)/sqrt(2)/(anita1->TIMESTEP*1.E6);
 
-	    anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k], debugInMakeArray);
+	    anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
 
 	    if (settings1->TUFFSON==2){
 	      tmp_vhz[0][k] = applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
@@ -906,8 +859,8 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 	  }
 	}
 	
-	anita1->MakeArrayforFFT(tmp_vhz[0], tmp_volts[0], 90., true, debugInMakeArray);
-	anita1->MakeArrayforFFT(tmp_vhz[1], tmp_volts[1], 90., true, debugInMakeArray);
+	anita1->MakeArrayforFFT(tmp_vhz[0], tmp_volts[0], 90., true);
+	anita1->MakeArrayforFFT(tmp_vhz[1], tmp_volts[1], 90., true);
 
 	// now v_banding_rfcm_h_forfft is in the time domain
 	// and now it is really in units of V
@@ -955,56 +908,6 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
       anita1->GetArrayFromFFT(tmp_volts[0], vhz_rx[0][iband]);
       anita1->GetArrayFromFFT(tmp_volts[1], vhz_rx[1][iband]);
 
-      // devel debug stuff!
-      static bool firstTime = true;	
-      static int lastAnt = -1;
-      static TFile* f = nullptr;
-      static std::vector<double> times;
-      if(times.size()==0){
-	const double dt = anita1->TIMESTEP;
-	times.reserve(Anita::HALFNFOUR);
-	for(int i=0; i < Anita::HALFNFOUR; i++){
-	  times.push_back(i*dt);
-	}
-      }
-
-      if(firstTime && inu==522){
-	if(!f){
-	  f = new TFile("oldChanTrigger.root", "recreate");
-	}
-	f->cd();
-	TGraph gr0(times.size(), &times[0], volts_rx_forfft[0][iband].data());
-	TGraph gr1(times.size(), &times[0], volts_rx_forfft[1][iband].data());
-
-	TGraph gr2(Anita::NFREQ, &times[0], vhz_rx[0][iband]);
-	TGraph gr3(Anita::NFREQ, &times[0], vhz_rx[1][iband]);
-	
-	// TGraph gr0(times.size(), &times[0], vhz_rx[0][iband]);
-	// TGraph gr1(times.size(), &times[0], vhz_rx[1][iband]);
-
-	gr0.SetName(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, iband));
-	gr1.SetName(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, iband));
-	gr0.SetTitle(TString::Format("gr_pol0_ant%d_iband%d_aftergain", ant, iband));
-	gr1.SetTitle(TString::Format("gr_pol1_ant%d_iband%d_aftergain", ant, iband));
-
-	gr2.SetName(TString::Format("gr_freq_pol0_ant%d_iband%d_aftergain", ant, iband));
-	gr3.SetName(TString::Format("gr_freq_pol1_ant%d_iband%d_aftergain", ant, iband));
-	gr2.SetTitle(TString::Format("gr_freq_pol0_ant%d_iband%d_aftergain", ant, iband));
-	gr3.SetTitle(TString::Format("gr_freq_pol1_ant%d_iband%d_aftergain", ant, iband));
-	
- 	gr0.Write();
-	gr1.Write();
- 	gr2.Write();
-	gr3.Write();
-
-	lastAnt = ant;
-	if(lastAnt == 47){
-	  f->Write();
-	  f->Close();
-	  f = nullptr;
-	  firstTime = false;
-	}
-      }
     }
   } // end loop over bands
 
@@ -1287,28 +1190,23 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
 
 
 // void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
-void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double* volts_rx_rfcm_lab_e_all, double* volts_rx_rfcm_lab_h_all, int inu)
+void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double* volts_rx_rfcm_lab_e_all, double* volts_rx_rfcm_lab_h_all)
 {
   // int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
   // now shift right to account for arrival times
   // this is done inside the impulse response function normally
   // if we don't use it, we need to do it here
-  if (!settings1->APPLYIMPULSERESPONSEDIGITIZER){
-    //  for (int i=0;i<48;i++) std::cout << "Arrival times " << anita1->arrival_times[0][anita1->GetRx(ilayer,ifold)] << std::endl;
-    Tools::ShiftRight(volts_rx_rfcm_lab[0],anita1->NFOUR/2, int(anita1->arrival_times[0][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-    Tools::ShiftRight(volts_rx_rfcm_lab[1],anita1->NFOUR/2, int(anita1->arrival_times[1][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
-  }
+  // if (!settings1->APPLYIMPULSERESPONSEDIGITIZER){
+  //   //  for (int i=0;i<48;i++) std::cout << "Arrival times " << anita1->arrival_times[0][anita1->GetRx(ilayer,ifold)] << std::endl;
+  //   Tools::ShiftRight(volts_rx_rfcm_lab[0],anita1->NFOUR/2, int(anita1->arrival_times[0][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+  //   Tools::ShiftRight(volts_rx_rfcm_lab[1],anita1->NFOUR/2, int(anita1->arrival_times[1][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+  // }
 
   const int rx = anita1->GetRx(ilayer, ifold);
   for (int i=0;i<anita1->NFOUR/2;i++) {
     volts_rx_rfcm_lab_e_all[i] = volts_rx_rfcm_lab[0][i];
     volts_rx_rfcm_lab_h_all[i] = volts_rx_rfcm_lab[1][i];
-  }
-
-  if(inu == 522){
-    std::cout << "Peak volts VPol! " << rx << "\t" << 1000*TMath::MaxElement(Anita::HALFNFOUR, volts_rx_rfcm_lab_e_all) << "\n";
-    // std::cout << "Peak volts HPol! " << rx << "\t" << 1000*TMath::MaxElement(Anita::HALFNFOUR, volts_rx_rfcm_lab_h_all[rx]) << "\n";
   }
   
   // now vmmhz_rx_rfcm_lab_e,h_forfft are the time domain waveforms after the antenna and lab attenuation
@@ -1522,14 +1420,14 @@ int icemc::ChanTrigger::IsItUnmasked(unsigned short surfTrigBandMask[9][2],int i
 
 
 void icemc::ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double powerthreshold[2][5],
-			    int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass) {
+				   int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass) {
    
   int maxsample=TMath::MaxElement(5,anita1->imaxbin);
   int minsample=TMath::MinElement(5,anita1->iminbin);
-    
+
   for (int j=0;j<5;j++) {
     flag_e[j].clear();
-    flag_h[j].clear();		
+    flag_h[j].clear();
       
     for (int i=minsample;i<maxsample;i++) {
       //      std::cout << anita1->inu << " " << timedomain_output_1[j][i] << " " << powerthreshold[0][j] << " " << anita1->bwslice_rmsdiode[j] << std::endl;
@@ -1537,15 +1435,16 @@ void icemc::ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][A
 	flag_e[j].push_back(1);
 	  
       }
-      else
+      else{
 	flag_e[j].push_back(0);
+      }
 	
-	
-      if (timedomain_output_2[j][i]<powerthreshold[1][j]*anita1->bwslice_rmsdiode[j] && anita1->bwslice_allowed[j]==1)
+      if (timedomain_output_2[j][i]<powerthreshold[1][j]*anita1->bwslice_rmsdiode[j] && anita1->bwslice_allowed[j]==1){
 	flag_h[j].push_back(1);
-      else
+      }
+      else{
 	flag_h[j].push_back(0);
-	
+      }	
     } // end loop over samples in window where we look for single channel trigger firing
   } // end loop over bands
     
@@ -1763,11 +1662,12 @@ void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1
     else          irx = 8 + ant/2;
   }
 
-  // Translate waveform according to arrival times
-  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx]*1e9 ) ;
+  // // Translate waveform according to arrival times
+  // TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx]*1e9 ) ;
   
   //Downsample again
-  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
+  // TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);  
   
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
@@ -1799,7 +1699,7 @@ void icemc::ChanTrigger::applyImpulseResponseDigitizer(const Settings *settings1
   
   // Cleaning up
   delete surfSignalDown;
-  delete surfTrans;
+  // delete surfTrans;
   delete surfSignal;
   delete graphUp;
   delete graph1;
@@ -1856,11 +1756,12 @@ void icemc::ChanTrigger::applyImpulseResponseTrigger(const Settings *settings1, 
     else          irx = 8 + ant/2;
   }
   
-  // Translate signal
-  TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx]*1e9 ) ;
+  // // Translate signal
+  // TGraph *surfTrans  = FFTtools::translateGraph(surfSignal, anita1->arrival_times[ipol][irx]*1e9 ) ;
   
   //Downsample again
-  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
+  // TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfTrans, 1/2.6);
+  TGraph *surfSignalDown = FFTtools::getInterpolatedGraph(surfSignal, 1/2.6);
 
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
@@ -1905,7 +1806,7 @@ void icemc::ChanTrigger::applyImpulseResponseTrigger(const Settings *settings1, 
   
   // Cleaning up
   delete surfSignalDown;
-  delete surfTrans;
+  // delete surfTrans;
   delete surfSignal;
   delete graphUp;
   delete graph1;

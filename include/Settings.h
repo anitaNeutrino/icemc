@@ -27,8 +27,6 @@ class TNamed;
 
 namespace icemc{
 
-
-
   enum class Payload : int
     {
      AnitaLite    = 0,

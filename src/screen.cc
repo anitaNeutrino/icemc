@@ -316,7 +316,6 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
 
   const Position& detPos = d->getCenterOfDetector(inu);
   double firstDelay = 0;
-  d->GetArrivalTimes(d->fRayPtrIDontOwn->n_exit2bn[2],d,settings1);
 
   for (int jpt=0; jpt<GetNvalidPoints(); jpt++){
     const Position& rfExit = GetImpactPt(jpt);
@@ -362,15 +361,6 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
 	firstDelay = relativeDelaySeconds;
       }
       relativeDelaySeconds -= firstDelay;
-      if(inu==522){
-	int ifold, ilayer;
-	d->getLayerFoldFromRX(rx, ilayer, ifold);
-	int rx2 = d->GetRx(ilayer,ifold);
-	double t = d->arrival_times[0][rx2] - d->arrival_times[0][0];
-	// const Vector& v = d->antenna_positions[0][rx2];
-	const double nsToS = 1e9;
-	std::cout << rx << "\t" << nsToS*relativeDelaySeconds << "\t" << nsToS*t << "\t" << nsToS*(relativeDelaySeconds - t) << "\t" << std::endl;
-      }
       
       //@todo set up delay to antennas
       // signal.applyConstantGroupDelay(relativeDelaySeconds + 20e-9, false);

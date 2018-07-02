@@ -17,9 +17,9 @@
 #include "TFile.h" ///@todo remove after done debugging
 
 
-icemc::ANITA::ANITA(const Settings* settings, const RayTracer* sillyRay, const RootOutput* ro)
+icemc::ANITA::ANITA(const Settings* settings, const RootOutput* ro)
   : Balloon(settings), Anita(settings, ro->getOutputDir(), this),
-    fSettings(settings), fRayPtrIDontOwn(sillyRay),
+    fSettings(settings),
     fNumRX(settings ? settings->NANTENNAS : 48),
     fVoltsRX(settings ? settings->NANTENNAS : 0),
     fAnitaOutput(this, settings, ro->getOutputDir(), ro->getRun())
@@ -226,51 +226,8 @@ bool icemc::ANITA::applyTrigger(int inu){
   int thispasses[Anita::NPOL]={0,0};
 
   auto globalTrigger = std::unique_ptr<GlobalTrigger>(new GlobalTrigger(fSettings, dynamic_cast<Anita*>(this)));
-  // make a global trigger object (but don't touch the electric fences)
-  // globaltrig1 = new GlobalTrigger(fSettings, anita1);
-  // globaltrig1 = new GlobalTrigger(fSettings, fDetector);
 
-  Tools::Zero(this->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-  Tools::Zero(this->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-  // if (!fSettings->TRIGGEREFFSCAN){
-  //   if(fSettings->BORESIGHTS){
-  //     this->GetArrivalTimesBoresights(fRayPtrIDontOwn->n_exit2bn_eachboresight[2]);
-  //   }
-  //   else{
-  //     this->GetArrivalTimes(fRayPtrIDontOwn->n_exit2bn[2],this,fSettings);
-  //   }
-  // }
-  // this->rx_minarrivaltime = Tools::WhichIsMin(this->arrival_times[0], fSettings->NANTENNAS);
-
- //  if(inu==522){
- //    for(int rx = 0; rx < fSeaveys.size(); rx++){
- //      int ifold, ilayer;
- //      getLayerFoldFromRX(rx, ilayer, ifold);
- //      int rx2 = GetRx(ilayer,ifold);
- //      std::cout << "Arrival times " << rx << "\t"
- // 		<< arrival_times[0][rx2] - arrival_times[0][0] << std::endl;//"\t"
- // 		// << arrival_times[1][rx] << std::endl;
-
-      
- //    }
- // }
-  //For verification plots - added by Stephen
-  double voltagearray[Anita::NLAYERS_MAX*Anita::NPHI_MAX] = {0}; //Records max voltages on each antenna for one neutrino
   int discones_passing = 0;  // number of discones that pass
-
-  // double max_antenna_volts0 = 0; //Voltage on the antenna with maximum signal,  top layer
-  // // double max_antenna_volts0_em = 0; //Component of voltage from em shower on the antenna with maximum signal,  top layer
-  // double max_antenna_volts1 = 0; //Voltage on the antenna with maximum signal,  middle layer
-  // double max_antenna_volts2 = 0; //Voltage on the antenna with maximum signal,  bottom layer
-
-  // double e_comp_max1=0;
-  // double h_comp_max1=0;
-  // double e_comp_max2=0;
-  // double h_comp_max2=0;
-  // double e_comp_max3=0;
-  // double h_comp_max3=0;
-
-  // double hitangle_e = 0; // angle the ray hits the antenna wrt e-plane
 
   // for comparing with peter
   double sumsignal[5]={0.};
@@ -291,46 +248,6 @@ bool icemc::ANITA::applyTrigger(int inu){
       justSignal_dig[pol][ant].resize(Anita::HALFNFOUR);
     }
   }
-  // double justNoise_trig[2][48][Anita::HALFNFOUR] = {{{0}}};
-  // double justSignal_trig[2][48][Anita::HALFNFOUR] = {{{0}}};
-  // double justNoise_dig[2][48][Anita::HALFNFOUR] = {{{0}}};
-  // double justSignal_dig[2][48][Anita::HALFNFOUR] = {{{0}}};
-  
-
-  // these variables are for energy reconstruction studies
-  double undogaintoheight_e=0;
-  double undogaintoheight_h=0;
-
-  double undogaintoheight_e_array[4];
-  double undogaintoheight_h_array[4];
-  double nbins_array[4];
-
-  double rec_efield=0;
-  double true_efield=0;
-
-  double rec_efield_array[4];
-  double true_efield_array[4];
-  // end energy reconstruction variables
-
-  int count_pass=0;  // how many total trigger channels pass (4 bandwidth slices*2 pol * nrx)
-
-
-  
-  undogaintoheight_e=0;
-  undogaintoheight_h=0;
-
-  for (int k=0;k<4;k++) {
-    undogaintoheight_e_array[k]=0.;
-    undogaintoheight_h_array[k]=0.;
-    nbins_array[k]=0;
-    true_efield_array[k]=0.;
-    rec_efield_array[k]=0.;
-  }
-
-  rec_efield=0;
-  true_efield=0;
-  
-
 
   // start looping over antennnas.
   // ilayer loops through vertical layers
@@ -347,13 +264,7 @@ bool icemc::ANITA::applyTrigger(int inu){
   }
   
   globalTrigger->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
-  this->rms_rfcm_e_single_event = 0;
 
-  double bwslice_vnoise_thislayer[4];// for filling tree6b,  noise for each bandwidth on each layer  
-  double rx0_signal_eachband[2][5];
-  double rx0_threshold_eachband[2][5];
-  double rx0_noise_eachband[2][5];
-  int rx0_passes_eachband[2][5];
   int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement
   int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement
   double thresholdsAnt[48][2][5] = {{{0}}};
@@ -365,8 +276,9 @@ bool icemc::ANITA::applyTrigger(int inu){
       ChanTrigger ct;
       ct.InitializeEachBand(this);
 
-      int antNum = this->GetRxTriggerNumbering(ilayer, ifold);
-      ct.readInSeavey(fSettings,  &fSeaveys.at(antNum), antNum, this, inu);
+      // int antNum = this->GetRxTriggerNumbering(ilayer, ifold);
+      int antNum = this->GetRx(ilayer, ifold);
+      ct.readInSeavey(fSettings,  &fSeaveys.at(antNum), antNum, this);
 
       // this->GetAntennaOrientation(fSettings,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
       // ct.ApplyAntennaGain(fSettings, this, fScreenPtrIDontOwn, antNum, n_eplane, n_hplane, n_normal, inu);
@@ -375,33 +287,12 @@ bool icemc::ANITA::applyTrigger(int inu){
       ct.DigitizerPath(fSettings, this, antNum, this);
       ct.TimeShiftAndSignalFluct(fSettings, this, ilayer, ifold,
 				 fVoltsRX.rfcm_lab_e_all.at(count_rx).data(),
-				 fVoltsRX.rfcm_lab_h_all.at(count_rx).data(), inu);
+				 fVoltsRX.rfcm_lab_h_all.at(count_rx).data());
       ct.saveTriggerWaveforms(&justSignal_trig[0][antNum][0], &justSignal_trig[1][antNum][0], &justNoise_trig[0][antNum][0], &justNoise_trig[1][antNum][0]);
       ct.saveDigitizerWaveforms(&justSignal_dig[0][antNum][0], &justSignal_dig[1][antNum][0], &justNoise_dig[0][antNum][0], &justNoise_dig[1][antNum][0]);
 
-      if(inu==522){
-	int j = TMath::LocMax(Anita::HALFNFOUR, fVoltsRX.rfcm_lab_e_all.at(count_rx).data());
-	std::cout << Anita::HALFNFOUR << "\t" << count_rx << "\t" << j << "\t" <<  1000*fVoltsRX.rfcm_lab_e_all[count_rx][j] << "\n";
-      }
-
       Tools::Zero(sumsignal, 5);
 
-      if (this->whichPath()==FlightPath::PeterEvent && ilayer==this->GetLayer(this->rx_minarrivaltime) && ifold==this->GetIfold(this->rx_minarrivaltime)) {
-	for (int ibw=0;ibw<5;ibw++) {
-	  std::cout << "Just after Taper,  sumsignal is " << sumsignal_aftertaper[ibw] << "\n";
-	  std::cout << "Just after antennagain,  sumsignal is " << sumsignal[ibw] << "\n";
-	}
-      }
-
-      // for energy reconstruction studies
-      if (count_rx==this->rx_minarrivaltime) {
-	undogaintoheight_e/=(double)Anita::NFREQ;
-	undogaintoheight_h/=(double)Anita::NFREQ;
-	for (int k=0;k<4;k++) {
-	  undogaintoheight_e_array[k]/=(double)nbins_array[k];
-	  undogaintoheight_h_array[k]/=(double)nbins_array[k];
-	}
-      }
       if (fSettings->SCALEDOWNLCPRX1){
 	globalTrigger->volts[0][ilayer][0] = globalTrigger->volts[0][ilayer][0]/sqrt(2.);
       }
@@ -421,58 +312,15 @@ bool icemc::ANITA::applyTrigger(int inu){
 	} //else
       } //if adding noise
       
-      if (count_rx==this->rx_minarrivaltime) {
-	rec_efield=sqrt(pow(globalTrigger->volts_original[0][ilayer][ifold]/(undogaintoheight_e*0.5), 2)+pow(globalTrigger->volts_original[1][ilayer][ifold]/(undogaintoheight_h*0.5), 2));
-	for (int ibw=0;ibw<4;ibw++) {
-	  rec_efield_array[ibw]=sqrt(pow(ct.bwslice_volts_pole[ibw]/(undogaintoheight_e_array[ibw]*0.5), 2)+pow(ct.bwslice_volts_polh[ibw]/(undogaintoheight_h_array[ibw]*0.5), 2));
-	  bwslice_vnoise_thislayer[ibw]=this->bwslice_vnoise[ilayer][ibw];// this is just for filling into a tree
-	} // end loop over bandwidth slices
-      } // end if this is the closest antenna
-
       ct.WhichBandsPass(fSettings, this, globalTrigger.get(), this, ilayer, ifold, thresholdsAnt[antNum]);
 	  
-      if (Anita::GetAntennaNumber(ilayer, ifold)==this->rx_minarrivaltime) {
-	for (int iband=0;iband<5;iband++) {
-	  for (int ipol=0;ipol<2;ipol++) {
-	    rx0_signal_eachband[ipol][iband] = ct.signal_eachband[ipol][iband];
-	    rx0_threshold_eachband[ipol][iband] = ct.threshold_eachband[ipol][iband];
-	    rx0_noise_eachband[ipol][iband] = ct.noise_eachband[ipol][iband];
-	    rx0_passes_eachband[ipol][iband] = ct.passes_eachband[ipol][iband];
-	  }
-	}
-      }
-
-      voltagearray[count_rx] = globalTrigger->volts[0][ilayer][ifold];
-      //End verification plot block
-
       count_rx++; // counting antennas that we loop through,  for indexing
-
-      // if (fSettings->TRIGTYPE==0 && ifold==1 && count_pass>=fSettings->NFOLD) { //added djg --line below fills "direct" voltage output file
-      // 	Log().al_voltages_direct<<"0 0 0"<<"   "<<"    "<<globalTrigger->volts_original[1][0][0]<<"    "<<(globalTrigger->volts_original[0][0][0]/sqrt(2.))<<"     "<<globalTrigger->volts_original[1][0][1]<<"     "<<globalTrigger->volts_original[0][0][1]<<"      "<<this->VNOISE[0]<<"     "<<this->VNOISE[0]<<"     "<<this->VNOISE[0]<<"     "<<this->VNOISE[0]<<"  "<<fNeutrinoPath->weight<<std::endl;
-      // }
     } //loop through the phi-fold antennas
   }  //loop through the layers of antennas
 
 
-  this->rms_rfcm_e_single_event = sqrt(this->rms_rfcm_e_single_event / (this->HALFNFOUR * fSettings->NANTENNAS));
-
-  // for (int irx=0;irx<fSettings->NANTENNAS;irx++) {
-  //   nchannels_perrx_triggered[irx]=globalTrigger->nchannels_perrx_triggered[irx];
-  // }
-
-  // nchannels_triggered = Tools::iSum(globalTrigger->nchannels_perrx_triggered, fSettings->NANTENNAS); // find total number of antennas that were triggered.
-
-  fVoltsRX.ave = GetAverageVoltageFromAntennasHit(fSettings, globalTrigger->nchannels_perrx_triggered, voltagearray, fVoltsRX.sum);
-
+  int count_pass = 0;
   globalTrigger->PassesTrigger(fSettings, this, discones_passing, 2, fL3trig, fL2trig, fL1trig, fSettings->antennaclump, loctrig, loctrig_nadironly, inu, thispasses);
-
-  // for (int i=0;i<2;i++) {
-  //   for (int j=0;j<16;j++) {
-  //     for (int k=0;k<this->HALFNFOUR;k++) {
-  // 	fCountPtrIDontOwn->nl1triggers[i][whichray]+=this->l1trig_anita3and4_inanita[i][j][k];
-  //     }
-  //   }
-  // }  
 
   ///////////////////////////////////////
   //       Require that it passes      //

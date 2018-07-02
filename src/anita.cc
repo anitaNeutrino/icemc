@@ -53,11 +53,11 @@ icemc::Anita::Anita(const Settings* settings, const char* outputDir, const Ballo
 
   std::string stemp = "";
 
-  for (int irx=0;irx<icemc::Anita::NLAYERS_MAX*icemc::Anita::NPHI_MAX;irx++) {
-    arrival_times[0][irx]=arrival_times[1][irx]=0.;
-  }
+  // for (int irx=0;irx<icemc::Anita::NLAYERS_MAX*icemc::Anita::NPHI_MAX;irx++) {
+  //   arrival_times[0][irx]=arrival_times[1][irx]=0.;
+  // }
   NCH_PASS=4;
-  rx_minarrivaltime=0.;
+  // rx_minarrivaltime=0.;
 
   Tools::Zero(VNOISE_ANITALITE,16);
   INCLINE_TOPTHREE = 10.; // cant angle of top three layers of antennas
@@ -453,7 +453,7 @@ void icemc::Anita::Initialize(const Settings *settings1, ofstream &foutput, TStr
   tdata->Branch("total_diodeinput_1_allantennas",&total_diodeinput_1_allantennas,"total_diodeinput_1_allantennas[48][512]/D"); // this is the waveform that is input to the tunnel diode in the first (LCP or vertical) polarization
   tdata->Branch("total_diodeinput_2_allantennas",&total_diodeinput_2_allantennas,"total_diodeinput_2_allantennas[48][512]/D"); // this is the waveform that is input to the tunnel diode in the first (LCP or vertical) polarization
   tdata->Branch("timedomain_output_allantennas",&timedomain_output_allantennas,"timedomain_output_allantennas[2][48][512]/D"); // this is the waveform that is output to the tunnel diode in the first (LCP or vertical) polarization
-  tdata->Branch("arrival_times",&arrival_times,"arrival_times[2][48]/D");
+  // tdata->Branch("arrival_times",&arrival_times,"arrival_times[2][48]/D");
   tdata->Branch("inu",&inu,"inu/I");
   tdata->Branch("powerthreshold",&powerthreshold,"powerthreshold[5]/D");
   tdata->Branch("bwslice_rmsdiode",&bwslice_rmsdiode,"bwslice_rmsdiode[5]/D");
@@ -2046,7 +2046,7 @@ double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) const
     // for this simple model just treat the cross pols the same with regard to effect of being hit off-axis
     // the absolute gain will of course be different for these
     // pol=(int)((double)gain_type/2.);
-		
+
     //    cout << "gain_type, k, flare, gain are " << gain_type << " " << k << " " << flare[gain_type][k] << " " << gain[pol][k] << "\n";
     //cout << "hitangle, flare, factor are " << hitangle << " " << flare[gain_type][k] << " " << exp(-1.*(hitangle*hitangle)/(2*flare[gain_type][k]*flare[gain_type][k])) << "\n";
     return exp(-1.*(hitangle*hitangle)/(2*thisFlareRads*thisFlareRads));
@@ -2408,7 +2408,7 @@ void icemc::Anita::GetNoiseWaveforms() {
       
       if (ipol==0){
 	sumtimedomain += timedomainnoise_lab[ipol][k] * timedomainnoise_lab[ipol][k];
-	rms_rfcm_e_single_event += timedomainnoise_rfcm[ipol][k] * timedomainnoise_rfcm[ipol][k];
+	// rms_rfcm_e_single_event += timedomainnoise_rfcm[ipol][k] * timedomainnoise_rfcm[ipol][k];
       }
       rms_rfcm[ipol] += timedomainnoise_rfcm[ipol][k] * timedomainnoise_rfcm[ipol][k] / ((double) NFOUR / 2);
       rms_lab[ipol]  += timedomainnoise_lab[ipol][k] * timedomainnoise_lab[ipol][k] / ((double) NFOUR / 2);
@@ -3848,198 +3848,198 @@ void icemc::Anita::calculate_single_offset(const unsigned center_phi_sector_inde
 }
 
 
-void icemc::Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, const Settings *settings1) {
-  //cout << "inside getarrivaltimes.\n";  
+// void icemc::Anita::GetArrivalTimes(const Vector& rf_direction,Balloon *bn1, const Settings *settings1) {
+//   //cout << "inside getarrivaltimes.\n";  
 
-  for (int ipol=0; ipol<2; ipol++){
+//   for (int ipol=0; ipol<2; ipol++){
 
-    for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
-      arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index].Dot(rf_direction)) / constants::CLIGHT;
+//     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
+//       arrival_times[ipol][antenna_index] = (antenna_positions[ipol][antenna_index].Dot(rf_direction)) / constants::CLIGHT;
 
-      //arrival_times[antenna_index] += extraCableDelays[0][antenna_index];
+//       //arrival_times[antenna_index] += extraCableDelays[0][antenna_index];
     
-      // cout << "index is " << antenna_index << "\n";
-      // cout << "antenna_positions are " << antenna_positions[antenna_index] << "\n";
-      // cout << "rf direction is " << rf_direction << "\n";
-      // cout << "arrival_times is " << arrival_times[antenna_index] << "\n";
-    } // for: loop over antenna layers
+//       // cout << "index is " << antenna_index << "\n";
+//       // cout << "antenna_positions are " << antenna_positions[antenna_index] << "\n";
+//       // cout << "rf direction is " << rf_direction << "\n";
+//       // cout << "arrival_times is " << arrival_times[antenna_index] << "\n";
+//     } // for: loop over antenna layers
     
-    if( settings1->WHICH==Payload::Anita2 ){//ANITA-II offboresight delay
+//     if( settings1->WHICH==Payload::Anita2 ){//ANITA-II offboresight delay
 
-      Vector rf_tmp_dir = bn1->unRotatePayload(-1*rf_direction);
+//       Vector rf_tmp_dir = bn1->unRotatePayload(-1*rf_direction);
 
-      double theta_deg =rf_tmp_dir.Theta() * constants::DEGRAD;//
+//       double theta_deg =rf_tmp_dir.Theta() * constants::DEGRAD;//
 
-      double phi_deg = rf_tmp_dir.Phi() *constants::DEGRAD;
-      double totalAngledeg;
-      double extra_delay;
+//       double phi_deg = rf_tmp_dir.Phi() *constants::DEGRAD;
+//       double totalAngledeg;
+//       double extra_delay;
      
-      double phi_eachlayer;
-      double theta_offset;
-      int ant_ctr=0;
+//       double phi_eachlayer;
+//       double theta_offset;
+//       int ant_ctr=0;
 
-      theta_offset = 10;//boresight_vector[ant_ctr].Theta()*constants::DEGRAD;
+//       theta_offset = 10;//boresight_vector[ant_ctr].Theta()*constants::DEGRAD;
        
-      theta_deg = theta_deg - 90;
+//       theta_deg = theta_deg - 90;
      
-      theta_deg = theta_deg - theta_offset;
-      for(int iii = 0; iii < 4; iii++){ 
-	for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++){
+//       theta_deg = theta_deg - theta_offset;
+//       for(int iii = 0; iii < 4; iii++){ 
+// 	for(int jjj = 0; jjj < NRX_PHI[iii]; jjj++){
 		   
-	  phi_deg = rf_tmp_dir.Phi();
+// 	  phi_deg = rf_tmp_dir.Phi();
       
-	  phi_eachlayer = atan2(ANTENNA_POSITION_START[ipol][iii][jjj][1],ANTENNA_POSITION_START[ipol][iii][jjj][0]);
+// 	  phi_eachlayer = atan2(ANTENNA_POSITION_START[ipol][iii][jjj][1],ANTENNA_POSITION_START[ipol][iii][jjj][0]);
        
-	  phi_deg = phi_deg- phi_eachlayer;
+// 	  phi_deg = phi_deg- phi_eachlayer;
 	 
-	  if(fabs(phi_deg) > fabs(phi_deg+2*constants::PI)) phi_deg+=2*constants::PI;
-	  if(fabs(phi_deg) > fabs(phi_deg-2*constants::PI)) phi_deg-=2*constants::PI;
-	  phi_deg = phi_deg*constants::DEGRAD;
-	  totalAngledeg = phi_deg*phi_deg + theta_deg*theta_deg;
-	  if(totalAngledeg > 2500) totalAngledeg=2500;
+// 	  if(fabs(phi_deg) > fabs(phi_deg+2*constants::PI)) phi_deg+=2*constants::PI;
+// 	  if(fabs(phi_deg) > fabs(phi_deg-2*constants::PI)) phi_deg-=2*constants::PI;
+// 	  phi_deg = phi_deg*constants::DEGRAD;
+// 	  totalAngledeg = phi_deg*phi_deg + theta_deg*theta_deg;
+// 	  if(totalAngledeg > 2500) totalAngledeg=2500;
 	 
-	  extra_delay  = (totalAngledeg*totalAngledeg)*1.45676e-8;//pulled from Abby analysis
-	  extra_delay -= (totalAngledeg)*5.01452e-6;//pulled from Abby analysis
+// 	  extra_delay  = (totalAngledeg*totalAngledeg)*1.45676e-8;//pulled from Abby analysis
+// 	  extra_delay -= (totalAngledeg)*5.01452e-6;//pulled from Abby analysis
 	
-	  arrival_times[ipol][ant_ctr]+=extra_delay*1E-9;
-	  ant_ctr++;
-	}
-      }
-    }
+// 	  arrival_times[ipol][ant_ctr]+=extra_delay*1E-9;
+// 	  ant_ctr++;
+// 	}
+//       }
+//     }
 
-  }
+//   }
   
-  //    double last_trigger_time=Tools::dMax(arrival_times,(number_all_antennas));
-  //cout << "last_trigger_time is " << last_trigger_time << "\n";
-  // double minV = TMath::Min(arrival_times[0],(number_all_antennas));
-  // double minH = TMath::Min(arrival_times[1],(number_all_antennas));
-  double minV = TMath::MinElement(number_all_antennas, arrival_times[0]);
-  double minH = TMath::MinElement(number_all_antennas, arrival_times[1]);
-  double first_trigger_time = TMath::Min(minV, minH);
-  for (int ipol=0; ipol<2; ipol++){
-    for (int i=0;i<(number_all_antennas);i++){
-      // cout << "antenna_positions is ";
-      //  antenna_positions[i].Print();
-      // cout << "diff is ";
-      // (antenna_positions[i]-one_antenna_position).Print();
+//   //    double last_trigger_time=Tools::dMax(arrival_times,(number_all_antennas));
+//   //cout << "last_trigger_time is " << last_trigger_time << "\n";
+//   // double minV = TMath::Min(arrival_times[0],(number_all_antennas));
+//   // double minH = TMath::Min(arrival_times[1],(number_all_antennas));
+//   double minV = TMath::MinElement(number_all_antennas, arrival_times[0]);
+//   double minH = TMath::MinElement(number_all_antennas, arrival_times[1]);
+//   double first_trigger_time = TMath::Min(minV, minH);
+//   for (int ipol=0; ipol<2; ipol++){
+//     for (int i=0;i<(number_all_antennas);i++){
+//       // cout << "antenna_positions is ";
+//       //  antenna_positions[i].Print();
+//       // cout << "diff is ";
+//       // (antenna_positions[i]-one_antenna_position).Print();
 
-      arrival_times[ipol][i] -= first_trigger_time;
-      // cout << "arrivaltimes is " << arrival_times[i] << "\n";
-      // arrival_times[i] -= last_trigger_time;
+//       arrival_times[ipol][i] -= first_trigger_time;
+//       // cout << "arrivaltimes is " << arrival_times[i] << "\n";
+//       // arrival_times[i] -= last_trigger_time;
 
-      // if (arrival_times[i] == 0){
-      // 	 first_phi_sector_hit = (int)((double)i/16.);
-      //        }
-    }
-  }
-  // cout << "end of GetArrivalTimes.\n";
-} // GetArrivalTimes
+//       // if (arrival_times[i] == 0){
+//       // 	 first_phi_sector_hit = (int)((double)i/16.);
+//       //        }
+//     }
+//   }
+//   // cout << "end of GetArrivalTimes.\n";
+// } // GetArrivalTimes
 
 
-void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX],Balloon *bn1, const Settings *settings1) {
+// void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX],Balloon *bn1, const Settings *settings1) {
 
-  for (int ipol=0; ipol<2; ipol++){
-    for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
-      int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
-      int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);      
-      arrival_times[ipol][antenna_index] = antenna_positions[ipol][antenna_index].Dot(rf_direction[ilayer][ifold]) / constants::CLIGHT;
+//   for (int ipol=0; ipol<2; ipol++){
+//     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
+//       int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
+//       int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);      
+//       arrival_times[ipol][antenna_index] = antenna_positions[ipol][antenna_index].Dot(rf_direction[ilayer][ifold]) / constants::CLIGHT;
 
-      // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
-      //      arrival_times[ipol][antenna_index] += extraCableDelays[ipol][antenna_index];
-      // cout << arrival_times[antenna_index] << endl;
+//       // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
+//       //      arrival_times[ipol][antenna_index] += extraCableDelays[ipol][antenna_index];
+//       // cout << arrival_times[antenna_index] << endl;
     
-      //  arrival_times[antenna_index]=0;
+//       //  arrival_times[antenna_index]=0;
       
 
-      if(settings1->WHICH==Payload::Anita2 ){//ANITA-II offboresight delay
+//       if(settings1->WHICH==Payload::Anita2 ){//ANITA-II offboresight delay
       
-	Vector rf_tmp_dir = bn1->unRotatePayload(-1*rf_direction[ilayer][ifold]);
+// 	Vector rf_tmp_dir = bn1->unRotatePayload(-1*rf_direction[ilayer][ifold]);
      
-	double theta_deg =rf_tmp_dir.Theta() * constants::DEGRAD;//
+// 	double theta_deg =rf_tmp_dir.Theta() * constants::DEGRAD;//
      
-	double phi_deg = rf_tmp_dir.Phi() *constants::DEGRAD;
-	double totalAngledeg;
-	double extra_delay;
+// 	double phi_deg = rf_tmp_dir.Phi() *constants::DEGRAD;
+// 	double totalAngledeg;
+// 	double extra_delay;
      
-	double phi_eachlayer;
-	double theta_offset;
-	int ant_ctr=0;
+// 	double phi_eachlayer;
+// 	double theta_offset;
+// 	int ant_ctr=0;
 
-	theta_offset = 10;//boresight_vector[ant_ctr].Theta()*constants::DEGRAD;
+// 	theta_offset = 10;//boresight_vector[ant_ctr].Theta()*constants::DEGRAD;
        
-	theta_deg = theta_deg -90;
+// 	theta_deg = theta_deg -90;
        
      
-	theta_deg = theta_deg - theta_offset;
+// 	theta_deg = theta_deg - theta_offset;
 		   
-	phi_deg = rf_tmp_dir.Phi();
+// 	phi_deg = rf_tmp_dir.Phi();
       
-	phi_eachlayer =atan2(ANTENNA_POSITION_START[ipol][ilayer][ifold][1],ANTENNA_POSITION_START[ipol][ilayer][ifold][0]);
+// 	phi_eachlayer =atan2(ANTENNA_POSITION_START[ipol][ilayer][ifold][1],ANTENNA_POSITION_START[ipol][ilayer][ifold][0]);
        
-	phi_deg =phi_deg- phi_eachlayer;
+// 	phi_deg =phi_deg- phi_eachlayer;
 	 
-	if(fabs(phi_deg) > fabs(phi_deg+2*constants::PI)) phi_deg+=2*constants::PI;
-	if(fabs(phi_deg) > fabs(phi_deg-2*constants::PI)) phi_deg-=2*constants::PI;
-	phi_deg =phi_deg*constants::DEGRAD;
-	totalAngledeg = phi_deg*phi_deg + theta_deg*theta_deg;
-	if(totalAngledeg > 2500) totalAngledeg=2500;
+// 	if(fabs(phi_deg) > fabs(phi_deg+2*constants::PI)) phi_deg+=2*constants::PI;
+// 	if(fabs(phi_deg) > fabs(phi_deg-2*constants::PI)) phi_deg-=2*constants::PI;
+// 	phi_deg =phi_deg*constants::DEGRAD;
+// 	totalAngledeg = phi_deg*phi_deg + theta_deg*theta_deg;
+// 	if(totalAngledeg > 2500) totalAngledeg=2500;
 	 
-	extra_delay  = (totalAngledeg*totalAngledeg)*1.45676e-8;//pulled from Abby analysis
-	extra_delay -= (totalAngledeg)*5.01452e-6;//pulled from Abby analysis
+// 	extra_delay  = (totalAngledeg*totalAngledeg)*1.45676e-8;//pulled from Abby analysis
+// 	extra_delay -= (totalAngledeg)*5.01452e-6;//pulled from Abby analysis
 	
-	arrival_times[ipol][ant_ctr]+=extra_delay*1E-9;
-	ant_ctr++;
+// 	arrival_times[ipol][ant_ctr]+=extra_delay*1E-9;
+// 	ant_ctr++;
       
-      }  
-    }
-  }
+//       }  
+//     }
+//   }
   
-  // double minV = TMath::Min(arrival_times[0],(number_all_antennas));
-  // double minH = TMath::Min(arrival_times[1],(number_all_antennas));
-  double minV = TMath::MinElement(number_all_antennas, arrival_times[0]);
-  double minH = TMath::MinElement(number_all_antennas, arrival_times[1]);
+//   // double minV = TMath::Min(arrival_times[0],(number_all_antennas));
+//   // double minH = TMath::Min(arrival_times[1],(number_all_antennas));
+//   double minV = TMath::MinElement(number_all_antennas, arrival_times[0]);
+//   double minH = TMath::MinElement(number_all_antennas, arrival_times[1]);
   
-  double first_trigger_time = TMath::Min(minV, minH);
-  for (int ipol=0; ipol<2; ipol++){
-    for (int i=0;i<(number_all_antennas);i++){
+//   double first_trigger_time = TMath::Min(minV, minH);
+//   for (int ipol=0; ipol<2; ipol++){
+//     for (int i=0;i<(number_all_antennas);i++){
       
-      arrival_times[ipol][i] -= first_trigger_time;
-      //cout<<"arrival_times boresight["<<i<<"] is "<<arrival_times[i]<<"\n";
-    }
-  }
-} // GetArrivalTimesBoresights
+//       arrival_times[ipol][i] -= first_trigger_time;
+//       //cout<<"arrival_times boresight["<<i<<"] is "<<arrival_times[i]<<"\n";
+//     }
+//   }
+// } // GetArrivalTimesBoresights
 
 
-void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]) {
+// void icemc::Anita::GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]) {
 
-  for (int ipol=0; ipol<2; ipol++){
-    for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
-      int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
-      int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
-      arrival_times[ipol][antenna_index] = antenna_positions[ipol][antenna_index].Dot(rf_direction[ilayer][ifold]) / constants::CLIGHT;
+//   for (int ipol=0; ipol<2; ipol++){
+//     for (int antenna_index = 0; antenna_index < (number_all_antennas); antenna_index++) { //loop over layers on the payload
+//       int ilayer = (antenna_index<8)*0 + (antenna_index>7)*(antenna_index<16)*1+ (antenna_index>15)*(antenna_index<32)*2+(antenna_index>31)*3;
+//       int ifold = (ilayer<2)*(antenna_index%8)+(ilayer>1)*(antenna_index%16);
+//       arrival_times[ipol][antenna_index] = antenna_positions[ipol][antenna_index].Dot(rf_direction[ilayer][ifold]) / constants::CLIGHT;
 
-      // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
-      //      arrival_times[ipol][antenna_index] += extraCableDelays[ipol][antenna_index];
-      // cout << arrival_times[antenna_index] << endl;
+//       // cout << antenna_index << " " << arrival_times[antenna_index] << " " << extraCableDelays[0][antenna_index] << " " ;
+//       //      arrival_times[ipol][antenna_index] += extraCableDelays[ipol][antenna_index];
+//       // cout << arrival_times[antenna_index] << endl;
     
-      //  arrival_times[antenna_index]=0;
-    } // for: loop over antenna layers
-  }
+//       //  arrival_times[antenna_index]=0;
+//     } // for: loop over antenna layers
+//   }
 
   
-  // double minV = TMath::Min(arrival_times[0],(number_all_antennas));
-  // double minH = TMath::Min(arrival_times[1],(number_all_antennas));
-  double minV = TMath::MinElement(number_all_antennas, arrival_times[0]);
-  double minH = TMath::MinElement(number_all_antennas, arrival_times[1]);
-  double first_trigger_time = TMath::Min(minV, minH);
-  for (int ipol=0; ipol<2; ipol++){
-    for (int i=0;i<(number_all_antennas);i++){
+//   // double minV = TMath::Min(arrival_times[0],(number_all_antennas));
+//   // double minH = TMath::Min(arrival_times[1],(number_all_antennas));
+//   double minV = TMath::MinElement(number_all_antennas, arrival_times[0]);
+//   double minH = TMath::MinElement(number_all_antennas, arrival_times[1]);
+//   double first_trigger_time = TMath::Min(minV, minH);
+//   for (int ipol=0; ipol<2; ipol++){
+//     for (int i=0;i<(number_all_antennas);i++){
       
-      arrival_times[ipol][i] = arrival_times[ipol][i] - first_trigger_time + additionalDt;
-      //cout<<"arrival_times boresight["<<i<<"] is "<<arrival_times[i]<<"\n";
-    }
-  }
-} // GetArrivalTimesBoresights
+//       arrival_times[ipol][i] = arrival_times[ipol][i] - first_trigger_time + additionalDt;
+//       //cout<<"arrival_times boresight["<<i<<"] is "<<arrival_times[i]<<"\n";
+//     }
+//   }
+// } // GetArrivalTimesBoresights
 
 
 
@@ -4583,20 +4583,28 @@ void icemc::Anita::calculateDelaysForEfficiencyScan(){
 
       irx = iant;
       if (iant<16) {
-	if (iant%2==0) irx = iant/2;
-	else          irx = 8 + iant/2;
+	if (iant%2==0){
+	  irx = iant/2;
+	}
+	else{
+          irx = 8 + iant/2;
+	}
       }
 
-      // Add phi sector delay
-      arrival_times[0][irx] += trigEffScanPhiDelay[phiIndex+2];
+      std::cerr << "arrival_times was deleted you need to reimplement calculateDelaysForEfficiencyScan!!!" << std::endl;
 
-      // Check if we are adding the ring delay to this phi sector
-      if (trigEffScanApplyRingDelay[phiIndex+2]>0){
-	// Add ring delay (T-M, M-B, T-B)
-	if (iant<16)       arrival_times[0][irx] += trigEffScanRingDelay[0] + trigEffScanRingDelay[2];
-	else if (iant<32)  arrival_times[0][irx] += trigEffScanRingDelay[1];
+      // // Add phi sector delay
+      // arrival_times[0][irx] += trigEffScanPhiDelay[phiIndex+2];
+
+      // // Check if we are adding the ring delay to this phi sector
+      // if (trigEffScanApplyRingDelay[phiIndex+2]>0){
+      // 	// Add ring delay (T-M, M-B, T-B)
+      // 	if (iant<16)       arrival_times[0][irx] += trigEffScanRingDelay[0] + trigEffScanRingDelay[2];
+      // 	else if (iant<32)  arrival_times[0][irx] += trigEffScanRingDelay[1];
       
-      }
+      // }
+
+      
     }
     
   }

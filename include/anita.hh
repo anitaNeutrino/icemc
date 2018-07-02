@@ -262,8 +262,6 @@ namespace icemc {
     double vmmhz_banding[NFREQ];                                                                                ///< V/m/MHz after banding
     double vmmhz_banding_rfcm[NFREQ];                                                                           ///< V/m/MHz after banding and rfcms
 
-    double rms_rfcm_e_single_event;                                                                             ///< This is in Volts, not mV!
-
     // Note: The following 4 RMS noise variables are for all antennas of all events.
     // In fact, they don't represent RMS until after all events are finished!
     double rms_rfcm[2];                                                                                         ///< rms noise just after rfcm's
@@ -367,13 +365,13 @@ namespace icemc {
 
     void myconvlv(double *timedomain_forconvl,const int NFOUR,double *fdiode,double &maxdiodeconvl,double &onediodeconvl,double *power_noise,double *diodeconv);
 
-    void GetArrivalTimes(const Vector& rf_direction,Balloon *bn1,const Settings *settings1);
-    void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]);
+    // void GetArrivalTimes(const Vector& rf_direction,Balloon *bn1,const Settings *settings1);
+    // void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]);
 
-    void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX],Balloon *bn1, const Settings *settings1);
+    // void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX],Balloon *bn1, const Settings *settings1);
 
-    int rx_minarrivaltime;
-    double arrival_times[2][NLAYERS_MAX*NPHI_MAX];
+    // int rx_minarrivaltime;
+    // double arrival_times[2][NLAYERS_MAX*NPHI_MAX];
     static int SurfChanneltoBand(int isurf);
     int AntennaWaveformtoSurf(int ilayer,int ifold) const; // find surf that generates this antenna's waveform
     static int AntennaNumbertoSurfNumber(int ilayer,int ifold); // find surf where this antenna is triggered

@@ -68,7 +68,7 @@ namespace icemc {
 
     
     // void readInSeavey(const Seavey* s);
-    void readInSeavey(const Settings* settings1, const Seavey* s, int ant, Anita* anita1, int inu = -1);
+    void readInSeavey(const Settings* settings1, const Seavey* s, int ant, Anita* anita1);
   
     //! Initialize trigger bands
     /**
@@ -95,7 +95,7 @@ namespace icemc {
      * @param  n_hplane :: Vector 
      * @param  n_normal :: Vector
      */  
-    void ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal, int inu = -1);
+    void ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal);
 
     //! Apply trigger path
     /**
@@ -137,7 +137,7 @@ namespace icemc {
      */ 
     // void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
     // void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][Anita::HALFNFOUR], double volts_rx_rfcm_lab_h_all[48][Anita::HALFNFOUR], int inu);
-    void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double* volts_rx_rfcm_lab_e_all, double* volts_rx_rfcm_lab_h_all, int inu);
+    void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double* volts_rx_rfcm_lab_e_all, double* volts_rx_rfcm_lab_h_all);
   
     //!  Convert E and H to left and right e field
     /**
@@ -188,7 +188,7 @@ namespace icemc {
      *  @param channels_passing_h_forglob :: double* - array of channels passing the L1 trigger for h (used in the GlobalTrigger class)
      *  @param npass :: &int - number of bands passing the L1 trigger
      */
-    void L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double powerthreshold[2][5],int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass);    
+    void L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::NFOUR],double timedomain_output_2[5][Anita::NFOUR],double powerthreshold[2][5],int *channels_passing_e_forglob,int *channels_passing_h_forglob,int &npass);
 
 
     //!	Returns the thisrate variable value (in MHz)

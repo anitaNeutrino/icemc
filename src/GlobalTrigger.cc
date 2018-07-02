@@ -238,7 +238,6 @@ void icemc::GlobalTrigger::PassesTrigger(const Settings *settings1,Anita *anita1
   if (settings1->TRIGGERSCHEME < 3) {
 
     // Basic trigger refers to  frequency domain voltage (0) frequency domain energy (1) timedomain diode integration (2) 
-
     PassesTriggerBasic(settings1, anita1, discones_passing, mode, l3trig, l2trig, l1trig, antennaclump, loctrig, loctrig_nadironly, thispasses, inu);
 
   }
@@ -273,13 +272,12 @@ void  icemc::GlobalTrigger::PassesTriggerBasic(const Settings *settings1,Anita *
   //  int thispasses[2]={0,0};
   int required_bands_failed[2]={0,0}; // keep track of whether bands that were required to pass did not, for each polarization
 
-    
   // this is an array with 1=pass and 0=fail for each channel
   // the first two layers on the payload are "compacted"
   // into one trigger layer of 16 antennas.
   // layer number, antenna, polarization, bandwidth slice
   int channels_compacted_passing[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2][5] = {{{{0}}}};
-    
+
   for (int k=0;k<Anita::NPOL;k++) {
     l3trig[k]=0;
     Tools::Zero(l1trig[k],Anita::NTRIGGERLAYERS_MAX);
@@ -317,9 +315,7 @@ void  icemc::GlobalTrigger::PassesTriggerBasic(const Settings *settings1,Anita *
 	  if (!anita1->bwslice_allowed[iband]) continue;
 	  
 	  GetAnitaLayerPhiSector(settings1,ilayer,iphi,whichlayer,whichphisector); // Translate Anita physical layer to Anita trigger layer and phi sector (4 layers with 8,8,16,8 phi sector to 3 layers with 16 phi sectors each.  In the nadir layer, 8 of the 16 slots are empty on the trigger layer.)
-	    
-	    
-	    
+
 	  // combining top two layers on the payload into one trigger layer
 	  // this means the 0th antenna in the first trigger layer is
 	  // physically higher than the 1st antenna in the first trigger layer
@@ -327,10 +323,10 @@ void  icemc::GlobalTrigger::PassesTriggerBasic(const Settings *settings1,Anita *
 	  // we will still use indices 0-7 for them though
 	  channels_compacted_passing[whichlayer][whichphisector][ipolar][iband]+=channels_passing[ilayer][iphi][ipolar][iband];
 	  // if (channels_compacted_passing[whichlayer][whichphisector][ipolar][iband]>0 && ipolar==0) cout << whichlayer << " " << whichphisector << endl;
-	} //for
-      } //for
-    } //for
-  } //for
+	}
+      }
+    }
+  }
 
   int antsum[2]={0,0}; // counter for how many channels of each polarization on an antenna pass
   /* antenna triggers */
@@ -389,20 +385,15 @@ void  icemc::GlobalTrigger::PassesTriggerBasic(const Settings *settings1,Anita *
 	     && anita1->bwslice_required[iband]==1 ) { // if this band was required to pass and it didn't,
 	    required_bands_failed[ipolar] = 1; // fatal for this antenna, polarization
 	  }
-	    
 	} // end loop over bands
       } // end loop over polarizations
 
 	// if the required bands didn't pass then set antsum=0 so the antenna doesn't pass
 	
 
-      for (int ipolar=0;ipolar<2;ipolar++) {	  
+      for (int ipolar=0;ipolar<2;ipolar++) {
 	ant[ipolar][iloc][iphitrig] = 1; // start with every antenna passing L1.	  
-	if( (anita1->pol_required[ipolar]==1 && 
-	     (antsum[ipolar] < anita1->trigRequirements[0]	    
-	      || required_bands_failed[ipolar]==1 ) )
-	    || (anita1->pol_required[ipolar]==0)
-	    )  { // if this polarization is required and it doesn't pass then make the antenna fail
+	if( (anita1->pol_required[ipolar]==1 && (antsum[ipolar] < anita1->trigRequirements[0] || required_bands_failed[ipolar]==1 )) || (anita1->pol_required[ipolar]==0)) { // if this polarization is required and it doesn't pass then make the antenna fail
 	  ant[ipolar][iloc][iphitrig]=0;
 	} //if
 	else{
@@ -891,9 +882,9 @@ void icemc::GlobalTrigger::PassesTriggerCoherentSum(const Settings *settings1,An
 	    
 	anita1->cwst_RXs[fill_index].waveform->assign(volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].begin(),volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].end());
 	  
-	for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR; ++fill_index_timestep) {
-	  anita1->cwst_RXs[fill_index].digitized->at(fill_index_timestep) = three_bit_round(anita1->cwst_RXs[fill_index].waveform->at(fill_index_timestep)/ anita1->rms_rfcm_e_single_event, (anita1->summed_power_trigger_digitizer_zero_random->Rndm() >= 0.5), false);
-	}
+	// for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR; ++fill_index_timestep) {
+	//   anita1->cwst_RXs[fill_index].digitized->at(fill_index_timestep) = three_bit_round(anita1->cwst_RXs[fill_index].waveform->at(fill_index_timestep)/ anita1->rms_rfcm_e_single_event, (anita1->summed_power_trigger_digitizer_zero_random->Rndm() >= 0.5), false);
+	// }
 	++fill_index;
       }
     }
@@ -955,17 +946,6 @@ void icemc::GlobalTrigger::PassesTriggerCoherentSum(const Settings *settings1,An
 	    if (power >= settings1->COHERENT_THRESHOLD){
 	      coherent_trigger_passes = true;
 	      thispasses += 2;
-	    }
-	      
-	    if (power >= settings1->COHERENT_THRESHOLD){
-	      anita1->fill_coherent_waveform_sum_tree(inu, center_phi_sector_index, settings1, anita1->rms_rfcm_e_single_event, 0., window_index, window_index + 32, index_theta - 45., index_phi, 33., 33.,summed_wfm, power_of_summed_wfm, power);
-	      //thispasses = true;
-	      //return 1;	// Return that this waveform passes.
-	    }
-	      
-	    if (inu == 1808 && center_phi_sector_index == 6) {
-	      anita1->fill_coherent_waveform_sum_tree(inu, center_phi_sector_index, settings1, anita1->rms_rfcm_e_single_event, 0., window_index, window_index + 32, index_theta - 45., index_phi, 33., 33.,summed_wfm, power_of_summed_wfm, power);
-	      //return 1;
 	    }
 	      
 	    if (coherent_trigger_passes){
@@ -1044,9 +1024,9 @@ void icemc::GlobalTrigger::PassesTriggerSummedPower(const Settings *settings1,An
       //	Fill the waveforms
       anita1->cwst_RXs[fill_index].waveform->assign(volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].begin(),volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].end());
 	
-      for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR; ++fill_index_timestep) {
-	anita1->cwst_RXs[fill_index].digitized->at(fill_index_timestep) = three_bit_round(anita1->cwst_RXs[fill_index].waveform->at(fill_index_timestep)/ anita1->rms_rfcm_e_single_event, false);
-      }
+      // for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR; ++fill_index_timestep) {
+      // 	anita1->cwst_RXs[fill_index].digitized->at(fill_index_timestep) = three_bit_round(anita1->cwst_RXs[fill_index].waveform->at(fill_index_timestep)/ anita1->rms_rfcm_e_single_event, false);
+      // }
       ++fill_index;
     }
   }
@@ -1169,6 +1149,7 @@ void icemc::GlobalTrigger::PassesTriggerSummedPower(const Settings *settings1,An
 
 
 void icemc::GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_threshold, int *thispasses) {
+  std::cout << __PRETTY_FUNCTION__ << std::endl;
   double threshold=this_threshold;
     
   // need to find how many in a set of 6 pass
@@ -1178,10 +1159,9 @@ void icemc::GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_thresh
     
   int nstayhigh=(int)(anita1->l1window/anita1->TIMESTEP);
   // now make each flag stay high for the required amount of time
-    
 
-  minsample=(int)(anita1->maxt_diode/anita1->TIMESTEP)+(anita1->NFOUR/4-(int)(anita1->maxt_diode/anita1->TIMESTEP))+(int)(anita1->arrival_times[0][anita1->rx_minarrivaltime]/anita1->TIMESTEP);
-  maxsample=anita1->NFOUR/2-(int)(anita1->arrival_times[0][anita1->rx_minarrivaltime]/anita1->TIMESTEP);
+  minsample=(int)(anita1->maxt_diode/anita1->TIMESTEP)+(anita1->NFOUR/4-(int)(anita1->maxt_diode/anita1->TIMESTEP)); //+(int)(anita1->arrival_times[0][anita1->rx_minarrivaltime]/anita1->TIMESTEP);
+maxsample=anita1->NFOUR/2; //-(int)(anita1->arrival_times[0][anita1->rx_minarrivaltime]/anita1->TIMESTEP);
 
   for (int i=0;i<5;i++) {
     anita1->iminbin[i]=minsample;
@@ -1221,13 +1201,13 @@ void icemc::GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_thresh
 	  //anita1->ston[k]=anita1->peak_v_banding_rfcm_e[k]/anita1->bwslice_vrms[k];
 	  //} // end loop over bands
 	  
-	  if (rx==anita1->rx_minarrivaltime) {
+	  // if (rx==anita1->rx_minarrivaltime) {
 
-	    for (int i=0;i<Anita::NFOUR/2;i++) {
-	      anita1->timedomain_output_corrected_forplotting[0][0][i]=timedomain_output_1_corrected[i];
-	      anita1->timedomain_output_corrected_forplotting[1][0][i]=timedomain_output_2_corrected[i];
-	    }
-	  }
+	  //   for (int i=0;i<Anita::NFOUR/2;i++) {
+	  //     anita1->timedomain_output_corrected_forplotting[0][0][i]=timedomain_output_1_corrected[i];
+	  //     anita1->timedomain_output_corrected_forplotting[1][0][i]=timedomain_output_2_corrected[i];
+	  //   }
+	  // }
 
 	  flag_e_L1[rx].clear();
 	  flag_h_L1[rx].clear();		
@@ -2764,8 +2744,6 @@ void icemc::GlobalTrigger::delay_AllAntennas(Anita *anita1) {
   for (int itriglayer=0;itriglayer<anita1->NTRIGGERLAYERS;itriglayer++) {
     for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
       for (int ipolar=0;ipolar<anita1->NPOL;ipolar++) {
-     
-      
 	delayL0(arrayofhits[itriglayer][iphi][ipolar][4],DELAYS[itriglayer]);
       }
     }

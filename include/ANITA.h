@@ -20,7 +20,7 @@ namespace icemc {
 
   class ANITA : public Detector, public Balloon, public Anita {
   public:
-    ANITA(const Settings* settings, const RayTracer* sillyRay, const RootOutput* ro);
+    ANITA(const Settings* settings, const RootOutput* ro);
     virtual ~ANITA();
 
     virtual int getNumRX() const override {return fNumRX;}
@@ -43,25 +43,6 @@ namespace icemc {
 
     UInt_t getLastEventNumber() const {return fEventNumber;}
 
-    const RayTracer* fRayPtrIDontOwn; /// @todo temp public for test
-    /** 
-     * What's the ilayer/ifold of given RX?
-     * 
-     * @param rx index of the fSeaveys
-     * @param ilayer layer of ANITA 
-     * @param ifold index in phi, maybe...
-     */
-    void getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const; ///@todo temp public for test
-
-    /** 
-     * What's the ilayer/ifold of given trigger RX?
-     * 
-     * @param rx index of the fSeaveys
-     * @param ilayer layer of ANITA 
-     * @param ifold index in phi, maybe...
-     */
-    void getLayerFoldFromTriggerRX(int rx, int& ilayer, int& ifold) const; ///@todo temp public for test
-    
   private:
 
     const Settings* fSettings;
@@ -84,6 +65,26 @@ namespace icemc {
 
 
     void initSeaveys(const Settings *settings1, const Anita *anita1);
+
+    /** 
+     * What's the ilayer/ifold of given RX?
+     * 
+     * @param rx index of the fSeaveys
+     * @param ilayer layer of ANITA 
+     * @param ifold index in phi, maybe...
+     */
+    void getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const; ///@todo temp public for test
+
+    /** 
+     * What's the ilayer/ifold of given trigger RX?
+     * 
+     * @param rx index of the fSeaveys
+     * @param ilayer layer of ANITA 
+     * @param ifold index in phi, maybe...
+     */
+    void getLayerFoldFromTriggerRX(int rx, int& ilayer, int& ifold) const; ///@todo temp public for test
+    
+    
   };
 }
 

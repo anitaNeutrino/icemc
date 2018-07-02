@@ -108,26 +108,26 @@ namespace icemc {
     double GetBalloonSpin(double heading) const;
 
     
-    ///< This function gets the antenna orientation
-    /**
-     * Long description
-     *
-     *
-     * @param  settings1 -
-     * @param  anita1 -
-     * @param  ilayer -
-     * @param  ifold
-     * @param  n_eplane -
-     * @param  n_hplane -
-     * @param  n_normal -
-     * @return returns void
-     */
-    void GetAntennaOrientation(const Settings *settings1,
-			       Anita *anita1, 
-			       int ilayer, int ifold, 
-			       Vector& n_eplane,
-			       Vector& n_hplane, 
-			       Vector& n_normal) const;
+    // ///< This function gets the antenna orientation
+    // /**
+    //  * Long description
+    //  *
+    //  *
+    //  * @param  settings1 -
+    //  * @param  anita1 -
+    //  * @param  ilayer -
+    //  * @param  ifold
+    //  * @param  n_eplane -
+    //  * @param  n_hplane -
+    //  * @param  n_normal -
+    //  * @return returns void
+    //  */
+    // void GetAntennaOrientation(const Settings *settings1,
+    // 			       Anita *anita1, 
+    // 			       int ilayer, int ifold, 
+    // 			       Vector& n_eplane,
+    // 			       Vector& n_hplane, 
+    // 			       Vector& n_normal) const;
 
     
 
@@ -174,18 +174,18 @@ namespace icemc {
      */
     void GetBoresights(const Settings *settings1, const Anita *anita1);
     
-    ///< This function calculates antenna positions
-    /**
-     * Long description
-     *
-     *
-     * @param  settings1 -
-     * @param  anita1 -
-     * @return returns void
-     */
-    void calculate_antenna_positions(const Settings *settings1,Anita *anita1) const ;
+    // ///< This function calculates antenna positions
+    // /**
+    //  * Long description
+    //  *
+    //  *
+    //  * @param  settings1 -
+    //  * @param  anita1 -
+    //  * @return returns void
+    //  */
+    // void calculate_antenna_positions(const Settings *settings1,Anita *anita1) const ;
     
-    ///< This function rotates the payload
+     ///< This function rotates the payload
     /**
      * Rotate from payload coord to earth coord
      *

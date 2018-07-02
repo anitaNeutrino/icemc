@@ -433,11 +433,11 @@ void icemc::Balloon::PickBalloonPosition(Vector straightup,const Antarctica *ant
   vertcoord_bn=r_bn[1]/1000.;
   
   
-  calculate_antenna_positions(settings1,anita1);
+  // calculate_antenna_positions(settings1,anita1);
   //  std::cout << "calculated antenna positions.\n";
   if (settings1->BORESIGHTS){
     GetBoresights(settings1,anita1);
-  }    
+  }
 }
 
 
@@ -683,7 +683,7 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
   horizcoord_bn=r_bn[0]/1000.; //m to km
   vertcoord_bn=r_bn[1]/1000.;
 
-  calculate_antenna_positions(settings1,anita1);
+  // calculate_antenna_positions(settings1,anita1);
   if (settings1->BORESIGHTS){
     GetBoresights(settings1,anita1);
   }
@@ -718,46 +718,46 @@ void icemc::Balloon::CenterPayload(double& hitangle_e) {
 }
 
 
-void icemc::Balloon::GetAntennaOrientation(const Settings *settings1, Anita *anita1, int ilayer, int ifold, Vector& n_eplane, Vector& n_hplane, Vector& n_normal) const {
+// void icemc::Balloon::GetAntennaOrientation(const Settings *settings1, Anita *anita1, int ilayer, int ifold, Vector& n_eplane, Vector& n_hplane, Vector& n_normal) const {
 
-  // rotate for antenna's orientation on payload
-  // face of antenna starts out relative to +x because phi is relative to +x
-  // n_normal points northwards for antenna 0 (0-31)
-  // const vectors const_z (n_eplane), const_y (-n_hplane), const_x (n_normal) defined under Constants.h   -- oindree
+//   // rotate for antenna's orientation on payload
+//   // face of antenna starts out relative to +x because phi is relative to +x
+//   // n_normal points northwards for antenna 0 (0-31)
+//   // const vectors const_z (n_eplane), const_y (-n_hplane), const_x (n_normal) defined under Constants.h   -- oindree
 
-  if(settings1->WHICH==Payload::Anita1 ||
-     settings1->WHICH==Payload::Anita2 ||
-     settings1->WHICH==Payload::Anita3 ||
-     settings1->WHICH==Payload::Anita4) {    
-    n_eplane = constants::const_z.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
-    n_hplane = (-constants::const_y).RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
-    n_normal = constants::const_x.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
-  }
-  else {
-    n_eplane = constants::const_z.RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
-    n_hplane = (-constants::const_y).RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
-    n_normal = constants::const_x.RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
-  }
+//   if(settings1->WHICH==Payload::Anita1 ||
+//      settings1->WHICH==Payload::Anita2 ||
+//      settings1->WHICH==Payload::Anita3 ||
+//      settings1->WHICH==Payload::Anita4) {    
+//     n_eplane = constants::const_z.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
+//     n_hplane = (-constants::const_y).RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
+//     n_normal = constants::const_x.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
+//   }
+//   else {
+//     n_eplane = constants::const_z.RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
+//     n_hplane = (-constants::const_y).RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
+//     n_normal = constants::const_x.RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
+//   }
 
-  double phi;
-  // rotate about z axis for phi
-  if (settings1->CYLINDRICALSYMMETRY==1) {
-    phi=(double)ifold/(double)anita1->NRX_PHI[ilayer]*2*constants::PI + anita1->PHI_OFFSET[ilayer] + phi_spin;
-  }
-  else{
-    //phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer] +phi_spin;
-    phi=anita1->PHI_EACHLAYER[ilayer][ifold];
-  }
+//   double phi;
+//   // rotate about z axis for phi
+//   if (settings1->CYLINDRICALSYMMETRY==1) {
+//     phi=(double)ifold/(double)anita1->NRX_PHI[ilayer]*2*constants::PI + anita1->PHI_OFFSET[ilayer] + phi_spin;
+//   }
+//   else{
+//     //phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer] +phi_spin;
+//     phi=anita1->PHI_EACHLAYER[ilayer][ifold];
+//   }
 
-  n_eplane = n_eplane.RotateZ(phi);
-  n_hplane = n_hplane.RotateZ(phi);
-  n_normal = n_normal.RotateZ(phi);
+//   n_eplane = n_eplane.RotateZ(phi);
+//   n_hplane = n_hplane.RotateZ(phi);
+//   n_normal = n_normal.RotateZ(phi);
 
-  n_eplane = RotatePayload(n_eplane); 
-  n_hplane = RotatePayload(n_hplane);
-  n_normal = RotatePayload(n_normal);
+//   n_eplane = RotatePayload(n_eplane); 
+//   n_hplane = RotatePayload(n_hplane);
+//   n_normal = RotatePayload(n_normal);
 
-} //end void GetAntennaOrientation
+// } //end void GetAntennaOrientation
 
 
 
@@ -924,46 +924,6 @@ void icemc::Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Ani
 
 
 
-// void icemc::Balloon::GetBoresights(const Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]){//,Vector n_north,Vector n_east) {
-    
-//   // this fills r_boresights with the position of the antenna boresights.
-//   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
-//     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-      
-//       Vector n_boresight(1,0,0); // this will be a unit vector that points from the center axis of the payload to the boresight on each level of the payload (it will stay in the x-y plane)
-      
-//       double phi;
-//       // rotate about z axis for phi
-//       if (settings1->CYLINDRICALSYMMETRY==1) {
-// 	phi=(double)ifold/(double)anita1->NRX_PHI[ilayer]*2*constants::PI + anita1->PHI_OFFSET[ilayer]+phi_spin;
-//       }
-//       else{
-// 	phi=anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer] +phi_spin;
-//       }
-      
-      
-//       n_boresight = n_boresight.RotateZ(phi);
-      
-//       // start with a vector that points in the +z direction but with the same length as r_bn
-//       r_boresights[ilayer][ifold].SetX(0.); // this will be a unit vector that points from the center axis of the payload to the boresight on each level of the payload (it will stay in the x-y plane)
-//       r_boresights[ilayer][ifold].SetY(0.);
-//       r_boresights[ilayer][ifold].SetZ(r_bn.Mag());
-      
-//       Vector zaxis(0.,0.,1.);
-//       Vector xaxis(1.,0.,0.);
-//       Vector yaxis(0.,1.,0.);
-      
-//       // Add the positions of the antennas relative to the center of the payload
-//       r_boresights[ilayer][ifold] += (anita1->RRX[ilayer]*n_boresight
-// 				      + anita1->LAYER_VPOSITION[ilayer]*zaxis
-// 				      + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer])*xaxis
-// 				      + anita1->LAYER_HPOSITION[ilayer]*sin(anita1->LAYER_PHIPOSITION[ilayer])*yaxis);
-
-//       //   now rotate to balloon's position on the continent
-//       r_boresights[ilayer][ifold] = r_boresights[ilayer][ifold].ChangeCoord(n_north,-1.*n_east);
-//     }
-//   }
-// }
 
 
 void icemc::Balloon::GetBoresights(const Settings *settings1, const Anita *anita1) {
@@ -979,47 +939,47 @@ void icemc::Balloon::GetBoresights(const Settings *settings1, const Anita *anita
 
 
 
-void icemc::Balloon::calculate_antenna_positions(const Settings *settings1, Anita *anita1) const {
-  int number_all_antennas = 0;
-  Vector antenna_position;
+// void icemc::Balloon::calculate_antenna_positions(const Settings *settings1, Anita *anita1) const {
+//   int number_all_antennas = 0;
+//   Vector antenna_position;
 
-  for (int ipol=0; ipol<2; ipol++){
-    number_all_antennas=0;
-    for (int ilayer = 0; ilayer < settings1->NLAYERS; ilayer++){
-      for (int ifold = 0; ifold < anita1->NRX_PHI[ilayer]; ifold++){
-	double phi = 0;
-	if (settings1->WHICH == Payload::Anita1 ||
-	    settings1->WHICH == Payload::Anita2 ||
-	    settings1->WHICH == Payload::Anita3 ||
-	    settings1->WHICH == Payload::Anita4 ){ //If payload is either
-	  antenna_position = anita1->ANTENNA_POSITION_START[ipol][ilayer][ifold];
-	}
-	else {
-	  if (settings1->CYLINDRICALSYMMETRY==1){ // for timing code
-	    // phi is 0 for antenna 0 (0-31) and antenna 16 (0-31)
-	    // antenna 1 (1-32) and antenna 18 (1-32)
-	    phi = (double) ifold / (double) anita1->NRX_PHI[ilayer] * 2 * constants::PI + anita1->PHI_OFFSET[ilayer];
-	  }
-	  else{
-	    phi = anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer];
-	  }
-	  antenna_position = Vector(anita1->RRX[ilayer]*cos(phi) + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer]),
-				    anita1->RRX[ilayer]*sin(phi) + anita1->LAYER_HPOSITION[ilayer]*sin(anita1->LAYER_PHIPOSITION[ilayer]),
-				    anita1->LAYER_VPOSITION[ilayer]);
+//   for (int ipol=0; ipol<2; ipol++){
+//     number_all_antennas=0;
+//     for (int ilayer = 0; ilayer < settings1->NLAYERS; ilayer++){
+//       for (int ifold = 0; ifold < anita1->NRX_PHI[ilayer]; ifold++){
+// 	double phi = 0;
+// 	if (settings1->WHICH == Payload::Anita1 ||
+// 	    settings1->WHICH == Payload::Anita2 ||
+// 	    settings1->WHICH == Payload::Anita3 ||
+// 	    settings1->WHICH == Payload::Anita4 ){ //If payload is either
+// 	  antenna_position = anita1->ANTENNA_POSITION_START[ipol][ilayer][ifold];
+// 	}
+// 	else {
+// 	  if (settings1->CYLINDRICALSYMMETRY==1){ // for timing code
+// 	    // phi is 0 for antenna 0 (0-31) and antenna 16 (0-31)
+// 	    // antenna 1 (1-32) and antenna 18 (1-32)
+// 	    phi = (double) ifold / (double) anita1->NRX_PHI[ilayer] * 2 * constants::PI + anita1->PHI_OFFSET[ilayer];
+// 	  }
+// 	  else{
+// 	    phi = anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer];
+// 	  }
+// 	  antenna_position = Vector(anita1->RRX[ilayer]*cos(phi) + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer]),
+// 				    anita1->RRX[ilayer]*sin(phi) + anita1->LAYER_HPOSITION[ilayer]*sin(anita1->LAYER_PHIPOSITION[ilayer]),
+// 				    anita1->LAYER_VPOSITION[ilayer]);
 
-	}//else
+// 	}//else
 
-	//std::cout<<"antenna_position start for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
-	antenna_position = RotatePayload(antenna_position);
+// 	//std::cout<<"antenna_position start for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
+// 	antenna_position = RotatePayload(antenna_position);
 
-	anita1->antenna_positions[ipol][number_all_antennas] = antenna_position;
-	//std::cout<<"antenna_position for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
-	number_all_antennas++;
-      }
-    }
-  }
-  return;
-}
+// 	anita1->antenna_positions[ipol][number_all_antennas] = antenna_position;
+// 	//std::cout<<"antenna_position for "<<number_all_antennas<<" is  "<<antenna_position<<"\n";
+// 	number_all_antennas++;
+//       }
+//     }
+//   }
+//   return;
+// }
 
 icemc::Vector icemc::Balloon::RotatePayload(Vector ant_pos_pre) const {
 

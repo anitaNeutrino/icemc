@@ -1212,15 +1212,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   icemc::RootOutput ro(this, &settings1, clOpts.outputdir.c_str(), clOpts.run_no);
 
-  ///@todo make passing these pointers (except maybe settings?) unnecessary!!!
   if(!fDetector){
-    fDetector = new ANITA(&settings1, &rayTracer, &ro);
+    fDetector = new ANITA(&settings1, &ro);
   }
 
   // input parameters
   settings1.ApplyInputs(fDetector,  &sec1,  &askFreqGen);
-  // fDetector->InitializeBalloon();
-  // fDetector->Initialize(&settings1, icemcLog().foutput, 0, clOpts.outputdir);
   askFreqGen.Initialize();
 
   NNU = settings1.NNU;
@@ -1366,20 +1363,20 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   fDetector->GetPayload(&settings1,  fDetector);  
 
 
-  if (settings1.TRIGGERSCHEME == 3 || settings1.TRIGGERSCHEME == 4 || settings1.TRIGGERSCHEME==5) {
-    Vector plusz(0., 0., 1.);
-    // fDetector->PickBalloonPosition(plusz, antarctica, &settings1, anita1);
-    fDetector->PickBalloonPosition(plusz, antarctica, &settings1, fDetector);    
-    fDetector->calculate_all_offsets();
-    double angle_theta=16.;
-    double angle_phi=0.;
-    Vector x = Vector(cos(angle_theta * constants::RADDEG) * cos((angle_phi+11.25) * constants::RADDEG),
-                      cos(angle_theta * constants::RADDEG) * sin((angle_phi+11.25) * constants::RADDEG),
-                      sin(angle_theta * constants::RADDEG));
-    // fDetector->GetArrivalTimes(x,bn1,&settings1);
-    fDetector->GetArrivalTimes(x,fDetector,&settings1);    
-    std::cout << "end of getarrivaltimes\n";
-  }
+  // if (settings1.TRIGGERSCHEME == 3 || settings1.TRIGGERSCHEME == 4 || settings1.TRIGGERSCHEME==5) {
+  //   Vector plusz(0., 0., 1.);
+  //   // fDetector->PickBalloonPosition(plusz, antarctica, &settings1, anita1);
+  //   fDetector->PickBalloonPosition(plusz, antarctica, &settings1, fDetector);    
+  //   fDetector->calculate_all_offsets();
+  //   double angle_theta=16.;
+  //   double angle_phi=0.;
+  //   Vector x = Vector(cos(angle_theta * constants::RADDEG) * cos((angle_phi+11.25) * constants::RADDEG),
+  //                     cos(angle_theta * constants::RADDEG) * sin((angle_phi+11.25) * constants::RADDEG),
+  //                     sin(angle_theta * constants::RADDEG));
+  //   // fDetector->GetArrivalTimes(x,bn1,&settings1);
+  //   fDetector->GetArrivalTimes(x,fDetector,&settings1);    
+  //   std::cout << "end of getarrivaltimes\n";
+  // }
 
   // get positions of the anita payload during the slac test
   if (settings1.SLAC){
@@ -1667,7 +1664,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
 
       // fills ray1->n_exit2bn[2] ?
-      // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 2, antarctica);
+     // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 2, antarctica);
       rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);      
 
       rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 2);
