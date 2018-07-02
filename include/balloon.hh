@@ -214,8 +214,8 @@ namespace icemc {
     inline double getLatitude() const {return latitude;}
     inline double getLongitude() const {return longitude;}
     inline double getHeading() const {return heading;}
-    inline double getPitch() const {return pitch;} ///@todo enforced fixed!
-    inline double getRoll() const {return roll;} ///@todo enforced fixed!
+    double getPitch() const;
+    double getRoll() const;
 
 #ifdef ANITA_UTIL_EXISTS
     /** 

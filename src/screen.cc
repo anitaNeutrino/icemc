@@ -9,6 +9,7 @@
 #include "anita.hh"
 #include "FTPair.h"
 #include "Tools.h"
+#include "RayTracer.h" ///@todo remove when test complete
 
 icemc::Screen::Screen(int a){
   if( !(a%2) )
@@ -315,6 +316,7 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
 
   const Position& detPos = d->getCenterOfDetector(inu);
   double firstDelay = 0;
+  d->GetArrivalTimes(d->fRayPtrIDontOwn->n_exit2bn[2],d,settings1);
 
   for (int jpt=0; jpt<GetNvalidPoints(); jpt++){
     const Position& rfExit = GetImpactPt(jpt);
@@ -343,9 +345,9 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
 	 * MakeArrayForFFT pads things for there to be 256 frequency bins (257 w/ nyquist) i.e. 512 time samples.
 	 * The inverse FFT (correctly) scales things down by a factor of N.
 	 * But is the correct N 256, or 512, or something else?
-	 * The FTPair class does this normalization properly but I'm not sure icemc does.
+	 * The FTPair class handles the general case of this normalization, but I'm not sure icemc does.
 	 * (It must  be one of the random factors of 2 or sqrt(2) littered around?)
-	 * Anyway I need to apply this factor to make sure the PSDs agree before and after.
+	 * Anyway I need to apply this factor to make sure the PSDs agree before and after refactoring.
 	 * (Where the PSD accounts for the difference in length correctly.)
 	 * But I need to fudge the amplitudes here so the PSDs agree during the refactor.
 	 * Before doing this the new PSD (which squares the voltages) had twice the amplitude of the old chanTrigger, as you would expect.
@@ -361,11 +363,18 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
       }
       relativeDelaySeconds -= firstDelay;
       if(inu==522){
-	std::cout << rx << "\t" << relativeDelaySeconds << std::endl;
+	int ifold, ilayer;
+	d->getLayerFoldFromRX(rx, ilayer, ifold);
+	int rx2 = d->GetRx(ilayer,ifold);
+	double t = d->arrival_times[0][rx2] - d->arrival_times[0][0];
+	// const Vector& v = d->antenna_positions[0][rx2];
+	const double nsToS = 1e9;
+	std::cout << rx << "\t" << nsToS*relativeDelaySeconds << "\t" << nsToS*t << "\t" << nsToS*(relativeDelaySeconds - t) << "\t" << std::endl;
       }
       
       //@todo set up delay to antennas
       // signal.applyConstantGroupDelay(relativeDelaySeconds + 20e-9, false);
+      signal.applyConstantGroupDelay(relativeDelaySeconds, false);      
 
       // TGraph& gr = signal.changeTimeDomain();
       // // add a point to force  up to next power of 2...

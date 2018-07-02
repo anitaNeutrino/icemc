@@ -58,6 +58,29 @@ constexpr double fixedAnita3Roll  =  0.00; // degrees
 // @todo have we got ANITA-4 pitch and roll numbers?
 
 
+double icemc::Balloon::getPitch() const {
+  switch(WHICHPATH){
+  case FlightPath::Anita2:
+    return fixedAnita2Pitch;
+  case FlightPath::Anita3:
+    return fixedAnita3Pitch;
+  default:
+    return pitch;
+  }
+}
+
+double icemc::Balloon::getRoll() const {
+  switch(WHICHPATH){
+  case FlightPath::Anita2:
+    return fixedAnita2Roll;
+  case FlightPath::Anita3:
+    return fixedAnita3Roll;
+  default:
+    return roll;
+  }
+}
+
+
 icemc::Balloon::Balloon(const Settings* settings)
   : WHICHPATH(settings ? static_cast<icemc::FlightPath>(settings->WHICHPATH) : FlightPath::FixedPosition){
 
@@ -1000,8 +1023,8 @@ void icemc::Balloon::calculate_antenna_positions(const Settings *settings1, Anit
 
 icemc::Vector icemc::Balloon::RotatePayload(Vector ant_pos_pre) const {
 
-  const double thisPitch = WHICHPATH == FlightPath::Anita2 ? fixedAnita2Pitch : WHICHPATH == FlightPath::Anita3 ? fixedAnita3Pitch : pitch;
-  const double thisRoll  = WHICHPATH == FlightPath::Anita2 ? fixedAnita2Roll  : WHICHPATH == FlightPath::Anita3 ? fixedAnita3Roll  : roll;
+  const double thisPitch = getPitch();
+  const double thisRoll  = getRoll();
 
   const Vector BalloonPos = r_bn;
   const double BalloonTheta = BalloonPos.Theta();
@@ -1041,9 +1064,9 @@ icemc::Vector icemc::Balloon::RotatePayload(Vector ant_pos_pre) const {
 }  
 
 icemc::Vector icemc::Balloon::unRotatePayload(Vector ant_pos_pre) const {//rotate back to Payload Centric coordinates
-  ///@todo does we have static pitch and roll offsets for A4?
-  const double thisPitch = WHICHPATH == FlightPath::Anita2 ? fixedAnita2Pitch : WHICHPATH == FlightPath::Anita3 ? fixedAnita3Pitch : pitch;
-  const double thisRoll  = WHICHPATH == FlightPath::Anita2 ? fixedAnita2Roll  : WHICHPATH == FlightPath::Anita3 ? fixedAnita3Roll  : roll;
+
+  const double thisPitch = getPitch();
+  const double thisRoll  = getRoll();
   
   Vector BalloonPos;
 

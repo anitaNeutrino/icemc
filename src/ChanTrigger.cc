@@ -1104,7 +1104,6 @@ void icemc::ChanTrigger::TriggerPath(const Settings *settings1, Anita *anita1, i
       
     }
     else {
-      
       for (int itime=0; itime<anita1->NFOUR/2 ; itime++){
 	v_banding_rfcm_forfft[0][iband][itime]=volts_rx_forfft[0][iband][itime];
 	v_banding_rfcm_forfft[1][iband][itime]=volts_rx_forfft[1][iband][itime];
@@ -1116,13 +1115,11 @@ void icemc::ChanTrigger::TriggerPath(const Settings *settings1, Anita *anita1, i
       applyImpulseResponseTrigger(settings1, anita1, ant, v_banding_rfcm_forfft[1][iband], v_banding_rfcm[1][iband], 1);
 #endif
     }
-    
-    
+
     if (settings1->ZEROSIGNAL) {
       Tools::Zero(v_banding_rfcm_forfft[0][iband],anita1->NFOUR/2);
       Tools::Zero(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
     }
-  
 
     for (int i=0;i<anita1->NFOUR/4;i++) {
       integrate_energy_freq[iband]+=v_banding_rfcm_forfft[0][iband][2*i]*v_banding_rfcm_forfft[0][iband][2*i]+v_banding_rfcm_forfft[0][iband][2*i+1]*v_banding_rfcm_forfft[0][iband][2*i+1];
@@ -1873,7 +1870,9 @@ void icemc::ChanTrigger::applyImpulseResponseTrigger(const Settings *settings1, 
       //  std::cout << i << " " << justNoise_trigPath[ipol][i] << std::endl;
     }
   } else {
-    for (int i=0;i<nPoints;i++)  justSig_trigPath[ipol][i] = y[i] = voltsArray[i] = surfSignalDown->Eval(x[i]);
+    for (int i=0;i<nPoints;i++){
+      justSig_trigPath[ipol][i] = y[i] = voltsArray[i] = surfSignalDown->Eval(x[i]);
+    }
   }
   
   // find back the frequency domain

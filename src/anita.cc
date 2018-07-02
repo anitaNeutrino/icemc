@@ -49,11 +49,6 @@
 const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
 
-using std::cout;
-using std::cin;
-using std::endl;
-using std::vector;
-
 icemc::Anita::Anita(const Settings* settings, const char* outputDir, const Balloon* bn1) {
 
   std::string stemp = "";
@@ -881,7 +876,7 @@ void icemc::Anita::setDiodeRMS(const Settings *settings1, TString outputdir){
   // just take the average noise arrays from the tdiode tree
   tdiode->GetEvent(0);
     
-  cout << "after getting event, freqdomain_rfcm_banding is " << freqdomain_rfcm_banding[0][NFOUR/8-1] << "\n";
+  std::cout << "after getting event, freqdomain_rfcm_banding is " << freqdomain_rfcm_banding[0][NFOUR/8-1] << "\n";
     
   // TGraph *gfreqdomain_rfcm=new TGraph(NFOUR/4,freq_forplotting,freqdomain_rfcm);
   // TGraph *gavgfreqdomain_lab=new TGraph(NFOUR/4,freq_forplotting,avgfreqdomain_lab);
@@ -1009,7 +1004,7 @@ void icemc::Anita::setDiodeRMS(const Settings *settings1, TString outputdir){
     
     for (int j=0;j<5;j++) {
       bwslice_rmsdiode[j]=sqrt(bwslice_rmsdiode[j]);
-      cout << "mean, rms are " << bwslice_meandiode[j] << " " << bwslice_rmsdiode[j] << "\n";
+      std::cout << "mean, rms are " << bwslice_meandiode[j] << " " << bwslice_rmsdiode[j] << "\n";
     }
   
     double thresh_begin=-1.;
@@ -1352,7 +1347,7 @@ void icemc::Anita::ReadGains(void) {
   std::ifstream gainsfile;
   gainsfile.open((ICEMC_DATA_DIR+"/hh_0").c_str()); // gains for horizontal polarization
   if(gainsfile.fail()) {
-    cout << "can't open `$ICEMC_DATA_DIR`/hh_0\n";
+    std::cout << "can't open `$ICEMC_DATA_DIR`/hh_0\n";
     exit(1);
   }
   for(iii = 0; iii < NPOINTS_GAIN; iii++)
@@ -1361,37 +1356,37 @@ void icemc::Anita::ReadGains(void) {
     
   gainsfile.open((ICEMC_DATA_DIR+"/vv_0").c_str()); // gains for vertical polarization
   if(gainsfile.fail()) {
-    cout << "can't open `$ICEMC_DATA_DIR`/vv_0\n";
+    std::cout << "can't open `$ICEMC_DATA_DIR`/vv_0\n";
     exit(1);
   }
   for(iii = 0; iii < NPOINTS_GAIN; iii++) {
     gainsfile >> sfrequency >> gainv_measured[iii];
     if(sfrequency != frequency_forgain_measured[iii])
-      cout << "warning: sfrequency = " << sfrequency << ", frequency_forgain_measured[iii] = " << frequency_forgain_measured[iii] << endl;
+      std::cout << "warning: sfrequency = " << sfrequency << ", frequency_forgain_measured[iii] = " << frequency_forgain_measured[iii] << std::endl;
   }
   gainsfile.close();
     
   gainsfile.open((ICEMC_DATA_DIR+"/hv_0").c_str()); // gains for h-->v cross polarization
   if(gainsfile.fail()) {
-    cout << "can't open `$ICEMC_DATA_DIR`/hv_0\n";
+    std::cout << "can't open `$ICEMC_DATA_DIR`/hv_0\n";
     exit(1);
   }
   for(iii = 0; iii < NPOINTS_GAIN; iii++) {
     gainsfile >> sfrequency >> gainhv_measured[iii];
     if(sfrequency != frequency_forgain_measured[iii])
-      cout << "warning: sfrequency = " << sfrequency << ", frequency_forgain_measured[iii] = " << frequency_forgain_measured[iii] << endl;
+      std::cout << "warning: sfrequency = " << sfrequency << ", frequency_forgain_measured[iii] = " << frequency_forgain_measured[iii] << std::endl;
   }
   gainsfile.close();
     
   gainsfile.open((ICEMC_DATA_DIR+"/vh_0").c_str()); // gains for v-->h cross polarization
   if(gainsfile.fail()) {
-    cout << "can't open `$ICEMC_DATA_DIR`/vh_0\n";
+    std::cout << "can't open `$ICEMC_DATA_DIR`/vh_0\n";
     exit(1);
   }
   for(iii = 0; iii < NPOINTS_GAIN; iii++) {
     gainsfile >> sfrequency >> gainvh_measured[iii];
     if(sfrequency != frequency_forgain_measured[iii])
-      cout << "warning: sfrequency = " << sfrequency << ", frequency_forgain_measured[iii] = " << frequency_forgain_measured[iii] << endl;
+      std::cout << "warning: sfrequency = " << sfrequency << ", frequency_forgain_measured[iii] = " << frequency_forgain_measured[iii] << std::endl;
   }
   gainsfile.close();
 } //ReadGains
@@ -1512,7 +1507,7 @@ int icemc::Anita::SurfChanneltoBand(int ichan) {
     
   // takes surf channel (0-31) and finds what band it is
   if (ichan<0 || ichan>31) {
-    cout << "surf channel out of range!\n";
+    std::cout << "surf channel out of range!\n";
     exit(1);
   }
     
@@ -1583,7 +1578,7 @@ int icemc::Anita::WhichBand(int ibw,int ipol) {
 void icemc::Anita::Banding(int j,double *freq_noise,double *vmmhz,int NPOINTS_NOISE) {
     
   if (j<0 || j>4) {
-    cout << "Band out of range.\n";
+    std::cout << "Band out of range.\n";
     exit(1);
   }
   if (BANDING!=1) {
@@ -1635,52 +1630,64 @@ void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_recei
     
   anglefile.open((ICEMC_DATA_DIR+"/vv_az").c_str()); // v polarization, a angle
   if(anglefile.fail()) {
-    cout << "can't open `$ICEMC_DATA_DIR`/vv_az\n";
+    std::cout << "can't open `$ICEMC_DATA_DIR`/vv_az\n";
     exit(1);
   }
-  for(jjj = 1; jjj < 7; jjj++)
+  for(jjj = 1; jjj < 7; jjj++){
     for(iii = 0; iii < 131; iii++) {
       anglefile >> sfrequency >> gain_angle[0][iii][jjj];
-      if(sfrequency != frequency_forgain_measured[iii]) cout << "check frequencies for vv_az\n";
+      if(sfrequency != frequency_forgain_measured[iii]){
+	std::cout << "check frequencies for vv_az\n";
+      }
     }
+  }
   anglefile.close();
     
     
     
   anglefile.open((ICEMC_DATA_DIR+"/hh_az").c_str()); // h polarization, a angle
   if(anglefile.fail()) {
-    cout << "can't open `$ICEMC_DATA_DIR`/hh_az\n";
+    std::cout << "can't open `$ICEMC_DATA_DIR`/hh_az\n";
     exit(1);
   }
-  for(jjj = 1; jjj < 7; jjj++)
+  for(jjj = 1; jjj < 7; jjj++){
     for(iii = 0; iii < 131; iii++) {
       anglefile >> sfrequency >> gain_angle[1][iii][jjj];
-      if(sfrequency != frequency_forgain_measured[iii]) cout << "check frequencies for hh_az\n";
+      if(sfrequency != frequency_forgain_measured[iii]){
+	std::cout << "check frequencies for hh_az\n";
+      }
     }
+  }
   anglefile.close();
     
   anglefile.open((ICEMC_DATA_DIR+"/hh_el").c_str()); // h polarization, e angle
   if(anglefile.fail()) {
-    cout << "can't open `$ICEMC_DATA_DIR`/hh_el\n";
+    std::cout << "can't open `$ICEMC_DATA_DIR`/hh_el\n";
     exit(1);
   }
-  for(jjj = 1; jjj < 7; jjj++)
+  for(jjj = 1; jjj < 7; jjj++){
     for(iii = 0; iii < 131; iii++) {
       anglefile >> sfrequency >> gain_angle[2][iii][jjj];
-      if(sfrequency != frequency_forgain_measured[iii]) cout << "check frequencies for hh_el\n";
+      if(sfrequency != frequency_forgain_measured[iii]) {
+	std::cout << "check frequencies for hh_el\n";
+      }
     }
+  }
   anglefile.close();
     
   anglefile.open((ICEMC_DATA_DIR+"/vv_el").c_str()); // v polarization, e angle
   if(anglefile.fail()) {
-    cout << "can't open `$ICEMC_DATA_DIR`/vv_el\n";
+    std::cout << "can't open `$ICEMC_DATA_DIR`/vv_el\n";
     exit(1);
   }
-  for(jjj = 1; jjj < 7; jjj++)
+  for(jjj = 1; jjj < 7; jjj++){
     for(iii = 0; iii < 131; iii++) {
       anglefile >> sfrequency >> gain_angle[3][iii][jjj];
-      if(sfrequency != frequency_forgain_measured[iii]) cout << "check frequencies for vv_el\n";
+      if(sfrequency != frequency_forgain_measured[iii]) {
+	std::cout << "check frequencies for vv_el\n";
+      }
     }
+  }
   anglefile.close();
   for(jjj = 0; jjj < 6; jjj++) inv_angle_bin_size[jjj] = 1. /
 				 (reference_angle[jjj+1] - reference_angle[jjj]); // this is used for interpolating gains at angles between reference angles
@@ -2029,7 +2036,7 @@ double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) const
    */
   double thisFlareRads = flare[gain_type][k]*constants::DEGRAD;
   if(hitangle > 90.00001) {
-    cout << "hitangle out of range\n";
+    std::cout << "hitangle out of range\n";
     exit(1);
   }
   if(hitangle >= 90.) hitangle = 89.99999;
@@ -2068,7 +2075,7 @@ double icemc::Anita::Get_gain_angle(int gain_type, int k, double hitangle) const
   }
     
     
-  cout << "Get_gain_angle should have returned a value\n";
+  std::cout << "Get_gain_angle should have returned a value\n";
   exit(1);
 } // double Get_gain_angle(int gain_type, double freq, double hitangle)
 
@@ -2221,7 +2228,7 @@ void icemc::Anita::myconvlv(double *data,const int NFOUR,double *fdiode,double &
     
   //  cout << "iminsamp, imaxsamp are " << iminsamp << " " << imaxsamp << "\n";
   if (imaxsamp<iminsamp) {
-    cout << "Noise waveform is not long enough for this diode response.\n";
+    std::cout << "Noise waveform is not long enough for this diode response.\n";
     exit(1);
   }
     
@@ -2611,8 +2618,9 @@ void icemc::Anita::labAttn(double *vhz) {
       vhz[i]*=sqrt(labattn[ilab]);
       vhz[i]*=sqrt(labattn[ilab]);
     }
-    else
-      cout << "Lab attenuation outside of band.\n";
+    else{
+      std::cout << "Lab attenuation outside of band.\n";
+    }
   }
 }
 
@@ -2620,7 +2628,7 @@ int icemc::Anita::getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn) {
     
   std::ifstream flab((ICEMC_DATA_DIR+"/surfatten_run294_ch23v.dat").c_str());
   if (flab.fail()) {
-    cout << "Cannot open lab data file.\n";
+    std::cout << "Cannot open lab data file.\n";
     exit(1);
   }
   int index=0;
@@ -2845,27 +2853,27 @@ void icemc::Anita::GetPayload(const Settings* settings1, const Balloon* bn1){
       // cout << "How many antennas in the " << i << "th layer?\n";
       // cin >> NRX_PHI[i];
 			
-      cout << "What is the offset in phi for the " << i << "th layer?\n";
-      cin >> PHI_OFFSET[i];
+      std::cout << "What is the offset in phi for the " << i << "th layer?\n";
+      std::cin >> PHI_OFFSET[i];
 			
-      cout << "What is the theta ascent for the " << i << "th layer (0 if pointed straight upwards, PI if pointed straight downwards)?\n";
-      cin >> THETA_ZENITH[i];
+      std::cout << "What is the theta ascent for the " << i << "th layer (0 if pointed straight upwards, PI if pointed straight downwards)?\n";
+      std::cin >> THETA_ZENITH[i];
 			
-      cout << "What is the vertical position of this layer relative to the vertical center of the payload?";
-      cin >> LAYER_VPOSITION[i];
+      std::cout << "What is the vertical position of this layer relative to the vertical center of the payload?";
+      std::cin >> LAYER_VPOSITION[i];
 			
-      cout << "What is the distance between of the vertical axis of the payload and the center of this layer?";
-      cin >> LAYER_HPOSITION[i];
+      std::cout << "What is the distance between of the vertical axis of the payload and the center of this layer?";
+      std::cin >> LAYER_HPOSITION[i];
 			
-      cout << "What is the phi of this layer relative to the vertical center of the payload in the horizontal plane?";
-      cin >> LAYER_PHIPOSITION[i];
+      std::cout << "What is the phi of this layer relative to the vertical center of the payload in the horizontal plane?";
+      std::cin >> LAYER_PHIPOSITION[i];
 			
 			
 			
       if (settings1->CYLINDRICALSYMMETRY==0) {
 	for (int j=0;j<NRX_PHI[i];j++) {
-	  cout << "What is the phi of the " << j << "th antenna is this layer?\n";
-	  cin >> PHI_EACHLAYER[i][j];
+	  std::cout << "What is the phi of the " << j << "th antenna is this layer?\n";
+	  std::cin >> PHI_EACHLAYER[i][j];
 	} //for (read antenna phi)
       }//if (not cylindrically symmetric)
     } //for (antenna layers)
@@ -2874,8 +2882,8 @@ void icemc::Anita::GetPayload(const Settings* settings1, const Balloon* bn1){
     // cout << "How many polarizations must pass a voltage threshold?\n";
     // cin >> settings1->NFOLD;
 		
-    cout << "How many times the expected noise level should the voltage threshold be?\n";
-    cin >> maxthreshold;
+    std::cout << "How many times the expected noise level should the voltage threshold be?\n";
+    std::cin >> maxthreshold;
   } //else if (custom payload)
 
   else if (settings1->WHICH==Payload::AnitaHill) {// anita hill
@@ -2895,7 +2903,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, const Balloon* bn1){
     // it's rotated by 1/2 the azimuth that separates two antennas on the 0th layer
     PHI_OFFSET[1]=(bn1->BN_LONGITUDE+0.)*constants::RADDEG;
 
-    cout << "phi_offsets are " << PHI_OFFSET[0] << " " << PHI_OFFSET[1] << "\n";
+    std::cout << "phi_offsets are " << PHI_OFFSET[0] << " " << PHI_OFFSET[1] << "\n";
 		
     //double INCLINE_NADIR=55; SET IN INPUT NOW!!!!
 		
@@ -3637,7 +3645,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, const Balloon* bn1){
 		
   } //else if (satellite)
 
-  cout << "nantennas is " << settings1->NANTENNAS << "\n";
+  std::cout << "nantennas is " << settings1->NANTENNAS << "\n";
   number_all_antennas=settings1->NANTENNAS;
     
   // gets noise (vrms) for each bandwidth slice and antenna layer according to antenna theta
@@ -3673,7 +3681,7 @@ void icemc::Anita::calculate_all_offsets(void) {
   double step_phi=(MAX_PHI_HYPOTHESIS-MIN_PHI_HYPOTHESIS)/(double)N_STEPS_PHI;
   double step_theta=(MAX_THETA_HYPOTHESIS-MIN_THETA_HYPOTHESIS)/(double)N_STEPS_THETA;
 
-  cout << "step_theta is " << step_theta << "\n";
+  std::cout << "step_theta is " << step_theta << "\n";
 
   for (unsigned center_phi_sector_index = 0; center_phi_sector_index < 1; ++center_phi_sector_index) {
     angles_tmp.clear();
@@ -4551,8 +4559,9 @@ void icemc::Anita::readTriggerEfficiencyScanPulser(const Settings *settings1){
 
      
     f->Close();
-  }else{
-    cout << "Impulse response on trigger path can only be used with ANITA-3" << endl;
+  }
+  else{
+    std::cout << "Impulse response on trigger path can only be used with ANITA-3" << std::endl;
     exit(1);
   }
  

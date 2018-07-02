@@ -58,15 +58,36 @@ icemc::Vector icemc::ANITA::getPositionRX(Int_t rx) const {
 }
 
 
-void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const {
-  int antNum = rx;
-  
+void icemc::ANITA::getLayerFoldFromTriggerRX(int rx, int& ilayer, int& ifold) const {
+  int antNum = rx;  
   // This is NOT how to do things...
   ilayer = -1;
   ifold = -1;
   for (int ilayerTemp=0 ;ilayerTemp < fSettings->NLAYERS; ilayerTemp++) { // loop over layers on the payload
     for (int ifoldTemp=0;ifoldTemp<this->NRX_PHI[ilayerTemp];ifoldTemp++) { // ifold loops over phi
       Int_t antNum2 = this->GetRxTriggerNumbering(ilayerTemp, ifoldTemp);
+      if(antNum==antNum2){
+	ilayer = ilayerTemp;
+	ifold = ifoldTemp;
+	break;
+      }
+    }
+    if(ilayer > -1){
+      break;
+    }
+  }
+}
+
+
+
+void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const {
+  int antNum = rx;  
+  // This is NOT how to do things...
+  ilayer = -1;
+  ifold = -1;
+  for (int ilayerTemp=0 ;ilayerTemp < fSettings->NLAYERS; ilayerTemp++) { // loop over layers on the payload
+    for (int ifoldTemp=0;ifoldTemp<this->NRX_PHI[ilayerTemp];ifoldTemp++) { // ifold loops over phi
+      Int_t antNum2 = this->GetRx(ilayerTemp, ifoldTemp);
       if(antNum==antNum2){
 	ilayer = ilayerTemp;
 	ifold = ifoldTemp;
@@ -147,7 +168,6 @@ void icemc::ANITA::initSeaveys(const Settings *settings1, const Anita *anita1) {
 	seaveyPayloadPos = Vector(anita1->RRX[ilayer]*cos(phi) + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer]),
 			   anita1->RRX[ilayer]*sin(phi) + anita1->LAYER_HPOSITION[ilayer]*sin(anita1->LAYER_PHIPOSITION[ilayer]),
 			   anita1->LAYER_VPOSITION[ilayer]);
-
       }
      
     } 
@@ -212,26 +232,28 @@ bool icemc::ANITA::applyTrigger(int inu){
 
   Tools::Zero(this->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
   Tools::Zero(this->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
-  if (!fSettings->TRIGGEREFFSCAN){
-    if(fSettings->BORESIGHTS){
-      this->GetArrivalTimesBoresights(fRayPtrIDontOwn->n_exit2bn_eachboresight[2]);
-    }
-    else{
-      this->GetArrivalTimes(fRayPtrIDontOwn->n_exit2bn[2],this,fSettings);
-    }
-  }
-  this->rx_minarrivaltime = Tools::WhichIsMin(this->arrival_times[0], fSettings->NANTENNAS);
+  // if (!fSettings->TRIGGEREFFSCAN){
+  //   if(fSettings->BORESIGHTS){
+  //     this->GetArrivalTimesBoresights(fRayPtrIDontOwn->n_exit2bn_eachboresight[2]);
+  //   }
+  //   else{
+  //     this->GetArrivalTimes(fRayPtrIDontOwn->n_exit2bn[2],this,fSettings);
+  //   }
+  // }
+  // this->rx_minarrivaltime = Tools::WhichIsMin(this->arrival_times[0], fSettings->NANTENNAS);
 
-  if(inu==522){
-    for(int rx = 0; rx < fSeaveys.size(); rx++){
-      int ifold, ilayer;
-      getLayerFoldFromRX(rx, ilayer, ifold);
-      int rx2 = GetRx(ilayer,ifold);
-      std::cout << "Arrival times " << rx << "\t"
-		<< arrival_times[0][rx2] - arrival_times[0][0] << std::endl;//"\t"
-		// << arrival_times[1][rx] << std::endl;
-    }
- }
+ //  if(inu==522){
+ //    for(int rx = 0; rx < fSeaveys.size(); rx++){
+ //      int ifold, ilayer;
+ //      getLayerFoldFromRX(rx, ilayer, ifold);
+ //      int rx2 = GetRx(ilayer,ifold);
+ //      std::cout << "Arrival times " << rx << "\t"
+ // 		<< arrival_times[0][rx2] - arrival_times[0][0] << std::endl;//"\t"
+ // 		// << arrival_times[1][rx] << std::endl;
+
+      
+ //    }
+ // }
   //For verification plots - added by Stephen
   double voltagearray[Anita::NLAYERS_MAX*Anita::NPHI_MAX] = {0}; //Records max voltages on each antenna for one neutrino
   int discones_passing = 0;  // number of discones that pass

@@ -43,10 +43,28 @@ namespace icemc {
 
     UInt_t getLastEventNumber() const {return fEventNumber;}
 
+    const RayTracer* fRayPtrIDontOwn; /// @todo temp public for test
+    /** 
+     * What's the ilayer/ifold of given RX?
+     * 
+     * @param rx index of the fSeaveys
+     * @param ilayer layer of ANITA 
+     * @param ifold index in phi, maybe...
+     */
+    void getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const; ///@todo temp public for test
+
+    /** 
+     * What's the ilayer/ifold of given trigger RX?
+     * 
+     * @param rx index of the fSeaveys
+     * @param ilayer layer of ANITA 
+     * @param ifold index in phi, maybe...
+     */
+    void getLayerFoldFromTriggerRX(int rx, int& ilayer, int& ifold) const; ///@todo temp public for test
+    
   private:
 
     const Settings* fSettings;
-    const RayTracer* fRayPtrIDontOwn;
     int fNumRX;
 
     std::vector<Seavey> fSeaveys; ///< The set of Seavey antennas on the payload
@@ -63,14 +81,6 @@ namespace icemc {
     friend class AnitaSimOutput; ///@todo Can I do this and respect privacy with getters?
     AnitaSimOutput fAnitaOutput; ///< Handles converting the MC output into the same format as real ANITA data
 
-    /** 
-     * What's the ilayer/ifold of given RX?
-     * 
-     * @param rx index of the fSeaveys
-     * @param ilayer layer of ANITA 
-     * @param ifold index in phi, maybe...
-     */
-    void getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const;
 
 
     void initSeaveys(const Settings *settings1, const Anita *anita1);
