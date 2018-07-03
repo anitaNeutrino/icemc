@@ -28,6 +28,26 @@ namespace icemc {
   class Settings;
 
   /**
+   * @class NuFlavor
+   * @brief enum for neutrino flavour
+   */
+  enum class NuFlavor : int {
+			   e = 1,
+			   mu = 2,
+			   tau = 3
+  };
+
+
+  /**
+   * @class CurrentType
+   * @brief enum for type of interaction
+   */
+  enum class CurrentType : int {
+				Charged = 0,
+				Neutral = 1
+  };
+
+  /**
    * @class Y
    * @brief Inelasticity distributions: stores parametrizations and picks inelasticities
    */
@@ -42,7 +62,7 @@ namespace icemc {
     TF2* fy0_high;						///< For picking inelasticity in high y region according to Equation 15.
     TRandom3 Rand3;
 
-    double pickYConnollyetal2011(int NU,int CURRENT,double e);	///< pick an inelasticity using recipe in Connolly et al. (2011)
+    double pickYConnollyetal2011(int NU,CurrentType CURRENT,double e);	///< pick an inelasticity using recipe in Connolly et al. (2011)
     // NU=0: nubar, NU=1: nu
     // CURRENT=0: CC, CURRENT-1: NC
 
@@ -80,7 +100,7 @@ namespace icemc {
      * 
      * @return 
      */
-    double pickY(const Settings *settings1, double pnu, int nu_nubar, int currentint);
+    double pickY(const Settings *settings1, double pnu, int nu_nubar, CurrentType currentint);
 
     /** 
      * @brief If you want to choose y from a flat distribution this is the weight it should have according to Connolly et al. (2011)
@@ -92,7 +112,7 @@ namespace icemc {
      * 
      * @return 
      */
-    double Getyweight(double pnu, double y, int nu_nubar, int currentint);
+    double Getyweight(double pnu, double y, int nu_nubar, CurrentType currentint);
     
   };//Y
 
@@ -112,8 +132,8 @@ namespace icemc {
     int run_old_code;
     
   public:
-    double pickY(const Settings *settings1,double pnu,int nu_nubar,int currentint);///<pick inelasticity y according to chosen model
-    double Getyweight(double pnu,double y,int nu_nubar,int currentint);///< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
+    double pickY(const Settings *settings1,double pnu,int nu_nubar, CurrentType currentint);///<pick inelasticity y according to chosen model
+    double Getyweight(double pnu,double y,int nu_nubar,CurrentType currentint);///< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
 
 
     double A_low[4];      ///< Table V of Connolly et al. for use in Eq. 16.  Same for any nu_nubar and current type.
@@ -143,17 +163,17 @@ namespace icemc {
     ~Primaries();///< Destructor 
     
     /// Neutrino-nucleon cross-sections using model chosen
-    int GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,int nu_nubar,int currentint);
+    int GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,int nu_nubar,CurrentType currentint);
 
 
 
     // string GetCurrent();
-    std::string GetNuFlavor() const;
+    NuFlavor GetNuFlavor() const;    
   protected:
   };///<Primaries
 
 
-  
+
 
   /**
    * @class Interaction
@@ -163,30 +183,13 @@ namespace icemc {
     
   private:
         
-    Vector tmp_banana;						        ///<Intermediate vector
-								        ///<For banana plot
-    static constexpr double nu_banana_theta_angle=-0.413*3.14159/180.;  ///< don't let me use RADDEG which is annoying 
-    static constexpr double altitude_nu_banana=-400.;			///<Depth of interaction of banana neutrino
-    static constexpr double lat_nu_banana=0.; 
-    static constexpr double lon_nu_banana=0.;
-    static constexpr double banana_slopey=0.;			        ///<Turn slopyness off for banana plots (SLOPEY)
-    static constexpr double nu_banana_phi_angle=0. * 3.14159/180.;
-    
+
   public:
     
-    static constexpr double phi_nu_banana=3.14159/4;			 ///<Location in phi    
-    static constexpr double banana_observation_distance=600000.;	 ///<How far from the surface above the interaction are we when we measure the voltages? (meters) Note: Should be at least 100000 for best results.
-    static constexpr double theta_nu_banana=170.*3.14159/180.;		 ///<Location of banana neutrino in theta
-    static constexpr int kcc=0;
-    static constexpr int knc=1;
-
-    double banana_phi_obs;
-    Vector banana_obs;						         ///<Vector from the neutrino interaction to the observation point
-
     /** 
      * Constructor
      */
-    Interaction(std::string inttype, Primaries *primary1, const Settings *settings1); //, int whichray); //, Counting *count1);
+    Interaction(Primaries *primary1, const Settings *settings1); //, int whichray); //, Counting *count1);
     void PickAnyDirection();
     
     int noway;
@@ -218,39 +221,17 @@ namespace icemc {
     double d2;                  ///< ice-rock boundary to interaction point in m
     
     
-    static constexpr double pnu_banana=2.00E19;
-    static constexpr double banana_y=0.2;	    ///< Elasticity.  0.2 is an average number.
-    double banana_weight;			    ///< Weight measurement locations to account for phase space
-    double banana_theta_obs;			         
-    double banana_volts;			    ///< Total voltage measured at a spot on the sky
-    static constexpr double banana_signal_fluct=0.; ///< Turn off noise for banana plots (settings1->SIGNAL_FLUCT) (shouldn't matter)
-    static constexpr double banana_sigma=0.;	    ///< NSIGMA in the case of a banana plot
-    
-    
     void setNuFlavor(const Primaries *primary1, const Settings *settings1);//, int whichray, Counting *count1);
-    std::string GetCurrent();
+    CurrentType GetCurrent();
     void setCurrent();
     int getPdgCode() const;
 
     Position posnu;
     Position posnu_down;
-    std::string  nuflavor;	  ///< neutrino flavor
-    std::string  current;	  ///< CC or NC?
-    int nuflavorint;		  ///< Added by Stephen for output purposes
-    int currentint;		  ///< Ditto - Stephen
+    NuFlavor nuflavor;	  ///< neutrino flavor    
+    CurrentType current;	  ///< CC or NC?
     
-    
-    double surface_over_banana_nu;
-    
-    std::string banana_flavor;	  ///<Force interaction to be a muon neutrino
-    std::string banana_current;	  ///<Force interaction to be a neutral current
-    
-    Vector nnu_banana;		  ///<Forced neutrino direction 
-    
-    Position nu_banana;		  ///<The forced interaction point of the neutrino for the banana plots
-    Position nu_banana_surface;	  ///<The location of the surface above the forced neutrino interaction point  
-    
-				  ///< phase space weighting
+
     double dtryingdirection;	  ///< weighting factor: how many equivalent tries each neutrino counts for after having reduced angular phase space for possibly detectable events
     double dnutries;		  ///< product of dtryingdirection and dtryingposition
     
@@ -268,5 +249,27 @@ namespace icemc {
   };
 
 }
+
+
+/** 
+ * For a nice cout/cerr/logging experience
+ * 
+ * @param os is a output string stream
+ * @param f is the Flavor class enum
+ * 
+ * @return the updated output string stream
+ */
+std::ostream& operator<<(std::ostream& os, const icemc::NuFlavor& f);
+
+/** 
+ * For a nice cout/cerr/logging experience
+ * 
+ * @param os is a output string stream
+ * @param c is the Current class enum
+ * 
+ * @return the updated output string stream
+ */
+std::ostream& operator<<(std::ostream& os, const icemc::CurrentType& c);
+
 
 #endif

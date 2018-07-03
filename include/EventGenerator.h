@@ -92,7 +92,7 @@ namespace icemc {
     // double latitude_this; // for plotting latitude
     // double altitude_this; // for plotting altitude
     // double heading_this=0.;// for plotting heading
-    double gps_offset=0;    
+    // double gps_offset=0;
     double pnu;   ///< energy of neutrinos
 
     double MEANX=0;
@@ -131,8 +131,8 @@ namespace icemc {
     double diff_3tries=0;
     double diffnorm=0;  // checking angle of surf normal between iterations
     double diffrefr=0;  // checking angle of refr between iterations
-    double costheta_inc=0;  // cos angle of incidence wrt surface normal
-    double costheta_exit=0; // theta of exit point wrt earth (costheta=1 at south pole)
+    // double costheta_inc=0;  // cos angle of incidence wrt surface normal
+    // double costheta_exit=0; // theta of exit point wrt earth (costheta=1 at south pole)
     double theta_rf_atbn; // polar angle of the signal as seen by perfect eyes at the balloon.
     double theta_rf_atbn_measured; //polar angle of the signal as measured at the balloon (just the above variable smeared by 0.5 degrees)
 
@@ -278,7 +278,7 @@ namespace icemc {
     //End verification plot block
 
     int xsecParam_nutype = 0; // neutrino = 0, antineutrino = 1;
-    int xsecParam_nuint  = 1; // NC = 0, CC = 1;
+    CurrentType xsecParam_nuint  = CurrentType::Neutral;
 
 
 
@@ -307,7 +307,6 @@ namespace icemc {
 
     // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
     // double vmmhz_em[Anita::NFREQ];
-    double vmmhz_min_thatpasses=1000;
     double vmmhz_min=0;   // minimum of the above array
     double vmmhz_max=0;                        // maximum of the above array
     double deltheta_em[Anita::NFREQ], deltheta_had[Anita::NFREQ];     // for ch angular distribution
@@ -318,7 +317,7 @@ namespace icemc {
     // double emfrac, hadfrac, sumfrac;               // em and had fractions
     // int n_interactions=1;           // count number of interactions for this event,  including secondaries.
     // double emfrac_db, hadfrac_db; //db stands for "double bang"
-    int nuflavorint2;
+    // int nuflavorint2;
     double costheta_nutraject2;
     double phi_nutraject2;
     double altitude_int2;
@@ -463,7 +462,7 @@ namespace icemc {
 
     // @todo constify... needs some love to constify
     void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, const AskaryanFreqsGenerator* askFreqGen,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
-    void WriteNeutrinoInfo(const int& inu, const Position&,  const Vector&,  const Position&,  double,  std::string,  std::string,  double,  std::ofstream &nu_out) const;
+    void WriteNeutrinoInfo(const int& inu, const Position&,  const Vector&,  const Position&,  double,  NuFlavor,  CurrentType,  double,  std::ofstream &nu_out) const;
 
     /** 
      * @brief Run the neutrino generation

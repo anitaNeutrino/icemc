@@ -565,8 +565,7 @@ int icemc::Earth::Getchord(const Settings *settings1,
 	std::cout<<"Oops3! len_int_kgm2, ddensity, step, factor : "<<len_int_kgm2<<" , "<<ddensity<<" , "<<step<<" , "<<exp(-step/L)<<std::endl;
       }
       x+=step; // increment how far you've stepped through crust
-	    
-	    
+
       // possible for a neutrino to go through the air but not likely because they aren't the most extreme skimmers (they went through the mantle)
       where += step*nchord; // where you are now along neutrino's path
 	    
@@ -682,12 +681,12 @@ double icemc::Earth::SmearTheta(int ilat, double rand) const {
 
 
 
-void icemc::Earth::ReadCrust(std::string test) {
+void icemc::Earth::ReadCrust(const std::string& fName) {
     
   // reads in altitudes of 7 layers of crust, ice and water
   // puts data in arrays
 
-  std::fstream infile(test.c_str(),std::ios::in);
+  std::fstream infile(fName.c_str(),std::ios::in);
     
   std::string thisline; // for reading in file
   std::string slon; //longitude as a string

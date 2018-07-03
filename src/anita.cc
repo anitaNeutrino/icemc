@@ -407,11 +407,11 @@ void icemc::Anita::Initialize(const Settings *settings1, ofstream &foutput, TStr
   
   // Setting up output files
   
-  string stemp=string(outputdir.Data())+"/signals.root";
+  std::string stemp = std::string(outputdir.Data())+"/signals.root";
   fsignals=new TFile(stemp.c_str(),"RECREATE");
   tsignals=new TTree("tsignals","tsignals");
     
-  stemp = string(outputdir.Data())+"/data.root";
+  stemp = std::string(outputdir.Data())+"/data.root";
   fdata = new TFile(stemp.c_str(),"RECREATE");
   tdata = new TTree("tdata","tdata");    
     
@@ -577,8 +577,8 @@ void icemc::Anita::readVariableThresholds(const Settings *settings1){
   }
   else if (settings1->WHICH==Payload::Anita3 || settings1->WHICH==Payload::Anita4){ // ANITA-3 and 4
     
-    string turfFile="";
-    string surfFile="";
+    std::string turfFile="";
+    std::string surfFile="";
     if (settings1->WHICH==Payload::Anita3){
       turfFile+=ICEMC_DATA_DIR+"/SampleTurf_icemc_anita3.root";
       surfFile+=ICEMC_DATA_DIR+"/SampleSurf_icemc_anita3.root";
@@ -588,7 +588,7 @@ void icemc::Anita::readVariableThresholds(const Settings *settings1){
     }
 
     // Reading in masking every 60 seconds
-    fturf=new TFile(turfFile.c_str());
+    fturf = TFile::Open(turfFile.c_str());
     turfratechain=(TTree*)fturf->Get("turfrate_icemc");
     turfratechain->SetMakeClass(1);
     turfratechain->SetBranchAddress("phiTrigMask",&phiTrigMask);
@@ -606,7 +606,7 @@ void icemc::Anita::readVariableThresholds(const Settings *settings1){
     realTime_tr_max=realTime_turfrate; // realTime of last event in file
 
     // Reading in thresholds/scalers every 60 seconds
-    fsurf=new TFile(surfFile.c_str());
+    fsurf = TFile::Open(surfFile.c_str());
     surfchain=(TTree*)fsurf->Get("surf_icemc");
     surfchain->SetMakeClass(1);
     surfchain->SetBranchAddress("thresholds",       &thresholds       );
@@ -632,7 +632,7 @@ void icemc::Anita::readAmplification(){
   // get rfcm amplification data
   // read from tree with amplification data
   // this tree contains a different event for each antenna and polarization
-  TFile* f2 = new TFile((ICEMC_DATA_DIR+"/gains.root").c_str());
+  TFile* f2 = TFile::Open((ICEMC_DATA_DIR+"/gains.root").c_str());
   TTree* tgain = (TTree*)f2->Get("tree1");
     
   float freq_ampl_eachantenna[NPOINTS_AMPL];
@@ -674,7 +674,7 @@ void icemc::Anita::saveGainsPlot(const std::string& fileName){
 void icemc::Anita::getDiodeDataAndAttenuation(const Settings *settings1, TString outputdir){
 
   // get vnoise data
-  string sdiode;
+  std::string sdiode;
   if (BANDING==0){
     sdiode=ICEMC_DATA_DIR+"/diode_anita1.root";
   }
@@ -693,7 +693,7 @@ void icemc::Anita::getDiodeDataAndAttenuation(const Settings *settings1, TString
     
     
     
-  string sbands;
+  std::string sbands;
   if (BANDING==0){
     sbands=ICEMC_DATA_DIR+"/bands_anita1.root";
   }
@@ -747,7 +747,7 @@ void icemc::Anita::getDiodeDataAndAttenuation(const Settings *settings1, TString
   cdiode->cd(2);
   gdiode->Draw("al");
   
-  std::string stemp = string(outputdir.Data())+"/diode.eps";
+  std::string stemp = std::string(outputdir.Data())+"/diode.eps";
   cdiode->Print((TString)stemp);
     
   tdiode->SetBranchAddress("avgfreqdomain_lab",&(avgfreqdomain_lab[0]));
@@ -804,7 +804,7 @@ void icemc::Anita::getDiodeDataAndAttenuation(const Settings *settings1, TString
   for (int i=0;i<5;i++) {
     gcorr[i]->Draw("l");
   }
-  stemp=string(outputdir.Data())+"/bands.eps";
+  stemp=std::string(outputdir.Data())+"/bands.eps";
   cbands->Print((TString)stemp);
     
     
@@ -1191,7 +1191,7 @@ void icemc::Anita::setDiodeRMS(const Settings *settings1, TString outputdir){
     }
 	
   }
-  std::string stemp = string(outputdir.Data())+"/hnoise.eps";
+  std::string stemp = std::string(outputdir.Data())+"/hnoise.eps";
   c4->Print((TString)stemp);
 
   
@@ -1620,7 +1620,7 @@ void icemc::Anita::RFCMs(int ilayer,int ifold,double *vmmhz) {
 // reads in the effect of a signal not hitting the antenna straight on
 // also reads in gainxx_measured and sets xxgaintoheight
 void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_receiver) {
-  string gain_null1, gain_null2;
+  std::string gain_null1, gain_null2;
   double sfrequency;
   int iii, jjj;
   std::ifstream anglefile;
@@ -2633,7 +2633,7 @@ int icemc::Anita::getLabAttn(int NPOINTS_LAB,double *freqlab,double *labattn) {
   }
   int index=0;
     
-  string line;
+  std::string line;
   getline(flab,line); // first two lines are junk
   getline(flab,line);
     
@@ -2738,7 +2738,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, const Balloon* bn1){
     }
 		
     for (int i=0;i<NRX_PHI[0];i++) {
-      VNOISE_ANITALITE[i]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,bn1->surface_under_balloon,THETA_ZENITH[i],settings1->BW_SEAVEYS,temp_eachrx[i]);
+      VNOISE_ANITALITE[i]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,bn1->getSurfaceUnderBalloon(),THETA_ZENITH[i],settings1->BW_SEAVEYS,temp_eachrx[i]);
     }
   } //if (ANITA-lite)
     
@@ -3411,12 +3411,12 @@ void icemc::Anita::GetPayload(const Settings* settings1, const Balloon* bn1){
     THETA_ZENITH[3]=constants::PI/2+INCLINE_TOPTHREE*constants::RADDEG;
       
     // Read photogrammetry positions
-    string whichANITAroman="";
+    std::string whichANITAroman="";
     if (settings1->WHICH==Payload::Anita3) whichANITAroman+="III";
     else whichANITAroman+="IV";
-    string photoFile;
+    std::string photoFile;
 #ifdef ANITA_UTIL_EXISTS
-    photoFile += ( (string)getenv("ANITA_UTIL_INSTALL_DIR") +"/share/anitaCalib/anita"+whichANITAroman+"Photogrammetry.csv");
+    photoFile += ( (std::string)getenv("ANITA_UTIL_INSTALL_DIR") +"/share/anitaCalib/anita"+whichANITAroman+"Photogrammetry.csv");
 #else
     photoFile += (ICEMC_DATA_DIR+"/anita"+whichANITAroman+"Photogrammetry.csv");
 #endif
@@ -3514,16 +3514,16 @@ void icemc::Anita::GetPayload(const Settings* settings1, const Balloon* bn1){
     }
       
     // HERE HPOL IS 0 AND VPOL IS 1
-    string whichANITAcard="";
+    std::string whichANITAcard="";
     if (settings1->WHICH==Payload::Anita3) {
       whichANITAcard+="3";
     }
     else{
       whichANITAcard+="4";
     }
-    string phaseCenterName;
+    std::string phaseCenterName;
 #ifdef ANITA_UTIL_EXISTS
-    phaseCenterName += ( (string)getenv("ANITA_UTIL_INSTALL_DIR") +"/share/anitaCalib/phaseCenterPositionsRelativeToPhotogrammetryAnita"+whichANITAcard+".dat");
+    phaseCenterName += ( (std::string)getenv("ANITA_UTIL_INSTALL_DIR") +"/share/anitaCalib/phaseCenterPositionsRelativeToPhotogrammetryAnita"+whichANITAcard+".dat");
 #else
     phaseCenterName += (ICEMC_DATA_DIR+"/phaseCenterPositionsRelativeToPhotogrammetryAnita"+whichANITAcard+".dat");
 #endif
@@ -3665,7 +3665,7 @@ void icemc::Anita::GetPayload(const Settings* settings1, const Balloon* bn1){
   }
 
   for (int i=0;i<NRX_PHI[0];i++) {
-    VNOISE_ANITALITE[i]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,bn1->surface_under_balloon,THETA_ZENITH[0],settings1->BW_SEAVEYS,temp_eachrx[i]);
+    VNOISE_ANITALITE[i]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,bn1->getSurfaceUnderBalloon(),THETA_ZENITH[0],settings1->BW_SEAVEYS,temp_eachrx[i]);
   }
 }//GetPayload
 
@@ -4103,8 +4103,8 @@ void icemc::Anita::readImpulseResponseDigitizer(const Settings *settings1){
   
   // Set deltaT to be used in the convolution
   deltaT = 1./(2.6*16.);
-  string graphNames[2][3][16];
-  string fileName;
+  std::string graphNames[2][3][16];
+  std::string fileName;
   double norm=1;
  
   // For ANITA-2 we have 1 impulse response for VPOL and 1 for HPOL
@@ -4125,8 +4125,8 @@ void icemc::Anita::readImpulseResponseDigitizer(const Settings *settings1){
 
     fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseDigitizer.root";
 
-    string spol[2] ={"V", "H"};
-    string sring[3]={"T", "M", "B"};
+    std::string spol[2] ={"V", "H"};
+    std::string sring[3]={"T", "M", "B"};
     
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
@@ -4214,9 +4214,9 @@ void icemc::Anita::readTuffResponseDigitizer(const Settings *settings1){
   // iphi is the antenna number
   // ituff is the notch directory
   TString filename;
-  string snotch_dir[6]={"notches_260_0_0","notches_260_375_0","notches_260_0_460","notches_260_385_0","notches_260_365_0","notches_260_375_460"};
-  string spol[2] = {"V","H"};
-  string sring[3] = {"T","M","B"};
+  std::string snotch_dir[6]={"notches_260_0_0","notches_260_375_0","notches_260_0_460","notches_260_385_0","notches_260_365_0","notches_260_375_460"};
+  std::string spol[2] = {"V","H"};
+  std::string sring[3] = {"T","M","B"};
  // Set deltaT to be used in the convolution
   deltaT = 1./(2.6*16.);
   for(int ipol=0; ipol<=1; ipol++) {
@@ -4275,7 +4275,7 @@ void icemc::Anita::readTuffResponseDigitizer(const Settings *settings1){
 void icemc::Anita::readTuffResponseTrigger(const Settings *settings1){
   // for loops to make the RFSignal array that can be used in applyImpulseResponseTrigger of ChanTrigger.cc Do we need one for each antenna???
   TString filename;
-  string snotch_dir[6]={"trigconfigA.imp","trigconfigB.imp","trigconfigC.imp","trigconfigG.imp","trigconfigO.imp","trigconfigP.imp"};
+  std::string snotch_dir[6]={"trigconfigA.imp","trigconfigB.imp","trigconfigC.imp","trigconfigG.imp","trigconfigO.imp","trigconfigP.imp"};
  // Set deltaT to be used in the convolution
   deltaT = 1./(2.6*16.);
   for(int ipol=0; ipol<=1; ipol++) {
@@ -4361,16 +4361,16 @@ void icemc::Anita::readImpulseResponseTrigger(const Settings *settings1){
   
   // Set deltaT to be used in the convolution
   deltaT = 1./(2.6*16.);
-  string graphNames[2][3][16];
-  string fileName;
+  std::string graphNames[2][3][16];
+  std::string fileName;
   double norm=1;
 
   if(settings1->WHICH==Payload::Anita3 || settings1->WHICH==Payload::Anita4){
 
     fileName = ICEMC_DATA_DIR+"/Anita3_ImpulseResponseTrigger.root";
 
-    string spol[2] ={"V", "H"};
-    string sring[3]={"T", "M", "B"};
+    std::string spol[2] ={"V", "H"};
+    std::string sring[3]={"T", "M", "B"};
     
     for (int ipol=0;ipol<2;ipol++){
       for (int iring=0;iring<3;iring++){
@@ -4479,7 +4479,7 @@ void icemc::Anita::readTriggerEfficiencyScanPulser(const Settings *settings1){
   
   if(settings1->WHICH==Payload::Anita3){
      
-    string fileName = ICEMC_DATA_DIR+"/TriggerEfficiencyScanPulser_anita3.root";
+    std::string fileName = ICEMC_DATA_DIR+"/TriggerEfficiencyScanPulser_anita3.root";
     TFile *f = new TFile(fileName.c_str(), "read");
 
     // Get average pulse as measured by scope

@@ -22,7 +22,6 @@
 
 #include "anita.hh"
 
-
 class TNamed;
 
 namespace icemc{
@@ -124,7 +123,7 @@ namespace icemc{
     int BN_LONGITUDE;
     int BN_ALTITUDE;
     int RANDOMIZE_BN_ORIENTATION;
-    int CENTER;                                                                ///< whether or not to center one phi sector of the payload on the incoming signal (for making signal efficiency curves)
+    // int CENTER;                                                                ///< whether or not to center one phi sector of the payload on the incoming signal (for making signal efficiency curves)
     double MAXHORIZON;
   
     int EVENTSMAP;//whether draw the events distribution map

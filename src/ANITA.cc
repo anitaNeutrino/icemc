@@ -257,11 +257,6 @@ bool icemc::ANITA::applyTrigger(int inu){
     exit(1);
     // icemcLog().fslac_hitangles << this->sslacpositions[this->islacposition] << "\n";    
   }
-
-  double hitangle_e;
-  if (fSettings->CENTER){
-    this->CenterPayload(hitangle_e);
-  }
   
   globalTrigger->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
 

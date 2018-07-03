@@ -30,14 +30,12 @@ namespace icemc {
   enum class FlightPath {FixedPosition        = 0,
 			 Circle80DegreesSouth = 1,
 			 AnitaLite            = 2,
-			 BananaPlot           = 3,
-			 PeterEvent           = 4,
 			 Custom               = 5,
 			 Anita1               = 6,
 			 Anita2               = 7,
 			 Anita3               = 8,
 			 Anita4               = 9
-  };  
+  };
 
   /**
    * @class Balloon
@@ -49,35 +47,9 @@ namespace icemc {
     Balloon(const Settings* settings);
     virtual ~Balloon() {;}
 
-  
-
-
-    void setObservationLocation(Interaction *interaction1,int inu, const Antarctica *antarctic, const Settings *settings1);
-    // void GetBoresights(const Settings *settings1, Anita *anita1, Position r_bn, double phi_spin, Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]);
-    void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,const Settings *settings1, const Antarctica *antarctica1,
+    void PickDownwardInteractionPoint(Interaction *interaction1,const Settings *settings1, const Antarctica *antarctica1,
 				      RayTracer *ray1, int &beyondhorizon); 
-  
-    
 
-    /**
-     * This function centers the payload
-     * 
-     * @param  hitangle_e 
-     */
-    void CenterPayload(double& hitangle_e);
-
-    
-    /**
-     * This function picks the balloon position
-     *
-     * @param  straightup -
-     * @param  antarctica -
-     * @param  settings1 -
-     * @param  anita1 -
-     */
-    void PickBalloonPosition(Vector straightup, const Antarctica *antarctica, const Settings *settings1, Anita *anita1);
-
-    
     /**
      * Position of spot under balloon
      *
@@ -97,15 +69,6 @@ namespace icemc {
      */
     int Getibnposition();
 
-    ///< This function gets the spin of the balloon whatever that means
-    /**
-     * Get the azimuth of the balloon
-     *
-     *
-     * @param  heading -
-     * @return returns double
-     */
-    double GetBalloonSpin(double heading) const;
 
     
     // ///< This function gets the antenna orientation
@@ -172,7 +135,7 @@ namespace icemc {
      * @param  anita1 -
      * @return returns void
      */
-    void GetBoresights(const Settings *settings1, const Anita *anita1);
+    // void GetBoresights(const Settings *settings1, const Anita *anita1);
     
     // ///< This function calculates antenna positions
     // /**
@@ -206,17 +169,17 @@ namespace icemc {
     Vector unRotatePayload(Vector ant_pos) const;
 
     inline FlightPath whichPath() const {return WHICHPATH;}
-
     inline const Position& position() const {return r_bn;}
-
     unsigned int realTime() const {return realTime_flightdata;}
-
     inline double getLatitude() const {return latitude;}
     inline double getLongitude() const {return longitude;}
+    inline double getAltitude() const {return altitude;}
     inline double getHeading() const {return heading;}
-    double getPitch() const;
-    double getRoll() const;
-
+    inline UInt_t getRealTime() const {return realTime_flightdata;}
+    double getPitch() const; ///< Converts to constant for A2 and A3 (A4?)
+    double getRoll() const; ///< Converts to constant for A2 and A3 (A4?)
+    double getSurfaceUnderBalloon() const {return surface_under_balloon;}
+    
 #ifdef ANITA_UTIL_EXISTS
     /** 
      * Construct an ANITA data style Adu5Pat from the GPS info in #fChain
@@ -246,24 +209,20 @@ namespace icemc {
 
     float flatitude,flongitude,faltitude,fheading,froll, fpitch;
 
-    double surface_under_balloon;                               ///< distance between center of the earth and the surface of earth under balloon        
-    
   private:
 
+    double surface_under_balloon;                               ///< distance between center of the earth and the surface of earth under balloon
+    
     void InitializeBalloon();
     void ReadAnitaliteFlight();
     void setr_bn(double latitude,double longitude);
     
-    const FlightPath WHICHPATH;                                 ///< 0=fixed balloon position,1=randomized,2=ANITA-lite GPS data,3=banana plot
-    // GPS positions of Anita-lite balloon flight
+    const FlightPath WHICHPATH;
     int igps;                                                   ///< which balloon position do we use out of the 25000 anitalite GPS positions.
     int ibnposition;
-    // static const int MAX_POSITIONS=50;                          ///< for the slac beam test
-    // Vector slacpositions[MAX_POSITIONS];
-    // std::string sslacpositions[MAX_POSITIONS];
-    // int islacposition;
     unsigned int realTime_flightdata_temp;                      ///< realtime from the flight data file
     unsigned int realTime_flightdata;                           ///< realtime from the flight data file
+
     double latitude,longitude,altitude,heading,roll,pitch;
     
     double MINALTITUDE;                                         ///< minimum altitude balloon needs to be before we consider it a good event to read from the flight data file
@@ -283,7 +242,6 @@ namespace icemc {
     Vector n_north;                                             ///< north, as seen from the balloon position
 
     Position r_bn_shadow;                                       ///< position of the balloon projected on earth surface - point just below balloon at surface of the earth
-    double phi_spin;                                            ///< orientation of the balloon
 
     int NPOINTS_MIN;                                            ///< min and max index for gps positions we want to include in the simulation (to exclude launch and fall).  These are set in ReadFlight
     int NPOINTS_MAX;

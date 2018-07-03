@@ -16,8 +16,6 @@
 #include "Tools.h"
 #include "vector.hh"
 #include "Roughness.h"
-// #include "anita.hh"
-// #include "balloon.hh"
 #include "ANITA.h"
 #include "Antarctica.h"
 #include "Spectra.h"
@@ -92,12 +90,6 @@ icemc::EventGenerator::~EventGenerator()
   if(interaction1){
     delete interaction1;
   }
-  // if(bn1){
-  //   delete bn1;
-  // }
-  // if(anita1){
-  //   delete anita1;
-  // }
   if(fDetector){
     delete fDetector;
   }
@@ -112,25 +104,6 @@ icemc::EventGenerator::~EventGenerator()
   }  
 }
 
-
-// void icemc::EventGenerator::IntegrateBands(Anita *anita1, int k, Screen *panel1, double *freq, double scalefactor, double *sumsignal) const {
-//   for (int j=0;j<5;j++) {
-//     // if this frequency is in this bandwidth slice
-//     for (int jpt=0; jpt<panel1->GetNvalidPoints(); jpt++){
-//       if (anita1->bwslice_min[j]<=freq[k] && anita1->bwslice_max[j]>freq[k]){
-//         sumsignal[j] += panel1->GetVmmhz_freq(jpt*Anita::NFREQ + k)*(freq[k+1]-freq[k])*scalefactor;
-//       }
-//     }
-//   }
-// }
-
-
-// void icemc::EventGenerator::Integrate(Anita *anita1, int j, int k, double *vmmhz, double *freq, double scalefactor, double sumsignal) {
-//   // if this frequency is in this bandwidth slice
-//   if (anita1->bwslice_min[j]<=freq[k] && anita1->bwslice_max[j]>freq[k]){
-//     sumsignal+=vmmhz[k]*(freq[k+1]-freq[k])*scalefactor;
-//   }
-// }
 
 
 
@@ -174,7 +147,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
 
   }//end for NTHRESHOLDS
 
-  string stemp=string(outputdir.Data())+"/thresholds.root";
+  std::string stemp=std::string(outputdir.Data())+"/thresholds.root";
   TFile *fthresholds=new TFile(stemp.c_str(), "RECREATE");
   TCanvas *cthresh=new TCanvas("cthresh", "cthresh", 880, 800);
   cthresh->SetLogy();
@@ -191,7 +164,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
   g->SetMarkerStyle(21);
   g->Draw("ape");
 
-  stemp = string(outputdir.Data())+"/thresholds.eps";
+  stemp = std::string(outputdir.Data())+"/thresholds.eps";
   cthresh->Print((TString)stemp);
   g->Write();
   gdenom->Write();
@@ -208,7 +181,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
     gH->SetLineWidth(2);
     gH->SetMarkerStyle(21);
     gH->Draw("ape");
-    stemp = string(outputdir.Data())+"/thresholds_HPOL.eps";
+    stemp = std::string(outputdir.Data())+"/thresholds_HPOL.eps";
     cthresh->Print((TString)stemp);
 
     gH->Write();
@@ -650,7 +623,7 @@ icemc::Vector icemc::EventGenerator::GetPolarization(const Vector &nnu, const Ve
 
 
 double icemc::EventGenerator::IsItDoubleBang(double exitlength, double plepton) const {
-  double gamma=plepton/constants::MTAU;
+  double gamma = plepton/constants::MTAU;
   return 1-exp(-1*exitlength/(constants::TAUDECAY_TIME*constants::CLIGHT*gamma));
 }
 //end IsItDoubleBang()
@@ -821,11 +794,6 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
   double costhetanu1 = 0;
   double costhetanu2 = 0;
 
-  if (fDetector->whichPath()==FlightPath::BananaPlot) { //To make a banana plot,  force neutrino direction
-    nnu = interaction1->nnu_banana;
-    theta_threshold = 0; //not used for anything in banana plots
-    return 1;
-  }
 
   if (settings1->SKIPCUTS || !settings1->USEDIRECTIONWEIGHTS) { // this is a setting that allows all neutrino angles,  no restriction.  Makes the code slower.
     costhetanu2=1.;
@@ -962,18 +930,6 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
 
     //dtryingdirection+=4*PI/(2.*theta_threshold*sin(askFreqGen->GetChangle())*2*PI);
     interaction1->dtryingdirection=1/((costhetanu2-costhetanu1)/2.);
-    if (fDetector->whichPath()==FlightPath::PeterEvent   ) {
-      //double angle=(PI/2.-askFreqGen->GetChangle())-ray1->rfexit[0].Angle(ray1->nrf_iceside[4])+1.*RADDEG;
-      double angle=(constants::PI/2.-askFreqGen->GetChangle())-ray1->rfexit[0].Angle(ray1->nrf_iceside[4]);      // this will put the viewing angle at the cerenkov angle
-      double thetaposnu=posnu.Theta();
-      //double phiposnu=posnu.Phi();
-      costhetanu=cos(constants::PI/2+(thetaposnu-angle));
-      sinthetanu=sqrt(1-costhetanu*costhetanu);
-      //phinu=0.95993;
-      phinu=-1.339; // this is the phi where it's coming *from.*
-      // we want the neutrino to be headed north
-      nnu = Vector(-1.*sinthetanu*cos(phinu), -1.*sinthetanu*sin(phinu), -1.*costhetanu);// 3-vector of neutrino direction,  at that same coordinate system.
-    }
     return 1;
   } //end if theta_threshold
   else if (theta_threshold==-1.) {
@@ -1183,7 +1139,7 @@ void icemc::EventGenerator::GetBalloonLocation(const Interaction *interaction1, 
 
 
 
-void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, const Position &posnu,  const Vector &nnu,  const Position &r_bn,  double altitude_int,  std::string nuflavor,  std::string current,  double elast_y,  std::ofstream &nu_out) const {
+void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, const Position &posnu,  const Vector &nnu,  const Position &r_bn,  double altitude_int,  NuFlavor nuflavor,  CurrentType current,  double elast_y,  std::ofstream &nu_out) const {
   nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
 }
 
@@ -1232,9 +1188,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   Spectra* nuSpectra = new Spectra((int)settings1.EXPONENT);
   if(!interaction1){
-    interaction1 = new Interaction("nu", primary1, &settings1); //, 0, count1);
+    interaction1 = new Interaction(primary1, &settings1); //, 0, count1);
   }
-  Interaction* int_banana = new Interaction("banana", primary1, &settings1); //, 0, count1);  
   Roughness* rough1 = new Roughness(&settings1); // create new instance of the roughness class
   rough1->SetRoughScale(settings1.ROUGHSIZE);
 
@@ -1254,11 +1209,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 
   // what is this?
-  nuflavorint2 = interaction1->nuflavorint;
   costheta_nutraject2 = interaction1->costheta_nutraject;
   phi_nutraject2 = interaction1->phi_nutraject;
   altitude_int2 = interaction1->altitude_int;
-  currentint2 = interaction1->currentint;
   d12 = interaction1->d1;
   d22 = interaction1->d2;
   dtryingdirection2 = interaction1->dtryingdirection;
@@ -1293,8 +1246,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   fNeutrinoPath = new NeutrinoPath(); // init here for branch setting
 
   Antarctica* antarctica = new Antarctica(settings1.ICE_MODEL + settings1.NOFZ*10,
-				      settings1.CONSTANTICETHICKNESS * 1000 + settings1.CONSTANTCRUST * 100 + settings1.FIXEDELEVATION * 10 + 0,
-				      settings1.WEIGHTABSORPTION);
+					  settings1.CONSTANTICETHICKNESS * 1000 + settings1.CONSTANTCRUST * 100 + settings1.FIXEDELEVATION * 10 + 0,
+					  settings1.WEIGHTABSORPTION);
   icemcLog() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
 
   // fills arrays according to antenna specs
@@ -1341,42 +1294,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     icemcLog().nu_out << "nu #,  position of nu interaction,  depth of int.,  Direction of nu momentum,  Position of balloon,  nu flavour,  current type,  elasticity\n\n\n\n";
   }
 
-  if (fDetector->whichPath()==FlightPath::BananaPlot) { //Force certain parameters if we're doing a banana plot
-    NNU = settings1.horizontal_banana_points*settings1.vertical_banana_points; //Total number of points to look at
-    fDetector->maxthreshold = Interaction::banana_sigma;
 
-    // moved to Settings.cc 
-    // settings1.SIGNAL_FLUCT = Interaction::banana_signal_fluct;
-    // settings1.CONSTANTCRUST=1;  //Set ice depths and elevations all the same
-    // settings1.CONSTANTICETHICKNESS=1;
-    // settings1.FIXEDELEVATION=1;
-
-    pnu = Interaction::pnu_banana; 
-    int_banana->surface_over_banana_nu=antarctica->Surface(int_banana->nu_banana);
-    int_banana->nu_banana_surface=(int_banana->surface_over_banana_nu) * (int_banana->nu_banana);
-  } //Done setting parameters for banana plot
-
-  std::cout << "reminder that I took out ChangeCoord.\n";
-
-  // builds payload based on read inputs
-  // fDetector->GetPayload(&settings1,  bn1);
-  fDetector->GetPayload(&settings1,  fDetector);  
-
-
-  // if (settings1.TRIGGERSCHEME == 3 || settings1.TRIGGERSCHEME == 4 || settings1.TRIGGERSCHEME==5) {
-  //   Vector plusz(0., 0., 1.);
-  //   // fDetector->PickBalloonPosition(plusz, antarctica, &settings1, anita1);
-  //   fDetector->PickBalloonPosition(plusz, antarctica, &settings1, fDetector);    
-  //   fDetector->calculate_all_offsets();
-  //   double angle_theta=16.;
-  //   double angle_phi=0.;
-  //   Vector x = Vector(cos(angle_theta * constants::RADDEG) * cos((angle_phi+11.25) * constants::RADDEG),
-  //                     cos(angle_theta * constants::RADDEG) * sin((angle_phi+11.25) * constants::RADDEG),
-  //                     sin(angle_theta * constants::RADDEG));
-  //   // fDetector->GetArrivalTimes(x,bn1,&settings1);
-  //   fDetector->GetArrivalTimes(x,fDetector,&settings1);    
-  //   std::cout << "end of getarrivaltimes\n";
-  // }
 
   // get positions of the anita payload during the slac test
   if (settings1.SLAC){
@@ -1390,43 +1308,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     nuSpectra->savePlots("Temp");
   }
 
-  
-  // for averaging balloon altitude and distance from center of earth
-  // for comparing with Peter
-  double average_altitude=0.;
-  double average_rbn=0.;  
 
-  
-  // Setting gps offset for plotting direction wrt north
-  if (settings1.WHICH==Payload::EeVEX){
-    gps_offset=atan2(-0.7042,0.71)*constants::DEGRAD;
-  }
-  else if(settings1.WHICH==Payload::Anita2){
-    gps_offset=atan2(-0.7085,0.7056)*constants::DEGRAD;
-  }
-  else if (settings1.WHICH==Payload::Anita3 ||
-	   settings1.WHICH==Payload::Anita4){
-    gps_offset=45;
-  }
-  else{
-    gps_offset=0;
-  }
-
-
-
-
-
-  
   // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.  
-  signal(SIGINT,  icemc::EventGenerator::interrupt_signal_handler);
+  signal(SIGINT, icemc::EventGenerator::interrupt_signal_handler);
   time_t raw_loop_start_time = time(NULL);
   icemcLog() << "Starting loop over events. Time required for setup is "
        <<(int)((raw_loop_start_time - raw_start_time)/60) << ":"
        << ((raw_loop_start_time - raw_start_time)%60) << std::endl;
-
-
-
-
 
 
 
@@ -1475,15 +1363,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       fDetector->passglobtrig[1] = 0;
       passes_thisevent = 0;
       unmasked_thisevent = 1;
-      vmmhz_min_thatpasses = 1000; // initializing.  want to find the minumum voltage that passes a
 
       if (nuSpectra->IsSpectrum()){//if using energy spectrum
 
 	if(settings1.USEDARTBOARD){
-	  pnu=nuSpectra->GetNuEnergy();
+	  pnu = nuSpectra->GetNuEnergy();
 	}
         else{
-	  pnu=nuSpectra->GetCDFEnergy();
+	  pnu = nuSpectra->GetCDFEnergy();
 	}
 
 	ierr = primary1->GetSigma(pnu, sigma, len_int_kgm2, &settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
@@ -1502,24 +1389,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       fDetector->dtryingposition=0;
 
       // Picks the balloon position and at the same time sets the masks and thresholds
-      
-      // fDetector->PickBalloonPosition(antarctica,  &settings1,  inu,  anita1,  r.Rndm(), &fGenNu->balloon);
-      fDetector->PickBalloonPosition(antarctica,  &settings1,  inu,  fDetector,  r.Rndm());//, &fGenNu->balloon);
-      // std::cout << fDetector->r_bn.Lat() << "\t" << fDetector->r_bn.Lon() << std::endl;
-
-      // find average balloon altitude and distance from center of earth for
-      // making comparisons with Peter
-      average_altitude += fDetector->altitude_bn/(double)NNU;
-      average_rbn += fDetector->position().Mag()/(double)NNU;
+      fDetector->PickBalloonPosition(antarctica,  &settings1,  inu,  fDetector,  r.Rndm());
 
       if (settings1.HIST && !settings1.ONLYFINAL && ro.prob_eachphi_bn.GetEntries() < settings1.HIST_MAX_ENTRIES) {
         ro.prob_eachphi_bn.Fill(fDetector->phi_bn);
         ro.prob_eachilon_bn.Fill(fDetector->position().Lon());
-      }
-
-      if (fDetector->whichPath()==FlightPath::BananaPlot) { // for banana plot
-        //Set observation location
-        fDetector->setObservationLocation(int_banana, inu, antarctica, &settings1);
       }
 
       // pick random point in ice.
@@ -1533,18 +1407,18 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         delete interaction1;
 	interaction1 = NULL;
       }
-      interaction1 = new Interaction("nu",  primary1,  &settings1); //,  whichray,  count1);
+      interaction1 = new Interaction(primary1,  &settings1); //,  whichray,  count1);
 
       // moved from deep inside interaction
       if (settings1.MINRAY==whichray) {
 	// only increment neutrino flavor on first ray so you don't count twice
-	if (interaction1->nuflavor=="nue"){
+	if (interaction1->nuflavor==NuFlavor::e){
 	  count1->nnu_e++;
 	}
-	else if (interaction1->nuflavor=="numu"){
+	else if (interaction1->nuflavor==NuFlavor::mu){
 	  count1->nnu_mu++;
 	}
-	else if (interaction1->nuflavor=="nutau"){
+	else if (interaction1->nuflavor==NuFlavor::tau){
 	  count1->nnu_tau++;
 	}
       }
@@ -1561,7 +1435,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       interaction1->weight_nu_prob=0;
       taus1->weight_tau_prob=0;
       
-      if (taumodes==1 && interaction1->nuflavor=="nutau" && interaction1->current=="cc"){
+      // if (taumodes==1 && interaction1->nuflavor=="nutau" && interaction1->current=="cc"){
+      if (taumodes==1 && interaction1->nuflavor==NuFlavor::tau && interaction1->current==CurrentType::Charged){
         tautrigger = 1;///< tau trigger sets the chance to create tau particle
       }
       else{
@@ -1569,7 +1444,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
 
       // fDetector->PickDownwardInteractionPoint(interaction1,  anita1,  &settings1,  antarctica,  ray1,  beyondhorizon);
-      fDetector->PickDownwardInteractionPoint(interaction1,  fDetector,  &settings1,  antarctica,  &rayTracer,  beyondhorizon);      
+      fDetector->PickDownwardInteractionPoint(interaction1,  &settings1,  antarctica,  &rayTracer,  beyondhorizon);
 
       if (interaction1->noway){
 	fGenNu->passCutNoWay = 0;
@@ -1607,10 +1482,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       count1->toolow[whichray]++;
 
-      if (fDetector->whichPath()==FlightPath::BananaPlot){
-	// this is fucking madness... why would someone do this!?!?
-        interaction1 = int_banana;
-      }
       if (!interaction1->iceinteraction){
         continue;
       }
@@ -1639,10 +1510,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // the incident angle and the ice-side ray the refracted
 
       // ray's angle of incidence (in the air) onto ice
-      costheta_inc=rayTracer.n_exit2bn[0].Dot(rayTracer.nsurf_rfexit);    // just for plotting
+      // costheta_inc=rayTracer.n_exit2bn[0].Dot(rayTracer.nsurf_rfexit);    // just for plotting
 
-      // just for plotting
-      costheta_exit=cos(rayTracer.rfexit[0].Theta()); // just for plotting
+      // // just for plotting
+      // costheta_exit=cos(rayTracer.rfexit[0].Theta()); // just for plotting
 
       // if (!ray1->TraceRay(&settings1, anita1, 1, askFreqGen.N_DEPTH)) {
       if (!rayTracer.TraceRay(&settings1, fDetector, 1, askFreqGen.N_DEPTH)) {	
@@ -1669,10 +1540,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 2);
 
-      if (fDetector->whichPath()==FlightPath::PeterEvent   ){  // if this is for comparison with Peter,  print angles of incidence
-        rayTracer.PrintAnglesofIncidence();
-      }
-
       // intermediate counter
       count1->nraypointsup1[whichray]++;
 
@@ -1680,19 +1547,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       sec1.GetTauDecay(interaction1->nuflavor, interaction1->current, taudecay,  emfrac_db,  hadfrac_db);
 
       // pick elasticity
-      elast_y = primary1->pickY(&settings1, pnu, 0, 0);
+      elast_y = primary1->pickY(&settings1, pnu, 0, CurrentType::Charged);
       if (settings1.CONSTANTY==1) { // if we ask to make y a constant=0.2
         elast_y = 0.2;
-        interaction1->nuflavor = "nue";
-        interaction1->current = "cc";
+        interaction1->nuflavor = NuFlavor::e;//"nue";
+        interaction1->current = CurrentType::Charged; //"cc";
       }
       
-      if (fDetector->whichPath()==FlightPath::BananaPlot){
-        elast_y = Interaction::banana_y;
-      }
-      else  if (fDetector->whichPath()==FlightPath::PeterEvent   ){
-        elast_y=1.;
-      }
 
       if (ro.ytree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
         ro.ytree.Fill();
@@ -1971,7 +1832,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       interaction1->dnutries=interaction1->dtryingdirection*fDetector->dtryingposition;
 
       // // for plotting aperture per ring radius from balloon
-      index_distance=(int)(fDetector->position().SurfaceDistance(interaction1->posnu, fDetector->surface_under_balloon) / (700000./(double)NBINS_DISTANCE));
+      index_distance=(int)(fDetector->position().SurfaceDistance(interaction1->posnu, fDetector->getSurfaceUnderBalloon()) / (700000./(double)NBINS_DISTANCE));
 
       // where the neutrino enters the earth
       if (tautrigger==0){//did for cc-taus already,  do for all other particles
@@ -1987,7 +1848,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       IsAbsorbed(chord_kgm2_test, len_int_kgm2, weight_test);
       // if the probably the neutrino gets absorbed is almost 1,  throw it out.
 
-      if (fDetector->whichPath()!=FlightPath::PeterEvent && !settings1.SKIPCUTS) {
+      if (!settings1.SKIPCUTS) {
         if (weight_test<CUTONWEIGHTS) {
           continue;
         }
@@ -2050,9 +1911,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       IsAbsorbed(interaction1->chord_kgm2_bestcase, len_int_kgm2, interaction1->weight_bestcase);
 
       // if the probability that the neutrino gets absorbed is almost 1,  throw it out.
-      if (fDetector->whichPath()!=FlightPath::PeterEvent && interaction1->weight_bestcase<CUTONWEIGHTS && !settings1.SKIPCUTS) {
-        if (fDetector->whichPath()==FlightPath::BananaPlot)
-          std::cout<<"Neutrino is getting absorbed and thrown out!"<<std::endl;
+      if (interaction1->weight_bestcase<CUTONWEIGHTS && !settings1.SKIPCUTS) {
         //
         continue;
       }
@@ -2073,9 +1932,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         bestcase_atten = exp(-1*rayTracer.rfexit[1].Distance(interaction1->posnu_down)/MAX_ATTENLENGTH);//use the real distance
       }
       if (fDetector->VNOISE[0]/10.*fDetector->maxthreshold/((showerProps.sumFrac())*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*fDetector->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR && !settings1.SKIPCUTS) {
-        if (fDetector->whichPath()==FlightPath::BananaPlot){
-          std::cout << "Event rejected.  Check." << std::endl;
-	}
         //
         continue;
       }
@@ -2121,9 +1977,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       // reject if the rf leaves the ice where there is water,  for example.
       if (!antarctica->AcceptableRfexit(rayTracer.nsurf_rfexit, rayTracer.rfexit[2], rayTracer.n_exit2bn[2])){
-        if (fDetector->whichPath()==FlightPath::BananaPlot){
-          std::cout << "Should look at this. Not expecting to be here." << std::endl;
-	}
         continue;
       }//end if acceptableRFexit
 
@@ -2146,26 +1999,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       Vector n_pol = GetPolarization(interaction1->nnu, rayTracer.nrf_iceside[4], inu);
       // signals.back().polarization = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4], inu);
 
-      // if (settings1.BORESIGHTS) {
-      //   for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
-      //     for(int ifold=0;ifold<fDetector->NRX_PHI[ilayer];ifold++) {
-      //       // n_pol_eachboresight[ilayer][ifold] = GetPolarization(interaction1->nnu, ray1->nrf_iceside_eachboresight[4][ilayer][ifold], inu);
-      // 	    signals.push_back(AskaryanSignal());
-      //       // n_pol_eachboresight[ilayer][ifold] = GetPolarization(interaction1->nnu, ray1->nrf_iceside_eachboresight[4][ilayer][ifold], inu);
-      //       n_pol_eachboresight[ilayer][ifold] = GetPolarization(interaction1->nnu, ray1->nrf_iceside_eachboresight[4][ilayer][ifold], inu);	    	    
-      //     } // end looping over antennas in phi
-      //   } // end looping over layers
-      // } // if we are calculating for all boresights
-
       //if(!settings1.ROUGHNESS){
       if (settings1.FIRN){
 	// now rotate that polarization vector according to ray paths in firn and air.
 	// fresnel factor at ice-firn interface
 
 	GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.nrf_iceside[3], n_pol, rayTracer.nrf_iceside[4], vmmhz1m_max, showerProps, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1, mag1);
-	if (fDetector->whichPath()==FlightPath::PeterEvent   ){
-	  std::cout << "Lentenin factor is " << 1./mag1 << "\n";
-	}
 	//The gradual transition in the firn means that there is no fresnel factor,  only magnification
 	// and the magnification factor is upside down compared to what it is
 	// for the firn-air interface
@@ -2177,22 +2016,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	//upside-down compared to what it is in the firn.
 	vmmhz1m_fresneledtwice = vmmhz1m_fresneledonce*fresnel2*mag2;
 
-	// if (settings1.BORESIGHTS) {
-	//   for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
-	//     for(int ifold=0;ifold<fDetector->NRX_PHI[ilayer];ifold++) {
-	//       GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold],
-	// 		 n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[3][ilayer][ifold],
-	// 		 vmmhz1m_max, showerProps, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy,
-	// 		 fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
-	//       //    std::cout << fresnel1_eachboresight[ilayer][ifold] << std::endl;
-	//     } // end looping over phi sectors
-	//   } // end looping over layers
-	// } // end if we are calculating for all boresights
-
-
-	if (fDetector->whichPath()==FlightPath::PeterEvent   ){
-	  std::cout<<"firn-air interface:  fresnel2,  mag2 are "<<fresnel2<<" "<< mag2 <<"\n";
-	}
       }//end if firn
       else {
 	askFreqGen.GetSpread(pnu, showerProps, (fDetector->bwslice_min[2]+fDetector->bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
@@ -2201,16 +2024,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 	vmmhz1m_fresneledtwice = vmmhz1m_max*fresnel1*mag1;  //  only the ice-air interface
 
-	// if (settings1.BORESIGHTS) {
-	//   for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
-	//     for(int ifold=0;ifold<fDetector->NRX_PHI[ilayer];ifold++) {
-	//       // GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold], n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[4][ilayer][ifold], vmmhz1m_max, emfrac, hadfrac, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
-	//       GetFresnel(rough1, settings1.ROUGHNESS, ray1->nsurf_rfexit, ray1->n_exit2bn_eachboresight[2][ilayer][ifold], n_pol_eachboresight[ilayer][ifold], ray1->nrf_iceside_eachboresight[4][ilayer][ifold], vmmhz1m_max, showerProps, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1_eachboresight[ilayer][ifold], mag1_eachboresight[ilayer][ifold]);
-	//     } // end looping over phi sectors
-	//   } // end looping over layers
-	// } // end if we are calculating for all boresights
-
-	
       }//end else firn
       //cerr<<inu<<" -- here"<<std::endl;      //}
 
@@ -2224,22 +2037,19 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
       
       if(settings1.CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10.&& !settings1.SKIPCUTS) {
-	if (fDetector->whichPath()==FlightPath::BananaPlot){
-	  std::cout<<"Event is undetectable.  Leaving loop."<<std::endl;
-	}
 	continue;
       }
       count1->nchanceinhell_fresnel[whichray]++;
       
       // // for plotting
-      // diffexit = ray1->rfexit[0].Distance(ray1->rfexit[1]);
-      // diffnorm = acos(ray1->nsurf_rfexit[0]*ray1->nsurf_rfexit[1]);
-      // diffrefr = acos(ray1->nrf_iceside[4].Dot(ray1->nrf_iceside[0]));
-
+      // diffexit = rayTracer.rfexit[0].Distance(rayTracer.rfexit[1]);
+      // diffnorm = acos(rayTracer.nsurf_rfexit[0]*rayTracer.nsurf_rfexit[1]);
+      // diffrefr = acos(rayTracer.nrf_iceside[4].Dot(rayTracer.nrf_iceside[0]));
       
       // scale by 1/r once you've found the 3rd iteration exit point
       // ALREADY DEALT WITH IN CASE OF ROUGHNESS
       if (!settings1.ROUGHNESS) {
+	// this is what was in ScaleVmMHz
 	const Position& posnu = whichray == direct ? interaction1->posnu : interaction1->posnu_down;
 	double r_meters = fDetector->position().Distance(rayTracer.rfexit[2]) + rayTracer.rfexit[2].Distance(posnu);
 	vmmhz_max = vmmhz1m_fresneledtwice/r_meters;
@@ -2248,8 +2058,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // reject if the event is undetectable.
       if (!settings1.ROUGHNESS){
         if (settings1.CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10. && !settings1.SKIPCUTS) {
-          if (fDetector->whichPath()==FlightPath::BananaPlot)
-            std::cout<<"Event is undetectable.  Leaving loop."<<std::endl;
           //
           continue;
         } //if
@@ -2266,9 +2074,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         }
       }
 
-      if (fDetector->whichPath()==FlightPath::PeterEvent){
-        std::cout << "rflength is " << rflength << "\n";
-      }
 
       // applying ice attenuation factor
       if (!settings1.ROUGHNESS) {
@@ -2279,7 +2084,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           Attenuate_down(antarctica, &settings1, vmmhz_max,  rayTracer.rfexit[2],  interaction1->posnu, interaction1->posnu_down);
 	}
       }
-      
 
       // intermediate counting
       count_dbexitsice++;
@@ -2287,10 +2091,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // reject if the event is undetectable.
       if (!settings1.ROUGHNESS){
         if (settings1.CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10. && !settings1.SKIPCUTS) {
-          if (fDetector->whichPath()==FlightPath::BananaPlot){
-            std::cout<<"Event is undetectable.  Leaving loop."<<std::endl;
-          //
-	  }
           continue;
         }
       }
@@ -2309,6 +2109,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // attenuation length is included.
       AskaryanFreqs askFreqs;
       if (!settings1.ROUGHNESS){
+
+	// the 1/r through ice is controlled by vmmhz_max,  which has been scaled in Attenuate (Attenuate_down)
         askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, fDetector->NFREQ, fDetector->freq, fDetector->NOTCH_MIN, fDetector->NOTCH_MAX, &showerProps);
 
 	// here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
@@ -2331,25 +2133,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 	askFreqs.taperAmplitudesForOffConeViewing(viewangle);
 
-	if (fDetector->whichPath() == FlightPath::BananaPlot){
-	  for (int k=0;k<Anita::NFREQ;k++) {
-            interaction1->banana_volts += askFreqs[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
-            // interaction1->banana_volts += vmmhz[k]*(settings1.BW/(double)Anita::NFREQ/1.E6);
-	  }
-        }//end for (int k=0;k<Anita::NFREQ;k++)
-
 	// store low frequency post-tapering
 	// vmmhz_lowfreq=askFreqs[0]; // for plotting,  vmmhz at the lowest frequency
 	pdgcode = interaction1->getPdgCode();
 
-        if (fDetector->whichPath()==FlightPath::BananaPlot && interaction1->banana_volts != 0 && settings1.HIST) {
-          continue;
-        }
-        else if (fDetector->whichPath()==FlightPath::BananaPlot && interaction1->banana_volts == 0) {
-          continue; //Exit the loop if there's no voltage here - no value at a point is the same as zero,  and this will save HD space
-        }
         // reject if it is undetectable now that we have accounted for viewing angle
-
         if (settings1.CHANCEINHELL_FACTOR*askFreqs.maxElement()*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10. && !settings1.SKIPCUTS) {
           continue;
         }
@@ -2450,10 +2238,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 	// the neutrino has passed the trigger...
 	fPassNu = new PassingNeutrino(*fGenNu, askFreqs, showerProps); // forced to be NULL at loop start
-
-	if (fDetector->whichPath()==FlightPath::PeterEvent   ){
-	  std::cout << "This event passes.\n";
-	}
 
 	// fDetector->passglobtrig[0]=thispasses[0];
 	// fDetector->passglobtrig[1]=thispasses[1];
@@ -2652,11 +2436,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 		} //end for
 	      } //end for
 
-	      nuflavorint2		= interaction1->nuflavorint;
 	      costheta_nutraject2	= interaction1->costheta_nutraject;
 	      phi_nutraject2		= interaction1->phi_nutraject;
 	      altitude_int2		= interaction1->altitude_int;
-	      currentint2		= interaction1->currentint;
 	      d12			= interaction1->d1;
 	      d22			= interaction1->d2;
 	      dtryingdirection2		= interaction1->dtryingdirection;
@@ -2725,16 +2507,16 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	    
 	    // incrementing by flavor	    
 	    // also bin in weight for error calculation.
-	    if (interaction1->nuflavor=="nue") {
+	    if (interaction1->nuflavor==NuFlavor::e) {
 	      sum[0]+=fNeutrinoPath->weight;
 	      eventsfound_binned_e[index_weights]++;
 	    } //if
-	    if (interaction1->nuflavor=="numu") {
+	    if (interaction1->nuflavor==NuFlavor::mu) {
 	      sum[1]+=fNeutrinoPath->weight;
 	      eventsfound_binned_mu[index_weights]++;
 	    } //if
 	    if(!sec1.secondbang || !sec1.interestedintaus) {
-	      if (interaction1->nuflavor=="nutau") {
+	      if (interaction1->nuflavor==NuFlavor::tau) {
 		sum[2]+=fNeutrinoPath->weight;
 		eventsfound_binned_tau[index_weights]++;
 	      } //if
@@ -2758,9 +2540,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       } // end if passing global trigger conditions
       else {
 	passes_thisevent = 0; // flag this event as not passing
-	if (fDetector->whichPath()==FlightPath::PeterEvent){
-	  std::cout << "This event does not pass.\n";
-	}
       }// end else event does not pass trigger
       
       // if it passes the trigger,  then go ahead and
@@ -2825,25 +2604,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       lat80deg->Fill(tmp_e, tmp_n);
     }//end for lon loop
   }// end if EVENTSMAP
-
-  if (fDetector->whichPath()==FlightPath::PeterEvent) {// this is for comparing with Peter
-    icemcLog() << "Earth radius at South Pole: " << antarctica->Geoid(0.) << "\n";
-    Position posnu_temp=Position(180., 0., 1.); // points at the south pole
-    icemcLog() << "Surface of ice at the South Pole: " << antarctica->Surface(posnu_temp) << "\n";
-    icemcLog() << "Average balloon altitude is " << average_altitude << "\n";
-    icemcLog() << "Average distance from earth center is " << average_rbn << "\n";
-    icemcLog() << "Average height of balloon above ice surface is " << average_rbn-antarctica->Surface(fDetector->position()) << "\n";
-    icemcLog() << "theta_zenith are " << fDetector->THETA_ZENITH[0]*constants::DEGRAD << " " << fDetector->THETA_ZENITH[1]*constants::DEGRAD << " " << fDetector->THETA_ZENITH[2]*constants::DEGRAD << "\n";
-    icemcLog() << "Index of refraction at this depth is " << askFreqGen.N_DEPTH << "\n";
-    icemcLog() << "Cerenkov angle is " << askFreqGen.GetChangle()*constants::DEGRAD << "\n";
-    icemcLog() << "Nadir angle to surface exit point is " << constants::DEGRAD*fDetector->position().Angle(rayTracer.n_exit2bn[2]) << "\n";
-    icemcLog() << "Distance from rfexit to balloon is " << (fDetector->position()+ -1*rayTracer.rfexit[2]).Mag() << "\n";
-    icemcLog() << "Payload zenith angle at event source is " << constants::DEGRAD*rayTracer.rfexit[2].Angle(rayTracer.n_exit2bn[2]) << "\n";
-    icemcLog() << "Angle of incidence just below surface is " << constants::DEGRAD*rayTracer.rfexit[2].Angle(rayTracer.nrf_iceside[4]) << "\n";
-    icemcLog() << "Angle between neutrino and surface normal is " << constants::DEGRAD*rayTracer.rfexit[0].Angle(interaction1->nnu)-90. << "\n";
-    icemcLog() << "Angle of incidence below firn surface is " << constants::DEGRAD*rayTracer.rfexit[2].Angle(rayTracer.nrf_iceside[3]) << "\n";
-  }
-  std::cout << "about to Summarize.\n";
 
   fDetector->rms_rfcm[0] = sqrt(fDetector->rms_rfcm[0] / (double)fDetector->count_getnoisewaveforms)*1000.;
   fDetector->rms_rfcm[1] = sqrt(fDetector->rms_rfcm[1] / (double)fDetector->count_getnoisewaveforms)*1000.;

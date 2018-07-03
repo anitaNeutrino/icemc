@@ -93,7 +93,7 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
   
   
   /** Bring in useful variables from other classes */
-  int currentint = interaction1->currentint;
+  CurrentType current = interaction1->current;
   const Position earth_in = interaction1->r_in;
   double TauWeight = 0;
   const Position r_enterice = interaction1->r_enterice;
@@ -124,7 +124,7 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
   double sigma = 0;
   double len_int_kgm2 =0;
   
-  primary1->GetSigma(pnu,sigma,len_int_kgm2,settings1,nu_nubar,currentint);
+  primary1->GetSigma(pnu,sigma,len_int_kgm2,settings1,nu_nubar,current);
   
   double step=TMath::Min(len_int_kgm2/densities[1]/10,25.0); ///how big is the step size
   
@@ -200,7 +200,7 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
         prob_at_z =0;
       }
       else{
-        yweight=primary1->Getyweight(pnu,y,nu_nubar,currentint);
+        yweight=primary1->Getyweight(pnu,y,nu_nubar,current);
         Prob_Nu_Surv = avgdensity/len_int_kgm2*exp(-zdistance*avgdensity*1./len_int_kgm2);///prob neutrino survives to this point
         dEtauidEtauf = exp(B1*taudensity*(Distance-zdistance))*Etaui/Etau_final;///how the initial tau energy is related to final
         prob_at_z = Prob_Nu_Surv*yweight*1./pnu*dEtauidEtauf*step*tau_surv;///probability that tau survives to ice

@@ -199,7 +199,7 @@ namespace icemc{
 
     /////////////////////////////////////
     //methods
-    void ReadCrust(std::string);
+    void ReadCrust(const std::string&);
     double SmearPhi(int ilon, double rand) const;
     double SmearTheta(int ilat, double rand) const;
     double dGetTheta(int itheta) const;

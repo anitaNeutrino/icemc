@@ -926,18 +926,17 @@ void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anit
 
 void icemc::ChanTrigger::TriggerPath(const Settings *settings1, Anita *anita1, int ant, Balloon *bn1){
 
-
   double integrate_energy_freq[5]={0.,0.,0.,0.,0.};
-    
+
   for (int iband=0;iband<5;iband++) { // loop over bands
     if (anita1->bwslice_allowed[iband]!=1) continue;
-    
+
     anita1->iminbin[iband]=0.;
     anita1->imaxbin[iband]=anita1->NFOUR/2;
 
     Tools::Zero(v_banding_rfcm_forfft[0][iband],anita1->NFOUR/2);
     Tools::Zero(v_banding_rfcm_forfft[1][iband],anita1->NFOUR/2);
-    
+
     for (int ifreq=0; ifreq<anita1->NFOUR/2; ifreq++){
       v_banding_rfcm[0][iband][ifreq]=vhz_rx[0][iband][ifreq];
       v_banding_rfcm[1][iband][ifreq]=vhz_rx[1][iband][ifreq];
@@ -952,8 +951,7 @@ void icemc::ChanTrigger::TriggerPath(const Settings *settings1, Anita *anita1, i
       anita1->Banding(iband,anita1->freq,v_banding_rfcm[1][iband],Anita::NFREQ);
       anita1->RFCMs(1,1,v_banding_rfcm[0][iband]);
       anita1->RFCMs(1,1,v_banding_rfcm[1][iband]);
-      
-      
+
       for (int ifreq=0;ifreq<Anita::NFREQ;ifreq++) {
 	if (anita1->freq[ifreq]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[ifreq]<=settings1->FREQ_HIGH_SEAVEYS){
 	  addToChannelSums(settings1, anita1, iband, ifreq);

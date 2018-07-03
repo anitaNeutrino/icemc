@@ -9,11 +9,6 @@
 
 class TRandom3;
 
-using std::ofstream;
-using std::vector;
-using std::string;
-
-
 namespace icemc {
   class Settings;
   class Interaction;
@@ -75,6 +70,8 @@ namespace icemc {
 
     const static int NBNPOSITIONS_MAX=26000;
     double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
+    // const static int NBNPOSITIONS_MAX=26000;
+    // double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
     Antarctica(int model=0,int earth_mode=0,int WEIGHTABSORPTION_SETTING=1);
     double IceThickness(double lon,double lat) const;
     double IceThickness(const Position& pos) const;
@@ -117,7 +114,7 @@ namespace icemc {
   
     void IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const;
 
-    int PickUnbiased(Interaction *interaction1, const Antarctica *antarctica) const;
+    int PickUnbiased(Interaction *interaction1) const;
 
 
   protected:
@@ -130,10 +127,10 @@ namespace icemc {
  
  
     double volume_inhorizon_average; // average volume of ice seen by balloon
-    vector<int> ilon_inhorizon[NBNPOSITIONS_MAX]; // indices in lon and lat for bins in horizon for NPHI balloon positions along 80 deg latitude line.
-    vector<int> ilat_inhorizon[NBNPOSITIONS_MAX];
-    vector<int> easting_inhorizon[NBNPOSITIONS_MAX]; //indicies in easting and northing for bins in horizon for NPHI balloon positions along 80 deg latitude line.
-    vector<int> northing_inhorizon[NBNPOSITIONS_MAX];
+    std::vector<int> ilon_inhorizon[NBNPOSITIONS_MAX]; // indices in lon and lat for bins in horizon for NPHI balloon positions along 80 deg latitude line.
+    std::vector<int> ilat_inhorizon[NBNPOSITIONS_MAX];
+    std::vector<int> easting_inhorizon[NBNPOSITIONS_MAX]; //indicies in easting and northing for bins in horizon for NPHI balloon positions along 80 deg latitude line.
+    std::vector<int> northing_inhorizon[NBNPOSITIONS_MAX];
     double maxvol_inhorizon[NBNPOSITIONS_MAX]; // maximum volume of ice for a bin 
 
     //BEDMAP utility methods

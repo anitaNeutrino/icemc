@@ -169,7 +169,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   finaltree.Branch("n_bn", &uhen->n_bn_array, "n_bn_array[3]/D");
   // finaltree.Branch("longitude_bn", &uhen->longitude_this, "longitude_bn/D"); @todo TEMPORARILY COMMENT OUT DURING REFACTOR, if abandon refactor then uncomment
   // finaltree.Branch("heading_bn", &uhen->heading_this, "heading_bn/D"); @todo TEMPORARILY COMMENT OUT DURING REFACTOR, if abandon refactor then uncomment
-  finaltree.Branch("gps_offset", &uhen->gps_offset, "gps_offset/D");
+  // finaltree.Branch("gps_offset", &uhen->gps_offset, "gps_offset/D");
   // this one is just weight due to earth absorption
   // finaltree.Branch("weight1", &weight1, "weight1/D");
   // // this is the total weight - the one you want to use!
@@ -191,7 +191,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   // finaltree.Branch("emfrac", &uhen->emfrac, "emfrac/D");
   // finaltree.Branch("hadfrac", &uhen->hadfrac, "hadfrac/D");
   // finaltree.Branch("sumfrac", &uhen->sumfrac, "sumfrac/D");
-  finaltree.Branch("nuflavor", &uhen->nuflavorint2, "nuflavorint/I");//1=electron,  2=muon,  3=tau
+  // finaltree.Branch("nuflavor", &uhen->nuflavorint2, "nuflavorint/I");//1=electron,  2=muon,  3=tau
   finaltree.Branch("current", &uhen->currentint2, "currentint/I");//0=charged current,  1=neutral current
   finaltree.Branch("logchord",  &uhen->logchord2,  "logchord/D");
   finaltree.Branch("nuexitice",  &uhen->nuexitice,  "nuexitice/D");
@@ -305,7 +305,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   finaltree.Branch("mantle_entered", &uhen->mantle_entered, "mantle_entered/I");
   finaltree.Branch("core_entered", &uhen->core_entered, "core_entered/I");
   finaltree.Branch("n_pol", &uhen->n_pol_array, "n_pol_array[3]/D");
-  finaltree.Branch("vmmhz_min_thatpasses", &uhen->vmmhz_min_thatpasses, "vmmhz_min_thatpasses/D");
+  // finaltree.Branch("vmmhz_min_thatpasses", &uhen->vmmhz_min_thatpasses, "vmmhz_min_thatpasses/D");
 
   // finaltree.Branch("pieceofkm2sr", &pieceofkm2sr, "pieceofkm2sr/D");
   //finaltree.Branch("volts_original", &volts_original, "volts_original[10][20][2]/D");

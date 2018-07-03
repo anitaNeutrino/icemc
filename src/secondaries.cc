@@ -44,17 +44,9 @@
 
 ClassImp(icemc::ShowerProperties)
 
-const string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
-const string ICEMC_SECONDARY_DIR=ICEMC_SRC_DIR+"/secondary/";
+const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
+const std::string ICEMC_SECONDARY_DIR=ICEMC_SRC_DIR+"/secondary/";
 
-
-using std::cout;
-using std::stringstream;
-using std::setprecision;
-using std::accumulate;
-using std::max_element;
-using std::partial_sum;
-using std::max;
 
 icemc::Secondaries::Secondaries() {
   //For Total Tau Survival probability equation
@@ -138,13 +130,13 @@ icemc::Secondaries::Secondaries() {
 	
 }//Secondaries Constructor
 
-void icemc::Secondaries::readData(string nuflavor,string secndryType, double (*y)[NPROB_MAX], double (*dsdy)[NPROB_MAX])
+void icemc::Secondaries::readData(std::string nuflavor,std::string secndryType, double (*y)[NPROB_MAX], double (*dsdy)[NPROB_MAX])
 {
   
   std::stringstream senergy;
   
   std::ifstream ifile;
-  string suffix=".vec";
+  std::string suffix=".vec";
   if(nuflavor=="tauon")
     suffix="_tau.vec";
   
@@ -152,8 +144,8 @@ void icemc::Secondaries::readData(string nuflavor,string secndryType, double (*y
     {senergy.str("");
       double energy=18+0.5*index;
       int precision=(index%2==0)?2:3;
-      senergy << setprecision(precision) << energy;
-      string path=ICEMC_SECONDARY_DIR+"/"+nuflavor+"/dsdy_"+secndryType+"_1e"+senergy.str()+suffix;
+      senergy << std::setprecision(precision) << energy;
+      std::string path=ICEMC_SECONDARY_DIR+"/"+nuflavor+"/dsdy_"+secndryType+"_1e"+senergy.str()+suffix;
       //cout << "openning file " << path.c_str() << endl;
       ifile.open(path.c_str());
       NPROB=0;
@@ -176,7 +168,7 @@ void icemc::Secondaries::readData(string nuflavor,string secndryType, double (*y
 void icemc::Secondaries::ReadSecondaries() {
   // reading in data for secondary interactions
   
-  cout<<"Reading in data on secondary interactions.\n";
+  std::cout<<"Reading in data on secondary interactions.\n";
 
   readData("muons","brems",y_muon_brems,dsdy_muon_brems);
   readData("muons","epair",y_muon_epair,dsdy_muon_epair);
@@ -190,27 +182,27 @@ void icemc::Secondaries::ReadSecondaries() {
   //cout << "NPROB=" << NPROB << ",  NPROB_MAX=" << NPROB_MAX << endl;
   for(int j=0;j<7;j++) {
     // integrating prob. distributions.
-    int_muon_brems[j]=accumulate(dsdy_muon_brems[j],dsdy_muon_brems[j]+NPROB_MAX,0.);//very important to keep the initial value the same type as the elements type
-    int_muon_epair[j]=accumulate(dsdy_muon_epair[j],dsdy_muon_epair[j]+NPROB_MAX,0.);
-    int_muon_pn[j]=accumulate(dsdy_muon_pn[j],dsdy_muon_pn[j]+NPROB_MAX,0.);
-    int_tauon_brems[j]=accumulate(dsdy_tauon_brems[j],dsdy_tauon_brems[j]+NPROB_MAX,0.);
-    int_tauon_epair[j]=accumulate(dsdy_tauon_epair[j],dsdy_tauon_epair[j]+NPROB_MAX,0.);
-    int_tauon_pn[j]=accumulate(dsdy_tauon_pn[j],dsdy_tauon_pn[j]+NPROB_MAX,0.);
-    int_tauon_hadrdecay[j]=accumulate(dsdy_tauon_hadrdecay[j],dsdy_tauon_hadrdecay[j]+NPROB_MAX,0.);
-    int_tauon_edecay[j]=accumulate(dsdy_tauon_edecay[j],dsdy_tauon_edecay[j]+NPROB_MAX,0.);
-    int_tauon_mudecay[j]=accumulate(dsdy_tauon_mudecay[j],dsdy_tauon_mudecay[j]+NPROB_MAX,0.);
+    int_muon_brems[j]=std::accumulate(dsdy_muon_brems[j],dsdy_muon_brems[j]+NPROB_MAX,0.);//very important to keep the initial value the same type as the elements type
+    int_muon_epair[j]=std::accumulate(dsdy_muon_epair[j],dsdy_muon_epair[j]+NPROB_MAX,0.);
+    int_muon_pn[j]=std::accumulate(dsdy_muon_pn[j],dsdy_muon_pn[j]+NPROB_MAX,0.);
+    int_tauon_brems[j]=std::accumulate(dsdy_tauon_brems[j],dsdy_tauon_brems[j]+NPROB_MAX,0.);
+    int_tauon_epair[j]=std::accumulate(dsdy_tauon_epair[j],dsdy_tauon_epair[j]+NPROB_MAX,0.);
+    int_tauon_pn[j]=std::accumulate(dsdy_tauon_pn[j],dsdy_tauon_pn[j]+NPROB_MAX,0.);
+    int_tauon_hadrdecay[j]=std::accumulate(dsdy_tauon_hadrdecay[j],dsdy_tauon_hadrdecay[j]+NPROB_MAX,0.);
+    int_tauon_edecay[j]=std::accumulate(dsdy_tauon_edecay[j],dsdy_tauon_edecay[j]+NPROB_MAX,0.);
+    int_tauon_mudecay[j]=std::accumulate(dsdy_tauon_mudecay[j],dsdy_tauon_mudecay[j]+NPROB_MAX,0.);
     
     // maximum value of prob. dist.
-    max_muon_brems=*max_element(dsdy_muon_brems[j],dsdy_muon_brems[j]+NPROB_MAX);
+    max_muon_brems=*std::max_element(dsdy_muon_brems[j],dsdy_muon_brems[j]+NPROB_MAX);
     //cout << "max_muon_brems=" << max_muon_brems << endl;//fenfang
-    max_muon_epair=*max_element(dsdy_muon_epair[j],dsdy_muon_epair[j]+NPROB_MAX);
-    max_muon_pn=*max_element(dsdy_muon_pn[j],dsdy_muon_pn[j]+NPROB_MAX);   
-    max_tauon_brems=*max_element(dsdy_tauon_brems[j],dsdy_tauon_brems[j]+NPROB_MAX);
-    max_tauon_epair=*max_element(dsdy_tauon_epair[j],dsdy_tauon_epair[j]+NPROB_MAX);
-    max_tauon_pn=*max_element(dsdy_tauon_pn[j],dsdy_tauon_pn[j]+NPROB_MAX);
-    max_tauon_hadrdecay=*max_element(dsdy_tauon_hadrdecay[j],dsdy_tauon_hadrdecay[j]+NPROB_MAX);
-    max_tauon_edecay=*max_element(dsdy_tauon_edecay[j],dsdy_tauon_edecay[j]+NPROB_MAX);
-    max_tauon_mudecay=*max_element(dsdy_tauon_mudecay[j],dsdy_tauon_mudecay[j]+NPROB_MAX);
+    max_muon_epair=*std::max_element(dsdy_muon_epair[j],dsdy_muon_epair[j]+NPROB_MAX);
+    max_muon_pn=*std::max_element(dsdy_muon_pn[j],dsdy_muon_pn[j]+NPROB_MAX);   
+    max_tauon_brems=*std::max_element(dsdy_tauon_brems[j],dsdy_tauon_brems[j]+NPROB_MAX);
+    max_tauon_epair=*std::max_element(dsdy_tauon_epair[j],dsdy_tauon_epair[j]+NPROB_MAX);
+    max_tauon_pn=*std::max_element(dsdy_tauon_pn[j],dsdy_tauon_pn[j]+NPROB_MAX);
+    max_tauon_hadrdecay=*std::max_element(dsdy_tauon_hadrdecay[j],dsdy_tauon_hadrdecay[j]+NPROB_MAX);
+    max_tauon_edecay=*std::max_element(dsdy_tauon_edecay[j],dsdy_tauon_edecay[j]+NPROB_MAX);
+    max_tauon_mudecay=*std::max_element(dsdy_tauon_mudecay[j],dsdy_tauon_mudecay[j]+NPROB_MAX);
      
     // minimum value of prob. dist.
     min_muon_brems=Tools::dMinNotZero(dsdy_muon_brems[j],NPROB_MAX);
@@ -224,17 +216,17 @@ void icemc::Secondaries::ReadSecondaries() {
     min_tauon_mudecay=Tools::dMinNotZero(dsdy_tauon_mudecay[j],NPROB_MAX);
      
     if (min_muon_brems<=0)
-      cout << "Minimum probability is <=0!\n";
+      std::cout << "Minimum probability is <=0!\n";
     
-    partial_sum(dsdy_muon_brems[j],dsdy_muon_brems[j]+NPROB_MAX,y_cumulative_muon_brems[j]);
-    partial_sum(dsdy_muon_epair[j],dsdy_muon_epair[j]+NPROB_MAX,y_cumulative_muon_epair[j]);
-    partial_sum(dsdy_muon_pn[j],dsdy_muon_pn[j]+NPROB_MAX,y_cumulative_muon_pn[j]);
-    partial_sum(dsdy_tauon_brems[j],dsdy_tauon_brems[j]+NPROB_MAX,y_cumulative_tauon_brems[j]);
-    partial_sum(dsdy_tauon_epair[j],dsdy_tauon_epair[j]+NPROB_MAX,y_cumulative_tauon_epair[j]);
-    partial_sum(dsdy_tauon_pn[j],dsdy_tauon_pn[j]+NPROB_MAX,y_cumulative_tauon_pn[j]);
-    partial_sum(dsdy_tauon_hadrdecay[j],dsdy_tauon_hadrdecay[j]+NPROB_MAX,y_cumulative_tauon_hadrdecay[j]);
-    partial_sum(dsdy_tauon_mudecay[j],dsdy_tauon_mudecay[j]+NPROB_MAX,y_cumulative_tauon_mudecay[j]);
-    partial_sum(dsdy_tauon_edecay[j],dsdy_tauon_edecay[j]+NPROB_MAX,y_cumulative_tauon_edecay[j]);
+    std::partial_sum(dsdy_muon_brems[j],dsdy_muon_brems[j]+NPROB_MAX,y_cumulative_muon_brems[j]);
+    std::partial_sum(dsdy_muon_epair[j],dsdy_muon_epair[j]+NPROB_MAX,y_cumulative_muon_epair[j]);
+    std::partial_sum(dsdy_muon_pn[j],dsdy_muon_pn[j]+NPROB_MAX,y_cumulative_muon_pn[j]);
+    std::partial_sum(dsdy_tauon_brems[j],dsdy_tauon_brems[j]+NPROB_MAX,y_cumulative_tauon_brems[j]);
+    std::partial_sum(dsdy_tauon_epair[j],dsdy_tauon_epair[j]+NPROB_MAX,y_cumulative_tauon_epair[j]);
+    std::partial_sum(dsdy_tauon_pn[j],dsdy_tauon_pn[j]+NPROB_MAX,y_cumulative_tauon_pn[j]);
+    std::partial_sum(dsdy_tauon_hadrdecay[j],dsdy_tauon_hadrdecay[j]+NPROB_MAX,y_cumulative_tauon_hadrdecay[j]);
+    std::partial_sum(dsdy_tauon_mudecay[j],dsdy_tauon_mudecay[j]+NPROB_MAX,y_cumulative_tauon_mudecay[j]);
+    std::partial_sum(dsdy_tauon_edecay[j],dsdy_tauon_edecay[j]+NPROB_MAX,y_cumulative_tauon_edecay[j]);
      
     for (int i=0;i<NPROB_MAX;i++) {
       y_cumulative_muon_brems[j][i]      /= y_cumulative_muon_brems[j][NPROB_MAX-1];
@@ -249,13 +241,13 @@ void icemc::Secondaries::ReadSecondaries() {
     } //for
 
   }
-  cout<<"Finished reading secondary interaction data.\n"; 
+  std::cout<<"Finished reading secondary interaction data.\n"; 
   
  
 } //end method ReadSecondaries
 
 
-void icemc::Secondaries::GetSecondaries(const Settings *settings1, const string& nuflavor, double plepton, double &em_secondaries_max, double &had_secondaries_max,int &n_interactions, TH1F *hy) {
+void icemc::Secondaries::GetSecondaries(const Settings *settings1, NuFlavor nuflavor, double plepton, double &em_secondaries_max, double &had_secondaries_max,int &n_interactions, TH1F *hy) {
 
   em_secondaries_max=0.;
   had_secondaries_max=0.;
@@ -274,11 +266,11 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, const string&
   // double rnd2=1000.;  // random numbers for throwing at dart board
   double y = 0; // inelasticity
  
-  string whichtype; // which type of interaction corresponds to that index
+  std::string whichtype; // which type of interaction corresponds to that index
   
 
 
-  if (nuflavor=="numu") {   
+  if (nuflavor==NuFlavor::mu) {
     n_brems=gRandom->Poisson(int_muon_brems[i]); // pick number of brem interactions
     n_epair=gRandom->Poisson(int_muon_epair[i]); // # of pair production
     n_pn=gRandom->Poisson(int_muon_pn[i]); // # photonuclear interactions   
@@ -312,7 +304,7 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, const string&
 	Picky(y_cumulative_muon_pn[i],NPROB,rnd1,y);
       }
      
-      if (y*plepton>max(em_secondaries_max,had_secondaries_max)) {  // if this is the largest interaction for this event so far
+      if (y*plepton>std::max(em_secondaries_max,had_secondaries_max)) {  // if this is the largest interaction for this event so far
 	if (whichtype=="brems" || whichtype=="epair") {  // save it
 	  em_secondaries_max=y*plepton;
 
@@ -324,7 +316,7 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, const string&
       }
     } // loop over secondary interactions
   } // end if it was a muon neutrino
-  if (nuflavor=="nutau") {
+  if (nuflavor==NuFlavor::tau) {
     n_brems=gRandom->Poisson(int_tauon_brems[i]);
     n_epair=gRandom->Poisson(int_tauon_epair[i]);
     n_pn=gRandom->Poisson(int_tauon_pn[i]);
@@ -360,7 +352,7 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, const string&
 
       if (settings1->HIST==1 && !settings1->ONLYFINAL && hy->GetEntries()<settings1->HIST_MAX_ENTRIES)
 	hy->Fill(y);
-      if (y*plepton>max(em_secondaries_max,had_secondaries_max)) { // if this is the biggest secondary signal yet,
+      if (y*plepton>std::max(em_secondaries_max,had_secondaries_max)) { // if this is the biggest secondary signal yet,
 	if (whichtype=="brems" || whichtype=="epair") // save it.
 	  em_secondaries_max=y*plepton;
 	if (whichtype=="pn")
@@ -398,7 +390,7 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, const string&
       }
       
      
-      if (y*plepton>max(em_secondaries_max, had_secondaries_max)) {  // if this is the biggest interaction yet,    
+      if (y*plepton>std::max(em_secondaries_max, had_secondaries_max)) {  // if this is the biggest interaction yet,    
 	if (whichtype=="edecay") // save it.
 	  em_secondaries_max=y*plepton;
 	if (whichtype=="hadrdecay")
@@ -412,9 +404,11 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, const string&
 
 
 icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
-						      const string& nuflavor,
-						      const string& current,
-						      const string& taudecay,
+						      NuFlavor nuflavor,
+						      CurrentType current,
+						      // const string& nuflavor,
+						      // const string& current,
+						      const std::string& taudecay,
 						      double y,
 						      TH1F *hy,
 						      double pnu,
@@ -428,7 +422,7 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
   ShowerProperties sp;
   sp.pnu = pnu;
 
-  if (current=="cc"){
+  if (current==CurrentType::Charged){
     plepton=(1.-y)*pnu;
   }
   else{
@@ -437,15 +431,15 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
 
 
   const double negligible = 1e-10;
-  if (nuflavor=="nue" && current=="cc") {
+  if (nuflavor==NuFlavor::e && current==CurrentType::Charged) {
     sp.emFrac=1.-y;
     sp.hadFrac=y;
   }
-  else if(nuflavor=="numu" && current=="cc") {
+  else if(nuflavor==NuFlavor::mu && current==CurrentType::Charged) {
     sp.emFrac=negligible;
     sp.hadFrac=y;
   }
-  else if(nuflavor=="nutau" && current=="cc") {
+  else if(nuflavor==NuFlavor::tau && current==CurrentType::Charged) {
     // behaves like a muon
     if(taumodes1 ==1){//taumodes==1; tau created somewhere in rock and decays at posnu.
       this->GetEMFracDB(sp.emFrac,sp.hadFrac);
@@ -455,7 +449,7 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
       sp.hadFrac=y;
     }
   }
-  else if (current=="nc") {
+  else if (current==CurrentType::Neutral) {
     sp.emFrac=negligible;
     sp.hadFrac=y;
   }
@@ -464,7 +458,7 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
   em_secondaries_max = sp.emFrac; // initialize search for maximum signal among primary, secondary interactions.
   had_secondaries_max = sp.hadFrac;
 
-  if (SECONDARIES==1 && current=="cc") {
+  if (SECONDARIES==1 && current==CurrentType::Charged) {
 
     while (1) {
 
@@ -494,7 +488,7 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
     } //if
   } //if (charged current, secondaries on)
 
-  if (nuflavor=="numu" && current=="cc" && sp.nInteractions==0){
+  if (nuflavor==NuFlavor::mu && current==CurrentType::Charged && sp.nInteractions==0){
     icemcLog() << icemc::warning << "Look at this one.  inu is " << inu << "\n";
   }  
 
@@ -527,9 +521,9 @@ void icemc::Secondaries::InitTauola() {
 }//InitTauola
 
 
-void icemc::Secondaries::GetTauDecay(const string& nuflavor, const string& current, string& taudecay, double& emfrac_db, double& hadfrac_db) {
+void icemc::Secondaries::GetTauDecay(NuFlavor nuflavor, CurrentType current, std::string& taudecay, double& emfrac_db, double& hadfrac_db) {
  
-  if (!(nuflavor=="nutau" || current=="cc" || interestedintaus)){
+  if (!(nuflavor==NuFlavor::tau || current==CurrentType::Charged || interestedintaus)){
     return;
   }
   

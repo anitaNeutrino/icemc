@@ -261,19 +261,19 @@ icemc::Position icemc::Antarctica::PickInteractionLocation(int ibnposition, cons
 } //PickInteractionLocation
 
 
-int icemc::Antarctica::PickUnbiased(Interaction *interaction1, const Antarctica *antarctica) const {
-    
+int icemc::Antarctica::PickUnbiased(Interaction *interaction1) const {
+
   interaction1->PickAnyDirection(); // first pick the neutrino direction
-    
+
   double mincos=cos(COASTLINE*constants::RADDEG);
   double maxcos=cos(0.);
   double minphi=0.;
   double maxphi=2.*constants::PI;
   double thisphi,thiscos,thissin;
         
-  thisphi=gRandom->Rndm()*(maxphi-minphi)+minphi;
-  thiscos=gRandom->Rndm()*(maxcos-mincos)+mincos;
-  thissin=sqrt(1.-thiscos*thiscos);
+  thisphi = gRandom->Rndm()*(maxphi-minphi) + minphi;
+  thiscos = gRandom->Rndm()*(maxcos-mincos) + mincos;
+  thissin = sqrt(1.-thiscos*thiscos);
   Position thisr_in;// entrance point
   Position thisr_enterice;
   Position thisr_enterice_tmp;
@@ -290,27 +290,28 @@ int icemc::Antarctica::PickUnbiased(Interaction *interaction1, const Antarctica 
   thisr_in.SetXYZ(Earth::BulgeRadius*thissin*thiscos,Earth::BulgeRadius*thissin*thissin,Earth::BulgeRadius*thiscos);
   // interaction1->r_in = thisr_in;
 
-  if (thisr_in.Dot(interaction1->nnu)>0)
+  if (thisr_in.Dot(interaction1->nnu)>0){
     interaction1->nnu=-1.*interaction1->nnu;
+  }
   // does this intersect any ice
   //std::cout << "lat, coastline, cos are " << thisr_in.Lat() << " " << COASTLINE << " " << cos(interaction1->nnu.Theta()) << "\n";
   if (thisr_in.Lat()>COASTLINE && cos(interaction1->nnu.Theta())<0) {
     interaction1->noway=1;
-	
+
     return 0; // there is no way it's going through the ice
   }
     
   int count1=0;
   int count2=0;
-    
-  if (RayTracer::WhereDoesItLeave(thisr_in,interaction1->nnu,antarctica,thisnuexitearth)) { // where does it leave Earth
+
+  if (RayTracer::WhereDoesItLeave(thisr_in, interaction1->nnu, this, thisnuexitearth)) { // where does it leave Earth
     // really want to find where it leaves ice
     // Does it leave in an ice bin
     if (IceThickness(thisnuexitearth) && thisnuexitearth.Lat()<COASTLINE) { // if this is an ice bin in the Antarctic
       //std::cout << "inu is " << inu << " it's in ice.\n";
       //std::cout << "this is an ice bin.\n";
-      thisnuexitice=thisnuexitearth;
-      thisr_exitice=thisnuexitearth;
+      thisnuexitice = thisnuexitearth;
+      thisr_exitice = thisnuexitearth;
       if (thisnuexitice.Mag()>Surface(thisnuexitice)) { // if the exit point is above the surface
 	if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>5.E3) { 
 	  WhereDoesItExitIce(thisnuexitearth,interaction1->nnu,5.E3, // then back up and find it more precisely
@@ -333,14 +334,15 @@ int icemc::Antarctica::PickUnbiased(Interaction *interaction1, const Antarctica 
 			     thisr_exitice);
 	  count1++;
 	} // end third wheredoesitexit
-	thisnuexitice=thisr_exitice;
+	thisnuexitice = thisr_exitice;
       } // if the exit point overshoots
-      else
-	thisnuexitice=thisnuexitearth;
-	    
+      else{
+	thisnuexitice = thisnuexitearth;
+      }	    
       // should also correct for undershooting
-      if (count1>10)
-	std::cout << "count1 is " << count1 << "\n";	  
+      if (count1>10){
+	std::cout << "count1 is " << count1 << "\n";
+      }
     } // if it's an Antarctic ice bin
     else { // it leaves a rock bin so back up and find where it leaves ice
       //std::cout << "inu is " << inu << " it's in rock.\n";
@@ -406,8 +408,9 @@ int icemc::Antarctica::PickUnbiased(Interaction *interaction1, const Antarctica 
 	}
       }
       thisnuexitice=thisr_exitice;
-      if (count2>10)
+      if (count2>10){
 	std::cout << "count1 is " << count2 << "\n";
+      }
       //	else return 0;  // never reaches any ice or is it because our step is too big
     } // if the nu leaves a rock bin
   } // end wheredoesitleave
@@ -426,29 +429,22 @@ int icemc::Antarctica::PickUnbiased(Interaction *interaction1, const Antarctica 
     
   if (WhereDoesItEnterIce(thisnuexitearth,interaction1->nnu,5.E3, // first pass with sort of course binning
 			  thisr_enterice)) {
-    thisr_enterice_tmp=thisr_enterice+5.E3*interaction1->nnu;
-    //std::cout << "inu is " << inu << " thisr_enterice is ";thisr_enterice.Print();
+    thisr_enterice_tmp = thisr_enterice+5.E3*interaction1->nnu;
+
     if (WhereDoesItEnterIce(thisr_enterice_tmp,interaction1->nnu,20., // second pass with finer binning
 			    thisr_enterice)) {
-      //std::cout << "inu is " << inu << " thisr_enterice is ";thisr_enterice.Print();
-      //std::cout << "entersice is ";thisr_enterice.Print();
-      //std::cout << "thisnuexitice is ";thisnuexitice.Print();
-      interaction1->pathlength_inice=thisr_enterice.Distance(thisnuexitice);
-      //std::cout << "distance is " << distance << "\n";
-      //std::cout << "inu " << inu << " thisr_enterice, thisnuexitice are ";thisr_enterice.Print();thisnuexitice.Print();
-      interaction1->posnu=interaction1->pathlength_inice*gRandom->Rndm()*interaction1->nnu;
-      interaction1->posnu=interaction1->posnu+thisr_enterice;
-      //std::cout << "inu" << inu << " thisr_enterice, thisnuexitice are ";thisr_enterice.Print();thisnuexitice.Print();
-      //std::cout << "inu " << inu << " distance is " << distance << "\n";
+      interaction1->pathlength_inice = thisr_enterice.Distance(thisnuexitice);
+      interaction1->posnu = interaction1->pathlength_inice*gRandom->Rndm()*interaction1->nnu;
+      interaction1->posnu = interaction1->posnu+thisr_enterice;
     }
   }
   else {
-    thisr_enterice=thisr_in;
-    interaction1->wheredoesitenterice_err=1;
+    thisr_enterice = thisr_in;
+    interaction1->wheredoesitenterice_err = 1;
     return 0;
   }
-  interaction1->nuexitice=thisnuexitice;
-  interaction1->r_enterice=thisr_enterice;
+  interaction1->nuexitice = thisnuexitice;
+  interaction1->r_enterice = thisr_enterice;
     
   if (interaction1->posnu.Mag()-Surface(interaction1->posnu)>0) {
     interaction1->toohigh=1;
@@ -1542,34 +1538,34 @@ void icemc::Antarctica::ReadIceThickness() {
   }
     
   std::cout<<"Reading in BEDMAP data on ice thickness.\n";
-  string tempBuf1;
-  string tempBuf2;
-  string tempBuf3;
-  string tempBuf4;
-  string tempBuf5;
-  string tempBuf6;
+  std::string tempBuf1;
+  std::string tempBuf2;
+  std::string tempBuf3;
+  std::string tempBuf4;
+  std::string tempBuf5;
+  std::string tempBuf6;
   int temp1,temp2,temp3,temp4,temp5,temp6;
     
   IceThicknessFile >> tempBuf1 >> temp1 >> tempBuf2 >> temp2 
 		   >> tempBuf3 >> temp3 >> tempBuf4 >> temp4 
 		   >> tempBuf5 >> temp5 >> tempBuf6 >> temp6;
     
-  if(tempBuf1 == string("ncols")) {
+  if(tempBuf1 == std::string("ncols")) {
     nCols_ice=temp1;
   }
-  if(tempBuf2 == string("nrows")) {
+  if(tempBuf2 == std::string("nrows")) {
     nRows_ice=temp2;
   }
-  if(tempBuf3 == string("xllcorner")) {
+  if(tempBuf3 == std::string("xllcorner")) {
     xLowerLeft_ice=temp3;
   }
-  if(tempBuf4 == string("yllcorner")) {
+  if(tempBuf4 == std::string("yllcorner")) {
     yLowerLeft_ice=temp4;
   }
-  if(tempBuf5 == string("cellsize")) {
+  if(tempBuf5 == std::string("cellsize")) {
     cellSize=temp5;
   }
-  if(tempBuf6 == string("NODATA_value")) {
+  if(tempBuf6 == std::string("NODATA_value")) {
     NODATA=temp6;
   }
   //cout<<"nCols_ice, nRows_ice "<<nCols_ice<<" , "<<nRows_ice<<std::endl;
@@ -1612,34 +1608,34 @@ void icemc::Antarctica::ReadGroundBed() {
     
   std::cout<<"Reading in BEDMAP data on elevation of ground.\n";
     
-  string tempBuf1;
-  string tempBuf2;
-  string tempBuf3;
-  string tempBuf4;
-  string tempBuf5;
-  string tempBuf6;
+  std::string tempBuf1;
+  std::string tempBuf2;
+  std::string tempBuf3;
+  std::string tempBuf4;
+  std::string tempBuf5;
+  std::string tempBuf6;
   int temp1,temp2,temp3,temp4,temp5,temp6;
     
   GroundBedFile >> tempBuf1 >> temp1 >> tempBuf2 >> temp2 
 		>> tempBuf3 >> temp3 >> tempBuf4 >> temp4 
 		>> tempBuf5 >> temp5 >> tempBuf6 >> temp6;
     
-  if(tempBuf1 == string("ncols")) {
+  if(tempBuf1 == std::string("ncols")) {
     nCols_ground=temp1;
   }
-  if(tempBuf2 == string("nrows")) {
+  if(tempBuf2 == std::string("nrows")) {
     nRows_ground=temp2;
   }
-  if(tempBuf3 == string("xllcorner")) {
+  if(tempBuf3 == std::string("xllcorner")) {
     xLowerLeft_ground=temp3;
   }
-  if(tempBuf4 == string("yllcorner")) {
+  if(tempBuf4 == std::string("yllcorner")) {
     yLowerLeft_ground=temp4;
   }
-  if(tempBuf5 == string("cellsize")) {
+  if(tempBuf5 == std::string("cellsize")) {
     cellSize=temp5;
   }
-  if(tempBuf6 == string("NODATA_value")) {
+  if(tempBuf6 == std::string("NODATA_value")) {
     NODATA=temp6;
   }
     
@@ -1673,34 +1669,34 @@ void icemc::Antarctica::ReadWaterDepth() {
     
   std::cout<<"Reading in BEDMAP data on water depth.\n";
     
-  string tempBuf1;
-  string tempBuf2;
-  string tempBuf3;
-  string tempBuf4;
-  string tempBuf5;
-  string tempBuf6;
+  std::string tempBuf1;
+  std::string tempBuf2;
+  std::string tempBuf3;
+  std::string tempBuf4;
+  std::string tempBuf5;
+  std::string tempBuf6;
   int temp1,temp2,temp3,temp4,temp5,temp6;
     
   WaterDepthFile >> tempBuf1 >> temp1 >> tempBuf2 >> temp2 
 		 >> tempBuf3 >> temp3 >> tempBuf4 >> temp4 
 		 >> tempBuf5 >> temp5 >> tempBuf6 >> temp6;
     
-  if(tempBuf1 == string("ncols")) {
+  if(tempBuf1 == std::string("ncols")) {
     nCols_water=temp1;
   }
-  if(tempBuf2 == string("nrows")) {
+  if(tempBuf2 == std::string("nrows")) {
     nRows_water=temp2;
   }
-  if(tempBuf3 == string("xllcorner")) {
+  if(tempBuf3 == std::string("xllcorner")) {
     xLowerLeft_water=temp3;
   }
-  if(tempBuf4 == string("yllcorner")) {
+  if(tempBuf4 == std::string("yllcorner")) {
     yLowerLeft_water=temp4;
   }
-  if(tempBuf5 == string("cellsize")) {
+  if(tempBuf5 == std::string("cellsize")) {
     cellSize=temp5;
   }
-  if(tempBuf6 == string("NODATA_value")) {
+  if(tempBuf6 == std::string("NODATA_value")) {
     NODATA=temp6;
   }
     

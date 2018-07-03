@@ -14,10 +14,37 @@
 
 #include <cmath>
 
-
-
 #include "TH2D.h"
 #include "TCanvas.h"
+
+
+std::ostream& operator<<(std::ostream& os, const icemc::CurrentType& c){
+  switch(c){
+  case icemc::CurrentType::Charged:
+    return os << "CurrentType::Charged";
+  case icemc::CurrentType::Neutral:
+    return os << "CurrentType::Neutral";
+  default:
+    return os << "Unknown CurrentType!";
+  }
+}
+
+std::ostream& operator<<(std::ostream& os, const icemc::NuFlavor& f){
+  switch(f){
+  case icemc::NuFlavor::e:
+    return os << "NuFlavor::e";
+  case icemc::NuFlavor::mu:
+    return os << "NuFlavor::mu";
+  case icemc::NuFlavor::tau:
+    return os << "NuFlavor::tau";
+  default:
+    return os << "Unknown NuFlavor!";
+  }
+}
+
+
+
+
 
 icemc::Primaries::Primaries(){//constructor
 
@@ -59,8 +86,8 @@ icemc::Primaries::Primaries(){//constructor
   c4[1][1]=-17.72;
   
   char ch[50];
-  string stmp;
-  string sbase="fsigma";
+  std::string stmp;
+  std::string sbase="fsigma";
   for(int i=0; i<=1;i++){ // nu, nubar
     for(int j=0; j<=1; j++){ // nc, cc
       sprintf(ch,"%d%d",i,j);
@@ -131,12 +158,12 @@ icemc::Primaries::Primaries(){//constructor
 }
 
 
-double icemc::Primaries::Getyweight(double pnu,double y,int nu_nubar,int currentint) {
+double icemc::Primaries::Getyweight(double pnu,double y,int nu_nubar, CurrentType currentint) {
   return m_myY->Getyweight(pnu,y,nu_nubar,currentint);
 }
 
 
-double icemc::Primaries::pickY(const Settings *settings1,double pnu,int nu_nubar,int currentint) {
+double icemc::Primaries::pickY(const Settings *settings1,double pnu,int nu_nubar,CurrentType currentint) {
   return m_myY->pickY(settings1,pnu,nu_nubar,currentint);
 }
 
@@ -154,7 +181,8 @@ icemc::Primaries::~Primaries(){//default deconstructor
 }//deconstructor
 
 
-int icemc::Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,int nu_nubar,int currentint){
+int icemc::Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,int nu_nubar,CurrentType current){
+  int currentint = static_cast<int>(current);
   // calculate cross section
   if (pnu<mine[settings1->SIGMAPARAM] || pnu>maxe[settings1->SIGMAPARAM]) {
     icemcLog() <<  icemc::error << "Need a parameterization for this energy region.\n";
@@ -167,9 +195,9 @@ int icemc::Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,con
       std::cout<<"nu_nubar is not defined correctly!\n";
       return 0;
     }
-    if (currentint!=Interaction::kcc && currentint!=Interaction::knc){//default "cc"
+    if (current!=CurrentType::Charged && current!=CurrentType::Neutral){//default "cc"
       std::cout<<"Current is not cc or nc!\n";
-      return Interaction::kcc;
+      return 0;
     }
     
     if(settings1->SIGMAPARAM==0){ // Reno
@@ -195,27 +223,28 @@ int icemc::Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,con
 
 
 //! pick a neutrino type, flavor ratio 1:1:1
-string icemc::Primaries::GetNuFlavor() const {
-  string nuflavor;
+icemc::NuFlavor icemc::Primaries::GetNuFlavor() const {
+  NuFlavor nuflavor = NuFlavor::e;
 
   double rnd=gRandom->Rndm();
 
   if (rnd<=(1./3.)) {  
-    nuflavor="nue";
+    nuflavor=NuFlavor::e;
   } //if
   else if(rnd<=(2./3.)) { 
-    nuflavor="numu";
+    nuflavor=NuFlavor::mu;
   } //else if
   else if(rnd<=(1.)) { 
-    nuflavor="nutau";
+    nuflavor=NuFlavor::tau;
   } //else if
-  else
+  else{
     std::cout << "unable to pick nu flavor\n";
+  }
   return nuflavor;
 } //GetNuFlavor
 
 
-icemc::Interaction::Interaction(string inttype,Primaries *primary1,const Settings *settings1) : banana_flavor("numu"), banana_current("nc"),  nu_banana(Position(theta_nu_banana,phi_nu_banana)) {
+icemc::Interaction::Interaction(Primaries *primary1, const Settings *settings1) {
 
   noway=0;
   wheredoesitleave_err=0;
@@ -232,24 +261,8 @@ icemc::Interaction::Interaction(string inttype,Primaries *primary1,const Setting
   weight_nu=0;
   weight_nu_prob=0;
 
-  if (inttype=="banana") {
-    nu_banana = (surface_over_banana_nu+altitude_nu_banana) * nu_banana;
-
-    //Set neutrino direction
-    nnu_banana = Vector(nu_banana_theta_angle + constants::PI,nu_banana_phi_angle);
-    nnu_banana = nnu_banana.ChangeCoord(nu_banana);
-         
-    current = banana_current;
-
-    nuflavor = banana_flavor;
-
-
-  }
-  else {
   setNuFlavor(primary1,settings1);
   setCurrent();
-  //    setnu_nubar(primary1);//same function for inttype "banna" or otherwise.
-  }
 }
 
 
@@ -279,47 +292,20 @@ void  icemc::Interaction::setNuFlavor(const Primaries *primary1, const Settings 
   // pick the neutrino flavor,  type of tau decay when relevant,
   //  lpm energy.
   nuflavor=primary1->GetNuFlavor();
-
-  // if(counting1){
-  //   if (settings1->MINRAY==whichray) {
-  //     // only increment neutrino flavor on first ray so you don't count twice
-  //     if (nuflavor=="nue"){
-  // 	counting1->nnu_e++;      
-  //     }
-  //     else if (nuflavor=="numu"){
-  // 	counting1->nnu_mu++;      
-  //     }
-  //     else if (nuflavor=="nutau"){
-  // 	counting1->nnu_tau++;
-  //     }
-  //   }
-  // }
-      
-
-  if (nuflavor=="nue"){  //For outputting to file
-    nuflavorint=1;
-  }
-  else if (nuflavor=="numu"){
-    nuflavorint=2;
-  }
-  else if (nuflavor=="nutau"){
-    nuflavorint=3;
-  }
-  else {
-    std::cout<<"nuflavor is "<<nuflavor<<"\n";
-  }
 }
 
 
 //! choose CC or NC: get from ratios in Ghandi etal paper, updated for the CTEQ6-DIS parton distribution functions (M.H. Reno, personal communication).  Need to add capability of using ratios from Connolly et al.
-string icemc::Interaction::GetCurrent() {
-  string current;
+icemc::CurrentType icemc::Interaction::GetCurrent() {
+  CurrentType current;
   double rnd=gRandom->Rndm();
-  if (rnd<=0.6865254) // 10^18 eV - 10^21 eV (use this one for ANITA)
+  if (rnd<=0.6865254){ // 10^18 eV - 10^21 eV (use this one for ANITA)
 //if (rnd<=0.6893498) // 10^17 eV - 10^20 eV (use this one for SalSA)
-    current="cc";
-  else
-    current="nc";  
+    current = CurrentType::Charged;//"cc";
+  }
+  else{
+    current = CurrentType::Neutral;//"nc";  
+  }
   return current;
 } //GetCurrent
 
@@ -327,22 +313,18 @@ void icemc::Interaction::setCurrent() {
   // pick whether it is neutral current
   // or charged current
   current=this->GetCurrent();
-  if (current=="cc")   //For outputting to file
-    currentint=kcc;
-  else if(current=="nc")
-    currentint=knc;   
 }//setCurrent
 
 
 int icemc::Interaction::getPdgCode() const {
   int pdgcode = -1;
-  if (nuflavor=="nue"){
+  if (nuflavor==NuFlavor::e){
     pdgcode = 12;
   }
-  else if (nuflavor=="numu"){
+  else if (nuflavor==NuFlavor::mu){
     pdgcode = 14;
   }
-  else if (nuflavor=="nutau"){
+  else if (nuflavor==NuFlavor::tau){
     pdgcode = 16;
   }
   return pdgcode;
@@ -363,18 +345,18 @@ icemc::Y::Y() { // Constructor
   ffrac->FixParameter(1,-0.197);
   ffrac->FixParameter(2,21.8);
 
-  string sbase="C1_high";
+  std::string sbase="C1_high";
   char which[50];
   for (int i=0;i<2;i++) {
     for (int j=0;j<2;j++) {
       sprintf(which,"%d%d",i,j);
-      string sname=sbase+which;
+      std::string sname=sbase+which;
       fC1_high[i][j]=new TF1(sname.c_str(),"[0]-[1]*(-exp(-(x-[2])/[3]))",7.,12.); // parameterization of parameter C1 in the high y region according to Equation 16
     }
   }
 
-  int kcc = icemc::Interaction::kcc;
-  int knc = icemc::Interaction::knc;
+  int kcc = static_cast<int>(icemc::CurrentType::Charged);
+  int knc = static_cast<int>(icemc::CurrentType::Neutral);
 
   // parameter A_0 in Table V for the high y region
   fC1_high[1][kcc]->FixParameter(0,-0.0026);//nubar, CC
@@ -428,7 +410,7 @@ icemc::Y::Y() { // Constructor
 
 
 //! Pick an inelasticity y according to the model chosen
-double icemc::Y::pickY(const Settings *settings1,double pnu,int nu_nubar,int currentint) {
+double icemc::Y::pickY(const Settings *settings1,double pnu,int nu_nubar,CurrentType currentint) {
   if(settings1->YPARAM==0){
     return pickYGandhietal();
   }//old Gety
@@ -455,7 +437,7 @@ double icemc::Y::pickYGandhietal() {
 }
 
 
-double icemc::Y::pickYConnollyetal2011(int NU,int CURRENT,double pnu) {
+double icemc::Y::pickYConnollyetal2011(int NU,CurrentType CURRENT,double pnu) {
   // Select a y according to recipe in Connolly et al. (2011)
   //pnu is in eV.
   double epsilon=log10(pnu/1.E9);
@@ -469,7 +451,7 @@ double icemc::Y::pickYConnollyetal2011(int NU,int CURRENT,double pnu) {
  
   double C1_this;
   if (iyregion==0) // high y region
-    C1_this=fC1_high[NU][CURRENT]->Eval(epsilon); // C1 for this event
+    C1_this=fC1_high[NU][static_cast<int>(CURRENT)]->Eval(epsilon); // C1 for this event
   else // low y region
     C1_this=fC1_low->Eval(epsilon); // C1 for this event
  
@@ -488,7 +470,7 @@ double icemc::Y::pickYConnollyetal2011(int NU,int CURRENT,double pnu) {
 }//pickY
 
 
-double icemc::Y::Getyweight(double pnu, double y, int nu_nubar, int currentint){
+double icemc::Y::Getyweight(double pnu, double y, int nu_nubar, CurrentType currentint){
   //from Connolly Calc 2011, Equations 9, 10, 11, 16, and 17.
   // double dy=0.;//default
   //Ev, cc or nc, nu or nubar.
@@ -503,7 +485,7 @@ double icemc::Y::Getyweight(double pnu, double y, int nu_nubar, int currentint){
   C2=fC2->Eval(epsilon);//Eq(17)
   C1_low=fC1_low->Eval(epsilon);//Eq(16) (Low region)
 
-  C1_high=fC1_high[nu_nubar][currentint]->Eval(epsilon);//Eq(16)(High region) 
+  C1_high=fC1_high[nu_nubar][static_cast<int>(currentint)]->Eval(epsilon);//Eq(16)(High region) 
   
    
   if(nu_nubar==0) {

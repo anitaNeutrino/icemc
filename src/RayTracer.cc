@@ -74,16 +74,16 @@ void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int w
 
   n_exit2bn[whichtry] = (r_bn - rfexit[whichtry]).Unit();
   
-  // if (settings1->BORESIGHTS) { // now find rfexit and n_exit2bn for each boresight, still first iteration
-  //   //std::cout << "first iteration.\n";
-  //   for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
-  //     for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-  //       WhereDoesItLeave(posnu,nrf_iceside_eachboresight[2*whichtry][ilayer][ifold],antarctica,
-  // 			 rfexit_eachboresight[whichtry][ilayer][ifold]);
-  //       n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit(); 
-  //     }
-  //   }
-  // } // end if we are doing this for each boresight
+  if (settings1->BORESIGHTS) { // now find rfexit and n_exit2bn for each boresight, still first iteration
+    //std::cout << "first iteration.\n";
+    for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
+      for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
+        WhereDoesItLeave(posnu,nrf_iceside_eachboresight[2*whichtry][ilayer][ifold],antarctica,
+  			 rfexit_eachboresight[whichtry][ilayer][ifold]);
+        n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit(); 
+      }
+    }
+  } // end if we are doing this for each boresight
   
   if (settings1->SLAC) {
     // ray comes out a little earlier because of the slope of the surface.
@@ -96,9 +96,9 @@ void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int w
     if (settings1->BORESIGHTS) {
       for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
         for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-          
-          x=sin(settings1->SLACSLOPE*constants::RADDEG)*(settings1->SLACICELENGTH/2.+rfexit_eachboresight[0][ilayer][ifold].Distance(rfexit_eachboresight[whichtry][ilayer][ifold]))/sin(constants::PI/2.+acos(nrf_iceside_eachboresight[2*whichtry][ilayer][ifold].Dot(nsurf_rfexit)));
-          
+
+          x = sin(settings1->SLACSLOPE*constants::RADDEG)*(settings1->SLACICELENGTH/2.+rfexit_eachboresight[0][ilayer][ifold].Distance(rfexit_eachboresight[whichtry][ilayer][ifold]))/sin(constants::PI/2.+acos(nrf_iceside_eachboresight[2*whichtry][ilayer][ifold].Dot(nsurf_rfexit)));
+
           rfexit_eachboresight[whichtry][ilayer][ifold]-=x*nrf_iceside_eachboresight[2*whichtry][ilayer][ifold];
           
           n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit();
@@ -246,7 +246,7 @@ int icemc::RayTracer::TraceRay(const Settings *settings1,Anita *anita1,int iter,
 	    
 	  if (!GetRayIceSide(n_exit2bn_eachboresight[iter-1][ilayer][ifold],nsurf_rfexit,AskaryanFreqsGenerator::N_AIR,constants::NFIRN,
 			     nrf_iceside_eachboresight[2*iter-1][ilayer][ifold])) // nrf_iceside[1] is the rf direction in the firn
-	    return 0; // reject if TIR.  
+	    return 0; // reject if TIR.
 
 
 	  //	    std::cout << "ITER " << iter-1 << " " << (n_exit2bn_eachboresight[iter-1][ilayer][ifold]) << std::endl;

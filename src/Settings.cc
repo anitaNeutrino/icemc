@@ -458,13 +458,6 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   getSetting("Flight path", whichPathInt);
   WHICHPATH = static_cast<FlightPath>(whichPathInt);
 
-  if(WHICHPATH==FlightPath::BananaPlot){ // moved here from icemc main
-    SIGNAL_FLUCT = Interaction::banana_signal_fluct;
-    CONSTANTCRUST=1;  //Set ice depths and elevations all the same
-    CONSTANTICETHICKNESS=1;
-    FIXEDELEVATION=1;
-  }
-
   if((WHICH==Payload::AnitaLite    && WHICHPATH!=FlightPath::AnitaLite) ||
      (WHICH==Payload::Anita1Simple && WHICHPATH!=FlightPath::Anita1) || 
      (WHICH==Payload::Anita1       && WHICHPATH!=FlightPath::Anita1) ||
@@ -631,12 +624,12 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
 	      << PULSER << std::endl;
   }
 
-  getSetting("Centre one phi-sector", CENTER);
+  // getSetting("Centre one phi-sector", CENTER);
 
-  if (CENTER!=0){
-    std::cout << "WARNING!!  Rotating payload to center one phi sector on the incoming signal for each event."
-	      << std::endl;
-  }
+  // if (CENTER!=0){
+  //   std::cout << "WARNING!!  Rotating payload to center one phi sector on the incoming signal for each event."
+  // 	      << std::endl;
+  // }
 
   getSetting("Force vertical polarization", MAKEVERTICAL);
 
@@ -1312,7 +1305,7 @@ void icemc::Settings::getSetting(const char* key, double& value) const {
 void icemc::Settings::processStrings(const std::string& raw, std::vector<std::string >& processed) const {
 
   bool stringAccumulation = false;
-  string::const_iterator it = raw.begin();
+  std::string::const_iterator it = raw.begin();
 
   // empty the processed vector
   processed.clear();
