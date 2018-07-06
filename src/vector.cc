@@ -42,9 +42,15 @@ double icemc::Vector::Dot(const Vector &vec) const {
 
 
 
+
 double icemc::Vector::Mag() const {
-  return sqrt(fX*fX + fY*fY + fZ*fZ);
+  return sqrt(this->Square());
 } //icemc::Vector::Mag
+
+double icemc::Vector::Square() const {
+  return fX*fX + fY*fY + fZ*fZ;
+} //icemc::Vector::Sq
+
 
 
 double icemc::Vector::Angle(const Vector &vec) const {
@@ -52,8 +58,11 @@ double icemc::Vector::Angle(const Vector &vec) const {
 } //icemc::Vector::Angle
 
 
-icemc::Vector icemc::Vector::Unit() const {
-  return (*this) / this->Mag();
+icemc::Vector icemc::Vector::Unit() const {  
+  double mag = this->Mag();
+  // three zeros are better than three nans
+  mag = mag > 0 ? mag : 1;
+  return (*this) / mag;
 } //icemc::Vector::Unit
 
 

@@ -37,9 +37,7 @@ namespace icemc {
     //! Identical to the Vector constructor with the same inputs.
     Position(double theta_inp, double phi_inp);
 
-    //! Constructs a position vector given a longitude, latitude,
-    //! and distance from the center of the Earth.
-    Position(double longitude, double latitude, double altitude);
+    void SetLonLatAlt(double longitude, double latitude, double altitude);
 
     //! Returns latitude, where the +z direction is at 0 latitude.
     double Lat() const;

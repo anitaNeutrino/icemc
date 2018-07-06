@@ -228,10 +228,6 @@ bool icemc::ANITA::applyTrigger(int inu){
   auto globalTrigger = std::unique_ptr<GlobalTrigger>(new GlobalTrigger(fSettings, dynamic_cast<Anita*>(this)));
 
   int discones_passing = 0;  // number of discones that pass
-
-  // for comparing with peter
-  double sumsignal[5]={0.};
-  double sumsignal_aftertaper[5]={0.};
   
 
   constexpr int nAnt = 48;
@@ -285,8 +281,6 @@ bool icemc::ANITA::applyTrigger(int inu){
 				 fVoltsRX.rfcm_lab_h_all.at(count_rx).data());
       ct.saveTriggerWaveforms(&justSignal_trig[0][antNum][0], &justSignal_trig[1][antNum][0], &justNoise_trig[0][antNum][0], &justNoise_trig[1][antNum][0]);
       ct.saveDigitizerWaveforms(&justSignal_dig[0][antNum][0], &justSignal_dig[1][antNum][0], &justNoise_dig[0][antNum][0], &justNoise_dig[1][antNum][0]);
-
-      Tools::Zero(sumsignal, 5);
 
       if (fSettings->SCALEDOWNLCPRX1){
 	globalTrigger->volts[0][ilayer][0] = globalTrigger->volts[0][ilayer][0]/sqrt(2.);

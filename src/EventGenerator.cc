@@ -794,24 +794,26 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
   double costhetanu1 = 0;
   double costhetanu2 = 0;
 
-
   if (settings1->SKIPCUTS || !settings1->USEDIRECTIONWEIGHTS) { // this is a setting that allows all neutrino angles,  no restriction.  Makes the code slower.
     costhetanu2=1.;
     costhetanu1=-1.;
     theta_threshold=1;
   }
   else {
+
+
     if (showerProps.emFrac<=1.E-10 && deltheta_had >1.E-10) {
       if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(showerProps.hadFrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(askFreqGen->GetChangle())>1)
 	//if (Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(askFreqGen->GetChangle())>1)
-	theta_threshold=-1;
+	theta_threshold = -1;
       else {
-	//theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(hadfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(askFreqGen->GetChangle()))/ALOG2);
-	theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(showerProps.hadFrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(askFreqGen->GetChangle()))/constants::ALOG2);
+	theta_threshold = sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(showerProps.hadFrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(askFreqGen->GetChangle()))/constants::ALOG2);
 	averaging_thetas1+=theta_threshold;
       } //else
       count_inthisloop1++;
-    } //if
+    }
+
+
 
     if (showerProps.emFrac>1.E-10 && deltheta_had <=1.E-10) {
       dont_count++;
@@ -819,15 +821,15 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
 	//if (Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(showerProps.emFrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(askFreqGen->GetChangle())>1)
 	theta_threshold=-1;
       else {
-	//theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(showerProps.emFrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(askFreqGen->GetChangle()))/0.5);
 	theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(showerProps.emFrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(askFreqGen->GetChangle()))/0.5);
 	averaging_thetas2+=theta_threshold;
       } //else
       count_inthisloop2++;
-    } //if
+    }
 
 
-      //start big code block of ifs/elses
+
+
     if (showerProps.emFrac>1.E-10 && deltheta_had>1.E-10) {
       // if the electromagnetic and hadronic components of the shower are both non-negligible
       // then theta_threshold cannot be determined analytically so we step away from the cerenkov angle in steps equal to 1/2 * deltheta_em
@@ -850,7 +852,6 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
 	  askFreqGen->TaperVmMHz(askFreqGen->GetChangle()+theta_test, deltheta_em, deltheta_had, showerProps, vmmhz1m_test, djunk);
 
 	  if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
-	    //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) {
 	    theta_threshold=theta_test;
 	  }
 	  else { // otherwise increment by the step size and check again.
@@ -858,16 +859,18 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
 	    vmmhz1m_test=vmmhz1m_max;
 	    askFreqGen->TaperVmMHz(askFreqGen->GetChangle()+theta_test, deltheta_em, deltheta_had, showerProps, vmmhz1m_test, djunk);
 	    //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
-	    if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
+	    if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.){
 	      theta_threshold=theta_test;
+	    }
 	    else { // otherwise increment by the step size and check again.
 	      theta_test=3*deltheta_em;
 	      vmmhz1m_test=vmmhz1m_max;
 	      askFreqGen->TaperVmMHz(askFreqGen->GetChangle()+theta_test, deltheta_em, deltheta_had, showerProps, vmmhz1m_test, djunk);
 	      //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.)
 
-	      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
+	      if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.){
 		theta_threshold=theta_test;
+	      }
 	      else { // otherwise,  set is the the width of the hadronic component (much wider than the electromagnetic component)
 		theta_test=deltheta_had;
 		vmmhz1m_test=vmmhz1m_max;
@@ -890,8 +893,7 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
       count_inthisloop3++;
       averaging_thetas3+=theta_threshold;
 
-    } // end if both the em and hadronic components are non-negligible.
-      //end big code block of ifs/elses
+    }
 
     theta_threshold*=settings1->THETA_TH_FACTOR; // multiply theta_threshold by scale factor if requested,  for testing purposes.
     if (theta_threshold>0) { // we only pick the angle between 0 and pi so set the upper and lower limits accordingly.
@@ -912,13 +914,11 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
 	costhetanu1=cos(askFreqGen->GetChangle()+theta_threshold);
       } //else if
     } // end if theta_threshold>0
-
-
   } // if SKIP_CUTS !=0
 
   if (theta_threshold>0) {
     // pick the neutrino direction,  in a coordinate system where the z axis lies along the cerenkov cone.
-    costhetanu=costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
+    costhetanu = costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
 
     double phinu=constants::TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
     double sinthetanu=sqrt(1-costhetanu*costhetanu);
@@ -1024,13 +1024,10 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 				       Vector &pol, 
 				       const Vector &firn_rf, 
 				       double efield, 
-				       // double emfrac,
-				       // double hadfrac,
-				       const ShowerProperties& sp,
+				       // const ShowerProperties& sp,
 				       double deltheta_em_max, double deltheta_had_max, 
 				       double &t_coeff_pokey, double &t_coeff_slappy,
-				       double &fresnel,
-				       double &mag) const {
+				       double &fresnel, double &mag) const {
 
   // find angle of incidence and angle of transmission
   double incident_angle = surface_normal.Angle(firn_rf);
@@ -1068,73 +1065,6 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 //end GetFresnel()
 
 
-void icemc::EventGenerator::GetBalloonLocation(const Interaction *interaction1, const RayTracer *ray1, const Balloon *bn1, const Antarctica *antarctica) const {
-  // brian enter function to calculate balloon position on your map.
-  // use interaction1->posnu // location of neutrino interaction
-  // coordinate system:  +z="up" at the south pole
-  // fDetector->r_bn
-  // nnu
-  // ray1->nsurf_rfexit
-    
-    
-  // brian enter function to calculate balloon position on your map.
-  // use interaction1->posnu // location of neutrino interaction
-  // coordinate system:  +z="up" at the south pole
-  // fDetector->r_bn
-  // nnu    
-    
-  // balloonvector = balloonvector - nuvector;//change origin to the nuetrino interaction point
-    
-  const Vector nuvector = interaction1->nnu;
-  // double interactiondepth = nuvector[2];//NOT CORRECT! need depth BELOW the ice. this is height above center of earth.
-    
-  Vector zcoordvector = ray1->nsurf_rfexit;
-  zcoordvector=zcoordvector.Unit();
-    
-  // double thetainc =acos(zcoordvector.Dot(nuvector))*180/PI;
-  //nsurf_rfexit is z direction for new coordinate system. Need to make sure the n-vector is in x-z plane.
-    
-  Vector xcoordvector = nuvector-(zcoordvector.Dot(nuvector))*zcoordvector;//xcoordvector is such that nnu lies in the x-z plane
-  xcoordvector = xcoordvector.Unit();
-
-  const Vector ycoordvector = zcoordvector.Cross(xcoordvector);//Need this for ChangeCoord. 
-
-  Vector origin_brian_tmp;
-  if (interaction1->nnu.Dot(zcoordvector)>0){ // up  going
-    origin_brian_tmp=interaction1->nuexit; // the origin is the neutrino exit point 
-  }
-  else {     
-    Vector nnu_flipped=interaction1->nnu;
-    nnu_flipped=nnu_flipped-2.*nnu_flipped.Dot(zcoordvector)*zcoordvector; // take it's upgoing reflection from surface
-      
-    Position nuexit_flipped;
-    if (RayTracer::WhereDoesItLeave(interaction1->posnu,nnu_flipped,antarctica,nuexit_flipped)){
-      origin_brian_tmp=nuexit_flipped;
-    }
-  }
-
-  Vector r_bn_tmp=fDetector->position()-origin_brian_tmp;
-  r_bn_tmp=r_bn_tmp.ChangeCoord(xcoordvector,ycoordvector);//change coordinates
-    
-  // double balloondist =r_bn_tmp.Mag();//this is above center of earth, if i understand correctly. Need above the surface of the earth. 
-  double balloonphi = r_bn_tmp.Phi(); //phi position of the balloon
-  if (balloonphi>constants::PI){
-    balloonphi=balloonphi-2*constants::PI;
-  }
-  
-  double balloontheta = r_bn_tmp.Theta();// costheta position of the baloon
-  // get this by dotting ray1->nsurf_rfexit with nnu?     
-  // double thetainc = acos(interaction1->nnu[2])*180/PI; //nnu is unit vector; cos(thetainc) = z/r
-  balloontheta = constants::PI-balloontheta;//walter.cc uses a pos z as down. this corrects for that.
-    
-  // define a coordinate system with ray1->nsurf_rfexit defining +z
-  // nnu direction defines the x-z plane
-  // find balloon position in that coordinate system
-  //to get the values from walter.cc we need : E_shower, correlation length, rms height and the em_frac and had_frac. the last
-  // two are so we can multiply the number from sky maps by the correct frac and then add the em and hadronic portion together
-  // to get the total.
-}
-
 
 
 
@@ -1161,7 +1091,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   Secondaries sec1;
   Primaries* primary1 = new Primaries();
   AskaryanFreqsGenerator askFreqGen;
-  RayTracer rayTracer;
+  Antarctica* antarctica = new Antarctica(settings1.ICE_MODEL + settings1.NOFZ*10,
+					  settings1.CONSTANTICETHICKNESS * 1000 + settings1.CONSTANTCRUST * 100 + settings1.FIXEDELEVATION * 10 + 0,
+					  settings1.WEIGHTABSORPTION);
+  icemcLog() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
+  
+  RayTracer rayTracer(antarctica);
   Counting* count1 = new Counting();
   Taumodel* taus1 = new Taumodel();
   Screen* panel1 = new Screen(0);  // create new instance of the screen class
@@ -1245,10 +1180,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   fNeutrinoPath = new NeutrinoPath(); // init here for branch setting
 
-  Antarctica* antarctica = new Antarctica(settings1.ICE_MODEL + settings1.NOFZ*10,
-					  settings1.CONSTANTICETHICKNESS * 1000 + settings1.CONSTANTCRUST * 100 + settings1.FIXEDELEVATION * 10 + 0,
-					  settings1.WEIGHTABSORPTION);
-  icemcLog() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
 
   // fills arrays according to antenna specs
   fDetector->GetBeamWidths(&settings1); // this is used if GAINS set to 0
@@ -1315,8 +1246,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   icemcLog() << "Starting loop over events. Time required for setup is "
        <<(int)((raw_loop_start_time - raw_start_time)/60) << ":"
        << ((raw_loop_start_time - raw_start_time)%60) << std::endl;
-
-
 
   /**
    * Main loop over generated neutrinos
@@ -1444,7 +1373,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       }
 
       // fDetector->PickDownwardInteractionPoint(interaction1,  anita1,  &settings1,  antarctica,  ray1,  beyondhorizon);
-      fDetector->PickDownwardInteractionPoint(interaction1,  &settings1,  antarctica,  &rayTracer,  beyondhorizon);
+      beyondhorizon = interaction1->PickDownwardInteractionPoint(fDetector->Getibnposition(), fDetector->position(), &settings1,  antarctica,  &rayTracer);
+      // fDetector->PickDownwardInteractionPoint(interaction1,  &settings1,  antarctica,  &rayTracer,  beyondhorizon);      
 
       if (interaction1->noway){
 	fGenNu->passCutNoWay = 0;
@@ -1516,7 +1446,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // costheta_exit=cos(rayTracer.rfexit[0].Theta()); // just for plotting
 
       // if (!ray1->TraceRay(&settings1, anita1, 1, askFreqGen.N_DEPTH)) {
-      if (!rayTracer.TraceRay(&settings1, fDetector, 1, askFreqGen.N_DEPTH)) {	
+      if (!rayTracer.TraceRay(&settings1, fDetector, 1, askFreqGen.N_DEPTH)) {
         continue;
       }
 
@@ -1525,18 +1455,32 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // 0th guess was simply radially outward from interaction position
       // this now takes into account balloon position and surface normal.
       // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 1, antarctica); // fills ray1->n_exit2bn[1]
-      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 1, antarctica); // fills ray1->n_exit2bn[1]      
+      const int inuDebug = 13; //1481; //1705; //34; //532; //543; //517; //523; //522;
+      bool debugRay = inu == inuDebug ? true : false;
+      rayTracer.setDebug(debugRay);
+      Vector surfacePosMinuit = rayTracer.findPathToDetector(interaction1->posnu, fDetector->position());
+      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 1, antarctica); // fills ray1->n_exit2bn[1]
 
       rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 1);
 
       // if (!ray1->TraceRay(&settings1, anita1, 2, askFreqGen.N_DEPTH)) {; // trace ray,  2nd iteration.
-      if (!rayTracer.TraceRay(&settings1, fDetector, 2, askFreqGen.N_DEPTH)) {; // trace ray,  2nd iteration.	
+      if (!rayTracer.TraceRay(&settings1, fDetector, 2, askFreqGen.N_DEPTH)) {; // trace ray,  2nd iteration.
         continue;
       }
 
+
       // fills ray1->n_exit2bn[2] ?
      // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 2, antarctica);
-      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);      
+      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);
+
+      std::cout << inu << "\t"
+		<< (surfacePosMinuit - rayTracer.rfexit[2]).Mag() << "\t"
+		<< 1e-3*(interaction1->posnu - fDetector->position()).Mag()
+		<< std::endl << std::endl;
+
+      // if(debugRay){
+      // 	exit(1);
+      // }
 
       rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 2);
 
@@ -1574,9 +1518,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	  ShowerProperties showerPropsTemp;
 	  showerPropsTemp.emFrac = emfrac_db;
 	  showerPropsTemp.hadFrac = hadfrac_db;
-          // err = GetDirection(&settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, showerPropsTemp, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, &askFreqGen, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
           err = GetDirection(&settings1, interaction1, rayTracer.nrf_iceside[4], deltheta_em_max, deltheta_had_max, showerPropsTemp, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], &rayTracer, &askFreqGen, interaction1->posnu, fDetector, fDetector, interaction1->nnu, costhetanu, theta_threshold);	  
-          //cout<<"UNBIASED_SELECTION IS "<<settings1.UNBIASED_SELECTION<<"\n";
         }
         // else if (settings1.SLAC) {
         //   Vector xaxis(1., 0., 0.);
@@ -1595,7 +1537,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
         //   }//end if boresights
         //   err=1; // everything is a-okay
         // }// end else if slac
-
         if(err==0){
           continue;//bad stuff has happened.
 	}
@@ -1756,24 +1697,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 			     costhetanu,
 			     theta_threshold);
 	}
-        // else if (settings1.SLAC)  {
-        //   Vector xaxis(1., 0., 0.);
-        //   interaction1->nnu = xaxis.RotateY(fDetector->theta_bn-settings1.SLAC_HORIZDIST/Earth::BulgeRadius);  //direction of neutrino- for slac,  that's the direction of the beam
-        //   interaction1->nnu = interaction1->nnu.RotateZ(fDetector->phi_bn);
-        //   costhetanu=cos(interaction1->nnu.Theta());
-        //   theta_threshold=1.; // this is a bogus theta_threshold but it is only used for plotting anyway
-        //   if (settings1.BORESIGHTS) {
-        //     icemcLog().fslac_viewangles << fDetector->sslacpositions[fDetector->islacposition] << "\n";
-        //     for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
-        //       for(int ifold=0;ifold<fDetector->NRX_PHI[ilayer];ifold++) {
-        //         viewangle_eachboresight[ilayer][ifold]=acos(interaction1->nnu.Dot(rayTracer.nrf_iceside_eachboresight[4][ilayer][ifold]));
-        //         icemcLog().fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-askFreqGen.GetChangle())*constants::DEGRAD << "\n";
-        //       }//end ifold
-        //     }//end ilayer
-        //   }//end boresight
-        //   err = 1; // everything is a-okay
-        // }
-	//end else if slac
       }//end tau trigger ==0
 
       // gets angle between ray and neutrino direction
@@ -1787,9 +1710,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	std::cout << "You fucked up the ray tracer!?!?!?!" << std::endl;
         continue; // doesn't give a real value from quadratic formula
       }
-
-      // // does this do anything?
-      // GetBalloonLocation(interaction1, ray1, bn1, antarctica);
       
       nuexitlength=interaction1->posnu.Distance(interaction1->nuexit);
       // probability a tau would decay within this length at this
@@ -1957,8 +1877,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // this sets n_exit2bn[2] to the ray from the exit point to the balloon,
       // last iteration.  Now we're ready to do some calculations!!!!
-      // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 2, antarctica);
-      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);      
+      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);
 
       count1->nraywithincontinent2[whichray]++;
 
@@ -1997,30 +1916,27 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       // Get Polarization vector.  See Jackson,  Cherenkov section.
       Vector n_pol = GetPolarization(interaction1->nnu, rayTracer.nrf_iceside[4], inu);
-      // signals.back().polarization = GetPolarization(interaction1->nnu, ray1->nrf_iceside[4], inu);
 
-      //if(!settings1.ROUGHNESS){
       if (settings1.FIRN){
 	// now rotate that polarization vector according to ray paths in firn and air.
 	// fresnel factor at ice-firn interface
 
-	GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.nrf_iceside[3], n_pol, rayTracer.nrf_iceside[4], vmmhz1m_max, showerProps, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1, mag1);
-	//The gradual transition in the firn means that there is no fresnel factor,  only magnification
+	GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.nrf_iceside[3], n_pol, rayTracer.nrf_iceside[4], vmmhz1m_max, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1, mag1);
+	//The gradual transition in the firn means that there is no fresnel factor, only magnification
 	// and the magnification factor is upside down compared to what it is
 	// for the firn-air interface
 	vmmhz1m_fresneledonce = vmmhz1m_max/mag1;
 
 	//  get fresnel factor at firn-air interface
-	GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.n_exit2bn[2], n_pol, rayTracer.nrf_iceside[3], vmmhz1m_fresneledonce, showerProps, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel2, mag2);	
-	// use both fresnel and magnification factors at firn-air interface.  Notice that magnification factor is
-	//upside-down compared to what it is in the firn.
+	GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.n_exit2bn[2], n_pol, rayTracer.nrf_iceside[3], vmmhz1m_fresneledonce, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel2, mag2);	
+	// use both fresnel and magnification factors at firn-air interface.  Notice that magnification factor is upside-down compared to what it is in the firn.
 	vmmhz1m_fresneledtwice = vmmhz1m_fresneledonce*fresnel2*mag2;
 
       }//end if firn
       else {
 	askFreqGen.GetSpread(pnu, showerProps, (fDetector->bwslice_min[2]+fDetector->bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
 
-	GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.n_exit2bn[2], n_pol, rayTracer.nrf_iceside[4], vmmhz1m_max, showerProps, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);
+	GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.n_exit2bn[2], n_pol, rayTracer.nrf_iceside[4], vmmhz1m_max, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);
 
 	vmmhz1m_fresneledtwice = vmmhz1m_max*fresnel1*mag1;  //  only the ice-air interface
 
@@ -2054,6 +1970,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	double r_meters = fDetector->position().Distance(rayTracer.rfexit[2]) + rayTracer.rfexit[2].Distance(posnu);
 	vmmhz_max = vmmhz1m_fresneledtwice/r_meters;
       }
+
+
+
+      
+      
 
       // reject if the event is undetectable.
       if (!settings1.ROUGHNESS){
@@ -2235,6 +2156,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 	
 	std::cout << "inu " <<  inu << ", eventNumber = " << eventNumber << "... It passed!" << std::endl;
+	TString canName = TString::Format("rayTracer_%d.C", inu);
+	rayTracer.makePlot(canName, antarctica, interaction1->posnu, interaction1->nnu, fDetector->position());
 
 	// the neutrino has passed the trigger...
 	fPassNu = new PassingNeutrino(*fGenNu, askFreqs, showerProps); // forced to be NULL at loop start

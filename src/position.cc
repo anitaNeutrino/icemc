@@ -16,15 +16,26 @@ icemc::Position::Position(const Vector& vec) : Vector(vec[0],vec[1],vec[2])
   //This method intentionally left blank.
 } //Position constructor from Vector
 
-icemc::Position::Position(double longitude, double latitude, double altitude) {
-  Vector location = z_axis;
-  double theta = latitude * constants::RADDEG;
-  double phi = Earth::LongtoPhi_0isPrimeMeridian(longitude); // convert longitude (-180 to 180) to phi (0 to 2pi wrt 90E, counter-clockwise)
-  location = location.RotateY(theta);
-  location = location.RotateZ(phi);
-  location = location*altitude;
-  SetXYZ(location[0], location[1], location[2]);
-} //Position constructor from longitude and latitude
+
+void icemc::Position::SetLonLatAlt(double longitude, double latitude, double altitude){
+   Vector location = z_axis;
+   double theta = latitude * constants::RADDEG;
+   double phi = Earth::LongtoPhi_0is180thMeridian(longitude); // convert longitude (-180 to 180) to phi (0 to 2pi wrt 90E, counter-clockwise)  
+   location = location.RotateY(theta);
+   location = location.RotateZ(phi);
+   location = location*altitude;
+   SetXYZ(location[0], location[1], location[2]);
+}
+
+// icemc::Position::Position(double longitude, double latitude, double altitude) {
+//   Vector location = z_axis;
+//   double theta = latitude * constants::RADDEG;
+//   double phi = Earth::LongtoPhi_0is180thMeridian(longitude); // convert longitude (-180 to 180) to phi (0 to 2pi wrt 90E, counter-clockwise)  
+//   location = location.RotateY(theta);
+//   location = location.RotateZ(phi);
+//   location = location*altitude;
+//   SetXYZ(location[0], location[1], location[2]);
+// } //Position constructor from longitude and latitude
 
 icemc::Position::Position(double theta, double phi)
   : Vector(theta,phi)

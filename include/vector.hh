@@ -209,6 +209,9 @@ namespace icemc {
     double Mag() const;
     //Returns the magnitude of this vector.
 
+    double Square() const;
+    //Returns the squared magnitude of this vector.
+
     double Angle(const Vector &vec) const;
     //Returns the 3-dimensional angle between this and vec.
 
@@ -219,7 +222,8 @@ namespace icemc {
     //rotated onto the new axis.
 
     /**
-     * Create a normalized copy of this vector
+     * Create a normalized copy of this vector.
+     * @warning, if a this is called on a vector of length 0, then a vector of length 0 is also returned.
      *
      * @return A unit vector in the same direction as this vector.
      */

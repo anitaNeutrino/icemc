@@ -23,13 +23,6 @@ const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
 const std::string crust20_in=ICEMC_DATA_DIR+"/outcr"; // Crust 2.0 data
 const std::string crust20_out=ICEMC_SRC_DIR+"/altitudes.txt"; // output file for plotting
 
-
-// using std::cout;
-// using std::endl;
-// using std::ios;
-// using std::fstream;
-
-
 const double icemc::Earth::COASTLINE(30.);
 const double icemc::Earth::MAXTHETA(180.);
 const int icemc::Earth::ILAT_COASTLINE((int)((COASTLINE/MAXTHETA)*(double)NLAT+0.00001)); // corresponding latitude bin to "coastline"
@@ -929,7 +922,7 @@ void icemc::Earth::ReadCrust(const std::string& fName) {
     
   //record depth of crust-mantle interface
   radii[1]=(Geoid(0.)+MIN_ALTITUDE_CRUST)*(Geoid(0.)+MIN_ALTITUDE_CRUST);
-    
+
 }//ReadCrust
 
 

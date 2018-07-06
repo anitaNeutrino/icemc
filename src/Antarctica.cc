@@ -21,8 +21,11 @@
 const std::string ICEMC_SRC_DIR = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const std::string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
 
-icemc::Antarctica::Antarctica(int model,int earth_model,int WEIGHTABSORPTION_SETTING)
-  : Earth(earth_model,WEIGHTABSORPTION_SETTING){
+icemc::Antarctica::Antarctica(int model,
+			      int earth_model,
+			      int WEIGHTABSORPTION_SETTING)
+  : Earth(earth_model,WEIGHTABSORPTION_SETTING)
+{
 
   // double bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(71*constants::RADDEG)) / (1 - eccentricity*sin(71*constants::RADDEG)) ),eccentricity/2) * tan((constants::PI/4) - (71*constants::RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
   
@@ -464,35 +467,35 @@ icemc::Vector icemc::Antarctica::GetSurfaceNormal(const Position &r_out) const {
   Vector n_surf = r_out.Unit();
   if (FLATSURFACE) {
     return n_surf;
-  }    
+  }
   if (ice_model==0) {
     double theta=r_out.Theta();
-	
+
     int ilon,ilat;
     GetILonILat(r_out,ilon,ilat);
-	
+
     int ilon_previous=ilon-1;
-    if (ilon_previous<0)
+    if (ilon_previous<0){
       ilon_previous=NLON-1;
-	
+    }
     int ilon_next=ilon+1;
-    if (ilon_next==NLON)
+    if (ilon_next==NLON){
       ilon_next=0;
-	
+    }
     double r=(geoid[ilat]+surfacer[ilon][ilat])*sin(theta);
 	
     double slope_phi=(surfacer[ilon_next][ilat]-surfacer[ilon_previous][ilat])/(r*2*phistep);
 	
     int ilat_previous=ilat-1;
-    if (ilat_previous<0)
+    if (ilat_previous<0){
       ilat_previous=0;
-	
+    }	
     int ilat_next=ilat+1;
-    if (ilat_next==NLAT)
+    if (ilat_next==NLAT){
       ilat_next=NLAT-1;
-	
+    }	
     double slope_costheta=(surfacer[ilon][ilat_next]-surfacer[ilon][ilat_previous])/((geoid[ilat]+surfacer[ilon][ilat])*2*thetastep);
-	
+
     // first rotate n_surf according to tilt in costheta and position on continent - rotate around the y axis.
     double angle=atan(slope_costheta);
 	
@@ -1233,6 +1236,7 @@ void icemc::Antarctica::GetMAXHORIZON(Balloon *bn1) const {
     // find distance from hrizon to balloon, increase it by 10% to be conservative.
   }
   icemcLog() << icemc::info << "MAXHORIZON is " << bn1->MAXHORIZON << std::endl;
+
 }
 
 

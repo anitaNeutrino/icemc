@@ -174,7 +174,9 @@ namespace icemc {
 
 
 
-
+  class RayTracer;
+  class Antarctica;
+  
   /**
    * @class Interaction
    * @brief Stores everything about a particular neutrino interaction.
@@ -190,6 +192,9 @@ namespace icemc {
      * Constructor
      */
     Interaction(Primaries *primary1, const Settings *settings1); //, int whichray); //, Counting *count1);
+
+    int PickDownwardInteractionPoint(int ibnposition, const Position& r_bn, const Settings *settings1, const Antarctica *antarctica1, RayTracer *ray1);
+    
     void PickAnyDirection();
     
     int noway;

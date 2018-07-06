@@ -17,7 +17,7 @@ icemc::Screen::Screen(int a){
 
   //std::cerr << "Generating default screen" << std::endl;
   fedgeLength=1.;
-  fcentralPoint = Position(1.,1.,1.);
+  fcentralPoint = Position();
   fnormal = Vector(1.,1.,1.);
   funit_x = Vector(1.,1.,1.);
   funit_y = Vector(1.,1.,1.);
