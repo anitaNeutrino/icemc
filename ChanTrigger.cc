@@ -867,7 +867,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
 
   if (settings1->ADDCW){
     memset(cw_digPath, 0, sizeof(cw_digPath));
-    calculateCW(anita1, 250E6, 0, 0.000005);
+    calculateCW(anita1, 460E6, 0, 0.00001);
   }
   
 #endif
@@ -1573,6 +1573,21 @@ double ChanTrigger::applyButterworthFilter(double ff, double ampl, int notchStat
 #ifdef ANITA_UTIL_EXISTS    
 void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anita1, int nPoints, int ant, double *x, double y[512], bool pol){
 
+  int ipol=0;
+  int iring=2;
+  if (pol) ipol = 1;
+  if (ant<16) iring=0;
+  else if (ant<32) iring=1;
+
+  int iphi = ant - (iring*16);
+  
+  if (settings1->ADDCW){
+    for (int i=0;i<nPoints;i++){
+      y[i]+=cw_digPath[ipol][i];
+    }
+  }
+
+
   if (settings1->ZEROSIGNAL){
     for (int i=0;i<nPoints;i++) y[i]=0;
   }
@@ -1588,19 +1603,6 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   // Upsample waveform to same deltaT of the signal chain impulse response
   TGraph *graphUp = FFTtools::getInterpolatedGraph(graph1, anita1->deltaT);
 
-  int ipol=0;
-  int iring=2;
-  if (pol) ipol = 1;
-  if (ant<16) iring=0;
-  else if (ant<32) iring=1;
-
-  int iphi = ant - (iring*16);
-  
-  if (settings1->ADDCW){
-    for (int i=0;i<nPoints;i++){
-      y[i]+=cw_digPath[ipol][i];
-    }
-  }
 
   TGraph *surfSignal;
   
@@ -1632,7 +1634,13 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
     for (int i=0;i<nPoints;i++){
       justSig_digPath[ipol][i] = surfSignalDown->Eval(x[i]);
-      y[i] = justSig_digPath[ipol][i] + justNoise_digPath[ipol][i];
+      if(settings1->ADDCW){
+        y[i] += justSig_digPath[ipol][i];
+        y[i] += justNoise_digPath[ipol][i];
+      }
+      else{
+        y[i] = justSig_digPath[ipol][i] + justNoise_digPath[ipol][i];
+      }
     }
   } else {
     for (int i=0;i<nPoints;i++)  justSig_digPath[ipol][i] = y[i] = surfSignalDown->Eval(x[i]);
@@ -1821,7 +1829,7 @@ void ChanTrigger::calculateCW(Anita *anita1, double frequency, double phase, dou
   double omega;
   
   for (int itime=0; itime<anita1->HALFNFOUR; itime++){
-    omega=TMath::Pi()*2*frequency;
+    omega=TMath::Pi()*2.0*frequency;
     cw_digPath[0][itime]+=amplitude*TMath::Sin(omega*anita1->TIMESTEP*itime + phase);
     cw_digPath[1][itime]+=amplitude*TMath::Sin(omega*anita1->TIMESTEP*itime + phase);
   }
