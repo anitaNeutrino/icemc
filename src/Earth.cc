@@ -15,13 +15,16 @@
 #include "EnvironmentVariable.h"
 #include "Constants.h"
 
+#include "TFile.h" ///@todo remove after debugging
+
+#include "RampdemReader.h"
+
 
 
 const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
 // input files for Crust 2.0
 const std::string crust20_in=ICEMC_DATA_DIR+"/outcr"; // Crust 2.0 data
-const std::string crust20_out=ICEMC_SRC_DIR+"/altitudes.txt"; // output file for plotting
 
 const double icemc::Earth::COASTLINE(30.);
 const double icemc::Earth::MAXTHETA(180.);
@@ -29,31 +32,38 @@ const int icemc::Earth::ILAT_COASTLINE((int)((COASTLINE/MAXTHETA)*(double)NLAT+0
 const double icemc::Earth::GEOID_MAX(6.378137E6); // parameters of geoid model
 const double icemc::Earth::GEOID_MIN(6.356752E6); // from Geodetic Reference System 1980, Bulletin Geodesique, Vol 54:395,1980. // The previous reference gave issue number 3 instead of page number 395
 
-
 icemc::Earth::Earth(int model,int WEIGHTABSORPTION_SETTING) {
 
- 
+  fLayerNames.emplace(CrustLayer::Water        , std::string("water"));
+  fLayerNames.emplace(CrustLayer::Ice          , std::string("ice"));
+  fLayerNames.emplace(CrustLayer::SoftSediment , std::string("hard sed"));
+  fLayerNames.emplace(CrustLayer::HardSediment , std::string("soft sed"));
+  fLayerNames.emplace(CrustLayer::UpperCrust   , std::string("upper crust"));
+  fLayerNames.emplace(CrustLayer::MiddleCrust  , std::string("middle crust"));
+  fLayerNames.emplace(CrustLayer::LowerCrust   , std::string("lower crust"));
+
+  fPropertyNames.emplace(CrustProperty::ThicknessKm, std::string("thickness (km)"));
+  fPropertyNames.emplace(CrustProperty::Density,     std::string("density"));
+
   radii[0]=1.2e13;
   radii[1]=(Earth::BulgeRadius-4.0E4)*(Earth::BulgeRadius-4.0E4);
   radii[2]=(Earth::BulgeRadius*Earth::BulgeRadius); // average radii of boundaries between earth layers
-    
-    
+
   //  cout << "In Earth, model is " << model << "\n";
   weightabsorption= WEIGHTABSORPTION_SETTING;
-    
+
   CONSTANTICETHICKNESS = (int) (model / 1000);
   model -= CONSTANTICETHICKNESS * 1000;
-    
+
   CONSTANTCRUST = (int) (model / 100);
   model -= CONSTANTCRUST * 100;
-    
+
   FIXEDELEVATION = (int) (model / 10);
   model -= FIXEDELEVATION * 10;
-    
+
   EARTH_MODEL = model;
   //cout<<"CONSTICETHK = "<<CONSTANTICETHICKNESS<<", CNSTCRST = "<<CONSTANTCRUST<<", FIXDELV = "<<FIXEDELEVATION<<", EARTH_MODEL = "<<EARTH_MODEL<<endl;
   for (int i=0;i<NLON;i++) {
-	
     Tools::Zero(elevationarray[i],NLAT);
     Tools::Zero(waterthkarray[i],NLAT);
     Tools::Zero(icethkarray[i],NLAT);
@@ -64,7 +74,6 @@ icemc::Earth::Earth(int model,int WEIGHTABSORPTION_SETTING) {
     Tools::Zero(lowercrustthkarray[i],NLAT);
     Tools::Zero(crustthkarray[i],NLAT);
 	
-	
     Tools::Zero(surfacer[i],NLAT);
     Tools::Zero(icer[i],NLAT);
     Tools::Zero(waterr[i],NLAT);
@@ -73,7 +82,7 @@ icemc::Earth::Earth(int model,int WEIGHTABSORPTION_SETTING) {
     Tools::Zero(uppercrustr[i],NLAT);
     Tools::Zero(middlecrustr[i],NLAT);
     Tools::Zero(lowercrustr[i],NLAT);
-	
+
     Tools::Zero(waterdensityarray[i],NLAT);
     Tools::Zero(icedensityarray[i],NLAT);
     Tools::Zero(softseddensityarray[i],NLAT);
@@ -81,17 +90,15 @@ icemc::Earth::Earth(int model,int WEIGHTABSORPTION_SETTING) {
     Tools::Zero(uppercrustdensityarray[i],NLAT);
     Tools::Zero(middlecrustdensityarray[i],NLAT);
     Tools::Zero(lowercrustdensityarray[i],NLAT);
-        
   } //Zero Earth model arrays
     
     // see monte carlo note #17
   for (int i=0;i<NLAT;i++) {
     geoid[i]=GEOID_MIN*GEOID_MAX/sqrt(pow(GEOID_MIN,2.)-(pow(GEOID_MIN,2.)-pow(GEOID_MAX,2.))*pow(cos(dGetTheta(i)),2.));
   } //for
-    
-    
-    // Crust 2.0 is binned in 2deg x 2deg bins, area of bin depends on latitude.
-    // calculating surface area of bins
+
+  // Crust 2.0 is binned in 2deg x 2deg bins, area of bin depends on latitude.
+  // calculating surface area of bins
   phistep=2*constants::PI/(double)NLON;
   thetastep=(MAXTHETA*constants::RADDEG)/NLAT;
   for (int i=0;i<NLAT;i++) {
@@ -105,10 +112,100 @@ icemc::Earth::Earth(int model,int WEIGHTABSORPTION_SETTING) {
     std::cout<<"Error!  Unknown Earth model requested!  Defaulting to Crust 2.0 model.\n";
     ReadCrust(crust20_in);
   } //else
-    
 } //Earth constructor (int mode)
 
-icemc::Earth::~Earth() {} //Earth destructor - no dynamic variables, nothing to delete
+
+icemc::Earth::~Earth() {
+  std::map<CrustKey, TH2D*>& m = fRawCrustData;
+  for(auto it = m.begin(); it!=m.end(); ++it){
+    if(it->second){
+      delete it->second;
+    }
+  }
+} //Earth destructor - no dynamic variables, nothing to delete
+
+
+const std::string& icemc::Earth::getLayerName(CrustLayer layer) const {
+  const std::string& name = findThingInMapToString(fLayerNames, layer);
+  if(name=="unknown"){
+    icemcLog() << icemc::error << "Requested name of unknown layer!" << std::endl;
+  }
+  return name;
+}
+
+const std::string& icemc::Earth::getPropertyName(CrustProperty property) const {
+  const std::string& name = findThingInMapToString(fPropertyNames, property);
+  if(name=="unknown"){
+    icemcLog() << icemc::error << "Requested name of unknown propery!" << std::endl;
+  }
+  return name;
+}
+
+
+// const std::string& icemc::Earth::getLayerName(CrustLayer layer) const {
+//   auto it = fLayerNames.find(layer);
+//   if(it!=fLayerNames.end()){
+//     return it->second;
+//   }
+//   else{
+//     icemcLog() << icemc::error << "Requested name of unknown layer!" << std::endl;
+//     static const std::string unknownLayer("unknown layer");
+//     return unknownLayer;
+//   }
+// }
+
+
+icemc::Earth::CrustLayer icemc::Earth::getLayerFromString(const std::string& layerType) const {  
+  for(auto& it : fLayerNames){
+    const std::string& name = it.second;
+    if(layerType.substr(0, name.length())==name){      
+      return it.first;
+    }    
+  }
+  icemcLog() << icemc::error << "Could not deduce CrustLayer from string: " << layerType << std::endl;
+  return CrustLayer::LowerCrust;  
+}
+
+inline TH2D* makeRawDataHist(const TString& name){
+  const int binSizeLon = 2;
+  const int nBinsLon = 362/binSizeLon;
+  const int binSizeLat = 2;
+  const int nBinsLat = 180/binSizeLat;
+  TH2D* h = new TH2D(name, name, nBinsLon, -180, 182, nBinsLat, -90, 90);
+  h->GetXaxis()->SetTitle("Longitude (Degrees)");
+  h->GetYaxis()->SetTitle("Latitude (Degrees)");
+  return h;
+}
+
+TH2D* icemc::Earth::getRawHist(CrustLayer layer, CrustProperty property) {
+  // construct a raw histogram if it's not already made
+  CrustKey key(layer, property);
+  auto it = fRawCrustData.find(key);
+  if(it!=fRawCrustData.end()){
+    return it->second;
+  }
+  else{
+    TString name("h_");
+    name += getLayerName(layer);
+    name += "_";
+    name += getPropertyName(property);
+    name.ReplaceAll(" ",  "_");
+    name.ReplaceAll("(",  "");
+    name.ReplaceAll(")",  "");
+
+    TH2D* h = makeRawDataHist(name);
+    fRawCrustData[key] = h;
+    return h;
+  }
+}
+
+
+TH2D* icemc::Earth::getRawHist(Elevation aboveGeoid){
+  if(!fElevationData){
+    fElevationData = makeRawDataHist("elevation");
+  }
+  return fElevationData;
+}
 
 
 double icemc::Earth::LongtoPhi_0isPrimeMeridian(double longitude) {
@@ -117,13 +214,15 @@ double icemc::Earth::LongtoPhi_0isPrimeMeridian(double longitude) {
   // convert longitude (-180 to 180) to phi (0 to 2pi) wrt +x
   // in radians
   phi=(90-longitude); 
-  if (phi<0.)
+  if (phi<0.){
     phi+=360.;
-    
+  }    
   phi=phi*constants::RADDEG;
     
   return phi;
 }
+
+
 double icemc::Earth::LongtoPhi_0is180thMeridian(double longitude) {
     
   double phi;
@@ -232,35 +331,38 @@ double icemc::Earth::GetDensity(double altitude, const Position earth_in,
   double local_icethickness = this->IceThickness(lon,lat);
   double local_waterdepth = WaterDepth(lon,lat);
 
-	
-
   if(altitude>surface_elevation+0.1){ // if it is above the surface, it's messed up
-	  
+
   }
   if(altitude>surface_elevation+0.1){
     ddensity=1.25;
     //cout <<"density is air! \n";
   }
-  if (altitude<=surface_elevation+0.1 && altitude>(surface_elevation-local_icethickness)) // the 0.1 is just to take care of precision issues.   It could have been 0.01 or 0.001.
+  if (altitude<=surface_elevation+0.1 && altitude>(surface_elevation-local_icethickness)){ // the 0.1 is just to take care of precision issues.   It could have been 0.01 or 0.001.
     ddensity=icedensityarray[ilon][ilat]*1000;
-	  
-  else if (altitude<=(surface_elevation-local_icethickness) && altitude>(surface_elevation-local_icethickness-local_waterdepth))
+  }	  
+  else if (altitude<=(surface_elevation-local_icethickness) && altitude>(surface_elevation-local_icethickness-local_waterdepth)){
     ddensity=waterdensityarray[ilon][ilat]*1000;
+  }
   else if (altitude<=(surface_elevation-local_icethickness-local_waterdepth) && altitude>softsedr[ilon][ilat]) {
     ddensity=softseddensityarray[ilon][ilat]*1000;
     crust_entered=1; //Switch that lets us know we've penetrated into the crust
   } //end if
-  else if (altitude<=softsedr[ilon][ilat] && altitude>hardsedr[ilon][ilat])
+  else if (altitude<=softsedr[ilon][ilat] && altitude>hardsedr[ilon][ilat]){
     ddensity=hardseddensityarray[ilon][ilat]*1000;
-  else if (altitude<=hardsedr[ilon][ilat] && altitude>uppercrustr[ilon][ilat])
+  }
+  else if (altitude<=hardsedr[ilon][ilat] && altitude>uppercrustr[ilon][ilat]){
     ddensity=uppercrustdensityarray[ilon][ilat]*1000;
-  else if (altitude<=uppercrustr[ilon][ilat] && altitude>middlecrustr[ilon][ilat])
+  }
+  else if (altitude<=uppercrustr[ilon][ilat] && altitude>middlecrustr[ilon][ilat]){
     ddensity=middlecrustdensityarray[ilon][ilat]*1000;
-  else if (altitude<=middlecrustr[ilon][ilat] && altitude>lowercrustr[ilon][ilat])
+  }
+  else if (altitude<=middlecrustr[ilon][ilat] && altitude>lowercrustr[ilon][ilat]){
     ddensity=lowercrustdensityarray[ilon][ilat]*1000;
-  else if (altitude<=lowercrustr[ilon][ilat])
+  }
+  else if (altitude<=lowercrustr[ilon][ilat]){
     ddensity=densities[1];
-	
+  }	
   return ddensity;
 
 }//Get Density
@@ -597,22 +699,23 @@ int icemc::Earth::Getchord(const Settings *settings1,
 icemc::Vector icemc::Earth::GetSurfaceNormal(const Position &r_out) const
 {
   Vector n_surf = r_out.Unit();
-  if (FLATSURFACE)
+  if (FLATSURFACE){
     return n_surf;
-    
+  }    
   double theta=r_out.Theta();
     
   int ilon,ilat;
   GetILonILat(r_out,ilon,ilat);
     
   int ilon_previous=ilon-1;
-  if (ilon_previous<0)
+  if (ilon_previous<0){
     ilon_previous=NLON-1;
-    
+  }    
   int ilon_next=ilon+1;
-  if (ilon_next==NLON)
+  if (ilon_next==NLON){
     ilon_next=0;
-    
+  }
+  
   double r=(geoid[ilat]+surfacer[ilon][ilat])*sin(theta);
     
   double slope_phi=(surfacer[ilon_next][ilat]-surfacer[ilon_previous][ilat])/(r*2*phistep);
@@ -674,134 +777,161 @@ double icemc::Earth::SmearTheta(int ilat, double rand) const {
 
 
 
+
+
+
+
+
 void icemc::Earth::ReadCrust(const std::string& fName) {
-    
+
   // reads in altitudes of 7 layers of crust, ice and water
   // puts data in arrays
 
   std::fstream infile(fName.c_str(),std::ios::in);
-    
+
   std::string thisline; // for reading in file
   std::string slon; //longitude as a string
   std::string slat; // latitude as a string
   std::string selev; // elevation (km relative to geoid)
   std::string sdepth; // depth (km)
   std::string sdensity; // density (g/cm^3)
-  double dlon,dlat; // longitude, latitude as double
   int endindex; // index along thisline for parsing
   int beginindex; // same
-    
-  int indexlon=0; // 180 bins in longitude
-  int indexlat=0; // 90 bins in latitude
-    
+
   std::string layertype; // water, ice, etc.
-    
+
+  int indexlon = 0;
+  int indexlat = 0;
+  double dlon, dlat;
+
   while(!infile.eof()) {
-    getline(infile,thisline,'\n'); 
-	
+    getline(infile,thisline,'\n');
+
     int loc=thisline.find("type, latitude, longitude,"); 
 	
     if (loc!=(int)(std::string::npos)) {      
-	    
+ 
       beginindex=thisline.find_first_not_of(" ",57);
-	    
+
       endindex=thisline.find_first_of(" ",61);
-	    
+
       slat=thisline.substr(beginindex,endindex-beginindex);
       dlat=(double)atof(slat.c_str());
-	    
+
       beginindex=thisline.find_first_not_of(" ",68);
       endindex=thisline.find_first_of(" ",72);
-	    
+
       slon=thisline.substr(beginindex,endindex-beginindex);
       dlon=(double)atof(slon.c_str());
-	    
-	    
+
       indexlon=(int)((dlon+180)/2);
       indexlat=(int)((90+dlat)/2);
-	    
+
       beginindex=thisline.find_first_not_of(" ",78);
       endindex=thisline.find_first_of(" ",83);
-	    
+
       selev=thisline.substr(beginindex,endindex-beginindex);
       elevationarray[indexlon][indexlat]=(double)atof(selev.c_str());
-	    
+
+      // std::cout << dlon << "\t" << dlat << "\t" << elevationarray[indexlon][indexlat] << std::endl;
+      /// @todo bring together and tidy up longitude wrapping into a histogram filling utility func
+      TH2D* hElevation = getRawHist(Elevation::AboveGeoid);
+      hElevation->Fill(dlon, dlat, elevationarray[indexlon][indexlat]);
+      if(dlon + 360 < 182){
+	hElevation->Fill(dlon+360, dlat, elevationarray[indexlon][indexlat]);
+      }
+
     } //if
-	
+
     for (int i=0;i<4;i++) {
       getline(infile,thisline,'\n');
     } //for
-	
+
     for (int i=0;i<7;i++) {
       getline(infile,thisline,'\n');
-	    
-      endindex=thisline.length()-1;
-      beginindex=thisline.find_last_of("0123456789",1000);
-      layertype=thisline.substr(beginindex+3,endindex-beginindex);
-	    
-	    
-      beginindex=thisline.find_first_not_of(" ",0);
+
+      endindex = thisline.length()-1;
+      beginindex = thisline.find_last_of("0123456789",1000);
+      layertype = thisline.substr(beginindex+3,endindex-beginindex);
+
+      beginindex = thisline.find_first_not_of(" ",0);
+      endindex = thisline.find_first_of(" ",beginindex);
+
+      sdepth = thisline.substr(beginindex, endindex-beginindex-1);
+      
+      beginindex=thisline.find_first_not_of(" ",endindex);
       endindex=thisline.find_first_of(" ",beginindex);
-	    
-      sdepth=thisline.substr(beginindex,endindex-beginindex-1);
-	    
-	    
-      // fills arrays of thicknesses of each layer
-      if (layertype.substr(0,5)=="water") 
-	waterthkarray[indexlon][indexlat]=(double)atof(sdepth.c_str()); 
-      if (layertype.substr(0,3)=="ice") 
-	icethkarray[indexlon][indexlat]=(double)atof(sdepth.c_str());
-      if (layertype.substr(0,8)=="soft sed") 
-	softsedthkarray[indexlon][indexlat]=(double)atof(sdepth.c_str());
-      if (layertype.substr(0,8)=="hard sed") 
-	hardsedthkarray[indexlon][indexlat]=(double)atof(sdepth.c_str());
-      if (layertype.substr(0,11)=="upper crust") 
-	uppercrustthkarray[indexlon][indexlat]=(double)atof(sdepth.c_str());
-      if (layertype.substr(0,12)=="middle crust") 
-	middlecrustthkarray[indexlon][indexlat]=(double)atof(sdepth.c_str());
-      if (layertype.substr(0,11)=="lower crust") 
-	lowercrustthkarray[indexlon][indexlat]=(double)atof(sdepth.c_str());
-	    
-      //      cout << "indexlon, indexlat, icethkarray " << indexlon << " " << indexlat << " " << icethkarray[indexlon][indexlat] << "\n";
-	    
+
+      beginindex=thisline.find_first_not_of(" ",endindex);
+      endindex=thisline.find_first_of(" ",beginindex);
+
+      beginindex=thisline.find_first_not_of(" ",endindex);
+      endindex=thisline.find_first_of(" ",beginindex);
+
+      sdensity=thisline.substr(beginindex,endindex-beginindex);
+
+      double density=(double)atof(sdensity.c_str());
+      double depth = (double)atof(sdepth.c_str());;
+
+      CrustLayer layer = getLayerFromString(layertype);
+      switch(layer){
+      case CrustLayer::Water:
+	waterthkarray[indexlon][indexlat] = depth;
+	waterdensityarray[indexlon][indexlat] = density; 	
+	break;
+      case CrustLayer::Ice:
+	icethkarray[indexlon][indexlat] = depth;
+	icedensityarray[indexlon][indexlat] = density;	
+	break;
+      case CrustLayer::SoftSediment:
+	softsedthkarray[indexlon][indexlat] = depth;
+	softseddensityarray[indexlon][indexlat] = density;	
+	break;
+      case CrustLayer::HardSediment:
+	hardsedthkarray[indexlon][indexlat] = depth;
+	hardseddensityarray[indexlon][indexlat] = density;
+	break;
+      case CrustLayer::UpperCrust:
+	uppercrustthkarray[indexlon][indexlat] = depth;
+	uppercrustdensityarray[indexlon][indexlat] = density;
+	break;	
+      case CrustLayer::MiddleCrust:
+	middlecrustthkarray[indexlon][indexlat] = depth;
+	middlecrustdensityarray[indexlon][indexlat] = density;
+	break;
+      case CrustLayer::LowerCrust:
+	lowercrustthkarray[indexlon][indexlat] = depth;
+	lowercrustdensityarray[indexlon][indexlat] = density;
+	break;
+      }
+
       // region where Ross Ice Shelf was not accounted for in Crust 2.0
       // add it in by hand
-      if (indexlat==5 && (indexlon<=5 || indexlon>=176)) // Ross Ice Shelf
+      if (indexlat==5 && (indexlon<=5 || indexlon>=176)){ // Ross Ice Shelf
 	icethkarray[indexlon][indexlat]=0.5;
-	    
-      beginindex=thisline.find_first_not_of(" ",endindex);
-      endindex=thisline.find_first_of(" ",beginindex);
-	    
-	    
-      beginindex=thisline.find_first_not_of(" ",endindex);
-      endindex=thisline.find_first_of(" ",beginindex);
-	    
-      beginindex=thisline.find_first_not_of(" ",endindex);
-      endindex=thisline.find_first_of(" ",beginindex);
-	    
-	    
-      sdensity=thisline.substr(beginindex,endindex-beginindex);
-	    
-      double ddensity=(double)atof(sdensity.c_str());
-	    
-	    
-      // fills arrays of densities of each layer
-      if (layertype.substr(0,5)=="water") 
-	waterdensityarray[indexlon][indexlat]=ddensity; 
-      if (layertype.substr(0,3)=="ice") 
-	icedensityarray[indexlon][indexlat]=ddensity;
-      if (layertype.substr(0,8)=="soft sed") 
-	softseddensityarray[indexlon][indexlat]=ddensity;
-      if (layertype.substr(0,8)=="hard sed") 
-	hardseddensityarray[indexlon][indexlat]=ddensity;
-      if (layertype.substr(0,11)=="upper crust") 
-	uppercrustdensityarray[indexlon][indexlat]=ddensity;
-      if (layertype.substr(0,12)=="middle crust")
-	middlecrustdensityarray[indexlon][indexlat]=ddensity;
-      if (layertype.substr(0,11)=="lower crust") 
-	lowercrustdensityarray[indexlon][indexlat]=ddensity;
+      }
+
+      TH2D* hThickness = getRawHist(layer, CrustProperty::ThicknessKm);
+      hThickness->Fill(dlon, dlat, depth);
+      if(dlon + 360 < 182){
+	hThickness->Fill(dlon+360, dlat, depth);	
+      }
+      double centerLon = hThickness->GetXaxis()->GetBinCenter(hThickness->GetXaxis()->FindBin(dlon));
+      double centerLat = hThickness->GetYaxis()->GetBinCenter(hThickness->GetYaxis()->FindBin(dlat));
+      if(centerLon - dlon != 0 || centerLat != dlat){
+	icemcLog() << icemc::warning << "Binning error in " << hThickness->GetName()
+		   << ", raw lon = " << dlon << " binCenter = " << centerLon
+		   << ", raw lat = " << dlat << " binCenter = " << centerLat
+		   << std::endl;
+      }     
+      TH2D* hDensity = getRawHist(layer, CrustProperty::Density);
+      hDensity->Fill(dlon, dlat, density);
+      if(dlon + 360 < 182){
+	hDensity->Fill(dlon+360, dlat, density);	
+      }
+      
     } //for (reading all lines for one location given in Crust 2.0 input file)
-	
+
     if (CONSTANTCRUST) {
       softsedthkarray[indexlon][indexlat]=40.;
       hardsedthkarray[indexlon][indexlat]=0;
@@ -815,59 +945,131 @@ void icemc::Earth::ReadCrust(const std::string& fName) {
       icethkarray[indexlon][indexlat]=3.;
       waterthkarray[indexlon][indexlat]=0.;
     } //if (set ice thickness to constant everywhere)
-	
+
     // adds up total thickness of crust
-    crustthkarray[indexlon][indexlat]=softsedthkarray[indexlon][indexlat]+
-      hardsedthkarray[indexlon][indexlat]+
-      uppercrustthkarray[indexlon][indexlat]+
-      middlecrustthkarray[indexlon][indexlat]+
-      lowercrustthkarray[indexlon][indexlat];
-	
-    if (indexlon==179 && indexlat==0)
+    crustthkarray[indexlon][indexlat] = (softsedthkarray[indexlon][indexlat]+
+					 hardsedthkarray[indexlon][indexlat]+
+					 uppercrustthkarray[indexlon][indexlat]+
+					 middlecrustthkarray[indexlon][indexlat]+
+					 lowercrustthkarray[indexlon][indexlat]);
+
+    if (indexlon==179 && indexlat==0){
       break;
+    }
   }  // done reading file
-    
+
+  TFile* fTest = new TFile("earthTest.root", "recreate");
+  for(auto it : fRawCrustData){
+    TH2D* h = it.second;
+    h->SetDirectory(gDirectory);
+  }
+  getRawHist(Elevation::AboveGeoid)->SetDirectory(gDirectory);
+
+
+  {
+    TProfile2D* hElevation = RampdemReader::getMap(RampdemReader::rampdem, 10);
+    hElevation->SetTitle("Elevation in from RamdemReader::rampdem (old Bedmap data)");  
+    TProfile2D* hElevation2 = RampdemReader::getMap(RampdemReader::surface, 10);
+    hElevation2->SetTitle("Elevation in from RamdemReader::surface (BEDMAP2 data)");  
+    // TProfile2D* hElevation = RampdemReader::getMap(RampdemReader::surface, 10);
+
+    // TProfile2D* hElevation = RampdemReader::getMap(RampdemReader::surface, 10);
+    const int nx = hElevation->GetNbinsX();
+    const int ny = hElevation->GetNbinsY();
+
+    TH2D *h = new TH2D("hElevation", "Interpolated elevation from CRUST2.0",
+		       nx, hElevation->GetXaxis()->GetBinLowEdge(1), hElevation->GetXaxis()->GetBinUpEdge(nx),
+		       ny, hElevation->GetYaxis()->GetBinLowEdge(1), hElevation->GetYaxis()->GetBinUpEdge(ny));
+
+  
+    for(int by=1; by <= ny; by++){
+      double northing = h->GetYaxis()->GetBinCenter(by);
+      for(int bx=1; bx <= nx; bx++){
+	double easting = h->GetXaxis()->GetBinCenter(bx);
+	double lon, lat;
+	RampdemReader::EastingNorthingToLonLat(easting, northing, lon, lat);
+	double elevation = interpolate(lon, lat, Elevation::AboveGeoid);
+	h->SetBinContent(bx, by, elevation);
+      }
+    }
+    hElevation->Write();
+    delete hElevation;
+    hElevation2->Write();
+    delete hElevation2;
+    h->Write();
+    delete h;    
+  }
+  
+  {
+    TProfile2D* hThickness2 = RampdemReader::getMap(RampdemReader::thickness, 10);
+    hThickness2->SetTitle("Ice thickness in from RamdemReader::thickness (BEDMAP2 data)");
+    const int nx2 = hThickness2->GetNbinsX();
+    const int ny2 = hThickness2->GetNbinsX();  
+    TH2D *h2 = new TH2D("hThickness", "Interpolated thickness from CRUST2.0",
+			nx2, hThickness2->GetXaxis()->GetBinLowEdge(1), hThickness2->GetXaxis()->GetBinUpEdge(nx2),
+			ny2, hThickness2->GetYaxis()->GetBinLowEdge(1), hThickness2->GetYaxis()->GetBinUpEdge(ny2));
+    for(int by=1; by <= ny2; by++){
+      double northing = h2->GetYaxis()->GetBinCenter(by);
+      for(int bx=1; bx <= nx2; bx++){
+	double easting = h2->GetXaxis()->GetBinCenter(bx);
+	double lon, lat;
+	RampdemReader::EastingNorthingToLonLat(easting, northing, lon, lat);
+	CrustKey k(CrustLayer::Ice, CrustProperty::ThicknessKm);
+	double thickness = 1000*interpolate(lon, lat, k);
+	h2->SetBinContent(bx, by, thickness);
+      }
+    }
+    hThickness2->Write();
+    delete hThickness2;
+    h2->Write();
+    delete h2;
+  }
+
+  fTest->Write();
+  fTest->Close();
+  exit(1);
+
+  // ok I'm going to try and figure out the surface elevation stuff by following the code here...
+  const double kmToMetres = 1000;
+
   for (int i=0;i<NLON;i++) {
     for (int j=0;j<NLAT;j++) {
-	    
-      if (FIXEDELEVATION) 	
-	elevationarray[i][j]=icethkarray[i][j]*1000;
-	    
-      if (waterthkarray[i][j] != 0) 
-	surfacer[i][j]=elevationarray[i][j]+waterthkarray[i][j]*1000+icethkarray[i][j]*1000;	  
-      else
+      if (FIXEDELEVATION) {
+	elevationarray[i][j] = icethkarray[i][j]*kmToMetres;
+      }
+      if (waterthkarray[i][j] != 0) {
+	surfacer[i][j] = elevationarray[i][j]+waterthkarray[i][j]*kmToMetres+icethkarray[i][j]*kmToMetres;
+      }
+      else{
 	surfacer[i][j]=elevationarray[i][j];
-	    
-      if (fabs(surfacer[i][j])<1.E-10)
-	surfacer[i][j] = 0;	
-	    
+      }
+      if (fabs(surfacer[i][j])<1.E-10){
+	surfacer[i][j] = 0;
+      }
       // reminder- waterr is elevation at *bottom* of water layer, etc. 
       // in units of m
-      waterr[i][j]=surfacer[i][j]-(icethkarray[i][j]+waterthkarray[i][j])*1000;
-      if ((double)fabs(waterr[i][j])<1.E-10)
+      waterr[i][j] = surfacer[i][j]-(icethkarray[i][j]+waterthkarray[i][j])*kmToMetres;
+      if ((double)fabs(waterr[i][j])<1.E-10){
 	waterr[i][j]=0;
-      icer[i][j]=waterr[i][j]+
-	waterthkarray[i][j]*1000;
-      softsedr[i][j]=waterr[i][j]-
-	softsedthkarray[i][j]*1000;
-      hardsedr[i][j]=waterr[i][j]-
-	(softsedthkarray[i][j]+
-	 hardsedthkarray[i][j])*1000;
-      uppercrustr[i][j]=waterr[i][j]-
-	(softsedthkarray[i][j]+
-	 hardsedthkarray[i][j]+
-	 uppercrustthkarray[i][j])*1000;
-      middlecrustr[i][j]=waterr[i][j]-
-	(softsedthkarray[i][j]+
-	 hardsedthkarray[i][j]+
-	 uppercrustthkarray[i][j]+
-	 middlecrustthkarray[i][j])*1000;
-      lowercrustr[i][j]=waterr[i][j]-
-	(softsedthkarray[i][j]+
-	 hardsedthkarray[i][j]+
-	 uppercrustthkarray[i][j]+
-	 middlecrustthkarray[i][j]+
-	 lowercrustthkarray[i][j])*1000;
+      }
+      icer[i][j] =  (waterr[i][j]+waterthkarray[i][j]*kmToMetres);
+      softsedr[i][j] = waterr[i][j]-softsedthkarray[i][j]*kmToMetres;
+
+      hardsedr[i][j] = waterr[i][j]-(softsedthkarray[i][j]+hardsedthkarray[i][j])*kmToMetres;
+
+      uppercrustr[i][j] = waterr[i][j]-(softsedthkarray[i][j] +
+					hardsedthkarray[i][j] +
+					uppercrustthkarray[i][j])*kmToMetres;
+      
+      middlecrustr[i][j] = waterr[i][j]- (softsedthkarray[i][j] +
+					  hardsedthkarray[i][j] +
+					  uppercrustthkarray[i][j] +
+					  middlecrustthkarray[i][j])*kmToMetres;
+      lowercrustr[i][j] = waterr[i][j] - (softsedthkarray[i][j] +
+					  hardsedthkarray[i][j] +
+					  uppercrustthkarray[i][j] +
+					  middlecrustthkarray[i][j] +
+					  lowercrustthkarray[i][j])*kmToMetres;
     } //for (latitude bins)
   } //for (longitude bins)
     
@@ -881,13 +1083,15 @@ void icemc::Earth::ReadCrust(const std::string& fName) {
   for (int j=0;j<ILAT_COASTLINE;j++) {
     for (int i=0;i<NLON;i++) {
       volume+=icethkarray[i][j]*1000.*area[j];
-      if (icethkarray[i][j]>0)
+      if (icethkarray[i][j]>0){
 	ice_area+=area[j];
-      if (icethkarray[i][j]*area[j]>max_icevol_perbin)
+      }
+      if (icethkarray[i][j]*area[j]>max_icevol_perbin){
 	max_icevol_perbin=icethkarray[i][j]*area[j];
-      if (icethkarray[i][j]>max_icethk_perbin)
+      }
+      if (icethkarray[i][j]>max_icethk_perbin){
 	max_icethk_perbin=icethkarray[i][j];
-	    
+      }	    
       /*
       // j=6 corresponds to 80deg S
       if (j==6) {
@@ -910,13 +1114,15 @@ void icemc::Earth::ReadCrust(const std::string& fName) {
   for (int i=0;i<NLON;i++) {
     for (int j=0;j<NLAT;j++) {
       if (elevationarray[i][j]-(crustthkarray[i][j])*1000<MIN_ALTITUDE_CRUST) {
-	if (waterthkarray[i][j]==0)
+	if (waterthkarray[i][j]==0){
 	  MIN_ALTITUDE_CRUST=elevationarray[i][j]-(crustthkarray[i][j]+icethkarray[i][j])*1000;
-	else
+	}
+	else{
 	  MIN_ALTITUDE_CRUST=elevationarray[i][j]-crustthkarray[i][j]*1000;
+	}
       }//if
-      //if (icethkarray[i][j]*1000.*area[j]>MAX_VOL) 
-      //MAX_VOL=icethkarray[i][j]*1000.*area[j];      
+      //if (icethkarray[i][j]*1000.*area[j]>MAX_VOL)
+      //MAX_VOL=icethkarray[i][j]*1000.*area[j];
     }//for
   }//for
     
@@ -978,7 +1184,9 @@ void icemc::Earth::GetILonILat(const Position &p,int& ilon,int& ilat) const {
     
   ilat=(int)((p.Theta()*constants::DEGRAD)/2.);
     
-} //method GetILonILat
+}
+
+//method GetILonILat
 void icemc::Earth::EarthCurvature(double *array,double depth_temp) const {
     
   Position parray;

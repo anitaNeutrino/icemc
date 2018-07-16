@@ -3,7 +3,13 @@
 
 #include <string>
 #include <cstdlib>
+#include <map>
+
 #include "TRandom3.h"
+#include "TH2D.h"
+
+
+#include "GeoidModel.h"
 #include "vector.hh"
 
 namespace icemc{
@@ -116,22 +122,10 @@ namespace icemc{
 		      nuexitice, posnu, inu, ci.chord, ci.probability_tmp, ci.weight1_tmp,
 		      ci.nearthlayers, ci.myair, ci.total_kgm2, ci.crust_entered, ci.mantle_entered, ci.core_entered);
     }
-    
-    
-		 // double& chord, // chord length
-		 // double& probability_tmp, // weight
-		 // double& weight1_tmp,
-		 // double& nearthlayers, // core, mantle, crust
-		 // double myair,
-		 // double& total_kgm2, // length in kg m^2
-		 // int& crust_entered, // 1 or 0
-		 // int& mantle_entered, // 1 or 0
-		 // int& core_entered);
 
     int Getchord(const Settings *settings1, double len_int_kgm2, const Position &earth_in, const Position &r_enterice,
 		 const Position &nuexitice, const Position &posnu, int inu,  double& chord, double& probability_tmp, double& weight1_tmp,
 		 double& nearthlayers, double myair, double& total_kgm2, int& crust_entered, int& mantle_entered, int& core_entered);
-    
 
     Vector GetSurfaceNormal(const Position &r_out) const;
     static double LongtoPhi_0isPrimeMeridian(double longitude); // convert longitude to phiwith 0 longitude being the prime meridian
@@ -208,6 +202,69 @@ namespace icemc{
     double GetLat(double theta) const;
     double GetLon(double phi) const;
     Vector PickPosnuForaLonLat(double lon,double lat,double theta,double phi) const; // given that an interaction occurs at a lon and lat, pick an interaction position in the ice
+
+
+
+    double getInterpolated();
+
+    enum class Elevation {AboveGeoid};
+
+    enum class CrustLayer {Water,
+			   Ice,
+			   SoftSediment,
+			   HardSediment,
+			   UpperCrust,
+			   MiddleCrust,
+			   LowerCrust};
+
+    enum class CrustProperty {ThicknessKm,
+			      Density};
+
+  private:
+
+    const std::string& getLayerName(CrustLayer layer) const;
+    CrustLayer getLayerFromString(const std::string& layerType) const;
+
+    const std::string& getPropertyName(CrustProperty property) const;
+    TH2D* getRawHist(CrustLayer layer, CrustProperty property);
+
+    std::map<CrustLayer, std::string> fLayerNames;
+    std::map<CrustProperty, std::string> fPropertyNames;
+    typedef std::pair<CrustLayer, CrustProperty> CrustKey;
+    std::map<CrustKey, TH2D*> fRawCrustData;
+
+    inline TH2D* getRawHist(CrustKey k) {
+      return getRawHist(k.first,  k.second);
+    }
+
+    TH2D* getRawHist(Elevation aboveGeoid); // elevation isn't really a layer, it just defines the top of everything... so just use this
+    TH2D* fElevationData = nullptr; // initialized by dynamically getRawElevationHist
+
+
+    
+    template <class T>
+    double interpolate(double lon, double lat, T t){
+      TH2D* h = getRawHist(t);
+      double v = h->Interpolate(lon, lat);
+      return v;
+    }
+    
+    
+    template <class T>
+    static const std::string& findThingInMapToString(const std::map<T, std::string>& m, T t){
+      auto it = m.find(t);
+      if(it!=m.end()){
+	return it->second;
+      }
+      else{
+	static const std::string unknown("unknown");
+	return unknown;
+      }      
+    }
+
+
+
+    
 
   }; //class Earth
 
