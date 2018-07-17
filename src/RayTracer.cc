@@ -173,7 +173,6 @@ void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int w
   //         x = sin(settings1->SLACSLOPE*constants::RADDEG)*(settings1->SLACICELENGTH/2.+rfexit_eachboresight[0][ilayer][ifold].Distance(rfexit_eachboresight[whichtry][ilayer][ifold]))/sin(constants::PI/2.+acos(nrf_iceside_eachboresight[2*whichtry][ilayer][ifold].Dot(nsurf_rfexit)));
 
   //         rfexit_eachboresight[whichtry][ilayer][ifold]-=x*nrf_iceside_eachboresight[2*whichtry][ilayer][ifold];
-          
   //         n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit();
   //       } // end loop over antennas on a layer
   //     } // end loop over layers of the payload
@@ -183,7 +182,6 @@ void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int w
 
 //###########
 // icemc::RayTracer::WhereDoesItLeave() is defined in ray.hh since it is a statis member function // MS 2/1/2017
-
 
 int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Position rfexit_temp, Vector posnu, const Antarctica *antarctica, double &slopeyangle, int whichtry){
 

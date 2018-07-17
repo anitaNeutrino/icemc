@@ -166,16 +166,38 @@ icemc::Earth::CrustLayer icemc::Earth::getLayerFromString(const std::string& lay
   return CrustLayer::LowerCrust;  
 }
 
+
+
+
+
+
+
+constexpr double minHistLon = -180;
+constexpr double maxHistLon = 182;
+constexpr int nBinsLon = (maxHistLon - minHistLon)/2;
+constexpr double minHistLat = -90;
+constexpr double maxHistLat = 90;
+constexpr int nBinsLat = (maxHistLat - minHistLat)/2;
+
 inline TH2D* makeRawDataHist(const TString& name){
-  const int binSizeLon = 2;
-  const int nBinsLon = 362/binSizeLon;
-  const int binSizeLat = 2;
-  const int nBinsLat = 180/binSizeLat;
-  TH2D* h = new TH2D(name, name, nBinsLon, -180, 182, nBinsLat, -90, 90);
+  TH2D* h = new TH2D(name, name, nBinsLon, minHistLon, maxHistLon, nBinsLat, minHistLat, maxHistLat);
   h->GetXaxis()->SetTitle("Longitude (Degrees)");
   h->GetYaxis()->SetTitle("Latitude (Degrees)");
   return h;
 }
+
+inline void fillWrapped(TH2D* h, double lon, double lat, double val){
+  h->Fill(lon, lat, val);
+  if(lon + 360 < maxHistLon){
+    h->Fill(lon+360, lat, val);	
+  }
+}
+
+
+
+
+
+
 
 TH2D* icemc::Earth::getRawHist(CrustLayer layer, CrustProperty property) {
   // construct a raw histogram if it's not already made
@@ -833,13 +855,8 @@ void icemc::Earth::ReadCrust(const std::string& fName) {
       selev=thisline.substr(beginindex,endindex-beginindex);
       elevationarray[indexlon][indexlat]=(double)atof(selev.c_str());
 
-      // std::cout << dlon << "\t" << dlat << "\t" << elevationarray[indexlon][indexlat] << std::endl;
-      /// @todo bring together and tidy up longitude wrapping into a histogram filling utility func
       TH2D* hElevation = getRawHist(Elevation::AboveGeoid);
-      hElevation->Fill(dlon, dlat, elevationarray[indexlon][indexlat]);
-      if(dlon + 360 < 182){
-	hElevation->Fill(dlon+360, dlat, elevationarray[indexlon][indexlat]);
-      }
+      fillWrapped(hElevation, dlon, dlat, elevationarray[indexlon][indexlat]);
 
     } //if
 
@@ -912,10 +929,8 @@ void icemc::Earth::ReadCrust(const std::string& fName) {
       }
 
       TH2D* hThickness = getRawHist(layer, CrustProperty::ThicknessKm);
-      hThickness->Fill(dlon, dlat, depth);
-      if(dlon + 360 < 182){
-	hThickness->Fill(dlon+360, dlat, depth);	
-      }
+      fillWrapped(hThickness, dlon, dlat, depth);
+      
       double centerLon = hThickness->GetXaxis()->GetBinCenter(hThickness->GetXaxis()->FindBin(dlon));
       double centerLat = hThickness->GetYaxis()->GetBinCenter(hThickness->GetYaxis()->FindBin(dlat));
       if(centerLon - dlon != 0 || centerLat != dlat){
@@ -924,11 +939,9 @@ void icemc::Earth::ReadCrust(const std::string& fName) {
 		   << ", raw lat = " << dlat << " binCenter = " << centerLat
 		   << std::endl;
       }     
+
       TH2D* hDensity = getRawHist(layer, CrustProperty::Density);
-      hDensity->Fill(dlon, dlat, density);
-      if(dlon + 360 < 182){
-	hDensity->Fill(dlon+360, dlat, density);	
-      }
+      fillWrapped(hDensity,  dlon, dlat, density);
       
     } //for (reading all lines for one location given in Crust 2.0 input file)
 
