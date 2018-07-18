@@ -95,7 +95,7 @@ void ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
 void ChanTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
     
 
-  if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==9) {
+  if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==9 ) {
     for(int i=0;i<4;i++) thresholds[0][i] = thresholds[1][i] = anita1->powerthreshold[i];
     int iring = (ilayer<2)*0 + (ilayer==2)*1 + (ilayer==3)*2;
     int iphi = ifold;
@@ -1287,9 +1287,9 @@ double ChanTrigger::ADCCountstoPowerThreshold(Anita *anita1, int ipol, int iant)
   int iband =3;
   thispowerthresh=rateToThreshold(thisrate,iband);
 
-  // Avoid inf and nan: 5 is the relative power threshold corresponding to 500kHz scalers
-  if (thispowerthresh>999999) return 5.;
-  if (thispowerthresh<0.0001) return 5.;
+  // Avoid inf and nan: 5 is the relative power threshold corresponding to 450kHz scalers
+  if (thispowerthresh>999999) return 5.40247;
+  if (thispowerthresh<0.0001) return 5.40247;
 
   // // Limit on relative power threshold to avoid thermal noise to trigger
   // if (thispowerthresh<4.5) return 4.5;
