@@ -240,6 +240,7 @@ public:
 
 
   int channels_passing[2][5];                                                                                 ///< channels passing.  This is reset for every antenna for every event
+  int channels_passing_justNoise[2][5];                                                                                 ///< channels passing.  This is reset for every antenna for every event
   int l1_passing; // l1 passing
   int l1_passing_allantennas[48]; // l1 passing
     

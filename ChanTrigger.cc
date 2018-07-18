@@ -333,6 +333,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   double onediodeconvl[2][5];
   
   double timedomain_output[2][5][Anita::NFOUR];
+  double timedomain_output_justNoise[2][5][Anita::NFOUR];
   int iant=anita1->GetRxTriggerNumbering(ilayer, ifold);
   int ipol=0;
 
@@ -402,14 +403,18 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
       
       // Convert Horiz and Vert polarization
       // To Left and Right circular polarization
-      ConvertHVtoLRTimedomain(anita1->NFOUR, v_banding_rfcm_forfft[0][iband], v_banding_rfcm_forfft[1][iband], vm_banding_rfcm_forfft[0][iband], vm_banding_rfcm_forfft[1][iband]);
+      ConvertHVtoLRTimedomain(anita1->NFOUR, v_banding_rfcm_forfft[0][iband], v_banding_rfcm_forfft[1][iband], vm_banding_rfcm_forfft[0][iband],           vm_banding_rfcm_forfft[1][iband]);
+      ConvertHVtoLRTimedomain(anita1->NFOUR, justNoise_trigPath[0]          , justNoise_trigPath[1],           vm_banding_rfcm_forfft_justNoise[0][iband], vm_banding_rfcm_forfft_justNoise[1][iband]);
       
     } else {
   
       for (int itime=0;itime<anita1->NFOUR/2;itime++) {
 	    
-	vm_banding_rfcm_forfft[0][iband][itime] = v_banding_rfcm_forfft[0][iband][itime];
-	vm_banding_rfcm_forfft[1][iband][itime] = v_banding_rfcm_forfft[1][iband][itime];
+	vm_banding_rfcm_forfft[0][iband][itime]           = v_banding_rfcm_forfft[0][iband][itime];
+	vm_banding_rfcm_forfft[1][iband][itime]           = v_banding_rfcm_forfft[1][iband][itime];
+	vm_banding_rfcm_forfft_justNoise[0][iband][itime] = justNoise_trigPath[0][itime];
+	vm_banding_rfcm_forfft_justNoise[1][iband][itime] = justNoise_trigPath[1][itime];
+
 	    
       }
     }
@@ -428,21 +433,24 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
     anita1->total_diodeinput_2_allantennas[anita1->GetRxTriggerNumbering(ilayer,ifold)][itime]=anita1->total_diodeinput_2_inanita[4][itime];
   }
 
-  DiodeConvolution(settings1, anita1, globaltrig1, ilayer, ifold, mindiodeconvl[0], onediodeconvl[0], psignal[0], timedomain_output[0], ibinshift, 0, thresholds);
-  DiodeConvolution(settings1, anita1, globaltrig1, ilayer, ifold, mindiodeconvl[1], onediodeconvl[1], psignal[1], timedomain_output[1], ibinshift, 1, thresholds);
-
+  DiodeConvolution(settings1, anita1, globaltrig1, ilayer, ifold, mindiodeconvl[0], onediodeconvl[0], psignal[0], timedomain_output[0], timedomain_output_justNoise[0], ibinshift, 0, thresholds);
+  DiodeConvolution(settings1, anita1, globaltrig1, ilayer, ifold, mindiodeconvl[1], onediodeconvl[1], psignal[1], timedomain_output[1], timedomain_output_justNoise[1], ibinshift, 1, thresholds);
+  
   // fill channels_passing
   //  } // end if the signal is big enough the be considered
   // now we've made the diode outputs
   // now step in time and find the most number of bands that pass in the
   // right time window
   // then fills channels_passing
-  int npass;
+  int npass, npassnoise;
 
+  L1Trigger(anita1,timedomain_output_justNoise[0],timedomain_output_justNoise[1],thresholds, //inputs
+	    globaltrig1->channels_passing_justNoise[ilayer][ifold][0],globaltrig1->channels_passing_justNoise[ilayer][ifold][1],npassnoise); //outputs
   L1Trigger(anita1,timedomain_output[0],timedomain_output[1],thresholds, //inputs
 	    globaltrig1->channels_passing[ilayer][ifold][0],globaltrig1->channels_passing[ilayer][ifold][1],npass); //outputs
 
-  //if (npass==1) std::cout << "L1 trigger " << ilayer << " " << ifold << " " << npass << std::endl;
+  
+  //  if (npass==1) std::cout << "L1 trigger " << ilayer << " " << ifold << " " << npass << std::endl;
 
   // if it's the closest antenna,
   // save flag_e,h in anita class for writing to tsignals tree
@@ -494,6 +502,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
       if (globaltrig1->channels_passing[ilayer][ifold][0][iband])
 	globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]--;
       globaltrig1->channels_passing[ilayer][ifold][0][iband]=0;// channel does not pass
+      globaltrig1->channels_passing_justNoise[ilayer][ifold][0][iband]=0;// channel does not pass
     }
 	
     // if we're implementing masking and the channel has been masked
@@ -501,6 +510,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
       if (globaltrig1->channels_passing[ilayer][ifold][1][iband])
 	globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]--;
       globaltrig1->channels_passing[ilayer][ifold][1][iband]=0;// channel does not pass
+      globaltrig1->channels_passing_justNoise[ilayer][ifold][1][iband]=0;// channel does not pass
       // note the last element of the array is 0 because this is lcp or e pol
     }
   } // end loop over first four bands
@@ -554,10 +564,10 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
  
   for (int i=0;i<2;i++) {
 
-    for (unsigned int ibin=0;ibin<globaltrig1->arrayofhits[whichlayer][whichphisector][i][4].size();ibin++) {
-      anita1->arrayofhits_inanita[whichlayer][whichphisector][i][ibin]=globaltrig1->arrayofhits[whichlayer][whichphisector][i][4][ibin];
+    for (unsigned int ibin=0;ibin<globaltrig1->arrayofhitsall[whichlayer][whichphisector][i][4].size();ibin++) {
+      anita1->arrayofhits_inanita[whichlayer][whichphisector][i][ibin]=globaltrig1->arrayofhitsall[whichlayer][whichphisector][i][4][ibin];
     }
-    for (unsigned int ibin=globaltrig1->arrayofhits[whichlayer][whichphisector][i][4].size();ibin<HALFNFOUR;ibin++) {
+    for (unsigned int ibin=globaltrig1->arrayofhitsall[whichlayer][whichphisector][i][4].size();ibin<HALFNFOUR;ibin++) {
       anita1->arrayofhits_inanita[whichlayer][whichphisector][i][ibin]=0.;
     }
     //       if (iband==4 && i==0)
@@ -572,9 +582,10 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
 
 
 
-void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]){
+void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR],  double timedomain_output_justNoise[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]){
 
   int tempChansPassing[5]={0,0,0,0,0};
+  int tempChansPassingNoise[5]={0,0,0,0,0};
 
   // Translate Anita physical layer to Anita trigger layer and phi sector
   // (4 layers with 8,8,16,8 phi sector to 3 layers with 16 phi sectors each.
@@ -587,10 +598,12 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
   for (int iband=0;iband<5;iband++) {
     
     anita1->channels_passing[ipol][iband]=0;
+    anita1->channels_passing_justNoise[ipol][iband]=0;
     if (anita1->bwslice_allowed[iband]!=1) continue; 
     
     // myconvl
     // this performs the convolution with the diode response
+    anita1->myconvlv(vm_banding_rfcm_forfft_justNoise[ipol][iband],anita1->NFOUR,anita1->fdiode_real[iband],mindiodeconvl[iband],onediodeconvl[iband],psignal[iband],timedomain_output_justNoise[iband]);
     anita1->myconvlv(vm_banding_rfcm_forfft[ipol][iband],anita1->NFOUR,anita1->fdiode_real[iband],mindiodeconvl[iband],onediodeconvl[iband],psignal[iband],timedomain_output[iband]);
     // loop from the ibinshift left + some delay + 10 ns
     
@@ -629,12 +642,14 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
     // but if we don't use it, we need to apply it manually here
     if (!settings1->APPLYIMPULSERESPONSETRIGGER){
       Tools::ShiftRight(timedomain_output[iband],anita1->NFOUR,(int)(anita1->arrival_times[ipol][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
+      Tools::ShiftRight(timedomain_output_justNoise[iband],anita1->NFOUR,(int)(anita1->arrival_times[ipol][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
     }
 	
     if (settings1->TRIGGERSCHEME == 2 || settings1->TRIGGERSCHEME == 3 || settings1->TRIGGERSCHEME == 4 || settings1->TRIGGERSCHEME == 5){
       //      if (anita1->inu==1570)
       //cout << "shifting left.\n";
       Tools::ShiftLeft(timedomain_output[iband],anita1->NFOUR,ibinshift);
+      Tools::ShiftLeft(timedomain_output_justNoise[iband],anita1->NFOUR,ibinshift);
     }
 
 	
@@ -668,7 +683,7 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
     }
     // keep track of whether each trigger bin has a hit
     int thisisaone=0;
-
+    int thisisaonenoise=0;
 
     for (int ibin = anita1->iminbin[iband]; ibin < anita1->imaxbin[iband]; ibin++) {
     
@@ -680,13 +695,25 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
 	thisisaone=1;
 	//	  cout << "got a hit.\n";
       }
+
+      if (timedomain_output_justNoise[iband][ibin] < thresholds[ipol][iband] * anita1->bwslice_rmsdiode[iband] && anita1->pol_allowed[ipol] && anita1->bwslice_allowed[iband]) { // is this polarization and bw slice allowed to pass
+	//std::cout << "VPOL : " << iband << " " << timedomain_output_1[iband][ibin]  << " " <<  thresholds[0][iband] << " " <<  anita1->bwslice_rmsdiode[iband] << std::endl;
+	tempChansPassingNoise[iband] = 1;// channel passes
+    
+	
+	thisisaonenoise=1;
+	//	  cout << "got a hit.\n";
+      }
+
+      
       // if (whichlayer==2 && whichphisector==15) 
       //cout << "ibin, nextbreakpoint are " << ibin << "\t" << nextbreakpoint << "\n";
       if (ibin>nextbreakpoint) {
 	//if (whichlayer==2 && whichphisector==15) 
 	//cout << "I'm filling. size is " << "\t" << globaltrig1->arrayofhits[whichlayer][whichphisector][0][iband].size() << "\n";
 
-	globaltrig1->arrayofhits[whichlayer][whichphisector][ipol][iband].push_back(thisisaone);
+	globaltrig1->arrayofhitsall[whichlayer][whichphisector][ipol][iband].push_back(thisisaone);
+	globaltrig1->arrayofhitsnoise[whichlayer][whichphisector][ipol][iband].push_back(thisisaonenoise);
 	// 	if (thisisaone) {
 	//  	  cout << "filling with 1. phi is " << whichphisector << "\n";
 	//  	}
@@ -699,11 +726,13 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
 	whichtrigbin++;
 	//cout << "3 whichtrigbin is " << whichtrigbin << "\n";
 	thisisaone=0;
+	thisisaonenoise=0;
       }
 
     } // end loop over bins in the window
 
     anita1->channels_passing[ipol][iband]=tempChansPassing[iband];
+    anita1->channels_passing_justNoise[ipol][iband]=tempChansPassingNoise[iband];
 
     
     if (tempChansPassing[iband]) {

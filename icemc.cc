@@ -803,6 +803,7 @@ int main(int argc,  char **argv) {
   Vector n_pol_db; // same,  double bangs
 
   int l3trig[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
+  int l3trignoise[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
   // For each trigger layer,  which "clumps" pass L2.  16 bit,  16 bit and 8 bit for layers 1 & 2 and nadirs
   int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX];
   //For each trigger layer,  which antennas pass L1.  16 bit,  16 bit and 8 bit and layers 1,  2 and nadirs
@@ -3117,10 +3118,21 @@ int main(int argc,  char **argv) {
       //////////////////////////////////////
       
       int thispasses[Anita::NPOL]={0,0};
-
+      int thispassesnoise[Anita::NPOL]={0,0};
+  
       if (!isDead){
+	// calculate global trigger on noise only waveforms
+	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trignoise, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
+				   thispassesnoise, true);
+	// calculate global trigger on noise + signal waveforms
 	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
-				   thispasses);
+	 			   thispasses);
+	//	if ( (l3trignoise[0]>0 && l3trignoise[0]==l3trig[0]) || (l3trignoise[1]>0 && l3trignoise[1]==l3trig[1] ) ){
+	if ( (l3trignoise[0]>0 ) || (l3trignoise[1]>0 ) ){
+	  cout << "A thermal noise fluctuation generated this trigger!" << l3trignoise[0] << " " << l3trig[0] << " " << l3trignoise[1] << " " << l3trig[1] << endl;
+	  delete globaltrig1;
+	  continue;
+	}
       }
       
       for (int i=0;i<2;i++) {

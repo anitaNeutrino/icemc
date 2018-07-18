@@ -293,7 +293,7 @@ class ChanTrigger {
    * @param  ipol :: int - which polarization
    * @param  thresholds :: double[2][5] - relative power thresholds for each pol and band
    */
-  void DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]);
+  void DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, int ilayer, int ifold, double mindiodeconvl[5], double onediodeconvl[5], double psignal[5][Anita::NFOUR],  double timedomain_output[5][Anita::NFOUR],  double timedomain_output_justNoise[5][Anita::NFOUR], int ibinshift, int ipol, double thresholds[2][5]);
 
 
   //! Increment the volts in each band 
@@ -465,7 +465,8 @@ class ChanTrigger {
     
   double v_banding_rfcm[2][5][Anita::NFREQ];                  ///< This is Volts/m as a function of frequency after rfcm's and banding
   double v_banding_rfcm_forfft[2][5][HALFNFOUR];              ///< Starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
-  double vm_banding_rfcm_forfft[2][5][HALFNFOUR];             ///< Starts out as V/s vs. freq after banding, rfcm, after fft it is V vs. t
+  double vm_banding_rfcm_forfft[2][5][HALFNFOUR];             ///< Tunnel diode input (signal + noise)
+  double vm_banding_rfcm_forfft_justNoise[2][5][HALFNFOUR];   ///< Tunnel diode input (just noise)
   double v_banding_rfcm_forfft_temp[2][5][HALFNFOUR];         ///< Use for the averaging over 10 neighboring bins
   double integral_vmmhz;                                      ///< Electric field integral    
   int unwarned;                                               ///< Whether we have warned the user about resetting thresholds when they are beyond the measured bounds
