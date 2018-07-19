@@ -95,7 +95,7 @@ void ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
 void ChanTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
     
 
-  if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && settings1->WHICH==9 ) {
+  if (settings1->USETIMEDEPENDENTTHRESHOLDS==1 && (settings1->WHICH==9 || settings1->WHICH==10 ) ) {
     for(int i=0;i<4;i++) thresholds[0][i] = thresholds[1][i] = anita1->powerthreshold[i];
     int iring = (ilayer<2)*0 + (ilayer==2)*1 + (ilayer==3)*2;
     int iphi = ifold;
@@ -111,7 +111,7 @@ void ChanTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigg
     thresholds[0][4] = anita1->fakeThresholds2[0][iring*16+iphi]*(-1.);
     thresholds[1][4] = anita1->fakeThresholds2[1][iring*16+iphi]*(-1.);
 
-    //    cout << thresholds[0][4] << " " <<  thresholds[0][4] << " \n";
+    // cout << thresholds[0][4] << " " <<  thresholds[1][4] << " \n";
   } else {
     GetThresholds(settings1,anita1,ilayer,thresholds); // get the right thresholds for this layer
   }

@@ -612,12 +612,9 @@ void Anita::readVariableThresholds(Settings *settings1){
     surfchain->SetMakeClass(1);
     surfchain->SetBranchAddress("thresholds",       &thresholds       );
     surfchain->SetBranchAddress("scalers",          &scalers          );
-    ///////////// FAKE SCALERS AND THRESHOLDS ONLY FOR ANITA 3 !!!!!!!!!!
-    if (settings1->WHICH==9){
-      surfchain->SetBranchAddress("fakeThreshold",    &fakeThresholds   );
-      surfchain->SetBranchAddress("fakeThreshold2",   &fakeThresholds2  );
-      surfchain->SetBranchAddress("fakeScaler",       &fakeScalers      );
-    }
+    surfchain->SetBranchAddress("fakeThreshold",    &fakeThresholds   );
+    surfchain->SetBranchAddress("fakeThreshold2",   &fakeThresholds2  );
+    surfchain->SetBranchAddress("fakeScaler",       &fakeScalers      );
     surfchain->SetBranchAddress("realTime",         &realTime_surf    );
     surfchain->BuildIndex("realTime");
     surfchain->GetEvent(0);
