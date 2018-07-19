@@ -69,8 +69,8 @@ namespace icemc{
     static constexpr double PHIMIN=0.;
     double weights_rin[NCOSTHETA][NPHI];
 
-    void findCosthetaPhiBins(Position r_in,int &icostheta,int &iphi);
-    void IncrementWeights_r_in(Position r_in,double weight) ;
+    void findCosthetaPhiBins(GeoidModel::Position r_in,int &icostheta,int &iphi);
+    void IncrementWeights_r_in(GeoidModel::Position r_in,double weight) ;
 
   protected:
 

@@ -1,5 +1,5 @@
-#include "vector.hh"
-#include "position.hh"
+#include "TVector3.h"
+#include "GeoidModel.h"
 #include "counting.hh"
 #include "Tools.h"
 #include "TMath.h"
@@ -53,14 +53,14 @@ icemc::Counting::Counting() {
 
 
 }
-void icemc::Counting::findCosthetaPhiBins(Position r_in,int &icostheta,int &iphi) {
+void icemc::Counting::findCosthetaPhiBins(GeoidModel::Position r_in,int &icostheta,int &iphi) {
 
   icostheta=(int)((cos(r_in.Theta())-COSTHETAMIN)/(COSTHETAMAX-COSTHETAMIN)*(double)NCOSTHETA);
   iphi=(int)((r_in.Phi()-PHIMIN)/(PHIMAX-PHIMIN)*(double)NPHI);
 
 
 }
-void icemc::Counting::IncrementWeights_r_in(Position r_in,double weight) {
+void icemc::Counting::IncrementWeights_r_in(GeoidModel::Position r_in,double weight) {
   int iphi,icostheta;
   findCosthetaPhiBins(r_in,icostheta,iphi);
   weights_rin[icostheta][iphi]+=weight;

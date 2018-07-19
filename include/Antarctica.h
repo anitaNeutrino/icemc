@@ -14,8 +14,6 @@ namespace icemc {
   class Interaction;
   class Ray;  
   class Balloon;
-  class Position;
-  class Vector;
   class Earth;
 
 
@@ -74,43 +72,43 @@ namespace icemc {
     // double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
     Antarctica(int model=0,int earth_mode=0,int WEIGHTABSORPTION_SETTING=1);
     double IceThickness(double lon,double lat) const;
-    double IceThickness(const Position& pos) const;
+    double IceThickness(const GeoidModel::Position& pos) const;
     double Surface(double lon,double lat) const;
-    double Surface(const Position& pos) const;
+    double Surface(const GeoidModel::Position& pos) const;
     double SurfaceAboveGeoid(double lon,double lat) const;
-    double SurfaceAboveGeoid(const Position& pos) const;
+    double SurfaceAboveGeoid(const GeoidModel::Position& pos) const;
     double WaterDepth(double lon,double lat) const;
-    double WaterDepth(const Position& pos) const;
-    Position PickInteractionLocation(int ibnposition, const Settings *settings1, const Position &rbn, Interaction *interaction1) const;
-    Position PickBalloonPosition() const;
+    double WaterDepth(const GeoidModel::Position& pos) const;
+    GeoidModel::Position PickInteractionLocation(int ibnposition, const Settings *settings1, const GeoidModel::Position &rbn, Interaction *interaction1) const;
+    GeoidModel::Position PickBalloonPosition() const;
     void GetMAXHORIZON(Balloon *bn1) const; // get upper limit on the horizon wrt the balloon.
-    int RossIceShelf(const Position &position) const; 
-    int IceOnWater(const Position &postition) const;
-    int RossExcept(const Position &position) const;
-    int RonneIceShelf(const Position &position) const;
-    int WestLand(const Position &pos) const; 
-    int AcceptableRfexit(const Vector &nsurf_rfexit,const Position &rfexit,const Vector &n_exit2rx); 
+    int RossIceShelf(const GeoidModel::Position &position) const; 
+    int IceOnWater(const GeoidModel::Position &postition) const;
+    int RossExcept(const GeoidModel::Position &position) const;
+    int RonneIceShelf(const GeoidModel::Position &position) const;
+    int WestLand(const GeoidModel::Position &pos) const; 
+    int AcceptableRfexit(const TVector3 &nsurf_rfexit,const GeoidModel::Position &rfexit,const TVector3 &n_exit2rx); 
     double GetBalloonPositionWeight(int ibnpos) const;
-    int OutsideAntarctica(const Position &pos) const;
+    int OutsideAntarctica(const GeoidModel::Position &pos) const;
     int OutsideAntarctica(double lat) const;
-    int WhereDoesItEnterIce(const Position &posnu,
-			    const Vector &nnu,
+    int WhereDoesItEnterIce(const GeoidModel::Position &posnu,
+			    const TVector3 &nnu,
 			    double stepsize,
-			    Position &r_enterice) const;
+			    GeoidModel::Position &r_enterice) const;
 
-    int WhereDoesItExitIce(const Position &posnu,
-			   const Vector &nnu,
+    int WhereDoesItExitIce(const GeoidModel::Position &posnu,
+			   const TVector3 &nnu,
 			   double stepsize,
-			   Position &r_enterice) const;
-    int WhereDoesItExitIceForward(const Position &posnu,
-				  const Vector &nnu,
+			   GeoidModel::Position &r_enterice) const;
+    int WhereDoesItExitIceForward(const GeoidModel::Position &posnu,
+				  const TVector3 &nnu,
 				  double stepsize,
-				  Position &r_enterice) const;
+				  GeoidModel::Position &r_enterice) const;
     void CreateHorizons(const Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn);
-    Vector GetSurfaceNormal(const Position &r_out) const; //overloaded from Earth to include procedures for new ice models.
+    TVector3 GetSurfaceNormal(const GeoidModel::Position &r_out) const; //overloaded from Earth to include procedures for new ice models.
     double GetN(double depth) const;
-    double GetN(const Position &pos) const;
-    double EffectiveAttenuationLength(const Settings *settings1,const Position &pos, const int &whichray) const;
+    double GetN(const GeoidModel::Position &pos) const;
+    double EffectiveAttenuationLength(const Settings *settings1,const GeoidModel::Position &pos, const int &whichray) const;
   
     void IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const;
 

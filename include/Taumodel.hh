@@ -17,7 +17,7 @@
 #include "Settings.h"
 #endif
 
-#include "vector.hh"
+#include "TVector3.h"
 
 class TH1F;
 
@@ -58,12 +58,12 @@ namespace icemc{
   
     /** \brief  Get Density Vectors sets two density vectors. One has the density at each step along the path, the other has an average density from the starting point to the current step.
      */
-    void GetDensityVectors(const Antarctica *antarctica1, Interaction *interaction1, Vector nchord, double step, double Distance, int &totalnusteps, int &crust_entered);
-    /** \brief   Get Energy Vector sets the energy of tau particle at every step along the path. It starts from the final energy and works back towards the nuetrino interaction point.
+    void GetDensityVectors(const Antarctica *antarctica1, Interaction *interaction1, TVector3 nchord, double step, double Distance, int &totalnusteps, int &crust_entered);
+    /** \brief   Get Energy TVector3 sets the energy of tau particle at every step along the path. It starts from the final energy and works back towards the nuetrino interaction point.
      */
     void GetEnergyVector(double Etau_final, double step,int totalnusteps, int &totalsteps, double &totaltaudistance, double pnu);
   
-    /** \brief  Get Tau Surv Vector gets a vector that is filled with the probability the tau will survive from neutrino interaction point to the ice.
+    /** \brief  Get Tau Surv TVector3 gets a vector that is filled with the probability the tau will survive from neutrino interaction point to the ice.
      */
     void GetTauSurvVector(double step, int totalsteps);
   public:

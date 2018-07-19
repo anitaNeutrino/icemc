@@ -10,12 +10,11 @@
 
 
 #include "GeoidModel.h"
-#include "vector.hh"
+#include "TVector3.h"
 
 namespace icemc{
 
   class Primaries;
-  class Position;
   class Interaction;
   class IceModel;
   class Settings;
@@ -29,12 +28,12 @@ namespace icemc{
   //
   //   methods:
   //
-  //IceThickness : Returns the thickness of ice in meters at a given Position or lon/lat.
-  //WaterDepth  : Returns the depth of water in meters at a given Position or lon/lat.
+  //IceThickness : Returns the thickness of ice in meters at a given GeoidModel::Position or lon/lat.
+  //WaterDepth  : Returns the depth of water in meters at a given GeoidModel::Position or lon/lat.
   //Surface   : Returns the distance in meters from the center of the Earth to the surface,
   //            i.e. to the start of air.
   //SurfaceAboveGeoid : Returns the distance in meters from the local geoid to the start of air.
-  //Geoid  : Returns the height in meters of the geoid at a given Position or lon/lat.
+  //Geoid  : Returns the height in meters of the geoid at a given GeoidModel::Position or lon/lat.
   //RockSurface  : Returns the distance in meters from the center of the Earth to the end of rock
   //               (the begninning of the ice/water/air)
   //GetSurfaceNormal  : Returns a unit vector pointing in the direction of the surface normal at
@@ -86,20 +85,20 @@ namespace icemc{
     double max_icevol_perbin; // maximum ice volume in any bin
     double max_icethk_perbin;
     virtual double Geoid(double latitude) const;
-    virtual double Geoid(const Position &pos) const;
+    virtual double Geoid(const GeoidModel::Position &pos) const;
     virtual double IceThickness(double lon,double lat) const;
-    virtual double IceThickness(const Position& pos) const;
+    virtual double IceThickness(const GeoidModel::Position& pos) const;
     virtual double Surface(double lon,double lat) const;
-    virtual double Surface(const Position& pos) const;
-    virtual int InFirn(const Position& pos) const;
-    virtual double SurfaceDeepIce(const Position& pos) const;
+    virtual double Surface(const GeoidModel::Position& pos) const;
+    virtual int InFirn(const GeoidModel::Position& pos) const;
+    virtual double SurfaceDeepIce(const GeoidModel::Position& pos) const;
     virtual double SurfaceAboveGeoid(double lon,double lat) const;
-    virtual double SurfaceAboveGeoid(const Position& pos) const;
+    virtual double SurfaceAboveGeoid(const GeoidModel::Position& pos) const;
     virtual double WaterDepth(double lon,double lat) const;
-    virtual double WaterDepth(const Position& pos) const;
+    virtual double WaterDepth(const GeoidModel::Position& pos) const;
     virtual double RockSurface(double lon,double lat) const;
-    virtual double RockSurface(const Position& pos) const;
-    double GetDensity(double altitude, const Position earth_in, int& crust_entered) const;
+    virtual double RockSurface(const GeoidModel::Position& pos) const;
+    double GetDensity(double altitude, const GeoidModel::Position earth_in, int& crust_entered) const;
 
     /** 
      * Figures out whether a neutrino will make it through thea Earth along a chord
@@ -116,22 +115,22 @@ namespace icemc{
      * 
      * @return 1 if it makes it, 0 otherwise
      */
-    int Getchord(const Settings *settings1, double len_int_kgm2, const Position &earth_in, const Position &r_enterice,
-		 const Position &nuexitice, const Position &posnu, int inu, ChordInfo& ci){
+    int Getchord(const Settings *settings1, double len_int_kgm2, const GeoidModel::Position &earth_in, const GeoidModel::Position &r_enterice,
+		 const GeoidModel::Position &nuexitice, const GeoidModel::Position &posnu, int inu, ChordInfo& ci){
       return Getchord(settings1, len_int_kgm2, earth_in, r_enterice,
 		      nuexitice, posnu, inu, ci.chord, ci.probability_tmp, ci.weight1_tmp,
 		      ci.nearthlayers, ci.myair, ci.total_kgm2, ci.crust_entered, ci.mantle_entered, ci.core_entered);
     }
 
-    int Getchord(const Settings *settings1, double len_int_kgm2, const Position &earth_in, const Position &r_enterice,
-		 const Position &nuexitice, const Position &posnu, int inu,  double& chord, double& probability_tmp, double& weight1_tmp,
+    int Getchord(const Settings *settings1, double len_int_kgm2, const GeoidModel::Position &earth_in, const GeoidModel::Position &r_enterice,
+		 const GeoidModel::Position &nuexitice, const GeoidModel::Position &posnu, int inu,  double& chord, double& probability_tmp, double& weight1_tmp,
 		 double& nearthlayers, double myair, double& total_kgm2, int& crust_entered, int& mantle_entered, int& core_entered);
 
-    Vector GetSurfaceNormal(const Position &r_out) const;
+    TVector3 GetSurfaceNormal(const GeoidModel::Position &r_out) const;
     static double LongtoPhi_0isPrimeMeridian(double longitude); // convert longitude to phiwith 0 longitude being the prime meridian
     static double LongtoPhi_0is180thMeridian(double longitude); // convert longitude to phi with 0 longitude being at the 180th meridian
     void EarthCurvature(double *array,double depth_temp) const; // adjusts coordinates within the mine to account for the curvature of the earth.
-    Position WhereDoesItEnter(const Position &posnu,const Vector &nnu) const;
+    GeoidModel::Position WhereDoesItEnter(const GeoidModel::Position &posnu,const TVector3 &nnu) const;
 
  
   private:
@@ -198,10 +197,10 @@ namespace icemc{
     double SmearTheta(int ilat, double rand) const;
     double dGetTheta(int itheta) const;
     double dGetPhi(int ilon) const;
-    void GetILonILat(const Position&,int& ilon,int& ilat) const;
+    void GetILonILat(const GeoidModel::Position&,int& ilon,int& ilat) const;
     double GetLat(double theta) const;
     double GetLon(double phi) const;
-    Vector PickPosnuForaLonLat(double lon,double lat,double theta,double phi) const; // given that an interaction occurs at a lon and lat, pick an interaction position in the ice
+    TVector3 PickPosnuForaLonLat(double lon,double lat,double theta,double phi) const; // given that an interaction occurs at a lon and lat, pick an interaction position in the ice
 
 
 

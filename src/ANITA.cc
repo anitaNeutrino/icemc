@@ -33,7 +33,7 @@ icemc::ANITA::~ANITA(){
 }
 
 
-icemc::Position icemc::ANITA::getCenterOfDetector(UInt_t unixTime){
+GeoidModel::Position icemc::ANITA::getCenterOfDetector(UInt_t unixTime){
   (void) unixTime;
 
   // UInt_t theUnixTime = unixTime ? 1 : 0;
@@ -53,7 +53,7 @@ icemc::Position icemc::ANITA::getCenterOfDetector(UInt_t unixTime){
 }
 
 
-icemc::Vector icemc::ANITA::getPositionRX(Int_t rx) const {
+TVector3 icemc::ANITA::getPositionRX(Int_t rx) const {
   return fSeaveys.at(rx).getPosition(Seavey::Pol::V);
 }
 
@@ -109,22 +109,29 @@ void icemc::ANITA::initSeaveys(const Settings *settings1, const Anita *anita1) {
     getLayerFoldFromRX(rx, ilayer, ifold);
     std::cout << rx << "\t" << ilayer << "\t" << ifold << std::endl;    
 
-    Vector n_eplane;
-    Vector n_hplane;
-    Vector n_normal;
+    TVector3 n_eplane;
+    TVector3 n_hplane;
+    TVector3 n_normal;
     
     if(settings1->WHICH==Payload::Anita1 ||
        settings1->WHICH==Payload::Anita2 ||
        settings1->WHICH==Payload::Anita3 ||
        settings1->WHICH==Payload::Anita4) { /// @todo presumably this is also correct for ANITA-4
-      n_eplane = constants::const_z.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
-      n_hplane = (-constants::const_y).RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
-      n_normal = constants::const_x.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
+
+      n_eplane = constants::const_z;
+      n_eplane.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
+      n_hplane = -constants::const_y;
+      n_hplane.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
+      n_normal = constants::const_x;
+      n_normal.RotateY(anita1->ANTENNA_DOWN[ilayer][ifold]);
     }
     else {
-      n_eplane = constants::const_z.RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
-      n_hplane = (-constants::const_y).RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
-      n_normal = constants::const_x.RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
+      n_eplane = constants::const_z;
+      n_eplane.RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
+      n_hplane = (-constants::const_y);
+      n_hplane.RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
+      n_normal = constants::const_x;
+      n_normal.RotateY(anita1->THETA_ZENITH[ilayer] - constants::PI/2);
     }
 
     double phi = 0;
@@ -137,15 +144,15 @@ void icemc::ANITA::initSeaveys(const Settings *settings1, const Anita *anita1) {
       phi=anita1->PHI_EACHLAYER[ilayer][ifold];
     }
 
-    n_eplane = n_eplane.RotateZ(phi);
-    n_hplane = n_hplane.RotateZ(phi);
-    n_normal = n_normal.RotateZ(phi);
+    n_eplane.RotateZ(phi);
+    n_hplane.RotateZ(phi);
+    n_normal.RotateZ(phi);
     
-    Vector positionH;
-    Vector positionV;    
+    TVector3 positionH;
+    TVector3 positionV;    
     for(auto pol : {Seavey::Pol::V, Seavey::Pol::H}){
       int ipol = static_cast<int>(pol);
-      Vector& seaveyPayloadPos = pol == Seavey::Pol::V ? positionV : positionH;
+      TVector3& seaveyPayloadPos = pol == Seavey::Pol::V ? positionV : positionH;
 
       double phi = 0;
       if (settings1->WHICH == Payload::Anita1 ||
@@ -165,7 +172,7 @@ void icemc::ANITA::initSeaveys(const Settings *settings1, const Anita *anita1) {
 	else{
 	  phi = anita1->PHI_EACHLAYER[ilayer][ifold] + anita1->PHI_OFFSET[ilayer];
 	}
-	seaveyPayloadPos = Vector(anita1->RRX[ilayer]*cos(phi) + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer]),
+	seaveyPayloadPos = TVector3(anita1->RRX[ilayer]*cos(phi) + anita1->LAYER_HPOSITION[ilayer]*cos(anita1->LAYER_PHIPOSITION[ilayer]),
 			   anita1->RRX[ilayer]*sin(phi) + anita1->LAYER_HPOSITION[ilayer]*sin(anita1->LAYER_PHIPOSITION[ilayer]),
 			   anita1->LAYER_VPOSITION[ilayer]);
       }

@@ -1,8 +1,8 @@
 #include <math.h>
 #include <iostream>
 
-#include "vector.hh"
-#include "position.hh"
+#include "TVector3.h"
+#include "GeoidModel.h"
 #include "screen.hh"
 #include "Detector.h"
 #include "ANITA.h"
@@ -17,10 +17,10 @@ icemc::Screen::Screen(int a){
 
   //std::cerr << "Generating default screen" << std::endl;
   fedgeLength=1.;
-  fcentralPoint = Position();
-  fnormal = Vector(1.,1.,1.);
-  funit_x = Vector(1.,1.,1.);
-  funit_y = Vector(1.,1.,1.);
+  fcentralPoint = GeoidModel::Position(0, 0, 0);
+  fnormal = TVector3(1.,1.,1.);
+  funit_x = TVector3(1.,1.,1.);
+  funit_y = TVector3(1.,1.,1.);
 
   fNsamples = a;
 };
@@ -41,7 +41,7 @@ void icemc::Screen::SetEdgeLength(double a){
 };
 
 
-void icemc::Screen::SetCentralPoint(Position a){
+void icemc::Screen::SetCentralPoint(GeoidModel::Position a){
   fcentralPoint = a;
 };
 
@@ -54,15 +54,15 @@ double icemc::Screen::GetCosineProjectionFactor() const {
   return fcosineProjectionFactor;
 };
 
-void icemc::Screen::SetNormal(Vector a){
+void icemc::Screen::SetNormal(TVector3 a){
   fnormal = a.Unit();
 };
 
-void icemc::Screen::SetUnitX(Vector a){
+void icemc::Screen::SetUnitX(TVector3 a){
   funit_x = a;
 };
 
-void icemc::Screen::SetUnitY(Vector a){
+void icemc::Screen::SetUnitY(TVector3 a){
   funit_y = a;
 };
 
@@ -71,22 +71,22 @@ double icemc::Screen::GetEdgeLength() const {
 };
 
 
-icemc::Position icemc::Screen::GetCentralPoint() const {
+GeoidModel::Position icemc::Screen::GetCentralPoint() const {
   return fcentralPoint;
 };
 
 
-icemc::Vector icemc::Screen::GetNormal() const {
+TVector3 icemc::Screen::GetNormal() const {
   return fnormal;
 };
 
 
-icemc::Vector icemc::Screen::GetUnitX() const {
+TVector3 icemc::Screen::GetUnitX() const {
   return funit_x;
 };
 
 
-icemc::Vector icemc::Screen::GetUnitY() const {
+TVector3 icemc::Screen::GetUnitY() const {
   return funit_y;
 };
 
@@ -101,8 +101,8 @@ double icemc::Screen::CalcYindex(int i) const {
 };
 
 
-icemc::Position icemc::Screen::GetPosition(int i, int j) const {
-  Position pos;
+GeoidModel::Position icemc::Screen::GetPosition(int i, int j) const {
+  GeoidModel::Position pos;
 
 
   // this picks points that are NOT on the edge
@@ -166,32 +166,32 @@ double icemc::Screen::GetNvalidPoints() const {
 };
 
 
-void icemc::Screen::AddVec2bln(Vector v){
+void icemc::Screen::AddVec2bln(TVector3 v){
   fVec2blns.push_back(v);
 };
 
 
-icemc::Vector icemc::Screen::GetVec2bln(int i) const {
+TVector3 icemc::Screen::GetVec2bln(int i) const {
   return fVec2blns[i];
 };
 
 
-void icemc::Screen::AddPol(Vector v){
+void icemc::Screen::AddPol(TVector3 v){
   fPols.push_back(v);
 };
 
 
-icemc::Vector icemc::Screen::GetPol(int i) const {
+TVector3 icemc::Screen::GetPol(int i) const {
   return fPols[i];
 };
 
 
-void icemc::Screen::AddImpactPt(Position p){
+void icemc::Screen::AddImpactPt(GeoidModel::Position p){
   fImpactPt.push_back(p);
 };
 
 
-icemc::Position icemc::Screen::GetImpactPt(int i) const {
+GeoidModel::Position icemc::Screen::GetImpactPt(int i) const {
   return fImpactPt[i];
 };
 
@@ -314,15 +314,15 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
   ///@todo remove hardcoding here!
   double TIMESTEP=(1./2.6)*1.E-9; // time step between samples
 
-  const Position& detPos = d->getCenterOfDetector(inu);
+  const GeoidModel::Position&detPos = d->getCenterOfDetector(inu);
   double firstDelay = 0;
 
   for (int jpt=0; jpt<GetNvalidPoints(); jpt++){
-    const Position& rfExit = GetImpactPt(jpt);
+    const GeoidModel::Position&rfExit = GetImpactPt(jpt);
     const double nominalTimeOfFlightSeconds = (detPos - rfExit).Mag()/constants::CLIGHT;
 
     for(int rx = 0; rx < d->getNumRX(); rx++){
-      Vector rxPos = d->getPositionRX(rx);
+      TVector3 rxPos = d->getPositionRX(rx);
       const double rxTimeOfFlightSeconds = (rxPos - rfExit).Mag()/constants::CLIGHT;
 
       ///@todo remove hardcoded number of frequencies!

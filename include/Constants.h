@@ -1,7 +1,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#include "vector.hh"
+#include "TVector3.h"
 
 namespace icemc {
 
@@ -60,9 +60,9 @@ namespace icemc {
    
   
     // constant vectors used in balloon class - oindree 
-    const Vector const_z(0,0,1);
-    const Vector const_y(0,1,0);
-    const Vector const_x(1,0,0);
+    const TVector3 const_z(0,0,1);
+    const TVector3 const_y(0,1,0);
+    const TVector3 const_x(1,0,0);
 
     // TUFF configuration switching times in ChanTrigger.cc
     const    int TUFFconfig_B_end_1 = 1480713195;

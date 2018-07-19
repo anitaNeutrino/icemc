@@ -4,8 +4,8 @@
 #include "Settings.h"
 #include <cmath>
 #include "Tools.h"
-#include "vector.hh"
-#include "position.hh"
+#include "TVector3.h"
+#include "GeoidModel.h"
 #include <iostream>
 #include <fstream>
 
@@ -268,56 +268,56 @@ double icemc::Earth::Geoid(double latitude) const {
 	       cos(latitude*constants::RADDEG)*cos(latitude*constants::RADDEG)));
 } //Geoid(lat)
 
-double icemc::Earth::Geoid(const Position &pos) const {
-  return Geoid(pos.Lat());
+double icemc::Earth::Geoid(const GeoidModel::Position &pos) const {
+  return Geoid(-pos.Latitude());
 } //Geoid(Position)
 
 double icemc::Earth::IceThickness(double lon,double lat) const {
   return icethkarray[(int)(lon/2)][(int)(lat/2)]*1000.;
 } //IceThickness(lon,lat)
 
-double icemc::Earth::IceThickness(const Position& pos) const {
-  return IceThickness(pos.Lon(),pos.Lat());
+double icemc::Earth::IceThickness(const GeoidModel::Position&pos) const {
+  return IceThickness((pos.Longitude() < 0 ? pos.Longitude() + 360 : pos.Longitude()),-pos.Latitude());
 } //IceThickness(Position)
-int icemc::Earth::InFirn(const Position& pos) const {
+int icemc::Earth::InFirn(const GeoidModel::Position&pos) const {
   if (pos.Mag()-Surface(pos)<constants::FIRNDEPTH)
     return 0;
   return 1;
 } //InFirn(Position)
-double icemc::Earth::SurfaceDeepIce(const Position& pos) const { // surface of the deep ice (where you reach the firn)
-  return  surfacer[(int)(pos.Lon()/2)][(int)(pos.Lat()/2)] + geoid[(int)(pos.Lat()/2)] + constants::FIRNDEPTH;
+double icemc::Earth::SurfaceDeepIce(const GeoidModel::Position&pos) const { // surface of the deep ice (where you reach the firn)
+  return  surfacer[(int)((pos.Longitude() < 0 ? pos.Longitude() + 360 : pos.Longitude())/2)][(int)(-pos.Latitude()/2)] + geoid[(int)(-pos.Latitude()/2)] + constants::FIRNDEPTH;
 } //Surface(lon,lat)
 
 double icemc::Earth::Surface(double lon,double lat) const {
   return surfacer[(int)(lon/2)][(int)(lat/2)] + geoid[(int)(lat/2)];
 } //Surface(lon,lat)
 
-double icemc::Earth::Surface(const Position& pos) const {
-  return surfacer[(int)(pos.Lon()/2)][(int)(pos.Lat()/2)] + geoid[(int)(pos.Lat()/2)];
+double icemc::Earth::Surface(const GeoidModel::Position&pos) const {
+  return surfacer[(int)((pos.Longitude() < 0 ? pos.Longitude() + 360 : pos.Longitude())/2)][(int)(-pos.Latitude()/2)] + geoid[(int)(-pos.Latitude()/2)];
 } //Surface(Position)
 
 double icemc::Earth::RockSurface(double lon,double lat) const {
   return (Surface(lon,lat) - IceThickness(lon,lat) - WaterDepth(lon,lat));
 } //RockSurface(lon,lat)
 
-double icemc::Earth::RockSurface(const Position& pos) const {
-  return RockSurface(pos.Lon(),pos.Lat());
+double icemc::Earth::RockSurface(const GeoidModel::Position&pos) const {
+  return RockSurface((pos.Longitude() < 0 ? pos.Longitude() + 360 : pos.Longitude()),-pos.Latitude());
 } //RockSurface(lon,lat)
 
 double icemc::Earth::SurfaceAboveGeoid(double lon,double lat) const {
   return surfacer[(int)(lon/2)][(int)(lat/2)];
 } //SurfaceAboveGeoid(lon,lat)
 
-double icemc::Earth::SurfaceAboveGeoid(const Position& pos) const {
-  return surfacer[(int)(pos.Lon()/2)][(int)(pos.Lat()/2)];
+double icemc::Earth::SurfaceAboveGeoid(const GeoidModel::Position&pos) const {
+  return surfacer[(int)((pos.Longitude() < 0 ? pos.Longitude() + 360 : pos.Longitude())/2)][(int)(-pos.Latitude()/2)];
 } //SurfaceAboveGeoid(Position)
 
 double icemc::Earth::WaterDepth(double lon,double lat) const {
   return waterthkarray[(int)(lon/2)][(int)(lat/2)]*1000;
 } //WaterDepth(lon,lat)
 
-double icemc::Earth::WaterDepth(const Position& pos) const {
-  return WaterDepth(pos.Lon(),pos.Lat());
+double icemc::Earth::WaterDepth(const GeoidModel::Position&pos) const {
+  return WaterDepth((pos.Longitude() < 0 ? pos.Longitude() + 360 : pos.Longitude()),-pos.Latitude());
 } //WaterDepth(Position)
 
 double icemc::Earth::GetLat(double theta) const {
@@ -333,14 +333,14 @@ double icemc::Earth::GetLon(double phi) const {
   return (360.*3./4. - phi_deg); // returns 0 to 360 degrees (going from -180 to 180 deg longitude like Crust 2.0 does)
 } //GetLon
 
-double icemc::Earth::GetDensity(double altitude, const Position earth_in,
+double icemc::Earth::GetDensity(double altitude, const GeoidModel::Position earth_in,
 				     int& crust_entered // 1 or 0
 				     ) const{
   
-  Position where = earth_in;
+  GeoidModel::Position pos = earth_in;
 	
-  double lon = where.Lon();
-  double lat = where.Lat();
+  double lon = (pos.Longitude() < 0 ? pos.Longitude() + 360 : pos.Longitude());
+  double lat = -pos.Latitude();
   //cout <<"Lon and Lat are "<<lon<<","<<lat<<"\n";
 
   int ilon = (int)(lon/2);
@@ -393,10 +393,10 @@ double icemc::Earth::GetDensity(double altitude, const Position earth_in,
 
 int icemc::Earth::Getchord(const Settings *settings1,
 				double len_int_kgm2,
-				const Position &earth_in, // place where neutrino entered the earth
-				const Position &r_enterice,
-				const Position &nuexitice,
-				const Position &posnu, // position of the interaction
+				const GeoidModel::Position &earth_in, // place where neutrino entered the earth
+				const GeoidModel::Position &r_enterice,
+				const GeoidModel::Position &nuexitice,
+				const GeoidModel::Position &posnu, // position of the interaction
 				int inu,
 				// ChordInfo& chordInfo){
 				double& chord, // chord length
@@ -409,8 +409,8 @@ int icemc::Earth::Getchord(const Settings *settings1,
 				int& mantle_entered, // 1 or 0
 				int& core_entered)  {
     
-  Vector chord3;
-  Vector nchord;
+  TVector3 chord3;
+  TVector3 nchord;
   double x=0;
   double lat,lon;
   // int ilon,ilat;
@@ -423,7 +423,7 @@ int icemc::Earth::Getchord(const Settings *settings1,
   //Find the chord, its length and its unit vector.
   chord3 = posnu - earth_in;
   chord=chord3.Mag();
-  nchord = chord3 / chord;
+  nchord = chord3*(1./chord);
     
   if (chord<=1) {
     std::cout << "short chord " << chord << "\n";
@@ -434,7 +434,7 @@ int icemc::Earth::Getchord(const Settings *settings1,
     std::cout << "bad chord" << " " << chord << ".  Event is " << inu << "\n";
   }
     
-  Position where=earth_in;
+  GeoidModel::Position where=earth_in;
   //cout <<"where(1) is "<<where;
   // the sin of the angle between the neutrino path and the 
   // radial vector to its earth entrance point determines
@@ -529,8 +529,8 @@ int icemc::Earth::Getchord(const Settings *settings1,
 	
     x=0; // x is the distance you move as you step through the earth.
 	
-    lon = where.Lon();
-    lat = where.Lat();
+    lon = where.Longitude();
+    lat = where.Latitude();
     // ilon = (int)(lon/2);
     // ilat = (int)(lat/2);
 	
@@ -594,8 +594,8 @@ int icemc::Earth::Getchord(const Settings *settings1,
 	    
       where += step*nchord;// find where you are now along the neutrino's path 
 	    
-      lon = where.Lon();
-      lat = where.Lat();
+      lon = where.Longitude();
+      lat = where.Latitude();
       // ilon = (int)(lon/2);
       // ilat = (int)(lat/2);
       altitude=where.Mag()-Geoid(lat); //what is the altitude
@@ -658,8 +658,8 @@ int icemc::Earth::Getchord(const Settings *settings1,
       } //end else(enter core)
     } //end if(left crust)
 	
-    lon = where.Lon();
-    lat = where.Lat();
+    lon = where.Longitude();
+    lat = where.Latitude();
     // ilon = (int)(lon/2);
     // ilat = (int)(lat/2);
     altitude=where.Mag()-Geoid(lat); //what is the altitude
@@ -686,8 +686,8 @@ int icemc::Earth::Getchord(const Settings *settings1,
       // possible for a neutrino to go through the air but not likely because they aren't the most extreme skimmers (they went through the mantle)
       where += step*nchord; // where you are now along neutrino's path
 	    
-      lon = where.Lon();
-      lat = where.Lat();
+      lon = where.Longitude();
+      lat = where.Latitude();
       // ilon = (int)(lon/2);
       // ilat = (int)(lat/2);
       altitude=where.Mag()-Geoid(lat); //what is the altitude
@@ -718,9 +718,9 @@ int icemc::Earth::Getchord(const Settings *settings1,
   return 1;
 } //end Getchord
 
-icemc::Vector icemc::Earth::GetSurfaceNormal(const Position &r_out) const
+TVector3 icemc::Earth::GetSurfaceNormal(const GeoidModel::Position &r_out) const
 {
-  Vector n_surf = r_out.Unit();
+  TVector3 n_surf = r_out.Unit();
   if (FLATSURFACE){
     return n_surf;
   }    
@@ -755,12 +755,12 @@ icemc::Vector icemc::Earth::GetSurfaceNormal(const Position &r_out) const
   // first rotate n_surf according to tilt in costheta and position on continent - rotate around the y axis.
   double angle=atan(slope_costheta);
     
-  n_surf = n_surf.RotateY(angle);
+  n_surf.RotateY(angle);
     
   // now rotate n_surf according to tilt in phi - rotate around the z axis.
   angle=atan(slope_phi);
     
-  n_surf = n_surf.RotateZ(angle);
+  n_surf.RotateZ(angle);
     
   return n_surf;
     
@@ -1145,7 +1145,7 @@ void icemc::Earth::ReadCrust(const std::string& fName) {
 }//ReadCrust
 
 
-icemc::Vector icemc::Earth::PickPosnuForaLonLat(double lon,double lat,double theta,double phi) const {
+TVector3 icemc::Earth::PickPosnuForaLonLat(double lon,double lat,double theta,double phi) const {
     
     
   double surface_above_geoid = this->SurfaceAboveGeoid(lon,lat);
@@ -1164,7 +1164,7 @@ icemc::Vector icemc::Earth::PickPosnuForaLonLat(double lon,double lat,double the
   if (elevation > surface_above_geoid || elevation < (surface_above_geoid - local_ice_thickness)){
     std::cout<<"elevation > surface_above_geoid || elevation < (surface_above_geoid - local_ice_thickness)\n";
   }    
-  Vector posnu((elevation+this->Geoid(lat))*sin(theta)*cos(phi),(elevation+this->Geoid(lat))*sin(theta)*sin(phi),(elevation+this->Geoid(lat))*cos(theta));
+  TVector3 posnu((elevation+this->Geoid(lat))*sin(theta)*cos(phi),(elevation+this->Geoid(lat))*sin(theta)*sin(phi),(elevation+this->Geoid(lat))*cos(theta));
     
   if (((this->Geoid(lat) + surface_above_geoid)) - posnu.Mag() < 0) {
     //cout<<"/nYikes!  (Geoid(lat) + Surface(lon,lat)) - sqrt(dSquare(posnu) = "<<((this->Geoid(lat) + surface_above_geoid)) - posnu.Mag()<<"/nlon, lat: "<<lon<<" , "<<lat<< " " << endl<<endl;
@@ -1185,7 +1185,7 @@ double icemc::Earth::dGetPhi(int ilon) const {
   return (double)(-1*((double)ilon+0.5)+(double)NLON)*2*constants::PI/(double)NLON-constants::PI/2;
 } //dGetPhi(int)
 
-void icemc::Earth::GetILonILat(const Position &p,int& ilon,int& ilat) const {
+void icemc::Earth::GetILonILat(const GeoidModel::Position &p,int& ilon,int& ilat) const {
   // Phi function outputs from 0 to 2*pi wrt +x
   double phi_deg=p.Phi()*constants::DEGRAD;
     
@@ -1202,7 +1202,7 @@ void icemc::Earth::GetILonILat(const Position &p,int& ilon,int& ilat) const {
 //method GetILonILat
 void icemc::Earth::EarthCurvature(double *array,double depth_temp) const {
     
-  Position parray;
+  GeoidModel::Position parray;
   parray.SetXYZ(array[0],array[1],array[2]);
     
   // adjust array coordinates so that it fits to a curved earth surface at a specific depth 
@@ -1223,14 +1223,14 @@ void icemc::Earth::EarthCurvature(double *array,double depth_temp) const {
     
 }
 
-icemc::Position icemc::Earth::WhereDoesItEnter(const Position &posnu,const Vector &nnu) const {
+GeoidModel::Position icemc::Earth::WhereDoesItEnter(const GeoidModel::Position &posnu,const TVector3 &nnu) const {
   // now get neutrino entry point...
   double p = posnu.Mag(); // radius of interaction
   double costheta = (nnu.Dot(posnu)) / p; // theta of neutrino at interaction position
   double sintheta = sqrt(1-costheta*costheta);
     
-  double lon = posnu.Lon();
-  double lat = posnu.Lat();
+  double lon = posnu.Longitude();
+  double lat = posnu.Latitude();
     
   double a=0; // length of chord
     
@@ -1254,7 +1254,7 @@ icemc::Position icemc::Earth::WhereDoesItEnter(const Position &posnu,const Vecto
 
     // first approx
     // find where nnu intersects spherical earth surface
-  Position r_in = posnu - a*nnu;
+  GeoidModel::Position r_in = posnu - a*nnu;
 
   int iter = 0;
   // now do correction 3 times

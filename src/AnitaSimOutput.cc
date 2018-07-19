@@ -266,7 +266,7 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(){
   // fTruth->sourceLat        = uhen->sourceLat;
   // fTruth->sourceAlt        = uhen->sourceAlt;
   // fTruth->weight           = uhen->fNeutrinoPath->weight;
-  Vector n_bn = bn1->position().Unit();
+  TVector3 n_bn = bn1->position().Unit();
   
   for (int i=0;i<3;i++){
     fTruth->balloonPos[i]  = bn1->position()[i];

@@ -16,8 +16,8 @@
 #include "TF3.h"
 #include "TH2D.h"
 
-#include "position.hh"
-#include "vector.hh"
+#include "GeoidModel.h"
+#include "TVector3.h"
 
 namespace icemc {
 
@@ -193,7 +193,7 @@ namespace icemc {
      */
     Interaction(Primaries *primary1, const Settings *settings1); //, int whichray); //, Counting *count1);
 
-    int PickDownwardInteractionPoint(int ibnposition, const Position& r_bn, const Settings *settings1, const Antarctica *antarctica1, RayTracer *ray1);
+    int PickDownwardInteractionPoint(int ibnposition, const GeoidModel::Position& r_bn, const Settings *settings1, const Antarctica *antarctica1, RayTracer *ray1);
     
     void PickAnyDirection();
     
@@ -206,17 +206,17 @@ namespace icemc {
     
     double pathlength_inice;
     
-    Vector nnu;                 ///< direction of neutrino (+z in south pole direction)
+    TVector3 nnu;                 ///< direction of neutrino (+z in south pole direction)
     double costheta_nutraject;  ///< theta of nnu with earth center to balloon as z axis 
     double phi_nutraject;       ///< phi of nnu with earth center to balloon as z axis
 
     double weight_nu;           ///< Weight for neutrino that survives to posnu
     double weight_nu_prob;      ///< Weight for neutrino that survives to posnu and interacts in the ice
     
-    Position r_in;              ///< position where neutrino enters the earth
-    Position r_enterice;        ///< position where neutrino enters the ice
-    Position nuexit;            ///< place where neutrino would have left the earth
-    Position nuexitice;         ///< place where neutrino would have left the ice
+    GeoidModel::Position r_in;              ///< position where neutrino enters the earth
+    GeoidModel::Position r_enterice;        ///< position where neutrino enters the ice
+    GeoidModel::Position nuexit;            ///< place where neutrino would have left the earth
+    GeoidModel::Position nuexitice;         ///< place where neutrino would have left the ice
     double chord;               ///< chord in m from earth entrance to rock-ice boundary
     double logchord;            ///< log_10 of chord length earth entrance to where it enters ice
     double weight_bestcase;     ///< what weight1 would be if whole earth had density of crust - for quick and dirty calculation of best case scenario
@@ -231,8 +231,8 @@ namespace icemc {
     void setCurrent();
     int getPdgCode() const;
 
-    Position posnu;
-    Position posnu_down;
+    GeoidModel::Position posnu;
+    GeoidModel::Position posnu_down;
     NuFlavor nuflavor;	  ///< neutrino flavor    
     CurrentType current;	  ///< CC or NC?
     

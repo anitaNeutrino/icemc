@@ -11,10 +11,10 @@
 #include "RootOutput.h"
 #include "Constants.h"
 #include "Settings.h"
-#include "position.hh"
+#include "GeoidModel.h"
 #include "Earth.h"
 #include "Tools.h"
-#include "vector.hh"
+#include "TVector3.h"
 #include "Roughness.h"
 #include "ANITA.h"
 #include "Antarctica.h"
@@ -603,14 +603,14 @@ double icemc::EventGenerator::GetAirDistance(double altitude_bn, double beta) co
 
 
 
-icemc::Vector icemc::EventGenerator::GetPolarization(const Vector &nnu, const Vector &nrf2_iceside, int inu) const {
+TVector3 icemc::EventGenerator::GetPolarization(const TVector3 &nnu, const TVector3 &nrf2_iceside, int inu) const {
   // Want to find a unit vector in the same plane as nnu and n_refr,
   // but perpendicular to n_refr,  pointing away from nnu.
 
   // cross nnu with n_refr to get the direction of the B field.
-  Vector n_bfield = nnu.Cross(nrf2_iceside);
+  TVector3 n_bfield = nnu.Cross(nrf2_iceside);
   // cross b-field with nrf2_iceside to get the polarization vector.
-  Vector n_pol = n_bfield.Cross(nrf2_iceside);
+  TVector3 n_pol = n_bfield.Cross(nrf2_iceside);
   n_pol = n_pol.Unit();
   // check and make sure E-field is pointing in the right direction.
   if (nnu.Dot(nrf2_iceside)>0 && n_pol.Dot(nnu)>0){
@@ -629,7 +629,7 @@ double icemc::EventGenerator::IsItDoubleBang(double exitlength, double plepton) 
 //end IsItDoubleBang()
 
 
-int icemc::EventGenerator::WhereIsSecondBang(const Position &posnu, const Vector &nnu, double nuexitlength, double pnu, Antarctica *antarctica1, const Position &r_bn, Position &posnu2, Position &rfexit_db, Vector &n_exit2bn_db) const {
+int icemc::EventGenerator::WhereIsSecondBang(const GeoidModel::Position &posnu, const TVector3 &nnu, double nuexitlength, double pnu, Antarctica *antarctica1, const GeoidModel::Position &r_bn, GeoidModel::Position &posnu2, GeoidModel::Position &rfexit_db, TVector3 &n_exit2bn_db) const {
   double rnd1=0;
   double rnd2=2;
   double gamma=pnu/constants::MTAU;
@@ -647,7 +647,7 @@ int icemc::EventGenerator::WhereIsSecondBang(const Position &posnu, const Vector
   rfexit_db = antarctica1->Surface(posnu2)*posnu2.Unit();
 
   // unit vector pointing to antenna from exit point.
-  n_exit2bn_db = (r_bn - rfexit_db) / r_bn.Distance(rfexit_db);
+  n_exit2bn_db = (r_bn - rfexit_db).Unit();
 
   double cosangle=(n_exit2bn_db.Dot(posnu2)) / posnu2.Mag();
   if (cosangle<0){
@@ -659,7 +659,7 @@ int icemc::EventGenerator::WhereIsSecondBang(const Position &posnu, const Vector
 
 
 //the following is  a new function only for reflected case.
-void icemc::EventGenerator::Attenuate_down(Antarctica *antarctica1, const Settings *settings1, double& vmmhz_max, const Position &rfexit2, const Position &posnu, const Position &posnu_down) const {
+void icemc::EventGenerator::Attenuate_down(Antarctica *antarctica1, const Settings *settings1, double& vmmhz_max, const GeoidModel::Position &rfexit2, const GeoidModel::Position &posnu, const GeoidModel::Position &posnu_down) const {
   double ATTENLENGTH=700;
   if(!settings1->VARIABLE_ATTEN){
     ATTENLENGTH=antarctica1->EffectiveAttenuationLength(settings1, posnu, 1);
@@ -696,7 +696,7 @@ void icemc::EventGenerator::Attenuate_down(Antarctica *antarctica1, const Settin
 //end Attenuate_down()
 
 
-void icemc::EventGenerator::Attenuate(const Antarctica *antarctica1, const Settings *settings1, double& vmmhz_max,  double rflength, const Position &posnu) const {
+void icemc::EventGenerator::Attenuate(const Antarctica *antarctica1, const Settings *settings1, double& vmmhz_max,  double rflength, const GeoidModel::Position &posnu) const {
   double ATTENLENGTH=700;  // constant attenuation length for now.
   if (!settings1->VARIABLE_ATTEN){
     ATTENLENGTH = antarctica1->EffectiveAttenuationLength(settings1, posnu, 0);
@@ -745,10 +745,10 @@ void icemc::EventGenerator::IsAbsorbed(double chord_kgm2, double len_int_kgm2, d
 //end IsAbsorbed()
 
 
-void icemc::EventGenerator::GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE) const{
+void icemc::EventGenerator::GetSmearedIncidentAngle(TVector3 &specular, TVector3 &nrf_iceside, TVector3 &n_exit2bn, double SMEARINCIDENTANGLE) const{
   // Smear the incident angle for roughness studies
   specular+=nrf_iceside; // specular is the ray that we got from Snell's law
-  Vector parallel_to_surface; // find vector parallel to surface to rotate the vector around
+  TVector3 parallel_to_surface; // find vector parallel to surface to rotate the vector around
   parallel_to_surface+=n_exit2bn; // want to cross specular with n_exit2bn
   parallel_to_surface.Cross(specular);
   nrf_iceside.Rotate(SMEARINCIDENTANGLE*(2*gRandom->Rndm()-1.), parallel_to_surface); // smear the incident ray
@@ -757,7 +757,7 @@ void icemc::EventGenerator::GetSmearedIncidentAngle(Vector &specular, Vector &nr
 //end GetSmearedIncidentAngle()
 
 
-int icemc::EventGenerator::GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit, double nexit,  double nenter,  Vector &nrf2_iceside) const {
+int icemc::EventGenerator::GetRayIceSide(const TVector3 &n_exit2rx,  const TVector3 &nsurf_rfexit, double nexit,  double nenter,  TVector3 &nrf2_iceside) const {
   // this function performs snell's law in three dimensions
   double costh=0;
   double NRATIO=nexit/nenter;
@@ -778,11 +778,11 @@ int icemc::EventGenerator::GetRayIceSide(const Vector &n_exit2rx,  const Vector 
 
 
 
-int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *interaction1, const Vector &refr,
+int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *interaction1, const TVector3 &refr,
 					double deltheta_em,  double deltheta_had, const ShowerProperties& showerProps,
 					double vmmhz1m_max,  double r_fromballoon,  RayTracer *ray1,
-					const AskaryanFreqsGenerator *askFreqGen,  Position posnu,  Anita *anita1,
-					Balloon *bn1, Vector &nnu,  double& costhetanu,  double& theta_threshold) { 
+					const AskaryanFreqsGenerator *askFreqGen,  GeoidModel::Position posnu,  Anita *anita1,
+					Balloon *bn1, TVector3 &nnu,  double& costhetanu,  double& theta_threshold) { 
 
   // In the specular (settings1->ROUGHNESS = 0) this function sets the neutrino direction according to a selection routine based on viewing within the Cerenkov cone
   // In the roughness case we just want to pick a random allowable direction,
@@ -923,8 +923,10 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
     double phinu=constants::TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
     double sinthetanu=sqrt(1-costhetanu*costhetanu);
     // 3-vector of neutrino direction,  at that same coordinate system.
-    nnu = Vector(sinthetanu*cos(phinu), sinthetanu*sin(phinu), costhetanu);
-    nnu = nnu.ChangeCoord(refr); // rotate so it's in our normal coordinate system.
+    nnu = TVector3(sinthetanu*cos(phinu), sinthetanu*sin(phinu), costhetanu);
+
+    ///@todo FIX CHANGECOORD
+    // nnu = nnu.ChangeCoord(refr); // rotate so it's in our normal coordinate system.
     // now the ray is aligned along the cerenkov cone and
     // the neutrino is rotated by that same angle
 
@@ -949,7 +951,7 @@ int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *
 
 
 
-double icemc::EventGenerator::GetThisAirColumn(const Settings* settings1,  Position r_in, Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta, double& cosbeta0, double& mybeta) const {
+double icemc::EventGenerator::GetThisAirColumn(const Settings* settings1,  GeoidModel::Position r_in, TVector3 nnu, GeoidModel::Position posnu,  double *col1,  double& cosalpha, double& mytheta, double& cosbeta0, double& mybeta) const {
   double myair=0; // this is the output
   // it is the column of air in kg/m^2
   cosalpha=(r_in.Dot(nnu)) / r_in.Mag(); // cosangle that the neutrino enters the earth wrt surface normal at its entrry point
@@ -989,7 +991,7 @@ void icemc::EventGenerator::GetAir(double *col1) const {
 //end GetAir()
 
 
-int icemc::EventGenerator::TIR(const Vector &n_surf, const Vector &nrf2_iceside,  double N_IN, double N_OUT) const {
+int icemc::EventGenerator::TIR(const TVector3 &n_surf, const TVector3 &nrf2_iceside,  double N_IN, double N_OUT) const {
   double test=sin(nrf2_iceside.Angle(n_surf))*N_IN/N_OUT;
   if(test>=1){
     return 1;
@@ -1001,7 +1003,7 @@ int icemc::EventGenerator::TIR(const Vector &n_surf, const Vector &nrf2_iceside,
 //end TIR()
 
 
-double icemc::EventGenerator::GetViewAngle(const Vector &nrf2_iceside, const Vector &nnu) const {
+double icemc::EventGenerator::GetViewAngle(const TVector3 &nrf2_iceside, const TVector3 &nnu) const {
   // get viewing angle of shower
   double dtemp=nrf2_iceside.Dot(nnu);
   if (dtemp>=1 && dtemp<1.02)
@@ -1019,10 +1021,10 @@ double icemc::EventGenerator::GetViewAngle(const Vector &nrf2_iceside, const Vec
 
 
 void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
-				       const Vector &surface_normal, 
-				       const Vector &air_rf, 
-				       Vector &pol, 
-				       const Vector &firn_rf, 
+				       const TVector3 &surface_normal, 
+				       const TVector3 &air_rf, 
+				       TVector3 &pol, 
+				       const TVector3 &firn_rf, 
 				       double efield, 
 				       // const ShowerProperties& sp,
 				       double deltheta_em_max, double deltheta_had_max, 
@@ -1036,11 +1038,11 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
   //  double t_coeff_pokey, t_coeff_slappy;
 
   // this is perp the surface normal and transmitted ray,  parallel to surface
-  Vector perp = air_rf.Cross(surface_normal).Unit();
+  TVector3 perp = air_rf.Cross(surface_normal).Unit();
   // this is in the bending plane
-  Vector air_parallel = perp.Cross(air_rf).Unit();
+  TVector3 air_parallel = perp.Cross(air_rf).Unit();
   // this is in the bending plane
-  Vector firn_parallel = perp.Cross(firn_rf).Unit();
+  TVector3 firn_parallel = perp.Cross(firn_rf).Unit();
 
   // component of polarization (in the air) perp to surface normal
   double pol_perp_firn = pol.Dot(perp); // this is the slappy component in the firn
@@ -1069,7 +1071,7 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 
 
 
-void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, const Position &posnu,  const Vector &nnu,  const Position &r_bn,  double altitude_int,  NuFlavor nuflavor,  CurrentType current,  double elast_y,  std::ofstream &nu_out) const {
+void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, const GeoidModel::Position &posnu,  const TVector3 &nnu,  const GeoidModel::Position &r_bn,  double altitude_int,  NuFlavor nuflavor,  CurrentType current,  double elast_y,  std::ofstream &nu_out) const {
   nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
 }
 
@@ -1222,7 +1224,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   if (settings1.WRITEPOSFILE==1) {
     icemcLog().nu_out << "Neutrinos with energy " << pnu << "\n\n"; //Write header to file of neutrino positions
-    icemcLog().nu_out << "nu #,  position of nu interaction,  depth of int.,  Direction of nu momentum,  Position of balloon,  nu flavour,  current type,  elasticity\n\n\n\n";
+    icemcLog().nu_out << "nu #,  position of nu interaction,  depth of int.,  Direction of nu momentum,  GeoidModel::Position of balloon,  nu flavour,  current type,  elasticity\n\n\n\n";
   }
 
 
@@ -1322,7 +1324,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
       if (settings1.HIST && !settings1.ONLYFINAL && ro.prob_eachphi_bn.GetEntries() < settings1.HIST_MAX_ENTRIES) {
         ro.prob_eachphi_bn.Fill(fDetector->phi_bn);
-        ro.prob_eachilon_bn.Fill(fDetector->position().Lon());
+        ro.prob_eachilon_bn.Fill(fDetector->position().Longitude());
       }
 
       // pick random point in ice.
@@ -1458,7 +1460,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       const int inuDebug = 13; //1481; //1705; //34; //532; //543; //517; //523; //522;
       bool debugRay = inu == inuDebug ? true : false;
       rayTracer.setDebug(debugRay);
-      Vector surfacePosMinuit = rayTracer.findPathToDetector(interaction1->posnu, fDetector->position());
+      TVector3 surfacePosMinuit = rayTracer.findPathToDetector(interaction1->posnu, fDetector->position());
       rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 1, antarctica); // fills ray1->n_exit2bn[1]
 
       rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 1);
@@ -1521,7 +1523,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
           err = GetDirection(&settings1, interaction1, rayTracer.nrf_iceside[4], deltheta_em_max, deltheta_had_max, showerPropsTemp, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], &rayTracer, &askFreqGen, interaction1->posnu, fDetector, fDetector, interaction1->nnu, costhetanu, theta_threshold);	  
         }
         // else if (settings1.SLAC) {
-        //   Vector xaxis(1., 0., 0.);
+        //   TVector3 xaxis(1., 0., 0.);
         //   //nnu=(rfexit[0].Unit()).Rotate(-10.*RADDEG, interaction1->posnu.Cross(zaxis));
         //   interaction1->nnu = xaxis.RotateY(fDetector->theta_bn-settings1.SLAC_HORIZDIST/Earth::BulgeRadius);  //direction of neutrino- for slac,  that's the direction of the beam
         //   interaction1->nnu = interaction1->nnu.RotateZ(fDetector->phi_bn);
@@ -1751,9 +1753,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // independent.
       interaction1->dnutries=interaction1->dtryingdirection*fDetector->dtryingposition;
 
-      // // for plotting aperture per ring radius from balloon
-      index_distance=(int)(fDetector->position().SurfaceDistance(interaction1->posnu, fDetector->getSurfaceUnderBalloon()) / (700000./(double)NBINS_DISTANCE));
-
       // where the neutrino enters the earth
       if (tautrigger==0){//did for cc-taus already,  do for all other particles
         interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
@@ -1915,7 +1914,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // Time to start assembling signal information...      
 
       // Get Polarization vector.  See Jackson,  Cherenkov section.
-      Vector n_pol = GetPolarization(interaction1->nnu, rayTracer.nrf_iceside[4], inu);
+      TVector3 n_pol = GetPolarization(interaction1->nnu, rayTracer.nrf_iceside[4], inu);
 
       if (settings1.FIRN){
 	// now rotate that polarization vector according to ray paths in firn and air.
@@ -1966,7 +1965,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // ALREADY DEALT WITH IN CASE OF ROUGHNESS
       if (!settings1.ROUGHNESS) {
 	// this is what was in ScaleVmMHz
-	const Position& posnu = whichray == direct ? interaction1->posnu : interaction1->posnu_down;
+	const GeoidModel::Position&posnu = whichray == direct ? interaction1->posnu : interaction1->posnu_down;
 	double r_meters = fDetector->position().Distance(rayTracer.rfexit[2]) + rayTracer.rfexit[2].Distance(posnu);
 	vmmhz_max = vmmhz1m_fresneledtwice/r_meters;
       }
@@ -2301,8 +2300,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	      int event_e_coord=0, event_n_coord=0;
 	      float event_e, event_n;
 	      //here are the longitude and altitude which Amy defined
-	      int_lon = interaction1->posnu.Lon(); // what latitude,  longitude does interaction occur at
-	      int_lat = interaction1->posnu.Lat();
+	      int_lon = interaction1->posnu.Longitude(); // what latitude,  longitude does interaction occur at
+	      int_lat = interaction1->posnu.Latitude();
 	      antarctica->IceLonLattoEN(int_lon, int_lat, event_e_coord, event_n_coord);
 	      event_e=float(antarctica->xLowerLeft_ice+event_e_coord*antarctica->cellSize)/1000.;
 	      event_n=float(-1*(antarctica->yLowerLeft_ice+(antarctica->cellSize*event_n_coord)))/1000.;
@@ -2327,13 +2326,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	    // ro.rec_diff3.Fill((rec_efield_array[3]-true_efield_array[3])/true_efield_array[3], fNeutrinoPath->weight);
 	    // ro.recsum_diff.Fill((rec_efield_array[0]+rec_efield_array[1]+rec_efield_array[2]+rec_efield_array[3]-true_efield)/true_efield, fNeutrinoPath->weight);
 
-	    sourceLon = rayTracer.rfexit[2].Lon() - 180;
-	    sourceLat = rayTracer.rfexit[2].Lat() - 90;
-	    sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon+180, sourceLat+90);
+	    sourceLon = rayTracer.rfexit[2].Longitude();
+	    sourceLat = rayTracer.rfexit[2].Latitude();
+	    sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon, sourceLat);
 
 	    //Now put data in Vectors and Positions into arrays for output to the ROOT file.
 	    if (settings1.HIST && ro.finaltree.GetEntries()<settings1.HIST_MAX_ENTRIES) {
-	      Vector n_bn = fDetector->position().Unit();
+	      TVector3 n_bn = fDetector->position().Unit();
 	      for (int i=0;i<3;i++) {
 		nnu_array[i] = interaction1->nnu[i];
 		r_in_array[i] = interaction1->r_in[i];
@@ -2611,20 +2610,20 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int&
   //(pos)    posnu:               position of neutrino interaction
 
   int num_validscreenpoints = 0;
-  Position pos_current;
-  Vector vec_pos_current_to_balloon;
+  GeoidModel::Position pos_current;
+  TVector3 vec_pos_current_to_balloon;
 
-  Position pos_projectedImpactPoint;
-  Vector vec_localnormal;         //normalized, normal vector at projected ground point
-  Vector vec_nnu_to_impactPoint;  //normalized
-  Vector vec_inc_perp;            //normalized, vector perp. to incident and surface normal (out-of-inc place)
-  Vector vec_inc_parl;            //normalized, vector parl. to incident and surface normal (in-inc plane)
+  GeoidModel::Position pos_projectedImpactPoint;
+  TVector3 vec_localnormal;         //normalized, normal vector at projected ground point
+  TVector3 vec_nnu_to_impactPoint;  //normalized
+  TVector3 vec_inc_perp;            //normalized, vector perp. to incident and surface normal (out-of-inc place)
+  TVector3 vec_inc_parl;            //normalized, vector parl. to incident and surface normal (in-inc plane)
   double pol_perp_inc, pol_parl_inc;  //component of incident polarization
-  Vector vec_local_grnd_perp;     //normalized, vector perp. to transmitted and surface normal (out-of-trans place)
-  Vector vec_local_grnd_parl;     //normalized, vector parl. to transmitted and surface normal (in-trans plane)
+  TVector3 vec_local_grnd_perp;     //normalized, vector perp. to transmitted and surface normal (out-of-trans place)
+  TVector3 vec_local_grnd_parl;     //normalized, vector parl. to transmitted and surface normal (in-trans plane)
   double pol_perp_trans, pol_parl_trans;  //component of transmitted polarization
-  Vector vec_grndcomp2bln;
-  Vector vec_grndcomp2IP;
+  TVector3 vec_grndcomp2bln;
+  TVector3 vec_grndcomp2IP;
 
   double time_reference_specular, time_reference_local;
   double pathlength_local;        // set for each screen point
@@ -2639,8 +2638,8 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int&
   power_perp_polperp = power_parl_polperp = power_perp_polparl = power_parl_polparl = 0.;
   double fresnel_r, mag_r;
 
-  Vector npol_local_inc, npol_local_trans;
-  Vector temp_a;
+  TVector3 npol_local_inc, npol_local_trans;
+  TVector3 temp_a;
 
   double Emag_local;
   double taperfactor;
@@ -2655,10 +2654,10 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int&
   }
 
   double slopeyx, slopeyy, slopeyz, rtemp;
-  Vector ntemp2;
-  Vector xaxis = Vector(1.,0.,0.);
-  Vector yaxis = Vector(0.,1.,0.);
-  Vector zaxis = Vector(0.,0.,1.);
+  TVector3 ntemp2;
+  TVector3 xaxis = TVector3(1.,0.,0.);
+  TVector3 yaxis = TVector3(0.,1.,0.);
+  TVector3 zaxis = TVector3(0.,0.,1.);
 
   double basescreenedgelength = settings1.SCREENEDGELENGTH;
   double grd_stepsize = settings1.SCREENSTEPSIZE;
@@ -2697,8 +2696,7 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int&
       tcoeff_perp_polparl = tcoeff_parl_polparl = 0.;
       tcoeff_perp_polperp = tcoeff_parl_polperp = 0.;
       pos_projectedImpactPoint = panel1->GetPosition(ii, jj);        // this gets the new screen position
-      vec_pos_current_to_balloon = Vector( fDetector->position()[0] - pos_projectedImpactPoint[0], fDetector->position()[1] - pos_projectedImpactPoint[1], fDetector->position()[2] - pos_projectedImpactPoint[2] );
-
+      vec_pos_current_to_balloon = fDetector->position() - pos_projectedImpactPoint;
       // local angles of transmission and incidence in their respective planes
       vec_localnormal = antarctica->GetSurfaceNormal(pos_projectedImpactPoint).Unit();
       if (settings1.SLOPEY) {
@@ -2706,14 +2704,14 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int&
 	slopeyy=ray1->slopeyy;
 	slopeyz=ray1->slopeyz;
 	ntemp2 = vec_localnormal + slopeyx*xaxis + slopeyy*yaxis + slopeyz*zaxis;
-	ntemp2 = ntemp2 / ntemp2.Mag();
+	ntemp2 = ntemp2.Unit();
 	rtemp= ntemp2.Dot(vec_localnormal);
 	if (rtemp<=1) {
 	  vec_localnormal = ntemp2;
 	}//if
       }//end local slopeyness
       //cerr<<inu<<"  "<<pos_projectedImpactPoint<<std::endl;
-      vec_nnu_to_impactPoint =  Vector( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
+      vec_nnu_to_impactPoint =  TVector3( pos_projectedImpactPoint[0]-interaction1->posnu[0], pos_projectedImpactPoint[1]-interaction1->posnu[1], pos_projectedImpactPoint[2]-interaction1->posnu[2] ).Unit();
 
       vec_grndcomp2IP = (vec_nnu_to_impactPoint - (vec_nnu_to_impactPoint.Dot(vec_localnormal)*vec_localnormal)).Unit();
       vec_grndcomp2bln = (vec_pos_current_to_balloon - (vec_pos_current_to_balloon.Dot(vec_localnormal)*vec_localnormal)).Unit();
@@ -2725,7 +2723,7 @@ void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int&
 	azimuth_local = 0.;
       }
       //cerr<<inu<<":  "<<jj<<"  "<<vec_grndcomp2IP<<" : "<<vec_grndcomp2bln<<" : "<<azimuth_local*180./PI<<std::endl;
-      theta_local = vec_localnormal.Angle( (const Vector)vec_pos_current_to_balloon ); //[rad]
+      theta_local = vec_localnormal.Angle( (const TVector3)vec_pos_current_to_balloon ); //[rad]
       theta_0_local = vec_localnormal.Angle(vec_nnu_to_impactPoint); //[rad]
       //cerr<<inu<<"  "<<ii<<"  "<<jj<<";  "<<panel1->GetCentralPoint()<<" : "<<  pos_projectedImpactPoint<<" : "<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<< azimuth_local*180./PI<< std::endl;
       //cerr<< panel1->GetCentralPoint() - pos_projectedImpactPoint<<std::endl;

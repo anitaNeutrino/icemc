@@ -1,11 +1,11 @@
 #include "TF1.h"
 #include "TFile.h"
 #include <array>
-#include "position.hh"
+#include "GeoidModel.h"
 #include "Constants.h"
 #include "Settings.h"
 #include "Tools.h"
-#include "vector.hh"
+#include "TVector3.h"
 #include "Roughness.h"
 #include "anita.hh"
 #include "balloon.hh"

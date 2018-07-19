@@ -6,8 +6,8 @@
 //class Balloon:
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #include "anita.hh"
-#include "position.hh"
-#include "vector.hh"
+#include "GeoidModel.h"
+#include "TVector3.h"
 
 #include <iostream>
 
@@ -48,7 +48,7 @@ namespace icemc {
     virtual ~Balloon() {;}
 
     /**
-     * Position of spot under balloon
+     * GeoidModel::Position of spot under balloon
      *
      * @param  antarctica1 -
      * @param  settings1 -
@@ -85,9 +85,9 @@ namespace icemc {
     // void GetAntennaOrientation(const Settings *settings1,
     // 			       Anita *anita1, 
     // 			       int ilayer, int ifold, 
-    // 			       Vector& n_eplane,
-    // 			       Vector& n_hplane, 
-    // 			       Vector& n_normal) const;
+    // 			       TVector3& n_eplane,
+    // 			       TVector3& n_hplane, 
+    // 			       TVector3& n_normal) const;
 
     
 
@@ -153,7 +153,7 @@ namespace icemc {
      * @param  ant_pos -
      * @return returns vector
      */
-    Vector RotatePayload(Vector ant_pos) const;
+    TVector3 RotatePayload(TVector3 ant_pos) const;
     
     ///< This function UN-rotates the payload
     /**
@@ -163,10 +163,10 @@ namespace icemc {
      * @param  ant_pos -
      * @return returns vector
      */
-    Vector unRotatePayload(Vector ant_pos) const;
+    TVector3 unRotatePayload(TVector3 ant_pos) const;
 
     inline FlightPath whichPath() const {return WHICHPATH;}
-    inline const Position& position() const {return r_bn;}
+    inline const GeoidModel::Position& position() const {return r_bn;}
     unsigned int realTime() const {return realTime_flightdata;}
     inline double getLatitude() const {return latitude;}
     inline double getLongitude() const {return longitude;}
@@ -197,7 +197,7 @@ namespace icemc {
     double phi_bn;                                              ///< theta,phi of balloon wrt south pole
     double altitude_bn;
     double dtryingposition;                                     ///< weighting factor: how many equivalent tries each neutrino counts for after having reduced possible interaction positions to within horizon
-    Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; ///< position of antenna boresights
+    GeoidModel::Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; ///< position of antenna boresights
     std::vector<double> latitude_bn_anitalite;                  ///< latitude at times along flightpath, equally distributed among gps data. This is filled with anita or anita-lite data, depending on which the user specifies
     std::vector<double> longitude_bn_anitalite;                 ///< same for longitude
     std::vector<double> altitude_bn_anitalite;                  ///< same for altitude
@@ -227,18 +227,8 @@ namespace icemc {
     int RANDOMIZE_BN_ORIENTATION;                               ///< 0=fixed balloon orientation,1=randomized
     float powerthresh[9][32];                                   ///< power threshold in Watts
     float meanp[9][32];                                         ///< mean power in Watts
-    Position r_bn;                                              ///< position of balloon
-    double horizcoord_bn;                                       ///< x component of balloon position
-    double vertcoord_bn;                                        ///< y component of balloon position
-
-    // Vector x_axis_rot;
-    // Vector y_axis_rot;
-    // Vector z_axis_rot;
-    // Vector n_bn;                                                ///< normalized r_bn
-    Vector n_east;                                              ///< east, as seen from the balloon position
-    Vector n_north;                                             ///< north, as seen from the balloon position
-
-    Position r_bn_shadow;                                       ///< position of the balloon projected on earth surface - point just below balloon at surface of the earth
+    GeoidModel::Position r_bn;                                              ///< position of balloon
+    GeoidModel::Position r_bn_shadow;                                       ///< position of the balloon projected on earth surface - point just below balloon at surface of the earth
 
     int NPOINTS_MIN;                                            ///< min and max index for gps positions we want to include in the simulation (to exclude launch and fall).  These are set in ReadFlight
     int NPOINTS_MAX;

@@ -7,8 +7,8 @@
 #include "Earth.h"
 #include "Antarctica.h"
 #include "AskaryanFreqsGenerator.h"
-#include "vector.hh"
-#include "position.hh"
+#include "TVector3.h"
+#include "GeoidModel.h"
 #include "anita.hh"
 #include "RayTracer.h"
 
@@ -59,7 +59,7 @@ void icemc::RayTracer::PrintAnglesOfIncidence() const {
 
 
 
-void icemc::RayTracer::initGuess(const Position& nuInteraction, const Position& detector) {  
+void icemc::RayTracer::initGuess(const GeoidModel::Position&nuInteraction, const GeoidModel::Position&detector) {  
 
   // to seed the ray tracing, we come up with an obviously wrong initial guess
   // first, we assume that the direction of the RF in the ice goes vertically upwards...
@@ -108,29 +108,29 @@ void icemc::RayTracer::initGuess(const Position& nuInteraction, const Position& 
 void icemc::RayTracer::Initialize() {
   
   for (int i = 0; i < numTries; i++) {
-    n_exit2bn[i]   = Vector(0.,0.,0.); // normal vector in direction of exit point to balloon - 5 iterations, 3 directions for eac
-    nrf_iceside[i] = Vector(0.,0.,0.);  // direction of rf [tries][3d]
-    rfexit_db[i]   = Vector(0.,0.,0.);
-    rfexit[i]      = Vector(0.,0.,0.); // position where the rf exits the ice- 5 iterations, 3 dimensions eac
+    n_exit2bn[i]   = TVector3(0.,0.,0.); // normal vector in direction of exit point to balloon - 5 iterations, 3 directions for eac
+    nrf_iceside[i] = TVector3(0.,0.,0.);  // direction of rf [tries][3d]
+    rfexit_db[i]   = TVector3(0.,0.,0.);
+    rfexit[i]      = TVector3(0.,0.,0.); // position where the rf exits the ice- 5 iterations, 3 dimensions eac
     
     for (int j=0;j<Anita::NPHI_MAX;j++) {
       for (int k=0;k<Anita::NLAYERS_MAX;k++) {
-	n_exit2bn_eachboresight[i][k][j]=Vector(0.,0.,0.); // normal vector in direction of exit point to each antenna boresight - 5 iterations
-	nrf_iceside_eachboresight[i][k][j]=Vector(0.,0.,0.);  // direction of rf [tries][3d]
+	n_exit2bn_eachboresight[i][k][j]=TVector3(0.,0.,0.); // normal vector in direction of exit point to each antenna boresight - 5 iterations
+	nrf_iceside_eachboresight[i][k][j]=TVector3(0.,0.,0.);  // direction of rf [tries][3d]
   	
-	rfexit_eachboresight[i][k][j]=Vector(0.,0.,0.);
+	rfexit_eachboresight[i][k][j]=TVector3(0.,0.,0.);
       }
     }
     
   }
 
-  nsurf_rfexit = Vector(0.,0.,0.); // normal of the surface at the place where the rf leaves
-  nsurf_rfexit_db = Vector(0.,0.,0.);
+  nsurf_rfexit = TVector3(0.,0.,0.); // normal of the surface at the place where the rf leaves
+  nsurf_rfexit_db = TVector3(0.,0.,0.);
 }
 
 
-void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int whichray, Position posnu, Position posnu_down, Position r_bn,
-				 Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int whichtry, const Antarctica *antarctica, bool debug){
+void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int whichray, GeoidModel::Position posnu, GeoidModel::Position posnu_down, GeoidModel::Position r_bn,
+				 GeoidModel::Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int whichtry, const Antarctica *antarctica, bool debug){
 
 
 
@@ -183,21 +183,23 @@ void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int w
 //###########
 // icemc::RayTracer::WhereDoesItLeave() is defined in ray.hh since it is a statis member function // MS 2/1/2017
 
-int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Position rfexit_temp, Vector posnu, const Antarctica *antarctica, double &slopeyangle, int whichtry){
+int icemc::RayTracer::RandomizeSurface(const Settings *settings1, GeoidModel::Position rfexit_temp, TVector3 posnu, const Antarctica *antarctica, double &slopeyangle, int whichtry){
 
   double howmuch=settings1->SLOPEYSIZE;
-  Position nsurf_rfexit_temp;
+  GeoidModel::Position nsurf_rfexit_temp;
   
   // rotate the surface normal according to the local slope.
   if (!settings1->SLAC){
     nsurf_rfexit_temp = antarctica->GetSurfaceNormal(rfexit_temp); // find the normal to the surface taking into account the tilt from the differential heights between neighboring bins
   }
   else if (settings1->SLAC) { // if we are simulating the slac test, rotate the surface by 10 degrees away from the south pole
-    Vector zaxis(0.,0.,1.);
-    nsurf_rfexit_temp=(rfexit_temp.Unit()).Rotate(-settings1->SLACSLOPE*constants::RADDEG,posnu.Cross(zaxis));
+    TVector3 zaxis(0.,0.,1.);
+    // nsurf_rfexit_temp=(rfexit_temp.Unit()).Rotate(-settings1->SLACSLOPE*constants::RADDEG,posnu.Cross(zaxis));
+    nsurf_rfexit_temp=rfexit_temp.Unit();
+    nsurf_rfexit_temp.Rotate(-settings1->SLACSLOPE*constants::RADDEG,posnu.Cross(zaxis));
   }
   
-  Position nsurf_rfexit_temp_copy=nsurf_rfexit_temp;
+  GeoidModel::Position nsurf_rfexit_temp_copy=nsurf_rfexit_temp;
   // tilt local surface based on slopeyness.
   if (settings1->SLOPEY) {
     
@@ -213,12 +215,12 @@ int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Position rfexi
       slopeyy=howmuch*gRandom->Gaus();
       slopeyz=howmuch*gRandom->Gaus();
     }
-    Vector ntemp2 = nsurf_rfexit_temp + slopeyx * xaxis
+    TVector3 ntemp2 = nsurf_rfexit_temp + slopeyx * xaxis
       + slopeyy * yaxis
       + slopeyz * zaxis;
     
-      
-    ntemp2 = ntemp2 / ntemp2.Mag();
+
+    ntemp2*=(1./ntemp2.Mag());
     
     double rtemp= ntemp2.Dot(nsurf_rfexit_temp);
     
@@ -233,14 +235,14 @@ int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Position rfexi
     if (settings1->DEBUG) {
       rtemp=nsurf_rfexit_temp.Mag(); 
       if (fabs(rtemp-1.0)>=0.01) {
-	std::cout << "error: nx,ny,nz_surf="<<nsurf_rfexit_temp<<std::endl;
+	// std::cout << "error: nx,ny,nz_surf="<<nsurf_rfexit_temp<<std::endl;
 	return 0;
       }//if
     }//if
 
     // to avoid FP errors, fudge the rare case of going out the poles
     if (fabs(nsurf_rfexit_temp[2])>=0.99999) {  // a hack
-      nsurf_rfexit_temp = Vector(sqrt(1.-0.99999*0.99999-nsurf_rfexit_temp[1]*nsurf_rfexit_temp[1]), nsurf_rfexit_temp[1], 0.99999);
+      nsurf_rfexit_temp = TVector3(sqrt(1.-0.99999*0.99999-nsurf_rfexit_temp[1]*nsurf_rfexit_temp[1]), nsurf_rfexit_temp[1], 0.99999);
     }//if
   }
   slopeyangle=constants::DEGRAD*acos(nsurf_rfexit_temp.Dot(nsurf_rfexit_temp_copy));
@@ -250,10 +252,10 @@ int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Position rfexi
 }//RandomizeSurface
 
 
-// int icemc::RayTracer::GetSurfaceNormal(Antarctica *antarctica,Vector posnu,Position *rfexit) {
-int icemc::RayTracer::GetSurfaceNormal(const Settings *settings1,const Antarctica *antarctica,Vector posnu,double &slopeyangle,int whichtry){
+// int icemc::RayTracer::GetSurfaceNormal(Antarctica *antarctica,TVector3 posnu,GeoidModel::Position *rfexit) {
+int icemc::RayTracer::GetSurfaceNormal(const Settings *settings1,const Antarctica *antarctica,TVector3 posnu,double &slopeyangle,int whichtry){
 
-  Position rfexit_temp;
+  GeoidModel::Position rfexit_temp;
 
   rfexit_temp=rfexit[whichtry];
 
@@ -368,11 +370,11 @@ int icemc::RayTracer::TraceRay(const Settings *settings1,Anita *anita1,int iter,
 }
 
 
-int icemc::RayTracer::GetRayIceSide(const Vector &n_exit2bn,
-				    const Vector &nsurf_rfexit,
+int icemc::RayTracer::GetRayIceSide(const TVector3 &n_exit2bn,
+				    const TVector3 &nsurf_rfexit,
 				    double nexit,
 				    double nenter, 
-				    Vector &nrf2_iceside) const {
+				    TVector3 &nrf2_iceside) const {
 
   // this function performs snell's law in three dimensions
 
@@ -473,21 +475,21 @@ TCanvas* icemc::RayTracer::testRefractiveBoundary(double n1, double n2) {
   t2->SetBit(kCanDelete);  
   t2->Draw();
 
-  const Vector normal(0, 0, 1);
+  const TVector3 normal(0, 0, 1);
   for(int theta_i_Deg = 1; theta_i_Deg <= 90 ; theta_i_Deg++){
 
     double thetaRad = TMath::DegToRad()*theta_i_Deg;
     double x = sin(thetaRad);
     double y = 0;
     double z = cos(thetaRad);
-    const Vector incoming(x, y, z);
+    const TVector3 incoming(x, y, z);
 
     TGraph* grPath = new TGraph();
     grPath->SetPoint(0, -x, -z);
     grPath->SetPoint(1, 0, 0);
     
-    Vector outgoing = refractiveBoundary(incoming,  normal, n1, n2);    
-    grPath->SetPoint(2, outgoing.GetX(), outgoing.GetZ());
+    TVector3 outgoing = refractiveBoundary(incoming,  normal, n1, n2);    
+    grPath->SetPoint(2, outgoing.X(), outgoing.Z());
 
     double cosThetaOut = outgoing.Dot(normal);
     gr->SetPoint(gr->GetN(), theta_i_Deg, TMath::ACos(cosThetaOut)*TMath::RadToDeg());
@@ -506,7 +508,7 @@ TCanvas* icemc::RayTracer::testRefractiveBoundary(double n1, double n2) {
 
 
 
-icemc::Vector icemc::RayTracer::refractiveBoundary(const Vector& incoming, const Vector& surfaceNormal, double n_incoming, double n_outgoing, bool debug){
+TVector3 icemc::RayTracer::refractiveBoundary(const TVector3& incoming, const TVector3& surfaceNormal, double n_incoming, double n_outgoing, bool debug){
 
   // The conventions for the inputs are:
   // The incoming vector (need not be a unit) is assumed to end exactly on the surface, with orientation given by surfaceNormal (need not be unit).
@@ -516,16 +518,16 @@ icemc::Vector icemc::RayTracer::refractiveBoundary(const Vector& incoming, const
 
   // First, since there  are two possible directions for the surface normal,
   // let's make sure that the normal is aligned *with* the incoming ray
-  const Vector unitNormal = surfaceNormal.Dot(incoming) > 0 ? surfaceNormal.Unit() : -surfaceNormal.Unit();
+  const TVector3 unitNormal = surfaceNormal.Dot(incoming) > 0 ? surfaceNormal.Unit() : -surfaceNormal.Unit();
 
   // We only care about direction, so convert to unit vector to simplify calculations
-  const Vector incomingUnit = incoming.Unit();
+  const TVector3 incomingUnit = incoming.Unit();
 
   // By definition, the dot product gives the size of the component parallel to unitNormal
-  const Vector incomingPara = incomingUnit.Dot(unitNormal)*unitNormal;
+  const TVector3 incomingPara = incomingUnit.Dot(unitNormal)*unitNormal;
 
   // and the perpendicular is whatever's not parallel
-  const Vector incomingPerp = incomingUnit - incomingPara;
+  const TVector3 incomingPerp = incomingUnit - incomingPara;
 
   /**
    * n_outgoing
@@ -576,30 +578,30 @@ icemc::Vector icemc::RayTracer::refractiveBoundary(const Vector& incoming, const
 
 
     // make new unit vector, which means perpendicular(parallel) components are size of sin(cos) theta_outgoing
-    Vector refracted = cosThetaOutgoing*incomingPara.Unit() + sinThetaOutgoing*incomingPerp.Unit();
+    TVector3 refracted = cosThetaOutgoing*incomingPara.Unit() + sinThetaOutgoing*incomingPerp.Unit();
     return refracted.Unit();
   }
 }
 
 
-icemc::Vector icemc::RayTracer::toLocal(const Vector& v, bool translate) const {
+TVector3 icemc::RayTracer::toLocal(const TVector3& v, bool translate) const {
   // translate the earth centered vector, v, to our new local coordinate system
   int translationFactor = translate ? 1 : 0;
-  const Vector relativeToNewOrigin = v - translationFactor*fBalloonPos;
+  const TVector3 relativeToNewOrigin = v - translationFactor*fBalloonPos;
   double x = relativeToNewOrigin.Dot(fLocalX);
   double y = relativeToNewOrigin.Dot(fLocalY);
   double z = relativeToNewOrigin.Dot(fLocalZ);
-  return Vector(x, y, z);
+  return TVector3(x, y, z);
 }
 
-// icemc::Position icemc::RayTracer::nudgeSurface(const double* params) const {
-icemc::Position icemc::RayTracer::getSurfacePosition(const double* params) const {
+// GeoidModel::Position icemc::RayTracer::nudgeSurface(const double* params) const {
+GeoidModel::Position icemc::RayTracer::getSurfacePosition(const double* params) const {
 
   // so we pick a point shifted by deltaX, and deltaY from the start position
-  // Position surfacePos = fInteractionPos + params[0]*fLocalX + params[1]*fLocalY;
-  Position surfacePos = fBalloonPos + params[0]*fLocalX + params[1]*fLocalY;
-  double lon = surfacePos.Lon();
-  double lat = surfacePos.Lat();
+  // GeoidModel::Position surfacePos = fInteractionPos + params[0]*fLocalX + params[1]*fLocalY;
+  GeoidModel::Position surfacePos = fBalloonPos + params[0]*fLocalX + params[1]*fLocalY;
+  double lon = surfacePos.Longitude();
+  double lat = surfacePos.Latitude();
   surfacePos.SetLonLatAlt(lon, lat, fAntarctica->Surface(lon, lat));
 
   return surfacePos;
@@ -611,20 +613,20 @@ icemc::Position icemc::RayTracer::getSurfacePosition(const double* params) const
 double icemc::RayTracer::evalPath(const double* params) const {
 
   // position we're aiming for from the detector...
-  const Position surfacePos = getSurfacePosition(params);
+  const GeoidModel::Position surfacePos = getSurfacePosition(params);
 
   // Gives us this initial RF direction...
-  const Vector rfDir = (surfacePos - fBalloonPos).Unit();
+  const TVector3 rfDir = (surfacePos - fBalloonPos).Unit();
 
-  const Vector surfaceNormal = fAntarctica->GetSurfaceNormal(surfacePos);
-  // const Vector surfaceNormal = surfacePos.Unit();
+  const TVector3 surfaceNormal = fAntarctica->GetSurfaceNormal(surfacePos);
+  // const TVector3 surfaceNormal = surfacePos.Unit();
 
-  const Vector refractedRfDir = refractiveBoundary(rfDir, surfaceNormal, AskaryanFreqsGenerator::N_AIR, AskaryanFreqsGenerator::NICE, fDebug);
+  const TVector3 refractedRfDir = refractiveBoundary(rfDir, surfaceNormal, AskaryanFreqsGenerator::N_AIR, AskaryanFreqsGenerator::NICE, fDebug);
   const double dist = (surfacePos - fInteractionPos).Mag();
 
-  const Vector endPoint = surfacePos + refractedRfDir*dist;
+  const TVector3 endPoint = surfacePos + refractedRfDir*dist;
 
-  const Vector delta = (endPoint - fInteractionPos);
+  const TVector3 delta = (endPoint - fInteractionPos);
   double residual = delta.Mag();
 
   if(fDebug && fDoingMinimization){
@@ -653,7 +655,7 @@ double icemc::RayTracer::evalPath(const double* params) const {
 
 
 
-icemc::Vector icemc::RayTracer::findPathToDetector(const Position& rfStart, const Position& balloon, bool debug){
+TVector3 icemc::RayTracer::findPathToDetector(const GeoidModel::Position&rfStart, const GeoidModel::Position&balloon, bool debug){
   
   fInteractionPos = rfStart;
   fBalloonPos = balloon;
@@ -721,31 +723,31 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
     
   TFile* fTest= new TFile(fileName, "recreate");
  
-  const Vector toInteraction = toLocal(fInteractionPos);
-  const Vector toSurface = toLocal(fSurfacePos);
-  const Vector surfPlusRef = toLocal(fRefractedRfDir, false) + toSurface;
-  const Vector surfPlusNorm = 1000*toLocal(fSurfaceNormal, false) + toSurface;
+  const TVector3 toInteraction = toLocal(fInteractionPos);
+  const TVector3 toSurface = toLocal(fSurfacePos);
+  const TVector3 surfPlusRef = toLocal(fRefractedRfDir, false) + toSurface;
+  const TVector3 surfPlusNorm = 1000*toLocal(fSurfaceNormal, false) + toSurface;
   std::cout << "The dot product is " << fSurfaceNormal.Unit().Dot((fSurfacePos - fBalloonPos).Unit()) << std::endl;
   // std::cout << toSurface.Unit() << "\t" << toLocal(fRefractedRfDir, false) << std::endl;    
-  const Vector toEndPoint = toLocal(fEndPoint);
+  const TVector3 toEndPoint = toLocal(fEndPoint);
 
   TGraph* grInteractionTop = new TGraph();
-  grInteractionTop->SetPoint(grInteractionTop->GetN(), toInteraction.GetX(), toInteraction.GetY());
+  grInteractionTop->SetPoint(grInteractionTop->GetN(), toInteraction.X(), toInteraction.Y());
   grInteractionTop->SetName("grInteractionTop");
   grInteractionTop->Write();
   delete grInteractionTop;
 
   TGraph* grInteractionSide = new TGraph();
-  grInteractionSide->SetPoint(grInteractionSide->GetN(), toInteraction.GetX(), toInteraction.GetZ());
+  grInteractionSide->SetPoint(grInteractionSide->GetN(), toInteraction.X(), toInteraction.Z());
   grInteractionSide->SetName("grInteractionSide");
   grInteractionSide->Write();
   delete grInteractionSide;
     
   TGraph* grTopView = new TGraph();
   grTopView->SetPoint(0, 0, 0); // balloon at origin
-  grTopView->SetPoint(1, toSurface.GetX(), toSurface.GetY());
-  grTopView->SetPoint(2, surfPlusRef.GetX(), surfPlusRef.GetY());
-  grTopView->SetPoint(3, toEndPoint.GetX(), toEndPoint.GetY());
+  grTopView->SetPoint(1, toSurface.X(), toSurface.Y());
+  grTopView->SetPoint(2, surfPlusRef.X(), surfPlusRef.Y());
+  grTopView->SetPoint(3, toEndPoint.X(), toEndPoint.Y());
   grTopView->SetName("grTopView");
   grTopView->Write();
   delete grTopView;
@@ -756,24 +758,24 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
   }
 
   TGraph* grNormalTop = new TGraph();
-  grNormalTop->SetPoint(0, toSurface.GetX(), toSurface.GetY());
-  grNormalTop->SetPoint(1, surfPlusNorm.GetX(), surfPlusNorm.GetY());
+  grNormalTop->SetPoint(0, toSurface.X(), toSurface.Y());
+  grNormalTop->SetPoint(1, surfPlusNorm.X(), surfPlusNorm.Y());
   grNormalTop->SetName("grNormalTop");
   grNormalTop->Write();
   delete grNormalTop;
 
   TGraph* grNormalSide = new TGraph();
-  grNormalSide->SetPoint(0, toSurface.GetX(), toSurface.GetZ());
-  grNormalSide->SetPoint(1, surfPlusNorm.GetX(), surfPlusNorm.GetZ());
+  grNormalSide->SetPoint(0, toSurface.X(), toSurface.Z());
+  grNormalSide->SetPoint(1, surfPlusNorm.X(), surfPlusNorm.Z());
   grNormalSide->SetName("grNormalSide");
   grNormalSide->Write();
   delete grNormalSide;
 
   TGraph* grSideView = new TGraph();
   grSideView->SetPoint(0, 0, 0); // balloon at origin
-  grSideView->SetPoint(1, toSurface.GetX(), toSurface.GetZ());
-  grSideView->SetPoint(2, surfPlusRef.GetX(), surfPlusRef.GetZ());    
-  grSideView->SetPoint(3, toEndPoint.GetX(), toEndPoint.GetZ());
+  grSideView->SetPoint(1, toSurface.X(), toSurface.Z());
+  grSideView->SetPoint(2, surfPlusRef.X(), surfPlusRef.Z());    
+  grSideView->SetPoint(3, toEndPoint.X(), toEndPoint.Z());
   grSideView->SetName("grSideView");
   grSideView->Write();
   delete grSideView;
@@ -782,14 +784,14 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
   grSurface->SetName("grSurface");
   const int nPoints = 1000000;
   const int nExtra = nPoints/10;
-  const double localXDistToInteraction = toInteraction.GetX();
+  const double localXDistToInteraction = toInteraction.X();
   const double deltaX = localXDistToInteraction/nPoints;
 
   for(int d=-nExtra; d < nPoints+nExtra; d++){
     const std::array<double, 2> params {deltaX*d, 0};
-    const Vector v = getSurfacePosition(params.data());
-    const Vector vl = toLocal(v);
-    grSurface->SetPoint(grSurface->GetN(), vl.GetX(), vl.GetZ());
+    const TVector3 v = getSurfacePosition(params.data());
+    const TVector3 vl = toLocal(v);
+    grSurface->SetPoint(grSurface->GetN(), vl.X(), vl.Z());
   }
   grSurface->Write();    
   delete grSurface;
@@ -837,9 +839,9 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
 
 
 
-// int icemc::RayTracer::WhereDoesItLeave(const Position &rfStart, const Vector &rfDirectionUnit, const Antarctica *antarctica, Position &surfaceIntersection, bool debug){
+// int icemc::RayTracer::WhereDoesItLeave(const GeoidModel::Position &rfStart, const TVector3 &rfDirectionUnit, const Antarctica *antarctica, GeoidModel::Position &surfaceIntersection, bool debug){
 
-//   Position ray = rfStart;
+//   GeoidModel::Position ray = rfStart;
 
 //   double deltaRadius = antarctica->Surface(surfaceIntersection) - surfaceIntersection.Mag();
 //   int iter = 0;
@@ -884,7 +886,7 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
   // //to find the exit point at the surface of the Earth.wufan 
   // }
 
-int icemc::RayTracer::WhereDoesItLeave(const Position &rfStart, const Vector &rfDirectionUnit, const Antarctica *antarctica, Position &surfaceIntersection){  
+int icemc::RayTracer::WhereDoesItLeave(const GeoidModel::Position &rfStart, const TVector3 &rfDirectionUnit, const Antarctica *antarctica, GeoidModel::Position &surfaceIntersection){  
   
   double distance = 0; ///< How far along rfDirectionUnit (meters)
   double rfStartRadius = rfStart.Mag(); ///< Distance from center of earth to interaction (meters)
@@ -995,18 +997,18 @@ int icemc::RayTracer::WhereDoesItLeave(const Position &rfStart, const Vector &rf
 
 
 
-void icemc::RayTracer::makePlot(const char* name, const Antarctica* antarctica, const Position& nuInteraction,  const Vector& nuDirection, const Position& detector) const {
+void icemc::RayTracer::makePlot(const char* name, const Antarctica* antarctica, const GeoidModel::Position&nuInteraction,  const TVector3& nuDirection, const GeoidModel::Position&detector) const {
 
   // here we make some graphics to show what's going on...
   // everything of interest is on a plane between the detector and neutrino
   // want y axis of TGraphs to be radial outwards vector from nuInteraction
-  const Vector graphYHat = nuInteraction.Unit();
+  const TVector3 graphYHat = nuInteraction.Unit();
   
   // want x axis of TGraphs to be perpendicular to that y-axis in plane of interaction-to-detector...
   // which is a slightly more involved calculation
-  const Vector nuIntToDetUnit = (detector - nuInteraction).Unit(); // this vector lies in the plane of interest
-  const Vector planeVector = graphYHat.Cross(nuIntToDetUnit).Unit(); // so this vector is perpendicular to the plane of interest...
-  const Vector graphXHat = planeVector.Cross(graphYHat).Unit(); // so.. this vector is perpendicular to yhat in the plane of interest
+  const TVector3 nuIntToDetUnit = (detector - nuInteraction).Unit(); // this vector lies in the plane of interest
+  const TVector3 planeVector = graphYHat.Cross(nuIntToDetUnit).Unit(); // so this vector is perpendicular to the plane of interest...
+  const TVector3 graphXHat = planeVector.Cross(graphYHat).Unit(); // so.. this vector is perpendicular to yhat in the plane of interest
 
   const double nuIntToDetDist = (detector - nuInteraction).Mag();
   
@@ -1020,7 +1022,7 @@ void icemc::RayTracer::makePlot(const char* name, const Antarctica* antarctica, 
   double minY = -extraRange; // nuInteraction is at TGraph origin, units are meters, so start here
   
   for(int i=-100; i < nPointsSurf + 100; i++){
-    Position getSurfaceHere = nuInteraction + nuIntToDetUnit*i*stepSize;
+    GeoidModel::Position getSurfaceHere = nuInteraction + nuIntToDetUnit*i*stepSize;
     double surface = antarctica->Surface(getSurfaceHere);
     double surfaceRelativeToNewOrigin = surface - altitudeOfInteraction;
 
@@ -1075,7 +1077,7 @@ void icemc::RayTracer::makePlot(const char* name, const Antarctica* antarctica, 
       std::vector<double> x_iceside;
       std::vector<double> y_iceside;
 
-      Vector downwards = rfexit[i];
+      TVector3 downwards = rfexit[i];
       const double scaleFactorDownwards = 10;
       while((downwards - nuInteraction).Dot(graphYHat) > 0){
 
@@ -1104,7 +1106,7 @@ void icemc::RayTracer::makePlot(const char* name, const Antarctica* antarctica, 
       }
       gr.SetPoint(gr.GetN(), (rfexit[i] - nuInteraction).Dot(graphXHat), (rfexit[i] - nuInteraction).Dot(graphYHat));
 
-      Vector upwards = rfexit[i];
+      TVector3 upwards = rfexit[i];
       const double scaleFactorUpwards = 1000;
       while((upwards - detector).Dot(graphXHat) < 0){
 	upwards += scaleFactorUpwards*n_exit2bn[i];
@@ -1127,7 +1129,7 @@ void icemc::RayTracer::makePlot(const char* name, const Antarctica* antarctica, 
       gr.SetLineStyle(i+2);      
       gr.Draw("lsame");
 
-      const Vector anitaToRfExit = rfexit[i] - detector;
+      const TVector3 anitaToRfExit = rfexit[i] - detector;
       //  what's the angle between ANITA's position (vector from earth centre to ANITA), and a vector from ANITA to the RF interaction      
       const double trueTheta = detector.Angle(anitaToRfExit);
       // if the interaction was directly below ANITA, trueTheta would be 180 degrees

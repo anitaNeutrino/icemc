@@ -522,8 +522,8 @@ bool icemc::Seavey::freqAllowedByPassBands(double freqHz) const {
 
 
 
-icemc::Seavey::Seavey(const Vector& positionV, const Vector& positionH,
-		      const Vector& ePlane, const Vector& hPlane, const Vector& normal,
+icemc::Seavey::Seavey(const TVector3& positionV, const TVector3& positionH,
+		      const TVector3& ePlane, const TVector3& hPlane, const TVector3& normal,
 		      const Settings* settings, double refractiveIndexOfMedium) : // remove include if you move this
   fPositionV(positionV),
   fPositionH(positionH),
@@ -777,8 +777,8 @@ const icemc::FTPair& icemc::Seavey::get(Pol pol) const {
 
 
 
-void icemc::Seavey::GetEcompHcompkvector(const Vector& n_eplane, const Vector& n_hplane, const Vector& n_normal,
-					 const Vector n_exit2bn,
+void icemc::Seavey::GetEcompHcompkvector(const TVector3& n_eplane, const TVector3& n_hplane, const TVector3& n_normal,
+					 const TVector3 n_exit2bn,
 					 double& e_component_kvector, double& h_component_kvector, double& n_component_kvector) {
 
   // find component along e-plane for the purpose of finding hit angles, that is, in direction of k vector, direction of radio wave)
@@ -792,7 +792,7 @@ void icemc::Seavey::GetEcompHcompkvector(const Vector& n_eplane, const Vector& n
 
 
 
-void icemc::Seavey::GetEcompHcompEvector(const Vector& n_eplane, const Vector& n_hplane, const Vector& n_pol,
+void icemc::Seavey::GetEcompHcompEvector(const TVector3& n_eplane, const TVector3& n_hplane, const TVector3& n_pol,
 					 double& e_component, double& h_component, double& n_component) {
 
   // find component along e-plane in direction of polarization, that is in direction of the E field   
@@ -830,7 +830,7 @@ void icemc::Seavey::GetHitAngles(double e_component_kvector, double h_component_
 }
 
 
-void icemc::Seavey::updatePosition(const Position& position, double heading, double pitch, double roll){
+void icemc::Seavey::updatePosition(const GeoidModel::Position& position, double heading, double pitch, double roll){
 
   std::vector<VectorPair*> forRotation {&fPositionV, &fPositionH, &fEPlane,  &fHPlane,  &fNormal};
 
@@ -845,26 +845,26 @@ void icemc::Seavey::updatePosition(const Position& position, double heading, dou
 
     vp->global = vp->payload;
 
-    const Vector zaxis(0.,0.,-1.);
-    Vector xaxis(1.,0.,0.);  // roll axis
-    Vector yaxis(0.,-1.,0.); // pitch axis for positive rotation to the clockwise of roll
+    const TVector3 zaxis(0.,0.,-1.);
+    TVector3 xaxis(1.,0.,0.);  // roll axis
+    TVector3 yaxis(0.,-1.,0.); // pitch axis for positive rotation to the clockwise of roll
 
     // do heading...
-    vp->global = vp->global.Rotate(heading*constants::RADDEG,zaxis);
-    xaxis = xaxis.Rotate(heading*constants::RADDEG,zaxis);
-    yaxis = yaxis.Rotate(heading*constants::RADDEG,zaxis);
+    vp->global.Rotate(heading*constants::RADDEG,zaxis);
+    xaxis.Rotate(heading*constants::RADDEG,zaxis);
+    yaxis.Rotate(heading*constants::RADDEG,zaxis);
 
     // do pitch...
-    vp->global = vp->global.Rotate(pitch*constants::RADDEG,yaxis);
-    xaxis = xaxis.Rotate(pitch*constants::RADDEG,yaxis);
+    vp->global.Rotate(pitch*constants::RADDEG,yaxis);
+    xaxis.Rotate(pitch*constants::RADDEG,yaxis);
 
     // do roll...
-    vp->global = vp->global.Rotate(roll*constants::RADDEG,xaxis);//roll and pitch
+    vp->global.Rotate(roll*constants::RADDEG,xaxis);//roll and pitch
 
     ////now place balloon at proper lat and lon
     // BalloonPhi =latitude*constants::RADDEG;
-    vp->global = vp->global.RotateY(BalloonTheta);
-    vp->global = vp->global.RotateZ(BalloonPhi);    
+    vp->global.RotateY(BalloonTheta);
+    vp->global.RotateZ(BalloonPhi);    
   }
   
   // finally translate to payload position

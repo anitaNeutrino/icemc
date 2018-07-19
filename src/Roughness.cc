@@ -7,8 +7,8 @@
 #include <string>
 #include <sstream>
 
-#include "vector.hh"
-#include "position.hh"
+#include "TVector3.h"
+#include "GeoidModel.h"
 #include "Roughness.h"
 #include "Constants.h"
 #include "TF2.h"

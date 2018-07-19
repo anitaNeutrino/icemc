@@ -6,7 +6,7 @@
 
 #include "rx.h"
 #include <array>
-#include "vector.hh"
+#include "TVector3.h"
 
 #ifdef ANITA_UTIL_EXISTS
 #include "FFTtools.h"
@@ -27,7 +27,6 @@ using std::array;
 namespace icemc {
   
   class RX;
-  class Position;
   class Balloon;
   class Antarctica;
   class Settings;
@@ -64,7 +63,7 @@ namespace icemc {
 
     void labAttn(double *vhz);
     void SetNoise(const Settings *settings1, Balloon *bn1, const Antarctica *antarctica);
-    void calculate_antenna_positions(const Settings *settings1,double pitch, double roll, double phi_spin,Vector n_north,Vector n_east);
+    void calculate_antenna_positions(const Settings *settings1,double pitch, double roll, double phi_spin,TVector3 n_north,TVector3 n_east);
 
     void saveGainsPlot(const std::string& fileName);
     
@@ -81,12 +80,12 @@ namespace icemc {
     static const int NLAYERS_MAX=5;                             ///< max number of layers (in smex design, it's 4)
     static const int NTRIGGERLAYERS_MAX=3;
     static const int NPHI_MAX=400;                              ///< max number of antennas around in phi (in smex, 16)
-    Vector ANTENNA_POSITION_START[NPOL][NLAYERS_MAX][NPHI_MAX]; ///< antenna positions from Kurt's measurements
+    TVector3 ANTENNA_POSITION_START[NPOL][NLAYERS_MAX][NPHI_MAX]; ///< antenna positions from Kurt's measurements
     double ANTENNA_DOWN[NLAYERS_MAX][NPHI_MAX];                 ///< down angles of antennas from Kurt's measurements
     double SIMON_DELTA_R[NLAYERS_MAX][NPHI_MAX];                ///< measurements by Simon used in analysis ANITA-2
     double SIMON_DELTA_PHI[NLAYERS_MAX][NPHI_MAX];              ///< measurements by Simon used in analysis ANITA-2
 
-    Vector antenna_positions[NPOL][NLAYERS_MAX * NPHI_MAX];     ///< these are the antenna positions in space in a coordinate system where x=north and y=west and the origin is at the center of the payload
+    TVector3 antenna_positions[NPOL][NLAYERS_MAX * NPHI_MAX];     ///< these are the antenna positions in space in a coordinate system where x=north and y=west and the origin is at the center of the payload
 
     int NRX_PHI[NLAYERS_MAX] = {0};                                   ///< number of antennas around in each layer. (radians)
     double PHI_EACHLAYER[NLAYERS_MAX][NPHI_MAX] = {{0}};                ///< phi of the center of each antenna on each layer
@@ -365,10 +364,10 @@ namespace icemc {
 
     void myconvlv(double *timedomain_forconvl,const int NFOUR,double *fdiode,double &maxdiodeconvl,double &onediodeconvl,double *power_noise,double *diodeconv);
 
-    // void GetArrivalTimes(const Vector& rf_direction,Balloon *bn1,const Settings *settings1);
-    // void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX]);
+    // void GetArrivalTimes(const TVector3& rf_direction,Balloon *bn1,const Settings *settings1);
+    // void GetArrivalTimesBoresights(const TVector3 rf_direction[NLAYERS_MAX][NPHI_MAX]);
 
-    // void GetArrivalTimesBoresights(const Vector rf_direction[NLAYERS_MAX][NPHI_MAX],Balloon *bn1, const Settings *settings1);
+    // void GetArrivalTimesBoresights(const TVector3 rf_direction[NLAYERS_MAX][NPHI_MAX],Balloon *bn1, const Settings *settings1);
 
     // int rx_minarrivaltime;
     // double arrival_times[2][NLAYERS_MAX*NPHI_MAX];
@@ -568,8 +567,8 @@ namespace icemc {
     double cwst_deg_phi;
     double cwst_actual_deg_theta;
     double cwst_actual_deg_phi;
-    Vector cwst_rf_direction;
-    Vector cwst_0th_sector_position;
+    TVector3 cwst_rf_direction;
+    TVector3 cwst_0th_sector_position;
     double cwst_timesteps[HALFNFOUR];
     RX cwst_RXs[48];
     RX cwst_aligned_wfms[9];

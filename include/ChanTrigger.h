@@ -6,7 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "TRandom3.h"
-#include "vector.hh"
+#include "TVector3.h"
 #include "anita.hh"
 
 // using std::vector;
@@ -91,11 +91,11 @@ namespace icemc {
      * @param  bn1 :: Balloon - balloon object
      * @param  panel1 :: Screen - screen object
      * @param  ant :: int- antenna number
-     * @param  n_eplane :: Vector 
-     * @param  n_hplane :: Vector 
+     * @param  n_eplane :: TVector3 
+     * @param  n_hplane :: TVector3 
      * @param  n_normal :: Vector
      */  
-    void ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal);
+    void ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, TVector3 &n_eplane, TVector3 &n_hplane, TVector3 &n_normal);
 
     //! Apply trigger path
     /**

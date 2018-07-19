@@ -2,8 +2,8 @@
 #include <array>
 #include <iostream>
 #include <fstream>
-#include "vector.hh"
-#include "position.hh"
+#include "TVector3.h"
+#include "GeoidModel.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TGraph.h"
@@ -793,7 +793,7 @@ void icemc::ChanTrigger::readInSeavey(const Settings* settings1, const Seavey* s
 }
 
 
-void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, Vector &n_eplane, Vector &n_hplane, Vector &n_normal) {
+void icemc::ChanTrigger::ApplyAntennaGain(const Settings *settings1, Anita *anita1, const Screen *panel1, int ant, TVector3 &n_eplane, TVector3 &n_hplane, TVector3 &n_normal) {
 
   e_component=0;
   h_component=0;

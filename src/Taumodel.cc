@@ -1,8 +1,6 @@
-#include "vector.hh"
+#include "TVector3.h"
 #include "TRandom3.h"
-#include "vector.hh"
-#include "position.hh"
-//#include "AskaryanFreqsGenerator.h"
+#include "GeoidModel.h"
 #include "Primaries.h"
 #include "secondaries.hh"
 #include "Antarctica.h"
@@ -88,16 +86,16 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
 			      // int& mantle_entered, // 1 or 0
 			      // int& core_entered){//add secondaries?
 
-  Vector chord3;///vector from earth_in to "interaction point". Sets the path direction
-  Vector nchord;///normalized chord3
+  TVector3 chord3;///vector from earth_in to "interaction point". Sets the path direction
+  TVector3 nchord;///normalized chord3
   
   
   /** Bring in useful variables from other classes */
   CurrentType current = interaction1->current;
-  const Position earth_in = interaction1->r_in;
+  const GeoidModel::Position earth_in = interaction1->r_in;
   double TauWeight = 0;
-  const Position r_enterice = interaction1->r_enterice;
-  const Position nuexitice = interaction1->nuexitice;
+  const GeoidModel::Position r_enterice = interaction1->r_enterice;
+  const GeoidModel::Position nuexitice = interaction1->nuexitice;
   int inu=4;
   //cout<<"inu is "<<inu<<"\n";
 
@@ -105,7 +103,7 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
  ///Find the chord, its length and its unit vector.
   chord3 = nuexitice - earth_in;///posnu-earth_in; 
   double Distance=chord3.Mag();
-  nchord = chord3 / Distance;///normalized chord3
+  nchord = chord3 * (1./Distance);///normalized chord3
   
   
   double Etaui,Etau_final;
@@ -129,7 +127,7 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
   double step=TMath::Min(len_int_kgm2/densities[1]/10,25.0); ///how big is the step size
   
   ///set up stuff to be used later.
-  Position posnunow;
+  GeoidModel::Position posnunow;
   double avgdensity=0;
   
   // double Etau_now;//=Etau_final;
@@ -145,7 +143,7 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
   
   double totaltaudistance=0;
   int totalnusteps=0;
-  Vector nchord1;
+  TVector3 nchord1;
   double enter_ice_mag = r_enterice.Distance(earth_in);///where the particle enters the ice.
   
   mydensityvector.clear();
@@ -170,7 +168,7 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
     startingz = Distance-totaltaudistance;///Set the starting position for tau. First possible interaction point for neutrino
     if(inu==7857){
        //cout<<"total nu steps is "<<totalnusteps<<"\n";
-       //cout<<"density_Vector is "<<mydensityvector[mydensityvector.size()-1]<<"\n";
+       //cout<<"density_TVector3 is "<<mydensityvector[mydensityvector.size()-1]<<"\n";
        //  cout<<"Distance is "<<Distance<<"\n";
        //cout<<"total nu steps is "<<totalnusteps<<"\n";
        //cout<<"vector size is "<<myenergyvector.size()<<"\n";
@@ -263,24 +261,24 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
 Get Density Vectors sets two density vectors. One has the density at each step along the path, the other has an average density from the starting point to the current step.
  */
 
-void icemc::Taumodel::GetDensityVectors(const Antarctica *antarctica1,Interaction *interaction1, Vector nchord, double step, double Distance, int &totalnusteps,int &crust_entered){
+void icemc::Taumodel::GetDensityVectors(const Antarctica *antarctica1,Interaction *interaction1, TVector3 nchord, double step, double Distance, int &totalnusteps,int &crust_entered){
    
-    Vector nchord1;
+    TVector3 nchord1;
     double avgdensity =0;//initilize average density.
     double density_total=0;//initilize running sum
     double density_now=0;//density at this step
-    Position posnunow;
-    Position postaunow;
+    GeoidModel::Position posnunow;
+    GeoidModel::Position postaunow;
     double altitude_tau;
     double lat_tau;
-    const Position earth_in = interaction1->r_in;
+    const GeoidModel::Position earth_in = interaction1->r_in;
     ofstream myNewFile;
     
    
   for(double taudistance=0;taudistance<=Distance;taudistance+=step){
      nchord1=taudistance*nchord;
      postaunow=earth_in+nchord1;
-     lat_tau=postaunow.Lat();
+     lat_tau=postaunow.Latitude();
      altitude_tau = postaunow.Mag()-antarctica1->Geoid(lat_tau);
      density_now=antarctica1->GetDensity(altitude_tau,postaunow,crust_entered);
      mydensityvector.push_back(density_now);///filled with density at that step
@@ -295,7 +293,7 @@ void icemc::Taumodel::GetDensityVectors(const Antarctica *antarctica1,Interactio
 }//Get Density Vectors
 
 /**
-   Get Energy Vector sets the energy of tau particle at every step along the path. It starts from the final energy and works back towards the nuetrino interaction point.
+   Get Energy TVector3 sets the energy of tau particle at every step along the path. It starts from the final energy and works back towards the nuetrino interaction point.
  */
 void icemc::Taumodel::GetEnergyVector(double Etau_final, double step,int totalnusteps, int &totalsteps, double &totaltaudistance, double pnu){
   

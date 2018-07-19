@@ -11,12 +11,11 @@
 #include <math.h>
 #include <vector>
 
-#include "vector.hh"
-#include "position.hh"
+#include "TVector3.h"
+#include "GeoidModel.h"
 
 
 namespace icemc{
-  class Position;
   class Detector;
   class ANITA;
   class Settings;
@@ -25,12 +24,12 @@ namespace icemc{
   class Screen {
   private:
     double fedgeLength;               ///< the full length of one side
-    Position fcentralPoint;           ///< coordinates of screen center
+    GeoidModel::Position fcentralPoint;           ///< coordinates of screen center
     double fcosineProjectionFactor;   ///< cosine projection factor of the screen onto the ground, corrects for the long extension so sampling is faster; cos(angle between local normal at RF exit and vector to balloon)
   
-    Vector fnormal;                   ///< screen orientation, '+' = pointing back to balloon
-    Vector funit_x;                   ///< X unit vector in screen (parallel to ground surface, perp. to screen normal)
-    Vector funit_y;                   ///< Y unit vector in screen (~ perp. to ground surface, perp. to screen normal)
+    TVector3 fnormal;                   ///< screen orientation, '+' = pointing back to balloon
+    TVector3 funit_x;                   ///< X unit vector in screen (parallel to ground surface, perp. to screen normal)
+    TVector3 funit_y;                   ///< Y unit vector in screen (~ perp. to ground surface, perp. to screen normal)
 
     int fNsamples;                    ///< number of samples in X-direction (and Y-, assuming symmetry)
     int fNvalidpoints;                ///< total number of points on the screen
@@ -39,9 +38,9 @@ namespace icemc{
     std::vector<double> fVmmhz0;      ///< container for vmmhz[0]
     std::vector<double> fViewangle;
     std::vector<double> fDelays;      ///< container for the relative propagation phase delays for each frequency and screen point; final size will be (anita::NFREQ *fNsamples) after the push_backs
-    std::vector<Vector> fVec2blns;    ///< container of 'vector to balloon'
-    std::vector<Vector> fPols;        ///< container of transmitted polarizations
-    std::vector<Position> fImpactPt;  ///< container of ground impact points
+    std::vector<TVector3> fVec2blns;    ///< container of 'vector to balloon'
+    std::vector<TVector3> fPols;        ///< container of transmitted polarizations
+    std::vector<GeoidModel::Position> fImpactPt;  ///< container of ground impact points
     std::vector<double> fWeight;      ///< container for weight of a screen point ( == area of screen element), normalized when used
     std::vector<double> fIncAngles;   ///< container for incidence angles
     std::vector<double> fTransAngles; ///< container for transmission angle
@@ -81,7 +80,7 @@ namespace icemc{
     /**
      * @param a - position vector
      */
-    void SetCentralPoint(Position a);
+    void SetCentralPoint(GeoidModel::Position a);
 
     //! Sets the projection factor of the screen relative to the specular RF exit point
     /**
@@ -99,19 +98,19 @@ namespace icemc{
     /**
      * @param a - normal vector
      */
-    void SetNormal(Vector a);
+    void SetNormal(TVector3 a);
 
     //! Sets an orientation vector of the screen
     /**
      * @param a - vector
      */
-    void SetUnitX(Vector a);
+    void SetUnitX(TVector3 a);
 
     //! Sets another orientation vector of the screen
     /**
      * @param a - vector
      */
-    void SetUnitY(Vector a);
+    void SetUnitY(TVector3 a);
 
     //! Gets the screen length
     /**
@@ -123,25 +122,25 @@ namespace icemc{
     /**
      * @return Position
      */
-    Position GetCentralPoint() const;
+    GeoidModel::Position GetCentralPoint() const;
 
     //! Gets the screen normal
     /**
      * @return Vector
      */
-    Vector GetNormal() const;
+    TVector3 GetNormal() const;
 
     //! Gets an orientation vector
     /**
      * @return Vector
      */
-    Vector GetUnitX() const;
+    TVector3 GetUnitX() const;
 
     //! Gets another orientation vector
     /**
      * @return Vector
      */
-    Vector GetUnitY() const;
+    TVector3 GetUnitY() const;
 
     //! Calculates the X index of the screen corresponding to the specified counter value
     /**
@@ -162,7 +161,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    Position GetPosition(int i, int j) const;
+    GeoidModel::Position GetPosition(int i, int j) const;
 
     //! Appends a Vmmhz value to the fVmmhz_freq array
     /**
@@ -232,40 +231,40 @@ namespace icemc{
     /**
      * @param v - Vector
      */
-    void AddVec2bln(Vector v);
+    void AddVec2bln(TVector3 v);
 
     //! Gets the to-balloon vector at the specified index
     /**
      * @param i - index
      * @return Vector
      */
-    Vector GetVec2bln(int i) const;
+    TVector3 GetVec2bln(int i) const;
 
     //! Appends a vector to the fPols array
     /**
      * @param v - Vector
      */
-    void AddPol(Vector v);
+    void AddPol(TVector3 v);
 
     //! Gets the polarization vector at the specified index
     /**
      * @param i - index
      * @return Vector
      */
-    Vector GetPol(int i) const;
+    TVector3 GetPol(int i) const;
 
     //! Appends a vector to the fImpactPt array
     /**
      * @param p - Position
      */
-    void AddImpactPt(Position p);
+    void AddImpactPt(GeoidModel::Position p);
 
     //! Gets the position at the specified index
     /**
      * @param i - index
      * @return Position
      */
-    Position GetImpactPt(int i) const;
+    GeoidModel::Position GetImpactPt(int i) const;
 
     //! Appends a weight value to the fWeight array
     /**

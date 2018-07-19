@@ -17,7 +17,7 @@
 #include "TRandom3.h"
 
 #include <vector>
-#include "vector.hh"
+#include "TVector3.h"
 
 class TH1F;
 
@@ -191,8 +191,8 @@ namespace icemc{
     void GetTauDecay(NuFlavor nuflavor, CurrentType current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);    
 
     void GetEMFracDB(double& emfrac_db, double& hadfrac_db) const;
-    double GetDBViewAngle(const icemc::Vector &refr, const icemc::Vector &nnu);
-    //void GetFirstBang(const Position &r_in, const icemc::Vector &nnu, Position &posnu, double len_int_kgm2, double d1, double &nuentrancelength);
+    double GetDBViewAngle(const TVector3 &refr, const TVector3 &nnu);
+    //void GetFirstBang(const GeoidModel::Position &r_in, const TVector3 &nnu, GeoidModel::Position &posnu, double len_int_kgm2, double d1, double &nuentrancelength);
     double NFBWeight(double ptau, double taulength);
 
     ShowerProperties GetEMFrac(const Settings *settings1,

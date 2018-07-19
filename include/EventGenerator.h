@@ -2,7 +2,7 @@
 #define ICEMC_EVENT_GENERATOR_H
 
 #include "anita.hh"
-#include "vector.hh"
+#include "TVector3.h"
 
 #include "Settings.h"
 
@@ -211,8 +211,8 @@ namespace icemc {
     double error_km3sr_nfb=0;
     double error_percent_increase_nfb=0;
 
-    Vector n_exit2bn_db[5];
-    Vector nrf_iceside_db[5];  // direction of rf [tries][3d]
+    TVector3 n_exit2bn_db[5];
+    TVector3 nrf_iceside_db[5];  // direction of rf [tries][3d]
     double n_exit_phi;  //phi angle of the ray from the surface to the balloon
     int count_dbexitsice=0;
 
@@ -391,10 +391,10 @@ namespace icemc {
     double sourceLat;
     double sourceMag;
 
-    // Vector n_nutraject_ontheground; //direction of the neutrino from the person standing on the ground just below the balloon.
-    // Vector n_pol; // direction of polarization
-    // Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
-    // Vector n_pol_db; // same,  double bangs
+    // TVector3 n_nutraject_ontheground; //direction of the neutrino from the person standing on the ground just below the balloon.
+    // TVector3 n_pol; // direction of polarization
+    // TVector3 n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
+    // TVector3 n_pol_db; // same,  double bangs
 
     // int l3trig[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
     // // For each trigger layer,  which "clumps" pass L2.  16 bit,  16 bit and 8 bit for layers 1 & 2 and nadirs
@@ -438,31 +438,31 @@ namespace icemc {
 
 
     
-    void   GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_exit2bn, double SMEARINCIDENTANGLE) const;
+    void   GetSmearedIncidentAngle(TVector3 &specular, TVector3 &nrf_iceside, TVector3 &n_exit2bn, double SMEARINCIDENTANGLE) const;
     double GetAirDistance(double altitude_bn,  double beta) const;
     void   GetAir(double *col1) const;
-    double GetThisAirColumn(const Settings*,  Position r_in,  Vector nnu, Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta) const;
+    double GetThisAirColumn(const Settings*,  GeoidModel::Position r_in,  TVector3 nnu, GeoidModel::Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta) const;
     double IsItDoubleBang(double exitlength,  double plepton) const;
-    int WhereIsSecondBang(const Position& posnu,  const Vector& nnu,  double nuexitlength,  double pnu,  Antarctica *antarctica1,
-			  const Position& r_bn, Position &posnu2,  Position &rfexit_db,  Vector &n_exit2bn_db) const;
+    int WhereIsSecondBang(const GeoidModel::Position& posnu,  const TVector3& nnu,  double nuexitlength,  double pnu,  Antarctica *antarctica1,
+			  const GeoidModel::Position& r_bn, GeoidModel::Position &posnu2,  GeoidModel::Position &rfexit_db,  TVector3 &n_exit2bn_db) const;
 
-    Vector GetPolarization(const Vector &nnu,  const Vector &nrf2_iceside, int inu) const;
-    void Attenuate(const Antarctica *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const Position &posnu) const ;
-    void Attenuate_down(Antarctica *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const Position &rfexit2,  const Position &posnu,  const Position &posnu_down) const ;
+    TVector3 GetPolarization(const TVector3 &nnu,  const TVector3 &nrf2_iceside, int inu) const;
+    void Attenuate(const Antarctica *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const GeoidModel::Position &posnu) const ;
+    void Attenuate_down(Antarctica *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const GeoidModel::Position &rfexit2,  const GeoidModel::Position &posnu,  const GeoidModel::Position &posnu_down) const ;
     void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight) const;
-    int GetRayIceSide(const Vector &n_exit2rx,  const Vector &nsurf_rfexit,  double nexit,  double nenter,  Vector &nrf2_iceside) const;
+    int GetRayIceSide(const TVector3 &n_exit2rx,  const TVector3 &nsurf_rfexit,  double nexit,  double nenter,  TVector3 &nrf2_iceside) const;
 
     // @todo constify... needs some love to constify
-    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const Vector &refr,  double deltheta_em,  double deltheta_had,  const ShowerProperties& sp,  double vmmhz1m_max,  double r_fromballoon,  RayTracer *ray1,  const AskaryanFreqsGenerator* askFreqGen,  Position posnu,  Anita *anita1,  Balloon *bn1,  Vector &nnu,  double& costhetanu,  double& theta_threshold) ;
-    void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield, double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag) const;
-    // void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const Vector &nsurf_rfexit,  const Vector &n_exit2rx,  Vector &n_pol,  const Vector &nrf2_iceside,  double efield,  const ShowerProperties& ,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag) const;    
-    double GetViewAngle(const Vector &nrf2_iceside,  const Vector &nnu) const;
-    int TIR(const Vector &n_surf,  const Vector &nrf2_iceside,  double N_IN,  double N_OUT) const;
+    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const TVector3 &refr,  double deltheta_em,  double deltheta_had,  const ShowerProperties& sp,  double vmmhz1m_max,  double r_fromballoon,  RayTracer *ray1,  const AskaryanFreqsGenerator* askFreqGen,  GeoidModel::Position posnu,  Anita *anita1,  Balloon *bn1,  TVector3 &nnu,  double& costhetanu,  double& theta_threshold) ;
+    void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const TVector3 &nsurf_rfexit,  const TVector3 &n_exit2rx,  TVector3 &n_pol,  const TVector3 &nrf2_iceside,  double efield, double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag) const;
+    // void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const TVector3 &nsurf_rfexit,  const TVector3 &n_exit2rx,  TVector3 &n_pol,  const TVector3 &nrf2_iceside,  double efield,  const ShowerProperties& ,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag) const;    
+    double GetViewAngle(const TVector3 &nrf2_iceside,  const TVector3 &nnu) const;
+    int TIR(const TVector3 &n_surf,  const TVector3 &nrf2_iceside,  double N_IN,  double N_OUT) const;
     // void IntegrateBands(Anita *anita1,  int k,  Screen *panel1,  double *freq,  double scalefactor,  double *sumsignal) const;
 
     // @todo constify... needs some love to constify
     void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, const AskaryanFreqsGenerator* askFreqGen,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
-    void WriteNeutrinoInfo(const int& inu, const Position&,  const Vector&,  const Position&,  double,  NuFlavor,  CurrentType,  double,  std::ofstream &nu_out) const;
+    void WriteNeutrinoInfo(const int& inu, const GeoidModel::Position&,  const TVector3&,  const GeoidModel::Position&,  double,  NuFlavor,  CurrentType,  double,  std::ofstream &nu_out) const;
 
     /** 
      * @brief Run the neutrino generation

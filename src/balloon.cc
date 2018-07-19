@@ -5,13 +5,13 @@
 #include "Settings.h"
 #include "Earth.h"
 #include "Antarctica.h"
-#include "vector.hh"
+#include "TVector3.h"
 #include "TF1.h"
 #include "TH1F.h"
 #include "TGraph.h"
 #include "TMath.h"
 
-#include "position.hh"
+#include "GeoidModel.h"
 #include "anita.hh"
 #include "RayTracer.h"
 
@@ -84,8 +84,6 @@ icemc::Balloon::Balloon(const Settings* settings)
   MAXHORIZON=800000.; // pick the interaction within this distance from the balloon so that it is within the horizon
   ibnposition=0;
   igps=0;
-  horizcoord_bn=0;    // x component of balloon position
-  vertcoord_bn=0;     // y component of balloon position
   BN_LONGITUDE=999;   // balloon longitude for fixed balloon location
   BN_LATITUDE=999;    // balloon latitude for fixed balloon location
   if(!settings){
@@ -140,8 +138,10 @@ void icemc::Balloon::SetDefaultBalloonPosition(const Antarctica *antarctica1) { 
     phi_bn = Earth::LongtoPhi_0isPrimeMeridian(BN_LONGITUDE_SETTING); //remember input of LongtoPhi is between -180 and 180
   }    
     
-  r_bn = Position(theta_bn,phi_bn); // direction of balloon- right now this is a unit vector
-    
+  r_bn = GeoidModel::Position(0, 0, 1);
+  r_bn.SetTheta(theta_bn);
+  r_bn.SetPhi(phi_bn); // direction of balloon- right now this is a unit vector
+
   if (BN_ALTITUDE==0){ // if the altitude isn't set in the input file
     altitude_bn=120000*12.*constants::CMINCH/100.; // 120000 ft.=36.6 m
   }
@@ -335,7 +335,9 @@ void icemc::Balloon::InitializeBalloon() {
 int icemc::Balloon::Getibnposition() {
   int ibnposition_tmp;
   if (WHICHPATH==FlightPath::Circle80DegreesSouth){
-    ibnposition_tmp = (int)(r_bn.Lon() / 2);
+    double lon = r_bn.Longitude();
+    if(lon < 0 ){lon += 360;}
+    ibnposition_tmp = (int)(lon/2);
   }
   else if (WHICHPATH==FlightPath::AnitaLite ||
 	   WHICHPATH==FlightPath::Anita1 ||
@@ -502,7 +504,10 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
   else if (WHICHPATH==FlightPath::Circle80DegreesSouth){ // pick random phi at 80 deg S
     phi_bn=gRandom->Rndm()*constants::TWOPI;
 		
-    r_bn = Position(theta_bn,phi_bn);
+    // r_bn = Position(theta_bn,phi_bn);
+    r_bn = GeoidModel::Position(0, 0, 1);
+    r_bn.SetTheta(theta_bn);
+    r_bn.SetPhi(phi_bn);    
     surface_under_balloon = antarctica1->Surface(r_bn);
 		
     r_bn_shadow = surface_under_balloon * r_bn.Unit();
@@ -519,7 +524,10 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
     igps=0;
     theta_bn=1.*constants::RADDEG; // 1deg
     phi_bn=1.*constants::RADDEG; // 1deg
-    r_bn=Position(theta_bn,phi_bn); // sets r_bn
+    // r_bn=Position(theta_bn,phi_bn); // sets r_bn
+    r_bn = GeoidModel::Position(0, 0, 1);
+    r_bn.SetTheta(theta_bn);
+    r_bn.SetPhi(phi_bn);    
     if (BN_ALTITUDE!=0){
       altitude_bn=BN_ALTITUDE*12.*constants::CMINCH/100.; // set the altitude of the balloon to be what you pick.  This isn't in time for CreateHorizons though!
     }
@@ -540,50 +548,38 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
   }
     
   // // normalized balloon position
-  Vector n_bn = r_bn.Unit();
-
-  // finding which direction is east under the balloon
-  n_east = Vector(sin(phi_bn), -1*cos(phi_bn), 0.);
+  TVector3 n_bn = r_bn.Unit();
     
   if (settings1->SLAC){
     icemcLog() << icemc::error << "SLAC settings are currently disabled!" << std::endl;
     // AdjustSlacBalloonPosition(inu); // move payload around like we did at slac
   }
-  // find position of each antenna boresight
    
-  // now finding north
-  n_north = n_bn.Cross(n_east);
-    
-  // these coordinates are for filling ntuples.
-  horizcoord_bn=r_bn[0]/1000.; //m to km
-  vertcoord_bn=r_bn[1]/1000.;
-
-  // calculate_antenna_positions(settings1,anita1);
-  // if (settings1->BORESIGHTS){
-  //   GetBoresights(settings1,anita1);
-  // }
 } // end PickBalloonPosition
 
 
 
 
 void icemc::Balloon::setr_bn(double latitude,double longitude) {
-    
-  // latitude is between -90 and 0.
-  // theta_bn measured from the SP and is between 0 and constants::PI/2.
-  theta_bn = (90+latitude)*constants::RADDEG;
 
-  // this is the payload's longitude, not the azimuth of the balloon like it sounds.
-  // longitude is between -180 to 180 with 0 at prime meridian
-  // phi is from 0 to 360 with 0 at +90 longitude
-  phi_bn = (-1*longitude+90.);
+  r_bn.SetLonLatAlt(longitude, latitude, 0);
+  r_bn = r_bn.Unit();
     
-  if (phi_bn<0){
-    phi_bn += 360.;
-  }    
-  phi_bn *= constants::RADDEG;
+  // // latitude is between -90 and 0.
+  // // theta_bn measured from the SP and is between 0 and constants::PI/2.
+  // theta_bn = (90+latitude)*constants::RADDEG;
 
-  r_bn = Position(theta_bn,phi_bn);  //r_bn is a unit vector pointing in the right direction
+  // // this is the payload's longitude, not the azimuth of the balloon like it sounds.
+  // // longitude is between -180 to 180 with 0 at prime meridian
+  // // phi is from 0 to 360 with 0 at +90 longitude
+  // phi_bn = (-1*longitude+90.);
+    
+  // if (phi_bn<0){
+  //   phi_bn += 360.;
+  // }    
+  // phi_bn *= constants::RADDEG;
+
+  // r_bn = Position(theta_bn,phi_bn);  //r_bn is a unit vector pointing in the right direction
 }
 
 

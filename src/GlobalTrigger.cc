@@ -2,8 +2,8 @@
 #include <array>
 #include <iostream>
 #include <fstream>
-#include "vector.hh"
-#include "position.hh"
+#include "TVector3.h"
+#include "GeoidModel.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TGraph.h"
@@ -1033,7 +1033,7 @@ void icemc::GlobalTrigger::PassesTriggerSummedPower(const Settings *settings1,An
     
     
   //  For whatever reason ANTENNA_POSITION_START[0] is a c-array, with large dimensions (5 by 400).
-  //  Most of these are initialized as a Vector with (0.,0.,1) for (x,y,z). These are non-existant antennas.
+  //  Most of these are initialized as a TVector3 with (0.,0.,1) for (x,y,z). These are non-existant antennas.
   //  
   //  Make sure that the antennas positions being copied are actually from a real antenna, and pay attention to the physical
   //  antenna layers 0 & 1, as they map to the 0th trigger layer.
@@ -1654,7 +1654,7 @@ void icemc::GlobalTrigger::L3Trigger(const Settings *settings1,Anita *anita1,int
     
  Finally, arrival times are shifted so that the first antenna triggered is at time 0.
 */
-// void icemc::GlobalTrigger::GetArrivalTimes(int inu, Anita *anita1, const Vector& rf_direction) {
+// void icemc::GlobalTrigger::GetArrivalTimes(int inu, Anita *anita1, const TVector3& rf_direction) {
     
     
 //     for (int antenna_index = 0; antenna_index < (anita1->number_all_antennas); antenna_index++) { //loop over layers on the payload

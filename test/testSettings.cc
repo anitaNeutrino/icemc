@@ -10,11 +10,9 @@
 
 #include "Constants.h"
 #include "Settings.h"
-#include "position.hh"
 
 #include "Earth.h"
 #include "Tools.h"
-#include "vector.hh"
 #include "RayTracer.h"
 #include "anita.hh"
 #include "balloon.hh"

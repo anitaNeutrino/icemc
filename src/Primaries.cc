@@ -1,7 +1,7 @@
 #include "TRandom3.h"
 #include "Constants.h"
-#include "vector.hh"
-#include "position.hh"
+#include "TVector3.h"
+#include "GeoidModel.h"
 #include "TF1.h"
 #include <fstream>
 #include <iostream>
@@ -296,7 +296,7 @@ void  icemc::Interaction::setNuFlavor(const Primaries *primary1, const Settings 
 }
 
 
-int icemc::Interaction::PickDownwardInteractionPoint(int ibnposition, const Position& r_bn, const Settings *settings1, const Antarctica *antarctica1, RayTracer *ray1) {
+int icemc::Interaction::PickDownwardInteractionPoint(int ibnposition, const GeoidModel::Position&r_bn, const Settings *settings1, const Antarctica *antarctica1, RayTracer *ray1) {
 
   if(settings1->UNBIASED_SELECTION==1){
     if(antarctica1->PickUnbiased(this)){ // pick neutrino direction and interaction point
@@ -313,7 +313,7 @@ int icemc::Interaction::PickDownwardInteractionPoint(int ibnposition, const Posi
     // If we require neutrinos from a particular position
     // we generate that cartesian position here
 
-    static Vector specific_position; 
+    static TVector3 specific_position; 
 
     if (settings1->SPECIFIC_NU_POSITION) 
       {

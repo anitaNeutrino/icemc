@@ -1,6 +1,6 @@
 #include <iostream>
 #include <array>
-#include "vector.hh"
+#include "TVector3.h"
 #include "Tools.h"
 #include "anita.hh"
 #include "SimulatedSignal.h"

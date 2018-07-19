@@ -13,7 +13,7 @@
 
 #include "Constants.h"
 #include "Settings.h"
-#include "vector.hh"
+#include "TVector3.h"
 
 #ifdef USE_HEALPIX
 #include "healpix_base.h"

@@ -1,9 +1,8 @@
 #include "AskaryanFreqsGenerator.h"
-#include "vector.hh"
+#include "TVector3.h"
 #include "TF1.h"
 #include "TRandom3.h"
-#include "vector.hh"
-#include "position.hh"
+#include "GeoidModel.h"
 #include "Constants.h"
 #include "anita.hh"
 

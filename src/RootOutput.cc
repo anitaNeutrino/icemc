@@ -11,7 +11,7 @@
 #include "Tools.h"
 #include "RayTracer.h"
 #include "screen.hh"
-#include "position.hh"
+#include "GeoidModel.h"
 #include "Antarctica.h"
 #include "IcemcLog.h"
 

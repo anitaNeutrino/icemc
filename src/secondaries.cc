@@ -1,8 +1,8 @@
-#include "vector.hh"
+#include "TVector3.h"
 #include "TRandom3.h"
 #include "Settings.h"
-#include "vector.hh"
-#include "position.hh"
+#include "TVector3.h"
+#include "GeoidModel.h"
 #include "Primaries.h"
 #include "secondaries.hh"
 #include "Antarctica.h"
@@ -576,9 +576,11 @@ void icemc::Secondaries::GetEMFracDB(double& emfrac_db, double& hadfrac_db) cons
 //GetDBViewAngle()
 //Gets the viewangle of the second bang
 
-double icemc::Secondaries::GetDBViewAngle(const Vector &refr, const Vector &nnu) {
+double icemc::Secondaries::GetDBViewAngle(const TVector3 &refr, const TVector3 &nnu) {
 
-  return ((nnu.ChangeCoord(refr)).Angle(z_axis));
+  /// @todo FIX CHANGECOORD
+  // return ((nnu.ChangeCoord(refr)).Angle(z_axis));
+  return nnu.Angle(TVector3(0, 0, 1));
 
 }//GetDBViewAngle
 
@@ -586,7 +588,7 @@ double icemc::Secondaries::GetDBViewAngle(const Vector &refr, const Vector &nnu)
 //GetFirstBang()
 //Gets the position of the first bang when the interaction point is the tau decay point
 
-//  void icemc::Secondaries::GetFirstBang(const Position &r_in, const Vector &nnu, Position &posnu, double len_int_kgm2, double chord, double &nuentrancelength) {
+//  void icemc::Secondaries::GetFirstBang(const GeoidModel::Position &r_in, const TVector3 &nnu, GeoidModel::Position &posnu, double len_int_kgm2, double chord, double &nuentrancelength) {
   
 //   double weightbang;
 //   double junk1;
@@ -595,7 +597,7 @@ double icemc::Secondaries::GetDBViewAngle(const Vector &refr, const Vector &nnu)
 //   int junk4,junk5,junk6;
 //   double myair=0;
 
-//   Vector r_out = r_in + chord*nnu;
+//   TVector3 r_out = r_in + chord*nnu;
 
 //   antarctica->Getchord(len_int_kgm2,r_in,r_out,
 // 		  junk1,weightbang,junk2,myair,junk3,junk4,junk5,junk6);

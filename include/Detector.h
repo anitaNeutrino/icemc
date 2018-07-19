@@ -1,8 +1,8 @@
 #ifndef ICEMC_DETECTOR_H
 #define ICEMC_DETECTOR_H
 
-#include "vector.hh" ///@todo use TVector or icemc::Vector?
-#include "position.hh" ///@todo use TVector or icemc::Vector?
+#include "TVector3.h"
+#include "GeoidModel.h"
 #include "FTPair.h"
 
 namespace icemc {
@@ -14,12 +14,12 @@ namespace icemc {
    */
   class PropagatingSignal {
   public:
-    PropagatingSignal (const FTPair& sig, const Vector& direction,  const Vector& pol)
+    PropagatingSignal (const FTPair& sig, const TVector3& direction,  const TVector3& pol)
       : waveform(sig), poynting(direction), polarization(pol) {;}
     
     icemc::FTPair waveform; ///< E-field (Volts/m) vs. time (seconds).
-    icemc::Vector poynting; /// < Direction of signal travel (in the icemc coordinate system).
-    icemc::Vector polarization; ///< Polarization vector (in the icemc coordinate system).
+    TVector3 poynting; /// < Direction of signal travel (in the icemc coordinate system).
+    TVector3 polarization; ///< Polarization vector (in the icemc coordinate system).
   };  
 
   
@@ -40,7 +40,7 @@ namespace icemc {
     /** 
      * @brief Where is the detector?
      */
-    virtual icemc::Position getCenterOfDetector(UInt_t unixTime = 0) = 0;
+    virtual GeoidModel::Position getCenterOfDetector(UInt_t unixTime = 0) = 0;
 
 
     /** 
@@ -58,7 +58,7 @@ namespace icemc {
      * 
      * @return a vector containing the position in the icemc coordinate system
      */
-    virtual icemc::Vector getPositionRX(int rx) const = 0;
+    virtual TVector3 getPositionRX(int rx) const = 0;
     
 
 

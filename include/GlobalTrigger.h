@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //class GlobalTrigger:
 ////////////////////////////////////////////////////////////////////////////////////////////////
-#include "vector.hh"
+#include "TVector3.h"
 
 namespace icemc{
 
@@ -19,7 +19,7 @@ namespace icemc{
   public:
     GlobalTrigger(const Settings *settings1,Anita *anita1);
     //  GlobalTrigger(const Settings *settings1,Anita *anita1,Balloon* bn1);
-    void GetArrivalTimes(int inu,Anita *anita1, const Vector &rf_direction);
+    void GetArrivalTimes(int inu,Anita *anita1, const TVector3 &rf_direction);
   
     // these are not really used now that we bin in frequency, but we keep them anyway.
   

@@ -2,7 +2,7 @@
 #ifndef ICEMC_SEAVEY_H
 #define ICEMC_SEAVEY_H
 
-#include "vector.hh"
+#include "TVector3.h"
 #include "Detector.h" // for PropagatingSignal
 #include "Constants.h"
 #include "AskaryanFreqsGenerator.h"// for N_AIR, although I'm going to move it
@@ -30,8 +30,8 @@ namespace icemc {
     enum class XPol : int      {VtoH,    HtoV};
     enum class AngleDir : int  {Azimuth, Elevation};
 
-    Seavey(const Vector& positionV, const Vector& positionH,
-	   const Vector& ePlane, const Vector& hPlane, const Vector& normal,
+    Seavey(const TVector3& positionV, const TVector3& positionH,
+	   const TVector3& ePlane, const TVector3& hPlane, const TVector3& normal,
 	   const Settings* settings = NULL, double refractiveIndexOfMedium = icemc::AskaryanFreqsGenerator::N_AIR);
 
     
@@ -62,7 +62,7 @@ namespace icemc {
      * 
      * @return the position of the phase center
      */    
-    const icemc::Vector& getPosition(Pol pol = Pol::V) const {
+    const TVector3& getPosition(Pol pol = Pol::V) const {
       switch(pol){
       case Pol::H: return fPositionH.global;
       case Pol::V: // is also the default...
@@ -72,12 +72,12 @@ namespace icemc {
     }
     
     ///@todo  make this private when the refactor is complete?
-    static void GetEcompHcompEvector(const Vector& n_eplane, const Vector& n_hplane, const Vector& n_pol,
+    static void GetEcompHcompEvector(const TVector3& n_eplane, const TVector3& n_hplane, const TVector3& n_pol,
 				     double& e_component, double& h_component, double& n_component);
     
 
     ///@todo  make this private when the refactor is complete?
-    static void GetEcompHcompkvector(const Vector& n_eplane, const Vector& n_hplane, const Vector& n_normal, const Vector n_exit2bn,
+    static void GetEcompHcompkvector(const TVector3& n_eplane, const TVector3& n_hplane, const TVector3& n_normal, const TVector3 n_exit2bn,
 				     double& e_component_kvector, double& h_component_kvector, double& n_component_kvector);
 
     
@@ -138,7 +138,7 @@ namespace icemc {
      * @param pitch 
      * @param roll 
      */
-    void updatePosition(const Position& anitaPos, double heading, double pitch, double roll);
+    void updatePosition(const GeoidModel::Position& anitaPos, double heading, double pitch, double roll);
 
   private:
     
@@ -149,9 +149,9 @@ namespace icemc {
      * (payload coordinates and Earth centered (global) coordinates)
      */
     struct VectorPair {
-      const icemc::Vector payload;
-      icemc::Vector global;
-      VectorPair(const Vector& v) : payload(v){
+      const TVector3 payload;
+      TVector3 global;
+      VectorPair(const TVector3& v) : payload(v){
 	global = payload;
       }
     };
