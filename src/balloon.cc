@@ -117,42 +117,35 @@ icemc::Balloon::Balloon(const Settings* settings)
 
 void icemc::Balloon::SetDefaultBalloonPosition(const Antarctica *antarctica1) { // position of surface of earth under balloon
     
-  // set the default balloon position
-  // if you are using real Anita-lite path, these get overwritten for each event
-  //std::cout << "BN_LATITUDE is " << BN_LATITUDE << "\n";
+  // // set the default balloon position
+  // // if you are using real Anita-lite path, these get overwritten for each event
+  // //std::cout << "BN_LATITUDE is " << BN_LATITUDE << "\n";
     
-  int BN_LATITUDE_SETTING = BN_LATITUDE;
-  int BN_LONGITUDE_SETTING = BN_LONGITUDE;
+  // int BN_LATITUDE_SETTING = BN_LATITUDE;
+  // int BN_LONGITUDE_SETTING = BN_LONGITUDE;
     
-  if(BN_LATITUDE_SETTING==999){
+  if(BN_LATITUDE==999){
     theta_bn=10*constants::RADDEG; // wrt south pole
+    phi_bn = constants::PI/4; //wrt 90E longitude
+    r_bn = GeoidModel::Position(GeoidModel::Pole::South);
+    r_bn.SetTheta(theta_bn);
+    r_bn.SetPhi(phi_bn);    
   }
   else{
-    theta_bn=(90-BN_LATITUDE_SETTING)*constants::RADDEG;
+    if (BN_ALTITUDE==0){ // if the altitude isn't set in the input file
+      altitude_bn=120000*12.*constants::CMINCH/100.; // 120000 ft.=36.6 m
+    }
+    else{
+      altitude_bn=BN_ALTITUDE*12.*constants::CMINCH/100.; // converts the altitude in the input file to meters
+    }
+    r_bn = GeoidModel::Position();
+    r_bn.SetLonLatAlt(BN_LONGITUDE, BN_LATITUDE, altitude_bn);
   }
   
-  if(BN_LONGITUDE_SETTING==999){
-    phi_bn = constants::PI/4; //wrt 90E longitude
-  }
-  else {
-    phi_bn = Earth::LongtoPhi_0isPrimeMeridian(BN_LONGITUDE_SETTING); //remember input of LongtoPhi is between -180 and 180
-  }    
-    
-  r_bn = GeoidModel::Position(0, 0, 1);
-  r_bn.SetTheta(theta_bn);
-  r_bn.SetPhi(phi_bn); // direction of balloon- right now this is a unit vector
-
-  if (BN_ALTITUDE==0){ // if the altitude isn't set in the input file
-    altitude_bn=120000*12.*constants::CMINCH/100.; // 120000 ft.=36.6 m
-  }
-  else{
-    altitude_bn=BN_ALTITUDE*12.*constants::CMINCH/100.; // converts the altitude in the input file to meters
-  }    
   surface_under_balloon = antarctica1->Surface(r_bn); // distance between center of earth and surface under balloon
 
-  r_bn_shadow = surface_under_balloon * r_bn.Unit(); // position of surface under balloon
-
-  r_bn = (antarctica1->Geoid(r_bn)+altitude_bn) * r_bn; // position of balloon
+  r_bn_shadow = r_bn;
+  r_bn_shadow.SetAltitude(0);
 
 } // set default balloon position
 
@@ -453,12 +446,12 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
       if(settings1->TUFFSON){
        anita1->tuffIndex = getTuffIndex(realTime_flightdata);
       }// end if tuffson 
-      
+
       while (faltitude<MINALTITUDE || fheading<0) { // if the altitude is too low, pick another event.
-		    
+
 	igps++; // increment by 1
 	igps=igps%fChain->GetEntries(); // make sure it's not beyond the maximum entry number
-		    
+
 	fChain->GetEvent(igps);	  // get new event
       }
       // set phi Masking for Anita 2 or Anita 3
@@ -494,9 +487,8 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
     }
     surface_under_balloon = antarctica1->Surface(r_bn); // get altitude of the surface under the balloon
 
-    r_bn_shadow = surface_under_balloon * r_bn.Unit(); // this is a vector pointing to spot just under the balloon on the surface (its shadow at high noon)
-    r_bn = (antarctica1->Geoid(r_bn)+altitude_bn) * r_bn.Unit();
-    //r_bn = (antarctica->Surface(r_bn)+altitude_bn) * r_bn.Unit(); //this points to balloon position (not a unit vector)
+    r_bn_shadow.SetLonLatAlt(longitude, latitude,  0);
+    r_bn.SetLonLatAlt(longitude,  latitude, altitude);
   } //if (ANITA-lite path) or anita 1 or anita 2
     
     

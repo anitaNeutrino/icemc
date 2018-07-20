@@ -147,120 +147,81 @@ icemc::Antarctica::Antarctica(int model,
 //constructor Antarctica(int model)
 
 
-GeoidModel::Position icemc::Antarctica::PickBalloonPosition() const {
-  GeoidModel::Position temp;
-  return temp;  
-}
 
+GeoidModel::Position icemc::Antarctica::PickInteractionLocation(const GeoidModel::Position &balloon) const {
 
-GeoidModel::Position icemc::Antarctica::PickInteractionLocation(int ibnposition, const Settings *settings1, const GeoidModel::Position &rbn, Interaction *interaction1) const {
-    
-  // random numbers used
-  double rnd1=0;
-  double rnd2=2.;
-  double rnd3=1.;
-    
-  double vol_bybin=0.; // volume of ice in each bin
-  int whichbin_forcrust20=0; // choice of a bin of ice for the interaction to occur in, for Crust 2.0
-  int which_coord=0;// choice of coordinates for the interaction, for Bedmap
-  double phi=0,theta=0; // phi and theta for interaction location
-  double lon=0,lat=0; // longitude and latitude corresponding to those phi and theta
-  int ilat=0,ilon=0; // ilat and ilon bins where interaction occurs
-  int e_coord=0; //east coordinate of interaction, from Bedmap
-  int n_coord=0; // north coordinate of interaction, from Bedmap
-    
-    
-  //in case of roughness, create an array of allowable indices for the lookup (so this stay local to this function and we don't modify *horizon[ibnposition] and fark up other things downstream)
-  /*if(settings1->ROUGHNESS){
+  
+  // // random numbers used
+  // double rnd1=0;
+  // double rnd2=2.;
+  // double rnd3=1.;
+  
+  // double vol_bybin=0.; // volume of ice in each bin
+  // int whichbin_forcrust20=0; // choice of a bin of ice for the interaction to occur in, for Crust 2.0
+  // int which_coord=0;// choice of coordinates for the interaction, for Bedmap
+  // double phi=0,theta=0; // phi and theta for interaction location
+  // double lon=0,lat=0; // longitude and latitude corresponding to those phi and theta
+  // // int ilat=0,ilon=0; // ilat and ilon bins where interaction occurs
+  // int e_coord=0; //east coordinate of interaction, from Bedmap
+  // int n_coord=0; // north coordinate of interaction, from Bedmap
 
-    interaction1->noway=0;
-    interaction1->wheredoesitleave_err=0;
-    interaction1->neverseesice=0;
-    interaction1->wheredoesitenterice_err=0;
-    interaction1->toohigh=0;
-    interaction1->toolow=0;
+  // //std::cout << "in pickinteractionlocation, size of ilat_inhorizon is " << ilat_inhorizon[ibnposition].size() << "\n";
+  // if (ice_model == 0) { // this is Crust 2.0
+  //   //std::cout << "Inside Crust 2.0 if statement.\n";
+  //   // vol_bybin is initialized to 0
+  //   while(vol_bybin/maxvol_inhorizon[ibnposition]<rnd3) {
+  //     rnd3=gRandom->Rndm(); // pick random numbers between 0 and 1
+  //     rnd1=gRandom->Rndm();
+  //     rnd2=gRandom->Rndm();
 
-    bool bl_foundit = false;
-    GeoidModel::Position temppos;
+  //     whichbin_forcrust20=(int)(rnd1*(double)ilat_inhorizon[ibnposition].size());
+  //     ilat=ilat_inhorizon[ibnposition][whichbin_forcrust20];
 
-    while (!bl_foundit){
-    // go through selecting a shift off the balloon position to get lon,lat
-    TVector3 blnormal = GetSurfaceNormal(rbn).Unit();
-    TVector3 unitx = Vector();
-    TVector3 unity;
+  //     ilon=ilon_inhorizon[ibnposition][whichbin_forcrust20];
 
-    unitx = unitx - unitx.Dot(blnormal)*blnormal;
-    unity = blnormal.Cross(unitx);
+  //     // vol_bybin=icethkarray[ilon][ilat]*1000.*area[ilat];
+  //   } //while
+  //   phi=SmearPhi(ilon, gRandom->Rndm());
+  //   theta=SmearTheta(ilat, gRandom->Rndm());
+  //   lon = GetLon(phi);
+  //   lat = GetLat(theta);
+  //   //        std::cout << "ibnposition, phi, theta, lon, lat are " << ibnposition << " " << phi << " " << theta << " " << lon << " " << lat << "\n";
+  // } //end if(Crust 2.0)
+  // else if (ice_model==1) { // this is Bedmap
+  //   //std::cout << "Inside Bedmap if statement.\n";
+  //   while(vol_bybin/maxvol_inhorizon[ibnposition]<rnd3) {
+  //     rnd3=gRandom->Rndm();
+  //     rnd1=gRandom->Rndm();
+  //     rnd2=gRandom->Rndm();
 
-    temppos = rbn + gRandom->Rndm() * settings1->ROUGH_INTPOS_SHIFT * unitx + gRandom->Rndm() * settings1->ROUGH_INTPOS_SHIFT * unity;
-    lon = temppos.Longitude();
-    lat = temppos.Latitude();
-    //if( !IceThickness(lon,lat)){   //ignore if not thick enough
-    //  continue;                       // PickPosnuForaLonLat below complained too much
-    //}
-    bl_foundit = true;
-    }
+  //     which_coord=(int)(rnd1*(double)easting_inhorizon[ibnposition].size());
 
-    theta = lat*RADDEG;
-    phi=LongtoPhi_0is180thMeridian(lon); // convert longitude to phi
-    //std::cout << rbn.Longitude() << "  "<< rbn.Latitude() << "  " <<temppos.Longitude()<< "  "<<temppos.Latitude()<< "  :: ";
-    }
-    else{ // NO roughness case*/
-  //std::cout << "in pickinteractionlocation, size of ilat_inhorizon is " << ilat_inhorizon[ibnposition].size() << "\n";
-  if (ice_model == 0) { // this is Crust 2.0
-    //std::cout << "Inside Crust 2.0 if statement.\n";
-    // vol_bybin is initialized to 0
-    while(vol_bybin/maxvol_inhorizon[ibnposition]<rnd3) {
-      rnd3=gRandom->Rndm(); // pick random numbers between 0 and 1
-      rnd1=gRandom->Rndm();
-      rnd2=gRandom->Rndm();
-	  
-      whichbin_forcrust20=(int)(rnd1*(double)ilat_inhorizon[ibnposition].size());
-      ilat=ilat_inhorizon[ibnposition][whichbin_forcrust20];
+  //     e_coord=easting_inhorizon[ibnposition][which_coord];
+  //     n_coord=northing_inhorizon[ibnposition][which_coord];
 
-      ilon=ilon_inhorizon[ibnposition][whichbin_forcrust20];
+  //     //      std::cout << "e_coord, n_coord are " << e_coord << " " << n_coord << "\n";
 
-      vol_bybin=icethkarray[ilon][ilat]*1000.*area[ilat];
-    } //while
-    phi=SmearPhi(ilon, gRandom->Rndm());
-    theta=SmearTheta(ilat, gRandom->Rndm());
-    lon = GetLon(phi);
-    lat = GetLat(theta);
-    //        std::cout << "ibnposition, phi, theta, lon, lat are " << ibnposition << " " << phi << " " << theta << " " << lon << " " << lat << "\n";
-  } //end if(Crust 2.0)
-  else if (ice_model==1) { // this is Bedmap
-    //std::cout << "Inside Bedmap if statement.\n";
-    while(vol_bybin/maxvol_inhorizon[ibnposition]<rnd3) {
-      rnd3=gRandom->Rndm();
-      rnd1=gRandom->Rndm();
-      rnd2=gRandom->Rndm();
+  //     GroundENtoLonLat(e_coord,n_coord,lon,lat); //Recall that the e / n coordinates in horizon were picked from the ground bed array.
+  //     //lon+=180.;
+  //     //std::cout << "lon, lat are " << lon << " " << lat << "\n";
 
-      which_coord=(int)(rnd1*(double)easting_inhorizon[ibnposition].size());
+  //     if (e_coord > 1068 || e_coord < 0 || n_coord < 0 || n_coord > 869){
+  // 	std::cout<<"Problem in PickDownward: e_coord, n_coord : "<<e_coord<<" , "<<n_coord<<std::endl;
+  //     }
+  //     vol_bybin=IceThickness(lon,lat)*Area(lat);
+  //   } //while
+  //   theta = lat*constants::RADDEG;
+  //   phi=LongtoPhi_0is180thMeridian(lon); // convert longitude to phi
+  // } //end if(BEDMAP)
+  //   //}
+  //   //all routines (roughness or no) \it{should} deliver a lon, lat, theta, phi
+  //   //roughness may not sometimes, should add checks or something
+  // TVector3 posnu=PickPosnuForaLonLat(lon,lat,theta,phi);
 
-      e_coord=easting_inhorizon[ibnposition][which_coord];
-      n_coord=northing_inhorizon[ibnposition][which_coord];
+  std::cerr << "Disabled during refactor!" << std::endl;
 
-      //      std::cout << "e_coord, n_coord are " << e_coord << " " << n_coord << "\n";
-
-      GroundENtoLonLat(e_coord,n_coord,lon,lat); //Recall that the e / n coordinates in horizon were picked from the ground bed array.
-      //lon+=180.;
-      //std::cout << "lon, lat are " << lon << " " << lat << "\n";
-
-      if (e_coord > 1068 || e_coord < 0 || n_coord < 0 || n_coord > 869)
-	std::cout<<"Problem in PickDownward: e_coord, n_coord : "<<e_coord<<" , "<<n_coord<<std::endl;
-      vol_bybin=IceThickness(lon,lat)*Area(lat);
-    } //while
-    theta = lat*constants::RADDEG;
-    phi=LongtoPhi_0is180thMeridian(lon); // convert longitude to phi
-  } //end if(BEDMAP)
-    //}
-
-    //all routines (roughness or no) \it{should} deliver a lon, lat, theta, phi
-    //roughness may not sometimes, should add checks or something
-  TVector3 posnu=PickPosnuForaLonLat(lon,lat,theta,phi);
-  //TVector3 blnormal = GetSurfaceNormal(rbn).Unit();
-  //std::cout << blnormal.Angle(Vector(rbn[0]-posnu[0],rbn[1]-posnu[1],rbn[2]-posnu[2]))*180./PI<<"\n";
-  return posnu;
+  GeoidModel::Position posNu = balloon;
+  return posNu;
 } //PickInteractionLocation
 
 
@@ -463,105 +424,110 @@ int icemc::Antarctica::PickUnbiased(Interaction *interaction1) const {
     
 }
 
-TVector3 icemc::Antarctica::GetSurfaceNormal(const GeoidModel::Position &r_out) const {
-  TVector3 n_surf = r_out.Unit();
-  if (FLATSURFACE) {
-    return n_surf;
-  }
-  if (ice_model==0) {
-    double theta=r_out.Theta();
+TVector3 icemc::Antarctica::GetSurfaceNormal(const GeoidModel::Position &here) const {
+  ///@todo FIX THIS FUNCTION
 
-    int ilon,ilat;
-    GetILonILat(r_out,ilon,ilat);
+  GeoidModel::Position justAbove = here;
+  justAbove.SetAltitude(here.Altitude()+1);
+  return (justAbove - here).Unit();
 
-    int ilon_previous=ilon-1;
-    if (ilon_previous<0){
-      ilon_previous=NLON-1;
-    }
-    int ilon_next=ilon+1;
-    if (ilon_next==NLON){
-      ilon_next=0;
-    }
-    double r=(geoid[ilat]+surfacer[ilon][ilat])*sin(theta);
-	
-    double slope_phi=(surfacer[ilon_next][ilat]-surfacer[ilon_previous][ilat])/(r*2*phistep);
-	
-    int ilat_previous=ilat-1;
-    if (ilat_previous<0){
-      ilat_previous=0;
-    }	
-    int ilat_next=ilat+1;
-    if (ilat_next==NLAT){
-      ilat_next=NLAT-1;
-    }	
-    double slope_costheta=(surfacer[ilon][ilat_next]-surfacer[ilon][ilat_previous])/((geoid[ilat]+surfacer[ilon][ilat])*2*thetastep);
+  // if (FLATSURFACE) {
+  //   return n_surf;
+  // }
+  // if (ice_model==0) {
+  //   double theta=r_out.Theta();
 
-    // first rotate n_surf according to tilt in costheta and position on continent - rotate around the y axis.
-    double angle=atan(slope_costheta);
+  //   int ilon,ilat;
+  //   GetILonILat(r_out,ilon,ilat);
+
+  //   int ilon_previous=ilon-1;
+  //   if (ilon_previous<0){
+  //     ilon_previous=NLON-1;
+  //   }
+  //   int ilon_next=ilon+1;
+  //   if (ilon_next==NLON){
+  //     ilon_next=0;
+  //   }
+  //   double r=(geoid[ilat]+surfacer[ilon][ilat])*sin(theta);
 	
-    n_surf.RotateY(angle);
+  //   double slope_phi=(surfacer[ilon_next][ilat]-surfacer[ilon_previous][ilat])/(r*2*phistep);
 	
-    // now rotate n_surf according to tilt in phi - rotate around the z axis.
-    angle=atan(slope_phi);
+  //   int ilat_previous=ilat-1;
+  //   if (ilat_previous<0){
+  //     ilat_previous=0;
+  //   }	
+  //   int ilat_next=ilat+1;
+  //   if (ilat_next==NLAT){
+  //     ilat_next=NLAT-1;
+  //   }	
+  //   double slope_costheta=(surfacer[ilon][ilat_next]-surfacer[ilon][ilat_previous])/((geoid[ilat]+surfacer[ilon][ilat])*2*thetastep);
+
+  //   // first rotate n_surf according to tilt in costheta and position on continent - rotate around the y axis.
+  //   double angle=atan(slope_costheta);
 	
-    n_surf.RotateZ(angle);
-  } //end if(Crust 2.0)
-  else if (ice_model==1) {
-    double dist_to_check = 7500; //check elevations at this distance north, south, east and west of event
-    double lon,lat;
-    double lon_prev,lon_next;
-    double lat_prev,lat_next;
-    lon = r_out.Longitude();
-    lat = r_out.Latitude(); //longitude and latitude of interaction
-    double local_surface_elevation = Surface(lon,lat);
+  //   n_surf.RotateY(angle);
 	
-    lat_next = lat + dist_to_check * (180 / (local_surface_elevation * constants::PI)); //the latitude 7.5 km south of the interaction
-    lat_prev = lat - dist_to_check * (180 / (local_surface_elevation * constants::PI)); //the latitude 7.5 km north of the interaction
+  //   // now rotate n_surf according to tilt in phi - rotate around the z axis.
+  //   angle=atan(slope_phi);
 	
-    lon_next = lon + dist_to_check * (180 / (sin(lat*constants::RADDEG) * local_surface_elevation * constants::PI)); 
-    lon_prev = lon - dist_to_check * (180 / (sin(lat*constants::RADDEG) * local_surface_elevation * constants::PI)); 
+  //   n_surf.RotateZ(angle);
+  // } //end if(Crust 2.0)
+  // else if (ice_model==1) {
+  //   double dist_to_check = 7500; //check elevations at this distance north, south, east and west of event
+  //   double lon,lat;
+  //   double lon_prev,lon_next;
+  //   double lat_prev,lat_next;
+  //   lon = r_out.Longitude();
+  //   lat = r_out.Latitude(); //longitude and latitude of interaction
+  //   double local_surface_elevation = Surface(lon,lat);
 	
-    if (lat_next > 90) {
-      //std::cout<<"lat_next is > 90"<<std::endl;
-      lat_next = 90 - (lat_next - 90);  //if we went past the pole, set coordinates for the other side
-      lon_next += 180;
-      lon_prev += 180;
-    } //end if
-    //std::cout<<"lon, lat: "<<lon<<" , "<<lat<<std::endl;
-    //correct any out of range longitudes
-    if (lon_next > 360) {
-      //std::cout<<"lon_next > 360\n";
-      lon_next -= 360;
-    }
-    else if (lon_next < 0) {
-      //std::cout<<"lon_next < 0\n";
-      lon_next += 360;
-    }
-    if (lon_prev > 360) {
-      //std::cout<<"lon_prev > 360\n";
-      lon_prev -= 360;
-    }
-    else if (lon_prev < 0) {
-      //std::cout << "lon_prev < 0";
-      lon_prev += 360;
-    }
+  //   lat_next = lat + dist_to_check * (180 / (local_surface_elevation * constants::PI)); //the latitude 7.5 km south of the interaction
+  //   lat_prev = lat - dist_to_check * (180 / (local_surface_elevation * constants::PI)); //the latitude 7.5 km north of the interaction
 	
-    double slope_phi=(SurfaceAboveGeoid(lon_next,lat)-SurfaceAboveGeoid(lon_prev,lat))/(2*dist_to_check);
+  //   lon_next = lon + dist_to_check * (180 / (sin(lat*constants::RADDEG) * local_surface_elevation * constants::PI)); 
+  //   lon_prev = lon - dist_to_check * (180 / (sin(lat*constants::RADDEG) * local_surface_elevation * constants::PI)); 
 	
-    double slope_costheta=(SurfaceAboveGeoid(lon,lat_next)-SurfaceAboveGeoid(lon,lat_prev))/(2*dist_to_check);
+  //   if (lat_next > 90) {
+  //     //std::cout<<"lat_next is > 90"<<std::endl;
+  //     lat_next = 90 - (lat_next - 90);  //if we went past the pole, set coordinates for the other side
+  //     lon_next += 180;
+  //     lon_prev += 180;
+  //   } //end if
+  //   //std::cout<<"lon, lat: "<<lon<<" , "<<lat<<std::endl;
+  //   //correct any out of range longitudes
+  //   if (lon_next > 360) {
+  //     //std::cout<<"lon_next > 360\n";
+  //     lon_next -= 360;
+  //   }
+  //   else if (lon_next < 0) {
+  //     //std::cout<<"lon_next < 0\n";
+  //     lon_next += 360;
+  //   }
+  //   if (lon_prev > 360) {
+  //     //std::cout<<"lon_prev > 360\n";
+  //     lon_prev -= 360;
+  //   }
+  //   else if (lon_prev < 0) {
+  //     //std::cout << "lon_prev < 0";
+  //     lon_prev += 360;
+  //   }
 	
-    // first rotate n_surf according to tilt in costheta - rotate around the y axis.
-    double angle=atan(slope_costheta);
+  //   double slope_phi=(SurfaceAboveGeoid(lon_next,lat)-SurfaceAboveGeoid(lon_prev,lat))/(2*dist_to_check);
 	
-    n_surf.RotateY(angle);
+  //   double slope_costheta=(SurfaceAboveGeoid(lon,lat_next)-SurfaceAboveGeoid(lon,lat_prev))/(2*dist_to_check);
 	
-    // now rotate n_surf according to tilt in phi - rotate around the z axis.
-    angle=atan(slope_phi);
+  //   // first rotate n_surf according to tilt in costheta - rotate around the y axis.
+  //   double angle=atan(slope_costheta);
 	
-    n_surf.RotateZ(angle);
-  } //end if(BEDMAP)
+  //   n_surf.RotateY(angle);
+	
+  //   // now rotate n_surf according to tilt in phi - rotate around the z axis.
+  //   angle=atan(slope_phi);
+	
+  //   n_surf.RotateZ(angle);
+  // } //end if(BEDMAP)
     
-  return n_surf;
+  // return n_surf;
     
 } //method GetSurfaceNormal
 
@@ -631,7 +597,7 @@ int icemc::Antarctica::WhereDoesItEnterIce(const GeoidModel::Position &posnu,
       r_enterice = x;
       // this gets you out of the loop.
       //continue;
-      distance=3*Geoid(lat);
+      distance=3*GeoidModel::getGeoidRadiusAtLatitude(lat);
       foundit=1;
       //std::cout << "foundit is " << foundit << "\n";
       //std::cout << "r_enterice is ";r_enterice.Print();
@@ -724,7 +690,7 @@ int icemc::Antarctica::WhereDoesItExitIce(const GeoidModel::Position &posnu,
       r_enterice = x;
       // this gets you out of the loop.
       //continue;
-      distance=3*Geoid(lat);
+      distance=3*GeoidModel::getGeoidRadiusAtLatitude(lat);//Geoid(lat);
       foundit=1;
       //std::cout << "foundit is " << foundit << "\n";
       //continue;
@@ -812,7 +778,7 @@ int icemc::Antarctica::WhereDoesItExitIceForward(const GeoidModel::Position &pos
       r_enterice = x;
       // this gets you out of the loop.
       //continue;
-      distance=3*Geoid(lat);
+      distance=3*GeoidModel::getGeoidRadiusAtLatitude(lat);//Geoid(lat);
       foundit=1;
       //std::cout << "foundit is " << foundit << "\n";
       //continue;
@@ -848,11 +814,11 @@ double icemc::Antarctica::IceThickness(double lon, double lat) const {
       ice_thickness = ice_thickness_array[e_coord][n_coord]; //if this region has BEDMAP data, use it.
     }
     else{
-      ice_thickness = icethkarray[(int)(lon/2)][(int)(lat/2)]*1000.; //if the location given is not covered by BEDMAP, use Crust 2.0 data
+      ice_thickness = Earth::IceThickness(lon, lat);
     }
   } //BEDMAP ice thickness
   else if (ice_model==0) {
-    ice_thickness = icethkarray[(int)(lon/2)][(int)(lat/2)]*1000.;
+    ice_thickness = Earth::IceThickness(lon, lat);
     //std::cout << "ilon, ilat are " << (int)(lon/2) << " " << (int)(lat/2) << "\n";
   } //Crust 2.0 ice thickness
     
@@ -881,11 +847,11 @@ double icemc::Antarctica::SurfaceAboveGeoid(double lon, double lat) const {
       surface = ground_elevation[e_coord_ground][n_coord_ground] + ice_thickness_array[e_coord_ice][n_coord_ice] + water_depth[e_coord_ice][n_coord_ice];
     }
     else{
-      surface = surfacer[(int)(lon/2)][(int)(lat/2)]; //If the position requested is outside the bounds of the BEDMAP data, use the Crust 2.0 data, regardless of the ice_model flag.
+      surface = Earth::SurfaceAboveGeoid(lon, lat);
     }
   } //Elevation of surface above geoid according to BEDMAP
   else if (ice_model==0) {
-    surface = surfacer[(int)(lon/2)][(int)(lat/2)];
+      surface = Earth::SurfaceAboveGeoid(lon, lat);
   } //Elevation of surface above geoid according to Crust 2.0
     
   return surface;
@@ -898,7 +864,8 @@ double icemc::Antarctica::SurfaceAboveGeoid(const GeoidModel::Position &pos) con
 } //method SurfaceAboveGeoid(position)
 
 double icemc::Antarctica::Surface(double lon,double lat) const {
-  return (SurfaceAboveGeoid(lon,lat) + Geoid(lat)); // distance from center of the earth to surface
+  GeoidModel::Position p(lon, lat, SurfaceAboveGeoid(lon,lat));
+  return p.Mag();
 } //Surface
 
 double icemc::Antarctica::Surface(const GeoidModel::Position&pos) const {
@@ -910,7 +877,7 @@ double icemc::Antarctica::WaterDepth(double lon, double lat) const {
   double water_depth_value=0;
     
   if (ice_model==0) {
-    water_depth_value = waterthkarray[(int)(lon/2)][(int)(lat/2)]*1000;
+    water_depth_value = Earth::WaterDepth(lon, lat);
   } //if(Crust 2.0)
   else if (ice_model==1) {
     int e_coord=0;
@@ -919,7 +886,7 @@ double icemc::Antarctica::WaterDepth(double lon, double lat) const {
     if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord >= 0)
       water_depth_value = water_depth[e_coord][n_coord];
     else
-      water_depth_value = waterthkarray[(int)(lon/2)][(int)(lat/2)]*1000;
+      water_depth_value = Earth::WaterDepth(lon, lat);
   } //else if(BEDMAP)
     
   return water_depth_value;
@@ -937,46 +904,52 @@ int icemc::Antarctica::IceOnWater(const GeoidModel::Position &pos) const{
     
 }
 int icemc::Antarctica::RossIceShelf(const GeoidModel::Position &pos) const {
-  int ilon,ilat;
+
+  ///@todo RESTORE ME!
+  return 0;
+  // int ilon,ilat;
     
-  GetILonILat(pos,ilon,ilat);
+  // GetILonILat(pos,ilon,ilat);
     
-  if ((ilat==2 && ilon>=5 && ilon<=14) ||
-      (ilat==3 && (ilon>=168 || ilon<=14)) ||
-      (ilat==4 && (ilon>=168 || ilon<=13)) ||
-      (ilat==5 && (ilon>=168 || ilon<=14))){
-    return 1;
-  }
-  else{
-    return 0;
-  }
+  // if ((ilat==2 && ilon>=5 && ilon<=14) ||
+  //     (ilat==3 && (ilon>=168 || ilon<=14)) ||
+  //     (ilat==4 && (ilon>=168 || ilon<=13)) ||
+  //     (ilat==5 && (ilon>=168 || ilon<=14))){
+  //   return 1;
+  // }
+  // else{
+  //   return 0;
+  // }
 }//RossIceShelf
 
 int icemc::Antarctica::RossExcept(const GeoidModel::Position &pos) const{
-  int ilon,ilat;
-  GetILonILat(pos,ilon,ilat);
-  if(ilon<=178&&ilon>=174&&ilat>=4&&ilat<=5){
-    return 1;
-  }
-  else {
+  ///@todo RESTORE ME!
+  // int ilon,ilat;
+  // GetILonILat(pos,ilon,ilat);
+  // if(ilon<=178&&ilon>=174&&ilat>=4&&ilat<=5){
+  //   return 1;
+  // }
+  // else {
     return 0;
-  }
+  // }
 }
 
 
 int icemc::Antarctica::RonneIceShelf(const GeoidModel::Position &pos) const {
-  int ilon,ilat;
+  ///@todo RESTORE ME!
+  return 0;
+  // int ilon,ilat;
+  
+  // GetILonILat(pos,ilon,ilat);
     
-  GetILonILat(pos,ilon,ilat);
-    
-  if ((ilat==4 && ilon>=52 && ilon<=74) ||
-      (ilat==5 && ilon>=50 && ilon<=71) ||
-      (ilat==6 && ilon>=55 && ilon<=64)){
-    return 1;
-  }
-  else{
-    return 0;
-  }    
+  // if ((ilat==4 && ilon>=52 && ilon<=74) ||
+  //     (ilat==5 && ilon>=50 && ilon<=71) ||
+  //     (ilat==6 && ilon>=55 && ilon<=64)){
+  //   return 1;
+  // }
+  // else{
+  //   return 0;
+  // }    
 }//RonneIceShelf
 
 int icemc::Antarctica::WestLand(const GeoidModel::Position &pos) const {
@@ -1053,6 +1026,8 @@ double icemc::Antarctica::GetN(double altitude) const {
 double icemc::Antarctica::GetN(const GeoidModel::Position &pos) const {
   return GetN(pos.Mag() - Surface(pos.Longitude(),pos.Latitude()));
 } //GetN(Position)
+
+
 
 double icemc::Antarctica::EffectiveAttenuationLength(const Settings *settings1,const GeoidModel::Position &pos,const int &whichray) const {
   double localmaxdepth = IceThickness(pos);
@@ -1256,279 +1231,283 @@ void icemc::Antarctica::CreateHorizons(const Settings *settings1, Balloon *bn1, 
 
   volume = 0.; // initialize volume to zero
 
-  double total_area=0; // initialize total area to zero
-  int NBALLOONPOSITIONS; // number of balloon positions considered here
-  if (bn1->whichPath()==FlightPath::AnitaLite){ // if anita-lite
-    NBALLOONPOSITIONS=(int)((double)bn1->NPOINTS/(double)bn1->REDUCEBALLOONPOSITIONS); //only take 1/100 of the total balloon positions that we have because otherwise it's overkill.
-  }
-  else if (bn1->whichPath()==FlightPath::Anita1 ||
-	   bn1->whichPath()==FlightPath::Anita2 ||
-	   bn1->whichPath()==FlightPath::Anita3 ||
-	   bn1->whichPath()==FlightPath::Anita4) {
 
-    NBALLOONPOSITIONS=(int)((double)bn1->fChain->GetEntries()/(double)bn1->REDUCEBALLOONPOSITIONS)+1;
-  }
+  icemcLog() << icemc::warning << "Temporarily disabled " << __PRETTY_FUNCTION__ << " during refactor! Volume = 2.3e8!" << std::endl;
+  volume = 2.3e8;
 
-  else if (bn1->whichPath()==FlightPath::Circle80DegreesSouth){ // for picking random point along 80 deg south
+  // double total_area=0; // initialize total area to zero
+  // int NBALLOONPOSITIONS; // number of balloon positions considered here
+  // if (bn1->whichPath()==FlightPath::AnitaLite){ // if anita-lite
+  //   NBALLOONPOSITIONS=(int)((double)bn1->NPOINTS/(double)bn1->REDUCEBALLOONPOSITIONS); //only take 1/100 of the total balloon positions that we have because otherwise it's overkill.
+  // }
+  // else if (bn1->whichPath()==FlightPath::Anita1 ||
+  // 	   bn1->whichPath()==FlightPath::Anita2 ||
+  // 	   bn1->whichPath()==FlightPath::Anita3 ||
+  // 	   bn1->whichPath()==FlightPath::Anita4) {
 
-    NBALLOONPOSITIONS=NPHI; // NPHI is the number of bins in phi for the visible ice in the horizon.  This is not the same as NLON, the number of bins in longitude for crust 2.0
-  }
-  else{ // includes fixed position (bn1->whichPath()=0)
-    NBALLOONPOSITIONS = 1;
-  }
+  //   NBALLOONPOSITIONS=(int)((double)bn1->fChain->GetEntries()/(double)bn1->REDUCEBALLOONPOSITIONS)+1;
+  // }
 
-  if (NBALLOONPOSITIONS>NBNPOSITIONS_MAX) {
-    icemcLog() << icemc::error << "Number of balloon positions is greater than max allowed.\n";
-    exit(1);
-  }
+  // else if (bn1->whichPath()==FlightPath::Circle80DegreesSouth){ // for picking random point along 80 deg south
 
-  double phi_bn_temp=0; //phi of balloon, temporary variable
-  GeoidModel::Position r_bn_temp; //position of balloon
-  GeoidModel::Position r_bin; // position of each bin
+  //   NBALLOONPOSITIONS=NPHI; // NPHI is the number of bins in phi for the visible ice in the horizon.  This is not the same as NLON, the number of bins in longitude for crust 2.0
+  // }
+  // else{ // includes fixed position (bn1->whichPath()=0)
+  //   NBALLOONPOSITIONS = 1;
+  // }
+
+  // if (NBALLOONPOSITIONS>NBNPOSITIONS_MAX) {
+  //   icemcLog() << icemc::error << "Number of balloon positions is greater than max allowed.\n";
+  //   exit(1);
+  // }
+
+  // double phi_bn_temp=0; //phi of balloon, temporary variable
+  // GeoidModel::Position r_bn_temp; //position of balloon
+  // GeoidModel::Position r_bin; // position of each bin
     
-  double surface_elevation=0;
-  double local_ice_thickness=0;
-  double lat=0;
-  double lon=0;
-  //double r=0; // r,theta and phi are temporary variables
-  double theta=0;
-  double phi=0;
-  int volume_found=0;
-  char horizon_file[80];
-  FILE *bedmap_horizons = new FILE();
-  char line[200];
-  int e_coord = 0;
-  int n_coord = 0;
+  // double surface_elevation=0;
+  // double local_ice_thickness=0;
+  // double lat=0;
+  // double lon=0;
+  // //double r=0; // r,theta and phi are temporary variables
+  // double theta=0;
+  // double phi=0;
+  // int volume_found=0;
+  // char horizon_file[80];
+  // FILE *bedmap_horizons = new FILE();
+  // char line[200];
+  // int e_coord = 0;
+  // int n_coord = 0;
     
-  sprintf(horizon_file,
-	  "bedmap_horizons_whichpath%i_weights%i.dat",
-	  bn1->whichPath(),
-	  settings1->USEPOSITIONWEIGHTS);
+  // sprintf(horizon_file,
+  // 	  "bedmap_horizons_whichpath%i_weights%i.dat",
+  // 	  bn1->whichPath(),
+  // 	  settings1->USEPOSITIONWEIGHTS);
 
-  bool writeFile = settings1->WRITE_FILE > 0;
+  // bool writeFile = settings1->WRITE_FILE > 0;
 
-  if (ice_model==1 && !writeFile) { // for bedmap model, need to be able to read file
-    if(!(bedmap_horizons = fopen(horizon_file, "r"))) {
-      printf("Error: unable to open %s.  Creating new file.\n", horizon_file);
-      writeFile=1;
-    }//if
-  } //if
-  if (ice_model==1 && writeFile) { // for bedmap model, need to be able to write to file
-    if(!(bedmap_horizons = fopen(horizon_file, "w"))) {
-      printf("Error: unable to open %s\n", horizon_file);
-      exit(1);
-    }//if
-  } //if
+  // if (ice_model==1 && !writeFile) { // for bedmap model, need to be able to read file
+  //   if(!(bedmap_horizons = fopen(horizon_file, "r"))) {
+  //     printf("Error: unable to open %s.  Creating new file.\n", horizon_file);
+  //     writeFile=1;
+  //   }//if
+  // } //if
+  // if (ice_model==1 && writeFile) { // for bedmap model, need to be able to write to file
+  //   if(!(bedmap_horizons = fopen(horizon_file, "w"))) {
+  //     printf("Error: unable to open %s\n", horizon_file);
+  //     exit(1);
+  //   }//if
+  // } //if
 
-  //@todo does this if statement make sense?
-  if (bn1->whichPath()!=FlightPath::AnitaLite && bn1->whichPath()!=FlightPath::Anita1){ // not anita and not anita-lite
-    lat = GetLat(theta_bn); //get index of latitude, same for all balloon positions
-  }    
+  // //@todo does this if statement make sense?
+  // if (bn1->whichPath()!=FlightPath::AnitaLite && bn1->whichPath()!=FlightPath::Anita1){ // not anita and not anita-lite
+  //   lat = GetLat(theta_bn); //get index of latitude, same for all balloon positions
+  // }    
 
-  for (int i=0;i<NBALLOONPOSITIONS;i++) { // loop over balloon positions
+  // for (int i=0;i<NBALLOONPOSITIONS;i++) { // loop over balloon positions
 	
-    maxvol_inhorizon[i]=-1.; // volume of bin with the most ice in the horizon
+  //   maxvol_inhorizon[i]=-1.; // volume of bin with the most ice in the horizon
 	
-    if (bn1->whichPath()==FlightPath::AnitaLite) { // anita or anita-lite path
-      theta_bn=(90+bn1->latitude_bn_anitalite.at(i*100))*constants::RADDEG; //theta of the balloon wrt north pole
-      lat = GetLat(theta_bn); // latitude  
-      phi_bn_temp =  (-1*bn1->longitude_bn_anitalite.at(i*100)+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
-      if (phi_bn_temp<0){ //correct phi_bn if it's negative
-	phi_bn_temp+=360.;
-      }
-      phi_bn_temp*=constants::RADDEG;// turn it into radians
+  //   if (bn1->whichPath()==FlightPath::AnitaLite) { // anita or anita-lite path
+  //     theta_bn=(90+bn1->latitude_bn_anitalite.at(i*100))*constants::RADDEG; //theta of the balloon wrt north pole
+  //     lat = GetLat(theta_bn); // latitude  
+  //     phi_bn_temp =  (-1*bn1->longitude_bn_anitalite.at(i*100)+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
+  //     if (phi_bn_temp<0){ //correct phi_bn if it's negative
+  // 	phi_bn_temp+=360.;
+  //     }
+  //     phi_bn_temp*=constants::RADDEG;// turn it into radians
 
-      altitude_bn=bn1->altitude_bn_anitalite.at(i*100)*12.*constants::CMINCH/100.; // get the altitude for this balloon posistion
-      //altitude_bn=altitude_bn_anitalite[i*100]*12.*CMINCH/100.; // for anita, altitude in is meters
+  //     altitude_bn=bn1->altitude_bn_anitalite.at(i*100)*12.*constants::CMINCH/100.; // get the altitude for this balloon posistion
+  //     //altitude_bn=altitude_bn_anitalite[i*100]*12.*CMINCH/100.; // for anita, altitude in is meters
 	    
-    } // end if anita-lite
+  //   } // end if anita-lite
 
-    else if (bn1->whichPath()==FlightPath::Anita1 || 
-	     bn1->whichPath()==FlightPath::Anita2 || 
-	     bn1->whichPath()==FlightPath::Anita3 || 
-	     bn1->whichPath()==FlightPath::Anita4) {
+  //   else if (bn1->whichPath()==FlightPath::Anita1 || 
+  // 	     bn1->whichPath()==FlightPath::Anita2 || 
+  // 	     bn1->whichPath()==FlightPath::Anita3 || 
+  // 	     bn1->whichPath()==FlightPath::Anita4) {
 
-      bn1->fChain->GetEvent(i*100);
+  //     bn1->fChain->GetEvent(i*100);
 
-      theta_bn = (90+(double)bn1->flatitude)*constants::RADDEG; //theta of the balloon wrt north pole
+  //     theta_bn = (90+(double)bn1->flatitude)*constants::RADDEG; //theta of the balloon wrt north pole
 
-      lat=GetLat(theta_bn); // latitude  
-      phi_bn_temp=(-1*(double)bn1->flongitude+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
-      if (phi_bn_temp<0){ //correct phi_bn if it's negative
-	phi_bn_temp+=360.;
-      }
-      phi_bn_temp*=constants::RADDEG;// turn it into radians
+  //     lat=GetLat(theta_bn); // latitude  
+  //     phi_bn_temp=(-1*(double)bn1->flongitude+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
+  //     if (phi_bn_temp<0){ //correct phi_bn if it's negative
+  // 	phi_bn_temp+=360.;
+  //     }
+  //     phi_bn_temp*=constants::RADDEG;// turn it into radians
 
-      altitude_bn = (double) bn1->faltitude; // for anita, altitude in is meters
+  //     altitude_bn = (double) bn1->faltitude; // for anita, altitude in is meters
 
-    } // end if anita or anita-lite
-    else if (bn1->whichPath()==FlightPath::Circle80DegreesSouth){ // for picking random position along 80 deg south
-      phi_bn_temp=dGetPhi(i); //get phi of the balloon just based on the balloon positions.  Remember nballoonpositions runs from 0 to 179 here.
-    // the output of dGetPhi is in radians and runs from -pi/2 to 3*pi/2 relative to 
-    }
-    else{ // includes bn1->whichPath()=0 
-      phi_bn_temp=phi_bn;
-    }
-    // altitude_bn has already been set in SetDefaultBalloonPosition
-    // same for theta_bn
-    // lat set above
-    lon = GetLon(phi_bn_temp); //get longitude for this phi position
-    // lon goes from 0 (at -180 longitude) to 360 (at 180 longitude)
+  //   } // end if anita or anita-lite
+  //   else if (bn1->whichPath()==FlightPath::Circle80DegreesSouth){ // for picking random position along 80 deg south
+  //     phi_bn_temp=dGetPhi(i); //get phi of the balloon just based on the balloon positions.  Remember nballoonpositions runs from 0 to 179 here.
+  //   // the output of dGetPhi is in radians and runs from -pi/2 to 3*pi/2 relative to 
+  //   }
+  //   else{ // includes bn1->whichPath()=0 
+  //     phi_bn_temp=phi_bn;
+  //   }
+  //   // altitude_bn has already been set in SetDefaultBalloonPosition
+  //   // same for theta_bn
+  //   // lat set above
+  //   lon = GetLon(phi_bn_temp); //get longitude for this phi position
+  //   // lon goes from 0 (at -180 longitude) to 360 (at 180 longitude)
 
-    // position of balloon
-    surface_elevation = this->Surface(lon,lat); // distance from center of the earth to surface at this lon and lat
+  //   // position of balloon
+  //   surface_elevation = this->Surface(lon,lat); // distance from center of the earth to surface at this lon and lat
     
-    r_bn_temp = TVector3(sin(theta_bn)*cos(phi_bn_temp)*(surface_elevation+altitude_bn),
-			 sin(theta_bn)*sin(phi_bn_temp)*(surface_elevation+altitude_bn),
-			 cos(theta_bn)*(surface_elevation+altitude_bn)); // vector from center of the earth to balloon
+  //   r_bn_temp = TVector3(sin(theta_bn)*cos(phi_bn_temp)*(surface_elevation+altitude_bn),
+  // 			 sin(theta_bn)*sin(phi_bn_temp)*(surface_elevation+altitude_bn),
+  // 			 cos(theta_bn)*(surface_elevation+altitude_bn)); // vector from center of the earth to balloon
 	
-    if (ice_model==0) { // Crust 2.0
-      for (int j=0;j<NLON;j++) { // loop over bins in longitude
-	for (int k=0;k<ILAT_COASTLINE;k++) { // loop over bins in latitude
+  //   if (ice_model==0) { // Crust 2.0
+  //     for (int j=0;j<NLON;j++) { // loop over bins in longitude
+  // 	for (int k=0;k<ILAT_COASTLINE;k++) { // loop over bins in latitude
 
-	  // get position of each bin
-	  r_bin = TVector3(sin(dGetTheta(k))*cos(dGetPhi(j))*(geoid[k]+surfacer[j][k]),
-			   sin(dGetTheta(k))*sin(dGetPhi(j))*(geoid[k]+surfacer[j][k]),
-			   cos(dGetTheta(k))*(geoid[k]+surfacer[j][k])); // vector from center of the earth to the surface of this bin
+  // 	  // get position of each bin
+  // 	  r_bin.SetLonLatAlt();
+  // 	  r_bin = TVector3(sin(dGetTheta(k))*cos(dGetPhi(j))*(geoid[k]+surfacer[j][k]),
+  // 			   sin(dGetTheta(k))*sin(dGetPhi(j))*(geoid[k]+surfacer[j][k]),
+  // 			   cos(dGetTheta(k))*(geoid[k]+surfacer[j][k])); // vector from center of the earth to the surface of this bin
 
-	  if (!volume_found){ 
-	    volume += icethkarray[j][k]*1000*area[k]; // add this to the total volume of ice in antarctica
-	  }
-	  if (!volume_found && icethkarray[j][k] > 0){
-	    total_area += area[k]; // add this to the total area of ice in antarctica
-	  }
-	  // if the bin is within the maximum horizon of the balloon or if we don't care
-	  //r=(geoid[k]+surfacer[j][k]);
-	  //phi=dGetPhi(j);
-	  //theta=dGetTheta(k);
-		    
-	  //	  cout << "USEWEIGHTS is " << USEWEIGHTS << "\n";
-	  if ((settings1->USEPOSITIONWEIGHTS && r_bin.Distance(r_bn_temp) < bn1->MAXHORIZON)
-	      || !settings1->USEPOSITIONWEIGHTS) {
-	    // then put this latitude and longitude in vector
+  // 	  if (!volume_found){ 
+  // 	    volume += icethkarray[j][k]*1000*area[k]; // add this to the total volume of ice in antarctica
+  // 	  }
+  // 	  if (!volume_found && icethkarray[j][k] > 0){
+  // 	    total_area += area[k]; // add this to the total area of ice in antarctica
+  // 	  }
+  // 	  // if the bin is within the maximum horizon of the balloon or if we don't care
+  // 	  //r=(geoid[k]+surfacer[j][k]);
+  // 	  //phi=dGetPhi(j);
+  // 	  //theta=dGetTheta(k);
+  // 	  //	  cout << "USEWEIGHTS is " << USEWEIGHTS << "\n";
+  // 	  if ((settings1->USEPOSITIONWEIGHTS && r_bin.Distance(r_bn_temp) < bn1->MAXHORIZON)
+  // 	      || !settings1->USEPOSITIONWEIGHTS) {
+  // 	    // then put this latitude and longitude in vector
 
-	    ilat_inhorizon[i].push_back(k); 
-	    ilon_inhorizon[i].push_back(j);
-	    // add up volume in horizon
+  // 	    ilat_inhorizon[i].push_back(k); 
+  // 	    ilon_inhorizon[i].push_back(j);
+  // 	    // add up volume in horizon
 			
-	    volume_inhorizon[i]+=icethkarray[j][k]*1000*area[k];
+  // 	    volume_inhorizon[i]+=icethkarray[j][k]*1000*area[k];
 
-	    // finding which bin in horizon has maximum volume
-	    if (icethkarray[j][k]*1000*area[k]>maxvol_inhorizon[i]) {
-	      maxvol_inhorizon[i]=icethkarray[j][k]*1000.*area[k];
-	    }
-	  } //end if (distance < 800 km)
-	} //end for (k loop)
-      } //end for (j loop)
-      //      cout << "i, volume_inhorizon are " << i << " " << volume_inhorizon[i] << "\n";
+  // 	    // finding which bin in horizon has maximum volume
+  // 	    if (icethkarray[j][k]*1000*area[k]>maxvol_inhorizon[i]) {
+  // 	      maxvol_inhorizon[i]=icethkarray[j][k]*1000.*area[k];
+  // 	    }
+  // 	  } //end if (distance < 800 km)
+  // 	} //end for (k loop)
+  //     } //end for (j loop)
+  //     //      cout << "i, volume_inhorizon are " << i << " " << volume_inhorizon[i] << "\n";
 
-      // ifi the balloon is too close to the ice, it will think there aren't any
-      // bins in the horizon, so force it the include the ones just below the balloon
-      int ilat_bn,ilon_bn;
-      GetILonILat(r_bn_temp,ilon_bn,ilat_bn); // find which longitude and latitude the balloon is above
+  //     // ifi the balloon is too close to the ice, it will think there aren't any
+  //     // bins in the horizon, so force it the include the ones just below the balloon
+  //     int ilat_bn,ilon_bn;
+  //     GetILonILat(r_bn_temp,ilon_bn,ilat_bn); // find which longitude and latitude the balloon is above
 
-      if (ilat_inhorizon[i].size()==0 || ilon_inhorizon[i].size()==0) {
-	maxvol_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // need to give it a maximum volume for a bin in horizon 
-	volume_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // and a total volume for the horizon
-      }
+  //     if (ilat_inhorizon[i].size()==0 || ilon_inhorizon[i].size()==0) {
+  // 	maxvol_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // need to give it a maximum volume for a bin in horizon 
+  // 	volume_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // and a total volume for the horizon
+  //     }
 
-      if (ilat_inhorizon[i].size()==0){ // for the ith balloon position, if it didn't find a latitude bin in horizon
-	ilat_inhorizon[i].push_back(ilat_bn); // force it to be the one below the balloon       
-      }	    
-      if (ilon_inhorizon[i].size()==0){ // for the ith balloon position, if it didn't find a longitude bin in horizon
-	ilon_inhorizon[i].push_back(ilon_bn); // force it to be the one below the balloon
-      }
-    } //end if (ice_model==0) Crust 2.0
+  //     if (ilat_inhorizon[i].size()==0){ // for the ith balloon position, if it didn't find a latitude bin in horizon
+  // 	ilat_inhorizon[i].push_back(ilat_bn); // force it to be the one below the balloon       
+  //     }	    
+  //     if (ilon_inhorizon[i].size()==0){ // for the ith balloon position, if it didn't find a longitude bin in horizon
+  // 	ilon_inhorizon[i].push_back(ilon_bn); // force it to be the one below the balloon
+  //     }
+  //   } //end if (ice_model==0) Crust 2.0
 
-    else if (ice_model==1 && !writeFile) { // for bedmap model
-      fgets(line,200,bedmap_horizons);
-      while(line[0] != 'X') {
-	e_coord = atoi(strtok(line,","));
-	n_coord = atoi(strtok(NULL,","));
-	easting_inhorizon[i].push_back(e_coord);
-	northing_inhorizon[i].push_back(n_coord);
-	fgets(line,200,bedmap_horizons);
-      } //while there are more eastings and northings
-      strtok(line,",");
-      volume_inhorizon[i] = atof(strtok(NULL,",")); // volume in the horizon
-      maxvol_inhorizon[i] = atof(strtok(NULL,","));
+  //   else if (ice_model==1 && !writeFile) { // for bedmap model
+  //     fgets(line,200,bedmap_horizons);
+  //     while(line[0] != 'X') {
+  // 	e_coord = atoi(strtok(line,","));
+  // 	n_coord = atoi(strtok(NULL,","));
+  // 	easting_inhorizon[i].push_back(e_coord);
+  // 	northing_inhorizon[i].push_back(n_coord);
+  // 	fgets(line,200,bedmap_horizons);
+  //     } //while there are more eastings and northings
+  //     strtok(line,",");
+  //     volume_inhorizon[i] = atof(strtok(NULL,",")); // volume in the horizon
+  //     maxvol_inhorizon[i] = atof(strtok(NULL,","));
 
-      if (!volume_found) {
-	total_area = atof(fgets(line,200,bedmap_horizons)); // total area on the continent
-	volume = atof(fgets(line,200,bedmap_horizons)); // total volume on the continent
-      } //if
-    } //end if (ice_model==1) && !writeFile
+  //     if (!volume_found) {
+  // 	total_area = atof(fgets(line,200,bedmap_horizons)); // total area on the continent
+  // 	volume = atof(fgets(line,200,bedmap_horizons)); // total volume on the continent
+  //     } //if
+  //   } //end if (ice_model==1) && !writeFile
 
-    else if (ice_model==1 && writeFile) { //for BEDMAP model, look through all easting and northing coordinates in the groundbed map (our smallest).  Output what we find to a file for later use.
-      for (int n_coord=0;n_coord<nRows_ground;n_coord++) {
-	for (int e_coord=0;e_coord<nCols_ground;e_coord++) {
+  //   else if (ice_model==1 && writeFile) { //for BEDMAP model, look through all easting and northing coordinates in the groundbed map (our smallest).  Output what we find to a file for later use.
+  //     for (int n_coord=0;n_coord<nRows_ground;n_coord++) {
+  // 	for (int e_coord=0;e_coord<nCols_ground;e_coord++) {
 
-	  GroundENtoLonLat(e_coord,n_coord,lon,lat);
+  // 	  GroundENtoLonLat(e_coord,n_coord,lon,lat);
 
-	  theta = lat * constants::RADDEG;
-	  phi=LongtoPhi_0is180thMeridian(lon);
+  // 	  theta = lat * constants::RADDEG;
+  // 	  phi=LongtoPhi_0is180thMeridian(lon);
 
-	  surface_elevation = this->Surface(lon,lat);
-	  local_ice_thickness = this->IceThickness(lon,lat);
+  // 	  surface_elevation = this->Surface(lon,lat);
+  // 	  local_ice_thickness = this->IceThickness(lon,lat);
 		    
-	  // get position of each bin
-	  r_bin = TVector3(sin(theta)*cos(phi)*surface_elevation,
-			   sin(theta)*sin(phi)*surface_elevation,
-			   cos(theta)*surface_elevation);
+  // 	  // get position of each bin
+  // 	  r_bin = TVector3(sin(theta)*cos(phi)*surface_elevation,
+  // 			   sin(theta)*sin(phi)*surface_elevation,
+  // 			   cos(theta)*surface_elevation);
 		    
-	  if (!volume_found){
-	    volume += local_ice_thickness*Area(lat);
-	  }
-	  if (!volume_found && local_ice_thickness > 5){
-	    total_area += Area(lat);
-	  }
-	  if ((settings1->USEPOSITIONWEIGHTS && r_bn_temp.Distance(r_bin)<bn1->MAXHORIZON) || !settings1->USEPOSITIONWEIGHTS) {
-	    fprintf(bedmap_horizons,"%i,%i,\n",e_coord,n_coord);
-	    // then put this latitude and longitude in vector
-	    easting_inhorizon[i].push_back(e_coord);
-	    northing_inhorizon[i].push_back(n_coord);
-	    // add up volume in horizon
+  // 	  if (!volume_found){
+  // 	    volume += local_ice_thickness*Area(lat);
+  // 	  }
+  // 	  if (!volume_found && local_ice_thickness > 5){
+  // 	    total_area += Area(lat);
+  // 	  }
+  // 	  if ((settings1->USEPOSITIONWEIGHTS && r_bn_temp.Distance(r_bin)<bn1->MAXHORIZON) || !settings1->USEPOSITIONWEIGHTS) {
+  // 	    fprintf(bedmap_horizons,"%i,%i,\n",e_coord,n_coord);
+  // 	    // then put this latitude and longitude in vector
+  // 	    easting_inhorizon[i].push_back(e_coord);
+  // 	    northing_inhorizon[i].push_back(n_coord);
+  // 	    // add up volume in horizon
 
-	    GroundENtoLonLat(e_coord,n_coord,lon,lat);
+  // 	    GroundENtoLonLat(e_coord,n_coord,lon,lat);
 
-	    volume_inhorizon[i]+=local_ice_thickness*Area(lat);
+  // 	    volume_inhorizon[i]+=local_ice_thickness*Area(lat);
 
-	    // finding which bin in horizon has maximum volumey
-	    if (local_ice_thickness*Area(lat)>maxvol_inhorizon[i]) {
-	      maxvol_inhorizon[i]=local_ice_thickness*Area(lat);
-	    }
-	  } //end if (distance < 800 km & ice present)
-	} //end for (e_coord loop)
-      } //end for (n_coord loop)
+  // 	    // finding which bin in horizon has maximum volumey
+  // 	    if (local_ice_thickness*Area(lat)>maxvol_inhorizon[i]) {
+  // 	      maxvol_inhorizon[i]=local_ice_thickness*Area(lat);
+  // 	    }
+  // 	  } //end if (distance < 800 km & ice present)
+  // 	} //end for (e_coord loop)
+  //     } //end for (n_coord loop)
 
-      fprintf(bedmap_horizons,"X,%f,%f,\n",volume_inhorizon[i],maxvol_inhorizon[i]);
-      if (!volume_found) {
-	fprintf(bedmap_horizons,"%f\n",total_area);
-	fprintf(bedmap_horizons,"%f\n",volume);
-      } //if
-    } //end if (ice_model==1) && writeFile
+  //     fprintf(bedmap_horizons,"X,%f,%f,\n",volume_inhorizon[i],maxvol_inhorizon[i]);
+  //     if (!volume_found) {
+  // 	fprintf(bedmap_horizons,"%f\n",total_area);
+  // 	fprintf(bedmap_horizons,"%f\n",volume);
+  //     } //if
+  //   } //end if (ice_model==1) && writeFile
 
-    if (!volume_found) {
-      std::cout << "Total surface area covered with ice (in m^2) is : "<<total_area<<std::endl;
-      volume_found=1;
-    } //if
-  } //end loop over balloon positions
+  //   if (!volume_found) {
+  //     std::cout << "Total surface area covered with ice (in m^2) is : "<<total_area<<std::endl;
+  //     volume_found=1;
+  //   } //if
+  // } //end loop over balloon positions
     
-    // finding average volume in horizon over all balloon positions.
-  volume_inhorizon_average=0;
+  //   // finding average volume in horizon over all balloon positions.
+  // volume_inhorizon_average=0;
     
-  for (int i=0;i<NPHI;i++) {
-    volume_inhorizon_average+=volume_inhorizon[i];
+  // for (int i=0;i<NPHI;i++) {
+  //   volume_inhorizon_average+=volume_inhorizon[i];
 	
-  } //for
-  volume_inhorizon_average/=(double)NBALLOONPOSITIONS;
+  // } //for
+  // volume_inhorizon_average/=(double)NBALLOONPOSITIONS;
     
-  //cout << "Total volume of ice in Antarctica with this ice model (m^3): " << volume << "\n";
-  //cout << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
+  // //cout << "Total volume of ice in Antarctica with this ice model (m^3): " << volume << "\n";
+  // //cout << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
     
-  icemcLog() << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
+  // icemcLog() << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
     
-  icemcLog() << "Average thickness of ice within horizon, averages over balloon positions " << volume_inhorizon_average/constants::PI/pow(bn1->MAXHORIZON,2) << "\n";
+  // icemcLog() << "Average thickness of ice within horizon, averages over balloon positions " << volume_inhorizon_average/constants::PI/pow(bn1->MAXHORIZON,2) << "\n";
 } //method CreateHorizons 
 
 
@@ -1578,23 +1557,30 @@ void icemc::Antarctica::ReadIceThickness() {
   double theValue;
   volume=0.;
   ice_area=0.;
-  max_icevol_perbin=0.;
-  max_icethk_perbin=0.;
+  // max_icevol_perbin=0.;
+  // max_icethk_perbin=0.;
   double lon_tmp,lat_tmp;
   for(int rowNum=0;rowNum<nRows_ice;rowNum++) {
     for(int colNum=0;colNum<nCols_ice;colNum++) {
       IceENtoLonLat(colNum,rowNum,lon_tmp,lat_tmp);
       IceThicknessFile >> theValue;
-      if(theValue==NODATA)
+      if(theValue==NODATA){
 	theValue=0; //Set ice depth to 0 where we have no data.
+      }
       ice_thickness_array[colNum][rowNum] = double(theValue); //This stores data as ice_thickness_array[easting][northing]
       volume+=ice_thickness_array[colNum][rowNum]*Area(lat_tmp);
-      if (ice_thickness_array[colNum][rowNum]>0)
+      if (ice_thickness_array[colNum][rowNum]>0){
 	ice_area+=Area(lat_tmp);
-      if (ice_thickness_array[colNum][rowNum]*Area(lat_tmp)>max_icevol_perbin)
-	max_icevol_perbin=ice_thickness_array[colNum][rowNum]*Area(lat_tmp);
-      if (ice_thickness_array[colNum][rowNum]>max_icethk_perbin)
-	max_icethk_perbin=ice_thickness_array[colNum][rowNum];
+      }
+      // if (ice_thickness_array[colNum][rowNum]*Area(lat_tmp)>max_icevol_perbin){
+      // 	max_icevol_perbin=ice_thickness_array[colNum][rowNum]*Area(lat_tmp);
+      // }
+      // if (ice_thickness_array[colNum][rowNum]>max_icethk_perbin){
+      // 	max_icethk_perbin=ice_thickness_array[colNum][rowNum];
+      // }
+      if(theValue > fMaxIceThickness ){
+	fMaxIceThickness = theValue;
+      }
     }//for
   }//for
     

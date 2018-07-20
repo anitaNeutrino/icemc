@@ -79,8 +79,7 @@ namespace icemc {
     double SurfaceAboveGeoid(const GeoidModel::Position& pos) const;
     double WaterDepth(double lon,double lat) const;
     double WaterDepth(const GeoidModel::Position& pos) const;
-    GeoidModel::Position PickInteractionLocation(int ibnposition, const Settings *settings1, const GeoidModel::Position &rbn, Interaction *interaction1) const;
-    GeoidModel::Position PickBalloonPosition() const;
+    GeoidModel::Position PickInteractionLocation(const GeoidModel::Position &balloon) const;
     void GetMAXHORIZON(Balloon *bn1) const; // get upper limit on the horizon wrt the balloon.
     int RossIceShelf(const GeoidModel::Position &position) const; 
     int IceOnWater(const GeoidModel::Position &postition) const;
@@ -120,9 +119,7 @@ namespace icemc {
     int ice_model;
     int DEPTH_DEPENDENT_N;
 
-
     //Information on horizons - what ice the balloon can see at each position along its path.
- 
  
     double volume_inhorizon_average; // average volume of ice seen by balloon
     std::vector<int> ilon_inhorizon[NBNPOSITIONS_MAX]; // indices in lon and lat for bins in horizon for NPHI balloon positions along 80 deg latitude line.
@@ -169,8 +166,6 @@ namespace icemc {
 
   private:
 
-    TRandom Rand3;
-  
     const static int N_sheetup=2810;
     double d_sheetup[N_sheetup], l_sheetup[N_sheetup];
     const static int N_shelfup=420;

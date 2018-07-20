@@ -313,19 +313,18 @@ int icemc::Interaction::PickDownwardInteractionPoint(int ibnposition, const Geoi
     // If we require neutrinos from a particular position
     // we generate that cartesian position here
 
-    static TVector3 specific_position; 
+    static GeoidModel::Position specific_position;
 
     if (settings1->SPECIFIC_NU_POSITION) 
       {
-        double R = settings1->SPECIFIC_NU_POSITION_ALTITUDE + antarctica1->Geoid(settings1->SPECIFIC_NU_POSITION_LATITUDE); 
-        double theta = settings1->SPECIFIC_NU_POSITION_LATITUDE * constants::RADDEG; 
-        double phi = Earth::LongtoPhi_0isPrimeMeridian(settings1->SPECIFIC_NU_POSITION_LONGITUDE); 
-        specific_position.SetXYZ(R * sin(theta) * cos(phi), R * sin(theta) * sin(phi), R * cos(theta)); 
+	specific_position.SetLonLatAlt(settings1->SPECIFIC_NU_POSITION_LONGITUDE,
+				       settings1->SPECIFIC_NU_POSITION_LATITUDE,
+				       settings1->SPECIFIC_NU_POSITION_ALTITUDE);
       }
 
     do{
       ///@todo ibnposition
-      posnu = antarctica1->PickInteractionLocation(ibnposition, settings1, r_bn, this);
+      posnu = antarctica1->PickInteractionLocation(r_bn);
     } while(settings1->SPECIFIC_NU_POSITION &&  (posnu - specific_position).Mag() > settings1->SPECIFIC_NU_POSITION_DISTANCE);    
   }
 
