@@ -59,8 +59,8 @@ namespace icemc{
 
     double DELAYS[3]; // delay top, middle, bottom
 
-    vector<int> flag_e_L1[Anita::NPHI_MAX];
-    vector<int> flag_h_L1[Anita::NPHI_MAX];
+    std::vector<int> flag_e_L1[Anita::NPHI_MAX];
+    std::vector<int> flag_h_L1[Anita::NPHI_MAX];
   
     UShort_t phiTrigMask[Anita::NPOL]; // which phi sector is masked for Anita 2 or Anita-3 (V-POL)
     //UShort_t phiTrigMaskH; // which phi sector is masked for Anita 3 (H-POL)
@@ -91,7 +91,7 @@ namespace icemc{
     //  int channels_passing[4][16][2][5]; // keeps track of which channels pass
     int channels_passing[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2][Anita::NBANDS_MAX]; // keeps track of which channels pass
     // make this an array of vectors instead so that we can have an arbitrary number of bands for satellite
-    vector<int> vchannels_passing[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2];
+    std::vector<int> vchannels_passing[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2];
     std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhits; 
 
 
@@ -126,28 +126,28 @@ namespace icemc{
     void FillInNadir(const Settings *settings1,Anita *anita1,int ant);
     
     // The following functions are related to the coherent-sum trigger
-    vector < vector < vector <double> > > volts_rx_rfcm_trigger; // This is used for easy access to the waveforms of specific phi sectors and layers, and it combines physical layers into their trigger layer.
+    std::vector < std::vector < std::vector <double> > > volts_rx_rfcm_trigger; // This is used for easy access to the waveforms of specific phi sectors and layers, and it combines physical layers into their trigger layer.
     // Accessed by volts_rx_rfcm_trigger[phi_sector][layer][timestep]
     int first_phi_sector_hit; // This is used by the coherent waveform sum trigger scheme to make processing more efficient
     double three_bit_round(double input, bool round_zero_up = true, bool allow_zero = false);
-    void convert_wfm_to_3_bit(const vector <double>& wfm, double rms, vector <double>& output);
-    void delay_align_antenna_waveforms(const vector< vector < vector <double> > >& waveforms, const vector < vector <unsigned int> >& delays, vector < vector <double> >& output);
-    void sum_aligned_waveforms(const vector < vector <double> >& waveforms, vector <double>& output);
-    void square_waveform_elements(const vector <double>& waveform, vector <double>& output);
-    double summed_power_window(const vector <double>& waveform, unsigned int start_index, unsigned int length);
+    void convert_wfm_to_3_bit(const std::vector <double>& wfm, double rms, std::vector <double>& output);
+    void delay_align_antenna_waveforms(const std::vector< std::vector < std::vector <double> > >& waveforms, const std::vector < std::vector <unsigned int> >& delays, std::vector < std::vector <double> >& output);
+    void sum_aligned_waveforms(const std::vector < std::vector <double> >& waveforms, std::vector <double>& output);
+    void square_waveform_elements(const std::vector <double>& waveform, std::vector <double>& output);
+    double summed_power_window(const std::vector <double>& waveform, unsigned int start_index, unsigned int length);
     // End of functions relating to coherent-sum trigger
 
-    int findahit(vector<int> myvector,int first,int last);
+    int findahit(const std::vector<int>& myvector,int first,int last);
     int findanl3(int *l3,int NPHISECTORS);
 
-    int L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
-			      vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top);
+    int L1Anita3_OnePhiSector(int IZERO,std::vector<int> &vl0_realtime_bottom, std::vector<int> &vl0_realtime_middle, std::vector<int> &vl0_realtime_top,
+			      std::vector<int> &vl1_realtime_bottom, std::vector<int> &vl1_realtime_middle, std::vector<int> &vl1_realtime_top);
 
     void L1Anita3_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &l1trig);  
 
 
-    int L1Anita4_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
-			      vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top);
+    int L1Anita4_OnePhiSector(int IZERO,std::vector<int> &vl0_realtime_bottom, std::vector<int> &vl0_realtime_middle, std::vector<int> &vl0_realtime_top,
+			      std::vector<int> &vl1_realtime_bottom, std::vector<int> &vl1_realtime_middle, std::vector<int> &vl1_realtime_top);
     void L1Anita4_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &l1trig);
 
     void L2Anita3and4(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> l1trig,
@@ -158,20 +158,20 @@ namespace icemc{
 
 
     int PartofL1Anita4LR_ScA_TwoPhiSectors(int ilayerreverse,int IZERO,int ipolar,
-					   vector<int> &v1l0_realtime_left, vector<int> &v2l0_realtime_left, 
-					   vector<int> &v1l0_realtime_right, vector<int> &v2l0_realtime_right, 
-					   vector<int> &vl1_realtime);
+					   std::vector<int> &v1l0_realtime_left, std::vector<int> &v2l0_realtime_left, 
+					   std::vector<int> &v1l0_realtime_right, std::vector<int> &v2l0_realtime_right, 
+					   std::vector<int> &vl1_realtime);
   
     int L1Anita4LR_ScA_TwoPhiSectors(int IZERO,int ipolar,
-				     vector<int> &vl0_realtime_bottomleft, vector<int> &v2l0_realtime_bottomleft, 
-				     vector<int> &vl0_realtime_bottomright, vector<int> &v2l0_realtime_bottomright, 
-				     vector<int> &vl0_realtime_middleleft, vector<int> &v2l0_realtime_middleleft,
-				     vector<int> &vl0_realtime_middleright, vector<int> &v2l0_realtime_middleright,
-				     vector<int> &vl0_realtime_topleft, vector<int> &v2l0_realtime_topleft,
-				     vector<int> &vl0_realtime_topright, vector<int> &v2l0_realtime_topright,
-				     vector<int> &vl1_realtime_bottom, 
-				     vector<int> &vl1_realtime_middle, 
-				     vector<int> &vl1_realtime_top);
+				     std::vector<int> &vl0_realtime_bottomleft, std::vector<int> &v2l0_realtime_bottomleft, 
+				     std::vector<int> &vl0_realtime_bottomright, std::vector<int> &v2l0_realtime_bottomright, 
+				     std::vector<int> &vl0_realtime_middleleft, std::vector<int> &v2l0_realtime_middleleft,
+				     std::vector<int> &vl0_realtime_middleright, std::vector<int> &v2l0_realtime_middleright,
+				     std::vector<int> &vl0_realtime_topleft, std::vector<int> &v2l0_realtime_topleft,
+				     std::vector<int> &vl0_realtime_topright, std::vector<int> &v2l0_realtime_topright,
+				     std::vector<int> &vl1_realtime_bottom, 
+				     std::vector<int> &vl1_realtime_middle, 
+				     std::vector<int> &vl1_realtime_top);
   
     void L1Anita4LR_ScA_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig);
     void L3Anita4LR_ScA(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> vl2trig,
@@ -180,33 +180,33 @@ namespace icemc{
 
 
 
-    void L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> &vl1trig_anita4lr_scb,int &npassesl1);
+    void L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *anita1, std::array< std::array< std::vector<int>,16>,3> &vl1trig_anita4lr_scb,int &npassesl1);
     // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
-    void L1Anita4LR_ScB_OneBin(int IZERO,vector<int> vleft,vector<int> vright,
-			       vector<int> &vl1trig);
+    void L1Anita4LR_ScB_OneBin(int IZERO,const std::vector<int>& vleft,const std::vector<int>& vright,
+			       std::vector<int> &vl1trig);
 
-    void L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
-					     std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb, int &npassesl2, int &npassesl2_type0);
+    void L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,std::array< std::array< std::vector<int>,16>,3> vl1trig_anita4lr_scb,
+					     std::array<std::array<std::vector<int>,3>,16> &vl2_realtime_anita4_scb, int &npassesl2, int &npassesl2_type0);
 
   
     // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
 
-    void L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,vector<int> vl1_bottom, 
-					    vector<int> vl1_middle,
-					    vector<int> vl1_top,
-					    std::array<vector<int>,3> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0);
+    void L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,std::vector<int> vl1_bottom, 
+					    std::vector<int> vl1_middle,
+					    std::vector<int> vl1_top,
+					    std::array<std::vector<int>,3> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0);
 
     int L3or30Anita4LR_ScB_TwoPhiSectors_OneBin(int IZERO, 
-						std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
-						std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
+						std::array<std::vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
+						std::array<std::vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
 						int npass1,int npass2);
   
-    void L3Anita4LR_ScB_OneBin(int IZERO,Anita *anita1,std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb,
-			       std::array<vector<int>,16> &vl3trig_type0, std::array<vector<int>,16> &vl3trig_type1,
+    void L3Anita4LR_ScB_OneBin(int IZERO,Anita *anita1,std::array<std::array<std::vector<int>,3>,16> vl2_realtime_anita4_scb,
+			       std::array<std::vector<int>,16> &vl3trig_type0, std::array<std::vector<int>,16> &vl3trig_type1,
 			       int &thispasses_l3type0,int &thispasses_l3type1);
 
   
-    void delayL0(vector<int> &vl0,double delay);
+    void delayL0(std::vector<int> &vl0,double delay);
     void delay_AllAntennas(Anita *anita1);
 
 

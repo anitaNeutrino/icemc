@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include "TVector3.h"
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TGraph.h"
@@ -556,15 +556,15 @@ void  icemc::GlobalTrigger::PassesTriggerBasic(const Settings *settings1,Anita *
 
       //	cout << "did delays.\n";
       // l1 triggers for all antennas
-      std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb;
+      std::array< std::array< std::vector<int>,16>,3> vl1trig_anita4lr_scb;
 
       // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
       // for each phi sector, whether there is a 1, 2 or 3 coincidence
-      std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb;
+      std::array<std::array<std::vector<int>,3>,16> vl2_realtime_anita4_scb;
       //	cout << "did L2.\n";
 
-      std::array<vector<int>,16> vl3trig_type0;
-      std::array<vector<int>,16> vl3trig_type1;
+      std::array<std::vector<int>,16> vl3trig_type0;
+      std::array<std::vector<int>,16> vl3trig_type1;
       int thispasses_l3type0=0;
       int thispasses_l3type1=0;
 
@@ -894,7 +894,7 @@ void icemc::GlobalTrigger::PassesTriggerCoherentSum(const Settings *settings1,An
       for (unsigned index_phi = 0; index_phi < N_STEP_PHI; ++index_phi) {
 	for (unsigned index_theta = 0; index_theta < N_STEP_THETA; ++index_theta) {
 	  unsigned fill_index = 0;
-	  vector <double> summed_wfm(anita1->HALFNFOUR, 0.);
+	  std::vector <double> summed_wfm(anita1->HALFNFOUR, 0.);
 	    
 	  for (int fill_index_phi_sector_offset = -1; fill_index_phi_sector_offset <= 1; ++fill_index_phi_sector_offset) {
 	    unsigned fill_index_phi_sector = (center_phi_sector_index + fill_index_phi_sector_offset + N_PHI_SECTORS)%N_PHI_SECTORS;
@@ -931,7 +931,7 @@ void icemc::GlobalTrigger::PassesTriggerCoherentSum(const Settings *settings1,An
 	    } // for fill layer indices
 	  } // for fill phi sector indices
 	    
-	  vector <double> power_of_summed_wfm;
+	  std::vector <double> power_of_summed_wfm;
 	  square_waveform_elements(summed_wfm, power_of_summed_wfm);
 	    
 	  for (unsigned window_index = 0; window_index < power_of_summed_wfm.size() - 32; window_index += 16) {
@@ -1040,7 +1040,7 @@ void icemc::GlobalTrigger::PassesTriggerSummedPower(const Settings *settings1,An
     
     
   //	Calculate the theta hypothesis angles
-  vector <double> theta_hypotheses_deg;
+  std::vector <double> theta_hypotheses_deg;
   double theta_deg = SummedPowerThetaMin;
     
   do {
@@ -1701,7 +1701,7 @@ void icemc::GlobalTrigger::L3Trigger(const Settings *settings1,Anita *anita1,int
  *
  *			Realistically though, the delays should just be used to advance the iterators.
  */
-void icemc::GlobalTrigger::delay_align_antenna_waveforms(const vector< vector < vector <double> > >& waveforms, const vector < vector <unsigned int> >& delays, vector < vector <double> >& output){
+void icemc::GlobalTrigger::delay_align_antenna_waveforms(const std::vector< std::vector < std::vector <double> > >& waveforms, const std::vector < std::vector <unsigned int> >& delays, std::vector < std::vector <double> >& output){
   // The waveforms vector is accessed by waveforms[phi_sector_id][antenna_id][sample_id]
   // the delays are accessed by delays[phi_sector_id][antenna_id]
     
@@ -1709,7 +1709,7 @@ void icemc::GlobalTrigger::delay_align_antenna_waveforms(const vector< vector < 
   output.clear();
     
   unsigned int shortest_waveform = waveforms[0][0].size();
-  vector <double> temp_antenna_waveform;
+  std::vector <double> temp_antenna_waveform;
   for (unsigned int phi_sector_index = 0; phi_sector_index < 3; phi_sector_index++){
     for (unsigned int antenna_index = 0; antenna_index < waveforms[phi_sector_index].size(); antenna_index++){
       temp_antenna_waveform.clear();
@@ -1738,7 +1738,7 @@ void icemc::GlobalTrigger::delay_align_antenna_waveforms(const vector< vector < 
  *			Also, the bounds of the for-loop should not be separately declared
  *			as it just adds another point of failure.
  */
-void icemc::GlobalTrigger::sum_aligned_waveforms(const vector < vector <double> >& waveforms, vector <double>& output){
+void icemc::GlobalTrigger::sum_aligned_waveforms(const std::vector < std::vector <double> >& waveforms, std::vector <double>& output){
   output.clear();
   unsigned waveform_size = waveforms[0].size();
   unsigned waveforms_size = waveforms.size();
@@ -1766,7 +1766,7 @@ void icemc::GlobalTrigger::sum_aligned_waveforms(const vector < vector <double> 
  *		result = boost::transform(wfm, [](auto& x){x *= x});
  *
  */
-void icemc::GlobalTrigger::square_waveform_elements(const vector <double>& waveform, vector <double>& output){
+void icemc::GlobalTrigger::square_waveform_elements(const std::vector <double>& waveform, std::vector <double>& output){
   output.clear();
     
   for (unsigned int element_index = 0; element_index < waveform.size(); element_index++){
@@ -1783,7 +1783,7 @@ void icemc::GlobalTrigger::square_waveform_elements(const vector <double>& wavef
  *		double sum = std::accumulate(wfm.begin(), wfm.end(), 0.); 
  *
  */
-double icemc::GlobalTrigger::summed_power_window(const vector <double>& waveform, unsigned int start_index, unsigned int length){
+double icemc::GlobalTrigger::summed_power_window(const std::vector <double>& waveform, unsigned int start_index, unsigned int length){
   double result = 0;
   for (unsigned int index = start_index; index < start_index + length; index++){
     result += waveform[index];
@@ -1830,13 +1830,14 @@ double icemc::GlobalTrigger::three_bit_round(double input, bool round_zero_up, b
 /*	
  *	This function takes a waveform array as a parameter and returns a vector <double> of 3 bit waveforms
  */
-void icemc::GlobalTrigger::convert_wfm_to_3_bit(const vector <double>& wfm, double rms, vector <double>& output){
+void icemc::GlobalTrigger::convert_wfm_to_3_bit(const std::vector <double>& wfm, double rms, std::vector <double>& output){
   output.clear();
   for (unsigned int index = 0; index < wfm.size(); index++){
     output.push_back(three_bit_round(wfm[index]/rms));
   }
 }
-int icemc::GlobalTrigger::findahit(vector<int> myvector,int first,int last) {
+
+int icemc::GlobalTrigger::findahit(const std::vector<int>& myvector,int first,int last) {
 
   int yes=0;
   if ((int)myvector.size()<=last)
@@ -1916,8 +1917,10 @@ void icemc::GlobalTrigger::L3Anita3and4(Anita *anita1,std::array<std::array<std:
 }
 
 // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
-void icemc::GlobalTrigger::L1Anita4LR_ScB_OneBin(int IZERO,vector<int> vleft,vector<int> vright,
-						 vector<int> &vl1trig) {
+void icemc::GlobalTrigger::L1Anita4LR_ScB_OneBin(int IZERO,
+						 const std::vector<int>& vleft,
+						 const std::vector<int>& vright,
+						 std::vector<int> &vl1trig) {
 
   if ((vleft[IZERO] && findahit(vright,IZERO-nstepback,IZERO-nstepback+(int)(L1_COINCIDENCE_ANITA4LR_SCB/TRIGTIMESTEP))) ||
       
@@ -1931,7 +1934,7 @@ void icemc::GlobalTrigger::L1Anita4LR_ScB_OneBin(int IZERO,vector<int> vleft,vec
 
 }
 // L1 trigger is at the antenna level again.  Just require coincidence between LCP and RCP
-void icemc::GlobalTrigger::L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> &vl1trig_anita4lr_scb,int &npassesl1) {
+void icemc::GlobalTrigger::L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *anita1,std::array< std::array< std::vector<int>,16>,3> &vl1trig_anita4lr_scb,int &npassesl1) {
  
 
   for (int itriglayer=0;itriglayer<anita1->NTRIGGERLAYERS;itriglayer++) {
@@ -1998,7 +2001,7 @@ void icemc::GlobalTrigger::L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *an
 
 // }
 // for each phi sector, does 1, 2 or 3 pass
-// void icemc::GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
+// void icemc::GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors(Anita *anita1,std::array< std::array< std::vector<int>,16>,3> vl1trig_anita4lr_scb,
 // 						 std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb) {
 
 //   double time_thisbin=(double)nstepback*TRIGTIMESTEP;
@@ -2030,8 +2033,8 @@ void icemc::GlobalTrigger::L1Anita4LR_ScB_AllAntennas_OneBin(int IZERO,Anita *an
 // }
 
 // for each phi sector, does 1, 2 or 3 pass
-void icemc::GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,std::array< std::array< vector<int>,16>,3> vl1trig_anita4lr_scb,
-							       std::array<std::array<vector<int>,3>,16> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0) {
+void icemc::GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *anita1,std::array< std::array< std::vector<int>,16>,3> vl1trig_anita4lr_scb,
+							       std::array<std::array<std::vector<int>,3>,16> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0) {
 
   for (int iphi=0;iphi<anita1->PHITRIG[0];iphi++) {
       
@@ -2055,7 +2058,7 @@ void icemc::GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *
 // 						    std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
 // 						    std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
 // 						    int npass1,int npass2,	
-// 						    vector<int> &vl3trig ) {
+// 						    std::vector<int> &vl3trig ) {
 
   
 
@@ -2087,7 +2090,7 @@ void icemc::GlobalTrigger::L2Anita4LR_ScB_AllPhiSectors_OneBin(int IZERO,Anita *
 // 						    std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
 // 						    std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
 // 						    int npass1,int npass2,	
-// 						    vector<int> &vl3trig ) {
+// 						    std::vector<int> &vl3trig ) {
 
   
 
@@ -2141,12 +2144,12 @@ void icemc::GlobalTrigger::L3Anita4LR_ScA(Anita *anita1,std::array<std::array<st
 
 }
 void icemc::GlobalTrigger::L1Anita3_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig) {
-  vector<int> vl1_realtime_vbottom;
-  vector<int> vl1_realtime_vmiddle; 
-  vector<int> vl1_realtime_vtop;
-  vector<int> vl1_realtime_hbottom;
-  vector<int> vl1_realtime_hmiddle; 
-  vector<int> vl1_realtime_htop;
+  std::vector<int> vl1_realtime_vbottom;
+  std::vector<int> vl1_realtime_vmiddle; 
+  std::vector<int> vl1_realtime_vtop;
+  std::vector<int> vl1_realtime_hbottom;
+  std::vector<int> vl1_realtime_hmiddle; 
+  std::vector<int> vl1_realtime_htop;
   double time_thisbin=(double)nstepback*TRIGTIMESTEP;
   int itrigbin=nstepback;
   //  cout << "phitrig is " << anita1->PHITRIG[0] << "\n";
@@ -2174,12 +2177,12 @@ void icemc::GlobalTrigger::L1Anita3_AllPhiSectors(Anita *anita1,std::array<std::
   //  cout << "inside, vl1trig is " << vl1trig[0][0].size() << "\n";
 }
 void icemc::GlobalTrigger::L1Anita4_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig) {
-  vector<int> vl1_realtime_vbottom;
-  vector<int> vl1_realtime_vmiddle; 
-  vector<int> vl1_realtime_vtop;
-  vector<int> vl1_realtime_hbottom;
-  vector<int> vl1_realtime_hmiddle; 
-  vector<int> vl1_realtime_htop;
+  std::vector<int> vl1_realtime_vbottom;
+  std::vector<int> vl1_realtime_vmiddle; 
+  std::vector<int> vl1_realtime_vtop;
+  std::vector<int> vl1_realtime_hbottom;
+  std::vector<int> vl1_realtime_hmiddle; 
+  std::vector<int> vl1_realtime_htop;
   double time_thisbin=(double)nstepback*TRIGTIMESTEP;
   int itrigbin=nstepback;
   //  cout << "phitrig is " << anita1->PHITRIG[0] << "\n";
@@ -2223,12 +2226,12 @@ void icemc::GlobalTrigger::L1Anita4_AllPhiSectors(Anita *anita1,std::array<std::
   //  cout << "inside, vl1trig is " << vl1trig[0][0].size() << "\n";
 }
 void icemc::GlobalTrigger::L1Anita4LR_ScA_AllPhiSectors(Anita *anita1,std::array<std::array<std::vector<int>,16>,2> &vl1trig) {
-  vector<int> vl1_realtime_1bottom;
-  vector<int> vl1_realtime_1middle; 
-  vector<int> vl1_realtime_1top;
-  vector<int> vl1_realtime_2bottom;
-  vector<int> vl1_realtime_2middle; 
-  vector<int> vl1_realtime_2top;
+  std::vector<int> vl1_realtime_1bottom;
+  std::vector<int> vl1_realtime_1middle; 
+  std::vector<int> vl1_realtime_1top;
+  std::vector<int> vl1_realtime_2bottom;
+  std::vector<int> vl1_realtime_2middle; 
+  std::vector<int> vl1_realtime_2top;
 
   double time_thisbin=(double)nstepback*TRIGTIMESTEP;
   int itrigbin=nstepback;
@@ -2300,8 +2303,8 @@ void icemc::GlobalTrigger::L1Anita4LR_ScA_AllPhiSectors(Anita *anita1,std::array
 }
 
 
-int icemc::GlobalTrigger::L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
-						vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top) {
+int icemc::GlobalTrigger::L1Anita3_OnePhiSector(int IZERO,std::vector<int> &vl0_realtime_bottom, std::vector<int> &vl0_realtime_middle, std::vector<int> &vl0_realtime_top,
+						std::vector<int> &vl1_realtime_bottom, std::vector<int> &vl1_realtime_middle, std::vector<int> &vl1_realtime_top) {
 
 
 
@@ -2367,8 +2370,8 @@ int icemc::GlobalTrigger::L1Anita3_OnePhiSector(int IZERO,vector<int> &vl0_realt
   }
   else return 0;
 }
-int icemc::GlobalTrigger::L1Anita4_OnePhiSector(int IZERO,vector<int> &vl0_realtime_bottom, vector<int> &vl0_realtime_middle, vector<int> &vl0_realtime_top,
-						vector<int> &vl1_realtime_bottom, vector<int> &vl1_realtime_middle, vector<int> &vl1_realtime_top) {
+int icemc::GlobalTrigger::L1Anita4_OnePhiSector(int IZERO,std::vector<int> &vl0_realtime_bottom, std::vector<int> &vl0_realtime_middle, std::vector<int> &vl0_realtime_top,
+						std::vector<int> &vl1_realtime_bottom, std::vector<int> &vl1_realtime_middle, std::vector<int> &vl1_realtime_top) {
 
 
 
@@ -2428,22 +2431,22 @@ int icemc::GlobalTrigger::L1Anita4_OnePhiSector(int IZERO,vector<int> &vl0_realt
   else return 0;
 }
 int icemc::GlobalTrigger::L1Anita4LR_ScA_TwoPhiSectors(int IZERO,int ipolar,
-						       vector<int> &v1l0_realtime_bottomleft, vector<int> &v2l0_realtime_bottomleft, 
-						       vector<int> &v1l0_realtime_bottomright, vector<int> &v2l0_realtime_bottomright, 
-						       vector<int> &v1l0_realtime_middleleft, vector<int> &v2l0_realtime_middleleft,
-						       vector<int> &v1l0_realtime_middleright, vector<int> &v2l0_realtime_middleright,
-						       vector<int> &v1l0_realtime_topleft, vector<int> &v2l0_realtime_topleft,
-						       vector<int> &v1l0_realtime_topright, vector<int> &v2l0_realtime_topright,
-						       vector<int> &vl1_realtime_bottom, 
-						       vector<int> &vl1_realtime_middle, 
-						       vector<int> &vl1_realtime_top) {
+						       std::vector<int> &v1l0_realtime_bottomleft, std::vector<int> &v2l0_realtime_bottomleft, 
+						       std::vector<int> &v1l0_realtime_bottomright, std::vector<int> &v2l0_realtime_bottomright, 
+						       std::vector<int> &v1l0_realtime_middleleft, std::vector<int> &v2l0_realtime_middleleft,
+						       std::vector<int> &v1l0_realtime_middleright, std::vector<int> &v2l0_realtime_middleright,
+						       std::vector<int> &v1l0_realtime_topleft, std::vector<int> &v2l0_realtime_topleft,
+						       std::vector<int> &v1l0_realtime_topright, std::vector<int> &v2l0_realtime_topright,
+						       std::vector<int> &vl1_realtime_bottom, 
+						       std::vector<int> &vl1_realtime_middle, 
+						       std::vector<int> &vl1_realtime_top) {
 
   
   //if (IZERO>=42 && IZERO<=44 && iphi==13)
   //cout << "inside _TwoPhiSectors. IZERO, ipolar are " <<  IZERO << "\t" << ipolar << "\n";
 
-  vector<int> vleft;
-  vector<int> vright;
+  std::vector<int> vleft;
+  std::vector<int> vright;
   if (ipolar==0) {
     vleft=v1l0_realtime_bottomleft;
     vright=v1l0_realtime_bottomright;
@@ -2486,16 +2489,16 @@ int icemc::GlobalTrigger::L1Anita4LR_ScA_TwoPhiSectors(int IZERO,int ipolar,
 
 
 int icemc::GlobalTrigger::PartofL1Anita4LR_ScA_TwoPhiSectors(int ilayerreverse,int ipolar,int IZERO,
-							     vector<int> &v1l0_realtime_left, vector<int> &v2l0_realtime_left, 
-							     vector<int> &v1l0_realtime_right, vector<int> &v2l0_realtime_right, 
-							     vector<int> &vl1_realtime) {
+							     std::vector<int> &v1l0_realtime_left, std::vector<int> &v2l0_realtime_left, 
+							     std::vector<int> &v1l0_realtime_right, std::vector<int> &v2l0_realtime_right, 
+							     std::vector<int> &vl1_realtime) {
     
   //  if (iphi==13)
   //cout << "ilayerreverse is " << ilayerreverse << "\n";
   if (WHICHLAYERSLCPRCP[ilayerreverse]==0) {
     
-    vector<int> vleft;
-    vector<int> vright;
+    std::vector<int> vleft;
+    std::vector<int> vright;
 
     if (ipolar==0) {
       vleft=v1l0_realtime_left;
@@ -2558,8 +2561,8 @@ int icemc::GlobalTrigger::PartofL1Anita4LR_ScA_TwoPhiSectors(int ilayerreverse,i
   return 0;
 
 }
-void icemc::GlobalTrigger::L3Anita4LR_ScB_OneBin(int IZERO,Anita *anita1,std::array<std::array<vector<int>,3>,16> vl2_realtime_anita4_scb,
-					  std::array<vector<int>,16> &vl3trig_type0, std::array<vector<int>,16> &vl3trig_type1,
+void icemc::GlobalTrigger::L3Anita4LR_ScB_OneBin(int IZERO,Anita *anita1,std::array<std::array<std::vector<int>,3>,16> vl2_realtime_anita4_scb,
+						 std::array<std::vector<int>,16> &vl3trig_type0, std::array<std::vector<int>,16> &vl3trig_type1,
 					  int &thispasses_l3type0,int &thispasses_l3type1) {
 
 
@@ -2621,10 +2624,10 @@ void icemc::GlobalTrigger::L3Anita4LR_ScB_OneBin(int IZERO,Anita *anita1,std::ar
 }
 
 
-void icemc::GlobalTrigger::L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,vector<int> vl1_bottom, 
-						       vector<int> vl1_middle,
-						       vector<int> vl1_top,
-						       std::array<vector<int>,3> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0) {
+void icemc::GlobalTrigger::L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,std::vector<int> vl1_bottom, 
+						       std::vector<int> vl1_middle,
+						       std::vector<int> vl1_top,
+							      std::array<std::vector<int>,3> &vl2_realtime_anita4_scb,int &npassesl2,int &npassesl2_type0) {
   // keep track of whether you get a coincidence between 1, 2 or 3 antennas in a phi sector with the right windows.
   
 
@@ -2705,9 +2708,9 @@ void icemc::GlobalTrigger::L2Anita4LR_ScB_OnePhiSector_OneBin(int IZERO,vector<i
 }
 // ask if L3 type 1 (2 and 2) or L3 type 0 (3 and 1 or 1 and 3) passes
 int icemc::GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( int IZERO,
-							    std::array<vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
-							    std::array<vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
-							    int npass1,int npass2) {
+								   std::array<std::vector<int>,3> vl2_realtime_anita4_scb, // 3 neighbors, whether 1, 2 or 3 pass
+								   std::array<std::vector<int>,3> vl2_realtime_anita4_scb_other, // 3 neighbors, whether 1, 2 or 3 pass
+								   int npass1,int npass2) {
 
   
 
@@ -2732,7 +2735,7 @@ int icemc::GlobalTrigger::L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( int IZERO,
   
 }
 
-void icemc::GlobalTrigger::delayL0(vector<int> &vl0,double delay) {
+void icemc::GlobalTrigger::delayL0(std::vector<int> &vl0,double delay) {
   int ndelay=(int)(delay/TRIGTIMESTEP);
   for (int i=0;i<ndelay;i++) {
     vl0.insert(vl0.begin(),0);

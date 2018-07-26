@@ -4,11 +4,11 @@
 #include "Constants.h"
 #include "TRandom3.h"
 #include "Settings.h"
-#include "Earth.h"
+#include "Crust2.h"
 #include "Antarctica.h"
 #include "AskaryanFreqsGenerator.h"
 #include "TVector3.h"
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "anita.hh"
 #include "RayTracer.h"
 
@@ -23,7 +23,8 @@
 #include "TH2D.h"
 
 
-icemc::RayTracer::RayTracer(const Antarctica* ice) :
+// icemc::RayTracer::RayTracer(const Antarctica* ice) :
+icemc::RayTracer::RayTracer(const EarthModel* ice) :  
   fAntarctica(ice),
   xaxis(1.,0.,0.),
   yaxis(0.,1.,0.),
@@ -59,7 +60,7 @@ void icemc::RayTracer::PrintAnglesOfIncidence() const {
 
 
 
-void icemc::RayTracer::initGuess(const GeoidModel::Position&nuInteraction, const GeoidModel::Position&detector) {  
+void icemc::RayTracer::initGuess(const Geoid::Position&nuInteraction, const Geoid::Position&detector) {  
 
   // to seed the ray tracing, we come up with an obviously wrong initial guess
   // first, we assume that the direction of the RF in the ice goes vertically upwards...
@@ -129,8 +130,8 @@ void icemc::RayTracer::Initialize() {
 }
 
 
-void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int whichray, GeoidModel::Position posnu, GeoidModel::Position posnu_down, GeoidModel::Position r_bn,
-				 GeoidModel::Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int whichtry, const Antarctica *antarctica, bool debug){
+void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int whichray, Geoid::Position posnu, Geoid::Position posnu_down, Geoid::Position r_bn,
+				 Geoid::Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX], int whichtry, const Antarctica *antarctica, bool debug){
 
 
 
@@ -183,10 +184,10 @@ void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int w
 //###########
 // icemc::RayTracer::WhereDoesItLeave() is defined in ray.hh since it is a statis member function // MS 2/1/2017
 
-int icemc::RayTracer::RandomizeSurface(const Settings *settings1, GeoidModel::Position rfexit_temp, TVector3 posnu, const Antarctica *antarctica, double &slopeyangle, int whichtry){
+int icemc::RayTracer::RandomizeSurface(const Settings *settings1, Geoid::Position rfexit_temp, TVector3 posnu, const Antarctica *antarctica, double &slopeyangle, int whichtry){
 
   double howmuch=settings1->SLOPEYSIZE;
-  GeoidModel::Position nsurf_rfexit_temp;
+  Geoid::Position nsurf_rfexit_temp;
   
   // rotate the surface normal according to the local slope.
   if (!settings1->SLAC){
@@ -199,7 +200,7 @@ int icemc::RayTracer::RandomizeSurface(const Settings *settings1, GeoidModel::Po
     nsurf_rfexit_temp.Rotate(-settings1->SLACSLOPE*constants::RADDEG,posnu.Cross(zaxis));
   }
   
-  GeoidModel::Position nsurf_rfexit_temp_copy=nsurf_rfexit_temp;
+  Geoid::Position nsurf_rfexit_temp_copy=nsurf_rfexit_temp;
   // tilt local surface based on slopeyness.
   if (settings1->SLOPEY) {
     
@@ -252,10 +253,10 @@ int icemc::RayTracer::RandomizeSurface(const Settings *settings1, GeoidModel::Po
 }//RandomizeSurface
 
 
-// int icemc::RayTracer::GetSurfaceNormal(Antarctica *antarctica,TVector3 posnu,GeoidModel::Position *rfexit) {
+// int icemc::RayTracer::GetSurfaceNormal(Antarctica *antarctica,TVector3 posnu,Geoid::Position *rfexit) {
 int icemc::RayTracer::GetSurfaceNormal(const Settings *settings1,const Antarctica *antarctica,TVector3 posnu,double &slopeyangle,int whichtry){
 
-  GeoidModel::Position rfexit_temp;
+  Geoid::Position rfexit_temp;
 
   rfexit_temp=rfexit[whichtry];
 
@@ -594,15 +595,15 @@ TVector3 icemc::RayTracer::toLocal(const TVector3& v, bool translate) const {
   return TVector3(x, y, z);
 }
 
-// GeoidModel::Position icemc::RayTracer::nudgeSurface(const double* params) const {
-GeoidModel::Position icemc::RayTracer::getSurfacePosition(const double* params) const {
+// Geoid::Position icemc::RayTracer::nudgeSurface(const double* params) const {
+Geoid::Position icemc::RayTracer::getSurfacePosition(const double* params) const {
 
   // so we pick a point shifted by deltaX, and deltaY from the start position
-  // GeoidModel::Position surfacePos = fInteractionPos + params[0]*fLocalX + params[1]*fLocalY;
-  GeoidModel::Position surfacePos = fBalloonPos + params[0]*fLocalX + params[1]*fLocalY;
-  double lon = surfacePos.Longitude();
-  double lat = surfacePos.Latitude();
-  surfacePos.SetLonLatAlt(lon, lat, fAntarctica->Surface(lon, lat));
+  // Geoid::Position surfacePos = fInteractionPos + params[0]*fLocalX + params[1]*fLocalY;
+  Geoid::Position surfacePos = fBalloonPos + params[0]*fLocalX + params[1]*fLocalY;
+  
+  double surfaceAlt = fAntarctica->SurfaceAboveGeoid(surfacePos);  
+  surfacePos.SetAltitude(surfaceAlt);
 
   return surfacePos;
 }
@@ -613,7 +614,7 @@ GeoidModel::Position icemc::RayTracer::getSurfacePosition(const double* params) 
 double icemc::RayTracer::evalPath(const double* params) const {
 
   // position we're aiming for from the detector...
-  const GeoidModel::Position surfacePos = getSurfacePosition(params);
+  const Geoid::Position surfacePos = getSurfacePosition(params);
 
   // Gives us this initial RF direction...
   const TVector3 rfDir = (surfacePos - fBalloonPos).Unit();
@@ -655,7 +656,7 @@ double icemc::RayTracer::evalPath(const double* params) const {
 
 
 
-TVector3 icemc::RayTracer::findPathToDetector(const GeoidModel::Position&rfStart, const GeoidModel::Position&balloon, bool debug){
+TVector3 icemc::RayTracer::findPathToDetector(const Geoid::Position&rfStart, const Geoid::Position&balloon, bool debug){
   
   fInteractionPos = rfStart;
   fBalloonPos = balloon;
@@ -807,10 +808,10 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
   const double bigPlotDist = 800e3;
   const double smallPlotDist = 100;
   const int nBins = 1024;
-  const vector<double> xMins {x0 - smallPlotDist, 0};
-  const vector<double> xMaxs {x0 + smallPlotDist, bigPlotDist};    
-  const vector<double> yMins {y0 - smallPlotDist, -0.5*bigPlotDist};
-  const vector<double> yMaxs {y0 + smallPlotDist, +0.5*bigPlotDist};
+  const std::vector<double> xMins {x0 - smallPlotDist, 0};
+  const std::vector<double> xMaxs {x0 + smallPlotDist, bigPlotDist};    
+  const std::vector<double> yMins {y0 - smallPlotDist, -0.5*bigPlotDist};
+  const std::vector<double> yMaxs {y0 + smallPlotDist, +0.5*bigPlotDist};
     
   for(int rangeInd=0; rangeInd < xMins.size(); rangeInd++){
 
@@ -839,9 +840,9 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
 
 
 
-// int icemc::RayTracer::WhereDoesItLeave(const GeoidModel::Position &rfStart, const TVector3 &rfDirectionUnit, const Antarctica *antarctica, GeoidModel::Position &surfaceIntersection, bool debug){
+// int icemc::RayTracer::WhereDoesItLeave(const Geoid::Position &rfStart, const TVector3 &rfDirectionUnit, const Antarctica *antarctica, Geoid::Position &surfaceIntersection, bool debug){
 
-//   GeoidModel::Position ray = rfStart;
+//   Geoid::Position ray = rfStart;
 
 //   double deltaRadius = antarctica->Surface(surfaceIntersection) - surfaceIntersection.Mag();
 //   int iter = 0;
@@ -886,7 +887,7 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
   // //to find the exit point at the surface of the Earth.wufan 
   // }
 
-int icemc::RayTracer::WhereDoesItLeave(const GeoidModel::Position &rfStart, const TVector3 &rfDirectionUnit, const Antarctica *antarctica, GeoidModel::Position &surfaceIntersection){  
+int icemc::RayTracer::WhereDoesItLeave(const Geoid::Position &rfStart, const TVector3 &rfDirectionUnit, const Antarctica *antarctica, Geoid::Position &surfaceIntersection){  
   
   double distance = 0; ///< How far along rfDirectionUnit (meters)
   double rfStartRadius = rfStart.Mag(); ///< Distance from center of earth to interaction (meters)
@@ -997,7 +998,7 @@ int icemc::RayTracer::WhereDoesItLeave(const GeoidModel::Position &rfStart, cons
 
 
 
-void icemc::RayTracer::makePlot(const char* name, const Antarctica* antarctica, const GeoidModel::Position&nuInteraction,  const TVector3& nuDirection, const GeoidModel::Position&detector) const {
+void icemc::RayTracer::makePlot(const char* name, const Antarctica* antarctica, const Geoid::Position&nuInteraction,  const TVector3& nuDirection, const Geoid::Position&detector) const {
 
   // here we make some graphics to show what's going on...
   // everything of interest is on a plane between the detector and neutrino
@@ -1022,7 +1023,7 @@ void icemc::RayTracer::makePlot(const char* name, const Antarctica* antarctica, 
   double minY = -extraRange; // nuInteraction is at TGraph origin, units are meters, so start here
   
   for(int i=-100; i < nPointsSurf + 100; i++){
-    GeoidModel::Position getSurfaceHere = nuInteraction + nuIntToDetUnit*i*stepSize;
+    Geoid::Position getSurfaceHere = nuInteraction + nuIntToDetUnit*i*stepSize;
     double surface = antarctica->Surface(getSurfaceHere);
     double surfaceRelativeToNewOrigin = surface - altitudeOfInteraction;
 

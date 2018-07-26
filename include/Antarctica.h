@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include "Earth.h"
+#include "Crust2.h"
 
 class TRandom3;
 
@@ -16,22 +16,8 @@ namespace icemc {
   class Balloon;
   class Earth;
 
-
-  //Variables for conversion between BEDMAP polar stereographic coordinates and lat/lon.  Conversion equations from ftp://164.214.2.65/pub/gig/tm8358.2/TM8358_2.pdf
-  const double scale_factor=0.97276901289;  //scale factor at pole corresponding to 71 deg S latitude of true scale (used in BEDMAP)
-  const double ellipsoid_inv_f = 298.257223563; //of Earth
-  // const double ellipsoid_b = Earth::R_EARTH*(1-(1/ellipsoid_inv_f));
-  const double ellipsoid_b = Earth::BulgeRadius*(1-(1/ellipsoid_inv_f));  
-  const double eccentricity = sqrt((1/ellipsoid_inv_f)*(2-(1/ellipsoid_inv_f)));
-  const double bedmap_a_bar = pow(eccentricity,2)/2 + 5*pow(eccentricity,4)/24 + pow(eccentricity,6)/12 + 13*pow(eccentricity,8)/360;
-  const double bedmap_b_bar = 7*pow(eccentricity,4)/48 + 29*pow(eccentricity,6)/240 + 811*pow(eccentricity,8)/11520;
-  const double bedmap_c_bar = 7*pow(eccentricity,6)/120 + 81*pow(eccentricity,8)/1120;
-  const double bedmap_d_bar = 4279*pow(eccentricity,8)/161280;
-  const double bedmap_c_0 = (2*Earth::BulgeRadius / sqrt(1-pow(eccentricity,2))) * pow(( (1-eccentricity) / (1+eccentricity) ),eccentricity/2);
-  // const double bedmap_c_0 = (2*Earth::R_EARTH / sqrt(1-pow(eccentricity,2))) * pow(( (1-eccentricity) / (1+eccentricity) ),eccentricity/2);  
-
   //! Ice thicknesses and water depth
-  class Antarctica : public Earth {
+  class Antarctica : public Crust2 {
 
 
   public:
@@ -67,47 +53,46 @@ namespace icemc {
     void GroundENtoLonLat(int e, int n,	double& lon, double& lat) const;
 
     const static int NBNPOSITIONS_MAX=26000;
-    double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
+    // double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
     // const static int NBNPOSITIONS_MAX=26000;
     // double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
     Antarctica(int model=0,int earth_mode=0,int WEIGHTABSORPTION_SETTING=1);
     double IceThickness(double lon,double lat) const;
-    double IceThickness(const GeoidModel::Position& pos) const;
+    double IceThickness(const Geoid::Position& pos) const;
     double Surface(double lon,double lat) const;
-    double Surface(const GeoidModel::Position& pos) const;
+    double Surface(const Geoid::Position& pos) const;
     double SurfaceAboveGeoid(double lon,double lat) const;
-    double SurfaceAboveGeoid(const GeoidModel::Position& pos) const;
+    double SurfaceAboveGeoid(const Geoid::Position& pos) const;
     double WaterDepth(double lon,double lat) const;
-    double WaterDepth(const GeoidModel::Position& pos) const;
-    GeoidModel::Position PickInteractionLocation(const GeoidModel::Position &balloon) const;
+    double WaterDepth(const Geoid::Position& pos) const;
+    Geoid::Position PickInteractionLocation(const Geoid::Position &balloon) const;
     void GetMAXHORIZON(Balloon *bn1) const; // get upper limit on the horizon wrt the balloon.
-    int RossIceShelf(const GeoidModel::Position &position) const; 
-    int IceOnWater(const GeoidModel::Position &postition) const;
-    int RossExcept(const GeoidModel::Position &position) const;
-    int RonneIceShelf(const GeoidModel::Position &position) const;
-    int WestLand(const GeoidModel::Position &pos) const; 
-    int AcceptableRfexit(const TVector3 &nsurf_rfexit,const GeoidModel::Position &rfexit,const TVector3 &n_exit2rx); 
+    int RossIceShelf(const Geoid::Position &position) const; 
+    int IceOnWater(const Geoid::Position &postition) const;
+    int RossExcept(const Geoid::Position &position) const;
+    int RonneIceShelf(const Geoid::Position &position) const;
+    int WestLand(const Geoid::Position &pos) const; 
+    int AcceptableRfexit(const TVector3 &nsurf_rfexit,const Geoid::Position &rfexit,const TVector3 &n_exit2rx); 
     double GetBalloonPositionWeight(int ibnpos) const;
-    int OutsideAntarctica(const GeoidModel::Position &pos) const;
+    int OutsideAntarctica(const Geoid::Position &pos) const;
     int OutsideAntarctica(double lat) const;
-    int WhereDoesItEnterIce(const GeoidModel::Position &posnu,
+    int WhereDoesItEnterIce(const Geoid::Position &posnu,
 			    const TVector3 &nnu,
 			    double stepsize,
-			    GeoidModel::Position &r_enterice) const;
+			    Geoid::Position &r_enterice) const;
 
-    int WhereDoesItExitIce(const GeoidModel::Position &posnu,
+    int WhereDoesItExitIce(const Geoid::Position &posnu,
 			   const TVector3 &nnu,
 			   double stepsize,
-			   GeoidModel::Position &r_enterice) const;
-    int WhereDoesItExitIceForward(const GeoidModel::Position &posnu,
+			   Geoid::Position &r_enterice) const;
+    int WhereDoesItExitIceForward(const Geoid::Position &posnu,
 				  const TVector3 &nnu,
 				  double stepsize,
-				  GeoidModel::Position &r_enterice) const;
-    void CreateHorizons(const Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn);
-    TVector3 GetSurfaceNormal(const GeoidModel::Position &r_out) const; //overloaded from Earth to include procedures for new ice models.
+				  Geoid::Position &r_enterice) const;
+    void CreateHorizons(const Settings *settings1,const Balloon *bn1);
     double GetN(double depth) const;
-    double GetN(const GeoidModel::Position &pos) const;
-    double EffectiveAttenuationLength(const Settings *settings1,const GeoidModel::Position &pos, const int &whichray) const;
+    double GetN(const Geoid::Position &pos) const;
+    double EffectiveAttenuationLength(const Settings *settings1,const Geoid::Position &pos, const int &whichray) const;
   
     void IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const;
 

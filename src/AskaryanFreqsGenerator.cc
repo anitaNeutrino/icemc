@@ -2,7 +2,7 @@
 #include "TVector3.h"
 #include "TF1.h"
 #include "TRandom3.h"
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "Constants.h"
 #include "anita.hh"
 

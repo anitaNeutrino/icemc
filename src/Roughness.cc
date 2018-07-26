@@ -8,7 +8,7 @@
 #include <sstream>
 
 #include "TVector3.h"
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "Roughness.h"
 #include "Constants.h"
 #include "TF2.h"
@@ -18,7 +18,7 @@
 #include "Primaries.h"
 #include "anita.hh"
 #include "balloon.hh"
-#include "Earth.h"
+#include "Crust2.h"
 #include "Antarctica.h"
 #include "spline.h"
 #include "RayTracer.h"

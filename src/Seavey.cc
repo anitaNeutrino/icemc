@@ -830,7 +830,7 @@ void icemc::Seavey::GetHitAngles(double e_component_kvector, double h_component_
 }
 
 
-void icemc::Seavey::updatePosition(const GeoidModel::Position& position, double heading, double pitch, double roll){
+void icemc::Seavey::updatePosition(const Geoid::Position& position, double heading, double pitch, double roll){
 
   std::vector<VectorPair*> forRotation {&fPositionV, &fPositionH, &fEPlane,  &fHPlane,  &fNormal};
 

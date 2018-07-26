@@ -26,7 +26,7 @@ namespace icemc {
     virtual int getNumRX() const override {return fNumRX;}
     virtual TVector3 getPositionRX(int i) const override;
 
-    virtual GeoidModel::Position getCenterOfDetector(UInt_t unixTime = 0) override;
+    virtual Geoid::Position getCenterOfDetector(UInt_t unixTime = 0) override;
     virtual bool applyTrigger() override {return  applyTrigger(-1);}
     virtual bool applyTrigger(int inu);
     virtual void getDesiredNDt(int& n, double& dt) const override {

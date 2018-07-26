@@ -3,11 +3,11 @@
 #include "Constants.h"
 #include "TRandom3.h"
 #include "Settings.h"
-#include "Earth.h"
+#include "Crust2.h"
 #include "Antarctica.h"
 
 #include "AskaryanFreqsGenerator.h"
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "Primaries.h"
 #include "anita.hh"
 #include "RayTracer.h"
@@ -24,7 +24,7 @@ const std::string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
 icemc::Antarctica::Antarctica(int model,
 			      int earth_model,
 			      int WEIGHTABSORPTION_SETTING)
-  : Earth(earth_model,WEIGHTABSORPTION_SETTING)
+  : Crust2(earth_model,WEIGHTABSORPTION_SETTING)
 {
 
   // double bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(71*constants::RADDEG)) / (1 - eccentricity*sin(71*constants::RADDEG)) ),eccentricity/2) * tan((constants::PI/4) - (71*constants::RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
@@ -148,7 +148,7 @@ icemc::Antarctica::Antarctica(int model,
 
 
 
-GeoidModel::Position icemc::Antarctica::PickInteractionLocation(const GeoidModel::Position &balloon) const {
+Geoid::Position icemc::Antarctica::PickInteractionLocation(const Geoid::Position &balloon) const {
 
   
   // // random numbers used
@@ -218,10 +218,12 @@ GeoidModel::Position icemc::Antarctica::PickInteractionLocation(const GeoidModel
   //   //roughness may not sometimes, should add checks or something
   // TVector3 posnu=PickPosnuForaLonLat(lon,lat,theta,phi);
 
-  std::cerr << "Disabled during refactor!" << std::endl;
+  std::cerr << __PRETTY_FUNCTION__ << " Disabled during refactor!" << std::endl;
 
-  GeoidModel::Position posNu = balloon;
-  return posNu;
+  ///@todo do this again!
+  return Crust2::PickInteractionLocation(balloon);
+  // Geoid::Position posNu = balloon;
+  // return posNu;
 } //PickInteractionLocation
 
 
@@ -238,12 +240,12 @@ int icemc::Antarctica::PickUnbiased(Interaction *interaction1) const {
   thisphi = gRandom->Rndm()*(maxphi-minphi) + minphi;
   thiscos = gRandom->Rndm()*(maxcos-mincos) + mincos;
   thissin = sqrt(1.-thiscos*thiscos);
-  GeoidModel::Position thisr_in;// entrance point
-  GeoidModel::Position thisr_enterice;
-  GeoidModel::Position thisr_enterice_tmp;
-  GeoidModel::Position thisnuexitearth;
-  GeoidModel::Position thisnuexitice;
-  GeoidModel::Position thisr_exitice;
+  Geoid::Position thisr_in;// entrance point
+  Geoid::Position thisr_enterice;
+  Geoid::Position thisr_enterice_tmp;
+  Geoid::Position thisnuexitearth;
+  Geoid::Position thisnuexitice;
+  Geoid::Position thisr_exitice;
   interaction1->noway=0;
   interaction1->wheredoesitleave_err=0;
   interaction1->neverseesice=0;
@@ -251,7 +253,7 @@ int icemc::Antarctica::PickUnbiased(Interaction *interaction1) const {
   interaction1->toohigh=0;
   interaction1->toolow=0;
     
-  thisr_in.SetXYZ(Earth::BulgeRadius*thissin*thiscos,Earth::BulgeRadius*thissin*thissin,Earth::BulgeRadius*thiscos);
+  thisr_in.SetXYZ(G::R_EARTH*thissin*thiscos,G::R_EARTH*thissin*thissin,G::R_EARTH*thiscos);
   // interaction1->r_in = thisr_in;
 
   if (thisr_in.Dot(interaction1->nnu)>0){
@@ -424,129 +426,23 @@ int icemc::Antarctica::PickUnbiased(Interaction *interaction1) const {
     
 }
 
-TVector3 icemc::Antarctica::GetSurfaceNormal(const GeoidModel::Position &here) const {
-  ///@todo FIX THIS FUNCTION
 
-  GeoidModel::Position justAbove = here;
-  justAbove.SetAltitude(here.Altitude()+1);
-  return (justAbove - here).Unit();
-
-  // if (FLATSURFACE) {
-  //   return n_surf;
-  // }
-  // if (ice_model==0) {
-  //   double theta=r_out.Theta();
-
-  //   int ilon,ilat;
-  //   GetILonILat(r_out,ilon,ilat);
-
-  //   int ilon_previous=ilon-1;
-  //   if (ilon_previous<0){
-  //     ilon_previous=NLON-1;
-  //   }
-  //   int ilon_next=ilon+1;
-  //   if (ilon_next==NLON){
-  //     ilon_next=0;
-  //   }
-  //   double r=(geoid[ilat]+surfacer[ilon][ilat])*sin(theta);
-	
-  //   double slope_phi=(surfacer[ilon_next][ilat]-surfacer[ilon_previous][ilat])/(r*2*phistep);
-	
-  //   int ilat_previous=ilat-1;
-  //   if (ilat_previous<0){
-  //     ilat_previous=0;
-  //   }	
-  //   int ilat_next=ilat+1;
-  //   if (ilat_next==NLAT){
-  //     ilat_next=NLAT-1;
-  //   }	
-  //   double slope_costheta=(surfacer[ilon][ilat_next]-surfacer[ilon][ilat_previous])/((geoid[ilat]+surfacer[ilon][ilat])*2*thetastep);
-
-  //   // first rotate n_surf according to tilt in costheta and position on continent - rotate around the y axis.
-  //   double angle=atan(slope_costheta);
-	
-  //   n_surf.RotateY(angle);
-	
-  //   // now rotate n_surf according to tilt in phi - rotate around the z axis.
-  //   angle=atan(slope_phi);
-	
-  //   n_surf.RotateZ(angle);
-  // } //end if(Crust 2.0)
-  // else if (ice_model==1) {
-  //   double dist_to_check = 7500; //check elevations at this distance north, south, east and west of event
-  //   double lon,lat;
-  //   double lon_prev,lon_next;
-  //   double lat_prev,lat_next;
-  //   lon = r_out.Longitude();
-  //   lat = r_out.Latitude(); //longitude and latitude of interaction
-  //   double local_surface_elevation = Surface(lon,lat);
-	
-  //   lat_next = lat + dist_to_check * (180 / (local_surface_elevation * constants::PI)); //the latitude 7.5 km south of the interaction
-  //   lat_prev = lat - dist_to_check * (180 / (local_surface_elevation * constants::PI)); //the latitude 7.5 km north of the interaction
-	
-  //   lon_next = lon + dist_to_check * (180 / (sin(lat*constants::RADDEG) * local_surface_elevation * constants::PI)); 
-  //   lon_prev = lon - dist_to_check * (180 / (sin(lat*constants::RADDEG) * local_surface_elevation * constants::PI)); 
-	
-  //   if (lat_next > 90) {
-  //     //std::cout<<"lat_next is > 90"<<std::endl;
-  //     lat_next = 90 - (lat_next - 90);  //if we went past the pole, set coordinates for the other side
-  //     lon_next += 180;
-  //     lon_prev += 180;
-  //   } //end if
-  //   //std::cout<<"lon, lat: "<<lon<<" , "<<lat<<std::endl;
-  //   //correct any out of range longitudes
-  //   if (lon_next > 360) {
-  //     //std::cout<<"lon_next > 360\n";
-  //     lon_next -= 360;
-  //   }
-  //   else if (lon_next < 0) {
-  //     //std::cout<<"lon_next < 0\n";
-  //     lon_next += 360;
-  //   }
-  //   if (lon_prev > 360) {
-  //     //std::cout<<"lon_prev > 360\n";
-  //     lon_prev -= 360;
-  //   }
-  //   else if (lon_prev < 0) {
-  //     //std::cout << "lon_prev < 0";
-  //     lon_prev += 360;
-  //   }
-	
-  //   double slope_phi=(SurfaceAboveGeoid(lon_next,lat)-SurfaceAboveGeoid(lon_prev,lat))/(2*dist_to_check);
-	
-  //   double slope_costheta=(SurfaceAboveGeoid(lon,lat_next)-SurfaceAboveGeoid(lon,lat_prev))/(2*dist_to_check);
-	
-  //   // first rotate n_surf according to tilt in costheta - rotate around the y axis.
-  //   double angle=atan(slope_costheta);
-	
-  //   n_surf.RotateY(angle);
-	
-  //   // now rotate n_surf according to tilt in phi - rotate around the z axis.
-  //   angle=atan(slope_phi);
-	
-  //   n_surf.RotateZ(angle);
-  // } //end if(BEDMAP)
-    
-  // return n_surf;
-    
-} //method GetSurfaceNormal
-
-int icemc::Antarctica::WhereDoesItEnterIce(const GeoidModel::Position &posnu,
+int icemc::Antarctica::WhereDoesItEnterIce(const Geoid::Position &posnu,
 					 const TVector3 &nnu,
 					 double stepsize,
-					 GeoidModel::Position &r_enterice) const {
+					 Geoid::Position &r_enterice) const {
   // now get exit point...
   //   see my geometry notes.
   // parameterize the neutrino trajectory and just see where it
   // crosses the earth radius.
     
-  //  GeoidModel::Position r_enterice;
+  //  Geoid::Position r_enterice;
   double distance=0;
   int left_edge=0;
-  GeoidModel::Position x = posnu;
+  Geoid::Position x = posnu;
   double x2;
     
-  GeoidModel::Position x_previous = posnu;
+  Geoid::Position x_previous = posnu;
     
   double x_previous2= x_previous.Dot(x_previous);
   x2=x_previous2;
@@ -597,7 +493,7 @@ int icemc::Antarctica::WhereDoesItEnterIce(const GeoidModel::Position &posnu,
       r_enterice = x;
       // this gets you out of the loop.
       //continue;
-      distance=3*GeoidModel::getGeoidRadiusAtLatitude(lat);
+      distance=3*Geoid::getGeoidRadiusAtLatitude(lat);
       foundit=1;
       //std::cout << "foundit is " << foundit << "\n";
       //std::cout << "r_enterice is ";r_enterice.Print();
@@ -620,22 +516,22 @@ int icemc::Antarctica::WhereDoesItEnterIce(const GeoidModel::Position &posnu,
   return foundit;
 }//WhereDoesItEnterIce
 
-int icemc::Antarctica::WhereDoesItExitIce(const GeoidModel::Position &posnu,
+int icemc::Antarctica::WhereDoesItExitIce(const Geoid::Position &posnu,
 					const TVector3 &nnu,
 					double stepsize,
-					GeoidModel::Position &r_enterice) const {
+					Geoid::Position &r_enterice) const {
   // now get exit point...
   //   see my geometry notes.
   // parameterize the neutrino trajectory and just see where it
   // crosses the earth radius.
     
-  //  GeoidModel::Position r_enterice;
+  //  Geoid::Position r_enterice;
   double distance=0;
   int left_edge=0;
-  GeoidModel::Position x = posnu;
+  Geoid::Position x = posnu;
   double x2;   
     
-  GeoidModel::Position x_previous = posnu;
+  Geoid::Position x_previous = posnu;
     
   double x_previous2= x_previous.Dot(x_previous);
   x2=x_previous2;
@@ -690,7 +586,7 @@ int icemc::Antarctica::WhereDoesItExitIce(const GeoidModel::Position &posnu,
       r_enterice = x;
       // this gets you out of the loop.
       //continue;
-      distance=3*GeoidModel::getGeoidRadiusAtLatitude(lat);//Geoid(lat);
+      distance=3*Geoid::getGeoidRadiusAtLatitude(lat);//Geoid(lat);
       foundit=1;
       //std::cout << "foundit is " << foundit << "\n";
       //continue;
@@ -712,22 +608,22 @@ int icemc::Antarctica::WhereDoesItExitIce(const GeoidModel::Position &posnu,
   return foundit;
 }//WhereDoesItExitIce
 
-int icemc::Antarctica::WhereDoesItExitIceForward(const GeoidModel::Position &posnu,
+int icemc::Antarctica::WhereDoesItExitIceForward(const Geoid::Position &posnu,
 					       const TVector3 &nnu,
 					       double stepsize,
-					       GeoidModel::Position &r_enterice) const {
+					       Geoid::Position &r_enterice) const {
   // now get exit point...
   //   see my geometry notes.
   // parameterize the neutrino trajectory and just see where it
   // crosses the earth radius.
     
-  //  GeoidModel::Position r_enterice;
+  //  Geoid::Position r_enterice;
   double distance=0;
   int left_edge=0;
-  GeoidModel::Position x = posnu;
+  Geoid::Position x = posnu;
   double x2;
     
-  GeoidModel::Position x_previous = posnu;
+  Geoid::Position x_previous = posnu;
     
   double x_previous2= x_previous.Dot(x_previous);
   x2=x_previous2;
@@ -778,7 +674,7 @@ int icemc::Antarctica::WhereDoesItExitIceForward(const GeoidModel::Position &pos
       r_enterice = x;
       // this gets you out of the loop.
       //continue;
-      distance=3*GeoidModel::getGeoidRadiusAtLatitude(lat);//Geoid(lat);
+      distance=3*Geoid::getGeoidRadiusAtLatitude(lat);//Geoid(lat);
       foundit=1;
       //std::cout << "foundit is " << foundit << "\n";
       //continue;
@@ -801,31 +697,33 @@ int icemc::Antarctica::WhereDoesItExitIceForward(const GeoidModel::Position &pos
 }//WhereDoesItExitIceForward
 
 
+
+
 double icemc::Antarctica::IceThickness(double lon, double lat) const {
   //This method returns the thickness of the ice in meters at a location specified by a latitude and longitude (in degrees).  A switch in the input file can be set to determine whether the Crust 2.0 model or the BEDMAP model is used to find the ice depth.  Code by Stephen Hoover.
   double ice_thickness=0;
-  //std::cout << "ice_model is " << ice_model << "\n";
-  //std::cout << "icethkarray is " << icethkarray[(int)(lon/2)][(int)(lat/2)]*1000. << "\n";
+
   if (ice_model==1) {
     int e_coord=0;
     int n_coord=0;
     IceLonLattoEN(lon,lat,e_coord,n_coord);
-    if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord > 0){
+    std::cout << lon << "\t" << e_coord << "\t" << n_coord << std::endl;
+    if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord > 0){      
       ice_thickness = ice_thickness_array[e_coord][n_coord]; //if this region has BEDMAP data, use it.
     }
     else{
-      ice_thickness = Earth::IceThickness(lon, lat);
+      ice_thickness = Crust2::IceThickness(lon, lat);
     }
   } //BEDMAP ice thickness
   else if (ice_model==0) {
-    ice_thickness = Earth::IceThickness(lon, lat);
+    ice_thickness = Crust2::IceThickness(lon, lat);
     //std::cout << "ilon, ilat are " << (int)(lon/2) << " " << (int)(lat/2) << "\n";
   } //Crust 2.0 ice thickness
     
   return ice_thickness;
 } //method IceThickness
 
-double icemc::Antarctica::IceThickness(const GeoidModel::Position &pos) const {
+double icemc::Antarctica::IceThickness(const Geoid::Position &pos) const {
   //This method returns the thickness of the ice in meters at a location under a given position vector.  Code by Stephen Hoover.
     
   return IceThickness(pos.Longitude(),pos.Latitude());
@@ -847,28 +745,28 @@ double icemc::Antarctica::SurfaceAboveGeoid(double lon, double lat) const {
       surface = ground_elevation[e_coord_ground][n_coord_ground] + ice_thickness_array[e_coord_ice][n_coord_ice] + water_depth[e_coord_ice][n_coord_ice];
     }
     else{
-      surface = Earth::SurfaceAboveGeoid(lon, lat);
+      surface = Crust2::SurfaceAboveGeoid(lon, lat);
     }
   } //Elevation of surface above geoid according to BEDMAP
   else if (ice_model==0) {
-      surface = Earth::SurfaceAboveGeoid(lon, lat);
+      surface = Crust2::SurfaceAboveGeoid(lon, lat);
   } //Elevation of surface above geoid according to Crust 2.0
     
   return surface;
 } //method SurfaceAboveGeoid
 
-double icemc::Antarctica::SurfaceAboveGeoid(const GeoidModel::Position &pos) const {
+double icemc::Antarctica::SurfaceAboveGeoid(const Geoid::Position &pos) const {
   //This method returns the elevation above the geoid of the surface of the ice (or bare ground, if no ice is present) in meters, at a location specified by a position vector.  Code by Stephen Hoover.
     
   return SurfaceAboveGeoid(pos.Longitude(),pos.Latitude());
 } //method SurfaceAboveGeoid(position)
 
 double icemc::Antarctica::Surface(double lon,double lat) const {
-  GeoidModel::Position p(lon, lat, SurfaceAboveGeoid(lon,lat));
+  Geoid::Position p(lon, lat, SurfaceAboveGeoid(lon,lat));
   return p.Mag();
 } //Surface
 
-double icemc::Antarctica::Surface(const GeoidModel::Position&pos) const {
+double icemc::Antarctica::Surface(const Geoid::Position&pos) const {
   return Surface(pos.Longitude(),pos.Latitude());
 } //Surface
 
@@ -877,7 +775,7 @@ double icemc::Antarctica::WaterDepth(double lon, double lat) const {
   double water_depth_value=0;
     
   if (ice_model==0) {
-    water_depth_value = Earth::WaterDepth(lon, lat);
+    water_depth_value = Crust2::WaterDepth(lon, lat);
   } //if(Crust 2.0)
   else if (ice_model==1) {
     int e_coord=0;
@@ -886,24 +784,24 @@ double icemc::Antarctica::WaterDepth(double lon, double lat) const {
     if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord >= 0)
       water_depth_value = water_depth[e_coord][n_coord];
     else
-      water_depth_value = Earth::WaterDepth(lon, lat);
+      water_depth_value = Crust2::WaterDepth(lon, lat);
   } //else if(BEDMAP)
     
   return water_depth_value;
 } //method WaterDepth(longitude, latitude)
-double icemc::Antarctica::WaterDepth(const GeoidModel::Position &pos) const {
+double icemc::Antarctica::WaterDepth(const Geoid::Position &pos) const {
   //This method returns the depth of water beneath ice shelves in meters, at a location specified by a position vector.  Code by Stephen Hoover.
     
   return WaterDepth(pos.Longitude(),pos.Latitude());
 } //method WaterDepth(position)
 
-int icemc::Antarctica::IceOnWater(const GeoidModel::Position &pos) const{
+int icemc::Antarctica::IceOnWater(const Geoid::Position &pos) const{
   if(IceThickness(pos)>0.&&WaterDepth(pos)>0.)
     return 1;
   else return 0;
     
 }
-int icemc::Antarctica::RossIceShelf(const GeoidModel::Position &pos) const {
+int icemc::Antarctica::RossIceShelf(const Geoid::Position &pos) const {
 
   ///@todo RESTORE ME!
   return 0;
@@ -922,7 +820,7 @@ int icemc::Antarctica::RossIceShelf(const GeoidModel::Position &pos) const {
   // }
 }//RossIceShelf
 
-int icemc::Antarctica::RossExcept(const GeoidModel::Position &pos) const{
+int icemc::Antarctica::RossExcept(const Geoid::Position &pos) const{
   ///@todo RESTORE ME!
   // int ilon,ilat;
   // GetILonILat(pos,ilon,ilat);
@@ -935,7 +833,7 @@ int icemc::Antarctica::RossExcept(const GeoidModel::Position &pos) const{
 }
 
 
-int icemc::Antarctica::RonneIceShelf(const GeoidModel::Position &pos) const {
+int icemc::Antarctica::RonneIceShelf(const Geoid::Position &pos) const {
   ///@todo RESTORE ME!
   return 0;
   // int ilon,ilat;
@@ -952,7 +850,7 @@ int icemc::Antarctica::RonneIceShelf(const GeoidModel::Position &pos) const {
   // }    
 }//RonneIceShelf
 
-int icemc::Antarctica::WestLand(const GeoidModel::Position &pos) const {
+int icemc::Antarctica::WestLand(const Geoid::Position &pos) const {
   double lon = pos.Longitude() , lat = pos.Latitude();
     
   if((lat>=4&&lat<=26)&&((lon>=0&&lon<=180)||lon>=336))
@@ -964,16 +862,18 @@ int icemc::Antarctica::WestLand(const GeoidModel::Position &pos) const {
 
 double icemc::Antarctica::GetBalloonPositionWeight(int ibnpos) const {
   //  std::cout << "ibnpos, volume_inhorizon, volume are " << ibnpos << " " << volume_inhorizon[ibnpos] << " " << volume << "\n";
-  if (volume_inhorizon[ibnpos]==0) {
-    icemcLog() << icemc::error << "Volume in horizon is zero!\n";
-    exit(1);
-  }
-
-  return volume/volume_inhorizon[ibnpos];
+  ///@todo The functionality here needs to be restored somehow...
+  
+  // if (volume_inhorizon[ibnpos]==0) {
+  //   icemcLog() << icemc::error << "Volume in horizon is zero!\n";
+  //   exit(1);
+  // }
+  return 1;
+  // return volume/volume_inhorizon[ibnpos];
 } //GetBalloonPositionWeight
 
 
-int icemc::Antarctica::OutsideAntarctica(const GeoidModel::Position &pos) const {
+int icemc::Antarctica::OutsideAntarctica(const Geoid::Position &pos) const {
   return (pos.Latitude() >= COASTLINE);
 } //OutsideAntarctica(Position)
 
@@ -983,7 +883,7 @@ int icemc::Antarctica::OutsideAntarctica(double lat) const {
 } //OutsideAntarctica(double lat)
 
 
-int icemc::Antarctica::AcceptableRfexit(const TVector3 &nsurf_rfexit,const GeoidModel::Position &rfexit,const TVector3 &n_exit2rx) {
+int icemc::Antarctica::AcceptableRfexit(const TVector3 &nsurf_rfexit,const Geoid::Position &rfexit,const TVector3 &n_exit2rx) {
 
   //Make sure there's actually ice where the ray leaves
   if (rfexit.Latitude()>COASTLINE || IceThickness(rfexit)<0.0001) {
@@ -1023,13 +923,13 @@ double icemc::Antarctica::GetN(double altitude) const {
   return n;
 } //GetN(altitude)
 
-double icemc::Antarctica::GetN(const GeoidModel::Position &pos) const {
+double icemc::Antarctica::GetN(const Geoid::Position &pos) const {
   return GetN(pos.Mag() - Surface(pos.Longitude(),pos.Latitude()));
 } //GetN(Position)
 
 
 
-double icemc::Antarctica::EffectiveAttenuationLength(const Settings *settings1,const GeoidModel::Position &pos,const int &whichray) const {
+double icemc::Antarctica::EffectiveAttenuationLength(const Settings *settings1,const Geoid::Position &pos,const int &whichray) const {
   double localmaxdepth = IceThickness(pos);
   double depth = Surface(pos) - pos.Mag();
   //std::cout << "depth is " << depth << "\n";
@@ -1101,10 +1001,12 @@ void icemc::Antarctica::LonLattoEN(double lon, double lat, double xLowerLeft, do
   double easting=0;
   double northing=0;
     
-  double lon_rad = (lon - 180) * constants::RADDEG; //convert to radians, and shift origin to conventional spot
-  double lat_rad = (90 - lat) * constants::RADDEG;
+  double lon_rad = lon * constants::RADDEG; //convert to radians, and shift origin to conventional spot
+  double lat_rad = lat * constants::RADDEG;
+  // double lon_rad = (lon - 180) * constants::RADDEG; //convert to radians, and shift origin to conventional spot
+  // double lat_rad = (90 - lat) * constants::RADDEG;
     
-  double bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(lat_rad)) / (1 - eccentricity*sin(lat_rad)) ),eccentricity/2) * tan((constants::PI/4) - lat_rad/2);
+  double bedmap_R = G::scale_factor*G::c_0 * pow(( (1 + G::eccentricity*sin(lat_rad)) / (1 - G::eccentricity*sin(lat_rad)) ),G::eccentricity/2) * tan((constants::PI/4) - lat_rad/2);
     
   easting = bedmap_R * sin(lon_rad);
   northing = bedmap_R * cos(lon_rad);
@@ -1143,7 +1045,7 @@ void icemc::Antarctica::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, 
   //first set longitude
     
   if (northing!=0){
-    lon = atan(easting/northing);
+    lon = atan2(easting,northing);
   }
   else{
     lon = 90*constants::RADDEG;
@@ -1160,7 +1062,7 @@ void icemc::Antarctica::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, 
   }
     
   //  now find latitude
-  double bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(71*constants::RADDEG)) / (1 - eccentricity*sin(71*constants::RADDEG)) ),eccentricity/2) * tan((constants::PI/4) - (71*constants::RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
+  double bedmap_R = G::scale_factor*G::c_0 * pow(( (1 + G::eccentricity*sin(71*constants::RADDEG)) / (1 - G::eccentricity*sin(71*constants::RADDEG)) ),G::eccentricity/2) * tan((constants::PI/4) - (71*constants::RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
   if (easting != 0){
     bedmap_R = fabs(easting/sin(lon));
   }
@@ -1173,12 +1075,12 @@ void icemc::Antarctica::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, 
     return;
   } //else
     
-  isometric_lat = (constants::PI/2) - 2*atan(bedmap_R/(scale_factor*bedmap_c_0));
+  isometric_lat = (constants::PI/2) - 2*atan(bedmap_R/(G::scale_factor*G::c_0));
     
-  lat = isometric_lat + bedmap_a_bar*sin(2*isometric_lat) + bedmap_b_bar*sin(4*isometric_lat) + bedmap_c_bar*sin(6*isometric_lat) + bedmap_d_bar*sin(8*isometric_lat);
+  lat = isometric_lat + G::a_bar*sin(2*isometric_lat) + G::b_bar*sin(4*isometric_lat) + G::c_bar*sin(6*isometric_lat) + G::d_bar*sin(8*isometric_lat);
     
-  lon = lon * constants::DEGRAD + 180;  //convert to degrees, shift 0 to line up with bin 0 of Crust 2.0
-  lat = 90 - lat*constants::DEGRAD; //convert to degrees, with 0 degrees at the south pole
+  lon = lon * constants::DEGRAD;  //convert to degrees, shift 0 to line up with bin 0 of Crust 2.0
+  lat = lat * constants::DEGRAD; //convert to degrees, with 0 degrees at the south pole
     
   //  if (lon>160 && lon<165)
   //std::cout << "e_coord, n_coord, easting, northing, lon are " << e_coord << " " << n_coord << " " << easting << " " << northing << " " << lon << "\n";
@@ -1207,7 +1109,7 @@ void icemc::Antarctica::GetMAXHORIZON(Balloon *bn1) const {
     bn1->MAXHORIZON=8.E5; // if it is a standard flight then use a horizon of 800 km
   }
   else{
-    bn1->MAXHORIZON=(sqrt((Earth::BulgeRadius+altitude_inmeters)*(Earth::BulgeRadius+altitude_inmeters)-Earth::BulgeRadius*Earth::BulgeRadius))*1.1;
+    bn1->MAXHORIZON=(sqrt((G::R_EARTH+altitude_inmeters)*(G::R_EARTH+altitude_inmeters)-G::R_EARTH*G::R_EARTH))*1.1;
     // find distance from hrizon to balloon, increase it by 10% to be conservative.
   }
   icemcLog() << icemc::info << "MAXHORIZON is " << bn1->MAXHORIZON << std::endl;
@@ -1215,7 +1117,7 @@ void icemc::Antarctica::GetMAXHORIZON(Balloon *bn1) const {
 }
 
 
-void icemc::Antarctica::CreateHorizons(const Settings *settings1, Balloon *bn1, double theta_bn, double phi_bn, double altitude_bn) {
+void icemc::Antarctica::CreateHorizons(const Settings *settings1, const Balloon *bn1) {
 
   // add up volume of ice within horizon of payload
   // goes a little beyond horizon.
@@ -1262,8 +1164,8 @@ void icemc::Antarctica::CreateHorizons(const Settings *settings1, Balloon *bn1, 
   // }
 
   // double phi_bn_temp=0; //phi of balloon, temporary variable
-  // GeoidModel::Position r_bn_temp; //position of balloon
-  // GeoidModel::Position r_bin; // position of each bin
+  // Geoid::Position r_bn_temp; //position of balloon
+  // Geoid::Position r_bin; // position of each bin
     
   // double surface_elevation=0;
   // double local_ice_thickness=0;

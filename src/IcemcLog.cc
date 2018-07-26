@@ -76,6 +76,9 @@ void icemc::Logger::openLogFiles(){
 }
 
 
+
+
+
 icemc::Logger& icemc::Logger::message(icemc::severity s){
 
   const char* red     = fUseColorCodes ? "\x1b[31m" : "";

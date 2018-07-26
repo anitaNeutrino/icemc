@@ -193,7 +193,8 @@ namespace icemc {
     Logger& message(const Streamable& s) {
       if(!fStartedWriting){
 	openLogFiles();
-      }
+      }      
+      
       getStream() << s;
       foutput << s;
       return *this;

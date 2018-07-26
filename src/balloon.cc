@@ -3,7 +3,7 @@
 #include "Constants.h"
 #include "TRandom3.h"
 #include "Settings.h"
-#include "Earth.h"
+#include "Crust2.h"
 #include "Antarctica.h"
 #include "TVector3.h"
 #include "TF1.h"
@@ -11,7 +11,7 @@
 #include "TGraph.h"
 #include "TMath.h"
 
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "anita.hh"
 #include "RayTracer.h"
 
@@ -115,21 +115,13 @@ icemc::Balloon::Balloon(const Settings* settings)
 
 
 
-void icemc::Balloon::SetDefaultBalloonPosition(const Antarctica *antarctica1) { // position of surface of earth under balloon
+void icemc::Balloon::SetDefaultBalloonPosition() { // position of surface of earth under balloon
     
   // // set the default balloon position
   // // if you are using real Anita-lite path, these get overwritten for each event
-  // //std::cout << "BN_LATITUDE is " << BN_LATITUDE << "\n";
-    
-  // int BN_LATITUDE_SETTING = BN_LATITUDE;
-  // int BN_LONGITUDE_SETTING = BN_LONGITUDE;
     
   if(BN_LATITUDE==999){
-    theta_bn=10*constants::RADDEG; // wrt south pole
-    phi_bn = constants::PI/4; //wrt 90E longitude
-    r_bn = GeoidModel::Position(GeoidModel::Pole::South);
-    r_bn.SetTheta(theta_bn);
-    r_bn.SetPhi(phi_bn);    
+    fPosition.SetLonLatAlt(0, -90, 40e3);
   }
   else{
     if (BN_ALTITUDE==0){ // if the altitude isn't set in the input file
@@ -138,15 +130,8 @@ void icemc::Balloon::SetDefaultBalloonPosition(const Antarctica *antarctica1) { 
     else{
       altitude_bn=BN_ALTITUDE*12.*constants::CMINCH/100.; // converts the altitude in the input file to meters
     }
-    r_bn = GeoidModel::Position();
-    r_bn.SetLonLatAlt(BN_LONGITUDE, BN_LATITUDE, altitude_bn);
-  }
-  
-  surface_under_balloon = antarctica1->Surface(r_bn); // distance between center of earth and surface under balloon
-
-  r_bn_shadow = r_bn;
-  r_bn_shadow.SetAltitude(0);
-
+    fPosition.SetLonLatAlt(BN_LONGITUDE, BN_LATITUDE, altitude_bn);
+  }  
 } // set default balloon position
 
 
@@ -328,7 +313,7 @@ void icemc::Balloon::InitializeBalloon() {
 int icemc::Balloon::Getibnposition() {
   int ibnposition_tmp;
   if (WHICHPATH==FlightPath::Circle80DegreesSouth){
-    double lon = r_bn.Longitude();
+    double lon = fPosition.Longitude();
     if(lon < 0 ){lon += 360;}
     ibnposition_tmp = (int)(lon/2);
   }
@@ -338,7 +323,6 @@ int icemc::Balloon::Getibnposition() {
 	   WHICHPATH==FlightPath::Anita3 ||
 	   WHICHPATH==FlightPath::Anita4){
     ibnposition_tmp=(int)((double)igps/(double)REDUCEBALLOONPOSITIONS);
-    // std::cout << __FUNCTION__ << " " << igps << " " << REDUCEBALLOONPOSITIONS << " " << ibnposition_tmp << std::endl;
   }
   else{
     ibnposition_tmp=0;
@@ -474,7 +458,7 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
     roll      = (double) froll;
     pitch     = (double) fpitch;
 
-    setr_bn(latitude,longitude); // sets theta_bn, phi_bn and r_bn.  r_bn is a unit vector pointing in the right direction
+    fPosition.SetLonLatAlt(longitude, latitude, altitude);
 
     if (WHICHPATH==FlightPath::AnitaLite){
       altitude_bn=altitude*12.*constants::CMINCH/100.;
@@ -485,26 +469,16 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
 	     WHICHPATH==FlightPath::Anita4){
       altitude_bn=altitude; // get the altitude of the balloon in the right units
     }
-    surface_under_balloon = antarctica1->Surface(r_bn); // get altitude of the surface under the balloon
-
-    r_bn_shadow.SetLonLatAlt(longitude, latitude,  0);
-    r_bn.SetLonLatAlt(longitude,  latitude, altitude);
+    // surface_under_balloon = antarctica1->Surface(r_bn); // get altitude of the surface under the balloon
+    ///@todo check this refactor!
+    // r_bn_shadow.SetLonLatAlt(longitude, latitude,  0);
+    // r_bn.SetLonLatAlt(longitude,  latitude, altitude);
   } //if (ANITA-lite path) or anita 1 or anita 2
-    
-    
-    
+
   else if (WHICHPATH==FlightPath::Circle80DegreesSouth){ // pick random phi at 80 deg S
-    phi_bn=gRandom->Rndm()*constants::TWOPI;
-		
-    // r_bn = Position(theta_bn,phi_bn);
-    r_bn = GeoidModel::Position(0, 0, 1);
-    r_bn.SetTheta(theta_bn);
-    r_bn.SetPhi(phi_bn);    
-    surface_under_balloon = antarctica1->Surface(r_bn);
-		
-    r_bn_shadow = surface_under_balloon * r_bn.Unit();
-    //    r_bn = (antarctica->Geoid(r_bn)+altitude_bn) * r_bn.Unit();
-    r_bn = (antarctica1->Surface(r_bn)+altitude_bn) * r_bn.Unit();
+    longitude = gRandom->Rndm()*360;
+    latitude = -80;
+    fPosition.SetLonLatAlt(longitude, latitude, 40e3);
     igps=0;
   } //else if(random position at 80 deg S)
   else if (WHICHPATH==FlightPath::FixedPosition){
@@ -513,21 +487,18 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
 		
   }
   else if (WHICHPATH==FlightPath::Custom) {
-    igps=0;
-    theta_bn=1.*constants::RADDEG; // 1deg
-    phi_bn=1.*constants::RADDEG; // 1deg
-    // r_bn=Position(theta_bn,phi_bn); // sets r_bn
-    r_bn = GeoidModel::Position(0, 0, 1);
-    r_bn.SetTheta(theta_bn);
-    r_bn.SetPhi(phi_bn);    
     if (BN_ALTITUDE!=0){
       altitude_bn=BN_ALTITUDE*12.*constants::CMINCH/100.; // set the altitude of the balloon to be what you pick.  This isn't in time for CreateHorizons though!
     }
-    surface_under_balloon = antarctica1->Surface(r_bn);
-    r_bn_shadow = surface_under_balloon * r_bn.Unit();
+
+    icemcLog() << icemc::error << FlightPath::Custom << " is currently broken!" << std::endl;
+    fPosition.SetLonLatAlt(0, -90, altitude_bn);
+    
+    // surface_under_balloon = antarctica1->Surface(r_bn);
+    // r_bn_shadow = surface_under_balloon * r_bn.Unit();
     //    r_bn = (antarctica->Geoid(r_bn)+altitude_bn) * r_bn.Unit();
 		
-    r_bn = (antarctica1->Surface(r_bn)+altitude_bn) * r_bn.Unit();
+    // r_bn = (antarctica1->Surface(r_bn)+altitude_bn) * r_bn.Unit();
   } // you pick it
     
   ibnposition = Getibnposition();
@@ -539,41 +510,8 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
     dtryingposition=1.;
   }
     
-  // // normalized balloon position
-  TVector3 n_bn = r_bn.Unit();
     
-  if (settings1->SLAC){
-    icemcLog() << icemc::error << "SLAC settings are currently disabled!" << std::endl;
-    // AdjustSlacBalloonPosition(inu); // move payload around like we did at slac
-  }
-   
 } // end PickBalloonPosition
-
-
-
-
-void icemc::Balloon::setr_bn(double latitude,double longitude) {
-
-  r_bn.SetLonLatAlt(longitude, latitude, 0);
-  r_bn = r_bn.Unit();
-    
-  // // latitude is between -90 and 0.
-  // // theta_bn measured from the SP and is between 0 and constants::PI/2.
-  // theta_bn = (90+latitude)*constants::RADDEG;
-
-  // // this is the payload's longitude, not the azimuth of the balloon like it sounds.
-  // // longitude is between -180 to 180 with 0 at prime meridian
-  // // phi is from 0 to 360 with 0 at +90 longitude
-  // phi_bn = (-1*longitude+90.);
-    
-  // if (phi_bn<0){
-  //   phi_bn += 360.;
-  // }    
-  // phi_bn *= constants::RADDEG;
-
-  // r_bn = Position(theta_bn,phi_bn);  //r_bn is a unit vector pointing in the right direction
-}
-
 
 
 

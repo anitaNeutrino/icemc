@@ -226,6 +226,7 @@ namespace icemc {
      *
      */
     static double GetNoise(const Settings *settings1,double altitude_bn,double geoid,double theta,double bw,double temp);
+    // static double GetNoise(const Settings *settings1,const Geoid::Position& detector, double theta,double bw,double temp);
 
     //! Which bands passes the trigger
     /**

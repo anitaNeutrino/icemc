@@ -192,7 +192,7 @@ namespace icemc{
 
     void GetEMFracDB(double& emfrac_db, double& hadfrac_db) const;
     double GetDBViewAngle(const TVector3 &refr, const TVector3 &nnu);
-    //void GetFirstBang(const GeoidModel::Position &r_in, const TVector3 &nnu, GeoidModel::Position &posnu, double len_int_kgm2, double d1, double &nuentrancelength);
+    //void GetFirstBang(const Geoid::Position &r_in, const TVector3 &nnu, Geoid::Position &posnu, double len_int_kgm2, double d1, double &nuentrancelength);
     double NFBWeight(double ptau, double taulength);
 
     ShowerProperties GetEMFrac(const Settings *settings1,

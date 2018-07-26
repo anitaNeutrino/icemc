@@ -1,11 +1,11 @@
 #include <array>
 #include "TVector3.h"
-#include "GeoidModel.h"
+#include "Geoid.h"
 
 #include "Constants.h"
 #include "TRandom3.h"
 #include "Settings.h"
-#include "Earth.h"
+#include "Crust2.h"
 #include "Antarctica.h"
 #include "IcemcLog.h"
 #include "TF1.h"
@@ -158,19 +158,19 @@ icemc::Anita::Anita(const Settings* settings, const char* outputDir, const Ballo
   coherent_waveform_sum_tree->Branch("timesteps", cwst_timesteps);
     
   for (unsigned i = 0; i < 48; ++i) {
-    cwst_RXs[i].waveform = new vector <double>(HALFNFOUR, 0.);
-    cwst_RXs[i].digitized = new vector <double>(HALFNFOUR, 0.);
+    cwst_RXs[i].waveform = new std::vector <double>(HALFNFOUR, 0.);
+    cwst_RXs[i].digitized = new std::vector <double>(HALFNFOUR, 0.);
     coherent_waveform_sum_tree->Branch(Form("rx%u", i), &(cwst_RXs[i]));
   }
     
   for (unsigned int i = 0; i < 9; i++) {
-    cwst_aligned_wfms[i].digitized = new vector <double>(HALFNFOUR, 0.);
+    cwst_aligned_wfms[i].digitized = new std::vector <double>(HALFNFOUR, 0.);
     coherent_waveform_sum_tree->Branch(Form("aligned_wfms%u", i), &(cwst_aligned_wfms[i]));
     /*
     //coherent_waveform_sum_tree->Branch(Form("whole_wfms%u", i), &(cwst_whole_wfms[i]));
-    cwst_whole_wfms[i] = new vector <double>(HALFNFOUR, 0.);
-    cwst_wfms[i] = new vector <double>(HALFNFOUR, 0.);
-    cwst_aligned_wfms[i] = new vector <double>(HALFNFOUR, 0.);
+    cwst_whole_wfms[i] = new std::vector <double>(HALFNFOUR, 0.);
+    cwst_wfms[i] = new std::vector <double>(HALFNFOUR, 0.);
+    cwst_aligned_wfms[i] = new std::vector <double>(HALFNFOUR, 0.);
     coherent_waveform_sum_tree->Branch(Form("whole_wfms%u", i), &(cwst_whole_wfms[i]));
     coherent_waveform_sum_tree->Branch(Form("wfms%u", i), &(cwst_wfms[i]));
     coherent_waveform_sum_tree->Branch(Form("aligned_wfms%u", i), &(cwst_aligned_wfms[i]));
@@ -239,7 +239,7 @@ int icemc::Anita::GetRxTriggerNumbering(int ilayer, int ifold) const { // get an
   }
 }
 
-void icemc::Anita::SetNoise(const Settings *settings1,Balloon *bn1,const Antarctica *antarctica) {
+void icemc::Anita::SetNoise(const Settings *settings1, Balloon *bn1, const Antarctica *antarctica) {
     
   // these should only be used for the frequency domain trigger.
   if (settings1->WHICH==Payload::Anita1Simple || settings1->WHICH==Payload::Anita1) { //this is for anita 1
@@ -258,14 +258,17 @@ void icemc::Anita::SetNoise(const Settings *settings1,Balloon *bn1,const Antarct
   else { // if not anita 1
     for (int il=0;il<NLAYERS_MAX;il++) {
       for (int ibw=0;ibw<5;ibw++) {
-	bwslice_vnoise[il][ibw]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,antarctica->SurfaceAboveGeoid(bn1->getLatitude(),bn1->getLongitude()),THETA_ZENITH[il],bwslice_max[ibw]-bwslice_min[ibw],0.);
+	bwslice_vnoise[il][ibw] = ChanTrigger::GetNoise(settings1, bn1->altitude_bn,
+							antarctica->SurfaceAboveGeoid(bn1->getLatitude(),bn1->getLongitude()),
+							THETA_ZENITH[il],
+							bwslice_max[ibw]-bwslice_min[ibw],0.);
       }
     }
   }
 }
 
 
-void icemc::Anita::Initialize(const Settings *settings1, ofstream &foutput, TString outputdir)
+void icemc::Anita::Initialize(const Settings *settings1, std::ofstream &foutput, TString outputdir)
 {
   tuffIndex=0; // keith edits
   count_getnoisewaveforms=0;
@@ -498,7 +501,7 @@ void icemc::Anita::Initialize(const Settings *settings1, ofstream &foutput, TStr
     
 }
 
-void icemc::Anita::initializeFixedPowerThresholds(ofstream &foutput){
+void icemc::Anita::initializeFixedPowerThresholds(std::ofstream &foutput){
     
   if (BANDING==2) { //anita 2
 		
@@ -2670,7 +2673,7 @@ double icemc::Anita::GaintoHeight(double gain,double freq,double nmedium_receive
 } //GaintoHeight
 
 
-void icemc::Anita::fill_coherent_waveform_sum_tree(unsigned event_number, unsigned center_phi_sector_index, const Settings* settings1, double rms_noise, double actual_rms, unsigned window_start, unsigned window_end, double deg_theta, double deg_phi, double actual_deg_theta, double actual_deg_phi, vector <double>& summed_wfm, vector <double>& power_of_summed_wfm, double power){
+void icemc::Anita::fill_coherent_waveform_sum_tree(unsigned event_number, unsigned center_phi_sector_index, const Settings* settings1, double rms_noise, double actual_rms, unsigned window_start, unsigned window_end, double deg_theta, double deg_phi, double actual_deg_theta, double actual_deg_phi, std::vector <double>& summed_wfm, std::vector <double>& power_of_summed_wfm, double power){
     
   cwst_event_number = event_number;
   cwst_center_phi_sector = center_phi_sector_index;
@@ -2736,9 +2739,15 @@ void icemc::Anita::GetPayload(const Settings* settings1, const Balloon* bn1){
     for (int i=0;i<5;i++) {
       RRX[i]=3.006;
     }
-		
+
     for (int i=0;i<NRX_PHI[0];i++) {
-      VNOISE_ANITALITE[i]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,bn1->getSurfaceUnderBalloon(),THETA_ZENITH[i],settings1->BW_SEAVEYS,temp_eachrx[i]);
+      VNOISE_ANITALITE[i] = ChanTrigger::GetNoise(settings1,
+						  bn1->getAltitude(),
+						  //@todo fix this, replaced surfaceUnderBalloon with 0
+						  // bn1->getSurfaceUnderBalloon(),
+						  0,
+						  
+						  THETA_ZENITH[i],settings1->BW_SEAVEYS,temp_eachrx[i]);
     }
   } //if (ANITA-lite)
     
@@ -3697,15 +3706,21 @@ void icemc::Anita::GetPayload(const Settings* settings1, const Balloon* bn1){
   }
   else {
     for (int j=0;j<16;j++) {
-	
       temp_eachrx[j]=(240.+200.); // temp of each antenna in kelvin
     }
   }
 
   for (int i=0;i<NRX_PHI[0];i++) {
-    VNOISE_ANITALITE[i]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,bn1->getSurfaceUnderBalloon(),THETA_ZENITH[0],settings1->BW_SEAVEYS,temp_eachrx[i]);
+    VNOISE_ANITALITE[i] = ChanTrigger::GetNoise(settings1,bn1->getAltitude(),
+						  //@todo fix this, replaced surfaceUnderBalloon with 0
+						0,
+						THETA_ZENITH[0],
+						settings1->BW_SEAVEYS,
+						temp_eachrx[i]);
   }
 }//GetPayload
+
+
 
 void icemc::Anita::calculate_all_offsets(void) {
 
@@ -3713,8 +3728,8 @@ void icemc::Anita::calculate_all_offsets(void) {
 
   double hypothesis_offset[3][3];
 
-  vector<double> angles_tmp;
-  vector< vector <double> > angles_diffthetas_tmp;
+  std::vector<double> angles_tmp;
+  std::vector< std::vector <double> > angles_diffthetas_tmp;
 
   double step_phi=(MAX_PHI_HYPOTHESIS-MIN_PHI_HYPOTHESIS)/(double)N_STEPS_PHI;
   double step_theta=(MAX_THETA_HYPOTHESIS-MIN_THETA_HYPOTHESIS)/(double)N_STEPS_THETA;
@@ -3762,7 +3777,8 @@ void icemc::Anita::calculate_all_offsets(void) {
   return;
 }
 void icemc::Anita::printDifferentOffsets() {
-  ofstream ofile("outputs/offsets.txt");
+  ///@todo  this is bullshit,  get rid of it
+  std::ofstream ofile("outputs/offsets.txt");
   ofile << "number of offsets is " << vdifferent_offsets.size() << "\n";
   
 
@@ -3784,8 +3800,8 @@ void icemc::Anita::printDifferentOffsets() {
 }
 void icemc::Anita::getDifferentOffsets() {
  
-  vector<int> vtmp;
-  vector<double> vangles_tmp;
+  std::vector<int> vtmp;
+  std::vector<double> vangles_tmp;
 
   for (int center_phi_sector_index=0;center_phi_sector_index<1;center_phi_sector_index++) {
     for (unsigned index_phi = 0; index_phi < N_STEPS_PHI; ++index_phi) {

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include "TVector3.h"
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TGraph.h"
@@ -1515,8 +1515,12 @@ void icemc::ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][A
   
 
 
-double icemc::ChanTrigger::GetNoise(const Settings *settings1,double altitude_bn,double geoid,double theta_zenith,double bw,double temp) {
-    
+// double icemc::ChanTrigger::GetNoise(const Settings *settings1,const Geoid::Position& detector,double theta_zenith,double bw,double temp) {
+double icemc::ChanTrigger::GetNoise(const Settings *settings1,double altitude_bn, double geoid, double theta_zenith,double bw,double temp) {  
+
+  // double geoid = detector.Mag();
+  // double altitude_bn = detector.Altitude(); 
+  
   int NSTEPS=1000;
   //  double VSKY=150;
   double VSKY=15;

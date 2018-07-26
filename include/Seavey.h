@@ -138,7 +138,7 @@ namespace icemc {
      * @param pitch 
      * @param roll 
      */
-    void updatePosition(const GeoidModel::Position& anitaPos, double heading, double pitch, double roll);
+    void updatePosition(const Geoid::Position& anitaPos, double heading, double pitch, double roll);
 
   private:
     

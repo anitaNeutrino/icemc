@@ -11,7 +11,7 @@
 #include "Tools.h"
 #include "RayTracer.h"
 #include "screen.hh"
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "Antarctica.h"
 #include "IcemcLog.h"
 
@@ -116,7 +116,6 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   initHist(&rec_diff1, "rec_diff1", "rec_diff1", 100, -1., 1., fIceFinal);
   initHist(&rec_diff2, "rec_diff2", "rec_diff2", 100, -1., 1., fIceFinal);
   initHist(&rec_diff3, "rec_diff3", "rec_diff3", 100, -1., 1., fIceFinal);
-  initHist(&prob_eachphi_bn, "prob_eachphi_bn", "prob_eachphi_bn", 100, 0., 6.3, fIceFinal);
   initHist(&prob_eachilon_bn, "prob_eachilon_bn", "prob_eachilon_bn", 180, 0., 180., fIceFinal);
   initHist(&h6, "theta_vs_hitangle_h", "theta_vs_hitangle_h", 100, -3.14, 3.14, 100, -1.1, 1.1, fIceFinal);
   initHist(&h10, "hitangle_e", "hitangle_e", 20, -1.6, 1.6, fIceFinal);

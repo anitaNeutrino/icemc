@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "TVector3.h"
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "screen.hh"
 #include "Detector.h"
 #include "ANITA.h"
@@ -17,7 +17,7 @@ icemc::Screen::Screen(int a){
 
   //std::cerr << "Generating default screen" << std::endl;
   fedgeLength=1.;
-  fcentralPoint = GeoidModel::Position(0, 0, 0);
+  fcentralPoint = Geoid::Position(0, 0, 0);
   fnormal = TVector3(1.,1.,1.);
   funit_x = TVector3(1.,1.,1.);
   funit_y = TVector3(1.,1.,1.);
@@ -41,7 +41,7 @@ void icemc::Screen::SetEdgeLength(double a){
 };
 
 
-void icemc::Screen::SetCentralPoint(GeoidModel::Position a){
+void icemc::Screen::SetCentralPoint(Geoid::Position a){
   fcentralPoint = a;
 };
 
@@ -71,7 +71,7 @@ double icemc::Screen::GetEdgeLength() const {
 };
 
 
-GeoidModel::Position icemc::Screen::GetCentralPoint() const {
+Geoid::Position icemc::Screen::GetCentralPoint() const {
   return fcentralPoint;
 };
 
@@ -101,8 +101,8 @@ double icemc::Screen::CalcYindex(int i) const {
 };
 
 
-GeoidModel::Position icemc::Screen::GetPosition(int i, int j) const {
-  GeoidModel::Position pos;
+Geoid::Position icemc::Screen::GetPosition(int i, int j) const {
+  Geoid::Position pos;
 
 
   // this picks points that are NOT on the edge
@@ -186,12 +186,12 @@ TVector3 icemc::Screen::GetPol(int i) const {
 };
 
 
-void icemc::Screen::AddImpactPt(GeoidModel::Position p){
+void icemc::Screen::AddImpactPt(Geoid::Position p){
   fImpactPt.push_back(p);
 };
 
 
-GeoidModel::Position icemc::Screen::GetImpactPt(int i) const {
+Geoid::Position icemc::Screen::GetImpactPt(int i) const {
   return fImpactPt[i];
 };
 
@@ -314,11 +314,11 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
   ///@todo remove hardcoding here!
   double TIMESTEP=(1./2.6)*1.E-9; // time step between samples
 
-  const GeoidModel::Position&detPos = d->getCenterOfDetector(inu);
+  const Geoid::Position&detPos = d->getCenterOfDetector(inu);
   double firstDelay = 0;
 
   for (int jpt=0; jpt<GetNvalidPoints(); jpt++){
-    const GeoidModel::Position&rfExit = GetImpactPt(jpt);
+    const Geoid::Position&rfExit = GetImpactPt(jpt);
     const double nominalTimeOfFlightSeconds = (detPos - rfExit).Mag()/constants::CLIGHT;
 
     for(int rx = 0; rx < d->getNumRX(); rx++){

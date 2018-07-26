@@ -1,7 +1,7 @@
 #include "TF1.h"
 #include "TFile.h"
 #include <array>
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "Constants.h"
 #include "Settings.h"
 #include "Tools.h"

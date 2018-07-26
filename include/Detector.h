@@ -2,7 +2,7 @@
 #define ICEMC_DETECTOR_H
 
 #include "TVector3.h"
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "FTPair.h"
 
 namespace icemc {
@@ -40,7 +40,7 @@ namespace icemc {
     /** 
      * @brief Where is the detector?
      */
-    virtual GeoidModel::Position getCenterOfDetector(UInt_t unixTime = 0) = 0;
+    virtual Geoid::Position getCenterOfDetector(UInt_t unixTime = 0) = 0;
 
 
     /** 

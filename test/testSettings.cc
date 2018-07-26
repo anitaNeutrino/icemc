@@ -11,7 +11,7 @@
 #include "Constants.h"
 #include "Settings.h"
 
-#include "Earth.h"
+#include "Crust2.h"
 #include "Tools.h"
 #include "RayTracer.h"
 #include "anita.hh"

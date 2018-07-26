@@ -70,7 +70,6 @@ namespace icemc {
     TH1F sampleweights;         ///< we sample weights for early events and save them in this histogram, to determine where the cut should be.
     TH2F ref_int_coord;
     TH2F dir_int_coord;
-    TH1F prob_eachphi_bn;
     TH1F prob_eachilon_bn;
     TH2F h6;
     TH1F h10;

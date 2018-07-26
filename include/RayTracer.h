@@ -11,7 +11,7 @@
 
 #include "TVector3.h"
 #include "anita.hh"
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "Antarctica.h"
 
 #include "Math/Minimizer.h"
@@ -24,7 +24,8 @@ namespace icemc {
   class Settings;
   class Anita;
   class Signal;
-  class Antarctica;
+  class EarthModel;
+  class Antarctica;  
 
   /**
    * @class RayTracer
@@ -33,7 +34,7 @@ namespace icemc {
   class RayTracer {
 
   public:
-    RayTracer(const Antarctica* ice);
+    RayTracer(const EarthModel* ice);
     virtual ~RayTracer();
 
     void Initialize();
@@ -46,17 +47,17 @@ namespace icemc {
     
     int GetSurfaceNormal(const Settings *settings1, const Antarctica *antarctica,TVector3 posnu,double &slopeyangle,int whichtry);
     
-    int RandomizeSurface(const Settings *settings1,GeoidModel::Position rfexit_temp,TVector3 posnu, const Antarctica *antarctica,double &slopeyangle,int whichtry);
+    int RandomizeSurface(const Settings *settings1,Geoid::Position rfexit_temp,TVector3 posnu, const Antarctica *antarctica,double &slopeyangle,int whichtry);
 
-    void GetRFExit(const Settings *settings1,Anita *anita1,int whichray,GeoidModel::Position posnu,GeoidModel::Position posnu_down,GeoidModel::Position r_bn,GeoidModel::Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry, const Antarctica *antarctica, bool debug=false);
+    void GetRFExit(const Settings *settings1,Anita *anita1,int whichray,Geoid::Position posnu,Geoid::Position posnu_down,Geoid::Position r_bn,Geoid::Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX],int whichtry, const Antarctica *antarctica, bool debug=false);
 
 
     
     
-    // static int WhereDoesItLeaveOld(const GeoidModel::Position &posnu, const TVector3 &ntemp, const Antarctica *antarctica, GeoidModel::Position &r_out);
-    static int WhereDoesItLeave(const GeoidModel::Position &posnu, const TVector3 &ntemp, const Antarctica *antarctica, GeoidModel::Position &r_out); //, bool debug = false);
+    // static int WhereDoesItLeaveOld(const Geoid::Position &posnu, const TVector3 &ntemp, const Antarctica *antarctica, Geoid::Position &r_out);
+    static int WhereDoesItLeave(const Geoid::Position &posnu, const TVector3 &ntemp, const Antarctica *antarctica, Geoid::Position &r_out); //, bool debug = false);
 
-    TVector3 findPathToDetector(const GeoidModel::Position &posnu, const GeoidModel::Position& detector, bool debug = false);
+    TVector3 findPathToDetector(const Geoid::Position &posnu, const Geoid::Position& detector, bool debug = false);
     static TVector3 refractiveBoundary(const TVector3& incoming, const TVector3& normal, double n_incoming, double n_outgoing, bool debug = false);
     static TCanvas* testRefractiveBoundary(double n1 = 1, double n2 = 1.31);
     
@@ -66,22 +67,23 @@ namespace icemc {
       return iter >= 0 && iter < numTries ? nrf_iceside[iter] : TVector3(0, 0, 0);
     }
 
-    void initGuess(const GeoidModel::Position& nuInteraction, const GeoidModel::Position& detector);
+    void initGuess(const Geoid::Position& nuInteraction, const Geoid::Position& detector);
 
     void setDebug(bool debug = true){
       fDebug = debug;
     }
 
   private:
-    const Antarctica* fAntarctica;    
+    // const Antarctica* fAntarctica;
+    const EarthModel* fAntarctica;
 
     static constexpr int numTries = 5;
     const TVector3 xaxis;
     const TVector3 yaxis;
     const TVector3 zaxis;
 
-    GeoidModel::Position fBalloonPos;
-    GeoidModel::Position fInteractionPos;
+    Geoid::Position fBalloonPos;
+    Geoid::Position fInteractionPos;
     TVector3 fLocalX;
     TVector3 fLocalY;
     TVector3 fLocalZ;
@@ -99,7 +101,7 @@ namespace icemc {
     mutable bool fDebug = false;
     bool fDoingMinimization = false;
 
-    GeoidModel::Position getSurfacePosition(const double* params) const;
+    Geoid::Position getSurfacePosition(const double* params) const;
     double evalPath(const double* params) const;
     TVector3 toLocal(const TVector3& v, bool translate=true) const;
     void makeDebugPlots(const TString& fileName) const;
@@ -113,18 +115,18 @@ namespace icemc {
     
     TVector3 nrf_iceside_eachboresight[numTries][Anita::NLAYERS_MAX][Anita::NPHI_MAX];
     TVector3 n_exit2bn_eachboresight[numTries][Anita::NLAYERS_MAX][Anita::NPHI_MAX];
-    GeoidModel::Position rfexit_eachboresight[numTries][Anita::NLAYERS_MAX][Anita::NPHI_MAX];
+    Geoid::Position rfexit_eachboresight[numTries][Anita::NLAYERS_MAX][Anita::NPHI_MAX];
     
-    GeoidModel::Position rfexit_db[numTries];
+    Geoid::Position rfexit_db[numTries];
     
-    GeoidModel::Position rfexit[numTries]; // position where the rf exits the ice- 5 iterations
+    Geoid::Position rfexit[numTries]; // position where the rf exits the ice- 5 iterations
     
     double sum_slopeyness; // for summing the average slopeyness
     
     //double sum_slopeyness=0; // for summing the average slopeyness
     double slopeyx,slopeyy,slopeyz;
 
-    void makePlot(const char* name, const Antarctica* antarctica, const GeoidModel::Position& nuInteraction,  const TVector3& nuDirection, const GeoidModel::Position& detector) const;    
+    void makePlot(const char* name, const Antarctica* antarctica, const Geoid::Position& nuInteraction,  const TVector3& nuDirection, const Geoid::Position& detector) const;    
 
   };
 }

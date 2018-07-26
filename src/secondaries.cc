@@ -2,7 +2,7 @@
 #include "TRandom3.h"
 #include "Settings.h"
 #include "TVector3.h"
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "Primaries.h"
 #include "secondaries.hh"
 #include "Antarctica.h"
@@ -588,7 +588,7 @@ double icemc::Secondaries::GetDBViewAngle(const TVector3 &refr, const TVector3 &
 //GetFirstBang()
 //Gets the position of the first bang when the interaction point is the tau decay point
 
-//  void icemc::Secondaries::GetFirstBang(const GeoidModel::Position &r_in, const TVector3 &nnu, GeoidModel::Position &posnu, double len_int_kgm2, double chord, double &nuentrancelength) {
+//  void icemc::Secondaries::GetFirstBang(const Geoid::Position &r_in, const TVector3 &nnu, Geoid::Position &posnu, double len_int_kgm2, double chord, double &nuentrancelength) {
   
 //   double weightbang;
 //   double junk1;

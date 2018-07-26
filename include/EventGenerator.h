@@ -439,21 +439,20 @@ namespace icemc {
 
     
     void   GetSmearedIncidentAngle(TVector3 &specular, TVector3 &nrf_iceside, TVector3 &n_exit2bn, double SMEARINCIDENTANGLE) const;
-    double GetAirDistance(double altitude_bn,  double beta) const;
     void   GetAir(double *col1) const;
-    double GetThisAirColumn(const Settings*,  GeoidModel::Position r_in,  TVector3 nnu, GeoidModel::Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta) const;
+    double GetThisAirColumn(const Settings*,  Geoid::Position r_in,  TVector3 nnu, Geoid::Position posnu,  double *col1,  double& cosalpha, double& mytheta,  double& cosbeta0, double& mybeta) const;
     double IsItDoubleBang(double exitlength,  double plepton) const;
-    int WhereIsSecondBang(const GeoidModel::Position& posnu,  const TVector3& nnu,  double nuexitlength,  double pnu,  Antarctica *antarctica1,
-			  const GeoidModel::Position& r_bn, GeoidModel::Position &posnu2,  GeoidModel::Position &rfexit_db,  TVector3 &n_exit2bn_db) const;
+    int WhereIsSecondBang(const Geoid::Position& posnu,  const TVector3& nnu,  double nuexitlength,  double pnu,  Antarctica *antarctica1,
+			  const Geoid::Position& r_bn, Geoid::Position &posnu2,  Geoid::Position &rfexit_db,  TVector3 &n_exit2bn_db) const;
 
     TVector3 GetPolarization(const TVector3 &nnu,  const TVector3 &nrf2_iceside, int inu) const;
-    void Attenuate(const Antarctica *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const GeoidModel::Position &posnu) const ;
-    void Attenuate_down(Antarctica *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const GeoidModel::Position &rfexit2,  const GeoidModel::Position &posnu,  const GeoidModel::Position &posnu_down) const ;
+    void Attenuate(const Antarctica *antartica1, const Settings *settings1,  double& vmmhz_max,  double rflength,  const Geoid::Position &posnu) const ;
+    void Attenuate_down(Antarctica *antarctica1,  const Settings *settings1,  double& vmmhz_max,  const Geoid::Position &rfexit2,  const Geoid::Position &posnu,  const Geoid::Position &posnu_down) const ;
     void IsAbsorbed(double chord_kgm2,  double len_int_kgm2,  double& weight) const;
     int GetRayIceSide(const TVector3 &n_exit2rx,  const TVector3 &nsurf_rfexit,  double nexit,  double nenter,  TVector3 &nrf2_iceside) const;
 
     // @todo constify... needs some love to constify
-    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const TVector3 &refr,  double deltheta_em,  double deltheta_had,  const ShowerProperties& sp,  double vmmhz1m_max,  double r_fromballoon,  RayTracer *ray1,  const AskaryanFreqsGenerator* askFreqGen,  GeoidModel::Position posnu,  Anita *anita1,  Balloon *bn1,  TVector3 &nnu,  double& costhetanu,  double& theta_threshold) ;
+    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const TVector3 &refr,  double deltheta_em,  double deltheta_had,  const ShowerProperties& sp,  double vmmhz1m_max,  double r_fromballoon,  RayTracer *ray1,  const AskaryanFreqsGenerator* askFreqGen,  Geoid::Position posnu,  Anita *anita1,  Balloon *bn1,  TVector3 &nnu,  double& costhetanu,  double& theta_threshold) ;
     void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const TVector3 &nsurf_rfexit,  const TVector3 &n_exit2rx,  TVector3 &n_pol,  const TVector3 &nrf2_iceside,  double efield, double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag) const;
     // void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const TVector3 &nsurf_rfexit,  const TVector3 &n_exit2rx,  TVector3 &n_pol,  const TVector3 &nrf2_iceside,  double efield,  const ShowerProperties& ,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag) const;    
     double GetViewAngle(const TVector3 &nrf2_iceside,  const TVector3 &nnu) const;
@@ -462,7 +461,7 @@ namespace icemc {
 
     // @todo constify... needs some love to constify
     void Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, const AskaryanFreqsGenerator* askFreqGen,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
-    void WriteNeutrinoInfo(const int& inu, const GeoidModel::Position&,  const TVector3&,  const GeoidModel::Position&,  double,  NuFlavor,  CurrentType,  double,  std::ofstream &nu_out) const;
+    void WriteNeutrinoInfo(const int& inu, const Geoid::Position&,  const TVector3&,  const Geoid::Position&,  double,  NuFlavor,  CurrentType,  double,  std::ofstream &nu_out) const;
 
     /** 
      * @brief Run the neutrino generation

@@ -33,7 +33,7 @@ icemc::ANITA::~ANITA(){
 }
 
 
-GeoidModel::Position icemc::ANITA::getCenterOfDetector(UInt_t unixTime){
+Geoid::Position icemc::ANITA::getCenterOfDetector(UInt_t unixTime){
   (void) unixTime;
 
   // UInt_t theUnixTime = unixTime ? 1 : 0;
@@ -261,7 +261,7 @@ bool icemc::ANITA::applyTrigger(int inu){
     // icemcLog().fslac_hitangles << this->sslacpositions[this->islacposition] << "\n";    
   }
   
-  globalTrigger->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
+  globalTrigger->volts_rx_rfcm_trigger.assign(16,  std::vector <std::vector <double> >(3,  std::vector <double>(0)));
 
   int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement
   int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement

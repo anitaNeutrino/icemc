@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "TVector3.h"
-#include "GeoidModel.h"
+#include "Geoid.h"
 
 
 namespace icemc{
@@ -24,7 +24,7 @@ namespace icemc{
   class Screen {
   private:
     double fedgeLength;               ///< the full length of one side
-    GeoidModel::Position fcentralPoint;           ///< coordinates of screen center
+    Geoid::Position fcentralPoint;           ///< coordinates of screen center
     double fcosineProjectionFactor;   ///< cosine projection factor of the screen onto the ground, corrects for the long extension so sampling is faster; cos(angle between local normal at RF exit and vector to balloon)
   
     TVector3 fnormal;                   ///< screen orientation, '+' = pointing back to balloon
@@ -40,7 +40,7 @@ namespace icemc{
     std::vector<double> fDelays;      ///< container for the relative propagation phase delays for each frequency and screen point; final size will be (anita::NFREQ *fNsamples) after the push_backs
     std::vector<TVector3> fVec2blns;    ///< container of 'vector to balloon'
     std::vector<TVector3> fPols;        ///< container of transmitted polarizations
-    std::vector<GeoidModel::Position> fImpactPt;  ///< container of ground impact points
+    std::vector<Geoid::Position> fImpactPt;  ///< container of ground impact points
     std::vector<double> fWeight;      ///< container for weight of a screen point ( == area of screen element), normalized when used
     std::vector<double> fIncAngles;   ///< container for incidence angles
     std::vector<double> fTransAngles; ///< container for transmission angle
@@ -80,7 +80,7 @@ namespace icemc{
     /**
      * @param a - position vector
      */
-    void SetCentralPoint(GeoidModel::Position a);
+    void SetCentralPoint(Geoid::Position a);
 
     //! Sets the projection factor of the screen relative to the specular RF exit point
     /**
@@ -122,7 +122,7 @@ namespace icemc{
     /**
      * @return Position
      */
-    GeoidModel::Position GetCentralPoint() const;
+    Geoid::Position GetCentralPoint() const;
 
     //! Gets the screen normal
     /**
@@ -161,7 +161,7 @@ namespace icemc{
      * @param i - index
      * @return double
      */
-    GeoidModel::Position GetPosition(int i, int j) const;
+    Geoid::Position GetPosition(int i, int j) const;
 
     //! Appends a Vmmhz value to the fVmmhz_freq array
     /**
@@ -257,14 +257,14 @@ namespace icemc{
     /**
      * @param p - Position
      */
-    void AddImpactPt(GeoidModel::Position p);
+    void AddImpactPt(Geoid::Position p);
 
     //! Gets the position at the specified index
     /**
      * @param i - index
      * @return Position
      */
-    GeoidModel::Position GetImpactPt(int i) const;
+    Geoid::Position GetImpactPt(int i) const;
 
     //! Appends a weight value to the fWeight array
     /**

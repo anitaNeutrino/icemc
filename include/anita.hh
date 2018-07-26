@@ -20,10 +20,6 @@ class TTree;
 class TH1F;
 class TRandom3;
 
-using std::ofstream;
-using std::vector;
-using std::array;
-
 namespace icemc {
   
   class RX;
@@ -46,8 +42,8 @@ namespace icemc {
     ///@todo find a way to remove the balloon from this constructor!
     Anita(const Settings* settings, const char* outputdir, const Balloon* bn1); // constructor
     virtual ~Anita();
-    void Initialize(const Settings *settings1, ofstream &foutput, TString outputdir); ///< initialize a bunch of stuff
-    void initializeFixedPowerThresholds(ofstream &foutput);
+    void Initialize(const Settings *settings1, std::ofstream &foutput, TString outputdir); ///< initialize a bunch of stuff
+    void initializeFixedPowerThresholds(std::ofstream &foutput);
     void readVariableThresholds(const Settings *settings1);
     void readAmplification();
     void getDiodeDataAndAttenuation(const Settings *settings1, TString outputdir);
@@ -546,10 +542,10 @@ namespace icemc {
     TTree* coherent_waveform_sum_tree;
     static const unsigned int NUM_COHERENT_ANTENNAS = 9;
     unsigned hypothesis_offsets[16][200][200][4][3]; // Time bin offsets for each hypothesis - [center_phi_sector_index][phi_angle_index][theta_angle_index][phi_sector_index][layer_index]
-    vector< vector< vector <double> > > hypothesis_angles; // Time bin offsets for each hypothesis - [center_phi_sector_index][phi_angle_index][theta_angle_index][phi_sector_index][layer_index]
+    std::vector< std::vector< std::vector <double> > > hypothesis_angles; // Time bin offsets for each hypothesis - [center_phi_sector_index][phi_angle_index][theta_angle_index][phi_sector_index][layer_index]
     //unsigned antenna_indices[16][9];	// These are the indices of the antennas used for a given hypothesis' center phi center index - [center_phi_sector-index][which of the nine]
-    vector< vector <int> > vdifferent_offsets;
-    vector< vector <double> > vdifferent_angles;
+    std::vector< std::vector <int> > vdifferent_offsets;
+    std::vector< std::vector <double> > vdifferent_angles;
 
     void calculate_all_offsets(void);	// This function creates offsets for coherent sum trigger
     void getDifferentOffsets();
@@ -575,10 +571,10 @@ namespace icemc {
     //vector <double>* cwst_whole_wfms[NUM_COHERENT_ANTENNAS];
     //vector <double>* cwst_wfms[NUM_COHERENT_ANTENNAS];
     //vector <double>* cwst_aligned_wfms[NUM_COHERENT_ANTENNAS];
-    vector <double> cwst_summed_wfm;
-    vector <double> cwst_power_of_summed_wfm;
+    std::vector <double> cwst_summed_wfm;
+    std::vector <double> cwst_power_of_summed_wfm;
     double cwst_power;
-    void fill_coherent_waveform_sum_tree(unsigned inu, unsigned center_phi_sector, const Settings* settings1, double rms_noise, double actual_rms, unsigned window_start, unsigned window_end, double deg_theta, double deg_phi, double actual_deg_theta, double actual_deg_phi, vector <double>& summed_wfm, vector <double>& power_of_summed_wfm, double power);
+    void fill_coherent_waveform_sum_tree(unsigned inu, unsigned center_phi_sector, const Settings* settings1, double rms_noise, double actual_rms, unsigned window_start, unsigned window_end, double deg_theta, double deg_phi, double actual_deg_theta, double actual_deg_phi, std::vector <double>& summed_wfm, std::vector <double>& power_of_summed_wfm, double power);
     void GetPayload(const Settings*, const Balloon*);
     double VNOISE_ANITALITE[NPHI_MAX]; // noise for each antenna, for the anita-lite trigger configuration.
     double INCLINE_TOPTHREE; // cant angle of top three layers of antennas

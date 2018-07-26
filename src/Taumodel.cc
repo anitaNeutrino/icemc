@@ -1,6 +1,6 @@
 #include "TVector3.h"
 #include "TRandom3.h"
-#include "GeoidModel.h"
+#include "Geoid.h"
 #include "Primaries.h"
 #include "secondaries.hh"
 #include "Antarctica.h"
@@ -92,10 +92,10 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
   
   /** Bring in useful variables from other classes */
   CurrentType current = interaction1->current;
-  const GeoidModel::Position earth_in = interaction1->r_in;
+  const Geoid::Position earth_in = interaction1->r_in;
   double TauWeight = 0;
-  const GeoidModel::Position r_enterice = interaction1->r_enterice;
-  const GeoidModel::Position nuexitice = interaction1->nuexitice;
+  const Geoid::Position r_enterice = interaction1->r_enterice;
+  const Geoid::Position nuexitice = interaction1->nuexitice;
   int inu=4;
   //cout<<"inu is "<<inu<<"\n";
 
@@ -127,7 +127,7 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
   double step=TMath::Min(len_int_kgm2/densities[1]/10,25.0); ///how big is the step size
   
   ///set up stuff to be used later.
-  GeoidModel::Position posnunow;
+  Geoid::Position posnunow;
   double avgdensity=0;
   
   // double Etau_now;//=Etau_final;
@@ -267,19 +267,19 @@ void icemc::Taumodel::GetDensityVectors(const Antarctica *antarctica1,Interactio
     double avgdensity =0;//initilize average density.
     double density_total=0;//initilize running sum
     double density_now=0;//density at this step
-    GeoidModel::Position posnunow;
-    GeoidModel::Position postaunow;
+    Geoid::Position posnunow;
+    Geoid::Position postaunow;
     // double altitude_tau;
     double lat_tau;
-    const GeoidModel::Position earth_in = interaction1->r_in;
-    ofstream myNewFile;
+    const Geoid::Position earth_in = interaction1->r_in;
+    std::ofstream myNewFile;
     
    
   for(double taudistance=0;taudistance<=Distance;taudistance+=step){
      nchord1=taudistance*nchord;
      postaunow=earth_in+nchord1;
      lat_tau=postaunow.Latitude();
-     // altitude_tau = postaunow.Mag()-GeoidModel::getGeoidRadius(lat_tau);
+     // altitude_tau = postaunow.Mag()-Geoid::getGeoidRadius(lat_tau);
      density_now=antarctica1->GetDensity(postaunow,crust_entered);
      mydensityvector.push_back(density_now);///filled with density at that step
      
@@ -301,7 +301,7 @@ void icemc::Taumodel::GetEnergyVector(double Etau_final, double step,int totalnu
   myenergyvector.push_back(Etau_final);
   double Etau_now=Etau_final;
   double density_now;
-  ofstream myNewFile_1;
+  std::ofstream myNewFile_1;
  
   // double pnu;//SET UP EVENT CLASS
   ///calculate the initial energy needed at the step so the tau will end at the correct final energy
