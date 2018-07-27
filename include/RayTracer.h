@@ -89,9 +89,9 @@ namespace icemc {
     TVector3 fLocalZ;
 
     mutable TVector3 fSurfaceNormal;
-    mutable TVector3 fSurfacePos;
+    mutable Geoid::Position fSurfacePos;
     mutable TVector3 fRefractedRfDir;
-    mutable TVector3 fEndPoint;
+    mutable Geoid::Position fEndPoint;
     mutable TGraph* fMinimizerPath = nullptr;
     mutable double fBestResidual = DBL_MAX;
 

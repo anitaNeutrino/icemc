@@ -8,7 +8,7 @@
 #include "TStyle.h"
 #include "TVector3.h"
 
-
+// libAntarcticaRoot includes
 #include "Geoid.h"
 
 // icemc includes
@@ -25,7 +25,6 @@
 #include "AskaryanFreqs.h"
 #include "secondaries.hh"
 #include "RayTracer.h"
-#include "counting.hh"
 #include "Primaries.h"
 #include "Taumodel.hh"
 #include "screen.hh"
@@ -109,7 +108,7 @@ icemc::EventGenerator::~EventGenerator()
 
 
 
-void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *nuSpectra, const AskaryanFreqsGenerator *askFreqGen, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
+void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Spectra *nuSpectra, const AskaryanFreqsGenerator *askFreqGen, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
 
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
@@ -201,7 +200,6 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
 
   // write out summary
   icemcLog() << "Generated " << NNU << " neutrinos with energy " << pnu << "\n";
-  icemcLog() << "Number of unweighted direct,  reflected that pass is: " << count1->npass[0] << "\t" << count1->npass[1] << "\n";
   icemcLog() << "Number of (weighted) neutrinos that pass is: " << eventsfound << "\n";
   icemcLog() << "Number of (weighted) neutrinos that pass,  multiplied by prob. of interacting in the ice,  is: " << eventsfound_prob << "\n";
   icemcLog() << "Number of weighted direct,  reflected that pass is: " << allcuts_weighted[0] << "\t" << allcuts_weighted[1] << "\n";
@@ -341,26 +339,26 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
 
     percent_increase_total=percent_increase_db+percent_increase_nfb;
 
-    km3sr_e = (pow(1.e-3, 3))*volume*constants::sr*(sum[0]/(double)count1->nnu_e)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20/settings1->SIGMA_FACTOR;
+    // km3sr_e = (pow(1.e-3, 3))*volume*constants::sr*(sum[0]/(double)count1->nnu_e)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20/settings1->SIGMA_FACTOR;
 
     icemcLog() << sum[0]/(double)nevents*100. << "% are electron neutrinos\n";
 
-    error_e_plus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_e_plus/(double)count1->nnu_e/settings1->SIGMA_FACTOR;
-    error_e_minus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_e_minus/(double)count1->nnu_e/settings1->SIGMA_FACTOR;
+    // error_e_plus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_e_plus/(double)count1->nnu_e/settings1->SIGMA_FACTOR;
+    // error_e_minus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_e_minus/(double)count1->nnu_e/settings1->SIGMA_FACTOR;
 
-    km3sr_mu = (pow(1.e-3, 3))*volume*constants::sr*(sum[1]/(double)count1->nnu_mu)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20/settings1->SIGMA_FACTOR;
+    // km3sr_mu = (pow(1.e-3, 3))*volume*constants::sr*(sum[1]/(double)count1->nnu_mu)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20/settings1->SIGMA_FACTOR;
 
     icemcLog() << sum[1]/(double)nevents*100. << "% are muon neutrinos\n";
 
-    error_mu_plus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_mu_plus/(double)count1->nnu_mu/settings1->SIGMA_FACTOR;
-    error_mu_minus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_mu_minus/(double)count1->nnu_mu/settings1->SIGMA_FACTOR;
+    // error_mu_plus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_mu_plus/(double)count1->nnu_mu/settings1->SIGMA_FACTOR;
+    // error_mu_minus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_mu_minus/(double)count1->nnu_mu/settings1->SIGMA_FACTOR;
 
-    km3sr_tau = (pow(1.e-3, 3))*volume*constants::sr*(sum[2]/(double)count1->nnu_tau)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20/settings1->SIGMA_FACTOR;
+    // km3sr_tau = (pow(1.e-3, 3))*volume*constants::sr*(sum[2]/(double)count1->nnu_tau)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20/settings1->SIGMA_FACTOR;
 
     icemcLog() << sum[2]/(double)nevents*100. << "% are tau neutrinos\n";
 
-    error_tau_plus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_tau_plus/(double)count1->nnu_tau/settings1->SIGMA_FACTOR;
-    error_tau_minus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_tau_minus/(double)count1->nnu_tau/settings1->SIGMA_FACTOR;
+    // error_tau_plus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_tau_plus/(double)count1->nnu_tau/settings1->SIGMA_FACTOR;
+    // error_tau_minus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_tau_minus/(double)count1->nnu_tau/settings1->SIGMA_FACTOR;
 
     double sum_km3sr=0;
     double sum_km3sr_error_plus=0;
@@ -397,165 +395,165 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
 
   icemcLog() << "\t\t\t\t\t\t\tprobability of passing \t# events passing\n";
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "No way this neutrino will see any ice \t\t\t" << (double)count1->noway[0]/(double)count_total << "\t" <<
-    (double)count1->noway[1]/(double)count_total << "\t\t" <<
-    count1->noway[0] << "\t" << count1->noway[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "No way this neutrino will see any ice \t\t\t" << (double)count1->noway[0]/(double)count_total << "\t" <<
+  //   (double)count1->noway[1]/(double)count_total << "\t\t" <<
+  //   count1->noway[0] << "\t" << count1->noway[1] << "\n";
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "Wheredoesitleave in PickUnbiased gives an error \t" << (double)count1->wheredoesitleave_err[0]/(double)count1->noway[0] << "\t" <<
-    (double)count1->wheredoesitleave_err[1]/(double)count1->noway[1] << "\t\t" <<
-    count1->wheredoesitleave_err[0] << "\t" << count1->wheredoesitleave_err[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "Wheredoesitleave in PickUnbiased gives an error \t" << (double)count1->wheredoesitleave_err[0]/(double)count1->noway[0] << "\t" <<
+  //   (double)count1->wheredoesitleave_err[1]/(double)count1->noway[1] << "\t\t" <<
+  //   count1->wheredoesitleave_err[0] << "\t" << count1->wheredoesitleave_err[1] << "\n";
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "This neutrino direction never sees ice \t\t\t" << (double)count1->neverseesice[0]/(double)count1->wheredoesitleave_err[0] << "\t" <<
-    (double)count1->neverseesice[1]/(double)count1->wheredoesitleave_err[1] << "\t\t" <<
-    count1->neverseesice[0] << "\t" << count1->neverseesice[1] << "\n";
-
-
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "WhereDoesItEnterIce in PickUnbiased gives an error \t\t\t" << (double)count1->wheredoesitenterice_err[0]/(double)count1->neverseesice[0] << "\t" <<
-    (double)count1->wheredoesitenterice_err[1]/(double)count1->neverseesice[1] << "\t\t" <<
-    count1->wheredoesitenterice_err[0] << "\t" << count1->wheredoesitenterice_err[1] << "\n";
-
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "Interaction point too high \t\t\t\t" << (double)count1->toohigh[0]/(double)count1->wheredoesitenterice_err[0] << "\t" <<
-    (double)count1->toohigh[1]/(double)count1->wheredoesitenterice_err[1] << "\t\t" <<
-    count1->toohigh[0] << "\t" << count1->toohigh[1] << "\n";
-
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "Interaction point too low \t\t\t\t" << (double)count1->toolow[0]/(double)count1->toohigh[0] << "\t" <<
-    (double)count1->toolow[1]/(double)count1->toohigh[1] << "\t\t" <<
-    count1->toolow[0] << "\t" << count1->toolow[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "This neutrino direction never sees ice \t\t\t" << (double)count1->neverseesice[0]/(double)count1->wheredoesitleave_err[0] << "\t" <<
+  //   (double)count1->neverseesice[1]/(double)count1->wheredoesitleave_err[1] << "\t\t" <<
+  //   count1->neverseesice[0] << "\t" << count1->neverseesice[1] << "\n";
 
 
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "WhereDoesItEnterIce in PickUnbiased gives an error \t\t\t" << (double)count1->wheredoesitenterice_err[0]/(double)count1->neverseesice[0] << "\t" <<
+  //   (double)count1->wheredoesitenterice_err[1]/(double)count1->neverseesice[1] << "\t\t" <<
+  //   count1->wheredoesitenterice_err[0] << "\t" << count1->wheredoesitenterice_err[1] << "\n";
 
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "Interaction point too high \t\t\t\t" << (double)count1->toohigh[0]/(double)count1->wheredoesitenterice_err[0] << "\t" <<
+  //   (double)count1->toohigh[1]/(double)count1->wheredoesitenterice_err[1] << "\t\t" <<
+  //   count1->toohigh[0] << "\t" << count1->toohigh[1] << "\n";
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "There is an interaction in ice \t\t\t\t" << (double)count1->iceinteraction[0]/(double)count1->toolow[0] << "\t" <<
-    (double)count1->iceinteraction[1]/(double)count1->toolow[1] << "\t\t" <<
-    count1->iceinteraction[0] << "\t" << count1->iceinteraction[1] << "\n";
-
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "In horizon \t\t\t\t\t\t" << (double)count1->inhorizon[0]/(double)count1->iceinteraction[0] << "\t" <<
-    (double)count1->inhorizon[1]/(double)count1->iceinteraction[1] << "\t\t" <<
-    count1->inhorizon[0] << "\t" << count1->inhorizon[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "Interaction point too low \t\t\t\t" << (double)count1->toolow[0]/(double)count1->toohigh[0] << "\t" <<
+  //   (double)count1->toolow[1]/(double)count1->toohigh[1] << "\t\t" <<
+  //   count1->toolow[0] << "\t" << count1->toolow[1] << "\n";
 
 
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "From surface to balloon,  ray not intersected by earth \t" << (double)count1->nraypointsup1[0]/(double)count1->inhorizon[0] << "\t" <<
-    (double)count1->nraypointsup1[1]/(double)count1->inhorizon[1] << "\t\t" <<
-    count1->nraypointsup1[0] << "\t" << count1->nraypointsup1[1] << "\n";
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "After 1/r scaling and best case attenuation, \n\tMaximum signal is detectable\t\t\t" << (double)count1->nnottoosmall[0]/(double)count1->nraypointsup1[0] << "\t" <<
-    (double)count1->nnottoosmall[1]/(double)count1->nraypointsup1[1] << "\t\t"
-	  << count1->nnottoosmall[0] << "\t" << count1->nnottoosmall[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "There is an interaction in ice \t\t\t\t" << (double)count1->iceinteraction[0]/(double)count1->toolow[0] << "\t" <<
+  //   (double)count1->iceinteraction[1]/(double)count1->toolow[1] << "\t\t" <<
+  //   count1->iceinteraction[0] << "\t" << count1->iceinteraction[1] << "\n";
 
-
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "Viewing angle lt 90 degrees\t\t\t" << (double)count1->nviewangle_lt_90[0]/(double)count1->nnottoosmall[0] << "\t" <<
-    (double)count1->nviewangle_lt_90[1]/(double)count1->nnottoosmall[1] << "\t\t"
-	  << count1->nviewangle_lt_90[0] << "\t" << count1->nviewangle_lt_90[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "In horizon \t\t\t\t\t\t" << (double)count1->inhorizon[0]/(double)count1->iceinteraction[0] << "\t" <<
+  //   (double)count1->inhorizon[1]/(double)count1->iceinteraction[1] << "\t\t" <<
+  //   count1->inhorizon[0] << "\t" << count1->inhorizon[1] << "\n";
 
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "Reality check:  EM and hadronic fractions both nonzero\t" << (double)count1->ngoodfracs[0]/(double)count1->nviewangle_lt_90[0] << "\t" <<
-    (double)count1->ngoodfracs[1]/(double)count1->nviewangle_lt_90[1] << "\t\t"
-	  << count1->ngoodfracs[0] << "\t" << count1->ngoodfracs[1] << "\n";
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "\tBoth EM and hadronic fractions are zero\t\t" << (double)count1->nbadfracs[0]/(double)count1->nviewangle_lt_90[0] << "\t" <<
-    (double)count1->nbadfracs[1]/(double)count1->nviewangle_lt_90[1] << "\t\t" <<
-    count1->nbadfracs[0] << "\t" << count1->nbadfracs[1] << "\n";
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "After finding neutrino direction,  \n\tchance of making through Earth\t\t\t" << (double)count_chanceofsurviving/(double)count1->ngoodfracs[0] << "\t\t\t";
-  icemcLog().foutput.precision(10);
-  icemcLog().foutput << count_chanceofsurviving << "\n";
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "Neutrino enters ice south of 60deg S latitude\t\t" << (double)count1->nentersice[0]/(double)count_chanceofsurviving << "\t" <<
-    (double)count1->nentersice[1]/(double)count_chanceofsurviving <<
-    "\t\t" <<
-    count1->nentersice[0] << "\t" << count1->nentersice[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "From surface to balloon,  ray not intersected by earth \t" << (double)count1->nraypointsup1[0]/(double)count1->inhorizon[0] << "\t" <<
+  //   (double)count1->nraypointsup1[1]/(double)count1->inhorizon[1] << "\t\t" <<
+  //   count1->nraypointsup1[0] << "\t" << count1->nraypointsup1[1] << "\n";
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "Neutrino reasonably likely to survive trip through Earth " << (double)count1->nabsorbed[0]/(double)count1->nentersice[0] << "\t" <<
-    (double)count1->nabsorbed[1]/(double)count1->nentersice[1] << "\t\t"
-	  << count1->nabsorbed[0] << "\t" << count1->nabsorbed[1] << "\n";
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "Ray leaves the ice south of 60deg S latitude\t\t" << (double)count1->nraywithincontinent1[0]/(double)count1->nabsorbed[0] << "\t" <<
-    (double)count1->nraywithincontinent1[1]/(double)count1->nabsorbed[1] << "\t" <<
-    count1->nraywithincontinent1[0] << "\t" <<
-    count1->nraywithincontinent1[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "After 1/r scaling and best case attenuation, \n\tMaximum signal is detectable\t\t\t" << (double)count1->nnottoosmall[0]/(double)count1->nraypointsup1[0] << "\t" <<
+  //   (double)count1->nnottoosmall[1]/(double)count1->nraypointsup1[1] << "\t\t"
+  // 	  << count1->nnottoosmall[0] << "\t" << count1->nnottoosmall[1] << "\n";
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "After 1/r,  best guess ice attenuation,  \n\tmaximum signal is detectable\t\t\t" << (double)count_chanceinhell0/(double)count1->nraywithincontinent1[0] << "\t\t\t";
-  icemcLog().foutput.precision(10);
-  icemcLog().foutput <<count_chanceinhell0 << "\n";
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "Ray is not totally internally reflected\t\t\t" << (double)count1->nnottir[0]/(double)count_chanceinhell0 <<  "\t" <<
-    (double)count1->nnottir[1]/(double)count_chanceinhell0 <<  "\t\t" <<
-    count1->nnottir[0] << "\t" << count1->nnottir[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "Viewing angle lt 90 degrees\t\t\t" << (double)count1->nviewangle_lt_90[0]/(double)count1->nnottoosmall[0] << "\t" <<
+  //   (double)count1->nviewangle_lt_90[1]/(double)count1->nnottoosmall[1] << "\t\t"
+  // 	  << count1->nviewangle_lt_90[0] << "\t" << count1->nviewangle_lt_90[1] << "\n";
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "From surface to balloon,  ray not intersected by earth \t" << (double)count1->nraypointsup2[0]/(double)count1->nnottir[0] << "\t" <<
-    (double)count1->nraypointsup2[1]/(double)count1->nnottir[1] <<
-    "\t\t"
-	  << count1->nraypointsup2[0] << "\t" << count1->nraypointsup2[1] << "\n";
-  icemcLog().foutput.precision(4);
 
-  icemcLog().foutput << "Ray leaves the ice south of 60deg S latitude\t\t" << (double)count1->nraywithincontinent2[0]/(double)count1->nraypointsup2[0] <<"\t" <<
-    (double)count1->nraywithincontinent2[0]/(double)count1->nraypointsup2[1] <<
-    "\t\t" << count1->nraywithincontinent2[0] << "\t" <<
-    count1->nraywithincontinent2[1]     << "\n";
-  icemcLog().foutput.precision(4);
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "Reality check:  EM and hadronic fractions both nonzero\t" << (double)count1->ngoodfracs[0]/(double)count1->nviewangle_lt_90[0] << "\t" <<
+  //   (double)count1->ngoodfracs[1]/(double)count1->nviewangle_lt_90[1] << "\t\t"
+  // 	  << count1->ngoodfracs[0] << "\t" << count1->ngoodfracs[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "\tBoth EM and hadronic fractions are zero\t\t" << (double)count1->nbadfracs[0]/(double)count1->nviewangle_lt_90[0] << "\t" <<
+  //   (double)count1->nbadfracs[1]/(double)count1->nviewangle_lt_90[1] << "\t\t" <<
+  //   count1->nbadfracs[0] << "\t" << count1->nbadfracs[1] << "\n";
 
-  icemcLog().foutput << "Ray leaves where there is ice\t\t\t\t" << (double)count1->nacceptablerf[0]/(double)count1->nraywithincontinent2[0] << "\t" <<
-    (double)count1->nacceptablerf[1]/(double)count1->nraywithincontinent2[1] << "\t\t"
-	  << count1->nacceptablerf[0] << "\t" << count1->nacceptablerf[1] << "\n";
-  icemcLog().foutput.precision(4);
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "After finding neutrino direction,  \n\tchance of making through Earth\t\t\t" << (double)count_chanceofsurviving/(double)count1->ngoodfracs[0] << "\t\t\t";
+  // icemcLog().foutput.precision(10);
+  // icemcLog().foutput << count_chanceofsurviving << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "Neutrino enters ice south of 60deg S latitude\t\t" << (double)count1->nentersice[0]/(double)count_chanceofsurviving << "\t" <<
+  //   (double)count1->nentersice[1]/(double)count_chanceofsurviving <<
+  //   "\t\t" <<
+  //   count1->nentersice[0] << "\t" << count1->nentersice[1] << "\n";
 
-  icemcLog().foutput << "Ray tracing converges to within 10 m\t\t\t" << (double)count1->nconverges[0]/(double)count1->nacceptablerf[0] << "\t" <<
-    (double)count1->nconverges[1]/(double)count1->nacceptablerf[1] <<
-    "\t\t" << count1->nconverges[0] << "\t" << count1->nconverges[1] << "\n";
-  icemcLog().foutput.precision(4);
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "Neutrino reasonably likely to survive trip through Earth " << (double)count1->nabsorbed[0]/(double)count1->nentersice[0] << "\t" <<
+  //   (double)count1->nabsorbed[1]/(double)count1->nentersice[1] << "\t\t"
+  // 	  << count1->nabsorbed[0] << "\t" << count1->nabsorbed[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "Ray leaves the ice south of 60deg S latitude\t\t" << (double)count1->nraywithincontinent1[0]/(double)count1->nabsorbed[0] << "\t" <<
+  //   (double)count1->nraywithincontinent1[1]/(double)count1->nabsorbed[1] << "\t" <<
+  //   count1->nraywithincontinent1[0] << "\t" <<
+  //   count1->nraywithincontinent1[1] << "\n";
 
-  icemcLog().foutput << "After fresnel coefficient,  \n\tmaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell_fresnel[0]/(double)count1->nconverges[0] << "\t" << (double)count1->nchanceinhell_fresnel[1]/(double)count1->nconverges[1] <<
-    "\t\t" <<count1->nchanceinhell_fresnel[0] << "\t" << count1->nchanceinhell_fresnel[1] << "\n";
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "After 1/r,  \n\tmaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell_1overr[0]/(double)count1->nchanceinhell_fresnel[0] << "\t" <<  (double)count1->nchanceinhell_1overr[1]/(double)count1->nchanceinhell_fresnel[1] << "\t\t" <<count1->nchanceinhell_1overr[0] << "\t" << count1->nchanceinhell_1overr[1] << "\n";
-  icemcLog().foutput.precision(4);
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "After 1/r,  best guess ice attenuation,  \n\tmaximum signal is detectable\t\t\t" << (double)count_chanceinhell0/(double)count1->nraywithincontinent1[0] << "\t\t\t";
+  // icemcLog().foutput.precision(10);
+  // icemcLog().foutput <<count_chanceinhell0 << "\n";
 
-  icemcLog().foutput << "After ice attenuation,  \n\tmaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell[0]/(double)count1->nchanceinhell_1overr[0] << "\t" <<
-    (double)count1->nchanceinhell[1]/(double)count1->nchanceinhell_1overr[1] << "\t" <<count1->nchanceinhell[0] << "\t" << count1->nchanceinhell[1] << "\n";
-  icemcLog().foutput.precision(4);
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "Ray is not totally internally reflected\t\t\t" << (double)count1->nnottir[0]/(double)count_chanceinhell0 <<  "\t" <<
+  //   (double)count1->nnottir[1]/(double)count_chanceinhell0 <<  "\t\t" <<
+  //   count1->nnottir[0] << "\t" << count1->nnottir[1] << "\n";
 
-  icemcLog().foutput << "After viewing angle cut, \t\t\t\t" << (double)count1->nviewanglecut[0]/(double)count1->nchanceinhell[0] << "\t" << (double)count1->nviewanglecut[1]/(double)count1->nchanceinhell[1] << "\t\t" << count1->nviewanglecut[0] << " " << count1->nviewanglecut[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "From surface to balloon,  ray not intersected by earth \t" << (double)count1->nraypointsup2[0]/(double)count1->nnottir[0] << "\t" <<
+  //   (double)count1->nraypointsup2[1]/(double)count1->nnottir[1] <<
+  //   "\t\t"
+  // 	  << count1->nraypointsup2[0] << "\t" << count1->nraypointsup2[1] << "\n";
+  // icemcLog().foutput.precision(4);
 
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "After factoring in off-Cerenkov cone tapering, \n\tMaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell2[0]/(double)count1->nviewanglecut[0] << "\t" << (double)count1->nchanceinhell2[1]/(double)count1->nviewanglecut[1] << "\t\t" << count1->nchanceinhell2[0] << " " << count1->nchanceinhell2[1] << "\n";
+  // icemcLog().foutput << "Ray leaves the ice south of 60deg S latitude\t\t" << (double)count1->nraywithincontinent2[0]/(double)count1->nraypointsup2[0] <<"\t" <<
+  //   (double)count1->nraywithincontinent2[0]/(double)count1->nraypointsup2[1] <<
+  //   "\t\t" << count1->nraywithincontinent2[0] << "\t" <<
+  //   count1->nraywithincontinent2[1]     << "\n";
+  // icemcLog().foutput.precision(4);
 
-  icemcLog().foutput << "Survive dead time \t\t\t\t\t" << (double)count1->ndeadtime[0]/(double)count1->nchanceinhell2[0] << "\t" << (double)count1->ndeadtime[1]/(double)count1->nchanceinhell2[1] << "\t\t" << (double)count1->ndeadtime[0] << " " << count1->ndeadtime[1] << "\n";
+  // icemcLog().foutput << "Ray leaves where there is ice\t\t\t\t" << (double)count1->nacceptablerf[0]/(double)count1->nraywithincontinent2[0] << "\t" <<
+  //   (double)count1->nacceptablerf[1]/(double)count1->nraywithincontinent2[1] << "\t\t"
+  // 	  << count1->nacceptablerf[0] << "\t" << count1->nacceptablerf[1] << "\n";
+  // icemcLog().foutput.precision(4);
+
+  // icemcLog().foutput << "Ray tracing converges to within 10 m\t\t\t" << (double)count1->nconverges[0]/(double)count1->nacceptablerf[0] << "\t" <<
+  //   (double)count1->nconverges[1]/(double)count1->nacceptablerf[1] <<
+  //   "\t\t" << count1->nconverges[0] << "\t" << count1->nconverges[1] << "\n";
+  // icemcLog().foutput.precision(4);
+
+  // icemcLog().foutput << "After fresnel coefficient,  \n\tmaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell_fresnel[0]/(double)count1->nconverges[0] << "\t" << (double)count1->nchanceinhell_fresnel[1]/(double)count1->nconverges[1] <<
+  //   "\t\t" <<count1->nchanceinhell_fresnel[0] << "\t" << count1->nchanceinhell_fresnel[1] << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "After 1/r,  \n\tmaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell_1overr[0]/(double)count1->nchanceinhell_fresnel[0] << "\t" <<  (double)count1->nchanceinhell_1overr[1]/(double)count1->nchanceinhell_fresnel[1] << "\t\t" <<count1->nchanceinhell_1overr[0] << "\t" << count1->nchanceinhell_1overr[1] << "\n";
+  // icemcLog().foutput.precision(4);
+
+  // icemcLog().foutput << "After ice attenuation,  \n\tmaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell[0]/(double)count1->nchanceinhell_1overr[0] << "\t" <<
+  //   (double)count1->nchanceinhell[1]/(double)count1->nchanceinhell_1overr[1] << "\t" <<count1->nchanceinhell[0] << "\t" << count1->nchanceinhell[1] << "\n";
+  // icemcLog().foutput.precision(4);
+
+  // icemcLog().foutput << "After viewing angle cut, \t\t\t\t" << (double)count1->nviewanglecut[0]/(double)count1->nchanceinhell[0] << "\t" << (double)count1->nviewanglecut[1]/(double)count1->nchanceinhell[1] << "\t\t" << count1->nviewanglecut[0] << " " << count1->nviewanglecut[1] << "\n";
+
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "After factoring in off-Cerenkov cone tapering, \n\tMaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell2[0]/(double)count1->nviewanglecut[0] << "\t" << (double)count1->nchanceinhell2[1]/(double)count1->nviewanglecut[1] << "\t\t" << count1->nchanceinhell2[0] << " " << count1->nchanceinhell2[1] << "\n";
+
+  // icemcLog().foutput << "Survive dead time \t\t\t\t\t" << (double)count1->ndeadtime[0]/(double)count1->nchanceinhell2[0] << "\t" << (double)count1->ndeadtime[1]/(double)count1->nchanceinhell2[1] << "\t\t" << (double)count1->ndeadtime[0] << " " << count1->ndeadtime[1] << "\n";
   
-  icemcLog().foutput << "Passes trigger\t\t\t\t\t\t" << (double)count1->npassestrigger[0]/(double)count1->ndeadtime[0] << "\t" << (double)count1->npassestrigger[1]/(double)count1->ndeadtime[1] << "\t\t" << count1->npassestrigger[0] << "\t" << count1->npassestrigger[1] << "\n";
-  icemcLog().foutput << "Number of l1 triggers\t\t\t\t\t\t" << (double)count1->nl1triggers[0][0] << "\t" << (double)count1->nl1triggers[1][0] << "\n";
+  // icemcLog().foutput << "Passes trigger\t\t\t\t\t\t" << (double)count1->npassestrigger[0]/(double)count1->ndeadtime[0] << "\t" << (double)count1->npassestrigger[1]/(double)count1->ndeadtime[1] << "\t\t" << count1->npassestrigger[0] << "\t" << count1->npassestrigger[1] << "\n";
+  // icemcLog().foutput << "Number of l1 triggers\t\t\t\t\t\t" << (double)count1->nl1triggers[0][0] << "\t" << (double)count1->nl1triggers[1][0] << "\n";
 
-  icemcLog().foutput << "Chord is good length\t\t\t\t\t" << (double)count_chordgoodlength/(double)count1->npassestrigger[0] << "\t\t\t";
-  icemcLog().foutput.precision(10);
-  icemcLog().foutput <<count_chordgoodlength << "\n";
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "Neutrino's path in ice more than 1m \t\t\t" << (double)count_d2goodlength/(double)count_chordgoodlength << "\t\t\t";
-  icemcLog().foutput.precision(10);
-  icemcLog().foutput << count_d2goodlength << "\n";
-  icemcLog().foutput.precision(4);
-  icemcLog().foutput << "Events that pass all cuts\t\t\t\t" << (double)count1->npass[0]/(double)count_d2goodlength << "\t" << (double)count1->npass[1]/(double)count_d2goodlength << "\t\t";
-  icemcLog().foutput.precision(10);
-  icemcLog().foutput <<count1->npass[0] << "\t" << count1->npass[1] << "\n";
+  // icemcLog().foutput << "Chord is good length\t\t\t\t\t" << (double)count_chordgoodlength/(double)count1->npassestrigger[0] << "\t\t\t";
+  // icemcLog().foutput.precision(10);
+  // icemcLog().foutput <<count_chordgoodlength << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "Neutrino's path in ice more than 1m \t\t\t" << (double)count_d2goodlength/(double)count_chordgoodlength << "\t\t\t";
+  // icemcLog().foutput.precision(10);
+  // icemcLog().foutput << count_d2goodlength << "\n";
+  // icemcLog().foutput.precision(4);
+  // icemcLog().foutput << "Events that pass all cuts\t\t\t\t" << (double)count1->npass[0]/(double)count_d2goodlength << "\t" << (double)count1->npass[1]/(double)count_d2goodlength << "\t\t";
+  // icemcLog().foutput.precision(10);
+  // icemcLog().foutput <<count1->npass[0] << "\t" << count1->npass[1] << "\n";
 
-  std::cout << "Events that pass all cuts\t\t\t\t" << (double)count1->npass[0]/(double)count_d2goodlength << "\t" << (double)count1->npass[1]/(double)count_d2goodlength << "\t\t";
-  std::cout <<count1->npass[0] << "\t" << count1->npass[1] << "\n";
+  // std::cout << "Events that pass all cuts\t\t\t\t" << (double)count1->npass[0]/(double)count_d2goodlength << "\t" << (double)count1->npass[1]/(double)count_d2goodlength << "\t\t";
+  // std::cout <<count1->npass[0] << "\t" << count1->npass[1] << "\n";
 
   //  if (EXPONENT<=10||EXPONENT>100) {
   if ( nuSpectra->IsSpectrum() ) {
@@ -1099,7 +1097,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   icemcLog() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
   
   RayTracer rayTracer(antarctica);
-  Counting* count1 = new Counting();
   Taumodel* taus1 = new Taumodel();
   Screen* panel1 = new Screen(0);  // create new instance of the screen class
 
@@ -1169,7 +1166,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   interaction1->dnutries=0;
   eventsfound=0.; // sums weights for events that pass
 
-  Tools::Zero(count1->npass, 2); // sums events that pass,  without weights
+  // Tools::Zero(count1->npass, 2); // sums events that pass,  without weights
   Tools::Zero(sum, 3);
   eventsfound_db=0;
   eventsfound_nfb=0;
@@ -1284,1199 +1281,1178 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // fDetector->inu=inu;
 
     // minray = direct,  maxray = reflected
-    for (int whichray = settings1.MINRAY; whichray <= settings1.MAXRAY; whichray++) {
-      fDetector->passglobtrig[0] = 0;
-      fDetector->passglobtrig[1] = 0;
-      passes_thisevent = 0;
-      unmasked_thisevent = 1;
+    // for (int whichray = settings1.MINRAY; whichray <= settings1.MAXRAY; whichray++) {
 
-      if (nuSpectra->IsSpectrum()){//if using energy spectrum
+    fDetector->passglobtrig[0] = 0;
+    fDetector->passglobtrig[1] = 0;
+    passes_thisevent = 0;
+    unmasked_thisevent = 1;
 
-	if(settings1.USEDARTBOARD){
-	  pnu = nuSpectra->GetNuEnergy();
-	}
-        else{
-	  pnu = nuSpectra->GetCDFEnergy();
-	}
+    if (nuSpectra->IsSpectrum()){//if using energy spectrum
 
-	ierr = primary1->GetSigma(pnu, sigma, len_int_kgm2, &settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
-        // ierr=0 if the energy is too low for the parameterization
-        // ierr=1 otherwise
-        fNeutrinoPath->len_int=1.0/(sigma*askFreqGen.RHOH20*(1./constants::M_NUCL)*1000); // in km (why interaction length in water?) //EH
-      }// end IsSpectrum
-      
-      // count_pass=0;
-      passestrigger=0;
-      chanceinhell2=0;
-      sec1.secondbang=false;
-      count_total++;
-      // initializing the voltage seen by each polarization of each antenna
-      interaction1->dtryingdirection=0;
-      fDetector->dtryingposition=0;
-
-      // Picks the balloon position and at the same time sets the masks and thresholds
-      fDetector->PickBalloonPosition(antarctica,  &settings1,  inu,  fDetector,  r.Rndm());
-
-      if (settings1.HIST && !settings1.ONLYFINAL && ro.prob_eachilon_bn.GetEntries() < settings1.HIST_MAX_ENTRIES) {
-        ro.prob_eachilon_bn.Fill(fDetector->position().Longitude());
-      }
-
-      // pick random point in ice.
-      // also get initial guess shower exit position
-      // unit vector from shower exit to balloon.
-      // get both positions of interaction point and its mirror point.
-      //-------------------------------------------------------
-      beyondhorizon = 0;
-
-      if (interaction1){
-        delete interaction1;
-	interaction1 = NULL;
-      }
-      interaction1 = new Interaction(primary1,  &settings1); //,  whichray,  count1);
-
-      // moved from deep inside interaction
-      if (settings1.MINRAY==whichray) {
-	// only increment neutrino flavor on first ray so you don't count twice
-	if (interaction1->nuflavor==NuFlavor::e){
-	  count1->nnu_e++;
-	}
-	else if (interaction1->nuflavor==NuFlavor::mu){
-	  count1->nnu_mu++;
-	}
-	else if (interaction1->nuflavor==NuFlavor::tau){
-	  count1->nnu_tau++;
-	}
-      }
-
-      if(taus1){
-        delete taus1;
-	taus1 = NULL;
-      }
-      taus1 = new Taumodel();
-
-      int taumodes = settings1.taumodes;
-      tauweighttrigger=0;
-      interaction1->weight_nu=0;
-      interaction1->weight_nu_prob=0;
-      taus1->weight_tau_prob=0;
-      
-      // if (taumodes==1 && interaction1->nuflavor=="nutau" && interaction1->current=="cc"){
-      if (taumodes==1 && interaction1->nuflavor==NuFlavor::tau && interaction1->current==CurrentType::Charged){
-        tautrigger = 1;///< tau trigger sets the chance to create tau particle
+      if(settings1.USEDARTBOARD){
+	pnu = nuSpectra->GetNuEnergy();
       }
       else{
-        tautrigger=0;
+	pnu = nuSpectra->GetCDFEnergy();
       }
 
-      // fDetector->PickDownwardInteractionPoint(interaction1,  anita1,  &settings1,  antarctica,  ray1,  beyondhorizon);
-      beyondhorizon = interaction1->PickDownwardInteractionPoint(fDetector->Getibnposition(), fDetector->position(), &settings1,  antarctica,  &rayTracer);
-      // fDetector->PickDownwardInteractionPoint(interaction1,  &settings1,  antarctica,  &rayTracer,  beyondhorizon);      
+      ierr = primary1->GetSigma(pnu, sigma, len_int_kgm2, &settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
+      // ierr=0 if the energy is too low for the parameterization
+      // ierr=1 otherwise
+      fNeutrinoPath->len_int=1.0/(sigma*askFreqGen.RHOH20*(1./constants::M_NUCL)*1000); // in km (why interaction length in water?) //EH
+    }// end IsSpectrum
+      
+    // count_pass=0;
+    passestrigger=0;
+    chanceinhell2=0;
+    sec1.secondbang=false;
+    count_total++;
+    // initializing the voltage seen by each polarization of each antenna
+    interaction1->dtryingdirection=0;
+    fDetector->dtryingposition=0;
 
-      if (interaction1->noway){
-	fGenNu->passCutNoWay = 0;
-	std::cerr << "All tree filled!" << ro.allTree.GetEntries() << "\n";
-	ro.allTree.Fill();
-        continue;
+    // Picks the balloon position and at the same time sets the masks and thresholds
+    fDetector->PickBalloonPosition(antarctica,  &settings1,  inu,  fDetector,  r.Rndm());
+
+    if (settings1.HIST && !settings1.ONLYFINAL && ro.prob_eachilon_bn.GetEntries() < settings1.HIST_MAX_ENTRIES) {
+      ro.prob_eachilon_bn.Fill(fDetector->position().Longitude());
+    }
+
+    // pick random point in ice.
+    // also get initial guess shower exit position
+    // unit vector from shower exit to balloon.
+    // get both positions of interaction point and its mirror point.
+    //-------------------------------------------------------
+    beyondhorizon = 0;
+
+    if (interaction1){
+      delete interaction1;
+      interaction1 = NULL;
+    }
+    interaction1 = new Interaction(primary1,  &settings1); //,  whichray,  count1);
+
+    // moved from deep inside interaction
+    // if (settings1.MINRAY==whichray) {
+    //   // only increment neutrino flavor on first ray so you don't count twice
+    //   if (interaction1->nuflavor==NuFlavor::e){
+    // 	count1->nnu_e++;
+    //   }
+    //   else if (interaction1->nuflavor==NuFlavor::mu){
+    // 	count1->nnu_mu++;
+    //   }
+    //   else if (interaction1->nuflavor==NuFlavor::tau){
+    // 	count1->nnu_tau++;
+    //   }
+    // }
+
+    if(taus1){
+      delete taus1;
+      taus1 = NULL;
+    }
+    taus1 = new Taumodel();
+
+    int taumodes = settings1.taumodes;
+    tauweighttrigger=0;
+    interaction1->weight_nu=0;
+    interaction1->weight_nu_prob=0;
+    taus1->weight_tau_prob=0;
+      
+    // if (taumodes==1 && interaction1->nuflavor=="nutau" && interaction1->current=="cc"){
+    if (taumodes==1 && interaction1->nuflavor==NuFlavor::tau && interaction1->current==CurrentType::Charged){
+      tautrigger = 1;///< tau trigger sets the chance to create tau particle
+    }
+    else{
+      tautrigger=0;
+    }
+
+    // fDetector->PickDownwardInteractionPoint(interaction1,  anita1,  &settings1,  antarctica,  ray1,  beyondhorizon);
+    beyondhorizon = interaction1->PickDownwardInteractionPoint(fDetector->Getibnposition(), fDetector->position(), &settings1,  antarctica,  &rayTracer);
+    // fDetector->PickDownwardInteractionPoint(interaction1,  &settings1,  antarctica,  &rayTracer,  beyondhorizon);      
+
+    if (interaction1->noway){
+      fGenNu->passCutNoWay = 0;
+      std::cerr << "All tree filled!" << ro.allTree.GetEntries() << "\n";
+      ro.allTree.Fill();
+      continue;
+    }
+    else{
+      fGenNu->passCutNoWay = 1;
+    }
+    // count1->noway[whichray]++;
+
+    if (interaction1->wheredoesitleave_err){	
+      continue;
+    }
+    // count1->wheredoesitleave_err[whichray]++;
+
+    if (interaction1->neverseesice){
+      continue;
+    }
+    // count1->neverseesice[whichray]++;
+
+    if (interaction1->wheredoesitenterice_err){
+      continue;
+    }
+    // count1->wheredoesitenterice_err[whichray]++;
+
+    if (interaction1->toohigh){
+      continue;
+    }
+    // count1->toohigh[whichray]++;
+
+    if (interaction1->toolow){
+      continue;
+    }
+    // count1->toolow[whichray]++;
+
+    if (!interaction1->iceinteraction){
+      continue;
+    }
+    // count1->iceinteraction[whichray]++;
+
+    if (beyondhorizon) {
+      fGenNu->passCutWithinHorizon = 0;
+      ro.allTree.Fill();
+      continue;
+    }
+    else{
+      fGenNu->passCutWithinHorizon = 1;
+    }
+    // count1->inhorizon[whichray]++;
+
+    // cerenkov angle depends on depth because index of refraction depends on depth.
+
+    if (settings1.FIRN) {
+      askFreqGen.SetNDepth(antarctica->GetN(interaction1->altitude_int));
+      changle_deg=askFreqGen.GetChangle()*constants::DEGRAD;
+    }
+
+    rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 0);
+
+    // *** NOTE **** for Snell's law,  I call the ray on the air-side
+    // the incident angle and the ice-side ray the refracted
+
+    // ray's angle of incidence (in the air) onto ice
+    // costheta_inc=rayTracer.n_exit2bn[0].Dot(rayTracer.nsurf_rfexit);    // just for plotting
+
+    // // just for plotting
+    // costheta_exit=cos(rayTracer.rfexit[0].Theta()); // just for plotting
+
+    // if (!ray1->TraceRay(&settings1, anita1, 1, askFreqGen.N_DEPTH)) {
+    if (!rayTracer.TraceRay(&settings1, fDetector, 1, askFreqGen.N_DEPTH)) {
+      continue;
+    }
+
+    // use snell's law to get the first guess at the
+    // direction of the rf as it leaves ice surface.
+    // 0th guess was simply radially outward from interaction position
+    // this now takes into account balloon position and surface normal.
+    // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 1, antarctica); // fills ray1->n_exit2bn[1]
+    const int inuDebug = -1; //1014; //1481; //1705; //34; //532; //543; //517; //523; //522;
+    bool debugRay = inu == inuDebug ? true : false;
+    rayTracer.setDebug(debugRay);
+    TVector3 rfDirFromInteraction = rayTracer.findPathToDetector(interaction1->posnu, fDetector->position());
+
+    if(rfDirFromInteraction.Mag()==0){
+      // no solution was found withing the fitter tolerance
+      ///@todo Fill some tree indicating this!
+      continue;
+    }
+
+    int whichray = 0;
+    rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 1, antarctica);
+
+    rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 1);
+
+    std::cout << "inu = " << inu << std::endl;
+    if(debugRay){
+      exit(1);
+    }
+    // if (!ray1->TraceRay(&settings1, anita1, 2, askFreqGen.N_DEPTH)) {; // trace ray,  2nd iteration.
+    if (!rayTracer.TraceRay(&settings1, fDetector, 2, askFreqGen.N_DEPTH)) {; // trace ray,  2nd iteration.
+      continue;
+    }
+
+    // fills ray1->n_exit2bn[2] ?
+    // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 2, antarctica);
+    rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);
+
+    rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 2);
+
+    // intermediate counter
+    // count1->nraypointsup1[whichray]++;
+
+    double emfrac_db = 0, hadfrac_db = 0;
+    sec1.GetTauDecay(interaction1->nuflavor, interaction1->current, taudecay,  emfrac_db,  hadfrac_db);
+
+    // pick elasticity
+    elast_y = primary1->pickY(&settings1, pnu, 0, CurrentType::Charged);
+    if (settings1.CONSTANTY==1) { // if we ask to make y a constant=0.2
+      elast_y = 0.2;
+      interaction1->nuflavor = NuFlavor::e;//"nue";
+      interaction1->current = CurrentType::Charged; //"cc";
+    }
+
+    if (ro.ytree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+      ro.ytree.Fill();
+    }
+
+    // //TAU STUFF. Pick whether it will stay as a neutrino or create tau
+    // if(tautrigger==1){
+    //   if (( !settings1.UNBIASED_SELECTION) && !settings1.SLAC ) {
+
+    // 	  /**
+    // 	   * @todo @warning bug discovered during =nicemc= refactor?
+    // 	   * The original, unrefactored version of this code passed emfrac and hadfrac to GetDirection (which uses those numbers)
+    // 	   * These values were not set in this iteration of the event loop, and so were probably the values from the last loop.
+    // 	   * It seems likely that emfrac_db and hadfrac_db were meant to be used here based on how emfrac & hadfrac are set to these
+    // 	   * values in the tau case later.
+    // 	   * I'll put these in now, but since I didn't write the original code I'm not 100% sure of the author's intent.
+    // 	   */
+    // 	  ShowerProperties showerPropsTemp;
+    // 	  showerPropsTemp.emFrac = emfrac_db;
+    // 	  showerPropsTemp.hadFrac = hadfrac_db;
+    //     err = GetDirection(&settings1, interaction1, rayTracer.nrf_iceside[4], deltheta_em_max, deltheta_had_max, showerPropsTemp, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], &rayTracer, &askFreqGen, interaction1->posnu, fDetector, fDetector, interaction1->nnu, costhetanu, theta_threshold);	  
+    //   }
+    //   if(err==0){
+    //     continue;//bad stuff has happened.
+    // 	}
+    //   interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
+
+    //   taus1->GetTauWeight(primary1,  &settings1,  antarctica,  interaction1,  pnu,  1,  ptauf, crust_entered);
+
+    //   antarctica->Getchord(&settings1,
+    // 			     len_int_kgm2,
+    // 			     interaction1->r_in,
+    // 			     interaction1->r_enterice,
+    // 			     interaction1->nuexitice,
+    // 			     interaction1->posnu, inu,
+    // 			     interaction1->chord,
+    // 			     interaction1->weight_nu_prob,
+    // 			     interaction1->weight_nu,
+    // 			     fNeutrinoPath->nearthlayers,
+    // 			     myair,
+    // 			     total_kgm2,
+    // 			     crust_entered,
+    // 			     mantle_entered,
+    // 			     core_entered);
+
+    //   nutauweight = interaction1->weight_nu_prob;
+    //   tauweight = taus1->weight_tau_prob;
+
+    //   nutauweightsum += nutauweight;
+    //   tauweightsum += tauweight;
+    //   double xrndm = gRandom->Rndm();
+
+    //   if(xrndm <=taus1->weight_tau_prob/(taus1->weight_tau_prob+interaction1->weight_nu_prob)){
+    //     pnu = ptauf;//set the energy we are looking at to the final energy of the tau. cuts out alot of if-else statements
+    //     tauweighttrigger=1; //From now on, signifies a tau particle
+    //   }
+    //   if(fTauPtr){
+    //     delete fTauPtr;
+    // 	  fTauPtr = NULL;
+    // 	}
+
+    //   fTauPtr = new Taumodel();
+    //   fTauPtr->inu = inu;
+    //   fTauPtr->ptauf = ptauf;
+    //   fTauPtr->weight_nu_prob = interaction1->weight_nu_prob;
+    //   fTauPtr->weight_tau_prob = taus1->weight_tau_prob;
+    //   ro.mytaus_tree.Fill();
+
+    // }//end tautrigger ==1
+    // /////////////////////// end of tau stuff
+
+      
+    // get fraction of shower that is electromagnetic.
+    // pi^0's are counted as hadronic.
+    // sec1->GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
+      
+    ShowerProperties showerProps = sec1.GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu, tauweighttrigger);
+
+    // for double bangs, surely this should be in Secondaries?
+    if(sec1.secondbang && sec1.interestedintaus) {
+      ptau=(1-elast_y)*pnu;
+      showerProps.emFrac=emfrac_db;
+      showerProps.hadFrac=hadfrac_db;
+    }
+
+    /**
+     * Find the highest possible electric field emitted at this energy
+     * (this corresponds to the electric field at the highest frequency detectable by the antennas.
+     * Also find the maximum width of Cerenkov cone (which is at lowest frequency)
+     * These are used to find the maximum angular deviation from Cerenkov cone where signal is still detectable.
+     */
+
+    //@todo this could be better!
+    const double testTaperFreqHz = fDetector->freq[0] > 0 ? fDetector->freq[0] : fDetector->freq[1];
+      
+    if(sec1.secondbang && sec1.interestedintaus) {
+      vmmhz1m_max = askFreqGen.GetVmMHz1m(ptau, fDetector->FREQ_HIGH);
+      askFreqGen.GetSpread(ptau, showerProps, testTaperFreqHz, deltheta_em_max, deltheta_had_max);
+    }
+    else {
+      // get peak signal at highest edge of frequency band because that is where it is highest
+      vmmhz1m_max = askFreqGen.GetVmMHz1m(pnu, fDetector->FREQ_HIGH);
+      askFreqGen.GetSpread(pnu, showerProps, testTaperFreqHz, deltheta_em_max, deltheta_had_max);
+    } //end else (not secondbang or not interested in taus)
+
+    static bool firstTimeSpread = true;
+    TFile* fTestSpread = NULL;
+    if(firstTimeSpread){
+      fTestSpread = new TFile("fTestSpread.root","recreate");	
+      TGraph gr;
+      for(int j=0; j < Anita::NFREQ; j++){
+	askFreqGen.GetSpread(pnu, showerProps, fDetector->freq[j], deltheta_em_max, deltheta_had_max);
+	gr.SetPoint(j, fDetector->freq[j], deltheta_em_max);
+	std::cout << j << "\t" <<  fDetector->freq[j] << "\t" << deltheta_em_max << "\t" << deltheta_had_max << std::endl;
       }
-      else{
-	fGenNu->passCutNoWay = 1;
-      }
-      count1->noway[whichray]++;
 
-      if (interaction1->wheredoesitleave_err){	
-        continue;
-      }
-      count1->wheredoesitleave_err[whichray]++;
-
-      if (interaction1->neverseesice){
-        continue;
-      }
-      count1->neverseesice[whichray]++;
-
-      if (interaction1->wheredoesitenterice_err){
-        continue;
-      }
-      count1->wheredoesitenterice_err[whichray]++;
-
-      if (interaction1->toohigh){
-        continue;
-      }
-      count1->toohigh[whichray]++;
-
-      if (interaction1->toolow){
-        continue;
-      }
-      count1->toolow[whichray]++;
-
-      if (!interaction1->iceinteraction){
-        continue;
-      }
-      count1->iceinteraction[whichray]++;
-
-      if (beyondhorizon) {
-	fGenNu->passCutWithinHorizon = 0;
-	ro.allTree.Fill();
-        continue;
-      }
-      else{
-	fGenNu->passCutWithinHorizon = 1;
-      }
-      count1->inhorizon[whichray]++;
-
-      // cerenkov angle depends on depth because index of refraction depends on depth.
-
-      if (settings1.FIRN) {
-	askFreqGen.SetNDepth(antarctica->GetN(interaction1->altitude_int));
-	changle_deg=askFreqGen.GetChangle()*constants::DEGRAD;
-      }
-
-      rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 0);
-
-      // *** NOTE **** for Snell's law,  I call the ray on the air-side
-      // the incident angle and the ice-side ray the refracted
-
-      // ray's angle of incidence (in the air) onto ice
-      // costheta_inc=rayTracer.n_exit2bn[0].Dot(rayTracer.nsurf_rfexit);    // just for plotting
-
-      // // just for plotting
-      // costheta_exit=cos(rayTracer.rfexit[0].Theta()); // just for plotting
-
-      // if (!ray1->TraceRay(&settings1, anita1, 1, askFreqGen.N_DEPTH)) {
-      if (!rayTracer.TraceRay(&settings1, fDetector, 1, askFreqGen.N_DEPTH)) {
-        continue;
-      }
-
-      // use snell's law to get the first guess at the
-      // direction of the rf as it leaves ice surface.
-      // 0th guess was simply radially outward from interaction position
-      // this now takes into account balloon position and surface normal.
-      // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 1, antarctica); // fills ray1->n_exit2bn[1]
-      const int inuDebug = 13; //1481; //1705; //34; //532; //543; //517; //523; //522;
-      bool debugRay = inu == inuDebug ? true : false;
-      rayTracer.setDebug(debugRay);
-      TVector3 surfacePosMinuit = rayTracer.findPathToDetector(interaction1->posnu, fDetector->position());
-      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 1, antarctica); // fills ray1->n_exit2bn[1]
-
-      rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 1);
-
-      // if (!ray1->TraceRay(&settings1, anita1, 2, askFreqGen.N_DEPTH)) {; // trace ray,  2nd iteration.
-      if (!rayTracer.TraceRay(&settings1, fDetector, 2, askFreqGen.N_DEPTH)) {; // trace ray,  2nd iteration.
-        continue;
-      }
-
-
-      // fills ray1->n_exit2bn[2] ?
-     // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 2, antarctica);
-      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);
-
-      std::cout << inu << "\t"
-		<< (surfacePosMinuit - rayTracer.rfexit[2]).Mag() << "\t"
-		<< 1e-3*(interaction1->posnu - fDetector->position()).Mag()
-		<< std::endl << std::endl;
-
-      if(debugRay){
-      	exit(1);
-      }
-
-      rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 2);
-
-      // intermediate counter
-      count1->nraypointsup1[whichray]++;
-
-      double emfrac_db = 0, hadfrac_db = 0;
-      sec1.GetTauDecay(interaction1->nuflavor, interaction1->current, taudecay,  emfrac_db,  hadfrac_db);
-
-      // pick elasticity
-      elast_y = primary1->pickY(&settings1, pnu, 0, CurrentType::Charged);
-      if (settings1.CONSTANTY==1) { // if we ask to make y a constant=0.2
-        elast_y = 0.2;
-        interaction1->nuflavor = NuFlavor::e;//"nue";
-        interaction1->current = CurrentType::Charged; //"cc";
-      }
+      gr.SetName("grTestSpread");
+      std::cout << "grTestSpread!!!!!!!!!!!!!" << std::endl;
+      std::cout << "grTestSpread!!!!!!!!!!!!!" << std::endl;
+      std::cout << "grTestSpread!!!!!!!!!!!!!" << std::endl;
+      std::cout << "grTestSpread!!!!!!!!!!!!!" << std::endl;
+      gr.Write();
+      fTestSpread->Close();
+      firstTimeSpread = false;
+    }
       
 
-      if (ro.ytree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
-        ro.ytree.Fill();
+
+    /*
+     * Using highest possible signal and minimum noise, accounting for distance from balloon,
+     * and best case attenutation... reject if signal is undetectable.
+     */
+    if (whichray==direct){ // if we are looking at direct rays	
+      // the attenuation is obtained from the altitude of the interaction (shortest path is if the signal went straight up)	
+      bestcase_atten = exp(interaction1->altitude_int/MAX_ATTENLENGTH);
+    }
+    if (whichray==downgoing){ // if we are looking at reflected rays
+      //use the real path which seems from the mirror point.
+      bestcase_atten=exp(interaction1->altitude_int_mirror/MAX_ATTENLENGTH);
+    }
+
+    // let's keep this even in the roughness case, since it still represents a ceiling value
+    if (fDetector->VNOISE[0]/10.*fDetector->maxthreshold/((showerProps.sumFrac())*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*fDetector->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR
+	&& !settings1.SKIPCUTS) {
+      // by comparing highest possible signal to the lowest possible noise, reject if there is just no way we could detect this event.
+      continue;
+
+      // vmmhz1m_max=signal at highest frequency
+      // bestcase_atten=best case attenuation
+      // r_fromballoon=distance from interaction to balloon
+      //heff_max=maximum effective height over the frequency range
+    }
+
+    // intermediate counter
+    // count1->nnottoosmall[whichray]++;
+
+    // pick neutrino direction.
+    // This GetDirection() picks a neutrino direction such that its cerenkov cone
+    // is close enough to the balloon line of sight that you have a chance in hell of seeing the signal.
+    if (whichray==downgoing) {
+      chengji=rayTracer.nrf_iceside[4].Dot(rayTracer.nrf_iceside[0]);//the projection of nrf_iceside[2] on the direction of radius direction of interaction1->posnu
+      //original nrf_iceside[4] is the upgoing direction of signals after being reflected.
+      //now I get the corresponding downward direction of real signals in my case.
+      //The two vectors are symmetric to the tangent plane of the Earth at interaction point
+      rayTracer.nrf_iceside[4] = rayTracer.nrf_iceside[4] - 2*chengji*rayTracer.nrf_iceside[0];
+    } //if whichray==1
+
+    if(tautrigger==0){//did this for cc- taus already,  do again for all other particles
+      if (( !settings1.UNBIASED_SELECTION) && !settings1.SLAC ){
+	err = GetDirection(&settings1, interaction1, rayTracer.nrf_iceside[4],
+			   deltheta_em_max, deltheta_had_max,
+			   showerProps,
+			   vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray],
+			   &rayTracer,
+			   &askFreqGen,
+			   interaction1->posnu,
+			   // anita1, bn1,
+			   fDetector, fDetector,
+			   interaction1->nnu,
+			   costhetanu,
+			   theta_threshold);
       }
+    }//end tau trigger ==0
 
-      //TAU STUFF. Pick whether it will stay as a neutrino or create tau
-      if(tautrigger==1){
-        if (( !settings1.UNBIASED_SELECTION) && !settings1.SLAC ) {
+    // gets angle between ray and neutrino direction
+    viewangle = GetViewAngle(rayTracer.nrf_iceside[4], interaction1->nnu);
+    if(viewangle>1.57 && !settings1.SKIPCUTS) { //discard the event if viewangle is greater than 90 degrees	
+      continue;
+    }
+    // count1->nviewangle_lt_90[whichray]++; // add to counter
 
-	  /**
-	   * @todo @warning bug discovered during =nicemc= refactor?
-	   * The original, unrefactored version of this code passed emfrac and hadfrac to GetDirection (which uses those numbers)
-	   * These values were not set in this iteration of the event loop, and so were probably the values from the last loop.
-	   * It seems likely that emfrac_db and hadfrac_db were meant to be used here based on how emfrac & hadfrac are set to these
-	   * values in the tau case later.
-	   * I'll put these in now, but since I didn't write the original code I'm not 100% sure of the author's intent.
-	   */
-	  ShowerProperties showerPropsTemp;
-	  showerPropsTemp.emFrac = emfrac_db;
-	  showerPropsTemp.hadFrac = hadfrac_db;
-          err = GetDirection(&settings1, interaction1, rayTracer.nrf_iceside[4], deltheta_em_max, deltheta_had_max, showerPropsTemp, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], &rayTracer, &askFreqGen, interaction1->posnu, fDetector, fDetector, interaction1->nnu, costhetanu, theta_threshold);	  
-        }
-        // else if (settings1.SLAC) {
-        //   TVector3 xaxis(1., 0., 0.);
-        //   //nnu=(rfexit[0].Unit()).Rotate(-10.*RADDEG, interaction1->posnu.Cross(zaxis));
-        //   interaction1->nnu = xaxis.RotateY(fDetector->theta_bn-settings1.SLAC_HORIZDIST/Earth::BulgeRadius);  //direction of neutrino- for slac,  that's the direction of the beam
-        //   interaction1->nnu = interaction1->nnu.RotateZ(fDetector->phi_bn);
-        //   costhetanu=cos(interaction1->nnu.Theta());
-        //   theta_threshold=1.; // this is a bogus theta_threshold but it is only used for plotting anyway
-        //   if (settings1.BORESIGHTS) {	    
-        //     for(int ilayer=0;ilayer<settings1.NLAYERS;ilayer++) { // loop over layers on the payload
-        //       for(int ifold=0;ifold<fDetector->NRX_PHI[ilayer];ifold++) {
-        //         viewangle_eachboresight[ilayer][ifold]=acos(interaction1->nnu.Dot(rayTracer.nrf_iceside_eachboresight[4][ilayer][ifold]));
-        //         icemcLog().fslac_viewangles << ilayer << "\t" << ifold << "\t" << (viewangle_eachboresight[ilayer][ifold]-askFreqGen.GetChangle())*constants::DEGRAD << "\n";
-        //       }//end for ifold
-        //     }//end for ilayer
-        //   }//end if boresights
-        //   err=1; // everything is a-okay
-        // }// end else if slac
-        if(err==0){
-          continue;//bad stuff has happened.
-	}
-        interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
+    if (!RayTracer::WhereDoesItLeave(interaction1->posnu, interaction1->nnu, antarctica, interaction1->nuexit)){
+      std::cout << "You fucked up the ray tracer!?!?!?!" << std::endl;
+      continue; // doesn't give a real value from quadratic formula
+    }
+      
+    nuexitlength=interaction1->posnu.Distance(interaction1->nuexit);
+    // probability a tau would decay within this length at this
+    // energy
+    nuexitice=interaction1->posnu.Distance(interaction1->nuexitice);
+    theta_threshold_deg=theta_threshold*constants::DEGRAD;
 
-        taus1->GetTauWeight(primary1,  &settings1,  antarctica,  interaction1,  pnu,  1,  ptauf, crust_entered);
+    // neutrino direction in frame where balloon is up,  0=east, 1=north, 2=up
+    // n_nutraject_ontheground = Vector(fDetector->n_east.Dot(interaction1->nnu),  fDetector->n_north.Dot(interaction1->nnu),  fDetector->n_bn.Dot(interaction1->nnu));
 
-        antarctica->Getchord(&settings1,
-			     len_int_kgm2,
-			     interaction1->r_in,
-			     interaction1->r_enterice,
-			     interaction1->nuexitice,
-			     interaction1->posnu, inu,
-			     interaction1->chord,
-			     interaction1->weight_nu_prob,
-			     interaction1->weight_nu,
-			     fNeutrinoPath->nearthlayers,
-			     myair,
-			     total_kgm2,
-			     crust_entered,
-			     mantle_entered,
-			     core_entered);
+    cosviewangle=cos(viewangle); // cosine angle
+    viewangle_deg=viewangle*constants::DEGRAD; // same angle but in degrees
+    dviewangle_deg=(askFreqGen.GetChangle()-viewangle)*constants::DEGRAD; // deviation from cerenkov angle
 
-        nutauweight = interaction1->weight_nu_prob;
-        tauweight = taus1->weight_tau_prob;
+    // if (ro.viewangletree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+    //   ro.viewangletree.Fill(); // fills variables related to viewing angle
+    // }
 
-        nutauweightsum += nutauweight;
-        tauweightsum += tauweight;
-        double xrndm = gRandom->Rndm();
+    if (whichray==downgoing) {
+      //return it to the upgoing direction that is after being reflected
+      rayTracer.nrf_iceside[4] = rayTracer.nrf_iceside[4] + 2*chengji*rayTracer.nrf_iceside[0];
+    }
 
-        if(xrndm <=taus1->weight_tau_prob/(taus1->weight_tau_prob+interaction1->weight_nu_prob)){
-          pnu = ptauf;//set the energy we are looking at to the final energy of the tau. cuts out alot of if-else statements
-          tauweighttrigger=1; //From now on, signifies a tau particle
-        }
-        if(fTauPtr){
-          delete fTauPtr;
-	  fTauPtr = NULL;
-	}
+    if (err==0) {
+      // count1->nbadfracs[whichray]++;
+      std::cout<<"err==0,  so leaving.\n";
+      continue;
+    }
+    // count1->ngoodfracs[whichray]++;
 
-        fTauPtr = new Taumodel();
-        fTauPtr->inu = inu;
-        fTauPtr->ptauf = ptauf;
-        fTauPtr->weight_nu_prob = interaction1->weight_nu_prob;
-        fTauPtr->weight_tau_prob = taus1->weight_tau_prob;
-        ro.mytaus_tree.Fill();
+    // these variables are just for plotting
+    nsigma_em_threshold=theta_threshold/deltheta_em_max;
+    nsigma_had_threshold=theta_threshold/deltheta_had_max;
 
-      }//end tautrigger ==1
-      /////////////////////// end of tau stuff
+    // For each neutrino,  multiply the number of tries
+    // necessary to generate the appropriate direction,
+    // and the number of tries necessary to generate
+    // an appropriate position,  and assume they are
+    // independent.
+    interaction1->dnutries=interaction1->dtryingdirection*fDetector->dtryingposition;
+
+    // where the neutrino enters the earth
+    if (tautrigger==0){//did for cc-taus already,  do for all other particles
+      interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
+    }
+
+    // total chord
+    double chord_kgm2_test=interaction1->posnu.Distance(interaction1->r_in)*askFreqGen.RHOMEDIUM;
+
+    double weight_test=0;  // weight if the whole chord from interaction to earth entrance is ice.
+    // take best case scenario chord length and find corresponding weight
+
+    IsAbsorbed(chord_kgm2_test, len_int_kgm2, weight_test);
+    // if the probably the neutrino gets absorbed is almost 1,  throw it out.
+
+    if (!settings1.SKIPCUTS) {
+      if (weight_test<CUTONWEIGHTS) {
+	continue;
+      }
+    }
+    count_chanceofsurviving++;
+
+    // theta of nu entrance point,  in earth frame
+    // and latitude
+    fNeutrinoPath->theta_in = interaction1->r_in.Theta();
+    fNeutrinoPath->lat_in = -90+fNeutrinoPath->theta_in*constants::DEGRAD;
+
+    // find quantities relevent for studying impact of atmosphere
+    // for black hole studies
+    // costheta and mytheta: theta of neutrino wrt surface normal where neutrino enters earth
+    // cosbeta0, mybeta: theta of neutrino wrt surface normal for a person standing above the interaction point
+    myair = GetThisAirColumn(&settings1,  interaction1->r_in, interaction1->nnu, interaction1->posnu, col1, cosalpha, mytheta, cosbeta0, mybeta);
+
+    // where the neutrino enters the ice
+    // reject if it enters beyond the borders of the continent.
+    // step size is 1/10 of interaction length
+    if (!settings1.UNBIASED_SELECTION) {
+      if (!antarctica->WhereDoesItEnterIce(interaction1->posnu, interaction1->nnu, len_int_kgm2/askFreqGen.RHOMEDIUM/10., interaction1->r_enterice)) {
+	//r_enterice.Print();
+	if (antarctica->OutsideAntarctica(interaction1->r_enterice)) {
+	  std::cout<<"Warning!  Neutrino enters beyond continent,  program is rejecting neutrino! inu = "<<inu<<std::endl;
+	  continue;
+	}// end outside antarctica
+      }// end wheredoesitenterice
+    }// end if unbiased
+    // intermediate counter
+    // count1->nentersice[whichray]++;
+
+    // d1=earth entrance to rock-ice interface
+    // d2=rock-ice interface to position of neutrino interaction
+    interaction1->d1=interaction1->r_enterice.Distance(interaction1->r_in);
+    interaction1->d2=interaction1->r_enterice.Distance(interaction1->posnu);
+
+
+    // get a lower limit on the chord that the neutrino traverses,
+    // so that later we can see if the signal is detectable in
+    // the best case scenario.
+    if(sec1.secondbang && sec1.interestedintaus) {
+      std::cout << "Need to bring back GetFirstBang before you can simulate taus.\n";
+      std::cout << "I removed it because it required Earth and I wanted Secondaries to be a stand-alone class to use in the embedded simulation.\n";
+      icethickness=interaction1->r_enterice.Distance(interaction1->nuexit);
+      interaction1->chord_kgm2_bestcase=nuentrancelength*TMath::MinElement(3, icemc::densities);
+    }
+    else {
+      // finds minimum chord (in kg/m^2) traversed by neutrino
+      // only keeping events with weight > 10^-3
+      // periodically need to make sure this is still valid
+      // chord_kgm2_bestcase=(d1+d2)*askFreqGen->RHOMEDIUM;
+      interaction1->chord_kgm2_bestcase=(interaction1->d1+interaction1->d2)*TMath::MinElement(3, icemc::densities);
+    }
+
+    // chord just through ice.
+    interaction1->chord_kgm2_ice=interaction1->d2*askFreqGen.RHOMEDIUM;
+
+    // take best case scenario chord length and find corresponding weight
+    IsAbsorbed(interaction1->chord_kgm2_bestcase, len_int_kgm2, interaction1->weight_bestcase);
+
+    // if the probability that the neutrino gets absorbed is almost 1,  throw it out.
+    if (interaction1->weight_bestcase<CUTONWEIGHTS && !settings1.SKIPCUTS) {
+      //
+      continue;
+    }
+    //intermediate counter
+    // count1->nabsorbed[whichray]++;
+
+    // intermediate counter
+    // count1->nraywithincontinent1[whichray]++;
+
+    // now we have second guess for rf exit point,  which is
+    // pretty close to the right answer.
+    // now get our best case attenuation again,
+    // and see if we can reject the event.
+    if (whichray==direct){
+      bestcase_atten = exp(-1*rayTracer.rfexit[1].Distance(interaction1->posnu)/MAX_ATTENLENGTH);
+    }
+    if (whichray==downgoing){
+      bestcase_atten = exp(-1*rayTracer.rfexit[1].Distance(interaction1->posnu_down)/MAX_ATTENLENGTH);//use the real distance
+    }
+    if (fDetector->VNOISE[0]/10.*fDetector->maxthreshold/((showerProps.sumFrac())*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*fDetector->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR && !settings1.SKIPCUTS) {
+      //
+      continue;
+    }
+    count_chanceinhell0++;
+
+    // intermediate counting
+    // count1->nraypointsup2[whichray]++;
+     
+    double nbelowsurface = 0;
+    // reject if it is totally internally reflected at the surface AND NOT CONSIDERING ROUGHNESS
+    if (settings1.FIRN){
+      nbelowsurface=constants::NFIRN;
+    }
+    else{
+      nbelowsurface=askFreqGen.NICE;
+    }
+    // this is purely a sanity check.
+    // if everything is working,  events should pass with 100% efficiency
+    if (!settings1.ROUGHNESS && TIR(rayTracer.nsurf_rfexit, rayTracer.nrf_iceside[3], nbelowsurface, askFreqGen.N_AIR)) {
+      continue;
+    }
+    // count1->nnottir[whichray]++;
+
+    // this sets n_exit2bn[2] to the ray from the exit point to the balloon,
+    // last iteration.  Now we're ready to do some calculations!!!!
+    rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);
+
+    // count1->nraywithincontinent2[whichray]++;
+
+    // for plotting- cos(theta) of neutrino direction standing on earth below balloon.
+    interaction1->costheta_nutraject=(interaction1->nnu.Dot(fDetector->position()))/sqrt(fDetector->position().Dot(fDetector->position()));
+
+    theta_rf_atbn = rayTracer.n_exit2bn[2].Angle(fDetector->position()); // polar angle of the rf signal as seen at the balloon.
+    // measured theta of the rf,  which is actual smeared by SIGMA_THETA,  whose default is 0.5 degrees.
+    theta_rf_atbn_measured = theta_rf_atbn+gRandom->Gaus()*fDetector->SIGMA_THETA;
+    interaction1->r_exit2bn=fDetector->position().Distance(rayTracer.rfexit[2]);
+    interaction1->r_exit2bn_measured=fDetector->altitude_bn/cos(theta_rf_atbn_measured);
+
+    // reject if the rf leaves the ice where there is water,  for example.
+    if (!antarctica->AcceptableRfexit(rayTracer.nsurf_rfexit, rayTracer.rfexit[2], rayTracer.n_exit2bn[2])){
+      continue;
+    }//end if acceptableRFexit
+
+    // intermediate counting
+    // count1->nacceptablerf[whichray]++;
+
+    // difference between exit points of 2nd and 3rd iterations.
+    diff_3tries=rayTracer.rfexit[1].Distance(rayTracer.rfexit[2]);
+
+    // reject if 2nd and 3rd tries
+    // don't converge within 10m.
+    if (diff_3tries>10) {
+      continue;
+    }
+    // count1->nconverges[whichray]++;
+
+    // Time to start assembling signal information...      
+
+    // Get Polarization vector.  See Jackson,  Cherenkov section.
+    TVector3 n_pol = GetPolarization(interaction1->nnu, rayTracer.nrf_iceside[4], inu);
+
+    if (settings1.FIRN){
+      // now rotate that polarization vector according to ray paths in firn and air.
+      // fresnel factor at ice-firn interface
+
+      GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.nrf_iceside[3], n_pol, rayTracer.nrf_iceside[4], vmmhz1m_max, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1, mag1);
+      //The gradual transition in the firn means that there is no fresnel factor, only magnification
+      // and the magnification factor is upside down compared to what it is
+      // for the firn-air interface
+      vmmhz1m_fresneledonce = vmmhz1m_max/mag1;
+
+      //  get fresnel factor at firn-air interface
+      GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.n_exit2bn[2], n_pol, rayTracer.nrf_iceside[3], vmmhz1m_fresneledonce, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel2, mag2);	
+      // use both fresnel and magnification factors at firn-air interface.  Notice that magnification factor is upside-down compared to what it is in the firn.
+      vmmhz1m_fresneledtwice = vmmhz1m_fresneledonce*fresnel2*mag2;
+
+    }//end if firn
+    else {
+      askFreqGen.GetSpread(pnu, showerProps, (fDetector->bwslice_min[2]+fDetector->bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
+
+      GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.n_exit2bn[2], n_pol, rayTracer.nrf_iceside[4], vmmhz1m_max, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);
+
+      vmmhz1m_fresneledtwice = vmmhz1m_max*fresnel1*mag1;  //  only the ice-air interface
+
+    }//end else firn
+    //cerr<<inu<<" -- here"<<std::endl;      //}
+
+    if(settings1.ROUGHNESS){
+      // applyRoughness(settings1, inu, interaction1, ray1, panel1, antarctica, bn1, &askFreqGen, anita1, showerProps);
+      applyRoughness(settings1, inu, interaction1, &rayTracer, panel1, antarctica, fDetector, &askFreqGen, fDetector, showerProps);	
+    }
+
+    if( settings1.ROUGHNESS && !panel1->GetNvalidPoints() ){
+      continue;
+    }
+      
+    if(settings1.CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10.&& !settings1.SKIPCUTS) {
+      continue;
+    }
+    // count1->nchanceinhell_fresnel[whichray]++;
+      
+    // // for plotting
+    // diffexit = rayTracer.rfexit[0].Distance(rayTracer.rfexit[1]);
+    // diffnorm = acos(rayTracer.nsurf_rfexit[0]*rayTracer.nsurf_rfexit[1]);
+    // diffrefr = acos(rayTracer.nrf_iceside[4].Dot(rayTracer.nrf_iceside[0]));
+      
+    // scale by 1/r once you've found the 3rd iteration exit point
+    // ALREADY DEALT WITH IN CASE OF ROUGHNESS
+    if (!settings1.ROUGHNESS) {
+      // this is what was in ScaleVmMHz
+      const Geoid::Position&posnu = whichray == direct ? interaction1->posnu : interaction1->posnu_down;
+      double r_meters = fDetector->position().Distance(rayTracer.rfexit[2]) + rayTracer.rfexit[2].Distance(posnu);
+      vmmhz_max = vmmhz1m_fresneledtwice/r_meters;
+    }
+
+
 
       
-      // get fraction of shower that is electromagnetic.
-      // pi^0's are counted as hadronic.
-      // sec1->GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
-      
-      ShowerProperties showerProps = sec1.GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu, tauweighttrigger);
-
-      // for double bangs, surely this should be in Secondaries?
-      if(sec1.secondbang && sec1.interestedintaus) {
-        ptau=(1-elast_y)*pnu;
-        showerProps.emFrac=emfrac_db;
-        showerProps.hadFrac=hadfrac_db;
-      }
-
-      /**
-       * Find the highest possible electric field emitted at this energy
-       * (this corresponds to the electric field at the highest frequency detectable by the antennas.
-       * Also find the maximum width of Cerenkov cone (which is at lowest frequency)
-       * These are used to find the maximum angular deviation from Cerenkov cone where signal is still detectable.
-       */
-
-      //@todo this could be better!
-      const double testTaperFreqHz = fDetector->freq[0] > 0 ? fDetector->freq[0] : fDetector->freq[1];
-      
-      if(sec1.secondbang && sec1.interestedintaus) {
-	 vmmhz1m_max = askFreqGen.GetVmMHz1m(ptau, fDetector->FREQ_HIGH);
-	 askFreqGen.GetSpread(ptau, showerProps, testTaperFreqHz, deltheta_em_max, deltheta_had_max);
-      }
-      else {
-	// get peak signal at highest edge of frequency band because that is where it is highest
-        vmmhz1m_max = askFreqGen.GetVmMHz1m(pnu, fDetector->FREQ_HIGH);
-        askFreqGen.GetSpread(pnu, showerProps, testTaperFreqHz, deltheta_em_max, deltheta_had_max);
-      } //end else (not secondbang or not interested in taus)
-
-      static bool firstTimeSpread = true;
-      TFile* fTestSpread = NULL;
-      if(firstTimeSpread){
-	fTestSpread = new TFile("fTestSpread.root","recreate");	
-	TGraph gr;
-	for(int j=0; j < Anita::NFREQ; j++){
-	  askFreqGen.GetSpread(pnu, showerProps, fDetector->freq[j], deltheta_em_max, deltheta_had_max);
-	  gr.SetPoint(j, fDetector->freq[j], deltheta_em_max);
-	  std::cout << j << "\t" <<  fDetector->freq[j] << "\t" << deltheta_em_max << "\t" << deltheta_had_max << std::endl;
-	}
-
-	gr.SetName("grTestSpread");
-	std::cout << "grTestSpread!!!!!!!!!!!!!" << std::endl;
-	std::cout << "grTestSpread!!!!!!!!!!!!!" << std::endl;
-	std::cout << "grTestSpread!!!!!!!!!!!!!" << std::endl;
-	std::cout << "grTestSpread!!!!!!!!!!!!!" << std::endl;
-	gr.Write();
-	fTestSpread->Close();
-	firstTimeSpread = false;
-      }
       
 
+    // reject if the event is undetectable.
+    if (!settings1.ROUGHNESS){
+      if (settings1.CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10. && !settings1.SKIPCUTS) {
+	//
+	continue;
+      } //if
+    }
+    // count1->nchanceinhell_1overr[whichray]++;
 
-      /*
-       * Using highest possible signal and minimum noise, accounting for distance from balloon,
-       * and best case attenutation... reject if signal is undetectable.
-       */
-      if (whichray==direct){ // if we are looking at direct rays	
-	// the attenuation is obtained from the altitude of the interaction (shortest path is if the signal went straight up)	
-        bestcase_atten = exp(interaction1->altitude_int/MAX_ATTENLENGTH);
+    // distance ray travels through ice.
+    if (!settings1.ROUGHNESS) {
+      if (whichray==direct) {
+	rflength=interaction1->posnu.Distance(rayTracer.rfexit[2]);
       }
-      if (whichray==downgoing){ // if we are looking at reflected rays
-	//use the real path which seems from the mirror point.
-        bestcase_atten=exp(interaction1->altitude_int_mirror/MAX_ATTENLENGTH);
-      }
-
-      // let's keep this even in the roughness case, since it still represents a ceiling value
-      if (fDetector->VNOISE[0]/10.*fDetector->maxthreshold/((showerProps.sumFrac())*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*fDetector->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR
-	  && !settings1.SKIPCUTS) {
-	// by comparing highest possible signal to the lowest possible noise, reject if there is just no way we could detect this event.
-        continue;
-
-        // vmmhz1m_max=signal at highest frequency
-        // bestcase_atten=best case attenuation
-        // r_fromballoon=distance from interaction to balloon
-        //heff_max=maximum effective height over the frequency range
-      }
-
-      // intermediate counter
-      count1->nnottoosmall[whichray]++;
-
-      // pick neutrino direction.
-      // This GetDirection() picks a neutrino direction such that its cerenkov cone
-      // is close enough to the balloon line of sight that you have a chance in hell of seeing the signal.
       if (whichray==downgoing) {
-        chengji=rayTracer.nrf_iceside[4].Dot(rayTracer.nrf_iceside[0]);//the projection of nrf_iceside[2] on the direction of radius direction of interaction1->posnu
-        //original nrf_iceside[4] is the upgoing direction of signals after being reflected.
-        //now I get the corresponding downward direction of real signals in my case.
-        //The two vectors are symmetric to the tangent plane of the Earth at interaction point
-        rayTracer.nrf_iceside[4] = rayTracer.nrf_iceside[4] - 2*chengji*rayTracer.nrf_iceside[0];
-      } //if whichray==1
-
-      if(tautrigger==0){//did this for cc- taus already,  do again for all other particles
-        if (( !settings1.UNBIASED_SELECTION) && !settings1.SLAC ){
-          err = GetDirection(&settings1, interaction1, rayTracer.nrf_iceside[4],
-			     deltheta_em_max, deltheta_had_max,
-			     showerProps,
-			     vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray],
-			     &rayTracer,
-			     &askFreqGen,
-			     interaction1->posnu,
-			     // anita1, bn1,
-			     fDetector, fDetector,
-			     interaction1->nnu,
-			     costhetanu,
-			     theta_threshold);
-	}
-      }//end tau trigger ==0
-
-      // gets angle between ray and neutrino direction
-      viewangle = GetViewAngle(rayTracer.nrf_iceside[4], interaction1->nnu);
-      if(viewangle>1.57 && !settings1.SKIPCUTS) { //discard the event if viewangle is greater than 90 degrees	
-        continue;
+	rflength=interaction1->posnu_down.Distance(rayTracer.rfexit[2]);//use the real distance that singals pass
       }
-      count1->nviewangle_lt_90[whichray]++; // add to counter
-
-      if (!RayTracer::WhereDoesItLeave(interaction1->posnu, interaction1->nnu, antarctica, interaction1->nuexit)){
-	std::cout << "You fucked up the ray tracer!?!?!?!" << std::endl;
-        continue; // doesn't give a real value from quadratic formula
-      }
-      
-      nuexitlength=interaction1->posnu.Distance(interaction1->nuexit);
-      // probability a tau would decay within this length at this
-      // energy
-      nuexitice=interaction1->posnu.Distance(interaction1->nuexitice);
-      theta_threshold_deg=theta_threshold*constants::DEGRAD;
-
-      // neutrino direction in frame where balloon is up,  0=east, 1=north, 2=up
-      // n_nutraject_ontheground = Vector(fDetector->n_east.Dot(interaction1->nnu),  fDetector->n_north.Dot(interaction1->nnu),  fDetector->n_bn.Dot(interaction1->nnu));
-
-      cosviewangle=cos(viewangle); // cosine angle
-      viewangle_deg=viewangle*constants::DEGRAD; // same angle but in degrees
-      dviewangle_deg=(askFreqGen.GetChangle()-viewangle)*constants::DEGRAD; // deviation from cerenkov angle
-
-      // if (ro.viewangletree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
-      //   ro.viewangletree.Fill(); // fills variables related to viewing angle
-      // }
-
-      if (whichray==downgoing) {
-        //return it to the upgoing direction that is after being reflected
-        rayTracer.nrf_iceside[4] = rayTracer.nrf_iceside[4] + 2*chengji*rayTracer.nrf_iceside[0];
-      }
-
-      if (err==0) {
-        count1->nbadfracs[whichray]++;
-        std::cout<<"err==0,  so leaving.\n";
-        continue;
-      }
-      count1->ngoodfracs[whichray]++;
-
-      // these variables are just for plotting
-      nsigma_em_threshold=theta_threshold/deltheta_em_max;
-      nsigma_had_threshold=theta_threshold/deltheta_had_max;
-
-      // For each neutrino,  multiply the number of tries
-      // necessary to generate the appropriate direction,
-      // and the number of tries necessary to generate
-      // an appropriate position,  and assume they are
-      // independent.
-      interaction1->dnutries=interaction1->dtryingdirection*fDetector->dtryingposition;
-
-      // where the neutrino enters the earth
-      if (tautrigger==0){//did for cc-taus already,  do for all other particles
-        interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
-      }
-
-      // total chord
-      double chord_kgm2_test=interaction1->posnu.Distance(interaction1->r_in)*askFreqGen.RHOMEDIUM;
-
-      double weight_test=0;  // weight if the whole chord from interaction to earth entrance is ice.
-      // take best case scenario chord length and find corresponding weight
-
-      IsAbsorbed(chord_kgm2_test, len_int_kgm2, weight_test);
-      // if the probably the neutrino gets absorbed is almost 1,  throw it out.
-
-      if (!settings1.SKIPCUTS) {
-        if (weight_test<CUTONWEIGHTS) {
-          continue;
-        }
-      }
-      count_chanceofsurviving++;
-
-      // theta of nu entrance point,  in earth frame
-      // and latitude
-      fNeutrinoPath->theta_in = interaction1->r_in.Theta();
-      fNeutrinoPath->lat_in = -90+fNeutrinoPath->theta_in*constants::DEGRAD;
-
-      // find quantities relevent for studying impact of atmosphere
-      // for black hole studies
-      // costheta and mytheta: theta of neutrino wrt surface normal where neutrino enters earth
-      // cosbeta0, mybeta: theta of neutrino wrt surface normal for a person standing above the interaction point
-      myair = GetThisAirColumn(&settings1,  interaction1->r_in, interaction1->nnu, interaction1->posnu, col1, cosalpha, mytheta, cosbeta0, mybeta);
-
-      // where the neutrino enters the ice
-      // reject if it enters beyond the borders of the continent.
-      // step size is 1/10 of interaction length
-      if (!settings1.UNBIASED_SELECTION) {
-        if (!antarctica->WhereDoesItEnterIce(interaction1->posnu, interaction1->nnu, len_int_kgm2/askFreqGen.RHOMEDIUM/10., interaction1->r_enterice)) {
-          //r_enterice.Print();
-          if (antarctica->OutsideAntarctica(interaction1->r_enterice)) {
-            std::cout<<"Warning!  Neutrino enters beyond continent,  program is rejecting neutrino! inu = "<<inu<<std::endl;
-            continue;
-          }// end outside antarctica
-        }// end wheredoesitenterice
-      }// end if unbiased
-      // intermediate counter
-      count1->nentersice[whichray]++;
-
-      // d1=earth entrance to rock-ice interface
-      // d2=rock-ice interface to position of neutrino interaction
-      interaction1->d1=interaction1->r_enterice.Distance(interaction1->r_in);
-      interaction1->d2=interaction1->r_enterice.Distance(interaction1->posnu);
+    }
 
 
-      // get a lower limit on the chord that the neutrino traverses,
-      // so that later we can see if the signal is detectable in
-      // the best case scenario.
-      if(sec1.secondbang && sec1.interestedintaus) {
-        std::cout << "Need to bring back GetFirstBang before you can simulate taus.\n";
-        std::cout << "I removed it because it required Earth and I wanted Secondaries to be a stand-alone class to use in the embedded simulation.\n";
-        icethickness=interaction1->r_enterice.Distance(interaction1->nuexit);
-        interaction1->chord_kgm2_bestcase=nuentrancelength*TMath::MinElement(3, icemc::densities);
-      }
-      else {
-        // finds minimum chord (in kg/m^2) traversed by neutrino
-        // only keeping events with weight > 10^-3
-        // periodically need to make sure this is still valid
-        // chord_kgm2_bestcase=(d1+d2)*askFreqGen->RHOMEDIUM;
-        interaction1->chord_kgm2_bestcase=(interaction1->d1+interaction1->d2)*TMath::MinElement(3, icemc::densities);
-      }
-
-      // chord just through ice.
-      interaction1->chord_kgm2_ice=interaction1->d2*askFreqGen.RHOMEDIUM;
-
-      // take best case scenario chord length and find corresponding weight
-      IsAbsorbed(interaction1->chord_kgm2_bestcase, len_int_kgm2, interaction1->weight_bestcase);
-
-      // if the probability that the neutrino gets absorbed is almost 1,  throw it out.
-      if (interaction1->weight_bestcase<CUTONWEIGHTS && !settings1.SKIPCUTS) {
-        //
-        continue;
-      }
-      //intermediate counter
-      count1->nabsorbed[whichray]++;
-
-      // intermediate counter
-      count1->nraywithincontinent1[whichray]++;
-
-      // now we have second guess for rf exit point,  which is
-      // pretty close to the right answer.
-      // now get our best case attenuation again,
-      // and see if we can reject the event.
+    // applying ice attenuation factor
+    if (!settings1.ROUGHNESS) {
       if (whichray==direct){
-        bestcase_atten = exp(-1*rayTracer.rfexit[1].Distance(interaction1->posnu)/MAX_ATTENLENGTH);
+	Attenuate(antarctica, &settings1, vmmhz_max,  rflength,  interaction1->posnu);
       }
       if (whichray==downgoing){
-        bestcase_atten = exp(-1*rayTracer.rfexit[1].Distance(interaction1->posnu_down)/MAX_ATTENLENGTH);//use the real distance
+	Attenuate_down(antarctica, &settings1, vmmhz_max,  rayTracer.rfexit[2],  interaction1->posnu, interaction1->posnu_down);
       }
-      if (fDetector->VNOISE[0]/10.*fDetector->maxthreshold/((showerProps.sumFrac())*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*fDetector->bwmin/1.E6)>settings1.CHANCEINHELL_FACTOR && !settings1.SKIPCUTS) {
-        //
-        continue;
-      }
-      count_chanceinhell0++;
+    }
 
-      // intermediate counting
-      count1->nraypointsup2[whichray]++;
-     
-      double nbelowsurface = 0;
-      // reject if it is totally internally reflected at the surface AND NOT CONSIDERING ROUGHNESS
-      if (settings1.FIRN){
-        nbelowsurface=constants::NFIRN;
-      }
-      else{
-        nbelowsurface=askFreqGen.NICE;
-      }
-      // this is purely a sanity check.
-      // if everything is working,  events should pass with 100% efficiency
-      if (!settings1.ROUGHNESS && TIR(rayTracer.nsurf_rfexit, rayTracer.nrf_iceside[3], nbelowsurface, askFreqGen.N_AIR)) {
-        continue;
-      }
-      count1->nnottir[whichray]++;
+    // intermediate counting
+    count_dbexitsice++;
 
-      // this sets n_exit2bn[2] to the ray from the exit point to the balloon,
-      // last iteration.  Now we're ready to do some calculations!!!!
-      rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);
-
-      count1->nraywithincontinent2[whichray]++;
-
-      // for plotting- cos(theta) of neutrino direction standing on earth below balloon.
-      interaction1->costheta_nutraject=(interaction1->nnu.Dot(fDetector->position()))/sqrt(fDetector->position().Dot(fDetector->position()));
-
-      theta_rf_atbn = rayTracer.n_exit2bn[2].Angle(fDetector->position()); // polar angle of the rf signal as seen at the balloon.
-      // measured theta of the rf,  which is actual smeared by SIGMA_THETA,  whose default is 0.5 degrees.
-      theta_rf_atbn_measured = theta_rf_atbn+gRandom->Gaus()*fDetector->SIGMA_THETA;
-      interaction1->r_exit2bn=fDetector->position().Distance(rayTracer.rfexit[2]);
-      interaction1->r_exit2bn_measured=fDetector->altitude_bn/cos(theta_rf_atbn_measured);
-
-      if((settings1.WHICH==Payload::Anita1Simple || settings1.WHICH==Payload::Anita1)
-	 && theta_rf_atbn < 0.3790091) {
-        continue; // the deck will mess up the arrival times in the top ring
-      }
-      // reject if the rf leaves the ice where there is water,  for example.
-      if (!antarctica->AcceptableRfexit(rayTracer.nsurf_rfexit, rayTracer.rfexit[2], rayTracer.n_exit2bn[2])){
-        continue;
-      }//end if acceptableRFexit
-
-      // intermediate counting
-      count1->nacceptablerf[whichray]++;
-
-      // difference between exit points of 2nd and 3rd iterations.
-      diff_3tries=rayTracer.rfexit[1].Distance(rayTracer.rfexit[2]);
-
-      // reject if 2nd and 3rd tries
-      // don't converge within 10m.
-      if (diff_3tries>10) {
-        continue;
-      }
-      count1->nconverges[whichray]++;
-
-      // Time to start assembling signal information...      
-
-      // Get Polarization vector.  See Jackson,  Cherenkov section.
-      TVector3 n_pol = GetPolarization(interaction1->nnu, rayTracer.nrf_iceside[4], inu);
-
-      if (settings1.FIRN){
-	// now rotate that polarization vector according to ray paths in firn and air.
-	// fresnel factor at ice-firn interface
-
-	GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.nrf_iceside[3], n_pol, rayTracer.nrf_iceside[4], vmmhz1m_max, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel1, mag1);
-	//The gradual transition in the firn means that there is no fresnel factor, only magnification
-	// and the magnification factor is upside down compared to what it is
-	// for the firn-air interface
-	vmmhz1m_fresneledonce = vmmhz1m_max/mag1;
-
-	//  get fresnel factor at firn-air interface
-	GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.n_exit2bn[2], n_pol, rayTracer.nrf_iceside[3], vmmhz1m_fresneledonce, deltheta_em_max, deltheta_had_max, t_coeff_pokey, t_coeff_slappy, fresnel2, mag2);	
-	// use both fresnel and magnification factors at firn-air interface.  Notice that magnification factor is upside-down compared to what it is in the firn.
-	vmmhz1m_fresneledtwice = vmmhz1m_fresneledonce*fresnel2*mag2;
-
-      }//end if firn
-      else {
-	askFreqGen.GetSpread(pnu, showerProps, (fDetector->bwslice_min[2]+fDetector->bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
-
-	GetFresnel(rough1, settings1.ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.n_exit2bn[2], n_pol, rayTracer.nrf_iceside[4], vmmhz1m_max, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);
-
-	vmmhz1m_fresneledtwice = vmmhz1m_max*fresnel1*mag1;  //  only the ice-air interface
-
-      }//end else firn
-      //cerr<<inu<<" -- here"<<std::endl;      //}
-
-      if(settings1.ROUGHNESS){
-	// applyRoughness(settings1, inu, interaction1, ray1, panel1, antarctica, bn1, &askFreqGen, anita1, showerProps);
-	applyRoughness(settings1, inu, interaction1, &rayTracer, panel1, antarctica, fDetector, &askFreqGen, fDetector, showerProps);	
-      }
-
-      if( settings1.ROUGHNESS && !panel1->GetNvalidPoints() ){
-        continue;
-      }
-      
-      if(settings1.CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10.&& !settings1.SKIPCUTS) {
+    // reject if the event is undetectable.
+    if (!settings1.ROUGHNESS){
+      if (settings1.CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10. && !settings1.SKIPCUTS) {
 	continue;
       }
-      count1->nchanceinhell_fresnel[whichray]++;
+    }
+
+    // count1->nchanceinhell[whichray]++;
       
-      // // for plotting
-      // diffexit = rayTracer.rfexit[0].Distance(rayTracer.rfexit[1]);
-      // diffnorm = acos(rayTracer.nsurf_rfexit[0]*rayTracer.nsurf_rfexit[1]);
-      // diffrefr = acos(rayTracer.nrf_iceside[4].Dot(rayTracer.nrf_iceside[0]));
-      
-      // scale by 1/r once you've found the 3rd iteration exit point
-      // ALREADY DEALT WITH IN CASE OF ROUGHNESS
-      if (!settings1.ROUGHNESS) {
-	// this is what was in ScaleVmMHz
-	const Geoid::Position&posnu = whichray == direct ? interaction1->posnu : interaction1->posnu_down;
-	double r_meters = fDetector->position().Distance(rayTracer.rfexit[2]) + rayTracer.rfexit[2].Distance(posnu);
-	vmmhz_max = vmmhz1m_fresneledtwice/r_meters;
+    // index for each antenna so you can use it to fill arrays
+    // count_rx=0;
+    // keeps track of maximum voltage seen on either polarization of any antenna
+    // voltsRX.max=0;
+
+    // Make a vector of V/m/MHz scaled by 1/r and attenuated.
+    // Calculates Jaime's V/m/MHz at 1 m for each frequency
+    // then multiplies by scale factor vmmhz_max/vmmhz1m_max
+    // this will need to be improved once frequency-dependent
+    // attenuation length is included.
+    AskaryanFreqs askFreqs;
+    if (!settings1.ROUGHNESS){
+
+      // the 1/r through ice is controlled by vmmhz_max,  which has been scaled in Attenuate (Attenuate_down)
+      askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, fDetector->NFREQ, fDetector->freq, fDetector->NOTCH_MIN, fDetector->NOTCH_MAX, &showerProps);
+
+      // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
+      // vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
+      // and making an array across frequency bins by putting in frequency dependence.
+    }
+
+    // For each frequency,  get the width of Cerenkov cone
+    // and size of signal once position of viewing angle is taken into account
+
+    // these variables are for energy reconstruction studies
+
+    if (!settings1.ROUGHNESS){
+      // don't loop over frequencies if the viewing angle is too far off
+      double rtemp = TMath::Min((viewangle-askFreqGen.GetChangle())/(deltheta_em_max), (viewangle-askFreqGen.GetChangle())/(deltheta_had_max));
+      if (rtemp > AskaryanFreqsGenerator::VIEWANGLE_CUT && !settings1.SKIPCUTS) {
+	continue;
       }
+      // count1->nviewanglecut[whichray]++;
 
+      askFreqs.taperAmplitudesForOffConeViewing(viewangle);
 
+      // store low frequency post-tapering
+      // vmmhz_lowfreq=askFreqs[0]; // for plotting,  vmmhz at the lowest frequency
+      pdgcode = interaction1->getPdgCode();
 
-      
-      
-
-      // reject if the event is undetectable.
-      if (!settings1.ROUGHNESS){
-        if (settings1.CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10. && !settings1.SKIPCUTS) {
-          //
-          continue;
-        } //if
+      // reject if it is undetectable now that we have accounted for viewing angle
+      if (settings1.CHANCEINHELL_FACTOR*askFreqs.maxElement()*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10. && !settings1.SKIPCUTS) {
+	continue;
       }
-      count1->nchanceinhell_1overr[whichray]++;
-
-      // distance ray travels through ice.
-      if (!settings1.ROUGHNESS) {
-        if (whichray==direct) {
-          rflength=interaction1->posnu.Distance(rayTracer.rfexit[2]);
-        }
-        if (whichray==downgoing) {
-          rflength=interaction1->posnu_down.Distance(rayTracer.rfexit[2]);//use the real distance that singals pass
-        }
-      }
-
-
-      // applying ice attenuation factor
-      if (!settings1.ROUGHNESS) {
-        if (whichray==direct){
-          Attenuate(antarctica, &settings1, vmmhz_max,  rflength,  interaction1->posnu);
-	}
-        if (whichray==downgoing){
-          Attenuate_down(antarctica, &settings1, vmmhz_max,  rayTracer.rfexit[2],  interaction1->posnu, interaction1->posnu_down);
-	}
-      }
-
-      // intermediate counting
-      count_dbexitsice++;
-
-      // reject if the event is undetectable.
-      if (!settings1.ROUGHNESS){
-        if (settings1.CHANCEINHELL_FACTOR*vmmhz_max*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10. && !settings1.SKIPCUTS) {
-          continue;
-        }
-      }
-
-      count1->nchanceinhell[whichray]++;
-      
-      // index for each antenna so you can use it to fill arrays
-      // count_rx=0;
-      // keeps track of maximum voltage seen on either polarization of any antenna
-      // voltsRX.max=0;
-
-      // Make a vector of V/m/MHz scaled by 1/r and attenuated.
-      // Calculates Jaime's V/m/MHz at 1 m for each frequency
-      // then multiplies by scale factor vmmhz_max/vmmhz1m_max
-      // this will need to be improved once frequency-dependent
-      // attenuation length is included.
-      AskaryanFreqs askFreqs;
-      if (!settings1.ROUGHNESS){
-
-	// the 1/r through ice is controlled by vmmhz_max,  which has been scaled in Attenuate (Attenuate_down)
-        askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, fDetector->NFREQ, fDetector->freq, fDetector->NOTCH_MIN, fDetector->NOTCH_MAX, &showerProps);
-
-	// here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
-        // vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
-        // and making an array across frequency bins by putting in frequency dependence.
-      }
-
-      // For each frequency,  get the width of Cerenkov cone
-      // and size of signal once position of viewing angle is taken into account
-
-      // these variables are for energy reconstruction studies
-
-      if (!settings1.ROUGHNESS){
-        // don't loop over frequencies if the viewing angle is too far off
-        double rtemp = TMath::Min((viewangle-askFreqGen.GetChangle())/(deltheta_em_max), (viewangle-askFreqGen.GetChangle())/(deltheta_had_max));
-        if (rtemp > AskaryanFreqsGenerator::VIEWANGLE_CUT && !settings1.SKIPCUTS) {
-          continue;
-        }
-        count1->nviewanglecut[whichray]++;
-
-	askFreqs.taperAmplitudesForOffConeViewing(viewangle);
-
-	// store low frequency post-tapering
-	// vmmhz_lowfreq=askFreqs[0]; // for plotting,  vmmhz at the lowest frequency
-	pdgcode = interaction1->getPdgCode();
-
-        // reject if it is undetectable now that we have accounted for viewing angle
-        if (settings1.CHANCEINHELL_FACTOR*askFreqs.maxElement()*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10. && !settings1.SKIPCUTS) {
-          continue;
-        }
-      }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
+    }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
       
 
-      // just for plotting
-      if(!settings1.ROUGHNESS){
-        vmmhz_max=askFreqs.maxElement();
-        vmmhz_min=askFreqs.minElement();
-      }
-      // intermediate counting
-      count1->nchanceinhell2[whichray]++;
-      chanceinhell2=1;
+    // just for plotting
+    if(!settings1.ROUGHNESS){
+      vmmhz_max=askFreqs.maxElement();
+      vmmhz_min=askFreqs.minElement();
+    }
+    // intermediate counting
+    // count1->nchanceinhell2[whichray]++;
+    chanceinhell2=1;
 
-      // Dead time
-      if (settings1.USEDEADTIME){
-      	if ( (fDetector->deadTime>0.9) || (r.Uniform(1)<fDetector->deadTime) ){
-	  continue;
-	}
+    // Dead time
+    if (settings1.USEDEADTIME){
+      if ( (fDetector->deadTime>0.9) || (r.Uniform(1)<fDetector->deadTime) ){
+	continue;
       }
+    }
 	    
-      count1->ndeadtime[whichray]++;
+    // count1->ndeadtime[whichray]++;
 
-      //if no-roughness case, add its parameters to the saved screen parameters so specular and roughness simulations use the same code in the waveform construction
-      if(!settings1.ROUGHNESS){
-        panel1->SetNvalidPoints(1);
-        for (int k=0;k<Anita::NFREQ;k++) {
-      	  panel1->AddVmmhz_freq(askFreqs[k]);
-        }
-        panel1->AddVmmhz0(askFreqs[0]);
-        panel1->AddVec2bln(rayTracer.n_exit2bn[2]); //
-        panel1->AddPol(n_pol);
-        panel1->AddDelay( 0. );
-        panel1->AddImpactPt(rayTracer.rfexit[2]); // impact point is the surface position?
+    //if no-roughness case, add its parameters to the saved screen parameters so specular and roughness simulations use the same code in the waveform construction
+    if(!settings1.ROUGHNESS){
+      panel1->SetNvalidPoints(1);
+      for (int k=0;k<Anita::NFREQ;k++) {
+	panel1->AddVmmhz_freq(askFreqs[k]);
+      }
+      panel1->AddVmmhz0(askFreqs[0]);
+      panel1->AddVec2bln(rayTracer.n_exit2bn[2]); //
+      panel1->AddPol(n_pol);
+      panel1->AddDelay( 0. );
+      panel1->AddImpactPt(rayTracer.rfexit[2]); // impact point is the surface position?
 
-	// std::cout << inu << " geom vectors:" << "\n" << rayTracer.rfexit[2] << "\n" << rayTracer.n_exit2bn[2] << "\n" << std::endl;
+      // std::cout << inu << " geom vectors:" << "\n" << rayTracer.rfexit[2] << "\n" << rayTracer.n_exit2bn[2] << "\n" << std::endl;
 	
-        panel1->AddViewangle(viewangle);
-        panel1->AddIncidenceAngle(rayTracer.nsurf_rfexit.Angle(rayTracer.nrf_iceside[3]));
-        panel1->AddTransmissionAngle(rayTracer.nsurf_rfexit.Angle(rayTracer.n_exit2bn[2]));
-        panel1->AddWeight( 1. );
-        panel1->SetWeightNorm( 1. );
-        panel1->AddFacetLength( 1. );
-        panel1->AddTparallel_polParallel(t_coeff_pokey);
-        panel1->AddTperpendicular_polPerpendicular(t_coeff_slappy);
+      panel1->AddViewangle(viewangle);
+      panel1->AddIncidenceAngle(rayTracer.nsurf_rfexit.Angle(rayTracer.nrf_iceside[3]));
+      panel1->AddTransmissionAngle(rayTracer.nsurf_rfexit.Angle(rayTracer.n_exit2bn[2]));
+      panel1->AddWeight( 1. );
+      panel1->SetWeightNorm( 1. );
+      panel1->AddFacetLength( 1. );
+      panel1->AddTparallel_polParallel(t_coeff_pokey);
+      panel1->AddTperpendicular_polPerpendicular(t_coeff_slappy);
 
-        panel1->AddTparallel_polPerpendicular(0.);
-        panel1->AddTperpendicular_polParallel(0.);
+      panel1->AddTparallel_polPerpendicular(0.);
+      panel1->AddTperpendicular_polParallel(0.);
 
-        // for (int k=0;k<Anita::NFREQ;k++) {
-        //   if (fDetector->whichPath()==FlightPath::PeterEvent){
-        //     // IntegrateBands(anita1, k, panel1, fDetector->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
-        //     IntegrateBands(fDetector, k, panel1, fDetector->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);	    
-	//   }
-        // }
-      }
+      // for (int k=0;k<Anita::NFREQ;k++) {
+      //   if (fDetector->whichPath()==FlightPath::PeterEvent){
+      //     // IntegrateBands(anita1, k, panel1, fDetector->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);
+      //     IntegrateBands(fDetector, k, panel1, fDetector->freq, vmmhz1m_max/(vmmhz_max*1.E6), sumsignal_aftertaper);	    
+      //   }
+      // }
+    }
 
-      //just added this temporarily - will make it run slower
-      //this gets the weight due to stopping in earth
-      //returns 0 if chord<1m
-      if (!antarctica->Getchord(&settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, fNeutrinoPath->nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered)){
-	interaction1->weight_nu_prob = -1.;
-      }
+    //just added this temporarily - will make it run slower
+    //this gets the weight due to stopping in earth
+    //returns 0 if chord<1m
+    if (!antarctica->Getchord(&settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, fNeutrinoPath->nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered)){
+      interaction1->weight_nu_prob = -1.;
+    }
 
-      if(tauweighttrigger==1){
-	fNeutrinoPath->weight1=interaction1->weight_nu_prob + taus1->weight_tau_prob;
-      }
-      else{
-	fNeutrinoPath->weight1=interaction1->weight_nu_prob;
-      }
+    if(tauweighttrigger==1){
+      fNeutrinoPath->weight1=interaction1->weight_nu_prob + taus1->weight_tau_prob;
+    }
+    else{
+      fNeutrinoPath->weight1=interaction1->weight_nu_prob;
+    }
 
-      fNeutrinoPath->weight = fNeutrinoPath->weight1 / interaction1->dnutries * settings1.SIGMA_FACTOR;  // total weight is the earth absorption factor
-      // divided by the factor accounting for the fact that we only chose our interaction point within the horizon of the balloon
-      // then multiply by the cross section multiplier,  to account for the fact that we get more interactions when the cross section is higher
-      if (fNeutrinoPath->weight<CUTONWEIGHTS) {
-	continue;
-      }
-      eventsfound_beforetrigger += fNeutrinoPath->weight;
+    fNeutrinoPath->weight = fNeutrinoPath->weight1 / interaction1->dnutries * settings1.SIGMA_FACTOR;  // total weight is the earth absorption factor
+    // divided by the factor accounting for the fact that we only chose our interaction point within the horizon of the balloon
+    // then multiply by the cross section multiplier,  to account for the fact that we get more interactions when the cross section is higher
+    if (fNeutrinoPath->weight<CUTONWEIGHTS) {
+      continue;
+    }
+    eventsfound_beforetrigger += fNeutrinoPath->weight;
 
 
 
-      // intermediate counter
+    // intermediate counter
+    if(sec1.secondbang && sec1.interestedintaus){
+      count_asktrigger_nfb++;  // just for taus
+    }
+    else{
+      count_asktrigger++;
+    }
+
+    panel1->PropagateSignalsToDetector(&settings1, fDetector, inu);
+
+    bool eventPassedTrigger = fDetector->applyTrigger(inu);
+    if(eventPassedTrigger){
+
+	
+      std::cout << "inu " <<  inu << ", eventNumber = " << eventNumber << "... It passed!" << std::endl;
+      TString canName = TString::Format("rayTracer_%d.C", inu);
+      rayTracer.makePlot(canName, antarctica, interaction1->posnu, interaction1->nnu, fDetector->position());
+
+      // the neutrino has passed the trigger...
+      fPassNu = new PassingNeutrino(*fGenNu, askFreqs, showerProps); // forced to be NULL at loop start
+
+      // fDetector->passglobtrig[0]=thispasses[0];
+      // fDetector->passglobtrig[1]=thispasses[1];
+
+      //calculate the phi angle wrt +x axis of the ray from exit to balloon
+      n_exit_phi = Tools::AbbyPhiCalc(rayTracer.n_exit2bn[2][0], rayTracer.n_exit2bn[2][1]);
+
+      // keep track of events passing trigger
+      // count1->npassestrigger[whichray]++;
+      // tags this event as passing
+      passestrigger=1;
+
+      // for taus
       if(sec1.secondbang && sec1.interestedintaus){
-	count_asktrigger_nfb++;  // just for taus
+	count_passestrigger_nfb++;
       }
-      else{
-	count_asktrigger++;
-      }
+      crust_entered=0; //These are switches that let us tell how far a given neutrino penetrated.  Clear them before entering Getchord.
+      mantle_entered=0;
+      core_entered=0;
 
-      panel1->PropagateSignalsToDetector(&settings1, fDetector, inu);
-
-      bool eventPassedTrigger = fDetector->applyTrigger(inu);
-      if(eventPassedTrigger){
-
-	
-	std::cout << "inu " <<  inu << ", eventNumber = " << eventNumber << "... It passed!" << std::endl;
-	TString canName = TString::Format("rayTracer_%d.C", inu);
-	rayTracer.makePlot(canName, antarctica, interaction1->posnu, interaction1->nnu, fDetector->position());
-
-	// the neutrino has passed the trigger...
-	fPassNu = new PassingNeutrino(*fGenNu, askFreqs, showerProps); // forced to be NULL at loop start
-
-	// fDetector->passglobtrig[0]=thispasses[0];
-	// fDetector->passglobtrig[1]=thispasses[1];
-
-	//calculate the phi angle wrt +x axis of the ray from exit to balloon
-	n_exit_phi = Tools::AbbyPhiCalc(rayTracer.n_exit2bn[2][0], rayTracer.n_exit2bn[2][1]);
-
-	// keep track of events passing trigger
-	count1->npassestrigger[whichray]++;
-	// tags this event as passing
-	passestrigger=1;
-
-	// for taus
-	if(sec1.secondbang && sec1.interestedintaus){
-	  count_passestrigger_nfb++;
+      // this gets the weight due to stopping in earth
+      // returns 0 if chord<1m
+      if (tautrigger==1 || antarctica->Getchord(&settings1,
+						len_int_kgm2,
+						interaction1->r_in,
+						interaction1->r_enterice,
+						interaction1->nuexitice,
+						interaction1->posnu,
+						inu,
+						interaction1->chord,
+						interaction1->weight_nu_prob,
+						interaction1->weight_nu,
+						fNeutrinoPath->nearthlayers,
+						myair,
+						total_kgm2,
+						crust_entered,
+						mantle_entered,
+						core_entered)) {
+	//cout << "passes chord.\n";
+	if (ro.nupathtree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+	  ro.nupathtree.Fill();
 	}
-	crust_entered=0; //These are switches that let us tell how far a given neutrino penetrated.  Clear them before entering Getchord.
-	mantle_entered=0;
-	core_entered=0;
+	// counts how many have a good chord length
+	count_chordgoodlength++;
 
-	// this gets the weight due to stopping in earth
-	// returns 0 if chord<1m
-	if (tautrigger==1 || antarctica->Getchord(&settings1,
-						  len_int_kgm2,
-						  interaction1->r_in,
-						  interaction1->r_enterice,
-						  interaction1->nuexitice,
-						  interaction1->posnu,
-						  inu,
-						  interaction1->chord,
-						  interaction1->weight_nu_prob,
-						  interaction1->weight_nu,
-						  fNeutrinoPath->nearthlayers,
-						  myair,
-						  total_kgm2,
-						  crust_entered,
-						  mantle_entered,
-						  core_entered)) {
-	  //cout << "passes chord.\n";
-	  if (ro.nupathtree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
-	    ro.nupathtree.Fill();
-	  }
-	  // counts how many have a good chord length
-	  count_chordgoodlength++;
+	// divide phase space factor into weight1
+	if(tauweighttrigger==1){
+	  fNeutrinoPath->weight_prob=interaction1->weight_nu_prob + taus1->weight_tau_prob;
+	}
+	else{
+	  fNeutrinoPath->weight_prob=interaction1->weight_nu_prob;
+	}
+	fNeutrinoPath->weight1=interaction1->weight_nu;
+	fNeutrinoPath->weight=fNeutrinoPath->weight1/interaction1->dnutries*settings1.SIGMA_FACTOR;
+	fNeutrinoPath->weight_prob=fNeutrinoPath->weight_prob/interaction1->dnutries*settings1.SIGMA_FACTOR;
 
-	  // divide phase space factor into weight1
-	  if(tauweighttrigger==1){
-	    fNeutrinoPath->weight_prob=interaction1->weight_nu_prob + taus1->weight_tau_prob;
-	  }
-	  else{
-	    fNeutrinoPath->weight_prob=interaction1->weight_nu_prob;
-	  }
-	  fNeutrinoPath->weight1=interaction1->weight_nu;
-	  fNeutrinoPath->weight=fNeutrinoPath->weight1/interaction1->dnutries*settings1.SIGMA_FACTOR;
-	  fNeutrinoPath->weight_prob=fNeutrinoPath->weight_prob/interaction1->dnutries*settings1.SIGMA_FACTOR;
-
-	  fNeutrinoPath->pieceofkm2sr=fNeutrinoPath->weight*antarctica->volume*pow(1.E-3, 3)*askFreqGen.RHOMEDIUM/askFreqGen.RHOH20*constants::sr/(double)NNU/fNeutrinoPath->len_int;
-	  // if (ro.h10.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST){
-	  //   ro.h10.Fill(hitangle_e_all[0], fNeutrinoPath->weight);
-	  // }
-	  fNeutrinoPath->logweight=log10(fNeutrinoPath->weight);
-	  interaction1->logchord=log10(interaction1->chord);
+	fNeutrinoPath->pieceofkm2sr=fNeutrinoPath->weight*antarctica->volume*pow(1.E-3, 3)*askFreqGen.RHOMEDIUM/askFreqGen.RHOH20*constants::sr/(double)NNU/fNeutrinoPath->len_int;
+	// if (ro.h10.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST){
+	//   ro.h10.Fill(hitangle_e_all[0], fNeutrinoPath->weight);
+	// }
+	fNeutrinoPath->logweight=log10(fNeutrinoPath->weight);
+	interaction1->logchord=log10(interaction1->chord);
 	  
-	  // if neutrino travels more than one meter in ice
-	  if (interaction1->d2>1) {
-	    // intermediate counter
-	    count_d2goodlength++;
+	// if neutrino travels more than one meter in ice
+	if (interaction1->d2>1) {
+	  // intermediate counter
+	  count_d2goodlength++;
 
-	    // for taus
-	    // add to tally of neutrinos found,  weighted.
-	    if(sec1.secondbang && sec1.interestedintaus) {
-	      eventsfound_nfb+=fNeutrinoPath->weight;
-	      index_weights=(int)(((fNeutrinoPath->logweight-MIN_LOGWEIGHT)/(MAX_LOGWEIGHT-MIN_LOGWEIGHT))*(double)NBINS);
-	      eventsfound_nfb_binned[index_weights]++;
-	    }//end if secondbang & interestedintaus
-	    else {
-	      allcuts[whichray]++;
-	      allcuts_weighted[whichray]+=fNeutrinoPath->weight;
-	      // if (thispasses[0] && thispasses[1]) {
-	      // 	allcuts_weighted_polarization[2]+=fNeutrinoPath->weight;
-	      // } else if (thispasses[0]){
-	      // 	allcuts_weighted_polarization[0]+=fNeutrinoPath->weight;
-	      // } else if (thispasses[1]){
-	      // 	allcuts_weighted_polarization[1]+=fNeutrinoPath->weight;
-	      // }
-	      fDetector->weight_inanita=fNeutrinoPath->weight;
+	  // for taus
+	  // add to tally of neutrinos found,  weighted.
+	  if(sec1.secondbang && sec1.interestedintaus) {
+	    eventsfound_nfb+=fNeutrinoPath->weight;
+	    index_weights=(int)(((fNeutrinoPath->logweight-MIN_LOGWEIGHT)/(MAX_LOGWEIGHT-MIN_LOGWEIGHT))*(double)NBINS);
+	    eventsfound_nfb_binned[index_weights]++;
+	  }//end if secondbang & interestedintaus
+	  else {
+	    allcuts[whichray]++;
+	    allcuts_weighted[whichray]+=fNeutrinoPath->weight;
+	    // if (thispasses[0] && thispasses[1]) {
+	    // 	allcuts_weighted_polarization[2]+=fNeutrinoPath->weight;
+	    // } else if (thispasses[0]){
+	    // 	allcuts_weighted_polarization[0]+=fNeutrinoPath->weight;
+	    // } else if (thispasses[1]){
+	    // 	allcuts_weighted_polarization[1]+=fNeutrinoPath->weight;
+	    // }
+	    fDetector->weight_inanita=fNeutrinoPath->weight;
 
-	      if (ro.h1mybeta.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
-		ro.h1mybeta.Fill(mybeta, fNeutrinoPath->weight); //get the angle distribution of mybeta
-	      }
-	      eventsfound+=fNeutrinoPath->weight; // counting events that pass,  weighted.
-	      eventsfound_prob+=fNeutrinoPath->weight_prob; // counting events that pass,  probabilities.
-	      if (cosalpha>0){
-		eventsfound_belowhorizon+=fNeutrinoPath->weight;
-	      }
-	      count1->npass[whichray]++;  // counting events that pass,  unweighted.
-	      // for calculating errors on sensitivity
-	      // need to find how many events as a function of weight
-	      // here,  we find how to index weight
-	      if (fNeutrinoPath->logweight<MIN_LOGWEIGHT){  // underflows,  set to 0th bin
-		index_weights=0;
-	      }
-	      else if (fNeutrinoPath->logweight>MAX_LOGWEIGHT){ // overflows,  set to last bin
-		index_weights=NBINS-1;
-	      }
-	      else{ // which index weight corresponds to.
-		index_weights=(int)(((fNeutrinoPath->logweight-MIN_LOGWEIGHT)/(MAX_LOGWEIGHT-MIN_LOGWEIGHT))*(double)NBINS);
-	      }
-	      // count number of events that pass,  binned in weight
-	      if (index_weights<NBINS){
-		eventsfound_binned[index_weights]++;
-	      }
-	      // number of events in a ring at distance from balloon
-	      // if (index_distance<NBINS_DISTANCE){
-	      // 	eventsfound_binned_distance[index_distance]+= fNeutrinoPath->weight;
-	      // }
-	      // // same,  now binned in weight,  for calculating errors
-	      // if (index_distance<NBINS_DISTANCE && index_weights<NBINS){
-	      // 	eventsfound_binned_distance_forerror[index_distance][index_weights]++;
-	      // }
-	      // for debugging
-	      if (fNeutrinoPath->logweight>-3){
-		eventsfound_weightgt01+=fNeutrinoPath->weight;
-	      }
-	      // how many events just pass through crust,  for same purpose.
-	      if (fNeutrinoPath->nearthlayers==1){
-		eventsfound_crust+=fNeutrinoPath->weight;
-	      }
-	      if (ro.h1mybeta.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1) {
-		ro.h1mybeta.Fill(mybeta, fNeutrinoPath->weight);
-		ro.h1mytheta.Fill(mytheta, fNeutrinoPath->weight);//fill mytheta
-	      }
-	    }//end else secondbang & interestedintaus
-
-	    //for plotting events distribution map only
-	    if(fNeutrinoPath->weight>0.0001){
-	      double int_lon, int_lat;
-	      int event_e_coord=0, event_n_coord=0;
-	      float event_e, event_n;
-	      //here are the longitude and altitude which Amy defined
-	      int_lon = interaction1->posnu.Longitude(); // what latitude,  longitude does interaction occur at
-	      int_lat = interaction1->posnu.Latitude();
-	      antarctica->IceLonLattoEN(int_lon, int_lat, event_e_coord, event_n_coord);
-	      event_e=float(antarctica->xLowerLeft_ice+event_e_coord*antarctica->cellSize)/1000.;
-	      event_n=float(-1*(antarctica->yLowerLeft_ice+(antarctica->cellSize*event_n_coord)))/1000.;
-	      if(whichray==direct){//direct
-		ro.dir_int_coord.Fill(event_e, event_n);
-	      }
-	      else if(whichray==downgoing){
-		ro.ref_int_coord.Fill(event_e, event_n);
-	      }
+	    if (ro.h1mybeta.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
+	      ro.h1mybeta.Fill(mybeta, fNeutrinoPath->weight); //get the angle distribution of mybeta
 	    }
+	    eventsfound+=fNeutrinoPath->weight; // counting events that pass,  weighted.
+	    eventsfound_prob+=fNeutrinoPath->weight_prob; // counting events that pass,  probabilities.
+	    if (cosalpha>0){
+	      eventsfound_belowhorizon+=fNeutrinoPath->weight;
+	    }
+	    // count1->npass[whichray]++;  // counting events that pass,  unweighted.
+	    // for calculating errors on sensitivity
+	    // need to find how many events as a function of weight
+	    // here,  we find how to index weight
+	    if (fNeutrinoPath->logweight<MIN_LOGWEIGHT){  // underflows,  set to 0th bin
+	      index_weights=0;
+	    }
+	    else if (fNeutrinoPath->logweight>MAX_LOGWEIGHT){ // overflows,  set to last bin
+	      index_weights=NBINS-1;
+	    }
+	    else{ // which index weight corresponds to.
+	      index_weights=(int)(((fNeutrinoPath->logweight-MIN_LOGWEIGHT)/(MAX_LOGWEIGHT-MIN_LOGWEIGHT))*(double)NBINS);
+	    }
+	    // count number of events that pass,  binned in weight
+	    if (index_weights<NBINS){
+	      eventsfound_binned[index_weights]++;
+	    }
+	    // number of events in a ring at distance from balloon
+	    // if (index_distance<NBINS_DISTANCE){
+	    // 	eventsfound_binned_distance[index_distance]+= fNeutrinoPath->weight;
+	    // }
+	    // // same,  now binned in weight,  for calculating errors
+	    // if (index_distance<NBINS_DISTANCE && index_weights<NBINS){
+	    // 	eventsfound_binned_distance_forerror[index_distance][index_weights]++;
+	    // }
+	    // for debugging
+	    if (fNeutrinoPath->logweight>-3){
+	      eventsfound_weightgt01+=fNeutrinoPath->weight;
+	    }
+	    // how many events just pass through crust,  for same purpose.
+	    if (fNeutrinoPath->nearthlayers==1){
+	      eventsfound_crust+=fNeutrinoPath->weight;
+	    }
+	    if (ro.h1mybeta.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1) {
+	      ro.h1mybeta.Fill(mybeta, fNeutrinoPath->weight);
+	      ro.h1mytheta.Fill(mytheta, fNeutrinoPath->weight);//fill mytheta
+	    }
+	  }//end else secondbang & interestedintaus
 
-	    // just for plotting.
-	    offaxis=(double)fabs(viewangle-askFreqGen.GetChangle());
-	    nsigma_offaxis=offaxis/deltheta_had_max;
+	  //for plotting events distribution map only
+	  if(fNeutrinoPath->weight>0.0001){
+	    double int_lon, int_lat;
+	    int event_e_coord=0, event_n_coord=0;
+	    float event_e, event_n;
+	    //here are the longitude and altitude which Amy defined
+	    int_lon = interaction1->posnu.Longitude(); // what latitude,  longitude does interaction occur at
+	    int_lat = interaction1->posnu.Latitude();
+	    antarctica->IceLonLattoEN(int_lon, int_lat, event_e_coord, event_n_coord);
+	    event_e=float(antarctica->xLowerLeft_ice+event_e_coord*antarctica->cellSize)/1000.;
+	    event_n=float(-1*(antarctica->yLowerLeft_ice+(antarctica->cellSize*event_n_coord)))/1000.;
+	    if(whichray==direct){//direct
+	      ro.dir_int_coord.Fill(event_e, event_n);
+	    }
+	    else if(whichray==downgoing){
+	      ro.ref_int_coord.Fill(event_e, event_n);
+	    }
+	  }
+
+	  // just for plotting.
+	  offaxis=(double)fabs(viewangle-askFreqGen.GetChangle());
+	  nsigma_offaxis=offaxis/deltheta_had_max;
 	    
-	    // ro.hundogaintoheight_e.Fill(undogaintoheight_e, fNeutrinoPath->weight);
-	    // ro.hundogaintoheight_h.Fill(undogaintoheight_h, fNeutrinoPath->weight);
-	    // ro.rec_diff.Fill((rec_efield-true_efield)/true_efield, fNeutrinoPath->weight);
-	    // ro.rec_diff0.Fill((rec_efield_array[0]-true_efield_array[0])/true_efield_array[0], fNeutrinoPath->weight);
-	    // ro.rec_diff1.Fill((rec_efield_array[1]-true_efield_array[1])/true_efield_array[1], fNeutrinoPath->weight);
-	    // ro.rec_diff2.Fill((rec_efield_array[2]-true_efield_array[2])/true_efield_array[2], fNeutrinoPath->weight);
-	    // ro.rec_diff3.Fill((rec_efield_array[3]-true_efield_array[3])/true_efield_array[3], fNeutrinoPath->weight);
-	    // ro.recsum_diff.Fill((rec_efield_array[0]+rec_efield_array[1]+rec_efield_array[2]+rec_efield_array[3]-true_efield)/true_efield, fNeutrinoPath->weight);
+	  // ro.hundogaintoheight_e.Fill(undogaintoheight_e, fNeutrinoPath->weight);
+	  // ro.hundogaintoheight_h.Fill(undogaintoheight_h, fNeutrinoPath->weight);
+	  // ro.rec_diff.Fill((rec_efield-true_efield)/true_efield, fNeutrinoPath->weight);
+	  // ro.rec_diff0.Fill((rec_efield_array[0]-true_efield_array[0])/true_efield_array[0], fNeutrinoPath->weight);
+	  // ro.rec_diff1.Fill((rec_efield_array[1]-true_efield_array[1])/true_efield_array[1], fNeutrinoPath->weight);
+	  // ro.rec_diff2.Fill((rec_efield_array[2]-true_efield_array[2])/true_efield_array[2], fNeutrinoPath->weight);
+	  // ro.rec_diff3.Fill((rec_efield_array[3]-true_efield_array[3])/true_efield_array[3], fNeutrinoPath->weight);
+	  // ro.recsum_diff.Fill((rec_efield_array[0]+rec_efield_array[1]+rec_efield_array[2]+rec_efield_array[3]-true_efield)/true_efield, fNeutrinoPath->weight);
 
-	    sourceLon = rayTracer.rfexit[2].Longitude();
-	    sourceLat = rayTracer.rfexit[2].Latitude();
-	    sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon, sourceLat);
+	  sourceLon = rayTracer.rfexit[2].Longitude();
+	  sourceLat = rayTracer.rfexit[2].Latitude();
+	  sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon, sourceLat);
 
-	    //Now put data in Vectors and Positions into arrays for output to the ROOT file.
-	    if (settings1.HIST && ro.finaltree.GetEntries()<settings1.HIST_MAX_ENTRIES) {
-	      TVector3 n_bn = fDetector->position().Unit();
+	  //Now put data in Vectors and Positions into arrays for output to the ROOT file.
+	  if (settings1.HIST && ro.finaltree.GetEntries()<settings1.HIST_MAX_ENTRIES) {
+	    TVector3 n_bn = fDetector->position().Unit();
+	    for (int i=0;i<3;i++) {
+	      nnu_array[i] = interaction1->nnu[i];
+	      r_in_array[i] = interaction1->r_in[i];
+	      r_bn_array[i] = fDetector->position()[i];
+	      n_bn_array[i] = n_bn[i];
+	      posnu_array[i] = interaction1->posnu[i];
+	      // ant_max_normal0_array[i] = ant_max_normal0[i];
+	      // ant_max_normal1_array[i] = ant_max_normal1[i];
+	      // ant_max_normal2_array[i] = ant_max_normal2[i];
+	      // n_pol_array[i] = n_pol[i];
+	      r_enterice_array[i] = interaction1->r_enterice[i];
+	      nsurf_rfexit_array[i] = rayTracer.nsurf_rfexit[i];
+	      nsurf_rfexit_db_array[i] = rayTracer.nsurf_rfexit_db[i];
+	    } //end for (fill arrays)
+	    for (int j=0;j<5;j++) {
 	      for (int i=0;i<3;i++) {
-		nnu_array[i] = interaction1->nnu[i];
-		r_in_array[i] = interaction1->r_in[i];
-		r_bn_array[i] = fDetector->position()[i];
-		n_bn_array[i] = n_bn[i];
-		posnu_array[i] = interaction1->posnu[i];
-		// ant_max_normal0_array[i] = ant_max_normal0[i];
-		// ant_max_normal1_array[i] = ant_max_normal1[i];
-		// ant_max_normal2_array[i] = ant_max_normal2[i];
-		// n_pol_array[i] = n_pol[i];
-		r_enterice_array[i] = interaction1->r_enterice[i];
-		nsurf_rfexit_array[i] = rayTracer.nsurf_rfexit[i];
-		nsurf_rfexit_db_array[i] = rayTracer.nsurf_rfexit_db[i];
-	      } //end for (fill arrays)
-	      for (int j=0;j<5;j++) {
-		for (int i=0;i<3;i++) {
-		  nrf_iceside_array[j][i] = rayTracer.nrf_iceside[j][i];
-		  nrf_iceside_db_array[j][i] = nrf_iceside_db[j][i];
-		  n_exit2bn_array[j][i] = rayTracer.n_exit2bn[j][i];
-		  n_exit2bn_db_array[j][i] = n_exit2bn_db[j][i];
-		  rfexit_array[j][i] = rayTracer.rfexit[j][i];
-		  rfexit_db_array[j][i] = rayTracer.rfexit_db[j][i];
-		} //end for
+		nrf_iceside_array[j][i] = rayTracer.nrf_iceside[j][i];
+		nrf_iceside_db_array[j][i] = nrf_iceside_db[j][i];
+		n_exit2bn_array[j][i] = rayTracer.n_exit2bn[j][i];
+		n_exit2bn_db_array[j][i] = n_exit2bn_db[j][i];
+		rfexit_array[j][i] = rayTracer.rfexit[j][i];
+		rfexit_db_array[j][i] = rayTracer.rfexit_db[j][i];
 	      } //end for
+	    } //end for
 
-	      costheta_nutraject2	= interaction1->costheta_nutraject;
-	      phi_nutraject2		= interaction1->phi_nutraject;
-	      altitude_int2		= interaction1->altitude_int;
-	      d12			= interaction1->d1;
-	      d22			= interaction1->d2;
-	      dtryingdirection2		= interaction1->dtryingdirection;
-	      logchord2			= interaction1->logchord;
-	      r_fromballoon2		= interaction1->r_fromballoon[0];
-	      chord_kgm2_bestcase2	= interaction1->chord_kgm2_bestcase;
-	      chord_kgm2_ice2		= interaction1->chord_kgm2_ice;
-	      weight_bestcase2		= interaction1->weight_bestcase;
-	      r_exit2bn2		= interaction1->r_exit2bn;
-	      r_exit2bn_measured2	= interaction1->r_exit2bn_measured;
+	    costheta_nutraject2	= interaction1->costheta_nutraject;
+	    phi_nutraject2		= interaction1->phi_nutraject;
+	    altitude_int2		= interaction1->altitude_int;
+	    d12			= interaction1->d1;
+	    d22			= interaction1->d2;
+	    dtryingdirection2		= interaction1->dtryingdirection;
+	    logchord2			= interaction1->logchord;
+	    r_fromballoon2		= interaction1->r_fromballoon[0];
+	    chord_kgm2_bestcase2	= interaction1->chord_kgm2_bestcase;
+	    chord_kgm2_ice2		= interaction1->chord_kgm2_ice;
+	    weight_bestcase2		= interaction1->weight_bestcase;
+	    r_exit2bn2		= interaction1->r_exit2bn;
+	    r_exit2bn_measured2	= interaction1->r_exit2bn_measured;
 
-	      sourceMag = rayTracer.rfexit[2].Mag();
+	    sourceMag = rayTracer.rfexit[2].Mag();
 
-	      ro.finaltree.Fill();
-	      count1->IncrementWeights_r_in(interaction1->r_in, fNeutrinoPath->weight);
-	    } //end if HIST & HISTMAXENTRIES
+	    ro.finaltree.Fill();
+	    // count1->IncrementWeights_r_in(interaction1->r_in, fNeutrinoPath->weight);
+	  } //end if HIST & HISTMAXENTRIES
 
 	    // Adds an entry to header, event, gps and truth trees
 	    // ro.fillRootifiedAnitaDataTrees(this, settings1, &rayTracer, panel1);
 
-	    sum_weights += fNeutrinoPath->weight;
-	    neutrinos_passing_all_cuts++;
-	    times_crust_entered_det += crust_entered;  //Increment counter for neutrino numbers in each earth layer - passing neutrinos
-	    times_mantle_entered_det += mantle_entered;
-	    times_core_entered_det += core_entered;
+	  sum_weights += fNeutrinoPath->weight;
+	  neutrinos_passing_all_cuts++;
+	  times_crust_entered_det += crust_entered;  //Increment counter for neutrino numbers in each earth layer - passing neutrinos
+	  times_mantle_entered_det += mantle_entered;
+	  times_core_entered_det += core_entered;
 
-	    if (settings1.WRITEPOSFILE==1){
-	      WriteNeutrinoInfo(inu, interaction1->posnu, interaction1->nnu, fDetector->position(), interaction1->altitude_int, interaction1->nuflavor, interaction1->current, elast_y, icemcLog().nu_out);
+	  if (settings1.WRITEPOSFILE==1){
+	    WriteNeutrinoInfo(inu, interaction1->posnu, interaction1->nnu, fDetector->position(), interaction1->altitude_int, interaction1->nuflavor, interaction1->current, elast_y, icemcLog().nu_out);
+	  }
+
+	  // sample first 1000 events that pass to see the distribution of weights
+	  if (settings1.HIST && !settings1.ONLYFINAL && ro.sampleweights.GetEntries()<settings1.HIST_MAX_ENTRIES) {
+	    if (fNeutrinoPath->weight>1.E-6){
+	      ro.sampleweights.Fill(log10(fNeutrinoPath->weight));
+	    }
+	    else{
+	      ro.sampleweights.Fill(-6.);
 	    }
 
-	    // sample first 1000 events that pass to see the distribution of weights
-	    if (settings1.HIST && !settings1.ONLYFINAL && ro.sampleweights.GetEntries()<settings1.HIST_MAX_ENTRIES) {
-	      if (fNeutrinoPath->weight>1.E-6){
-		ro.sampleweights.Fill(log10(fNeutrinoPath->weight));
+	    // on the 1000th one,  see how low you should make the cut so that you catch 99% of the events (weighted)
+	    if (ro.sampleweights.GetEntries()==1000) {
+	      double sum_sampleintegral=0.;
+	      double sum_sample=0.;
+	      // first calculate total integral of all the weights
+	      for (int k=ro.sampleweights.GetNbinsX();k>=1;k--) {
+		sum_sampleintegral+=ro.sampleweights.GetBinContent(k)*pow(10., ro.sampleweights.GetBinLowEdge(k));
 	      }
-	      else{
-		ro.sampleweights.Fill(-6.);
-	      }
-
-	      // on the 1000th one,  see how low you should make the cut so that you catch 99% of the events (weighted)
-	      if (ro.sampleweights.GetEntries()==1000) {
-		double sum_sampleintegral=0.;
-		double sum_sample=0.;
-		// first calculate total integral of all the weights
-		for (int k=ro.sampleweights.GetNbinsX();k>=1;k--) {
-		  sum_sampleintegral+=ro.sampleweights.GetBinContent(k)*pow(10., ro.sampleweights.GetBinLowEdge(k));
-		}
-		// treat the underflow bin specially
-		sum_sampleintegral+=ro.sampleweights.GetBinContent(0)*pow(10., ro.sampleweights.GetBinLowEdge(1));
-		// now sum until you reach 99% of the integral.
-		for (int k=ro.sampleweights.GetNbinsX();k>=1;k--) {
-		  sum_sample+=ro.sampleweights.GetBinContent(k)*pow(10., ro.sampleweights.GetBinLowEdge(k));
-		  if (sum_sample>0.99*sum_sampleintegral) {
-		    // reset the cut value.
-		    CUTONWEIGHTS=pow(10., ro.sampleweights.GetBinLowEdge(k));
-		    std::cout << "CUTONWEIGHTS is " << CUTONWEIGHTS << "\n";
-		    k=0;
-		  }
+	      // treat the underflow bin specially
+	      sum_sampleintegral+=ro.sampleweights.GetBinContent(0)*pow(10., ro.sampleweights.GetBinLowEdge(1));
+	      // now sum until you reach 99% of the integral.
+	      for (int k=ro.sampleweights.GetNbinsX();k>=1;k--) {
+		sum_sample+=ro.sampleweights.GetBinContent(k)*pow(10., ro.sampleweights.GetBinLowEdge(k));
+		if (sum_sample>0.99*sum_sampleintegral) {
+		  // reset the cut value.
+		  CUTONWEIGHTS=pow(10., ro.sampleweights.GetBinLowEdge(k));
+		  std::cout << "CUTONWEIGHTS is " << CUTONWEIGHTS << "\n";
+		  k=0;
 		}
 	      }
-	    }//end if HIST & ONLYFINAL & sampleweights HISTMAXENTRIES
+	    }
+	  }//end if HIST & ONLYFINAL & sampleweights HISTMAXENTRIES
 
-	    // outputs to text file variables relevant to sky map.
+	  // outputs to text file variables relevant to sky map.
 	    
-	    // icemcLog().forbrian << interaction1->costheta_nutraject << " " << n_nutraject_ontheground.Phi() << " " << fDetector->phi_bn << " " << fNeutrinoPath->logweight << "\n";
+	  // icemcLog().forbrian << interaction1->costheta_nutraject << " " << n_nutraject_ontheground.Phi() << " " << fDetector->phi_bn << " " << fNeutrinoPath->logweight << "\n";
 	    
-	    // incrementing by flavor	    
-	    // also bin in weight for error calculation.
-	    if (interaction1->nuflavor==NuFlavor::e) {
-	      sum[0]+=fNeutrinoPath->weight;
-	      eventsfound_binned_e[index_weights]++;
+	  // incrementing by flavor	    
+	  // also bin in weight for error calculation.
+	  if (interaction1->nuflavor==NuFlavor::e) {
+	    sum[0]+=fNeutrinoPath->weight;
+	    eventsfound_binned_e[index_weights]++;
+	  } //if
+	  if (interaction1->nuflavor==NuFlavor::mu) {
+	    sum[1]+=fNeutrinoPath->weight;
+	    eventsfound_binned_mu[index_weights]++;
+	  } //if
+	  if(!sec1.secondbang || !sec1.interestedintaus) {
+	    if (interaction1->nuflavor==NuFlavor::tau) {
+	      sum[2]+=fNeutrinoPath->weight;
+	      eventsfound_binned_tau[index_weights]++;
 	    } //if
-	    if (interaction1->nuflavor==NuFlavor::mu) {
-	      sum[1]+=fNeutrinoPath->weight;
-	      eventsfound_binned_mu[index_weights]++;
-	    } //if
-	    if(!sec1.secondbang || !sec1.interestedintaus) {
-	      if (interaction1->nuflavor==NuFlavor::tau) {
-		sum[2]+=fNeutrinoPath->weight;
-		eventsfound_binned_tau[index_weights]++;
-	      } //if
-	    } //if
+	  } //if
 
-	  } //end if interaction1->d2>1
+	} //end if interaction1->d2>1
 
-	} //end if tautrigger || GetChord
-	else {
-	  std::cout << "Chord is less than 1m.\n";
-	} //end else GetChord
-
-	if (settings1.HIST==1 && !settings1.ONLYFINAL && fDetector->tglob->GetEntries()<settings1.HIST_MAX_ENTRIES) {// all events
-	  // std::cout << "Filling global trigger tree.  inu is " << inu << "\n";
-	  fDetector->tglob->Fill();
-	}
-
-	passes_thisevent = 1; // flag this event as passing
-	fDetector->tdata->Fill();
-	fDetector->tgaryanderic->Fill();
-      } // end if passing global trigger conditions
+      } //end if tautrigger || GetChord
       else {
-	passes_thisevent = 0; // flag this event as not passing
-      }// end else event does not pass trigger
+	std::cout << "Chord is less than 1m.\n";
+      } //end else GetChord
+
+      if (settings1.HIST==1 && !settings1.ONLYFINAL && fDetector->tglob->GetEntries()<settings1.HIST_MAX_ENTRIES) {// all events
+	// std::cout << "Filling global trigger tree.  inu is " << inu << "\n";
+	fDetector->tglob->Fill();
+      }
+
+      passes_thisevent = 1; // flag this event as passing
+      fDetector->tdata->Fill();
+      fDetector->tgaryanderic->Fill();
+    } // end if passing global trigger conditions
+    else {
+      passes_thisevent = 0; // flag this event as not passing
+    }// end else event does not pass trigger
       
-      // if it passes the trigger,  then go ahead and
-      // calculate the chord length,  etc.
+    // if it passes the trigger,  then go ahead and
+    // calculate the chord length,  etc.
 
       
 
 	
-      // keeping track of intermediate counters,  incrementing by weight1.
-      // weight1 was not yet determined when integer counters were incremented.
-      if (chanceinhell2){
-        count_chanceinhell2_w += fNeutrinoPath->weight;
-      }
-      if (passestrigger){
-        count_passestrigger_w += fNeutrinoPath->weight;
-      }
+    // keeping track of intermediate counters,  incrementing by weight1.
+    // weight1 was not yet determined when integer counters were incremented.
+    if (chanceinhell2){
+      count_chanceinhell2_w += fNeutrinoPath->weight;
+    }
+    if (passestrigger){
+      count_passestrigger_w += fNeutrinoPath->weight;
+    }
       
-      // volume_thishorizon=antarctica->volume_inhorizon[fDetector->Getibnposition()]/1.E9;
+    // volume_thishorizon=antarctica->volume_inhorizon[fDetector->Getibnposition()]/1.E9;
 
-    } // end for WHICHRAY
-    //looping over two types of rays - upgoing and downgoing.
 
     if(fPassNu){
       ro.passTree.Fill();
@@ -2552,7 +2528,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // maks the output file
   // Summarize(&settings1, anita1, count1, nuSpectra, &askFreqGen, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb,
   // 	    sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, clOpts.outputdir);
-  Summarize(&settings1, fDetector, count1, nuSpectra, &askFreqGen, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb,
+  Summarize(&settings1, fDetector, nuSpectra, &askFreqGen, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb,
 	    sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, clOpts.outputdir);
 
   icemcLog().veff_out << settings1.EXPONENT << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << settings1.SIGMA_FACTOR << std::endl;//this is for my convenience
@@ -2579,7 +2555,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // heap allocated non-members need deleting
   if(primary1)       delete primary1;
   // if(ray1)        delete ray1;
-  if(count1)         delete count1;
+  // if(count1)         delete count1;
   // if(globaltrig1) delete globaltrig1;
   if(taus1)          delete taus1;
   if(rough1)         delete rough1;

@@ -10,7 +10,6 @@
 #include "Antarctica.h"
 #include "Primaries.h"
 #include "IcemcLog.h"
-#include "counting.hh"
 #include "RayTracer.h"
 
 #include <cmath>
@@ -362,7 +361,12 @@ int icemc::Interaction::PickDownwardInteractionPoint(int ibnposition, const Geoi
 
 
 
-//! choose CC or NC: get from ratios in Ghandi etal paper, updated for the CTEQ6-DIS parton distribution functions (M.H. Reno, personal communication).  Need to add capability of using ratios from Connolly et al.
+/**
+ * Choose CC or NC: get from ratios in Ghandi etal paper,
+ * updated for the CTEQ6-DIS parton distribution functions (M.H. Reno, personal communication).
+ * Need to add capability of using ratios from Connolly et al.
+ */
+
 icemc::CurrentType icemc::Interaction::GetCurrent() {
   CurrentType current;
   double rnd=gRandom->Rndm();
@@ -396,6 +400,9 @@ int icemc::Interaction::getPdgCode() const {
   }
   return pdgcode;
 }
+
+
+
 
 
 ///////////////// Y //////////////

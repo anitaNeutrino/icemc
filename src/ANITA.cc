@@ -3,7 +3,6 @@
 #include "GlobalTrigger.h"
 #include "ChanTrigger.h"
 #include "Tools.h"
-#include "counting.hh"
 #include "Settings.h"
 #include "IcemcLog.h"
 #include "Constants.h"

@@ -14,7 +14,6 @@
 #include "AskaryanFreqsGenerator.h"
 #include "secondaries.hh"
 #include "RayTracer.h"
-#include "counting.hh"
 #include "Primaries.h"
 #include "EnvironmentVariable.h"
 

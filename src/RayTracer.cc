@@ -159,26 +159,6 @@ void icemc::RayTracer::GetRFExit(const Settings *settings1, Anita *anita1, int w
     }
   } // end if we are doing this for each boresight
   
-  // if (settings1->SLAC) {
-  //   // ray comes out a little earlier because of the slope of the surface.
-  //   // use law of cosines the get how much "distance" should be cut short
-    
-  //   double x=sin(settings1->SLACSLOPE*constants::RADDEG)*(settings1->SLACICELENGTH/2.+rfexit[0].Distance(rfexit[whichtry]))/sin(constants::PI/2.+acos(nrf_iceside[2*whichtry].Dot(nsurf_rfexit)));
-    
-  //   rfexit[whichtry]-=x*nrf_iceside[2*whichtry];
-    
-  //   if (settings1->BORESIGHTS) {
-  //     for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) {
-  //       for(int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) {
-
-  //         x = sin(settings1->SLACSLOPE*constants::RADDEG)*(settings1->SLACICELENGTH/2.+rfexit_eachboresight[0][ilayer][ifold].Distance(rfexit_eachboresight[whichtry][ilayer][ifold]))/sin(constants::PI/2.+acos(nrf_iceside_eachboresight[2*whichtry][ilayer][ifold].Dot(nsurf_rfexit)));
-
-  //         rfexit_eachboresight[whichtry][ilayer][ifold]-=x*nrf_iceside_eachboresight[2*whichtry][ilayer][ifold];
-  //         n_exit2bn_eachboresight[whichtry][ilayer][ifold] = (r_boresights[ilayer][ifold] - rfexit_eachboresight[whichtry][ilayer][ifold]).Unit();
-  //       } // end loop over antennas on a layer
-  //     } // end loop over layers of the payload
-  //   } // end if we're keeping track of all antenna boresights
-  // } // end if we're modeling the slac run
 }
 
 //###########
@@ -655,8 +635,8 @@ double icemc::RayTracer::evalPath(const double* params) const {
 
 
 
-
 TVector3 icemc::RayTracer::findPathToDetector(const Geoid::Position&rfStart, const Geoid::Position&balloon, bool debug){
+  ///@todo add collision check to best fit path
   
   fInteractionPos = rfStart;
   fBalloonPos = balloon;
@@ -670,6 +650,7 @@ TVector3 icemc::RayTracer::findPathToDetector(const Geoid::Position&rfStart, con
   // fLocalY = fLocalZ.Cross(fBalloonPos - fInteractionPos).Unit(); // y is perpendicual to local up AND the balloon-interaction path
   fLocalX = fLocalY.Cross(fLocalZ).Unit(); // ... and therefore x is local horizontal in direction of balloon-interaction path
 
+  
   if(!fMinimizer){
     fMinimizer = ROOT::Math::Factory::CreateMinimizer("Minuit2", "");
     fMinimizer->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
@@ -696,25 +677,26 @@ TVector3 icemc::RayTracer::findPathToDetector(const Geoid::Position&rfStart, con
 
   gErrorIgnoreLevel = oldErrorLevel;
   
+  if(fDebug){
+    makeDebugPlots("testFitter.root");
+    // exit(1);
+  }
+
+  TVector3 rfPath = (fSurfacePos - fInteractionPos).Unit();;
+
   static int nGood = 0;
   static int nBad = 0;
   if(fBestResidual > 1){
     nBad++;
     icemcLog() << icemc::warning << "Outside path fitter residual tolerance!,  fBestResidual = " << fBestResidual << ", nGood = " << nGood << ", nBad = " << nBad << std::endl;
+    rfPath.SetXYZ(0, 0, 0);
   }
   else{
     nGood++;
     icemcLog() << icemc::info << "Successful fit! fBestResidual = " << fBestResidual << ", nGood = " << nGood << ", nBad = " << nBad << std::endl;
   }
 
-  ///@todo add collision check to best fit path  
-  
-  if(fDebug){
-    makeDebugPlots("testFitter.root");
-    exit(1);
-  }
-
-  return fSurfacePos;
+  return rfPath;
 }
 
 
