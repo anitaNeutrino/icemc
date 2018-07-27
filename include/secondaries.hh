@@ -184,11 +184,11 @@ namespace icemc{
     int count_nfb;
     int secondary_e_noncons;
 
-    void GetSecondaries(const Settings *settings1, NuFlavor ,double, double&, double&, int&, TH1F*);
+    void GetSecondaries(const Settings *settings1, Neutrino::Flavor ,double, double&, double&, int&, TH1F*);
 
     void InitTauola();
     // void GetTauDecay(const std::string& nuflavor, const std::string& current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);
-    void GetTauDecay(NuFlavor nuflavor, CurrentType current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);    
+    void GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::CurrentType current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);    
 
     void GetEMFracDB(double& emfrac_db, double& hadfrac_db) const;
     double GetDBViewAngle(const TVector3 &refr, const TVector3 &nnu);
@@ -196,8 +196,8 @@ namespace icemc{
     double NFBWeight(double ptau, double taulength);
 
     ShowerProperties GetEMFrac(const Settings *settings1,
-			       NuFlavor nuflavor,
-			       CurrentType current,
+			       Neutrino::Flavor nuflavor,
+			       Neutrino::CurrentType current,
 			       // const std::string& nuflavor,
 			       // const std::string& current,
 			       const std::string& taudecay,

@@ -47,6 +47,8 @@ namespace icemc {
     Balloon(const Settings* settings);
     virtual ~Balloon() {;}
 
+    
+
     /**
      * Geoid::Position of spot under balloon
      *
@@ -56,96 +58,13 @@ namespace icemc {
      * @param  anita1 -
      * @param  randomNumber -
      */
-    void PickBalloonPosition(const Antarctica *antarctica1, const Settings *settings1,int inu,Anita *anita1, double randomNumber);
-
-    /**
-     * Gets ith balloon position
-     *
-     *
-     * @return returns int
-     */
-    int Getibnposition();
-
-
-    
-    // ///< This function gets the antenna orientation
-    // /**
-    //  * Long description
-    //  *
-    //  *
-    //  * @param  settings1 -
-    //  * @param  anita1 -
-    //  * @param  ilayer -
-    //  * @param  ifold
-    //  * @param  n_eplane -
-    //  * @param  n_hplane -
-    //  * @param  n_normal -
-    //  * @return returns void
-    //  */
-    // void GetAntennaOrientation(const Settings *settings1,
-    // 			       Anita *anita1, 
-    // 			       int ilayer, int ifold, 
-    // 			       TVector3& n_eplane,
-    // 			       TVector3& n_hplane, 
-    // 			       TVector3& n_normal) const;
-
-    
+    void PickBalloonPosition(double eventTime, const Settings* settings1 ,Anita *anita1);
+    // void PickBalloonPosition(const Antarctica *antarctica1, const Settings *settings1,int inu,Anita *anita1, double randomNumber);
 
  
     ///< This function sets the default balloon position
     void SetDefaultBalloonPosition();
 
-
-    // ///< This function adjusts the slac balloon position
-    // /**
-    //  * move payload around like we did at slac
-    //  *
-    //  *
-    //  * @param  inu -
-    //  * @return returns void
-    //  */
-    // void AdjustSlacBalloonPosition(int inu);
-    
-    // ///< This function gets the slac balloon positions
-    // /**
-    //  * Long description
-    //  *
-    //  *
-    //  * @param  anita1 -
-    //  * @return returns void
-    //  */
-    // void GetSlacPositions(Anita *anita1);
-
-    ///< This function gets boresights
-    /**
-     * Long description
-     *
-     *
-     * @param  settings1 -
-     * @param  anita1 -
-     * @return returns void
-     */
-    // void GetBoresights(const Settings *settings1, const Anita *anita1);
-    
-    // ///< This function calculates antenna positions
-    // /**
-    //  * Long description
-    //  *
-    //  *
-    //  * @param  settings1 -
-    //  * @param  anita1 -
-    //  * @return returns void
-    //  */
-    // void calculate_antenna_positions(const Settings *settings1,Anita *anita1) const ;
-    
-     ///< This function rotates the payload
-    /**
-     * Rotate from payload coord to earth coord
-     *
-     *
-     * @param  ant_pos -
-     * @return returns vector
-     */
     TVector3 RotatePayload(TVector3 ant_pos) const;
     
     ///< This function UN-rotates the payload
@@ -169,6 +88,8 @@ namespace icemc {
     double getPitch() const; ///< Converts to constant for A2 and A3 (A4?)
     double getRoll() const; ///< Converts to constant for A2 and A3 (A4?)
     // double getSurfaceUnderBalloon() const {return surface_under_balloon;}
+
+
     
 #ifdef ANITA_UTIL_EXISTS
     /** 
@@ -184,11 +105,10 @@ namespace icemc {
     double BN_LONGITUDE;                                        ///< balloon longitude for fixed balloon location
     double BN_LATITUDE;                                         ///< balloon latitude for fixed balloon location
     unsigned short surfTrigBandMask[9][2];                      ///< Ryan's 16 bit masks for 9 surfs.  2x16 bit masks gives 32 channels per surf
-    int NPOINTS;                                                ///< number of GPS positions we're picking from.
+    // int NPOINTS;                                                ///< number of GPS positions we're picking from.
     int REDUCEBALLOONPOSITIONS;                                 ///< only take every 100th entry in the flight data file
     double altitude_bn;
-    double dtryingposition;                                     ///< weighting factor: how many equivalent tries each neutrino counts for after having reduced possible interaction positions to within horizon
-    Geoid::Position r_boresights[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; ///< position of antenna boresights
+    // double dtryingposition;                                     ///< weighting factor: how many equivalent tries each neutrino counts for after having reduced possible interaction positions to within horizon
     std::vector<double> latitude_bn_anitalite;                  ///< latitude at times along flightpath, equally distributed among gps data. This is filled with anita or anita-lite data, depending on which the user specifies
     std::vector<double> longitude_bn_anitalite;                 ///< same for longitude
     std::vector<double> altitude_bn_anitalite;                  ///< same for altitude
@@ -222,12 +142,10 @@ namespace icemc {
 
     // Geoid::Position r_bn_shadow;                                       ///< position of the balloon projected on earth surface - point just below balloon at surface of the earth
 
-    int NPOINTS_MIN;                                            ///< min and max index for gps positions we want to include in the simulation (to exclude launch and fall).  These are set in ReadFlight
-    int NPOINTS_MAX;
+  protected:
+    double fFirstRealTime = -1;
+    double fLastRealTime = -1;
 
-    
-
-   
   }; //class Balloon
 }
 

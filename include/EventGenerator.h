@@ -81,7 +81,7 @@ namespace icemc {
 
     // inputs
     int NNU;        // number of neutrinos
-    // int whichray=0; // indexes the rays that we look at (actually just used for ice but we use it in GetNuFlavor so keep it here)
+    // int whichray=0; // indexes the rays that we look at (actually just used for ice but we use it in GetNeutrino::Flavor so keep it here)
     double RANDOMISEPOL=0.;
 
     
@@ -103,7 +103,6 @@ namespace icemc {
     const double FREQ_HIGH_DISCONES=1000.E6; // max frequency for discones
 
     int passes_thisevent=0; // this event passes
-    int unmasked_thisevent=0; // this event is unmasked
 
 
     int NDISCONES=8;
@@ -277,7 +276,7 @@ namespace icemc {
     //End verification plot block
 
     int xsecParam_nutype = 0; // neutrino = 0, antineutrino = 1;
-    CurrentType xsecParam_nuint  = CurrentType::Neutral;
+    Neutrino::CurrentType xsecParam_nuint  = Neutrino::CurrentType::Neutral;
 
 
 
@@ -460,7 +459,7 @@ namespace icemc {
 
     // @todo constify... needs some love to constify
     void Summarize(const Settings *settings1,  Anita* anita1,  Spectra *spectra1, const AskaryanFreqsGenerator* askFreqGen,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
-    void WriteNeutrinoInfo(const int& inu, const Geoid::Position&,  const TVector3&,  const Geoid::Position&,  double,  NuFlavor,  CurrentType,  double,  std::ofstream &nu_out) const;
+    void WriteNeutrinoInfo(const int& inu, const Geoid::Position&,  const TVector3&,  const Geoid::Position&,  double,  Neutrino::Flavor,  Neutrino::CurrentType,  double,  std::ofstream &nu_out) const;
 
     /** 
      * @brief Run the neutrino generation

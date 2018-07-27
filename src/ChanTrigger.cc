@@ -1862,8 +1862,8 @@ void icemc::ChanTrigger::getNoiseFromFlight(const Anita* anita1, int ant, bool a
       trigNorm       = anita1->fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
       digNorm        = anita1->fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
       sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
-      realPart       = anita1->fRand->Gaus(0,sigma);
-      imPart         = anita1->fRand->Gaus(0,sigma);
+      realPart       = gRandom->Gaus(0,sigma);
+      imPart         = gRandom->Gaus(0,sigma);
 
       phasorsDig.emplace_back(  FFTWComplex(realPart*digNorm,  imPart*digNorm  ));
       phasorsTrig.emplace_back( FFTWComplex(realPart*trigNorm, imPart*trigNorm ));
@@ -1982,7 +1982,7 @@ void icemc::ChanTrigger::injectImpulseAtSurf(Anita *anita1, double volts_trigger
   int fNumPoints=anita1->HALFNFOUR;
   // only 2 phi sectors adjecent to the central one are considered in efficiency scan
   if(TMath::Abs(phiIndex)<=2){
-    int randomIndex=anita1->fRand->Integer(250);
+    int randomIndex=gRandom->Integer(250);
     double att = anita1->trigEffScanAtt[phiIndex+2];
     double norm = (anita1->trigEffScanAtt[phiIndex+2]==999)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=999)*1;
 

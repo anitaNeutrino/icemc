@@ -1226,8 +1226,8 @@ void icemc::Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int 
     norm           = fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i];
     sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
     sigma*=norm;
-    realPart       = fRand->Gaus(0,sigma);
-    imPart         = fRand->Gaus(0,sigma);
+    realPart       = gRandom->Gaus(0,sigma);
+    imPart         = gRandom->Gaus(0,sigma);
 
     //    cout << " " << i << " " << trig << " " << dig << " " << trig/dig << " " << norm << endl;
     phasorsTrig.emplace_back(FFTWComplex(realPart, imPart));
@@ -4401,10 +4401,7 @@ void icemc::Anita::readNoiseFromFlight(const Settings *settings1){
   RFSignal *rfTemplate = new RFSignal(780,timeVals,voltVals,true);
   
   numFreqs=rfTemplate->getNumFreqs();
-  freqs=rfTemplate->getFreqs();
-  
-  fRand = new TRandom3(settings1->SEED);
-  
+  freqs=rfTemplate->getFreqs();  
 }
 
 

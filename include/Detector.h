@@ -36,6 +36,8 @@ namespace icemc {
   class Detector {
   public:    
 
+    virtual double getStartTime() const =0;
+    virtual double getEndTime() const =0;
     
     /** 
      * @brief Where is the detector?

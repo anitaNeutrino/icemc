@@ -146,26 +146,15 @@ void icemc::Balloon::ReadAnitaliteFlight() {
     exit(1);
   }
     
-  std::string slatitude; // latitude in string format
-  std::string slongitude; //longitude in string format
-  std::string saltitude; // altitude in string format
-  std::string sheading; // heading in string format
-  std::string srealtime; // real life unix time in string format
-  std::string junk; // string not used for anything
     
-  std::string line; // for reading a whole line
-  double latitude; // same quantities as above but in double format
-  double longitude;
-  double altitude;
-  double heading;
-  double realtime;
+
+
+  for(int line=0; line < 4; line++){
+    std::string junk;
+    getline(flightfile,junk); // first few lines are junk
+  }
     
-  getline(flightfile,junk); // first few lines are junk
-  getline(flightfile,junk);
-  getline(flightfile,junk);
-  getline(flightfile,junk);
-    
-  NPOINTS=0; // number of points we have for the flight path
+  int NPOINTS=0; // number of points we have for the flight path
 
   const int plentyLong = 100000;
   latitude_bn_anitalite.reserve(plentyLong);
@@ -175,6 +164,19 @@ void icemc::Balloon::ReadAnitaliteFlight() {
   realtime_bn_anitalite.reserve(plentyLong);
   
   while (!flightfile.eof()) {
+    std::string slatitude; // latitude in string format
+    std::string slongitude; //longitude in string format
+    std::string saltitude; // altitude in string format
+    std::string sheading; // heading in string format
+    std::string srealtime; // real life unix time in string format    
+    std::string junk;
+
+    double latitude; // same quantities as above but in double format
+    double longitude;
+    double altitude;
+    double heading;
+    double realtime;
+    
     flightfile >> srealtime >> junk >> slatitude >> slongitude >> saltitude >> sheading >> junk >> junk >> junk;
     latitude  = (double)atof(slatitude.c_str());
     longitude = (double)atof(slongitude.c_str());
@@ -188,29 +190,33 @@ void icemc::Balloon::ReadAnitaliteFlight() {
     altitude_bn_anitalite.push_back(altitude);
     heading_bn_anitalite.push_back(heading);
     realtime_bn_anitalite.push_back(realtime);
-    // latitude_bn_anitalite[NPOINTS]=latitude;
-    // longitude_bn_anitalite[NPOINTS]=longitude;
-    // altitude_bn_anitalite[NPOINTS]=altitude;
-    // heading_bn_anitalite[NPOINTS]=heading;
-    // realtime_bn_anitalite[NPOINTS]=realtime;
-		
     NPOINTS++;
-		
-    //    std::cout << "NPOINTS, altitude are " << NPOINTS << " " << altitude << "\n";
 		
     getline(flightfile,junk);
 		
   }//while
 
   // plenty long is probably too long
+
+  int NPOINTS_MAX=NPOINTS-140; // exclude the fall
+  // int NPOINTS_MIN=0;
+
+  while(latitude_bn_anitalite.size() > NPOINTS_MAX){
+    latitude_bn_anitalite.pop_back();
+    longitude_bn_anitalite.pop_back();
+    altitude_bn_anitalite.pop_back();
+    heading_bn_anitalite.pop_back();
+    realtime_bn_anitalite.pop_back();
+  }
+
   latitude_bn_anitalite.shrink_to_fit();
   longitude_bn_anitalite.shrink_to_fit();
   altitude_bn_anitalite.shrink_to_fit();
   heading_bn_anitalite.shrink_to_fit();
   realtime_bn_anitalite.shrink_to_fit();
-    
-  NPOINTS_MAX=NPOINTS-140; // exclude the fall
-  NPOINTS_MIN=0;
+  
+  fFirstRealTime = realtime_bn_anitalite.front();
+  fLastRealTime = realtime_bn_anitalite.back();
 
 }//ReadAnitaliteFlight
 
@@ -226,14 +232,14 @@ void icemc::Balloon::InitializeBalloon() {
     ReadAnitaliteFlight();
   }
 
-  MINALTITUDE=30000; // balloon has to be 30 km altitude at least for us to read the event from the flight data file
+  MINALTITUDE=30e3; // balloon has to be 30 km altitude at least for us to read the event from the flight data file
 
   // initialisation of igps_previous
   if (WHICHPATH==FlightPath::Anita1 || WHICHPATH==FlightPath::Anita2 || WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4){
     igps_previous=0; // which entry from the flight data file the previous event was
   }
   if (WHICHPATH==FlightPath::AnitaLite){
-    igps_previous=NPOINTS_MIN; // initialise here to avoid times during launch
+    igps_previous=0;
   }
 
   
@@ -251,6 +257,8 @@ void icemc::Balloon::InitializeBalloon() {
     fChain->SetBranchAddress("altitude",&faltitude);
     fChain->SetBranchAddress("realTime_surfhk",&realTime_flightdata);
     fChain->SetBranchAddress("heading",&fheading);
+
+    fChain->BuildIndex("realTime_surfhk");
   }
 
   else if (WHICHPATH==FlightPath::Anita2 || WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4) { // for anita-3 and 4 flights
@@ -279,58 +287,17 @@ void icemc::Balloon::InitializeBalloon() {
     fChain->SetBranchAddress("realTime",&realTime_flightdata_temp);
     fChain->SetBranchAddress("pitch",&fpitch);
     fChain->SetBranchAddress("roll",&froll);
+    fChain->BuildIndex("realTime");
+
+    fChain->GetEntry(0);
+    fFirstRealTime = realTime_flightdata_temp;
+    fChain->GetEntry(fChain->GetEntries()-1);
+    fLastRealTime = realTime_flightdata_temp;
   }
   
-  NPOINTS=0;
-  REDUCEBALLOONPOSITIONS=100;
-
+  // REDUCEBALLOONPOSITIONS=100;
 }
 
-// double icemc::Balloon::GetBalloonSpin(double heading) const { // get the azimuth of the balloon
-      
-//   double phi_spin;
-//   if (WHICHPATH==FlightPath::AnitaLite ||
-//       WHICHPATH==FlightPath::Anita1    ||
-//       WHICHPATH==FlightPath::Anita2    ||
-//       WHICHPATH==FlightPath::Anita3    ||
-//       WHICHPATH==FlightPath::Anita4){
-
-//     phi_spin=heading*constants::RADDEG;
-//   }
-//   else {
-//     if (RANDOMIZE_BN_ORIENTATION==1){
-//       phi_spin=gRandom->Rndm()*2*constants::PI;
-//     }
-//     else{
-//       phi_spin=0.;
-//     }
-//   }
-  
-//   return phi_spin;
-// }
-
-
-int icemc::Balloon::Getibnposition() {
-  int ibnposition_tmp;
-  if (WHICHPATH==FlightPath::Circle80DegreesSouth){
-    double lon = fPosition.Longitude();
-    if(lon < 0 ){lon += 360;}
-    ibnposition_tmp = (int)(lon/2);
-  }
-  else if (WHICHPATH==FlightPath::AnitaLite ||
-	   WHICHPATH==FlightPath::Anita1 ||
-	   WHICHPATH==FlightPath::Anita2 ||
-	   WHICHPATH==FlightPath::Anita3 ||
-	   WHICHPATH==FlightPath::Anita4){
-    ibnposition_tmp=(int)((double)igps/(double)REDUCEBALLOONPOSITIONS);
-  }
-  else{
-    ibnposition_tmp=0;
-  }
-    
-  return ibnposition_tmp;
-    
-}
 
 
 
@@ -367,7 +334,9 @@ int getTuffIndex(int Curr_time) {
 
 
 // this is called for each neutrino
-void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Settings *settings1, int inu, Anita *anita1, double randomNumber) {
+// void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Settings *settings1, int inu, Anita *anita1, double randomNumber) {
+// void icemc::Balloon::PickBalloonPosition(const Settings *settings1, int inu, Anita *anita1, double randomNumber) {
+void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* settings1 ,Anita *anita1) {    
 
   pitch=0.;
   roll=0.;
@@ -377,9 +346,12 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
       WHICHPATH==FlightPath::Anita2 ||
       WHICHPATH==FlightPath::Anita3 ||
       WHICHPATH==FlightPath::Anita4) {
-        
+
     if (WHICHPATH==FlightPath::AnitaLite) {
-      igps = NPOINTS_MIN+(igps_previous+1-NPOINTS_MIN)%(NPOINTS_MAX-NPOINTS_MIN); //Note: ignore last 140 points, where balloon is falling - Stephen
+      
+      auto it = std::upper_bound(realtime_bn_anitalite.begin(),  realtime_bn_anitalite.end(), eventTime);
+      
+      int igps = std::distance(realtime_bn_anitalite.begin(), it);
       flatitude=(float)latitude_bn_anitalite.at(igps);
       flongitude=(float)longitude_bn_anitalite.at(igps);
       faltitude=(float)altitude_bn_anitalite.at(igps);
@@ -389,47 +361,53 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
 	     WHICHPATH==FlightPath::Anita2 ||
 	     WHICHPATH==FlightPath::Anita3 ||
 	     WHICHPATH==FlightPath::Anita4) {
+
+      fChain->GetEntryWithIndex(eventTime);
+      
       // For Anita 1 and Anita 2 and Anita 3:
       // igps = (igps_previous+1)%fChain->GetEntries(); // pick which event in the tree we want
-      static int start_igps = 0; 
-      static int ngps = fChain->GetEntries(); 
-      static int init_best = 0;
-      
-      if (settings1->PAYLOAD_USE_SPECIFIC_TIME && !init_best) 
-      {
-         int N = fChain->Draw("realTime","","goff"); 
-         double * times = fChain->GetV1(); 
+      // static int start_igps = 0; 
+      // static int ngps = fChain->GetEntries(); 
+      // static int init_best = 0;
 
-         int best_igps =  TMath::BinarySearch(N, times, (double) settings1->PAYLOAD_USE_SPECIFIC_TIME); 
-         start_igps = best_igps;
-         int end_igps = best_igps;
 
-         while (times[start_igps] > settings1->PAYLOAD_USE_SPECIFIC_TIME - settings1->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
-         {
-           start_igps--; 
-         }
+      ///@todo restore payload use specific time
+      // if (settings1->PAYLOAD_USE_SPECIFIC_TIME && !init_best) 
+      // {
+      //    int N = fChain->Draw("realTime","","goff"); 
+      //    double * times = fChain->GetV1(); 
 
-         while (times[end_igps] < settings1->PAYLOAD_USE_SPECIFIC_TIME + settings1->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
-         {
-           end_igps++; 
-         }
+      //    int best_igps =  TMath::BinarySearch(N, times, (double) settings1->PAYLOAD_USE_SPECIFIC_TIME); 
+      //    start_igps = best_igps;
+      //    int end_igps = best_igps;
 
-         ngps = end_igps - start_igps + 1; 
-         init_best = 1; 
-      }
+      //    while (times[start_igps] > settings1->PAYLOAD_USE_SPECIFIC_TIME - settings1->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
+      //    {
+      //      start_igps--; 
+      //    }
 
-      igps = start_igps + int(randomNumber*ngps); // use random position 
+      //    while (times[end_igps] < settings1->PAYLOAD_USE_SPECIFIC_TIME + settings1->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
+      //    {
+      //      end_igps++; 
+      //    }
+
+      //    ngps = end_igps - start_igps + 1; 
+      //    init_best = 1; 
+      // }
+
+      // igps = start_igps + int(randomNumber*ngps); // use random position 
 
       //////////////////////////// TEMPORARY HACKS FOR ANITA4 !!!!!!      
-      if (WHICHPATH==FlightPath::Anita4 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660)) || (igps==17862) ){
-	igps = igps+30;
-      }
+      // if (WHICHPATH==FlightPath::Anita4 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660)) || (igps==17862) ){
+      // 	igps = igps+30;
+      // }
       
-      fChain->GetEvent(igps); // this grabs the balloon position data for this event
+      // fChain->GetEvent(igps); // this grabs the balloon position data for this event
       realTime_flightdata = realTime_flightdata_temp;
       if(settings1->TUFFSON){
-       anita1->tuffIndex = getTuffIndex(realTime_flightdata);
+	anita1->tuffIndex = getTuffIndex(realTime_flightdata);
       }// end if tuffson 
+
 
       while (faltitude<MINALTITUDE || fheading<0) { // if the altitude is too low, pick another event.
 
@@ -501,14 +479,12 @@ void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Se
     // r_bn = (antarctica1->Surface(r_bn)+altitude_bn) * r_bn.Unit();
   } // you pick it
     
-  ibnposition = Getibnposition();
-
-  if (!settings1->UNBIASED_SELECTION && dtryingposition!=-999){
-    dtryingposition=antarctica1->GetBalloonPositionWeight(ibnposition);
-  }
-  else{
-    dtryingposition=1.;
-  }
+  // if (!settings1->UNBIASED_SELECTION && dtryingposition!=-999){
+  //   dtryingposition=antarctica1->GetBalloonPositionWeight(ibnposition);
+  // }
+  // else{
+  //   dtryingposition=1.;
+  // }
     
     
 } // end PickBalloonPosition

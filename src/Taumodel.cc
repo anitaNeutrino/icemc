@@ -91,7 +91,7 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
   
   
   /** Bring in useful variables from other classes */
-  CurrentType current = interaction1->current;
+  Neutrino::CurrentType current = interaction1->current;
   const Geoid::Position earth_in = interaction1->r_in;
   double TauWeight = 0;
   const Geoid::Position r_enterice = interaction1->r_enterice;

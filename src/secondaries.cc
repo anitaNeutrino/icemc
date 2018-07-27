@@ -247,7 +247,7 @@ void icemc::Secondaries::ReadSecondaries() {
 } //end method ReadSecondaries
 
 
-void icemc::Secondaries::GetSecondaries(const Settings *settings1, NuFlavor nuflavor, double plepton, double &em_secondaries_max, double &had_secondaries_max,int &n_interactions, TH1F *hy) {
+void icemc::Secondaries::GetSecondaries(const Settings *settings1, Neutrino::Flavor nuflavor, double plepton, double &em_secondaries_max, double &had_secondaries_max,int &n_interactions, TH1F *hy) {
 
   em_secondaries_max=0.;
   had_secondaries_max=0.;
@@ -270,7 +270,7 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, NuFlavor nufl
   
 
 
-  if (nuflavor==NuFlavor::mu) {
+  if (nuflavor==Neutrino::Flavor::mu) {
     n_brems=gRandom->Poisson(int_muon_brems[i]); // pick number of brem interactions
     n_epair=gRandom->Poisson(int_muon_epair[i]); // # of pair production
     n_pn=gRandom->Poisson(int_muon_pn[i]); // # photonuclear interactions   
@@ -316,7 +316,7 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, NuFlavor nufl
       }
     } // loop over secondary interactions
   } // end if it was a muon neutrino
-  if (nuflavor==NuFlavor::tau) {
+  if (nuflavor==Neutrino::Flavor::tau) {
     n_brems=gRandom->Poisson(int_tauon_brems[i]);
     n_epair=gRandom->Poisson(int_tauon_epair[i]);
     n_pn=gRandom->Poisson(int_tauon_pn[i]);
@@ -404,8 +404,8 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, NuFlavor nufl
 
 
 icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
-						      NuFlavor nuflavor,
-						      CurrentType current,
+						      Neutrino::Flavor nuflavor,
+						      Neutrino::CurrentType current,
 						      // const string& nuflavor,
 						      // const string& current,
 						      const std::string& taudecay,
@@ -422,7 +422,7 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
   ShowerProperties sp;
   sp.pnu = pnu;
 
-  if (current==CurrentType::Charged){
+  if (current==Neutrino::CurrentType::Charged){
     plepton=(1.-y)*pnu;
   }
   else{
@@ -431,15 +431,15 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
 
 
   const double negligible = 1e-10;
-  if (nuflavor==NuFlavor::e && current==CurrentType::Charged) {
+  if (nuflavor==Neutrino::Flavor::e && current==Neutrino::CurrentType::Charged) {
     sp.emFrac=1.-y;
     sp.hadFrac=y;
   }
-  else if(nuflavor==NuFlavor::mu && current==CurrentType::Charged) {
+  else if(nuflavor==Neutrino::Flavor::mu && current==Neutrino::CurrentType::Charged) {
     sp.emFrac=negligible;
     sp.hadFrac=y;
   }
-  else if(nuflavor==NuFlavor::tau && current==CurrentType::Charged) {
+  else if(nuflavor==Neutrino::Flavor::tau && current==Neutrino::CurrentType::Charged) {
     // behaves like a muon
     if(taumodes1 ==1){//taumodes==1; tau created somewhere in rock and decays at posnu.
       this->GetEMFracDB(sp.emFrac,sp.hadFrac);
@@ -449,7 +449,7 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
       sp.hadFrac=y;
     }
   }
-  else if (current==CurrentType::Neutral) {
+  else if (current==Neutrino::CurrentType::Neutral) {
     sp.emFrac=negligible;
     sp.hadFrac=y;
   }
@@ -458,7 +458,7 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
   em_secondaries_max = sp.emFrac; // initialize search for maximum signal among primary, secondary interactions.
   had_secondaries_max = sp.hadFrac;
 
-  if (SECONDARIES==1 && current==CurrentType::Charged) {
+  if (SECONDARIES==1 && current==Neutrino::CurrentType::Charged) {
 
     while (1) {
 
@@ -488,7 +488,7 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
     } //if
   } //if (charged current, secondaries on)
 
-  if (nuflavor==NuFlavor::mu && current==CurrentType::Charged && sp.nInteractions==0){
+  if (nuflavor==Neutrino::Flavor::mu && current==Neutrino::CurrentType::Charged && sp.nInteractions==0){
     icemcLog() << icemc::warning << "Look at this one.  inu is " << inu << "\n";
   }  
 
@@ -521,9 +521,9 @@ void icemc::Secondaries::InitTauola() {
 }//InitTauola
 
 
-void icemc::Secondaries::GetTauDecay(NuFlavor nuflavor, CurrentType current, std::string& taudecay, double& emfrac_db, double& hadfrac_db) {
+void icemc::Secondaries::GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::CurrentType current, std::string& taudecay, double& emfrac_db, double& hadfrac_db) {
  
-  if (!(nuflavor==NuFlavor::tau || current==CurrentType::Charged || interestedintaus)){
+  if (!(nuflavor==Neutrino::Flavor::tau || current==Neutrino::CurrentType::Charged || interestedintaus)){
     return;
   }
   

@@ -35,6 +35,8 @@
 #include "EnvironmentVariable.h"
 #include "IcemcLog.h"
 #include "FTPair.h"
+#include "Neutrino.h"
+
 
 #include <string>
 #include <sstream>
@@ -1068,7 +1070,7 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 
 
 
-void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, const Geoid::Position &posnu,  const TVector3 &nnu,  const Geoid::Position &r_bn,  double altitude_int,  NuFlavor nuflavor,  CurrentType current,  double elast_y,  std::ofstream &nu_out) const {
+void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, const Geoid::Position &posnu,  const TVector3 &nnu,  const Geoid::Position &r_bn,  double altitude_int,  Neutrino::Flavor nuflavor,  Neutrino::CurrentType current,  double elast_y,  std::ofstream &nu_out) const {
   nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
 }
 
@@ -1241,10 +1243,27 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
        <<(int)((raw_loop_start_time - raw_start_time)/60) << ":"
        << ((raw_loop_start_time - raw_start_time)%60) << std::endl;
 
+
+  double startTime = fDetector->getStartTime();
+  double endTime = fDetector->getEndTime();
+
+  icemcLog() << icemc::info << "Start time is " << startTime << ", end time is " << endTime << ", time range is " << endTime - startTime << std::endl;
+  return;
+  // UInt_t simulationEndTime = fDetector->startTime();
+  
+
   /**
    * Main loop over generated neutrinos
    */
   for (int inu = clOpts.startNu; inu < NNU; inu++) {
+
+    eventNumber=(UInt_t)(clOpts.run_no)*NNU+inu;
+    // Set seed of all random number generators to be dependent on eventNumber
+    gRandom->SetSeed(eventNumber+6e7);
+    
+    double eventTime = startTime + (endTime - startTime)*gRandom->Rndm();
+
+    fDetector->PickBalloonPosition(eventTime, &settings1,  fDetector);
 
     // generate a new one for each loop...
     // is there a more elegant way to do this?
@@ -1258,42 +1277,35 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       fPassNu = NULL; // will be initialized in the case that a neutrino triggers the detector
     }
 
-    if (NNU >= 100) {
-      if (inu % (NNU / 100) == 0){
-        std::cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
-      }
+    if (NNU >= 100 && (inu % (NNU / 100) == 0)){
+      std::cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
     }
     else{
       std::cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
     }
-    
-    eventNumber=(UInt_t)(clOpts.run_no)*NNU+inu;
 
-    // Set seed of all random number generators to be dependent on eventNumber
-    gRandom->SetSeed(eventNumber+6e7);
-    TRandom3 r(eventNumber+7e8);
-    if (settings1.NOISEFROMFLIGHTDIGITIZER || settings1.NOISEFROMFLIGHTTRIGGER) {
-      fDetector->fRand->SetSeed(eventNumber+8e9);
-    }
+    // if (settings1.NOISEFROMFLIGHTDIGITIZER || settings1.NOISEFROMFLIGHTTRIGGER) {
+    //   fDetector->fRand->SetSeed(eventNumber+8e9);
+    // }
     
     //reset screen parameters (even for no roughness) for the new event
     panel1->ResetParameters();
     // fDetector->inu=inu;
 
+    int whichray = 0;
     // minray = direct,  maxray = reflected
     // for (int whichray = settings1.MINRAY; whichray <= settings1.MAXRAY; whichray++) {
 
     fDetector->passglobtrig[0] = 0;
     fDetector->passglobtrig[1] = 0;
     passes_thisevent = 0;
-    unmasked_thisevent = 1;
 
     if (nuSpectra->IsSpectrum()){//if using energy spectrum
 
       if(settings1.USEDARTBOARD){
 	pnu = nuSpectra->GetNuEnergy();
       }
-      else{
+      else {
 	pnu = nuSpectra->GetCDFEnergy();
       }
 
@@ -1302,7 +1314,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       // ierr=1 otherwise
       fNeutrinoPath->len_int=1.0/(sigma*askFreqGen.RHOH20*(1./constants::M_NUCL)*1000); // in km (why interaction length in water?) //EH
     }// end IsSpectrum
-      
+
     // count_pass=0;
     passestrigger=0;
     chanceinhell2=0;
@@ -1310,10 +1322,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     count_total++;
     // initializing the voltage seen by each polarization of each antenna
     interaction1->dtryingdirection=0;
-    fDetector->dtryingposition=0;
-
-    // Picks the balloon position and at the same time sets the masks and thresholds
-    fDetector->PickBalloonPosition(antarctica,  &settings1,  inu,  fDetector,  r.Rndm());
+    // fDetector->dtryingposition=0;
 
     if (settings1.HIST && !settings1.ONLYFINAL && ro.prob_eachilon_bn.GetEntries() < settings1.HIST_MAX_ENTRIES) {
       ro.prob_eachilon_bn.Fill(fDetector->position().Longitude());
@@ -1335,13 +1344,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // moved from deep inside interaction
     // if (settings1.MINRAY==whichray) {
     //   // only increment neutrino flavor on first ray so you don't count twice
-    //   if (interaction1->nuflavor==NuFlavor::e){
+    //   if (interaction1->nuflavor==Neutrino::Flavor::e){
     // 	count1->nnu_e++;
     //   }
-    //   else if (interaction1->nuflavor==NuFlavor::mu){
+    //   else if (interaction1->nuflavor==Neutrino::Flavor::mu){
     // 	count1->nnu_mu++;
     //   }
-    //   else if (interaction1->nuflavor==NuFlavor::tau){
+    //   else if (interaction1->nuflavor==Neutrino::Flavor::tau){
     // 	count1->nnu_tau++;
     //   }
     // }
@@ -1359,7 +1368,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     taus1->weight_tau_prob=0;
       
     // if (taumodes==1 && interaction1->nuflavor=="nutau" && interaction1->current=="cc"){
-    if (taumodes==1 && interaction1->nuflavor==NuFlavor::tau && interaction1->current==CurrentType::Charged){
+    if (taumodes==1 && interaction1->nuflavor==Neutrino::Flavor::tau && interaction1->current==Neutrino::CurrentType::Charged){
       tautrigger = 1;///< tau trigger sets the chance to create tau particle
     }
     else{
@@ -1367,7 +1376,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     }
 
     // fDetector->PickDownwardInteractionPoint(interaction1,  anita1,  &settings1,  antarctica,  ray1,  beyondhorizon);
-    beyondhorizon = interaction1->PickDownwardInteractionPoint(fDetector->Getibnposition(), fDetector->position(), &settings1,  antarctica,  &rayTracer);
+    beyondhorizon = interaction1->PickDownwardInteractionPoint(fDetector->position(), &settings1,  antarctica,  &rayTracer);
     // fDetector->PickDownwardInteractionPoint(interaction1,  &settings1,  antarctica,  &rayTracer,  beyondhorizon);      
 
     if (interaction1->noway){
@@ -1460,10 +1469,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       continue;
     }
 
-    int whichray = 0;
-    rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 1, antarctica);
+    // rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 1, antarctica);
 
-    rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 1);
+     // rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 1);
 
     std::cout << "inu = " << inu << std::endl;
     if(debugRay){
@@ -1476,9 +1484,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
     // fills ray1->n_exit2bn[2] ?
     // ray1->GetRFExit(&settings1, anita1, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->r_bn, fDetector->r_boresights, 2, antarctica);
-    rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);
+    // rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);
 
-    rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 2);
+    // rayTracer.GetSurfaceNormal(&settings1, antarctica, interaction1->posnu, slopeyangle, 2);
 
     // intermediate counter
     // count1->nraypointsup1[whichray]++;
@@ -1487,11 +1495,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     sec1.GetTauDecay(interaction1->nuflavor, interaction1->current, taudecay,  emfrac_db,  hadfrac_db);
 
     // pick elasticity
-    elast_y = primary1->pickY(&settings1, pnu, 0, CurrentType::Charged);
+    elast_y = primary1->pickY(&settings1, pnu, 0, Neutrino::CurrentType::Charged);
     if (settings1.CONSTANTY==1) { // if we ask to make y a constant=0.2
       elast_y = 0.2;
-      interaction1->nuflavor = NuFlavor::e;//"nue";
-      interaction1->current = CurrentType::Charged; //"cc";
+      interaction1->nuflavor = Neutrino::Flavor::e;//"nue";
+      interaction1->current = Neutrino::CurrentType::Charged; //"cc";
     }
 
     if (ro.ytree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
@@ -1568,7 +1576,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // get fraction of shower that is electromagnetic.
     // pi^0's are counted as hadronic.
     // sec1->GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
-      
+
     ShowerProperties showerProps = sec1.GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu, tauweighttrigger);
 
     // for double bangs, surely this should be in Secondaries?
@@ -1727,7 +1735,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // and the number of tries necessary to generate
     // an appropriate position,  and assume they are
     // independent.
-    interaction1->dnutries=interaction1->dtryingdirection*fDetector->dtryingposition;
+
+    
+    double dtryingposition = 1;///@todo dtryingposition IS AN IMPORTANT WEIGHT FACTOR THAT MUST BE RESTORED
+    interaction1->dnutries=interaction1->dtryingdirection*dtryingposition;
 
     // where the neutrino enters the earth
     if (tautrigger==0){//did for cc-taus already,  do for all other particles
@@ -1852,7 +1863,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
     // this sets n_exit2bn[2] to the ray from the exit point to the balloon,
     // last iteration.  Now we're ready to do some calculations!!!!
-    rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);
+    // rayTracer.GetRFExit(&settings1, fDetector, whichray, interaction1->posnu, interaction1->posnu_down, fDetector->position(), fDetector->r_boresights, 2, antarctica);
 
     // count1->nraywithincontinent2[whichray]++;
 
@@ -1914,18 +1925,15 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     }//end else firn
     //cerr<<inu<<" -- here"<<std::endl;      //}
 
-    if(settings1.ROUGHNESS){
-      // applyRoughness(settings1, inu, interaction1, ray1, panel1, antarctica, bn1, &askFreqGen, anita1, showerProps);
-      applyRoughness(settings1, inu, interaction1, &rayTracer, panel1, antarctica, fDetector, &askFreqGen, fDetector, showerProps);	
-    }
+    // if(settings1.ROUGHNESS){
+    //   // applyRoughness(settings1, inu, interaction1, ray1, panel1, antarctica, bn1, &askFreqGen, anita1, showerProps);
+    //   applyRoughness(settings1, inu, interaction1, &rayTracer, panel1, antarctica, fDetector, &askFreqGen, fDetector, showerProps);	
+    // }
 
-    if( settings1.ROUGHNESS && !panel1->GetNvalidPoints() ){
-      continue;
-    }
+    // if( settings1.ROUGHNESS && !panel1->GetNvalidPoints() ){
+    //   continue;
+    // }
       
-    if(settings1.CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(fDetector->bwmin/1.E6)<fDetector->maxthreshold*fDetector->VNOISE[0]/10.&& !settings1.SKIPCUTS) {
-      continue;
-    }
     // count1->nchanceinhell_fresnel[whichray]++;
       
     // // for plotting
@@ -2047,7 +2055,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
     // Dead time
     if (settings1.USEDEADTIME){
-      if ( (fDetector->deadTime>0.9) || (r.Uniform(1)<fDetector->deadTime) ){
+      if ( (fDetector->deadTime>0.9) || (gRandom->Uniform(1)<fDetector->deadTime) ){
 	continue;
       }
     }
@@ -2401,16 +2409,16 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 	    
 	  // incrementing by flavor	    
 	  // also bin in weight for error calculation.
-	  if (interaction1->nuflavor==NuFlavor::e) {
+	  if (interaction1->nuflavor==Neutrino::Flavor::e) {
 	    sum[0]+=fNeutrinoPath->weight;
 	    eventsfound_binned_e[index_weights]++;
 	  } //if
-	  if (interaction1->nuflavor==NuFlavor::mu) {
+	  if (interaction1->nuflavor==Neutrino::Flavor::mu) {
 	    sum[1]+=fNeutrinoPath->weight;
 	    eventsfound_binned_mu[index_weights]++;
 	  } //if
 	  if(!sec1.secondbang || !sec1.interestedintaus) {
-	    if (interaction1->nuflavor==NuFlavor::tau) {
+	    if (interaction1->nuflavor==Neutrino::Flavor::tau) {
 	      sum[2]+=fNeutrinoPath->weight;
 	      eventsfound_binned_tau[index_weights]++;
 	    } //if

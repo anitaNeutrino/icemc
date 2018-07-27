@@ -584,7 +584,6 @@ namespace icemc {
     double SIGMA_THETA; // resolution on the polar angle of the signal
 
     double extraCableDelays[NPOL][48];
-    TRandom3 *fRand;
 #ifdef ANITA_UTIL_EXISTS
     RFSignal *fSignalChainResponseDigitizerTuffs[NPOL][3][16][6]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM------- 0:configA, 1:configB, 2:configC, 3:configG, 4:configO, 5:configP
     RFSignal *fSignalChainResponseTriggerTuffs[NPOL][3][16][6];  // same as for DigitizerTuffs

@@ -23,6 +23,9 @@ namespace icemc {
     ANITA(const Settings* settings, const RootOutput* ro);
     virtual ~ANITA();
 
+    virtual double getStartTime() const override {return fFirstRealTime;} // currently in balloon
+    virtual double getEndTime() const override {return fLastRealTime;}  // currently in balloon
+
     virtual int getNumRX() const override {return fNumRX;}
     virtual TVector3 getPositionRX(int i) const override;
 
