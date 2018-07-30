@@ -47,6 +47,7 @@ class Settings : public TObject {
   void getSetting(const char* key, float& value);
   void getSetting(const char* key, double& value);
 
+  void getSetting(const char * key, std::string & value); 
   void getSetting(const char* key, vector<int>& valueArray);
   void getSetting(const char* key, vector<float>& valueArray);
   void getSetting(const char* key, vector<double>& valueArray);
@@ -149,7 +150,7 @@ class Settings : public TObject {
   double SLAC_DEPTH; // vertical depth of interaction at slac beam test
   double SLAC_HORIZ_DEPTH; // horizontal depth of interaction at slac
 
-  int SOURCE;  // get direction of neutrino from specified sources 
+  std::string SOURCE;  // the source option (see source.hh) 
 
   int ROUGHNESS; // include effects of surface roughness
   int FIRN; // whether or not to include the firn

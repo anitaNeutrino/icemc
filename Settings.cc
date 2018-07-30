@@ -272,8 +272,6 @@ void Settings::Initialize() {
   SPECIFIC_NU_POSITION_LONGITUDE = 166.7; 
   SPECIFIC_NU_POSITION_ALTITUDE = 0; 
   SPECIFIC_NU_POSITION_DISTANCE = 100e3; 
-
-
 }
 
 
@@ -583,9 +581,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   }
   getSetting("Which attenuation length", MOOREBAY);
 
-  /////////////////oindree adding this to do source (GRB) search////////////////////////////
-  getSetting("Get neutrino direction from specified source", SOURCE); 
-
+  getSetting("Source Option", SOURCE); 
 
   getSetting("Cross-section factor", SIGMA_FACTOR);
   if (SIGMA_FACTOR!=1){
@@ -1064,6 +1060,20 @@ void Settings::getSetting(const char* key, float& value){
     value = atof(it->second.Data());
   }
 }
+
+
+void Settings::getSetting(const char * key, std::string & value) 
+{
+  kvpMap::iterator it = keyValuePairStrings.find(key);
+  if(it == keyValuePairStrings.end()){
+    complainAboutNotFindingKey(key);
+  }
+  else{
+    // found a match for the key
+    value = it->second.Data();
+  }
+}
+
 
 void Settings::getSetting(const char* key, double& value){
 
