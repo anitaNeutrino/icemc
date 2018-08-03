@@ -1871,6 +1871,7 @@ TGraph *ChanTrigger::getPulserAtAMPA(Anita *anita1, int ant){
   int phiIndex = anita1->trigEffScanPhi - (ant%16);
   if (phiIndex>8) phiIndex=phiIndex-16;
   double tmp_volts[10000];
+  memset(tmp_volts, 0, sizeof(tmp_volts));
   int iring=2;
   if (ant<16) iring=0;
   else if (ant<32) iring=1;
