@@ -301,9 +301,9 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   initializeFixedPowerThresholds(foutput);
 
   additionalDt=0;
-  /// TEMP HACK FOR ANITA-4 !!!!
   if (settings1->WHICH==10){
-    powerthreshold[4] /= TMath::Sqrt(2.);
+    // powerthreshold[4] /= TMath::Sqrt(2.);
+    powerthreshold[4] = -3.1;
     additionalDt=30.e-9;
   }
   if (settings1->TRIGGERSCHEME==5)
@@ -4242,7 +4242,7 @@ void Anita::readNoiseFromFlight(Settings *settings1){
     RayleighFits[0][iant] = (TGraph*)fRayleighAnita3->Get(Form("grSigma%dV_interp", iant+1));
     RayleighFits[1][iant] = (TGraph*)fRayleighAnita3->Get(Form("grSigma%dH_interp", iant+1));
   }
-  
+   
   Double_t *timeVals = new Double_t [780];
   Double_t *voltVals = new Double_t [780];
   for(int i=0;i<780;i++){
@@ -4385,7 +4385,9 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 
 
 void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
+
   if(settings1->WHICH==10 || settings1->WHICH==9){
+
     if(settings1->WHICH==10){
       string fileName = ICEMC_DATA_DIR+"/TriggerEfficiencyScanPulser_anita4_33dB_avg_trimmed.root";
       TFile *f = new TFile(fileName.c_str(), "read");
@@ -4395,9 +4397,12 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
       Int_t nPoints  = gPulseAtAmpa->GetN();
       Double_t *newx = gPulseAtAmpa->GetX();
       Double_t *newy = gPulseAtAmpa->GetY();
+      Double_t meany = TMath::Mean(nPoints/10, newy);
+      
       for (int i=0;i<nPoints;i++){
       // change time axis s to ns
         newx[i]=newx[i]*1E9;
+	newy[i]-=meany;
       }
       *gPulseAtAmpa = TGraph(nPoints,newx,newy);
 // end change to ns
@@ -4429,14 +4434,15 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
       if(settings1->WHICH==9){
         // 7db fixed attenuation
         gPulseAtAmpa->GetY()[i]*=TMath::Power(10,-7./20.);
-      }
-      if(settings1->WHICH==10){
+      } else if(settings1->WHICH==10){
 
         // 0db fixed attenuation
 //        if(i==1000){
 //          cout << "y value for entry 1000 before attenuation of 0db is  " << gPulseAtAmpa->GetY()[i] << endl;
 //        }
-        gPulseAtAmpa->GetY()[i]*=TMath::Power(10,(-25.0+33.0)/20.);
+	// Fixed attenuation was -25dB
+	// Input is the pulse at -33dB variable attenuation
+	gPulseAtAmpa->GetY()[i]*=TMath::Power(10,(-25.0+33.0)/20.);
 
 //        if(i==1000){
 //          cout << "y value for entry 1000 is after attenuation of 0db is " << gPulseAtAmpa->GetY()[i] << endl;
@@ -4450,15 +4456,14 @@ void Anita::readTriggerEfficiencyScanPulser(Settings *settings1){
       if(settings1->WHICH==9){
         // Signal in a 12-way splitter 
         gPulseAtAmpa->GetY()[i]*=TMath::Power(10, -10.8/20.);
-      }
-      if(settings1->WHICH==10){
+      } else if(settings1->WHICH==10){
         // Signal in a 16-way splitter 
         gPulseAtAmpa->GetY()[i]*=TMath::Power(10, -12./20.);
       }
 
       // Attenutation due to delay generator
       if (useDelayGenerator){
-	gPulseAtAmpa->GetY()[i]*=TMath::Power(10, -12/20.);
+	gPulseAtAmpa->GetY()[i]*=TMath::Power(10, -12./20.);
       }
 
       // Splitter between digitizer and trigger path
