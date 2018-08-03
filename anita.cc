@@ -397,9 +397,46 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   if (settings1->APPLYIMPULSERESPONSETRIGGER){
     readImpulseResponseTrigger(settings1);
   }
+
+  // ANITA-4 uses Rayleigh distributions from ANITA-3 to generate thermal noise
+  // Some channels weren't great for ANITA-3 but were ok in ANITA-4
+  if (settings1->WHICH==10){
+
+    double denom, trig, dig;
+
+    // ANITA-3 channel 4TV was broken and channel 5TH had the alfa filter
+    // For ANITA-4 the Rayleigh distributions of those channels are taken from channels nearby
+    RayleighFits[0][3] =  (TGraph*)RayleighFits[0][2]->Clone();
+    RayleighFits[1][4] =  (TGraph*)RayleighFits[1][3]->Clone();
+    // 11MH 14BH 11MV 12MV 0BV show weird high/low noise for ANITA-4
+    RayleighFits[1][27] =  (TGraph*)RayleighFits[1][26]->Clone();
+    RayleighFits[1][46] =  (TGraph*)RayleighFits[1][47]->Clone();
+    RayleighFits[0][27] =  (TGraph*)RayleighFits[0][26]->Clone();
+    RayleighFits[0][28] =  (TGraph*)RayleighFits[0][29]->Clone();
+    RayleighFits[0][32] =  (TGraph*)RayleighFits[0][33]->Clone();
+    for (int ifreq=0; ifreq<numFreqs; ifreq++){
+      fSignalChainResponseA3DigitizerFreqDomain[0][0][3][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[0][0][2][ifreq];
+      fSignalChainResponseA3DigitizerFreqDomain[1][0][4][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[1][0][3][ifreq];
+
+      fSignalChainResponseA3DigitizerFreqDomain[1][1][11][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[1][1][10][ifreq];
+      fSignalChainResponseA3DigitizerFreqDomain[1][2][14][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[1][2][15][ifreq];
+      fSignalChainResponseA3DigitizerFreqDomain[0][1][11][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[0][1][10][ifreq];
+      fSignalChainResponseA3DigitizerFreqDomain[0][1][12][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[0][1][13][ifreq];
+      fSignalChainResponseA3DigitizerFreqDomain[0][2][0][ifreq] =fSignalChainResponseA3DigitizerFreqDomain[0][2][1][ifreq];
+
+    }
+       
+  }
+  
+  calculateImpulseResponsesRatios(settings1);
+
   if (settings1->TRIGGEREFFSCAN){
     readTriggerEfficiencyScanPulser(settings1);
   }
+
+ 
+
+  
 #endif
 
   setDiodeRMS(settings1, outputdir);
@@ -4146,10 +4183,12 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
           Int_t nPoints  = gint->GetN();
           Double_t *newx = gint->GetX();
           Double_t *newy = gint->GetY();
-          // Normalise
+	  
+	  // Normalise
           for (int i=0;i<nPoints;i++){
-          // change time axis from ns to s
-          newx[i]=newx[i]*1E-9;
+	    // change time axis from ns to s
+	    newx[i]=newx[i]*1E-9;
+	    newy[i]=newy[i]*norm;
           }
           *gint = TGraph(nPoints,newx,newy);
 // end edits for debugging volumes
@@ -4202,12 +4241,10 @@ void Anita::readTuffResponseTrigger(Settings *settings1){
           Int_t nPoints  = gint->GetN();
           Double_t *newx = gint->GetX();
           Double_t *newy = gint->GetY();
-	  
-	  // Normalise
+          // Normalise
           for (int i=0;i<nPoints;i++){
-	    // change time axis from ns to s
-	    newx[i]=newx[i]*1E-9;
-	    newy[i]=newy[i]*norm;
+          // change time axis from ns to s
+          newx[i]=newx[i]*1E-9;
           }
           *gint = TGraph(nPoints,newx,newy);
 // end edits for debugging volumes
@@ -4353,8 +4390,16 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
     }
   }
 
+}
+
+void Anita::calculateImpulseResponsesRatios(Settings *settings1){
 
   double denom, dig, trig;
+
+  double norm = 1.;
+  // thermal noise is calculated from ANITA-3 flight data
+  // the ANITA-4 thermal noise was roughly 85% of the ANITA-3 one
+  if (settings1->WHICH==10) norm=0.85;
   
   for (int ipol=0; ipol<2; ipol++){
     for (int iring=0; iring<3; iring++){
@@ -4369,10 +4414,10 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	    if (freqs[i]<160.) {
 	      fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i] = 0.1;  
 	    } else {
-	      fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i] = (trig/denom);
+	      fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i] = (trig/denom)*norm;
 	    }
 	    
-	    fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = (dig/denom);
+	    fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i]  = (dig/denom)*norm;
 	    //	    cout << "Numbers are " << dig <<  " " << trig << " " << denom  << " " << trig/denom << " " << dig/denom << endl;
 	  }// end for loop to fill fRatioTriggerDigitizerFreqDomain
 	}// end tuffIndex loop

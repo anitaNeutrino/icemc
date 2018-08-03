@@ -596,6 +596,7 @@ public:
   RFSignal *fSignalChainResponseTriggerTuffs[2][3][16][7];  // same as for DigitizerTuffs
   void readImpulseResponseDigitizer(Settings *settings1);
   void readImpulseResponseTrigger(Settings *settings1);
+  void calculateImpulseResponsesRatios(Settings *settings1);
   void readTuffResponseDigitizer(Settings *settings1);
   void readTuffResponseTrigger(Settings *settings1);
   void readTriggerEfficiencyScanPulser(Settings *settings1);
