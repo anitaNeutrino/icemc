@@ -4123,6 +4123,10 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
   string sring[3] = {"T","M","B"};
  // Set deltaT to be used in the convolution
   deltaT = 1./(2.6*16.);
+
+  // Additional norm constant?
+  double norm = TMath::Power(10., +6./20.);
+
   for(int ipol=0; ipol<=1; ipol++) {
     for(int iring = 0; iring<=2; iring++){
       for(int iphi=0; iphi<=15; iphi++) {
@@ -4198,10 +4202,12 @@ void Anita::readTuffResponseTrigger(Settings *settings1){
           Int_t nPoints  = gint->GetN();
           Double_t *newx = gint->GetX();
           Double_t *newy = gint->GetY();
-          // Normalise
+	  
+	  // Normalise
           for (int i=0;i<nPoints;i++){
-          // change time axis from ns to s
-          newx[i]=newx[i]*1E-9;
+	    // change time axis from ns to s
+	    newx[i]=newx[i]*1E-9;
+	    newy[i]=newy[i]*norm;
           }
           *gint = TGraph(nPoints,newx,newy);
 // end edits for debugging volumes
