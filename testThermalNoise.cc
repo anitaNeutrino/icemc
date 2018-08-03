@@ -368,6 +368,12 @@ double sum_weights=0;
 //End verification plot block
 
 
+
+double justNoise_trig[2][48][512];
+double justSignal_trig[2][48][512];
+double justNoise_dig[2][48][512];
+double justSignal_dig[2][48][512];
+
 // functions
 
 // set up array of viewing angles for making plots for seckel
@@ -652,6 +658,10 @@ int main(int argc,  char **argv) {
   Tools::Zero(eventsfound_binned_tau, NBINS);
   Tools::Zero(eventsfound_nfb_binned, NBINS);
 
+  
+  Tools::Zero(anita1->arrival_times[0], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
+  Tools::Zero(anita1->arrival_times[1], Anita::NLAYERS_MAX*Anita::NPHI_MAX);
+
   //we pick both the interaction point and its corresponding mirror point
 
 
@@ -803,22 +813,27 @@ int main(int argc,  char **argv) {
 
 	antNum = anita1->GetRxTriggerNumbering(ilayer, ifold);
 	  
-	//	  chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
 
+	
+#ifdef ANITA_UTIL_EXISTS
+	if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
+	  chantrig1->getNoiseFromFlight(anita1, antNum);
+#endif
+	//	  chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
+	
 	// chantrig1->injectImpulseAfterAntenna(anita1, antNum);
 
-	// chantrig1->TriggerPath(settings1, anita1, antNum);
+	
+	memset(chantrig1->volts_rx_forfft, 0, sizeof(chantrig1->volts_rx_forfft));
 
-
-	for (int i=0;i<anita1->HALFNFOUR;i++){
-	  chantrig1->volts_rx_forfft[0][4][i]=0;
-	  chantrig1->volts_rx_forfft[1][4][i]=0;
-	}
-    
+	chantrig1->TriggerPath(settings1, anita1, antNum, bn1);
 	
 	chantrig1->DigitizerPath(settings1, anita1, antNum, bn1);
 	
 	chantrig1->TimeShiftAndSignalFluct(settings1, anita1, ilayer, ifold, volts_rx_rfcm_lab_e_all,  volts_rx_rfcm_lab_h_all);
+
+	chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
+	chantrig1->saveDigitizerWaveforms(anita1, justSignal_dig[0][antNum], justSignal_dig[1][antNum], justNoise_dig[0][antNum], justNoise_dig[1][antNum]);
  
 	// chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac, thresholdsAnt[antNum]);
 
@@ -846,13 +861,12 @@ int main(int argc,  char **argv) {
       Adu5PatPtr->roll      = bn1->roll;
       Adu5PatPtr->run       = run_no;
 
+
+      memset(realEvPtr->fNumPoints, 0, sizeof(realEvPtr->fNumPoints) );
+      memset(realEvPtr->fVolts,     0, sizeof(realEvPtr->fVolts)     );
+      memset(realEvPtr->fTimes,     0, sizeof(realEvPtr->fTimes)     );
+      
       int fNumPoints = 260;
-      for (int i = 0; i < 96; i++){
-	for (int j = 0; j < 260; j++){
-	  realEvPtr->fVolts[i][j] = 0.;
-	  realEvPtr->fTimes[i][j] = 0.;
-	}
-      }
 
       for (int iant = 0; iant < settings1->NANTENNAS; iant++){
 	//int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1,  AnitaGeom1,  iant);
@@ -869,9 +883,9 @@ int main(int argc,  char **argv) {
 	  realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
 	  realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
 	  // convert volts to millivolts
-	  realEvPtr->fVolts[UsefulChanIndexH][j] =  volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
+	  realEvPtr->fVolts[UsefulChanIndexH][j] =  volts_rx_rfcm_lab_h_all[IceMCAnt][j+64]*1000;
+	  realEvPtr->fVolts[UsefulChanIndexV][j] =  volts_rx_rfcm_lab_e_all[IceMCAnt][j+64]*1000;
 	  realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
-	  realEvPtr->fVolts[UsefulChanIndexV][j] =  volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
 	  realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
 	}//end int j
       }// end int iant
