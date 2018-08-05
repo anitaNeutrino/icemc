@@ -1,9 +1,7 @@
 #ifndef ICEMC_INTEGRATOR_H
 #define ICEMC_INTEGRATOR_H
 
-
 #include "TRandom3.h"
-
 
 namespace icemc {
 
@@ -22,6 +20,8 @@ namespace icemc {
   protected:
     TRandom3 fRandom;
   };
+
+
 }
 
 

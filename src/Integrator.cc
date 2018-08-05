@@ -1,10 +1,11 @@
 #include "Integrator.h"
 #include "TString.h"
+#include <iostream>
 
 icemc::Integrator::Integrator(int run){
 
   TString hashStr = GetName();
-  hashStr += TString::Format("_%d");
+  hashStr += TString::Format("_%d", run);
   hash = hashStr.Hash();
 
   std::cout << hashStr <<  "\t"  << hash << std::endl;
@@ -12,7 +13,8 @@ icemc::Integrator::Integrator(int run){
   fRandom.SetSeed(run);  
 }
 
-icemc::Integrator::reset(){
+
+void icemc::Integrator::reset(){
   hash++;
   fRandom.SetSeed(hash);
 }

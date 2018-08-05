@@ -32,20 +32,29 @@ icemc::ANITA::~ANITA(){
 }
 
 
-Geoid::Position icemc::ANITA::getCenterOfDetector(UInt_t unixTime){
-  (void) unixTime;
+const Geoid::Position& icemc::ANITA::getPosition(double time){
+  /**
+   * Here I'm using TMath's QuietNaN() as a default argument.
+   * That might be a bad idea, but for now...
+   */
 
-  // UInt_t theUnixTime = unixTime ? 1 : 0;
-  // for(int rx=0; rx < static_cast<int>(fSeaveys.size()); rx++){
-  //   int layer, fold;
-  //   getLayerFoldFromRX(rx, layer, fold);
-  // }
+  if(TMath::IsNaN(time) && TMath::IsNaN(fLastPositionTime)){
+    time = getStartTime();
+  }
 
-  for(auto& s : fSeaveys){
-    s.updatePosition(Balloon::position(),
-		     Balloon::getHeading(),
-		     Balloon::getPitch(),
-		     Balloon::getRoll());
+  if(!TMath::IsNaN(time) && time != fLastPositionTime){
+
+    PickBalloonPosition(time, fSettings, this);
+
+    for(auto& s : fSeaveys){
+      s.updatePosition(Balloon::position(),
+		       Balloon::getHeading(),
+		       Balloon::getPitch(),
+		       Balloon::getRoll());
+    }
+
+    fLastPositionTime = time;
+
   }
 
   return Balloon::position();

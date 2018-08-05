@@ -42,7 +42,7 @@ namespace icemc {
     /** 
      * @brief Where is the detector?
      */
-    virtual Geoid::Position getCenterOfDetector(UInt_t unixTime = 0) = 0;
+    virtual const Geoid::Position& getPosition(double time = TMath::QuietNaN()) = 0;
 
 
     /** 

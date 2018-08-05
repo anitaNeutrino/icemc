@@ -1,5 +1,5 @@
 #include "SourceModel.h"
-#include "EarthModel.h"
+#include "WorldModel.h"
 
 TVector3 icemc::DiffuseFlux::pickDirection(const Geoid::Position& interaction, double refractiveIndex, const TVector3* rfToDetector) {
 
@@ -32,9 +32,8 @@ TVector3 icemc::DiffuseFlux::pickDirection(const Geoid::Position& interaction, d
 
     double phi = fRandom.Uniform(0, TMath::TwoPi());
 
-    nuDir.Rotate(phi, *rfToDetector);    
-    
-    
+    nuDir.Rotate(phi, *rfToDetector);
+
   }
   else{
     double cosTheta = fRandom.Uniform(-1, 1);

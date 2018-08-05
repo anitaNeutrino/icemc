@@ -107,7 +107,7 @@ namespace icemc {
      */
     Interaction(Primaries *primary1, const Settings *settings1); //, int whichray); //, Counting *count1);
 
-    int PickDownwardInteractionPoint(const Geoid::Position& r_bn, const Settings *settings1, const Antarctica *antarctica1, RayTracer *ray1);
+    int PickDownwardInteractionPoint(const Geoid::Position& r_bn, const Settings *settings1, const Antarctica *antarctica1);
     
     void PickAnyDirection();
     

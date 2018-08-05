@@ -8,7 +8,9 @@
 #include "Geoid.h"
 #include "TVector3.h"
 
-#include "EarthModel.h"
+#include "WorldModel.h"
+
+#include "TKDTree.h"
 
 class TH2D;
 
@@ -64,7 +66,7 @@ namespace icemc{
   };
 
   //! Shape of the earth, ice thicknesses, profiles of earth layers, densities, neutrino absorption
-  class Crust2 : public EarthModel {
+  class Crust2 : public WorldModel {
 
   public:
     Crust2(int model = 0,int WEIGHTABSORPTION_SETTING=1);
@@ -85,8 +87,6 @@ namespace icemc{
     }
     virtual double IceThickness(double lon,double lat) const;
     virtual double IceThickness(const Geoid::Position& pos) const;
-    // virtual double Surface(double lon,double lat) const;    
-    // virtual double Surface(const Geoid::Position& pos) const;    
     virtual int InFirn(const Geoid::Position& pos) const;
     virtual double SurfaceDeepIce(const Geoid::Position& pos) const;
     virtual double SurfaceAboveGeoid(double lon,double lat) const;
@@ -97,6 +97,8 @@ namespace icemc{
 
     virtual double RockSurface(const Geoid::Position& pos) const;
     double GetDensity(const Geoid::Position& pos, int& crust_entered) const;
+
+    virtual double fractionalIceVolumeWithinHorizon(const Geoid::Position& centeredOn, double horizonDistance) const;
 
     /** 
      * Figures out whether a neutrino will make it through the a Earth along a chord
@@ -247,8 +249,6 @@ namespace icemc{
 
 
 
-
-
     
 
     template <class T>
@@ -264,7 +264,12 @@ namespace icemc{
     }
 
 
-
+    TKDTreeID * fKDTree; /// ROOT's implementation of a KDTree, typedef'd for int/double
+    std::vector<double> fXs; ///< Positions on the surface of the geoid
+    std::vector<double> fYs; ///< Positions on the surface of the geoid
+    std::vector<double> fZs; ///< Positions on the surface of the geoid
+    std::vector<double> fElevations; ///< Elevation corrections to the geoid...
+    std::vector<double> fThickness; ///< Ice thickness...
     
 
   }; //class Earth

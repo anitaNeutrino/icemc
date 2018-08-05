@@ -274,7 +274,7 @@ void  icemc::Interaction::setNuFlavor(const Primaries *primary1, const Settings 
 }
 
 
-int icemc::Interaction::PickDownwardInteractionPoint(const Geoid::Position&r_bn, const Settings *settings1, const Antarctica *antarctica1, RayTracer *ray1) {
+int icemc::Interaction::PickDownwardInteractionPoint(const Geoid::Position&r_bn, const Settings *settings1, const Antarctica *antarctica1) {
 
   if(settings1->UNBIASED_SELECTION==1){
     if(antarctica1->PickUnbiased(this)){ // pick neutrino direction and interaction point
@@ -306,34 +306,34 @@ int icemc::Interaction::PickDownwardInteractionPoint(const Geoid::Position&r_bn,
     } while(settings1->SPECIFIC_NU_POSITION &&  (posnu - specific_position).Mag() > settings1->SPECIFIC_NU_POSITION_DISTANCE);    
   }
 
-  // first pass at rf exit point,  straight above the interaction point!
-  // ray1->rfexit[0] = antarctica1->Surface(interaction1->posnu) * interaction1->posnu.Unit(); 
-  ray1->initGuess(posnu, r_bn);
+  // // first pass at rf exit point,  straight above the interaction point!
+  // // ray1->rfexit[0] = antarctica1->Surface(interaction1->posnu) * interaction1->posnu.Unit(); 
+  // ray1->initGuess(posnu, r_bn);
 
-  double r_down = 2*(antarctica1->Surface(posnu)-antarctica1->IceThickness(posnu))-posnu.Mag();
-  posnu_down = r_down * posnu.Unit();
-  //position of the mirror point of interaction
+  // double r_down = 2*(antarctica1->Surface(posnu)-antarctica1->IceThickness(posnu))-posnu.Mag();
+  // posnu_down = r_down * posnu.Unit();
+  // //position of the mirror point of interaction
   
-  //interaction1->posnu is downward interaction1->posnu.
-  // distance=interaction1->posnu.Distance(r_bn);
+  // //interaction1->posnu is downward interaction1->posnu.
+  // // distance=interaction1->posnu.Distance(r_bn);
 
-  // depth of interaction
-  // gets distance between interaction and exit point, this time it's same as depth
-  // because our first guess at exit point is radially outward from interaction.
-  // negative means below surface
-  altitude_int=-1*ray1->rfexit[0].Distance(posnu);
-  altitude_int_mirror=-1*ray1->rfexit[0].Distance(posnu_down);//get depth of mirror point
+  // // depth of interaction
+  // // gets distance between interaction and exit point, this time it's same as depth
+  // // because our first guess at exit point is radially outward from interaction.
+  // // negative means below surface
+  // altitude_int=-1*ray1->rfexit[0].Distance(posnu);
+  // altitude_int_mirror=-1*ray1->rfexit[0].Distance(posnu_down);//get depth of mirror point
 
-  r_fromballoon[0]=r_bn.Distance(posnu);
+  // r_fromballoon[0]=r_bn.Distance(posnu);
 
-  //distance from the mirror point to the balloon because it is equal to the path that signals pass
-  r_fromballoon[1]=r_bn.Distance(posnu_down);
+  // //distance from the mirror point to the balloon because it is equal to the path that signals pass
+  // r_fromballoon[1]=r_bn.Distance(posnu_down);
 
-  // if the angle from the initial exit point guess to the balloon is more than 90 degree
-  // then it's over the horizon, so return 1
-  if (ray1->n_exit2bn[0].Angle(posnu) > constants::PI/2){
-    return 1;
-  }
+  // // if the angle from the initial exit point guess to the balloon is more than 90 degree
+  // // then it's over the horizon, so return 1
+  // if (ray1->n_exit2bn[0].Angle(posnu) > constants::PI/2){
+  //   return 1;
+  // }
   
   return 0;
 }//PickDownwardInteractionPoint

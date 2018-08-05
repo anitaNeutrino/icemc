@@ -314,7 +314,7 @@ void icemc::Screen::PropagateSignalsToDetector(const Settings* settings1, ANITA*
   ///@todo remove hardcoding here!
   double TIMESTEP=(1./2.6)*1.E-9; // time step between samples
 
-  const Geoid::Position&detPos = d->getCenterOfDetector(inu);
+  const Geoid::Position detPos = d->getPosition();
   double firstDelay = 0;
 
   for (int jpt=0; jpt<GetNvalidPoints(); jpt++){

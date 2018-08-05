@@ -29,7 +29,7 @@ namespace icemc {
     virtual int getNumRX() const override {return fNumRX;}
     virtual TVector3 getPositionRX(int i) const override;
 
-    virtual Geoid::Position getCenterOfDetector(UInt_t unixTime = 0) override;
+    virtual const Geoid::Position& getPosition(double time = TMath::QuietNaN()) override;
     virtual bool applyTrigger() override {return  applyTrigger(-1);}
     virtual bool applyTrigger(int inu);
     virtual void getDesiredNDt(int& n, double& dt) const override {
@@ -65,6 +65,7 @@ namespace icemc {
     friend class AnitaSimOutput; ///@todo Can I do this and respect privacy with getters?
     AnitaSimOutput fAnitaOutput; ///< Handles converting the MC output into the same format as real ANITA data
 
+    double fLastPositionTime = TMath::QuietNaN();
 
 
     void initSeaveys(const Settings *settings1, const Anita *anita1);

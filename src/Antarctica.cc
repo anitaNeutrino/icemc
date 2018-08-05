@@ -21,6 +21,7 @@
 const std::string ICEMC_SRC_DIR = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const std::string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
 
+
 icemc::Antarctica::Antarctica(int model,
 			      int earth_model,
 			      int WEIGHTABSORPTION_SETTING)
@@ -230,199 +231,199 @@ Geoid::Position icemc::Antarctica::PickInteractionLocation(const Geoid::Position
 int icemc::Antarctica::PickUnbiased(Interaction *interaction1) const {
 
   interaction1->PickAnyDirection(); // first pick the neutrino direction
-
-  double mincos=cos(COASTLINE*constants::RADDEG);
-  double maxcos=cos(0.);
-  double minphi=0.;
-  double maxphi=2.*constants::PI;
-  double thisphi,thiscos,thissin;
+  return 0;
+  // double mincos=cos(COASTLINE*constants::RADDEG);
+  // double maxcos=cos(0.);
+  // double minphi=0.;
+  // double maxphi=2.*constants::PI;
+  // double thisphi,thiscos,thissin;
         
-  thisphi = gRandom->Rndm()*(maxphi-minphi) + minphi;
-  thiscos = gRandom->Rndm()*(maxcos-mincos) + mincos;
-  thissin = sqrt(1.-thiscos*thiscos);
-  Geoid::Position thisr_in;// entrance point
-  Geoid::Position thisr_enterice;
-  Geoid::Position thisr_enterice_tmp;
-  Geoid::Position thisnuexitearth;
-  Geoid::Position thisnuexitice;
-  Geoid::Position thisr_exitice;
-  interaction1->noway=0;
-  interaction1->wheredoesitleave_err=0;
-  interaction1->neverseesice=0;
-  interaction1->wheredoesitenterice_err=0;
-  interaction1->toohigh=0;
-  interaction1->toolow=0;
+  // thisphi = gRandom->Rndm()*(maxphi-minphi) + minphi;
+  // thiscos = gRandom->Rndm()*(maxcos-mincos) + mincos;
+  // thissin = sqrt(1.-thiscos*thiscos);
+  // Geoid::Position thisr_in;// entrance point
+  // Geoid::Position thisr_enterice;
+  // Geoid::Position thisr_enterice_tmp;
+  // Geoid::Position thisnuexitearth;
+  // Geoid::Position thisnuexitice;
+  // Geoid::Position thisr_exitice;
+  // interaction1->noway=0;
+  // interaction1->wheredoesitleave_err=0;
+  // interaction1->neverseesice=0;
+  // interaction1->wheredoesitenterice_err=0;
+  // interaction1->toohigh=0;
+  // interaction1->toolow=0;
     
-  thisr_in.SetXYZ(G::R_EARTH*thissin*thiscos,G::R_EARTH*thissin*thissin,G::R_EARTH*thiscos);
-  // interaction1->r_in = thisr_in;
+  // thisr_in.SetXYZ(G::R_EARTH*thissin*thiscos,G::R_EARTH*thissin*thissin,G::R_EARTH*thiscos);
+  // // interaction1->r_in = thisr_in;
 
-  if (thisr_in.Dot(interaction1->nnu)>0){
-    interaction1->nnu=-1.*interaction1->nnu;
-  }
-  // does this intersect any ice
-  //std::cout << "lat, coastline, cos are " << thisr_in.Latitude() << " " << COASTLINE << " " << cos(interaction1->nnu.Theta()) << "\n";
-  if (-thisr_in.Latitude()>COASTLINE && cos(interaction1->nnu.Theta())<0) {
-    interaction1->noway=1;
+  // if (thisr_in.Dot(interaction1->nnu)>0){
+  //   interaction1->nnu=-1.*interaction1->nnu;
+  // }
+  // // does this intersect any ice
+  // //std::cout << "lat, coastline, cos are " << thisr_in.Latitude() << " " << COASTLINE << " " << cos(interaction1->nnu.Theta()) << "\n";
+  // if (-thisr_in.Latitude()>COASTLINE && cos(interaction1->nnu.Theta())<0) {
+  //   interaction1->noway=1;
 
-    return 0; // there is no way it's going through the ice
-  }
+  //   return 0; // there is no way it's going through the ice
+  // }
     
-  int count1=0;
-  int count2=0;
+  // int count1=0;
+  // int count2=0;
 
-  if (RayTracer::WhereDoesItLeave(thisr_in, interaction1->nnu, this, thisnuexitearth)) { // where does it leave Earth
-    // really want to find where it leaves ice
-    // Does it leave in an ice bin
-    if (IceThickness(thisnuexitearth) && -thisnuexitearth.Latitude()<COASTLINE) { // if this is an ice bin in the Antarctic
-      //std::cout << "inu is " << inu << " it's in ice.\n";
-      //std::cout << "this is an ice bin.\n";
-      thisnuexitice = thisnuexitearth;
-      thisr_exitice = thisnuexitearth;
-      if (thisnuexitice.Mag()>Surface(thisnuexitice)) { // if the exit point is above the surface
-	if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>5.E3) { 
-	  WhereDoesItExitIce(thisnuexitearth,interaction1->nnu,5.E3, // then back up and find it more precisely
-			     thisr_exitice);
-	  thisnuexitice=(5000.)*interaction1->nnu;
-	  thisnuexitice+=thisr_exitice;
-	  count1++;
-	}
-	if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>5.E2) {
-		    
-	  WhereDoesItExitIce(thisnuexitice,interaction1->nnu,5.E2, // then back up and find it more precisely
-			     thisr_exitice);
-	  thisnuexitice=5.E2*interaction1->nnu;
-	  thisnuexitice+=thisr_exitice;
-	  count1++;
-	}
-	if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>50.) {
-		    
-	  WhereDoesItExitIce(thisnuexitice,interaction1->nnu,50., // then back up and find it more precisely
-			     thisr_exitice);
-	  count1++;
-	} // end third wheredoesitexit
-	thisnuexitice = thisr_exitice;
-      } // if the exit point overshoots
-      else{
-	thisnuexitice = thisnuexitearth;
-      }	    
-      // should also correct for undershooting
-      if (count1>10){
-	std::cout << "count1 is " << count1 << "\n";
-      }
-    } // if it's an Antarctic ice bin
-    else { // it leaves a rock bin so back up and find where it leaves ice
-      //std::cout << "inu is " << inu << " it's in rock.\n";
-      if (thisr_in.Distance(thisnuexitearth)>5.E4) {
-	count2++;
-	if (WhereDoesItExitIce(thisnuexitearth,interaction1->nnu,5.E4, // then back up and find it more precisely
-			       thisr_exitice)) {
-		    
-	  thisnuexitice=(5.E4)*interaction1->nnu;
-	  thisnuexitice+=thisr_exitice;
-	  //std::cout << "inu is " << inu << " I'm here 1.\n";
-		    
-	}
-	else {
-	  interaction1->neverseesice=1;
-	  return 0;
-	}
-      }
-      else
-	thisnuexitice=thisnuexitearth;
-      //   WhereDoesItExitIce(thisnuexit,interaction1->nnu,5.E4, // then back up and find it more precisely
-      // 			     thisr_exitice);
-      // 	  thisnuexit=5.E4*interaction1->nnu;
-      // 	  thisnuexit+=thisr_exitice;
-      if (thisr_in.Distance(thisnuexitice)>5.E3) {
-		
-		
-	if (WhereDoesItExitIce(thisnuexitice,interaction1->nnu,5.E3, // then back up and find it more precisely
-			       thisr_exitice)) {
-	  count2++;
-	  //interaction1->neverseesice=1;
-	  thisnuexitice=5.E3*interaction1->nnu;
-	  thisnuexitice+=thisr_exitice;
-	  //std::cout << "inu is " << inu << " I'm here 2\n";
-	  //return 0;
-		    
-	}
-      }
-      if (thisr_in.Distance(thisnuexitice)>5.E2) {
-		
-		
-	if (WhereDoesItExitIce(thisnuexitice,interaction1->nnu,5.E2, // then back up and find it more precisely
-			       thisr_exitice)) {
-	  count2++;
-	  //interaction1->neverseesice=1;
-		    
-	  thisnuexitice=5.E2*interaction1->nnu;
-	  thisnuexitice+=thisr_exitice;
-	  //std::cout << "inu is " << inu << " I'm here 3\n";
-	  //return 0;
-	}
-		
-      }
-      if (thisr_in.Distance(thisnuexitice)>50.) {
-		
-		
-	if (WhereDoesItExitIce(thisnuexitice,interaction1->nnu,50., // then back up and find it more precisely
-			       thisr_exitice)) {
-	  //interaction1->neverseesice=1;
-	  count2++;
-	  //std::cout << "inu is " << inu << " I'm here 4\n";
-	  //return 0;
-	}
-      }
-      thisnuexitice=thisr_exitice;
-      if (count2>10){
-	std::cout << "count1 is " << count2 << "\n";
-      }
-      //	else return 0;  // never reaches any ice or is it because our step is too big
-    } // if the nu leaves a rock bin
-  } // end wheredoesitleave
-  else {
-    interaction1->wheredoesitleave_err=1;
-    return 0;
-  }
-  // end finding where it leaves ice
-    
-  // 	if (thisnuexit.Mag()<Surface(thisnuexit)) { // if the exit point is below the surface
-  // 	  WhereDoesItExitIceForward(thisnuexit,interaction1->nnu,20., // then find it more finely
+  // if (RayTracer::WhereDoesItLeave(thisr_in, interaction1->nnu, this, thisnuexitearth)) { // where does it leave Earth
+  //   // really want to find where it leaves ice
+  //   // Does it leave in an ice bin
+  //   if (IceThickness(thisnuexitearth) && -thisnuexitearth.Latitude()<COASTLINE) { // if this is an ice bin in the Antarctic
+  //     //std::cout << "inu is " << inu << " it's in ice.\n";
+  //     //std::cout << "this is an ice bin.\n";
+  //     thisnuexitice = thisnuexitearth;
+  //     thisr_exitice = thisnuexitearth;
+  //     if (thisnuexitice.Mag()>Surface(thisnuexitice)) { // if the exit point is above the surface
+  // 	if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>5.E3) { 
+  // 	  WhereDoesItExitIce(thisnuexitearth,interaction1->nnu,5.E3, // then back up and find it more precisely
   // 			     thisr_exitice);
-  // 	  thisnuexit=thisr_enterice;
-  // 	  // then back up and find it more precisely
+  // 	  thisnuexitice=(5000.)*interaction1->nnu;
+  // 	  thisnuexitice+=thisr_exitice;
+  // 	  count1++;
   // 	}
+  // 	if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>5.E2) {
+		    
+  // 	  WhereDoesItExitIce(thisnuexitice,interaction1->nnu,5.E2, // then back up and find it more precisely
+  // 			     thisr_exitice);
+  // 	  thisnuexitice=5.E2*interaction1->nnu;
+  // 	  thisnuexitice+=thisr_exitice;
+  // 	  count1++;
+  // 	}
+  // 	if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>50.) {
+		    
+  // 	  WhereDoesItExitIce(thisnuexitice,interaction1->nnu,50., // then back up and find it more precisely
+  // 			     thisr_exitice);
+  // 	  count1++;
+  // 	} // end third wheredoesitexit
+  // 	thisnuexitice = thisr_exitice;
+  //     } // if the exit point overshoots
+  //     else{
+  // 	thisnuexitice = thisnuexitearth;
+  //     }	    
+  //     // should also correct for undershooting
+  //     if (count1>10){
+  // 	std::cout << "count1 is " << count1 << "\n";
+  //     }
+  //   } // if it's an Antarctic ice bin
+  //   else { // it leaves a rock bin so back up and find where it leaves ice
+  //     //std::cout << "inu is " << inu << " it's in rock.\n";
+  //     if (thisr_in.Distance(thisnuexitearth)>5.E4) {
+  // 	count2++;
+  // 	if (WhereDoesItExitIce(thisnuexitearth,interaction1->nnu,5.E4, // then back up and find it more precisely
+  // 			       thisr_exitice)) {
+		    
+  // 	  thisnuexitice=(5.E4)*interaction1->nnu;
+  // 	  thisnuexitice+=thisr_exitice;
+  // 	  //std::cout << "inu is " << inu << " I'm here 1.\n";
+		    
+  // 	}
+  // 	else {
+  // 	  interaction1->neverseesice=1;
+  // 	  return 0;
+  // 	}
+  //     }
+  //     else
+  // 	thisnuexitice=thisnuexitearth;
+  //     //   WhereDoesItExitIce(thisnuexit,interaction1->nnu,5.E4, // then back up and find it more precisely
+  //     // 			     thisr_exitice);
+  //     // 	  thisnuexit=5.E4*interaction1->nnu;
+  //     // 	  thisnuexit+=thisr_exitice;
+  //     if (thisr_in.Distance(thisnuexitice)>5.E3) {
+		
+		
+  // 	if (WhereDoesItExitIce(thisnuexitice,interaction1->nnu,5.E3, // then back up and find it more precisely
+  // 			       thisr_exitice)) {
+  // 	  count2++;
+  // 	  //interaction1->neverseesice=1;
+  // 	  thisnuexitice=5.E3*interaction1->nnu;
+  // 	  thisnuexitice+=thisr_exitice;
+  // 	  //std::cout << "inu is " << inu << " I'm here 2\n";
+  // 	  //return 0;
+		    
+  // 	}
+  //     }
+  //     if (thisr_in.Distance(thisnuexitice)>5.E2) {
+		
+		
+  // 	if (WhereDoesItExitIce(thisnuexitice,interaction1->nnu,5.E2, // then back up and find it more precisely
+  // 			       thisr_exitice)) {
+  // 	  count2++;
+  // 	  //interaction1->neverseesice=1;
+		    
+  // 	  thisnuexitice=5.E2*interaction1->nnu;
+  // 	  thisnuexitice+=thisr_exitice;
+  // 	  //std::cout << "inu is " << inu << " I'm here 3\n";
+  // 	  //return 0;
+  // 	}
+		
+  //     }
+  //     if (thisr_in.Distance(thisnuexitice)>50.) {
+		
+		
+  // 	if (WhereDoesItExitIce(thisnuexitice,interaction1->nnu,50., // then back up and find it more precisely
+  // 			       thisr_exitice)) {
+  // 	  //interaction1->neverseesice=1;
+  // 	  count2++;
+  // 	  //std::cout << "inu is " << inu << " I'm here 4\n";
+  // 	  //return 0;
+  // 	}
+  //     }
+  //     thisnuexitice=thisr_exitice;
+  //     if (count2>10){
+  // 	std::cout << "count1 is " << count2 << "\n";
+  //     }
+  //     //	else return 0;  // never reaches any ice or is it because our step is too big
+  //   } // if the nu leaves a rock bin
+  // } // end wheredoesitleave
+  // else {
+  //   interaction1->wheredoesitleave_err=1;
+  //   return 0;
+  // }
+  // // end finding where it leaves ice
     
-  if (WhereDoesItEnterIce(thisnuexitearth,interaction1->nnu,5.E3, // first pass with sort of course binning
-			  thisr_enterice)) {
-    thisr_enterice_tmp = thisr_enterice+5.E3*interaction1->nnu;
+  // // 	if (thisnuexit.Mag()<Surface(thisnuexit)) { // if the exit point is below the surface
+  // // 	  WhereDoesItExitIceForward(thisnuexit,interaction1->nnu,20., // then find it more finely
+  // // 			     thisr_exitice);
+  // // 	  thisnuexit=thisr_enterice;
+  // // 	  // then back up and find it more precisely
+  // // 	}
+    
+  // if (WhereDoesItEnterIce(thisnuexitearth,interaction1->nnu,5.E3, // first pass with sort of course binning
+  // 			  thisr_enterice)) {
+  //   thisr_enterice_tmp = thisr_enterice+5.E3*interaction1->nnu;
 
-    if (WhereDoesItEnterIce(thisr_enterice_tmp,interaction1->nnu,20., // second pass with finer binning
-			    thisr_enterice)) {
-      interaction1->pathlength_inice = thisr_enterice.Distance(thisnuexitice);
-      interaction1->posnu = interaction1->pathlength_inice*gRandom->Rndm()*interaction1->nnu;
-      interaction1->posnu = interaction1->posnu+thisr_enterice;
-    }
-  }
-  else {
-    thisr_enterice = thisr_in;
-    interaction1->wheredoesitenterice_err = 1;
-    return 0;
-  }
-  interaction1->nuexitice = thisnuexitice;
-  interaction1->r_enterice = thisr_enterice;
+  //   if (WhereDoesItEnterIce(thisr_enterice_tmp,interaction1->nnu,20., // second pass with finer binning
+  // 			    thisr_enterice)) {
+  //     interaction1->pathlength_inice = thisr_enterice.Distance(thisnuexitice);
+  //     interaction1->posnu = interaction1->pathlength_inice*gRandom->Rndm()*interaction1->nnu;
+  //     interaction1->posnu = interaction1->posnu+thisr_enterice;
+  //   }
+  // }
+  // else {
+  //   thisr_enterice = thisr_in;
+  //   interaction1->wheredoesitenterice_err = 1;
+  //   return 0;
+  // }
+  // interaction1->nuexitice = thisnuexitice;
+  // interaction1->r_enterice = thisr_enterice;
     
-  if (interaction1->posnu.Mag()-Surface(interaction1->posnu)>0) {
-    interaction1->toohigh=1;
-    //std::cout << "inu, toohigh is " << inu << " " << interaction1->toohigh << "\n";
-    return 0;
-  }
-  if (interaction1->posnu.Mag()-Surface(interaction1->posnu)+IceThickness(interaction1->posnu)<0) {
-    interaction1->toolow=1;
-    //std::cout << "inu, toolow is " << inu << " " << interaction1->toolow << "\n";
-    return 0;
-  }    
-  return 1;
+  // if (interaction1->posnu.Mag()-Surface(interaction1->posnu)>0) {
+  //   interaction1->toohigh=1;
+  //   //std::cout << "inu, toohigh is " << inu << " " << interaction1->toohigh << "\n";
+  //   return 0;
+  // }
+  // if (interaction1->posnu.Mag()-Surface(interaction1->posnu)+IceThickness(interaction1->posnu)<0) {
+  //   interaction1->toolow=1;
+  //   //std::cout << "inu, toolow is " << inu << " " << interaction1->toolow << "\n";
+  //   return 0;
+  // }    
+  // return 1;
     
 }
 
@@ -726,7 +727,8 @@ double icemc::Antarctica::IceThickness(double lon, double lat) const {
 double icemc::Antarctica::IceThickness(const Geoid::Position &pos) const {
   //This method returns the thickness of the ice in meters at a location under a given position vector.  Code by Stephen Hoover.
     
-  return IceThickness(pos.Longitude(),pos.Latitude());
+  // return IceThickness(pos.Longitude(),pos.Latitude());
+  return Crust2::IceThickness(pos);
 } //method IceThickness(position)
 
 double icemc::Antarctica::SurfaceAboveGeoid(double lon, double lat) const {
@@ -1006,7 +1008,7 @@ void icemc::Antarctica::LonLattoEN(double lon, double lat, double xLowerLeft, do
   // double lon_rad = (lon - 180) * constants::RADDEG; //convert to radians, and shift origin to conventional spot
   // double lat_rad = (90 - lat) * constants::RADDEG;
     
-  double bedmap_R = G::scale_factor*G::c_0 * pow(( (1 + G::eccentricity*sin(lat_rad)) / (1 - G::eccentricity*sin(lat_rad)) ),G::eccentricity/2) * tan((constants::PI/4) - lat_rad/2);
+  double bedmap_R = Geoid::scale_factor*Geoid::c_0 * pow(( (1 + Geoid::eccentricity*sin(lat_rad)) / (1 - Geoid::eccentricity*sin(lat_rad)) ),Geoid::eccentricity/2) * tan((constants::PI/4) - lat_rad/2);
     
   easting = bedmap_R * sin(lon_rad);
   northing = bedmap_R * cos(lon_rad);
@@ -1062,7 +1064,7 @@ void icemc::Antarctica::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, 
   }
     
   //  now find latitude
-  double bedmap_R = G::scale_factor*G::c_0 * pow(( (1 + G::eccentricity*sin(71*constants::RADDEG)) / (1 - G::eccentricity*sin(71*constants::RADDEG)) ),G::eccentricity/2) * tan((constants::PI/4) - (71*constants::RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
+  double bedmap_R = Geoid::scale_factor*Geoid::c_0 * pow(( (1 + Geoid::eccentricity*sin(71*constants::RADDEG)) / (1 - Geoid::eccentricity*sin(71*constants::RADDEG)) ),Geoid::eccentricity/2) * tan((constants::PI/4) - (71*constants::RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
   if (easting != 0){
     bedmap_R = fabs(easting/sin(lon));
   }
@@ -1075,9 +1077,9 @@ void icemc::Antarctica::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, 
     return;
   } //else
     
-  isometric_lat = (constants::PI/2) - 2*atan(bedmap_R/(G::scale_factor*G::c_0));
+  isometric_lat = (constants::PI/2) - 2*atan(bedmap_R/(Geoid::scale_factor*Geoid::c_0));
     
-  lat = isometric_lat + G::a_bar*sin(2*isometric_lat) + G::b_bar*sin(4*isometric_lat) + G::c_bar*sin(6*isometric_lat) + G::d_bar*sin(8*isometric_lat);
+  lat = isometric_lat + Geoid::a_bar*sin(2*isometric_lat) + Geoid::b_bar*sin(4*isometric_lat) + Geoid::c_bar*sin(6*isometric_lat) + Geoid::d_bar*sin(8*isometric_lat);
     
   lon = lon * constants::DEGRAD;  //convert to degrees, shift 0 to line up with bin 0 of Crust 2.0
   lat = lat * constants::DEGRAD; //convert to degrees, with 0 degrees at the south pole
@@ -1109,7 +1111,7 @@ void icemc::Antarctica::GetMAXHORIZON(Balloon *bn1) const {
     bn1->MAXHORIZON=8.E5; // if it is a standard flight then use a horizon of 800 km
   }
   else{
-    bn1->MAXHORIZON=(sqrt((G::R_EARTH+altitude_inmeters)*(G::R_EARTH+altitude_inmeters)-G::R_EARTH*G::R_EARTH))*1.1;
+    bn1->MAXHORIZON=(sqrt((Geoid::R_EARTH+altitude_inmeters)*(Geoid::R_EARTH+altitude_inmeters)-Geoid::R_EARTH*Geoid::R_EARTH))*1.1;
     // find distance from hrizon to balloon, increase it by 10% to be conservative.
   }
   icemcLog() << icemc::info << "MAXHORIZON is " << bn1->MAXHORIZON << std::endl;
