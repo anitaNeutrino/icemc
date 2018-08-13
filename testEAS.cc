@@ -107,13 +107,31 @@ std::string some_imortant_str = "some_important_str value";
 namespace bvv {
   
   //! Fill amplitude and phase arrays given FT of a ZHS waveform.
-  int interpolate_zhs_ft (
-    double (&amp)[Anita::NFREQ] /*!< [out] ft amplitude */,
-    double (&phase)[Anita::NFREQ] /*!< [out] ft phase */,
-    double *FftRho /*!<[in]*/, double *FftPhi /*!<[in]*/, int NBins /*! <[in] Number of bins in the input arrays */) {
-    return FftRho[0] + FftPhi[0];
+  int interpolate_zhs_ft
+  (
+   double (&amp)[Anita::NFREQ]   /*!< [out] ft amplitude. */,
+   double (&phase)[2 * Anita::NFREQ] /*!< [out] ft phase. */,
+   Anita *anita /*!< [in] Anita class with the highest frequency bin. */,
+   cr_ft_state *cr_ft_result  /*!< [in] a struct returned from from the zhs ft module. */
+   )
+  {
+    // cr_ft_result->FftPhi, cr_ft_result->vis_nbins / 2 + 1
+    for (int i = 0; i < Anita::NFREQ; i++) {
+      double target_freq = anita->FREQ_HIGH / Anita::NFREQ * i;
+      double target_freq_src_units = target_freq / cr_ft_result->dfreq;
+      int int_target_freq_src_units = target_freq_src_units + 0.5;
+      amp[i] = cr_ft_result->FftRho[int_target_freq_src_units];
+    }
+    for (int i = 0; i < 2 * Anita::NFREQ; i++) {
+      double target_freq = anita->FREQ_HIGH / (2 * Anita::NFREQ) * i;
+      double target_freq_src_units = target_freq / cr_ft_result->dfreq;
+      int int_target_freq_src_units = target_freq_src_units + 0.5;
+      phase[i] = cr_ft_result->FftPhi[int_target_freq_src_units];
+    }
+      
+    return 0;
   }
-}
+  }
 
 
 extern const double pi = atan(1)*4;
@@ -368,7 +386,7 @@ int main(int argc,  char **argv) {
     }
       
     ZhsAlpha[i] = EEmaxAlpha;
-    printf("i: %d/%d, Time: %11.8e, ZhsTimeE[i]: %11.4e, Eproj/E: %11.8e, EEmaxAlpha: %11.4e\n", i, ZhsTimeN - 1, ZhsTimeArr.at(i), ZhsTimeE.at(i), Eproj/E, EEmaxAlpha);
+    // printf("i: %d/%d, Time: %11.8e, ZhsTimeE[i]: %11.4e, Eproj/E: %11.8e, EEmaxAlpha: %11.4e\n", i, ZhsTimeN - 1, ZhsTimeArr.at(i), ZhsTimeE.at(i), Eproj/E, EEmaxAlpha);
   }
 
   // Projections on the Emax:
@@ -384,17 +402,19 @@ int main(int argc,  char **argv) {
   gStyle->SetOptTitle(0);
 
   struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
-
+  //  exit(0);
   
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
   // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
-  double phase[Anita::NFREQ];
-  double vmmhz_em[Anita::NFREQ];
    
-  bvv::interpolate_zhs_ft(vmmhz, phase, cr_ft_result->FftRho, cr_ft_result->FftPhi, cr_ft_result->vis_nbins / 2 + 1);
+  Anita *anita1=new Anita();// right now this constructor gets banding info
+  bvv::interpolate_zhs_ft(vmmhz, anita1->v_phases, anita1, cr_ft_result);
+  // for (int i = 0; i < Anita::NFREQ; i++) {
+  //   cout << "i: " << i << " vmmhz: " << vmmhz[i] << " phase: " << phase[i] << endl;
+  // }
 
   cout << "testEAS reached the end of the development block" << endl;
-  exit(0);
+  //  exit(0);
 
   settings1->SEED=settings1->SEED +run_no;
   cout <<"seed is " << settings1->SEED << endl;
@@ -405,7 +425,6 @@ int main(int argc,  char **argv) {
 
 
   Balloon *bn1=new Balloon(); // instance of the balloon
-  Anita *anita1=new Anita();// right now this constructor gets banding info
   Secondaries *sec1=new Secondaries();
   // Primaries *primary1=new Primaries();
   Signal *sig1=new Signal();
@@ -468,9 +487,9 @@ int main(int argc,  char **argv) {
   Vector n_hplane = -const_y;
   Vector n_normal = const_x;
 
-  Vector n_pol; // direction of polarization
+  Vector n_pol = const_z; /* bvv: assuming something for the time being */; // direction of polarization
   Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
-  Vector direction2bn; // direction from EAS to balloon
+  Vector direction2bn = const_x /* bvv: assuming something for the time being */; // direction from EAS to balloon
   Vector direction2bn_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction from EAS to balloon
 
   // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
@@ -503,8 +522,8 @@ int main(int argc,  char **argv) {
 
   int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement
 
-  int nchannels_triggered = 0; // total number of channels triggered
-  int nchannels_perrx_triggered[48]; // total number of channels triggered
+  int nchannels_triggered /* __attribute__ ((unused)) */ = 0; // total number of channels triggered
+  int nchannels_perrx_triggered[48] __attribute__ ((unused)); // total number of channels triggered
 
 
   Tools::Zero(count1->npass, 2); // sums events that pass,  without weights
@@ -614,8 +633,8 @@ int main(int argc,  char **argv) {
 
   signal(SIGINT,  interrupt_signal_handler);     // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
 
-  int passes_thisevent=0;
-  int passestrigger=0;
+  int passes_thisevent __attribute__ ((unused)) =0;
+  int passestrigger __attribute__ ((unused)) = 0;
   int count_total=0;
   int count_rx=0;
   int antNum=0;
@@ -646,10 +665,10 @@ int main(int argc,  char **argv) {
     // initializing the voltage seen by each polarization of each antenna
     bn1->dtryingposition=0;
 
-    for (int i=0; i<Anita::NFREQ;i++) {
-      vmmhz[i] = 0.; // the full signal with all factors accounted for (1/r,  atten. etc.)
-      vmmhz_em[i]=0.; // for keeping track of just the em component of the shower
-    } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
+    // for (int i=0; i<Anita::NFREQ;i++) {
+    //   vmmhz[i] = 0.; // the full signal with all factors accounted for (1/r,  atten. etc.)
+    //   // vmmhz_em[i]=0.; // for keeping track of just the em component of the shower
+    // } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
     
       // Picks the balloon position and at the same time sets the masks and thresholds
     bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
@@ -758,6 +777,7 @@ int main(int argc,  char **argv) {
     }
 
     nchannels_triggered=Tools::iSum(globaltrig1->nchannels_perrx_triggered, settings1->NANTENNAS); // find total number of antennas that were triggered.
+    cout << "nchannels_triggered: " << nchannels_triggered << endl;
 
     //////////////////////////////////////
     //       EVALUATE GLOBAL TRIGGER    //
@@ -948,6 +968,7 @@ int main(int argc,  char **argv) {
     } // end if passing global trigger conditions
     else {
       passes_thisevent=0; // flag this event as not passing
+      cout << "Event produced no triggers." << endl;
     }// end else event does not pass trigger
 
     ///////////////////////////////////////

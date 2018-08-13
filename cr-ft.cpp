@@ -3,6 +3,7 @@
 # include "TCanvas.h"
 # include "TSystem.h"
 # include "game.h"
+// # include "anita.hh"
 # include "TGraph.h"
 # include "TGaxis.h"
 # include "TLine.h"
@@ -96,6 +97,14 @@ void PlotIFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
 
   if (mode == m_reload || *state->vis_nbins || *Phi || *state->BinShift) {
     state->cZhsIFft->Clear();
+    for (int i = 0; i < ANITA_FT_SAMPLES; i++) {
+      double target_freq = ANITA_FREQ_HIGH / ANITA_FT_BINS * i;
+      double target_freq_src_units = target_freq / state->dfreq;
+      int int_target_freq_src_units = target_freq_src_units + 0.5;
+      state->AnitaFT[i].re = state->ZhsFft[int_target_freq_src_units].re;
+      state->AnitaFT[i].im = state->ZhsFft[int_target_freq_src_units].im;
+    }
+
     for (int i = 0; i < state->vis_nbins / 2 + 1; i++) {
       double re = state->ZhsFft[i].re;
       double im = state->ZhsFft[i].im;
@@ -105,13 +114,23 @@ void PlotIFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
       state->ZhsFft[i].re = new_re;
       state->ZhsFft[i].im = new_im;
     }
-    state->ZhsIFft.reset(FFTtools::doInvFFT(state->vis_nbins, state->ZhsFft.get()));
-    state->grIFft.reset(new TGraph(state->vis_nbins));
-    for (int i = 0; i < state->vis_nbins; i++){
-      state->grIFft->SetPoint(i, (i + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, state->ZhsIFft[i]);
+    // Disabled temporarily to try backtransform with ANITA freq grid: state->ZhsIFft.reset(FFTtools::doInvFFT(state->vis_nbins, state->ZhsFft.get()));
+    state->ZhsIFft.reset(FFTtools::doInvFFT(ANITA_TIME_SAMPLES, state->AnitaFT));
+    // state->grIFft.reset(new TGraph(state->vis_nbins));
+    state->grIFft.reset(new TGraph(ANITA_TIME_SAMPLES));
+    // for (int i = 0; i < state->vis_nbins; i++){
+    //   state->grIFft->SetPoint(i, (i + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, state->ZhsIFft[i]);
+    // }
+    for (int i = 0; i < ANITA_TIME_SAMPLES; i++){
+      // By my design, ANITA_TIME_SAMPLES / 2 + 1 corresponds to ANITA_FREQ_HIGH.
+      // That means ANITA_TIME_SAMPLES / 2 * (1 / T) = ANITA_FREQ_HIGH
+      // Therefore T = ANITA_TIME_SAMPLES / 2 / ANITA_FREQ_HIGH
+      // And the time step is T / (ANITA_TIME_SAMPLES - 1)
+      double TimeDelta = ANITA_TIME_SAMPLES / 2 / ANITA_FREQ_HIGH / (ANITA_TIME_SAMPLES - 1); // Should be valid for any even number of time samples, not just ANITA_TIME_SAMPLES.
+      state->grIFft->SetPoint(i, i * TimeDelta / unit::ns + state->vis_xmin_bin * ZhsTimeDelta + ZhsTimeStart, state->ZhsIFft[i]);
     }
     state->grIFft->SetLineColor(kBlue);
-    state->grIFft->SetLineWidth(3);
+    state->grIFft->SetLineWidth(2);
     state->grIFft->Draw("AL");
     state->grZhsTimeERec.reset(new TGraph(state->vis_nbins));
     for (int i = 0; i < state->vis_nbins; i++) {
@@ -121,7 +140,8 @@ void PlotIFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
     // state->grZhsTimeERec->Draw("L");
     state->grZhsTimeERec->SetMarkerSize(1);
     state->grZhsTimeERec->SetMarkerStyle(6);
-    state->grZhsTimeERec->Draw("LP");
+    // state->grZhsTimeERec->Draw("LP");
+    state->grZhsTimeERec->Draw("L");
     state->grZhsTimeERec->SetLineColor(kRed);
     state->cZhsIFft->Modified(); state->cZhsIFft->Update(); 
   }
@@ -138,6 +158,13 @@ void PlotFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
   }
   static bvv::TBuffer <int> ShiftPeakToZero(1);
   static bvv::TBuffer <int> cf(cf_polar);
+  if (ShiftPeakToZero == 1) {
+    state->BinShift = state->vis_nbins - (state->ind_maxval - state->vis_xmin_bin) -1; 
+    // printf("state->ind_maxval: %d, vis_xmin_bin: %d\n", state->ind_maxval, state->vis_xmin_bin);
+    // printf("ShiftPeakToZero: %d, by %d\n", int(ShiftPeakToZero), int(state->BinShift));
+  } else {
+    property_int(ctx, "BinShift: ", 0 /*min*/, state->BinShift, +1000 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
+  }
   if (mode == m_step) {
     if (bInteractive) {
       nk_layout_row_dynamic(ctx, 30, 2);
@@ -145,13 +172,6 @@ void PlotFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
       if (nk_option_label(ctx, "Rectg", cf == cf_rect))   { cf = cf_rect; }
       nk_layout_row_dynamic(ctx, 30, 2);
       checkbox_label(ctx, "To Zero", ShiftPeakToZero);
-    }
-    if (ShiftPeakToZero == 1) {
-      state->BinShift = state->vis_nbins - (state->ind_maxval - state->vis_xmin_bin) -1; 
-      // printf("state->ind_maxval: %d, vis_xmin_bin: %d\n", state->ind_maxval, state->vis_xmin_bin);
-      // printf("ShiftPeakToZero: %d, by %d\n", int(ShiftPeakToZero), int(state->BinShift));
-    } else {
-      property_int(ctx, "BinShift: ", 0 /*min*/, state->BinShift, +1000 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
     }
   }
 
@@ -182,18 +202,18 @@ void PlotFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
       state->FftPhi = new double[state->vis_nbins / 2 + 1];
     }
 
+    state->dfreq = 1.0 / ((state->vis_xmax_bin - state->vis_xmin_bin) * ZhsTimeDelta * unit::ns);
     for (int i = 0; i < state->vis_nbins / 2 + 1; i++){
-      double dfreq = 1.0 / ((state->vis_xmax_bin - state->vis_xmin_bin) * ZhsTimeDelta * unit::ns);
       double re = state->ZhsFft[i].re * /* --> */ ZhsTimeDelta  * unit::ns /* <-- to make discrete ft comparable to analytical one */;
       double im = state->ZhsFft[i].im * /* --> */ ZhsTimeDelta  * unit::ns /* <-- to make discrete ft comparable to analytical one */;
       if (bInteractive) {
         if (cf == cf_polar) {
-          state->grFftRho->SetPoint(i, i * dfreq, TMath::Sqrt(im * im + re * re));
-          state->grFftPhi->SetPoint(i, i * dfreq, TMath::ATan2(re, im) * 180.0 / TMath::Pi());
+          state->grFftRho->SetPoint(i, i * state->dfreq, TMath::Sqrt(im * im + re * re));
+          state->grFftPhi->SetPoint(i, i * state->dfreq, TMath::ATan2(re, im) * 180.0 / TMath::Pi());
         }
         else {
-          state->grFftRe->SetPoint(i, i * dfreq, re);
-          state->grFftIm->SetPoint(i, i * dfreq, im);
+          state->grFftRe->SetPoint(i, i * state->dfreq, re);
+          state->grFftIm->SetPoint(i, i * state->dfreq, im);
         }
       }
       else { // Non-interactive:
@@ -304,7 +324,7 @@ void PlotWaveform(struct cr_ft_state *state, RunMode mode, struct nk_context *ct
     state->legend->SetY1NDC(0.75);
   }
 
-  static bvv::TBuffer <int> ZhsTimePlotHalfWidth(100);
+  static bvv::TBuffer <int> ZhsTimePlotHalfWidth(500);
   static bvv::TBuffer <double> ZhsTimePlotY2NDC(0.85);
   if (mode == m_step && bInteractive) {
     nk_layout_row_dynamic(ctx, 25, 1);
