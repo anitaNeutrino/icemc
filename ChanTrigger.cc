@@ -780,7 +780,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
       // }
 
       int saved_PULSER = anita1->PULSER;
-      // anita1->PULSER = 1;
+      anita1->PULSER = 1;
       anita1->MakeArraysforFFT(tmp_vhz[0],tmp_vhz[1],tmp_volts[0],tmp_volts[1], 90., true);
       anita1->PULSER = saved_PULSER;
 

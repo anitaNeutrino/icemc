@@ -117,7 +117,7 @@ namespace bvv {
   {
     // cr_ft_result->FftPhi, cr_ft_result->vis_nbins / 2 + 1
     for (int i = 0; i < Anita::NFREQ; i++) {
-      double target_freq = anita->FREQ_HIGH / Anita::NFREQ * i;
+      double target_freq = (anita->FREQ_HIGH  - anita->FREQ_LOW) / (double) Anita::NFREQ * i + anita->FREQ_LOW;
       double target_freq_src_units = target_freq / cr_ft_result->dfreq;
       int int_target_freq_src_units = target_freq_src_units + 0.5;
       amp[i] = cr_ft_result->FftRho[int_target_freq_src_units];
@@ -402,7 +402,7 @@ int main(int argc,  char **argv) {
   gStyle->SetOptTitle(0);
 
   struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
-  //  exit(0);
+  // exit(0);
   
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
   // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
