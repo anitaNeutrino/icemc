@@ -90,52 +90,72 @@ void PlotIFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
   }
 
   static bvv::TBuffer <int> Phi(0);
+  static bvv::TBuffer <int> FreqLoCut(0);
+
   if (mode == m_step) {
-    nk_layout_row_dynamic(ctx, 25, 1);
-    property_int(ctx, "Phase: ", -180 /*min*/, Phi, +180 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
+    nk_layout_row_dynamic(ctx, 25, 2);
+    // property_int(ctx, "Phase: ", -180 /*min*/, Phi, +180 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
+    property_int(ctx, "First non-zero freq: ", 0 /*min*/, FreqLoCut, +2000 /*max*/, 1 /*increment*/, 1.0 /*sensitivity*/);
   }
 
-  if (mode == m_reload || *state->vis_nbins || *Phi || *state->BinShift) {
+  if (mode == m_reload || *state->vis_nbins || *Phi || *state->BinShift || *FreqLoCut) {
+    bool bHiResIFT = true;
+    bool bConstPhi = false;
     state->cZhsIFft->Clear();
-    for (int i = 0; i < ANITA_FT_SAMPLES; i++) {
-      double target_freq = ANITA_FREQ_HIGH / ANITA_FT_BINS * i;
-      double target_freq_src_units = target_freq / state->dfreq;
-      int int_target_freq_src_units = target_freq_src_units + 0.5;
-      state->AnitaFT[i].re = state->ZhsFft[int_target_freq_src_units].re;
-      state->AnitaFT[i].im = state->ZhsFft[int_target_freq_src_units].im;
+    if (bHiResIFT) {
+      if (bConstPhi) {
+        for (int i = 0; i < state->vis_nbins / 2 + 1; i++) {
+          double re = state->ZhsFft[i].re;
+          double im = state->ZhsFft[i].im;
+          double rho = TMath::Sqrt(re * re + im * im);
+          double new_re = rho * TMath::Cos(Phi * TMath::Pi() / 180.);
+          double new_im = rho * TMath::Sin(Phi * TMath::Pi() / 180.);
+          state->ZhsFft[i].re = new_re;
+          state->ZhsFft[i].im = new_im;
+        }
+      }
+      if (*FreqLoCut) {
+        int FreqLoCutBin = FreqLoCut * 1e6 / state->dfreq + 1;
+        cout << "The actual FreqLoCut: " << FreqLoCutBin * state->dfreq / 1e6 << endl;
+        cout << "FreqLoCut: " << FreqLoCut << endl;
+                                                          for (int i = 0; i <= (int) FreqLoCutBin; i++) {
+          state->ZhsFft[i].re = 0;
+          state->ZhsFft[i].im = 0;
+        }
+      }
+      state->ZhsIFft.reset(FFTtools::doInvFFT(state->vis_nbins, state->ZhsFft.get()));
+      state->grIFft.reset(new TGraph(state->vis_nbins));
+      for (int i = 0; i < state->vis_nbins; i++) {
+        state->grIFft->SetPoint(i, (i + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, state->ZhsIFft[i]);
+      }
+    }
+    else { // bHiResIFT == false
+      for (int i = 0; i < ANITA_FT_SAMPLES; i++) {
+        double target_freq = ANITA_FREQ_HIGH / ANITA_FT_BINS * i;
+        double target_freq_src_units = target_freq / state->dfreq;
+        int int_target_freq_src_units = target_freq_src_units + 0.5;
+        state->AnitaFT[i].re = state->ZhsFft[int_target_freq_src_units].re;
+        state->AnitaFT[i].im = state->ZhsFft[int_target_freq_src_units].im;
+      }
+      state->ZhsIFft.reset(FFTtools::doInvFFT(ANITA_TIME_SAMPLES, state->AnitaFT));
+      state->grIFft.reset(new TGraph(ANITA_TIME_SAMPLES));
+      for (int i = 0; i < ANITA_TIME_SAMPLES; i++){
+        // By my design, ANITA_TIME_SAMPLES / 2 + 1 corresponds to ANITA_FREQ_HIGH.
+        // That means ANITA_TIME_SAMPLES / 2 * (1 / T) = ANITA_FREQ_HIGH
+        // Therefore T = ANITA_TIME_SAMPLES / 2 / ANITA_FREQ_HIGH
+        // And the time step is T / (ANITA_TIME_SAMPLES - 1)
+        double TimeDelta = ANITA_TIME_SAMPLES / 2 / ANITA_FREQ_HIGH / (ANITA_TIME_SAMPLES - 1); // Should be valid for any even number of time samples, not just ANITA_TIME_SAMPLES.
+        state->grIFft->SetPoint(i, i * TimeDelta / unit::ns + state->vis_xmin_bin * ZhsTimeDelta + ZhsTimeStart, state->ZhsIFft[i]);
+      }
     }
 
-    for (int i = 0; i < state->vis_nbins / 2 + 1; i++) {
-      double re = state->ZhsFft[i].re;
-      double im = state->ZhsFft[i].im;
-      double rho = TMath::Sqrt(re * re + im * im);
-      double new_re = rho * TMath::Cos(Phi * TMath::Pi() / 180.);
-      double new_im = rho * TMath::Sin(Phi * TMath::Pi() / 180.);
-      state->ZhsFft[i].re = new_re;
-      state->ZhsFft[i].im = new_im;
-    }
-    // Disabled temporarily to try backtransform with ANITA freq grid: state->ZhsIFft.reset(FFTtools::doInvFFT(state->vis_nbins, state->ZhsFft.get()));
-    state->ZhsIFft.reset(FFTtools::doInvFFT(ANITA_TIME_SAMPLES, state->AnitaFT));
-    // state->grIFft.reset(new TGraph(state->vis_nbins));
-    state->grIFft.reset(new TGraph(ANITA_TIME_SAMPLES));
-    // for (int i = 0; i < state->vis_nbins; i++){
-    //   state->grIFft->SetPoint(i, (i + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, state->ZhsIFft[i]);
-    // }
-    for (int i = 0; i < ANITA_TIME_SAMPLES; i++){
-      // By my design, ANITA_TIME_SAMPLES / 2 + 1 corresponds to ANITA_FREQ_HIGH.
-      // That means ANITA_TIME_SAMPLES / 2 * (1 / T) = ANITA_FREQ_HIGH
-      // Therefore T = ANITA_TIME_SAMPLES / 2 / ANITA_FREQ_HIGH
-      // And the time step is T / (ANITA_TIME_SAMPLES - 1)
-      double TimeDelta = ANITA_TIME_SAMPLES / 2 / ANITA_FREQ_HIGH / (ANITA_TIME_SAMPLES - 1); // Should be valid for any even number of time samples, not just ANITA_TIME_SAMPLES.
-      state->grIFft->SetPoint(i, i * TimeDelta / unit::ns + state->vis_xmin_bin * ZhsTimeDelta + ZhsTimeStart, state->ZhsIFft[i]);
-    }
     state->grIFft->SetLineColor(kBlue);
     state->grIFft->SetLineWidth(2);
     state->grIFft->Draw("AL");
     state->grZhsTimeERec.reset(new TGraph(state->vis_nbins));
+    // Reference waveform shifted such that peaks are split between the first and the last bins:
     for (int i = 0; i < state->vis_nbins; i++) {
       state->grZhsTimeERec->SetPoint(i, ((i + state->BinShift) % state->vis_nbins + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, ZhsTimeE[state->vis_xmin_bin + i]);
-      // printf("row: %i, ZhsTimeE.data() vs i * ZhsTimeDelta + ZhsTimeStart: %12.7e, %12.7e\n", i + state->vis_xmin_bin, ZhsTimeArr[i + state->vis_xmin_bin],                     ZhsTimeDelta * (i + state->vis_xmin_bin) + ZhsTimeStart);
     }
     // state->grZhsTimeERec->Draw("L");
     state->grZhsTimeERec->SetMarkerSize(1);

@@ -2508,6 +2508,10 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
       vsignal_h_forfft[2*ifour+1]*=sinphase;	
     }
   }
+  // for (int i = 0; i <=79; i++) {
+  //   vsignal_e_forfft[i] = 0;
+  //   vsignal_h_forfft[i] = 0;    
+  // }
 }
 
 void Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay) {

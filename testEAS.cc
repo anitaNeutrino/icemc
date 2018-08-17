@@ -401,17 +401,13 @@ int main(int argc,  char **argv) {
 
   gStyle->SetOptTitle(0);
 
-  struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
+  struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", true /* bInteractive */);
   // exit(0);
   
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
   // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
    
   Anita *anita1=new Anita();// right now this constructor gets banding info
-  bvv::interpolate_zhs_ft(vmmhz, anita1->v_phases, anita1, cr_ft_result);
-  // for (int i = 0; i < Anita::NFREQ; i++) {
-  //   cout << "i: " << i << " vmmhz: " << vmmhz[i] << " phase: " << phase[i] << endl;
-  // }
 
   cout << "testEAS reached the end of the development block" << endl;
   //  exit(0);
@@ -452,6 +448,10 @@ int main(int argc,  char **argv) {
 
   bn1->InitializeBalloon();
   anita1->Initialize(settings1, foutput, inu, outputdir);
+  bvv::interpolate_zhs_ft(vmmhz, anita1->v_phases, anita1, cr_ft_result);
+  // for (int i = 0; i < Anita::NFREQ; i++) {
+  //   cout << "i: " << i << " vmmhz: " << vmmhz[i] << " phase: " << phase[i] << endl;
+  // }
 
   if (trig_thresh!=0)
     anita1->powerthreshold[4]=trig_thresh;
