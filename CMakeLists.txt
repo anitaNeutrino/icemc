@@ -148,6 +148,26 @@ add_library(${libname} SHARED ${SOURCE_FILES} ${DICTNAME}.cxx)
 target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper AnitaEvent ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
 
 
+if(DEFINED ENV{ANITA_UTIL_INSTALL_DIR})
+  set(UTIL_LIB_DIR $ENV{ANITA_UTIL_INSTALL_DIR}/lib)
+  set(UTIL_INC_DIR $ENV{ANITA_UTIL_INSTALL_DIR}/include)
+  set(UTIL_BIN_DIR $ENV{ANITA_UTIL_INSTALL_DIR}/bin)
+  set(UTIL_SHARE_DIR $ENV{ANITA_UTIL_INSTALL_DIR}/share)
+  set(LD_UTIL $ENV{ANITA_UTIL_INSTALL_DIR}/lib)
+  set(INC_UTIL $ENV{ANITA_UTIL_INSTALL_DIR}/include)
+
+  install (FILES ${INCLUDE_FILES} DESTINATION ${UTIL_INC_DIR})
+  install (TARGETS ${libname}
+    ARCHIVE DESTINATION ${UTIL_LIB_DIR}
+    LIBRARY DESTINATION ${UTIL_LIB_DIR}
+    RUNTIME DESTINATION ${UTIL_BIN_DIR})
+  #Only needed for ROOT6
+  if( ${ROOT_VERSION} VERSION_GREATER "5.99.99")
+    install (FILES ${PROJECT_BINARY_DIR}/${DICTNAME}_rdict.pcm DESTINATION ${UTIL_LIB_DIR})
+    #  install (FILES ${PROJECT_BINARY_DIR}/lib${libname}.rootmap DESTINATION ${UTIL_LIB_DIR})
+  endif()
+endif()
+
 macro(add_binary bin) 
   add_executable(${bin} test/${bin}.cc)
   #target_link_libraries(${bin} icemc_objs ${LIBS})

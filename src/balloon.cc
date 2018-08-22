@@ -45,6 +45,7 @@ std::ostream& operator<<(std::ostream& os, const icemc::FlightPath& fp){
 }
 
 
+
 // ANITA-2 (WHICHPATH 7) analysis fitted fixed const pitch (-0.29) and const roll (0.89)
 constexpr double fixedAnita2Pitch = -0.29; // degrees
 constexpr double fixedAnita2Roll  =  0.89; // degrees
@@ -77,39 +78,26 @@ double icemc::Balloon::getRoll() const {
 }
 
 
+icemc::Balloon::Balloon(icemc::FlightPath path) : WHICHPATH(path)
+{
+  InitializeBalloon(nullptr);
+}
+
 icemc::Balloon::Balloon(const Settings* settings)
   : WHICHPATH(settings ? static_cast<icemc::FlightPath>(settings->WHICHPATH) : FlightPath::FixedPosition){
 
-  
-  MAXHORIZON=800000.; // pick the interaction within this distance from the balloon so that it is within the horizon
-  ibnposition=0;
-  igps=0;
-  BN_LONGITUDE=999;   // balloon longitude for fixed balloon location
-  BN_LATITUDE=999;    // balloon latitude for fixed balloon location
   if(!settings){
     icemcLog() << icemc::warning << __PRETTY_FUNCTION__ << " was given nullptr for const Settings*. "
 	       << "Assuming " << FlightPath::FixedPosition << std::endl;
   }
-  else{
-    BN_LATITUDE              = settings->BN_LATITUDE;
-    BN_LONGITUDE             = settings->BN_LONGITUDE;
-    BN_ALTITUDE              = settings->BN_ALTITUDE;
-    RANDOMIZE_BN_ORIENTATION = settings->RANDOMIZE_BN_ORIENTATION;
-    MAXHORIZON               = settings->MAXHORIZON;    
-  }
-
-  for (int i=0;i<9;i++) {
-    for (int j=0;j<2;j++) {
-      surfTrigBandMask[i][j]=0;
-    }
-    for (int j=0;j<32;j++) {
-      powerthresh[i][j]=3.E-12;
-      meanp[i][j]=1.E-12;
-    }
-  }
-
-  InitializeBalloon();
+  InitializeBalloon(settings);
 }
+
+icemc::Balloon::~Balloon(){
+  // icemcLog() << icemc::info << __PRETTY_FUNCTION__ << " for " << WHICHPATH << std::endl;
+}
+
+
 
 
 
@@ -222,24 +210,49 @@ void icemc::Balloon::ReadAnitaliteFlight() {
 
 
 
-void icemc::Balloon::InitializeBalloon() {
+void icemc::Balloon::InitializeBalloon(const Settings* settings) {
+
+  
+  MAXHORIZON=800000.; // pick the interaction within this distance from the balloon so that it is within the horizon
+  ibnposition=0;
+  igps=0;
+  BN_LONGITUDE=999;   // balloon longitude for fixed balloon location
+  BN_LATITUDE=999;    // balloon latitude for fixed balloon location
+  if(settings){
+    BN_LATITUDE              = settings->BN_LATITUDE;
+    BN_LONGITUDE             = settings->BN_LONGITUDE;
+    BN_ALTITUDE              = settings->BN_ALTITUDE;
+    RANDOMIZE_BN_ORIENTATION = settings->RANDOMIZE_BN_ORIENTATION;
+    MAXHORIZON               = settings->MAXHORIZON;    
+  }
+
+  
+  for (int i=0;i<9;i++) {
+    for (int j=0;j<2;j++) {
+      surfTrigBandMask[i][j]=0;
+    }
+    for (int j=0;j<32;j++) {
+      powerthresh[i][j]=3.E-12;
+      meanp[i][j]=1.E-12;
+    }
+  }
+
+  
   const std::string ICEMC_SRC_DIR = icemc::EnvironmentVariable::ICEMC_SRC_DIR();
   const std::string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
-  const std::string anitaflight = ICEMC_DATA_DIR+"/anitagps.txt";// gps path of anita flight    
+
 
   // GPS positions of Anita or Anita-lite balloon flight
   if (WHICHPATH==FlightPath::AnitaLite){
     ReadAnitaliteFlight();
   }
 
+
   MINALTITUDE=30e3; // balloon has to be 30 km altitude at least for us to read the event from the flight data file
 
   // initialisation of igps_previous
-  if (WHICHPATH==FlightPath::Anita1 || WHICHPATH==FlightPath::Anita2 || WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4){
+  if (WHICHPATH==FlightPath::AnitaLite || WHICHPATH==FlightPath::Anita1 || WHICHPATH==FlightPath::Anita2 || WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4){
     igps_previous=0; // which entry from the flight data file the previous event was
-  }
-  if (WHICHPATH==FlightPath::AnitaLite){
-    igps_previous=0;
   }
 
   
@@ -255,15 +268,24 @@ void icemc::Balloon::InitializeBalloon() {
     fChain->SetBranchAddress("longitude",&flongitude);
     fChain->SetBranchAddress("latitude",&flatitude);
     fChain->SetBranchAddress("altitude",&faltitude);
-    fChain->SetBranchAddress("realTime_surfhk",&realTime_flightdata);
+    const char* whichRealTime = "realTime_surfhk"; // there are several realTime variables in this tree
+    fChain->SetBranchAddress(whichRealTime,&realTime_flightdata);
     fChain->SetBranchAddress("heading",&fheading);
 
-    fChain->BuildIndex("realTime_surfhk");
+    fChain->BuildIndex(whichRealTime);
+
+    fChain->GetEntry(0);
+    fFirstRealTime = realTime_flightdata_temp;
+
+    fChain->GetEntry(fChain->GetEntries()-1);
+    fLastRealTime = realTime_flightdata_temp;
+
+    std::cout << "Loaded chain " << whichPath() << "\t" << fFirstRealTime << "\t" << fLastRealTime << std::endl;    
   }
 
   else if (WHICHPATH==FlightPath::Anita2 || WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4) { // for anita-3 and 4 flights
 
-    std::string balloonFile = ICEMC_DATA_DIR;
+    TString balloonFile = ICEMC_DATA_DIR;
     switch(WHICHPATH){
     case FlightPath::Anita2:
       balloonFile += "/anita2gps_pitchandroll.root";
@@ -277,22 +299,36 @@ void icemc::Balloon::InitializeBalloon() {
       break;
     }
 
+    
     fChain = new TChain("adu5PatTree");
-    fChain->SetMakeClass(1);
-    fChain->Add(balloonFile.c_str());//created to include pitch and roll.
+    
+    // fChain->SetMakeClass(1);
+    fChain->Add(balloonFile);//created to include pitch and roll.
     fChain->SetBranchAddress("longitude",&flongitude);
     fChain->SetBranchAddress("latitude",&flatitude);
     fChain->SetBranchAddress("altitude",&faltitude);
     fChain->SetBranchAddress("heading",&fheading);
     fChain->SetBranchAddress("realTime",&realTime_flightdata_temp);
-    fChain->SetBranchAddress("pitch",&fpitch);
-    fChain->SetBranchAddress("roll",&froll);
+
+    if(WHICHPATH==FlightPath::Anita2){// someone was really stupid
+      fChain->SetBranchAddress("pitch",&pitch);
+      fChain->SetBranchAddress("roll",&roll);
+    }
+    else{
+      fChain->SetBranchAddress("pitch",&fpitch);
+      fChain->SetBranchAddress("roll",&froll);
+    }
+
+    
     fChain->BuildIndex("realTime");
 
     fChain->GetEntry(0);
     fFirstRealTime = realTime_flightdata_temp;
+
     fChain->GetEntry(fChain->GetEntries()-1);
     fLastRealTime = realTime_flightdata_temp;
+
+    // std::cout << "Loaded chain " << whichPath() << "\t" << fFirstRealTime << "\t" << fLastRealTime << std::endl;
   }
   
   // REDUCEBALLOONPOSITIONS=100;
@@ -336,7 +372,8 @@ int getTuffIndex(int Curr_time) {
 // this is called for each neutrino
 // void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Settings *settings1, int inu, Anita *anita1, double randomNumber) {
 // void icemc::Balloon::PickBalloonPosition(const Settings *settings1, int inu, Anita *anita1, double randomNumber) {
-void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* settings1 ,Anita *anita1) {    
+void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* settings1 ,Anita *anita1) {
+
 
   pitch=0.;
   roll=0.;
@@ -362,7 +399,11 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
 	     WHICHPATH==FlightPath::Anita3 ||
 	     WHICHPATH==FlightPath::Anita4) {
 
-      fChain->GetEntryWithIndex(eventTime);
+      Long64_t entry = fChain->GetEntryNumberWithBestIndex((UInt_t)eventTime);
+      fChain->GetEntry(entry);
+
+      // std::cout << entry << "\t" << realTime_flightdata_temp << "\t" << eventTime << std::endl;
+
       
       // For Anita 1 and Anita 2 and Anita 3:
       // igps = (igps_previous+1)%fChain->GetEntries(); // pick which event in the tree we want
@@ -404,7 +445,7 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
       
       // fChain->GetEvent(igps); // this grabs the balloon position data for this event
       realTime_flightdata = realTime_flightdata_temp;
-      if(settings1->TUFFSON){
+      if(settings1 && anita1 && settings1->TUFFSON){
 	anita1->tuffIndex = getTuffIndex(realTime_flightdata);
       }// end if tuffson 
 
@@ -421,10 +462,11 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
       if ((WHICHPATH==FlightPath::Anita2 ||
 	   WHICHPATH==FlightPath::Anita3 ||
 	   WHICHPATH==FlightPath::Anita4) &&
+	  settings1 && anita1 && 
 	  (settings1->PHIMASKING==1 || settings1->USEDEADTIME)){
 	anita1->setphiTrigMask(realTime_flightdata);
       }
-      if ((WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4) && settings1->USETIMEDEPENDENTTHRESHOLDS==1){ // set time-dependent thresholds
+      if ((WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4) && settings1 && anita1 && settings1->USETIMEDEPENDENTTHRESHOLDS==1){ // set time-dependent thresholds
 	anita1->setTimeDependentThresholds(realTime_flightdata);
       }
     }
@@ -433,25 +475,28 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
     longitude = (double) flongitude;
     altitude  = (double) faltitude;
     heading   = (double) fheading;
-    roll      = (double) froll;
-    pitch     = (double) fpitch;
-
-    fPosition.SetLonLatAlt(longitude, latitude, altitude);
+    
+    if(WHICHPATH!=FlightPath::Anita2){
+      // someone set these as doubles in the A2 tree
+      // but everything else is a float... (I have some
+      // opinions about that, putting those to one side)
+      // for A2 we read the doubles directly so no need
+      // to convert
+      roll      = (double) froll;
+      pitch     = (double) fpitch;
+    }
 
     if (WHICHPATH==FlightPath::AnitaLite){
       altitude_bn=altitude*12.*constants::CMINCH/100.;
     }
-    else if (WHICHPATH==FlightPath::Anita1 ||
-	     WHICHPATH==FlightPath::Anita2 ||
-	     WHICHPATH==FlightPath::Anita3 ||
-	     WHICHPATH==FlightPath::Anita4){
+    else{
       altitude_bn=altitude; // get the altitude of the balloon in the right units
     }
-    // surface_under_balloon = antarctica1->Surface(r_bn); // get altitude of the surface under the balloon
-    ///@todo check this refactor!
-    // r_bn_shadow.SetLonLatAlt(longitude, latitude,  0);
-    // r_bn.SetLonLatAlt(longitude,  latitude, altitude);
-  } //if (ANITA-lite path) or anita 1 or anita 2
+
+    fPosition.SetLonLatAlt(longitude, latitude, altitude_bn);
+
+    
+  }
 
   else if (WHICHPATH==FlightPath::Circle80DegreesSouth){ // pick random phi at 80 deg S
     longitude = gRandom->Rndm()*360;
@@ -478,7 +523,9 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
 		
     // r_bn = (antarctica1->Surface(r_bn)+altitude_bn) * r_bn.Unit();
   } // you pick it
-    
+  else{
+    // icemcLog() << icemc::error << "Can't get position for " << static_cast<int>(whichPath()) << std::endl;
+  }
   // if (!settings1->UNBIASED_SELECTION && dtryingposition!=-999){
   //   dtryingposition=antarctica1->GetBalloonPositionWeight(ibnposition);
   // }

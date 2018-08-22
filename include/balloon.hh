@@ -45,7 +45,8 @@ namespace icemc {
  
   public:
     Balloon(const Settings* settings);
-    virtual ~Balloon() {;}
+    Balloon(FlightPath path);
+    virtual ~Balloon();
 
     
 
@@ -58,7 +59,7 @@ namespace icemc {
      * @param  anita1 -
      * @param  randomNumber -
      */
-    void PickBalloonPosition(double eventTime, const Settings* settings1 ,Anita *anita1);
+    void PickBalloonPosition(double eventTime, const Settings* settings1 = nullptr,Anita *anita1 = nullptr);
     // void PickBalloonPosition(const Antarctica *antarctica1, const Settings *settings1,int inu,Anita *anita1, double randomNumber);
 
  
@@ -89,6 +90,8 @@ namespace icemc {
     double getRoll() const; ///< Converts to constant for A2 and A3 (A4?)
     // double getSurfaceUnderBalloon() const {return surface_under_balloon;}
 
+    virtual double getStartTime() const {return fFirstRealTime;} 
+    virtual double getEndTime() const {return fLastRealTime;}
 
     
 #ifdef ANITA_UTIL_EXISTS
@@ -121,7 +124,7 @@ namespace icemc {
 
     // double surface_under_balloon;                               ///< distance between center of the earth and the surface of earth under balloon
     
-    void InitializeBalloon();
+    void InitializeBalloon(const Settings* settings);
     void ReadAnitaliteFlight();
     void setr_bn(double latitude,double longitude);
     
