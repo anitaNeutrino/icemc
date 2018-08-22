@@ -237,8 +237,8 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(){
   }
 
   fHeader->calibStatus = 31;
-  fHeader->realTime = bn1->realTime();//realTime_flightdata;
-  fHeader->triggerTime = bn1->realTime(); //realTime_flightdata;
+  fHeader->realTime = bn1->getRealTime();//realTime_flightdata;
+  fHeader->triggerTime = bn1->getRealTime(); //realTime_flightdata;
 
 #ifdef ANITA3_EVENTREADER
   if (fSettings->WHICH==Payload::Anita3 || fSettings->WHICH==Payload::Anita4) {
@@ -250,7 +250,7 @@ void icemc::AnitaSimOutput::fillRootifiedAnitaDataTrees(){
 
   fTruth                   = new TruthAnitaEvent();
   fTruth->eventNumber      = fDetector->getLastEventNumber();
-  fTruth->realTime         = bn1->realTime(); //realTime_flightdata;
+  fTruth->realTime         = bn1->getRealTime(); //realTime_flightdata;
   fTruth->run              = fRun; //clOpts.run_no;
 
   //@todo URGENT RESTORE these parameters to the truth tree! FIX ME!  

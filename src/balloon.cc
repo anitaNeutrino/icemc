@@ -269,16 +269,19 @@ void icemc::Balloon::InitializeBalloon(const Settings* settings) {
     fChain->SetBranchAddress("latitude",&flatitude);
     fChain->SetBranchAddress("altitude",&faltitude);
     const char* whichRealTime = "realTime_surfhk"; // there are several realTime variables in this tree
-    fChain->SetBranchAddress(whichRealTime,&realTime_flightdata);
+    fChain->SetBranchAddress(whichRealTime,&realTime);
     fChain->SetBranchAddress("heading",&fheading);
 
     fChain->BuildIndex(whichRealTime);
 
+    fChain->Show(0);
+    fChain->Show(fChain->GetEntries()-1);    
+
     fChain->GetEntry(0);
-    fFirstRealTime = realTime_flightdata_temp;
+    fFirstRealTime = realTime;
 
     fChain->GetEntry(fChain->GetEntries()-1);
-    fLastRealTime = realTime_flightdata_temp;
+    fLastRealTime = realTime;
 
     std::cout << "Loaded chain " << whichPath() << "\t" << fFirstRealTime << "\t" << fLastRealTime << std::endl;    
   }
@@ -308,7 +311,7 @@ void icemc::Balloon::InitializeBalloon(const Settings* settings) {
     fChain->SetBranchAddress("latitude",&flatitude);
     fChain->SetBranchAddress("altitude",&faltitude);
     fChain->SetBranchAddress("heading",&fheading);
-    fChain->SetBranchAddress("realTime",&realTime_flightdata_temp);
+    fChain->SetBranchAddress("realTime",&realTime);
 
     if(WHICHPATH==FlightPath::Anita2){// someone was really stupid
       fChain->SetBranchAddress("pitch",&pitch);
@@ -323,10 +326,10 @@ void icemc::Balloon::InitializeBalloon(const Settings* settings) {
     fChain->BuildIndex("realTime");
 
     fChain->GetEntry(0);
-    fFirstRealTime = realTime_flightdata_temp;
+    fFirstRealTime = realTime;
 
     fChain->GetEntry(fChain->GetEntries()-1);
-    fLastRealTime = realTime_flightdata_temp;
+    fLastRealTime = realTime;
 
     // std::cout << "Loaded chain " << whichPath() << "\t" << fFirstRealTime << "\t" << fLastRealTime << std::endl;
   }
@@ -402,7 +405,7 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
       Long64_t entry = fChain->GetEntryNumberWithBestIndex((UInt_t)eventTime);
       fChain->GetEntry(entry);
 
-      // std::cout << entry << "\t" << realTime_flightdata_temp << "\t" << eventTime << std::endl;
+      std::cout << entry << "\t" << realTime << "\t" << eventTime << std::endl;
 
       
       // For Anita 1 and Anita 2 and Anita 3:
@@ -444,9 +447,8 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
       // }
       
       // fChain->GetEvent(igps); // this grabs the balloon position data for this event
-      realTime_flightdata = realTime_flightdata_temp;
       if(settings1 && anita1 && settings1->TUFFSON){
-	anita1->tuffIndex = getTuffIndex(realTime_flightdata);
+	anita1->tuffIndex = getTuffIndex(realTime);
       }// end if tuffson 
 
 
@@ -464,10 +466,10 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
 	   WHICHPATH==FlightPath::Anita4) &&
 	  settings1 && anita1 && 
 	  (settings1->PHIMASKING==1 || settings1->USEDEADTIME)){
-	anita1->setphiTrigMask(realTime_flightdata);
+	anita1->setphiTrigMask(realTime);
       }
       if ((WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4) && settings1 && anita1 && settings1->USETIMEDEPENDENTTHRESHOLDS==1){ // set time-dependent thresholds
-	anita1->setTimeDependentThresholds(realTime_flightdata);
+	anita1->setTimeDependentThresholds(realTime);
       }
     }
     igps_previous=igps;

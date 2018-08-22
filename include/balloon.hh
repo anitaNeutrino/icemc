@@ -80,12 +80,11 @@ namespace icemc {
 
     inline FlightPath whichPath() const {return WHICHPATH;}
     inline const Geoid::Position& position() const {return fPosition;}
-    unsigned int realTime() const {return realTime_flightdata;}
     inline double getLatitude() const {return latitude;}
     inline double getLongitude() const {return longitude;}
     inline double getAltitude() const {return altitude;}
     inline double getHeading() const {return heading;}
-    inline UInt_t getRealTime() const {return realTime_flightdata;}
+    inline UInt_t getRealTime() const {return realTime;}
     double getPitch() const; ///< Converts to constant for A2 and A3 (A4?)
     double getRoll() const; ///< Converts to constant for A2 and A3 (A4?)
     // double getSurfaceUnderBalloon() const {return surface_under_balloon;}
@@ -131,8 +130,7 @@ namespace icemc {
     const FlightPath WHICHPATH;
     int igps;                                                   ///< which balloon position do we use out of the 25000 anitalite GPS positions.
     int ibnposition;
-    unsigned int realTime_flightdata_temp;                      ///< realtime from the flight data file
-    unsigned int realTime_flightdata;                           ///< realtime from the flight data file
+    unsigned int realTime;                           ///< realtime from the flight data file
 
     double latitude,longitude,altitude,heading,roll,pitch;
     
