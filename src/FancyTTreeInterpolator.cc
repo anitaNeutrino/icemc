@@ -92,11 +92,11 @@ TGraph* icemc::FancyTTreeInterpolator::makeSortedTGraph(TString drawText, TStrin
  * @param wrapValue value to unwrap around. e.g. 360 for rotations in degrees.
  * @returns a pointer to the created, sorted TGraph.
  * 
- * For example if you want to interpolate between 359 and 1 degrees, these will be unwrapped as  259, 361.
+ * For example if you want to interpolate between 359 and 1 degrees, these will be unwrapped as  359, 361.
  * These values can then be interpolated between correctly.
  */
-TGraph* icemc::FancyTTreeInterpolator::makeSortedTGraph(TString drawText, Double_t wrapValue){
-  return makeSortedTGraph(drawText, "", wrapValue);
+TGraph* icemc::FancyTTreeInterpolator::makeSortedTGraph(TString drawText, Double_t wrapHigh, Double_t wrapLow){
+  return makeSortedTGraph(drawText, "", wrapHigh, wrapLow);
 }
 
 
@@ -115,7 +115,7 @@ TGraph* icemc::FancyTTreeInterpolator::makeSortedTGraph(TString drawText, Double
  * For example if you want to interpolate between 359 and 1 degrees, these will be unwrapped as  259, 361.
  * These values can then be interpolated between correctly.
  */
-TGraph* icemc::FancyTTreeInterpolator::makeSortedTGraph(TString drawText, TString cutString, Double_t wrapValue){
+TGraph* icemc::FancyTTreeInterpolator::makeSortedTGraph(TString drawText, TString cutString, Double_t wrapHigh, Double_t wrapLow){
   /*
     This function:
        Uses TTree::Draw to select the data.
@@ -141,20 +141,20 @@ TGraph* icemc::FancyTTreeInterpolator::makeSortedTGraph(TString drawText, TStrin
 
   // Unwrap data here so interpolation works smoothly
   // will unwrap when getting entries from graph
-  if(wrapValue != 0){
+  if(wrapHigh != 0){
     for(int i=1; i<nEntries; i++){
       // If y[i] >> y[i-1] => then we went below zero to the wrap value
       // can only modify y[i], so we should subtract wrapValue enough times 
       // that the graph becomes smooth
-      while (newY.at(i) - newY.at(i-1) > wrapValue/2){
-	newY.at(i) -= wrapValue;
+      while (newY.at(i) - newY.at(i-1) > (wrapHigh - wrapLow)/2){
+	newY.at(i) -= (wrapHigh - wrapLow);
       }
 
       // If y[i] << y[i-1] => then we went add zero to the wrap value
       // can only modify y[i], so we should add wrapValue enough times 
       // that the graph becomes smooth
-      while (newY.at(i) - newY.at(i-1) < -wrapValue/2){
-	newY.at(i) += wrapValue;
+      while (newY.at(i) - newY.at(i-1) < -(wrapHigh - wrapLow)/2){
+	newY.at(i) += (wrapHigh - wrapLow);
       }    
 
     }   
@@ -209,8 +209,8 @@ void icemc::FancyTTreeInterpolator::add(TString yAxisText, TString cutString){
  * @param yAxisText is defines the y-axis of the TGraph, drawn against fXaxisText
  * @param wrapValue value to unwrap around. e.g. 360 for rotations in degrees.
  */
-void icemc::FancyTTreeInterpolator::add(TString yAxisText, Double_t wrapValue){
-  add(yAxisText, "", wrapValue);
+void icemc::FancyTTreeInterpolator::add(TString yAxisText, Double_t wrapHigh, Double_t wrapLow){
+  add(yAxisText, "", wrapHigh, wrapLow);
 }
 
 
@@ -225,11 +225,11 @@ void icemc::FancyTTreeInterpolator::add(TString yAxisText, Double_t wrapValue){
  * @param cutString defines the cuts to padd to fTree->Draw();
  * @param wrapValue value to unwrap around. e.g. 360 for rotations in degrees.
  */
-void icemc::FancyTTreeInterpolator::add(TString yAxisText, TString cutString, Double_t wrapValue){
+void icemc::FancyTTreeInterpolator::add(TString yAxisText, TString cutString, Double_t wrapHigh, Double_t wrapLow){
   TString drawText = yAxisText + ":" + fXAxisText;
-  TGraph* gr = makeSortedTGraph(drawText, cutString, wrapValue);
+  TGraph* gr = makeSortedTGraph(drawText, cutString, wrapHigh, wrapLow);
   fStringToGraph[yAxisText] = gr;
-  fStringToWrapValue[yAxisText] = wrapValue;
+  fStringToWrapValues[yAxisText] = std::make_pair(wrapHigh, wrapLow);
 }
 
 
@@ -279,13 +279,16 @@ Double_t icemc::FancyTTreeInterpolator::interp(TString yAxisText, Double_t xAxis
     Double_t tempVal = gr->Eval(xAxisValue);
 
     // do the unwrapping if required
-    Double_t wrap = fStringToWrapValue.find(yAxisText)->second;
-    if(wrap != 0){
-      while (tempVal < 0){
-        tempVal += wrap;
+    std::pair<Double_t, Double_t> wrap = fStringToWrapValues.find(yAxisText)->second;
+    Double_t wrapHigh = wrap.first;
+    Double_t wrapLow = wrap.second;
+    
+    if(wrapHigh != 0){
+      while (tempVal < wrapLow){
+        tempVal += (wrapHigh - wrapLow);
       }
-      while (tempVal >= wrap){
-        tempVal -= wrap;	
+      while (tempVal >= wrapHigh){
+        tempVal -= (wrapHigh - wrapLow);
       }
     }
     return tempVal;

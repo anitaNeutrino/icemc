@@ -14,6 +14,7 @@
 #include "Geoid.h"
 #include "anita.hh"
 #include "RayTracer.h"
+#include "FancyTTreeInterpolator.h"
 
 #include "balloon.hh"
 #include "Settings.h"
@@ -94,6 +95,8 @@ icemc::Balloon::Balloon(const Settings* settings)
 }
 
 icemc::Balloon::~Balloon(){
+  if(fInterp) delete fInterp;
+  
   // icemcLog() << icemc::info << __PRETTY_FUNCTION__ << " for " << WHICHPATH << std::endl;
 }
 
@@ -274,16 +277,29 @@ void icemc::Balloon::InitializeBalloon(const Settings* settings) {
 
     fChain->BuildIndex(whichRealTime);
 
-    fChain->Show(0);
-    fChain->Show(fChain->GetEntries()-1);    
+    Long64_t firstGoodEntry = -1;
+    faltitude = 0;
+    while(faltitude < MINALTITUDE || heading < 0){
+      firstGoodEntry++;
+      fChain->GetEntry(firstGoodEntry);
+      fFirstRealTime = realTime;
+    }
 
-    fChain->GetEntry(0);
-    fFirstRealTime = realTime;
+    faltitude = 0;
+    Long64_t lastGoodEntry = fChain->GetEntries();
+    while(faltitude < MINALTITUDE || heading < 0){
+      lastGoodEntry--;
+      fChain->GetEntry(lastGoodEntry);
+      fLastRealTime = realTime;
+    }
+    fInterp = new FancyTTreeInterpolator(fChain,  whichRealTime);    
+    TString cut = TString::Format("Entry$ >= %lld && Entry$ < %lld", firstGoodEntry, lastGoodEntry);
+    fInterp->add("heading", cut, 360);
+    fInterp->add("longitude", cut);
+    fInterp->add("latitude", cut);
+    fInterp->add("altitude", cut);
 
-    fChain->GetEntry(fChain->GetEntries()-1);
-    fLastRealTime = realTime;
-
-    std::cout << "Loaded chain " << whichPath() << "\t" << fFirstRealTime << "\t" << fLastRealTime << std::endl;    
+    std::cout << "Loaded chain " << whichPath() << " with first good entry " << firstGoodEntry << " at " << fFirstRealTime << " and last good entry " << lastGoodEntry << " at " << fLastRealTime << std::endl;
   }
 
   else if (WHICHPATH==FlightPath::Anita2 || WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4) { // for anita-3 and 4 flights
@@ -321,17 +337,33 @@ void icemc::Balloon::InitializeBalloon(const Settings* settings) {
       fChain->SetBranchAddress("pitch",&fpitch);
       fChain->SetBranchAddress("roll",&froll);
     }
-
     
     fChain->BuildIndex("realTime");
 
-    fChain->GetEntry(0);
-    fFirstRealTime = realTime;
+    Long64_t firstGoodEntry = -1;
+    faltitude = 0;
+    while(faltitude < MINALTITUDE || heading < 0){
+      firstGoodEntry++;
+      fChain->GetEntry(firstGoodEntry);
+      fFirstRealTime = realTime;      
+    }
 
-    fChain->GetEntry(fChain->GetEntries()-1);
-    fLastRealTime = realTime;
+    faltitude = 0;
+    Long64_t lastGoodEntry = fChain->GetEntries();
+    while(faltitude < MINALTITUDE || heading < 0){
+      lastGoodEntry--;
+      fChain->GetEntry(lastGoodEntry);
+      fLastRealTime = realTime;
+    }
 
-    // std::cout << "Loaded chain " << whichPath() << "\t" << fFirstRealTime << "\t" << fLastRealTime << std::endl;
+    fInterp = new FancyTTreeInterpolator(fChain,"realTime");
+    TString cut = TString::Format("Entry$ >= %lld && Entry$ < %lld", firstGoodEntry, lastGoodEntry);
+    fInterp->add("heading", cut, 360);
+    fInterp->add("longitude", cut, 180, -180);
+    fInterp->add("latitude", cut);
+    fInterp->add("altitude", cut);
+
+    std::cout << "Loaded chain " << whichPath() << " with first good entry " << firstGoodEntry << " at " << fFirstRealTime << " and last good entry " << lastGoodEntry << " at " << fLastRealTime << std::endl;
   }
   
   // REDUCEBALLOONPOSITIONS=100;
@@ -380,7 +412,7 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
 
   pitch=0.;
   roll=0.;
-
+  Long64_t entry = 0;
   if (WHICHPATH==FlightPath::AnitaLite ||
       WHICHPATH==FlightPath::Anita1 ||
       WHICHPATH==FlightPath::Anita2 ||
@@ -402,11 +434,8 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
 	     WHICHPATH==FlightPath::Anita3 ||
 	     WHICHPATH==FlightPath::Anita4) {
 
-      Long64_t entry = fChain->GetEntryNumberWithBestIndex((UInt_t)eventTime);
+      entry = fChain->GetEntryNumberWithBestIndex((UInt_t)eventTime);
       fChain->GetEntry(entry);
-
-      std::cout << entry << "\t" << realTime << "\t" << eventTime << std::endl;
-
       
       // For Anita 1 and Anita 2 and Anita 3:
       // igps = (igps_previous+1)%fChain->GetEntries(); // pick which event in the tree we want
@@ -452,13 +481,15 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
       }// end if tuffson 
 
 
-      while (faltitude<MINALTITUDE || fheading<0) { // if the altitude is too low, pick another event.
+      ///@todo figure out if I need to switch this back on!
+      // while (faltitude<MINALTITUDE || fheading<0) { // if the altitude is too low, pick another event.
 
-	igps++; // increment by 1
-	igps=igps%fChain->GetEntries(); // make sure it's not beyond the maximum entry number
+      // 	igps++; // increment by 1
+      // 	igps=igps%fChain->GetEntries(); // make sure it's not beyond the maximum entry number
 
-	fChain->GetEvent(igps);	  // get new event
-      }
+      // 	fChain->GetEvent(igps);	  // get new event
+      // }
+      
       // set phi Masking for Anita 2 or Anita 3
       // the deadtime is read from the same tree
       if ((WHICHPATH==FlightPath::Anita2 ||
@@ -472,12 +503,17 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
 	anita1->setTimeDependentThresholds(realTime);
       }
     }
-    igps_previous=igps;
-    latitude  = (double) flatitude;
-    longitude = (double) flongitude;
-    altitude  = (double) faltitude;
-    heading   = (double) fheading;
-    
+    igps_previous = igps;
+    latitude  = fInterp ? fInterp->interp("latitude", eventTime) : (double) flatitude;    
+    longitude = fInterp ? fInterp->interp("longitude", eventTime) : (double) flongitude;
+    altitude  = fInterp ? fInterp->interp("altitude", eventTime) : (double) faltitude;
+    heading   = fInterp ? fInterp->interp("heading", eventTime) : (double) fheading;
+    // latitude  = (double) flatitude;
+    // longitude = (double) flongitude;
+    // altitude  = (double) faltitude;
+    // heading   = (double) fheading;
+
+
     if(WHICHPATH!=FlightPath::Anita2){
       // someone set these as doubles in the A2 tree
       // but everything else is a float... (I have some
@@ -487,6 +523,27 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
       roll      = (double) froll;
       pitch     = (double) fpitch;
     }
+    
+
+    static double lastLat =  -999;
+    static double lastLon =  -999;
+    static UInt_t lastTime = 0;
+    static Long64_t lastEntry = -1;
+    if(lastLat != -999 && lastLon != -999){
+      if(fabs(latitude - lastLat) > 0.2 || (fabs(longitude - lastLon) > 1 && fabs(longitude - lastLon) < 359)){ 
+    	std::cout << lastEntry << "\t" << lastTime << "\t" << lastLon << "\t" << lastLat << std::endl;
+    	std::cout << entry << "\t" << realTime << "\t" << longitude << "\t" << latitude << std::endl;	
+    	std::cout << entry - lastEntry << "\t" << realTime - lastTime << "\t" << longitude - lastLon << "\t" << latitude - lastLat << std::endl;
+    	std::cout << std::endl << std::endl;;	
+    	// std::cout << entry << "\t" << dt << "\t" << realTime << "\t" << eventTime << std::endl;
+      }
+    }
+
+    lastLat = latitude;
+    lastLon = longitude;
+    lastTime = realTime;
+    lastEntry = entry;
+    
 
     if (WHICHPATH==FlightPath::AnitaLite){
       altitude_bn=altitude*12.*constants::CMINCH/100.;

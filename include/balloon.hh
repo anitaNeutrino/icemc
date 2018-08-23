@@ -7,6 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 #include "anita.hh"
 #include "Geoid.h"
+
 #include "TVector3.h"
 
 #include <iostream>
@@ -22,6 +23,7 @@ namespace icemc {
   class RayTracer;
   class Interaction;
   class Antarctica;
+  class FancyTTreeInterpolator;
 
   /**
    * @class FlightPath
@@ -123,7 +125,7 @@ namespace icemc {
 
     // double surface_under_balloon;                               ///< distance between center of the earth and the surface of earth under balloon
     
-    void InitializeBalloon(const Settings* settings);
+    void InitializeBalloon(const Settings* settings);    
     void ReadAnitaliteFlight();
     void setr_bn(double latitude,double longitude);
     
@@ -140,7 +142,7 @@ namespace icemc {
     float powerthresh[9][32];                                   ///< power threshold in Watts
     float meanp[9][32];                                         ///< mean power in Watts
     Geoid::Position fPosition; ///< Balloon position
-
+    FancyTTreeInterpolator* fInterp = nullptr;
     // Geoid::Position r_bn_shadow;                                       ///< position of the balloon projected on earth surface - point just below balloon at surface of the earth
 
   protected:
