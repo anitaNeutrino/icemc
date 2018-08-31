@@ -2485,7 +2485,7 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
     // cout << "ifirstnonzero, ilastnonzero are " << ifirstnonzero << " " << ilastnonzero << "\n";
     // cout << "ratio is " << (double)count_nonzero/(double)(ilastnonzero-ifirstnonzero) << "\n";
   for (int j=0;j<NFOUR/4;j++) {
-    vsignal_e_forfft[2*j]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
+    vsignal_e_forfft[2*j]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero)); // plot1d vsignal_e_forfft[0]@512
     vsignal_e_forfft[2*j+1]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
     vsignal_h_forfft[2*j]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
     vsignal_h_forfft[2*j+1]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
@@ -2505,7 +2505,10 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
       vsignal_e_forfft[2*ifour]*=cosphase;
       vsignal_e_forfft[2*ifour+1]*=sinphase;
       vsignal_h_forfft[2*ifour]*=cosphase;
-      vsignal_h_forfft[2*ifour+1]*=sinphase;	
+      // GDB: conditional stop.
+      // b if ifour==37
+      // END GDB.
+      vsignal_h_forfft[2*ifour+1]*=sinphase;
     }
   }
   // for (int i = 0; i <=79; i++) {

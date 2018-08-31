@@ -20,6 +20,7 @@
 #include "nuklear_xlib.h"
 #include "buffer.hh"
 #include "cr-ft.h"
+#include "Tools.h"
 
 extern struct xlibstruct *gxlib;
 struct nk_context *ctx = &(gxlib->ctx);
@@ -58,6 +59,7 @@ extern double ZhsTimeDelta;
 extern vector<double> ZhsTimeArr;
 extern vector<double> ZhsTimeE;
 extern vector<double> ZhsAlpha;
+extern double NrFT[ANITA_TIME_SAMPLES];
 bool FWHM(long int n, double *x, double *y, double &xmin, double &xmax, int &ind_maxval, double &xmaxval, double &ymaxval, double threshold_rel = 0.5);
 
 
@@ -99,7 +101,7 @@ void PlotIFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
   }
 
   if (mode == m_reload || *state->vis_nbins || *Phi || *state->BinShift || *FreqLoCut) {
-    bool bHiResIFT = true;
+    bool bHiResIFT = false;
     bool bConstPhi = false;
     state->cZhsIFft->Clear();
     if (bHiResIFT) {
@@ -114,11 +116,11 @@ void PlotIFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
           state->ZhsFft[i].im = new_im;
         }
       }
-      if (*FreqLoCut) {
+      if (mode == m_reload || *FreqLoCut) {
         int FreqLoCutBin = FreqLoCut * 1e6 / state->dfreq + 1;
         cout << "The actual FreqLoCut: " << FreqLoCutBin * state->dfreq / 1e6 << endl;
         cout << "FreqLoCut: " << FreqLoCut << endl;
-                                                          for (int i = 0; i <= (int) FreqLoCutBin; i++) {
+        for (int i = 0; i <= (int) FreqLoCutBin; i++) {
           state->ZhsFft[i].re = 0;
           state->ZhsFft[i].im = 0;
         }
@@ -136,27 +138,60 @@ void PlotIFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
         int int_target_freq_src_units = target_freq_src_units + 0.5;
         state->AnitaFT[i].re = state->ZhsFft[int_target_freq_src_units].re;
         state->AnitaFT[i].im = state->ZhsFft[int_target_freq_src_units].im;
+        // cout << "i, re, im: " << i << ", " << state->AnitaFT[i].re << ", " << state->AnitaFT[i].im << endl;
       }
-      state->ZhsIFft.reset(FFTtools::doInvFFT(ANITA_TIME_SAMPLES, state->AnitaFT));
+      for (int i = 0; i < ANITA_TIME_SAMPLES / 2; i++) {
+        state->AnitaNRInp[i * 2] = state->AnitaFT[i].re;
+        state->AnitaNRInp[i * 2 + 1] = -state->AnitaFT[i].im;
+      }
+      state->AnitaNRInp[1] = state->AnitaFT[ANITA_TIME_SAMPLES / 2].re;
+      Tools::realft(state->AnitaNRInp, -1, ANITA_TIME_SAMPLES);
+
       state->grIFft.reset(new TGraph(ANITA_TIME_SAMPLES));
+      // state->ZhsIFft.reset(FFTtools::doInvFFT(ANITA_TIME_SAMPLES, state->AnitaFT));
+      /*
       for (int i = 0; i < ANITA_TIME_SAMPLES; i++){
         // By my design, ANITA_TIME_SAMPLES / 2 + 1 corresponds to ANITA_FREQ_HIGH.
         // That means ANITA_TIME_SAMPLES / 2 * (1 / T) = ANITA_FREQ_HIGH
         // Therefore T = ANITA_TIME_SAMPLES / 2 / ANITA_FREQ_HIGH
         // And the time step is T / (ANITA_TIME_SAMPLES - 1)
         double TimeDelta = ANITA_TIME_SAMPLES / 2 / ANITA_FREQ_HIGH / (ANITA_TIME_SAMPLES - 1); // Should be valid for any even number of time samples, not just ANITA_TIME_SAMPLES.
-        state->grIFft->SetPoint(i, i * TimeDelta / unit::ns + state->vis_xmin_bin * ZhsTimeDelta + ZhsTimeStart, state->ZhsIFft[i]);
+        // state->grIFft->SetPoint(i, i * TimeDelta / unit::ns + state->vis_xmin_bin * ZhsTimeDelta + ZhsTimeStart, state->ZhsIFft[i]);
+        state->grIFft->SetPoint(i, i * TimeDelta / unit::ns + state->vis_xmin_bin * ZhsTimeDelta + ZhsTimeStart, state->AnitaNRInp[i] * 2.0 / ANITA_TIME_SAMPLES);
       }
+      */
+
+      for (int i = 0; i < ANITA_TIME_SAMPLES; i++){
+        // By my design, ANITA_TIME_SAMPLES / 2 + 1 corresponds to ANITA_FREQ_HIGH.
+        // That means ANITA_TIME_SAMPLES / 2 * (1 / T) = ANITA_FREQ_HIGH
+        // Therefore T = ANITA_TIME_SAMPLES / 2 / ANITA_FREQ_HIGH
+        // And the time step is T / (ANITA_TIME_SAMPLES - 1)
+        double TimeDelta = ANITA_TIME_SAMPLES / 2 / ANITA_FREQ_HIGH / (ANITA_TIME_SAMPLES - 1); // Should be valid for any even number of time samples, not just ANITA_TIME_SAMPLES.
+        // state->grIFft->SetPoint(i, i * TimeDelta / unit::ns + state->vis_xmin_bin * ZhsTimeDelta + ZhsTimeStart, state->ZhsIFft[i]);
+        state->grIFft->SetPoint(i, i * TimeDelta / unit::ns + state->vis_xmin_bin * ZhsTimeDelta + ZhsTimeStart, state->AnitaNRInp[i] * 2.0 / ANITA_TIME_SAMPLES);
+      }
+
+    }
+
+    Tools::realft(NrFT, -1, ANITA_TIME_SAMPLES);
+
+    state->grZhsTimeERec.reset(new TGraph(state->vis_nbins));
+    for (int i = 0; i < ANITA_TIME_SAMPLES; i++){
+      // By my design, ANITA_TIME_SAMPLES / 2 + 1 corresponds to ANITA_FREQ_HIGH.
+      // That means ANITA_TIME_SAMPLES / 2 * (1 / T) = ANITA_FREQ_HIGH
+      // Therefore T = ANITA_TIME_SAMPLES / 2 / ANITA_FREQ_HIGH
+      // And the time step is T / (ANITA_TIME_SAMPLES - 1)
+      double TimeDelta = ANITA_TIME_SAMPLES / 2 / ANITA_FREQ_HIGH / (ANITA_TIME_SAMPLES - 1); // Should be valid for any even number of time samples, not just ANITA_TIME_SAMPLES.
+      state->grZhsTimeERec->SetPoint(i, i * TimeDelta / unit::ns + state->vis_xmin_bin * ZhsTimeDelta + ZhsTimeStart, NrFT[i] * 2.0 / ANITA_TIME_SAMPLES);
     }
 
     state->grIFft->SetLineColor(kBlue);
     state->grIFft->SetLineWidth(2);
     state->grIFft->Draw("AL");
-    state->grZhsTimeERec.reset(new TGraph(state->vis_nbins));
     // Reference waveform shifted such that peaks are split between the first and the last bins:
-    for (int i = 0; i < state->vis_nbins; i++) {
-      state->grZhsTimeERec->SetPoint(i, ((i + state->BinShift) % state->vis_nbins + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, ZhsTimeE[state->vis_xmin_bin + i]);
-    }
+    // for (int i = 0; i < state->vis_nbins; i++) {
+    //   state->grZhsTimeERec->SetPoint(i, ((i + state->BinShift) % state->vis_nbins + state->vis_xmin_bin) * ZhsTimeDelta + ZhsTimeStart, ZhsTimeE[state->vis_xmin_bin + i]);
+    // }
     // state->grZhsTimeERec->Draw("L");
     state->grZhsTimeERec->SetMarkerSize(1);
     state->grZhsTimeERec->SetMarkerStyle(6);
@@ -223,13 +258,26 @@ void PlotFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
     }
 
     state->dfreq = 1.0 / ((state->vis_xmax_bin - state->vis_xmin_bin) * ZhsTimeDelta * unit::ns);
+    int FreqLoCutBin = 200 * 1e6 / state->dfreq + 1;
+    for (int i = 0; i <= (int) FreqLoCutBin; i++) {
+      state->ZhsFft[i].re = 0;
+      state->ZhsFft[i].im = 0;
+    }
+    int FreqHiCutBin = 1200 * 1e6 / state->dfreq;
+    for (int i = FreqHiCutBin; i < state->vis_nbins / 2 + 1; i++) {
+      state->ZhsFft[i].re = 0;
+      state->ZhsFft[i].im = 0;
+    }
     for (int i = 0; i < state->vis_nbins / 2 + 1; i++){
       double re = state->ZhsFft[i].re * /* --> */ ZhsTimeDelta  * unit::ns /* <-- to make discrete ft comparable to analytical one */;
       double im = state->ZhsFft[i].im * /* --> */ ZhsTimeDelta  * unit::ns /* <-- to make discrete ft comparable to analytical one */;
       if (bInteractive) {
         if (cf == cf_polar) {
           state->grFftRho->SetPoint(i, i * state->dfreq, TMath::Sqrt(im * im + re * re));
-          state->grFftPhi->SetPoint(i, i * state->dfreq, TMath::ATan2(re, im) * 180.0 / TMath::Pi());
+          // state->grFftPhi->SetPoint(i, i * state->dfreq, TMath::ATan2(re, -im) * 180.0 / TMath::Pi());
+          double phi = TMath::ATan2(re, -im) * 180.0 / TMath::Pi();
+          if (phi < 0) phi = phi + 360;
+          state->grFftPhi->SetPoint(i, i * state->dfreq, phi);
         }
         else {
           state->grFftRe->SetPoint(i, i * state->dfreq, re);
@@ -238,7 +286,10 @@ void PlotFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
       }
       else { // Non-interactive:
         state->FftRho[i] = TMath::Sqrt(im * im + re * re);
-        state->FftPhi[i] = TMath::ATan2(re, im) * 180.0 / TMath::Pi();
+        // IceMC's "realft" apparently uses the opposite sign of the power of the exponent:
+        double phi = TMath::ATan2(re, -im) * 180.0 / TMath::Pi();
+        if (phi < 0) phi = phi + 360;
+        state->FftPhi[i] = phi;
       }
     }
 

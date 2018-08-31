@@ -102,8 +102,6 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 #include "hot-loop.h"
 #include "cr-ft.h"
 
-std::string some_imortant_str = "some_important_str value";
-
 namespace bvv {
   
   //! Fill amplitude and phase arrays given FT of a ZHS waveform.
@@ -117,13 +115,15 @@ namespace bvv {
   {
     // cr_ft_result->FftPhi, cr_ft_result->vis_nbins / 2 + 1
     for (int i = 0; i < Anita::NFREQ; i++) {
-      double target_freq = (anita->FREQ_HIGH  - anita->FREQ_LOW) / (double) Anita::NFREQ * i + anita->FREQ_LOW;
+      double target_freq = anita->freq[i];
+        // double target_freq = (anita->FREQ_HIGH  - anita->FREQ_LOW) / (double) Anita::NFREQ * i + anita->FREQ_LOW;
       double target_freq_src_units = target_freq / cr_ft_result->dfreq;
       int int_target_freq_src_units = target_freq_src_units + 0.5;
       amp[i] = cr_ft_result->FftRho[int_target_freq_src_units];
     }
-    for (int i = 0; i < 2 * Anita::NFREQ; i++) {
-      double target_freq = anita->FREQ_HIGH / (2 * Anita::NFREQ) * i;
+    for (int i = 0; i < Anita::NFREQ * 2; i++) {
+      double target_freq = anita->freq_forfft[i * 2];
+      // double target_freq = anita->FREQ_HIGH / (2 * Anita::NFREQ) * i;
       double target_freq_src_units = target_freq / cr_ft_result->dfreq;
       int int_target_freq_src_units = target_freq_src_units + 0.5;
       phase[i] = cr_ft_result->FftPhi[int_target_freq_src_units];
@@ -157,6 +157,7 @@ vector<string> str_split(char* a_str, const char a_delim)
 
 
 // https://stackoverflow.com/questions/3501338/c-read-file-line-by-line:
+// Notice that index "_with_line_ind" starts from 1:
 #define WITH_LINES(_with_lines_name, _with_lines_ind, _with_lines_tokens, _with_lines_codeblock...) \
   do									\
     {									\
@@ -204,8 +205,6 @@ using namespace std;
 class EarthModel;
 class Position;
 
-
-// functions
 
 bool FWHM(long int n, double *x, double *y, double &xmin, double &xmax, int &ind_maxval, double &xmaxval, double &ymaxval, double threshold_rel = 0.5){
   // xmin, xmax: interval where y > ymaxval * threshold_rel;
@@ -258,6 +257,7 @@ double ZhsTimeDelta = -999;
 vector<double> ZhsTimeArr;
 vector<double> ZhsTimeE(25000);
 vector<double> ZhsAlpha(25000);
+double NrFT[ANITA_TIME_SAMPLES];
 
 int main(int argc,  char **argv) {
 
@@ -397,12 +397,23 @@ int main(int argc,  char **argv) {
   ZhsTimeStart = ZhsTimeArr[0]; 
   ZhsTimeDelta = ZhsTimeArr[1] - ZhsTimeArr[0];
 
-
-
   gStyle->SetOptTitle(0);
 
+  WITH_LINES(
+             "./GDB/cut_lo_hi/ft/icemc/__plot1d.dat",
+             ind,
+             tokens,
+             // NrFT[ind - 1] = atof(tokens[0].c_str());
+             NrFT[ind - 1] = atof(tokens[0].c_str());
+            );
+  for (int ind = 0; ind < ANITA_TIME_SAMPLES; ind++) {
+    NrFT[ind] = NrFT[ind] * 5.5e+8; // The coefficient is an empirical value derived from eyeballing using gnuplot.
+    cout << "NrFT: " << NrFT[ind] << endl;
+  }
+  // cout << "Before the call to hot_loop" << endl;
+
   struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", true /* bInteractive */);
-  // exit(0);
+ // exit(0);
   
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
   // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower

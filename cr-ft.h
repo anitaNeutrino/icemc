@@ -34,6 +34,7 @@ struct cr_ft_state {
   //unique_ptr<TPad> panel_ft_phi;
   std::unique_ptr<FFTWComplex[]> ZhsFft;
   FFTWComplex AnitaFT[ANITA_FT_SAMPLES]; //!< Frequency distribution sampled on the ANITA frequency grid. 
+  double AnitaNRInp[ANITA_TIME_SAMPLES];
   TCanvas *cZhsFft;
   int ind_maxval;
   double fwhm_xmin;
