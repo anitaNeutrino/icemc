@@ -272,6 +272,11 @@ void Settings::Initialize() {
   SPECIFIC_NU_POSITION_LONGITUDE = 166.7; 
   SPECIFIC_NU_POSITION_ALTITUDE = 0; 
   SPECIFIC_NU_POSITION_DISTANCE = 100e3; 
+
+  SOURCE = "None"; 
+  SOURCE_MIN_E = 18; 
+  SOURCE_MAX_E = 22; 
+
 }
 
 
@@ -582,6 +587,9 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Which attenuation length", MOOREBAY);
 
   getSetting("Source Option", SOURCE); 
+  getSetting("Source Max Energy", SOURCE_MAX_E); 
+  getSetting("Source Min Energy", SOURCE_MIN_E); 
+
 
   getSetting("Cross-section factor", SIGMA_FACTOR);
   if (SIGMA_FACTOR!=1){

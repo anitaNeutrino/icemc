@@ -151,6 +151,8 @@ class Settings : public TObject {
   double SLAC_HORIZ_DEPTH; // horizontal depth of interaction at slac
 
   std::string SOURCE;  // the source option (see source.hh) 
+  double SOURCE_MIN_E;  // log10 of minimum energy for sources 
+  double SOURCE_MAX_E;   // log10 of maximinum energy for sources 
 
   int ROUGHNESS; // include effects of surface roughness
   int FIRN; // whether or not to include the firn
