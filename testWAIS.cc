@@ -328,6 +328,7 @@ int main(int argc,  char **argv) {
   double sourceAlt;
   double sourceLat;
 
+  int l3trignoise[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
 
   int l3trig[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
   // For each trigger layer,  which "clumps" pass L2.  16 bit,  16 bit and 8 bit for layers 1 & 2 and nadirs
@@ -575,7 +576,7 @@ int main(int argc,  char **argv) {
     distanceFromWAIS =  (interaction1->posnu.Distance(bn1->r_bn));
    // cout << "distance is" << distanceFromWAIS << endl;
     // eliminate stuff when we are more than 1000km from WAIS
-    if (distanceFromWAIS > 1e6) {
+    if (distanceFromWAIS > 10e6) {
      //     std::cout << "Too far from WAIS " << interaction1->posnu  << " and ballon is " << (bn1->r_bn) << " \t " << distanceFromWAIS <<std::endl;
       continue;
     }
@@ -760,10 +761,21 @@ int main(int argc,  char **argv) {
 
 
     int thispasses[Anita::NPOL]={0,0};
+    int thispassesnoise[Anita::NPOL]={0,0};
 
     if (!isDead){
+      
+      // calculate global trigger on noise only waveforms
+      globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trignoise, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
+				 thispassesnoise, true);
+	
       globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
 				 thispasses);
+      if ( (l3trignoise[0]>0 && l3trignoise[0]==l3trig[0]) || (l3trignoise[1]>0 && l3trignoise[1]==l3trig[1] ) ){
+	cout << "A thermal noise fluctuation generated this trigger!" << l3trignoise[0] << " " << l3trig[0] << " " << l3trignoise[1] << " " << l3trig[1] << endl;
+	delete globaltrig1;
+	continue;
+      }
     }
     
     for (int i=0;i<2;i++) {
