@@ -145,6 +145,13 @@ Source::Source(const char * nm, double ra, double dc, SourceFlux * f)
 
 Vector Source::getDirection( double t) const 
 {
+
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,0,0)
+  std::cerr << "ROOT 5 doesn't have AsLMST. Returning nonsense." << std::endl;
+  return Vector(1,0,0); 
+#else
+
+
   time_t secs = t; 
   int nsecs = 1e9 *(t-secs); 
   TTimeStamp ts(secs, nsecs); 
@@ -152,6 +159,7 @@ Vector Source::getDirection( double t) const
   double h = lst - RA; 
   h *= (TMath::Pi()/12); 
   return Vector(cos(h) * cos(dec), sin(h) * cos(dec), sin(dec)); 
+#endif
 }
 
 
