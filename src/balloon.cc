@@ -292,12 +292,12 @@ void icemc::Balloon::InitializeBalloon(const Settings* settings) {
       fChain->GetEntry(lastGoodEntry);
       fLastRealTime = realTime;
     }
-    fInterp = new FancyTTreeInterpolator(fChain,  whichRealTime);    
-    TString cut = TString::Format("Entry$ >= %lld && Entry$ < %lld", firstGoodEntry, lastGoodEntry);
-    fInterp->add("heading", cut, 360);
-    fInterp->add("longitude", cut);
-    fInterp->add("latitude", cut);
-    fInterp->add("altitude", cut);
+    // fInterp = new FancyTTreeInterpolator(fChain,  whichRealTime);
+    // TString cut = TString::Format("Entry$ >= %lld && Entry$ < %lld", firstGoodEntry, lastGoodEntry);
+    // fInterp->add("heading", cut, 360);
+    // fInterp->add("longitude", cut);
+    // fInterp->add("latitude", cut);
+    // fInterp->add("altitude", cut);
 
     std::cout << "Loaded chain " << whichPath() << " with first good entry " << firstGoodEntry << " at " << fFirstRealTime << " and last good entry " << lastGoodEntry << " at " << fLastRealTime << std::endl;
   }
@@ -356,12 +356,12 @@ void icemc::Balloon::InitializeBalloon(const Settings* settings) {
       fLastRealTime = realTime;
     }
 
-    fInterp = new FancyTTreeInterpolator(fChain,"realTime");
-    TString cut = TString::Format("Entry$ >= %lld && Entry$ < %lld", firstGoodEntry, lastGoodEntry);
-    fInterp->add("heading", cut, 360);
-    fInterp->add("longitude", cut, 180, -180);
-    fInterp->add("latitude", cut);
-    fInterp->add("altitude", cut);
+    // fInterp = new FancyTTreeInterpolator(fChain,"realTime");
+    // TString cut = TString::Format("Entry$ >= %lld && Entry$ < %lld", firstGoodEntry, lastGoodEntry);
+    // fInterp->add("heading", cut, 360);
+    // fInterp->add("longitude", cut, 180, -180);
+    // fInterp->add("latitude", cut);
+    // fInterp->add("altitude", cut);
 
     std::cout << "Loaded chain " << whichPath() << " with first good entry " << firstGoodEntry << " at " << fFirstRealTime << " and last good entry " << lastGoodEntry << " at " << fLastRealTime << std::endl;
   }
