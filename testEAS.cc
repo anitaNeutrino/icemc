@@ -404,11 +404,11 @@ int main(int argc,  char **argv) {
              ind,
              tokens,
              // NrFT[ind - 1] = atof(tokens[0].c_str());
-             NrFT[ind - 1] = atof(tokens[0].c_str());
+             NrFT[ind] = atof(tokens[0].c_str());
             );
   for (int ind = 0; ind < ANITA_TIME_SAMPLES; ind++) {
     NrFT[ind] = NrFT[ind] * 5.5e+8; // The coefficient is an empirical value derived from eyeballing using gnuplot.
-    cout << "NrFT: " << NrFT[ind] << endl;
+    // cout << ind << " NrFT: " << NrFT[ind] << endl;
   }
   // cout << "Before the call to hot_loop" << endl;
 

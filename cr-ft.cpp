@@ -140,11 +140,20 @@ void PlotIFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
         state->AnitaFT[i].im = state->ZhsFft[int_target_freq_src_units].im;
         // cout << "i, re, im: " << i << ", " << state->AnitaFT[i].re << ", " << state->AnitaFT[i].im << endl;
       }
+
       for (int i = 0; i < ANITA_TIME_SAMPLES / 2; i++) {
         state->AnitaNRInp[i * 2] = state->AnitaFT[i].re;
         state->AnitaNRInp[i * 2 + 1] = -state->AnitaFT[i].im;
       }
+
+      // for (int i = 0; i < ANITA_TIME_SAMPLES; i++) {
+      //   cout << i << " re: " << state->AnitaFT[i].re << " im: " << state->AnitaFT[i].im << endl;
+      // }
       state->AnitaNRInp[1] = state->AnitaFT[ANITA_TIME_SAMPLES / 2].re;
+
+      // for (int i = 0; i < ANITA_TIME_SAMPLES; i++) {
+      //   cout << i << " AnitaNRInp: " << state->AnitaNRInp[i] << endl;
+      // }
       Tools::realft(state->AnitaNRInp, -1, ANITA_TIME_SAMPLES);
 
       state->grIFft.reset(new TGraph(ANITA_TIME_SAMPLES));
@@ -259,6 +268,11 @@ void PlotFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
 
     state->dfreq = 1.0 / ((state->vis_xmax_bin - state->vis_xmin_bin) * ZhsTimeDelta * unit::ns);
     int FreqLoCutBin = 200 * 1e6 / state->dfreq + 1;
+
+    // for (int i = 0; i <= (int) FreqLoCutBin; i++) {
+    //   cout << i << " re: " << state->ZhsFft[i].re << " im: " << state->ZhsFft[i].im << endl;
+    // }
+
     for (int i = 0; i <= (int) FreqLoCutBin; i++) {
       state->ZhsFft[i].re = 0;
       state->ZhsFft[i].im = 0;
@@ -275,9 +289,10 @@ void PlotFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
         if (cf == cf_polar) {
           state->grFftRho->SetPoint(i, i * state->dfreq, TMath::Sqrt(im * im + re * re));
           // state->grFftPhi->SetPoint(i, i * state->dfreq, TMath::ATan2(re, -im) * 180.0 / TMath::Pi());
-          double phi = TMath::ATan2(re, -im) * 180.0 / TMath::Pi();
+          double phi = TMath::ATan2(-im, re) * 180.0 / TMath::Pi();
           if (phi < 0) phi = phi + 360;
           state->grFftPhi->SetPoint(i, i * state->dfreq, phi);
+          // cout << i << " Rho: " << TMath::Sqrt(im * im + re * re) << " phi: " << phi << endl;
         }
         else {
           state->grFftRe->SetPoint(i, i * state->dfreq, re);
@@ -287,7 +302,7 @@ void PlotFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
       else { // Non-interactive:
         state->FftRho[i] = TMath::Sqrt(im * im + re * re);
         // IceMC's "realft" apparently uses the opposite sign of the power of the exponent:
-        double phi = TMath::ATan2(re, -im) * 180.0 / TMath::Pi();
+        double phi = TMath::ATan2(-im, re) * 180.0 / TMath::Pi();
         if (phi < 0) phi = phi + 360;
         state->FftPhi[i] = phi;
       }
