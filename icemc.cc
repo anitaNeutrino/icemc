@@ -65,6 +65,7 @@
 #include "ChanTrigger.h"
 #include "SimulatedSignal.h"
 #include "EnvironmentVariable.h"
+#include "source.hh" 
 
 #include <string>
 #include <sstream>
@@ -157,7 +158,9 @@ double RANDOMISEPOL=0.;
 
 
 double volume_thishorizon; // for plotting volume within the horizon of the balloon
-int realtime_this;  // for plotting real unix time
+double realtime_this;  // for plotting real unix time
+double earliest_time = 4e9; 
+double latest_time = 0; 
 double longitude_this; // for plotting longitude
 double latitude_this; // for plotting latitude
 double altitude_this; // for plotting altitude
@@ -396,6 +399,7 @@ double justSignal_trig[2][48][512];
 double justNoise_dig[2][48][512];
 double justSignal_dig[2][48][512];
 
+
 // functions
 
 // set up array of viewing angles for making plots for seckel
@@ -444,7 +448,7 @@ void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  S
 
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString, SourceModel * src_model);
 
 void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  string,  string,  double,  ofstream &nu_out);
 
@@ -627,20 +631,31 @@ int main(int argc,  char **argv) {
   if (exp_tmp!=0)
     settings1->EXPONENT=exp_tmp;
 
+  SourceModel *src_model = SourceModel::getSourceModel(settings1->SOURCE.c_str(), settings1->SEED + 0x5eed); 
+  double src_min = TMath::Power(10,settings1->SOURCE_MIN_E-9);  //since source model takes things in GeV
+  double src_max = TMath::Power(10,settings1->SOURCE_MAX_E-9);  //since source model takes things in GeV
   Spectra *spectra1 = new Spectra((int)settings1->EXPONENT);
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
+
  
-  //if ( settings1->SOURCE == 1 ) {
-    //cout << "Source setting is ON!" << endl;  
-  //}
+  if (src_model) {
+    printf("Using Source Model %s\n", src_model->getName()); 
+  }
   
   Roughness *rough1 = new Roughness(settings1); // create new instance of the roughness class
   rough1->SetRoughScale(settings1->ROUGHSIZE);
 
   Screen *panel1 = new Screen(0);  // create new instance of the screen class
 
-  if(spectra1->IsSpectrum()) cout<<" Lowest energy for spectrum is 10^18 eV! \n";
+  if(!src_model || spectra1->IsSpectrum())
+  {
+    cout<<" Lowest energy for spectrum is 10^18 eV! \n";
+  }
+  else if (src_model) 
+  {
+    cout<<" Source Model Bounds are 10^" << settings1->SOURCE_MIN_E << "to 10^ " << settings1->SOURCE_MAX_E << "eV" << endl; 
+  }
 
   // declare instance of trigger class.
   // this constructor reads from files with info to parameterize the
@@ -1446,7 +1461,7 @@ int main(int argc,  char **argv) {
   cout << "Done with CreateHorizons.\n";
 
   // sets neutrino energy
-  if ( spectra1->IsMonoenergetic() ){
+  if (! src_model &&  spectra1->IsMonoenergetic() ){
     pnu=pow(10., settings1->EXPONENT);
     primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);    // get cross section and interaction length.
     cout << "pnu,  sigma,  len_int_kgm2 are " << pnu << " " << sigma << " " << len_int_kgm2 << "\n";
@@ -1510,6 +1525,7 @@ int main(int argc,  char **argv) {
   time_t raw_loop_start_time = time(NULL);
   cout<<"Starting loop over events.  Time required for setup is "<<(int)((raw_loop_start_time - raw_start_time)/60)<<":"<< ((raw_loop_start_time - raw_start_time)%60)<<endl;
 
+  //CD TODO: Do something analogous for sources 
   TCanvas *ctest1 = new TCanvas("ctest1", "", 880, 800);
 
   spectra1->GetGEdNdEdAdt()->Draw("al");
@@ -1594,16 +1610,21 @@ int main(int argc,  char **argv) {
       unmasked_thisevent=1;
       vmmhz_min_thatpasses=1000; // initializing.  want to find the minumum voltage that passes a
 
-      if ( spectra1->IsSpectrum() ){//if using energy spectrum
 
-	if(settings1->USEDARTBOARD) pnu=spectra1->GetNuEnergy();
+      Vector force_dir; 
+      if (!src_model &&  spectra1->IsSpectrum() ){//if using energy spectrum
+
+        if(settings1->USEDARTBOARD) pnu=spectra1->GetNuEnergy();
         else pnu=spectra1->GetCDFEnergy();
 
-	ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
+        ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
         // ierr=0 if the energy is too low for the parameterization
         // ierr=1 otherwise
         len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
       }// end IsSpectrum
+
+      
+
       n_interactions=1;
       count_pass=0;
       passestrigger=0;
@@ -1620,21 +1641,28 @@ int main(int argc,  char **argv) {
 
       // Picks the balloon position and at the same time sets the masks and thresholds
       bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
-      if ( settings1->SOURCE == 1 ) {
-        interaction1->PickGrbDirection(interaction1->nnu); 
-        //cout << "First time: I called PickGrb " << "\n";  
-      }
       
+
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter
       average_altitude+=bn1->altitude_bn/(double)NNU;
       average_rbn+=bn1->r_bn.Mag()/(double)NNU;
 
       realtime_this=bn1->realTime_flightdata;
+      if (realtime_this < earliest_time) earliest_time = realtime_this; 
+      if (realtime_this > latest_time) latest_time = realtime_this; 
       longitude_this=bn1->longitude;
       latitude_this=bn1->latitude;
       altitude_this=bn1->altitude;
       heading_this=bn1->heading;
+
+      if (src_model) 
+      {
+        src_model->getDirectionAndEnergy(&force_dir, realtime_this, pnu, src_min, src_max); 
+        pnu*=1e9; //GeV -> eV
+        ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
+        len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
+      }
 
       if (settings1->HIST && !settings1->ONLYFINAL
 	  && prob_eachphi_bn->GetEntries() < settings1->HIST_MAX_ENTRIES) {
@@ -1675,10 +1703,6 @@ int main(int argc,  char **argv) {
         tautrigger=0;
 
       bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon);
-      if ( settings1->SOURCE == 1 ) {
-        interaction1->PickGrbDirection(interaction1->nnu); 
-        //cout << "Second time: I called PickGrb " << "\n";  
-      }
       
       if (interaction1->noway)
         continue;
@@ -1730,17 +1754,6 @@ int main(int argc,  char **argv) {
       // x and y components of interaction in km.
       horizcoord=interaction1->posnu[0]/1000;
       vertcoord=interaction1->posnu[1]/1000;
-
-      //Oindree
-      //if (interaction1->posnu[0] > 0.0){
-        //cout << "Left side!" << "\n";
-        //continue;
-      //}
-
-      //if (interaction1->posnu[0] < 0.0){
-        //cout << "Right side!" << "\n";
-        //continue;
-      //}
 
       ray1->GetSurfaceNormal(settings1, antarctica, interaction1->posnu, slopeyangle, 0);
 
@@ -1806,17 +1819,20 @@ int main(int argc,  char **argv) {
       if (ytree->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
         ytree->Fill();
  
-      if ( settings1->SOURCE == 1 ) {
-        interaction1->PickGrbDirection(interaction1->nnu); 
-        //cout << "I called PickGrb " << "\n";  
-      }
 
       //TAU STUFF. Pick whether it will stay as a neutrino or create tau
       if ( tautrigger == 1 ) {
-        //if (  ( !settings1->UNBIASED_SELECTION ) && ( !settings1->SLAC ) && ( !settings1->SOURCE )  ) {
-        if (  ( !settings1->UNBIASED_SELECTION ) && ( !settings1->SLAC )  ) {
+        if (  ( !settings1->UNBIASED_SELECTION ) && ( !settings1->SLAC )  && !src_model ) {
           err = GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
           //cout<<"UNBIASED_SELECTION IS "<<settings1->UNBIASED_SELECTION<<"\n";
+        }
+        else if (src_model) 
+        {
+          interaction1->nnu = force_dir; 
+          interaction1->dtryingdirection = 1; //ugh 
+          costhetanu = cos(force_dir.Theta()); 
+          theta_threshold = 1; 
+          err = 1; 
         }
         else if ( settings1->SLAC ) {
           Vector xaxis(1., 0., 0.);
@@ -1836,11 +1852,6 @@ int main(int argc,  char **argv) {
           }//end if boresights
           err = 1; // everything is a-okay
         }// end else if slac
-        //else if ( settings1->SOURCE ) {
-          //err = interaction1->PickGrbDirection(interaction1->nnu); 
-          //cout << "err is " << err << endl; 
-          //costhetanu=cos(interaction1->nnu.Theta());
-        //}
 
         if ( err == 0 )
           continue;//bad stuff has happened.
@@ -1963,10 +1974,17 @@ int main(int argc,  char **argv) {
       } //if whichray==1
 
       if ( tautrigger == 0 ) {//did this for cc- taus already,  do again for all other particles
-        //if (  ( !settings1->UNBIASED_SELECTION ) && ( !settings1->SLAC ) && ( !settings1->SOURCE )  ) {
-        if (  ( !settings1->UNBIASED_SELECTION ) && ( !settings1->SLAC )  ) {
+        if (  ! src_model && ( !settings1->UNBIASED_SELECTION ) && ( !settings1->SLAC )  ) {
           err = GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
         //cout << "costhetanu is " << costhetanu << endl; 
+        }
+        else if (src_model) 
+        {
+          interaction1->nnu = force_dir; 
+          interaction1->dtryingdirection = 1; //ugh 
+          costhetanu = cos(force_dir.Theta()); 
+          theta_threshold = 1; 
+          err = 1; 
         }
         else if (settings1->SLAC) {
           Vector xaxis(1., 0., 0.);
@@ -1985,12 +2003,6 @@ int main(int argc,  char **argv) {
           }//end boresight
           err = 1; // everything is a-okay
         }//end else if slac
-        //else if ( settings1->SOURCE ) {
-          //err = interaction1->PickGrbDirection(interaction1->nnu); 
-          //cout << "err is " << err << endl; 
-          //costhetanu = cos(interaction1->nnu.Theta());
-          //cout << "costhetanu is " << costhetanu << endl; 
-        //}
       }//end tau trigger ==0
 
       // gets angle between ray and neutrino direction
@@ -2052,10 +2064,6 @@ int main(int argc,  char **argv) {
 
       // where the neutrino enters the earth
       if (tautrigger==0){//did for cc-taus already,  do for all other particles
-        //if ( settings1->SOURCE == 1 ) {
-          //interaction1->PickGrbDirection(interaction1->nnu); 
-          //cout << "I called PickGrb " << "\n";  
-        //}
         interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
         antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
         //cout << "interaction1->chord is " << interaction1->chord << "\n"; 
@@ -3913,9 +3921,10 @@ int main(int argc,  char **argv) {
 
 
   // maks the output file
-  Summarize(settings1, anita1, count1, spectra1, sig1, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb, sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, foutput, distanceout, outputdir);
+  Summarize(settings1, anita1, count1, spectra1, sig1, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb, sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, foutput, distanceout, outputdir, src_model);
 
-  veff_out << settings1->EXPONENT << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << settings1->SIGMA_FACTOR << endl;//this is for my convenience
+  std::string spec_string = src_model ? settings1->SOURCE : std::to_string( settings1->EXPONENT); 
+  veff_out << spec_string << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << settings1->SIGMA_FACTOR << endl;//this is for my convenience
 
   // for each neutrino flavor,  fraction each contributes to sensitivity.
   sum_frac[0]=sum[0]/eventsfound;
@@ -4022,7 +4031,7 @@ void WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double a
 //end WriteNeutrinoInfo()
 
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, Signal *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir) {
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, Signal *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir, SourceModel * src_model) {
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
   double errordown_v_thresh[NTHRESHOLDS];
@@ -4460,8 +4469,9 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   cout << "Events that pass all cuts\t\t\t\t" << (double)count1->npass[0]/(double)count_d2goodlength << "\t" << (double)count1->npass[1]/(double)count_d2goodlength << "\t\t";
   cout <<count1->npass[0] << "\t" << count1->npass[1] << "\n";
 
+
   //  if (EXPONENT<=10||EXPONENT>100) {
-  if ( spectra1->IsSpectrum() ) {
+  if ( src_model || spectra1->IsSpectrum() ) {
     double sum_events=0.;
     double thisenergy=0.;
     double thislen_int_kgm2=0.;
@@ -4472,10 +4482,25 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     double even_E;
     int N_even_E = 12;
     double integral=0;
-    even_E = ( spectra1->Getenergy()[spectra1->GetE_bin() - 1] - spectra1->Getenergy()[0] ) / ( (double) N_even_E );
+    double min_energy = src_model ? settings1->SOURCE_MIN_E : spectra1->Getenergy()[0];
+    double max_energy = src_model ? settings1->SOURCE_MAX_E : spectra1->Getenergy()[spectra1->GetE_bin()-1];
+    even_E = ( max_energy - min_energy  ) / ( (double) N_even_E );
+
+    TH1 * src_flux = 0; 
+    if (src_model) 
+    {
+      src_flux = src_model->estimateFlux(earliest_time,latest_time, TMath::Power(10,min_energy-9), TMath::Power(10,max_energy-9), 2*N_even_E, 10000); 
+//      TFile fsrcflux("fsrcflux.root","RECREATE"); 
+//      src_flux->Write(); 
+    }
+
+
     for (int i=0;i<N_even_E;i++) {
-      thisenergy=pow(10., (spectra1->Getenergy())[0]+((double)i)*even_E);
+      thisenergy=pow(10., (min_energy+((double)i)*even_E));
       primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);
+
+      // are the units of this in log (eV) ???!????!??
+      double EdNdEdAdt = src_model ? 1e9*src_flux->Interpolate(thisenergy*1e-9) : spectra1->GetEdNdEdAdt(log10(thisenergy));
 
       // EdNdEdAdt is in #/cm^2/s
       // need to be multiplied by 1e4 to change 1/cm2 to 1/m^2
@@ -4483,9 +4508,9 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
       // = dN*log(10)/d(log E)dAdt
       // the bin spacing is 0.5
       // so # events ~ dN*log(10)*0.5/d(log E)dAdt
-      sum_events+=even_E*log(10.)*( spectra1->GetEdNdEdAdt(log10(thisenergy))*1e4 )/(thislen_int_kgm2/sig1->RHOH20);
-      integral+=even_E*log(10.)*( spectra1->GetEdNdEdAdt(log10(thisenergy)) );
-      cout << "thisenergy,  EdNdEdAdt is " << thisenergy << " " <<  spectra1->GetEdNdEdAdt(log10(thisenergy)) << "\n";
+      sum_events+=even_E*log(10.)*( EdNdEdAdt*1e4 )/(thislen_int_kgm2/sig1->RHOH20);
+      integral+=even_E*log(10.)*(EdNdEdAdt);
+      cout << "thisenergy,  EdNdEdAdt is " << thisenergy << " " <<  EdNdEdAdt << "\n";
       //foutput << "interaction length is " << thislen_int_kgm2/RHOH20 << "\n";
     }//end for N_even_E
      // for (int i=0;i<12;i++) {
@@ -4732,12 +4757,6 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
       return 1;
     } //if (make banana plot)
   
-
-    if ( settings1->SOURCE == 1 ) {
-      //cout << "Source setting is ON!" << endl; 
-      nnu = Vector(-1.,0.,0.); 
-      return 1;  
-    }
 
     if (settings1->SKIPCUTS || !settings1->USEDIRECTIONWEIGHTS) { // this is a setting that allows all neutrino angles,  no restriction.  Makes the code slower.
       costhetanu2=1.;

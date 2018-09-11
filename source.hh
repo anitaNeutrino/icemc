@@ -4,8 +4,11 @@
 /** For point-source analyses, we want to draw an energy and direction
  * from the sources we're considering. 
  *
- *  Flux units are now in GeV/cm^2/yr (no steradian anymore) 
+ *  Flux units are now in GeV/cm^2/s (no steradian anymore) 
  *
+ *   ALL ENERGY UNITS ARE IN GeV  NOT log eV. That was easiest for me to figure out :)  
+ *
+ *   
  *
 */
 
@@ -45,8 +48,9 @@ class SourceModel
     void addSource(Source * source) { sources.push_back(source) ; }
     
     const char * getName() const { return name; } 
-    int getDirectionAndEnergy(Vector & nudir, double t, double & nuE, double minE = 1e18, double maxE = 1e22) ; 
-    int getDirection(Vector &nudir, double t, double nuE = 1e19) { return getDirectionAndEnergy(nudir, t, nuE, nuE, nuE); }
+    int getDirectionAndEnergy( Vector * nudir, double t, double & nuE, double minE = 1e9, double maxE = 1e13) ; 
+    int getDirection( Vector &nudir, double t, double nuE = 1e10) { return getDirectionAndEnergy( &nudir, t, nuE, nuE, nuE); }
+    TH1 * estimateFlux (double tmin, double tmax, double Emin, double Emax, int nbins = 100, int Ntrials = 1e6); 
     unsigned getNSources() const { return sources.size(); } 
     virtual ~SourceModel(); 
   private:
@@ -78,14 +82,14 @@ class Source
   public: 
     /* The source will own the flux */ 
     Source (const char * name, double RA, double dec, SourceFlux * flux); 
-    Vector getDirection(double t) const; 
+    Vector getDirection( double t) const; 
     const SourceFlux * getFlux() const { return flux; } 
     virtual ~Source() { delete flux; } 
 
   protected:
     const char * name; 
     SourceFlux * flux; 
-    double RA, z; 
+    double RA, dec; 
 };
 
 /** A time invariant flux with an exponential distribution */ 
@@ -93,8 +97,8 @@ class ConstantExponentialSourceFlux : public SourceFlux
 {
 
   public: 
-    //gamma is the spectral index (so it's positive). norm is the normalization at normE, where normE is exressed in log units. 
-    ConstantExponentialSourceFlux(double gamma, double norm, double normE=1e14); 
+    //gamma is the spectral index (so it's positive). norm is the normalization (in units of GeV / cm^2 / s) at normE, where normE is in GeV
+    ConstantExponentialSourceFlux(double gamma, double norm, double normE=0.1); 
     virtual double getFlux(double E, double t) const 
     { (void) t; return A * TMath::Power(E,-gamma) ; } 
     virtual double getFluxBetween(double Emin, double Emax, double t) const 
