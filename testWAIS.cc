@@ -207,7 +207,7 @@ int main(int argc,  char **argv) {
       case 'o':
         outputdir=optarg;
         cout << "Changed output directory to: " << outputdir.Data() << endl;
-        stemp="mkdir " + string(outputdir.Data());
+        stemp="mkdir -p " + string(outputdir.Data());
         system(stemp.c_str());
         break;
       case 'e':
@@ -328,6 +328,7 @@ int main(int argc,  char **argv) {
   double sourceAlt;
   double sourceLat;
 
+  int l3trignoise[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
 
   int l3trig[Anita::NPOL];  // 16 bit number which says which phi sectors pass L3 V-POL
   // For each trigger layer,  which "clumps" pass L2.  16 bit,  16 bit and 8 bit for layers 1 & 2 and nadirs
@@ -491,6 +492,8 @@ int main(int argc,  char **argv) {
   // LC: If we turn on this flag, then we can use different phases when applying the antenna gain
   anita1->USEPHASES=1;
 
+  Bool_t isDead;
+
     // SAW: Adding pulser model
     // Not the most elegant...
     cout << "Reading pulser model: " <<endl;
@@ -573,13 +576,28 @@ int main(int argc,  char **argv) {
     distanceFromWAIS =  (interaction1->posnu.Distance(bn1->r_bn));
    // cout << "distance is" << distanceFromWAIS << endl;
     // eliminate stuff when we are more than 1000km from WAIS
-    if (distanceFromWAIS > 1e6) {
+    if (distanceFromWAIS > 10e6) {
      //     std::cout << "Too far from WAIS " << interaction1->posnu  << " and ballon is " << (bn1->r_bn) << " \t " << distanceFromWAIS <<std::endl;
       continue;
     }
     interaction1->nnu = (bn1->r_bn - interaction1->posnu);
     interaction1->nnu = interaction1->nnu.Unit();
 
+
+    isDead = false;
+    // Dead time
+    if (settings1->USEDEADTIME){
+      // cout << anita1->deadTime << endl;
+      if ( (r.Uniform(1)<anita1->deadTime) ){
+	isDead = true;
+	// cout << "DEAD !" << endl;
+	if (settings1->MINBIAS!=1) {
+	  continue;
+	}
+      }
+    }
+	    
+    
     // TEMPORARY UNTIL WE HAVE MINI ALFA MODEL
     // FIRST PASS AT MINI ALFA MODEL
     // SAW: REPLACE THIS CODE WITH WAIS PULSER MODEL
@@ -587,13 +605,13 @@ int main(int argc,  char **argv) {
     
     vmmhz1m     = 0;  //JS: edited
     for (int i=0; i<wais_nfreqs; i++) {
-	if (wais_pulser_mags[i]>vmmhz1m) {
+      if (wais_pulser_mags[i]>vmmhz1m) {
  		vmmhz1m = wais_pulser_mags[i];
 		//cout << wais_pulser_mags[i] << endl;
 	}
     }
-cout << "vmmhz1m"<< vmmhz1m << endl;
-   ; //JS: edited
+    //cout << "vmmhz1m"<< vmmhz1m << endl;
+    //JS: edited
     //trying to calculate attenuation JS
     //Atdb = a*100*distanceFromWais*frequency/100000
     //Gaindb = 80
@@ -628,7 +646,7 @@ cout << "vmmhz1m"<< vmmhz1m << endl;
     // HPOL 
     n_pol = interaction1->nnu.Cross(surfaceNormalWAIS);
     
-n_pol = n_pol.Unit();
+    n_pol = n_pol.Unit();
     
     if (settings1->BORESIGHTS) {
       for(int ilayer=0;ilayer<settings1->NLAYERS;ilayer++) { 
@@ -743,10 +761,23 @@ n_pol = n_pol.Unit();
 
 
     int thispasses[Anita::NPOL]={0,0};
+    int thispassesnoise[Anita::NPOL]={0,0};
 
-    globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
-			       thispasses);
-
+    if (!isDead){
+      
+      // calculate global trigger on noise only waveforms
+      globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trignoise, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
+				 thispassesnoise, true);
+	
+      globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
+				 thispasses);
+      if ( (l3trignoise[0]>0 && l3trignoise[0]==l3trig[0]) || (l3trignoise[1]>0 && l3trignoise[1]==l3trig[1] ) ){
+	cout << "A thermal noise fluctuation generated this trigger!" << l3trignoise[0] << " " << l3trig[0] << " " << l3trignoise[1] << " " << l3trig[1] << endl;
+	delete globaltrig1;
+	continue;
+      }
+    }
+    
     for (int i=0;i<2;i++) {
       for (int j=0;j<16;j++) {
 	for (int k=0;k<anita1->HALFNFOUR;k++) {
