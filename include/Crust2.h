@@ -14,6 +14,13 @@
 
 class TH2D;
 
+namespace ROOT {
+  namespace Math {
+    class Delaunay2D;
+  }
+}
+
+
 namespace icemc{
 
   class Primaries;
@@ -70,7 +77,7 @@ namespace icemc{
 
   public:
     Crust2(int model = 0,int WEIGHTABSORPTION_SETTING=1);
-    virtual ~Crust2();
+    virtual ~Crust2(){;}
 
     double radii[3];
     // = {1.2e13,(Earth::EarthRadiusMeters-4.0E4)*(Earth::EarthRadiusMeters-4.0E4),Earth::EarthRadiusMeters*Earth::EarthRadiusMeters}; // average radii of boundaries between earth layers
@@ -99,6 +106,7 @@ namespace icemc{
     double GetDensity(const Geoid::Position& pos, int& crust_entered) const;
 
     virtual double fractionalIceVolumeWithinHorizon(const Geoid::Position& centeredOn, double horizonDistance) const;
+    virtual double IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const ;
 
     /** 
      * Figures out whether a neutrino will make it through the a Earth along a chord
@@ -196,6 +204,9 @@ namespace icemc{
 			   UpperCrust,
 			   MiddleCrust,
 			   LowerCrust};
+    static CrustLayer layerAbove(CrustLayer);
+    static CrustLayer layerBelow(CrustLayer);    
+    
 
     /** 
      * Utility function for ease of for-range based for loops and iteration
@@ -232,24 +243,9 @@ namespace icemc{
 
     const std::string& getPropertyName(CrustProperty property) const;
 
-    TH2D* makeRawHist(CrustLayer layer, CrustProperty property);
-    TH2D* getRawHist(CrustLayer layer, CrustProperty property) const;
-    double get(CrustLayer layer, CrustProperty property, const Geoid::Position& p) const;
-
     std::map<CrustLayer, std::string> fLayerNames;
     std::map<CrustProperty, std::string> fPropertyNames;
     typedef std::pair<CrustLayer, CrustProperty> CrustKey;
-    std::map<CrustKey, TH2D*> fRawCrustData;
-
-    inline TH2D* getRawHist(CrustKey k) const {
-      return getRawHist(k.first,  k.second);
-    }
-    TH2D* fCrustElevation = nullptr;
-    TH2D* fSurfaceAboveGeoid = nullptr; // the top of of everything
-
-
-
-    
 
     template <class T>
     static const std::string& findThingInMapToString(const std::map<T, std::string>& m, T t){
@@ -260,16 +256,14 @@ namespace icemc{
       else{
 	static const std::string unknown("unknown");
 	return unknown;
-      }      
+      }
     }
 
 
     TKDTreeID * fKDTree; /// ROOT's implementation of a KDTree, typedef'd for int/double
-    std::vector<double> fXs; ///< Positions on the surface of the geoid
-    std::vector<double> fYs; ///< Positions on the surface of the geoid
-    std::vector<double> fZs; ///< Positions on the surface of the geoid
-    std::vector<double> fElevations; ///< Elevation corrections to the geoid...
-    std::vector<double> fThickness; ///< Ice thickness...
+    std::map<CrustLayer, icemc::Mesh> fLayers;
+    icemc::Mesh fSurfaceAboveGeoid;
+    
     
 
   }; //class Earth

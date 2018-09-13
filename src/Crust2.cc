@@ -16,30 +16,21 @@
 #include "Constants.h"
 
 #include "TFile.h" ///@todo remove after debugging
+#include "Math/Delaunay2D.h"
 
 #include "RampdemReader.h"
 #include "LocalCoordinateSystem.h"
 
-namespace G=Geoid; //
-
-const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
-const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
-// input files for Crust 2.0
-const std::string crust20_in=ICEMC_DATA_DIR+"/outcr"; // Crust 2.0 data
+namespace G=Geoid;
 
 const double icemc::Crust2::COASTLINE(-60); //30.);
-// const double icemc::Crust2::MAXTHETA(180.);
-// const int icemc::Crust2::ILAT_COASTLINE((int)((COASTLINE/MAXTHETA)*(double)NLAT+0.00001)); // corresponding latitude bin to "coastline"
-// const double icemc::Crust2::GEOID_MAX(6.378137E6); // parameters of geoid model
-// const double icemc::Crust2::GEOID_MIN(6.356752E6); // from Geodetic Reference System 1980, Bulletin Geodesique, Vol 54:395,1980. // The previous reference gave issue number 3 instead of page number 395
-
 
 icemc::Crust2::Crust2(int model,int WEIGHTABSORPTION_SETTING) {
 
   fLayerNames.emplace(CrustLayer::Water        , std::string("water"));
   fLayerNames.emplace(CrustLayer::Ice          , std::string("ice"));
-  fLayerNames.emplace(CrustLayer::SoftSediment , std::string("hard sed"));
-  fLayerNames.emplace(CrustLayer::HardSediment , std::string("soft sed"));
+  fLayerNames.emplace(CrustLayer::SoftSediment , std::string("soft sed"));
+  fLayerNames.emplace(CrustLayer::HardSediment , std::string("hard sed"));
   fLayerNames.emplace(CrustLayer::UpperCrust   , std::string("upper crust"));
   fLayerNames.emplace(CrustLayer::MiddleCrust  , std::string("middle crust"));
   fLayerNames.emplace(CrustLayer::LowerCrust   , std::string("lower crust"));
@@ -66,6 +57,9 @@ icemc::Crust2::Crust2(int model,int WEIGHTABSORPTION_SETTING) {
 
   EARTH_MODEL = model;
 
+  const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
+  const std::string crust20_in=ICEMC_SRC_DIR+"/data/outcr"; // Crust 2.0 data file
+
   if (EARTH_MODEL == 0){
     ReadCrust(crust20_in);
   }
@@ -76,33 +70,6 @@ icemc::Crust2::Crust2(int model,int WEIGHTABSORPTION_SETTING) {
 } //Earth constructor (int mode)
 
 
-icemc::Crust2::~Crust2() {
-  std::map<CrustKey, TH2D*>& m = fRawCrustData;
-  for(auto it = m.begin(); it!=m.end(); ++it){
-    if(it->second){
-      delete it->second;
-    }
-  }
-
-  if(fCrustElevation){
-    delete fCrustElevation;
-  }
-  if(fSurfaceAboveGeoid){
-    delete fSurfaceAboveGeoid;
-  }
-}
-
-
-
-
-
-double icemc::Crust2::get(CrustLayer layer, CrustProperty property, const Geoid::Position& p) const {
-  double lon = p.Longitude();
-  TH2D* h = getRawHist(layer, property);
-  double val = h->Interpolate(lon, p.Latitude());
-  return val;
-
-}
 
 const std::string& icemc::Crust2::getLayerName(CrustLayer layer) const {
   const std::string& name = findThingInMapToString(fLayerNames, layer);
@@ -124,158 +91,142 @@ const std::string& icemc::Crust2::getPropertyName(CrustProperty property) const 
 icemc::Crust2::CrustLayer icemc::Crust2::getLayerFromString(const std::string& layerType) const {  
   for(auto& it : fLayerNames){
     const std::string& name = it.second;
-    if(layerType.substr(0, name.length())==name){      
+    // std::cout << "trying... " << name << " for " <<  layerType << std::endl;
+    if(layerType.substr(0, name.length())==name){
+      // std::cout << "Matched!" << std::endl;
       return it.first;
-    }    
+    }
   }
   icemcLog() << icemc::error << "Could not deduce CrustLayer from string: " << layerType << std::endl;
-  return CrustLayer::LowerCrust;  
+  return CrustLayer::LowerCrust;
 }
 
 
+///@todo handle out of layer bounds somehow
+icemc::Crust2::CrustLayer icemc::Crust2::layerAbove(CrustLayer layer) {
+  switch (layer){
+  case CrustLayer::Water:        return CrustLayer::Water;
+  case CrustLayer::Ice:          return CrustLayer::Water;
+  case CrustLayer::SoftSediment: return CrustLayer::Ice;
+  case CrustLayer::HardSediment: return CrustLayer::SoftSediment;
+  case CrustLayer::UpperCrust:   return CrustLayer::HardSediment;
+  case CrustLayer::MiddleCrust:  return CrustLayer::UpperCrust;
+  case CrustLayer::LowerCrust:   return CrustLayer::MiddleCrust;
+  }
+  
+  return layer;
+}
 
+///@todo handle out of layer bounds somehow
+icemc::Crust2::CrustLayer icemc::Crust2::layerBelow(CrustLayer layer) {
+  switch (layer){
+  case CrustLayer::Water:          return CrustLayer::Ice;
+  case CrustLayer::Ice:            return CrustLayer::SoftSediment;
+  case CrustLayer::SoftSediment:   return CrustLayer::HardSediment;
+  case CrustLayer::HardSediment:   return CrustLayer::UpperCrust;
+  case CrustLayer::UpperCrust:     return CrustLayer::MiddleCrust;
+  case CrustLayer::MiddleCrust:    return CrustLayer::LowerCrust;
+  case CrustLayer::LowerCrust:     return CrustLayer::LowerCrust;
+  }
+  return layer;
+}
+
+
+double icemc::Crust2::IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const {
+
+  const int numDimensions = 3;
+  double pCart[numDimensions];
+  p.GetXYZ(pCart);
+  std::vector<int> indicesOfPointsWithinRange;
+  fKDTree->FindInRange(pCart, horizonDistanceMeters, indicesOfPointsWithinRange);
+  
+  return double(indicesOfPointsWithinRange.size());
+}
 
 
 
 
 double icemc::Crust2::IceThickness(const Geoid::Position& p) const {
 
-  const int numDimensions = 3;
-  double pCart[numDimensions];
-  p.GetXYZ(pCart);
+  return 1;
+
+  // const int numDimensions = 3;
+  // double pCart[numDimensions];
+  // p.GetXYZ(pCart);
   
-  const int numNeighbours = 3;
-  std::vector<int> indices(numNeighbours);
-  std::vector<double> distances(numNeighbours);
+  // const int numNeighbours = 3;
+  // std::vector<int> indices(numNeighbours);
+  // std::vector<double> distances(numNeighbours);
 
-  fKDTree->FindNearestNeighbors(pCart, numNeighbours, &indices[0], &distances[0]);
+  // fKDTree->FindNearestNeighbors(pCart, numNeighbours, &indices[0], &distances[0]);
+  
+  // Geoid::Position p0(fXs.at(indices[0]), fYs.at(indices[0]), fZs.at(indices[0]));
+  // Geoid::Position p1(fXs.at(indices[1]), fYs.at(indices[1]), fZs.at(indices[1]));
+  // Geoid::Position p2(fXs.at(indices[2]), fYs.at(indices[2]), fZs.at(indices[2]));
+
+  // TVector3 d2 = p2 - p0;
+  // TVector3 d1 = p1 - p0;
+  
+  // TVector3 newZ = d2.Cross(d1);
 
   
-  Geoid::Position p0(fXs.at(indices[0]), fYs.at(indices[0]), fZs.at(indices[0]));
-  Geoid::Position p1(fXs.at(indices[1]), fYs.at(indices[1]), fZs.at(indices[1]));
-  Geoid::Position p2(fXs.at(indices[2]), fYs.at(indices[2]), fZs.at(indices[2]));
+  // // now we have a local coordinate system where:
+  // // the local z-axis is normal to the plane containing p0, p1, p2
+  // // and local x-axis points from p0 to p1
+  // // local y-axis is perpendicular to local z-axis and local x-axis
+  // // I call these the "planeCoords"
+  // LocalCoordinateSystem planeCoords(p0, p1, newZ);
 
-  TVector3 d2 = p2 - p0;
-  TVector3 d1 = p1 - p0;
+
+  // // these are the reference positions in the planeCoords
+  // // They should all have z=0, and l1 should have y=0
+  // const TVector3 l0 = planeCoords.globalPositionToLocal(p0);
+  // const TVector3 l1 = planeCoords.globalPositionToLocal(p1);
+  // const TVector3 l2 = planeCoords.globalPositionToLocal(p2);
+
+  // // std::cout << l0.X() << "\t" << l0.Y() << "\t" << l0.Z() << std::endl;
+  // // std::cout << l1.X() << "\t" << l1.Y() << "\t" << l1.Z() << std::endl;
+  // // std::cout << l2.X() << "\t" << l2.Y() << "\t" << l2.Z() << std::endl;
+  // // std::cout << std::endl;  
   
-  TVector3 newZ = d2.Cross(d1);
+  // // position of interest in plane coords
+  // // NOTE THAT local Z here need not be zero
+  // // but we are going to ignore it for now as we are interpolating in the
+  // // plane of p0, p1, p2
+  // const TVector3 l = planeCoords.globalPositionToLocal(p);    
 
+  // // Here we get the the quantity of interest at the reference points: p0, p1, p2
+  // double z0 = fThickness.at(indices[0]);
+  // double z1 = fThickness.at(indices[1]);
+  // double z2 = fThickness.at(indices[2]);
+
+  // double dz1 = z1 - z0; // change in z when moving from l0 to l1
+  // double dz2 = z2 - z0; // change in z when moving from l0 to l2
+
+
+  // // So long as l1 is not parallel to l2 they span the p0, p1, p2 plane
+  // // I think we can consider our quantity of interest as a shift in dz along the plane
+  // // the values dz1 and dz2 tell us how the values shift as we move along these basis vectors
+  // // so we need to find the position of interest in local coordinates in terms of l0 and l1
+
+  // // so if l = a*l1  + b*l2;
+  // // then  z = a*dz1 + b*dz2
+
+  // // since we know that l1 lies along the z-axis
+  // // the y-component of l must come entirely from b*l2.
+  // // therefore
+
+  // double b = l.Y()/l2.Y();
+
+  // TVector3 part2 = b*l2; // this is the l2 component
+  // TVector3 part1 = l - part2; // this is a*l1
+
+  // double a = part1.X()/l1.X();  
+
+  // double z = z0 + a*dz1 + b*dz2;
   
-  // now we have a local coordinate system where:
-  // the local z-axis is normal to the plane containing p0, p1, p2
-  // and local x-axis points from p0 to p1
-  // local y-axis is perpendicular to local z-axis and local x-axis
-  // I call these the "planeCoords"
-  LocalCoordinateSystem planeCoords(p0, p1, newZ);
-
-
-  // these are the reference positions in the planeCoords
-  // They should all have z=0, and l1 should have y=0
-  const TVector3 l0 = planeCoords.globalPositionToLocal(p0);
-  const TVector3 l1 = planeCoords.globalPositionToLocal(p1);
-  const TVector3 l2 = planeCoords.globalPositionToLocal(p2);
-
-  // std::cout << l0.X() << "\t" << l0.Y() << "\t" << l0.Z() << std::endl;
-  // std::cout << l1.X() << "\t" << l1.Y() << "\t" << l1.Z() << std::endl;
-  // std::cout << l2.X() << "\t" << l2.Y() << "\t" << l2.Z() << std::endl;
-  // std::cout << std::endl;  
-  
-  // position of interest in plane coords
-  // NOTE THAT local Z here need not be zero
-  // but we are going to ignore it for now as we are interpolating in the
-  // plane of p0, p1, p2
-  const TVector3 l = planeCoords.globalPositionToLocal(p);    
-
-  // Here we get the the quantity of interest at the reference points: p0, p1, p2
-  double z0 = fThickness.at(indices[0]);
-  double z1 = fThickness.at(indices[1]);
-  double z2 = fThickness.at(indices[2]);
-
-  double dz1 = z1 - z0; // change in z when moving from l0 to l1
-  double dz2 = z2 - z0; // change in z when moving from l0 to l2
-
-
-  // So long as l1 is not parallel to l2 they span the p0, p1, p2 plane
-  // I think we can consider our quantity of interest as a shift in dz along the plane
-  // the values dz1 and dz2 tell us how the values shift as we move along these basis vectors
-  // so we need to find the position of interest in local coordinates in terms of l0 and l1
-
-  // so if l = a*l1  + b*l2;
-  // then  z = a*dz1 + b*dz2
-
-  // since we know that l1 lies along the z-axis
-  // the y-component of l must come entirely from b*l2.
-  // therefore
-
-  double b = l.Y()/l2.Y();
-
-  TVector3 part2 = b*l2; // this is the l2 component
-  TVector3 part1 = l - part2; // this is a*l1
-
-  double a = part1.X()/l1.X();  
-
-  double z = z0 + a*dz1 + b*dz2;
-  
-  return z;
+  // return z;
 }
-
-
-
-
-
-constexpr double minHistLon = -180;
-constexpr double maxHistLon = 182;
-constexpr int nBinsLon = (maxHistLon - minHistLon)/2;
-constexpr double minHistLat = -90;
-constexpr double maxHistLat = 90;
-constexpr int nBinsLat = (maxHistLat - minHistLat)/2;
-
-inline TH2D* makeRawDataHist(const TString& name){
-  TH2D* h = new TH2D(name, name, nBinsLon, minHistLon, maxHistLon, nBinsLat, minHistLat, maxHistLat);
-  h->GetXaxis()->SetTitle("Longitude (Degrees)");
-  h->GetYaxis()->SetTitle("Latitude (Degrees)");
-  return h;
-}
-
-inline void fillWrapped(TH2D* h, double lon, double lat, double val){
-  h->Fill(lon, lat, val);
-  if(lon + 360 < maxHistLon){
-    h->Fill(lon+360, lat, val);	
-  }
-}
-
-
-
-TH2D* icemc::Crust2::makeRawHist(CrustLayer layer, CrustProperty property){
-  CrustKey key(layer, property);
-  TString name("h_");
-  name += getLayerName(layer);
-  name += "_";
-  name += getPropertyName(property);
-  name.ReplaceAll(" ",  "_");
-  name.ReplaceAll("(",  "");
-  name.ReplaceAll(")",  "");
-
-  TH2D* h = makeRawDataHist(name);
-  fRawCrustData[key] = h;
-  return h;
-}
-
-
-
-TH2D* icemc::Crust2::getRawHist(CrustLayer layer, CrustProperty property) const {
-  CrustKey key(layer, property);
-  auto it = fRawCrustData.find(key);
-  if(it!=fRawCrustData.end()){
-    return it->second;
-  }
-  else{
-    return nullptr;
-  }
-}
-
-
-
 
 
 double icemc::Crust2::IceThickness(double lon,double lat) const {
@@ -310,8 +261,9 @@ double icemc::Crust2::SurfaceDeepIce(const Geoid::Position&pos) const { // surfa
 
 
 double icemc::Crust2::RockSurface(double lon,double lat) const {
-  lon = lon < 0 ? lon + 360 : lon;  
-  return fCrustElevation->Interpolate(lon, lat); //(Surface(lon,lat) - IceThickness(lon,lat) - WaterDepth(lon,lat));
+  // lon = lon < 0 ? lon + 360 : lon;  
+  // return fCrustElevation->Interpolate(lon, lat); //(Surface(lon,lat) - IceThickness(lon,lat) - WaterDepth(lon,lat));
+  return 0;
 } //RockSurface(lon,lat)
 
 double icemc::Crust2::RockSurface(const Geoid::Position&pos) const {
@@ -324,7 +276,7 @@ double icemc::Crust2::RockSurface(const Geoid::Position&pos) const {
 double icemc::Crust2::SurfaceAboveGeoid(double lon,double lat) const {
   Geoid::Position p;
   p.SetLonLatAlt(lon, lat, 0);
-  return Crust2::SurfaceAboveGeoid(p);
+  return SurfaceAboveGeoid(p);
   // return surfacer[(int)(lon/2)][(int)(lat/2)];
 } //SurfaceAboveGeoid(lon,lat)
 
@@ -332,14 +284,16 @@ double icemc::Crust2::SurfaceAboveGeoid(double lon,double lat) const {
 
 double icemc::Crust2::SurfaceAboveGeoid(const Geoid::Position&pos) const {
   // std::cout << __PRETTY_FUNCTION__ << ": " << pos.Longitude() << "\t" << pos.Latitude() << std::endl;
-  double surfaceAboveGeoid = fSurfaceAboveGeoid->Interpolate(pos.Longitude(), pos.Latitude());
-  // std::cout << "Found " << surfaceAboveGeoid << std::endl;
-  return surfaceAboveGeoid;
+  return fSurfaceAboveGeoid.eval(pos);
+  // double surfaceAboveGeoid = fSurfaceAboveGeoid->Interpolate(pos.Longitude(), pos.Latitude());
+  // // std::cout << "Found " << surfaceAboveGeoid << std::endl;
+  // return surfaceAboveGeoid;
 } //SurfaceAboveGeoid(Position)
 
 double icemc::Crust2::WaterDepth(double lon,double lat) const {
-  lon = lon < 0 ? lon + 360 : lon;  
-  return getRawHist(CrustLayer::Water, CrustProperty::ThicknessKm)->Interpolate(lon, lat);  
+  return  0;
+  // lon = lon < 0 ? lon + 360 : lon;  
+  // return getRawHist(CrustLayer::Water, CrustProperty::ThicknessKm)->Interpolate(lon, lat);  
   // return waterthkarray[(int)(lon/2)][(int)(lat/2)]*1000;
 } //WaterDepth(lon,lat)
 
@@ -350,32 +304,34 @@ double icemc::Crust2::WaterDepth(const Geoid::Position&pos) const {
 
 double icemc::Crust2::GetDensity(const Geoid::Position& pos,
 				int& crust_entered /* 1 or 0 */) const{
-  
-  double lon = pos.Longitude();
-  lon = lon < 0 ? lon + 360 : lon;  
-  double lat = pos.Latitude();
-  double alt = pos.Altitude();
-  double ddensity =0; //initilize ddensity
 
-  if(alt > SurfaceAboveGeoid(pos)){
-    ddensity = 1.25; /// @todo better model than this?
-  }
-  else {
-    // this is actually pretty inefficient, but reads nicely and will do for now...
-    for(auto layer : CrustLayers() ){
-      double elevationLow = getRawHist(layer,  CrustProperty::ElevationLowerBoundary)->Interpolate(lon, lat);
-      if(alt >= elevationLow){ //  
-	ddensity = getRawHist(layer,  CrustProperty::Density)->Interpolate(lon, lat);
-      }
-      else{ // if you're below the lower boundary then the last density was correct
-	break;
-      }
-    }
-  }
-  if(ddensity == 0){
-    ddensity = densities[1]; // I guess this a mantle thing for below the moho?
-  }
-  return ddensity;
+  return densities[1];
+  
+  // double lon = pos.Longitude();
+  // lon = lon < 0 ? lon + 360 : lon;  
+  // double lat = pos.Latitude();
+  // double alt = pos.Altitude();
+  // double ddensity =0; //initilize ddensity
+
+  // if(alt > SurfaceAboveGeoid(pos)){
+  //   ddensity = 1.25; /// @todo better model than this?
+  // }
+  // else {
+  //   // this is actually pretty inefficient, but reads nicely and will do for now...
+  //   for(auto layer : CrustLayers() ){
+  //     double elevationLow = getRawHist(layer,  CrustProperty::ElevationLowerBoundary)->Interpolate(lon, lat);
+  //     if(alt >= elevationLow){ //  
+  // 	ddensity = getRawHist(layer,  CrustProperty::Density)->Interpolate(lon, lat);
+  //     }
+  //     else{ // if you're below the lower boundary then the last density was correct
+  // 	break;
+  //     }
+  //   }
+  // }
+  // if(ddensity == 0){
+  //   ddensity = densities[1]; // I guess this a mantle thing for below the moho?
+  // }
+  // return ddensity;
 
 }//Get Density
 
@@ -403,39 +359,40 @@ Geoid::Position icemc::Crust2::PickInteractionLocation(const Geoid::Position &de
 
   Geoid::Position nuPos;
 
+  ///@todo unbreak this!
   const double MAX_HORIZON_DIST = 800e3; ///@todo Get this from settings or something?
   bool iceThickEnough = false;
 
-  // This is a pretty important statement about icemc, we sample the ICE uniformly.
-  // To do that we first sample the x/y plane uniformly within the horizon radius,
-  // then we weight randomly chosen positions by ice thickness so that x/y positions
-  // where the ice is twice as thick are twice as likely to be chosen.
-  int numTries = 0;
-  while(!iceThickEnough){
-    double dx, dy;
-    do{ // first pick any point within the horizon radius
-      ///@todo make an integrator!
-      dx = MAX_HORIZON_DIST*gRandom->Rndm();
-      dy = MAX_HORIZON_DIST*gRandom->Rndm();
-    } while(dx*dx* + dy*dy > MAX_HORIZON_DIST*MAX_HORIZON_DIST);
+  // // This is a pretty important statement about icemc, we sample the ICE uniformly.
+  // // To do that we first sample the x/y plane uniformly within the horizon radius,
+  // // then we weight randomly chosen positions by ice thickness so that x/y positions
+  // // where the ice is twice as thick are twice as likely to be chosen.
+  // int numTries = 0;
+  // while(!iceThickEnough){
+  //   double dx, dy;
+  //   do{ // first pick any point within the horizon radius
+  //     ///@todo make an integrator!
+  //     dx = MAX_HORIZON_DIST*gRandom->Rndm();
+  //     dy = MAX_HORIZON_DIST*gRandom->Rndm();
+  //   } while(dx*dx* + dy*dy > MAX_HORIZON_DIST*MAX_HORIZON_DIST);
 
-    TVector3 deltaPos(dx, dy, 0);
-    nuPos = detector + deltaPos;
+  //   TVector3 deltaPos(dx, dy, 0);
+  //   nuPos = detector + deltaPos;
     
-    // then roll a dice to see if it's deep enough
-    double iceThicknessHere = this->IceThickness(nuPos);
-    double randomHeight = gRandom->Rndm()*GetMaxIceThickness();
+  //   // then roll a dice to see if it's deep enough
+  //   double iceThicknessHere = this->IceThickness(nuPos);
+  //   double randomHeight = gRandom->Rndm()*GetMaxIceThickness();
 
-    numTries++;
-    // std::cout << numTries << "\t" << iceThicknessHere << std::endl;
+  //   numTries++;
+  //   // std::cout << numTries << "\t" << iceThicknessHere << std::endl;
 
-    if(randomHeight < iceThicknessHere){
-      iceThickEnough = true;
-      double elevationIceBottom = get(CrustLayer::Ice, CrustProperty::ElevationLowerBoundary, nuPos);
-      const int kmToMetres = 1000;
-      nuPos.SetAltitude(elevationIceBottom + kmToMetres*randomHeight);
-    }
-  }
+  //   if(randomHeight < iceThicknessHere){
+  //     iceThickEnough = true;
+  //     // double elevationIceBottom = get(CrustLayer::Ice, CrustProperty::ElevationLowerBoundary, nuPos);
+  //     // const int kmToMetres = 1000;
+  //     nuPos.SetAltitude(elevationIceBottom + kmToMetres*randomHeight);
+  //   }
+  // }
   return nuPos;
 }
 
@@ -804,129 +761,81 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
   // puts data in arrays
 
   std::fstream infile(fName.c_str(),std::ios::in);
-
   std::string thisline; // for reading in file
-  std::string slon; //longitude as a string
-  std::string slat; // latitude as a string
-  std::string selev; // elevation (km relative to geoid)
-  std::string sdepth; // depth (km)
-  std::string sdensity; // density (g/cm^3)
-  int endindex; // index along thisline for parsing
-  int beginindex; // same
-
-  std::string layertype; // water, ice, etc.
-
-  int indexlon = 0;
-  int indexlat = 0;
-  double dlon, dlat;
 
   while(!infile.eof()) {
     getline(infile,thisline,'\n');
 
-    int loc=thisline.find("type, latitude, longitude,"); 
-	
-    if (loc!=(int)(std::string::npos)) {      
- 
-      beginindex=thisline.find_first_not_of(" ",57);
-
-      endindex=thisline.find_first_of(" ",61);
-
-      slat=thisline.substr(beginindex,endindex-beginindex);
-      dlat=(double)atof(slat.c_str());
+    Geoid::Position currentPos;
+    int indexlon = 0;
+    int indexlat = 0;
+    
+    if (thisline.find("type, latitude, longitude,")!=(int)(std::string::npos)){
+      // a new point in the model  
+      int beginindex=thisline.find_first_not_of(" ",57);
+      int endindex=thisline.find_first_of(" ",61);
+      
+      std::string slat=thisline.substr(beginindex,endindex-beginindex);
+      double latitude = (double)atof(slat.c_str());
 
       beginindex=thisline.find_first_not_of(" ",68);
       endindex=thisline.find_first_of(" ",72);
 
-      slon=thisline.substr(beginindex,endindex-beginindex);
-      dlon=(double)atof(slon.c_str());
+      std::string slon=thisline.substr(beginindex,endindex-beginindex);
+      double longitude =(double)atof(slon.c_str());
 
-      indexlon=(int)((dlon+180)/2);
-      indexlat=(int)((90+dlat)/2);
+      indexlon=(int)((longitude+180)/2);
+      indexlat=(int)((90+latitude)/2);
 
       beginindex=thisline.find_first_not_of(" ",78);
       endindex=thisline.find_first_of(" ",83);
 
-      selev=thisline.substr(beginindex,endindex-beginindex);
+      std::string selev=thisline.substr(beginindex,endindex-beginindex);
       double elevation = (double)atof(selev.c_str());
 
-      if(!fCrustElevation) {
-	fCrustElevation = makeRawDataHist("fCrustElevation");
-      }
-      fillWrapped(fCrustElevation, dlon, dlat, elevation);
+      currentPos.SetLonLatAlt(longitude, latitude, 0); //elevation); // put the current position on the surface
+      std::cout << "lon/lat/elev:\t" << longitude << "\t" << latitude << "\t" << elevation << std::endl;
+      fSurfaceAboveGeoid.addPoint(currentPos, elevation);
+      
+    } // new data point
 
-      Geoid::Position p;
-      p.SetLonLatAlt(dlon, dlat, 0);
-      fXs.push_back(p.X());
-      fYs.push_back(p.Y());
-      fZs.push_back(p.Z());
-      fElevations.push_back(elevation);
-
-    } //if
-
+    // skip next 4 lines of file
     for (int i=0;i<4;i++) {
       getline(infile,thisline,'\n');
-    } //for
+    }
 
+    // read crust values at this point
     for (int i=0;i<7;i++) {
       getline(infile,thisline,'\n');
 
-      endindex = thisline.length()-1;
-      beginindex = thisline.find_last_of("0123456789",1000);
-      layertype = thisline.substr(beginindex+3,endindex-beginindex);
+      int endindex = thisline.length()-1;
+      int beginindex = thisline.find_last_of("0123456789",1000);
+      std::string layertype = thisline.substr(beginindex+3,endindex-beginindex);
+      CrustLayer layer = getLayerFromString(layertype);
 
       beginindex = thisline.find_first_not_of(" ",0);
       endindex = thisline.find_first_of(" ",beginindex);
 
-      sdepth = thisline.substr(beginindex, endindex-beginindex-1);
+      std::string sdepth = thisline.substr(beginindex, endindex-beginindex-1);
       
-      beginindex=thisline.find_first_not_of(" ",endindex);
-      endindex=thisline.find_first_of(" ",beginindex);
+      for(int i=0; i < 3;  i++){ // skip the next three data numbers
+	beginindex = thisline.find_first_not_of(" ",endindex);
+	endindex = thisline.find_first_of(" ",beginindex);
+      }
 
-      beginindex=thisline.find_first_not_of(" ",endindex);
-      endindex=thisline.find_first_of(" ",beginindex);
-
-      beginindex=thisline.find_first_not_of(" ",endindex);
-      endindex=thisline.find_first_of(" ",beginindex);
-
-      sdensity=thisline.substr(beginindex,endindex-beginindex);
-
+      std::string sdensity=thisline.substr(beginindex,endindex-beginindex);
       double density=(double)atof(sdensity.c_str());
       double depth = (double)atof(sdepth.c_str());;
-
-      CrustLayer layer = getLayerFromString(layertype);
-      // region where Ross Ice Shelf was not accounted for in Crust 2.0
-      // add it in by hand
+      
+      // region where Ross Ice Shelf was not accounted for in Crust 2.0 add it in by hand
       if (layer==CrustLayer::Ice && indexlat==5 && (indexlon<=5 || indexlon>=176)){ // Ross Ice Shelf
 	depth = 0.5;
       }
 
-      TH2D* hThickness = getRawHist(layer, CrustProperty::ThicknessKm);
-      if(!hThickness){
-	hThickness = makeRawHist(layer, CrustProperty::ThicknessKm);
-      }
-      fillWrapped(hThickness, dlon, dlat, depth);
-      fThickness.push_back(depth);
-
-      if(layer == CrustLayer::Ice && depth > fMaxIceThickness){
-	fMaxIceThickness = depth;
-      }
-
-      double centerLon = hThickness->GetXaxis()->GetBinCenter(hThickness->GetXaxis()->FindBin(dlon));
-      double centerLat = hThickness->GetYaxis()->GetBinCenter(hThickness->GetYaxis()->FindBin(dlat));
-      if(centerLon - dlon != 0 || centerLat != dlat){
-	icemcLog() << icemc::warning << "Binning error in " << hThickness->GetName()
-		   << ", raw lon = " << dlon << " binCenter = " << centerLon
-		   << ", raw lat = " << dlat << " binCenter = " << centerLat
-		   << std::endl;
-      }
-
-      TH2D* hDensity = getRawHist(layer, CrustProperty::Density);
-      if(!hDensity){
-	hDensity = makeRawHist(layer, CrustProperty::Density);
-      }
-      fillWrapped(hDensity,  dlon, dlat, density);
-            
-    } //for (reading all lines for one location given in Crust 2.0 input file)
+      icemc::Mesh& surf = fLayers[layer];
+      const double kmToM = 1e3;
+      surf.addPoint(currentPos, kmToM*depth);
+    } // for each data point in the crust file
 
 
     ///@todo restore constant crust values
@@ -958,119 +867,17 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
     }
   }  // done reading file
 
-  
-  if(!fSurfaceAboveGeoid){
-    fSurfaceAboveGeoid = makeRawDataHist("fSurfaceAboveGeoid");
-  }
-  else{
-    fSurfaceAboveGeoid->Clear();
-  }
-  const double kmToMetres = 1000;
-  for(int by=1; by < fCrustElevation->GetNbinsY(); by++){
-    for(int bx=1; bx < fCrustElevation->GetNbinsX(); bx++){
-      double surfaceAboveGeoid = fCrustElevation->GetBinContent(bx,  by);
-      for(auto layer : {CrustLayer::Ice, CrustLayer::Water}){
-	surfaceAboveGeoid += kmToMetres*(getRawHist(layer, CrustProperty::ThicknessKm)->GetBinContent(bx, by));
-      }
-      fSurfaceAboveGeoid->SetBinContent(bx, by, surfaceAboveGeoid);
-    }
-  }
-
   // find the place where the crust is the deepest.
-  // for finding where to start stepping in Getchord  
+  // for finding where to start stepping in Getchord
   MIN_ALTITUDE_CRUST = DBL_MAX;
   
   // now we have the surface which has everything underneath it, we can go back and deduce the elevation of each layer
   // by the subtracting the cumulative thickness of the layers from the surfaceAboveGeoid 
   // so the CurstPropery::ElevationLowerBoundary is, descriptively, the elevation at the *BOTTOM* of each layer.
-  for(int by=1; by < fCrustElevation->GetNbinsY(); by++){
-    for(int bx=1; bx < fCrustElevation->GetNbinsX(); bx++){
-      double layerElevation = fSurfaceAboveGeoid->GetBinContent(bx, by);
-      for(auto layer : CrustLayers() ){	
-	double thicknessMetres = kmToMetres*(getRawHist(layer, CrustProperty::ThicknessKm)->GetBinContent(bx, by));
-	layerElevation -= thicknessMetres;
-	TH2D* hLayerElev = getRawHist(layer, CrustProperty::ElevationLowerBoundary);
-	if(!hLayerElev){
-	  hLayerElev = makeRawHist(layer, CrustProperty::ElevationLowerBoundary);
-	}
-	hLayerElev->SetBinContent(bx, by, layerElevation);
-
-	if(layerElevation < MIN_ALTITUDE_CRUST){
-	  MIN_ALTITUDE_CRUST = layerElevation;
-	}
-      }
-    }
-  }
   radii[1]=(Geoid::GEOID_MIN+MIN_ALTITUDE_CRUST)*(Geoid::GEOID_MIN+MIN_ALTITUDE_CRUST);
-
-
-  const int numDimensions = 3;
-  const int binSize = 10e3;
-  fKDTree = new TKDTreeID(fXs.size(), numDimensions, binSize);
-  fKDTree->SetData(0, fXs.data());
-  fKDTree->SetData(1, fYs.data());
-  fKDTree->SetData(2, fZs.data());  
-  fKDTree->Build();
-
   
-  // {
-  //   Geoid::Position p;
-  //   p.SetLonLatAlt(0, -90, 0);
-  //   int numTest = 10;
-  //   std::vector<int> indices(numTest);
-  //   std::vector<double> distances(numTest);
-  //   double pCart[numDimensions];
-  //   p.GetXYZ(pCart);
-  //   fKDTree->FindNearestNeighbors(pCart, numTest, &indices[0], &distances[0]);
-
-  //   for(int i=0; i < numTest; i++){
-  //     int j = indices[i];
-  //     Geoid::Position p2(fXs.at(j), fYs.at(j), fZs.at(j));
-  //     std::cout << j << "\t" << distances[i] << "\t" << p2.Longitude() << "\t" << p2.Latitude() << std::endl;      
-  //   }
-  //   exit(1);
-  // }
-
-  
-  // TFile* fTest = new TFile("earthTest.root", "recreate");
-  // for(auto it : fRawCrustData){
-  //   TH2D* h = it.second;
-  //   h->SetDirectory(gDirectory);
-  // }
-  // fCrustElevation->SetDirectory(gDirectory);
-  // fSurfaceAboveGeoid->SetDirectory(gDirectory);
-  
-  // fTest->Write();
-  // fTest->Close();
-  // // exit(1);
-
-
   
 }//ReadCrust
-
-
-// Geoid::Position icemc::Crust2::PickPosnuForaLonLat(double lon,double lat) const {
-    
-    
-//   double surface_above_geoid = this->SurfaceAboveGeoid(lon,lat);
-//   double local_ice_thickness = this->IceThickness(lon,lat);
-    
-//   double rnd3=gRandom->Rndm();
-
-//   double elevation = surface_above_geoid - rnd3*local_ice_thickness; // elevation of interaction
-//   //cout << "Inside PickInteractionLocation, lon, lat, local_ice_thickness are " << lon << " " << lat << " " << local_ice_thickness << "\n";
-
-//   if (elevation > surface_above_geoid || elevation < (surface_above_geoid - local_ice_thickness)){
-//     std::cout<<"elevation > surface_above_geoid || elevation < (surface_above_geoid - local_ice_thickness)\n";
-//   }
-  
-//   Geoid::Position posnu;
-//   posnu.SetLonLatAlt(lon, lat, elevation);
-
-//   return posnu;
-// }
-
-
 
 
 

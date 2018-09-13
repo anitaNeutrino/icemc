@@ -95,22 +95,178 @@ double icemc::WorldModel::CreateHorizons(Detector* detector,  double horizonDist
 }
 
 
-double icemc::WorldModel::IceVolumeWithinHorizon(const Geoid::Position& p,  double horizonDistanceMeters, double stepSizeMeters) const {
 
-  const LocalCoordinateSystem localCoords(p);
-  double localVolume = 0;
-  const double drSq = horizonDistanceMeters*horizonDistanceMeters;
-  const double kilometersToMeters = 1e3;
-  for(double dy=-horizonDistanceMeters; dy <= horizonDistanceMeters; dy += stepSizeMeters){
-    for(double dx=-horizonDistanceMeters; dx <= horizonDistanceMeters; dx += stepSizeMeters){
-      if(dx*dx + dy*dy <= drSq){
-	TVector3 deltaLocal(dx, dy, 0);
-	TVector3 deltaGlobal = localCoords.localTranslationToGlobal(deltaLocal);
-	double iceThickness = kilometersToMeters*this->IceThickness(p + deltaGlobal);
-	localVolume += stepSizeMeters*stepSizeMeters*iceThickness;
-      }
-    }
-  }
-  return localVolume;
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+icemc::Mesh::Mesh(){
+
 }
+
+icemc::Mesh::~Mesh(){
+  if(fSurfUp){
+    delete fSurfUp;
+  }
+  if(fSurfDown){
+    delete fSurfDown;
+  }  
+}
+
+size_t icemc::Mesh::addPoint(const Geoid::Position& p, double val){
+  
+  if(fDoneInit){
+    icemcLog() << icemc::warning << "Can't add a point after calling distanceZ!" << std::endl;
+    return N();
+  }
+  Geoid::Position p2 = p;
+  p2.SetMag(p.Surface());
+  
+  if(p.Z() >= 0){
+    fXUps.push_back(p.X());
+    fYUps.push_back(p.Y());
+    fZUps.push_back(val);
+  }
+  else{
+    fXDowns.push_back(p.X());
+    fYDowns.push_back(p.Y());
+    fZDowns.push_back(val);
+  }
+  return N();
+}
+
+double icemc::Mesh::eval(const Geoid::Position& p) const {
+  
+  
+  if(N() == 0){
+    icemcLog() << icemc::warning << "Can't interpolate with 0 points" << std::endl;
+    return TMath::QuietNaN();
+  }
+
+  if(!fDoneInit){
+    init();
+  }
+  
+  Geoid::Position p2 = p;
+  p2.SetMag(p.Surface());
+  if(p.Z() >= 0){
+    return fSurfUp->Interpolate(p2.X(), p2.Y());
+  }
+  else{
+    fSurfDown->Interpolate(p2.X(), p2.Y());
+  }
+  return 0;
+}
+
+void icemc::Mesh::init() const {
+
+  
+  fSurfUp = new ROOT::Math::Delaunay2D(fXUps.size(),   &fXUps[0],   &fYUps[0],   &fZUps[0]);
+  fSurfDown = new ROOT::Math::Delaunay2D(fXDowns.size(), &fXDowns[0], &fYDowns[0], &fZDowns[0]);  
+  
+
+  fDoneInit = true;
+}
+
+
+
+// double icemc::Surface::distanceZ(const TVector3& p) const {
+
+//   if(N() == 0){
+//     icemcLog() << icemc::warning << "Can't interpolate with 0 points" << std::endl;
+//     return TMath::QuietNaN();
+//   }
+
+//   if(!fDoneInit){
+//     init();
+//   }
+  
+//   if(p.Z() >= 0){
+//     return p.Z() - fSurfUp->Interpolate(p.X(), p.Y());
+//   }
+//   else{
+//     return p.Z() - fSurfDown->Interpolate(p.X(), p.Y());
+//   }
+// }
+
+
+// double icemc::Surface::distanceR(const TVector3& p) const {
+
+//   /**
+//    * Here we try to get the radial distance above the surface
+//    * We interpolate in z(x,y) but we want 3D deltaR.
+//    * 
+//    * Since the surface covers the globe, there will be a value of dr which cuts the surface.
+//    * At the point we cut the surface, the position, p_c, will be (x_c, y_c, distanceZ(x_c, y_c))
+//    * Therefore we need to scale the p until this is true (or close enough).
+//    * 
+//    * The key to make this efficient is to make intelligent guesses as to the scale factor in the loop iteration.
+//    */
+
+//   const double epsilon = 0.001; // meters, i.e. 1mm
+
+//   TVector3 p2 = p;
+
+//   double dz = distanceZ(p2);
+//   const double cosTheta = p2.CosTheta();
+  
+//   int iter = 0;
+//   while(TMath::Abs(dz) > epsilon){
+
+//     // if we're close to the surface near the south pole, dz will be close to dr.
+//     double scaleFactor = 1 - (distanceZ(p2)/p2.Z()*cosTheta);
+//     p2 *= scaleFactor;
+//     dz = distanceZ(p2);
+
+//     iter++;
+//     if(iter >= 1000){
+//       printf("After %d iterations, ", iter);
+//       printf("sf = %8.7lf, ", scaleFactor);
+//       printf("dz = %8.7lf, ", dz);
+//       printf("p2.Z() = %8.7lf, ", p2.Z());
+//       printf("\n");
+//     }
+//     if(iter >= 2000){
+//       std::cout <<  "Something went wrong in " << __PRETTY_FUNCTION__ << " check this!" << std::endl;
+//       exit(1);
+//     }
+//   }
+//   // std::cout << "Converged after " << iter << " iterations" << std::endl;
+//   return p.Mag() - p2.Mag();
+// }
