@@ -260,8 +260,8 @@ namespace icemc{
     }
 
 
-    TKDTreeID * fKDTree; /// ROOT's implementation of a KDTree, typedef'd for int/double
     std::map<CrustLayer, icemc::Mesh> fLayers;
+    std::map<CrustLayer, icemc::Mesh> fDensities;
     icemc::Mesh fSurfaceAboveGeoid;
     
     

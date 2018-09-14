@@ -141,39 +141,35 @@ icemc::Mesh::Mesh(){
 }
 
 icemc::Mesh::~Mesh(){
-  if(fSurfUp){
-    delete fSurfUp;
+
+  std::vector<ROOT::Math::Delaunay2D*> meshes {fXUp, fXDown, fYUp, fYDown, fZUp, fZDown};
+  for(auto m : meshes){
+    if(m){
+      delete m;
+    }
   }
-  if(fSurfDown){
-    delete fSurfDown;
-  }  
 }
 
 size_t icemc::Mesh::addPoint(const Geoid::Position& p, double val){
   
   if(fDoneInit){
-    icemcLog() << icemc::warning << "Can't add a point after calling distanceZ!" << std::endl;
+    icemcLog() << icemc::warning << "Can't add a point after calling eval!" << std::endl;
     return N();
   }
   Geoid::Position p2 = p;
   p2.SetMag(p.Surface());
-  
-  if(p.Z() >= 0){
-    fXUps.push_back(p.X());
-    fYUps.push_back(p.Y());
-    fZUps.push_back(val);
-  }
-  else{
-    fXDowns.push_back(p.X());
-    fYDowns.push_back(p.Y());
-    fZDowns.push_back(val);
-  }
+  fPositions.emplace_back(p2);
+  fValues.emplace_back(val);  
   return N();
 }
 
+
+inline void nudgeInsideBounds(Geoid::Position& p, ROOT::Math::Delaunay2D* d){
+
+}
+
 double icemc::Mesh::eval(const Geoid::Position& p) const {
-  
-  
+
   if(N() == 0){
     icemcLog() << icemc::warning << "Can't interpolate with 0 points" << std::endl;
     return TMath::QuietNaN();
@@ -185,23 +181,97 @@ double icemc::Mesh::eval(const Geoid::Position& p) const {
   
   Geoid::Position p2 = p;
   p2.SetMag(p.Surface());
-  if(p.Z() >= 0){
-    return fSurfUp->Interpolate(p2.X(), p2.Y());
+
+  double interpolatedMeshVal = 0;
+
+  double X = TMath::Abs(p2.X());
+  double Y = TMath::Abs(p2.Y());
+  double Z = TMath::Abs(p2.Z());  
+  
+  if(Z >= X && Z >= Y){
+    if(p2.Z() >= 0){
+      interpolatedMeshVal = fZUp->Interpolate(p2.X(),  p2.Y());
+    }
+    else{
+      interpolatedMeshVal = fZDown->Interpolate(p2.X(),  p2.Y());
+    }
+  }
+  else if(X >= Y && X >= Z){
+    if(p2.X() >= 0){
+      interpolatedMeshVal = fXUp->Interpolate(p2.Y(),  p2.Z());
+    }
+    else{
+      interpolatedMeshVal = fXDown->Interpolate(p2.Y(),  p2.Z());
+    }
+  }
+  else if(Y >= X && Y >= Z){
+    if(p2.Y() >= 0){
+      interpolatedMeshVal = fYUp->Interpolate(p2.X(),  p2.Z());
+    }
+    else{
+      interpolatedMeshVal = fYDown->Interpolate(p2.X(),  p2.Z());
+    }    
   }
   else{
-    fSurfDown->Interpolate(p2.X(), p2.Y());
+    icemcLog() << icemc::error << "You shouldn't get here!" << std::endl;
   }
-  return 0;
+
+  return interpolatedMeshVal;
 }
 
 void icemc::Mesh::init() const {
 
-  
-  fSurfUp = new ROOT::Math::Delaunay2D(fXUps.size(),   &fXUps[0],   &fYUps[0],   &fZUps[0]);
-  fSurfDown = new ROOT::Math::Delaunay2D(fXDowns.size(), &fXDowns[0], &fYDowns[0], &fZDowns[0]);  
-  
+  if(!fDoneInit){
 
-  fDoneInit = true;
+    for(int i=0; i < N(); i++){
+      const Geoid::Position& p = fPositions.at(i);
+      const double val = fValues.at(i);
+      
+      if(p.X() >= 0){
+	xUpX.push_back(p.Y());
+	xUpY.push_back(p.Z());
+	xUpZ.push_back(val);
+      }
+      else{
+	xDownX.push_back(p.Y());
+	xDownY.push_back(p.Z());
+	xDownZ.push_back(val);
+      }
+
+      if(p.Y() >= 0){
+	yUpX.push_back(p.X());
+	yUpY.push_back(p.Z());	
+        yUpZ.push_back(val);
+      }
+      else{
+	yDownX.push_back(p.X());
+	yDownY.push_back(p.Z());
+	yDownZ.push_back(val);
+      }
+      
+      if(p.Z() >= 0){
+	zUpX.push_back(p.X());
+	zUpY.push_back(p.Y());	
+        zUpZ.push_back(val);
+      }
+      else{
+	zDownX.push_back(p.X());
+	zDownY.push_back(p.Y());
+	zDownZ.push_back(val);
+      }            
+    }
+
+    fXUp = new ROOT::Math::Delaunay2D(xUpX.size(), &xUpX[0], &xUpY[0], &xUpZ[0]);
+    fXDown = new ROOT::Math::Delaunay2D(xDownX.size(), &xDownX[0], &xDownY[0], &xDownZ[0]);    
+
+    fYUp = new ROOT::Math::Delaunay2D(yUpX.size(), &yUpX[0], &yUpY[0], &yUpZ[0]);
+    fYDown = new ROOT::Math::Delaunay2D(yDownX.size(), &yDownX[0], &yDownY[0], &yDownZ[0]);    
+
+    fZUp = new ROOT::Math::Delaunay2D(zUpX.size(), &zUpX[0], &zUpY[0], &zUpZ[0]);
+    fZDown = new ROOT::Math::Delaunay2D(zDownX.size(), &zDownX[0], &zDownY[0], &zDownZ[0]);    
+
+    fDoneInit = true;
+  }
 }
 
 

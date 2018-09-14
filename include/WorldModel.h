@@ -68,40 +68,37 @@ namespace icemc {
     virtual ~Mesh();
 
     size_t addPoint(const Geoid::Position& p, double val);
-    // double distanceZ(const TVector3& p) const;
-    // double distanceR(const TVector3& p) const;
 
     inline size_t N() const {
-      return fXUps.size() + fXDowns.size();
+      return fPositions.size();
     }
 
     double eval(const Geoid::Position& p) const;
 
-    // inline bool above(const TVector3& p){
-    //   return p.Z() >= distanceZ(p);
-    // }
-
-    // inline bool below(const TVector3& p){
-    //   return p.Z() < distanceZ(p);
-    // }
-
   private:
     void init() const;
     
-    std::vector<double> fXUps;
-    std::vector<double> fYUps;
-    std::vector<double> fZUps;
-
-    std::vector<double> fXDowns;
-    std::vector<double> fYDowns;
-    std::vector<double> fZDowns;
-
-    std::vector<Geoid::Position> fPUps;
-    std::vector<Geoid::Position> fPDowns;
-
-    mutable ROOT::Math::Delaunay2D* fSurfUp = nullptr;
-    mutable ROOT::Math::Delaunay2D* fSurfDown = nullptr;
+    std::vector<Geoid::Position> fPositions;
+    std::vector<double> fValues;    
+    
+    mutable ROOT::Math::Delaunay2D* fXUp = nullptr;
+    mutable ROOT::Math::Delaunay2D* fXDown = nullptr;
+    
+    mutable ROOT::Math::Delaunay2D* fYUp = nullptr;
+    mutable ROOT::Math::Delaunay2D* fYDown = nullptr;
+    
+    mutable ROOT::Math::Delaunay2D* fZUp = nullptr;
+    mutable ROOT::Math::Delaunay2D* fZDown = nullptr; 
     mutable bool fDoneInit = false;
+
+    mutable std::vector<double> xUpX, xUpY, xUpZ;
+    mutable std::vector<double> yUpX, yUpY, yUpZ;
+    mutable std::vector<double> zUpX, zUpY, zUpZ;
+    mutable std::vector<double> xDownX, xDownY, xDownZ;
+    mutable std::vector<double> yDownX, yDownY, yDownZ;
+    mutable std::vector<double> zDownX, zDownY, zDownZ;
+
+    
   };
   
 }

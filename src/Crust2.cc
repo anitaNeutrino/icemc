@@ -138,14 +138,14 @@ double icemc::Crust2::IceVolumeWithinHorizon(const Geoid::Position& p, double ho
   double pCart[numDimensions];
   p.GetXYZ(pCart);
   std::vector<int> indicesOfPointsWithinRange;
-  fKDTree->FindInRange(pCart, horizonDistanceMeters, indicesOfPointsWithinRange);
+  // fKDTree->FindInRange(pCart, horizonDistanceMeters, indicesOfPointsWithinRange);
   
   return double(indicesOfPointsWithinRange.size());
 }
 
 
 
-
+///@todo unbreak this
 double icemc::Crust2::IceThickness(const Geoid::Position& p) const {
 
   return 1;
@@ -794,7 +794,7 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
       double elevation = (double)atof(selev.c_str());
 
       currentPos.SetLonLatAlt(longitude, latitude, 0); //elevation); // put the current position on the surface
-      std::cout << "lon/lat/elev:\t" << longitude << "\t" << latitude << "\t" << elevation << std::endl;
+      // std::cout << "lon/lat/elev:\t" << longitude << "\t" << latitude << "\t" << elevation << std::endl;
       fSurfaceAboveGeoid.addPoint(currentPos, elevation);
       
     } // new data point
@@ -826,15 +826,18 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
       std::string sdensity=thisline.substr(beginindex,endindex-beginindex);
       double density=(double)atof(sdensity.c_str());
       double depth = (double)atof(sdepth.c_str());;
-      
+
       // region where Ross Ice Shelf was not accounted for in Crust 2.0 add it in by hand
       if (layer==CrustLayer::Ice && indexlat==5 && (indexlon<=5 || indexlon>=176)){ // Ross Ice Shelf
 	depth = 0.5;
       }
 
-      icemc::Mesh& surf = fLayers[layer];
-      const double kmToM = 1e3;
-      surf.addPoint(currentPos, kmToM*depth);
+      icemc::Mesh& depthMesh = fLayers[layer];
+      const double kilometersToMeters = 1e3;
+      depthMesh.addPoint(currentPos, kilometersToMeters*depth);
+
+      icemc::Mesh& densityMesh = fDensities[layer];
+      densityMesh.addPoint(currentPos, density);
     } // for each data point in the crust file
 
 
