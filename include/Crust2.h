@@ -92,20 +92,15 @@ namespace icemc{
     virtual double GetMaxIceThickness() const {
       return fMaxIceThickness;
     }
-    virtual double IceThickness(double lon,double lat) const;
     virtual double IceThickness(const Geoid::Position& pos) const;
     virtual int InFirn(const Geoid::Position& pos) const;
     virtual double SurfaceDeepIce(const Geoid::Position& pos) const;
-    virtual double SurfaceAboveGeoid(double lon,double lat) const;
     virtual double SurfaceAboveGeoid(const Geoid::Position& pos) const;
-    virtual double WaterDepth(double lon,double lat) const;
     virtual double WaterDepth(const Geoid::Position& pos) const;
-    virtual double RockSurface(double lon,double lat) const;
-
-    virtual double RockSurface(const Geoid::Position& pos) const;
+    // virtual double RockSurface(const Geoid::Position& pos) const;
     double GetDensity(const Geoid::Position& pos, int& crust_entered) const;
 
-    virtual double fractionalIceVolumeWithinHorizon(const Geoid::Position& centeredOn, double horizonDistance) const;
+    // virtual double fractionalIceVolumeWithinHorizon(const Geoid::Position& centeredOn, double horizonDistance) const;
     virtual double IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const ;
 
     /** 
@@ -259,10 +254,13 @@ namespace icemc{
       }
     }
 
-
     std::map<CrustLayer, icemc::Mesh> fLayers;
     std::map<CrustLayer, icemc::Mesh> fDensities;
     icemc::Mesh fSurfaceAboveGeoid;
+    std::shared_ptr<TKDTreeID> fKDTree = nullptr;
+    std::vector<double> fXs;
+    std::vector<double> fYs;
+    std::vector<double> fZs;
     
     
 

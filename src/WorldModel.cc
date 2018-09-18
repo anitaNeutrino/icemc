@@ -2,7 +2,18 @@
 #include "IcemcLog.h"
 #include "WorldModel.h"
 #include "LocalCoordinateSystem.h"
+#include <memory>
 
+
+/** 
+ * Plane is defined by three points
+ * 
+ * @param p1 is the first point
+ * @param p2 is the second points
+ * @param p3 is the third point
+ * 
+ * @return vector normal to the plane surface
+ */
 inline TVector3 normalToPlane(const Geoid::Position& p1,  const Geoid::Position& p2,  const Geoid::Position& p3){
   TVector3 d3 = p3 - p1;
   TVector3 d2 = p2 - p1;
@@ -10,9 +21,20 @@ inline TVector3 normalToPlane(const Geoid::Position& p1,  const Geoid::Position&
   return d3.Cross(d2).Unit();
 }
 
-
-
-
+/** 
+ * Get the area of the triangle defined by the three points.
+ * 
+ * @param p1 
+ * @param p2 
+ * @param p3 
+ * 
+ * @return 
+ */
+inline double area(const Geoid::Position& p1, const Geoid::Position& p2, const Geoid::Position& p3){
+  TVector3 normal = normalToPlane(p1, p2, p3);
+  // length of normal gives area of parallelogram of vectors, therefore divide by 2
+  return 0.5*normal.Mag();
+}
 
 
 TVector3 icemc::WorldModel::GetSurfaceNormal(const Geoid::Position& p) const {
@@ -57,42 +79,41 @@ TVector3 icemc::WorldModel::GetSurfaceNormal(const Geoid::Position& p) const {
 
 
 
-double icemc::WorldModel::CreateHorizons(Detector* detector,  double horizonDistanceMeters, double timeStepSeconds){
+// double icemc::WorldModel::CreateHorizons(Detector* detector,  double horizonDistanceMeters, double timeStepSeconds){
 
-  if(fHorizons.GetN()==0){
+//   if(fHorizons.GetN()==0){
   
-    if(timeStepSeconds <= 0){
-      icemcLog() << icemc::error << "got timeStepSeconds = " << timeStepSeconds << ", setting to default " << icemc::WorldModel::defaultTimeStep << std::endl;
-      timeStepSeconds = defaultTimeStep;
-    }
+//     if(timeStepSeconds <= 0){
+//       icemcLog() << icemc::error << "got timeStepSeconds = " << timeStepSeconds << ", setting to default " << icemc::WorldModel::defaultTimeStep << std::endl;
+//       timeStepSeconds = defaultTimeStep;
+//     }
 
-    double startTime = detector->getStartTime();
-    double endTime = detector->getEndTime();
-
+//     double startTime = detector->getStartTime();
+//     double endTime = detector->getEndTime();
     
-    const int nSteps = (endTime - startTime)/timeStepSeconds;
+//     const int nSteps = (endTime - startTime)/timeStepSeconds;
 
-    icemcLog() << icemc::info << "Creating horizons for " << nSteps << " time samples" << std::endl;
+//     icemcLog() << icemc::info << "Creating horizons for " << nSteps << " time samples" << std::endl;
     
-    for(int step=0; step <= nSteps; step++){
-      double sampleTime = startTime + step*timeStepSeconds;
+//     for(int step=0; step <= nSteps; step++){
+//       double sampleTime = startTime + step*timeStepSeconds;
 
-      Geoid::Position pos = detector->getPosition(sampleTime);
+//       Geoid::Position pos = detector->getPosition(sampleTime);
 
-      double volume = IceVolumeWithinHorizon(pos, horizonDistanceMeters);
+//       double volume = IceVolumeWithinHorizon(pos, horizonDistanceMeters);
 
-      fHorizons.SetPoint(fHorizons.GetN(), sampleTime, volume);
+//       fHorizons.SetPoint(fHorizons.GetN(), sampleTime, volume);
 
-      std::cout << "\r" << step << " / " << nSteps << std::flush;
-    }
-    std::cout << std::endl;
-  }
+//       std::cout << "\r" << step << " / " << nSteps << std::flush;
+//     }
+//     std::cout << std::endl;
+//   }
 
-  std::cout << fHorizons.GetN() << std::endl;
-  exit(1);
+//   std::cout << fHorizons.GetN() << std::endl;
+//   exit(1);
   
-  return 0;
-}
+//   return 0;
+// }
 
 
 
@@ -142,12 +163,6 @@ icemc::Mesh::Mesh(){
 
 icemc::Mesh::~Mesh(){
 
-  std::vector<ROOT::Math::Delaunay2D*> meshes {fXUp, fXDown, fYUp, fYDown, fZUp, fZDown};
-  for(auto m : meshes){
-    if(m){
-      delete m;
-    }
-  }
 }
 
 size_t icemc::Mesh::addPoint(const Geoid::Position& p, double val){
@@ -158,15 +173,10 @@ size_t icemc::Mesh::addPoint(const Geoid::Position& p, double val){
   }
   Geoid::Position p2 = p;
   p2.SetMag(p.Surface());
-  fPositions.emplace_back(p2);
-  fValues.emplace_back(val);  
+  fPoints.emplace_back(Point(p, val));
   return N();
 }
 
-
-inline void nudgeInsideBounds(Geoid::Position& p, ROOT::Math::Delaunay2D* d){
-
-}
 
 double icemc::Mesh::eval(const Geoid::Position& p) const {
 
@@ -186,7 +196,7 @@ double icemc::Mesh::eval(const Geoid::Position& p) const {
 
   double X = TMath::Abs(p2.X());
   double Y = TMath::Abs(p2.Y());
-  double Z = TMath::Abs(p2.Z());  
+  double Z = TMath::Abs(p2.Z());
   
   if(Z >= X && Z >= Y){
     if(p2.Z() >= 0){
@@ -210,7 +220,7 @@ double icemc::Mesh::eval(const Geoid::Position& p) const {
     }
     else{
       interpolatedMeshVal = fYDown->Interpolate(p2.X(),  p2.Z());
-    }    
+    }
   }
   else{
     icemcLog() << icemc::error << "You shouldn't get here!" << std::endl;
@@ -224,8 +234,8 @@ void icemc::Mesh::init() const {
   if(!fDoneInit){
 
     for(int i=0; i < N(); i++){
-      const Geoid::Position& p = fPositions.at(i);
-      const double val = fValues.at(i);
+      const Geoid::Position& p = fPoints.at(i).position;
+      const double val = fPoints.at(i).value;
       
       if(p.X() >= 0){
 	xUpX.push_back(p.Y());
@@ -261,82 +271,32 @@ void icemc::Mesh::init() const {
       }            
     }
 
-    fXUp = new ROOT::Math::Delaunay2D(xUpX.size(), &xUpX[0], &xUpY[0], &xUpZ[0]);
-    fXDown = new ROOT::Math::Delaunay2D(xDownX.size(), &xDownX[0], &xDownY[0], &xDownZ[0]);    
+    const int minPoints = 2;
+    if(xUpX.size() > minPoints){
+      fXUp = std::unique_ptr<Delaunay2D>(new Delaunay2D(xUpX.size(), &xUpX[0], &xUpY[0], &xUpZ[0]));
+    }
 
-    fYUp = new ROOT::Math::Delaunay2D(yUpX.size(), &yUpX[0], &yUpY[0], &yUpZ[0]);
-    fYDown = new ROOT::Math::Delaunay2D(yDownX.size(), &yDownX[0], &yDownY[0], &yDownZ[0]);    
+    if(xDownX.size() > minPoints){
+    fXDown = std::unique_ptr<Delaunay2D>(new Delaunay2D(xDownX.size(), &xDownX[0], &xDownY[0], &xDownZ[0]));
+    }
 
-    fZUp = new ROOT::Math::Delaunay2D(zUpX.size(), &zUpX[0], &zUpY[0], &zUpZ[0]);
-    fZDown = new ROOT::Math::Delaunay2D(zDownX.size(), &zDownX[0], &zDownY[0], &zDownZ[0]);    
+    if(yUpX.size() > minPoints){
+      fYUp = std::unique_ptr<Delaunay2D>(new Delaunay2D(yUpX.size(), &yUpX[0], &yUpY[0], &yUpZ[0]));
+    }
 
+    if(yDownX.size() > minPoints){
+      fYDown = std::unique_ptr<Delaunay2D>(new Delaunay2D(yDownX.size(), &yDownX[0], &yDownY[0], &yDownZ[0]));
+    }
+
+    if(zUpX.size() > minPoints){
+    fZUp = std::unique_ptr<Delaunay2D>(new Delaunay2D(zUpX.size(), &zUpX[0], &zUpY[0], &zUpZ[0]));
+    }
+
+    if(zDownX.size() > minPoints){
+      fZDown = std::unique_ptr<Delaunay2D>(new Delaunay2D(zDownX.size(), &zDownX[0], &zDownY[0], &zDownZ[0]));
+    }
+
+    
     fDoneInit = true;
   }
 }
-
-
-
-// double icemc::Surface::distanceZ(const TVector3& p) const {
-
-//   if(N() == 0){
-//     icemcLog() << icemc::warning << "Can't interpolate with 0 points" << std::endl;
-//     return TMath::QuietNaN();
-//   }
-
-//   if(!fDoneInit){
-//     init();
-//   }
-  
-//   if(p.Z() >= 0){
-//     return p.Z() - fSurfUp->Interpolate(p.X(), p.Y());
-//   }
-//   else{
-//     return p.Z() - fSurfDown->Interpolate(p.X(), p.Y());
-//   }
-// }
-
-
-// double icemc::Surface::distanceR(const TVector3& p) const {
-
-//   /**
-//    * Here we try to get the radial distance above the surface
-//    * We interpolate in z(x,y) but we want 3D deltaR.
-//    * 
-//    * Since the surface covers the globe, there will be a value of dr which cuts the surface.
-//    * At the point we cut the surface, the position, p_c, will be (x_c, y_c, distanceZ(x_c, y_c))
-//    * Therefore we need to scale the p until this is true (or close enough).
-//    * 
-//    * The key to make this efficient is to make intelligent guesses as to the scale factor in the loop iteration.
-//    */
-
-//   const double epsilon = 0.001; // meters, i.e. 1mm
-
-//   TVector3 p2 = p;
-
-//   double dz = distanceZ(p2);
-//   const double cosTheta = p2.CosTheta();
-  
-//   int iter = 0;
-//   while(TMath::Abs(dz) > epsilon){
-
-//     // if we're close to the surface near the south pole, dz will be close to dr.
-//     double scaleFactor = 1 - (distanceZ(p2)/p2.Z()*cosTheta);
-//     p2 *= scaleFactor;
-//     dz = distanceZ(p2);
-
-//     iter++;
-//     if(iter >= 1000){
-//       printf("After %d iterations, ", iter);
-//       printf("sf = %8.7lf, ", scaleFactor);
-//       printf("dz = %8.7lf, ", dz);
-//       printf("p2.Z() = %8.7lf, ", p2.Z());
-//       printf("\n");
-//     }
-//     if(iter >= 2000){
-//       std::cout <<  "Something went wrong in " << __PRETTY_FUNCTION__ << " check this!" << std::endl;
-//       exit(1);
-//     }
-//   }
-//   // std::cout << "Converged after " << iter << " iterations" << std::endl;
-//   return p.Mag() - p2.Mag();
-// }

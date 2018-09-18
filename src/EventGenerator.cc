@@ -1205,7 +1205,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // calculate the volume of ice seen by the balloon for all balloon positions
   // antarctica->CreateHorizons(&settings1, bn1, fDetector->theta_bn, fDetector->phi_bn, fDetector->altitude_bn, icemcLog().foutput);
   // antarctica->CreateHorizons(&settings1, fDetector);
-  antarctica->WorldModel::CreateHorizons(fDetector, 800e3);
+  // antarctica->WorldModel::CreateHorizons(fDetector, 800e3);
   icemcLog() << "Done with CreateHorizons.\n";
 
 
@@ -1266,16 +1266,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     eventNumber=(UInt_t)(clOpts.run_no)*NNU+inu;
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
-    
-    double eventTime = startTime + (endTime - startTime)*gRandom->Rndm();    
 
+    double eventTime = startTime + (endTime - startTime)*gRandom->Rndm();
 
     // first pick a balloon position...
     fDetector->PickBalloonPosition(eventTime, &settings1,  fDetector);
 
-
     Geoid::Position interaction = antarctica->PickInteractionLocation(fDetector->position());
-    // double volume = antarctica->IceVolumeWithinHorizon(fDetector->position(), 800e3); ///@todo from settings or something;
 
     RayTracer rayTracer(antarctica, fDetector->position());
     TVector3 rfDirFromInteraction = rayTracer.findPathToDetector(interaction);
@@ -1284,6 +1281,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       ///@todo Fill some tree indicating this!
       continue;
     }
+    
+    
     
     
   }
