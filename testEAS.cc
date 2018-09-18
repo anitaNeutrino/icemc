@@ -101,6 +101,7 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 #include <fftw3.h>
 #include "hot-loop.h"
 #include "cr-ft.h"
+#include "hot-module-test.h"
 
 namespace bvv {
   
@@ -412,7 +413,8 @@ int main(int argc,  char **argv) {
     }
   // cout << "Before the call to hot_loop" << endl;
 
-  struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", true /* bInteractive */);
+  struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
+  struct hot_test_state *hot_test_result = (struct hot_test_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/hot-module-test.so", true /* bInteractive */);
  // exit(0);
   
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)

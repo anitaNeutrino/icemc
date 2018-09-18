@@ -522,9 +522,9 @@ static bool game_step(struct cr_ft_state *state)
 }
 
 __attribute__((visibility("default"))) extern const struct game_api GAME_API = {
-  game_init, // game_init
-  game_finalize, // game_finalize
-  game_reload, // game_reload
-  game_unload, // game_unload
-  game_step // game_step
+  (void *(*)(bool))  game_init, // game_init
+  (void (*)(void *)) game_finalize, // game_finalize
+  (void (*)(void *)) game_reload, // game_reload
+  (void (*)(void *)) game_unload, // game_unload
+  (bool (*)(void *)) game_step // game_step
 };

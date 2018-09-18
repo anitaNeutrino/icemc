@@ -105,7 +105,7 @@ struct game {
     void *handle;
     ino_t id;
     struct game_api api;
-    struct cr_ft_state *state;
+    void *state;
 };
 
 static void game_load(struct game *game, bool bInteractive)
@@ -135,7 +135,6 @@ static void game_load(struct game *game, bool bInteractive)
         game->handle = handle;
         game->id = attr.st_ino;
         const struct game_api *api = (game_api *) dlsym(game->handle, "GAME_API");
-        // struct game_api *api = &GAME_API;
         if (api != NULL) {
           game->api = *api;
           if (game->state == NULL) game->state = game->api.init(bInteractive);

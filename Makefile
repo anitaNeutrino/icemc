@@ -121,9 +121,6 @@ BVVLDLIBS  = -ldl $(shell root-config --glibs)
 
 all:            $(BINARIES) $(SO_TARGET)
 
-# testEAS : testEAS.cc hot-api.h hot-loop.o
-# 		g++ -pedantic -Wall -O0 -g3 -fPIC `root-config --cflags` -rdynamic -o $@ $< -ldl `root-config --glibs` hot-loop.o $(LIBS)
-
 
 $(SO_HOT_TARGET): $(SO_DEP) $(SO_DEP_HEADER) hot-api.h
 	g++ $(CXXFLAGS) -shared $(LDFLAGS) -ldl -fvisibility=hidden -o $@ $<
@@ -138,9 +135,9 @@ $(SO_TARGET) : $(SO_DEP) $(SO_DEP_HEADER) hot-api.h
 hot-loop.o : hot-loop.cpp hot-api.h
 		g++ -c $(BVVCPPFLAGS) $(BVVLDFLAGS) -rdynamic -o $@ $< $(BVVLDLIBS)
 
-# main : main.cpp hot-api.h hot-loop.o
-# 		c++ $(BVVCPPFLAGS) $(BVVLDFLAGS) -rdynamic -o $@ $< $(BVVLDLIBS) hot-loop.o
-# 
+hot-module-test.o : hot-module-test.cpp hot-api.h
+		g++ -c $(BVVCPPFLAGS) $(BVVLDFLAGS) -rdynamic -o $@ $< $(BVVLDLIBS)
+
 $(BINARIES): %: %.$(SrcSuf) $(OBJS)
 		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(LIBS) $< $(OutPutOpt) $@
 		@echo "$@ done"
