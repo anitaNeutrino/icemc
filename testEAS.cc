@@ -401,15 +401,15 @@ int main(int argc,  char **argv) {
 
   WITH_LINES(
              "./GDB/cut_lo_hi/ft/icemc/__plot1d.dat",
+             // "./GDB/ift/inter/__plot1d.dat",
              ind,
              tokens,
-             // NrFT[ind - 1] = atof(tokens[0].c_str());
-             NrFT[ind] = atof(tokens[0].c_str());
+             NrFT[ind - 1] = atof(tokens[0].c_str());
             );
-  for (int ind = 0; ind < ANITA_TIME_SAMPLES; ind++) {
-    NrFT[ind] = NrFT[ind] * 5.5e+8; // The coefficient is an empirical value derived from eyeballing using gnuplot.
-    // cout << ind << " NrFT: " << NrFT[ind] << endl;
-  }
+    for (int ind = 0; ind < ANITA_TIME_SAMPLES; ind++) {
+      NrFT[ind] = NrFT[ind] * 5.5e+8; // The coefficient is an empirical value derived from eyeballing using gnuplot.
+  //    // cout << ind << " NrFT: " << NrFT[ind] << endl;
+    }
   // cout << "Before the call to hot_loop" << endl;
 
   struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", true /* bInteractive */);

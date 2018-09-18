@@ -49,6 +49,7 @@ struct cr_ft_state {
   bvv::TBuffer <int> vis_nbins;
   TCanvas *cZhsIFft;
   std::unique_ptr<TGraph> grIFft;
+  std::unique_ptr<TGraph> grINRFft; //!< TGraph with the inverse transform based on ANITA_FT_SAMPLES.
   std::unique_ptr<TGraph> grZhsTimeERec;
   std::unique_ptr<double[]> ZhsIFft;
   bvv::TBuffer <int> BinShift;
