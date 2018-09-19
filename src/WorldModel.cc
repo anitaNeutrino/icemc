@@ -172,7 +172,7 @@ size_t icemc::Mesh::addPoint(const Geoid::Position& p, double val){
     return N();
   }
   Geoid::Position p2 = p;
-  p2.SetMag(p.Surface());
+  p2.SetMag(p.EllipsoidSurface());
   fPoints.emplace_back(Point(p, val));
   return N();
 }
@@ -190,7 +190,7 @@ double icemc::Mesh::eval(const Geoid::Position& p) const {
   }
   
   Geoid::Position p2 = p;
-  p2.SetMag(p.Surface());
+  p2.SetMag(p.EllipsoidSurface());
 
   double interpolatedMeshVal = 0;
 

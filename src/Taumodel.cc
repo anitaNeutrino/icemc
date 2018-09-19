@@ -280,7 +280,7 @@ void icemc::Taumodel::GetDensityVectors(const Antarctica *antarctica1,Interactio
      postaunow=earth_in+nchord1;
      lat_tau=postaunow.Latitude();
      // altitude_tau = postaunow.Mag()-Geoid::getGeoidRadius(lat_tau);
-     density_now=antarctica1->GetDensity(postaunow,crust_entered);
+     density_now=antarctica1->Density(postaunow,crust_entered);
      mydensityvector.push_back(density_now);///filled with density at that step
      
      density_total+=density_now;

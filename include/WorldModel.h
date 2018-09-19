@@ -25,6 +25,7 @@ namespace icemc {
   public:
     virtual double SurfaceAboveGeoid(const Geoid::Position& p) const = 0;
     virtual double IceThickness(const Geoid::Position& p) const = 0;
+    virtual double Density(const Geoid::Position& p) const = 0;
 
     /** 
      * This one is actually implemented in this class.
@@ -37,7 +38,7 @@ namespace icemc {
     virtual TVector3 GetSurfaceNormal(const Geoid::Position& p) const;
 
     virtual inline double Surface(const Geoid::Position& p) const {
-      return p.Surface() + SurfaceAboveGeoid(p);
+      return p.EllipsoidSurface() + SurfaceAboveGeoid(p);
     };
 
     // inline double IceVolumeAtTime(double time){

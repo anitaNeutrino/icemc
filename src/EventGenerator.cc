@@ -643,7 +643,7 @@ int icemc::EventGenerator::WhereIsSecondBang(const Geoid::Position &posnu, const
     } //while
   } //else
   posnu2 = posnu + rnd1*nnu;
-  rfexit_db = antarctica1->Surface(posnu2)*posnu2.Unit();
+  rfexit_db = antarctica1->WorldModel::Surface(posnu2)*posnu2.Unit();
 
   // unit vector pointing to antenna from exit point.
   n_exit2bn_db = (r_bn - rfexit_db).Unit();
@@ -1254,17 +1254,18 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   /**
    * Main loop over generated neutrinos
    */
-  for (int inu = clOpts.startNu; inu < NNU; inu++) {
+  for (int inu = clOpts.startNu; inu < NNU && !ABORT_EARLY; inu++) {
+    
     if (NNU >= 100 && (inu % (NNU / 100) == 0)){
-      std::cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
+      std::cout << inu << " neutrinos. " << (double(inu+1)/double(NNU)) * 100 << "% complete.\n";
     }
     else{
-      std::cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
+      std::cout << inu << " neutrinos.  " << (double(inu+1) / double(NNU)) * 100 << "% complete.\n";
     }
-    
 
     eventNumber=(UInt_t)(clOpts.run_no)*NNU+inu;
-    // Set seed of all random number generators to be dependent on eventNumber
+
+    // @todo Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
 
     double eventTime = startTime + (endTime - startTime)*gRandom->Rndm();
@@ -1282,9 +1283,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       continue;
     }
     
+    // if we get here, then there's a ray tracing solution
+    // to get from our interaction point to the payload
+    // now we have that, we can calculate the neutrino path
+
     
-    
-    
+    NeutrinoPath np(interaction, rfDirFromInteraction, antarctica);
   }
 
   return;

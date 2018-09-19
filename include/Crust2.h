@@ -98,7 +98,11 @@ namespace icemc{
     virtual double SurfaceAboveGeoid(const Geoid::Position& pos) const;
     virtual double WaterDepth(const Geoid::Position& pos) const;
     // virtual double RockSurface(const Geoid::Position& pos) const;
-    double GetDensity(const Geoid::Position& pos, int& crust_entered) const;
+    virtual double Density(const Geoid::Position& pos) const {
+      int ce;
+      return Density(pos, ce);
+    }
+    virtual double Density(const Geoid::Position& pos, int& crust_entered) const;
 
     // virtual double fractionalIceVolumeWithinHorizon(const Geoid::Position& centeredOn, double horizonDistance) const;
     virtual double IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const ;
@@ -131,6 +135,7 @@ namespace icemc{
 
     Geoid::Position WhereDoesItEnter(const Geoid::Position &posnu,const TVector3 &nnu) const;
 
+    double integratePath(const Geoid::Position& interaction, const TVector3& neutrinoDir) const;
  
   protected:
     int EARTH_MODEL;
@@ -140,50 +145,14 @@ namespace icemc{
     int FLATSURFACE;
     int weightabsorption;
 
-
     // pick method to step neutrino through the earth and get attenuation length
     static constexpr int getchord_method=2;	///< 1=core,mantle,crust; 2=crust 2.0 model
 
-    static const double COASTLINE;		///< if the rf leaves from beyond this "coastline" (in degrees of latitude relative to south pole) it's not in antarctica.  Real coastline is always closer than this.
-
-						///< parameters of the Crust 2.0 earth model
+    static const double COASTLINE;		///< if the rf leaves from beyond this "coastline" (in degrees of latitude relative to south pole) it's not in antarctica.  Real coastline is always closer than this.						///< parameters of the Crust 2.0 earth model
     static constexpr int NLON=180;		///< number of bins in longitude for crust 2.0
     static constexpr int NLAT=90;		///< number of bins in latitude
     static constexpr int NPHI=180;		///< bins in longitude for visible ice in horizon
-    // static const double MAXTHETA;		///< maximum value of theta in degrees in polar coordinates
-    // double thetastep;				///< how big do you step in theta-> always 2deg with Crust 2.0
-    // double phistep;				///< how big do you step in phi->always 2deg in Crust 2.0
-    // static const int ILAT_COASTLINE;
-    // double surfacer[NLON][NLAT];		///< elevation at the surface (top of ice) compared to geoid (in meters)
-    // double icer[NLON][NLAT];			///< elevation at the *bottom* of ice layer (in meters)
-    // double waterr[NLON][NLAT];			///< elevation at the bottom of water layer (in meters)
-    // double softsedr[NLON][NLAT];		///< elevation at the bottom of soft set layer (in meters)
-    // double hardsedr[NLON][NLAT];		///< elev at bottom of hard sed layer (in meters)
-    // double uppercrustr[NLON][NLAT];		///< elev at bottom of upper crust layer (in meters)
-    // double middlecrustr[NLON][NLAT];		///< elev at bottom of middle crust layer (in meters)
-    // double lowercrustr[NLON][NLAT];		///< elev at bottom of lower crust layer (in meters)
-    // double geoid[NLAT];				///< realistic shape of earth-radius at each latitude (in meters)
     double MIN_ALTITUDE_CRUST;			///< maximum depth of crust- determines when to start stepping
-						///<double MAX_VOL; ///< maximum volume of ice in a bin in Crust 2.0 - not used
-
-
-    // double elevationarray[NLON][NLAT];		///< If no water, measures the elevation (relative to geoid, in meters) of the top of the ice or rock (i.e., air interface).  If there is water, measures elevation to bottom of water. (There may or may not be ice on top of the water.)
-    // double waterthkarray[NLON][NLAT];		///< thickness of water layer (in km)
-    // double icethkarray[NLON][NLAT];		///< thickness of ice layer (in km)
-    // double softsedthkarray[NLON][NLAT];		///< thickness of soft sed layer (in km)
-    // double hardsedthkarray[NLON][NLAT];		///< thickness of hard sed layer (in km)
-    // double uppercrustthkarray[NLON][NLAT];	///< thickness of upper crust layer (in km)
-    // double middlecrustthkarray[NLON][NLAT];	///< thickness of middle crust layer (in km)
-    // double lowercrustthkarray[NLON][NLAT];	///< thickness of lower crust layer (in km)
-    // double crustthkarray[NLON][NLAT];		///< total thickness of crust (in km)
-    // double waterdensityarray[NLON][NLAT];	///< density of water layer bin by bin
-    // double icedensityarray[NLON][NLAT];		///< density of ice layer bin by bin
-    // double softseddensityarray[NLON][NLAT];	///< density of soft sed layer
-    // double hardseddensityarray[NLON][NLAT];	///< density of hard sed layer
-    // double uppercrustdensityarray[NLON][NLAT];	///< density of upper crust layer
-    // double middlecrustdensityarray[NLON][NLAT]; ///< density of middle crust layer
-    // double lowercrustdensityarray[NLON][NLAT];	///< density of lower crust layer
-    // double area[NLAT];				///< area of a bin at a given latitude- calculated once
     double average_iceth;			///< average ice thickness over the continent-calculated once
 
     /////////////////////////////////////
@@ -191,71 +160,57 @@ namespace icemc{
     void ReadCrust(const std::string&);
     Geoid::Position PickInteractionLocation(const Geoid::Position &detector) const;
 
-    static const int numCrustLayers = 7;
-    enum class CrustLayer {Water,
-			   Ice,
-			   SoftSediment,
-			   HardSediment,
-			   UpperCrust,
-			   MiddleCrust,
-			   LowerCrust};
-    static CrustLayer layerAbove(CrustLayer);
-    static CrustLayer layerBelow(CrustLayer);    
-    
-
+    static const int numLayers = 9;
+    enum class Layer {Air, ///@todo think about this one
+		      Water,
+		      Ice,
+		      SoftSediment,
+		      HardSediment,
+		      UpperCrust,
+		      MiddleCrust,
+		      LowerCrust,
+		      Mantle ///@todo also special case
+    };
     /** 
      * Utility function for ease of for-range based for loops and iteration
-     * If the CrustLayer enum class is expanded this array should too! 
+     * If the Layer enum class is expanded this array should too! 
      * Allows for nice code like:
-     * for(auto layer : CrustLayers() ){
+     * for(auto layer : Layers() ){
      *    // something with a layer
      * }
      * @return const reference to a static array.
      */
-    inline const std::array<CrustLayer, numCrustLayers> CrustLayers() const {
-      static std::array<CrustLayer, numCrustLayers> allLayers {CrustLayer::Water,
-							       CrustLayer::Ice,
-							       CrustLayer::SoftSediment,
-							       CrustLayer::HardSediment,
-							       CrustLayer::UpperCrust,
-							       CrustLayer::MiddleCrust,
-							       CrustLayer::LowerCrust};
+    const std::array<Crust2::Layer, numLayers>& Layers() const {
+
+      static const int numLayers = 9;  
+
+      static std::array<Crust2::Layer, numLayers> allLayers {Crust2::Layer::Air,
+							     Crust2::Layer::Water,
+							     Crust2::Layer::Ice,
+							     Crust2::Layer::SoftSediment,
+							     Crust2::Layer::HardSediment,
+							     Crust2::Layer::UpperCrust,
+							     Crust2::Layer::MiddleCrust,
+							     Crust2::Layer::LowerCrust,
+							     Crust2::Layer::Mantle};
       return allLayers;
     }
-
-    enum class CrustProperty {ThicknessKm,
-			      ElevationLowerBoundary, // this is the elevation at the BOTTOM of the layer!
-			      Density};
-
+    
+    static Layer layerAbove(Layer);
+    static Layer layerBelow(Layer);
+    Layer getLayer(const Geoid::Position& pos, Layer startLayer=Layer::Air) const;
+    
   protected:
     double fMaxIceThickness = 0;    
   private:
 
+    const std::string& getLayerName(Layer layer) const;
+    Layer getLayerFromString(const std::string& layerType) const;
+    std::map<Layer, std::string> fLayerNames;
 
-
-    const std::string& getLayerName(CrustLayer layer) const;
-    CrustLayer getLayerFromString(const std::string& layerType) const;
-
-    const std::string& getPropertyName(CrustProperty property) const;
-
-    std::map<CrustLayer, std::string> fLayerNames;
-    std::map<CrustProperty, std::string> fPropertyNames;
-    typedef std::pair<CrustLayer, CrustProperty> CrustKey;
-
-    template <class T>
-    static const std::string& findThingInMapToString(const std::map<T, std::string>& m, T t){
-      auto it = m.find(t);
-      if(it!=m.end()){
-	return it->second;
-      }
-      else{
-	static const std::string unknown("unknown");
-	return unknown;
-      }
-    }
-
-    std::map<CrustLayer, icemc::Mesh> fLayers;
-    std::map<CrustLayer, icemc::Mesh> fDensities;
+    std::map<Layer, icemc::Mesh> fThicknesses;
+    std::map<Layer, icemc::Mesh> fSurfaceMag; ///< Here mag means Mag() of the Position, not elevation
+    std::map<Layer, icemc::Mesh> fDensities;
     icemc::Mesh fSurfaceAboveGeoid;
     std::shared_ptr<TKDTreeID> fKDTree = nullptr;
     std::vector<double> fXs;

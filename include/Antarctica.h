@@ -60,7 +60,7 @@ namespace icemc {
     double IceThickness(double lon,double lat) const;
     double IceThickness(const Geoid::Position& pos) const;
     double Surface(double lon,double lat) const;
-    double Surface(const Geoid::Position& pos) const;
+    // double Surface(const Geoid::Position& pos) const;
     double SurfaceAboveGeoid(double lon,double lat) const;
     double SurfaceAboveGeoid(const Geoid::Position& pos) const;
     double WaterDepth(double lon,double lat) const;

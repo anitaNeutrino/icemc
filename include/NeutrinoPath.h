@@ -1,10 +1,13 @@
 #ifndef NEUTRINO_PATH_H
 #define NEUTRINO_PATH_H
 
-#include "TObject.h"
+#include "Geoid.h"
 
 namespace icemc {
 
+
+  class WorldModel;
+  
   /**
    * @class NeutrinoPath
    * @brief Holds all path related information, for use in icemc::EventGenerator
@@ -13,6 +16,10 @@ namespace icemc {
    * an event position and direction you have its weight.
    */
   class NeutrinoPath {
+  private:
+    const WorldModel* fW = nullptr;
+    const Geoid::Position fInteractionPos;
+    TVector3 fNeutrinoDir;    
   public:
 
     /** 
@@ -21,9 +28,21 @@ namespace icemc {
     NeutrinoPath();
 
     /** 
+     * From these two
+     * 
+     * @param interaction 
+     * @param rfDir 
+     */
+    NeutrinoPath(const Geoid::Position& interaction, const TVector3& rfDir, const WorldModel* m);
+    
+
+    /** 
      * Default destructor, currently does nothing
      */
     virtual ~NeutrinoPath() {;}
+
+
+    void project();
 
 
     /** 
@@ -43,7 +62,7 @@ namespace icemc {
     double len_int;	///< interaction length in m
     double pieceofkm2sr;///< Use this for making plots comparing different cross sections.  The integral of a plot from a run will be the total Area*sr of the detector.  That way it is proportional to the cross section and the integral is something meaningful to people.
 
-    ClassDef(NeutrinoPath, 1);
+    // ClassDef(NeutrinoPath, 1);
   };
 }
 

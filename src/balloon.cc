@@ -530,13 +530,13 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
     static UInt_t lastTime = 0;
     static Long64_t lastEntry = -1;
     if(lastLat != -999 && lastLon != -999){
-      if(fabs(latitude - lastLat) > 0.2 || (fabs(longitude - lastLon) > 1 && fabs(longitude - lastLon) < 359)){ 
-    	std::cout << lastEntry << "\t" << lastTime << "\t" << lastLon << "\t" << lastLat << std::endl;
-    	std::cout << entry << "\t" << realTime << "\t" << longitude << "\t" << latitude << std::endl;	
-    	std::cout << entry - lastEntry << "\t" << realTime - lastTime << "\t" << longitude - lastLon << "\t" << latitude - lastLat << std::endl;
-    	std::cout << std::endl << std::endl;;	
-    	// std::cout << entry << "\t" << dt << "\t" << realTime << "\t" << eventTime << std::endl;
-      }
+      // if(fabs(latitude - lastLat) > 0.2 || (fabs(longitude - lastLon) > 1 && fabs(longitude - lastLon) < 359)){ 
+      // 	std::cout << lastEntry << "\t" << lastTime << "\t" << lastLon << "\t" << lastLat << std::endl;
+      // 	std::cout << entry << "\t" << realTime << "\t" << longitude << "\t" << latitude << std::endl;	
+      // 	std::cout << entry - lastEntry << "\t" << realTime - lastTime << "\t" << longitude - lastLon << "\t" << latitude - lastLat << std::endl;
+      // 	std::cout << std::endl << std::endl;;	
+      // 	// std::cout << entry << "\t" << dt << "\t" << realTime << "\t" << eventTime << std::endl;
+      // }
     }
 
     lastLat = latitude;

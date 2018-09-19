@@ -219,7 +219,7 @@ Geoid::Position icemc::Antarctica::PickInteractionLocation(const Geoid::Position
   //   //roughness may not sometimes, should add checks or something
   // TVector3 posnu=PickPosnuForaLonLat(lon,lat,theta,phi);
 
-  std::cerr << __PRETTY_FUNCTION__ << " Disabled during refactor!" << std::endl;
+  // std::cerr << __PRETTY_FUNCTION__ << " Disabled during refactor!" << std::endl;
 
   ///@todo do this again!
   return Crust2::PickInteractionLocation(balloon);
@@ -773,9 +773,9 @@ double icemc::Antarctica::Surface(double lon,double lat) const {
   return p.Mag();
 } //Surface
 
-double icemc::Antarctica::Surface(const Geoid::Position&pos) const {
-  return Surface(pos.Longitude(),pos.Latitude());
-} //Surface
+// double icemc::Antarctica::Surface(const Geoid::Position&pos) const {
+//   return Surface(pos.Longitude(),pos.Latitude());
+// } //Surface
 
 double icemc::Antarctica::WaterDepth(double lon, double lat) const {
   //This method returns the depth of water beneath ice shelves in meters, at a location specified by a latitude and longitude (in degrees).  A switch in the input file can be set to determine whether the Crust 2.0 model or the BEDMAP model is used to find the ice depth.  Code by Stephen Hoover.
@@ -940,7 +940,7 @@ double icemc::Antarctica::GetN(const Geoid::Position &pos) const {
 
 double icemc::Antarctica::EffectiveAttenuationLength(const Settings *settings1,const Geoid::Position &pos,const int &whichray) const {
   double localmaxdepth = IceThickness(pos);
-  double depth = Surface(pos) - pos.Mag();
+  double depth = WorldModel::Surface(pos) - pos.Mag();
   //std::cout << "depth is " << depth << "\n";
   int depth_index=0;
   double attenuation_length=0.0;
