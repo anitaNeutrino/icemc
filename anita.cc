@@ -1425,6 +1425,7 @@ void Anita::AntennaGain(Settings *settings1,double hitangle_e,double hitangle_h,
     //      if (fabs(hitangle_e)<PI/12)
     //cout << "vsignalarray_e before is " << vsignalarray_e << "\n";
     vsignalarray_e = vsignalarray_e * 0.5 * sqrt(vvGaintoHeight[k] * vvGaintoHeight[k] * e_component * e_component * relativegains[0] + hvGaintoHeight[k] * hvGaintoHeight[k] * h_component * h_component * relativegains[1]); // 0.5 is for voltage dividing
+
 		
     //cout << "In AntennaGain, vsignalarray_e is " << vsignalarray_e << "\n";
 		
@@ -1445,6 +1446,10 @@ void Anita::AntennaGain(Settings *settings1,double hitangle_e,double hitangle_h,
 		
     vsignalarray_h=vsignalarray_h*0.5*
       sqrt(hhGaintoHeight[k]*hhGaintoHeight[k]*h_component*h_component*relativegains[2] + vhGaintoHeight[k]*vhGaintoHeight[k]*e_component*e_component*relativegains[3]);
+
+    // the assumption is that the sign is set by the dominant component... the crosspol might actually be destructive :( 
+    if (e_component < 0) vsignalarray_e *=-1; 
+    if (h_component < 0) vsignalarray_h *=-1; 
 		
     //      if (fabs(hitangle_h)<PI/12)
     //cout << "vsignalarray_h after is " << vsignalarray_h << "\n";
