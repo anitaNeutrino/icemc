@@ -761,13 +761,13 @@ int main(int argc,  char **argv) {
   double volts_rx_rfcm_lab_h_all[48][512];
 
   // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
-  double e_component=0; // E comp along polarization
-  double h_component=0; // H comp along polarization
-  double n_component=0; // normal comp along polarization
+  double e_component[Anita::NANTENNAS_MAX]={0}; // E comp along polarization
+  double h_component[Anita::NANTENNAS_MAX]={0}; // H comp along polarization
+  double n_component[Anita::NANTENNAS_MAX]={0}; // normal comp along polarization
 
-  double e_component_kvector=0; // component of e-field along the rx e-plane
-  double h_component_kvector=0; // component of the e-field along the rx h-plane
-  double n_component_kvector=0; // component of the e-field along the normal
+  double e_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of e-field along the rx e-plane
+  double h_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the rx h-plane
+  double n_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the normal
 
   Vector n_eplane = const_z;
   Vector n_hplane = -const_y;
@@ -1063,8 +1063,8 @@ int main(int argc,  char **argv) {
   finaltree->Branch("rx0_threshold_eachband", &rx0_threshold_eachband, "rx0_threshold_eachband[2][5]/D");
   finaltree->Branch("rx0_noise_eachband", &rx0_noise_eachband, "rx0_noise_eachband[2][5]/D");
   finaltree->Branch("rx0_passes_eachband", &rx0_passes_eachband, "rx0_passes_eachband[2][5]/I");
-  finaltree->Branch("e_component", &e_component, "e_component/D");
-  finaltree->Branch("h_component", &h_component, "h_component/D");
+  finaltree->Branch("e_component", &e_component, "e_component[48]/D");
+  finaltree->Branch("h_component", &h_component, "h_component[48]/D");
   finaltree->Branch("dist_int_bn_2d", &dist_int_bn_2d, "dist_int_bn_2d/D");
   finaltree->Branch("d1", &d12, "d1/D");
 
@@ -2984,11 +2984,11 @@ int main(int argc,  char **argv) {
       anita1->rms_rfcm_e_single_event = 0;
 
       if (!settings1->BORESIGHTS) {
-        bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
-        bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
+        bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn[2], e_component_kvector[0],  h_component_kvector[0],  n_component_kvector[0]);
+        bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component[0],  h_component[0],  n_component[0]);
       }
       
-      for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
+           for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
         for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
           
           ChanTrigger *chantrig1 = new ChanTrigger();
@@ -2997,11 +2997,21 @@ int main(int argc,  char **argv) {
           bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
  
           if (settings1->BORESIGHTS){ // i.e. if BORESIGHTS is true
-            bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector,  h_component_kvector,  n_component_kvector);
-            bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol_eachboresight[ilayer][ifold], e_component,  h_component,  n_component);
+            bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector[count_rx],  h_component_kvector[count_rx],  n_component_kvector[count_rx]);
+            bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol_eachboresight[ilayer][ifold], e_component[count_rx],  h_component[count_rx],  n_component[count_rx]);
             fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold] << " " << mag1_eachboresight[ilayer][ifold] << "\n";
           }
-          bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
+          else if (count_rx > 0)  
+          {
+            e_component_kvector[count_rx] = e_component_kvector[0];
+            h_component_kvector[count_rx] = h_component_kvector[0];
+            n_component_kvector[count_rx] = n_component_kvector[0];
+            e_component[count_rx] = e_component[0];
+            h_component[count_rx] = h_component[0];
+            n_component[count_rx] = n_component[0];
+          }
+
+          bn1->GetHitAngles(e_component_kvector[count_rx], h_component_kvector[count_rx], n_component_kvector[count_rx], hitangle_e, hitangle_h);
           // store hitangles for plotting
           hitangle_h_all[count_rx]=hitangle_h;
           hitangle_e_all[count_rx]=hitangle_e;
@@ -3110,8 +3120,8 @@ int main(int argc,  char **argv) {
             max_antenna_volts0 = globaltrig1->volts[0][ilayer][ifold];
             max_antenna_volts0_em=globaltrig1->volts_em[0][ilayer][ifold];
             ant_max_normal0 = ant_normal;
-            e_comp_max1 = e_component;
-            h_comp_max1 = h_component;
+            e_comp_max1 = e_component[count_rx];
+            h_comp_max1 = h_component[count_rx];
           }
           else if (ilayer == 0 && globaltrig1->volts[0][ilayer][ifold] == max_antenna_volts0 && globaltrig1->volts[0][ilayer][ifold] != 0){
             cout<<"Equal voltage on two antennas!  Event : "<<inu<<endl;
@@ -3120,8 +3130,8 @@ int main(int argc,  char **argv) {
             max_antenna1 = count_rx;
             max_antenna_volts1 = globaltrig1->volts[0][ilayer][ifold];
             ant_max_normal1 = ant_normal;
-            e_comp_max2 = e_component;
-            h_comp_max2 = h_component;
+            e_comp_max2 = e_component[count_rx];
+            h_comp_max2 = h_component[count_rx];
           }
           else if (ilayer == 1 && globaltrig1->volts[0][ilayer][ifold] == max_antenna_volts1 && globaltrig1->volts[0][ilayer][ifold] != 0){
             cout<<"Equal voltage on two antennas!  Event : "<<inu<<endl;
@@ -3130,8 +3140,8 @@ int main(int argc,  char **argv) {
             max_antenna2 = count_rx;
             max_antenna_volts2 = globaltrig1->volts[0][ilayer][ifold];
             ant_max_normal2 = ant_normal;
-            e_comp_max3 = e_component;
-            h_comp_max3 = h_component;
+            e_comp_max3 = e_component[count_rx];
+            h_comp_max3 = h_component[count_rx];
           }
           else if (ilayer == 2 && globaltrig1->volts[0][ilayer][ifold] == max_antenna_volts2 && globaltrig1->volts[0][ilayer][ifold] != 0){
             cout<<"Equal voltage on two antennas!  Event : "<<inu<<endl;
@@ -3596,12 +3606,12 @@ int main(int argc,  char **argv) {
             truthEvPtr->run              = run_no;
             truthEvPtr->nuMom            = pnu;
             truthEvPtr->nu_pdg           = pdgcode;
-            truthEvPtr->e_component      = e_component;
-            truthEvPtr->h_component      = h_component;
-            truthEvPtr->n_component      = n_component;
-            truthEvPtr->e_component_k    = e_component_kvector;
-            truthEvPtr->h_component_k    = h_component_kvector;
-            truthEvPtr->n_component_k    = n_component_kvector;
+            memcpy(truthEvPtr->e_component, e_component, sizeof(e_component));
+            memcpy(truthEvPtr->h_component, h_component, sizeof(h_component));
+            memcpy(truthEvPtr->n_component, n_component, sizeof(n_component));
+            memcpy(truthEvPtr->e_component_k ,e_component_kvector, sizeof(e_component_kvector));
+            memcpy(truthEvPtr->h_component_k ,h_component_kvector, sizeof(h_component_kvector));
+            memcpy(truthEvPtr->n_component_k ,n_component_kvector, sizeof(n_component_kvector));
             truthEvPtr->sourceLon        = sourceLon;
             truthEvPtr->sourceLat        = sourceLat;
             truthEvPtr->sourceAlt        = sourceAlt;

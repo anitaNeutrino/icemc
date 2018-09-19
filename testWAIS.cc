@@ -311,13 +311,15 @@ int main(int argc,  char **argv) {
   Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
 
   // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
-  double e_component=0; // E comp along polarization
-  double h_component=0; // H comp along polarization
-  double n_component=0; // normal comp along polarization
+  double e_component[Anita::NANTENNAS_MAX]={0}; // E comp along polarization
+  double h_component[Anita::NANTENNAS_MAX]={0}; // H comp along polarization
+  double n_component[Anita::NANTENNAS_MAX]={0}; // normal comp along polarization
 
-  double e_component_kvector=0; // component of e-field along the rx e-plane
-  double h_component_kvector=0; // component of the e-field along the rx h-plane
-  double n_component_kvector=0; // component of the e-field along the normal
+  double e_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of e-field along the rx e-plane
+  double h_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the rx h-plane
+  double n_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the normal
+
+
 
 
   double hitangle_e, hitangle_h;       // angle the ray hits the antenna wrt e-plane, h-plane
@@ -708,14 +710,14 @@ int main(int argc,  char **argv) {
 	// for this (hitangle_h_all[count_rx]=hitangle_h;) and histogram fill, use specular case
 	//although the GetEcomp..() functions are called in ConvertInputWFtoAntennaWF() to calculate the actual waveforms
 	if (!settings1->BORESIGHTS) {
-	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,   ray1->n_exit2bn[2], e_component_kvector,  h_component_kvector,  n_component_kvector);
-	  bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component,  h_component,  n_component);
+	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,   ray1->n_exit2bn[2], e_component_kvector[count_rx],  h_component_kvector[count_rx],  n_component_kvector[count_rx]);
+	  bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component[count_rx],  h_component[count_rx],  n_component[count_rx]);
 	}
 	else{ // i.e. if BORESIGHTS is true
-	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector,  h_component_kvector,  n_component_kvector);
-	  bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol_eachboresight[ilayer][ifold], e_component,  h_component,  n_component);
+	  bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector[count_rx],  h_component_kvector[count_rx],  n_component_kvector[count_rx]);
+	  bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol_eachboresight[ilayer][ifold], e_component[count_rx],  h_component[count_rx],  n_component[count_rx]);
 	}
-	bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
+	bn1->GetHitAngles(e_component_kvector[count_rx], h_component_kvector[count_rx], n_component_kvector[count_rx], hitangle_e, hitangle_h);
 	// store hitangles for plotting
 	hitangle_h_all[count_rx]=hitangle_h;
 	hitangle_e_all[count_rx]=hitangle_e;
@@ -904,12 +906,12 @@ int main(int argc,  char **argv) {
       truthEvPtr->run              = run_no;
       truthEvPtr->nuMom            = 0; //pnu;
       truthEvPtr->nu_pdg           = 0; //pdgcode;
-      truthEvPtr->e_component      = e_component;
-      truthEvPtr->h_component      = h_component;
-      truthEvPtr->n_component      = n_component;
-      truthEvPtr->e_component_k    = e_component_kvector;
-      truthEvPtr->h_component_k    = h_component_kvector;
-      truthEvPtr->n_component_k    = n_component_kvector;
+      memcpy(truthEvPtr->e_component, e_component, sizeof(e_component));
+      memcpy(truthEvPtr->h_component, h_component, sizeof(h_component));
+      memcpy(truthEvPtr->n_component, n_component, sizeof(n_component));
+      memcpy(truthEvPtr->e_component_k ,e_component_kvector, sizeof(e_component_kvector));
+      memcpy(truthEvPtr->h_component_k ,h_component_kvector, sizeof(h_component_kvector));
+      memcpy(truthEvPtr->n_component_k ,n_component_kvector, sizeof(n_component_kvector));
       truthEvPtr->sourceLon        = sourceLon;
       truthEvPtr->sourceLat        = sourceLat;
       truthEvPtr->sourceAlt        = sourceAlt;

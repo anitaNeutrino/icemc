@@ -629,13 +629,13 @@ int main(int argc,  char **argv) {
   double volts_rx_rfcm_lab_h_all[48][512];
 
   // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
-  double e_component=0; // E comp along polarization
-  double h_component=0; // H comp along polarization
-  double n_component=0; // normal comp along polarization
+  double e_component[Anita::NANTENNAS_MAX]={0}; // E comp along polarization
+  double h_component[Anita::NANTENNAS_MAX]={0}; // H comp along polarization
+  double n_component[Anita::NANTENNAS_MAX]={0}; // normal comp along polarization
 
-  double e_component_kvector=0; // component of e-field along the rx e-plane
-  double h_component_kvector=0; // component of the e-field along the rx h-plane
-  double n_component_kvector=0; // component of the e-field along the normal
+  double e_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of e-field along the rx e-plane
+  double h_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the rx h-plane
+  double n_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the normal
 
 
   // Vector n_eplane = const_z;
@@ -764,8 +764,8 @@ int main(int argc,  char **argv) {
   finaltree->Branch("rx0_threshold_eachband", &rx0_threshold_eachband, "rx0_threshold_eachband[2][5]/D");
   finaltree->Branch("rx0_noise_eachband", &rx0_noise_eachband, "rx0_noise_eachband[2][5]/D");
   finaltree->Branch("rx0_passes_eachband", &rx0_passes_eachband, "rx0_passes_eachband[2][5]/I");
-  finaltree->Branch("e_component", &e_component, "e_component/D");
-  finaltree->Branch("h_component", &h_component, "h_component/D");
+  finaltree->Branch("e_component", &e_component, "e_component[48]/D");
+  finaltree->Branch("h_component", &h_component, "h_component[48]/D");
   finaltree->Branch("dist_int_bn_2d", &dist_int_bn_2d, "dist_int_bn_2d/D");
 
   finaltree->Branch("cosalpha", &cosalpha, "cosalpha/D");
@@ -1240,12 +1240,13 @@ int main(int argc,  char **argv) {
       truthEvPtr->run              = run_no;
       truthEvPtr->nuMom            = pnu;
       truthEvPtr->nu_pdg           = pdgcode;
-      truthEvPtr->e_component      = e_component;
-      truthEvPtr->h_component      = h_component;
-      truthEvPtr->n_component      = n_component;
-      truthEvPtr->e_component_k    = e_component_kvector;
-      truthEvPtr->h_component_k    = h_component_kvector;
-      truthEvPtr->n_component_k    = n_component_kvector;
+      memcpy(truthEvPtr->e_component, e_component, sizeof(e_component));
+      memcpy(truthEvPtr->h_component, h_component, sizeof(h_component));
+      memcpy(truthEvPtr->n_component, n_component, sizeof(n_component));
+      memcpy(truthEvPtr->e_component_k ,e_component_kvector, sizeof(e_component_kvector));
+      memcpy(truthEvPtr->h_component_k ,h_component_kvector, sizeof(h_component_kvector));
+      memcpy(truthEvPtr->n_component_k ,n_component_kvector, sizeof(n_component_kvector));
+ 
       truthEvPtr->sourceLon        = sourceLon;
       truthEvPtr->sourceLat        = sourceLat;
       truthEvPtr->sourceAlt        = sourceAlt;
