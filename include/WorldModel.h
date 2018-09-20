@@ -76,7 +76,7 @@ namespace icemc {
 
   using ROOT::Math::Delaunay2D;
   
-  class Mesh {
+  class Mesh : public TNamed {
 
     class Point {
     public:
@@ -86,8 +86,8 @@ namespace icemc {
     };
     
   public:
-    Mesh();
-    virtual ~Mesh();
+    Mesh(const char* name = "Mesh", const char* title = "Mesh") : TNamed(name, title) {}
+    virtual ~Mesh() {};
 
     size_t addPoint(const Geoid::Position& p, double val);
 
