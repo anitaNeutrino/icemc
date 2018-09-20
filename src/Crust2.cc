@@ -35,6 +35,9 @@ icemc::Crust2::Crust2(int model,int WEIGHTABSORPTION_SETTING) {
   fLayerNames.emplace(Layer::MiddleCrust,  std::string("middle crust"));
   fLayerNames.emplace(Layer::LowerCrust,   std::string("lower crust"));
   fLayerNames.emplace(Layer::Mantle,       std::string("mantle"));
+  fLayerNames.emplace(Layer::OuterCore,    std::string("outer core"));
+  fLayerNames.emplace(Layer::InnerCore,    std::string("inner core"));
+  
   
   radii[0]=1.2e13;
   radii[1]=(G::R_EARTH-4.0E4)*(G::R_EARTH-4.0E4);
@@ -86,7 +89,7 @@ icemc::Crust2::Layer icemc::Crust2::getLayerFromString(const std::string& layerT
 ///@todo handle out of layer bounds somehow
 icemc::Crust2::Layer icemc::Crust2::layerAbove(Layer layer) {
   switch (layer){
-  case Layer::Air:        return Layer::Air;
+  case Layer::Air:          return Layer::Air;
   case Layer::Water:        return Layer::Air;
   case Layer::Ice:          return Layer::Water;
   case Layer::SoftSediment: return Layer::Ice;
@@ -94,7 +97,9 @@ icemc::Crust2::Layer icemc::Crust2::layerAbove(Layer layer) {
   case Layer::UpperCrust:   return Layer::HardSediment;
   case Layer::MiddleCrust:  return Layer::UpperCrust;
   case Layer::LowerCrust:   return Layer::MiddleCrust;
-  case Layer::Mantle:   return Layer::LowerCrust;
+  case Layer::Mantle:       return Layer::LowerCrust;
+  case Layer::OuterCore:    return Layer::Mantle;
+  case Layer::InnerCore:    return Layer::OuterCore;
   }
   return layer;
 }
@@ -103,14 +108,16 @@ icemc::Crust2::Layer icemc::Crust2::layerAbove(Layer layer) {
 icemc::Crust2::Layer icemc::Crust2::layerBelow(Layer layer) {
   switch (layer){
   case Layer::Air:          return Layer::Water;    
-  case Layer::Water:          return Layer::Ice;
-  case Layer::Ice:            return Layer::SoftSediment;
-  case Layer::SoftSediment:   return Layer::HardSediment;
-  case Layer::HardSediment:   return Layer::UpperCrust;
-  case Layer::UpperCrust:     return Layer::MiddleCrust;
-  case Layer::MiddleCrust:    return Layer::LowerCrust;
-  case Layer::LowerCrust:     return Layer::Mantle;
-  case Layer::Mantle:     return Layer::Mantle;    
+  case Layer::Water:        return Layer::Ice;
+  case Layer::Ice:          return Layer::SoftSediment;
+  case Layer::SoftSediment: return Layer::HardSediment;
+  case Layer::HardSediment: return Layer::UpperCrust;
+  case Layer::UpperCrust:   return Layer::MiddleCrust;
+  case Layer::MiddleCrust:  return Layer::LowerCrust;
+  case Layer::LowerCrust:   return Layer::Mantle;
+  case Layer::Mantle:       return Layer::OuterCore;
+  case Layer::OuterCore:    return Layer::InnerCore;
+  case Layer::InnerCore:    return Layer::InnerCore;
   }
   return layer;
 }
@@ -221,7 +228,7 @@ double icemc::Crust2::integratePath(const Geoid::Position& interaction, const TV
     double density = Density(p);
 
     double cosTheta = p.Dot(neutrinoDir)/p.Mag();
-    double distGuess = 10e3;
+    double distGuess = 1000e3;
     double dr = 1;
     // const char* dir = "horizontal";    
     
@@ -252,7 +259,8 @@ double icemc::Crust2::integratePath(const Geoid::Position& interaction, const TV
     if(l2 == l || stepSize ==  1.0){
       // if you're in the same layer
       // or you crossed with a step size of 1
-      // update p and reset step size
+      // update p,l and reset step size fraction
+      // and update columnDepth
       p = p2;
       l = l2; //  this allows us to break out of the loop on this step
       fractionalStep = 1;
@@ -287,7 +295,18 @@ icemc::Crust2::Layer icemc::Crust2::getLayer(const Geoid::Position& pos, Layer s
     // std::cout << fLayerNames.find(layer)->second << "\t" << std::endl;
     if(layer <= startLayer) continue;
 
-    double layerSurface = fSurfaceMag.find(layer)->second.eval(pos);
+    double layerSurface = 0;
+    switch(layer){
+    case Layer::InnerCore:
+      layerSurface = 1220e3;
+      break;
+    case Layer::OuterCore:
+      layerSurface = 3400e3;
+      break;
+    default:
+      layerSurface = fSurfaceMag.find(layer)->second.eval(pos); 
+    }
+    
     if(posMag > layerSurface){
       deltaR = posMag - layerSurface;
       // then we're in the layer from the previous loop!
@@ -302,14 +321,21 @@ double icemc::Crust2::Density(const Geoid::Position& pos,
 				int& crust_entered /* 1 or 0 */) const{
 
   Layer l = getLayer(pos);
-  
-  if(l==Layer::Air){
-    return 0; ///@todo check this!
-  }
-  else if(l == Layer::Mantle){
-    return densities[1]; ///@todo check this!
-  }
-  else{
+
+  switch(l){
+  case Layer::Air:
+    return 0; ///@todo Air model...
+  case Layer::Mantle:
+    return 3400; //densities[1]; ///@todo check this!
+
+    // these values were just copied from hyperphysics...
+    // it looks like the mantle density was too...
+    // http://hyperphysics.phy-astr.gsu.edu/hbase/Geophys/earthstruct.html
+  case Layer::OuterCore:
+    return 9900;
+  case Layer::InnerCore:
+    return 1280;
+  default:
     return fDensities.find(l)->second.eval(pos);
   }
   

@@ -80,7 +80,7 @@ namespace icemc{
     virtual ~Crust2(){;}
 
     double radii[3];
-    // = {1.2e13,(Earth::EarthRadiusMeters-4.0E4)*(Earth::EarthRadiusMeters-4.0E4),Earth::EarthRadiusMeters*Earth::EarthRadiusMeters}; // average radii of boundaries between earth layers
+    // = {1.2e3,(Earth::EarthRadiusMeters-4.0E4)*(Earth::EarthRadiusMeters-4.0E4),Earth::EarthRadiusMeters*Earth::EarthRadiusMeters}; // average radii of boundaries between earth layers
 
     double volume; // sums the volume of medium (ice or salt)
     double ice_area; // sums the area of the earth's surface that has antarctic ice underneath
@@ -138,6 +138,8 @@ namespace icemc{
     double integratePath(const Geoid::Position& interaction, const TVector3& neutrinoDir) const;
  
   protected:
+    double fMaxIceThickness;
+    
     int EARTH_MODEL;
     int CONSTANTICETHICKNESS;
     int CONSTANTCRUST;
@@ -160,7 +162,7 @@ namespace icemc{
     void ReadCrust(const std::string&);
     Geoid::Position PickInteractionLocation(const Geoid::Position &detector) const;
 
-    static const int numLayers = 9;
+    static const int numLayers = 11;
     enum class Layer {Air, ///@todo think about this one
 		      Water,
 		      Ice,
@@ -169,7 +171,9 @@ namespace icemc{
 		      UpperCrust,
 		      MiddleCrust,
 		      LowerCrust,
-		      Mantle ///@todo also special case
+		      Mantle,
+		      OuterCore,
+		      InnerCore///@todo also special case
     };
     /** 
      * Utility function for ease of for-range based for loops and iteration
@@ -182,8 +186,6 @@ namespace icemc{
      */
     const std::array<Crust2::Layer, numLayers>& Layers() const {
 
-      static const int numLayers = 9;  
-
       static std::array<Crust2::Layer, numLayers> allLayers {Crust2::Layer::Air,
 							     Crust2::Layer::Water,
 							     Crust2::Layer::Ice,
@@ -192,7 +194,10 @@ namespace icemc{
 							     Crust2::Layer::UpperCrust,
 							     Crust2::Layer::MiddleCrust,
 							     Crust2::Layer::LowerCrust,
-							     Crust2::Layer::Mantle};
+							     Crust2::Layer::Mantle,
+							     Crust2::Layer::OuterCore,
+							     Crust2::Layer::InnerCore
+      };
       return allLayers;
     }
     
@@ -200,8 +205,6 @@ namespace icemc{
     static Layer layerBelow(Layer);
     Layer getLayer(const Geoid::Position& pos, Layer startLayer=Layer::Air) const;
     
-  protected:
-    double fMaxIceThickness = 0;    
   private:
 
     const std::string& getLayerName(Layer layer) const;
