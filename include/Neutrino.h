@@ -1,7 +1,7 @@
 #ifndef ICEMC_NEUTRINO_H
 #define ICEMC_NEUTRINO_H
 
-#include "Geoid.h"
+#include <iostream>
 
 namespace icemc {
 
@@ -23,24 +23,31 @@ namespace icemc {
     };
 
     /**
-     * @class CurrentType
+     * @class Current
      * @brief enum for type of interaction
      */
-    enum class CurrentType : int {
-				  Charged = 0,
-				  Neutral = 1
+    enum class Current : int {
+			      Charged = 0,
+			      Neutral = 1
     };
 
-  public:
+    /**
+     * @class L
+     * @brief For lepton number, are we matter (neutrinos) or anti-matter (anti-neutrinos)
+     */
 
-    double Energy() const {return fEnergy;}
+    enum class L : int { ///@todo it would make more sense to newcomers if lepton number of 1 was for matter, -1 for anti-matter
+			Matter = 0,
+			AntiMatter = 1
+    };
 
-  private:
-    double fEnergy; ///< (eV )electron volts
-    Geoid::Position fInteraction; ///< Where the interaction happens    
-    Flavor fFlavor; ///< Neutrino flavor
-    CurrentType fCurrent; ///< Interaction current
+    double energy; ///< (eV )electron volts
+    double crossSection; /// @todo units
+    double interactionLength; ///@todo units
     
+    Flavor flavor; ///< Neutrino flavor
+    Current interactionCurrent; ///< Interaction current
+    L leptonNumber = L::Matter;
   };
   
 
@@ -70,6 +77,6 @@ std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Flavor& f);
  * 
  * @return the updated output string stream
  */
-std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::CurrentType& c);
+std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Current& c);
 
 #endif

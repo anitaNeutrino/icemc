@@ -33,7 +33,7 @@ namespace icemc {
 
   /**
    * @class Primaries
-   * @brief Functions you need to generate a primary interaction including cross sections and picking charged current/neutral current and flavor
+   * @brief Functions you need to generate a primary interaction: cross sections, picking charged current/neutral current and flavor
    */
   class Primaries {
     
@@ -45,10 +45,6 @@ namespace icemc {
     Y* m_myY; 
     int run_old_code;
     
-  public:
-    double pickY(const Settings *settings1,double pnu,int nu_nubar, Neutrino::CurrentType currentint);///<pick inelasticity y according to chosen model
-    double Getyweight(double pnu,double y,int nu_nubar,Neutrino::CurrentType currentint);///< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
-
 
     double A_low[4];      ///< Table V of Connolly et al. for use in Eq. 16.  Same for any nu_nubar and current type.
     double A0_high[2][2]; ///< Table V of Connolly et al. for use in Eq. 16.  
@@ -73,11 +69,16 @@ namespace icemc {
     double mine[NSIGMAS]; ///< minimum energy for cross section parametrizations, in eV
     double maxe[NSIGMAS]; ///< maximum energy for cross section parametrizations, in eV
     
+  public:
+    // double pickY(const Settings *settings1,double pnu,int nu_nubar, Neutrino::Current currentint);///<pick inelasticity y according to chosen model
+    double pickY(const Settings *settings1,double pnu,Neutrino::L leptonNumber, Neutrino::Current currentint);///<pick inelasticity y according to chosen model    
+    double Getyweight(double pnu,double y,Neutrino::L leptonNumber,Neutrino::Current currentint);///< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
+
     Primaries(); ///< Constructor 
     ~Primaries();///< Destructor 
     
     /// Neutrino-nucleon cross-sections using model chosen
-    int GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,int nu_nubar,Neutrino::CurrentType currentint);
+    int GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,Neutrino::L leptonNumber,Neutrino::Current currentint);
 
 
 
@@ -141,14 +142,14 @@ namespace icemc {
     
     
     void setNuFlavor(const Primaries *primary1, const Settings *settings1);//, int whichray, Counting *count1);
-    Neutrino::CurrentType GetCurrent();
+    Neutrino::Current GetCurrent();
     void setCurrent();
     int getPdgCode() const;
 
     Geoid::Position posnu;
     Geoid::Position posnu_down;
     Neutrino::Flavor nuflavor;	  ///< neutrino flavor    
-    Neutrino::CurrentType current;	  ///< CC or NC?
+    Neutrino::Current current;	  ///< CC or NC?
     
 
     double dtryingdirection;	  ///< weighting factor: how many equivalent tries each neutrino counts for after having reduced angular phase space for possibly detectable events

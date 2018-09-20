@@ -41,8 +41,8 @@ namespace icemc {
     TF2* fy0_high;						///< For picking inelasticity in high y region according to Equation 15.
     TRandom3 Rand3;
 
-    double pickYConnollyetal2011(int NU,Neutrino::CurrentType CURRENT,double e);	///< pick an inelasticity using recipe in Connolly et al. (2011)
-    // NU=0: nubar, NU=1: nu
+    double pickYConnollyetal2011(Neutrino::L leptonNumber,Neutrino::Current CURRENT,double e);	///< pick an inelasticity using recipe in Connolly et al. (2011)
+    // L =0: nubar, NU=1: nu
     // CURRENT=0: CC, CURRENT-1: NC
 
     static constexpr double ymin_low  = 0.00002;		///< Minimum y in low-y region, Connolly et al.
@@ -79,7 +79,7 @@ namespace icemc {
      * 
      * @return 
      */
-    double pickY(const Settings *settings1, double pnu, int nu_nubar, Neutrino::CurrentType currentint);
+    double pickY(const Settings *settings1, double pnu, Neutrino::L leptonNumber, Neutrino::Current currentint);
 
     /** 
      * @brief If you want to choose y from a flat distribution this is the weight it should have according to Connolly et al. (2011)
@@ -91,7 +91,8 @@ namespace icemc {
      * 
      * @return 
      */
-    double Getyweight(double pnu, double y, int nu_nubar, Neutrino::CurrentType currentint);
+    // double Getyweight(double pnu, double y, int nu_nubar, Neutrino::Current currentint);
+    double Getyweight(double pnu, double y, Neutrino::L leptonNumber, Neutrino::Current currentint);    
     
   };//Y
 

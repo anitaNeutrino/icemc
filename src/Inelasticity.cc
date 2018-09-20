@@ -44,8 +44,8 @@ icemc::Y::Y() { // Constructor
     }
   }
 
-  int kcc = static_cast<int>(icemc::Neutrino::CurrentType::Charged);
-  int knc = static_cast<int>(icemc::Neutrino::CurrentType::Neutral);
+  int kcc = static_cast<int>(icemc::Neutrino::Current::Charged);
+  int knc = static_cast<int>(icemc::Neutrino::Current::Neutral);
 
   // parameter A_0 in Table V for the high y region
   fC1_high[1][kcc]->FixParameter(0,-0.0026);//nubar, CC
@@ -99,13 +99,14 @@ icemc::Y::Y() { // Constructor
 
 
 //! Pick an inelasticity y according to the model chosen
-double icemc::Y::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::CurrentType currentint) {
+// double icemc::Y::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Current currentint) {
+double icemc::Y::pickY(const Settings *settings1,double pnu,Neutrino::L leptonNumber,Neutrino::Current currentint) {  
   if(settings1->YPARAM==0){
     return pickYGandhietal();
   }//old Gety
   else { //use prescription in Connolly et al.2011
-    nu_nubar=0;
-    double elast_y=pickYConnollyetal2011(nu_nubar,currentint,pnu);
+    leptonNumber=Neutrino::L::Matter;
+    double elast_y=pickYConnollyetal2011(leptonNumber,currentint,pnu);
     return elast_y;   
   }//current Gety
 } //Gety
@@ -126,7 +127,11 @@ double icemc::Y::pickYGandhietal() {
 }
 
 
-double icemc::Y::pickYConnollyetal2011(int NU, Neutrino::CurrentType CURRENT,double pnu) {
+// double icemc::Y::pickYConnollyetal2011(int NU, Neutrino::Current CURRENT,double pnu) {
+double icemc::Y::pickYConnollyetal2011(Neutrino::L leptonNumber, Neutrino::Current CURRENT,double pnu) {
+
+  int NU = leptonNumber == Neutrino::L::Matter ? 0 : 1;  ///@todo check this!
+  
   // Select a y according to recipe in Connolly et al. (2011)
   //pnu is in eV.
   double epsilon=log10(pnu/1.E9);
@@ -159,7 +164,10 @@ double icemc::Y::pickYConnollyetal2011(int NU, Neutrino::CurrentType CURRENT,dou
 }//pickY
 
 
-double icemc::Y::Getyweight(double pnu, double y, int nu_nubar, Neutrino::CurrentType currentint){
+// double icemc::Y::Getyweight(double pnu, double y, int nu_nubar, Neutrino::Current currentint){
+double icemc::Y::Getyweight(double pnu, double y, Neutrino::L leptonNumber, Neutrino::Current currentint){
+
+  int nu_nubar = leptonNumber == Neutrino::L::Matter ? 0 : 1;
   //from Connolly Calc 2011, Equations 9, 10, 11, 16, and 17.
   // double dy=0.;//default
   //Ev, cc or nc, nu or nubar.

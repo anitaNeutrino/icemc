@@ -135,14 +135,19 @@ icemc::Primaries::Primaries(){//constructor
 }
 
 
-double icemc::Primaries::Getyweight(double pnu,double y,int nu_nubar, Neutrino::CurrentType currentint) {
-  return m_myY->Getyweight(pnu,y,nu_nubar,currentint);
+
+// double icemc::Primaries::Getyweight(double pnu,double y,int nu_nubar, Neutrino::Current currentint) {
+double icemc::Primaries::Getyweight(double pnu,double y, Neutrino::L leptonNumber, Neutrino::Current currentint) {  
+  return m_myY->Getyweight(pnu,y,leptonNumber,currentint);
 }
 
 
-double icemc::Primaries::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::CurrentType currentint) {
-  return m_myY->pickY(settings1,pnu,nu_nubar,currentint);
+double icemc::Primaries::pickY(const Settings *settings1,double pnu,Neutrino::L leptonNumber,Neutrino::Current currentint) {
+  return m_myY->pickY(settings1,pnu,leptonNumber,currentint);
 }
+// double icemc::Primaries::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Current currentint) {
+//   return m_myY->pickY(settings1,pnu,nu_nubar,currentint);
+// }
 
 
 icemc::Primaries::~Primaries(){//default deconstructor
@@ -158,21 +163,25 @@ icemc::Primaries::~Primaries(){//default deconstructor
 }//deconstructor
 
 
-int icemc::Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,int nu_nubar,Neutrino::CurrentType current){
+
+
+// int icemc::Primaries::GetSigma(double pnu, double& sigma,double &len_int_kgm2, const Settings *settings1, int nu_nubar, Neutrino::Current current){
+int icemc::Primaries::GetSigma(double pnu, double& sigma,double &len_int_kgm2, const Settings *settings1, Neutrino::L leptonNumber, Neutrino::Current current){  
+  
   int currentint = static_cast<int>(current);
+  int nu_nubar = leptonNumber == Neutrino::L::Matter ? 0 : 1;
   // calculate cross section
   if (pnu<mine[settings1->SIGMAPARAM] || pnu>maxe[settings1->SIGMAPARAM]) {
     icemcLog() <<  icemc::error << "Need a parameterization for this energy region.\n";
     return 0;
   }
   else {
-   
     //nu=0, nubar=1
     if(nu_nubar!=0 && nu_nubar!=1){   
       std::cout<<"nu_nubar is not defined correctly!\n";
       return 0;
     }
-    if (current!=Neutrino::CurrentType::Charged && current!=Neutrino::CurrentType::Neutral){//default "cc"
+    if (current!=Neutrino::Current::Charged && current!=Neutrino::Current::Neutral){//default "cc"
       std::cout<<"Current is not cc or nc!\n";
       return 0;
     }
@@ -346,15 +355,15 @@ int icemc::Interaction::PickDownwardInteractionPoint(const Geoid::Position&r_bn,
  * Need to add capability of using ratios from Connolly et al.
  */
 
-icemc::Neutrino::CurrentType icemc::Interaction::GetCurrent() {
-  Neutrino::CurrentType current;
+icemc::Neutrino::Current icemc::Interaction::GetCurrent() {
+  Neutrino::Current current;
   double rnd=gRandom->Rndm();
   if (rnd<=0.6865254){ // 10^18 eV - 10^21 eV (use this one for ANITA)
 //if (rnd<=0.6893498) // 10^17 eV - 10^20 eV (use this one for SalSA)
-    current = Neutrino::CurrentType::Charged;//"cc";
+    current = Neutrino::Current::Charged;//"cc";
   }
   else{
-    current = Neutrino::CurrentType::Neutral;//"nc";  
+    current = Neutrino::Current::Neutral;//"nc";  
   }
   return current;
 } //GetCurrent

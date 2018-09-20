@@ -275,9 +275,9 @@ namespace icemc {
     double sum_weights=0;
     //End verification plot block
 
-    int xsecParam_nutype = 0; // neutrino = 0, antineutrino = 1;
-    Neutrino::CurrentType xsecParam_nuint  = Neutrino::CurrentType::Neutral;
-
+    // int xsecParam_nutype = 0; // neutrino = 0, antineutrino = 1;
+    Neutrino::L xsecParam_nutype = Neutrino::L::Matter; // neutrino = 0, antineutrino = 1;    
+    Neutrino::Current xsecParam_nuint  = Neutrino::Current::Neutral;
 
 
     // ray tracing
@@ -459,7 +459,7 @@ namespace icemc {
 
     // @todo constify... needs some love to constify
     void Summarize(const Settings *settings1,  Anita* anita1,  Spectra *spectra1, const AskaryanFreqsGenerator* askFreqGen,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
-    void WriteNeutrinoInfo(const int& inu, const Geoid::Position&,  const TVector3&,  const Geoid::Position&,  double,  Neutrino::Flavor,  Neutrino::CurrentType,  double,  std::ofstream &nu_out) const;
+    void WriteNeutrinoInfo(const int& inu, const Geoid::Position&,  const TVector3&,  const Geoid::Position&,  double,  Neutrino::Flavor,  Neutrino::Current,  double,  std::ofstream &nu_out) const;
 
     /** 
      * @brief Run the neutrino generation

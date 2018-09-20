@@ -19,7 +19,9 @@ namespace icemc {
   private:
     const WorldModel* fW = nullptr;
     const Geoid::Position fInteractionPos;
-    TVector3 fNeutrinoDir;    
+    TVector3 fNeutrinoDir;
+    Geoid::Position fNuEntrance;
+    double fColumnDensity;
   public:
 
     /** 

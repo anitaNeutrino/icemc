@@ -32,7 +32,7 @@ icemc::NeutrinoPath::NeutrinoPath(const Geoid::Position& interaction, const TVec
 
   fNeutrinoDir = lc.localTranslationToGlobal(fNeutrinoDir);
   
-  ((icemc::Crust2*)fW)->integratePath(fInteractionPos, fNeutrinoDir);
+  fColumnDensity = ((icemc::Crust2*)fW)->integratePath(fInteractionPos, fNeutrinoDir);
 }
 
 

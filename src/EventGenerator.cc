@@ -1,3 +1,4 @@
+
 #include "EventGenerator.h"
 
 // system includes
@@ -78,6 +79,9 @@ icemc::EventGenerator::EventGenerator() : fNeutrinoPath(NULL), interaction1(NULL
 {
   pnu = pow(10., 20);   //!< energy of neutrinos
   // inu = 0;
+
+  // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.  
+  signal(SIGINT, icemc::EventGenerator::interrupt_signal_handler);
 }
 
 
@@ -87,6 +91,8 @@ icemc::EventGenerator::EventGenerator() : fNeutrinoPath(NULL), interaction1(NULL
  */
 icemc::EventGenerator::~EventGenerator()
 {
+  signal(SIGINT, SIG_DFL); /// unset signal handler
+  
   if(fNeutrinoPath){
     delete fNeutrinoPath;
   }
@@ -1070,7 +1076,7 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 
 
 
-void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, const Geoid::Position &posnu,  const TVector3 &nnu,  const Geoid::Position &r_bn,  double altitude_int,  Neutrino::Flavor nuflavor,  Neutrino::CurrentType current,  double elast_y,  std::ofstream &nu_out) const {
+void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, const Geoid::Position &posnu,  const TVector3 &nnu,  const Geoid::Position &r_bn,  double altitude_int,  Neutrino::Flavor nuflavor,  Neutrino::Current current,  double elast_y,  std::ofstream &nu_out) const {
   nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
 }
 
@@ -1128,13 +1134,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   Roughness* rough1 = new Roughness(&settings1); // create new instance of the roughness class
   rough1->SetRoughScale(settings1.ROUGHSIZE);
 
-  if(nuSpectra->IsSpectrum()){
+  if(nuSpectra->IsSpectrum()){ ///@todo move to spectra constructor
     icemcLog() <<" Lowest energy for spectrum is 10^18 eV! \n";
   }
   time_t raw_start_time = time(NULL);
   struct tm*  start_time = localtime(&raw_start_time);
   icemcLog() << "Date and time at start of run are: " << asctime (start_time) << "\n";
-
 
   // for attenuation of neutrino in atmosphere
   // only important for black hole studies
@@ -1236,8 +1241,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   }
 
 
-  // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.  
-  signal(SIGINT, icemc::EventGenerator::interrupt_signal_handler);
   time_t raw_loop_start_time = time(NULL);
   icemcLog() << "Starting loop over events. Time required for setup is "
        <<(int)((raw_loop_start_time - raw_start_time)/60) << ":"
@@ -1289,6 +1292,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
     
     NeutrinoPath np(interaction, rfDirFromInteraction, antarctica);
+
+    /// pick neutrino energy
+
+
+    // propagate to ANITA
+
+    
+    
   }
 
   return;
@@ -1405,7 +1416,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // taus1->weight_tau_prob=0;
       
     // if (taumodes==1 && interaction1->nuflavor=="nutau" && interaction1->current=="cc"){
-    // if (taumodes==1 && interaction1->nuflavor==Neutrino::Flavor::tau && interaction1->current==Neutrino::CurrentType::Charged){
+    // if (taumodes==1 && interaction1->nuflavor==Neutrino::Flavor::tau && interaction1->current==Neutrino::Current::Charged){
     //   tautrigger = 1;///< tau trigger sets the chance to create tau particle
     // }
     // else{
@@ -1532,11 +1543,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // sec1.GetTauDecay(interaction1->nuflavor, interaction1->current, taudecay,  emfrac_db,  hadfrac_db);
 
     // // pick elasticity
-    // elast_y = primary1->pickY(&settings1, pnu, 0, Neutrino::CurrentType::Charged);
+    // elast_y = primary1->pickY(&settings1, pnu, 0, Neutrino::Current::Charged);
     // if (settings1.CONSTANTY==1) { // if we ask to make y a constant=0.2
     //   elast_y = 0.2;
     //   interaction1->nuflavor = Neutrino::Flavor::e;//"nue";
-    //   interaction1->current = Neutrino::CurrentType::Charged; //"cc";
+    //   interaction1->current = Neutrino::Current::Charged; //"cc";
     // }
 
     // if (ro.ytree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
