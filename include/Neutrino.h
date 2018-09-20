@@ -68,7 +68,6 @@ std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Flavor& f);
 
 
 
-
 /** 
  * For a nice cout/cerr/logging experience
  * 
@@ -79,4 +78,17 @@ std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Flavor& f);
  */
 std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Current& c);
 
+
+/** 
+ * For a nice cout/cerr/logging experience
+ * 
+ * @param os is a output string stream
+ * @param l is the L class enum
+ * 
+ * @return the updated output string stream
+ */
+std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::L& l);
+
 #endif
+
+

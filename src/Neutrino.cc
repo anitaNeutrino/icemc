@@ -23,3 +23,15 @@ std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Flavor& f){
     return os << "Unknown Flavor!";
   }
 }
+
+
+std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::L& l){
+  switch(l){
+  case icemc::Neutrino::L::Matter:
+    return os << "Neutrino::L::Matter";
+  case icemc::Neutrino::L::AntiMatter:
+    return os << "Neutrino::L::AntiMatter";
+  default:
+    return os << "Unknown L!";
+  }
+}
