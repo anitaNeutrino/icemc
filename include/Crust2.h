@@ -204,6 +204,7 @@ namespace icemc{
     static Layer layerAbove(Layer);
     static Layer layerBelow(Layer);
     Layer getLayer(const Geoid::Position& pos, Layer startLayer=Layer::Air) const;
+    double getLayerSurfaceAtPosition(const Geoid::Position& pos, Layer l) const;
     
   private:
 

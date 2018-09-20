@@ -24,7 +24,9 @@ namespace G=Geoid;
 
 const double icemc::Crust2::COASTLINE(-60); //30.);
 
-icemc::Crust2::Crust2(int model,int WEIGHTABSORPTION_SETTING) {
+icemc::Crust2::Crust2(int model,int WEIGHTABSORPTION_SETTING) :
+  fSurfaceAboveGeoid("fSurfaceAboveGeoid", "Surface above geoid")
+{
 
   fLayerNames.emplace(Layer::Air,          std::string("air"));
   fLayerNames.emplace(Layer::Water,        std::string("water"));
@@ -68,7 +70,6 @@ icemc::Crust2::Crust2(int model,int WEIGHTABSORPTION_SETTING) {
     ReadCrust(crust20_in);
   } //else
 } //Earth constructor (int mode)
-
 
 
 
@@ -236,16 +237,16 @@ double icemc::Crust2::integratePath(const Geoid::Position& interaction, const TV
       // neutrino path is upgoing at this position
       // where up is radially outwards at p
       // but we are integrating downwards, so find distance to layer below
-      dr = p.Mag() - fSurfaceMag.find(layerBelow(l))->second.eval(p);
-      distGuess = l != Layer::Mantle ? dr/cosTheta : 1000e3;
+      dr = p.Mag() - getLayerSurfaceAtPosition(p, layerBelow(l));
+      distGuess = l >= Layer::Mantle ? dr/cosTheta : 1000e3;
       // dir = "(nu up) integrating down";
     }
     else if(cosTheta < 0){
       // neutrino path is downgoing at this position
       // where down is radially indwards at p
       // but we are integrating upwards, so find the distance to the surface of this layer.
-      dr = fSurfaceMag.find(l)->second.eval(p) - p.Mag();
-      distGuess = l != Layer::Mantle ?  dr/-cosTheta : dr;
+      dr = getLayerSurfaceAtPosition(p, l) - p.Mag();
+      distGuess = l >= Layer::Mantle ?  dr/-cosTheta : dr;
       // dir = "(nu down) integrating up";
     }
 
@@ -286,6 +287,17 @@ double icemc::Crust2::integratePath(const Geoid::Position& interaction, const TV
 
 
 
+double icemc::Crust2::getLayerSurfaceAtPosition(const Geoid::Position& pos, Layer layer) const {  
+
+  switch(layer){
+  case Layer::InnerCore: return 1220e3;
+  case Layer::OuterCore: return 3400e3;
+  default:               return fSurfaceMag.find(layer)->second.eval(pos);
+  }  
+}
+
+
+
 icemc::Crust2::Layer icemc::Crust2::getLayer(const Geoid::Position& pos, Layer startLayer) const {
 
   auto inLayer = startLayer;
@@ -295,17 +307,7 @@ icemc::Crust2::Layer icemc::Crust2::getLayer(const Geoid::Position& pos, Layer s
     // std::cout << fLayerNames.find(layer)->second << "\t" << std::endl;
     if(layer <= startLayer) continue;
 
-    double layerSurface = 0;
-    switch(layer){
-    case Layer::InnerCore:
-      layerSurface = 1220e3;
-      break;
-    case Layer::OuterCore:
-      layerSurface = 3400e3;
-      break;
-    default:
-      layerSurface = fSurfaceMag.find(layer)->second.eval(pos); 
-    }
+    double layerSurface = getLayerSurfaceAtPosition(pos, layer);
     
     if(posMag > layerSurface){
       deltaR = posMag - layerSurface;
@@ -861,11 +863,37 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
 	depth = kilometersToMeters*0.5;
       }
 
-      icemc::Mesh& thicknessMesh = fThicknesses[layer];
+
+      auto find_or_make_mesh = [&](std::map<Crust2::Layer, Mesh>& m, Crust2::Layer l, const std::string& n) -> Mesh& {
+				 auto it = m.find(l);
+				 if(it==m.end()){
+				   auto& newMesh = m[l];
+				   const std::string& name = fLayerNames.find(l)->second;
+				   const std::string title = name + n;
+				   newMesh.SetName(name.c_str());
+				   newMesh.SetTitle(title.c_str());
+				   return newMesh;
+				 }
+				 return it->second;
+			       };
+
+      // auto itThick = fThicknesses.find(layer);
+      // if(itThick == fThicknesses.end()){
+      // 	const std::string& name = fLayerNames.find(layer)->second;
+      // 	const std::string title = name + " thickness";	
+      // 	fThicknesses.emplace(layer, Mesh(name.c_str(), title.c_str()));
+      // }
+      icemc::Mesh& thicknessMesh = find_or_make_mesh(fThicknesses, layer,  "thickness"); //fThicknesses[layer];
       thicknessMesh.addPoint(ellipsoidPos, depth);
 
 
-      icemc::Mesh& surfaceMesh = fSurfaceMag[layer];
+      // auto itSurf = fSurfaceMag.find(layer);
+      // if(itSurf == fSurfaceMag.end()){
+      // 	const std::string& name = fLayerNames.find(layer)->second;
+      // 	const std::string title = name + " surface";
+      // 	fSurfaceMag.emplace(layer, Mesh(name.c_str(), title.c_str()));
+      // }
+      icemc::Mesh& surfaceMesh = find_or_make_mesh(fSurfaceMag, layer, "surface magnitude");
       
       // don't add water to cumulative depth, as it is above surface!
       if(layer==Layer::Water){
@@ -875,12 +903,13 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
 	surfaceMesh.addPoint(ellipsoidPos, ellipsoidPos.Mag() + elevation - cumulativeDepth);
 	cumulativeDepth += depth;
 	if(layer==Layer::LowerCrust){
-	  icemc::Mesh& mantleMesh = fSurfaceMag[Layer::Mantle];
+	  
+	  icemc::Mesh& mantleMesh = find_or_make_mesh(fSurfaceMag, Layer::Mantle, "surface magnitude");
 	  mantleMesh.addPoint(ellipsoidPos, ellipsoidPos.Mag() + elevation - cumulativeDepth);
 	}
       }
-
-      icemc::Mesh& densityMesh = fDensities[layer];
+      
+      icemc::Mesh& densityMesh = find_or_make_mesh(fDensities, layer,  "density"); ////fDensities[layer];
       densityMesh.addPoint(ellipsoidPos, density);
 
       
