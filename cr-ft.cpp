@@ -185,7 +185,7 @@ void PlotIFT(struct cr_ft_state *state, RunMode mode, struct nk_context *ctx){
 
     state->grIFft->SetLineColor(kBlue);
     state->grIFft->SetMarkerStyle(5);
-    state->grIFft->SetMarkerColor(kBlue);
+    state->grIFft->SetMarkerColor(kRed);
     state->grIFft->SetMarkerSize(2);
     state->grIFft->SetLineWidth(6);
     state->grIFft->Draw("AL");

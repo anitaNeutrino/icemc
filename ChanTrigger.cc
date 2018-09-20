@@ -31,6 +31,8 @@ using std::cout;
 #include "SimulatedSignal.h"
 #endif
 
+#include "hot-loop.h"
+#include "hot-antenna.h"
 
 
 
@@ -781,6 +783,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
       // if (settings1->TRIGGEREFFSCAN && (settings1->TRIGGEREFFSCAPULSE==0)){
       //   injectImpulseAmplitudeAfterAntenna(anita1, tmp_vhz[0], tmp_vhz[1], ant);
       // }
+      std::map<std::string, void *> *hot_antenna_result = (std::map<std::string, void *> *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/hot-antenna.so", true /* bInteractive */);
 
       int saved_PULSER = anita1->PULSER;
       anita1->PULSER = 1;

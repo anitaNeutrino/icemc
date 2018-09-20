@@ -127,15 +127,17 @@ $(SO_HOT_TARGET): $(SO_DEP) $(SO_DEP_HEADER) hot-api.h
 	nm $@ > $(basename $(SO_HOT_TARGET)).txt
 	./notify.sh testEAS SO_LOCATION $@ || rm $(SO_HOT_TARGET) $(basename $(SO_HOT_TARGET)).txt # if default, "hot" target was called by mistake when program is not running.
 
-$(SO_TARGET) : $(SO_DEP) $(SO_DEP_HEADER) hot-api.h
-# g++ $(CXXFLAGS) -shared $(LDFLAGS) -fvisibility=hidden -o $@ $<
+$(SO_TARGET) : $(SO_DEP) $(SO_DEP_HEADER)
 	g++ $(CXXFLAGS) -g3 -shared $(LDFLAGS) -fvisibility=hidden -o $@ $<
 
 
 hot-loop.o : hot-loop.cpp hot-api.h
 		g++ -c $(BVVCPPFLAGS) $(BVVLDFLAGS) -rdynamic -o $@ $< $(BVVLDLIBS)
 
-hot-module-test.o : hot-module-test.cpp hot-api.h
+hot-module-test.o : hot-module-test.cpp hot-module-test.h
+		g++ -c $(BVVCPPFLAGS) $(BVVLDFLAGS) -rdynamic -o $@ $< $(BVVLDLIBS)
+
+hot-antenna.o : hot-antenna.cpp hot-antennan.h
 		g++ -c $(BVVCPPFLAGS) $(BVVLDFLAGS) -rdynamic -o $@ $< $(BVVLDLIBS)
 
 $(BINARIES): %: %.$(SrcSuf) $(OBJS)

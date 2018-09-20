@@ -120,7 +120,9 @@ namespace bvv {
         // double target_freq = (anita->FREQ_HIGH  - anita->FREQ_LOW) / (double) Anita::NFREQ * i + anita->FREQ_LOW;
       double target_freq_src_units = target_freq / cr_ft_result->dfreq;
       int int_target_freq_src_units = target_freq_src_units + 0.5;
-      amp[i] = cr_ft_result->FftRho[int_target_freq_src_units];
+      // Hack alert!:
+      // amp[i] = cr_ft_result->FftRho[int_target_freq_src_units];
+      amp[i] = 1;
     }
     for (int i = 0; i < Anita::NFREQ * 2; i++) {
       double target_freq = anita->freq_forfft[i * 2];
@@ -413,8 +415,8 @@ int main(int argc,  char **argv) {
     }
   // cout << "Before the call to hot_loop" << endl;
 
-  struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
-  struct hot_test_state *hot_test_result = (struct hot_test_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/hot-module-test.so", true /* bInteractive */);
+ struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
+ // struct hot_test_state *hot_test_result = (struct hot_test_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/hot-module-test.so", true /* bInteractive */);
  // exit(0);
   
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
