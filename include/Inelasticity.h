@@ -2,7 +2,6 @@
 #ifndef ICEMC_INELASTICITY_H
 #define ICEMC_INELASTICITY_H
 
-#include "TRandom3.h" 
 #include <iostream>
 
 #include "TH1.h"
@@ -16,6 +15,7 @@
 #include "Geoid.h"
 #include "TVector3.h"
 #include "Neutrino.h"
+#include "RNG.h"
 
 namespace icemc {
 
@@ -30,7 +30,7 @@ namespace icemc {
    * @class Y
    * @brief Inelasticity distributions: stores parametrizations and picks inelasticities
    */
-  class Y {  
+  class Y :  public RNG {  
 
   private:
     TF1* ffrac;							///< This is the fraction of the distribution in the low y region given by Equation 18. 
@@ -39,7 +39,6 @@ namespace icemc {
     TF1 *fC2;							///< parameterization of parameter C2 in the low y region according to Equation 17.
     TF3* fy0_low;						///< For picking inelasticity in low y region according to Equation 14.
     TF2* fy0_high;						///< For picking inelasticity in high y region according to Equation 15.
-    TRandom3 Rand3;
 
     double pickYConnollyetal2011(Neutrino::L leptonNumber,Neutrino::Current CURRENT,double e);	///< pick an inelasticity using recipe in Connolly et al. (2011)
     // L =0: nubar, NU=1: nu

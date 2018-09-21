@@ -11,13 +11,22 @@
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TH1F.h"
+
 #include "Report.h"
+#include "Settings.h"
 
-icemc::Spectra::Spectra(int EXPONENT_fromsettings) {
+double icemc::Source::Spectra::pickNeutrinoEnergy() {
+  if(fSettings->USEDARTBOARD){
+    return GetNuEnergy();
+  }
+  else {
+    return GetCDFEnergy();
+  }
+}
 
-  EXPONENT=EXPONENT_fromsettings;
-  // initialize parameters!!
-
+icemc::Source::Spectra::Spectra(const Settings* settings) : fSettings(settings){
+  
+  EXPONENT=fSettings->EXPONENT;
   E_bin = 12;
 
   double Emuons[E_bin]; // E dN/dE/dA/dt for neutrinos that are produced as muon neutrinos or muon antineutrinos.
@@ -341,7 +350,7 @@ icemc::Spectra::Spectra(int EXPONENT_fromsettings) {
 }
 
 
-double  icemc::Spectra::GetNuEnergy() {
+double  icemc::Source::Spectra::GetNuEnergy() {
   double thisenergy=16.; // arbitrary initialisation
   double thisflux=2.; // initialise higher than max
   double max=1.;
@@ -367,7 +376,7 @@ double  icemc::Spectra::GetNuEnergy() {
 
 
 
-void icemc::Spectra::GetCDF(){//set up CDF and inverse CDF;
+void icemc::Source::Spectra::GetCDF(){//set up CDF and inverse CDF;
   std::cout<<"in CDF " << EXPONENT << "\t" << E_bin << std::endl;;
   for(auto e :  energy){
     std::cout << e << ",  ";
@@ -408,7 +417,7 @@ void icemc::Spectra::GetCDF(){//set up CDF and inverse CDF;
   inverse_CDF = new TGraph(n,&N[0],&E[0]);
 }
 
-double icemc::Spectra::GetCDFEnergy(){//get Energy from 'CDF'
+double icemc::Source::Spectra::GetCDFEnergy(){//get Energy from 'CDF'
 
   if(!CDF){
     GetCDF(); // do initialization if needed
@@ -433,7 +442,7 @@ double icemc::Spectra::GetCDFEnergy(){//get Energy from 'CDF'
   
 }
 
-inline void icemc::Spectra::GetFlux(std::string filename)
+inline void icemc::Source::Spectra::GetFlux(std::string filename)
 {
   
   const std::string ICEMC_SRC_DIR=std::getenv("ICEMC_SRC_DIR");
@@ -459,42 +468,42 @@ inline void icemc::Spectra::GetFlux(std::string filename)
 }
 
 
-TGraph *icemc::Spectra::GetGEdNdEdAdt() {
+TGraph *icemc::Source::Spectra::GetGEdNdEdAdt() {
   return gEdNdEdAdt;
 }
 
 
-TGraph *icemc::Spectra::GetGE2dNdEdAdt() {
+TGraph *icemc::Source::Spectra::GetGE2dNdEdAdt() {
   return gE2dNdEdAdt;
 }
 
 
-TSpline3 *icemc::Spectra::GetSEdNdEdAdt() {
+TSpline3 *icemc::Source::Spectra::GetSEdNdEdAdt() {
   return sEdNdEdAdt;
 }
 
 
-TSpline3 *icemc::Spectra::GetSE2dNdEdAdt() {
+TSpline3 *icemc::Source::Spectra::GetSE2dNdEdAdt() {
   return sE2dNdEdAdt;
 }
 
 
-double *icemc::Spectra::Getenergy() {
+double *icemc::Source::Spectra::Getenergy() {
   return energy;
 }
 
 
-double *icemc::Spectra::GetEdNdEdAdt() {
+double *icemc::Source::Spectra::GetEdNdEdAdt() {
   return EdNdEdAdt;
 }
 
 
-double *icemc::Spectra::GetE2dNdEdAdt() {
+double *icemc::Source::Spectra::GetE2dNdEdAdt() {
   return E2dNdEdAdt;
 }
 
 
-double icemc::Spectra::GetEdNdEdAdt(double E_val) {
+double icemc::Source::Spectra::GetEdNdEdAdt(double E_val) {
   double tmp_Get;
   if (E_val < energy[0]) {
     std::cout<<"Energy value is smaller than the energy boundary!\n";
@@ -513,7 +522,7 @@ double icemc::Spectra::GetEdNdEdAdt(double E_val) {
 }
 
 
-double icemc::Spectra::GetE2dNdEdAdt(double E_val) {
+double icemc::Source::Spectra::GetE2dNdEdAdt(double E_val) {
   double tmp_Get;
   if (E_val < energy[0]) {
     std::cout<<"Energy value is smaller than the energy boundary!\n";
@@ -532,17 +541,17 @@ double icemc::Spectra::GetE2dNdEdAdt(double E_val) {
 }
 
 
-double icemc::Spectra::Getmaxflux() {
+double icemc::Source::Spectra::Getmaxflux() {
   return maxflux;
 }
 
 
-int icemc::Spectra::GetE_bin() {
+int icemc::Source::Spectra::GetE_bin() {
   return E_bin;
 }
 
 
-int icemc::Spectra::IsSpectrum() {
+int icemc::Source::Spectra::IsSpectrum() {
   int out;
   if (EXPONENT<=10||EXPONENT>=30) {
     out = 1;
@@ -554,7 +563,7 @@ int icemc::Spectra::IsSpectrum() {
 }
 
 
-int icemc::Spectra::IsMonoenergetic() {
+int icemc::Source::Spectra::IsMonoenergetic() {
   int out;
   if (EXPONENT>10&&EXPONENT<30) {
     out = 1;
@@ -566,7 +575,7 @@ int icemc::Spectra::IsMonoenergetic() {
 }
 
 
-void icemc::Spectra::savePlots2(const TString& fileName){
+void icemc::Source::Spectra::savePlots2(const TString& fileName){
   TCanvas *ctest1 = new TCanvas("ctest1", "", 880, 800);
 
   GetGEdNdEdAdt()->Draw("al");
@@ -579,7 +588,7 @@ void icemc::Spectra::savePlots2(const TString& fileName){
 
 }
 
-void icemc::Spectra::savePlots(const TString& fileNameNoSuffix){
+void icemc::Source::Spectra::savePlots(const TString& fileNameNoSuffix){
 
   TCanvas *ctemp = new TCanvas(fileNameNoSuffix);
 

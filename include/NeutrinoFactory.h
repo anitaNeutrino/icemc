@@ -23,7 +23,7 @@ namespace icemc {
 
   private:
     const Settings* fSettings;
-    Spectra fSpectra;
+    Source::Spectra fSpectra;
     Primaries fPrimaries; // contains an inelasticity distribution thingy
     Interaction fInteraction;    
 

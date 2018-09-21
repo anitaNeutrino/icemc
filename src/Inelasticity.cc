@@ -1,4 +1,3 @@
-#include "TRandom3.h"
 #include "Constants.h"
 #include "TVector3.h"
 #include "Geoid.h"
@@ -120,9 +119,9 @@ double icemc::Y::pickYGandhietal() {
   	// adjust exponent until looks like the curve
   	//  and has right mean.
   	//  (Note this is not the fcn, but the inverse of the integral...)
-  rnd = gRandom->Rndm(1); // (0,1)
+  rnd = pickUniform(1); //gRandom->Rndm(1); // (0,1)
   //  cout << "R1, R2, rnd are " << R1 << " " << R2 << " " << rnd << "\n";
-  x=pow(-log(R1+rnd*R2),2.5); 
+  x=pow(-log(R1+rnd*R2),2.5);
   return x;   
 }
 
@@ -137,7 +136,7 @@ double icemc::Y::pickYConnollyetal2011(Neutrino::L leptonNumber, Neutrino::Curre
   double epsilon=log10(pnu/1.E9);
   // pick a y region 
   //double R1=Rand3Y.Rndm(); // choose our first random number
-  double r1=gRandom->Rndm();
+  double r1=pickUniform(); //gRandom->Rndm();
  
   int iyregion=0; // 0 for high y region 
   if (r1<ffrac->Eval(epsilon)) // Is it going to be in low y region?
@@ -152,7 +151,7 @@ double icemc::Y::pickYConnollyetal2011(Neutrino::L leptonNumber, Neutrino::Curre
   double C2_this=fC2->Eval(epsilon); // C2 for this event
   
   // pick another random number
-  double r2=gRandom->Rndm();//  double r2=Rand3Y.Rndm();
+  double r2=pickUniform(); //gRandom->Rndm();//  double r2=Rand3Y.Rndm();
   double y0=0.;
  
   if (iyregion==0)  // high y region

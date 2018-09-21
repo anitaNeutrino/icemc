@@ -38,6 +38,8 @@
 #include "FTPair.h"
 #include "Neutrino.h"
 #include "NeutrinoFactory.h"
+#include "DiffuseFlux.h"
+#include "RNG.h"
 
 #include <string>
 #include <sstream>
@@ -116,7 +118,7 @@ icemc::EventGenerator::~EventGenerator()
 
 
 
-void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Spectra *nuSpectra, const AskaryanFreqsGenerator *askFreqGen, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
+void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Source::Spectra *nuSpectra, const AskaryanFreqsGenerator *askFreqGen, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
 
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
@@ -1127,7 +1129,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     fDetector->powerthreshold[4]=clOpts.trig_thresh;
   }
 
-  Spectra* nuSpectra = new Spectra((int)settings1.EXPONENT);
+  Source::Spectra* nuSpectra = new Source::Spectra(&settings1);
   if(!interaction1){
     interaction1 = new Interaction(primary1, &settings1); //, 0, count1);
   }
@@ -1253,26 +1255,28 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   icemc::report() << severity::info << "Start time is " << startTime << ", end time is " << endTime << ", time range is " << endTime - startTime << std::endl;
   // UInt_t simulationEndTime = fDetector->startTime();
-  
+
+  Source::DiffuseFlux directionModel;
   
   /**
    * Main loop over generated neutrinos
    */
   for (int inu = clOpts.startNu; inu < NNU && !ABORT_EARLY; inu++) {
     
-    if (NNU >= 100 && (inu % (NNU / 100) == 0)){
-      std::cout << inu << " neutrinos. " << (double(inu+1)/double(NNU)) * 100 << "% complete.\n";
+    if (NNU >= 100 && ((inu % (NNU / 100)) == 0)){
+      std::cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
     }
-    else{
-      std::cout << inu << " neutrinos.  " << (double(inu+1) / double(NNU)) * 100 << "% complete.\n";
+    else if(NNU < 100){
+      std::cout << inu << " / " << NNU << "neutrinos" << std::endl;
     }
-
+    
     eventNumber=(UInt_t)(clOpts.run_no)*NNU+inu;
+    RNG::newSeeds(clOpts.run_no, eventNumber); // updates all RNG seeds
 
     // @todo Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
 
-    double eventTime = startTime + (endTime - startTime)*gRandom->Rndm();
+    double eventTime = fDetector->pickEventTime();
 
     // first pick a balloon position...
     fDetector->PickBalloonPosition(eventTime, &settings1,  fDetector);
@@ -1291,7 +1295,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // to get from our interaction point to the payload
     // now we have that, we can calculate the neutrino path
 
-    NeutrinoPath np(interactionPos, rfDirFromInteraction, antarctica);
+    TVector3 v = directionModel.pickNeutrinoDirection(interactionPos, rfDirFromInteraction); //, antarctica);
 
     // make a neutrino, we've picked energy, flavor, interaction current, 
     Neutrino nu = nuFactory.makeNeutrino();

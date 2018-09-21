@@ -20,12 +20,16 @@ namespace icemc {
   class RayTracer;
   class Roughness;
   class Screen;
-  class Spectra;
   class Primaries;
   class GeneratedNeutrino;
   class PassingNeutrino;
   class ANITA;
 
+  namespace Source {
+    class Spectra;
+  }
+
+  
 
   /**
    * @class EventGenerator
@@ -458,7 +462,7 @@ namespace icemc {
     // void IntegrateBands(Anita *anita1,  int k,  Screen *panel1,  double *freq,  double scalefactor,  double *sumsignal) const;
 
     // @todo constify... needs some love to constify
-    void Summarize(const Settings *settings1,  Anita* anita1,  Spectra *spectra1, const AskaryanFreqsGenerator* askFreqGen,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
+    void Summarize(const Settings *settings1,  Anita* anita1,  Source::Spectra *spectra1, const AskaryanFreqsGenerator* askFreqGen,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
     void WriteNeutrinoInfo(const int& inu, const Geoid::Position&,  const TVector3&,  const Geoid::Position&,  double,  Neutrino::Flavor,  Neutrino::Current,  double,  std::ofstream &nu_out) const;
 
     /** 
