@@ -367,7 +367,7 @@ double icemc::Crust2::Density(const Geoid::Position& pos,
 
 
 
-Geoid::Position icemc::Crust2::PickInteractionLocation(const Geoid::Position &detector) const {
+Geoid::Position icemc::Crust2::pickInteractionPosition(const Geoid::Position &detector) const {
 
   Geoid::Position nuPos;
 

@@ -308,7 +308,7 @@ int icemc::Interaction::PickDownwardInteractionPoint(const Geoid::Position&r_bn,
 
     do{
       ///@todo ibnposition
-      posnu = antarctica1->PickInteractionLocation(r_bn);
+      posnu = antarctica1->pickInteractionPosition(r_bn);
     } while(settings1->SPECIFIC_NU_POSITION &&  (posnu - specific_position).Mag() > settings1->SPECIFIC_NU_POSITION_DISTANCE);    
   }
 

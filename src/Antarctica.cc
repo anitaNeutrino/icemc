@@ -149,7 +149,7 @@ icemc::Antarctica::Antarctica(int model,
 
 
 
-Geoid::Position icemc::Antarctica::PickInteractionLocation(const Geoid::Position &balloon) const {
+Geoid::Position icemc::Antarctica::pickInteractionPosition(const Geoid::Position &balloon) const {
 
   
   // // random numbers used
@@ -222,7 +222,7 @@ Geoid::Position icemc::Antarctica::PickInteractionLocation(const Geoid::Position
   // std::cerr << __PRETTY_FUNCTION__ << " Disabled during refactor!" << std::endl;
 
   ///@todo do this again!
-  return Crust2::PickInteractionLocation(balloon);
+  return Crust2::pickInteractionPosition(balloon);
   // Geoid::Position posNu = balloon;
   // return posNu;
 } //PickInteractionLocation

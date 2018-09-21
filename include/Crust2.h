@@ -160,7 +160,7 @@ namespace icemc{
     /////////////////////////////////////
     //methods
     void ReadCrust(const std::string&);
-    Geoid::Position PickInteractionLocation(const Geoid::Position &detector) const;
+    Geoid::Position pickInteractionPosition(const Geoid::Position &detector) const;
 
     static const int numLayers = 11;
     enum class Layer {Air, ///@todo think about this one

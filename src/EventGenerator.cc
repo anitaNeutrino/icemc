@@ -1249,13 +1249,6 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
        <<(int)((raw_loop_start_time - raw_start_time)/60) << ":"
        << ((raw_loop_start_time - raw_start_time)%60) << std::endl;
 
-
-  double startTime = fDetector->getStartTime();
-  double endTime = fDetector->getEndTime();
-
-  icemc::report() << severity::info << "Start time is " << startTime << ", end time is " << endTime << ", time range is " << endTime - startTime << std::endl;
-  // UInt_t simulationEndTime = fDetector->startTime();
-
   Source::DiffuseFlux directionModel;
   
   /**
@@ -1281,7 +1274,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // first pick a balloon position...
     fDetector->PickBalloonPosition(eventTime, &settings1,  fDetector);
 
-    Geoid::Position interactionPos = antarctica->PickInteractionLocation(fDetector->position());
+    Geoid::Position interactionPos = antarctica->pickInteractionPosition(fDetector->position());
 
     RayTracer rayTracer(antarctica, fDetector->position());
     TVector3 rfDirFromInteraction = rayTracer.findPathToDetector(interactionPos);
