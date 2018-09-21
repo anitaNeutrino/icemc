@@ -1,18 +1,16 @@
 #ifndef SPECTRA_H_
 #define SPECTRA_H_
 
-
+#include "RNG.h"
 #include "TSpline.h"
 #include <string>
-#include "TRandom3.h"
 
 namespace icemc{
 
   //! Neutrino spectra
-  class Spectra {
+  class Spectra : public RNG {
 
   private:
-    TRandom3 Rand3;
     double maxflux;   // max flux value
     //  static const int NSPECTRA_MAX=300;  // why need this??
     static const int E_bin_max = 50;
