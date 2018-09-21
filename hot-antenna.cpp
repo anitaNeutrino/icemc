@@ -18,6 +18,8 @@
 #include "buffer.hh"
 #include "vector.hh"
 #include "anita.hh"
+#include "Settings.h"
+#include "anita.hh"
 #include "hot-antenna.h"
 
 extern struct xlibstruct *gxlib;
@@ -26,6 +28,8 @@ struct nk_context *ctx = &(gxlib->ctx);
 enum RunMode { m_init, m_reload, m_step, NRunModes };
 
 // extern double tmp_vhz[2][Anita::NFREQ];
+extern Settings* global_settings1;
+extern Anita *global_anita1;
 
 // bInteractive: can be assigned "false" once through game_init
 // to instruct the module that it is in the batch mode.
@@ -53,57 +57,88 @@ void checkbox_label(struct nk_context *ctx, const char *name, bvv::TBuffer <int>
   buf = val;
 }
 
+void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_context *ctx) {
+  if (mode == m_reload) {
+    for (int ilayer=0; ilayer < global_settings1->NLAYERS; ilayer++) { // loop over layers on the payload
+      for (int ifold=0;ifold<global_anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
+        cout << "ilayer: " << ilayer << ", ifold: " << ifold << ", antNum: " << global_anita1->GetRxTriggerNumbering(ilayer, ifold) << endl;
+      }
+    }
+  }
+  // bn1->GetAntennaOrientation(settings1,  anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
+  // bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  panel1->GetVec2bln(jpt), e_component_kvector,  h_component_kvector,  n_component_kvector);
+  // bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
+  // bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
 
-void PlotSomething(std::map<std::string, void*> *env, RunMode mode, struct nk_context *ctx){
+  // anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
+}
+
+void PlotSomething(std::map<std::string, void*> *penv, RunMode mode, struct nk_context *ctx){
+  map<std::string, void*> &env = *penv;
   if (mode == m_init) {
-    (*env)["cHotTest"] = new TCanvas();
-    (*env)["fHotTest"] = new std::unique_ptr<TF1>;
+    env["cHotTest"] = new TCanvas();
     return;
   }
 
   static bvv::TBuffer <double> Deviation(1.0);
 
   if (mode == m_reload) {
-    ((std::unique_ptr<TF1> *) (*env)["fHotTest"])->reset(new TF1("fHotTest","sin([0]*x)/x",0,10));
-    (*((std::unique_ptr<TF1> *) (*env)["fHotTest"]))->SetParameter(0, Deviation);
-
-    if ( (*env).find("amps0") == (*env).end() ) {
+    // BEGIN Introduce new persistent entries in "env":
+    if ( env.find("gAmps0") == env.end() ) {
       // not found
-      (*env)["amps0"] = new std::unique_ptr<TGraph>;
+      env["gAmps0"] = new std::unique_ptr<TGraph>;
     }
-    ((std::unique_ptr<TGraph> *) (*env)["amps0"])->reset(new TGraph(Anita::NFREQ));
+    if ( env.find("fHotTest") == env.end() ) {
+      // not found
+      env["fHotTest"] = new std::unique_ptr<TF1>;
+    }
+    // END   Introduce new persistent entries in "env".
+
+    // BEGIN Create shortcuts to objects listed in "env":
+    std::unique_ptr<TF1> & fHotTest = *((std::unique_ptr<TF1> *) env["fHotTest"]);
+    std::unique_ptr<TGraph> & gAmps0 = *((std::unique_ptr<TGraph> *) env["gAmps0"]);
+    // END   Create shortcuts to objects listed in "env".
+
+
+    fHotTest.reset(new TF1("fHotTest","sin([0]*x)/x",0,10));
+    fHotTest->SetParameter(0, Deviation);
+
+    gAmps0.reset(new TGraph(Anita::NFREQ));
+
     for (int i = 0; i < Anita::NFREQ; i++) {
-      // (*((std::unique_ptr<TGraph> *) (*env)["amps0"]))->SetPoint(i, i, tmp_vhz[0][i]);
-      (*((std::unique_ptr<TGraph> *) (*env)["amps0"]))->SetPoint(i, i, 1.2345);
+      gAmps0->SetPoint(i, i, 1.2345);
     }
 
-    (*((std::unique_ptr<TGraph> *) (*env)["amps0"]))->SetLineColor(kBlue);
-    (*((std::unique_ptr<TGraph> *) (*env)["amps0"]))->SetMarkerStyle(5);
-    (*((std::unique_ptr<TGraph> *) (*env)["amps0"]))->SetMarkerColor(kBlue);
-    (*((std::unique_ptr<TGraph> *) (*env)["amps0"]))->SetMarkerSize(2);
-    (*((std::unique_ptr<TGraph> *) (*env)["amps0"]))->SetLineWidth(6);
-    (*((std::unique_ptr<TGraph> *) (*env)["amps0"]))->Draw("AL");
+    gAmps0->SetLineColor(kBlue);
+    gAmps0->SetMarkerStyle(5);
+    gAmps0->SetMarkerColor(kBlue);
+    gAmps0->SetMarkerSize(2);
+    gAmps0->SetLineWidth(6);
+    gAmps0->Draw("AL");
 
   }
 
   if (mode == m_step) {
+    // BEGIN Create shortcuts to objects listed in "env":
+    std::unique_ptr<TF1> & fHotTest = *((std::unique_ptr<TF1> *) env["fHotTest"]);
+    // END   Create shortcuts to objects listed in "env".
     nk_layout_row_dynamic(ctx, 25, 1);
     property_double(ctx, "STD: ", 0.0, Deviation, 15.0 /*max*/, 1.0 /*increment*/, 0.002 /*sensitivity*/);
 
     if (*Deviation) {
-      ((std::unique_ptr<TF1> *) (*env)["fHotTest"])->reset(new TF1("fHotTest","sin([0]*x)/x",0,10));
-      (*((std::unique_ptr<TF1> *) (*env)["fHotTest"]))->SetParameter(0, Deviation);
-      (*((std::unique_ptr<TF1> *) (*env)["fHotTest"]))->Draw("L");
-      (*((std::unique_ptr<TF1> *) (*env)["fHotTest"]))->SetLineColor(kBlue);
-      (*((std::unique_ptr<TF1> *) (*env)["fHotTest"]))->SetLineWidth(2);
-      (*((std::unique_ptr<TF1> *) (*env)["fHotTest"]))->GetXaxis()->SetTitle("Time [ns]");
-      (*((std::unique_ptr<TF1> *) (*env)["fHotTest"]))->GetYaxis()->SetTitle("E [V/m]");
+      fHotTest.reset(new TF1("fHotTest","sin([0]*x)/x",0,10));
+      fHotTest->SetParameter(0, Deviation);
+      fHotTest->Draw("L");
+      fHotTest->SetLineColor(kRed);
+      fHotTest->SetLineWidth(2);
+      fHotTest->GetXaxis()->SetTitle("Time [ns]");
+      fHotTest->GetYaxis()->SetTitle("E [V/m]");
     } 
   }
 
   if (mode == m_reload || *Deviation) {
-    ((TCanvas *) (*env)["cHotTest"])->Modified();
-    ((TCanvas *) (*env)["cHotTest"])->Update();
+    ((TCanvas *) env["cHotTest"])->Modified();
+    ((TCanvas *) env["cHotTest"])->Update();
   }
 
   fflush(stdout);
@@ -126,7 +161,8 @@ static void game_finalize(std::map<std::string, void*> *env)
 
 static void game_reload(std::map<std::string, void*> *env)
 {
-  PlotSomething(env, m_reload, ctx);
+  // PlotSomething(env, m_reload, ctx);
+  PlotGain(env, m_reload, ctx);
   cout << "reloaded dl" << endl;
 }
 

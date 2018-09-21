@@ -245,8 +245,6 @@ void* hot_loop_interactive(std::string arg_so_location) {
     }
     nk_input_end(ctx);
 
-    /* GUI */
-    // Empty: moved to game_step.
     if (SO_LOCATION[0]) {
       printf("I would like to load %s\n", SO_LOCATION);
       game_load(&game, true /* bInteractive */);
@@ -256,7 +254,7 @@ void* hot_loop_interactive(std::string arg_so_location) {
       if (!game.api.step(game.state))
         break;
 
-    if (nk_window_is_hidden(ctx, "Plot Controls")) break;
+    // if (nk_window_is_hidden(ctx, "Plot Controls")) break;
 
     /* Draw */
     XClearWindow(xw.dpy, xw.win);
@@ -286,6 +284,6 @@ void *hot_loop(std::string arg_so_location, bool bInteractive) {
     result = hot_loop_interactive(arg_so_location);
   else
     result = hot_loop_batch(arg_so_location);
-  printf("In hot_loop...\n");
+  printf("In the end of hot_loop...\n");
   return result;
 }

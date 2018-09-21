@@ -260,6 +260,8 @@ double ZhsTimeDelta = -999;
 vector<double> ZhsTimeArr;
 vector<double> ZhsTimeE(25000);
 vector<double> ZhsAlpha(25000);
+Settings* global_settings1;
+Anita *global_anita1;
 double NrFT[ANITA_TIME_SAMPLES];
 
 int main(int argc,  char **argv) {
@@ -275,6 +277,7 @@ int main(int argc,  char **argv) {
   string stemp;
 
   Settings* settings1 = new Settings();
+  global_settings1 = settings1;
 
   string input="inputs.txt";
   string sim_inp="/nfs/data_disks/herc0a/users/bugaev/ANITA/SIMS/Event_4212/timefresnel-root.dat";
@@ -408,21 +411,22 @@ int main(int argc,  char **argv) {
              ind,
              tokens,
              NrFT[ind - 1] = atof(tokens[0].c_str());
-            );
-    for (int ind = 0; ind < ANITA_TIME_SAMPLES; ind++) {
-      NrFT[ind] = NrFT[ind] * 5.5e+8; // The coefficient is an empirical value derived from eyeballing using gnuplot.
-  //    // cout << ind << " NrFT: " << NrFT[ind] << endl;
-    }
+             );
+  for (int ind = 0; ind < ANITA_TIME_SAMPLES; ind++) {
+    NrFT[ind] = NrFT[ind] * 5.5e+8; // The coefficient is an empirical value derived from eyeballing using gnuplot.
+    //    // cout << ind << " NrFT: " << NrFT[ind] << endl;
+  }
   // cout << "Before the call to hot_loop" << endl;
 
- struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
- // struct hot_test_state *hot_test_result = (struct hot_test_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/hot-module-test.so", true /* bInteractive */);
- // exit(0);
+  struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
+  // struct hot_test_state *hot_test_result = (struct hot_test_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/hot-module-test.so", true /* bInteractive */);
+  // exit(0);
   
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
   // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
    
   Anita *anita1=new Anita();// right now this constructor gets banding info
+  global_anita1 = anita1;
 
   cout << "testEAS reached the end of the development block" << endl;
   //  exit(0);
@@ -685,7 +689,7 @@ int main(int argc,  char **argv) {
     //   // vmmhz_em[i]=0.; // for keeping track of just the em component of the shower
     // } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
     
-      // Picks the balloon position and at the same time sets the masks and thresholds
+    // Picks the balloon position and at the same time sets the masks and thresholds
     bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
     
     // BR: Here calculate the direction to the balloon
@@ -714,6 +718,8 @@ int main(int argc,  char **argv) {
     globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
     anita1->rms_rfcm_e_single_event = 0;
 
+
+    std::map<std::string, void *> *hot_antenna_result = (std::map<std::string, void *> *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/hot-antenna.so", true /* bInteractive */);
 
     count_rx=0;
     for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
