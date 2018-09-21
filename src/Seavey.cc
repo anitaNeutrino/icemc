@@ -1,6 +1,6 @@
 #include "Seavey.h"
 #include "EnvironmentVariable.h"
-#include "IcemcLog.h"
+#include "Report.h"
 #include "balloon.hh"
 #include "Constants.h"
 #include "Settings.h"
@@ -93,11 +93,11 @@ std::ifstream openCarefully(const char* fileName, bool failHard = true){
   dataFile.open(fileName);
   if(dataFile.fail()){
     if(failHard){
-      icemcLog() << icemc::error << "Quiting because I can't open " << fileName << "\n";
+      icemc::report() << icemc::severity::error << "Quiting because I can't open " << fileName << "\n";
       exit(1);
     }
     else{
-      icemcLog() << icemc::warning << "I can't open "  << fileName << "\n";
+      icemc::report() << icemc::severity::warning << "I can't open "  << fileName << "\n";
     }
   }
   return dataFile;
@@ -135,7 +135,7 @@ void loadGains(){
 	  freqHz_measured.at(i) = f;
 	}
 	else if (f != freqHz_measured.at(i)){
-	  icemcLog() << icemc::warning << "frequency = " << f << ", freqHz_measured[i] = " << freqHz_measured.at(i) << "\n";
+	  icemc::report() << icemc::severity::warning << "frequency = " << f << ", freqHz_measured[i] = " << freqHz_measured.at(i) << "\n";
 	}
       }
       firstFile = false;
@@ -163,7 +163,7 @@ void loadGains(){
 	for(auto& g : gainVsAngle.at(j)){	  
 	  angle_file >> f >> g;
 	  if(f != freqHz_measured.at(k)){
-	    icemcLog() << icemc::warning << "Check off-axis frequencies for " << filePath << std::endl;
+	    icemc::report() << icemc::severity::warning << "Check off-axis frequencies for " << filePath << std::endl;
 	  }
 	  k++;
 	}
@@ -451,7 +451,7 @@ double icemc::Seavey::getHeight(Pol pol, double freqHz) const {
   case Pol::H:
     return linearInterp(heightHH_m, freqHz);
   default:
-    icemcLog() << icemc::warning << "Requested height for unknown pol, return 0" << std::endl;
+    icemc::report() << severity::warning << "Requested height for unknown pol, return 0" << std::endl;
     return 0;
   }
 }
@@ -466,7 +466,7 @@ double icemc::Seavey::getHeight(XPol xPol, double freqHz) const {
   case XPol::HtoV:
     return linearInterp(heightHV_m, freqHz);
   default:
-    icemcLog() << icemc::warning << "Requested height for unknown cross-pol, returning 0" << std::endl;
+    icemc::report() << severity::warning << "Requested height for unknown cross-pol, returning 0" << std::endl;
     return 0;
   }
 }
@@ -565,7 +565,7 @@ double icemc::Seavey::getOffAxisResponse(Pol pol,  AngleDir dir, double freqHz, 
     g2 = dir == AngleDir::Azimuth ? linearInterp(gain_h_angle_az.at(j2), freqHz) : linearInterp(gain_h_angle_az.at(j2), freqHz);
     break;
   default:
-    icemcLog() << icemc::warning << "Requested off-axis gain for for unknown pol, " << (int)pol <<", returning 0\n";
+    icemc::report() << severity::warning << "Requested off-axis gain for for unknown pol, " << (int)pol <<", returning 0\n";
     break;    
   }
 
@@ -764,7 +764,7 @@ const icemc::FTPair& icemc::Seavey::get(Pol pol) const {
     return fHPol;
   }
   else{
-    icemcLog() << icemc::warning << "Pol for unknown pol requested, returning V.\n";
+    icemc::report() << severity::warning << "Pol for unknown pol requested, returning V.\n";
     return fVPol;
   }  
 }

@@ -1,5 +1,5 @@
-#ifndef TEXT_OUTPUT_H
-#define TEXT_OUTPUT_H
+#ifndef ICEMC_LOG_H
+#define ICEMC_LOG_H
 
 #include <fstream>
 #include <sstream>
@@ -8,20 +8,18 @@
 
 namespace icemc {
 
-
   /**
    * @enum severity for tweaking the warning message
    * 
    */
-  enum severity {
-    info,
-    warning,
-    error
-  };
-
+  enum class severity {
+		       info,
+		       warning,
+		       error
+  };    
   
   /**
-   * @class Logger
+   * @class Report
    * @brief A pretty (and probably over-engineered) logger for icemc, 
    * which can potentially hold a number of text files.
    * 
@@ -45,18 +43,19 @@ namespace icemc {
    * 
    */
 
-  class Logger {
+  class Report {
   public:
+
 
     /** 
      * Constructor
      */
-    Logger();
+    Report();
 
     /** 
      * Destructor, makes sure the terminal colors are reset
      */
-    virtual ~Logger();
+    virtual ~Report();
 
 
 
@@ -66,7 +65,7 @@ namespace icemc {
      * @param s is a streamable type
      */
     template <typename Streamable>
-    Logger& operator<<(const Streamable& s){
+    Report& operator<<(const Streamable& s){
       fStartedWriting = true;
       return message(s);      
     }
@@ -80,7 +79,7 @@ namespace icemc {
      */
     typedef std::basic_ostream<char, std::char_traits<char> > CoutType;
     typedef CoutType& (*StandardEndLine)(CoutType&);
-    Logger& operator<<(StandardEndLine manip){
+    Report& operator<<(StandardEndLine manip){
       manip(getStream());
 
       if(fMustReset){	
@@ -170,6 +169,9 @@ namespace icemc {
     std::ofstream fslac_viewangles;
     std::ofstream fslac_hitangles;
 
+
+
+
   private:
 
     /** 
@@ -179,7 +181,7 @@ namespace icemc {
      * 
      * @return reference to self
      */
-    Logger& message(severity s);
+    Report& message(severity s);
 
 
     /** 
@@ -190,7 +192,7 @@ namespace icemc {
      * @return reference to self
      */
     template<typename Streamable>
-    Logger& message(const Streamable& s) {
+    Report& message(const Streamable& s) {
       if(!fStartedWriting){
 	openLogFiles();
       }      
@@ -239,18 +241,16 @@ namespace icemc {
     int fSourceLine;
   };
 
-
   
-
   /** 
    * Access the global log, you should be able to call this anywhere.
    * However, it's better to use the macro!
    * @return The log
    */
-  Logger& getLog(const char* file, int line);
+  Report& _report(const char* file, int line);
   
-#define icemcLog() icemc::getLog(__FILE__, __LINE__)
-  
+#define report() _report(__FILE__, __LINE__)      
+
 }
 
 

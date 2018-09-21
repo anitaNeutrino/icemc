@@ -183,7 +183,7 @@ double icemc::AskaryanFreqsGenerator::GetELPM() const {
 
   //double elpm=7.7E12*(X0ICE*100.);
 
-  double elpm=2.E15*(X0MEDIUM/x0ice);  // this is what Jaime uses.  see caption under figure 4 of 0003315.
+  double elpm = 2.E15*(X0MEDIUM/x0ice);  // this is what Jaime uses.  see caption under figure 4 of 0003315.
   return elpm;
   
 } //GetELPM
@@ -229,7 +229,7 @@ void icemc::AskaryanFreqsGenerator::GetSpread(double pnu,
 
 
   //  std::cout << "elpm is " << elpm << "\n";
-  freq=freq/1.E6;  // frequency in MHz
+  freq = freq/1.E6;  // frequency in MHz
   double showerlength=3.1;  //shower length in meters-gets a modification
                             //for em showers due to lpm effect.
   

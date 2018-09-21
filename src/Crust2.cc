@@ -82,7 +82,7 @@ icemc::Crust2::Layer icemc::Crust2::getLayerFromString(const std::string& layerT
       return it.first;
     }
   }
-  icemcLog() << icemc::error << "Could not deduce Layer from string: " << layerType << std::endl;
+  icemc::report() << severity::error << "Could not deduce Layer from string: " << layerType << std::endl;
   return Layer::LowerCrust;
 }
 
@@ -148,13 +148,6 @@ double icemc::Crust2::IceThickness(const Geoid::Position& p) const {
   return fThicknesses.find(Layer::Ice)->second.eval(p);
 }
 
-
-// double icemc::Crust2::IceThickness(double lon,double lat) const {
-//   Geoid::Position p;
-//   p.SetLonLatAlt(lon, lat, 0);
-//   return Crust2::IceThickness(p);
-// }
-
 int icemc::Crust2::InFirn(const Geoid::Position&pos) const {
   if (pos.Mag()-Surface(pos)<constants::FIRNDEPTH){
     return 0;
@@ -166,26 +159,6 @@ int icemc::Crust2::InFirn(const Geoid::Position&pos) const {
 double icemc::Crust2::SurfaceDeepIce(const Geoid::Position&pos) const { // surface of the deep ice (where you reach the firn)
   return  Surface(pos) + constants::FIRNDEPTH;
 }
-
-
-// double icemc::Crust2::Surface(double lon,double lat) const {
-//   Geoid::Position p;
-//   p.SetLonLatAlt(lon, lat, 0);
-//   return this->Surface(p);
-// } //Surface(lon,lat)
-
-
-// double icemc::Crust2::RockSurface(double lon,double lat) const {
-//   return 0;
-//   // lon = lon < 0 ? lon + 360 : lon;  
-//   // return fCrustElevation->Interpolate(lon, lat); //(Surface(lon,lat) - IceThickness(lon,lat) - WaterDepth(lon,lat));
-
-// } //RockSurface(lon,lat)
-
-// double icemc::Crust2::RockSurface(const Geoid::Position&pos) const {
-//   return 0;  
-// } //RockSurface(lon,lat)
-
 
 
 double icemc::Crust2::SurfaceAboveGeoid(const Geoid::Position&pos) const {
@@ -251,19 +224,20 @@ double icemc::Crust2::integratePath(const Geoid::Position& interaction, const TV
     }
 
     double stepSize = fractionalStep*distGuess;
-    
-    stepSize = TMath::Max(stepSize, 1.0);
+
+    const double minStepSize = 1.0;
+    stepSize = TMath::Max(stepSize, minStepSize);
     // std::cout << dir << "\t" << nSteps2 << "\t" << cosTheta << "\t" << TMath::ACos(cosTheta)*TMath::RadToDeg() << "\t" << ln << " dr = " << dr << "\t distGuess = " << distGuess << ", stepSize = " << stepSize << "\t...";
     Geoid::Position p2 = p - stepSize*neutrinoDir;
 
     Layer l2 = getLayer(p2);
-    if(l2 == l || stepSize ==  1.0){
+    if(l2 == l || stepSize <= minStepSize){
       // if you're in the same layer
       // or you crossed with a step size of 1
       // update p,l and reset step size fraction
       // and update columnDepth
       p = p2;
-      l = l2; //  this allows us to break out of the loop on this step
+      l = l2; // this allows us to break out of the loop on this iteration
       fractionalStep = 1;
       cumulativeColumnDepth += density*stepSize;
       nSteps++;
@@ -278,7 +252,7 @@ double icemc::Crust2::integratePath(const Geoid::Position& interaction, const TV
   }
 
   if(nSteps2 > 1000){
-    icemcLog() << icemc::warning << "I took " << nSteps << " good steps out of "  <<  nSteps2 <<  " to find " << cumulativeColumnDepth << std::endl;  
+    icemc::report() << severity::warning << "I took " << nSteps << " good steps out of "  <<  nSteps2 <<  " to find " << cumulativeColumnDepth << std::endl;  
   }
   
   return cumulativeColumnDepth;

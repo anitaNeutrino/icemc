@@ -9,7 +9,7 @@
 #include "Crust2.h"
 #include "Antarctica.h"
 #include "Primaries.h"
-#include "IcemcLog.h"
+#include "Report.h"
 #include "RayTracer.h"
 #include <cmath>
 
@@ -62,13 +62,10 @@ icemc::Primaries::Primaries(){//constructor
   c3[1][1]=1.569;
   c4[1][1]=-17.72;
   
-  char ch[50];
   std::string stmp;
   std::string sbase="fsigma";
   for(int i=0; i<=1;i++){ // nu, nubar
     for(int j=0; j<=1; j++){ // nc, cc
-      sprintf(ch,"%d%d",i,j);
-      stmp=ch;	
       m_fsigma[i][j]=new TF1((sbase+stmp).c_str(),"pow(10, [1]+[2]*log(x-[0])+[3]*pow(log(x-[0]),2)+[4]/log(x-[0]))", 4., 21.);//check bounds. they're in log10 GeV.
       //x=log10(pnu/GeV).
       m_fsigma[i][j]->SetParameters(c0[i][j], c1[i][j], c2[i][j], c3[i][j], c4[i][j]);
@@ -172,7 +169,7 @@ int icemc::Primaries::GetSigma(double pnu, double& sigma,double &len_int_kgm2, c
   int nu_nubar = leptonNumber == Neutrino::L::Matter ? 0 : 1;
   // calculate cross section
   if (pnu<mine[settings1->SIGMAPARAM] || pnu>maxe[settings1->SIGMAPARAM]) {
-    icemcLog() <<  icemc::error << "Need a parameterization for this energy region.\n";
+    icemc::report() <<  severity::error << "Need a parameterization for this energy region.\n";
     return 0;
   }
   else {

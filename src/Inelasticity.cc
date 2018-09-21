@@ -9,7 +9,7 @@
 #include "Crust2.h"
 #include "Antarctica.h"
 #include "Primaries.h"
-#include "IcemcLog.h"
+#include "Report.h"
 #include "RayTracer.h"
 
 #include <cmath>

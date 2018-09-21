@@ -13,7 +13,7 @@
 #include "screen.hh"
 #include "Geoid.h"
 #include "Antarctica.h"
-#include "IcemcLog.h"
+#include "Report.h"
 
 #include "GeneratedNeutrino.h"
 
@@ -73,7 +73,7 @@ void icemc::RootOutput::initHist(TH1* h, const char* name, const char* title,
 void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings* settings2){
 
   if(fIceFinal){
-    icemcLog() << icemc::warning << "IceFinal already initialized!"  << std::endl;
+    icemc::report() << severity::warning << "IceFinal already initialized!"  << std::endl;
     return;
   }
 

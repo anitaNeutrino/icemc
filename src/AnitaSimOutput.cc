@@ -1,7 +1,7 @@
 #include "AnitaSimOutput.h"
 #include "EventGenerator.h"
 #include "RootOutput.h"
-#include "IcemcLog.h"
+#include "Report.h"
 #include "EnvironmentVariable.h"
 #include "ANITA.h"
 #include "RayTracer.h"
@@ -105,7 +105,7 @@ void icemc::AnitaSimOutput::initRootifiedAnitaDataFiles(){
   TNamed starttime("StartTime", asctime(timeinfo));
   starttime.Write();
 
-  icemcLog() << icemc::info << "ICEMC GIT Repository Version: " <<  gitversion.GetTitle() << std::endl;
+  icemc::report() << severity::info << "ICEMC GIT Repository Version: " <<  gitversion.GetTitle() << std::endl;
 
   RootOutput::initTree(&triggerSettingsTree, "triggerSettingsTree", "Trigger settings", fTruthFile);
   // Anita* anita2 = const_cast<Anita*>(uhen->anita1);
@@ -119,11 +119,11 @@ void icemc::AnitaSimOutput::initRootifiedAnitaDataFiles(){
   truthTree.Branch("truth", &fTruth);
 
 #else
-  Log() << icemc::warning << "Need ANITA EventReader version at least 3 to produce Truth output." << std::endl;    
+  Log() << severity::warning << "Need ANITA EventReader version at least 3 to produce Truth output." << std::endl;    
 #endif
 
 #else
-  Log() << icemc::warning << "Can't generate ROOTified output without satisfying ANITA_UTIL_EXISTS at compile time" << std::endl;
+  Log() << severity::warning << "Can't generate ROOTified output without satisfying ANITA_UTIL_EXISTS at compile time" << std::endl;
 #endif
 }
 

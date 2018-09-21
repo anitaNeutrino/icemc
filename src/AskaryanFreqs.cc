@@ -1,5 +1,5 @@
 #include "AskaryanFreqs.h"
-#include "IcemcLog.h"
+#include "Report.h"
 #include "anita.hh"
 #include "TGraph.h"
 #include "secondaries.hh"
@@ -78,7 +78,7 @@ double icemc::AskaryanFreqs::operator[](int i) const {
     return vmmhz[i];
   }
   else {
-    icemcLog() << icemc::error << "Attempt to access icemc::AskaryanFreqs at index "
+    icemc::report() << severity::error << "Attempt to access icemc::AskaryanFreqs at index "
 	       << i << ", which is out of bounds. (min=0, max="
 	       << vmmhz.size() <<"). Returning 0.\n";
     return 0;

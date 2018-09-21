@@ -1,4 +1,3 @@
-
 #ifndef ICEMC_SEAVEY_H
 #define ICEMC_SEAVEY_H
 

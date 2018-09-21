@@ -1,5 +1,5 @@
 #include "Detector.h"
-#include "IcemcLog.h"
+#include "Report.h"
 #include "WorldModel.h"
 #include "LocalCoordinateSystem.h"
 #include <memory>
@@ -84,7 +84,7 @@ TVector3 icemc::WorldModel::GetSurfaceNormal(const Geoid::Position& p) const {
 //   if(fHorizons.GetN()==0){
   
 //     if(timeStepSeconds <= 0){
-//       icemcLog() << icemc::error << "got timeStepSeconds = " << timeStepSeconds << ", setting to default " << icemc::WorldModel::defaultTimeStep << std::endl;
+//       icemc::report() << severity::error << "got timeStepSeconds = " << timeStepSeconds << ", setting to default " << icemc::WorldModel::defaultTimeStep << std::endl;
 //       timeStepSeconds = defaultTimeStep;
 //     }
 
@@ -93,7 +93,7 @@ TVector3 icemc::WorldModel::GetSurfaceNormal(const Geoid::Position& p) const {
     
 //     const int nSteps = (endTime - startTime)/timeStepSeconds;
 
-//     icemcLog() << icemc::info << "Creating horizons for " << nSteps << " time samples" << std::endl;
+//     icemc::report() << severity::info << "Creating horizons for " << nSteps << " time samples" << std::endl;
     
 //     for(int step=0; step <= nSteps; step++){
 //       double sampleTime = startTime + step*timeStepSeconds;
@@ -155,7 +155,7 @@ TVector3 icemc::WorldModel::GetSurfaceNormal(const Geoid::Position& p) const {
 size_t icemc::Mesh::addPoint(const Geoid::Position& p, double val){
   
   if(fDoneInit){
-    icemcLog() << icemc::warning << "Can't add a point after calling eval!" << std::endl;
+    icemc::report() << severity::warning << "Can't add a point after calling eval!" << std::endl;
     return N();
   }
   Geoid::Position p2 = p;
@@ -168,7 +168,7 @@ size_t icemc::Mesh::addPoint(const Geoid::Position& p, double val){
 double icemc::Mesh::eval(const Geoid::Position& p) const {
 
   if(N() == 0){
-    icemcLog() << icemc::warning << "Can't interpolate with 0 points" << std::endl;
+    icemc::report() << severity::warning << "Can't interpolate with 0 points" << std::endl;
     return TMath::QuietNaN();
   }
 
@@ -210,7 +210,7 @@ double icemc::Mesh::eval(const Geoid::Position& p) const {
     }
   }
   else{
-    icemcLog() << icemc::error << "You shouldn't get here!" << std::endl;
+    icemc::report() << severity::error << "You shouldn't get here!" << std::endl;
   }
 
   return interpolatedMeshVal;

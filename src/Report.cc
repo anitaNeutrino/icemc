@@ -1,35 +1,35 @@
-#include "IcemcLog.h"
+#include "Report.h"
 #include <map>
 
-// std::map<std::pair<const char*, int>, icemc::Logger> logs;
+// std::map<std::pair<const char*, int>, icemc::Report> logs;
 
-icemc::Logger& icemc::getLog(const char* file, int line){
+icemc::Report& icemc::_report(const char* file, int line){
 
-  static icemc::Logger log;
+  static icemc::Report log;
   log.setCallPoint(file, line);
   // log << file << ":" << line << " ";
   return log;
 }
 
 
-icemc::Logger::Logger(){
+icemc::Report::Report(){
 
 }
 
 
-icemc::Logger::~Logger(){
+icemc::Report::~Report(){
   std::cout << getColorReset() << std::flush;
   std::cerr << getColorReset() << std::flush;
 }
 
 
-void icemc::Logger::setCallPoint(const char* file, int line){
+void icemc::Report::setCallPoint(const char* file, int line){
   fSourceFile = file;
   fSourceLine = line;
 }
 
 
-void icemc::Logger::openLogFiles(){
+void icemc::Report::openLogFiles(){
 
   // convert the run to a string
   std::stringstream ss;
@@ -79,7 +79,7 @@ void icemc::Logger::openLogFiles(){
 
 
 
-icemc::Logger& icemc::Logger::message(icemc::severity s){
+icemc::Report& icemc::Report::message(icemc::severity s){
 
   const char* red     = fUseColorCodes ? "\x1b[31m" : "";
   const char* blue    = fUseColorCodes ? "\x1b[34m" : "";
@@ -89,17 +89,17 @@ icemc::Logger& icemc::Logger::message(icemc::severity s){
 
   fMustReset = true;
   switch(s){
-  case info:
+  case severity::info:
     fUseStdErr = false;
     getStream() << blue << "[Info at " << fSourceFile.substr(n+1) << ":" << fSourceLine << "] ";
     foutput << "[Info at " << fSourceFile.substr(n+1) << ":" << fSourceLine << "] ";
     break;
-  case warning:
+  case severity::warning:
     fUseStdErr = true;
     getStream() << magenta << "[Warning at " << fSourceFile.substr(n+1) << ":" << fSourceLine << "] ";
     foutput << "[Warning at " << fSourceFile.substr(n+1) << ":" << fSourceLine << "] ";
     break;
-  case error:
+  case severity::error:
     fUseStdErr = true;
     getStream() << red << "[Error at " << fSourceFile.substr(n+1) << ":" << fSourceLine << "] ";
     foutput << "[Error at " << fSourceFile.substr(n+1) << ":" << fSourceLine << "] ";

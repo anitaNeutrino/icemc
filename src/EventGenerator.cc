@@ -34,10 +34,10 @@
 #include "SimulatedSignal.h"
 #include "GeneratedNeutrino.h"
 #include "EnvironmentVariable.h"
-#include "IcemcLog.h"
+#include "Report.h"
 #include "FTPair.h"
 #include "Neutrino.h"
-
+#include "NeutrinoFactory.h"
 
 #include <string>
 #include <sstream>
@@ -204,17 +204,17 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
   //  double ses;                          // single-event sensitivity
   double km2sr;                        // aperture km**2-sr
 
-  icemcLog() << "\n";
+  icemc::report() << "\n";
 
   // write out summary
-  icemcLog() << "Generated " << NNU << " neutrinos with energy " << pnu << "\n";
-  icemcLog() << "Number of (weighted) neutrinos that pass is: " << eventsfound << "\n";
-  icemcLog() << "Number of (weighted) neutrinos that pass,  multiplied by prob. of interacting in the ice,  is: " << eventsfound_prob << "\n";
-  icemcLog() << "Number of weighted direct,  reflected that pass is: " << allcuts_weighted[0] << "\t" << allcuts_weighted[1] << "\n";
-  icemcLog() << "Number of (weighted) neutrinos that pass (with weight>0.001) is: " << eventsfound_weightgt01 << "\n";
-  icemcLog() << "Number of (weighted) neutrinos that only traverse the crust is " << eventsfound_crust << " -> " << eventsfound_crust/eventsfound*100 << "%\n\n";
-  icemcLog() << "Volume of ice is " << volume << "\n";
-  icemcLog() << "Value of 4*pi*pi*r_earth*r_earth in km^2 " << 4*constants::PI*constants::PI*(Geoid::R_EARTH*Geoid::R_EARTH/1.E6) << "\n";
+  icemc::report() << "Generated " << NNU << " neutrinos with energy " << pnu << "\n";
+  icemc::report() << "Number of (weighted) neutrinos that pass is: " << eventsfound << "\n";
+  icemc::report() << "Number of (weighted) neutrinos that pass,  multiplied by prob. of interacting in the ice,  is: " << eventsfound_prob << "\n";
+  icemc::report() << "Number of weighted direct,  reflected that pass is: " << allcuts_weighted[0] << "\t" << allcuts_weighted[1] << "\n";
+  icemc::report() << "Number of (weighted) neutrinos that pass (with weight>0.001) is: " << eventsfound_weightgt01 << "\n";
+  icemc::report() << "Number of (weighted) neutrinos that only traverse the crust is " << eventsfound_crust << " -> " << eventsfound_crust/eventsfound*100 << "%\n\n";
+  icemc::report() << "Volume of ice is " << volume << "\n";
+  icemc::report() << "Value of 4*pi*pi*r_earth*r_earth in km^2 " << 4*constants::PI*constants::PI*(Geoid::R_EARTH*Geoid::R_EARTH/1.E6) << "\n";
 
 
   // single event sensitivity for 150 MHz array per year
@@ -335,7 +335,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
   if (NNU != 0 && nevents!=0) {
     km3sr=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*nevents/(double)NNU/settings1->SIGMA_FACTOR;
 
-    icemcLog() << nevents << " events passed out of " << NNU << "\n";
+    icemc::report() << nevents << " events passed out of " << NNU << "\n";
 
     error_plus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_plus/(double)NNU/settings1->SIGMA_FACTOR;
     error_minus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_minus/(double)NNU/settings1->SIGMA_FACTOR;
@@ -349,21 +349,21 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
 
     // km3sr_e = (pow(1.e-3, 3))*volume*constants::sr*(sum[0]/(double)count1->nnu_e)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20/settings1->SIGMA_FACTOR;
 
-    icemcLog() << sum[0]/(double)nevents*100. << "% are electron neutrinos\n";
+    icemc::report() << sum[0]/(double)nevents*100. << "% are electron neutrinos\n";
 
     // error_e_plus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_e_plus/(double)count1->nnu_e/settings1->SIGMA_FACTOR;
     // error_e_minus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_e_minus/(double)count1->nnu_e/settings1->SIGMA_FACTOR;
 
     // km3sr_mu = (pow(1.e-3, 3))*volume*constants::sr*(sum[1]/(double)count1->nnu_mu)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20/settings1->SIGMA_FACTOR;
 
-    icemcLog() << sum[1]/(double)nevents*100. << "% are muon neutrinos\n";
+    icemc::report() << sum[1]/(double)nevents*100. << "% are muon neutrinos\n";
 
     // error_mu_plus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_mu_plus/(double)count1->nnu_mu/settings1->SIGMA_FACTOR;
     // error_mu_minus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_mu_minus/(double)count1->nnu_mu/settings1->SIGMA_FACTOR;
 
     // km3sr_tau = (pow(1.e-3, 3))*volume*constants::sr*(sum[2]/(double)count1->nnu_tau)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20/settings1->SIGMA_FACTOR;
 
-    icemcLog() << sum[2]/(double)nevents*100. << "% are tau neutrinos\n";
+    icemc::report() << sum[2]/(double)nevents*100. << "% are tau neutrinos\n";
 
     // error_tau_plus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_tau_plus/(double)count1->nnu_tau/settings1->SIGMA_FACTOR;
     // error_tau_minus=volume*pow(1.E-3, 3)*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr*error_tau_minus/(double)count1->nnu_tau/settings1->SIGMA_FACTOR;
@@ -378,187 +378,187 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
       error_distance_plus[i]=sqrt(sum_km3sr_error_plus);
       sum_km3sr_error_minus+=pow(pow(1.E-3, 3)*volume*error_distance_minus[i]*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*constants::sr/(double)NNU, 2)/settings1->SIGMA_FACTOR;
       error_distance_minus[i]=sqrt(sum_km3sr_error_minus);
-      icemcLog().distanceout << 700000./(double)NBINS_DISTANCE*(double)i << "\t" << km3sr_distance[i] << "\t" << error_distance_plus[i] << "\t" << error_distance_minus[i] << "\n";
+      icemc::report().distanceout << 700000./(double)NBINS_DISTANCE*(double)i << "\t" << km3sr_distance[i] << "\t" << error_distance_plus[i] << "\t" << error_distance_minus[i] << "\n";
     } //for
 
-    icemcLog() << "Total volume * solid angle is \t\t\t\t" << km3sr << " + " << error_plus << " - " << error_minus << " km^3 str\n";
-    icemcLog() << "Total volume * solid angle for electron neutrinos is \t" << km3sr_e << " + " << error_e_plus << " - " << error_e_minus << " km^3 str\n";
-    icemcLog() << "Total volume * solid angle for muon neutrinos is \t" << km3sr_mu << " + " << error_mu_plus << " - " << error_mu_minus << " km^3 str\n";
-    icemcLog() << "Total volume * solid angle for tau neutrinos is \t" << km3sr_tau << " + " << error_tau_plus << " - " << error_tau_minus << " km^3 str\n";
+    icemc::report() << "Total volume * solid angle is \t\t\t\t" << km3sr << " + " << error_plus << " - " << error_minus << " km^3 str\n";
+    icemc::report() << "Total volume * solid angle for electron neutrinos is \t" << km3sr_e << " + " << error_e_plus << " - " << error_e_minus << " km^3 str\n";
+    icemc::report() << "Total volume * solid angle for muon neutrinos is \t" << km3sr_mu << " + " << error_mu_plus << " - " << error_mu_minus << " km^3 str\n";
+    icemc::report() << "Total volume * solid angle for tau neutrinos is \t" << km3sr_tau << " + " << error_tau_plus << " - " << error_tau_minus << " km^3 str\n";
 
     if ( nuSpectra->IsMonoenergetic() )  {
       std::cout << "Cross section is " << sigma << "m^2\n";
       double len_int=1.0/(sigma*askFreqGen->RHOH20*(1./constants::M_NUCL)*1000);
-      icemcLog() << "Interaction length is " << len_int << "\n";
+      icemc::report() << "Interaction length is " << len_int << "\n";
       km2sr=km3sr/len_int;
-      icemcLog() << "Total area x steradians using km3sr/len_int is \t\t\t\t" << km2sr << " km^2 str\n\n";
+      icemc::report() << "Total area x steradians using km3sr/len_int is \t\t\t\t" << km2sr << " km^2 str\n\n";
       km2sr=ice_area/(1.E6)*constants::PI*eventsfound_prob/(double)NNU;
-      icemcLog() << "Total area x steradians using 4*PI*R_EARTH^2*eff. is \t" << km2sr << " km^2 str\n\n";
-      icemcLog() << "These are not the same because we are not throwing all directions on all points of the surface.  Believe the first one as an approximation,  we are working on this for high cross sections.\n";
+      icemc::report() << "Total area x steradians using 4*PI*R_EARTH^2*eff. is \t" << km2sr << " km^2 str\n\n";
+      icemc::report() << "These are not the same because we are not throwing all directions on all points of the surface.  Believe the first one as an approximation,  we are working on this for high cross sections.\n";
       // ses=(pnu/1.E9)/(km2sr*3.16E7);
     }//end if IsMonoenergetic
 
   }//end if NNU!=0 and nevents!=0
 
 
-  icemcLog() << "\t\t\t\t\t\t\tprobability of passing \t# events passing\n";
+  icemc::report() << "\t\t\t\t\t\t\tprobability of passing \t# events passing\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "No way this neutrino will see any ice \t\t\t" << (double)count1->noway[0]/(double)count_total << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "No way this neutrino will see any ice \t\t\t" << (double)count1->noway[0]/(double)count_total << "\t" <<
   //   (double)count1->noway[1]/(double)count_total << "\t\t" <<
   //   count1->noway[0] << "\t" << count1->noway[1] << "\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "Wheredoesitleave in PickUnbiased gives an error \t" << (double)count1->wheredoesitleave_err[0]/(double)count1->noway[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "Wheredoesitleave in PickUnbiased gives an error \t" << (double)count1->wheredoesitleave_err[0]/(double)count1->noway[0] << "\t" <<
   //   (double)count1->wheredoesitleave_err[1]/(double)count1->noway[1] << "\t\t" <<
   //   count1->wheredoesitleave_err[0] << "\t" << count1->wheredoesitleave_err[1] << "\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "This neutrino direction never sees ice \t\t\t" << (double)count1->neverseesice[0]/(double)count1->wheredoesitleave_err[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "This neutrino direction never sees ice \t\t\t" << (double)count1->neverseesice[0]/(double)count1->wheredoesitleave_err[0] << "\t" <<
   //   (double)count1->neverseesice[1]/(double)count1->wheredoesitleave_err[1] << "\t\t" <<
   //   count1->neverseesice[0] << "\t" << count1->neverseesice[1] << "\n";
 
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "WhereDoesItEnterIce in PickUnbiased gives an error \t\t\t" << (double)count1->wheredoesitenterice_err[0]/(double)count1->neverseesice[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "WhereDoesItEnterIce in PickUnbiased gives an error \t\t\t" << (double)count1->wheredoesitenterice_err[0]/(double)count1->neverseesice[0] << "\t" <<
   //   (double)count1->wheredoesitenterice_err[1]/(double)count1->neverseesice[1] << "\t\t" <<
   //   count1->wheredoesitenterice_err[0] << "\t" << count1->wheredoesitenterice_err[1] << "\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "Interaction point too high \t\t\t\t" << (double)count1->toohigh[0]/(double)count1->wheredoesitenterice_err[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "Interaction point too high \t\t\t\t" << (double)count1->toohigh[0]/(double)count1->wheredoesitenterice_err[0] << "\t" <<
   //   (double)count1->toohigh[1]/(double)count1->wheredoesitenterice_err[1] << "\t\t" <<
   //   count1->toohigh[0] << "\t" << count1->toohigh[1] << "\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "Interaction point too low \t\t\t\t" << (double)count1->toolow[0]/(double)count1->toohigh[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "Interaction point too low \t\t\t\t" << (double)count1->toolow[0]/(double)count1->toohigh[0] << "\t" <<
   //   (double)count1->toolow[1]/(double)count1->toohigh[1] << "\t\t" <<
   //   count1->toolow[0] << "\t" << count1->toolow[1] << "\n";
 
 
 
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "There is an interaction in ice \t\t\t\t" << (double)count1->iceinteraction[0]/(double)count1->toolow[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "There is an interaction in ice \t\t\t\t" << (double)count1->iceinteraction[0]/(double)count1->toolow[0] << "\t" <<
   //   (double)count1->iceinteraction[1]/(double)count1->toolow[1] << "\t\t" <<
   //   count1->iceinteraction[0] << "\t" << count1->iceinteraction[1] << "\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "In horizon \t\t\t\t\t\t" << (double)count1->inhorizon[0]/(double)count1->iceinteraction[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "In horizon \t\t\t\t\t\t" << (double)count1->inhorizon[0]/(double)count1->iceinteraction[0] << "\t" <<
   //   (double)count1->inhorizon[1]/(double)count1->iceinteraction[1] << "\t\t" <<
   //   count1->inhorizon[0] << "\t" << count1->inhorizon[1] << "\n";
 
 
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "From surface to balloon,  ray not intersected by earth \t" << (double)count1->nraypointsup1[0]/(double)count1->inhorizon[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "From surface to balloon,  ray not intersected by earth \t" << (double)count1->nraypointsup1[0]/(double)count1->inhorizon[0] << "\t" <<
   //   (double)count1->nraypointsup1[1]/(double)count1->inhorizon[1] << "\t\t" <<
   //   count1->nraypointsup1[0] << "\t" << count1->nraypointsup1[1] << "\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "After 1/r scaling and best case attenuation, \n\tMaximum signal is detectable\t\t\t" << (double)count1->nnottoosmall[0]/(double)count1->nraypointsup1[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "After 1/r scaling and best case attenuation, \n\tMaximum signal is detectable\t\t\t" << (double)count1->nnottoosmall[0]/(double)count1->nraypointsup1[0] << "\t" <<
   //   (double)count1->nnottoosmall[1]/(double)count1->nraypointsup1[1] << "\t\t"
   // 	  << count1->nnottoosmall[0] << "\t" << count1->nnottoosmall[1] << "\n";
 
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "Viewing angle lt 90 degrees\t\t\t" << (double)count1->nviewangle_lt_90[0]/(double)count1->nnottoosmall[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "Viewing angle lt 90 degrees\t\t\t" << (double)count1->nviewangle_lt_90[0]/(double)count1->nnottoosmall[0] << "\t" <<
   //   (double)count1->nviewangle_lt_90[1]/(double)count1->nnottoosmall[1] << "\t\t"
   // 	  << count1->nviewangle_lt_90[0] << "\t" << count1->nviewangle_lt_90[1] << "\n";
 
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "Reality check:  EM and hadronic fractions both nonzero\t" << (double)count1->ngoodfracs[0]/(double)count1->nviewangle_lt_90[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "Reality check:  EM and hadronic fractions both nonzero\t" << (double)count1->ngoodfracs[0]/(double)count1->nviewangle_lt_90[0] << "\t" <<
   //   (double)count1->ngoodfracs[1]/(double)count1->nviewangle_lt_90[1] << "\t\t"
   // 	  << count1->ngoodfracs[0] << "\t" << count1->ngoodfracs[1] << "\n";
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "\tBoth EM and hadronic fractions are zero\t\t" << (double)count1->nbadfracs[0]/(double)count1->nviewangle_lt_90[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "\tBoth EM and hadronic fractions are zero\t\t" << (double)count1->nbadfracs[0]/(double)count1->nviewangle_lt_90[0] << "\t" <<
   //   (double)count1->nbadfracs[1]/(double)count1->nviewangle_lt_90[1] << "\t\t" <<
   //   count1->nbadfracs[0] << "\t" << count1->nbadfracs[1] << "\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "After finding neutrino direction,  \n\tchance of making through Earth\t\t\t" << (double)count_chanceofsurviving/(double)count1->ngoodfracs[0] << "\t\t\t";
-  // icemcLog().foutput.precision(10);
-  // icemcLog().foutput << count_chanceofsurviving << "\n";
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "Neutrino enters ice south of 60deg S latitude\t\t" << (double)count1->nentersice[0]/(double)count_chanceofsurviving << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "After finding neutrino direction,  \n\tchance of making through Earth\t\t\t" << (double)count_chanceofsurviving/(double)count1->ngoodfracs[0] << "\t\t\t";
+  // icemc::report().foutput.precision(10);
+  // icemc::report().foutput << count_chanceofsurviving << "\n";
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "Neutrino enters ice south of 60deg S latitude\t\t" << (double)count1->nentersice[0]/(double)count_chanceofsurviving << "\t" <<
   //   (double)count1->nentersice[1]/(double)count_chanceofsurviving <<
   //   "\t\t" <<
   //   count1->nentersice[0] << "\t" << count1->nentersice[1] << "\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "Neutrino reasonably likely to survive trip through Earth " << (double)count1->nabsorbed[0]/(double)count1->nentersice[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "Neutrino reasonably likely to survive trip through Earth " << (double)count1->nabsorbed[0]/(double)count1->nentersice[0] << "\t" <<
   //   (double)count1->nabsorbed[1]/(double)count1->nentersice[1] << "\t\t"
   // 	  << count1->nabsorbed[0] << "\t" << count1->nabsorbed[1] << "\n";
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "Ray leaves the ice south of 60deg S latitude\t\t" << (double)count1->nraywithincontinent1[0]/(double)count1->nabsorbed[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "Ray leaves the ice south of 60deg S latitude\t\t" << (double)count1->nraywithincontinent1[0]/(double)count1->nabsorbed[0] << "\t" <<
   //   (double)count1->nraywithincontinent1[1]/(double)count1->nabsorbed[1] << "\t" <<
   //   count1->nraywithincontinent1[0] << "\t" <<
   //   count1->nraywithincontinent1[1] << "\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "After 1/r,  best guess ice attenuation,  \n\tmaximum signal is detectable\t\t\t" << (double)count_chanceinhell0/(double)count1->nraywithincontinent1[0] << "\t\t\t";
-  // icemcLog().foutput.precision(10);
-  // icemcLog().foutput <<count_chanceinhell0 << "\n";
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "After 1/r,  best guess ice attenuation,  \n\tmaximum signal is detectable\t\t\t" << (double)count_chanceinhell0/(double)count1->nraywithincontinent1[0] << "\t\t\t";
+  // icemc::report().foutput.precision(10);
+  // icemc::report().foutput <<count_chanceinhell0 << "\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "Ray is not totally internally reflected\t\t\t" << (double)count1->nnottir[0]/(double)count_chanceinhell0 <<  "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "Ray is not totally internally reflected\t\t\t" << (double)count1->nnottir[0]/(double)count_chanceinhell0 <<  "\t" <<
   //   (double)count1->nnottir[1]/(double)count_chanceinhell0 <<  "\t\t" <<
   //   count1->nnottir[0] << "\t" << count1->nnottir[1] << "\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "From surface to balloon,  ray not intersected by earth \t" << (double)count1->nraypointsup2[0]/(double)count1->nnottir[0] << "\t" <<
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "From surface to balloon,  ray not intersected by earth \t" << (double)count1->nraypointsup2[0]/(double)count1->nnottir[0] << "\t" <<
   //   (double)count1->nraypointsup2[1]/(double)count1->nnottir[1] <<
   //   "\t\t"
   // 	  << count1->nraypointsup2[0] << "\t" << count1->nraypointsup2[1] << "\n";
-  // icemcLog().foutput.precision(4);
+  // icemc::report().foutput.precision(4);
 
-  // icemcLog().foutput << "Ray leaves the ice south of 60deg S latitude\t\t" << (double)count1->nraywithincontinent2[0]/(double)count1->nraypointsup2[0] <<"\t" <<
+  // icemc::report().foutput << "Ray leaves the ice south of 60deg S latitude\t\t" << (double)count1->nraywithincontinent2[0]/(double)count1->nraypointsup2[0] <<"\t" <<
   //   (double)count1->nraywithincontinent2[0]/(double)count1->nraypointsup2[1] <<
   //   "\t\t" << count1->nraywithincontinent2[0] << "\t" <<
   //   count1->nraywithincontinent2[1]     << "\n";
-  // icemcLog().foutput.precision(4);
+  // icemc::report().foutput.precision(4);
 
-  // icemcLog().foutput << "Ray leaves where there is ice\t\t\t\t" << (double)count1->nacceptablerf[0]/(double)count1->nraywithincontinent2[0] << "\t" <<
+  // icemc::report().foutput << "Ray leaves where there is ice\t\t\t\t" << (double)count1->nacceptablerf[0]/(double)count1->nraywithincontinent2[0] << "\t" <<
   //   (double)count1->nacceptablerf[1]/(double)count1->nraywithincontinent2[1] << "\t\t"
   // 	  << count1->nacceptablerf[0] << "\t" << count1->nacceptablerf[1] << "\n";
-  // icemcLog().foutput.precision(4);
+  // icemc::report().foutput.precision(4);
 
-  // icemcLog().foutput << "Ray tracing converges to within 10 m\t\t\t" << (double)count1->nconverges[0]/(double)count1->nacceptablerf[0] << "\t" <<
+  // icemc::report().foutput << "Ray tracing converges to within 10 m\t\t\t" << (double)count1->nconverges[0]/(double)count1->nacceptablerf[0] << "\t" <<
   //   (double)count1->nconverges[1]/(double)count1->nacceptablerf[1] <<
   //   "\t\t" << count1->nconverges[0] << "\t" << count1->nconverges[1] << "\n";
-  // icemcLog().foutput.precision(4);
+  // icemc::report().foutput.precision(4);
 
-  // icemcLog().foutput << "After fresnel coefficient,  \n\tmaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell_fresnel[0]/(double)count1->nconverges[0] << "\t" << (double)count1->nchanceinhell_fresnel[1]/(double)count1->nconverges[1] <<
+  // icemc::report().foutput << "After fresnel coefficient,  \n\tmaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell_fresnel[0]/(double)count1->nconverges[0] << "\t" << (double)count1->nchanceinhell_fresnel[1]/(double)count1->nconverges[1] <<
   //   "\t\t" <<count1->nchanceinhell_fresnel[0] << "\t" << count1->nchanceinhell_fresnel[1] << "\n";
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "After 1/r,  \n\tmaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell_1overr[0]/(double)count1->nchanceinhell_fresnel[0] << "\t" <<  (double)count1->nchanceinhell_1overr[1]/(double)count1->nchanceinhell_fresnel[1] << "\t\t" <<count1->nchanceinhell_1overr[0] << "\t" << count1->nchanceinhell_1overr[1] << "\n";
-  // icemcLog().foutput.precision(4);
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "After 1/r,  \n\tmaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell_1overr[0]/(double)count1->nchanceinhell_fresnel[0] << "\t" <<  (double)count1->nchanceinhell_1overr[1]/(double)count1->nchanceinhell_fresnel[1] << "\t\t" <<count1->nchanceinhell_1overr[0] << "\t" << count1->nchanceinhell_1overr[1] << "\n";
+  // icemc::report().foutput.precision(4);
 
-  // icemcLog().foutput << "After ice attenuation,  \n\tmaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell[0]/(double)count1->nchanceinhell_1overr[0] << "\t" <<
+  // icemc::report().foutput << "After ice attenuation,  \n\tmaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell[0]/(double)count1->nchanceinhell_1overr[0] << "\t" <<
   //   (double)count1->nchanceinhell[1]/(double)count1->nchanceinhell_1overr[1] << "\t" <<count1->nchanceinhell[0] << "\t" << count1->nchanceinhell[1] << "\n";
-  // icemcLog().foutput.precision(4);
+  // icemc::report().foutput.precision(4);
 
-  // icemcLog().foutput << "After viewing angle cut, \t\t\t\t" << (double)count1->nviewanglecut[0]/(double)count1->nchanceinhell[0] << "\t" << (double)count1->nviewanglecut[1]/(double)count1->nchanceinhell[1] << "\t\t" << count1->nviewanglecut[0] << " " << count1->nviewanglecut[1] << "\n";
+  // icemc::report().foutput << "After viewing angle cut, \t\t\t\t" << (double)count1->nviewanglecut[0]/(double)count1->nchanceinhell[0] << "\t" << (double)count1->nviewanglecut[1]/(double)count1->nchanceinhell[1] << "\t\t" << count1->nviewanglecut[0] << " " << count1->nviewanglecut[1] << "\n";
 
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "After factoring in off-Cerenkov cone tapering, \n\tMaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell2[0]/(double)count1->nviewanglecut[0] << "\t" << (double)count1->nchanceinhell2[1]/(double)count1->nviewanglecut[1] << "\t\t" << count1->nchanceinhell2[0] << " " << count1->nchanceinhell2[1] << "\n";
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "After factoring in off-Cerenkov cone tapering, \n\tMaximum signal is detectable\t\t\t" << (double)count1->nchanceinhell2[0]/(double)count1->nviewanglecut[0] << "\t" << (double)count1->nchanceinhell2[1]/(double)count1->nviewanglecut[1] << "\t\t" << count1->nchanceinhell2[0] << " " << count1->nchanceinhell2[1] << "\n";
 
-  // icemcLog().foutput << "Survive dead time \t\t\t\t\t" << (double)count1->ndeadtime[0]/(double)count1->nchanceinhell2[0] << "\t" << (double)count1->ndeadtime[1]/(double)count1->nchanceinhell2[1] << "\t\t" << (double)count1->ndeadtime[0] << " " << count1->ndeadtime[1] << "\n";
+  // icemc::report().foutput << "Survive dead time \t\t\t\t\t" << (double)count1->ndeadtime[0]/(double)count1->nchanceinhell2[0] << "\t" << (double)count1->ndeadtime[1]/(double)count1->nchanceinhell2[1] << "\t\t" << (double)count1->ndeadtime[0] << " " << count1->ndeadtime[1] << "\n";
   
-  // icemcLog().foutput << "Passes trigger\t\t\t\t\t\t" << (double)count1->npassestrigger[0]/(double)count1->ndeadtime[0] << "\t" << (double)count1->npassestrigger[1]/(double)count1->ndeadtime[1] << "\t\t" << count1->npassestrigger[0] << "\t" << count1->npassestrigger[1] << "\n";
-  // icemcLog().foutput << "Number of l1 triggers\t\t\t\t\t\t" << (double)count1->nl1triggers[0][0] << "\t" << (double)count1->nl1triggers[1][0] << "\n";
+  // icemc::report().foutput << "Passes trigger\t\t\t\t\t\t" << (double)count1->npassestrigger[0]/(double)count1->ndeadtime[0] << "\t" << (double)count1->npassestrigger[1]/(double)count1->ndeadtime[1] << "\t\t" << count1->npassestrigger[0] << "\t" << count1->npassestrigger[1] << "\n";
+  // icemc::report().foutput << "Number of l1 triggers\t\t\t\t\t\t" << (double)count1->nl1triggers[0][0] << "\t" << (double)count1->nl1triggers[1][0] << "\n";
 
-  // icemcLog().foutput << "Chord is good length\t\t\t\t\t" << (double)count_chordgoodlength/(double)count1->npassestrigger[0] << "\t\t\t";
-  // icemcLog().foutput.precision(10);
-  // icemcLog().foutput <<count_chordgoodlength << "\n";
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "Neutrino's path in ice more than 1m \t\t\t" << (double)count_d2goodlength/(double)count_chordgoodlength << "\t\t\t";
-  // icemcLog().foutput.precision(10);
-  // icemcLog().foutput << count_d2goodlength << "\n";
-  // icemcLog().foutput.precision(4);
-  // icemcLog().foutput << "Events that pass all cuts\t\t\t\t" << (double)count1->npass[0]/(double)count_d2goodlength << "\t" << (double)count1->npass[1]/(double)count_d2goodlength << "\t\t";
-  // icemcLog().foutput.precision(10);
-  // icemcLog().foutput <<count1->npass[0] << "\t" << count1->npass[1] << "\n";
+  // icemc::report().foutput << "Chord is good length\t\t\t\t\t" << (double)count_chordgoodlength/(double)count1->npassestrigger[0] << "\t\t\t";
+  // icemc::report().foutput.precision(10);
+  // icemc::report().foutput <<count_chordgoodlength << "\n";
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "Neutrino's path in ice more than 1m \t\t\t" << (double)count_d2goodlength/(double)count_chordgoodlength << "\t\t\t";
+  // icemc::report().foutput.precision(10);
+  // icemc::report().foutput << count_d2goodlength << "\n";
+  // icemc::report().foutput.precision(4);
+  // icemc::report().foutput << "Events that pass all cuts\t\t\t\t" << (double)count1->npass[0]/(double)count_d2goodlength << "\t" << (double)count1->npass[1]/(double)count_d2goodlength << "\t\t";
+  // icemc::report().foutput.precision(10);
+  // icemc::report().foutput <<count1->npass[0] << "\t" << count1->npass[1] << "\n";
 
   // std::cout << "Events that pass all cuts\t\t\t\t" << (double)count1->npass[0]/(double)count_d2goodlength << "\t" << (double)count1->npass[1]/(double)count_d2goodlength << "\t\t";
   // std::cout <<count1->npass[0] << "\t" << count1->npass[1] << "\n";
@@ -583,9 +583,9 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
       // EdNdEdAdt is in #/cm^2/s
       // need to be multiplied by 1e4 to change 1/cm2 to 1/m^2
       // can also be written dN/d(lnE)dAdt
-      // = dN*log(10)/d(icemcLog() E)dAdt
+      // = dN*log(10)/d(icemc::report() E)dAdt
       // the bin spacing is 0.5
-      // so # events ~ dN*log(10)*0.5/d(icemcLog() E)dAdt
+      // so # events ~ dN*log(10)*0.5/d(icemc::report() E)dAdt
       sum_events+=even_E*log(10.)*( nuSpectra->GetEdNdEdAdt(log10(thisenergy))*1e4 )/(thislen_int_kgm2/askFreqGen->RHOH20);
       integral+=even_E*log(10.)*( nuSpectra->GetEdNdEdAdt(log10(thisenergy)) );
       std::cout << "thisenergy,  EdNdEdAdt is " << thisenergy << " " <<  nuSpectra->GetEdNdEdAdt(log10(thisenergy)) << "\n";
@@ -595,8 +595,8 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
     std::cout << "INTEGRAL : " << integral << std::endl;
     sum_events*=volume*anita1->LIVETIME*askFreqGen->RHOMEDIUM/askFreqGen->RHOH20*nevents/(double)NNU*constants::sr;
     // sum_events*=anita1->LIVETIME*km3sr*1e9;
-    icemcLog().foutput << "volume,  LIVETIME,  askFreqGen->RHOMEDIUM,  RHOH20,  nevents,  NNU,  sr are " << volume << " " << anita1->LIVETIME << " " << askFreqGen->RHOMEDIUM << " " << askFreqGen->RHOH20 << " " << nevents << " " << NNU << " " << constants::sr << "\n";
-    icemcLog().foutput << "Total events observed is " << sum_events << "\n";
+    icemc::report().foutput << "volume,  LIVETIME,  askFreqGen->RHOMEDIUM,  RHOH20,  nevents,  NNU,  sr are " << volume << " " << anita1->LIVETIME << " " << askFreqGen->RHOMEDIUM << " " << askFreqGen->RHOH20 << " " << nevents << " " << NNU << " " << constants::sr << "\n";
+    icemc::report().foutput << "Total events observed is " << sum_events << "\n";
   } //end if IsSpectrum
 
 }
@@ -619,7 +619,7 @@ TVector3 icemc::EventGenerator::GetPolarization(const TVector3 &nnu, const TVect
   n_pol = n_pol.Unit();
   // check and make sure E-field is pointing in the right direction.
   if (nnu.Dot(nrf2_iceside)>0 && n_pol.Dot(nnu)>0){
-    icemcLog() << icemc::error << "In GetPolarization.  inu = " << inu << std::endl;
+    icemc::report() << severity::error << "In GetPolarization.  inu = " << inu << std::endl;
   }
   return n_pol;
 }
@@ -1089,7 +1089,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   feenableexcept(FE_INVALID | FE_DIVBYZERO); 
 #endif
 
-  icemcLog() << icemc::info << "Seed is " << settings1.SEED << std::endl;
+  icemc::report() << severity::info << "Seed is " << settings1.SEED << std::endl;
 
   // TRandom *rsave = gRandom;
   // TRandom3 *Rand3 = new TRandom3(settings1.SEED);//for generating random numbers
@@ -1102,7 +1102,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // 					  settings1.CONSTANTICETHICKNESS * 1000 + settings1.CONSTANTCRUST * 100 + settings1.FIXEDELEVATION * 10 + 0,
   // 					  settings1.WEIGHTABSORPTION);
   Antarctica* antarctica = new Antarctica();
-  icemcLog() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
+  icemc::report() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
   
   Taumodel* taus1 = new Taumodel();
   Screen* panel1 = new Screen(0);  // create new instance of the screen class
@@ -1135,11 +1135,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   rough1->SetRoughScale(settings1.ROUGHSIZE);
 
   if(nuSpectra->IsSpectrum()){ ///@todo move to spectra constructor
-    icemcLog() <<" Lowest energy for spectrum is 10^18 eV! \n";
+    icemc::report() <<" Lowest energy for spectrum is 10^18 eV! \n";
   }
   time_t raw_start_time = time(NULL);
   struct tm*  start_time = localtime(&raw_start_time);
-  icemcLog() << "Date and time at start of run are: " << asctime (start_time) << "\n";
+  icemc::report() << "Date and time at start of run are: " << asctime (start_time) << "\n";
 
   // for attenuation of neutrino in atmosphere
   // only important for black hole studies
@@ -1164,7 +1164,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   r_exit2bn_measured2 = interaction1->r_exit2bn_measured;
 
   //added djg ////////////////////////////////////////////////////////
-  icemcLog().al_voltages_direct<<"antenna #"<<"   "<<"volts chan 1"<<"   "<<"volts chan 2"<<"    "<<"volts chan 3"<<"    "<<"volts chan 4"<<"    "<<"noise chan 1"<<"    "<<"noise chan 2"<<"    "<<"noise chan 3"<<"   "<<"noise chan 4"<<"  "<<"weight"<<std::endl;
+  icemc::report().al_voltages_direct<<"antenna #"<<"   "<<"volts chan 1"<<"   "<<"volts chan 2"<<"    "<<"volts chan 3"<<"    "<<"volts chan 4"<<"    "<<"noise chan 1"<<"    "<<"noise chan 2"<<"    "<<"noise chan 3"<<"   "<<"noise chan 4"<<"  "<<"weight"<<std::endl;
   ////////////////////////////////////////////////////////////////////
 
 
@@ -1208,29 +1208,29 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   antarctica->GetMAXHORIZON(fDetector);  
 
   // calculate the volume of ice seen by the balloon for all balloon positions
-  // antarctica->CreateHorizons(&settings1, bn1, fDetector->theta_bn, fDetector->phi_bn, fDetector->altitude_bn, icemcLog().foutput);
+  // antarctica->CreateHorizons(&settings1, bn1, fDetector->theta_bn, fDetector->phi_bn, fDetector->altitude_bn, icemc::report().foutput);
   // antarctica->CreateHorizons(&settings1, fDetector);
   // antarctica->WorldModel::CreateHorizons(fDetector, 800e3);
-  icemcLog() << "Done with CreateHorizons.\n";
+  icemc::report() << "Done with CreateHorizons.\n";
 
 
   // sets neutrino energy
   if ( nuSpectra->IsMonoenergetic() ){
     pnu=pow(10., settings1.EXPONENT);
     primary1->GetSigma(pnu, sigma, len_int_kgm2, &settings1, xsecParam_nutype, xsecParam_nuint);    // get cross section and interaction length.
-    icemcLog() << "pnu,  sigma,  len_int_kgm2 are " << pnu << " " << sigma << " " << len_int_kgm2 << "\n";
+    icemc::report() << "pnu,  sigma,  len_int_kgm2 are " << pnu << " " << sigma << " " << len_int_kgm2 << "\n";
   }
 
   if (settings1.WRITEPOSFILE==1) {
-    icemcLog().nu_out << "Neutrinos with energy " << pnu << "\n\n"; //Write header to file of neutrino positions
-    icemcLog().nu_out << "nu #,  position of nu interaction,  depth of int.,  Direction of nu momentum,  Geoid::Position of balloon,  nu flavour,  current type,  elasticity\n\n\n\n";
+    icemc::report().nu_out << "Neutrinos with energy " << pnu << "\n\n"; //Write header to file of neutrino positions
+    icemc::report().nu_out << "nu #,  position of nu interaction,  depth of int.,  Direction of nu momentum,  Geoid::Position of balloon,  nu flavour,  current type,  elasticity\n\n\n\n";
   }
 
 
 
   // get positions of the anita payload during the slac test
   if (settings1.SLAC){
-    icemcLog() << icemc::error << "SLAC is no longer supported!" << std::endl;
+    icemc::report() << severity::error << "SLAC is no longer supported!" << std::endl;
     exit(1);
   }
 
@@ -1240,9 +1240,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     nuSpectra->savePlots("Temp");
   }
 
+  NeutrinoFactory nuFactory(&settings1);  
 
   time_t raw_loop_start_time = time(NULL);
-  icemcLog() << "Starting loop over events. Time required for setup is "
+  icemc::report() << "Starting loop over events. Time required for setup is "
        <<(int)((raw_loop_start_time - raw_start_time)/60) << ":"
        << ((raw_loop_start_time - raw_start_time)%60) << std::endl;
 
@@ -1250,10 +1251,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   double startTime = fDetector->getStartTime();
   double endTime = fDetector->getEndTime();
 
-  icemcLog() << icemc::info << "Start time is " << startTime << ", end time is " << endTime << ", time range is " << endTime - startTime << std::endl;
+  icemc::report() << severity::info << "Start time is " << startTime << ", end time is " << endTime << ", time range is " << endTime - startTime << std::endl;
   // UInt_t simulationEndTime = fDetector->startTime();
   
-
+  
   /**
    * Main loop over generated neutrinos
    */
@@ -1276,10 +1277,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // first pick a balloon position...
     fDetector->PickBalloonPosition(eventTime, &settings1,  fDetector);
 
-    Geoid::Position interaction = antarctica->PickInteractionLocation(fDetector->position());
+    Geoid::Position interactionPos = antarctica->PickInteractionLocation(fDetector->position());
 
     RayTracer rayTracer(antarctica, fDetector->position());
-    TVector3 rfDirFromInteraction = rayTracer.findPathToDetector(interaction);
+    TVector3 rfDirFromInteraction = rayTracer.findPathToDetector(interactionPos);
     if(rfDirFromInteraction.Mag()==0){
       // no solution was found withing the fitter tolerance
       ///@todo Fill some tree indicating this!
@@ -1290,9 +1291,15 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // to get from our interaction point to the payload
     // now we have that, we can calculate the neutrino path
 
-    
-    NeutrinoPath np(interaction, rfDirFromInteraction, antarctica);
+    NeutrinoPath np(interactionPos, rfDirFromInteraction, antarctica);
 
+    // make a neutrino, we've picked energy, flavor, interaction current, 
+    Neutrino nu = nuFactory.makeNeutrino();
+
+    // ShowerProperties 
+    
+    // askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, fDetector->NFREQ, fDetector->freq, fDetector->NOTCH_MIN, fDetector->NOTCH_MAX, &showerProps);
+    
     /// pick neutrino energy
 
 
@@ -2414,7 +2421,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // 	  times_core_entered_det += core_entered;
 
   // 	  if (settings1.WRITEPOSFILE==1){
-  // 	    WriteNeutrinoInfo(inu, interaction1->posnu, interaction1->nnu, fDetector->position(), interaction1->altitude_int, interaction1->nuflavor, interaction1->current, elast_y, icemcLog().nu_out);
+  // 	    WriteNeutrinoInfo(inu, interaction1->posnu, interaction1->nnu, fDetector->position(), interaction1->altitude_int, interaction1->nuflavor, interaction1->current, elast_y, icemc::report().nu_out);
   // 	  }
 
   // 	  // sample first 1000 events that pass to see the distribution of weights
@@ -2451,7 +2458,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   // 	  // outputs to text file variables relevant to sky map.
 	    
-  // 	  // icemcLog().forbrian << interaction1->costheta_nutraject << " " << n_nutraject_ontheground.Phi() << " " << fDetector->phi_bn << " " << fNeutrinoPath->logweight << "\n";
+  // 	  // icemc::report().forbrian << interaction1->costheta_nutraject << " " << n_nutraject_ontheground.Phi() << " " << fDetector->phi_bn << " " << fNeutrinoPath->logweight << "\n";
 	    
   // 	  // incrementing by flavor	    
   // 	  // also bin in weight for error calculation.
@@ -2514,11 +2521,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   //   ro.allTree.Fill(); // should be called at each "continue" inu loop, but we made it though.    
     
   //   if (ABORT_EARLY){
-  //     icemcLog() << "\n***********************************************************";
-  //     icemcLog() << "\n* SIGINT received,  aborting loop over events early.";
-  //     icemcLog() << "\n* Stopped after event " << inu << " instead of " << NNU;
-  //     icemcLog() << "\n* Any output which relied on NNU should be corrected for.";
-  //     icemcLog() << "\n***********************************************************\n";
+  //     icemc::report() << "\n***********************************************************";
+  //     icemc::report() << "\n* SIGINT received,  aborting loop over events early.";
+  //     icemc::report() << "\n* Stopped after event " << inu << " instead of " << NNU;
+  //     icemc::report() << "\n* Any output which relied on NNU should be corrected for.";
+  //     icemc::report() << "\n***********************************************************\n";
   //     break;
   //   }
   // }//end NNU neutrino loop
@@ -2526,7 +2533,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // gRandom = rsave;
   // delete Rand3;
 
-  // icemcLog() << "about to close tsignals tree.\n";
+  // icemc::report() << "about to close tsignals tree.\n";
   // fDetector->fsignals=fDetector->tsignals->GetCurrentFile();
   // fDetector->fdata=fDetector->tdata->GetCurrentFile();
   // fDetector->fdata=fDetector->tgaryanderic->GetCurrentFile();
@@ -2557,10 +2564,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // fDetector->rms_lab[0] = sqrt(fDetector->rms_lab[0] / (double)fDetector->count_getnoisewaveforms)*1000.;
   // fDetector->rms_lab[1] = sqrt(fDetector->rms_lab[1] / (double)fDetector->count_getnoisewaveforms)*1000.;
 
-  // icemcLog() << "RMS noise in rfcm e-pol is " << fDetector->rms_rfcm[0] << " mV.\n";
-  // icemcLog() << "RMS noise in rfcm h-pol is " << fDetector->rms_rfcm[1] << " mV.\n";
-  // icemcLog() << "RMS noise in lab e-pol is " << fDetector->rms_lab[0] << "mV.\n";
-  // icemcLog() << "RMS noise in lab h-pol is " << fDetector->rms_lab[1] << "mV.\n";
+  // icemc::report() << "RMS noise in rfcm e-pol is " << fDetector->rms_rfcm[0] << " mV.\n";
+  // icemc::report() << "RMS noise in rfcm h-pol is " << fDetector->rms_rfcm[1] << " mV.\n";
+  // icemc::report() << "RMS noise in lab e-pol is " << fDetector->rms_lab[0] << "mV.\n";
+  // icemc::report() << "RMS noise in lab h-pol is " << fDetector->rms_lab[1] << "mV.\n";
   // for (int i=0;i<Anita::NFREQ;i++) {
   //   fDetector->avgfreq_rfcm[i]/=(double)fDetector->count_getnoisewaveforms;
   //   fDetector->avgfreq_rfcm_lab[i]/=(double)fDetector->count_getnoisewaveforms;
@@ -2575,7 +2582,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   //   avgfreq_rfcm_lab[i]=fDetector->avgfreq_rfcm_lab[i];
   //   freq[i]=fDetector->freq[i];
   // }
-  // icemcLog() << "Filling summarytree.  rms_rfcm_e is " << rms_rfcm_e << "\n";
+  // icemc::report() << "Filling summarytree.  rms_rfcm_e is " << rms_rfcm_e << "\n";
   // ro.summarytree.Fill();
 
 
@@ -2585,7 +2592,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // Summarize(&settings1, fDetector, nuSpectra, &askFreqGen, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb,
   // 	    sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, clOpts.outputdir);
 
-  // icemcLog().veff_out << settings1.EXPONENT << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << settings1.SIGMA_FACTOR << std::endl;//this is for my convenience
+  // icemc::report().veff_out << settings1.EXPONENT << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << settings1.SIGMA_FACTOR << std::endl;//this is for my convenience
 
   // // for each neutrino flavor,  fraction each contributes to sensitivity.
   // sum_frac[0]=sum[0]/eventsfound;
@@ -2603,8 +2610,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   time_t raw_end_time = time(NULL);
   struct tm * end_time = localtime(&raw_end_time);
-  icemcLog() << "Date and time at end of run are: " << asctime (end_time) << "\n";
-  icemcLog() << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<std::endl;
+  icemc::report() << "Date and time at end of run are: " << asctime (end_time) << "\n";
+  icemc::report() << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<std::endl;
 
   // heap allocated non-members need deleting
   if(primary1)       delete primary1;

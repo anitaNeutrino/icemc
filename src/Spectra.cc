@@ -11,7 +11,7 @@
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TH1F.h"
-
+#include "Report.h"
 
 icemc::Spectra::Spectra(int EXPONENT_fromsettings) {
 
@@ -370,6 +370,7 @@ void icemc::Spectra::GetCDF(){//set up CDF and inverse CDF;
   if(E_max > 21) E_max=21;
   double step_size =.25;//in logE
   int n =(int) floor((E_max-E_min)/step_size);
+
   double E[n];
   double N[n];
   double E_tmp=0.;
@@ -395,12 +396,13 @@ void icemc::Spectra::GetCDF(){//set up CDF and inverse CDF;
 
   CDF = new TGraph(n,E,N);
   inverse_CDF = new TGraph(n,N,E);
-  
-  
-
 }
 
 double icemc::Spectra::GetCDFEnergy(){//get Energy from 'CDF'
+
+  if(!CDF){
+    GetCDF(); // do initialization if needed
+  }
 
   double ran = gRandom->Rndm();
  

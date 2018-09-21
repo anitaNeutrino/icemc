@@ -1,6 +1,6 @@
 #include "CommandLineOpts.h"
 #include "Settings.h"
-#include "IcemcLog.h"
+#include "Report.h"
 
 #include <iostream>
 #include <unistd.h> // for getopt
@@ -143,7 +143,7 @@ icemc::CommandLineOpts::CommandLineOpts(int argc, char* argv[], Settings& settin
   else{
 
     // open files for logging...
-    Logger& log = icemcLog();
+    Report& log = icemc::report();
     log.setOutputDir(outputdir.c_str());
     log.setRun(run_no);
 

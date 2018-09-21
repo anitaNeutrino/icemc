@@ -7,7 +7,7 @@
 #include "Settings.h"
 #include "Crust2.h"
 #include "Antarctica.h"
-#include "IcemcLog.h"
+#include "Report.h"
 #include "TF1.h"
 
 #include "rx.h"
@@ -182,8 +182,8 @@ icemc::Anita::Anita(const Settings* settings, const char* outputDir, const Ballo
   coherent_waveform_sum_tree->Branch("power", &cwst_power);
   // End of preparition for the coherent sum trigger's data tree
 
-  // Initialize(settings, icemcLog().foutput, settings->getOutputDir());
-  Initialize(settings, icemcLog().foutput, outputDir);
+  // Initialize(settings, icemc::report().foutput, settings->getOutputDir());
+  Initialize(settings, icemc::report().foutput, outputDir);
   GetPayload(settings, bn1);
 }
 
@@ -1698,11 +1698,11 @@ void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_recei
   double gainhv, gainhh, gainvh, gainvv;
   double gain_step = frequency_forgain_measured[1]-frequency_forgain_measured[0]; // how wide are the steps in frequency;
     
-  icemcLog() << "GAINS is " << GAINS << "\n";
+  icemc::report() << "GAINS is " << GAINS << "\n";
   for (int k = 0; k < NFREQ; ++k) {
     whichbin[k] = int((freq[k] - frequency_forgain_measured[0]) / gain_step); // finds the gains that were measured for the frequencies closest to the frequency being considered here
     if((whichbin[k] >= NPOINTS_GAIN || whichbin[k] < 0)) {
-      icemcLog() << "Set_gain_angle out of range, freq = " << freq[k] << "\twhichbin[k] = " << whichbin[k] << std::endl;
+      icemc::report() << "Set_gain_angle out of range, freq = " << freq[k] << "\twhichbin[k] = " << whichbin[k] << std::endl;
       // no longer exit, just set antenna gain to 0 outside band
       // exit(1);
       scalef2[k] = 0;

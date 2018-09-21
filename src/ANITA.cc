@@ -4,7 +4,7 @@
 #include "ChanTrigger.h"
 #include "Tools.h"
 #include "Settings.h"
-#include "IcemcLog.h"
+#include "Report.h"
 #include "Constants.h"
 #include "screen.hh"
 #include "RayTracer.h"
@@ -264,9 +264,9 @@ bool icemc::ANITA::applyTrigger(int inu){
   // ilayer loops through vertical layers
 
   if (fSettings->SLAC){
-    icemcLog() << icemc::error << "SLAC is no longer supported!" << std::endl;
+    icemc::report() << severity::error << "SLAC is no longer supported!" << std::endl;
     exit(1);
-    // icemcLog().fslac_hitangles << this->sslacpositions[this->islacposition] << "\n";    
+    // icemc::report().fslac_hitangles << this->sslacpositions[this->islacposition] << "\n";    
   }
   
   globalTrigger->volts_rx_rfcm_trigger.assign(16,  std::vector <std::vector <double> >(3,  std::vector <double>(0)));

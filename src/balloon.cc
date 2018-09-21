@@ -20,7 +20,7 @@
 #include "Settings.h"
 #include "Primaries.h"
 #include "EnvironmentVariable.h"
-#include "IcemcLog.h"
+#include "Report.h"
 
 std::ostream& operator<<(std::ostream& os, const icemc::FlightPath& fp){
   switch (fp){
@@ -88,7 +88,7 @@ icemc::Balloon::Balloon(const Settings* settings)
   : WHICHPATH(settings ? static_cast<icemc::FlightPath>(settings->WHICHPATH) : FlightPath::FixedPosition){
 
   if(!settings){
-    icemcLog() << icemc::warning << __PRETTY_FUNCTION__ << " was given nullptr for const Settings*. "
+    icemc::report() << severity::warning << __PRETTY_FUNCTION__ << " was given nullptr for const Settings*. "
 	       << "Assuming " << FlightPath::FixedPosition << std::endl;
   }
   InitializeBalloon(settings);
@@ -97,7 +97,7 @@ icemc::Balloon::Balloon(const Settings* settings)
 icemc::Balloon::~Balloon(){
   if(fInterp) delete fInterp;
   
-  // icemcLog() << icemc::info << __PRETTY_FUNCTION__ << " for " << WHICHPATH << std::endl;
+  // icemc::report() << severity::info << __PRETTY_FUNCTION__ << " for " << WHICHPATH << std::endl;
 }
 
 
@@ -397,7 +397,7 @@ int getTuffIndex(int Curr_time) {
   else if( ((TUFFconfig_B_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_1)) || ((TUFFconfig_C_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_2)) || ((TUFFconfig_O_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_3)) || ((TUFFconfig_B_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_4)) || ((TUFFconfig_B_end_4 < Curr_time) && (Curr_time <= TUFFconfig_P_end_5)) || ((TUFFconfig_B_end_5 < Curr_time) && (Curr_time <= TUFFconfig_P_end_6)) || ((TUFFconfig_B_end_6 < Curr_time) && (Curr_time <= TUFFconfig_P_end_7)) ) { // config P trigconfigP.imp
     return 5;
   }
-  icemcLog() << icemc::warning << __PRETTY_FUNCTION__
+  icemc::report() << icemc::severity::warning << __PRETTY_FUNCTION__
 	     << " could not get TUFF index from current time "
 	     << Curr_time << ", returning -1." << std::endl;
   return -1;
@@ -573,7 +573,7 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
       altitude_bn=BN_ALTITUDE*12.*constants::CMINCH/100.; // set the altitude of the balloon to be what you pick.  This isn't in time for CreateHorizons though!
     }
 
-    icemcLog() << icemc::error << FlightPath::Custom << " is currently broken!" << std::endl;
+    icemc::report() << severity::error << FlightPath::Custom << " is currently broken!" << std::endl;
     fPosition.SetLonLatAlt(0, -90, altitude_bn);
     
     // surface_under_balloon = antarctica1->Surface(r_bn);
@@ -583,7 +583,7 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
     // r_bn = (antarctica1->Surface(r_bn)+altitude_bn) * r_bn.Unit();
   } // you pick it
   else{
-    // icemcLog() << icemc::error << "Can't get position for " << static_cast<int>(whichPath()) << std::endl;
+    // icemc::report() << severity::error << "Can't get position for " << static_cast<int>(whichPath()) << std::endl;
   }
   // if (!settings1->UNBIASED_SELECTION && dtryingposition!=-999){
   //   dtryingposition=antarctica1->GetBalloonPositionWeight(ibnposition);

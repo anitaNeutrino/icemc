@@ -40,7 +40,7 @@
 #include "TSpline.h"
 
 #include "EnvironmentVariable.h"
-#include "IcemcLog.h"
+#include "Report.h"
 
 ClassImp(icemc::ShowerProperties)
 
@@ -489,16 +489,16 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
   } //if (charged current, secondaries on)
 
   if (nuflavor==Neutrino::Flavor::mu && current==Neutrino::Current::Charged && sp.nInteractions==0){
-    icemcLog() << icemc::warning << "Look at this one.  inu is " << inu << "\n";
+    icemc::report() << severity::warning << "Look at this one.  inu is " << inu << "\n";
   }  
 
   if ((y<0 || y>1) && y != -999.) {
-    icemcLog() << icemc::error <<  "Illegal value of y, y =" << y << "\n";
+    icemc::report() << severity::error <<  "Illegal value of y, y =" << y << "\n";
   }
   
   if (sp.sumFrac()>1.00001) {
-    icemcLog() << icemc::error << "emFrac,hadfrac=" << sp.emFrac << "," << sp.hadFrac << ": sum = " << sp.sumFrac() << "\n";
-    icemcLog() << "nuflavor,taudecay=" << nuflavor << " " << taudecay << "\n";
+    icemc::report() << severity::error << "emFrac,hadfrac=" << sp.emFrac << "," << sp.hadFrac << ": sum = " << sp.sumFrac() << "\n";
+    icemc::report() << "nuflavor,taudecay=" << nuflavor << " " << taudecay << "\n";
   }
   
   return sp;

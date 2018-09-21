@@ -53,7 +53,7 @@ icemc::Antarctica::Antarctica(int model,
   ice_model -= DEPTH_DEPENDENT_N * 10;
 
   if (ice_model != 0 && ice_model != 1) {
-    icemcLog() << icemc::error << "Unknown ice model requested!  Defaulting to Crust 2.0." << std::endl;
+    icemc::report() << severity::error << "Unknown ice model requested!  Defaulting to Crust 2.0." << std::endl;
     ice_model = 0;
   } //if
   else if (ice_model==1) {
@@ -874,7 +874,7 @@ double icemc::Antarctica::GetBalloonPositionWeight(int ibnpos) const {
   ///@todo The functionality here needs to be restored somehow...
   
   // if (volume_inhorizon[ibnpos]==0) {
-  //   icemcLog() << icemc::error << "Volume in horizon is zero!\n";
+  //   icemc::report() << severity::error << "Volume in horizon is zero!\n";
   //   exit(1);
   // }
   return 1;
@@ -1121,7 +1121,7 @@ void icemc::Antarctica::GetMAXHORIZON(Balloon *bn1) const {
     bn1->MAXHORIZON=(sqrt((Geoid::R_EARTH+altitude_inmeters)*(Geoid::R_EARTH+altitude_inmeters)-Geoid::R_EARTH*Geoid::R_EARTH))*1.1;
     // find distance from hrizon to balloon, increase it by 10% to be conservative.
   }
-  icemcLog() << icemc::info << "MAXHORIZON is " << bn1->MAXHORIZON << std::endl;
+  icemc::report() << severity::info << "MAXHORIZON is " << bn1->MAXHORIZON << std::endl;
 
 }
 
@@ -1143,7 +1143,7 @@ void icemc::Antarctica::CreateHorizons(const Settings *settings1, const Balloon 
   volume = 0.; // initialize volume to zero
 
 
-  icemcLog() << icemc::warning << "Temporarily disabled " << __PRETTY_FUNCTION__ << " during refactor! Volume = 2.3e8!" << std::endl;
+  icemc::report() << severity::warning << "Temporarily disabled " << __PRETTY_FUNCTION__ << " during refactor! Volume = 2.3e8!" << std::endl;
   volume = 2.3e8;
 
   // double total_area=0; // initialize total area to zero
@@ -1168,7 +1168,7 @@ void icemc::Antarctica::CreateHorizons(const Settings *settings1, const Balloon 
   // }
 
   // if (NBALLOONPOSITIONS>NBNPOSITIONS_MAX) {
-  //   icemcLog() << icemc::error << "Number of balloon positions is greater than max allowed.\n";
+  //   icemc::report() << severity::error << "Number of balloon positions is greater than max allowed.\n";
   //   exit(1);
   // }
 
@@ -1416,9 +1416,9 @@ void icemc::Antarctica::CreateHorizons(const Settings *settings1, const Balloon 
   // //cout << "Total volume of ice in Antarctica with this ice model (m^3): " << volume << "\n";
   // //cout << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
     
-  // icemcLog() << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
+  // icemc::report() << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
     
-  // icemcLog() << "Average thickness of ice within horizon, averages over balloon positions " << volume_inhorizon_average/constants::PI/pow(bn1->MAXHORIZON,2) << "\n";
+  // icemc::report() << "Average thickness of ice within horizon, averages over balloon positions " << volume_inhorizon_average/constants::PI/pow(bn1->MAXHORIZON,2) << "\n";
 } //method CreateHorizons 
 
 
