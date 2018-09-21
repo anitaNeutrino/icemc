@@ -105,7 +105,7 @@ double icemc::Y::pickY(const Settings *settings1,double pnu,Neutrino::L leptonNu
     return pickYGandhietal();
   }//old Gety
   else { //use prescription in Connolly et al.2011
-    leptonNumber=Neutrino::L::Matter;
+    leptonNumber=Neutrino::L::Matter; ///@todo ? 
     double elast_y=pickYConnollyetal2011(leptonNumber,currentint,pnu);
     return elast_y;   
   }//current Gety
@@ -165,9 +165,10 @@ double icemc::Y::pickYConnollyetal2011(Neutrino::L leptonNumber, Neutrino::Curre
 
 
 // double icemc::Y::Getyweight(double pnu, double y, int nu_nubar, Neutrino::Current currentint){
-double icemc::Y::Getyweight(double pnu, double y, Neutrino::L leptonNumber, Neutrino::Current currentint){
+double icemc::Y::Getyweight(double pnu, double y, Neutrino::L leptonNumber, Neutrino::Current current){
 
   int nu_nubar = leptonNumber == Neutrino::L::Matter ? 0 : 1;
+  int currentint = static_cast<int>(current);
   //from Connolly Calc 2011, Equations 9, 10, 11, 16, and 17.
   // double dy=0.;//default
   //Ev, cc or nc, nu or nubar.
@@ -179,19 +180,18 @@ double icemc::Y::Getyweight(double pnu, double y, Neutrino::L leptonNumber, Neut
   double weighty;
   double epsilon=log10(pnu/1.E9);
   
-  C2=fC2->Eval(epsilon);//Eq(17)
-  C1_low=fC1_low->Eval(epsilon);//Eq(16) (Low region)
-
-  C1_high=fC1_high[nu_nubar][static_cast<int>(currentint)]->Eval(epsilon);//Eq(16)(High region) 
+  C2 = fC2->Eval(epsilon);//Eq(17)
+  C1_low = fC1_low->Eval(epsilon);//Eq(16) (Low region)
+  C1_high = fC1_high[nu_nubar][currentint]->Eval(epsilon);//Eq(16)(High region) 
   
    
   if(nu_nubar==0) {
-    U=1-1/C2;
-    W=fabs( (ymax_high-C1_high)/(ymin_high-C1_high));
-    B=(pow(ymax_low-C1_low, 1/C2)/(ymax_low-C1_high));
-    T=B*((pow(ymax_low-C1_low, U)-pow(ymin_low-C1_low, U) )/U)+log(W);
-    C0_high=1/T;	
-    C0_low=C0_high*(pow(ymax_low-C1_low, 1/C2))/(ymax_low-C1_high);
+    U = 1-1/C2;
+    W = fabs( (ymax_high-C1_high)/(ymin_high-C1_high));
+    B = (pow(ymax_low-C1_low, 1/C2)/(ymax_low-C1_high));
+    T = B*((pow(ymax_low-C1_low, U)-pow(ymin_low-C1_low, U) )/U)+log(W);
+    C0_high = 1/T;	
+    C0_low = C0_high*(pow(ymax_low-C1_low, 1/C2))/(ymax_low-C1_high);
     
     if(y<ymax_low){//Eq(9)
       // dy=0.00002;
@@ -203,7 +203,7 @@ double icemc::Y::Getyweight(double pnu, double y, Neutrino::L leptonNumber, Neut
     }
     else{
       dNdy=0.;
-      std::cout<<"y value is outside of the domain of y.\n";
+      icemc::report() << severity::warning <<"y value is outside of the domain of y.\n";
     }
   }
   else if(nu_nubar==1){
@@ -224,11 +224,11 @@ double icemc::Y::Getyweight(double pnu, double y, Neutrino::L leptonNumber, Neut
     }
     else{
       dNdy=0;
-      std::cout<<"y value is outside of the domain of y.\n";
+      icemc::report() << severity::warning << "y value is outside of the domain of y.\n";
     }
   }
   else{
-    std::cout<<"Nu_nubar is not defined!\n";
+    icemc::report() << severity::warning << "Nu_nubar is not defined!\n";
   }		
   weighty=dNdy;
   return weighty;

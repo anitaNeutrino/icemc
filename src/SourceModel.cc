@@ -30,14 +30,14 @@ TVector3 icemc::DiffuseFlux::pickDirection(const Geoid::Position& interaction, d
       std::cerr << "You can't do 3D vector things in your head!" << std::endl;
     }
 
-    double phi = fRandom.Uniform(0, TMath::TwoPi());
+    double phi = pickUniform(0, TMath::TwoPi());
 
     nuDir.Rotate(phi, *rfToDetector);
 
   }
   else{
-    double cosTheta = fRandom.Uniform(-1, 1);
-    double phi = fRandom.Uniform(0, TMath::TwoPi());
+    double cosTheta = pickUniform(-1, 1);
+    double phi = pickUniform(0, TMath::TwoPi());
     
     nuDir.SetMagThetaPhi(1, TMath::ACos(cosTheta), phi);
     

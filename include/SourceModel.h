@@ -4,7 +4,7 @@
 
 #include "Geoid.h"
 #include "TVector3.h"
-#include "Integrator.h"
+#include "RNG.h"
 
 namespace icemc {
 
@@ -15,7 +15,7 @@ namespace icemc {
    * During nicemc development, this is just a diffuse source, one can imagine adding fixed sources later
    */
 
-  class SourceModel : public Integrator {
+  class SourceModel : public RNG {
   public:
     
     // given an already chosen interaction, 
