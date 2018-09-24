@@ -580,7 +580,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
     even_E = ( nuSpectra->Getenergy()[nuSpectra->GetE_bin() - 1] - nuSpectra->Getenergy()[0] ) / ( (double) N_even_E );
     for (int i=0;i<N_even_E;i++) {
       thisenergy=pow(10., (nuSpectra->Getenergy())[0]+((double)i)*even_E);
-      primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);
+      primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, xsecParam_nutype, xsecParam_nuint);
 
       // EdNdEdAdt is in #/cm^2/s
       // need to be multiplied by 1e4 to change 1/cm2 to 1/m^2
@@ -1098,7 +1098,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // gRandom=Rand3;
   
   Secondaries sec1;
-  Primaries* primary1 = new Primaries();
+  Primaries* primary1 = new Primaries(&settings1);
   AskaryanFreqsGenerator askFreqGen;
   // Antarctica* antarctica = new Antarctica(settings1.ICE_MODEL + settings1.NOFZ*10,
   // 					  settings1.CONSTANTICETHICKNESS * 1000 + settings1.CONSTANTCRUST * 100 + settings1.FIXEDELEVATION * 10 + 0,
@@ -1219,7 +1219,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // sets neutrino energy
   if ( nuSpectra->IsMonoenergetic() ){
     pnu=pow(10., settings1.EXPONENT);
-    primary1->GetSigma(pnu, sigma, len_int_kgm2, &settings1, xsecParam_nutype, xsecParam_nuint);    // get cross section and interaction length.
+    primary1->GetSigma(pnu, sigma, len_int_kgm2, xsecParam_nutype, xsecParam_nuint);    // get cross section and interaction length.
     icemc::report() << "pnu,  sigma,  len_int_kgm2 are " << pnu << " " << sigma << " " << len_int_kgm2 << "\n";
   }
 

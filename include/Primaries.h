@@ -5,8 +5,8 @@
 #ifndef PRIMARIES_H_
 #define PRIMARIES_H_
 
-#include "TRandom3.h" 
 #include <iostream>
+#include "RNG.h"
 
 #include "TH1.h"
 #include "TH2.h"
@@ -19,73 +19,70 @@
 #include "Geoid.h"
 #include "TVector3.h"
 #include "Neutrino.h"
+#include "Inelasticity.h"
 
-
-
-namespace icemc {
-
+// std::vector;
+namespace icemc {  
+  
   class Interaction;
-  class Primaries;
-  class IceModel;
-  class Counting;
   class Settings;
-  class Y;
 
   /**
    * @class Primaries
    * @brief Functions you need to generate a primary interaction: cross sections, picking charged current/neutral current and flavor
    */
-  class Primaries {
+  class Primaries : public RNG {
     
   private:
-    TRandom3 Rand3;
     
-    TH2D* m_hsigma;	///< plot of cross section vs. log(E/GeV)
-    TCanvas* m_csigma;	///< canvas
-    Y* m_myY; 
-    int run_old_code;
+    Y m_myY; ///< defined in Inelasticity.h
     
-
-    double A_low[4];      ///< Table V of Connolly et al. for use in Eq. 16.  Same for any nu_nubar and current type.
-    double A0_high[2][2]; ///< Table V of Connolly et al. for use in Eq. 16.  
-    double A1_high[2][2]; ///< Table V of Connolly et al. for use in Eq. 16.  
-    double A2_high[2][2]; ///< Table V of Connolly et al. for use in Eq. 16.  
-    double A3_high[2][2]; ///< Table V of Connolly et al. for use in Eq. 16.  
-    double b0;            ///<  Eq. 17 of Connolly et al.
-    double b1;            ///<  Eq. 17 of Connolly et al.
+    typedef std::map<std::pair<Neutrino::L, Neutrino::Current>, double> DoubleLCC; // represent a double for nu/nubar, neutral/charged currents
+    std::array<double, 4> A_low; ///< Table V of Connolly et al. for use in Eq. 16.
+    DoubleLCC A0_high; ///< Table V of Connolly et al. for use in Eq. 16.
+    DoubleLCC A1_high; ///< Table V of Connolly et al. for use in Eq. 16.
+    DoubleLCC A2_high; ///< Table V of Connolly et al. for use in Eq. 16.
+    DoubleLCC A3_high; ///< Table V of Connolly et al. for use in Eq. 16.
+    double b0;         ///<  Eq. 17 of Connolly et al.
+    double b1;         ///<  Eq. 17 of Connolly et al.
     
-    TF1* m_fy[2][2];
-    TF1* m_fsigma[2][2];
+    // TF1* m_fy[2][2];
     
-    double c0[2][2];      ///< Table V of Connolly et al. for Eq. 7
-    double c1[2][2];      ///< Table V of Connolly et al. for Eq. 7
-    double c2[2][2];      ///< Table V of Connolly et al. for Eq. 7
-    double c3[2][2];      ///< Table V of Connolly et al. for Eq. 7
-    double c4[2][2];      ///< Table V of Connolly et al. for Eq. 7
+    std::map<std::pair<Neutrino::L, Neutrino::Current>, TF1> fSigma;
+    
+    DoubleLCC c0;      ///< Table V of Connolly et al. for Eq. 7
+    DoubleLCC c1;      ///< Table V of Connolly et al. for Eq. 7
+    DoubleLCC c2;      ///< Table V of Connolly et al. for Eq. 7
+    DoubleLCC c3;      ///< Table V of Connolly et al. for Eq. 7
+    DoubleLCC c4;      ///< Table V of Connolly et al. for Eq. 7
     
     static constexpr int NSIGMAS=2;///< number of possible cross section models
     ///< 0=Gandhi et al.
     ///< 1=Connolly et al. 2011
     double mine[NSIGMAS]; ///< minimum energy for cross section parametrizations, in eV
     double maxe[NSIGMAS]; ///< maximum energy for cross section parametrizations, in eV
+
+    TCanvas* plotSigma(Neutrino::L l, Neutrino::Current c, int nSamples = 2000);
     
   public:
     // double pickY(const Settings *settings1,double pnu,int nu_nubar, Neutrino::Current currentint);///<pick inelasticity y according to chosen model
-    double pickY(const Settings *settings1,double pnu,Neutrino::L leptonNumber, Neutrino::Current currentint);///<pick inelasticity y according to chosen model    
+    double pickY(double pnu, Neutrino::L leptonNumber, Neutrino::Current currentint);///<pick inelasticity y according to chosen model    
     double Getyweight(double pnu,double y,Neutrino::L leptonNumber,Neutrino::Current currentint);///< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
 
-    Primaries(); ///< Constructor 
-    ~Primaries();///< Destructor 
+    Primaries(const Settings* settings); ///< Constructor 
+    virtual ~Primaries();///< Destructor 
     
     /// Neutrino-nucleon cross-sections using model chosen
-    int GetSigma(double pnu,double& sigma,double &len_int_kgm2,const Settings *settings1,Neutrino::L leptonNumber,Neutrino::Current currentint);
+    int GetSigma(double pnu,double& sigma,double &len_int_kgm2,Neutrino::L leptonNumber,Neutrino::Current currentint);
 
 
 
     // string GetCurrent();
-    Neutrino::Flavor GetNuFlavor() const;    
+    Neutrino::Flavor pickFlavor();    
   protected:
+    const Settings* fSettings;
   };///<Primaries
+  
 
 
 
@@ -96,7 +93,7 @@ namespace icemc {
    * @class Interaction
    * @brief Stores everything about a particular neutrino interaction.
    */
-  class Interaction  {
+  class Interaction : public RNG {
     
   private:
         
@@ -138,19 +135,17 @@ namespace icemc {
     double chord_kgm2_bestcase; ///< the chord the neutrino would traverse if it all was crust density
     double chord_kgm2_ice;      ///< from ice entrance to interaction point
     double d1;                  ///< same as chord in m (earth entrance to rock-ice boundary)
-    double d2;                  ///< ice-rock boundary to interaction point in m
+    double d2;                  ///< ice-rock boundary to interaction point in m    
     
+    // void setNuFlavor(const Primaries *primary1, const Settings *settings1);//, int whichray, Counting *count1);
     
-    void setNuFlavor(const Primaries *primary1, const Settings *settings1);//, int whichray, Counting *count1);
-    Neutrino::Current GetCurrent();
-    void setCurrent();
+    Neutrino::Current pickCurrent();
     int getPdgCode() const;
 
     Geoid::Position posnu;
     Geoid::Position posnu_down;
-    Neutrino::Flavor nuflavor;	  ///< neutrino flavor    
+    Neutrino::Flavor nuflavor;	  ///< neutrino flavor
     Neutrino::Current current;	  ///< CC or NC?
-    
 
     double dtryingdirection;	  ///< weighting factor: how many equivalent tries each neutrino counts for after having reduced angular phase space for possibly detectable events
     double dnutries;		  ///< product of dtryingdirection and dtryingposition
@@ -164,8 +159,6 @@ namespace icemc {
     double r_exit2bn;		  ///< exit to balloon
     double r_exit2bn_measured;	  ///< exit to balloon deduced from measured theta
     int iceinteraction;		  ///< whether or not there is an interaction in the ice
-    
-    
   };
 
 }

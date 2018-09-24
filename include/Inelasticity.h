@@ -33,12 +33,14 @@ namespace icemc {
   class Y :  public RNG {  
 
   private:
-    TF1* ffrac;							///< This is the fraction of the distribution in the low y region given by Equation 18. 
-    TF1* fC1_high[2][2];					///< parameterization of parameter C1 in the high y region according to Equation 16
-    TF1 *fC1_low;						///< parameterization of parameter C1 in the low y region according to Equation 16.
-    TF1 *fC2;							///< parameterization of parameter C2 in the low y region according to Equation 17.
-    TF3* fy0_low;						///< For picking inelasticity in low y region according to Equation 14.
-    TF2* fy0_high;						///< For picking inelasticity in high y region according to Equation 15.
+
+    std::unique_ptr<TF1> ffrac;          ///< This is the fraction of the distribution in the low y region given by Equation 18. 
+    // std::unique_ptr<TF1> fC1_high[2][2]; ///< parameterization of parameter C1 in the high y region according to Equation 16
+    std::map<std::pair<Neutrino::L, Neutrino::Current>, TF1> fC1_high; ///< parameterization of parameter C1 in the high y region according to Equation 16    
+    std::unique_ptr<TF1> fC1_low;        ///< parameterization of parameter C1 in the low y region according to Equation 16.
+    std::unique_ptr<TF1> fC2;            ///< parameterization of parameter C2 in the low y region according to Equation 17.
+    std::unique_ptr<TF3> fy0_low;        ///< For picking inelasticity in low y region according to Equation 14.
+    std::unique_ptr<TF2> fy0_high;       ///< For picking inelasticity in high y region according to Equation 15.
 
     double pickYConnollyetal2011(Neutrino::L leptonNumber,Neutrino::Current CURRENT,double e);	///< pick an inelasticity using recipe in Connolly et al. (2011)
     // L =0: nubar, NU=1: nu
