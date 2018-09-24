@@ -1131,7 +1131,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
   Source::Spectra* nuSpectra = new Source::Spectra(&settings1);
   if(!interaction1){
-    interaction1 = new Interaction(primary1, &settings1); //, 0, count1);
+    interaction1 = new Interaction(&settings1); //, 0, count1);
   }
   Roughness* rough1 = new Roughness(&settings1); // create new instance of the roughness class
   rough1->SetRoughScale(settings1.ROUGHSIZE);
@@ -1265,10 +1265,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     }
     
     eventNumber=(UInt_t)(clOpts.run_no)*NNU+inu;
-    RNG::newSeeds(clOpts.run_no, eventNumber); // updates all RNG seeds
 
     // @todo Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
+    RNG::newSeeds(clOpts.run_no, eventNumber); // updates all RNG seeds
 
     double eventTime = fDetector->pickEventTime();
 
@@ -1294,13 +1294,14 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // make a neutrino, we've picked energy, flavor, interaction current, 
     Neutrino nu = nuFactory.makeNeutrino();
 
-    // ShowerProperties 
+    
+
+    // ShowerProperties
+
+    // auto askaryan = askFreqGen.generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max, const ShowerProperties *sp)
     
     // askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, fDetector->NFREQ, fDetector->freq, fDetector->NOTCH_MIN, fDetector->NOTCH_MAX, &showerProps);
     
-    /// pick neutrino energy
-
-
     // propagate to ANITA
 
     

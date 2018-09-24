@@ -10,6 +10,11 @@ namespace icemc {
 
   class Settings;
 
+  /**
+   * @class CrossSectionModel
+   * @brief Pure virtual class to model neutrino cross section
+   */
+
   class CrossSectionModel {
   public:
 

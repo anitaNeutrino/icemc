@@ -14,6 +14,8 @@
 #include "balloon.hh"
 #include "Constants.h"
 #include "EnvironmentVariable.h"
+#include "Interaction.h"
+
 
 #include <fstream>
 #include <iostream>

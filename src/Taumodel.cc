@@ -39,6 +39,7 @@
 #include "TRotation.h"
 #include "TSpline.h"
 #include "Taumodel.hh"
+#include "Interaction.h"
 
 ClassImp(icemc::Taumodel);
 

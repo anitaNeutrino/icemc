@@ -4,6 +4,8 @@
 #include "Spectra.h"
 #include "ConnollyEtAl2011.h"
 #include "Neutrino.h"
+#include "RNG.h"
+#include "Interaction.h"
 
 namespace icemc {
 
@@ -14,12 +16,16 @@ namespace icemc {
    * @brief Simplify neutrino generation interface to just one place
    */
 
-  class NeutrinoFactory {
+  class NeutrinoFactory : public RNG {
   public:
 
+    Neutrino::Flavor pickFlavor();
+    
     NeutrinoFactory(const Settings* s);
 
     Neutrino makeNeutrino();
+
+    
 
   private:
     const Settings* fSettings;

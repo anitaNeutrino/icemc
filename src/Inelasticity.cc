@@ -19,7 +19,7 @@
 #include "Inelasticity.h"
 
 ///////////////// Y //////////////
-icemc::Y::Y() { // Constructor
+icemc::Y::Y(const Settings* s) : fSettings(s){ // Constructor
 
   /**
    * The Y class contains all of the parameterizations for generating
@@ -100,14 +100,14 @@ icemc::Y::Y() { // Constructor
 
 //! Pick an inelasticity y according to the model chosen
 // double icemc::Y::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Current currentint) {
-double icemc::Y::pickY(const Settings *settings1,double pnu,Neutrino::L leptonNumber,Neutrino::Current currentint) {  
-  if(settings1->YPARAM==0){
+double icemc::Y::pickY(double pnu,Neutrino::L leptonNumber,Neutrino::Current currentint) {  
+  if(fSettings->YPARAM==0){
     return pickYGandhietal();
   }//old Gety
   else { //use prescription in Connolly et al.2011
     leptonNumber=Neutrino::L::Matter; ///@todo ? 
     double elast_y=pickYConnollyetal2011(leptonNumber,currentint,pnu);
-    return elast_y;   
+    return elast_y;
   }//current Gety
 } //Gety
 

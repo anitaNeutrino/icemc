@@ -1,13 +1,29 @@
 #include "NeutrinoFactory.h"
 #include "Settings.h"
+#include "Report.h"
 
 icemc::NeutrinoFactory::NeutrinoFactory(const Settings* s)
   : fSettings(s),
-    fSpectra(s), ///@todo check cast to int is ok here!
+    fSpectra(s),
     fConnollyEtAl2011(s),
-    fInteraction(&fConnollyEtAl2011, fSettings)
+    fInteraction(s)
 {
 
+}
+
+
+icemc::Neutrino::Flavor icemc::NeutrinoFactory::pickFlavor() {
+//! pick a neutrino type, flavor ratio 1:1:1
+  double r = pickUniform(0, 3);
+  if (r <= 1){
+    return Neutrino::Flavor::e;
+  }
+  else if(r <= 2){
+    return Neutrino::Flavor::mu;
+  }
+  else {
+    return Neutrino::Flavor::tau;
+  }
 }
 
 icemc::Neutrino icemc::NeutrinoFactory::makeNeutrino() {
@@ -17,15 +33,13 @@ icemc::Neutrino icemc::NeutrinoFactory::makeNeutrino() {
     // /// now generate some askaryan rf
   
   Neutrino n;
+  n.flavor = pickFlavor();
 
   n.energy = fSpectra.pickNeutrinoEnergy();
-  n.flavor = fConnollyEtAl2011.pickFlavor();
   n.leptonNumber = Neutrino::L::Matter; ///@todo check
   n.interactionCurrent = fInteraction.pickCurrent();
   n.crossSection = fConnollyEtAl2011.getSigma(n.energy, n.leptonNumber,  n.interactionCurrent);
   n.interactionLength = CrossSectionModel::getInteractionLength(n.crossSection);
-
-  // pick flavour!
 
   return n;
   

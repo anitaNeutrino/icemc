@@ -19,12 +19,7 @@
 
 namespace icemc {
 
-  class Interaction;
-  class ConnollyEtAl2011;
-  class IceModel;
-  class Counting;
   class Settings;
-
 
   /**
    * @class Y
@@ -33,6 +28,7 @@ namespace icemc {
   class Y :  public RNG {  
 
   private:
+    const Settings* fSettings;
 
     std::unique_ptr<TF1> ffrac;          ///< This is the fraction of the distribution in the low y region given by Equation 18. 
     // std::unique_ptr<TF1> fC1_high[2][2]; ///< parameterization of parameter C1 in the high y region according to Equation 16
@@ -68,19 +64,18 @@ namespace icemc {
 
     
   public:
-    Y();
+    Y(const Settings* settings);
 
     /** 
      * Pick inelasticity y according to chosen model
      * 
-     * @param settings1 are the icemc settings 
      * @param pnu 
      * @param nu_nubar 
      * @param currentint 
      * 
      * @return 
      */
-    double pickY(const Settings *settings1, double pnu, Neutrino::L leptonNumber, Neutrino::Current currentint);
+    double pickY(double pnu, Neutrino::L leptonNumber, Neutrino::Current currentint);
 
     /** 
      * @brief If you want to choose y from a flat distribution this is the weight it should have according to Connolly et al. (2011)

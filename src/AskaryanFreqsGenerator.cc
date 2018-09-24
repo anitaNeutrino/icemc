@@ -323,10 +323,7 @@ void icemc::AskaryanFreqsGenerator::GetSpread(double pnu,
 
     // and then scale it according to astro-ph/0512337
     // Eq. 9
-    deltheta_em_max*=RHOMEDIUM/rhoice
-      /KDELTA_MEDIUM*kdelta_ice
-      /X0MEDIUM*x0ice
-      /sqrt(N_DEPTH*N_DEPTH-1)*sqrt(nice*nice-1);
+    deltheta_em_max*=RHOMEDIUM/rhoice/KDELTA_MEDIUM*kdelta_ice/X0MEDIUM*x0ice/sqrt(N_DEPTH*N_DEPTH-1)*sqrt(nice*nice-1);
 
     if (hadfrac>0.00001) { // if there is a hadronic component
       // for had showers, just use the one from astro-ph/0512337
