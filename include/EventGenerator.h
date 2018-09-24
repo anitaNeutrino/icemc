@@ -8,14 +8,14 @@
 
 #include "NeutrinoPath.h"
 #include "Constants.h"
-#include "CommandLineOpts.h"
-#include "secondaries.hh"
-
+#include "CommandLineOptions.h"
+#include "ShowerGenerator.h"
+#include "RNG.h"
 
 namespace icemc {
 
   class Taumodel;
-  class AskaryanFreqsGenerator;
+  class AskaryanFactory;
   class Interaction;
   class RayTracer;
   class Roughness;
@@ -29,7 +29,7 @@ namespace icemc {
     class Spectra;
   }
 
-  
+  class Detector;
 
   /**
    * @class EventGenerator
@@ -38,7 +38,10 @@ namespace icemc {
    * Contains the main neutrino generation loop in generateNeutrinos()
    */
 
-  class EventGenerator {
+  class EventGenerator : public RNG {
+  private:
+    double fStartTime;
+    double fEndTime;
   public:
 
     enum RayDirection {
@@ -46,7 +49,7 @@ namespace icemc {
       downgoing = 1,
     };
 
-    EventGenerator();
+    EventGenerator(Detector* detector);
     virtual ~EventGenerator();
     static void interrupt_signal_handler(int);  // This catches ctrl-C interrupt (SIGINT)
 
@@ -281,7 +284,7 @@ namespace icemc {
 
     // int xsecParam_nutype = 0; // neutrino = 0, antineutrino = 1;
     Neutrino::L xsecParam_nutype = Neutrino::L::Matter; // neutrino = 0, antineutrino = 1;    
-    Neutrino::Current xsecParam_nuint  = Neutrino::Current::Neutral;
+    Neutrino::Interaction::Current xsecParam_nuint  = Neutrino::Interaction::Current::Neutral;
 
 
     // ray tracing
@@ -436,7 +439,7 @@ namespace icemc {
 
     
     // @todo constify... if I can const this, then we're probably near the end of the refactor...
-    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  RayTracer* ray1, Screen* panel1, Antarctica* antarctica1, Balloon* bn1, const AskaryanFreqsGenerator* askFreqGen, Anita* anita1, const ShowerProperties& showerProps);
+    void applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,  RayTracer* ray1, Screen* panel1, Antarctica* antarctica1, Balloon* bn1, const AskaryanFactory* askFreqGen, Anita* anita1, const Shower& showerProps);
 
 
     
@@ -454,16 +457,16 @@ namespace icemc {
     int GetRayIceSide(const TVector3 &n_exit2rx,  const TVector3 &nsurf_rfexit,  double nexit,  double nenter,  TVector3 &nrf2_iceside) const;
 
     // @todo constify... needs some love to constify
-    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const TVector3 &refr,  double deltheta_em,  double deltheta_had,  const ShowerProperties& sp,  double vmmhz1m_max,  double r_fromballoon,  RayTracer *ray1,  const AskaryanFreqsGenerator* askFreqGen,  Geoid::Position posnu,  Anita *anita1,  Balloon *bn1,  TVector3 &nnu,  double& costhetanu,  double& theta_threshold) ;
+    int GetDirection(const Settings *settings1,  Interaction *interaction1,  const TVector3 &refr,  double deltheta_em,  double deltheta_had,  const Shower& sp,  double vmmhz1m_max,  double r_fromballoon,  RayTracer *ray1,  const AskaryanFactory* askFreqGen,  Geoid::Position posnu,  Anita *anita1,  Balloon *bn1,  TVector3 &nnu,  double& costhetanu,  double& theta_threshold) ;
     void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const TVector3 &nsurf_rfexit,  const TVector3 &n_exit2rx,  TVector3 &n_pol,  const TVector3 &nrf2_iceside,  double efield, double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag) const;
-    // void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const TVector3 &nsurf_rfexit,  const TVector3 &n_exit2rx,  TVector3 &n_pol,  const TVector3 &nrf2_iceside,  double efield,  const ShowerProperties& ,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag) const;    
+    // void GetFresnel(Roughness *rough1,  int ROUGHNESS_SETTING,  const TVector3 &nsurf_rfexit,  const TVector3 &n_exit2rx,  TVector3 &n_pol,  const TVector3 &nrf2_iceside,  double efield,  const Shower& ,  double deltheta_em, double deltheta_had,  double &t_coeff_pokey,  double &t_coeff_slappy,  double &fresnel,  double &mag) const;    
     double GetViewAngle(const TVector3 &nrf2_iceside,  const TVector3 &nnu) const;
     int TIR(const TVector3 &n_surf,  const TVector3 &nrf2_iceside,  double N_IN,  double N_OUT) const;
     // void IntegrateBands(Anita *anita1,  int k,  Screen *panel1,  double *freq,  double scalefactor,  double *sumsignal) const;
 
     // @todo constify... needs some love to constify
-    void Summarize(const Settings *settings1,  Anita* anita1,  Source::Spectra *spectra1, const AskaryanFreqsGenerator* askFreqGen,  ConnollyEtAl2011 *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
-    void WriteNeutrinoInfo(const int& inu, const Geoid::Position&,  const TVector3&,  const Geoid::Position&,  double,  Neutrino::Flavor,  Neutrino::Current,  double,  std::ofstream &nu_out) const;
+    void Summarize(const Settings *settings1,  Anita* anita1,  Source::Spectra *spectra1, const AskaryanFactory* askFreqGen,  ConnollyEtAl2011 *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&, TString);
+    void WriteNeutrinoInfo(const int& inu, const Geoid::Position&,  const TVector3&,  const Geoid::Position&,  double,  Neutrino::Flavor,  Neutrino::Interaction::Current,  double,  std::ofstream &nu_out) const;
 
     /** 
      * @brief Run the neutrino generation
@@ -471,7 +474,7 @@ namespace icemc {
      * This function does the stuff that used to be the main in the icemc executable
      * @todo needs some love to constify... probably not doable...
      */    
-    void generateNeutrinos(const Settings& settings1, const CommandLineOpts& clOpts);
+    void generateNeutrinos(const Settings& settings1);
 
 
     //do a threshold scan
@@ -489,7 +492,7 @@ namespace icemc {
     Interaction* interaction1 = nullptr;
     // Balloon* bn1;
     // Anita* anita1;
-    ANITA* fDetector = nullptr;
+    Detector* fDetector = nullptr;
     Taumodel* fTauPtr = nullptr;
 
     GeneratedNeutrino* fGenNu = nullptr;

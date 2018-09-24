@@ -59,3 +59,9 @@ double icemc::RNG::pickGaus(double mean, double sigma){
   updateSeed();  
   return fRandom->Gaus(mean, sigma);
 }
+
+
+int icemc::RNG::pickPoisson(double mean){
+  updateSeed();  
+  return fRandom->Poisson(mean);
+}

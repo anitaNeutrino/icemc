@@ -56,13 +56,13 @@ namespace icemc {
     
     // void setNuFlavor(const ConnollyEtAl2011 *primary1, const Settings *settings1);//, int whichray, Counting *count1);
     
-    Neutrino::Current pickCurrent();
+    Neutrino::Interaction::Current pickCurrent();
     int getPdgCode() const;
 
     Geoid::Position posnu;
     Geoid::Position posnu_down;
     Neutrino::Flavor nuflavor;	  ///< neutrino flavor
-    Neutrino::Current current;	  ///< CC or NC?
+    Neutrino::Interaction::Current current;	  ///< CC or NC?
 
     double dtryingdirection;	  ///< weighting factor: how many equivalent tries each neutrino counts for after having reduced angular phase space for possibly detectable events
     double dnutries;		  ///< product of dtryingdirection and dtryingposition
@@ -80,5 +80,7 @@ namespace icemc {
 
 
 }
+
+
 
 #endif //INTERACTION_H

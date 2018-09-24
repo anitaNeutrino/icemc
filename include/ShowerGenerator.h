@@ -1,10 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
-//class Secondaries:
+//class ShowerGenerator:
 ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ICEMC_SECONDARIES_HH
-#define ICEMC_SECONDARIES_HH
+#ifndef ICEMC_SHOWER_GENERATOR_H
+#define ICEMC_SHOWER_GENERATOR_H
 
 #include <algorithm>
 #include <numeric>
@@ -14,10 +12,10 @@
 #include <fstream>
 #include <iomanip>
 #include "ConnollyEtAl2011.h"
-#include "TRandom3.h"
 
 #include <vector>
 #include "TVector3.h"
+#include "RNG.h"
 
 class TH1F;
 
@@ -26,14 +24,12 @@ namespace icemc{
   class ConnollyEtAl2011;
 
   /**
-   * @class ShowerProperties
-   * @brief The shower properties that determine the Askaryan frequency content
-   * 
-   * Everything created by Secondaries needed by AskaryanFreqs to the off-Cherenkov cone tapering.
+   * @class Shower
+   * @brief Container for properties that determine the Askaryan frequency content
    */
-  class ShowerProperties {
+  class Shower {
   public:
-    ShowerProperties()
+    Shower()
       : // emDeltaThetaMax(0), hadDeltaThetaMax(0),
 	emFrac(0), hadFrac(0),
 	nInteractions(1), pnu(0)
@@ -46,16 +42,15 @@ namespace icemc{
     double hadFrac;
     int nInteractions;
     double pnu;
-    ClassDef(ShowerProperties ,1)
+    TVector3 axis;
+    ClassDef(Shower, 1)
   };
   
 
   //! Secondary interactions
-  class Secondaries {
+  class ShowerGenerator : public RNG {
 
   private:
-    TRandom3 Rand3;
-
     void Picky(double *y_cumulative,int NPROB_MAX,double rnd,double& y);
     // secondaries
     static const int NPROB_MAX=100; // this sets the maximum length of the arrays
@@ -156,7 +151,7 @@ namespace icemc{
 
 
     void readData(std::string,std::string,double (*)[NPROB_MAX], double (*)[NPROB_MAX]);
-    void ReadSecondaries(); // read in prob. dist. for secondary interactions
+    void ReadShowerGenerator(); // read in prob. dist. for secondary interactions
 
     //For Tau Weight & Survival probability equations.
     //n.b. not in SI units.
@@ -175,7 +170,7 @@ namespace icemc{
 
 
   public:
-    Secondaries();
+    ShowerGenerator();
 
 
     int SECONDARIES;
@@ -184,20 +179,20 @@ namespace icemc{
     int count_nfb;
     int secondary_e_noncons;
 
-    void GetSecondaries(const Settings *settings1, Neutrino::Flavor ,double, double&, double&, int&, TH1F*);
+    void GetShowerGenerator(const Settings *settings1, Neutrino::Flavor ,double, double&, double&, int&, TH1F*);
 
     void InitTauola();
     // void GetTauDecay(const std::string& nuflavor, const std::string& current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);
-    void GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::Current current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);    
+    void GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::Interaction::Current current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);    
 
     void GetEMFracDB(double& emfrac_db, double& hadfrac_db) const;
     double GetDBViewAngle(const TVector3 &refr, const TVector3 &nnu);
     //void GetFirstBang(const Geoid::Position &r_in, const TVector3 &nnu, Geoid::Position &posnu, double len_int_kgm2, double d1, double &nuentrancelength);
     double NFBWeight(double ptau, double taulength);
 
-    ShowerProperties GetEMFrac(const Settings *settings1,
+    Shower GetEMFrac(const Settings *settings1,
 			       Neutrino::Flavor nuflavor,
-			       Neutrino::Current current,
+			       Neutrino::Interaction::Current current,
 			       // const std::string& nuflavor,
 			       // const std::string& current,
 			       const std::string& taudecay,
@@ -215,7 +210,7 @@ namespace icemc{
 
     std::string flavors[3];
 
-  }; //class Secondaries
+  }; //class ShowerGenerator
 }
 
 #endif

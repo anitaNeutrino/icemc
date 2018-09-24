@@ -37,9 +37,9 @@ icemc::Neutrino icemc::NeutrinoFactory::makeNeutrino() {
 
   n.energy = fSpectra.pickNeutrinoEnergy();
   n.leptonNumber = Neutrino::L::Matter; ///@todo check
-  n.interactionCurrent = fInteraction.pickCurrent();
-  n.crossSection = fConnollyEtAl2011.getSigma(n.energy, n.leptonNumber,  n.interactionCurrent);
-  n.interactionLength = CrossSectionModel::getInteractionLength(n.crossSection);
+  n.interaction.current = fInteraction.pickCurrent();
+  n.interaction.crossSection = fConnollyEtAl2011.getSigma(n.energy, n.leptonNumber,  n.interaction.current);
+  n.interaction.length = CrossSectionModel::getInteractionLength(n.interaction.crossSection);
 
   return n;
   

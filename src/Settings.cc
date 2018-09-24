@@ -11,8 +11,8 @@
 #include "balloon.hh"
 #include "Antarctica.h"
 #include "Spectra.h"
-#include "AskaryanFreqsGenerator.h"
-#include "secondaries.hh"
+#include "AskaryanFactory.h"
+#include "ShowerGenerator.h"
 #include "RayTracer.h"
 #include "ConnollyEtAl2011.h"
 #include "EnvironmentVariable.h"
@@ -85,7 +85,6 @@ icemc::Settings::Settings() : jamieFactor(0), medium(0), askaryanParameterizatio
 icemc::Settings::~Settings() {
 
 }
-
 
 
 
@@ -974,8 +973,8 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
 
   
 
-void icemc::Settings::ApplyInputs(Anita* anita1, Secondaries* sec1,
-				  AskaryanFreqsGenerator* askFreqGen) const {
+void icemc::Settings::ApplyInputs(Anita* anita1, ShowerGenerator* sec1,
+				  AskaryanFactory* askFreqGen) const {
   
    //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas. 
   if (WHICH==Payload::Anita1Simple || WHICH==Payload::Anita1 || WHICH==Payload::Anita2 || WHICH==Payload::Anita3 || WHICH==Payload::Anita4){

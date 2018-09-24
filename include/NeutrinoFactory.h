@@ -3,9 +3,9 @@
 
 #include "Spectra.h"
 #include "ConnollyEtAl2011.h"
+#include "Interaction.h"
 #include "Neutrino.h"
 #include "RNG.h"
-#include "Interaction.h"
 
 namespace icemc {
 

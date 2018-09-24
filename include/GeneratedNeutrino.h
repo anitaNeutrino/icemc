@@ -3,7 +3,7 @@
 
 #include "TObject.h" ///< ClassDef/ClassImp
 #include "AskaryanFreqs.h" ///< For AskaryanFreqs
-#include "secondaries.hh" ///< For AskaryanFreqs
+#include "ShowerGenerator.h" ///< For AskaryanFreqs
 
 namespace icemc {
 
@@ -58,11 +58,11 @@ namespace icemc {
 
   class PassingNeutrino : public GeneratedNeutrino {
   public:    
-    PassingNeutrino(const GeneratedNeutrino& genNu, const AskaryanFreqs& askFreqs, const ShowerProperties& sp);
+    PassingNeutrino(const GeneratedNeutrino& genNu, const AskaryanFreqs& askFreqs, const Shower& sp);
     virtual ~PassingNeutrino();
 
     AskaryanFreqs askaryanFreqs;
-    ShowerProperties showerProps;
+    Shower showerProps;
 
     ClassDef(PassingNeutrino, 1)    
   };

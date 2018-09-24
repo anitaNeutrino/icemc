@@ -36,7 +36,7 @@ icemc::Y::Y(const Settings* s) : fSettings(s){ // Constructor
   std::string sbase="C1_high";
   std::string which;
   for(auto l : {Neutrino::L::Matter, Neutrino::L::AntiMatter}){
-    for(auto c : {Neutrino::Current::Charged, Neutrino::Current::Neutral}){
+    for(auto c : {Neutrino::Interaction::Current::Charged, Neutrino::Interaction::Current::Neutral}){
       std::stringstream name;
       name  << "fC1_high_" << l << "_" <<  c;
       auto lc = std::make_pair(l, c);
@@ -45,22 +45,22 @@ icemc::Y::Y(const Settings* s) : fSettings(s){ // Constructor
   }
 
   // parameter A_0 in Table V for the high y region
-  fC1_high[{Neutrino::L::AntiMatter, Neutrino::Current::Charged}].FixParameter(0,-0.0026);//nubar, CC
-  fC1_high[{Neutrino::L::Matter,     Neutrino::Current::Charged}].FixParameter(0,-0.008); //nu,    CC
-  fC1_high[{Neutrino::L::AntiMatter, Neutrino::Current::Neutral}].FixParameter(0,-0.005); //nubar, NC
-  fC1_high[{Neutrino::L::Matter,     Neutrino::Current::Neutral}].FixParameter(0,-0.005); //nu,    NC
+  fC1_high[{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged}].FixParameter(0,-0.0026);//nubar, CC
+  fC1_high[{Neutrino::L::Matter,     Neutrino::Interaction::Current::Charged}].FixParameter(0,-0.008); //nu,    CC
+  fC1_high[{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral}].FixParameter(0,-0.005); //nubar, NC
+  fC1_high[{Neutrino::L::Matter,     Neutrino::Interaction::Current::Neutral}].FixParameter(0,-0.005); //nu,    NC
 
   // parameter A_1 in Table V for the high y region
-  fC1_high[{Neutrino::L::AntiMatter, Neutrino::Current::Charged}].FixParameter(1,0.085); // nubar, CC
-  fC1_high[{Neutrino::L::Matter,     Neutrino::Current::Charged}].FixParameter(1,0.26); // nu, CC
-  fC1_high[{Neutrino::L::AntiMatter, Neutrino::Current::Neutral}].FixParameter(1,0.23); // nubar, NC
-  fC1_high[{Neutrino::L::Matter,     Neutrino::Current::Neutral}].FixParameter(1,0.23); // nu, NC
+  fC1_high[{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged}].FixParameter(1,0.085); // nubar, CC
+  fC1_high[{Neutrino::L::Matter,     Neutrino::Interaction::Current::Charged}].FixParameter(1,0.26); // nu, CC
+  fC1_high[{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral}].FixParameter(1,0.23); // nubar, NC
+  fC1_high[{Neutrino::L::Matter,     Neutrino::Interaction::Current::Neutral}].FixParameter(1,0.23); // nu, NC
 
   // parameter A_2 in Table V for the high y region
-  fC1_high[{Neutrino::L::AntiMatter, Neutrino::Current::Charged}].FixParameter(2,4.1); // nubar, CC
-  fC1_high[{Neutrino::L::Matter,     Neutrino::Current::Charged}].FixParameter(2,3.0); // nu, CC   
-  fC1_high[{Neutrino::L::AntiMatter, Neutrino::Current::Neutral}].FixParameter(2,3.0); // nubar, NC
-  fC1_high[{Neutrino::L::Matter,     Neutrino::Current::Neutral}].FixParameter(2,3.0); // nu, NC
+  fC1_high[{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged}].FixParameter(2,4.1); // nubar, CC
+  fC1_high[{Neutrino::L::Matter,     Neutrino::Interaction::Current::Charged}].FixParameter(2,3.0); // nu, CC   
+  fC1_high[{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral}].FixParameter(2,3.0); // nubar, NC
+  fC1_high[{Neutrino::L::Matter,     Neutrino::Interaction::Current::Neutral}].FixParameter(2,3.0); // nu, NC
 
   // parameter A_3 in Table V for the high y region.  This parameter is the same for all four interaction types
   for(auto& f : fC1_high){
@@ -99,8 +99,8 @@ icemc::Y::Y(const Settings* s) : fSettings(s){ // Constructor
 
 
 //! Pick an inelasticity y according to the model chosen
-// double icemc::Y::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Current currentint) {
-double icemc::Y::pickY(double pnu,Neutrino::L leptonNumber,Neutrino::Current currentint) {  
+// double icemc::Y::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Interaction::Current currentint) {
+double icemc::Y::pickY(double pnu,Neutrino::L leptonNumber,Neutrino::Interaction::Current currentint) {  
   if(fSettings->YPARAM==0){
     return pickYGandhietal();
   }//old Gety
@@ -127,8 +127,8 @@ double icemc::Y::pickYGandhietal() {
 }
 
 
-// double icemc::Y::pickYConnollyetal2011(int NU, Neutrino::Current CURRENT,double pnu) {
-double icemc::Y::pickYConnollyetal2011(Neutrino::L leptonNumber, Neutrino::Current CURRENT,double pnu) {
+// double icemc::Y::pickYConnollyetal2011(int NU, Neutrino::Interaction::Current CURRENT,double pnu) {
+double icemc::Y::pickYConnollyetal2011(Neutrino::L leptonNumber, Neutrino::Interaction::Current CURRENT,double pnu) {
 
   // Select a y according to recipe in Connolly et al. (2011)
   //pnu is in eV.
@@ -165,8 +165,8 @@ double icemc::Y::pickYConnollyetal2011(Neutrino::L leptonNumber, Neutrino::Curre
 }//pickY
 
 
-// double icemc::Y::Getyweight(double pnu, double y, int nu_nubar, Neutrino::Current currentint){
-double icemc::Y::Getyweight(double pnu, double y, Neutrino::L leptonNumber, Neutrino::Current current){
+// double icemc::Y::Getyweight(double pnu, double y, int nu_nubar, Neutrino::Interaction::Current currentint){
+double icemc::Y::Getyweight(double pnu, double y, Neutrino::L leptonNumber, Neutrino::Interaction::Current current){
 
   // int nu_nubar = leptonNumber == Neutrino::L::Matter ? 0 : 1;
   //from Connolly Calc 2011, Equations 9, 10, 11, 16, and 17.

@@ -1,6 +1,7 @@
 #include "Settings.h"
-#include "CommandLineOpts.h"
+#include "CommandLineOptions.h"
 #include "EventGenerator.h"
+#include "ANITA.h"
 
 int main(int argc,  char **argv) {
 
@@ -12,11 +13,12 @@ int main(int argc,  char **argv) {
   //--------------------------------------------------------------
 
   icemc::Settings settings;
-  icemc::CommandLineOpts clOpts(argc, argv, settings);
+  icemc::CommandLineOptions clOpts(argc, argv, settings);
 
   if(clOpts.are_good){
-    icemc::EventGenerator uhen;
-    uhen.generateNeutrinos(settings, clOpts);
+    icemc::ANITA anita(&settings);
+    icemc::EventGenerator uhen(&anita);
+    uhen.generateNeutrinos(settings);
   }
   
   return 0;

@@ -41,6 +41,7 @@ namespace icemc {
     double pickUniform(double x1=1);
     double pickUniform(double x1, double x2);    
     double pickGaus(double mean=0, double sigma=1);
+    int pickPoisson(double mean);
 
   private:
 

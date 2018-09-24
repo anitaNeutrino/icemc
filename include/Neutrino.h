@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include "Geoid.h"
+
 namespace icemc {
 
   /**
@@ -22,32 +24,48 @@ namespace icemc {
 			     tau = 3
     };
 
-    /**
-     * @class Current
-     * @brief enum for type of interaction
-     */
-    enum class Current : int {
-			      Charged = 0,
-			      Neutral = 1
-    };
 
     /**
      * @class L
      * @brief For lepton number, are we matter (neutrinos) or anti-matter (anti-neutrinos)
      */
 
-    enum class L : int { ///@todo it would make more sense to newcomers if lepton number of 1 was for matter, -1 for anti-matter
+    enum class L : int { ///@todo would it make more sense to newcomers if lepton number of 1 was for matter, -1 for anti-matter?
 			Matter = 0,
 			AntiMatter = 1
     };
 
-    double energy; ///< (eV )electron volts
-    double crossSection; /// @todo units
-    double interactionLength; ///@todo units
+    class Interaction {
+    public:
+
+      /**
+       * @class Current
+       * @brief enum for type of interaction
+       */
+      enum class Current : int {
+				Charged = 0,
+				Neutral = 1
+      };
     
-    Flavor flavor; ///< Neutrino flavor
-    Current interactionCurrent; ///< Interaction current
+      Geoid::Position position;
+      double crossSection;
+      double length;
+      Current current;
+    };
+
+    class Path {
+    public:
+      TVector3 direction;
+      Geoid::Position entry;
+      Geoid::Position exit;
+      double weight;      
+    };
+    
+    double energy; ///< (eV )electron volts
+    Flavor flavor = Flavor::e; ///< Neutrino flavor
     L leptonNumber = L::Matter;
+    Interaction interaction;
+    Path path;
   };
   
 
@@ -76,7 +94,7 @@ std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Flavor& f);
  * 
  * @return the updated output string stream
  */
-std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Current& c);
+std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Interaction::Current& c);
 
 
 /** 

@@ -4,7 +4,7 @@
 #include "TVector3.h"
 #include "Detector.h" // for PropagatingSignal
 #include "Constants.h"
-#include "AskaryanFreqsGenerator.h"// for N_AIR, although I'm going to move it
+#include "AskaryanFactory.h"// for N_AIR, although I'm going to move it
 
 class TCanvas;
 
@@ -31,7 +31,7 @@ namespace icemc {
 
     Seavey(const TVector3& positionV, const TVector3& positionH,
 	   const TVector3& ePlane, const TVector3& hPlane, const TVector3& normal,
-	   const Settings* settings = NULL, double refractiveIndexOfMedium = icemc::AskaryanFreqsGenerator::N_AIR);
+	   const Settings* settings = NULL, double refractiveIndexOfMedium = icemc::AskaryanFactory::N_AIR);
 
     
     void addSignal(const PropagatingSignal& incomingSignal);
@@ -164,7 +164,7 @@ namespace icemc {
     FTPair fVPol;
     FTPair fHPol;
 
-    double fRefractiveIndex = icemc::AskaryanFreqsGenerator::N_AIR; ///< This is the refractive index at the antenna (formerly known as nmedium_receiver)
+    double fRefractiveIndex = icemc::AskaryanFactory::N_AIR; ///< This is the refractive index at the antenna (formerly known as nmedium_receiver)
     bool fDebug = false;
     std::vector<std::pair<double, double> > fPassBandsHz; ///< Passbands frequencies (Hz) pairs go(low, high), filled in constructor if icemc::Settings are passed
   };

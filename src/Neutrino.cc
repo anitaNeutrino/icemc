@@ -1,10 +1,10 @@
 #include "Neutrino.h"
 
-std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Current& c){
+std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Interaction::Current& c){
   switch(c){
-  case icemc::Neutrino::Current::Charged:
+  case icemc::Neutrino::Interaction::Current::Charged:
     return os << "CurrentType::Charged";
-  case icemc::Neutrino::Current::Neutral:
+  case icemc::Neutrino::Interaction::Current::Neutral:
     return os << "CurrentType::Neutral";
   default:
     return os << "Unknown CurrentType!";

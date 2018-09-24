@@ -17,14 +17,14 @@ namespace icemc {
 
   class CrossSectionModel {
   public:
-
-    virtual double getSigma(double energy_eV, Neutrino::L leptonNumber, Neutrino::Current current) const = 0;
+    virtual ~CrossSectionModel(){;}
+    virtual double getSigma(double energy_eV, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) const = 0;
 
     inline static double getInteractionLength(double sigma){
       return constants::M_NUCL/sigma; // kg/m^2
     }
     
-    TCanvas* plotSigma(Neutrino::L l, Neutrino::Current c, int nSamples = 2000) const;
+    TCanvas* plotSigma(Neutrino::L l, Neutrino::Interaction::Current c, int nSamples = 2000) const;
 
     inline bool validEnergy(double energy_eV) const {
       return energy_eV >= fMinEnergy_eV && energy_eV <= fMaxEnergy_eV;
@@ -36,14 +36,19 @@ namespace icemc {
   };
 
 
-  class Reno : public CrossSectionModel {
+
+
+  
+
+  class MHReno : public CrossSectionModel {
   public:
-    Reno(const Settings* settings) : fSettings(settings){
+    MHReno(const Settings* settings) : fSettings(settings){
       fMinEnergy_eV = 1.2E15;
       fMaxEnergy_eV = 1.E21;
     }
+    virtual ~MHReno(){;}
 
-    virtual double getSigma(double energy_eV, Neutrino::L leptonNumber, Neutrino::Current current) const override;
+    virtual double getSigma(double energy_eV, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) const override;
   private:
     const Settings* fSettings;
   };

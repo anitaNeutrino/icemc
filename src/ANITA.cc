@@ -16,12 +16,13 @@
 #include "TFile.h" ///@todo remove after done debugging
 
 
-icemc::ANITA::ANITA(const Settings* settings, const RootOutput* ro)
-  : Balloon(settings), Anita(settings, ro->getOutputDir(), this),
+icemc::ANITA::ANITA(const Settings* settings)
+// icemc::ANITA::ANITA(const Settings* settings, const RootOutput* ro ) 
+  : Balloon(settings), Anita(settings, settings->getOutputDir(), this),
     fSettings(settings),
     fNumRX(settings ? settings->NANTENNAS : 48),
     fVoltsRX(settings ? settings->NANTENNAS : 0),
-    fAnitaOutput(this, settings, ro->getOutputDir(), ro->getRun())
+    fAnitaOutput(this, settings, settings->getOutputDir(), settings->getRun())
 {
   initSeaveys(settings, this);
 }

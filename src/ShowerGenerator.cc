@@ -4,7 +4,7 @@
 #include "TVector3.h"
 #include "Geoid.h"
 #include "ConnollyEtAl2011.h"
-#include "secondaries.hh"
+#include "ShowerGenerator.h"
 #include "Antarctica.h"
 #include "Tools.h"
 #include <sstream>
@@ -42,13 +42,10 @@
 #include "EnvironmentVariable.h"
 #include "Report.h"
 
-ClassImp(icemc::ShowerProperties)
-
-const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
-const std::string ICEMC_SECONDARY_DIR=ICEMC_SRC_DIR+"/secondary/";
+ClassImp(icemc::Shower)
 
 
-icemc::Secondaries::Secondaries() {
+icemc::ShowerGenerator::ShowerGenerator() {
   //For Total Tau Survival probability equation
   //n.b. not in SI units.
   ////from Tau neutrino propagaiton and tau energy loss 2005 Dutta, Huang, & Reno. 
@@ -66,7 +63,7 @@ icemc::Secondaries::Secondaries() {
   
   flavors[0]="nue";
   flavors[1]="numu";
-  flavors[2]="nutau"; // the gps path of the anita-lite flight
+  flavors[2]="nutau";
 
   SECONDARIES=1; // include secondary interactions
   TAUDECAY=1; // include secondary interactions
@@ -74,6 +71,7 @@ icemc::Secondaries::Secondaries() {
 
 
   // reading in tauola data file for tau decays
+  const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
   tauolainfile.open((ICEMC_SRC_DIR+"/data/tau_decay_tauola.dat").c_str(),std::ifstream::in);
   InitTauola();
   
@@ -124,50 +122,62 @@ icemc::Secondaries::Secondaries() {
 
   // Read probability distributions for secondary interactions
 
-  ReadSecondaries();
+  ReadShowerGenerator();
 
 	
 	
-}//Secondaries Constructor
+}//ShowerGenerator Constructor
 
-void icemc::Secondaries::readData(std::string nuflavor,std::string secndryType, double (*y)[NPROB_MAX], double (*dsdy)[NPROB_MAX])
+void icemc::ShowerGenerator::readData(std::string nuflavor, std::string secndryType, double (*y)[NPROB_MAX], double (*dsdy)[NPROB_MAX])
 {
-  
+
+  const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
+  const std::string ICEMC_SECONDARY_DIR=ICEMC_SRC_DIR+"/secondary/";
+
+  // std::string nuflavor;
+  // switch(flavor){
+  // case Neutrino::Flavor::e:
+  //   nuflavor = "";
+  //   break;
+  // case Neutrino::Flavor::mu:
+  //   nuflavor = "muons";
+  //   break;
+  // case Neutrino::Flavor::tau:
+  //   nuflavor = "tauons";
+  //   break;
+  // }
+    
   std::stringstream senergy;
   
-  std::ifstream ifile;
+  std::ifstream in;
   std::string suffix=".vec";
-  if(nuflavor=="tauon")
+  if(nuflavor=="tauon"){
     suffix="_tau.vec";
-  
-  for(int index=0;index<7;index++)
-    {senergy.str("");
-      double energy=18+0.5*index;
-      int precision=(index%2==0)?2:3;
-      senergy << std::setprecision(precision) << energy;
-      std::string path=ICEMC_SECONDARY_DIR+"/"+nuflavor+"/dsdy_"+secndryType+"_1e"+senergy.str()+suffix;
-      //cout << "openning file " << path.c_str() << endl;
-      ifile.open(path.c_str());
-      NPROB=0;
-      while(!ifile.eof())
-	{
-	  ifile >> y[index][NPROB] >> dsdy[index][NPROB];
-	  NPROB++;
-	  if(NPROB>=NPROB_MAX)
-	    {
-	      // cerr << " ERROR in reading in y_muon_brem. \n";
-	      break;
-	    }
-	 
+  }  
+  for(int index=0;index<7;index++){
+    senergy.str("");
+    double energy=18+0.5*index;
+    int precision=(index%2==0)?2:3;
+    senergy << std::setprecision(precision) << energy;
+    std::string path=ICEMC_SECONDARY_DIR+"/"+nuflavor+"/dsdy_"+secndryType+"_1e"+senergy.str()+suffix;
+    //cout << "openning file " << path.c_str() << endl;
+    in.open(path.c_str());
+    NPROB=0;
+    while(!in.eof()){
+      in >> y[index][NPROB] >> dsdy[index][NPROB];
+	NPROB++;
+	if(NPROB>=NPROB_MAX){
+	  // cerr << " ERROR in reading in y_muon_brem. \n";
+	  break;
 	}
-      ifile.close();
     }
-  
+    in.close();
+  }  
 }
 
-void icemc::Secondaries::ReadSecondaries() {
+void icemc::ShowerGenerator::ReadShowerGenerator() {
   // reading in data for secondary interactions
-  
+    
   std::cout<<"Reading in data on secondary interactions.\n";
 
   readData("muons","brems",y_muon_brems,dsdy_muon_brems);
@@ -244,10 +254,10 @@ void icemc::Secondaries::ReadSecondaries() {
   std::cout<<"Finished reading secondary interaction data.\n"; 
   
  
-} //end method ReadSecondaries
+} //end method ReadShowerGenerator
 
 
-void icemc::Secondaries::GetSecondaries(const Settings *settings1, Neutrino::Flavor nuflavor, double plepton, double &em_secondaries_max, double &had_secondaries_max,int &n_interactions, TH1F *hy) {
+void icemc::ShowerGenerator::GetShowerGenerator(const Settings *settings1, Neutrino::Flavor nuflavor, double plepton, double &em_secondaries_max, double &had_secondaries_max,int &n_interactions, TH1F *hy) {
 
   em_secondaries_max=0.;
   had_secondaries_max=0.;
@@ -266,14 +276,12 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, Neutrino::Fla
   // double rnd2=1000.;  // random numbers for throwing at dart board
   double y = 0; // inelasticity
  
-  std::string whichtype; // which type of interaction corresponds to that index
-  
-
+  std::string whichtype; // which type of interaction corresponds to that index  
 
   if (nuflavor==Neutrino::Flavor::mu) {
-    n_brems=gRandom->Poisson(int_muon_brems[i]); // pick number of brem interactions
-    n_epair=gRandom->Poisson(int_muon_epair[i]); // # of pair production
-    n_pn=gRandom->Poisson(int_muon_pn[i]); // # photonuclear interactions   
+    n_brems=pickPoisson(int_muon_brems[i]); // pick number of brem interactions
+    n_epair=pickPoisson(int_muon_epair[i]); // # of pair production
+    n_pn=pickPoisson(int_muon_pn[i]); // # photonuclear interactions   
     
     n_interactions+=(n_brems+n_epair+n_pn);	
 
@@ -317,9 +325,9 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, Neutrino::Fla
     } // loop over secondary interactions
   } // end if it was a muon neutrino
   if (nuflavor==Neutrino::Flavor::tau) {
-    n_brems=gRandom->Poisson(int_tauon_brems[i]);
-    n_epair=gRandom->Poisson(int_tauon_epair[i]);
-    n_pn=gRandom->Poisson(int_tauon_pn[i]);
+    n_brems=pickPoisson(int_tauon_brems[i]);
+    n_epair=pickPoisson(int_tauon_epair[i]);
+    n_pn=pickPoisson(int_tauon_pn[i]);
 
     n_interactions+=(n_brems+n_epair+n_pn); // increment number of secondary interactions.
 
@@ -399,13 +407,13 @@ void icemc::Secondaries::GetSecondaries(const Settings *settings1, Neutrino::Fla
     } //if (TAUDECAY)
   } //if (nutau)
 
-} //GetSecondaries
+} //GetShowerGenerator
 
 
 
-icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
+icemc::Shower icemc::ShowerGenerator::GetEMFrac(const Settings *settings1,
 						      Neutrino::Flavor nuflavor,
-						      Neutrino::Current current,
+						      Neutrino::Interaction::Current current,
 						      // const string& nuflavor,
 						      // const string& current,
 						      const std::string& taudecay,
@@ -419,10 +427,10 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
 						      int taumodes1) {
 
 
-  ShowerProperties sp;
+  Shower sp;
   sp.pnu = pnu;
 
-  if (current==Neutrino::Current::Charged){
+  if (current==Neutrino::Interaction::Current::Charged){
     plepton=(1.-y)*pnu;
   }
   else{
@@ -431,15 +439,15 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
 
 
   const double negligible = 1e-10;
-  if (nuflavor==Neutrino::Flavor::e && current==Neutrino::Current::Charged) {
+  if (nuflavor==Neutrino::Flavor::e && current==Neutrino::Interaction::Current::Charged) {
     sp.emFrac=1.-y;
     sp.hadFrac=y;
   }
-  else if(nuflavor==Neutrino::Flavor::mu && current==Neutrino::Current::Charged) {
+  else if(nuflavor==Neutrino::Flavor::mu && current==Neutrino::Interaction::Current::Charged) {
     sp.emFrac=negligible;
     sp.hadFrac=y;
   }
-  else if(nuflavor==Neutrino::Flavor::tau && current==Neutrino::Current::Charged) {
+  else if(nuflavor==Neutrino::Flavor::tau && current==Neutrino::Interaction::Current::Charged) {
     // behaves like a muon
     if(taumodes1 ==1){//taumodes==1; tau created somewhere in rock and decays at posnu.
       this->GetEMFracDB(sp.emFrac,sp.hadFrac);
@@ -449,7 +457,7 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
       sp.hadFrac=y;
     }
   }
-  else if (current==Neutrino::Current::Neutral) {
+  else if (current==Neutrino::Interaction::Current::Neutral) {
     sp.emFrac=negligible;
     sp.hadFrac=y;
   }
@@ -458,13 +466,13 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
   em_secondaries_max = sp.emFrac; // initialize search for maximum signal among primary, secondary interactions.
   had_secondaries_max = sp.hadFrac;
 
-  if (SECONDARIES==1 && current==Neutrino::Current::Charged) {
+  if (SECONDARIES==1 && current==Neutrino::Interaction::Current::Charged) {
 
     while (1) {
 
       // find how much em and hadronic energies comes from secondary interactions.
       // keep picking until you get a bunch of secondary interactions that conserve energy
-      GetSecondaries(settings1,nuflavor,plepton,em_secondaries_max,had_secondaries_max,sp.nInteractions,hy); 
+      GetShowerGenerator(settings1,nuflavor,plepton,em_secondaries_max,had_secondaries_max,sp.nInteractions,hy); 
 
       if (em_secondaries_max+had_secondaries_max<=plepton*(1.+1.E-5)) // if conserves energy, break.
 	break;
@@ -488,7 +496,7 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
     } //if
   } //if (charged current, secondaries on)
 
-  if (nuflavor==Neutrino::Flavor::mu && current==Neutrino::Current::Charged && sp.nInteractions==0){
+  if (nuflavor==Neutrino::Flavor::mu && current==Neutrino::Interaction::Current::Charged && sp.nInteractions==0){
     icemc::report() << severity::warning << "Look at this one.  inu is " << inu << "\n";
   }  
 
@@ -510,7 +518,7 @@ icemc::ShowerProperties icemc::Secondaries::GetEMFrac(const Settings *settings1,
 //InitTauola()
 //Initializes the tau decay information
 
-void icemc::Secondaries::InitTauola() {
+void icemc::ShowerGenerator::InitTauola() {
   for(int k=0;k<5;k++)
     tauolainfile >> tauola[0][k];
   for(int i=1;i<N_TAUOLA;i++)
@@ -521,9 +529,9 @@ void icemc::Secondaries::InitTauola() {
 }//InitTauola
 
 
-void icemc::Secondaries::GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::Current current, std::string& taudecay, double& emfrac_db, double& hadfrac_db) {
+void icemc::ShowerGenerator::GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::Interaction::Current current, std::string& taudecay, double& emfrac_db, double& hadfrac_db) {
  
-  if (!(nuflavor==Neutrino::Flavor::tau || current==Neutrino::Current::Charged || interestedintaus)){
+  if (!(nuflavor==Neutrino::Flavor::tau || current==Neutrino::Interaction::Current::Charged || interestedintaus)){
     return;
   }
   
@@ -560,7 +568,7 @@ void icemc::Secondaries::GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::Curren
 //GetEMFracDB()
 //Gets the emfrac_db and hadfrac_db for a doublebang
 
-void icemc::Secondaries::GetEMFracDB(double& emfrac_db, double& hadfrac_db) const {
+void icemc::ShowerGenerator::GetEMFracDB(double& emfrac_db, double& hadfrac_db) const {
 
 
   double rnd = gRandom->Rndm();
@@ -576,7 +584,7 @@ void icemc::Secondaries::GetEMFracDB(double& emfrac_db, double& hadfrac_db) cons
 //GetDBViewAngle()
 //Gets the viewangle of the second bang
 
-double icemc::Secondaries::GetDBViewAngle(const TVector3 &refr, const TVector3 &nnu) {
+double icemc::ShowerGenerator::GetDBViewAngle(const TVector3 &refr, const TVector3 &nnu) {
 
   /// @todo FIX CHANGECOORD
   // return ((nnu.ChangeCoord(refr)).Angle(z_axis));
@@ -588,7 +596,7 @@ double icemc::Secondaries::GetDBViewAngle(const TVector3 &refr, const TVector3 &
 //GetFirstBang()
 //Gets the position of the first bang when the interaction point is the tau decay point
 
-//  void icemc::Secondaries::GetFirstBang(const Geoid::Position &r_in, const TVector3 &nnu, Geoid::Position &posnu, double len_int_kgm2, double chord, double &nuentrancelength) {
+//  void icemc::ShowerGenerator::GetFirstBang(const Geoid::Position &r_in, const TVector3 &nnu, Geoid::Position &posnu, double len_int_kgm2, double chord, double &nuentrancelength) {
   
 //   double weightbang;
 //   double junk1;
@@ -623,7 +631,7 @@ double icemc::Secondaries::GetDBViewAngle(const TVector3 &refr, const TVector3 &
 //---------------------------------------------------------
 //NFBWeight()
 //Gets the weight of the tau decay for second bang events
-double icemc::Secondaries::NFBWeight(double ptau, double taulength) {
+double icemc::ShowerGenerator::NFBWeight(double ptau, double taulength) {
   
   double gamma=ptau/constants::MTAU;
   double D=constants::TAUDECAY_TIME*constants::CLIGHT*gamma;
@@ -631,7 +639,7 @@ double icemc::Secondaries::NFBWeight(double ptau, double taulength) {
   return exp(-taulength/D);
 
 }
-void icemc::Secondaries::Picky(double *y_cumulative,int NPROB,double rnd,double& y) {
+void icemc::ShowerGenerator::Picky(double *y_cumulative,int NPROB,double rnd,double& y) {
   for (int i=0;i<NPROB;i++) {
     if (y_cumulative[i]<=rnd && y_cumulative[i+1]>rnd) {
       y=(double)i/(double)NPROB;

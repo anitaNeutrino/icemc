@@ -37,7 +37,8 @@ namespace icemc {
     
     
   public:    
-
+    virtual ~Detector(){};
+    
     double pickEventTime();
     virtual double getStartTime() const = 0;
     virtual double getEndTime() const = 0;

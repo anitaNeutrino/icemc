@@ -21,7 +21,7 @@
 
 
 icemc::ConnollyEtAl2011::ConnollyEtAl2011(const Settings* settings)
-  : fSettings(settings), m_myY(settings)
+  : fSettings(settings), fY(settings)
 {//constructor
 
   // This is for parametrizations in Connolly et al. 2011  
@@ -34,7 +34,7 @@ icemc::ConnollyEtAl2011::ConnollyEtAl2011(const Settings* settings)
   //[1][1]->[nubar][charged current]
   
   //[nu][neutral current]
-  auto nu_nc = std::make_pair(Neutrino::L::Matter, Neutrino::Current::Neutral);
+  auto nu_nc = std::make_pair(Neutrino::L::Matter, Neutrino::Interaction::Current::Neutral);
   c0[nu_nc] = -1.826;
   c1[nu_nc] = -17.31;
   c2[nu_nc] = -6.448; 
@@ -42,7 +42,7 @@ icemc::ConnollyEtAl2011::ConnollyEtAl2011(const Settings* settings)
   c4[nu_nc] = -18.61;
   
   //[nu][charged current]
-  auto nu_cc = std::make_pair(Neutrino::L::Matter, Neutrino::Current::Charged);
+  auto nu_cc = std::make_pair(Neutrino::L::Matter, Neutrino::Interaction::Current::Charged);
   c0[nu_cc] = -1.826;
   c1[nu_cc] = -17.31;
   c2[nu_cc] = -6.406; 
@@ -50,7 +50,7 @@ icemc::ConnollyEtAl2011::ConnollyEtAl2011(const Settings* settings)
   c4[nu_cc] = -17.91;
   
   //[nubar][neutral current]
-  auto nubar_nc = std::make_pair(Neutrino::L::AntiMatter, Neutrino::Current::Neutral);
+  auto nubar_nc = std::make_pair(Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral);
   c0[nubar_nc] = -1.033;
   c1[nubar_nc] = -15.95;
   c2[nubar_nc] = -7.296; 
@@ -58,7 +58,7 @@ icemc::ConnollyEtAl2011::ConnollyEtAl2011(const Settings* settings)
   c4[nubar_nc] = -18.30;
   
   //[nubar][charged current]
-  auto nubar_cc = std::make_pair(Neutrino::L::AntiMatter, Neutrino::Current::Charged);
+  auto nubar_cc = std::make_pair(Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged);
   c0[nubar_cc] = -1.033;
   c1[nubar_cc] = -15.95;
   c2[nubar_cc] = -7.247;
@@ -66,7 +66,7 @@ icemc::ConnollyEtAl2011::ConnollyEtAl2011(const Settings* settings)
   c4[nubar_cc] = -17.72;
   
   for(auto l : {Neutrino::L::Matter, Neutrino::L::AntiMatter}){ 
-    for(auto cc : {Neutrino::Current::Neutral, Neutrino::Current::Charged}){
+    for(auto cc : {Neutrino::Interaction::Current::Neutral, Neutrino::Interaction::Current::Charged}){
       std::stringstream name;
       name << "fSigma_" << l << "_" << cc;
 
@@ -78,7 +78,7 @@ icemc::ConnollyEtAl2011::ConnollyEtAl2011(const Settings* settings)
   }
 
   // again y distributions from Connolly et al. 2011
-  // m_myY = std::unique_ptr<Y>(new icemc::Y());
+  // fY = std::unique_ptr<Y>(new icemc::Y());
   
   //From Table V. Connolly Calc 2011.
   //A_low[4];//same for any [i]nu_nubar and [j]currentint.
@@ -128,17 +128,17 @@ icemc::ConnollyEtAl2011::ConnollyEtAl2011(const Settings* settings)
   
 }
 
-// double icemc::ConnollyEtAl2011::Getyweight(double pnu,double y,int nu_nubar, Neutrino::Current currentint) {
-double icemc::ConnollyEtAl2011::Getyweight(double pnu,double y, Neutrino::L leptonNumber, Neutrino::Current currentint) {  
-  return m_myY.Getyweight(pnu,y,leptonNumber,currentint);
+// double icemc::ConnollyEtAl2011::Getyweight(double pnu,double y,int nu_nubar, Neutrino::Interaction::Current currentint) {
+double icemc::ConnollyEtAl2011::Getyweight(double pnu,double y, Neutrino::L leptonNumber, Neutrino::Interaction::Current currentint) {  
+  return fY.Getyweight(pnu,y,leptonNumber,currentint);
 }
 
 
-double icemc::ConnollyEtAl2011::pickY(double pnu,Neutrino::L leptonNumber,Neutrino::Current currentint) {
-  return m_myY.pickY(pnu,leptonNumber,currentint);
+double icemc::ConnollyEtAl2011::pickY(double pnu,Neutrino::L leptonNumber,Neutrino::Interaction::Current currentint) {
+  return fY.pickY(pnu,leptonNumber,currentint);
 }
-// double icemc::ConnollyEtAl2011::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Current currentint) {
-//   return m_myY->pickY(settings1,pnu,nu_nubar,currentint);
+// double icemc::ConnollyEtAl2011::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Interaction::Current currentint) {
+//   return fY->pickY(settings1,pnu,nu_nubar,currentint);
 // }
 
 
@@ -147,8 +147,8 @@ double icemc::ConnollyEtAl2011::pickY(double pnu,Neutrino::L leptonNumber,Neutri
 
 
 
-// int icemc::ConnollyEtAl2011::GetSigma(double pnu, double& sigma,double &len_int_kgm2, const Settings *settings1, int nu_nubar, Neutrino::Current current){
-double icemc::ConnollyEtAl2011::getSigma(double energy_eV, Neutrino::L leptonNumber, Neutrino::Current current) const {
+// int icemc::ConnollyEtAl2011::GetSigma(double pnu, double& sigma,double &len_int_kgm2, const Settings *settings1, int nu_nubar, Neutrino::Interaction::Current current){
+double icemc::ConnollyEtAl2011::getSigma(double energy_eV, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) const {
   
   // int currentint = static_cast<int>(current);
   // int nu_nubar = leptonNumber == Neutrino::L::Matter ? 0 : 1;

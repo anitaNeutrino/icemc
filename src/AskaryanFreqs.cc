@@ -2,7 +2,7 @@
 #include "Report.h"
 #include "anita.hh"
 #include "TGraph.h"
-#include "secondaries.hh"
+#include "ShowerGenerator.h"
 
 ClassImp(icemc::AskaryanFreqs)
 
@@ -16,7 +16,7 @@ icemc::AskaryanFreqs::AskaryanFreqs()
 
 
 
-icemc::AskaryanFreqs::AskaryanFreqs(int nf, double minFreqHz, double deltaFreqHz, double cherenkovAngleRad, const ShowerProperties* sp, const double* vmmhz_input)
+icemc::AskaryanFreqs::AskaryanFreqs(int nf, double minFreqHz, double deltaFreqHz, double cherenkovAngleRad, const Shower* sp, const double* vmmhz_input)
   : vmmhz(vmmhz_input, vmmhz_input + nf),  fMinFreqHz(minFreqHz < 0 ? 0 : minFreqHz), fDeltaFreqHz(deltaFreqHz), fCherenkovAngleRad(cherenkovAngleRad) 
 {
 

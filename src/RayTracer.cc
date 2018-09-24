@@ -6,7 +6,7 @@
 #include "Settings.h"
 #include "Crust2.h"
 #include "Antarctica.h"
-#include "AskaryanFreqsGenerator.h"
+#include "AskaryanFactory.h"
 #include "TVector3.h"
 #include "Geoid.h"
 #include "anita.hh"
@@ -239,7 +239,7 @@ double icemc::RayTracer::evalPath(const double* params) const {
   const TVector3 surfaceNormal = fWorld->GetSurfaceNormal(surfacePos);
   // const TVector3 surfaceNormal = surfacePos.Unit();
 
-  const TVector3 refractedRfDir = refractiveBoundary(rfDir, surfaceNormal, AskaryanFreqsGenerator::N_AIR, AskaryanFreqsGenerator::NICE, fDebug);
+  const TVector3 refractedRfDir = refractiveBoundary(rfDir, surfaceNormal, AskaryanFactory::N_AIR, AskaryanFactory::NICE, fDebug);
   const double dist = (surfacePos - fInteractionPos).Mag();
 
   const TVector3 endPoint = surfacePos + refractedRfDir*dist;

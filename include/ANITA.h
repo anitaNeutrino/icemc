@@ -20,7 +20,7 @@ namespace icemc {
 
   class ANITA : public Detector, public Balloon, public Anita {
   public:
-    ANITA(const Settings* settings, const RootOutput* ro);
+    ANITA(const Settings* settings); //, const RootOutput* ro);
     virtual ~ANITA();
 
     virtual double getStartTime() const override {return fFirstRealTime;} // currently in balloon

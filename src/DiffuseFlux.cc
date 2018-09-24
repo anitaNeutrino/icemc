@@ -1,17 +1,17 @@
 #include "DiffuseFlux.h"
 #include "LocalCoordinateSystem.h"
-#include "AskaryanFreqsGenerator.h"
+#include "AskaryanFactory.h"
 
 
 TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const Geoid::Position& interaction, const TVector3& rfDir) {
 
   LocalCoordinateSystem lc(interaction, -interaction, rfDir);
 
-  // const double n = AskaryanFreqsGenerator::NICE;
+  // const double n = AskaryanFactory::NICE;
   ///@todo put this somewhere better?
 
   //@todo return WEIGHT!
-  const double theta_cherenkov = AskaryanFreqsGenerator::CHANGLE_ICE;
+  const double theta_cherenkov = AskaryanFactory::CHANGLE_ICE;
   ///@todo add a theta integration!!!  
   const double phi = pickUniform(0, TMath::TwoPi());
 

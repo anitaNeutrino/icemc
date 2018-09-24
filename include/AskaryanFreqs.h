@@ -8,8 +8,8 @@
 
 namespace icemc {
 
-  class AskaryanFreqsGenerator;
-  class ShowerProperties;
+  class AskaryanFactory;
+  class Shower;
 
   /**
    * @class AskaryanFreqs
@@ -23,7 +23,7 @@ namespace icemc {
 
   class AskaryanFreqs {
 
-    friend AskaryanFreqsGenerator; ///< Allow this generating class to manipulate the private members of the AskaryanFreqs class
+    friend AskaryanFactory; ///< Allow this generating class to manipulate the private members of the AskaryanFreqs class
 
   public:
 
@@ -40,7 +40,7 @@ namespace icemc {
      * @param deltaFreqHz change between bins
      * @param vmmhz_input points to the first element of an array of length nf
      */
-    AskaryanFreqs(int nf, double minFreqHz, double deltaFreqHz, double cherenkovAngle, const ShowerProperties* sp, const double* vmmhz_input);
+    AskaryanFreqs(int nf, double minFreqHz, double deltaFreqHz, double cherenkovAngle, const Shower* sp, const double* vmmhz_input);
 
 
 

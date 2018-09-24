@@ -7,7 +7,7 @@
 #include "TH2D.h"
 
 
-TCanvas* icemc::CrossSectionModel::plotSigma(Neutrino::L l, Neutrino::Current c, int nSamples) const {
+TCanvas* icemc::CrossSectionModel::plotSigma(Neutrino::L l, Neutrino::Interaction::Current c, int nSamples) const {
 
   RNG r;
   TH2D* h = new TH2D("hSigma","Cross-section model;log_{10}(Energy)(GeV);log_{10}(#sigma) (units?)", 600, 7., 12., 600, -40., -30.);
@@ -34,7 +34,13 @@ TCanvas* icemc::CrossSectionModel::plotSigma(Neutrino::L l, Neutrino::Current c,
 
 
 
-double icemc::Reno::getSigma(double energy_eV, Neutrino::L leptonNumber, Neutrino::Current current) const {
+
+
+
+
+
+
+double icemc::MHReno::getSigma(double energy_eV, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) const {
 
   if(!validEnergy(energy_eV)){
     icemc::report() << severity::error << "Need a parameterization for this energy region, energy (eV) = "

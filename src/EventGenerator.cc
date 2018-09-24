@@ -22,9 +22,9 @@
 #include "ANITA.h"
 #include "Antarctica.h"
 #include "Spectra.h"
-#include "AskaryanFreqsGenerator.h"
+#include "AskaryanFactory.h"
 #include "AskaryanFreqs.h"
-#include "secondaries.hh"
+#include "ShowerGenerator.h"
 #include "RayTracer.h"
 #include "ConnollyEtAl2011.h"
 #include "Taumodel.hh"
@@ -77,10 +77,13 @@ void icemc::EventGenerator::interrupt_signal_handler(int sig){
  * 
  * @todo properly zero member variables
  */
-icemc::EventGenerator::EventGenerator() : fNeutrinoPath(NULL), interaction1(NULL), fDetector(NULL), fTauPtr(NULL), fGenNu(NULL),  fPassNu(NULL)
+icemc::EventGenerator::EventGenerator(Detector* detector) : fNeutrinoPath(NULL), interaction1(NULL), fDetector(detector), fTauPtr(NULL), fGenNu(NULL),  fPassNu(NULL)
 {
   pnu = pow(10., 20);   //!< energy of neutrinos
   // inu = 0;
+
+  fStartTime = detector->getStartTime();
+  fEndTime = detector->getEndTime();
 
   // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.  
   signal(SIGINT, icemc::EventGenerator::interrupt_signal_handler);
@@ -118,7 +121,7 @@ icemc::EventGenerator::~EventGenerator()
 
 
 
-void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Source::Spectra *nuSpectra, const AskaryanFreqsGenerator *askFreqGen, ConnollyEtAl2011 *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
+void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Source::Spectra *nuSpectra, const AskaryanFactory *askFreqGen, ConnollyEtAl2011 *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
 
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
@@ -786,9 +789,9 @@ int icemc::EventGenerator::GetRayIceSide(const TVector3 &n_exit2rx,  const TVect
 
 
 int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *interaction1, const TVector3 &refr,
-					double deltheta_em,  double deltheta_had, const ShowerProperties& showerProps,
+					double deltheta_em,  double deltheta_had, const Shower& showerProps,
 					double vmmhz1m_max,  double r_fromballoon,  RayTracer *ray1,
-					const AskaryanFreqsGenerator *askFreqGen,  Geoid::Position posnu,  Anita *anita1,
+					const AskaryanFactory *askFreqGen,  Geoid::Position posnu,  Anita *anita1,
 					Balloon *bn1, TVector3 &nnu,  double& costhetanu,  double& theta_threshold) { 
 
   // In the specular (settings1->ROUGHNESS = 0) this function sets the neutrino direction according to a selection routine based on viewing within the Cerenkov cone
@@ -1033,7 +1036,7 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 				       TVector3 &pol, 
 				       const TVector3 &firn_rf, 
 				       double efield, 
-				       // const ShowerProperties& sp,
+				       // const Shower& sp,
 				       double deltheta_em_max, double deltheta_had_max, 
 				       double &t_coeff_pokey, double &t_coeff_slappy,
 				       double &fresnel, double &mag) const {
@@ -1078,14 +1081,14 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 
 
 
-void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, const Geoid::Position &posnu,  const TVector3 &nnu,  const Geoid::Position &r_bn,  double altitude_int,  Neutrino::Flavor nuflavor,  Neutrino::Current current,  double elast_y,  std::ofstream &nu_out) const {
+void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, const Geoid::Position &posnu,  const TVector3 &nnu,  const Geoid::Position &r_bn,  double altitude_int,  Neutrino::Flavor nuflavor,  Neutrino::Interaction::Current current,  double elast_y,  std::ofstream &nu_out) const {
   nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
 }
 
 
 
 
-void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const CommandLineOpts& clOpts){
+void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
 
 #ifdef ICEMC_FEEXCEPT
   feenableexcept(FE_INVALID | FE_DIVBYZERO); 
@@ -1097,9 +1100,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // TRandom3 *Rand3 = new TRandom3(settings1.SEED);//for generating random numbers
   // gRandom=Rand3;
   
-  Secondaries sec1;
+  ShowerGenerator sec1;
   ConnollyEtAl2011* primary1 = new ConnollyEtAl2011(&settings1);
-  AskaryanFreqsGenerator askFreqGen;
+
+  
   // Antarctica* antarctica = new Antarctica(settings1.ICE_MODEL + settings1.NOFZ*10,
   // 					  settings1.CONSTANTICETHICKNESS * 1000 + settings1.CONSTANTCRUST * 100 + settings1.FIXEDELEVATION * 10 + 0,
   // 					  settings1.WEIGHTABSORPTION);
@@ -1109,14 +1113,19 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   Taumodel* taus1 = new Taumodel();
   Screen* panel1 = new Screen(0);  // create new instance of the screen class
 
-  icemc::RootOutput ro(this, &settings1, clOpts.outputdir.c_str(), clOpts.run_no);
+  icemc::RootOutput ro(this, &settings1, settings1.getOutputDir(), settings1.getRun());
 
   if(!fDetector){
-    fDetector = new ANITA(&settings1, &ro);
+    fDetector = new ANITA(&settings1);
   }
+  int n;
+  double dt;
+  fDetector->getDesiredNDt(n, dt);
+  AskaryanFactory askFreqGen(n, dt);
 
+  
   // input parameters
-  settings1.ApplyInputs(fDetector,  &sec1,  &askFreqGen);
+  settings1.ApplyInputs((ANITA*)fDetector,  &sec1,  &askFreqGen);
   askFreqGen.Initialize();
 
   NNU = settings1.NNU;
@@ -1125,9 +1134,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   gRandom->SetSeed(settings1.SEED); // settings seed is now updated with run_no to uniquify it elsewhere
 
   // @todo do this somewhere where it makes sense
-  if (clOpts.trig_thresh!=0){
-    fDetector->powerthreshold[4]=clOpts.trig_thresh;
-  }
+  ///@todo RESTORE THIS!!
+  // if (clOpts.trig_thresh!=0){
+  //   ((ANITA*)fDetector)->powerthreshold[4]=clOpts.trig_thresh;
+  // }
 
   Source::Spectra* nuSpectra = new Source::Spectra(&settings1);
   if(!interaction1){
@@ -1186,28 +1196,28 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   Tools::Zero(eventsfound_nfb_binned, NBINS);
 
   fNeutrinoPath = new NeutrinoPath(); // init here for branch setting
-
+  
 
   // fills arrays according to antenna specs
-  fDetector->GetBeamWidths(&settings1); // this is used if GAINS set to 0
+  ((ANITA*)fDetector)->GetBeamWidths(&settings1); // this is used if GAINS set to 0
   // Antenna measured gain vs. frequency
-  fDetector->ReadGains(); // this is used if GAINS set to 1
-  fDetector->Set_gain_angle(&settings1, askFreqGen.NMEDIUM_RECEIVER);
+  ((ANITA*)fDetector)->ReadGains(); // this is used if GAINS set to 1
+  ((ANITA*)fDetector)->Set_gain_angle(&settings1, askFreqGen.NMEDIUM_RECEIVER);
   if(settings1.WHICH == Payload::Anita1Simple ||
      settings1.WHICH == Payload::Anita1){
-    fDetector->SetDiffraction(); // for the upper ring
+    ((ANITA*)fDetector)->SetDiffraction(); // for the upper ring
   }
 
-  fDetector->saveGainsPlot(clOpts.outputdir+"/gains.eps");
+  ((ANITA*)fDetector)->saveGainsPlot(std::string(settings1.getOutputDir())+"/gains.eps");
   
 
   // sets position of balloon and related quantities
-  fDetector->SetDefaultBalloonPosition();
-  fDetector->SetNoise(&settings1, fDetector, antarctica);
+  ((ANITA*)fDetector)->SetDefaultBalloonPosition();
+  ((ANITA*)fDetector)->SetNoise(&settings1, ((ANITA*)fDetector), antarctica);
 
   // find the maximum distance the interaction could be from the balloon and still be within the horizon.
   // antarctica->GetMAXHORIZON(bn1);
-  antarctica->GetMAXHORIZON(fDetector);  
+  antarctica->GetMAXHORIZON(((ANITA*)fDetector));  
 
   // calculate the volume of ice seen by the balloon for all balloon positions
   // antarctica->CreateHorizons(&settings1, bn1, fDetector->theta_bn, fDetector->phi_bn, fDetector->altitude_bn, icemc::report().foutput);
@@ -1237,7 +1247,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     exit(1);
   }
 
-  nuSpectra->savePlots2(clOpts.outputdir + "/GetG_test1.pdf");
+  nuSpectra->savePlots2(std::string(settings1.getOutputDir()) + "/GetG_test1.pdf");
   //if using energy spectrum
   if (nuSpectra->IsSpectrum()){
     nuSpectra->savePlots("Temp");
@@ -1255,8 +1265,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   /**
    * Main loop over generated neutrinos
    */
-  for (int inu = clOpts.startNu; inu < NNU && !ABORT_EARLY; inu++) {
-    
+  int run = settings1.getRun();
+  for (int inu = settings1.getStartNu(); inu < NNU && !ABORT_EARLY; inu++) {    
     if (NNU >= 100 && ((inu % (NNU / 100)) == 0)){
       std::cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
     }
@@ -1264,18 +1274,19 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
       std::cout << inu << " / " << NNU << "neutrinos" << std::endl;
     }
     
-    eventNumber=(UInt_t)(clOpts.run_no)*NNU+inu;
+    eventNumber=(UInt_t)(run)*NNU+inu;
 
+    RNG::newSeeds(run, eventNumber); // updates all RNG seeds
     gRandom->SetSeed(eventNumber+6e7);
-    RNG::newSeeds(clOpts.run_no, eventNumber); // updates all RNG seeds
 
+    
     ///@todo make a dedicated event time picker class?
     double eventTime = fDetector->pickEventTime();
     fDetector->getPosition(eventTime);
 
-    Geoid::Position interactionPos = antarctica->pickInteractionPosition(fDetector->position());
+    Geoid::Position interactionPos = antarctica->pickInteractionPosition(((ANITA*)fDetector)->position());
 
-    RayTracer rayTracer(antarctica, fDetector->position());
+    RayTracer rayTracer(antarctica, ((ANITA*)fDetector)->position());
     TVector3 rfDirFromInteraction = rayTracer.findPathToDetector(interactionPos);
     if(rfDirFromInteraction.Mag()==0){
       // no solution was found withing the fitter tolerance
@@ -1294,9 +1305,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
     
 
-    // ShowerProperties
+    // Shower
 
-    // auto askaryan = askFreqGen.generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max, const ShowerProperties *sp)
+    // auto askaryan = askFreqGen.generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max, const Shower *sp)
     
     // askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, fDetector->NFREQ, fDetector->freq, fDetector->NOTCH_MIN, fDetector->NOTCH_MAX, &showerProps);
     
@@ -1420,7 +1431,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // taus1->weight_tau_prob=0;
       
     // if (taumodes==1 && interaction1->nuflavor=="nutau" && interaction1->current=="cc"){
-    // if (taumodes==1 && interaction1->nuflavor==Neutrino::Flavor::tau && interaction1->current==Neutrino::Current::Charged){
+    // if (taumodes==1 && interaction1->nuflavor==Neutrino::Flavor::tau && interaction1->current==Neutrino::Interaction::Current::Charged){
     //   tautrigger = 1;///< tau trigger sets the chance to create tau particle
     // }
     // else{
@@ -1547,11 +1558,11 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // sec1.GetTauDecay(interaction1->nuflavor, interaction1->current, taudecay,  emfrac_db,  hadfrac_db);
 
     // // pick elasticity
-    // elast_y = primary1->pickY(&settings1, pnu, 0, Neutrino::Current::Charged);
+    // elast_y = primary1->pickY(&settings1, pnu, 0, Neutrino::Interaction::Current::Charged);
     // if (settings1.CONSTANTY==1) { // if we ask to make y a constant=0.2
     //   elast_y = 0.2;
     //   interaction1->nuflavor = Neutrino::Flavor::e;//"nue";
-    //   interaction1->current = Neutrino::Current::Charged; //"cc";
+    //   interaction1->current = Neutrino::Interaction::Current::Charged; //"cc";
     // }
 
     // if (ro.ytree.GetEntries()<settings1.HIST_MAX_ENTRIES && !settings1.ONLYFINAL && settings1.HIST==1){
@@ -1570,7 +1581,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // 	   * values in the tau case later.
     // 	   * I'll put these in now, but since I didn't write the original code I'm not 100% sure of the author's intent.
     // 	   */
-    // 	  ShowerProperties showerPropsTemp;
+    // 	  Shower showerPropsTemp;
     // 	  showerPropsTemp.emFrac = emfrac_db;
     // 	  showerPropsTemp.hadFrac = hadfrac_db;
     //     err = GetDirection(&settings1, interaction1, rayTracer.nrf_iceside[4], deltheta_em_max, deltheta_had_max, showerPropsTemp, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], &rayTracer, &askFreqGen, interaction1->posnu, fDetector, fDetector, interaction1->nnu, costhetanu, theta_threshold);	  
@@ -1629,9 +1640,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // pi^0's are counted as hadronic.
     // sec1->GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
 
-    // ShowerProperties showerProps = sec1.GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu, tauweighttrigger);
+    // Shower showerProps = sec1.GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu, tauweighttrigger);
 
-    // // for double bangs, surely this should be in Secondaries?
+    // // for double bangs, surely this should be in ShowerGenerator?
     // if(sec1.secondbang && sec1.interestedintaus) {
     //   ptau=(1-elast_y)*pnu;
     //   showerProps.emFrac=emfrac_db;
@@ -1848,7 +1859,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     // // the best case scenario.
     // if(sec1.secondbang && sec1.interestedintaus) {
     //   std::cout << "Need to bring back GetFirstBang before you can simulate taus.\n";
-    //   std::cout << "I removed it because it required Earth and I wanted Secondaries to be a stand-alone class to use in the embedded simulation.\n";
+    //   std::cout << "I removed it because it required Earth and I wanted ShowerGenerator to be a stand-alone class to use in the embedded simulation.\n";
     //   icethickness=interaction1->r_enterice.Distance(interaction1->nuexit);
     //   interaction1->chord_kgm2_bestcase=nuentrancelength*TMath::MinElement(3, icemc::densities);
     // }
@@ -2076,7 +2087,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // //   if (!settings1.ROUGHNESS){
   // //     // don't loop over frequencies if the viewing angle is too far off
   // //     double rtemp = TMath::Min((viewangle-askFreqGen.GetChangle())/(deltheta_em_max), (viewangle-askFreqGen.GetChangle())/(deltheta_had_max));
-  // //     if (rtemp > AskaryanFreqsGenerator::VIEWANGLE_CUT && !settings1.SKIPCUTS) {
+  // //     if (rtemp > AskaryanFactory::VIEWANGLE_CUT && !settings1.SKIPCUTS) {
   // // 	continue;
   // //     }
   // //     // count1->nviewanglecut[whichray]++;
@@ -2629,7 +2640,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
 
 // void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,
 // 					   RayTracer* ray1, Screen* panel1, Antarctica* antarctica,
-// 					   Balloon* bn1, const AskaryanFreqsGenerator* askFreqGen, Anita* anita1, const ShowerProperties& showerProps){
+// 					   Balloon* bn1, const AskaryanFactory* askFreqGen, Anita* anita1, const Shower& showerProps){
   
 //   //(vector) ray1->nsurf_rfexit:  surface normal at RFexit position
 //   //(pos)        ->rfexit[2]:     final iterated position of RF exit

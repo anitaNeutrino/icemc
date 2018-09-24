@@ -1,7 +1,7 @@
 #include "NeutrinoPath.h"
 #include "WorldModel.h"
 #include "LocalCoordinateSystem.h"
-#include "AskaryanFreqsGenerator.h"
+#include "AskaryanFactory.h"
 #include "Crust2.h"
 
 // ClassImp(icemc::NeutrinoPath);
@@ -17,22 +17,7 @@ icemc::NeutrinoPath::NeutrinoPath(const Geoid::Position& interaction, const TVec
 
 {
   
-  reset();
-
-  LocalCoordinateSystem lc(interaction, -interaction, rfDir);
-
-  // const double n = AskaryanFreqsGenerator::NICE;
-  ///@todo put this somewhere better?
-  
-  const double theta_cherenkov = AskaryanFreqsGenerator::CHANGLE_ICE;
-  ///@todo add a theta integration!!!
-  ///@todo make integrator / random number generator
-  const double phi = gRandom->Uniform(0, TMath::TwoPi());
-  fNeutrinoDir.SetMagThetaPhi(1.0, theta_cherenkov, phi);
-
-  fNeutrinoDir = lc.localTranslationToGlobal(fNeutrinoDir);
-  
-  fColumnDensity = ((icemc::Crust2*)fW)->integratePath(fInteractionPos, fNeutrinoDir);
+  // fColumnDensity = ((icemc::Crust2*)fW)->integratePath(fInteractionPos, fNeutrinoDir);
 }
 
 

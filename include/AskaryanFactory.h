@@ -1,56 +1,39 @@
-#ifndef ASKARYAN_FREQS_GENERATOR_H
-#define ASKARYAN_FREQS_GENERATOR_H
+#ifndef ASKARYAN_FACTORY_H
+#define ASKARYAN_FACTORY_H
 
 #include <cmath>
 #include <iostream>
 #include "AskaryanFreqs.h"
-#include "secondaries.hh"
+#include "ShowerGenerator.h"
 #include "Report.h"
-
+#include "FTPair.h"
 
 namespace icemc {
 
-  class ShowerProperties;
+  class Shower;
   
   /**
-   * @class AskaryanFreqsGenerator
+   * @class AskaryanFactory
    * @brief Generate Askaryan radiation from a neutrino of a given energy in a given medium.
    * 
    * In theory one should set the medium and give it an energy and generate a set of frequencies.
    */
-  class AskaryanFreqsGenerator {
-
+  class AskaryanFactory {
   public:
-    // double vmmhz1m_max; // V/m/MHz at 1m
-    double X0MEDIUM;                  // radiation length of medium
-    double KELVINS;                   // temperature of medium + system
-    double N_DEPTH;                   // index of refraction at the interaction depth
-    double RHO_DEPTH;                 // density at the interaction depth
-    double X0_DEPTH;                  // density at the interaction depth
-    double NMEDIUM_RECEIVER;          // index of refraction at receiver
-    double RHOMEDIUM;                 // density of medium
 
-    static const double RHOICE;       // density of ice (kg/m**3)
-    static const double RHOAIR;       // density of air (kg/m**3)
-    static const double RHOH20;       // density of water (kg/m**3) 
-    static const double N_AIR;        // index of refr for air
-    static const double NICE;         // index of refraction of ice
-    static const double NSALT;        // index of refraction of salt
-    static const double CHANGLE_ICE;  // cherenkov angle in ice
-    static const double VIEWANGLE_CUT;
-
-    AskaryanFreqsGenerator(); ///< Default constructor
+    // AskaryanFactory(); ///< Default constructor
+    AskaryanFactory(int n, double dt); ///< Default constructor
 
     void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had,
 		    double emfrac, double hadfrac, double& vmmhz1m, double& vmmhz_em) const;
 
     void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had,
-		    const ShowerProperties& sp, double& vmmhz1m, double& vmmhz_em) const {
+		    const Shower& sp, double& vmmhz1m, double& vmmhz_em) const {
       TaperVmMHz(viewangle, deltheta_em, deltheta_had, sp.emFrac, sp.hadFrac, vmmhz1m, vmmhz_em);
     }
 
     ///@todo make this more elegent once you understand it better, (move to AskaryanFreqs class and maybe put the loop over k inside the function)
-    void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had, const ShowerProperties& sp, AskaryanFreqs& radioSignal, int k) const {
+    void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had, const Shower& sp, AskaryanFreqs& radioSignal, int k) const {
       double dummyVariable;
       TaperVmMHz(viewangle,  deltheta_em, deltheta_had,  sp, radioSignal.vmmhz[k], dummyVariable);
     }
@@ -58,14 +41,15 @@ namespace icemc {
     void GetSpread(double pnu, double emfrac, double hadfrac, double freq,
 		   double& deltheta_em_max, double& deltheta_had_max) const;
 
-    void GetSpread(double pnu, const ShowerProperties& sp, double freq,
+    void GetSpread(double pnu, const Shower& sp, double freq,
 		   double& deltheta_em_max, double& deltheta_had_max) const {
       GetSpread(pnu, sp.emFrac,  sp.hadFrac, freq, deltheta_em_max, deltheta_had_max);
     }
     
     
     double GetVmMHz1m(double pnu, double freq) const;
-    AskaryanFreqs generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max, const ShowerProperties* sp) const;
+    AskaryanFreqs generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max, const Shower* sp) const;
+    // FTPair generate(double pnu, int numFreqs, const double *freq_Hz, const Shower* sp) const;
 
     void GetVmMHz(double vmmhz_max, double vmmhz1m_max, double pnu, const double *freq,
 		  double notch_min,double notch_max, double *vmmhz, int nfreq) const;
@@ -164,9 +148,30 @@ namespace icemc {
 
 
 
+    // double vmmhz1m_max; // V/m/MHz at 1m
+    double X0MEDIUM;                  // radiation length of medium
+    double KELVINS;                   // temperature of medium + system
+    double N_DEPTH;                   // index of refraction at the interaction depth
+    double RHO_DEPTH;                 // density at the interaction depth
+    double X0_DEPTH;                  // density at the interaction depth
+    double NMEDIUM_RECEIVER;          // index of refraction at receiver
+    double RHOMEDIUM;                 // density of medium
+
+    static const double RHOICE;       // density of ice (kg/m**3)
+    static const double RHOAIR;       // density of air (kg/m**3)
+    static const double RHOH20;       // density of water (kg/m**3) 
+    static const double N_AIR;        // index of refr for air
+    static const double NICE;         // index of refraction of ice
+    static const double NSALT;        // index of refraction of salt
+    static const double CHANGLE_ICE;  // cherenkov angle in ice
+    static const double VIEWANGLE_CUT;
+
 
 
   protected:
+    const int fNumFreqs;
+    const double fDeltaF_Hz;    
+    
     // properties of ice
     double x0ice; 
     double ecice;                     // critical energy in ice (MeV)

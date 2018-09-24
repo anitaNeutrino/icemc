@@ -12,6 +12,7 @@
 #include <TObject.h>
 #include "balloon.hh"
 #include <map>
+#include "CommandLineOptions.h"
 
 // from RVersion.h
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
@@ -42,8 +43,8 @@ namespace icemc{
      Satellite    = 11
   };
   
-  class Secondaries;
-  class AskaryanFreqsGenerator;
+  class ShowerGenerator;
+  class AskaryanFactory;
   class Balloon;
   class RayTracer;
 
@@ -54,12 +55,12 @@ namespace icemc{
 
   class Settings : public TObject {
 
-    /* protected:  */
+    friend class CommandLineOptions;
 
-  public:
+  public:    
 
     Settings();
-    ~Settings(); 
+    ~Settings();
     void Initialize();
     void printAllKeyValuePairStrings() const;
 
@@ -74,10 +75,14 @@ namespace icemc{
     void getSetting(const char* key, std::vector<std::string>& valueArray) const;
 
     void ReadInputs(const char* fileName , std::ofstream &foutput);//,
-		    // Anita* anita1, Secondaries* sec1, AskaryanFreqsGenerator* askFreqGen, Balloon* bn1, Ray* ray1,
+		    // Anita* anita1, ShowerGenerator* sec1, AskaryanFactory* askFreqGen, Balloon* bn1, Ray* ray1,
 		    // int& NNU, double& RANDOMISEPOL);
 
-    void ApplyInputs(Anita* anita1, Secondaries* sec1, AskaryanFreqsGenerator* askFreqGen) const;
+    void ApplyInputs(Anita* anita1, ShowerGenerator* sec1, AskaryanFactory* askFreqGen) const;
+
+    const char* getOutputDir() const {return fOutputDir.c_str();}
+    int getRun() const {return fRun;}
+    int getStartNu() const {return fStartNu;}
 
     int NNU; ///< The number of neutrinos
     double RANDOMISEPOL; ///< Randomize the polarity?
@@ -317,7 +322,9 @@ namespace icemc{
     std::vector<int> channelAllowedPol;
 
     TString wholeSettingsFile;
-
+    std::string fOutputDir;
+    int fRun;
+    int fStartNu;
   };
 }
 
