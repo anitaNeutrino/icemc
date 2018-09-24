@@ -1280,8 +1280,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
     gRandom->SetSeed(eventNumber+6e7);
 
     
-    ///@todo make a dedicated event time picker class?
-    double eventTime = fDetector->pickEventTime();
+    double eventTime = pickUniform(fStartTime, fEndTime);
     fDetector->getPosition(eventTime);
 
     Geoid::Position interactionPos = antarctica->pickInteractionPosition(((ANITA*)fDetector)->position());
