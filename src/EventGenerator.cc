@@ -1100,7 +1100,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
   // TRandom3 *Rand3 = new TRandom3(settings1.SEED);//for generating random numbers
   // gRandom=Rand3;
   
-  ShowerGenerator sec1;
+  ShowerGenerator sec1(&settings1);
   ConnollyEtAl2011* primary1 = new ConnollyEtAl2011(&settings1);
 
   
@@ -1302,6 +1302,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
     // make a neutrino, we've picked energy, flavor, interaction current, 
     Neutrino nu = nuFactory.makeNeutrino();
 
+    // shower generator ->
+    // askaryan generator ->
+    // 
+
+
+    // finalize the interaction position
     
 
     // Shower

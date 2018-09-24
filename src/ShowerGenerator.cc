@@ -1,7 +1,4 @@
-#include "TVector3.h"
-#include "TRandom3.h"
 #include "Settings.h"
-#include "TVector3.h"
 #include "Geoid.h"
 #include "ConnollyEtAl2011.h"
 #include "ShowerGenerator.h"
@@ -12,40 +9,13 @@
 #include <fstream>
 #include <cmath>
 
-#include "TH1F.h"
-#include "Constants.h"
-#include "TTreeIndex.h"
-#include "TChain.h"
-#include "TF1.h"
-#include "TF2.h"
-#include "TFile.h"
-#include "TRandom.h"
-#include "TRandom2.h"
-#include "TRandom3.h" 
-#include "TTree.h"
-#include "TLegend.h"
-#include "TLine.h"
-#include "TROOT.h"
-#include "TPostScript.h"
-#include "TCanvas.h"
-#include "TH2F.h"
-#include "TText.h"
-#include "TProfile.h"
-#include "TGraphErrors.h"
-#include "TStyle.h"
-#include "TMath.h"
-#include <unistd.h>
-#include "TVector3.h"
-#include "TRotation.h"
-#include "TSpline.h"
-
 #include "EnvironmentVariable.h"
 #include "Report.h"
 
 ClassImp(icemc::Shower)
 
 
-icemc::ShowerGenerator::ShowerGenerator() {
+icemc::ShowerGenerator::ShowerGenerator(const Settings* settings) : fSettings(settings) {
   //For Total Tau Survival probability equation
   //n.b. not in SI units.
   ////from Tau neutrino propagaiton and tau energy loss 2005 Dutta, Huang, & Reno. 
@@ -61,9 +31,6 @@ icemc::ShowerGenerator::ShowerGenerator() {
   A=1.;              //| none    |constant that sets the total probability to unity
   //these last two constanst from Connolly Calc 2011, used in d_dzPsurvNu().
   
-  flavors[0]="nue";
-  flavors[1]="numu";
-  flavors[2]="nutau";
 
   SECONDARIES=1; // include secondary interactions
   TAUDECAY=1; // include secondary interactions
@@ -225,9 +192,9 @@ void icemc::ShowerGenerator::ReadShowerGenerator() {
     min_tauon_edecay=Tools::dMinNotZero(dsdy_tauon_edecay[j],NPROB_MAX);
     min_tauon_mudecay=Tools::dMinNotZero(dsdy_tauon_mudecay[j],NPROB_MAX);
      
-    if (min_muon_brems<=0)
+    if (min_muon_brems<=0){
       std::cout << "Minimum probability is <=0!\n";
-    
+    }    
     std::partial_sum(dsdy_muon_brems[j],dsdy_muon_brems[j]+NPROB_MAX,y_cumulative_muon_brems[j]);
     std::partial_sum(dsdy_muon_epair[j],dsdy_muon_epair[j]+NPROB_MAX,y_cumulative_muon_epair[j]);
     std::partial_sum(dsdy_muon_pn[j],dsdy_muon_pn[j]+NPROB_MAX,y_cumulative_muon_pn[j]);
@@ -257,7 +224,7 @@ void icemc::ShowerGenerator::ReadShowerGenerator() {
 } //end method ReadShowerGenerator
 
 
-void icemc::ShowerGenerator::GetShowerGenerator(const Settings *settings1, Neutrino::Flavor nuflavor, double plepton, double &em_secondaries_max, double &had_secondaries_max,int &n_interactions, TH1F *hy) {
+void icemc::ShowerGenerator::generate(Neutrino::Flavor nuflavor, double plepton, double &em_secondaries_max, double &had_secondaries_max,int &n_interactions, TH1F *hy) {
 
   em_secondaries_max=0.;
   had_secondaries_max=0.;
@@ -287,7 +254,7 @@ void icemc::ShowerGenerator::GetShowerGenerator(const Settings *settings1, Neutr
 
 
     for (int j=0;j<n_brems+n_epair+n_pn;j++) {
-      rnd1=gRandom->Rndm();
+      rnd1=pickUniform();
       if (rnd1<=(double)n_brems/(double)(n_brems+n_epair+n_pn))
 	whichtype="brems";
       else if (rnd1<=(double)(n_brems+n_epair)/(double)(n_brems+n_epair+n_pn))
@@ -300,15 +267,15 @@ void icemc::ShowerGenerator::GetShowerGenerator(const Settings *settings1, Neutr
       // index_y=0;
 
       if (whichtype=="brems") {	
-	rnd1=gRandom->Rndm();
+	rnd1=pickUniform();
 	Picky(y_cumulative_muon_brems[i],NPROB,rnd1,y);
       }
       else if (whichtype=="epair") {	
-	rnd1=gRandom->Rndm();
+	rnd1=pickUniform();
 	Picky(y_cumulative_muon_epair[i],NPROB,rnd1,y);	
       }
       else if (whichtype=="pn") {
-	rnd1=gRandom->Rndm();
+	rnd1=pickUniform();
 	Picky(y_cumulative_muon_pn[i],NPROB,rnd1,y);
       }
      
@@ -333,7 +300,7 @@ void icemc::ShowerGenerator::GetShowerGenerator(const Settings *settings1, Neutr
 
     for (int j=0;j<n_brems+n_epair+n_pn;j++) { // loop over secondary interactions. 
       
-      rnd1=gRandom->Rndm();
+      rnd1=pickUniform();
       if (rnd1<=(double)n_brems/(double)(n_brems+n_epair+n_pn))
 	whichtype="brems";
       else if (rnd1<=(double)(n_brems+n_epair)/(double)(n_brems+n_epair+n_pn))
@@ -346,20 +313,22 @@ void icemc::ShowerGenerator::GetShowerGenerator(const Settings *settings1, Neutr
       // index_y=0;
 
       if (whichtype=="brems") {  // bremstrahlung interaction
-	rnd1=gRandom->Rndm();
+	rnd1=pickUniform();
 	Picky(y_cumulative_tauon_brems[i],NPROB,rnd1,y);
       }
       if (whichtype=="epair") { // pair production
-	rnd1=gRandom->Rndm();
+	rnd1=pickUniform();
 	Picky(y_cumulative_tauon_epair[i],NPROB,rnd1,y);
       }
       if (whichtype=="pn") {
-	rnd1=gRandom->Rndm();
+	rnd1=pickUniform();
 	Picky(y_cumulative_tauon_pn[i],NPROB,rnd1,y);
       }
 
-      if (settings1->HIST==1 && !settings1->ONLYFINAL && hy->GetEntries()<settings1->HIST_MAX_ENTRIES)
+      if (fSettings->HIST==1 && !fSettings->ONLYFINAL && hy->GetEntries()<fSettings->HIST_MAX_ENTRIES){
 	hy->Fill(y);
+      }
+
       if (y*plepton>std::max(em_secondaries_max,had_secondaries_max)) { // if this is the biggest secondary signal yet,
 	if (whichtype=="brems" || whichtype=="epair") // save it.
 	  em_secondaries_max=y*plepton;
@@ -372,7 +341,7 @@ void icemc::ShowerGenerator::GetShowerGenerator(const Settings *settings1, Neutr
     if (TAUDECAY) {
       n_interactions++; // increment number of interactions, for plotting.
 
-      rnd1=gRandom->Rndm();
+      rnd1=pickUniform();
       if (rnd1<0.65011)  // pick which type of decay it is.
 	whichtype="hadrdecay";
       if (rnd1>=0.65011 && rnd1<0.8219)
@@ -385,15 +354,15 @@ void icemc::ShowerGenerator::GetShowerGenerator(const Settings *settings1, Neutr
       // index_y=0;     
       
       if (whichtype=="hadrdecay") { // hadronic decay
-	rnd1=gRandom->Rndm();
+	rnd1=pickUniform();
 	Picky(y_cumulative_tauon_hadrdecay[i],NPROB,rnd1,y);	
       }
       else if (whichtype=="edecay") { // e decay	
-	rnd1=gRandom->Rndm();
+	rnd1=pickUniform();
 	Picky(y_cumulative_tauon_edecay[i],NPROB,rnd1,y);
       }
       else if (whichtype=="mudecay") { // mu decay
-	rnd1=gRandom->Rndm();
+	rnd1=pickUniform();
 	Picky(y_cumulative_tauon_mudecay[i],NPROB,rnd1,y);
       }
       
@@ -411,24 +380,23 @@ void icemc::ShowerGenerator::GetShowerGenerator(const Settings *settings1, Neutr
 
 
 
-icemc::Shower icemc::ShowerGenerator::GetEMFrac(const Settings *settings1,
-						      Neutrino::Flavor nuflavor,
-						      Neutrino::Interaction::Current current,
-						      // const string& nuflavor,
-						      // const string& current,
-						      const std::string& taudecay,
-						      double y,
-						      TH1F *hy,
-						      double pnu,
-						      int inu,
-						      // double& emfrac,
-						      // double& hadfrac,
-						      // int& n_interactions,
-						      int taumodes1) {
+icemc::Shower icemc::ShowerGenerator::GetEMFrac(Neutrino::Flavor nuflavor,
+						Neutrino::Interaction::Current current,
+						// const string& nuflavor,
+						// const string& current,
+						const std::string& taudecay,
+						double y,
+						TH1F *hy,
+						double pnu,
+						int inu,
+						// double& emfrac,
+						// double& hadfrac,
+						// int& n_interactions,
+						int taumodes1) {
 
 
-  Shower sp;
-  sp.pnu = pnu;
+  Shower s;
+  s.pnu = pnu;
 
   if (current==Neutrino::Interaction::Current::Charged){
     plepton=(1.-y)*pnu;
@@ -440,31 +408,31 @@ icemc::Shower icemc::ShowerGenerator::GetEMFrac(const Settings *settings1,
 
   const double negligible = 1e-10;
   if (nuflavor==Neutrino::Flavor::e && current==Neutrino::Interaction::Current::Charged) {
-    sp.emFrac=1.-y;
-    sp.hadFrac=y;
+    s.emFrac=1.-y;
+    s.hadFrac=y;
   }
   else if(nuflavor==Neutrino::Flavor::mu && current==Neutrino::Interaction::Current::Charged) {
-    sp.emFrac=negligible;
-    sp.hadFrac=y;
+    s.emFrac=negligible;
+    s.hadFrac=y;
   }
   else if(nuflavor==Neutrino::Flavor::tau && current==Neutrino::Interaction::Current::Charged) {
     // behaves like a muon
     if(taumodes1 ==1){//taumodes==1; tau created somewhere in rock and decays at posnu.
-      this->GetEMFracDB(sp.emFrac,sp.hadFrac);
+      this->pickEMFracDB(s.emFrac,s.hadFrac);
     }
     else if (taumodes1 == 0){
-      sp.emFrac=negligible;
-      sp.hadFrac=y;
+      s.emFrac=negligible;
+      s.hadFrac=y;
     }
   }
   else if (current==Neutrino::Interaction::Current::Neutral) {
-    sp.emFrac=negligible;
-    sp.hadFrac=y;
+    s.emFrac=negligible;
+    s.hadFrac=y;
   }
 
 
-  em_secondaries_max = sp.emFrac; // initialize search for maximum signal among primary, secondary interactions.
-  had_secondaries_max = sp.hadFrac;
+  em_secondaries_max = s.emFrac; // initialize search for maximum signal among primary, secondary interactions.
+  had_secondaries_max = s.hadFrac;
 
   if (SECONDARIES==1 && current==Neutrino::Interaction::Current::Charged) {
 
@@ -472,31 +440,31 @@ icemc::Shower icemc::ShowerGenerator::GetEMFrac(const Settings *settings1,
 
       // find how much em and hadronic energies comes from secondary interactions.
       // keep picking until you get a bunch of secondary interactions that conserve energy
-      GetShowerGenerator(settings1,nuflavor,plepton,em_secondaries_max,had_secondaries_max,sp.nInteractions,hy); 
+      generate(nuflavor,plepton,em_secondaries_max,had_secondaries_max,s.nInteractions,hy); 
 
       if (em_secondaries_max+had_secondaries_max<=plepton*(1.+1.E-5)) // if conserves energy, break.
 	break;
       else {
 	secondary_e_noncons++; //Record how many times we come up with something that doesn't conserve energy
-	em_secondaries_max=sp.emFrac;
-	had_secondaries_max=sp.hadFrac;
+	em_secondaries_max=s.emFrac;
+	had_secondaries_max=s.hadFrac;
       } //else
     } //while(1)
 
-    if ((em_secondaries_max+had_secondaries_max)>(sp.sumFrac())*pnu) { // if maximum signal from secondaries is larger than
+    if ((em_secondaries_max+had_secondaries_max)>(s.sumFrac())*pnu) { // if maximum signal from secondaries is larger than
                                                                          // signal from primary interaction
-      sp.emFrac=em_secondaries_max/pnu; // then use that one.
-      sp.hadFrac=had_secondaries_max/pnu;
-      if (sp.emFrac <= negligible){
-	sp.emFrac=negligible;
+      s.emFrac=em_secondaries_max/pnu; // then use that one.
+      s.hadFrac=had_secondaries_max/pnu;
+      if (s.emFrac <= negligible){
+	s.emFrac=negligible;
       }
-      if (sp.hadFrac<= negligible){
-	sp.hadFrac=negligible;
+      if (s.hadFrac<= negligible){
+	s.hadFrac=negligible;
       }
     } //if
   } //if (charged current, secondaries on)
 
-  if (nuflavor==Neutrino::Flavor::mu && current==Neutrino::Interaction::Current::Charged && sp.nInteractions==0){
+  if (nuflavor==Neutrino::Flavor::mu && current==Neutrino::Interaction::Current::Charged && s.nInteractions==0){
     icemc::report() << severity::warning << "Look at this one.  inu is " << inu << "\n";
   }  
 
@@ -504,12 +472,12 @@ icemc::Shower icemc::ShowerGenerator::GetEMFrac(const Settings *settings1,
     icemc::report() << severity::error <<  "Illegal value of y, y =" << y << "\n";
   }
   
-  if (sp.sumFrac()>1.00001) {
-    icemc::report() << severity::error << "emFrac,hadfrac=" << sp.emFrac << "," << sp.hadFrac << ": sum = " << sp.sumFrac() << "\n";
+  if (s.sumFrac()>1.00001) {
+    icemc::report() << severity::error << "emFrac,hadfrac=" << s.emFrac << "," << s.hadFrac << ": sum = " << s.sumFrac() << "\n";
     icemc::report() << "nuflavor,taudecay=" << nuflavor << " " << taudecay << "\n";
   }
   
-  return sp;
+  return s;
 
 } //GetEMFrac
 
@@ -537,7 +505,7 @@ void icemc::ShowerGenerator::GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::In
   
   // if nu_tau choose tau decay type
   
-  double rnd = gRandom->Rndm();
+  double rnd = pickUniform();
   int decay = static_cast<int>(rnd*(N_TAUOLA-2)+1);
   
   hadfrac_db=tauola[decay][3];
@@ -553,7 +521,7 @@ void icemc::ShowerGenerator::GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::In
     secondbang=false; //for all muon decays, the interaction point chosen is the neutrino interaction since we don't detect the decay if
   //the tau decays into a muon.
   else {
-    double rnd=gRandom->Rndm();
+    double rnd=pickUniform();
     if(rnd>TAUFRAC) {
       secondbang=true;
       count_nfb++;
@@ -568,10 +536,10 @@ void icemc::ShowerGenerator::GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::In
 //GetEMFracDB()
 //Gets the emfrac_db and hadfrac_db for a doublebang
 
-void icemc::ShowerGenerator::GetEMFracDB(double& emfrac_db, double& hadfrac_db) const {
+void icemc::ShowerGenerator::pickEMFracDB(double& emfrac_db, double& hadfrac_db) {
 
 
-  double rnd = gRandom->Rndm();
+  double rnd = pickUniform();
   int decay = static_cast<int>(rnd*(N_TAUOLA-2)+1);
 
   hadfrac_db=tauola[decay][3];
@@ -611,11 +579,11 @@ double icemc::ShowerGenerator::GetDBViewAngle(const TVector3 &refr, const TVecto
 // 		  junk1,weightbang,junk2,myair,junk3,junk4,junk5,junk6);
 //   double r1,r2;
 //   if(weightbang>.999)
-//     r2=gRandom->Rndm()*chord;
+//     r2=pickUniform()*chord;
 //   else {
 //     do {
-//       r1=gRandom->Rndm();
-//       r2=gRandom->Rndm()*chord;
+//       r1=pickUniform();
+//       r2=pickUniform()*chord;
 //       r_out = r_in + r2*nnu;
 //       antarctica->Getchord(len_int_kgm2,r_in,r_out,
 // 		      junk1,weightbang,junk2,myair,junk3,junk4,junk5,junk6);

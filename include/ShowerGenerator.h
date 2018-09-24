@@ -51,6 +51,8 @@ namespace icemc{
   class ShowerGenerator : public RNG {
 
   private:
+    const Settings* fSettings;
+
     void Picky(double *y_cumulative,int NPROB_MAX,double rnd,double& y);
     // secondaries
     static const int NPROB_MAX=100; // this sets the maximum length of the arrays
@@ -170,7 +172,7 @@ namespace icemc{
 
 
   public:
-    ShowerGenerator();
+    ShowerGenerator(const Settings* settings);
 
 
     int SECONDARIES;
@@ -179,36 +181,33 @@ namespace icemc{
     int count_nfb;
     int secondary_e_noncons;
 
-    void GetShowerGenerator(const Settings *settings1, Neutrino::Flavor ,double, double&, double&, int&, TH1F*);
+    void generate(Neutrino::Flavor ,double, double&, double&, int&, TH1F*);
 
     void InitTauola();
     // void GetTauDecay(const std::string& nuflavor, const std::string& current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);
     void GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::Interaction::Current current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);    
 
-    void GetEMFracDB(double& emfrac_db, double& hadfrac_db) const;
+    void pickEMFracDB(double& emfrac_db, double& hadfrac_db);
     double GetDBViewAngle(const TVector3 &refr, const TVector3 &nnu);
     //void GetFirstBang(const Geoid::Position &r_in, const TVector3 &nnu, Geoid::Position &posnu, double len_int_kgm2, double d1, double &nuentrancelength);
     double NFBWeight(double ptau, double taulength);
 
-    Shower GetEMFrac(const Settings *settings1,
-			       Neutrino::Flavor nuflavor,
-			       Neutrino::Interaction::Current current,
-			       // const std::string& nuflavor,
-			       // const std::string& current,
-			       const std::string& taudecay,
-			       double y,
-			       TH1F *hy,
-			       double pnu,
-			       int inu,			       
-			       // double& emfrac,
-			       // double& hadfrac,
-			       // int& n_interactions,
-			       int taumodes1);
+    Shower GetEMFrac(Neutrino::Flavor nuflavor,
+		     Neutrino::Interaction::Current current,
+		     // const std::string& nuflavor,
+		     // const std::string& current,
+		     const std::string& taudecay,
+		     double y,
+		     TH1F *hy,
+		     double pnu,
+		     int inu,			       
+		     // double& emfrac,
+		     // double& hadfrac,
+		     // int& n_interactions,
+		     int taumodes1);
 
     bool secondbang;
     static const bool interestedintaus=false;
-
-    std::string flavors[3];
 
   }; //class ShowerGenerator
 }
