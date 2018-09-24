@@ -23,7 +23,7 @@ namespace ROOT {
 
 namespace icemc{
 
-  class Primaries;
+  class ConnollyEtAl2011;
   class Interaction;
   class IceModel;
   class Settings;

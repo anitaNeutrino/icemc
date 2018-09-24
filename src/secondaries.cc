@@ -3,7 +3,7 @@
 #include "Settings.h"
 #include "TVector3.h"
 #include "Geoid.h"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "secondaries.hh"
 #include "Antarctica.h"
 #include "Tools.h"

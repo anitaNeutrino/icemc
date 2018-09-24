@@ -1,7 +1,7 @@
 #include "TVector3.h"
 #include "TRandom3.h"
 #include "Geoid.h"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "secondaries.hh"
 #include "Antarctica.h"
 #include "Tools.h"
@@ -82,8 +82,8 @@ icemc::Taumodel::Taumodel() {
 /**
    GetTauWeight is the function that will calculate the probability that a tau neutrino will interact along its path through the earth,and the tau will survive the rest of the journey and decay in the ice. This probability is calculated for final energies from 10^15.5 to the energy of the neutrino.
 */
-// double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered){ // 1 or 0
-double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, Neutrino::L leptonNumber, double& ptauf, int& crust_entered){ // 1 or 0   
+// double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered){ // 1 or 0
+double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, Neutrino::L leptonNumber, double& ptauf, int& crust_entered){ // 1 or 0   
 			      // int& mantle_entered, // 1 or 0
 			      // int& core_entered){//add secondaries?
 
@@ -121,9 +121,9 @@ double icemc::Taumodel::GetTauWeight(Primaries *primary1, const Settings *settin
     
   double tau_surv;
   double sigma = 0;
-  double len_int_kgm2 =0;
 
-  primary1->GetSigma(pnu,sigma,len_int_kgm2,leptonNumber,current);
+  primary1->getSigma(pnu,leptonNumber,current);
+  double len_int_kgm2 = CrossSectionModel::getInteractionLength(sigma);
   
   double step=TMath::Min(len_int_kgm2/densities[1]/10,25.0); ///how big is the step size
   

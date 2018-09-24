@@ -13,7 +13,7 @@
 #include <sstream>
 #include <fstream>
 #include <iomanip>
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "TRandom3.h"
 
 #include <vector>
@@ -23,7 +23,7 @@ class TH1F;
 
 namespace icemc{
   class Settings;
-  class Primaries;
+  class ConnollyEtAl2011;
 
   /**
    * @class ShowerProperties

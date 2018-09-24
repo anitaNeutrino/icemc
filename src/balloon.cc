@@ -18,7 +18,7 @@
 
 #include "balloon.hh"
 #include "Settings.h"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "EnvironmentVariable.h"
 #include "Report.h"
 

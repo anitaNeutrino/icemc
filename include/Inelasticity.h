@@ -20,7 +20,7 @@
 namespace icemc {
 
   class Interaction;
-  class Primaries;
+  class ConnollyEtAl2011;
   class IceModel;
   class Counting;
   class Settings;

@@ -57,7 +57,7 @@
 #include "secondaries.hh"
 #include "RayTracer.h"
 #include "counting.hh"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "Taumodel.hh"
 #include "screen.hh"
 #include "GlobalTrigger.h"
@@ -105,7 +105,7 @@ using icemc::Settings;
 using icemc::Vector;
 using icemc::Position;
 using icemc::IceModel;
-using icemc::Primaries;
+using icemc::ConnollyEtAl2011;
 using icemc::Secondaries;
 using icemc::Roughness;
 using icemc::Screen;

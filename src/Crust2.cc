@@ -10,7 +10,7 @@
 #include <fstream>
 
 #include "AskaryanFreqsGenerator.h"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "secondaries.hh"
 #include "EnvironmentVariable.h"
 #include "Constants.h"

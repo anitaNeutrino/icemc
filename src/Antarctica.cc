@@ -8,7 +8,7 @@
 
 #include "AskaryanFreqsGenerator.h"
 #include "Geoid.h"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "anita.hh"
 #include "RayTracer.h"
 #include "balloon.hh"

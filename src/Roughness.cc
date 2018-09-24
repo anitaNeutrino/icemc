@@ -15,7 +15,7 @@
 #include "TCanvas.h"
 #include "TRandom3.h"
 #include "Settings.h"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "anita.hh"
 #include "balloon.hh"
 #include "Crust2.h"

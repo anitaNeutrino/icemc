@@ -58,7 +58,7 @@
 #include "secondaries.hh"
 #include "ray.hh"
 #include "counting.hh"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "Taumodel.hh"
 #include "screen.hh"
 #include "GlobalTrigger.h"
@@ -93,7 +93,7 @@ using icemc::Settings;
 using icemc::Vector;
 using icemc::Position;
 using icemc::IceModel;
-using icemc::Primaries;
+using icemc::ConnollyEtAl2011;
 using icemc::Secondaries;
 using icemc::Roughness;
 using icemc::Screen;
@@ -455,7 +455,7 @@ void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  S
 
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, AskaryanFreqsGenerator *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, AskaryanFreqsGenerator *sig1,  ConnollyEtAl2011 *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString);
 
 void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  string,  string,  double,  ofstream &nu_out);
 
@@ -613,7 +613,7 @@ int main(int argc,  char **argv) {
   Balloon *bn1=new Balloon(); // instance of the balloon
   Anita *anita1=new Anita();// right now this constructor gets banding info
   Secondaries *sec1=new Secondaries();
-  Primaries *primary1=new Primaries();
+  ConnollyEtAl2011 *primary1=new ConnollyEtAl2011();
   AskaryanFreqsGenerator *sig1=new AskaryanFreqsGenerator();
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();
@@ -3847,7 +3847,7 @@ void WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double a
 //end WriteNeutrinoInfo()
 
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, AskaryanFreqsGenerator *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir) {
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, AskaryanFreqsGenerator *sig1, ConnollyEtAl2011 *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir) {
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
   double errordown_v_thresh[NTHRESHOLDS];

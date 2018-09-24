@@ -66,7 +66,7 @@
 #include "secondaries.hh"
 #include "ray.hh"
 #include "counting.hh"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "Taumodel.hh"
 #include "screen.hh"
 #include "GlobalTrigger.h"
@@ -96,7 +96,7 @@ using icemc::Settings;
 using icemc::Vector;
 using icemc::Position;
 using icemc::IceModel;
-using icemc::Primaries;
+using icemc::ConnollyEtAl2011;
 using icemc::Secondaries;
 using icemc::Roughness;
 using icemc::Screen;
@@ -254,7 +254,7 @@ int main(int argc,  char **argv) {
   Balloon *bn1=new Balloon(); // instance of the balloon
   Anita *anita1=new Anita();// right now this constructor gets banding info
   Secondaries *sec1=new Secondaries();
-  Primaries *primary1=new Primaries();
+  ConnollyEtAl2011 *primary1=new ConnollyEtAl2011();
   AskaryanFreqsGenerator *sig1=new AskaryanFreqsGenerator();
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();

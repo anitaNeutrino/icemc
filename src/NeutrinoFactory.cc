@@ -4,8 +4,8 @@
 icemc::NeutrinoFactory::NeutrinoFactory(const Settings* s)
   : fSettings(s),
     fSpectra(s), ///@todo check cast to int is ok here!
-    fPrimaries(s),
-    fInteraction(&fPrimaries, fSettings)
+    fConnollyEtAl2011(s),
+    fInteraction(&fConnollyEtAl2011, fSettings)
 {
 
 }
@@ -19,12 +19,12 @@ icemc::Neutrino icemc::NeutrinoFactory::makeNeutrino() {
   Neutrino n;
 
   n.energy = fSpectra.pickNeutrinoEnergy();
-  n.flavor = fPrimaries.pickFlavor();
+  n.flavor = fConnollyEtAl2011.pickFlavor();
   n.leptonNumber = Neutrino::L::Matter; ///@todo check
   n.interactionCurrent = fInteraction.pickCurrent();
-  fPrimaries.GetSigma(n.energy, n.crossSection, n.interactionLength,
-		      n.leptonNumber,  n.interactionCurrent);
-		      // xsecParam_nutype, xsecParam_nuint);
+  n.crossSection = fConnollyEtAl2011.getSigma(n.energy, n.leptonNumber,  n.interactionCurrent);
+  n.interactionLength = CrossSectionModel::getInteractionLength(n.crossSection);
+
   // pick flavour!
 
   return n;

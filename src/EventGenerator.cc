@@ -26,7 +26,7 @@
 #include "AskaryanFreqs.h"
 #include "secondaries.hh"
 #include "RayTracer.h"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "Taumodel.hh"
 #include "screen.hh"
 #include "GlobalTrigger.h"
@@ -118,7 +118,7 @@ icemc::EventGenerator::~EventGenerator()
 
 
 
-void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Source::Spectra *nuSpectra, const AskaryanFreqsGenerator *askFreqGen, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
+void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Source::Spectra *nuSpectra, const AskaryanFreqsGenerator *askFreqGen, ConnollyEtAl2011 *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
 
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
@@ -580,8 +580,8 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
     even_E = ( nuSpectra->Getenergy()[nuSpectra->GetE_bin() - 1] - nuSpectra->Getenergy()[0] ) / ( (double) N_even_E );
     for (int i=0;i<N_even_E;i++) {
       thisenergy=pow(10., (nuSpectra->Getenergy())[0]+((double)i)*even_E);
-      primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, xsecParam_nutype, xsecParam_nuint);
-
+      sigma = primary1->getSigma(thisenergy, xsecParam_nutype, xsecParam_nuint);
+      thislen_int_kgm2 = CrossSectionModel::getInteractionLength(sigma);
       // EdNdEdAdt is in #/cm^2/s
       // need to be multiplied by 1e4 to change 1/cm2 to 1/m^2
       // can also be written dN/d(lnE)dAdt
@@ -1098,7 +1098,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // gRandom=Rand3;
   
   Secondaries sec1;
-  Primaries* primary1 = new Primaries(&settings1);
+  ConnollyEtAl2011* primary1 = new ConnollyEtAl2011(&settings1);
   AskaryanFreqsGenerator askFreqGen;
   // Antarctica* antarctica = new Antarctica(settings1.ICE_MODEL + settings1.NOFZ*10,
   // 					  settings1.CONSTANTICETHICKNESS * 1000 + settings1.CONSTANTCRUST * 100 + settings1.FIXEDELEVATION * 10 + 0,
@@ -1219,7 +1219,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
   // sets neutrino energy
   if ( nuSpectra->IsMonoenergetic() ){
     pnu=pow(10., settings1.EXPONENT);
-    primary1->GetSigma(pnu, sigma, len_int_kgm2, xsecParam_nutype, xsecParam_nuint);    // get cross section and interaction length.
+    sigma = primary1->getSigma(pnu, xsecParam_nutype, xsecParam_nuint);    // get cross section and interaction length.
+    len_int_kgm2 = CrossSectionModel::getInteractionLength(sigma);
     icemc::report() << "pnu,  sigma,  len_int_kgm2 are " << pnu << " " << sigma << " " << len_int_kgm2 << "\n";
   }
 

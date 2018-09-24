@@ -1,7 +1,7 @@
 #include "RootOutput.h"
 #include <iostream>
 #include "EventGenerator.h"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 // #include "balloon.hh"
 // #include "anita.hh"
 #include "ANITA.h"

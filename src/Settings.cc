@@ -14,7 +14,7 @@
 #include "AskaryanFreqsGenerator.h"
 #include "secondaries.hh"
 #include "RayTracer.h"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "EnvironmentVariable.h"
 
 #include <string.h>

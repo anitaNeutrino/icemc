@@ -8,7 +8,7 @@
 #include "Settings.h"
 #include "Crust2.h"
 #include "Antarctica.h"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "Report.h"
 #include "RayTracer.h"
 #include <cmath>
@@ -20,9 +20,7 @@
 #include "Inelasticity.h"
 
 
-
-
-icemc::Primaries::Primaries(const Settings* settings) : fSettings(settings){//constructor
+icemc::ConnollyEtAl2011::ConnollyEtAl2011(const Settings* settings) : fSettings(settings){//constructor
 
   // This is for parametrizations in Connolly et al. 2011  
   //in the form of [i][j] where i is neutrino type(nu_nubar) and j is current type, "nc" vs "cc".
@@ -76,17 +74,7 @@ icemc::Primaries::Primaries(const Settings* settings) : fSettings(settings){//co
       it->second.SetParameters(c0[p], c1[p], c2[p], c3[p], c4[p]);
     }
   }
-  // m_csigma=new TCanvas("m_csigma","m_csigma title",1000, 700);
-  // m_hsigma=new TH2D("hsigma","title hsigma", 600, 7., 12., 600, -40., -30.);
-  
-  // m_hsigma->SetTitle("log10 (pnu) vs.log10 Cross Section Sigma");
-  // m_hsigma->GetXaxis()->SetTitle("Log10(Ev/ GeV)");
-  // m_hsigma->GetYaxis()->SetTitle("log10(Cross Section/ m^2)");
-  
-  // m_hsigma->Draw("scat");
-  // m_hsigma->SetMarkerStyle(7);
-  // m_hsigma->SetMarkerSize(3);
-  
+
   // again y distributions from Connolly et al. 2011
   // m_myY = std::unique_ptr<Y>(new icemc::Y());
   
@@ -125,99 +113,74 @@ icemc::Primaries::Primaries(const Settings* settings) : fSettings(settings){//co
   b0=2.55;
   b1=-0.0949; //C2_low=b0+b1*epsilon;
   
+  
   // 0=Reno
   // 1=Connolly et al. 2011
-  mine[0] = 1.2E15;
-  mine[1] = 1.E4;// minimum energy for cross section parametrizations
-  maxe[0] = 1.E21;
-  maxe[1] = 1.E21; // use the same upper limit for reno as for connolly et al.
+  // mine[0] = 1.2E15;
+  // mine[1] = 1.E4;
+  // maxe[0] = 1.E21;
+  // maxe[1] = 1.E21;
+
+  fMinEnergy_eV = 1.E4; // minimum energy for cross section parametrizations
+  fMaxEnergy_eV = 1.E21; // use the same upper limit for reno as for connolly et al.
+  
 }
 
-// double icemc::Primaries::Getyweight(double pnu,double y,int nu_nubar, Neutrino::Current currentint) {
-double icemc::Primaries::Getyweight(double pnu,double y, Neutrino::L leptonNumber, Neutrino::Current currentint) {  
+// double icemc::ConnollyEtAl2011::Getyweight(double pnu,double y,int nu_nubar, Neutrino::Current currentint) {
+double icemc::ConnollyEtAl2011::Getyweight(double pnu,double y, Neutrino::L leptonNumber, Neutrino::Current currentint) {  
   return m_myY.Getyweight(pnu,y,leptonNumber,currentint);
 }
 
 
-double icemc::Primaries::pickY(double pnu,Neutrino::L leptonNumber,Neutrino::Current currentint) {
+double icemc::ConnollyEtAl2011::pickY(double pnu,Neutrino::L leptonNumber,Neutrino::Current currentint) {
   return m_myY.pickY(fSettings,pnu,leptonNumber,currentint);
 }
-// double icemc::Primaries::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Current currentint) {
+// double icemc::ConnollyEtAl2011::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Current currentint) {
 //   return m_myY->pickY(settings1,pnu,nu_nubar,currentint);
 // }
 
 
-icemc::Primaries::~Primaries(){//default deconstructor
-}//deconstructor
-
-
-
-TCanvas* icemc::Primaries::plotSigma(Neutrino::L l, Neutrino::Current c, int nSamples) {
-  TH2D* h = new TH2D("hsigma","title hsigma", 600, 7., 12., 600, -40., -30.);
-
-  for(int i=0; i < nSamples; i++){
-
-    double pnu = pickUniform(mine[fSettings->SIGMAPARAM], maxe[fSettings->SIGMAPARAM]);
-    double pnuGeV=pnu/1.E9;//Convert eV to GeV.
-    double epsilon=log10(pnuGeV);
-
-    double sigma, len;
-    GetSigma(pnu, sigma, len, l, c);
-
-    h->Fill(epsilon, log10(sigma));
-  }
-  h->SetBit(kCanDelete);
-
-  auto p = std::make_pair(l, c);
-
-  auto can = new TCanvas();
-  h->Draw("colz");
-  
-  fSigma[p].Draw("lsame");
-  
-  return can;
-}
 
 
 
 
-// int icemc::Primaries::GetSigma(double pnu, double& sigma,double &len_int_kgm2, const Settings *settings1, int nu_nubar, Neutrino::Current current){
-int icemc::Primaries::GetSigma(double pnu, double& sigma,double &len_int_kgm2, Neutrino::L leptonNumber, Neutrino::Current current){
+
+// int icemc::ConnollyEtAl2011::GetSigma(double pnu, double& sigma,double &len_int_kgm2, const Settings *settings1, int nu_nubar, Neutrino::Current current){
+double icemc::ConnollyEtAl2011::getSigma(double energy_eV, Neutrino::L leptonNumber, Neutrino::Current current) const {
   
   // int currentint = static_cast<int>(current);
   // int nu_nubar = leptonNumber == Neutrino::L::Matter ? 0 : 1;
   // calculate cross section
-  if (pnu<mine[fSettings->SIGMAPARAM] || pnu>maxe[fSettings->SIGMAPARAM]) {
-    icemc::report() <<  severity::error << "Need a parameterization for this energy region.\n";
-    return 0;
+  if(!validEnergy(energy_eV)){
+    icemc::report() << severity::error << "Need a parameterization for this energy region, energy (eV) = "
+		    << energy_eV << " but min = " << fMinEnergy_eV << ", max = " << fMaxEnergy_eV << std::endl;
+    return -1;
   }
-  else {
-    if(fSettings->SIGMAPARAM==0){ // Reno
+  double sigma = 0;
+  if(fSettings->SIGMAPARAM==0){ // Reno
       // fit to cross sections calculated by M.H. Reno using the same method as Gandhi et al, but with the CTEQ6-DIS parton distribution functions instead of the CTEQ4-DIS distribution functions
-      sigma=(2.501E-39)*pow(pnu/1.E9,0.3076)*fSettings->SIGMA_FACTOR; // 10^18 eV - 10^21 eV(use this one for ANITA)
-      //sigma=(1.2873E-39)*pow(pnu/1.E9,0.33646)*SIGMA_FACTOR; // 10^17 eV - 10^20 eV (use this one for SalSA)
-    }//old code
-    else if (fSettings->SIGMAPARAM==1) {//Connolly et al.
-      double pnuGeV=pnu/1.E9;//Convert eV to GeV.
-      double epsilon=log10(pnuGeV);
-      sigma=fSettings->SIGMA_FACTOR*(fSigma[{leptonNumber, current}].Eval(epsilon))/1.E4;//convert cm to meters. multiply by (1m^2/10^4 cm^2).
-      
-      // if(m_hsigma->GetEntries()<2000){
-      //   m_hsigma->Fill(epsilon, log10(sigma));
-      // }
-    }
+    sigma=(2.501E-39)*pow(energy_eV/1.E9,0.3076)*fSettings->SIGMA_FACTOR; // 10^18 eV - 10^21 eV(use this one for ANITA)
+    //sigma=(1.2873E-39)*pow(pnu/1.E9,0.33646)*SIGMA_FACTOR; // 10^17 eV - 10^20 eV (use this one for SalSA)
+  }//old code
+  else if (fSettings->SIGMAPARAM==1) {//Connolly et al.
+    double pnuGeV=energy_eV/1.E9;//Convert eV to GeV.
+    double epsilon=log10(pnuGeV);
+
+    auto f_it = fSigma.find({leptonNumber, current});
+    const TF1& f = f_it->second;
+    sigma=fSettings->SIGMA_FACTOR*(f.Eval(epsilon))/1.E4;//convert cm to meters. multiply by (1m^2/10^4 cm^2).
   }
   // interaction length in kg/m^2
   
-  len_int_kgm2=constants::M_NUCL/sigma; // kg/m^2
-  return 1;
+  // len_int_kgm2=constants::M_NUCL/sigma; // kg/m^2
+  return sigma;
 } //GetSigma
 
 
 
 
 //! pick a neutrino type, flavor ratio 1:1:1
-icemc::Neutrino::Flavor icemc::Primaries::pickFlavor() {
+icemc::Neutrino::Flavor icemc::ConnollyEtAl2011::pickFlavor() {
   double r = pickUniform(0, 3);
   if (r <= 1){  
     return Neutrino::Flavor::e;
@@ -252,7 +215,7 @@ icemc::Neutrino::Flavor icemc::Primaries::pickFlavor() {
 
 
 
-icemc::Interaction::Interaction(Primaries *primary1, const Settings *settings1) {
+icemc::Interaction::Interaction(ConnollyEtAl2011 *primary1, const Settings *settings1) {
 
   noway=0;
   wheredoesitleave_err=0;

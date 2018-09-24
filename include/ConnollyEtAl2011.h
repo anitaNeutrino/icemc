@@ -1,20 +1,13 @@
-////////////////////////////////////////////////////////////////////////////////////////////////
-//class Primaries:
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifndef PRIMARIES_H_
-#define PRIMARIES_H_
+#ifndef CONNOLLY_ET_AL_2011_H
+#define CONNOLLY_ET_AL_2011_H
 
 #include <iostream>
+#include "CrossSectionModel.h"
 #include "RNG.h"
 
-#include "TH1.h"
-#include "TH2.h"
 #include "TF1.h"
 #include "TF2.h"
-#include "TCanvas.h"
 #include "TF3.h"
-#include "TH2D.h"
 
 #include "Geoid.h"
 #include "TVector3.h"
@@ -28,10 +21,31 @@ namespace icemc {
   class Settings;
 
   /**
-   * @class Primaries
-   * @brief Functions you need to generate a primary interaction: cross sections, picking charged current/neutral current and flavor
+   * @class ConnollyEtAl2011
+   * @brief To compute Cross sections given in https://arxiv.org/pdf/1102.0691.pdf
    */
-  class Primaries : public RNG {
+  class ConnollyEtAl2011 : public CrossSectionModel, public RNG {
+    
+    static constexpr int NSIGMAS=2;///< number of possible cross section models
+    ///< 0=Gandhi et al.
+    ///< 1=Connolly et al. 2011
+    // double mine[NSIGMAS]; ///< minimum energy for cross section parametrizations, in eV
+    // double maxe[NSIGMAS]; ///< maximum energy for cross section parametrizations, in eV
+    
+  public:
+    // double pickY(const Settings *settings1,double pnu,int nu_nubar, Neutrino::Current currentint);///<pick inelasticity y according to chosen model
+    double pickY(double pnu, Neutrino::L leptonNumber, Neutrino::Current currentint);///<pick inelasticity y according to chosen model    
+    double Getyweight(double pnu,double y,Neutrino::L leptonNumber,Neutrino::Current currentint);///< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
+
+    ConnollyEtAl2011(const Settings* settings); ///< Constructor 
+    
+    /// Neutrino-nucleon cross-sections using model chosen
+    virtual double getSigma(double pnu, Neutrino::L leptonNumber, Neutrino::Current currentint) const override;
+
+    Neutrino::Flavor pickFlavor();    
+  protected:
+    const Settings* fSettings;
+
     
   private:
     
@@ -48,6 +62,7 @@ namespace icemc {
     
     // TF1* m_fy[2][2];
     
+
     std::map<std::pair<Neutrino::L, Neutrino::Current>, TF1> fSigma;
     
     DoubleLCC c0;      ///< Table V of Connolly et al. for Eq. 7
@@ -56,37 +71,11 @@ namespace icemc {
     DoubleLCC c3;      ///< Table V of Connolly et al. for Eq. 7
     DoubleLCC c4;      ///< Table V of Connolly et al. for Eq. 7
     
-    static constexpr int NSIGMAS=2;///< number of possible cross section models
-    ///< 0=Gandhi et al.
-    ///< 1=Connolly et al. 2011
-    double mine[NSIGMAS]; ///< minimum energy for cross section parametrizations, in eV
-    double maxe[NSIGMAS]; ///< maximum energy for cross section parametrizations, in eV
-
-    TCanvas* plotSigma(Neutrino::L l, Neutrino::Current c, int nSamples = 2000);
-    
-  public:
-    // double pickY(const Settings *settings1,double pnu,int nu_nubar, Neutrino::Current currentint);///<pick inelasticity y according to chosen model
-    double pickY(double pnu, Neutrino::L leptonNumber, Neutrino::Current currentint);///<pick inelasticity y according to chosen model    
-    double Getyweight(double pnu,double y,Neutrino::L leptonNumber,Neutrino::Current currentint);///< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
-
-    Primaries(const Settings* settings); ///< Constructor 
-    virtual ~Primaries();///< Destructor 
-    
-    /// Neutrino-nucleon cross-sections using model chosen
-    int GetSigma(double pnu,double& sigma,double &len_int_kgm2,Neutrino::L leptonNumber,Neutrino::Current currentint);
-
-
-
-    // string GetCurrent();
-    Neutrino::Flavor pickFlavor();    
-  protected:
-    const Settings* fSettings;
-  };///<Primaries
+  };///<ConnollyEtAl2011
   
 
 
 
-  class RayTracer;
   class Antarctica;
   
   /**
@@ -103,7 +92,7 @@ namespace icemc {
     /** 
      * Constructor
      */
-    Interaction(Primaries *primary1, const Settings *settings1); //, int whichray); //, Counting *count1);
+    Interaction(ConnollyEtAl2011 *primary1, const Settings *settings1); //, int whichray); //, Counting *count1);
 
     int PickDownwardInteractionPoint(const Geoid::Position& r_bn, const Settings *settings1, const Antarctica *antarctica1);
     
@@ -137,7 +126,7 @@ namespace icemc {
     double d1;                  ///< same as chord in m (earth entrance to rock-ice boundary)
     double d2;                  ///< ice-rock boundary to interaction point in m    
     
-    // void setNuFlavor(const Primaries *primary1, const Settings *settings1);//, int whichray, Counting *count1);
+    // void setNuFlavor(const ConnollyEtAl2011 *primary1, const Settings *settings1);//, int whichray, Counting *count1);
     
     Neutrino::Current pickCurrent();
     int getPdgCode() const;

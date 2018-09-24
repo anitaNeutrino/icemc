@@ -2,7 +2,7 @@
 #define ICEMC_NEUTRINO_FACTORY_H
 
 #include "Spectra.h"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "Neutrino.h"
 
 namespace icemc {
@@ -24,7 +24,7 @@ namespace icemc {
   private:
     const Settings* fSettings;
     Source::Spectra fSpectra;
-    Primaries fPrimaries; // contains an inelasticity distribution thingy
+    ConnollyEtAl2011 fConnollyEtAl2011; // contains an inelasticity distribution thingy
     Interaction fInteraction;    
 
   };

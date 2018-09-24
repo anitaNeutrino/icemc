@@ -7,7 +7,7 @@
 #include "Settings.h"
 #include "Crust2.h"
 #include "Antarctica.h"
-#include "Primaries.h"
+#include "ConnollyEtAl2011.h"
 #include "Report.h"
 #include "RayTracer.h"
 
@@ -80,7 +80,7 @@ icemc::Y::Y() { // Constructor
   fC1_low->FixParameter(1,0.0941);
   fC1_low->FixParameter(2,4.72);
   fC1_low->FixParameter(3,0.456);
-
+  
   fC2 = std::unique_ptr<TF1>(new TF1("C2","[0]+[1]*x",7.,12.)); // parameterization of parameter C2 in the low y region according to Equation 17.
   // This parameterization is the same for all interaction types.
   fC2->FixParameter(0,2.55);
