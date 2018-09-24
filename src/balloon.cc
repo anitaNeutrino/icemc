@@ -79,7 +79,7 @@ double icemc::Balloon::getRoll() const {
 }
 
 
-icemc::Balloon::Balloon(icemc::FlightPath path) : WHICHPATH(path)
+icemc::Balloon::Balloon(icemc::FlightPath path, const Settings* settings) : fSettings(settings), WHICHPATH(path)
 {
   InitializeBalloon(nullptr);
 }
@@ -407,7 +407,8 @@ int getTuffIndex(int Curr_time) {
 // this is called for each neutrino
 // void icemc::Balloon::PickBalloonPosition(const Antarctica *antarctica1, const Settings *settings1, int inu, Anita *anita1, double randomNumber) {
 // void icemc::Balloon::PickBalloonPosition(const Settings *settings1, int inu, Anita *anita1, double randomNumber) {
-void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* settings1 ,Anita *anita1) {
+// void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* settings1 ,Anita *anita1) {
+void icemc::Balloon::getBalloonPosition(double eventTime, Anita *anita1) {  
 
 
   pitch=0.;
@@ -445,21 +446,21 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
 
 
       ///@todo restore payload use specific time
-      // if (settings1->PAYLOAD_USE_SPECIFIC_TIME && !init_best) 
+      // if (fSettings->PAYLOAD_USE_SPECIFIC_TIME && !init_best) 
       // {
       //    int N = fChain->Draw("realTime","","goff"); 
       //    double * times = fChain->GetV1(); 
 
-      //    int best_igps =  TMath::BinarySearch(N, times, (double) settings1->PAYLOAD_USE_SPECIFIC_TIME); 
+      //    int best_igps =  TMath::BinarySearch(N, times, (double) fSettings->PAYLOAD_USE_SPECIFIC_TIME); 
       //    start_igps = best_igps;
       //    int end_igps = best_igps;
 
-      //    while (times[start_igps] > settings1->PAYLOAD_USE_SPECIFIC_TIME - settings1->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
+      //    while (times[start_igps] > fSettings->PAYLOAD_USE_SPECIFIC_TIME - fSettings->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
       //    {
       //      start_igps--; 
       //    }
 
-      //    while (times[end_igps] < settings1->PAYLOAD_USE_SPECIFIC_TIME + settings1->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
+      //    while (times[end_igps] < fSettings->PAYLOAD_USE_SPECIFIC_TIME + fSettings->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
       //    {
       //      end_igps++; 
       //    }
@@ -476,7 +477,7 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
       // }
       
       // fChain->GetEvent(igps); // this grabs the balloon position data for this event
-      if(settings1 && anita1 && settings1->TUFFSON){
+      if(fSettings && anita1 && fSettings->TUFFSON){
 	anita1->tuffIndex = getTuffIndex(realTime);
       }// end if tuffson 
 
@@ -495,11 +496,11 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
       if ((WHICHPATH==FlightPath::Anita2 ||
 	   WHICHPATH==FlightPath::Anita3 ||
 	   WHICHPATH==FlightPath::Anita4) &&
-	  settings1 && anita1 && 
-	  (settings1->PHIMASKING==1 || settings1->USEDEADTIME)){
+	  fSettings && anita1 && 
+	  (fSettings->PHIMASKING==1 || fSettings->USEDEADTIME)){
 	anita1->setphiTrigMask(realTime);
       }
-      if ((WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4) && settings1 && anita1 && settings1->USETIMEDEPENDENTTHRESHOLDS==1){ // set time-dependent thresholds
+      if ((WHICHPATH==FlightPath::Anita3 || WHICHPATH==FlightPath::Anita4) && fSettings && anita1 && fSettings->USETIMEDEPENDENTTHRESHOLDS==1){ // set time-dependent thresholds
 	anita1->setTimeDependentThresholds(realTime);
       }
     }
@@ -585,7 +586,7 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
   else{
     // icemc::report() << severity::error << "Can't get position for " << static_cast<int>(whichPath()) << std::endl;
   }
-  // if (!settings1->UNBIASED_SELECTION && dtryingposition!=-999){
+  // if (!fSettings->UNBIASED_SELECTION && dtryingposition!=-999){
   //   dtryingposition=antarctica1->GetBalloonPositionWeight(ibnposition);
   // }
   // else{
@@ -593,7 +594,7 @@ void icemc::Balloon::PickBalloonPosition(double eventTime, const Settings* setti
   // }
     
     
-} // end PickBalloonPosition
+} 
 
 
 

@@ -1266,14 +1266,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1, const C
     
     eventNumber=(UInt_t)(clOpts.run_no)*NNU+inu;
 
-    // @todo Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
     RNG::newSeeds(clOpts.run_no, eventNumber); // updates all RNG seeds
 
+    ///@todo make a dedicated event time picker class?
     double eventTime = fDetector->pickEventTime();
-
-    // first pick a balloon position...
-    fDetector->PickBalloonPosition(eventTime, &settings1,  fDetector);
+    fDetector->getPosition(eventTime);
 
     Geoid::Position interactionPos = antarctica->pickInteractionPosition(fDetector->position());
 

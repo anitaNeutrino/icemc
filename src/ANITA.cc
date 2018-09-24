@@ -44,7 +44,7 @@ const Geoid::Position& icemc::ANITA::getPosition(double time){
 
   if(!TMath::IsNaN(time) && time != fLastPositionTime){
 
-    PickBalloonPosition(time, fSettings, this);
+    getBalloonPosition(time, this);
 
     for(auto& s : fSeaveys){
       s.updatePosition(Balloon::position(),

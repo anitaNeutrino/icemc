@@ -47,7 +47,7 @@ namespace icemc {
  
   public:
     Balloon(const Settings* settings);
-    Balloon(FlightPath path);
+    Balloon(FlightPath path, const Settings* settings = nullptr);
     virtual ~Balloon();
 
     
@@ -61,7 +61,7 @@ namespace icemc {
      * @param  anita1 -
      * @param  randomNumber -
      */
-    void PickBalloonPosition(double eventTime, const Settings* settings1 = nullptr,Anita *anita1 = nullptr);
+    void getBalloonPosition(double eventTime,Anita *anita1 = nullptr);
     // void PickBalloonPosition(const Antarctica *antarctica1, const Settings *settings1,int inu,Anita *anita1, double randomNumber);
 
  
@@ -122,13 +122,13 @@ namespace icemc {
     float flatitude,flongitude,faltitude,fheading,froll, fpitch;
 
   private:
-
     // double surface_under_balloon;                               ///< distance between center of the earth and the surface of earth under balloon
     
     void InitializeBalloon(const Settings* settings);    
     void ReadAnitaliteFlight();
     void setr_bn(double latitude,double longitude);
     
+    const Settings* fSettings;
     const FlightPath WHICHPATH;
     int igps;                                                   ///< which balloon position do we use out of the 25000 anitalite GPS positions.
     int ibnposition;
