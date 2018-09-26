@@ -10,3 +10,5 @@ gdb -n -q -batch -ex "attach $(pidof $1)" \
   -ex "detach" \
   -ex "quit"
 
+# gdb -n -q -ex "attach $(pidof $1)" \ -ex "set $2 = \"$3\""
+

@@ -162,7 +162,7 @@ vector<string> str_split(char* a_str, const char a_delim)
 // https://stackoverflow.com/questions/3501338/c-read-file-line-by-line:
 // Notice that index "_with_line_ind" starts from 1:
 #define WITH_LINES(_with_lines_name, _with_lines_ind, _with_lines_tokens, _with_lines_codeblock...) \
-  do									\
+  do \
     {									\
       vector<string> _with_lines_tokens;				\
       FILE * _with_lines_fp;						\
@@ -262,6 +262,7 @@ vector<double> ZhsTimeE(25000);
 vector<double> ZhsAlpha(25000);
 Settings* global_settings1;
 Anita *global_anita1;
+Balloon *global_bn1;
 double NrFT[ANITA_TIME_SAMPLES];
 
 int main(int argc,  char **argv) {
@@ -440,6 +441,7 @@ int main(int argc,  char **argv) {
 
 
   Balloon *bn1=new Balloon(); // instance of the balloon
+  global_bn1 = bn1;
   Secondaries *sec1=new Secondaries();
   // Primaries *primary1=new Primaries();
   Signal *sig1=new Signal();
