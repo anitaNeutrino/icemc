@@ -9,6 +9,7 @@
 # include "TLegend.h"
 # include "TView.h"
 # include "TPolyLine3D.h"
+# include "TPolyMarker3D.h"
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
@@ -89,35 +90,11 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   static bvv::TBuffer <int> SelLayer(0);
   
   INIT_VAR_ONCE(TCanvas, cHotTest, new TCanvas());
-
-  // static void * pcHotTest;
-  // if (mode == m_reload) {
-  //   map<std::string, void*> &env = *penv;
-  //   std::map<std::string, void*>::iterator env_it = env.find("cHotTest");
-  //   if ( env_it == env.end() ) {
-  //     pcHotTest = new std::unique_ptr<TCanvas>;
-  //     env["cHotTest"] = pcHotTest;
-  //   } else {
-  //     pcHotTest = env_it->second;
-  //   }
-  // }
-  // std::unique_ptr<TCanvas> & cHotTest = *((std::unique_ptr<TCanvas> *) pcHotTest);
-
   RESET_VAR_ONRELOAD(TView, view, TView::CreateView(1));
-  RESET_VAR_ONRELOAD(vector <TPolyLine3D *>, vAntNormals, new vector <TPolyLine3D *> (48));
+  RESET_VAR_ONRELOAD(vector <TPolyLine3D>, vAntNormals, new vector <TPolyLine3D> (48));
+  RESET_VAR_ONRELOAD(vector <TPolyMarker3D>, vAntPos, new vector <TPolyMarker3D> (48));
+
   if (mode == m_reload) {
-    // if ( env.find("view") == env.end() ) {
-    //   env["view"] = new std::unique_ptr<TView>;
-    // }
-    // std::unique_ptr<TView> & view = *((std::unique_ptr<TView> *) env["view"]);
-    // view.reset(TView::CreateView(1));
-
-    // if ( env.find("vAntNormals") == env.end() ) {
-    //   env["vAntNormals"] = new std::unique_ptr<vector<TPolyLine3D *>>;
-    // }
-    // std::unique_ptr<vector <TPolyLine3D *>> & vAntNormals = *((std::unique_ptr<vector <TPolyLine3D *>> *) env["vAntNormals"]);
-    // vAntNormals.reset(new std::vector <TPolyLine3D *> (48));
-
     const double RangeMax = 5;
     view->SetRange(-RangeMax, -RangeMax, -RangeMax, +RangeMax, +RangeMax, +RangeMax);
 
@@ -130,27 +107,30 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
         Vector n_normal;
 
         global_bn1->GetAntennaOrientation(global_settings1,  global_anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
-        vAntNormals->at(antNum) = new TPolyLine3D(2);
+        // vAntNormals->at(antNum) = TPolyLine3D(2);
         double antX = global_anita1->antenna_positions[antNum][0];
         double antY = global_anita1->antenna_positions[antNum][1];
         double antZ = global_anita1->antenna_positions[antNum][2];
-        vAntNormals->at(antNum)->SetPoint(0, antX, antY, antZ);
-        vAntNormals->at(antNum)->SetPoint(1, antX + n_normal[0], antY + n_normal[1], antZ + n_normal[2]);
+        vAntPos->at(antNum).SetPoint(0, antX, antY, antZ);
+        vAntNormals->at(antNum).SetPoint(0, antX, antY, antZ);
+        vAntNormals->at(antNum).SetPoint(1, antX + n_normal[0], antY + n_normal[1], antZ + n_normal[2]);
 
-        vAntNormals->at(antNum)->SetLineWidth(2);
-        vAntNormals->at(antNum)->SetLineColor(kBlue);
+        vAntPos->at(antNum).SetMarkerSize(1);
+        vAntPos->at(antNum).SetMarkerColor(kBlue);
+        vAntPos->at(antNum).SetMarkerStyle(8);
+        vAntNormals->at(antNum).SetLineWidth(1);
+        vAntNormals->at(antNum).SetLineColor(kBlue);
 
-        vAntNormals->at(antNum)->Draw();
+        vAntNormals->at(antNum).Draw();
+        vAntPos->at(antNum).Draw();
         std::cout << "n_normal: " << n_normal << std::endl;
       }
     }
+    
   }
 
 
   if (mode == m_step) {
-    // BEGIN Create shortcuts to objects listed in "env":
-    //    std::unique_ptr<vector <TPolyLine3D *>> & vAntNormals = *((std::unique_ptr<vector <TPolyLine3D *>> *) env["vAntNormals"]);
-    // END   Create shortcuts to objects listed in "env".
     nk_layout_row_dynamic(ctx, 25, 1);
     property_int(ctx, "SelLayer: ", 0, SelLayer, global_settings1->NLAYERS - 1/*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
     if (*SelLayer) {
@@ -163,8 +143,9 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
             NormalsColor = kRed;
           else
             NormalsColor = kBlue;
-          vAntNormals->at(antNum)->SetLineColor(NormalsColor);
-          vAntNormals->at(antNum)->Draw();
+          vAntNormals->at(antNum).SetLineColor(NormalsColor);
+          vAntPos->at(antNum).SetMarkerColor(NormalsColor);
+          // vAntNormals->at(antNum).Draw();
         }
       }
     }
