@@ -92,14 +92,21 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   const double Dir2BalLen = 5;
   const int SelAntLayer = 3;
   const int SelAntFold = 0;
+  const double RangeMax = 5;
   Vector n_eplane, SelAnt_eplane;
   Vector n_hplane, SelAnt_hplane;
   Vector n_normal, SelAnt_normal;
+  int SelAntNum = global_anita1->GetRxTriggerNumbering(SelAntLayer, SelAntFold);
+  double SelAntX = global_anita1->antenna_positions[SelAntNum][0];
+  double SelAntY = global_anita1->antenna_positions[SelAntNum][1];
+  double SelAntZ = global_anita1->antenna_positions[SelAntNum][2];
 
   static bvv::TBuffer <int> SelLayer(0);
+  static bvv::TBuffer <int> AntZoom(0);
   
   INIT_VAR_ONCE(TCanvas, cHotTest, new TCanvas());
   INIT_VAR_ONCE(TCanvas, cGain, new TCanvas());
+  INIT_VAR_ONCE(bvv::TBuffer <int>, RotSpeed, new bvv::TBuffer <int> (10));
   RESET_VAR_ONRELOAD(TView, view, TView::CreateView(1));
   RESET_VAR_ONRELOAD(vector <TPolyLine3D>, vAntNormals, new vector <TPolyLine3D> (48));
   RESET_VAR_ONRELOAD(vector <TPolyMarker3D>, vAntPos, new vector <TPolyMarker3D> (48));
@@ -111,11 +118,11 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
 
   cHotTest->cd();
   if (mode == m_reload) {
+    SelLayer.modified = true;
     int ReturnCode;
 
     global_bn1->GetAntennaOrientation(global_settings1,  global_anita1,  SelAntLayer,  SelAntFold, SelAnt_eplane,  SelAnt_hplane,  SelAnt_normal);
     
-    const double RangeMax = 5;
     view->SetRange(-RangeMax, -RangeMax, -RangeMax, +RangeMax, +RangeMax, +RangeMax);
     lDir2Bal->SetPoint(0, 0, 0, 0);
     lDir2Bal->SetPoint(1, SelAnt_normal[0] * Dir2BalLen, SelAnt_normal[1] * Dir2BalLen, SelAnt_normal[2] * Dir2BalLen);
@@ -175,7 +182,7 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
       gegain->SetPoint(ifreq, ifreq, e_signal);
       ghgain->SetPoint(ifreq, ifreq, h_signal);
       // cout << "hitangles: " << hitangle_e << ", " << hitangle_h << endl;
-      cout << "eh_signal: " << e_signal << ", " << h_signal << endl;
+      // cout << "eh_signal: " << e_signal << ", " << h_signal << endl;
     }
     gegain->SetLineColor(kBlue);
     ghgain->SetLineColor(kRed);
@@ -186,39 +193,54 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   cHotTest->cd();
   if (mode == m_step) {
     nk_layout_row_dynamic(ctx, 25, 1);
-    property_int(ctx, "SelLayer: ", 0, SelLayer, global_settings1->NLAYERS - 1/*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
-    if (*SelLayer) {
-      for (int ilayer=0; ilayer < global_settings1->NLAYERS; ilayer++) { // loop over layers on the payload
-        for (int ifold=0;ifold<global_anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
-          int antNum = global_anita1->GetRxTriggerNumbering(ilayer, ifold);
-
-          int NormalsColor;
-          if (ilayer == SelLayer)
-            NormalsColor = kRed;
-          else
-            NormalsColor = kBlue;
-          vAntNormals->at(antNum).SetLineColor(NormalsColor);
-          vAntPos->at(antNum).SetMarkerColor(NormalsColor);
-
-          if (ilayer == SelAntLayer && ifold == SelAntFold){
-            vAntNormals->at(antNum).SetLineColor(kMagenta);
-            vAntPos->at(antNum).SetMarkerColor(kMagenta);
-          }
-          vAntNormals->at(antNum).Draw();
-        }
+    property_int(ctx, "Rot Speed: ", 0, *RotSpeed, 50 /*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
+    checkbox_label(ctx, "Ant. Zoom: ", AntZoom);
+    if (*AntZoom) { 
+      if (AntZoom) {
+        const double RangeZoomMax = 1;
+        view->SetRange(SelAntX - RangeZoomMax, SelAntY - RangeZoomMax, SelAntZ - RangeZoomMax, SelAntX + RangeZoomMax, SelAntY + RangeZoomMax, SelAntZ + RangeZoomMax);
+      } else {
+        view->SetRange(-RangeMax, -RangeMax, -RangeMax, +RangeMax, +RangeMax, +RangeMax);
       }
     }
-    int ReturnCode;
-    // view->SetView(view->GetLongitude() + 0.4, view->GetLatitude() + 0, 0, ReturnCode);
-    cHotTest->Modified();
-    cHotTest->Update();
+
+      if (*SelLayer) {
+        for (int ilayer=0; ilayer < global_settings1->NLAYERS; ilayer++) { // loop over layers on the payload
+          for (int ifold=0;ifold<global_anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
+            int antNum = global_anita1->GetRxTriggerNumbering(ilayer, ifold);
+
+            int NormalsColor;
+            if (ilayer == SelLayer)
+              NormalsColor = kRed;
+            else
+              NormalsColor = kBlue;
+            vAntNormals->at(antNum).SetLineColor(NormalsColor);
+            vAntPos->at(antNum).SetMarkerColor(NormalsColor);
+
+            if (ilayer == SelAntLayer && ifold == SelAntFold){
+              vAntNormals->at(antNum).SetLineColor(kMagenta);
+              vAntPos->at(antNum).SetMarkerColor(kMagenta);
+            }
+            vAntNormals->at(antNum).Draw();
+          }
+        }
+      }
+      // The following is shifted to the bottom since "modified" flag may have been inherited from the reload section and we
+      // don't want to clear it by the call to the "property_int".
+      property_int(ctx, "SelLayer: ", 0, SelLayer, global_settings1->NLAYERS - 1/*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
+      int ReturnCode;
+      if (*RotSpeed != 0) {
+        view->SetView(view->GetLongitude() + 0.1 * *RotSpeed, view->GetLatitude() + 0, 0, ReturnCode);
+      }
+      cHotTest->Modified();
+      cHotTest->Update();
   }
-  if (mode == m_reload || *SelLayer) {
-    cHotTest->Modified();
-    cHotTest->Update();
-    cGain->Modified();
-    cGain->Update();
-  }
+    if (mode == m_reload || *SelLayer || *AntZoom) {
+      cHotTest->Modified();
+      cHotTest->Update();
+      cGain->Modified();
+      cGain->Update();
+    }
 }
 
   void PlotSomething(std::map<std::string, void*> *penv, RunMode mode, struct nk_context *ctx){
@@ -292,64 +314,64 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
     fflush(stdout);
   }
 
-  static std::map<std::string, void*> *game_init(bool bInteractive_arg)
-  {
-    bInteractive = bInteractive_arg;
+static std::map<std::string, void*> *game_init(bool bInteractive_arg)
+{
+  bInteractive = bInteractive_arg;
 
-    std::map<std::string, void*> *env = new std::map<std::string, void*>;
-    // PlotSomething(env, m_init, NULL);
-    printf("Init Done\n");
-    return env;
-  }
+  std::map<std::string, void*> *env = new std::map<std::string, void*>;
+  // PlotSomething(env, m_init, NULL);
+  printf("Init Done\n");
+  return env;
+}
 
-  static void game_finalize(std::map<std::string, void*> *env)
-  {
-    delete env;
-  }
+static void game_finalize(std::map<std::string, void*> *env)
+{
+  delete env;
+}
 
-  static void game_reload(std::map<std::string, void*> *env)
-  {
-    // PlotSomething(env, m_reload, ctx);
-    PlotGain(env, m_reload, ctx);
-    cout << "reloaded dl" << endl;
-  }
+static void game_reload(std::map<std::string, void*> *env)
+{
+  // PlotSomething(env, m_reload, ctx);
+  PlotGain(env, m_reload, ctx);
+  cout << "reloaded dl" << endl;
+}
 
-  static void game_unload(std::map<std::string, void*> *env __attribute__ ((unused)))
-  {
-    cout << "game unloaded" << endl;
-  }
+static void game_unload(std::map<std::string, void*> *env __attribute__ ((unused)))
+{
+  cout << "game unloaded" << endl;
+}
 
-  static bool game_step_core(std::map<std::string, void*> *env) {
-    // PlotSomething(env, m_step, ctx);
-    PlotGain(env, m_step, ctx);
-    return true;
-  }
+static bool game_step_core(std::map<std::string, void*> *env) {
+  // PlotSomething(env, m_step, ctx);
+  PlotGain(env, m_step, ctx);
+  return true;
+}
 
-  static bool game_step(std::map<std::string, void*> *env)
-  {
-    if (bInteractive) {
-      gSystem->ProcessEvents();
+static bool game_step(std::map<std::string, void*> *env)
+{
+  if (bInteractive) {
+    gSystem->ProcessEvents();
  
-      if (nk_begin(ctx, "Plot Controls", nk_rect(50, 50, 200, 200),
-                   NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
-                   NK_WINDOW_CLOSABLE|NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE)) {
-        game_step_core(env);
-      }
-      else
-        cout << "nk_begin failed" << endl;
-      nk_end(ctx);
-    }
-    else {
+    if (nk_begin(ctx, "Plot Controls", nk_rect(50, 50, 200, 200),
+                 NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
+                 NK_WINDOW_CLOSABLE|NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE)) {
       game_step_core(env);
     }
-
-    return true;
+    else
+      cout << "nk_begin failed" << endl;
+    nk_end(ctx);
+  }
+  else {
+    game_step_core(env);
   }
 
-  __attribute__((visibility("default"))) extern const struct game_api GAME_API = {
-    (void *(*)(bool))  game_init, // game_init
-    (void (*)(void *)) game_finalize, // game_finalize
-    (void (*)(void *)) game_reload, // game_reload
-    (void (*)(void *)) game_unload, // game_unload
-    (bool (*)(void *)) game_step // game_step
-  };
+  return true;
+}
+
+__attribute__((visibility("default"))) extern const struct game_api GAME_API = {
+  (void *(*)(bool))  game_init, // game_init
+  (void (*)(void *)) game_finalize, // game_finalize
+  (void (*)(void *)) game_reload, // game_reload
+  (void (*)(void *)) game_unload, // game_unload
+  (bool (*)(void *)) game_step // game_step
+};
