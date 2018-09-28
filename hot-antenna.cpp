@@ -37,7 +37,7 @@ extern Settings* global_settings1;
 extern Anita *global_anita1;
 extern Balloon *global_bn1;
 extern Vector direction2bn;
-
+extern const double pi;
 // bInteractive: can be assigned "false" once through game_init
 // to instruct the module that it is in the batch mode.
 // One time is enough since reloading should not happen in the batch mode.
@@ -93,14 +93,17 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   const int SelAntLayer = 3;
   const int SelAntFold = 0;
   const double RangeMax = 5;
-  Vector n_eplane, SelAnt_eplane;
-  Vector n_hplane, SelAnt_hplane;
-  Vector n_normal, SelAnt_normal;
+  static Vector n_eplane, SelAnt_eplane;
+  static Vector n_hplane, SelAnt_hplane;
+  static Vector n_normal, SelAnt_normal;
+  static Vector RotatedSel_eplane;
   int SelAntNum = global_anita1->GetRxTriggerNumbering(SelAntLayer, SelAntFold);
   double SelAntX = global_anita1->antenna_positions[SelAntNum][0];
   double SelAntY = global_anita1->antenna_positions[SelAntNum][1];
   double SelAntZ = global_anita1->antenna_positions[SelAntNum][2];
+  int ReturnCode;
 
+  static bvv::TBuffer <double> PolAngle(30);
   static bvv::TBuffer <int> SelLayer(0);
   static bvv::TBuffer <int> AntZoom(0);
   
@@ -111,6 +114,7 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   RESET_VAR_ONRELOAD(vector <TPolyLine3D>, vAntNormals, new vector <TPolyLine3D> (48));
   RESET_VAR_ONRELOAD(vector <TPolyMarker3D>, vAntPos, new vector <TPolyMarker3D> (48));
   RESET_VAR_ONRELOAD(TPolyLine3D, lDir2Bal, new TPolyLine3D(2));
+  RESET_VAR_ONRELOAD(TPolyLine3D, lPol, new TPolyLine3D(2));
   RESET_VAR_ONRELOAD(TPolyLine3D, lSelAnt_hplane, new TPolyLine3D(2));
   RESET_VAR_ONRELOAD(TPolyLine3D, lSelAnt_eplane, new TPolyLine3D(2));
   RESET_VAR_ONRELOAD(TGraph, gegain, new TGraph(Anita::NFREQ));
@@ -119,15 +123,15 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   cHotTest->cd();
   if (mode == m_reload) {
     SelLayer.modified = true;
-    int ReturnCode;
-
     global_bn1->GetAntennaOrientation(global_settings1,  global_anita1,  SelAntLayer,  SelAntFold, SelAnt_eplane,  SelAnt_hplane,  SelAnt_normal);
+    cout << "SelAnt_normal: " << SelAnt_normal << endl;
     
     view->SetRange(-RangeMax, -RangeMax, -RangeMax, +RangeMax, +RangeMax, +RangeMax);
     lDir2Bal->SetPoint(0, 0, 0, 0);
     lDir2Bal->SetPoint(1, SelAnt_normal[0] * Dir2BalLen, SelAnt_normal[1] * Dir2BalLen, SelAnt_normal[2] * Dir2BalLen);
     lDir2Bal->SetLineColor(kMagenta);
     lDir2Bal->Draw();
+
     for (int ilayer=0; ilayer < global_settings1->NLAYERS; ilayer++) { // loop over layers on the payload
       for (int ifold=0;ifold<global_anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
         int antNum = global_anita1->GetRxTriggerNumbering(ilayer, ifold);
@@ -166,12 +170,71 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
       }
     }
 
+    cHotTest->Modified();
+    cHotTest->Update();
+  }
+
+  cHotTest->cd();
+
+  if (mode == m_step) {
+    nk_layout_row_dynamic(ctx, 25, 1);
+    property_int(ctx, "Rot Speed: ", 0, *RotSpeed, 50 /*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
+    property_double(ctx, "Pol Angle: ", 0, PolAngle, 359 /*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
+    checkbox_label(ctx, "Ant. Zoom: ", AntZoom);
+    if (*AntZoom) { 
+      if (AntZoom) {
+        const double RangeZoomMax = 1;
+        view->SetRange(SelAntX - RangeZoomMax, SelAntY - RangeZoomMax, SelAntZ - RangeZoomMax, SelAntX + RangeZoomMax, SelAntY + RangeZoomMax, SelAntZ + RangeZoomMax);
+      } else {
+        view->SetRange(-RangeMax, -RangeMax, -RangeMax, +RangeMax, +RangeMax, +RangeMax);
+      }
+    }
+
+    if (*SelLayer) { // This is either from the m_reload or previous step.
+      for (int ilayer=0; ilayer < global_settings1->NLAYERS; ilayer++) { // loop over layers on the payload
+        for (int ifold=0;ifold<global_anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
+          int antNum = global_anita1->GetRxTriggerNumbering(ilayer, ifold);
+
+          int NormalsColor;
+          if (ilayer == SelLayer)
+            NormalsColor = kRed;
+          else
+            NormalsColor = kBlue;
+          vAntNormals->at(antNum).SetLineColor(NormalsColor);
+          vAntPos->at(antNum).SetMarkerColor(NormalsColor);
+
+          if (ilayer == SelAntLayer && ifold == SelAntFold){
+            vAntNormals->at(antNum).SetLineColor(kMagenta);
+            vAntPos->at(antNum).SetMarkerColor(kMagenta);
+          }
+          vAntNormals->at(antNum).Draw();
+        }
+      }
+      // I cannot wait until the end of m_step block because I rely on SelLayer.modified == true which expire after the first redrawing of the corresponding widget:
+      cHotTest->Modified();
+      cHotTest->Update();
+    }
+    // The following is shifted to the bottom since "modified" flag may have been inherited from the reload section and we
+    // don't want to clear it by the call to the "property_int".
+    property_int(ctx, "SelLayer: ", 0, SelLayer, global_settings1->NLAYERS - 1/*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
+    int ReturnCode;
+    if (*RotSpeed != 0) {
+      view->SetView(view->GetLongitude() + 0.1 * *RotSpeed, view->GetLatitude() + 0, 0, ReturnCode);
+    }
+  }
+
+  if (mode == m_reload || *PolAngle) {
+    RotatedSel_eplane = SelAnt_eplane.Rotate(PolAngle * pi / 180, SelAnt_normal);
+    lPol->SetPoint(0, SelAntX, SelAntY, SelAntZ);
+    lPol->SetPoint(1, SelAntX + RotatedSel_eplane[0], SelAntY + RotatedSel_eplane[1], SelAntZ + RotatedSel_eplane[2]);
+    lPol->SetLineColor(kGreen);
+    lPol->Draw();
     // Computing gains:
     cGain->cd(); 
     double e_component_kvector, h_component_kvector, n_component_kvector;
     global_bn1->GetEcompHcompkvector(SelAnt_eplane,  SelAnt_hplane,  SelAnt_normal, /* -SelAnt_hplane */ -SelAnt_normal /* <-- direction2bn */, e_component_kvector,  h_component_kvector,  n_component_kvector);
     double e_component, h_component, n_component;
-    global_bn1->GetEcompHcompEvector(global_settings1,  SelAnt_eplane,  SelAnt_hplane, /* SelAnt_eplane */ SelAnt_hplane /* <-- polarization */,  e_component,  h_component,  n_component);
+    global_bn1->GetEcompHcompEvector(global_settings1,  SelAnt_eplane,  SelAnt_hplane, /* SelAnt_eplane */ RotatedSel_eplane /* <-- polarization */,  e_component,  h_component,  n_component);
     double hitangle_e, hitangle_h;
     global_bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
     // double e_signal[global_anita1->NFREQ] = {1.0}, h_signal[global_anita1->NFREQ] = {1.0};
@@ -187,60 +250,18 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
     gegain->SetLineColor(kBlue);
     ghgain->SetLineColor(kRed);
     ghgain->Draw("AL");
+    ghgain->GetYaxis()->SetRangeUser(0, 0.45);
     gegain->Draw("L");
+
   }
 
-  cHotTest->cd();
-  if (mode == m_step) {
-    nk_layout_row_dynamic(ctx, 25, 1);
-    property_int(ctx, "Rot Speed: ", 0, *RotSpeed, 50 /*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
-    checkbox_label(ctx, "Ant. Zoom: ", AntZoom);
-    if (*AntZoom) { 
-      if (AntZoom) {
-        const double RangeZoomMax = 1;
-        view->SetRange(SelAntX - RangeZoomMax, SelAntY - RangeZoomMax, SelAntZ - RangeZoomMax, SelAntX + RangeZoomMax, SelAntY + RangeZoomMax, SelAntZ + RangeZoomMax);
-      } else {
-        view->SetRange(-RangeMax, -RangeMax, -RangeMax, +RangeMax, +RangeMax, +RangeMax);
-      }
-    }
-
-      if (*SelLayer) {
-        for (int ilayer=0; ilayer < global_settings1->NLAYERS; ilayer++) { // loop over layers on the payload
-          for (int ifold=0;ifold<global_anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
-            int antNum = global_anita1->GetRxTriggerNumbering(ilayer, ifold);
-
-            int NormalsColor;
-            if (ilayer == SelLayer)
-              NormalsColor = kRed;
-            else
-              NormalsColor = kBlue;
-            vAntNormals->at(antNum).SetLineColor(NormalsColor);
-            vAntPos->at(antNum).SetMarkerColor(NormalsColor);
-
-            if (ilayer == SelAntLayer && ifold == SelAntFold){
-              vAntNormals->at(antNum).SetLineColor(kMagenta);
-              vAntPos->at(antNum).SetMarkerColor(kMagenta);
-            }
-            vAntNormals->at(antNum).Draw();
-          }
-        }
-      }
-      // The following is shifted to the bottom since "modified" flag may have been inherited from the reload section and we
-      // don't want to clear it by the call to the "property_int".
-      property_int(ctx, "SelLayer: ", 0, SelLayer, global_settings1->NLAYERS - 1/*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
-      int ReturnCode;
-      if (*RotSpeed != 0) {
-        view->SetView(view->GetLongitude() + 0.1 * *RotSpeed, view->GetLatitude() + 0, 0, ReturnCode);
-      }
-      cHotTest->Modified();
-      cHotTest->Update();
+  if (mode == m_reload /* not needed: || *SelLayer */ || *AntZoom || *RotSpeed || *PolAngle) {
+    cHotTest->Modified();
+    cHotTest->Update();
+    cGain->Modified();
+    cGain->Update();
+    cout << "Step updated canvases" << endl;
   }
-    if (mode == m_reload || *SelLayer || *AntZoom) {
-      cHotTest->Modified();
-      cHotTest->Update();
-      cGain->Modified();
-      cGain->Update();
-    }
 }
 
   void PlotSomething(std::map<std::string, void*> *penv, RunMode mode, struct nk_context *ctx){
