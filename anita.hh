@@ -240,6 +240,7 @@ public:
 
 
   int channels_passing[2][5];                                                                                 ///< channels passing.  This is reset for every antenna for every event
+  int channels_passing_justNoise[2][5];                                                                                 ///< channels passing.  This is reset for every antenna for every event
   int l1_passing; // l1 passing
   int l1_passing_allantennas[48]; // l1 passing
     
@@ -595,6 +596,7 @@ public:
   RFSignal *fSignalChainResponseTriggerTuffs[2][3][16][7];  // same as for DigitizerTuffs
   void readImpulseResponseDigitizer(Settings *settings1);
   void readImpulseResponseTrigger(Settings *settings1);
+  void calculateImpulseResponsesRatios(Settings *settings1);
   void readTuffResponseDigitizer(Settings *settings1);
   void readTuffResponseTrigger(Settings *settings1);
   void readTriggerEfficiencyScanPulser(Settings *settings1);

@@ -87,9 +87,12 @@ class GlobalTrigger {
   // 4th component:  slices of bandwidth
   //  int channels_passing[4][16][2][5]; // keeps track of which channels pass
   int channels_passing[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2][Anita::NBANDS_MAX]; // keeps track of which channels pass
+  int channels_passing_justNoise[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2][Anita::NBANDS_MAX]; // keeps track of which channels pass (justNoise)
   // make this an array of vectors instead so that we can have an arbitrary number of bands for satellite
   vector<int> vchannels_passing[Anita::NLAYERS_MAX][Anita::NPHI_MAX][2];
   std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhits; 
+  std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhitsnoise; 
+  std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhitsall; 
 
 
   int triggerbits[Anita::NTRIG]; // keeps track of which trigger scenarios pass
@@ -97,12 +100,12 @@ class GlobalTrigger {
     
   // this is L2 and L3 triggers
   void PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,
-		     int *thispasses);
+		     int *thispasses,  bool noiseOnly=false);
   void PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold,
-		     int *thispasses);
+		     int *thispasses,  bool noiseOnly=false);
 
   
-  void PassesTriggerBasic(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses, int inu);
+  void PassesTriggerBasic(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses, int inu, bool noiseOnly=false);
 
   void PassesTriggerCoherentSum(Settings *settings1, Anita *anita1, int inu, int *thispasses);
 

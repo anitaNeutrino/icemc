@@ -896,8 +896,8 @@ int main(int argc,  char **argv) {
   configAnitaTree->Fill();
   
   TTree *triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
-  triggerSettingsTree->Branch("dioderms", anita1->bwslice_dioderms_fullband_allchan, "dioderms[2][48][6]/D");
-  triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48][6]/D");
+  triggerSettingsTree->Branch("dioderms", anita1->bwslice_dioderms_fullband_allchan, "dioderms[2][48][7]/D");
+  triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48][7/D");
   triggerSettingsTree->Fill();
 
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
@@ -1046,6 +1046,7 @@ int main(int argc,  char **argv) {
     globaltrig1->volts_rx_rfcm_trigger.assign(16,  vector <vector <double> >(3,  vector <double>(0)));
     anita1->rms_rfcm_e_single_event = 0;
 
+    
     for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
       for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
 
@@ -1053,8 +1054,6 @@ int main(int argc,  char **argv) {
 	
 	ChanTrigger *chantrig1 = new ChanTrigger();
 	chantrig1->InitializeEachBand(anita1);
-	  
-	//	  chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
 
 	
 #ifdef ANITA_UTIL_EXISTS
@@ -1063,6 +1062,9 @@ int main(int argc,  char **argv) {
   
 	if(!settings1->APPLYIMPULSERESPONSETRIGGER) chantrig1->injectImpulseAfterAntenna(anita1, antNum);
 #endif
+	
+
+	memset(chantrig1->volts_rx_forfft, 0, sizeof(chantrig1->volts_rx_forfft));
 	
 	chantrig1->TriggerPath(settings1, anita1, antNum, bn1);
 	  

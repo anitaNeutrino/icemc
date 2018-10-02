@@ -113,6 +113,7 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
       for (int k=0;k<2;k++) {
 	for (int p=0;p<anita1->NBANDS+1;p++) {
 	  channels_passing[i][j][k][p]=0;
+	  channels_passing_justNoise[i][j][k][p]=0;
 	  // make vchannels_passing the proper length.
 	  vchannels_passing[i][j][k].push_back(0);
 	}
@@ -127,6 +128,7 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
       for (int k=0;k<2;k++) {
 	for (int p=0;p<5;p++) {
 	  arrayofhits[i][j][k][p].clear();
+	  arrayofhitsnoise[i][j][k][p].clear();
 	}
       }
     }
@@ -206,16 +208,16 @@ GlobalTrigger::GlobalTrigger(Settings *settings1,Anita *anita1){
  *			There is a decent amount of dead code which should be pruned, as well.
  */
 
-void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,  int *thispasses) {
+void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,  int *thispasses, bool noiseOnly) {
 
   double this_threshold= anita1->powerthreshold[4]; 
-  return PassesTrigger(settings1,anita1,discones_passing,mode,l3trig,l2trig,l1trig,antennaclump,loctrig,loctrig_nadironly,inu,this_threshold, thispasses);   
+  return PassesTrigger(settings1,anita1,discones_passing,mode,l3trig,l2trig,l1trig,antennaclump,loctrig,loctrig_nadironly,inu,this_threshold, thispasses, noiseOnly);   
 }
 
 
 
 
-void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold, int *thispasses) {
+void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX],int inu,double this_threshold, int *thispasses, bool noiseOnly) {
 
 
   //bool ishpol should only be used for anita3, by default do only vpol
@@ -224,7 +226,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 
     // Basic trigger refers to  frequency domain voltage (0) frequency domain energy (1) timedomain diode integration (2) 
 
-    PassesTriggerBasic(settings1, anita1, discones_passing, mode, l3trig, l2trig, l1trig, antennaclump, loctrig, loctrig_nadironly, thispasses, inu);
+    PassesTriggerBasic(settings1, anita1, discones_passing, mode, l3trig, l2trig, l1trig, antennaclump, loctrig, loctrig_nadironly, thispasses, inu, noiseOnly);
 
   }
 
@@ -250,7 +252,7 @@ void GlobalTrigger::PassesTrigger(Settings *settings1,Anita *anita1,int discones
 
 
 
-void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses, int inu){
+void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int discones_passing,int mode,int *l3trig,int l2trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int l1trig[Anita::NPOL][Anita::NTRIGGERLAYERS_MAX],int antennaclump,int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX],int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX], int *thispasses, int inu, bool noiseOnly){
 
   int ltsum=0;
   int channsum=0;
@@ -258,7 +260,13 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
   //  int thispasses[2]={0,0};
   int required_bands_failed[2]={0,0}; // keep track of whether bands that were required to pass did not, for each polarization
 
-    
+  if (noiseOnly){
+    arrayofhits = arrayofhitsnoise;
+  }else{
+    arrayofhits = arrayofhitsall;
+  }
+
+  
   // this is an array with 1=pass and 0=fail for each channel
   // the first two layers on the payload are "compacted"
   // into one trigger layer of 16 antennas.
@@ -310,7 +318,8 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
 	  // physically higher than the 1st antenna in the first trigger layer
 	  // which means that the nadirs are aligned with the antennas with indices 1,3,5 etc.
 	  // we will still use indices 0-7 for them though
-	  channels_compacted_passing[whichlayer][whichphisector][ipolar][iband]+=channels_passing[ilayer][iphi][ipolar][iband];
+	  if (noiseOnly) channels_compacted_passing[whichlayer][whichphisector][ipolar][iband]+=channels_passing_justNoise[ilayer][iphi][ipolar][iband];
+	   else  channels_compacted_passing[whichlayer][whichphisector][ipolar][iband]+=channels_passing[ilayer][iphi][ipolar][iband];
 	  // if (channels_compacted_passing[whichlayer][whichphisector][ipolar][iband]>0 && ipolar==0) cout << whichlayer << " " << whichphisector << endl;
 	} //for
       } //for
