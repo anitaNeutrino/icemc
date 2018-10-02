@@ -123,6 +123,7 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   cHotTest->cd();
   if (mode == m_reload) {
     SelLayer.modified = true;
+    cout << "view: " << &view << endl;
     global_bn1->GetAntennaOrientation(global_settings1,  global_anita1,  SelAntLayer,  SelAntFold, SelAnt_eplane,  SelAnt_hplane,  SelAnt_normal);
     cout << "SelAnt_normal: " << SelAnt_normal << endl;
     
@@ -181,7 +182,7 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
     property_int(ctx, "Rot Speed: ", 0, *RotSpeed, 50 /*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
     property_double(ctx, "Pol Angle: ", 0, PolAngle, 359 /*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
     checkbox_label(ctx, "Ant. Zoom: ", AntZoom);
-    if (*AntZoom) { 
+    if (*AntZoom) {
       if (AntZoom) {
         const double RangeZoomMax = 1;
         view->SetRange(SelAntX - RangeZoomMax, SelAntY - RangeZoomMax, SelAntZ - RangeZoomMax, SelAntX + RangeZoomMax, SelAntY + RangeZoomMax, SelAntZ + RangeZoomMax);
@@ -218,9 +219,9 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
     // don't want to clear it by the call to the "property_int".
     property_int(ctx, "SelLayer: ", 0, SelLayer, global_settings1->NLAYERS - 1/*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
     int ReturnCode;
-    if (*RotSpeed != 0) {
-      view->SetView(view->GetLongitude() + 0.1 * *RotSpeed, view->GetLatitude() + 0, 0, ReturnCode);
-    }
+    // if (*RotSpeed != 0) {
+    //   view->SetView(view->GetLongitude() + 0.1 * *RotSpeed, view->GetLatitude() + 0, 0, ReturnCode);
+    // }
   }
 
   if (mode == m_reload || *PolAngle) {
