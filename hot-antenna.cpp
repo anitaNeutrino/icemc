@@ -101,16 +101,16 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   double SelAntX = global_anita1->antenna_positions[SelAntNum][0];
   double SelAntY = global_anita1->antenna_positions[SelAntNum][1];
   double SelAntZ = global_anita1->antenna_positions[SelAntNum][2];
-  int ReturnCode;
+  // int ReturnCode;
 
   static bvv::TBuffer <double> PolAngle(30);
   static bvv::TBuffer <int> SelLayer(0);
   static bvv::TBuffer <int> AntZoom(0);
   
   INIT_VAR_ONCE(TCanvas, cHotTest, new TCanvas());
+  INIT_VAR_ONCE(TView, view, TView::CreateView(1));
   INIT_VAR_ONCE(TCanvas, cGain, new TCanvas());
-  INIT_VAR_ONCE(bvv::TBuffer <int>, RotSpeed, new bvv::TBuffer <int> (10));
-  RESET_VAR_ONRELOAD(TView, view, TView::CreateView(1));
+  INIT_VAR_ONCE(bvv::TBuffer <int>, RotSpeed, new bvv::TBuffer <int> (0));
   RESET_VAR_ONRELOAD(vector <TPolyLine3D>, vAntNormals, new vector <TPolyLine3D> (48));
   RESET_VAR_ONRELOAD(vector <TPolyMarker3D>, vAntPos, new vector <TPolyMarker3D> (48));
   RESET_VAR_ONRELOAD(TPolyLine3D, lDir2Bal, new TPolyLine3D(2));
@@ -123,7 +123,7 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   cHotTest->cd();
   if (mode == m_reload) {
     SelLayer.modified = true;
-    cout << "view: " << &view << endl;
+    // cout << "view: " << &view << endl;
     global_bn1->GetAntennaOrientation(global_settings1,  global_anita1,  SelAntLayer,  SelAntFold, SelAnt_eplane,  SelAnt_hplane,  SelAnt_normal);
     cout << "SelAnt_normal: " << SelAnt_normal << endl;
     
@@ -219,9 +219,9 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
     // don't want to clear it by the call to the "property_int".
     property_int(ctx, "SelLayer: ", 0, SelLayer, global_settings1->NLAYERS - 1/*max*/, 1 /*increment*/, 0.5 /*sensitivity*/);
     int ReturnCode;
-    // if (*RotSpeed != 0) {
-    //   view->SetView(view->GetLongitude() + 0.1 * *RotSpeed, view->GetLatitude() + 0, 0, ReturnCode);
-    // }
+    if (*RotSpeed != 0) {
+      view->SetView(view->GetLongitude() + 0.1 * *RotSpeed, view->GetLatitude() + 0, 0, ReturnCode);
+    }
   }
 
   if (mode == m_reload || *PolAngle) {
@@ -249,7 +249,9 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
       // cout << "eh_signal: " << e_signal << ", " << h_signal << endl;
     }
     gegain->SetLineColor(kBlue);
+    gegain->SetLineWidth(2);
     ghgain->SetLineColor(kRed);
+    ghgain->SetLineWidth(2);
     ghgain->Draw("AL");
     ghgain->GetYaxis()->SetRangeUser(0, 0.45);
     gegain->Draw("L");
