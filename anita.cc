@@ -4170,7 +4170,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 	for(int ituff=0; ituff <=6; ituff++) {
 	  
           if(ituff==6){
-	    filename = Form("%s/share/AnitaAnalysisFramework/responses/A4noNotches/fullTF_%02d%s%s.txt",getenv("ANITA_UTIL_INSTALL_DIR"), iphi+1, sring[iring].c_str(), spol[ipol].c_str());	    
+	    filename = Form("%s/share/AnitaAnalysisFramework/responses/A4noNotches/%02d%s%s.txt",getenv("ANITA_UTIL_INSTALL_DIR"), iphi+1, sring[iring].c_str(), spol[ipol].c_str());	    
           }// if tuffs notches off but tuffs on, these files are loaded and in different directory than other tuff notch configurations
           else {
 	    filename = Form("%s/share/AnitaAnalysisFramework/responses/A4ImpulseTUFFs/%s/%02d%s%s.imp",getenv("ANITA_UTIL_INSTALL_DIR"), snotch_dir[ituff].c_str(), iphi+1, sring[iring].c_str(), spol[ipol].c_str());            
