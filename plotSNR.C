@@ -8,11 +8,10 @@ void plotSNR(){
 
   // Change pathname to the path to your icemc runs
   string path = "/datapool/software/anitaBuildTool/build/components/icemc/outputs";
-
+  // use 338 - 343
   // Change first and last run number appropriately
-  int firstRun = 321;
-  int lastRun  = 348;
-
+  int firstRun = 338;
+  int lastRun  = 343;
 
   // Define TChains for the head and truth Trees
   TChain *tHead = new TChain("headTree");
@@ -54,23 +53,28 @@ void plotSNR(){
 
     tHead->GetEntry(ientry);
     tTrue->GetEntry(ientry);
-
+	cout << header->l3TrigPatternH << endl;
     // Get SNR value at Digitizer (change V to H in case of using HPOL)
     snr = truth->maxSNRAtDigitizerH;
     if (snr>snrmax) snr=snrmax*0.9999;
-    
     hDenom->Fill(snr, 1);
 
+    
+    //	hDenom->Fill(snr, 1);
+    
     // if there is a trigger add the event to the numerator
     // NB l3TrigPattern is for VPOL
     //    l3TrigPatternH is for HPOL
-    if (header->l3TrigPatternH>0)   hNum->Fill(snr, 1);
-  
-    // cout << header->eventNumber << " " << truth->maxSNRAtDigitizerH << " " << 1 << endl;
+    if (header->l3TrigPatternH>0) hNum->Fill(snr, 1); 
+
+ // cout << header->eventNumber << " " << truth->maxSNRAtDigitizerH << " " << 1 << endl;
   }
+cout << hDenom << " = denominator" <<endl;
+cout << hDenom << " = numerator" << endl;
+cout << nentries << " = number of entries/events" << endl;
 
   TEfficiency *eff = 0;
-
+  
   // Define the TEfficiency from the numerator and denominator
   if (TEfficiency::CheckConsistency(*hNum, *hDenom)){
     eff = new TEfficiency(*hNum, *hDenom);
@@ -81,4 +85,8 @@ void plotSNR(){
     eff->Write("icemcWAIS");
 
   }
+
 }
+
+
+// used branches: 
