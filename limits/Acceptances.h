@@ -14,6 +14,7 @@ Double_t ANITA_1_effArea[n_ANITA] = {3.13E-4,
 /* 1022.5 eV 1.41 × 103 km2 sr */
 /* 1023 eV 2.54 × 103 km2 sr */
 
+double ANITA_4_eff[n_ANITA] = { 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7 };
 double ANITA_3_eff[n_ANITA] = { 0.84, 0.84, 0.84, 0.84, 0.84, 0.84, 0.84 };
 double ANITA_2_eff[n_ANITA] = { 0.67664 , 0.60748 , 0.60000 , 0.55701 , 0.47477, 0.40935 , 0.41495 };
 double ANITA_1_eff[n_ANITA] = { 0.62041 , 0.71429 , 0.75306 , 0.68571 , 0.64694, 0.50000 , 0.43878 };
@@ -67,13 +68,23 @@ Double_t ANITA_3_effVol[n_ANITA] = { 0.28516,
 				     9398.71,
 				     19776.2}; // in km^3 srt
 
-Double_t ANITA_4_effVol[n_ANITA] = {0.0305464,
-				    3.32624,
-				    93.0101,
-				    847.846,
-				    4199.19,
-				    12248,
-				    26229.5};
+
+Double_t ANITA_4_effVol[n_ANITA] = { 2.43441,
+				     12.0405,
+				     139.711,
+				     989.925,
+				     4744.19,
+				     14142.7,
+				     30423.9};
+
+Double_t ANITA_4_vol_notuffs[n_ANITA] = {0.308033,
+					 8.34676,
+					 184.818,
+					 1490.28,
+					 6467.77,
+					 17734.4,
+					 36094.1};
+
 
 Double_t ANITA_3_effVol_noMasking[n_ANITA] = { 0.910887,
 					       22.,

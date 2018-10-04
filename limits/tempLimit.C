@@ -10,25 +10,16 @@ TGraph *getLimitOldFormula(double N90, double effArea[n_ANITA], double eff[n_ANI
 
 TGraph *getLimitNewFormula(double N90, double effArea[n_ANITA], double eff[n_ANITA], double livetime);
 
-TGraph* getCombinedLimitNoDelta(double denom[n_ANITA]);
+TGraph* getCombinedLimitNoDelta(double denom[n_ANITA], double N90);
 
-TGraph* getCombinedLimit(double denom[n_ANITA]);
+TGraph* getCombinedLimit(double denom[n_ANITA], double N90);
 
 TGraph *auger2015();
 TGraph *icecube();
 
-
-Double_t ANITA4vol[] = { 2.43441,
-			 12.0405,
-			 139.711,
-			 989.925,
-			 4744.19,
-			 14142.7,
-			 30423.9};
-
 void tempLimit(){
 
-  string outname = "LimitTemp_ANITA4_peter";
+  string outname = "LimitTemp_ANITA4";
 
   //   if (!gROOT->GetClass("TFeldmanCousins")) gSystem->Load("libPhysics");
 
@@ -39,15 +30,18 @@ void tempLimit(){
   // either upper or lower limit will return that limit and fill
   // data members with both the upper and lower limit for you.
   Double_t Nobserved   = 1.0;
-  Double_t Nbackground = 0.7;
+  Double_t Nbackground = 0.34;
 
-  Double_t NobsAll  = 3.0;
-  Double_t NbkgAll  = (0.7+0.98+1.1);
+  Double_t NobsAll  = 4.0;
+  Double_t NbkgAll  = (0.34+0.7+0.98+1.1);
 
-  Double_t ul = 3.471 ; //; f.CalculateUpperLimit(Nobserved, Nbackground);
+  Double_t A3ul = 3.471 ;
+  Double_t A4ul = f.CalculateUpperLimit(Nobserved, Nbackground);
   //   Double_t ll = f.GetLowerLimit();
 
-   
+
+  
+  Double_t ulA123 = f.CalculateUpperLimit(3, 0.7+0.98+1.1);
   Double_t ulAll = f.CalculateUpperLimit(NobsAll, NbkgAll);
 
   cout << "ANITA 1-3 Upper Limit = " <<  ulAll << endl;
@@ -65,7 +59,7 @@ void tempLimit(){
   
   for (int i=0; i<n_ANITA; i++){
     ANITA_3_effArea[i]     = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCC[i]; 
-    ANITA_4_effArea[i]     = ANITA4vol[i]/intLength_CONNOLLY_nuCC[i]; 
+    ANITA_4_effArea[i]     = ANITA_4_effVol[i]/intLength_CONNOLLY_nuCC[i]; 
     // ANITA_3_effAreaUp[i]   = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCCup[i];
     // ANITA_3_effAreaLow[i]  = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCClow[i]; 
     ANITA_3_effAreaReno[i] = ANITA_3_effVol[i]/intLength_RENO[i];
@@ -78,18 +72,19 @@ void tempLimit(){
   }
   
 
-  double N90A3 = ul;
+  double N90A3 = A3ul;
   
   cout << "ANITA3" << endl;
   TGraph *g_ANITA_3_combined = getLimitOldFormula(N90A3, ANITA_3_geomAverage, ANITA_3_eff, ANITA_3_livetime);
   g_ANITA_3_combined->SetLineStyle(1);
-  g_ANITA_3_combined->SetLineColor(kBlack);
+  g_ANITA_3_combined->SetLineColor(kRed+2);
 
+  double N90A4 = A4ul;
   cout << "ANITA4" << endl;
-  TGraph *g_ANITA_4_icemc = getLimitOldFormula(2.3, ANITA_4_geomAverage, ANITA_3_eff, ANITA_4_livetime);
+  TGraph *g_ANITA_4_icemc = getLimitOldFormula(N90A4, ANITA_4_geomAverage, ANITA_4_eff, ANITA_4_livetime);
   g_ANITA_4_icemc->SetLineStyle(1);
   g_ANITA_4_icemc->SetLineColor(kBlack);
-  g_ANITA_4_icemc->SetLineStyle(2);
+  // g_ANITA_4_icemc->SetLineStyle(2);
 
 
   Double_t ANITA_2_effArea[n_ANITA];
@@ -115,18 +110,18 @@ void tempLimit(){
 			     ANITA_1_livetime*ANITA_1_effArea[ibin]*ANITA_1_eff[ibin] +
 			     ANITA_2_livetime*ANITA_2_effArea[ibin]*ANITA_2_eff[ibin] +
 			     ANITA_3_livetime*ANITA_3_geomAverage[ibin]*ANITA_3_eff[ibin] +
-			     ANITA_4_livetime*ANITA_4_geomAverage[ibin]*ANITA_3_eff[ibin] 
+			     ANITA_4_livetime*ANITA_4_geomAverage[ibin]*ANITA_4_eff[ibin] 
 			     );
   }
 
 
   cout << "Combined limit ANITA 1-3" << endl;
-  TGraph *g_ANITA_123 = getCombinedLimit(ANITA_123_denom);
+  TGraph *g_ANITA_123 = getCombinedLimit(ANITA_123_denom, ulA123);
   g_ANITA_123->SetLineColor(kCyan);
 
-  TGraph *g_ANITA_1234 = getCombinedLimit(ANITA_1234_denom);
+  TGraph *g_ANITA_1234 = getCombinedLimit(ANITA_1234_denom, ulAll);
   g_ANITA_1234->SetLineColor(kCyan);
-  g_ANITA_1234->SetLineStyle(2);
+  // g_ANITA_1234->SetLineStyle(2);
 
   // cout << "Combined limit no delta" << endl;
   // TGraph *gtemp = getCombinedLimitNoDelta(ANITA_123_denom);
@@ -169,7 +164,7 @@ void tempLimit(){
   // g_ANITA_3up->Draw("l");
   // g_ANITA_3low->Draw("l");
   // g_ANITA_3Reno->Draw("l");
-  g_ANITA_123->Draw("l");
+  //  g_ANITA_123->Draw("l");
   g_ANITA_1234->Draw("l");
   g_ANITA_4_icemc->Draw("l");
 
@@ -195,9 +190,9 @@ void tempLimit(){
   // // leg->AddEntry(g_ANITA_3up,  "#sigma Connolly et al, Upper bound",   "l");
   // // leg->AddEntry(g_ANITA_3low, "#sigma Connolly et al, Lower bound",   "l");
   // // leg->AddEntry(g_ANITA_3Reno,        "#sigma Reno et al",     "l");
-  leg->AddEntry(g_ANITA_123,       "ANITA I-III",  "l" );
-  leg->AddEntry(g_ANITA_4_icemc,       "ANITA IV sensitivity icemc+Peter",  "l" );
-  leg->AddEntry(g_ANITA_1234,       "ANITA I-IV sensitivity",  "l" );
+  // leg->AddEntry(g_ANITA_123,       "ANITA I-III",  "l" );
+  leg->AddEntry(g_ANITA_4_icemc,       "ANITA IV",  "l" );
+  leg->AddEntry(g_ANITA_1234,       "ANITA I-IV",  "l" );
   leg->Draw();
 
   
@@ -647,11 +642,9 @@ TGraph* getLimitOldFormula(double N90, double effArea[n_ANITA], double eff[n_ANI
   return g_ANITA_4;
 }
 
-TGraph* getCombinedLimit(double denom[n_ANITA]){
+TGraph* getCombinedLimit(double denom[n_ANITA], double N90){
 
   Double_t ANITA_4_y[n_ANITA];
-  
-  double N90 = 2.30; 
 
   for (int i=0; i<n_ANITA; i++){
     
@@ -700,12 +693,10 @@ TGraph* getLimitNewFormula(double N90, double effArea[n_ANITA], double eff[n_ANI
 
 
 
-TGraph* getCombinedLimitNoDelta(double denom[n_ANITA]){
+TGraph* getCombinedLimitNoDelta(double denom[n_ANITA], double N90){
 
   Double_t ANITA_4_y[n_ANITA];
   
-  double N90 = 2.30; 
-
   for (int i=0; i<n_ANITA; i++){
     
     ANITA_4_y[i] = N90/(denom[i]*1e10*TMath::Log(10.));
