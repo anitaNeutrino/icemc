@@ -57,9 +57,10 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
 
 
     }
-    else if (stripped == "TEVBLAZARS") 
+    else if (stripped == "A3_FAVA") 
     {
-      //
+      // Let's load all the blazars from FAVA that occurred during the A3 flight
+
 
     }
 
