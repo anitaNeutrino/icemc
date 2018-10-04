@@ -18,6 +18,7 @@ double ANITA_3_eff[n_ANITA] = { 0.84, 0.84, 0.84, 0.84, 0.84, 0.84, 0.84 };
 double ANITA_2_eff[n_ANITA] = { 0.67664 , 0.60748 , 0.60000 , 0.55701 , 0.47477, 0.40935 , 0.41495 };
 double ANITA_1_eff[n_ANITA] = { 0.62041 , 0.71429 , 0.75306 , 0.68571 , 0.64694, 0.50000 , 0.43878 };
 
+double ANITA_4_livetime = 24.5416*24*3600.; // 17.4 days
 double ANITA_3_livetime = 17.4*24*3600.; // 17.4 days
 double ANITA_2_livetime = 28.5*24*3600.; 
 double ANITA_1_livetime = 17.4*24*3600.;
@@ -66,6 +67,13 @@ Double_t ANITA_3_effVol[n_ANITA] = { 0.28516,
 				     9398.71,
 				     19776.2}; // in km^3 srt
 
+Double_t ANITA_4_effVol[n_ANITA] = {0.0305464,
+				    3.32624,
+				    93.0101,
+				    847.846,
+				    4199.19,
+				    12248,
+				    26229.5};
 
 Double_t ANITA_3_effVol_noMasking[n_ANITA] = { 0.910887,
 					       22.,
@@ -74,6 +82,15 @@ Double_t ANITA_3_effVol_noMasking[n_ANITA] = { 0.910887,
 					       5768.12,
 					       15041.8,
 					       29690.}; // in km^3 srt
+
+Double_t ANITA_3_effVol_justTau[n_ANITA] = {0.0183866,
+					    0.255914,
+					    30.5467,
+					    263.894,
+					    1010.1,
+					    3290.64,
+					    7159.01};
+
 
 Double_t intLength_RENO[n_ANITA] = { 1131.34,
 				     793.952,
