@@ -510,7 +510,7 @@ int main(int argc,  char **argv) {
     // length = 2 x NFREQ - 1 = 511
     // deltaT = 1/(length x df ) = 3.85368436041e-10 s
     
-    string fname = ICEMC_SRC_DIR + "/data/var31_minialfa_icemc2icemc_input_electric_field_1m_511points.dat";
+    string fname = ICEMC_SRC_DIR + "/data/var31_minialfa_icemc2icemc_input_electric_field_1m_511points_window.dat";
     cout << fname << endl;
 
     vector<double> time;
@@ -537,7 +537,7 @@ int main(int argc,  char **argv) {
    int a = 0;
    //for (a = 1; a < run_no; a++) { //JS: trying to get it to do all runs at once
    for (inu = 0; inu < NNU; inu++) {
-
+    settings1->MINBIAS=1;
     if (NNU >= 100) {
       if (inu % (NNU / 100) == 0)
         cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
@@ -798,7 +798,7 @@ int main(int argc,  char **argv) {
     if ( (thispasses[0]==1 && anita1->pol_allowed[0]==1)
     	 || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
     	 || (settings1->MINBIAS==1)) {
-      
+          settings1->MINBIAS==1;
       //	cout << inu << endl;
 
       anita1->passglobtrig[0]=thispasses[0];
@@ -807,6 +807,7 @@ int main(int argc,  char **argv) {
 
       // keep track of events passing trigger
       count1->npassestrigger[0]++;
+cout << count1 << endl;
       // tags this event as passing
       passestrigger=1;
 
@@ -858,12 +859,14 @@ int main(int argc,  char **argv) {
       rawHeaderPtr->eventNumber = eventNumber;
       rawHeaderPtr->surfSlipFlag = 0;
       rawHeaderPtr->errorFlag = 0;
-
-      if (settings1->MINBIAS==1)
+      if (settings1->MINBIAS==1){
 	rawHeaderPtr->trigType = 8; // soft-trigger
-      else
+	cout << "MINBIASis one" << endl;
+	}
+      else {
 	rawHeaderPtr->trigType = 1; // RF trigger
-
+	cout << "MINBIAS isn't one" << endl;
+      }
       rawHeaderPtr->run = run_no;
       // put the vpol only as a placeholder - these are only used in Anita-2 anyway
       rawHeaderPtr->upperL1TrigPattern = l1trig[0][0];
