@@ -97,10 +97,13 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   static Vector n_hplane, SelAnt_hplane;
   static Vector n_normal, SelAnt_normal;
   static Vector RotatedSel_eplane;
-  int SelAntNum = global_anita1->GetRxTriggerNumbering(SelAntLayer, SelAntFold);
-  double SelAntX = global_anita1->antenna_positions[SelAntNum][0];
-  double SelAntY = global_anita1->antenna_positions[SelAntNum][1];
-  double SelAntZ = global_anita1->antenna_positions[SelAntNum][2];
+  // int SelAntNum = global_anita1->GetRxTriggerNumbering(SelAntLayer, SelAntFold);
+  // double SelAntX = global_anita1->antenna_positions[SelAntNum][0];
+  // double SelAntY = global_anita1->antenna_positions[SelAntNum][1];
+  // double SelAntZ = global_anita1->antenna_positions[SelAntNum][2];
+  double SelAntX = global_anita1->ANTENNA_POSITION_START[SelAntLayer][SelAntFold][0];
+  double SelAntY = global_anita1->ANTENNA_POSITION_START[SelAntLayer][SelAntFold][1];
+  double SelAntZ = global_anita1->ANTENNA_POSITION_START[SelAntLayer][SelAntFold][2];
   // int ReturnCode;
 
   static bvv::TBuffer <double> PolAngle(30);
@@ -132,41 +135,45 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
     lDir2Bal->SetPoint(1, SelAnt_normal[0] * Dir2BalLen, SelAnt_normal[1] * Dir2BalLen, SelAnt_normal[2] * Dir2BalLen);
     lDir2Bal->SetLineColor(kMagenta);
     lDir2Bal->Draw();
-
+    int AntNum = -1;
     for (int ilayer=0; ilayer < global_settings1->NLAYERS; ilayer++) { // loop over layers on the payload
       for (int ifold=0;ifold<global_anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
-        int antNum = global_anita1->GetRxTriggerNumbering(ilayer, ifold);
+        AntNum++;
+        // int antNum = global_anita1->GetRxTriggerNumbering(ilayer, ifold);
         // cout << "ilayer: " << ilayer << ", ifold: " << ifold << ", antNum: " << antNum << endl;
 
         global_bn1->GetAntennaOrientation(global_settings1,  global_anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
         // vAntNormals->at(antNum) = TPolyLine3D(2);
-        double antX = global_anita1->antenna_positions[antNum][0];
-        double antY = global_anita1->antenna_positions[antNum][1];
-        double antZ = global_anita1->antenna_positions[antNum][2];
-        vAntPos->at(antNum).SetPoint(0, antX, antY, antZ);
-        vAntNormals->at(antNum).SetPoint(0, antX, antY, antZ);
-        vAntNormals->at(antNum).SetPoint(1, antX + n_normal[0], antY + n_normal[1], antZ + n_normal[2]);
+        // double antX = global_anita1->antenna_positions[antNum][0];
+        // double antY = global_anita1->antenna_positions[antNum][1];
+        // double antZ = global_anita1->antenna_positions[antNum][2];
+        double AntX = global_anita1->ANTENNA_POSITION_START[ilayer][ifold][0];
+        double AntY = global_anita1->ANTENNA_POSITION_START[ilayer][ifold][1];
+        double AntZ = global_anita1->ANTENNA_POSITION_START[ilayer][ifold][2];
+        vAntPos->at(AntNum).SetPoint(0, AntX, AntY, AntZ);
+        vAntNormals->at(AntNum).SetPoint(0, AntX, AntY, AntZ);
+        vAntNormals->at(AntNum).SetPoint(1, AntX + n_normal[0], AntY + n_normal[1], AntZ + n_normal[2]);
         if (ilayer == SelAntLayer && ifold == SelAntFold) {
-          lSelAnt_eplane->SetPoint(0, antX, antY, antZ);
-          lSelAnt_eplane->SetPoint(1, antX + SelAnt_eplane[0], antY + SelAnt_eplane[1], antZ + SelAnt_eplane[2]);
+          lSelAnt_eplane->SetPoint(0, AntX, AntY, AntZ);
+          lSelAnt_eplane->SetPoint(1, AntX + SelAnt_eplane[0], AntY + SelAnt_eplane[1], AntZ + SelAnt_eplane[2]);
 
-          lSelAnt_hplane->SetPoint(0, antX, antY, antZ);
-          lSelAnt_hplane->SetPoint(1, antX + SelAnt_hplane[0], antY + SelAnt_hplane[1], antZ + SelAnt_hplane[2]);
+          lSelAnt_hplane->SetPoint(0, AntX, AntY, AntZ);
+          lSelAnt_hplane->SetPoint(1, AntX + SelAnt_hplane[0], AntY + SelAnt_hplane[1], AntZ + SelAnt_hplane[2]);
 
           lSelAnt_eplane->Draw();
           lSelAnt_hplane->Draw();
-          cout << "antXYZ: " << antX << ", " << antY << ", " << antZ << endl;
+          cout << "AntXYZ: " << AntX << ", " << AntY << ", " << AntZ << endl;
           cout << "SelAnt_hplane[123]: " << SelAnt_hplane[0] << ", " << SelAnt_hplane[1] << ", " << SelAnt_hplane[2] << endl;
         }
 
-        vAntPos->at(antNum).SetMarkerSize(1);
-        vAntPos->at(antNum).SetMarkerColor(kBlue);
-        vAntPos->at(antNum).SetMarkerStyle(8);
-        vAntNormals->at(antNum).SetLineWidth(1);
-        vAntNormals->at(antNum).SetLineColor(kBlue);
+        vAntPos->at(AntNum).SetMarkerSize(1);
+        vAntPos->at(AntNum).SetMarkerColor(kBlue);
+        vAntPos->at(AntNum).SetMarkerStyle(8);
+        vAntNormals->at(AntNum).SetLineWidth(1);
+        vAntNormals->at(AntNum).SetLineColor(kBlue);
 
-        vAntNormals->at(antNum).Draw();
-        vAntPos->at(antNum).Draw();
+        vAntNormals->at(AntNum).Draw();
+        vAntPos->at(AntNum).Draw();
         // std::cout << "n_normal: " << n_normal << std::endl;
       }
     }
@@ -192,23 +199,25 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
     }
 
     if (*SelLayer) { // This is either from the m_reload or previous step.
+      int AntNum = -1;
       for (int ilayer=0; ilayer < global_settings1->NLAYERS; ilayer++) { // loop over layers on the payload
         for (int ifold=0;ifold<global_anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
-          int antNum = global_anita1->GetRxTriggerNumbering(ilayer, ifold);
+          AntNum++;
+          // int antNum = global_anita1->GetRxTriggerNumbering(ilayer, ifold);
 
           int NormalsColor;
           if (ilayer == SelLayer)
             NormalsColor = kRed;
           else
             NormalsColor = kBlue;
-          vAntNormals->at(antNum).SetLineColor(NormalsColor);
-          vAntPos->at(antNum).SetMarkerColor(NormalsColor);
+          vAntNormals->at(AntNum).SetLineColor(NormalsColor);
+          vAntPos->at(AntNum).SetMarkerColor(NormalsColor);
 
           if (ilayer == SelAntLayer && ifold == SelAntFold){
-            vAntNormals->at(antNum).SetLineColor(kMagenta);
-            vAntPos->at(antNum).SetMarkerColor(kMagenta);
+            vAntNormals->at(AntNum).SetLineColor(kMagenta);
+            vAntPos->at(AntNum).SetMarkerColor(kMagenta);
           }
-          vAntNormals->at(antNum).Draw();
+          vAntNormals->at(AntNum).Draw();
         }
       }
       // I cannot wait until the end of m_step block because I rely on SelLayer.modified == true which expire after the first redrawing of the corresponding widget:
