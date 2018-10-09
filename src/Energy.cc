@@ -7,3 +7,8 @@ std::ostream& operator<<(std::ostream& os, const icemc::Energy& e){
 icemc::Energy operator* (double lhs, icemc::Energy rhs){
   return rhs *= lhs;
 }
+
+icemc::Energy operator* (double lhs, icemc::Energy::Unit rhs){
+  icemc::Energy e(lhs, rhs);
+  return e;
+}

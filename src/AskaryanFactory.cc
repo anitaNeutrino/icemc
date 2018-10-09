@@ -177,7 +177,8 @@ void icemc::AskaryanFactory::GetVmMHz(double vmmhz_max,double vmmhz1m_max, doubl
   }
 } //GetVmMHz
 
-double icemc::AskaryanFactory::GetELPM() const {
+// double icemc::AskaryanFactory::GetELPM() const {
+icemc::Energy icemc::AskaryanFactory::GetELPM() const {  
 
   // LPM
   // elpm =7.7 TeV/cm * rho * X0 in PDG, but our x0 is in meters
@@ -186,7 +187,7 @@ double icemc::AskaryanFactory::GetELPM() const {
 
   //double elpm=7.7E12*(X0ICE*100.);
 
-  double elpm = 2.E15*(X0MEDIUM/x0ice);  // this is what Jaime uses.  see caption under figure 4 of 0003315.
+  Energy elpm = Energy(2.E15, Energy::Unit::eV)*(X0MEDIUM/x0ice);  // this is what Jaime uses.  see caption under figure 4 of 0003315.
   return elpm;
   
 } //GetELPM
@@ -199,12 +200,12 @@ int icemc::AskaryanFactory::GetLPM() const {
 } //GetLPM
 
 
-void icemc::AskaryanFactory::GetSpread(double pnu,
-					      double emfrac,
-					      double hadfrac,
-					      double freq,
-					      double& deltheta_em_max,
-					      double& deltheta_had_max) const {
+void icemc::AskaryanFactory::GetSpread(Energy pnu,
+				       double emfrac,
+				       double hadfrac,
+				       double freq,
+				       double& deltheta_em_max,
+				       double& deltheta_had_max) const {
 
   /**
    * Ultimately, it seems this follows a some_constant/freq dependence
@@ -226,7 +227,7 @@ void icemc::AskaryanFactory::GetSpread(double pnu,
   //  the shower is different.  Get the angular thickness for
   //  both the EM and hadroic parts.
 
-  double elpm = GetELPM();
+  Energy elpm = GetELPM();
 
   //  std::cout << "elpm is " << elpm << "\n";
 
@@ -246,8 +247,8 @@ void icemc::AskaryanFactory::GetSpread(double pnu,
   // and index of refraction explicit, so I pulled those variables
   // out of the equations for deltheta_em_max and deltheta_had_max.
 
-  double em_eshower;  // em shower energy
-  double had_eshower; // had shower energy
+  Energy em_eshower;  // em shower energy
+  Energy had_eshower; // had shower energy
   double nu0; // reference frequency
 
   em_eshower = emfrac*pnu; // first, consider the electromagnetic shower.
@@ -255,8 +256,9 @@ void icemc::AskaryanFactory::GetSpread(double pnu,
 
   // lengthen the shower to account for the lpm effect.
   // from astro-ph/9706064
-  if (em_eshower<1.E15 || !LPM) {
-    showerlength /= pow((em_eshower/1.e15),-0.03);
+  if (em_eshower<Energy(1.E15, Energy::Unit::eV) || !LPM) {
+    // showerlength /= pow((em_eshower/1.e15),-0.03);
+    showerlength /= pow((em_eshower.in(Energy::Unit::PeV)),-0.03);
   }
   else {
     showerlength /= pow(elpm/(0.14*(em_eshower)+elpm),0.3);
@@ -285,14 +287,14 @@ void icemc::AskaryanFactory::GetSpread(double pnu,
       // out the dependence on index of refraction and shower length.
       // remember that in this paper he includes a factor of ln2 in
       // the exponential, which we account for further down
-      const double epsilon=log10(had_eshower/1.E12);
-      if (had_eshower>=1E12 && had_eshower<100.E12) {
+      const double epsilon=log10(had_eshower.in(Energy::Unit::TeV));
+      if (had_eshower>=Energy(1E12, Energy::Unit::eV) && had_eshower<Energy(100.E12, Energy::Unit::eV)) {
 	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(2.07-0.33*epsilon+(7.5e-2)*epsilon*epsilon);
       }
-      else if (had_eshower<100.E15) {
+      else if (had_eshower<Energy(100.E15, Energy::Unit::eV)) {
 	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(1.744-(1.21e-2)*epsilon);
       }
-      else if (had_eshower<10.E18){
+      else if (had_eshower<Energy(10.E18, Energy::Unit::eV)){
 	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(4.23-0.785*epsilon+(5.5e-2)*epsilon*epsilon);
       }
       else {

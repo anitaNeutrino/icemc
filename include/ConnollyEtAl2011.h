@@ -32,12 +32,12 @@ namespace icemc {
     
   public:
     double pickY(double pnu, Neutrino::L leptonNumber, Neutrino::Interaction::Current current);///<pick inelasticity y according to chosen model    
-    double Getyweight(double pnu,double y,Neutrino::L leptonNumber,Neutrino::Interaction::Current currentint);///< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
+    double Getyweight(Energy pnu,double y,Neutrino::L leptonNumber,Neutrino::Interaction::Current currentint);///< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
 
     ConnollyEtAl2011(const Settings* settings); ///< Constructor 
     virtual ~ConnollyEtAl2011(){;}
     /// Neutrino-nucleon cross-sections using model chosen
-    virtual double getSigma(double pnu, Neutrino::L leptonNumber, Neutrino::Interaction::Current currentint) const override;
+    virtual double getSigma(Energy pnu, Neutrino::L leptonNumber, Neutrino::Interaction::Current currentint) const override;
 
   protected:
     const Settings* fSettings;

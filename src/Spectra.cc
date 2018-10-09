@@ -15,7 +15,7 @@
 #include "Report.h"
 #include "Settings.h"
 
-double icemc::Source::Spectra::pickNeutrinoEnergy() {
+icemc::Energy icemc::Source::Spectra::pickNeutrinoEnergy() {
   if(fSettings->USEDARTBOARD){
     return GetNuEnergy();
   }
@@ -350,7 +350,7 @@ icemc::Source::Spectra::Spectra(const Settings* settings) : fSettings(settings){
 }
 
 
-double  icemc::Source::Spectra::GetNuEnergy() {
+icemc::Energy icemc::Source::Spectra::GetNuEnergy() {
   double thisenergy=16.; // arbitrary initialisation
   double thisflux=2.; // initialise higher than max
   double max=1.;
@@ -371,7 +371,7 @@ double  icemc::Source::Spectra::GetNuEnergy() {
     max=EdNdEdAdt[energybin]/maxflux;
     thisflux=pickUniform(); //Rand3.Rndm(); // pick the flux at random between 0 and 1, if it's less than max it's a winner
   } //while
-  return pow(10.,thisenergy);
+  return Energy(pow(10.,thisenergy), Energy::Unit::eV);
 } //Pick Neutrino Energy
 
 
@@ -417,7 +417,8 @@ void icemc::Source::Spectra::GetCDF(){//set up CDF and inverse CDF;
   inverse_CDF = new TGraph(n,&N[0],&E[0]);
 }
 
-double icemc::Source::Spectra::GetCDFEnergy(){//get Energy from 'CDF'
+
+icemc::Energy icemc::Source::Spectra::GetCDFEnergy(){//get Energy from 'CDF'
 
   if(!CDF){
     GetCDF(); // do initialization if needed
@@ -437,9 +438,7 @@ double icemc::Source::Spectra::GetCDFEnergy(){//get Energy from 'CDF'
     //cout<<"ran is "<<ran<<" thisenergy is "<<thisenergy<<"\n";
   }
   
-  return pow(10.,thisenergy);
-
-  
+  return Energy(pow(10.,thisenergy), Energy::Unit::eV);  
 }
 
 inline void icemc::Source::Spectra::GetFlux(std::string filename)

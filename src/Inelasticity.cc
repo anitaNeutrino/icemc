@@ -166,7 +166,7 @@ double icemc::Y::pickYConnollyetal2011(Neutrino::L leptonNumber, Neutrino::Inter
 
 
 // double icemc::Y::Getyweight(double pnu, double y, int nu_nubar, Neutrino::Interaction::Current currentint){
-double icemc::Y::Getyweight(double pnu, double y, Neutrino::L leptonNumber, Neutrino::Interaction::Current current){
+double icemc::Y::Getyweight(Energy pnu, double y, Neutrino::L leptonNumber, Neutrino::Interaction::Current current){
 
   // int nu_nubar = leptonNumber == Neutrino::L::Matter ? 0 : 1;
   //from Connolly Calc 2011, Equations 9, 10, 11, 16, and 17.
@@ -178,7 +178,7 @@ double icemc::Y::Getyweight(double pnu, double y, Neutrino::L leptonNumber, Neut
   double U, W, B, T;//are added in to help with readability of equations.
   double C1_low, C2, C1_high;
   double weighty;
-  double epsilon=log10(pnu/1.E9);
+  double epsilon=log10(pnu.in(Energy::Unit::GeV));
   
   C2 = fC2->Eval(epsilon);//Eq(17)
   C1_low = fC1_low->Eval(epsilon);//Eq(16) (Low region)

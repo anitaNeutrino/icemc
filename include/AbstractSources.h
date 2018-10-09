@@ -26,7 +26,7 @@ namespace icemc {
 
     class EnergyModel {
     public:
-      virtual double pickNeutrinoEnergy() = 0;
+      virtual Energy pickNeutrinoEnergy() = 0;
     };
 
 

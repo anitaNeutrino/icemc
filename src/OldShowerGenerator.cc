@@ -325,7 +325,7 @@ void icemc::OldShowerGenerator::generate(Neutrino::Flavor nuflavor, double plept
 	Picky(y_cumulative_tauon_pn[i],NPROB,rnd1,y);
       }
 
-      if (fSettings->HIST==1 && !fSettings->ONLYFINAL && hy->GetEntries()<fSettings->HIST_MAX_ENTRIES){
+      if (fSettings->HIST==1 && !fSettings->ONLYFINAL && hy  && hy->GetEntries()<fSettings->HIST_MAX_ENTRIES){
 	hy->Fill(y);
       }
 

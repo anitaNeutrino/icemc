@@ -5,6 +5,7 @@
 #include "AbstractSources.h"
 #include "TSpline.h"
 #include <string>
+#include "Neutrino.h"
 
 namespace icemc{
 
@@ -38,19 +39,18 @@ namespace icemc{
       TSpline3 *sE2dNdEdAdt;    //spline of E2dNdEdAdt
       int EXPONENT; // set flux model
 
-    public:    
 
       double energy[E_bin_max]; // energies that correspond to the fluxes in the previous array  
       double EdNdEdAdt[E_bin_max]; //flux of incident neutrinos vs. energy E*dN/dE/dA/dt
       double E2dNdEdAdt[E_bin_max]; //flux of incident neutrinos vs. energy E^2*dN/dE/dA/dt
-  
-      // Spectra(int EXPONENT); // constructor
+      
+    public:
       Spectra(const Settings* settings); // constructor
     
-      virtual double pickNeutrinoEnergy();
+      virtual Energy pickNeutrinoEnergy();
     
-      double GetNuEnergy(); // get the neutrino energy which follows neutrino flux. 
-      double GetCDFEnergy();//get Energy from 'CDF'
+      Energy GetNuEnergy(); // get the neutrino energy which follows neutrino flux. 
+      Energy GetCDFEnergy();//get Energy from 'CDF'
       void GetCDF();//set up CDF and inverse CDF;
       TGraph *GetGEdNdEdAdt();
       TGraph *GetGE2dNdEdAdt();

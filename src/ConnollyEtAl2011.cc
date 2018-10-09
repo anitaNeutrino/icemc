@@ -123,13 +123,13 @@ icemc::ConnollyEtAl2011::ConnollyEtAl2011(const Settings* settings)
   // maxe[0] = 1.E21;
   // maxe[1] = 1.E21;
 
-  fMinEnergy_eV = 1.E4; // minimum energy for cross section parametrizations
-  fMaxEnergy_eV = 1.E21; // use the same upper limit for reno as for connolly et al.
+  fMinEnergy = Energy(1.E4, Energy::Unit::eV); // minimum energy for cross section parametrizations
+  fMaxEnergy = Energy(1.E21, Energy::Unit::eV); // use the same upper limit for reno as for connolly et al.
   
 }
 
 // double icemc::ConnollyEtAl2011::Getyweight(double pnu,double y,int nu_nubar, Neutrino::Interaction::Current currentint) {
-double icemc::ConnollyEtAl2011::Getyweight(double pnu,double y, Neutrino::L leptonNumber, Neutrino::Interaction::Current currentint) {  
+double icemc::ConnollyEtAl2011::Getyweight(Energy pnu,double y, Neutrino::L leptonNumber, Neutrino::Interaction::Current currentint) {  
   return fY.Getyweight(pnu,y,leptonNumber,currentint);
 }
 
@@ -148,24 +148,24 @@ double icemc::ConnollyEtAl2011::pickY(double pnu,Neutrino::L leptonNumber,Neutri
 
 
 // int icemc::ConnollyEtAl2011::GetSigma(double pnu, double& sigma,double &len_int_kgm2, const Settings *settings1, int nu_nubar, Neutrino::Interaction::Current current){
-double icemc::ConnollyEtAl2011::getSigma(double energy_eV, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) const {
+double icemc::ConnollyEtAl2011::getSigma(Energy energy, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) const {
   
   // int currentint = static_cast<int>(current);
   // int nu_nubar = leptonNumber == Neutrino::L::Matter ? 0 : 1;
   // calculate cross section
-  if(!validEnergy(energy_eV)){
-    icemc::report() << severity::error << "Need a parameterization for this energy region, energy (eV) = "
-		    << energy_eV << " but min = " << fMinEnergy_eV << ", max = " << fMaxEnergy_eV << std::endl;
+  if(!validEnergy(energy)){
+    icemc::report() << severity::error << "Need a parameterization for this energy region, energy = "
+		    << energy << " but min = " << fMinEnergy << ", max = " << fMaxEnergy << std::endl;
     return -1;
   }
   double sigma = 0;
   if(fSettings->SIGMAPARAM==0){ // Reno
       // fit to cross sections calculated by M.H. Reno using the same method as Gandhi et al, but with the CTEQ6-DIS parton distribution functions instead of the CTEQ4-DIS distribution functions
-    sigma=(2.501E-39)*pow(energy_eV/1.E9,0.3076)*fSettings->SIGMA_FACTOR; // 10^18 eV - 10^21 eV(use this one for ANITA)
+    sigma=(2.501E-39)*pow(energy.in(Energy::Unit::GeV),0.3076)*fSettings->SIGMA_FACTOR; // 10^18 eV - 10^21 eV(use this one for ANITA)
     //sigma=(1.2873E-39)*pow(pnu/1.E9,0.33646)*SIGMA_FACTOR; // 10^17 eV - 10^20 eV (use this one for SalSA)
   }//old code
   else if (fSettings->SIGMAPARAM==1) {//Connolly et al.
-    double pnuGeV=energy_eV/1.E9;//Convert eV to GeV.
+    double pnuGeV=energy.in(Energy::Unit::GeV);//Convert eV to GeV.
     double epsilon=log10(pnuGeV);
 
     auto f_it = fSigma.find({leptonNumber, current});

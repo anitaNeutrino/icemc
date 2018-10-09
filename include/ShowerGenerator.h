@@ -34,7 +34,7 @@ namespace icemc{
     Shower()
       : // emDeltaThetaMax(0), hadDeltaThetaMax(0),
 	emFrac(0), hadFrac(0),
-	nInteractions(1), pnu(0)
+	nInteractions(1)
     {;}
 
     double sumFrac() const {return emFrac + hadFrac;}
@@ -43,7 +43,7 @@ namespace icemc{
     double emFrac;
     double hadFrac;
     int nInteractions;
-    double pnu;
+    Energy pnu;
     TVector3 axis;
     ClassDef(Shower, 1)
   };
@@ -61,9 +61,9 @@ namespace icemc{
     static const int nP=100; // this sets the maximum length of the arrays
     static const int nE = 7;
     int NPROB; // this counts how many of those array elements are actually used
-    double plepton;  // energy of charged lepton after interaction(s)
-    double em_secondaries_max;  // em energy due to secondary interactions
-    double had_secondaries_max; // had energy due to secondary interactions
+    Energy plepton;  // energy of charged lepton after interaction(s)
+    Energy em_secondaries_max;  // em energy due to secondary interactions
+    Energy had_secondaries_max; // had energy due to secondary interactions
     // first index=energy from 10^18 to 10^21 in half-decades
     // second index=y (100 bins)
     std::array<std::array<double, nP>, nE> dsdy_muon_brems; // probability distribution vs. y for brem
@@ -203,7 +203,7 @@ namespace icemc{
 
 
   private:
-    void doShower(Neutrino::Flavor ,double, double&, double&, int&, TH1F*);
+    void doShower(Neutrino::Flavor ,Energy, Energy&, Energy&, int&, TH1F*);
     
 
   public:
@@ -236,7 +236,7 @@ namespace icemc{
 		     const std::string& taudecay,
 		     double y,
 		     TH1F *hy,
-		     double pnu,
+		     Energy pnu,
 		     int inu,			       
 		     // double& emfrac,
 		     // double& hadfrac,

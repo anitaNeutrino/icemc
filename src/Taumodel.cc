@@ -61,8 +61,8 @@ icemc::Taumodel::Taumodel() {
   //////////////////////////|Units////|Description////////////////////////
   B0 = 1.2*pow(10.,-7);  ///| m^2/kg  |
   B1 = 0.16*pow(10.,-7); ///| m^2/kg  | }parameterization using a logarithmic dependence on energy for B,
-  E0 = pow(10.,19);      ///| eV      | the tau elecromagnetic energy loss parameter.
-  mT = 1.777E9;          ///| eV      |Mass of Tau
+  E0.set(pow(10.,19), Energy::Unit::eV);      ///| eV      | the tau elecromagnetic energy loss parameter.
+  mT.set(1.777E9, Energy::Unit::GeV);          ///| eV      |Mass of Tau
   cT = 0.00008693;       ///| m       |Tau Decay length (86.93 microMeters)
                          ///|         |
   Mn = 1.672622E-24;     ///| g       |nucleon/ proton mass in grams,also equal to 0.938 GeV. 
@@ -84,7 +84,8 @@ icemc::Taumodel::Taumodel() {
    GetTauWeight is the function that will calculate the probability that a tau neutrino will interact along its path through the earth,and the tau will survive the rest of the journey and decay in the ice. This probability is calculated for final energies from 10^15.5 to the energy of the neutrino.
 */
 // double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered){ // 1 or 0
-double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, Neutrino::L leptonNumber, double& ptauf, int& crust_entered){ // 1 or 0
+// double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, Neutrino::L leptonNumber, double& ptauf, int& crust_entered){ // 1 or 0
+double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, Energy pnu, Neutrino::L leptonNumber, Energy& ptauf, int& crust_entered){ // 1 or 0  
 			      // int& mantle_entered, // 1 or 0
 			      // int& core_entered){//add secondaries?
 
@@ -108,7 +109,7 @@ double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings 
   nchord = chord3 * (1./Distance);///normalized chord3
   
   
-  double Etaui,Etau_final;
+  Energy Etaui,Etau_final;
   double y=0;
   double yweight;
   
@@ -133,7 +134,7 @@ double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings 
   double avgdensity=0;
   
   // double Etau_now;//=Etau_final;
-  double Emin=1E15;
+  Energy Emin(1E15, Energy::Unit::eV);
  
   int i=0;
  
@@ -153,8 +154,8 @@ double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings 
   this->GetDensityVectors(antarctica1,interaction1,nchord,step,Distance,totalnusteps, crust_entered);///Get the density vectors this function needs
   
   
-  for(double logEtau_final=log10(Emin);logEtau_final<=log10(pnu);logEtau_final+=.01){//integral over energy (in log space?)
-    Etau_final= pow(10,logEtau_final);
+  for(double logEtau_final=log10(Emin.in(Energy::Unit::eV));logEtau_final<=log10(pnu.in(Energy::Unit::eV));logEtau_final+=.01){//integral over energy (in log space?)
+    Etau_final.set(pow(10,logEtau_final), Energy::Unit::eV);
     i=0;
     int totalsteps=0;
     TauWeight_tmp=0;
@@ -202,8 +203,8 @@ double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings 
       else{
         yweight=primary1->Getyweight(pnu,y,leptonNumber,current);
         Prob_Nu_Surv = avgdensity/len_int_kgm2*exp(-zdistance*avgdensity*1./len_int_kgm2);///prob neutrino survives to this point
-        dEtauidEtauf = exp(B1*taudensity*(Distance-zdistance))*Etaui/Etau_final;///how the initial tau energy is related to final
-        prob_at_z = Prob_Nu_Surv*yweight*1./pnu*dEtauidEtauf*step*tau_surv;///probability that tau survives to ice
+        dEtauidEtauf = exp(B1*taudensity*(Distance-zdistance))*(Etaui/Etau_final);///how the initial tau energy is related to final
+        prob_at_z = Prob_Nu_Surv*yweight*1./pnu.in(Energy::Unit::eV)*dEtauidEtauf*step*tau_surv;///probability that tau survives to ice
 	/*	if(i==100 && Etaui > 1E18){
 	  cout<<"Prob_Nu_Surv is "<<Prob_Nu_Surv<<"\n";
 	  cout<<"avgdensity is "<<avgdensity<<"\n";
@@ -229,7 +230,7 @@ double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings 
     }//zdist loop
      
      
-    TauWeight_tmp*=log(10)*Etau_final;///dP/dE ->dP/d(log10(E))   
+    TauWeight_tmp*=log(10)*Etau_final.in(Energy::Unit::eV);///dP/dE ->dP/d(log10(E))   
     TauWeight_tmp*=.01; ///dP/dlog10(E) * dlog10(E) 
     
     TauWeight+=TauWeight_tmp;
@@ -248,7 +249,7 @@ double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings 
   //cout<<"TauWeight is "<<TauWeight<<" xrandom is "<<xrandom<<"\n";
   for(size_t loopthrough =0; loopthrough<=PDFarray.size();loopthrough++){
     if(xrandom >PDFarray[loopthrough] && xrandom <PDFarray[loopthrough+1]){
-      ptauf=etaufarray[loopthrough];
+      ptauf = etaufarray[loopthrough];
       break;
     }//if xrandom
     
@@ -297,11 +298,11 @@ void icemc::Taumodel::GetDensityVectors(const Antarctica *antarctica1,Interactio
 /**
    Get Energy TVector3 sets the energy of tau particle at every step along the path. It starts from the final energy and works back towards the nuetrino interaction point.
  */
-void icemc::Taumodel::GetEnergyVector(double Etau_final, double step,int totalnusteps, int &totalsteps, double &totaltaudistance, double pnu){
+void icemc::Taumodel::GetEnergyVector(Energy Etau_final, double step,int totalnusteps, int &totalsteps, double &totaltaudistance, Energy pnu){
   
   myenergyvector.clear();
   myenergyvector.push_back(Etau_final);
-  double Etau_now=Etau_final;
+  Energy Etau_now=Etau_final;
   double density_now;
   std::ofstream myNewFile_1;
  
@@ -309,8 +310,9 @@ void icemc::Taumodel::GetEnergyVector(double Etau_final, double step,int totalnu
   ///calculate the initial energy needed at the step so the tau will end at the correct final energy
   for(int energysteps=totalnusteps-1;energysteps>0;energysteps--){///start at nuexit, work backwards
     density_now=mydensityvector[energysteps];///get the density at this step
-    
-    Etau_now=Etau_now + (B0+B1*log(Etau_now/E0))*density_now*Etau_now*step;///E_i=E_last +dE/dz*dz
+
+    double dE_eV = B0 + B1*log(Etau_now/E0)*density_now*Etau_now.in(Energy::Unit::eV)*step;///E_i=E_last +dE/dz*dz
+    Etau_now = Etau_now + Energy(dE_eV, Energy::Unit::eV);
         
     if(Etau_now <=pnu){///as long as the energy is less than the neutrino energy
       totaltaudistance=(totalnusteps-energysteps)*step;///distance tau can travel
@@ -332,13 +334,15 @@ void icemc::Taumodel::GetEnergyVector(double Etau_final, double step,int totalnu
 
 void icemc::Taumodel::GetTauSurvVector(double step, int totalsteps){
   myPsurvvector.clear();
-  double Etau_now;
+  Energy Etau_now;
+  Energy nothing(0, Energy::Unit::eV);
   double tau_surv;
+  
   for(int k1=totalsteps;k1>=0;k1--){///tau surv vector
     tau_surv=1;
     for(int k2=k1-1;k2>=0;k2--){
       Etau_now=myenergyvector[k2];///energy vector starts at the endpoint and goes to earth_in;
-      if (Etau_now >0)
+      if (Etau_now > nothing)
         tau_surv=tau_surv*(1-step*mT/(cT*Etau_now));///calculate chance for tau to survive
       else
         tau_surv = 0;///is the tau runs out of energy, it wont make it to the ice to decay

@@ -77,9 +77,8 @@ void icemc::EventGenerator::interrupt_signal_handler(int sig){
  * 
  * @todo properly zero member variables
  */
-icemc::EventGenerator::EventGenerator(Detector* detector) : fNeutrinoPath(NULL), interaction1(NULL), fDetector(detector), fTauPtr(NULL), fGenNu(NULL),  fPassNu(NULL)
+icemc::EventGenerator::EventGenerator(Detector* detector) : pnu(pow(10, 20), Energy::Unit::eV), fNeutrinoPath(NULL), interaction1(NULL), fDetector(detector), fTauPtr(NULL), fGenNu(NULL),  fPassNu(NULL)
 {
-  pnu = pow(10., 20);   //!< energy of neutrinos
   // inu = 0;
 
   fStartTime = detector->getStartTime();
@@ -569,7 +568,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
   //  if (EXPONENT<=10||EXPONENT>100) {
   if ( nuSpectra->IsSpectrum() ) {
     double sum_events=0.;
-    double thisenergy=0.;
+    Energy thisenergy;
     double thislen_int_kgm2=0.;
     // double *energy=nuSpectra->GetEnergyArray();
     // double *EdNdEdAdt=nuSpectra->GetEdNdEdAdt();
@@ -580,7 +579,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
     double integral=0;
     even_E = ( nuSpectra->Getenergy()[nuSpectra->GetE_bin() - 1] - nuSpectra->Getenergy()[0] ) / ( (double) N_even_E );
     for (int i=0;i<N_even_E;i++) {
-      thisenergy=pow(10., (nuSpectra->Getenergy())[0]+((double)i)*even_E);
+      thisenergy.set(pow(10., (nuSpectra->Getenergy())[0]+((double)i)*even_E), Energy::Unit::eV);
       sigma = crossSectionModel->getSigma(thisenergy, xsecParam_nutype, xsecParam_nuint);
       thislen_int_kgm2 = CrossSectionModel::getInteractionLength(sigma);
       // EdNdEdAdt is in #/cm^2/s
@@ -589,9 +588,9 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
       // = dN*log(10)/d(icemc::report() E)dAdt
       // the bin spacing is 0.5
       // so # events ~ dN*log(10)*0.5/d(icemc::report() E)dAdt
-      sum_events+=even_E*log(10.)*( nuSpectra->GetEdNdEdAdt(log10(thisenergy))*1e4 )/(thislen_int_kgm2/askFreqGen->RHOH20);
-      integral+=even_E*log(10.)*( nuSpectra->GetEdNdEdAdt(log10(thisenergy)) );
-      std::cout << "thisenergy,  EdNdEdAdt is " << thisenergy << " " <<  nuSpectra->GetEdNdEdAdt(log10(thisenergy)) << "\n";
+      sum_events+=even_E*log(10.)*( nuSpectra->GetEdNdEdAdt(log10(thisenergy.in(Energy::Unit::eV)))*1e4 )/(thislen_int_kgm2/askFreqGen->RHOH20);
+      integral+=even_E*log(10.)*( nuSpectra->GetEdNdEdAdt(log10(thisenergy.in(Energy::Unit::eV))) );
+      std::cout << "thisenergy,  EdNdEdAdt is " << thisenergy << " " <<  nuSpectra->GetEdNdEdAdt(log10(thisenergy.in(Energy::Unit::eV))) << "\n";
       //foutput << "interaction length is " << thislen_int_kgm2/RHOH20 << "\n";
     }//end for N_even_E
     std::cout << "SUM EVENTS IS " << sum_events << std::endl;
@@ -1221,7 +1220,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
 
   // sets neutrino energy
   if ( nuSpectra->IsMonoenergetic() ){
-    pnu=pow(10., settings1.EXPONENT);
+    ///@todo replace with MonoEnergetic class
+    pnu.set(pow(10., settings1.EXPONENT), Energy::Unit::eV);
     sigma = crossSectionModel->getSigma(pnu, xsecParam_nutype, xsecParam_nuint);    // get cross section and interaction length.
     len_int_kgm2 = CrossSectionModel::getInteractionLength(sigma);
     icemc::report() << "pnu,  sigma,  len_int_kgm2 are " << pnu << " " << sigma << " " << len_int_kgm2 << "\n";

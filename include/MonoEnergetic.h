@@ -13,10 +13,10 @@ namespace icemc {
 
     class MonoEnergetic : public EnergyModel {
     public:
-      MonoEnergetic(double energy) : fEnergy(energy) {;}				     
-      virtual double pickNeutrinoEnergy() override {return fEnergy;}
+      MonoEnergetic(double energy, Energy::Unit unit) : fEnergy(energy, unit) {;}				     
+      virtual Energy pickNeutrinoEnergy() override {return fEnergy;}
     private:
-      const double fEnergy;
+      const Energy fEnergy;
     };
   }
 }

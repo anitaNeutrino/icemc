@@ -88,7 +88,7 @@ namespace icemc {
      * @return 
      */
     // double Getyweight(double pnu, double y, int nu_nubar, Neutrino::Interaction::Current currentint);
-    double Getyweight(double pnu, double y, Neutrino::L leptonNumber, Neutrino::Interaction::Current currentint);    
+    double Getyweight(Energy pnu, double y, Neutrino::L leptonNumber, Neutrino::Interaction::Current currentint);    
     
   };//Y
 

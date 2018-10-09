@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "Geoid.h"
+#include "Energy.h"
 
 namespace icemc {
 
@@ -61,18 +62,15 @@ namespace icemc {
       double weight;      
     };
     
-    double energy; ///< (eV )electron volts
+    Energy energy;
     Flavor flavor = Flavor::e; ///< Neutrino flavor
     L leptonNumber = L::Matter;
     Interaction interaction;
     Path path;
   };
-  
+}
 
 
-
-
-};
 
 /** 
  * For a nice cout/cerr/logging experience
@@ -106,6 +104,8 @@ std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Interaction::C
  * @return the updated output string stream
  */
 std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::L& l);
+
+
 
 #endif
 

@@ -19,7 +19,9 @@ namespace icemc{
 		     GeV,
 		     TeV,
 		     PeV,
-		     EeV
+		     EeV,
+		     ZeV,
+		     YeV
     };
 
     /** 
@@ -37,7 +39,7 @@ namespace icemc{
     Energy(double value, Unit unit){
       set(value, unit);
     }
-
+    
     /** 
      * Make this object represent an energy with given units.
      * 
@@ -47,6 +49,14 @@ namespace icemc{
     void set(double value, Unit unit){
       feV = value/to(unit);
     }
+
+    /** 
+     * Allow setting to zero with no units
+     */
+    inline void setZero(){
+      feV = 0;
+    }
+    
 
     /** 
      * Access the energy value as a double ONLY when the unit is specified.
@@ -107,6 +117,8 @@ namespace icemc{
       case Unit::TeV: return 1e-12;
       case Unit::PeV: return 1e-15;
       case Unit::EeV: return 1e-18;
+      case Unit::ZeV: return 1e-21;
+      case Unit::YeV: return 1e-24;	
       default: return 0; ///@todo warn?
       }
     }
@@ -123,6 +135,19 @@ namespace icemc{
  * @return a scaled energy value
  */
 icemc::Energy operator* (double lhs, icemc::Energy rhs);
+
+
+
+/** 
+ * A sneaky way to make a nice constructor for Energy
+ * 
+ * @param lhs is a double
+ * @param rhs is an Energy::Unit
+ * 
+ * @return an constructed Energy(lhs, rhs)
+ */
+icemc::Energy operator* (double lhs, icemc::Energy::Unit rhs);
+
 
 
 /** 

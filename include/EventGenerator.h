@@ -99,7 +99,7 @@ namespace icemc {
     // double altitude_this; // for plotting altitude
     // double heading_this=0.;// for plotting heading
     // double gps_offset=0;
-    double pnu;   ///< energy of neutrinos
+    Energy pnu;   ///< energy of neutrinos
 
     double MEANX=0;
     double MEANY=0.;

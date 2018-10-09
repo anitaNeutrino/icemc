@@ -351,16 +351,16 @@ void icemc::ShowerGenerator::ReadSecondaries() {
 } //end method ReadSecondaries
 
 
-void icemc::ShowerGenerator::doShower(Neutrino::Flavor nuflavor, double plepton, double &em_secondaries_max, double &had_secondaries_max,int &n_interactions, TH1F *hy) {
+void icemc::ShowerGenerator::doShower(Neutrino::Flavor nuflavor, Energy plepton, Energy &em_secondaries_max, Energy &had_secondaries_max,int &n_interactions, TH1F *hy) {
 
-  em_secondaries_max=0.;
-  had_secondaries_max=0.;
+  em_secondaries_max.setZero();
+  had_secondaries_max.setZero();
   
-  double energy = plepton;
+  Energy energy = plepton;
 
   // ok it it looks like we're doing a lookup table with i.
   // this could probably be improved.
-  int i=(int)((log10(plepton)-18.)*2.);
+  int i=(int)((log10(plepton.in(Energy::Unit::eV))-18.)*2.);
 
   if (i>6){
     i=6;
@@ -388,7 +388,7 @@ void icemc::ShowerGenerator::doShower(Neutrino::Flavor nuflavor, double plepton,
       DataKey key(nuflavor, sec);
       TH1F& h_E_dsdy = fE_dsdy[key];
       
-      int nPoisson = pickPoisson(h_E_dsdy.Interpolate(energy));
+      int nPoisson = pickPoisson(h_E_dsdy.Interpolate(energy.in(Energy::Unit::eV)));
       for(int k=0; k < nPoisson; k++){
       	secondaries.emplace_back(sec);
       }
@@ -424,14 +424,14 @@ void icemc::ShowerGenerator::doShower(Neutrino::Flavor nuflavor, double plepton,
       // this is stupid...
       // Picky(d, NPROB, rnd1, y);
 
-      if (y*plepton>std::max(em_secondaries_max,had_secondaries_max)) {  // if this is the largest interaction for this event so far
-	if (secondary == Secondary::brems || secondary == Secondary::epair) {  // save it
-	  em_secondaries_max=y*plepton;
-	}
-	if (secondary == Secondary::pn) {
-	  had_secondaries_max=y*plepton;
-	}
-      }      
+      // if (y*plepton>std::max(em_secondaries_max,had_secondaries_max)) {  // if this is the largest interaction for this event so far
+      // 	if (secondary == Secondary::brems || secondary == Secondary::epair) {  // save it
+      // 	  em_secondaries_max=y*plepton;
+      // 	}
+      // 	if (secondary == Secondary::pn) {
+      // 	  had_secondaries_max=y*plepton;
+      // 	}
+      // }      
     }
     
     const int n_total = secondaries.size();
@@ -572,7 +572,6 @@ void icemc::ShowerGenerator::doShower(Neutrino::Flavor nuflavor, double plepton,
       } //if
     } //if (TAUDECAY)
   } //if (nutau)
-
 } //GetShowerGenerator
 
 
@@ -592,7 +591,7 @@ icemc::Shower icemc::ShowerGenerator::GetEMFrac(Neutrino::Flavor nuflavor,
 						const std::string& taudecay,
 						double y,
 						TH1F *hy,
-						double pnu,
+						Energy pnu,
 						int inu,
 						// double& emfrac,
 						// double& hadfrac,
@@ -607,7 +606,7 @@ icemc::Shower icemc::ShowerGenerator::GetEMFrac(Neutrino::Flavor nuflavor,
     plepton=(1.-y)*pnu;
   }
   else{
-    plepton=0.;
+    plepton.setZero();
   }
 
 
@@ -636,8 +635,8 @@ icemc::Shower icemc::ShowerGenerator::GetEMFrac(Neutrino::Flavor nuflavor,
   }
 
 
-  em_secondaries_max = s.emFrac; // initialize search for maximum signal among primary, secondary interactions.
-  had_secondaries_max = s.hadFrac;
+  em_secondaries_max.setZero(); // initialize search for maximum signal among primary, secondary interactions.
+  had_secondaries_max.setZero();
 
   if (SECONDARIES==1 && current==Neutrino::Interaction::Current::Charged) {
 
@@ -651,8 +650,8 @@ icemc::Shower icemc::ShowerGenerator::GetEMFrac(Neutrino::Flavor nuflavor,
 	break;
       else {
 	secondary_e_noncons++; //Record how many times we come up with something that doesn't conserve energy
-	em_secondaries_max=s.emFrac;
-	had_secondaries_max=s.hadFrac;
+	em_secondaries_max.setZero();
+	had_secondaries_max.setZero();
       } //else
     } //while(1)
 

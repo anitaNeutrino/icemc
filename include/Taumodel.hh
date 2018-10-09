@@ -36,9 +36,10 @@ namespace icemc{
        from Tau neutrino propagaiton and tau energy loss 2005 Dutta, Huang, & Reno. 
        Equation 16  &  used in Equation 30. 
     */
-    double B0,B1,E0;/*!<parameterization using a logarithmic dependence on energy>*/ 
-    ///for B, the tau elecromagnetic energy loss parameter. 
-    double mT;/*!<mass of the Tau in Gev> */
+    double B0,B1;/*!<parameterization using a logarithmic dependence on energy>*/ 
+    ///for B, the tau elecromagnetic energy loss parameter.
+    Energy E0;
+    Energy mT;/*!<mass of the Tau in Gev> */
     double cT;/*!<Tau Decay length in cm> */
     // double p;/*!<Density of Standard Rock. g/cm^3> */
   
@@ -51,9 +52,9 @@ namespace icemc{
   
     std::vector<double> myavgdensityvector;/*!<Filled with avg density from earth-in to interaction point.> */
 
-    std::vector<double> myenergyvector;/*!<vector to hold initial energies.> */
+    std::vector<Energy> myenergyvector;/*!<vector to hold initial energies.> */
     std::vector<double> myPsurvvector;/*!<vector to hold the chance tau would survive from that step.> */
-    std::vector<double> etaufarray;/*! <filled with all the possible tau final energies.> */
+    std::vector<Energy> etaufarray;/*! <filled with all the possible tau final energies.> */
     std::vector<double> PDFarray;/*! <Filled with the total weight(a running sum) up to the current final energy.> */
   
     /** \brief  Get Density Vectors sets two density vectors. One has the density at each step along the path, the other has an average density from the starting point to the current step.
@@ -61,14 +62,14 @@ namespace icemc{
     void GetDensityVectors(const Antarctica *antarctica1, Interaction *interaction1, TVector3 nchord, double step, double Distance, int &totalnusteps, int &crust_entered);
     /** \brief   Get Energy TVector3 sets the energy of tau particle at every step along the path. It starts from the final energy and works back towards the nuetrino interaction point.
      */
-    void GetEnergyVector(double Etau_final, double step,int totalnusteps, int &totalsteps, double &totaltaudistance, double pnu);
+    void GetEnergyVector(Energy Etau_final, double step,int totalnusteps, int &totalsteps, double &totaltaudistance, Energy pnu);
   
     /** \brief  Get Tau Surv TVector3 gets a vector that is filled with the probability the tau will survive from neutrino interaction point to the ice.
      */
     void GetTauSurvVector(double step, int totalsteps);
   public:
     Taumodel();
-    double ptauf; ///< Final energy of the tau.
+    Energy ptauf; ///< Final energy of the tau.
     double weight_tau_prob; ///< Weight for tau neutrino to interact, create a tau, tau survives and decays in the ice.
     int inu; 
     double weight_nu_prob;
@@ -77,7 +78,7 @@ namespace icemc{
      */
 
     // double GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica* antarctica1, Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered); // 1 or 0
-    double GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica* antarctica1, Interaction *interaction1, double pnu, Neutrino::L leptonNumber, double& ptauf, int& crust_entered); // 1 or 0    
+    double GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica* antarctica1, Interaction *interaction1, Energy pnu, Neutrino::L leptonNumber, Energy& ptauf, int& crust_entered); // 1 or 0    
     // int& mantle_entered, // 1 or 0
     // int& core_entered);//include secondaries?
  

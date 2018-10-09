@@ -38,10 +38,10 @@ namespace icemc {
       TaperVmMHz(viewangle,  deltheta_em, deltheta_had,  sp, radioSignal.vmmhz[k], dummyVariable);
     }
 
-    void GetSpread(double pnu, double emfrac, double hadfrac, double freq,
+    void GetSpread(Energy pnu, double emfrac, double hadfrac, double freq,
 		   double& deltheta_em_max, double& deltheta_had_max) const;
 
-    void GetSpread(double pnu, const Shower& sp, double freq,
+    void GetSpread(Energy pnu, const Shower& sp, double freq,
 		   double& deltheta_em_max, double& deltheta_had_max) const {
       GetSpread(pnu, sp.emFrac,  sp.hadFrac, freq, deltheta_em_max, deltheta_had_max);
     }
@@ -55,7 +55,7 @@ namespace icemc {
 		  double notch_min,double notch_max, double *vmmhz, int nfreq) const;
     
     int GetLPM() const;
-    double GetELPM() const;
+    Energy GetELPM() const;
 
     void Initialize();
 
