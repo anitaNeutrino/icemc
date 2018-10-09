@@ -11,13 +11,12 @@ int main(int argc,  char **argv) {
   // 12/01/03
   //
   //--------------------------------------------------------------
-
   icemc::Settings settings;
   icemc::CommandLineOptions clOpts(argc, argv, settings);
 
   if(clOpts.are_good){
-    icemc::ANITA anita(&settings);
-    icemc::EventGenerator uhen(&anita);
+    auto anita = std::make_shared<icemc::ANITA>(&settings);
+    icemc::EventGenerator uhen(anita.get());
     uhen.generateNeutrinos(settings);
   }
   

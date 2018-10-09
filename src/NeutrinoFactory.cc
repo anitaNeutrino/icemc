@@ -15,10 +15,10 @@ icemc::NeutrinoFactory::NeutrinoFactory(const Settings* s)
 icemc::Neutrino::Flavor icemc::NeutrinoFactory::pickFlavor() {
 //! pick a neutrino type, flavor ratio 1:1:1
   double r = pickUniform(0, 3);
-  if (r <= 1){
+  if (r < 1){
     return Neutrino::Flavor::e;
   }
-  else if(r <= 2){
+  else if(r < 2){
     return Neutrino::Flavor::mu;
   }
   else {

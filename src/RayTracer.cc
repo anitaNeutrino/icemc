@@ -317,16 +317,16 @@ TVector3 icemc::RayTracer::findPathToDetector(const Geoid::Position&rfStart, boo
   static int nBad = 0;
   if(fBestResidual > 1){
     nBad++;
-    if(fDebug){
+    // if(fDebug){
       icemc::report() << severity::warning << "Outside path fitter residual tolerance!,  fBestResidual = " << fBestResidual << ", nGood = " << nGood << ", nBad = " << nBad << std::endl;
-    }
+    // }
     rfPath.SetXYZ(0, 0, 0);
   }
   else{
     nGood++;
-    if(fDebug){
+    // if(fDebug){
       icemc::report() << severity::info << "Successful fit! fBestResidual = " << fBestResidual << ", nGood = " << nGood << ", nBad = " << nBad << std::endl;
-    }
+  //   }
   }
 
   return rfPath;

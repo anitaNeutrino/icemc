@@ -104,9 +104,7 @@ icemc::EventGenerator::~EventGenerator()
   if(interaction1){
     delete interaction1;
   }
-  if(fDetector){
-    delete fDetector;
-  }
+
   if(fTauPtr){
     delete fTauPtr;
   }
@@ -121,7 +119,7 @@ icemc::EventGenerator::~EventGenerator()
 
 
 
-void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Source::Spectra *nuSpectra, const AskaryanFactory *askFreqGen, ConnollyEtAl2011 *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
+void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Source::Spectra *nuSpectra, const AskaryanFactory *askFreqGen, ConnollyEtAl2011 *crossSectionModel, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
 
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
@@ -583,7 +581,7 @@ void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,
     even_E = ( nuSpectra->Getenergy()[nuSpectra->GetE_bin() - 1] - nuSpectra->Getenergy()[0] ) / ( (double) N_even_E );
     for (int i=0;i<N_even_E;i++) {
       thisenergy=pow(10., (nuSpectra->Getenergy())[0]+((double)i)*even_E);
-      sigma = primary1->getSigma(thisenergy, xsecParam_nutype, xsecParam_nuint);
+      sigma = crossSectionModel->getSigma(thisenergy, xsecParam_nutype, xsecParam_nuint);
       thislen_int_kgm2 = CrossSectionModel::getInteractionLength(sigma);
       // EdNdEdAdt is in #/cm^2/s
       // need to be multiplied by 1e4 to change 1/cm2 to 1/m^2
@@ -1100,9 +1098,8 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
   // TRandom3 *Rand3 = new TRandom3(settings1.SEED);//for generating random numbers
   // gRandom=Rand3;
   
-  ShowerGenerator sec1(&settings1);
-  ConnollyEtAl2011* primary1 = new ConnollyEtAl2011(&settings1);
-
+  ShowerGenerator showerGenerator(&settings1);
+  ConnollyEtAl2011* crossSectionModel = new ConnollyEtAl2011(&settings1);
   
   // Antarctica* antarctica = new Antarctica(settings1.ICE_MODEL + settings1.NOFZ*10,
   // 					  settings1.CONSTANTICETHICKNESS * 1000 + settings1.CONSTANTCRUST * 100 + settings1.FIXEDELEVATION * 10 + 0,
@@ -1115,17 +1112,13 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
 
   icemc::RootOutput ro(this, &settings1, settings1.getOutputDir(), settings1.getRun());
 
-  if(!fDetector){
-    fDetector = new ANITA(&settings1);
-  }
   int n;
   double dt;
   fDetector->getDesiredNDt(n, dt);
   AskaryanFactory askFreqGen(n, dt);
-
   
   // input parameters
-  settings1.ApplyInputs((ANITA*)fDetector,  &sec1,  &askFreqGen);
+  settings1.ApplyInputs((ANITA*)fDetector,  &showerGenerator,  &askFreqGen);
   askFreqGen.Initialize();
 
   NNU = settings1.NNU;
@@ -1229,7 +1222,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
   // sets neutrino energy
   if ( nuSpectra->IsMonoenergetic() ){
     pnu=pow(10., settings1.EXPONENT);
-    sigma = primary1->getSigma(pnu, xsecParam_nutype, xsecParam_nuint);    // get cross section and interaction length.
+    sigma = crossSectionModel->getSigma(pnu, xsecParam_nutype, xsecParam_nuint);    // get cross section and interaction length.
     len_int_kgm2 = CrossSectionModel::getInteractionLength(sigma);
     icemc::report() << "pnu,  sigma,  len_int_kgm2 are " << pnu << " " << sigma << " " << len_int_kgm2 << "\n";
   }
@@ -1286,11 +1279,16 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
     Geoid::Position interactionPos = antarctica->pickInteractionPosition(((ANITA*)fDetector)->position());
 
     RayTracer rayTracer(antarctica, ((ANITA*)fDetector)->position());
+    // rayTracer.setDebug();
     TVector3 rfDirFromInteraction = rayTracer.findPathToDetector(interactionPos);
     if(rfDirFromInteraction.Mag()==0){
+      // std::cout << "bad" << std::endl;
       // no solution was found withing the fitter tolerance
       ///@todo Fill some tree indicating this!
       continue;
+    }
+    else{
+      // std::cout << "good" << std::endl;
     }
     
     // if we get here, then there's a ray tracing solution
@@ -1298,9 +1296,18 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
     // now we have that, we can calculate the neutrino path
 
     TVector3 v = directionModel.pickNeutrinoDirection(interactionPos, rfDirFromInteraction); //, antarctica);
-
+    
     // make a neutrino, we've picked energy, flavor, interaction current, 
     Neutrino nu = nuFactory.makeNeutrino();
+
+    //@todo package 
+    Shower shower = showerGenerator.generate(nu);
+
+    // showerGenerator.GetEMFrac(Neutrino::Flavor nuflavor, Neutrino::Interaction::Current current, const std::string &taudecay, double y, TH1F *hy, double pnu, int inu, int taumodes1);
+    
+
+    
+    
 
     // shower generator ->
     // askaryan generator ->
@@ -1377,7 +1384,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
   // 	pnu = nuSpectra->GetCDFEnergy();
   //     }
 
-  //     ierr = primary1->GetSigma(pnu, sigma, len_int_kgm2, &settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
+  //     ierr = crossSectionModel->GetSigma(pnu, sigma, len_int_kgm2, &settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
   //     // ierr=0 if the energy is too low for the parameterization
   //     // ierr=1 otherwise
   //     fNeutrinoPath->len_int=1.0/(sigma*askFreqGen.RHOH20*(1./constants::M_NUCL)*1000); // in km (why interaction length in water?) //EH
@@ -1386,7 +1393,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
   //   // count_pass=0;
   //   passestrigger=0;
   //   chanceinhell2=0;
-  //   sec1.secondbang=false;
+  //   showerGenerator.secondbang=false;
   //   count_total++;
   //   // initializing the voltage seen by each polarization of each antenna
   //   interaction1->dtryingdirection=0;
@@ -1407,7 +1414,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
   //     delete interaction1;
   //     interaction1 = NULL;
   //   }
-  //   interaction1 = new Interaction(primary1,  &settings1); //,  whichray,  count1);
+  //   interaction1 = new Interaction(crossSectionModel,  &settings1); //,  whichray,  count1);
 
     // moved from deep inside interaction
     // if (settings1.MINRAY==whichray) {
@@ -1560,10 +1567,10 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
     // count1->nraypointsup1[whichray]++;
 
     // double emfrac_db = 0, hadfrac_db = 0;
-    // sec1.GetTauDecay(interaction1->nuflavor, interaction1->current, taudecay,  emfrac_db,  hadfrac_db);
+    // showerGenerator.GetTauDecay(interaction1->nuflavor, interaction1->current, taudecay,  emfrac_db,  hadfrac_db);
 
     // // pick elasticity
-    // elast_y = primary1->pickY(&settings1, pnu, 0, Neutrino::Interaction::Current::Charged);
+    // elast_y = crossSectionModel->pickY(&settings1, pnu, 0, Neutrino::Interaction::Current::Charged);
     // if (settings1.CONSTANTY==1) { // if we ask to make y a constant=0.2
     //   elast_y = 0.2;
     //   interaction1->nuflavor = Neutrino::Flavor::e;//"nue";
@@ -1596,7 +1603,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
     // 	}
     //   interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
 
-    //   taus1->GetTauWeight(primary1,  &settings1,  antarctica,  interaction1,  pnu,  1,  ptauf, crust_entered);
+    //   taus1->GetTauWeight(crossSectionModel,  &settings1,  antarctica,  interaction1,  pnu,  1,  ptauf, crust_entered);
 
     //   antarctica->Getchord(&settings1,
     // 			     len_int_kgm2,
@@ -1643,12 +1650,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
       
     // get fraction of shower that is electromagnetic.
     // pi^0's are counted as hadronic.
-    // sec1->GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
+    // showerGenerator->GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
 
-    // Shower showerProps = sec1.GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu, tauweighttrigger);
+    // Shower showerProps = showerGenerator.GetEMFrac(&settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu, tauweighttrigger);
 
     // // for double bangs, surely this should be in ShowerGenerator?
-    // if(sec1.secondbang && sec1.interestedintaus) {
+    // if(showerGenerator.secondbang && showerGenerator.interestedintaus) {
     //   ptau=(1-elast_y)*pnu;
     //   showerProps.emFrac=emfrac_db;
     //   showerProps.hadFrac=hadfrac_db;
@@ -1664,7 +1671,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
     // //@todo this could be better!
     // const double testTaperFreqHz = fDetector->freq[0] > 0 ? fDetector->freq[0] : fDetector->freq[1];
       
-    // if(sec1.secondbang && sec1.interestedintaus) {
+    // if(showerGenerator.secondbang && showerGenerator.interestedintaus) {
     //   vmmhz1m_max = askFreqGen.GetVmMHz1m(ptau, fDetector->FREQ_HIGH);
     //   askFreqGen.GetSpread(ptau, showerProps, testTaperFreqHz, deltheta_em_max, deltheta_had_max);
     // }
@@ -1862,7 +1869,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
     // // get a lower limit on the chord that the neutrino traverses,
     // // so that later we can see if the signal is detectable in
     // // the best case scenario.
-    // if(sec1.secondbang && sec1.interestedintaus) {
+    // if(showerGenerator.secondbang && showerGenerator.interestedintaus) {
     //   std::cout << "Need to bring back GetFirstBang before you can simulate taus.\n";
     //   std::cout << "I removed it because it required Earth and I wanted ShowerGenerator to be a stand-alone class to use in the embedded simulation.\n";
     //   icethickness=interaction1->r_enterice.Distance(interaction1->nuexit);
@@ -2187,7 +2194,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
 
 
   // //   // intermediate counter
-  // //   if(sec1.secondbang && sec1.interestedintaus){
+  // //   if(showerGenerator.secondbang && showerGenerator.interestedintaus){
   // //     count_asktrigger_nfb++;  // just for taus
   // //   }
   // //   else{
@@ -2219,7 +2226,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
   // //     passestrigger=1;
 
   // //     // for taus
-  // //     if(sec1.secondbang && sec1.interestedintaus){
+  // //     if(showerGenerator.secondbang && showerGenerator.interestedintaus){
   // // 	count_passestrigger_nfb++;
   // //     }
   // //     crust_entered=0; //These are switches that let us tell how far a given neutrino penetrated.  Clear them before entering Getchord.
@@ -2276,7 +2283,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
 
   // // 	  // for taus
   // // 	  // add to tally of neutrinos found,  weighted.
-  // // 	  if(sec1.secondbang && sec1.interestedintaus) {
+  // // 	  if(showerGenerator.secondbang && showerGenerator.interestedintaus) {
   // // 	    eventsfound_nfb+=fNeutrinoPath->weight;
   // // 	    index_weights=(int)(((fNeutrinoPath->logweight-MIN_LOGWEIGHT)/(MAX_LOGWEIGHT-MIN_LOGWEIGHT))*(double)NBINS);
   // // 	    eventsfound_nfb_binned[index_weights]++;
@@ -2483,7 +2490,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
   // 	    sum[1]+=fNeutrinoPath->weight;
   // 	    eventsfound_binned_mu[index_weights]++;
   // 	  } //if
-  // 	  if(!sec1.secondbang || !sec1.interestedintaus) {
+  // 	  if(!showerGenerator.secondbang || !showerGenerator.interestedintaus) {
   // 	    if (interaction1->nuflavor==Neutrino::Flavor::tau) {
   // 	      sum[2]+=fNeutrinoPath->weight;
   // 	      eventsfound_binned_tau[index_weights]++;
@@ -2600,9 +2607,9 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
 
 
   // // maks the output file
-  // // Summarize(&settings1, anita1, count1, nuSpectra, &askFreqGen, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb,
+  // // Summarize(&settings1, anita1, count1, nuSpectra, &askFreqGen, crossSectionModel, pnu, eventsfound, eventsfound_db, eventsfound_nfb,
   // // 	    sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, clOpts.outputdir);
-  // Summarize(&settings1, fDetector, nuSpectra, &askFreqGen, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb,
+  // Summarize(&settings1, fDetector, nuSpectra, &askFreqGen, crossSectionModel, pnu, eventsfound, eventsfound_db, eventsfound_nfb,
   // 	    sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, clOpts.outputdir);
 
   // icemc::report().veff_out << settings1.EXPONENT << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << settings1.SIGMA_FACTOR << std::endl;//this is for my convenience
@@ -2627,7 +2634,7 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
   icemc::report() << "\nTotal time elapsed in run is " <<(int)((raw_end_time - raw_start_time)/60)<<":"<< ((raw_end_time - raw_start_time)%60)<<std::endl;
 
   // heap allocated non-members need deleting
-  if(primary1)       delete primary1;
+  if(crossSectionModel)       delete crossSectionModel;
   // if(ray1)        delete ray1;
   // if(count1)         delete count1;
   // if(globaltrig1) delete globaltrig1;
