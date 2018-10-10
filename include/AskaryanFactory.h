@@ -171,6 +171,7 @@ namespace icemc {
   protected:
     const int fNumFreqs;
     const double fDeltaF_Hz;    
+    const std::vector<double> fFreqs_Hz;
     
     // properties of ice
     double x0ice; 

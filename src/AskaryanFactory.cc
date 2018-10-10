@@ -39,10 +39,33 @@ const double icemc::AskaryanFactory::BETAICE(2.25);             // exponent, in 
 const double icemc::AskaryanFactory::BETASALT(2.60);            // exponent, in jaime's parameterization
 const double icemc::AskaryanFactory::VIEWANGLE_CUT(sqrt(5.));   // require viewangle is no more than 5 delta away from the cerenkov angle where
 
+
+
+/** 
+ * Dummy function to use in initializer list.
+ * 
+ * @param nf the number of freqs
+ * @param df the frequency shift between bins
+ * 
+ * @return the constructed vector
+ */
+std::vector<double> make_evenly_spaced(int nf, double df){
+  std::vector<double> freqs(nf, 0);
+  double this_freq = 0;
+  for(auto& freq : freqs){
+    freq = this_freq;
+    this_freq += df;
+  }
+  return freqs;
+}
+
+
 icemc::AskaryanFactory::AskaryanFactory(int n, double dt)
   : N_DEPTH(NICE),
     fNumFreqs(1+(n/2)),
-    fDeltaF_Hz(1./(n*dt)) {
+    fDeltaF_Hz(1./(n*dt)),
+    fFreqs_Hz(make_evenly_spaced(fNumFreqs, fDeltaF_Hz))
+{   
   
   Initialize();
 }
@@ -133,6 +156,7 @@ void icemc::AskaryanFactory::InitializeMedium() {
 
   }
 }
+
 
 
 icemc::AskaryanFreqs icemc::AskaryanFactory::generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu,
