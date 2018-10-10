@@ -52,6 +52,7 @@ namespace icemc {
       double crossSection;
       double length;
       Current current;
+      double y;
     };
 
     class Path {

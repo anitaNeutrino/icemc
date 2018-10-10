@@ -19,13 +19,18 @@
 
 namespace icemc {
 
+  // class Y {
+  // private:
+  //   double y;
+  // };
+
   class Settings;
 
   /**
-   * @class Y
+   * @class YGenerator
    * @brief Inelasticity distributions: stores parametrizations and picks inelasticities
    */
-  class Y :  public RNG {  
+  class YGenerator :  public RNG {  
 
   private:
     const Settings* fSettings;
@@ -38,7 +43,7 @@ namespace icemc {
     std::unique_ptr<TF3> fy0_low;        ///< For picking inelasticity in low y region according to Equation 14.
     std::unique_ptr<TF2> fy0_high;       ///< For picking inelasticity in high y region according to Equation 15.
 
-    double pickYConnollyetal2011(Neutrino::L leptonNumber,Neutrino::Interaction::Current CURRENT,double e);	///< pick an inelasticity using recipe in Connolly et al. (2011)
+    double pickYConnollyetal2011(Neutrino::L leptonNumber,Neutrino::Interaction::Current CURRENT,Energy e);	///< pick an inelasticity using recipe in Connolly et al. (2011)
     // L =0: nubar, NU=1: nu
     // CURRENT=0: CC, CURRENT-1: NC
 
@@ -64,7 +69,7 @@ namespace icemc {
 
     
   public:
-    Y(const Settings* settings);
+    YGenerator(const Settings* settings);
 
     /** 
      * Pick inelasticity y according to chosen model
@@ -75,7 +80,7 @@ namespace icemc {
      * 
      * @return 
      */
-    double pickY(double pnu, Neutrino::L leptonNumber, Neutrino::Interaction::Current currentint);
+    double pickY(Energy pnu, Neutrino::L leptonNumber, Neutrino::Interaction::Current currentint);
 
     /** 
      * @brief If you want to choose y from a flat distribution this is the weight it should have according to Connolly et al. (2011)

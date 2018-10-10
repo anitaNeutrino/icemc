@@ -194,7 +194,7 @@ void icemc::OldShowerGenerator::ReadOldShowerGenerator() {
      
     if (min_muon_brems<=0){
       std::cout << "Minimum probability is <=0!\n";
-    }    
+    }
     std::partial_sum(dsdy_muon_brems[j],dsdy_muon_brems[j]+NPROB_MAX,y_cumulative_muon_brems[j]);
     std::partial_sum(dsdy_muon_epair[j],dsdy_muon_epair[j]+NPROB_MAX,y_cumulative_muon_epair[j]);
     std::partial_sum(dsdy_muon_pn[j],dsdy_muon_pn[j]+NPROB_MAX,y_cumulative_muon_pn[j]);
@@ -607,6 +607,7 @@ double icemc::OldShowerGenerator::NFBWeight(double ptau, double taulength) {
   return exp(-taulength/D);
 
 }
+
 void icemc::OldShowerGenerator::Picky(double *y_cumulative,int NPROB,double rnd,double& y) {
   for (int i=0;i<NPROB;i++) {
     if (y_cumulative[i]<=rnd && y_cumulative[i+1]>rnd) {

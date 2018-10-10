@@ -19,7 +19,7 @@
 #include "Inelasticity.h"
 
 ///////////////// Y //////////////
-icemc::Y::Y(const Settings* s) : fSettings(s){ // Constructor
+icemc::YGenerator::YGenerator(const Settings* s) : fSettings(s){ // Constructor
 
   /**
    * The Y class contains all of the parameterizations for generating
@@ -99,21 +99,21 @@ icemc::Y::Y(const Settings* s) : fSettings(s){ // Constructor
 
 
 //! Pick an inelasticity y according to the model chosen
-// double icemc::Y::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Interaction::Current currentint) {
-double icemc::Y::pickY(double pnu,Neutrino::L leptonNumber,Neutrino::Interaction::Current currentint) {  
+// double icemc::YGenerator::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Interaction::Current currentint) {
+double icemc::YGenerator::pickY(Energy pnu,Neutrino::L leptonNumber,Neutrino::Interaction::Current current) {  
   if(fSettings->YPARAM==0){
     return pickYGandhietal();
   }//old Gety
   else { //use prescription in Connolly et al.2011
     leptonNumber=Neutrino::L::Matter; ///@todo ? 
-    double elast_y=pickYConnollyetal2011(leptonNumber,currentint,pnu);
+    double elast_y=pickYConnollyetal2011(leptonNumber,current,pnu);
     return elast_y;
   }//current Gety
 } //Gety
 
 
 //! THIS IS A ROUGH PARAMETRIZATION OF PLOT 6 FROM Ghandhi,Reno,Quigg,Sarcevic  hep-ph/9512364 (the curves are not in their later article).  There is also a slow energy dependence.
-double icemc::Y::pickYGandhietal() {
+double icemc::YGenerator::pickYGandhietal() {
   double rnd;
   double x = 0;
   // generate according to Ghandi fig. 6 
@@ -127,12 +127,13 @@ double icemc::Y::pickYGandhietal() {
 }
 
 
-// double icemc::Y::pickYConnollyetal2011(int NU, Neutrino::Interaction::Current CURRENT,double pnu) {
-double icemc::Y::pickYConnollyetal2011(Neutrino::L leptonNumber, Neutrino::Interaction::Current CURRENT,double pnu) {
+// double icemc::YGenerator::pickYConnollyetal2011(int NU, Neutrino::Interaction::Current CURRENT,double pnu) {
+double icemc::YGenerator::pickYConnollyetal2011(Neutrino::L leptonNumber, Neutrino::Interaction::Current CURRENT,Energy pnu) {
 
   // Select a y according to recipe in Connolly et al. (2011)
   //pnu is in eV.
-  double epsilon = log10(pnu/1.E9);
+  // double epsilon = log10(pnu/1.E9);
+  double epsilon = log10(pnu.in(Energy::Unit::GeV));
   // pick a y region 
   //double R1=Rand3Y.Rndm(); // choose our first random number
   double r1 = pickUniform(); //gRandom->Rndm();
@@ -165,8 +166,9 @@ double icemc::Y::pickYConnollyetal2011(Neutrino::L leptonNumber, Neutrino::Inter
 }//pickY
 
 
-// double icemc::Y::Getyweight(double pnu, double y, int nu_nubar, Neutrino::Interaction::Current currentint){
-double icemc::Y::Getyweight(Energy pnu, double y, Neutrino::L leptonNumber, Neutrino::Interaction::Current current){
+
+// double icemc::YGenerator::Getyweight(double pnu, double y, int nu_nubar, Neutrino::Interaction::Current currentint){
+double icemc::YGenerator::Getyweight(Energy pnu, double y, Neutrino::L leptonNumber, Neutrino::Interaction::Current current){
 
   // int nu_nubar = leptonNumber == Neutrino::L::Matter ? 0 : 1;
   //from Connolly Calc 2011, Equations 9, 10, 11, 16, and 17.

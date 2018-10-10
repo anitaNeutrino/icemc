@@ -61,9 +61,9 @@ namespace icemc{
     static const int nP=100; // this sets the maximum length of the arrays
     static const int nE = 7;
     int NPROB; // this counts how many of those array elements are actually used
-    Energy plepton;  // energy of charged lepton after interaction(s)
-    Energy em_secondaries_max;  // em energy due to secondary interactions
-    Energy had_secondaries_max; // had energy due to secondary interactions
+    // Energy plepton;  // energy of charged lepton after interaction(s)
+    // Energy em_secondaries_max;  // em energy due to secondary interactions
+    // Energy had_secondaries_max; // had energy due to secondary interactions
     // first index=energy from 10^18 to 10^21 in half-decades
     // second index=y (100 bins)
     std::array<std::array<double, nP>, nE> dsdy_muon_brems; // probability distribution vs. y for brem
@@ -203,7 +203,7 @@ namespace icemc{
 
 
   private:
-    void doShower(Neutrino::Flavor ,Energy, Energy&, Energy&, int&, TH1F*);
+    void doShower(Neutrino::Flavor ,Energy, Energy&, Energy&, int&);
     
 
   public:
@@ -231,18 +231,8 @@ namespace icemc{
 
     Shower GetEMFrac(Neutrino::Flavor nuflavor,
 		     Neutrino::Interaction::Current current,
-		     // const std::string& nuflavor,
-		     // const std::string& current,
-		     const std::string& taudecay,
 		     double y,
-		     TH1F *hy,
-		     Energy pnu,
-		     int inu,			       
-		     // double& emfrac,
-		     // double& hadfrac,
-		     // int& n_interactions,
-		     int taumodes1);
-
+		     Energy pnu);
     bool secondbang;
     static const bool interestedintaus=false;
 

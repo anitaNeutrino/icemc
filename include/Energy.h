@@ -82,7 +82,7 @@ namespace icemc{
      */
     Energy& operator*=(double s){feV *= s; return *this;}
     Energy& operator/=(double s){feV /= s; return *this;}
-    Energy  operator* (double s) const {Energy e; e*=s; return e;}    
+    Energy  operator* (double s) const {Energy e; e*=s; return e;}
     Energy  operator/ (double s) const {Energy e; e/=s; return e;}
     /* Or take a ratio of two energies */
     double  operator/(const Energy& e){return feV/e.feV;}

@@ -134,8 +134,8 @@ double icemc::ConnollyEtAl2011::Getyweight(Energy pnu,double y, Neutrino::L lept
 }
 
 
-double icemc::ConnollyEtAl2011::pickY(double pnu,Neutrino::L leptonNumber,Neutrino::Interaction::Current currentint) {
-  return fY.pickY(pnu,leptonNumber,currentint);
+double icemc::ConnollyEtAl2011::pickY(Energy pnu,Neutrino::L leptonNumber,Neutrino::Interaction::Current current) {
+  return fY.pickY(pnu,leptonNumber,current);
 }
 // double icemc::ConnollyEtAl2011::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Interaction::Current currentint) {
 //   return fY->pickY(settings1,pnu,nu_nubar,currentint);

@@ -1299,12 +1299,12 @@ void icemc::EventGenerator::generateNeutrinos(const Settings& settings1){
     
     // make a neutrino, we've picked energy, flavor, interaction current, 
     Neutrino nu = nuFactory.makeNeutrino();
-
+    
     //@todo package 
     Shower shower = showerGenerator.generate(nu);
-
-    // showerGenerator.GetEMFrac(Neutrino::Flavor nuflavor, Neutrino::Interaction::Current current, const std::string &taudecay, double y, TH1F *hy, double pnu, int inu, int taumodes1);
     
+    // askFreqGen.generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max, const Shower *sp);
+    // askFreqGen.generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max, const Shower *sp);    
 
     
     

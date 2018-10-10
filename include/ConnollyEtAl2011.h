@@ -13,7 +13,7 @@
 #include "Neutrino.h"
 #include "Inelasticity.h"
 
-namespace icemc {  
+namespace icemc {
   
   class Interaction;
   class Settings;
@@ -31,7 +31,7 @@ namespace icemc {
     // double maxe[NSIGMAS]; ///< maximum energy for cross section parametrizations, in eV
     
   public:
-    double pickY(double pnu, Neutrino::L leptonNumber, Neutrino::Interaction::Current current);///<pick inelasticity y according to chosen model    
+    double pickY(Energy pnu, Neutrino::L leptonNumber, Neutrino::Interaction::Current current);///<pick inelasticity y according to chosen model    
     double Getyweight(Energy pnu,double y,Neutrino::L leptonNumber,Neutrino::Interaction::Current currentint);///< in case you choose y from a flat distribution, this is the weight you should give it according to Connolly et al. (2011)
 
     ConnollyEtAl2011(const Settings* settings); ///< Constructor 
@@ -44,7 +44,7 @@ namespace icemc {
     
   private:
     
-    Y fY; ///< defined in Inelasticity.h
+    YGenerator fY; ///< defined in Inelasticity.h
     
     typedef std::map<std::pair<Neutrino::L, Neutrino::Interaction::Current>, double> DoubleLCC; // represent a double for nu/nubar, neutral/charged currents
     std::array<double, 4> A_low; ///< Table V of Connolly et al. for use in Eq. 16.

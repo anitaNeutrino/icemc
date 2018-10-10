@@ -21,11 +21,11 @@ int main(int argc, char* argv[]){
 	double y = 1;
 	TH1F *hy = nullptr;
 	int inu = 0;
-	int taumodes1  = 0;
+	int taumodes1 = 0;
 	OldShower os = osg.GetEMFrac(flavor, current, taudecay, y, hy, energy.in(Energy::Unit::eV),  inu, taumodes1);
 	std::cout << flavor  <<  "\t" << current  << "\t" << energy << "\t\t\t\t" << os.emFrac << "\t" << os.hadFrac << "\t\t\t\t";
 
-	Shower s = sg.GetEMFrac(flavor, current, taudecay, y, hy, energy,  inu, taumodes1);
+	Shower s = sg.GetEMFrac(flavor, current, y, energy);
 	std::cout << s.emFrac << "\t" << s.hadFrac << std::endl;
 
 	Energy dE = pow(10, floor(TMath::Log10(energy.in(Energy::Unit::eV))))*Energy::Unit::eV;

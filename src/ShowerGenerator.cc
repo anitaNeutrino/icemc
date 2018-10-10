@@ -239,146 +239,20 @@ void icemc::ShowerGenerator::ReadSecondaries() {
   readData(Neutrino::Flavor::tau, Secondary::edecay);
   readData(Neutrino::Flavor::tau, Secondary::mudecay);
 
-  // readData("muons", "brems", fY[{Neutrino::Flavor::mu, Secondary::brems}], fDsdy[{Neutrino::Flavor::mu, Secondary::brems}]);
-  // readData("muons", "epair", fY[{Neutrino::Flavor::mu, Secondary::epair}], fDsdy[{Neutrino::Flavor::mu, Secondary::epair}]);
-  // readData("muons", "pn",    fY[{Neutrino::Flavor::mu, Secondary::pn}],    fDsdy[{Neutrino::Flavor::mu, Secondary::pn}]);
-  		    
-  // readData("tauon", "brems", fY[{Neutrino::Flavor::tau, Secondary::brems}], fDsdy[{Neutrino::Flavor::tau, Secondary::brems}]);
-  // readData("tauon", "epair", fY[{Neutrino::Flavor::tau, Secondary::epair}], fDsdy[{Neutrino::Flavor::tau, Secondary::epair}]);
-  // readData("tauon", "pn",    fY[{Neutrino::Flavor::tau, Secondary::pn}],    fDsdy[{Neutrino::Flavor::tau, Secondary::pn}]);
-  // readData("tauon", "hadrdecay", fY[{Neutrino::Flavor::tau, Secondary::hadrdecay}],    fDsdy[{Neutrino::Flavor::tau, Secondary::hadrdecay}]);
-  // readData("tauon", "edecay", fY[{Neutrino::Flavor::tau, Secondary::edecay}],    fDsdy[{Neutrino::Flavor::tau, Secondary::edecay}]);
-  // readData("tauon", "mudecay",fY[{Neutrino::Flavor::tau, Secondary::mudecay}],    fDsdy[{Neutrino::Flavor::tau, Secondary::mudecay}]);
-
-  // readData("muons", "brems", y_muon_brems, dsdy_muon_brems);
-  // readData("muons", "epair", y_muon_epair, dsdy_muon_epair);
-  // readData("muons", "pn",    y_muon_pn,    dsdy_muon_pn);
-  		    
-  // readData("tauon", "brems",     y_tauon_brems,     dsdy_tauon_brems);
-  // readData("tauon", "epair",     y_tauon_epair,     dsdy_tauon_epair);
-  // readData("tauon", "pn",        y_tauon_pn,        dsdy_tauon_pn);
-  // readData("tauon", "hadrdecay", y_tauon_hadrdecay, dsdy_tauon_hadrdecay);
-  // readData("tauon", "edecay",    y_tauon_edecay,    dsdy_tauon_edecay);
-  // readData("tauon", "mudecay",   y_tauon_mudecay,   dsdy_tauon_mudecay);
-  
-
-  //cout << "NPROB=" << NPROB << ",  nP=" << nP << endl;
-
-  // auto integrate = [&] (const std::array<std::array<double, nP>, nE>& toIntegrate, std::array<double, nE>& result)->void
-  //   {     
-  //    for(int j=0; j < nE;  j++){
-  //       result.at(j) = std::accumulate(toIntegrate.begin(), toIntegrate.end(), 0.0);
-  //    }
-  //    return;
-  //   };
-
-  // integrate(dsdy_muon_brems,      int_muon_brems);
-  // integrate(dsdy_muon_epair,      int_muon_epair);
-  // integrate(dsdy_muon_pn,         int_muon_pn);
-  // integrate(dsdy_tauon_brems,     int_tauon_brems);
-  // integrate(dsdy_tauon_epair,     int_tauon_epair);
-  // integrate(dsdy_tauon_pn,        int_tauon_pn);
-  // integrate(dsdy_tauon_brems,     int_tauon_brems);
-  // integrate(dsdy_tauon_epair,     int_tauon_epair);
-  // integrate(dsdy_tauon_pn,        int_tauon_pn);
-  // integrate(dsdy_tauon_hadrdecay, int_tauon_hadrdecay);
-  // integrate(dsdy_tauon_edecay,    int_tauon_edecay);
-  // integrate(dsdy_tauon_mudecay,   int_tauon_mudecay);
-  
-  // for(int j=0;j<nE;j++) {
-  //   // integrating prob. distributions.
-  //   // int_muon_brems[j]=std::accumulate(dsdy_muon_brems[j],dsdy_muon_brems[j]+nP,0.);//very important to keep the initial value the same type as the elements type
-  //   // int_muon_epair[j]=std::accumulate(dsdy_muon_epair[j],dsdy_muon_epair[j]+nP,0.);
-  //   // int_muon_pn[j]=std::accumulate(dsdy_muon_pn[j],dsdy_muon_pn[j]+nP,0.);
-  //   // int_tauon_brems[j]=std::accumulate(dsdy_tauon_brems[j],dsdy_tauon_brems[j]+nP,0.);
-  //   // int_tauon_epair[j]=std::accumulate(dsdy_tauon_epair[j],dsdy_tauon_epair[j]+nP,0.);
-  //   // int_tauon_pn[j]=std::accumulate(dsdy_tauon_pn[j],dsdy_tauon_pn[j]+nP,0.);
-  //   // int_tauon_hadrdecay[j]=std::accumulate(dsdy_tauon_hadrdecay[j],dsdy_tauon_hadrdecay[j]+nP,0.);
-  //   // int_tauon_edecay[j]=std::accumulate(dsdy_tauon_edecay[j],dsdy_tauon_edecay[j]+nP,0.);
-  //   // int_tauon_mudecay[j]=std::accumulate(dsdy_tauon_mudecay[j],dsdy_tauon_mudecay[j]+nP,0.);
-    
-
-  //   // maximum value of prob. dist.
-  //   max_muon_brems = *std::max_element(dsdy_muon_brems[j],dsdy_muon_brems[j]+nP);
-  //   //cout << "max_muon_brems=" << max_muon_brems << endl;//fenfang
-  //   max_muon_epair = *std::max_element(dsdy_muon_epair[j],dsdy_muon_epair[j]+nP);
-  //   max_muon_pn = *std::max_element(dsdy_muon_pn[j],dsdy_muon_pn[j]+nP);   
-  //   max_tauon_brems = *std::max_element(dsdy_tauon_brems[j],dsdy_tauon_brems[j]+nP);
-  //   max_tauon_epair = *std::max_element(dsdy_tauon_epair[j],dsdy_tauon_epair[j]+nP);
-  //   max_tauon_pn = *std::max_element(dsdy_tauon_pn[j],dsdy_tauon_pn[j]+nP);
-  //   max_tauon_hadrdecay = *std::max_element(dsdy_tauon_hadrdecay[j],dsdy_tauon_hadrdecay[j]+nP);
-  //   max_tauon_edecay = *std::max_element(dsdy_tauon_edecay[j],dsdy_tauon_edecay[j]+nP);
-  //   max_tauon_mudecay = *std::max_element(dsdy_tauon_mudecay[j],dsdy_tauon_mudecay[j]+nP);
-     
-  //   // minimum value of prob. dist.
-  //   min_muon_brems=Tools::dMinNotZero(dsdy_muon_brems[j],nP);
-  //   min_muon_epair=Tools::dMinNotZero(dsdy_muon_epair[j],nP);
-  //   min_muon_pn=Tools::dMinNotZero(dsdy_muon_pn[j],nP);   
-  //   min_tauon_brems=Tools::dMinNotZero(dsdy_tauon_brems[j],nP);
-  //   min_tauon_epair=Tools::dMinNotZero(dsdy_tauon_epair[j],nP);
-  //   min_tauon_pn=Tools::dMinNotZero(dsdy_tauon_pn[j],nP);
-  //   min_tauon_hadrdecay=Tools::dMinNotZero(dsdy_tauon_hadrdecay[j],nP);
-  //   min_tauon_edecay=Tools::dMinNotZero(dsdy_tauon_edecay[j],nP);
-  //   min_tauon_mudecay=Tools::dMinNotZero(dsdy_tauon_mudecay[j],nP);
-     
-  //   if (min_muon_brems<=0){
-  //     std::cout << "Minimum probability is <=0!\n";
-  //   }    
-  //   std::partial_sum(dsdy_muon_brems[j],dsdy_muon_brems[j]+nP,y_cumulative_muon_brems[j]);
-  //   std::partial_sum(dsdy_muon_epair[j],dsdy_muon_epair[j]+nP,y_cumulative_muon_epair[j]);
-  //   std::partial_sum(dsdy_muon_pn[j],dsdy_muon_pn[j]+nP,y_cumulative_muon_pn[j]);
-  //   std::partial_sum(dsdy_tauon_brems[j],dsdy_tauon_brems[j]+nP,y_cumulative_tauon_brems[j]);
-  //   std::partial_sum(dsdy_tauon_epair[j],dsdy_tauon_epair[j]+nP,y_cumulative_tauon_epair[j]);
-  //   std::partial_sum(dsdy_tauon_pn[j],dsdy_tauon_pn[j]+nP,y_cumulative_tauon_pn[j]);
-  //   std::partial_sum(dsdy_tauon_hadrdecay[j],dsdy_tauon_hadrdecay[j]+nP,y_cumulative_tauon_hadrdecay[j]);
-  //   std::partial_sum(dsdy_tauon_mudecay[j],dsdy_tauon_mudecay[j]+nP,y_cumulative_tauon_mudecay[j]);
-  //   std::partial_sum(dsdy_tauon_edecay[j],dsdy_tauon_edecay[j]+nP,y_cumulative_tauon_edecay[j]);
-     
-  //   for (int i=0;i<nP;i++) {
-  //     y_cumulative_muon_brems[j][i]      /= y_cumulative_muon_brems[j][nP-1];
-  //     y_cumulative_muon_epair[j][i]      /= y_cumulative_muon_epair[j][nP-1];
-  //     y_cumulative_muon_pn[j][i]         /= y_cumulative_muon_pn[j][nP-1];
-  //     y_cumulative_tauon_brems[j][i]     /= y_cumulative_tauon_brems[j][nP-1];
-  //     y_cumulative_tauon_epair[j][i]     /= y_cumulative_tauon_epair[j][nP-1];
-  //     y_cumulative_tauon_pn[j][i]        /= y_cumulative_tauon_pn[j][nP-1];
-  //     y_cumulative_tauon_hadrdecay[j][i] /= y_cumulative_tauon_hadrdecay[j][nP-1];
-  //     y_cumulative_tauon_mudecay[j][i]   /= y_cumulative_tauon_mudecay[j][nP-1];
-  //     y_cumulative_tauon_edecay[j][i]    /= y_cumulative_tauon_edecay[j][nP-1];
-  //   } //for
-
   // }
   std::cout<<"Finished reading secondary interaction data.\n"; 
 } //end method ReadSecondaries
 
 
-void icemc::ShowerGenerator::doShower(Neutrino::Flavor nuflavor, Energy plepton, Energy &em_secondaries_max, Energy &had_secondaries_max,int &n_interactions, TH1F *hy) {
+void icemc::ShowerGenerator::doShower(Neutrino::Flavor nuflavor, Energy plepton, Energy &em_secondaries_max, Energy &had_secondaries_max,int &n_interactions) {
+  // @todo currently disabled as it's not totally necessary and I don't understand what it used to do because it was written so fucking badly
+  return;
 
   em_secondaries_max.setZero();
   had_secondaries_max.setZero();
   
   Energy energy = plepton;
-
-  // ok it it looks like we're doing a lookup table with i.
-  // this could probably be improved.
-  int i=(int)((log10(plepton.in(Energy::Unit::eV))-18.)*2.);
-
-  if (i>6){
-    i=6;
-  }
-  else if (i<0){
-    i=0;
-  }
-
-  // int n_brems,n_epair,n_pn; // number of interactions of each type.
-  // int index_y; // index along the horizontal axis of ped's plots
-  // double rnd1=1000.;
-  // double rnd2=1000.;  // random numbers for throwing at dart board
-  double y = 0; // inelasticity
- 
-  // std::string whichtype; // which type of interaction corresponds to that index
-  Secondary whichtype;
-  
-  if (nuflavor==Neutrino::Flavor::mu){
+  if (nuflavor==Neutrino::Flavor::mu || nuflavor==Neutrino::Flavor::tau){
     /**
      * Pick poisson distribution for each, uses i.
      */
@@ -393,296 +267,113 @@ void icemc::ShowerGenerator::doShower(Neutrino::Flavor nuflavor, Energy plepton,
       	secondaries.emplace_back(sec);
       }
     }
-    // then we can sort them to get our particles in a random order
-    // std::sort(secondaries.begin(),  secondaries.end());
-    
     std::random_shuffle(secondaries.begin(), secondaries.end(),
 			[&](int z){ return int(pickUniform(z))%z; } );
 
-    // secondaryCount[Secondary::brems];// = 
-    // secondaryCount[Secondary::epair] = pickPoisson(int_muon_epair[i]);
-    // secondaryCount[Secondary::pn] = pickPoisson(int_muon_pn[i]);
-
-    // int n_brems = pickPoisson(int_muon_brems[i]); // pick number of brem interactions
-    // int n_epair = pickPoisson(int_muon_epair[i]); // # of pair production
-    // int n_pn    = pickPoisson(int_muon_pn[i]); // # photonuclear interactions
-    // int n_total = n_brems + n_epair + n_pn;
-
-    
     for(auto secondary : secondaries){
-      const double* d = nullptr;
-
-      switch(secondary){
-      case Secondary::brems: d = y_cumulative_muon_brems[i].data();  break;
-      case Secondary::epair: d = y_cumulative_muon_epair[i].data();  break;
-      case Secondary::pn:    d = y_cumulative_muon_pn[i].data();     break;
-      }
       // double rnd1 = pickUniform(secondaries.size());
 
       DataKey key(nuflavor, secondary);
       fE_YCumulative_dsdy[key];
-      // this is stupid...
-      // Picky(d, NPROB, rnd1, y);
-
-      // if (y*plepton>std::max(em_secondaries_max,had_secondaries_max)) {  // if this is the largest interaction for this event so far
-      // 	if (secondary == Secondary::brems || secondary == Secondary::epair) {  // save it
-      // 	  em_secondaries_max=y*plepton;
-      // 	}
-      // 	if (secondary == Secondary::pn) {
-      // 	  had_secondaries_max=y*plepton;
-      // 	}
-      // }      
     }
-    
-    const int n_total = secondaries.size();
-    const int n_brems = std::count(secondaries.begin(), secondaries.end(), Secondary::brems);
-    const int n_epair = std::count(secondaries.begin(), secondaries.end(), Secondary::epair);
-    // we generated n_total particles, loop through them
-    for (int j=0; j<n_total; j++) {
-
-      double rnd1 = pickUniform(n_total);
-      
-      if (rnd1<=(double)n_brems/(double)(n_total)){
-	whichtype= Secondary::brems;
-      }
-      else if (rnd1<=(double)(n_brems+n_epair)/(double)(n_total)){
-	whichtype= Secondary::epair;
-      }
-      else{
-	whichtype= Secondary::pn;
-      }
-      // rnd2=1000.;  // random numbers for throwing at dart board
-      // index_y=0;
-
-      if (whichtype== Secondary::brems) {	
-	rnd1 = pickUniform();
-	Picky(&y_cumulative_muon_brems[i][0],NPROB,rnd1,y);
-      }
-      else if (whichtype== Secondary::epair) {
-	rnd1 = pickUniform();
-	Picky(&y_cumulative_muon_epair[i][0],NPROB,rnd1,y);
-      }
-      else if (whichtype== Secondary::pn) {
-	rnd1 = pickUniform();
-	Picky(&y_cumulative_muon_pn[i][0],NPROB,rnd1,y);
-      }
-     
-      if (y*plepton>std::max(em_secondaries_max,had_secondaries_max)) {  // if this is the largest interaction for this event so far
-	if (whichtype== Secondary::brems || whichtype== Secondary::epair) {  // save it
-	  em_secondaries_max=y*plepton;
-	}
-	if (whichtype== Secondary::pn) {
-	  had_secondaries_max=y*plepton;
-	}
-      }
-    } // loop over secondary interactions
-  } // end if it was a muon neutrino
-
-  if (nuflavor == Neutrino::Flavor::tau) {
-    int n_brems = pickPoisson(int_tauon_brems[i]);
-    int n_epair = pickPoisson(int_tauon_epair[i]);
-    int n_pn =    pickPoisson(int_tauon_pn[i]);
-
-    n_interactions += (n_brems+n_epair+n_pn); // increment number of secondary interactions.
-
-    for (int j=0;j<n_brems+n_epair+n_pn;j++) { // loop over secondary interactions. 
-      
-      double rnd1 = pickUniform();
-      if (rnd1<=(double)n_brems/(double)(n_brems+n_epair+n_pn)){
-	whichtype= Secondary::brems;
-      }
-      else if (rnd1<=(double)(n_brems+n_epair)/(double)(n_brems+n_epair+n_pn)){
-	whichtype= Secondary::epair;
-      }
-      else{
-	whichtype= Secondary::pn;
-      }
-      
-      rnd1=1000.;
-      // rnd2=1000.;  // random numbers for throwing at dart board
-      // index_y=0;
-
-      if (whichtype== Secondary::brems) {  // bremstrahlung interaction
-	rnd1 = pickUniform();
-	Picky(&y_cumulative_tauon_brems[i][0],NPROB,rnd1,y);
-      }
-      if (whichtype== Secondary::epair) { // pair production
-	rnd1 = pickUniform();
-	Picky(&y_cumulative_tauon_epair[i][0],NPROB,rnd1,y);
-      }
-      if (whichtype== Secondary::pn) {
-	rnd1 = pickUniform();
-	Picky(&y_cumulative_tauon_pn[i][0],NPROB,rnd1,y);
-      }
-
-      if (fSettings->HIST==1 && !fSettings->ONLYFINAL && hy->GetEntries()<fSettings->HIST_MAX_ENTRIES){
-	hy->Fill(y);
-      }
-
-      if (y*plepton>std::max(em_secondaries_max,had_secondaries_max)) { // if this is the biggest secondary signal yet,
-	if (whichtype== Secondary::brems || whichtype== Secondary::epair){ // save it.
-	  em_secondaries_max=y*plepton;
-	}
-	if (whichtype== Secondary::pn){
-	  had_secondaries_max=y*plepton;
-	}
-      }
-    }
-   
-
-    if (TAUDECAY) {
-      n_interactions++; // increment number of interactions, for plotting.
-
-      double rnd1 = pickUniform();
-      if (rnd1<0.65011){  // pick which type of decay it is.
-	whichtype = Secondary::hadrdecay;
-      }
-      if (rnd1>=0.65011 && rnd1<0.8219){
-	whichtype = Secondary::mudecay;
-      }
-      if (rnd1>=0.8219){
-	whichtype = Secondary::edecay;
-      }
-      
-      rnd1=1000.;
-      // rnd2=1000.;  // random numbers for throwing at dart board
-      // index_y=0;     
-      
-      if (whichtype== Secondary::hadrdecay) { // hadronic decay
-	rnd1 = pickUniform();
-	Picky(&y_cumulative_tauon_hadrdecay[i][0], NPROB, rnd1, y);	
-      }
-      else if (whichtype== Secondary::edecay) { // e decay	
-	rnd1 = pickUniform();
-	Picky(&y_cumulative_tauon_edecay[i][0], NPROB, rnd1, y);
-      }
-      else if (whichtype== Secondary::mudecay) { // mu decay
-	rnd1 = pickUniform();
-	Picky(&y_cumulative_tauon_mudecay[i][0], NPROB, rnd1, y);
-      }
-      
-     
-      if (y*plepton>std::max(em_secondaries_max, had_secondaries_max)) {  // if this is the biggest interaction yet,    
-	if (whichtype== Secondary::edecay){ // save it.
-	  em_secondaries_max=y*plepton;
-	}
-	if (whichtype== Secondary::hadrdecay){
-	  had_secondaries_max=y*plepton;
-	}
-      } //if
-    } //if (TAUDECAY)
-  } //if (nutau)
+  }    
 } //GetShowerGenerator
 
 
 
-icemc::Shower icemc::ShowerGenerator::generate(const Neutrino& nu){
-  Shower s;
+icemc::Shower icemc::ShowerGenerator::generate(const Neutrino& nu) {
+  Shower s = GetEMFrac(nu.flavor, nu.interaction.current, nu.interaction.y,  nu.energy);
   
-  // doShower(nu.flavor,nu.energy,em_secondaries_max,had_secondaries_max,s.nInteractions,hy);   
+  // doShower(nu.flavor,nu.energy,em_secondaries_max,had_secondaries_max,s.nInteractions);   
   return s;
 }
 
 
 icemc::Shower icemc::ShowerGenerator::GetEMFrac(Neutrino::Flavor nuflavor,
 						Neutrino::Interaction::Current current,
-						// const string& nuflavor,
-						// const string& current,
-						const std::string& taudecay,
 						double y,
-						TH1F *hy,
-						Energy pnu,
-						int inu,
-						// double& emfrac,
-						// double& hadfrac,
-						// int& n_interactions,
-						int taumodes1) {
+						Energy pnu) {
+						// int taumodes1) {
 
 
   Shower s;
   s.pnu = pnu;
 
-  if (current==Neutrino::Interaction::Current::Charged){
-    plepton=(1.-y)*pnu;
-  }
-  else{
-    plepton.setZero();
-  }
+  // if (current==Neutrino::Interaction::Current::Charged){
+  //   plepton=(1.-y)*pnu;
+  // }
+  // else{
+  //   plepton.setZero();
+  // }
 
 
   const double negligible = 1e-10;
   if (nuflavor==Neutrino::Flavor::e && current==Neutrino::Interaction::Current::Charged) {
-    s.emFrac=1.-y;
-    s.hadFrac=y;
+    s.emFrac = 1.-y;
+    s.hadFrac = y;
   }
   else if(nuflavor==Neutrino::Flavor::mu && current==Neutrino::Interaction::Current::Charged) {
-    s.emFrac=negligible;
-    s.hadFrac=y;
+    s.emFrac = negligible;
+    s.hadFrac = y;
   }
   else if(nuflavor==Neutrino::Flavor::tau && current==Neutrino::Interaction::Current::Charged) {
     // behaves like a muon
-    if(taumodes1 ==1){//taumodes==1; tau created somewhere in rock and decays at posnu.
-      this->pickEMFracDB(s.emFrac,s.hadFrac);
-    }
-    else if (taumodes1 == 0){
-      s.emFrac=negligible;
-      s.hadFrac=y;
-    }
-  }
-  else if (current==Neutrino::Interaction::Current::Neutral) {
+    // if(taumodes1 ==1){//taumodes==1; tau created somewhere in rock and decays at posnu.
+    //   this->pickEMFracDB(s.emFrac,s.hadFrac);
+    // }
+    // else if (taumodes1 == 0){
     s.emFrac=negligible;
     s.hadFrac=y;
+    // }
+  }
+  else if (current==Neutrino::Interaction::Current::Neutral) {
+    s.emFrac = negligible;
+    s.hadFrac = y;
   }
 
+  // em_secondaries_max.setZero(); // initialize search for maximum signal among primary, secondary interactions.
+  // had_secondaries_max.setZero();
 
-  em_secondaries_max.setZero(); // initialize search for maximum signal among primary, secondary interactions.
-  had_secondaries_max.setZero();
+  ///@todo restore a better version of this
+  // if (SECONDARIES==1 && current==Neutrino::Interaction::Current::Charged) {
 
-  if (SECONDARIES==1 && current==Neutrino::Interaction::Current::Charged) {
+  //   while (1) {
 
-    while (1) {
+  //     // find how much em and hadronic energies comes from secondary interactions.
+  //     // keep picking until you get a bunch of secondary interactions that conserve energy
+  //     doShower(nuflavor,plepton,em_secondaries_max,had_secondaries_max,s.nInteractions); 
 
-      // find how much em and hadronic energies comes from secondary interactions.
-      // keep picking until you get a bunch of secondary interactions that conserve energy
-      doShower(nuflavor,plepton,em_secondaries_max,had_secondaries_max,s.nInteractions,hy); 
+  //     if (em_secondaries_max+had_secondaries_max<=plepton*(1.+1.E-5)) // if conserves energy, break.
+  // 	break;
+  //     else {
+  // 	secondary_e_noncons++; //Record how many times we come up with something that doesn't conserve energy
+  // 	em_secondaries_max.setZero();
+  // 	had_secondaries_max.setZero();
+  //     } //else
+  //   } //while(1)
 
-      if (em_secondaries_max+had_secondaries_max<=plepton*(1.+1.E-5)) // if conserves energy, break.
-	break;
-      else {
-	secondary_e_noncons++; //Record how many times we come up with something that doesn't conserve energy
-	em_secondaries_max.setZero();
-	had_secondaries_max.setZero();
-      } //else
-    } //while(1)
+  //   if ((em_secondaries_max+had_secondaries_max)>(s.sumFrac())*pnu) { // if maximum signal from secondaries is larger than
+  //                                                                        // signal from primary interaction
+  //     s.emFrac=em_secondaries_max/pnu; // then use that one.
+  //     s.hadFrac=had_secondaries_max/pnu;
+  //     if (s.emFrac <= negligible){
+  // 	s.emFrac=negligible;
+  //     }
+  //     if (s.hadFrac<= negligible){
+  // 	s.hadFrac=negligible;
+  //     }
+  //   } //if
+  // } //if (charged current, secondaries on)
 
-    if ((em_secondaries_max+had_secondaries_max)>(s.sumFrac())*pnu) { // if maximum signal from secondaries is larger than
-                                                                         // signal from primary interaction
-      s.emFrac=em_secondaries_max/pnu; // then use that one.
-      s.hadFrac=had_secondaries_max/pnu;
-      if (s.emFrac <= negligible){
-	s.emFrac=negligible;
-      }
-      if (s.hadFrac<= negligible){
-	s.hadFrac=negligible;
-      }
-    } //if
-  } //if (charged current, secondaries on)
+  // if (nuflavor==Neutrino::Flavor::mu && current==Neutrino::Interaction::Current::Charged && s.nInteractions==0){
+  //   icemc::report() << severity::warning << "Look at this one.  inu is " << inu << "\n";
+  // }  
 
-  if (nuflavor==Neutrino::Flavor::mu && current==Neutrino::Interaction::Current::Charged && s.nInteractions==0){
-    icemc::report() << severity::warning << "Look at this one.  inu is " << inu << "\n";
-  }  
-
-  if ((y<0 || y>1) && y != -999.) {
-    icemc::report() << severity::error <<  "Illegal value of y, y =" << y << "\n";
-  }
-  
   if (s.sumFrac()>1.00001) {
     icemc::report() << severity::error << "emFrac,hadfrac=" << s.emFrac << "," << s.hadFrac << ": sum = " << s.sumFrac() << "\n";
-    icemc::report() << "nuflavor,taudecay=" << nuflavor << " " << taudecay << "\n";
   }
   
   return s;
-
 } //GetEMFrac
 
 

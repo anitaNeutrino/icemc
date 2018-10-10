@@ -31,15 +31,22 @@ icemc::Neutrino icemc::NeutrinoFactory::makeNeutrino() {
     // ///@todo finalize
     // int someKindOfError = primary1->GetSigma(pnu, sigma, interactionLength_kgm2, &settings1, xsecParam_nutype, xsecParam_nuint);
     // /// now generate some askaryan rf
-  
+
+  // neutrino properties
   Neutrino n;
   n.flavor = pickFlavor();
-
   n.energy = fSpectra.pickNeutrinoEnergy();
   n.leptonNumber = Neutrino::L::Matter; ///@todo check
+
+
+  // interaction properties
   n.interaction.current = fInteraction.pickCurrent();
   n.interaction.crossSection = fConnollyEtAl2011.getSigma(n.energy, n.leptonNumber,  n.interaction.current);
   n.interaction.length = CrossSectionModel::getInteractionLength(n.interaction.crossSection);
+  // Energy pnu, Neutrino::L leptonNumber, Neutrino::Interaction::Current current
+  n.interaction.y = fConnollyEtAl2011.pickY(n.energy, n.leptonNumber, n.interaction.current);
+
+  
 
   return n;
   
