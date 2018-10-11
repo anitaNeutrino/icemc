@@ -5,6 +5,7 @@
 #include "Geoid.h"
 #include "Antarctica.h"
 #include "LocalCoordinateSystem.h"
+#include "OpticalPath.h"
 
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
@@ -14,6 +15,8 @@
 namespace icemc {
 
   class WorldModel;
+
+
   
   /**
    * @class RayTracer
@@ -24,8 +27,10 @@ namespace icemc {
   public:
     RayTracer(const WorldModel* world, const Geoid::Position& detector);
     virtual ~RayTracer();
-    TVector3 findPathToDetector(const Geoid::Position &interaction, bool debug = false);
+    OpticalPath findPathToDetector(const Geoid::Position &interaction, bool debug = false);
+
     static TVector3 refractiveBoundary(const TVector3& incoming, const TVector3& surfaceNormal, double n_incoming, double n_outgoing, bool debug=false);
+    // static TVector3 refractiveBoundaryPol(const TVector3& incoming, const TVector3& surfaceNormal, double n_incoming, double n_outgoing);
 
     void setDebug(bool debug = true){
       fDebug = debug;
@@ -44,6 +49,7 @@ namespace icemc {
     mutable Geoid::Position fEndPoint;
     mutable TGraph* fMinimizerPath = nullptr;
     mutable double fBestResidual = DBL_MAX;
+    mutable OpticalPath fOpticalPath;
 
     ROOT::Math::Minimizer* fMinimizer = nullptr;
     ROOT::Math::Functor* fFitFunc = nullptr;

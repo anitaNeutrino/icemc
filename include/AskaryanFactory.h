@@ -7,6 +7,7 @@
 #include "ShowerGenerator.h"
 #include "Report.h"
 #include "FTPair.h"
+#include "Detector.h"
 
 namespace icemc {
 
@@ -24,35 +25,27 @@ namespace icemc {
     // AskaryanFactory(); ///< Default constructor
     AskaryanFactory(int n, double dt); ///< Default constructor
 
-    void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had,
-		    double emfrac, double hadfrac, double& vmmhz1m, double& vmmhz_em) const;
-
-    void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had,
-		    const Shower& sp, double& vmmhz1m, double& vmmhz_em) const {
-      TaperVmMHz(viewangle, deltheta_em, deltheta_had, sp.emFrac, sp.hadFrac, vmmhz1m, vmmhz_em);
-    }
-
-    ///@todo make this more elegent once you understand it better, (move to AskaryanFreqs class and maybe put the loop over k inside the function)
-    void TaperVmMHz(double viewangle, double deltheta_em, double deltheta_had, const Shower& sp, AskaryanFreqs& radioSignal, int k) const {
-      double dummyVariable;
-      TaperVmMHz(viewangle,  deltheta_em, deltheta_had,  sp, radioSignal.vmmhz[k], dummyVariable);
-    }
-
-    void GetSpread(Energy pnu, double emfrac, double hadfrac, double freq,
-		   double& deltheta_em_max, double& deltheta_had_max) const;
-
-    void GetSpread(Energy pnu, const Shower& sp, double freq,
-		   double& deltheta_em_max, double& deltheta_had_max) const {
-      GetSpread(pnu, sp.emFrac,  sp.hadFrac, freq, deltheta_em_max, deltheta_had_max);
-    }
     
     
-    double GetVmMHz1m(double pnu, double freq) const;
-    AskaryanFreqs generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu, int numFreqs, const double *freq_Hz, double notch_min, double notch_max, const Shower* sp) const;
-    // FTPair generate(double pnu, int numFreqs, const double *freq_Hz, const Shower* sp) const;
+    /** 
+     * Generates Askaryan signal 1m along shower axis from interaction, finds component pointing along outgoing RF direction
+     * 
+     * @param nu is the neutrino which triggered the interaction
+     * @param shower contains details of the simulated shower
+     * @param outgoingRfDirection is the direction the RF signal must go to get to the detector
+     * 
+     * @return the component of the Askaryan signal pointing along outgoingRfDirection
+     */
+    PropagatingSignal generate(const Neutrino& nu, const Shower& shower, const TVector3& outgoingRfDirection) const;
 
-    void GetVmMHz(double vmmhz_max, double vmmhz1m_max, double pnu, const double *freq,
-		  double notch_min,double notch_max, double *vmmhz, int nfreq) const;
+  private:
+    double GetVmMHz1m(Energy pnu, double freq) const;
+    FTPair generateOnAxisAt1m(Energy energy) const;
+    void taperWaveform(FTPair& waveform/*modified*/, double viewAngleRadians, Energy energy, const Shower& shower) const;
+    void GetSpread(Energy pnu, const Shower& sp, double freq, double& deltheta_em_max, double& deltheta_had_max) const;
+    TVector3 getPolarizationVector(const TVector3& rfDir, const TVector3& showerAxis) const;
+    
+  public:
     
     int GetLPM() const;
     Energy GetELPM() const;
@@ -235,7 +228,94 @@ namespace icemc {
     static const double KELVINS_ICE;  // temperature in Kelvin (ice+system)
     static const double KELVINS_SALT; // temperature in salt (350) + receiver temp (150)
     static const double BETAICE;      // exponent, in jaime's parameterization
-    static const double BETASALT;     // exponent, in jaime's parameterization   
+    static const double BETASALT;     // exponent, in jaime's parameterization
+
+
+    template<class T>
+    T taperSingleFreq(T amplitude,
+		      double viewangle,
+		      double deltheta_em,
+		      double deltheta_had,
+		      double emfrac,
+		      double hadfrac) const {
+
+      auto taper_component = [&](double threshold, double delTheta, double frac){
+			       double rtemp=(viewangle-changle)*(viewangle-changle)/(deltheta_em*deltheta_em);
+			       T amp = 0;
+			       // the power goes like exp(-(theta_v-theta_c)^2/Delta^2)
+			       // so the e-field is the same with a 1/2 in the exponential
+			       if (frac>threshold) { // if there is an em component
+				 if (rtemp<=20) {
+				   // if the viewing angle is less than 20 sigma away from the cerankov angle
+				   // this is the effect of the em width on the signal
+				   amp=amplitude*exp(-rtemp);
+				 }
+				 else{
+				   // if it's more than 20 sigma just set it to zero 
+				   amp=0.;
+				 }
+			       }
+			       else{ // if the em component is essentially zero than set this to zero
+				 amp = 0;
+			       }
+			       return amp;
+			     };
+
+      T amplitude_em = taper_component(pow(10, -10), deltheta_em,  emfrac);
+      T amplitude_had = taper_component(0,           deltheta_had, hadfrac);
+      amplitude = sin(viewangle)*(emfrac*amplitude_em+hadfrac*amplitude_had);
+
+      return amplitude;
+      
+      // //--EM 
+      // T amplitude_em=0;  // V/m/MHz at 1m due to EM component of shower
+
+      // // this is the number that get exponentiated
+      // //  double rtemp=0.5*(viewangle-changle)*(viewangle-changle)/(deltheta_em*deltheta_em);
+      // double rtemp=(viewangle-changle)*(viewangle-changle)/(deltheta_em*deltheta_em);
+
+      // // the power goes like exp(-(theta_v-theta_c)^2/Delta^2)
+      // // so the e-field is the same with a 1/2 in the exponential
+      // if (emfrac>pow(10.,-10.)) { // if there is an em component
+      // 	if (rtemp<=20) {
+      // 	  // if the viewing angle is less than 20 sigma away from the cerankov angle
+      // 	  // this is the effect of the em width on the signal
+      // 	  amplitude_em=amplitude*exp(-rtemp);
+      // 	}
+      // 	else{
+      // 	  // if it's more than 20 sigma just set it to zero 
+      // 	  amplitude_em=0.;
+      // 	}
+      // }
+      // else{ // if the em component is essentially zero than set this to zero
+      // 	amplitude_em=0;
+      // }
+
+
+      // T amplitude_had=0; // V/m/MHz at 1m due to HAD component of shower  
+      // //--HAD
+      // // this is the quantity that gets exponentiated
+      // rtemp=(viewangle-changle)*(viewangle-changle)/(deltheta_had*deltheta_had);
+
+      // //std::cout << "rtemp (had) is " << rtemp << "\n";
+
+      // if (hadfrac!=0) { // if there is a hadronic fraction
+      // 	if (rtemp<20) { // if we are less than 20 sigma from cerenkov angle
+      // 	  amplitude_had=amplitude*exp(-rtemp); // this is the effect of the hadronic width of the signal
+      // 	}
+      // 	else{ // if we're more than 20 sigma from cerenkov angle
+      // 	  amplitude_had=0.; // just set it to zero
+      // 	}
+      // }
+      // else {
+      // 	amplitude_had=0.;
+      // }
+      // amplitude=sin(viewangle)*(emfrac*amplitude_em+hadfrac*amplitude_had);
+
+      // return amplitude;
+
+    } //TaperVmMHz
+    
     
   };
 }

@@ -14,7 +14,7 @@ namespace icemc {
 
   class LocalCoordinateSystem {
   public:
-    
+
     LocalCoordinateSystem(const Geoid::Position& origin)
       : fOrigin(origin){
       init();

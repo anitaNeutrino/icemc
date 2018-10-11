@@ -65,8 +65,7 @@ icemc::AskaryanFactory::AskaryanFactory(int n, double dt)
     fNumFreqs(1+(n/2)),
     fDeltaF_Hz(1./(n*dt)),
     fFreqs_Hz(make_evenly_spaced(fNumFreqs, fDeltaF_Hz))
-{   
-  
+{
   Initialize();
 }
 
@@ -112,94 +111,151 @@ void icemc::AskaryanFactory::InitializeMedium() {
 
   JAIME_FACTOR=1.0;          // factor to multiply Jaime's parameterization for error analysis
 
-  x0ice=0.403; 
-  ecice=63.7;                // critical energy in ice (MeV)
-  nice=1.79;                 // index of refraction of ice
-  nfirn=1.3250;              // index of refraction at the very surface - Peter
-  invnfirn=1/nfirn; 
-  invnice=1/nice;
-  rhoice=917;                // density of ice (kg/m**3)
-  kelvins_ice=250.+150.;     // temperature in Kelvin (ice+system)
-  changle_ice=acos(1./nice); //
-  aex_ice=1.;                //efficiency for producing charge asymmetry relative to ice.  1 by definition
+  x0ice = 0.403; 
+  ecice = 63.7;                // critical energy in ice (MeV)
+  nice = 1.79;                 // index of refraction of ice
+  nfirn = 1.3250;              // index of refraction at the very surface - Peter
+  invnfirn = 1/nfirn; 
+  invnice = 1/nice;
+  rhoice = 917;                // density of ice (kg/m**3)
+  kelvins_ice = 250.+150.;     // temperature in Kelvin (ice+system)
+  changle_ice = acos(1./nice); //
+  aex_ice = 1.;                //efficiency for producing charge asymmetry relative to ice.  1 by definition
 
-  alphaice=1.32;             // exponent that goes into cutting off the spectrum at high frequencies
-  rm_ice=10.35;              // moliere radius, in g/cm^2
-  ke_ice=4.79E-16;           // const staticant in jaime's parameterization, in V/cm/MHz
-  kl_ice=23.80;              //const staticant in jaime's parameterization
-  kdelta_ice=18.33;          // const staticant in jaime's parameterization
-  kr_ice=1.42;               // const staticant in jaime's parameterization
-  betaice=2.25;              // exponent, in jaime's parameterization
-  nu0_modified=0.;           // nu_0 modified for a specific medium
+  alphaice = 1.32;             // exponent that goes into cutting off the spectrum at high frequencies
+  rm_ice = 10.35;              // moliere radius, in g/cm^2
+  ke_ice = 4.79E-16;           // const staticant in jaime's parameterization, in V/cm/MHz
+  kl_ice = 23.80;              //const staticant in jaime's parameterization
+  kdelta_ice = 18.33;          // const staticant in jaime's parameterization
+  kr_ice = 1.42;               // const staticant in jaime's parameterization
+  betaice = 2.25;              // exponent, in jaime's parameterization
+  nu0_modified = 0.;           // nu_0 modified for a specific medium
 
-  freq_reference=1.E6;       // reference frequency in MHz
-  pnu_reference=1.E18;       // reference energy in MHz
+  freq_reference = 1.E6;       // reference frequency in MHz
+  pnu_reference = 1.E18;       // reference energy in MHz
 
 
-  if (WHICHPARAMETERIZATION==1) {
-    nu_r=(RHOMEDIUM/1000.)
-      //NU_R=(RHOMEDIUM/1000.) // density in g/cm^3
+  if (WHICHPARAMETERIZATION == 1) {
+    nu_r = (RHOMEDIUM/1000.)
+      //NU_R = (RHOMEDIUM/1000.) // density in g/cm^3
       /KR_MEDIUM/RM_MEDIUM*
       constants::CLIGHT*100./N_DEPTH/sin(acos(1/N_DEPTH));
  
-    vmmhz1m_reference=KE_MEDIUM/ECMEDIUM* // KE in V/cm/MHz^2, Ec in MeV
+    vmmhz1m_reference = KE_MEDIUM/ECMEDIUM* // KE in V/cm/MHz^2, Ec in MeV
       (X0MEDIUM*100.) // radiation length in cm
       *freq_reference/1.E6 // frequency in MHz
       *sqrt(N_DEPTH*N_DEPTH-1)/N_DEPTH // sin(theta_c)
       *pnu_reference/1.E6 // energy in MeV
       *1./sin(changle); 
-
+    
     std::cout << "multiplying by 1/changle which is " << 1./sin(changle) << "\n";
 
-    //    vmmhz1m*=1./(1.+pow(freq/NU_R,ALPHAMEDIUM));
-    vmmhz1m_reference*=1./(1.+pow(freq_reference/nu_r,ALPHAMEDIUM));
+    //    vmmhz1m* = 1./(1.+pow(freq/NU_R,ALPHAMEDIUM));
+    vmmhz1m_reference *= 1./(1.+pow(freq_reference/nu_r,ALPHAMEDIUM));
 
+  }
+ }
+
+
+
+icemc::FTPair icemc::AskaryanFactory::generateOnAxisAt1m(Energy energy) const {
+
+  // do the slow work of the full calculation for a single reference frequency
+  double vmmhz1m_max = GetVmMHz1m(energy, fFreqs_Hz.back());
+
+  std::vector<std::complex<double> > amplitudes(fFreqs_Hz.size(), 0);
+  amplitudes.back() = vmmhz1m_max;
+
+  // this encodes the 1/f dependence from GetVmMHz
+  for(int freq_index = amplitudes.size()-2; freq_index > 0; freq_index--){
+    // start at -2 since we already set size()-1 which is the back()
+    // stop before 0 since that's a DC offset and this would diverge
+    amplitudes.at(freq_index) = amplitudes.back()*fFreqs_Hz.at(freq_index)/fFreqs_Hz.back();
+  }
+
+  bool doNormalTimeOrdering = true;
+  FTPair waveform(amplitudes, fDeltaF_Hz, doNormalTimeOrdering);
+  return waveform;
+}
+
+
+
+void icemc::AskaryanFactory::taperWaveform(FTPair& waveform /*modified*/, double viewAngleRadians, Energy energy, const Shower& shower) const {
+
+  // from icemc main... which is the WRONG fucking place...
+  // deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
+  // ... again a 1/f scaling...
+  const double referenceFreqHz = fFreqs_Hz.at(1);
+  double deltheta_em_ref, deltheta_had_ref; // these are the 
+  GetSpread(energy, shower, referenceFreqHz, deltheta_em_ref, deltheta_had_ref);
+
+  std::vector<double> delThetaEm (fFreqs_Hz.size(), deltheta_em_ref);
+  std::vector<double> delThetaHad(fFreqs_Hz.size(), deltheta_had_ref);
+
+  auto& vmmhz = waveform.changeFreqDomain();
+  for(int k=1; k < fFreqs_Hz.size(); k++){ // skip 0th bin as we will have 0 power there
+    double scale_factor = referenceFreqHz/fFreqs_Hz.at(k);
+    double delThetaEm  = scale_factor*deltheta_em_ref;
+    double delThetaHad = scale_factor*deltheta_had_ref;
+
+    vmmhz.at(k) = taperSingleFreq(vmmhz.at(k), viewAngleRadians, delThetaEm, delThetaHad, shower.emFrac, shower.hadFrac);
   }
 }
 
 
-
-icemc::AskaryanFreqs icemc::AskaryanFactory::generateAskaryanFreqs(double vmmhz_max, double vmmhz1m_max, double pnu,
-								   int numFreqs, const double *freq_Hz,
-								   double notch_min, double notch_max,
-								   const Shower* sp) const {
-
-  // @todo this is a fucking mess and really needs improvement
-  // @todo perhaps all this shit should be in the constructor for AskaryanFreqs?
-  std::vector<double> tempArray(numFreqs, 0);
-  GetVmMHz(vmmhz_max, vmmhz1m_max, pnu, freq_Hz, notch_min, notch_max, &tempArray[0], numFreqs);
-  AskaryanFreqs af(numFreqs, freq_Hz[0], freq_Hz[1] - freq_Hz[0], GetChangle(), sp, &tempArray[0]);
-  GetSpread(sp->pnu, sp->emFrac, sp->hadFrac, af.fSpreadTestFreqHz, af.fDeltaThetaEmTest,  af.fDeltaThetaHadTest);
-  af.fEmFrac = sp->emFrac;
-  af.fHadFrac = sp->hadFrac;
-  
-  return af;
+TVector3 icemc::AskaryanFactory::getPolarizationVector(const TVector3& rfDir, const TVector3& showerAxis) const {
+  // perpendicular to the rf direction
+  // in the plane of the shower axis i.e. perpendicular to the normal of that plane
+  TVector3 normalToPlaneOfShowerAxisAndRF = rfDir.Cross(showerAxis);
+  TVector3 pol = normalToPlaneOfShowerAxisAndRF.Cross(rfDir).Unit(); // perpendicular to the rfDir and the plane normal
+  return pol.Unit(); // make it a unit vector
 }
 
 
-void icemc::AskaryanFactory::GetVmMHz(double vmmhz_max,double vmmhz1m_max, double pnu,
-					     const double *freq, double notch_min, double notch_max,
-					     double *vmmhz, int nfreq) const {
 
-  // parametrization from Jaime Alvarez Munhiz  
-  //  here using astro-ph/0003315 
-  
-  for (int i=0;i<nfreq;i++) {
-  
-    vmmhz[i]=vmmhz_max
-      //*1./FREQ_LOW*freq[i];
-      *GetVmMHz1m(pnu,freq[i])/vmmhz1m_max;
+icemc::PropagatingSignal icemc::AskaryanFactory::generate(const Neutrino& nu, const Shower& shower, const TVector3& directionOfPropagationToDetector) const {
 
-    //if (WHICHPARAMETERIZATION==0)
-    //vmmhz[i]*=(1./(1.+pow(freq[i]/NU0_MODIFIED,ALPHAMEDIUM)));
-    //if (WHICHPARAMETERIZATION==1)
-    //vmmhz[i]*=1./(1.+pow(freq[i]/NU_R,ALPHAMEDIUM));
+  // first generate the signal you would see viewing on axis at 1m from the interaction
+  FTPair waveform = generateOnAxisAt1m(nu.energy);
+  
+  // now we taper since we won't view this signal on axis, we'll view at at a view angle, theta
+  const double cosTheta = shower.axis.Dot(directionOfPropagationToDetector);
+  const double theta = TMath::ACos(cosTheta);
+  taperWaveform(waveform /*modified*/, theta, nu.energy, shower);
+
+
+  TVector3 polarizationVector = getPolarizationVector(directionOfPropagationToDetector, shower.axis);
+  PropagatingSignal signal(waveform, directionOfPropagationToDetector, polarizationVector);
+  
+  return signal;
+}
+
+
+
+
+// void icemc::AskaryanFactory::GetVmMHz(double vmmhz_max,double vmmhz1m_max, Energy energy,
+// 				      const double *freq, double notch_min, double notch_max,
+// 				      double *vmmhz, int nfreq) const {
+
+//   // parametrization from Jaime Alvarez Munhiz  
+//   //  here using astro-ph/0003315
+  
+//   for (int i=0;i<nfreq;i++) {
+  
+//     vmmhz[i]=vmmhz_max
+//       //*1./FREQ_LOW*freq[i];
+//       *GetVmMHz1m(energy,freq[i])/vmmhz1m_max;
+
+//     //if (WHICHPARAMETERIZATION==0)
+//     //vmmhz[i]*=(1./(1.+pow(freq[i]/NU0_MODIFIED,ALPHAMEDIUM)));
+//     //if (WHICHPARAMETERIZATION==1)
+//     //vmmhz[i]*=1./(1.+pow(freq[i]/NU_R,ALPHAMEDIUM));
     
-    if (notch_min!=0 && notch_max!=0 && freq[i]>notch_min && freq[i]<notch_max){
-      vmmhz[i]=0.;
-    }
-  }
-} //GetVmMHz
+//     if (notch_min!=0 && notch_max!=0 && freq[i]>notch_min && freq[i]<notch_max){
+//       vmmhz[i]=0.;
+//     }
+//   }
+// } //GetVmMHz
 
 // double icemc::AskaryanFactory::GetELPM() const {
 icemc::Energy icemc::AskaryanFactory::GetELPM() const {  
@@ -211,22 +267,20 @@ icemc::Energy icemc::AskaryanFactory::GetELPM() const {
 
   //double elpm=7.7E12*(X0ICE*100.);
 
-  Energy elpm = Energy(2.E15, Energy::Unit::eV)*(X0MEDIUM/x0ice);  // this is what Jaime uses.  see caption under figure 4 of 0003315.
+  // Energy elpm = Energy(2.E15, Energy::Unit::eV)*(X0MEDIUM/x0ice);  // this is what Jaime uses.  see caption under figure 4 of 0003315.
+  Energy elpm = 2*Energy::Unit::PeV*(X0MEDIUM/x0ice);  // this is what Jaime uses.  see caption under figure 4 of 0003315.  
   return elpm;
   
 } //GetELPM
 
 
 int icemc::AskaryanFactory::GetLPM() const {
-
-
   return LPM;
 } //GetLPM
 
 
 void icemc::AskaryanFactory::GetSpread(Energy pnu,
-				       double emfrac,
-				       double hadfrac,
+				       const Shower& shower,
 				       double freq,
 				       double& deltheta_em_max,
 				       double& deltheta_had_max) const {
@@ -275,12 +329,12 @@ void icemc::AskaryanFactory::GetSpread(Energy pnu,
   Energy had_eshower; // had shower energy
   double nu0; // reference frequency
 
-  em_eshower = emfrac*pnu; // first, consider the electromagnetic shower.
-  had_eshower = hadfrac*pnu;  // just the energy of the hadronic component of the shower
+  em_eshower = shower.emFrac*pnu; // first, consider the electromagnetic shower.
+  had_eshower = shower.hadFrac*pnu;  // just the energy of the hadronic component of the shower
 
   // lengthen the shower to account for the lpm effect.
   // from astro-ph/9706064
-  if (em_eshower<Energy(1.E15, Energy::Unit::eV) || !LPM) {
+  if (em_eshower<1*Energy::Unit::PeV || !LPM) {
     // showerlength /= pow((em_eshower/1.e15),-0.03);
     showerlength /= pow((em_eshower.in(Energy::Unit::PeV)),-0.03);
   }
@@ -304,21 +358,22 @@ void icemc::AskaryanFactory::GetSpread(Energy pnu,
     // remember that Jaime has a factor of ln2 in the exponential here which we'll have to correct for further down
     deltheta_em_max=12.32/sqrt(pow(N_DEPTH,2)-1)*(nu0/freq)*constants::RADDEG/showerlength;
 
-    if (hadfrac>0.00001) { // if there is a hadronic component
-	
+    ///@todo tidy this up with some kind of constant
+    if (shower.hadFrac>0.00001) { // if there is a hadronic component	
 	
       // these equations are in astro-ph/9806098, but we have pulled
       // out the dependence on index of refraction and shower length.
       // remember that in this paper he includes a factor of ln2 in
       // the exponential, which we account for further down
       const double epsilon=log10(had_eshower.in(Energy::Unit::TeV));
-      if (had_eshower>=Energy(1E12, Energy::Unit::eV) && had_eshower<Energy(100.E12, Energy::Unit::eV)) {
+
+      if (had_eshower>=1*Energy::Unit::TeV && had_eshower < 100*Energy::Unit::TeV) {
 	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(2.07-0.33*epsilon+(7.5e-2)*epsilon*epsilon);
       }
-      else if (had_eshower<Energy(100.E15, Energy::Unit::eV)) {
+      else if (had_eshower<100*Energy::Unit::PeV) {
 	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(1.744-(1.21e-2)*epsilon);
       }
-      else if (had_eshower<Energy(10.E18, Energy::Unit::eV)){
+      else if (had_eshower<10*Energy::Unit::EeV){
 	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(4.23-0.785*epsilon+(5.5e-2)*epsilon*epsilon);
       }
       else {
@@ -354,7 +409,7 @@ void icemc::AskaryanFactory::GetSpread(Energy pnu,
     // Eq. 9
     deltheta_em_max*=RHOMEDIUM/rhoice/KDELTA_MEDIUM*kdelta_ice/X0MEDIUM*x0ice/sqrt(N_DEPTH*N_DEPTH-1)*sqrt(nice*nice-1);
 
-    if (hadfrac>0.00001) { // if there is a hadronic component
+    if (shower.hadFrac>0.00001) { // if there is a hadronic component
       // for had showers, just use the one from astro-ph/0512337
       // Eq. 9
       // straight away
@@ -378,9 +433,11 @@ void icemc::AskaryanFactory::GetSpread(Energy pnu,
 
 
 
-double icemc::AskaryanFactory::GetVmMHz1m(double pnu, double freq) const {
-
+double icemc::AskaryanFactory::GetVmMHz1m(Energy energy, double freq) const {
+  
   double vmmhz1m_max = 0;
+  double pnu = energy.in(Energy::Unit::GeV);
+  
   if (WHICHPARAMETERIZATION==0) {
     // parametrization from Jaime Alvarez Munhiz  
     // here using astro-ph/0003315 
@@ -447,76 +504,3 @@ void icemc::AskaryanFactory::SetParameterization(int whichparameterization) {
 
 
 
-
-
-
-
-void icemc::AskaryanFactory::TaperVmMHz(double viewangle,
-					       double deltheta_em,
-					       double deltheta_had,
-					       double emfrac,
-					       double hadfrac,
-					       double& vmmhz1m,
-					       double& vmmhz1m_em_obs) const {
-
-  //--EM 
-  double vmmhz1m_em=0;  // V/m/MHz at 1m due to EM component of shower
-  double vmmhz1m_had=0; // V/m/MHz at 1m due to HAD component of shower
-
-  // this is the number that get exponentiated
-  //  double rtemp=0.5*(viewangle-changle)*(viewangle-changle)/(deltheta_em*deltheta_em);
-  double rtemp=(viewangle-changle)*(viewangle-changle)/(deltheta_em*deltheta_em);
-
-  // the power goes like exp(-(theta_v-theta_c)^2/Delta^2)
-  // so the e-field is the same with a 1/2 in the exponential
-  if (emfrac>pow(10.,-10.)) { // if there is an em component
-    if (rtemp<=20) {
-      // if the viewing angle is less than 20 sigma away from the cerankov angle
-      // this is the effect of the em width on the signal
-      vmmhz1m_em=vmmhz1m*exp(-rtemp);
-    }
-    else{
-      // if it's more than 20 sigma just set it to zero 
-      vmmhz1m_em=0.;
-    }
-  }
-  else{ // if the em component is essentially zero than set this to zero
-    vmmhz1m_em=0;
-  }
-
-
-  
-  //--HAD
-  // this is the quantity that gets exponentiated
-
-  rtemp=(viewangle-changle)*(viewangle-changle)/(deltheta_had*deltheta_had);
-
-  //std::cout << "rtemp (had) is " << rtemp << "\n";
-
-  if (hadfrac!=0) { // if there is a hadronic fraction
-    if (rtemp<20) { // if we are less than 20 sigma from cerenkov angle
-      vmmhz1m_had=vmmhz1m*exp(-rtemp); // this is the effect of the hadronic width of the signal
-    }
-    else{ // if we're more than 20 sigma from cerenkov angle
-      vmmhz1m_had=0.; // just set it to zero
-    }
-  }
-  else {
-    vmmhz1m_had=0.;
-  }
-
-  // logscalefactor_taper=log10((emfrac*vmmhz1m_em+hadfrac*vmmhz1m_had)/vmmhz1m);
-
-
-  //std::cout << "emfrac, vmmhz1m_em, hadfrac, vmmhz1m_had are " << emfrac << " " << vmmhz1m_em << " " << hadfrac << " " << vmmhz1m_had << "\n";
-  vmmhz1m=sin(viewangle)*(emfrac*vmmhz1m_em+hadfrac*vmmhz1m_had);
-
-  if (vmmhz1m==0){
-    vmmhz1m_em_obs=0.;
-  }
-  else{
-    vmmhz1m_em_obs=sin(viewangle)*emfrac*vmmhz1m_em/vmmhz1m;
-  }
-
-
-} //TaperVmMHz

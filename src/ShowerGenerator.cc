@@ -283,7 +283,7 @@ void icemc::ShowerGenerator::doShower(Neutrino::Flavor nuflavor, Energy plepton,
 
 icemc::Shower icemc::ShowerGenerator::generate(const Neutrino& nu) {
   Shower s = GetEMFrac(nu.flavor, nu.interaction.current, nu.interaction.y,  nu.energy);
-  
+  s.axis = nu.path.direction.Unit();
   // doShower(nu.flavor,nu.energy,em_secondaries_max,had_secondaries_max,s.nInteractions);   
   return s;
 }

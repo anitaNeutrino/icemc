@@ -53,87 +53,6 @@ icemc::RayTracer::~RayTracer()
 
 
 
-TCanvas* icemc::RayTracer::testRefractiveBoundary(double n1, double n2) {
-
-  TGraph* gr = new TGraph();
-  gr->SetBit(kCanDelete);
-  gr->SetTitle("Angles relative to surface normal; Angle of incidence (Degrees);Angle of refraction (Degrees)");
-  
-  TCanvas* c = new TCanvas();
-  c->Divide(2);
-  c->cd(1);
-  TGraph* grBoundary = new TGraph();
-  grBoundary->SetTitle("Ray tracing");
-  grBoundary->SetPoint(0, -1, 0);
-  grBoundary->SetPoint(1, 1, 0);
-  grBoundary->Draw("al");
-  grBoundary->SetLineStyle(2);
-  grBoundary->SetMaximum(1);
-  grBoundary->SetMinimum(-1);
-  grBoundary->SetBit(kCanDelete);
-
-  TBox* bIncoming = new TBox(-1, -1, 1, 0);
-  EColor b1 = n1 > n2 ? kCyan : kWhite;
-  bIncoming->SetFillColorAlpha(b1, 0.5);
-  bIncoming->SetFillStyle(3345);
-  bIncoming->Draw("same");
-  bIncoming->SetBit(kCanDelete);
-
-  TBox* bOutgoing = new TBox(-1, 0, 1, 1);
-  EColor b2 = n2 > n1 ? kCyan : kWhite;
-  bOutgoing->SetFillColorAlpha(b2, 0.5);
-  bOutgoing->SetFillStyle(3354);  
-  bOutgoing->Draw("same");
-  bOutgoing->SetBit(kCanDelete);
-
-  TPaveText* t1 = new TPaveText(-1, -1, -0.6, -0.8);
-  t1->AddText("Incoming");
-  t1->AddText(TString::Format("n=%4.2lf", n1));
-  t1->SetBorderSize(0);
-  t1->SetFillColor(b1);
-  t1->SetBit(kCanDelete);
-  t1->Draw();
-  
-  TPaveText* t2 = new TPaveText(-1, 0.8, -0.6, 1);
-  t2->AddText("Outgoing");
-  t2->AddText(TString::Format("n=%4.2lf", n2));
-  t2->SetBorderSize(0);
-  t2->SetFillColor(b2);
-  t2->SetBit(kCanDelete);  
-  t2->Draw();
-
-  const TVector3 normal(0, 0, 1);
-  for(int theta_i_Deg = 1; theta_i_Deg <= 90 ; theta_i_Deg++){
-
-    double thetaRad = TMath::DegToRad()*theta_i_Deg;
-    double x = sin(thetaRad);
-    double y = 0;
-    double z = cos(thetaRad);
-    const TVector3 incoming(x, y, z);
-
-    TGraph* grPath = new TGraph();
-    grPath->SetPoint(0, -x, -z);
-    grPath->SetPoint(1, 0, 0);
-    
-    TVector3 outgoing = refractiveBoundary(incoming,  normal, n1, n2);    
-    grPath->SetPoint(2, outgoing.X(), outgoing.Z());
-
-    double cosThetaOut = outgoing.Dot(normal);
-    gr->SetPoint(gr->GetN(), theta_i_Deg, TMath::ACos(cosThetaOut)*TMath::RadToDeg());
-    grPath->SetLineColor(theta_i_Deg + 1);
-    
-    grPath->Draw("lsame");
-
-    grPath->SetBit(kCanDelete);
-  }
-
-  c->cd(2);
-  gr->Draw("al");
-  
-  return c;
-}
-
-
 
 TVector3 icemc::RayTracer::refractiveBoundary(const TVector3& incoming, const TVector3& surfaceNormal, double n_incoming, double n_outgoing, bool debug){
 
@@ -203,7 +122,6 @@ TVector3 icemc::RayTracer::refractiveBoundary(const TVector3& incoming, const TV
     //   std::cout << "Refract!\t" << TMath::ASin(sinThetaIncoming)*TMath::RadToDeg() << "\t" << TMath::ASin(sinThetaOutgoing)*TMath::RadToDeg() << std::endl;          
     // }
 
-
     // make new unit vector, which means perpendicular(parallel) components are size of sin(cos) theta_outgoing
     TVector3 refracted = cosThetaOutgoing*incomingPara.Unit() + sinThetaOutgoing*incomingPerp.Unit();
     return refracted.Unit();
@@ -212,7 +130,6 @@ TVector3 icemc::RayTracer::refractiveBoundary(const TVector3& incoming, const TV
 
 
 
-// Geoid::Position icemc::RayTracer::nudgeSurface(const double* params) const {
 Geoid::Position icemc::RayTracer::getSurfacePosition(const double* params) const {
 
   // so we pick a point shifted by deltaX, and deltaY from the start position
@@ -220,10 +137,12 @@ Geoid::Position icemc::RayTracer::getSurfacePosition(const double* params) const
   TVector3 localPos(params[0], params[1], 0);
   Geoid::Position surfacePos = fLocalCoords.localPositionToGlobal(localPos);
   double surfaceAlt = fWorld->SurfaceAboveGeoid(surfacePos);  
-  surfacePos.SetAltitude(surfaceAlt);
+  surfacePos.SetAltitude(surfaceAlt); ///@todo Is this efficient yet?
 
   return surfacePos;
 }
+
+
 
 
 
@@ -236,16 +155,39 @@ double icemc::RayTracer::evalPath(const double* params) const {
   // Gives us this initial RF direction...
   const TVector3 rfDir = (surfacePos - fBalloonPos).Unit();
 
-  const TVector3 surfaceNormal = fWorld->GetSurfaceNormal(surfacePos);
-  // const TVector3 surfaceNormal = surfacePos.Unit();
+  OpticalPath::Step s1; // from the surface to the balloon
+  s1.direction = fBalloonPos - surfacePos;
+  s1.n = AskaryanFactory::N_AIR;
+  s1.attenuationLength = DBL_MAX; //@todo is this sensible?  
 
-  const TVector3 refractedRfDir = refractiveBoundary(rfDir, surfaceNormal, AskaryanFactory::N_AIR, AskaryanFactory::NICE, fDebug);
-  const double dist = (surfacePos - fInteractionPos).Mag();
+  s1.boundaryNormal = fWorld->GetSurfaceNormal(surfacePos);
+  
+  ///@todo get these refractive index numbers from the world model...
+  const TVector3 refractedRfDir = refractiveBoundary(rfDir, s1.boundaryNormal, AskaryanFactory::N_AIR, AskaryanFactory::NICE, fDebug);
+  const double distRemaining = (surfacePos - fInteractionPos).Mag();
 
-  const TVector3 endPoint = surfacePos + refractedRfDir*dist;
+  const TVector3 endPoint = surfacePos + refractedRfDir*distRemaining;
+
+  OpticalPath::Step s2; // from the source (hopefully the end point) to the surface
+  s2.direction = surfacePos - endPoint;
+  s2.n = AskaryanFactory::NICE;
+  const double attenLengthIceMeters = 700; ///@todo Get this number from the world model
+  s2.attenuationLength = attenLengthIceMeters;
+  // order matters, think about this!
+  s2.boundaryNormal = s1.boundaryNormal; ///@todo think about this...
+
 
   const TVector3 delta = (endPoint - fInteractionPos);
   double residual = delta.Mag();
+
+
+  // we propagate from detector to the interaction during fitting
+  // but for the result we want from interaction to detector, so s2 goes first
+  fOpticalPath.clear();
+
+  fOpticalPath.steps.emplace_back(s2);
+  fOpticalPath.steps.emplace_back(s1);
+  fOpticalPath.residual = residual;
 
   if(fDebug && fDoingMinimization){
     if(!fMinimizerPath){
@@ -257,12 +199,12 @@ double icemc::RayTracer::evalPath(const double* params) const {
   	      << ", dy (km) = " << 1e-3*params[1]
   	      << ", residual (m) = " << residual
   	      // <<  ", endPoint.Mag() = " << endPoint.Mag()
-  	      << "\n";    
+  	      << "\n";
   }
 
   if(fDoingMinimization && residual < fBestResidual){
     fBestResidual = residual;
-    fSurfaceNormal = surfaceNormal;
+    fSurfaceNormal = s1.boundaryNormal;
     fSurfacePos = surfacePos;
     fEndPoint = endPoint;
     fRefractedRfDir = refractedRfDir;
@@ -272,13 +214,13 @@ double icemc::RayTracer::evalPath(const double* params) const {
 
 
 
-TVector3 icemc::RayTracer::findPathToDetector(const Geoid::Position&rfStart, bool debug){
+icemc::OpticalPath icemc::RayTracer::findPathToDetector(const Geoid::Position&rfStart, bool debug){
   ///@todo add collision check to best fit path
   
   fInteractionPos = rfStart;
 
   // here we setup a new local coordinate system for the fitter to do translations in
-  // The idea is to fit along the surface in terms of dx and dy  
+  // The idea is to fit along the surface in terms of dx and dy
 
   if(!fMinimizer){
     fMinimizer = ROOT::Math::Factory::CreateMinimizer("Minuit2", "");
@@ -305,39 +247,39 @@ TVector3 icemc::RayTracer::findPathToDetector(const Geoid::Position&rfStart, boo
   fDoingMinimization = false;
 
   gErrorIgnoreLevel = oldErrorLevel;
-  
+
   if(fDebug){
     makeDebugPlots("testFitter.root");
     // exit(1);
   }
 
-  TVector3 rfPath = (fSurfacePos - fInteractionPos).Unit();;
+  TVector3 rfPath = (fSurfacePos - fInteractionPos).Unit();
 
   static int nGood = 0;
   static int nBad = 0;
-  if(fBestResidual > 1){
+  const double residualThreshold = 1;
+  if(fBestResidual > residualThreshold){
     nBad++;
-    // if(fDebug){
+    if(fDebug){
       icemc::report() << severity::warning << "Outside path fitter residual tolerance!,  fBestResidual = " << fBestResidual << ", nGood = " << nGood << ", nBad = " << nBad << std::endl;
-    // }
+    }
     rfPath.SetXYZ(0, 0, 0);
   }
   else{
     nGood++;
-    // if(fDebug){
+    if(fDebug){
       icemc::report() << severity::info << "Successful fit! fBestResidual = " << fBestResidual << ", nGood = " << nGood << ", nBad = " << nBad << std::endl;
-  //   }
+    }
   }
 
-  return rfPath;
+  return fOpticalPath;
 }
-
 
 
 
 void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
     
-  TFile* fTest= new TFile(fileName, "recreate");
+  TFile* fTest = new TFile(fileName, "recreate");
  
   const TVector3 toInteraction = fLocalCoords.globalPositionToLocal(fInteractionPos);
   const TVector3 toSurface = fLocalCoords.globalPositionToLocal(fSurfacePos);
@@ -457,3 +399,88 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
 
 
 
+
+
+
+
+
+
+TCanvas* icemc::RayTracer::testRefractiveBoundary(double n1, double n2) {
+
+  TGraph* gr = new TGraph();
+  gr->SetBit(kCanDelete);
+  gr->SetTitle("Angles relative to surface normal; Angle of incidence (Degrees);Angle of refraction (Degrees)");
+  
+  TCanvas* c = new TCanvas();
+  c->Divide(2);
+  c->cd(1);
+  TGraph* grBoundary = new TGraph();
+  grBoundary->SetTitle("Ray tracing");
+  grBoundary->SetPoint(0, -1, 0);
+  grBoundary->SetPoint(1, 1, 0);
+  grBoundary->Draw("al");
+  grBoundary->SetLineStyle(2);
+  grBoundary->SetMaximum(1);
+  grBoundary->SetMinimum(-1);
+  grBoundary->SetBit(kCanDelete);
+
+  TBox* bIncoming = new TBox(-1, -1, 1, 0);
+  EColor b1 = n1 > n2 ? kCyan : kWhite;
+  bIncoming->SetFillColorAlpha(b1, 0.5);
+  bIncoming->SetFillStyle(3345);
+  bIncoming->Draw("same");
+  bIncoming->SetBit(kCanDelete);
+
+  TBox* bOutgoing = new TBox(-1, 0, 1, 1);
+  EColor b2 = n2 > n1 ? kCyan : kWhite;
+  bOutgoing->SetFillColorAlpha(b2, 0.5);
+  bOutgoing->SetFillStyle(3354);  
+  bOutgoing->Draw("same");
+  bOutgoing->SetBit(kCanDelete);
+
+  TPaveText* t1 = new TPaveText(-1, -1, -0.6, -0.8);
+  t1->AddText("Incoming");
+  t1->AddText(TString::Format("n=%4.2lf", n1));
+  t1->SetBorderSize(0);
+  t1->SetFillColor(b1);
+  t1->SetBit(kCanDelete);
+  t1->Draw();
+  
+  TPaveText* t2 = new TPaveText(-1, 0.8, -0.6, 1);
+  t2->AddText("Outgoing");
+  t2->AddText(TString::Format("n=%4.2lf", n2));
+  t2->SetBorderSize(0);
+  t2->SetFillColor(b2);
+  t2->SetBit(kCanDelete);  
+  t2->Draw();
+
+  const TVector3 normal(0, 0, 1);
+  for(int theta_i_Deg = 1; theta_i_Deg <= 90 ; theta_i_Deg++){
+
+    double thetaRad = TMath::DegToRad()*theta_i_Deg;
+    double x = sin(thetaRad);
+    double y = 0;
+    double z = cos(thetaRad);
+    const TVector3 incoming(x, y, z);
+
+    TGraph* grPath = new TGraph();
+    grPath->SetPoint(0, -x, -z);
+    grPath->SetPoint(1, 0, 0);
+    
+    TVector3 outgoing = refractiveBoundary(incoming,  normal, n1, n2);    
+    grPath->SetPoint(2, outgoing.X(), outgoing.Z());
+
+    double cosThetaOut = outgoing.Dot(normal);
+    gr->SetPoint(gr->GetN(), theta_i_Deg, TMath::ACos(cosThetaOut)*TMath::RadToDeg());
+    grPath->SetLineColor(theta_i_Deg + 1);
+    
+    grPath->Draw("lsame");
+
+    grPath->SetBit(kCanDelete);
+  }
+
+  c->cd(2);
+  gr->Draw("al");
+  
+  return c;
+}

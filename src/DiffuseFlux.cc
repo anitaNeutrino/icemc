@@ -21,5 +21,5 @@ TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const Geoid::Position
   nuDir = lc.localTranslationToGlobal(nuDir);
 
   return nuDir;
-  // fColumnDensity = ((icemc::Crust2*)fW)->integratePath(fInteractionPos, fNeutrinoDir);
+
 }
