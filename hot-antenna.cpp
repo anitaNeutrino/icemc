@@ -90,20 +90,19 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   if (mode == m_init) return;
 
   const double Dir2BalLen = 5;
-  const int SelAntLayer = 3;
-  const int SelAntFold = 0;
+  static int SelAntLayer = -1;
+  static int SelAntFold = -1;
   const double RangeMax = 5;
   static Vector n_eplane, SelAnt_eplane;
   static Vector n_hplane, SelAnt_hplane;
   static Vector n_normal, SelAnt_normal;
   static Vector RotatedSel_eplane;
-  // int SelAntNum = global_anita1->GetRxTriggerNumbering(SelAntLayer, SelAntFold);
-  // double SelAntX = global_anita1->antenna_positions[SelAntNum][0];
-  // double SelAntY = global_anita1->antenna_positions[SelAntNum][1];
-  // double SelAntZ = global_anita1->antenna_positions[SelAntNum][2];
-  double SelAntX = global_anita1->ANTENNA_POSITION_START[SelAntLayer][SelAntFold][0];
-  double SelAntY = global_anita1->ANTENNA_POSITION_START[SelAntLayer][SelAntFold][1];
-  double SelAntZ = global_anita1->ANTENNA_POSITION_START[SelAntLayer][SelAntFold][2];
+  static int LayerFromAntNum[48];
+  static int PhiFromAntNum[48];
+  static double SelAntX;
+  static double SelAntY;
+  static double SelAntZ;
+  static int SelAntNum = 40;
   // int ReturnCode;
 
   static bvv::TBuffer <double> PolAngle(30);
@@ -124,7 +123,25 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   RESET_VAR_ONRELOAD(TGraph, ghgain, new TGraph(Anita::NFREQ));
 
   cHotTest->cd();
+  cHotTest->SetWindowPosition(200, 200);
+
   if (mode == m_reload) {
+    int AntNum;
+    // Map antenna number to (ilayer, ifold):
+    AntNum = -1;
+    for (int ilayer=0; ilayer < global_settings1->NLAYERS; ilayer++) { // loop over layers on the payload
+      for (int ifold=0;ifold<global_anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
+        AntNum++;
+        LayerFromAntNum[AntNum] = ilayer;
+        PhiFromAntNum[AntNum] = ifold;
+      }
+    }
+    SelAntLayer = LayerFromAntNum[SelAntNum];
+    SelAntFold = PhiFromAntNum[SelAntNum];
+    SelAntX = global_anita1->antenna_positions[SelAntNum][0];
+    SelAntY = global_anita1->antenna_positions[SelAntNum][1];
+    SelAntZ = global_anita1->antenna_positions[SelAntNum][2];
+
     SelLayer.modified = true;
     // cout << "view: " << &view << endl;
     global_bn1->GetAntennaOrientation(global_settings1,  global_anita1,  SelAntLayer,  SelAntFold, SelAnt_eplane,  SelAnt_hplane,  SelAnt_normal);
@@ -135,7 +152,7 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
     lDir2Bal->SetPoint(1, SelAnt_normal[0] * Dir2BalLen, SelAnt_normal[1] * Dir2BalLen, SelAnt_normal[2] * Dir2BalLen);
     lDir2Bal->SetLineColor(kMagenta);
     lDir2Bal->Draw();
-    int AntNum = -1;
+    AntNum = -1;
     for (int ilayer=0; ilayer < global_settings1->NLAYERS; ilayer++) { // loop over layers on the payload
       for (int ifold=0;ifold<global_anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
         AntNum++;
@@ -144,12 +161,12 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
 
         global_bn1->GetAntennaOrientation(global_settings1,  global_anita1,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
         // vAntNormals->at(antNum) = TPolyLine3D(2);
-        // double antX = global_anita1->antenna_positions[antNum][0];
-        // double antY = global_anita1->antenna_positions[antNum][1];
-        // double antZ = global_anita1->antenna_positions[antNum][2];
-        double AntX = global_anita1->ANTENNA_POSITION_START[ilayer][ifold][0];
-        double AntY = global_anita1->ANTENNA_POSITION_START[ilayer][ifold][1];
-        double AntZ = global_anita1->ANTENNA_POSITION_START[ilayer][ifold][2];
+        double AntX = global_anita1->antenna_positions[AntNum][0];
+        double AntY = global_anita1->antenna_positions[AntNum][1];
+        double AntZ = global_anita1->antenna_positions[AntNum][2];
+        // double AntX = global_anita1->ANTENNA_POSITION_START[ilayer][ifold][0];
+        // double AntY = global_anita1->ANTENNA_POSITION_START[ilayer][ifold][1];
+        // double AntZ = global_anita1->ANTENNA_POSITION_START[ilayer][ifold][2];
         vAntPos->at(AntNum).SetPoint(0, AntX, AntY, AntZ);
         vAntNormals->at(AntNum).SetPoint(0, AntX, AntY, AntZ);
         vAntNormals->at(AntNum).SetPoint(1, AntX + n_normal[0], AntY + n_normal[1], AntZ + n_normal[2]);
