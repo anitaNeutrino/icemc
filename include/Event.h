@@ -1,8 +1,5 @@
 #include "TObject.h"
 
-
-#include "NeutrinoPath.h"
-
 namespace icemc {
 
   /**
@@ -10,7 +7,7 @@ namespace icemc {
    * @brief A class which contains all the info about an icemc event
    */
 
-  class Weight {
+  class Weights {
     double position;
     double direction;
     operator double(){return position*direction;}
@@ -30,8 +27,8 @@ namespace icemc {
     Int_t run;
     Geoid::Position detector; ///< detector pos
     Geoid::Position interaction; ///
-    NeutrinoPath path;
-    Weight weight;
+    Neutrino neutrino;
+    Weights weights;
   };
 
 }

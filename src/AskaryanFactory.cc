@@ -47,7 +47,7 @@ const double icemc::AskaryanFactory::VIEWANGLE_CUT(sqrt(5.));   // require viewa
  * @param nf the number of freqs
  * @param df the frequency shift between bins
  * 
- * @return the constructed vector
+ * @return vector of nf values spaced by df starting with 0
  */
 std::vector<double> make_evenly_spaced(int nf, double df){
   std::vector<double> freqs(nf, 0);

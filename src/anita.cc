@@ -185,6 +185,24 @@ icemc::Anita::Anita(const Settings* settings, const char* outputDir, const Ballo
   // Initialize(settings, icemc::report().foutput, settings->getOutputDir());
   Initialize(settings, icemc::report().foutput, outputDir);
   GetPayload(settings, bn1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 }
 
 
@@ -1620,131 +1638,131 @@ void icemc::Anita::RFCMs(int ilayer,int ifold,double *vmmhz) {
 }
 
 
-// reads in the effect of a signal not hitting the antenna straight on
-// also reads in gainxx_measured and sets xxgaintoheight
-void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_receiver) {
-  std::string gain_null1, gain_null2;
-  double sfrequency;
-  int iii, jjj;
-  std::ifstream anglefile;
-  for(jjj = 0; jjj < 4; jjj++)
-    for(iii = 0; iii < 131; iii++)
-      gain_angle[jjj][iii][0] = 1.;
+// // reads in the effect of a signal not hitting the antenna straight on
+// // also reads in gainxx_measured and sets xxgaintoheight
+// void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_receiver) {
+//   std::string gain_null1, gain_null2;
+//   double sfrequency;
+//   int iii, jjj;
+//   std::ifstream anglefile;
+//   for(jjj = 0; jjj < 4; jjj++)
+//     for(iii = 0; iii < 131; iii++)
+//       gain_angle[jjj][iii][0] = 1.;
     
-  anglefile.open((ICEMC_DATA_DIR+"/vv_az").c_str()); // v polarization, a angle
-  if(anglefile.fail()) {
-    std::cout << "can't open `$ICEMC_DATA_DIR`/vv_az\n";
-    exit(1);
-  }
-  for(jjj = 1; jjj < 7; jjj++){
-    for(iii = 0; iii < 131; iii++) {
-      anglefile >> sfrequency >> gain_angle[0][iii][jjj];
-      if(sfrequency != frequency_forgain_measured[iii]){
-	std::cout << "check frequencies for vv_az\n";
-      }
-    }
-  }
-  anglefile.close();
+//   anglefile.open((ICEMC_DATA_DIR+"/vv_az").c_str()); // v polarization, a angle
+//   if(anglefile.fail()) {
+//     std::cout << "can't open `$ICEMC_DATA_DIR`/vv_az\n";
+//     exit(1);
+//   }
+//   for(jjj = 1; jjj < 7; jjj++){
+//     for(iii = 0; iii < 131; iii++) {
+//       anglefile >> sfrequency >> gain_angle[0][iii][jjj];
+//       if(sfrequency != frequency_forgain_measured[iii]){
+// 	std::cout << "check frequencies for vv_az\n";
+//       }
+//     }
+//   }
+//   anglefile.close();
     
     
     
-  anglefile.open((ICEMC_DATA_DIR+"/hh_az").c_str()); // h polarization, a angle
-  if(anglefile.fail()) {
-    std::cout << "can't open `$ICEMC_DATA_DIR`/hh_az\n";
-    exit(1);
-  }
-  for(jjj = 1; jjj < 7; jjj++){
-    for(iii = 0; iii < 131; iii++) {
-      anglefile >> sfrequency >> gain_angle[1][iii][jjj];
-      if(sfrequency != frequency_forgain_measured[iii]){
-	std::cout << "check frequencies for hh_az\n";
-      }
-    }
-  }
-  anglefile.close();
+//   anglefile.open((ICEMC_DATA_DIR+"/hh_az").c_str()); // h polarization, a angle
+//   if(anglefile.fail()) {
+//     std::cout << "can't open `$ICEMC_DATA_DIR`/hh_az\n";
+//     exit(1);
+//   }
+//   for(jjj = 1; jjj < 7; jjj++){
+//     for(iii = 0; iii < 131; iii++) {
+//       anglefile >> sfrequency >> gain_angle[1][iii][jjj];
+//       if(sfrequency != frequency_forgain_measured[iii]){
+// 	std::cout << "check frequencies for hh_az\n";
+//       }
+//     }
+//   }
+//   anglefile.close();
     
-  anglefile.open((ICEMC_DATA_DIR+"/hh_el").c_str()); // h polarization, e angle
-  if(anglefile.fail()) {
-    std::cout << "can't open `$ICEMC_DATA_DIR`/hh_el\n";
-    exit(1);
-  }
-  for(jjj = 1; jjj < 7; jjj++){
-    for(iii = 0; iii < 131; iii++) {
-      anglefile >> sfrequency >> gain_angle[2][iii][jjj];
-      if(sfrequency != frequency_forgain_measured[iii]) {
-	std::cout << "check frequencies for hh_el\n";
-      }
-    }
-  }
-  anglefile.close();
+//   anglefile.open((ICEMC_DATA_DIR+"/hh_el").c_str()); // h polarization, e angle
+//   if(anglefile.fail()) {
+//     std::cout << "can't open `$ICEMC_DATA_DIR`/hh_el\n";
+//     exit(1);
+//   }
+//   for(jjj = 1; jjj < 7; jjj++){
+//     for(iii = 0; iii < 131; iii++) {
+//       anglefile >> sfrequency >> gain_angle[2][iii][jjj];
+//       if(sfrequency != frequency_forgain_measured[iii]) {
+// 	std::cout << "check frequencies for hh_el\n";
+//       }
+//     }
+//   }
+//   anglefile.close();
     
-  anglefile.open((ICEMC_DATA_DIR+"/vv_el").c_str()); // v polarization, e angle
-  if(anglefile.fail()) {
-    std::cout << "can't open `$ICEMC_DATA_DIR`/vv_el\n";
-    exit(1);
-  }
-  for(jjj = 1; jjj < 7; jjj++){
-    for(iii = 0; iii < 131; iii++) {
-      anglefile >> sfrequency >> gain_angle[3][iii][jjj];
-      if(sfrequency != frequency_forgain_measured[iii]) {
-	std::cout << "check frequencies for vv_el\n";
-      }
-    }
-  }
-  anglefile.close();
-  for(jjj = 0; jjj < 6; jjj++) inv_angle_bin_size[jjj] = 1. /
-				 (reference_angle[jjj+1] - reference_angle[jjj]); // this is used for interpolating gains at angles between reference angles
+//   anglefile.open((ICEMC_DATA_DIR+"/vv_el").c_str()); // v polarization, e angle
+//   if(anglefile.fail()) {
+//     std::cout << "can't open `$ICEMC_DATA_DIR`/vv_el\n";
+//     exit(1);
+//   }
+//   for(jjj = 1; jjj < 7; jjj++){
+//     for(iii = 0; iii < 131; iii++) {
+//       anglefile >> sfrequency >> gain_angle[3][iii][jjj];
+//       if(sfrequency != frequency_forgain_measured[iii]) {
+// 	std::cout << "check frequencies for vv_el\n";
+//       }
+//     }
+//   }
+//   anglefile.close();
+//   for(jjj = 0; jjj < 6; jjj++) inv_angle_bin_size[jjj] = 1. /
+// 				 (reference_angle[jjj+1] - reference_angle[jjj]); // this is used for interpolating gains at angles between reference angles
     
-  double gainhv, gainhh, gainvh, gainvv;
-  double gain_step = frequency_forgain_measured[1]-frequency_forgain_measured[0]; // how wide are the steps in frequency;
+//   double gainhv, gainhh, gainvh, gainvv;
+//   double gain_step = frequency_forgain_measured[1]-frequency_forgain_measured[0]; // how wide are the steps in frequency;
     
-  icemc::report() << "GAINS is " << GAINS << "\n";
-  for (int k = 0; k < NFREQ; ++k) {
-    whichbin[k] = int((freq[k] - frequency_forgain_measured[0]) / gain_step); // finds the gains that were measured for the frequencies closest to the frequency being considered here
-    if((whichbin[k] >= NPOINTS_GAIN || whichbin[k] < 0)) {
-      icemc::report() << "Set_gain_angle out of range, freq = " << freq[k] << "\twhichbin[k] = " << whichbin[k] << std::endl;
-      // no longer exit, just set antenna gain to 0 outside band
-      // exit(1);
-      scalef2[k] = 0;
-      scalef1[k] = 0;
-    }
-    else{
+//   icemc::report() << "GAINS is " << GAINS << "\n";
+//   for (int k = 0; k < NFREQ; ++k) {
+//     whichbin[k] = int((freq[k] - frequency_forgain_measured[0]) / gain_step); // finds the gains that were measured for the frequencies closest to the frequency being considered here
+//     if((whichbin[k] >= NPOINTS_GAIN || whichbin[k] < 0)) {
+//       icemc::report() << "Set_gain_angle out of range, freq = " << freq[k] << "\twhichbin[k] = " << whichbin[k] << std::endl;
+//       // no longer exit, just set antenna gain to 0 outside band
+//       // exit(1);
+//       scalef2[k] = 0;
+//       scalef1[k] = 0;
+//     }
+//     else{
 
-      //now a linear interpolation for the frequency
-      scalef2[k] = (freq[k] - frequency_forgain_measured[whichbin[k]]) / gain_step;
-      // how far from the lower frequency
-      scalef1[k] = 1. - scalef2[k]; // how far from the higher frequency
+//       //now a linear interpolation for the frequency
+//       scalef2[k] = (freq[k] - frequency_forgain_measured[whichbin[k]]) / gain_step;
+//       // how far from the lower frequency
+//       scalef1[k] = 1. - scalef2[k]; // how far from the higher frequency
 
-      // convert the gain at 0 degrees to the effective antenna height at 0 degrees for every frequency
-      if(whichbin[k] == NPOINTS_GAIN - 1) { // if the frequency is 1.5e9 or goes a little over due to rounding
-	gainhv = gainhv_measured[whichbin[k]];
-	gainhh = gainh_measured[whichbin[k]];
-	gainvh = gainvh_measured[whichbin[k]];
-	gainvv = gainv_measured[whichbin[k]];
-      }
-      else {
-	// These gains should be dimensionless numbers, not in dBi
-	gainhv = scalef1[k] * gainhv_measured[whichbin[k]] + scalef2[k] * gainhv_measured[whichbin[k] + 1];
-	gainhh = scalef1[k] * gainh_measured[whichbin[k]] + scalef2[k] * gainh_measured[whichbin[k] + 1];
-	gainvh = scalef1[k] * gainvh_measured[whichbin[k]] + scalef2[k] * gainvh_measured[whichbin[k] + 1];
-	gainvv = scalef1[k] * gainv_measured[whichbin[k]] + scalef2[k] * gainv_measured[whichbin[k] + 1];
-      }
-    }
-    if (GAINS==0) {
+//       // convert the gain at 0 degrees to the effective antenna height at 0 degrees for every frequency
+//       if(whichbin[k] == NPOINTS_GAIN - 1) { // if the frequency is 1.5e9 or goes a little over due to rounding
+// 	gainhv = gainhv_measured[whichbin[k]];
+// 	gainhh = gainh_measured[whichbin[k]];
+// 	gainvh = gainvh_measured[whichbin[k]];
+// 	gainvv = gainv_measured[whichbin[k]];
+//       }
+//       else {
+// 	// These gains should be dimensionless numbers, not in dBi
+// 	gainhv = scalef1[k] * gainhv_measured[whichbin[k]] + scalef2[k] * gainhv_measured[whichbin[k] + 1];
+// 	gainhh = scalef1[k] * gainh_measured[whichbin[k]] + scalef2[k] * gainh_measured[whichbin[k] + 1];
+// 	gainvh = scalef1[k] * gainvh_measured[whichbin[k]] + scalef2[k] * gainvh_measured[whichbin[k] + 1];
+// 	gainvv = scalef1[k] * gainv_measured[whichbin[k]] + scalef2[k] * gainv_measured[whichbin[k] + 1];
+//       }
+//     }
+//     if (GAINS==0) {
 
-      gainhv=0.;
-      gainhh=gain[1][k];
-      gainvh=0.;
-      gainvv=gain[0][k];
+//       gainhv=0.;
+//       gainhh=gain[1][k];
+//       gainvh=0.;
+//       gainvv=gain[0][k];
 
-    }
+//     }
 
-    hvGaintoHeight[k] = GaintoHeight(gainhv,freq[k],nmedium_receiver);
-    hhGaintoHeight[k] = GaintoHeight(gainhh,freq[k],nmedium_receiver);
-    vhGaintoHeight[k] = GaintoHeight(gainvh,freq[k],nmedium_receiver);
-    vvGaintoHeight[k] = GaintoHeight(gainvv,freq[k],nmedium_receiver);
+//     hvGaintoHeight[k] = GaintoHeight(gainhv,freq[k],nmedium_receiver);
+//     hhGaintoHeight[k] = GaintoHeight(gainhh,freq[k],nmedium_receiver);
+//     vhGaintoHeight[k] = GaintoHeight(gainvh,freq[k],nmedium_receiver);
+//     vvGaintoHeight[k] = GaintoHeight(gainvv,freq[k],nmedium_receiver);
 
-  } // loop through frequency bins
+//   } // loop through frequency bins
     
     
     
@@ -1754,7 +1772,9 @@ void icemc::Anita::Set_gain_angle(const Settings *settings1,double nmedium_recei
     
     
     
-} // void Set_gain_angle()
+// } // void Set_gain_angle()
+
+
 
 // determines the effect of a signal not hitting the antenna straight on
 // for the gain type, 0 means V polarization and el angle, 1 means H polarization and el angle, 2 means H polarization and az angle, 3 means V polarization and az angle

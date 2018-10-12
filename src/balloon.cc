@@ -106,24 +106,24 @@ icemc::Balloon::~Balloon(){
 
 
 
-void icemc::Balloon::SetDefaultBalloonPosition() { // position of surface of earth under balloon
+// void icemc::Balloon::SetDefaultBalloonPosition() { // position of surface of earth under balloon
     
-  // // set the default balloon position
-  // // if you are using real Anita-lite path, these get overwritten for each event
+//   // // set the default balloon position
+//   // // if you are using real Anita-lite path, these get overwritten for each event
     
-  if(BN_LATITUDE==999){
-    fPosition.SetLonLatAlt(0, -90, 40e3);
-  }
-  else{
-    if (BN_ALTITUDE==0){ // if the altitude isn't set in the input file
-      altitude_bn=120000*12.*constants::CMINCH/100.; // 120000 ft.=36.6 m
-    }
-    else{
-      altitude_bn=BN_ALTITUDE*12.*constants::CMINCH/100.; // converts the altitude in the input file to meters
-    }
-    fPosition.SetLonLatAlt(BN_LONGITUDE, BN_LATITUDE, altitude_bn);
-  }  
-} // set default balloon position
+//   if(BN_LATITUDE==999){
+//     fPosition.SetLonLatAlt(0, -90, 40e3);
+//   }
+//   else{
+//     if (BN_ALTITUDE==0){ // if the altitude isn't set in the input file
+//       altitude_bn=120000*12.*constants::CMINCH/100.; // 120000 ft.=36.6 m
+//     }
+//     else{
+//       altitude_bn=BN_ALTITUDE*12.*constants::CMINCH/100.; // converts the altitude in the input file to meters
+//     }
+//     fPosition.SetLonLatAlt(BN_LONGITUDE, BN_LATITUDE, altitude_bn);
+//   }  
+// } // set default balloon position
 
 
 void icemc::Balloon::ReadAnitaliteFlight() {

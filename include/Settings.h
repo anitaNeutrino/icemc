@@ -78,7 +78,7 @@ namespace icemc{
 		    // Anita* anita1, ShowerGenerator* sec1, AskaryanFactory* askFreqGen, Balloon* bn1, Ray* ray1,
 		    // int& NNU, double& RANDOMISEPOL);
 
-    void ApplyInputs(Anita* anita1, ShowerGenerator* sec1, AskaryanFactory* askFreqGen) const;
+    void ApplyInputs(Anita* anita1, AskaryanFactory* askFreqGen) const;
 
     const char* getOutputDir() const {return fOutputDir.c_str();}
     int getRun() const {return fRun;}

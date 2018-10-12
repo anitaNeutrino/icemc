@@ -1113,19 +1113,6 @@ void icemc::Antarctica::WaterENtoLonLat(int e, int n, double& lon, double& lat) 
   ENtoLonLat(e,n,xLowerLeft_water,yLowerLeft_water,lon,lat);
 }//WaterENtoLonLat
 
-void icemc::Antarctica::GetMAXHORIZON(Balloon *bn1) const {
-
-  double altitude_inmeters=bn1->BN_ALTITUDE*12.*constants::CMINCH/100.;
-  if (bn1->BN_ALTITUDE==0.){
-    bn1->MAXHORIZON=8.E5; // if it is a standard flight then use a horizon of 800 km
-  }
-  else{
-    bn1->MAXHORIZON=(sqrt((Geoid::R_EARTH+altitude_inmeters)*(Geoid::R_EARTH+altitude_inmeters)-Geoid::R_EARTH*Geoid::R_EARTH))*1.1;
-    // find distance from hrizon to balloon, increase it by 10% to be conservative.
-  }
-  icemc::report() << severity::info << "MAXHORIZON is " << bn1->MAXHORIZON << std::endl;
-
-}
 
 
 void icemc::Antarctica::CreateHorizons(const Settings *settings1, const Balloon *bn1) {

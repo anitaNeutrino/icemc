@@ -1516,7 +1516,7 @@ void icemc::ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][A
 
 
 // double icemc::ChanTrigger::GetNoise(const Settings *settings1,const Geoid::Position& detector,double theta_zenith,double bw,double temp) {
-double icemc::ChanTrigger::GetNoise(const Settings *settings1,double altitude_bn, double geoid, double theta_zenith,double bw,double temp) {  
+double icemc::ChanTrigger::GetNoise(const Settings *settings1,double altitude_bn, double geoid, double theta_zenith,double bw,double temp) {
 
   // double geoid = detector.Mag();
   // double altitude_bn = detector.Altitude(); 

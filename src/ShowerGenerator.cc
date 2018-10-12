@@ -32,9 +32,8 @@ icemc::ShowerGenerator::ShowerGenerator(const Settings* settings) : fSettings(se
   //these last two constanst from Connolly Calc 2011, used in d_dzPsurvNu().
   
 
-  SECONDARIES=1; // include secondary interactions
-  TAUDECAY=1; // include secondary interactions
-  // This is just the initialization, it is set in ReadInputs
+  SECONDARIES=fSettings->SECONDARIES;
+  TAUDECAY=fSettings->TAUDECAY;
 
   // reading in tauola data file for tau decays
   const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();

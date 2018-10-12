@@ -66,7 +66,6 @@ namespace icemc {
     double WaterDepth(double lon,double lat) const;
     double WaterDepth(const Geoid::Position& pos) const;
     Geoid::Position pickInteractionPosition(const Geoid::Position &balloon) const;
-    void GetMAXHORIZON(Balloon *bn1) const; // get upper limit on the horizon wrt the balloon.
     int RossIceShelf(const Geoid::Position &position) const; 
     int IceOnWater(const Geoid::Position &postition) const;
     int RossExcept(const Geoid::Position &position) const;

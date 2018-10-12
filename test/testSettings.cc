@@ -38,7 +38,7 @@ int main(){
   icemc::ShowerGenerator *sec1 = new icemc::ShowerGenerator(&s);
   icemc::AskaryanFactory *sig1 = new icemc::AskaryanFactory(1024, 1e-9/2.6);
   // input parameters
-  s.ApplyInputs(anita1,  sec1,  sig1);
+  s.ApplyInputs(anita1,  sig1);
 
 
 

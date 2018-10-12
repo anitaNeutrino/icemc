@@ -830,6 +830,13 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
 
 
   getSetting("SLAC run", SLAC);
+  // get positions of the anita payload during the slac test
+  if (SLAC){
+    icemc::report() << severity::error << "SLAC is no longer supported!" << std::endl;
+    exit(1);
+  }
+
+  
   // this rotates surface slope 10 degrees away from south pole
   if (SLAC==1){
     std::cout << "Warning!  Non-standard parameter setting.  SLAC = " << SLAC << std::endl;
@@ -973,8 +980,7 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
 
   
 
-void icemc::Settings::ApplyInputs(Anita* anita1, ShowerGenerator* sec1,
-				  AskaryanFactory* askFreqGen) const {
+void icemc::Settings::ApplyInputs(Anita* anita1, AskaryanFactory* askFreqGen) const {
   
    //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas. 
   if (WHICH==Payload::Anita1Simple || WHICH==Payload::Anita1 || WHICH==Payload::Anita2 || WHICH==Payload::Anita3 || WHICH==Payload::Anita4){
@@ -1099,8 +1105,8 @@ for(unsigned int i=0; i < requiredBands.size(); i++){
   askFreqGen->SetMedium(medium);
 
 
-  sec1->SECONDARIES=SECONDARIES;
-  sec1->TAUDECAY=TAUDECAY;
+  // sec1->SECONDARIES=SECONDARIES;
+  // sec1->TAUDECAY=TAUDECAY;
 
   anita1->trigEffScanPhi = trigEffScanPhi;
   for (unsigned int i=0; i < efficiencyScanOffAxisAttenuations.size(); i++){

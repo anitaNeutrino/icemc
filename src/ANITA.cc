@@ -25,6 +25,30 @@ icemc::ANITA::ANITA(const Settings* settings)
     fAnitaOutput(this, settings, settings->getOutputDir(), settings->getRun())
 {
   initSeaveys(settings, this);
+
+
+
+
+  // moved from main just before main event loop to here
+  
+  // fills arrays according to antenna specs
+  // GetBeamWidths(fSettings); // this is used if GAINS set to 0
+  // Antenna measured gain vs. frequency
+  // ReadGains(); // this is used if GAINS set to 1
+  // Set_gain_angle(fSettings, askFreqGen.NMEDIUM_RECEIVER);
+  // Set_gain_angle(fSettings, AskaryanGenerator::N_AIR); //askFreqGen.NMEDIUM_RECEIVER);  
+
+  if(fSettings->WHICH == Payload::Anita1Simple ||
+     fSettings->WHICH == Payload::Anita1){
+    SetDiffraction(); // for the upper ring
+  }
+
+  saveGainsPlot(std::string(fSettings->getOutputDir())+"/gains.eps");
+  
+  // sets position of balloon and related quantities
+  // SetDefaultBalloonPosition();
+  // SetNoise(fSettings, this, antarctica);
+  
 }
 
 
