@@ -1048,23 +1048,13 @@ void icemc::EventGenerator::GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING,
 
 
 
-
-
-
-// void icemc::EventGenerator::WriteNeutrinoInfo(const int& inu, const Geoid::Position &posnu,  const TVector3 &nnu,  const Geoid::Position &r_bn,  double altitude_int,  Neutrino::Flavor nuflavor,  Neutrino::Interaction::Current current,  double elast_y,  std::ofstream &nu_out) const {
-//   nu_out << "\n" << inu << "\t" << posnu[0] << " " << posnu[1] << " " << posnu[2] << "\t" << altitude_int << "\t" << nnu[0] << " " << nnu[1] << " " << nnu[2] << "\t" << r_bn[0] << " " << r_bn[1] << " " << r_bn[2] << "\t" << nuflavor << "\t" << current << "\t" << elast_y << "\n\n";
-// }
-
-
-
-
 void icemc::EventGenerator::generateNeutrinos(Detector& detector){
 
   icemc::report() << severity::info << "Seed is " << fSettings->SEED << std::endl;
 
   ShowerGenerator showerGenerator(fSettings);
   ConnollyEtAl2011 crossSectionModel(fSettings);
-  Antarctica* antarctica = new Antarctica();  
+  Antarctica* antarctica = new Antarctica();
 
   icemc::report() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
   
@@ -1073,12 +1063,11 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
   int n;
   double dt;
   detector.getDesiredNDt(n, dt);
-  AskaryanFactory askFreqGen(n, dt);
+  AskaryanFactory askFreqGen(fSettings, n, dt);
   
   // input parameters
   ///@todo  move me
-  fSettings->ApplyInputs((Anita*)&detector,  &askFreqGen);
-  askFreqGen.Initialize();
+  fSettings->ApplyInputs((Anita*)&detector);
 
   int NNU = fSettings->NNU;
   // int RANDOMISEPOL = fSettings->RANDOMISEPOL;
@@ -1142,7 +1131,18 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     Shower shower = showerGenerator.generate(nu);
     PropagatingSignal signal = askFreqGen.generate(nu, shower, rfDirFromInteraction);
 
+
+    const TGraph& gr = signal.waveform.getTimeDomain();
+    double maxVolts = TMath::MaxElement(gr.GetN(), gr.GetY());
+    
     signal.propagate(opticalPath);
+
+    const TGraph& gr2 = signal.waveform.getTimeDomain();
+    double maxVolts2 = TMath::MaxElement(gr2.GetN(), gr2.GetY());
+
+    std::cout << maxVolts << " \t" << maxVolts2 << std::endl;
+
+    if(maxVolts2 <= 0) continue;
 
     ///@todo need to get relative delays between antennas and delay signals
     for(int rx = 0; rx < detector.getNumRX(); rx++){

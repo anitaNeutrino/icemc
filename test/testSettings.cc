@@ -36,9 +36,9 @@ int main(){
   icemc::Balloon *bn1 = new icemc::Balloon(&s); // instance of the balloon
   icemc::Anita *anita1 = new icemc::Anita(&s, "/tmp/", bn1);// right now this constructor gets banding info
   icemc::ShowerGenerator *sec1 = new icemc::ShowerGenerator(&s);
-  icemc::AskaryanFactory *sig1 = new icemc::AskaryanFactory(1024, 1e-9/2.6);
+  icemc::AskaryanFactory *sig1 = new icemc::AskaryanFactory(&s, 1024, 1e-9/2.6);
   // input parameters
-  s.ApplyInputs(anita1,  sig1);
+  s.ApplyInputs(anita1);
 
 
 

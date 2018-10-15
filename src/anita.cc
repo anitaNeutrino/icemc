@@ -49,7 +49,7 @@
 const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
 const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
 
-icemc::Anita::Anita(const Settings* settings, const char* outputDir, const Balloon* bn1) {
+icemc::Anita::Anita(const Settings* settings, const char* outputDir, const Balloon* bn1){
 
   std::string stemp = "";
 
@@ -185,8 +185,7 @@ icemc::Anita::Anita(const Settings* settings, const char* outputDir, const Ballo
   // Initialize(settings, icemc::report().foutput, settings->getOutputDir());
   Initialize(settings, icemc::report().foutput, outputDir);
   GetPayload(settings, bn1);
-
-
+  settings->ApplyInputs(this);
 
 
 

@@ -206,6 +206,11 @@ namespace icemc {
     inline double getDeltaF() const {return getDeltaF(getNumTimes(), getDeltaT());}
 
 
+    inline double timeDomainMax() const {
+      const TGraph& gr = getTimeDomain();
+      return TMath::MaxElement(gr.GetN(), gr.GetY());
+    }
+    
     
     /** 
      * @brief Use the numerical recipes FT directly.

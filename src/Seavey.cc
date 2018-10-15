@@ -20,6 +20,18 @@
 
 
 
+std::ostream& operator<<(std::ostream& os, icemc::Seavey::Pol pol){
+  switch(pol){
+  case icemc::Seavey::Pol::H:
+    os << "H";
+    break;
+  case icemc::Seavey::Pol::V:
+    os << "V";
+    break;
+  }
+  return os;
+}
+
 
 
 

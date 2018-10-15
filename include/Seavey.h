@@ -170,4 +170,6 @@ namespace icemc {
   };
 }
 
+std::ostream& operator<<(std::ostream& os, icemc::Seavey::Pol pol);
+
 #endif // ICEMC_SEAVEY_H

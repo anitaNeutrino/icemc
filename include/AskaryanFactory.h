@@ -12,6 +12,7 @@
 namespace icemc {
 
   class Shower;
+  class Settings;
   
   /**
    * @class AskaryanFactory
@@ -23,7 +24,7 @@ namespace icemc {
   public:
 
     // AskaryanFactory(); ///< Default constructor
-    AskaryanFactory(int n, double dt); ///< Default constructor
+    AskaryanFactory(const Settings* settings, int n, double dt); ///< Default constructor
 
     
     
@@ -39,6 +40,8 @@ namespace icemc {
     PropagatingSignal generate(const Neutrino& nu, const Shower& shower, const TVector3& outgoingRfDirection) const;
 
   private:
+    const Settings* fSettings;
+
     double GetVmMHz1m(Energy pnu, double freq) const;
     FTPair generateOnAxisAt1m(Energy energy) const;
     void taperWaveform(FTPair& waveform/*modified*/, double viewAngleRadians, Energy energy, const Shower& shower) const;
@@ -131,7 +134,7 @@ namespace icemc {
     void SetJaime_Factor(double jaime_factor) {
       JAIME_FACTOR=jaime_factor;
       if (JAIME_FACTOR!=1){
-	icemc::report() << severity::info << "Non-default setting: JAIME_FACTOR = " << JAIME_FACTOR << "\n";
+    	icemc::report() << severity::info << "Non-default setting: JAIME_FACTOR = " << JAIME_FACTOR << "\n";
       }
     }
 
@@ -263,7 +266,9 @@ namespace icemc {
 
       T amplitude_em = taper_component(pow(10, -10), deltheta_em,  emfrac);
       T amplitude_had = taper_component(0,           deltheta_had, hadfrac);
-      amplitude = sin(viewangle)*(emfrac*amplitude_em+hadfrac*amplitude_had);
+
+      // std::cout << __PRETTY_FUNCTION__ << "\t" << amplitude_em << "\t" << amplitude_had << "\t" << std::endl;
+      amplitude = sin(viewangle)*(emfrac*amplitude_em + hadfrac*amplitude_had);
 
       return amplitude;
       

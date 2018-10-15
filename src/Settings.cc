@@ -980,7 +980,7 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
 
   
 
-void icemc::Settings::ApplyInputs(Anita* anita1, AskaryanFactory* askFreqGen) const {
+void icemc::Settings::ApplyInputs(Anita* anita1) const {
   
    //When you look at the Anita payload there are 4 layers, with 8,8,16 and 8 antennas each.  But in the trigger, the top two become one layer of 16 antennas. 
   if (WHICH==Payload::Anita1Simple || WHICH==Payload::Anita1 || WHICH==Payload::Anita2 || WHICH==Payload::Anita3 || WHICH==Payload::Anita4){
@@ -1096,13 +1096,13 @@ for(unsigned int i=0; i < requiredBands.size(); i++){
 
 
 
-  askFreqGen->SetLPM(useLPM);
-  if (askFreqGen->GetLPM()!=1){
-    std::cout << "Non-default setting:  LPM= " << askFreqGen->GetLPM() << std::endl;
-  }
-  askFreqGen->SetParameterization(askaryanParameterization);
-  askFreqGen->SetJaime_Factor(jamieFactor);
-  askFreqGen->SetMedium(medium);
+  // askFreqGen->SetLPM(useLPM);
+  // if (askFreqGen->GetLPM()!=1){
+  //   std::cout << "Non-default setting:  LPM= " << askFreqGen->GetLPM() << std::endl;
+  // }
+  // askFreqGen->SetParameterization(askaryanParameterization);
+  // askFreqGen->SetJaime_Factor(jamieFactor);
+  // askFreqGen->SetMedium(medium);
 
 
   // sec1->SECONDARIES=SECONDARIES;

@@ -4,8 +4,9 @@
 #include "TRandom3.h"
 #include "Geoid.h"
 #include "Constants.h"
-#include "anita.hh"
+// #include "anita.hh"
 #include "FTPair.h"
+#include "Settings.h"
 
 const double icemc::AskaryanFactory::N_AIR(1.);                 // index of refraction of air
 const double icemc::AskaryanFactory::NICE(1.79);                // index of refraction of ice
@@ -60,13 +61,29 @@ std::vector<double> make_evenly_spaced(int nf, double df){
 }
 
 
-icemc::AskaryanFactory::AskaryanFactory(int n, double dt)
-  : N_DEPTH(NICE),
+icemc::AskaryanFactory::AskaryanFactory(const Settings* settings, int n, double dt)
+  : fSettings(settings),
+    N_DEPTH(NICE),
     fNumFreqs(1+(n/2)),
     fDeltaF_Hz(1./(n*dt)),
     fFreqs_Hz(make_evenly_spaced(fNumFreqs, fDeltaF_Hz))
 {
   Initialize();
+
+  SetLPM(fSettings->useLPM);
+  if (GetLPM()!=1){
+    std::cout << "Non-default setting:  LPM= " << GetLPM() << std::endl;
+  }
+  SetParameterization(fSettings->askaryanParameterization);
+
+  SetJaime_Factor(fSettings->jaimeFactor);
+  if (JAIME_FACTOR!=1){
+    icemc::report() << severity::info << "Non-default setting: JAIME_FACTOR = " << JAIME_FACTOR << "\n";
+  }
+
+  Initialize();
+  SetMedium(fSettings->medium);
+  InitializeMedium();
 }
 
 
@@ -109,7 +126,7 @@ void icemc::AskaryanFactory::InitializeMedium() {
 
  void icemc::AskaryanFactory::Initialize() {
 
-  JAIME_FACTOR=1.0;          // factor to multiply Jaime's parameterization for error analysis
+  // JAIME_FACTOR=1.0;          // factor to multiply Jaime's parameterization for error analysis
 
   x0ice = 0.403; 
   ecice = 63.7;                // critical energy in ice (MeV)
@@ -189,9 +206,6 @@ void icemc::AskaryanFactory::taperWaveform(FTPair& waveform /*modified*/, double
   double deltheta_em_ref, deltheta_had_ref; // these are the 
   GetSpread(energy, shower, referenceFreqHz, deltheta_em_ref, deltheta_had_ref);
 
-  std::vector<double> delThetaEm (fFreqs_Hz.size(), deltheta_em_ref);
-  std::vector<double> delThetaHad(fFreqs_Hz.size(), deltheta_had_ref);
-
   auto& vmmhz = waveform.changeFreqDomain();
   for(int k=1; k < fFreqs_Hz.size(); k++){ // skip 0th bin as we will have 0 power there
     double scale_factor = referenceFreqHz/fFreqs_Hz.at(k);
@@ -217,13 +231,18 @@ icemc::PropagatingSignal icemc::AskaryanFactory::generate(const Neutrino& nu, co
 
   // first generate the signal you would see viewing on axis at 1m from the interaction
   FTPair waveform = generateOnAxisAt1m(nu.energy);
+
+  std::cout << __PRETTY_FUNCTION__ << " maxVolts = " << waveform.timeDomainMax() << std::endl;
   
   // now we taper since we won't view this signal on axis, we'll view at at a view angle, theta
-  const double cosTheta = shower.axis.Dot(directionOfPropagationToDetector);
-  const double theta = TMath::ACos(cosTheta);
+  // const double cosTheta = shower.axis.Dot(directionOfPropagationToDetector);
+
+  ///@todo THIS IS A TEST CONDITION AND MUST BE REMOVED
+  const double theta = changle; //TMath::ACos(cosTheta);  
   taperWaveform(waveform /*modified*/, theta, nu.energy, shower);
 
-
+  std::cout << __PRETTY_FUNCTION__ << " maxVolts2 = " << waveform.timeDomainMax() << std::endl;
+  
   TVector3 polarizationVector = getPolarizationVector(directionOfPropagationToDetector, shower.axis);
   PropagatingSignal signal(waveform, directionOfPropagationToDetector, polarizationVector);
   
@@ -491,6 +510,8 @@ double icemc::AskaryanFactory::GetVmMHz1m(Energy energy, double freq) const {
    */
   vmmhz1m_max=vmmhz1m_max*sqrt(2.);
 
+
+  std::cout<< JAIME_FACTOR << std::endl;
   return vmmhz1m_max*JAIME_FACTOR;
 
 } 
