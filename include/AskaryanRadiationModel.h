@@ -1,10 +1,9 @@
-#ifndef ASKARYAN_FACTORY_H
-#define ASKARYAN_FACTORY_H
+#ifndef ASKARYAN_RADIATION_MODEL_H
+#define ASKARYAN_RADIATION_MODEL_H
 
 #include <cmath>
 #include <iostream>
-#include "AskaryanFreqs.h"
-#include "ShowerGenerator.h"
+#include "ShowerModel.h"
 #include "Report.h"
 #include "FTPair.h"
 #include "Detector.h"
@@ -15,16 +14,16 @@ namespace icemc {
   class Settings;
   
   /**
-   * @class AskaryanFactory
+   * @class AskaryanRadiationModel
    * @brief Generate Askaryan radiation from a neutrino of a given energy in a given medium.
    * 
    * In theory one should set the medium and give it an energy and generate a set of frequencies.
    */
-  class AskaryanFactory {
+  class AskaryanRadiationModel {
   public:
 
-    // AskaryanFactory(); ///< Default constructor
-    AskaryanFactory(const Settings* settings, int n, double dt); ///< Default constructor
+    // AskaryanRadiationModel(); ///< Default constructor
+    AskaryanRadiationModel(const Settings* settings, int n, double dt); ///< Default constructor
 
     
     
@@ -324,4 +323,4 @@ namespace icemc {
     
   };
 }
-#endif // ASKARYAN_FREQS_GENERATOR_H
+#endif // ASKARYAN_RADIATION_MODEL_H

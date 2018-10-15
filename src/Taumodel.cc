@@ -2,7 +2,7 @@
 #include "TRandom3.h"
 #include "Geoid.h"
 #include "ConnollyEtAl2011.h"
-#include "ShowerGenerator.h"
+#include "ShowerModel.h"
 #include "Antarctica.h"
 #include "Tools.h"
 #include <sstream>

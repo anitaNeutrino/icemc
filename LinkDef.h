@@ -14,7 +14,6 @@
 #pragma link C++ class icemc::PassingNeutrino+;
 #pragma link C++ class icemc::AskaryanFreqs+;
 #pragma link C++ class icemc::Shower+;
-#pragma link C++ class icemc::ShowerGenerator+;
-#pragma link C++ class icemc::OldShower+;
-#pragma link C++ class icemc::OldShowerGenerator+;
+#pragma link C++ class icemc::ShowerModel+;
+
 #endif

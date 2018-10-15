@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
-//class ShowerGenerator:
+//class ShowerModel:
 ////////////////////////////////////////////////////////////////////////////////////////////////
-#ifndef ICEMC_SHOWER_GENERATOR_H
-#define ICEMC_SHOWER_GENERATOR_H
+#ifndef ICEMC_SHOWER_MODEL_H
+#define ICEMC_SHOWER_MODEL_H
 
 #include <algorithm>
 #include <numeric>
@@ -50,7 +50,7 @@ namespace icemc{
   
 
   //! Secondary interactions
-  class ShowerGenerator : public RNG {
+  class ShowerModel : public RNG {
   public:
     void Draw(Option_t* opt = "colz");
   private:
@@ -207,8 +207,8 @@ namespace icemc{
     
 
   public:
-    ShowerGenerator(const Settings* settings);
-    virtual ~ShowerGenerator(){;}
+    ShowerModel(const Settings* settings);
+    virtual ~ShowerModel();
 
     
     Shower generate(const Neutrino& n);
@@ -236,8 +236,8 @@ namespace icemc{
     bool secondbang;
     static const bool interestedintaus=false;
 
-    ClassDef(ShowerGenerator, 0);
-  }; //class ShowerGenerator
+    ClassDef(ShowerModel, 0);
+  }; //class ShowerModel
 }
 
-#endif
+#endif ///SHOWER_MODEL_H

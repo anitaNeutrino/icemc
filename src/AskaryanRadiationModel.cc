@@ -1,4 +1,4 @@
-#include "AskaryanFactory.h"
+#include "AskaryanRadiationModel.h"
 #include "TVector3.h"
 #include "TF1.h"
 #include "TRandom3.h"
@@ -8,37 +8,37 @@
 #include "FTPair.h"
 #include "Settings.h"
 
-const double icemc::AskaryanFactory::N_AIR(1.);                 // index of refraction of air
-const double icemc::AskaryanFactory::NICE(1.79);                // index of refraction of ice
-const double icemc::AskaryanFactory::CHANGLE_ICE(acos(1/NICE)); // index of refraction of ice
-const double icemc::AskaryanFactory::NSALT(2.45);               // index of refracton for salt
-const double icemc::AskaryanFactory::RHOSALT(2050.);            // density of salt (kg/m**3)
-const double icemc::AskaryanFactory::RHOICE(917);               // density of ice (kg/m**3)
-const double icemc::AskaryanFactory::RHOH20(1000);              // density of water (kg/m**3)
-const double icemc::AskaryanFactory::RHOAIR(1.25);              // density of air (kg/m**3)
-const double icemc::AskaryanFactory::RM_ICE(10.35);             // moliere radius, in g/cm^2
-const double icemc::AskaryanFactory::RM_SALT(12.09);            // moliere radius, in g/cm^2
-const double icemc::AskaryanFactory::KR_SALT(1.33);             // constant in jaime's parameterization
-const double icemc::AskaryanFactory::KR_ICE(1.42);              // constant in jaime's parameterization
-const double icemc::AskaryanFactory::X0SALT(0.1081);            // radiation length of salt (meters)
-const double icemc::AskaryanFactory::ECSALT(38.5);              // critical energy in salt (MeV)
-const double icemc::AskaryanFactory::X0ICE(0.403); 
-const double icemc::AskaryanFactory::ECICE(63.7);               // critical energy in ice (MeV)
-const double icemc::AskaryanFactory::AEX_ICE(1.);               // efficiency for producing charge asymmetry relative to ice.  1 by definition
-const double icemc::AskaryanFactory::ALPHAICE(1.32);            // exponent that goes into cutting off the spectrum at high frequencies
-const double icemc::AskaryanFactory::AEX_SALT(0.684);           // efficiency for producing charge asymmetry relative to ice
-const double icemc::AskaryanFactory::ALPHASALT(1.27);           // exponent that goes into cutting off the spectrum at high frequencies
-const double icemc::AskaryanFactory::KE_SALT(3.2E-16);          // constant in jaime's parameterization, in V/cm/MHz
-const double icemc::AskaryanFactory::KL_SALT(21.12);            // constant in jaime's parameterization
-const double icemc::AskaryanFactory::KDELTA_SALT(14.95);        // constant in jaime's parameterization
-const double icemc::AskaryanFactory::KE_ICE(4.79E-16);          // constant in jaime's parameterization, in V/cm/MHz
-const double icemc::AskaryanFactory::KL_ICE(23.80);             // constant in jaime's parameterization
-const double icemc::AskaryanFactory::KDELTA_ICE(18.33);         // constant in jaime's parameterization
-const double icemc::AskaryanFactory::KELVINS_ICE(250.+150.);    // temperature in Kelvin (ice+system)
-const double icemc::AskaryanFactory::KELVINS_SALT(500.);        // temperature in salt (350) + receiver temp (150)
-const double icemc::AskaryanFactory::BETAICE(2.25);             // exponent, in jaime's parameterization
-const double icemc::AskaryanFactory::BETASALT(2.60);            // exponent, in jaime's parameterization
-const double icemc::AskaryanFactory::VIEWANGLE_CUT(sqrt(5.));   // require viewangle is no more than 5 delta away from the cerenkov angle where
+const double icemc::AskaryanRadiationModel::N_AIR(1.);                 // index of refraction of air
+const double icemc::AskaryanRadiationModel::NICE(1.79);                // index of refraction of ice
+const double icemc::AskaryanRadiationModel::CHANGLE_ICE(acos(1/NICE)); // index of refraction of ice
+const double icemc::AskaryanRadiationModel::NSALT(2.45);               // index of refracton for salt
+const double icemc::AskaryanRadiationModel::RHOSALT(2050.);            // density of salt (kg/m**3)
+const double icemc::AskaryanRadiationModel::RHOICE(917);               // density of ice (kg/m**3)
+const double icemc::AskaryanRadiationModel::RHOH20(1000);              // density of water (kg/m**3)
+const double icemc::AskaryanRadiationModel::RHOAIR(1.25);              // density of air (kg/m**3)
+const double icemc::AskaryanRadiationModel::RM_ICE(10.35);             // moliere radius, in g/cm^2
+const double icemc::AskaryanRadiationModel::RM_SALT(12.09);            // moliere radius, in g/cm^2
+const double icemc::AskaryanRadiationModel::KR_SALT(1.33);             // constant in jaime's parameterization
+const double icemc::AskaryanRadiationModel::KR_ICE(1.42);              // constant in jaime's parameterization
+const double icemc::AskaryanRadiationModel::X0SALT(0.1081);            // radiation length of salt (meters)
+const double icemc::AskaryanRadiationModel::ECSALT(38.5);              // critical energy in salt (MeV)
+const double icemc::AskaryanRadiationModel::X0ICE(0.403); 
+const double icemc::AskaryanRadiationModel::ECICE(63.7);               // critical energy in ice (MeV)
+const double icemc::AskaryanRadiationModel::AEX_ICE(1.);               // efficiency for producing charge asymmetry relative to ice.  1 by definition
+const double icemc::AskaryanRadiationModel::ALPHAICE(1.32);            // exponent that goes into cutting off the spectrum at high frequencies
+const double icemc::AskaryanRadiationModel::AEX_SALT(0.684);           // efficiency for producing charge asymmetry relative to ice
+const double icemc::AskaryanRadiationModel::ALPHASALT(1.27);           // exponent that goes into cutting off the spectrum at high frequencies
+const double icemc::AskaryanRadiationModel::KE_SALT(3.2E-16);          // constant in jaime's parameterization, in V/cm/MHz
+const double icemc::AskaryanRadiationModel::KL_SALT(21.12);            // constant in jaime's parameterization
+const double icemc::AskaryanRadiationModel::KDELTA_SALT(14.95);        // constant in jaime's parameterization
+const double icemc::AskaryanRadiationModel::KE_ICE(4.79E-16);          // constant in jaime's parameterization, in V/cm/MHz
+const double icemc::AskaryanRadiationModel::KL_ICE(23.80);             // constant in jaime's parameterization
+const double icemc::AskaryanRadiationModel::KDELTA_ICE(18.33);         // constant in jaime's parameterization
+const double icemc::AskaryanRadiationModel::KELVINS_ICE(250.+150.);    // temperature in Kelvin (ice+system)
+const double icemc::AskaryanRadiationModel::KELVINS_SALT(500.);        // temperature in salt (350) + receiver temp (150)
+const double icemc::AskaryanRadiationModel::BETAICE(2.25);             // exponent, in jaime's parameterization
+const double icemc::AskaryanRadiationModel::BETASALT(2.60);            // exponent, in jaime's parameterization
+const double icemc::AskaryanRadiationModel::VIEWANGLE_CUT(sqrt(5.));   // require viewangle is no more than 5 delta away from the cerenkov angle where
 
 
 
@@ -61,7 +61,7 @@ std::vector<double> make_evenly_spaced(int nf, double df){
 }
 
 
-icemc::AskaryanFactory::AskaryanFactory(const Settings* settings, int n, double dt)
+icemc::AskaryanRadiationModel::AskaryanRadiationModel(const Settings* settings, int n, double dt)
   : fSettings(settings),
     N_DEPTH(NICE),
     fNumFreqs(1+(n/2)),
@@ -76,7 +76,7 @@ icemc::AskaryanFactory::AskaryanFactory(const Settings* settings, int n, double 
   }
   SetParameterization(fSettings->askaryanParameterization);
 
-  SetJaime_Factor(fSettings->jaimeFactor);
+  SetJaime_Factor(fSettings->jamieFactor);
   if (JAIME_FACTOR!=1){
     icemc::report() << severity::info << "Non-default setting: JAIME_FACTOR = " << JAIME_FACTOR << "\n";
   }
@@ -87,7 +87,7 @@ icemc::AskaryanFactory::AskaryanFactory(const Settings* settings, int n, double 
 }
 
 
-void icemc::AskaryanFactory::InitializeMedium() {
+void icemc::AskaryanRadiationModel::InitializeMedium() {
   if (MEDIUM==1) {
     SetKelvins(KELVINS_SALT);    
     SetRhoMedium(RHOSALT);
@@ -124,7 +124,7 @@ void icemc::AskaryanFactory::InitializeMedium() {
  
 }
 
- void icemc::AskaryanFactory::Initialize() {
+ void icemc::AskaryanRadiationModel::Initialize() {
 
   // JAIME_FACTOR=1.0;          // factor to multiply Jaime's parameterization for error analysis
 
@@ -175,7 +175,7 @@ void icemc::AskaryanFactory::InitializeMedium() {
 
 
 
-icemc::FTPair icemc::AskaryanFactory::generateOnAxisAt1m(Energy energy) const {
+icemc::FTPair icemc::AskaryanRadiationModel::generateOnAxisAt1m(Energy energy) const {
 
   // do the slow work of the full calculation for a single reference frequency
   double vmmhz1m_max = GetVmMHz1m(energy, fFreqs_Hz.back());
@@ -197,7 +197,7 @@ icemc::FTPair icemc::AskaryanFactory::generateOnAxisAt1m(Energy energy) const {
 
 
 
-void icemc::AskaryanFactory::taperWaveform(FTPair& waveform /*modified*/, double viewAngleRadians, Energy energy, const Shower& shower) const {
+void icemc::AskaryanRadiationModel::taperWaveform(FTPair& waveform /*modified*/, double viewAngleRadians, Energy energy, const Shower& shower) const {
 
   // from icemc main... which is the WRONG fucking place...
   // deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
@@ -217,7 +217,7 @@ void icemc::AskaryanFactory::taperWaveform(FTPair& waveform /*modified*/, double
 }
 
 
-TVector3 icemc::AskaryanFactory::getPolarizationVector(const TVector3& rfDir, const TVector3& showerAxis) const {
+TVector3 icemc::AskaryanRadiationModel::getPolarizationVector(const TVector3& rfDir, const TVector3& showerAxis) const {
   // perpendicular to the rf direction
   // in the plane of the shower axis i.e. perpendicular to the normal of that plane
   TVector3 normalToPlaneOfShowerAxisAndRF = rfDir.Cross(showerAxis);
@@ -227,7 +227,7 @@ TVector3 icemc::AskaryanFactory::getPolarizationVector(const TVector3& rfDir, co
 
 
 
-icemc::PropagatingSignal icemc::AskaryanFactory::generate(const Neutrino& nu, const Shower& shower, const TVector3& directionOfPropagationToDetector) const {
+icemc::PropagatingSignal icemc::AskaryanRadiationModel::generate(const Neutrino& nu, const Shower& shower, const TVector3& directionOfPropagationToDetector) const {
 
   // first generate the signal you would see viewing on axis at 1m from the interaction
   FTPair waveform = generateOnAxisAt1m(nu.energy);
@@ -252,7 +252,7 @@ icemc::PropagatingSignal icemc::AskaryanFactory::generate(const Neutrino& nu, co
 
 
 
-// void icemc::AskaryanFactory::GetVmMHz(double vmmhz_max,double vmmhz1m_max, Energy energy,
+// void icemc::AskaryanRadiationModel::GetVmMHz(double vmmhz_max,double vmmhz1m_max, Energy energy,
 // 				      const double *freq, double notch_min, double notch_max,
 // 				      double *vmmhz, int nfreq) const {
 
@@ -276,8 +276,8 @@ icemc::PropagatingSignal icemc::AskaryanFactory::generate(const Neutrino& nu, co
 //   }
 // } //GetVmMHz
 
-// double icemc::AskaryanFactory::GetELPM() const {
-icemc::Energy icemc::AskaryanFactory::GetELPM() const {  
+// double icemc::AskaryanRadiationModel::GetELPM() const {
+icemc::Energy icemc::AskaryanRadiationModel::GetELPM() const {  
 
   // LPM
   // elpm =7.7 TeV/cm * rho * X0 in PDG, but our x0 is in meters
@@ -293,12 +293,12 @@ icemc::Energy icemc::AskaryanFactory::GetELPM() const {
 } //GetELPM
 
 
-int icemc::AskaryanFactory::GetLPM() const {
+int icemc::AskaryanRadiationModel::GetLPM() const {
   return LPM;
 } //GetLPM
 
 
-void icemc::AskaryanFactory::GetSpread(Energy pnu,
+void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
 				       const Shower& shower,
 				       double freq,
 				       double& deltheta_em_max,
@@ -452,7 +452,7 @@ void icemc::AskaryanFactory::GetSpread(Energy pnu,
 
 
 
-double icemc::AskaryanFactory::GetVmMHz1m(Energy energy, double freq) const {
+double icemc::AskaryanRadiationModel::GetVmMHz1m(Energy energy, double freq) const {
   
   double vmmhz1m_max = 0;
   double pnu = energy.in(Energy::Unit::GeV);
@@ -517,7 +517,7 @@ double icemc::AskaryanFactory::GetVmMHz1m(Energy energy, double freq) const {
 } 
 
 
-void icemc::AskaryanFactory::SetParameterization(int whichparameterization) {
+void icemc::AskaryanRadiationModel::SetParameterization(int whichparameterization) {
 
   WHICHPARAMETERIZATION=whichparameterization;
 }

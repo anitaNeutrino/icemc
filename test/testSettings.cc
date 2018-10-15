@@ -18,8 +18,8 @@
 #include "balloon.hh"
 #include "Antarctica.h"
 #include "Spectra.h"
-#include "AskaryanFactory.h"
-#include "ShowerGenerator.h"
+#include "AskaryanRadiationModel.h"
+#include "ShowerModel.h"
 #include "RayTracer.h"
 #include "ConnollyEtAl2011.h"
 #include "Taumodel.hh"
@@ -35,8 +35,8 @@ int main(){
 
   icemc::Balloon *bn1 = new icemc::Balloon(&s); // instance of the balloon
   icemc::Anita *anita1 = new icemc::Anita(&s, "/tmp/", bn1);// right now this constructor gets banding info
-  icemc::ShowerGenerator *sec1 = new icemc::ShowerGenerator(&s);
-  icemc::AskaryanFactory *sig1 = new icemc::AskaryanFactory(&s, 1024, 1e-9/2.6);
+  icemc::ShowerModel *sec1 = new icemc::ShowerModel(&s);
+  icemc::AskaryanRadiationModel *sig1 = new icemc::AskaryanRadiationModel(&s, 1024, 1e-9/2.6);
   // input parameters
   s.ApplyInputs(anita1);
 

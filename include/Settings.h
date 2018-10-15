@@ -44,7 +44,7 @@ namespace icemc{
   };
   
   class ShowerGenerator;
-  class AskaryanFactory;
+  class AskaryanRadiationModel;
   class Balloon;
   class RayTracer;
 
@@ -75,7 +75,7 @@ namespace icemc{
     void getSetting(const char* key, std::vector<std::string>& valueArray) const;
 
     void ReadInputs(const char* fileName , std::ofstream &foutput);//,
-		    // Anita* anita1, ShowerGenerator* sec1, AskaryanFactory* askFreqGen, Balloon* bn1, Ray* ray1,
+		    // Anita* anita1, ShowerGenerator* sec1, AskaryanRadiationModel* askFreqGen, Balloon* bn1, Ray* ray1,
 		    // int& NNU, double& RANDOMISEPOL);
 
     void ApplyInputs(Anita* anita1) const;

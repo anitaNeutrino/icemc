@@ -21,9 +21,8 @@
 #include "ANITA.h"
 #include "Antarctica.h"
 #include "Spectra.h"
-#include "AskaryanFactory.h"
-#include "AskaryanFreqs.h"
-#include "ShowerGenerator.h"
+#include "AskaryanRadiationModel.h"
+#include "ShowerModel.h"
 #include "RayTracer.h"
 #include "ConnollyEtAl2011.h"
 #include "Taumodel.hh"
@@ -91,7 +90,7 @@ icemc::EventGenerator::~EventGenerator()
 
 
 
-// void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Source::Spectra *nuSpectra, const AskaryanFactory *askFreqGen, ConnollyEtAl2011 *crossSectionModel, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
+// void icemc::EventGenerator::Summarize(const Settings *settings1,  Anita* anita1,  Source::Spectra *nuSpectra, const AskaryanRadiationModel *askFreqGen, ConnollyEtAl2011 *crossSectionModel, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, TString outputdir) {
 
 //   double rate_v_thresh[NTHRESHOLDS];
 //   double errorup_v_thresh[NTHRESHOLDS];
@@ -761,7 +760,7 @@ int icemc::EventGenerator::GetRayIceSide(const TVector3 &n_exit2rx,  const TVect
 int icemc::EventGenerator::GetDirection(const Settings *settings1, Interaction *interaction1, const TVector3 &refr,
 					double deltheta_em,  double deltheta_had, const Shower& showerProps,
 					double vmmhz1m_max,  double r_fromballoon,  RayTracer *ray1,
-					const AskaryanFactory *askFreqGen,  Geoid::Position posnu,  Anita *anita1,
+					const AskaryanRadiationModel *askFreqGen,  Geoid::Position posnu,  Anita *anita1,
 					Balloon *bn1, TVector3 &nnu,  double& costhetanu,  double& theta_threshold) {
   //  disabled this...
   return 1;
@@ -1052,7 +1051,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
 
   icemc::report() << severity::info << "Seed is " << fSettings->SEED << std::endl;
 
-  ShowerGenerator showerGenerator(fSettings);
+  ShowerModel showerGenerator(fSettings);
   ConnollyEtAl2011 crossSectionModel(fSettings);
   Antarctica* antarctica = new Antarctica();
 
@@ -1063,7 +1062,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
   int n;
   double dt;
   detector.getDesiredNDt(n, dt);
-  AskaryanFactory askFreqGen(fSettings, n, dt);
+  AskaryanRadiationModel askaryanModel(fSettings, n, dt);
   
   // input parameters
   ///@todo  move me
@@ -1129,7 +1128,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     nu.path.direction = v.Unit();
     
     Shower shower = showerGenerator.generate(nu);
-    PropagatingSignal signal = askFreqGen.generate(nu, shower, rfDirFromInteraction);
+    PropagatingSignal signal = askaryanModel.generate(nu, shower, rfDirFromInteraction);
 
 
     const TGraph& gr = signal.waveform.getTimeDomain();
@@ -1222,7 +1221,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
   //     ierr = crossSectionModel->GetSigma(pnu, sigma, len_int_kgm2, fSettings, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
   //     // ierr=0 if the energy is too low for the parameterization
   //     // ierr=1 otherwise
-  //     fNeutrinoPath->len_int=1.0/(sigma*askFreqGen.RHOH20*(1./constants::M_NUCL)*1000); // in km (why interaction length in water?) //EH
+  //     fNeutrinoPath->len_int=1.0/(sigma*askaryanModel.RHOH20*(1./constants::M_NUCL)*1000); // in km (why interaction length in water?) //EH
   //   }// end IsSpectrum
 
   //   // count_pass=0;
@@ -1343,8 +1342,8 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     // // cerenkov angle depends on depth because index of refraction depends on depth.
 
     // if (fSettings->FIRN) {
-    //   askFreqGen.SetNDepth(antarctica->GetN(interaction1->altitude_int));
-    //   changle_deg=askFreqGen.GetChangle()*constants::DEGRAD;
+    //   askaryanModel.SetNDepth(antarctica->GetN(interaction1->altitude_int));
+    //   changle_deg=askaryanModel.GetChangle()*constants::DEGRAD;
     // }
 
     // rayTracer.GetSurfaceNormal(fSettings, antarctica, interaction1->posnu, slopeyangle, 0);
@@ -1358,8 +1357,8 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     // // just for plotting
     // costheta_exit=cos(rayTracer.rfexit[0].Theta()); // just for plotting
 
-    // if (!ray1->TraceRay(fSettings, anita1, 1, askFreqGen.N_DEPTH)) {
-    // if (!rayTracer.TraceRay(fSettings, fDetector, 1, askFreqGen.N_DEPTH)) {
+    // if (!ray1->TraceRay(fSettings, anita1, 1, askaryanModel.N_DEPTH)) {
+    // if (!rayTracer.TraceRay(fSettings, fDetector, 1, askaryanModel.N_DEPTH)) {
     //   continue;
     // }
 
@@ -1387,8 +1386,8 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     // if(debugRay){
     //   exit(1);
     // }
-    // if (!ray1->TraceRay(fSettings, anita1, 2, askFreqGen.N_DEPTH)) {; // trace ray,  2nd iteration.
-    // if (!rayTracer.TraceRay(fSettings, fDetector, 2, askFreqGen.N_DEPTH)) {; // trace ray,  2nd iteration.
+    // if (!ray1->TraceRay(fSettings, anita1, 2, askaryanModel.N_DEPTH)) {; // trace ray,  2nd iteration.
+    // if (!rayTracer.TraceRay(fSettings, fDetector, 2, askaryanModel.N_DEPTH)) {; // trace ray,  2nd iteration.
     //   continue;
     // }
 
@@ -1431,7 +1430,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     // 	  Shower showerPropsTemp;
     // 	  showerPropsTemp.emFrac = emfrac_db;
     // 	  showerPropsTemp.hadFrac = hadfrac_db;
-    //     err = GetDirection(fSettings, interaction1, rayTracer.nrf_iceside[4], deltheta_em_max, deltheta_had_max, showerPropsTemp, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], &rayTracer, &askFreqGen, interaction1->posnu, fDetector, fDetector, interaction1->nnu, costhetanu, theta_threshold);	  
+    //     err = GetDirection(fSettings, interaction1, rayTracer.nrf_iceside[4], deltheta_em_max, deltheta_had_max, showerPropsTemp, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], &rayTracer, &askaryanModel, interaction1->posnu, fDetector, fDetector, interaction1->nnu, costhetanu, theta_threshold);	  
     //   }
     //   if(err==0){
     //     continue;//bad stuff has happened.
@@ -1489,7 +1488,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
 
     // Shower showerProps = showerGenerator.GetEMFrac(fSettings, interaction1->nuflavor, interaction1->current, taudecay, elast_y, &ro.hy, pnu, inu, tauweighttrigger);
 
-    // // for double bangs, surely this should be in ShowerGenerator?
+    // // for double bangs, surely this should be in ShowerModel?
     // if(showerGenerator.secondbang && showerGenerator.interestedintaus) {
     //   ptau=(1-elast_y)*pnu;
     //   showerProps.emFrac=emfrac_db;
@@ -1507,13 +1506,13 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     // const double testTaperFreqHz = detector.freq[0] > 0 ? detector.freq[0] : detector.freq[1];
       
     // if(showerGenerator.secondbang && showerGenerator.interestedintaus) {
-    //   vmmhz1m_max = askFreqGen.GetVmMHz1m(ptau, detector.FREQ_HIGH);
-    //   askFreqGen.GetSpread(ptau, showerProps, testTaperFreqHz, deltheta_em_max, deltheta_had_max);
+    //   vmmhz1m_max = askaryanModel.GetVmMHz1m(ptau, detector.FREQ_HIGH);
+    //   askaryanModel.GetSpread(ptau, showerProps, testTaperFreqHz, deltheta_em_max, deltheta_had_max);
     // }
     // else {
     //   // get peak signal at highest edge of frequency band because that is where it is highest
-    //   vmmhz1m_max = askFreqGen.GetVmMHz1m(pnu, detector.FREQ_HIGH);
-    //   askFreqGen.GetSpread(pnu, showerProps, testTaperFreqHz, deltheta_em_max, deltheta_had_max);
+    //   vmmhz1m_max = askaryanModel.GetVmMHz1m(pnu, detector.FREQ_HIGH);
+    //   askaryanModel.GetSpread(pnu, showerProps, testTaperFreqHz, deltheta_em_max, deltheta_had_max);
     // } //end else (not secondbang or not interested in taus)
 
     // static bool firstTimeSpread = true;
@@ -1522,7 +1521,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     //   fTestSpread = new TFile("fTestSpread.root","recreate");	
     //   TGraph gr;
     //   for(int j=0; j < Anita::NFREQ; j++){
-    // 	askFreqGen.GetSpread(pnu, showerProps, detector.freq[j], deltheta_em_max, deltheta_had_max);
+    // 	askaryanModel.GetSpread(pnu, showerProps, detector.freq[j], deltheta_em_max, deltheta_had_max);
     // 	gr.SetPoint(j, detector.freq[j], deltheta_em_max);
     // 	std::cout << j << "\t" <<  detector.freq[j] << "\t" << deltheta_em_max << "\t" << deltheta_had_max << std::endl;
     //   }
@@ -1583,7 +1582,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     // 			   showerProps,
     // 			   vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray],
     // 			   &rayTracer,
-    // 			   &askFreqGen,
+    // 			   &askaryanModel,
     // 			   interaction1->posnu,
     // 			   // anita1, bn1,
     // 			   fDetector, fDetector,
@@ -1616,7 +1615,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
 
     // cosviewangle=cos(viewangle); // cosine angle
     // viewangle_deg=viewangle*constants::DEGRAD; // same angle but in degrees
-    // dviewangle_deg=(askFreqGen.GetChangle()-viewangle)*constants::DEGRAD; // deviation from cerenkov angle
+    // dviewangle_deg=(askaryanModel.GetChangle()-viewangle)*constants::DEGRAD; // deviation from cerenkov angle
 
     // if (ro.viewangletree.GetEntries()<fSettings->HIST_MAX_ENTRIES && !fSettings->ONLYFINAL && fSettings->HIST==1){
     //   ro.viewangletree.Fill(); // fills variables related to viewing angle
@@ -1654,7 +1653,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     // }
 
     // // total chord
-    // double chord_kgm2_test=interaction1->posnu.Distance(interaction1->r_in)*askFreqGen.RHOMEDIUM;
+    // double chord_kgm2_test=interaction1->posnu.Distance(interaction1->r_in)*askaryanModel.RHOMEDIUM;
 
     // double weight_test=0;  // weight if the whole chord from interaction to earth entrance is ice.
     // // take best case scenario chord length and find corresponding weight
@@ -1684,7 +1683,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     // // reject if it enters beyond the borders of the continent.
     // // step size is 1/10 of interaction length
     // if (!fSettings->UNBIASED_SELECTION) {
-    //   if (!antarctica->WhereDoesItEnterIce(interaction1->posnu, interaction1->nnu, len_int_kgm2/askFreqGen.RHOMEDIUM/10., interaction1->r_enterice)) {
+    //   if (!antarctica->WhereDoesItEnterIce(interaction1->posnu, interaction1->nnu, len_int_kgm2/askaryanModel.RHOMEDIUM/10., interaction1->r_enterice)) {
     // 	//r_enterice.Print();
     // 	if (antarctica->OutsideAntarctica(interaction1->r_enterice)) {
     // 	  std::cout<<"Warning!  Neutrino enters beyond continent,  program is rejecting neutrino! inu = "<<inu<<std::endl;
@@ -1706,7 +1705,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     // // the best case scenario.
     // if(showerGenerator.secondbang && showerGenerator.interestedintaus) {
     //   std::cout << "Need to bring back GetFirstBang before you can simulate taus.\n";
-    //   std::cout << "I removed it because it required Earth and I wanted ShowerGenerator to be a stand-alone class to use in the embedded simulation.\n";
+    //   std::cout << "I removed it because it required Earth and I wanted ShowerModel to be a stand-alone class to use in the embedded simulation.\n";
     //   icethickness=interaction1->r_enterice.Distance(interaction1->nuexit);
     //   interaction1->chord_kgm2_bestcase=nuentrancelength*TMath::MinElement(3, icemc::densities);
     // }
@@ -1714,12 +1713,12 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     //   // finds minimum chord (in kg/m^2) traversed by neutrino
     //   // only keeping events with weight > 10^-3
     //   // periodically need to make sure this is still valid
-    //   // chord_kgm2_bestcase=(d1+d2)*askFreqGen->RHOMEDIUM;
+    //   // chord_kgm2_bestcase=(d1+d2)*askaryanModel->RHOMEDIUM;
     //   interaction1->chord_kgm2_bestcase=(interaction1->d1+interaction1->d2)*TMath::MinElement(3, icemc::densities);
     // }
 
     // // chord just through ice.
-    // interaction1->chord_kgm2_ice=interaction1->d2*askFreqGen.RHOMEDIUM;
+    // interaction1->chord_kgm2_ice=interaction1->d2*askaryanModel.RHOMEDIUM;
 
     // // take best case scenario chord length and find corresponding weight
     // IsAbsorbed(interaction1->chord_kgm2_bestcase, len_int_kgm2, interaction1->weight_bestcase);
@@ -1760,11 +1759,11 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     //   nbelowsurface=constants::NFIRN;
     // }
     // else{
-    //   nbelowsurface=askFreqGen.NICE;
+    //   nbelowsurface=askaryanModel.NICE;
     // }
     // // this is purely a sanity check.
     // // if everything is working,  events should pass with 100% efficiency
-    // if (!fSettings->ROUGHNESS && TIR(rayTracer.nsurf_rfexit, rayTracer.nrf_iceside[3], nbelowsurface, askFreqGen.N_AIR)) {
+    // if (!fSettings->ROUGHNESS && TIR(rayTracer.nsurf_rfexit, rayTracer.nrf_iceside[3], nbelowsurface, askaryanModel.N_AIR)) {
     //   continue;
     // }
     // // count1->nnottir[whichray]++;
@@ -1824,7 +1823,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
 
     // }//end if firn
     // else {
-    //   askFreqGen.GetSpread(pnu, showerProps, (detector.bwslice_min[2]+detector.bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
+    //   askaryanModel.GetSpread(pnu, showerProps, (detector.bwslice_min[2]+detector.bwslice_max[2])/2., deltheta_em_mid2, deltheta_had_mid2);
 
     //   GetFresnel(rough1, fSettings->ROUGHNESS, rayTracer.nsurf_rfexit, rayTracer.n_exit2bn[2], n_pol, rayTracer.nrf_iceside[4], vmmhz1m_max, deltheta_em_mid2, deltheta_had_mid2, t_coeff_pokey, t_coeff_slappy,  fresnel1, mag1);
 
@@ -1834,8 +1833,8 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
     // //cerr<<inu<<" -- here"<<std::endl;      //}
 
     // if(fSettings->ROUGHNESS){
-    //   // applyRoughness(settings1, inu, interaction1, ray1, panel1, antarctica, bn1, &askFreqGen, anita1, showerProps);
-    //   applyRoughness(settings1, inu, interaction1, &rayTracer, panel1, antarctica, fDetector, &askFreqGen, fDetector, showerProps);	
+    //   // applyRoughness(settings1, inu, interaction1, ray1, panel1, antarctica, bn1, &askaryanModel, anita1, showerProps);
+    //   applyRoughness(settings1, inu, interaction1, &rayTracer, panel1, antarctica, fDetector, &askaryanModel, fDetector, showerProps);	
     // }
 
     // if( fSettings->ROUGHNESS && !panel1->GetNvalidPoints() ){
@@ -1919,7 +1918,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
   // //   if (!fSettings->ROUGHNESS){
 
   // //     // the 1/r through ice is controlled by vmmhz_max,  which has been scaled in Attenuate (Attenuate_down)
-  // //     askFreqs = askFreqGen.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, detector.NFREQ, detector.freq, detector.NOTCH_MIN, detector.NOTCH_MAX, &showerProps);
+  // //     askFreqs = askaryanModel.generateAskaryanFreqs(vmmhz_max, vmmhz1m_max, pnu, detector.NFREQ, detector.freq, detector.NOTCH_MIN, detector.NOTCH_MAX, &showerProps);
 
   // //     // here we get the array vmmhz by taking vmmhz1m_max (signal at lowest frequency bin) and
   // //     // vmmhz_max (signal at lowest frequency after applying 1/r factor and attenuation factor)
@@ -1933,8 +1932,8 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
 
   // //   if (!fSettings->ROUGHNESS){
   // //     // don't loop over frequencies if the viewing angle is too far off
-  // //     double rtemp = TMath::Min((viewangle-askFreqGen.GetChangle())/(deltheta_em_max), (viewangle-askFreqGen.GetChangle())/(deltheta_had_max));
-  // //     if (rtemp > AskaryanFactory::VIEWANGLE_CUT && !fSettings->SKIPCUTS) {
+  // //     double rtemp = TMath::Min((viewangle-askaryanModel.GetChangle())/(deltheta_em_max), (viewangle-askaryanModel.GetChangle())/(deltheta_had_max));
+  // //     if (rtemp > AskaryanRadiationModel::VIEWANGLE_CUT && !fSettings->SKIPCUTS) {
   // // 	continue;
   // //     }
   // //     // count1->nviewanglecut[whichray]++;
@@ -2104,7 +2103,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
   // // 	fNeutrinoPath->weight=fNeutrinoPath->weight1/interaction1->dnutries*fSettings->SIGMA_FACTOR;
   // // 	fNeutrinoPath->weight_prob=fNeutrinoPath->weight_prob/interaction1->dnutries*fSettings->SIGMA_FACTOR;
 
-  // // 	fNeutrinoPath->pieceofkm2sr=fNeutrinoPath->weight*antarctica->volume*pow(1.E-3, 3)*askFreqGen.RHOMEDIUM/askFreqGen.RHOH20*constants::sr/(double)NNU/fNeutrinoPath->len_int;
+  // // 	fNeutrinoPath->pieceofkm2sr=fNeutrinoPath->weight*antarctica->volume*pow(1.E-3, 3)*askaryanModel.RHOMEDIUM/askaryanModel.RHOH20*constants::sr/(double)NNU/fNeutrinoPath->len_int;
   // // 	// if (ro.h10.GetEntries()<fSettings->HIST_MAX_ENTRIES && !fSettings->ONLYFINAL && fSettings->HIST){
   // // 	//   ro.h10.Fill(hitangle_e_all[0], fNeutrinoPath->weight);
   // // 	// }
@@ -2202,7 +2201,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
   // 	  }
 
   // 	  // just for plotting.
-  // 	  offaxis=(double)fabs(viewangle-askFreqGen.GetChangle());
+  // 	  offaxis=(double)fabs(viewangle-askaryanModel.GetChangle());
   // 	  nsigma_offaxis=offaxis/deltheta_had_max;
 	    
   // 	  // ro.hundogaintoheight_e.Fill(undogaintoheight_e, fNeutrinoPath->weight);
@@ -2442,9 +2441,9 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
 
 
   // // maks the output file
-  // // Summarize(fSettings, anita1, count1, nuSpectra, &askFreqGen, crossSectionModel, pnu, eventsfound, eventsfound_db, eventsfound_nfb,
+  // // Summarize(fSettings, anita1, count1, nuSpectra, &askaryanModel, crossSectionModel, pnu, eventsfound, eventsfound_db, eventsfound_nfb,
   // // 	    sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, clOpts.outputdir);
-  // Summarize(fSettings, fDetector, nuSpectra, &askFreqGen, crossSectionModel, pnu, eventsfound, eventsfound_db, eventsfound_nfb,
+  // Summarize(fSettings, fDetector, nuSpectra, &askaryanModel, crossSectionModel, pnu, eventsfound, eventsfound_db, eventsfound_nfb,
   // 	    sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, clOpts.outputdir);
 
   // icemc::report().veff_out << fSettings->EXPONENT << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << fSettings->SIGMA_FACTOR << std::endl;//this is for my convenience
@@ -2487,7 +2486,7 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
 
 // void icemc::EventGenerator::applyRoughness(const Settings& settings1, const int& inu, Interaction* interaction1,
 // 					   RayTracer* ray1, Screen* panel1, Antarctica* antarctica,
-// 					   Balloon* bn1, const AskaryanFactory* askFreqGen, Anita* anita1, const Shower& showerProps){
+// 					   Balloon* bn1, const AskaryanRadiationModel* askaryanModel, Anita* anita1, const Shower& showerProps){
   
 //   //(vector) ray1->nsurf_rfexit:  surface normal at RFexit position
 //   //(pos)        ->rfexit[2]:     final iterated position of RF exit
@@ -2623,9 +2622,9 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
 //       deltheta_em[0] = deltheta_em_max*detector.FREQ_LOW/detector.freq[0];
 //       deltheta_had[0] = deltheta_had_max*detector.FREQ_LOW/detector.freq[0];
 
-//       // askFreqGen->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], showerProps, taperfactor, vmmhz_em[0]);// this applies the angular dependence.
+//       // askaryanModel->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], showerProps, taperfactor, vmmhz_em[0]);// this applies the angular dependence.
 //       double dummy_vmmhz_em_0 = 0;
-//       askFreqGen->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], showerProps, taperfactor, dummy_vmmhz_em_0);// this applies the angular dependence.
+//       askaryanModel->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], showerProps, taperfactor, dummy_vmmhz_em_0);// this applies the angular dependence.
 //       if(taperfactor==0){
 // 	continue;
 //       }
@@ -2730,14 +2729,14 @@ void icemc::EventGenerator::generateNeutrinos(Detector& detector){
 //   // AskaryanFreqs askFreqsLocal;
 //   for (int jj=0; jj<panel1->GetNvalidPoints(); jj++){
 //     // fill the frequency array vmmhz_local_array
-//     askFreqGen->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, detector.freq, detector.NOTCH_MIN, detector.NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
+//     askaryanModel->GetVmMHz(panel1->GetVmmhz0(jj), vmmhz1m_max, pnu, detector.freq, detector.NOTCH_MIN, detector.NOTCH_MAX, vmmhz_local_array, Anita::NFREQ);
 //     // apply the off-angle tapering
 //     for (int k=0;k<Anita::NFREQ;k++) {
 //       deltheta_em[k]=deltheta_em_max*detector.FREQ_LOW/detector.freq[k];
 //       deltheta_had[k]=deltheta_had_max*detector.FREQ_LOW/detector.Yfreq[k];
-//       // askFreqGen->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
+//       // askaryanModel->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], emfrac, hadfrac, vmmhz_local_array[k], vmmhz_em[k]);// this applies the angular dependence.
 //       double dummy_vmmhz_em_k = 0;
-//       askFreqGen->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], showerProps.emFrac, showerProps.hadFrac, vmmhz_local_array[k], dummy_vmmhz_em_k);// this applies the angular dependence.
+//       askaryanModel->TaperVmMHz(panel1->GetViewangle(jj), deltheta_em[k], deltheta_had[k], showerProps.emFrac, showerProps.hadFrac, vmmhz_local_array[k], dummy_vmmhz_em_k);// this applies the angular dependence.
 //       panel1->AddVmmhz_freq(vmmhz_local_array[k]);
 //     }
 

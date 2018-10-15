@@ -9,9 +9,9 @@
 #include <iostream>
 #include <fstream>
 
-#include "AskaryanFactory.h"
+#include "AskaryanRadiationModel.h"
 #include "ConnollyEtAl2011.h"
-#include "ShowerGenerator.h"
+#include "ShowerModel.h"
 #include "EnvironmentVariable.h"
 #include "Constants.h"
 
@@ -593,14 +593,14 @@ int icemc::Crust2::Getchord(const Settings *settings1,
     //------------------added on Dec 8------------------------
     total_kgm2+=myair;
 
-    double L_ice=len_int_kgm2/AskaryanFactory::RHOICE;
+    double L_ice=len_int_kgm2/AskaryanRadiationModel::RHOICE;
 
     if (settings1->UNBIASED_SELECTION){
       probability_tmp *= 1.-exp(-1.*(r_enterice.Distance(nuexitice)/L_ice)); // probability it interacts in ice along its path
     }
     double L = 0;
 
-    double ddensity = AskaryanFactory::RHOAIR;
+    double ddensity = AskaryanRadiationModel::RHOAIR;
     nearthlayers=1;
 
     if (where.Dot(nchord)>0.)  { // look at direction of neutrino where it enters the earth.

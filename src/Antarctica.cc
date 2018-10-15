@@ -6,7 +6,7 @@
 #include "Crust2.h"
 #include "Antarctica.h"
 
-#include "AskaryanFactory.h"
+#include "AskaryanRadiationModel.h"
 #include "Geoid.h"
 #include "ConnollyEtAl2011.h"
 #include "anita.hh"
@@ -918,7 +918,7 @@ double icemc::Antarctica::GetN(double altitude) const {
   double n=0;
 
   if (altitude < constants::FIRNDEPTH) {
-    n=AskaryanFactory::NICE;
+    n=AskaryanRadiationModel::NICE;
   }
   else if (altitude >= constants::FIRNDEPTH && altitude <=0 && DEPTH_DEPENDENT_N) {
     //    N_DEPTH=NFIRN-(4.6198+13.62*(altitude_int/1000.))*

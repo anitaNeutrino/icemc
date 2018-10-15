@@ -6,7 +6,7 @@
 #include "Settings.h"
 #include "Crust2.h"
 #include "Antarctica.h"
-#include "AskaryanFactory.h"
+#include "AskaryanRadiationModel.h"
 #include "TVector3.h"
 #include "Geoid.h"
 #include "anita.hh"
@@ -157,20 +157,20 @@ double icemc::RayTracer::evalPath(const double* params) const {
 
   OpticalPath::Step s1; // from the surface to the balloon
   s1.direction = fBalloonPos - surfacePos;
-  s1.n = AskaryanFactory::N_AIR;
+  s1.n = AskaryanRadiationModel::N_AIR;
   s1.attenuationLength = DBL_MAX; //@todo is this sensible?  
 
   s1.boundaryNormal = fWorld->GetSurfaceNormal(surfacePos);
   
   ///@todo get these refractive index numbers from the world model...
-  const TVector3 refractedRfDir = refractiveBoundary(rfDir, s1.boundaryNormal, AskaryanFactory::N_AIR, AskaryanFactory::NICE, fDebug);
+  const TVector3 refractedRfDir = refractiveBoundary(rfDir, s1.boundaryNormal, AskaryanRadiationModel::N_AIR, AskaryanRadiationModel::NICE, fDebug);
   const double distRemaining = (surfacePos - fInteractionPos).Mag();
 
   const TVector3 endPoint = surfacePos + refractedRfDir*distRemaining;
 
   OpticalPath::Step s2; // from the source (hopefully the end point) to the surface
   s2.direction = surfacePos - endPoint;
-  s2.n = AskaryanFactory::NICE;
+  s2.n = AskaryanRadiationModel::NICE;
   const double attenLengthIceMeters = 700; ///@todo Get this number from the world model
   s2.attenuationLength = attenLengthIceMeters;
   // order matters, think about this!

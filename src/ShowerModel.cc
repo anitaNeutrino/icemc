@@ -1,7 +1,7 @@
 #include "Settings.h"
 #include "Geoid.h"
 #include "ConnollyEtAl2011.h"
-#include "ShowerGenerator.h"
+#include "ShowerModel.h"
 #include "Antarctica.h"
 #include "Tools.h"
 #include <sstream>
@@ -14,8 +14,11 @@
 
 ClassImp(icemc::Shower)
 
+icemc::ShowerModel::~ShowerModel(){
+}
 
-icemc::ShowerGenerator::ShowerGenerator(const Settings* settings) : fSettings(settings) {
+
+icemc::ShowerModel::ShowerModel(const Settings* settings) : fSettings(settings) {
   //For Total Tau Survival probability equation
   //n.b. not in SI units.
   ////from Tau neutrino propagaiton and tau energy loss 2005 Dutta, Huang, & Reno. 
@@ -84,17 +87,17 @@ icemc::ShowerGenerator::ShowerGenerator(const Settings* settings) : fSettings(se
 
 	
 	
-}//ShowerGenerator Constructor
+}//ShowerModel Constructor
 
-// void icemc::ShowerGenerator::readData(std::string nuflavor, std::string secndryType, double (*y)[nP], double (*dsdy)[nP])
-// void icemc::ShowerGenerator::readData(const std::string& nuflavor,
+// void icemc::ShowerModel::readData(std::string nuflavor, std::string secndryType, double (*y)[nP], double (*dsdy)[nP])
+// void icemc::ShowerModel::readData(const std::string& nuflavor,
 // 				      const std::string& secndryType,
 // 				      std::array<std::array<double, nP>, nE>& y,
 // 				      std::array<std::array<double, nP>, nE>& dsdy)
 // 				      // double (*dsdy)[nP])  
 // {
 
-void icemc::ShowerGenerator::readData(Neutrino::Flavor flavor, Secondary secondary){
+void icemc::ShowerModel::readData(Neutrino::Flavor flavor, Secondary secondary){
   
   const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
   const std::string ICEMC_SECONDARY_DIR=ICEMC_SRC_DIR+"/secondary/";
@@ -200,7 +203,7 @@ void icemc::ShowerGenerator::readData(Neutrino::Flavor flavor, Secondary seconda
   }
 }
 
-void icemc::ShowerGenerator::Draw(Option_t* opt){
+void icemc::ShowerModel::Draw(Option_t* opt){
 
   std::vector<TCanvas*> cans;
   for(auto& p : fE_Y_dsdy){
@@ -220,7 +223,7 @@ void icemc::ShowerGenerator::Draw(Option_t* opt){
   }
 }
 
-void icemc::ShowerGenerator::ReadSecondaries() {
+void icemc::ShowerModel::ReadSecondaries() {
   // reading in data for secondary interactions
     
   icemc::report() << "Reading in data on secondary interactions." << std::endl;
@@ -243,7 +246,7 @@ void icemc::ShowerGenerator::ReadSecondaries() {
 } //end method ReadSecondaries
 
 
-void icemc::ShowerGenerator::doShower(Neutrino::Flavor nuflavor, Energy plepton, Energy &em_secondaries_max, Energy &had_secondaries_max,int &n_interactions) {
+void icemc::ShowerModel::doShower(Neutrino::Flavor nuflavor, Energy plepton, Energy &em_secondaries_max, Energy &had_secondaries_max,int &n_interactions) {
   // @todo currently disabled as it's not totally necessary and I don't understand what it used to do because it was written so fucking badly
   return;
 
@@ -276,11 +279,11 @@ void icemc::ShowerGenerator::doShower(Neutrino::Flavor nuflavor, Energy plepton,
       fE_YCumulative_dsdy[key];
     }
   }    
-} //GetShowerGenerator
+} //GetShowerModel
 
 
 
-icemc::Shower icemc::ShowerGenerator::generate(const Neutrino& nu) {
+icemc::Shower icemc::ShowerModel::generate(const Neutrino& nu) {
   Shower s = GetEMFrac(nu.flavor, nu.interaction.current, nu.interaction.y,  nu.energy);
   s.axis = nu.path.direction.Unit();
   // doShower(nu.flavor,nu.energy,em_secondaries_max,had_secondaries_max,s.nInteractions);   
@@ -288,11 +291,11 @@ icemc::Shower icemc::ShowerGenerator::generate(const Neutrino& nu) {
 }
 
 
-icemc::Shower icemc::ShowerGenerator::GetEMFrac(Neutrino::Flavor nuflavor,
-						Neutrino::Interaction::Current current,
-						double y,
-						Energy pnu) {
-						// int taumodes1) {
+icemc::Shower icemc::ShowerModel::GetEMFrac(Neutrino::Flavor nuflavor,
+					    Neutrino::Interaction::Current current,
+					    double y,
+					    Energy pnu) {
+  // int taumodes1) {
 
 
   Shower s;
@@ -380,7 +383,7 @@ icemc::Shower icemc::ShowerGenerator::GetEMFrac(Neutrino::Flavor nuflavor,
 //InitTauola()
 //Initializes the tau decay information
 
-void icemc::ShowerGenerator::InitTauola() {
+void icemc::ShowerModel::InitTauola() {
   for(int k=0;k<5;k++)
     tauolainfile >> tauola[0][k];
   for(int i=1;i<N_TAUOLA;i++)
@@ -391,7 +394,7 @@ void icemc::ShowerGenerator::InitTauola() {
 }//InitTauola
 
 
-void icemc::ShowerGenerator::GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::Interaction::Current current, std::string& taudecay, double& emfrac_db, double& hadfrac_db) {
+void icemc::ShowerModel::GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::Interaction::Current current, std::string& taudecay, double& emfrac_db, double& hadfrac_db) {
  
   if (!(nuflavor==Neutrino::Flavor::tau || current==Neutrino::Interaction::Current::Charged || interestedintaus)){
     return;
@@ -430,7 +433,7 @@ void icemc::ShowerGenerator::GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::In
 //GetEMFracDB()
 //Gets the emfrac_db and hadfrac_db for a doublebang
 
-void icemc::ShowerGenerator::pickEMFracDB(double& emfrac_db, double& hadfrac_db) {
+void icemc::ShowerModel::pickEMFracDB(double& emfrac_db, double& hadfrac_db) {
 
 
   double rnd = pickUniform();
@@ -446,7 +449,7 @@ void icemc::ShowerGenerator::pickEMFracDB(double& emfrac_db, double& hadfrac_db)
 //GetDBViewAngle()
 //Gets the viewangle of the second bang
 
-double icemc::ShowerGenerator::GetDBViewAngle(const TVector3 &refr, const TVector3 &nnu) {
+double icemc::ShowerModel::GetDBViewAngle(const TVector3 &refr, const TVector3 &nnu) {
 
   /// @todo FIX CHANGECOORD
   // return ((nnu.ChangeCoord(refr)).Angle(z_axis));
@@ -458,7 +461,7 @@ double icemc::ShowerGenerator::GetDBViewAngle(const TVector3 &refr, const TVecto
 //GetFirstBang()
 //Gets the position of the first bang when the interaction point is the tau decay point
 
-//  void icemc::ShowerGenerator::GetFirstBang(const Geoid::Position &r_in, const TVector3 &nnu, Geoid::Position &posnu, double len_int_kgm2, double chord, double &nuentrancelength) {
+//  void icemc::ShowerModel::GetFirstBang(const Geoid::Position &r_in, const TVector3 &nnu, Geoid::Position &posnu, double len_int_kgm2, double chord, double &nuentrancelength) {
   
 //   double weightbang;
 //   double junk1;
@@ -493,7 +496,7 @@ double icemc::ShowerGenerator::GetDBViewAngle(const TVector3 &refr, const TVecto
 //---------------------------------------------------------
 //NFBWeight()
 //Gets the weight of the tau decay for second bang events
-double icemc::ShowerGenerator::NFBWeight(double ptau, double taulength) {
+double icemc::ShowerModel::NFBWeight(double ptau, double taulength) {
   
   double gamma=ptau/constants::MTAU;
   double D=constants::TAUDECAY_TIME*constants::CLIGHT*gamma;
@@ -502,7 +505,7 @@ double icemc::ShowerGenerator::NFBWeight(double ptau, double taulength) {
 
 }
 
-void icemc::ShowerGenerator::Picky(const double *y_cumulative,int NPROB,double rnd,double& y) const {
+void icemc::ShowerModel::Picky(const double *y_cumulative,int NPROB,double rnd,double& y) const {
   for (int i=0;i<NPROB;i++) {
     if (y_cumulative[i] <= rnd && y_cumulative[i+1] > rnd) {
       y=(double)i/(double)NPROB;
