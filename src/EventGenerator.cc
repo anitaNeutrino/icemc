@@ -159,24 +159,14 @@ void icemc::EventGenerator::generate(Detector& detector){
     double tofDetector = opticalPath.steps.back().distance()/constants::CLIGHT;
     Geoid::Position rfExit = detectorPos - opticalPath.steps.back().direction;
 
-
-    int closestRX = -1;
-    double minTof= DBL_MAX;
-    for(int rx=0; rx < detector.getNumRX(); rx++){
-      double tofRX = (detector.getPositionRX(rx) - rfExit).Mag()/constants::CLIGHT;
-      if(tofRX < minTof){
-	minTof = tofRX ;
-	closestRX = rx;
-      }
+    std::vector<double> delays(detector.getNumRX());
+    for(int rx = 0; rx < detector.getNumRX(); rx++){
+      delays.at(rx) = (detector.getPositionRX(rx) - rfExit).Mag()/constants::CLIGHT - tofDetector;
     }
-
-    std::cout << "closestRX = " << closestRX << std::endl;
-    
-    for(int rx = 0; rx < detector.getNumRX(); rx++){      
-      double tofRX = (detector.getPositionRX(rx) - rfExit).Mag()/constants::CLIGHT;
+    double minDelay = *std::min_element(delays.begin(), delays.end());
+    for(int rx=0; rx < detector.getNumRX(); rx++){
       PropagatingSignal signalRX = signal;
-      signal.waveform.applyConstantGroupDelay(tofRX - tofDetector, false);
-      std::cout << rx << "\t" << 1e9*(tofRX - tofDetector) << std::endl;
+      signalRX.waveform.applyConstantGroupDelay(delays.at(rx) - minDelay, false);
       detector.addSignalToRX(signalRX, rx);
     }
 
@@ -184,7 +174,6 @@ void icemc::EventGenerator::generate(Detector& detector){
 
     if(triggered){
       std::cout << inu << "\tPASSED!" << std::endl;
-      break;
     }
     // else{
     //   std::cout << "FAILED!" << std::endl;
