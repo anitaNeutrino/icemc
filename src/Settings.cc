@@ -1,28 +1,15 @@
-#include "TF1.h"
-#include "TFile.h"
-#include <array>
-#include "Geoid.h"
-#include "Constants.h"
 #include "Settings.h"
-#include "Tools.h"
-#include "TVector3.h"
-#include "Roughness.h"
-// #include "anita.hh"
-// #include "balloon.hh"
-#include "Antarctica.h"
-#include "Spectra.h"
-#include "AskaryanRadiationModel.h"
-#include "ShowerModel.h"
-#include "RayTracer.h"
-#include "ConnollyEtAl2011.h"
-#include "EnvironmentVariable.h"
 
 #include <string.h>
+#include <iostream>
+#include "EnvironmentVariable.h"
+#include "TFile.h"
 
 #include "TString.h"
 #include "TRegexp.h"
 #include "TObjString.h"
-
+#include "TObjArray.h"
+#include "TRandom3.h"
 
 // Prettify warnings because, why not?
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -534,10 +521,6 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   getSetting("Weight on absorption", WEIGHTABSORPTION);
   getSetting("Phi points banana", horizontal_banana_points);
   getSetting("Theta points banana", vertical_banana_points);
-  getSetting("Signal across frequencies", FORSECKEL);
-  if(FORSECKEL > 0){
-    std::cerr << "Warning! FORSECKEL has been deprecated!" << std::endl;
-  }
 
   getSetting("Shower type", SHOWERTYPE);
 

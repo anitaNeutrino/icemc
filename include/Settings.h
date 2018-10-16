@@ -117,8 +117,6 @@ namespace icemc {
     //double FREQ_LOW_SEAVEYS=200.E6; // min frequency for seaveys
     //const double FREQ_HIGH_SEAVEYS=1200.E6; // max frequency for seaveys
 
-    int FORSECKEL; // Make array of strength of signal across frequencies for different viewing angles.
-
     double ROUGHSIZE; // roughness size
     double SCREENEDGELENGTH;        // edge length of screen used if there is roughness
     double SCREENSTEPSIZE;        // step size of screen grid if there is roughness
