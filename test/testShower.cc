@@ -1,4 +1,5 @@
 #include "ShowerModel.h"
+#include "CommandLineOptions.h"
 #include "Settings.h"
 #include "Neutrino.h"
 

@@ -38,10 +38,10 @@
 #include "TVector3.h"
 #include "TRotation.h"
 #include "TSpline.h"
-#include "Taumodel.hh"
+#include "TauModel.h"
 #include "Interaction.h"
 
-ClassImp(icemc::Taumodel);
+ClassImp(icemc::TauModel);
 
 using std::cout;
 using std::stringstream;
@@ -51,7 +51,7 @@ using std::max_element;
 using std::partial_sum;
 using std::max;
 
-icemc::Taumodel::Taumodel() {
+icemc::TauModel::TauModel() {
   /**For Total Tau Survival probability equation
    //n.b. not in SI units.
    ////from Tau neutrino propagaiton and tau energy loss 2005 Dutta, Huang, & Reno. 
@@ -83,9 +83,9 @@ icemc::Taumodel::Taumodel() {
 /**
    GetTauWeight is the function that will calculate the probability that a tau neutrino will interact along its path through the earth,and the tau will survive the rest of the journey and decay in the ice. This probability is calculated for final energies from 10^15.5 to the energy of the neutrino.
 */
-// double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered){ // 1 or 0
-// double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, Neutrino::L leptonNumber, double& ptauf, int& crust_entered){ // 1 or 0
-double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, Energy pnu, Neutrino::L leptonNumber, Energy& ptauf, int& crust_entered){ // 1 or 0  
+// double icemc::TauModel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered){ // 1 or 0
+// double icemc::TauModel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, Neutrino::L leptonNumber, double& ptauf, int& crust_entered){ // 1 or 0
+double icemc::TauModel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, Energy pnu, Neutrino::L leptonNumber, Energy& ptauf, int& crust_entered){ // 1 or 0  
 			      // int& mantle_entered, // 1 or 0
 			      // int& core_entered){//add secondaries?
 
@@ -264,7 +264,7 @@ double icemc::Taumodel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings 
 Get Density Vectors sets two density vectors. One has the density at each step along the path, the other has an average density from the starting point to the current step.
  */
 
-void icemc::Taumodel::GetDensityVectors(const Antarctica *antarctica1,Interaction *interaction1, TVector3 nchord, double step, double Distance, int &totalnusteps,int &crust_entered){
+void icemc::TauModel::GetDensityVectors(const Antarctica *antarctica1,Interaction *interaction1, TVector3 nchord, double step, double Distance, int &totalnusteps,int &crust_entered){
    
     TVector3 nchord1;
     double avgdensity =0;//initilize average density.
@@ -298,7 +298,7 @@ void icemc::Taumodel::GetDensityVectors(const Antarctica *antarctica1,Interactio
 /**
    Get Energy TVector3 sets the energy of tau particle at every step along the path. It starts from the final energy and works back towards the nuetrino interaction point.
  */
-void icemc::Taumodel::GetEnergyVector(Energy Etau_final, double step,int totalnusteps, int &totalsteps, double &totaltaudistance, Energy pnu){
+void icemc::TauModel::GetEnergyVector(Energy Etau_final, double step,int totalnusteps, int &totalsteps, double &totaltaudistance, Energy pnu){
   
   myenergyvector.clear();
   myenergyvector.push_back(Etau_final);
@@ -332,7 +332,7 @@ void icemc::Taumodel::GetEnergyVector(Energy Etau_final, double step,int totalnu
    Get Tau Surv Vector gets a vector that is filled with the probability the tau will survive from neutrino interaction point to the ice.
  */
 
-void icemc::Taumodel::GetTauSurvVector(double step, int totalsteps){
+void icemc::TauModel::GetTauSurvVector(double step, int totalsteps){
   myPsurvvector.clear();
   Energy Etau_now;
   Energy nothing(0, Energy::Unit::eV);

@@ -1,5 +1,5 @@
-#ifndef SCREEN_H_
-#define SCREEN_H_
+#ifndef ICEMC_SURFACE_SCREEN_H
+#define ICEMC_SURFACE_SCREEN_H
 
 #include <iostream>
 #include <iomanip>
@@ -17,11 +17,10 @@
 
 namespace icemc{
   class Detector;
-  class ANITA;
   class Settings;
 
   
-  class Screen {
+  class SurfaceScreen {
   private:
     double fedgeLength;               ///< the full length of one side
     Geoid::Position fcentralPoint;           ///< coordinates of screen center
@@ -56,7 +55,7 @@ namespace icemc{
     /**
      * @param a - unused (needs removed)
      */
-    Screen(int a);
+    SurfaceScreen(int a);
 
     //! Sets number of grid divisions for the base screen
     /**
@@ -386,13 +385,6 @@ namespace icemc{
     void ResetParameters();
 
 
-
-    /** 
-     * Propagate the signals from the surface to the detector
-     * 
-     * @param d is the abstract detector class
-     */
-    void PropagateSignalsToDetector(const Settings* settings1, ANITA* d, int inu) const;
 
   };
 }

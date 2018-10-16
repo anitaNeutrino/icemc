@@ -14,15 +14,13 @@
 #include "Crust2.h"
 #include "Tools.h"
 #include "RayTracer.h"
-#include "anita.hh"
-#include "balloon.hh"
 #include "Antarctica.h"
 #include "Spectra.h"
 #include "AskaryanRadiationModel.h"
 #include "ShowerModel.h"
 #include "RayTracer.h"
 #include "ConnollyEtAl2011.h"
-#include "Taumodel.hh"
+#include "TauModel.h"
 
 
 int main(){
@@ -32,15 +30,8 @@ int main(){
   std::ofstream outputsFile("/tmp/outputs.txt");
   s.ReadInputs("inputs.anita3.conf",  outputsFile);
   
-
-  icemc::Balloon *bn1 = new icemc::Balloon(&s); // instance of the balloon
-  icemc::Anita *anita1 = new icemc::Anita(&s, "/tmp/", bn1);// right now this constructor gets banding info
   icemc::ShowerModel *sec1 = new icemc::ShowerModel(&s);
   icemc::AskaryanRadiationModel *sig1 = new icemc::AskaryanRadiationModel(&s, 1024, 1e-9/2.6);
-  // input parameters
-  s.ApplyInputs(anita1);
-
-
 
   //  s.printAllKeyValuePairStrings();
 
@@ -72,9 +63,6 @@ int main(){
 
   delete sig1;
   delete sec1;
-  delete anita1;
-  delete bn1;
-
 
   return 0;
 

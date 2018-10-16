@@ -1,7 +1,6 @@
 #ifndef ICEMC_EVENT_GENERATOR_H
 #define ICEMC_EVENT_GENERATOR_H
 
-#include "anita.hh"
 #include "TVector3.h"
 
 #include "Settings.h"

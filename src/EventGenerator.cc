@@ -108,7 +108,7 @@ void icemc::EventGenerator::generate(Detector& detector){
    */
   signal(SIGINT, icemc::EventGenerator::interrupt_signal_handler);  
   int run = fSettings->getRun();
-  for (int inu = fSettings->getStartNu(); inu < NNU && !ABORT_EARLY; inu++) {    
+  for (int inu = fSettings->getStartNu(); inu < NNU && !ABORT_EARLY; inu++) {
     if (NNU >= 100 && ((inu % (NNU / 100)) == 0)){
       std::cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
     }
@@ -146,7 +146,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     const TVector3& rfDirFromInteraction = opticalPath.steps.at(0).direction;
     TVector3 v = directionModel.pickNeutrinoDirection(interactionPos, rfDirFromInteraction);
     
-    // make a neutrino, we've picked energy, flavor, interaction current, 
+    // make a neutrino, we've picked energy, flavor, interaction current
     Neutrino nu = nuFactory.makeNeutrino();
 
     nu.path.direction = v.Unit();

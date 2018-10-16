@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
-//class Taumodel:
+//class TauModel:
 ////////////////////////////////////////////////////////////////////////////////////////////////
-#ifndef TAU_MODEL_H
-#define TAU_MODEL_H
+#ifndef ICEMC_TAU_MODEL_H
+#define ICEMC_TAU_MODEL_H
 
 #include <algorithm>
 #include <numeric>
@@ -26,7 +26,7 @@ namespace icemc{
   class Interaction;
   class Antarctica;
 
-  class Taumodel: public TObject
+  class TauModel: public TObject
   {
 
   private: //stuff other programs arent allowed to touch
@@ -68,7 +68,7 @@ namespace icemc{
      */
     void GetTauSurvVector(double step, int totalsteps);
   public:
-    Taumodel();
+    TauModel();
     Energy ptauf; ///< Final energy of the tau.
     double weight_tau_prob; ///< Weight for tau neutrino to interact, create a tau, tau survives and decays in the ice.
     int inu; 
@@ -82,7 +82,7 @@ namespace icemc{
     // int& mantle_entered, // 1 or 0
     // int& core_entered);//include secondaries?
  
-    ClassDef(Taumodel,1);
+    ClassDef(TauModel,1);
   }; //class Taumodel
 
 }

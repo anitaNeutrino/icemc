@@ -1,18 +1,12 @@
-////////////////////////////////////////////////////////////////////////////////////////////////
-//class Tools:
-////////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifndef SETTINGS_H_
-#define SETTINGS_H_
+#ifndef ICEMC_SETTINGS_H
+#define ICEMC_SETTINGS_H
 
 #include <fstream>
 #include <vector>
 
 #include "TString.h"
 #include <TObject.h>
-#include "balloon.hh"
 #include <map>
-#include "CommandLineOptions.h"
 
 // from RVersion.h
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
@@ -21,31 +15,12 @@
 #include "TCint.h"
 #endif
 
-#include "anita.hh"
-
 class TNamed;
 
-namespace icemc{
-
-  enum class Payload : int
-    {
-     AnitaLite    = 0,
-     Ross         = 1,
-     Anita1Simple = 2,
-     Custom       = 3,
-     AnitaHill    = 4,
-     SLAC         = 5, //?
-     Anita1       = 6,
-     EeVEX        = 7,
-     Anita2       = 8,
-     Anita3       = 9,
-     Anita4       = 10,
-     Satellite    = 11
-  };
+namespace icemc {
   
   class ShowerGenerator;
   class AskaryanRadiationModel;
-  class Balloon;
   class RayTracer;
 
   /**
@@ -60,7 +35,7 @@ namespace icemc{
   public:    
 
     Settings();
-    ~Settings();
+    virtual ~Settings();
     void Initialize();
     void printAllKeyValuePairStrings() const;
 
@@ -74,11 +49,11 @@ namespace icemc{
     void getSetting(const char* key, std::vector<double>& valueArray) const;
     void getSetting(const char* key, std::vector<std::string>& valueArray) const;
 
-    void ReadInputs(const char* fileName , std::ofstream &foutput);//,
+    virtual void ReadInputs(const char* fileName , std::ofstream &foutput);
 		    // Anita* anita1, ShowerGenerator* sec1, AskaryanRadiationModel* askFreqGen, Balloon* bn1, Ray* ray1,
 		    // int& NNU, double& RANDOMISEPOL);
 
-    void ApplyInputs(Anita* anita1) const;
+    // void ApplyInputs(Anita* anita1) const;
 
     const char* getOutputDir() const {return fOutputDir.c_str();}
     int getRun() const {return fRun;}
@@ -88,48 +63,22 @@ namespace icemc{
     double RANDOMISEPOL; ///< Randomize the polarity?
     
     int UNBIASED_SELECTION;
-    Payload WHICH; // which payload to use 0=Anita-lite,1=Ross,2=Smex,3=make your own
-    int ANITAVERSION;
-    int CYLINDRICALSYMMETRY; // is it cylindrically symmetric =1 if which=1,2, =0 if which=0
-    // if which=3 then 0 or 1
     double SIGMA_FACTOR; // factor to multiply cross section by for error analysis
     int SIGMAPARAM; // 0=Reno, 1=Connolly et al. 2011 for cross section parametrization
     int YPARAM; // 0=Reno, 1=Connolly et al. 2011 for cross section parametrization
     int SIGNAL_FLUCT;  // 1=add noise fluctuation to signal or 0=do not
-    int TRIGGERSCHEME;  // frequency domain voltage, frequency domain energy, time domain diode integration
     int ZEROSIGNAL;  // zero the signal to see how many of our hits are noise hits
     int REMOVEPOLARIZATION; //Disable polarizations
 
-    double INCLINE_TOPTHREE;
-    double INCLINE_NADIR;
     int USEDARTBOARD;
-    int GAINS;
-    int BANDING;
-    int NBANDS;
     int PERCENTBW; 
-    int trigRequirements[4];//  0th element - L1 - how many channels per antenna should pass
-    // 1st element- L2 - how many antennas on a layer
-    // 2nd element - L3 - how many L2 triggers should be coincident
-    int REQUIRE_CENTRE; // require centre antenna in clump to be one of those hit
-    double INCLUDE_NADIRONLY; // cant angle of nadir (bottom) layer of antennas
     int PULSER;
-    double SIGMA_THETA; // resolution on the polar angle of the signal
-    double FREQ_LOW;       ///< lowest frequency
-    double FREQ_HIGH;
   
     int SECONDARIES;
     int TAUDECAY; // is tau decay counted as a secondary interaction
 
-    int trigEffScanPhi;                      // central phi sector of trigger efficiency scan
 
   
-    FlightPath WHICHPATH;
-    int BN_LATITUDE;
-    int BN_LONGITUDE;
-    int BN_ALTITUDE;
-    int RANDOMIZE_BN_ORIENTATION;
-    // int CENTER;                                                                ///< whether or not to center one phi sector of the payload on the incoming signal (for making signal efficiency curves)
-    double MAXHORIZON;
   
     int EVENTSMAP;//whether draw the events distribution map
 
@@ -137,25 +86,10 @@ namespace icemc{
     int MAKEVERTICAL; // option in the input file to force the signal to hit the payload with completely vertical polarisation.  For making signal efficiency curves.
 
     // trigger
-    int LCPRCP; // 1 for circular polarization trigger, 0 for V and H
-    int JUSTVPOL; // 0 for both polarizations, 1 for just V polarization
-    // doesn't allow for both LCPRCP=1 and JUSTVPOL=1
-    //int FIFTHBAND; // 1 to include 0.2-1.2 GHz as a frequency band if JUSTVPOL==1
-    //int NFOLD=3;  // how many channels must pass the trigger - in old mechanism - only used for anita-lite
-    int NFOLD;  // how many channels must pass the trigger - in old mechanism - only used for anita-lite
-
-
-    //int CHMASKING=1; // whether or not to include channel masking
-    //int PHIMASKING=1; // whether or not to include phi masking
-    int CHMASKING; // whether or not to include channel masking
-    int PHIMASKING; // whether or not to include phi masking
 
     //int NLAYERS=0;
     //int NANTENNAS=0;
 
-    int NLAYERS;
-    int NANTENNAS;
-    int NRX_PHI[Anita::NLAYERS_MAX];
 
     /* int ONLYFINAL=1; // only write to final histogram */
     /* int HIST_MAX_ENTRIES=10000; //maximum number of events to put in histograms */
@@ -165,19 +99,6 @@ namespace icemc{
     int HIST_MAX_ENTRIES; //maximum number of events to put in histograms
     int HIST;          //write to histograms
     double BW; // BANDWIDTH
-    //int DISCONES=1; // whether or not to use discones
-    int DISCONES; // whether or not to use discones
-
-    //double NDISCONES_PASS=3; // number of discones needed to pass
-    double NDISCONES_PASS; // number of discones needed to pass
-
-    int BORESIGHTS; // whether to loop over boresights
-    int SLAC; // whether or not we are simulating the slac run
-    double SLACSLOPE; // slope of the ice
-    double SLACICELENGTH;  // length of the block of ice
-    double SLAC_HORIZDIST; // horizontal distance from interaction to center of payload at slac beam test
-    double SLAC_DEPTH; // vertical depth of interaction at slac beam test
-    double SLAC_HORIZ_DEPTH; // horizontal depth of interaction at slac
 
     int ROUGHNESS; // include effects of surface roughness
     int FIRN; // whether or not to include the firn
@@ -196,10 +117,6 @@ namespace icemc{
     //double FREQ_LOW_SEAVEYS=200.E6; // min frequency for seaveys
     //const double FREQ_HIGH_SEAVEYS=1200.E6; // max frequency for seaveys
 
-    double FREQ_LOW_SEAVEYS; // min frequency for seaveys
-    double FREQ_HIGH_SEAVEYS; // max frequency for seaveys
-    double BW_SEAVEYS;
-    //int FORSECKEL=1; // Make array of strength of signal across frequencies for different viewing angles.
     int FORSECKEL; // Make array of strength of signal across frequencies for different viewing angles.
 
     double ROUGHSIZE; // roughness size
@@ -212,11 +129,9 @@ namespace icemc{
     int CONSTANTICETHICKNESS; // set ice thickness to constant value
     int FIXEDELEVATION; // fix the elevation to the thickness of ice.
     int MOOREBAY; //1=use Moore's Bay measured ice field attenuation length for the west land, otherwise use South Pole data
-    int USEPOSITIONWEIGHTS;// whether or not to restrict the neutrino position so it is within the horizon of the balloon
+    int USEPOSITIONWEIGHTS;// whether or not to restrict the neutrino position so it is within the horizon of the detector
     int WRITE_FILE; //Select whether or not to write a new input file for CreateHorizons
 
-    // EventGenerator::RayDirection MINRAY;
-    // EventGenerator::RayDirection MAXRAY;
     int MINRAY;
     int MAXRAY;
 
@@ -251,23 +166,7 @@ namespace icemc{
     int SKIPCUTS; //See every neutrino through to the end - don't make any of the various cuts designed to speed up the program.  (For checking distributions.)
     int USEDIRECTIONWEIGHTS;// whether or not to restrict the neutrino angle so that the viewing angle is near the cerenkov cone
     int SHOWERTYPE; // Type of shower for previous option
-    int antennaclump; //number of antenna in clump (L2)
-    // End of the once-global varibles.
-    double COHERENT_THRESHOLD;
-    int APPLYIMPULSERESPONSEDIGITIZER;       // apply impulse response in the digitizer path
-    int APPLYIMPULSERESPONSETRIGGER;         // apply impulse response in the trigger path
-    int USETIMEDEPENDENTTHRESHOLDS;          // use time-dependent thresholds
-    int USEDEADTIME;                         // use dead time from flight
-    int NOISEFROMFLIGHTTRIGGER;              // use thermal noise from flight in trigger path
-    int NOISEFROMFLIGHTDIGITIZER;            // use thermal noise from flight in digitizer path
     int MINBIAS;                             // generate minimum bias sample
-    int TRIGGEREFFSCAN;                      // do a trigger efficiency scan
-    int TRIGGEREFFSCAPULSE;                  // Apply pulse at AMPA (0) or at SURF (1)
-
-    int TUFFSON;                             // Are the TUFFs on for the whole flight?
-
-    int ADDCW;                               // Add CW
-  
     int PAYLOAD_USE_SPECIFIC_TIME;           //Instead of using the entire flight path, only generate neutrinos for a specific time for the paylaod (0 to disable). 
     int PAYLOAD_USE_SPECIFIC_TIME_DELTA;     //How much before and after the specific time can we use payload locations? 
     int SPECIFIC_NU_POSITION;                //Use a specific interaction position 
@@ -285,14 +184,10 @@ namespace icemc{
 
     TNamed* makeRootSaveableSettings() const;
 
-    ClassDef(Settings,1);
+    ClassDef(Settings,2);
   
   private:
 
-    /** 
-     * @brief Some of the logic from Anita moved to here to make Settings const correct
-     */
-    void setNrxPhiAndNantennasFromWhich();
     
     typedef std::map<TString, TString> kvpMap;
 
@@ -306,20 +201,6 @@ namespace icemc{
     void processStrings(const std::string& raw, std::vector<std::string>& processed) const;
     void processLine(const std::string& thisLine, std::ofstream& outputFile, const char* fileName, int lineNum);
 
-    std::vector<double> efficiencyScanOffAxisAttenuations;
-    std::vector<double> efficiencyScanPhiSectorDelay;
-    std::vector<double> efficiencyScanRingDelay;
-    std::vector<int> efficiencyScanRingsUsed;
-    std::vector<int> efficiencyScanApplyRingDelay;
-    std::vector<int> whichTUFFsON;
-    std::vector<double> tempThresholds;  
-    std::vector<double> bandLowEdgesMHz;
-    std::vector<double> bandHighEdgesMHz;
-    std::vector<int> requiredBands;
-    std::vector<int> allowedBands;
-    std::vector<double> notchFilterLimitsMHz;
-    std::vector<int> channelRequirePol;
-    std::vector<int> channelAllowedPol;
 
     TString wholeSettingsFile;
     std::string fOutputDir;
@@ -327,16 +208,6 @@ namespace icemc{
     int fStartNu;
   };
 }
-
-/** 
- * For a nice cout/cerr/logging experience
- * 
- * @param os is a output string stream
- * @param which is the Payload class enum
- * 
- * @return the updated output string stream
- */
-std::ostream& operator<<(std::ostream& os, const icemc::Payload& which);
 
 
 

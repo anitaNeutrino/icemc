@@ -22,7 +22,7 @@ include_directories(${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include)
 set (CMAKE_CXX_STANDARD 11)
 
 FILE (GLOB SOURCE_FILES "src/*.cc")
-FILE (GLOB INCLUDE_FILES "include/*h") 
+FILE (GLOB INCLUDE_FILES "include/*.h") 
 
 #SET(SOURCES vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
 #  ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc
@@ -34,10 +34,6 @@ FILE (GLOB INCLUDE_FILES "include/*h")
 #  src/GlobalTrigger.cc src/ChanTrigger.cc src/SimulatedSignal.cc src/EnvironmentVariable.cc
 #  src/IcemcRootOutput.cc)
 
-
-if( ${ROOT_VERSION} VERSION_GREATER "5.99.99")
-    add_custom_target(${DICT}.pcm DEPENDS ${DICT})
-endif()
 
 
 
@@ -115,13 +111,17 @@ endif()
 
 #We need to compile stuff into a library unless we want it to be compiled a million times over
 set(DICTNAME G__${libname})
+if( ${ROOT_VERSION} VERSION_GREATER "5.99.99")
+    add_custom_target(${DICTNAME}.pcm DEPENDS ${DICTNAME})
+endif()
+
+
 ROOT_GENERATE_DICTIONARY(${DICTNAME} ${INCLUDE_FILES} LINKDEF LinkDef.h)
 
 
 #---Create a shared library with geneated dictionary
 add_library(${libname} SHARED ${SOURCE_FILES} ${DICTNAME}.cxx)
 target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper AnitaEvent ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
-
 
 if(DEFINED ENV{ANITA_UTIL_INSTALL_DIR})
   set(UTIL_LIB_DIR $ENV{ANITA_UTIL_INSTALL_DIR}/lib)
@@ -150,7 +150,7 @@ macro(add_binary bin)
 endmacro() 
 
 # add_binary(icemc)
-add_binary(nicemc)
+#add_binary(nicemc)
 add_binary(testSettings)
 add_binary(testCrust)
 add_binary(testShower)

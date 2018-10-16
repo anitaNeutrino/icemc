@@ -9,7 +9,6 @@
 #include "AskaryanRadiationModel.h"
 #include "TVector3.h"
 #include "Geoid.h"
-#include "anita.hh"
 #include "RayTracer.h"
 
 #include <cmath>
