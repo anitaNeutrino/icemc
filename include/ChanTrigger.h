@@ -64,12 +64,13 @@ namespace icemc {
   public:
 
     //!  Channel trigger constructur
-    ChanTrigger(); 
+    ChanTrigger(Anita* anita1); 
 
     
     // void readInSeavey(const Seavey* s);
     void readInSeavey(const Settings* settings1, const Seavey* s, int ant, Anita* anita1);
   
+  private:
     //! Initialize trigger bands
     /**
      * Initialize trigger bands
@@ -77,7 +78,8 @@ namespace icemc {
      * @param  anita1 :: Anita - anita object
      */
     void InitializeEachBand(Anita *anita1);
-
+  public:
+    
     //! Apply the antenna gain
     /**
      *
@@ -121,7 +123,7 @@ namespace icemc {
      * @param  anita1 :: Anita - anita object
      * @param  ant :: int - antenna number
      */ 
-    void DigitizerPath(const Settings *settings1, Anita *anita1, int ant, Balloon *bn1);
+    void DigitizerPath(const Settings *settings1, Anita *anita1, int ant);
 
     //! Time shift and fluctuate signal
     /**
@@ -137,7 +139,7 @@ namespace icemc {
      */ 
     // void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512]);
     // void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][Anita::HALFNFOUR], double volts_rx_rfcm_lab_h_all[48][Anita::HALFNFOUR], int inu);
-    void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double* volts_rx_rfcm_lab_e_all, double* volts_rx_rfcm_lab_h_all);
+    void TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int rx, double* volts_rx_rfcm_lab_e_all, double* volts_rx_rfcm_lab_h_all);
   
     //!  Convert E and H to left and right e field
     /**
@@ -272,7 +274,7 @@ namespace icemc {
      * @param waveform :: double* - waveform
      * @param n :: int - number of points in waveform
      */
-    static double FindPeak(double *waveform,int n);
+    static double FindPeak(const double *waveform,int n);
 
   
     //!	Sets the threshold values based on which payload and where the antenna is located physically

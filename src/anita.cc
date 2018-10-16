@@ -231,15 +231,16 @@ int icemc::Anita::Match(int ilayer,int ifold,int rx_minarrivaltime) {
     return 0;
   }
 }
-int icemc::Anita::GetRx(int ilayer, int ifold) const { // get antenna number based on which layer and position it is
 
-  int irx=0;
-  for (int i=0;i<ilayer;i++) {
-    irx+=NRX_PHI[i];
-  }
-  irx+=ifold;
-  return irx;
-}
+// int icemc::Anita::GetRx(int ilayer, int ifold) const { // get antenna number based on which layer and position it is
+
+//   int irx=0;
+//   for (int i=0;i<ilayer;i++) {
+//     irx+=NRX_PHI[i];
+//   }
+//   irx+=ifold;
+//   return irx;
+// }
 
 int icemc::Anita::GetRxTriggerNumbering(int ilayer, int ifold) const { // get antenna number based on which layer and position it is
   // make the top trigger layer count 1-16 left to right
@@ -252,7 +253,15 @@ int icemc::Anita::GetRxTriggerNumbering(int ilayer, int ifold) const { // get an
   }
   else {
     //cout << "ilayer, ifold, getrx are " << ilayer << "\t" << ifold << "\t" << GetRx(ilayer,ifold) << "\n";
-    return GetRx(ilayer,ifold);
+    // return GetRx(ilayer,ifold);
+
+    int irx=0;
+    for (int i=0;i<ilayer;i++) {
+      irx+=NRX_PHI[i];
+    }
+    irx+=ifold;
+    return irx;
+    
   }
 }
 

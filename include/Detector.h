@@ -73,6 +73,7 @@ namespace icemc {
      */
     virtual bool applyTrigger() = 0;
 
+
     /** 
      * @brief Tell icemc how you like your Askaryan signals.
      * 

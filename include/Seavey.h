@@ -60,11 +60,11 @@ namespace icemc {
      * @param pol is the desired polarization (defaults to VPol)
      * 
      * @return the position of the phase center
-     */    
-    const TVector3& getPosition(Pol pol = Pol::V) const {
+     */
+    const Geoid::Position& getPosition(Pol pol = Pol::V) const {
       switch(pol){
       case Pol::H: return fPositionH.global;
-      case Pol::V: // is also the default...
+      case Pol::V:
       default:
 	return fPositionV.global;
       }
@@ -149,7 +149,7 @@ namespace icemc {
      */
     struct VectorPair {
       const TVector3 payload;
-      TVector3 global;
+      Geoid::Position global;
       VectorPair(const TVector3& v) : payload(v){
 	global = payload;
       }

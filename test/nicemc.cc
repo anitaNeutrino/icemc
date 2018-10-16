@@ -17,7 +17,7 @@ int main(int argc,  char **argv) {
   if(clOpts.are_good){
     auto anita = std::make_shared<icemc::ANITA>(&settings);    
     icemc::EventGenerator uhen(&settings);
-    uhen.generateNeutrinos(*anita.get());
+    uhen.generate(*anita.get());
   }
   
   return 0;

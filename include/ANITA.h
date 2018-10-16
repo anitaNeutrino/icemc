@@ -32,6 +32,7 @@ namespace icemc {
     virtual const Geoid::Position& getPosition(double time = TMath::QuietNaN()) override;
     virtual bool applyTrigger() override {return  applyTrigger(-1);}
     virtual bool applyTrigger(int inu);
+    
     virtual void getDesiredNDt(int& n, double& dt) const override {
       n = 1024;
       dt = 1e-9*1./2.6;
@@ -70,14 +71,14 @@ namespace icemc {
 
     void initSeaveys(const Settings *settings1, const Anita *anita1);
 
-    /** 
-     * What's the ilayer/ifold of given RX?
-     * 
-     * @param rx index of the fSeaveys
-     * @param ilayer layer of ANITA 
-     * @param ifold index in phi, maybe...
-     */
-    void getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const; ///@todo temp public for test
+    // /** 
+    //  * What's the ilayer/ifold of given RX?
+    //  * 
+    //  * @param rx index of the fSeaveys
+    //  * @param ilayer layer of ANITA 
+    //  * @param ifold index in phi, maybe...
+    //  */
+    // void getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const; ///@todo temp public for test
 
     /** 
      * What's the ilayer/ifold of given trigger RX?

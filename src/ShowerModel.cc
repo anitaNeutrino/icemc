@@ -4,13 +4,13 @@
 #include "ShowerModel.h"
 #include "Antarctica.h"
 #include "Tools.h"
+#include "EnvironmentVariable.h"
+#include "Report.h"
+
 #include <sstream>
 #include <iostream>
 #include <fstream>
 #include <cmath>
-
-#include "EnvironmentVariable.h"
-#include "Report.h"
 
 ClassImp(icemc::Shower)
 

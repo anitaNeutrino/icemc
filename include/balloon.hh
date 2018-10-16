@@ -51,19 +51,9 @@ namespace icemc {
     virtual ~Balloon();
 
     
-
-    /**
-     * Geoid::Position of spot under balloon
-     *
-     * @param  antarctica1 -
-     * @param  settings1 -
-     * @param  inu -
-     * @param  anita1 -
-     * @param  randomNumber -
-     */
+  protected:
     void getBalloonPosition(double eventTime,Anita *anita1 = nullptr);
-    // void PickBalloonPosition(const Antarctica *antarctica1, const Settings *settings1,int inu,Anita *anita1, double randomNumber);
-
+  public:
  
     ///< This function sets the default balloon position
     void SetDefaultBalloonPosition();

@@ -241,7 +241,9 @@ void icemc::ChanTrigger::WhichBandsPassTrigger1(const Settings *settings1, const
       if (signal_eachband[0][ibw]/noise_eachband[0][ibw]>=threshold_eachband[0][ibw]) {
 	//      if (fabs(volts_thischannel)/anita1->bwslice_vnoise[ilayer][ibw]>=bwslice_thresholds[ibw]) {
 	if (anita1->pol_allowed[0] && anita1->bwslice_allowed[ibw]) { // are this pol and bandwidth allowed to pass
-	  globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]++; //Records number of first level triggers on each antenna for a single neutrino
+	  ///@warning 
+	  globaltrig1->nchannels_perrx_triggered[anita1->GetRxTriggerNumbering(ilayer,ifold)]++; //Records number of first level triggers on each antenna for a single neutrino	  
+	  // globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]++; //Records number of first level triggers on each antenna for a single neutrino	  
 	  globaltrig1->channels_passing[ilayer][ifold][0][ibw]=1; // if it does then flag the element of the channels_passing array that corresponds to lcp or v pol for this band
 	  globaltrig1->vchannels_passing[ilayer][ifold][0][ibw]=1; // if it does then flag the element of the channels_passing array that corresponds to lcp or v pol for this band
 	  passes_eachband[0][ibw]=1;
@@ -307,7 +309,8 @@ void icemc::ChanTrigger::WhichBandsPassTrigger1(const Settings *settings1, const
 	// compare the signal to noise and see if it passes
 	if (signal_eachband[1][ibw]/noise_eachband[1][ibw]>=threshold_eachband[1][ibw]) {
 	  if (anita1->pol_allowed[1] && anita1->bwslice_allowed[ibw]) {
-	    globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]++; //Records number of first level triggers on each antenna for a single neutrino
+	    // globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]++; //Records number of first level triggers on each antenna for a single neutrino
+	    globaltrig1->nchannels_perrx_triggered[anita1->GetRxTriggerNumbering(ilayer,ifold)]++; //Records number of first level triggers on each antenna for a single neutrino	    
 	    globaltrig1->channels_passing[ilayer][ifold][1][ibw]=1; // if it does then flag the element of the channels_passing array that corresponds to rcp for this band
 	    globaltrig1->vchannels_passing[ilayer][ifold][1][ibw]=1; // if it does then flag the element of the channels_passing array that corresponds to rcp for this band
 	    passes_eachband[1][ibw]=1;
@@ -497,14 +500,18 @@ void icemc::ChanTrigger::WhichBandsPassTrigger2(const Settings *settings1, Anita
     // if we're implementing masking and the channel has been masked
     if (settings1->CHMASKING && !icemc::ChanTrigger::IsItUnmasked(bn1->surfTrigBandMask,iband,ilayer,ifold,0)) {
       if (globaltrig1->channels_passing[ilayer][ifold][0][iband])
-	globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]--;
+	///@warning
+	// globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]--;
+	globaltrig1->nchannels_perrx_triggered[anita1->GetRxTriggerNumbering(ilayer,ifold)]--;      
       globaltrig1->channels_passing[ilayer][ifold][0][iband]=0;// channel does not pass
     }
 	
     // if we're implementing masking and the channel has been masked
     if (settings1->CHMASKING && !icemc::ChanTrigger::IsItUnmasked(bn1->surfTrigBandMask,iband,ilayer,ifold,1)) {
       if (globaltrig1->channels_passing[ilayer][ifold][1][iband])
-	globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]--;
+	///@warning 
+	// globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]--;
+	globaltrig1->nchannels_perrx_triggered[anita1->GetRxTriggerNumbering(ilayer,ifold)]--;      
       globaltrig1->channels_passing[ilayer][ifold][1][iband]=0;// channel does not pass
       // note the last element of the array is 0 because this is lcp or e pol
     }
@@ -707,7 +714,8 @@ void icemc::ChanTrigger::DiodeConvolution(const Settings *settings1, Anita *anit
 
     if (tempChansPassing[iband]) {
       //Records number of first level triggers on each antenna for a single neutrino
-      globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]++; 
+      // globaltrig1->nchannels_perrx_triggered[anita1->GetRx(ilayer,ifold)]++;
+      globaltrig1->nchannels_perrx_triggered[anita1->GetRxTriggerNumbering(ilayer,ifold)]++;       
     }
   } // end loop over bands
 }
@@ -1051,7 +1059,7 @@ void icemc::ChanTrigger::TriggerPath(const Settings *settings1, Anita *anita1, i
 
 
 
-void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1, int ant, Balloon *bn1)
+void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1, int ant)//}, Balloon *bn1)
 {
   double vhz_rx_rfcm_e[Anita::NFREQ]; // V/Hz after rx, rfcm
   double vhz_rx_rfcm_h[Anita::NFREQ];
@@ -1188,8 +1196,8 @@ void icemc::ChanTrigger::DigitizerPath(const Settings *settings1, Anita *anita1,
 
 
 // void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double volts_rx_rfcm_lab_e_all[48][512], double volts_rx_rfcm_lab_h_all[48][512])
-void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double* volts_rx_rfcm_lab_e_all, double* volts_rx_rfcm_lab_h_all)
-{
+// void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int ilayer, int ifold, double* volts_rx_rfcm_lab_e_all, double* volts_rx_rfcm_lab_h_all)
+ void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anita *anita1, int rx, double* volts_rx_rfcm_lab_e_all, double* volts_rx_rfcm_lab_h_all) {
   // int ant = anita1->GetRxTriggerNumbering(ilayer, ifold);
 
   // now shift right to account for arrival times
@@ -1200,8 +1208,6 @@ void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anit
   //   Tools::ShiftRight(volts_rx_rfcm_lab[0],anita1->NFOUR/2, int(anita1->arrival_times[0][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
   //   Tools::ShiftRight(volts_rx_rfcm_lab[1],anita1->NFOUR/2, int(anita1->arrival_times[1][anita1->GetRx(ilayer,ifold)]/anita1->TIMESTEP));
   // }
-
-  const int rx = anita1->GetRx(ilayer, ifold);
   for (int i=0;i<anita1->NFOUR/2;i++) {
     volts_rx_rfcm_lab_e_all[i] = volts_rx_rfcm_lab[0][i];
     volts_rx_rfcm_lab_h_all[i] = volts_rx_rfcm_lab[1][i];
@@ -1221,12 +1227,12 @@ void icemc::ChanTrigger::TimeShiftAndSignalFluct(const Settings *settings1, Anit
 
 
 
-icemc::ChanTrigger::ChanTrigger() {
-    
+icemc::ChanTrigger::ChanTrigger(Anita* anita1) {
+  InitializeEachBand(anita1);
 }
 
 
-double icemc::ChanTrigger::FindPeak(double *waveform,int n) {
+double icemc::ChanTrigger::FindPeak(const double *waveform,int n) {
     
   // find peak abs(voltage) of this waveform
     

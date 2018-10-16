@@ -93,7 +93,7 @@ TVector3 icemc::ANITA::getPositionRX(Int_t rx) const {
 
 void icemc::ANITA::getLayerFoldFromTriggerRX(int rx, int& ilayer, int& ifold) const {
   int antNum = rx;  
-  // This is NOT how to do things...
+  ///@todo Do something smarter, this is NOT how to do things...
   ilayer = -1;
   ifold = -1;
   for (int ilayerTemp=0 ;ilayerTemp < fSettings->NLAYERS; ilayerTemp++) { // loop over layers on the payload
@@ -113,25 +113,25 @@ void icemc::ANITA::getLayerFoldFromTriggerRX(int rx, int& ilayer, int& ifold) co
 
 
 
-void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const {
-  int antNum = rx;  
-  // This is NOT how to do things...
-  ilayer = -1;
-  ifold = -1;
-  for (int ilayerTemp=0 ;ilayerTemp < fSettings->NLAYERS; ilayerTemp++) { // loop over layers on the payload
-    for (int ifoldTemp=0;ifoldTemp<this->NRX_PHI[ilayerTemp];ifoldTemp++) { // ifold loops over phi
-      Int_t antNum2 = this->GetRx(ilayerTemp, ifoldTemp);
-      if(antNum==antNum2){
-	ilayer = ilayerTemp;
-	ifold = ifoldTemp;
-	break;
-      }
-    }
-    if(ilayer > -1){
-      break;
-    }
-  }
-}
+// void icemc::ANITA::getLayerFoldFromRX(int rx, int& ilayer, int& ifold) const {
+//   int antNum = rx;  
+//   ///@todo Do something smarter, this is NOT how to do things...
+//   ilayer = -1;
+//   ifold = -1;
+//   for (int ilayerTemp=0 ;ilayerTemp < fSettings->NLAYERS; ilayerTemp++) { // loop over layers on the payload
+//     for (int ifoldTemp=0;ifoldTemp < this->NRX_PHI[ilayerTemp];ifoldTemp++) { // ifold loops over phi
+//       Int_t antNum2 = this->GetRx(ilayerTemp, ifoldTemp);
+//       if(antNum==antNum2){
+// 	ilayer = ilayerTemp;
+// 	ifold = ifoldTemp;
+// 	break;
+//       }
+//     }
+//     if(ilayer > -1){
+//       break;
+//     }
+//   }
+// }
 
 
 void icemc::ANITA::initSeaveys(const Settings *settings1, const Anita *anita1) {
@@ -139,8 +139,9 @@ void icemc::ANITA::initSeaveys(const Settings *settings1, const Anita *anita1) {
   for(int rx = 0; rx < getNumRX(); rx++){
     int ilayer = -1;
     int ifold = -1;
-    getLayerFoldFromRX(rx, ilayer, ifold);
-    std::cout << rx << "\t" << ilayer << "\t" << ifold << std::endl;    
+    getLayerFoldFromTriggerRX(rx, ilayer, ifold);
+    std::cout << "Seaveys: rx = " << rx << ", ilayer = " << ilayer << ", ifold =" << ifold << ",  rxTrigger = " << this->GetRxTriggerNumbering(ilayer, ifold) << std::endl;    
+    
 
     TVector3 n_eplane;
     TVector3 n_hplane;
@@ -195,6 +196,7 @@ void icemc::ANITA::initSeaveys(const Settings *settings1, const Anita *anita1) {
 	///@todo Anita needs to be instantiated with these arrays filled!
 	/// currently they are done in "apply settings", this needs to change
 	seaveyPayloadPos = anita1->ANTENNA_POSITION_START[ipol][ilayer][ifold];
+	std::cout << seaveyPayloadPos.Z() << "\t" << seaveyPayloadPos.Phi()*TMath::RadToDeg() << std::endl;
       }
       else {
 	if (settings1->CYLINDRICALSYMMETRY==1){ // for timing code
@@ -221,7 +223,7 @@ void icemc::ANITA::initSeaveys(const Settings *settings1, const Anita *anita1) {
 void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx, int inu){
 
   int ifold, ilayer;
-  getLayerFoldFromRX(rx, ilayer, ifold);
+  getLayerFoldFromTriggerRX(rx, ilayer, ifold);
   
   static bool firstTime = true;
   if(inu == 522 && firstTime){
@@ -242,15 +244,10 @@ void icemc::ANITA::addSignalToRX(const icemc::PropagatingSignal& signal, int rx,
   }
 
   if(rx >= 0 && rx < fSeaveys.size()){
-    // this->GetAntennaOrientation(fSettings,  this,  ilayer,  ifold,
-    // 				fSeaveys.at(rx).fEPlane, fSeaveys.at(rx).fHPlane, fSeaveys.at(rx).fNormal);
-
     // actually we add the signal to the new Seavey class
     fSeaveys.at(rx).addSignal(signal);
   }
 }
-
-
 
 
 
@@ -265,7 +262,7 @@ bool icemc::ANITA::applyTrigger(int inu){
   fVoltsRX.reset();
   int thispasses[Anita::NPOL]={0,0};
 
-  auto globalTrigger = std::unique_ptr<GlobalTrigger>(new GlobalTrigger(fSettings, dynamic_cast<Anita*>(this)));
+  auto globalTrigger = std::make_shared<GlobalTrigger>(fSettings, dynamic_cast<Anita*>(this));
 
   int discones_passing = 0;  // number of discones that pass
   
@@ -288,37 +285,36 @@ bool icemc::ANITA::applyTrigger(int inu){
   // start looping over antennnas.
   // ilayer loops through vertical layers
 
-  if (fSettings->SLAC){
-    icemc::report() << severity::error << "SLAC is no longer supported!" << std::endl;
-    exit(1);
-    // icemc::report().fslac_hitangles << this->sslacpositions[this->islacposition] << "\n";    
-  }
-  
   globalTrigger->volts_rx_rfcm_trigger.assign(16,  std::vector <std::vector <double> >(3,  std::vector <double>(0)));
 
   int loctrig[Anita::NPOL][Anita::NLAYERS_MAX][Anita::NPHI_MAX]; //counting how many pass trigger requirement
   int loctrig_nadironly[Anita::NPOL][Anita::NPHI_MAX]; //counting how many pass trigger requirement
   double thresholdsAnt[48][2][5] = {{{0}}};
+  
+  for (int antNum=0; antNum < getNumRX(); antNum++) { // loop over layers on the payload
+      
+  // for (int ilayer=0; ilayer < fSettings->NLAYERS; ilayer++) { // loop over layers on the payload
+  //   for (int ifold=0;ifold<this->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
+      
 
-  int count_rx = 0;
-  for (int ilayer=0; ilayer < fSettings->NLAYERS; ilayer++) { // loop over layers on the payload
-    for (int ifold=0;ifold<this->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
-
-      ChanTrigger ct;
-      ct.InitializeEachBand(this);
+      ChanTrigger ct(this);
 
       // int antNum = this->GetRxTriggerNumbering(ilayer, ifold);
-      int antNum = this->GetRx(ilayer, ifold);
+      int ilayer, ifold;
+      getLayerFoldFromTriggerRX(antNum, ilayer, ifold);
+      // int antNum = this->GetRx(ilayer, ifold);
       ct.readInSeavey(fSettings,  &fSeaveys.at(antNum), antNum, this);
 
       // this->GetAntennaOrientation(fSettings,  this,  ilayer,  ifold, n_eplane,  n_hplane,  n_normal);
       // ct.ApplyAntennaGain(fSettings, this, fScreenPtrIDontOwn, antNum, n_eplane, n_hplane, n_normal, inu);
 
+      // std::cout << antNum << "\t" << count_rx << std::endl;
+
       ct.TriggerPath(fSettings, this, antNum, this);
-      ct.DigitizerPath(fSettings, this, antNum, this);
-      ct.TimeShiftAndSignalFluct(fSettings, this, ilayer, ifold,
-				 fVoltsRX.rfcm_lab_e_all.at(count_rx).data(),
-				 fVoltsRX.rfcm_lab_h_all.at(count_rx).data());
+      ct.DigitizerPath(fSettings, this, antNum);
+      ct.TimeShiftAndSignalFluct(fSettings, this, antNum,
+				 fVoltsRX.rfcm_lab_e_all.at(antNum).data(),
+				 fVoltsRX.rfcm_lab_h_all.at(antNum).data());
       ct.saveTriggerWaveforms(&justSignal_trig[0][antNum][0], &justSignal_trig[1][antNum][0], &justNoise_trig[0][antNum][0], &justNoise_trig[1][antNum][0]);
       ct.saveDigitizerWaveforms(&justSignal_dig[0][antNum][0], &justSignal_dig[1][antNum][0], &justNoise_dig[0][antNum][0], &justNoise_dig[1][antNum][0]);
 
@@ -343,10 +339,9 @@ bool icemc::ANITA::applyTrigger(int inu){
       
       ct.WhichBandsPass(fSettings, this, globalTrigger.get(), this, ilayer, ifold, thresholdsAnt[antNum]);
 	  
-      count_rx++; // counting antennas that we loop through,  for indexing
-    } //loop through the phi-fold antennas
-  }  //loop through the layers of antennas
-
+  //   } //loop through the phi-fold antennas
+  // }  //loop through the layers of antennas
+    }
 
   int count_pass = 0;
   globalTrigger->PassesTrigger(fSettings, this, discones_passing, 2, fL3trig, fL2trig, fL1trig, fSettings->antennaclump, loctrig, loctrig_nadironly, inu, thispasses);
@@ -360,7 +355,7 @@ bool icemc::ANITA::applyTrigger(int inu){
   // Minimum bias sample: save all events that we could see at the payload
   // Independentely from the fact that they generated an RF trigger
 
-  bool eventPassesTrigger = false;  
+  bool eventPassesTrigger = false;
   if ( (thispasses[0]==1 && this->pol_allowed[0]==1)
        || (thispasses[1]==1 && this->pol_allowed[1]==1)
        || (fSettings->TRIGTYPE==0 && count_pass>=fSettings->NFOLD)

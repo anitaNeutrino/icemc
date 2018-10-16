@@ -245,7 +245,7 @@ namespace icemc {
     // int irx;
     void BoxAverageComplex(double *array,const int n,int navg);
     void BoxAverage(double *array,const int n,int navg);
-    int GetRx(int ilayer, int ifold) const;                                                                           ///< get antenna number based on which layer and position it is
+    // int GetRx(int ilayer, int ifold) const;                                                                           ///< get antenna number based on which layer and position it is
     int GetRxTriggerNumbering(int ilayer, int ifold) const;                                                           ///< get antenna number based on which layer and position it is
 
 
