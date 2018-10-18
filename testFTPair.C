@@ -57,6 +57,18 @@ void testFTPair(){
   icemc::FTPair p(makeDelta(TMath::Nint(maxTime/dt)), dt);
   // p.setDebug();
 
+  // TGraph* gr1 = new TGraph();
+  // *gr1 = p.changeTimeDomain();  
+  // auto& v = p.changeFreqDomain();  
+  // TGraph* gr2 = new TGraph();
+  // *gr2 = p.changeTimeDomain();;
+  // gr1->Draw("al");
+  // gr1->SetLineColor(kGreen);
+  // gr2->SetLineColor(kRed);
+  // gr2->SetLineStyle(5);  
+  // gr2->Draw("lsame");
+  // return;
+
   for(int i=0; i < cols.size(); i++){
     TCanvas* c  = separateCans || i == 0 ? new TCanvas() : nullptr;
 

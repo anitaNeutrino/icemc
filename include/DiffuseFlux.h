@@ -2,6 +2,7 @@
 #define ICEMC_DIFFUSE_H
 
 #include "AbstractSources.h"
+#include "RNG.h"
 
 namespace icemc {
   namespace Source {
@@ -12,7 +13,7 @@ namespace icemc {
      */
     class DiffuseFlux : public DirectionModel, public RNG {
     public:
-      virtual TVector3 pickNeutrinoDirection(const Geoid::Position& interaction, const TVector3& rfToDetector) override;
+      virtual TVector3 pickNeutrinoDirection(const OpticalPath& opticalPath) override;
     };
 
     

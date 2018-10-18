@@ -2,8 +2,10 @@
 #define ICEMC_ENERGY_H
 
 #include <iostream>
+#include "TObject.h"
+#include "TMath.h"
 
-namespace icemc{
+namespace icemc {
 
   /**
    * @class Energy
@@ -28,7 +30,7 @@ namespace icemc{
      * Default constructor, 0 energy
      * 
      */
-    Energy() : feV(0) {}
+    Energy() : eV(0) {}
 
     /** 
      * Useful constructor, represent an energy with given units.
@@ -47,14 +49,14 @@ namespace icemc{
      * @param unit 
      */
     void set(double value, Unit unit){
-      feV = value/to(unit);
+      eV = value/to(unit);
     }
 
     /** 
      * Allow setting to zero with no units
      */
     inline void setZero(){
-      feV = 0;
+      eV = 0;
     }
     
 
@@ -65,14 +67,22 @@ namespace icemc{
      * 
      * @return value of the energy in the desired units
      */
-    double in(Unit unit) const {return feV*to(unit);}    
+    double in(Unit unit) const {return eV*to(unit);}
+
+
+    /** 
+     * Some syntactic sugar for TTree::Draw
+     * 
+     * @return The logarithm (base 10) of the energy
+     */
+    double log10eV() const {return TMath::Log10(eV);}
     
 
     /**
      * Add or subtract energy only with another Energy object
      */
-    Energy& operator+=(const Energy& e){feV += e.feV; return *this;}
-    Energy& operator-=(const Energy& e){feV += e.feV; return *this;}
+    Energy& operator+=(const Energy& e){eV += e.eV; return *this;}
+    Energy& operator-=(const Energy& e){eV += e.eV; return *this;}
     Energy  operator+ (const Energy& e) const {Energy e2 = *this; e2 += e; return e2;}
     Energy  operator- (const Energy& e) const {Energy e2 = *this; e2 -= e; return e2;}
 
@@ -80,27 +90,27 @@ namespace icemc{
     /**
      * Scale energy only by a unitless number
      */
-    Energy& operator*=(double s){feV *= s; return *this;}
-    Energy& operator/=(double s){feV /= s; return *this;}
+    Energy& operator*=(double s){eV *= s; return *this;}
+    Energy& operator/=(double s){eV /= s; return *this;}
     Energy  operator* (double s) const {Energy e; e*=s; return e;}
     Energy  operator/ (double s) const {Energy e; e/=s; return e;}
     /* Or take a ratio of two energies */
-    double  operator/(const Energy& e){return feV/e.feV;}
+    double  operator/(const Energy& e){return eV/e.eV;}
 
     /**
      * Relational operators
      * 
      */
-    bool operator==(const Energy& e) const {return feV == e.feV;}
-    bool operator!=(const Energy& e) const {return feV != e.feV;}    
-    bool operator< (const Energy& e) const {return feV <  e.feV;}
-    bool operator<=(const Energy& e) const {return feV <= e.feV;}    
-    bool operator> (const Energy& e) const {return feV >  e.feV;}
-    bool operator>=(const Energy& e) const {return feV >= e.feV;}    
+    bool operator==(const Energy& e) const {return eV == e.eV;}
+    bool operator!=(const Energy& e) const {return eV != e.eV;}    
+    bool operator< (const Energy& e) const {return eV <  e.eV;}
+    bool operator<=(const Energy& e) const {return eV <= e.eV;}    
+    bool operator> (const Energy& e) const {return eV >  e.eV;}
+    bool operator>=(const Energy& e) const {return eV >= e.eV;}    
 
     
   private:
-    double feV; // internally we store the energy in electron_volts
+    double eV; // internally we store the energy in electron_volts
     /** 
      * Internal function, gets conversion factor from eV to desired unit.
      * 
@@ -122,6 +132,8 @@ namespace icemc{
       default: return 0; ///@todo warn?
       }
     }
+
+    ClassDef(Energy, 1);
   };
 }
 

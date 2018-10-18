@@ -1,9 +1,7 @@
 #ifndef ICEMC_SOURCE_MODEL_H
 #define ICEMC_SOURCE_MODEL_H
 
-#include "Geoid.h"
-#include "TVector3.h"
-#include "RNG.h"
+#include "OpticalPath.h"
 #include "Neutrino.h"
 
 namespace icemc {
@@ -15,7 +13,7 @@ namespace icemc {
      */
     class DirectionModel {
     public:
-      virtual TVector3 pickNeutrinoDirection(const Geoid::Position& interaction, const TVector3& rfToDetector) = 0;
+      virtual TVector3 pickNeutrinoDirection(const OpticalPath& opticalPath) = 0;
     };
 
 

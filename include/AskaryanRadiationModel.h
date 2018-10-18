@@ -32,11 +32,11 @@ namespace icemc {
      * 
      * @param nu is the neutrino which triggered the interaction
      * @param shower contains details of the simulated shower
-     * @param outgoingRfDirection is the direction the RF signal must go to get to the detector
+     * @param opticalPath is the contains direction the RF signal travels way from the interaction
      * 
      * @return the component of the Askaryan signal pointing along outgoingRfDirection
      */
-    PropagatingSignal generate(const Neutrino& nu, const Shower& shower, const TVector3& outgoingRfDirection) const;
+    PropagatingSignal generate(const Neutrino& nu, const Shower& shower, const OpticalPath& opticalPath) const;
 
   private:
     const Settings* fSettings;
@@ -44,7 +44,7 @@ namespace icemc {
     double GetVmMHz1m(Energy pnu, double freq) const;
     FTPair generateOnAxisAt1m(Energy energy) const;
     void taperWaveform(FTPair& waveform/*modified*/, double viewAngleRadians, Energy energy, const Shower& shower) const;
-    void GetSpread(Energy pnu, const Shower& sp, double freq, double& deltheta_em_max, double& deltheta_had_max) const;
+    void GetSpread(Energy pnu, const Shower& sp, double freq, double& coneWidthEm, double& coneWidthHad) const;
     TVector3 getPolarizationVector(const TVector3& rfDir, const TVector3& showerAxis) const;
     
   public:
@@ -236,13 +236,13 @@ namespace icemc {
     template<class T>
     T taperSingleFreq(T amplitude,
 		      double viewangle,
-		      double deltheta_em,
-		      double deltheta_had,
+		      double coneWidthEm,
+		      double coneWidthHad,
 		      double emfrac,
 		      double hadfrac) const {
 
-      auto taper_component = [&](double threshold, double delTheta, double frac){
-			       double rtemp=(viewangle-changle)*(viewangle-changle)/(deltheta_em*deltheta_em);
+      auto taper_component = [&](double threshold, double coneWidth, double frac){
+			       double rtemp = (viewangle-changle)*(viewangle-changle)/(coneWidth*coneWidth);
 			       T amp = 0;
 			       // the power goes like exp(-(theta_v-theta_c)^2/Delta^2)
 			       // so the e-field is the same with a 1/2 in the exponential
@@ -250,7 +250,7 @@ namespace icemc {
 				 if (rtemp<=20) {
 				   // if the viewing angle is less than 20 sigma away from the cerankov angle
 				   // this is the effect of the em width on the signal
-				   amp=amplitude*exp(-rtemp);
+				   amp = amplitude*exp(-rtemp);
 				 }
 				 else{
 				   // if it's more than 20 sigma just set it to zero 
@@ -263,8 +263,9 @@ namespace icemc {
 			       return amp;
 			     };
 
-      T amplitude_em = taper_component(pow(10, -10), deltheta_em,  emfrac);
-      T amplitude_had = taper_component(0,           deltheta_had, hadfrac);
+      // std::cout << emfrac << "\t" << hadfrac << std::endl;
+      T amplitude_em  = taper_component(1e-10, coneWidthEm,  emfrac);
+      T amplitude_had = taper_component(1e-10, coneWidthHad, hadfrac);
 
       // std::cout << __PRETTY_FUNCTION__ << "\t" << amplitude_em << "\t" << amplitude_had << "\t" << std::endl;
       amplitude = sin(viewangle)*(emfrac*amplitude_em + hadfrac*amplitude_had);

@@ -22,10 +22,8 @@
 #include "TH2D.h"
 
 
-icemc::RayTracer::RayTracer(const WorldModel* world, const Geoid::Position& detector) :
-  fLocalCoords(detector),
-  fWorld(world),
-  fBalloonPos(detector)
+icemc::RayTracer::RayTracer(std::shared_ptr<const WorldModel> world) :
+  fWorld(world)
 {
 }
 
@@ -134,7 +132,7 @@ Geoid::Position icemc::RayTracer::getSurfacePosition(const double* params) const
   // so we pick a point shifted by deltaX, and deltaY from the start position
   // Geoid::Position surfacePos = fInteractionPos + params[0]*fLocalX + params[1]*fLocalY;
   TVector3 localPos(params[0], params[1], 0);
-  Geoid::Position surfacePos = fLocalCoords.localPositionToGlobal(localPos);
+  Geoid::Position surfacePos = fLocalCoords->localPositionToGlobal(localPos);
   double surfaceAlt = fWorld->SurfaceAboveGeoid(surfacePos);  
   surfacePos.SetAltitude(surfaceAlt); ///@todo Is this efficient yet?
 
@@ -152,30 +150,31 @@ double icemc::RayTracer::evalPath(const double* params) const {
   const Geoid::Position surfacePos = getSurfacePosition(params);
 
   // Gives us this initial RF direction...
-  const TVector3 rfDir = (surfacePos - fBalloonPos).Unit();
+  const TVector3 rfDir = (surfacePos - fDetectorPos).Unit();
 
-  OpticalPath::Step s1; // from the surface to the balloon
-  s1.direction = fBalloonPos - surfacePos;
-  s1.n = AskaryanRadiationModel::N_AIR;
-  s1.attenuationLength = DBL_MAX; //@todo is this sensible?  
+  OpticalPath::Step s2; // from the surface to the balloon
+  s2.direction = fDetectorPos - surfacePos;
+  s2.n = AskaryanRadiationModel::N_AIR;
+  s2.attenuationLength = DBL_MAX; //@todo is this sensible? 
 
-  s1.boundaryNormal = fWorld->GetSurfaceNormal(surfacePos);
+  s2.boundaryNormal = fWorld->GetSurfaceNormal(surfacePos);
+  s2.start = surfacePos;
   
   ///@todo get these refractive index numbers from the world model...
-  const TVector3 refractedRfDir = refractiveBoundary(rfDir, s1.boundaryNormal, AskaryanRadiationModel::N_AIR, AskaryanRadiationModel::NICE, fDebug);
+  const TVector3 refractedRfDir = refractiveBoundary(rfDir, s2.boundaryNormal, AskaryanRadiationModel::N_AIR, AskaryanRadiationModel::NICE, fDebug);
   const double distRemaining = (surfacePos - fInteractionPos).Mag();
 
   const TVector3 endPoint = surfacePos + refractedRfDir*distRemaining;
 
-  OpticalPath::Step s2; // from the source (hopefully the end point) to the surface
-  s2.direction = surfacePos - endPoint;
-  s2.n = AskaryanRadiationModel::NICE;
+  OpticalPath::Step s1; // from the source (hopefully the end point) to the surface
+  s1.direction = surfacePos - endPoint;
+  s1.n = AskaryanRadiationModel::NICE;
   const double attenLengthIceMeters = 700; ///@todo Get this number from the world model
-  s2.attenuationLength = attenLengthIceMeters;
+  s1.attenuationLength = attenLengthIceMeters;
   // order matters, think about this!
-  s2.boundaryNormal = s1.boundaryNormal; ///@todo think about this...
-
-
+  s1.boundaryNormal = s2.boundaryNormal; ///@todo think about this...
+  s1.start = endPoint;
+  
   const TVector3 delta = (endPoint - fInteractionPos);
   double residual = delta.Mag();
 
@@ -184,9 +183,9 @@ double icemc::RayTracer::evalPath(const double* params) const {
   // but for the result we want from interaction to detector, so s2 goes first
   fOpticalPath.clear();
 
-  fOpticalPath.steps.emplace_back(s2);
   fOpticalPath.steps.emplace_back(s1);
-  fOpticalPath.residual = residual;
+  fOpticalPath.steps.emplace_back(s2);
+  fOpticalPath.residual = residual;  
 
   if(fDebug && fDoingMinimization){
     if(!fMinimizerPath){
@@ -213,11 +212,12 @@ double icemc::RayTracer::evalPath(const double* params) const {
 
 
 
-icemc::OpticalPath icemc::RayTracer::findPathToDetector(const Geoid::Position&rfStart, bool debug){
+icemc::OpticalPath icemc::RayTracer::findPath(const Geoid::Position&rfStart, const Geoid::Position& rfEnd, bool debug){
   ///@todo add collision check to best fit path
-  
+  fDetectorPos = rfEnd;
+  fLocalCoords = std::make_shared<LocalCoordinateSystem>(fDetectorPos);
   fInteractionPos = rfStart;
-
+  
   // here we setup a new local coordinate system for the fitter to do translations in
   // The idea is to fit along the surface in terms of dx and dy
 
@@ -280,13 +280,13 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
     
   TFile* fTest = new TFile(fileName, "recreate");
  
-  const TVector3 toInteraction = fLocalCoords.globalPositionToLocal(fInteractionPos);
-  const TVector3 toSurface = fLocalCoords.globalPositionToLocal(fSurfacePos);
-  const TVector3 surfPlusRef = fLocalCoords.globalTranslationToLocal(fRefractedRfDir) + toSurface;
-  const TVector3 surfPlusNorm = 1000*fLocalCoords.globalTranslationToLocal(fSurfaceNormal) + toSurface;
-  std::cout << "The dot product is " << fSurfaceNormal.Unit().Dot((fSurfacePos - fBalloonPos).Unit()) << std::endl;
+  const TVector3 toInteraction = fLocalCoords->globalPositionToLocal(fInteractionPos);
+  const TVector3 toSurface = fLocalCoords->globalPositionToLocal(fSurfacePos);
+  const TVector3 surfPlusRef = fLocalCoords->globalTranslationToLocal(fRefractedRfDir) + toSurface;
+  const TVector3 surfPlusNorm = 1000*fLocalCoords->globalTranslationToLocal(fSurfaceNormal) + toSurface;
+  std::cout << "The dot product is " << fSurfaceNormal.Unit().Dot((fSurfacePos - fDetectorPos).Unit()) << std::endl;
   // std::cout << toSurface.Unit() << "\t" << toLocal(fRefractedRfDir, false) << std::endl;    
-  const TVector3 toEndPoint = fLocalCoords.globalPositionToLocal(fEndPoint);
+  const TVector3 toEndPoint = fLocalCoords->globalPositionToLocal(fEndPoint);
 
   TGraph* grInteractionTop = new TGraph();
   grInteractionTop->SetPoint(grInteractionTop->GetN(), toInteraction.X(), toInteraction.Y());
@@ -347,7 +347,7 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
   for(int d=-nExtra; d < nPoints+nExtra; d++){
     const std::array<double, 2> params {deltaX*d, 0};
     const TVector3 v = getSurfacePosition(params.data());
-    const TVector3 vl = fLocalCoords.globalPositionToLocal(v);
+    const TVector3 vl = fLocalCoords->globalPositionToLocal(v);
     grSurface->SetPoint(grSurface->GetN(), vl.X(), vl.Z());
   }
   grSurface->Write();    

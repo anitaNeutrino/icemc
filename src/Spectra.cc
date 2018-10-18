@@ -27,10 +27,10 @@ icemc::Energy icemc::Source::Spectra::pickNeutrinoEnergy() {
 icemc::Source::Spectra::Spectra(const Settings* settings) : fSettings(settings){
   
   EXPONENT=fSettings->EXPONENT;
-  E_bin = 12;
-
-  double Emuons[E_bin]; // E dN/dE/dA/dt for neutrinos that are produced as muon neutrinos or muon antineutrinos.
-  double Eelectrons[E_bin];// E dN/dE/dA/dt for neutrinos that are produced as electron neutrinos or muon antineutrinos.
+  int E_bin = 12;
+  resizeFluxVectors(E_bin);
+  std::vector<double> Emuons(E_bin, 0); // E dN/dE/dA/dt for neutrinos that are produced as muon neutrinos or muon antineutrinos.
+  std::vector<double> Eelectrons(E_bin, 0);// E dN/dE/dA/dt for neutrinos that are produced as electron neutrinos or muon antineutrinos.
   
   for (int i=0;i<E_bin;i++) {
     const double EMin = 18.0;
@@ -45,6 +45,7 @@ icemc::Source::Spectra::Spectra(const Settings* settings) : fSettings(settings){
   if (EXPONENT==1)  // dNdEdAdt ~ E^-1
     {
       E_bin = 12;
+      resizeFluxVectors(E_bin);
       for (int i=0;i<E_bin;i++) {   // set energy, EdNdEdAdt and E2dNdEdAdt
 	energy[i] = 16.+((double)i)/2.;   // in log, in eV
 	EdNdEdAdt[i] = 0.;    // in log
@@ -55,6 +56,7 @@ icemc::Source::Spectra::Spectra(const Settings* settings) : fSettings(settings){
   else if (EXPONENT==2) // dNdEdAdt ~ E^-2
     {
       E_bin = 12;
+      resizeFluxVectors(E_bin);      
       for (int i=0;i<E_bin;i++) {   // set energy, EdNdEdAdt and E2dNdEdAdt
 	energy[i] = 16.+((double)i)/2.;   // in log, in eV
 	E2dNdEdAdt[i] = 0.;    // in log, in GeV
@@ -65,6 +67,7 @@ icemc::Source::Spectra::Spectra(const Settings* settings) : fSettings(settings){
   else if (EXPONENT==3) // dNdEdAdt ~ E^-3
     {
       E_bin = 12;
+      resizeFluxVectors(E_bin);      
       for (int i=0;i<E_bin;i++) {   // set energy, EdNdEdAdt and E2dNdEdAdt
 	energy[i] = 16.+((double)i)/2.;   // in log, in eV
 	E2dNdEdAdt[i] = -(energy[i] - 9.);    // in log, in GeV
@@ -75,6 +78,7 @@ icemc::Source::Spectra::Spectra(const Settings* settings) : fSettings(settings){
   else if (EXPONENT==4) // dNdEdAdt ~ E^-4
     {
       E_bin = 12;
+      resizeFluxVectors(E_bin);      
       for (int i=0;i<E_bin;i++) {   // set energy, EdNdEdAdt and E2dNdEdAdt
 	energy[i] = 16.+((double)i)/2.;   // in log, in eV
 	E2dNdEdAdt[i] = -2. * (energy[i] - 9.);    // in log, in GeV
@@ -85,7 +89,7 @@ icemc::Source::Spectra::Spectra(const Settings* settings) : fSettings(settings){
   else if (EXPONENT==30) // ESS baseline model. Used to be EXPONENT "0"
     {
       E_bin = 9;
-
+      resizeFluxVectors(E_bin);
       // electron component of Figure 4 of ES&S
       // astro-ph/0101216
       Eelectrons[0]=-17.2; // 16.
@@ -127,6 +131,7 @@ icemc::Source::Spectra::Spectra(const Settings* settings) : fSettings(settings){
   else if (EXPONENT==31) // ESS-cosmological constant. Use Nu_el : Nu_mu ratio. used to be EXPONENT "5"
     {
       E_bin = 9;
+      resizeFluxVectors(E_bin);      
       double emuratio[E_bin];
 
       // electron component of Figure 4 of ES&S
@@ -177,12 +182,12 @@ icemc::Source::Spectra::Spectra(const Settings* settings) : fSettings(settings){
       Emuons[10]=-30.; // 21.0 punt
       Emuons[11]=-30.; // 21.5 punt
     
-    
       for(int i=0;i<E_bin;i++) {
 	Eelectrons[i]=Emuons[i]*emuratio[i];
 	std::cout << "Eelectrons, Emuons are " << Eelectrons[i] << " " << Emuons[i] << "\n";
       }
   
+      resizeFluxVectors(E_bin);    
       for (int i=0;i<E_bin;i++) {
 	energy[i] = 16.+((double)i)/2.;   // in log, in eV
 	EdNdEdAdt[i]=log10( pow(10.,Eelectrons[i]) + pow(10.,Emuons[i]) );  // in log.
@@ -340,13 +345,14 @@ icemc::Source::Spectra::Spectra(const Settings* settings) : fSettings(settings){
     //      E2dNdEdAdt[i]=log10(EdNdEdAdt[i])+energy[i]-9.;
   }
 
-  gEdNdEdAdt = new TGraph(E_bin, energy, EdNdEdAdt);
-  gE2dNdEdAdt = new TGraph(E_bin, energy, E2dNdEdAdt);
+  gEdNdEdAdt = new TGraph(energy.size(), energy.data(), EdNdEdAdt.data());
+  gE2dNdEdAdt = new TGraph(energy.size(), energy.data(), E2dNdEdAdt.data());
 
   sEdNdEdAdt = new TSpline3("sEdNdEdAdt", gEdNdEdAdt);
   sE2dNdEdAdt = new TSpline3("sE2dNdEdAdt", gE2dNdEdAdt);
 
-  maxflux = Tools::dMax(EdNdEdAdt,E_bin);
+  maxflux = *std::max_element(EdNdEdAdt.begin(), EdNdEdAdt.end());
+
 }
 
 
@@ -355,8 +361,9 @@ icemc::Energy icemc::Source::Spectra::GetNuEnergy() {
   double thisflux=2.; // initialise higher than max
   double max=1.;
   int energybin=0; // arbitrary initialisation
-  double maxenergy=Tools::dMax(energy,E_bin);
-  double minenergy=Tools::dMin(energy,E_bin);
+  double maxenergy = *std::max_element(energy.begin(),  energy.end()); //Tools::dMax(energy,E_bin);
+  double minenergy = *std::min_element(energy.begin(),  energy.end()); //Tools::dMin(energy,E_bin);
+  int E_bin = energy.size();
   // this uses the dartboard approach
   //cout << "minenergy, maxenergy are " << minenergy << " " << maxenergy << "\n";
   while(thisflux>max) {
@@ -377,6 +384,7 @@ icemc::Energy icemc::Source::Spectra::GetNuEnergy() {
 
 
 void icemc::Source::Spectra::GetCDF(){//set up CDF and inverse CDF;
+  int E_bin = energy.size();
   std::cout<<"in CDF " << EXPONENT << "\t" << E_bin << std::endl;;
   for(auto e :  energy){
     std::cout << e << ",  ";
@@ -397,11 +405,11 @@ void icemc::Source::Spectra::GetCDF(){//set up CDF and inverse CDF;
   double E_tmp=0.;
   double integral=0.;
 
-  TGraph *hEdNdE = new TGraph(E_bin,energy,EdNdEdAdt);
+  TGraph hEdNdE(E_bin,energy.data(),EdNdEdAdt.data());
   //cout<<"E_min, Max, n are "<<E_min<<" "<<E_max<<" "<<n<<"\n";
   for(int i=0;i<n;i++){
     E_tmp = E_min+i*step_size;
-    y_val=hEdNdE->Eval(E_tmp,0,"s");//get interpolated value
+    y_val=hEdNdE.Eval(E_tmp,0,"s");//get interpolated value
     
     integral +=y_val*step_size;//integrate in log space
     
@@ -450,7 +458,8 @@ inline void icemc::Source::Spectra::GetFlux(std::string filename)
   influx >> NLINES;   // Read how much lines in the file.
   std::cout<<"We are using "<<filename.c_str()<<" as the flux data."<<std::endl;
   std::cout<<"total lines in the file are "<<NLINES<<std::endl;
-  E_bin = NLINES;
+  int E_bin = NLINES;
+  resizeFluxVectors(E_bin);
     
   //    double flux[NLINES];//E2dNdE GeV cm^-2 s^-1 sr^-1
     
@@ -487,23 +496,24 @@ TSpline3 *icemc::Source::Spectra::GetSE2dNdEdAdt() {
 }
 
 
-double *icemc::Source::Spectra::Getenergy() {
-  return energy;
-}
+// double *icemc::Source::Spectra::Getenergy() {
+//   return energy;
+// }
 
 
-double *icemc::Source::Spectra::GetEdNdEdAdt() {
-  return EdNdEdAdt;
-}
+// double *icemc::Source::Spectra::GetEdNdEdAdt() {
+//   return EdNdEdAdt;
+// }
 
 
-double *icemc::Source::Spectra::GetE2dNdEdAdt() {
-  return E2dNdEdAdt;
-}
+// double *icemc::Source::Spectra::GetE2dNdEdAdt() {
+//   return E2dNdEdAdt;
+// }
 
 
 double icemc::Source::Spectra::GetEdNdEdAdt(double E_val) {
   double tmp_Get;
+  int E_bin = energy.size();
   if (E_val < energy[0]) {
     std::cout<<"Energy value is smaller than the energy boundary!\n";
     std::cout<<"Energy value is replaced to minimum value of energy bound : "<<energy[0]<<"\n";
@@ -523,6 +533,7 @@ double icemc::Source::Spectra::GetEdNdEdAdt(double E_val) {
 
 double icemc::Source::Spectra::GetE2dNdEdAdt(double E_val) {
   double tmp_Get;
+  int E_bin = energy.size();
   if (E_val < energy[0]) {
     std::cout<<"Energy value is smaller than the energy boundary!\n";
     std::cout<<"Energy value is replaced to minimum value of energy bound : "<<energy[0]<<"\n";
@@ -545,9 +556,9 @@ double icemc::Source::Spectra::Getmaxflux() {
 }
 
 
-int icemc::Source::Spectra::GetE_bin() {
-  return E_bin;
-}
+// int icemc::Source::Spectra::GetE_bin() {
+//   return E_bin;
+// }
 
 
 int icemc::Source::Spectra::IsSpectrum() {

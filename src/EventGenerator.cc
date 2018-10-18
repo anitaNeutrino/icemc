@@ -28,7 +28,7 @@
 #include "DiffuseFlux.h"
 #include "RNG.h"
 #include "TRandom3.h" ///@todo remove when gRandom is excized
-
+#include "MonoEnergetic.h"
 #include <string>
 #include <sstream>
 
@@ -64,6 +64,21 @@ void icemc::EventGenerator::interrupt_signal_handler(int sig){
 icemc::EventGenerator::EventGenerator(const Settings* settings) :  
   fSettings(settings)
 {
+  initialize();
+}
+
+
+void icemc::EventGenerator::initialize(){
+
+  ///@todo can the details of this be hidden?
+  if(fSettings->EXPONENT > 10 && fSettings->EXPONENT < 10){
+    fSourceEnergyModel = std::make_shared<Source::MonoEnergetic>(1e20*Energy::Unit::eV);
+  }
+  else{
+    fSourceEnergyModel = std::make_shared<Source::Spectra>(fSettings);
+  }
+
+  fSourceDirectionModel = std::make_shared<Source::DiffuseFlux>();
 }
 
 
@@ -74,6 +89,8 @@ icemc::EventGenerator::EventGenerator(const Settings* settings) :
 icemc::EventGenerator::~EventGenerator()
 {
 
+  
+  
 }
 
 
@@ -99,10 +116,9 @@ void icemc::EventGenerator::generate(Detector& detector){
   
   gRandom->SetSeed(fSettings->SEED); // settings seed is now updated with run_no to uniquify it elsewhere
 
-  Source::Spectra nuSpectra(fSettings);
-  NeutrinoFactory nuFactory(fSettings);
-  Source::DiffuseFlux directionModel;
-
+  NeutrinoFactory nuFactory(fSettings,  fSourceEnergyModel, fSourceDirectionModel);
+  RayTracer rayTracer(antarctica);
+  
   /**
    * Main loop over generated neutrinos
    */
@@ -121,43 +137,30 @@ void icemc::EventGenerator::generate(Detector& detector){
     RNG::newSeeds(run, eventNumber); // updates all RNG seeds
     gRandom->SetSeed(eventNumber+6e7);
     
-    double eventTime = pickUniform(detector.getStartTime(), detector.getEndTime()); 
-    Geoid::Position detectorPos = detector.getPosition(eventTime);
-    Geoid::Position interactionPos = antarctica->pickInteractionPosition(detectorPos);
+    fEventTime = pickUniform(detector.getStartTime(), detector.getEndTime()); 
+    fDetectorPos = detector.getPosition(fEventTime);
+    Geoid::Position interactionPos = antarctica->pickInteractionPosition(fDetectorPos);
 
-    RayTracer rayTracer(antarctica.get(), detectorPos);
-    OpticalPath opticalPath = rayTracer.findPathToDetector(interactionPos);
+    OpticalPath opticalPath = rayTracer.findPath(fDetectorPos, interactionPos);
     
     if(opticalPath.residual > 1){
       ///@todo better interface for no good solution?
       // std::cout << "bad" << std::endl;
       // no solution was found withing the fitter tolerance
-      ///@todo Fill some tree indicating this!
+      ///@todo Fill some tree indicating this!      
+      ro.allTree.Fill();
       continue;
     }
-    else{
-      // std::cout << "good" << std::endl;
-    }
     
-    // if we get here, then there's a ray tracing solution
-    // to get from our interaction point to the payload
-    // now we have that, we can calculate the neutrino path
-
-    const TVector3& rfDirFromInteraction = opticalPath.steps.at(0).direction;
-    TVector3 v = directionModel.pickNeutrinoDirection(interactionPos, rfDirFromInteraction);
+    fNeutrino = nuFactory.makeNeutrino(opticalPath);
     
-    // make a neutrino, we've picked energy, flavor, interaction current
-    Neutrino nu = nuFactory.makeNeutrino();
-
-    nu.path.direction = v.Unit();
-    
-    Shower shower = showerModel.generate(nu);
-    PropagatingSignal signal = askaryanModel.generate(nu, shower, rfDirFromInteraction);
+    fShower = showerModel.generate(fNeutrino);
+    PropagatingSignal signal = askaryanModel.generate(fNeutrino, fShower, opticalPath);
     signal.propagate(opticalPath);
     
     ///@todo put this in some useful function tucked away somewhere...
     double tofDetector = opticalPath.steps.back().distance()/constants::CLIGHT;
-    Geoid::Position rfExit = detectorPos - opticalPath.steps.back().direction;
+    Geoid::Position rfExit = fDetectorPos - opticalPath.steps.back().direction;
 
     std::vector<double> delays(detector.getNumRX());
     for(int rx = 0; rx < detector.getNumRX(); rx++){
@@ -173,12 +176,9 @@ void icemc::EventGenerator::generate(Detector& detector){
     bool triggered =  detector.applyTrigger();
 
     if(triggered){
+      ro.passTree.Fill();
       std::cout << inu << "\tPASSED!" << std::endl;
     }
-    // else{
-    //   std::cout << "FAILED!" << std::endl;
-    // }
-
   }
   signal(SIGINT, SIG_DFL); /// unset signal handler
 }

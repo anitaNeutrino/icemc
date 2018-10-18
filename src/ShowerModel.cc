@@ -295,36 +295,27 @@ icemc::Shower icemc::ShowerModel::GetEMFrac(Neutrino::Flavor nuflavor,
 					    Neutrino::Interaction::Current current,
 					    double y,
 					    Energy pnu) {
-  // int taumodes1) {
-
-
   Shower s;
   s.pnu = pnu;
 
-  // if (current==Neutrino::Interaction::Current::Charged){
-  //   plepton=(1.-y)*pnu;
-  // }
-  // else{
-  //   plepton.setZero();
-  // }
-
-
-  const double negligible = 1e-10;
+  const double negligible = 1e-10; ///@todo make a constant?
   if (nuflavor==Neutrino::Flavor::e && current==Neutrino::Interaction::Current::Charged) {
-    s.emFrac = 1.-y;
+    s.emFrac = 1 - y; // if it turns into an electron, it will get stopped quickly and all the energy ends up in the shower
     s.hadFrac = y;
   }
   else if(nuflavor==Neutrino::Flavor::mu && current==Neutrino::Interaction::Current::Charged) {
-    s.emFrac = negligible;
+    s.emFrac = negligible; // if it turns into a muon, it lives for a long time, and goes much further longer than the shower size?
     s.hadFrac = y;
   }
   else if(nuflavor==Neutrino::Flavor::tau && current==Neutrino::Interaction::Current::Charged) {
+    ///@todo model taus better
     // behaves like a muon
+
     // if(taumodes1 ==1){//taumodes==1; tau created somewhere in rock and decays at posnu.
     //   this->pickEMFracDB(s.emFrac,s.hadFrac);
     // }
     // else if (taumodes1 == 0){
-    s.emFrac=negligible;
+    s.emFrac=negligible; //?
     s.hadFrac=y;
     // }
   }
@@ -370,7 +361,7 @@ icemc::Shower icemc::ShowerModel::GetEMFrac(Neutrino::Flavor nuflavor,
   // if (nuflavor==Neutrino::Flavor::mu && current==Neutrino::Interaction::Current::Charged && s.nInteractions==0){
   //   icemc::report() << severity::warning << "Look at this one.  inu is " << inu << "\n";
   // }  
-
+  
   if (s.sumFrac()>1.00001) {
     icemc::report() << severity::error << "emFrac,hadfrac=" << s.emFrac << "," << s.hadFrac << ": sum = " << s.sumFrac() << "\n";
   }

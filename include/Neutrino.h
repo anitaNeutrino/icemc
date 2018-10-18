@@ -5,6 +5,7 @@
 
 #include "Geoid.h"
 #include "Energy.h"
+#include "TObject.h"
 
 namespace icemc {
 
@@ -53,6 +54,7 @@ namespace icemc {
       double length;
       Current current;
       double y;
+      ClassDef(Interaction, 1);
     };
 
     class Path {
@@ -60,7 +62,9 @@ namespace icemc {
       TVector3 direction;
       Geoid::Position entry;
       Geoid::Position exit;
-      double weight;      
+      double weight;
+
+      ClassDef(Path, 1);      
     };
     
     Energy energy;
@@ -68,6 +72,7 @@ namespace icemc {
     L leptonNumber = L::Matter;
     Interaction interaction;
     Path path;
+    ClassDef(Neutrino, 1);    
   };
 }
 

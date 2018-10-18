@@ -1,5 +1,5 @@
-#ifndef MONOENERGETIC_H
-#define MONOENERGETIC_H
+#ifndef ICEMC_MONOENERGETIC_H
+#define ICEMC_MONOENERGETIC_H
 
 #include "AbstractSources.h"
 
@@ -13,7 +13,8 @@ namespace icemc {
 
     class MonoEnergetic : public EnergyModel {
     public:
-      MonoEnergetic(double energy, Energy::Unit unit) : fEnergy(energy, unit) {;}				     
+      MonoEnergetic(Energy energy) : fEnergy(energy) {;}
+      MonoEnergetic(double energy, Energy::Unit unit) : fEnergy(energy, unit) {;}      
       virtual Energy pickNeutrinoEnergy() override {return fEnergy;}
     private:
       const Energy fEnergy;

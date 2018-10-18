@@ -25,9 +25,9 @@ namespace icemc {
   class RayTracer {
 
   public:
-    RayTracer(const WorldModel* world, const Geoid::Position& detector);
+    RayTracer(std::shared_ptr<const WorldModel> world);
     virtual ~RayTracer();
-    OpticalPath findPathToDetector(const Geoid::Position &interaction, bool debug = false);
+    OpticalPath findPath(const Geoid::Position &interaction, const Geoid::Position& detector, bool debug = false);
 
     static TVector3 refractiveBoundary(const TVector3& incoming, const TVector3& surfaceNormal, double n_incoming, double n_outgoing, bool debug=false);
     // static TVector3 refractiveBoundaryPol(const TVector3& incoming, const TVector3& surfaceNormal, double n_incoming, double n_outgoing);
@@ -37,10 +37,11 @@ namespace icemc {
     }
 
   private:
-    const LocalCoordinateSystem fLocalCoords;
-    const WorldModel* fWorld;
+    std::shared_ptr<const WorldModel> fWorld;
 
-    Geoid::Position fBalloonPos;
+    Geoid::Position fDetectorPos;
+    std::shared_ptr<LocalCoordinateSystem> fLocalCoords = nullptr;
+    
     Geoid::Position fInteractionPos;
 
     mutable TVector3 fSurfaceNormal;

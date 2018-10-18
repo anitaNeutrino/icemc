@@ -76,7 +76,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   Settings* settings = const_cast<Settings*>(settings2);
 
   // first the file(s)
-  TString fileName = fOutputDir + TString::Format("/icefinal%d.root", fRun);
+  TString fileName = fOutputDir + TString::Format("/IceMC_%d.root", fRun);
   fIceFinal = new TFile(fileName, "RECREATE", "ice");
 
   TNamed* ss = settings2->makeRootSaveableSettings();
@@ -87,8 +87,16 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   // initTree(&allTree, "allTree", "allTree", fIceFinal);
   // allTree.Branch("genNu", &uhen->fGenNu);
 
-  // initTree(&passTree, "passTree", "passTree", fIceFinal);
-  // passTree.Branch("passNu", &uhen->fPassNu);
+  
+
+  initTree(&passTree, "passTree", "passTree", fIceFinal);
+  passTree.Branch("run", &uhen->fRun);
+  passTree.Branch("eventNumber", &uhen->fEventNumber);
+  passTree.Branch("neutrino", &uhen->fNeutrino);
+  passTree.Branch("shower", &uhen->fShower);
+
+
+  
 
   // // histograms
   // initHist(&ref_int_coord, "ref_int_coord", "", 600, -3000, 3000, 500, -2500, 2500, fIceFinal);

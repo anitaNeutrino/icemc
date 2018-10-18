@@ -4,14 +4,13 @@
 #include "TRandom3.h"
 #include "Geoid.h"
 #include "Constants.h"
-// #include "anita.hh"
 #include "FTPair.h"
 #include "Settings.h"
 
 const double icemc::AskaryanRadiationModel::N_AIR(1.);                 // index of refraction of air
 const double icemc::AskaryanRadiationModel::NICE(1.79);                // index of refraction of ice
 const double icemc::AskaryanRadiationModel::CHANGLE_ICE(acos(1/NICE)); // index of refraction of ice
-const double icemc::AskaryanRadiationModel::NSALT(2.45);               // index of refracton for salt
+const double icemc::AskaryanRadiationModel::NSALT(2.45);               // index of refraction for salt
 const double icemc::AskaryanRadiationModel::RHOSALT(2050.);            // density of salt (kg/m**3)
 const double icemc::AskaryanRadiationModel::RHOICE(917);               // density of ice (kg/m**3)
 const double icemc::AskaryanRadiationModel::RHOH20(1000);              // density of water (kg/m**3)
@@ -203,16 +202,18 @@ void icemc::AskaryanRadiationModel::taperWaveform(FTPair& waveform /*modified*/,
   // deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
   // ... again a 1/f scaling...
   const double referenceFreqHz = fFreqs_Hz.at(1);
-  double deltheta_em_ref, deltheta_had_ref; // these are the 
-  GetSpread(energy, shower, referenceFreqHz, deltheta_em_ref, deltheta_had_ref);
+  double coneWidthEm_ref, coneWidthHad_ref; // these are the 
+  GetSpread(energy, shower, referenceFreqHz, coneWidthEm_ref, coneWidthHad_ref);
+
+  std::cout << __PRETTY_FUNCTION__ << "\t" << energy << "\t" << coneWidthEm_ref <<  "\t" << coneWidthHad_ref << std::endl;
 
   auto& vmmhz = waveform.changeFreqDomain();
   for(int k=1; k < fFreqs_Hz.size(); k++){ // skip 0th bin as we will have 0 power there
     double scale_factor = referenceFreqHz/fFreqs_Hz.at(k);
-    double delThetaEm  = scale_factor*deltheta_em_ref;
-    double delThetaHad = scale_factor*deltheta_had_ref;
+    double coneWidthEm  = scale_factor*coneWidthEm_ref;
+    double coneWidthHad = scale_factor*coneWidthHad_ref;
 
-    vmmhz.at(k) = taperSingleFreq(vmmhz.at(k), viewAngleRadians, delThetaEm, delThetaHad, shower.emFrac, shower.hadFrac);
+    vmmhz.at(k) = taperSingleFreq(vmmhz.at(k), viewAngleRadians, coneWidthEm, coneWidthHad, shower.emFrac, shower.hadFrac);
   }
 }
 
@@ -227,24 +228,23 @@ TVector3 icemc::AskaryanRadiationModel::getPolarizationVector(const TVector3& rf
 
 
 
-icemc::PropagatingSignal icemc::AskaryanRadiationModel::generate(const Neutrino& nu, const Shower& shower, const TVector3& directionOfPropagationToDetector) const {
+icemc::PropagatingSignal icemc::AskaryanRadiationModel::generate(const Neutrino& nu, const Shower& shower, const OpticalPath& opticalPath) const {
 
   // first generate the signal you would see viewing on axis at 1m from the interaction
   FTPair waveform = generateOnAxisAt1m(nu.energy);
 
-  std::cout << __PRETTY_FUNCTION__ << " maxVolts = " << waveform.timeDomainMax() << std::endl;
+  // std::cout << __PRETTY_FUNCTION__ << " max E field = " << waveform.timeDomainMax() << std::endl;
   
   // now we taper since we won't view this signal on axis, we'll view at at a view angle, theta
-  // const double cosTheta = shower.axis.Dot(directionOfPropagationToDetector);
-
-  ///@todo THIS IS A TEST CONDITION AND MUST BE REMOVED
-  const double theta = changle; //TMath::ACos(cosTheta);  
+  const double theta = shower.axis.Angle(opticalPath.steps.at(0).direction.Unit());
   taperWaveform(waveform /*modified*/, theta, nu.energy, shower);
 
-  std::cout << __PRETTY_FUNCTION__ << " maxVolts2 = " << waveform.timeDomainMax() << std::endl;
+  // std::cout << __PRETTY_FUNCTION__ << " max E Field2 = " << waveform.timeDomainMax() << std::endl;
+
+  const TVector3 rfDirection = opticalPath.steps.at(0).direction.Unit();
   
-  TVector3 polarizationVector = getPolarizationVector(directionOfPropagationToDetector, shower.axis);
-  PropagatingSignal signal(waveform, directionOfPropagationToDetector, polarizationVector);
+  TVector3 polarizationVector = getPolarizationVector(rfDirection, shower.axis);
+  PropagatingSignal signal(waveform, rfDirection, polarizationVector);
   
   return signal;
 }
@@ -299,10 +299,10 @@ int icemc::AskaryanRadiationModel::GetLPM() const {
 
 
 void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
-				       const Shower& shower,
-				       double freq,
-				       double& deltheta_em_max,
-				       double& deltheta_had_max) const {
+					      const Shower& shower,
+					      double freq,
+					      double& coneWidthEm,
+					      double& coneWidthHad) const {
 
   /**
    * Ultimately, it seems this follows a some_constant/freq dependence
@@ -310,8 +310,8 @@ void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
    * but for now I'll just set these to as high as possible. 
    * @todo this may need to be revised.
    */
-  deltheta_em_max = DBL_MAX;
-  deltheta_had_max = DBL_MAX;
+  coneWidthEm = DBL_MAX;
+  coneWidthHad = DBL_MAX;
   if(freq <= 0){
     return;
   }
@@ -337,12 +337,12 @@ void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
   // this shower length is chosen somewhat arbitrarily, but is 
   // approximately the length of a shower in ice.
   // Then, the coefficient out front of the equations for
-  // deltheta_em_max and deltheta_had_max are set so that
+  // coneWidthEm and coneWidthHad are set so that
   // for ice, we get the equations in astro-ph/9706064
   // with the coefficient in front being 2.7 degrees.
   // I wanted to make the dependence on the shower length
   // and index of refraction explicit, so I pulled those variables
-  // out of the equations for deltheta_em_max and deltheta_had_max.
+  // out of the equations for coneWidthEm and coneWidthHad.
 
   Energy em_eshower;  // em shower energy
   Energy had_eshower; // had shower energy
@@ -375,7 +375,7 @@ void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
     // out the dependence on index of refraction and shower length. 
     // note that 12.32/sqrt(pow(n_depth,2)-1)*RADDEG/showerlength=2.7 degrees.
     // remember that Jaime has a factor of ln2 in the exponential here which we'll have to correct for further down
-    deltheta_em_max=12.32/sqrt(pow(N_DEPTH,2)-1)*(nu0/freq)*constants::RADDEG/showerlength;
+    coneWidthEm=12.32/sqrt(pow(N_DEPTH,2)-1)*(nu0/freq)*constants::RADDEG/showerlength;
 
     ///@todo tidy this up with some kind of constant
     if (shower.hadFrac>0.00001) { // if there is a hadronic component	
@@ -387,33 +387,33 @@ void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
       const double epsilon=log10(had_eshower.in(Energy::Unit::TeV));
 
       if (had_eshower>=1*Energy::Unit::TeV && had_eshower < 100*Energy::Unit::TeV) {
-	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(2.07-0.33*epsilon+(7.5e-2)*epsilon*epsilon);
+	coneWidthHad=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(2.07-0.33*epsilon+(7.5e-2)*epsilon*epsilon);
       }
       else if (had_eshower<100*Energy::Unit::PeV) {
-	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(1.744-(1.21e-2)*epsilon);
+	coneWidthHad=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(1.744-(1.21e-2)*epsilon);
       }
       else if (had_eshower<10*Energy::Unit::EeV){
-	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(4.23-0.785*epsilon+(5.5e-2)*epsilon*epsilon);
+	coneWidthHad=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(4.23-0.785*epsilon+(5.5e-2)*epsilon*epsilon);
       }
       else {
 	//  beyond param, just use value at 10 EeV since slow variation
 	//  and parameterization might diverge
 	//  so scale from 10 EeV at 7.5% per decade (30/4=7.5)
 	
-	//deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*RADDEG*(4.23-0.785*7.+5.5e-2*49.);  // the last part in parenthesis if the previous equation evaluated at epsilon=7.
-	//deltheta_had_max=deltheta_had_max*(1.+(epsilon-7.)*0.075);
-	// It doesn't increase deltheta_had_max by 7.5% per decade anymore. Now it decreases the energy factor by 0.07 per decade.
-	deltheta_had_max=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(4.23-0.785*7.+5.5e-2*49. - (epsilon-7.)*0.07);
+	//coneWidthHad=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*RADDEG*(4.23-0.785*7.+5.5e-2*49.);  // the last part in parenthesis if the previous equation evaluated at epsilon=7.
+	//coneWidthHad=coneWidthHad*(1.+(epsilon-7.)*0.075);
+	// It doesn't increase coneWidthHad by 7.5% per decade anymore. Now it decreases the energy factor by 0.07 per decade.
+	coneWidthHad=1.473/sqrt(pow(N_DEPTH,2)-1)*nu0/freq*constants::RADDEG*(4.23-0.785*7.+5.5e-2*49. - (epsilon-7.)*0.07);
       } //else : beyond paramatrization
-      deltheta_had_max/=sqrt(log(2.)); // in astro-ph/9706064, Jaime uses exp(-0.5* (theta-theta_c)^2/delta_had^2)
+      coneWidthHad/=sqrt(log(2.)); // in astro-ph/9706064, Jaime uses exp(-0.5* (theta-theta_c)^2/delta_had^2)
 
       // we adjust the delta's so that we can use the same form for both parameterizations: exp(-(theta-theta_c)^2/delta^2)
 
     }
     else{
-      deltheta_had_max=1.E-10;
+      coneWidthHad=1.E-10;
     }
-    deltheta_em_max/=sqrt(log(2.)); // in astro-ph/9706064, Jaime uses exp(-0.5 (theta-theta_c)^2/delta_had^2)
+    coneWidthEm/=sqrt(log(2.)); // in astro-ph/9706064, Jaime uses exp(-0.5 (theta-theta_c)^2/delta_had^2)
   }
   else if (WHICHPARAMETERIZATION==1) {
 
@@ -421,18 +421,18 @@ void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
     // we use the old parameterization for em showers
     nu0=500.E6/1.E6; // for rego (astro-ph/9706064)
 
-    deltheta_em_max=12.32/sqrt(nice*nice-1)*(nu0/freq)*constants::RADDEG/showerlength;
+    coneWidthEm=12.32/sqrt(nice*nice-1)*(nu0/freq)*constants::RADDEG/showerlength;
 
 
     // and then scale it according to astro-ph/0512337
     // Eq. 9
-    deltheta_em_max*=RHOMEDIUM/rhoice/KDELTA_MEDIUM*kdelta_ice/X0MEDIUM*x0ice/sqrt(N_DEPTH*N_DEPTH-1)*sqrt(nice*nice-1);
+    coneWidthEm*=RHOMEDIUM/rhoice/KDELTA_MEDIUM*kdelta_ice/X0MEDIUM*x0ice/sqrt(N_DEPTH*N_DEPTH-1)*sqrt(nice*nice-1);
 
     if (shower.hadFrac>0.00001) { // if there is a hadronic component
       // for had showers, just use the one from astro-ph/0512337
       // Eq. 9
       // straight away
-      deltheta_had_max=constants::CLIGHT*100.// speed of light in cm/s
+      coneWidthHad=constants::CLIGHT*100.// speed of light in cm/s
 	/(freq*1.E6)
 	*1/KDELTA_MEDIUM
 	/(X0MEDIUM*100.) // radiation length in cm
@@ -440,7 +440,7 @@ void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
 	
     } //if (hadronic component)
     else {
-      deltheta_had_max=1.E-10;
+      coneWidthHad=1.E-10;
     }      
   } // if more recent parameterization
 
