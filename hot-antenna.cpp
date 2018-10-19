@@ -1,3 +1,6 @@
+// SelAntNum = 30
+// lDir2Bal: -0.918422,  +0.0459897, -0.392921
+// lPol    : +0.0274856, +0.998238,  +0.0525939
 # include <iostream>
 # include <stdlib.h>
 # include "TCanvas.h"
@@ -102,7 +105,7 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   static double SelAntX;
   static double SelAntY;
   static double SelAntZ;
-  static int SelAntNum = 40;
+  static int SelAntNum = 30;
   // int ReturnCode;
 
   static bvv::TBuffer <double> PolAngle(30);
@@ -150,6 +153,7 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
     view->SetRange(-RangeMax, -RangeMax, -RangeMax, +RangeMax, +RangeMax, +RangeMax);
     lDir2Bal->SetPoint(0, 0, 0, 0);
     lDir2Bal->SetPoint(1, SelAnt_normal[0] * Dir2BalLen, SelAnt_normal[1] * Dir2BalLen, SelAnt_normal[2] * Dir2BalLen);
+    cout << "lDir2Bal: " << SelAnt_normal[0] << ", " << SelAnt_normal[1] << ", " << SelAnt_normal[2] << endl;
     lDir2Bal->SetLineColor(kMagenta);
     lDir2Bal->Draw();
     AntNum = -1;
@@ -254,6 +258,7 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
     RotatedSel_eplane = SelAnt_eplane.Rotate(PolAngle * pi / 180, SelAnt_normal);
     lPol->SetPoint(0, SelAntX, SelAntY, SelAntZ);
     lPol->SetPoint(1, SelAntX + RotatedSel_eplane[0], SelAntY + RotatedSel_eplane[1], SelAntZ + RotatedSel_eplane[2]);
+    cout << "lPol: " << RotatedSel_eplane[0] << ", " << RotatedSel_eplane[1] << ", " << RotatedSel_eplane[2] << endl;
     lPol->SetLineColor(kGreen);
     lPol->Draw();
     // Computing gains:

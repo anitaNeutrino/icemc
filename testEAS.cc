@@ -508,9 +508,11 @@ int main(int argc,  char **argv) {
   Vector n_hplane = -const_y;
   Vector n_normal = const_x;
 
-  Vector n_pol = const_z; /* bvv: assuming something for the time being */; // direction of polarization
+  // Antenna #30's horizontal polarization: 
+  Vector n_pol = Vector(+0.0274856, +0.998238,  +0.0525939); // direction of polarization
+  // Direction opposite to antenna #30's normal:
+  Vector direction2bn = -1 * Vector(-0.918422,  +0.0459897, -0.392921); // direction from EAS to balloon
   Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
-  Vector direction2bn = const_x /* bvv: assuming something for the time being */; // direction from EAS to balloon
   Vector direction2bn_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction from EAS to balloon
 
   // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
