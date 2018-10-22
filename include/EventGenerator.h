@@ -7,9 +7,9 @@
 
 #include "Constants.h"
 #include "CommandLineOptions.h"
-#include "ShowerModel.h"
 #include "RNG.h"
-#include "LoopInfo.h"
+#include "Event.h"
+#include "PropagatingSignal.h"
 
 namespace icemc {
 
@@ -47,14 +47,12 @@ namespace icemc {
     std::shared_ptr<Source::EnergyModel> fSourceEnergyModel = nullptr;
     std::shared_ptr<Source::DirectionModel> fSourceDirectionModel = nullptr;
 
+    void delayAndAddSignalToEachRX(const PropagatingSignal& signal, const OpticalPath& opticalPath, Detector& detector) const;
 
-    LoopInfo fLoopInfo;
-    Neutrino fNeutrino;
-    Shower fShower;
-    Geoid::Position fDetectorPos;
 
     
     bool fOrderedEventTimes = true;
+    Event fEvent;
   };
 }
 

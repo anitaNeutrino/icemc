@@ -1,34 +1,39 @@
+#ifndef ICEMC_EVENT_H
+#define ICEMC_EVENT_H
+
 #include "TObject.h"
+#include  "TMath.h"
+
+#include "Geoid.h"
+
+#include "LoopInfo.h"
+#include "ShowerModel.h"
+#include "Neutrino.h"
 
 namespace icemc {
 
   /**
    * @class Event
-   * @brief A class which contains all the info about an icemc event
+   * @brief A class which contains all the info about an icemc event.
    */
-
-  class Weights {
-    double position;
-    double direction;
-    operator double(){return position*direction;}
-  };
-
-  class Event : public TObject {
+  class Event {
+    // class Weights {
+    //   double position;
+    //   double direction;
+    //   operator double(){return position*direction;}
+    // };
 
   public:
-    Event(UInt_t eventNumber_, int run_) :
-      eventNumber(eventNumber_), run(run_)
-    {
-      
-    }
+    Event(Int_t run=-1, UInt_t eventNumber=0, double eventTime=TMath::QuietNaN());
     
-    UInt_t realTime;
-    UInt_t eventNumber; 
-    Int_t run;
-    Geoid::Position detector; ///< detector pos
-    Geoid::Position interaction; ///
+    LoopInfo loop;
     Neutrino neutrino;
-    Weights weights;
-  };
+    Shower shower;
+    Geoid::Position detector;
 
+    ClassDef(Event, 1)
+  };
 }
+
+
+#endif // ICEMC_EVENT_H

@@ -128,6 +128,24 @@ icemc::EventGenerator::~EventGenerator()
 // }
 
 
+void icemc::EventGenerator::delayAndAddSignalToEachRX(const PropagatingSignal& signal, const OpticalPath& opticalPath, Detector& detector) const {
+  double tofDetector = opticalPath.steps.back().distance()/constants::CLIGHT;
+  ///@todo this interface needs to be improved
+  Geoid::Position rfExit = fEvent.detector - opticalPath.steps.back().direction;
+
+  std::vector<double> delays(detector.getNumRX());
+  for(int rx = 0; rx < detector.getNumRX(); rx++){
+    delays.at(rx) = (detector.getPositionRX(rx) - rfExit).Mag()/constants::CLIGHT - tofDetector;
+  }
+  double minDelay = *std::min_element(delays.begin(), delays.end());
+  for(int rx=0; rx < detector.getNumRX(); rx++){
+    PropagatingSignal signalRX = signal;
+    signalRX.waveform.applyConstantGroupDelay(delays.at(rx) - minDelay, false);
+    detector.addSignalToRX(signalRX, rx);
+  }  
+}
+
+
 void icemc::EventGenerator::generate(Detector& detector){
 
   icemc::report() << severity::info << "Seed is " << fSettings->SEED << std::endl;
@@ -168,60 +186,49 @@ void icemc::EventGenerator::generate(Detector& detector){
    * Main loop over generated neutrinos
    */
   signal(SIGINT, icemc::EventGenerator::interrupt_signal_handler);  
-  fLoopInfo.run = fSettings->getRun();
 
-  for(int entry=0; entry < eventTimes.size(); entry++){
+  int run = fSettings->getRun();
+  for(int entry=0; entry < eventTimes.size() && ABORT_EARLY==false; entry++){
     
-    UInt_t eventNumber = (UInt_t)(fLoopInfo.run)*fSettings->NNU+entry;
-    RNG::newSeeds(fLoopInfo.run, eventNumber); // updates all RNG seeds
+    UInt_t eventNumber = (UInt_t)(fEvent.loop.run)*fSettings->NNU+entry;
+    fEvent = Event(run, eventNumber,  eventTimes.at(entry));
+    
+    RNG::newSeeds(run, eventNumber); // updates all RNG seeds
     gRandom->SetSeed(eventNumber+6e7); ///@todo kill me
-
-    // update loop info
-    fLoopInfo.next(eventNumber, eventTimes.at(entry));
     
-    fDetectorPos = detector.getPosition(fLoopInfo.eventTime);
-    Geoid::Position interactionPos = antarctica->pickInteractionPosition(fDetectorPos);
+    fEvent.detector = detector.getPosition(fEvent.loop.eventTime);
+    Geoid::Position interactionPos = antarctica->pickInteractionPosition(fEvent.detector);
 
-    OpticalPath opticalPath = rayTracer.findPath(fDetectorPos, interactionPos);
-    fLoopInfo.rayTracingSolution = opticalPath.residual < 1; // meters
+    OpticalPath opticalPath = rayTracer.findPath(fEvent.detector, interactionPos);
+    fEvent.loop.rayTracingSolution = opticalPath.residual < 1; // meters
     
-    if(fLoopInfo.rayTracingSolution==false){
+    if(fEvent.loop.rayTracingSolution==false){
       output.allTree.Fill();
       continue;
     }
     
-    fNeutrino = nuFactory.makeNeutrino(opticalPath);
+    fEvent.neutrino = nuFactory.makeNeutrino(opticalPath);
     
-    fShower = showerModel.generate(fNeutrino);
-    PropagatingSignal signal = askaryanModel.generate(fNeutrino, fShower, opticalPath);
+    fEvent.shower = showerModel.generate(fEvent.neutrino);
+    
+    PropagatingSignal signal = askaryanModel.generate(fEvent.neutrino, fEvent.shower, opticalPath);
+    
     signal.propagate(opticalPath);
 
-    fLoopInfo.chanceInHell = detector.chanceInHell(signal);
-    if(fLoopInfo.chanceInHell==false){
+    fEvent.loop.chanceInHell = detector.chanceInHell(signal);
+    if(fEvent.loop.chanceInHell==false){
       output.allTree.Fill();
       continue;
     }
     
-    ///@todo put this in some useful function tucked away somewhere...
-    double tofDetector = opticalPath.steps.back().distance()/constants::CLIGHT;
-    Geoid::Position rfExit = fDetectorPos - opticalPath.steps.back().direction;
+    delayAndAddSignalToEachRX(signal, opticalPath, detector);
 
-    std::vector<double> delays(detector.getNumRX());
-    for(int rx = 0; rx < detector.getNumRX(); rx++){
-      delays.at(rx) = (detector.getPositionRX(rx) - rfExit).Mag()/constants::CLIGHT - tofDetector;
-    }
-    double minDelay = *std::min_element(delays.begin(), delays.end());
-    for(int rx=0; rx < detector.getNumRX(); rx++){
-      PropagatingSignal signalRX = signal;
-      signalRX.waveform.applyConstantGroupDelay(delays.at(rx) - minDelay, false);
-      detector.addSignalToRX(signalRX, rx);
-    }
+    fEvent.loop.passesTrigger = detector.applyTrigger();
 
-    fLoopInfo.passesTrigger = detector.applyTrigger();
-
-    if(fLoopInfo.passesTrigger==true){
+    if(fEvent.loop.passesTrigger==true){
       output.passTree.Fill();
     }
+    output.allTree.Fill();
   }
   signal(SIGINT, SIG_DFL); /// unset signal handler
 }

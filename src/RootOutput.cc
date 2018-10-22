@@ -85,22 +85,14 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   ss = NULL;
 
   initTree(&allTree, "allTree", "allTree", fIceFinal);
-  allTree.Branch("loop", &uhen->fLoopInfo);
-  allTree.Branch("detector", &uhen->fDetectorPos);
-  allTree.Branch("neutrino", &uhen->fNeutrino);
-  allTree.Branch("shower", &uhen->fShower);
-  allTree.Branch("signal", &uhen->fShower);
+  allTree.Branch("loop", &uhen->fEvent.loop);
+  allTree.Branch("detector", &uhen->fEvent.detector);
+  allTree.Branch("neutrino", &uhen->fEvent.neutrino);
+  allTree.Branch("shower", &uhen->fEvent.shower);
 
   
   initTree(&passTree, "passTree", "passTree", fIceFinal);
-  passTree.Branch("loop", &uhen->fLoopInfo);
-  passTree.Branch("detector", &uhen->fDetectorPos);
-  passTree.Branch("neutrino", &uhen->fNeutrino);
-  passTree.Branch("shower", &uhen->fShower);
-  passTree.Branch("signal", &uhen->fShower);  
-
-
-
+  passTree.Branch("event", &uhen->fEvent);
 }
 
 

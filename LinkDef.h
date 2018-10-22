@@ -13,6 +13,9 @@
 
 
 #pragma link C++ class icemc::Energy+;
+
+#pragma link C++ class icemc::Event+;
+
 #pragma link C++ class icemc::Neutrino+;
 #pragma link C++ class icemc::Neutrino::Interaction+;
 #pragma link C++ class icemc::Neutrino::Path+;
