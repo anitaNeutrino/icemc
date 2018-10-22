@@ -26,6 +26,9 @@ namespace icemc {
      * @param opticalPath
      */
     void propagate(const icemc::OpticalPath& opticalPath);
+
+
+    double energy() const;
   };
 
   

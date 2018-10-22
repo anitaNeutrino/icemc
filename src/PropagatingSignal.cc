@@ -1,4 +1,16 @@
 #include "PropagatingSignal.h"
+#include "Constants.h"
+
+double icemc::PropagatingSignal::energy() const {
+
+  const TGraph& gr = waveform.getTimeDomain();
+  double E_squared = 0;
+  double dt = gr.GetX()[1] - gr.GetX()[0];
+  for(int i=0; i < gr.GetN(); i++){
+    E_squared += gr.GetY()[i]*gr.GetY()[i]*dt;
+  }
+  return E_squared*0.5*constants::VACUUM_PERMITTIVITY;
+}
 
 
 void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){

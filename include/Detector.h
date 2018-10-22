@@ -50,6 +50,23 @@ namespace icemc {
     
 
 
+    /** 
+     * Function which can be optionally implemented in a derived detector class.
+     * The idea is to do a very simple test on the signal to see if it is worth
+     * doing the full trigger simulation. For example if there is basically no
+     * power in the signal or the polarization is nowhere near on axis, etc.
+     * then you can return false.
+     * 
+     * @param signal is a signal at the payload.
+     * 
+     * @return true if there is some 
+     */
+    virtual bool chanceInHell(const PropagatingSignal& signal){
+      (void) signal;
+      return true;
+    }
+    
+
 
     /** 
      * @brief Add a time domain signal to a receiver

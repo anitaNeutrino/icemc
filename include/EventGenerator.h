@@ -9,6 +9,7 @@
 #include "CommandLineOptions.h"
 #include "ShowerModel.h"
 #include "RNG.h"
+#include "LoopInfo.h"
 
 namespace icemc {
 
@@ -19,6 +20,8 @@ namespace icemc {
 
   class Detector;
   class Neutrino;
+  
+  
 
   /**
    * @class EventGenerator
@@ -36,13 +39,8 @@ namespace icemc {
     virtual ~EventGenerator();
     static void interrupt_signal_handler(int);  // This catches ctrl-C interrupt (SIGINT)
 
-    /** 
-     * @brief Run the neutrino generation
-     * 
-     * This function does the stuff that used to be the main in the icemc executable
-     * @todo needs some love to constify... probably not doable...
-     */    
     void generate(Detector& detector);
+    // bool nextEvent();
 
   private:
     void initialize();
@@ -50,15 +48,15 @@ namespace icemc {
     std::shared_ptr<Source::DirectionModel> fSourceDirectionModel = nullptr;
 
 
-    UInt_t fEventNumber;
-    Int_t fRun;
+    LoopInfo fLoopInfo;
     Neutrino fNeutrino;
     Shower fShower;
-    Double_t fEventTime;
     Geoid::Position fDetectorPos;
+
+    
+    bool fOrderedEventTimes = true;
   };
 }
-
 
 
 #endif //ICEMC_EVENT_GENERATOR_H

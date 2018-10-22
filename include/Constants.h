@@ -12,11 +12,11 @@ namespace icemc {
   namespace constants {
   
     // Mathematical constants     
-    const double TWOPI = 6.2831852;
-    const double PI    = 3.141592654;
-    const double ALOG2 = 0.693147;        // natural log of 2
-    const double INV_E = 0.36787944;      // 1/e
-    const double sr    = 4*PI;
+    constexpr double TWOPI = 6.2831852;
+    constexpr double PI    = 3.141592654;
+    constexpr double ALOG2 = 0.693147;        // natural log of 2
+    constexpr double INV_E = 0.36787944;      // 1/e
+    constexpr double sr    = 4*PI;
     
     /** 
      * Get the Poisson error associated from n events, currently valid up to 20
@@ -35,13 +35,15 @@ namespace icemc {
     const double DEGRAD=57.2957795;    // degree/rad
 
     // physical constants
-    const double CLIGHT=3.0E8;            // speed of light m/s
-    const double KBOLTZ=1.38E-23;         // Boltzmann constant J/K
-    const double Z0=377.;                 // resistivity of free space
-    const double Zr=50.;  // radiation resistance (50 Ohms?)
-    const double M_NUCL=1.66E-27;         // amu mass in kg
-    const double MTAU=1.777E9;            // mass of the tau
-    const double TAUDECAY_TIME=290.6E-15; // lifetime of tau
+    constexpr double CLIGHT=3.0E8;            // speed of light m/s
+    constexpr double KBOLTZ=1.38E-23;         // Boltzmann constant J/K
+    constexpr double Z0=377.;                 // resistivity of free space
+    constexpr double Zr=50.;  // radiation resistance (50 Ohms?)
+    constexpr double M_NUCL=1.66E-27;         // amu mass in kg
+    constexpr double MTAU=1.777E9;            // mass of the tau
+    constexpr double TAUDECAY_TIME=290.6E-15; // lifetime of tau
+    constexpr double VACUUM_PERMEABILITY = 1e-7*sr; //mu_0 
+    constexpr double VACUUM_PERMITTIVITY = 1./(CLIGHT*CLIGHT*VACUUM_PERMEABILITY); //epsilon_0
 
     // properties of water
     const double X0H20=0.361;          // radiation length of water (meters)

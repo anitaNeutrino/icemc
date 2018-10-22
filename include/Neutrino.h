@@ -48,23 +48,24 @@ namespace icemc {
 				Charged = 0,
 				Neutral = 1
       };
-    
+
       Geoid::Position position;
-      double crossSection;
-      double length;
-      Current current;
-      double y;
+      double crossSection = -1;
+      double length = -1;
+      Current current = Current::Charged;
+      double y = -1;
       ClassDef(Interaction, 1);
     };
 
     class Path {
     public:
       TVector3 direction;
-      Geoid::Position entry;
-      Geoid::Position exit;
-      double weight;
+      // Geoid::Position entry;
+      // Geoid::Position exit; 
+      double columnDepth = -1;
+      double weight = -1;
 
-      ClassDef(Path, 1);      
+      ClassDef(Path, 1);
     };
     
     Energy energy;

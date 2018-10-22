@@ -73,7 +73,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   }
 
   EventGenerator* uhen = const_cast<EventGenerator*>(uhen2);
-  Settings* settings = const_cast<Settings*>(settings2);
+  // Settings* settings = const_cast<Settings*>(settings2);
 
   // first the file(s)
   TString fileName = fOutputDir + TString::Format("/IceMC_%d.root", fRun);
@@ -84,53 +84,20 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   delete ss;
   ss = NULL;
 
-  // initTree(&allTree, "allTree", "allTree", fIceFinal);
-  // allTree.Branch("genNu", &uhen->fGenNu);
+  initTree(&allTree, "allTree", "allTree", fIceFinal);
+  allTree.Branch("loop", &uhen->fLoopInfo);
+  allTree.Branch("detector", &uhen->fDetectorPos);
+  allTree.Branch("neutrino", &uhen->fNeutrino);
+  allTree.Branch("shower", &uhen->fShower);
+  allTree.Branch("signal", &uhen->fShower);
 
   
-
   initTree(&passTree, "passTree", "passTree", fIceFinal);
-  passTree.Branch("run", &uhen->fRun);
-  passTree.Branch("eventNumber", &uhen->fEventNumber);
+  passTree.Branch("loop", &uhen->fLoopInfo);
+  passTree.Branch("detector", &uhen->fDetectorPos);
   passTree.Branch("neutrino", &uhen->fNeutrino);
   passTree.Branch("shower", &uhen->fShower);
-
-
-  
-
-  // // histograms
-  // initHist(&ref_int_coord, "ref_int_coord", "", 600, -3000, 3000, 500, -2500, 2500, fIceFinal);
-  // ref_int_coord.SetMarkerSize(0.7);
-  // ref_int_coord.SetMarkerColor(kBlue);
-
-  
-  // initHist(&dir_int_coord, "dir_int_coord", "", 600, -3000, 3000, 500, -2500, 2500, fIceFinal);
-  // dir_int_coord.SetMarkerSize(0.7);
-  // dir_int_coord.SetMarkerStyle(30);
-
-
-  // initHist(&h1mybeta, "betaforall", "betaforall(deg)", 180, -15, 15, fIceFinal);
-  // initHist(&h1mytheta, "mytheta", "mytheta(deg)", 180, -90, 90, fIceFinal);
-  // initHist(&hundogaintoheight_e, "undogaintoheight_e", "undogaintoheight_e", 100, 0., 1., fIceFinal);
-  // initHist(&hundogaintoheight_h, "undogaintoheight_h", "undogaintoheight_h", 100, 0., 1., fIceFinal);
-  // initHist(&rec_diff, "rec_diff", "rec_diff", 100, -1., 1., fIceFinal);
-  // initHist(&recsum_diff, "recsum_diff", "recsum_diff", 100, -1., 1., fIceFinal);
-  // initHist(&rec_diff0, "rec_diff0", "rec_diff0", 100, -1., 1., fIceFinal);
-  // initHist(&rec_diff1, "rec_diff1", "rec_diff1", 100, -1., 1., fIceFinal);
-  // initHist(&rec_diff2, "rec_diff2", "rec_diff2", 100, -1., 1., fIceFinal);
-  // initHist(&rec_diff3, "rec_diff3", "rec_diff3", 100, -1., 1., fIceFinal);
-  // initHist(&prob_eachilon_bn, "prob_eachilon_bn", "prob_eachilon_bn", 180, 0., 180., fIceFinal);
-  // initHist(&h6, "theta_vs_hitangle_h", "theta_vs_hitangle_h", 100, -3.14, 3.14, 100, -1.1, 1.1, fIceFinal);
-  // initHist(&h10, "hitangle_e", "hitangle_e", 20, -1.6, 1.6, fIceFinal);
-  // initHist(&hy, "hy", "hy", 100, 0., 1., fIceFinal);
-  // initHist(&fraction_sec_muons, "fraction_sec_muons", "fraction_sec_muons", 100, 0., 1., fIceFinal);
-  // initHist(&fraction_sec_taus, "fraction_sec_taus", "fraction_sec_taus", 100, 0., 1., fIceFinal);
-  // initHist(&n_sec_muons, "n_sec_muons", "n_sec_muons", 100, 0., 10., fIceFinal);
-  // initHist(&n_sec_taus, "n_sec_taus", "n_sec_taus", 100, 0., 10., fIceFinal);
-  // initHist(&sampleweights, "sampleweights", "sampleweights", 100, -5., 0., fIceFinal);
-  
-  
-  
+  passTree.Branch("signal", &uhen->fShower);  
 
 
 

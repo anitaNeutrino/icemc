@@ -17,4 +17,7 @@
 #pragma link C++ class icemc::Neutrino::Interaction+;
 #pragma link C++ class icemc::Neutrino::Path+;
 
+#pragma link C++ class icemc::LoopInfo+;
+#pragma link C++ class icemc::LoopInfo::Step+;
+
 #endif

@@ -38,7 +38,11 @@
 #endif
 
 #include <typeinfo>
-#include <fenv.h> 
+#include <fenv.h>
+
+
+
+
 
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
@@ -54,6 +58,8 @@ void icemc::EventGenerator::interrupt_signal_handler(int sig){
   }
   return;
 }
+
+
 
 
 
@@ -94,61 +100,93 @@ icemc::EventGenerator::~EventGenerator()
 }
 
 
+// bool icemc::EventGenerator::nextEvent(){
+//   if(ABORT_EARLY){
+//     return false;
+//   }
+
+
+//   // for (int inu = fSettings->getStartNu(); inu < NNU && !ABORT_EARLY; inu++) {
+//   //   if (NNU >= 100 && ((inu % (NNU / 100)) == 0)){
+//   //     std::cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
+//   //   }
+//   //   else if(NNU < 100){
+//   //     std::cout << inu << " / " << NNU << "neutrinos" << std::endl;
+//   //   }
+
+
+//   fDetectorPos = Geoid::Position();
+//   fNeutrino = Neutrino();
+
+//   bool again = true;
+//   if(fLoopCount >= fSettings->NNU){
+//     again = false;
+//   }
+//   fLoopCount++;
+  
+//   return again;
+// }
+
+
 void icemc::EventGenerator::generate(Detector& detector){
 
   icemc::report() << severity::info << "Seed is " << fSettings->SEED << std::endl;
 
+
+  
   ShowerModel showerModel(fSettings);
   ConnollyEtAl2011 crossSectionModel(fSettings);
   auto antarctica = std::make_shared<Antarctica>();
 
   icemc::report() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
   
-  icemc::RootOutput ro(this, fSettings, fSettings->getOutputDir(), fSettings->getRun());
+  icemc::RootOutput output(this, fSettings, fSettings->getOutputDir(), fSettings->getRun());
 
   int n;
   double dt;
   detector.getDesiredNDt(n, dt);
   AskaryanRadiationModel askaryanModel(fSettings, n, dt);
 
-  int NNU = fSettings->NNU;
-  // int RANDOMISEPOL = fSettings->RANDOMISEPOL;
-  
   gRandom->SetSeed(fSettings->SEED); // settings seed is now updated with run_no to uniquify it elsewhere
 
   NeutrinoFactory nuFactory(fSettings,  fSourceEnergyModel, fSourceDirectionModel);
   RayTracer rayTracer(antarctica);
+
+  int numEvents = fSettings->NNU - fSettings->getStartNu();
+  std::vector<double> eventTimes;
+  eventTimes.reserve(numEvents);
+  for(int e=0; e < numEvents; e++){
+    eventTimes.push_back(pickUniform(detector.getStartTime(),  detector.getEndTime()));
+  }
+  if(fOrderedEventTimes==true){
+    std::sort(eventTimes.begin(), eventTimes.end());
+  }
+  
+  
   
   /**
    * Main loop over generated neutrinos
    */
   signal(SIGINT, icemc::EventGenerator::interrupt_signal_handler);  
-  int run = fSettings->getRun();
-  for (int inu = fSettings->getStartNu(); inu < NNU && !ABORT_EARLY; inu++) {
-    if (NNU >= 100 && ((inu % (NNU / 100)) == 0)){
-      std::cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
-    }
-    else if(NNU < 100){
-      std::cout << inu << " / " << NNU << "neutrinos" << std::endl;
-    }
-    
-    UInt_t eventNumber=(UInt_t)(run)*NNU+inu;
+  fLoopInfo.run = fSettings->getRun();
 
-    RNG::newSeeds(run, eventNumber); // updates all RNG seeds
-    gRandom->SetSeed(eventNumber+6e7);
+  for(int entry=0; entry < eventTimes.size(); entry++){
     
-    fEventTime = pickUniform(detector.getStartTime(), detector.getEndTime()); 
-    fDetectorPos = detector.getPosition(fEventTime);
+    UInt_t eventNumber = (UInt_t)(fLoopInfo.run)*fSettings->NNU+entry;
+    RNG::newSeeds(fLoopInfo.run, eventNumber); // updates all RNG seeds
+    gRandom->SetSeed(eventNumber+6e7); ///@todo kill me
+
+    // update loop info
+    fLoopInfo.next(eventNumber, eventTimes.at(entry));
+    
+    fDetectorPos = detector.getPosition(fLoopInfo.eventTime);
     Geoid::Position interactionPos = antarctica->pickInteractionPosition(fDetectorPos);
 
     OpticalPath opticalPath = rayTracer.findPath(fDetectorPos, interactionPos);
+    fLoopInfo.rayTracingSolution = opticalPath.residual < 1; // meters
     
-    if(opticalPath.residual > 1){
-      ///@todo better interface for no good solution?
-      // std::cout << "bad" << std::endl;
-      // no solution was found withing the fitter tolerance
-      ///@todo Fill some tree indicating this!      
-      ro.allTree.Fill();
+    if(fLoopInfo.rayTracingSolution==false){
+      output.allTree.Fill();
       continue;
     }
     
@@ -157,6 +195,12 @@ void icemc::EventGenerator::generate(Detector& detector){
     fShower = showerModel.generate(fNeutrino);
     PropagatingSignal signal = askaryanModel.generate(fNeutrino, fShower, opticalPath);
     signal.propagate(opticalPath);
+
+    fLoopInfo.chanceInHell = detector.chanceInHell(signal);
+    if(fLoopInfo.chanceInHell==false){
+      output.allTree.Fill();
+      continue;
+    }
     
     ///@todo put this in some useful function tucked away somewhere...
     double tofDetector = opticalPath.steps.back().distance()/constants::CLIGHT;
@@ -173,11 +217,10 @@ void icemc::EventGenerator::generate(Detector& detector){
       detector.addSignalToRX(signalRX, rx);
     }
 
-    bool triggered =  detector.applyTrigger();
+    fLoopInfo.passesTrigger = detector.applyTrigger();
 
-    if(triggered){
-      ro.passTree.Fill();
-      std::cout << inu << "\tPASSED!" << std::endl;
+    if(fLoopInfo.passesTrigger==true){
+      output.passTree.Fill();
     }
   }
   signal(SIGINT, SIG_DFL); /// unset signal handler

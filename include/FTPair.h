@@ -127,6 +127,7 @@ namespace icemc {
      */
     std::vector<std::complex<double> >& changeFreqDomain();
 
+    
 
     /** 
      * Force a regeneration of the time domain from the frequency domain.
