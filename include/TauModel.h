@@ -22,9 +22,10 @@
 class TH1F;
 
 namespace icemc{
-  class ConnollyEtAl2011;
+  // class ConnollyEtAl2011;
   class Interaction;
   class Antarctica;
+  class CrossSectionModel;
 
   class TauModel: public TObject
   {
@@ -78,7 +79,8 @@ namespace icemc{
      */
 
     // double GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica* antarctica1, Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered); // 1 or 0
-    double GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica* antarctica1, Interaction *interaction1, Energy pnu, Neutrino::L leptonNumber, Energy& ptauf, int& crust_entered); // 1 or 0    
+    // double GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica* antarctica1, Interaction *interaction1, Energy pnu, Neutrino::L leptonNumber, Energy& ptauf, int& crust_entered); // 1 or 0
+    double GetTauWeight(CrossSectionModel *primary1, const Settings *settings1, const Antarctica* antarctica1, Interaction *interaction1, Energy pnu, Neutrino::L leptonNumber, Energy& ptauf, int& crust_entered); // 1 or 0        
     // int& mantle_entered, // 1 or 0
     // int& core_entered);//include secondaries?
  

@@ -23,4 +23,8 @@
 #pragma link C++ class icemc::LoopInfo+;
 #pragma link C++ class icemc::LoopInfo::Step+;
 
+#pragma link C++ namespace icemc::ConnollyEtAl2011;
+#pragma link C++ class icemc::ConnollyEtAl2011::YGenerator;
+
+
 #endif

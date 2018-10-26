@@ -3,11 +3,6 @@
 // system includes
 #include "signal.h"
 
-// ROOT includes
-#include "TGraphAsymmErrors.h"
-#include "TStyle.h"
-#include "TVector3.h"
-
 // libAntarcticaRoot includes
 #include "Geoid.h"
 
@@ -29,18 +24,6 @@
 #include "RNG.h"
 #include "TRandom3.h" ///@todo remove when gRandom is excized
 #include "MonoEnergetic.h"
-#include <string>
-#include <sstream>
-
-#if __cplusplus > 199711L
-#define isnan std::isnan 
-#include <type_traits>
-#endif
-
-#include <typeinfo>
-#include <fenv.h>
-
-
 
 
 
@@ -84,7 +67,36 @@ void icemc::EventGenerator::initialize(){
     fSourceEnergyModel = std::make_shared<Source::Spectra>(fSettings);
   }
 
+  ///@todo add support for directional sources
   fSourceDirectionModel = std::make_shared<Source::DiffuseFlux>();
+
+
+  if(fSettings->YPARAM==0){ ///@todo enumify
+    fYGenerator = std::make_shared<GhandiEtAl::YGenerator>();
+  }
+  else if(fSettings->YPARAM==1){
+    fYGenerator = std::make_shared<ConnollyEtAl2011::YGenerator>(fSettings);            
+  }
+  else{
+    icemc::report() << severity::error << "Unknown YPARAM!" << std::endl;
+  }
+
+  
+  if(fSettings->SIGMAPARAM==0){ ///@todo enumify
+    fCrossSectionModel = std::make_shared<MHReno::CrossSectionModel>(fSettings);
+  }
+  else if(fSettings->SIGMAPARAM==1){
+    fCrossSectionModel = std::make_shared<ConnollyEtAl2011::CrossSectionModel>(fSettings);
+  }
+  else{
+    icemc::report() << severity::error << "Unknown SIGMAPARAM!" << std::endl;
+  }
+
+
+  
+
+
+  
 }
 
 
@@ -99,33 +111,6 @@ icemc::EventGenerator::~EventGenerator()
   
 }
 
-
-// bool icemc::EventGenerator::nextEvent(){
-//   if(ABORT_EARLY){
-//     return false;
-//   }
-
-
-//   // for (int inu = fSettings->getStartNu(); inu < NNU && !ABORT_EARLY; inu++) {
-//   //   if (NNU >= 100 && ((inu % (NNU / 100)) == 0)){
-//   //     std::cout << inu << " neutrinos. " << (double(inu)/double(NNU)) * 100 << "% complete.\n";
-//   //   }
-//   //   else if(NNU < 100){
-//   //     std::cout << inu << " / " << NNU << "neutrinos" << std::endl;
-//   //   }
-
-
-//   fDetectorPos = Geoid::Position();
-//   fNeutrino = Neutrino();
-
-//   bool again = true;
-//   if(fLoopCount >= fSettings->NNU){
-//     again = false;
-//   }
-//   fLoopCount++;
-  
-//   return again;
-// }
 
 
 void icemc::EventGenerator::delayAndAddSignalToEachRX(const PropagatingSignal& signal, const OpticalPath& opticalPath, Detector& detector) const {
@@ -153,7 +138,8 @@ void icemc::EventGenerator::generate(Detector& detector){
 
   
   ShowerModel showerModel(fSettings);
-  ConnollyEtAl2011 crossSectionModel(fSettings);
+
+  
   auto antarctica = std::make_shared<Antarctica>();
 
   icemc::report() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
@@ -167,7 +153,7 @@ void icemc::EventGenerator::generate(Detector& detector){
 
   gRandom->SetSeed(fSettings->SEED); // settings seed is now updated with run_no to uniquify it elsewhere
 
-  NeutrinoFactory nuFactory(fSettings,  fSourceEnergyModel, fSourceDirectionModel);
+  NeutrinoFactory nuFactory(fSettings, fSourceEnergyModel, fSourceDirectionModel, fCrossSectionModel, fYGenerator);
   RayTracer rayTracer(antarctica);
 
   int numEvents = fSettings->NNU - fSettings->getStartNu();
@@ -212,10 +198,15 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEvent.shower = showerModel.generate(fEvent.neutrino);
     
     PropagatingSignal signal = askaryanModel.generate(fEvent.neutrino, fEvent.shower, opticalPath);
+
+    std::cout << signal.maxEField() << "\n";
     
     signal.propagate(opticalPath);
 
-    fEvent.loop.chanceInHell = detector.chanceInHell(signal);
+    std::cout << signal.maxEField() << "\n"  << std::endl;
+
+    fEvent.loop.chanceInHell = false; //detector.chanceInHell(signal);
+
     if(fEvent.loop.chanceInHell==false){
       output.allTree.Fill();
       continue;

@@ -13,6 +13,12 @@ double icemc::PropagatingSignal::energy() const {
 }
 
 
+double icemc::PropagatingSignal::maxEField() const {
+  const TGraph& gr = waveform.getTimeDomain();
+  return *std::max_element(gr.GetY(), gr.GetY()+gr.GetN());  
+}
+
+
 void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
   return; ///@todo remove test condition!
   

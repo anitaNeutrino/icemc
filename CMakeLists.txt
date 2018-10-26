@@ -151,6 +151,7 @@ endmacro()
 
 # add_binary(icemc)
 #add_binary(nicemc)
+add_binary(testY)
 add_binary(testSettings)
 add_binary(testCrust)
 add_binary(testShower)

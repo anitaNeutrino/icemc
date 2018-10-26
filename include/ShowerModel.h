@@ -23,7 +23,8 @@ class TH1F;
 
 namespace icemc{
   class Settings;
-  class ConnollyEtAl2011;
+
+  namespace ConnollyEtAl2011 {class CrossSectionModel;}
 
   /**
    * @class Shower

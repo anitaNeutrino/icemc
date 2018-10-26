@@ -4,11 +4,14 @@
 
 icemc::NeutrinoFactory::NeutrinoFactory(const Settings* settings,
 					std::shared_ptr<Source::EnergyModel> sourceEnergyModel,
-					std::shared_ptr<Source::DirectionModel> sourceDirectionModel)
+					std::shared_ptr<Source::DirectionModel> sourceDirectionModel,
+					std::shared_ptr<CrossSectionModel> crossSectionModel,
+					std::shared_ptr<YGenerator> yGenerator)
   : fSettings(settings),
     fSourceEnergyModel(sourceEnergyModel),
     fSourceDirectionModel(sourceDirectionModel),
-    fConnollyEtAl2011(settings),
+    fCrossSectionModel(crossSectionModel),
+    fYGenerator(yGenerator),
     fInteraction(settings)
 {
 
@@ -42,10 +45,12 @@ icemc::Neutrino icemc::NeutrinoFactory::makeNeutrino(const OpticalPath& opticalP
   // interaction properties
   n.interaction.position = opticalPath.steps.at(0).start; ///@todo get the *exact* picked position?
   n.interaction.current = fInteraction.pickCurrent();
-  n.interaction.crossSection = fConnollyEtAl2011.getSigma(n.energy, n.leptonNumber,  n.interaction.current);
+  // n.interaction.crossSection = fConnollyEtAl2011.getSigma(n.energy, n.leptonNumber,  n.interaction.current); 
+  n.interaction.crossSection = fCrossSectionModel->getSigma(n.energy, n.leptonNumber,  n.interaction.current); 
   n.interaction.length = CrossSectionModel::getInteractionLength(n.interaction.crossSection);
   // Energy pnu, Neutrino::L leptonNumber, Neutrino::Interaction::Current current
-  n.interaction.y = fConnollyEtAl2011.pickY(n.energy, n.leptonNumber, n.interaction.current);
+  // n.interaction.y = fConnollyEtAl2011.pickY(n.energy, n.leptonNumber, n.interaction.current);
+  n.interaction.y = fYGenerator->pickY(n.energy, n.leptonNumber, n.interaction.current);  
 
   return n;
   

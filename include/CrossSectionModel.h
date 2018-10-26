@@ -12,13 +12,13 @@ namespace icemc {
 
   /**
    * @class CrossSectionModel
-   * @brief Pure virtual class to model neutrino cross section
+   * @brief Pure virtual class to model neutrino-nucleon cross section
    */
 
   class CrossSectionModel {
   public:
+    CrossSectionModel(const Settings* settings) : fSettings(settings) {;}
     virtual ~CrossSectionModel(){;}
-    // virtual double getSigma(double energy_eV, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) const = 0;
     virtual double getSigma(Energy energy, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) const = 0;
 
     inline static double getInteractionLength(double sigma){
@@ -32,6 +32,7 @@ namespace icemc {
     }
     
   protected:
+    const Settings* fSettings = nullptr;
     Energy fMinEnergy;
     Energy fMaxEnergy;
   };
@@ -39,22 +40,24 @@ namespace icemc {
 
 
 
+
   
+  namespace MHReno {
 
-  class MHReno : public CrossSectionModel {
-  public:
-    MHReno(const Settings* settings)
-      : fSettings(settings)
-    {
-      fMinEnergy = Energy(1.2E15, Energy::Unit::eV);
-      fMaxEnergy = Energy(1.E21, Energy::Unit::eV);
-    }
-    virtual ~MHReno(){;}
+    class CrossSectionModel : public icemc::CrossSectionModel {
+    public:
+      CrossSectionModel(const Settings* settings) : icemc::CrossSectionModel(settings)
+      {
+	fMinEnergy = Energy(1.2e15, Energy::Unit::eV);
+	fMaxEnergy = Energy(1.0e21, Energy::Unit::eV);
+      }
+      virtual ~CrossSectionModel(){;}
 
-    virtual double getSigma(Energy energy, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) const override;
-  private:
-    const Settings* fSettings;
-  };
+      virtual double getSigma(Energy energy, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) const override;
+    };    
+  }
+
+
   
 }
 

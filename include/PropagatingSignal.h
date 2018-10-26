@@ -29,6 +29,7 @@ namespace icemc {
 
 
     double energy() const;
+    double maxEField() const;
   };
 
   

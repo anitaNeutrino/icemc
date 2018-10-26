@@ -324,6 +324,8 @@ icemc::Shower icemc::ShowerModel::GetEMFrac(Neutrino::Flavor nuflavor,
     s.hadFrac = y;
   }
 
+  std::cout << "y = " << y << std::endl;
+
   // em_secondaries_max.setZero(); // initialize search for maximum signal among primary, secondary interactions.
   // had_secondaries_max.setZero();
 

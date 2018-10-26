@@ -20,8 +20,8 @@ namespace icemc {
 
   class Detector;
   class Neutrino;
-  
-  
+  class CrossSectionModel;
+  class YGenerator;
 
   /**
    * @class EventGenerator
@@ -46,6 +46,8 @@ namespace icemc {
     void initialize();
     std::shared_ptr<Source::EnergyModel> fSourceEnergyModel = nullptr;
     std::shared_ptr<Source::DirectionModel> fSourceDirectionModel = nullptr;
+    std::shared_ptr<CrossSectionModel> fCrossSectionModel = nullptr;
+    std::shared_ptr<YGenerator> fYGenerator = nullptr;
 
     void delayAndAddSignalToEachRX(const PropagatingSignal& signal, const OpticalPath& opticalPath, Detector& detector) const;
 

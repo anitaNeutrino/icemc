@@ -85,7 +85,8 @@ icemc::TauModel::TauModel() {
 */
 // double icemc::TauModel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, int nu_nubar, double& ptauf, int& crust_entered){ // 1 or 0
 // double icemc::TauModel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, double pnu, Neutrino::L leptonNumber, double& ptauf, int& crust_entered){ // 1 or 0
-double icemc::TauModel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, Energy pnu, Neutrino::L leptonNumber, Energy& ptauf, int& crust_entered){ // 1 or 0  
+// double icemc::TauModel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, Energy pnu, Neutrino::L leptonNumber, Energy& ptauf, int& crust_entered){ // 1 or 0
+double icemc::TauModel::GetTauWeight(CrossSectionModel *primary1, const Settings *settings1, const Antarctica *antarctica1,Interaction *interaction1, Energy pnu, Neutrino::L leptonNumber, Energy& ptauf, int& crust_entered){ // 1 or 0    
 			      // int& mantle_entered, // 1 or 0
 			      // int& core_entered){//add secondaries?
 
@@ -201,7 +202,9 @@ double icemc::TauModel::GetTauWeight(ConnollyEtAl2011 *primary1, const Settings 
         prob_at_z =0;
       }
       else{
-        yweight=primary1->Getyweight(pnu,y,leptonNumber,current);
+        // yweight=primary1->Getyweight(pnu,y,leptonNumber,current);
+        yweight=0; ///@todo FIXME
+	
         Prob_Nu_Surv = avgdensity/len_int_kgm2*exp(-zdistance*avgdensity*1./len_int_kgm2);///prob neutrino survives to this point
         dEtauidEtauf = exp(B1*taudensity*(Distance-zdistance))*(Etaui/Etau_final);///how the initial tau energy is related to final
         prob_at_z = Prob_Nu_Surv*yweight*1./pnu.in(Energy::Unit::eV)*dEtauidEtauf*step*tau_surv;///probability that tau survives to ice

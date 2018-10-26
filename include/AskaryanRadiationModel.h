@@ -242,23 +242,20 @@ namespace icemc {
 		      double hadfrac) const {
 
       auto taper_component = [&](double threshold, double coneWidth, double frac){
-			       double rtemp = (viewangle-changle)*(viewangle-changle)/(coneWidth*coneWidth);
+			       // avoid infs/nan by setting special value for 0...
+			       double rtemp = coneWidth > 0 ? (viewangle-changle)*(viewangle-changle)/(coneWidth*coneWidth) : -1;
 			       T amp = 0;
 			       // the power goes like exp(-(theta_v-theta_c)^2/Delta^2)
 			       // so the e-field is the same with a 1/2 in the exponential
-			       if (frac>threshold) { // if there is an em component
-				 if (rtemp<=20) {
+			       if (frac>threshold && rtemp >= 0 && rtemp < 20) { // if there is an em component
 				   // if the viewing angle is less than 20 sigma away from the cerankov angle
 				   // this is the effect of the em width on the signal
-				   amp = amplitude*exp(-rtemp);
-				 }
-				 else{
-				   // if it's more than 20 sigma just set it to zero 
-				   amp=0.;
-				 }
+				 amp = amplitude*exp(-rtemp);
 			       }
-			       else{ // if the em component is essentially zero than set this to zero
-				 amp = 0;
+			       else{
+				 // std::cout << "frac = " << frac << "\t rtemp = " << rtemp << "\tconeWidth = " << coneWidth << std::endl;
+				 // if it's more than 20 sigma or with barely any component just set it to zero 
+				 amp=0.;
 			       }
 			       return amp;
 			     };
@@ -266,6 +263,8 @@ namespace icemc {
       // std::cout << emfrac << "\t" << hadfrac << std::endl;
       T amplitude_em  = taper_component(1e-10, coneWidthEm,  emfrac);
       T amplitude_had = taper_component(1e-10, coneWidthHad, hadfrac);
+
+      // std::cout << "amp_em = " << amplitude_em << "\t amp_had = " <<  amplitude_had << std::endl;
 
       // std::cout << __PRETTY_FUNCTION__ << "\t" << amplitude_em << "\t" << amplitude_had << "\t" << std::endl;
       amplitude = sin(viewangle)*(emfrac*amplitude_em + hadfrac*amplitude_had);

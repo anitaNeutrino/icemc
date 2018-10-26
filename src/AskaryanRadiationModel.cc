@@ -202,18 +202,36 @@ void icemc::AskaryanRadiationModel::taperWaveform(FTPair& waveform /*modified*/,
   // deltheta_em[k]=deltheta_em_max*anita1->FREQ_LOW/anita1->freq[k];
   // ... again a 1/f scaling...
   const double referenceFreqHz = fFreqs_Hz.at(1);
-  double coneWidthEm_ref, coneWidthHad_ref; // these are the 
+  double coneWidthEm_ref, coneWidthHad_ref; // these are the
+
+  // if(TMath::IsNaN(shower.emFrac) || TMath::IsNaN(shower.hadFrac)){
+  //   std::cout << "@@@@@@@@@@@@@1 " << shower.emFrac << "\t" << shower.hadFrac << std::endl;
+  // }
   GetSpread(energy, shower, referenceFreqHz, coneWidthEm_ref, coneWidthHad_ref);
-
-  std::cout << __PRETTY_FUNCTION__ << "\t" << energy << "\t" << coneWidthEm_ref <<  "\t" << coneWidthHad_ref << std::endl;
-
+  // if(TMath::IsNaN(shower.emFrac) || TMath::IsNaN(shower.hadFrac)){
+  //   std::cout << "@@@@@@@@@@@@@2 " << shower.emFrac << "\t" << shower.hadFrac << std::endl;
+  // }
+   
+  // std::cout << __PRETTY_FUNCTION__ << "\t, energy = " << energy << "\t coneWidthEm_ref = " << coneWidthEm_ref <<  "\tconeWidthHad_ref = " << coneWidthHad_ref << std::endl;
+ 
   auto& vmmhz = waveform.changeFreqDomain();
   for(int k=1; k < fFreqs_Hz.size(); k++){ // skip 0th bin as we will have 0 power there
     double scale_factor = referenceFreqHz/fFreqs_Hz.at(k);
     double coneWidthEm  = scale_factor*coneWidthEm_ref;
     double coneWidthHad = scale_factor*coneWidthHad_ref;
 
+    // if(TMath::IsNaN(vmmhz.at(k).real()) ||
+    //    TMath::IsNaN(vmmhz.at(k).imag())){
+    //   std::cout << "before\t" << k << "\t" << vmmhz.at(k) << std::endl;
+    // }
+
+    // double before = vmmhz.at(k);
     vmmhz.at(k) = taperSingleFreq(vmmhz.at(k), viewAngleRadians, coneWidthEm, coneWidthHad, shower.emFrac, shower.hadFrac);
+
+    // if(TMath::IsNaN(vmmhz.at(k).real()) ||
+    //    TMath::IsNaN(vmmhz.at(k).imag())){
+    //   std::cout << "after\t" << k << "\t" << vmmhz.at(k) << std::endl;
+    // }
   }
 }
 
@@ -233,6 +251,14 @@ icemc::PropagatingSignal icemc::AskaryanRadiationModel::generate(const Neutrino&
   // first generate the signal you would see viewing on axis at 1m from the interaction
   FTPair waveform = generateOnAxisAt1m(nu.energy);
 
+  // int numNan = std::count_if(waveform.getTimeDomain().GetY(),
+  // 			     waveform.getTimeDomain().GetY()+waveform.getTimeDomain().GetN(),
+  // 			     [](double val){return TMath::IsNaN(val);});
+
+  // if(numNan > 0){
+  //   std::cout << "here 1!" << std::endl;
+  // }
+
   // std::cout << __PRETTY_FUNCTION__ << " max E field = " << waveform.timeDomainMax() << std::endl;
   
   // now we taper since we won't view this signal on axis, we'll view at at a view angle, theta
@@ -240,6 +266,15 @@ icemc::PropagatingSignal icemc::AskaryanRadiationModel::generate(const Neutrino&
   taperWaveform(waveform /*modified*/, theta, nu.energy, shower);
 
   // std::cout << __PRETTY_FUNCTION__ << " max E Field2 = " << waveform.timeDomainMax() << std::endl;
+
+  // numNan = std::count_if(waveform.getTimeDomain().GetY(),
+  // 			 waveform.getTimeDomain().GetY()+waveform.getTimeDomain().GetN(),
+  // 			 [](double val){return TMath::IsNaN(val);});
+
+  // if(numNan > 0){
+  //   std::cout << "here 2!" << "\t" << theta  << "\t" << nu.energy << "\t" << shower.axis  << std::endl;
+  // }
+  
 
   const TVector3 rfDirection = opticalPath.steps.at(0).direction.Unit();
   
@@ -511,7 +546,7 @@ double icemc::AskaryanRadiationModel::GetVmMHz1m(Energy energy, double freq) con
   vmmhz1m_max=vmmhz1m_max*sqrt(2.);
 
 
-  std::cout<< JAIME_FACTOR << std::endl;
+  // std::cout<< JAIME_FACTOR << std::endl;
   return vmmhz1m_max*JAIME_FACTOR;
 
 } 
