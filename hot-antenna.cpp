@@ -105,7 +105,7 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
   static double SelAntX;
   static double SelAntY;
   static double SelAntZ;
-  static int SelAntNum = 30;
+  static int SelAntNum = 0;
   // int ReturnCode;
 
   static bvv::TBuffer <double> PolAngle(30);
@@ -137,6 +137,7 @@ void PlotGain(std::map<std::string, void*> *penv, RunMode mode, struct nk_contex
         AntNum++;
         LayerFromAntNum[AntNum] = ilayer;
         PhiFromAntNum[AntNum] = ifold;
+        cout << AntNum << ", " << global_anita1->GetRxTriggerNumbering(ilayer, ifold) << endl;
       }
     }
     SelAntLayer = LayerFromAntNum[SelAntNum];

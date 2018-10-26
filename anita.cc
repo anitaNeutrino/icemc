@@ -2425,7 +2425,7 @@ void Anita::GetArrayFromFFT(double *tmp_fftvhz, double *vhz_rx){
 
 }
 
-void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay) {
+void Anita::MakeCRArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft) {
     
   Tools::Zero(vsignal_e_forfft,NFOUR/2);
   Tools::Zero(vsignal_h_forfft,NFOUR/2);
@@ -2481,6 +2481,87 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
       
   } // end loop over nfreq
     
+    double cosphase;
+    double sinphase;
+    for (int ifour=0;ifour<NFOUR/4;ifour++) {      
+      cosphase = cos(v_phases[ifour]*PI/180.);
+      sinphase = sin(v_phases[ifour]*PI/180.);
+      vsignal_e_forfft[2*ifour]*=cosphase;
+      vsignal_e_forfft[2*ifour+1]*=sinphase;
+      vsignal_h_forfft[2*ifour]*=cosphase;
+      vsignal_h_forfft[2*ifour+1]*=sinphase;
+    }
+}
+
+void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay) {
+    
+  Tools::Zero(vsignal_e_forfft,NFOUR/2);
+  Tools::Zero(vsignal_h_forfft,NFOUR/2);
+    
+  double previous_value_e_even=0.;
+  double previous_value_e_odd=0.;
+  double previous_value_h_even=0.;
+  double previous_value_h_odd=0.;
+  int count_nonzero=0;
+  int iprevious=0;
+  int ifirstnonzero=-1;
+  int ilastnonzero=2000;
+  for (int i=0;i<NFREQ;i++) {
+    // freq_forfft has NFOUR/2 elements because it is meant to cover real and imaginary values
+    // but there are only NFOUR/4 different values
+    // it's the index among the NFOUR/4 that we're interested in
+    int ifour=Tools::Getifreq(freq[i],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
+      
+    if (ifour!=-1 && 2*ifour+1<NFOUR/2) {
+      count_nonzero++;
+      if (ifirstnonzero==-1){
+	ifirstnonzero=ifour;
+      }
+
+      vsignal_e_forfft[2*ifour]=vsignalarray_e[i]*2/((double)NFOUR/2); // phases is 90 deg.
+
+      //      cout << "ifour, vsignal is " << ifour << " " << vsignal_e_forfft[2*ifour] << "\n";
+
+      vsignal_e_forfft[2*ifour+1]=vsignalarray_e[i]*2/((double)NFOUR/2); // phase is 90 deg.
+      // the 2/(nfour/2) needs to be included since were using Tools::realft with the -1 setting
+
+      vsignal_h_forfft[2*ifour]=vsignalarray_h[i]*2/((double)NFOUR/2); // what to do about phases
+      vsignal_h_forfft[2*ifour+1]=vsignalarray_h[i]*2/((double)NFOUR/2); // what to do about phases
+      // the 2/(nfour/2) needs to be included since were using Tools::realft with the -1 setting
+      // how about we interpolate instead of doing a box average
+
+      for (int j=iprevious+1;j<ifour;j++) {
+        vsignal_e_forfft[2*j]=previous_value_e_even+(vsignal_e_forfft[2*ifour]-previous_value_e_even)*(double)(j-iprevious)/(double)(ifour-iprevious);
+        //	cout << "j, vsignal is " << j << " " << vsignal_e_forfft[2*j] << "\n";
+        vsignal_h_forfft[2*j]=previous_value_h_even+(vsignal_h_forfft[2*ifour]-previous_value_h_even)*(double)(j-iprevious)/(double)(ifour-iprevious);
+
+        vsignal_e_forfft[2*j+1]=previous_value_e_odd+(vsignal_e_forfft[2*ifour+1]-previous_value_e_odd)*(double)(j-iprevious)/(double)(ifour-iprevious);
+        vsignal_h_forfft[2*j+1]=previous_value_h_odd+(vsignal_h_forfft[2*ifour+1]-previous_value_h_odd)*(double)(j-iprevious)/(double)(ifour-iprevious);
+      }
+
+      ilastnonzero=ifour;
+      iprevious=ifour;
+      previous_value_e_even=vsignal_e_forfft[2*ifour];
+      previous_value_e_odd=vsignal_e_forfft[2*ifour+1];
+      previous_value_h_even=vsignal_h_forfft[2*ifour];
+      previous_value_h_odd=vsignal_h_forfft[2*ifour+1];
+    }
+      
+  } // end loop over nfreq
+    
+    // EH check
+    // cout << "ifirstnonzero, ilastnonzero are " << ifirstnonzero << " " << ilastnonzero << "\n";
+    // cout << "ratio is " << (double)count_nonzero/(double)(ilastnonzero-ifirstnonzero) << "\n";
+  for (int j=0;j<NFOUR/4;j++) {
+    vsignal_e_forfft[2*j]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero)); // plot1d vsignal_e_forfft[0]@512
+    vsignal_e_forfft[2*j+1]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
+    vsignal_h_forfft[2*j]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
+    vsignal_h_forfft[2*j+1]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
+  }
+    
+  //  Tools::InterpolateComplex(vsignal_e_forfft,NFOUR/4);
+  //Tools::InterpolateComplex(vsignal_h_forfft,NFOUR/4);
+
   if (useconstantdelay){
     double cosphase=cos(phasedelay*PI/180.);
     double sinphase=sin(phasedelay*PI/180.);
@@ -2492,106 +2573,13 @@ void Anita::MakeArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,doubl
       vsignal_e_forfft[2*ifour]*=cosphase;
       vsignal_e_forfft[2*ifour+1]*=sinphase;
       vsignal_h_forfft[2*ifour]*=cosphase;
+      // GDB: conditional stop.
+      // b if ifour==37
+      // END GDB.
       vsignal_h_forfft[2*ifour+1]*=sinphase;
     }
   }
-  // for (int i = 0; i <=79; i++) {
-  //   vsignal_e_forfft[i] = 0;
-  //   vsignal_h_forfft[i] = 0;    
-  // }
 }
-
-// void Anita::MakeArraysforFFTOrig(double *vsignalarray_e,double *vsignalarray_h,double *vsignal_e_forfft,double *vsignal_h_forfft, double phasedelay, bool useconstantdelay) {
-    
-//   Tools::Zero(vsignal_e_forfft,NFOUR/2);
-//   Tools::Zero(vsignal_h_forfft,NFOUR/2);
-    
-//   double previous_value_e_even=0.;
-//   double previous_value_e_odd=0.;
-//   double previous_value_h_even=0.;
-//   double previous_value_h_odd=0.;
-//   int count_nonzero=0;
-//   int iprevious=0;
-//   int ifirstnonzero=-1;
-//   int ilastnonzero=2000;
-//   for (int i=0;i<NFREQ;i++) {
-//     // freq_forfft has NFOUR/2 elements because it is meant to cover real and imaginary values
-//     // but there are only NFOUR/4 different values
-//     // it's the index among the NFOUR/4 that we're interested in
-//     int ifour=Tools::Getifreq(freq[i],freq_forfft[0],freq_forfft[NFOUR/2-1],NFOUR/4);
-      
-//     if (ifour!=-1 && 2*ifour+1<NFOUR/2) {
-//       count_nonzero++;
-//       if (ifirstnonzero==-1){
-// 	ifirstnonzero=ifour;
-//       }
-
-//       vsignal_e_forfft[2*ifour]=vsignalarray_e[i]*2/((double)NFOUR/2); // phases is 90 deg.
-
-//       //      cout << "ifour, vsignal is " << ifour << " " << vsignal_e_forfft[2*ifour] << "\n";
-
-//       vsignal_e_forfft[2*ifour+1]=vsignalarray_e[i]*2/((double)NFOUR/2); // phase is 90 deg.
-//       // the 2/(nfour/2) needs to be included since were using Tools::realft with the -1 setting
-
-//       vsignal_h_forfft[2*ifour]=vsignalarray_h[i]*2/((double)NFOUR/2); // what to do about phases
-//       vsignal_h_forfft[2*ifour+1]=vsignalarray_h[i]*2/((double)NFOUR/2); // what to do about phases
-//       // the 2/(nfour/2) needs to be included since were using Tools::realft with the -1 setting
-//       // how about we interpolate instead of doing a box average
-
-//       for (int j=iprevious+1;j<ifour;j++) {
-//         vsignal_e_forfft[2*j]=previous_value_e_even+(vsignal_e_forfft[2*ifour]-previous_value_e_even)*(double)(j-iprevious)/(double)(ifour-iprevious);
-//         //	cout << "j, vsignal is " << j << " " << vsignal_e_forfft[2*j] << "\n";
-//         vsignal_h_forfft[2*j]=previous_value_h_even+(vsignal_h_forfft[2*ifour]-previous_value_h_even)*(double)(j-iprevious)/(double)(ifour-iprevious);
-
-//         vsignal_e_forfft[2*j+1]=previous_value_e_odd+(vsignal_e_forfft[2*ifour+1]-previous_value_e_odd)*(double)(j-iprevious)/(double)(ifour-iprevious);
-//         vsignal_h_forfft[2*j+1]=previous_value_h_odd+(vsignal_h_forfft[2*ifour+1]-previous_value_h_odd)*(double)(j-iprevious)/(double)(ifour-iprevious);
-//       }
-
-//       ilastnonzero=ifour;
-//       iprevious=ifour;
-//       previous_value_e_even=vsignal_e_forfft[2*ifour];
-//       previous_value_e_odd=vsignal_e_forfft[2*ifour+1];
-//       previous_value_h_even=vsignal_h_forfft[2*ifour];
-//       previous_value_h_odd=vsignal_h_forfft[2*ifour+1];
-//     }
-      
-//   } // end loop over nfreq
-    
-//     // EH check
-//     // cout << "ifirstnonzero, ilastnonzero are " << ifirstnonzero << " " << ilastnonzero << "\n";
-//     // cout << "ratio is " << (double)count_nonzero/(double)(ilastnonzero-ifirstnonzero) << "\n";
-//   for (int j=0;j<NFOUR/4;j++) {
-//     vsignal_e_forfft[2*j]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero)); // plot1d vsignal_e_forfft[0]@512
-//     vsignal_e_forfft[2*j+1]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
-//     vsignal_h_forfft[2*j]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
-//     vsignal_h_forfft[2*j+1]*=sqrt((double)count_nonzero/(double)(ilastnonzero-ifirstnonzero));
-//   }
-    
-//   //  Tools::InterpolateComplex(vsignal_e_forfft,NFOUR/4);
-//   //Tools::InterpolateComplex(vsignal_h_forfft,NFOUR/4);
-
-//   if (useconstantdelay){
-//     double cosphase=cos(phasedelay*PI/180.);
-//     double sinphase=sin(phasedelay*PI/180.);
-//     for (int ifour=0;ifour<NFOUR/4;ifour++) {      
-//       if (PULSER) {
-// 	cosphase = cos(v_phases[ifour]*PI/180.);
-// 	sinphase = sin(v_phases[ifour]*PI/180.);
-//       }
-//       vsignal_e_forfft[2*ifour]*=cosphase;
-//       vsignal_e_forfft[2*ifour+1]*=sinphase;
-//       vsignal_h_forfft[2*ifour]*=cosphase;
-//       // GDB: conditional stop.
-//       // b if ifour==37
-//       // END GDB.
-//       vsignal_h_forfft[2*ifour+1]*=sinphase;
-//     }
-//   }
-//   // for (int i = 0; i <=79; i++) {
-//   //   vsignal_e_forfft[i] = 0;
-//   //   vsignal_h_forfft[i] = 0;    
-//   // }
-// }
 
 void Anita::MakeArrayforFFT(double *vsignalarray_e,double *vsignal_e_forfft, double phasedelay, bool useconstantdelay) {
     

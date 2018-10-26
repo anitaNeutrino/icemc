@@ -880,6 +880,7 @@ int main(int argc,  char **argv) {
 	realEvPtr->chanId[UsefulChanIndexV] = UsefulChanIndexV;
 	realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
+        cout << "Antenna " << iant << " ";
 	for (int j = 0; j < fNumPoints; j++) {
 	  // convert seconds to nanoseconds
 	  realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
@@ -889,7 +890,9 @@ int main(int argc,  char **argv) {
 	  realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
 	  realEvPtr->fVolts[UsefulChanIndexV][j] =  volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
 	  realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
+          cout << realEvPtr->fVolts[UsefulChanIndexV][j] << " ";
 	}//end int j
+        cout << endl;
       }// end int iant
 
       realEvPtr->eventNumber = eventNumber;
@@ -990,6 +993,7 @@ int main(int argc,  char **argv) {
 
 
       passes_thisevent=1; // flag this event as passing
+      cout << "PRODUCED TRIGGER" << endl;
     } // end if passing global trigger conditions
     else {
       passes_thisevent=0; // flag this event as not passing
