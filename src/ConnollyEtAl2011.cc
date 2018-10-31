@@ -240,8 +240,7 @@ double icemc::ConnollyEtAl2011::YGenerator::Getyweight(Energy pnu, double y, Neu
   C2 = fC2.Eval(epsilon);//Eq(17)
   C1_low = fC1_low.Eval(epsilon);//Eq(16) (Low region)
   C1_high = fC1_high[{leptonNumber, current}].Eval(epsilon);//Eq(16)(High region) 
-  
- 
+
   if(leptonNumber==Neutrino::L::Matter){//nu_nubar==0) {
     U = 1-1/C2;
     W = fabs( (ymax_high-C1_high)/(ymin_high-C1_high));

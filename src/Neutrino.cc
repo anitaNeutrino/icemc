@@ -1,5 +1,19 @@
 #include "Neutrino.h"
 
+int icemc::Neutrino::pdgCode(Neutrino::Flavor flavor) {
+  switch(flavor){
+  case Neutrino::Flavor::e:   return 12;
+  case Neutrino::Flavor::mu:  return 14;
+  case Neutrino::Flavor::tau: return 16;
+  }
+}
+
+
+int icemc::Neutrino::pdgCode() const {
+  return pdgCode(flavor);
+}
+
+
 std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Interaction::Current& c){
   switch(c){
   case icemc::Neutrino::Interaction::Current::Charged:

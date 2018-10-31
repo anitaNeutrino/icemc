@@ -59,8 +59,10 @@ icemc::EventGenerator::EventGenerator(const Settings* settings) :
 
 void icemc::EventGenerator::initialize(){
 
-  ///@todo can the details of this be hidden?
-  if(fSettings->EXPONENT > 10 && fSettings->EXPONENT < 10){
+
+  report() << severity::info << "EXPONENT = " << fSettings->EXPONENT << std::endl;
+
+  if(fSettings->EXPONENT > 10 && fSettings->EXPONENT < 10){ ///@todo fix this
     fSourceEnergyModel = std::make_shared<Source::MonoEnergetic>(1e20*Energy::Unit::eV);
   }
   else{
@@ -70,8 +72,7 @@ void icemc::EventGenerator::initialize(){
   ///@todo add support for directional sources
   fSourceDirectionModel = std::make_shared<Source::DiffuseFlux>();
 
-
-  if(fSettings->YPARAM==0){ ///@todo enumify
+  if(fSettings->YPARAM==0){ ///@todo enumify YPARAM
     fYGenerator = std::make_shared<GhandiEtAl::YGenerator>();
   }
   else if(fSettings->YPARAM==1){
@@ -82,7 +83,7 @@ void icemc::EventGenerator::initialize(){
   }
 
   
-  if(fSettings->SIGMAPARAM==0){ ///@todo enumify
+  if(fSettings->SIGMAPARAM==0){ ///@todo enumify SIGMAPARAM
     fCrossSectionModel = std::make_shared<MHReno::CrossSectionModel>(fSettings);
   }
   else if(fSettings->SIGMAPARAM==1){

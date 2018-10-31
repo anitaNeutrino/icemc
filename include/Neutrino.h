@@ -26,6 +26,9 @@ namespace icemc {
 			     tau = 3
     };
 
+    static int pdgCode(Flavor f);
+    int pdgCode() const;
+
 
     /**
      * @class L
@@ -49,6 +52,7 @@ namespace icemc {
 				Neutral = 1
       };
 
+
       Geoid::Position position;
       double crossSection = -1;
       double length = -1;
@@ -61,7 +65,7 @@ namespace icemc {
     public:
       TVector3 direction;
       // Geoid::Position entry;
-      // Geoid::Position exit; 
+      // Geoid::Position exit;
       double columnDepth = -1;
       double weight = -1;
 
