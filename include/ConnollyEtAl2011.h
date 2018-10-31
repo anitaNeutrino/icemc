@@ -96,7 +96,7 @@ namespace icemc {
     
     const std::string equation14 = "x+pow( z*pow([1]-x, (-1./y + 1)) + (1-z)*pow([0]-x,-1./y + 1) , y/(y-1))"; // x = C1, y = C2, z = R, [0] = y_min, [1] = y_max
     const std::string equation15 = "(pow([1]-x,y) / pow([0]-x, y-1)) + x"; // x = C1', y = R,  [0] = y_min, [1] = y_max    
-    const std::string equation16 = "[0]-[1]*(-exp(-(x-[2])/[3]))"; // x = epsilon, [i] is A0, A1, A2, A3
+    const std::string equation16 = "[0]-[1]*exp(-(x-[2])/[3])"; // x = epsilon, [i] is A0, A1, A2, A3
     const std::string equation17 = "[0]+[1]*x"; // x = epsilon, [i] are the B0, B1
     const std::string equation18 = "[0]*sin([1]*(x-[2]))"; //x = epsilon, [i] are the F0, F1, F2
 
