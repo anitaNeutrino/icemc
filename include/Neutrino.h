@@ -14,6 +14,8 @@ namespace icemc {
    * @brief All the randomly selected (and derived) numbers that describe a simulated neutrino
    */
   class Neutrino {
+    friend class NeutrinoFactory;
+    
   public:
 
     /**
@@ -52,7 +54,6 @@ namespace icemc {
 				Neutral = 1
       };
 
-
       Geoid::Position position;
       double crossSection = -1;
       double length = -1;
@@ -63,13 +64,21 @@ namespace icemc {
 
     class Path {
     public:
-      TVector3 direction;
-      // Geoid::Position entry;
-      // Geoid::Position exit;
-      double columnDepth = -1;
-      double weight = -1;
+      TVector3 direction; ///< unit vector direction of neutrino travel
+      Geoid::Position entry; ///< Where the neutrino entered the Earth.
+      Geoid::Position interaction; ///< Same as interaction.position ///@todo deduplicate?
+      Geoid::Position exit; ///< Where it would have left the Earth if it didn't interact
+      double columnDepth = -1; ///< Line integral of Earth density from entry to interaction
+      double columnDepthInteractionToExit = -1; ///< Line integral of Earth density from interaction to exit
+      double weight = -1; ///@todo
 
-      ClassDef(Path, 1);
+      double length(bool includeDistanceToExit = false) const {
+	const Geoid::Position& end = includeDistanceToExit ? exit : interaction;
+	const TVector3 d = end - entry;
+	return d.Mag();
+      }
+
+      ClassDef(Path, 3);
     };
     
     Energy energy;
@@ -77,7 +86,22 @@ namespace icemc {
     L leptonNumber = L::Matter;
     Interaction interaction;
     Path path;
-    ClassDef(Neutrino, 1);    
+    ClassDef(Neutrino, 1);
+
+
+
+
+    double weight(){
+      return 0; ///@todo product of all weights;
+    };
+
+  private:
+    void setInteractionPosition(const Geoid::Position& p){
+      // keep these the same
+      interaction.position = p;
+      path.interaction = p;
+    }
+    
   };
 }
 

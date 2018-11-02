@@ -35,7 +35,7 @@ namespace icemc {
 		    std::shared_ptr<InteractionGenerator> interactionGenerator);
     
 
-    Neutrino makeNeutrino(const OpticalPath& opticalPath);
+    Neutrino makeNeutrino(const Geoid::Position& interaction, const OpticalPath& opticalPath);
 
     
 

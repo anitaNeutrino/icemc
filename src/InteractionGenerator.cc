@@ -59,7 +59,7 @@ Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid
       nuPos.SetAltitude(surfaceElevation - randomThickness);
 
       // std::cout << "Picked an interaction position after " <<  numTries << " tries..." << std::endl;
-      std::cout << "nuPos = " << nuPos.Longitude() << ", " << nuPos.Latitude() << ", " << nuPos.Altitude() << std::endl;
+      // std::cout << "nuPos = " << nuPos.Longitude() << ", " << nuPos.Latitude() << ", " << nuPos.Altitude() << std::endl;
       // std::cout << surfaceElevation << ", " << randomThickness << std::endl;
     }
   }

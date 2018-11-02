@@ -1,5 +1,9 @@
 #include "Neutrino.h"
 
+// ClassImp(icemc::Neutrino);
+// ClassImp(icemc::Neutrino::Interaction);
+// ClassImp(icemc::Neutrino::Path);
+
 int icemc::Neutrino::pdgCode(Neutrino::Flavor flavor) {
   switch(flavor){
   case Neutrino::Flavor::e:   return 12;

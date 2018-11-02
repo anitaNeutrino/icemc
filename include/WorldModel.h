@@ -25,7 +25,7 @@ namespace icemc {
   class WorldModel {
 
   public:
-    virtual double integratePath(const Geoid::Position& start, const TVector3& direction) const = 0;
+    virtual std::pair<Geoid::Position, double> integratePath(const Geoid::Position& start, const TVector3& direction) const = 0;
     virtual double SurfaceAboveGeoid(const Geoid::Position& p) const = 0;
     virtual double IceThickness(const Geoid::Position& p) const = 0;
     virtual double maxIceThicknessWithinDistance(const Geoid::Position& p, double distanceMeters) const = 0;    

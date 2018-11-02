@@ -132,7 +132,7 @@ namespace icemc{
 
     Geoid::Position WhereDoesItEnter(const Geoid::Position &posnu,const TVector3 &nnu) const;
 
-    double integratePath(const Geoid::Position& start, const TVector3& direction) const override;
+    std::pair<Geoid::Position, double> integratePath(const Geoid::Position& start, const TVector3& direction) const override;
  
   protected:
     double fMaxIceThickness;

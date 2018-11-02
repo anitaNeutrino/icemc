@@ -176,23 +176,26 @@ double icemc::Crust2::WaterDepth(const Geoid::Position&pos) const {
 
 
 
-double icemc::Crust2::integratePath(const Geoid::Position& start, const TVector3& direction) const {
+std::pair<Geoid::Position, double> icemc::Crust2::integratePath(const Geoid::Position& start, const TVector3& direction) const {
 
   double cumulativeColumnDepth = 0;
-  int nSteps = 0;
-  int nSteps2 = 0;
-  Geoid::Position p = start;
+  Geoid::Position posNow = start;
+  Geoid::Position posEnd = posNow;
   double fractionalStep = 1.0;
-  Layer l = getLayer(p);
-  // std::cout << start << "\t" << direction << "\t" << fLayerNames.at(l) << std::endl;
-  while(l > Layer::Air){
-    l = getLayer(p);
+  Layer layerNow = getLayer(posNow);
+  // int nSteps = 0, nSteps2 = 0;
+  // std::cout << fLayerNames.at(layerNow) << "\n";
+
+  while(layerNow > Layer::Air){
+    layerNow = getLayer(posNow);
     // const std::string& ln = fLayerNames.find(l)->second;
 
-    double density = Density(p);
+    double density = Density(posNow);
 
-    double cosTheta = p.Dot(direction)/p.Mag();
-    double distGuess = 1000e3;
+    double cosTheta = posNow.Dot(direction)/posNow.Mag();
+    const double minStepSize = 1.0;    
+    const double maxStepSize = 1000e3;
+    double distGuess = maxStepSize;
     double dr = 1;
     // const char* dir = "horizontal";    
     
@@ -200,54 +203,53 @@ double icemc::Crust2::integratePath(const Geoid::Position& start, const TVector3
       // neutrino path is upgoing at this position
       // where up is radially outwards at p
       // but we are integrating downwards, so find distance to layer below
-      dr = p.Mag() - getLayerSurfaceAtPosition(p, layerBelow(l));
-      distGuess = l >= Layer::Mantle ? dr/cosTheta : 1000e3;
+      dr = posNow.Mag() - getLayerSurfaceAtPosition(posNow, layerBelow(layerNow));
+      distGuess = layerNow >= Layer::Mantle ? dr/cosTheta : distGuess;
       // dir = "(nu up) integrating down";
     }
     else if(cosTheta < 0){
       // neutrino path is downgoing at this position
       // where down is radially indwards at p
       // but we are integrating upwards, so find the distance to the surface of this layer.
-      dr = getLayerSurfaceAtPosition(p, l) - p.Mag();
-      distGuess = l >= Layer::Mantle ?  dr/-cosTheta : dr;
+      dr = getLayerSurfaceAtPosition(posNow, layerNow) - posNow.Mag();
+      distGuess = layerNow >= Layer::Mantle ?  dr/-cosTheta : dr;
       // dir = "(nu down) integrating up";
     }
 
     double stepSize = fractionalStep*distGuess;
 
-    const double minStepSize = 1.0;
+
     stepSize = TMath::Max(stepSize, minStepSize);
     // std::cout << dir << "\t" << nSteps2 << "\t" << cosTheta << "\t" << TMath::ACos(cosTheta)*TMath::RadToDeg() << "\t" << ln << " dr = " << dr << "\t distGuess = " << distGuess << ", stepSize = " << stepSize << "\t...";
-    Geoid::Position p2 = p - stepSize*direction;
+    posEnd = posNow + stepSize*direction;
 
-    Layer l2 = getLayer(p2);
-    if(l2 == l || stepSize <= minStepSize){
+    Layer l = getLayer(posEnd);
+    if(l == layerNow || stepSize <= minStepSize){
       // if you're in the same layer
       // or you crossed with a step size of 1
-      // update p,l and reset step size fraction
+      // update posNow,layernow,  reset step size fraction
       // and update columnDepth
-      p = p2;
-      l = l2; // this allows us to break out of the loop on this iteration
+
+      // if(l!=layerNow){
+      // 	std::cout << fLayerNames.at(l) << "\n";
+      // }
+      
+      posNow = posEnd;
+      layerNow = l; // this allows us to break out of the loop on this iteration
       fractionalStep = 1;
       cumulativeColumnDepth += density*stepSize;
-      nSteps++;
-      // std::cout << "success!" << std::endl;
+      // nSteps++;
     }
     else{
       // try again with a smaller step
       fractionalStep *= 0.5;
-      // std::cout << "failed :(" << std::endl;
     }
-    nSteps2++;
+    // nSteps2++;
   }
 
-  if(nSteps2 > 1000){
-    icemc::report() << severity::warning << "I took " << nSteps << " good steps out of "  <<  nSteps2 <<  " to find " << cumulativeColumnDepth << std::endl;  
-  }
-
-  std::cout << "Steps: " <<  nSteps << "\t" << nSteps2 << std::endl;
+  // std::cout << nSteps << "\t" << nSteps2 << "\t" << cumulativeColumnDepth << "\n" << std::endl;
   
-  return cumulativeColumnDepth;
+  return {posEnd, cumulativeColumnDepth};
 }
 
 
@@ -273,15 +275,15 @@ icemc::Crust2::Layer icemc::Crust2::getLayer(const Geoid::Position& pos, Layer s
 
     double layerSurface = getLayerSurfaceAtPosition(pos, layer);
 
-    std::cout << "layer name = " << fLayerNames.at(layer) << "\n";
-    std::cout << "layer surface = " << layerSurface << "\n";
-    std::cout << "pos = " << posMag << "\n";    
-    std::cout << "delta (km) " << 1e-3*(posMag - layerSurface)  << "\n";
-    std::cout << "surface radius " << pos.EllipsoidSurface() + fSurfaceAboveGeoid.eval(pos) <<"\n";
-    std::cout << std::endl;
+    // std::cout << "layer name = " << fLayerNames.at(layer) << "\n";
+    // std::cout << "layer surface = " << layerSurface << "\n";
+    // std::cout << "pos = " << posMag << "\n";    
+    // std::cout << "delta (km) " << 1e-3*(posMag - layerSurface)  << "\n";
+    // std::cout << "surface radius " << pos.EllipsoidSurface() + fSurfaceAboveGeoid.eval(pos) <<"\n";
+    // std::cout << std::endl;
+    
     if(posMag > layerSurface){
       // then we're in the layer from the previous loop!
-      std::cout << std::endl;
       return inLayer;
     }
     inLayer = layer;

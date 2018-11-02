@@ -195,7 +195,7 @@ void icemc::EventGenerator::generate(Detector& detector){
       continue;
     }
     
-    fEvent.neutrino = nuFactory.makeNeutrino(opticalPath);
+    fEvent.neutrino = nuFactory.makeNeutrino(interactionPos, opticalPath);
     
     fEvent.shower = showerModel.generate(fEvent.neutrino);
     

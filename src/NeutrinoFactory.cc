@@ -37,7 +37,7 @@ icemc::Neutrino::Flavor icemc::NeutrinoFactory::pickFlavor() {
   }
 }
 
-icemc::Neutrino icemc::NeutrinoFactory::makeNeutrino(const OpticalPath& opticalPath) {
+icemc::Neutrino icemc::NeutrinoFactory::makeNeutrino(const Geoid::Position& interaction, const OpticalPath& opticalPath) {
 
   // neutrino properties
   Neutrino n;
@@ -46,18 +46,18 @@ icemc::Neutrino icemc::NeutrinoFactory::makeNeutrino(const OpticalPath& opticalP
   n.leptonNumber = Neutrino::L::Matter; ///@todo check
 
   // interaction properties
-  n.interaction.position = opticalPath.steps.at(0).start; ///@todo get the *exact* picked position?
+  n.setInteractionPosition(interaction);
 
 
-  static auto print_geoid = [](const char* words, const Geoid::Position& p){
-			      std::cout << words << "\t" << p.Longitude() << "\t" << p.Latitude() << "\t" << p.Altitude() << std::endl;
-			    };
-  {
-    print_geoid("start 0", opticalPath.steps.at(0).start);
-    print_geoid("end 0", opticalPath.steps.at(0).end);
-    print_geoid("start 1", opticalPath.steps.at(1).start);
-    print_geoid("end 1", opticalPath.steps.at(1).end);
-  }
+  // static auto print_geoid = [](const char* words, const Geoid::Position& p){
+  // 			      std::cout << words << "\t" << p.Longitude() << "\t" << p.Latitude() << "\t" << p.Altitude() << std::endl;
+  // 			    };
+  // {
+  //   print_geoid("start 0", opticalPath.steps.at(0).start);
+  //   print_geoid("end 0", opticalPath.steps.at(0).end);
+  //   print_geoid("start 1", opticalPath.steps.at(1).start);
+  //   print_geoid("end 1", opticalPath.steps.at(1).end);
+  // }
   
   n.interaction.current = fInteractionGenerator->pickCurrent();
   // n.interaction.crossSection = fConnollyEtAl2011.getSigma(n.energy, n.leptonNumber,  n.interaction.current); 
@@ -70,9 +70,17 @@ icemc::Neutrino icemc::NeutrinoFactory::makeNeutrino(const OpticalPath& opticalP
 
 
   n.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath);
+  std::pair<Geoid::Position, double> entry_columnDepth = fWorldModel->integratePath(n.interaction.position, -n.path.direction);
 
-  n.path.columnDepth = fWorldModel->integratePath(n.interaction.position, -n.path.direction);
-  std::cout << "column depth = " << n.path.columnDepth << std::endl;
+  std::pair<Geoid::Position, double> exit_columnDepth = fWorldModel->integratePath(n.interaction.position, n.path.direction);
+  
+  n.path.entry = entry_columnDepth.first;
+  n.path.columnDepth = entry_columnDepth.second;
+
+  n.path.exit = exit_columnDepth.first;
+  n.path.columnDepthInteractionToExit = exit_columnDepth.second;
+  
+  // std::cout << "column depth = " << n.path.columnDepth << std::endl;
 
   return n;
   

@@ -5,11 +5,6 @@
 
 TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& opticalPath){
 
-
-  /**
-   * We have the 
-   * 
-   */
   const Geoid::Position& start = opticalPath.steps.at(0).start;
   const Geoid::Position pointLocalXTowards(Geoid::Pole::South);
   const TVector3& rfDir = opticalPath.steps.at(0).direction().Unit(); ///@todo better interface
@@ -27,6 +22,8 @@ TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& op
   nuDir.SetMagThetaPhi(1.0, thetaCherenkov, phi);
 
   nuDir = lc.localTranslationToGlobal(nuDir);
+
+  // std::cout << nuDir.Angle(rfDir) << std::endl;
   
   return nuDir.Unit();
 
