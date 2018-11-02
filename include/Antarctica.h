@@ -11,8 +11,7 @@ class TRandom3;
 
 namespace icemc {
   class Settings;
-  class Interaction;
-  class Ray;  
+  class InteractionGenerator;
   class Balloon;
   class Earth;
 
@@ -65,7 +64,7 @@ namespace icemc {
     double SurfaceAboveGeoid(const Geoid::Position& pos) const;
     double WaterDepth(double lon,double lat) const;
     double WaterDepth(const Geoid::Position& pos) const;
-    Geoid::Position pickInteractionPosition(const Geoid::Position &balloon) const;
+    // Geoid::Position pickInteractionPosition(const Geoid::Position &balloon) const;
     int RossIceShelf(const Geoid::Position &position) const; 
     int IceOnWater(const Geoid::Position &postition) const;
     int RossExcept(const Geoid::Position &position) const;
@@ -95,7 +94,7 @@ namespace icemc {
   
     void IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const;
 
-    int PickUnbiased(Interaction *interaction1) const;
+    int PickUnbiased(InteractionGenerator *interaction1) const;
 
 
   protected:

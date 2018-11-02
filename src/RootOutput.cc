@@ -3,7 +3,6 @@
 #include "EventGenerator.h"
 #include "ConnollyEtAl2011.h"
 #include "Settings.h"
-#include "TauModel.h"
 #include "EnvironmentVariable.h"
 #include "Tools.h"
 #include "RayTracer.h"

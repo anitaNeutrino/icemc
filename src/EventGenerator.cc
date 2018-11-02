@@ -24,6 +24,7 @@
 #include "RNG.h"
 #include "TRandom3.h" ///@todo remove when gRandom is excized
 #include "MonoEnergetic.h"
+#include "InteractionGenerator.h"
 
 
 
@@ -139,9 +140,9 @@ void icemc::EventGenerator::generate(Detector& detector){
 
   
   ShowerModel showerModel(fSettings);
-
   
   auto antarctica = std::make_shared<Antarctica>();
+  auto interactionGenerator = std::make_shared<InteractionGenerator>(fSettings, antarctica);
 
   icemc::report() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
   
@@ -154,7 +155,7 @@ void icemc::EventGenerator::generate(Detector& detector){
 
   gRandom->SetSeed(fSettings->SEED); // settings seed is now updated with run_no to uniquify it elsewhere
 
-  NeutrinoFactory nuFactory(fSettings, fSourceEnergyModel, fSourceDirectionModel, fCrossSectionModel, fYGenerator);
+  NeutrinoFactory nuFactory(fSettings, fSourceEnergyModel, fSourceDirectionModel, fCrossSectionModel, fYGenerator, antarctica, interactionGenerator);
   RayTracer rayTracer(antarctica);
 
   int numEvents = fSettings->NNU - fSettings->getStartNu();
@@ -184,7 +185,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     gRandom->SetSeed(eventNumber+6e7); ///@todo kill me
     
     fEvent.detector = detector.getPosition(fEvent.loop.eventTime);
-    Geoid::Position interactionPos = antarctica->pickInteractionPosition(fEvent.detector);
+    Geoid::Position interactionPos = interactionGenerator->pickInteractionPosition(fEvent.detector);
 
     OpticalPath opticalPath = rayTracer.findPath(fEvent.detector, interactionPos);
     fEvent.loop.rayTracingSolution = opticalPath.residual < 1; // meters
@@ -200,11 +201,11 @@ void icemc::EventGenerator::generate(Detector& detector){
     
     PropagatingSignal signal = askaryanModel.generate(fEvent.neutrino, fEvent.shower, opticalPath);
 
-    std::cout << signal.maxEField() << "\n";
+    // std::cout << signal.maxEField() << "\n";
     
     signal.propagate(opticalPath);
 
-    std::cout << signal.maxEField() << "\n"  << std::endl;
+    // std::cout << signal.maxEField() << "\n"  << std::endl;
 
     fEvent.loop.chanceInHell = false; //detector.chanceInHell(signal);
 

@@ -3,7 +3,6 @@
 
 #include "AbstractSources.h"
 #include "ConnollyEtAl2011.h"
-#include "Interaction.h"
 #include "Neutrino.h"
 #include "RNG.h"
 #include "OpticalPath.h"
@@ -14,6 +13,8 @@ namespace icemc {
   }
 
   class Settings;
+  class WorldModel;
+  class InteractionGenerator;
 
   /**
    * @class NeutrinoFactory
@@ -29,7 +30,9 @@ namespace icemc {
 		    std::shared_ptr<Source::EnergyModel> sourceEnergyModel,
 		    std::shared_ptr<Source::DirectionModel> sourceDirectionModel,
 		    std::shared_ptr<CrossSectionModel> crossSectionModel,
-		    std::shared_ptr<YGenerator> yGenerator);
+		    std::shared_ptr<YGenerator> yGenerator,
+		    std::shared_ptr<WorldModel> worldModel,
+		    std::shared_ptr<InteractionGenerator> interactionGenerator);
     
 
     Neutrino makeNeutrino(const OpticalPath& opticalPath);
@@ -37,13 +40,17 @@ namespace icemc {
     
 
   private:
+
+    std::pair<double, double> integrateNeutrinoPath(const Geoid::Position& interaction, const TVector3& neutrinoDirection) const;
+    
     const Settings* fSettings;
     std::shared_ptr<Source::EnergyModel> fSourceEnergyModel;
     std::shared_ptr<Source::DirectionModel> fSourceDirectionModel; 
     std::shared_ptr<CrossSectionModel> fCrossSectionModel;
     std::shared_ptr<YGenerator> fYGenerator;
+    std::shared_ptr<WorldModel> fWorldModel;
     // ConnollyEtAl2011 fConnollyEtAl2011; // contains an inelasticity distribution thingy
-    Interaction fInteraction;    
+    std::shared_ptr<InteractionGenerator> fInteractionGenerator;
 
   };
 

@@ -11,7 +11,8 @@ namespace icemc {
    * @class OpticalPath
    * @brief A class to hold the output of the RayTracing.
    * 
-   * Stores the output of the RayTracing in a way that can be used to attenuate the Askaryan signal
+   * Stores the output of the RayTracing.
+   * Determines the attenuation applied to the Askaryan signal.
    */
 
   class OpticalPath {

@@ -20,7 +20,6 @@
 #include "ShowerModel.h"
 #include "RayTracer.h"
 #include "ConnollyEtAl2011.h"
-#include "TauModel.h"
 
 
 int main(){
