@@ -79,134 +79,103 @@ TVector3 icemc::WorldModel::GetSurfaceNormal(const Geoid::Position& p) const {
 
 
 
-// double icemc::WorldModel::CreateHorizons(Detector* detector,  double horizonDistanceMeters, double timeStepSeconds){
 
-//   if(fHorizons.GetN()==0){
+
+
+
+size_t icemc::Mesh::addPoint(const Geoid::Position& p2, double val){
   
-//     if(timeStepSeconds <= 0){
-//       icemc::report() << severity::error << "got timeStepSeconds = " << timeStepSeconds << ", setting to default " << icemc::WorldModel::defaultTimeStep << std::endl;
-//       timeStepSeconds = defaultTimeStep;
-//     }
-
-//     double startTime = detector->getStartTime();
-//     double endTime = detector->getEndTime();
-    
-//     const int nSteps = (endTime - startTime)/timeStepSeconds;
-
-//     icemc::report() << severity::info << "Creating horizons for " << nSteps << " time samples" << std::endl;
-    
-//     for(int step=0; step <= nSteps; step++){
-//       double sampleTime = startTime + step*timeStepSeconds;
-
-//       Geoid::Position pos = detector->getPosition(sampleTime);
-
-//       double volume = IceVolumeWithinHorizon(pos, horizonDistanceMeters);
-
-//       fHorizons.SetPoint(fHorizons.GetN(), sampleTime, volume);
-
-//       std::cout << "\r" << step << " / " << nSteps << std::flush;
-//     }
-//     std::cout << std::endl;
-//   }
-
-//   std::cout << fHorizons.GetN() << std::endl;
-//   exit(1);
-  
-//   return 0;
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-size_t icemc::Mesh::addPoint(const Geoid::Position& p, double val){
-  
-  if(fDoneInit){
-    icemc::report() << severity::warning << "Can't add a point after calling eval!" << std::endl;
+  if(fDoneBuild){
+    icemc::report() << severity::warning << "Can't add a point after calling build!" << std::endl;
     return N();
   }
-  Geoid::Position p2 = p;
-  p2.SetMag(p.EllipsoidSurface());
-  fPoints.emplace_back(Point(p, val));
+  Geoid::Position p = p2;
+  p.SetMag(p2.EllipsoidSurface());
+
+
+  /**
+   * To follow what's going on here you need to image a sphere cut in half.
+   * There's only one sphere of data but we're going to represent it with 6 hemispheres (Delaunays).
+   * We take the same sphere and cut it in half 3 ways:
+   * along the x-y plane, the x-z plane, and the y-z plane.
+   * Annoyingly, this does triple the amount of memory we need, but it ensures no edge effects.
+   * 
+   * i.e. we get a point (x,y,z) and a value v.
+   * If z>0 we put it in the fUpZ category, otherwise fDownZ
+   * If y>0 we put it in the fUpY category, otherwise fDownY
+   * If x>0 we put it in the fUpX category, otherwise fDownx
+   */
+
+
+  if(p.X() >= 0){
+    fUpX.fPoints.add(p, val);
+  }
+  else{
+    fDownX.fPoints.add(p, val);
+  }
+
+  if(p.Y() >= 0){
+    fUpY.fPoints.add(p, val);
+  }
+  else{
+    fDownY.fPoints.add(p, val);    
+  }
+  
+
+  if(p.Z() >= 0){
+    fUpZ.fPoints.add(p, val);
+  }
+  else{
+    fDownZ.fPoints.add(p, val);
+  }
+
+  fNumPoints++;
+  
   return N();
 }
 
 
-double icemc::Mesh::eval(const Geoid::Position& p) const {
+double icemc::Mesh::eval(const Geoid::Position& p2) const {
 
-  if(N() == 0){
-    icemc::report() << severity::warning << "Can't interpolate with 0 points" << std::endl;
-    return TMath::QuietNaN();
-  }
-
-  if(!fDoneInit){
-    init();
+  if(fDoneBuild==false){
+    icemc::report() << severity::warning << "Can't call eval without first calling build! returning 0." << std::endl;
+    return 0;
   }
   
-  Geoid::Position p2 = p;
-  p2.SetMag(p.EllipsoidSurface());
+  Geoid::Position p = p2;
+  p.SetMag(p2.EllipsoidSurface());
 
   double interpolatedMeshVal = 0;
 
-  double X = TMath::Abs(p2.X());
-  double Y = TMath::Abs(p2.Y());
-  double Z = TMath::Abs(p2.Z());
+  double X = TMath::Abs(p.X());
+  double Y = TMath::Abs(p.Y());
+  double Z = TMath::Abs(p.Z());
   
   if(Z >= X && Z >= Y){
-    if(p2.Z() >= 0){
-      interpolatedMeshVal = fZUp->Interpolate(p2.X(),  p2.Y());
+    // for z we interpolate v in x-y
+    if(p.Z() >= 0){
+      interpolatedMeshVal = fUpZ.fDelaunay->Interpolate(p.X(),  p.Y());
     }
     else{
-      interpolatedMeshVal = fZDown->Interpolate(p2.X(),  p2.Y());
+      interpolatedMeshVal = fDownZ.fDelaunay->Interpolate(p.X(),  p.Y());
     }
   }
   else if(X >= Y && X >= Z){
-    if(p2.X() >= 0){
-      interpolatedMeshVal = fXUp->Interpolate(p2.Y(),  p2.Z());
+    // for x we interpolate v in y-z
+    if(p.X() >= 0){
+      interpolatedMeshVal = fUpX.fDelaunay->Interpolate(p.Y(),  p.Z());
     }
     else{
-      interpolatedMeshVal = fXDown->Interpolate(p2.Y(),  p2.Z());
+      interpolatedMeshVal = fDownX.fDelaunay->Interpolate(p.Y(),  p.Z());
     }
   }
   else if(Y >= X && Y >= Z){
-    if(p2.Y() >= 0){
-      interpolatedMeshVal = fYUp->Interpolate(p2.X(),  p2.Z());
+    // for y we interpolate v in z-x
+    if(p.Y() >= 0){
+      interpolatedMeshVal = fUpY.fDelaunay->Interpolate(p.Z(),  p.X());
     }
     else{
-      interpolatedMeshVal = fYDown->Interpolate(p2.X(),  p2.Z());
+      interpolatedMeshVal = fDownY.fDelaunay->Interpolate(p.Z(),  p.X());
     }
   }
   else{
@@ -216,74 +185,72 @@ double icemc::Mesh::eval(const Geoid::Position& p) const {
   return interpolatedMeshVal;
 }
 
-void icemc::Mesh::init() const {
 
-  if(!fDoneInit){
 
-    for(int i=0; i < N(); i++){
-      const Geoid::Position& p = fPoints.at(i).position;
-      const double val = fPoints.at(i).value;
-      
-      if(p.X() >= 0){
-	xUpX.push_back(p.Y());
-	xUpY.push_back(p.Z());
-	xUpZ.push_back(val);
-      }
-      else{
-	xDownX.push_back(p.Y());
-	xDownY.push_back(p.Z());
-	xDownZ.push_back(val);
-      }
 
-      if(p.Y() >= 0){
-	yUpX.push_back(p.X());
-	yUpY.push_back(p.Z());	
-        yUpZ.push_back(val);
-      }
-      else{
-	yDownX.push_back(p.X());
-	yDownY.push_back(p.Z());
-	yDownZ.push_back(val);
-      }
-      
-      if(p.Z() >= 0){
-	zUpX.push_back(p.X());
-	zUpY.push_back(p.Y());	
-        zUpZ.push_back(val);
-      }
-      else{
-	zDownX.push_back(p.X());
-	zDownY.push_back(p.Y());
-	zDownZ.push_back(val);
-      }            
-    }
+void icemc::Mesh::build() {
 
-    const int minPoints = 2;
-    if(xUpX.size() > minPoints){
-      fXUp = std::unique_ptr<Delaunay2D>(new Delaunay2D(xUpX.size(), &xUpX[0], &xUpY[0], &xUpZ[0]));
-    }
+  if(!fDoneBuild){
 
-    if(xDownX.size() > minPoints){
-    fXDown = std::unique_ptr<Delaunay2D>(new Delaunay2D(xDownX.size(), &xDownX[0], &xDownY[0], &xDownZ[0]));
-    }
-
-    if(yUpX.size() > minPoints){
-      fYUp = std::unique_ptr<Delaunay2D>(new Delaunay2D(yUpX.size(), &yUpX[0], &yUpY[0], &yUpZ[0]));
-    }
-
-    if(yDownX.size() > minPoints){
-      fYDown = std::unique_ptr<Delaunay2D>(new Delaunay2D(yDownX.size(), &yDownX[0], &yDownY[0], &yDownZ[0]));
-    }
-
-    if(zUpX.size() > minPoints){
-    fZUp = std::unique_ptr<Delaunay2D>(new Delaunay2D(zUpX.size(), &zUpX[0], &zUpY[0], &zUpZ[0]));
-    }
-
-    if(zDownX.size() > minPoints){
-      fZDown = std::unique_ptr<Delaunay2D>(new Delaunay2D(zDownX.size(), &zDownX[0], &zDownY[0], &zDownZ[0]));
-    }
-
+    fUpX.build();
+    fDownX.build();
+    fUpY.build();
+    fDownY.build();
+    fUpZ.build();
+    fDownZ.build();    
     
-    fDoneInit = true;
+    fDoneBuild = true;
   }
+}
+
+
+bool icemc::Mesh::Hemisphere::build(){
+
+  const int minPoints = 2;
+  if(fPoints.v.size() > minPoints){
+
+    fKDTree = std::make_shared<TKDTreeID>(fPoints.v.size(), nDim, kdTreeBinSize);
+    fKDTree->SetData(0, &fPoints.x[0]);
+    fKDTree->SetData(1, &fPoints.y[0]);
+    fKDTree->SetData(2, &fPoints.z[0]);
+    fKDTree->Build();
+
+
+    fDelaunay = std::make_shared<Delaunay2D>(fPoints.v.size(),
+					     fAxis==Axis::x ? &fPoints.y[0] : fAxis==Axis::y ? &fPoints.z[0] : &fPoints.x[0],
+					     fAxis==Axis::x ? &fPoints.z[0] : fAxis==Axis::y ? &fPoints.x[0] : &fPoints.y[0],
+					     &fPoints.v[0]);
+    return true;
+  }
+  else{
+    icemc::report() << severity::error << "Can't initialize with only " << fPoints.v.size() << " points!" << std::endl;
+    return false;
+  }
+}
+
+
+double icemc::Mesh::findMaxWithinDistance(const Geoid::Position &p, double distanceMeters) const {
+
+  if(fDoneBuild==false){
+    
+  }
+
+  double maxVal = -DBL_MAX;
+
+  for(auto h : {&fUpX, &fDownX, &fUpY, &fDownY, &fUpZ, &fDownZ}){
+    if(h->fKDTree!=nullptr){
+      double xyz[3];
+      p.GetXYZ(xyz);
+      std::vector<int> indices;
+      h->fKDTree->FindInRange(xyz, distanceMeters, indices);
+
+      for(int i : indices){
+	double val = h->fPoints.v[i];
+	if(val > maxVal){
+	  maxVal = val;
+	}
+      }
+    }
+  }
+return maxVal;
 }

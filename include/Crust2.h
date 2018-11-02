@@ -10,7 +10,6 @@
 
 #include "WorldModel.h"
 
-#include "TKDTree.h"
 
 class TH2D;
 
@@ -89,20 +88,20 @@ namespace icemc{
     virtual double GetMaxIceThickness() const {
       return fMaxIceThickness;
     }
-    virtual double IceThickness(const Geoid::Position& pos) const;
+    virtual double IceThickness(const Geoid::Position& pos) const override;
     virtual int InFirn(const Geoid::Position& pos) const;
     virtual double SurfaceDeepIce(const Geoid::Position& pos) const;
-    virtual double SurfaceAboveGeoid(const Geoid::Position& pos) const;
+    virtual double SurfaceAboveGeoid(const Geoid::Position& pos) const override;
     virtual double WaterDepth(const Geoid::Position& pos) const;
     // virtual double RockSurface(const Geoid::Position& pos) const;
-    virtual double Density(const Geoid::Position& pos) const {
+    virtual double Density(const Geoid::Position& pos) const override{
       int ce;
       return Density(pos, ce);
     }
     virtual double Density(const Geoid::Position& pos, int& crust_entered) const;
 
     // virtual double fractionalIceVolumeWithinHorizon(const Geoid::Position& centeredOn, double horizonDistance) const;
-    virtual double IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const ;
+    virtual double IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const override;
 
     /** 
      * Figures out whether a neutrino will make it through the a Earth along a chord
@@ -132,7 +131,7 @@ namespace icemc{
 
     Geoid::Position WhereDoesItEnter(const Geoid::Position &posnu,const TVector3 &nnu) const;
 
-    double integratePath(const Geoid::Position& interaction, const TVector3& neutrinoDir) const;
+    double integratePath(const Geoid::Position& start, const TVector3& direction) const override;
  
   protected:
     double fMaxIceThickness;
@@ -157,7 +156,6 @@ namespace icemc{
     /////////////////////////////////////
     //methods
     void ReadCrust(const std::string&);
-    Geoid::Position pickInteractionPosition(const Geoid::Position &detector) const;
 
     static const int numLayers = 11;
     enum class Layer {Air, ///@todo think about this one
@@ -201,7 +199,7 @@ namespace icemc{
     static Layer layerAbove(Layer);
     static Layer layerBelow(Layer);
     Layer getLayer(const Geoid::Position& pos, Layer startLayer=Layer::Air) const;
-    double getLayerSurfaceAtPosition(const Geoid::Position& pos, Layer l) const;
+    double getLayerSurfaceAtPosition(const Geoid::Position& pos, Layer l) const;    
     
   private:
 
@@ -213,11 +211,6 @@ namespace icemc{
     std::map<Layer, icemc::Mesh> fSurfaceMag; ///< Here mag means Mag() of the Position, not elevation
     std::map<Layer, icemc::Mesh> fDensities;
     icemc::Mesh fSurfaceAboveGeoid;
-    std::shared_ptr<TKDTreeID> fKDTree = nullptr;
-    std::vector<double> fXs;
-    std::vector<double> fYs;
-    std::vector<double> fZs;
-    
     
 
   }; //class Earth

@@ -5,6 +5,8 @@
 #include "TVector3.h"
 #include "TGraph.h"
 #include "Math/Delaunay2D.h"
+#include "TKDTree.h"
+
 
 namespace icemc {
 
@@ -23,6 +25,7 @@ namespace icemc {
   class WorldModel {
 
   public:
+    virtual double integratePath(const Geoid::Position& start, const TVector3& direction) const = 0;
     virtual double SurfaceAboveGeoid(const Geoid::Position& p) const = 0;
     virtual double IceThickness(const Geoid::Position& p) const = 0;
     virtual double Density(const Geoid::Position& p) const = 0;
@@ -41,14 +44,6 @@ namespace icemc {
       return p.EllipsoidSurface() + SurfaceAboveGeoid(p);
     };
 
-    // inline double IceVolumeAtTime(double time){
-    //   return fHorizons.Eval(time);
-    // }
-
-    // enum {defaultTimeStep = 60}; // seconds
-    // virtual double CreateHorizons(Detector* detector,  double horizonDistanceMeters, double timeStepSeconds = defaultTimeStep);
-    
-
     virtual double IceVolumeWithinHorizon(const Geoid::Position& p,  double horizonDistance) const = 0;
   private:
     
@@ -65,8 +60,8 @@ namespace icemc {
    * We want to know what some value is as a function of f(x,y,z)
    * It has 6 internal Delaunay triangulations, 2 per dimension: top/bottom/front/back/left/right.
    * 
-   * When a value is requested with eval(const Geoid::Position& p) it finds the position on the Geoid 
-   * surface, s(x,y,z), then it queries the Delaunay triangulation with it is nearest the center of.
+   * When a value is requested with eval(const Geoid::Position& p) it finds the position on the Geoid.
+   * surface, s(x,y,z), then it queries the Delaunay triangulation it's closest to the center of.
    * This prevents edge effects in the model.
    * It may create some slightly unsmooth edge effects at the boundaries of the meshes.
    * 
@@ -78,51 +73,72 @@ namespace icemc {
   
   class Mesh : public TNamed {
 
-    class Point {
-    public:
-      Point(const Geoid::Position& p, double v) : position(p), value(v) {}
-      Geoid::Position position;
-      double value;
-    };
-    
   public:
-    Mesh(const char* name = "Mesh", const char* title = "Mesh") : TNamed(name, title) {}
-    virtual ~Mesh() {};
+    Mesh(const char* name = "Mesh", const char* title = "Mesh")
+      : TNamed(name, title),
+	fUpX(Hemisphere::Axis::x),
+	fDownX(Hemisphere::Axis::x),	
+	fUpY(Hemisphere::Axis::y),
+	fDownY(Hemisphere::Axis::y),	
+	fUpZ(Hemisphere::Axis::z),
+	fDownZ(Hemisphere::Axis::z)
+    {;}
+    
+    virtual ~Mesh() {;}
 
     size_t addPoint(const Geoid::Position& p, double val);
 
     inline size_t N() const {
-      return fPoints.size();
+      return fNumPoints;
     }
-    std::vector<Point>::const_iterator begin() const {return fPoints.begin();}
-    std::vector<Point>::const_iterator end() const {return fPoints.end();}
+    void build();
 
     double eval(const Geoid::Position& p) const;
-    
+    double findMaxWithinDistance(const  Geoid::Position& p, double distanceMeters) const;
 
   private:
-    void init() const;
 
-    std::vector<Point> fPoints;
+    struct Points {
+      std::vector<double> x;
+      std::vector<double> y;
+      std::vector<double> z;
+      std::vector<double> v;
+      size_t add(const Geoid::Position& p, double val){
+	x.push_back(p.X());
+	y.push_back(p.Y());
+	z.push_back(p.Z());
+	v.push_back(val);
+	return v.size();
+      }
+    };
 
-    mutable std::unique_ptr<Delaunay2D> fXUp = nullptr;
-    mutable std::unique_ptr<Delaunay2D> fXDown = nullptr;
+    class Hemisphere {      
+      static const int nDim = 3;
+      static const UInt_t kdTreeBinSize = 1e6;
+    public:
+      
+      enum class Axis {x, y, z};
+      Hemisphere(Axis axis) : fAxis(axis) {;}
+      Axis fAxis;
+      std::shared_ptr<Delaunay2D> fDelaunay = nullptr;
+      std::shared_ptr<TKDTreeID> fKDTree = nullptr;
+      Points fPoints;
 
-    mutable std::unique_ptr<Delaunay2D> fYUp = nullptr;
-    mutable std::unique_ptr<Delaunay2D> fYDown = nullptr;
-
-    mutable std::unique_ptr<Delaunay2D> fZUp = nullptr;
-    mutable std::unique_ptr<Delaunay2D> fZDown = nullptr;
-    mutable bool fDoneInit = false;
-
-    mutable std::vector<double> xUpX, xUpY, xUpZ;
-    mutable std::vector<double> yUpX, yUpY, yUpZ;
-    mutable std::vector<double> zUpX, zUpY, zUpZ;
-
-    mutable std::vector<double> xDownX, xDownY, xDownZ;
-    mutable std::vector<double> yDownX, yDownY, yDownZ;
-    mutable std::vector<double> zDownX, zDownY, zDownZ;
+      bool build();
+    };
+    
+    size_t fNumPoints = 0;
+    Hemisphere fUpX;
+    Hemisphere fDownX;
+    Hemisphere fUpY;
+    Hemisphere fDownY;
+    Hemisphere fUpZ;
+    Hemisphere fDownZ;
+    
+    bool fDoneBuild = false;    
   };
+
+  
   
 }
 

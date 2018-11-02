@@ -20,7 +20,6 @@
 #include "RampdemReader.h"
 #include "LocalCoordinateSystem.h"
 
-namespace G=Geoid;
 
 const double icemc::Crust2::COASTLINE(-60); //30.);
 
@@ -40,7 +39,7 @@ icemc::Crust2::Crust2(int model,int WEIGHTABSORPTION_SETTING) :
   fLayerNames.emplace(Layer::OuterCore,    std::string("outer core"));
   fLayerNames.emplace(Layer::InnerCore,    std::string("inner core"));
   
-  
+  namespace G=Geoid;
   radii[0]=1.2e13;
   radii[1]=(G::R_EARTH-4.0E4)*(G::R_EARTH-4.0E4);
   radii[2]=(G::R_EARTH*G::R_EARTH); // average radii of boundaries between earth layers
@@ -172,36 +171,22 @@ double icemc::Crust2::WaterDepth(const Geoid::Position&pos) const {
 
 
 
-double icemc::Crust2::integratePath(const Geoid::Position& interaction, const TVector3& neutrinoDir) const {
+double icemc::Crust2::integratePath(const Geoid::Position& start, const TVector3& direction) const {
 
   double cumulativeColumnDepth = 0;
-  
-  Geoid::Position p = interaction;  
   int nSteps = 0;
-
-  // const double stepSize = 1000; // meters
-  // const auto& water = fSurfaceMag.find(Layer::Water)->second;
-  // while(p.Mag() < water.eval(p)){
-  //   p -= stepSize*neutrinoDir;
-  //   double density = Density(p);
-  //   cumulativeColumnDepth += density*stepSize;
-  //   nSteps++;
-  // }
-  // std::cout << "I took " << nSteps << " to find " << cumulativeColumnDepth << std::endl;
-
-  cumulativeColumnDepth = 0;
-  nSteps = 0;
   int nSteps2 = 0;
-  p = interaction;
+  Geoid::Position p = start;
   double fractionalStep = 1.0;
   Layer l = getLayer(p);
+  // std::cout << start << "\t" << direction << "\t" << fLayerNames.at(l) << std::endl;
   while(l > Layer::Air){
     l = getLayer(p);
     // const std::string& ln = fLayerNames.find(l)->second;
 
     double density = Density(p);
 
-    double cosTheta = p.Dot(neutrinoDir)/p.Mag();
+    double cosTheta = p.Dot(direction)/p.Mag();
     double distGuess = 1000e3;
     double dr = 1;
     // const char* dir = "horizontal";    
@@ -228,7 +213,7 @@ double icemc::Crust2::integratePath(const Geoid::Position& interaction, const TV
     const double minStepSize = 1.0;
     stepSize = TMath::Max(stepSize, minStepSize);
     // std::cout << dir << "\t" << nSteps2 << "\t" << cosTheta << "\t" << TMath::ACos(cosTheta)*TMath::RadToDeg() << "\t" << ln << " dr = " << dr << "\t distGuess = " << distGuess << ", stepSize = " << stepSize << "\t...";
-    Geoid::Position p2 = p - stepSize*neutrinoDir;
+    Geoid::Position p2 = p - stepSize*direction;
 
     Layer l2 = getLayer(p2);
     if(l2 == l || stepSize <= minStepSize){
@@ -254,6 +239,8 @@ double icemc::Crust2::integratePath(const Geoid::Position& interaction, const TV
   if(nSteps2 > 1000){
     icemc::report() << severity::warning << "I took " << nSteps << " good steps out of "  <<  nSteps2 <<  " to find " << cumulativeColumnDepth << std::endl;  
   }
+
+  std::cout << "Steps: " <<  nSteps << "\t" << nSteps2 << std::endl;
   
   return cumulativeColumnDepth;
 }
@@ -266,7 +253,7 @@ double icemc::Crust2::getLayerSurfaceAtPosition(const Geoid::Position& pos, Laye
   switch(layer){
   case Layer::InnerCore: return 1220e3;
   case Layer::OuterCore: return 3400e3;
-  default:               return fSurfaceMag.find(layer)->second.eval(pos);
+  default:               return fSurfaceMag.at(layer).eval(pos);
   }  
 }
 
@@ -276,16 +263,17 @@ icemc::Crust2::Layer icemc::Crust2::getLayer(const Geoid::Position& pos, Layer s
 
   auto inLayer = startLayer;
   double posMag = pos.Mag();
-  double deltaR = 0;
   for(auto layer : Layers()){
-    // std::cout << fLayerNames.find(layer)->second << "\t" << std::endl;
     if(layer <= startLayer) continue;
 
     double layerSurface = getLayerSurfaceAtPosition(pos, layer);
-    
+
+    std::cout << fLayerNames.at(layer) << "\t"
+	      << 1e-3*(posMag - layerSurface)  << "\t"
+	      << fSurfaceAboveGeoid.eval(pos) << std::endl;
     if(posMag > layerSurface){
-      deltaR = posMag - layerSurface;
       // then we're in the layer from the previous loop!
+      std::cout << std::endl;
       return inLayer;
     }
     inLayer = layer;
@@ -312,7 +300,7 @@ double icemc::Crust2::Density(const Geoid::Position& pos,
   case Layer::InnerCore:
     return 1280;
   default:
-    return fDensities.find(l)->second.eval(pos);
+    return fDensities.at(l).eval(pos);
   }
   
   // if(posMag > surfaceHere){
@@ -367,74 +355,6 @@ double icemc::Crust2::Density(const Geoid::Position& pos,
 
 
 
-Geoid::Position icemc::Crust2::pickInteractionPosition(const Geoid::Position &detector) const {
-
-  Geoid::Position nuPos;
-
-  ///@todo unbreak this!
-  const double MAX_HORIZON_DIST = 800e3; ///@todo Get this from settings or something?
-  bool iceThickEnough = false;
-
-  const int numDimensions = 3;
-  double pCart[numDimensions];
-  detector.GetXYZ(pCart);
-  std::vector<int> indicesOfPointsWithinRange;
-  fKDTree->FindInRange(pCart, MAX_HORIZON_DIST, indicesOfPointsWithinRange);
-
-
-  ///@todo put this inside mesh?
-  std::sort(indicesOfPointsWithinRange.begin(), indicesOfPointsWithinRange.end());
-  double localMax = -999999;
-  {
-    const auto& thickness = fThicknesses.find(Layer::Ice)->second;
-    auto point = thickness.begin();
-    int i=0;
-    for(int index : indicesOfPointsWithinRange){
-      while (i != index){
-	i++;
-	++point;
-      }
-
-      if(point->value > localMax){
-	localMax = point->value;
-      }
-    }
-  }
-
-  // This is a pretty important statement about icemc, we sample the ICE uniformly.
-  // To do that we first sample the x/y plane uniformly within the horizon radius,
-  // then we weight randomly chosen positions by ice thickness so that x/y positions
-  // where the ice is twice as thick are twice as likely to be chosen.
-  int numTries = 0;
-  while(!iceThickEnough){
-    double dx=1, dy=1;
-    while(dx*dx + dy*dy > 1){
-      ///@todo make an integrator!
-      dx = gRandom->Uniform(-1, 1);
-      dy = gRandom->Uniform(-1, 1);
-    }
-
-    dx*=MAX_HORIZON_DIST;
-    dy*=MAX_HORIZON_DIST;
-    
-    TVector3 deltaPos(dx, dy, 0);
-    nuPos = detector + deltaPos;
-    
-    // then roll a dice to see if it's deep enough
-    double iceThicknessHere = this->IceThickness(nuPos);
-    double randomHeight = gRandom->Rndm()*localMax;
-
-    numTries++;
-    // std::cout << numTries << "\t" << iceThicknessHere << std::endl;
-
-    if(randomHeight < iceThicknessHere){
-      iceThickEnough = true;
-      double surfaceElevation = SurfaceAboveGeoid(nuPos);
-      nuPos.SetAltitude(surfaceElevation - randomHeight);
-    }
-  }
-  return nuPos;
-}
 
 
 
@@ -476,7 +396,7 @@ int icemc::Crust2::Getchord(const Settings *settings1,
     std::cout << "short chord " << chord << "\n";
     return 0;
   }
-  if (chord>2.*G::R_EARTH+1000) {      
+  if (chord>2.*Geoid::R_EARTH+1000) {      
     std::cout << "bad chord" << " " << chord << ".  Event is " << inu << "\n";
   }
     
@@ -770,6 +690,7 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
     getline(infile,thisline,'\n');
 
     Geoid::Position ellipsoidPos;
+    Geoid::Position surfacePos;    
     int indexlon = 0;
     int indexlat = 0;
     double elevation = 0;
@@ -799,6 +720,7 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
 
       ellipsoidPos.SetLonLatAlt(longitude, latitude, 0);
       fSurfaceAboveGeoid.addPoint(ellipsoidPos, elevation);
+      surfacePos.SetLonLatAlt(longitude, latitude, elevation);
     } // new data point
 
     // skip next 4 lines of file
@@ -807,7 +729,7 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
     }
 
     // read crust values at this point
-    double cumulativeDepth = elevation;
+    double depthBelowSurfaceMeters = 0;
     
     for (int i=0;i<7;i++) {
       getline(infile,thisline,'\n');
@@ -830,11 +752,11 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
       std::string sdensity=thisline.substr(beginindex,endindex-beginindex);
       double density=(double)atof(sdensity.c_str());
       const double kilometersToMeters = 1e3;      
-      double depth = kilometersToMeters*(double)atof(sdepth.c_str());;
+      double depthMeters = kilometersToMeters*(double)atof(sdepth.c_str());;
 
       // region where Ross Ice Shelf was not accounted for in Crust 2.0 add it in by hand
       if (layer==Layer::Ice && indexlat==5 && (indexlon<=5 || indexlon>=176)){ // Ross Ice Shelf
-	depth = kilometersToMeters*0.5;
+	depthMeters = kilometersToMeters*0.5;
       }
 
 
@@ -858,7 +780,7 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
       // 	fThicknesses.emplace(layer, Mesh(name.c_str(), title.c_str()));
       // }
       icemc::Mesh& thicknessMesh = find_or_make_mesh(fThicknesses, layer,  "thickness"); //fThicknesses[layer];
-      thicknessMesh.addPoint(ellipsoidPos, depth);
+      thicknessMesh.addPoint(ellipsoidPos, depthMeters);
 
 
       // auto itSurf = fSurfaceMag.find(layer);
@@ -869,17 +791,16 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
       // }
       icemc::Mesh& surfaceMesh = find_or_make_mesh(fSurfaceMag, layer, "surface magnitude");
       
-      // don't add water to cumulative depth, as it is above surface!
+      // don't add water to cumulative depth, as it is ABOVE surface!
       if(layer==Layer::Water){
-	surfaceMesh.addPoint(ellipsoidPos, ellipsoidPos.Mag() + elevation + depth);
+	surfaceMesh.addPoint(ellipsoidPos, surfacePos.Mag() + depthMeters);
       }
       else {
-	surfaceMesh.addPoint(ellipsoidPos, ellipsoidPos.Mag() + elevation - cumulativeDepth);
-	cumulativeDepth += depth;
+	surfaceMesh.addPoint(ellipsoidPos, surfacePos.Mag() - depthBelowSurfaceMeters);
+	depthBelowSurfaceMeters += depthMeters;
 	if(layer==Layer::LowerCrust){
-	  
 	  icemc::Mesh& mantleMesh = find_or_make_mesh(fSurfaceMag, Layer::Mantle, "surface magnitude");
-	  mantleMesh.addPoint(ellipsoidPos, ellipsoidPos.Mag() + elevation - cumulativeDepth);
+	  mantleMesh.addPoint(ellipsoidPos, surfacePos.Mag() - depthBelowSurfaceMeters);
 	}
       }
       
@@ -923,22 +844,22 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
   // for finding where to start stepping in Getchord
   MIN_ALTITUDE_CRUST = DBL_MAX;
   
-  fXs.reserve(fSurfaceAboveGeoid.N());
-  fYs.reserve(fSurfaceAboveGeoid.N());
-  fZs.reserve(fSurfaceAboveGeoid.N());  
-  for(auto p : fSurfaceAboveGeoid){
-    fXs.push_back(p.position.X());
-    fYs.push_back(p.position.Y());
-    fZs.push_back(p.position.Z());
-  }
-  fKDTree = std::shared_ptr<TKDTreeID>(new TKDTreeID(fSurfaceAboveGeoid.N(), 3, 1e6));
-  fKDTree->SetData(0, &fXs[0]);
-  fKDTree->SetData(1, &fYs[0]);
-  fKDTree->SetData(2, &fZs[0]);
-  fKDTree->Build();
-  
   radii[1]=(Geoid::GEOID_MIN+MIN_ALTITUDE_CRUST)*(Geoid::GEOID_MIN+MIN_ALTITUDE_CRUST);
   
+
+    // std::map<Layer, icemc::Mesh> fThicknesses;
+    // std::map<Layer, icemc::Mesh> fSurfaceMag; ///< Here mag means Mag() of the Position, not elevation
+    // std::map<Layer, icemc::Mesh> fDensities;
+
+  auto build_all_meshes = [&](std::map<Crust2::Layer, Mesh>& m){
+			    for(auto it = m.begin(); it != m.end(); ++it){
+			      it->second.build();
+			    }
+			  };
+    build_all_meshes(fThicknesses);
+    build_all_meshes(fSurfaceMag);
+    build_all_meshes(fDensities);
+    fSurfaceAboveGeoid.build();
   
 }//ReadCrust
 
