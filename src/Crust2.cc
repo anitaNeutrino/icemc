@@ -144,8 +144,13 @@ double icemc::Crust2::IceVolumeWithinHorizon(const Geoid::Position& p, double ho
 }
 
 double icemc::Crust2::IceThickness(const Geoid::Position& p) const {
-  return fThicknesses.find(Layer::Ice)->second.eval(p);
+  return fThicknesses.at(Layer::Ice).eval(p);
 }
+
+double icemc::Crust2::maxIceThicknessWithinDistance(const Geoid::Position& p, double distanceMeters) const {
+  return fThicknesses.at(Layer::Ice).findMaxWithinDistance(p,  distanceMeters);
+}
+
 
 int icemc::Crust2::InFirn(const Geoid::Position&pos) const {
   if (pos.Mag()-Surface(pos)<constants::FIRNDEPTH){
@@ -165,7 +170,7 @@ double icemc::Crust2::SurfaceAboveGeoid(const Geoid::Position&pos) const {
 } //SurfaceAboveGeoid(Position)
 
 double icemc::Crust2::WaterDepth(const Geoid::Position&pos) const {
-  return fThicknesses.find(Layer::Water)->second.eval(pos);  
+  return fThicknesses.at(Layer::Water).eval(pos);  
 } //WaterDepth(Position)
 
 
@@ -261,16 +266,19 @@ double icemc::Crust2::getLayerSurfaceAtPosition(const Geoid::Position& pos, Laye
 
 icemc::Crust2::Layer icemc::Crust2::getLayer(const Geoid::Position& pos, Layer startLayer) const {
 
-  auto inLayer = startLayer;
+  Layer inLayer = startLayer;
   double posMag = pos.Mag();
   for(auto layer : Layers()){
     if(layer <= startLayer) continue;
 
     double layerSurface = getLayerSurfaceAtPosition(pos, layer);
 
-    std::cout << fLayerNames.at(layer) << "\t"
-	      << 1e-3*(posMag - layerSurface)  << "\t"
-	      << fSurfaceAboveGeoid.eval(pos) << std::endl;
+    std::cout << "layer name = " << fLayerNames.at(layer) << "\n";
+    std::cout << "layer surface = " << layerSurface << "\n";
+    std::cout << "pos = " << posMag << "\n";    
+    std::cout << "delta (km) " << 1e-3*(posMag - layerSurface)  << "\n";
+    std::cout << "surface radius " << pos.EllipsoidSurface() + fSurfaceAboveGeoid.eval(pos) <<"\n";
+    std::cout << std::endl;
     if(posMag > layerSurface){
       // then we're in the layer from the previous loop!
       std::cout << std::endl;
@@ -773,22 +781,8 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
 				 return it->second;
 			       };
 
-      // auto itThick = fThicknesses.find(layer);
-      // if(itThick == fThicknesses.end()){
-      // 	const std::string& name = fLayerNames.find(layer)->second;
-      // 	const std::string title = name + " thickness";	
-      // 	fThicknesses.emplace(layer, Mesh(name.c_str(), title.c_str()));
-      // }
       icemc::Mesh& thicknessMesh = find_or_make_mesh(fThicknesses, layer,  "thickness"); //fThicknesses[layer];
       thicknessMesh.addPoint(ellipsoidPos, depthMeters);
-
-
-      // auto itSurf = fSurfaceMag.find(layer);
-      // if(itSurf == fSurfaceMag.end()){
-      // 	const std::string& name = fLayerNames.find(layer)->second;
-      // 	const std::string title = name + " surface";
-      // 	fSurfaceMag.emplace(layer, Mesh(name.c_str(), title.c_str()));
-      // }
       icemc::Mesh& surfaceMesh = find_or_make_mesh(fSurfaceMag, layer, "surface magnitude");
       
       // don't add water to cumulative depth, as it is ABOVE surface!
@@ -846,21 +840,15 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
   
   radii[1]=(Geoid::GEOID_MIN+MIN_ALTITUDE_CRUST)*(Geoid::GEOID_MIN+MIN_ALTITUDE_CRUST);
   
-
-    // std::map<Layer, icemc::Mesh> fThicknesses;
-    // std::map<Layer, icemc::Mesh> fSurfaceMag; ///< Here mag means Mag() of the Position, not elevation
-    // std::map<Layer, icemc::Mesh> fDensities;
-
   auto build_all_meshes = [&](std::map<Crust2::Layer, Mesh>& m){
 			    for(auto it = m.begin(); it != m.end(); ++it){
 			      it->second.build();
 			    }
 			  };
-    build_all_meshes(fThicknesses);
-    build_all_meshes(fSurfaceMag);
-    build_all_meshes(fDensities);
-    fSurfaceAboveGeoid.build();
-  
+  build_all_meshes(fThicknesses);
+  build_all_meshes(fSurfaceMag);
+  build_all_meshes(fDensities);
+  fSurfaceAboveGeoid.build();
 }//ReadCrust
 
 

@@ -3,7 +3,9 @@
 #include "Settings.h"
 #include "Antarctica.h"
 #include "Neutrino.h"
-
+#include "LocalCoordinateSystem.h"
+// #include "TGraphAntarctica.h" ///@todo remove after debugging
+// #include "TFile.h" ///@todo remove after debugging
 
 icemc::InteractionGenerator::InteractionGenerator(const Settings *settings, std::shared_ptr<WorldModel> worldModel) :
   fSettings(settings), fWorldModel(worldModel)
@@ -13,71 +15,78 @@ icemc::InteractionGenerator::InteractionGenerator(const Settings *settings, std:
 
 
 
+
+
+
 Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid::Position &detector) {
-  //@todo restore me!
+
   Geoid::Position nuPos;
 
-  // ///@todo unbreak this!
-  // const double MAX_HORIZON_DIST = 800e3; ///@todo Get this from settings or something?
-  // bool iceThickEnough = false;
-
-  // const int numDimensions = 3;
-  // double pCart[numDimensions];
-  // detector.GetXYZ(pCart);
-  // std::vector<int> indicesOfPointsWithinRange;
-  // fKDTree->FindInRange(pCart, MAX_HORIZON_DIST, indicesOfPointsWithinRange);
-
-
-  // ///@todo put this inside mesh?
-  // std::sort(indicesOfPointsWithinRange.begin(), indicesOfPointsWithinRange.end());
-  // double localMax = -999999;
-  // {
-  //   const auto& thickness = fThicknesses.at(Layer::Ice);
-  //   auto point = thickness.begin();
-  //   int i=0;
-  //   for(int index : indicesOfPointsWithinRange){
-  //     while (i != index){
-  // 	i++;
-  // 	++point;
-  //     }
-
-  //     if(point->value > localMax){
-  // 	localMax = point->value;
-  //     }
-  //   }
-  // }
+  const double MAX_HORIZON_DIST = 800e3; ///@todo get me from settings?
+  double localMaxIceThickness = fWorldModel->maxIceThicknessWithinDistance(detector, MAX_HORIZON_DIST);
 
   // This is a pretty important statement about icemc, we sample the ICE uniformly.
   // To do that we first sample the x/y plane uniformly within the horizon radius,
   // then we weight randomly chosen positions by ice thickness so that x/y positions
   // where the ice is twice as thick are twice as likely to be chosen.
+
+  LocalCoordinateSystem lc(detector);  
+
   // int numTries = 0;
-  // while(!iceThickEnough){
-  //   double dx=1, dy=1;
-  //   while(dx*dx + dy*dy > 1){
-  //     dx = pickUniform(-1, 1);
-  //     dy = pickUniform(-1, 1);
-  //   }
+  bool iceThickEnough = false;
+  while(!iceThickEnough){
+    double dx=1, dy=1;
+    while(dx*dx + dy*dy > 1){
+      dx = pickUniform(-1, 1);
+      dy = pickUniform(-1, 1);
+    }
 
-  //   dx*=MAX_HORIZON_DIST;
-  //   dy*=MAX_HORIZON_DIST;
+    dx*=MAX_HORIZON_DIST;
+    dy*=MAX_HORIZON_DIST;
     
-  //   TVector3 deltaPos(dx, dy, 0);
-  //   nuPos = detector + deltaPos;
+    TVector3 deltaPos(dx, dy, 0);
+    nuPos = lc.localPositionToGlobal(deltaPos);
     
-  //   // then roll a dice to see if it's deep enough
-  //   double iceThicknessHere = fWorldModel->IceThickness(nuPos);
-  //   double randomHeight = pickUniform()*localMax;
+    // then roll a dice to see if it's deep enough
+    double iceThicknessHere = fWorldModel->IceThickness(nuPos);
+    double randomThickness = pickUniform()*localMaxIceThickness;
 
-  //   numTries++;
-  //   // std::cout << numTries << "\t" << iceThicknessHere << std::endl;
+    // numTries++;
 
-  //   if(randomHeight < iceThicknessHere){
-  //     iceThickEnough = true;
-  //     double surfaceElevation = fWorldModel->SurfaceAboveGeoid(nuPos);
-  //     nuPos.SetAltitude(surfaceElevation - randomHeight);
-  //   }
+    if(iceThicknessHere >= randomThickness){
+      iceThickEnough = true;
+      double surfaceElevation = fWorldModel->SurfaceAboveGeoid(nuPos);
+      nuPos.SetAltitude(surfaceElevation - randomThickness);
+
+      // std::cout << "Picked an interaction position after " <<  numTries << " tries..." << std::endl;
+      std::cout << "nuPos = " << nuPos.Longitude() << ", " << nuPos.Latitude() << ", " << nuPos.Altitude() << std::endl;
+      // std::cout << surfaceElevation << ", " << randomThickness << std::endl;
+    }
+  }
+
+  // static TGraphAntarctica* grD = new TGraphAntarctica();
+  // static TGraphAntarctica* grN = new TGraphAntarctica();
+  
+  // if(grN){grN->SetPoint(grN->GetN(), nuPos.Longitude(), nuPos.Latitude());}
+  // if(grD){grD->SetPoint(grD->GetN(), detector.Longitude(), detector.Latitude());}
+
+  // static int nCount = 0;
+  // nCount++;
+
+  // if(nCount==5000){
+  //   TFile* grTest = new TFile("pickPosition.root", "recreate");
+  //   grD->SetName("grDetector");
+  //   grN->SetName("grNeutrino");    
+  //   grD->Write();
+  //   grN->Write();
+  //   delete grD; grD = nullptr;
+  //   delete grN; grN = nullptr;
+  //   grTest->Write();
+  //   grTest->Close();
+  //   delete grTest;
   // }
+  
+  
   return nuPos;
 }
 

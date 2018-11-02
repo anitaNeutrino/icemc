@@ -4,7 +4,7 @@
 
 int main(){
 
-  icemc::Crust2 c;
+  const icemc::Crust2 c;
 
   TFile* fOut = new TFile("testCrust.root", "recreate");
   TH2DAntarctica*  h = new TH2DAntarctica();

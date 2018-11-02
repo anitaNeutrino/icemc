@@ -153,12 +153,12 @@ double icemc::RayTracer::evalPath(const double* params) const {
   const TVector3 rfDir = (surfacePos - fDetectorPos).Unit();
 
   OpticalPath::Step s2; // from the surface to the balloon
-  s2.direction = fDetectorPos - surfacePos;
+  s2.start = surfacePos;  
+  s2.end = fDetectorPos;
   s2.n = AskaryanRadiationModel::N_AIR;
   s2.attenuationLength = DBL_MAX; //@todo is this sensible? 
 
   s2.boundaryNormal = fWorld->GetSurfaceNormal(surfacePos);
-  s2.start = surfacePos;
   
   ///@todo get these refractive index numbers from the world model...
   const TVector3 refractedRfDir = refractiveBoundary(rfDir, s2.boundaryNormal, AskaryanRadiationModel::N_AIR, AskaryanRadiationModel::NICE, fDebug);
@@ -167,26 +167,18 @@ double icemc::RayTracer::evalPath(const double* params) const {
   const TVector3 endPoint = surfacePos + refractedRfDir*distRemaining;
 
   OpticalPath::Step s1; // from the source (hopefully the end point) to the surface
-  s1.direction = surfacePos - endPoint;
+  s1.start = endPoint;
+  s1.end = surfacePos;
   s1.n = AskaryanRadiationModel::NICE;
   const double attenLengthIceMeters = 700; ///@todo Get this number from the world model
   s1.attenuationLength = attenLengthIceMeters;
   // order matters, think about this!
   s1.boundaryNormal = s2.boundaryNormal; ///@todo think about this...
-  s1.start = endPoint;
+  
   
   const TVector3 delta = (endPoint - fInteractionPos);
   double residual = delta.Mag();
-
-
-  // we propagate from detector to the interaction during fitting
-  // but for the result we want from interaction to detector, so s2 goes first
-  fOpticalPath.clear();
-
-  fOpticalPath.steps.emplace_back(s1);
-  fOpticalPath.steps.emplace_back(s2);
-  fOpticalPath.residual = residual;  
-
+  
   if(fDebug && fDoingMinimization){
     if(!fMinimizerPath){
       fMinimizerPath = new TGraph();
@@ -206,6 +198,12 @@ double icemc::RayTracer::evalPath(const double* params) const {
     fSurfacePos = surfacePos;
     fEndPoint = endPoint;
     fRefractedRfDir = refractedRfDir;
+
+    fOpticalPath.clear();
+
+    fOpticalPath.steps.emplace_back(s1);
+    fOpticalPath.steps.emplace_back(s2);
+    fOpticalPath.residual = residual;    
   }
   return residual;
 }
@@ -214,9 +212,12 @@ double icemc::RayTracer::evalPath(const double* params) const {
 
 icemc::OpticalPath icemc::RayTracer::findPath(const Geoid::Position&rfStart, const Geoid::Position& rfEnd, bool debug){
   ///@todo add collision check to best fit path
-  fDetectorPos = rfEnd;
+  ///@todo dynamically figure out which way to fit, from lowest to highest refractive index.
+  fDetectorPos = rfEnd; // RF ends up at the detector...
   fLocalCoords = std::make_shared<LocalCoordinateSystem>(fDetectorPos);
   fInteractionPos = rfStart;
+  fOpticalPath.reset();
+  
   
   // here we setup a new local coordinate system for the fitter to do translations in
   // The idea is to fit along the surface in terms of dx and dy

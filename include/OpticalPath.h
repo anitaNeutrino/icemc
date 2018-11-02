@@ -26,11 +26,13 @@ namespace icemc {
     ///@todo make these private to hide implementation details
     class Step {
     public:
-      double distance() const {return direction.Mag();}
+      double distance() const {return direction().Mag();}
       double attenuation() const {return exp(-distance()/attenuationLength);}
 
+      TVector3 direction() const {return end - start;}
+
       Geoid::Position start;
-      TVector3 direction; /// direction
+      Geoid::Position end;
       double n; /// refractive index
       double attenuationLength; /// attenuation length, meters
       TVector3 boundaryNormal; /// normal of the boundary
@@ -40,8 +42,13 @@ namespace icemc {
       steps.clear();
     }
 
-    double residual = 0;
-    std::vector<Step> steps;    
+    void reset(){
+      clear();
+      residual = DBL_MAX;
+    }
+
+    double residual = DBL_MAX;
+    std::vector<Step> steps;
   };
 
 

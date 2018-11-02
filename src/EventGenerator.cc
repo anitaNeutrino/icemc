@@ -118,7 +118,7 @@ icemc::EventGenerator::~EventGenerator()
 void icemc::EventGenerator::delayAndAddSignalToEachRX(const PropagatingSignal& signal, const OpticalPath& opticalPath, Detector& detector) const {
   double tofDetector = opticalPath.steps.back().distance()/constants::CLIGHT;
   ///@todo this interface needs to be improved
-  Geoid::Position rfExit = fEvent.detector - opticalPath.steps.back().direction;
+  Geoid::Position rfExit = fEvent.detector - opticalPath.steps.back().direction();
 
   std::vector<double> delays(detector.getNumRX());
   for(int rx = 0; rx < detector.getNumRX(); rx++){
@@ -187,7 +187,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEvent.detector = detector.getPosition(fEvent.loop.eventTime);
     Geoid::Position interactionPos = interactionGenerator->pickInteractionPosition(fEvent.detector);
 
-    OpticalPath opticalPath = rayTracer.findPath(fEvent.detector, interactionPos);
+    OpticalPath opticalPath = rayTracer.findPath(interactionPos, fEvent.detector);
     fEvent.loop.rayTracingSolution = opticalPath.residual < 1; // meters
     
     if(fEvent.loop.rayTracingSolution==false){

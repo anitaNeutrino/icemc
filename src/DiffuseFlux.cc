@@ -12,7 +12,7 @@ TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& op
    */
   const Geoid::Position& start = opticalPath.steps.at(0).start;
   const Geoid::Position pointLocalXTowards(Geoid::Pole::South);
-  const TVector3& rfDir = opticalPath.steps.at(0).direction.Unit(); ///@todo better interface
+  const TVector3& rfDir = opticalPath.steps.at(0).direction().Unit(); ///@todo better interface
 
   // here we construct a local coordinate system to pick the neutrino direction
   // the z-axis is along the RF direction.

@@ -262,7 +262,7 @@ icemc::PropagatingSignal icemc::AskaryanRadiationModel::generate(const Neutrino&
   // std::cout << __PRETTY_FUNCTION__ << " max E field = " << waveform.timeDomainMax() << std::endl;
   
   // now we taper since we won't view this signal on axis, we'll view at at a view angle, theta
-  const double theta = shower.axis.Angle(opticalPath.steps.at(0).direction.Unit());
+  const double theta = shower.axis.Angle(opticalPath.steps.at(0).direction().Unit());
   taperWaveform(waveform /*modified*/, theta, nu.energy, shower);
 
   // std::cout << __PRETTY_FUNCTION__ << " max E Field2 = " << waveform.timeDomainMax() << std::endl;
@@ -276,7 +276,7 @@ icemc::PropagatingSignal icemc::AskaryanRadiationModel::generate(const Neutrino&
   // }
   
 
-  const TVector3 rfDirection = opticalPath.steps.at(0).direction.Unit();
+  const TVector3 rfDirection = opticalPath.steps.at(0).direction().Unit();
   
   TVector3 polarizationVector = getPolarizationVector(rfDirection, shower.axis);
   PropagatingSignal signal(waveform, rfDirection, polarizationVector);

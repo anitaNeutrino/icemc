@@ -28,6 +28,7 @@ namespace icemc {
     virtual double integratePath(const Geoid::Position& start, const TVector3& direction) const = 0;
     virtual double SurfaceAboveGeoid(const Geoid::Position& p) const = 0;
     virtual double IceThickness(const Geoid::Position& p) const = 0;
+    virtual double maxIceThicknessWithinDistance(const Geoid::Position& p, double distanceMeters) const = 0;    
     virtual double Density(const Geoid::Position& p) const = 0;
 
     /** 
