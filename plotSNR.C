@@ -7,11 +7,12 @@
 void plotSNR(){
 
   // Change pathname to the path to your icemc runs
-  string path = "/datapool/software/anitaBuildTool/build/components/icemc/outputs";
-  // use 338 - 343
+  //  string path = "/datapool/software/anitaBuildTool/build/components/icemc/outputs";
+  string path = "/unix/anita3/linda/SimulatedFiles/Production4/anita3/wais_MaskingAndDeadTime//Energy_222/";
+
   // Change first and last run number appropriately
-  int firstRun = 338;
-  int lastRun  = 343;
+  int firstRun = 1;
+  int lastRun  = 100;
 
   // Define TChains for the head and truth Trees
   TChain *tHead = new TChain("headTree");
@@ -41,8 +42,14 @@ void plotSNR(){
   TH1D *hDenom = new TH1D ("hDenom", "", ntot, snrmin, snrmax);
   hNum->Sumw2();
   hDenom->Sumw2();
+
+  TH1D *hNumt = new TH1D ("hNumt", "", ntot, snrmin, snrmax);
+  TH1D *hDenomt = new TH1D ("hDenomt", "", ntot, snrmin, snrmax);
+  hNumt->Sumw2();
+  hDenomt->Sumw2();
   
   double snr=0.;
+  double snrt=0.;
 
   // Define output file
   TFile *fout = new TFile("icemcWAISeff2.root", "recreate");
@@ -57,7 +64,12 @@ void plotSNR(){
     // Get SNR value at Digitizer (change V to H in case of using HPOL)
     snr = truth->maxSNRAtDigitizerH;
     if (snr>snrmax) snr=snrmax*0.9999;
+
+    snrt = truth->maxSNRAtTriggerH;
+    if (snrt>snrmax) snrt=snrmax*0.9999;
+    
     hDenom->Fill(snr, 1);
+    hDenomt->Fill(snrt, 1);
 
     
     //	hDenom->Fill(snr, 1);
@@ -65,16 +77,20 @@ void plotSNR(){
     // if there is a trigger add the event to the numerator
     // NB l3TrigPattern is for VPOL
     //    l3TrigPatternH is for HPOL
-    if (header->l3TrigPatternH>0) hNum->Fill(snr, 1); 
 
- // cout << header->eventNumber << " " << truth->maxSNRAtDigitizerH << " " << 1 << endl;
+    if (header->l3TrigPatternH>0){
+      hNum->Fill(snr, 1);
+      hNumt->Fill(snrt, 1);
+    }  
+    // cout << header->eventNumber << " " << truth->maxSNRAtDigitizerH << " " << 1 << endl;
   }
 cout << hDenom << " = denominator" <<endl;
 cout << hDenom << " = numerator" << endl;
 cout << nentries << " = number of entries/events" << endl;
 
   TEfficiency *eff = 0;
-  
+  TEfficiency *efft = 0;
+
   // Define the TEfficiency from the numerator and denominator
   if (TEfficiency::CheckConsistency(*hNum, *hDenom)){
     eff = new TEfficiency(*hNum, *hDenom);
@@ -83,6 +99,13 @@ cout << nentries << " = number of entries/events" << endl;
     eff->Draw();
     
     eff->Write("icemcWAIS");
+
+  }
+
+  if (TEfficiency::CheckConsistency(*hNumt, *hDenomt)){
+    efft = new TEfficiency(*hNumt, *hDenomt);
+     
+    efft->Write("icemcWAIS");
 
   }
 
