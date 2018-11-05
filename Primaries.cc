@@ -229,10 +229,8 @@ Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,
 
   iceinteraction=0;
 
-  if (settings1->SOURCE == 1) {
-    dtryingdirection = 1.;
-  }
-  else dtryingdirection = 0.;
+  //setting it to 1 if it's a source is useless here because it wantonly gets set elsewhere... 
+  dtryingdirection = 0.;
   
   dnutries=0.;
 
@@ -280,60 +278,6 @@ void Interaction::PickAnyDirection() {
   nnu.SetZ(costheta_nutraject);
 }
 
-int Interaction::PickGrbDirection(Vector &nnu) {
- 
-  TTree grb_tree("grb_tree","grb_tree");
-  grb_tree.ReadFile("data/grb_az_alt_from_astropy.txt","grb_az/D:grb_alt/D");
-  
-  double grb_az;
-  double grb_alt;
-  double grb_alt_icemc; 
-  double grb_az_icemc; 
-   
-  grb_tree.SetBranchAddress("grb_az",&grb_az);
-  grb_tree.SetBranchAddress("grb_alt",&grb_alt);
-  
-  //for (int igrb = 0; igrb < grb_tree.GetEntries(); igrb++) {
-
-  grb_tree.GetEntry(1);
-
-  grb_alt_icemc = (90. - grb_alt) * (PI / 180.); 
-  //cout << "grb_alt is " << grb_alt << " grb_alt_icemc is " << grb_alt_icemc << "\n";
-
-  grb_az_icemc = 450. - grb_az;
-  if (grb_az_icemc > 360.) grb_az_icemc = grb_az_icemc - 360.; 
-  grb_az_icemc = grb_az_icemc * (PI / 180.);  
-  //cout << "grb_az is " << grb_az << " grb_az_icemc is " << grb_az_icemc << "\n";
-
-  //}
-
-  costheta_nutraject = cos(grb_alt_icemc); 
-
-  double thetanu = acos(costheta_nutraject);
-
-  // oindree -- setting phi of nutraject (azimuth) 
-  phi_nutraject = grb_az_icemc; 
-  
-  //cout << "thetanu is " << thetanu * (180./PI) << "\n";  
-
-  double sinthetanu = sin(thetanu);
-  
-  // find direction vector of neutrino
-  // **** are cosine and sine flipped?
-  nnu.SetX(sinthetanu * cos(phi_nutraject));
-  nnu.SetY(sinthetanu * sin(phi_nutraject));
-  nnu.SetZ(costheta_nutraject);
- 
-  //testing 
-  //nnu.SetX(-1.0);
-  //nnu.SetY(0.0);
-  //nnu.SetZ(0.0);
-
-  //cout << "nnu is " << nnu << " grb alt is " << grb_alt << " grb az is " << grb_az << " grb # is " << igrb << "\n"; 
-  //}
-  return 1;
- 
-}
 
 void  Interaction::setNuFlavor(Primaries *primary1,Settings *settings1,int whichray,Counting *counting1) {
   // pick the neutrino flavor,  type of tau decay when relevant,
@@ -406,7 +350,7 @@ Y::Y() { // Constructor
     for (int j=0;j<2;j++) {
       sprintf(which,"%d%d",i,j);
       string sname=sbase+which;
-      fC1_high[i][j]=new TF1(sname.c_str(),"[0]-[1]*(-exp(-(x-[2])/[3]))",7.,12.); // parameterization of parameter C1 in the high y region according to Equation 16
+      fC1_high[i][j]=new TF1(sname.c_str(),"[0]-[1]*(exp(-(x-[2])/[3]))",7.,12.); // parameterization of parameter C1 in the high y region according to Equation 16
     }
   }
 
@@ -439,7 +383,7 @@ Y::Y() { // Constructor
     }
   }
 
-  fC1_low=new TF1("C1_low","[0]-[1]*(-exp(-(x-[2])/[3]))",7.,12.); // parameterization of parameter C1 in the low y region according to Equation 16.
+  fC1_low=new TF1("C1_low","[0]-[1]*(exp(-(x-[2])/[3]))",7.,12.); // parameterization of parameter C1 in the low y region according to Equation 16.
   // This parameterization is the same for all interaction types.
   
   fC1_low->FixParameter(0,0.);
@@ -470,7 +414,7 @@ double Y::pickY(Settings *settings1,double pnu,int nu_nubar,int currentint) {
     return pickYGandhietal();
   }//old Gety
   else { //use prescription in Connolly et al.2011
-    nu_nubar=0;
+    //    nu_nubar=0;
     double elast_y=pickYConnollyetal2011(nu_nubar,currentint,pnu);
     return elast_y;   
   }//current Gety

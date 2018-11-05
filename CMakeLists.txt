@@ -54,7 +54,7 @@ FILE (GLOB SOURCE_FILES "*.cc")
 SET(SOURCES vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
   ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc
   counting.cc Settings.cc Taumodel.cc screen.cc GlobalTrigger.cc
-  ChanTrigger.cc SimulatedSignal.cc EnvironmentVariable.cc)
+  ChanTrigger.cc SimulatedSignal.cc EnvironmentVariable.cc source.cc )
 
 
 if( ${ROOT_VERSION} VERSION_GREATER "5.99.99")

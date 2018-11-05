@@ -14,7 +14,6 @@ void plotSNR(){
   int firstRun = 1;
   int lastRun  = 100;
 
-
   // Define TChains for the head and truth Trees
   TChain *tHead = new TChain("headTree");
   TChain *tTrue = new TChain("truthAnitaTree");
@@ -61,7 +60,7 @@ void plotSNR(){
 
     tHead->GetEntry(ientry);
     tTrue->GetEntry(ientry);
-
+	cout << header->l3TrigPatternH << endl;
     // Get SNR value at Digitizer (change V to H in case of using HPOL)
     snr = truth->maxSNRAtDigitizerH;
     if (snr>snrmax) snr=snrmax*0.9999;
@@ -72,15 +71,22 @@ void plotSNR(){
     hDenom->Fill(snr, 1);
     hDenomt->Fill(snrt, 1);
 
+    
+    //	hDenom->Fill(snr, 1);
+    
     // if there is a trigger add the event to the numerator
     // NB l3TrigPattern is for VPOL
     //    l3TrigPatternH is for HPOL
+
     if (header->l3TrigPatternH>0){
       hNum->Fill(snr, 1);
       hNumt->Fill(snrt, 1);
     }  
     // cout << header->eventNumber << " " << truth->maxSNRAtDigitizerH << " " << 1 << endl;
   }
+cout << hDenom << " = denominator" <<endl;
+cout << hDenom << " = numerator" << endl;
+cout << nentries << " = number of entries/events" << endl;
 
   TEfficiency *eff = 0;
   TEfficiency *efft = 0;
@@ -102,4 +108,8 @@ void plotSNR(){
     efft->Write("icemcWAIS");
 
   }
+
 }
+
+
+// used branches: 

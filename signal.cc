@@ -56,7 +56,7 @@ const double Signal::VIEWANGLE_CUT(sqrt(5.)); // require viewangle is no more th
 
 Signal::Signal() : N_DEPTH(1.79) {
 
-  Initialize();
+//  Initialize(); // CD: You can't initialize it before setting the interaction mode... that's insanity! 
 }
  void Signal::InitializeMedium() {
   if (MEDIUM==1) {
