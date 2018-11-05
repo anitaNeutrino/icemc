@@ -8,7 +8,7 @@ icemc::ConnollyEtAl2011::CrossSectionModel::CrossSectionModel(const icemc::Setti
 {//constructor
 
   for(auto l : {Neutrino::L::Matter, Neutrino::L::AntiMatter}){
-    for(auto c : {Neutrino::Interaction::Current::Neutral, Neutrino::Interaction::Current::Charged}){
+    for(auto c : {Interaction::Current::Neutral, Interaction::Current::Charged}){
       std::stringstream name;
       name << "fSigma_" << l << "_" << c;
 
@@ -37,7 +37,7 @@ icemc::ConnollyEtAl2011::CrossSectionModel::CrossSectionModel(const icemc::Setti
 
 
 
-double icemc::ConnollyEtAl2011::CrossSectionModel::getSigma(icemc::Energy energy, icemc::Neutrino::L leptonNumber, icemc::Neutrino::Interaction::Current current) const {
+double icemc::ConnollyEtAl2011::CrossSectionModel::getSigma(icemc::Energy energy, icemc::Neutrino::L leptonNumber, icemc::Interaction::Current current) const {
   
   // int currentint = static_cast<int>(current);
   // int nu_nubar = leptonNumber == Neutrino::L::Matter ? 0 : 1;
@@ -99,15 +99,15 @@ icemc::ConnollyEtAl2011::YGenerator::YGenerator(const Settings* s) :
   fFracLowHigh.FixParameter(1, F1);
   fFracLowHigh.FixParameter(2, F2);
 
-  const std::map<std::pair<icemc::Neutrino::L, icemc::Neutrino::Interaction::Current>, EColor> fCols =
-    {{{icemc::Neutrino::L::AntiMatter, icemc::Neutrino::Interaction::Current::Charged}, kRed},
-     {{icemc::Neutrino::L::Matter,     icemc::Neutrino::Interaction::Current::Charged}, kBlue },
-     {{icemc::Neutrino::L::AntiMatter, icemc::Neutrino::Interaction::Current::Neutral}, kGreen },
-     {{icemc::Neutrino::L::Matter,     icemc::Neutrino::Interaction::Current::Neutral}, kMagenta }};
+  const std::map<std::pair<icemc::Neutrino::L, icemc::Interaction::Current>, EColor> fCols =
+    {{{icemc::Neutrino::L::AntiMatter, icemc::Interaction::Current::Charged}, kRed},
+     {{icemc::Neutrino::L::Matter,     icemc::Interaction::Current::Charged}, kBlue },
+     {{icemc::Neutrino::L::AntiMatter, icemc::Interaction::Current::Neutral}, kGreen },
+     {{icemc::Neutrino::L::Matter,     icemc::Interaction::Current::Neutral}, kMagenta }};
   
   for(auto l : {Neutrino::L::Matter, Neutrino::L::AntiMatter}){
-    for(auto c : {Neutrino::Interaction::Current::Charged,
-		  Neutrino::Interaction::Current::Neutral}){
+    for(auto c : {Interaction::Current::Charged,
+		  Interaction::Current::Neutral}){
       std::stringstream ss;
       ss  << "fC1_high_" << l << "_" <<  c;
       std::string name = ss.str();
@@ -158,7 +158,7 @@ icemc::ConnollyEtAl2011::YGenerator::YGenerator(const Settings* s) :
 
 
 // void icemc::ConnollyEtAl2011::YGenerator::Draw(Option_t* opt){
-TH1D* icemc::ConnollyEtAl2011::YGenerator::plot(Energy energy, Neutrino::L l, Neutrino::Interaction::Current c, int n) {
+TH1D* icemc::ConnollyEtAl2011::YGenerator::plot(Energy energy, Neutrino::L l, Interaction::Current c, int n) {
 
   std::stringstream ss;
   ss << "h_"  << energy << "_" << l << "_" << c;
@@ -176,10 +176,10 @@ TH1D* icemc::ConnollyEtAl2011::YGenerator::plot(Energy energy, Neutrino::L l, Ne
 
 
 //! Pick an inelasticity y according to the model chosen
-// double icemc::YGenerator::pickY(const Settings *settings1,double pnu,int nu_nubar,Neutrino::Interaction::Current currentint) {
+// double icemc::YGenerator::pickY(const Settings *settings1,double pnu,int nu_nubar,Interaction::Current currentint) {
 double icemc::ConnollyEtAl2011::YGenerator::pickY(Energy energy,
 						  Neutrino::L leptonNumber,
-						  Neutrino::Interaction::Current current) {
+						  Interaction::Current current) {
   // Select a y according to recipe in Connolly et al. (2011)
   double epsilon = log10(energy.in(Energy::Unit::GeV));
 
@@ -222,8 +222,8 @@ double icemc::ConnollyEtAl2011::YGenerator::pickY(Energy energy,
 
 
 
-// double icemc::YGenerator::Getyweight(double pnu, double y, int nu_nubar, Neutrino::Interaction::Current currentint){
-double icemc::ConnollyEtAl2011::YGenerator::Getyweight(Energy pnu, double y, Neutrino::L leptonNumber, Neutrino::Interaction::Current current){
+// double icemc::YGenerator::Getyweight(double pnu, double y, int nu_nubar, Interaction::Current currentint){
+double icemc::ConnollyEtAl2011::YGenerator::Getyweight(Energy pnu, double y, Neutrino::L leptonNumber, Interaction::Current current){
 
   // int nu_nubar = leptonNumber == Neutrino::L::Matter ? 0 : 1;
   //from Connolly Calc 2011, Equations 9, 10, 11, 16, and 17.

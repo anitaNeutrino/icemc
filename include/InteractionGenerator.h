@@ -3,12 +3,15 @@
 
 #include "Geoid.h"
 #include "RNG.h"
+#include "Interaction.h"
 #include "Neutrino.h"
 
 namespace icemc {
 
   class Settings;
   class WorldModel;
+  class CrossSectionModel;
+  class YGenerator;
   
   /**
    * @class InteractionGenerator
@@ -18,11 +21,18 @@ namespace icemc {
 
     const Settings* fSettings = nullptr;
     std::shared_ptr<const WorldModel> fWorldModel = nullptr;
-    
+    std::shared_ptr<CrossSectionModel> fCrossSectionModel;
+    std::shared_ptr<YGenerator> fYGenerator;
+
   public:    
-    InteractionGenerator(const Settings *settings, std::shared_ptr<WorldModel> worldModel); //, int whichray); //, Counting *count1);
+    InteractionGenerator(const Settings *settings,
+			 std::shared_ptr<WorldModel> worldModel,
+			 std::shared_ptr<CrossSectionModel> crossSectionModel,
+			 std::shared_ptr<YGenerator> yGenerator);
+
+    Interaction generate(const Neutrino& n, const Geoid::Position& detectorPos);
     Geoid::Position pickInteractionPosition(const Geoid::Position& detector);
-    Neutrino::Interaction::Current pickCurrent();
+    Interaction::Current pickCurrent();
   };
 
 

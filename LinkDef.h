@@ -16,8 +16,10 @@
 
 #pragma link C++ class icemc::Event+;
 
+#pragma link C++ class icemc::SignalSummary+;
+
 #pragma link C++ class icemc::Neutrino+;
-#pragma link C++ class icemc::Neutrino::Interaction+;
+#pragma link C++ class icemc::Interaction+;
 #pragma link C++ class icemc::Neutrino::Path+;
 
 #pragma link C++ class icemc::LoopInfo+;

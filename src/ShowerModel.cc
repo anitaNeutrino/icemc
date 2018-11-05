@@ -283,8 +283,8 @@ void icemc::ShowerModel::doShower(Neutrino::Flavor nuflavor, Energy plepton, Ene
 
 
 
-icemc::Shower icemc::ShowerModel::generate(const Neutrino& nu) {
-  Shower s = GetEMFrac(nu.flavor, nu.interaction.current, nu.interaction.y,  nu.energy);
+icemc::Shower icemc::ShowerModel::generate(const Neutrino& nu, const Interaction& i) {
+  Shower s = GetEMFrac(nu.flavor, i.current, i.y,  nu.energy);
   s.axis = nu.path.direction.Unit();
   // doShower(nu.flavor,nu.energy,em_secondaries_max,had_secondaries_max,s.nInteractions);   
   return s;
@@ -292,22 +292,22 @@ icemc::Shower icemc::ShowerModel::generate(const Neutrino& nu) {
 
 
 icemc::Shower icemc::ShowerModel::GetEMFrac(Neutrino::Flavor nuflavor,
-					    Neutrino::Interaction::Current current,
+					    Interaction::Current current,
 					    double y,
 					    Energy pnu) {
   Shower s;
   s.pnu = pnu;
 
   const double negligible = 1e-10; ///@todo make a constant?
-  if (nuflavor==Neutrino::Flavor::e && current==Neutrino::Interaction::Current::Charged) {
+  if (nuflavor==Neutrino::Flavor::e && current==Interaction::Current::Charged) {
     s.emFrac = 1 - y; // if it turns into an electron, it will get stopped quickly and all the energy ends up in the shower
     s.hadFrac = y;
   }
-  else if(nuflavor==Neutrino::Flavor::mu && current==Neutrino::Interaction::Current::Charged) {
+  else if(nuflavor==Neutrino::Flavor::mu && current==Interaction::Current::Charged) {
     s.emFrac = negligible; // if it turns into a muon, it lives for a long time, and goes much further longer than the shower size?
     s.hadFrac = y;
   }
-  else if(nuflavor==Neutrino::Flavor::tau && current==Neutrino::Interaction::Current::Charged) {
+  else if(nuflavor==Neutrino::Flavor::tau && current==Interaction::Current::Charged) {
     ///@todo model taus better
     // behaves like a muon
 
@@ -319,7 +319,7 @@ icemc::Shower icemc::ShowerModel::GetEMFrac(Neutrino::Flavor nuflavor,
     s.hadFrac=y;
     // }
   }
-  else if (current==Neutrino::Interaction::Current::Neutral) {
+  else if (current==Interaction::Current::Neutral) {
     s.emFrac = negligible;
     s.hadFrac = y;
   }
@@ -330,7 +330,7 @@ icemc::Shower icemc::ShowerModel::GetEMFrac(Neutrino::Flavor nuflavor,
   // had_secondaries_max.setZero();
 
   ///@todo restore a better version of this
-  // if (SECONDARIES==1 && current==Neutrino::Interaction::Current::Charged) {
+  // if (SECONDARIES==1 && current==Interaction::Current::Charged) {
 
   //   while (1) {
 
@@ -360,7 +360,7 @@ icemc::Shower icemc::ShowerModel::GetEMFrac(Neutrino::Flavor nuflavor,
   //   } //if
   // } //if (charged current, secondaries on)
 
-  // if (nuflavor==Neutrino::Flavor::mu && current==Neutrino::Interaction::Current::Charged && s.nInteractions==0){
+  // if (nuflavor==Neutrino::Flavor::mu && current==Interaction::Current::Charged && s.nInteractions==0){
   //   icemc::report() << severity::warning << "Look at this one.  inu is " << inu << "\n";
   // }  
   
@@ -387,9 +387,9 @@ void icemc::ShowerModel::InitTauola() {
 }//InitTauola
 
 
-void icemc::ShowerModel::GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::Interaction::Current current, std::string& taudecay, double& emfrac_db, double& hadfrac_db) {
+void icemc::ShowerModel::GetTauDecay(Neutrino::Flavor nuflavor, Interaction::Current current, std::string& taudecay, double& emfrac_db, double& hadfrac_db) {
  
-  if (!(nuflavor==Neutrino::Flavor::tau || current==Neutrino::Interaction::Current::Charged || interestedintaus)){
+  if (!(nuflavor==Neutrino::Flavor::tau || current==Interaction::Current::Charged || interestedintaus)){
     return;
   }
   

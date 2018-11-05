@@ -2,6 +2,7 @@
 #define CROSS_SECTION_MODEL_H
 
 #include "Neutrino.h"
+#include "Interaction.h"
 #include "Constants.h"
 
 class TCanvas;
@@ -19,13 +20,13 @@ namespace icemc {
   public:
     CrossSectionModel(const Settings* settings) : fSettings(settings) {;}
     virtual ~CrossSectionModel(){;}
-    virtual double getSigma(Energy energy, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) const = 0;
+    virtual double getSigma(Energy energy, Neutrino::L leptonNumber, Interaction::Current current) const = 0;
 
     inline static double getInteractionLength(double sigma){
       return constants::M_NUCL/sigma; // kg/m^2
     }
     
-    TCanvas* plotSigma(Neutrino::L l, Neutrino::Interaction::Current c, int nSamples = 2000) const;
+    TCanvas* plotSigma(Neutrino::L l, Interaction::Current c, int nSamples = 2000) const;
 
     inline bool validEnergy(const Energy& energy) const {
       return energy >= fMinEnergy && energy <= fMaxEnergy;
@@ -53,7 +54,7 @@ namespace icemc {
       }
       virtual ~CrossSectionModel(){;}
 
-      virtual double getSigma(Energy energy, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) const override;
+      virtual double getSigma(Energy energy, Neutrino::L leptonNumber, Interaction::Current current) const override;
     };    
   }
 

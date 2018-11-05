@@ -2,13 +2,14 @@
 #define ICEMC_EVENT_H
 
 #include "TObject.h"
-#include  "TMath.h"
+#include "TMath.h"
 
 #include "Geoid.h"
 
 #include "LoopInfo.h"
 #include "ShowerModel.h"
 #include "Neutrino.h"
+#include "PropagatingSignal.h"
 
 namespace icemc {
 
@@ -28,8 +29,10 @@ namespace icemc {
     
     LoopInfo loop;
     Neutrino neutrino;
+    Interaction interaction;
     Shower shower;
     Geoid::Position detector;
+    SignalSummary signalSummary;
 
     ClassDef(Event, 1)
   };

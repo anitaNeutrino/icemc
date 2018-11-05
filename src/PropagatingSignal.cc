@@ -19,8 +19,7 @@ double icemc::PropagatingSignal::maxEField() const {
 }
 
 
-void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
-  return; ///@todo remove test condition!
+icemc::SignalSummary icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
   
   // 1/r loss from power intensity on spherical wavefront
   const double distanceFactor = 1./opticalPath.distance();
@@ -43,8 +42,9 @@ void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
     amp *= totalFieldReduction;
   }
 
-  // std::cout << attenuationFactor << "\t" << distanceFactor << "\t" << fresnelFactor << "\t" << totalFieldReduction << std::endl;  
-  
+
+  SignalSummary ss(this);
+  return ss;  
 }
 
 

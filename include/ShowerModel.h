@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iomanip>
 #include "ConnollyEtAl2011.h"
+#include "Interaction.h"
 
 #include <vector>
 #include "TVector3.h"
@@ -212,7 +213,7 @@ namespace icemc{
     virtual ~ShowerModel();
 
     
-    Shower generate(const Neutrino& n);
+    Shower generate(const Neutrino& n, const Interaction& i);
 
     int SECONDARIES;
     int TAUDECAY; // is tau decay counted as a secondary interaction
@@ -223,7 +224,7 @@ namespace icemc{
 
     void InitTauola();
     // void GetTauDecay(const std::string& nuflavor, const std::string& current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);
-    void GetTauDecay(Neutrino::Flavor nuflavor, Neutrino::Interaction::Current current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);    
+    void GetTauDecay(Neutrino::Flavor nuflavor, Interaction::Current current, std::string& taudecay, double& emfrac_db, double& hadfrac_db);    
 
     void pickEMFracDB(double& emfrac_db, double& hadfrac_db);
     double GetDBViewAngle(const TVector3 &refr, const TVector3 &nnu);
@@ -231,7 +232,7 @@ namespace icemc{
     double NFBWeight(double ptau, double taulength);
 
     Shower GetEMFrac(Neutrino::Flavor nuflavor,
-		     Neutrino::Interaction::Current current,
+		     Interaction::Current current,
 		     double y,
 		     Energy pnu);
     bool secondbang;

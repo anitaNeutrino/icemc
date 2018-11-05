@@ -25,7 +25,7 @@ int main(){
 
     std::vector<double> ys; ys.reserve(4);
     for(auto l : {Neutrino::L::Matter, Neutrino::L::AntiMatter}){
-      for(auto c : {Neutrino::Interaction::Current::Neutral, Neutrino::Interaction::Current::Charged}){
+      for(auto c : {Interaction::Current::Neutral, Interaction::Current::Charged}){
 	double y = yGen.pickY(energy, l, c);
 	ys.push_back(y);
       }

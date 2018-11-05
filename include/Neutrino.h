@@ -42,25 +42,6 @@ namespace icemc {
 			AntiMatter = 1
     };
 
-    class Interaction {
-    public:
-
-      /**
-       * @class Current
-       * @brief enum for type of interaction
-       */
-      enum class Current : int {
-				Charged = 0,
-				Neutral = 1
-      };
-
-      Geoid::Position position;
-      double crossSection = -1;
-      double length = -1;
-      Current current = Current::Charged;
-      double y = -1;
-      ClassDef(Interaction, 1);
-    };
 
     class Path {
     public:
@@ -84,7 +65,6 @@ namespace icemc {
     Energy energy;
     Flavor flavor = Flavor::e; ///< Neutrino flavor
     L leptonNumber = L::Matter;
-    Interaction interaction;
     Path path;
     ClassDef(Neutrino, 1);
 
@@ -96,11 +76,11 @@ namespace icemc {
     };
 
   private:
-    void setInteractionPosition(const Geoid::Position& p){
-      // keep these the same
-      interaction.position = p;
-      path.interaction = p;
-    }
+    // void setInteractionPosition(const Geoid::Position& p){
+    //   // keep these the same
+    //   interaction.position = p;
+    //   path.interaction = p;
+    // }
     
   };
 }
@@ -118,16 +98,6 @@ namespace icemc {
 std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Flavor& f);
 
 
-
-/** 
- * For a nice cout/cerr/logging experience
- * 
- * @param os is a output string stream
- * @param c is the Current class enum
- * 
- * @return the updated output string stream
- */
-std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Interaction::Current& c);
 
 
 /** 

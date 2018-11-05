@@ -28,58 +28,58 @@ namespace icemc {
     const double A2_low = 4.72;   ///< Table V of Connolly et al. for use in Eq. 16.
     const double A3_low = 0.456;  ///< Table V of Connolly et al. for use in Eq. 16.
 
-    typedef std::pair<Neutrino::L, Neutrino::Interaction::Current> LC; // pair representing nu/nubar & neutral/charged current interactions
+    typedef std::pair<Neutrino::L, Interaction::Current> LC; // pair representing nu/nubar & neutral/charged current interactions
     typedef std::map<LC, double> Map_LC_Double; // stores a double for each combo of nu/nubar + neutral/charged current interactions
 
-    const Map_LC_Double A0_high = {{{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged}, -0.0026},
-				   {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Charged}, -0.008 },
-				   {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral}, -0.005 },   
-				   {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Neutral}, -0.005 }};
+    const Map_LC_Double A0_high = {{{Neutrino::L::AntiMatter, Interaction::Current::Charged}, -0.0026},
+				   {{Neutrino::L::Matter,     Interaction::Current::Charged}, -0.008 },
+				   {{Neutrino::L::AntiMatter, Interaction::Current::Neutral}, -0.005 },   
+				   {{Neutrino::L::Matter,     Interaction::Current::Neutral}, -0.005 }};
 
-    const Map_LC_Double A1_high = {{{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged},  0.085},
-				   {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Charged},  0.26 },
-				   {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral},  0.23 },
-				   {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Neutral},  0.23 }};
+    const Map_LC_Double A1_high = {{{Neutrino::L::AntiMatter, Interaction::Current::Charged},  0.085},
+				   {{Neutrino::L::Matter,     Interaction::Current::Charged},  0.26 },
+				   {{Neutrino::L::AntiMatter, Interaction::Current::Neutral},  0.23 },
+				   {{Neutrino::L::Matter,     Interaction::Current::Neutral},  0.23 }};
 
-    const Map_LC_Double A2_high = {{{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged},  4.1 },
-				   {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Charged},  3.0 },
-				   {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral},  3.0 },
-				   {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Neutral},  3.0 }};
+    const Map_LC_Double A2_high = {{{Neutrino::L::AntiMatter, Interaction::Current::Charged},  4.1 },
+				   {{Neutrino::L::Matter,     Interaction::Current::Charged},  3.0 },
+				   {{Neutrino::L::AntiMatter, Interaction::Current::Neutral},  3.0 },
+				   {{Neutrino::L::Matter,     Interaction::Current::Neutral},  3.0 }};
 
-    const Map_LC_Double A3_high = {{{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged},  1.7 },
-				   {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Charged},  1.7 },
-				   {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral},  1.7 },
-				   {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Neutral},  1.7 }};
+    const Map_LC_Double A3_high = {{{Neutrino::L::AntiMatter, Interaction::Current::Charged},  1.7 },
+				   {{Neutrino::L::Matter,     Interaction::Current::Charged},  1.7 },
+				   {{Neutrino::L::AntiMatter, Interaction::Current::Neutral},  1.7 },
+				   {{Neutrino::L::Matter,     Interaction::Current::Neutral},  1.7 }};
 
     
     const double B0 = 2.55;            ///<  Eq. 17 of Connolly et al.
     const double B1 = -0.0949;         ///<  Eq. 17 of Connolly et al.
 
     ///< Table III in Connolly et al.
-    const Map_LC_Double C0 = {{{Neutrino::L::Matter,     Neutrino::Interaction::Current::Neutral}, -1.826 },
-			      {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Charged}, -1.826 },
-			      {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral}, -1.033 },
-			      {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged}, -1.033 }};
+    const Map_LC_Double C0 = {{{Neutrino::L::Matter,     Interaction::Current::Neutral}, -1.826 },
+			      {{Neutrino::L::Matter,     Interaction::Current::Charged}, -1.826 },
+			      {{Neutrino::L::AntiMatter, Interaction::Current::Neutral}, -1.033 },
+			      {{Neutrino::L::AntiMatter, Interaction::Current::Charged}, -1.033 }};
 
-    const Map_LC_Double C1 = {{{Neutrino::L::Matter,     Neutrino::Interaction::Current::Neutral}, -17.31 },
-			      {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Charged}, -17.31 },
-			      {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral}, -15.95 },
-			      {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged}, -15.95 }};
+    const Map_LC_Double C1 = {{{Neutrino::L::Matter,     Interaction::Current::Neutral}, -17.31 },
+			      {{Neutrino::L::Matter,     Interaction::Current::Charged}, -17.31 },
+			      {{Neutrino::L::AntiMatter, Interaction::Current::Neutral}, -15.95 },
+			      {{Neutrino::L::AntiMatter, Interaction::Current::Charged}, -15.95 }};
 
-    const Map_LC_Double C2 = {{{Neutrino::L::Matter,     Neutrino::Interaction::Current::Neutral}, -6.448 },
-			      {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Charged}, -6.406 },
-			      {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral}, -7.296 },
-			      {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged}, -7.247 }};
+    const Map_LC_Double C2 = {{{Neutrino::L::Matter,     Interaction::Current::Neutral}, -6.448 },
+			      {{Neutrino::L::Matter,     Interaction::Current::Charged}, -6.406 },
+			      {{Neutrino::L::AntiMatter, Interaction::Current::Neutral}, -7.296 },
+			      {{Neutrino::L::AntiMatter, Interaction::Current::Charged}, -7.247 }};
 
-    const Map_LC_Double C3 = {{{Neutrino::L::Matter,     Neutrino::Interaction::Current::Neutral}, 1.431 },
-			      {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Charged}, 1.431 },
-			      {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral}, 1.569 },
-			      {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged}, 1.569 }};
+    const Map_LC_Double C3 = {{{Neutrino::L::Matter,     Interaction::Current::Neutral}, 1.431 },
+			      {{Neutrino::L::Matter,     Interaction::Current::Charged}, 1.431 },
+			      {{Neutrino::L::AntiMatter, Interaction::Current::Neutral}, 1.569 },
+			      {{Neutrino::L::AntiMatter, Interaction::Current::Charged}, 1.569 }};
 
-    const Map_LC_Double C4 = {{{Neutrino::L::Matter,     Neutrino::Interaction::Current::Neutral}, -18.61 },
-			      {{Neutrino::L::Matter,     Neutrino::Interaction::Current::Charged}, -17.91 },
-			      {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Neutral}, -18.30 },
-			      {{Neutrino::L::AntiMatter, Neutrino::Interaction::Current::Charged}, -17.72 }};
+    const Map_LC_Double C4 = {{{Neutrino::L::Matter,     Interaction::Current::Neutral}, -18.61 },
+			      {{Neutrino::L::Matter,     Interaction::Current::Charged}, -17.91 },
+			      {{Neutrino::L::AntiMatter, Interaction::Current::Neutral}, -18.30 },
+			      {{Neutrino::L::AntiMatter, Interaction::Current::Charged}, -17.72 }};
 
 
     // Parameters for equation18, given in the text just below
@@ -112,10 +112,10 @@ namespace icemc {
     public:
       CrossSectionModel(const Settings* settings); ///< Constructor 
       virtual ~CrossSectionModel(){;}
-      virtual double getSigma(Energy pnu, Neutrino::L leptonNumber, Neutrino::Interaction::Current currentint) const override;      
+      virtual double getSigma(Energy pnu, Neutrino::L leptonNumber, Interaction::Current currentint) const override;      
 
     private:
-      std::map<std::pair<Neutrino::L, Neutrino::Interaction::Current>, TF1> fSigma;
+      std::map<std::pair<Neutrino::L, Interaction::Current>, TF1> fSigma;
     };
 
 
@@ -140,11 +140,11 @@ namespace icemc {
 
     public:
       YGenerator(const Settings* settings);
-      virtual double pickY(Energy E,Neutrino::L l, Neutrino::Interaction::Current c) override;
-      double Getyweight(Energy E, double y, Neutrino::L l, Neutrino::Interaction::Current c); ///@todo ?
+      virtual double pickY(Energy E,Neutrino::L l, Interaction::Current c) override;
+      double Getyweight(Energy E, double y, Neutrino::L l, Interaction::Current c); ///@todo ?
       TH1D* plot(Energy energy = 1e18*Energy::Unit::eV,
 		 Neutrino::L l = Neutrino::L::Matter,
-		 Neutrino::Interaction::Current c = Neutrino::Interaction::Current::Neutral,
+		 Interaction::Current c = Interaction::Current::Neutral,
 		 int n = 10000);
     };
     

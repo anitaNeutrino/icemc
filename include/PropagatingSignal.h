@@ -4,8 +4,11 @@
 #include "OpticalPath.h"
 #include "TVector3.h"
 #include "FTPair.h"
+#include "Energy.h"
 
-namespace icemc {  
+namespace icemc {
+
+  class SignalSummary;
 
   /**
    * @class PropagatingSignal
@@ -25,13 +28,32 @@ namespace icemc {
      * 
      * @param opticalPath
      */
-    void propagate(const icemc::OpticalPath& opticalPath);
+    SignalSummary propagate(const icemc::OpticalPath& opticalPath);
 
 
     double energy() const;
     double maxEField() const;
   };
 
+
+
+  /**
+   * @class SignalAtPayload
+   * @brief Summary class for plotting
+   */
+
+  class SignalSummary {
+  public:
+    SignalSummary(const PropagatingSignal* s = nullptr) {set(s);}
+    void set(const PropagatingSignal* s = nullptr){
+      if(s){
+	maxEField = s->maxEField();
+	energy = s->energy();	
+      }
+    }
+    double maxEField;
+    double energy; ///@todo make an instance of the Energy class
+  };
   
 }
 #endif

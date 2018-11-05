@@ -21,7 +21,7 @@
 
 
 //! THIS IS A ROUGH PARAMETRIZATION OF PLOT 6 FROM Ghandhi,Reno,Quigg,Sarcevic  hep-ph/9512364 (the curves are not in their later article).  There is also a slow energy dependence.
-double icemc::GhandiEtAl::YGenerator::pickY(Energy energy, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) {
+double icemc::GhandiEtAl::YGenerator::pickY(Energy energy, Neutrino::L leptonNumber, Interaction::Current current) {
   (void) energy;
   (void) leptonNumber;
   (void) current;

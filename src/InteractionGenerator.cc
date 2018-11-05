@@ -4,13 +4,21 @@
 #include "Antarctica.h"
 #include "Neutrino.h"
 #include "LocalCoordinateSystem.h"
+#include "CrossSectionModel.h"
+#include "Inelasticity.h"
 // #include "TGraphAntarctica.h" ///@todo remove after debugging
 // #include "TFile.h" ///@todo remove after debugging
 
-icemc::InteractionGenerator::InteractionGenerator(const Settings *settings, std::shared_ptr<WorldModel> worldModel) :
-  fSettings(settings), fWorldModel(worldModel)
+icemc::InteractionGenerator::InteractionGenerator(const Settings *settings,
+						  std::shared_ptr<WorldModel> worldModel,
+						  std::shared_ptr<CrossSectionModel> crossSectionModel,
+						  std::shared_ptr<YGenerator> yGenerator						  
+						  ) :
+  fSettings(settings),
+  fWorldModel(worldModel),
+  fCrossSectionModel(crossSectionModel),
+  fYGenerator(yGenerator)
 {
-
 }
 
 
@@ -93,6 +101,18 @@ Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid
 
 
 
+icemc::Interaction icemc::InteractionGenerator::generate(const Neutrino& n, const Geoid::Position& detector){
+
+  Interaction i;
+  i.current = pickCurrent();
+  i.crossSection = fCrossSectionModel->getSigma(n.energy, n.leptonNumber, i.current);
+  i.length = CrossSectionModel::getInteractionLength(i.crossSection);
+  i.y = fYGenerator->pickY(n.energy, n.leptonNumber, i.current);
+  i.position = pickInteractionPosition(detector);
+  
+  return i;
+}
+
 
 
 // int icemc::InteractionGenerator::PickDownwardInteractionPoint(const Geoid::Position&r_bn, const Settings *settings1, const Antarctica *antarctica1) {
@@ -140,13 +160,13 @@ Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid
  * Need to add capability of using ratios from Connolly et al.
  */
 
-icemc::Neutrino::Interaction::Current icemc::InteractionGenerator::pickCurrent() {
+icemc::Interaction::Current icemc::InteractionGenerator::pickCurrent() {
   double rnd = pickUniform();
   if (rnd<=0.6865254){ // 10^18 eV - 10^21 eV (use this one for ANITA)
 //if (rnd<=0.6893498) // 10^17 eV - 10^20 eV (use this one for SalSA)
-    return Neutrino::Interaction::Current::Charged;//"cc";
+    return Interaction::Current::Charged;//"cc";
   }
   else{
-    return Neutrino::Interaction::Current::Neutral;//"nc";  
+    return Interaction::Current::Neutral;//"nc";  
   }
 } //GetCurrent

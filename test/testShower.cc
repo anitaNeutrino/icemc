@@ -13,7 +13,7 @@ int main(int argc, char* argv[]){
   ShowerModel sg(&settings);
 
   for(auto flavor : {Neutrino::Flavor::e, Neutrino::Flavor::mu, Neutrino::Flavor::tau}) {
-    for(auto current : {Neutrino::Interaction::Current::Charged, Neutrino::Interaction::Current::Neutral}){
+    for(auto current : {Interaction::Current::Charged, Interaction::Current::Neutral}){
       Energy energy = 1*Energy::Unit::EeV;
       while(energy <= 1*Energy::Unit::ZeV){
 	double y = 1;

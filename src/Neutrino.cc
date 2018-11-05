@@ -1,8 +1,7 @@
 #include "Neutrino.h"
 
-// ClassImp(icemc::Neutrino);
-// ClassImp(icemc::Neutrino::Interaction);
-// ClassImp(icemc::Neutrino::Path);
+//ClassImp(icemc::Neutrino);
+//ClassImp(icemc::Neutrino::Path);
 
 int icemc::Neutrino::pdgCode(Neutrino::Flavor flavor) {
   switch(flavor){
@@ -17,17 +16,6 @@ int icemc::Neutrino::pdgCode() const {
   return pdgCode(flavor);
 }
 
-
-std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Interaction::Current& c){
-  switch(c){
-  case icemc::Neutrino::Interaction::Current::Charged:
-    return os << "Neutrino:Interaction:Current:Charged";
-  case icemc::Neutrino::Interaction::Current::Neutral:
-    return os << "Neutrino:Interaction:Current:Neutral";
-  default:
-    return os << "Neutrino:Interaction:Current:Unknown";
-  }
-}
 
 std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::Flavor& f){
   switch(f){

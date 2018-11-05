@@ -15,6 +15,7 @@
 #include "TVector3.h"
 #include "Neutrino.h"
 #include "RNG.h"
+#include "Interaction.h"
 
 namespace icemc {
 
@@ -27,7 +28,7 @@ namespace icemc {
   class YGenerator {
   public:
     ///@todo weight?
-    virtual double pickY(Energy energy, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) = 0;
+    virtual double pickY(Energy energy, Neutrino::L leptonNumber, Interaction::Current current) = 0;
   };
 
 
@@ -54,7 +55,7 @@ namespace icemc {
        * 
        * @return a parameterized y value
        */
-      virtual double pickY(Energy energy, Neutrino::L leptonNumber, Neutrino::Interaction::Current current) override;            
+      virtual double pickY(Energy energy, Neutrino::L leptonNumber, Interaction::Current current) override;            
     };    
   };
 

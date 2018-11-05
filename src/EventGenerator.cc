@@ -19,7 +19,7 @@
 #include "ConnollyEtAl2011.h"
 #include "Report.h"
 #include "Neutrino.h"
-#include "NeutrinoFactory.h"
+#include "NeutrinoGenerator.h"
 #include "DiffuseFlux.h"
 #include "RNG.h"
 #include "TRandom3.h" ///@todo remove when gRandom is excized
@@ -115,6 +115,15 @@ icemc::EventGenerator::~EventGenerator()
 
 
 
+void icemc::EventGenerator::printProgress(int entry, size_t n){
+
+  const int maxPrints = 100;
+  const int printEvery = n/maxPrints > 0 ? n/maxPrints : 1;
+  if((entry%printEvery)==0){
+    std::cout << entry << " of " << n << std::endl;
+  }
+}
+
 void icemc::EventGenerator::delayAndAddSignalToEachRX(const PropagatingSignal& signal, const OpticalPath& opticalPath, Detector& detector) const {
   double tofDetector = opticalPath.steps.back().distance()/constants::CLIGHT;
   ///@todo this interface needs to be improved
@@ -142,7 +151,10 @@ void icemc::EventGenerator::generate(Detector& detector){
   ShowerModel showerModel(fSettings);
   
   auto antarctica = std::make_shared<Antarctica>();
-  auto interactionGenerator = std::make_shared<InteractionGenerator>(fSettings, antarctica);
+  auto interactionGenerator = std::make_shared<InteractionGenerator>(fSettings,
+								     antarctica,
+								     fCrossSectionModel,
+								     fYGenerator);
 
   icemc::report() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
   
@@ -155,7 +167,7 @@ void icemc::EventGenerator::generate(Detector& detector){
 
   gRandom->SetSeed(fSettings->SEED); // settings seed is now updated with run_no to uniquify it elsewhere
 
-  NeutrinoFactory nuFactory(fSettings, fSourceEnergyModel, fSourceDirectionModel, fCrossSectionModel, fYGenerator, antarctica, interactionGenerator);
+  NeutrinoGenerator nuGenerator(fSettings, fSourceEnergyModel, fSourceDirectionModel, antarctica);
   RayTracer rayTracer(antarctica);
 
   int numEvents = fSettings->NNU - fSettings->getStartNu();
@@ -167,9 +179,7 @@ void icemc::EventGenerator::generate(Detector& detector){
   if(fOrderedEventTimes==true){
     std::sort(eventTimes.begin(), eventTimes.end());
   }
-  
-  
-  
+
   /**
    * Main loop over generated neutrinos
    */
@@ -177,17 +187,20 @@ void icemc::EventGenerator::generate(Detector& detector){
 
   int run = fSettings->getRun();
   for(int entry=0; entry < eventTimes.size() && ABORT_EARLY==false; entry++){
+
+    printProgress(entry, eventTimes.size());
     
     UInt_t eventNumber = (UInt_t)(fEvent.loop.run)*fSettings->NNU+entry;
-    fEvent = Event(run, eventNumber,  eventTimes.at(entry));
-    
     RNG::newSeeds(run, eventNumber); // updates all RNG seeds
     gRandom->SetSeed(eventNumber+6e7); ///@todo kill me
     
-    fEvent.detector = detector.getPosition(fEvent.loop.eventTime);
-    Geoid::Position interactionPos = interactionGenerator->pickInteractionPosition(fEvent.detector);
+    fEvent = Event(run, eventNumber,  eventTimes.at(entry));
 
-    OpticalPath opticalPath = rayTracer.findPath(interactionPos, fEvent.detector);
+    fEvent.neutrino = nuGenerator.generate();
+    fEvent.detector = detector.getPosition(fEvent.loop.eventTime);
+    fEvent.interaction = interactionGenerator->generate(fEvent.neutrino, fEvent.detector);
+
+    OpticalPath opticalPath = rayTracer.findPath(fEvent.interaction.position, fEvent.detector);
     fEvent.loop.rayTracingSolution = opticalPath.residual < 1; // meters
     
     if(fEvent.loop.rayTracingSolution==false){
@@ -195,22 +208,29 @@ void icemc::EventGenerator::generate(Detector& detector){
       continue;
     }
     
-    fEvent.neutrino = nuFactory.makeNeutrino(interactionPos, opticalPath);
+    // fEvent.neutrino = nuGenerator.makeNeutrino(interactionPos, opticalPath);
     
-    fEvent.shower = showerModel.generate(fEvent.neutrino);
+    
+    fEvent.shower = showerModel.generate(fEvent.neutrino, fEvent.interaction);
     
     PropagatingSignal signal = askaryanModel.generate(fEvent.neutrino, fEvent.shower, opticalPath);
 
     // std::cout << signal.maxEField() << "\n";
     
-    signal.propagate(opticalPath);
+    fEvent.signalSummary = signal.propagate(opticalPath);
 
-    // std::cout << signal.maxEField() << "\n"  << std::endl;
+    static double bestMaxE = 0;
+    if(signal.maxEField() > bestMaxE){
+      bestMaxE = signal.maxEField();
+      std::cout << bestMaxE << std::endl;
+    }
+    // std::cout << signal.maxEField() << "...";
 
-    fEvent.loop.chanceInHell = false; //detector.chanceInHell(signal);
+    fEvent.loop.chanceInHell = detector.chanceInHell(signal);
 
     if(fEvent.loop.chanceInHell==false){
       output.allTree.Fill();
+      // std::cout << std::endl;
       continue;
     }
     
@@ -219,9 +239,11 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEvent.loop.passesTrigger = detector.applyTrigger();
 
     if(fEvent.loop.passesTrigger==true){
+      std::cout << "PASSED!" << std::endl;
       output.passTree.Fill();
     }
-    output.allTree.Fill();
+    // std::cout << std::endl;
+    output.allTree.Fill();    
   }
   signal(SIGINT, SIG_DFL); /// unset signal handler
 }

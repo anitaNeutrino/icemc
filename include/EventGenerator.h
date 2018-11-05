@@ -52,6 +52,7 @@ namespace icemc {
     void delayAndAddSignalToEachRX(const PropagatingSignal& signal, const OpticalPath& opticalPath, Detector& detector) const;
 
 
+    void printProgress(int entry, size_t n);
     
     bool fOrderedEventTimes = true;
     Event fEvent;
