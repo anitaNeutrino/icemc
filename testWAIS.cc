@@ -262,7 +262,8 @@ int main(int argc,  char **argv) {
  
   settings1->ReadInputs(input.c_str(),  foutput, NNU, RANDOMISEPOL);
   settings1->ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
-  
+  sig1->Initialize();
+
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);
 
@@ -800,7 +801,7 @@ int main(int argc,  char **argv) {
     if ( (thispasses[0]==1 && anita1->pol_allowed[0]==1)
     	 || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
     	 || (settings1->MINBIAS==1)) {
-          settings1->MINBIAS==1;
+
       //	cout << inu << endl;
 
       anita1->passglobtrig[0]=thispasses[0];
@@ -809,7 +810,7 @@ int main(int argc,  char **argv) {
 
       // keep track of events passing trigger
       count1->npassestrigger[0]++;
-cout << count1 << endl;
+      cout << count1->npassestrigger[0] << endl;
       // tags this event as passing
       passestrigger=1;
 
