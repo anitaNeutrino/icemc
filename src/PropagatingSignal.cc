@@ -1,5 +1,6 @@
 #include "PropagatingSignal.h"
 #include "Constants.h"
+#include "Report.h"
 
 double icemc::PropagatingSignal::energy() const {
 
@@ -28,13 +29,19 @@ icemc::SignalSummary icemc::PropagatingSignal::propagate(const OpticalPath& opti
   const double attenuationFactor = opticalPath.attenuation();
 
   polarization = opticalPath.polarization(polarization);
+  // std::cout << polarization << std::endl;
 
   double fresnelFactor = polarization.Mag();
-  assert(fresnelFactor < 1);
+
+  if(fresnelFactor >= 1 || fresnelFactor<=0){
+    icemc::report() << severity::error << "Un-physical Fresnel factor! " <<  fresnelFactor << std::endl;
+  }
   
   polarization *= (1./fresnelFactor); // make unit length
 
   const double totalFieldReduction = distanceFactor*attenuationFactor*fresnelFactor;
+
+  // std::cout << totalFieldReduction << ":\t" << distanceFactor << "\t" << attenuationFactor << "\t" << fresnelFactor << std::endl;
 
   // apply the losses
   auto& amps = waveform.changeFreqDomain();

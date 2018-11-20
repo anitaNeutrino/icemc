@@ -75,7 +75,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   // Settings* settings = const_cast<Settings*>(settings2);
 
   // first the file(s)
-  TString fileName = fOutputDir + TString::Format("/IceMC_%d.root", fRun);
+  TString fileName = fOutputDir + TString::Format("/run%d/IceMC_%d.root", fRun, fRun);
   fIceFinal = new TFile(fileName, "RECREATE", "ice");
 
   TNamed* ss = settings2->makeRootSaveableSettings();

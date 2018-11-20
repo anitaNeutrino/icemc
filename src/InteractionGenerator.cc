@@ -6,6 +6,7 @@
 #include "LocalCoordinateSystem.h"
 #include "CrossSectionModel.h"
 #include "Inelasticity.h"
+#include "Report.h"
 // #include "TGraphAntarctica.h" ///@todo remove after debugging
 // #include "TFile.h" ///@todo remove after debugging
 
@@ -28,7 +29,7 @@ icemc::InteractionGenerator::InteractionGenerator(const Settings *settings,
 
 Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid::Position &detector) {
 
-  Geoid::Position nuPos;
+  Geoid::Position interactionPosition;
 
   const double MAX_HORIZON_DIST = 800e3; ///@todo get me from settings?
   double localMaxIceThickness = fWorldModel->maxIceThicknessWithinDistance(detector, MAX_HORIZON_DIST);
@@ -37,12 +38,11 @@ Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid
   // To do that we first sample the x/y plane uniformly within the horizon radius,
   // then we weight randomly chosen positions by ice thickness so that x/y positions
   // where the ice is twice as thick are twice as likely to be chosen.
-
   LocalCoordinateSystem lc(detector);  
 
-  // int numTries = 0;
-  bool iceThickEnough = false;
-  while(!iceThickEnough){
+  int numTries = 0;
+  const int maxTries = 10000;
+  while(numTries < maxTries){
     double dx=1, dy=1;
     while(dx*dx + dy*dy > 1){
       dx = pickUniform(-1, 1);
@@ -53,49 +53,28 @@ Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid
     dy*=MAX_HORIZON_DIST;
     
     TVector3 deltaPos(dx, dy, 0);
-    nuPos = lc.localPositionToGlobal(deltaPos);
+    interactionPosition = lc.localPositionToGlobal(deltaPos);
     
     // then roll a dice to see if it's deep enough
-    double iceThicknessHere = fWorldModel->IceThickness(nuPos);
+    double iceThicknessHere = fWorldModel->IceThickness(interactionPosition);
     double randomThickness = pickUniform()*localMaxIceThickness;
 
-    // numTries++;
+    numTries++;
 
     if(iceThicknessHere >= randomThickness){
-      iceThickEnough = true;
-      double surfaceElevation = fWorldModel->SurfaceAboveGeoid(nuPos);
-      nuPos.SetAltitude(surfaceElevation - randomThickness);
+      double surfaceElevation = fWorldModel->SurfaceAboveGeoid(interactionPosition);
+      interactionPosition.SetAltitude(surfaceElevation - randomThickness);
 
       // std::cout << "Picked an interaction position after " <<  numTries << " tries..." << std::endl;
-      // std::cout << "nuPos = " << nuPos.Longitude() << ", " << nuPos.Latitude() << ", " << nuPos.Altitude() << std::endl;
-      // std::cout << surfaceElevation << ", " << randomThickness << std::endl;
+      // std::cout << "interaction = " << interactionPosition.Longitude() << ", " << interactionPosition.Latitude() << ", " << interactionPosition.Altitude() << std::endl;
+      break;
     }
   }
 
-  // static TGraphAntarctica* grD = new TGraphAntarctica();
-  // static TGraphAntarctica* grN = new TGraphAntarctica();
-  
-  // if(grN){grN->SetPoint(grN->GetN(), nuPos.Longitude(), nuPos.Latitude());}
-  // if(grD){grD->SetPoint(grD->GetN(), detector.Longitude(), detector.Latitude());}
-
-  // static int nCount = 0;
-  // nCount++;
-
-  // if(nCount==5000){
-  //   TFile* grTest = new TFile("pickPosition.root", "recreate");
-  //   grD->SetName("grDetector");
-  //   grN->SetName("grNeutrino");    
-  //   grD->Write();
-  //   grN->Write();
-  //   delete grD; grD = nullptr;
-  //   delete grN; grN = nullptr;
-  //   grTest->Write();
-  //   grTest->Close();
-  //   delete grTest;
-  // }
-  
-  
-  return nuPos;
+  if(numTries >= maxTries){
+    icemc::report() << severity::error << "Failed to pick a neutrino position after " << numTries << "!" << std::endl;
+  }   
+  return interactionPosition;
 }
 
 
@@ -103,14 +82,14 @@ Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid
 
 icemc::Interaction icemc::InteractionGenerator::generate(const Neutrino& n, const Geoid::Position& detector){
 
-  Interaction i;
-  i.current = pickCurrent();
-  i.crossSection = fCrossSectionModel->getSigma(n.energy, n.leptonNumber, i.current);
-  i.length = CrossSectionModel::getInteractionLength(i.crossSection);
-  i.y = fYGenerator->pickY(n.energy, n.leptonNumber, i.current);
-  i.position = pickInteractionPosition(detector);
-  
-  return i;
+  Interaction interaction;
+  interaction.current = pickCurrent();
+  interaction.crossSection = fCrossSectionModel->getSigma(n.energy, n.leptonNumber, interaction.current);
+  interaction.length = CrossSectionModel::getInteractionLength(interaction.crossSection);
+  interaction.y = fYGenerator->pickY(n.energy, n.leptonNumber, interaction.current);
+  interaction.position = pickInteractionPosition(detector);
+  // std::cout << interaction.position << std::endl;
+  return interaction;
 }
 
 
