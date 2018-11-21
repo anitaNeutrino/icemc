@@ -32,9 +32,7 @@ icemc::Neutrino::Flavor icemc::NeutrinoGenerator::pickFlavor() {
 }
 
 
-// icemc::Neutrino icemc::NeutrinoGenerator::makeNeutrino(const Interaction& interaction, const OpticalPath& opticalPath) {
-// icemc::Neutrino icemc::NeutrinoGenerator::makeNeutrino(const Interaction& interaction, const OpticalPath& opticalPath) { 
-icemc::Neutrino icemc::NeutrinoGenerator::generate(){ //(const Interaction& interaction, const OpticalPath& opticalPath) {   
+icemc::Neutrino icemc::NeutrinoGenerator::generate(){
 
   // neutrino properties
   Neutrino n;
