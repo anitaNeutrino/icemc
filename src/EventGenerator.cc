@@ -63,11 +63,10 @@ icemc::EventGenerator::EventGenerator(const Settings* settings) :
 
 void icemc::EventGenerator::initialize(){
 
-
-  report() << severity::info << "EXPONENT = " << fSettings->EXPONENT << std::endl;
-
-  if(fSettings->EXPONENT > 10 && fSettings->EXPONENT < 10){ ///@todo fix this
-    fSourceEnergyModel = std::make_shared<Source::MonoEnergetic>(1e20*Energy::Unit::eV);
+  ///@todo I don't like selecting things based on numbers, make this more human readable?
+  if(fSettings->EXPONENT > 4 && fSettings->EXPONENT < 30){
+    Energy energy(pow(10, fSettings->EXPONENT), Energy::Unit::eV);
+    fSourceEnergyModel = std::make_shared<Source::MonoEnergetic>(energy);
   }
   else{
     fSourceEnergyModel = std::make_shared<Source::Spectra>(fSettings);
