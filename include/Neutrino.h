@@ -9,6 +9,8 @@
 
 namespace icemc {
 
+  class WorldModel;
+
   /**
    * @class Neutrino
    * @brief All the randomly selected (and derived) numbers that describe a simulated neutrino
@@ -46,18 +48,21 @@ namespace icemc {
     class Path {
     public:
       TVector3 direction; ///< unit vector direction of neutrino travel
-      Geoid::Position entry; ///< Where the neutrino entered the Earth.
-      Geoid::Position interaction; ///< Same as interaction.position ///@todo deduplicate?
-      Geoid::Position exit; ///< Where it would have left the Earth if it didn't interact
-      double columnDepth = -1; ///< Line integral of Earth density from entry to interaction
-      double columnDepthInteractionToExit = -1; ///< Line integral of Earth density from interaction to exit
-      double weight = -1; ///@todo
-
+      void integrate(const Geoid::Position& interactionPosition, const std::shared_ptr<WorldModel> world = nullptr);
       double length(bool includeDistanceToExit = false) const {
 	const Geoid::Position& end = includeDistanceToExit ? exit : interaction;
 	const TVector3 d = end - entry;
 	return d.Mag();
       }
+
+    private:
+      Geoid::Position interaction; ///< Same as interaction.position ///@todo deduplicate?
+      Geoid::Position entry; ///< Where the neutrino entered the Earth.
+      Geoid::Position exit; ///< Where it would have left the Earth if it didn't interact
+      double columnDepth = -1; ///< Line integral of Earth density from entry to interaction
+      double columnDepthInteractionToExit = -1; ///< Line integral of Earth density from interaction to exit
+      double weight = -1; ///@todo
+
 
       ClassDef(Path, 3);
     };

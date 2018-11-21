@@ -168,8 +168,6 @@ void icemc::EventGenerator::generate(Detector& detector){
   detector.getDesiredNDt(n, dt);
   AskaryanRadiationModel askaryanModel(fSettings, n, dt);
 
-  gRandom->SetSeed(fSettings->SEED); // settings seed is now updated with run_no to uniquify it elsewhere
-
   NeutrinoGenerator nuGenerator(fSettings, fSourceEnergyModel, fSourceDirectionModel, antarctica);
   RayTracer rayTracer(antarctica);
 
@@ -194,13 +192,14 @@ void icemc::EventGenerator::generate(Detector& detector){
     printProgress(entry, eventTimes.size());
 
     UInt_t eventNumber = (UInt_t)(fEvent.loop.run)*fSettings->NNU+entry;
+
     RNG::newSeeds(run, eventNumber); // updates all RNG seeds
     gRandom->SetSeed(eventNumber+6e7); ///@todo kill me
 
     fEvent = Event(run, eventNumber,  eventTimes.at(entry));
-
     fEvent.neutrino = nuGenerator.generate();
     fEvent.detector = detector.getPosition(fEvent.loop.eventTime);
+
     fEvent.interaction = interactionGenerator->generate(fEvent.neutrino, fEvent.detector);
     // std::cout << fEvent.interaction.position << std::endl;
 
@@ -208,7 +207,8 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEvent.loop.rayTracingSolution = opticalPath.residual < 1; // meters
 
     if(fEvent.loop.rayTracingSolution==false){
-      // std::cout << "No ray tracing solution\t" << fEvent.interaction.position << std::endl;
+      std::cout << "No ray tracing solution\t" << fEvent.interaction.position << std::endl;
+      std::cout << (fEvent.interaction.position - fEvent.detector).Mag() << std::endl;
       output.allTree.Fill();
       continue;
     }
@@ -225,6 +225,7 @@ void icemc::EventGenerator::generate(Detector& detector){
       bestMaxE = signal.maxEField();
       std::cout << bestMaxE << std::endl;
     }
+    // std::cout  << signal.maxEField() << std::endl;
 
     fEvent.loop.chanceInHell = detector.chanceInHell(signal);
 
@@ -240,7 +241,10 @@ void icemc::EventGenerator::generate(Detector& detector){
 
     if(fEvent.loop.passesTrigger==true){
       std::cout << "PASSED!" << std::endl;
+
+      fEvent.neutrino.path.integrate(fEvent.interaction.position, antarctica);
       // std::cout << "PASSED\t" << fEvent.interaction.position << std::endl;
+
       output.passTree.Fill();
     }
     // std::cout << std::endl;

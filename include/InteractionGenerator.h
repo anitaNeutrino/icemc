@@ -24,13 +24,17 @@ namespace icemc {
     std::shared_ptr<CrossSectionModel> fCrossSectionModel;
     std::shared_ptr<YGenerator> fYGenerator;
 
+    Geoid::Position fSpecificInteractionCenter; ///< Used in the Settings::SPECIFIC_NU_POSITION case
+    Geoid::Position pickInteractionPosition(const Geoid::Position& center, double rangeMeters);
+
+
   public:    
     InteractionGenerator(const Settings *settings,
 			 std::shared_ptr<WorldModel> worldModel,
 			 std::shared_ptr<CrossSectionModel> crossSectionModel,
 			 std::shared_ptr<YGenerator> yGenerator);
 
-    Interaction generate(const Neutrino& n, const Geoid::Position& detectorPos);
+    Interaction generate(const Neutrino& n, const Geoid::Position& detector);
     Geoid::Position pickInteractionPosition(const Geoid::Position& detector);
     Interaction::Current pickCurrent();
   };

@@ -77,9 +77,6 @@ namespace icemc {
     int SECONDARIES;
     int TAUDECAY; // is tau decay counted as a secondary interaction
 
-
-  
-  
     int EVENTSMAP;//whether draw the events distribution map
 
     int WHICHRAYS;  // how many rays to look at (1) direct only (2) direct and down-going.
@@ -177,6 +174,8 @@ namespace icemc {
     double jamieFactor;// = 0;
     int medium;// = 0;
     int askaryanParameterization;// = 0;
+    double MAX_HORIZON_DISTANCE; // how far away to consider as "the horizon", default is 800e3 meters
+
     
     //  TString outputdir; // directory where outputs go
 

@@ -7,8 +7,6 @@
 #include "CrossSectionModel.h"
 #include "Inelasticity.h"
 #include "Report.h"
-// #include "TGraphAntarctica.h" ///@todo remove after debugging
-// #include "TFile.h" ///@todo remove after debugging
 
 icemc::InteractionGenerator::InteractionGenerator(const Settings *settings,
 						  std::shared_ptr<WorldModel> worldModel,
@@ -20,25 +18,40 @@ icemc::InteractionGenerator::InteractionGenerator(const Settings *settings,
   fCrossSectionModel(crossSectionModel),
   fYGenerator(yGenerator)
 {
+
+  if(fSettings->SPECIFIC_NU_POSITION > 0){
+    fSpecificInteractionCenter.SetLonLatAlt(fSettings->SPECIFIC_NU_POSITION_LONGITUDE,
+					    fSettings->SPECIFIC_NU_POSITION_LATITUDE,
+					    fSettings->SPECIFIC_NU_POSITION_ALTITUDE);
+  }
 }
-
-
-
 
 
 
 Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid::Position &detector) {
 
+  if(fSettings->SPECIFIC_NU_POSITION > 0){
+    // if we need a specific place, then don't pick with reference to the detector, instead pick with reference to the specific place
+    return pickInteractionPosition(fSpecificInteractionCenter, fSettings->SPECIFIC_NU_POSITION_DISTANCE);
+  }
+  else{
+    return pickInteractionPosition(detector, fSettings->MAX_HORIZON_DISTANCE);
+  }
+}
+
+
+Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid::Position &center, double rangeMeters) {
+
   Geoid::Position interactionPosition;
 
-  const double MAX_HORIZON_DIST = 800e3; ///@todo get me from settings?
-  double localMaxIceThickness = fWorldModel->maxIceThicknessWithinDistance(detector, MAX_HORIZON_DIST);
+  // const double MAX_HORIZON_DIST = 800e3; ///@todo get me from settings?
+  double localMaxIceThickness = fWorldModel->maxIceThicknessWithinDistance(center, rangeMeters);
 
   // This is a pretty important statement about icemc, we sample the ICE uniformly.
   // To do that we first sample the x/y plane uniformly within the horizon radius,
   // then we weight randomly chosen positions by ice thickness so that x/y positions
   // where the ice is twice as thick are twice as likely to be chosen.
-  LocalCoordinateSystem lc(detector);  
+  LocalCoordinateSystem lc(center);  
 
   int numTries = 0;
   const int maxTries = 10000;
@@ -49,8 +62,8 @@ Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid
       dy = pickUniform(-1, 1);
     }
 
-    dx*=MAX_HORIZON_DIST;
-    dy*=MAX_HORIZON_DIST;
+    dx*=rangeMeters;
+    dy*=rangeMeters;
     
     TVector3 deltaPos(dx, dy, 0);
     interactionPosition = lc.localPositionToGlobal(deltaPos);

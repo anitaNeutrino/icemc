@@ -531,6 +531,10 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
 
 
   getSetting("Askaryan parameterization", askaryanParameterization);
+  getSetting("Max interaction distance", MAX_HORIZON_DISTANCE);
+  if(MAX_HORIZON_DISTANCE != 800e3){
+    std::cout << "Non-default settings: MAX_HORIZON_DISTANCE=" << MAX_HORIZON_DISTANCE << std::endl;
+  }
 
   getSetting("Cross-section parameterization", SIGMAPARAM);
   getSetting("Inelasticity parameterization", YPARAM);
