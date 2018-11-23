@@ -490,7 +490,7 @@ void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
 double icemc::AskaryanRadiationModel::GetVmMHz1m(Energy energy, double freq) const {
   
   double vmmhz1m_max = 0;
-  double pnu = energy.in(Energy::Unit::GeV);
+  double pnu = energy.in(Energy::Unit::eV);
   
   if (WHICHPARAMETERIZATION==0) {
     // parametrization from Jaime Alvarez Munhiz  
