@@ -3,15 +3,23 @@
 /** 
  * Print the state of the updater variables
  * 
- * @param funcName must be cout-able, is supposed to be the __PRETTY_FUNCTION__ macro
+ * @param funcName is supposed to be the __PRETTY_FUNCTION__ macro
+ * @param fTime should be fNeedToUpdateTimeDomain
+ * @param fFreq should be fNeedToUpdateFreqDomain
  */
+void PRINT_STATE(const char* funcName, bool fTime,  bool fFreq){
+  std::cerr << "In " << (funcName)
+	    << ": fNeedToUpdateTimeDomain = " << fTime << ", "
+	    << "fNeedToUpdateFreqDomain = " << fFreq  << std::endl;
+}
 
-#define PRINT_STATE_IF_DEBUG(funcName)                                               \
-  if(fDebug /*&& (fNeedToUpdateTimeDomain > 0 || fNeedToUpdateFreqDomain > 0)*/){    \
-    std::cerr << "In " << (funcName)						     \
-              << ": fMustUpdateTimeDomain = " << fNeedToUpdateTimeDomain << ", "     \
-              << "fMustUpdateFreqDomain = " << fNeedToUpdateFreqDomain  << std::endl;\
-   }
+/**
+ * Print the state of the updater variables
+ */
+#define PRINT_STATE_IF_DEBUG()						               \
+  if(fDebug){                                                                          \
+    PRINT_STATE(__PRETTY_FUNCTION__, fNeedToUpdateTimeDomain, fNeedToUpdateFreqDomain);\
+  }
 
 
 
@@ -23,7 +31,7 @@ icemc::FTPair::FTPair()
     fDebug(false),
     fDoNormalTimeDomainOrdering(false)
 {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
 
   // we need to put some kind of state in here as
   // otherwise things can go very wrong.
@@ -46,7 +54,7 @@ icemc::FTPair::FTPair(int n, const double* timeDomainAmplitude,  double dt, doub
     fDebug(false),
     fDoNormalTimeDomainOrdering(false)
 {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   for(int i=0; i < n; i++){
     fTimeDomainGraph.GetX()[i] = t0 + dt*i;
   }
@@ -64,7 +72,7 @@ icemc::FTPair::FTPair(const std::vector<double>& timeDomainAmplitude, double dt,
     fDebug(false),
     fDoNormalTimeDomainOrdering(false)
 {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   
   for(int i=0; i < timeDomainAmplitude.size(); i++){
     fTimeDomainGraph.GetX()[i] = t0 + dt*i;
@@ -82,7 +90,7 @@ icemc::FTPair::FTPair(const TGraph& grTimeDomain)
     fDebug(false),
     fDoNormalTimeDomainOrdering(false)
 {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   zeroPadTimeDomainLengthToPowerOf2();
 }
 
@@ -101,7 +109,7 @@ icemc::FTPair::FTPair(const std::vector<std::complex<double> >& freqDomainPhasor
     fDebug(false),
     fDoNormalTimeDomainOrdering(doNormalTimeOrdering)    
 {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   int nf = zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(df);
   double dt = getDeltaT(nf, df);
   int nt = getNumTimes(nf);
@@ -120,7 +128,7 @@ icemc::FTPair::FTPair(int nf, const std::complex<double>* freqDomainPhasors, dou
     fDebug(false),
     fDoNormalTimeDomainOrdering(doNormalTimeOrdering)
 {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   nf = zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(df);
   double dt = getDeltaT(nf, df);
   int nt = getNumTimes(nf);
@@ -137,26 +145,26 @@ icemc::FTPair::FTPair(int nf, const std::complex<double>* freqDomainPhasors, dou
 
 
 const TGraph& icemc::FTPair::getTimeDomain() const{
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   maybeUpdateTimeDomain();
   return fTimeDomainGraph;
 }
 
 TGraph& icemc::FTPair::changeTimeDomain() {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   maybeUpdateTimeDomain();
   fNeedToUpdateFreqDomain = true;
   return fTimeDomainGraph;
 }
 
 const std::vector<std::complex<double> >& icemc::FTPair::getFreqDomain() const {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   maybeUpdateFreqDomain();
   return fFreqDomain;
 }
 
 std::vector<std::complex<double> >& icemc::FTPair::changeFreqDomain() {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   maybeUpdateFreqDomain();
   fNeedToUpdateTimeDomain = true;
   return fFreqDomain;
@@ -164,13 +172,13 @@ std::vector<std::complex<double> >& icemc::FTPair::changeFreqDomain() {
 
 
 void icemc::FTPair::forceUpdateTimeDomain() const {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   fNeedToUpdateTimeDomain = true;
   maybeUpdateTimeDomain();
 };
 
 void icemc::FTPair::forceUpdateFreqDomain() const {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   fNeedToUpdateFreqDomain = true;
   maybeUpdateFreqDomain();
 };
@@ -189,7 +197,7 @@ TGraph icemc::FTPair::makePowerSpectralDensityGraph() const {
 
 TGraph icemc::FTPair::makePowerSpectrumGraph() const {
 
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   maybeUpdateFreqDomain();
 
   double df = getDeltaF();
@@ -243,7 +251,7 @@ TGraph icemc::FTPair::makePowerSpectrumGraph() const {
 
 
 void icemc::FTPair::doNormalTimeDomainOrdering() const {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   
   TGraph grOld = getTimeDomain();
   TGraph& grNew = fTimeDomainGraph;
@@ -268,7 +276,7 @@ void icemc::FTPair::doNormalTimeDomainOrdering() const {
 
 
 void icemc::FTPair::applyConstantGroupDelay(double delaySeconds, bool circularDelay){
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
 
   if(delaySeconds==0) {
     // then we don't do anything
@@ -351,7 +359,7 @@ void icemc::FTPair::applyConstantGroupDelay(double delaySeconds, bool circularDe
 
 
 int icemc::FTPair::zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(double df) const {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   
   // assume freq domain vector is not dirty, but everything else is...
 
@@ -413,7 +421,7 @@ int icemc::FTPair::zeroPadFreqDomainSoTimeDomainLengthIsPowerOf2(double df) cons
 
  
 int icemc::FTPair::zeroPadTimeDomainLengthToPowerOf2() const {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   
   // asssume unpadded time domain is good, everything else is dirty
   
@@ -443,7 +451,7 @@ int icemc::FTPair::zeroPadTimeDomainLengthToPowerOf2() const {
 
 
 void icemc::FTPair::maybeUpdateFreqDomain() const {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
   
   if(fNeedToUpdateFreqDomain){
 
@@ -484,7 +492,7 @@ void icemc::FTPair::maybeUpdateFreqDomain() const {
 
 
 void icemc::FTPair::maybeUpdateTimeDomain() const {
-  PRINT_STATE_IF_DEBUG(__PRETTY_FUNCTION__);
+  PRINT_STATE_IF_DEBUG();
 
   if(fNeedToUpdateTimeDomain){
     // if(fDebug){
