@@ -23,6 +23,7 @@ icemc::InteractionGenerator::InteractionGenerator(const Settings *settings,
     fSpecificInteractionCenter.SetLonLatAlt(fSettings->SPECIFIC_NU_POSITION_LONGITUDE,
 					    fSettings->SPECIFIC_NU_POSITION_LATITUDE,
 					    fSettings->SPECIFIC_NU_POSITION_ALTITUDE);
+    std::cout << "SPECIFIC ALTITUDE " << fSpecificInteractionCenter << std::endl;    
   }
 }
 
@@ -44,8 +45,7 @@ Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid
 
   Geoid::Position interactionPosition;
 
-  // const double MAX_HORIZON_DIST = 800e3; ///@todo get me from settings?
-  double localMaxIceThickness = fWorldModel->maxIceThicknessWithinDistance(center, rangeMeters);
+  double localMaxIceThickness = fWorldModel->maxIceThicknessWithinDistance(center, fSettings->MAX_HORIZON_DISTANCE);
 
   // This is a pretty important statement about icemc, we sample the ICE uniformly.
   // To do that we first sample the x/y plane uniformly within the horizon radius,
@@ -77,6 +77,7 @@ Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid
     if(iceThicknessHere >= randomThickness){
       double surfaceElevation = fWorldModel->SurfaceAboveGeoid(interactionPosition);
       interactionPosition.SetAltitude(surfaceElevation - randomThickness);
+      std::cout << "surf/thick\t"  <<  surfaceElevation << "\t" << randomThickness << "\t" << localMaxIceThickness << std::endl;
 
       // std::cout << "Picked an interaction position after " <<  numTries << " tries..." << std::endl;
       // std::cout << "interaction = " << interactionPosition.Longitude() << ", " << interactionPosition.Latitude() << ", " << interactionPosition.Altitude() << std::endl;

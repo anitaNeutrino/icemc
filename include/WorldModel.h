@@ -113,6 +113,8 @@ namespace icemc {
       }
     };
 
+    double buildWarning(const char*) const;
+    
     class Hemisphere {      
       static const int nDim = 3;
       static const UInt_t kdTreeBinSize = 1e6;

@@ -138,8 +138,7 @@ size_t icemc::Mesh::addPoint(const Geoid::Position& p2, double val){
 double icemc::Mesh::eval(const Geoid::Position& p2) const {
 
   if(fDoneBuild==false){
-    icemc::report() << severity::warning << "Can't call eval without first calling build! returning 0." << std::endl;
-    return 0;
+    return buildWarning(__PRETTY_FUNCTION__);
   }
   
   Geoid::Position p = p2;
@@ -179,14 +178,18 @@ double icemc::Mesh::eval(const Geoid::Position& p2) const {
     }
   }
   else{
-    icemc::report() << severity::error << "You shouldn't get here!" << std::endl;
+    icemc::report() << severity::error << "Outside interpolation bounds!" << std::endl;
+    exit(1);
   }
 
   return interpolatedMeshVal;
 }
 
 
-
+double icemc::Mesh::buildWarning(const char* funcName) const {
+  icemc::report() << severity::warning << "Can't call " << funcName << "without first calling build! returning 0." << std::endl;
+  return 0;
+}
 
 void icemc::Mesh::build() {
 
@@ -213,14 +216,15 @@ bool icemc::Mesh::Hemisphere::build(){
     fKDTree->SetData(0, &fPoints.x[0]);
     fKDTree->SetData(1, &fPoints.y[0]);
     fKDTree->SetData(2, &fPoints.z[0]);
-    fKDTree->Build();
-
+    fKDTree->Build();    
 
     fDelaunay = std::make_shared<Delaunay2D>(fPoints.v.size(),
 					     fAxis==Axis::x ? &fPoints.y[0] : fAxis==Axis::y ? &fPoints.z[0] : &fPoints.x[0],
 					     fAxis==Axis::x ? &fPoints.z[0] : fAxis==Axis::y ? &fPoints.x[0] : &fPoints.y[0],
 					     &fPoints.v[0]);
-    return true;
+
+    std::cout << "\t" << fKDTree.get() << "\t" << fDelaunay.get() << std::endl;
+    return true;    
   }
   else{
     icemc::report() << severity::error << "Can't initialize with only " << fPoints.v.size() << " points!" << std::endl;
@@ -232,11 +236,11 @@ bool icemc::Mesh::Hemisphere::build(){
 double icemc::Mesh::findMaxWithinDistance(const Geoid::Position &p, double distanceMeters) const {
 
   if(fDoneBuild==false){
-    
+    return buildWarning(__PRETTY_FUNCTION__);
   }
 
   double maxVal = -DBL_MAX;
-
+  bool foundAny = false;
   for(auto h : {&fUpX, &fDownX, &fUpY, &fDownY, &fUpZ, &fDownZ}){
     if(h->fKDTree!=nullptr){
       double xyz[3];
@@ -245,6 +249,7 @@ double icemc::Mesh::findMaxWithinDistance(const Geoid::Position &p, double dista
       h->fKDTree->FindInRange(xyz, distanceMeters, indices);
 
       for(int i : indices){
+	foundAny = true;	
 	double val = h->fPoints.v[i];
 	if(val > maxVal){
 	  maxVal = val;
@@ -252,5 +257,10 @@ double icemc::Mesh::findMaxWithinDistance(const Geoid::Position &p, double dista
       }
     }
   }
-return maxVal;
+
+  if(!foundAny){
+    icemc::report() << severity::warning << "Found no points within " << distanceMeters << "m of " << p << ", returning 0" << std::endl;
+    maxVal = 0;
+  }
+  return maxVal;
 }
