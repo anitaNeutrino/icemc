@@ -31,6 +31,19 @@ namespace icemc {
     virtual double pickY(Energy energy, Neutrino::L leptonNumber, Interaction::Current current) = 0;
   };
 
+  class ConstantY : public YGenerator {
+    double fY;
+  public:
+    ConstantY(double y) : fY(y){
+      if(fY <= 0 || fY > 1){
+	fY = 0.2;
+      }
+    }
+    double pickY(Energy energy, Neutrino::L leptonNumber, Interaction::Current current) override {
+      return fY;
+    }
+  };
+  
 
   /**
    * @namespace GhandiEtAl
