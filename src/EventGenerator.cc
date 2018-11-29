@@ -200,10 +200,17 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEvent.detector = detector.getPosition(fEvent.loop.eventTime);
 
     fEvent.interaction = interactionGenerator->generate(fEvent.neutrino, fEvent.detector);
-    // std::cout << fEvent.interaction.position << std::endl;
 
     OpticalPath opticalPath = rayTracer.findPath(fEvent.interaction.position, fEvent.detector);
     fEvent.loop.rayTracingSolution = opticalPath.residual < 1; // meters
+
+    // {
+    //   std::cout << fEvent.interaction.position << "\n";
+    //   std::cout << fEvent.detector << "\n";
+    //   std::cout << "Separation = " << fEvent.interaction.position.Distance(fEvent.detector) << "\n" << std::endl;
+    //   std::cout << opticalPath.residual << std::endl;      
+    // }
+    
 
     if(fEvent.loop.rayTracingSolution==false){
       std::cout << "No ray tracing solution\t" << fEvent.interaction.position << std::endl;
@@ -217,13 +224,20 @@ void icemc::EventGenerator::generate(Detector& detector){
 
     PropagatingSignal signal = askaryanModel.generate(fEvent.neutrino, fEvent.shower, opticalPath);
 
+    // {
+    //   const auto& amps = signal.waveform.getFreqDomain();
+    //   for(int i=0; i < amps.size(); i++){
+    // 	std::cout << i << ": " << amps[i] << "\n";
+    //   }
+    //   std::cout << std::endl;
+    // }
     fEvent.signalSummary = signal.propagate(opticalPath);
 
-    static double bestMaxE = 0;
-    if(signal.maxEField() > bestMaxE){
-      bestMaxE = signal.maxEField();
-      std::cout << bestMaxE << std::endl;
-    }
+    // static double bestMaxE = 0;
+    // if(signal.maxEField() > bestMaxE){
+    //   bestMaxE = signal.maxEField();
+    //   std::cout << bestMaxE << std::endl;
+    // }
     // std::cout  << signal.maxEField() << std::endl;
 
     fEvent.loop.chanceInHell = detector.chanceInHell(signal);

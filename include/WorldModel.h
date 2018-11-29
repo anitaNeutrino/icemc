@@ -30,6 +30,7 @@ namespace icemc {
     virtual double IceThickness(const Geoid::Position& p) const = 0;
     virtual double maxIceThicknessWithinDistance(const Geoid::Position& p, double distanceMeters) const = 0;    
     virtual double Density(const Geoid::Position& p) const = 0;
+    virtual bool   InsideIce(const Geoid::Position& p) const = 0;
 
     /** 
      * This one is actually implemented in this class.

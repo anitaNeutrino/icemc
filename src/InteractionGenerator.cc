@@ -23,7 +23,6 @@ icemc::InteractionGenerator::InteractionGenerator(const Settings *settings,
     fSpecificInteractionCenter.SetLonLatAlt(fSettings->SPECIFIC_NU_POSITION_LONGITUDE,
 					    fSettings->SPECIFIC_NU_POSITION_LATITUDE,
 					    fSettings->SPECIFIC_NU_POSITION_ALTITUDE);
-    std::cout << "SPECIFIC ALTITUDE " << fSpecificInteractionCenter << std::endl;    
   }
 }
 
@@ -33,16 +32,58 @@ Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid
 
   if(fSettings->SPECIFIC_NU_POSITION > 0){
     // if we need a specific place, then don't pick with reference to the detector, instead pick with reference to the specific place
-    return pickInteractionPosition(fSpecificInteractionCenter, fSettings->SPECIFIC_NU_POSITION_DISTANCE);
+    // std::cout << "Picking within " << fSettings->SPECIFIC_NU_POSITION_DISTANCE << "m of " << fSpecificInteractionCenter << std::endl;
+    return pickInteractionPositionInSphere(fSpecificInteractionCenter, fSettings->SPECIFIC_NU_POSITION_DISTANCE);
   }
   else{
-    return pickInteractionPosition(detector, fSettings->MAX_HORIZON_DISTANCE);
+    // since this is large, always use the function which forces the events to be in the ice    
+    return pickInteractionPositionInIce(detector, fSettings->MAX_HORIZON_DISTANCE);
   }
 }
 
 
-Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid::Position &center, double rangeMeters) {
+Geoid::Position icemc::InteractionGenerator::pickInteractionPositionInSphere(const Geoid::Position &center, double rangeMeters) {
 
+  LocalCoordinateSystem lc(center);
+  Geoid::Position interactionPosition;
+  
+  int numTries = 0;
+  const int maxTries = 10000;
+  while(numTries < maxTries){
+    double dx=1, dy=1;
+    do{
+      dx = pickUniform(-1, 1);
+      dy = pickUniform(-1, 1);
+    } while(dx*dx + dy*dy > 1);
+    
+    dx*=rangeMeters;
+    dy*=rangeMeters;
+
+    double maxDeltaZ = TMath::Sqrt(rangeMeters*rangeMeters - dx*dx - dy*dy);
+    double dz = pickUniform(-maxDeltaZ, maxDeltaZ);
+
+    TVector3 deltaPos(dx, dy, dz);
+    interactionPosition = lc.localPositionToGlobal(deltaPos);
+
+    numTries++;
+    
+    if(fWorldModel->InsideIce(interactionPosition)){
+      return interactionPosition;
+    }
+    // else{
+    //   std::cout << numTries << " Failed " << deltaPos << std::endl;
+    // }
+
+    if(numTries >= maxTries){
+      icemc::report() << severity::error << __PRETTY_FUNCTION__ << " failed to pick a neutrino position after " << numTries << " tries!" << std::endl;
+      icemc::report() << severity::error << "The center is " << center << " and the surface is at " << fWorldModel->SurfaceAboveGeoid(center) << std::endl;
+    }
+  }
+  return interactionPosition;
+}
+
+
+Geoid::Position icemc::InteractionGenerator::pickInteractionPositionInIce(const Geoid::Position &center, double rangeMeters) {
   Geoid::Position interactionPosition;
 
   double localMaxIceThickness = fWorldModel->maxIceThicknessWithinDistance(center, fSettings->MAX_HORIZON_DISTANCE);
@@ -51,17 +92,17 @@ Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid
   // To do that we first sample the x/y plane uniformly within the horizon radius,
   // then we weight randomly chosen positions by ice thickness so that x/y positions
   // where the ice is twice as thick are twice as likely to be chosen.
-  LocalCoordinateSystem lc(center);  
+  LocalCoordinateSystem lc(center);
 
   int numTries = 0;
   const int maxTries = 10000;
   while(numTries < maxTries){
     double dx=1, dy=1;
-    while(dx*dx + dy*dy > 1){
+    do{
       dx = pickUniform(-1, 1);
       dy = pickUniform(-1, 1);
-    }
-
+    } while(dx*dx + dy*dy > 1);
+    
     dx*=rangeMeters;
     dy*=rangeMeters;
     
@@ -77,17 +118,16 @@ Geoid::Position icemc::InteractionGenerator::pickInteractionPosition(const Geoid
     if(iceThicknessHere >= randomThickness){
       double surfaceElevation = fWorldModel->SurfaceAboveGeoid(interactionPosition);
       interactionPosition.SetAltitude(surfaceElevation - randomThickness);
-      std::cout << "surf/thick\t"  <<  surfaceElevation << "\t" << randomThickness << "\t" << localMaxIceThickness << std::endl;
+      if(interactionPosition.Distance(center) < rangeMeters){ // check we're within the sphere...
+	break;
+      }
+    }
 
-      // std::cout << "Picked an interaction position after " <<  numTries << " tries..." << std::endl;
-      // std::cout << "interaction = " << interactionPosition.Longitude() << ", " << interactionPosition.Latitude() << ", " << interactionPosition.Altitude() << std::endl;
-      break;
+    if(numTries >= maxTries){
+      icemc::report() << severity::error << "Failed to pick a neutrino position after " << numTries << "!" << std::endl;
     }
   }
 
-  if(numTries >= maxTries){
-    icemc::report() << severity::error << "Failed to pick a neutrino position after " << numTries << "!" << std::endl;
-  }   
   return interactionPosition;
 }
 

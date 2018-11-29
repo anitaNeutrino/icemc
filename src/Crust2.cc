@@ -291,6 +291,13 @@ icemc::Crust2::Layer icemc::Crust2::getLayer(const Geoid::Position& pos, Layer s
   return inLayer;
 }
 
+
+bool icemc::Crust2::InsideIce(const Geoid::Position& pos) const {
+  Layer l = getLayer(pos);
+  // std::cout << fLayerNames.at(l) << std::endl;
+  return l == Crust2::Layer::Ice;
+}
+
 double icemc::Crust2::Density(const Geoid::Position& pos,
 				int& crust_entered /* 1 or 0 */) const{
 

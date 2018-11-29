@@ -25,8 +25,16 @@ namespace icemc {
     std::shared_ptr<YGenerator> fYGenerator;
 
     Geoid::Position fSpecificInteractionCenter; ///< Used in the Settings::SPECIFIC_NU_POSITION case
-    Geoid::Position pickInteractionPosition(const Geoid::Position& center, double rangeMeters);
 
+    /** 
+     * Pick a position in the ice near center, reject if outside sphere of rangeMeters 
+     */
+    Geoid::Position pickInteractionPositionInIce(const Geoid::Position& center, double rangeMeters);
+    
+    /** 
+     * Pick a position inside sphere of rangeMeters around center, reject if not inside ice.
+     */
+    Geoid::Position pickInteractionPositionInSphere(const Geoid::Position& center, double rangeMeters);
 
   public:    
     InteractionGenerator(const Settings *settings,

@@ -223,7 +223,6 @@ bool icemc::Mesh::Hemisphere::build(){
 					     fAxis==Axis::x ? &fPoints.z[0] : fAxis==Axis::y ? &fPoints.x[0] : &fPoints.y[0],
 					     &fPoints.v[0]);
 
-    std::cout << "\t" << fKDTree.get() << "\t" << fDelaunay.get() << std::endl;
     return true;    
   }
   else{

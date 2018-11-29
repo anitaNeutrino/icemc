@@ -418,8 +418,6 @@ void icemc::ShowerModel::GetTauDecay(Neutrino::Flavor nuflavor, Interaction::Cur
     } else
       secondbang=false;
   }
-  
-
 } //GetTauDecay
 
 //-----------------------------------------------------

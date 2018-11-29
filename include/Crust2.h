@@ -89,6 +89,7 @@ namespace icemc{
       return fMaxIceThickness;
     }
     virtual double IceThickness(const Geoid::Position& pos) const override;
+    virtual bool   InsideIce(const Geoid::Position& pos) const override;    
     virtual double maxIceThicknessWithinDistance(const Geoid::Position& p, double distanceMeters) const override;
     virtual int InFirn(const Geoid::Position& pos) const;
     virtual double SurfaceDeepIce(const Geoid::Position& pos) const;

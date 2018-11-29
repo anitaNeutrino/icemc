@@ -153,29 +153,30 @@ double icemc::RayTracer::evalPath(const double* params) const {
   const TVector3 rfDir = (surfacePos - fDetectorPos).Unit();
 
   OpticalPath::Step s2; // from the surface to the balloon
-  s2.start = surfacePos;  
+  s2.start = surfacePos;
   s2.end = fDetectorPos;
-  s2.n = AskaryanRadiationModel::N_AIR;
-  s2.attenuationLength = DBL_MAX; //@todo is this sensible? 
+  s2.n = AskaryanRadiationModel::N_AIR; ///@todo someday get from fWorldModel
+  s2.attenuationLength = DBL_MAX; //@todo is this sensible?
 
-  s2.boundaryNormal = fWorld->GetSurfaceNormal(surfacePos);
-  
-  ///@todo get these refractive index numbers from the world model...
-  const TVector3 refractedRfDir = refractiveBoundary(rfDir, s2.boundaryNormal, AskaryanRadiationModel::N_AIR, AskaryanRadiationModel::NICE, fDebug);
-  const double distRemaining = (surfacePos - fInteractionPos).Mag();
-
-  const TVector3 endPoint = surfacePos + refractedRfDir*distRemaining;
 
   OpticalPath::Step s1; // from the source (hopefully the end point) to the surface
-  s1.start = endPoint;
   s1.end = surfacePos;
   s1.n = AskaryanRadiationModel::NICE;
-  const double attenLengthIceMeters = 700; ///@todo Get this number from the world model
+  const double attenLengthIceMeters = 700; ///@todo Someday get from fWorldModel
   s1.attenuationLength = attenLengthIceMeters;
-  // order matters, think about this!
-  s1.boundaryNormal = s2.boundaryNormal; ///@todo think about this...
+  s1.boundaryNormal = fWorld->GetSurfaceNormal(surfacePos);
+    
+  const TVector3 refractedRfDir = refractiveBoundary(rfDir, s1.boundaryNormal, s2.n, s1.n, fDebug);
+  const double distRemaining = (surfacePos - fInteractionPos).Mag();
+
+  if(fDebug && fDoingMinimization){
+    std::cout << "Angle between initial and refracted is " << TMath::RadToDeg()*refractedRfDir.Angle(rfDir) << std::endl;
+  }
   
-  
+  const TVector3 endPoint = surfacePos + refractedRfDir*distRemaining;
+  s1.start = endPoint;
+
+
   const TVector3 delta = (endPoint - fInteractionPos);
   double residual = delta.Mag();
   

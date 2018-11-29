@@ -179,6 +179,9 @@ icemc::FTPair icemc::AskaryanRadiationModel::generateOnAxisAt1m(Energy energy) c
   // do the slow work of the full calculation for a single reference frequency
   double vmmhz1m_max = GetVmMHz1m(energy, fFreqs_Hz.back());
 
+  // std::cout << "vmmhz1m_max for " << fFreqs_Hz.back() << " = " << vmmhz1m_max << std::endl;
+  // std::cout << "vmmhz1m_max for " << 1.2e9 << " = " << GetVmMHz1m(energy, 1.2e9) << std::endl;  
+
   std::vector<std::complex<double> > amplitudes(fFreqs_Hz.size(), 0);
   amplitudes.back() = vmmhz1m_max;
 
@@ -188,6 +191,11 @@ icemc::FTPair icemc::AskaryanRadiationModel::generateOnAxisAt1m(Energy energy) c
     // stop before 0 since that's a DC offset and this would diverge
     amplitudes.at(freq_index) = amplitudes.back()*fFreqs_Hz.at(freq_index)/fFreqs_Hz.back();
   }
+
+  // for(auto a : amplitudes){
+  //   std::cout << a << ", ";
+  // }
+  // std::cout << std::endl;
 
   bool doNormalTimeOrdering = true;
   FTPair waveform(amplitudes, fDeltaF_Hz, doNormalTimeOrdering);
@@ -491,6 +499,8 @@ double icemc::AskaryanRadiationModel::GetVmMHz1m(Energy energy, double freq) con
   
   double vmmhz1m_max = 0;
   double pnu = energy.in(Energy::Unit::eV);
+
+  // std::cout << __PRETTY_FUNCTION__  << " has pnu =  " << pnu << std::endl;  
   
   if (WHICHPARAMETERIZATION==0) {
     // parametrization from Jaime Alvarez Munhiz  
