@@ -414,6 +414,10 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
     RayleighFits[0][27] =  (TGraph*)RayleighFits[0][26]->Clone();
     RayleighFits[0][28] =  (TGraph*)RayleighFits[0][29]->Clone();
     RayleighFits[0][32] =  (TGraph*)RayleighFits[0][33]->Clone();
+
+    RayleighFits[1][9]  =  (TGraph*)RayleighFits[1][5]->Clone();
+    RayleighFits[1][42] =  (TGraph*)RayleighFits[1][6]->Clone();
+    
     for (int ifreq=0; ifreq<numFreqs; ifreq++){
       fSignalChainResponseA3DigitizerFreqDomain[0][0][3][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[0][0][2][ifreq];
       fSignalChainResponseA3DigitizerFreqDomain[1][0][4][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[1][0][3][ifreq];
@@ -424,12 +428,16 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
       fSignalChainResponseA3DigitizerFreqDomain[0][1][12][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[0][1][13][ifreq];
       fSignalChainResponseA3DigitizerFreqDomain[0][2][0][ifreq] =fSignalChainResponseA3DigitizerFreqDomain[0][2][1][ifreq];
 
+      fSignalChainResponseA3DigitizerFreqDomain[1][0][9][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[1][0][5][ifreq];
+      fSignalChainResponseA3DigitizerFreqDomain[1][2][10][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[1][0][6][ifreq];
+
     }
        
   }
   
   calculateImpulseResponsesRatios(settings1);
 
+  
   if (settings1->TRIGGEREFFSCAN){
     readTriggerEfficiencyScanPulser(settings1);
   }
@@ -4031,7 +4039,7 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
 	}
       }
     }else{
-      surfchain->GetEvent(isurf);
+      surfchain->GetEvent(isurf);      
     }
   } // end if it's in range
   
@@ -4196,7 +4204,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 	  fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
 	  delete gint;
 	  delete gtemp;
-
+	  
 	  TGraph *gDig  = fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff]->getFreqMagGraph();
 	  // Smooth out the high frequency 
 	  double temparray[512];
