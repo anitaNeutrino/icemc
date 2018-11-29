@@ -32,7 +32,8 @@ namespace icemc {
     Interaction interaction;
     Shower shower;
     Geoid::Position detector;
-    SignalSummary signalSummary;
+    SignalSummary signalAtInteraction;
+    SignalSummary signalAtDetector;
 
     ClassDef(Event, 1)
   };

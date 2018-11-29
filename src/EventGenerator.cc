@@ -75,7 +75,10 @@ void icemc::EventGenerator::initialize(){
   ///@todo add support for directional sources
   fSourceDirectionModel = std::make_shared<Source::DiffuseFlux>();
 
-  if(fSettings->YPARAM==0){ ///@todo enumify YPARAM
+  if(fSettings->CONSTANTY > 0){
+    fYGenerator = std::make_shared<ConstantY>(0.2);
+  }
+  else if(fSettings->YPARAM==0){ ///@todo enumify YPARAM
     fYGenerator = std::make_shared<GhandiEtAl::YGenerator>();
   }
   else if(fSettings->YPARAM==1){
@@ -223,6 +226,9 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEvent.shower = showerModel.generate(fEvent.neutrino, fEvent.interaction);
 
     PropagatingSignal signal = askaryanModel.generate(fEvent.neutrino, fEvent.shower, opticalPath);
+    
+    fEvent.signalAtInteraction.maxEField = signal.maxEField();
+    fEvent.signalAtInteraction.energy = signal.energy();
 
     // {
     //   const auto& amps = signal.waveform.getFreqDomain();
@@ -231,7 +237,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     //   }
     //   std::cout << std::endl;
     // }
-    fEvent.signalSummary = signal.propagate(opticalPath);
+    fEvent.signalAtDetector = signal.propagate(opticalPath);
 
     // static double bestMaxE = 0;
     // if(signal.maxEField() > bestMaxE){
