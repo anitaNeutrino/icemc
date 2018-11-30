@@ -152,30 +152,45 @@ double icemc::RayTracer::evalPath(const double* params) const {
   // Gives us this initial RF direction...
   const TVector3 rfDir = (surfacePos - fDetectorPos).Unit();
 
+
+  // need a new method of search though this works well for the in ice case...
+  // now need the option to be able to stop in air as well.
+  // What about: step the distance to the source or the surface, whichever is smaller?
+  // then you should be able to just jump to the answer.
+
+  const double distanceToInteraction = (fInteractionPos - fDetectorPos).Mag();
+  bool stepToSurface = (surfacePos - fDetectorPos).Mag() < distanceToInteraction;
+  
+  TVector3 endPoint;
+  
   OpticalPath::Step s2; // from the surface to the balloon
-  s2.start = surfacePos;
+  if(stepToSurface){
+    s2.start = surfacePos;
+  }
+  else{
+    const TVector3 translation = (surfacePos - fDetectorPos).Unit();
+    s2.start = fDetectorPos + distanceToInteraction*translation;
+    endPoint = s2.start;
+  }
+
   s2.end = fDetectorPos;
   s2.n = AskaryanRadiationModel::N_AIR; ///@todo someday get from fWorldModel
   s2.attenuationLength = DBL_MAX; //@todo is this sensible?
 
-
   OpticalPath::Step s1; // from the source (hopefully the end point) to the surface
-  s1.end = surfacePos;
-  s1.n = AskaryanRadiationModel::NICE;
-  const double attenLengthIceMeters = 700; ///@todo Someday get from fWorldModel
-  s1.attenuationLength = attenLengthIceMeters;
-  s1.boundaryNormal = fWorld->GetSurfaceNormal(surfacePos);
+  if(stepToSurface){
+    s1.end = surfacePos;
+    s1.n = AskaryanRadiationModel::NICE;
+    const double attenLengthIceMeters = 700; ///@todo Someday get from fWorldModel
+    s1.attenuationLength = attenLengthIceMeters;
+    s1.boundaryNormal = fWorld->GetSurfaceNormal(surfacePos);
     
-  const TVector3 refractedRfDir = refractiveBoundary(rfDir, s1.boundaryNormal, s2.n, s1.n, fDebug);
-  const double distRemaining = (surfacePos - fInteractionPos).Mag();
+    const TVector3 refractedRfDir = refractiveBoundary(rfDir, s1.boundaryNormal, s2.n, s1.n, fDebug);
+    const double distRemaining = (surfacePos - fInteractionPos).Mag();
 
-  if(fDebug && fDoingMinimization){
-    std::cout << "Angle between initial and refracted is " << TMath::RadToDeg()*refractedRfDir.Angle(rfDir) << std::endl;
+    endPoint = surfacePos + refractedRfDir*distRemaining;
+    s1.start = endPoint;    
   }
-  
-  const TVector3 endPoint = surfacePos + refractedRfDir*distRemaining;
-  s1.start = endPoint;
-
 
   const TVector3 delta = (endPoint - fInteractionPos);
   double residual = delta.Mag();
@@ -198,11 +213,13 @@ double icemc::RayTracer::evalPath(const double* params) const {
     fSurfaceNormal = s1.boundaryNormal;
     fSurfacePos = surfacePos;
     fEndPoint = endPoint;
-    fRefractedRfDir = refractedRfDir;
+    fRefractedRfDir = s1.end - s1.start;
 
     fOpticalPath.clear();
 
-    fOpticalPath.steps.emplace_back(s1);
+    if(stepToSurface){
+      fOpticalPath.steps.emplace_back(s1);
+    }
     fOpticalPath.steps.emplace_back(s2);
     fOpticalPath.residual = residual;    
   }

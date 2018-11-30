@@ -91,10 +91,10 @@ TVector3 icemc::OpticalPath::polarization(const TVector3& initialPolarization) c
 
   TVector3 finalPolarization = initialPolarization;
   
-  for(int i=0; i < steps.size(); i++){
-    if(i < steps.size() - 1){
-      const Step& s1 = steps[i];
-      const Step& s2 = steps[i+1];
+  for(int i=1; i < steps.size(); i++){
+    if(i < steps.size()){
+      const Step& s1 = steps.at(i-1);
+      const Step& s2 = steps.at(i);
       finalPolarization = updatePolarization(finalPolarization, s1.boundaryNormal,
 					     s1.direction(), s1.n,
 					     s2.direction(), s2.n);

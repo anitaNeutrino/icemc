@@ -31,8 +31,8 @@ icemc::WaisPulser::WaisPulser(const Settings* settings, std::shared_ptr<const Wo
 
   double newAlt = worldModel->SurfaceAboveGeoid(fWaisPulserPosition);
   std::cout << "WorldModel gives surface at WAIS at " << newAlt << ", old was " << fWaisPulserPosition.Altitude() << std::endl;
-  ///@todo check, do we want to put this slightly below the surface?
-  fWaisPulserPosition.SetAltitude(newAlt); // put it slightly below the surface?
+  ///@todo check, do we want to put this slightly below/above the surface?
+  fWaisPulserPosition.SetAltitude(newAlt + 0.01); // put it slightly above the surface?
 
   fSurfaceNormal = worldModel->GetSurfaceNormal(fWaisPulserPosition);  
   

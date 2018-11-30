@@ -33,7 +33,8 @@ icemc::SignalSummary icemc::PropagatingSignal::propagate(const OpticalPath& opti
 
   double fresnelFactor = polarization.Mag();
 
-  if(fresnelFactor >= 1 || fresnelFactor<=0){
+  const double tolerance = 1e-10;
+  if(fresnelFactor > 1 + tolerance || fresnelFactor<=0){
     icemc::report() << severity::error << "Un-physical Fresnel factor! " <<  fresnelFactor << std::endl;
   }
   
