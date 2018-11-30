@@ -13,30 +13,43 @@
 
 namespace icemc {
 
+
   /**
-   * @class Event
-   * @brief A class which contains all the info about an icemc event.
+   * @class EventSummary
+   * @brief A class which contains sumary info about an icemc event.
    */
-  class Event {
-    // class Weights {
-    //   double position;
-    //   double direction;
-    //   operator double(){return position*direction;}
-    // };
+  class EventSummary {
 
   public:
-    Event(Int_t run=-1, UInt_t eventNumber=0, double eventTime=TMath::QuietNaN());
+    EventSummary(Int_t run=-1, UInt_t eventNumber=0, double eventTime=TMath::QuietNaN());
     
     LoopInfo loop;
     Neutrino neutrino;
     Interaction interaction;
     Shower shower;
     Geoid::Position detector;
-    SignalSummary signalAtInteraction;
-    SignalSummary signalAtDetector;
+    SignalSummary signalSummaryAt1m;
+    SignalSummary signalSummaryAtDetector;
 
-    ClassDef(Event, 1)
+    ClassDef(EventSummary, 3)
   };
+
+
+
+  /**
+   * @class Event
+   * @brief A class which contains all the info about an icemc event.
+   */
+  class Event : public EventSummary {
+  public:
+    Event() : EventSummary() {}
+    void copy(const EventSummary& other);
+    
+    TGraph signalAt1m;
+    TGraph signalAtDetector;    
+    ClassDef(Event, 3)
+  };
+  
 }
 
 

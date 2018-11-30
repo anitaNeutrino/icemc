@@ -84,7 +84,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   ss = NULL;
 
   initTree(&allTree, "allTree", "allTree", fIceFinal);
-  allTree.Branch("event", &uhen->fEvent);
+  allTree.Branch("eventSummary", &uhen->fEventSummary);
   
   initTree(&passTree, "passTree", "passTree", fIceFinal);
   passTree.Branch("event", &uhen->fEvent);

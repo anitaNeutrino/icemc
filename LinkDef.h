@@ -15,6 +15,7 @@
 #pragma link C++ class icemc::Energy+;
 
 #pragma link C++ class icemc::Event+;
+#pragma link C++ class icemc::EventSummary+;
 
 #pragma link C++ class icemc::SignalSummary+;
 

@@ -208,34 +208,38 @@ void icemc::EventGenerator::generate(Detector& detector){
     RNG::newSeeds(run, eventNumber); // updates all RNG seeds
     gRandom->SetSeed(eventNumber+6e7); ///@todo kill me
 
-    fEvent = Event(run, eventNumber,  eventTimes.at(entry));
-    fEvent.neutrino = nuGenerator.generate();
-    fEvent.detector = detector.getPosition(fEvent.loop.eventTime);
+    fEventSummary = EventSummary(run, eventNumber,  eventTimes.at(entry));
+    fEventSummary.neutrino = nuGenerator.generate();
+    fEventSummary.detector = detector.getPosition(fEventSummary.loop.eventTime);
 
-    fEvent.interaction = interactionGenerator->generateInteraction(fEvent.neutrino, fEvent.detector);
+    fEventSummary.interaction = interactionGenerator->generateInteraction(fEventSummary.neutrino, fEventSummary.detector);
 
-    OpticalPath opticalPath = rayTracer.findPath(fEvent.interaction.position, fEvent.detector);
-    fEvent.loop.rayTracingSolution = opticalPath.residual < 1; // meters
+    OpticalPath opticalPath = rayTracer.findPath(fEventSummary.interaction.position, fEventSummary.detector);
+    fEventSummary.loop.rayTracingSolution = opticalPath.residual < 1; // meters
 
     // {
-    //   std::cout << fEvent.interaction.position << "\n";
-    //   std::cout << fEvent.detector << "\n";
-    //   std::cout << "Separation = " << fEvent.interaction.position.Distance(fEvent.detector) << "\n" << std::endl;
+    //   std::cout << fEventSummary.interaction.position << "\n";
+    //   std::cout << fEventSummary.detector << "\n";
+    //   std::cout << "Separation = " << fEventSummary.interaction.position.Distance(fEventSummary.detector) << "\n" << std::endl;
     //   std::cout << opticalPath.residual << std::endl;
     // }
 
-    if(fEvent.loop.rayTracingSolution==false){
-      std::cout << "No ray tracing solution between source " << fEvent.interaction.position << " and detector " << fEvent.detector << std::endl;
-      std::cout << (fEvent.interaction.position - fEvent.detector).Mag() << std::endl;
+    if(fEventSummary.loop.rayTracingSolution==false){
+      std::cout << "No ray tracing solution between source " << fEventSummary.interaction.position << " and detector " << fEventSummary.detector << std::endl;
+      std::cout << (fEventSummary.interaction.position - fEventSummary.detector).Mag() << std::endl;
       output.allTree.Fill();
       continue;
     }
 
-    fEvent.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath);
-    fEvent.shower = showerModel.generate(fEvent.neutrino, fEvent.interaction);
-    PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEvent.neutrino, fEvent.shower);
-    fEvent.signalAtInteraction.maxEField = signal.maxEField();
-    fEvent.signalAtInteraction.energy = signal.energy();
+    fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath);
+    fEventSummary.shower = showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction);
+    PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEventSummary.neutrino, fEventSummary.shower);
+
+
+    fEvent.signalAt1m = signal.waveform.getTimeDomain();
+    ///@todo wrap these up?
+    fEventSummary.signalSummaryAt1m.maxEField = signal.maxEField();
+    fEventSummary.signalSummaryAt1m.energy = signal.energy();
     // std::cout << signal.energy() << "\t" << signal.polarization << std::endl;
 
     // {
@@ -245,8 +249,9 @@ void icemc::EventGenerator::generate(Detector& detector){
     //   }
     //   std::cout << std::endl;
     // }
-    fEvent.signalAtDetector = signal.propagate(opticalPath);
-
+    fEventSummary.signalSummaryAtDetector = signal.propagate(opticalPath);
+    fEvent.signalAtDetector = signal.waveform.getTimeDomain();
+    
     // static double bestMaxE = 0;
     // if(signal.maxEField() > bestMaxE){
     //   bestMaxE = signal.maxEField();
@@ -254,23 +259,25 @@ void icemc::EventGenerator::generate(Detector& detector){
     // }
     // std::cout  << signal.maxEField() << std::endl;
 
-    fEvent.loop.chanceInHell = detector.chanceInHell(signal);
+    fEventSummary.loop.chanceInHell = detector.chanceInHell(signal);
 
-    if(fEvent.loop.chanceInHell==false){
-      // std::cout << "No chance in hell\t" << fEvent.interaction.position << std::endl;
+    if(fEventSummary.loop.chanceInHell==false){
+      // std::cout << "No chance in hell\t" << fEventSummary.interaction.position << std::endl;
       output.allTree.Fill();
       continue;
     }
     delayAndAddSignalToEachRX(signal, opticalPath, detector);
 
-    fEvent.loop.passesTrigger = detector.applyTrigger();
+    fEventSummary.loop.passesTrigger = detector.applyTrigger();
 
-    if(fEvent.loop.passesTrigger==true){
+    if(fEventSummary.loop.passesTrigger==true){
       std::cout << "PASSED!" << std::endl;
 
-      fEvent.neutrino.path.integrate(fEvent.interaction.position, antarctica);
-      // std::cout << "PASSED\t" << fEvent.interaction.position << std::endl;
+      fEventSummary.neutrino.path.integrate(fEventSummary.interaction.position, antarctica);
+      // std::cout << "PASSED\t" << fEventSummary.interaction.position << std::endl;
 
+      fEvent.copy(fEventSummary);
+      
       output.passTree.Fill();
     }
     // std::cout << std::endl;
