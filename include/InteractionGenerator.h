@@ -1,55 +1,21 @@
 #ifndef ICEMC_INTERACTION_GENERATOR_H
 #define ICEMC_INTERACTION_GENERATOR_H
 
-#include "Geoid.h"
-#include "RNG.h"
-#include "Interaction.h"
 #include "Neutrino.h"
+#include "Detector.h"
+#include "Interaction.h"
 
 namespace icemc {
 
-  class Settings;
-  class WorldModel;
-  class CrossSectionModel;
-  class YGenerator;
-  
-  /**
-   * @class InteractionGenerator
-   * @brief Picks random numbers to model neutrino interactions
-   */
-  class InteractionGenerator : public RNG {
-
-    const Settings* fSettings = nullptr;
-    std::shared_ptr<const WorldModel> fWorldModel = nullptr;
-    std::shared_ptr<CrossSectionModel> fCrossSectionModel;
-    std::shared_ptr<YGenerator> fYGenerator;
-
-    Geoid::Position fSpecificInteractionCenter; ///< Used in the Settings::SPECIFIC_NU_POSITION case
-
-    /** 
-     * Pick a position in the ice near center, reject if outside sphere of rangeMeters 
-     */
-    Geoid::Position pickInteractionPositionInIce(const Geoid::Position& center, double rangeMeters);
+  class InteractionGenerator {
     
-    /** 
-     * Pick a position inside sphere of rangeMeters around center, reject if not inside ice.
-     */
-    Geoid::Position pickInteractionPositionInSphere(const Geoid::Position& center, double rangeMeters);
-
-  public:    
-    InteractionGenerator(const Settings *settings,
-			 std::shared_ptr<WorldModel> worldModel,
-			 std::shared_ptr<CrossSectionModel> crossSectionModel,
-			 std::shared_ptr<YGenerator> yGenerator);
-
-    Interaction generate(const Neutrino& n, const Geoid::Position& detector);
-    Geoid::Position pickInteractionPosition(const Geoid::Position& detector);
-    Interaction::Current pickCurrent();
+  public:
+    ///@todo remove the neutrino if possible... does this abstraction even make sense?
+    virtual Interaction generateInteraction(const Neutrino& n, const Geoid::Position& detector) = 0;
   };
-
 
 }
 
 
 
-#endif //ICEMC_INTERACTION_GENERATOR_H
+#endif //ICEMC_NEUTRINO_INTERACTION_GENERATOR_H

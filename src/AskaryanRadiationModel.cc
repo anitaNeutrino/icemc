@@ -254,7 +254,7 @@ TVector3 icemc::AskaryanRadiationModel::getPolarizationVector(const TVector3& rf
 
 
 
-icemc::PropagatingSignal icemc::AskaryanRadiationModel::generate(const OpticalPath& opticalPath, const Neutrino& nu, const Shower& shower) const {
+icemc::PropagatingSignal icemc::AskaryanRadiationModel::generateImpulse(const OpticalPath& opticalPath, const Neutrino& nu, const Shower& shower) const {
 
   // first generate the signal you would see viewing on axis at 1m from the interaction
   FTPair waveform = generateOnAxisAt1m(nu.energy);

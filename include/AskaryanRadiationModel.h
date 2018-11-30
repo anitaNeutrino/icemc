@@ -37,7 +37,7 @@ namespace icemc {
      * 
      * @return the component of the Askaryan signal pointing along outgoingRfDirection
      */
-    PropagatingSignal generate(const OpticalPath& opticalPath, const Neutrino& nu, const Shower& shower) const;
+    PropagatingSignal generateImpulse(const OpticalPath& opticalPath, const Neutrino& nu, const Shower& shower) const;
 
   private:
     const Settings* fSettings;

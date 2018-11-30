@@ -28,6 +28,9 @@
 #include "AskaryanRadiationModel.h"
 #include "ShowerModel.h"
 
+#include "InteractionGenerator.h"
+#include "NeutrinoInteractionGenerator.h"
+#include "WaisPulser.h"
 
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
@@ -155,23 +158,27 @@ void icemc::EventGenerator::generate(Detector& detector){
   icemc::report() << severity::info << "Seed is " << fSettings->SEED << std::endl;
 
 
+  int n;
+  double dt;
+  detector.getDesiredNDt(n, dt);
+  fRadioModel = std::make_shared<AskaryanRadiationModel>(fSettings, n, dt);
 
   ShowerModel showerModel(fSettings);
 
   auto antarctica = std::make_shared<Antarctica>();
-  auto interactionGenerator = std::make_shared<InteractionGenerator>(fSettings,
+  std::shared_ptr<InteractionGenerator> interactionGenerator = std::make_shared<NeutrinoInteractionGenerator>(fSettings,
 								     antarctica,
 								     fCrossSectionModel,
 								     fYGenerator);
+
+  auto waisModel = std::make_shared<WaisPulser>(fSettings, antarctica);
+  interactionGenerator = waisModel;
+  fRadioModel = waisModel;  
 
   icemc::report() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
 
   icemc::RootOutput output(this, fSettings, fSettings->getOutputDir(), fSettings->getRun());
 
-  int n;
-  double dt;
-  detector.getDesiredNDt(n, dt);
-  fRadioModel = std::make_shared<AskaryanRadiationModel>(fSettings, n, dt);
 
   NeutrinoGenerator nuGenerator(fSettings, fSourceEnergyModel, fSourceDirectionModel, antarctica);
   RayTracer rayTracer(antarctica);
@@ -205,7 +212,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEvent.neutrino = nuGenerator.generate();
     fEvent.detector = detector.getPosition(fEvent.loop.eventTime);
 
-    fEvent.interaction = interactionGenerator->generate(fEvent.neutrino, fEvent.detector);
+    fEvent.interaction = interactionGenerator->generateInteraction(fEvent.neutrino, fEvent.detector);
 
     OpticalPath opticalPath = rayTracer.findPath(fEvent.interaction.position, fEvent.detector);
     fEvent.loop.rayTracingSolution = opticalPath.residual < 1; // meters
@@ -218,7 +225,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     // }
 
     if(fEvent.loop.rayTracingSolution==false){
-      std::cout << "No ray tracing solution\t" << fEvent.interaction.position << std::endl;
+      std::cout << "No ray tracing solution between source " << fEvent.interaction.position << " and detector " << fEvent.detector << std::endl;
       std::cout << (fEvent.interaction.position - fEvent.detector).Mag() << std::endl;
       output.allTree.Fill();
       continue;
@@ -226,13 +233,10 @@ void icemc::EventGenerator::generate(Detector& detector){
 
     fEvent.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath);
     fEvent.shower = showerModel.generate(fEvent.neutrino, fEvent.interaction);
-
-    PropagatingSignal signal = fRadioModel->generate(opticalPath, fEvent.neutrino, fEvent.shower);
-    
+    PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEvent.neutrino, fEvent.shower);
     fEvent.signalAtInteraction.maxEField = signal.maxEField();
     fEvent.signalAtInteraction.energy = signal.energy();
-
-    std::cout << signal.energy() << "\t" << signal.polarization << std::endl;
+    // std::cout << signal.energy() << "\t" << signal.polarization << std::endl;
 
     // {
     //   const auto& amps = signal.waveform.getFreqDomain();
@@ -257,7 +261,6 @@ void icemc::EventGenerator::generate(Detector& detector){
       output.allTree.Fill();
       continue;
     }
-
     delayAndAddSignalToEachRX(signal, opticalPath, detector);
 
     fEvent.loop.passesTrigger = detector.applyTrigger();

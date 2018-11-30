@@ -12,7 +12,7 @@ namespace icemc {
   public:
 
     ///@todo some of these aren't necessary for pulsers e.g. WAIS, can this be made a little more elegant?
-    virtual PropagatingSignal generate(const OpticalPath& opticalPath, const Neutrino& nu, const Shower& shower) const = 0;
+    virtual PropagatingSignal generateImpulse(const OpticalPath& opticalPath, const Neutrino& nu, const Shower& shower) const = 0;
   };
   
 };

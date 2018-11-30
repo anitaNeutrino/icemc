@@ -22,6 +22,7 @@ namespace icemc {
   class Neutrino;
   class CrossSectionModel;
   class YGenerator;
+  class ImpulsiveRadioGenerator;
 
   /**
    * @class EventGenerator
@@ -48,7 +49,8 @@ namespace icemc {
     std::shared_ptr<Source::DirectionModel> fSourceDirectionModel = nullptr;
     std::shared_ptr<CrossSectionModel> fCrossSectionModel = nullptr;
     std::shared_ptr<YGenerator> fYGenerator = nullptr;
-
+    std::shared_ptr<ImpulsiveRadioGenerator> fRadioModel = nullptr;
+    
     void delayAndAddSignalToEachRX(const PropagatingSignal& signal, const OpticalPath& opticalPath, Detector& detector) const;
 
 

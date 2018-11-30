@@ -16,7 +16,8 @@ TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& op
   //@todo return WEIGHT this with the 1./cos_theta_range factor
   const double thetaCherenkov = AskaryanRadiationModel::CHANGLE_ICE;
   // const double theta = pickUniform(0, TMath::Pi());
-  const double phi = pickUniform(0, TMath::TwoPi());
+  // const double phi = pickUniform(0, TMath::TwoPi());
+  const double phi = 0; ///@attention test condition, remove me!
 
   TVector3 nuDir;
   nuDir.SetMagThetaPhi(1.0, thetaCherenkov, phi);
