@@ -7,6 +7,7 @@
 #include "Report.h"
 #include "FTPair.h"
 #include "Detector.h"
+#include "ImpulsiveRadioGenerator.h"
 
 namespace icemc {
 
@@ -19,7 +20,7 @@ namespace icemc {
    * 
    * In theory one should set the medium and give it an energy and generate a set of frequencies.
    */
-  class AskaryanRadiationModel {
+  class AskaryanRadiationModel : public ImpulsiveRadioGenerator {
   public:
 
     // AskaryanRadiationModel(); ///< Default constructor
@@ -36,7 +37,7 @@ namespace icemc {
      * 
      * @return the component of the Askaryan signal pointing along outgoingRfDirection
      */
-    PropagatingSignal generate(const Neutrino& nu, const Shower& shower, const OpticalPath& opticalPath) const;
+    PropagatingSignal generate(const OpticalPath& opticalPath, const Neutrino& nu, const Shower& shower) const;
 
   private:
     const Settings* fSettings;

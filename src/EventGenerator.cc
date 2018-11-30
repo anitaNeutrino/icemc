@@ -13,8 +13,6 @@
 #include "Crust2.h"
 #include "Antarctica.h"
 #include "Spectra.h"
-#include "AskaryanRadiationModel.h"
-#include "ShowerModel.h"
 #include "RayTracer.h"
 #include "ConnollyEtAl2011.h"
 #include "Report.h"
@@ -26,6 +24,9 @@
 #include "MonoEnergetic.h"
 #include "InteractionGenerator.h"
 
+#include "ImpulsiveRadioGenerator.h"
+#include "AskaryanRadiationModel.h"
+#include "ShowerModel.h"
 
 
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
@@ -142,6 +143,8 @@ void icemc::EventGenerator::delayAndAddSignalToEachRX(const PropagatingSignal& s
   for(int rx=0; rx < detector.getNumRX(); rx++){
     PropagatingSignal signalRX = signal;
     signalRX.waveform.applyConstantGroupDelay(delays.at(rx) - minDelay, false);
+    // std::cout << "EventGenerator::delayAndAdd: rx " << rx << ", " << signalRX.energy() << std::endl;
+    
     detector.addSignalToRX(signalRX, rx);
   }
 }
@@ -168,7 +171,7 @@ void icemc::EventGenerator::generate(Detector& detector){
   int n;
   double dt;
   detector.getDesiredNDt(n, dt);
-  AskaryanRadiationModel askaryanModel(fSettings, n, dt);
+  fRadioModel = std::make_shared<AskaryanRadiationModel>(fSettings, n, dt);
 
   NeutrinoGenerator nuGenerator(fSettings, fSourceEnergyModel, fSourceDirectionModel, antarctica);
   RayTracer rayTracer(antarctica);
@@ -211,9 +214,8 @@ void icemc::EventGenerator::generate(Detector& detector){
     //   std::cout << fEvent.interaction.position << "\n";
     //   std::cout << fEvent.detector << "\n";
     //   std::cout << "Separation = " << fEvent.interaction.position.Distance(fEvent.detector) << "\n" << std::endl;
-    //   std::cout << opticalPath.residual << std::endl;      
+    //   std::cout << opticalPath.residual << std::endl;
     // }
-    
 
     if(fEvent.loop.rayTracingSolution==false){
       std::cout << "No ray tracing solution\t" << fEvent.interaction.position << std::endl;
@@ -225,10 +227,12 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEvent.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath);
     fEvent.shower = showerModel.generate(fEvent.neutrino, fEvent.interaction);
 
-    PropagatingSignal signal = askaryanModel.generate(fEvent.neutrino, fEvent.shower, opticalPath);
+    PropagatingSignal signal = fRadioModel->generate(opticalPath, fEvent.neutrino, fEvent.shower);
     
     fEvent.signalAtInteraction.maxEField = signal.maxEField();
     fEvent.signalAtInteraction.energy = signal.energy();
+
+    std::cout << signal.energy() << "\t" << signal.polarization << std::endl;
 
     // {
     //   const auto& amps = signal.waveform.getFreqDomain();
