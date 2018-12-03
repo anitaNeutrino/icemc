@@ -211,6 +211,16 @@ namespace icemc {
       const TGraph& gr = getTimeDomain();
       return TMath::MaxElement(gr.GetN(), gr.GetY());
     }
+
+
+    /** 
+     * Write the time domain graph and power spectral density to a TFile.
+     * 
+     * Potentially useful for debugging.
+     * 
+     * @param fileName is the name of the file, (overwrites it if already exists)
+     */
+    void dump(const char* fileName) const;
     
     
     /** 

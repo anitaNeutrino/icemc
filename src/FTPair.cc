@@ -1,4 +1,5 @@
 #include "FTPair.h"
+#include "TFile.h"
 
 /** 
  * Print the state of the updater variables
@@ -20,6 +21,9 @@ void PRINT_STATE(const char* funcName, bool fTime,  bool fFreq){
   if(fDebug){                                                                          \
     PRINT_STATE(__PRETTY_FUNCTION__, fNeedToUpdateTimeDomain, fNeedToUpdateFreqDomain);\
   }
+
+
+
 
 
 
@@ -691,4 +695,22 @@ void icemc::FTPair::realft(double *data, const int isign, int nsize){
 
 
 
+void icemc::FTPair::dump(const char* fileName) const {
+  
+  TFile* f= new TFile(fileName, "recreate");
 
+  TGraph grTime = getTimeDomain();
+  grTime.SetName("grTimeDomain");
+  grTime.SetTitle("Time domain");
+  grTime.Write();
+
+
+  TGraph grFreq = makePowerSpectralDensityGraph();
+  grFreq.SetName("grFreqDomain");
+  grFreq.SetTitle("Power spectral density");
+  grFreq.Write();
+  
+  f->Write();
+  f->Close();
+  delete f;  
+}
