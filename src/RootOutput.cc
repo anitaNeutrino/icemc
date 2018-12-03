@@ -17,11 +17,36 @@
 icemc::RootOutput::RootOutput(const EventGenerator* uhen, const Settings* settings, const char* outputDir, int run)
   : fOutputDir(outputDir), fRun(run), fIceFinal(NULL)
 {
-
+  std::cout << "icemc::RootOutput created in write mode." << std::endl;
   initIceFinal(uhen, settings);
 }
 
 
+icemc::RootOutput::RootOutput(const char* outputDir, int run)
+  : fOutputDir(outputDir), fRun(run), fIceFinal(NULL)
+{
+  std::cout << "icemc::RootOutput created in read mode." << std::endl;
+  readIceFinal();
+}
+
+
+
+void icemc::RootOutput::readIceFinal(){
+
+  TString fileName = fOutputDir + TString::Format("/run%d/IceFinal_%d.root", fRun, fRun);
+  fIceFinal = TFile::Open(fileName);
+
+  if(!fIceFinal){
+    icemc::report() << severity::error << "Can't open " << fileName << std::endl;
+    return;
+  }
+  
+  fAllTree = (TTree*) fIceFinal->Get("allTree");
+  fPassTree = (TTree*) fIceFinal->Get("passTree");
+
+  fAllTree->SetBranchAddress("eventSummary", &fEventSummary);
+  fPassTree->SetBranchAddress("event", &fEvent);
+}
 
 icemc::RootOutput::~RootOutput(){
 
@@ -75,7 +100,7 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   // Settings* settings = const_cast<Settings*>(settings2);
 
   // first the file(s)
-  TString fileName = fOutputDir + TString::Format("/run%d/IceMC_%d.root", fRun, fRun);
+  TString fileName = fOutputDir + TString::Format("/run%d/IceFinal_%d.root", fRun, fRun);
   fIceFinal = new TFile(fileName, "RECREATE", "ice");
 
   TNamed* ss = settings2->makeRootSaveableSettings();
@@ -83,11 +108,19 @@ void icemc::RootOutput::initIceFinal(const EventGenerator* uhen2, const Settings
   delete ss;
   ss = NULL;
 
-  initTree(&allTree, "allTree", "allTree", fIceFinal);
-  allTree.Branch("eventSummary", &uhen->fEventSummary);
+  fAllTree = new TTree();
+  initTree(fAllTree, "allTree", "allTree", fIceFinal);
+  fAllTree->Branch("eventSummary", &uhen->fEventSummary);
   
-  initTree(&passTree, "passTree", "passTree", fIceFinal);
-  passTree.Branch("event", &uhen->fEvent);
+  fPassTree = new TTree();
+  initTree(fPassTree, "passTree", "passTree", fIceFinal);
+  fPassTree->Branch("event", &uhen->fEvent);
+
+  // these are only for read only mode,
+  // disable these pointers when we're writing
+  // as we are copying the EventGenerator members into the trees.
+  fEventSummary = nullptr;
+  fEvent = nullptr;
 }
 
 

@@ -7,6 +7,7 @@
 #include "TH1D.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "Event.h"
 
 
 // need some ifdefs?
@@ -36,14 +37,15 @@ namespace icemc {
 
   public:
     RootOutput(const EventGenerator* uhen = NULL, const Settings* settings = NULL, const char* outputDir = ".", int run = 0);
+    RootOutput(const char* fileName,  int run);    
     virtual ~RootOutput();
 
     /**
      * The goal is to have all info in these trees.
      * 
      */
-    TTree allTree;  ///< For every neutrino generated,  not too detailed.
-    TTree passTree; ///< For every neutrino that passes the detector trigger, very detailed.
+    TTree& allTree(){return  *fAllTree;}  ///< For every neutrino generated,  not too detailed.
+    TTree& passTree(){return *fPassTree;} ///< For every neutrino that passes the detector trigger, very detailed.
 
     static void initHist(TH1* h, const char* name, const char* title, int nx, double xMin, double xMax, TFile* f);
     static void initHist(TH2* h, const char* name, const char* title, int nx, double xMin, double xMax, int ny, double yMin, double yMax, TFile* f);
@@ -51,13 +53,24 @@ namespace icemc {
 
     const TString& getOutputDir() const {return fOutputDir;}
     int getRun() const {return fRun;}
+    
+    EventSummary& eventSummary() const {return *fEventSummary;}
+    Event& event() const {return *fEvent;}
 
   private:
+    void initIceFinal(const EventGenerator* uhen, const Settings* settings);
+    void readIceFinal();
+
+
     TString fOutputDir; ///< The output directory
     int fRun; ///< The simulated run number (used to uniquely name output files)
-    TFile* fIceFinal;
+    TFile* fIceFinal = nullptr;
+    TTree* fAllTree = nullptr;
+    TTree* fPassTree = nullptr;
+    EventSummary* fEventSummary = nullptr;
+    Event* fEvent = nullptr;
 
-    void initIceFinal(const EventGenerator* uhen, const Settings* settings);
+    
 
   };
 

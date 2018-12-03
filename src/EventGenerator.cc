@@ -213,7 +213,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary.detector = detector.getPosition(fEventSummary.loop.eventTime);
 
     fEventSummary.interaction = interactionGenerator->generateInteraction(fEventSummary.neutrino, fEventSummary.detector);
-
+    
     OpticalPath opticalPath = rayTracer.findPath(fEventSummary.interaction.position, fEventSummary.detector);
     fEventSummary.loop.rayTracingSolution = opticalPath.residual < 1; // meters
 
@@ -227,7 +227,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     if(fEventSummary.loop.rayTracingSolution==false){
       std::cout << "No ray tracing solution between source " << fEventSummary.interaction.position << " and detector " << fEventSummary.detector << std::endl;
       std::cout << (fEventSummary.interaction.position - fEventSummary.detector).Mag() << std::endl;
-      output.allTree.Fill();
+      output.allTree().Fill();
       continue;
     }
 
@@ -263,7 +263,7 @@ void icemc::EventGenerator::generate(Detector& detector){
 
     if(fEventSummary.loop.chanceInHell==false){
       // std::cout << "No chance in hell\t" << fEventSummary.interaction.position << std::endl;
-      output.allTree.Fill();
+      output.allTree().Fill();
       continue;
     }
     delayAndAddSignalToEachRX(signal, opticalPath, detector);
@@ -278,10 +278,10 @@ void icemc::EventGenerator::generate(Detector& detector){
 
       fEvent.copy(fEventSummary);
       
-      output.passTree.Fill();
+      output.passTree().Fill();
     }
     // std::cout << std::endl;
-    output.allTree.Fill();
+    output.allTree().Fill();
   }
   signal(SIGINT, SIG_DFL); /// unset signal handler
 }
