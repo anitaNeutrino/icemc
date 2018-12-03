@@ -723,7 +723,7 @@ int main(int argc,  char **argv) {
     anita1->rms_rfcm_e_single_event = 0;
 
 
-    std::map<std::string, void *> *hot_antenna_result = (std::map<std::string, void *> *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/hot-antenna.so", true /* bInteractive */);
+    // std::map<std::string, void *> *hot_antenna_result = (std::map<std::string, void *> *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/hot-antenna.so", false /* bInteractive */);
 
     count_rx=0;
     for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
