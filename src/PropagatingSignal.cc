@@ -20,7 +20,7 @@ double icemc::PropagatingSignal::maxEField() const {
 }
 
 
-icemc::SignalSummary icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
+void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
   
   // 1/r loss from power intensity on spherical wavefront
   const double distanceFactor = 1./opticalPath.distance();
@@ -48,15 +48,18 @@ icemc::SignalSummary icemc::PropagatingSignal::propagate(const OpticalPath& opti
   auto& amps = waveform.changeFreqDomain();
   for(auto& amp : amps){
     amp *= totalFieldReduction;
-  }
-
-
-  SignalSummary ss(this);
-  return ss;  
+  }  
 }
 
 
 
+
+void icemc::SignalSummary::set(const PropagatingSignal* s){
+  if(s){
+    maxEField = s->maxEField();
+    energy = s->energy();	
+  }
+}
 
 
 

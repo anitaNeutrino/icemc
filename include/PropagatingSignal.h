@@ -8,7 +8,24 @@
 
 namespace icemc {
 
-  class SignalSummary;
+  class PropagatingSignal;
+  /**
+   * @class SignalSummary
+   * @brief Summary class for plotting
+   */
+
+  class SignalSummary {
+  public:
+    SignalSummary(const PropagatingSignal* s = nullptr) {set(s);}
+    void set(const PropagatingSignal* s = nullptr);
+
+    double maxEField;
+    double energy; ///@todo make an instance of the Energy class
+  };
+
+
+
+
 
   /**
    * @class PropagatingSignal
@@ -28,8 +45,13 @@ namespace icemc {
      * 
      * @param opticalPath
      */
-    SignalSummary propagate(const icemc::OpticalPath& opticalPath);
+    void propagate(const icemc::OpticalPath& opticalPath);
 
+
+    /** 
+     * Create a summary object, to describe the signal so we don't have to store the whole thing.
+     */
+    SignalSummary summarize() const {return SignalSummary(this);}
 
     double energy() const;
     double maxEField() const;
@@ -37,23 +59,6 @@ namespace icemc {
 
 
 
-  /**
-   * @class SignalAtPayload
-   * @brief Summary class for plotting
-   */
-
-  class SignalSummary {
-  public:
-    SignalSummary(const PropagatingSignal* s = nullptr) {set(s);}
-    void set(const PropagatingSignal* s = nullptr){
-      if(s){
-	maxEField = s->maxEField();
-	energy = s->energy();	
-      }
-    }
-    double maxEField;
-    double energy; ///@todo make an instance of the Energy class
-  };
   
 }
 #endif

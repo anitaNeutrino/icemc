@@ -235,29 +235,15 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary.shower = showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction);
     PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEventSummary.neutrino, fEventSummary.shower);
 
-
-    fEvent.signalAt1m = signal.waveform.getTimeDomain();
-    ///@todo wrap these up?
-    fEventSummary.signalSummaryAt1m.maxEField = signal.maxEField();
-    fEventSummary.signalSummaryAt1m.energy = signal.energy();
-    // std::cout << signal.energy() << "\t" << signal.polarization << std::endl;
-
-    // {
-    //   const auto& amps = signal.waveform.getFreqDomain();
-    //   for(int i=0; i < amps.size(); i++){
-    // 	std::cout << i << ": " << amps[i] << "\n";
-    //   }
-    //   std::cout << std::endl;
-    // }
-    fEventSummary.signalSummaryAtDetector = signal.propagate(opticalPath);
-    fEvent.signalAtDetector = signal.waveform.getTimeDomain();
     
-    // static double bestMaxE = 0;
-    // if(signal.maxEField() > bestMaxE){
-    //   bestMaxE = signal.maxEField();
-    //   std::cout << bestMaxE << std::endl;
-    // }
-    // std::cout  << signal.maxEField() << std::endl;
+    fEvent.signalAt1m = signal.waveform.getTimeDomain();
+    fEventSummary.signalSummaryAt1m = signal.summarize();
+
+    signal.propagate(opticalPath);
+    
+    fEvent.signalAtDetector = signal.waveform.getTimeDomain();
+    fEventSummary.signalSummaryAtDetector = signal.summarize();
+    
 
     fEventSummary.loop.chanceInHell = detector.chanceInHell(signal);
 
