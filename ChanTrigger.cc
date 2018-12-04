@@ -821,7 +821,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
 
           anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
 
-          if (settings1->TUFFSON==2){
+          if (settings1->TUFFSTATUS==3){
             tmp_vhz[0][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
             tmp_vhz[1][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
           }
@@ -1637,7 +1637,7 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   
   
   //Calculate convolution
-  if(!settings1->TUFFSON){
+  if(settings1->TUFFSTATUS==0){
     surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizer[ipol][iring][iphi]);
   }
   else
@@ -1729,7 +1729,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
 
 // begin keith edits
   TGraph *surfSignal;
-  if (!settings1->TUFFSON){
+  if (settings1->TUFFSTATUS==0){
     surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring][iphi]);
   }
   else

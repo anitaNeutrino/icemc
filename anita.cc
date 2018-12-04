@@ -284,9 +284,10 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
 
   USEPHASES=0;
   ntuffs=1;
-  if (settings1->WHICH==10 && settings1->TUFFSON){ 
-    ntuffs=6;
-    if(settings1->TRIGGEREFFSCAN){
+  if (settings1->WHICH==10){
+    if (settings1->TUFFSTATUS==1) 
+      ntuffs=6;
+    else if(settings1->TRIGGEREFFSCAN || settings1->TUFFSTATUS==2 ){
       ntuffs=7;
     }
   }
@@ -389,7 +390,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   }
   if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
     readImpulseResponseDigitizer(settings1);
-    if(settings1->TUFFSON){
+    if(settings1->TUFFSTATUS>0){
       readTuffResponseDigitizer(settings1);
       readTuffResponseTrigger(settings1);
     }
@@ -4385,7 +4386,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	  delete grInt;
 	  delete grTemp;
 
-	  if (!settings1->TUFFSON){
+	  if (settings1->TUFFSTATUS==0){
 	    TGraph *gTrig = fSignalChainResponseTrigger[ipol][iring][iphi]->getFreqMagGraph();
 	    for(int i=0;i<numFreqs;i++) {
 	      fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][0][i]    = gTrig->Eval(freqs[i]*1e6);

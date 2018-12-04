@@ -455,12 +455,12 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
       flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
       realTime_flightdata = realTime_flightdata_temp;
       
-      if(settings1->TUFFSON){
+      if(settings1->TUFFSTATUS==1){
         anita1->tuffIndex = getTuffIndex(realTime_flightdata);
         if(settings1->TRIGGEREFFSCAN){
           anita1->tuffIndex = 6;
         }
-      } else if (WHICHPATH==9) anita1->tuffIndex = 6; 
+      } else if (WHICHPATH==9 && settings1->TUFFSTATUS==2) anita1->tuffIndex = 6; 
       
       while (faltitude<MINALTITUDE || fheading<0) { // if the altitude is too low, pick another event.
 		    
