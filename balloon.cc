@@ -451,12 +451,10 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
       }
 
       igps = start_igps + int(randomNumber*ngps); // use random position 
-
-      //////////////////////////// TEMPORARY HACKS FOR ANITA4 !!!!!!      
-      if (WHICHPATH==9 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660) || (igps==17862) ) ) igps=igps+30;
       
       flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
       realTime_flightdata = realTime_flightdata_temp;
+      
       if(settings1->TUFFSON){
         anita1->tuffIndex = getTuffIndex(realTime_flightdata);
         if(settings1->TRIGGEREFFSCAN){
