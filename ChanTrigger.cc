@@ -765,7 +765,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
           bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  panel1->GetPol(jpt),  e_component,  h_component,  n_component);
           bn1->GetHitAngles(e_component_kvector, h_component_kvector, n_component_kvector, hitangle_e, hitangle_h);
 
-	  anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
+	  // anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
 
 	  if (settings1->TUFFSON){
 	    tmp_vhz[0][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
@@ -783,6 +783,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
       //   injectImpulseAmplitudeAfterAntenna(anita1, tmp_vhz[0], tmp_vhz[1], ant);
       // }
 
+      cout << "Calling MakeCRArraysforFFT: " << ant << ", " << iband << ", " << jpt << endl;
       anita1->MakeCRArraysforFFT(tmp_vhz[0],tmp_vhz[1],tmp_volts[0],tmp_volts[1]);
 
       // now v_banding_rfcm_h_forfft is in the time domain
