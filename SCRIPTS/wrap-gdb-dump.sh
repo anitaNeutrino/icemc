@@ -30,3 +30,21 @@ MD5_OUT_PREF=dump ~/PROGS/DepTrack/with-md5.sh \
  --inp $INP \
  --out $OUT \
  $EXE $INP $OUT
+
+read MD5 < val-dump-ID0-MD5.out
+INP=GDB/amp_eq_1/md5-${MD5}_tmp_volts_col.dat
+OUT=GDB/amp_eq_1/tmp_volts-cmp.eps
+EXE=SCRIPTS/gdb-tmp_volts-plot.sh
+MD5_OUT_PREF=dump ~/PROGS/DepTrack/with-md5.sh \
+ --envar PARENT_SCRIPT=$SELF \
+ --envar PARENT_LINENO=$LINENO \
+ --devar PATH=/usr/bin \
+ --inp $EXE \
+ --inp $INP \
+ --out $OUT \
+ $EXE $INP $OUT
+
+
+read MD5 < val-dump-ID0-MD5.out
+INP=GDB/amp_eq_1/md5-${MD5}_tmp_volts-cmp.eps
+SCRIPTS/view-gpl-eps.sh $INP
