@@ -888,9 +888,10 @@ int main(int argc,  char **argv) {
 	  // convert volts to millivolts
 	  realEvPtr->fVolts[UsefulChanIndexH][j] =  volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
 	  realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
+          cout << "H:" << realEvPtr->fVolts[UsefulChanIndexH][j] << " ";
 	  realEvPtr->fVolts[UsefulChanIndexV][j] =  volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
 	  realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
-          cout << realEvPtr->fVolts[UsefulChanIndexV][j] << " ";
+          cout << "V: " << realEvPtr->fVolts[UsefulChanIndexV][j] << " ";
 	}//end int j
         cout << endl;
       }// end int iant
