@@ -121,7 +121,8 @@ namespace bvv {
       double target_freq_src_units = target_freq / cr_ft_result->dfreq;
       int int_target_freq_src_units = target_freq_src_units + 0.5;
       // Hack alert!:
-      amp[i] = cr_ft_result->FftRho[int_target_freq_src_units] * 1e-3 /* to switch from V/m/GHz to V/m/MHz as IceMC expects */;
+      // amp[i] = cr_ft_result->FftRho[int_target_freq_src_units] * 1e-3 /* to switch from V/m/GHz to V/m/MHz as IceMC expects */;
+      amp[i] = cr_ft_result->FftRho[int_target_freq_src_units];
       // amp[i] = 1;
     }
     for (int i = 0; i < Anita::NFREQ * 2; i++) {
