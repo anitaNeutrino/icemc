@@ -1,0 +1,26 @@
+set out "H-V-WF.eps"
+set term post color solid 5 
+
+set multiplot layout 6,8
+set macro
+do for [i = 1:48] {
+   # set nokey
+   if (i == 31) {
+     nplot = sprintf("Selected: ------> %d <------", i)
+   }
+   else {
+     nplot = sprintf("%d", i)
+   }
+   set title nplot
+ plot [][-3e+1 : +3e+1] \
+ "H-transp.txt" using 0:(column(i) / 1e6)  with lines title "H",\
+ "V-transp.txt" using 0:(column(i) / 1e6)  with lines title "V"
+  
+}
+unset multiplot
+
+# plot for [i = 1:48 ] "H-transp.txt" using 0:i with lines
+
+
+pause -1
+
