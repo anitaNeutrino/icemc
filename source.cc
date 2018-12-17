@@ -3,7 +3,10 @@
 #include <map>
 #include "TObjString.h" 
 #include "TTimeStamp.h" 
+#include "EnvironmentVariable.h" 
 #include "TH1.h" 
+#include "TFile.h" 
+#include "TTree.h" 
 
 
 
@@ -20,6 +23,12 @@ SourceModel::~SourceModel()
 }
 
 static std::map<std::string, SourceModel * > models; 
+
+const double txs_index = 2; 
+const double txs_norm = 2.2e-8; 
+const double txs_E0 = 0.1; 
+const double txs_flux = 3.8; 
+const double txs_z = 0.3365; 
 
 SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed) 
 {
@@ -47,7 +56,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
 
       m->addSource(new Source("TXS 0506+056", 5 + 9/60. +  25.9637 / 3600, 
                                               5 + 41/60. + 35.3279/3600,
-          new ConstantExponentialSourceFlux(2,2.2e-8,0.1) //from IceCube paper , assume it's constant over flight for now
+          new ConstantExponentialSourceFlux(txs_index,txs_flux,txs_E0) //from IceCube paper , assume it's constant over flight for now
           )) ; 
     }
 
@@ -57,14 +66,62 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
 
 
     }
-    else if (stripped == "A3_FAVA") 
+    else if (stripped.BeginsWith("A3_FAVA"))
     {
       // Let's load all the blazars from FAVA that occurred during the A3 flight
 
+      bool flux_weighted = strcasestr(stripped.Data(),"FLUX"); 
+      bool z_weighted = strcasestr(stripped.Data(),"REDSHIFT"); 
 
+
+      int a3_tmin = 1418938406; 
+      int a3_tmax = 1420777814; 
+
+      const char * dir = EnvironmentVariable::ICEMC_SRC_DIR() ?: "."; 
+
+      TFile fava(Form("%s/blazars/fava.root", dir)); 
+      TTree * fava_tree = (TTree*) fava.Get("fava"); 
+      int tmin,tmax; 
+      double he_sigma; 
+      double ra, dec;
+      double he_flux; 
+      double z; 
+      TObjString name; 
+      fava_tree->SetBranchAddress("unix_tmin",&tmin); 
+      fava_tree->SetBranchAddress("unix_tmax",&tmax); 
+      fava_tree->SetBranchAddress("he_sigma",&he_sigma); 
+      fava_tree->SetBranchAddress("he_flux",&he_flux); 
+      fava_tree->SetBranchAddress("ra",&ra); 
+      fava_tree->SetBranchAddress("dec",&dec); 
+      fava_tree->SetBranchAddress("z",&z); 
+      fava_tree->SetBranchAddress("association",&name); 
+
+      for (int i = 0; i < fava_tree->GetEntries(); i++) 
+      {
+        fava_tree->GetEntry(i); 
+
+        if (tmax < a3_tmin || tmin > a3_tmax) continue;
+
+
+        //say no to |dec| >30 
+        if (fabs(dec) > 30) continue; 
+
+        if (he_sigma < 4 && he_flux < 0) continue; //say no to low HE flux 
+
+        //only blazars
+        if (name.GetString() ==  "bcu" || name.GetString() == "fsrq" || name.GetString() == "bll")
+        {
+          m->addSource(new Source(name.GetString().Data(), ra, dec, 
+                       new TimeWindowedExponentialSourceFlux( tmin, tmax, txs_index, 
+                        txs_norm * (flux_weighted ? he_flux / txs_flux : 
+                                    z_weighted ?   
+                                    txs_flux * txs_z/z: 1), txs_E0))
+                       ); 
+
+        }
+
+      }
     }
-
-
   }
 
   delete tokens; 
@@ -175,6 +232,30 @@ ConstantExponentialSourceFlux::ConstantExponentialSourceFlux(double e, double no
 double ConstantExponentialSourceFlux::pickEnergy(double Emin, double Emax, double t,  TRandom * rng)  const
 {
   (void) t; 
+  TRandom * old = gRandom; 
+  gRandom = rng; 
+
+  //I'm too bad at math to figure out the proper quantile function here. It's probably trivial, but this works and isn't THAT slow. 
+  if (f.GetXmin() != Emin && f.GetXmax() !=Emax) f.SetRange(Emin,Emax); 
+
+  double E = f.GetRandom(); 
+  gRandom = old; 
+  return E; 
+}
+
+
+
+TimeWindowedExponentialSourceFlux::TimeWindowedExponentialSourceFlux(double t0, double t1, double e, double norm, double normE)
+:  gamma(e) , f("f", "[0] * x^-[1]",1e9,1e13) , t0(t0), t1(t1) 
+{
+  //figure out what A is 
+  A = norm * TMath::Power(normE,gamma); 
+  f.SetParameters(A,gamma); 
+}
+
+double TimeWindowedExponentialSourceFlux::pickEnergy(double Emin, double Emax, double t,  TRandom * rng)  const
+{
+  if (t < t0 || t > t1) return 0; 
   TRandom * old = gRandom; 
   gRandom = rng; 
 

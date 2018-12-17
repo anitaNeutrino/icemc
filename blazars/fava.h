@@ -22,8 +22,11 @@ struct FAVAEntry {
     double le_sigma;
     double le_flux;
     double he_flux;
+    double le_flux_err;
+    double he_flux_err;
     double le_index;
     double he_index;
+    double z; 
     bool tevcat; 
     TObjString association;
     TObjString association_3fgl;

@@ -29,6 +29,13 @@ t = TTree("fava","FAVA tree");
 
 t.Branch('fava', fava); 
 
+# put some in by hand, 
+# for RGB J2243+203, VERITAS sets an upper limit of ~1 and optical sets a lower limit of 0.4, so let's call it 0.7
+# TXS 0506+056 is measured but not in the NED catalog 
+# PKS 1441+25 has a crazy preferred value in NED... 
+
+zs = {"RGB J2243+203":0.7, "TXS 0506+056":0.3365, "PKS 1441+25":0.939} 
+
 fermi_start_date = datetime.datetime(2001,1,1)
 time_offset = int(fermi_start_date.strftime("%s"))
 
@@ -42,8 +49,6 @@ source_dict = {}
 
 for row in reader: 
   source_dict[row["Source Name"]] = (row["Classification (code)"].lower(),row["TEV Cat"])
-
-
 
 
 
@@ -77,9 +82,12 @@ for week in range(week_start,week_end+1):
     fava.he_ts_sigma =  float(js[i]['he_tssigma'])
     fava.le_flux =  float(js[i]['le_flux'])
     fava.he_flux =  float(js[i]['he_flux'])
+    fava.le_flux_err =  float(js[i]['le_fuxerr'])
+    fava.he_flux_err =  float(js[i]['he_fuxerr'])
     fava.le_index =  float(js[i]['le_index'])
     fava.he_index =  float(js[i]['he_index'])
-    fava.association = TObjString(js[i]['assoc'])
+    assoc =  js[i]['assoc']
+    fava.association = TObjString(assoc)
     glassoc = js[i]['fglassoc'] 
     fava.association_3fgl = TObjString(glassoc)
     fava.tevcat = False 
@@ -91,11 +99,27 @@ for week in range(week_start,week_end+1):
       fava.association_source_class=TObjString("")
     
 
+    ## try to to find the Z! 
+
+    if assoc in zs: 
+      fava.z = zs[assoc]
+    else: 
+      encodeme = {'name': js[i]['assoc']}; 
+      ned_url="http://ned.ipac.caltech.edu/srs/ObjectLookup?"+urllib.urlencode(encodeme); 
+      ned_page = urllib.urlopen(ned_url); 
+      ned_js = json.loads(ned_page.read()) 
+
+      fava.z = -1; 
+
+      if 'Preferred' in ned_js: 
+        if 'Redshift' in ned_js['Preferred']:
+          if ned_js['Preferred']['Redshift']['Value']!=None:
+            fava.z = float(ned_js['Preferred']['Redshift']['Value']) 
+
+      print (assoc + ":" + repr(fava.z)); 
+      zs[assoc] = fava.z 
+
     t.Fill() 
-
-
-
-
 
 
 

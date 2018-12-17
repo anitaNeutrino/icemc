@@ -115,21 +115,34 @@ class ConstantExponentialSourceFlux : public SourceFlux
 
 
 
-/** uses fermi light curves from known TeV blazars 
- *  but converting these to a flux is... non-trivial. 
- *
- **/
-class FermiFlux : public SourceFlux
+
+/** Same as above, but only between time t0 and t1 */
+class TimeWindowedExponentialSourceFlux : public SourceFlux
 {
 
   public: 
 
-//    FermiFlux(const TGraph * flux, const TGraph * bg,  const TGraph * sigma, double minsig, double gamma ); 
+   TimeWindowedExponentialSourceFlux(double t0, double t1, double gamma, double norm, double normE = 0.1); 
 
-
+    virtual double getFlux(double E, double t) const 
+    { 
+      if (t < t0 || t > t0){ return 0; }
+      else return A * TMath::Power(E,-gamma) ;
+      } 
+    virtual double getFluxBetween(double Emin, double Emax, double t) const 
+    { 
+      if (t < t0 || t > t0){ return 0; }
+      else return A * (  TMath::Power(Emin,-gamma+1) / (gamma-1)  - TMath::Power(Emax,-gamma+1) / (gamma-1));
+    }
+    virtual double pickEnergy(double Emin, double Emax, double t, TRandom * rng = gRandom) const; 
+    virtual ~TimeWindowedExponentialSourceFlux() { ; } 
+ 
   private: 
 
-
+    double gamma; 
+    double A; 
+    mutable TF1 f; 
+    double t0, t1; 
 }; 
 
 #endif 
