@@ -237,7 +237,7 @@ class Settings : public TObject {
   int TRIGGEREFFSCAN;                      // do a trigger efficiency scan
   int TRIGGEREFFSCAPULSE;                  // Apply pulse at AMPA (0) or at SURF (1)
 
-  int TUFFSON;                             // Are the TUFFs on for the whole flight?
+  int TUFFSTATUS;                             // Are the TUFFs on for the whole flight?
 
   int ADDCW;                               // Add CW
   

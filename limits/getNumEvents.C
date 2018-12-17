@@ -1,6 +1,10 @@
 #include "Acceptances.h"
 
-Double_t ANITA_3_livetime = 17.4*24*3600.;
+Double_t ANITA_livetime = ANITA_3_livetime;
+
+Double_t ANITA_effArea[n_ANITA];
+Double_t ANITA_efficiency[n_ANITA];
+
 double deltaLog=0.01;
 double Emin = 18.;
 double Emax = 21.;
@@ -12,7 +16,6 @@ TH1D *hNumObs;
 
 Double_t EmaxModel=30;
 
-Double_t ANITA_3_effArea[n_ANITA];
 
 void GetFlux(string name);
 string GetFluxFromNumber(int EXPONENT);
@@ -28,14 +31,15 @@ void getNumEvents(){
   // int expMin = 200;
   // int expMax = expMin+1;
 
-  bool debug=false;
+  bool debug=true;
   TCanvas *c;
 
   if (debug){
     c = new TCanvas("c");
   }
   
-  for (int iexp=expMin;  iexp<expMax; iexp++){
+  //  for (int iexp=expMin;  iexp<expMax; iexp++){
+  for (int iexp=101;  iexp<=101; iexp++){
     
     string fluxname = GetFluxFromNumber(iexp);
     if (fluxname=="") continue;
@@ -89,7 +93,7 @@ void GetNumObs(){
     if (tempEnergy>EmaxModel) break;
     tempRate = hRate->GetBinContent(i);
     //    cout << i << " " << tempEnergy << " " << tempRate << endl;
-    hNumObs->Fill(tempEnergy, tempRate*ANITA_3_livetime);
+    hNumObs->Fill(tempEnergy, tempRate*ANITA_livetime);
   }
 
   hNumObs->SetTitle(";log_{10} #left(#frac{E_{#nu}}{eV}#right);Number per Bin");
@@ -112,19 +116,17 @@ void GetRate(){
 }
 
 void GetEffArea(){
-
-  
-  double ANITA_3_eff_combined[n_ANITA] = { 0.84, 0.84, 0.84, 0.84, 0.84, 0.84, 0.84 };
   
   for (int i=0; i<n_ANITA; i++){
     
-    ANITA_3_effArea[i] = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCC[i]; 
-    ANITA_3_effArea[i] = TMath::Sqrt(ANITA_3_effArea[i]*ANITA_2_effArea_Peter[i]*ANITA_3_effArea[i]/ANITA_2_effArea_icemc2010[i]);
-    ANITA_3_effArea[i] *= 1e10; // from km^2 to cm^2
-    ANITA_3_effArea[i] *= ANITA_3_eff_combined[i];
+    ANITA_effArea[i] = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCC[i]; 
+    ANITA_effArea[i] = TMath::Sqrt(ANITA_effArea[i]*ANITA_2_effArea_Peter[i]*ANITA_effArea[i]/ANITA_2_effArea_icemc2010[i])*ANITA_3_eff[i];
+    // ANITA_effArea[i] = ANITA_1_effArea[i]*ANITA_1_eff[i];
+    cout << ANITA_effArea[i] << endl;
+    ANITA_effArea[i] *= 1e10; // from km^2 to cm^2
   }
   
-  gEffArea = new TGraph (n_ANITA, ANITA_x, ANITA_3_effArea);
+  gEffArea = new TGraph (n_ANITA, ANITA_x, ANITA_effArea);
   gEffArea->SetTitle(";log_{10} #left(#frac{E_{#nu}}{eV}#right);[A#Omega], cm^{2} str");
 }
 
@@ -169,6 +171,9 @@ string GetFluxFromNumber(int EXPONENT){
 	break;
       case 100:
 	return ("e-2.dat");
+	break;
+      case 101:
+	return ("e-2_icecube.dat");
 	break;
       case 110:
 	return ("yuksel_grb.dat");

@@ -284,9 +284,10 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
 
   USEPHASES=0;
   ntuffs=1;
-  if (settings1->WHICH==10 && settings1->TUFFSON){ 
-    ntuffs=6;
-    if(settings1->TRIGGEREFFSCAN){
+  if (settings1->WHICH==10){
+    if (settings1->TUFFSTATUS==1) 
+      ntuffs=6;
+    else if(settings1->TRIGGEREFFSCAN || settings1->TUFFSTATUS==2 ){
       ntuffs=7;
     }
   }
@@ -389,7 +390,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   }
   if (settings1->APPLYIMPULSERESPONSEDIGITIZER){
     readImpulseResponseDigitizer(settings1);
-    if(settings1->TUFFSON){
+    if(settings1->TUFFSTATUS>0){
       readTuffResponseDigitizer(settings1);
       readTuffResponseTrigger(settings1);
     }
@@ -414,6 +415,10 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
     RayleighFits[0][27] =  (TGraph*)RayleighFits[0][26]->Clone();
     RayleighFits[0][28] =  (TGraph*)RayleighFits[0][29]->Clone();
     RayleighFits[0][32] =  (TGraph*)RayleighFits[0][33]->Clone();
+
+    RayleighFits[1][9]  =  (TGraph*)RayleighFits[1][5]->Clone();
+    RayleighFits[1][42] =  (TGraph*)RayleighFits[1][6]->Clone();
+    
     for (int ifreq=0; ifreq<numFreqs; ifreq++){
       fSignalChainResponseA3DigitizerFreqDomain[0][0][3][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[0][0][2][ifreq];
       fSignalChainResponseA3DigitizerFreqDomain[1][0][4][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[1][0][3][ifreq];
@@ -424,12 +429,16 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
       fSignalChainResponseA3DigitizerFreqDomain[0][1][12][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[0][1][13][ifreq];
       fSignalChainResponseA3DigitizerFreqDomain[0][2][0][ifreq] =fSignalChainResponseA3DigitizerFreqDomain[0][2][1][ifreq];
 
+      fSignalChainResponseA3DigitizerFreqDomain[1][0][9][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[1][0][5][ifreq];
+      fSignalChainResponseA3DigitizerFreqDomain[1][2][10][ifreq]=fSignalChainResponseA3DigitizerFreqDomain[1][0][6][ifreq];
+
     }
        
   }
   
   calculateImpulseResponsesRatios(settings1);
 
+  
   if (settings1->TRIGGEREFFSCAN){
     readTriggerEfficiencyScanPulser(settings1);
   }
@@ -4041,7 +4050,7 @@ void Anita::setTimeDependentThresholds(UInt_t realTime_flightdata){
 	}
       }
     }else{
-      surfchain->GetEvent(isurf);
+      surfchain->GetEvent(isurf);      
     }
   } // end if it's in range
   
@@ -4206,7 +4215,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 	  fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff] = new RFSignal(FFTtools::padWaveToLength(gint, paveNum)); 
 	  delete gint;
 	  delete gtemp;
-
+	  
 	  TGraph *gDig  = fSignalChainResponseDigitizerTuffs[ipol][iring][iphi][ituff]->getFreqMagGraph();
 	  // Smooth out the high frequency 
 	  double temparray[512];
@@ -4387,7 +4396,7 @@ void Anita::readImpulseResponseTrigger(Settings *settings1){
 	  delete grInt;
 	  delete grTemp;
 
-	  if (!settings1->TUFFSON){
+	  if (settings1->TUFFSTATUS==0){
 	    TGraph *gTrig = fSignalChainResponseTrigger[ipol][iring][iphi]->getFreqMagGraph();
 	    for(int i=0;i<numFreqs;i++) {
 	      fSignalChainResponseTriggerFreqDomain[ipol][iring][iphi][0][i]    = gTrig->Eval(freqs[i]*1e6);

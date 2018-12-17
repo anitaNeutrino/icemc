@@ -262,7 +262,7 @@ void Settings::Initialize() {
   // End of the once-global varibles.
   taumodes = 1; //Taumodes =1, taucreated in the rock.
   SCREENEDGELENGTH=25.;
-  TUFFSON=0;
+  TUFFSTATUS=0;
   ADDCW=0;
   PAYLOAD_USE_SPECIFIC_TIME = 0; 
   PAYLOAD_USE_SPECIFIC_TIME_DELTA = 3600; 
@@ -809,9 +809,9 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
     getSetting("Ring delays to phi",   efficiencyScanApplyRingDelay       );
   }
   
-  getSetting("Simulate TUFFs", TUFFSON);
+  getSetting("Simulate TUFFs", TUFFSTATUS);
   getSetting("Which TUFFs are on", whichTUFFsON);
-  if (TUFFSON) cout << "TUFFs are simulated " << endl;
+  if (TUFFSTATUS>0) cout << "TUFFs are simulated with status " << TUFFSTATUS << endl;
   
   getSetting("Add CW", ADDCW);
   if(ADDCW) cout << "Adding CW " << endl;
@@ -1023,9 +1023,9 @@ for(unsigned int i=0; i < requiredBands.size(); i++){
     anita1->TUFFstatus[i] = whichTUFFsON.at(i);
   }
 
-  if (TUFFSON){
-    std::cout << "The TUFFs are ON for the whole flight!" << std::endl;
-    if (TUFFSON==2){
+  if (TUFFSTATUS){
+    std::cout << "The TUFFs are simulated for the whole flight with status " << TUFFSTATUS << " ! " << std::endl;
+    if (TUFFSTATUS==3){
       std::cout << "Using Butterworth filters approximation " << std::endl;
       std::cout << "Notch 0 status " << anita1->TUFFstatus[0] << std::endl;
       std::cout << "Notch 1 status " << anita1->TUFFstatus[1] << std::endl;

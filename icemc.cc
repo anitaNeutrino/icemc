@@ -557,10 +557,6 @@ int main(int argc,  char **argv) {
     } // end while
   } // end if arg>1
 
-  if (startNu>0){
-    run_no = 0;
-    nnu_tmp = startNu+1;
-  }
   settings1->SEED=settings1->SEED +run_no;
   cout << "seed is " << settings1->SEED << endl;
 
@@ -624,6 +620,11 @@ int main(int argc,  char **argv) {
   bn1->InitializeBalloon();
   anita1->Initialize(settings1, foutput, inu, outputdir);
 
+  if (startNu>0){
+    run_no = 0;
+    nnu_tmp = startNu+1;
+  }
+  
   if (trig_thresh!=0)
     anita1->powerthreshold[4]=trig_thresh;
   if (nnu_tmp!=0)
