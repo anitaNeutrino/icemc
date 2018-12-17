@@ -246,6 +246,8 @@ class Settings : public TObject {
   int SPECIFIC_NU_POSITION;                //Use a specific interaction position 
   double SPECIFIC_NU_POSITION_LATITUDE, SPECIFIC_NU_POSITION_LONGITUDE, SPECIFIC_NU_POSITION_ALTITUDE; //the specific interaction position 
   double SPECIFIC_NU_POSITION_DISTANCE; //Max distance from place
+  int IGNORE_CROSSPOL; //Ignore the crosspol polarization component
+  int POL_SIGN_HACK; // patch up the sign of e/h 
 
   int useLPM;
 
