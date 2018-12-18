@@ -104,7 +104,7 @@ void icemc::WaisPulser::readModel(){
 	ss.ignore(1);
 	ss >> t;
 	ss.ignore(1);
-            
+
 	if( ind != -999 ){
 	  fVoltsPerMeter.push_back(v);
 
@@ -121,8 +121,8 @@ void icemc::WaisPulser::readModel(){
     }
     std::cout << "Counted " << c << " rows from electric field file" << fileName << std::endl;
     
-    input_stream.close();  
-  }  
+    input_stream.close();
+  }
 }
 
 
@@ -135,6 +135,20 @@ icemc::PropagatingSignal icemc::WaisPulser::generateImpulse(const OpticalPath& o
   }
   
   FTPair signal(eField, fTimes[1] - fTimes[0], fTimes[0]);
+
+  ///@todo make having the signal peak in the middle of the waveform unnecessary for ANITA.
+  const TGraph& gr = signal.getTimeDomain();
+  double mid_time = 0.5*(gr.GetX()[gr.GetN()-1] - gr.GetX()[0]);  
+  auto it = std::max_element(gr.GetY(), gr.GetY()+gr.GetN());
+  int max_i = std::distance(gr.GetY(), it);
+  double max_time = gr.GetX()[max_i] - gr.GetX()[0];
+  signal.applyConstantGroupDelay(mid_time - max_time, false);
+
+  // static bool firstTime = true;
+  // if(firstTime){
+  //   signal.dump("waisTest.root");
+  //   firstTime = false;
+  // }
 
   const TVector3& rfDir = opticalPath.steps.at(0).direction().Unit();
   TVector3 polarization = rfDir.Cross(fSurfaceNormal); 

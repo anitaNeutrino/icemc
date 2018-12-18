@@ -51,13 +51,14 @@ void icemc::RootOutput::readIceFinal(){
 icemc::RootOutput::~RootOutput(){
 
   // write, close and delete all non-NULL member files.
-  const int numFiles = 1;
-  TFile* fs[numFiles] = {fIceFinal};
-  for(int i=0; i < numFiles;  i++){
-    if(fs[i]){
-      fs[i]->Write();
-      fs[i]->Close();
-      delete fs[i];
+  std::vector<TFile*> fs {fIceFinal};
+  for(auto f : fs){
+    if(f!=nullptr){
+      if(f->IsWritable()){
+	f->Write();
+      }
+      f->Close();
+      delete f;
     }
   }
 }
