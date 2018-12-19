@@ -76,7 +76,7 @@ namespace icemc {
 
 
 
-    double weight(){
+    double weight() const {
       return 0; ///@todo product of all weights;
     };
 

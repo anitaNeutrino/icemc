@@ -3,9 +3,9 @@
 
 #include "Geoid.h"
 #include "PropagatingSignal.h"
+#include "Event.h"
 
 namespace icemc {
-
 
   /**
    * @class Detector
@@ -90,6 +90,14 @@ namespace icemc {
      */
     virtual bool applyTrigger() = 0;
 
+
+
+    /**
+     * @brief Write out detector formatted data. 
+     * 
+     * @param truth Pass MC true information, to be optionally used for extending outputted detector data (e.g. true neutrino energy w/ reconstructed energy)
+     */
+    virtual void write(const Event& event) = 0;
 
     /** 
      * @brief Tell icemc how you like your Askaryan signals.

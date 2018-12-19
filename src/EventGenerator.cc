@@ -243,7 +243,6 @@ void icemc::EventGenerator::generate(Detector& detector){
     
     fEvent.signalAtDetector = signal.waveform.getTimeDomain();
     fEventSummary.signalSummaryAtDetector = signal.summarize();
-    
 
     fEventSummary.loop.chanceInHell = detector.chanceInHell(signal);
 
@@ -257,13 +256,10 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary.loop.passesTrigger = detector.applyTrigger();
 
     if(fEventSummary.loop.passesTrigger==true){
-      std::cout << "PASSED!" << std::endl;
-
       fEventSummary.neutrino.path.integrate(fEventSummary.interaction.position, antarctica);
       // std::cout << "PASSED\t" << fEventSummary.interaction.position << std::endl;
-
       fEvent.copy(fEventSummary);
-      
+      detector.write(fEvent);
       output.passTree().Fill();
     }
     // std::cout << std::endl;
