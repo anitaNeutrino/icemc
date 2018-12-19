@@ -284,13 +284,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
 
   USEPHASES=0;
   ntuffs=1;
-  if (settings1->WHICH==10){
-    if (settings1->TUFFSTATUS==1) 
-      ntuffs=6;
-    else if(settings1->TRIGGEREFFSCAN || settings1->TUFFSTATUS==2 ){
-      ntuffs=7;
-    }
-  }
+  if (settings1->WHICH==10) ntuffs=7;
+  
   for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
  
   for (int i=0;i<NFREQ;i++) {
@@ -1092,7 +1087,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 	  for (int i=0;i<ngeneratedevents;i++) {
 	  
-	    getQuickTrigNoiseFromFlight(quickNoise, ipol, iant, ituff);
+	    getQuickTrigNoiseFromFlight(settings1, quickNoise, ipol, iant, ituff);
 	  
 	    myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
 
@@ -1230,7 +1225,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 
 #ifdef ANITA_UTIL_EXISTS
-void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int ituff){
+void Anita::getQuickTrigNoiseFromFlight(Settings *settings1, double justNoise[HALFNFOUR], int ipol, int iant, int ituff){
 
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
   phasorsTrig[0].setMagPhase(0,0);
@@ -1242,12 +1237,16 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
   int iphi = iant - (iring*16);
 
   for(int i=1;i<numFreqs;i++) {
-    norm           = fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i];
-    sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
-    sigma*=norm;
-    realPart       = fRand->Gaus(0,sigma);
-    imPart         = fRand->Gaus(0,sigma);
-
+    
+      if (freq[i]>=settings1->FREQ_LOW_SEAVEYS && freq[i]<=settings1->FREQ_HIGH_SEAVEYS){
+	norm           = fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i];
+	sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
+	sigma*=norm;
+	realPart       = fRand->Gaus(0,sigma);
+	imPart         = fRand->Gaus(0,sigma);
+      }else {
+	imPart=realPart=0;
+      }
     //    cout << " " << i << " " << trig << " " << dig << " " << trig/dig << " " << norm << endl;
     phasorsTrig[i] = FFTWComplex(realPart, imPart);
   }

@@ -825,7 +825,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
             tmp_vhz[0][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
             tmp_vhz[1][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
           }
-          
+
         } // end if (seavey frequencies)
         else {
           tmp_vhz[0][k]=0;
@@ -892,7 +892,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
 
 #ifdef ANITA_UTIL_EXISTS
   if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
-    getNoiseFromFlight(anita1, ant, settings1->SIGNAL_FLUCT > 0);
+    getNoiseFromFlight(settings1, anita1, ant, settings1->SIGNAL_FLUCT > 0);
 
   if (settings1->ADDCW){
     memset(cw_digPath, 0, sizeof(cw_digPath));
@@ -1736,7 +1736,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   {
     // keith editing 1/24/18
     surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTriggerTuffs[ipol][iring][iphi][anita1->tuffIndex]); 
-//    cout << anita1->tuffIndex << " is the tuff Index" << endl;
+    // cout << anita1->tuffIndex << " is the tuff Index" << endl;
     // end keith editing 
   }// end else anita 4
 // end keith edits
@@ -1801,7 +1801,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
 }
 
 
-void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
+void ChanTrigger::getNoiseFromFlight(Settings *settings1, Anita* anita1, int ant, bool also_digi){
 //  std::cout << __FILE__ << " " << __FUNCTION__ << " " << __LINE__ << std::endl;
   Int_t numFreqs = anita1->numFreqs;
   FFTWComplex *phasorsDig  = new FFTWComplex[numFreqs];
@@ -1819,12 +1819,16 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
   for (int ipol=0; ipol<2; ipol++){
 
     for(int i=1;i<numFreqs;i++) {
-      trigNorm       = anita1->fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
-      digNorm        = anita1->fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
-      sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
-      realPart       = anita1->fRand->Gaus(0,sigma);
-      imPart         = anita1->fRand->Gaus(0,sigma);
-      
+
+      if (anita1->freq[i]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[i]<=settings1->FREQ_HIGH_SEAVEYS){
+	trigNorm       = anita1->fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
+	digNorm        = anita1->fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
+	sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
+	realPart       = anita1->fRand->Gaus(0,sigma);
+	imPart         = anita1->fRand->Gaus(0,sigma);
+      } else {
+	trigNorm=digNorm=realPart=imPart=0.;
+      }
       phasorsDig[i]  = FFTWComplex(realPart*digNorm,  imPart*digNorm  );
       phasorsTrig[i] = FFTWComplex(realPart*trigNorm, imPart*trigNorm );
     }
