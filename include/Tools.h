@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <numeric>
 #include <iostream>
 #include <fstream>
 
@@ -87,7 +88,27 @@ namespace icemc{
 
     TStyle* RootStyle();
 
-    double calculateSNR(const double justSig[512], const double justNoise[512]);    
+    template<class V> double max(const V& v){
+      return v.size() > 0 ? *std::max_element(v.begin(), v.end()) : 0;
+    }
+
+    template<class V> double min(const V& v){
+      return v.size() > 0 ? *std::min_element(v.begin(), v.end()) : 0;
+    }
+
+    template<class V> double RMS(const V& v){
+      double mean = std::accumulate(v.begin(), v.end(), 0.0)/v.size();
+      auto square = [](double x, double y){return x + y*y;};
+      double mean_of_square = std::accumulate(v.begin(), v.end(), 0.0, square)/v.size();
+      double rms = mean*mean - mean_of_square;
+      return rms;
+    }
+
+    template<class V1, class V2> double calculateSNR(const V1& v1, const V2& v2){
+      double p2p = max(v1) - min(v1);
+      double rms = RMS(v2);
+      return p2p/(2*rms);
+    }
     
     template <class T, class U> void vector_element_convert(const std::vector<T>& input, std::vector<U>& output){
       output.clear();
