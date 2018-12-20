@@ -24,7 +24,6 @@
 #include "Math/Interpolator.h"
 #include "Math/InterpolationTypes.h"
 
-class TSpline5;
 class TH1;
 class TGraph;
 class TH2F;
@@ -36,34 +35,17 @@ namespace icemc{
 
   //! Functions to make life easier.  Many of these probably exist other places.
   namespace Tools {
-    double dMax(const double*,int);
-    // double dsMax(TSpline5 *sp);
-    // double dMin(const double*,int);
+    // double dMax(const double*,int);
     int Getifreq(double freq,double freq_low,double freq_high,int n);
-    // void InterpolateReal(double* array, const unsigned n);
-    // void InterpolateComplex(double *array, const unsigned n);
-
     void NormalTimeOrdering(const int n,double *volts);
     void reverseTimeOrdering(const int n,double *bitsin,double *bitsout);
     void reverseTimeOrdering(const int n,int *bitsin,int *bitsout);
-
     void ShiftLeft(double *x,const int n,int ishift);  
     void ShiftRight(double *x,const int n,int ishift);  
     double GetFWHM(TH1 *h1);
-
-    void Zero(double *anarray,int n);
-    void Zero(int *anarray,int n);
-
     int findIndex(double *freqlab,double freq,int npoints,double min,double max); // this is the same thing but more general
-    void get_random_rician(double signal, double signal_phase, double sigma, double& amplitude, double &phase);
-    void get_circular_bivariate_normal_random_variable(double& rand_gauss_a, double& rand_gauss_b);
-
-    // double AbbyPhiCalc(double x_abby, double y_abby);
-
     TGraph *getInterpolatedGraph(TGraph *grIn, Double_t deltaT);
-
-    TStyle* RootStyle();
-
+    
     template<class V> double max(const V& v){
       return v.size() > 0 ? *std::max_element(v.begin(), v.end()) : 0;
     }

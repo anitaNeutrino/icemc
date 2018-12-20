@@ -56,9 +56,8 @@ namespace icemc {
     static std::map<std::string, unsigned int> fNameCount; // for counting instances with the same class name;
 
   };
-
 }
 
 
 
-#endif // ICEMC_INTEGRATOR_H
+#endif // ICEMC_RNG_H
