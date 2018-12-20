@@ -16,7 +16,7 @@ namespace icemc {
 
   /**
    * @class EventSummary
-   * @brief A class which contains sumary info about an icemc event.
+   * @brief Saved for each generated event, a small summary.
    */
   class EventSummary {
 
@@ -38,7 +38,7 @@ namespace icemc {
 
   /**
    * @class Event
-   * @brief A class which contains all the info about an icemc event.
+   * @brief Saved for each passing event, more data.
    */
   class Event : public EventSummary {
   public:
@@ -46,7 +46,7 @@ namespace icemc {
     void copy(const EventSummary& other);
     
     TGraph signalAt1m;
-    TGraph signalAtDetector;    
+    TGraph signalAtDetector;
     ClassDef(Event, 3)
   };
   

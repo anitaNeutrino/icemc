@@ -22,9 +22,9 @@ icemc::WaisPulser::WaisPulser(const Settings* settings, std::shared_ptr<const Wo
   Double_t altWAIS  = 1775.68;
   
 #ifdef ANITA_UTIL_EXISTS
-  latWAIS = AnitaLocations::getWaisLatitude()  ;
-  lonWAIS = AnitaLocations::getWaisLongitude() ;
-  altWAIS = AnitaLocations::getWaisAltitude()  ;
+  latWAIS = AnitaLocations::getWaisLatitude();
+  lonWAIS = AnitaLocations::getWaisLongitude();
+  altWAIS = AnitaLocations::getWaisAltitude();
 #endif
   
   fWaisPulserPosition.SetLonLatAlt(lonWAIS,  latWAIS, altWAIS);
@@ -35,9 +35,8 @@ icemc::WaisPulser::WaisPulser(const Settings* settings, std::shared_ptr<const Wo
   fWaisPulserPosition.SetAltitude(newAlt + 0.01); // put it slightly above the surface?
 
   fSurfaceNormal = worldModel->GetSurfaceNormal(fWaisPulserPosition);  
-  
+
   readModel();
-  
 }
 
 icemc::WaisPulser::~WaisPulser(){
@@ -138,7 +137,7 @@ icemc::PropagatingSignal icemc::WaisPulser::generateImpulse(const OpticalPath& o
 
   ///@todo make having the signal peak in the middle of the waveform unnecessary for ANITA.
   const TGraph& gr = signal.getTimeDomain();
-  double mid_time = 0.5*(gr.GetX()[gr.GetN()-1] - gr.GetX()[0]);  
+  double mid_time = 0.5*(gr.GetX()[gr.GetN()-1] - gr.GetX()[0]);
   auto it = std::max_element(gr.GetY(), gr.GetY()+gr.GetN());
   int max_i = std::distance(gr.GetY(), it);
   double max_time = gr.GetX()[max_i] - gr.GetX()[0];
