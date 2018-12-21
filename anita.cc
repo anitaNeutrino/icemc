@@ -1238,7 +1238,7 @@ void Anita::getQuickTrigNoiseFromFlight(Settings *settings1, double justNoise[HA
 
   for(int i=1;i<numFreqs;i++) {
     
-      if (freq[i]>=settings1->FREQ_LOW_SEAVEYS && freq[i]<=settings1->FREQ_HIGH_SEAVEYS){
+    if (freqs[i]*1e6>=settings1->FREQ_LOW_SEAVEYS && freqs[i]*1e6<=settings1->FREQ_HIGH_SEAVEYS){
 	norm           = fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i];
 	sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
 	sigma*=norm;

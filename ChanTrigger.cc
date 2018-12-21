@@ -1820,7 +1820,7 @@ void ChanTrigger::getNoiseFromFlight(Settings *settings1, Anita* anita1, int ant
 
     for(int i=1;i<numFreqs;i++) {
 
-      if (anita1->freq[i]>=settings1->FREQ_LOW_SEAVEYS && anita1->freq[i]<=settings1->FREQ_HIGH_SEAVEYS){
+      if (freqs[i]*1e6>=settings1->FREQ_LOW_SEAVEYS && freqs[i]*1e6<=settings1->FREQ_HIGH_SEAVEYS){
 	trigNorm       = anita1->fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
 	digNorm        = anita1->fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
 	sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
