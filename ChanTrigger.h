@@ -357,7 +357,7 @@ class ChanTrigger {
    * @param  ant :: int - which antennta
    * @param  also_digi :: bool - also fill in digitizer 
    */
-  void getNoiseFromFlight(Anita* anita1, int ant, bool also_digi = true);
+  void getNoiseFromFlight(Settings* settings1, Anita* anita1, int ant, bool also_digi = true);
 
   //! Inject pulse after the antenna (used for trigger efficiency scans)
   /**

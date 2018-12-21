@@ -284,13 +284,8 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
 
   USEPHASES=0;
   ntuffs=1;
-  if (settings1->WHICH==10){
-    if (settings1->TUFFSTATUS==1) 
-      ntuffs=6;
-    else if(settings1->TRIGGEREFFSCAN || settings1->TUFFSTATUS==2 ){
-      ntuffs=7;
-    }
-  }
+  if (settings1->WHICH==10) ntuffs=7;
+  
   for (int i=0;i<HALFNFOUR;i++)   fTimes[i] = i * TIMESTEP * 1.0E9; 
  
   for (int i=0;i<NFREQ;i++) {
@@ -488,7 +483,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   tsignals->Branch("imaxbin",&imaxbin,"imaxbin[5]/I");
   tsignals->Branch("maxbin_fortotal",&maxbin_fortotal,"maxbin_fortotal[5]/I");
   tsignals->Branch("channels_passing",&channels_passing,"channels_passing[2][5]/I");
-  tsignals->Branch("bwslice_rmsdiode",&bwslice_rmsdiode,"bwslice_rmsdiode[5]/D");
+  tsignals->Branch("bwslice_rmsdiode",&bwslice_rmsdiode,"bwslice_rmsdiode[2][5]/D");
   tsignals->Branch("l1_passing",&l1_passing,"l1_passing/I");
   tsignals->Branch("integral_vmmhz",&integral_vmmhz_foranita,"integral_vmmhz/D");
   //tsignals->Branch("dnutries",&dnutries,"dnutries/D");
@@ -504,7 +499,7 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   tdata->Branch("arrival_times",&arrival_times,"arrival_times[2][48]/D");
   tdata->Branch("inu",&inu,"inu/I");
   tdata->Branch("powerthreshold",&powerthreshold,"powerthreshold[5]/D");
-  tdata->Branch("bwslice_rmsdiode",&bwslice_rmsdiode,"bwslice_rmsdiode[5]/D");
+  tdata->Branch("bwslice_rmsdiode",&bwslice_rmsdiode,"bwslice_rmsdiode[2][5]/D");
 
   //std::array< std::array< std::array< std::array<std::vector<int>,5>, 2>, 16>, 3>  arrayofhits_inanita; 
 
@@ -867,7 +862,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
     
   for (int i=0;i<5;i++) {
     bwslice_enoise[i]=0.;
-    bwslice_rmsdiode[i]=0.;
+    bwslice_rmsdiode[0][i]=bwslice_rmsdiode[1][i]=0.;
     bwslice_vrms[i]=0.;
   }
 
@@ -1025,15 +1020,15 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 	myconvlv(timedomainnoise_rfcm_banding[0][j],NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
 	
 	for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {	  
-	  bwslice_rmsdiode[j]+=(timedomain_output[j][m]-bwslice_meandiode[j])*(timedomain_output[j][m]-bwslice_meandiode[j])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	  bwslice_rmsdiode[0][j]+=(timedomain_output[j][m]-bwslice_meandiode[j])*(timedomain_output[j][m]-bwslice_meandiode[j])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
 	}
       
       }
     }
     
     for (int j=0;j<5;j++) {
-      bwslice_rmsdiode[j]=sqrt(bwslice_rmsdiode[j]);
-      cout << "mean, rms are " << bwslice_meandiode[j] << " " << bwslice_rmsdiode[j] << "\n";
+      bwslice_rmsdiode[0][j]=bwslice_rmsdiode[1][j]=sqrt(bwslice_rmsdiode[0][j]);
+      cout << "mean, rms are " << bwslice_meandiode[j] << " " << bwslice_rmsdiode[0][j] << "\n";
     }
   
     double thresh_begin=-1.;
@@ -1054,7 +1049,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
   	
 	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
   	    
-	    if (timedomain_output[j][m+1]<bwslice_rmsdiode[j]*testthresh) {
+	    if (timedomain_output[j][m+1]<bwslice_rmsdiode[0][j]*testthresh) {
 	      passes[j]++;
 	      m+=(int)(DEADTIME/TIMESTEP);
 	    }
@@ -1092,7 +1087,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 	  for (int i=0;i<ngeneratedevents;i++) {
 	  
-	    getQuickTrigNoiseFromFlight(quickNoise, ipol, iant, ituff);
+	    getQuickTrigNoiseFromFlight(settings1, quickNoise, ipol, iant, ituff);
 	  
 	    myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
 
@@ -1230,7 +1225,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
 
 #ifdef ANITA_UTIL_EXISTS
-void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, int iant, int ituff){
+void Anita::getQuickTrigNoiseFromFlight(Settings *settings1, double justNoise[HALFNFOUR], int ipol, int iant, int ituff){
 
   FFTWComplex *phasorsTrig = new FFTWComplex[numFreqs];
   phasorsTrig[0].setMagPhase(0,0);
@@ -1242,12 +1237,16 @@ void Anita::getQuickTrigNoiseFromFlight(double justNoise[HALFNFOUR], int ipol, i
   int iphi = iant - (iring*16);
 
   for(int i=1;i<numFreqs;i++) {
-    norm           = fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i];
-    sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
-    sigma*=norm;
-    realPart       = fRand->Gaus(0,sigma);
-    imPart         = fRand->Gaus(0,sigma);
-
+    
+    if (freqs[i]*1e6>=settings1->FREQ_LOW_SEAVEYS && freqs[i]*1e6<=settings1->FREQ_HIGH_SEAVEYS){
+	norm           = fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][ituff][i];
+	sigma          = RayleighFits[ipol][iant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
+	sigma*=norm;
+	realPart       = fRand->Gaus(0,sigma);
+	imPart         = fRand->Gaus(0,sigma);
+      }else {
+	imPart=realPart=0;
+      }
     //    cout << " " << i << " " << trig << " " << dig << " " << trig/dig << " " << norm << endl;
     phasorsTrig[i] = FFTWComplex(realPart, imPart);
   }
