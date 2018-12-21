@@ -335,10 +335,10 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   double timedomain_output[2][5][Anita::NFOUR];
   double timedomain_output_justNoise[2][5][Anita::NFOUR];
   int iant=anita1->GetRxTriggerNumbering(ilayer, ifold);
-  int ipol=0;
 
   if (settings1->NOISEFROMFLIGHTTRIGGER){
-    anita1->bwslice_rmsdiode[4] = anita1->bwslice_dioderms_fullband_allchan[ipol][iant][anita1->tuffIndex];
+    anita1->bwslice_rmsdiode[0][4] = anita1->bwslice_dioderms_fullband_allchan[0][iant][anita1->tuffIndex];
+    anita1->bwslice_rmsdiode[1][4] = anita1->bwslice_dioderms_fullband_allchan[1][iant][anita1->tuffIndex];
   }
   
   // if we use the diode to perform an integral
@@ -466,8 +466,8 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
 	// 	      cout << "output is " << anita1->inu << "\t" << timedomain_output[0][iband][i] << "\n";
 	// 	    }
 	// cout << "output, bwslice_rmsdiode are " << timedomain_output[0][iband][i] << "\t" << anita1->bwslice_rmsdiode[iband] << "\n";
-	if (timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[iband]<anita1->ston[iband]) {
-	  anita1->ston[iband]=timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[iband];
+	if (timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[0][iband]<anita1->ston[iband]) {
+	  anita1->ston[iband]=timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[0][iband];
 	  // if (iband==4 && anita1->ston[iband]<0.)
 	  // cout << "ston is " << anita1->ston[iband] << "\n";
 	}
@@ -687,8 +687,8 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
 
     for (int ibin = anita1->iminbin[iband]; ibin < anita1->imaxbin[iband]; ibin++) {
     
-      if (timedomain_output[iband][ibin] < thresholds[ipol][iband] * anita1->bwslice_rmsdiode[iband] && anita1->pol_allowed[ipol] && anita1->bwslice_allowed[iband]) { // is this polarization and bw slice allowed to pass
-	//std::cout << "VPOL : " << iband << " " << timedomain_output_1[iband][ibin]  << " " <<  thresholds[0][iband] << " " <<  anita1->bwslice_rmsdiode[iband] << std::endl;
+      if (timedomain_output[iband][ibin] < thresholds[ipol][iband] * anita1->bwslice_rmsdiode[ipol][iband] && anita1->pol_allowed[ipol] && anita1->bwslice_allowed[iband]) { // is this polarization and bw slice allowed to pass
+	//std::cout << "VPOL : " << iband << " " << timedomain_output_1[iband][ibin]  << " " <<  thresholds[0][iband] << " " <<  anita1->bwslice_rmsdiode[ipol][iband] << std::endl;
 	tempChansPassing[iband] = 1;// channel passes
     
 	
@@ -696,8 +696,8 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
 	//	  cout << "got a hit.\n";
       }
 
-      if (timedomain_output_justNoise[iband][ibin] < thresholds[ipol][iband] * anita1->bwslice_rmsdiode[iband] && anita1->pol_allowed[ipol] && anita1->bwslice_allowed[iband]) { // is this polarization and bw slice allowed to pass
-	//std::cout << "VPOL : " << iband << " " << timedomain_output_1[iband][ibin]  << " " <<  thresholds[0][iband] << " " <<  anita1->bwslice_rmsdiode[iband] << std::endl;
+      if (timedomain_output_justNoise[iband][ibin] < thresholds[ipol][iband] * anita1->bwslice_rmsdiode[ipol][iband] && anita1->pol_allowed[ipol] && anita1->bwslice_allowed[iband]) { // is this polarization and bw slice allowed to pass
+	//std::cout << "VPOL : " << iband << " " << timedomain_output_1[iband][ibin]  << " " <<  thresholds[0][iband] << " " <<  anita1->bwslice_rmsdiode[ipol][iband] << std::endl;
 	tempChansPassingNoise[iband] = 1;// channel passes
     
 	
@@ -1421,7 +1421,7 @@ void ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::N
       
     for (int i=minsample;i<maxsample;i++) {
       //      std::cout << anita1->inu << " " << timedomain_output_1[j][i] << " " << powerthreshold[0][j] << " " << anita1->bwslice_rmsdiode[j] << std::endl;
-      if (timedomain_output_1[j][i]<powerthreshold[0][j]*anita1->bwslice_rmsdiode[j] && anita1->bwslice_allowed[j]==1) {
+      if (timedomain_output_1[j][i]<powerthreshold[0][j]*anita1->bwslice_rmsdiode[0][j] && anita1->bwslice_allowed[j]==1) {
 	flag_e[j].push_back(1);
 	  
       }
@@ -1429,7 +1429,7 @@ void ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::N
 	flag_e[j].push_back(0);
 	
 	
-      if (timedomain_output_2[j][i]<powerthreshold[1][j]*anita1->bwslice_rmsdiode[j] && anita1->bwslice_allowed[j]==1)
+      if (timedomain_output_2[j][i]<powerthreshold[1][j]*anita1->bwslice_rmsdiode[1][j] && anita1->bwslice_allowed[j]==1)
 	flag_h[j].push_back(1);
       else
 	flag_h[j].push_back(0);

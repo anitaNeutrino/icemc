@@ -420,7 +420,7 @@ public:
   double probability[5];
   double bwslice_enoise[5]; // average integrated power in each band
   double bwslice_fwhmnoise[5]; // 1/2 of fwhm of hnoise
-  double bwslice_rmsdiode[5]; // average rms diode output across noise waveforms in each band
+  double bwslice_rmsdiode[2][5]; // average rms diode output across noise waveforms in each band
   double bwslice_meandiode[5]; // mean diode output across all samples in a sample of noise waveforms generated for each band
   double bwslice_vrms[5]; // rms noise voltage for this bandwidth slice
   double bwslice_dioderms_fullband_allchan[2][48][7]; // diode rms for noise read from flight last elements are tuffs

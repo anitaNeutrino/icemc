@@ -1231,7 +1231,7 @@ void GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_threshold, in
 	    //      for (int i=minsample;i<maxsample;i++) {
 	
 	    //cout << "timedomain_output_1_corrected[i], threshold, bwslice_rmsdiode[4] are " << timedomain_output_1_corrected[i] << "\t" << threshold*anita1->bwslice_rmsdiode[4] << "\n";
-	    if (timedomain_output_1_corrected[i]<threshold*anita1->bwslice_rmsdiode[4]) {
+	    if (timedomain_output_1_corrected[i]<threshold*anita1->bwslice_rmsdiode[0][4]) {
 	      flag_e_L1[rx].push_back(1);
 	      //cout << "passes.\n";
 	    }
@@ -1240,7 +1240,7 @@ void GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_threshold, in
 	      //cout << "doesn't pass.\n";
 	    }
 	
-	    if (timedomain_output_2_corrected[i]<threshold*anita1->bwslice_rmsdiode[4])
+	    if (timedomain_output_2_corrected[i]<threshold*anita1->bwslice_rmsdiode[1][4])
 	      flag_h_L1[rx].push_back(1);
 	    else
 	      flag_h_L1[rx].push_back(0);
