@@ -43,14 +43,14 @@ class Settings : public TObject {
   void Initialize();
   void printAllKeyValuePairStrings();
 
-  void getSetting(const char* key, int& value);
-  void getSetting(const char* key, float& value);
-  void getSetting(const char* key, double& value);
+  void getSetting(const char* key, int& value, bool nonag=false);
+  void getSetting(const char* key, float& value, bool nonag=false);
+  void getSetting(const char* key, double& value, bool nonag=false);
 
-  void getSetting(const char * key, std::string & value); 
-  void getSetting(const char* key, vector<int>& valueArray);
-  void getSetting(const char* key, vector<float>& valueArray);
-  void getSetting(const char* key, vector<double>& valueArray);
+  void getSetting(const char * key, std::string & value, bool nonag=false); 
+  void getSetting(const char* key, vector<int>& valueArray, bool nonag=false);
+  void getSetting(const char* key, vector<float>& valueArray, bool nonag=false);
+  void getSetting(const char* key, vector<double>& valueArray, bool nonag=false);
 
   void ReadInputs(const char* fileName , ofstream &foutput,
 		  // Anita* anita1, Secondaries* sec1, Signal* sig1, Balloon* bn1, Ray* ray1,

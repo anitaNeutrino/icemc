@@ -588,9 +588,9 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   }
   getSetting("Which attenuation length", MOOREBAY);
 
-  getSetting("Source Option", SOURCE); 
-  getSetting("Source Max Energy", SOURCE_MAX_E); 
-  getSetting("Source Min Energy", SOURCE_MIN_E); 
+  getSetting("Source Option", SOURCE,true); 
+  getSetting("Source Max Energy", SOURCE_MAX_E,true); 
+  getSetting("Source Min Energy", SOURCE_MIN_E,true); 
 
 
   getSetting("Cross-section factor", SIGMA_FACTOR);
@@ -1051,11 +1051,11 @@ void Settings::complainAboutNotFindingKey(const TString& key){
 }
 
 
-void Settings::getSetting(const char* key, int& value){
+void Settings::getSetting(const char* key, int& value, bool nonag){
 
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
-    complainAboutNotFindingKey(key);
+    if(!nonag) complainAboutNotFindingKey(key);
   }
   else{
     // found a match for the key
@@ -1063,7 +1063,7 @@ void Settings::getSetting(const char* key, int& value){
   }
 }
 
-void Settings::getSetting(const char* key, float& value){
+void Settings::getSetting(const char* key, float& value, bool nonag){
 
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
@@ -1076,11 +1076,11 @@ void Settings::getSetting(const char* key, float& value){
 }
 
 
-void Settings::getSetting(const char * key, std::string & value) 
+void Settings::getSetting(const char * key, std::string & value, bool nonag) 
 {
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
-    complainAboutNotFindingKey(key);
+    if (!nonag) complainAboutNotFindingKey(key);
   }
   else{
     // found a match for the key
@@ -1089,11 +1089,11 @@ void Settings::getSetting(const char * key, std::string & value)
 }
 
 
-void Settings::getSetting(const char* key, double& value){
+void Settings::getSetting(const char* key, double& value, bool nonag){
 
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
-    complainAboutNotFindingKey(key);
+    if (!nonag) complainAboutNotFindingKey(key);
   }
   else{
     // found a match for the key
@@ -1101,11 +1101,11 @@ void Settings::getSetting(const char* key, double& value){
   }
 }
 
-void Settings::getSetting(const char* key, std::vector<int>& valueArray){
+void Settings::getSetting(const char* key, std::vector<int>& valueArray, bool nonag){
 
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
-    complainAboutNotFindingKey(key);
+    if (!nonag) complainAboutNotFindingKey(key);
   }
   else{
     // found a match for the key
@@ -1113,11 +1113,11 @@ void Settings::getSetting(const char* key, std::vector<int>& valueArray){
   }
 }
 
-void Settings::getSetting(const char* key, std::vector<float>& valueArray){
+void Settings::getSetting(const char* key, std::vector<float>& valueArray, bool nonag){
 
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
-    complainAboutNotFindingKey(key);
+    if (!nonag) complainAboutNotFindingKey(key);
   }
   else{
     // found a match for the key
@@ -1125,11 +1125,11 @@ void Settings::getSetting(const char* key, std::vector<float>& valueArray){
   }
 }
 
-void Settings::getSetting(const char* key, std::vector<double>& valueArray){
+void Settings::getSetting(const char* key, std::vector<double>& valueArray, bool nonag){
 
   kvpMap::iterator it = keyValuePairStrings.find(key);
   if(it == keyValuePairStrings.end()){
-    complainAboutNotFindingKey(key);
+    if (!nonag) complainAboutNotFindingKey(key);
   }
   else{
     // found a match for the key
