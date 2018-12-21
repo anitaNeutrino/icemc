@@ -680,6 +680,10 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
     std::cout << "Non-default setting:  SIGMA_THETA = 1" << std::endl;
   }
   SIGMA_THETA*=RADDEG; // immediately convert degrees to radians
+
+  getSetting("Seavey Low Frequency",FREQ_LOW_SEAVEYS,true); 
+  BW_SEAVEYS=FREQ_HIGH_SEAVEYS-FREQ_LOW_SEAVEYS;
+
   getSetting("Low frequency", FREQ_LOW);
 
   // if (FREQ_LOW_SEAVEYS>anita1->FREQ_LOW){
