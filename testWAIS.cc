@@ -630,8 +630,13 @@ int main(int argc,  char **argv) {
     // and making an array across frequency bins by putting in frequency dependence.
       // SAW: REPLACE THIS CODE WITH WAIS PULSER MODEL
     // SET THE SIGNAL USING vmmhz_max and vmmhz1m
-    sig1->GetVmMHz(vmmhz_max, vmmhz1m, 1e19, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ);  
+    //    sig1->GetVmMHz(vmmhz_max, vmmhz1m, 1e19, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ);  
 
+    for (int i=0;i<Anita::NFREQ;i++) {  
+      vmmhz[i]=vmmhz_max*wais_pulser_mags[i]/vmmhz1m;
+    }
+  
+    
     // Here we need also to define the anita1->v_phases in DEGREES :/
     for (int i=0; i<anita1->NFOUR/4; i++){
         // SAW: REPLACE THIS CODE WITH WAIS PULSER MODEL
