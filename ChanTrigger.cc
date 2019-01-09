@@ -335,10 +335,10 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   double timedomain_output[2][5][Anita::NFOUR];
   double timedomain_output_justNoise[2][5][Anita::NFOUR];
   int iant=anita1->GetRxTriggerNumbering(ilayer, ifold);
-  int ipol=0;
 
   if (settings1->NOISEFROMFLIGHTTRIGGER){
-    anita1->bwslice_rmsdiode[4] = anita1->bwslice_dioderms_fullband_allchan[ipol][iant][anita1->tuffIndex];
+    anita1->bwslice_rmsdiode[0][4] = anita1->bwslice_dioderms_fullband_allchan[0][iant][anita1->tuffIndex];
+    anita1->bwslice_rmsdiode[1][4] = anita1->bwslice_dioderms_fullband_allchan[1][iant][anita1->tuffIndex];
   }
   
   // if we use the diode to perform an integral
@@ -466,8 +466,8 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
 	// 	      cout << "output is " << anita1->inu << "\t" << timedomain_output[0][iband][i] << "\n";
 	// 	    }
 	// cout << "output, bwslice_rmsdiode are " << timedomain_output[0][iband][i] << "\t" << anita1->bwslice_rmsdiode[iband] << "\n";
-	if (timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[iband]<anita1->ston[iband]) {
-	  anita1->ston[iband]=timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[iband];
+	if (timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[0][iband]<anita1->ston[iband]) {
+	  anita1->ston[iband]=timedomain_output[0][iband][i]/anita1->bwslice_rmsdiode[0][iband];
 	  // if (iband==4 && anita1->ston[iband]<0.)
 	  // cout << "ston is " << anita1->ston[iband] << "\n";
 	}
@@ -687,8 +687,8 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
 
     for (int ibin = anita1->iminbin[iband]; ibin < anita1->imaxbin[iband]; ibin++) {
     
-      if (timedomain_output[iband][ibin] < thresholds[ipol][iband] * anita1->bwslice_rmsdiode[iband] && anita1->pol_allowed[ipol] && anita1->bwslice_allowed[iband]) { // is this polarization and bw slice allowed to pass
-	//std::cout << "VPOL : " << iband << " " << timedomain_output_1[iband][ibin]  << " " <<  thresholds[0][iband] << " " <<  anita1->bwslice_rmsdiode[iband] << std::endl;
+      if (timedomain_output[iband][ibin] < thresholds[ipol][iband] * anita1->bwslice_rmsdiode[ipol][iband] && anita1->pol_allowed[ipol] && anita1->bwslice_allowed[iband]) { // is this polarization and bw slice allowed to pass
+	//std::cout << "VPOL : " << iband << " " << timedomain_output_1[iband][ibin]  << " " <<  thresholds[0][iband] << " " <<  anita1->bwslice_rmsdiode[ipol][iband] << std::endl;
 	tempChansPassing[iband] = 1;// channel passes
     
 	
@@ -696,8 +696,8 @@ void ChanTrigger::DiodeConvolution(Settings *settings1, Anita *anita1, GlobalTri
 	//	  cout << "got a hit.\n";
       }
 
-      if (timedomain_output_justNoise[iband][ibin] < thresholds[ipol][iband] * anita1->bwslice_rmsdiode[iband] && anita1->pol_allowed[ipol] && anita1->bwslice_allowed[iband]) { // is this polarization and bw slice allowed to pass
-	//std::cout << "VPOL : " << iband << " " << timedomain_output_1[iband][ibin]  << " " <<  thresholds[0][iband] << " " <<  anita1->bwslice_rmsdiode[iband] << std::endl;
+      if (timedomain_output_justNoise[iband][ibin] < thresholds[ipol][iband] * anita1->bwslice_rmsdiode[ipol][iband] && anita1->pol_allowed[ipol] && anita1->bwslice_allowed[iband]) { // is this polarization and bw slice allowed to pass
+	//std::cout << "VPOL : " << iband << " " << timedomain_output_1[iband][ibin]  << " " <<  thresholds[0][iband] << " " <<  anita1->bwslice_rmsdiode[ipol][iband] << std::endl;
 	tempChansPassingNoise[iband] = 1;// channel passes
     
 	
@@ -821,11 +821,11 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
 
           anita1->AntennaGain(settings1, hitangle_e, hitangle_h, e_component, h_component, k, tmp_vhz[0][k], tmp_vhz[1][k]);
 
-          if (settings1->TUFFSON==2){
+          if (settings1->TUFFSTATUS==3){
             tmp_vhz[0][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[0][k], anita1->TUFFstatus);
             tmp_vhz[1][k]=applyButterworthFilter(anita1->freq[k], tmp_vhz[1][k], anita1->TUFFstatus);
           }
-          
+
         } // end if (seavey frequencies)
         else {
           tmp_vhz[0][k]=0;
@@ -892,7 +892,7 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
 
 #ifdef ANITA_UTIL_EXISTS
   if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
-    getNoiseFromFlight(anita1, ant, settings1->SIGNAL_FLUCT > 0);
+    getNoiseFromFlight(settings1, anita1, ant, settings1->SIGNAL_FLUCT > 0);
 
   if (settings1->ADDCW){
     memset(cw_digPath, 0, sizeof(cw_digPath));
@@ -1421,7 +1421,7 @@ void ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::N
       
     for (int i=minsample;i<maxsample;i++) {
       //      std::cout << anita1->inu << " " << timedomain_output_1[j][i] << " " << powerthreshold[0][j] << " " << anita1->bwslice_rmsdiode[j] << std::endl;
-      if (timedomain_output_1[j][i]<powerthreshold[0][j]*anita1->bwslice_rmsdiode[j] && anita1->bwslice_allowed[j]==1) {
+      if (timedomain_output_1[j][i]<powerthreshold[0][j]*anita1->bwslice_rmsdiode[0][j] && anita1->bwslice_allowed[j]==1) {
 	flag_e[j].push_back(1);
 	  
       }
@@ -1429,7 +1429,7 @@ void ChanTrigger::L1Trigger(Anita *anita1,double timedomain_output_1[5][Anita::N
 	flag_e[j].push_back(0);
 	
 	
-      if (timedomain_output_2[j][i]<powerthreshold[1][j]*anita1->bwslice_rmsdiode[j] && anita1->bwslice_allowed[j]==1)
+      if (timedomain_output_2[j][i]<powerthreshold[1][j]*anita1->bwslice_rmsdiode[1][j] && anita1->bwslice_allowed[j]==1)
 	flag_h[j].push_back(1);
       else
 	flag_h[j].push_back(0);
@@ -1637,7 +1637,7 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   
   
   //Calculate convolution
-  if(!settings1->TUFFSON){
+  if(settings1->TUFFSTATUS==0){
     surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseDigitizer[ipol][iring][iphi]);
   }
   else
@@ -1729,14 +1729,14 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
 
 // begin keith edits
   TGraph *surfSignal;
-  if (!settings1->TUFFSON){
+  if (settings1->TUFFSTATUS==0){
     surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTrigger[ipol][iring][iphi]);
   }
   else
   {
     // keith editing 1/24/18
     surfSignal = FFTtools::getConvolution(graphUp, anita1->fSignalChainResponseTriggerTuffs[ipol][iring][iphi][anita1->tuffIndex]); 
-//    cout << anita1->tuffIndex << " is the tuff Index" << endl;
+    // cout << anita1->tuffIndex << " is the tuff Index" << endl;
     // end keith editing 
   }// end else anita 4
 // end keith edits
@@ -1801,7 +1801,7 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
 }
 
 
-void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
+void ChanTrigger::getNoiseFromFlight(Settings *settings1, Anita* anita1, int ant, bool also_digi){
 //  std::cout << __FILE__ << " " << __FUNCTION__ << " " << __LINE__ << std::endl;
   Int_t numFreqs = anita1->numFreqs;
   FFTWComplex *phasorsDig  = new FFTWComplex[numFreqs];
@@ -1819,12 +1819,16 @@ void ChanTrigger::getNoiseFromFlight(Anita* anita1, int ant, bool also_digi){
   for (int ipol=0; ipol<2; ipol++){
 
     for(int i=1;i<numFreqs;i++) {
-      trigNorm       = anita1->fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
-      digNorm        = anita1->fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
-      sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
-      realPart       = anita1->fRand->Gaus(0,sigma);
-      imPart         = anita1->fRand->Gaus(0,sigma);
-      
+
+      if (freqs[i]*1e6>=settings1->FREQ_LOW_SEAVEYS && freqs[i]*1e6<=settings1->FREQ_HIGH_SEAVEYS){
+	trigNorm       = anita1->fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
+	digNorm        = anita1->fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
+	sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
+	realPart       = anita1->fRand->Gaus(0,sigma);
+	imPart         = anita1->fRand->Gaus(0,sigma);
+      } else {
+	trigNorm=digNorm=realPart=imPart=0.;
+      }
       phasorsDig[i]  = FFTWComplex(realPart*digNorm,  imPart*digNorm  );
       phasorsTrig[i] = FFTWComplex(realPart*trigNorm, imPart*trigNorm );
     }

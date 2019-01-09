@@ -350,7 +350,7 @@ Y::Y() { // Constructor
     for (int j=0;j<2;j++) {
       sprintf(which,"%d%d",i,j);
       string sname=sbase+which;
-      fC1_high[i][j]=new TF1(sname.c_str(),"[0]-[1]*(-exp(-(x-[2])/[3]))",7.,12.); // parameterization of parameter C1 in the high y region according to Equation 16
+      fC1_high[i][j]=new TF1(sname.c_str(),"[0]-[1]*(exp(-(x-[2])/[3]))",7.,12.); // parameterization of parameter C1 in the high y region according to Equation 16
     }
   }
 
@@ -383,7 +383,7 @@ Y::Y() { // Constructor
     }
   }
 
-  fC1_low=new TF1("C1_low","[0]-[1]*(-exp(-(x-[2])/[3]))",7.,12.); // parameterization of parameter C1 in the low y region according to Equation 16.
+  fC1_low=new TF1("C1_low","[0]-[1]*(exp(-(x-[2])/[3]))",7.,12.); // parameterization of parameter C1 in the low y region according to Equation 16.
   // This parameterization is the same for all interaction types.
   
   fC1_low->FixParameter(0,0.);
@@ -414,7 +414,7 @@ double Y::pickY(Settings *settings1,double pnu,int nu_nubar,int currentint) {
     return pickYGandhietal();
   }//old Gety
   else { //use prescription in Connolly et al.2011
-    nu_nubar=0;
+    //    nu_nubar=0;
     double elast_y=pickYConnollyetal2011(nu_nubar,currentint,pnu);
     return elast_y;   
   }//current Gety

@@ -262,7 +262,8 @@ int main(int argc,  char **argv) {
  
   settings1->ReadInputs(input.c_str(),  foutput, NNU, RANDOMISEPOL);
   settings1->ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
-  
+  sig1->Initialize();
+
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);
 
@@ -629,8 +630,13 @@ int main(int argc,  char **argv) {
     // and making an array across frequency bins by putting in frequency dependence.
       // SAW: REPLACE THIS CODE WITH WAIS PULSER MODEL
     // SET THE SIGNAL USING vmmhz_max and vmmhz1m
-    sig1->GetVmMHz(vmmhz_max, vmmhz1m, 1e19, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ);  
+    //    sig1->GetVmMHz(vmmhz_max, vmmhz1m, 1e19, anita1->freq, anita1->NOTCH_MIN, anita1->NOTCH_MAX, vmmhz, Anita::NFREQ);  
 
+    for (int i=0;i<Anita::NFREQ;i++) {  
+      vmmhz[i]=vmmhz_max*wais_pulser_mags[i]/vmmhz1m;
+    }
+  
+    
     // Here we need also to define the anita1->v_phases in DEGREES :/
     for (int i=0; i<anita1->NFOUR/4; i++){
         // SAW: REPLACE THIS CODE WITH WAIS PULSER MODEL
@@ -798,7 +804,7 @@ int main(int argc,  char **argv) {
     if ( (thispasses[0]==1 && anita1->pol_allowed[0]==1)
     	 || (thispasses[1]==1 && anita1->pol_allowed[1]==1)
     	 || (settings1->MINBIAS==1)) {
-          settings1->MINBIAS==1;
+
       //	cout << inu << endl;
 
       anita1->passglobtrig[0]=thispasses[0];
@@ -807,7 +813,7 @@ int main(int argc,  char **argv) {
 
       // keep track of events passing trigger
       count1->npassestrigger[0]++;
-cout << count1 << endl;
+      cout << count1->npassestrigger[0] << endl;
       // tags this event as passing
       passestrigger=1;
 

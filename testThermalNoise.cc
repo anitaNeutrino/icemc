@@ -558,7 +558,8 @@ int main(int argc,  char **argv) {
   // input parameters
   settings1->ReadInputs(input.c_str(),  foutput, NNU, RANDOMISEPOL);
   settings1->ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
-  
+  sig1->Initialize();
+
   settings1->SEED=settings1->SEED + run_no;
   gRandom->SetSeed(settings1->SEED);
 
@@ -817,7 +818,7 @@ int main(int argc,  char **argv) {
 	
 #ifdef ANITA_UTIL_EXISTS
 	if (settings1->SIGNAL_FLUCT && (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) )
-	  chantrig1->getNoiseFromFlight(anita1, antNum);
+	  chantrig1->getNoiseFromFlight(settings1, anita1, antNum);
 #endif
 	//	  chantrig1->ApplyAntennaGain(settings1, anita1, bn1, panel1, antNum, n_eplane, n_hplane, n_normal);
 	

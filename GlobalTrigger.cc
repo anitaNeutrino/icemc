@@ -628,10 +628,10 @@ void  GlobalTrigger::PassesTriggerBasic(Settings *settings1,Anita *anita1,int di
       } // loop over time steps
       
 
-      if (thispasses_l3type0)
-	thispasses[0]=1;
+      // if (thispasses_l3type0)
+      // 	thispasses[0]=1;
       if (thispasses_l3type1)
-	thispasses[1]=1;
+	thispasses[1]=thispasses[0]=1;
 
       //	if (thispasses[0] || thispasses[1])
       //cout << "This passes! " << thispasses[0] << "\t" << thispasses[1] << "\n";
@@ -1231,7 +1231,7 @@ void GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_threshold, in
 	    //      for (int i=minsample;i<maxsample;i++) {
 	
 	    //cout << "timedomain_output_1_corrected[i], threshold, bwslice_rmsdiode[4] are " << timedomain_output_1_corrected[i] << "\t" << threshold*anita1->bwslice_rmsdiode[4] << "\n";
-	    if (timedomain_output_1_corrected[i]<threshold*anita1->bwslice_rmsdiode[4]) {
+	    if (timedomain_output_1_corrected[i]<threshold*anita1->bwslice_rmsdiode[0][4]) {
 	      flag_e_L1[rx].push_back(1);
 	      //cout << "passes.\n";
 	    }
@@ -1240,7 +1240,7 @@ void GlobalTrigger::PassesTriggerScheme5(Anita *anita1,double this_threshold, in
 	      //cout << "doesn't pass.\n";
 	    }
 	
-	    if (timedomain_output_2_corrected[i]<threshold*anita1->bwslice_rmsdiode[4])
+	    if (timedomain_output_2_corrected[i]<threshold*anita1->bwslice_rmsdiode[1][4])
 	      flag_h_L1[rx].push_back(1);
 	    else
 	      flag_h_L1[rx].push_back(0);
@@ -2601,30 +2601,30 @@ void GlobalTrigger::L3Anita4LR_ScB_OneBin(int IZERO,Anita *anita1,std::array<std
     else
       vl3trig_type1[iphi].push_back(0);
 
-    //cout << "calling the second l3.\n";
-    if ((iphi%2==0 && L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( IZERO,
-							       vl2_realtime_anita4_scb[iphi], // 3 neighbors, whether 1, 2 or 3 pass
-							       vl2_realtime_anita4_scb[iphi_next], // 3 neighbors, whether 1, 2 or 3 pass
+    // //cout << "calling the second l3.\n";
+    // if ((iphi%2==0 && L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( IZERO,
+    // 							       vl2_realtime_anita4_scb[iphi], // 3 neighbors, whether 1, 2 or 3 pass
+    // 							       vl2_realtime_anita4_scb[iphi_next], // 3 neighbors, whether 1, 2 or 3 pass
 							      
-							       1,3)	  
-	 ) ||
-	(
-	 iphi%2==1 && L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( IZERO,
-							       vl2_realtime_anita4_scb[iphi], // 3 neighbors, whether 1, 2 or 3 pass
-							       vl2_realtime_anita4_scb[iphi_previous], // 3 neighbors, whether 1, 2 or 3 pass
+    // 							       1,3)	  
+    // 	 ) ||
+    // 	(
+    // 	 iphi%2==1 && L3or30Anita4LR_ScB_TwoPhiSectors_OneBin( IZERO,
+    // 							       vl2_realtime_anita4_scb[iphi], // 3 neighbors, whether 1, 2 or 3 pass
+    // 							       vl2_realtime_anita4_scb[iphi_previous], // 3 neighbors, whether 1, 2 or 3 pass
 							       
-							       1,3)
+    // 							       1,3)
 
-	 )) {
-      thispasses_l3type0=1;
-      vl3trig_type0[iphi].push_back(1);
+    // 	 )) {
+    //   thispasses_l3type0=1;
+    //   vl3trig_type0[iphi].push_back(1);
       
-    }
+    // }
 
 
 
-    else
-      vl3trig_type0[iphi].push_back(0);
+    // else
+    //   vl3trig_type0[iphi].push_back(0);
   }
 
 }
