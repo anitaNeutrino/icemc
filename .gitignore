@@ -1,3 +1,8 @@
+PLOTS/WForms/MD5
+BROWSE
+md5-????????????????????????????????_*
+*.so
+*~
 *.pdf
 *.o
 *.pcm
@@ -6,12 +11,14 @@
 classdict*
 icemc
 testEAS
+testEAS-*
 testInputAfterAntenna
 testSettings
 testThermalNoise
 testTrigger
 limits/*.pdf
 limits/*.eps
+PLOTS/WForms/*.eps
 limits/makelimitplot
 gitversion.c
 setup.sh
