@@ -5,7 +5,11 @@ read SELF < val-parent-ID0-SNAPSHOT.out
 
 EXE=SCRIPTS/testEAS-save-std.sh
 # EXE1=./testEAS-ec15
-EXE1=./testEAS-b269
+# EXE1=./testEAS-6e59
+# EXE1=./testEAS-c04f
+# EXE1=./testEAS-85b5
+# EXE1=./testEAS-c929
+EXE1=./testEAS-e2a1
 INP1=inputs.anita3.conf
 INP2=/nfs/data_disks/herc0a/users/bugaev/ANITA/SIMS/Event_4212/timefresnel-root.dat
 OUT=PLOTS/WForms/MD5/testEAS-std.txt
