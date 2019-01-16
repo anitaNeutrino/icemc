@@ -2484,8 +2484,9 @@ void Anita::MakeCRArraysforFFT(double *vsignalarray_e,double *vsignalarray_h,dou
     double cosphase;
     double sinphase;
     for (int ifour=0;ifour<NFOUR/4;ifour++) {      
-      cosphase = cos(v_phases[ifour]*PI/180.);
-      sinphase = sin(v_phases[ifour]*PI/180.);
+      // cosphase = cos(v_phases[ifour]*PI/180.);
+      cosphase = cos(90.*PI/180.);
+      sinphase = sin(90.*PI/180.);
       vsignal_e_forfft[2*ifour]*=cosphase;
       vsignal_e_forfft[2*ifour+1]*=sinphase;
       vsignal_h_forfft[2*ifour]*=cosphase;

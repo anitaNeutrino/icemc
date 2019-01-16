@@ -9,8 +9,8 @@ cat << EOF  > $TMP_GNUPLOT_SCRIPT
 set out "$GAIN_VS_TRIGGER_VOLTS"
 set term post color solid 18
 plot [200: 300]\
-       	"$GAIN_VOLTS_COL_FILE" with lines,\
-       	"$TRIG_VOLTS_COL_FILE" with lines
+       	"$GAIN_VOLTS_COL_FILE" with lines lt 1,\
+       	"$TRIG_VOLTS_COL_FILE" with lines lt 2
 EOF
 
 gnuplot --persist $TMP_GNUPLOT_SCRIPT
