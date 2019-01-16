@@ -59,15 +59,23 @@ Double_t ANITA_2_effVol[n_ANITA] = { 0.612838,
 				     3918.96,
 				     9684.73,
 				     18955.6};
-// Icemc January 2018
-Double_t ANITA_3_effVol[n_ANITA] = { 0.28516,
-				     5.79936,
-				     101.24 ,
-				     784.763,
-				     3244.84,
-				     9398.71,
-				     19776.2}; // in km^3 srt
 
+Double_t ANITA_3_effVol_published[n_ANITA] = { 0.28516,
+					       5.79936,
+					       101.24 ,
+					       784.763,
+					       3244.84,
+					       9398.71,
+					       19776.2}; // in km^3 srt
+
+// Icemc December 2018
+Double_t ANITA_3_effVol[] = {0.544934,
+			     3.8882,
+			     131.667,
+			     837.749,
+			     3249.79,
+			     9031.45,
+			     18516.6};
 
 // Icemc December 2018
 Double_t ANITA_4_effVol[n_ANITA] = { 0.524342,
@@ -78,14 +86,14 @@ Double_t ANITA_4_effVol[n_ANITA] = { 0.524342,
 				     14040.6,
 				     30315.4};
 
-// As of December 2018 numbers below still need to be updated
-Double_t ANITA_4_vol_notuffs[n_ANITA] = {0.308033,
-					 8.34676,
-					 184.818,
-					 1490.28,
-					 6467.77,
-					 17734.4,
-					 36094.1};
+// Icemc December 2018 (number at E18 TBC)
+Double_t ANITA_4_vol_tuffsoff[n_ANITA] = {0.8,
+					  5.33191,
+					  172.263,
+					  1488.34,
+					  6529.09,
+					  17998.5,
+					  36258.9};
 
 // As of December 2018 numbers below still need to be updated
 Double_t ANITA_3_effVol_noMasking[n_ANITA] = { 0.910887,
