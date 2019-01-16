@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-gdb ./testEAS-ae08 -q -batch \
+gdb ./testEAS-6380 -q -batch \
   -ex "set print repeats 0" \
   -ex "set height 0" \
   -ex "set print elements 50000" \
