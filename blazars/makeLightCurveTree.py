@@ -12,7 +12,7 @@ import json
 import datetime
 
 
-# Dictionary of TeV blazars within +/-25 degrees dec (From TeVCat... someone should check that I didn't typo anyting) 
+# Dictionary of TeV blazars within +/-25 degrees dec (From TeVCat 2.0 filtered by all blazar types as 'Blzr')
 blazars = {} 
 
 
@@ -25,7 +25,7 @@ blazars["1ES 0347-121"]     = (15*(3 + 49./60 + 23.0/3600), -(11 + 58./60 + 38./
 blazars["3C 279"]           = (15*(12 + 56./60 + 11.1/3600), -(5 + 47./60 + 22./3600))
 blazars["4C +21.35"]        = (15*(12 + 24./60 + 54.4/3600), (21 + 22./60 + 46./3600))
 blazars["AP Lib"]           = (15*(15 + 17./60 + 41.8/3600), -(24 + 22./60 + 19./3600))
-blazars["H 1722+119"]       = (15*(17 + 24./60 + 4.3/3600), (11 + 52./60 + 15./3600))
+blazars["H 1722+119"]       = (15*(17 + 25./60 + 4.3/3600), (11 + 52./60 + 15./3600))
 blazars["HESS J1943+213"]   = (15*(19 + 43./60 + 55./3600), (21 + 18./60 + 8./3600))
 blazars["KUV 00311-1938"]   = (15*(0 + 33./60 + 34.2/3600), -(19 + 21./60 + 33./3600))
 blazars["MS 1221.8+2452"]   = (15*(12 + 24./60 + 24.2/3600), (24 + 36./60 + 24./3600))
@@ -43,9 +43,9 @@ blazars["RGB J2243+203"]    = (15*(22 + 43./60 + 52/3600), (20 + 19./60 + 12./36
 blazars["RX J0638.7+1516"]  = (15*(6 + 48./60 + 45.6/3600), (15 + 16./60 + 12./3600))
 blazars["S2 0109+22"]       = (15*(1 + 12./60 + 5.8/3600), (22 + 44./60 + 39./3600))
 blazars["SHBL J001355.9-185406"] = (15*(0 + 13./60 + 52./3600), -(18 + 53./60 + 29./3600))
-blazars["TXS 0506+056"] =    (15*(5 + 9./60 + 25.96/3600), (5 + 41./60 + 35.33/3600))
+blazars["TXS 0506+056"] =    (15*(5 + 9./60 + 25./3600), (5 + 42./60 + 9./3600))
 blazars["VER J0421+211"] =    (15*(5 + 21./60 + 45./3600), (21 + 12./60 + 51.4/3600))
-
+# RA/Dec for TXS 0506+056 was not as listed. Perhaps inserted is a more accurate result from elsewhere. Changed it to the TevCat 2.0 source for now.
 
 f = TFile("blazars.root","RECREATE"); 
 t = TTree("blazars","blazars") 
