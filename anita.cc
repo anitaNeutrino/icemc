@@ -156,7 +156,7 @@ Anita::Anita() {
   
   if (stat(outputdir, &sb) == 0 && S_ISDIR(sb.st_mode))
     {
-      // dir already exists, no we don't ned to overwrite it!
+      // dir already exists don't overwrite
     }
   else
     {
