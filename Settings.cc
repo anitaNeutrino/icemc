@@ -279,6 +279,7 @@ void Settings::Initialize() {
 
   IGNORE_CROSSPOL = 0; 
   POL_SIGN_HACK = 1; 
+  CUTONWEIGHTS = 1e-10; 
 }
 
 
@@ -654,19 +655,6 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Max interaction distance", MAXHORIZON);
   getSetting("Set tau modes", taumodes);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
   getSetting("Which rays", WHICHRAYS);
   if (WHICHRAYS!=1){
     std::cout << "Non-default setting:  WHICHRAYS= " << WHICHRAYS << std::endl;
@@ -838,7 +826,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   getSetting("Ignore Cross-Pol", IGNORE_CROSSPOL); 
   getSetting("Polarization Sign Hack", POL_SIGN_HACK); 
-
+  getSetting("Minimum weight", CUTONWEIGHTS); 
 } //method ReadInputs
 
 

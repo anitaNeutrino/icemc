@@ -246,8 +246,6 @@ double logweight=0.;// log of the previous number
 double len_int=0;// interaction length in m
 double pieceofkm2sr=0; // Use this for making plots comparing different cross sections.  The integral of a plot from a run will be the total Area*sr of the detector.  That way it is proportional to the cross section and the integral is something meaningful to people.
 
-double CUTONWEIGHTS=1.E-10; // cut out events with small enough weight that they don't matter,  to save time
-
 // counting variables
 int count_inthisloop1=0; // for debugging
 int count_inthisloop2=0;
@@ -1176,6 +1174,8 @@ int main(int argc,  char **argv) {
   TTree *mytaus_tree = new TTree("mytaus", "mytaus");
   mytaus_tree->Branch("taus",  &TauPtr);
 
+
+
   double rms_rfcm_e;
   double rms_rfcm_h;
   double rms_lab_e;
@@ -2084,7 +2084,7 @@ int main(int argc,  char **argv) {
 
       //if ( bn1->WHICHPATH != 4 && settings1->FORSECKEL != 1 && !settings1->SKIPCUTS && !settings1->SOURCE) {
       if ( bn1->WHICHPATH != 4 && settings1->FORSECKEL != 1 && !settings1->SKIPCUTS) {
-        if (weight_test < CUTONWEIGHTS) {
+        if (weight_test < settings1->CUTONWEIGHTS) {
           continue;
         }
       }
@@ -2160,8 +2160,8 @@ int main(int argc,  char **argv) {
 
 
       // if the probability that the neutrino gets absorbed is almost 1,  throw it out.
-      //if (bn1->WHICHPATH!=4 && interaction1->weight_bestcase<CUTONWEIGHTS && !settings1->SKIPCUTS && !settings1->FORSECKEL && !settings1->SOURCE) {
-      if (bn1->WHICHPATH!=4 && interaction1->weight_bestcase<CUTONWEIGHTS && !settings1->SKIPCUTS && !settings1->FORSECKEL) {
+      //if (bn1->WHICHPATH!=4 && interaction1->weight_bestcase<settings1->CUTONWEIGHTS && !settings1->SKIPCUTS && !settings1->FORSECKEL && !settings1->SOURCE) {
+      if (bn1->WHICHPATH!=4 && interaction1->weight_bestcase<settings1->CUTONWEIGHTS && !settings1->SKIPCUTS && !settings1->FORSECKEL) {
         if (bn1->WHICHPATH==3)
           cout<<"Neutrino is getting absorbed and thrown out!"<<endl;
         //
@@ -3228,11 +3228,11 @@ int main(int argc,  char **argv) {
       weight = weight1 / interaction1->dnutries * settings1->SIGMA_FACTOR;  // total weight is the earth absorption factor
       // divided by the factor accounting for the fact that we only chose our interaction point within the horizon of the balloon
       // then multiply by the cross section multiplier,  to account for the fact that we get more interactions when the cross section is higher
-      //if (weight < CUTONWEIGHTS && !settings1->SOURCE) {
+      //if (weight < settings1->CUTONWEIGHTS && !settings1->SOURCE) {
       //oindree_file << weight << "\n"; 
       
 
-      if (weight < CUTONWEIGHTS) {
+      if (weight < settings1->CUTONWEIGHTS) {
         delete globaltrig1;
         continue;
       }
@@ -3606,6 +3606,7 @@ int main(int argc,  char **argv) {
             truthEvPtr->realTime         = bn1->realTime_flightdata;
             truthEvPtr->run              = run_no;
             truthEvPtr->nuMom            = pnu;
+            truthEvPtr->showerE =        pnu * sumfrac; 
             truthEvPtr->nu_pdg           = pdgcode;
             memcpy(truthEvPtr->e_component, e_component, sizeof(e_component));
             memcpy(truthEvPtr->h_component, h_component, sizeof(h_component));
@@ -3617,6 +3618,7 @@ int main(int argc,  char **argv) {
             truthEvPtr->sourceLat        = sourceLat;
             truthEvPtr->sourceAlt        = sourceAlt;
             truthEvPtr->weight           = weight;
+            truthEvPtr->weight1           = weight1;
             for (int i=0;i<3;i++){
               truthEvPtr->balloonPos[i]  = bn1->r_bn[i];
               truthEvPtr->balloonDir[i]  = bn1->n_bn[i];
@@ -3739,8 +3741,8 @@ int main(int argc,  char **argv) {
                   sum_sample+=sampleweights->GetBinContent(k)*pow(10., sampleweights->GetBinLowEdge(k));
                   if (sum_sample>0.99*sum_sampleintegral) {
                     // reset the cut value.
-                    CUTONWEIGHTS=pow(10., sampleweights->GetBinLowEdge(k));
-                    cout << "CUTONWEIGHTS is " << CUTONWEIGHTS << "\n";
+                    settings1->CUTONWEIGHTS=pow(10., sampleweights->GetBinLowEdge(k));
+                    cout << "settings1->CUTONWEIGHTS is " << settings1->CUTONWEIGHTS << "\n";
                     k=0;
                   }
                 }

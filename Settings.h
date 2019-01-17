@@ -248,6 +248,7 @@ class Settings : public TObject {
   double SPECIFIC_NU_POSITION_DISTANCE; //Max distance from place
   int IGNORE_CROSSPOL; //Ignore the crosspol polarization component
   int POL_SIGN_HACK; // patch up the sign of e/h 
+  double CUTONWEIGHTS;
 
   int useLPM;
 
