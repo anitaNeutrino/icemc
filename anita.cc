@@ -35,6 +35,8 @@
 
 #include "TMath.h"
 
+#include <sys/stat.h>
+
 #include "EnvironmentVariable.h"
 
 #ifdef ANITA_UTIL_EXISTS
@@ -146,7 +148,22 @@ Anita::Anita() {
     
   /*** Used for the Coherent Sum Trigger ***/
   summed_power_trigger_digitizer_zero_random = new TRandom3();
-  // Prepare the file and tree for the coherent sum trigger's data tree
+  
+  // If outputs dir doesn't already exist, create it
+  const char* outputdir;
+  outputdir = "outputs";
+  struct stat sb;
+  
+  if (stat(outputdir, &sb) == 0 && S_ISDIR(sb.st_mode))
+    {
+      // dir already exists!
+    }
+  else
+    {
+      mkdir(outputdir,S_IRWXU);
+    }
+  
+    // Prepare the file and tree for the coherent sum trigger's data tree
   coherent_datafile = new TFile("outputs/coherent_sum_data_file.root","RECREATE");
   coherent_waveform_sum_tree = new TTree("coherent_waveform_sum_tree", "Coherent Waveform Sum");
   coherent_waveform_sum_tree->Branch("event_number", &cwst_event_number);
