@@ -1,5 +1,5 @@
 # icemc
-[icemc](https://github.com/anitaNeutrino/icemc) is a tool to simulate neutrino interactions in the ice
+[icemc](https://github.com/anitaNeutrino/icemc) is a tool to simulate neutrino interactions in the ice.
 
 ## Prerequisites ##
 
@@ -38,7 +38,7 @@ export DYLD_LIBRARY_PATH=${ICEMC_SRC_DIR}:${ICEMC_BUILD_DIR}:${DYLD_LIBRARY_PATH
 If you use the anitaBuildTool, it's a good practice to add these lines to your setup script.
 
 
-To run iceme do:
+To run icemc do:
 ``` bash
 ./icemc -i {inputFile} -o {outputDirectory} -r {runNumber} -n {numberOfNeutrinos} -t {triggerThreshold} -e {energyExponent}
 ```
