@@ -275,7 +275,7 @@ void Settings::Initialize() {
 
   SOURCE = "None"; 
   SOURCE_MIN_E = 18; 
-  SOURCE_MAX_E = 22; 
+  SOURCE_MAX_E = 21; 
 
   IGNORE_CROSSPOL = 0; 
   POL_SIGN_HACK = 1; 
