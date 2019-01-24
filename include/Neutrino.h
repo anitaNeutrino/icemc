@@ -2,7 +2,7 @@
 #define ICEMC_NEUTRINO_H
 
 #include <iostream>
-
+#include <memory>
 #include "Geoid.h"
 #include "Energy.h"
 #include "TObject.h"

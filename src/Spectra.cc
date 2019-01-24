@@ -14,6 +14,7 @@
 
 #include "Report.h"
 #include "Settings.h"
+#include "TRandom.h" ///@todo remove me
 
 icemc::Energy icemc::Source::Spectra::pickNeutrinoEnergy() {
   if(fSettings->USEDARTBOARD){

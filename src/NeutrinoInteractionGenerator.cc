@@ -67,7 +67,7 @@ Geoid::Position icemc::NeutrinoInteractionGenerator::pickInteractionPositionInSp
 
     numTries++;
 
-    if(fWorldModel->InsideIce(interactionPosition)){
+    if(fAllowInteractionOutsideIce || fWorldModel->InsideIce(interactionPosition)){
       return interactionPosition;
     }
     // else{

@@ -14,15 +14,7 @@
 #include <fstream>
 
 // ROOT
-#include "TRandom3.h" 
-#include "TGraph.h"
-#include "TROOT.h"
-#include "TMath.h"
-#include "TString.h"
-#include "TSystem.h"
-#include "TMath.h"
-#include "Math/Interpolator.h"
-#include "Math/InterpolationTypes.h"
+#include "TObject.h"
 
 class TH1;
 class TGraph;
@@ -43,7 +35,7 @@ namespace icemc{
     void ShiftLeft(double *x,const int n,int ishift);  
     void ShiftRight(double *x,const int n,int ishift);  
     double GetFWHM(TH1 *h1);
-    int findIndex(double *freqlab,double freq,int npoints,double min,double max); // this is the same thing but more general
+    int findIndex(const double *freqlab,double freq,int npoints,double min,double max); // this is the same thing but more general
     TGraph *getInterpolatedGraph(TGraph *grIn, Double_t deltaT);
     
     template<class V> double max(const V& v){

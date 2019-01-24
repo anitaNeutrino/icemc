@@ -302,8 +302,7 @@ void icemc::FTPair::applyConstantGroupDelay(double delaySeconds, bool circularDe
     // For a non-circular delay, the strategy is this:
     // 1. construct a longer graph,
     // 2. apply the group delay,
-    // 3. copy the portion of the extended graph corresponding
-    // to the original time window back in
+    // 3. copy the portion of the extended graph corresponding to the original back
     // 4. profit
 
     const int n = getNumTimes();
@@ -579,7 +578,7 @@ void icemc::FTPair::maybeUpdateTimeDomain() const {
  * @param a will take the value of b
  * @param b will take the value of a
  */
-void SWAP(double &a, double &b){
+inline void SWAP(double &a, double &b){
   double dum = a;
   a = b;
   b = dum;

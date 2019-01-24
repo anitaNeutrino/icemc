@@ -167,13 +167,12 @@ void icemc::EventGenerator::generate(Detector& detector){
 
   auto antarctica = std::make_shared<Antarctica>();
   std::shared_ptr<InteractionGenerator> interactionGenerator = std::make_shared<NeutrinoInteractionGenerator>(fSettings,
-								     antarctica,
-								     fCrossSectionModel,
-								     fYGenerator);
-
-  auto waisModel = std::make_shared<WaisPulser>(fSettings, antarctica);
-  interactionGenerator = waisModel;
-  fRadioModel = waisModel;  
+													      antarctica,
+													      fCrossSectionModel,
+													      fYGenerator);  
+  // auto waisModel = std::make_shared<WaisPulser>(fSettings, antarctica);
+  // interactionGenerator = waisModel;
+  // fRadioModel = waisModel;
 
   icemc::report() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
 
@@ -203,7 +202,7 @@ void icemc::EventGenerator::generate(Detector& detector){
 
     printProgress(entry, eventTimes.size());
 
-    UInt_t eventNumber = (UInt_t)(fEvent.loop.run)*fSettings->NNU+entry;
+    UInt_t eventNumber = (UInt_t)(fEvent.loop.run)*fSettings->NNU+entry; ///@todo fix me
 
     RNG::newSeeds(run, eventNumber); // updates all RNG seeds
     gRandom->SetSeed(eventNumber+6e7); ///@todo kill me
@@ -217,12 +216,12 @@ void icemc::EventGenerator::generate(Detector& detector){
     OpticalPath opticalPath = rayTracer.findPath(fEventSummary.interaction.position, fEventSummary.detector);
     fEventSummary.loop.rayTracingSolution = opticalPath.residual < 1; // meters
 
-    // {
-    //   std::cout << fEventSummary.interaction.position << "\n";
-    //   std::cout << fEventSummary.detector << "\n";
-    //   std::cout << "Separation = " << fEventSummary.interaction.position.Distance(fEventSummary.detector) << "\n" << std::endl;
-    //   std::cout << opticalPath.residual << std::endl;
-    // }
+    {
+      std::cout << fEventSummary.interaction.position << "\n";
+      std::cout << fEventSummary.detector << "\n";
+      std::cout << "Separation = " << fEventSummary.interaction.position.Distance(fEventSummary.detector) << "\n" << std::endl;
+      std::cout << opticalPath.residual << std::endl;
+    }
 
     if(fEventSummary.loop.rayTracingSolution==false){
       std::cout << "No ray tracing solution between source " << fEventSummary.interaction.position << " and detector " << fEventSummary.detector << std::endl;
@@ -244,10 +243,11 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEvent.signalAtDetector = signal.waveform.getTimeDomain();
     fEventSummary.signalSummaryAtDetector = signal.summarize();
 
-    fEventSummary.loop.chanceInHell = detector.chanceInHell(signal);
+    fEventSummary.loop.chanceInHell = true;
+    // fEventSummary.loop.chanceInHell = detector.chanceInHell(signal);    
 
     if(fEventSummary.loop.chanceInHell==false){
-      // std::cout << "No chance in hell\t" << fEventSummary.interaction.position << std::endl;
+      std::cout << "No chance in hell\t" << fEventSummary.interaction.position << std::endl;
       output.allTree().Fill();
       continue;
     }

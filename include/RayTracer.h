@@ -12,6 +12,8 @@
 #include "Math/Functor.h"
 
 
+class TCanvas;
+
 namespace icemc {
 
   class WorldModel;

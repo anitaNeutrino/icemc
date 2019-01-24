@@ -1,14 +1,10 @@
 #include "Tools.h"
-#include <iostream>
-#include <cmath>
-#include "TSpline.h"
-#include "TH2F.h"
-#include <fstream>
-#include "TTree.h"
 #include "TGraph.h"
-#include "TCanvas.h"
 #include "Constants.h"
-#include "TStyle.h"
+#include "TH1.h"
+#include "Math/Interpolator.h"
+#include "Math/InterpolationTypes.h"
+
 
 void icemc::Tools::ShiftLeft(double *x,const int n,int ishift) {
     
@@ -124,7 +120,7 @@ void icemc::Tools::reverseTimeOrdering(const int n, int* bitsin,int *bitsout) {
 }
 
 
-int icemc::Tools::findIndex(double *freqlab,double freq,int npoints,double min,double max) {
+int icemc::Tools::findIndex(const double *freqlab,double freq,int npoints,double min,double max) {
     
   //  std::cout << "inside findIndex, freq, min are " << freq << " " << min << "\n";
     

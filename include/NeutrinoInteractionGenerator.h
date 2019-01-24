@@ -38,14 +38,21 @@ namespace icemc {
     Geoid::Position pickInteractionPositionInSphere(const Geoid::Position& center, double rangeMeters);
     Geoid::Position pickInteractionPosition(const Geoid::Position& detector);
     Interaction::Current pickCurrent();
-
+    bool fAllowInteractionOutsideIce = true; ///@todo testing, remove me
   public:    
     NeutrinoInteractionGenerator(const Settings *settings,
-				 std::shared_ptr<WorldModel> worldModel,
+				 std::shared_ptr<WorldModel>        worldModel,
 				 std::shared_ptr<CrossSectionModel> crossSectionModel,
-				 std::shared_ptr<YGenerator> yGenerator);
+				 std::shared_ptr<YGenerator>        yGenerator);
 
     virtual Interaction generateInteraction(const Neutrino& n, const Geoid::Position& detector) override;
+
+
+    void setAllowInteractionOutsideIce(bool allow = true){
+      fAllowInteractionOutsideIce = allow;
+    }
+    bool getAllowInteractionOutsideIce() const {return 	fAllowInteractionOutsideIce;}
+
   };
 
 

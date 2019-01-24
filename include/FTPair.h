@@ -359,8 +359,8 @@ namespace icemc {
     mutable std::vector<std::complex<double> > fFreqDomain; ///< The frequency domain representation
     mutable bool fNeedToUpdateTimeDomain; ///< If you call changeFreqDomain, this is set to true, set to false after maybeUpdateFreqDomain
     mutable bool fNeedToUpdateFreqDomain; ///< If you call changeTimeDomain, this is set to true, set to false after maybeUpdateTimeDomain
-    bool fDebug; ///< To toggle debug output, probably not useful unless you're developing and there's problem.
     mutable bool fDoNormalTimeDomainOrdering; ///< Optionally call doNormalTimeDomainOrdering once after an inverse FT
+    bool fDebug; ///< To toggle debug output, probably not useful unless you're developing and there's problem.
     
     void maybeUpdateFreqDomain() const; ///< If fNeedToUpdateFreqDomain is true, does the appropriate forward FTs
     void maybeUpdateTimeDomain() const; ///< If fNeedToUpdateTimeDomain is true, does the appropriate inverse FTs
