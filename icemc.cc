@@ -1721,7 +1721,7 @@ int main(int argc,  char **argv) {
       bool havent_set_weights = true; 
 
 #ifdef ANITA3_EVENTREADER
-#define DO_SKIP do { truthNuPtr->setSkipped(true,havent_set_frac,havent_set_weights); truthAnitaNuTree->Fill(); continue; } while(0) 
+#define DO_SKIP  truthNuPtr->setSkipped(true,havent_set_frac,havent_set_weights); truthAnitaNuTree->Fill(); continue
 #else
 #define DO_SKIP continue 
 #endif
