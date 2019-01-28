@@ -238,7 +238,8 @@ Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,
   weight_nu_prob=0;
 
   if (inttype=="banana") {
-    nu_banana = (surface_over_banana_nu+altitude_nu_banana) * nu_banana;
+   //surface_over_banana_nu and altitude_nu_banana haven't been defined yet! 
+   // nu_banana = (surface_over_banana_nu+altitude_nu_banana) * nu_banana;
 
     //Set neutrino direction
     nnu_banana = Vector(nu_banana_theta_angle + PI,nu_banana_phi_angle);
