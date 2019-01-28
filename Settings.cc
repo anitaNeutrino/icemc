@@ -275,7 +275,7 @@ void Settings::Initialize() {
 
   SOURCE = "None"; 
   SOURCE_MIN_E = 18; 
-  SOURCE_MAX_E = 22; 
+  SOURCE_MAX_E = 21; 
 
   IGNORE_CROSSPOL = 0; 
   POL_SIGN_HACK = 1; 
@@ -358,12 +358,20 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   }
 
   getSetting("Balloon latitude", BN_LATITUDE);
+  getSetting("Balloon longitude", BN_LONGITUDE);
 
-  getSetting("Balloon longitude", BN_LATITUDE);
-
-  if((BN_LONGITUDE!=999 || BN_LATITUDE!=999) && WHICHPATH==0){
-    std::cout << "BN_LATITUDE: "<< BN_LATITUDE << ", BN_LONGITUDE: " << BN_LONGITUDE << std::endl;
-  }
+  if(WHICHPATH==0)
+    {
+      if(BN_LONGITUDE!=999 && BN_LATITUDE!=999)
+	{
+	  std::cout << "Setting the payload position to a custom **fixed** position: BN_LATITUDE: "<< BN_LATITUDE << ", BN_LONGITUDE: " << BN_LONGITUDE << std::endl;
+	}
+      else
+	{
+	  std::cout << "Setting the payload position to the default **fixed** position: BN_LATITUDE: "<< BN_LATITUDE << ", BN_LONGITUDE: " << BN_LONGITUDE << std::endl;
+	}
+      
+    }
 
   if (BN_LONGITUDE>180. && BN_LONGITUDE!=999){
     std::cout << "Entered balloon longitude wrong!  Should be between -180 and 180 degrees." << std::endl;
