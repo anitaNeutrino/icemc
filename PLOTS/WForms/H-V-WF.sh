@@ -19,7 +19,7 @@ do for [i = 1:48] {
      nplot = sprintf("%d", i)
    }
    set title nplot
- plot [][-1e+2 : +1e+2] \
+ plot [][:] \
 	 "$INP1" using 0:(column(i))  with lines title "H",\
 	 "$INP2" using 0:(column(i))  with lines title "V"
  # "$INP1" using 0:(column(i) / 1e6)  with lines title "H",\
