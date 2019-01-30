@@ -30,10 +30,13 @@ void getFlareInfo()
   ///////////////////////////////SET THESE TO WHAT YOU DESIRE////////////////
   bool ignoreAssoc = true; // set to true to only look for known (associated) sources, IGNORE those that don't point to a catalogued astrophysical object
   bool uniqueSourcesOnly = true; // set to get a list of unique astrophyical objects associated with these blazar flares
-  int anitaFlight = 4; // set to which flight you want. i.e. 3 for ANITA-3. Special option: 0 to use all data from all times (including those when anita wasn't flying) from FAVA
+  int anitaFlight = 0; // set to which flight you want. i.e. 3 for ANITA-3.
+  //Special options for anitaFlight:
+  //0 to use all data from all times (including those when anita wasn't flying) from FAVA
+  //-1 to use a custom time range
+  //---
   bool skyMap = true; // print a sky map of all the unique catalogued objects flaring during the flight
   /////////////////////////////////////////////////////////////////////////////////////
-
   
   TFile *file = new TFile("fava.root"); 
   TTree *tree = (TTree*) file->Get("fava");
@@ -57,6 +60,11 @@ void getFlareInfo()
     {
       a_tmin = 1217864618;
       a_tmax = 1546271018;
+    }
+    else if(anitaFlight == -1)
+    {
+      a_tmin = 1481557419; // fermi week 437 start +1 sec to avoid conflict with next week
+      a_tmax = 1482162217; // fermi week 437 end -1 sec to avoid conflict with previous week
     }
   else
     {
@@ -165,6 +173,7 @@ void getFlareInfo()
 		{
 		  break;
 		}
+	      
 	      if(vFlareList[i] == vFlareList[j]) // Only unique
 		{
 		  break;
@@ -173,14 +182,12 @@ void getFlareInfo()
 	  if(i==j)
 	    {
 	      uniqueSources++;
-	      cout << "   * " << vFlareList[i] << endl;
+	      cout << vSourceClass[i] << "\t" << vFlareList[i] << endl;
 
 	      // We only want to draw each catalogued source on the map once
 	      if(skyMap==true)
 		{
-		  astroObject->SetX(vRA[i]);
-		  astroObject->SetY(vDEC[i]);
-		  skyMapOut->addMarker(astroObject);
+		  
 		  // Yes, this is inefficient, but TLegend doesn't work well otherwise
 		  if(vSourceClass[i] == "bll")
 		    {
@@ -300,18 +307,21 @@ void getFlareInfo()
 		    }
 		  //Global object marker options: not source specific
 		  astroObject->SetMarkerStyle(20);
-		  astroObject->SetMarkerSize(1.75);
+		  astroObject->SetMarkerSize(2);
+		  astroObject->SetX(vRA[i]);
+		  astroObject->SetY(vDEC[i]);
+		  skyMapOut->addMarker(astroObject);
 		}
 	      
 	    }      
 	}
     }
   
+  
   cout << "____________Summary_____________" << endl; 
   //cout << flareTotal << " flares occurred during the ANITA-4 flight:" << endl;
   if(uniqueSourcesOnly == true)
     {
-      //cout << "   * From " <<  uniqueSources << " catalogued sources" << endl;
       cout << uniqueSources << " catalogued sources were flaring during the flight: " << endl;
       if(bllPass == true){cout << "   * " << bllCount << " BLLs" << endl;}
       if(fsrqPass == true){cout << "   * " << fsrqCount << " FSRQs" << endl;}
@@ -328,7 +338,7 @@ void getFlareInfo()
   if(skyMap==true)
     {
       TCanvas *c = new TCanvas();
-      c->SetTitle("ANITA flaring sources map ");
+      c->SetTitle("ANITA flaring sources map");
       skyMapOut->Draw();
       legend->Draw();
     }
