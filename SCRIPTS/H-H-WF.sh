@@ -8,9 +8,12 @@ cat << EOF > $TMP_SCRIPT
 set out "$OUT"
 set term post color solid 5 
 
-set multiplot layout 6,8
+# set multiplot layout 6,8
+set multiplot layout 1,1
 set macro
-do for [i = 1:48] {
+# do for [i = 1:48] {
+
+do for [i = 31:31] {
    # set nokey
    if (i == 31) {
      nplot = sprintf("Selected: ------> %d <------", i)
@@ -20,11 +23,11 @@ do for [i = 1:48] {
    }
    set title nplot
 
-plot [][-100 : +100]\
-	 "$INP1" using 0:(column(i))  with lines title "H",\
-	 "$INP2" using 0:(column(i))  with lines title "V"
- # "$INP1" using 0:(column(i) / 1e6)  with lines title "H",\
- # "$INP2" using 0:(column(i) / 1e6)  with lines title "V"
+# plot [][-100 : +100]\
+
+plot [][]\
+	 "$INP1" using 0:(column(i))  with lines title "phase: f",\
+	 "$INP2" using 0:(column(i))  with lines title "phase: t"
   
 }
 unset multiplot
