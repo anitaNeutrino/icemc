@@ -27,3 +27,4 @@ setup.sh
 doc/html
 doc/latex
 output*
+val-*.out
