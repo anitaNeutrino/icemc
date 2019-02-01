@@ -420,7 +420,7 @@ int main(int argc,  char **argv) {
     //    // cout << ind << " NrFT: " << NrFT[ind] << endl;
   }
   // cout << "Before the call to hot_loop" << endl;
-
+  // GDB-DUMP-MARKER: ZhsTimeE: plot1d_opt ZhsTimeE 'with lines'
   struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
   // struct hot_test_state *hot_test_result = (struct hot_test_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/hot-module-test.so", true /* bInteractive */);
   // exit(0);

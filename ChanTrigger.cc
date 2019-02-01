@@ -825,6 +825,9 @@ void ChanTrigger::ApplyAntennaGain(Settings *settings1, Anita *anita1, Balloon *
       tmp_volts[1][k]=volts_rx_forfft[1][iband][k];
       // cout << anita1->fTimes[k] << " " << tmp_volts[0][k] << endl;
     }
+    // b ChanTrigger.cc: 833 if ant == 30
+    // GDB: plot1d_opt volts_rx_forfft[0][4][0]@512 'with lines'
+    // GDB-DUMP-MARKER: volts_rx_forfft"
 
     
     // find back the frequency domain
@@ -972,10 +975,6 @@ void ChanTrigger::TriggerPath(Settings *settings1, Anita *anita1, int ant){
     
 
 }
-
-
-
-
 
 
 void ChanTrigger::DigitizerPath(Settings *settings1, Anita *anita1, int ant)

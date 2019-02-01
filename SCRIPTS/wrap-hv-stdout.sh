@@ -12,7 +12,7 @@ EXE=SCRIPTS/testEAS-save-std.sh
 # EXE1=./testEAS-e2a1
 # EXE1=./testEAS-1438
 # EXE1=./testEAS-5fe3
-EXE1=./testEAS-d372
+EXE1=./testEAS-d372c
 INP1=inputs.anita3.conf
 INP2=/nfs/data_disks/herc0a/users/bugaev/ANITA/SIMS/Event_4212/timefresnel-root.dat
 OUT=PLOTS/WForms/MD5/testEAS-std.txt
@@ -105,5 +105,5 @@ MD5_OUT_PREF=gpl ~/PROGS/DepTrack/with-md5.sh \
  --out $OUT \
 $EXE $INP1 $INP2 $TMPSCRIPT $OUT
 
-#Comment.
+#NoComment.
 #More nonsense.

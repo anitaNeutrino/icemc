@@ -5,7 +5,8 @@ read SELF < val-parent-ID0-SNAPSHOT.out
 
 
 MD5OLD=50d47adc9b0a25e71270de28f050c5db # H-pol in ANITA coll call.
-MD5NEW=2f49e8b9150977787598e6ac77c9b9f7 # H-pol after propagation of phases.
+# MD5NEW=2f49e8b9150977787598e6ac77c9b9f7 # H-pol after propagation of phases.
+MD5NEW=78e7079616bf8a0febf5ba51302b0632 # H-pol after propagation of phases, fully recompiled.
 
 EXE=/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/SCRIPTS/H-H-WF.sh
 INP1=PLOTS/WForms/MD5/md5-${MD5OLD}_h.txt
