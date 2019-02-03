@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 
+# example: ./two-col-plot.sh  --inp "Homer Simpson" --inp "" --default-title none --yscale 0.1 --inp "Bart Simpson" --title "Son" --xscale 0.21 --xshift +0.22 --lt 1 --lw 2 --inp "Marge" --title "Mother" --yscale 0.3 --inp "Peter Griffin" --default-title \"\" --xrange "[:20]" --yrange "[0: 100]"
+
+
 NINP=0
 INP=none
 OUT=none
 XRANGE=none
 YRANGE=none
+DEFAULTTITLE="\"\""
 TMP_GNUPLOT_SCRIPT=none
 
 function display_help()
 {
-    echo "Usage: $0 --option1 --option2" 1>&2
+    echo "Usage example: $0" ' --inp "Homer Simpson" --inp "" --default-title none --yscale 0.1 --inp "Bart Simpson" --title "Son" --xscale 0.21 --xshift +0.22 --lt 1 --lw 2 --inp "Marge" --title "Mother" --yscale 0.3 --inp "Peter Griffin" --default-title \"\" --xrange "[:20]" --yrange "[0: 100]"' 1>&2
 }
 
 
@@ -28,6 +32,7 @@ function reset()
     YSHIFT=+0.0
     LINETYPE=none
     LINEWIDTH=none
+    TITLE=none
 }
 
 PLOTACC="plot"
@@ -40,7 +45,11 @@ function flush_line()
     test "$LINETYPE" != "none" && LT=" lt $LINETYPE"
     local LW=""
     test "$LINEWIDTH" != "none" && LW=" lw $LINEWIDTH"
-    local APPENDIX="\"$INP\" (column(0) * $XSCALE $XSHIFT):(column(1) * $YSCALE $YSHIFT) with line$LT$LW""$LINE_SEP"
+    local THISTITLE=" title $DEFAULTTITLE"
+    test "$DEFAULTTITLE" = "none" && THISTITLE=""
+    test "$TITLE" != "none" && THISTITLE=" title \"$TITLE\""
+
+    local APPENDIX="\"$INP\" using (column(0) * $XSCALE $XSHIFT):(column(1) * $YSCALE $YSHIFT) with line$LT$LW$THISTITLE""$LINE_SEP"
     LINEACC="${LINEACC}$APPENDIX" 
 }
 
@@ -49,6 +58,14 @@ reset
 while [[ $# > 0 ]]
 do
     case "$1" in
+      --default-title)
+         DEFAULTTITLE="$2"
+         shift 2
+         ;;
+      --title)
+         TITLE="$2"
+         shift 2
+         ;;
       --xrange)
          XRANGE="$2"
          shift 2
