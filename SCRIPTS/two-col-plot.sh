@@ -17,7 +17,7 @@ TMP_GNUPLOT_SCRIPT=none
 
 function display_help()
 {
-    echo "Usage example: $0" ' --inp "Homer Simpson" --inp "" --default-title none --yscale 0.1 --inp "Bart Simpson" --title "Son" --xscale 0.21 --xshift +0.22 --lt 1 --lw 2 --inp "Marge" --title "Mother" --yscale 0.3 --inp "Peter Griffin" --default-title \"\" --xrange "[:20]" --yrange "[0: 100]"' 1>&2
+    echo "Usage example: $0" ' --default-title Simpson --inp "Homer Simpson" --title "Homer" --inp ""  --yscale 0.1 --default-title default --inp "Bart Simpson"  --xscale 0.21 --xshift +0.22 --lt 1 --lw 2 --default-title none --inp Marge  --yscale 0.3  --inp "Peter Griffin" --xrange "[:20]" --yrange "[0: 100]" --out "family.eps" --term "post enh color 18"' 1>&2
 }
 
 
@@ -57,12 +57,6 @@ function flush_line()
     then
         THISTITLE=""
     else # No special treatment required, prepending $DEFAULTTITLE if it is not one of the special words:
-       # if test "$DEFAULTTITLE" != none && test "$DEFAULTTITLE" != default
-       # then
-       #    THISTITLE=" title \"$DEFAULTTITLE$TITLE\""
-       # else
-       #    THISTITLE=" title \"$TITLE\""
-       # fi
         THISTITLE=" title \"$TITLE\""
     fi
 
@@ -81,6 +75,10 @@ do
          ;;
       --out)
          OUT="$2"
+         shift 2
+         ;;
+      --tmp-out)
+         TMP_GNUPLOT_SCRIPT="$2"
          shift 2
          ;;
       --default-title)
@@ -165,6 +163,13 @@ do
     esac
 done
 
+if [ "$TMP_GNUPLOT_SCRIPT" = none ]
+then
+    echo "Error: mandatory \"--tmp-out\" option is missing."
+    display_help
+    exit 100
+fi
+
 LINE_SEP="" # Empty
 flush_line "$LINE_SEP"
 
@@ -179,18 +184,14 @@ test "$TERM" != "none" && OUTPUTTERM="set term $TERM"$'\n'
 test "$OUT" != "none" && OUTPUTACC="set out \"$OUT\""$'\n'
 ACC="$OUTPUTTERM$OUTPUTACC$PLOTACC "$'\\\n'"$LINEACC"
 
-echo "$ACC"
+echo "$ACC" > "$TMP_GNUPLOT_SCRIPT"
 
-exit 0
-
-echo "Temporary gnuplot script is: $TMP_GNUPLOT_SCRIPT"
-
-cat << EOF  > "$TMP_GNUPLOT_SCRIPT"
-set out "$OUT"
-set term post color solid 18
-plot $XRANGE $YRANGE \
-       	"$FILE1" using 0:(column(1) * 1.0) with lines  lt 1 lw 3,\
-       	"$FILE2" using (column(0) $SHIFT):(column(1) * $SCALE) with lines lt 2
-EOF
+# cat << EOF  > "$TMP_GNUPLOT_SCRIPT"
+# set out "$OUT"
+# set term post color solid 18
+# plot $XRANGE $YRANGE \
+#        	"$FILE1" using 0:(column(1) * 1.0) with lines  lt 1 lw 3,\
+#        	"$FILE2" using (column(0) $SHIFT):(column(1) * $SCALE) with lines lt 2
+# EOF
 
 gnuplot $TMP_GNUPLOT_SCRIPT

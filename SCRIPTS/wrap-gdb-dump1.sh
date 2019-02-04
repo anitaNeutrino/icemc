@@ -107,6 +107,16 @@ OUT_BASE_NAME=zhs-vs-vrx.eps
 OUT=$dump_dir/$OUT_BASE_NAME
 EXE=SCRIPTS/two-col-plot.sh
 
+# MD5_OUT_PREF=$JOB_NAME ~/PROGS/DepTrack/with-md5.sh \
+#  --envar PARENT_SCRIPT=$SELF \
+#  --envar PARENT_LINENO=$LINENO \
+#  --devar PATH=/usr/bin \
+#  --inp $EXE \
+#  --inp $INP1 \
+#  --inp $INP2 \
+#  --out $OUT \
+#  $EXE $INP1 $INP2 $OUT "[500:1000]" "[]" "1e3" "+550" $dump_dir/_$JOB_NAME.gpl
+
 MD5_OUT_PREF=$JOB_NAME ~/PROGS/DepTrack/with-md5.sh \
  --envar PARENT_SCRIPT=$SELF \
  --envar PARENT_LINENO=$LINENO \
@@ -115,4 +125,4 @@ MD5_OUT_PREF=$JOB_NAME ~/PROGS/DepTrack/with-md5.sh \
  --inp $INP1 \
  --inp $INP2 \
  --out $OUT \
- $EXE $INP1 $INP2 $OUT "[500:1000]" "[]" "1e3" "+550" $dump_dir/_$JOB_NAME.gpl
+ $EXE --term "post enh color solid 18" --xrange "[500:1000]" --inp "$INP1" --inp "$INP2" --xshift +550 --yscale 1e3 --tmp-out $dump_dir/_$JOB_NAME.gpl --out "$OUT"
