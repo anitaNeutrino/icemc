@@ -52,14 +52,18 @@ function flush_line()
     local THISTITLE
     if test "$TITLE" = none
     then
-        echo "None title for $INP, title: $TITLE, default-title: $DEFAULTTITLE"
         THISTITLE=" title \"\""
     elif test "$TITLE" = default
     then
-        echo "Default title for $INP, title: $TITLE, default-title: $DEFAULTTITLE"
         THISTITLE=""
-    else # No special treatment required.
-      THISTITLE=" title \"$TITLE\""
+    else # No special treatment required, prepending $DEFAULTTITLE if it is not one of the special words:
+       # if test "$DEFAULTTITLE" != none && test "$DEFAULTTITLE" != default
+       # then
+       #    THISTITLE=" title \"$DEFAULTTITLE$TITLE\""
+       # else
+       #    THISTITLE=" title \"$TITLE\""
+       # fi
+        THISTITLE=" title \"$TITLE\""
     fi
 
     local APPENDIX="\"$INP\" using (column(0) * $XSCALE $XSHIFT):(column(1) * $YSCALE $YSHIFT) with line$LT$LW$THISTITLE""$LINE_SEP"
@@ -128,7 +132,6 @@ do
          if [[ "$NINP" > 1 ]] # We are done with the previous input file, flush its plotting line.
          then
              LINE_SEP=$',\\\n'
-             echo "Before flush_line after $INP, title: $TITLE, default-title: $DEFAULTTITLE"
              flush_line "$LINE_SEP"
              reset
          fi
