@@ -9,7 +9,10 @@ OUT=none
 XRANGE=none
 YRANGE=none
 TERM=none
-DEFAULTTITLE="\"\""
+DEFAULTTITLE=default # [ default | none ]
+# default: do not insert title option and let gnuplot behave _default_ way, i.e., show the full file name.
+# none: do not show line's title.
+
 TMP_GNUPLOT_SCRIPT=none
 
 function display_help()
@@ -33,7 +36,7 @@ function reset()
     YSHIFT=+0.0
     LINETYPE=none
     LINEWIDTH=none
-    TITLE=none
+    TITLE="$DEFAULTTITLE"
 }
 
 PLOTACC="plot"
@@ -46,9 +49,18 @@ function flush_line()
     test "$LINETYPE" != "none" && LT=" lt $LINETYPE"
     local LW=""
     test "$LINEWIDTH" != "none" && LW=" lw $LINEWIDTH"
-    local THISTITLE=" title $DEFAULTTITLE"
-    test "$DEFAULTTITLE" = "none" && THISTITLE=""
-    test "$TITLE" != "none" && THISTITLE=" title \"$TITLE\""
+    local THISTITLE
+    if test "$TITLE" = none
+    then
+        echo "None title for $INP, title: $TITLE, default-title: $DEFAULTTITLE"
+        THISTITLE=" title \"\""
+    elif test "$TITLE" = default
+    then
+        echo "Default title for $INP, title: $TITLE, default-title: $DEFAULTTITLE"
+        THISTITLE=""
+    else # No special treatment required.
+      THISTITLE=" title \"$TITLE\""
+    fi
 
     local APPENDIX="\"$INP\" using (column(0) * $XSCALE $XSHIFT):(column(1) * $YSCALE $YSHIFT) with line$LT$LW$THISTITLE""$LINE_SEP"
     LINEACC="${LINEACC}$APPENDIX" 
@@ -116,6 +128,7 @@ do
          if [[ "$NINP" > 1 ]] # We are done with the previous input file, flush its plotting line.
          then
              LINE_SEP=$',\\\n'
+             echo "Before flush_line after $INP, title: $TITLE, default-title: $DEFAULTTITLE"
              flush_line "$LINE_SEP"
              reset
          fi
