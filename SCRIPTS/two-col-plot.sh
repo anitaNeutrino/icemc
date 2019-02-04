@@ -8,6 +8,7 @@ INP=none
 OUT=none
 XRANGE=none
 YRANGE=none
+TERM=none
 DEFAULTTITLE="\"\""
 TMP_GNUPLOT_SCRIPT=none
 
@@ -58,6 +59,14 @@ reset
 while [[ $# > 0 ]]
 do
     case "$1" in
+      --term)
+         TERM="$2"
+         shift 2
+         ;;
+      --out)
+         OUT="$2"
+         shift 2
+         ;;
       --default-title)
          DEFAULTTITLE="$2"
          shift 2
@@ -150,7 +159,9 @@ test "$XRANGE" != "none" && XR=" $XRANGE"
 test "$YRANGE" != "none" && test "$XRANGE" = "none" && XR=" []"
 PLOTACC="$PLOTACC$XR$YR"
 
-ACC="$PLOTACC "$'\\\n'"$LINEACC"
+test "$TERM" != "none" && OUTPUTTERM="set term $TERM"$'\n'
+test "$OUT" != "none" && OUTPUTACC="set out \"$OUT\""$'\n'
+ACC="$OUTPUTTERM$OUTPUTACC$PLOTACC "$'\\\n'"$LINEACC"
 
 echo "$ACC"
 
