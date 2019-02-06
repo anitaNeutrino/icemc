@@ -30,12 +30,13 @@ void getFlareInfo()
   ///////////////////////////////SET THESE TO WHAT YOU DESIRE////////////////
   bool ignoreAssoc = true; // set to true to only look for known (associated) sources, IGNORE those that don't point to a catalogued astrophysical object
   bool uniqueSourcesOnly = true; // set to get a list of unique astrophyical objects associated with these blazar flares
-  int anitaFlight = 0; // set to which flight you want. i.e. 3 for ANITA-3.
+  int anitaFlight = 3; // set to which flight you want. i.e. 3 for ANITA-3.
   //Special options for anitaFlight:
   //0 to use all data from all times (including those when anita wasn't flying) from FAVA
   //-1 to use a custom time range
   //---
   bool skyMap = true; // print a sky map of all the unique catalogued objects flaring during the flight
+  bool cuts = false; // true to apply cuts to what we don't want: high dec, low flux
   /////////////////////////////////////////////////////////////////////////////////////
   
   TFile *file = new TFile("fava.root"); 
@@ -86,6 +87,13 @@ void getFlareInfo()
     {
       tree->GetEntry(i);
 
+      // some cuts
+      if(cuts == true)
+	{
+	  if(fabs(fava->dec) > 30){continue;} // reject high dec
+	  if (fava->he_sigma < 4 && fava->he_flux < 0){continue;} // reject low HE flux
+	}
+      
       // If week times fall completely out of ANITA flight times, ignore
       if( (fava->unix_tmin < a_tmin && fava->unix_tmax < a_tmin) || (fava->unix_tmin > a_tmax && fava->unix_tmax > a_tmax))
 	{
@@ -125,10 +133,10 @@ void getFlareInfo()
 
 	  else // Consider all
 	    {
-	      std::cout << "Num:" << fava->num;
+	      //std::cout << "Num:" << fava->num;
 	      cout << " \t Source class:" << fava->source_class.GetString();
-	      std::cout <<  "\t RA:" << fava->ra << "\t Dec:" << fava->dec;
-	      cout << "\t Assoc:" << fava->association.GetString() << endl;
+	      //std::cout <<  "\t RA:" << fava->ra << "\t Dec:" << fava->dec;
+	      //cout << "\t Assoc:" << fava->association.GetString() << endl;
 	      vFlareList.push_back(fava->association.GetString());
 	      vSourceClass.push_back(fava->source_class.GetString());
 	      vRA.push_back(fava->ra);
