@@ -1,4 +1,5 @@
 #----
+#1.
 # Program to pull supernovae info from the Open Supernova Catalog.
 # Uses variable-length, nested tables, so some default values are used.
 # This is rather annoying to pass as many dates / co-ord systems have completely different formats!
@@ -7,6 +8,7 @@
 # Default string: Unknown -> now just ""
 # Default number: -999
 #---
+#2. Automatically pull TNS tsv
 
 import urllib2
 import csv
@@ -18,10 +20,16 @@ import os
 import string
 import re
 
-print('Scanning catalog...')
-snFileName = "supernovae.csv"
+#Initials
+dataDir = './data'
+if not os.path.exists(dataDir):
+    os.makedirs(dataDir)
+
+#1.
+print('Scanning Open Source Catalog...')
+snFileName = "./data/supernovaeOSC.tsv"
 with open(snFileName,'w') as csvfile:
-    writer = csv.writer(csvfile,delimiter='%',quoting=csv.QUOTE_MINIMAL)
+    writer = csv.writer(csvfile,delimiter='\t',quoting=csv.QUOTE_MINIMAL)
     webpage = urllib2.urlopen("https://raw.githubusercontent.com/astrocatalogs/supernovae/master/output/catalog.json")
     js = json.loads(webpage.read()) 
     N = len(js)
@@ -181,4 +189,25 @@ with open(snFileName,'w') as csvfile:
             
         writer.writerow([name,alias,discoverer,discoverUnixTime,maxUnixTime,maxappmag,host,ra,dec,redshift,claimedtype])
 
-print('Written to catalog %s') % snFileName
+print('Catalog written to: %s') % snFileName
+print('------------------------------------')
+print('')
+
+#2.
+### Same for TNS
+print('Scanning Transient Name Server...')
+tnsFileName = "./data/supernovaeTNS_unformatted.tsv"
+### CSV already made via URL manipulation (this one is for classified SNe between 01/06/2016 - 01/06/2017
+### Can change variables wanted, and their range by editing the below URL:
+webpage = urllib2.urlopen("https://wis-tns.weizmann.ac.il/search?&name=&name_like=0&isTNS_AT=all&public=all&unclassified_at=0&classified_sne=1&ra=&decl=&radius=&coords_unit=arcsec&groupid%5B%5D=null&classifier_groupid%5B%5D=null&objtype%5B%5D=null&at_type%5B%5D=null&date_start%5Bdate%5D=2016-06-01&date_end%5Bdate%5D=2017-06-01&discovery_mag_min=&discovery_mag_max=&internal_name=&redshift_min=&redshift_max=&spectra_count=&discoverer=&classifier=&discovery_instrument%5B%5D=&classification_instrument%5B%5D=&hostname=&associated_groups%5B%5D=null&ext_catid=&num_page=1000&display%5Bredshift%5D=1&display%5Bhostname%5D=1&display%5Bhost_redshift%5D=1&display%5Bsource_group_name%5D=1&display%5Bclassifying_source_group_name%5D=1&display%5Bdiscovering_instrument_name%5D=0&display%5Bclassifing_instrument_name%5D=0&display%5Bprograms_name%5D=0&display%5Binternal_name%5D=1&display%5BisTNS_AT%5D=0&display%5Bpublic%5D=1&display%5Bend_pop_period%5D=0&display%5Bspectra_count%5D=1&display%5Bdiscoverymag%5D=1&display%5Bdiscmagfilter%5D=1&display%5Bdiscoverydate%5D=1&display%5Bdiscoverer%5D=1&display%5Bsources%5D=0&display%5Bbibcode%5D=0&display%5Bext_catalogs%5D=0&format=tsv")
+webContent = webpage.read()
+f = open(tnsFileName,'w')
+f.write(webContent)
+f.close
+            
+os.remove(tnsFileName)
+
+
+print('Catalog written to: %s') % tnsFileName
+print('------------------------------------')
+print('Finished processing all SNe catalogs!')
