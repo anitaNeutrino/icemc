@@ -153,7 +153,7 @@ TH1 * SourceModel::estimateFlux(double tmin, double tmax, double Emin, double Em
       for (int E = 1; E<= nbins; E++) 
       {
         double l = TMath::Power(10,spectrum->GetBinLowEdge(E)); 
-        double h = TMath::Power(10,spectrum->GetBinLowEdge(E) + spectrum->GetBinWidth(E)); 
+        double h = TMath::Power(10,spectrum->GetBinLowEdge(E) + spectrum->GetBinWidth(E));
         spectrum->Fill(spectrum->GetBinCenter(E), sources[j]->getFlux()->getFluxBetween(l,h,t));
       }
     }
@@ -187,8 +187,8 @@ int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE,
 
   if (nudir) *nudir = which->getDirection(t); 
 
-  if (!fixedEnergy) nuE =  which->getFlux()->pickEnergy(minE,maxE,t,&rng); 
-
+  if (!fixedEnergy) nuE =  which->getFlux()->pickEnergy(minE,maxE,t,&rng);
+      
   return 0; 
 }
 
@@ -219,7 +219,7 @@ Vector Source::getDirection( double t) const
 
 
 ConstantExponentialSourceFlux::ConstantExponentialSourceFlux(double e, double norm, double normE)
-:  gamma(e) , f("f", "[0] * x^-[1]",1e9,1e13) 
+:  gamma(e) , f("f", "[0] * x^-[1]",1e9,1e12) 
 {
   //figure out what A is 
   A = norm * TMath::Power(normE,gamma); 
@@ -243,7 +243,7 @@ double ConstantExponentialSourceFlux::pickEnergy(double Emin, double Emax, doubl
 
 
 TimeWindowedExponentialSourceFlux::TimeWindowedExponentialSourceFlux(double t0, double t1, double e, double norm, double normE)
-:  gamma(e) , f("f", "[0] * x^-[1]",1e9,1e13) , t0(t0), t1(t1) 
+:  gamma(e) , f("f", "[0] * x^-[1]",1e9,1e12) , t0(t0), t1(t1) 
 {
   //figure out what A is 
   A = norm * TMath::Power(normE,gamma); 

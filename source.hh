@@ -48,7 +48,7 @@ class SourceModel
     void addSource(Source * source) { sources.push_back(source) ; }
     
     const char * getName() const { return name; } 
-    int getDirectionAndEnergy( Vector * nudir, double t, double & nuE, double minE = 1e9, double maxE = 1e13) ; 
+    int getDirectionAndEnergy( Vector * nudir, double t, double & nuE, double minE = 1e9, double maxE = 1e12) ; 
     int getDirection( Vector &nudir, double t, double nuE = 1e10) { return getDirectionAndEnergy( &nudir, t, nuE, nuE, nuE); }
     TH1 * estimateFlux (double tmin, double tmax, double Emin, double Emax, int nbins = 100, int Ntrials = 1e6); 
     unsigned getNSources() const { return sources.size(); } 
