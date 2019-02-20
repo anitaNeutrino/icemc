@@ -107,10 +107,10 @@ LIBS += $(LIBS_ANITA_UTIL)
 # Mathmore not included in the standard ROOT libs
 LIBS += -lMathMore
 
-CLASS_HEADERS = rx.hpp Taumodel.hh Settings.h
+CLASS_HEADERS = rx.hpp Taumodel.hh Settings.h blazars/fava.h 
 DICT = classdict
 
-OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o source.o
+OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o source.o 
 
 
 BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) 
@@ -141,10 +141,11 @@ distclean:      clean
 		   *.ps *.so *.lib *.dll *.d *.log .def so_locations
 		@rm -rf cxx_repository core* classdict.* icemc
 
-$(DICT).C : $(HEADERS)
+$(DICT).C : $(CLASS_HEADERS) LinkDef.h
 		@echo "<**And here's the dictionary...**>" $<
 		@rm -f *Dict*
-		rootcint $@ -c -p -I./ $(INC_ANITA_UTIL) $(CLASS_HEADERS) LinkDef.h
+		rootcint -f $@  -c -p -I./ $(INC_ANITA_UTIL) $(CLASS_HEADERS) LinkDef.h
+
 
 %.$(ObjSuf) : %.$(SrcSuf) %.h
 	@echo "<**Compiling**> "$<
