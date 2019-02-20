@@ -15,9 +15,11 @@ TGraph* getCombinedLimitNoDelta(double denom[n_ANITA], double N90);
 TGraph* getCombinedLimit(double denom[n_ANITA], double N90);
 
 TGraph *auger2015();
+TGraph *auger2017();
 TGraph *icecube();
+TGraph *icecube2018();
 
-void tempLimit(){
+void anita4paperLimit(){
 
   string outname = "LimitTemp_ANITA4";
 
@@ -38,6 +40,7 @@ void tempLimit(){
 
   Double_t A3ul = 3.471 ;
   Double_t A4ul = f.CalculateUpperLimit(Nobserved, Nbackground);
+//  printf("a4 ul = %g\n", A4ul);
   //   Double_t ll = f.GetLowerLimit();
 
 
@@ -169,8 +172,8 @@ void tempLimit(){
   g_ANITA_1234->Draw("l");
   g_ANITA_4_icemc->Draw("l");
 
-  TGraph *gAuger   = auger2015();
-  TGraph *gIcecube = icecube();
+  TGraph *gAuger   = auger2017();
+  TGraph *gIcecube = icecube2018();
 
 
   gAuger->SetLineColor(kRed);
@@ -182,8 +185,8 @@ void tempLimit(){
   gIcecube->Draw("l");
   
   TLegend *leg = new TLegend(0.5, 0.7, 0.89, 0.89);
-  leg->AddEntry(gAuger,   "Auger 2015", "l");
-  leg->AddEntry(gIcecube, "IceCube 2017", "l");
+  leg->AddEntry(gAuger,   "Auger 2017", "l");
+  leg->AddEntry(gIcecube, "IceCube 2018", "l");
   leg->AddEntry(g_ANITA_3_combined,    "ANITA-III",  "l" );
   // leg->AddEntry(g_ANITA_2_erratum, "ANITA-II erratum", "l");
   // leg->AddEntry(gtemp, "ANITA I-III arxiv", "l");
@@ -1063,4 +1066,18 @@ TGraph *icecube(){
   g_Icecube->SetLineWidth(3);
   
   return g_Icecube;
+}
+
+TGraph *icecube2018(){
+  TGraph* g = new TGraph("icecube_2018.dat");
+  g->SetLineWidth(3);
+
+  return g;
+}
+
+TGraph *auger2017(){
+  TGraph* g = new TGraph("auger_2017.dat");
+  g->SetLineWidth(3);
+
+  return g;
 }

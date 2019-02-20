@@ -236,7 +236,7 @@ double ConstantExponentialSourceFlux::pickEnergy(double Emin, double Emax, doubl
   gRandom = rng; 
 
   //I'm too bad at math to figure out the proper quantile function here. It's probably trivial, but this works and isn't THAT slow. 
-  if (f.GetXmin() != Emin && f.GetXmax() !=Emax) f.SetRange(Emin,Emax); 
+  if (f.GetXmin() != Emin || f.GetXmax() !=Emax) f.SetRange(Emin,Emax); 
 
   double E = f.GetRandom(); 
   gRandom = old; 
@@ -260,7 +260,7 @@ double TimeWindowedExponentialSourceFlux::pickEnergy(double Emin, double Emax, d
   gRandom = rng; 
 
   //I'm too bad at math to figure out the proper quantile function here. It's probably trivial, but this works and isn't THAT slow. 
-  if (f.GetXmin() != Emin && f.GetXmax() !=Emax) f.SetRange(Emin,Emax); 
+  if (f.GetXmin() != Emin || f.GetXmax() !=Emax) f.SetRange(Emin,Emax); 
 
   double E = f.GetRandom(); 
   gRandom = old; 
