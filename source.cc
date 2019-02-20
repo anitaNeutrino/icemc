@@ -190,7 +190,7 @@ int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE,
 
   if (nudir) *nudir = which->getDirection(t); 
 
-  nuE =  which->getFlux()->pickEnergy(minE,maxE,t,&rng);
+  if (!fixedEnergy) nuE =  which->getFlux()->pickEnergy(minE,maxE,t,&rng);
       
   return 0; 
 }
