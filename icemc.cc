@@ -1359,7 +1359,8 @@ int main(int argc,  char **argv) {
   outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
   
-  static TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
+
+  TString icemcgitversion( EnvironmentVariable::ICEMC_VERSION(outputdir)); 
   printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
   unsigned int timenow = time(NULL);
 
@@ -1404,7 +1405,8 @@ int main(int argc,  char **argv) {
 
   TruthAnitaNeutrino * truthNuPtr = new TruthAnitaNeutrino; 
   TTree* truthAnitaNuTree = new TTree("truthAnitaNuTree","Truth ANITA Neutrino Tree (all nus)"); 
-  truthAnitaTree->Branch("truth_neutrino",     &truthNuPtr );
+  truthAnitaNuTree->SetAutoFlush(10000); 
+  truthAnitaNuTree->Branch("truth_neutrino",     &truthNuPtr );
 
 #endif
 
@@ -1425,6 +1427,8 @@ int main(int argc,  char **argv) {
     for (int j=0;j<antarctica->nCols_ice;j++) {
       antarctica->IceENtoLonLat(j, i, lon_ice, lat_ice);
       icethck=antarctica->IceThickness(lon_ice, lat_ice);
+      lon_water=lon_ice; //redundant?
+      lat_water=lat_ice; 
       h20_depth=antarctica->water_depth[j][i];
       icetree->Fill();
     }
@@ -1712,55 +1716,70 @@ int main(int argc,  char **argv) {
 
 #ifdef ANITA3_EVENTREADER
       //FILL TruthAnitaNeutrino here (in case we don't get to fill it later) 
-      truthNuPtr->setPos(interaction1->posnu.GetX(), interaction1->posnu.GetY(), interaction1->posnu.GetZ());
-      truthNuPtr->setDir(interaction1->nnu.GetX(), interaction1->nnu.GetY(), interaction1->nnu.GetZ()); 
+      truthNuPtr->setPos(interaction1->posnu.GetX(), interaction1->posnu.GetY(), interaction1->posnu.GetZ(),
+                         bn1->r_bn.GetX(), bn1->r_bn.GetY(), bn1->r_bn.GetZ(), realtime_this);
       truthNuPtr->setNu(pnu,pdgcode); 
 #endif
       
       bool havent_set_frac = true; 
       bool havent_set_weights = true; 
+      bool havent_set_dir = true; 
 
 #ifdef ANITA3_EVENTREADER
-#define DO_SKIP  truthNuPtr->setSkipped(true,havent_set_frac,havent_set_weights); truthAnitaNuTree->Fill(); continue
+#define DO_SKIP  {truthNuPtr->setSkipped(true,havent_set_frac,havent_set_weights,havent_set_dir); truthAnitaNuTree->Fill(); continue; }
 #else
-#define DO_SKIP continue 
+#define DO_SKIP continue ;
 #endif
 
       //BELOW HERE, WE NO LONGER HAVE EVERY EVENT
       //
       if (interaction1->noway)
-        DO_SKIP;
+      {
+        DO_SKIP
+      }
       count1->noway[whichray]++;
 
       if (interaction1->wheredoesitleave_err)
-        DO_SKIP;
+      {
+        DO_SKIP
+      }
       count1->wheredoesitleave_err[whichray]++;
 
       if (interaction1->neverseesice)
-        DO_SKIP;
+      {
+        DO_SKIP
+      }
       count1->neverseesice[whichray]++;
 
       if (interaction1->wheredoesitenterice_err)
-        DO_SKIP;
+      {
+        DO_SKIP
+      }
       count1->wheredoesitenterice_err[whichray]++;
 
       if (interaction1->toohigh)
-        DO_SKIP;
+      {
+        DO_SKIP
+      }
       count1->toohigh[whichray]++;
 
       if (interaction1->toolow)
-        DO_SKIP;
+      {
+        DO_SKIP
+      }
       count1->toolow[whichray]++;
 
       if (bn1->WHICHPATH==3)
         interaction1=int_banana;
 
       if (!interaction1->iceinteraction)
-        DO_SKIP;
+      {
+        DO_SKIP
+      }
       count1->iceinteraction[whichray]++;
 
       if (beyondhorizon) {
-        DO_SKIP;
+        DO_SKIP
       }
       count1->inhorizon[whichray]++;
       // cerenkov angle depends on depth because index of refraction depends on depth.
@@ -1792,7 +1811,7 @@ int main(int argc,  char **argv) {
       
 
       if (!ray1->TraceRay(settings1, anita1, 1, sig1->N_DEPTH)) {
-        DO_SKIP;
+        DO_SKIP
       }
 
       //       // use snell's law to get the first guess at the
@@ -1804,7 +1823,7 @@ int main(int argc,  char **argv) {
       ray1->GetSurfaceNormal(settings1, antarctica, interaction1->posnu, slopeyangle, 1);
 
       if (!ray1->TraceRay(settings1, anita1, 2, sig1->N_DEPTH)) {; // trace ray,  2nd iteration.
-        DO_SKIP;
+        DO_SKIP
       }
 
       
@@ -1878,7 +1897,9 @@ int main(int argc,  char **argv) {
         }// end else if slac
 
         if ( err == 0 )
-          DO_SKIP;//bad stuff has happened.
+        {
+          DO_SKIP//bad stuff has happened.
+        }
 
         interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
 
@@ -1980,7 +2001,7 @@ int main(int argc,  char **argv) {
 
       // let's keep this even in the roughness case, since it still represents an ceiling value
       if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*bestcase_atten/interaction1->r_fromballoon[whichray]*heff_max*anita1->bwmin/1.E6)>settings1->CHANCEINHELL_FACTOR && !settings1->SKIPCUTS) {
-        DO_SKIP; // by comparing highest possible signal to the lowest possible noise,  reject if there is just no way we could detect this event.
+        DO_SKIP // by comparing highest possible signal to the lowest possible noise,  reject if there is just no way we could detect this event.
         // vmmhz1m_max=signal at highest frequency
         // bestcase_atten=best case attenuation
         // r_fromballoon=distance from interaction to balloon
@@ -2033,15 +2054,23 @@ int main(int argc,  char **argv) {
         }//end else if slac
       }//end tau trigger ==0
 
+
+#ifdef ANITA3_EVENTREADER
+      truthNuPtr->setDir(interaction1->nnu.GetX(), interaction1->nnu.GetY(), interaction1->nnu.GetZ()); 
+      havent_set_dir = false; 
+#endif
+
       // gets angle between ray and neutrino direction
       viewangle = GetViewAngle(ray1->nrf_iceside[4], interaction1->nnu);
       if(viewangle>1.57 && !settings1->SKIPCUTS) { //discard the event if viewangle is greater than 90 degrees
-        DO_SKIP;
+        DO_SKIP
       }
       count1->nviewangle_lt_90[whichray]++; // add to counter
 
       if (!Ray::WhereDoesItLeave(interaction1->posnu, interaction1->nnu, antarctica, interaction1->nuexit))
-       DO_SKIP; // doesn't give a real value from quadratic formula 
+      {
+       DO_SKIP // doesn't give a real value from quadratic formula 
+      }
       
       GetBalloonLocation(interaction1, ray1, bn1, antarctica);
       
@@ -2072,7 +2101,7 @@ int main(int argc,  char **argv) {
       if ( err == 0 ) {
         count1->nbadfracs[whichray]++;
         cout<<"err==0,  so leaving.\n";
-        DO_SKIP;
+        DO_SKIP
       }
       count1->ngoodfracs[whichray]++;
 
@@ -2112,7 +2141,7 @@ int main(int argc,  char **argv) {
       //if ( bn1->WHICHPATH != 4 && settings1->FORSECKEL != 1 && !settings1->SKIPCUTS && !settings1->SOURCE) {
       if ( bn1->WHICHPATH != 4 && settings1->FORSECKEL != 1 && !settings1->SKIPCUTS) {
         if (weight_test < settings1->CUTONWEIGHTS) {
-          DO_SKIP; 
+          DO_SKIP 
         }
       }
       count_chanceofsurviving++;
@@ -2139,7 +2168,7 @@ int main(int argc,  char **argv) {
             if (bn1->WHICHPATH==3)
               cout<<"Warning!  Neutrino enters beyond continent,  program is rejecting neutrino!"<<endl;
             //
-            DO_SKIP;
+            DO_SKIP
           }// end outside antarctica
         }// end wheredoesitenterice
       }// end if !settings forseckel && unbiased
@@ -2192,7 +2221,7 @@ int main(int argc,  char **argv) {
         if (bn1->WHICHPATH==3)
           cout<<"Neutrino is getting absorbed and thrown out!"<<endl;
         //
-        DO_SKIP;
+        DO_SKIP
       }
       //intermediate counter
       count1->nabsorbed[whichray]++;
@@ -2214,7 +2243,7 @@ int main(int argc,  char **argv) {
         if (bn1->WHICHPATH==3)
           cout<<"Event rejected.  Check."<<endl;
         //
-        DO_SKIP;
+        DO_SKIP
       }
       count_chanceinhell0++;
 
@@ -2230,7 +2259,7 @@ int main(int argc,  char **argv) {
       // this is purely a sanity check.
       // if everything is working,  events should pass with 100% efficiency
       if (!settings1->ROUGHNESS && TIR(ray1->nsurf_rfexit, ray1->nrf_iceside[3], nbelowsurface, sig1->N_AIR)) {
-        DO_SKIP;
+        DO_SKIP
       }
       count1->nnottir[whichray]++;
 
@@ -2287,13 +2316,13 @@ int main(int argc,  char **argv) {
       //cout << "Oindree: phi nnu, rf, diff at bn " << DEGRAD * phi_nnu_atbn << " " << DEGRAD * phi_rf_atbn << " " << DEGRAD * phi_nnu_rf_diff_atbn << "\n";
 
       if((settings1->WHICH == 2 || settings1->WHICH == 6) && theta_rf_atbn < 0.3790091) {
-        DO_SKIP; // the deck will mess up the arrival times in the top ring
+        DO_SKIP // the deck will mess up the arrival times in the top ring
       }
       // reject if the rf leaves the ice where there is water,  for example.
       if (!antarctica->AcceptableRfexit(ray1->nsurf_rfexit, ray1->rfexit[2], ray1->n_exit2bn[2])){
         if (bn1->WHICHPATH==3)
           cout<<"Should look at this. Not expecting to be here."<<endl;
-        DO_SKIP; 
+        DO_SKIP 
       }//end if acceptableRFexit
 
       // intermediate counting
@@ -2308,7 +2337,7 @@ int main(int argc,  char **argv) {
       // reject if 2nd and 3rd tries
       // don't converge within 10m.
       if (diff_3tries>10) {
-        DO_SKIP;
+        DO_SKIP
       }
       count1->nconverges[whichray]++;
       // Get Polarization vector.  See Jackson,  Cherenkov section.
@@ -2502,7 +2531,7 @@ int main(int argc,  char **argv) {
 //cerr<<inu<<"  "<<ii<<"  "<<jj<<";  "<<panel1->GetCentralPoint()<<" : "<<  pos_projectedImpactPoint<<" : "<<theta_local*180./PI<<"  "<<theta_0_local*180./PI<<"  "<< azimuth_local*180./PI<< endl;
 //cerr<< panel1->GetCentralPoint() - pos_projectedImpactPoint<<endl;
             if( isnan(theta_local) | isnan(theta_0_local) | isnan(azimuth_local) ){
-              DO_SKIP; 
+              continue;  
             }
             viewangle_local = GetViewAngle(vec_nnu_to_impactPoint, interaction1->nnu);
 
@@ -2511,7 +2540,9 @@ int main(int argc,  char **argv) {
             deltheta_had[0]=deltheta_had_max*anita1->FREQ_LOW/anita1->freq[0];
             sig1->TaperVmMHz(viewangle_local, deltheta_em[0], deltheta_had[0], emfrac, hadfrac, taperfactor, vmmhz_em[0]);// this applies the angular dependence.
             if(taperfactor==0)
+            {
               continue; 
+            }
 //cerr<<inu<< ": past E=0"<<endl;
             /////
             // Field Magnitude
@@ -2638,7 +2669,7 @@ int main(int argc,  char **argv) {
       /////////////////////////////
 
       if( settings1->ROUGHNESS && !panel1->GetNvalidPoints() ){
-        DO_SKIP;  
+        DO_SKIP  
       }
       
       // reject if the event is undetectable.
@@ -2648,7 +2679,7 @@ int main(int argc,  char **argv) {
 	if (bn1->WHICHPATH==3)
 	  cout<<"Event is undetectable.  Leaving loop."<<endl;
 
-	DO_SKIP; 
+	DO_SKIP 
       }
       count1->nchanceinhell_fresnel[whichray]++;
       // } //end if CHANCEINHELL factor and SKIPCUTS
@@ -2681,7 +2712,7 @@ int main(int argc,  char **argv) {
           if (bn1->WHICHPATH==3)
             cout<<"Event is undetectable.  Leaving loop."<<endl;
           //
-          DO_SKIP; 
+          DO_SKIP 
         } //if
       }
       count1->nchanceinhell_1overr[whichray]++;
@@ -2723,7 +2754,7 @@ int main(int argc,  char **argv) {
           if (bn1->WHICHPATH==3)
             cout<<"Event is undetectable.  Leaving loop."<<endl;
           //
-          DO_SKIP;; 
+          DO_SKIP; 
         } //if
       }
 
@@ -2777,7 +2808,7 @@ int main(int argc,  char **argv) {
         double rtemp=Tools::dMin((viewangle-sig1->changle)/(deltheta_em_max), (viewangle-sig1->changle)/(deltheta_had_max));
         if (rtemp>Signal::VIEWANGLE_CUT && !settings1->SKIPCUTS) {
           //delete interaction1;
-          DO_SKIP;
+          DO_SKIP
         }
         count1->nviewanglecut[whichray]++;
 
@@ -2844,10 +2875,10 @@ int main(int argc,  char **argv) {
 
         if (bn1->WHICHPATH==3 && interaction1->banana_volts != 0 && settings1->HIST && banana_tree->GetEntries()<settings1->HIST_MAX_ENTRIES) {
           banana_tree->Fill();
-          DO_SKIP;
+          DO_SKIP
         } //This is all the data needed for the banana plot - we now have the final value of vmmhz[]
         else if (bn1->WHICHPATH==3 && interaction1->banana_volts == 0) {
-          DO_SKIP; //Exit the loop if there's no voltage here - no value at a point is the same as zero,  and this will save HD space
+          DO_SKIP //Exit the loop if there's no voltage here - no value at a point is the same as zero,  and this will save HD space
         }
         // reject if it is undetectable now that we have accounted for viewing angle
 
@@ -2861,7 +2892,7 @@ int main(int argc,  char **argv) {
         if (settings1->CHANCEINHELL_FACTOR*Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(anita1->bwmin/1.E6) < anita1->maxthreshold*anita1->VNOISE[0]/10. && !settings1->SKIPCUTS) {
         //if (settings1->CHANCEINHELL_FACTOR*Tools::dMax(vmmhz, Anita::NFREQ)*heff_max*0.5*(anita1->bwmin/1.E6) < anita1->maxthreshold*anita1->VNOISE[0]/10.) {
           //cout << "chance fail" << "\n"; 
-          DO_SKIP;
+          DO_SKIP
         }
       }//end if roughness==0 before the Anita::NFREQ k loop, this isolates the TaperVmMHz()
       
@@ -2883,7 +2914,7 @@ int main(int argc,  char **argv) {
       	if ( (r.Uniform(1)<anita1->deadTime) ){
 	  isDead = true;
 	  if (settings1->MINBIAS!=1) {
-           DO_SKIP;
+           DO_SKIP
           }
 	}
       }
@@ -3268,7 +3299,7 @@ int main(int argc,  char **argv) {
 
       if (weight < settings1->CUTONWEIGHTS) {
         delete globaltrig1;
-        DO_SKIP; 
+        DO_SKIP 
       }
 
       eventsfound_beforetrigger+=weight;
@@ -3292,7 +3323,7 @@ int main(int argc,  char **argv) {
 	if ( (l3trignoise[0]>0 ) || (l3trignoise[1]>0 ) ){
 	  cout << "A thermal noise fluctuation generated this trigger!" << l3trignoise[0] << " " << l3trig[0] << " " << l3trignoise[1] << " " << l3trig[1] << endl;
 	  delete globaltrig1;
-	  DO_SKIP;
+	  DO_SKIP
 	}
       }
       
@@ -3733,6 +3764,12 @@ int main(int argc,  char **argv) {
             }// end int iant
 
             truthNuPtr->setSkipped(false); 
+
+            if (truthAnitaNuTree->GetEntries() <= inu-10) 
+            {
+              printf("SKIPPED BEFORE %d\n",inu); 
+
+            }
             truthAnitaNuTree->Fill();
             truthAnitaTree->Fill();
             delete truthEvPtr;
@@ -3824,6 +3861,12 @@ int main(int argc,  char **argv) {
       } // end if passing global trigger conditions
       else {
         passes_thisevent=0; // flag this event as not passing
+        //hack so continue doesn't exit loop
+        do 
+        {
+          DO_SKIP
+        }while(0); 
+        
         if (bn1->WHICHPATH==4)
           cout << "This event does not pass.\n";
       }// end else event does not pass trigger
@@ -4012,6 +4055,7 @@ int main(int argc,  char **argv) {
   anitafileTruth->cd();
   configAnitaTree->Write("configAnitaTree");
   truthAnitaTree->Write("truthAnitaTree");
+  truthAnitaNuTree->Write();
   triggerSettingsTree->Write("triggerSettingsTree");
   summaryAnitaTree->Fill();
   summaryAnitaTree->Write("summaryAnitaTree");
