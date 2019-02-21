@@ -1,14 +1,15 @@
-#include "source.hh" 
-#include "TMath.h" 
 #include <map>
 #include <string>
+#include <iostream>
+#include "TMath.h" 
 #include "TObjString.h" 
 #include "TTimeStamp.h" 
-#include "EnvironmentVariable.h" 
 #include "TH1.h" 
 #include "TFile.h" 
-#include "TTree.h" 
-#include <iostream>
+#include "TTree.h"
+#include "EnvironmentVariable.h" 
+#include "blazars/fava.h"
+#include "source.hh"
 
 // SourceModel 
 
@@ -135,43 +136,39 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
 
       const char * dir = EnvironmentVariable::ICEMC_SRC_DIR() ?: "."; 
 
-      TFile fava(Form("%s/blazars/fava.root", dir)); 
-      TTree * fava_tree = (TTree*) fava.Get("fava"); 
-      int tmin,tmax; 
-      double he_sigma; 
-      double ra, dec;
-      double he_flux; 
-      double z; 
-      TObjString name; 
-      fava_tree->SetBranchAddress("unix_tmin",&tmin); 
-      fava_tree->SetBranchAddress("unix_tmax",&tmax); 
-      fava_tree->SetBranchAddress("he_sigma",&he_sigma); 
-      fava_tree->SetBranchAddress("he_flux",&he_flux); 
-      fava_tree->SetBranchAddress("ra",&ra); 
-      fava_tree->SetBranchAddress("dec",&dec); 
-      fava_tree->SetBranchAddress("z",&z); 
-      fava_tree->SetBranchAddress("association",&name); 
+      TFile ffava(Form("%s/blazars/fava.root", dir)); 
+      TTree * fava_tree = (TTree*) ffava.Get("fava"); 
+      FAVAEntry *fava = 0; 
+
+      fava_tree->SetBranchAddress("fava",&fava); 
 
       for (int i = 0; i < fava_tree->GetEntries(); i++) 
       {
         fava_tree->GetEntry(i); 
 
-        if (tmax < a3_tmin || tmin > a3_tmax) continue;
+//        fava_tree->Show(i); 
+       
+        printf("%s %s %d %d %g %g %g\n",fava->association.GetString().Data(), fava->source_class.GetString().Data(), 
+            fava->unix_tmin, fava->unix_tmax, fava->dec, fava->he_sigma, fava->he_flux); 
+        if (fava->unix_tmax < a3_tmin || fava->unix_tmin > a3_tmax) continue;
+        printf("passed time cut\n");
 
 
         //say no to |dec| >30 
-        if (fabs(dec) > 30) continue; 
+        if (fabs(fava->dec) > 30) continue; 
+        printf("passed dec cut\n");
 
-        if (he_sigma < 4 && he_flux < 0) continue; //say no to low HE flux 
+        if (fava->he_sigma < 4 && fava->he_flux < 0) continue; //say no to low HE flux 
+        printf("passed flux cut \n");
 
         //only blazars
-        if (name.GetString() ==  "bcu" || name.GetString() == "fsrq" || name.GetString() == "bll")
+        if (fava->source_class.GetString() ==  "bcu" || fava->source_class.GetString() == "fsrq" || fava->source_class.GetString() == "bll")
         {
-          m->addSource(new Source(name.GetString().Data(), ra, dec, 
-                       new TimeWindowedExponentialSourceFlux( tmin, tmax, txs_index, 
-                        txs_norm * (flux_weighted ? he_flux / txs_flux : 
+          m->addSource(new Source(fava->association.GetString().Data(), fava->ra, fava->dec, 
+                       new TimeWindowedExponentialSourceFlux( fava->unix_tmin, fava->unix_tmax, txs_index, 
+                        txs_norm * (flux_weighted ? fava->he_flux / txs_flux : 
                                     z_weighted ?   
-                                    txs_flux * txs_z/z: 1), txs_E0))
+                                    txs_flux * txs_z/fava->z: 1), txs_E0))
                        ); 
 
         }
@@ -246,12 +243,20 @@ int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE,
      fluxes[i] = total_flux; 
   }
 
+
   double random = rng.Uniform(0, total_flux); 
-  const Source * which = sources[std::upper_bound(fluxes.begin(), fluxes.end(), random) - fluxes.begin()]; 
+  unsigned index = std::upper_bound(fluxes.begin(), fluxes.end(), random) - fluxes.begin(); 
+//  printf("random: %g total_flux%g, index:%u \n",random, total_flux, index); 
+  if (total_flux == 0) 
+  {
+    nuE = minE; // do something... 
+    return 1; 
+  }
+  const Source * which = sources[index]; 
 
   if (nudir) *nudir = which->getDirection(t); 
 
-  nuE =  which->getFlux()->pickEnergy(minE,maxE,t,&rng);
+  if (!fixedEnergy) nuE =  which->getFlux()->pickEnergy(minE,maxE,t,&rng);
       
   return 0; 
 }

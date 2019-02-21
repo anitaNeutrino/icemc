@@ -126,12 +126,12 @@ class TimeWindowedExponentialSourceFlux : public SourceFlux
 
     virtual double getFlux(double E, double t) const 
     { 
-      if (t < t0 || t > t0){ return 0; }
+      if (t < t0 || t > t1){ return 0; }
       else return A * TMath::Power(E,-gamma) ;
       } 
     virtual double getFluxBetween(double Emin, double Emax, double t) const 
     { 
-      if (t < t0 || t > t0){ return 0; }
+      if (t < t0 || t > t1){ return 0; }
       else return A * (  TMath::Power(Emin,-gamma+1) / (gamma-1)  - TMath::Power(Emax,-gamma+1) / (gamma-1));
     }
     virtual double pickEnergy(double Emin, double Emax, double t, TRandom * rng = gRandom) const; 

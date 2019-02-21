@@ -56,6 +56,7 @@ const double Signal::VIEWANGLE_CUT(sqrt(5.)); // require viewangle is no more th
 
 Signal::Signal() : N_DEPTH(1.79) {
 
+  JAIME_FACTOR=1.0; // factor to multiply Jaime's parameterization for error analysis
 //  Initialize(); // CD: You can't initialize it before setting the interaction mode... that's insanity! 
 }
  void Signal::InitializeMedium() {
@@ -102,7 +103,6 @@ Signal::Signal() : N_DEPTH(1.79) {
  void Signal::Initialize() {
 
   logscalefactor_taper=0.;
-  JAIME_FACTOR=1.0; // factor to multiply Jaime's parameterization for error analysis
 
   x0ice=0.403; 
   //X0ICE=0.392; // radiation length of ice (meters)
