@@ -1,15 +1,14 @@
 #include "source.hh" 
 #include "TMath.h" 
 #include <map>
+#include <string>
 #include "TObjString.h" 
 #include "TTimeStamp.h" 
 #include "EnvironmentVariable.h" 
 #include "TH1.h" 
 #include "TFile.h" 
 #include "TTree.h" 
-
-
-
+#include <iostream>
 
 // SourceModel 
 
@@ -24,11 +23,15 @@ SourceModel::~SourceModel()
 
 static std::map<std::string, SourceModel * > models; 
 
-const double txs_index = 2; 
+// TXS blazar (from icecube)
+const double txs_index = 2;
 const double txs_norm = 2.2e-8; 
 const double txs_E0 = 0.1; 
 const double txs_flux = 3.8; 
-const double txs_z = 0.3365; 
+const double txs_z = 0.3365;
+
+// SNe
+const double gamma_index = 2;
 
 SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed) 
 {
@@ -50,15 +53,69 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
 
     TString stripped( tok->String().Strip( TString::kBoth)); 
 
-    // the flux from TXS 
+    // the flux from TXS
+    
     if (stripped == "TXS15")
     {
 
       m->addSource(new Source("TXS 0506+056", 5 + 9/60. +  25.9637 / 3600, 
                                               5 + 41/60. + 35.3279/3600,
-          new ConstantExponentialSourceFlux(txs_index,txs_flux,txs_E0) //from IceCube paper , assume it's constant over flight for now
+          new ConstantExponentialSourceFlux(txs_index,txs_flux,txs_E0) //from IceCube paper, assume it's constant over flight for now
           )) ; 
     }
+    
+    else if(stripped=="SNA4")
+      {
+	
+	TFile *file = new TFile("./supernovae/data/supernovaeTNS.root"); 
+	TTree *tree = (TTree*) file->Get("tnsTree");
+
+	// Tree vars
+	float ra, dec;
+	std::string *name = new std::string;
+	std::string *objType = new std::string;
+	int discoveryUnixTime = 0;
+
+	// New vars
+	int a4_tmin = 1480707643;
+	int a4_tmax = 1483004563;
+	
+	std::string desiredType;
+	size_t found;
+	
+	tree->SetBranchAddress("ra",&ra); 
+	tree->SetBranchAddress("dec",&dec); 
+	tree->SetBranchAddress("name",&name);
+	tree->SetBranchAddress("objType",&objType);
+	tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
+
+	for (unsigned int i = 0; i < tree->GetEntries(); i++) 
+	  {
+	    tree->GetEntry(i);
+
+	    // Only look for SNs detected within A4
+	    if( (discoveryUnixTime < a4_tmin) || (discoveryUnixTime > a4_tmax) ){continue;}
+	    // Declination cut (ANITA won't see neutrinos from these sources)
+	    if( abs(dec)>30 ){continue;}
+	    // Only look at SNe of type II for now
+	    // Core collapse SNe, associated with type II, can accelerate CRs to high energies
+	    // Thus, only look for those beginning with SN II
+	    desiredType = "SN II"; // <- DEFAULT
+	    found = objType->find(desiredType);
+	    if(found != 0){continue;}
+	    // Only look at a single source for now
+	    if(*name != "SN 2016jby"){continue;} 
+	    
+	    //std::cout << "ra = " << ra << std::endl;
+	    //std::cout << "name = " << *name << std::endl;
+	    //std::cout << name->c_str() << std::endl;
+	    
+	    m->addSource(new Source(name->c_str(), ra, dec,
+				    new ConstantExponentialSourceFlux(gamma_index,txs_flux,txs_E0) // Just use these params as the first step
+				    )) ; 
+	  }
+	
+      }
 
     else if (stripped == "GRB15") 
     {
@@ -72,7 +129,6 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
 
       bool flux_weighted = strcasestr(stripped.Data(),"FLUX"); 
       bool z_weighted = strcasestr(stripped.Data(),"REDSHIFT"); 
-
 
       int a3_tmin = 1418938406; 
       int a3_tmax = 1420777814; 
@@ -126,6 +182,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
 
   delete tokens; 
 
+  std::cout << "----------------------" << std::endl;
   
   if (!m->getNSources())
   {
@@ -133,8 +190,12 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
     delete m; 
     m = NULL; 
   }
-
-  models[key] = m; 
+  else
+    {
+      std::cout << "Sources added: " << m->getNSources() << std::endl;
+    }
+  
+  models[key] = m;
 
   return m; 
 }
@@ -266,9 +327,3 @@ double TimeWindowedExponentialSourceFlux::pickEnergy(double Emin, double Emax, d
   gRandom = old; 
   return E; 
 }
-
-
-
-
-
-

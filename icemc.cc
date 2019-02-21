@@ -86,6 +86,7 @@
 #include "RawAnitaHeader.h"
 #include "Adu5Pat.h"
 #include "FFTtools.h"
+#include "UsefulAdu5Pat.h"
 UsefulAnitaEvent*     realEvPtr    = NULL;
 RawAnitaHeader*       rawHeaderPtr = NULL;
 Adu5Pat*         Adu5PatPtr   = NULL;
@@ -639,7 +640,7 @@ int main(int argc,  char **argv) {
 
  
   if (src_model) {
-    printf("Using Source Model %s\n", src_model->getName()); 
+    printf("Using Source Model%s\n", src_model->getName()); 
   }
   
   Roughness *rough1 = new Roughness(settings1); // create new instance of the roughness class
@@ -649,12 +650,14 @@ int main(int argc,  char **argv) {
 
   if(!src_model || spectra1->IsSpectrum())
   {
-    cout<<" Lowest energy for spectrum is 10^18 eV! \n";
+    cout<< "Lowest energy for spectrum is 10^18 eV! \n";
   }
   else if (src_model) 
   {
-    cout<<" Source Model Bounds are 10^" << settings1->SOURCE_MIN_E << "to 10^ " << settings1->SOURCE_MAX_E << "eV" << endl; 
+    cout<< "Source Model Bounds are 10^" << settings1->SOURCE_MIN_E << "eV to 10^" << settings1->SOURCE_MAX_E << "eV" << endl; 
   }
+
+  std::cout << "----------------------" << std::endl;
 
   // declare instance of trigger class.
   // this constructor reads from files with info to parameterize the
@@ -819,6 +822,9 @@ int main(int argc,  char **argv) {
   double sourceAlt;
   double sourceLat;
   double sourceMag;
+
+  //double payloadTheta;
+  //double payloadPhi;
 
   Vector n_nutraject_ontheground; //direction of the neutrino from the person standing on the ground just below the balloon.
   Vector n_pol; // direction of polarization
@@ -1170,6 +1176,8 @@ int main(int argc,  char **argv) {
   finaltree->Branch("sourceLat", &sourceLat, "sourceLat/D");
   finaltree->Branch("sourceAlt", &sourceAlt, "sourceAlt/D");
   finaltree->Branch("sourceMag", &sourceMag, "sourceMag/D");
+  //finaltree->Branch("payloadTheta", &payloadTheta, "payloadTheta/D");
+  //finaltree->Branch("payloadPhi", &payloadPhi, "payloadPhi/D");
 
   TTree *mytaus_tree = new TTree("mytaus", "mytaus");
   mytaus_tree->Branch("taus",  &TauPtr);
@@ -1350,7 +1358,7 @@ int main(int argc,  char **argv) {
   adu5PatTree->Branch("pat",          &Adu5PatPtr                   );
   adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
   adu5PatTree->Branch("weight",       &weight,       "weight/D"     );
-
+  
 #ifdef ANITA3_EVENTREADER
 
   // Set AnitaVersion so that the right payload geometry is used
@@ -3448,10 +3456,11 @@ int main(int argc,  char **argv) {
             rec_diff3->Fill((rec_efield_array[3]-true_efield_array[3])/true_efield_array[3], weight);
             recsum_diff->Fill((rec_efield_array[0]+rec_efield_array[1]+rec_efield_array[2]+rec_efield_array[3]-true_efield)/true_efield, weight);
 
+	    // calc source lon, lat, alt
             sourceLon = ray1->rfexit[2].Lon() - 180;
             sourceLat = ray1->rfexit[2].Lat() - 90;
             sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon+180, sourceLat+90);
-
+	    
             //Now put data in Vectors and Positions into arrays for output to the ROOT file.
             if (settings1->HIST && finaltree->GetEntries()<settings1->HIST_MAX_ENTRIES) {
               for (int i=0;i<3;i++) {
@@ -3507,8 +3516,7 @@ int main(int argc,  char **argv) {
 #ifdef ANITA_UTIL_EXISTS
             realEvPtr     = new UsefulAnitaEvent();
             rawHeaderPtr  = new RawAnitaHeader();
-            Adu5PatPtr    = new Adu5Pat();	    
-
+            Adu5PatPtr    = new Adu5Pat();
             Adu5PatPtr->latitude= bn1->latitude;
             Adu5PatPtr->longitude=bn1->longitude;
             Adu5PatPtr->altitude=bn1->altitude;
@@ -3617,6 +3625,14 @@ int main(int argc,  char **argv) {
             truthEvPtr->sourceLon        = sourceLon;
             truthEvPtr->sourceLat        = sourceLat;
             truthEvPtr->sourceAlt        = sourceAlt;
+
+	    cout << "Neutrino passed!" << endl;
+
+	    //getThetaAndPhiWave;
+	    
+	    //truthEvPtr->payloadTheta = payloadTheta;
+	    //truthEvPtr->payloadPhi = payloadPhi;
+	    
             truthEvPtr->weight           = weight;
             truthEvPtr->weight1           = weight1;
             for (int i=0;i<3;i++){
