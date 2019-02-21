@@ -28,7 +28,7 @@ static std::map<std::string, SourceModel * > models;
 const double txs_index = 2;
 const double txs_norm = 2.2e-8; 
 const double txs_E0 = 0.1; 
-const double txs_flux = 3.8; 
+const double txs_flux = 3.8;
 const double txs_z = 0.3365;
 
 // SNe
@@ -59,10 +59,13 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
     if (stripped == "TXS15")
     {
 
-      m->addSource(new Source("TXS 0506+056", 5 + 9/60. +  25.9637 / 3600, 
+      std::string *tns_name = new std::string;
+      *tns_name = "TXS 0506+056";
+      
+      m->addSource(new Source(*tns_name, 5 + 9/60. +  25.9637 / 3600, 
                                               5 + 41/60. + 35.3279/3600,
           new ConstantExponentialSourceFlux(txs_index,txs_flux,txs_E0) //from IceCube paper, assume it's constant over flight for now
-          )) ; 
+			      )) ; 
     }
     
     else if(stripped=="SNA4")
@@ -73,7 +76,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
 
 	// Tree vars
 	float ra, dec;
-	std::string *name = new std::string;
+	std::string *objName = new std::string;
 	std::string *objType = new std::string;
 	int discoveryUnixTime = 0;
 
@@ -86,7 +89,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
 	
 	tree->SetBranchAddress("ra",&ra); 
 	tree->SetBranchAddress("dec",&dec); 
-	tree->SetBranchAddress("name",&name);
+	tree->SetBranchAddress("name",&objName);
 	tree->SetBranchAddress("objType",&objType);
 	tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
 
@@ -101,17 +104,19 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
 	    // Only look at SNe of type II for now
 	    // Core collapse SNe, associated with type II, can accelerate CRs to high energies
 	    // Thus, only look for those beginning with SN II
-	    desiredType = "SN II"; // <- DEFAULT
-	    found = objType->find(desiredType);
-	    if(found != 0){continue;}
-	    // Only look at a single source for now
-	    if(*name != "SN 2016jby"){continue;} 
+	    //desiredType = "SN II"; // <- DEFAULT
+	    //found = objType->find(desiredType);
+	    //if(found != 0){continue;}
+	    // Only look at 2 sources for now
+	    if(*objName != "SN 2016jby" && *objName != "SN 2016iyz"){continue;}
+	    //if(*objName != "SN 2016jby"){continue;}
 	    
 	    //std::cout << "ra = " << ra << std::endl;
 	    //std::cout << "name = " << *name << std::endl;
-	    //std::cout << name->c_str() << std::endl;
+	    //std::cout << objName->c_str() << std::endl;
+	    //std::cout << *objName << std::endl;
 	    
-	    m->addSource(new Source(name->c_str(), ra, dec,
+	    m->addSource(new Source(*objName, ra, dec,
 				    new ConstantExponentialSourceFlux(gamma_index,txs_flux,txs_E0) // Just use these params as the first step
 				    )) ; 
 	  }
@@ -164,7 +169,10 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
         //only blazars
         if (fava->source_class.GetString() ==  "bcu" || fava->source_class.GetString() == "fsrq" || fava->source_class.GetString() == "bll")
         {
-          m->addSource(new Source(fava->association.GetString().Data(), fava->ra, fava->dec, 
+	  std::string *fava_name = new std::string;
+	  *fava_name = fava->association.GetString().Data();
+      
+          m->addSource(new Source(*fava_name, fava->ra, fava->dec, 
                        new TimeWindowedExponentialSourceFlux( fava->unix_tmin, fava->unix_tmax, txs_index, 
                         txs_norm * (flux_weighted ? fava->he_flux / txs_flux : 
                                     z_weighted ?   
@@ -225,9 +233,9 @@ TH1 * SourceModel::estimateFlux(double tmin, double tmax, double Emin, double Em
 }
 
 
-int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE, double minE, double maxE)
+int SourceModel::getDirectionAndEnergyAndOriginInfo(std::string objName, double & RA, double & dec, Vector * nudir, double t, double  & nuE, double minE, double maxE)
 {
-  if (!sources.size()) return 1; 
+  if (!sources.size()) return 1;
 
   bool fixedEnergy = minE==maxE;
   if (fixedEnergy) nuE = minE; 
@@ -243,17 +251,26 @@ int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE,
      fluxes[i] = total_flux; 
   }
 
-
   double random = rng.Uniform(0, total_flux); 
-  unsigned index = std::upper_bound(fluxes.begin(), fluxes.end(), random) - fluxes.begin(); 
+  unsigned index = std::upper_bound(fluxes.begin(), fluxes.end(), random) - fluxes.begin();
+
+  
 //  printf("random: %g total_flux%g, index:%u \n",random, total_flux, index); 
   if (total_flux == 0) 
   {
     nuE = minE; // do something... 
     return 1; 
   }
-  const Source * which = sources[index]; 
-
+  // This is the chosen source, so we should retain some info about it
+  // Then we can easily access info about *each* simulated neutrino's origin
+  const Source * which = sources[index];
+  objName = which->getObjName();
+  RA = which->getObjRA();
+  dec = which->getObjDEC();
+  //std::cout << objName << std::endl;
+  //std::cout << RA << std::endl;
+  //std::cout << dec << std::endl;
+  
   if (nudir) *nudir = which->getDirection(t); 
 
   if (!fixedEnergy) nuE =  which->getFlux()->pickEnergy(minE,maxE,t,&rng);
@@ -262,19 +279,18 @@ int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE,
 }
 
 
-Source::Source(const char * nm, double ra, double dc, SourceFlux * f) 
-: name(nm), flux(f) , RA(ra), dec(dc*TMath::DegToRad()) 
+Source::Source(std::string nm, double ra, double dc, SourceFlux * f) 
+: objName(nm), flux(f) , RA(ra), dec(dc*TMath::DegToRad()) 
 {
 }
 
-Vector Source::getDirection( double t) const 
+Vector Source::getDirection(double t) const 
 {
 
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,0,0)
   std::cerr << "ROOT 5 doesn't have AsLMST. Returning nonsense." << std::endl;
   return Vector(1,0,0); 
 #else
-
 
   time_t secs = t; 
   int nsecs = 1e9 *(t-secs); 

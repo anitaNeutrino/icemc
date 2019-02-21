@@ -1629,7 +1629,10 @@ int main(int argc,  char **argv) {
       vmmhz_min_thatpasses=1000; // initializing.  want to find the minumum voltage that passes a
 
 
-      Vector force_dir; 
+      Vector force_dir;
+      std::string objName;
+      double RA, dec;
+      //std::string *objName = new std::string;
       if (!src_model &&  spectra1->IsSpectrum() ){//if using energy spectrum
 
         if(settings1->USEDARTBOARD) pnu=spectra1->GetNuEnergy();
@@ -1678,7 +1681,11 @@ int main(int argc,  char **argv) {
 
       if (src_model) 
       {
-          got_a_good_position = !src_model->getDirectionAndEnergy(&force_dir, realtime_this, pnu, src_min, src_max); 
+	got_a_good_position = !src_model->getDirectionAndEnergyAndOriginInfo(objName, RA, dec, &force_dir, realtime_this, pnu, src_min, src_max);
+	//std::cout << "pnu = " << pnu << std::endl;
+	std::cout << "RA = " << RA << std::endl;
+	std::cout << "dec = " << dec << std::endl;
+	std::cout << "objName = " << objName << std::endl; // Deal with strings. Resume tomorrow, then add to tree so we have origin info.
           pnu*=1e9; //GeV -> eV
           ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
           len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
@@ -4036,7 +4043,7 @@ int main(int argc,  char **argv) {
   summarytree->Fill();
 
 
-  // maks the output file
+  // makes the output file
   Summarize(settings1, anita1, count1, spectra1, sig1, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb, sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, foutput, distanceout, outputdir, src_model);
 
   std::string spec_string = src_model ? settings1->SOURCE : std::to_string( settings1->EXPONENT); 
