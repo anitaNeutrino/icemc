@@ -1649,9 +1649,11 @@ int main(int argc,  char **argv) {
         vmmhz_em[i]=0.; // for keeping track of just the em component of the shower
       } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
 
+      int got_a_good_position = 0; 
+      
       // Picks the balloon position and at the same time sets the masks and thresholds
       bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
-      
+        
 
       // find average balloon altitude and distance from center of earth for
       // making comparisons with Peter
@@ -1668,11 +1670,12 @@ int main(int argc,  char **argv) {
 
       if (src_model) 
       {
-        src_model->getDirectionAndEnergy(&force_dir, realtime_this, pnu, src_min, src_max); 
-        pnu*=1e9; //GeV -> eV
-        ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
-        len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
+          got_a_good_position = !src_model->getDirectionAndEnergy(&force_dir, realtime_this, pnu, src_min, src_max); 
+          pnu*=1e9; //GeV -> eV
+          ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
+          len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
       }
+      else got_a_good_position = 1; 
 
       if (settings1->HIST && !settings1->ONLYFINAL
 	  && prob_eachphi_bn->GetEntries() < settings1->HIST_MAX_ENTRIES) {
@@ -1731,6 +1734,10 @@ int main(int argc,  char **argv) {
 #define DO_SKIP continue ;
 #endif
 
+      if (!got_a_good_position) //no source is turned on 
+      {
+        DO_SKIP
+      }
       //BELOW HERE, WE NO LONGER HAVE EVERY EVENT
       //
       if (interaction1->noway)

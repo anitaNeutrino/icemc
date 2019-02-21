@@ -182,8 +182,16 @@ int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE,
      fluxes[i] = total_flux; 
   }
 
+
   double random = rng.Uniform(0, total_flux); 
-  const Source * which = sources[std::upper_bound(fluxes.begin(), fluxes.end(), random) - fluxes.begin()]; 
+  unsigned index = std::upper_bound(fluxes.begin(), fluxes.end(), random) - fluxes.begin(); 
+//  printf("random: %g total_flux%g, index:%u \n",random, total_flux, index); 
+  if (total_flux == 0) 
+  {
+    nuE = minE; // do something... 
+    return 1; 
+  }
+  const Source * which = sources[index]; 
 
   if (nudir) *nudir = which->getDirection(t); 
 
