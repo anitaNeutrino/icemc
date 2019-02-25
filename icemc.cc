@@ -1683,6 +1683,7 @@ int main(int argc,  char **argv) {
       {
 	objName = src_model->getDirectionAndEnergyAndOriginInfo(objName, RA, dec, &force_dir, realtime_this, pnu, src_min, src_max);
 	if(objName!="noObject"){got_a_good_position = 1;}
+	dec*=TMath::RadToDeg(); // Get it make in deg
 	
 	//std::cout << "pnu = " << pnu << std::endl;
 	//std::cout << "RA = " << RA << std::endl;
