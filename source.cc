@@ -14,7 +14,7 @@
 // SourceModel 
 
 
-SourceModel::SourceModel(const char * n, unsigned seed) 
+SourceModel::SourceModel(const char * n, unsigned seed, int decCutLimit) 
   : name(n), rng(seed) { }
 
 SourceModel::~SourceModel() 
@@ -34,7 +34,7 @@ const double txs_z = 0.3365;
 // SNe
 const double gamma_index = 2;
 
-SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed) 
+SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, int decCutLimit) 
 {
 
   if (!key || !strcasecmp(key,"NONE")) return NULL; 
@@ -43,7 +43,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
   if (models.count(key)) 
     return models[key]; 
 
-  SourceModel * m = new SourceModel(key,seed); 
+  SourceModel * m = new SourceModel(key,seed,decCutLimit); 
 
   TString str(key); 
   TObjArray * tokens = str.Tokenize("+"); 
@@ -98,9 +98,9 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
 	    tree->GetEntry(i);
 
 	    // Only look for SNs detected within A4
-	    if( (discoveryUnixTime < a4_tmin) || (discoveryUnixTime > a4_tmax) ){continue;}
+	    //if( (discoveryUnixTime < a4_tmin) || (discoveryUnixTime > a4_tmax) ){continue;}
 	    // Declination cut (ANITA won't see neutrinos from these sources)
-	    if( abs(dec)>30 ){continue;}
+	    if( abs(dec)>decCutLimit){continue;}
 	    // Only look at SNe of type II for now
 	    // Core collapse SNe, associated with type II, can accelerate CRs to high energies
 	    // Thus, only look for those beginning with SN II

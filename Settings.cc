@@ -275,11 +275,13 @@ void Settings::Initialize() {
 
   SOURCE = "None"; 
   SOURCE_MIN_E = 18; 
-  SOURCE_MAX_E = 21; 
+  SOURCE_MAX_E = 21;
 
   IGNORE_CROSSPOL = 0; 
   POL_SIGN_HACK = 1; 
-  CUTONWEIGHTS = 1e-10; 
+  CUTONWEIGHTS = 1e-10;
+  DEC_CUT = 999; // Declination cut 999 is default: no declination cut
+                                   //  If you specify a value, then only use sources within from declination = -DEC_CUT to DEC_CUT
 }
 
 
@@ -834,7 +836,8 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   getSetting("Ignore Cross-Pol", IGNORE_CROSSPOL); 
   getSetting("Polarization Sign Hack", POL_SIGN_HACK); 
-  getSetting("Minimum weight", CUTONWEIGHTS); 
+  getSetting("Minimum weight", CUTONWEIGHTS);
+  getSetting("Absolute declination cut", DEC_CUT); 
 } //method ReadInputs
 
 

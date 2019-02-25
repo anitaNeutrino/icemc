@@ -29,7 +29,7 @@ class SourceModel
 
   public: 
 
-    SourceModel(const char * model_name, unsigned seed  = 0); 
+  SourceModel(const char * model_name, unsigned seed  = 0, int decCutLimit = 999); 
 
 /** We will label our source models by a string so they're easy to pick. 
  *  
@@ -40,7 +40,7 @@ class SourceModel
  *
  */ 
 
-    static SourceModel * getSourceModel(const char * key, unsigned seed = 0); 
+  static SourceModel * getSourceModel(const char * key, unsigned seed = 0, int decCutLimit = 999); 
 
     /** Add a source to our model. 
      * This class will then own the source (it will release its memory). 

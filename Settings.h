@@ -249,6 +249,7 @@ class Settings : public TObject {
   int IGNORE_CROSSPOL; //Ignore the crosspol polarization component
   int POL_SIGN_HACK; // patch up the sign of e/h 
   double CUTONWEIGHTS;
+  double DEC_CUT;
 
   int useLPM;
 
