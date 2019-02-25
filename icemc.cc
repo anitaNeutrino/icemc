@@ -66,7 +66,7 @@
 #include "SimulatedSignal.h"
 #include "EnvironmentVariable.h"
 #include "source.hh" 
-
+#include <typeinfo>
 #include <string>
 #include <sstream>
 
@@ -1630,9 +1630,9 @@ int main(int argc,  char **argv) {
 
 
       Vector force_dir;
-      std::string objName;
-      double RA, dec;
-      //std::string *objName = new std::string;
+      double RA = 0;
+      double dec = 0;
+      std::string objName = "noObject";
       if (!src_model &&  spectra1->IsSpectrum() ){//if using energy spectrum
 
         if(settings1->USEDARTBOARD) pnu=spectra1->GetNuEnergy();
@@ -1660,7 +1660,7 @@ int main(int argc,  char **argv) {
         vmmhz_em[i]=0.; // for keeping track of just the em component of the shower
       } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
 
-      int got_a_good_position = 0; 
+      int got_a_good_position = 0;
       
       // Picks the balloon position and at the same time sets the masks and thresholds
       bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
@@ -1678,14 +1678,16 @@ int main(int argc,  char **argv) {
       latitude_this=bn1->latitude;
       altitude_this=bn1->altitude;
       heading_this=bn1->heading;
-
+      
       if (src_model) 
       {
-	got_a_good_position = !src_model->getDirectionAndEnergyAndOriginInfo(objName, RA, dec, &force_dir, realtime_this, pnu, src_min, src_max);
+	objName = src_model->getDirectionAndEnergyAndOriginInfo(objName, RA, dec, &force_dir, realtime_this, pnu, src_min, src_max);
+	if(objName!="noObject"){got_a_good_position = 1;}
+	
 	//std::cout << "pnu = " << pnu << std::endl;
-	std::cout << "RA = " << RA << std::endl;
-	std::cout << "dec = " << dec << std::endl;
-	std::cout << "objName = " << objName << std::endl; // Deal with strings. Resume tomorrow, then add to tree so we have origin info.
+	//std::cout << "RA = " << RA << std::endl;
+	//std::cout << "dec = " << dec << std::endl;
+	//std::cout << "objName = " << objName << std::endl;
           pnu*=1e9; //GeV -> eV
           ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
           len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
@@ -3706,15 +3708,16 @@ int main(int argc,  char **argv) {
             truthEvPtr->sourceAlt        = sourceAlt;
 
 	    cout << "Neutrino passed!" << endl;
-
-	    //getThetaAndPhiWave;
-	    
-	    //truthEvPtr->payloadTheta = payloadTheta;
-	    //truthEvPtr->payloadPhi = payloadPhi;
+	    if(src_model){cout << "It originated from " << objName << " (" << RA << ", " << dec << ")" << endl;}
 	    
             truthEvPtr->weight           = weight;
             truthEvPtr->weight1           = weight1;
-            truthEvPtr->phaseWeight       = 1./interaction1->dnutries; 
+            truthEvPtr->phaseWeight       = 1./interaction1->dnutries;
+
+	    truthEvPtr->RA = RA;
+	    truthEvPtr->dec = dec;
+	    truthEvPtr->objName = objName;
+	    
             for (int i=0;i<3;i++){
               truthEvPtr->balloonPos[i]  = bn1->r_bn[i];
               truthEvPtr->balloonDir[i]  = bn1->n_bn[i];

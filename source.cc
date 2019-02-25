@@ -108,7 +108,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed)
 	    //found = objType->find(desiredType);
 	    //if(found != 0){continue;}
 	    // Only look at 2 sources for now
-	    if(*objName != "SN 2016jby" && *objName != "SN 2016iyz"){continue;}
+	    //if(*objName != "SN 2016jby" && *objName != "SN 2016iyz"){continue;}
 	    //if(*objName != "SN 2016jby"){continue;}
 	    
 	    //std::cout << "ra = " << ra << std::endl;
@@ -233,9 +233,9 @@ TH1 * SourceModel::estimateFlux(double tmin, double tmax, double Emin, double Em
 }
 
 
-int SourceModel::getDirectionAndEnergyAndOriginInfo(std::string objName, double & RA, double & dec, Vector * nudir, double t, double  & nuE, double minE, double maxE)
+std::string SourceModel::getDirectionAndEnergyAndOriginInfo(std::string objName, double & RA, double & dec, Vector * nudir, double t, double  & nuE, double minE, double maxE)
 {
-  if (!sources.size()) return 1;
+  if (!sources.size()) return "1";
 
   bool fixedEnergy = minE==maxE;
   if (fixedEnergy) nuE = minE; 
@@ -259,7 +259,7 @@ int SourceModel::getDirectionAndEnergyAndOriginInfo(std::string objName, double 
   if (total_flux == 0) 
   {
     nuE = minE; // do something... 
-    return 1; 
+    return "1"; 
   }
   // This is the chosen source, so we should retain some info about it
   // Then we can easily access info about *each* simulated neutrino's origin
@@ -275,7 +275,7 @@ int SourceModel::getDirectionAndEnergyAndOriginInfo(std::string objName, double 
 
   if (!fixedEnergy) nuE =  which->getFlux()->pickEnergy(minE,maxE,t,&rng);
       
-  return 0; 
+  return objName; 
 }
 
 

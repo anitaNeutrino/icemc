@@ -5,13 +5,15 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 #include <string>
 #include <vector>
 
-void trim(std::string& s, const char* t)
+void trim(std::string& s, const char t)
 {
-  s.erase(0, s.find_first_not_of(t));
-  s.erase(s.find_last_not_of(t) + 1);
+  //s.erase(0, s.find_first_not_of(t));
+  //s.erase(s.find_last_not_of(t) + 1);
+  s.erase(std::remove(s.begin(), s.end(), t), s.end());
 }
 
 void rootify3FGL()
@@ -49,7 +51,7 @@ void rootify3FGL()
   std::vector<double> he_bg; double he_bgTemp;
   std::vector<double> he_sig; double he_sigTemp;
 
-  bool doLightCurves = true;
+  bool doLightCurves = false;
   if(doLightCurves == true)
     {
       catTree.Branch("met",&met);
@@ -73,7 +75,7 @@ void rootify3FGL()
     {
       lineNumber++;
       // skip header
-      if(lineNumber > 1 && lineNumber <= 10)   // if you only want, say, 10 sources, add && lineNumber <= 10 to the conditional
+      if(lineNumber > 1)   // if you only want, say, 10 sources, add && lineNumber <= 10 to the conditional
 	{
 	  std::istringstream iss(line); // construct a string stream from line
 	  // read the tokens from current line separated by comma
@@ -81,7 +83,8 @@ void rootify3FGL()
 	  std::string token; // current token
 	  while (std::getline(iss, token, ','))
 	    {
-	      trim(token, "\" ");
+	      trim(token, '\"');
+	      trim(token, '*');
 	      tokens.push_back(token); // add the token to the vector
 	    }
 
@@ -141,8 +144,9 @@ void rootify3FGL()
 		  std::cout << "dec: " << dec << std::endl;
 		  std::cout << "ra: " << ra << std::endl;
 		  std::cout << "type: " << classType << std::endl;
-		  std::cout << "association: " << association << std::endl;
-	  */	  
+	  */
+	  //std::cout << "association: " << sourceName << std::endl;
+	  	  
 	}
     }
 
