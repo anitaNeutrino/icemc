@@ -284,6 +284,12 @@ void Settings::Initialize() {
   DEC_CUT = 999; // Declination cut 999 is default: no declination cut
                                    //  If you specify a value, then only use sources within from declination = -DEC_CUT to DEC_CUT
   ALL_SKY_MAP = 0; // Draw all-sky map?
+  CUSTOM_NAME = "customObject";
+  CUSTOM_RA = 0;
+  CUSTOM_DEC = 0;
+  // Custom source options
+  
+  
 }
 
 
@@ -604,7 +610,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Source Option", SOURCE,true); 
   getSetting("Source Max Energy", SOURCE_MAX_E,true); 
   getSetting("Source Min Energy", SOURCE_MIN_E,true); 
-
+  getSetting("Which Sources", WHICH_SOURCES,true); 
 
   getSetting("Cross-section factor", SIGMA_FACTOR);
   if (SIGMA_FACTOR!=1){
@@ -840,7 +846,13 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Polarization Sign Hack", POL_SIGN_HACK); 
   getSetting("Minimum weight", CUTONWEIGHTS);
   getSetting("Absolute declination cut", DEC_CUT);
-  getSetting("Draw all-sky map", ALL_SKY_MAP); 
+  getSetting("Draw all-sky map", ALL_SKY_MAP);
+
+  //Custom sources
+  getSetting("Custom Name",CUSTOM_NAME);
+  getSetting("Custom RA",CUSTOM_RA);
+  getSetting("Custom Dec",CUSTOM_DEC);
+  
 } //method ReadInputs
 
 

@@ -635,7 +635,7 @@ int main(int argc,  char **argv) {
   if (exp_tmp!=0)
     settings1->EXPONENT=exp_tmp;
 
-  SourceModel *src_model = SourceModel::getSourceModel(settings1->SOURCE.c_str(), settings1->SEED + 0x5eed, settings1->DEC_CUT); 
+  SourceModel *src_model = SourceModel::getSourceModel(settings1->SOURCE.c_str(), settings1->SEED + 0x5eed, settings1->WHICH_SOURCES, settings1->DEC_CUT, settings1->CUSTOM_NAME, settings1->CUSTOM_RA, settings1->CUSTOM_DEC);
   double src_min = TMath::Power(10,settings1->SOURCE_MIN_E-9);  //since source model takes things in GeV
   double src_max = TMath::Power(10,settings1->SOURCE_MAX_E-9);  //since source model takes things in GeV
   Spectra *spectra1 = new Spectra((int)settings1->EXPONENT);
@@ -644,7 +644,7 @@ int main(int argc,  char **argv) {
 
  
   if (src_model) {
-    printf("Using Source Model%s\n", src_model->getName());
+    printf("Using Source Model %s\n", src_model->getName());
     // Graphing
   }
   

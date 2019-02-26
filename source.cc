@@ -14,8 +14,8 @@
 // SourceModel 
 
 
-SourceModel::SourceModel(const char * n, unsigned seed, int decCutLimit) 
-  : name(n), rng(seed) { }
+SourceModel::SourceModel(const char * n, unsigned seed, std::string whichSources, int decCutLimit, std::string customName, double customRA, double customDec) 
+  : name(n), rng(seed), whichSources(whichSources), decCutLimit(decCutLimit), customName(customName), customRA(customRA), customDec(customDec) { }
 
 SourceModel::~SourceModel() 
 {
@@ -34,7 +34,7 @@ const double txs_z = 0.3365;
 // SNe
 const double gamma_index = 2;
 
-SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, int decCutLimit) 
+SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::string whichSources, int decCutLimit, std::string customName, double customRA, double customDec) 
 {
 
   if (!key || !strcasecmp(key,"NONE")) return NULL; 
@@ -43,7 +43,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, int d
   if (models.count(key)) 
     return models[key]; 
 
-  SourceModel * m = new SourceModel(key,seed,decCutLimit); 
+  SourceModel * m = new SourceModel(key,seed,whichSources, decCutLimit, customName, customRA, customDec); 
 
   TString str(key); 
   TObjArray * tokens = str.Tokenize("+"); 
@@ -54,8 +54,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, int d
 
     TString stripped( tok->String().Strip( TString::kBoth)); 
 
-    // the flux from TXS
-    
+    // The flux from TXS
     if (stripped == "TXS15")
     {
 
@@ -68,6 +67,18 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, int d
 			      )) ; 
     }
     
+    // A custom source 
+    else if (stripped=="CUSTOM")
+      {
+
+	m->addSource(new Source(customName, customRA, 
+				customDec,
+				new ConstantExponentialSourceFlux(txs_index,txs_flux,txs_E0) // for now just use these flux constants
+				)) ; 
+	
+      }
+
+    // Supernovae
     else if(stripped=="SNA4")
       {
 	
@@ -92,24 +103,36 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, int d
 	tree->SetBranchAddress("name",&objName);
 	tree->SetBranchAddress("objType",&objType);
 	tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
-
+	
 	for (unsigned int i = 0; i < tree->GetEntries(); i++) 
 	  {
 	    tree->GetEntry(i);
-
+	    
+	    // If we didn't specific all sources
+	    if(whichSources!="All")
+	      {
+		// Account for the chosen one
+		if(*objName==whichSources)
+		  {
+		    std::cout << "Using the specified source: " << whichSources << std::endl;
+		  }
+		else{continue;}
+	      }
+	    
 	    // Only look for SNs detected within A4
 	    //if( (discoveryUnixTime < a4_tmin) || (discoveryUnixTime > a4_tmax) ){continue;}
 	    // Declination cut (ANITA won't see neutrinos from these sources)
-	    if( abs(dec)>decCutLimit){continue;}
+	    //if( abs(dec)>10){continue;}
+	    
 	    // Only look at SNe of type II for now
 	    // Core collapse SNe, associated with type II, can accelerate CRs to high energies
 	    // Thus, only look for those beginning with SN II
 	    //desiredType = "SN II"; // <- DEFAULT
 	    //found = objType->find(desiredType);
 	    //if(found != 0){continue;}
+	    
 	    // Only look at 2 sources for now
 	    //if(*objName != "SN 2016jby" && *objName != "SN 2016iyz"){continue;}
-	    //if(*objName != "SN 2016jby"){continue;}
 	    
 	    //std::cout << "ra = " << ra << std::endl;
 	    //std::cout << "name = " << *name << std::endl;
@@ -158,7 +181,20 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, int d
         if (fava->unix_tmax < a3_tmin || fava->unix_tmin > a3_tmax) continue;
         printf("passed time cut\n");
 
+	std::string *fava_name = new std::string;	
+	*fava_name = fava->association.GetString().Data();
 
+	// If we didn't specific all sources
+	if(whichSources!="All")
+	  {
+	    // Account for the chosen one
+	    if(*fava_name==whichSources)
+	      {
+		std::cout << "Using the specified source: " << whichSources << std::endl;
+	      }
+	    else{continue;}
+	  }
+	
         //say no to |dec| >30 
         if (fabs(fava->dec) > 30) continue; 
         printf("passed dec cut\n");
@@ -169,8 +205,6 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, int d
         //only blazars
         if (fava->source_class.GetString() ==  "bcu" || fava->source_class.GetString() == "fsrq" || fava->source_class.GetString() == "bll")
         {
-	  std::string *fava_name = new std::string;
-	  *fava_name = fava->association.GetString().Data();
       
           m->addSource(new Source(*fava_name, fava->ra, fava->dec, 
                        new TimeWindowedExponentialSourceFlux( fava->unix_tmin, fava->unix_tmax, txs_index, 

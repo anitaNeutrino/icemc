@@ -150,10 +150,11 @@ class Settings : public TObject {
   double SLAC_DEPTH; // vertical depth of interaction at slac beam test
   double SLAC_HORIZ_DEPTH; // horizontal depth of interaction at slac
 
-  std::string SOURCE;  // the source option (see source.hh) 
+  std::string SOURCE;  // the source option (see source.hh)
+  std::string WHICH_SOURCES; // which sources? All, or just a specific one
   double SOURCE_MIN_E;  // log10 of minimum energy for sources 
   double SOURCE_MAX_E;   // log10 of maximinum energy for sources 
-
+  
   int ROUGHNESS; // include effects of surface roughness
   int FIRN; // whether or not to include the firn
 
@@ -251,6 +252,11 @@ class Settings : public TObject {
   double CUTONWEIGHTS;
   double DEC_CUT;
   int ALL_SKY_MAP;
+  
+  // custom sources
+  std::string CUSTOM_NAME;
+  double CUSTOM_RA;
+  double CUSTOM_DEC;
   
   int useLPM;
 
