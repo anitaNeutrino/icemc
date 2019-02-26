@@ -250,7 +250,8 @@ class Settings : public TObject {
   int POL_SIGN_HACK; // patch up the sign of e/h 
   double CUTONWEIGHTS;
   double DEC_CUT;
-
+  int ALL_SKY_MAP;
+  
   int useLPM;
 
   // In-header intialization is to old gcc as Domino's pizza is to real Italians

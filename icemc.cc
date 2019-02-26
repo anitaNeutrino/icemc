@@ -11,9 +11,11 @@
 #include "TTreeIndex.h"
 #include "TChain.h"
 #include "TH1.h"
+#include "TH2.h"
 #include "TF1.h"
 #include "TF2.h"
 #include "TFile.h"
+#include "TObject.h"
 #include "TRandom.h"
 #include "TRandom2.h"
 #include "TRandom3.h"
@@ -26,10 +28,12 @@
 #include "TH2F.h"
 #include "TText.h"
 #include "TProfile.h"
+#include "TGraph.h"
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
 #include "TStyle.h"
 #include "TMath.h"
+#include "TMarker.h"
 #include <unistd.h>
 #include "TVector3.h"
 #include "TRotation.h"
@@ -81,6 +85,7 @@
 
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
+#include "SkyMap.h"
 #include "AnitaGeomTool.h"
 #include "AnitaConventions.h"
 #include "RawAnitaHeader.h"
@@ -398,7 +403,6 @@ double justSignal_trig[2][48][512];
 double justNoise_dig[2][48][512];
 double justSignal_dig[2][48][512];
 
-
 // functions
 
 // set up array of viewing angles for making plots for seckel
@@ -640,7 +644,8 @@ int main(int argc,  char **argv) {
 
  
   if (src_model) {
-    printf("Using Source Model%s\n", src_model->getName()); 
+    printf("Using Source Model%s\n", src_model->getName());
+    // Graphing
   }
   
   Roughness *rough1 = new Roughness(settings1); // create new instance of the roughness class
@@ -1410,7 +1415,6 @@ int main(int argc,  char **argv) {
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
 
-
   TruthAnitaNeutrino * truthNuPtr = new TruthAnitaNeutrino; 
   TTree* truthAnitaNuTree = new TTree("truthAnitaNuTree","Truth ANITA Neutrino Tree (all nus)"); 
   truthAnitaNuTree->SetAutoFlush(10000); 
@@ -1423,6 +1427,14 @@ int main(int argc,  char **argv) {
 #endif
   //end ROOT variable definitions
   ///////////////////////////////////////////////////////////////////////
+#ifdef ANITA_UTIL_EXISTS
+
+  const int skyMapLat = 90;
+  TMarker *astroObject = new TMarker();
+  SkyMap *skyMapOut = new SkyMap(skyMapLat);
+   
+  
+#endif
 
   if (bn1->WHICHPATH==3) {
     settings1->CONSTANTCRUST = 1;  //Set ice depths and elevations all the same
@@ -3715,9 +3727,23 @@ int main(int argc,  char **argv) {
             truthEvPtr->weight1           = weight1;
             truthEvPtr->phaseWeight       = 1./interaction1->dnutries;
 
+	    // for passed neutrinos:
+
+	      if(settings1->ALL_SKY_MAP)
+		{  
+		  astroObject->SetX(RA);
+		  astroObject->SetY(dec);
+		  astroObject->SetMarkerStyle(20);
+		  astroObject->SetMarkerSize(1.5);
+		  astroObject->SetMarkerColor(9);
+		  skyMapOut->addMarker(astroObject);
+		}
+	    
+	    
 	    truthEvPtr->RA = RA;
 	    truthEvPtr->dec = dec;
 	    truthEvPtr->objName = objName;
+	    //
 	    
             for (int i=0;i<3;i++){
               truthEvPtr->balloonPos[i]  = bn1->r_bn[i];
@@ -3796,7 +3822,7 @@ int main(int argc,  char **argv) {
               }//end int j
 	      
             }// end int iant
-
+	    
             truthNuPtr->setSkipped(false); 
 
             if (truthAnitaNuTree->GetEntries() <= inu-10) 
@@ -3804,6 +3830,7 @@ int main(int argc,  char **argv) {
               printf("SKIPPED BEFORE %d\n",inu); 
 
             }
+	    
             truthAnitaNuTree->Fill();
             truthAnitaTree->Fill();
             delete truthEvPtr;
@@ -4098,7 +4125,17 @@ int main(int argc,  char **argv) {
 #endif
 
 #endif
-  
+
+
+  if(settings1->ALL_SKY_MAP)
+    {  
+      TCanvas *skyMapC = new TCanvas("skyMapC", "skyMapC", 1000, 500);
+      skyMapC->cd(1);
+      skyMapOut->Draw();
+      string outputSkyMap =string(outputdir.Data())+"/allSkyMap"+run_num+".png";
+      skyMapC->SaveAs(outputSkyMap.c_str());
+    }
+ 
   cout << "closing file.\n";
   CloseTFile(hfile);
 
