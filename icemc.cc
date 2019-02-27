@@ -1427,13 +1427,11 @@ int main(int argc,  char **argv) {
 #endif
   //end ROOT variable definitions
   ///////////////////////////////////////////////////////////////////////
-#ifdef ANITA_UTIL_EXISTS
 
+#ifdef ANITA3_EVENTREADER
   const int skyMapLat = 90;
   TMarker *astroObject = new TMarker();
   SkyMap *skyMapOut = new SkyMap(skyMapLat);
-   
-  
 #endif
 
   if (bn1->WHICHPATH==3) {
@@ -3728,17 +3726,16 @@ int main(int argc,  char **argv) {
             truthEvPtr->phaseWeight       = 1./interaction1->dnutries;
 
 	    // for passed neutrinos:
-
-	      if(settings1->ALL_SKY_MAP)
-		{  
-		  astroObject->SetX(RA);
-		  astroObject->SetY(dec);
-		  astroObject->SetMarkerStyle(20);
-		  astroObject->SetMarkerSize(1.5);
-		  astroObject->SetMarkerColor(9);
-		  skyMapOut->addMarker(astroObject);
-		}
 	    
+	    if(settings1->ALL_SKY_MAP)
+	      {  
+		astroObject->SetX(RA);
+		astroObject->SetY(dec);
+		astroObject->SetMarkerStyle(20);
+		astroObject->SetMarkerSize(1.5);
+		astroObject->SetMarkerColor(9);
+		skyMapOut->addMarker(astroObject);
+	      }
 	    
 	    truthEvPtr->RA = RA;
 	    truthEvPtr->dec = dec;
@@ -4127,6 +4124,7 @@ int main(int argc,  char **argv) {
 #endif
 
 
+  #ifdef ANITA3_EVENTREADER
   if(settings1->ALL_SKY_MAP)
     {  
       TCanvas *skyMapC = new TCanvas("skyMapC", "skyMapC", 1000, 500);
@@ -4135,6 +4133,7 @@ int main(int argc,  char **argv) {
       string outputSkyMap =string(outputdir.Data())+"/allSkyMap"+run_num+".png";
       skyMapC->SaveAs(outputSkyMap.c_str());
     }
+  #endif 
  
   cout << "closing file.\n";
   CloseTFile(hfile);

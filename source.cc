@@ -214,17 +214,17 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
       {
         fava_tree->GetEntry(i);
 
-	std::cout << "dec = " << fava->dec << std::endl;
+	//std::cout << "dec = " << fava->dec << std::endl;
 	
         //printf("%s %s %d %d %g %g %g\n",fava->association.GetString().Data(), fava->source_class.GetString().Data(), fava->unix_tmin, fava->unix_tmax, fava->dec, fava->he_sigma, fava->he_flux);
 	
 	// time cut
 	if( (fava->unix_tmax < TMIN) || (fava->unix_tmin > TMAX) ){continue;}
-        printf("passed time cut\n");
+        //printf("passed time cut\n");
 
 	std::string *fava_name = new std::string;	
 	*fava_name = fava->association.GetString().Data();
-	std::cout << "name = " << *fava_name << std::endl;
+	//std::cout << "name = " << *fava_name << std::endl;
 
 	// If we didn't specific all sources
 	
@@ -239,16 +239,14 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
 	  }
 	
 	
-        //say no to |dec| >30 
+        //say no to |dec| >decCutLimit
         if (fabs(fava->dec) > decCutLimit) continue; 
-        printf("passed dec cut\n");
+        //printf("passed dec cut\n");
 
 	//say no to low HE flux 
         if (fava->he_sigma < 4 && fava->he_flux < 0) continue;
-        printf("passed flux cut \n");
+        //printf("passed flux cut \n");
 
-	//std::cout << fava->source_class.GetString() << std::endl;
-	
         //only blazars
         if (fava->source_class.GetString() ==  "bcu" || fava->source_class.GetString() == "fsrq" || fava->source_class.GetString() == "bll")
         {
