@@ -641,7 +641,6 @@ int main(int argc,  char **argv) {
   Spectra *spectra1 = new Spectra((int)settings1->EXPONENT);
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
-
  
   if (src_model) {
     printf("Using Source Model %s\n", src_model->getName());
@@ -653,14 +652,20 @@ int main(int argc,  char **argv) {
 
   Screen *panel1 = new Screen(0);  // create new instance of the screen class
 
-  if(!src_model || spectra1->IsSpectrum())
+  if(!src_model && spectra1->IsSpectrum())
   {
-    cout<< "Lowest energy for spectrum is 10^18 eV! \n";
+    cout << "Using an energy spectrum" << endl;
   }
+  
   else if (src_model) 
   {
     cout<< "Source Model Bounds are 10^" << settings1->SOURCE_MIN_E << "eV to 10^" << settings1->SOURCE_MAX_E << "eV" << endl; 
   }
+
+  else if (!src_model && spectra1->IsMonoenergetic())
+    {
+      cout << "Using a monoenergetic exponent of: " << settings1->EXPONENT << endl;
+    }
 
   std::cout << "----------------------" << std::endl;
 
@@ -1556,6 +1561,8 @@ int main(int argc,  char **argv) {
   //CD TODO: Do something analogous for sources 
   TCanvas *ctest1 = new TCanvas("ctest1", "", 880, 800);
 
+  // Surely we only want this if there's a spectrum...
+  if ( spectra1->IsSpectrum() ){
   spectra1->GetGEdNdEdAdt()->Draw("al");
   spectra1->GetGEdNdEdAdt()->GetHistogram()->SetMinimum(-0.2*spectra1->Getmaxflux());
   spectra1->GetSEdNdEdAdt()->SetLineColor(2);
@@ -1563,7 +1570,8 @@ int main(int argc,  char **argv) {
 
   stemp=string(outputdir.Data())+"/GetG_test1.pdf";
   ctest1->Print((TString)stemp);
-
+  }
+  
   // for averaging balloon altitude and distance from center of earth
   // for comparing with Peter
   double average_altitude=0.;
@@ -2173,6 +2181,7 @@ int main(int argc,  char **argv) {
 
       // if the probably the neutrino gets absorbed is almost 1,  throw it out.
 
+      //std::cout << "Cut on weights = " << settings1->CUTONWEIGHTS;
       //if ( bn1->WHICHPATH != 4 && settings1->FORSECKEL != 1 && !settings1->SKIPCUTS && !settings1->SOURCE) {
       if ( bn1->WHICHPATH != 4 && settings1->FORSECKEL != 1 && !settings1->SKIPCUTS) {
         if (weight_test < settings1->CUTONWEIGHTS) {
@@ -3693,6 +3702,8 @@ int main(int argc,  char **argv) {
             Adu5PatPtr->roll = bn1->roll;
             Adu5PatPtr->run = run_no;
 
+	    cout << "Neutrino (evNum = " << eventNumber << ") passed" << endl;
+	    
 #ifdef ANITA3_EVENTREADER
             if (settings1->WHICH==9 || settings1->WHICH==10) {
               rawHeaderPtr->setTrigPattern((short) l3trig[0], AnitaPol::kVertical);
@@ -3718,7 +3729,6 @@ int main(int argc,  char **argv) {
             truthEvPtr->sourceLat        = sourceLat;
             truthEvPtr->sourceAlt        = sourceAlt;
 
-	    cout << "Neutrino passed!" << endl;
 	    if(src_model){cout << "It originated from " << objName << " (" << RA << ", " << dec << ")" << endl;}
 	    
             truthEvPtr->weight           = weight;
@@ -3873,14 +3883,16 @@ int main(int argc,  char **argv) {
                   sum_sample+=sampleweights->GetBinContent(k)*pow(10., sampleweights->GetBinLowEdge(k));
                   if (sum_sample>0.99*sum_sampleintegral) {
                     // reset the cut value.
-                    settings1->CUTONWEIGHTS=pow(10., sampleweights->GetBinLowEdge(k));
-                    cout << "settings1->CUTONWEIGHTS is " << settings1->CUTONWEIGHTS << "\n";
+                    //settings1->CUTONWEIGHTS=pow(10., sampleweights->GetBinLowEdge(k));
+                    //cout << "settings1->CUTONWEIGHTS is " << settings1->CUTONWEIGHTS << "\n";
                     k=0;
                   }
                 }
               }
             }//end if HIST & ONLYFINAL & sampleweights HISTMAXENTRIES
 
+	    //cout << "cut on weights = " << settings1->CUTONWEIGHTS << endl;
+	    
             // outputs to text file variables relevant to sky map.
             forbrian << interaction1->costheta_nutraject << " " << n_nutraject_ontheground.Phi() << " " << bn1->phi_bn << " " << logweight << "\n";
             // incrementing by flavor
@@ -4657,12 +4669,12 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
 //      TFile fsrcflux("fsrcflux.root","RECREATE"); 
 //      src_flux->Write(); 
     }
-
-
+  
+  
     for (int i=0;i<N_even_E;i++) {
       thisenergy=pow(10., (min_energy+((double)i)*even_E));
       primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);
-
+    
       // are the units of this in log (eV) ???!????!??
       double EdNdEdAdt = src_model ? 1e9*src_flux->Interpolate(thisenergy*1e-9) : spectra1->GetEdNdEdAdt(log10(thisenergy));
 
