@@ -118,7 +118,7 @@ void rootifySupernovaeTNS()
   std::string name;
   std::string raAlt;
   std::string decAlt;
-  std::string objType;
+  std::string fullObjType;
   float redshift;
   std::string hostName;
   float hostRedshift;
@@ -142,12 +142,16 @@ void rootifySupernovaeTNS()
   float ra; // ra in 0 -> 360 deg format
   float dec; // dec in -90 -> 90 deg format
   int discoveryUnixTime; // converted from date
+  std::string objSubtype; // I (SN I) or II (SN II) or more complex types (SLSN), etc
+  std::string objSubtypeSuffix; // a (SNIa, SNIIb), b-pec (SNIb-pec) etc
 
   tnsTree.Branch("id",&id);
   tnsTree.Branch("name",&name);
   tnsTree.Branch("ra",&ra);
   tnsTree.Branch("dec",&dec);
-  tnsTree.Branch("objType",&objType);
+  tnsTree.Branch("fullObjType",&fullObjType);
+  tnsTree.Branch("objSubtype",&objSubtype);
+  tnsTree.Branch("objSubtypeSuffix",&objSubtypeSuffix);
   tnsTree.Branch("redshift",&redshift);
   tnsTree.Branch("hostName",&hostName);
   tnsTree.Branch("hostRedshift",&hostRedshift);
@@ -193,7 +197,8 @@ void rootifySupernovaeTNS()
 	  name = tokens[1];
 	  raAlt = tokens[2];
 	  decAlt = tokens[3];
-	  objType = tokens[4];
+	  fullObjType = tokens[4];
+	  //
 	  redshift = atof(tokens[5].c_str());
 	  hostName = tokens[6]; if(hostName == ""){hostName = "Unknown";}
 	  hostRedshift =  atof(tokens[7].c_str()); if(hostRedshift == 0){hostRedshift = -999;} // if unknown (i.e. a blank field = 0, set to -999)
@@ -215,6 +220,8 @@ void rootifySupernovaeTNS()
 	  int pass = 0;
 	  string jub;
 	  string raAltSep[3] = {};
+	  string supernovaString = "SN ";
+	  //size_t prefix;
 	  // Extract substrings
 	  while(jub != raAlt)
 	    {
@@ -265,6 +272,37 @@ void rootifySupernovaeTNS()
 	  discoveryUnixTime = (int)ts;
 	  //cout << discoveryUnixTime << endl;
 	  // END TIME
+
+	  // Supernovae have complex names sometimes...
+	  // Also SNI is contained within the SNII string...
+	  if(fullObjType.find("SN II") == 0)
+	    {
+	      objSubtype = "II";
+	    }
+	  else if(fullObjType.find("SN I") == 0)
+	    {
+	      objSubtype = "I";
+	    }
+	  else
+	    {
+	      objSubtype = fullObjType; // Non-standard SN, such as SLSN
+	    }
+
+	  // Keep suffix
+	  // SN 1a-jub, suffix is a-jub
+	  if(objSubtype!=fullObjType)
+	    {
+	      objSubtypeSuffix = fullObjType.substr(fullObjType.find(objSubtype)+1);
+	    }
+	  else
+	    {
+	      objSubtypeSuffix = "None";
+	    }
+	  /*
+	  std::cout << "full = " << fullObjType << std::endl;
+	  std::cout << "sub = " << objSubtype << std::endl;
+	  std::cout << "suffix = " << objSubtypeSuffix << std::endl;
+	  */
 	  
 	  tnsTree.Fill();
 	}
