@@ -14,8 +14,8 @@
 // SourceModel 
 
 
-SourceModel::SourceModel(const char * n, unsigned seed, std::string whichSources, int decCutLimit, std::string customName, double customRA, double customDec) 
-  : name(n), rng(seed), whichSources(whichSources), decCutLimit(decCutLimit), customName(customName), customRA(customRA), customDec(customDec) { }
+SourceModel::SourceModel(const char * n, unsigned seed, std::string whichSources, std::string whichSubtype, std::string whichStartTime, std::string whichEndTime, int decCutLimit, std::string customName, double customRA, double customDec, double customGamma)
+  : name(n), rng(seed), whichSources(whichSources), whichSubtype(whichSubtype), whichStartTime(whichStartTime), whichEndTime(whichEndTime), decCutLimit(decCutLimit), customName(customName), customRA(customRA), customDec(customDec), customGamma(customGamma) { }
 
 SourceModel::~SourceModel() 
 {
@@ -34,7 +34,7 @@ const double txs_z = 0.3365;
 // SNe
 const double gamma_index = 2;
 
-SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::string whichSources, int decCutLimit, std::string customName, double customRA, double customDec) 
+SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::string whichSources, std::string whichSubtype, std::string whichStartTime, std::string whichEndTime, int decCutLimit, std::string customName, double customRA, double customDec, double customGamma) 
 {
 
   if (!key || !strcasecmp(key,"NONE")) return NULL; 
@@ -43,11 +43,46 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
   if (models.count(key)) 
     return models[key]; 
 
-  SourceModel * m = new SourceModel(key,seed,whichSources, decCutLimit, customName, customRA, customDec); 
+  SourceModel * m = new SourceModel(key,seed,whichSources, whichSubtype, whichStartTime, whichEndTime, decCutLimit, customName, customRA, customDec, customGamma); 
 
   TString str(key); 
   TObjArray * tokens = str.Tokenize("+"); 
 
+  ///// Assign times in which we look for sources
+  int TMIN = 0;
+  int TMAX = 0;
+  // Start times
+  if(whichStartTime == "A4_MIN")
+    {
+      TMIN = 1480707643;
+    }
+  else if(whichStartTime == "A3_MIN")
+    {
+      TMIN = 1418938406;
+    }
+  else
+    {
+      TMIN = stoi(whichStartTime);
+    }
+  // End times
+  if(whichEndTime == "A4_MAX")
+    {
+      TMAX = 1483004563;
+    }
+  else if(whichEndTime == "A3_MAX")
+    {
+      TMAX = 1420777814;
+    }
+  else if(whichEndTime == "MAX")
+    {
+      TMAX = 2147483646;
+    }
+  else
+    {
+      TMAX = stoi(whichEndTime);
+    }
+  /////
+  
   for (int i =0; i < tokens->GetEntries(); i++)
   {
     TObjString * tok = (TObjString*) tokens->At(i); 
@@ -73,42 +108,41 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
 
 	m->addSource(new Source(customName, customRA, 
 				customDec,
-				new ConstantExponentialSourceFlux(txs_index,txs_flux,txs_E0) // for now just use these flux constants
+				new ConstantExponentialSourceFlux(customGamma,txs_flux,txs_E0) // for now just use these flux constants
 				)) ; 
 	
       }
 
     // Supernovae
-    else if(stripped=="SNA4")
-      {
-	
+    else if(stripped=="SN")
+      {	
 	TFile *file = new TFile("./supernovae/data/supernovaeTNS.root"); 
 	TTree *tree = (TTree*) file->Get("tnsTree");
 
 	// Tree vars
 	float ra, dec;
 	std::string *objName = new std::string;
-	std::string *objType = new std::string;
+	std::string *fullObjType = new std::string;
+	std::string *objSubtype = new std::string;
 	int discoveryUnixTime = 0;
-
-	// New vars
-	int a4_tmin = 1480707643;
-	int a4_tmax = 1483004563;
-	
-	std::string desiredType;
-	size_t found;
 	
 	tree->SetBranchAddress("ra",&ra); 
 	tree->SetBranchAddress("dec",&dec); 
 	tree->SetBranchAddress("name",&objName);
-	tree->SetBranchAddress("objType",&objType);
+	tree->SetBranchAddress("fullObjType",&fullObjType);
+	tree->SetBranchAddress("objSubtype",&objSubtype);
 	tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
 	
 	for (unsigned int i = 0; i < tree->GetEntries(); i++) 
 	  {
 	    tree->GetEntry(i);
-	    
-	    // If we didn't specific all sources
+	     
+	    //////////// Cuts
+	    // Time cut for finding sources within a certain time period
+	    if( (discoveryUnixTime < TMIN) || (discoveryUnixTime > TMAX) ){continue;}
+	    // Declination cut (ANITA won't see neutrinos from these sources)
+	    if( abs(dec)>decCutLimit){continue;}
+	    // Search for specific subtype
 	    if(whichSources!="All")
 	      {
 		// Account for the chosen one
@@ -117,27 +151,35 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
 		    std::cout << "Using the specified source: " << whichSources << std::endl;
 		  }
 		else{continue;}
+	      }	    
+	    // Only look at a single subtype (REMEMBER this searches for a complete string
+	    // but SNII can take the formats of: SN IIa ,SN IIb, SN IIa-91bg-like, etc)
+	    if(whichSubtype!="All")
+	      {
+		if(*objSubtype==whichSubtype)
+		  {
+		    //std::cout << "Using the specified subtype: " << whichSubtype << std::endl;
+		  }
+		else{continue;}
 	      }
+	    ////////////
 	    
-	    // Only look for SNs detected within A4
-	    //if( (discoveryUnixTime < a4_tmin) || (discoveryUnixTime > a4_tmax) ){continue;}
-	    // Declination cut (ANITA won't see neutrinos from these sources)
-	    //if( abs(dec)>10){continue;}
-	    
+	    // Legacy stuff
+	    //if( abs(dec)>10){continue;}	    
 	    // Only look at SNe of type II for now
 	    // Core collapse SNe, associated with type II, can accelerate CRs to high energies
 	    // Thus, only look for those beginning with SN II
-	    //desiredType = "SN II"; // <- DEFAULT
+	    //desiredType = "SN II"; //
 	    //found = objType->find(desiredType);
 	    //if(found != 0){continue;}
-	    
 	    // Only look at 2 sources for now
-	    //if(*objName != "SN 2016jby" && *objName != "SN 2016iyz"){continue;}
+	    //if(*objName != "SN 2017jy" && *objName != "SN 2017dhd"){continue;}
 	    
 	    //std::cout << "ra = " << ra << std::endl;
 	    //std::cout << "name = " << *name << std::endl;
 	    //std::cout << objName->c_str() << std::endl;
 	    //std::cout << *objName << std::endl;
+	    ////////////
 	    
 	    m->addSource(new Source(*objName, ra, dec,
 				    new ConstantExponentialSourceFlux(gamma_index,txs_flux,txs_E0) // Just use these params as the first step
@@ -146,45 +188,46 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
 	
       }
 
-    else if (stripped == "GRB15") 
+    else if (stripped == "GRB") 
     {
-      //add ANITA3 GRB's
-
-
+      //add GRB's
     }
-    else if (stripped.BeginsWith("A3_FAVA"))
+    
+    else if (stripped.BeginsWith("FAVA"))
     {
-      // Let's load all the blazars from FAVA that occurred during the A3 flight
+      // Let's load all the blazars from FAVA that occurred during a flight
 
       bool flux_weighted = strcasestr(stripped.Data(),"FLUX"); 
       bool z_weighted = strcasestr(stripped.Data(),"REDSHIFT"); 
-
-      int a3_tmin = 1418938406; 
-      int a3_tmax = 1420777814; 
 
       const char * dir = EnvironmentVariable::ICEMC_SRC_DIR() ?: "."; 
 
       TFile ffava(Form("%s/blazars/fava.root", dir)); 
       TTree * fava_tree = (TTree*) ffava.Get("fava"); 
-      FAVAEntry *fava = 0; 
+      FAVAEntry *fava = 0;
+      
+      fava_tree->SetBranchAddress("fava",&fava);
 
-      fava_tree->SetBranchAddress("fava",&fava); 
-
+      
+      
       for (int i = 0; i < fava_tree->GetEntries(); i++) 
       {
-        fava_tree->GetEntry(i); 
+        fava_tree->GetEntry(i);
 
-//        fava_tree->Show(i); 
-       
-        printf("%s %s %d %d %g %g %g\n",fava->association.GetString().Data(), fava->source_class.GetString().Data(), 
-            fava->unix_tmin, fava->unix_tmax, fava->dec, fava->he_sigma, fava->he_flux); 
-        if (fava->unix_tmax < a3_tmin || fava->unix_tmin > a3_tmax) continue;
+	std::cout << "dec = " << fava->dec << std::endl;
+	
+        //printf("%s %s %d %d %g %g %g\n",fava->association.GetString().Data(), fava->source_class.GetString().Data(), fava->unix_tmin, fava->unix_tmax, fava->dec, fava->he_sigma, fava->he_flux);
+	
+	// time cut
+	if( (fava->unix_tmax < TMIN) || (fava->unix_tmin > TMAX) ){continue;}
         printf("passed time cut\n");
 
 	std::string *fava_name = new std::string;	
 	*fava_name = fava->association.GetString().Data();
+	std::cout << "name = " << *fava_name << std::endl;
 
 	// If we didn't specific all sources
+	
 	if(whichSources!="All")
 	  {
 	    // Account for the chosen one
@@ -195,13 +238,17 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
 	    else{continue;}
 	  }
 	
+	
         //say no to |dec| >30 
-        if (fabs(fava->dec) > 30) continue; 
+        if (fabs(fava->dec) > decCutLimit) continue; 
         printf("passed dec cut\n");
 
-        if (fava->he_sigma < 4 && fava->he_flux < 0) continue; //say no to low HE flux 
+	//say no to low HE flux 
+        if (fava->he_sigma < 4 && fava->he_flux < 0) continue;
         printf("passed flux cut \n");
 
+	//std::cout << fava->source_class.GetString() << std::endl;
+	
         //only blazars
         if (fava->source_class.GetString() ==  "bcu" || fava->source_class.GetString() == "fsrq" || fava->source_class.GetString() == "bll")
         {

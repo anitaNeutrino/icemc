@@ -152,6 +152,10 @@ class Settings : public TObject {
 
   std::string SOURCE;  // the source option (see source.hh)
   std::string WHICH_SOURCES; // which sources? All, or just a specific one
+  std::string WHICH_SUBTYPE; // which subtype? All, or just a specific one
+  std::string WHICH_START_TIME; // which start time? 0, or an anita flight option
+  std::string WHICH_END_TIME; // which end time? 0 or an anita flight option
+  
   double SOURCE_MIN_E;  // log10 of minimum energy for sources 
   double SOURCE_MAX_E;   // log10 of maximinum energy for sources 
   
@@ -257,6 +261,7 @@ class Settings : public TObject {
   std::string CUSTOM_NAME;
   double CUSTOM_RA;
   double CUSTOM_DEC;
+  double CUSTOM_GAMMA;
   
   int useLPM;
 

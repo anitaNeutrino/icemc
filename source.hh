@@ -29,7 +29,7 @@ class SourceModel
 
 public: 
 
-  SourceModel(const char * model_name, unsigned seed  = 0, std::string whichSources = "All", int decCutLimit = 999, std::string customName = "customObject", double customRA = 0, double customDec = 0); 
+  SourceModel(const char * model_name, unsigned seed  = 0, std::string whichSources = "All", std::string whichSubtype = "All", std::string whichStartTime = "0", std::string whichEndTime = "2147483646", int decCutLimit = 90, std::string customName = "customObject", double customRA = 0, double customDec = 0, double customGamma = 2); 
 
   /** We will label our source models by a string so they're easy to pick. 
    *  
@@ -40,7 +40,7 @@ public:
    *
    */ 
 
-  static SourceModel * getSourceModel(const char * key, unsigned seed = 0, std::string whichSources = "All", int decCutLimit = 90, std::string customName = "customObject", double customRA = 0, double customDec = 0) ; 
+  static SourceModel * getSourceModel(const char * key, unsigned seed = 0, std::string whichSources = "All", std::string whichSubtype = "All", std::string whichStartTime = "0", std::string whichEndTime = "2147483646",  int decCutLimit = 90, std::string customName = "customObject", double customRA = 0, double customDec = 0, double customGamma = 2); 
 
   /** Add a source to our model. 
    * This class will then own the source (it will release its memory). 
@@ -58,10 +58,14 @@ private:
   const char * name;
   TRandom3 rng;
   std::string whichSources;
+  std::string whichSubtype;
+  std::string whichStartTime;
+  std::string whichEndTime;
   int decCutLimit;
   std::string customName;
   double customRA;
   double customDec;
+  double customGamma;
 }; 
 
 
