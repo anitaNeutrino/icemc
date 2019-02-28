@@ -150,7 +150,7 @@ class Settings : public TObject {
   double SLAC_DEPTH; // vertical depth of interaction at slac beam test
   double SLAC_HORIZ_DEPTH; // horizontal depth of interaction at slac
 
-  std::string SOURCE;  // the source option (see source.hh)
+  std::string SOURCE;  // the source option: FAVA (blazars), GRB (gamma ray bursts), SN (supernovae),  see source.hh for more info
   std::string WHICH_SOURCES; // which sources? All, or just a specific one
   std::string WHICH_SUBTYPE; // which subtype? All, or just a specific one
   std::string WHICH_START_TIME; // which start time? 0, or an anita flight option
