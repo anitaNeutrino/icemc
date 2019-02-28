@@ -942,8 +942,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
   // }
   // stemp=string(outputdir.Data())+"/freqdomainplots.eps";
   // cfreq->Print((TString)stemp);
-    
-    
+        
     
   // do the box banding for BANDING==1
   if (BANDING==1) {
@@ -971,9 +970,10 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
   int ngeneratedevents=1000;
   int passes[5]={0,0,0,0,0};
   double averageoutput[5]={0.,0.,0.,0.,0.};
-
+  
   if (!settings1->NOISEFROMFLIGHTTRIGGER){
     for (int i=0;i<ngeneratedevents;i++) {
+      cout << double(i)/double(ngeneratedevents) << endl;
       // put phases to freqdomain_rfcm_banding_rfcm array
       // assign phases (w/ correlations) to freqdomain_rfcm_banding_rfmc_banding array
       GetNoiseWaveforms();
@@ -1001,9 +1001,8 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 	} // end loop over samples where diode function is fully contained
 			
       } // end loop over bands
-		
+
     } // end loop over generated events
-    
     
     // TCanvas *ctest=new TCanvas("ctest","ctest",880,800);
     // ctest->Divide(1,5);
@@ -1028,7 +1027,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
       bwslice_fwhmnoise[j]=Tools::GetFWHM(hnoise[j]);
       
     }
-    
+
     
     for (int i=0;i<ngeneratedevents;i++) {// now we need to get the rms
       GetNoiseWaveforms();
@@ -1086,8 +1085,7 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
     }
     
   } else { // IF WE HAVE NOISE FROM FLIGHT
-
-
+	
 #ifdef ANITA_UTIL_EXISTS
     double quickNoise[HALFNFOUR];
 
@@ -1098,8 +1096,10 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
     for (int ipol=0; ipol<2; ipol++){
       for (int iant=0; iant<48; iant++){
+	// This takes for ages, and may appear to hang... some basic flushing to show user the status, esp for A4
+	std::cout << "Using noise from flight to get rms of channel " << (ipol == 0 ? iant : 48+iant) + 1 << " of 96\r" << std::flush;
+	if((ipol == 0 ? iant : 48+iant) + 1 == 96){std::cout << std::endl;}
 	for (int ituff=0; ituff<ntuffs; ituff++){
-	
 	  memset(tempdiodeoutput, 0, sizeof(tempdiodeoutput) );
 
 	  for (int i=0;i<ngeneratedevents;i++) {
@@ -1130,10 +1130,9 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 	
 	}
       }
-	
+      	
     }
-    
-    
+  
     // double thresh_begin=-1.;
     // double thresh_end=-11.;
     // double thresh_step=1.;

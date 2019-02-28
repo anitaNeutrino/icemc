@@ -1987,6 +1987,7 @@ int main(int argc,  char **argv) {
         cout << "Warning:  " << inu << " " << emfrac+hadfrac << "\n";
       }
 
+      
       // for plotting
       sumfrac=emfrac+hadfrac;
       //cout << "tree7 check" <<interaction1->nuflavorint << endl;
@@ -3702,6 +3703,7 @@ int main(int argc,  char **argv) {
             Adu5PatPtr->roll = bn1->roll;
             Adu5PatPtr->run = run_no;
 
+	    cout << "" << endl;
 	    cout << "Neutrino (evNum = " << eventNumber << ") passed" << endl;
 	    
 #ifdef ANITA3_EVENTREADER
