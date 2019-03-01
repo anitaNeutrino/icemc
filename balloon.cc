@@ -76,8 +76,8 @@ void Balloon::SetDefaultBalloonPosition(IceModel *antarctica1) { // position of 
     
   // set the default balloon position
   // if you are an Anita path, these get overwritten for each event
-  cout << "BN_LATITUDE is " << BN_LATITUDE << "\n";
-  cout << "BN_LONGITUDE is " << BN_LONGITUDE << "\n";
+  //cout << "BN_LATITUDE is " << BN_LATITUDE << "\n";
+  //cout << "BN_LONGITUDE is " << BN_LONGITUDE << "\n";
     
   int BN_LATITUDE_SETTING = BN_LATITUDE;
   int BN_LONGITUDE_SETTING = BN_LONGITUDE;

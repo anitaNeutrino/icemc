@@ -235,7 +235,8 @@ void Settings::Initialize() {
   UNBIASED_SELECTION=1.; // (0) pick neutrino interaction in the ice and neutrino from any direction or (1) choose neutrino interaction point in the horizon on the balloon in the ice and neutrino direction on the cerenkov cone
   SIGMA_FACTOR=1;
   USEDARTBOARD=0;
-
+  EXPONENT=18.; // Initialize energy exponent
+  
   // Bunch of variables which were global in icemc.cc but are settings:
   SEED=65540;      // random number seed.
   THETA_TH_FACTOR=1.0; // factor to multiply theta_th to check code is working properly
@@ -285,7 +286,7 @@ void Settings::Initialize() {
   // Extras
   IGNORE_CROSSPOL = 0; 
   POL_SIGN_HACK = 1; 
-  CUTONWEIGHTS = 1e-10;
+  CUTONWEIGHTS = 0.;
   DEC_CUT = 90; // Declination cut 999 is default: no declination cut
                                    //  If you specify a value, then only use sources within from declination = -DEC_CUT to DEC_CUT
   ALL_SKY_MAP = 0; // Draw all-sky map?
