@@ -29,7 +29,7 @@ class SourceModel
 
 public: 
 
-  SourceModel(const char * model_name, unsigned seed  = 0, std::string whichSources = "All", std::string whichSubtype = "All", std::string whichStartTime = "0", std::string whichEndTime = "2147483646", int decCutLimit = 90, std::string customName = "customObject", double customRA = 0, double customDec = 0, double customGamma = 2); 
+  SourceModel(const char * model_name, unsigned seed  = 0); 
 
   /** We will label our source models by a string so they're easy to pick. 
    *  
@@ -40,7 +40,7 @@ public:
    *
    */ 
 
-  static SourceModel * getSourceModel(const char * key, unsigned seed = 0, std::string whichSources = "All", std::string whichSubtype = "All", std::string whichStartTime = "0", std::string whichEndTime = "2147483646",  int decCutLimit = 90, std::string customName = "customObject", double customRA = 0, double customDec = 0, double customGamma = 2); 
+  static SourceModel * getSourceModel(const char * key, unsigned seed = 0, const char *whichSources = "All", const char * whichSubtype = "All", const char* whichStartTime = "0", const char * whichEndTime = "2147483646",  double decCutLimit = 30, const char *customName = "customObject", double customRA = 0, double customDec = 0, double customGamma = 2); 
 
   /** Add a source to our model. 
    * This class will then own the source (it will release its memory). 
@@ -48,24 +48,18 @@ public:
   void addSource(Source * source) { sources.push_back(source) ; }
     
   const char * getName() const { return name; } 
-  std::string getDirectionAndEnergyAndOriginInfo(std::string objName, double & RA, double & dec, Vector * nudir, double t, double & nuE, double minE = 1e9, double maxE = 1e12) ; 
-  std::string getDirection(std::string objName, double RA, double dec, Vector &nudir, double t, double nuE = 1e10) { return getDirectionAndEnergyAndOriginInfo(objName, RA, dec, &nudir, t, nuE, nuE, nuE); }
+  /** Returns the index of the source used ! */ 
+  int getDirectionAndEnergy( Vector * nudir, double t, double & nuE, double minE = 1e9, double maxE = 1e12) ; 
+  /** Returns the index of the source used ! */ 
+  int getDirection(Vector &nudir, double t, double nuE = 1e10) { return getDirectionAndEnergy( &nudir, t, nuE, nuE, nuE); }
   TH1 * estimateFlux (double tmin, double tmax, double Emin, double Emax, int nbins = 100, int Ntrials = 1e6); 
+  const Source * getSource(int i ) const { return  sources[i]; } 
   unsigned getNSources() const { return sources.size(); } 
   virtual ~SourceModel(); 
 private:
   std::vector<Source*> sources; 
   const char * name;
   TRandom3 rng;
-  std::string whichSources;
-  std::string whichSubtype;
-  std::string whichStartTime;
-  std::string whichEndTime;
-  int decCutLimit;
-  std::string customName;
-  double customRA;
-  double customDec;
-  double customGamma;
 }; 
 
 
@@ -90,16 +84,16 @@ class Source
 
 public: 
   /* The source will own the flux */ 
-  Source (std::string objName, double RA, double dec, SourceFlux * flux);
-  std::string getObjName() const { return objName; }
-  double getObjRA() const { return RA; }
-  double getObjDEC() const { return dec; } 
+  Source (const char * name, double RA, double dec, SourceFlux * flux);
+  const char * getName() const { return name.c_str(); }
+  double getRA() const { return RA; }
+  double getDec() const { return dec; } 
   Vector getDirection( double t) const; 
   const SourceFlux * getFlux() const { return flux; } 
   virtual ~Source() { delete flux; } 
 
 protected:
-  std::string objName; 
+  std::string name; 
   SourceFlux * flux; 
   double RA, dec; 
 };

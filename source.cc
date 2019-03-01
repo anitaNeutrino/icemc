@@ -14,15 +14,17 @@
 // SourceModel 
 
 
-SourceModel::SourceModel(const char * n, unsigned seed, std::string whichSources, std::string whichSubtype, std::string whichStartTime, std::string whichEndTime, int decCutLimit, std::string customName, double customRA, double customDec, double customGamma)
-  : name(n), rng(seed), whichSources(whichSources), whichSubtype(whichSubtype), whichStartTime(whichStartTime), whichEndTime(whichEndTime), decCutLimit(decCutLimit), customName(customName), customRA(customRA), customDec(customDec), customGamma(customGamma) { }
+SourceModel::SourceModel(const char * n, unsigned seed)
+  : name(n), rng(seed)
+{
+
+}
 
 SourceModel::~SourceModel() 
 {
   for (unsigned i = 0; i < sources.size(); i++) delete sources[i]; 
 }
 
-static std::map<std::string, SourceModel * > models; 
 
 // TXS blazar (from icecube)
 const double txs_index = 2;
@@ -34,16 +36,12 @@ const double txs_z = 0.3365;
 // SNe
 const double gamma_index = 2;
 
-SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::string whichSources, std::string whichSubtype, std::string whichStartTime, std::string whichEndTime, int decCutLimit, std::string customName, double customRA, double customDec, double customGamma) 
+SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, const char * whichSources, const char * whichSubtype, const char * whichStartTime, const char * whichEndTime, double decCutLimit, const char * customName, double customRA, double customDec, double customGamma) 
 {
 
   if (!key || !strcasecmp(key,"NONE")) return NULL; 
 
-
-  if (models.count(key)) 
-    return models[key]; 
-
-  SourceModel * m = new SourceModel(key,seed,whichSources, whichSubtype, whichStartTime, whichEndTime, decCutLimit, customName, customRA, customDec, customGamma); 
+  SourceModel * m = new SourceModel(key,seed);
 
   TString str(key); 
   TObjArray * tokens = str.Tokenize("+"); 
@@ -52,34 +50,34 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
   int TMIN = 0;
   int TMAX = 0;
   // Start times
-  if(whichStartTime == "A4_MIN")
+  if(!strcasecmp(whichStartTime, "A4_MIN"))
     {
       TMIN = 1480707643;
     }
-  else if(whichStartTime == "A3_MIN")
+  else if(!strcasecmp(whichStartTime, "A3_MIN"))
     {
       TMIN = 1418938406;
     }
   else
     {
-      TMIN = stoi(whichStartTime);
+      TMIN = atoi(whichStartTime);
     }
   // End times
-  if(whichEndTime == "A4_MAX")
+  if(!strcasecmp(whichEndTime,"A4_MAX"))
     {
       TMAX = 1483004563;
     }
-  else if(whichEndTime == "A3_MAX")
+  else if(!strcasecmp(whichEndTime, "A3_MAX"))
     {
       TMAX = 1420777814;
     }
-  else if(whichEndTime == "MAX")
+  else if(!strcasestr(whichEndTime,"MAX"))
     {
       TMAX = 2147483646;
     }
   else
     {
-      TMAX = stoi(whichEndTime);
+      TMAX = atoi(whichEndTime);
     }
   /////
   
@@ -93,10 +91,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
     if (stripped == "TXS15")
     {
 
-      std::string *tns_name = new std::string;
-      *tns_name = "TXS 0506+056";
-      
-      m->addSource(new Source(*tns_name, 5 + 9/60. +  25.9637 / 3600, 
+      m->addSource(new Source("TXS 0506+056", 5 + 9/60. +  25.9637 / 3600, 
                                               5 + 41/60. + 35.3279/3600,
           new ConstantExponentialSourceFlux(txs_index,txs_flux,txs_E0) //from IceCube paper, assume it's constant over flight for now
 			      )) ; 
@@ -143,10 +138,10 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
 	    // Declination cut (ANITA won't see neutrinos from these sources)
 	    if( abs(dec)>decCutLimit){continue;}
 	    // Search for specific subtype
-	    if(whichSources!="All")
+	    if(strcasecmp(whichSources,"All"))
 	      {
 		// Account for the chosen one
-		if(*objName==whichSources)
+		if(strcasestr(whichSources, objName->c_str()))
 		  {
 		    std::cout << "Using the specified source: " << whichSources << std::endl;
 		  }
@@ -154,9 +149,9 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
 	      }	    
 	    // Only look at a single subtype (REMEMBER this searches for a complete string
 	    // but SNII can take the formats of: SN IIa ,SN IIb, SN IIa-91bg-like, etc)
-	    if(whichSubtype!="All")
+	    if(strcasecmp(whichSubtype,"All"))
 	      {
-		if(*objSubtype==whichSubtype)
+		if(strcasestr(whichSubtype,objSubtype->c_str()))
 		  {
 		    //std::cout << "Using the specified subtype: " << whichSubtype << std::endl;
 		  }
@@ -181,7 +176,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
 	    //std::cout << *objName << std::endl;
 	    ////////////
 	    
-	    m->addSource(new Source(*objName, ra, dec,
+	    m->addSource(new Source(objName->c_str(), ra, dec,
 				    new ConstantExponentialSourceFlux(gamma_index,txs_flux,txs_E0) // Just use these params as the first step
 				    )) ; 
 	  }
@@ -214,26 +209,22 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
       {
         fava_tree->GetEntry(i);
 
-	std::cout << "dec = " << fava->dec << std::endl;
 	
         //printf("%s %s %d %d %g %g %g\n",fava->association.GetString().Data(), fava->source_class.GetString().Data(), fava->unix_tmin, fava->unix_tmax, fava->dec, fava->he_sigma, fava->he_flux);
 	
 	// time cut
 	if( (fava->unix_tmax < TMIN) || (fava->unix_tmin > TMAX) ){continue;}
-        printf("passed time cut\n");
 
-	std::string *fava_name = new std::string;	
-	*fava_name = fava->association.GetString().Data();
-	std::cout << "name = " << *fava_name << std::endl;
+	const char * fava_name = fava->association.GetString().Data();
 
 	// If we didn't specific all sources
 	
-	if(whichSources!="All")
+	if(strcasecmp(whichSources,"All"))
 	  {
 	    // Account for the chosen one
-	    if(*fava_name==whichSources)
+	    if(strcasestr(whichSources,fava_name))
 	      {
-		std::cout << "Using the specified source: " << whichSources << std::endl;
+            std::cout << "Using the specified source: " << whichSources << std::endl;
 	      }
 	    else{continue;}
 	  }
@@ -241,7 +232,6 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
 	
         //say no to |dec| >30 
         if (fabs(fava->dec) > decCutLimit) continue; 
-        printf("passed dec cut\n");
 
 	//say no to low HE flux 
         if (fava->he_sigma < 4 && fava->he_flux < 0) continue;
@@ -253,7 +243,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
         if (fava->source_class.GetString() ==  "bcu" || fava->source_class.GetString() == "fsrq" || fava->source_class.GetString() == "bll")
         {
       
-          m->addSource(new Source(*fava_name, fava->ra, fava->dec, 
+          m->addSource(new Source(fava_name, fava->ra, fava->dec, 
                        new TimeWindowedExponentialSourceFlux( fava->unix_tmin, fava->unix_tmax, txs_index, 
                         txs_norm * (flux_weighted ? fava->he_flux / txs_flux : 
                                     z_weighted ?   
@@ -281,8 +271,6 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, std::
       std::cout << "Sources added: " << m->getNSources() << std::endl;
     }
   
-  models[key] = m;
-
   return m; 
 }
 
@@ -314,9 +302,9 @@ TH1 * SourceModel::estimateFlux(double tmin, double tmax, double Emin, double Em
 }
 
 
-std::string SourceModel::getDirectionAndEnergyAndOriginInfo(std::string objName, double & RA, double & dec, Vector * nudir, double t, double  & nuE, double minE, double maxE)
+int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE, double minE, double maxE)
 {
-  if (!sources.size()) return "noObject";
+  if (!sources.size()) return -1; 
 
   bool fixedEnergy = minE==maxE;
   if (fixedEnergy) nuE = minE; 
@@ -340,14 +328,11 @@ std::string SourceModel::getDirectionAndEnergyAndOriginInfo(std::string objName,
   if (total_flux == 0) 
   {
     nuE = minE; // do something... 
-    return "noObject"; 
+    return -1; 
   }
   // This is the chosen source, so we should retain some info about it
   // Then we can easily access info about *each* simulated neutrino's origin
   const Source * which = sources[index];
-  objName = which->getObjName();
-  RA = which->getObjRA();
-  dec = which->getObjDEC();
   //std::cout << objName << std::endl;
   //std::cout << RA << std::endl;
   //std::cout << dec << std::endl;
@@ -356,12 +341,12 @@ std::string SourceModel::getDirectionAndEnergyAndOriginInfo(std::string objName,
 
   if (!fixedEnergy) nuE =  which->getFlux()->pickEnergy(minE,maxE,t,&rng);
       
-  return objName; 
+  return index; 
 }
 
 
-Source::Source(std::string nm, double ra, double dc, SourceFlux * f) 
-: objName(nm), flux(f) , RA(ra), dec(dc*TMath::DegToRad()) 
+Source::Source(const char * nm, double ra, double dc, SourceFlux * f) 
+: name(nm), flux(f) , RA(ra), dec(dc*TMath::DegToRad()) 
 {
 }
 

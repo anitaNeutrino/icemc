@@ -635,7 +635,7 @@ int main(int argc,  char **argv) {
   if (exp_tmp!=0)
     settings1->EXPONENT=exp_tmp;
 
-  SourceModel *src_model = SourceModel::getSourceModel(settings1->SOURCE.c_str(), settings1->SEED + 0x5eed, settings1->WHICH_SOURCES, settings1->WHICH_SUBTYPE, settings1->WHICH_START_TIME,settings1->WHICH_END_TIME, settings1->DEC_CUT, settings1->CUSTOM_NAME, settings1->CUSTOM_RA, settings1->CUSTOM_DEC,settings1->CUSTOM_GAMMA);
+  SourceModel *src_model = SourceModel::getSourceModel(settings1->SOURCE.c_str(), settings1->SEED + 0x5eed, settings1->WHICH_SOURCES.c_str(), settings1->WHICH_SUBTYPE.c_str(), settings1->WHICH_START_TIME.c_str(),settings1->WHICH_END_TIME.c_str(), settings1->DEC_CUT, settings1->CUSTOM_NAME.c_str(), settings1->CUSTOM_RA, settings1->CUSTOM_DEC,settings1->CUSTOM_GAMMA);
   double src_min = TMath::Power(10,settings1->SOURCE_MIN_E-9);  //since source model takes things in GeV
   double src_max = TMath::Power(10,settings1->SOURCE_MAX_E-9);  //since source model takes things in GeV
   Spectra *spectra1 = new Spectra((int)settings1->EXPONENT);
@@ -1644,6 +1644,7 @@ int main(int argc,  char **argv) {
       Vector force_dir;
       double RA = 0;
       double dec = 0;
+      int which_source = -1; 
       std::string objName = "noObject";
       if (!src_model &&  spectra1->IsSpectrum() ){//if using energy spectrum
 
@@ -1693,9 +1694,16 @@ int main(int argc,  char **argv) {
       
       if (src_model) 
       {
-	objName = src_model->getDirectionAndEnergyAndOriginInfo(objName, RA, dec, &force_dir, realtime_this, pnu, src_min, src_max);
-	if(objName!="noObject"){got_a_good_position = 1;}
-	dec*=TMath::RadToDeg(); // Get it make in deg
+	which_source = src_model->getDirectionAndEnergy(&force_dir, realtime_this, pnu, src_min, src_max);
+	if(which_source>= 0) {
+          got_a_good_position = 1;
+        
+          const Source * src = src_model->getSource(which_source); 
+          RA = src->getRA();
+	  dec= src->getDec()* TMath::RadToDeg(); // Get it make in deg
+          objName = src->getName(); 
+        
+        }
 	
 	//std::cout << "pnu = " << pnu << std::endl;
 	//std::cout << "RA = " << RA << std::endl;
@@ -3740,6 +3748,7 @@ int main(int argc,  char **argv) {
 		}
 	    
 	    
+            truthEvPtr->source_index = which_source;
 	    truthEvPtr->RA = RA;
 	    truthEvPtr->dec = dec;
 	    truthEvPtr->objName = objName;
