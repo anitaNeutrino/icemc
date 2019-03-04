@@ -43,6 +43,11 @@ void plotGRB()
   // A4 for now
   a_tmin = 1480707643;
   a_tmax = 1483004563;
+
+  //A3
+  //a_tmin = 1418938406;
+  //a_tmax = 1420777814;
+   
   
   // Branches
   tree->SetBranchAddress("RA",&RA);

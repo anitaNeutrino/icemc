@@ -143,6 +143,7 @@ void rootifySupernovaeTNS()
   float dec; // dec in -90 -> 90 deg format
   int discoveryUnixTime; // converted from date
   std::string objSubtype; // I (SN I) or II (SN II) or more complex types (SLSN), etc
+  int objSubtypeNum; // 1 (SN I) or 2 (SN II), 0 (other)
   std::string objSubtypeSuffix; // a (SNIa, SNIIb), b-pec (SNIb-pec) etc
 
   tnsTree.Branch("id",&id);
@@ -151,6 +152,7 @@ void rootifySupernovaeTNS()
   tnsTree.Branch("dec",&dec);
   tnsTree.Branch("fullObjType",&fullObjType);
   tnsTree.Branch("objSubtype",&objSubtype);
+  tnsTree.Branch("objSubtypeNum",&objSubtypeNum);
   tnsTree.Branch("objSubtypeSuffix",&objSubtypeSuffix);
   tnsTree.Branch("redshift",&redshift);
   tnsTree.Branch("hostName",&hostName);
@@ -199,7 +201,7 @@ void rootifySupernovaeTNS()
 	  decAlt = tokens[3];
 	  fullObjType = tokens[4];
 	  //
-	  redshift = atof(tokens[5].c_str());
+	  redshift =  atof(tokens[5].c_str()); if(redshift == 0){redshift = -999;}
 	  hostName = tokens[6]; if(hostName == ""){hostName = "Unknown";}
 	  hostRedshift =  atof(tokens[7].c_str()); if(hostRedshift == 0){hostRedshift = -999;} // if unknown (i.e. a blank field = 0, set to -999)
 	  discoveryGroup = tokens[8]; if(discoveryGroup == ""){discoveryGroup = "Unknown";}
@@ -278,19 +280,26 @@ void rootifySupernovaeTNS()
 	  if(fullObjType.find("SN II") == 0)
 	    {
 	      objSubtype = "II";
+	      objSubtypeNum = 2;
 	    }
 	  else if(fullObjType.find("SN I") == 0)
 	    {
 	      objSubtype = "I";
+	      objSubtypeNum = 1;
 	    }
 	  else
 	    {
 	      objSubtype = fullObjType; // Non-standard SN, such as SLSN
+	      objSubtypeNum=0;
 	    }
 
 	  // Keep suffix
 	  // SN 1a-jub, suffix is a-jub
-	  if(objSubtype!=fullObjType)
+	  if(objSubtype!=fullObjType && objSubtype == "II")
+	    {
+	      objSubtypeSuffix = fullObjType.substr(fullObjType.find(objSubtype)+2);
+	    }
+	  else if(objSubtype!=fullObjType && objSubtype == "I")
 	    {
 	      objSubtypeSuffix = fullObjType.substr(fullObjType.find(objSubtype)+1);
 	    }
@@ -298,11 +307,11 @@ void rootifySupernovaeTNS()
 	    {
 	      objSubtypeSuffix = "None";
 	    }
-	  /*
-	  std::cout << "full = " << fullObjType << std::endl;
-	  std::cout << "sub = " << objSubtype << std::endl;
-	  std::cout << "suffix = " << objSubtypeSuffix << std::endl;
-	  */
+	  
+	  //std::cout << "full = " << fullObjType << std::endl;
+	  //std::cout << "sub = " << objSubtype << std::endl;
+	  //std::cout << "suffix = " << objSubtypeSuffix << std::endl;
+	  
 	  
 	  tnsTree.Fill();
 	}

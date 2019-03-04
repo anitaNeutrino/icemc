@@ -196,17 +196,23 @@ print('')
 #2.
 ### Same for TNS
 print('Scanning Transient Name Server...')
-tnsFileName = "./data/supernovaeTNS_unformatted.tsv"
-### CSV already made via URL manipulation (this one is for classified SNe between 01/06/2016 - 01/06/2017
-### Can change variables wanted, and their range by editing the below URL:
-webpage = urllib2.urlopen("https://wis-tns.weizmann.ac.il/search?&name=&name_like=0&isTNS_AT=all&public=all&unclassified_at=0&classified_sne=1&ra=&decl=&radius=&coords_unit=arcsec&groupid%5B%5D=null&classifier_groupid%5B%5D=null&objtype%5B%5D=null&at_type%5B%5D=null&date_start%5Bdate%5D=2016-06-01&date_end%5Bdate%5D=2017-06-01&discovery_mag_min=&discovery_mag_max=&internal_name=&redshift_min=&redshift_max=&spectra_count=&discoverer=&classifier=&discovery_instrument%5B%5D=&classification_instrument%5B%5D=&hostname=&associated_groups%5B%5D=null&ext_catid=&num_page=1000&display%5Bredshift%5D=1&display%5Bhostname%5D=1&display%5Bhost_redshift%5D=1&display%5Bsource_group_name%5D=1&display%5Bclassifying_source_group_name%5D=1&display%5Bdiscovering_instrument_name%5D=0&display%5Bclassifing_instrument_name%5D=0&display%5Bprograms_name%5D=0&display%5Binternal_name%5D=1&display%5BisTNS_AT%5D=0&display%5Bpublic%5D=1&display%5Bend_pop_period%5D=0&display%5Bspectra_count%5D=1&display%5Bdiscoverymag%5D=1&display%5Bdiscmagfilter%5D=1&display%5Bdiscoverydate%5D=1&display%5Bdiscoverer%5D=1&display%5Bsources%5D=0&display%5Bbibcode%5D=0&display%5Bext_catalogs%5D=0&format=tsv")
-webContent = webpage.read()
+tnsFileName = "./data/supernovaeTNS.tsv"
+### CSV already made via URL manipulation # this one is for classified SNe between 01/06/2016 - 01/06/2017
+### Can change variables wanted, and their range by editing the below URL (limited to 1000 lines...):
+# VERY IMPORTANT NOTE: Some info may be missing for the older data (the TNS only became the official SNe reporting method in 2016). If you want other flights (their associated times will be 00:00:00), check more thoroughly...
+webpage0 = urllib2.urlopen("https://wis-tns.weizmann.ac.il/search?&name=&name_like=0&isTNS_AT=all&public=all&unclassified_at=0&classified_sne=1&ra=&decl=&radius=&coords_unit=arcsec&groupid%5B%5D=null&classifier_groupid%5B%5D=null&objtype%5B%5D=null&at_type%5B%5D=null&date_start%5Bdate%5D=2016-06-01&date_end%5Bdate%5D=2017-06-01&discovery_mag_min=&discovery_mag_max=&internal_name=&redshift_min=&redshift_max=&spectra_count=&discoverer=&classifier=&discovery_instrument%5B%5D=&classification_instrument%5B%5D=&hostname=&associated_groups%5B%5D=null&ext_catid=&num_page=1000&display%5Bredshift%5D=1&display%5Bhostname%5D=1&display%5Bhost_redshift%5D=1&display%5Bsource_group_name%5D=1&display%5Bclassifying_source_group_name%5D=1&display%5Bdiscovering_instrument_name%5D=0&display%5Bclassifing_instrument_name%5D=0&display%5Bprograms_name%5D=0&display%5Binternal_name%5D=1&display%5BisTNS_AT%5D=0&display%5Bpublic%5D=1&display%5Bend_pop_period%5D=0&display%5Bspectra_count%5D=1&display%5Bdiscoverymag%5D=1&display%5Bdiscmagfilter%5D=1&display%5Bdiscoverydate%5D=1&display%5Bdiscoverer%5D=1&display%5Bsources%5D=0&display%5Bbibcode%5D=0&display%5Bext_catalogs%5D=0&format=tsv")
+webContent0 = webpage0.read();
 f = open(tnsFileName,'w')
-f.write(webContent)
+f.write(webContent0)
+#this one is for classified SNe between 01/06/2015 - 31/05/2016 
+webpage1 = urllib2.urlopen("https://wis-tns.weizmann.ac.il/search?&name=&name_like=0&isTNS_AT=all&public=all&unclassified_at=0&classified_sne=1&ra=&decl=&radius=&coords_unit=arcsec&groupid%5B%5D=null&classifier_groupid%5B%5D=null&objtype%5B%5D=null&at_type%5B%5D=null&date_start%5Bdate%5D=2015-06-01&date_end%5Bdate%5D=2016-05-31&discovery_mag_min=&discovery_mag_max=&internal_name=&redshift_min=&redshift_max=&spectra_count=&discoverer=&classifier=&discovery_instrument%5B%5D=&classification_instrument%5B%5D=&hostname=&associated_groups%5B%5D=null&ext_catid=&num_page=1000&display%5Bredshift%5D=1&display%5Bhostname%5D=1&display%5Bhost_redshift%5D=1&display%5Bsource_group_name%5D=1&display%5Bclassifying_source_group_name%5D=1&display%5Bdiscovering_instrument_name%5D=0&display%5Bclassifing_instrument_name%5D=0&display%5Bprograms_name%5D=0&display%5Binternal_name%5D=1&display%5BisTNS_AT%5D=0&display%5Bpublic%5D=1&display%5Bend_pop_period%5D=0&display%5Bspectra_count%5D=1&display%5Bdiscoverymag%5D=1&display%5Bdiscmagfilter%5D=1&display%5Bdiscoverydate%5D=1&display%5Bdiscoverer%5D=1&display%5Bsources%5D=0&display%5Bbibcode%5D=0&display%5Bext_catalogs%5D=0&format=tsv")
+webContent1 = webpage1.read()
+f.write(webContent1)
+# (this one is for classified SNe between 01/06/2014 - 31/05/2015)
+webpage2 = urllib2.urlopen("https://wis-tns.weizmann.ac.il/search?&name=&name_like=0&isTNS_AT=all&public=all&unclassified_at=0&classified_sne=1&ra=&decl=&radius=&coords_unit=arcsec&groupid%5B%5D=null&classifier_groupid%5B%5D=null&objtype%5B%5D=null&at_type%5B%5D=null&date_start%5Bdate%5D=2014-06-01&date_end%5Bdate%5D=2015-05-31&discovery_mag_min=&discovery_mag_max=&internal_name=&redshift_min=&redshift_max=&spectra_count=&discoverer=&classifier=&discovery_instrument%5B%5D=&classification_instrument%5B%5D=&hostname=&associated_groups%5B%5D=null&ext_catid=&num_page=1000&display%5Bredshift%5D=1&display%5Bhostname%5D=1&display%5Bhost_redshift%5D=1&display%5Bsource_group_name%5D=1&display%5Bclassifying_source_group_name%5D=1&display%5Bdiscovering_instrument_name%5D=0&display%5Bclassifing_instrument_name%5D=0&display%5Bprograms_name%5D=0&display%5Binternal_name%5D=1&display%5BisTNS_AT%5D=0&display%5Bpublic%5D=1&display%5Bend_pop_period%5D=0&display%5Bspectra_count%5D=1&display%5Bdiscoverymag%5D=1&display%5Bdiscmagfilter%5D=1&display%5Bdiscoverydate%5D=1&display%5Bdiscoverer%5D=1&display%5Bsources%5D=0&display%5Bbibcode%5D=0&display%5Bext_catalogs%5D=0&format=tsv")
+webContent2 = webpage2.read()
+f.write(webContent2)
 f.close
-            
-os.remove(tnsFileName)
-
 
 print('Catalog written to: %s') % tnsFileName
 print('------------------------------------')
