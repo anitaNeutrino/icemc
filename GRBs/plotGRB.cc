@@ -25,15 +25,15 @@
 
 void plotGRB()
 {
-  TFile *file = new TFile("./data/GRB.root"); 
-  TTree *tree = (TTree*) file->Get("grbTree");
+  TFile *file = new TFile("./data/GRBIceCube.root"); 
+  TTree *tree = (TTree*) file->Get("iceCubeTree");
   UInt_t entries = tree->GetEntries();
 
   // Root vars
   float RA = 0;
   float dec = 0;
   std::string *name = new std::string;
-  int unixTime = 0;
+  int unixTriggerTime = 0;
 
   // New vars
   int a_tmin;
@@ -48,7 +48,7 @@ void plotGRB()
   tree->SetBranchAddress("RA",&RA);
   tree->SetBranchAddress("dec",&dec);
   tree->SetBranchAddress("name",&name);
-  tree->SetBranchAddress("unixTime",&unixTime);
+  tree->SetBranchAddress("unixTriggerTime",&unixTriggerTime);
   
   TMarker *astroObject = new TMarker();
   SkyMap *skyMapOut = new SkyMap(90);
@@ -58,7 +58,7 @@ void plotGRB()
       tree->GetEntry(i);
 
       // Skip those if the discovery time falls outside of ANITA flight time
-      if( (unixTime < a_tmin) || (unixTime > a_tmax) ){continue;}
+      if( (unixTriggerTime < a_tmin) || (unixTriggerTime > a_tmax) ){continue;}
       
       //cout << ra << endl;
       //cout << dec << endl;

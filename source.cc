@@ -185,18 +185,18 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, const
 
   else if (stripped == "GRB") 
         {
-          TFile *file = new TFile("./GRBs/data/GRB.root"); 
-          TTree *tree = (TTree*) file->Get("grbTree");
+          TFile *file = new TFile("./GRBs/data/GRBIceCube.root"); 
+          TTree *tree = (TTree*) file->Get("iceCubeTree");
 
           // Tree vars
           float RA, dec;
           std::string *objName = new std::string;
-          int unixTime = 0;
+          int unixTriggerTime = 0;
         
           tree->SetBranchAddress("RA",&RA); 
           tree->SetBranchAddress("dec",&dec); 
           tree->SetBranchAddress("name",&objName);
-          tree->SetBranchAddress("unixTime",&unixTime);
+          tree->SetBranchAddress("unixTriggerTime",&unixTriggerTime);
         
           for (unsigned int i = 0; i < tree->GetEntries(); i++) 
             {
@@ -204,7 +204,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, const
              
               //////////// Cuts
               // Time cut for finding sources within a certain time period
-              if( (unixTime < TMIN) || (unixTime > TMAX) ){continue;}
+              if( (unixTriggerTime < TMIN) || (unixTriggerTime > TMAX) ){continue;}
               // Declination cut (ANITA won't see neutrinos from these sources)
               if( abs(dec)>decCutLimit){continue;}
               // Search for specific subtype

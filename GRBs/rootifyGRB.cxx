@@ -1,4 +1,4 @@
-// Rootify GRB tsvs for SWIFT catalog for all time
+// Rootify GRB tsvs for SWIFT and IceCube catalogs for all time
 
 #include <time.h>
 #include <stdlib.h>
@@ -16,11 +16,16 @@ void trim(std::string& s, const char t)
   s.erase(std::remove(s.begin(), s.end(), t), s.end());
 }
 
-void rootifyGRB()
+bool RemoveExtraneousSpaces(char lhs, char rhs)
+{
+  return (lhs == rhs) && (lhs == ' ');
+}
+
+void rootifyGRBSwift()
 {
 
-  TFile file("./data/GRB.root","RECREATE");
-  TTree grbTree("grbTree","Gamma Ray Burst SWIFT tree");
+  TFile file("./data/GRBSwift.root","RECREATE");
+  TTree swiftTree("swiftTree","Gamma Ray Burst SWIFT tree");
 
   // Scalar vars
   std::string name;
@@ -42,19 +47,19 @@ void rootifyGRB()
   std::string tempIndexFound;
   std::string na = "n/a";
 
-  grbTree.Branch("name",&name);
-  grbTree.Branch("date",&date);
-  grbTree.Branch("letterIndex",&letterIndex);
-  grbTree.Branch("time",&time);
-  grbTree.Branch("unixTime",&unixTime, "unixTime/I");
-  grbTree.Branch("RA",&RA,"RA/F");
-  grbTree.Branch("dec",&dec,"dec/F");
-  grbTree.Branch("T90",&T90,"T90/F");
-  grbTree.Branch("fluence",&fluence,"fluence/F");
-  grbTree.Branch("peakPhotonFluxOneSec",&peakPhotonFluxOneSec,"peakPhotonFluxOneSec/F");
-  grbTree.Branch("photonIndex",&photonIndex,"photonIndex/F");
-  grbTree.Branch("powerLawType",&powerLawType);
-  grbTree.Branch("gamma",&gamma,"gamma/F");
+  swiftTree.Branch("name",&name);
+  swiftTree.Branch("date",&date);
+  swiftTree.Branch("letterIndex",&letterIndex);
+  swiftTree.Branch("time",&time);
+  swiftTree.Branch("unixTime",&unixTime, "unixTime/I");
+  swiftTree.Branch("RA",&RA,"RA/F");
+  swiftTree.Branch("dec",&dec,"dec/F");
+  swiftTree.Branch("T90",&T90,"T90/F");
+  swiftTree.Branch("fluence",&fluence,"fluence/F");
+  swiftTree.Branch("peakPhotonFluxOneSec",&peakPhotonFluxOneSec,"peakPhotonFluxOneSec/F");
+  swiftTree.Branch("photonIndex",&photonIndex,"photonIndex/F");
+  swiftTree.Branch("powerLawType",&powerLawType);
+  swiftTree.Branch("gamma",&gamma,"gamma/F");
   
   std::ifstream ifile("./data/swift_grb.tsv");
   std::string line;
@@ -129,14 +134,157 @@ void rootifyGRB()
 	      cout << "---" << endl;
 	    }
 	  */	  
-	  grbTree.Fill();
+	  swiftTree.Fill();
 	    
 	}
     }
   
-  grbTree.Write();
+  swiftTree.Write();
   file.Close();
   cout << "Processed SWIFT GRB catalog!" << endl;
   
   return;
+}
+
+void rootifyGRBIcecube()
+{
+
+  TFile file("./data/GRBIceCube.root","RECREATE");
+  TTree iceCubeTree("iceCubeTree","Gamma Ray Burst IceCube tree");
+
+  // Scalar vars
+  std::string iceCubeName;
+  std::string fermiName;
+  std::string name;
+  std::string date;
+  int unixTriggerTime;
+  float RA;
+  float dec;
+  float T90; // *duration* of T90 window
+  int unixT90Time;
+  float fluence;
+  float redshift;
+  float T100;
+
+  // Intermediate vars
+  std::string triggerTime;
+  std::string T90Time;
+
+  iceCubeTree.Branch("name",&name);
+  iceCubeTree.Branch("date",&date);
+  iceCubeTree.Branch("unixTriggerTime",&unixTriggerTime,"unixTriggerTime/I");
+  iceCubeTree.Branch("RA",&RA,"RA/F");
+  iceCubeTree.Branch("dec",&dec,"dec/F");
+  iceCubeTree.Branch("T90",&T90,"T90/F");
+  iceCubeTree.Branch("unixT90Time",&unixT90Time,"unixT90Time/I");
+  iceCubeTree.Branch("fluence",&fluence,"fluence/F");
+  iceCubeTree.Branch("redshift",&redshift,"redshift/F");
+  iceCubeTree.Branch("T100",&T100,"T100/F");
+
+  ////////////////////////////////////////////////
+
+  std::ifstream ifile("./data/Summary_table.txt");
+  std::string line;
+  std::ifstream vifile;
+  std::string vline;
+  
+  int lineNumber = 0;
+  
+  while (std::getline(ifile, line))
+    {
+      lineNumber++;
+      if(lineNumber > 4 && lineNumber) // skip format, header, units
+	{
+	  std::istringstream iss(line); // construct a string stream from line
+	  // read the tokens from current line separated by comma
+	  std::vector<std::string> tokens; // here we store the tokens
+	  std::string token; // current token
+
+	  // note: used sed -i 's/ \{1,\}/,/g' file      on original file to replace any amount of space with a single ,
+	  //sed -i 's/^[ \t]*//' file      on original file to remove leading whitespace
+	  // sed -i 's/^,//' file        on original file to remove first comma if first character is comma
+	  while (std::getline(iss, token, ','))
+	    {
+	      tokens.push_back(token); // add the token to the vector
+	    }
+
+	  // map the tokens into our variables
+	  iceCubeName = tokens[0];
+	  fermiName = tokens[1];
+
+	  if(fermiName!="None" && iceCubeName=="None")
+	    {
+	      date = fermiName.substr(3,6);
+	      name = fermiName;
+	    }
+	  else if(fermiName=="None" && iceCubeName!="None")
+	    {
+	      date = iceCubeName.substr(3,6);
+	      name = iceCubeName;
+	    }
+	  else if(fermiName!="None" && iceCubeName!="None")
+	    {
+	      date = iceCubeName.substr(3,6); // use iceCubeName if both names exist
+	      name = iceCubeName;
+	    }
+	  else
+	    {
+	      date = "noDate";
+	      name= "noName";
+	    }
+	  
+	  triggerTime = tokens[2];
+	  
+
+	  // trigger time
+	  struct tm tm;
+	  time_t ts = 0;
+	  memset(&tm, 0, sizeof(tm));
+	  std::string humanTime = date + " " + triggerTime;
+	  strptime(humanTime.c_str(), "%y%m%d %T", &tm);
+	  ts = mktime(&tm);
+	  unixTriggerTime = (int)ts;
+	  //
+	  RA = atof(tokens[3].c_str());
+	  dec = atof(tokens[4].c_str());
+	  T90 = atof(tokens[6].c_str());
+	  T90Time = tokens[8];
+	  // same for T90 time
+	  struct tm tm2;
+	  time_t ts2 = 0;
+	  memset(&tm2, 0, sizeof(tm2));
+	  std::string humanTime2 = date + " " + T90Time;
+	  strptime(humanTime2.c_str(), "%y%m%d %T", &tm2);
+	  ts2 = mktime(&tm2);
+	  unixT90Time = (int)ts2;
+	  // if no T90 Start is NOT recorded (-999), also set the calculated unix time to -999...
+	  if(T90Time == "-999"){unixT90Time = -999;}
+	  //
+
+	  fluence = atof(tokens[9].c_str());
+	  redshift = atof(tokens[11].c_str());
+	  T100 = atof(tokens[12].c_str());
+	  
+	  iceCubeTree.Fill();
+
+	  // account for -999s 
+	}
+    }
+  
+  iceCubeTree.Write();
+  file.Close();
+  cout << "Processed IceCube GRB catalog!" << endl;
+  
+  return;
+  
+}
+
+void rootifyGRB()
+{
+  
+  rootifyGRBSwift();
+  rootifyGRBIcecube();
+  
+  return;
+  
 }
