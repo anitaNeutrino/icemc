@@ -63,12 +63,12 @@ void plotSuperNovaeTNS()
       tree->GetEntry(i);
 
       // Skip those if the discovery time falls outside of ANITA flight time
-      if( (discoveryUnixTime < a_tmin) || (discoveryUnixTime > a_tmax) ){continue;}
-      if( abs(dec)>30 ){continue;}
+      //if( (discoveryUnixTime < a_tmin) || (discoveryUnixTime > a_tmax) ){continue;}
+      if( abs(dec)>5 ){continue;}
       //desiredType = "SN II";
       //found = objType->find(desiredType);
       //if(found != 0){continue;}
-      if(*name != "SN 2016jby" && *name != "SN 2016iyz"){continue;}
+      //if(*name != "SN 2016jby" && *name != "SN 2016iyz"){continue;}
       
       //cout << ra << endl;
       //cout << dec << endl;
