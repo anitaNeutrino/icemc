@@ -161,6 +161,7 @@ void rootifyGRBIcecube()
   float RA;
   float dec;
   float T90; // *duration* of T90 window
+  float T90error;
   int unixT90Time;
   float fluence;
   float redshift;
@@ -176,6 +177,7 @@ void rootifyGRBIcecube()
   iceCubeTree.Branch("RA",&RA,"RA/F");
   iceCubeTree.Branch("dec",&dec,"dec/F");
   iceCubeTree.Branch("T90",&T90,"T90/F");
+  iceCubeTree.Branch("T90error",&T90error,"T90error/F");
   iceCubeTree.Branch("unixT90Time",&unixT90Time,"unixT90Time/I");
   iceCubeTree.Branch("fluence",&fluence,"fluence/F");
   iceCubeTree.Branch("redshift",&redshift,"redshift/F");
@@ -248,6 +250,7 @@ void rootifyGRBIcecube()
 	  RA = atof(tokens[3].c_str());
 	  dec = atof(tokens[4].c_str());
 	  T90 = atof(tokens[6].c_str());
+          T90error = atof(tokens[7].c_str());
 	  T90Time = tokens[8];
 	  // same for T90 time
 	  struct tm tm2;
