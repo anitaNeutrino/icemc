@@ -73,7 +73,8 @@ void tempLimit(){
   for (int i=0; i<n_ANITA; i++){
     ANITA_3_effArea[i]     = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCC[i]; 
     printf("a3 eff area %d %8.3e \n", i, ANITA_3_effArea[i]);
-    ANITA_4_effArea[i]     = ANITA_4_effVol[i]/intLength_CONNOLLY_nuCC[i] * A5_factor[i]; 
+    //ANITA_4_effArea[i]     = ANITA_4_effVol[i]/intLength_CONNOLLY_nuCC[i] * A5_factor[i]; 
+    ANITA_4_effArea[i]     = ANITA_4_effVol[i]/intLength_CONNOLLY_nuCC[i]; 
     printf("a4 eff area %d %8.3e \n", i, ANITA_4_effArea[i]);
     // ANITA_3_effAreaUp[i]   = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCCup[i];
     // ANITA_3_effAreaLow[i]  = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCClow[i]; 
