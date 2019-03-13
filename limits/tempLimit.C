@@ -139,7 +139,7 @@ void tempLimit(){
   g_ANITA_123->SetLineColor(kCyan);
 
   TGraph *g_ANITA_1234 = getCombinedLimit(ANITA_1234_denom, ulAll);
-  g_ANITA_1234->SetLineColor(kCyan);
+  //  g_ANITA_1234->SetLineColor(kCyan);
   // g_ANITA_1234->SetLineStyle(2);
 
   // cout << "Combined limit no delta" << endl;
@@ -197,15 +197,15 @@ void tempLimit(){
   int expMin = 30;
   int expMax = 250;
   
-  TLegend *Leg_Const2_2 = new TLegend(0.16, 0.12, 0.43, 0.254);
-  // TLegend *Leg_Const2_2 = new TLegend(0.1, 0.1, 0.9, 0.9);
+  //TLegend *Leg_Const2_2 = new TLegend(0.16, 0.12, 0.43, 0.254);
+  TLegend *Leg_Const2_2 = new TLegend(0., 0., 0.99, 0.99);
   Leg_Const2_2 -> AddEntry(g_Kotera_shade, "GZK, Kotera '10", "f");  
   Leg_Const2_2 -> AddEntry(g_Ahlers, "Ahlers '12, E_{min}=10^{18.5} eV", "l");
   Leg_Const2_2 -> SetBorderSize(0);
   Leg_Const2_2 -> SetFillColor(0);
 
   TGraph *newflux[200];
-  int icolor=52;
+  int icolor=51;
   for (int iexp=expMin;  iexp<expMax; iexp++){
     
     string fluxname = GetFluxFromNumber(iexp);
@@ -214,6 +214,7 @@ void tempLimit(){
     newflux[iexp-expMin] = GetFlux(fluxname);
     newflux[iexp-expMin]->SetLineColor(icolor);
     newflux[iexp-expMin]->SetLineWidth(3);
+    newflux[iexp-expMin]->SetLineStyle(9);    
     newflux[iexp-expMin]->SetName(fluxname.c_str());
     newflux[iexp-expMin]->Draw("l");
     Leg_Const2_2 -> AddEntry(newflux[iexp-expMin], fluxname.c_str(), "l");
@@ -226,13 +227,13 @@ void tempLimit(){
   // g_ANITA_2_erratum->Draw("l");
   // gtemp->Draw("l");
   // g_ANITA_3_shade->Draw("f");
-  g_ANITA_3_combined->Draw("l");
+  // g_ANITA_3_combined->Draw("l");
   // g_ANITA_3up->Draw("l");
   // g_ANITA_3low->Draw("l");
   // g_ANITA_3Reno->Draw("l");
   //  g_ANITA_123->Draw("l");
-  //g_ANITA_1234->Draw("l");
-  g_ANITA_4_icemc->Draw("l");
+  g_ANITA_1234->Draw("l");
+  // g_ANITA_4_icemc->Draw("l");
 
   TGraph *gAuger   = auger2015();
   TGraph *gIcecube = icecube();
@@ -240,16 +241,16 @@ void tempLimit(){
 
   gAuger->SetLineColor(kRed);
   gAuger->SetLineStyle(2);
-  gAuger->Draw("l");
+  // gAuger->Draw("l");
 
   gIcecube->SetLineColor(kBlue);
   gIcecube->SetLineStyle(3);
-  gIcecube->Draw("l");
+  // gIcecube->Draw("l");
   
   TLegend *leg = new TLegend(0.5, 0.7, 0.89, 0.89);
-  leg->AddEntry(gAuger,   "Auger 2015", "l");
-  leg->AddEntry(gIcecube, "IceCube 2017", "l");
-  leg->AddEntry(g_ANITA_3_combined,    "ANITA-III",  "l" );
+  // leg->AddEntry(gAuger,   "Auger 2015", "l");
+  // leg->AddEntry(gIcecube, "IceCube 2017", "l");
+  // leg->AddEntry(g_ANITA_3_combined,    "ANITA-III",  "l" );
   // leg->AddEntry(g_ANITA_2_erratum, "ANITA-II erratum", "l");
   // leg->AddEntry(gtemp, "ANITA I-III arxiv", "l");
   // // leg->AddEntry(g_ANITA_3,    "#sigma Connolly et al, Nominal", "l");
@@ -257,12 +258,12 @@ void tempLimit(){
   // // leg->AddEntry(g_ANITA_3low, "#sigma Connolly et al, Lower bound",   "l");
   // // leg->AddEntry(g_ANITA_3Reno,        "#sigma Reno et al",     "l");
   // leg->AddEntry(g_ANITA_123,       "ANITA I-III",  "l" );
-  leg->AddEntry(g_ANITA_4_icemc,       "ASO",  "l" );
-  //leg->AddEntry(g_ANITA_1234,       "ANITA I-IV",  "l" );
+  // leg->AddEntry(g_ANITA_4_icemc,       "ANITA IV",  "l" );
+  leg->AddEntry(g_ANITA_1234,       "ANITA I-IV",  "l" );
   leg->Draw();
 
   
-  Leg_Const2_2 -> Draw();
+  // Leg_Const2_2 -> Draw();
 
   //  Preliminary();
   
@@ -270,8 +271,8 @@ void tempLimit(){
   cConst_2->Print(Form("%s.pdf", outname.c_str()));
   cConst_2->Print(Form("%s.C", outname.c_str()));
 
-  // TCanvas *c2 = new TCanvas("c2");
-  //  Leg_Const2_2 -> Draw();
+  TCanvas *c2 = new TCanvas("c2");
+  Leg_Const2_2 -> Draw();
 
 }
 
