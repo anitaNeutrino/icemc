@@ -1,4 +1,7 @@
+#ifndef FAVA_ENTRY_H
+#define  FAVA_ENTRY_H
 
+#include "TObjString.h"
 
 struct FAVAEntry {
     int week; 
@@ -33,6 +36,6 @@ struct FAVAEntry {
     TObjString source_class;
     };
 
-
+#endif 
 
 

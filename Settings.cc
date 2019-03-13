@@ -235,7 +235,8 @@ void Settings::Initialize() {
   UNBIASED_SELECTION=1.; // (0) pick neutrino interaction in the ice and neutrino from any direction or (1) choose neutrino interaction point in the horizon on the balloon in the ice and neutrino direction on the cerenkov cone
   SIGMA_FACTOR=1;
   USEDARTBOARD=0;
-
+  EXPONENT=18.; // Initialize energy exponent
+  
   // Bunch of variables which were global in icemc.cc but are settings:
   SEED=65540;      // random number seed.
   THETA_TH_FACTOR=1.0; // factor to multiply theta_th to check code is working properly
@@ -273,13 +274,29 @@ void Settings::Initialize() {
   SPECIFIC_NU_POSITION_ALTITUDE = 0; 
   SPECIFIC_NU_POSITION_DISTANCE = 100e3; 
 
+  // Source options
   SOURCE = "None"; 
   SOURCE_MIN_E = 18; 
-  SOURCE_MAX_E = 21; 
+  SOURCE_MAX_E = 21;
+  WHICH_SOURCES = "All";
+  WHICH_SUBTYPE = "All";
+  WHICH_START_TIME = "0";
+  WHICH_END_TIME = "MAX";
 
+  // Extras
   IGNORE_CROSSPOL = 0; 
   POL_SIGN_HACK = 1; 
-  CUTONWEIGHTS = 1e-10; 
+  CUTONWEIGHTS = 0.;
+  DEC_CUT = 90; // Declination cut 999 is default: no declination cut
+                                   //  If you specify a value, then only use sources within from declination = -DEC_CUT to DEC_CUT
+  ALL_SKY_MAP = 0; // Draw all-sky map?
+
+  // Custom source options
+  CUSTOM_NAME = "customObject";
+  CUSTOM_RA = 0;
+  CUSTOM_DEC = 0;
+  CUSTOM_GAMMA = 2;
+  
 }
 
 
@@ -600,7 +617,10 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Source Option", SOURCE,true); 
   getSetting("Source Max Energy", SOURCE_MAX_E,true); 
   getSetting("Source Min Energy", SOURCE_MIN_E,true); 
-
+  getSetting("Which Sources", WHICH_SOURCES,true);
+  getSetting("Which Subtype", WHICH_SUBTYPE,true);
+  getSetting("Which Start Time", WHICH_START_TIME,true);
+  getSetting("Which End Time", WHICH_END_TIME,true);
 
   getSetting("Cross-section factor", SIGMA_FACTOR);
   if (SIGMA_FACTOR!=1){
@@ -834,7 +854,16 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   getSetting("Ignore Cross-Pol", IGNORE_CROSSPOL); 
   getSetting("Polarization Sign Hack", POL_SIGN_HACK); 
-  getSetting("Minimum weight", CUTONWEIGHTS); 
+  getSetting("Minimum weight", CUTONWEIGHTS);
+  getSetting("Absolute declination cut", DEC_CUT);
+  getSetting("Draw all-sky map", ALL_SKY_MAP);
+
+  //Custom sources
+  getSetting("Custom Name",CUSTOM_NAME);
+  getSetting("Custom RA",CUSTOM_RA);
+  getSetting("Custom Dec",CUSTOM_DEC);
+  getSetting("Custom Gamma",CUSTOM_GAMMA);
+  
 } //method ReadInputs
 
 
