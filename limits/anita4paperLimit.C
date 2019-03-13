@@ -17,7 +17,7 @@ TGraph* getCombinedLimit(double denom[n_ANITA], double N90);
 TGraph *auger2015();
 TGraph *icecube();
 
-void tempLimit(){
+void anita4paperLimit(){
 
   string outname = "LimitTemp_ANITA4";
 
@@ -45,7 +45,7 @@ void tempLimit(){
   Double_t ulA123 = f.CalculateUpperLimit(3, 0.7+0.98+1.1);
   Double_t ulAll = f.CalculateUpperLimit(NobsAll, NbkgAll);
 
-  cout << "ANITA 1-3 Upper Limit = " <<  ulAll << endl;
+  cout << "ANITA 1-4 Upper Limit = " <<  ulAll << endl;
      
   LogToLine(n_ANITA, ANITA_x);
   TGraph *g_Kotera_shade = getKoteraShade();  
@@ -70,6 +70,7 @@ void tempLimit(){
     // cout  << "ANITA-3 geom  " << ANITA_3_geomAverage[i] << " " << endl;
     ANITA_3_effAreaUp[i]   = ANITA_3_geomAverage[i]*intLength_CONNOLLY_nuCC[i]/intLength_CONNOLLY_nuCCup[i];
     ANITA_3_effAreaLow[i]  = ANITA_3_geomAverage[i]*intLength_CONNOLLY_nuCC[i]/intLength_CONNOLLY_nuCClow[i];
+    cout <<  ANITA_4_geomAverage[i] << endl;
   }
   
 
@@ -82,10 +83,10 @@ void tempLimit(){
 
   double N90A4 = A4ul;
   cout << "ANITA4" << endl;
-  TGraph *g_ANITA_4_icemc = getLimitOldFormula(N90A4, ANITA_4_geomAverage, ANITA_4_eff, ANITA_4_livetime);
-  g_ANITA_4_icemc->SetLineStyle(1);
-  g_ANITA_4_icemc->SetLineColor(kBlack);
-  // g_ANITA_4_icemc->SetLineStyle(2);
+  TGraph *g_ANITA_4_combined = getLimitOldFormula(N90A4, ANITA_4_geomAverage, ANITA_4_eff, ANITA_4_livetime);
+  g_ANITA_4_combined->SetLineStyle(1);
+  g_ANITA_4_combined->SetLineColor(kBlack);
+  // g_ANITA_4_combined->SetLineStyle(2);
 
 
   Double_t ANITA_2_effArea[n_ANITA];
@@ -167,7 +168,7 @@ void tempLimit(){
   // g_ANITA_3Reno->Draw("l");
   //  g_ANITA_123->Draw("l");
   g_ANITA_1234->Draw("l");
-  g_ANITA_4_icemc->Draw("l");
+  g_ANITA_4_combined->Draw("l");
 
   TGraph *gAuger   = auger2015();
   TGraph *gIcecube = icecube();
@@ -192,7 +193,7 @@ void tempLimit(){
   // // leg->AddEntry(g_ANITA_3low, "#sigma Connolly et al, Lower bound",   "l");
   // // leg->AddEntry(g_ANITA_3Reno,        "#sigma Reno et al",     "l");
   // leg->AddEntry(g_ANITA_123,       "ANITA I-III",  "l" );
-  leg->AddEntry(g_ANITA_4_icemc,       "ANITA IV",  "l" );
+  leg->AddEntry(g_ANITA_4_combined,       "ANITA IV",  "l" );
   leg->AddEntry(g_ANITA_1234,       "ANITA I-IV",  "l" );
   leg->Draw();
 
