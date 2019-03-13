@@ -14,6 +14,9 @@ TGraph* getCombinedLimitNoDelta(double denom[n_ANITA], double N90);
 
 TGraph* getCombinedLimit(double denom[n_ANITA], double N90);
 
+TGraph *GetFlux(string name);
+string GetFluxFromNumber(int EXPONENT);
+
 TGraph *auger2015();
 TGraph *icecube();
 TGraph* getPulsar();
@@ -170,26 +173,55 @@ void tempLimit(){
 
   TGraph *g_Ahlers=getAhlers();
   g_Ahlers->Draw("l");
-/*
-  TGraph* gNSNS = getNSNS();
-  gNSNS->Draw("l");
-  TGraph* gPulsar = getPulsar();
-  gPulsar->Draw("l");
-  TGraph* gAGN = getAGN();
-  gAGN->Draw("l");
-  TGraph* gTakami = getTakami();
-  gTakami->Draw("l");
-  TGraph* gYGRB = getYukselGRB();
-  gYGRB->Draw("l");
-  TGraph* gYmax = getYukselMax();
-  gYmax->Draw("l");
-  TGraph* gYSFH = getYukselSFH();
-  gYSFH->Draw("l");
-  TGraph* gYmin = getYukselMin();
-  gYmin->Draw("l");
-  TGraph* gYQSO = getYukselQSO();
-  gYQSO->Draw("l");
- */ 
+  
+
+  // TGraph* gNSNS = getNSNS();
+  // gNSNS->Draw("l");
+  // TGraph* gPulsar = getPulsar();
+  // gPulsar->Draw("l");
+  // TGraph* gAGN = getAGN();
+  // gAGN->Draw("l");
+  // TGraph* gTakami = getTakami();
+  // gTakami->Draw("l");
+  // TGraph* gYGRB = getYukselGRB();
+  // gYGRB->Draw("l");
+  // TGraph* gYmax = getYukselMax();
+  // gYmax->Draw("l");
+  // TGraph* gYSFH = getYukselSFH();
+  // gYSFH->Draw("l");
+  // TGraph* gYmin = getYukselMin();
+  // gYmin->Draw("l");
+  // TGraph* gYQSO = getYukselQSO();
+  // gYQSO->Draw("l");
+  
+  int expMin = 30;
+  int expMax = 250;
+  
+  TLegend *Leg_Const2_2 = new TLegend(0.16, 0.12, 0.43, 0.254);
+  // TLegend *Leg_Const2_2 = new TLegend(0.1, 0.1, 0.9, 0.9);
+  Leg_Const2_2 -> AddEntry(g_Kotera_shade, "GZK, Kotera '10", "f");  
+  Leg_Const2_2 -> AddEntry(g_Ahlers, "Ahlers '12, E_{min}=10^{18.5} eV", "l");
+  Leg_Const2_2 -> SetBorderSize(0);
+  Leg_Const2_2 -> SetFillColor(0);
+
+  TGraph *newflux[200];
+  int icolor=52;
+  for (int iexp=expMin;  iexp<expMax; iexp++){
+    
+    string fluxname = GetFluxFromNumber(iexp);
+    if (fluxname=="") continue;
+    cout << "Flux name is " << fluxname << endl;
+    newflux[iexp-expMin] = GetFlux(fluxname);
+    newflux[iexp-expMin]->SetLineColor(icolor);
+    newflux[iexp-expMin]->SetLineWidth(3);
+    newflux[iexp-expMin]->SetName(fluxname.c_str());
+    newflux[iexp-expMin]->Draw("l");
+    Leg_Const2_2 -> AddEntry(newflux[iexp-expMin], fluxname.c_str(), "l");
+    icolor+=2;
+    
+  }
+
+    
   TGraph *g_ANITA_2_erratum = getANITA2erratum();
   // g_ANITA_2_erratum->Draw("l");
   // gtemp->Draw("l");
@@ -230,11 +262,6 @@ void tempLimit(){
   leg->Draw();
 
   
-  TLegend *Leg_Const2_2 = new TLegend(0.16, 0.12, 0.43, 0.254);
-  Leg_Const2_2 -> AddEntry(g_Kotera_shade, "GZK, Kotera '10", "f");  
-  Leg_Const2_2 -> AddEntry(g_Ahlers, "Ahlers '12, E_{min}=10^{18.5} eV", "l");
-  Leg_Const2_2 -> SetBorderSize(0);
-  Leg_Const2_2 -> SetFillColor(0);
   Leg_Const2_2 -> Draw();
 
   //  Preliminary();
@@ -242,6 +269,10 @@ void tempLimit(){
   cConst_2->Print(Form("%s.png", outname.c_str()));
   cConst_2->Print(Form("%s.pdf", outname.c_str()));
   cConst_2->Print(Form("%s.C", outname.c_str()));
+
+  // TCanvas *c2 = new TCanvas("c2");
+  //  Leg_Const2_2 -> Draw();
+
 }
 
 
@@ -1193,4 +1224,155 @@ TGraph* getYukselQSO()
   g->SetLineWidth(3);
 
   return g;
+}
+
+string GetFluxFromNumber(int EXPONENT){
+
+  if (EXPONENT<113) {
+    switch (EXPONENT)
+      {
+      case 32:  // ESS3
+	return ("essfig9.dat");
+	break;
+      case 33:  // ESS4
+	return ("essbaseline.dat");
+	break;
+      case 34:  // ESS5
+	return ("ess_n0.dat");
+	break;
+      case 40:
+	return ("ahlers.dat");
+	break;
+      case 41:
+	return ("ahlers2012.dat");
+	break;
+      case 50:
+	return ("allard.dat");
+	break;
+      case 60:
+	return ("ave_max.dat");
+	break;
+      case 61:
+	return ("ave_min.dat");
+	break;
+      case 70:
+	return ("kkss_envo.dat");
+	break;
+      case 80:
+	return ("gzk_peter.dat");
+	break;
+      case 90:
+	return ("waxgzk.dat");
+	break;
+      case 100:
+	return ("e-2.dat");
+	break;
+      case 101:
+	return ("e-2_icecube.dat");
+	break;
+      case 110:
+	return ("yuksel_grb.dat");
+	break;
+      case 111:
+	return ("yuksel_qso.dat");
+	break;
+      case 112:
+	return ("yuksel_sfh.dat");
+	break;
+
+      default:
+	return "";
+      }
+  
+  } else if (EXPONENT==200)   // Iron model
+    {
+      return ("Ave2005_Fe_Emax21.0.dat");
+    }
+
+  else if (EXPONENT==201)
+    {
+      return ("Ave2005_Fe_Emax21.5.dat");
+    }
+  
+  else if (EXPONENT==202)
+    {
+      return ("Ave2005_Fe_Emax22.0.dat");
+    }
+
+  else if (EXPONENT==203)
+    {
+      return ("Ave2005_Fe_hi_evo.dat");
+    }
+
+  else if (EXPONENT==204)
+    {
+      return ("Ave2005_Fe_low_evo.dat");
+    }
+
+  else if (EXPONENT==210)
+    {
+      return ("Stanev2008_heavy.dat");
+    }
+
+  else if (EXPONENT==220)
+    {
+      return ("Kotera2010_Fe_only.dat");
+    }
+
+  else if (EXPONENT==221)
+    {
+      return ("Kotera2010_Fe_rich.dat");
+    }
+
+  else if (EXPONENT==222)
+    {
+      return ("Kotera2010_mix_max.dat");
+    }
+
+  else if (EXPONENT==223)
+    {
+      return ("Kotera2010_mix_min.dat");
+    }
+  
+  else if (EXPONENT==224)
+    {
+      return ("Kotera2010_proton.dat");
+    }
+  
+
+
+
+  return "";
+
+}
+
+
+TGraph *GetFlux(string filename){
+
+  ifstream influx(("../fluxes/"+filename).c_str());
+  int nlines;
+  influx >> nlines;   // Read how much lines in the file.
+  // cout<<"We are using "<<("../fluxes/"+filename).c_str()<<" as the flux data."<<endl;
+  // cout<<"total lines in the file are "<<nlines<<endl;
+ 
+  double E2dNdEdAdt[100]; //E2dNdE GeV cm^-2 s^-1 sr^-1
+  double EdNdEdAdt[100]; //E2dNdE GeV cm^-2 s^-1 sr^-1
+  double energy[100];
+  
+  for(int i=0;i<nlines;i++) {
+    influx>>energy[i]>>E2dNdEdAdt[i];
+  }
+    
+  for(int i=0;i<nlines;i++) {
+    EdNdEdAdt[i] = E2dNdEdAdt[i] + 9. - energy[i];  // change from GeV to eV and E2dN -> EdN
+    EdNdEdAdt[i] = TMath::Power(10,  EdNdEdAdt[i]);
+
+    energy[i] = TMath::Power(10,  energy[i]);
+    // cout << energy[i] << " " <<  EdNdEdAdt[i] << endl;
+  }
+
+  
+  TGraph *gFluence = new TGraph(nlines, energy, EdNdEdAdt);
+  gFluence->SetTitle(";log_{10} #left(#frac{E_{#nu}}{eV}#right);EF(E), cm^{-2} s^{-1} str^{-1}");
+  return gFluence;
 }
