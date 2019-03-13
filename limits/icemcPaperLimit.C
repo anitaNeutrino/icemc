@@ -228,7 +228,7 @@ void icemcPaperLimit(){
   
   TLegend *Leg_Const2_2 = new TLegend(0.16, 0.12, 0.43, 0.254);
   Leg_Const2_2 -> AddEntry(g_kkss, "KKSS '02 ", "l");
-  Leg_Const2_2 -> AddEntry(gTakami, "Takami et al '07", "l");
+  Leg_Const2_2 -> AddEntry(gTakami, "Takami et al '09", "l");
   Leg_Const2_2 -> AddEntry(g_Ahlers, "Ahlers '12, E_{min}=10^{18.5} eV", "l");
   Leg_Const2_2 -> AddEntry(g_Kotera_shade, "GZK, Kotera '10", "f");  
   Leg_Const2_2 -> SetBorderSize(0);
