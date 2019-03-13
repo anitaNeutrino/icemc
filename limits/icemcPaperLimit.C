@@ -14,11 +14,10 @@ TGraph* getCombinedLimitNoDelta(double denom[n_ANITA], double N90);
 
 TGraph* getCombinedLimit(double denom[n_ANITA], double N90);
 
-TGraph *GetFlux(string name);
-string GetFluxFromNumber(int EXPONENT);
-
 TGraph *auger2015();
+TGraph *auger2017();
 TGraph *icecube();
+TGraph *icecube2018();
 TGraph* getPulsar();
 TGraph* getNSNS();
 TGraph* getAGN();
@@ -29,9 +28,13 @@ TGraph* getYukselQSO();
 TGraph* getYukselMax();
 TGraph* getYukselMin();
 
-void tempLimit(){
+TGraph *GetFlux(string name);
+string GetFluxFromNumber(int EXPONENT);
 
-  string outname = "LimitTemp_ANITA4";
+
+void icemcPaperLimit(){
+
+  string outname = "Limit4icemcPaper";
 
   //   if (!gROOT->GetClass("TFeldmanCousins")) gSystem->Load("libPhysics");
 
@@ -50,6 +53,7 @@ void tempLimit(){
 
   Double_t A3ul = 3.471 ;
   Double_t A4ul = f.CalculateUpperLimit(Nobserved, Nbackground);
+//  printf("a4 ul = %g\n", A4ul);
   //   Double_t ll = f.GetLowerLimit();
 
 
@@ -57,7 +61,7 @@ void tempLimit(){
   Double_t ulA123 = f.CalculateUpperLimit(3, 0.7+0.98+1.1);
   Double_t ulAll = f.CalculateUpperLimit(NobsAll, NbkgAll);
 
-  cout << "ANITA 1-3 Upper Limit = " <<  ulAll << endl;
+  cout << "ANITA 1-4 Upper Limit = " <<  ulAll << endl;
      
   LogToLine(n_ANITA, ANITA_x);
   TGraph *g_Kotera_shade = getKoteraShade();  
@@ -69,16 +73,10 @@ void tempLimit(){
   Double_t ANITA_3_effAreaReno[n_ANITA];
   Double_t ANITA_3_geomAverage[n_ANITA];
   Double_t ANITA_4_geomAverage[n_ANITA];
-  //double A5_factor[n_ANITA] = {300., 35., 6.6, 5., 3.3, 2., 1.8};
-  double A5_factor[n_ANITA] = {10., 10., 10., 10., 10., 10., 10.};
-  //double A5_factor[n_ANITA] = {1., 1., 1., 1., 1., 1., 1.};
-
+  
   for (int i=0; i<n_ANITA; i++){
     ANITA_3_effArea[i]     = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCC[i]; 
-    printf("a3 eff area %d %8.3e \n", i, ANITA_3_effArea[i]);
-    //ANITA_4_effArea[i]     = ANITA_4_effVol[i]/intLength_CONNOLLY_nuCC[i] * A5_factor[i]; 
     ANITA_4_effArea[i]     = ANITA_4_effVol[i]/intLength_CONNOLLY_nuCC[i]; 
-    printf("a4 eff area %d %8.3e \n", i, ANITA_4_effArea[i]);
     // ANITA_3_effAreaUp[i]   = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCCup[i];
     // ANITA_3_effAreaLow[i]  = ANITA_3_effVol[i]/intLength_CONNOLLY_nuCClow[i]; 
     ANITA_3_effAreaReno[i] = ANITA_3_effVol[i]/intLength_RENO[i];
@@ -88,6 +86,7 @@ void tempLimit(){
     // cout  << "ANITA-3 geom  " << ANITA_3_geomAverage[i] << " " << endl;
     ANITA_3_effAreaUp[i]   = ANITA_3_geomAverage[i]*intLength_CONNOLLY_nuCC[i]/intLength_CONNOLLY_nuCCup[i];
     ANITA_3_effAreaLow[i]  = ANITA_3_geomAverage[i]*intLength_CONNOLLY_nuCC[i]/intLength_CONNOLLY_nuCClow[i];
+    cout <<  ANITA_4_geomAverage[i] << endl;
   }
   
 
@@ -100,10 +99,10 @@ void tempLimit(){
 
   double N90A4 = A4ul;
   cout << "ANITA4" << endl;
-  TGraph *g_ANITA_4_icemc = getLimitOldFormula(N90A4, ANITA_4_geomAverage, ANITA_4_eff, ANITA_4_livetime);
-  g_ANITA_4_icemc->SetLineStyle(1);
-  g_ANITA_4_icemc->SetLineColor(kBlack);
-  // g_ANITA_4_icemc->SetLineStyle(2);
+  TGraph *g_ANITA_4_combined = getLimitOldFormula(N90A4, ANITA_4_geomAverage, ANITA_4_eff, ANITA_4_livetime);
+  g_ANITA_4_combined->SetLineStyle(1);
+  g_ANITA_4_combined->SetLineColor(kBlack);
+  // g_ANITA_4_combined->SetLineStyle(2);
 
 
   Double_t ANITA_2_effArea[n_ANITA];
@@ -139,7 +138,7 @@ void tempLimit(){
   g_ANITA_123->SetLineColor(kCyan);
 
   TGraph *g_ANITA_1234 = getCombinedLimit(ANITA_1234_denom, ulAll);
-  //  g_ANITA_1234->SetLineColor(kCyan);
+  g_ANITA_1234->SetLineColor(kCyan);
   // g_ANITA_1234->SetLineStyle(2);
 
   // cout << "Combined limit no delta" << endl;
@@ -172,85 +171,47 @@ void tempLimit(){
   gPad->RedrawAxis();
 
   TGraph *g_Ahlers=getAhlers();
+  g_Ahlers->SetLineStyle(9);
   g_Ahlers->Draw("l");
-  
 
-  // TGraph* gNSNS = getNSNS();
-  // gNSNS->Draw("l");
-  // TGraph* gPulsar = getPulsar();
-  // gPulsar->Draw("l");
-  // TGraph* gAGN = getAGN();
-  // gAGN->Draw("l");
-  // TGraph* gTakami = getTakami();
-  // gTakami->Draw("l");
-  // TGraph* gYGRB = getYukselGRB();
-  // gYGRB->Draw("l");
-  // TGraph* gYmax = getYukselMax();
-  // gYmax->Draw("l");
-  // TGraph* gYSFH = getYukselSFH();
-  // gYSFH->Draw("l");
-  // TGraph* gYmin = getYukselMin();
-  // gYmin->Draw("l");
-  // TGraph* gYQSO = getYukselQSO();
-  // gYQSO->Draw("l");
-  
-  int expMin = 30;
-  int expMax = 250;
-  
-  //TLegend *Leg_Const2_2 = new TLegend(0.16, 0.12, 0.43, 0.254);
-  TLegend *Leg_Const2_2 = new TLegend(0., 0., 0.99, 0.99);
-  Leg_Const2_2 -> AddEntry(g_Kotera_shade, "GZK, Kotera '10", "f");  
-  Leg_Const2_2 -> AddEntry(g_Ahlers, "Ahlers '12, E_{min}=10^{18.5} eV", "l");
-  Leg_Const2_2 -> SetBorderSize(0);
-  Leg_Const2_2 -> SetFillColor(0);
+  TGraph *g_kkss = GetFlux("kkss_envo.dat");
+  g_kkss->SetLineWidth(3);
+  g_kkss->SetLineStyle(9);
+  g_kkss->SetLineColor(kMagenta);
+  g_kkss->Draw("l");
 
-  TGraph *newflux[200];
-  int icolor=51;
-  for (int iexp=expMin;  iexp<expMax; iexp++){
-    
-    string fluxname = GetFluxFromNumber(iexp);
-    if (fluxname=="") continue;
-    cout << "Flux name is " << fluxname << endl;
-    newflux[iexp-expMin] = GetFlux(fluxname);
-    newflux[iexp-expMin]->SetLineColor(icolor);
-    newflux[iexp-expMin]->SetLineWidth(3);
-    newflux[iexp-expMin]->SetLineStyle(9);    
-    newflux[iexp-expMin]->SetName(fluxname.c_str());
-    newflux[iexp-expMin]->Draw("l");
-    Leg_Const2_2 -> AddEntry(newflux[iexp-expMin], fluxname.c_str(), "l");
-    icolor+=2;
-    
-  }
-
-    
+  TGraph* gTakami = getTakami();
+  gTakami->SetLineWidth(3);
+  gTakami->SetLineStyle(9);
+  gTakami->SetLineColor(kOrange);
+  gTakami->Draw("l");
+  
   TGraph *g_ANITA_2_erratum = getANITA2erratum();
   // g_ANITA_2_erratum->Draw("l");
   // gtemp->Draw("l");
   // g_ANITA_3_shade->Draw("f");
-  // g_ANITA_3_combined->Draw("l");
+  g_ANITA_3_combined->Draw("l");
   // g_ANITA_3up->Draw("l");
   // g_ANITA_3low->Draw("l");
   // g_ANITA_3Reno->Draw("l");
   //  g_ANITA_123->Draw("l");
   g_ANITA_1234->Draw("l");
-  // g_ANITA_4_icemc->Draw("l");
+  g_ANITA_4_combined->Draw("l");
 
-  TGraph *gAuger   = auger2015();
-  TGraph *gIcecube = icecube();
+  TGraph *gAuger   = auger2017();
+  TGraph *gIcecube = icecube2018();
 
 
   gAuger->SetLineColor(kRed);
-  gAuger->SetLineStyle(2);
-  // gAuger->Draw("l");
+  // gAuger->SetLineStyle(2);
+  gAuger->Draw("l");
 
   gIcecube->SetLineColor(kBlue);
-  gIcecube->SetLineStyle(3);
-  // gIcecube->Draw("l");
+  // gIcecube->SetLineStyle(3);
+  gIcecube->Draw("l");
   
   TLegend *leg = new TLegend(0.5, 0.7, 0.89, 0.89);
-  // leg->AddEntry(gAuger,   "Auger 2015", "l");
-  // leg->AddEntry(gIcecube, "IceCube 2017", "l");
-  // leg->AddEntry(g_ANITA_3_combined,    "ANITA-III",  "l" );
+  leg->AddEntry(g_ANITA_3_combined,    "ANITA-III",  "l" );
   // leg->AddEntry(g_ANITA_2_erratum, "ANITA-II erratum", "l");
   // leg->AddEntry(gtemp, "ANITA I-III arxiv", "l");
   // // leg->AddEntry(g_ANITA_3,    "#sigma Connolly et al, Nominal", "l");
@@ -258,22 +219,27 @@ void tempLimit(){
   // // leg->AddEntry(g_ANITA_3low, "#sigma Connolly et al, Lower bound",   "l");
   // // leg->AddEntry(g_ANITA_3Reno,        "#sigma Reno et al",     "l");
   // leg->AddEntry(g_ANITA_123,       "ANITA I-III",  "l" );
-  // leg->AddEntry(g_ANITA_4_icemc,       "ANITA IV",  "l" );
+  leg->AddEntry(g_ANITA_4_combined,       "ANITA IV",  "l" );
   leg->AddEntry(g_ANITA_1234,       "ANITA I-IV",  "l" );
+  leg->AddEntry(gAuger,   "Auger 2017", "l");
+  leg->AddEntry(gIcecube, "IceCube 2018", "l");
   leg->Draw();
 
   
-  // Leg_Const2_2 -> Draw();
+  TLegend *Leg_Const2_2 = new TLegend(0.16, 0.12, 0.43, 0.254);
+  Leg_Const2_2 -> AddEntry(g_kkss, "KKSS '02 ", "l");
+  Leg_Const2_2 -> AddEntry(gTakami, "Takami et al '09", "l");
+  Leg_Const2_2 -> AddEntry(g_Ahlers, "Ahlers '12, E_{min}=10^{18.5} eV", "l");
+  Leg_Const2_2 -> AddEntry(g_Kotera_shade, "GZK, Kotera '10", "f");  
+  Leg_Const2_2 -> SetBorderSize(0);
+  Leg_Const2_2 -> SetFillColor(0);
+  Leg_Const2_2 -> Draw();
 
   //  Preliminary();
   
   cConst_2->Print(Form("%s.png", outname.c_str()));
   cConst_2->Print(Form("%s.pdf", outname.c_str()));
   cConst_2->Print(Form("%s.C", outname.c_str()));
-
-  TCanvas *c2 = new TCanvas("c2");
-  Leg_Const2_2 -> Draw();
-
 }
 
 
@@ -696,7 +662,7 @@ TGraph* getLimitOldFormula(double N90, double effArea[n_ANITA], double eff[n_ANI
 
     
     printf("%8.3e %8.3e \n", ANITA_x[i], ANITA_4_y[i]);
-    //printf("eff area %8.3e %8.3e \n", ANITA_x[i], effArea[i]);
+    printf("eff area %8.3e %8.3e \n", ANITA_x[i], effArea[i]);
   }
       
       
@@ -1129,6 +1095,21 @@ TGraph *icecube(){
   
   return g_Icecube;
 }
+
+TGraph *icecube2018(){
+  TGraph* g = new TGraph("icecube_2018.dat");
+  g->SetLineWidth(3);
+
+  return g;
+}
+
+TGraph *auger2017(){
+  TGraph* g = new TGraph("auger_2017.dat");
+  g->SetLineWidth(3);
+
+  return g;
+}
+
 
 TGraph* getNSNS()
 {

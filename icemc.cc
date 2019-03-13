@@ -527,11 +527,11 @@ int main(int argc,  char **argv) {
     while ((clswitch = getopt(argc, argv, "t:i:o:r:n:e:x:")) != EOF) {
       switch(clswitch) {
       case 'n':
-	nnu_tmp=atoi(optarg);
-	cout << "Changed number of simulated neutrinos to " << nnu_tmp << endl;
+        nnu_tmp=atoi(optarg);
+        cout << "Changed number of simulated neutrinos to " << nnu_tmp << endl;
         break;
       case 't':
-	trig_thresh=atof(optarg);
+        trig_thresh=atof(optarg);
         break;
       case 'i':
         input=optarg;
@@ -544,13 +544,13 @@ int main(int argc,  char **argv) {
         system(stemp.c_str());
         break;
       case 'e':
-	exp_tmp=atof(optarg);
-	cout << "Changed neutrino energy exponent to " << exp_tmp << endl;
-	break;
+        exp_tmp=atof(optarg);
+        cout << "Changed neutrino energy exponent to " << exp_tmp << endl;
+        break;
       case 'x':
-	startNu=atoi(optarg);
-	cout << "Running icemc for just 1 event with eventNumber : " << startNu << endl;
-	break;
+        startNu=atoi(optarg);
+        cout << "Running icemc for just 1 event with eventNumber : " << startNu << endl;
+        break;
       case 'r':
         run_num=optarg;
         stringstream convert(run_num);
@@ -1700,21 +1700,21 @@ int main(int argc,  char **argv) {
       
       if (src_model) 
       {
-	which_source = src_model->getDirectionAndEnergy(&force_dir, realtime_this, pnu, src_min, src_max);
-	if(which_source>= 0) {
+        which_source = src_model->getDirectionAndEnergy(&force_dir, realtime_this, pnu, src_min, src_max);
+        if(which_source>= 0) {
           got_a_good_position = 1;
         
           const Source * src = src_model->getSource(which_source); 
           RA = src->getRA();
-	  dec= src->getDec()* TMath::RadToDeg(); // Get it make in deg
+          dec= src->getDec()* TMath::RadToDeg(); // Get it make in deg
           objName = src->getName(); 
         
         }
-	
-	//std::cout << "pnu = " << pnu << std::endl;
-	//std::cout << "RA = " << RA << std::endl;
-	//std::cout << "dec = " << dec << std::endl;
-	//std::cout << "objName = " << objName << std::endl;
+        
+        //std::cout << "pnu = " << pnu << std::endl;
+        //std::cout << "RA = " << RA << std::endl;
+        //std::cout << "dec = " << dec << std::endl;
+        //std::cout << "objName = " << objName << std::endl;
           pnu*=1e9; //GeV -> eV
           ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
           len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
@@ -1722,7 +1722,7 @@ int main(int argc,  char **argv) {
       else got_a_good_position = 1; 
 
       if (settings1->HIST && !settings1->ONLYFINAL
-	  && prob_eachphi_bn->GetEntries() < settings1->HIST_MAX_ENTRIES) {
+          && prob_eachphi_bn->GetEntries() < settings1->HIST_MAX_ENTRIES) {
         prob_eachphi_bn->Fill(bn1->phi_bn);
         prob_eachilon_bn->Fill(bn1->r_bn.Lon());
       }
@@ -2035,7 +2035,7 @@ int main(int argc,  char **argv) {
       else {// get peak signal at highest edge of frequency band because that is where it is highest
         vmmhz1m_max=sig1->GetVmMHz1m(pnu, anita1->FREQ_HIGH);
         sig1->GetSpread(pnu, emfrac, hadfrac, anita1->FREQ_LOW,
-			deltheta_em_max, deltheta_had_max);
+                        deltheta_em_max, deltheta_had_max);
       } //end else (not secondbang or not interested in taus)
 
       if (jaimetree->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
@@ -2729,10 +2729,10 @@ int main(int argc,  char **argv) {
       // THIS ONLY CHECKS IF ROUGHNESS == 0, WE WILL SKIP THIS IF THERE IS ROUGHNESS
       // if (!settings1->ROUGHNESS){
       if(settings1->CHANCEINHELL_FACTOR*vmmhz1m_fresneledtwice*heff_max*0.5*(anita1->bwmin/1.E6)<anita1->maxthreshold*anita1->VNOISE[0]/10.&& !settings1->SKIPCUTS) {
-	if (bn1->WHICHPATH==3)
-	  cout<<"Event is undetectable.  Leaving loop."<<endl;
+        if (bn1->WHICHPATH==3)
+          cout<<"Event is undetectable.  Leaving loop."<<endl;
 
-	DO_SKIP 
+        DO_SKIP 
       }
       count1->nchanceinhell_fresnel[whichray]++;
       // } //end if CHANCEINHELL factor and SKIPCUTS
@@ -2964,14 +2964,14 @@ int main(int argc,  char **argv) {
       isDead = false;
       // Dead time
       if (settings1->USEDEADTIME){
-      	if ( (r.Uniform(1)<anita1->deadTime) ){
-	  isDead = true;
-	  if (settings1->MINBIAS!=1) {
+              if ( (r.Uniform(1)<anita1->deadTime) ){
+          isDead = true;
+          if (settings1->MINBIAS!=1) {
            DO_SKIP
           }
-	}
+        }
       }
-	    
+            
       count1->ndeadtime[whichray]++;
 
       Tools::Zero(sumsignal_aftertaper, 5);
@@ -2988,8 +2988,8 @@ int main(int argc,  char **argv) {
       if(!settings1->ROUGHNESS){
         panel1->SetNvalidPoints(1);
         for (int k=0;k<Anita::NFREQ;k++) {
-      	  //cout << anita1->freq[k] << " " << vmmhz[k] << " " << vmmhz2[k] << " " << vmmhz[k]/vmmhz2[k] << endl;
-      	  panel1->AddVmmhz_freq(vmmhz[k]);
+                //cout << anita1->freq[k] << " " << vmmhz[k] << " " << vmmhz2[k] << " " << vmmhz[k]/vmmhz2[k] << endl;
+                panel1->AddVmmhz_freq(vmmhz[k]);
         }
         panel1->AddVmmhz0(vmmhz[0]);
         panel1->AddVec2bln(ray1->n_exit2bn[2]);
@@ -3167,7 +3167,7 @@ int main(int argc,  char **argv) {
 
           chantrig1->saveTriggerWaveforms(anita1, justSignal_trig[0][antNum], justSignal_trig[1][antNum], justNoise_trig[0][antNum], justNoise_trig[1][antNum]);
           chantrig1->saveDigitizerWaveforms(anita1, justSignal_dig[0][antNum], justSignal_dig[1][antNum], justNoise_dig[0][antNum], justNoise_dig[1][antNum]);
-	  
+          
           Tools::Zero(sumsignal, 5);
 
           if (bn1->WHICHPATH==4 && ilayer==anita1->GetLayer(anita1->rx_minarrivaltime) && ifold==anita1->GetIfold(anita1->rx_minarrivaltime)) {
@@ -3214,7 +3214,7 @@ int main(int argc,  char **argv) {
 
           chantrig1->WhichBandsPass(settings1, anita1, globaltrig1, bn1, ilayer, ifold,  viewangle-sig1->changle, emfrac, hadfrac, thresholdsAnt[antNum]);
 
-	  
+          
           if (Anita::GetAntennaNumber(ilayer, ifold)==anita1->rx_minarrivaltime) {
             for (int iband=0;iband<5;iband++) {
               for (int ipol=0;ipol<2;ipol++) {
@@ -3366,18 +3366,18 @@ int main(int argc,  char **argv) {
       int thispassesnoise[Anita::NPOL]={0,0};
   
       if (!isDead){
-	// calculate global trigger on noise only waveforms
-	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trignoise, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
-				   thispassesnoise, true);
-	// calculate global trigger on noise + signal waveforms
-	globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
-	 			   thispasses);
-	//	if ( (l3trignoise[0]>0 && l3trignoise[0]==l3trig[0]) || (l3trignoise[1]>0 && l3trignoise[1]==l3trig[1] ) ){
-	if ( (l3trignoise[0]>0 ) || (l3trignoise[1]>0 ) ){
-	  cout << "A thermal noise fluctuation generated this trigger!" << l3trignoise[0] << " " << l3trig[0] << " " << l3trignoise[1] << " " << l3trig[1] << endl;
-	  delete globaltrig1;
-	  DO_SKIP
-	}
+        // calculate global trigger on noise only waveforms
+        globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trignoise, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
+                                   thispassesnoise, true);
+        // calculate global trigger on noise + signal waveforms
+        globaltrig1->PassesTrigger(settings1, anita1, discones_passing, 2, l3trig, l2trig, l1trig, settings1->antennaclump, loctrig, loctrig_nadironly, inu,
+                                    thispasses);
+        //        if ( (l3trignoise[0]>0 && l3trignoise[0]==l3trig[0]) || (l3trignoise[1]>0 && l3trignoise[1]==l3trig[1] ) ){
+        if ( (l3trignoise[0]>0 ) || (l3trignoise[1]>0 ) ){
+          cout << "A thermal noise fluctuation generated this trigger!" << l3trignoise[0] << " " << l3trig[0] << " " << l3trignoise[1] << " " << l3trig[1] << endl;
+          delete globaltrig1;
+          DO_SKIP
+        }
       }
       
       for (int i=0;i<2;i++) {
@@ -3402,7 +3402,7 @@ int main(int argc,  char **argv) {
            || (settings1->TRIGTYPE==0 && count_pass>=settings1->NFOLD)
            || (settings1->MINBIAS==1)){
 
-	if (bn1->WHICHPATH==4)
+        if (bn1->WHICHPATH==4)
           cout << "This event passes.\n";
 
         anita1->passglobtrig[0]=thispasses[0];
@@ -3566,11 +3566,11 @@ int main(int argc,  char **argv) {
             rec_diff3->Fill((rec_efield_array[3]-true_efield_array[3])/true_efield_array[3], weight);
             recsum_diff->Fill((rec_efield_array[0]+rec_efield_array[1]+rec_efield_array[2]+rec_efield_array[3]-true_efield)/true_efield, weight);
 
-	    // calc source lon, lat, alt
+            // calc source lon, lat, alt
             sourceLon = ray1->rfexit[2].Lon() - 180;
             sourceLat = ray1->rfexit[2].Lat() - 90;
             sourceAlt = antarctica->SurfaceAboveGeoid(sourceLon+180, sourceLat+90);
-	    
+            
             //Now put data in Vectors and Positions into arrays for output to the ROOT file.
             if (settings1->HIST && finaltree->GetEntries()<settings1->HIST_MAX_ENTRIES) {
               for (int i=0;i<3;i++) {
@@ -3636,34 +3636,34 @@ int main(int argc,  char **argv) {
             Adu5PatPtr->roll = bn1->roll;
             Adu5PatPtr->run = run_no;
 
-	    memset(realEvPtr->fNumPoints, 0, sizeof(realEvPtr->fNumPoints) );
-	    memset(realEvPtr->fVolts,     0, sizeof(realEvPtr->fVolts)     );
-	    memset(realEvPtr->fTimes,     0, sizeof(realEvPtr->fTimes)     );
+            memset(realEvPtr->fNumPoints, 0, sizeof(realEvPtr->fNumPoints) );
+            memset(realEvPtr->fVolts,     0, sizeof(realEvPtr->fVolts)     );
+            memset(realEvPtr->fTimes,     0, sizeof(realEvPtr->fTimes)     );
 
             int fNumPoints = 260;
-	    for (int ichan=0; ichan<108; ichan++){
+            for (int ichan=0; ichan<108; ichan++){
               realEvPtr->fNumPoints[ichan] = fNumPoints;
 
               for (int j = 0; j < fNumPoints; j++) {
                 // convert seconds to nanoseconds
                 realEvPtr->fTimes[ichan][j] = j * anita1->TIMESTEP * 1.0E9;
-	      }
-	    }
-	    	realEvPtr->fRFSpike = 0;// glitch does not likely happen in mc data.
+              }
+            }
+                    realEvPtr->fRFSpike = 0;// glitch does not likely happen in mc data.
             for (int iant = 0; iant < settings1->NANTENNAS; iant++){
               //int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1,  AnitaGeom1,  iant);
               int IceMCAnt = GetIceMCAntfromUsefulEventAnt(settings1,  iant);
               int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
               int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
-	      //              realEvPtr->fNumPoints[UsefulChanIndexV] = fNumPoints;
-	      //              realEvPtr->fNumPoints[UsefulChanIndexH] = fNumPoints;
+              //              realEvPtr->fNumPoints[UsefulChanIndexV] = fNumPoints;
+              //              realEvPtr->fNumPoints[UsefulChanIndexH] = fNumPoints;
               realEvPtr->chanId[UsefulChanIndexV] = UsefulChanIndexV;
               realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
               for (int j = 0; j < fNumPoints; j++) {
                 // convert seconds to nanoseconds
-		//                realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
-		//                realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
+                //                realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
+                //                realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
                 // convert volts to millivolts
                 realEvPtr->fVolts[UsefulChanIndexH][j] =  volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
                 realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
@@ -3683,7 +3683,7 @@ int main(int argc,  char **argv) {
             else
               rawHeaderPtr->trigType = 1; // RF trigger
 
-	    
+            
             rawHeaderPtr->run = run_no;
             // put the vpol only as a placeholder - these are only used in Anita-2 anyway
             rawHeaderPtr->upperL1TrigPattern = l1trig[0][0];
@@ -3701,7 +3701,7 @@ int main(int argc,  char **argv) {
 
             rawHeaderPtr->calibStatus = 31;
             rawHeaderPtr->realTime = bn1->realTime_flightdata;
-	    rawHeaderPtr->triggerTime = bn1->realTime_flightdata;
+            rawHeaderPtr->triggerTime = bn1->realTime_flightdata;
             Adu5PatPtr->latitude= bn1->latitude;
             Adu5PatPtr->longitude=bn1->longitude;
             Adu5PatPtr->altitude=bn1->altitude;
@@ -3711,9 +3711,9 @@ int main(int argc,  char **argv) {
             Adu5PatPtr->roll = bn1->roll;
             Adu5PatPtr->run = run_no;
 
-	    cout << "" << endl;
-	    cout << "Neutrino (evNum = " << eventNumber << ") passed" << endl;
-	    
+            cout << "" << endl;
+            cout << "Neutrino (evNum = " << eventNumber << ") passed" << endl;
+            
 #ifdef ANITA3_EVENTREADER
             if (settings1->WHICH==9 || settings1->WHICH==10) {
               rawHeaderPtr->setTrigPattern((short) l3trig[0], AnitaPol::kVertical);
@@ -3739,30 +3739,30 @@ int main(int argc,  char **argv) {
             truthEvPtr->sourceLat        = sourceLat;
             truthEvPtr->sourceAlt        = sourceAlt;
 
-	    if(src_model){cout << "It originated from " << objName << " (" << RA << ", " << dec << ")" << endl;}
-	    
+            if(src_model){cout << "It originated from " << objName << " (" << RA << ", " << dec << ")" << endl;}
+            
             truthEvPtr->weight           = weight;
             truthEvPtr->weight1           = weight1;
             truthEvPtr->phaseWeight       = 1./interaction1->dnutries;
 
-	    // for passed neutrinos:
-	    
-	    if(settings1->ALL_SKY_MAP)
-	      {  
-		astroObject->SetX(RA);
-		astroObject->SetY(dec);
-		astroObject->SetMarkerStyle(20);
-		astroObject->SetMarkerSize(1.5);
-		astroObject->SetMarkerColor(9);
-		skyMapOut->addMarker(astroObject);
-	      }
-	    
+            // for passed neutrinos:
+            
+            if(settings1->ALL_SKY_MAP)
+              {  
+                astroObject->SetX(RA);
+                astroObject->SetY(dec);
+                astroObject->SetMarkerStyle(20);
+                astroObject->SetMarkerSize(1.5);
+                astroObject->SetMarkerColor(9);
+                skyMapOut->addMarker(astroObject);
+              }
+            
             truthEvPtr->source_index = which_source;
-	    truthEvPtr->RA = RA;
-	    truthEvPtr->dec = dec;
-	    truthEvPtr->objName = objName;
-	    //
-	    
+            truthEvPtr->RA = RA;
+            truthEvPtr->dec = dec;
+            truthEvPtr->objName = objName;
+            //
+            
             for (int i=0;i<3;i++){
               truthEvPtr->balloonPos[i]  = bn1->r_bn[i];
               truthEvPtr->balloonDir[i]  = bn1->n_bn[i];
@@ -3784,48 +3784,48 @@ int main(int argc,  char **argv) {
                 truthEvPtr->vmmhz[i]       = panel1->GetVmmhz_freq(i);
             }
 
-	    
-	    memset(truthEvPtr->SNRAtTrigger,       0, sizeof(truthEvPtr->SNRAtTrigger)       );
-	    memset(truthEvPtr->fSignalAtTrigger,   0, sizeof(truthEvPtr->fSignalAtTrigger)   );
-	    memset(truthEvPtr->fNoiseAtTrigger,    0, sizeof(truthEvPtr->fNoiseAtTrigger)    );
-	    memset(truthEvPtr->SNRAtDigitizer,     0, sizeof(truthEvPtr->SNRAtDigitizer)     );
-	    memset(truthEvPtr->thresholds,         0, sizeof(truthEvPtr->thresholds)         );
-	    memset(truthEvPtr->fDiodeOutput,       0, sizeof(truthEvPtr->fDiodeOutput)       );
-	    
-	    truthEvPtr->maxSNRAtTriggerV=0;
-	    truthEvPtr->maxSNRAtTriggerH=0;
-	    truthEvPtr->maxSNRAtDigitizerV=0;
-	    truthEvPtr->maxSNRAtDigitizerH=0;
+            
+            memset(truthEvPtr->SNRAtTrigger,       0, sizeof(truthEvPtr->SNRAtTrigger)       );
+            memset(truthEvPtr->fSignalAtTrigger,   0, sizeof(truthEvPtr->fSignalAtTrigger)   );
+            memset(truthEvPtr->fNoiseAtTrigger,    0, sizeof(truthEvPtr->fNoiseAtTrigger)    );
+            memset(truthEvPtr->SNRAtDigitizer,     0, sizeof(truthEvPtr->SNRAtDigitizer)     );
+            memset(truthEvPtr->thresholds,         0, sizeof(truthEvPtr->thresholds)         );
+            memset(truthEvPtr->fDiodeOutput,       0, sizeof(truthEvPtr->fDiodeOutput)       );
+            
+            truthEvPtr->maxSNRAtTriggerV=0;
+            truthEvPtr->maxSNRAtTriggerH=0;
+            truthEvPtr->maxSNRAtDigitizerV=0;
+            truthEvPtr->maxSNRAtDigitizerH=0;
 
             for (int iant = 0; iant < settings1->NANTENNAS; iant++){
               int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
               int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
 
-	      truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(justSignal_trig[0][iant], justNoise_trig[0][iant]);
-	      truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(justSignal_trig[1][iant], justNoise_trig[1][iant]);
-	      
-	      if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
-	      if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
+              truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(justSignal_trig[0][iant], justNoise_trig[0][iant]);
+              truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(justSignal_trig[1][iant], justNoise_trig[1][iant]);
+              
+              if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
+              if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
 
-	      truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = Tools::calculateSNR(justSignal_dig[0][iant], justNoise_dig[0][iant]);
-	      truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = Tools::calculateSNR(justSignal_dig[1][iant], justNoise_dig[1][iant]);
-	      
-	      if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexV]>truthEvPtr->maxSNRAtDigitizerV) truthEvPtr->maxSNRAtDigitizerV=truthEvPtr->SNRAtDigitizer[UsefulChanIndexV];
-	      if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexH]>truthEvPtr->maxSNRAtDigitizerH) truthEvPtr->maxSNRAtDigitizerH=truthEvPtr->SNRAtDigitizer[UsefulChanIndexH];
+              truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = Tools::calculateSNR(justSignal_dig[0][iant], justNoise_dig[0][iant]);
+              truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = Tools::calculateSNR(justSignal_dig[1][iant], justNoise_dig[1][iant]);
+              
+              if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexV]>truthEvPtr->maxSNRAtDigitizerV) truthEvPtr->maxSNRAtDigitizerV=truthEvPtr->SNRAtDigitizer[UsefulChanIndexV];
+              if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexH]>truthEvPtr->maxSNRAtDigitizerH) truthEvPtr->maxSNRAtDigitizerH=truthEvPtr->SNRAtDigitizer[UsefulChanIndexH];
 
-	      
-	      truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[iant][0][4];
-	      truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[iant][1][4];
-	      int irx = iant;
-	      if (iant<16){
-		if (iant%2) irx = iant/2;
-		else        irx = iant/2 + 1;
-	      }
-	      
+              
+              truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[iant][0][4];
+              truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[iant][1][4];
+              int irx = iant;
+              if (iant<16){
+                if (iant%2) irx = iant/2;
+                else        irx = iant/2 + 1;
+              }
+              
               for (int j = 0; j < fNumPoints; j++) {
-		truthEvPtr->fTimes[UsefulChanIndexV][j]             = j * anita1->TIMESTEP * 1.0E9;
-		truthEvPtr->fTimes[UsefulChanIndexH][j]             = j * anita1->TIMESTEP * 1.0E9;
-		
+                truthEvPtr->fTimes[UsefulChanIndexV][j]             = j * anita1->TIMESTEP * 1.0E9;
+                truthEvPtr->fTimes[UsefulChanIndexH][j]             = j * anita1->TIMESTEP * 1.0E9;
+                
                 truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j]   = justSignal_trig[0][iant][j+128]*1000;
                 truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j]   = justSignal_trig[1][iant][j+128]*1000;
                 truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]    = justNoise_trig[0][iant][j+128]*1000;
@@ -3834,13 +3834,13 @@ int main(int argc,  char **argv) {
                 truthEvPtr->fSignalAtDigitizer[UsefulChanIndexH][j] = justSignal_dig[1][iant][j+128]*1000;
                 truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexV][j]  = justNoise_dig[0][iant][j+128]*1000;
                 truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexH][j]  = justNoise_dig[1][iant][j+128]*1000;
-		
+                
                 truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]       = anita1->timedomain_output_allantennas[0][irx][j];
                 truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]       = anita1->timedomain_output_allantennas[1][irx][j];
               }//end int j
-	      
+              
             }// end int iant
-	    
+            
             truthNuPtr->setSkipped(false); 
 
             if (truthAnitaNuTree->GetEntries() <= inu-10) 
@@ -3848,7 +3848,7 @@ int main(int argc,  char **argv) {
               printf("SKIPPED BEFORE %d\n",inu); 
 
             }
-	    
+            
             truthAnitaNuTree->Fill();
             truthAnitaTree->Fill();
             delete truthEvPtr;
@@ -3902,8 +3902,8 @@ int main(int argc,  char **argv) {
               }
             }//end if HIST & ONLYFINAL & sampleweights HISTMAXENTRIES
 
-	    //cout << "cut on weights = " << settings1->CUTONWEIGHTS << endl;
-	    
+            //cout << "cut on weights = " << settings1->CUTONWEIGHTS << endl;
+            
             // outputs to text file variables relevant to sky map.
             forbrian << interaction1->costheta_nutraject << " " << n_nutraject_ontheground.Phi() << " " << bn1->phi_bn << " " << logweight << "\n";
             // incrementing by flavor
@@ -3931,7 +3931,7 @@ int main(int argc,  char **argv) {
         } //end else GetChord
 
         if (settings1->HIST==1 && !settings1->ONLYFINAL && anita1->tglob->GetEntries()<settings1->HIST_MAX_ENTRIES) {// all events
-	  // cout << "Filling global trigger tree.  inu is " << inu << "\n";
+          // cout << "Filling global trigger tree.  inu is " << inu << "\n";
           anita1->tglob->Fill();
 
         }
@@ -3994,9 +3994,9 @@ int main(int argc,  char **argv) {
       volume_thishorizon=antarctica->volume_inhorizon[bn1->Getibnposition()]/1.E9;
 
       if (settings1->HIST==1
-	  && !settings1->ONLYFINAL
-	  && tree1->GetEntries()<settings1->HIST_MAX_ENTRIES
-	  && bn1->WHICHPATH != 3){ // all events
+          && !settings1->ONLYFINAL
+          && tree1->GetEntries()<settings1->HIST_MAX_ENTRIES
+          && bn1->WHICHPATH != 3){ // all events
         tree1->Fill();
       }//end if
 
@@ -4550,19 +4550,19 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput.precision(4);
   foutput << "After 1/r scaling and best case attenuation, \n\tMaximum signal is detectable\t\t\t" << (double)count1->nnottoosmall[0]/(double)count1->nraypointsup1[0] << "\t" <<
     (double)count1->nnottoosmall[1]/(double)count1->nraypointsup1[1] << "\t\t"
-	  << count1->nnottoosmall[0] << "\t" << count1->nnottoosmall[1] << "\n";
+          << count1->nnottoosmall[0] << "\t" << count1->nnottoosmall[1] << "\n";
 
 
   foutput.precision(4);
   foutput << "Viewing angle lt 90 degrees\t\t\t" << (double)count1->nviewangle_lt_90[0]/(double)count1->nnottoosmall[0] << "\t" <<
     (double)count1->nviewangle_lt_90[1]/(double)count1->nnottoosmall[1] << "\t\t"
-	  << count1->nviewangle_lt_90[0] << "\t" << count1->nviewangle_lt_90[1] << "\n";
+          << count1->nviewangle_lt_90[0] << "\t" << count1->nviewangle_lt_90[1] << "\n";
 
 
   foutput.precision(4);
   foutput << "Reality check:  EM and hadronic fractions both nonzero\t" << (double)count1->ngoodfracs[0]/(double)count1->nviewangle_lt_90[0] << "\t" <<
     (double)count1->ngoodfracs[1]/(double)count1->nviewangle_lt_90[1] << "\t\t"
-	  << count1->ngoodfracs[0] << "\t" << count1->ngoodfracs[1] << "\n";
+          << count1->ngoodfracs[0] << "\t" << count1->ngoodfracs[1] << "\n";
   foutput.precision(4);
   foutput << "\tBoth EM and hadronic fractions are zero\t\t" << (double)count1->nbadfracs[0]/(double)count1->nviewangle_lt_90[0] << "\t" <<
     (double)count1->nbadfracs[1]/(double)count1->nviewangle_lt_90[1] << "\t\t" <<
@@ -4581,7 +4581,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput.precision(4);
   foutput << "Neutrino reasonably likely to survive trip through Earth " << (double)count1->nabsorbed[0]/(double)count1->nentersice[0] << "\t" <<
     (double)count1->nabsorbed[1]/(double)count1->nentersice[1] << "\t\t"
-	  << count1->nabsorbed[0] << "\t" << count1->nabsorbed[1] << "\n";
+          << count1->nabsorbed[0] << "\t" << count1->nabsorbed[1] << "\n";
   foutput.precision(4);
   foutput << "Ray leaves the ice south of 60deg S latitude\t\t" << (double)count1->nraywithincontinent1[0]/(double)count1->nabsorbed[0] << "\t" <<
     (double)count1->nraywithincontinent1[1]/(double)count1->nabsorbed[1] << "\t" <<
@@ -4602,7 +4602,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput << "From surface to balloon,  ray not intersected by earth \t" << (double)count1->nraypointsup2[0]/(double)count1->nnottir[0] << "\t" <<
     (double)count1->nraypointsup2[1]/(double)count1->nnottir[1] <<
     "\t\t"
-	  << count1->nraypointsup2[0] << "\t" << count1->nraypointsup2[1] << "\n";
+          << count1->nraypointsup2[0] << "\t" << count1->nraypointsup2[1] << "\n";
   foutput.precision(4);
 
   foutput << "Ray leaves the ice south of 60deg S latitude\t\t" << (double)count1->nraywithincontinent2[0]/(double)count1->nraypointsup2[0] <<"\t" <<
@@ -4613,7 +4613,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
 
   foutput << "Ray leaves where there is ice\t\t\t\t" << (double)count1->nacceptablerf[0]/(double)count1->nraywithincontinent2[0] << "\t" <<
     (double)count1->nacceptablerf[1]/(double)count1->nraywithincontinent2[1] << "\t\t"
-	  << count1->nacceptablerf[0] << "\t" << count1->nacceptablerf[1] << "\n";
+          << count1->nacceptablerf[0] << "\t" << count1->nacceptablerf[1] << "\n";
   foutput.precision(4);
 
   foutput << "Ray tracing converges to within 10 m\t\t\t" << (double)count1->nconverges[0]/(double)count1->nacceptablerf[0] << "\t" <<
@@ -4966,7 +4966,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
       if (emfrac>1.E-10 && deltheta_had <=1.E-10) {
         dont_count++;
         if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(emfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle)>1)
-	  //if (Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle)>1)
+          //if (Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle)>1)
           theta_threshold=-1;
         else {
           //theta_threshold=sqrt(-1*deltheta_em*deltheta_em*log(Tools::dMax(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(emfrac*vmmhz1m_max*heff_max*bw/1.E6)*sin(sig1->changle))/0.5);
@@ -4979,10 +4979,10 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
 
       //start big code block of ifs/elses
       if (emfrac>1.E-10 && deltheta_had>1.E-10) {
-	// if the electromagnetic and hadronic components of the shower are both non-negligible
-	// then theta_threshold cannot be determined analytically so we step away from the cerenkov angle in steps equal to 1/2 * deltheta_em
+        // if the electromagnetic and hadronic components of the shower are both non-negligible
+        // then theta_threshold cannot be determined analytically so we step away from the cerenkov angle in steps equal to 1/2 * deltheta_em
         if (anita1->VNOISE[0]/10.*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
-	  //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*heff_max*bw/1.E6)>1.) {
+          //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/((hadfrac+emfrac)*vmmhz1m_max*heff_max*bw/1.E6)>1.) {
           theta_threshold=-1.; // if it's not detectable at all
         }
         else { // otherwise,  start stepping.
@@ -5000,7 +5000,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
             sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
 
             if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.) {
-	      //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) {
+              //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) {
               theta_threshold=theta_test;
             }
             else { // otherwise increment by the step size and check again.
@@ -5024,7 +5024,7 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
                   sig1->TaperVmMHz(sig1->changle+theta_test, deltheta_em, deltheta_had, emfrac, hadfrac, vmmhz1m_test, djunk);
                   // if at the hadronic width,  you're below the threshold
                   if (anita1->VNOISE[0]/10.*anita1->maxthreshold/(vmmhz1m_test/r_fromballoon*heff_max*anita1->bwmin/1.E6)>1.)
-		    //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) // if at the hadronic width,  you're below the threshold
+                    //if (Tools::dMin(VNOISE, settings1->NLAYERS)*anita1->maxthreshold/(vmmhz1m_test*heff_max*bw/1.E6)>1.) // if at the hadronic width,  you're below the threshold
                     theta_threshold=theta_test; // set theta_threshold
                   else { // otherwise,  find theta_threshold considering the hadronic component alone.  This is conservative-- an electromagnetic component would only make it narrower.
                     theta_threshold=sqrt(-1*deltheta_had*deltheta_had*log(anita1->VNOISE[0]/10.*anita1->maxthreshold/(hadfrac*vmmhz1m_max/r_fromballoon*heff_max*anita1->bwmin/1.E6)*sin(sig1->changle))/0.5);
@@ -5337,14 +5337,14 @@ TStyle* RootStyle() {
 
 
 void GetFresnel(Roughness *rough1, int ROUGHNESS_SETTING, const Vector &surface_normal, 
-		const Vector &air_rf, 
-		Vector &pol, 
-		const Vector &firn_rf, 
-		double efield, 
-		double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, 
-		double &t_coeff_pokey, double &t_coeff_slappy,
-		double &fresnel,
-		double &mag) {
+                const Vector &air_rf, 
+                Vector &pol, 
+                const Vector &firn_rf, 
+                double efield, 
+                double emfrac, double hadfrac, double deltheta_em_max, double deltheta_had_max, 
+                double &t_coeff_pokey, double &t_coeff_slappy,
+                double &fresnel,
+                double &mag) {
 
   // find angle of incidence and angle of transmission
   double incident_angle = surface_normal.Angle(firn_rf);
