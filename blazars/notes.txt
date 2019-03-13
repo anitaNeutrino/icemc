@@ -1,0 +1,29 @@
+_python files_
+*** Necessary ***
+get3FGL.py -> Pulls 3FGL FITS file, converts it to csv. Optinally, pulls light curves of objects.
+INPUT => Nothing, this is the starting point 
+OUTPUT => data_3fgl.csv, light curve csvs in ./lightCurves (made automatically)
+
+stealFAVA.py -> Fetches FAVA events and information, stores as root file
+INPUT => data_3fgl.csv
+OUTPUT => fava.root
+
+*** Misc ***
+makeLightCurveTree.py ->Make light curves of specific blazars
+INPUT => none (blazars by hand in file)
+OUTPUT => blazars.root
+--------------------------
+_c files_
+rootify3FGL.cxx -> rootifies 3FGL data as well as, optionally light curve data 
+INPUT => data_3fgl.csv, light curve csvs in ./lightCurves
+OUTPUT => 3FGL.root
+
+plotLightCurve.cc -> Plot a light curve for an astrophysical object
+INPUT => 3FGL.root
+
+getFlareInfo.cc -> Use FAVA data to retrieve information about flares during a specific flight
+Plot these on a sky map
+INPUT => fava.root
+
+plotSkyMap.cc -> Example of how to use SkyMap class
+INPUT => fava.root

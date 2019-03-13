@@ -10,11 +10,12 @@ from ROOT import TFile,TTree, gROOT, TObjString
 import urllib 
 import json 
 import datetime
-import csv 
+import csv
+import sys 
 
-
-week_start = 300; 
-week_end = 500; 
+## Limit this if you want a lower run time / more time constrained data
+week_start = 330; 
+week_end = 340; 
 
 
 gROOT.ProcessLine("#include \"fava.h\"") 
@@ -41,14 +42,17 @@ time_offset = int(fermi_start_date.strftime("%s"))
 
 
 
-catalog = open("3fgl.csv") 
-reader = csv.DictReader(catalog) 
-
+#catalog = open("3fgl.csv")
+catalog = open("data_3fgl.csv")
+reader = csv.DictReader(catalog)
+## Make reading whitespaced data easier
+#reader = (
+#    dict((k, v.strip()) for k, v in row.items() if v) for row in reader)
 
 source_dict = {}
 
 for row in reader: 
-  source_dict[row["Source Name"]] = (row["Classification (code)"].lower(),row["TEV Cat"])
+ source_dict[row["Source Name"]] = (row["Classification (code)"].lower(),row["TEV Cat"])
 
 
 
@@ -116,7 +120,8 @@ for week in range(week_start,week_end+1):
           if ned_js['Preferred']['Redshift']['Value']!=None:
             fava.z = float(ned_js['Preferred']['Redshift']['Value']) 
 
-      print (assoc + ":" + repr(fava.z)); 
+      sys.stdout.write('\rOn object: %s, z = %s' % (assoc, repr(fava.z)))
+      sys.stdout.flush()
       zs[assoc] = fava.z 
 
     t.Fill() 

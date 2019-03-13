@@ -75,8 +75,9 @@ void  Balloon::setObservationLocation(Interaction *interaction1,int inu,IceModel
 void Balloon::SetDefaultBalloonPosition(IceModel *antarctica1) { // position of surface of earth under balloon
     
   // set the default balloon position
-  // if you are using real Anita-lite path, these get overwritten for each event
+  // if you are an Anita path, these get overwritten for each event
   //cout << "BN_LATITUDE is " << BN_LATITUDE << "\n";
+  //cout << "BN_LONGITUDE is " << BN_LONGITUDE << "\n";
     
   int BN_LATITUDE_SETTING = BN_LATITUDE;
   int BN_LONGITUDE_SETTING = BN_LONGITUDE;

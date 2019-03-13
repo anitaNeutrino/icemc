@@ -1,5 +1,6 @@
 #include "Spectra.h"
 #include "Tools.h"
+#include "TCanvas.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -22,7 +23,7 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   double Eelectrons[E_bin];// E dN/dE/dA/dt for neutrinos that are produced as electron neutrinos or muon antineutrinos.
   
   for (int i=0;i<E_bin;i++) {
-    energy[i]=16.+((double)i)*0.12; // initial E_bin = 50. energy = 16 ~ 22 eV
+    energy[i]=16.+((double)i)/2.; // initial E_bin = 12. energy = 16 ~ 22 eV
     Emuons[i]=-30.;
     Eelectrons[i]=-30.;
   } //for
@@ -318,7 +319,6 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
     maxflux=Tools::dMax(EdNdEdAdt,12);
 */
 
-
   // From log to linear!!  
   for (int i=0;i<E_bin;i++) {
       EdNdEdAdt[i] = pow(10, EdNdEdAdt[i]);     //to linear 
@@ -329,6 +329,13 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   gEdNdEdAdt = new TGraph(E_bin, energy, EdNdEdAdt);
   gE2dNdEdAdt = new TGraph(E_bin, energy, E2dNdEdAdt);
 
+  /*
+  TCanvas *EnergyGraphC = new TCanvas("EnergyGraphC", "EnergyGraphC", 1000, 500);
+  EnergyGraphC->cd(1);
+  gEdNdEdAdt->Draw();
+  string outputGraph = string("outputGraph.png");
+  EnergyGraphC->SaveAs(outputGraph.c_str());
+  */
   sEdNdEdAdt = new TSpline3("sEdNdEdAdt", gEdNdEdAdt);
   sE2dNdEdAdt = new TSpline3("sE2dNdEdAdt", gE2dNdEdAdt);
 
@@ -344,7 +351,7 @@ double  Spectra::GetNuEnergy() {
   double maxenergy=Tools::dMax(energy,E_bin);
   double minenergy=Tools::dMin(energy,E_bin);
   // this uses the dartboard approach
-  //cout << "minenergy, maxenergy are " << minenergy << " " << maxenergy << "\n";
+  cout << "minenergy, maxenergy are " << minenergy << " " << maxenergy << "\n";
   while(thisflux>max) {
     // pick an energy  
     thisenergy=Rand3.Rndm()*(maxenergy-minenergy)+minenergy; // pick energy at random between the highest and lowest
@@ -536,6 +543,7 @@ int Spectra::IsSpectrum() {
   else {
       out = 0;
   }
+  
   return out;
 }
 
