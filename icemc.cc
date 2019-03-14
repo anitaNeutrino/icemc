@@ -664,7 +664,6 @@ int main(int argc,  char **argv) {
     printf("Using Source Model %s\n", src_model->getName());
     printf("Setting up weights: %g %g %g %g\n", bn1->min_time, bn1->max_time, src_min, src_max); 
     src_model->setUpWeights(bn1->min_time, bn1->max_time , src_min, src_max); 
-    bn1->REDUCEBALLOONPOSITIONS = 1; 
   }
   
 
@@ -1512,7 +1511,7 @@ int main(int argc,  char **argv) {
   antarctica->GetMAXHORIZON(bn1);
 
   // calculate the volume of ice seen by the balloon for all balloon positions
-  antarctica->CreateHorizons(settings1, bn1, bn1->theta_bn, bn1->phi_bn, bn1->altitude_bn, foutput, src_model);
+  antarctica->CreateHorizons(settings1, bn1, bn1->theta_bn, bn1->phi_bn, bn1->altitude_bn, foutput);
   cout << "Done with CreateHorizons.\n";
 
   // sets neutrino energy
@@ -1770,6 +1769,7 @@ int main(int argc,  char **argv) {
       {
 #ifdef ANITA3_EVENTREADER
         truthNuPtr->setNoNu(bn1->r_bn.GetX(), bn1->r_bn.GetY(), bn1->r_bn.GetZ(), realtime_this);
+        truthAnitaNuTree->Fill(); 
 #endif
         continue; 
       }
@@ -3377,7 +3377,7 @@ int main(int argc,  char **argv) {
       else {
         weight1=interaction1->weight_nu_prob;
       }
-      weight = weight1 / interaction1->dnutries * settings1->SIGMA_FACTOR;  // total weight is the earth absorption factor
+      weight = weight1 / interaction1->dnutries * settings1->SIGMA_FACTOR * time_weight;  // total weight is the earth absorption factor
       // divided by the factor accounting for the fact that we only chose our interaction point within the horizon of the balloon
       // then multiply by the cross section multiplier,  to account for the fact that we get more interactions when the cross section is higher
       //if (weight < settings1->CUTONWEIGHTS && !settings1->SOURCE) {
@@ -3386,7 +3386,7 @@ int main(int argc,  char **argv) {
 
       
 #ifdef ANITA3_EVENTREADER
-      truthNuPtr->setWeights(weight, 1./interaction1->dnutries); 
+      truthNuPtr->setWeights(weight, 1./interaction1->dnutries, time_weight); 
 #endif
       havent_set_weights = false; 
      

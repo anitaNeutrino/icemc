@@ -1228,7 +1228,7 @@ void IceModel::GetMAXHORIZON(Balloon *bn1) {
 }
 
 
-void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput, SourceModel * src_model) {
+void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput) {
     
     // add up volume of ice within horizon of payload
     // goes a little beyond horizon.
@@ -1501,12 +1501,6 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	    volume_found=1;
 	} //if
 
-        if (src_model) 
-        {
-          double time_weight = src_model->getTimeWeight(the_time); ;
-//          printf("%d %g %g\n", i, the_time,time_weight); 
-          volume_inhorizon[i]*= time_weight;
-        }
     } //end loop over balloon positions
     
     // finding average volume in horizon over all balloon positions.
@@ -1521,7 +1515,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
     //cout << "Total volume of ice in Antarctica with this ice model (m^3): " << volume << "\n";
     //cout << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
     
-    foutput << "Average "<< (src_model ? "TIME-WEIGHTED" : "") << "volume of ice within a horizon is " << volume_inhorizon_average << "\n";
+    foutput << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
     
     foutput << "Average thickness of ice within horizon, averages over balloon positions " << volume_inhorizon_average/PI/pow(bn1->MAXHORIZON,2) << "\n";
 } //method CreateHorizons 

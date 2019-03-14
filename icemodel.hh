@@ -118,7 +118,7 @@ int NODATA;
 			 const Vector &nnu,
 			 double stepsize,
 			 Position &r_enterice);
-  void CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput, SourceModel * src_model = 0);
+  void CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput);
   Vector GetSurfaceNormal(const Position &r_out); //overloaded from EarthModel to include procedures for new ice models.
   double GetN(double depth);
   double GetN(const Position &pos);
