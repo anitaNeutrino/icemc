@@ -137,11 +137,14 @@ $(BINARIES): %: %.$(SrcSuf) $(OBJS)
 		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $< $(LIBS) $(OutPutOpt) $@
 		@echo "$@ done"
 
+libicemc.so: $(OBJS) 
+		$(LD) $(CXXFLAGS) -shared $(LDFLAGS) $(OBJS) $(LIBS) $(OutPutOpt) $@
+		@echo "$@ done"
 
 
 .PHONY: clean
 clean:
-		@rm -f $(OBJS) classdict.* $(BINARIES)
+		@rm -f $(OBJS) classdict.* $(BINARIES) *.so 
 
 distclean:      clean
 		@rm -f $(OBJS) $(BINAIRES) $(DICT)* *.def *.exp \
