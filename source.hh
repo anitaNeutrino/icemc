@@ -17,6 +17,7 @@
 #include "TRandom3.h" 
 #include "TMath.h" 
 #include "TF1.h" 
+#include <stdint.h> 
 
 
 
@@ -40,12 +41,31 @@ public:
    *
    */ 
 
-  static SourceModel * getSourceModel(const char * key, unsigned seed = 0, const char *whichSources = "All", const char * whichSubtype = "All", const char* whichStartTime = "0", const char * whichEndTime = "2147483646",  double decCutLimit = 30, const char *customName = "customObject", double customRA = 0, double customDec = 0, double customGamma = 2); 
+  //a way to further restrict source types. 
+  struct Restriction
+  {
+    const char * whichSubtype; 
+    const char * whichSources; 
+    double whichStartTime; 
+    double whichEndTime; 
+    double maxDec; 
+    static double fromString(const char * time); 
+    Restriction(double max_dec = 30, const char * sources = "All", const char * subtype = "All",
+        double startTime = 0, double endTime= 2147483647) 
+      : whichSubtype(subtype), whichSources(sources), whichStartTime(startTime), whichEndTime(endTime), maxDec(max_dec) {; }
+  };
+
+  static SourceModel * getSourceModel(const char * key, unsigned seed = 0, Restriction r = Restriction()); 
+
+  /** this must be called before asking for a time weight */ 
+  void setUpWeights(double t0, double t1, double minE = 1e9, double maxE=1e12, int N = 1e6); 
 
   /** Add a source to our model. 
    * This class will then own the source (it will release its memory). 
    **/ 
   void addSource(Source * source) { sources.push_back(source) ; }
+  //this is the flux at this time divided by the average flux (computed by setUpWeights). 
+  double getTimeWeight(double t) const; 
     
   const char * getName() const { return name; } 
   /** Returns the index of the source used ! */ 
@@ -56,8 +76,15 @@ public:
   const Source * getSource(int i ) const { return  sources[i]; } 
   unsigned getNSources() const { return sources.size(); } 
   virtual ~SourceModel(); 
+  void setSeed(ULong_t seed) { rng.SetSeed(seed); } 
+
+  /** fills a vector with the times that sources turn on and off */ 
+  void computeFluxTimeChanges(std::vector<double> * changes) const; 
 private:
   std::vector<Source*> sources; 
+  double weight_Emin;
+  double weight_Emax;
+  double average_flux; 
   const char * name;
   TRandom3 rng;
 }; 
@@ -70,6 +97,7 @@ public:
   virtual double getFlux(double E, double t) const = 0; 
   virtual double getFluxBetween(double Emin, double Emax, double t) const = 0; 
   virtual double pickEnergy(double Emin, double Emax, double t, TRandom * rng = gRandom) const = 0; 
+  virtual void getFluxTimeChanges(std::vector<double> * changes) const { (void) changes ; }
   virtual ~SourceFlux() { ; }
 }; 
 
@@ -104,7 +132,7 @@ class ConstantExponentialSourceFlux : public SourceFlux
 
 public: 
   //gamma is the spectral index (so it's positive). norm is the normalization (in units of GeV / cm^2 / s) at normE, where normE is in GeV
-  ConstantExponentialSourceFlux(double gamma, double norm, double normE=0.1); 
+  ConstantExponentialSourceFlux(double gamma, double norm, double normE=1e5); 
   virtual double getFlux(double E, double t) const 
   { (void) t; return A * TMath::Power(E,-gamma) ; } 
   virtual double getFluxBetween(double Emin, double Emax, double t) const 
@@ -128,27 +156,32 @@ class TimeWindowedExponentialSourceFlux : public SourceFlux
 
 public: 
 
-  TimeWindowedExponentialSourceFlux(double t0, double t1, double gamma, double norm, double normE = 0.1); 
+  TimeWindowedExponentialSourceFlux(double t0, double t1, double gamma, double norm, double normE = 0.1, double cutoff = 0 ); 
 
   virtual double getFlux(double E, double t) const 
   { 
     if (t < t0 || t > t1){ return 0; }
+    if (cutoff && E > cutoff) return 0; 
     else return A * TMath::Power(E,-gamma) ;
   } 
   virtual double getFluxBetween(double Emin, double Emax, double t) const 
   { 
     if (t < t0 || t > t1){ return 0; }
-    else return A * (  TMath::Power(Emin,-gamma+1) / (gamma-1)  - TMath::Power(Emax,-gamma+1) / (gamma-1));
+    if (cutoff && Emin > cutoff) return 0; 
+    if (cutoff && Emax > cutoff) Emax = cutoff; 
+    return A * (  TMath::Power(Emin,-gamma+1) / (gamma-1)  - TMath::Power(Emax,-gamma+1) / (gamma-1));
   }
   virtual double pickEnergy(double Emin, double Emax, double t, TRandom * rng = gRandom) const; 
   virtual ~TimeWindowedExponentialSourceFlux() { ; } 
  
+  virtual void getFluxTimeChanges(std::vector<double> * changes) const { changes->push_back(t0); changes->push_back(t1); }
 private: 
 
   double gamma; 
   double A; 
   mutable TF1 f; 
   double t0, t1; 
+  double cutoff; 
 }; 
 
 #endif 

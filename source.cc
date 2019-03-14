@@ -17,7 +17,9 @@
 SourceModel::SourceModel(const char * n, unsigned seed)
   : name(n), rng(seed)
 {
-
+  weight_Emin = 0;
+  weight_Emax = 0;
+  average_flux = -1; 
 }
 
 SourceModel::~SourceModel() 
@@ -26,17 +28,59 @@ SourceModel::~SourceModel()
 }
 
 
+// convert redshift to MPC
+static double luminosity_distance(double z) 
+{
+  static TF1  f_comoving("comoving_distance", "[0]  / sqrt([1]*(1+x)^4 + [2] * (1+x)^3 + [3] * (1+x)^2 + [4])", 0,10); 
+  f_comoving.SetParameters(67.74, 5e-5, 0.3089, 0, 0.6911); 
+
+  double d_M = f_comoving.Integral(0,z); 
+  return (1+z) * d_M; 
+} 
+
+
 // TXS blazar (from icecube)
 const double txs_index = 2;
 const double txs_norm = 2.2e-8; 
-const double txs_E0 = 0.1; 
+const double txs_E0 = 100e3; 
 const double txs_flux = 3.8;
 const double txs_z = 0.3365;
+const double txs_D = luminosity_distance(txs_z); 
 
 // SNe
 const double gamma_index = 2;
 
-SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, const char * whichSources, const char * whichSubtype, const char * whichStartTime, const char * whichEndTime, double decCutLimit, const char * customName, double customRA, double customDec, double customGamma) 
+double SourceModel::Restriction::fromString(const char * the_time) 
+{
+  printf("PARSING \"%s\"\n",the_time); 
+  // Start times
+  if(strcasestr(the_time, "A4_MIN"))
+    {
+      return 1480707643;
+    }
+    else if(strcasestr(the_time, "A3_MIN"))
+    {
+      return 1418938406;
+    }
+    else if(strcasestr(the_time,"A4_MAX"))
+    {
+      return 1483004563;
+    }
+    else if(strcasestr(the_time, "A3_MAX"))
+    {
+      return 1420777814;
+    }
+   else if(strcasestr(the_time,"MAX"))
+    {
+      return 2147483646;
+    }
+
+  return atof(the_time); 
+}
+ 
+
+
+SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, SourceModel::Restriction r) 
 {
 
   if (!key || !strcasecmp(key,"NONE")) return NULL; 
@@ -46,243 +90,203 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, const
   TString str(key); 
   TObjArray * tokens = str.Tokenize("+"); 
 
-  ///// Assign times in which we look for sources
-  int TMIN = 0;
-  int TMAX = 0;
-  // Start times
-  if(!strcasecmp(whichStartTime, "A4_MIN"))
-    {
-      TMIN = 1480707643;
-    }
-  else if(!strcasecmp(whichStartTime, "A3_MIN"))
-    {
-      TMIN = 1418938406;
-    }
-  else
-    {
-      TMIN = atoi(whichStartTime);
-    }
-  // End times
-  if(!strcasecmp(whichEndTime,"A4_MAX"))
-    {
-      TMAX = 1483004563;
-    }
-  else if(!strcasecmp(whichEndTime, "A3_MAX"))
-    {
-      TMAX = 1420777814;
-    }
-  else if(!strcasestr(whichEndTime,"MAX"))
-    {
-      TMAX = 2147483646;
-    }
-  else
-    {
-      TMAX = atoi(whichEndTime);
-    }
-  /////
-  
+ 
   for (int i =0; i < tokens->GetEntries(); i++)
   {
-      TObjString * tok = (TObjString*) tokens->At(i); 
+     TObjString * tok = (TObjString*) tokens->At(i); 
 
-      TString stripped( tok->String().Strip( TString::kBoth)); 
+     TString stripped( tok->String().Strip( TString::kBoth)); 
 
-      // The flux from TXS
-      if (stripped == "TXS")
-        {
+     // The flux from TXS
+     if (stripped == "TXS")
+     {
 
-      m->addSource(new Source("TXS 0506+056", 5 + 9/60. +  25.9637 / 3600, 
-                                              5 + 41/60. + 35.3279/3600,
+       m->addSource(new Source("TXS 0506+056", 5 + 9/60. +  25.9637 / 3600, 5 + 41/60. + 35.3279/3600,
           new ConstantExponentialSourceFlux(txs_index,txs_flux,txs_E0) //from IceCube paper, assume it's constant over flight for now
-                              )) ; 
-    }
+          )) ; 
+     }
     
-      // A custom source 
-      else if (stripped=="CUSTOM")
-        {
+    // Supernovae
+    else if(stripped=="SN")
+    {        
+      TFile *file = new TFile("./supernovae/data/supernovaeTNS.root"); 
+      TTree *tree = (TTree*) file->Get("tnsTree");
 
-          m->addSource(new Source(customName, customRA, 
-                                  customDec,
-                                  new ConstantExponentialSourceFlux(customGamma,txs_flux,txs_E0) // for now just use these flux constants
-                                  )) ; 
-        
-        }
-
-      // Supernovae
-      else if(stripped=="SN")
-        {        
-          TFile *file = new TFile("./supernovae/data/supernovaeTNS.root"); 
-          TTree *tree = (TTree*) file->Get("tnsTree");
-
-          // Tree vars
-          float ra, dec;
-          std::string *objName = new std::string;
-          std::string *fullObjType = new std::string;
-          std::string *objSubtype = new std::string;
-          int discoveryUnixTime = 0;
-        
-          tree->SetBranchAddress("ra",&ra); 
-          tree->SetBranchAddress("dec",&dec); 
-          tree->SetBranchAddress("name",&objName);
-          tree->SetBranchAddress("fullObjType",&fullObjType);
-          tree->SetBranchAddress("objSubtype",&objSubtype);
-          tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
-        
-          for (unsigned int i = 0; i < tree->GetEntries(); i++) 
-            {
-              tree->GetEntry(i);
-             
-            //////////// Cuts
-            // Time cut for finding sources within a certain time period
-            if( (discoveryUnixTime < TMIN) || (discoveryUnixTime > TMAX) ){continue;}
-            // Declination cut (ANITA won't see neutrinos from these sources)
-            if( abs(dec)>decCutLimit){continue;}
-            // Search for specific subtype
-            if(strcasecmp(whichSources,"All"))
-              {
-                // Account for the chosen one
-                if(strcasestr(whichSources, objName->c_str()))
-                  {
-                    std::cout << "Using the specified source: " << whichSources << std::endl;
-                  }
-                else{continue;}
-              }            
-            // Only look at a single subtype (REMEMBER this searches for a complete string
-            // but SNII can take the formats of: SN IIa ,SN IIb, SN IIa-91bg-like, etc)
-            if(strcasecmp(whichSubtype,"All"))
-              {
-                if(strcasestr(whichSubtype,objSubtype->c_str()))
-                  {
-                    //std::cout << "Using the specified subtype: " << whichSubtype << std::endl;
-                  }
-                else{continue;}
-              }
-            ////////////
-    
-              // Legacy stuff
-              //if( abs(dec)>10){continue;}            
-              // Only look at SNe of type II for now
-              // Core collapse SNe, associated with type II, can accelerate CRs to high energies
-              // Thus, only look for those beginning with SN II
-              //desiredType = "SN II"; //
-              //found = objType->find(desiredType);
-              //if(found != 0){continue;}
-              // Only look at 2 sources for now
-              //if(*objName != "SN 2017jy" && *objName != "SN 2017dhd"){continue;}
-            
-              //std::cout << "ra = " << ra << std::endl;
-              //std::cout << "name = " << *name << std::endl;
-              //std::cout << objName->c_str() << std::endl;
-              //std::cout << *objName << std::endl;
-              ////////////
-            
-            m->addSource(new Source(objName->c_str(), ra, dec,
-                                    new ConstantExponentialSourceFlux(gamma_index,txs_flux,txs_E0) // Just use these params as the first step
-                                    )) ; 
-          }
-        
-        }
-
-  else if (stripped == "GRB") 
-        {
-          TFile *file = new TFile("./GRBs/data/GRBIceCube.root"); 
-          TTree *tree = (TTree*) file->Get("iceCubeTree");
-
-          // Tree vars
-          float RA, dec;
-          std::string *objName = new std::string;
-          int unixTriggerTime = 0;
-        
-          tree->SetBranchAddress("RA",&RA); 
-          tree->SetBranchAddress("dec",&dec); 
-          tree->SetBranchAddress("name",&objName);
-          tree->SetBranchAddress("unixTriggerTime",&unixTriggerTime);
-        
-          for (unsigned int i = 0; i < tree->GetEntries(); i++) 
-            {
-              tree->GetEntry(i);
-             
-              //////////// Cuts
-              // Time cut for finding sources within a certain time period
-              if( (unixTriggerTime < TMIN) || (unixTriggerTime > TMAX) ){continue;}
-              // Declination cut (ANITA won't see neutrinos from these sources)
-              if( abs(dec)>decCutLimit){continue;}
-              // Search for specific subtype
-              if(strcasecmp(whichSources,"All"))
-                {
-                  // Account for the chosen one
-                  if(strcasestr(whichSources,objName->c_str()))
-                    {
-                      std::cout << "Using the specified source: " << whichSources << std::endl;
-                    }
-                  else{continue;}
-                }
-            
-              m->addSource(new Source(objName->c_str(), RA, dec,
-                                      new ConstantExponentialSourceFlux(gamma_index,txs_flux,txs_E0) // Just use these params as the first step
-                                      )) ; 
-            }
-        }
-    
-      else if (stripped=="FAVA")
+      // Tree vars
+      float ra, dec;
+      std::string *objName = new std::string;
+      std::string *fullObjType = new std::string;
+      std::string *objSubtype = new std::string;
+      int discoveryUnixTime = 0;
+         
+      tree->SetBranchAddress("ra",&ra); 
+      tree->SetBranchAddress("dec",&dec); 
+      tree->SetBranchAddress("name",&objName);
+      tree->SetBranchAddress("fullObjType",&fullObjType);
+      tree->SetBranchAddress("objSubtype",&objSubtype);
+      tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
+         
+      for (unsigned int i = 0; i < tree->GetEntries(); i++) 
       {
-          // Let's load all the blazars from FAVA that occurred during a flight
-
-          bool flux_weighted = strcasestr(stripped.Data(),"FLUX"); 
-          bool z_weighted = strcasestr(stripped.Data(),"REDSHIFT"); 
-
-          const char * dir = EnvironmentVariable::ICEMC_SRC_DIR() ?: "."; 
-
-          TFile ffava(Form("%s/blazars/fava.root", dir)); 
-          TTree * fava_tree = (TTree*) ffava.Get("fava"); 
-          FAVAEntry *fava = 0;
-      
-          fava_tree->SetBranchAddress("fava",&fava);      
-      
-          for (int i = 0; i < fava_tree->GetEntries(); i++) 
-          {
-              fava_tree->GetEntry(i);
-
-        
-              //printf("%s %s %d %d %g %g %g\n",fava->association.GetString().Data(), fava->source_class.GetString().Data(), fava->unix_tmin, fava->unix_tmax, fava->dec, fava->he_sigma, fava->he_flux);
-        
-              // time cut
-              if( (fava->unix_tmax < TMIN) || (fava->unix_tmin > TMAX) ){continue;}
-
-              const char * fava_name = fava->association.GetString().Data();
-
-                    // If we didn't specific all sources
+         tree->GetEntry(i);
               
-              if(strcasecmp(whichSources,"All"))
-                {
-                  // Account for the chosen one
-                  if(strcasestr(whichSources,fava_name))
-                    {
-                  std::cout << "Using the specified source: " << whichSources << std::endl;
-                    }
-                  else{continue;}
-                }
-              
-              
-              //say no to |dec| >30 
-              if (fabs(fava->dec) > decCutLimit) continue; 
-                    //say no to low HE flux 
-              if (fava->he_sigma < 4 && fava->he_flux < 0) continue;
-              //printf("passed flux cut \n");
-
-              //only blazars
-              if (fava->source_class.GetString() ==  "bcu" || fava->source_class.GetString() == "fsrq" || fava->source_class.GetString() == "bll")
+         //////////// Cuts
+         // Time cut for finding sources within a certain time period
+         if( (discoveryUnixTime < r.whichStartTime) || (discoveryUnixTime > r.whichEndTime) ){continue;}
+             // Declination cut (ANITA won't see neutrinos from these sources)
+             if( abs(dec)>r.maxDec){continue;}
+             // Search for specific subtype
+             if(strcasecmp(r.whichSources,"All"))
+             {
+                 // Account for the chosen one
+                 if(strcasestr(r.whichSources, objName->c_str()))
+                 {
+                   std::cout << "Using the specified source: " << objName << std::endl;
+                 }
+                 else{continue;}
+             }            
+             // Only look at a single subtype (REMEMBER this searches for a complete string
+             // but SNII can take the formats of: SN IIa ,SN IIb, SN IIa-91bg-like, etc)
+             if(strcasecmp(r.whichSubtype,"All"))
+             {
+               if(strcasestr(r.whichSubtype,objSubtype->c_str()))
                {
-      
-                 m->addSource(new Source(fava_name, fava->ra, fava->dec, 
-                               new TimeWindowedExponentialSourceFlux( fava->unix_tmin, fava->unix_tmax, txs_index, 
-                                txs_norm * (flux_weighted ? fava->he_flux / txs_flux : z_weighted ?  txs_flux * txs_z/fava->z: 1), txs_E0))
-                             ); 
-
+                     //std::cout << "Using the specified subtype: " << whichSubtype << std::endl;
                }
-          }
+               else{continue;}
+             }
+            
+             m->addSource(new Source(objName->c_str(), ra, dec,
+                          new ConstantExponentialSourceFlux(gamma_index,txs_flux,txs_E0) // Just use these params as the first step
+                         )) ; 
+       }
+     
+    }
 
+    else if (stripped.BeginsWith("GRB"))
+    {
+      TFile *file = new TFile("./GRBs/data/GRBIceCube.root"); 
+      TTree *tree = (TTree*) file->Get("iceCubeTree");
+
+      // Tree vars
+      float RA, dec;
+      std::string *objName = new std::string;
+      int unixTriggerTime = 0;
+      float t90,  fluence; 
+      
+      tree->SetBranchAddress("RA",&RA); 
+      tree->SetBranchAddress("dec",&dec); 
+      tree->SetBranchAddress("name",&objName);
+      tree->SetBranchAddress("unixTriggerTime",&unixTriggerTime);
+      tree->SetBranchAddress("T90",&t90);
+      tree->SetBranchAddress("fluence",&fluence);
+      
+      for (unsigned int i = 0; i < tree->GetEntries(); i++) 
+      {
+        tree->GetEntry(i);
+             
+        if (fluence < 0) fluence = 1e-6; 
+
+        //////////// Cuts
+        // Time cut for finding sources within a certain time period
+        if( (unixTriggerTime < r.whichStartTime) || (unixTriggerTime > r.whichEndTime) ){continue;}
+        // Declination cut (ANITA won't see neutrinos from these sources)
+        if( abs(dec)>r.maxDec){continue;}
+
+        printf("%d\n", unixTriggerTime); 
+
+        // Search for specific subtype
+        if(strcasecmp(r.whichSources,"All"))
+        {
+            // Account for the chosen one
+            if(strcasestr(r.whichSources,objName->c_str()))
+            {
+                      std::cout << "Using the specified source: " << objName << std::endl;
+            }
+            else{continue;}
+        }
+            
+        if (strcasestr(stripped.Data(),"AFTERGLOW") )
+        {
+          m->addSource(new Source(objName->c_str(), RA, dec,
+                  new TimeWindowedExponentialSourceFlux(unixTriggerTime,
+                                                                      unixTriggerTime + 3600,1.5,
+                                                                      fluence,1e9, 1e10) 
+                ));
+         
+        }
+        else
+        {
+          m->addSource(new Source(objName->c_str(), RA, dec,
+              //fireball model for E > 1e18 eV, I think
+                                new TimeWindowedExponentialSourceFlux(unixTriggerTime,
+                                                                      unixTriggerTime + t90,4,
+                                                                      fluence,1e9) 
+                                )) ; 
+
+        }
       }
+    }
+     
+    else if (stripped.BeginsWith("FAVA"))
+    {
+      // Let's load all the blazars from FAVA that occurred during a flight
+
+      bool flux_weighted = strcasestr(stripped.Data(),"FLUX"); 
+      bool z_weighted = strcasestr(stripped.Data(),"REDSHIFT"); 
+
+      const char * dir = EnvironmentVariable::ICEMC_SRC_DIR() ?: "."; 
+
+      TFile ffava(Form("%s/blazars/fava.root", dir)); 
+      TTree * fava_tree = (TTree*) ffava.Get("fava"); 
+      FAVAEntry *fava = 0;
+       
+      fava_tree->SetBranchAddress("fava",&fava);      
+       
+      for (int i = 0; i < fava_tree->GetEntries(); i++) 
+      {
+        fava_tree->GetEntry(i);
+
+         
+         
+        // time cut
+        if( (fava->unix_tmax < r.whichStartTime) || (fava->unix_tmin > r.whichEndTime) ){continue;}
+
+        const char * fava_name = fava->association.GetString().Data();
+
+                  // If we didn't specific all sources
+            
+        if(strcasecmp(r.whichSources,"All"))
+        {
+           // Account for the chosen one
+           if(strcasestr(r.whichSources,fava_name))
+           {
+             std::cout << "Using the specified source: " << fava_name << std::endl;
+           }
+           else{continue;}
+        }
+            
+            
+        //say no to |dec| >30 
+        if (fabs(fava->dec) > r.maxDec) continue; 
+              
+        //say no to low HE flux 
+             
+        if (fava->he_sigma < 4 && fava->he_flux < 0) continue;
+        //printf("passed flux cut \n");
+
+        //only blazars
+        if (fava->source_class.GetString() ==  "bcu" || fava->source_class.GetString() == "fsrq" || fava->source_class.GetString() == "bll")
+        {
+       
+           m->addSource(new Source(fava_name, fava->ra, fava->dec, 
+                         new TimeWindowedExponentialSourceFlux( fava->unix_tmin, fava->unix_tmax, txs_index, 
+                          txs_norm * (flux_weighted ? fava->he_flux / txs_flux : z_weighted ?  txs_flux * pow(txs_D/luminosity_distance(fava->z),2): 1), txs_E0))
+                       ); 
+
+        }
+      }
+    }
   }
 
   delete tokens; 
@@ -329,6 +333,24 @@ TH1 * SourceModel::estimateFlux(double tmin, double tmax, double Emin, double Em
   spectrum->Scale(1./N); 
   return spectrum; 
 }
+
+
+void SourceModel::computeFluxTimeChanges(std::vector<double> * changes) const 
+{
+
+  changes->clear(); 
+
+  for (unsigned i = 0; i < sources.size(); i++) 
+  {
+    sources[i]->getFlux()->getFluxTimeChanges(changes); 
+  }
+
+  //sort and remove dupes 
+  std::sort(changes->begin(), changes->end()); 
+  std::vector<double>::iterator it = std::unique(changes->begin(),changes->end()); 
+  changes->resize(std::distance(changes->begin(),it));
+}
+
 
 
 int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE, double minE, double maxE)
@@ -422,8 +444,8 @@ double ConstantExponentialSourceFlux::pickEnergy(double Emin, double Emax, doubl
 
 
 
-TimeWindowedExponentialSourceFlux::TimeWindowedExponentialSourceFlux(double t0, double t1, double e, double norm, double normE)
-  :  gamma(e) , f("f", "[0] * x^-[1]",1e9,1e12) , t0(t0), t1(t1) 
+TimeWindowedExponentialSourceFlux::TimeWindowedExponentialSourceFlux(double t0, double t1, double e, double norm, double normE, double cutoff)
+  :  gamma(e) , f("f", "[0] * x^-[1]",1e9,cutoff ? cutoff : 1e12) , t0(t0), t1(t1) , cutoff(cutoff) 
 {
   //figure out what A is 
   A = norm * TMath::Power(normE,gamma); 
@@ -443,3 +465,39 @@ double TimeWindowedExponentialSourceFlux::pickEnergy(double Emin, double Emax, d
   gRandom = old; 
   return E; 
 }
+
+
+void SourceModel::setUpWeights(double t0, double t1, double minE, double maxE, int N) 
+{
+
+  average_flux = 0; 
+  weight_Emin = minE; 
+  weight_Emax = maxE; 
+
+  for (int i =0; i < N; i++) 
+  {
+    double t = rng.Uniform(t0,t1); 
+    for (unsigned j = 0; j < sources.size(); j++) 
+    {
+      average_flux += sources[j]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t)/N; 
+    }
+  }
+  printf("Set up weights: average flux is %g\n", average_flux); 
+}
+
+
+double SourceModel::getTimeWeight(double t) const
+{
+  static int nnag = 0; 
+  if (average_flux < 0) 
+  {
+    if (nnag++ < 100) fprintf(stderr,"WARNING: setUpWeights() hasn't been called yet. Will return crazy value!\n"); 
+  }
+  double weight = 0;
+  for (unsigned i = 0; i < sources.size(); i++) 
+  {
+    weight += sources[i]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t); 
+  }
+  return weight/average_flux; 
+}
+

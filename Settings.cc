@@ -282,12 +282,13 @@ void Settings::Initialize() {
   WHICH_SUBTYPE = "All";
   WHICH_START_TIME = "0";
   WHICH_END_TIME = "MAX";
+  SOURCE_SKIP_WHEN_NONE = 0; 
 
   // Extras
   IGNORE_CROSSPOL = 0; 
   POL_SIGN_HACK = 1; 
   CUTONWEIGHTS = 0.;
-  DEC_CUT = 90; // Declination cut 999 is default: no declination cut
+  DEC_CUT = 30; // Declination cut 999 is default: no declination cut
                                    //  If you specify a value, then only use sources within from declination = -DEC_CUT to DEC_CUT
   ALL_SKY_MAP = 0; // Draw all-sky map?
 
@@ -621,6 +622,11 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Which Subtype", WHICH_SUBTYPE,true);
   getSetting("Which Start Time", WHICH_START_TIME,true);
   getSetting("Which End Time", WHICH_END_TIME,true);
+  getSetting("Source Skip When None", SOURCE_SKIP_WHEN_NONE, true); 
+  if (SOURCE_SKIP_WHEN_NONE)
+  {
+    std::cout << "Non-default setting:  settings->SOURCE_SKIP_WHEN_NONE= " << SOURCE_SKIP_WHEN_NONE << std::endl;
+  }
 
   getSetting("Cross-section factor", SIGMA_FACTOR);
   if (SIGMA_FACTOR!=1){

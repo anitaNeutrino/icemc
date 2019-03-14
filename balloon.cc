@@ -254,6 +254,8 @@ void Balloon::InitializeBalloon() {
   }
     
 
+  min_time = flightdatachain ? flightdatachain->GetMinimum(WHICHPATH == 6 ? "realTime_surfhk":  "realTime") : 0; 
+  max_time = flightdatachain ? flightdatachain->GetMaximum(WHICHPATH == 6 ? "realTime_surfhk":  "realTime") : 0; 
         
   for (int i=0;i<10000;i++) {
     latitude_bn_anitalite[i]=0;

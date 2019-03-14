@@ -158,6 +158,8 @@ class Settings : public TObject {
   
   double SOURCE_MIN_E;  // log10 of minimum energy for sources 
   double SOURCE_MAX_E;   // log10 of maximinum energy for sources 
+
+  int SOURCE_SKIP_WHEN_NONE; //Whether or not to reroll position if no source is available! 
   
   int ROUGHNESS; // include effects of surface roughness
   int FIRN; // whether or not to include the firn

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "earthmodel.hh"
+#include "source.hh" 
 
 class Balloon;
 class Position;
@@ -82,8 +83,7 @@ int NODATA;
 			double& lon,
 			double& lat);
 
-  const static int NBNPOSITIONS_MAX=26000;
-  double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
+  vector<double> volume_inhorizon; // volume of ice within horizon for each balloon phi position 
   IceModel(int model=0,int earth_mode=0,int WEIGHTABSORPTION_SETTING=1);
   double IceThickness(double lon,double lat);
   double IceThickness(const Position& pos) ;
@@ -118,7 +118,7 @@ int NODATA;
 			 const Vector &nnu,
 			 double stepsize,
 			 Position &r_enterice);
-  void CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput);
+  void CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput, SourceModel * src_model = 0);
   Vector GetSurfaceNormal(const Position &r_out); //overloaded from EarthModel to include procedures for new ice models.
   double GetN(double depth);
   double GetN(const Position &pos);
@@ -143,11 +143,11 @@ protected:
  
  
   double volume_inhorizon_average; // average volume of ice seen by balloon
-  vector<int> ilon_inhorizon[NBNPOSITIONS_MAX]; // indices in lon and lat for bins in horizon for NPHI balloon positions along 80 deg latitude line.
-  vector<int> ilat_inhorizon[NBNPOSITIONS_MAX];
-  vector<int> easting_inhorizon[NBNPOSITIONS_MAX]; //indicies in easting and northing for bins in horizon for NPHI balloon positions along 80 deg latitude line.
-  vector<int> northing_inhorizon[NBNPOSITIONS_MAX];
-  double maxvol_inhorizon[NBNPOSITIONS_MAX]; // maximum volume of ice for a bin 
+  vector< vector<int> > ilon_inhorizon; // indices in lon and lat for bins in horizon for NPHI balloon positions along 80 deg latitude line.
+  vector< vector<int> >ilat_inhorizon;
+  vector< vector<int> >easting_inhorizon; //indicies in easting and northing for bins in horizon for NPHI balloon positions along 80 deg latitude line.
+  vector< vector<int> >northing_inhorizon;
+  vector<double> maxvol_inhorizon; // maximum volume of ice for a bin 
 
   //BEDMAP utility methods
   double Area(double latitude);

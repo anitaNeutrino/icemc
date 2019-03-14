@@ -85,7 +85,9 @@
 
 #ifdef ANITA_UTIL_EXISTS
 #include "UsefulAnitaEvent.h"
+#ifdef  ANITA3_EVENTCORRELATOR
 #include "SkyMap.h"
+#endif
 #include "AnitaGeomTool.h"
 #include "AnitaConventions.h"
 #include "RawAnitaHeader.h"
@@ -165,8 +167,6 @@ double RANDOMISEPOL=0.;
 
 double volume_thishorizon; // for plotting volume within the horizon of the balloon
 double realtime_this;  // for plotting real unix time
-double earliest_time = 4e9; 
-double latest_time = 0; 
 double longitude_this; // for plotting longitude
 double latitude_this; // for plotting latitude
 double altitude_this; // for plotting altitude
@@ -451,7 +451,7 @@ void interrupt_signal_handler(int);  // This catches the Control-C interrupt,  S
 
 bool ABORT_EARLY = false;    // This flag is set to true when interrupt_signal_handler() is called
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString, SourceModel * src_model);
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1,  Spectra *spectra1, Signal *sig1,  Primaries *primary1,  double,  double eventsfound,  double,  double,  double,  double*,  double,  double,  double&,  double&,  double&,  double&,  ofstream&,  ofstream&, TString, Balloon*, SourceModel * src_model);
 
 void WriteNeutrinoInfo(Position&,  Vector&,  Position&,  double,  string,  string,  double,  ofstream &nu_out);
 
@@ -635,18 +635,40 @@ int main(int argc,  char **argv) {
   if (exp_tmp!=0)
     settings1->EXPONENT=exp_tmp;
 
-  SourceModel *src_model = SourceModel::getSourceModel(settings1->SOURCE.c_str(), settings1->SEED + 0x5eed, settings1->WHICH_SOURCES.c_str(), settings1->WHICH_SUBTYPE.c_str(), settings1->WHICH_START_TIME.c_str(),settings1->WHICH_END_TIME.c_str(), settings1->DEC_CUT, settings1->CUSTOM_NAME.c_str(), settings1->CUSTOM_RA, settings1->CUSTOM_DEC,settings1->CUSTOM_GAMMA);
+  SourceModel *src_model = 0; 
+  if (!strcasecmp(settings1->SOURCE.c_str(),"CUSTOM")) 
+  {
+    src_model = new SourceModel("custom",settings1->SEED + 0xc0fefe); 
+
+    src_model->addSource( new Source("Custom Source", settings1->CUSTOM_RA, settings1->CUSTOM_DEC, 
+                              new ConstantExponentialSourceFlux(settings1->CUSTOM_GAMMA, 1e-10,1e6))); 
+    
+  }
+  else
+  {
+    src_model = SourceModel::getSourceModel(settings1->SOURCE.c_str(), settings1->SEED + 0x5eed, 
+                              SourceModel::Restriction( settings1->DEC_CUT, settings1->WHICH_SOURCES.c_str(), settings1->WHICH_SUBTYPE.c_str(), 
+                                  SourceModel::Restriction::fromString(settings1->WHICH_START_TIME.c_str()),
+                                  SourceModel::Restriction::fromString(settings1->WHICH_END_TIME.c_str()))); 
+  }
+      
+
   double src_min = TMath::Power(10,settings1->SOURCE_MIN_E-9);  //since source model takes things in GeV
   double src_max = TMath::Power(10,settings1->SOURCE_MAX_E-9);  //since source model takes things in GeV
+
   Spectra *spectra1 = new Spectra((int)settings1->EXPONENT);
   Interaction *interaction1=new Interaction("nu", primary1, settings1, 0, count1);
   Interaction *int_banana=new Interaction("banana", primary1, settings1, 0, count1);
  
   if (src_model) {
     printf("Using Source Model %s\n", src_model->getName());
-    // Graphing
+    printf("Setting up weights: %g %g %g %g\n", bn1->min_time, bn1->max_time, src_min, src_max); 
+    src_model->setUpWeights(bn1->min_time, bn1->max_time , src_min, src_max); 
+    bn1->REDUCEBALLOONPOSITIONS = 1; 
   }
   
+
+
   Roughness *rough1 = new Roughness(settings1); // create new instance of the roughness class
   rough1->SetRoughScale(settings1->ROUGHSIZE);
 
@@ -1433,7 +1455,7 @@ int main(int argc,  char **argv) {
   //end ROOT variable definitions
   ///////////////////////////////////////////////////////////////////////
 
-#ifdef ANITA3_EVENTREADER
+#ifdef ANITA3_EVENTCORRELATOR
   const int skyMapLat = 90;
   TMarker *astroObject = new TMarker();
   SkyMap *skyMapOut = new SkyMap(skyMapLat);
@@ -1490,7 +1512,7 @@ int main(int argc,  char **argv) {
   antarctica->GetMAXHORIZON(bn1);
 
   // calculate the volume of ice seen by the balloon for all balloon positions
-  antarctica->CreateHorizons(settings1, bn1, bn1->theta_bn, bn1->phi_bn, bn1->altitude_bn, foutput);
+  antarctica->CreateHorizons(settings1, bn1, bn1->theta_bn, bn1->phi_bn, bn1->altitude_bn, foutput, src_model);
   cout << "Done with CreateHorizons.\n";
 
   // sets neutrino energy
@@ -1629,6 +1651,7 @@ int main(int argc,  char **argv) {
 //if( !((inu==246) || (inu==2579) || (inu==5522) || (inu==11235) || (inu==11815) || (inu==19723) || (inu==21264) || (inu==28442) || (inu==36789) || (inu==36894) || (inu==38424) || (inu==45829) || (inu==45880) || (inu==52929) || (inu==56821) || (inu==64933) || (inu==73569) || (inu==73707) || (inu==78717) || (inu==92717) || (inu==99750))  ) continue;
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
+    if (src_model) src_model->setSeed(eventNumber + 0x12345); //the password on my luggage 
     TRandom3 r(eventNumber+7e8);
     if (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) anita1->fRand->SetSeed(eventNumber+8e9);
 
@@ -1639,6 +1662,7 @@ int main(int argc,  char **argv) {
 
     std::string nunum = Form("%d",inu);    
 
+    double time_weight = 1; 
     for (whichray = settings1->MINRAY; whichray <= settings1->MAXRAY; whichray++) {
       anita1->passglobtrig[0]=0;
       anita1->passglobtrig[1]=0;
@@ -1681,45 +1705,52 @@ int main(int argc,  char **argv) {
 
       int got_a_good_position = 0;
       
-      // Picks the balloon position and at the same time sets the masks and thresholds
-      bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
-        
-
-      // find average balloon altitude and distance from center of earth for
-      // making comparisons with Peter
-      average_altitude+=bn1->altitude_bn/(double)NNU;
-      average_rbn+=bn1->r_bn.Mag()/(double)NNU;
-
-      realtime_this=bn1->realTime_flightdata;
-      if (realtime_this < earliest_time) earliest_time = realtime_this; 
-      if (realtime_this > latest_time) latest_time = realtime_this; 
-      longitude_this=bn1->longitude;
-      latitude_this=bn1->latitude;
-      altitude_this=bn1->altitude;
-      heading_this=bn1->heading;
-      
-      if (src_model) 
+      do  // loop for forcing a good position with sources if that option is enabled
       {
-        which_source = src_model->getDirectionAndEnergy(&force_dir, realtime_this, pnu, src_min, src_max);
-        if(which_source>= 0) {
-          got_a_good_position = 1;
+        // Picks the balloon position and at the same time sets the masks and thresholds
+        bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
+          
+
+        // find average balloon altitude and distance from center of earth for
+        // making comparisons with Peter
+        average_altitude+=bn1->altitude_bn/(double)NNU;
+        average_rbn+=bn1->r_bn.Mag()/(double)NNU;
+
+        realtime_this=bn1->realTime_flightdata;
+        longitude_this=bn1->longitude;
+        latitude_this=bn1->latitude;
+        altitude_this=bn1->altitude;
+        heading_this=bn1->heading;
         
-          const Source * src = src_model->getSource(which_source); 
-          RA = src->getRA();
-          dec= src->getDec()* TMath::RadToDeg(); // Get it make in deg
-          objName = src->getName(); 
-        
+        if (src_model) 
+        {
+          time_weight = src_model->getTimeWeight(realtime_this); 
+
+          which_source = time_weight > 0 ?  src_model->getDirectionAndEnergy(&force_dir, realtime_this, pnu, src_min, src_max) : -1;
+          if(which_source >= 0) {
+            got_a_good_position = 1;
+          
+            const Source * src = src_model->getSource(which_source); 
+            RA = src->getRA();
+            dec= src->getDec()* TMath::RadToDeg(); // Get it make in deg
+            objName = src->getName(); 
+            pnu*=1e9; //GeV -> eV
+            ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
+            len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
+          }
+
+          
+          //std::cout << "pnu = " << pnu << std::endl;
+          //std::cout << "RA = " << RA << std::endl;
+          //std::cout << "dec = " << dec << std::endl;
+          //std::cout << "objName = " << objName << std::endl;
         }
-        
-        //std::cout << "pnu = " << pnu << std::endl;
-        //std::cout << "RA = " << RA << std::endl;
-        //std::cout << "dec = " << dec << std::endl;
-        //std::cout << "objName = " << objName << std::endl;
-          pnu*=1e9; //GeV -> eV
-          ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
-          len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
-      }
-      else got_a_good_position = 1; 
+        else
+        {
+          got_a_good_position = 1; 
+        }
+
+      } while(!got_a_good_position && settings1->SOURCE_SKIP_WHEN_NONE) ; 
 
       if (settings1->HIST && !settings1->ONLYFINAL
           && prob_eachphi_bn->GetEntries() < settings1->HIST_MAX_ENTRIES) {
@@ -1732,6 +1763,16 @@ int main(int argc,  char **argv) {
         bn1->setObservationLocation(int_banana, inu, antarctica, settings1);
       } //End else if (WHICHPATH==3) : Banana plot locations
       balloontree->Fill();
+
+
+      // No sources were turned on, so we have no neutrino. So we should try again. 
+      if (!got_a_good_position) 
+      {
+#ifdef ANITA3_EVENTREADER
+        truthNuPtr->setNoNu(bn1->r_bn.GetX(), bn1->r_bn.GetY(), bn1->r_bn.GetZ(), realtime_this);
+#endif
+        continue; 
+      }
 
       // pick random point in ice.
       // also get initial guess shower exit position
@@ -3744,9 +3785,11 @@ int main(int argc,  char **argv) {
             truthEvPtr->weight           = weight;
             truthEvPtr->weight1           = weight1;
             truthEvPtr->phaseWeight       = 1./interaction1->dnutries;
+            truthEvPtr->timeWeight       = time_weight;
 
             // for passed neutrinos:
             
+#ifdef ANITA3_EVENTCORRELATOR
             if(settings1->ALL_SKY_MAP)
               {  
                 astroObject->SetX(RA);
@@ -3756,7 +3799,9 @@ int main(int argc,  char **argv) {
                 astroObject->SetMarkerColor(9);
                 skyMapOut->addMarker(astroObject);
               }
+#endif 
             
+
             truthEvPtr->source_index = which_source;
             truthEvPtr->RA = RA;
             truthEvPtr->dec = dec;
@@ -4095,7 +4140,7 @@ int main(int argc,  char **argv) {
 
 
   // makes the output file
-  Summarize(settings1, anita1, count1, spectra1, sig1, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb, sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, foutput, distanceout, outputdir, src_model);
+  Summarize(settings1, anita1, count1, spectra1, sig1, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb, sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, foutput, distanceout, outputdir, bn1, src_model);
 
   std::string spec_string = src_model ? settings1->SOURCE : std::to_string( settings1->EXPONENT); 
   veff_out << spec_string << "\t" << km3sr << "\t" << km3sr_e << "\t" << km3sr_mu << "\t" << km3sr_tau << "\t" << settings1->SIGMA_FACTOR << endl;//this is for my convenience
@@ -4218,7 +4263,7 @@ void WriteNeutrinoInfo(Position &posnu,  Vector &nnu,  Position &r_bn,  double a
 //end WriteNeutrinoInfo()
 
 
-void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, Signal *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir, SourceModel * src_model) {
+void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *spectra1, Signal *sig1, Primaries *primary1, double pnu, double eventsfound, double eventsfound_db, double eventsfound_nfb, double sigma, double* sum, double volume, double ice_area, double& km3sr, double& km3sr_e, double& km3sr_mu, double& km3sr_tau, ofstream &foutput, ofstream &distanceout, TString outputdir, Balloon * bn1, SourceModel * src_model) {
   double rate_v_thresh[NTHRESHOLDS];
   double errorup_v_thresh[NTHRESHOLDS];
   double errordown_v_thresh[NTHRESHOLDS];
@@ -4657,6 +4702,20 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   cout <<count1->npass[0] << "\t" << count1->npass[1] << "\n";
 
 
+  if (src_model) 
+  {
+
+    TString str; str.Form("%s/source_times.txt", outputdir.Data()); 
+    FILE * f = fopen(str.Data(),"w"); 
+    std::vector<double> times; 
+    src_model->computeFluxTimeChanges(&times); 
+    for (unsigned i = 0; i < times.size(); i++) 
+    {
+      fprintf(f,"%g\n", times[i]); 
+    }
+    fclose(f); 
+  }
+
   //  if (EXPONENT<=10||EXPONENT>100) {
   if ( src_model || spectra1->IsSpectrum() ) {
     double sum_events=0.;
@@ -4676,7 +4735,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     TH1 * src_flux = 0; 
     if (src_model) 
     {
-      src_flux = src_model->estimateFlux(earliest_time,latest_time, TMath::Power(10,min_energy-9), TMath::Power(10,max_energy-9), 2*N_even_E, 10000); 
+      src_flux = src_model->estimateFlux(bn1->min_time,bn1->max_time, TMath::Power(10,min_energy-9), TMath::Power(10,max_energy-9), 2*N_even_E, 10000); 
 //      TFile fsrcflux("fsrcflux.root","RECREATE"); 
 //      src_flux->Write(); 
     }

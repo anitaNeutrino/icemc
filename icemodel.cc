@@ -999,8 +999,7 @@ int IceModel::WestLand(const Position &pos) {
 double IceModel::GetBalloonPositionWeight(int ibnpos) {
   //  cout << "ibnpos, volume_inhorizon, volume are " << ibnpos << " " << volume_inhorizon[ibnpos] << " " << volume << "\n";
     if (volume_inhorizon[ibnpos]==0) {
-	cout << "volume in horizon is zero!\n";
-	exit(1);
+      return 0; //we will be skipped anyway 
     }
     
     return volume/volume_inhorizon[ibnpos];
@@ -1229,7 +1228,7 @@ void IceModel::GetMAXHORIZON(Balloon *bn1) {
 }
 
 
-void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput) {
+void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput, SourceModel * src_model) {
     
     // add up volume of ice within horizon of payload
     // goes a little beyond horizon.
@@ -1257,11 +1256,15 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
     else // includes fixed position (bn1->WHICHPATH=0)
 	NBALLOONPOSITIONS=1;
     
-    if (NBALLOONPOSITIONS>NBNPOSITIONS_MAX) {
-	cout << "Number of balloon positions is greater than max allowed.\n";
-	exit(1);
-    }
-    
+    volume_inhorizon.resize(NBALLOONPOSITIONS); 
+    maxvol_inhorizon.resize(NBALLOONPOSITIONS); 
+    ilon_inhorizon.resize(NBALLOONPOSITIONS); 
+    ilat_inhorizon.resize(NBALLOONPOSITIONS); 
+    easting_inhorizon.resize(NBALLOONPOSITIONS); 
+    northing_inhorizon.resize(NBALLOONPOSITIONS); 
+   
+
+
     double phi_bn_temp=0; //phi of balloon, temporary variable
     Position r_bn_temp; //position of balloon
     Position r_bin; // position of each bin
@@ -1303,17 +1306,18 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
     for (int i=0;i<NBALLOONPOSITIONS;i++) { // loop over balloon positions
 	
 	maxvol_inhorizon[i]=-1.; // volume of bin with the most ice in the horizon
+        double the_time = 0; 
 	
 	if (bn1->WHICHPATH==2) { // anita or anita-lite path
-	    theta_bn=(90+bn1->latitude_bn_anitalite[i*100])*RADDEG; //theta of the balloon wrt north pole
+	    theta_bn=(90+bn1->latitude_bn_anitalite[i*bn1->REDUCEBALLOONPOSITIONS])*RADDEG; //theta of the balloon wrt north pole
 	    lat=GetLat(theta_bn); // latitude  
-	    phi_bn_temp=(-1*bn1->longitude_bn_anitalite[i*100]+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
+	    phi_bn_temp=(-1*bn1->longitude_bn_anitalite[i*bn1->REDUCEBALLOONPOSITIONS]+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
 	    if (phi_bn_temp<0) //correct phi_bn if it's negative
 		phi_bn_temp+=360.;
 	    phi_bn_temp*=RADDEG;// turn it into radians
 	    
 	    
-	    altitude_bn=bn1->altitude_bn_anitalite[i*100]*12.*CMINCH/100.; // get the altitude for this balloon posistion
+	    altitude_bn=bn1->altitude_bn_anitalite[i*bn1->REDUCEBALLOONPOSITIONS]*12.*CMINCH/100.; // get the altitude for this balloon posistion
 	    //altitude_bn=altitude_bn_anitalite[i*100]*12.*CMINCH/100.; // for anita, altitude in is meters
 	    
 	} // end if anita-lite
@@ -1322,7 +1326,8 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	
 	else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8 || bn1->WHICHPATH==9) {
 	    
-	    bn1->flightdatachain->GetEvent(i*100);
+	    bn1->flightdatachain->GetEvent(i*bn1->REDUCEBALLOONPOSITIONS);
+      the_time = bn1->realTime_flightdata_temp; //??!? 
 	    
 	    theta_bn=(90+(double)bn1->flatitude)*RADDEG; //theta of the balloon wrt north pole
 	    lat=GetLat(theta_bn); // latitude  
@@ -1495,12 +1500,19 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	    cout<<"Total surface area covered with ice (in m^2) is : "<<total_area<<endl;
 	    volume_found=1;
 	} //if
+
+        if (src_model) 
+        {
+          double time_weight = src_model->getTimeWeight(the_time); ;
+//          printf("%d %g %g\n", i, the_time,time_weight); 
+          volume_inhorizon[i]*= time_weight;
+        }
     } //end loop over balloon positions
     
     // finding average volume in horizon over all balloon positions.
     volume_inhorizon_average=0;
     
-    for (int i=0;i<NPHI;i++) {
+    for (int i=0;i<NBALLOONPOSITIONS;i++) {
 	volume_inhorizon_average+=volume_inhorizon[i];
 	
     } //for
@@ -1509,7 +1521,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
     //cout << "Total volume of ice in Antarctica with this ice model (m^3): " << volume << "\n";
     //cout << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
     
-    foutput << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
+    foutput << "Average "<< (src_model ? "TIME-WEIGHTED" : "") << "volume of ice within a horizon is " << volume_inhorizon_average << "\n";
     
     foutput << "Average thickness of ice within horizon, averages over balloon positions " << volume_inhorizon_average/PI/pow(bn1->MAXHORIZON,2) << "\n";
 } //method CreateHorizons 

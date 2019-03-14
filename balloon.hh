@@ -88,6 +88,8 @@ public:
   double realtime_bn_anitalite[100000];                                      ///< same for real life time
   double BN_LONGITUDE;                                                       ///< balloon longitude for fixed balloon location
   double BN_LATITUDE;                                                        ///< balloon latitude for fixed balloon location
+  double min_time; 
+  double max_time; 
 
 
   //!This function sets the observation location
