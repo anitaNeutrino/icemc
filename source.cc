@@ -126,13 +126,15 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       tree->SetBranchAddress("objSubtype",&objSubtype);
       tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
          
+      int two_weeks = 24*3600*14; 
+      int two_days = 24*3600*2; 
       for (unsigned int i = 0; i < tree->GetEntries(); i++) 
       {
          tree->GetEntry(i);
               
          //////////// Cuts
          // Time cut for finding sources within a certain time period
-         if( (discoveryUnixTime < r.whichStartTime) || (discoveryUnixTime > r.whichEndTime) ){continue;}
+         if( (discoveryUnixTime < r.whichStartTime - two_weeks) || (discoveryUnixTime > r.whichEndTime) ){continue;}
              // Declination cut (ANITA won't see neutrinos from these sources)
              if( abs(dec)>r.maxDec){continue;}
              // Search for specific subtype
@@ -157,7 +159,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
              }
             
              m->addSource(new Source(objName->c_str(), ra, dec,
-                          new ConstantExponentialSourceFlux(gamma_index,txs_flux,txs_E0) // Just use these params as the first step
+                          new TimeWindowedExponentialSourceFlux(discoveryUnixTime-two_days, discoveryUnixTime + two_weeks - two_days, 2,txs_flux,txs_E0) // Just use these params as the first step
                          )) ; 
        }
      
@@ -205,7 +207,9 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
             }
             else{continue;}
         }
-            
+
+
+
         if (strcasestr(stripped.Data(),"AFTERGLOW") )
         {
           m->addSource(new Source(objName->c_str(), RA, dec,
@@ -215,7 +219,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
                 ));
          
         }
-        else
+        else if (strcasestr(stripped.Data(),"PROMPT") )
         {
           m->addSource(new Source(objName->c_str(), RA, dec,
               //fireball model for E > 1e18 eV, I think
@@ -225,6 +229,19 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
                                 )) ; 
 
         }
+
+        // conservative case... 5 minutes before, one hour after, use afterglow flux. 
+        else
+        {
+          m->addSource(new Source(objName->c_str(), RA, dec,
+              //fireball model for E > 1e18 eV, I think
+                                new TimeWindowedExponentialSourceFlux(unixTriggerTime-300,
+                                                                      unixTriggerTime + 3600,1.5,
+                                                                      fluence,1e9, 1e10) 
+                                )) ; 
+
+        }
+ 
       }
     }
      
@@ -457,6 +474,7 @@ double TimeWindowedExponentialSourceFlux::pickEnergy(double Emin, double Emax, d
   if (t < t0 || t > t1) return 0; 
   TRandom * old = gRandom; 
   gRandom = rng; 
+  if (cutoff && Emax > cutoff) Emax = cutoff; 
 
   //I'm too bad at math to figure out the proper quantile function here. It's probably trivial, but this works and isn't THAT slow. 
   if (f.GetXmin() != Emin || f.GetXmax() !=Emax) f.SetRange(Emin,Emax); 
