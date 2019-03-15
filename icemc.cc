@@ -1650,7 +1650,7 @@ int main(int argc,  char **argv) {
 //if( !((inu==246) || (inu==2579) || (inu==5522) || (inu==11235) || (inu==11815) || (inu==19723) || (inu==21264) || (inu==28442) || (inu==36789) || (inu==36894) || (inu==38424) || (inu==45829) || (inu==45880) || (inu==52929) || (inu==56821) || (inu==64933) || (inu==73569) || (inu==73707) || (inu==78717) || (inu==92717) || (inu==99750))  ) continue;
     // Set seed of all random number generators to be dependent on eventNumber
     gRandom->SetSeed(eventNumber+6e7);
-    if (src_model) src_model->setSeed(eventNumber + 0x12345); //the password on my luggage 
+    if (src_model) src_model->setSeed(eventNumber + 12345); //the password on my luggage 
     TRandom3 r(eventNumber+7e8);
     if (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) anita1->fRand->SetSeed(eventNumber+8e9);
 
@@ -1769,7 +1769,7 @@ int main(int argc,  char **argv) {
       {
 #ifdef ANITA3_EVENTREADER
         truthNuPtr->setNoNu(bn1->r_bn.GetX(), bn1->r_bn.GetY(), bn1->r_bn.GetZ(), realtime_this);
-        truthAnitaNuTree->Fill(); 
+//        truthAnitaNuTree->Fill();  
 #endif
         continue; 
       }
@@ -1819,10 +1819,6 @@ int main(int argc,  char **argv) {
 #define DO_SKIP continue ;
 #endif
 
-      if (!got_a_good_position) //no source is turned on 
-      {
-        DO_SKIP
-      }
       //BELOW HERE, WE NO LONGER HAVE EVERY EVENT
       //
       if (interaction1->noway)
@@ -4711,7 +4707,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
     src_model->computeFluxTimeChanges(&times); 
     for (unsigned i = 0; i < times.size(); i++) 
     {
-      fprintf(f,"%g\n", times[i]); 
+      fprintf(f,"%f\n", times[i]); 
     }
     fclose(f); 
   }
