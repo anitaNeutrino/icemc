@@ -163,49 +163,7 @@ Anita::Anita() {
       mkdir(outputdir,S_IRWXU);
     }
   
-    // Prepare the file and tree for the coherent sum trigger's data tree
-  coherent_datafile = new TFile("outputs/coherent_sum_data_file.root","RECREATE");
-  coherent_waveform_sum_tree = new TTree("coherent_waveform_sum_tree", "Coherent Waveform Sum");
-  coherent_waveform_sum_tree->Branch("event_number", &cwst_event_number);
-  coherent_waveform_sum_tree->Branch("center_phi_sector", &cwst_center_phi_sector);
-  coherent_waveform_sum_tree->Branch("rms_noise", &cwst_rms_noise);
-  coherent_waveform_sum_tree->Branch("actual_rms", &cwst_actual_rms);
-  coherent_waveform_sum_tree->Branch("threshold", &cwst_threshold);
-  coherent_waveform_sum_tree->Branch("window_start", &cwst_window_start);
-  coherent_waveform_sum_tree->Branch("window_end", &cwst_window_end);
-    
-  coherent_waveform_sum_tree->Branch("deg_theta", &cwst_deg_theta);
-  coherent_waveform_sum_tree->Branch("deg_phi", &cwst_deg_phi);
-    
-  coherent_waveform_sum_tree->Branch("actual_deg_theta", &cwst_actual_deg_theta);
-  coherent_waveform_sum_tree->Branch("actual_deg_phi", &cwst_actual_deg_phi);
-    
-  coherent_waveform_sum_tree->Branch("timesteps", cwst_timesteps);
-    
-  for (unsigned i = 0; i < 48; ++i) {
-    cwst_RXs[i].waveform = new vector <double>(HALFNFOUR, 0.);
-    cwst_RXs[i].digitized = new vector <double>(HALFNFOUR, 0.);
-    coherent_waveform_sum_tree->Branch(Form("rx%u", i), &(cwst_RXs[i]));
-  }
-    
-  for (unsigned int i = 0; i < 9; i++) {
-    cwst_aligned_wfms[i].digitized = new vector <double>(HALFNFOUR, 0.);
-    coherent_waveform_sum_tree->Branch(Form("aligned_wfms%u", i), &(cwst_aligned_wfms[i]));
-    /*
-    //coherent_waveform_sum_tree->Branch(Form("whole_wfms%u", i), &(cwst_whole_wfms[i]));
-    cwst_whole_wfms[i] = new vector <double>(HALFNFOUR, 0.);
-    cwst_wfms[i] = new vector <double>(HALFNFOUR, 0.);
-    cwst_aligned_wfms[i] = new vector <double>(HALFNFOUR, 0.);
-    coherent_waveform_sum_tree->Branch(Form("whole_wfms%u", i), &(cwst_whole_wfms[i]));
-    coherent_waveform_sum_tree->Branch(Form("wfms%u", i), &(cwst_wfms[i]));
-    coherent_waveform_sum_tree->Branch(Form("aligned_wfms%u", i), &(cwst_aligned_wfms[i]));
-    */
-  }
-	
-  coherent_waveform_sum_tree->Branch("summed_wfm", &cwst_summed_wfm);
-  coherent_waveform_sum_tree->Branch("power_of_summed_wfm", &cwst_power_of_summed_wfm);
-  coherent_waveform_sum_tree->Branch("power", &cwst_power);
-  // End of preparition for the coherent sum trigger's data tree
+  
 }
 
 Anita::~Anita(){
@@ -555,7 +513,52 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   tglob->Branch("l1_passing_allantennas",&l1_passing_allantennas,"l1_passing_allantennas[48]/I");
   
   
+
+  // Prepare the file and tree for the coherent sum trigger's data tree
+  coherent_datafile = new TFile(Form("%s/coherent_sum_data_file.root", outputdir.Data()),"RECREATE");
+  coherent_waveform_sum_tree = new TTree("coherent_waveform_sum_tree", "Coherent Waveform Sum");
+  coherent_waveform_sum_tree->Branch("event_number", &cwst_event_number);
+  coherent_waveform_sum_tree->Branch("center_phi_sector", &cwst_center_phi_sector);
+  coherent_waveform_sum_tree->Branch("rms_noise", &cwst_rms_noise);
+  coherent_waveform_sum_tree->Branch("actual_rms", &cwst_actual_rms);
+  coherent_waveform_sum_tree->Branch("threshold", &cwst_threshold);
+  coherent_waveform_sum_tree->Branch("window_start", &cwst_window_start);
+  coherent_waveform_sum_tree->Branch("window_end", &cwst_window_end);
     
+  coherent_waveform_sum_tree->Branch("deg_theta", &cwst_deg_theta);
+  coherent_waveform_sum_tree->Branch("deg_phi", &cwst_deg_phi);
+    
+  coherent_waveform_sum_tree->Branch("actual_deg_theta", &cwst_actual_deg_theta);
+  coherent_waveform_sum_tree->Branch("actual_deg_phi", &cwst_actual_deg_phi);
+    
+  coherent_waveform_sum_tree->Branch("timesteps", cwst_timesteps);
+    
+  for (unsigned i = 0; i < 48; ++i) {
+    cwst_RXs[i].waveform = new vector <double>(HALFNFOUR, 0.);
+    cwst_RXs[i].digitized = new vector <double>(HALFNFOUR, 0.);
+    coherent_waveform_sum_tree->Branch(Form("rx%u", i), &(cwst_RXs[i]));
+  }
+    
+  for (unsigned int i = 0; i < 9; i++) {
+    cwst_aligned_wfms[i].digitized = new vector <double>(HALFNFOUR, 0.);
+    coherent_waveform_sum_tree->Branch(Form("aligned_wfms%u", i), &(cwst_aligned_wfms[i]));
+    /*
+    //coherent_waveform_sum_tree->Branch(Form("whole_wfms%u", i), &(cwst_whole_wfms[i]));
+    cwst_whole_wfms[i] = new vector <double>(HALFNFOUR, 0.);
+    cwst_wfms[i] = new vector <double>(HALFNFOUR, 0.);
+    cwst_aligned_wfms[i] = new vector <double>(HALFNFOUR, 0.);
+    coherent_waveform_sum_tree->Branch(Form("whole_wfms%u", i), &(cwst_whole_wfms[i]));
+    coherent_waveform_sum_tree->Branch(Form("wfms%u", i), &(cwst_wfms[i]));
+    coherent_waveform_sum_tree->Branch(Form("aligned_wfms%u", i), &(cwst_aligned_wfms[i]));
+    */
+  }
+	
+  coherent_waveform_sum_tree->Branch("summed_wfm", &cwst_summed_wfm);
+  coherent_waveform_sum_tree->Branch("power_of_summed_wfm", &cwst_power_of_summed_wfm);
+  coherent_waveform_sum_tree->Branch("power", &cwst_power);
+  // End of preparition for the coherent sum trigger's data tree
+  
+  
 }
 
 void Anita::initializeFixedPowerThresholds(ofstream &foutput){
