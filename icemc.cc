@@ -1475,14 +1475,14 @@ int main(int argc,  char **argv) {
       lon_water=lon_ice; //redundant?
       lat_water=lat_ice; 
       h20_depth=antarctica->water_depth[j][i];
-      icetree->Fill();
+      if (settings1->HIST) icetree->Fill();
     }
   }
   for (int i=0;i<antarctica->nRows_ground;i++) {
     for (int j=0;j<antarctica->nCols_ground;j++) {
       antarctica->GroundENtoLonLat(j, i, lon_ground, lat_ground);
       elev=antarctica->SurfaceAboveGeoid(lon_ground, lat_ground);
-      groundtree->Fill();
+      if (settings1->HIST) groundtree->Fill();
     }
   }
 
@@ -1756,14 +1756,13 @@ int main(int argc,  char **argv) {
           && prob_eachphi_bn->GetEntries() < settings1->HIST_MAX_ENTRIES) {
         prob_eachphi_bn->Fill(bn1->phi_bn);
         prob_eachilon_bn->Fill(bn1->r_bn.Lon());
+	balloontree->Fill();
       }
 
       if (bn1->WHICHPATH==3) { // for banana plot
         //Set observation location
         bn1->setObservationLocation(int_banana, inu, antarctica, settings1);
       } //End else if (WHICHPATH==3) : Banana plot locations
-      balloontree->Fill();
-
 
       // No sources were turned on, so we have no neutrino. So we should try again. 
       if (!got_a_good_position) 
@@ -2018,7 +2017,9 @@ int main(int argc,  char **argv) {
         TauPtr->ptauf = ptauf;
         TauPtr->weight_nu_prob = interaction1->weight_nu_prob;
         TauPtr->weight_tau_prob = taus1->weight_tau_prob;
-        mytaus_tree->Fill();
+	
+	if (mytaus_tree->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
+	  mytaus_tree->Fill();
 
         //delete TauPtr;
       }//end tautrigger ==1
@@ -3152,7 +3153,7 @@ int main(int argc,  char **argv) {
           if (settings1->BORESIGHTS){ // i.e. if BORESIGHTS is true
             bn1->GetEcompHcompkvector(n_eplane,  n_hplane,  n_normal,  ray1->n_exit2bn_eachboresight[2][ilayer][ifold],  e_component_kvector[count_rx],  h_component_kvector[count_rx],  n_component_kvector[count_rx]);
             bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol_eachboresight[ilayer][ifold], e_component[count_rx],  h_component[count_rx],  n_component[count_rx]);
-            fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold] << " " << mag1_eachboresight[ilayer][ifold] << "\n";
+	    if (settings1->SLAC) fslac_hitangles << ilayer << "\t" << ifold << "\t" << hitangle_e << "\t" << hitangle_h << "\t" << e_component_kvector << "\t" << h_component_kvector << "\t" << fresnel1_eachboresight[ilayer][ifold] << " " << mag1_eachboresight[ilayer][ifold] << "\n";
           }
           else if (count_rx > 0)  
           {
@@ -3248,7 +3249,9 @@ int main(int argc,  char **argv) {
               rec_efield_array[ibw]=sqrt(pow(chantrig1->bwslice_volts_pole[ibw]/(undogaintoheight_e_array[ibw]*0.5), 2)+pow(chantrig1->bwslice_volts_polh[ibw]/(undogaintoheight_h_array[ibw]*0.5), 2));
               bwslice_vnoise_thislayer[ibw]=anita1->bwslice_vnoise[ilayer][ibw];// this is just for filling into a tree
             } // end loop over bandwidth slices
-            tree6b->Fill();
+
+	    if (tree6b->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
+	      tree6b->Fill();
           } // end if this is the closest antenna
 
           //+++++//+++++//+++++//+++++//+++++//+++++//+++++
@@ -3638,7 +3641,7 @@ int main(int argc,  char **argv) {
                   rfexit_db_array[j][i] = ray1->rfexit_db[j][i];
                 } //end for
               } //end for
-              if (vmmhz_tree->GetEntries()<20) {
+              if (settings1->HIST && vmmhz_tree->GetEntries()<20) {
                 vmmhz_tree->Fill();
               }
 
@@ -3978,12 +3981,11 @@ int main(int argc,  char **argv) {
         if (settings1->HIST==1 && !settings1->ONLYFINAL && anita1->tglob->GetEntries()<settings1->HIST_MAX_ENTRIES) {// all events
           // cout << "Filling global trigger tree.  inu is " << inu << "\n";
           anita1->tglob->Fill();
-
+	  anita1->tdata->Fill();
+	  anita1->tgaryanderic->Fill();
         }
 
         passes_thisevent=1; // flag this event as passing
-        anita1->tdata->Fill();
-        anita1->tgaryanderic->Fill();
       } // end if passing global trigger conditions
       else {
         passes_thisevent=0; // flag this event as not passing
