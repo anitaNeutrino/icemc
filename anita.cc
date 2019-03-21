@@ -1263,9 +1263,9 @@ void Anita::getQuickTrigNoiseFromFlight(Settings *settings1, double justNoise[HA
 	sigma*=norm;
 	realPart       = fRand->Gaus(0,sigma);
 	imPart         = fRand->Gaus(0,sigma);
-      }else {
-	imPart=realPart=0;
-      }
+    }else {
+      imPart=realPart=0;
+    }
     //    cout << " " << i << " " << trig << " " << dig << " " << trig/dig << " " << norm << endl;
     phasorsTrig[i] = FFTWComplex(realPart, imPart);
   }

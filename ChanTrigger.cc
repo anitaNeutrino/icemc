@@ -339,6 +339,7 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
   if (settings1->NOISEFROMFLIGHTTRIGGER){
     anita1->bwslice_rmsdiode[0][4] = anita1->bwslice_dioderms_fullband_allchan[0][iant][anita1->tuffIndex];
     anita1->bwslice_rmsdiode[1][4] = anita1->bwslice_dioderms_fullband_allchan[1][iant][anita1->tuffIndex];
+    anita1->bwslice_rmsdiode[1][4] = anita1->bwslice_rmsdiode[0][4];
   }
   
   // if we use the diode to perform an integral
@@ -1831,7 +1832,7 @@ void ChanTrigger::getNoiseFromFlight(Settings *settings1, Anita* anita1, int ant
 	realPart       = anita1->fRand->Gaus(0,sigma);
 	imPart         = anita1->fRand->Gaus(0,sigma);
       } else {
-	trigNorm=digNorm=realPart=imPart=0.;
+       	trigNorm=digNorm=realPart=imPart=0.;
       }
       phasorsDig[i]  = FFTWComplex(realPart*digNorm,  imPart*digNorm  );
       phasorsTrig[i] = FFTWComplex(realPart*trigNorm, imPart*trigNorm );
