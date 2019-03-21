@@ -1933,7 +1933,7 @@ int main(int argc,  char **argv) {
       sec1->GetTauDecay(interaction1->nuflavor, interaction1->current, taudecay,  emfrac_db,  hadfrac_db);
 
       // pick elasticity
-      elast_y=primary1->pickY(settings1, pnu, 0, 0);
+      elast_y=primary1->pickY(settings1, pnu, interaction1->nuflavor, interaction1->current);
       if (settings1->CONSTANTY==1) { // if we ask to make y a constant=0.2
         elast_y=0.2;
         interaction1->nuflavor="nue";
