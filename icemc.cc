@@ -3142,7 +3142,7 @@ int main(int argc,  char **argv) {
         bn1->GetEcompHcompEvector(settings1,  n_eplane,  n_hplane,  n_pol,  e_component[0],  h_component[0],  n_component[0]);
       }
       
-           for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
+      for (int ilayer=0; ilayer < settings1->NLAYERS; ilayer++) { // loop over layers on the payload
         for (int ifold=0;ifold<anita1->NRX_PHI[ilayer];ifold++) { // ifold loops over phi
           
           ChanTrigger *chantrig1 = new ChanTrigger();
@@ -3789,7 +3789,8 @@ int main(int argc,  char **argv) {
             truthEvPtr->weight1           = weight1;
             truthEvPtr->phaseWeight       = 1./interaction1->dnutries;
             truthEvPtr->timeWeight       = time_weight;
-
+	    truthEvPtr->tuffIndex = (short)anita1->tuffIndex;
+	    
             // for passed neutrinos:
             
 #ifdef ANITA3_EVENTCORRELATOR
