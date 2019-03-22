@@ -1519,7 +1519,7 @@ int main(int argc,  char **argv) {
   if (! src_model &&  spectra1->IsMonoenergetic() ){
     pnu=pow(10., settings1->EXPONENT);
     primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);    // get cross section and interaction length.
-    cout << "pnu,  sigma,  len_int_kgm2 are " << pnu << " " << sigma << " " << len_int_kgm2 << "\n";
+    cout << "pnu,  sigma and len_int_kgm2 (for nu CC) are " << pnu << " " << sigma << " " << len_int_kgm2 << "\n";
   }
 
   if (settings1->WRITEPOSFILE==1) {
@@ -1681,13 +1681,12 @@ int main(int argc,  char **argv) {
         if(settings1->USEDARTBOARD) pnu=spectra1->GetNuEnergy();
         else pnu=spectra1->GetCDFEnergy();
 
-        ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
-        // ierr=0 if the energy is too low for the parameterization
-        // ierr=1 otherwise
-        len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
-      }// end IsSpectrum
+      } // end IsSpectrum
 
-      
+      ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, interaction1->currentint);  // given neutrino momentum,  cross section and interaction length of neutrino.
+      // ierr=0 if the energy is too low for the parameterization
+      // ierr=1 otherwise
+      len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (interaction length is in water equivalent)
 
       n_interactions=1;
       count_pass=0;
@@ -1735,7 +1734,7 @@ int main(int argc,  char **argv) {
             dec= src->getDec()* TMath::RadToDeg(); // Get it make in deg
             objName = src->getName(); 
             pnu*=1e9; //GeV -> eV
-            ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);  // given neutrino momentum,  cross section and interaction length of neutrino.
+            ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, interaction1->currentint);  // given neutrino momentum,  cross section and interaction length of neutrino.
             len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
           }
 
@@ -1932,8 +1931,8 @@ int main(int argc,  char **argv) {
 
       sec1->GetTauDecay(interaction1->nuflavor, interaction1->current, taudecay,  emfrac_db,  hadfrac_db);
 
-      // pick elasticity
-      elast_y=primary1->pickY(settings1, pnu, interaction1->nuflavor, interaction1->current);
+      // pick elasticity (for now is done for neutrinos only)
+      elast_y=primary1->pickY(settings1, pnu, xsecParam_nutype, interaction1->currentint);
       if (settings1->CONSTANTY==1) { // if we ask to make y a constant=0.2
         elast_y=0.2;
         interaction1->nuflavor="nue";
@@ -3809,7 +3808,7 @@ int main(int argc,  char **argv) {
             truthEvPtr->source_index = which_source;
             truthEvPtr->RA = RA;
             truthEvPtr->dec = dec;
-            truthEvPtr->objName = objName;
+	    truthEvPtr->objName = objName;
             //
             
             for (int i=0;i<3;i++){
@@ -3898,8 +3897,8 @@ int main(int argc,  char **argv) {
 
             }
             
-            truthAnitaNuTree->Fill();
-            truthAnitaTree->Fill();
+	    truthAnitaNuTree->Fill();
+	    truthAnitaTree->Fill();
             delete truthEvPtr;
 #endif
 
@@ -4142,6 +4141,10 @@ int main(int argc,  char **argv) {
   summarytree->Fill();
 
 
+  // Recalculate the cross section because for the final volume approximation we just use the neutrino CC cross section
+  primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);
+  len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); 
+  
   // makes the output file
   Summarize(settings1, anita1, count1, spectra1, sig1, primary1, pnu, eventsfound, eventsfound_db, eventsfound_nfb, sigma, sum, antarctica->volume, antarctica->ice_area, km3sr, km3sr_e, km3sr_mu, km3sr_tau, foutput, distanceout, outputdir, bn1, src_model);
 
