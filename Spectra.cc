@@ -283,7 +283,6 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   {
       GetFlux("Kotera2010_mix_max.dat");
   }
-
   else if (EXPONENT==223)
   {
       GetFlux("Kotera2010_mix_min.dat");
@@ -291,6 +290,35 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   else if (EXPONENT==224)
   {
       GetFlux("Kotera2010_proton.dat");
+  }
+  // Recent papers, optimistic flux spectra
+  else if (EXPONENT==300)
+  {
+      GetFlux("heinze2018C.dat");
+  }
+  else if (EXPONENT==301)
+  {
+      GetFlux("vliet2018C.dat");
+  }
+  else if (EXPONENT==302)
+  {
+      GetFlux("biehlTDE2018C.dat");
+  }
+  else if (EXPONENT==303)
+  {
+      GetFlux("fang2017C.dat");
+  }
+  else if (EXPONENT==304)
+  {
+      GetFlux("fangPulsar2016C.dat");
+  }
+  else if (EXPONENT==305)
+  {
+      GetFlux("bonciolo2019C.dat");
+  }
+  else if (EXPONENT==306)
+  {
+      GetFlux("bonciolo2019cosmoMuC.dat");
   }
   
 
