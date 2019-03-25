@@ -1368,6 +1368,18 @@ string GetFluxFromNumber(int EXPONENT){
     {
       return ("bonciolo2019cosmoMuC.dat");
     }
+  else if (EXPONENT==307)
+    {
+      return ("wallFRIIevolutionC.dat");
+    }
+  else if (EXPONENT==308)
+    {
+      return ("vliet2018OptC.dat");
+    }
+  else if (EXPONENT==309)
+    {
+      return ("muraseAGN2017C.dat");
+    }
 
   
 

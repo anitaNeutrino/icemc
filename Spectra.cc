@@ -320,6 +320,18 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
   {
       GetFlux("bonciolo2019cosmoMuC.dat");
   }
+  else if (EXPONENT==307)
+  {
+      GetFlux("wallFRIIevolutionC.dat");
+  }
+  else if (EXPONENT==308)
+  {
+      GetFlux("vliet2018OptC.dat");
+  }
+  else if (EXPONENT==309)
+  {
+      GetFlux("muraseAGN2017C.dat");
+  }
   
 
   if(EXPONENT <6 || EXPONENT >29){//is spectrum

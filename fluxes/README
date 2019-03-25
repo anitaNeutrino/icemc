@@ -74,3 +74,9 @@ and from the second line, first column : energy in log, second column : flux E^2
 305. bonciolo2019C.dat-----Bonciolo's paper from arXiv:1808.07481, Fig 4, neutrino flux B (most optimistic)
 
 306. bonciolo2019cosmoMuC.dat-----Bonciolo's paper from arXiv:1808.07481, Fig 4, cosmogenic muon neutrino
+
+307. wallFRIIevolutionC.dat-----Graph taken from Kotera's 2011 paper: arXiv:1101.4256 Figure 12 pink line, originally from Wall et al. 2005 (most optimistic)
+
+308. vliet2018OptC.dat-----Vliet's paper from arXiv:1707.04511, Fig 5(b), combined fit model (most optimistic)
+
+309. muraseAGN2017C.dat-----Murase's paper from arXiv:1511.01590, Fig 4 red dashed cosmogenic (most optimistic)
