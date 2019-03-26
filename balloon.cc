@@ -438,7 +438,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
          int best_igps =  TMath::BinarySearch(N, times, (double) settings1->PAYLOAD_USE_SPECIFIC_TIME); 
          start_igps = best_igps;
          int end_igps = best_igps;
-
+         
          while (times[start_igps] > settings1->PAYLOAD_USE_SPECIFIC_TIME - settings1->PAYLOAD_USE_SPECIFIC_TIME_DELTA)
          {
            start_igps--; 
@@ -454,12 +454,33 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
       }
 
       igps = start_igps + int(randomNumber*ngps); // use random position 
-
+      bool adjustedTime = false;
       //////////////////////////// TEMPORARY HACKS FOR ANITA4 !!!!!!      	
-      if (WHICHPATH==9 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660) || (igps==17862) ) ) igps=igps+30;
+      if (WHICHPATH==9 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660) || (igps==17862) ) )
+        {
+          igps+=30;
+          igps=igps%flightdatachain->GetEntries(); // make sure it's not beyond the maximum entry number
+        }
       
       flightdatachain->GetEvent(igps); // this grabs the balloon position data for this event
       realTime_flightdata = realTime_flightdata_temp;
+      ///// If the realTime points to a time associated with a header file (and avr spectra) that doesn't exist, look for another event
+      ///// i.e., run 46, run 60-61
+      if(WHICHPATH==9)
+        {
+          //std::cout << "realTime_flightdata  = " << realTime_flightdata << std::endl;
+          // Small portion of flight, so shouldn't cause slowdown
+            while( (realTime_flightdata >= 1480725528 && realTime_flightdata <= 1480730678) || (realTime_flightdata >= 1480796516 && realTime_flightdata <= 1480804184) )
+            {
+              adjustedTime = true;
+              //std::cout << "BAD TIME DETECTED: " << realTime_flightdata << std::endl;
+              igps+=30; // pick another time, out range
+              igps=igps%flightdatachain->GetEntries(); // make sure it's not beyond the maximum entry number
+              flightdatachain->GetEvent(igps);	  // get new event
+              realTime_flightdata = realTime_flightdata_temp; // recalculate fight time with new igps
+            }
+            //if(adjustedTime==true){std::cout << "GOOD TIME DETECTED = " << realTime_flightdata << std::endl;}
+        }
       
       if(settings1->TUFFSTATUS==1){
         anita1->tuffIndex = getTuffIndex(realTime_flightdata);
