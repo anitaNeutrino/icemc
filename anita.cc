@@ -1097,82 +1097,107 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
     static double tempdiodeoutput[1000][NFOUR];
 
-    for (int ipol=0; ipol<2; ipol++){
+    if (settings1->WHICH==9) { // ANITA-3
+      for (int ipol=0; ipol<2; ipol++){
+	for (int iant=0; iant<48; iant++){
+	  // This takes for ages, and may appear to hang... some basic flushing to show user the status, esp for A4
+	  std::cout << "Using noise from flight to get rms of channel " << (ipol == 0 ? iant : 48+iant) + 1 << " of 96\r" << std::flush;
+	  if((ipol == 0 ? iant : 48+iant) + 1 == 96){std::cout << std::endl;}
+	
+	  for (int ituff=0; ituff<ntuffs; ituff++){
+	    memset(tempdiodeoutput, 0, sizeof(tempdiodeoutput) );
+
+	    for (int i=0;i<ngeneratedevents;i++) {
+	  
+	      getQuickTrigNoiseFromFlight(settings1, quickNoise, ipol, iant, ituff);
+	  
+	      myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
+
+	      // First calculate the mean
+	      for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+		bwslice_diodemean_fullband_allchan[ipol][iant][ituff]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+		//	  cout << m << " " << timedomain_output[j][m] << " " << ((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)) << endl;
+	  
+	      }
+	    }
+
+	    // Then get the RMS
+	    for (int i=0;i<ngeneratedevents;i++) {
+	  
+	      for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+		bwslice_dioderms_fullband_allchan[ipol][iant][ituff]+=(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant][ituff])*(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant][ituff])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	      }
+
+	    }
+	
+	    bwslice_dioderms_fullband_allchan[ipol][iant][ituff]=sqrt(bwslice_dioderms_fullband_allchan[ipol][iant][ituff]);
+	    //	  cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << ituff << " " << bwslice_diodemean_fullband_allchan[ipol][iant][ituff] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant][ituff] << endl;  
+	
+	  }
+	}
+      	
+      }
+
+    } else if (settings1->WHICH==10){ // ANITA-4
+
+      double quickNoise2[2][HALFNFOUR];
+      double lcprcpNoise[2][HALFNFOUR];
+      
+      static double tempdiodeoutput2[1000][NFOUR];
+      
       for (int iant=0; iant<48; iant++){
 	// This takes for ages, and may appear to hang... some basic flushing to show user the status, esp for A4
-	std::cout << "Using noise from flight to get rms of channel " << (ipol == 0 ? iant : 48+iant) + 1 << " of 96\r" << std::flush;
-	if((ipol == 0 ? iant : 48+iant) + 1 == 96){std::cout << std::endl;}
+	std::cout << "Using noise from flight to get rms of channel pair " << iant + 1 << " of 48\r" << std::flush;
+	if( iant + 1 == 48 ){std::cout << std::endl;}
+	
 	for (int ituff=0; ituff<ntuffs; ituff++){
+
 	  memset(tempdiodeoutput, 0, sizeof(tempdiodeoutput) );
-
+	  memset(tempdiodeoutput2, 0, sizeof(tempdiodeoutput2) );
+	  
 	  for (int i=0;i<ngeneratedevents;i++) {
-	  
-	    getQuickTrigNoiseFromFlight(settings1, quickNoise, ipol, iant, ituff);
-	  
-	    myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
 
+	    for (int ipol=0; ipol<2; ipol++){
+	      getQuickTrigNoiseFromFlight(settings1, quickNoise2[ipol], ipol, iant, ituff);
+	    }
+	    
+	    Tools::ConvertHVtoLRTimedomain(NFOUR, quickNoise2[0], quickNoise2[1], lcprcpNoise[0], lcprcpNoise[1]);
+	    myconvlv(lcprcpNoise[0],NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
+	    myconvlv(lcprcpNoise[1],NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput2[i]);
+	
 	    // First calculate the mean
 	    for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	      bwslice_diodemean_fullband_allchan[ipol][iant][ituff]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	      bwslice_diodemean_fullband_allchan[0][iant][ituff]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	      bwslice_diodemean_fullband_allchan[1][iant][ituff]+=tempdiodeoutput2[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
 	      //	  cout << m << " " << timedomain_output[j][m] << " " << ((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)) << endl;
-	  
+	      
 	    }
+	    
 	  }
-
+	  
 	  // Then get the RMS
 	  for (int i=0;i<ngeneratedevents;i++) {
-	  
+	    
 	    for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	      bwslice_dioderms_fullband_allchan[ipol][iant][ituff]+=(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant][ituff])*(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant][ituff])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	      bwslice_dioderms_fullband_allchan[0][iant][ituff]+=(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[0][iant][ituff])*(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[0][iant][ituff])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	      bwslice_dioderms_fullband_allchan[1][iant][ituff]+=(tempdiodeoutput2[i][m]-bwslice_diodemean_fullband_allchan[1][iant][ituff])*(tempdiodeoutput2[i][m]-bwslice_diodemean_fullband_allchan[1][iant][ituff])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
 	    }
-
+	    
 	  }
-	
-	  bwslice_dioderms_fullband_allchan[ipol][iant][ituff]=sqrt(bwslice_dioderms_fullband_allchan[ipol][iant][ituff]);
+	  
+	  bwslice_dioderms_fullband_allchan[0][iant][ituff]=sqrt(bwslice_dioderms_fullband_allchan[0][iant][ituff]);
+	  bwslice_dioderms_fullband_allchan[1][iant][ituff]=sqrt(bwslice_dioderms_fullband_allchan[1][iant][ituff]);
 	  //	  cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << ituff << " " << bwslice_diodemean_fullband_allchan[ipol][iant][ituff] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant][ituff] << endl;  
-	
+	  
 	}
       }
-      	
+      
     }
   
-    // double thresh_begin=-1.;
-    // double thresh_end=-11.;
-    // double thresh_step=1.;
   
-    // double rate[5][100];
-    // for (double testthresh=thresh_begin;testthresh>=thresh_end;testthresh-=thresh_step) {
-    //   for (int j=0;j<5;j++) {
-    // 	passes[j]=0;
-    //   }
-    //   for (int i=0;i<ngeneratedevents;i++) {
-  	
-    // 	for (int j=4;j<5;j++) {
+  
 
-    // 	  getQuickTrigNoiseFromFlight(quickNoise, 0, 0);
 
-    // 	  myconvlv(quickNoise,NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
-  	
-    // 	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-  	    
-    // 	    if (timedomain_output[j][m+1]<bwslice_rmsdiode[j]*testthresh) {
-    // 	      passes[j]++;
-    // 	      m+=(int)(DEADTIME/TIMESTEP);
-    // 	    }
-  	    	    
-    // 	  } // end loop over samples where diode function is fully contained
-    // 	}
-    //   }
-    //   // brian m.
-    //   for (int j=0;j<5;j++) {
-    // 	int ibin=(int)fabs((testthresh-thresh_begin)/thresh_step);
-    // 	// relthresh[j][ibin]=fabs(testthresh);
-    // 	rate[j][ibin]=passes[j]/((double)ngeneratedevents*((double)NFOUR/2*(TIMESTEP)-maxt_diode));
-    // 	if (rate[j][ibin]!=0)
-    // 	  rate[j][ibin]=log10(rate[j][ibin]);
-    // 	//cout << "Threshold " << testthresh << " For the " << j << "th band, rate is " << rate[j][ibin] << "\n";
-    //   }
-    // }
    
 #endif 
   }

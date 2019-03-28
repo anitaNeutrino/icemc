@@ -46,50 +46,9 @@ void ChanTrigger::ConvertEHtoLREnergy(double e_component,double h_component,doub
     
   lcp_component=(e_component+h_component)/2;
   rcp_component=lcp_component;
-    
+  
 } //ConvertEHtoLREnergy
 
-void ChanTrigger::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
-					  double *hvolts,
-					  double *left,double *right) {
-    
-  // nfour is the real and complex values from -F to F
-    
-  // first perform fft on each of h and v
-  // find l, r polarizations
-  // take fft back
-    
-  double hvolts_f[nfour/2];
-  double vvolts_f[nfour/2];
-  for (int i=0;i<nfour/2;i++) {
-    hvolts_f[i]=hvolts[i];
-    vvolts_f[i]=vvolts[i];
-  }
-  
-  Tools::realft(hvolts_f,1,nfour/2);
-  Tools::realft(vvolts_f,1,nfour/2);
-    
-  for (int i=0;i<nfour/4;i++) {
-    right[2*i]=1/sqrt(2.)*(vvolts_f[2*i]-hvolts_f[2*i+1]); 
-    left[2*i]=1/sqrt(2.)*(hvolts_f[2*i]-vvolts_f[2*i+1]);
-		
-    right[2*i+1]=1/sqrt(2.)*(vvolts_f[2*i+1]+hvolts_f[2*i]); 
-    left[2*i+1]=1/sqrt(2.)*(hvolts_f[2*i+1]+vvolts_f[2*i]);
-		
-
-    left[2*i]=left[2*i]*2./((double)nfour/2.);
-    left[2*i+1]=left[2*i+1]*2./((double)nfour/2.);
-		
-    right[2*i]=right[2*i]*2./((double)nfour/2.);
-    right[2*i+1]=right[2*i+1]*2./((double)nfour/2.);
-  }
-    
-  Tools::realft(left,-1,nfour/2);
-  Tools::realft(right,-1,nfour/2);
-    
-  // now take fft back
-    
-}
 
 
 void ChanTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
@@ -404,8 +363,8 @@ void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, Glo
       
       // Convert Horiz and Vert polarization
       // To Left and Right circular polarization
-      ConvertHVtoLRTimedomain(anita1->NFOUR, v_banding_rfcm_forfft[0][iband], v_banding_rfcm_forfft[1][iband], vm_banding_rfcm_forfft[0][iband],           vm_banding_rfcm_forfft[1][iband]);
-      ConvertHVtoLRTimedomain(anita1->NFOUR, justNoise_trigPath[0]          , justNoise_trigPath[1],           vm_banding_rfcm_forfft_justNoise[0][iband], vm_banding_rfcm_forfft_justNoise[1][iband]);
+      Tools::ConvertHVtoLRTimedomain(anita1->NFOUR, v_banding_rfcm_forfft[0][iband], v_banding_rfcm_forfft[1][iband], vm_banding_rfcm_forfft[0][iband],           vm_banding_rfcm_forfft[1][iband]);
+      Tools::ConvertHVtoLRTimedomain(anita1->NFOUR, justNoise_trigPath[0]          , justNoise_trigPath[1],           vm_banding_rfcm_forfft_justNoise[0][iband], vm_banding_rfcm_forfft_justNoise[1][iband]);
       
     } else {
   

@@ -149,22 +149,6 @@ class ChanTrigger {
    */ 
   static void ConvertEHtoLREnergy(double,double,double&,double&);
 
-  //! Convert L1 trigger of the Anita trigger scheme
-  /**
-   * Convert H and V components to left and right circular polarization
-   * in time domain
-   * 
-   * @param nfour :: const int - number of fourier points
-   * @param vvolts :: double * - array of voltage values (VPOL)
-   * @param hvolts :: double * - array of voltage values (HPOL)
-   * @param left :: double * - array of voltage values (LCP)
-   * @param right :: double * - array of voltage values (RCP)
-   */ 
-  void ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
-			       double *hvolts,
-			       double *left,double *right);
-
-
   //!	The L1 trigger of the Anita trigger scheme
   /**
    * 
