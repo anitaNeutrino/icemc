@@ -243,6 +243,49 @@ string GetFluxFromNumber(int EXPONENT){
     {
       return ("Kotera2010_proton.dat");
     }
+  // Recent papers, optimistic flux spectra
+  else if (EXPONENT==300)
+    {
+      return ("heinze2018C.dat");
+    }
+  else if (EXPONENT==301)
+    {
+      return ("vliet2018C.dat");
+    }
+  else if (EXPONENT==302)
+    {
+      return ("biehlTDE2018C.dat");
+    }
+  else if (EXPONENT==303)
+    {
+      return ("fang2017C.dat");
+    }
+  else if (EXPONENT==304)
+    {
+      return ("fangPulsar2016C.dat");
+    }
+  else if (EXPONENT==305)
+    {
+      return ("bonciolo2019C.dat");
+    }
+  else if (EXPONENT==306)
+    {
+      return ("bonciolo2019cosmoMuC.dat");
+    }
+  else if (EXPONENT==307)
+    {
+      return ("wallFRIIevolutionC.dat");
+    }
+  else if (EXPONENT==308)
+    {
+      return ("vliet2018OptC.dat");
+    }
+  else if (EXPONENT==309)
+    {
+      return ("muraseAGN2017C.dat");
+    }
+  
+  
   
 
 

@@ -737,3 +737,47 @@ double Tools::calculateSNR(double justSig[512], double justNoise[512]){
   return p2p/(2*rms);
 
 }
+
+
+
+void Tools::ConvertHVtoLRTimedomain(const int nfour,double *vvolts,
+					  double *hvolts,
+					  double *left,double *right) {
+    
+  // nfour is the real and complex values from -F to F
+    
+  // first perform fft on each of h and v
+  // find l, r polarizations
+  // take fft back
+    
+  double hvolts_f[nfour/2];
+  double vvolts_f[nfour/2];
+  for (int i=0;i<nfour/2;i++) {
+    hvolts_f[i]=hvolts[i];
+    vvolts_f[i]=vvolts[i];
+  }
+  
+  realft(hvolts_f,1,nfour/2);
+  realft(vvolts_f,1,nfour/2);
+    
+  for (int i=0;i<nfour/4;i++) {
+    right[2*i]=1/sqrt(2.)*(vvolts_f[2*i]-hvolts_f[2*i+1]); 
+    left[2*i]=1/sqrt(2.)*(hvolts_f[2*i]-vvolts_f[2*i+1]);
+		
+    right[2*i+1]=1/sqrt(2.)*(vvolts_f[2*i+1]+hvolts_f[2*i]); 
+    left[2*i+1]=1/sqrt(2.)*(hvolts_f[2*i+1]+vvolts_f[2*i]);
+		
+
+    left[2*i]=left[2*i]*2./((double)nfour/2.);
+    left[2*i+1]=left[2*i+1]*2./((double)nfour/2.);
+		
+    right[2*i]=right[2*i]*2./((double)nfour/2.);
+    right[2*i+1]=right[2*i+1]*2./((double)nfour/2.);
+  }
+    
+  realft(left,-1,nfour/2);
+  realft(right,-1,nfour/2);
+    
+  // now take fft back
+    
+}

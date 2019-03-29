@@ -163,49 +163,7 @@ Anita::Anita() {
       mkdir(outputdir,S_IRWXU);
     }
   
-    // Prepare the file and tree for the coherent sum trigger's data tree
-  coherent_datafile = new TFile("outputs/coherent_sum_data_file.root","RECREATE");
-  coherent_waveform_sum_tree = new TTree("coherent_waveform_sum_tree", "Coherent Waveform Sum");
-  coherent_waveform_sum_tree->Branch("event_number", &cwst_event_number);
-  coherent_waveform_sum_tree->Branch("center_phi_sector", &cwst_center_phi_sector);
-  coherent_waveform_sum_tree->Branch("rms_noise", &cwst_rms_noise);
-  coherent_waveform_sum_tree->Branch("actual_rms", &cwst_actual_rms);
-  coherent_waveform_sum_tree->Branch("threshold", &cwst_threshold);
-  coherent_waveform_sum_tree->Branch("window_start", &cwst_window_start);
-  coherent_waveform_sum_tree->Branch("window_end", &cwst_window_end);
-    
-  coherent_waveform_sum_tree->Branch("deg_theta", &cwst_deg_theta);
-  coherent_waveform_sum_tree->Branch("deg_phi", &cwst_deg_phi);
-    
-  coherent_waveform_sum_tree->Branch("actual_deg_theta", &cwst_actual_deg_theta);
-  coherent_waveform_sum_tree->Branch("actual_deg_phi", &cwst_actual_deg_phi);
-    
-  coherent_waveform_sum_tree->Branch("timesteps", cwst_timesteps);
-    
-  for (unsigned i = 0; i < 48; ++i) {
-    cwst_RXs[i].waveform = new vector <double>(HALFNFOUR, 0.);
-    cwst_RXs[i].digitized = new vector <double>(HALFNFOUR, 0.);
-    coherent_waveform_sum_tree->Branch(Form("rx%u", i), &(cwst_RXs[i]));
-  }
-    
-  for (unsigned int i = 0; i < 9; i++) {
-    cwst_aligned_wfms[i].digitized = new vector <double>(HALFNFOUR, 0.);
-    coherent_waveform_sum_tree->Branch(Form("aligned_wfms%u", i), &(cwst_aligned_wfms[i]));
-    /*
-    //coherent_waveform_sum_tree->Branch(Form("whole_wfms%u", i), &(cwst_whole_wfms[i]));
-    cwst_whole_wfms[i] = new vector <double>(HALFNFOUR, 0.);
-    cwst_wfms[i] = new vector <double>(HALFNFOUR, 0.);
-    cwst_aligned_wfms[i] = new vector <double>(HALFNFOUR, 0.);
-    coherent_waveform_sum_tree->Branch(Form("whole_wfms%u", i), &(cwst_whole_wfms[i]));
-    coherent_waveform_sum_tree->Branch(Form("wfms%u", i), &(cwst_wfms[i]));
-    coherent_waveform_sum_tree->Branch(Form("aligned_wfms%u", i), &(cwst_aligned_wfms[i]));
-    */
-  }
-	
-  coherent_waveform_sum_tree->Branch("summed_wfm", &cwst_summed_wfm);
-  coherent_waveform_sum_tree->Branch("power_of_summed_wfm", &cwst_power_of_summed_wfm);
-  coherent_waveform_sum_tree->Branch("power", &cwst_power);
-  // End of preparition for the coherent sum trigger's data tree
+  
 }
 
 Anita::~Anita(){
@@ -555,7 +513,52 @@ void Anita::Initialize(Settings *settings1,ofstream &foutput,int thisInu, TStrin
   tglob->Branch("l1_passing_allantennas",&l1_passing_allantennas,"l1_passing_allantennas[48]/I");
   
   
+
+  // Prepare the file and tree for the coherent sum trigger's data tree
+  coherent_datafile = new TFile(Form("%s/coherent_sum_data_file.root", outputdir.Data()),"RECREATE");
+  coherent_waveform_sum_tree = new TTree("coherent_waveform_sum_tree", "Coherent Waveform Sum");
+  coherent_waveform_sum_tree->Branch("event_number", &cwst_event_number);
+  coherent_waveform_sum_tree->Branch("center_phi_sector", &cwst_center_phi_sector);
+  coherent_waveform_sum_tree->Branch("rms_noise", &cwst_rms_noise);
+  coherent_waveform_sum_tree->Branch("actual_rms", &cwst_actual_rms);
+  coherent_waveform_sum_tree->Branch("threshold", &cwst_threshold);
+  coherent_waveform_sum_tree->Branch("window_start", &cwst_window_start);
+  coherent_waveform_sum_tree->Branch("window_end", &cwst_window_end);
     
+  coherent_waveform_sum_tree->Branch("deg_theta", &cwst_deg_theta);
+  coherent_waveform_sum_tree->Branch("deg_phi", &cwst_deg_phi);
+    
+  coherent_waveform_sum_tree->Branch("actual_deg_theta", &cwst_actual_deg_theta);
+  coherent_waveform_sum_tree->Branch("actual_deg_phi", &cwst_actual_deg_phi);
+    
+  coherent_waveform_sum_tree->Branch("timesteps", cwst_timesteps);
+    
+  for (unsigned i = 0; i < 48; ++i) {
+    cwst_RXs[i].waveform = new vector <double>(HALFNFOUR, 0.);
+    cwst_RXs[i].digitized = new vector <double>(HALFNFOUR, 0.);
+    coherent_waveform_sum_tree->Branch(Form("rx%u", i), &(cwst_RXs[i]));
+  }
+    
+  for (unsigned int i = 0; i < 9; i++) {
+    cwst_aligned_wfms[i].digitized = new vector <double>(HALFNFOUR, 0.);
+    coherent_waveform_sum_tree->Branch(Form("aligned_wfms%u", i), &(cwst_aligned_wfms[i]));
+    /*
+    //coherent_waveform_sum_tree->Branch(Form("whole_wfms%u", i), &(cwst_whole_wfms[i]));
+    cwst_whole_wfms[i] = new vector <double>(HALFNFOUR, 0.);
+    cwst_wfms[i] = new vector <double>(HALFNFOUR, 0.);
+    cwst_aligned_wfms[i] = new vector <double>(HALFNFOUR, 0.);
+    coherent_waveform_sum_tree->Branch(Form("whole_wfms%u", i), &(cwst_whole_wfms[i]));
+    coherent_waveform_sum_tree->Branch(Form("wfms%u", i), &(cwst_wfms[i]));
+    coherent_waveform_sum_tree->Branch(Form("aligned_wfms%u", i), &(cwst_aligned_wfms[i]));
+    */
+  }
+	
+  coherent_waveform_sum_tree->Branch("summed_wfm", &cwst_summed_wfm);
+  coherent_waveform_sum_tree->Branch("power_of_summed_wfm", &cwst_power_of_summed_wfm);
+  coherent_waveform_sum_tree->Branch("power", &cwst_power);
+  // End of preparition for the coherent sum trigger's data tree
+  
+  
 }
 
 void Anita::initializeFixedPowerThresholds(ofstream &foutput){
@@ -1094,82 +1097,107 @@ void Anita::setDiodeRMS(Settings *settings1, TString outputdir){
 
     static double tempdiodeoutput[1000][NFOUR];
 
-    for (int ipol=0; ipol<2; ipol++){
+    if (settings1->WHICH==9) { // ANITA-3
+      for (int ipol=0; ipol<2; ipol++){
+	for (int iant=0; iant<48; iant++){
+	  // This takes for ages, and may appear to hang... some basic flushing to show user the status, esp for A4
+	  std::cout << "Using noise from flight to get rms of channel " << (ipol == 0 ? iant : 48+iant) + 1 << " of 96\r" << std::flush;
+	  if((ipol == 0 ? iant : 48+iant) + 1 == 96){std::cout << std::endl;}
+	
+	  for (int ituff=0; ituff<ntuffs; ituff++){
+	    memset(tempdiodeoutput, 0, sizeof(tempdiodeoutput) );
+
+	    for (int i=0;i<ngeneratedevents;i++) {
+	  
+	      getQuickTrigNoiseFromFlight(settings1, quickNoise, ipol, iant, ituff);
+	  
+	      myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
+
+	      // First calculate the mean
+	      for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+		bwslice_diodemean_fullband_allchan[ipol][iant][ituff]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+		//	  cout << m << " " << timedomain_output[j][m] << " " << ((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)) << endl;
+	  
+	      }
+	    }
+
+	    // Then get the RMS
+	    for (int i=0;i<ngeneratedevents;i++) {
+	  
+	      for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
+		bwslice_dioderms_fullband_allchan[ipol][iant][ituff]+=(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant][ituff])*(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant][ituff])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	      }
+
+	    }
+	
+	    bwslice_dioderms_fullband_allchan[ipol][iant][ituff]=sqrt(bwslice_dioderms_fullband_allchan[ipol][iant][ituff]);
+	    //	  cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << ituff << " " << bwslice_diodemean_fullband_allchan[ipol][iant][ituff] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant][ituff] << endl;  
+	
+	  }
+	}
+      	
+      }
+
+    } else if (settings1->WHICH==10){ // ANITA-4
+
+      double quickNoise2[2][HALFNFOUR];
+      double lcprcpNoise[2][HALFNFOUR];
+      
+      static double tempdiodeoutput2[1000][NFOUR];
+      
       for (int iant=0; iant<48; iant++){
 	// This takes for ages, and may appear to hang... some basic flushing to show user the status, esp for A4
-	std::cout << "Using noise from flight to get rms of channel " << (ipol == 0 ? iant : 48+iant) + 1 << " of 96\r" << std::flush;
-	if((ipol == 0 ? iant : 48+iant) + 1 == 96){std::cout << std::endl;}
+	std::cout << "Using noise from flight to get rms of channel pair " << iant + 1 << " of 48\r" << std::flush;
+	if( iant + 1 == 48 ){std::cout << std::endl;}
+	
 	for (int ituff=0; ituff<ntuffs; ituff++){
+
 	  memset(tempdiodeoutput, 0, sizeof(tempdiodeoutput) );
-
+	  memset(tempdiodeoutput2, 0, sizeof(tempdiodeoutput2) );
+	  
 	  for (int i=0;i<ngeneratedevents;i++) {
-	  
-	    getQuickTrigNoiseFromFlight(settings1, quickNoise, ipol, iant, ituff);
-	  
-	    myconvlv(quickNoise,NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
 
+	    for (int ipol=0; ipol<2; ipol++){
+	      getQuickTrigNoiseFromFlight(settings1, quickNoise2[ipol], ipol, iant, ituff);
+	    }
+	    
+	    Tools::ConvertHVtoLRTimedomain(NFOUR, quickNoise2[0], quickNoise2[1], lcprcpNoise[0], lcprcpNoise[1]);
+	    myconvlv(lcprcpNoise[0],NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput[i]);
+	    myconvlv(lcprcpNoise[1],NFOUR,fdiode_real[4],mindiodeconvl[4],onediodeconvl[4],power_noise_eachband[4],tempdiodeoutput2[i]);
+	
 	    // First calculate the mean
 	    for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	      bwslice_diodemean_fullband_allchan[ipol][iant][ituff]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	      bwslice_diodemean_fullband_allchan[0][iant][ituff]+=tempdiodeoutput[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	      bwslice_diodemean_fullband_allchan[1][iant][ituff]+=tempdiodeoutput2[i][m]/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
 	      //	  cout << m << " " << timedomain_output[j][m] << " " << ((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP)) << endl;
-	  
+	      
 	    }
+	    
 	  }
-
+	  
 	  // Then get the RMS
 	  for (int i=0;i<ngeneratedevents;i++) {
-	  
+	    
 	    for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-	      bwslice_dioderms_fullband_allchan[ipol][iant][ituff]+=(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant][ituff])*(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[ipol][iant][ituff])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	      bwslice_dioderms_fullband_allchan[0][iant][ituff]+=(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[0][iant][ituff])*(tempdiodeoutput[i][m]-bwslice_diodemean_fullband_allchan[0][iant][ituff])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
+	      bwslice_dioderms_fullband_allchan[1][iant][ituff]+=(tempdiodeoutput2[i][m]-bwslice_diodemean_fullband_allchan[1][iant][ituff])*(tempdiodeoutput2[i][m]-bwslice_diodemean_fullband_allchan[1][iant][ituff])/((double)ngeneratedevents*((double)NFOUR/2-maxt_diode/TIMESTEP));
 	    }
-
+	    
 	  }
-	
-	  bwslice_dioderms_fullband_allchan[ipol][iant][ituff]=sqrt(bwslice_dioderms_fullband_allchan[ipol][iant][ituff]);
+	  
+	  bwslice_dioderms_fullband_allchan[0][iant][ituff]=sqrt(bwslice_dioderms_fullband_allchan[0][iant][ituff]);
+	  bwslice_dioderms_fullband_allchan[1][iant][ituff]=sqrt(bwslice_dioderms_fullband_allchan[1][iant][ituff]);
 	  //	  cout << "EACH CHAN MEAN, RMS " <<  ipol << " " << iant << " " << ituff << " " << bwslice_diodemean_fullband_allchan[ipol][iant][ituff] << " , " << bwslice_dioderms_fullband_allchan[ipol][iant][ituff] << endl;  
-	
+	  
 	}
       }
-      	
+      
     }
   
-    // double thresh_begin=-1.;
-    // double thresh_end=-11.;
-    // double thresh_step=1.;
   
-    // double rate[5][100];
-    // for (double testthresh=thresh_begin;testthresh>=thresh_end;testthresh-=thresh_step) {
-    //   for (int j=0;j<5;j++) {
-    // 	passes[j]=0;
-    //   }
-    //   for (int i=0;i<ngeneratedevents;i++) {
-  	
-    // 	for (int j=4;j<5;j++) {
+  
 
-    // 	  getQuickTrigNoiseFromFlight(quickNoise, 0, 0);
 
-    // 	  myconvlv(quickNoise,NFOUR,fdiode_real[j],mindiodeconvl[j],onediodeconvl[j],power_noise_eachband[j],timedomain_output[j]);
-  	
-    // 	  for (int m=(int)(maxt_diode/TIMESTEP);m<NFOUR/2;m++) {
-  	    
-    // 	    if (timedomain_output[j][m+1]<bwslice_rmsdiode[j]*testthresh) {
-    // 	      passes[j]++;
-    // 	      m+=(int)(DEADTIME/TIMESTEP);
-    // 	    }
-  	    	    
-    // 	  } // end loop over samples where diode function is fully contained
-    // 	}
-    //   }
-    //   // brian m.
-    //   for (int j=0;j<5;j++) {
-    // 	int ibin=(int)fabs((testthresh-thresh_begin)/thresh_step);
-    // 	// relthresh[j][ibin]=fabs(testthresh);
-    // 	rate[j][ibin]=passes[j]/((double)ngeneratedevents*((double)NFOUR/2*(TIMESTEP)-maxt_diode));
-    // 	if (rate[j][ibin]!=0)
-    // 	  rate[j][ibin]=log10(rate[j][ibin]);
-    // 	//cout << "Threshold " << testthresh << " For the " << j << "th band, rate is " << rate[j][ibin] << "\n";
-    //   }
-    // }
    
 #endif 
   }
@@ -1260,9 +1288,9 @@ void Anita::getQuickTrigNoiseFromFlight(Settings *settings1, double justNoise[HA
 	sigma*=norm;
 	realPart       = fRand->Gaus(0,sigma);
 	imPart         = fRand->Gaus(0,sigma);
-      }else {
-	imPart=realPart=0;
-      }
+    }else {
+      imPart=realPart=0;
+    }
     //    cout << " " << i << " " << trig << " " << dig << " " << trig/dig << " " << norm << endl;
     phasorsTrig[i] = FFTWComplex(realPart, imPart);
   }

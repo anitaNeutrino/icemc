@@ -38,7 +38,6 @@ and from the second line, first column : energy in log, second column : flux E^2
 
 112. yuksel_sfh.dat-----Yuksel's paper from astro-ph/0610481v2 9 Nov 2006 FIG4
 
-
 200. Ave2005_Fe_Emax21.0.dat-----Ave's paper from Astroparticle Physics 23. (2005) 19-29, Fig.6
 
 201. Ave2005_Fe_Emax21.5.dat-----Ave's paper from Astroparticle Physics 23. (2005) 19-29, Fig.6
@@ -62,3 +61,22 @@ and from the second line, first column : energy in log, second column : flux E^2
 224. Kotera2010_proton.dat------Kotera's paper from arXiv:1009.1382v2, Fig.9 top pink dashed line
 
 
+300. heinze2018C.dat-----Heinze's presentation at TeVPA 2018, Page 10, best fit
+
+301. vliet2018C.dat-----Vliet's paper from arXiv:1707.04511, Fig 4(a), combined fit model
+
+302. biehlTDE2018C.dat-----Biehl's paper from arXiv:1711.03555, Fig 1, TDE neutrino flux
+
+303. fang2017C.dat-----Fang's paper from arXiv:1707.04263, Fig 5, default case (most optimistic)
+
+304. fangPulsar2016C.dat-----Fang's paper from arXiv:1311.2044, Fig 3, SFR (most optimistic)
+
+305. bonciolo2019C.dat-----Bonciolo's paper from arXiv:1808.07481, Fig 4, neutrino flux B (most optimistic)
+
+306. bonciolo2019cosmoMuC.dat-----Bonciolo's paper from arXiv:1808.07481, Fig 4, cosmogenic muon neutrino
+
+307. wallFRIIevolutionC.dat-----Graph taken from Kotera's 2011 paper: arXiv:1101.4256 Figure 12 pink line, originally from Wall et al. 2005 (most optimistic)
+
+308. vliet2018OptC.dat-----Vliet's paper from arXiv:1707.04511, Fig 5(b), combined fit model (most optimistic)
+
+309. muraseAGN2017C.dat-----Murase's paper from arXiv:1511.01590, Fig 4 red dashed cosmogenic (most optimistic)
