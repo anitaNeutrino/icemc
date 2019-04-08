@@ -42,6 +42,8 @@ To run icemc do:
 ``` bash
 ./icemc -i {inputFile} -o {outputDirectory} -r {runNumber} -n {numberOfNeutrinos} -t {triggerThreshold} -e {energyExponent}
 ```
+For only running over a single event, the ```-x {eventNumber}``` option can be used.
+
 If parameters are not specified
 
    * inputs from inputs.conf are used
