@@ -756,7 +756,7 @@ void Balloon::setr_bn(double latitude,double longitude) {
 }
 
 
-void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, Settings *settings1, IceModel *antarctica1, Ray *ray1, int &beyondhorizon) {
+void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *anita1, Settings *settings1, IceModel *antarctica1, Ray *ray1, int &beyondhorizon,  Vector * force_dir) {
     
   // double distance=1.E7;
   double phi=0,theta=0;
@@ -766,7 +766,7 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
   
   if (settings1->UNBIASED_SELECTION==1) {
 
-    if (antarctica1->PickUnbiased(interaction1,antarctica1)) { // pick neutrino direction and interaction point
+    if (antarctica1->PickUnbiased(interaction1,antarctica1,force_dir )) { // pick neutrino direction and interaction point
       interaction1->dtryingdirection=1.;
       interaction1->iceinteraction=1;
     }

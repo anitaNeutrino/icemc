@@ -230,7 +230,7 @@ Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,
   iceinteraction=0;
 
   //setting it to 1 if it's a source is useless here because it wantonly gets set elsewhere... 
-  dtryingdirection = 0.;
+  dtryingdirection = 1.;
   
   dnutries=0.;
 
@@ -257,6 +257,7 @@ Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,
   //    setnu_nubar(primary1);//same function for inttype "banna" or otherwise.
   }
 }
+
 
 void Interaction::PickAnyDirection() {
   double rndlist[2];

@@ -131,7 +131,7 @@ public:
    * @return returns void
    */
   void PickDownwardInteractionPoint(Interaction *interaction1,Anita *anita1,Settings *settings1,IceModel *antarctica1,
-				    Ray *ray1, int &beyondhorizon); 
+				    Ray *ray1, int &beyondhorizon, Vector * force_dir = 0); 
   
   //! This function initializes the balloon or the specific flight
   /**

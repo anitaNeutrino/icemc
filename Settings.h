@@ -265,6 +265,7 @@ class Settings : public TObject {
   double CUSTOM_DEC;
   double CUSTOM_GAMMA;
   
+  double HORIZON_OFFSET; 
   int useLPM;
 
   // In-header intialization is to old gcc as Domino's pizza is to real Italians

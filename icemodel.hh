@@ -131,7 +131,7 @@ int NODATA;
 		     int& n_coord);
 
   void FillArraysforTree(double lon_ground[1068][869],double lat_ground[1068][869],double lon_ice[1200][1000],double lat_ice[1200][1000],double lon_water[1200][1000],double lat_water[1200][1000]);
-  int PickUnbiased(Interaction *interaction1,IceModel *antarctica);
+  int PickUnbiased(Interaction *interaction1,IceModel *antarctica, Vector * force_dir = 0);
 
 
 protected:

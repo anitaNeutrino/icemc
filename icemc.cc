@@ -1746,6 +1746,20 @@ int main(int argc,  char **argv) {
         else
         {
           got_a_good_position = 1; 
+
+          if (settings1->HORIZON_OFFSET > -999) 
+          {
+            double horizon_angle = acos(bn1->r_bn_shadow.Mag()/bn1->r_bn.Mag()); 
+            double alt = -horizon_angle + TMath::DegToRad() * settings1->HORIZON_OFFSET; 
+            double Az = 0; //for now always sough
+            double lat = bn1->latitude*TMath::DegToRad(); 
+            double sin_lat = sin(lat); 
+            double cos_lat = cos(lat); 
+            double sindec = sin_lat *sin(alt) - cos_lat*cos(alt) *cos(Az); 
+            double cosdec = sqrt(1-sindec*sindec); 
+            double h = atan2(sin(Az),-sin_lat*cos(Az) + cos_lat*tan(alt));
+            force_dir = Vector(cos(h)*cosdec,sin(h)*cosdec,sindec);
+          }
         }
 
       } while(!got_a_good_position && settings1->SOURCE_SKIP_WHEN_NONE) ; 
@@ -1798,7 +1812,7 @@ int main(int argc,  char **argv) {
       else
         tautrigger=0;
 
-      bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon);
+      bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon,  src_model || settings1->HORIZON_OFFSET ? &force_dir : 0);
 
 #ifdef ANITA3_EVENTREADER
       //FILL TruthAnitaNeutrino here (in case we don't get to fill it later) 
@@ -1955,7 +1969,7 @@ int main(int argc,  char **argv) {
           err = GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
           //cout<<"UNBIASED_SELECTION IS "<<settings1->UNBIASED_SELECTION<<"\n";
         }
-        else if (src_model) 
+        else if (src_model || settings1->HORIZON_OFFSET > -999) 
         {
           interaction1->nnu = force_dir; 
           interaction1->dtryingdirection = 1; //ugh 
@@ -2116,7 +2130,7 @@ int main(int argc,  char **argv) {
           err = GetDirection(settings1, interaction1, ray1->nrf_iceside[4], deltheta_em_max, deltheta_had_max, emfrac, hadfrac, vmmhz1m_max*bestcase_atten, interaction1->r_fromballoon[whichray], ray1, sig1, interaction1->posnu, anita1, bn1, interaction1->nnu, costhetanu, theta_threshold);
         //cout << "costhetanu is " << costhetanu << endl; 
         }
-        else if (src_model) 
+        else if (src_model || settings1->HORIZON_OFFSET > -999) 
         {
           interaction1->nnu = force_dir; 
           interaction1->dtryingdirection = 1; //ugh 

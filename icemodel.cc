@@ -278,9 +278,16 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
 } //PickInteractionLocation
 
 
-int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica) {
+int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, Vector * force_dir) {
     
-    interaction1->PickAnyDirection(); // first pick the neutrino direction
+    if (!force_dir) 
+    {
+      interaction1->PickAnyDirection(); // first pick the neutrino direction
+    }
+    else
+    {
+      interaction1->nnu = *force_dir; 
+    }
     
     double mincos=cos(COASTLINE*RADDEG);
     double maxcos=cos(0.);

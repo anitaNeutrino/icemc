@@ -623,6 +623,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Which Start Time", WHICH_START_TIME,true);
   getSetting("Which End Time", WHICH_END_TIME,true);
   getSetting("Source Skip When None", SOURCE_SKIP_WHEN_NONE, true); 
+  getSetting("Fixed Horizon Offset",HORIZON_OFFSET,true); 
   if (SOURCE_SKIP_WHEN_NONE)
   {
     std::cout << "Non-default setting:  settings->SOURCE_SKIP_WHEN_NONE= " << SOURCE_SKIP_WHEN_NONE << std::endl;
