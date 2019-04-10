@@ -278,7 +278,7 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
 } //PickInteractionLocation
 
 
-int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, Vector * force_dir) {
+int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, double len_int_kgm2, Vector * force_dir) {
     
     if (!force_dir) 
     {
@@ -327,6 +327,7 @@ int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, Vecto
     int count1=0;
     int count2=0;
     
+    double L_ice=len_int_kgm2/Signal::RHOICE;
     
     if (Ray::WhereDoesItLeave(thisr_in,interaction1->nnu,antarctica,thisnuexitearth)) { // where does it leave Earth
 	// really want to find where it leaves ice
@@ -461,7 +462,21 @@ int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, Vecto
 	    interaction1->pathlength_inice=thisr_enterice.Distance(thisnuexitice);
 	    //cout << "distance is " << distance << "\n";
 	    //cout << "inu " << inu << " thisr_enterice, thisnuexitice are ";thisr_enterice.Print();thisnuexitice.Print();
-	    interaction1->posnu=interaction1->pathlength_inice*gRandom->Rndm()*interaction1->nnu;
+            //
+             //CD Instead of picking uniformly in the ice, we will pick from exp(-x/L_ice); 
+            double distance = -1; 
+
+            //If we have a very short path length in ice, it's ok to just assume it's uniform
+            if (interaction1->pathlength_inice / L_ice < 1e-3) 
+            {
+              distance = gRandom->Rndm() * interaction1->pathlength_inice; 
+            }
+            else
+            {
+              distance = -log(gRandom->Uniform(exp(-interaction1->pathlength_inice/L_ice),1))*L_ice; 
+            }
+
+	    interaction1->posnu=distance*interaction1->nnu; 
 	    interaction1->posnu=interaction1->posnu+thisr_enterice;
 	    //cout << "inu" << inu << " thisr_enterice, thisnuexitice are ";thisr_enterice.Print();thisnuexitice.Print();
 	    //cout << "inu " << inu << " distance is " << distance << "\n";

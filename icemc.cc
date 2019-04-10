@@ -338,7 +338,7 @@ double viewangles[NVIEWANGLE];
 double GetAirDistance(double altitude_bn,  double beta); // given beta=angle wrt horizontal that the ray hits the balloon,  calculate distance that the ray traveled in air,  including curvature of earth
 
 //Input files
-int err = 0; // errors from GetDirection function
+int err = 1; // errors from GetDirection function
 
 double djunk; // junk variable
 
@@ -1812,7 +1812,7 @@ int main(int argc,  char **argv) {
       else
         tautrigger=0;
 
-      bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon,  src_model || settings1->HORIZON_OFFSET ? &force_dir : 0);
+      bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon, len_int_kgm2,  src_model || settings1->HORIZON_OFFSET ? &force_dir : 0);
 
 #ifdef ANITA3_EVENTREADER
       //FILL TruthAnitaNeutrino here (in case we don't get to fill it later) 
