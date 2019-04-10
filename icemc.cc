@@ -1948,6 +1948,21 @@ int main(int argc,  char **argv) {
         interaction1->nuflavor="nue";
         interaction1->current="cc";
       }
+      else if (settings1->CONSTANTY==2) 
+      {
+        if (settings1->SHOWERTYPE == 0) 
+        {
+          elast_y = 1; 
+          interaction1->nuflavor="nue";
+          interaction1->current="cc";  
+        }
+        else
+        {
+          elast_y = 0; 
+          interaction1->nuflavor="nue";
+          interaction1->current="cc";  
+        }
+      }
       if (bn1->WHICHPATH==3)
         elast_y = Interaction::banana_y;
       if (bn1->WHICHPATH==4)
