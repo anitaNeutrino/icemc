@@ -1359,7 +1359,7 @@ int main(int argc,  char **argv) {
   IceModel *antarctica = new IceModel(settings1->ICE_MODEL + settings1->NOFZ*10, settings1->CONSTANTICETHICKNESS * 1000 + settings1->CONSTANTCRUST * 100 + settings1->FIXEDELEVATION * 10 + 0, settings1->WEIGHTABSORPTION);
   cout << "area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << "\n";
   
-  UInt_t eventNumber;
+  ULong_t eventNumber;
 #ifdef ANITA_UTIL_EXISTS
 
   string outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaEventFile"+run_num+".root";
@@ -1382,7 +1382,7 @@ int main(int argc,  char **argv) {
 
   TTree *adu5PatTree = new TTree("adu5PatTree", "adu5PatTree");
   adu5PatTree->Branch("pat",          &Adu5PatPtr                   );
-  adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/I");
+  adu5PatTree->Branch("eventNumber",  &eventNumber,  "eventNumber/L");
   adu5PatTree->Branch("weight",       &weight,       "weight/D"     );
   
 #ifdef ANITA3_EVENTREADER
@@ -1640,7 +1640,7 @@ int main(int argc,  char **argv) {
     else
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
 
-    eventNumber=(UInt_t)(run_no)*NNU+inu;
+    eventNumber=(ULong_t)(run_no)*NNU+inu;
 //cerr<<inu<<endl;
 //if( !((inu==246) || (inu==2579) || (inu==5522) || (inu==11235) || (inu==11815) || (inu==19723) || (inu==21264) || (inu==28442) || (inu==36789) || (inu==36894) || (inu==38424) || (inu==45829) || (inu==45880) || (inu==52929) || (inu==56821) || (inu==64933) || (inu==73569) || (inu==73707) || (inu==78717) || (inu==92717) || (inu==99750))  ) continue;
 //
