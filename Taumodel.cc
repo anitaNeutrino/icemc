@@ -1,5 +1,4 @@
 #include "vector.hh"
-#include "TRandom3.h"
 #include "Settings.h"
 #include "vector.hh"
 #include "position.hh"
@@ -22,9 +21,6 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TFile.h"
-#include "TRandom.h"
-#include "TRandom2.h"
-#include "TRandom3.h" 
 #include "TTree.h"
 #include "TLegend.h"
 #include "TLine.h"
@@ -42,6 +38,7 @@
 #include "TRotation.h"
 #include "TSpline.h"
 #include "Taumodel.hh"
+#include "icemc_random.h" 
 using std::cout;
 using std::stringstream;
 using std::setprecision;
@@ -241,7 +238,7 @@ double Taumodel::GetTauWeight(Primaries *primary1, Settings *settings1,IceModel 
   
    // }//xloop
    ///We have the weight. Now use a PDF to find the final energy of the tau.///
-  double xrandom= TauWeight*gRandom->Rndm();
+  double xrandom= TauWeight*getRNG(RNG_XRNDM)->Rndm();
  
   //cout<<"TauWeight is "<<TauWeight<<" xrandom is "<<xrandom<<"\n";
   for(size_t loopthrough =0; loopthrough<=PDFarray.size();loopthrough++){

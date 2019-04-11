@@ -15,9 +15,7 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TFile.h"
-#include "TRandom.h"
-#include "TRandom2.h"
-#include "TRandom3.h"
+#include "icemc_random.h" 
 #include "TTree.h"
 #include "TLegend.h"
 #include "TLine.h"
@@ -513,9 +511,7 @@ int main(int argc,  char **argv) {
   settings1->SEED=settings1->SEED +run_no;
   cout <<"seed is " << settings1->SEED << endl;
 
-  TRandom *rsave = gRandom;
-  TRandom3 *Rand3 = new TRandom3(settings1->SEED);//for generating random numbers
-  gRandom=Rand3;
+  setSeed(settings1->SEED);
 
   stemp=string(outputdir.Data())+"/nu_position"+run_num+".txt";
   ofstream nu_out(stemp.c_str(),  ios::app); //Positions,  direction of momentum,  and neutrino type for Ryan.
@@ -564,7 +560,7 @@ int main(int argc,  char **argv) {
   sig1->Initialize();
 
   settings1->SEED=settings1->SEED + run_no;
-  gRandom->SetSeed(settings1->SEED);
+  setSeed(settings1->SEED);
 
   bn1->InitializeBalloon();
   anita1->Initialize(settings1, foutput, inu, outputdir);
@@ -962,8 +958,6 @@ int main(int argc,  char **argv) {
   double average_altitude=0.;
   double average_rbn=0.;
 
-  //  TRandom r(settings1->SEED); // use seed set as input
-
   signal(SIGINT,  interrupt_signal_handler);     // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
 
   // Setting gps offset for plotting direction wrt north
@@ -991,10 +985,7 @@ int main(int argc,  char **argv) {
     anita1->inu = inu;
     
     // Set seed of all random number generators to be dependent on eventNumber
-    gRandom->SetSeed(eventNumber+6e7);
-    TRandom3 r(eventNumber+7e8);
-    anita1->fRand->SetSeed(eventNumber+8e9);
-    
+    setSeed(eventNumber);
     anita1->passglobtrig[0]=0;
     anita1->passglobtrig[1]=0;
     passes_thisevent=0;
@@ -1015,7 +1006,7 @@ int main(int argc,  char **argv) {
     } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
 
       // Picks the balloon position and at the same time sets the masks and thresholds
-    bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
+    bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  getRNG(RNG_BALLOON_POSITION)->Rndm());
       
     // find average balloon altitude and distance from center of earth for
     // making comparisons with Peter
@@ -1369,8 +1360,6 @@ int main(int argc,  char **argv) {
   }//end NNU neutrino loop
 
 
-  gRandom=rsave;
-  delete Rand3;
 
 
 #ifdef ANITA_UTIL_EXISTS
@@ -1563,12 +1552,12 @@ int WhereIsSecondBang(const Position &posnu, const Vector &nnu, double nuexitlen
   double gamma=pnu/MTAU;
 
   if (exp(-1*nuexitlength/(TAUDECAY_TIME*CLIGHT*gamma))>0.999){
-    rnd1=gRandom->Rndm()*nuexitlength;
+    rnd1=getRNG(RNG_SECOND_BANG)->Rndm()*nuexitlength;
   }
   else {
     while (rnd2>1-exp(-1*rnd1/(TAUDECAY_TIME*CLIGHT*gamma))) {
-      rnd1=gRandom->Rndm()*nuexitlength;
-      rnd2=gRandom->Rndm();
+      rnd1=getRNG(RNG_SECOND_BANG)->Rndm()*nuexitlength;
+      rnd2=getRNG(RNG_SECOND_BANG)->Rndm();
     } //while
   } //else
   posnu2 = posnu + rnd1*nnu;
@@ -1677,7 +1666,7 @@ void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_ex
   Vector parallel_to_surface; // find vector parallel to surface to rotate the vector around
   parallel_to_surface+=n_exit2bn; // want to cross specular with n_exit2bn
   parallel_to_surface.Cross(specular);
-  nrf_iceside.Rotate(SMEARINCIDENTANGLE*(2*gRandom->Rndm()-1.), parallel_to_surface); // smear the incident ray
+  nrf_iceside.Rotate(SMEARINCIDENTANGLE*(2*getRNG(RNG_SMEARED_INCIDENT_ANGLE)->Rndm()-1.), parallel_to_surface); // smear the incident ray
   //   theta_inc_smeared=acos(nrf_iceside.Dot(nsurf_rfexit));
 }
 //end GetSmearedIncidentAngle()

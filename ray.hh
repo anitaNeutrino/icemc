@@ -8,7 +8,6 @@ class Vector;
 class IceModel;
 class Settings;
 class Anita;
-class TRandom3;
 class Position;
 class Signal;
 
@@ -21,7 +20,6 @@ using std::cout;
 class Ray {
     
 private:
-    TRandom3 Rand3;
     
 protected:
     

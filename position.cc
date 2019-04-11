@@ -1,5 +1,4 @@
 #include "vector.hh"
-#include "TRandom3.h"
 #include "Settings.h"
 #include "position.hh"
 #include "earthmodel.hh"

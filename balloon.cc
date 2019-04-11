@@ -1,7 +1,6 @@
 #include "TChain.h"
 #include "TFile.h"
 #include "Constants.h"
-#include "TRandom3.h"
 #include "Settings.h"
 #include "earthmodel.hh"
 #include "icemodel.hh"
@@ -19,6 +18,7 @@
 #include "Settings.h"
 #include "Primaries.h"
 #include "EnvironmentVariable.h"
+#include "icemc_random.h" 
 
 
 #if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
@@ -291,7 +291,7 @@ double Balloon::GetBalloonSpin(double heading) { // get the azimuth of the ballo
     phi_spin=heading*RADDEG;
   else {
     if (RANDOMIZE_BN_ORIENTATION==1)
-      phi_spin=gRandom->Rndm()*2*PI;
+      phi_spin=getRNG(RNG_BALLOON_POSITION)->Rndm()*2*PI;
     else
       phi_spin=0.;
   }
@@ -531,7 +531,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     
     
   else if (WHICHPATH==1){ // pick random phi at 80 deg S
-    phi_bn=gRandom->Rndm()*TWOPI;
+    phi_bn=getRNG(RNG_BALLOON_POSITION)->Rndm()*TWOPI;
 		
     r_bn = Position(theta_bn,phi_bn);
     surface_under_balloon = antarctica1->Surface(r_bn);

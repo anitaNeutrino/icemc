@@ -13,7 +13,6 @@
 #include "Constants.h"
 #include "TF2.h"
 #include "TCanvas.h"
-#include "TRandom3.h"
 #include "signal.hh"
 #include "Settings.h"
 #include "Primaries.h"

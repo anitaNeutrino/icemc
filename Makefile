@@ -114,10 +114,10 @@ LIBS += $(LIBS_ANITA_UTIL)
 # Mathmore not included in the standard ROOT libs
 LIBS += -lMathMore
 
-CLASS_HEADERS = rx.hpp Taumodel.hh Settings.h blazars/fava.h 
+CLASS_HEADERS = rx.hpp Taumodel.hh Settings.h blazars/fava.h icemc_random.h 
 DICT = classdict
 
-OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o source.o 
+OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o source.o  random.o
 
 
 BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) 

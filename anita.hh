@@ -24,7 +24,6 @@ class Position;
 class Balloon;
 class IceModel;
 class Settings;
-class TRandom3;
 
 using std::ofstream;
 using std::vector;
@@ -543,7 +542,6 @@ public:
   double bwslice_max[5]; //minimum of each bandwidth slice
   double bwmin; // minimum width of any allowed bandwidth slice
 
-  TRandom3* summed_power_trigger_digitizer_zero_random;
   TFile* coherent_datafile;
   TTree* coherent_waveform_sum_tree;
   static const unsigned int NUM_COHERENT_ANTENNAS = 9;
@@ -590,7 +588,6 @@ public:
   double SIGMA_THETA; // resolution on the polar angle of the signal
 
   double extraCableDelays[2][48];
-  TRandom3 *fRand;
 #ifdef ANITA_UTIL_EXISTS
   RFSignal *fSignalChainResponseDigitizerTuffs[2][3][16][7]; // 0:VPOL, 1:HPOL ---- 0:TOP, 1:MIDDLE, 2:BOTTOM------- 0:configA, 1:configB, 2:configC, 3:configG, 4:configO, 5:configP, 6:configK
   RFSignal *fSignalChainResponseTriggerTuffs[2][3][16][7];  // same as for DigitizerTuffs

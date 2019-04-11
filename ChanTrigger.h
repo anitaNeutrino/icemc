@@ -11,7 +11,6 @@ using std::vector;
 class Balloon;
 class IceModel;
 class Settings;
-class TRandom3;
 class Screen;
 class GlobalTrigger;
 
@@ -42,7 +41,6 @@ class ChanTrigger {
   static const unsigned NFOUR = 1024;                           ///< Number of points in Fourier space
   static const unsigned HALFNFOUR = 512;                        ///< Half of the number of points in the Fourier space
 							       
-  TRandom3 Rand3;                                               ///< Random number generator instance
   double thisrate;                                              ///< Rate in MHz
   double thispowerthresh;                                       ///< Relative power threshold
   double e_component;                                           ///< E comp along polarization

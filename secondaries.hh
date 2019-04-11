@@ -18,7 +18,6 @@
 class TH1F;
 class Vector;
 class Settings;
-class TRandom3;
 class Primaries;
 
 using std::vector;
@@ -29,7 +28,6 @@ using std::string;
 class Secondaries {
 
 private:
-  TRandom3 Rand3;
 
   void Picky(double *y_cumulative,int NPROB_MAX,double rnd,double& y);
   // secondaries

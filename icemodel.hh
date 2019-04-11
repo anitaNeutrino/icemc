@@ -14,7 +14,6 @@ class Position;
 class Vector;
 class EarthModel;
 class Settings;
-class TRandom3;
 class Interaction;
 class Ray;
 
@@ -193,8 +192,6 @@ void ENtoLonLat(int e_coord,
 
 private:
 
-  TRandom Rand3;
-  
   const static int N_sheetup=2810;
   double d_sheetup[N_sheetup], l_sheetup[N_sheetup];
   const static int N_shelfup=420;

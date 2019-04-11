@@ -3,7 +3,6 @@
 #include "position.hh"
 
 #include "Constants.h"
-#include "TRandom3.h"
 #include "Settings.h"
 #include "earthmodel.hh"
 #include "icemodel.hh"
@@ -46,6 +45,7 @@
 #include "AnitaConventions.h"
 #endif
 
+#include "icemc_random.h" 
 const std::string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
 const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
 
@@ -146,8 +146,6 @@ Anita::Anita() {
     
   bwmin=0.; // minimum width of any allowed bandwidth slice
     
-  /*** Used for the Coherent Sum Trigger ***/
-  summed_power_trigger_digitizer_zero_random = new TRandom3();
   
   // If outputs dir doesn't already exist, create it
   const char* outputdir;
@@ -176,7 +174,6 @@ Anita::~Anita(){
   coherent_datafile->Close();
   coherent_datafile->Delete();
     
-  delete summed_power_trigger_digitizer_zero_random;
 	
   return;
 }
@@ -1280,6 +1277,7 @@ void Anita::getQuickTrigNoiseFromFlight(Settings *settings1, double justNoise[HA
 
   int iphi = iant - (iring*16);
 
+  TRandom * fRand  = getRNG(RNG_NOISE); 
   for(int i=1;i<numFreqs;i++) {
     
     if (freqs[i]*1e6>=settings1->FREQ_LOW_SEAVEYS && freqs[i]*1e6<=settings1->FREQ_HIGH_SEAVEYS){
@@ -2292,13 +2290,14 @@ void Anita::GetPhases() {
   double corr,uncorr;
   double phase_corr,phase_uncorr;
   double phasor_x,phasor_y;
+  TRandom * rng = getRNG(RNG_PHASES); 
     
   for (int k=0;k<NFOUR/4;k++) { // loop through samples
     iband=Tools::findIndex(freq_bands[0],freq_forfft[2*k],NPOINTS_BANDS,freq_bands[0][0],freq_bands[0][NPOINTS_BANDS-1]);
 		
 		
-    phases_rfcm[0][k]=2*PI*gRandom->Rndm(); // set phases at output of rfcm randoml
-    phases_rfcm[1][k]=2*PI*gRandom->Rndm(); // set phases at output of rfcm randomly
+    phases_rfcm[0][k]=2*PI*rng->Rndm(); // set phases at output of rfcm randoml
+    phases_rfcm[1][k]=2*PI*rng->Rndm(); // set phases at output of rfcm randomly
 		
 		
     // now set phases at the lab chip
@@ -2307,7 +2306,7 @@ void Anita::GetPhases() {
     else corr=correl_lab[iband];
     uncorr=1-corr;
     phase_corr=phases_rfcm[0][k];
-    phase_uncorr=2*PI*gRandom->Rndm();
+    phase_uncorr=2*PI*rng->Rndm();
     phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
     phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
     phases_lab[0][k]=TMath::ATan2(phasor_y,phasor_x);
@@ -2315,7 +2314,7 @@ void Anita::GetPhases() {
 		
 		
     phase_corr=phases_rfcm[1][k];
-    phase_uncorr=2*PI*gRandom->Rndm();
+    phase_uncorr=2*PI*rng->Rndm();
     phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
     phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
     phases_lab[1][k]=TMath::ATan2(phasor_y,phasor_x);
@@ -2328,12 +2327,12 @@ void Anita::GetPhases() {
       else corr=correl_banding[j][iband];
       uncorr=1-corr;
       phase_corr=phases_rfcm[0][k];
-      phase_uncorr=2*PI*gRandom->Rndm();
+      phase_uncorr=2*PI*rng->Rndm();
       phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
       phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
       phases_rfcm_banding[0][j][k]=TMath::ATan2(phasor_y,phasor_x);
       phase_corr=phases_rfcm[1][k];
-      phase_uncorr=2*PI*gRandom->Rndm();
+      phase_uncorr=2*PI*rng->Rndm();
       phasor_x=corr*cos(phase_corr)+uncorr*cos(phase_uncorr);
       phasor_y=corr*sin(phase_corr)+uncorr*sin(phase_uncorr);
       phases_rfcm_banding[1][j][k]=TMath::ATan2(phasor_y,phasor_x);
@@ -4360,7 +4359,6 @@ void Anita::readNoiseFromFlight(Settings *settings1){
   numFreqs=rfTemplate->getNumFreqs();
   freqs=rfTemplate->getFreqs();
   
-  fRand = new TRandom3(settings1->SEED);
   
 }
 

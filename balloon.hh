@@ -17,7 +17,6 @@ class TTreeIndex;
 class IceModel;
 class Anita;
 class Settings;
-class TRandom3;
 class Interaction;
 class Ray;
 class TH1F;

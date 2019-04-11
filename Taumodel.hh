@@ -18,7 +18,6 @@
 class TH1F;
 class Vector;
 class Settings;
-class TRandom3;
 class Primaries;
 class Interaction;
 class IceModel;

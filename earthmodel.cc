@@ -1,5 +1,4 @@
 #include "Constants.h"
-#include "TRandom3.h"
 #include "Settings.h"
 #include "earthmodel.hh"
 #include "icemodel.hh"
@@ -9,6 +8,7 @@
 #include "position.hh"
 #include <iostream>
 #include <fstream>
+#include "icemc_random.h" 
 
 #include "signal.hh"
 #include "Primaries.h"
@@ -577,7 +577,7 @@ int EarthModel::Getchord(Settings *settings1,
     //cout <<"probability_tmp(non-tau) is "<<probability_tmp<<".\n";
     
     if (weightabsorption==0) {
-	if (gRandom->Rndm()>weight1_tmp) { 
+	if (getRNG(RNG_ABSORB)->Rndm()>weight1_tmp) { 
 	    
 	    weight1_tmp=0.;
 	    return 0;
@@ -932,7 +932,7 @@ Vector EarthModel::PickPosnuForaLonLat(double lon,double lat,double theta,double
     double surface_above_geoid = this->SurfaceAboveGeoid(lon,lat);
     double local_ice_thickness = this->IceThickness(lon,lat);
     
-    double rnd3=gRandom->Rndm();
+    double rnd3=getRNG(RNG_POSNU)->Rndm();
     
    
     

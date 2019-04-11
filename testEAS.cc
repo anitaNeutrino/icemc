@@ -22,11 +22,9 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TFile.h"
-#include "TRandom.h"
-#include "TRandom2.h"
-#include "TRandom3.h"
 #include "TTree.h"
 #include "TLegend.h"
+#include "icemc_random.h" 
 #include "TLine.h"
 #include "TROOT.h"
 #include "TPostScript.h"
@@ -180,9 +178,7 @@ int main(int argc,  char **argv) {
   settings1->SEED=settings1->SEED +run_no;
   cout <<"seed is " << settings1->SEED << endl;
 
-  TRandom *rsave = gRandom;
-  TRandom3 *Rand3 = new TRandom3(settings1->SEED);//for generating random numbers
-  gRandom=Rand3;
+  setSeed(settings1->SEED); 
 
 
   Balloon *bn1=new Balloon(); // instance of the balloon
@@ -215,7 +211,7 @@ int main(int argc,  char **argv) {
   sig1->Initialize();
 
   settings1->SEED=settings1->SEED + run_no;
-  gRandom->SetSeed(settings1->SEED);
+  setSeed(settings1->SEED);
 
   bn1->InitializeBalloon();
   anita1->Initialize(settings1, foutput, inu, outputdir);
@@ -402,7 +398,6 @@ int main(int argc,  char **argv) {
   cout<<"Starting loop over events.  Time required for setup is "<<(int)((raw_loop_start_time - raw_start_time)/60)<<":"<< ((raw_loop_start_time - raw_start_time)%60)<<endl;
 
 
-  //  TRandom r(settings1->SEED); // use seed set as input
 
   signal(SIGINT,  interrupt_signal_handler);     // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
 
@@ -433,9 +428,7 @@ int main(int argc,  char **argv) {
     eventNumber=(UInt_t)(run_no)*NNU+inu;
     
     // Set seed of all random number generators to be dependent on eventNumber
-    gRandom->SetSeed(eventNumber+6e7);
-    TRandom3 r(eventNumber+7e8);
-    anita1->fRand->SetSeed(eventNumber+8e9);
+    setSeed(eventNumber); 
     
     anita1->passglobtrig[0]=0;
     anita1->passglobtrig[1]=0;
@@ -450,7 +443,7 @@ int main(int argc,  char **argv) {
     } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
     
       // Picks the balloon position and at the same time sets the masks and thresholds
-    bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
+    bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  getRNG(RNG_BALLOON_POSITION)->Rndm());
     
     // BR: Here calculate the direction to the balloon
     // And the polarization
@@ -839,8 +832,6 @@ int main(int argc,  char **argv) {
   // Finished with individual neutrinos now ...
   //roughout.close();
 
-  gRandom=rsave;
-  delete Rand3;
 
 
 #ifdef ANITA_UTIL_EXISTS

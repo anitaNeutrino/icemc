@@ -21,9 +21,7 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TFile.h"
-#include "TRandom.h"
-#include "TRandom2.h"
-#include "TRandom3.h"
+#include "icemc_random.h"
 #include "TTree.h"
 #include "TLegend.h"
 #include "TLine.h"
@@ -227,10 +225,7 @@ int main(int argc,  char **argv) {
   settings1->SEED=settings1->SEED +run_no;
   cout <<"seed is " << settings1->SEED << endl;
 
-  TRandom *rsave = gRandom;
-  TRandom3 *Rand3 = new TRandom3(settings1->SEED);//for generating random numbers
-  gRandom=Rand3;
-
+  setSeed(settings1->SEED); 
 
   Balloon *bn1=new Balloon(); // instance of the balloon
   Anita *anita1=new Anita();// right now this constructor gets banding info
@@ -265,7 +260,7 @@ int main(int argc,  char **argv) {
   sig1->Initialize();
 
   settings1->SEED=settings1->SEED + run_no;
-  gRandom->SetSeed(settings1->SEED);
+  setSeed(settings1->SEED);
 
   bn1->InitializeBalloon();
   anita1->Initialize(settings1, foutput, inu, outputdir);
@@ -552,9 +547,7 @@ int main(int argc,  char **argv) {
     eventNumber=(UInt_t)(run_no)*NNU+inu; //replaced a where run_no was
     
     // Set seed of all random number generators to be dependent on eventNumber
-    gRandom->SetSeed(eventNumber+6e7);
-    TRandom3 r(eventNumber+7e8);
-    anita1->fRand->SetSeed(eventNumber+8e9);
+    setSeed(eventNumber); 
     
     anita1->passglobtrig[0]=0;
     anita1->passglobtrig[1]=0;
@@ -574,7 +567,7 @@ int main(int argc,  char **argv) {
     interaction1->posnu_down = positionWAIS;
     
     // Picks the balloon position and at the same time sets the masks and thresholds
-    bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
+    bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  getRNG(RNG_BALLOON_POSITION)->Rndm());
       
     distanceFromWAIS =  (interaction1->posnu.Distance(bn1->r_bn));
    // cout << "distance is" << distanceFromWAIS << endl;
@@ -591,7 +584,7 @@ int main(int argc,  char **argv) {
     // Dead time
     if (settings1->USEDEADTIME){
       // cout << anita1->deadTime << endl;
-      if ( (r.Uniform(1)<anita1->deadTime) ){
+      if ( (getRNG(RNG_DEADTIME)->Uniform(1)<anita1->deadTime) ){
 	isDead = true;
 	// cout << "DEAD !" << endl;
 	if (settings1->MINBIAS!=1) {
@@ -1059,8 +1052,6 @@ int main(int argc,  char **argv) {
   // Finished with individual neutrinos now ...
   //roughout.close();
 
-  gRandom=rsave;
-  delete Rand3;
 
 
 #ifdef ANITA_UTIL_EXISTS

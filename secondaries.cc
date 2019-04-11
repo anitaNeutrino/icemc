@@ -1,5 +1,4 @@
 #include "vector.hh"
-#include "TRandom3.h"
 #include "Settings.h"
 #include "vector.hh"
 #include "position.hh"
@@ -20,9 +19,6 @@
 #include "TF1.h"
 #include "TF2.h"
 #include "TFile.h"
-#include "TRandom.h"
-#include "TRandom2.h"
-#include "TRandom3.h" 
 #include "TTree.h"
 #include "TLegend.h"
 #include "TLine.h"
@@ -39,6 +35,7 @@
 #include "TVector3.h"
 #include "TRotation.h"
 #include "TSpline.h"
+#include "icemc_random.h" 
 
 #include "EnvironmentVariable.h"
 
@@ -274,18 +271,19 @@ using std::max;
  
   string whichtype; // which type of interaction corresponds to that index
   
+  TRandom * rng = getRNG(RNG_SECONDARIES);
 
 
   if (nuflavor=="numu") {   
-    n_brems=gRandom->Poisson(int_muon_brems[i]); // pick number of brem interactions
-    n_epair=gRandom->Poisson(int_muon_epair[i]); // # of pair production
-    n_pn=gRandom->Poisson(int_muon_pn[i]); // # photonuclear interactions   
+    n_brems=rng->Poisson(int_muon_brems[i]); // pick number of brem interactions
+    n_epair=rng->Poisson(int_muon_epair[i]); // # of pair production
+    n_pn=rng->Poisson(int_muon_pn[i]); // # photonuclear interactions   
     
     n_interactions+=(n_brems+n_epair+n_pn);	
 
 
     for (int j=0;j<n_brems+n_epair+n_pn;j++) {
-      rnd1=gRandom->Rndm();
+      rnd1=rng->Rndm();
       if (rnd1<=(double)n_brems/(double)(n_brems+n_epair+n_pn))
 	whichtype="brems";
       else if (rnd1<=(double)(n_brems+n_epair)/(double)(n_brems+n_epair+n_pn))
@@ -298,15 +296,15 @@ using std::max;
       // index_y=0;
 
       if (whichtype=="brems") {	
-	rnd1=gRandom->Rndm();
+	rnd1=rng->Rndm();
 	Picky(y_cumulative_muon_brems[i],NPROB,rnd1,y);
       }
       else if (whichtype=="epair") {	
-	rnd1=gRandom->Rndm();
+	rnd1=rng->Rndm();
 	Picky(y_cumulative_muon_epair[i],NPROB,rnd1,y);	
       }
       else if (whichtype=="pn") {
-	rnd1=gRandom->Rndm();
+	rnd1=rng->Rndm();
 	Picky(y_cumulative_muon_pn[i],NPROB,rnd1,y);
       }
      
@@ -323,15 +321,15 @@ using std::max;
     } // loop over secondary interactions
   } // end if it was a muon neutrino
   if (nuflavor=="nutau") {
-    n_brems=gRandom->Poisson(int_tauon_brems[i]);
-    n_epair=gRandom->Poisson(int_tauon_epair[i]);
-    n_pn=gRandom->Poisson(int_tauon_pn[i]);
+    n_brems=rng->Poisson(int_tauon_brems[i]);
+    n_epair=rng->Poisson(int_tauon_epair[i]);
+    n_pn=rng->Poisson(int_tauon_pn[i]);
 
     n_interactions+=(n_brems+n_epair+n_pn); // increment number of secondary interactions.
 
     for (int j=0;j<n_brems+n_epair+n_pn;j++) { // loop over secondary interactions. 
       
-      rnd1=gRandom->Rndm();
+      rnd1=rng->Rndm();
       if (rnd1<=(double)n_brems/(double)(n_brems+n_epair+n_pn))
 	whichtype="brems";
       else if (rnd1<=(double)(n_brems+n_epair)/(double)(n_brems+n_epair+n_pn))
@@ -344,15 +342,15 @@ using std::max;
       // index_y=0;
 
       if (whichtype=="brems") {  // bremstrahlung interaction
-	rnd1=gRandom->Rndm();
+	rnd1=rng->Rndm();
 	Picky(y_cumulative_tauon_brems[i],NPROB,rnd1,y);
       }
       if (whichtype=="epair") { // pair production
-	rnd1=gRandom->Rndm();
+	rnd1=rng->Rndm();
 	Picky(y_cumulative_tauon_epair[i],NPROB,rnd1,y);
       }
       if (whichtype=="pn") {
-	rnd1=gRandom->Rndm();
+	rnd1=rng->Rndm();
 	Picky(y_cumulative_tauon_pn[i],NPROB,rnd1,y);
       }
 
@@ -370,7 +368,7 @@ using std::max;
     if (TAUDECAY) {
       n_interactions++; // increment number of interactions, for plotting.
 
-      rnd1=gRandom->Rndm();
+      rnd1=rng->Rndm();
       if (rnd1<0.65011)  // pick which type of decay it is.
 	whichtype="hadrdecay";
       if (rnd1>=0.65011 && rnd1<0.8219)
@@ -383,15 +381,15 @@ using std::max;
       // index_y=0;     
       
       if (whichtype=="hadrdecay") { // hadronic decay
-	rnd1=gRandom->Rndm();
+	rnd1=rng->Rndm();
 	Picky(y_cumulative_tauon_hadrdecay[i],NPROB,rnd1,y);	
       }
       else if (whichtype=="edecay") { // e decay	
-	rnd1=gRandom->Rndm();
+	rnd1=rng->Rndm();
 	Picky(y_cumulative_tauon_edecay[i],NPROB,rnd1,y);
       }
       else if (whichtype=="mudecay") { // mu decay
-	rnd1=gRandom->Rndm();
+	rnd1=rng->Rndm();
 	Picky(y_cumulative_tauon_mudecay[i],NPROB,rnd1,y);
       }
       
@@ -527,7 +525,8 @@ void Secondaries::GetTauDecay(string nuflavor,string current,string& taudecay,do
 
   // if nu_tau choose tau decay type
   
-  double rnd = gRandom->Rndm();
+  TRandom * rng = getRNG(RNG_SECONDARIES); 
+  double rnd = rng->Rndm();
   int decay = static_cast<int>(rnd*(N_TAUOLA-2)+1);
   
   hadfrac_db=tauola[decay][3];
@@ -543,7 +542,7 @@ void Secondaries::GetTauDecay(string nuflavor,string current,string& taudecay,do
     secondbang=false; //for all muon decays, the interaction point chosen is the neutrino interaction since we don't detect the decay if
   //the tau decays into a muon.
   else {
-    double rnd=gRandom->Rndm();
+    double rnd=rng->Rndm();
     if(rnd>TAUFRAC) {
       secondbang=true;
       count_nfb++;
@@ -560,8 +559,9 @@ void Secondaries::GetTauDecay(string nuflavor,string current,string& taudecay,do
 
  void Secondaries::GetEMFracDB(double& emfrac_db, double& hadfrac_db) {
 
+  TRandom * rng = getRNG(RNG_SECONDARIES); 
 
-  double rnd = gRandom->Rndm();
+  double rnd = rng->Rndm();
   int decay = static_cast<int>(rnd*(N_TAUOLA-2)+1);
 
   hadfrac_db=tauola[decay][3];

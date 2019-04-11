@@ -16,13 +16,13 @@
 #include "Constants.h"
 #include "anita.hh"
 #include "balloon.hh"
-#include "TRandom3.h"
 #include <cmath>
 #include "Tools.h"
 #include "Settings.h"
 #include "screen.hh"
 #include "ChanTrigger.h"
 #include "GlobalTrigger.h"
+#include "icemc_random.h" 
 
 using std::cout;
 
@@ -886,7 +886,7 @@ void GlobalTrigger::PassesTriggerCoherentSum(Settings *settings1,Anita *anita1,i
 	anita1->cwst_RXs[fill_index].waveform->assign(volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].begin(),volts_rx_rfcm_trigger[fill_index_phi_sector][fill_index_layer].end());
 	  
 	for (unsigned fill_index_timestep = 0; fill_index_timestep < anita1->HALFNFOUR; ++fill_index_timestep) {
-	  anita1->cwst_RXs[fill_index].digitized->at(fill_index_timestep) = three_bit_round(anita1->cwst_RXs[fill_index].waveform->at(fill_index_timestep)/ anita1->rms_rfcm_e_single_event, (anita1->summed_power_trigger_digitizer_zero_random->Rndm() >= 0.5), false);
+	  anita1->cwst_RXs[fill_index].digitized->at(fill_index_timestep) = three_bit_round(anita1->cwst_RXs[fill_index].waveform->at(fill_index_timestep)/ anita1->rms_rfcm_e_single_event, (getRNG(RNG_SUMMED_TRIGGER)->Rndm() >= 0.5), false);
 	}
 	++fill_index;
       }

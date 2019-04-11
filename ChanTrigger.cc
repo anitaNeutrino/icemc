@@ -18,13 +18,13 @@
 #include "Constants.h"
 #include "anita.hh"
 #include "balloon.hh"
-#include "TRandom3.h"
 #include "ChanTrigger.h"
 #include <cmath>
 #include "Tools.h"
 #include "Settings.h"
 #include "screen.hh"
 #include "GlobalTrigger.h"
+#include "icemc_random.h" 
 
 using std::cout;
 
@@ -77,7 +77,6 @@ void ChanTrigger::WhichBandsPass(Settings *settings1, Anita *anita1, GlobalTrigg
   globaltrig1->volts[0][ilayer][ifold]=0.;
   globaltrig1->volts[1][ilayer][ifold]=0.;
     
-  //  TRandom3 Rand3;
     
   // This is the old way used for ANITA 1 where we integrate in frequency
   // to get an estimate of the signal strength
@@ -113,8 +112,8 @@ void ChanTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, Glo
     //     cout << "ibw, bwslice_volts_pole are " << ibw << " " << bwslice_volts_pole[ibw] << "\n";
 	
     if (settings1->SIGNAL_FLUCT) {// add noise fluctuations if requested
-      bwslice_volts_pole[ibw] += gRandom->Gaus(0.,anita1->bwslice_vnoise[ilayer][ibw]);
-      bwslice_volts_polh[ibw] += gRandom->Gaus(0.,anita1->bwslice_vnoise[ilayer][ibw]);
+      bwslice_volts_pole[ibw] += getRNG(RNG_SIGNAL_FLUCT)->Gaus(0.,anita1->bwslice_vnoise[ilayer][ibw]);
+      bwslice_volts_polh[ibw] += getRNG(RNG_SIGNAL_FLUCT)->Gaus(0.,anita1->bwslice_vnoise[ilayer][ibw]);
     }
 	
     // Convert e-plane and h-plane components into lcp,rcp
@@ -1777,6 +1776,7 @@ void ChanTrigger::getNoiseFromFlight(Settings *settings1, Anita* anita1, int ant
   int iring=2;
   if (ant<16) iring=0;
   else if (ant<32) iring=1;
+  TRandom * rng = getRNG(RNG_SIGNAL_FLUCT); 
 
   int iphi = ant - (iring*16);
 
@@ -1788,8 +1788,8 @@ void ChanTrigger::getNoiseFromFlight(Settings *settings1, Anita* anita1, int ant
 	trigNorm       = anita1->fRatioTriggerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
 	digNorm        = anita1->fRatioDigitizerToA3DigitizerFreqDomain[ipol][iring][iphi][anita1->tuffIndex][i];
 	sigma          = anita1->RayleighFits[ipol][ant]->Eval(freqs[i])*4./TMath::Sqrt(numFreqs);
-	realPart       = anita1->fRand->Gaus(0,sigma);
-	imPart         = anita1->fRand->Gaus(0,sigma);
+	realPart       = rng->Gaus(0,sigma);
+	imPart         = rng->Gaus(0,sigma);
       } else {
        	trigNorm=digNorm=realPart=imPart=0.;
       }
@@ -1920,7 +1920,7 @@ void ChanTrigger::injectImpulseAtSurf(Anita *anita1, double volts_triggerPath_e[
   int fNumPoints=anita1->HALFNFOUR;
   // only 2 phi sectors adjecent to the central one are considered in efficiency scan
   if(TMath::Abs(phiIndex)<=2){
-    int randomIndex=anita1->fRand->Integer(250);
+    int randomIndex=getRNG(RNG_INJECT)->Integer(250);
     double att = anita1->trigEffScanAtt[phiIndex+2];
     double norm = (anita1->trigEffScanAtt[phiIndex+2]==999)*0 + (anita1->trigEffScanAtt[phiIndex+2]!=999)*1;
 

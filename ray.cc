@@ -1,9 +1,7 @@
 #include "vector.hh"
 #include "TF1.h"
-#include "TRandom3.h"
 
 #include "Constants.h"
-#include "TRandom3.h"
 #include "Settings.h"
 #include "earthmodel.hh"
 #include "icemodel.hh"
@@ -13,6 +11,7 @@
 #include "anita.hh"
 #include "ray.hh"
 #include <cmath>
+#include "icemc_random.h" 
  
 using std::endl;
 
@@ -123,6 +122,7 @@ int Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,
   // tilt local surface based on slopeyness.
   if (settings1->SLOPEY) {
     
+    TRandom * rng = getRNG(RNG_SLOPEY);
     // randomizing surface direction
     
     // 0.10=5.4, 0.2=7.4 deg mean
@@ -131,9 +131,9 @@ int Ray::RandomizeSurface(Settings *settings1,Position rfexit_temp,Vector posnu,
     
     double slopeyness=0;
     if (whichtry==0) { // only reset the surface slopeyness for the first try an then repeat the same for each subsequent try
-      slopeyx=howmuch*gRandom->Gaus();
-      slopeyy=howmuch*gRandom->Gaus();
-      slopeyz=howmuch*gRandom->Gaus();
+      slopeyx=howmuch*rng->Gaus();
+      slopeyy=howmuch*rng->Gaus();
+      slopeyz=howmuch*rng->Gaus();
     }
     Vector ntemp2 = nsurf_rfexit_temp + slopeyx * xaxis
       + slopeyy * yaxis

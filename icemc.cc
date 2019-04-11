@@ -16,9 +16,7 @@
 #include "TF2.h"
 #include "TFile.h"
 #include "TObject.h"
-#include "TRandom.h"
-#include "TRandom2.h"
-#include "TRandom3.h"
+#include "icemc_random.h"
 #include "TTree.h"
 #include "TLegend.h"
 #include "TLine.h"
@@ -563,9 +561,6 @@ int main(int argc,  char **argv) {
   settings1->SEED=settings1->SEED +run_no;
   cout << "seed is " << settings1->SEED << endl;
 
-  TRandom *rsave = gRandom;
-  TRandom3 *Rand3 = new TRandom3(settings1->SEED);//for generating random numbers
-  gRandom=Rand3;
 
   stemp=string(outputdir.Data())+"/nu_position"+run_num+".txt";
   ofstream nu_out(stemp.c_str(),  ios::app); //Positions,  direction of momentum,  and neutrino type for Ryan.
@@ -618,7 +613,7 @@ int main(int argc,  char **argv) {
   sig1->Initialize();
   
   settings1->SEED=settings1->SEED + run_no;
-  gRandom->SetSeed(settings1->SEED);
+  setSeed(settings1->SEED);
 
   bn1->InitializeBalloon();
   anita1->Initialize(settings1, foutput, inu, outputdir);
@@ -1648,12 +1643,9 @@ int main(int argc,  char **argv) {
     eventNumber=(UInt_t)(run_no)*NNU+inu;
 //cerr<<inu<<endl;
 //if( !((inu==246) || (inu==2579) || (inu==5522) || (inu==11235) || (inu==11815) || (inu==19723) || (inu==21264) || (inu==28442) || (inu==36789) || (inu==36894) || (inu==38424) || (inu==45829) || (inu==45880) || (inu==52929) || (inu==56821) || (inu==64933) || (inu==73569) || (inu==73707) || (inu==78717) || (inu==92717) || (inu==99750))  ) continue;
+//
     // Set seed of all random number generators to be dependent on eventNumber
-    gRandom->SetSeed(eventNumber+6e7);
-    if (src_model) src_model->setSeed(eventNumber + 12345); //the password on my luggage 
-    TRandom3 r(eventNumber+7e8);
-    if (settings1->NOISEFROMFLIGHTDIGITIZER || settings1->NOISEFROMFLIGHTTRIGGER) anita1->fRand->SetSeed(eventNumber+8e9);
-
+    setSeed(eventNumber);
 
     //reset screen parameters (even for no roughness) for the new event
     panel1->ResetParameters();
@@ -1706,7 +1698,7 @@ int main(int argc,  char **argv) {
       do  // loop for forcing a good position with sources if that option is enabled
       {
         // Picks the balloon position and at the same time sets the masks and thresholds
-        bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  r.Rndm());
+        bn1->PickBalloonPosition(antarctica,  settings1,  inu,  anita1,  getRNG(RNG_BALLOON_POSITION)->Rndm());
           
 
         // find average balloon altitude and distance from center of earth for
@@ -2027,7 +2019,7 @@ int main(int argc,  char **argv) {
 
         nutauweightsum +=nutauweight;
         tauweightsum +=tauweight;
-        double xrndm=gRandom->Rndm();
+        double xrndm=getRNG(RNG_XRNDM)->Rndm();
 
         if(xrndm <=taus1->weight_tau_prob/(taus1->weight_tau_prob+interaction1->weight_nu_prob)){
           pnu=ptauf;//set the energy we are looking at to the final energy of the tau. cuts out alot of if-else statements
@@ -2395,7 +2387,7 @@ int main(int argc,  char **argv) {
 
       theta_rf_atbn = ray1->n_exit2bn[2].Angle(bn1->r_bn); // polar angle of the rf signal as seen at the balloon.
       // measured theta of the rf,  which is actual smeared by SIGMA_THETA,  whose default is 0.5 degrees.
-      theta_rf_atbn_measured = theta_rf_atbn+gRandom->Gaus()*anita1->SIGMA_THETA;
+      theta_rf_atbn_measured = theta_rf_atbn+getRNG(RNG_THETA_RF_RESOLUTION)->Gaus()*anita1->SIGMA_THETA;
       interaction1->r_exit2bn=bn1->r_bn.Distance(ray1->rfexit[2]);
       interaction1->r_exit2bn_measured=bn1->altitude_bn/cos(theta_rf_atbn_measured);
 
@@ -3030,7 +3022,7 @@ int main(int argc,  char **argv) {
       isDead = false;
       // Dead time
       if (settings1->USEDEADTIME){
-              if ( (r.Uniform(1)<anita1->deadTime) ){
+              if ( (getRNG(RNG_DEADTIME)->Uniform(1)<anita1->deadTime) ){
           isDead = true;
           if (settings1->MINBIAS!=1) {
            DO_SKIP
@@ -3126,7 +3118,7 @@ int main(int argc,  char **argv) {
         fslac_hitangles << bn1->sslacpositions[bn1->islacposition] << "\n";
 
       if (RANDOMISEPOL) {
-        double rotateangle=gRandom->Gaus(RANDOMISEPOL*RADDEG);
+        double rotateangle=getRNG(RNG_RANDOMISE_POL)->Gaus(RANDOMISEPOL*RADDEG);
         n_pol=n_pol.Rotate(rotateangle, ray1->n_exit2bn[2]);
       }
 
@@ -3263,8 +3255,8 @@ int main(int argc,  char **argv) {
 
           if (settings1->SIGNAL_FLUCT) {
             if (settings1->WHICH==0) {
-              globaltrig1->volts[ilayer][ifold][0]+=gRandom->Gaus(0., anita1->VNOISE_ANITALITE[ifold]);
-              globaltrig1->volts[ilayer][ifold][1]+=gRandom->Gaus(0., anita1->VNOISE_ANITALITE[ifold]);
+              globaltrig1->volts[ilayer][ifold][0]+=getRNG(RNG_SIGNAL_FLUCT)->Gaus(0., anita1->VNOISE_ANITALITE[ifold]);
+              globaltrig1->volts[ilayer][ifold][1]+=getRNG(RNG_SIGNAL_FLUCT)->Gaus(0., anita1->VNOISE_ANITALITE[ifold]);
             } //else
           } //if adding noise
           if (count_rx==anita1->rx_minarrivaltime) {
@@ -3361,7 +3353,7 @@ int main(int argc,  char **argv) {
             vnoise_discone=anita1->VNOISE[0]*sqrt(BW_DISCONES/settings1->BW_SEAVEYS);
 
             if (settings1->SIGNAL_FLUCT) {
-              volts_discone+=gRandom->Gaus(0., vnoise_discone); // here I'm using the noise seen by an antenna pointed with a 10 degree cant.  Should be different for a discone but we'll change it later.
+              volts_discone+=getRNG(RNG_SIGNAL_FLUCT)->Gaus(0., vnoise_discone); // here I'm using the noise seen by an antenna pointed with a 10 degree cant.  Should be different for a discone but we'll change it later.
             }
 
             if (fabs(volts_discone)/vnoise_discone>anita1->maxthreshold)
@@ -4091,8 +4083,6 @@ int main(int argc,  char **argv) {
     //cout << "Oindree: nnu is " << interaction1->nnu << "\n";
   }//end NNU neutrino loop
 
-  gRandom=rsave;
-  delete Rand3;
 
   cout << "about to close tsignals tree.\n";
   anita1->fsignals=anita1->tsignals->GetCurrentFile();
@@ -4876,12 +4866,12 @@ int WhereIsSecondBang(const Position &posnu, const Vector &nnu, double nuexitlen
   double gamma=pnu/MTAU;
 
   if (exp(-1*nuexitlength/(TAUDECAY_TIME*CLIGHT*gamma))>0.999){
-    rnd1=gRandom->Rndm()*nuexitlength;
+    rnd1=getRNG(RNG_SECOND_BANG)->Rndm()*nuexitlength;
   }
   else {
     while (rnd2>1-exp(-1*rnd1/(TAUDECAY_TIME*CLIGHT*gamma))) {
-      rnd1=gRandom->Rndm()*nuexitlength;
-      rnd2=gRandom->Rndm();
+      rnd1=getRNG(RNG_SECOND_BANG)->Rndm()*nuexitlength;
+      rnd2=getRNG(RNG_SECOND_BANG)->Rndm();
     } //while
   } //else
   posnu2 = posnu + rnd1*nnu;
@@ -4990,7 +4980,7 @@ void GetSmearedIncidentAngle(Vector &specular, Vector &nrf_iceside, Vector &n_ex
   Vector parallel_to_surface; // find vector parallel to surface to rotate the vector around
   parallel_to_surface+=n_exit2bn; // want to cross specular with n_exit2bn
   parallel_to_surface.Cross(specular);
-  nrf_iceside.Rotate(SMEARINCIDENTANGLE*(2*gRandom->Rndm()-1.), parallel_to_surface); // smear the incident ray
+  nrf_iceside.Rotate(SMEARINCIDENTANGLE*(2*getRNG(RNG_SMEARED_INCIDENT_ANGLE)->Rndm()-1.), parallel_to_surface); // smear the incident ray
   //   theta_inc_smeared=acos(nrf_iceside.Dot(nsurf_rfexit));
 }
 //end GetSmearedIncidentAngle()
@@ -5158,9 +5148,9 @@ int GetDirection(Settings *settings1, Interaction *interaction1, const Vector &r
 
     if (theta_threshold>0) {
       // pick the neutrino direction,  in a coordinate system where the z axis lies along the cerenkov cone.
-      costhetanu=costhetanu1+gRandom->Rndm()*(costhetanu2-costhetanu1);
+      costhetanu=costhetanu1+getRNG(RNG_DIRECTION)->Rndm()*(costhetanu2-costhetanu1);
 
-      double phinu=TWOPI*gRandom->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
+      double phinu=TWOPI*getRNG(RNG_DIRECTION)->Rndm(); // pick the phi of the neutrino direction,  in the same coordinate system.
       double sinthetanu=sqrt(1-costhetanu*costhetanu);
       // 3-vector of neutrino direction,  at that same coordinate system.
       nnu = Vector(sinthetanu*cos(phinu), sinthetanu*sin(phinu), costhetanu);

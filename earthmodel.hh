@@ -4,12 +4,10 @@
 #include <string>
 #include <cstdlib>
 //#include "Primaries.h"
-#include "TRandom3.h"
 
 class Primaries;
 class Position;
 class Vector;
-//class TRandom3;
 class Interaction;
 class IceModel;
 using std::string;
@@ -96,7 +94,6 @@ public:
 
  
 private:
-  TRandom3 Rand3;
 
 protected:
   int EARTH_MODEL;

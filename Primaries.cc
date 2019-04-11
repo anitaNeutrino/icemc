@@ -1,4 +1,3 @@
-#include "TRandom3.h"
 #include "Constants.h"
 #include "vector.hh"
 #include "position.hh"
@@ -13,6 +12,7 @@
 #include "Primaries.h"
 #include "Settings.h"
 #include "counting.hh"
+#include "icemc_random.h" 
 
 #include <cmath>
 
@@ -200,7 +200,7 @@ int Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *
 string Primaries::GetNuFlavor() {
   string nuflavor;
 
-  double rnd=gRandom->Rndm();
+  double rnd=getRNG(RNG_INTERACTION)->Rndm();
 
   if (rnd<=(1./3.)) {  
     nuflavor="nue";
@@ -261,7 +261,7 @@ Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,
 
 void Interaction::PickAnyDirection() {
   double rndlist[2];
-  gRandom->RndmArray(2,rndlist);
+  getRNG(RNG_DIRECTION)->RndmArray(2,rndlist);
   
   costheta_nutraject=2*rndlist[0]-1;
 
@@ -312,7 +312,7 @@ void  Interaction::setNuFlavor(Primaries *primary1,Settings *settings1,int which
 //! choose CC or NC: get from ratios in Ghandi etal paper, updated for the CTEQ6-DIS parton distribution functions (M.H. Reno, personal communication).  Need to add capability of using ratios from Connolly et al.
 string Interaction::GetCurrent() {
   string current;
-  double rnd=gRandom->Rndm();
+  double rnd=getRNG(RNG_INTERACTION)->Rndm();
   if (rnd<=0.6865254) // 10^18 eV - 10^21 eV (use this one for ANITA)
 //if (rnd<=0.6893498) // 10^17 eV - 10^20 eV (use this one for SalSA)
     current="cc";
@@ -431,7 +431,7 @@ double Y::pickYGandhietal() {
   	// adjust exponent until looks like the curve
   	//  and has right mean.
   	//  (Note this is not the fcn, but the inverse of the integral...)
-  rnd = gRandom->Rndm(1); // (0,1)
+  rnd = getRNG(RNG_INTERACTION)->Rndm(1); // (0,1)
   //  cout << "R1, R2, rnd are " << R1 << " " << R2 << " " << rnd << "\n";
   x=pow(-log(R1+rnd*R2),2.5); 
   return x;   
@@ -444,7 +444,7 @@ double Y::pickYConnollyetal2011(int NU,int CURRENT,double pnu) {
   double epsilon=log10(pnu/1.E9);
   // pick a y region 
   //double R1=Rand3Y.Rndm(); // choose our first random number
-  double r1=gRandom->Rndm();
+  double r1=getRNG(RNG_INTERACTION)->Rndm();
  
   int iyregion=0; // 0 for high y region 
   if (r1<ffrac->Eval(epsilon)) // Is it going to be in low y region?
@@ -459,7 +459,7 @@ double Y::pickYConnollyetal2011(int NU,int CURRENT,double pnu) {
   double C2_this=fC2->Eval(epsilon); // C2 for this event
   
   // pick another random number
-  double r2=gRandom->Rndm();//  double r2=Rand3Y.Rndm();
+  double r2=getRNG(RNG_INTERACTION)->Rndm();//  double r2=Rand3Y.Rndm();
   double y0=0.;
  
   if (iyregion==0)  // high y region

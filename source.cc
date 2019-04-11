@@ -10,12 +10,13 @@
 #include "EnvironmentVariable.h" 
 #include "blazars/fava.h"
 #include "source.hh"
+#include "icemc_random.h" 
 
 // SourceModel 
 
 
 SourceModel::SourceModel(const char * n, unsigned seed)
-  : name(n), rng(seed)
+  : name(n)
 {
   weight_Emin = 0;
   weight_Emax = 0;
@@ -332,9 +333,10 @@ TH1 * SourceModel::estimateFlux(double tmin, double tmax, double Emin, double Em
   TH1D * spectrum = new TH1D("spec", name, nbins, from, to); 
   spectrum->SetDirectory(0); 
   spectrum->GetXaxis()->SetTitle("log10 (E GeV)"); 
+  TRandom * rng = getRNG(RNG_SOURCE);
   for (int i = 0; i < N; i++) 
     {
-      double t = rng.Uniform(tmin,tmax); 
+      double t = rng->Uniform(tmin,tmax); 
       for (unsigned j = 0; j < sources.size(); j++) 
         {
           //figure out the flux between each energy bin 
@@ -388,7 +390,8 @@ int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE,
       fluxes[i] = total_flux; 
     }
 
-  double random = rng.Uniform(0, total_flux); 
+  TRandom * rng = getRNG(RNG_SOURCE);
+  double random = rng->Uniform(0, total_flux); 
   unsigned index = std::upper_bound(fluxes.begin(), fluxes.end(), random) - fluxes.begin();
 
   
@@ -407,7 +410,7 @@ int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE,
   
   if (nudir) *nudir = which->getDirection(t); 
 
-  if (!fixedEnergy) nuE =  which->getFlux()->pickEnergy(minE,maxE,t,&rng);
+  if (!fixedEnergy) nuE =  which->getFlux()->pickEnergy(minE,maxE,t,rng);
       
   return index; 
 }
@@ -492,9 +495,10 @@ void SourceModel::setUpWeights(double t0, double t1, double minE, double maxE, i
   weight_Emin = minE; 
   weight_Emax = maxE; 
 
+  TRandom * rng = getRNG(RNG_SOURCE);
   for (int i =0; i < N; i++) 
   {
-    double t = rng.Uniform(t0,t1); 
+    double t = rng->Uniform(t0,t1); 
     for (unsigned j = 0; j < sources.size(); j++) 
     {
       average_flux += sources[j]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t)/N; 

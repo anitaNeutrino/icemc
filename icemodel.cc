@@ -1,7 +1,6 @@
 #include "vector.hh"
 #include "TChain.h"
 #include "Constants.h"
-#include "TRandom3.h"
 #include "Settings.h"
 #include "earthmodel.hh"
 #include "icemodel.hh"
@@ -17,6 +16,7 @@
 #include "EnvironmentVariable.h"
 
 
+#include "icemc_random.h" 
 
 #include <fstream>
 #include <iostream>
@@ -183,6 +183,7 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
     int e_coord=0; //east coordinate of interaction, from Bedmap
     int n_coord=0; // north coordinate of interaction, from Bedmap
     
+    TRandom * rng = getRNG(RNG_INTERACTION_LOCATION); 
     
     //in case of roughness, create an array of allowable indices for the lookup (so this stay local to this function and we don't modify *horizon[ibnposition] and fark up other things downstream)
     /*if(settings1->ROUGHNESS){
@@ -206,7 +207,7 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
         unitx = unitx - unitx.Dot(blnormal)*blnormal;
         unity = blnormal.Cross(unitx);
 
-        temppos = rbn + gRandom->Rndm() * settings1->ROUGH_INTPOS_SHIFT * unitx + gRandom->Rndm() * settings1->ROUGH_INTPOS_SHIFT * unity;
+        temppos = rbn + rng->Rndm() * settings1->ROUGH_INTPOS_SHIFT * unitx + rng->Rndm() * settings1->ROUGH_INTPOS_SHIFT * unity;
         lon = temppos.Lon();
         lat = temppos.Lat();
         //if( !IceThickness(lon,lat)){   //ignore if not thick enough
@@ -225,9 +226,9 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
         //cout << "Inside Crust 2.0 if statement.\n";
         // vol_bybin is initialized to 0
         while(vol_bybin/maxvol_inhorizon[ibnposition]<rnd3) {
-          rnd3=gRandom->Rndm(); // pick random numbers between 0 and 1
-          rnd1=gRandom->Rndm();
-          rnd2=gRandom->Rndm();
+          rnd3=rng->Rndm(); // pick random numbers between 0 and 1
+          rnd1=rng->Rndm();
+          rnd2=rng->Rndm();
 	  
           whichbin_forcrust20=(int)(rnd1*(double)ilat_inhorizon[ibnposition].size());
           ilat=ilat_inhorizon[ibnposition][whichbin_forcrust20];
@@ -236,8 +237,8 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
 
           vol_bybin=icethkarray[ilon][ilat]*1000.*area[ilat];
         } //while
-        phi=SmearPhi(ilon, gRandom->Rndm());
-        theta=SmearTheta(ilat, gRandom->Rndm());
+        phi=SmearPhi(ilon, rng->Rndm());
+        theta=SmearTheta(ilat, rng->Rndm());
         lon = GetLon(phi);
         lat = GetLat(theta);
 	//        cout << "ibnposition, phi, theta, lon, lat are " << ibnposition << " " << phi << " " << theta << " " << lon << " " << lat << "\n";
@@ -245,9 +246,9 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
       else if (ice_model==1) { // this is Bedmap
         //cout << "Inside Bedmap if statement.\n";
         while(vol_bybin/maxvol_inhorizon[ibnposition]<rnd3) {
-          rnd3=gRandom->Rndm();
-          rnd1=gRandom->Rndm();
-          rnd2=gRandom->Rndm();
+          rnd3=rng->Rndm();
+          rnd1=rng->Rndm();
+          rnd2=rng->Rndm();
 
           which_coord=(int)(rnd1*(double)easting_inhorizon[ibnposition].size());
 
@@ -280,6 +281,7 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
 
 int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, double len_int_kgm2, Vector * force_dir) {
     
+    TRandom * rng = getRNG(RNG_INTERACTION_LOCATION); 
     if (!force_dir) 
     {
       interaction1->PickAnyDirection(); // first pick the neutrino direction
@@ -295,8 +297,8 @@ int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, doubl
     double maxphi=2.*PI;
     double thisphi,thiscos,thissin;
         
-    thisphi=gRandom->Rndm()*(maxphi-minphi)+minphi;
-    thiscos=gRandom->Rndm()*(maxcos-mincos)+mincos;
+    thisphi=rng->Rndm()*(maxphi-minphi)+minphi;
+    thiscos=rng->Rndm()*(maxcos-mincos)+mincos;
     thissin=sqrt(1.-thiscos*thiscos);
     Position thisr_in;// entrance point
     Position thisr_enterice;
@@ -469,11 +471,11 @@ int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, doubl
             //If we have a very short path length in ice, it's ok to just assume it's uniform
             if (interaction1->pathlength_inice / L_ice < 1e-3) 
             {
-              distance = gRandom->Rndm() * interaction1->pathlength_inice; 
+              distance = rng->Rndm() * interaction1->pathlength_inice; 
             }
             else
             {
-              distance = -log(gRandom->Uniform(exp(-interaction1->pathlength_inice/L_ice),1))*L_ice; 
+              distance = -log(rng->Uniform(exp(-interaction1->pathlength_inice/L_ice),1))*L_ice; 
             }
 
 	    interaction1->posnu=distance*interaction1->nnu; 

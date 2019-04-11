@@ -14,11 +14,10 @@
 
 #include <vector> 
 #include "vector.hh"  // only two kinds of vectors? we need more! 
-#include "TRandom3.h" 
 #include "TMath.h" 
 #include "TF1.h" 
 #include <stdint.h> 
-
+#include "TRandom.h" 
 
 
 /** A source model holds a collection of sources */ 
@@ -76,7 +75,6 @@ public:
   const Source * getSource(int i ) const { return  sources[i]; } 
   unsigned getNSources() const { return sources.size(); } 
   virtual ~SourceModel(); 
-  void setSeed(ULong_t seed) { rng.SetSeed(seed); } 
 
   /** fills a vector with the times that sources turn on and off */ 
   void computeFluxTimeChanges(std::vector<double> * changes) const; 
@@ -86,7 +84,6 @@ private:
   double weight_Emax;
   double average_flux; 
   const char * name;
-  TRandom3 rng;
 }; 
 
 

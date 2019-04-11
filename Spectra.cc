@@ -8,6 +8,7 @@
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
+#include "icemc_random.h" 
 
 //class Tools;
 
@@ -447,7 +448,8 @@ void Spectra::GetCDF(){//set up CDF and inverse CDF;
 
 double Spectra::GetCDFEnergy(){//get Energy from 'CDF'
 
-  double ran = gRandom->Rndm();
+  TRandom * rng = getRNG(RNG_SPECTRA);
+  double ran = rng->Rndm();
  
   double thisenergy=0.;
 
@@ -456,7 +458,7 @@ double Spectra::GetCDFEnergy(){//get Energy from 'CDF'
 
   while(thisenergy <18){//redundant?
     //cout<<"thisenergy was "<<thisenergy<<" ran was "<<ran<<"\n";
-    ran = gRandom->Rndm();
+    ran = rng->Rndm();
     thisenergy = inverse_CDF->Eval(ran,0,"S");
     //cout<<"ran is "<<ran<<" thisenergy is "<<thisenergy<<"\n";
   }
