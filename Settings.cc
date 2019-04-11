@@ -273,6 +273,7 @@ void Settings::Initialize() {
   SPECIFIC_NU_POSITION_LONGITUDE = 166.7; 
   SPECIFIC_NU_POSITION_ALTITUDE = 0; 
   SPECIFIC_NU_POSITION_DISTANCE = 100e3; 
+  HORIZON_OFFSET = -999; 
 
   // Source options
   SOURCE = "None"; 
