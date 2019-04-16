@@ -98,14 +98,20 @@ void TRandomXoshiro256Plus::RndmArray(Int_t n, Double_t * arr)
 
 static ULong_t the_seed = 12345; 
 static WhichIceMcRNGType the_rng_type; 
-static std::vector<TRandom*> rngs(HOW_MANY_RNGS_DO_WE_HAVE); 
+static TRandom* rngs[HOW_MANY_RNGS_DO_WE_HAVE]; 
 
-static void setup() __attribute__((constructor));
 
-void setup() 
+class random_initializer
 {
-  setRNGType(RNG_TYPE_XOSHIRO256PLUS); 
-}
+  public:
+  random_initializer() 
+  {
+    setRNGType(RNG_TYPE_XOSHIRO256PLUS); 
+  }
+};
+
+static random_initializer initializer; 
+
 
 WhichIceMcRNGType getRNGType() { return the_rng_type; } 
 
@@ -113,7 +119,7 @@ void setRNGType(WhichIceMcRNGType type)
 {
   the_rng_type = type; 
 
-  for (unsigned i = 0; i < rngs.size(); i++) 
+  for (unsigned i = 0; i < HOW_MANY_RNGS_DO_WE_HAVE; i++) 
   {
     if (rngs[i]) delete rngs[i]; 
 
@@ -130,7 +136,7 @@ void setRNGType(WhichIceMcRNGType type)
 void setSeed(ULong_t s) 
 {
   the_seed = s; 
-  for (unsigned i = 0; i < rngs.size(); i++) rngs[i]->SetSeed(s + i * 1235); //each gets a different seed derived from the primary.
+  for (unsigned i = 0; i <HOW_MANY_RNGS_DO_WE_HAVE; i++) rngs[i]->SetSeed(s + i * 1235); //each gets a different seed derived from the primary.
 }
 
 
