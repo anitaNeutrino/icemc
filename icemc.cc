@@ -1666,7 +1666,7 @@ int main(int argc,  char **argv) {
       double RA = 0;
       double dec = 0;
       int which_source = -1; 
-      std::string objName = "noObject";
+      TString objName = "noObject";
       if (!src_model &&  spectra1->IsSpectrum() ){//if using energy spectrum
 
         if(settings1->USEDARTBOARD) pnu=spectra1->GetNuEnergy();
