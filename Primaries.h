@@ -237,6 +237,8 @@ public:
     //!< phase space weighting
     double dtryingdirection; //!<weighting factor: how many equivalent tries each neutrino counts for after having reduced angular phase space for possibly detectable events
     double dnutries; //!<product of dtryingdirection and dtryingposition
+
+    double d_effective_area; //!< In unbaised mode, projection of surface onto nnu
     
     double altitude_int;//!< depth of interaction
     double altitude_int_mirror;//!<depth of the mirror point of interaction.
