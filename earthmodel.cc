@@ -38,6 +38,7 @@ const double EarthModel::GEOID_MIN(6.356752E6); // from Geodetic Reference Syste
 EarthModel::EarthModel(int model,int WEIGHTABSORPTION_SETTING) {
 
  
+  FLATSURFACE = 0; 
     radii[0]=1.2e13;
     radii[1]=(EarthModel::R_EARTH-4.0E4)*(EarthModel::R_EARTH-4.0E4);
     radii[2]=(EarthModel::R_EARTH*EarthModel::R_EARTH); // average radii of boundaries between earth layers
