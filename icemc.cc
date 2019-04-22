@@ -1785,9 +1785,9 @@ int main(int argc,  char **argv) {
       //-------------------------------------------------------
       beyondhorizon = 0;
 
-      if (interaction1)
-        delete interaction1;
-      interaction1 = new Interaction("nu",  primary1,  settings1,  whichray,  count1);
+
+      //Use placement new instead of deleting and recreating so that branch pointers don't go away
+      interaction1 = new (interaction1) Interaction("nu",  primary1,  settings1,  whichray,  count1);
 
       if(taus1)
         delete taus1;
