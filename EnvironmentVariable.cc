@@ -71,7 +71,7 @@ const char* EnvironmentVariable::ICEMC_SRC_DIR(){
 const char* EnvironmentVariable::ICEMC_VERSION(TString outputdir){
 
   system(Form("git rev-parse HEAD > %s/gitversion.txt", outputdir.Data()));
-  std::string gitversion;
+  static std::string gitversion;
   std::ifstream gitversionfile (Form("%s/gitversion.txt", outputdir.Data()));
   if (gitversionfile.is_open())
     {
