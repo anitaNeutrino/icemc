@@ -1,4 +1,6 @@
 #include "vector.hh"
+#include "TH1.h" 
+#include "TFile.h" 
 #include "TChain.h"
 #include "Constants.h"
 #include "Settings.h"
@@ -279,6 +281,215 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
 } //PickInteractionLocation
 
 
+
+
+static double getDEffectiveArea( const Vector & cap_axis, 
+                                      const Vector & nnu, 
+                                      double cap_angle)  
+{
+    
+  const double A = PI*EarthModel::R_EARTH * EarthModel::R_EARTH; 
+
+  static TFile f(Form("%s/projections/projections.root", getenv("ICEMC_SRC_DIR") ?: ".")); 
+  static TH2 * h = (TH2*) f.Get("projections.root"); 
+
+
+  //figure out observation angle relative to axis 
+
+  double obs = DEGRAD * ( cap_axis.Angle(nnu)); 
+  if (obs > 90) obs = 180-90; //not sure this is quite right. Also do we need to account for having two chances to hit it? 
+  return A*h->Interpolate(obs, cap_angle); 
+}
+
+
+int IceModel::PickUnbiasedNearBalloon(Interaction * interaction1, IceModel *antarctica, const Position * balloon_position, 
+                                      double max_angular_dist, double len_int_kgm2, const Vector * force_dir) 
+{
+     // first pick the neutrino direction
+    if (!force_dir) 
+    {
+      interaction1->PickAnyDirection();
+    }
+    else
+    {
+      interaction1->nnu = *force_dir; 
+    }
+    
+    TRandom * rng = getRNG(RNG_INTERACTION_LOCATION); 
+
+    //now we pick a point on the SURFACE near our balloon 
+
+     double maxcos =1; 
+     double mincos = cos(max_angular_dist*RADDEG); 
+     double minphi = 0; 
+     double maxphi = 2* PI; 
+     double thisphi=rng->Rndm()*(maxphi-minphi)+minphi;
+     double thiscos=rng->Rndm()*(maxcos-mincos)+mincos;
+
+     //now we rotate from balloon position to normal units. 
+     Position r_local(acos(thiscos), thisphi);
+     Vector r_global_n  = r_local.ChangeCoord( balloon_position->Unit()); 
+     double R = EarthModel::R_EARTH; 
+     Position r_global = R * r_global_n; 
+    
+
+     //ok, now we have to find where our neutrino trajectory intersects rock/ice
+    
+     // For now, let's force the direction to be in the opposite direction as r_global 
+     // so we don't confuse the other methods too much.  Just for our temporary value though! 
+     bool should_flip = r_global.Dot(interaction1->nnu) > 0;  
+     Vector nnu  = should_flip ? -1 * interaction1->nnu : interaction1->nnu; 
+
+
+    Position exitearth; 
+    if (!Ray::WhereDoesItLeave(r_global,nnu,antarctica,exitearth)) { // where does it leave Earth
+      interaction1->wheredoesitleave_err = 1; // epic fail 
+      return 0; 
+    }
+
+
+    //let's see if our Earth exit position is in the ice 
+
+    Position exitice; 
+    if (IceThickness(exitearth) && exitearth.Lat() < COASTLINE) 
+    {
+      //we are on the ice, but let's see if we're above the surface
+
+      if (exitearth.Mag() > Surface(exitearth))
+      {
+        //oops we are above the ice. Let's try with some more gusto 
+        const int max_step = 3; 
+        double steps[max_step]  = {5e3, 5e2, 5e1 };
+        int istep = 0; 
+
+        exitice = exitearth;
+
+        //is this right? don't we want the angle with the local surface normal? I guess it's not that different... 
+        while (exitice.Mag() - Surface(exitice)/cos(nnu.Theta()) > steps[istep])
+        {
+          Position new_exitice; 
+          WhereDoesItExitIce(exitice, nnu, steps[istep], new_exitice); 
+
+          if (istep < max_step-1) 
+          {
+            exitice =  new_exitice + steps[istep] * nnu; 
+          }
+          else  // give up
+          {
+            exitice = new_exitice; 
+            break; 
+          }
+          istep++; 
+        }
+      }
+      else
+      {
+        exitice = exitearth; 
+      }
+
+    }
+
+    else // We are not in an ice bin, so back up and find where we left the ice
+    {
+
+      const int max_step = 4; 
+      const double steps[max_step] = {5e4,5e3,5e2, 5e1}; 
+
+      Position exitice = exitearth; 
+      //try to find ice exit point with decrasing stepsize. 
+      for (int istep = 0; istep < max_step; istep++) 
+      {
+        if(r_global.Distance(exitice) > steps[istep])
+        {
+          Position updated_exitice; 
+          if (!WhereDoesItExitIce(exitearth, nnu, steps[istep], updated_exitice))
+          {
+            interaction1->neverseesice = 1; 
+            return 0; 
+          }
+
+          if (istep < max_step -1 ) 
+          {
+            exitice =updated_exitice +  steps[istep] *nnu; 
+          }
+          else 
+          {
+            exitice = updated_exitice; 
+
+          }
+
+        }
+      }
+    }
+
+
+    //now find out where we enter the ice. 
+    // start with a coarsish binning to get in the ballpark
+    double enter_coarse = 5e3; 
+    Position enterice; 
+
+    if (!WhereDoesItEnterIce(exitearth, nnu, enter_coarse, enterice))
+    {
+      interaction1->wheredoesitenterice_err = 1; 
+      return 0; 
+    }
+
+    //now with finer binning 
+    Position entericetmp = enterice + enter_coarse * nnu; 
+    double enter_fine = 20; 
+    if (!WhereDoesItEnterIce(entericetmp, nnu, enter_fine, enterice))
+    {
+      interaction1->wheredoesitenterice_err = 1; 
+      return 0; 
+    }
+
+    // phew, done with entering and exiting ice.  
+
+    interaction1->pathlength_inice=enterice.Distance(exitice);
+
+    //now pick from exp(-x/L_ice) 
+    double L_ice=len_int_kgm2/Signal::RHOICE;
+
+    double distance = -1; 
+    //If we have a very short path length in ice, it's ok to just assume it's uniform
+    if (interaction1->pathlength_inice / L_ice < 1e-3) 
+    {
+       distance = rng->Rndm() * interaction1->pathlength_inice; 
+    }
+    else
+    {
+       distance = -log(rng->Uniform(exp(-interaction1->pathlength_inice/L_ice),1))*L_ice; 
+    }
+
+    // now we have to remember if we have the right sign or not!!  
+    interaction1->posnu=distance *interaction1->nnu+ (should_flip ? exitice : enterice);
+
+
+    //we should probably tell the interaction all the new stuff as well 
+
+    interaction1->nuexitice = should_flip ? enterice : exitice;  // do we need to flip these? 
+    interaction1->r_enterice = should_flip ? exitice : enterice; 
+
+    if (interaction1->posnu.Mag()-Surface(interaction1->posnu)>0) {
+      interaction1->toohigh=1;
+      return 0;
+    }
+    if (interaction1->posnu.Mag()-Surface(interaction1->posnu)+IceThickness(interaction1->posnu)<0) {
+      interaction1->toolow=1;
+      return 0; 
+    }    
+
+
+    interaction1->d_effective_area = getDEffectiveArea(*balloon_position, interaction1->nnu,max_angular_dist); 
+
+
+    return 1;
+}
+
+     
+
+
+
 int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, double len_int_kgm2, Vector * force_dir) {
     
     TRandom * rng = getRNG(RNG_INTERACTION_LOCATION); 
@@ -313,7 +524,7 @@ int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, doubl
     interaction1->toohigh=0;
     interaction1->toolow=0;
     
-    thisr_in.SetXYZ(R_EARTH*thissin*thiscos,R_EARTH*thissin*thissin,R_EARTH*thiscos);
+    thisr_in.SetXYZ(R_EARTH*thissin*cos(thisphi),R_EARTH*thissin*sin(thisphi),R_EARTH*thiscos);
     // interaction1->r_in = thisr_in;
 
     if (thisr_in.Dot(interaction1->nnu)>0)
@@ -502,6 +713,8 @@ int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, doubl
 	//cout << "inu, toolow is " << inu << " " << interaction1->toolow << "\n";
 	return 0;
     }    
+
+    interaction1->d_effective_area = getDEffectiveArea(z_axis, interaction1->nnu,COASTLINE); 
     return 1;
     
 }

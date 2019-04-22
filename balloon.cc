@@ -393,6 +393,8 @@ int getTuffIndex(int Curr_time) {
   else if( ((TUFFconfig_B_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_1)) || ((TUFFconfig_C_end_1 < Curr_time) && (Curr_time <= TUFFconfig_P_end_2)) || ((TUFFconfig_O_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_3)) || ((TUFFconfig_B_end_2 < Curr_time) && (Curr_time <= TUFFconfig_P_end_4)) || ((TUFFconfig_B_end_4 < Curr_time) && (Curr_time <= TUFFconfig_P_end_5)) || ((TUFFconfig_B_end_5 < Curr_time) && (Curr_time <= TUFFconfig_P_end_6)) || ((TUFFconfig_B_end_6 < Curr_time) && (Curr_time <= TUFFconfig_P_end_7)) ) { // config P trigconfigP.imp
     return 5;
   }
+
+  return -1; 
 }
 // this is called for each neutrino
 void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int inu,Anita *anita1, double randomNumber) { // r_bn_shadow=position of spot under the balloon on earth's surface
@@ -764,15 +766,26 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
   double latfromSP=0;
   
   
-  if (settings1->UNBIASED_SELECTION==1) {
+  if (settings1->UNBIASED_SELECTION>=1) {
 
-    if (antarctica1->PickUnbiased(interaction1,antarctica1,len_int_kgm2,force_dir )) { // pick neutrino direction and interaction point
-      interaction1->dtryingdirection=1.;
-      interaction1->iceinteraction=1;
+
+    if ( (settings1->UNBIASED_SELECTION == 1 && antarctica1->PickUnbiased(interaction1,antarctica1,len_int_kgm2,force_dir)) ||
+         (settings1->UNBIASED_SELECTION == 2 && antarctica1->PickUnbiasedNearBalloon(interaction1,antarctica1, &r_bn, 
+                                                                                     settings1->UNBIASED_SELECTION_MAX_ANGLE,
+                                                                                     len_int_kgm2,force_dir))  )
+    { // pick neutrino direction and interaction point
+          interaction1->dtryingdirection=1.;
+          interaction1->iceinteraction=1;
     }
     else
-      interaction1->iceinteraction=0;
+    {
+       interaction1->iceinteraction=0;
+       interaction1->d_effective_area = 0; 
+    }
+
+
   } else {
+    interaction1->d_effective_area = 0;
     interaction1->iceinteraction=1;
     if (WHICHPATH==3) { //Force interaction point if we want to make a banana plot
       interaction1->posnu = interaction1->nu_banana;

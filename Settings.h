@@ -60,6 +60,7 @@ class Settings : public TObject {
 
 
   int UNBIASED_SELECTION;
+  double UNBIASED_SELECTION_MAX_ANGLE; 
   int WHICH; // which payload to use 0=Anita-lite,1=Ross,2=Smex,3=make your own
   int ANITAVERSION;
   int CYLINDRICALSYMMETRY; // is it cylindrically symmetric =1 if which=1,2, =0 if which=0
