@@ -3790,12 +3790,12 @@ int main(int argc,  char **argv) {
             truthEvPtr->nuMom            = pnu;
             truthEvPtr->showerE =        pnu * sumfrac; 
             truthEvPtr->nu_pdg           = pdgcode;
-            memcpy(truthEvPtr->e_component, e_component, sizeof(e_component));
-            memcpy(truthEvPtr->h_component, h_component, sizeof(h_component));
-            memcpy(truthEvPtr->n_component, n_component, sizeof(n_component));
-            memcpy(truthEvPtr->e_component_k ,e_component_kvector, sizeof(e_component_kvector));
-            memcpy(truthEvPtr->h_component_k ,h_component_kvector, sizeof(h_component_kvector));
-            memcpy(truthEvPtr->n_component_k ,n_component_kvector, sizeof(n_component_kvector));
+            memcpy(truthEvPtr->e_component, e_component, sizeof(truthEvPtr->e_component));
+            memcpy(truthEvPtr->h_component, h_component, sizeof(truthEvPtr->h_component));
+            memcpy(truthEvPtr->n_component, n_component, sizeof(truthEvPtr->n_component));
+            memcpy(truthEvPtr->e_component_k ,e_component_kvector, sizeof(truthEvPtr->e_component_k));
+            memcpy(truthEvPtr->h_component_k ,h_component_kvector, sizeof(truthEvPtr->h_component_k));
+            memcpy(truthEvPtr->n_component_k ,n_component_kvector, sizeof(truthEvPtr->n_component_k));
             truthEvPtr->sourceLon        = sourceLon;
             truthEvPtr->sourceLat        = sourceLat;
             truthEvPtr->sourceAlt        = sourceAlt;
