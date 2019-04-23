@@ -1619,6 +1619,8 @@ int main(int argc,  char **argv) {
  
   signal(SIGINT,  interrupt_signal_handler);     // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
 
+  TString objName = "noObject";
+
   // Setting gps offset for plotting direction wrt north
   if (settings1->WHICH==7){
     gps_offset=atan2(-0.7042,0.71)*DEGRAD;
@@ -1666,7 +1668,6 @@ int main(int argc,  char **argv) {
       double RA = 0;
       double dec = 0;
       int which_source = -1; 
-      TString objName = "noObject";
       if (!src_model &&  spectra1->IsSpectrum() ){//if using energy spectrum
 
         if(settings1->USEDARTBOARD) pnu=spectra1->GetNuEnergy();
