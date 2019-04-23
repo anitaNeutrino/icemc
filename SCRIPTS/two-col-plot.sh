@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# A script to plot a few one-column data files.
+
 # example: ./two-col-plot.sh  --inp "Homer Simpson" --inp "" --default-title none --yscale 0.1 --inp "Bart Simpson" --title "Son" --xscale 0.21 --xshift +0.22 --lt 1 --lw 2 --inp "Marge" --title "Mother" --yscale 0.3 --inp "Peter Griffin" --default-title \"\" --xrange "[:20]" --yrange "[0: 100]"
 
 
