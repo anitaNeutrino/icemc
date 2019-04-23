@@ -32,10 +32,14 @@ SourceModel::~SourceModel()
 // convert redshift to MPC
 static double luminosity_distance(double z) 
 {
-  static TF1  f_comoving("comoving_distance", "[0]  / sqrt([1]*(1+x)^4 + [2] * (1+x)^3 + [3] * (1+x)^2 + [4])", 0,10); 
-  f_comoving.SetParameters(67.74, 5e-5, 0.3089, 0, 0.6911); 
+  static TF1 * f_comoving = 0; 
+  if (!f_comoving) 
+  {
+    f_comoving = new TF1("comoving_distance", "[0]  / sqrt([1]*(1+x)^4 + [2] * (1+x)^3 + [3] * (1+x)^2 + [4])", 0,10); 
+    f_comoving->SetParameters(67.74, 5e-5, 0.3089, 0, 0.6911); 
+  }
 
-  double d_M = f_comoving.Integral(0,z); 
+  double d_M = f_comoving->Integral(0,z); 
   return (1+z) * d_M; 
 } 
 
