@@ -284,14 +284,16 @@ void ChanTrigger::WhichBandsPassTrigger1(Settings *settings1, Anita *anita1, Glo
  */
 void ChanTrigger::WhichBandsPassTrigger2(Settings *settings1, Anita *anita1, GlobalTrigger *globaltrig1, Balloon *bn1, int ilayer, int ifold, double dangle, double emfrac, double hadfrac, double thresholds[2][5]){
   
-  double psignal[2][5][Anita::NFOUR];
+  double psignal[2][5][Anita::NFOUR]; memset(psignal,0,sizeof(psignal));
   
-  double mindiodeconvl[2][5];
+  double mindiodeconvl[2][5]; memset(mindiodeconvl,0,sizeof(mindiodeconvl)); 
 
-  double onediodeconvl[2][5];
+  double onediodeconvl[2][5]; memset(onediodeconvl,0,sizeof(onediodeconvl)); 
   
-  double timedomain_output[2][5][Anita::NFOUR];
-  double timedomain_output_justNoise[2][5][Anita::NFOUR];
+  double timedomain_output[2][5][Anita::NFOUR]; memset(timedomain_output,0,sizeof(timedomain_output)); 
+  double timedomain_output_justNoise[2][5][Anita::NFOUR]; memset(timedomain_output_justNoise,0,sizeof(timedomain_output_justNoise)); 
+
+
   int iant=anita1->GetRxTriggerNumbering(ilayer, ifold);
 
   if (settings1->NOISEFROMFLIGHTTRIGGER){
