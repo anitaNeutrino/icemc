@@ -136,9 +136,17 @@ Anita::Anita() {
   bwslice_width[3]=370.e6;
   bwslice_width[4]=965.E6; // 3 dB bandwidths, without overlap
     
+
+
   for (int i=0;i<4;i++) {
     bwslice_min[i]=bwslice_center[i]-bwslice_width[i]/2.;
     bwslice_max[i]=bwslice_center[i]+bwslice_width[i]/2.;
+  }
+
+  for (int i = 0; i < 5; i++) 
+  {
+    iminbin[i] = 0; 
+    imaxbin[i] = NFOUR/2; 
   }
     
   bwslice_min[4]= bwslice_center[0]-bwslice_width[0]/2.; //minimum of each bandwidth slice
