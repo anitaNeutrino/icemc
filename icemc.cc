@@ -789,13 +789,13 @@ int main(int argc,  char **argv) {
   double volts_rx_rfcm_lab_h_all[48][512];
 
   // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
-  double e_component[Anita::NANTENNAS_MAX]={0}; // E comp along polarization
-  double h_component[Anita::NANTENNAS_MAX]={0}; // H comp along polarization
-  double n_component[Anita::NANTENNAS_MAX]={0}; // normal comp along polarization
+  static double e_component[Anita::NANTENNAS_MAX]={0}; // E comp along polarization
+  static double h_component[Anita::NANTENNAS_MAX]={0}; // H comp along polarization
+  static double n_component[Anita::NANTENNAS_MAX]={0}; // normal comp along polarization
 
-  double e_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of e-field along the rx e-plane
-  double h_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the rx h-plane
-  double n_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the normal
+  static double e_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of e-field along the rx e-plane
+  static double h_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the rx h-plane
+  static double n_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the normal
 
   Vector n_eplane = const_z;
   Vector n_hplane = -const_y;
