@@ -212,7 +212,6 @@ vector<double> ZhsAlpha(25000);
 Settings* global_settings1;
 Anita *global_anita1;
 Balloon *global_bn1;
-double NrFT[ANITA_TIME_SAMPLES];
 std::string ZHSEvNum;
 std::string ZHSPathRoot;
 
@@ -372,24 +371,9 @@ int main(int argc,  char **argv) {
 
   gStyle->SetOptTitle(0);
 
-  // NrFT was only for playing in an interactive session.
-  // It is a Fourier Transform computed with a Numerical Recipes routine.
-  // WITH_LINES(
-  //            "./GDB/cut_lo_hi/ft/icemc/__plot1d.dat",
-  //            // "./GDB/ift/inter/__plot1d.dat",
-  //            ind,
-  //            tokens,
-  //            NrFT[ind - 1] = atof(tokens[0].c_str());
-  //            );
-  // for (int ind = 0; ind < ANITA_TIME_SAMPLES; ind++) {
-  //   NrFT[ind] = NrFT[ind] * 5.5e+8; // The coefficient is an empirical value derived from eyeballing using gnuplot.
-  //   //    // cout << ind << " NrFT: " << NrFT[ind] << endl;
-  // }
 
   // GDB-DUMP-MARKER: ZhsTimeE: plot1d_opt ZhsTimeE 'with lines'
   struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
-  // struct hot_test_state *hot_test_result = (struct hot_test_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/hot-module-test.so", true /* bInteractive */);
-  // exit(0);
   
   double vmmhz[Anita::NFREQ];                        //  V/m/MHz at balloon (after all steps)
   // given the angle you are off the Cerenkov cone,  the fraction of the observed e field that comes from the em shower
@@ -413,8 +397,6 @@ int main(int argc,  char **argv) {
   Ray *ray1=new Ray(); // create new instance of the ray class
   Counting *count1=new Counting();
   GlobalTrigger *globaltrig1;
-  // Taumodel *taus1 = new Taumodel();
-  // input parameters
 
   stemp=string(outputdir.Data())+"/output"+run_num+".txt";
   ofstream foutput(stemp.c_str(),  ios::app);
@@ -435,9 +417,6 @@ int main(int argc,  char **argv) {
   bn1->InitializeBalloon();
   anita1->Initialize(settings1, foutput, inu, outputdir);
   bvv::interpolate_zhs_ft(vmmhz, anita1->v_phases, anita1, cr_ft_result);
-  // for (int i = 0; i < Anita::NFREQ; i++) {
-  //   cout << "i: " << i << " vmmhz: " << vmmhz[i] << " phase: " << phase[i] << endl;
-  // }
 
   if (trig_thresh!=0)
     anita1->powerthreshold[4]=trig_thresh;
@@ -473,18 +452,29 @@ int main(int argc,  char **argv) {
   Vector n_hplane = -const_y;
   Vector n_normal = const_x;
 
+  // The following two assingments are good for debugging:
   // Antenna #30's horizontal polarization under assumption of default balloon coordinates (== 999):
-  Vector n_pol = Vector(+0.0274856, +0.998238,  +0.0525939); // direction of polarization
+  // Vector n_pol = Vector(+0.0274856, +0.998238,  +0.0525939); // direction of polarization
 
   // Direction opposite to antenna #30's normal under assumption of default balloon coordinates (== 999):
   // Vector direction2bn = -1 * Vector(-0.918422,  +0.0459897, -0.392921); // direction from EAS to balloon.
 
-  double direction2bn_x, direction2bn_y, direction2bn_z; // Unit vector components of signal.
-  dir2bn(direction2bn_x, direction2bn_y, direction2bn_z, ZHSPathRoot, ZHSEvNum);
-  std::cout << "Reflected signal direction2bn: " << direction2bn_x << ", " << direction2bn_y << ", " << direction2bn_z << std::endl;
-  //exit(0);
+  Vector n_pol = Vector(Ex_max / Emax, Ey_max / Emax, Ez_max / Emax);
 
-  Vector direction2bn = Vector(-0.918422,  +0.0459897, -0.392921); // direction from EAS to balloon.
+  double direction2bn_x, direction2bn_y, direction2bn_z; // Unit vector components of signal propagation direction.
+  TZHSSimPar ZHSSimPar = dir2bn(direction2bn_x, direction2bn_y, direction2bn_z, ZHSPathRoot, ZHSEvNum);
+  double ZHSAnitaDist = sqrt(ZHSSimPar.AntX * ZHSSimPar.AntX + ZHSSimPar.AntY * ZHSSimPar.AntY + ZHSSimPar.AntZ * ZHSSimPar.AntZ);
+  double AnitaTheta = acos(ZHSSimPar.AntZ / ZHSAnitaDist);
+  double AnitaPhi = atan2(ZHSSimPar.AntY, ZHSSimPar.AntX);
+  double AnitaLat = EarthModel::GetLat(AnitaTheta);
+  double AnitaLon = EarthModel::GetLon(AnitaPhi);
+
+  std::cout << "AnitaLat, AnitaLon: " << AnitaLat << ", " << AnitaLon << std::endl;
+  exit(0);
+  
+  std::cout << "Reflected signal direction2bn: " << direction2bn_x << ", " << direction2bn_y << ", " << direction2bn_z << std::endl;
+  Vector direction2bn = Vector(direction2bn_x, direction2bn_y, direction2bn_z); // direction from EAS to balloon.
+
   Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
   Vector direction2bn_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction from EAS to balloon
 

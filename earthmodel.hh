@@ -94,6 +94,9 @@ public:
   void EarthCurvature(double *array,double depth_temp); // adjusts coordinates within the mine to account for the curvature of the earth.
   Position WhereDoesItEnter(const Position &posnu,const Vector &nnu);
 
+  static double GetLat(double theta) ;
+  static double GetLon(double phi) ;
+
  
 private:
   TRandom3 Rand3;
@@ -160,8 +163,6 @@ protected:
   double dGetTheta(int itheta) ;
   double dGetPhi(int ilon) ;
   void GetILonILat(const Position&,int& ilon,int& ilat) ;
-  double GetLat(double theta) ;
-  double GetLon(double phi) ;
   Vector PickPosnuForaLonLat(double lon,double lat,double theta,double phi); // given that an interaction occurs at a lon and lat, pick an interaction position in the ice
 
 }; //class EarthModel

@@ -6,29 +6,11 @@
 #include <string>
 #include "bvv-macro.h"
 #include "bvv-util.h"
+#include "zhs-input.h"
 
 extern "C" void atmosinit_(int *modlabel, char* atmosname, int atmosname_len);
 extern "C" double zfromdepth_(double *depth, int *layer);
 
-
-class TSimPar {
-  char buf[256];
-public: 
-  double Ze;
-  double Az;   // astro-ph/9911331v1: The azimuth angle phi is the angle between the horizontal projection of the shower axis and  the x-axis (0 <= phi < 360 deg).
-  double HMax; // vertical, g/cm^2;
-  double AntX; // Antenna X [m].
-  double AntY; // Antenna Y [m].
-  double AntZ; // Antenna Z [m].
-  double Hg  ; // Ground level [m].
-
-  TSimPar(double Ze = -9999, double Az = -9999, double HMax = -9999, double AntX = -9999, double AntY = -9999, double AntZ = -9999,
-          double Hg = -9999): Ze(Ze), Az(Az), HMax(HMax), AntX(AntX), AntY(AntY), AntZ(AntZ), Hg(Hg) {}
-  std::string str() {
-    sprintf(buf, "Ze: %9.4f, Az: %6.2f, HMax: %9.2f\nAntX: %6.1f, AntY: %6.1f, AntZ: %6.1f\nHg: %6.1f", Ze, Az, HMax, AntX, AntY, AntZ, Hg);
-    return std::string(buf);
-  }
-};
 
 void atmosinit() {
     int modlabel = 2;
@@ -163,12 +145,12 @@ void UnitRA(double& ux, double& uy, double& uz, double Sx=-5, double Sy=-3, doub
   uz = Az*v13; 
 }
 
-TSimPar ZHSSimPar(std::string PathRoot="Event_", std::string EvNum="4212") {
+TZHSSimPar ZHSSimPar(std::string PathRoot="Event_", std::string EvNum="4212") {
   // Input:
   // - RepoPath: directory of the event of interest minus the number and "_" at the end.
   // - EvNum: event number, std::string form.
   // Output:
-  // TSimPar result.
+  // TZHSSimPar result.
   std::string EventDir = PathRoot + EvNum;
   std::string ZHSSummaryFile = EventDir + "/Event_" + EvNum + ".sry";
   std::string ZHSInputFile = EventDir + "/Event_" + EvNum + ".inp";
@@ -227,19 +209,19 @@ TSimPar ZHSSimPar(std::string PathRoot="Event_", std::string EvNum="4212") {
              }
              catch (...) { std::cout << "<===" << std::endl << "BVV-EXCEPTION" << std::endl; break; }
              );
-  return TSimPar(Ze, Az, HMax, AntX, AntY, AntZ, Hg);
+  return TZHSSimPar(Ze, Az, HMax, AntX, AntY, AntZ, Hg);
 }
 
 
 // Compute direction of RF wave propagation simulated by ZHS.
-void dir2bn(double& ux, double& uy, double& uz, std::string PathRoot="./Event_", std::string EvNumStr = "4212"){
+TZHSSimPar dir2bn(double& ux, double& uy, double& uz, std::string PathRoot="./Event_", std::string EvNumStr = "4212"){
   // Inputs:
   // PathRoot: name of the event directory with "_" and event number stripped from the end.
   // EvNumStr: ZHS event number in form of a string.
   // Outputs:
   // u[xyz]: Unit vector of the direction of RF wave propagation.
 
-  TSimPar SimPar = ZHSSimPar(PathRoot, EvNumStr);
+  TZHSSimPar SimPar = ZHSSimPar(PathRoot, EvNumStr);
   atmosinit();
   // std::cout << "Altitude: " << AltFromDepth(SimPar.HMax) << std::endl;
 
@@ -247,4 +229,5 @@ void dir2bn(double& ux, double& uy, double& uz, std::string PathRoot="./Event_",
   double AiresEarthRad = 6370949;
   ShowerXYZ(Sx, Sy, Sz, SimPar.Ze, SimPar.Az, AiresEarthRad, SimPar.Hg, AltFromDepth(SimPar.HMax));
   UnitRA(ux, uy, uz, Sx, Sy, Sz, SimPar.AntX, SimPar.AntY, SimPar.AntZ);
+  return SimPar;
 }
