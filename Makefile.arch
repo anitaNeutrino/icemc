@@ -316,6 +316,7 @@ CXXFLAGS      = $(OPT2) -Wall -fPIC
 LD            = g++
 LDFLAGS       = $(OPT2)
 SOFLAGS       = -shared
+FC            = gfortran
 endif
 
 ifeq ($(ARCH),linuxppc64gcc)

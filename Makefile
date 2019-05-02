@@ -104,11 +104,11 @@ LIBS += -lMathMore  -lX11
 CLASS_HEADERS = rx.hpp Taumodel.hh Settings.h
 DICT = classdict
 
-OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o hot-loop.o
+OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o hot-loop.o bvv-util.o PRIVATE/atmosphere1.o zhs-input.o
 
 
 # BINARIES = icemc$(ExeSuf) testTrigger$(ExeSuf) testSettings$(ExeSuf) testEAS$(ExeSuf) testInputAfterAntenna$(ExeSuf) testThermalNoise$(ExeSuf)
-BINARIES = testEAS$(ExeSuf) main
+BINARIES = testEAS$(ExeSuf)
 # BINARIES = main skel
 
 BVVCPPFLAGS =         -pedantic -Wall -O0 -g3 -fPIC $(shell root-config --cflags)
@@ -134,8 +134,6 @@ $(SO_TARGET) : $(SO_DEP) $(SO_DEP_HEADER)
 hot-loop.o : hot-loop.cpp hot-api.h
 		g++ -c $(BVVCPPFLAGS) $(BVVLDFLAGS) -rdynamic -o $@ $< $(BVVLDLIBS)
 
-hot-module-test.o : hot-module-test.cpp hot-module-test.h
-		g++ -c $(BVVCPPFLAGS) $(BVVLDFLAGS) -rdynamic -o $@ $< $(BVVLDLIBS)
 
 hot-antenna.o : hot-antenna.cpp hot-antennan.h
 		g++ -c $(BVVCPPFLAGS) $(BVVLDFLAGS) -rdynamic -o $@ $< $(BVVLDLIBS)

@@ -101,7 +101,10 @@ TruthAnitaEvent*      truthEvPtr   = NULL;
 #include <fftw3.h>
 #include "hot-loop.h"
 #include "cr-ft.h"
-#include "hot-module-test.h"
+#include "zhs-input.h"
+#include "bvv-macro.h"
+#include "bvv-util.h"
+
 
 namespace bvv {
   
@@ -123,8 +126,6 @@ namespace bvv {
       // Hack alert!:
       // amp[i] = cr_ft_result->FftRho[int_target_freq_src_units] * 1e-3 /* to switch from V/m/GHz to V/m/MHz as IceMC expects */;
       amp[i] = cr_ft_result->FftRho[int_target_freq_src_units] * 1e+6;
-      cout << "amp: " << amp[i] << endl;
-      // amp[i] = 1;
     }
     for (int i = 0; i < Anita::NFREQ * 2; i++) {
       double target_freq = anita->freq_forfft[i * 2];
@@ -141,63 +142,9 @@ namespace bvv {
 
 extern const double pi = atan(1)*4;
 
-// cpp'ed version of https://stackoverflow.com/questions/9210528/split-string-with-delimiters-in-c
-vector<string> str_split(char* a_str, const char a_delim)
-{
-  char delim[2];
-  delim[0] = a_delim;
-  delim[1] = 0;
-
-  vector<string> result;
-
-  char* token = strtok(a_str, delim);
-
-  while (token) {
-    result.push_back(token);
-    token = strtok(0, delim);
-  }
-
-  return result;
-}
-
-
-// https://stackoverflow.com/questions/3501338/c-read-file-line-by-line:
-// Notice that index "_with_line_ind" starts from 1:
-#define WITH_LINES(_with_lines_name, _with_lines_ind, _with_lines_tokens, _with_lines_codeblock...) \
-  do \
-    {									\
-      vector<string> _with_lines_tokens;				\
-      FILE * _with_lines_fp;						\
-      char * _with_lines_line = NULL;					\
-      size_t _with_lines_len = 0;					\
-      ssize_t _with_lines_read;						\
-      int _with_lines_ind = 0;						\
-      _with_lines_fp = fopen(_with_lines_name, "r");						\
-      if (_with_lines_fp == NULL)					\
-	exit(EXIT_FAILURE);						\
-      while ((_with_lines_read = getline(&_with_lines_line, &_with_lines_len, _with_lines_fp)) != -1) { \
-        _with_lines_ind++;						\
-	_with_lines_tokens = str_split(_with_lines_line,' ');		\
-	_with_lines_codeblock						\
-	  }								\
-      fclose(_with_lines_fp);						\
-      if (_with_lines_line)						\
-	free(_with_lines_line);						\
-    }									\
-  while(0)
-
-#define SET3_IND(_SET3_IND_TARGET_ROOT_NAME, _SET3_IND_NAME_SPECIFIER1, _SET3_IND_NAME_SPECIFIER2, _SET3_IND_NAME_SPECIFIER3, _SET3_IND_TARGET_CATEGORY, _SET3_IND_SRC_IND) \
-do									\
-{									\
- _SET3_IND_TARGET_ROOT_NAME##_SET3_IND_NAME_SPECIFIER1##_SET3_IND_TARGET_CATEGORY = _SET3_IND_TARGET_ROOT_NAME##_SET3_IND_NAME_SPECIFIER1[_SET3_IND_SRC_IND]; \
- _SET3_IND_TARGET_ROOT_NAME##_SET3_IND_NAME_SPECIFIER2##_SET3_IND_TARGET_CATEGORY = _SET3_IND_TARGET_ROOT_NAME##_SET3_IND_NAME_SPECIFIER2[_SET3_IND_SRC_IND]; \
- _SET3_IND_TARGET_ROOT_NAME##_SET3_IND_NAME_SPECIFIER3##_SET3_IND_TARGET_CATEGORY = _SET3_IND_TARGET_ROOT_NAME##_SET3_IND_NAME_SPECIFIER3[_SET3_IND_SRC_IND]; \
- } \
-while(0)
-
-template <typename T> int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
-}
+// template <typename T> int sgn(T val) {
+//     return (T(0) < val) - (val < T(0));
+// }
 
 Taumodel* TauPtr = NULL;
 
@@ -419,7 +366,7 @@ int main(int argc,  char **argv) {
     NrFT[ind] = NrFT[ind] * 5.5e+8; // The coefficient is an empirical value derived from eyeballing using gnuplot.
     //    // cout << ind << " NrFT: " << NrFT[ind] << endl;
   }
-  // cout << "Before the call to hot_loop" << endl;
+
   // GDB-DUMP-MARKER: ZhsTimeE: plot1d_opt ZhsTimeE 'with lines'
   struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
   // struct hot_test_state *hot_test_result = (struct hot_test_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/hot-module-test.so", true /* bInteractive */);
@@ -431,9 +378,6 @@ int main(int argc,  char **argv) {
   Anita *anita1=new Anita();// right now this constructor gets banding info
   global_anita1 = anita1;
 
-  cout << "testEAS reached the end of the development block" << endl;
-  //  exit(0);
-
   settings1->SEED=settings1->SEED +run_no;
   cout <<"seed is " << settings1->SEED << endl;
 
@@ -510,10 +454,18 @@ int main(int argc,  char **argv) {
   Vector n_hplane = -const_y;
   Vector n_normal = const_x;
 
-  // Antenna #30's horizontal polarization: 
+  // Antenna #30's horizontal polarization under assumption of default balloon coordinates (== 999):
   Vector n_pol = Vector(+0.0274856, +0.998238,  +0.0525939); // direction of polarization
-  // Direction opposite to antenna #30's normal:
-  Vector direction2bn = -1 * Vector(-0.918422,  +0.0459897, -0.392921); // direction from EAS to balloon
+
+  // Direction opposite to antenna #30's normal under assumption of default balloon coordinates (== 999):
+  // Vector direction2bn = -1 * Vector(-0.918422,  +0.0459897, -0.392921); // direction from EAS to balloon.
+
+  double direction2bn_x, direction2bn_y, direction2bn_z; // Unit vector components of signal.
+  dir2bn(direction2bn_x, direction2bn_y, direction2bn_z, "/nfs/data_disks/herc0a/users/bugaev/ANITA/SIMS", "4212");
+  std::cout << "Reflected signal direction2bn: " << direction2bn_x << ", " << direction2bn_y << ", " << direction2bn_z << std::endl;
+  exit(0);
+
+  Vector direction2bn = Vector(-0.918422,  +0.0459897, -0.392921); // direction from EAS to balloon.
   Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
   Vector direction2bn_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction from EAS to balloon
 
