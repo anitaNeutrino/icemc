@@ -213,6 +213,9 @@ Settings* global_settings1;
 Anita *global_anita1;
 Balloon *global_bn1;
 double NrFT[ANITA_TIME_SAMPLES];
+std::string ZHSEvNum;
+std::string ZHSPathRoot;
+
 
 int main(int argc,  char **argv) {
 
@@ -278,6 +281,20 @@ int main(int argc,  char **argv) {
       case 's':
         sim_inp=optarg;
         cout << "Changed input simulation directory to: " << sim_inp << endl;
+        { 
+          char buf[256];
+          strcpy(buf, sim_inp.c_str());
+          std::vector<std::string> tokens = str_split(buf, '_');
+          // StrArrPrint(tokens);
+          ZHSEvNum = tokens.at(tokens.size() - 1);
+          for (unsigned int ind = 0; ind < tokens.size() - 1; ind++) {
+            ZHSPathRoot = ZHSPathRoot + tokens[ind];
+            ZHSPathRoot = ZHSPathRoot + "_";
+          }
+          std::cout << "ZHSEvNum: " << ZHSEvNum << std::endl;
+          std::cout << "ZHSPathRoot: " << ZHSPathRoot << std::endl;
+        }
+
         break;
       } // end switch
     } // end while
@@ -286,7 +303,7 @@ int main(int argc,  char **argv) {
   
   vector<double> Ex, Ey, Ez; 
   WITH_LINES(
-             sim_inp.c_str(),
+             (ZHSPathRoot + ZHSEvNum + "/" + "timefresnel-root.dat").c_str(),
              ind,
              tokens,
              if (ind > 19) {
@@ -355,17 +372,19 @@ int main(int argc,  char **argv) {
 
   gStyle->SetOptTitle(0);
 
-  WITH_LINES(
-             "./GDB/cut_lo_hi/ft/icemc/__plot1d.dat",
-             // "./GDB/ift/inter/__plot1d.dat",
-             ind,
-             tokens,
-             NrFT[ind - 1] = atof(tokens[0].c_str());
-             );
-  for (int ind = 0; ind < ANITA_TIME_SAMPLES; ind++) {
-    NrFT[ind] = NrFT[ind] * 5.5e+8; // The coefficient is an empirical value derived from eyeballing using gnuplot.
-    //    // cout << ind << " NrFT: " << NrFT[ind] << endl;
-  }
+  // NrFT was only for playing in an interactive session.
+  // It is a Fourier Transform computed with a Numerical Recipes routine.
+  // WITH_LINES(
+  //            "./GDB/cut_lo_hi/ft/icemc/__plot1d.dat",
+  //            // "./GDB/ift/inter/__plot1d.dat",
+  //            ind,
+  //            tokens,
+  //            NrFT[ind - 1] = atof(tokens[0].c_str());
+  //            );
+  // for (int ind = 0; ind < ANITA_TIME_SAMPLES; ind++) {
+  //   NrFT[ind] = NrFT[ind] * 5.5e+8; // The coefficient is an empirical value derived from eyeballing using gnuplot.
+  //   //    // cout << ind << " NrFT: " << NrFT[ind] << endl;
+  // }
 
   // GDB-DUMP-MARKER: ZhsTimeE: plot1d_opt ZhsTimeE 'with lines'
   struct cr_ft_state *cr_ft_result = (struct cr_ft_state *) hot_loop("/nfs/data_disks/herc0a/users/bugaev/ANITA/anitaBuildTool/components/icemc/cr-ft.so", false /* bInteractive */);
@@ -461,9 +480,9 @@ int main(int argc,  char **argv) {
   // Vector direction2bn = -1 * Vector(-0.918422,  +0.0459897, -0.392921); // direction from EAS to balloon.
 
   double direction2bn_x, direction2bn_y, direction2bn_z; // Unit vector components of signal.
-  dir2bn(direction2bn_x, direction2bn_y, direction2bn_z, "/nfs/data_disks/herc0a/users/bugaev/ANITA/SIMS", "4212");
+  dir2bn(direction2bn_x, direction2bn_y, direction2bn_z, ZHSPathRoot, ZHSEvNum);
   std::cout << "Reflected signal direction2bn: " << direction2bn_x << ", " << direction2bn_y << ", " << direction2bn_z << std::endl;
-  exit(0);
+  //exit(0);
 
   Vector direction2bn = Vector(-0.918422,  +0.0459897, -0.392921); // direction from EAS to balloon.
   Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna

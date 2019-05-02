@@ -163,16 +163,16 @@ void UnitRA(double& ux, double& uy, double& uz, double Sx=-5, double Sy=-3, doub
   uz = Az*v13; 
 }
 
-TSimPar ZHSSimPar(std::string RepoPath=".", std::string EvNum="4212") {
+TSimPar ZHSSimPar(std::string PathRoot="Event_", std::string EvNum="4212") {
   // Input:
-  // - RepoPath: path to the parent directory of an event of interest. For ex.: ".".
-  // - EvNum: event number, text form.
+  // - RepoPath: directory of the event of interest minus the number and "_" at the end.
+  // - EvNum: event number, std::string form.
   // Output:
   // TSimPar result.
-  std::string EventDir = RepoPath + "/Event_" + EvNum;
+  std::string EventDir = PathRoot + EvNum;
   std::string ZHSSummaryFile = EventDir + "/Event_" + EvNum + ".sry";
   std::string ZHSInputFile = EventDir + "/Event_" + EvNum + ".inp";
-  // std::cout << "Composed paths: " << ZHSSummaryFile << ", " << ZHSInputFile << std::endl;
+  std::cout << "Composed paths: " << ZHSSummaryFile << ", " << ZHSInputFile << std::endl;
   double HMax = -9999;
   double Ze = -9999;
   double Az = -9999;
@@ -232,14 +232,14 @@ TSimPar ZHSSimPar(std::string RepoPath=".", std::string EvNum="4212") {
 
 
 // Compute direction of RF wave propagation simulated by ZHS.
-void dir2bn(double& ux, double& uy, double& uz, std::string RepoPath=".", std::string EvNumStr = "4212"){
+void dir2bn(double& ux, double& uy, double& uz, std::string PathRoot="./Event_", std::string EvNumStr = "4212"){
   // Inputs:
-  // RepoPath: parent directory of the event.
+  // PathRoot: name of the event directory with "_" and event number stripped from the end.
   // EvNumStr: ZHS event number in form of a string.
   // Outputs:
   // u[xyz]: Unit vector of the direction of RF wave propagation.
 
-  TSimPar SimPar = ZHSSimPar(RepoPath, EvNumStr);
+  TSimPar SimPar = ZHSSimPar(PathRoot, EvNumStr);
   atmosinit();
   // std::cout << "Altitude: " << AltFromDepth(SimPar.HMax) << std::endl;
 
