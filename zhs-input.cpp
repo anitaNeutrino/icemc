@@ -226,8 +226,7 @@ TZHSSimPar dir2bn(double& ux, double& uy, double& uz, std::string PathRoot="./Ev
   // std::cout << "Altitude: " << AltFromDepth(SimPar.HMax) << std::endl;
 
   double Sx, Sy, Sz;
-  double AiresEarthRad = 6370949;
-  ShowerXYZ(Sx, Sy, Sz, SimPar.Ze, SimPar.Az, AiresEarthRad, SimPar.Hg, AltFromDepth(SimPar.HMax));
+  ShowerXYZ(Sx, Sy, Sz, SimPar.Ze, SimPar.Az, TZHSSimPar::AiresEarthRad(), SimPar.Hg, AltFromDepth(SimPar.HMax));
   UnitRA(ux, uy, uz, Sx, Sy, Sz, SimPar.AntX, SimPar.AntY, SimPar.AntZ);
   return SimPar;
 }

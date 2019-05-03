@@ -4,6 +4,7 @@
 class TZHSSimPar {
   char buf[256];
 public: 
+  static double AiresEarthRad() { return 6370949; }
   double Ze;
   double Az;   // astro-ph/9911331v1: The azimuth angle phi is the angle between the horizontal projection of the shower axis and  the x-axis (0 <= phi < 360 deg).
   double HMax; // vertical, g/cm^2;

@@ -120,7 +120,7 @@ namespace bvv {
     // cr_ft_result->FftPhi, cr_ft_result->vis_nbins / 2 + 1
     for (int i = 0; i < Anita::NFREQ; i++) {
       double target_freq = anita->freq[i];
-        // double target_freq = (anita->FREQ_HIGH  - anita->FREQ_LOW) / (double) Anita::NFREQ * i + anita->FREQ_LOW;
+      // double target_freq = (anita->FREQ_HIGH  - anita->FREQ_LOW) / (double) Anita::NFREQ * i + anita->FREQ_LOW;
       double target_freq_src_units = target_freq / cr_ft_result->dfreq;
       int int_target_freq_src_units = target_freq_src_units + 0.5;
       // Hack alert!:
@@ -137,10 +137,33 @@ namespace bvv {
       
     return 0;
   }
+
+ 
+  /* Conversion from IceMC Phi to Lon */
+  double LonFromPhi(double Phi /* deg */) {
+    // implementing the following logic:
+    // -180 deg <= Phi <  -90 deg  => Lon = -270 deg - Phi
+    // -90 deg <= Phi <= +180 deg => Lon =   90 deg - Phi
+    if (Phi >= -180 && Phi < -90) {
+      return -290 - Phi;
+    } else if (Phi >= -90 && Phi <= 180) {
+      return 90 - Phi;
+    } else {
+      std::cout << "Error in LonFromPhi: " << "Phi should be in [-180, + 180] deg range. " << Phi << " was given" << std::endl;
+      exit(1);
+    }
   }
+
+  /* Conversion from IceMC Theta to Lat */
+  double LatFromTheta(double Theta /* deg */) {
+    return -90 + Theta;
+  }
+
+}
 
 
 extern const double pi = atan(1)*4;
+const double deg = pi / 180;
 
 // template <typename T> int sgn(T val) {
 //     return (T(0) < val) - (val < T(0));
@@ -463,11 +486,12 @@ int main(int argc,  char **argv) {
 
   double direction2bn_x, direction2bn_y, direction2bn_z; // Unit vector components of signal propagation direction.
   TZHSSimPar ZHSSimPar = dir2bn(direction2bn_x, direction2bn_y, direction2bn_z, ZHSPathRoot, ZHSEvNum);
-  double ZHSAnitaDist = sqrt(ZHSSimPar.AntX * ZHSSimPar.AntX + ZHSSimPar.AntY * ZHSSimPar.AntY + ZHSSimPar.AntZ * ZHSSimPar.AntZ);
-  double AnitaTheta = acos(ZHSSimPar.AntZ / ZHSAnitaDist);
-  double AnitaPhi = atan2(ZHSSimPar.AntY, ZHSSimPar.AntX);
-  double AnitaLat = EarthModel::GetLat(AnitaTheta);
-  double AnitaLon = EarthModel::GetLon(AnitaPhi);
+  double AnitaZ = ZHSSimPar.AntZ + ZHSSimPar.Hg + TZHSSimPar::AiresEarthRad(); // Z coordinate in IceMC reference frame.
+  double AnitaDist = sqrt(ZHSSimPar.AntX * ZHSSimPar.AntX + ZHSSimPar.AntY * ZHSSimPar.AntY + AnitaZ * AnitaZ);
+  double AnitaTheta = acos(AnitaZ / AnitaDist) / deg;
+  double AnitaPhi = atan2(ZHSSimPar.AntY, ZHSSimPar.AntX) / deg;
+  double AnitaLat = bvv::LatFromTheta(AnitaTheta);
+  double AnitaLon = bvv::LonFromPhi(AnitaPhi);
 
   std::cout << "AnitaLat, AnitaLon: " << AnitaLat << ", " << AnitaLon << std::endl;
   exit(0);
