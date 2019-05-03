@@ -432,6 +432,24 @@ int main(int argc,  char **argv) {
   int discones_passing=0;  // number of discones that pass
  
   settings1->ReadInputs(input.c_str(),  foutput, NNU, RANDOMISEPOL);
+
+  // Reconstruct the reflected wave propagation direction:
+  double direction2bn_x, direction2bn_y, direction2bn_z; // Unit vector components of signal propagation direction.
+  TZHSSimPar ZHSSimPar = dir2bn(direction2bn_x, direction2bn_y, direction2bn_z, ZHSPathRoot, ZHSEvNum);
+  std::cout << "Reflected signal direction2bn: " << direction2bn_x << ", " << direction2bn_y << ", " << direction2bn_z << std::endl;
+  Vector direction2bn = Vector(direction2bn_x, direction2bn_y, direction2bn_z); // direction from EAS to balloon.
+
+  // Find out what ZHS AnitaXYZ means in terms of IceMC (Lon, Lat) and update Lon/Lat settings:
+  double AnitaZ = ZHSSimPar.AntZ + ZHSSimPar.Hg + TZHSSimPar::AiresEarthRad(); // Z coordinate in IceMC reference frame.
+  double AnitaDist = sqrt(ZHSSimPar.AntX * ZHSSimPar.AntX + ZHSSimPar.AntY * ZHSSimPar.AntY + AnitaZ * AnitaZ);
+  double AnitaTheta = acos(AnitaZ / AnitaDist) / deg;
+  double AnitaPhi = atan2(ZHSSimPar.AntY, ZHSSimPar.AntX) / deg;
+  double AnitaLat = bvv::LatFromTheta(AnitaTheta);
+  double AnitaLon = bvv::LonFromPhi(AnitaPhi);
+  std::cout << "AnitaLat, AnitaLon: " << AnitaLat << ", " << AnitaLon << std::endl;
+  settings1->BN_LATITUDE = AnitaLat;
+  settings1->BN_LONGITUDE = AnitaLon;
+
   settings1->ApplyInputs(anita1,  sec1,  sig1,  bn1,  ray1);
   
   settings1->SEED=settings1->SEED + run_no;
@@ -484,20 +502,6 @@ int main(int argc,  char **argv) {
 
   Vector n_pol = Vector(Ex_max / Emax, Ey_max / Emax, Ez_max / Emax);
 
-  double direction2bn_x, direction2bn_y, direction2bn_z; // Unit vector components of signal propagation direction.
-  TZHSSimPar ZHSSimPar = dir2bn(direction2bn_x, direction2bn_y, direction2bn_z, ZHSPathRoot, ZHSEvNum);
-  double AnitaZ = ZHSSimPar.AntZ + ZHSSimPar.Hg + TZHSSimPar::AiresEarthRad(); // Z coordinate in IceMC reference frame.
-  double AnitaDist = sqrt(ZHSSimPar.AntX * ZHSSimPar.AntX + ZHSSimPar.AntY * ZHSSimPar.AntY + AnitaZ * AnitaZ);
-  double AnitaTheta = acos(AnitaZ / AnitaDist) / deg;
-  double AnitaPhi = atan2(ZHSSimPar.AntY, ZHSSimPar.AntX) / deg;
-  double AnitaLat = bvv::LatFromTheta(AnitaTheta);
-  double AnitaLon = bvv::LonFromPhi(AnitaPhi);
-
-  std::cout << "AnitaLat, AnitaLon: " << AnitaLat << ", " << AnitaLon << std::endl;
-  exit(0);
-  
-  std::cout << "Reflected signal direction2bn: " << direction2bn_x << ", " << direction2bn_y << ", " << direction2bn_z << std::endl;
-  Vector direction2bn = Vector(direction2bn_x, direction2bn_y, direction2bn_z); // direction from EAS to balloon.
 
   Vector n_pol_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction of polarization of signal seen at each antenna
   Vector direction2bn_eachboresight[Anita::NLAYERS_MAX][Anita::NPHI_MAX]; // direction from EAS to balloon
