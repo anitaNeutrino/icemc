@@ -1063,3 +1063,78 @@ Position EarthModel::WhereDoesItEnter(const Position &posnu,const Vector &nnu) {
     
     return r_in;
 } //method WhereDoesItEnter
+
+
+const double POLAR_RADIUS = 6356752.31425; 
+const double EQUATORIAL_RADIUS = 6378137.0; 
+const double EQ_INV = 1./(EQUATORIAL_RADIUS * EQUATORIAL_RADIUS); 
+const double PO_INV = 1./(POLAR_RADIUS * POLAR_RADIUS); 
+
+int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position * int2) const
+{
+
+
+  /** The reference ellipsoid is 
+   *
+   *
+   *   x^2        y^2        z^2
+   *  ----    +  -----  +   -----  = 1
+   *  R^2_eq     R^2_eq +   R^2_po
+   *
+   *  
+   *  we have \vec{x} = \vec{x0} + \vec{p0} d 
+   *
+   *
+   *  or
+   *
+   *   x = x0_x + p0_x * d 
+   *   y = x0_y + p0_y * d 
+   *   z = x0_z + p0_z* d 
+   *   
+   *   so we must solve the quadratic in terms of d 
+   *    
+   *
+   *
+   */
+
+
+  //d^2 terms
+  double a = p0.X()*p0.X() *EQ_INV + p0.Y()*p0.Y() * EQ_INV + p0.Z()*p0.Z() *PO_INV; 
+  
+  //d terms
+  double b = 2 * ( p0.X()*x0.X() *EQ_INV + x0.Y()*p0.Y() * EQ_INV + x0.Z()*p0.Z() *EQ_INV) ; 
+
+  //constant terms
+  double c = -1 + x0.X()*x0.X() *EQ_INV + x0.Y()*x0.Y() * EQ_INV + x0.Z()*x0.Z() *PO_INV; 
+
+  //check discriminant
+  double discr = b*b-4*a*c; 
+
+  //no solution
+  if (discr < 0) 
+  {
+    return 0; 
+  }
+
+  double d0= (-b + discr)/(2*a); 
+  double d1= (-b - discr)/(2*a); 
+
+  if (int1)
+  {
+    int1->SetXYZ(
+        x0.X() + d0 *p0.X(), 
+        x0.Y() + d0 *p0.Y(), 
+        x0.Z() + d0 *p0.Z() );
+
+  }
+  if (int2)
+  {
+    int2->SetXYZ(
+        x0.X() + d1 *p0.X(), 
+        x0.Y() + d1 *p0.Y(), 
+        x0.Z() + d1 *p0.Z() );
+
+  }
+
+  return discr == 0; 
+}

@@ -6,6 +6,7 @@
 #include "Settings.h"
 #include "earthmodel.hh"
 #include "icemodel.hh"
+#include <assert.h> 
 
 
 #include "signal.hh"
@@ -173,7 +174,6 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
     
     // random numbers used
     double rnd1=0;
-    double rnd2=2.;
     double rnd3=1.;
     
     double vol_bybin=0.; // volume of ice in each bin
@@ -186,6 +186,10 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
     int n_coord=0; // north coordinate of interaction, from Bedmap
     
     TRandom * rng = getRNG(RNG_INTERACTION_LOCATION); 
+    
+    (void) settings1; 
+    (void) rbn; 
+    (void) interaction1; 
     
     //in case of roughness, create an array of allowable indices for the lookup (so this stay local to this function and we don't modify *horizon[ibnposition] and fark up other things downstream)
     /*if(settings1->ROUGHNESS){
@@ -230,7 +234,6 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
         while(vol_bybin/maxvol_inhorizon[ibnposition]<rnd3) {
           rnd3=rng->Rndm(); // pick random numbers between 0 and 1
           rnd1=rng->Rndm();
-          rnd2=rng->Rndm();
 	  
           whichbin_forcrust20=(int)(rnd1*(double)ilat_inhorizon[ibnposition].size());
           ilat=ilat_inhorizon[ibnposition][whichbin_forcrust20];
@@ -250,7 +253,6 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
         while(vol_bybin/maxvol_inhorizon[ibnposition]<rnd3) {
           rnd3=rng->Rndm();
           rnd1=rng->Rndm();
-          rnd2=rng->Rndm();
 
           which_coord=(int)(rnd1*(double)easting_inhorizon[ibnposition].size());
 
@@ -302,10 +304,10 @@ static double getDEffectiveArea( const Vector & cap_axis,
 }
 
 
-int IceModel::PickUnbiasedNearBalloon(Interaction * interaction1, IceModel *antarctica, const Position * balloon_position, 
-                                      double max_angular_dist, double len_int_kgm2, const Vector * force_dir) 
+int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, IceModel *antarctica, const Position * balloon_position, 
+                                      double maxdist, double len_int_kgm2, const Vector * force_dir) 
 {
-     // first pick the neutrino direction
+    // first pick the neutrino direction
     if (!force_dir) 
     {
       interaction1->PickAnyDirection();
@@ -317,32 +319,93 @@ int IceModel::PickUnbiasedNearBalloon(Interaction * interaction1, IceModel *anta
     
     TRandom * rng = getRNG(RNG_INTERACTION_LOCATION); 
 
-    //now we pick a point on the SURFACE near our balloon 
 
-     double maxcos =1; 
-     double mincos = cos(max_angular_dist*RADDEG); 
-     double minphi = 0; 
-     double maxphi = 2* PI; 
-     double thisphi=rng->Rndm()*(maxphi-minphi)+minphi;
-     double thiscos=rng->Rndm()*(maxcos-mincos)+mincos;
+    //now we pick a point in the plane normal to the neutrino direction
+    // We will use the point directly below ANITA with an altitude at 0 km as a reference then consider offsets
+    // relative to that in that plane. 
+    
+    Position ref(balloon_position->Lon(), balloon_position->Lat(), R_EARTH); 
 
-     //now we rotate from balloon position to normal units. 
-     Position r_local(acos(thiscos), thisphi);
-     Vector r_global_n  = r_local.ChangeCoord( balloon_position->Unit()); 
-     double R = EarthModel::R_EARTH; 
-     Position r_global = R * r_global_n; 
+
+    // For now, randomly pick an offset up to 1000 km away 
+    // This can be optimized by precalculating the polygon 
+    // visible from this angle or finding the bounds in some other way... 
+    // Especially for nearly orthogonal events this will be far too big... 
+    double x= rng->Uniform(-maxdist*1e3,maxdist*1e3); 
+    double y= rng->Uniform(-maxdist*1e3,maxdist*1e3); 
+     
+    // get nnu as a TVector3 since I like those better
+    Vector nudir = interaction1->nnu.Unit(); //is probably already a unit vector? 
+    Vector orth = nudir.Orthogonal(); 
+    Vector orth2 = nudir.Cross(orth);
+
+    Vector p0 = ref + x*orth + y*orth2; 
+
+    //Where do we intersect the Earth? 
     
 
-     //ok, now we have to find where our neutrino trajectory intersects rock/ice
+    Position int1; 
+    Position int2; 
+    Position pint; 
+
+    int nintersect = GeoidIntersection(p0, nudir, &int1, &int2); 
+
+    if (nintersect == 0) 
+    {
+
+      interaction1->noway = 1; 
+      return 0; 
+    }
+
+
+    if (nintersect == 1) // yeah right
+    {
+      pint = int1; 
+    }
+
+    else 
+    {
+      //check if either solution is pointing at ANITA
+
+      Vector d1 = ref - int1; 
+      Vector d2 = ref - int1; 
+      bool rightdir1 = (d1).Dot(nudir) > 0; 
+      bool rightdir2 = (d2).Dot(nudir) > 0; 
+
+      //if both, pick the closer one since I think 
+      //it should never be the case that both are close... 
+      if (rightdir1 && rightdir2) 
+      {
+        pint =  d1.Mag2() < d2.Mag2() ? int1 : int2; 
+      }
+
+      else if (rightdir1) 
+      {
+        pint = int1; 
+      }
+
+      else if (rightdir2) 
+      {
+        pint = int2; 
+      }
+
+      else 
+      {
+        interaction1->noway = 1; 
+        return 0; 
+      }
+    }
+
+    //ok, now we have to find where our neutrino trajectory intersects rock/ice
     
-     // For now, let's force the direction to be in the opposite direction as r_global 
-     // so we don't confuse the other methods too much.  Just for our temporary value though! 
-     bool should_flip = r_global.Dot(interaction1->nnu) > 0;  
-     Vector nnu  = should_flip ? -1 * interaction1->nnu : interaction1->nnu; 
+    // For now, let's force the direction to be in the opposite direction as interaction point
+    // so we don't confuse the other methods too much (which assume n is in the same direction as the position).  Just for our temporary value though! 
+    bool should_flip = pint.Dot(nudir) > 0;  
+    Vector nnu  = should_flip ? -1 * nudir : nudir; 
 
 
     Position exitearth; 
-    if (!Ray::WhereDoesItLeave(r_global,nnu,antarctica,exitearth)) { // where does it leave Earth
+    if (!Ray::WhereDoesItLeave(pint,nnu,antarctica,exitearth)) { // where does it leave Earth
       interaction1->wheredoesitleave_err = 1; // epic fail 
       return 0; 
     }
@@ -399,7 +462,7 @@ int IceModel::PickUnbiasedNearBalloon(Interaction * interaction1, IceModel *anta
       //try to find ice exit point with decrasing stepsize. 
       for (int istep = 0; istep < max_step; istep++) 
       {
-        if(r_global.Distance(exitice) > steps[istep])
+        if(pint.Distance(exitice) > steps[istep])
         {
           Position updated_exitice; 
           if (!WhereDoesItExitIce(exitearth, nnu, steps[istep], updated_exitice))
@@ -479,9 +542,7 @@ int IceModel::PickUnbiasedNearBalloon(Interaction * interaction1, IceModel *anta
       return 0; 
     }    
 
-
-    interaction1->d_effective_area = getDEffectiveArea(*balloon_position, interaction1->nnu,max_angular_dist); 
-
+    interaction1->d_effective_area = 4*maxdist*1e6; 
 
     return 1;
 }
@@ -1099,7 +1160,7 @@ double IceModel::IceThickness(double lon, double lat) {
 	int e_coord=0;
 	int n_coord=0;
 	IceLonLattoEN(lon,lat,e_coord,n_coord);
-	if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord > 0)
+	if (e_coord < 1200 && e_coord >= 0 && n_coord < 1000 && n_coord >= 0)
 	    ice_thickness = ice_thickness_array[e_coord][n_coord]; //if this region has BEDMAP data, use it.
 	else
 	    ice_thickness = icethkarray[(int)(lon/2)][(int)(lat/2)]*1000.; //if the location given is not covered by BEDMAP, use Crust 2.0 data
@@ -1129,7 +1190,7 @@ double IceModel::SurfaceAboveGeoid(double lon, double lat)  {
 	int n_coord_ground=0;
 	IceLonLattoEN(lon,lat,e_coord_ice,n_coord_ice);
 	GroundLonLattoEN(lon,lat,e_coord_ground,n_coord_ground);
-	if (e_coord_ground <= 1068 && e_coord_ground >= 0 && n_coord_ground <= 869 && n_coord_ground >= 0 && e_coord_ice <= 1200 && e_coord_ice >= 0 && n_coord_ice <= 1000 && n_coord_ice >= 0)
+	if (e_coord_ground < 1068 && e_coord_ground >= 0 && n_coord_ground < 869 && n_coord_ground > 0 && e_coord_ice < 1200 && e_coord_ice >= 0 && n_coord_ice < 1000 && n_coord_ice >= 0)
 	    surface = ground_elevation[e_coord_ground][n_coord_ground] + ice_thickness_array[e_coord_ice][n_coord_ice] + water_depth[e_coord_ice][n_coord_ice];
 	else
 	    surface = surfacer[(int)(lon/2)][(int)(lat/2)]; //If the position requested is outside the bounds of the BEDMAP data, use the Crust 2.0 data, regardless of the ice_model flag.
@@ -1543,7 +1604,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
     for (int i=0;i<NBALLOONPOSITIONS;i++) { // loop over balloon positions
 	
 	maxvol_inhorizon[i]=-1.; // volume of bin with the most ice in the horizon
-        double the_time = 0; 
+//        double the_time = 0; 
 	
 	if (bn1->WHICHPATH==2) { // anita or anita-lite path
 	    theta_bn=(90+bn1->latitude_bn_anitalite[i*bn1->REDUCEBALLOONPOSITIONS])*RADDEG; //theta of the balloon wrt north pole
@@ -1564,7 +1625,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	else if (bn1->WHICHPATH==6 || bn1->WHICHPATH==7 || bn1->WHICHPATH==8 || bn1->WHICHPATH==9) {
 	    
 	    bn1->flightdatachain->GetEvent(i*bn1->REDUCEBALLOONPOSITIONS);
-      the_time = bn1->realTime_flightdata_temp; //??!? 
+//      the_time = bn1->realTime_flightdata_temp; //??!? 
 	    
 	    theta_bn=(90+(double)bn1->flatitude)*RADDEG; //theta of the balloon wrt north pole
 	    lat=GetLat(theta_bn); // latitude  
@@ -1802,6 +1863,9 @@ void IceModel::ReadIceThickness() {
     //cout<<"nCols_ice, nRows_ice "<<nCols_ice<<" , "<<nRows_ice<<endl;
     //cout<<"xLL_ice, yLL_ice, cellsize "<<xLowerLeft_ice<<" , "<<yLowerLeft_ice<<" , "<<cellSize<<endl<<endl;
     
+    assert(nRows_ice == 1000 && nCols_ice==1200); 
+
+
     double theValue;
     volume=0.;
     ice_area=0.;
@@ -1869,6 +1933,7 @@ void IceModel::ReadGroundBed() {
     if(tempBuf6 == string("NODATA_value")) {
 	NODATA=temp6;
     }
+    assert(nRows_ground == 869 && nCols_ground==1068); 
     
     //cout<<"nCols_ground, nRows_ground "<<nCols_ground<<" , "<<nRows_ground<<endl;
     //cout<<"xLL_ground, yLL_ground, cellsize "<<xLowerLeft_ground<<" , "<<yLowerLeft_ground<<" , "<<cellSize<<endl<<endl;
@@ -1934,6 +1999,7 @@ void IceModel::ReadWaterDepth() {
     //cout<<"nCols_water, nRows_water "<<nCols_water<<" , "<<nRows_water<<endl;
     //cout<<"xLL_water, yLL_water, cellsize "<<xLowerLeft_water<<" , "<<yLowerLeft_water<<" , "<<cellSize<<endl<<endl;
     
+    assert(nRows_water == 1000 && nCols_water==1200); 
     double theValue;
     for(int rowNum=0;rowNum<nRows_water;rowNum++) {
 	for(int colNum=0;colNum<nCols_water;colNum++) {

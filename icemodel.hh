@@ -131,8 +131,9 @@ int NODATA;
 
   void FillArraysforTree(double lon_ground[1068][869],double lat_ground[1068][869],double lon_ice[1200][1000],double lat_ice[1200][1000],double lon_water[1200][1000],double lat_water[1200][1000]);
   int PickUnbiased(Interaction *interaction1,IceModel *antarctica, double len_int_kgm2, Vector * force_dir = 0);
-  int PickUnbiasedNearBalloon(Interaction *interaction1,IceModel *antarctica, const Position * balloon_position, 
-      double max_angular_dist, double len_int_kgm2, const Vector * force_dir = 0);
+
+  int PickUnbiasedPointSourceNearBalloon(Interaction *interaction1,IceModel *antarctica, const Position * balloon_position, 
+      double max_ps_distance, double len_int_kgm2, const Vector * force_dir = 0);
 
 
 protected:

@@ -92,6 +92,9 @@ public:
   void EarthCurvature(double *array,double depth_temp); // adjusts coordinates within the mine to account for the curvature of the earth.
   Position WhereDoesItEnter(const Position &posnu,const Vector &nnu);
 
+  /*Finds where we intersect the Geoid */ 
+  int GeoidIntersection(Vector x0,Vector p0, Position * int1, Position * int2) const; 
+
  
 private:
 

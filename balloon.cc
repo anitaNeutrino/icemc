@@ -770,8 +770,8 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
 
 
     if ( (settings1->UNBIASED_SELECTION == 1 && antarctica1->PickUnbiased(interaction1,antarctica1,len_int_kgm2,force_dir)) ||
-         (settings1->UNBIASED_SELECTION == 2 && antarctica1->PickUnbiasedNearBalloon(interaction1,antarctica1, &r_bn, 
-                                                                                     settings1->UNBIASED_SELECTION_MAX_ANGLE,
+         (settings1->UNBIASED_SELECTION == 2 && antarctica1->PickUnbiasedPointSourceNearBalloon(interaction1,antarctica1, &r_bn, 
+                                                                                     settings1->UNBIASED_PS_MAX_DISTANCE_KM,
                                                                                      len_int_kgm2,force_dir))  )
     { // pick neutrino direction and interaction point
           interaction1->dtryingdirection=1.;

@@ -1807,17 +1807,24 @@ int main(int argc,  char **argv) {
 
       bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon, len_int_kgm2,  src_model || settings1->HORIZON_OFFSET ? &force_dir : 0);
 
+      bool havent_set_frac = true; 
+      bool havent_set_weights = true; 
+      bool havent_set_dir = true; 
+
 #ifdef ANITA3_EVENTREADER
+
+      if (settings1->UNBIASED_SELECTION > 0 || src_model || settings1->HORIZON_OFFSET) //in this case, we have already picked the direction
+      {
+        havent_set_dir = false; 
+        truthNuPtr->setDir(interaction1->nnu.GetX(), interaction1->nnu.GetY(), interaction1->nnu.GetZ()); 
+      }
+
       //FILL TruthAnitaNeutrino here (in case we don't get to fill it later) 
       truthNuPtr->setPos(interaction1->posnu.GetX(), interaction1->posnu.GetY(), interaction1->posnu.GetZ(),
                          bn1->r_bn.GetX(), bn1->r_bn.GetY(), bn1->r_bn.GetZ(), realtime_this);
       truthNuPtr->setNu(pnu,pdgcode); 
 #endif
       
-      bool havent_set_frac = true; 
-      bool havent_set_weights = true; 
-      bool havent_set_dir = true; 
-
 #ifdef ANITA3_EVENTREADER
 #define DO_SKIP  {truthNuPtr->setSkipped(true,havent_set_frac,havent_set_weights,havent_set_dir); truthAnitaNuTree->Fill(); continue; }
 #else
@@ -2167,8 +2174,11 @@ int main(int argc,  char **argv) {
 
 
 #ifdef ANITA3_EVENTREADER
-      truthNuPtr->setDir(interaction1->nnu.GetX(), interaction1->nnu.GetY(), interaction1->nnu.GetZ()); 
-      havent_set_dir = false; 
+      if (havent_set_dir) 
+      {
+        truthNuPtr->setDir(interaction1->nnu.GetX(), interaction1->nnu.GetY(), interaction1->nnu.GetZ()); 
+        havent_set_dir = false; 
+      }
 #endif
 
       // gets angle between ray and neutrino direction
@@ -2233,7 +2243,8 @@ int main(int argc,  char **argv) {
       // where the neutrino enters the earth
       if (tautrigger==0){//did for cc-taus already,  do for all other particles
         interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
-        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
+        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, 
+            interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
         //cout << "interaction1->chord is " << interaction1->chord << "\n"; 
       }
 
@@ -3826,7 +3837,8 @@ int main(int argc,  char **argv) {
             truthEvPtr->source_index = which_source;
             truthEvPtr->RA = RA;
             truthEvPtr->dec = dec;
-	    truthEvPtr->objName = objName;
+
+            truthEvPtr->objName =objName;
             //
             
             for (int i=0;i<3;i++){
@@ -3915,6 +3927,7 @@ int main(int argc,  char **argv) {
 
             }
             
+//            printf("objname: 0x%p %s\n", &truthEvPtr->objName, truthEvPtr->objName.Data()); 
 	    truthAnitaNuTree->Fill();
 	    truthAnitaTree->Fill();
             delete truthEvPtr;
@@ -4214,7 +4227,7 @@ int main(int argc,  char **argv) {
 #endif
 
 
-  #ifdef ANITA3_EVENTREADER
+  #ifdef ANITA3_EVENTCORRELATOR
   if(settings1->ALL_SKY_MAP)
     {  
       TCanvas *skyMapC = new TCanvas("skyMapC", "skyMapC", 1000, 500);
