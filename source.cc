@@ -52,6 +52,12 @@ const double txs_flux = 3.8;
 const double txs_z = 0.3365;
 const double txs_D = luminosity_distance(txs_z); 
 
+
+// M77 
+const double m77_index = 3.16; 
+
+
+
 // SNe
 const double gamma_index = 2;
 
@@ -109,6 +115,11 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
        m->addSource(new Source("TXS 0506+056", 5 + 9/60. +  25.9637 / 3600, 5 + 41/60. + 35.3279/3600,
           new ConstantExponentialSourceFlux(txs_index,txs_flux,txs_E0) //from IceCube paper, assume it's constant over flight for now
           )) ; 
+     }
+
+     else if (stripped == "M77") 
+     {
+       m->addSource(new Source("M77", 2 + 42./60 + 40.771/3600, -47.84/3600, new ConstantExponentialSourceFlux(m77_index, txs_flux, txs_E0))); //flux and E0 don't matter 
      }
     
     // Supernovae
