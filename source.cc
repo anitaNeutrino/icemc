@@ -106,7 +106,10 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
      if (stripped == "TXS")
      {
 
-       m->addSource(new Source("TXS 0506+056", 5 + 9/60. +  25.9637 / 3600, 5 + 41/60. + 35.3279/3600,
+       double txs_ra = 77.3582; // decimal degrees
+       double txs_dec = 5.69314; // decimal degrees
+
+       m->addSource(new Source("TXS 0506+056", txs_ra/15., txs_dec,
           new ConstantExponentialSourceFlux(txs_index,txs_flux,txs_E0) //from IceCube paper, assume it's constant over flight for now
           )) ; 
      }
@@ -130,7 +133,10 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       tree->SetBranchAddress("fullObjType",&fullObjType);
       tree->SetBranchAddress("objSubtype",&objSubtype);
       tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
-         
+      
+      // convert to astronomy convention
+      ra/=15.;
+
       int two_weeks = 24*3600*14; 
       int two_days = 24*3600*2; 
       for (unsigned int i = 0; i < tree->GetEntries(); i++) 
@@ -187,6 +193,9 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       tree->SetBranchAddress("unixTriggerTime",&unixTriggerTime);
       tree->SetBranchAddress("T90",&t90);
       tree->SetBranchAddress("fluence",&fluence);
+
+      // convert to astronomy convention
+      RA/=15.;
       
       for (unsigned int i = 0; i < tree->GetEntries(); i++) 
       {
@@ -267,9 +276,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
        
       for (int i = 0; i < fava_tree->GetEntries(); i++) 
       {
-        fava_tree->GetEntry(i);
-
-         
+        fava_tree->GetEntry(i);       
          
         // time cut
         if( (fava->unix_tmax < r.whichStartTime) || (fava->unix_tmin > r.whichEndTime) ){continue;}
@@ -301,7 +308,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
         if (fava->source_class.GetString() ==  "bcu" || fava->source_class.GetString() == "fsrq" || fava->source_class.GetString() == "bll")
         {
        
-           m->addSource(new Source(fava_name, fava->ra, fava->dec, 
+	  m->addSource(new Source(fava_name, (fava->ra)/15., fava->dec, 
                          new TimeWindowedExponentialSourceFlux( fava->unix_tmin, fava->unix_tmax, txs_index, 
                           txs_norm * (flux_weighted ? fava->he_flux / txs_flux : z_weighted ?  txs_flux * pow(txs_D/luminosity_distance(fava->z),2): 1), txs_E0))
                        ); 

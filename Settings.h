@@ -262,8 +262,8 @@ class Settings : public TObject {
   
   // custom sources
   std::string CUSTOM_NAME;
-  double CUSTOM_RA;
-  double CUSTOM_DEC;
+  double CUSTOM_RA; // in decimal degrees
+  double CUSTOM_DEC; // in decimal degrees
   double CUSTOM_GAMMA;
   
   double HORIZON_OFFSET; 

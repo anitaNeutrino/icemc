@@ -296,8 +296,8 @@ void Settings::Initialize() {
 
   // Custom source options
   CUSTOM_NAME = "customObject";
-  CUSTOM_RA = 0;
-  CUSTOM_DEC = 0;
+  CUSTOM_RA = 0; // in decimal degrees
+  CUSTOM_DEC = 0; // in decimal degrees
   CUSTOM_GAMMA = 2;
   
 }

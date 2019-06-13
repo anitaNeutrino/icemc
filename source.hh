@@ -109,6 +109,7 @@ class Source
 
 public: 
   /* The source will own the flux */ 
+  // !!! The source function takes RA in decimal hours, and dec in decimal degrees. !!!
   Source (const char * name, double RA, double dec, SourceFlux * flux);
   const char * getName() const { return name.c_str(); }
   double getRA() const { return RA; }
