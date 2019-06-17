@@ -134,9 +134,6 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       tree->SetBranchAddress("objSubtype",&objSubtype);
       tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
       
-      // convert to astronomy convention
-      ra/=15.;
-
       int two_weeks = 24*3600*14; 
       int two_days = 24*3600*2; 
       for (unsigned int i = 0; i < tree->GetEntries(); i++) 
@@ -169,7 +166,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
                else{continue;}
              }
             
-             m->addSource(new Source(objName->c_str(), ra, dec,
+             m->addSource(new Source(objName->c_str(), ra/=15., dec,
                           new TimeWindowedExponentialSourceFlux(discoveryUnixTime-two_days, discoveryUnixTime + two_weeks - two_days, 2,txs_flux,txs_E0) // Just use these params as the first step
                          )) ; 
        }
@@ -194,9 +191,6 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       tree->SetBranchAddress("T90",&t90);
       tree->SetBranchAddress("fluence",&fluence);
 
-      // convert to astronomy convention
-      RA/=15.;
-      
       for (unsigned int i = 0; i < tree->GetEntries(); i++) 
       {
         tree->GetEntry(i);
@@ -226,7 +220,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
 
         if (strcasestr(stripped.Data(),"AFTERGLOW") )
         {
-          m->addSource(new Source(objName->c_str(), RA, dec,
+          m->addSource(new Source(objName->c_str(), RA/=15., dec,
                   new TimeWindowedExponentialSourceFlux(unixTriggerTime,
                                                                       unixTriggerTime + 3600,1.5,
                                                                       fluence,1e9, 1e10) 
@@ -235,7 +229,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
         }
         else if (strcasestr(stripped.Data(),"PROMPT") )
         {
-          m->addSource(new Source(objName->c_str(), RA, dec,
+          m->addSource(new Source(objName->c_str(), RA/=15., dec,
               //fireball model for E > 1e18 eV, I think
                                 new TimeWindowedExponentialSourceFlux(unixTriggerTime,
                                                                       unixTriggerTime + t90,4,
@@ -247,7 +241,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
         // conservative case... 5 minutes before, one hour after, use afterglow flux. 
         else
         {
-          m->addSource(new Source(objName->c_str(), RA, dec,
+          m->addSource(new Source(objName->c_str(), RA/=15., dec,
               //fireball model for E > 1e18 eV, I think
                                 new TimeWindowedExponentialSourceFlux(unixTriggerTime-300,
                                                                       unixTriggerTime + 3600,1.5,
@@ -283,7 +277,13 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
 
         const char * fava_name = fava->association.GetString().Data();
 
-                  // If we didn't specific all sources
+	// Skip flares that are not associated with a source
+	if(strcasestr(fava_name,"None"))
+	  {
+	    continue;
+	  }
+
+	// If we didn't specific all sources
             
         if(strcasecmp(r.whichSources,"All"))
         {
