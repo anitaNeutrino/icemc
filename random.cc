@@ -124,7 +124,7 @@ void setRNGType(WhichIceMcRNGType type)
     if (rngs[i]) delete rngs[i]; 
 
     rngs[i] = type == RNG_TYPE_XOSHIRO256PLUS ? (TRandom*) new TRandomXoshiro256Plus(the_seed) : 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,8)
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,8,0)
               type == RNG_TYPE_MT64     ? (TRandom*) new TRandomMT64  : 
               type == RNG_TYPE_MIXMAX256     ? (TRandom*) new TRandomMixMax256  : 
 #endif
