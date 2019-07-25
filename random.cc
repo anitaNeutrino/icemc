@@ -2,7 +2,7 @@
 #include "TUUID.h" 
 #include "TRandom3.h" 
 
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,8)
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,8,0)
 #include "TRandomGen.h" 
 #endif
 
