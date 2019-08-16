@@ -112,7 +112,10 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
      if (stripped == "TXS")
      {
 
-       m->addSource(new Source("TXS 0506+056", 5 + 9/60. +  25.9637 / 3600, 5 + 41/60. + 35.3279/3600,
+       double txs_ra = 77.3582; // decimal degrees
+       double txs_dec = 5.69314; // decimal degrees
+
+       m->addSource(new Source("TXS 0506+056", txs_ra/15., txs_dec,
           new ConstantExponentialSourceFlux(txs_index,txs_flux,txs_E0) //from IceCube paper, assume it's constant over flight for now
           )) ; 
      }
@@ -141,7 +144,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       tree->SetBranchAddress("fullObjType",&fullObjType);
       tree->SetBranchAddress("objSubtype",&objSubtype);
       tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
-         
+      
       int two_weeks = 24*3600*14; 
       int two_days = 24*3600*2; 
       for (unsigned int i = 0; i < tree->GetEntries(); i++) 
@@ -174,7 +177,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
                else{continue;}
              }
             
-             m->addSource(new Source(objName->c_str(), ra, dec,
+             m->addSource(new Source(objName->c_str(), ra/=15., dec,
                           new TimeWindowedExponentialSourceFlux(discoveryUnixTime-two_days, discoveryUnixTime + two_weeks - two_days, 2,txs_flux,txs_E0) // Just use these params as the first step
                          )) ; 
        }
@@ -198,7 +201,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       tree->SetBranchAddress("unixTriggerTime",&unixTriggerTime);
       tree->SetBranchAddress("T90",&t90);
       tree->SetBranchAddress("fluence",&fluence);
-      
+
       for (unsigned int i = 0; i < tree->GetEntries(); i++) 
       {
         tree->GetEntry(i);
@@ -228,7 +231,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
 
         if (strcasestr(stripped.Data(),"AFTERGLOW") )
         {
-          m->addSource(new Source(objName->c_str(), RA, dec,
+          m->addSource(new Source(objName->c_str(), RA/=15., dec,
                   new TimeWindowedExponentialSourceFlux(unixTriggerTime,
                                                                       unixTriggerTime + 3600,1.5,
                                                                       fluence,1e9, 1e10) 
@@ -237,7 +240,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
         }
         else if (strcasestr(stripped.Data(),"PROMPT") )
         {
-          m->addSource(new Source(objName->c_str(), RA, dec,
+          m->addSource(new Source(objName->c_str(), RA/=15., dec,
               //fireball model for E > 1e18 eV, I think
                                 new TimeWindowedExponentialSourceFlux(unixTriggerTime,
                                                                       unixTriggerTime + t90,4,
@@ -249,7 +252,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
         // conservative case... 5 minutes before, one hour after, use afterglow flux. 
         else
         {
-          m->addSource(new Source(objName->c_str(), RA, dec,
+          m->addSource(new Source(objName->c_str(), RA/=15., dec,
               //fireball model for E > 1e18 eV, I think
                                 new TimeWindowedExponentialSourceFlux(unixTriggerTime-300,
                                                                       unixTriggerTime + 3600,1.5,
@@ -278,16 +281,20 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
        
       for (int i = 0; i < fava_tree->GetEntries(); i++) 
       {
-        fava_tree->GetEntry(i);
-
-         
+        fava_tree->GetEntry(i);       
          
         // time cut
         if( (fava->unix_tmax < r.whichStartTime) || (fava->unix_tmin > r.whichEndTime) ){continue;}
 
         const char * fava_name = fava->association.GetString().Data();
 
-                  // If we didn't specific all sources
+	// Skip flares that are not associated with a source
+	if(strcasestr(fava_name,"None"))
+	  {
+	    continue;
+	  }
+
+	// If we didn't specific all sources
             
         if(strcasecmp(r.whichSources,"All"))
         {
@@ -312,7 +319,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
         if (fava->source_class.GetString() ==  "bcu" || fava->source_class.GetString() == "fsrq" || fava->source_class.GetString() == "bll")
         {
        
-           m->addSource(new Source(fava_name, fava->ra, fava->dec, 
+	  m->addSource(new Source(fava_name, (fava->ra)/15., fava->dec, 
                          new TimeWindowedExponentialSourceFlux( fava->unix_tmin, fava->unix_tmax, txs_index, 
                           txs_norm * (flux_weighted ? fava->he_flux / txs_flux : z_weighted ?  txs_flux * pow(txs_D/luminosity_distance(fava->z),2): 1), txs_E0))
                        ); 

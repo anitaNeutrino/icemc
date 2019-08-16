@@ -635,7 +635,7 @@ int main(int argc,  char **argv) {
   {
     src_model = new SourceModel("custom",settings1->SEED + 0xc0fefe); 
 
-    src_model->addSource( new Source("Custom Source", settings1->CUSTOM_RA, settings1->CUSTOM_DEC, 
+    src_model->addSource( new Source("Custom Source", (settings1->CUSTOM_RA)/15, settings1->CUSTOM_DEC, 
                               new ConstantExponentialSourceFlux(settings1->CUSTOM_GAMMA, 1e-10,1e6))); 
     
   }
@@ -1665,7 +1665,7 @@ int main(int argc,  char **argv) {
 
 
       Vector force_dir;
-      double RA = 0;
+      double RA = 0; 
       double dec = 0;
       int which_source = -1; 
       if (!src_model &&  spectra1->IsSpectrum() ){//if using energy spectrum
@@ -3811,7 +3811,7 @@ int main(int argc,  char **argv) {
             truthEvPtr->sourceLat        = sourceLat;
             truthEvPtr->sourceAlt        = sourceAlt;
 
-            if(src_model){cout << "It originated from " << objName << " (" << RA << ", " << dec << ")" << endl;}
+            if(src_model){cout << "It originated from " << objName << " (" << RA*15 << "°, " << dec << "°)" << endl;}
             
             truthEvPtr->weight           = weight;
             truthEvPtr->weight1           = weight1;
