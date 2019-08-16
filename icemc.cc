@@ -639,7 +639,7 @@ int main(int argc,  char **argv) {
                               new ConstantExponentialSourceFlux(settings1->CUSTOM_GAMMA, 1e-10,1e6))); 
     
   }
-  else
+  else if(strcasecmp(settings1->SOURCE.c_str(),"NONE"))
   {
     src_model = SourceModel::getSourceModel(settings1->SOURCE.c_str(), settings1->SEED + 0x5eed, 
                               SourceModel::Restriction( settings1->DEC_CUT, settings1->WHICH_SOURCES.c_str(), settings1->WHICH_SUBTYPE.c_str(), 
