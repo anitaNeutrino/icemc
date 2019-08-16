@@ -1805,7 +1805,7 @@ int main(int argc,  char **argv) {
       else
         tautrigger=0;
 
-      bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon, len_int_kgm2,  src_model || settings1->HORIZON_OFFSET ? &force_dir : 0);
+      bn1->PickDownwardInteractionPoint(interaction1,  anita1,  settings1,  antarctica,  ray1,  beyondhorizon, len_int_kgm2,  (src_model || settings1->HORIZON_OFFSET > -999) ? &force_dir : 0);
 
       bool havent_set_frac = true; 
       bool havent_set_weights = true; 
