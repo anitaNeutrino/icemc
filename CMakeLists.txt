@@ -85,7 +85,7 @@ if(DEFINED ENV{ANITA_UTIL_INSTALL_DIR})
     set(INC_ANITA_UTIL $ENV{ANITA_UTIL_INSTALL_DIR}/include)
     set(ANITA_UTIL_ETC_DIR $ENV{ANITA_UTIL_INSTALL_DIR}/etc)
     link_directories(${ANITA_UTIL_LIB_DIR})
-    include_directories(${ANITA_UTIL_LIB_DIR})
+    include_directories(${INC_ANITA_UTIL})
  endif()
 
 
@@ -129,6 +129,7 @@ if (VECTORIZE)
         endif()
       endif()
       add_definitions(  -fabi-version=0 ) 
+      include_directories(${INC_ANITA_UTIL}/vectorclass) 
   endif() 
 
 

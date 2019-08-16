@@ -22,7 +22,7 @@
 
 
 #if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
-#include "vectorclass/vectormath_trig.h"
+#include "vectormath_trig.h"
 
 #endif
 using std::ifstream;
