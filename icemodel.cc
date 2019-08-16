@@ -18,11 +18,12 @@
 #include "Settings.h"
 #include "EnvironmentVariable.h"
 
-
 #include "icemc_random.h" 
 
 #include <fstream>
 #include <iostream>
+
+ClassImp(icemodel_debug); 
 
 using std::endl;
 using std::cout;
@@ -32,7 +33,58 @@ using std::cerr;
 
 const string ICEMC_SRC_DIR = EnvironmentVariable::ICEMC_SRC_DIR();
 const string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
+
   
+#ifdef ICEMODEL_DEBUG_TREE
+#include "TTree.h" 
+static TFile * debugfile = 0; 
+static TTree * debugtree = 0; 
+
+static icemodel_debug * dbg = new icemodel_debug; 
+
+void write_the_tree() 
+{
+  if (debugtree)
+  {
+    debugfile->cd(); 
+    debugtree->Write(); 
+    delete debugfile ;
+  }
+}
+
+void setupTree() 
+{
+  if (!debugtree) 
+  {
+
+    debugfile = new TFile(Form("icemodel_debug_%d.root",getpid()),"RECREATE"); 
+    debugtree = new TTree("debug","debug"); 
+    debugtree->Branch("dbg",dbg); 
+    atexit(write_the_tree); 
+  }
+}
+
+
+
+
+
+class FillTreeOnReturn
+{
+
+  public: 
+    FillTreeOnReturn(TFile * cdto, TTree * tree)  : f(cdto), t(tree) { ; } 
+    ~FillTreeOnReturn() {
+      TDirectory * tmp = gDirectory; 
+      f->cd(); 
+      t->Fill();
+      tmp->cd(); 
+    } 
+  private: 
+    TFile * f; 
+    TTree * t; 
+};
+
+#endif
 
 
 
@@ -307,6 +359,13 @@ static double getDEffectiveArea( const Vector & cap_axis,
 int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, IceModel *antarctica, const Position * balloon_position, 
                                       double maxdist, double len_int_kgm2, const Vector * force_dir) 
 {
+
+#ifdef ICEMODEL_DEBUG_TREE
+    setupTree(); 
+    dbg->reset() ; 
+    FillTreeOnReturn fill (debugfile, debugtree); 
+#endif
+
     // first pick the neutrino direction
     if (!force_dir) 
     {
@@ -324,10 +383,11 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
     // We will use the point directly below ANITA with an altitude at 0 km as a reference then consider offsets
     // relative to that in that plane. 
     
-    Position ref(balloon_position->Lon(), balloon_position->Lat(), R_EARTH); 
+    //piece of shit! 
+    Position ref(balloon_position->Lon()+180, balloon_position->Lat(), R_EARTH); 
 
 
-    // For now, randomly pick an offset up to 1000 km away 
+    // For now, randomly pick an offset up to maxdist km away 
     // This can be optimized by precalculating the polygon 
     // visible from this angle or finding the bounds in some other way... 
     // Especially for nearly orthogonal events this will be far too big... 
@@ -350,9 +410,24 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
 
     int nintersect = GeoidIntersection(p0, nudir, &int1, &int2); 
 
+
+#ifdef ICEMODEL_DEBUG_TREE
+    dbg->balloon.SetXYZ(balloon_position->X(), balloon_position->Y(), balloon_position->Z()); 
+    dbg->ref.SetXYZ(ref.X(), ref.Y(), ref.Z()); 
+    dbg->nudir.SetXYZ(nudir.X(), nudir.Y(), nudir.Z()); 
+    dbg->nintersect = nintersect; 
+    dbg->x = x; 
+    dbg->y = y; 
+    dbg->int1.SetXYZ(int1.X(), int1.Y(), int1.Z()); 
+    dbg->int2.SetXYZ(int2.X(), int2.Y(), int2.Z()); 
+#endif
+
     if (nintersect == 0) 
     {
 
+#ifdef ICEMODEL_DEBUG_TREE
+      dbg->noway = true;
+#endif
       interaction1->noway = 1; 
       return 0; 
     }
@@ -367,16 +442,24 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
     {
       //check if either solution is pointing at ANITA
 
-      Vector d1 = ref - int1; 
-      Vector d2 = ref - int1; 
+      Vector d1 = int1-ref; 
+      Vector d2 = int2-ref; 
       bool rightdir1 = (d1).Dot(nudir) > 0; 
       bool rightdir2 = (d2).Dot(nudir) > 0; 
 
+#ifdef ICEMODEL_DEBUG_TREE
+      dbg->rightdir1 = rightdir1;
+      dbg->rightdir2 = rightdir2;
+#endif
+
+
+      pint =  rng->Rndm() > 0.5 ? int1 : int2; 
+      /*
       //if both, pick the closer one since I think 
       //it should never be the case that both are close... 
       if (rightdir1 && rightdir2) 
       {
-        pint =  d1.Mag2() < d2.Mag2() ? int1 : int2; 
+        pint =  rng->Rndm() > 0.5 ? int1 : int2; 
       }
 
       else if (rightdir1) 
@@ -392,21 +475,33 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
       else 
       {
         interaction1->noway = 1; 
+#ifdef ICEMODEL_DEBUG_TREE
+        dbg->noway = true;
+#endif
         return 0; 
       }
+    */ 
     }
+     
 
     //ok, now we have to find where our neutrino trajectory intersects rock/ice
     
     // For now, let's force the direction to be in the opposite direction as interaction point
     // so we don't confuse the other methods too much (which assume n is in the same direction as the position).  Just for our temporary value though! 
-    bool should_flip = pint.Dot(nudir) > 0;  
+    bool should_flip = pint.Dot(nudir) > 0; 
     Vector nnu  = should_flip ? -1 * nudir : nudir; 
 
+#ifdef ICEMODEL_DEBUG_TREE
+    dbg->pint.SetXYZ(pint.X(),pint.Y(),pint.Z()); 
+#endif 
 
     Position exitearth; 
     if (!Ray::WhereDoesItLeave(pint,nnu,antarctica,exitearth)) { // where does it leave Earth
       interaction1->wheredoesitleave_err = 1; // epic fail 
+#ifdef ICEMODEL_DEBUG_TREE
+      dbg->leave_err = true; 
+#endif 
+
       return 0; 
     }
 
@@ -452,6 +547,7 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
 
     }
 
+
     else // We are not in an ice bin, so back up and find where we left the ice
     {
 
@@ -485,6 +581,11 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
       }
     }
 
+#ifdef ICEMODEL_DEBUG_TREE
+    dbg->exitice.SetXYZ(exitice.X(),exitice.Y(),exitice.Z()); 
+    dbg->exitearth.SetXYZ(exitearth.X(),exitearth.Y(),exitearth.Z()); 
+#endif 
+
 
     //now find out where we enter the ice. 
     // start with a coarsish binning to get in the ballpark
@@ -505,6 +606,11 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
       interaction1->wheredoesitenterice_err = 1; 
       return 0; 
     }
+
+#ifdef ICEMODEL_DEBUG_TREE
+    dbg->enterice.SetXYZ(enterice.X(),enterice.Y(),enterice.Z()); 
+#endif 
+
 
     // phew, done with entering and exiting ice.  
 
@@ -527,6 +633,9 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
     // now we have to remember if we have the right sign or not!!  
     interaction1->posnu=distance *interaction1->nnu+ (should_flip ? exitice : enterice);
 
+#ifdef ICEMODEL_DEBUG_TREE
+    dbg->nupos.SetXYZ(interaction1->posnu.X(),interaction1->posnu.Y(),interaction1->posnu.Z()); 
+#endif
 
     //we should probably tell the interaction all the new stuff as well 
 

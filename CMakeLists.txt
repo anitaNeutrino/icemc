@@ -46,7 +46,8 @@ endif()
 
 
 set(DICT classdict)
-set(CLASS_HEADERS rx.hpp Taumodel.hh Settings.h blazars/fava.h icemc_random.h)
+set(CLASS_HEADERS rx.hpp Taumodel.hh Settings.h blazars/fava.h icemc_random.h
+  icemodel.hh)
 
 ROOT_GENERATE_DICTIONARY(${DICT} ${CLASS_HEADERS} LINKDEF LinkDef.h)
 FILE (GLOB SOURCE_FILES "*.cc") 

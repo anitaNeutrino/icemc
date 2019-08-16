@@ -23,7 +23,7 @@ ANITA3_EVENTCORRELATOR=1
 #USE_HEALPIX=1
 
 # Uncomment to disable explicit vectorization (but will do nothing if ANITA_UTIL is not available) 
-#VECTORIZE=1
+VECTORIZE=1
 
 
 # The ROOT flags are added to the CXXFLAGS in the .arch file
@@ -31,12 +31,17 @@ ANITA3_EVENTCORRELATOR=1
 ifeq (,$(findstring -std=, $(CXXFLAGS)))
 ifeq ($(shell test $(GCC_MAJOR) -lt 5; echo $$?),0)
 ifeq ($(shell test $(GCC_MINOR) -lt 5; echo $$?),0)
-CXXFLAGS += -std=c++0x
+CXXFLAGS += -std=c++0x 
 else
 CXXFLAGS += -std=c++11
 endif
 endif
 endif
+
+
+#CXXFLAGS+=-flto 
+#CXXFLAGS+=-fsanitize=address
+#CXXFLAGS+=-DICEMODEL_DEBUG_TREE
 
 ################################################################################
 
@@ -79,7 +84,7 @@ CXXFLAGS += -DANITA_UTIL_EXISTS
 endif
 
 ifdef VECTORIZE
-CXXFLAGS += -DVECTORIZE -march=native -fabi-version=0
+CXXFLAGS += -DVECTORIZE -march=native -fabi-version=0 
 endif
 
 ifdef ANITA3_EVENTREADER
@@ -114,7 +119,7 @@ LIBS += $(LIBS_ANITA_UTIL)
 # Mathmore not included in the standard ROOT libs
 LIBS += -lMathMore
 
-CLASS_HEADERS = rx.hpp Taumodel.hh Settings.h blazars/fava.h icemc_random.h 
+CLASS_HEADERS = rx.hpp Taumodel.hh Settings.h blazars/fava.h icemc_random.h icemodel.hh 
 DICT = classdict
 
 OBJS = vector.o position.o earthmodel.o balloon.o icemodel.o signal.o ray.o Spectra.o anita.o roughness.o secondaries.o Primaries.o Tools.o counting.o $(DICT).o Settings.o Taumodel.o screen.o GlobalTrigger.o ChanTrigger.o SimulatedSignal.o EnvironmentVariable.o source.o  random.o

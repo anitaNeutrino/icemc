@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include "TVector3.h" 
 
 #include "earthmodel.hh"
 #include "source.hh" 
@@ -35,6 +36,47 @@ const double bedmap_b_bar = 7*pow(eccentricity,4)/48 + 29*pow(eccentricity,6)/24
 const double bedmap_c_bar = 7*pow(eccentricity,6)/120 + 81*pow(eccentricity,8)/1120;
 const double bedmap_d_bar = 4279*pow(eccentricity,8)/161280;
 const double bedmap_c_0 = (2*EarthModel::R_EARTH / sqrt(1-pow(eccentricity,2))) * pow(( (1-eccentricity) / (1+eccentricity) ),eccentricity/2);
+
+struct icemodel_debug
+{
+  TVector3 balloon;
+  TVector3 ref; 
+  int nintersect; 
+  TVector3 int1; 
+  TVector3 int2; 
+  TVector3 pint; 
+  TVector3 nudir;
+  bool rightdir1; 
+  bool rightdir2; 
+  bool noway; 
+  bool leave_err; 
+  TVector3 nupos; 
+  TVector3 enterice; 
+  TVector3 exitice; 
+  TVector3 exitearth; 
+  double x,y; 
+
+  void reset() 
+  {
+    balloon.SetXYZ(0,0,0);
+    ref.SetXYZ(0,0,0);
+    int1.SetXYZ(0,0,0);
+    int2.SetXYZ(0,0,0);
+    pint.SetXYZ(0,0,0);
+    nudir.SetXYZ(0,0,0);
+    nupos.SetXYZ(0,0,0);
+    enterice.SetXYZ(0,0,0);
+    exitice.SetXYZ(0,0,0);
+    exitearth.SetXYZ(0,0,0);
+    nintersect = 0;
+    rightdir1 = false;
+    rightdir2 = false;
+    noway = false;
+    x = 0;
+    y = 0; 
+    leave_err = false; 
+  }
+}; 
 
 
 
