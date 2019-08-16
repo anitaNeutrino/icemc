@@ -1067,8 +1067,9 @@ Position EarthModel::WhereDoesItEnter(const Position &posnu,const Vector &nnu) {
 
 const double POLAR_RADIUS = 6356752.31425; 
 const double EQUATORIAL_RADIUS = 6378137.0; 
-const double EQ_INV = 1./(EQUATORIAL_RADIUS * EQUATORIAL_RADIUS); 
-const double PO_INV = 1./(POLAR_RADIUS * POLAR_RADIUS); 
+const double EQ2 = EQUATORIAL_RADIUS*EQUATORIAL_RADIUS; 
+const double PO2 = POLAR_RADIUS*POLAR_RADIUS; 
+const double RAT = EQ2/PO2; 
 
 int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position * int2) const
 {
@@ -1081,6 +1082,11 @@ int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position
    *  ----    +  -----  +   -----  = 1
    *  R^2_eq     R^2_eq +   R^2_po
    *
+   *  or
+   *   x^2    +     y^2   +     r  z^2   -  R^2_eq= 0
+   *
+   *
+   *   where r is the ratio of squares of the equatorial to polar radius. 
    *  
    *  we have \vec{x} = \vec{x0} + \vec{p0} d 
    *
@@ -1092,20 +1098,19 @@ int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position
    *   z = x0_z + p0_z* d 
    *   
    *   so we must solve the quadratic in terms of d 
-   *    
    *
    *
    */
 
 
   //d^2 terms
-  double a = p0.X()*p0.X() *EQ_INV + p0.Y()*p0.Y() * EQ_INV + p0.Z()*p0.Z() *PO_INV; 
+  double a = p0.X()*p0.X() + p0.Y()*p0.Y() + p0.Z()*p0.Z() *RAT; 
   
   //d terms
-  double b = 2 * ( p0.X()*x0.X() *EQ_INV + x0.Y()*p0.Y() * EQ_INV + x0.Z()*p0.Z() *EQ_INV) ; 
+  double b = 2 * ( p0.X()*x0.X() + x0.Y()*p0.Y() + x0.Z()*p0.Z() *RAT) ; 
 
   //constant terms
-  double c = -1 + x0.X()*x0.X() *EQ_INV + x0.Y()*x0.Y() * EQ_INV + x0.Z()*x0.Z() *PO_INV; 
+  double c = -EQ2 + x0.X()*x0.X() + x0.Y()*x0.Y() + x0.Z()*x0.Z() *RAT; 
 
   //check discriminant
   double discr = b*b-4*a*c; 
@@ -1115,6 +1120,8 @@ int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position
   {
     return 0; 
   }
+
+  discr = sqrt(discr);
 
   double d0= (-b + discr)/(2*a); 
   double d1= (-b - discr)/(2*a); 
@@ -1136,5 +1143,5 @@ int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position
 
   }
 
-  return discr == 0; 
+  return discr == 0 ? 1 : 2; 
 }
