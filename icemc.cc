@@ -3784,7 +3784,7 @@ int main(int argc,  char **argv) {
             Adu5PatPtr->run = run_no;
 
             cout << "" << endl;
-            cout << "Neutrino (evNum = " << eventNumber << ") passed" << endl;
+            cout << "Neutrino (evNum = " << eventNumber << ", weight = " << weight << " weight_prob = " << weight_prob <<") passed" << endl;
             
 #ifdef ANITA3_EVENTREADER
             if (settings1->WHICH==9 || settings1->WHICH==10) {
@@ -3815,6 +3815,7 @@ int main(int argc,  char **argv) {
             
             truthEvPtr->weight           = weight;
             truthEvPtr->weight1           = weight1;
+            truthEvPtr->weight_prob           = weight_prob;
             truthEvPtr->phaseWeight       = 1./interaction1->dnutries;
             truthEvPtr->timeWeight       = time_weight;
 	    truthEvPtr->tuffIndex = (short)anita1->tuffIndex;
