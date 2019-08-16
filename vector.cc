@@ -4,6 +4,10 @@
 #include "TVector3.h"
 #include "TRotation.h"
 
+#if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
+#include "vectorclass/vectormath_trig.h"
+#endif
+
 using std::cout;
 
 Vector::Vector(double x_inp,double y_inp,double z_inp) {
@@ -193,15 +197,23 @@ void Vector::UpdateThetaPhi() const {
 	//double transverse = hypot(x,y);
 	double transverse = sqrt(x*x+y*y);
 	
+#if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
+
+  Vec2d Y(transverse,y); 
+  Vec2d X(z,x); 
+  Vec2d answer = atan2(Y,X); 
+  theta = answer[0]; 
+  phi = answer[1]; 
+#else
 	// atan2 outputs in the range -pi to pi
 	theta = atan2(transverse,z);
-	
 	phi=atan2(y,x);
+#endif
 	
 	if (phi<0)
 		phi+=2*PI;
 	// phi is now from 0 to 2*pi wrt +x
-        angles_need_updating = false; 
+   angles_need_updating = false; 
 	
 } //UpdateThetaPhi
 Vector Vector::Zero() {
