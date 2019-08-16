@@ -25,7 +25,7 @@ public:
     double x, y, z;
     std::vector <double>* waveform;
     std::vector <double>* digitized;
-	RX (void) : waveform (NULL), digitized (NULL) {}
+	RX (void) : phi_sector(0xffff),layer(0xffff), x(0),y(0),z(0), waveform (NULL), digitized (NULL) {}
     ~RX (void) {delete waveform; delete digitized;}
     ClassDef(RX, 1);
 };
