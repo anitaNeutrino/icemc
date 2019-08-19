@@ -408,6 +408,7 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
     Position int2; 
     Position pint; 
 
+    //check if we intersect with the (super) geoid. 
     int nintersect = GeoidIntersection(p0, nudir, &int1, &int2); 
 
 

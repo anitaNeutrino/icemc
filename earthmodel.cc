@@ -1065,13 +1065,7 @@ Position EarthModel::WhereDoesItEnter(const Position &posnu,const Vector &nnu) {
 } //method WhereDoesItEnter
 
 
-const double POLAR_RADIUS = 6356752.31425; 
-const double EQUATORIAL_RADIUS = 6378137.0; 
-const double EQ2 = EQUATORIAL_RADIUS*EQUATORIAL_RADIUS; 
-const double PO2 = POLAR_RADIUS*POLAR_RADIUS; 
-const double RAT = EQ2/PO2; 
-
-int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position * int2) const
+int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position * int2, double extra_height) const
 {
 
 
@@ -1101,6 +1095,13 @@ int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position
    *
    *
    */
+
+  double POLAR_RADIUS = 6356752.31425 + extra_height; 
+  double EQUATORIAL_RADIUS = 6378137.0 + extra_height; 
+  double EQ2 = EQUATORIAL_RADIUS*EQUATORIAL_RADIUS; 
+  double PO2 = POLAR_RADIUS*POLAR_RADIUS; 
+  double RAT = EQ2/PO2; 
+
 
 
   //d^2 terms
