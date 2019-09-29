@@ -234,6 +234,7 @@ void Settings::Initialize() {
   YPARAM=1;  // Connolly et al. 2011 default y parametrization
   UNBIASED_SELECTION=1.; // (0) pick neutrino interaction in the ice and neutrino from any direction or (1) choose neutrino interaction point in the horizon on the balloon in the ice and neutrino direction on the cerenkov cone
   UNBIASED_PS_MAX_DISTANCE_KM =1e3; 
+  UNBIASED_CHORD_STEP_M =50; 
   SIGMA_FACTOR=1;
   USEDARTBOARD=0;
   EXPONENT=18.; // Initialize energy exponent
@@ -325,6 +326,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
 
   getSetting("Neutrino position", UNBIASED_SELECTION);
   getSetting("Neutrino Point Source Max Distance", UNBIASED_PS_MAX_DISTANCE_KM,true);
+  getSetting("Neutrino Point Source Ice Chord Step", UNBIASED_CHORD_STEP_M,true);
   getSetting("Write hists and trees", HIST);
   getSetting("Write ray", FILLRAYTREES);
 

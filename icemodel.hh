@@ -9,6 +9,7 @@
 
 #include "earthmodel.hh"
 #include "source.hh" 
+#include "TH2.h" 
 
 class Balloon;
 class Position;
@@ -87,9 +88,9 @@ class IceModel : public EarthModel {
 public:
 
   //BEDMAP data
-  double ice_thickness_array[1200][1000];  //thickness of the ice
-  double ground_elevation[1068][869]; //elevation above geoid at which ice starts
-  double water_depth[1200][1000]; //depth of water under ice
+  TH2D h_ice_thickness;
+  TH2D h_ground_elevation;;
+  TH2D h_water_depth;;
 
 
 double bedmap_R; //varies with latitude, defined here for 71 deg S latitude
@@ -118,14 +119,21 @@ int NODATA;
 		     
 		     double& lon,
 		     double& lat);  
+
   void GroundENtoLonLat(int e,
 			int n,
-			
+			double& lon,
+			double& lat);
+  void WaterENtoLonLat(int e,
+			int n,
 			double& lon,
 			double& lat);
 
+
+
   vector<double> volume_inhorizon; // volume of ice within horizon for each balloon phi position 
   IceModel(int model=0,int earth_mode=0,int WEIGHTABSORPTION_SETTING=1);
+  virtual ~IceModel(); 
   double IceThickness(double lon,double lat);
   double IceThickness(const Position& pos) ;
   double Surface(double lon,double lat) ;
@@ -159,23 +167,38 @@ int NODATA;
 			 const Vector &nnu,
 			 double stepsize,
 			 Position &r_enterice);
+
+
+  //resolution is in cartesian meters 
+  void CreateCartesianTopAndBottom(int resolution, bool force_new =false); 
+  const TH2 * GetCartesianTop() const { return  cart_ice_top; }
+  const TH2 * GetCartesianBottom() const { return  cart_ice_bot; }
+  bool CartesianIsInIce(double x, double y, double z); 
+  
+  int GetIceIntersectionsCartesian(const Position &posnu,  const Vector &nnu, 
+      std::vector<std::pair<double,double> > & intersections, double initial_step_size = 50, int map_resolution=1000); 
+
+
   void CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput);
   Vector GetSurfaceNormal(const Position &r_out); //overloaded from EarthModel to include procedures for new ice models.
   double GetN(double depth);
   double GetN(const Position &pos);
   double EffectiveAttenuationLength(Settings *settings1,const Position &pos, const int &whichray);
   
-  void IceLonLattoEN(double lon, 
-		     double lat,
-		     
-		     int& e_coord, 
-		     int& n_coord);
-
   void FillArraysforTree(double lon_ground[1068][869],double lat_ground[1068][869],double lon_ice[1200][1000],double lat_ice[1200][1000],double lon_water[1200][1000],double lat_water[1200][1000]);
-  int PickUnbiased(Interaction *interaction1,IceModel *antarctica, double len_int_kgm2, Vector * force_dir = 0);
+  int PickUnbiased(Interaction *interaction1, double len_int_kgm2, double & position_weight, double chord_step, Vector * force_dir = 0);
 
-  int PickUnbiasedPointSourceNearBalloon(Interaction *interaction1,IceModel *antarctica, const Position * balloon_position, 
-      double max_ps_distance, double len_int_kgm2, const Vector * force_dir = 0);
+  int PickUnbiasedPointSourceNearBalloon(Interaction *interaction1, 
+      const Position * balloon_position, double max_ps_distance, double chord_step, 
+      double len_int_kgm2, const Vector * force_dir = 0);
+
+  double getSampleX() const { return sample_x; } 
+  double getSampleY() const { return sample_y; } 
+
+  void LonLattoEN(double lon, 
+		  double lat,
+		  double& E, 
+		  double& N);
 
 
 protected:
@@ -193,10 +216,19 @@ protected:
   vector< vector<int> >northing_inhorizon;
   vector<double> maxvol_inhorizon; // maximum volume of ice for a bin 
 
+  double cart_max_z; 
+  double cart_min_z; 
+  double sample_x, sample_y; 
+
+  TH2 *cart_ice_top; 
+  TH2 *cart_ice_bot; 
+  TFile *cart_ice_file; 
+  int cart_resolution; 
+
   //BEDMAP utility methods
   double Area(double latitude);
 
-void ENtoLonLat(int e_coord, 
+  void ENtoLonLat(int e_coord, 
 		  int n_coord,
 		  double xLowerLeft,
 		  double yLowerLeft,
@@ -206,29 +238,6 @@ void ENtoLonLat(int e_coord,
 
 
 
-  void WaterENtoLonLat(int e,
-		       int n,
-		       
-		       double& lon,
-		       double& lat);
-  void LonLattoEN(double lon, 
-		  double lat,
-		  double xLowerLeft,
-		  double yLowerLeft,
-		
-		  int& e_coord, 
-		  int& n_coord);
- 
-  void GroundLonLattoEN(double lon, 
-			double lat,
-			
-			int& e_coord, 
-			int& n_coord) ;
-  void WaterLonLattoEN(double lon,
-		       double lat,
-		       
-		       int& e_coord,
-		       int& n_coord) ;
 
   //BEDMAP data input methods
   void ReadIceThickness();

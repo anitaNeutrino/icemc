@@ -456,7 +456,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
       }
 
       igps = start_igps + int(randomNumber*ngps); // use random position 
-      bool adjustedTime = false;
+      bool adjustedTime = false; 
       //////////////////////////// TEMPORARY HACKS FOR ANITA4 !!!!!!      	
       if (WHICHPATH==9 && ((igps>870 && igps<880) || (igps>7730 && igps<7740) || (igps>23810 && igps<23820) || (igps>31630 && igps<31660) || (igps==17862) ) )
         {
@@ -493,6 +493,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
       
       while (faltitude<MINALTITUDE || fheading<0) { // if the altitude is too low, pick another event.
 		    
+  (void) adjustedTime; 
 	igps++; // increment by 1
 	igps=igps%flightdatachain->GetEntries(); // make sure it's not beyond the maximum entry number
 		    
@@ -595,7 +596,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     
   if (!settings1->UNBIASED_SELECTION && dtryingposition!=-999)
     dtryingposition=antarctica1->GetBalloonPositionWeight(ibnposition);
-  else
+  else if (settings1->UNBIASED_SELECTION == 2)
     dtryingposition=1.;
     
   phi_spin=GetBalloonSpin(heading); // get the azimuth of the balloon.
@@ -769,9 +770,10 @@ void Balloon::PickDownwardInteractionPoint(Interaction *interaction1, Anita *ani
   if (settings1->UNBIASED_SELECTION>=1) {
 
 
-    if ( (settings1->UNBIASED_SELECTION == 1 && antarctica1->PickUnbiased(interaction1,antarctica1,len_int_kgm2,force_dir)) ||
-         (settings1->UNBIASED_SELECTION == 2 && antarctica1->PickUnbiasedPointSourceNearBalloon(interaction1,antarctica1, &r_bn, 
+    if ( (settings1->UNBIASED_SELECTION == 1 && antarctica1->PickUnbiased(interaction1,len_int_kgm2,dtryingposition,settings1->UNBIASED_CHORD_STEP_M, force_dir)) ||
+         (settings1->UNBIASED_SELECTION == 2 && antarctica1->PickUnbiasedPointSourceNearBalloon(interaction1,&r_bn, 
                                                                                      settings1->UNBIASED_PS_MAX_DISTANCE_KM,
+                                                                                     settings1->UNBIASED_CHORD_STEP_M, 
                                                                                      len_int_kgm2,force_dir))  )
     { // pick neutrino direction and interaction point
           interaction1->dtryingdirection=1.;

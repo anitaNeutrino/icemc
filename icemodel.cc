@@ -42,7 +42,8 @@ static TTree * debugtree = 0;
 
 static icemodel_debug * dbg = new icemodel_debug; 
 
-void write_the_tree() 
+
+static void write_the_tree() 
 {
   if (debugtree)
   {
@@ -52,7 +53,7 @@ void write_the_tree()
   }
 }
 
-void setupTree() 
+static void setupTree() 
 {
   if (!debugtree) 
   {
@@ -98,7 +99,10 @@ static bool inHistBounds(double x, double y, const TH2 & h)
 }
 
 
-IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : EarthModel(earth_model,WEIGHTABSORPTION_SETTING) {
+
+
+IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : EarthModel(earth_model,WEIGHTABSORPTION_SETTING) 
+{
     
     bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(71*RADDEG)) / (1 - eccentricity*sin(71*RADDEG)) ),eccentricity/2) * tan((PI/4) - (71*RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
     bedmap_nu = bedmap_R / cos(71*RADDEG);
@@ -125,7 +129,8 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
 
     h_water_depth.SetTitle("BEDMAP Water Depth; Easting (m), Northing (m)"); 
     
-    
+    sample_x = 0; 
+    sample_y = 0; 
     
     ice_model=model;
     DEPTH_DEPENDENT_N = (int) (model / 10);
@@ -227,8 +232,23 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
     }
     westlanddown.close();
 
+
+    cart_ice_top = 0; 
+    cart_ice_bot = 0; 
+    cart_ice_file = 0; 
+    cart_resolution = 0; 
+    cart_min_z = -1; 
+    cart_max_z = -1; 
 }
 //constructor IceModel(int model)
+//
+IceModel::~IceModel() 
+{
+  if (cart_ice_top) delete cart_ice_top; 
+  if (cart_ice_bot) delete cart_ice_bot; 
+  if (cart_ice_file) delete cart_ice_file; 
+
+}
 
 
 Position IceModel::PickBalloonPosition() {
@@ -352,27 +372,54 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
 
 
 
-static double getDEffectiveArea( const Vector & cap_axis, 
-                                      const Vector & nnu, 
-                                      double cap_angle)  
+
+static void sampleLocation( double len_int_kgm2, 
+                           std::vector<std::pair<double,double> > & ice_intersections, 
+                           Interaction *  interaction1, const Vector & x,  TRandom * rng ) 
+
 {
+    std::vector<double> cumulative_dists(ice_intersections.size()); 
+    interaction1->pathlength_inice = 0;
+    for (unsigned i = 0; i < ice_intersections.size(); i++) 
+    {
+      double this_distance = ice_intersections[i].second - ice_intersections[i].first; 
+      interaction1->pathlength_inice += this_distance;
+      cumulative_dists[i] = interaction1->pathlength_inice; 
+    }
+
+    //let's exponentially attenuate within the ice (ignoring any gaps in ice... those will be covered in principle by the attenuation weight)
+
+    double distance = -1; 
+	  double L_ice=len_int_kgm2/Signal::RHOICE;
+    //If we have a very short path length in ice, it's ok to just assume it's uniform
+    if (interaction1->pathlength_inice / L_ice < 1e-3) 
+    {
+       distance = rng->Rndm() * interaction1->pathlength_inice; 
+    }
+    else
+    {
+       distance = -log(rng->Uniform(exp(-interaction1->pathlength_inice/L_ice),1))*L_ice; 
+    }
     
-  const double A = PI*EarthModel::R_EARTH * EarthModel::R_EARTH; 
 
-  static TFile f(Form("%s/projections/projections.root", getenv("ICEMC_SRC_DIR") ?: ".")); 
-  static TH2 * h = (TH2*) f.Get("projections.root"); 
+    //now figure out where that distance is 
 
+    unsigned which = 0; 
+    for (which= 0; which < cumulative_dists.size(); which++) 
+    {
+      if (distance < cumulative_dists[which]) 
+        break;
+    }
 
-  //figure out observation angle relative to axis 
-
-  double obs = DEGRAD * ( cap_axis.Angle(nnu)); 
-  if (obs > 90) obs = 180-90; //not sure this is quite right. Also do we need to account for having two chances to hit it? 
-  return A*h->Interpolate(obs, cap_angle); 
+    Vector enterice = x +  ice_intersections[which].first * interaction1->nnu;
+    Vector exitice = x +  ice_intersections[which].second * interaction1->nnu;
+    interaction1->posnu = enterice + (which == 0 ? distance : distance-cumulative_dists[which-1]) * interaction1->nnu; 
+    interaction1->nuexitice =  exitice;  // do we need to flip these? 
+    interaction1->r_enterice =  enterice; 
 }
 
-
-int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, IceModel *antarctica, const Position * balloon_position, 
-                                      double maxdist, double len_int_kgm2, const Vector * force_dir) 
+int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, const Position * balloon_position, 
+                                      double maxdist, double chord_step,  double len_int_kgm2, const Vector * force_dir) 
 {
 
 #ifdef ICEMODEL_DEBUG_TREE
@@ -408,6 +455,7 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
     // Especially for nearly orthogonal events this will be far too big... 
     double x= rng->Uniform(-maxdist*1e3,maxdist*1e3); 
     double y= rng->Uniform(-maxdist*1e3,maxdist*1e3); 
+    sample_x =x; sample_y = y; 
      
     // get nnu as a TVector3 since I like those better
     Vector nudir = interaction1->nnu.Unit(); //is probably already a unit vector? 
@@ -417,11 +465,8 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
     Vector p0 = ref + x*orth + y*orth2; 
 
     //Where do we intersect the Earth? 
-    
-
     Position int1; 
     Position int2; 
-    Position pint; 
 
     //check if we intersect with the (super) geoid. 
     int nintersect = GeoidIntersection(p0, nudir, &int1, &int2); 
@@ -444,219 +489,40 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
 #ifdef ICEMODEL_DEBUG_TREE
       dbg->noway = true;
 #endif
+      interaction1->neverseesice=1;
       interaction1->noway = 1; 
       return 0; 
     }
 
 
-    if (nintersect == 1) // yeah right
+
+
+
+    std::vector<std::pair<double,double> > ice_intersections; 
+    int n_intersections = GetIceIntersectionsCartesian(int1, nudir, ice_intersections,chord_step); 
+
+    if (n_intersections == 0) 
     {
-      pint = int1; 
-    }
-
-    else 
-    {
-      //check if either solution is pointing at ANITA
-
-      Vector d1 = int1-ref; 
-      Vector d2 = int2-ref; 
-      bool rightdir1 = (d1).Dot(nudir) > 0; 
-      bool rightdir2 = (d2).Dot(nudir) > 0; 
-
-#ifdef ICEMODEL_DEBUG_TREE
-      dbg->rightdir1 = rightdir1;
-      dbg->rightdir2 = rightdir2;
+ #ifdef ICEMODEL_DEBUG_TREE
+      dbg->noway = true;
 #endif
-
-
-      pint =  rng->Rndm() > 0.5 ? int1 : int2; 
-      /*
-      //if both, pick the closer one since I think 
-      //it should never be the case that both are close... 
-      if (rightdir1 && rightdir2) 
-      {
-        pint =  rng->Rndm() > 0.5 ? int1 : int2; 
-      }
-
-      else if (rightdir1) 
-      {
-        pint = int1; 
-      }
-
-      else if (rightdir2) 
-      {
-        pint = int2; 
-      }
-
-      else 
-      {
-        interaction1->noway = 1; 
-#ifdef ICEMODEL_DEBUG_TREE
-        dbg->noway = true;
-#endif
-        return 0; 
-      }
-    */ 
-    }
-     
-
-    //ok, now we have to find where our neutrino trajectory intersects rock/ice
-    
-    // For now, let's force the direction to be in the opposite direction as interaction point
-    // so we don't confuse the other methods too much (which assume n is in the same direction as the position).  Just for our temporary value though! 
-    bool should_flip = pint.Dot(nudir) > 0; 
-    Vector nnu  = should_flip ? -1 * nudir : nudir; 
-
-#ifdef ICEMODEL_DEBUG_TREE
-    dbg->pint.SetXYZ(pint.X(),pint.Y(),pint.Z()); 
-#endif 
-
-    Position exitearth; 
-    if (!Ray::WhereDoesItLeave(pint,nnu,antarctica,exitearth)) { // where does it leave Earth
-      interaction1->wheredoesitleave_err = 1; // epic fail 
-#ifdef ICEMODEL_DEBUG_TREE
-      dbg->leave_err = true; 
-#endif 
-
+      interaction1->pathlength_inice = 0;
+      interaction1->neverseesice = 1;
       return 0; 
     }
+//    printf("Hits the ice %d times!\n", n_intersections); 
+
+    sampleLocation(len_int_kgm2, ice_intersections, interaction1,int1, rng);
 
 
-    //let's see if our Earth exit position is in the ice 
-
-    Position exitice; 
-    if (IceThickness(exitearth) && exitearth.Lat() < COASTLINE) 
-    {
-      //we are on the ice, but let's see if we're above the surface
-
-      if (exitearth.Mag() > Surface(exitearth))
-      {
-        //oops we are above the ice. Let's try with some more gusto 
-        const int max_step = 3; 
-        double steps[max_step]  = {5e3, 5e2, 5e1 };
-        int istep = 0; 
-
-        exitice = exitearth;
-
-        //is this right? don't we want the angle with the local surface normal? I guess it's not that different... 
-        while (exitice.Mag() - Surface(exitice)/cos(nnu.Theta()) > steps[istep])
-        {
-          Position new_exitice; 
-          WhereDoesItExitIce(exitice, nnu, steps[istep], new_exitice); 
-
-          if (istep < max_step-1) 
-          {
-            exitice =  new_exitice + steps[istep] * nnu; 
-          }
-          else  // give up
-          {
-            exitice = new_exitice; 
-            break; 
-          }
-          istep++; 
-        }
-      }
-      else
-      {
-        exitice = exitearth; 
-      }
-
-    }
-
-
-    else // We are not in an ice bin, so back up and find where we left the ice
-    {
-
-      const int max_step = 4; 
-      const double steps[max_step] = {5e4,5e3,5e2, 5e1}; 
-
-      Position exitice = exitearth; 
-      //try to find ice exit point with decrasing stepsize. 
-      for (int istep = 0; istep < max_step; istep++) 
-      {
-        if(pint.Distance(exitice) > steps[istep])
-        {
-          Position updated_exitice; 
-          if (!WhereDoesItExitIce(exitearth, nnu, steps[istep], updated_exitice))
-          {
-            interaction1->neverseesice = 1; 
-            return 0; 
-          }
-
-          if (istep < max_step -1 ) 
-          {
-            exitice =updated_exitice +  steps[istep] *nnu; 
-          }
-          else 
-          {
-            exitice = updated_exitice; 
-
-          }
-
-        }
-      }
-    }
 
 #ifdef ICEMODEL_DEBUG_TREE
     dbg->exitice.SetXYZ(exitice.X(),exitice.Y(),exitice.Z()); 
-    dbg->exitearth.SetXYZ(exitearth.X(),exitearth.Y(),exitearth.Z()); 
-#endif 
-
-
-    //now find out where we enter the ice. 
-    // start with a coarsish binning to get in the ballpark
-    double enter_coarse = 5e3; 
-    Position enterice; 
-
-    if (!WhereDoesItEnterIce(exitearth, nnu, enter_coarse, enterice))
-    {
-      interaction1->wheredoesitenterice_err = 1; 
-      return 0; 
-    }
-
-    //now with finer binning 
-    Position entericetmp = enterice + enter_coarse * nnu; 
-    double enter_fine = 20; 
-    if (!WhereDoesItEnterIce(entericetmp, nnu, enter_fine, enterice))
-    {
-      interaction1->wheredoesitenterice_err = 1; 
-      return 0; 
-    }
-
-#ifdef ICEMODEL_DEBUG_TREE
     dbg->enterice.SetXYZ(enterice.X(),enterice.Y(),enterice.Z()); 
-#endif 
-
-
-    // phew, done with entering and exiting ice.  
-
-    interaction1->pathlength_inice=enterice.Distance(exitice);
-
-    //now pick from exp(-x/L_ice) 
-    double L_ice=len_int_kgm2/Signal::RHOICE;
-
-    double distance = -1; 
-    //If we have a very short path length in ice, it's ok to just assume it's uniform
-    if (interaction1->pathlength_inice / L_ice < 1e-3) 
-    {
-       distance = rng->Rndm() * interaction1->pathlength_inice; 
-    }
-    else
-    {
-       distance = -log(rng->Uniform(exp(-interaction1->pathlength_inice/L_ice),1))*L_ice; 
-    }
-
-    // now we have to remember if we have the right sign or not!!  
-    interaction1->posnu=distance *interaction1->nnu+ (should_flip ? exitice : enterice);
-
-#ifdef ICEMODEL_DEBUG_TREE
     dbg->nupos.SetXYZ(interaction1->posnu.X(),interaction1->posnu.Y(),interaction1->posnu.Z()); 
 #endif
 
-    //we should probably tell the interaction all the new stuff as well 
 
-    interaction1->nuexitice = should_flip ? enterice : exitice;  // do we need to flip these? 
-    interaction1->r_enterice = should_flip ? exitice : enterice; 
 
     if (interaction1->posnu.Mag()-Surface(interaction1->posnu)>0) {
       interaction1->toohigh=1;
@@ -667,16 +533,13 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, Ice
       return 0; 
     }    
 
-    interaction1->d_effective_area = 4*maxdist*1e6; 
 
     return 1;
 }
 
      
 
-
-
-int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, double len_int_kgm2, Vector * force_dir) {
+int IceModel::PickUnbiased(Interaction *interaction1, double len_int_kgm2, double & position_weight, double chord_step, Vector * force_dir) {
     
     TRandom * rng = getRNG(RNG_INTERACTION_LOCATION); 
     if (!force_dir) 
@@ -688,219 +551,68 @@ int IceModel::PickUnbiased(Interaction *interaction1,IceModel *antarctica, doubl
       interaction1->nnu = *force_dir; 
     }
     
-    double mincos=cos(COASTLINE*RADDEG);
-    double maxcos=cos(0.);
-    double minphi=0.;
-    double maxphi=2.*PI;
-    double thisphi,thiscos,thissin;
-        
-    thisphi=rng->Rndm()*(maxphi-minphi)+minphi;
-    thiscos=rng->Rndm()*(maxcos-mincos)+mincos;
-    thissin=sqrt(1.-thiscos*thiscos);
-    Position thisr_in;// entrance point
-    Position thisr_enterice;
-    Position thisr_enterice_tmp;
-    Position thisnuexitearth;
-    Position thisnuexitice;
-    Position thisr_exitice;
-    interaction1->noway=0;
-    interaction1->wheredoesitleave_err=0;
-    interaction1->neverseesice=0;
-    interaction1->wheredoesitenterice_err=0;
-    interaction1->toohigh=0;
-    interaction1->toolow=0;
-    
-    thisr_in.SetXYZ(R_EARTH*thissin*cos(thisphi),R_EARTH*thissin*sin(thisphi),R_EARTH*thiscos);
-    // interaction1->r_in = thisr_in;
 
-    if (thisr_in.Dot(interaction1->nnu)>0)
-	interaction1->nnu=-1.*interaction1->nnu;
-    // does this intersect any ice
-    //cout << "lat, coastline, cos are " << thisr_in.Lat() << " " << COASTLINE << " " << cos(interaction1->nnu.Theta()) << "\n";
-    if (thisr_in.Lat()>COASTLINE && cos(interaction1->nnu.Theta())<0) {
-	interaction1->noway=1;
-	
-	return 0; // there is no way it's going through the ice
-    }
-    
-    int count1=0;
-    int count2=0;
-    
-    double L_ice=len_int_kgm2/Signal::RHOICE;
-    
-    if (Ray::WhereDoesItLeave(thisr_in,interaction1->nnu,antarctica,thisnuexitearth)) { // where does it leave Earth
-	// really want to find where it leaves ice
-	// Does it leave in an ice bin
-	if (IceThickness(thisnuexitearth) && thisnuexitearth.Lat()<COASTLINE) { // if this is an ice bin in the Antarctic
-	    //cout << "inu is " << inu << " it's in ice.\n";
-	    //cout << "this is an ice bin.\n";
-	    thisnuexitice=thisnuexitearth;
-	    thisr_exitice=thisnuexitearth;
-	    if (thisnuexitice.Mag()>Surface(thisnuexitice)) { // if the exit point is above the surface
-		if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>5.E3) { 
-		    WhereDoesItExitIce(thisnuexitearth,interaction1->nnu,5.E3, // then back up and find it more precisely
-				       thisr_exitice);
-		    thisnuexitice=(5000.)*interaction1->nnu;
-		    thisnuexitice+=thisr_exitice;
-		    count1++;
-		}
-		if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>5.E2) {
-		    
-		    WhereDoesItExitIce(thisnuexitice,interaction1->nnu,5.E2, // then back up and find it more precisely
-				       thisr_exitice);
-		    thisnuexitice=5.E2*interaction1->nnu;
-		    thisnuexitice+=thisr_exitice;
-		    count1++;
-		}
-		if ((thisnuexitice.Mag()-Surface(thisnuexitice))/cos(interaction1->nnu.Theta())>50.) {
-		    
-		    WhereDoesItExitIce(thisnuexitice,interaction1->nnu,50., // then back up and find it more precisely
-				       thisr_exitice);
-		    count1++;
-		} // end third wheredoesitexit
-		thisnuexitice=thisr_exitice;
-	    } // if the exit point overshoots
-	    else
-		thisnuexitice=thisnuexitearth;
-	    
-	    // should also correct for undershooting
-	    if (count1>10)
-		cout << "count1 is " << count1 << "\n";	  
-	} // if it's an Antarctic ice bin
-	else { // it leaves a rock bin so back up and find where it leaves ice
-	    //cout << "inu is " << inu << " it's in rock.\n";
-	    if (thisr_in.Distance(thisnuexitearth)>5.E4) {
-		count2++;
-		if (WhereDoesItExitIce(thisnuexitearth,interaction1->nnu,5.E4, // then back up and find it more precisely
-				       thisr_exitice)) {
-		    
-		    thisnuexitice=(5.E4)*interaction1->nnu;
-		    thisnuexitice+=thisr_exitice;
-		    //cout << "inu is " << inu << " I'm here 1.\n";
-		    
-		}
-		else {
-		    interaction1->neverseesice=1;
-		    return 0;
-		}
-	    }
-	    else
-		thisnuexitice=thisnuexitearth;
-	    //   WhereDoesItExitIce(thisnuexit,interaction1->nnu,5.E4, // then back up and find it more precisely
-	    // 			     thisr_exitice);
-	    // 	  thisnuexit=5.E4*interaction1->nnu;
-	    // 	  thisnuexit+=thisr_exitice;
-	    if (thisr_in.Distance(thisnuexitice)>5.E3) {
-		
-		
-		if (WhereDoesItExitIce(thisnuexitice,interaction1->nnu,5.E3, // then back up and find it more precisely
-				       thisr_exitice)) {
-		    count2++;
-		    //interaction1->neverseesice=1;
-		    thisnuexitice=5.E3*interaction1->nnu;
-		    thisnuexitice+=thisr_exitice;
-		    //cout << "inu is " << inu << " I'm here 2\n";
-		    //return 0;
-		    
-		}
-	    }
-	    if (thisr_in.Distance(thisnuexitice)>5.E2) {
-		
-		
-		if (WhereDoesItExitIce(thisnuexitice,interaction1->nnu,5.E2, // then back up and find it more precisely
-				       thisr_exitice)) {
-		    count2++;
-		    //interaction1->neverseesice=1;
-		    
-		    thisnuexitice=5.E2*interaction1->nnu;
-		    thisnuexitice+=thisr_exitice;
-		    //cout << "inu is " << inu << " I'm here 3\n";
-		    //return 0;
-		}
-		
-	    }
-	    if (thisr_in.Distance(thisnuexitice)>50.) {
-		
-		
-		if (WhereDoesItExitIce(thisnuexitice,interaction1->nnu,50., // then back up and find it more precisely
-				       thisr_exitice)) {
-		    //interaction1->neverseesice=1;
-		    count2++;
-		    //cout << "inu is " << inu << " I'm here 4\n";
-		    //return 0;
-		}
-	    }
-	    thisnuexitice=thisr_exitice;
-	    if (count2>10)
-		cout << "count1 is " << count2 << "\n";
-	    //	else return 0;  // never reaches any ice or is it because our step is too big
-	} // if the nu leaves a rock bin
-    } // end wheredoesitleave
-    else {
-	interaction1->wheredoesitleave_err=1;
-	return 0;
-    }
-    // end finding where it leaves ice
-    
-    // 	if (thisnuexit.Mag()<Surface(thisnuexit)) { // if the exit point is below the surface
-    // 	  WhereDoesItExitIceForward(thisnuexit,interaction1->nnu,20., // then find it more finely
-    // 			     thisr_exitice);
-    // 	  thisnuexit=thisr_enterice;
-    // 	  // then back up and find it more precisely
-    // 	}
-    
-    if (WhereDoesItEnterIce(thisnuexitearth,interaction1->nnu,5.E3, // first pass with sort of course binning
-			    thisr_enterice)) {
-	thisr_enterice_tmp=thisr_enterice+5.E3*interaction1->nnu;
-	//cout << "inu is " << inu << " thisr_enterice is ";thisr_enterice.Print();
-	if (WhereDoesItEnterIce(thisr_enterice_tmp,interaction1->nnu,20., // second pass with finer binning
-				thisr_enterice)) {
-	    //cout << "inu is " << inu << " thisr_enterice is ";thisr_enterice.Print();
-	    //cout << "entersice is ";thisr_enterice.Print();
-	    //cout << "thisnuexitice is ";thisnuexitice.Print();
-	    interaction1->pathlength_inice=thisr_enterice.Distance(thisnuexitice);
-	    //cout << "distance is " << distance << "\n";
-	    //cout << "inu " << inu << " thisr_enterice, thisnuexitice are ";thisr_enterice.Print();thisnuexitice.Print();
-            //
-             //CD Instead of picking uniformly in the ice, we will pick from exp(-x/L_ice); 
-            double distance = -1; 
+    //now we pick a point somewhere on the surface of the superellipsoid. 
+    //up to the coastline 
+    //TODO, can pick closer to payload but hard to do while keeping ellipsoidal geometry... 
+    //instead, will just reject points far away... 
 
-            //If we have a very short path length in ice, it's ok to just assume it's uniform
-            if (interaction1->pathlength_inice / L_ice < 1e-3) 
-            {
-              distance = rng->Rndm() * interaction1->pathlength_inice; 
-            }
-            else
-            {
-              distance = -log(rng->Uniform(exp(-interaction1->pathlength_inice/L_ice),1))*L_ice; 
-            }
+    double sinth = rng->Uniform(0, sin(COASTLINE*RADDEG)); 
+    double phi = rng->Uniform(0,2*TMath::Pi()); 
 
-	    interaction1->posnu=distance*interaction1->nnu; 
-	    interaction1->posnu=interaction1->posnu+thisr_enterice;
-	    //cout << "inu" << inu << " thisr_enterice, thisnuexitice are ";thisr_enterice.Print();thisnuexitice.Print();
-	    //cout << "inu " << inu << " distance is " << distance << "\n";
-	}
+    double costh = sqrt(1-sinth*sinth); 
+
+    const double RMAX = GEOID_MAX + 5500; 
+    const double RMIN = GEOID_MIN + 5500; 
+    Vector p0(RMAX * cos(phi) * sinth, RMAX * sin(phi) * sinth, RMIN*costh); 
+
+
+    // The position weight is (maybe) the dot product of the position with the neutrino direction
+    // this is actually the inverse weight
+    position_weight = 1./fabs(p0.Unit() * interaction1->nnu); 
+
+    //but actually, we can be double counting if the other superellipsoid intesrection is above coastline because
+    //we can sample the same trajectory twice. So let's divide position_weight by two if that is indeed the case. 
+
+    Position ints[2]; 
+    GeoidIntersection(p0, interaction1->nnu, &ints[0],&ints[2]); 
+
+    int nabovecoastline = 0; 
+    for (int i =0; i < 2; i++) 
+    {
+      if (ints[i].Lat() < COASTLINE) nabovecoastline++; 
     }
-    else {
-	thisr_enterice=thisr_in;
-	interaction1->wheredoesitenterice_err=1;
-	return 0;
+    assert(nabovecoastline>0); 
+    position_weight /= nabovecoastline; 
+    interaction1->r_enterice = p0; 
+
+    //now let's set the ice intersactions
+    std::vector<std::pair<double,double> > ice_intersections; 
+    int n_intersections = GetIceIntersectionsCartesian(p0, interaction1->nnu, ice_intersections,chord_step); 
+
+
+    if (!n_intersections)
+    {
+      interaction1->noway = 1; 
+      interaction1->neverseesice=1;
+      interaction1->pathlength_inice = 0;
+      return 0; 
     }
-    interaction1->nuexitice=thisnuexitice;
-    interaction1->r_enterice=thisr_enterice;
+
+    sampleLocation(len_int_kgm2, ice_intersections, interaction1,p0, rng);
+    
     
     if (interaction1->posnu.Mag()-Surface(interaction1->posnu)>0) {
-	interaction1->toohigh=1;
-	//cout << "inu, toohigh is " << inu << " " << interaction1->toohigh << "\n";
-	return 0;
+        interaction1->toohigh=1;
+        //cout << "inu, toohigh is " << inu << " " << interaction1->toohigh << "\n";
+        return 0;
     }
     if (interaction1->posnu.Mag()-Surface(interaction1->posnu)+IceThickness(interaction1->posnu)<0) {
-	interaction1->toolow=1;
-	//cout << "inu, toolow is " << inu << " " << interaction1->toolow << "\n";
-	return 0;
+      interaction1->toolow=1;
+      //cout << "inu, toolow is " << inu << " " << interaction1->toolow << "\n";
+      return 0;
     }    
 
-    interaction1->d_effective_area = getDEffectiveArea(z_axis, interaction1->nnu,COASTLINE); 
     return 1;
     
 }
@@ -1625,6 +1337,8 @@ void IceModel::WaterENtoLonLat(int e, int n, double& lon, double& lat) {
     ENtoLonLat(e,n,xLowerLeft_water,yLowerLeft_water,lon,lat);
 }//WaterENtoLonLat
 
+
+
 void IceModel::GetMAXHORIZON(Balloon *bn1) {
     
     double altitude_inmeters=bn1->BN_ALTITUDE*12.*CMINCH/100.;
@@ -2134,3 +1848,298 @@ void IceModel::ReadWaterDepth() {
     WaterDepthFile.close();
     return;
 } //method ReadWaterDepth
+
+
+
+
+//Methods related to the 2D cartesian surfaces
+//
+
+
+void IceModel::CreateCartesianTopAndBottom(int resolution, bool force)  
+{
+  TString fname;
+
+  if (resolution == cart_resolution) 
+  {
+    return ;
+  } 
+
+  cart_resolution = resolution; 
+
+  if (cart_ice_file) delete cart_ice_file; 
+
+  fname.Form("%s/cartesian_icemodel_%d_%d.root", getenv("ICEMC_SRC_DIR")?: ".", ice_model ,  resolution); 
+
+  TDirectory * olddir = gDirectory; 
+
+  //check if it exists
+  if (!force) 
+  {
+    cart_ice_file = new TFile(fname); 
+
+    if (!cart_ice_file->IsOpen())
+    {
+      delete cart_ice_file; 
+    }
+    else 
+    {
+      cart_ice_top = (TH2*) cart_ice_file->Get("top");
+      cart_ice_bot = (TH2*) cart_ice_file->Get("bot");
+
+      if (!cart_ice_top || !cart_ice_bot) 
+      {
+        delete cart_ice_file; 
+      }
+
+      else
+      {
+        olddir->cd();
+        return; 
+      }
+    }
+  }
+
+  //if we got this far, we don't already have it 
+  cart_ice_file = new TFile(fname,"RECREATE"); 
+  //the bounds will roughly be +/- REARTH /2,so we'll convert that to our resolution
+
+  printf("Creating new cartesian ice file at %s...\n", cart_ice_file->GetName()); 
+
+  double bound = ceil(6371000/2/resolution)*resolution; 
+  int nbins = (2*bound)/resolution; 
+  
+  TString hname; 
+  hname.Form("icetop_%d_%d", ice_model, resolution); 
+  TString htitle; 
+  htitle.Form("Ice Top (model=%d, res=%d m)", ice_model, resolution); 
+  cart_ice_top = new TH2D(hname.Data(), htitle.Data(), nbins,-bound,bound,nbins,-bound,bound);
+
+  hname.Form("icebot_%d_%d", ice_model, resolution); 
+  htitle.Form("Ice Bottom (model=%d, res=%d m)", ice_model, resolution); 
+  cart_ice_bot= new TH2D(hname.Data(), htitle.Data(), nbins,-bound,bound,nbins,-bound,bound);
+
+  // auxiliary hists
+  hname.Form("ice_bot_r_%d_%d",ice_model, resolution);
+  htitle.Form("Ice Bottom (r) (model=%d, res=%d m)", ice_model, resolution); 
+
+  TH2 * r_bot= new TH2D(hname.Data(), htitle.Data(), nbins,-bound,bound,nbins,-bound,bound);
+
+  hname.Form("ice_top_r_%d_%d",ice_model, resolution);
+  htitle.Form("Ice top (r) (model=%d, res=%d m)", ice_model, resolution); 
+
+  TH2 * r_top= new TH2D(hname.Data(), htitle.Data(), nbins,-bound,bound,nbins,-bound,bound);
+
+  hname.Form("ice_bot_alt_%d_%d",ice_model, resolution);
+  htitle.Form("Ice Bottom (alt) (model=%d, res=%d m)", ice_model, resolution); 
+
+  TH2 * alt_bot= new TH2D(hname.Data(), htitle.Data(), nbins,-bound,bound,nbins,-bound,bound);
+
+  hname.Form("ice_top_alt_%d_%d",ice_model, resolution);
+  htitle.Form("Ice top (alt) (model=%d, res=%d m)", ice_model, resolution); 
+
+  TH2 * alt_top= new TH2D(hname.Data(), htitle.Data(), nbins,-bound,bound,nbins,-bound,bound);
+
+
+  for (int j = 1; j <= nbins; j++) 
+  {
+    double y = cart_ice_top->GetYaxis()->GetBinCenter(j);
+    for (int i = 1; i <= nbins; i++) 
+    {
+      double x = cart_ice_top->GetXaxis()->GetBinCenter(i);
+
+      double r2 = x*x+y*y; 
+      const double a = 6378137;
+      const double a2 = a*a; 
+      if (r2 > a2) continue; 
+      const double b = 6356752.314245; ;
+      const double b2 = b*b; 
+      double z_geoid = sqrt((1-r2/a2)*b2); 
+
+      Position p(Vector(x,y,z_geoid)); 
+      double lon = p.Lon(); 
+      double lat = p.Lat(); 
+      double ice_depth = IceThickness(lon,lat); 
+      if (ice_depth) 
+      {
+        double surface_above_geoid = SurfaceAboveGeoid(lon,lat); 
+        double geoid = Geoid(lat); 
+        double surface = surface_above_geoid+geoid; 
+
+        Position top(lon,lat,surface);
+        Position bot(lon,lat,surface-ice_depth);
+
+        cart_ice_top->SetBinContent(i,j,top.Z()); 
+        cart_ice_bot->SetBinContent(i,j,bot.Z()); 
+
+        r_top->SetBinContent(i,j,surface); 
+        r_bot->SetBinContent(i,j,surface-ice_depth); 
+
+        alt_top->SetBinContent(i,j,surface_above_geoid); 
+        alt_bot->SetBinContent(i,j,surface_above_geoid-ice_depth); 
+      }
+    }
+  }
+
+  cart_ice_top->Write("top");
+  cart_ice_bot->Write("bot");
+  r_top->Write("r_top");
+  r_bot->Write("r_bot");
+  alt_top->Write("alt_top");
+  alt_bot->Write("alt_bot");
+  cart_ice_file->Flush(); 
+  printf("...Done!\n"); 
+  olddir->cd();
+
+}
+
+
+bool IceModel::CartesianIsInIce(double x,double y, double z) 
+{
+  const TH2 * htop = GetCartesianTop();
+  if (z > cart_max_z) return false; 
+  if (z < cart_min_z) return false; 
+  if (x < htop->GetXaxis()->GetXmin()) return false;
+  if (x > htop->GetXaxis()->GetXmax()) return false;
+  if (y < htop->GetYaxis()->GetXmin()) return false;
+  if (y > htop->GetYaxis()->GetXmax()) return false;
+
+  double top = ((TH2*)htop)->Interpolate(x,y); 
+  if (!top) return false; 
+
+  return z < top && z > ((TH2*)GetCartesianBottom())->Interpolate(x,y);
+}
+
+int IceModel::GetIceIntersectionsCartesian(const Position & posnu, const Vector & nnu_in, 
+                                           std::vector<std::pair<double,double> > & intersection_points, 
+                                           double start_step, int map_resolution) 
+{
+  if (map_resolution!= cart_resolution) CreateCartesianTopAndBottom(map_resolution); 
+
+  if (cart_max_z == -1)
+  {
+    cart_max_z =  GetCartesianTop()->GetMaximum();
+
+    cart_min_z = cart_max_z; 
+
+    const TH2 * hbot = GetCartesianBottom(); 
+
+    for (int j = 1; j <= hbot->GetNbinsY(); j++) 
+    {
+      for (int i = 1; i <= hbot->GetNbinsX(); i++) 
+      {
+        double val = hbot->GetBinContent(i,j); 
+        if (val > 0 && val < cart_min_z) cart_min_z = val; 
+      }
+    }
+  }
+
+
+  std::vector<double> boundaries; 
+
+  //is our start point in the ice? 
+
+  bool start_in_ice = CartesianIsInIce(posnu.X(), posnu.Y(), posnu.Z()); 
+
+  Vector nnu = nnu_in.Unit(); 
+  //let's start at the position and go both ways
+  for (int dir = -1; dir <=1 ; dir+=2) 
+  {
+
+    Vector x = posnu; 
+    bool was_in_ice = start_in_ice; 
+
+    // go until we are way to far away from the Earth to matter
+    
+    double displacement = 0;
+    bool jumped = false;
+    bool just_jumped = false;
+    while (true) //this is mean Earth radius + 5 km. 
+    {
+//      printf("%g  ->  %g,%g,%g\n", displacement, x.X(),x.Y(), x.Z()); 
+      displacement += start_step*dir; 
+      x = posnu + displacement*nnu; 
+      double mag2 = x.X()*x.X() + x.Y()*x.Y() + x.Z()*x.Z(); 
+ //     printf(" %g\n", sqrt(mag2)); 
+      if (mag2 > (7000e3*7000e3))
+      {
+        printf("wtf:  [%g,%g,%g], %g\n", x.X(), x.Y(), x.Z(), mag2); 
+
+      }
+      if (mag2 > (6365e3*6365e3))
+      {
+        break; 
+      }
+
+      //jump to the other side of the world if we dip down too much! 
+      if (mag2 < (6355.5e3*6355.5e3) && !jumped && !was_in_ice) 
+      {
+       // printf("Trying to go to other side of the earth! start displacement: %g, mag: %g\n", displacement,sqrt(mag2));
+        double ds[2]; 
+        GeoidIntersection(x,dir*nnu, 0,0,-1000,ds); 
+        //now figure out which is on the opposite side of the Earth from where we are...  since we're using our current position and direction it should be the positive one! 
+        displacement = (ds[0] > 0 ? ds[0] : ds[1])*dir; 
+        //printf("End displacement: %g\n", displacement); 
+        jumped = true; 
+        just_jumped = true; 
+        continue; 
+      }
+      
+      bool is_in_ice = CartesianIsInIce(x.X(),x.Y(),x.Z()); 
+
+      //this is no bueno...we won't find the right boundary in this case!  
+      // let's back up 500 m from where we were at the start of this iteration
+      if (just_jumped && is_in_ice) 
+      {
+        displacement -= dir*(500+start_step); 
+        continue; 
+      }
+
+      just_jumped = false; 
+
+      if (was_in_ice!=is_in_ice) 
+      {
+        //binary search for the boundary to 1 m resolution
+
+        Vector xsearch = x; 
+        double step = -start_step*dir/2; 
+        bool search_was_in_ice = is_in_ice; 
+        double boundary_displacement = displacement; 
+
+        while (fabs(step) > 1) 
+        {
+          boundary_displacement+=step;
+          xsearch = posnu + boundary_displacement * nnu; 
+          bool search_is_in_ice = CartesianIsInIce(xsearch.X(),xsearch.Y(),xsearch.Z()); 
+
+          step*=0.5; 
+          if (search_is_in_ice!=search_was_in_ice) step*=-1; 
+          search_was_in_ice = search_is_in_ice; 
+        }
+
+        //we found a boundary! (if there is more than one boundary within this segment... we probably picked a random one. Oh well. 
+        boundaries.push_back(boundary_displacement); 
+      }
+      was_in_ice = is_in_ice; 
+    }
+  }
+
+  std::sort(boundaries.begin(), boundaries.end()); 
+
+  if (boundaries.size() % 2) 
+  {
+    fprintf(stderr,"Uh oh, have an odd number of boundaries (%lu) . That means there's a bug...\n", boundaries.size()); 
+    for (unsigned i = 0; i < boundaries.size(); i++) printf(" %g ", boundaries[i]); 
+    printf("\n"); 
+    assert(0);
+    return -1; 
+  }
+
+  for (unsigned i = 0; i < boundaries.size()/2; i++)
+  {
+    intersection_points.push_back(std::pair<double,double>(boundaries[2*i], boundaries[2*i+1])); 
+  }
+
+  return boundaries.size()/2; 
+}
+
