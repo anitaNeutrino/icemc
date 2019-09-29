@@ -56,15 +56,19 @@ void plotSuperNovaeTNS()
   tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
   
   TMarker *astroObject = new TMarker();
-  SkyMap *skyMapOut = new SkyMap(90);
+  SkyMap *skyMapOut = new SkyMap(180);
+
+  TH2F* h = new TH2F("h","h",1000,0,360,1000,-90,90);
   
   for(unsigned int i = 0; i < discoveryEntries; i++)
     {
       tree->GetEntry(i);
 
       // Skip those if the discovery time falls outside of ANITA flight time
-      //if( (discoveryUnixTime < a_tmin) || (discoveryUnixTime > a_tmax) ){continue;}
-      if( abs(dec)>5 ){continue;}
+      if( (discoveryUnixTime < (a_tmin - 1209600)) || (discoveryUnixTime > (a_tmax + 1209600)) ){continue;}
+
+      cout << "discovery time = " << discoveryUnixTime << endl;
+      //if( abs(dec)>5 ){continue;}
       //desiredType = "SN II";
       //found = objType->find(desiredType);
       //if(found != 0){continue;}
@@ -81,6 +85,8 @@ void plotSuperNovaeTNS()
       astroObject->SetMarkerSize(1.5);
       astroObject->SetMarkerColor(9);
 
+      h->Fill(ra,dec);
+
       //if(*name == "SN 2016isg"){astroObject->SetMarkerColor(2);} 
       
       skyMapOut->addMarker(astroObject);
@@ -89,6 +95,15 @@ void plotSuperNovaeTNS()
     }
   cout << passed << " supernovae with discovery time coinciding with the A4 flight." << endl;
   skyMapOut->Draw("");
+
+  TCanvas *c = new TCanvas("c","c",2708,2085);
+  c->SetTitle("ANITA flaring sources map");
+  //skyMapOut->Draw();
+  //legend->Draw();
+  h->Draw("colz2d");
+  h->SetTitle(" ");
+  h->GetXaxis()->SetTitle(" ");
+  h->GetXaxis()->SetTitle(" ");
   
   return;
   
