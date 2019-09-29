@@ -71,6 +71,12 @@ public:
   {
     return Vector(a*v.x , a*v.y , a*v.z);
   }
+
+  friend Vector operator *(const Vector& v, const double& a)
+  {
+    return Vector(a*v.x , a*v.y , a*v.z);
+  }
+ 
   //Multiply a vector by a scalar
 
   friend ostream& operator <<(ostream& outs, const Vector& vec);
@@ -135,7 +141,7 @@ public:
   Vector Zero();
   //zero the vector
 
-  double Mag2() const { return x*x* + y*y + z*z; }
+  double Mag2() const { return X()*X()* + Y()*Y() + Z()*Z(); }
 
   double Mag() const;
   //Returns the magnitude of this vector.
