@@ -67,13 +67,12 @@ public:
   virtual double WaterDepth(const Position& pos) ;
   virtual double RockSurface(double lon,double lat) ;
   virtual double RockSurface(const Position& pos) ;
-  double GetDensity(double altitude, const Position earth_in, int& crust_entered);
+  double GetDensity(double altitude, const Position earth_in, int& crust_entered, bool * inice = 0);
   int Getchord(Settings *settings1,
 			 double len_int_kgm2,
 			 const Position &earth_in, // place where neutrino entered the earth
-			 const Position &r_enterice,
-			 const Position &nuexitice,
-
+                         double distance_in_ice,
+                         bool include_ice_absorption, 
 			 const Position &posnu, // position of the interaction
 			 int inu,
 			 double& chord, // chord length
