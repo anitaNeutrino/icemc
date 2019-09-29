@@ -1076,7 +1076,7 @@ Position EarthModel::WhereDoesItEnter(const Position &posnu,const Vector &nnu) {
 } //method WhereDoesItEnter
 
 
-int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position * int2, double extra_height) const
+int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position * int2, double extra_height, double * ds) const
 {
 
 
@@ -1137,6 +1137,11 @@ int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position
 
   double d0= (-b + discr)/(2*a); 
   double d1= (-b - discr)/(2*a); 
+  if (ds) 
+  {
+    ds[0] = d0; 
+    ds[1] = d1; 
+  }
 
   if (int1)
   {

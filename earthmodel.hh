@@ -92,7 +92,7 @@ public:
   Position WhereDoesItEnter(const Position &posnu,const Vector &nnu);
 
   /*Finds where we intersect the Geoid */ 
-  int GeoidIntersection(Vector x0,Vector p0, Position * int1, Position * int2, double extra_height = 5000) const; 
+  int GeoidIntersection(Vector x0,Vector p0, Position * int1, Position * int2, double extra_height = 5500, double * ds =0) const; 
 
  
 private:
