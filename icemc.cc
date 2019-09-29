@@ -1471,7 +1471,7 @@ int main(int argc,  char **argv) {
       icethck=antarctica->IceThickness(lon_ice, lat_ice);
       lon_water=lon_ice; //redundant?
       lat_water=lat_ice; 
-      h20_depth=antarctica->water_depth[j][i];
+      h20_depth=antarctica->h_water_depth.GetBinContent(j+1,i+1);
       if (settings1->HIST) icetree->Fill();
     }
   }
@@ -3618,18 +3618,15 @@ int main(int argc,  char **argv) {
             //for plotting events distribution map only
             if(weight>0.0001){
               double int_lon, int_lat;
-              int event_e_coord=0, event_n_coord=0;
-              float event_e, event_n;
+              double E,N;
               //here are the longitude and altitude which Amy defined
               int_lon = interaction1->posnu.Lon(); // what latitude,  longitude does interaction occur at
               int_lat = interaction1->posnu.Lat();
-              antarctica->IceLonLattoEN(int_lon, int_lat, event_e_coord, event_n_coord);
-              event_e=float(antarctica->xLowerLeft_ice+event_e_coord*antarctica->cellSize)/1000.;
-              event_n=float(-1*(antarctica->yLowerLeft_ice+(antarctica->cellSize*event_n_coord)))/1000.;
+              antarctica->LonLattoEN(int_lon, int_lat, E, N);
               if(whichray==0)//direct
-                dir_int_coord->Fill(event_e, event_n);
+                dir_int_coord->Fill(E, N);
               if(whichray==1)
-                ref_int_coord->Fill(event_e, event_n);
+                ref_int_coord->Fill(E, N);
             }
 
             // just for plotting.
@@ -4116,14 +4113,11 @@ int main(int argc,  char **argv) {
     //draw the S80-degree-latitude circle
     TH2F *lat80deg=new TH2F("lat80deg", "", 600, -3000, 3000, 500, -2500, 2500);
     lat80deg->SetMarkerColor(kRed);
-    int tmp_e_coord=0, tmp_n_coord=0;
-    float tmp_e, tmp_n=0;
+    double E,N;
     for(double lon=0;lon<360.;lon+=0.5){
       double lat=10.;
-      antarctica->IceLonLattoEN(lon, lat, tmp_e_coord, tmp_n_coord);
-      tmp_e=float(antarctica->xLowerLeft_ice+tmp_e_coord*antarctica->cellSize)/1000.;
-      tmp_n=float(-1*(antarctica->yLowerLeft_ice+tmp_n_coord*antarctica->cellSize))/1000.;
-      lat80deg->Fill(tmp_e, tmp_n);
+      antarctica->LonLattoEN(lon, lat, E, N);
+      lat80deg->Fill(E, N);
     }//end for lon loop
   }// end if EVENTSMAP
 
