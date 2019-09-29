@@ -273,10 +273,11 @@ class Settings : public TObject {
   double jamieFactor;// = 0;
   int medium;// = 0;
   int askaryanParameterization;// = 0;
+  int SAVE_TRUTH_NU_TREE; 
     
   //  TString outputdir; // directory where outputs go
 
-  ClassDef(Settings,1);
+  ClassDef(Settings,2);
   
  private:
   typedef std::map<TString, TString> kvpMap;

@@ -275,6 +275,7 @@ void Settings::Initialize() {
   SPECIFIC_NU_POSITION_ALTITUDE = 0; 
   SPECIFIC_NU_POSITION_DISTANCE = 100e3; 
   HORIZON_OFFSET = -999; 
+  SAVE_TRUTH_NU_TREE = 0; 
 
   // Source options
   SOURCE = "None"; 
@@ -631,6 +632,8 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   {
     std::cout << "Non-default setting:  settings->SOURCE_SKIP_WHEN_NONE= " << SOURCE_SKIP_WHEN_NONE << std::endl;
   }
+
+  getSetting("Save Truth Nu Tree",SAVE_TRUTH_NU_TREE,true); 
 
   getSetting("Cross-section factor", SIGMA_FACTOR);
   if (SIGMA_FACTOR!=1){

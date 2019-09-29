@@ -1436,10 +1436,13 @@ int main(int argc,  char **argv) {
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
 
-  TruthAnitaNeutrino * truthNuPtr = new TruthAnitaNeutrino; 
-  TTree* truthAnitaNuTree = new TTree("truthAnitaNuTree","Truth ANITA Neutrino Tree (all nus)"); 
-  truthAnitaNuTree->SetAutoFlush(10000); 
-  truthAnitaNuTree->Branch("truth_neutrino",     &truthNuPtr );
+  TruthAnitaNeutrino * truthNuPtr = settings1->SAVE_TRUTH_NU_TREE ? new TruthAnitaNeutrino : 0; 
+  TTree* truthAnitaNuTree = settings1->SAVE_TRUTH_NU_TREE ? new TTree("truthAnitaNuTree","Truth ANITA Neutrino Tree (all nus)") : 0; 
+  if (settings1->SAVE_TRUTH_NU_TREE) 
+  {
+    truthAnitaNuTree->SetAutoFlush(10000); 
+    truthAnitaNuTree->Branch("truth_neutrino",     &truthNuPtr );
+  }
 
 #endif
 
@@ -1773,7 +1776,8 @@ int main(int argc,  char **argv) {
       if (!got_a_good_position) 
       {
 #ifdef ANITA3_EVENTREADER
-        truthNuPtr->setNoNu(bn1->r_bn.GetX(), bn1->r_bn.GetY(), bn1->r_bn.GetZ(), realtime_this);
+
+       if (truthNuPtr) truthNuPtr->setNoNu(bn1->r_bn.GetX(), bn1->r_bn.GetY(), bn1->r_bn.GetZ(), realtime_this);
 //        truthAnitaNuTree->Fill();  
 #endif
         continue; 
@@ -1816,17 +1820,20 @@ int main(int argc,  char **argv) {
       if (settings1->UNBIASED_SELECTION > 0 || src_model || settings1->HORIZON_OFFSET) //in this case, we have already picked the direction
       {
         havent_set_dir = false; 
-        truthNuPtr->setDir(interaction1->nnu.GetX(), interaction1->nnu.GetY(), interaction1->nnu.GetZ()); 
+        if (truthNuPtr) truthNuPtr->setDir(interaction1->nnu.GetX(), interaction1->nnu.GetY(), interaction1->nnu.GetZ()); 
       }
 
       //FILL TruthAnitaNeutrino here (in case we don't get to fill it later) 
-      truthNuPtr->setPos(interaction1->posnu.GetX(), interaction1->posnu.GetY(), interaction1->posnu.GetZ(),
-                         bn1->r_bn.GetX(), bn1->r_bn.GetY(), bn1->r_bn.GetZ(), realtime_this);
-      truthNuPtr->setNu(pnu,pdgcode); 
+      if (truthNuPtr) 
+      {
+        truthNuPtr->setPos(interaction1->posnu.GetX(), interaction1->posnu.GetY(), interaction1->posnu.GetZ(),
+                           bn1->r_bn.GetX(), bn1->r_bn.GetY(), bn1->r_bn.GetZ(), realtime_this);
+        truthNuPtr->setNu(pnu,pdgcode); 
+      }
 #endif
       
 #ifdef ANITA3_EVENTREADER
-#define DO_SKIP  {truthNuPtr->setSkipped(true,havent_set_frac,havent_set_weights,havent_set_dir); truthAnitaNuTree->Fill(); continue; }
+#define DO_SKIP  { if (truthNuPtr) {truthNuPtr->setSkipped(true,havent_set_frac,havent_set_weights,havent_set_dir); truthAnitaNuTree->Fill();} continue; }
 #else
 #define DO_SKIP continue ;
 #endif
@@ -2055,7 +2062,7 @@ int main(int argc,  char **argv) {
       havent_set_frac = false; 
 
 #ifdef ANITA3_EVENTREADER
-      truthNuPtr->setFrac(hadfrac,emfrac); 
+      if (truthNuPtr) truthNuPtr->setFrac(hadfrac,emfrac); 
 #endif
       if (emfrac+hadfrac>1.000001) {
         cout << "Warning:  " << inu << " " << emfrac+hadfrac << "\n";
@@ -2176,7 +2183,7 @@ int main(int argc,  char **argv) {
 #ifdef ANITA3_EVENTREADER
       if (havent_set_dir) 
       {
-        truthNuPtr->setDir(interaction1->nnu.GetX(), interaction1->nnu.GetY(), interaction1->nnu.GetZ()); 
+        if (truthNuPtr) truthNuPtr->setDir(interaction1->nnu.GetX(), interaction1->nnu.GetY(), interaction1->nnu.GetZ()); 
         havent_set_dir = false; 
       }
 #endif
@@ -3417,7 +3424,7 @@ int main(int argc,  char **argv) {
 
       
 #ifdef ANITA3_EVENTREADER
-      truthNuPtr->setWeights(weight, 1./interaction1->dnutries, time_weight); 
+      if (truthNuPtr) truthNuPtr->setWeights(weight, 1./interaction1->dnutries, time_weight); 
 #endif
       havent_set_weights = false; 
      
@@ -3920,17 +3927,12 @@ int main(int argc,  char **argv) {
               
             }// end int iant
             
-            truthNuPtr->setSkipped(false); 
+            if (truthNuPtr) truthNuPtr->setSkipped(false); 
 
-            if (truthAnitaNuTree->GetEntries() <= inu-10) 
-            {
-              printf("SKIPPED BEFORE %d\n",inu); 
-
-            }
             
 //            printf("objname: 0x%p %s\n", &truthEvPtr->objName, truthEvPtr->objName.Data()); 
-	    truthAnitaNuTree->Fill();
-	    truthAnitaTree->Fill();
+            if (truthAnitaNuTree) truthAnitaNuTree->Fill();
+            truthAnitaTree->Fill();
             delete truthEvPtr;
 #endif
 
@@ -4217,7 +4219,7 @@ int main(int argc,  char **argv) {
   anitafileTruth->cd();
   configAnitaTree->Write("configAnitaTree");
   truthAnitaTree->Write("truthAnitaTree");
-  truthAnitaNuTree->Write();
+  if (truthAnitaNuTree) truthAnitaNuTree->Write();
   triggerSettingsTree->Write("triggerSettingsTree");
   summaryAnitaTree->Fill();
   summaryAnitaTree->Write("summaryAnitaTree");
