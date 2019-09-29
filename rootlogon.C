@@ -1,6 +1,8 @@
 {
 
+  gSystem->Load("libicemc.so"); 
 
+  /*
   gSystem->Load("${ANITA_UTIL_INSTALL_DIR}/lib/libRootFftwWrapper.so") && gSystem->Load("$ANITA_UTIL_INSTALL_DIR/lib/libRootFftwWrapper.dylib");
   gSystem->Load("${ANITA_UTIL_INSTALL_DIR}/lib/libAnitaEvent.so") && gSystem->Load("$ANITA_UTIL_INSTALL_DIR/lib/libAnitaEvent.dylib"); 
   gSystem->Load("${ANITA_UTIL_INSTALL_DIR}/lib/libAnitaCorrelator.so") && gSystem->Load("$ANITA_UTIL_INSTALL_DIR/lib/libAnitaCorrelator.dylib"); 
@@ -8,6 +10,7 @@
   gSystem->Load("${ANITA_UTIL_INSTALL_DIR}/lib/libUCorrelator.so") && gSystem->Load("$ANITA_UTIL_INSTALL_DIR/lib/libUCorrelator.dylib"); 
 //  gSystem->Load("build/libUCorrelator.so"); 
 
+*/
 
 //  const Int_t NRGBs = 5;
 //  const Int_t NCont = 255;
