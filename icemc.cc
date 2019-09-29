@@ -129,6 +129,7 @@ double eventsfound_belowhorizon=0; // how many are below horizon
 double eventsfound=0;   // how many events found
 double eventsfound_prob=0;   // how many events found,  probabilities
 double sum[3]; // sum of weight for events found for 3 flavors
+double sum_prob[3]; // sum of weight for events found for 3 flavors
 // These numbers are from Feldman and Cousins wonderful paper:  physics/9711021
 double poissonerror_minus[21] = {0.-0.00, 1.-0.37, 2.-0.74, 3.-1.10, 4.-2.34, 5.-2.75, 6.-3.82, 7.-4.25, 8.-5.30, 9.-6.33, 10.-6.78, 11.-7.81, 12.-8.83, 13.-9.28, 14.-10.30, 15.-11.32, 16.-12.33, 17.-12.79, 18.-13.81, 19.-14.82, 20.-15.83};
 double poissonerror_plus[21] = {1.29-0., 2.75-1., 4.25-2., 5.30-3., 6.78-4., 7.81-5., 9.28-6., 10.30-7., 11.32-8., 12.79-9., 13.81-10., 14.82-11., 16.29-12., 17.30-13., 18.32-14., 19.32-15., 20.80-16., 21.81-17., 22.82-18., 23.82-19., 25.30-20.};
@@ -841,6 +842,7 @@ int main(int argc,  char **argv) {
   double nutauweight=0;
   int tautrigger=0;
   int tauweighttrigger=0;
+  double sample_x=0, sample_y = 0; 
 
   bool isDead;
   
@@ -1036,6 +1038,8 @@ int main(int argc,  char **argv) {
 
   TTree *finaltree = new TTree("passing_events", "passing_events"); // finaltree filled for all events that pass
   finaltree->Branch("inu", &inu, "inu/I");
+  finaltree->Branch("sample_x", &sample_x, "sample_x/D");
+  finaltree->Branch("sample_y", &sample_y, "sample_y/D");
   finaltree->Branch("vmmhz_min", &vmmhz_min, "vmmhz_min/D");
   finaltree->Branch("vmmhz_max", &vmmhz_max, "vmmhz_max/D");
   finaltree->Branch("thresholdsAnt", &thresholdsAnt, "thresholdsAnt[48][2][5]/D");
@@ -1413,6 +1417,7 @@ int main(int argc,  char **argv) {
   
   TTree *summaryAnitaTree = new TTree("summaryAnitaTree", "summaryAnitaTree"); // finaltree filled for all events that pass
   summaryAnitaTree->Branch("EXPONENT", &settings1->EXPONENT, "EXPONENT/D" );
+  summaryAnitaTree->Branch("SELECTION_MODE", &settings1->UNBIASED_SELECTION, "SELECTION_MODE/I" );
   summaryAnitaTree->Branch("total_nu",      &NNU,                 "total_nu/I" );
   summaryAnitaTree->Branch("total_nue",     &count1->nnu_e,       "total_nue/I" );
   summaryAnitaTree->Branch("total_numu",    &count1->nnu_mu,      "total_numu/I" );
@@ -1425,13 +1430,20 @@ int main(int argc,  char **argv) {
   summaryAnitaTree->Branch("weighted_numu",  &sum[1],               "weighted_numu/D"    );
   summaryAnitaTree->Branch("weighted_nutau", &sum[2],               "weighted_nutau/D"    );
 
+  summaryAnitaTree->Branch("weighted_prob_nu",    &eventsfound_prob,          "weighted_prob_nu/D"    );
+  summaryAnitaTree->Branch("weighted_prob_nue",   &sum_prob[0],               "weighted_prob_nue/D"    );
+  summaryAnitaTree->Branch("weighted_prob_numu",  &sum_prob[1],               "weighted_prob_numu/D"    );
+  summaryAnitaTree->Branch("weighted_prob_nutau", &sum_prob[2],               "weighted_prob_nutau/D"    );
+
+
   summaryAnitaTree->Branch("int_length",      &len_int_kgm2,         "int_length/D");
   summaryAnitaTree->Branch("total_volume",   &antarctica->volume,    "total_volume/D");
   summaryAnitaTree->Branch("rho_medium",     &sig1->RHOMEDIUM,       "rho_medium/D");
+  summaryAnitaTree->Branch("selection_box_half_length",     &settings1->UNBIASED_PS_MAX_DISTANCE_KM,       "selection_box_half_length/D");
   // summaryAnitaTree->Branch("rho_h20",        &(sig1->RHOH20),          "rho_water/D");
   
   summaryAnitaTree->Branch("effVol_nu",    &km3sr,                  "effVol_nu/D" );
-  //  summaryAnitaTree->Branch("effArea_nu",   &km2sr,                  "effArea_nu/D");
+//  summaryAnitaTree->Branch("effArea_nu",   &km2sr,                  "effArea_nu/D");
   
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
@@ -2027,7 +2039,7 @@ int main(int argc,  char **argv) {
 
         taus1->GetTauWeight(primary1,  settings1,  antarctica,  interaction1,  pnu,  1,  ptauf, crust_entered);
 
-        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
+        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in,  interaction1->pathlength_inice, settings1->UNBIASED_SELECTION == 0, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
 
         nutauweight = interaction1->weight_nu_prob;
         tauweight = taus1->weight_tau_prob;
@@ -2250,7 +2262,7 @@ int main(int argc,  char **argv) {
       // where the neutrino enters the earth
       if (tautrigger==0){//did for cc-taus already,  do for all other particles
         interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
-        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, 
+        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->pathlength_inice, settings1->UNBIASED_SELECTION  ==0,  interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, 
             interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
         //cout << "interaction1->chord is " << interaction1->chord << "\n"; 
       }
@@ -3687,6 +3699,8 @@ int main(int argc,  char **argv) {
               r_exit2bn_measured2=interaction1->r_exit2bn_measured;
 
               sourceMag = ray1->rfexit[2].Mag();
+              sample_x = antarctica->getSampleX();
+              sample_y = antarctica->getSampleY();
 
               finaltree->Fill();
               count1->IncrementWeights_r_in(interaction1->r_in, weight);
@@ -3982,15 +3996,18 @@ int main(int argc,  char **argv) {
             // also bin in weight for error calculation.
             if (interaction1->nuflavor=="nue") {
               sum[0]+=weight;
+              sum_prob[0]+=weight_prob;
               eventsfound_binned_e[index_weights]++;
             } //if
             if (interaction1->nuflavor=="numu") {
               sum[1]+=weight;
+              sum_prob[1]+=weight_prob;
               eventsfound_binned_mu[index_weights]++;
             } //if
             if(!sec1->secondbang || !sec1->interestedintaus) {
               if (interaction1->nuflavor=="nutau") {
                 sum[2]+=weight;
+                sum_prob[2]+=weight_prob;
                 eventsfound_binned_tau[index_weights]++;
               } //if
             } //if
@@ -4380,6 +4397,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput << "Number of (weighted) neutrinos that pass both pol triggers is: " << allcuts_weighted_polarization[2] << "\n\n";
   
   cout << "Number of (weighted) neutrinos that pass (with weight>0.001) is: " << eventsfound_weightgt01 << "\n";
+  cout << "Number of (weighted) neutrinos that pass,  multiplied by prob. of interacting in the ice,  is: " << eventsfound_prob << "\n";
   cout << "Number of (weighted) neutrinos that only traverse the crust is " << eventsfound_crust << " -> " << eventsfound_crust/eventsfound*100 << "%\n\n";
   cout << "Number of (weighted) neutrinos that pass only VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
   cout << "Number of (weighted) neutrinos that pass only HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
