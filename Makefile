@@ -142,7 +142,7 @@ $(BINARIES): %: %.$(SrcSuf) $(OBJS)
 		$(LD) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $< $(LIBS) $(OutPutOpt) $@
 		@echo "$@ done"
 
-libicemc.so: $(OBJS) 
+libicemc.so: $(OBJS) classdict.o 
 		$(LD) $(CXXFLAGS) -shared $(LDFLAGS) $(OBJS) $(LIBS) $(OutPutOpt) $@
 		@echo "$@ done"
 
