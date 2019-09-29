@@ -3404,18 +3404,22 @@ int main(int argc,  char **argv) {
       //this gets the weight due to stopping in earth
       //returns 0 if chord<1m
 
-      if (!antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered)){
+      if (!antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->pathlength_inice, settings1->UNBIASED_SELECTION ==0,  
+                               interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered)){
         interaction1->weight_nu_prob = -1.;
       }
 
       if(tauweighttrigger==1) {
-        weight1=interaction1->weight_nu_prob + taus1->weight_tau_prob;
+        weight1=interaction1->weight_nu_prob; //?????? this is probably not right... 
+        weight_prob=interaction1->weight_nu_prob+ taus1->weight_tau_prob;
       }
       
       else {
-        weight1=interaction1->weight_nu_prob;
+        weight1=interaction1->weight_nu;
+        weight_prob=interaction1->weight_nu_prob;
       }
       weight = weight1 / interaction1->dnutries * settings1->SIGMA_FACTOR * time_weight;  // total weight is the earth absorption factor
+      weight_prob = weight_prob / interaction1->dnutries * settings1->SIGMA_FACTOR * time_weight;  // total weight is the earth absorption factor
       // divided by the factor accounting for the fact that we only chose our interaction point within the horizon of the balloon
       // then multiply by the cross section multiplier,  to account for the fact that we get more interactions when the cross section is higher
       //if (weight < settings1->CUTONWEIGHTS && !settings1->SOURCE) {
@@ -3429,7 +3433,7 @@ int main(int argc,  char **argv) {
       havent_set_weights = false; 
      
 
-      if (weight < settings1->CUTONWEIGHTS) {
+      if (weight < settings1->CUTONWEIGHTS || weight_prob < settings1->CUTONWEIGHTPROBS) {
         delete globaltrig1;
         DO_SKIP 
       }
@@ -3510,24 +3514,13 @@ int main(int argc,  char **argv) {
 
         // this gets the weight due to stopping in earth
         // returns 0 if chord<1m
-        if (tautrigger==1 || antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->r_enterice, interaction1->nuexitice, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered, mantle_entered, core_entered)) {
+        if (tautrigger==1 || interaction1->weight_nu_prob >= 0) {
           //cout << "passes chord.\n";
           if (nupathtree->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST==1)
             nupathtree->Fill();
 
           // counts how many have a good chord length
           count_chordgoodlength++;
-
-          // divide phase space factor into weight1
-          if(tauweighttrigger==1){
-            weight_prob=interaction1->weight_nu_prob + taus1->weight_tau_prob;
-          }
-          else
-            weight_prob=interaction1->weight_nu_prob;
-
-          weight1 = interaction1->weight_nu;
-          weight=weight1/interaction1->dnutries*settings1->SIGMA_FACTOR;
-          weight_prob=weight_prob/interaction1->dnutries*settings1->SIGMA_FACTOR;
 
           pieceofkm2sr=weight*antarctica->volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr/(double)NNU/len_int;
           if (h10->GetEntries()<settings1->HIST_MAX_ENTRIES && !settings1->ONLYFINAL && settings1->HIST)

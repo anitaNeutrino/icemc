@@ -291,6 +291,7 @@ void Settings::Initialize() {
   IGNORE_CROSSPOL = 0; 
   POL_SIGN_HACK = 1; 
   CUTONWEIGHTS = 0.;
+  CUTONWEIGHTPROBS = 0.;
   DEC_CUT = 30; // Declination cut 999 is default: no declination cut
                                    //  If you specify a value, then only use sources within from declination = -DEC_CUT to DEC_CUT
   ALL_SKY_MAP = 0; // Draw all-sky map?
@@ -868,6 +869,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Ignore Cross-Pol", IGNORE_CROSSPOL); 
   getSetting("Polarization Sign Hack", POL_SIGN_HACK); 
   getSetting("Minimum weight", CUTONWEIGHTS);
+  getSetting("Minimum probability weight", CUTONWEIGHTPROBS,1);
   getSetting("Absolute declination cut", DEC_CUT);
   getSetting("Draw all-sky map", ALL_SKY_MAP);
 
