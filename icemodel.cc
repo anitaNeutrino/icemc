@@ -87,6 +87,16 @@ class FillTreeOnReturn
 #endif
 
 
+static bool inHistBounds(double x, double y, const TH2 & h)
+{
+  if (x < h.GetXaxis()->GetXmin()) return false;
+  if (y < h.GetYaxis()->GetXmin()) return false;
+  if (x > h.GetXaxis()->GetXmax()) return false;
+  if (y > h.GetYaxis()->GetXmax()) return false;
+
+  return true; 
+}
+
 
 IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : EarthModel(earth_model,WEIGHTABSORPTION_SETTING) {
     
@@ -109,6 +119,11 @@ IceModel::IceModel(int model,int earth_model,int WEIGHTABSORPTION_SETTING) : Ear
     yLowerLeft_water=-2500000;
     NODATA=-9999;
     
+    h_ice_thickness.SetTitle("BEDMAP Ice Thickness; Easting (m), Northing (m)"); 
+
+    h_ground_elevation.SetTitle("BEDMAP Ground Elevation; Easting (m), Northing (m)"); 
+
+    h_water_depth.SetTitle("BEDMAP Water Depth; Easting (m), Northing (m)"); 
     
     
     
@@ -1267,13 +1282,17 @@ double IceModel::IceThickness(double lon, double lat) {
     //cout << "ice_model is " << ice_model << "\n";
     //cout << "icethkarray is " << icethkarray[(int)(lon/2)][(int)(lat/2)]*1000. << "\n";
     if (ice_model==1) {
-	int e_coord=0;
-	int n_coord=0;
-	IceLonLattoEN(lon,lat,e_coord,n_coord);
-	if (e_coord < 1200 && e_coord >= 0 && n_coord < 1000 && n_coord >= 0)
-	    ice_thickness = ice_thickness_array[e_coord][n_coord]; //if this region has BEDMAP data, use it.
+	double E=0;
+	double N=0;
+	LonLattoEN(lon,lat,E,N);
+        if (inHistBounds(E,N,h_ice_thickness))
+        {
+	    ice_thickness = h_ice_thickness.Interpolate(E,N); //if this region has BEDMAP data, use it.
+        }
 	else
+        {
 	    ice_thickness = icethkarray[(int)(lon/2)][(int)(lat/2)]*1000.; //if the location given is not covered by BEDMAP, use Crust 2.0 data
+        }
     } //BEDMAP ice thickness
     else if (ice_model==0) {
 	ice_thickness = icethkarray[(int)(lon/2)][(int)(lat/2)]*1000.;
@@ -1294,16 +1313,17 @@ double IceModel::SurfaceAboveGeoid(double lon, double lat)  {
     double surface=0;
     
     if (ice_model==1) {
-	int e_coord_ice=0;
-	int n_coord_ice=0;
-	int e_coord_ground=0;
-	int n_coord_ground=0;
-	IceLonLattoEN(lon,lat,e_coord_ice,n_coord_ice);
-	GroundLonLattoEN(lon,lat,e_coord_ground,n_coord_ground);
-	if (e_coord_ground < 1068 && e_coord_ground >= 0 && n_coord_ground < 869 && n_coord_ground > 0 && e_coord_ice < 1200 && e_coord_ice >= 0 && n_coord_ice < 1000 && n_coord_ice >= 0)
-	    surface = ground_elevation[e_coord_ground][n_coord_ground] + ice_thickness_array[e_coord_ice][n_coord_ice] + water_depth[e_coord_ice][n_coord_ice];
+        double E, N ; 
+	LonLattoEN(lon,lat,E,N);
+
+        if (inHistBounds(E,N, h_ground_elevation))
+        {
+	    surface = h_ground_elevation.Interpolate(E,N) + h_ice_thickness.Interpolate(E,N) + h_water_depth.Interpolate(E,N);
+        }
 	else
+        {
 	    surface = surfacer[(int)(lon/2)][(int)(lat/2)]; //If the position requested is outside the bounds of the BEDMAP data, use the Crust 2.0 data, regardless of the ice_model flag.
+        }
     } //Elevation of surface above geoid according to BEDMAP
     else if (ice_model==0) {
 	surface = surfacer[(int)(lon/2)][(int)(lat/2)];
@@ -1334,11 +1354,12 @@ double IceModel::WaterDepth(double lon, double lat)  {
 	water_depth_value = waterthkarray[(int)(lon/2)][(int)(lat/2)]*1000;
     } //if(Crust 2.0)
     else if (ice_model==1) {
-	int e_coord=0;
-	int n_coord=0;
-	WaterLonLattoEN(lon,lat,e_coord,n_coord);
-	if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord >= 0)
-	    water_depth_value = water_depth[e_coord][n_coord];
+        double E, N; 
+	LonLattoEN(lon,lat,E,N);
+        if (inHistBounds(E,N,h_water_depth))
+        {
+	    water_depth_value = h_water_depth.Interpolate(E,N); 
+        }
 	else
 	    water_depth_value = waterthkarray[(int)(lon/2)][(int)(lat/2)]*1000;
     } //else if(BEDMAP)
@@ -1526,48 +1547,27 @@ double IceModel::Area(double latitude) {
     return (pow(cellSize* ((1 + sin(71*RADDEG)) / (1 + sin(lat_rad))),2));
 } //method Area
 
-void IceModel::LonLattoEN(double lon, double lat, double xLowerLeft, double yLowerLeft, int& e_coord, int& n_coord) {
+void IceModel::LonLattoEN(double lon, double lat,  double& E, double& N) {
     //takes as input a latitude and longitude (in degrees) and converts to indicies for BEDMAP matricies. Needs a location for the corner of the matrix, as not all the BEDMAP files cover the same area.  Code by Stephen Hoover.
     
-    double easting=0;
-    double northing=0;
     
     double lon_rad = (lon - 180) * RADDEG; //convert to radians, and shift origin to conventional spot
     double lat_rad = (90 - lat) * RADDEG;
     
     bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(lat_rad)) / (1 - eccentricity*sin(lat_rad)) ),eccentricity/2) * tan((PI/4) - lat_rad/2);
     
-    easting = bedmap_R * sin(lon_rad);
-    northing = bedmap_R * cos(lon_rad);
-    
-    //  cout << "bedmap_R is " << bedmap_R << "\n";
-    //cout << "easting, northing are " << easting << " " << northing << "\n";
-    
-    e_coord = (int)((easting - xLowerLeft) / cellSize);
-    n_coord = (int)((-1*northing - yLowerLeft) / cellSize);
-    
+    E = bedmap_R * sin(lon_rad);
+    N = bedmap_R * cos(lon_rad);
     return;
 } //method LonLattoEN
 
-void IceModel::IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) {
-    //Converts a latitude and longitude (in degrees) to indicies for BEDMAP ice thickness data.  Code by Stephen Hoover.
-    LonLattoEN(lon, lat, xLowerLeft_ice, yLowerLeft_ice, e_coord, n_coord);
-}//IceLonLattoEN
-void IceModel::GroundLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) {
-    //Converts a latitude and longitude (in degrees) to indicies for BEDMAP ground elevation data.  Code by Stephen Hoover.
-    LonLattoEN(lon, lat, xLowerLeft_ground, yLowerLeft_ground, e_coord, n_coord);
-}//GroundLonLattoEN
-void IceModel::WaterLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) {
-    //Converts a latitude and longitude (in degrees) to indicies for BEDMAP water depth data.  Code by Stephen Hoover.
-    LonLattoEN(lon, lat, xLowerLeft_water, yLowerLeft_water, e_coord, n_coord);
-}//WaterLonLattoEN
 
 void IceModel::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, double yLowerLeft, double& lon, double& lat)  {
     //Takes as input the indicies from a BEDMAP data set, and turns them into latitude and longitude coordinates.  Information on which data set (surface data, ice depth, water depth) is necessary, in the form of coordinates of a corner of the map.  Code by Stephen Hoover.
     
     double isometric_lat=0;
     double easting = xLowerLeft+(cellSize*(e_coord+0.5)); //Add offset of 0.5 to get coordinates of middle of cell instead of edges.
-    double northing = -1*(yLowerLeft+(cellSize*(n_coord+0.5)));
+    double northing = -(yLowerLeft+(cellSize*(n_coord+0.5)));
     
     //  cout << "easting, northing are " << easting << " " << northing << "\n";
     
@@ -1975,6 +1975,8 @@ void IceModel::ReadIceThickness() {
     
     assert(nRows_ice == 1000 && nCols_ice==1200); 
 
+    h_ice_thickness.SetBins(nCols_ice, xLowerLeft_ice, xLowerLeft_ice + nCols_ice*cellSize, 
+                           nRows_ice, yLowerLeft_ice, yLowerLeft_ice+nRows_ice*cellSize);
 
     double theValue;
     volume=0.;
@@ -1988,14 +1990,16 @@ void IceModel::ReadIceThickness() {
 	    IceThicknessFile >> theValue;
 	    if(theValue==NODATA)
 		theValue=0; //Set ice depth to 0 where we have no data.
-	    ice_thickness_array[colNum][rowNum] = double(theValue); //This stores data as ice_thickness_array[easting][northing]
-	    volume+=ice_thickness_array[colNum][rowNum]*Area(lat_tmp);
-	    if (ice_thickness_array[colNum][rowNum]>0)
+
+            //note that the histogram has a backwards indexing on rows since it's defined in a different order
+	    h_ice_thickness.SetBinContent(1+colNum, nRows_ice-rowNum, theValue); 
+	    volume+=theValue*Area(lat_tmp);
+	    if (theValue>0)
 		ice_area+=Area(lat_tmp);
-	    if (ice_thickness_array[colNum][rowNum]*Area(lat_tmp)>max_icevol_perbin)
-		max_icevol_perbin=ice_thickness_array[colNum][rowNum]*Area(lat_tmp);
-	    if (ice_thickness_array[colNum][rowNum]>max_icethk_perbin)
-		max_icethk_perbin=ice_thickness_array[colNum][rowNum];
+	    if (theValue*Area(lat_tmp)>max_icevol_perbin)
+		max_icevol_perbin=theValue*Area(lat_tmp);
+	    if (theValue>max_icethk_perbin)
+		max_icethk_perbin=theValue;
 	}//for
     }//for
     
@@ -2045,6 +2049,9 @@ void IceModel::ReadGroundBed() {
     }
     assert(nRows_ground == 869 && nCols_ground==1068); 
     
+    h_ground_elevation.SetBins(nCols_ground, xLowerLeft_ground, xLowerLeft_ground + nCols_ground*cellSize, 
+                               nRows_ground, yLowerLeft_ground, yLowerLeft_ground + nRows_ground*cellSize);
+
     //cout<<"nCols_ground, nRows_ground "<<nCols_ground<<" , "<<nRows_ground<<endl;
     //cout<<"xLL_ground, yLL_ground, cellsize "<<xLowerLeft_ground<<" , "<<yLowerLeft_ground<<" , "<<cellSize<<endl<<endl;
     
@@ -2055,7 +2062,7 @@ void IceModel::ReadGroundBed() {
 	    
 	    if(theValue==NODATA)
 		theValue=0; //Set elevation to 0 where we have no data.
-	    ground_elevation[colNum][rowNum] = double(theValue);
+	    h_ground_elevation.SetBinContent(colNum+1,nRows_ground-rowNum, double(theValue));
 	    //if (theValue != -96 && theValue != 0)
 	    //cout<<"ground_elevation: "<<theValue<<endl;
 	}//for
@@ -2110,6 +2117,9 @@ void IceModel::ReadWaterDepth() {
     //cout<<"xLL_water, yLL_water, cellsize "<<xLowerLeft_water<<" , "<<yLowerLeft_water<<" , "<<cellSize<<endl<<endl;
     
     assert(nRows_water == 1000 && nCols_water==1200); 
+
+    h_water_depth.SetBins(nCols_water, xLowerLeft_water, xLowerLeft_water + nCols_water*cellSize, 
+                          nRows_water, yLowerLeft_water, yLowerLeft_water+nRows_water*cellSize);
     double theValue;
     for(int rowNum=0;rowNum<nRows_water;rowNum++) {
 	for(int colNum=0;colNum<nCols_water;colNum++) {
@@ -2117,7 +2127,7 @@ void IceModel::ReadWaterDepth() {
 	    
 	    if(theValue==NODATA)
 		theValue=0; //Set depth to 0 where we have no data.
-	    water_depth[colNum][rowNum] = double(theValue);
+	    h_water_depth.SetBinContent(1+colNum,nRows_water-rowNum, double(theValue));
 	}//for
     }//for
     
