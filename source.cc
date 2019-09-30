@@ -475,6 +475,7 @@ double ConstantExponentialSourceFlux::pickEnergy(double Emin, double Emax, doubl
   (void) t; 
   TRandom * old = gRandom; 
   gRandom = rng; 
+  if (Emin == Emax) return Emin; 
 
   //I'm too bad at math to figure out the proper quantile function here. It's probably trivial, but this works and isn't THAT slow. 
   if (f.GetXmin() != Emin || f.GetXmax() !=Emax) f.SetRange(Emin,Emax); 
@@ -523,7 +524,7 @@ void SourceModel::setUpWeights(double t0, double t1, double minE, double maxE, i
     double t = rng->Uniform(t0,t1); 
     for (unsigned j = 0; j < sources.size(); j++) 
     {
-      average_flux += sources[j]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t)/N; 
+      average_flux +=  minE == maxE ? sources[j]->getFlux()->getFlux(minE, t)/N : sources[j]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t)/N; 
     }
   }
   printf("Set up weights: average flux is %g\n", average_flux); 
@@ -540,7 +541,7 @@ double SourceModel::getTimeWeight(double t) const
   double weight = 0;
   for (unsigned i = 0; i < sources.size(); i++) 
   {
-    weight += sources[i]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t); 
+    weight += weight_Emin == weight_Emax ? sources[i]->getFlux()->getFlux(weight_Emin,t) : sources[i]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t); 
   }
   return weight/average_flux; 
 }
