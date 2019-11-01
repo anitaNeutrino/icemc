@@ -158,6 +158,7 @@ class Settings : public TObject {
   std::string WHICH_START_TIME; // which start time? 0, or an anita flight option
   std::string WHICH_END_TIME; // which end time? 0 or an anita flight option
   
+  int SOURCE_USE_EXPONENT; //Use the exponent for a source (if exponent <= 21) 
   double SOURCE_MIN_E;  // log10 of minimum energy for sources 
   double SOURCE_MAX_E;   // log10 of maximinum energy for sources 
 

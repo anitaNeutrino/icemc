@@ -280,6 +280,7 @@ void Settings::Initialize() {
 
   // Source options
   SOURCE = "None"; 
+  SOURCE_USE_EXPONENT = 0; 
   SOURCE_MIN_E = 18; 
   SOURCE_MAX_E = 21;
   WHICH_SOURCES = "All";
@@ -623,6 +624,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Which attenuation length", MOOREBAY);
 
   getSetting("Source Option", SOURCE,true); 
+  getSetting("Source Use Exponent", SOURCE_USE_EXPONENT,true); 
   getSetting("Source Max Energy", SOURCE_MAX_E,true); 
   getSetting("Source Min Energy", SOURCE_MIN_E,true); 
   getSetting("Which Sources", WHICH_SOURCES,true);

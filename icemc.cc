@@ -648,6 +648,12 @@ int main(int argc,  char **argv) {
                                   SourceModel::Restriction::fromString(settings1->WHICH_END_TIME.c_str()))); 
   }
       
+  if (settings1->SOURCE_USE_EXPONENT && settings1->EXPONENT < 22) 
+  {
+    settings1->SOURCE_MIN_E=settings1->EXPONENT;
+    settings1->SOURCE_MAX_E=settings1->EXPONENT;
+  }
+
 
   double src_min = TMath::Power(10,settings1->SOURCE_MIN_E-9);  //since source model takes things in GeV
   double src_max = TMath::Power(10,settings1->SOURCE_MAX_E-9);  //since source model takes things in GeV
