@@ -43,6 +43,9 @@ void plotSuperNovaeTNS()
   std::string desiredType;
   size_t found;
 
+    // A3
+  //a_tmin = 1418938406;                                                                                   
+  //a_tmax = 1420777814;
   
   // A4 for now
   a_tmin = 1480707643;
@@ -59,16 +62,18 @@ void plotSuperNovaeTNS()
   SkyMap *skyMapOut = new SkyMap(180);
 
   TH2F* h = new TH2F("h","h",1000,0,360,1000,-90,90);
+  int two_weeks = 1209600;
+  int extraRange = two_weeks; // two_weeks
   
   for(unsigned int i = 0; i < discoveryEntries; i++)
     {
       tree->GetEntry(i);
 
       // Skip those if the discovery time falls outside of ANITA flight time
-      if( (discoveryUnixTime < (a_tmin - 1209600)) || (discoveryUnixTime > (a_tmax + 1209600)) ){continue;}
+      if( (discoveryUnixTime < (a_tmin)) || (discoveryUnixTime > (a_tmax + extraRange)) ){continue;}
 
-      cout << "discovery time = " << discoveryUnixTime << endl;
-      //if( abs(dec)>5 ){continue;}
+      if( abs(dec)>20 ){continue;}
+      //cout << "discovery time = " << discoveryUnixTime << endl;
       //desiredType = "SN II";
       //found = objType->find(desiredType);
       //if(found != 0){continue;}
@@ -76,8 +81,8 @@ void plotSuperNovaeTNS()
       
       //cout << ra << endl;
       //cout << dec << endl;
-      cout << *name << ", ";
-      cout << *objType << "- ";
+      cout << *name << endl; // ", ";
+      //cout << *objType << "- " << endl;
       // Set ra, dec
       astroObject->SetX(ra);
       astroObject->SetY(dec);
