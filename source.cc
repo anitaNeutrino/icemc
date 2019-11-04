@@ -146,16 +146,19 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
       
       int two_weeks = 24*3600*14; 
-      int two_days = 24*3600*2; 
+      //int two_days = 24*3600*2; 
       for (unsigned int i = 0; i < tree->GetEntries(); i++) 
       {
          tree->GetEntry(i);
               
          //////////// Cuts
          // Time cut for finding sources within a certain time period
-         if( (discoveryUnixTime < r.whichStartTime - two_weeks) || (discoveryUnixTime > r.whichEndTime) ){continue;}
+	 // NOTE we are working with _neutrinos_ instead of photons. Neutrinos reach Earth before photons because they escape the star before the shockwaves of the supernova explosion.
+	 // assume photons arrive, at max, 2 weeks after the neutrinos
+	 // discoveryUnixTime is the discovery time of the supernova using photons, not neutrinos, thus:
+         if( (discoveryUnixTime < r.whichStartTime) || (discoveryUnixTime > r.whichEndTime + two_weeks) ){continue;}
              // Declination cut (ANITA won't see neutrinos from these sources)
-             if( abs(dec)>r.maxDec){continue;}
+             //if( abs(dec)>r.maxDec){continue;}
              // Search for specific subtype
              if(strcasecmp(r.whichSources,"All"))
              {
@@ -178,7 +181,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
              }
             
              m->addSource(new Source(objName->c_str(), ra/=15., dec,
-                          new TimeWindowedExponentialSourceFlux(discoveryUnixTime-two_days, discoveryUnixTime + two_weeks - two_days, 2,txs_flux,txs_E0) // Just use these params as the first step
+                          new TimeWindowedExponentialSourceFlux(discoveryUnixTime - two_weeks, discoveryUnixTime, 2,txs_flux,txs_E0) // Just use these params as the first step
                          )) ; 
        }
      
@@ -308,11 +311,11 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
             
             
         //say no to |dec| >30 
-        if (fabs(fava->dec) > r.maxDec) continue; 
+        //if (fabs(fava->dec) > r.maxDec) continue; 
               
         //say no to low HE flux 
              
-        if (fava->he_sigma < 4 && fava->he_flux < 0) continue;
+        //if (fava->he_sigma < 4 && fava->he_flux < 0) continue;
         //printf("passed flux cut \n");
 
         //only blazars
