@@ -18,6 +18,7 @@ class EarthModel;
 class Settings;
 class Interaction;
 class Ray;
+class TFile; 
 
 //Constants relating to all ice models
 const double FIRNDEPTH=-150.;                // depth of the firn, in meters: currently a constant over all ice
