@@ -1,6 +1,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+
 #include "TMath.h" 
 #include "TObjString.h" 
 #include "TTimeStamp.h" 
@@ -8,6 +9,9 @@
 #include "TFile.h" 
 #include "TTree.h"
 #include "EnvironmentVariable.h" 
+#include "Math/WrappedTF1.h"
+#include "Math/GaussIntegrator.h"
+
 #include "blazars/fava.h"
 #include "source.hh"
 #include "icemc_random.h" 
@@ -158,7 +162,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
 	 // discoveryUnixTime is the discovery time of the supernova using photons, not neutrinos, thus:
          if( (discoveryUnixTime < r.whichStartTime) || (discoveryUnixTime > r.whichEndTime + two_weeks) ){continue;}
              // Declination cut (ANITA won't see neutrinos from these sources)
-             //if( abs(dec)>r.maxDec){continue;}
+             if( abs(dec)>r.maxDec){continue;}
              // Search for specific subtype
              if(strcasecmp(r.whichSources,"All"))
              {
@@ -196,7 +200,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       float RA, dec;
       std::string *objName = new std::string;
       int unixTriggerTime = 0;
-      float t90,  fluence; 
+      float t90, fluence, redshift; 
       
       tree->SetBranchAddress("RA",&RA); 
       tree->SetBranchAddress("dec",&dec); 
@@ -204,6 +208,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       tree->SetBranchAddress("unixTriggerTime",&unixTriggerTime);
       tree->SetBranchAddress("T90",&t90);
       tree->SetBranchAddress("fluence",&fluence);
+      tree->SetBranchAddress("redshift",&redshift);
 
       for (unsigned int i = 0; i < tree->GetEntries(); i++) 
       {
@@ -230,14 +235,128 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
             else{continue;}
         }
 
+	// Calculate the explicit maximum neutrino energy via fireball model
+	bool modelCalculation = true;
+	double energyCutoff = 1e10;
+	if(modelCalculation==true)
+	  {
 
+	    // Cosmology
+	    double omegaRad = 9.236e-5;
+	    double omegaM = 0.315;
+	    double omegaLambda = 0.679;
+	    double H0 = 67.4 * pow(10,3); // We want this in ms^-1/Mpc, not the standard kms^-1/Mpc
+	    double c = 299792458; // ms^-1, as we we calculate c/H0
+	    double EGammaIso = 0.;
+	    double dL = 0.; // we will calculate in Mpc
+	    double MpcToCm = 3.08e+24;
 
+	    // GRB model vars
+	    double r = 0.;
+  
+	    // Model assumptions
+	    double lorentzFactor = 300.;
+	    double eB = 0.1;
+	    double eE = 0.1;
+	    /// Afterglow
+	    double nEx = 1.; // cm^-3
+	    double EKinIso = 0.;
+	    double shockLorentzFactor = 0.;
+	    double energyCGamma = 0.;
+	    double fPiAG = 0.;
+	    double energyBreakNeutrinoAG = 0.;
+	    double shockRadius = 0.;
+	    double massProton = 0.0015; // erg/c^2
+	    double magFieldShock = 0.;
+	    double maxShockNuE = 0.;
+
+	    // GRB spectra calculation starts
+	    // Some T90s are not recorded, set to 20s.
+	    if(t90==-999){t90 = 20;}
+	    // Some redshifts are not calculated, set to 2.
+	    if(redshift==-999){redshift = 2;}
+	    // Just set the fluence to this for now
+	    if(fluence==-999){fluence=1e-6;}
+            
+	    // Cosmology stuff
+	    // Assume flat Universe
+	    // Curvature is k = 0, omegaK = 0      
+	    TF1 Ez("E(z)", "1/(pow([0] * pow((1+x),3) + [1] + [2] * pow((1+x),4),0.5))", 0, redshift);
+	    //TF1 Ez("E(z)", "1/(pow([0] * pow((1+x),3) + [1],0.5))", 0, redshift);
+	    Ez.SetParameter(0,omegaM); Ez.SetParName(0,"omegaM");
+	    Ez.SetParameter(1,omegaLambda); Ez.SetParName(1,"omegaLambda");
+	    Ez.SetParameter(2,omegaRad); Ez.SetParName(2,"omegaRad");
+	    ROOT::Math::WrappedTF1 wEz(Ez);
+	    ROOT::Math::GaussIntegrator ig;
+	    ig.SetFunction(wEz);
+	    ig.SetRelTolerance(0.001);
+	    double integral =  ig.Integral(0, redshift);
+      
+	    // Now calc lum dist
+	    dL = (1+redshift) * c/H0 * integral; // Mpc
+      
+	    // Calc gamma-ray bolometric energy
+	    EGammaIso = 4 * TMath::Pi() * dL*dL * fluence * 1/(1+redshift); // Mpc^2 * erg cm^-2
+	    EGammaIso*=pow(MpcToCm,2); // erg
+      
+	    //////////////////////////////
+	    // Afterglow specific calcs
+	    /////////////////////////////
+
+	    // Calculate total jet kinetic energy and bulk Lorentz factor of GRB afterglow
+	    EKinIso = EGammaIso/eE; //erg
+      
+	    // Radii, depths
+	    shockRadius = pow(((3*EKinIso)/(4*TMath::Pi() * nEx * massProton * c*c * lorentzFactor*lorentzFactor)),(1./3.)); // in cm
+	    shockRadius*=100; // in meters, to compare with internal rad
+	    if(shockRadius < r)
+	      {
+		std::cout << "Afterglow shock radius < burst radius. Something might be wrong." << std::endl;
+	      }
+
+	    shockRadius/=100;
+	    magFieldShock = pow(8 * TMath::Pi() * eB * nEx * massProton,0.5);
+      
+	    shockLorentzFactor = 195 * pow(((EKinIso)/(pow(10,54))),0.125) * pow(t90/10,-0.375) * pow(nEx/1.,-0.125);
+
+	    // Peak sync gamma energy radiated by electrons in B field:
+	    energyCGamma = 0.4 * pow(((EKinIso)/(pow(10,54))),(-25./24.)) * pow(((lorentzFactor)/(300)),(4./3.)) * pow(((t90)/(10)),(9./8.)) * pow(((nEx)/(1)),(-11./24.));
+      
+	    // Calculate proton-to-pion conversion factor
+	    fPiAG = 0.2;
+	    //fPiAG = 0.2 * pow(((EKinIso)/(pow(10,54))),(33./24.)) * pow(t90/10,(-9./8.)) * pow(nEx/1,(9./8.));
+
+	    // convert to GeV
+	    energyCGamma/=1e+9;
+	    // break energies
+	    energyBreakNeutrinoAG = 0.015 * shockLorentzFactor * 1/(1+redshift) * pow(energyCGamma,-1); // GeV
+	    // max shock neutrino energy
+	    maxShockNuE = fPiAG/(4*(1+redshift)) * eE * shockLorentzFactor * magFieldShock * shockRadius;
+      
+	    // normal case
+	    if(maxShockNuE > energyBreakNeutrinoAG)
+	      {
+		// All good
+	      }
+	    else if(maxShockNuE < 1e9) // account for minimum possible energy
+	      {
+		maxShockNuE = 1e9;
+	      }
+	    else
+	      {
+		maxShockNuE = energyBreakNeutrinoAG+energyBreakNeutrinoAG*0.01;
+	      }
+	    
+	    energyCutoff = maxShockNuE;
+
+	  }
+      
         if (strcasestr(stripped.Data(),"AFTERGLOW") )
         {
           m->addSource(new Source(objName->c_str(), RA/=15., dec,
                   new TimeWindowedExponentialSourceFlux(unixTriggerTime,
                                                                       unixTriggerTime + 3600,1.5,
-                                                                      fluence,1e9, 1e10) 
+                                                                      fluence,1e9, energyCutoff) 
                 ));
          
         }
@@ -259,7 +378,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
               //fireball model for E > 1e18 eV, I think
                                 new TimeWindowedExponentialSourceFlux(unixTriggerTime-300,
                                                                       unixTriggerTime + 3600,1.5,
-                                                                      fluence,1e9, 1e10) 
+                                                                      fluence,1e9, energyCutoff) 
                                 )) ; 
 
         }
@@ -395,8 +514,6 @@ void SourceModel::computeFluxTimeChanges(std::vector<double> * changes) const
   changes->resize(std::distance(changes->begin(),it));
 }
 
-
-
 int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE, double minE, double maxE)
 {
   if (!sources.size()) return -1; 
@@ -487,7 +604,6 @@ double ConstantExponentialSourceFlux::pickEnergy(double Emin, double Emax, doubl
   gRandom = old; 
   return E; 
 }
-
 
 
 TimeWindowedExponentialSourceFlux::TimeWindowedExponentialSourceFlux(double t0, double t1, double e, double norm, double normE, double cutoff)
