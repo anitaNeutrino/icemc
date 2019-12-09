@@ -164,6 +164,10 @@ double RANDOMISEPOL=0.;
 /************MOVED FROM shared.hh and shared.cc*****************/
 
 
+std::vector<int> NNU_per_source; 
+std::vector<double> eventsfound_per_source; 
+std::vector<double> eventsfound_prob_per_source; 
+
 double volume_thishorizon; // for plotting volume within the horizon of the balloon
 double realtime_this;  // for plotting real unix time
 double longitude_this; // for plotting longitude
@@ -634,7 +638,7 @@ int main(int argc,  char **argv) {
   SourceModel *src_model = 0; 
   if (!strcasecmp(settings1->SOURCE.c_str(),"CUSTOM")) 
   {
-    src_model = new SourceModel("custom",settings1->SEED + 0xc0fefe); 
+    src_model = new SourceModel("custom"); 
 
     src_model->addSource( new Source("Custom Source", (settings1->CUSTOM_RA)/15, settings1->CUSTOM_DEC, 
                               new ConstantExponentialSourceFlux(settings1->CUSTOM_GAMMA, 1e-10,1e6))); 
@@ -642,10 +646,10 @@ int main(int argc,  char **argv) {
   }
   else if(strcasecmp(settings1->SOURCE.c_str(),"NONE"))
   {
-    src_model = SourceModel::getSourceModel(settings1->SOURCE.c_str(), settings1->SEED + 0x5eed, 
+    src_model = SourceModel::getSourceModel(settings1->SOURCE.c_str(),  
                               SourceModel::Restriction( settings1->DEC_CUT, settings1->WHICH_SOURCES.c_str(), settings1->WHICH_SUBTYPE.c_str(), 
-                                  SourceModel::Restriction::fromString(settings1->WHICH_START_TIME.c_str()),
-                                  SourceModel::Restriction::fromString(settings1->WHICH_END_TIME.c_str()))); 
+                              SourceModel::Restriction::fromString(settings1->WHICH_START_TIME.c_str()),
+                              SourceModel::Restriction::fromString(settings1->WHICH_END_TIME.c_str()))); 
   }
       
   if (settings1->SOURCE_USE_EXPONENT && settings1->EXPONENT < 22) 
@@ -1424,6 +1428,9 @@ int main(int argc,  char **argv) {
   TTree *summaryAnitaTree = new TTree("summaryAnitaTree", "summaryAnitaTree"); // finaltree filled for all events that pass
   summaryAnitaTree->Branch("EXPONENT", &settings1->EXPONENT, "EXPONENT/D" );
   summaryAnitaTree->Branch("SELECTION_MODE", &settings1->UNBIASED_SELECTION, "SELECTION_MODE/I" );
+  summaryAnitaTree->Branch("totalnu_per_source", &NNU_per_source);
+  summaryAnitaTree->Branch("weighted_nu_per_source", &eventsfound_per_source);
+  summaryAnitaTree->Branch("weighted_prob_nu_per_source", &eventsfound_prob_per_source);
   summaryAnitaTree->Branch("total_nu",      &NNU,                 "total_nu/I" );
   summaryAnitaTree->Branch("total_nue",     &count1->nnu_e,       "total_nue/I" );
   summaryAnitaTree->Branch("total_numu",    &count1->nnu_mu,      "total_numu/I" );
@@ -1676,7 +1683,9 @@ int main(int argc,  char **argv) {
 
     std::string nunum = Form("%d",inu);    
 
-    double time_weight = 1; 
+    double time_weight = 1; //this is the sum of all source time weights for the time
+    double src_time_weight = 1;  //this is the time weight for the selected source 
+
     for (whichray = settings1->MINRAY; whichray <= settings1->MAXRAY; whichray++) {
       anita1->passglobtrig[0]=0;
       anita1->passglobtrig[1]=0;
@@ -1741,6 +1750,16 @@ int main(int argc,  char **argv) {
           which_source = time_weight > 0 ?  src_model->getDirectionAndEnergy(&force_dir, realtime_this, pnu, src_min, src_max) : -1;
           if(which_source >= 0) {
             got_a_good_position = 1;
+            src_time_weight = src_model->getPerSourceTimeWeight(realtime_this, which_source); 
+
+            if (NNU_per_source.size() < which_source+1) 
+            {
+              NNU_per_source.resize(which_source+1); 
+              eventsfound_per_source.resize(which_source+1); 
+              eventsfound_prob_per_source.resize(which_source+1); 
+            }
+
+            NNU_per_source[which_source]++; 
           
             const Source * src = src_model->getSource(which_source); 
             RA = src->getRA();
@@ -3436,6 +3455,9 @@ int main(int argc,  char **argv) {
         weight1=interaction1->weight_nu;
         weight_prob=interaction1->weight_nu_prob;
       }
+
+      //if we are using the correct sampling mode, should need to time weight. 
+
       weight = weight1 / interaction1->dnutries * settings1->SIGMA_FACTOR * time_weight;  // total weight is the earth absorption factor
       weight_prob = weight_prob / interaction1->dnutries * settings1->SIGMA_FACTOR * time_weight;  // total weight is the earth absorption factor
       // divided by the factor accounting for the fact that we only chose our interaction point within the horizon of the balloon
@@ -3587,6 +3609,11 @@ int main(int argc,  char **argv) {
 
               eventsfound+=weight; // counting events that pass,  weighted.
               eventsfound_prob+=weight_prob; // counting events that pass,  probabilities.
+
+              eventsfound_per_source[which_source]+=weight*src_time_weight/time_weight; // counting events that pass,  weighted.
+              eventsfound_prob_per_source[which_source]+=weight_prob*src_time_weight/time_weight; // counting events that pass,  probabilities.
+
+
               if (cosalpha>0)
                 eventsfound_belowhorizon+=weight;
 
@@ -3835,6 +3862,7 @@ int main(int argc,  char **argv) {
             truthEvPtr->weight_prob           = weight_prob;
             truthEvPtr->phaseWeight       = 1./interaction1->dnutries;
             truthEvPtr->timeWeight       = time_weight;
+            truthEvPtr->sourceTimeWeight       = src_time_weight;
 	    truthEvPtr->tuffIndex = (short)anita1->tuffIndex;
 	    
             // for passed neutrinos:

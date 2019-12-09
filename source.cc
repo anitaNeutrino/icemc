@@ -19,12 +19,13 @@
 // SourceModel 
 
 
-SourceModel::SourceModel(const char * n, unsigned seed)
+SourceModel::SourceModel(const char * n)
   : name(n)
 {
   weight_Emin = 0;
   weight_Emax = 0;
   average_flux = -1; 
+  average_nonzero_flux= -1; 
 }
 
 SourceModel::~SourceModel() 
@@ -95,12 +96,12 @@ double SourceModel::Restriction::fromString(const char * the_time)
  
 
 
-SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, SourceModel::Restriction r) 
+SourceModel * SourceModel::getSourceModel(const char * key, SourceModel::Restriction r) 
 {
 
   if (!key || !strcasecmp(key,"NONE")) return NULL; 
 
-  SourceModel * m = new SourceModel(key,seed);
+  SourceModel * m = new SourceModel(key);
 
   TString str(key); 
   TObjArray * tokens = str.Tokenize("+"); 
@@ -634,6 +635,15 @@ void SourceModel::setUpWeights(double t0, double t1, double minE, double maxE, i
 {
 
   average_flux = 0; 
+  average_nonzero_flux = 0;
+
+  per_source_average_flux.clear();
+  per_source_average_nonzero_flux.clear();
+  per_source_average_flux.resize(sources.size());
+  per_source_average_nonzero_flux.resize(sources.size());
+  std::vector<int> Nnonzero_per_source(sources.size());
+  int Nnonzero = 0; 
+
   weight_Emin = minE; 
   weight_Emax = maxE; 
 
@@ -641,16 +651,46 @@ void SourceModel::setUpWeights(double t0, double t1, double minE, double maxE, i
   for (int i =0; i < N; i++) 
   {
     double t = rng->Uniform(t0,t1); 
+    double sumFlux = 0;
     for (unsigned j = 0; j < sources.size(); j++) 
     {
-      average_flux +=  minE == maxE ? sources[j]->getFlux()->getFlux(minE, t)/N : sources[j]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t)/N; 
+      double dFlux =  minE == maxE ? sources[j]->getFlux()->getFlux(minE, t)/N : sources[j]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t); 
+      sumFlux += dFlux; 
+
+      average_flux += dFlux/N; 
+      per_source_average_flux[j]+=dFlux/N; 
+      average_nonzero_flux += dFlux; 
+
+      if (dFlux!=0)
+      {
+        Nnonzero_per_source[j]++; 
+        per_source_average_nonzero_flux[j]+= dFlux; 
+      }
+    }
+    if (sumFlux != 0) 
+    {
+      Nnonzero++;
     }
   }
-  printf("Set up weights: average flux is %g\n", average_flux); 
+
+  for (unsigned j = 0; j < sources.size(); j++) 
+  {
+   if (per_source_average_nonzero_flux[j])  per_source_average_nonzero_flux[j] /= Nnonzero_per_source[j]; 
+  }
+
+  if (average_nonzero_flux) average_nonzero_flux /= Nnonzero; 
+  printf("Set up weights: average flux is %g (average non-zero flux: %g)\n", average_flux, average_nonzero_flux); 
 }
 
+double SourceModel::getPerSourceTimeWeight(double t, int i, bool use_average_nonzero_flux) const
+{
+  double weight = weight_Emin == weight_Emax ? sources[i]->getFlux()->getFlux(weight_Emin,t)
+                                             : sources[i]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t); 
 
-double SourceModel::getTimeWeight(double t) const
+  return weight / (use_average_nonzero_flux ? per_source_average_nonzero_flux[i] : per_source_average_flux[i]); 
+}
+
+double SourceModel::getTimeWeight(double t, bool use_average_nonzero_flux) const
 {
   static int nnag = 0; 
   if (average_flux < 0) 
@@ -662,6 +702,6 @@ double SourceModel::getTimeWeight(double t) const
   {
     weight += weight_Emin == weight_Emax ? sources[i]->getFlux()->getFlux(weight_Emin,t) : sources[i]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t); 
   }
-  return weight/average_flux; 
+  return weight / (use_average_nonzero_flux ? average_nonzero_flux : average_flux); 
 }
 
