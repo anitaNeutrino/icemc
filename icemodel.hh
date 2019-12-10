@@ -39,6 +39,7 @@ const double bedmap_c_bar = 7*pow(eccentricity,6)/120 + 81*pow(eccentricity,8)/1
 const double bedmap_d_bar = 4279*pow(eccentricity,8)/161280;
 const double bedmap_c_0 = (2*EarthModel::R_EARTH / sqrt(1-pow(eccentricity,2))) * pow(( (1-eccentricity) / (1+eccentricity) ),eccentricity/2);
 
+#ifdef ICEMODEL_DEBUG_TREE
 struct icemodel_debug
 {
   TVector3 balloon;
@@ -79,6 +80,7 @@ struct icemodel_debug
     leave_err = false; 
   }
 }; 
+#endif
 
 
 

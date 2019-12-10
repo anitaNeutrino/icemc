@@ -23,7 +23,6 @@
 #include <fstream>
 #include <iostream>
 
-ClassImp(icemodel_debug); 
 
 using std::endl;
 using std::cout;
@@ -36,6 +35,7 @@ const string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
 
   
 #ifdef ICEMODEL_DEBUG_TREE
+ClassImp(icemodel_debug); 
 #include "TTree.h" 
 static TFile * debugfile = 0; 
 static TTree * debugtree = 0; 
