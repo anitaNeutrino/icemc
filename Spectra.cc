@@ -232,6 +232,12 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
           case 112:
               GetFlux("yuksel_sfh.dat");
               break;
+	  case 113:
+		GetFlux("Oikonomou2019_TXS_0506+056_Model_A.dat");
+		break;
+	  case 114:
+		GetFlux("Oikonomou2019_TXS_0506+056_Model_B.dat");
+		break;
 //          case 100:
 //              GetFlux("berezinsky_saturate.dat");
 //              break;
