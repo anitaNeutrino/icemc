@@ -3610,8 +3610,11 @@ int main(int argc,  char **argv) {
               eventsfound+=weight; // counting events that pass,  weighted.
               eventsfound_prob+=weight_prob; // counting events that pass,  probabilities.
 
-              eventsfound_per_source[which_source]+=weight*src_time_weight/time_weight; // counting events that pass,  weighted.
-              eventsfound_prob_per_source[which_source]+=weight_prob*src_time_weight/time_weight; // counting events that pass,  probabilities.
+              if (NNU_per_source.size())
+              {
+                eventsfound_per_source[which_source]+=weight*src_time_weight/time_weight; // counting events that pass,  weighted.
+                eventsfound_prob_per_source[which_source]+=weight_prob*src_time_weight/time_weight; // counting events that pass,  probabilities.
+              }
 
 
               if (cosalpha>0)
