@@ -4,18 +4,23 @@
 #include "TVector3.h"
 #include "TRotation.h"
 
+#if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
+#include "vectormath_trig.h"
+#endif
+
 using std::cout;
 
 Vector::Vector(double x_inp,double y_inp,double z_inp) {
 	x = x_inp;
 	y = y_inp;
 	z = z_inp;
-	UpdateThetaPhi();
+  angles_need_updating = true; 
 } //Constructor Vector(double,double,double)
 Vector::Vector(double* xarray) {
 	x=xarray[0];
 	y=xarray[1];
 	z=xarray[2];
+  angles_need_updating = true; 
 }
 Vector::Vector(double theta_inp, double phi_inp) {
 	
@@ -33,14 +38,18 @@ Vector::Vector(double theta_inp, double phi_inp) {
 	y = sin(theta_inp) * sin(phi_inp);
 	z = cos(theta_inp);
 	
-	UpdateThetaPhi();
+  theta = theta_inp; 
+  phi = phi_inp; 
+  angles_need_updating = false;
 } //Constructor Vector(theta,phi)
 
 Vector::Vector() {
 	x = 0.;
 	y = 0.;
 	z = 1.;
-	UpdateThetaPhi();
+  theta = 0; 
+  phi = 0; 
+  angles_need_updating = false;
 } //Vector default constructor
 
 Vector Vector::Cross(const Vector &vec) const {
@@ -114,8 +123,8 @@ Vector Vector::ChangeCoord(const Vector &new_x_axis,const Vector &new_y_axis) co
 
 Vector Vector::ChangeCoord(const Vector &new_z_axis) const {
 	
-	Vector new_vector = this->RotateY(new_z_axis.theta);
-	new_vector = new_vector.RotateZ(new_z_axis.phi);
+	Vector new_vector = this->RotateY(new_z_axis.Theta());
+	new_vector = new_vector.RotateZ(new_z_axis.Phi());
 	
 	return new_vector;
 	
@@ -128,53 +137,15 @@ Vector Vector::Unit() const {
 void Vector::Print() const {
 	cout << x << " " << y << " " << z << "\n";
 }
-double Vector::GetX() const {
-	return x;
-} //Vector::GetX
-
-double Vector::GetY() const {
-	return y;
-} //Vector::GetY
-
-double Vector::GetZ() const {
-	return z;
-} //Vector::GetZ
-
 double Vector::Theta() const {
+        if (angles_need_updating) UpdateThetaPhi(); 
 	return theta;
 } //Vector::Theta
 
 double Vector::Phi() const {
-	return phi;
+  if (angles_need_updating) UpdateThetaPhi(); 
+  return phi;
 } //Vector::Phi
-
-void Vector::SetX(double inp) {
-	x = inp;
-	UpdateThetaPhi();
-} //Vector::SetX
-
-void Vector::SetY(double inp) {
-	y = inp;
-	UpdateThetaPhi();
-} //Vector::SetY
-
-void Vector::SetZ(double inp) {
-	z = inp;
-	UpdateThetaPhi();
-} //Vector::SetZ
-void Vector::SetXYZ(double inpx,double inpy,double inpz) {
-	x = inpx;
-	y = inpy;
-	z = inpz;
-	UpdateThetaPhi();
-} //Vector::SetXYZ
-
-void Vector::Reset(double x_inp, double y_inp, double z_inp) {
-	x = x_inp;
-	y = y_inp;
-	z = z_inp;
-	UpdateThetaPhi();
-} //Vector::Reset
 
 Vector Vector::RotateX(double angle) const {
 	double new_x = x;
@@ -220,20 +191,29 @@ Vector Vector::Rotate(const double angle,const Vector& axis) const {
 	return Vector(newx,newy,newz);
 } //Vector::Rotate
 
-void Vector::UpdateThetaPhi() {
+void Vector::UpdateThetaPhi() const {
 	//This is a private method that will calculate values of theta and phi from x,y,z coordinates,
 	//and store the results in the class variables.
 	//double transverse = hypot(x,y);
 	double transverse = sqrt(x*x+y*y);
 	
+#if defined(ANITA_UTIL_EXISTS) and defined(VECTORIZE)
+
+  Vec2d Y(transverse,y); 
+  Vec2d X(z,x); 
+  Vec2d answer = atan2(Y,X); 
+  theta = answer[0]; 
+  phi = answer[1]; 
+#else
 	// atan2 outputs in the range -pi to pi
 	theta = atan2(transverse,z);
-	
 	phi=atan2(y,x);
+#endif
 	
 	if (phi<0)
 		phi+=2*PI;
 	// phi is now from 0 to 2*pi wrt +x
+   angles_need_updating = false; 
 	
 } //UpdateThetaPhi
 Vector Vector::Zero() {
@@ -246,57 +226,27 @@ Vector Vector::Zero() {
 } // Zero
 
 
-double Vector::operator [](int i) const {
-	//code taken from ROOT's TVector3 class
-	switch(i) {
-		case 0:
-			return x;
-		case 1:
-			return y;
-		case 2:
-			return z;
-		default:
-			printf("Vector::operator[](i) has been given a bad index: %d.  Returning zero.",i);
-	} //end switch
-	
-	return 0.;
-} //operator[]
 
-//Overloaded operators - friends of Vector, not member functions.
 
-Vector operator +(const Vector& vector1, const Vector& vector2) {
-	return Vector(vector1.x + vector2.x , vector1.y + vector2.y , vector1.z + vector2.z);
-} //Vector overloaded operator +
 
-void operator +=(Vector& vector1, const Vector& vector2) {
-	vector1 = vector1 + vector2;
-} //Vector overloaded operator +=
 
-Vector operator -(const Vector& vector1, const Vector& vector2) {
-	return Vector(vector1.x - vector2.x , vector1.y - vector2.y , vector1.z - vector2.z);
-} //Vector overloaded operator -
-
-void operator -=(Vector& vector1, const Vector& vector2) {
-	vector1 = vector1 - vector2;
-} //Vector overloaded operator -=
-
-Vector operator -(const Vector& vec) {
-	return Vector(-vec.x,-vec.y,-vec.z);
-} //Vector overloaded operator - (negative)
-
-double operator *(const Vector& vector1, const Vector& vector2) {
-	return ((vector1.x * vector2.x) + (vector1.y * vector2.y) + (vector1.z * vector2.z));
-} //Vector overloaded operator * (dot product)
-
-Vector operator /(const Vector &v, const double& a) {
-	return Vector(v.x / a, v.y / a, v.z / a);
-} //Vector overloaded operator /
-
-Vector operator *(const double& a, const Vector& v) {
-	return Vector(a*v.x , a*v.y , a*v.z);
-} //Vector overloaded operator * (scalar multiplication)
 
 ostream& operator <<(ostream& outs, const Vector& vec) {
 	cout<<vec.x<<","<<vec.y<<","<<vec.z;
 	return outs;
 } //Vector overloaded operator <<
+
+
+Vector Vector::Orthogonal() const 
+{
+  //this is based on ROOT's implementation which might be based on Geant4's? 
+
+     Double_t xx = fabs(x); 
+     Double_t yy = fabs(y); 
+     Double_t zz = fabs(z); 
+     if (xx < yy) {
+        return xx < zz ? Vector(0,z,-y) : Vector(y,-x,0);
+     } else {
+        return yy < zz ? Vector(-z,0,x) : Vector(y,-x,0);
+     }
+}

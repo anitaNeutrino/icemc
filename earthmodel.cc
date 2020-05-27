@@ -218,7 +218,8 @@ double EarthModel::GetLon(double phi) {
 } //GetLon
 
 double EarthModel::GetDensity(double altitude, const Position earth_in,
-			      int& crust_entered // 1 or 0
+			      int& crust_entered, // 1 or 0
+            bool * inice
 			      ){
   
         Position where = earth_in;
@@ -237,6 +238,7 @@ double EarthModel::GetDensity(double altitude, const Position earth_in,
 	double local_icethickness = this->IceThickness(lon,lat);
 	double local_waterdepth = WaterDepth(lon,lat);
 
+  if (inice) *inice = false;
 	
 
 	if(altitude>surface_elevation+0.1){ // if it is above the surface, it's messed up
@@ -247,7 +249,10 @@ double EarthModel::GetDensity(double altitude, const Position earth_in,
 	  //cout <<"density is air! \n";
 	}
 	if (altitude<=surface_elevation+0.1 && altitude>(surface_elevation-local_icethickness)) // the 0.1 is just to take care of precision issues.   It could have been 0.01 or 0.001.
+        {
 		ddensity=icedensityarray[ilon][ilat]*1000;
+                if (inice) *inice = true;
+        }
 	  
 	else if (altitude<=(surface_elevation-local_icethickness) && altitude>(surface_elevation-local_icethickness-local_waterdepth))
 		ddensity=waterdensityarray[ilon][ilat]*1000;
@@ -275,9 +280,8 @@ double EarthModel::GetDensity(double altitude, const Position earth_in,
 int EarthModel::Getchord(Settings *settings1,
 			 double len_int_kgm2,
 			 const Position &earth_in, // place where neutrino entered the earth
-			 const Position &r_enterice,
-			 const Position &nuexitice,
-			 
+             double distance_in_ice, 
+             bool include_ice_absorption, 
 			 const Position &posnu, // position of the interaction
 			 int inu,
 			 double& chord, // chord length
@@ -433,7 +437,7 @@ int EarthModel::Getchord(Settings *settings1,
 	double L_ice=len_int_kgm2/Signal::RHOICE;
 	
 	if (settings1->UNBIASED_SELECTION)
-	    probability_tmp*=1.-exp(-1.*(r_enterice.Distance(nuexitice)/L_ice)); // probability it interacts in ice along its path
+	    probability_tmp*=1-exp(-1.*(distance_in_ice/L_ice)); // probability it interacts somewhere along its path (at all). We have already sampled exponentially along the chord, so want to multiply by chance of interacting at all! 
 	
 	double L=0;
 	
@@ -458,13 +462,15 @@ int EarthModel::Getchord(Settings *settings1,
 	while(altitude>MIN_ALTITUDE_CRUST && x<posnu.Distance(earth_in)) { // starting at earth entrance point, step toward interaction position until you've reached the interaction or you are below the crust.
 	    //    while(altitude>MIN_ALTITUDE_CRUST && x<dDistance(enterice,earth_in)) {
 	  
-	  ddensity = this->GetDensity(altitude,where,crust_entered);
+        bool inice; 
+	    ddensity = this->GetDensity(altitude,where,crust_entered,&inice);
 	 
 	    L=len_int_kgm2/ddensity; // get the interaction length for that density
-	    weight1_tmp*=exp(-step/L);  // adjust the weight accordingly
-	    
-	    
-	    total_kgm2+=ddensity*step; //increase column density accordingly
+      if (!inice || include_ice_absorption) 
+      {
+	      weight1_tmp*=exp(-step/L);  // adjust the weight accordingly
+        total_kgm2+=ddensity*step; //increase column density accordingly
+      }
 	    if (exp(-step/L) > 1)
 		cout<<"Oops! len_int_kgm2, ddensity, factor : "<<len_int_kgm2<<" , "<<ddensity<<" , "<<exp(-step/L)<<endl;
 	    x+=step; // distance you have stepped through the earth so far.
@@ -548,11 +554,16 @@ int EarthModel::Getchord(Settings *settings1,
 	x=0; // this keeps track of how far you've stepped along the neutrino path, starting at the crust entrance.
 	while(x<=distance_remaining) { // keep going until you have reached the interaction position
 	    
-	  ddensity=this->GetDensity(altitude,where,crust_entered);
+    bool inice; 
+	  ddensity=this->GetDensity(altitude,where,crust_entered,&inice);
 	  
 	    L=len_int_kgm2/ddensity; // get the interaction length for that density
-	    weight1_tmp*=exp(-step/L);  // adjust the weight accordingly
-	    total_kgm2 += step*ddensity;
+
+      if (!inice || include_ice_absorption)
+      {
+        weight1_tmp*=exp(-step/L);  // adjust the weight accordingly
+        total_kgm2 += step*ddensity;
+      }
 	    
 	    if (exp(-step/L) > 1)
 		cout<<"Oops3! len_int_kgm2, ddensity, step, factor : "<<len_int_kgm2<<" , "<<ddensity<<" , "<<step<<" , "<<exp(-step/L)<<endl;
@@ -1063,3 +1074,91 @@ Position EarthModel::WhereDoesItEnter(const Position &posnu,const Vector &nnu) {
     
     return r_in;
 } //method WhereDoesItEnter
+
+
+int EarthModel::GeoidIntersection(Vector x0,Vector p0, Position * int1, Position * int2, double extra_height, double * ds) const
+{
+
+
+  /** The reference ellipsoid is 
+   *
+   *
+   *   x^2        y^2        z^2
+   *  ----    +  -----  +   -----  = 1
+   *  R^2_eq     R^2_eq +   R^2_po
+   *
+   *  or
+   *   x^2    +     y^2   +     r  z^2   -  R^2_eq= 0
+   *
+   *
+   *   where r is the ratio of squares of the equatorial to polar radius. 
+   *  
+   *  we have \vec{x} = \vec{x0} + \vec{p0} d 
+   *
+   *
+   *  or
+   *
+   *   x = x0_x + p0_x * d 
+   *   y = x0_y + p0_y * d 
+   *   z = x0_z + p0_z* d 
+   *   
+   *   so we must solve the quadratic in terms of d 
+   *
+   *
+   */
+
+  double POLAR_RADIUS = 6356752.31425 + extra_height; 
+  double EQUATORIAL_RADIUS = 6378137.0 + extra_height; 
+  double EQ2 = EQUATORIAL_RADIUS*EQUATORIAL_RADIUS; 
+  double PO2 = POLAR_RADIUS*POLAR_RADIUS; 
+  double RAT = EQ2/PO2; 
+
+
+
+  //d^2 terms
+  double a = p0.X()*p0.X() + p0.Y()*p0.Y() + p0.Z()*p0.Z() *RAT; 
+  
+  //d terms
+  double b = 2 * ( p0.X()*x0.X() + x0.Y()*p0.Y() + x0.Z()*p0.Z() *RAT) ; 
+
+  //constant terms
+  double c = -EQ2 + x0.X()*x0.X() + x0.Y()*x0.Y() + x0.Z()*x0.Z() *RAT; 
+
+  //check discriminant
+  double discr = b*b-4*a*c; 
+
+  //no solution
+  if (discr < 0) 
+  {
+    return 0; 
+  }
+
+  discr = sqrt(discr);
+
+  double d0= (-b + discr)/(2*a); 
+  double d1= (-b - discr)/(2*a); 
+  if (ds) 
+  {
+    ds[0] = d0; 
+    ds[1] = d1; 
+  }
+
+  if (int1)
+  {
+    int1->SetXYZ(
+        x0.X() + d0 *p0.X(), 
+        x0.Y() + d0 *p0.Y(), 
+        x0.Z() + d0 *p0.Z() );
+
+  }
+  if (int2)
+  {
+    int2->SetXYZ(
+        x0.X() + d1 *p0.X(), 
+        x0.Y() + d1 *p0.Y(), 
+        x0.Z() + d1 *p0.Z() );
+
+  }
+
+  return discr == 0 ? 1 : 2; 
+}
