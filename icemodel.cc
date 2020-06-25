@@ -1341,7 +1341,7 @@ void IceModel::WaterENtoLonLat(int e, int n, double& lon, double& lat) {
 
 void IceModel::GetMAXHORIZON(Balloon *bn1) {
     
-    double altitude_inmeters=bn1->BN_ALTITUDE*12.*CMINCH/100.;
+    double altitude_inmeters=bn1->BN_ALTITUDE;
     if (bn1->BN_ALTITUDE==0.)
 	bn1->MAXHORIZON=8.E5; // if it is a standard flight then use a horizon of 800 km
     else
@@ -1439,8 +1439,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 	    phi_bn_temp*=RADDEG;// turn it into radians
 	    
 	    
-	    altitude_bn=bn1->altitude_bn_anitalite[i*bn1->REDUCEBALLOONPOSITIONS]*12.*CMINCH/100.; // get the altitude for this balloon posistion
-	    //altitude_bn=altitude_bn_anitalite[i*100]*12.*CMINCH/100.; // for anita, altitude in is meters
+	    altitude_bn=bn1->altitude_bn_anitalite[i*bn1->REDUCEBALLOONPOSITIONS]*12.*CMINCH/100.; // get the altitude for this balloon posistion (ANITA-lite had values in feet)
 	    
 	} // end if anita-lite
 	

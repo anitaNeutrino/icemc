@@ -96,9 +96,9 @@ void Balloon::SetDefaultBalloonPosition(IceModel *antarctica1) { // position of 
   r_bn = Position(theta_bn,phi_bn); // direction of balloon- right now this is a unit vector
     
   if (BN_ALTITUDE==0) // if the altitude isn't set in the input file
-    altitude_bn=120000*12.*CMINCH/100.; // 120000 ft.=36.6 m
+    altitude_bn=37000.; // 37000 m.
   else
-    altitude_bn=BN_ALTITUDE*12.*CMINCH/100.; // converts the altitude in the input file to meters
+    altitude_bn=BN_ALTITUDE; // altitude in meters
     
   surface_under_balloon = antarctica1->Surface(r_bn); // distance between center of earth and surface under balloon
     
@@ -330,7 +330,7 @@ void Balloon::PickBalloonPosition(Vector straightup,IceModel *antarctica1,Settin
   //cout << "r_bn is ";
   //r_bn.Print();
   if (BN_ALTITUDE!=0)
-    altitude_bn=BN_ALTITUDE*12.*CMINCH/100.; // set the altitude of the balloon to be what you pick.  This isn't in time for CreateHorizons though!
+    altitude_bn=BN_ALTITUDE; // set the altitude of the balloon to be what you pick.  This isn't in time for CreateHorizons though!
   //cout << "altitude_bn is " << altitude_bn << "\n";
   surface_under_balloon = antarctica1->Surface(r_bn);
   //cout << "surface_under_balloon is " << surface_under_balloon << "\n";
@@ -520,7 +520,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
 		
 		
     if (WHICHPATH==2)
-      altitude_bn=altitude*12.*CMINCH/100.;
+      altitude_bn=altitude*12.*CMINCH/100.;  // ANITA-lite flight input is in feet 
     else if (WHICHPATH==6 || WHICHPATH==7 || WHICHPATH==8 || WHICHPATH==9)
       altitude_bn=altitude; // get the altitude of the balloon in the right units
 		
@@ -555,7 +555,7 @@ void Balloon::PickBalloonPosition(IceModel *antarctica1,Settings *settings1,int 
     phi_bn=1.*RADDEG; // 1deg
     r_bn=Position(theta_bn,phi_bn); // sets r_bn
     if (BN_ALTITUDE!=0)
-      altitude_bn=BN_ALTITUDE*12.*CMINCH/100.; // set the altitude of the balloon to be what you pick.  This isn't in time for CreateHorizons though!
+      altitude_bn=BN_ALTITUDE; // set the altitude of the balloon to be what you pick.  This isn't in time for CreateHorizons though!
     surface_under_balloon = antarctica1->Surface(r_bn);
     r_bn_shadow = surface_under_balloon * r_bn.Unit();
     //    r_bn = (antarctica->Geoid(r_bn)+altitude_bn) * r_bn.Unit();
@@ -1018,7 +1018,7 @@ void Balloon::GetSlacPositions(Anita *anita1) {
     slacpositions[i]=Vector(slacpositions[i].GetX()*CMINCH/100.,
 			    slacpositions[i].GetY()*CMINCH/100.,
 			    slacpositions[i].GetZ()*CMINCH/100.);// inches to meters
-    slacpositions[i].SetY(slacpositions[i].GetY()-BN_ALTITUDE*12.*CMINCH/100.-0.5584-anita1->LAYER_VPOSITION[2]+0.4); // subtract balloon altitude, add depth of beam relative to surface.  Use 0.4 m for the height of an antenna.
+    slacpositions[i].SetY(slacpositions[i].GetY()-BN_ALTITUDE-0.5584-anita1->LAYER_VPOSITION[2]+0.4); // subtract balloon altitude, add depth of beam relative to surface.  Use 0.4 m for the height of an antenna.
 		
   }
     

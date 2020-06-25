@@ -744,8 +744,8 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
     foutput << "SLOPEY=0" << std::endl;
     BORESIGHTS=1; // loop over boresights
     foutput << "BORESIGHTS=1" << std::endl;
-    BN_ALTITUDE=4.22/0.3; // balloon altitude in ft.!!
-    foutput << "BN_ALTITUDE=4.22/0.3" << std::endl;
+    BN_ALTITUDE=(4.22/0.3)*12.*CMINCH/100.; // balloon altitude in ft. converted to meters
+    foutput << "BN_ALTITUDE=4.22/0.3 ft" << std::endl;
     RANDOMIZE_BN_ORIENTATION=0; // don't randomize the balloon orientation
     foutput << "RANDOMIZE_BN_ORIENTATION=0" << std::endl;
     SKIPCUTS=1; // don't make chance in hell cuts
