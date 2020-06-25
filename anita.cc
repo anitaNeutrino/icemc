@@ -4231,7 +4231,8 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
   deltaT = 1./(2.6*16.);
 
   // Additional norm constant?
-  double norm = TMath::Power(10., +6./20.);
+  //  double norm = TMath::Power(10., +6./20.);
+  double norm = 100.; // LC: 2019 Dec 11 From John Russels studies, additional factor of 54.4. 54.4*TMath::Power(10., +6./20.)~100
 
   for(int ipol=0; ipol<=1; ipol++) {
     for(int iring = 0; iring<=2; iring++){
