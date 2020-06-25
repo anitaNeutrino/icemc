@@ -125,11 +125,51 @@ SourceModel * SourceModel::getSourceModel(const char * key, SourceModel::Restric
           )) ; 
      }
 
-     else if (stripped == "M77") 
+     else if (stripped.BeginsWith("M77")) 
      {
-       m->addSource(new Source("M77", 2 + 42./60 + 40.771/3600, -47.84/3600, new ConstantExponentialSourceFlux(m77_index, txs_flux, txs_E0))); //flux and E0 don't matter 
+
+       double index = m77_index; 
+       const char * index_string = strcasestr(stripped.Data(),"INDEX="); 
+       if (index_string)
+       {
+         sscanf(index_string,"HOURS=%lf%*s", &index); 
+
+
+       }
+       m->addSource(new Source("M77", 2 + 42./60 + 40.771/3600, -47.84/3600, new ConstantExponentialSourceFlux(index, txs_flux, txs_E0))); //flux and E0 don't matter 
      }
-    
+
+    //A3 SN
+    else if(stripped=="A3SN")
+    {
+      TFile f("./supernovae/data/supernovaA3.root"); 
+      TTree *tree = (TTree*) f.Get("sn");
+      std::string *objName = new std::string;
+      std::string *objType = new std::string;
+      int tdiscovery;
+      int texplode; 
+      double ra, dec; 
+
+      tree->SetBranchAddress("ra",&ra); 
+      tree->SetBranchAddress("dec",&dec); 
+      tree->SetBranchAddress("tdiscovery",&tdiscovery); 
+      tree->SetBranchAddress("texplode",&texplode); 
+      tree->SetBranchAddress("name",&objName); 
+      tree->SetBranchAddress("type",&objType); 
+      int two_weeks = 24*3600*14; 
+
+      for (int i = 0; i < tree->GetEntries(); i++) 
+      {
+        tree->GetEntry(i); 
+        if( abs(dec)>r.maxDec){continue;}
+        m->addSource(new Source(objName->c_str(), ra, dec,
+         new TimeWindowedExponentialSourceFlux(texplode, texplode+two_weeks, 2,txs_flux,txs_E0) // Just use these params as the first step
+       )) ; 
+      }
+
+      delete objName; 
+      delete objType; 
+    }
     // Supernovae
     else if(stripped=="SN")
     {        
@@ -351,12 +391,22 @@ SourceModel * SourceModel::getSourceModel(const char * key, SourceModel::Restric
 	    energyCutoff = maxShockNuE;
 
 	  }
+
+        double afterglow_hrs = 1; 
+
+        const char * hours_string = strcasestr(stripped.Data(),"HOURS="); 
+        if (hours_string)
+        {
+          sscanf(hours_string, "HOURS=%lf%*s", &afterglow_hrs); 
+          printf("AFTERGLOW HOURS is %f\n", afterglow_hrs); 
+        }
+
       
         if (strcasestr(stripped.Data(),"AFTERGLOW") )
         {
           m->addSource(new Source(objName->c_str(), RA/=15., dec,
                   new TimeWindowedExponentialSourceFlux(unixTriggerTime,
-                                                                      unixTriggerTime + 3600,1.5,
+                                                                      unixTriggerTime + 3600*afterglow_hrs,1.5,
                                                                       fluence,1e9, energyCutoff) 
                 ));
          
@@ -372,14 +422,14 @@ SourceModel * SourceModel::getSourceModel(const char * key, SourceModel::Restric
 
         }
 
-        // conservative case... 5 minutes before, one hour after, use afterglow flux. 
+        // conservative case... 5 minutes before, one hour after, use afterglow flux up to 1e10 GeV. 
         else
         {
           m->addSource(new Source(objName->c_str(), RA/=15., dec,
               //fireball model for E > 1e18 eV, I think
                                 new TimeWindowedExponentialSourceFlux(unixTriggerTime-300,
-                                                                      unixTriggerTime + 3600,1.5,
-                                                                      fluence,1e9, energyCutoff) 
+                                                                      unixTriggerTime + 3600*afterglow_hrs,1.5,
+                                                                      fluence,1e9, 1e10) 
                                 )) ; 
 
         }
@@ -654,7 +704,7 @@ void SourceModel::setUpWeights(double t0, double t1, double minE, double maxE, i
     double sumFlux = 0;
     for (unsigned j = 0; j < sources.size(); j++) 
     {
-      double dFlux =  minE == maxE ? sources[j]->getFlux()->getFlux(minE, t)/N : sources[j]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t); 
+      double dFlux =  minE == maxE ? sources[j]->getFlux()->getFlux(minE, t) : sources[j]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t); 
       sumFlux += dFlux; 
 
       average_flux += dFlux/N; 

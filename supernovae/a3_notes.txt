@@ -1,0 +1,58 @@
+SN 2015W 
+CBET 4168
+Jan 12, 10 days after, according to arxiv 1603.08953 
+
+
+
+SN2015E
+CBET 4053
+discovered Jan13, wasn't there Dec 23.  type ia, no max available, so use Jan13? (can't be that wrong)? 
+
+SN2015D 
+CBET 4051
+nothing 12/25/14.
+Thought to be 2 weeks old 1/20. 
+
+
+
+SN2015C
+CBET 4049 
+1-2 months after explosion. Ignore. 
+
+
+SN2015B
+CBET4046 
+Discovered Jan 5, max light probably Jan 4
+
+
+SN2015A
+CBET4045
+sn1a, discovery 1/9, max light is probably 1/16. So use 1/2-1/16 
+
+
+
+SN2014dz
+CBET 4052
+sn1A, discovery 12/20, 9 days past max on 12/31.6/2014
+verdict: change end-time to  12/23
+
+
+SN2014dy
+CBET 4050 
+Discovery time: 12/19/2014, around maximum light on 12/23.5/24
+verdict: change end-time to 12/24
+Sn 1A
+
+
+
+
+SN2014dx
+CBET 4048
+Discovery time: 12/25/2014 
+ Based on CBET, on 12/27, 2-3 weeks past maximum light, implies maximum light was before flight started
+ verdict: kick out 
+
+
+
+  
+
