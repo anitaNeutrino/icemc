@@ -1405,7 +1405,14 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
     int e_coord = 0;
     int n_coord = 0;
     
-    sprintf(horizon_file,"bedmap_horizons_whichpath%i_weights%i.dat",bn1->WHICHPATH,settings1->USEPOSITIONWEIGHTS);
+    if (bn1->WHICHPATH==0) 
+    {
+      sprintf(horizon_file,"bedmap_horizons_fixed_%g_%g_%g.dat",bn1->BN_LATITUDE, bn1->BN_LATITUDE, bn1->BN_ALTITUDE); 
+    }
+    else
+    {
+      sprintf(horizon_file,"bedmap_horizons_whichpath%i_weights%i.dat",bn1->WHICHPATH,settings1->USEPOSITIONWEIGHTS);
+    }
     
     if (ice_model==1 && !settings1->WRITE_FILE) { // for bedmap model, need to be able to read file
 	if(!(bedmap_horizons = fopen(horizon_file, "r"))) {
@@ -1615,6 +1622,8 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 		fprintf(bedmap_horizons,"%f\n",volume);
 	    } //if
 	    
+            fclose(bedmap_horizons); 
+
 	} //end if (ice_model==1) && settings1->WRITE_FILE
 	
 	if (!volume_found) {
