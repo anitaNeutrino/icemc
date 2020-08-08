@@ -238,7 +238,7 @@ void Anita::SetNoise(Settings *settings1,Balloon *bn1,IceModel *antarctica) {
   else { // if not anita 1
     for (int il=0;il<NLAYERS_MAX;il++) {
       for (int ibw=0;ibw<5;ibw++) {
-	bwslice_vnoise[il][ibw]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,antarctica->SurfaceAboveGeoid(bn1->latitude,bn1->longitude),THETA_ZENITH[il],bwslice_max[ibw]-bwslice_min[ibw],0.);
+	bwslice_vnoise[il][ibw]=ChanTrigger::GetNoise(settings1,bn1->altitude_bn,antarctica->SurfaceAboveGeoid(bn1->phi_bn,bn1->theta_bn),THETA_ZENITH[il],bwslice_max[ibw]-bwslice_min[ibw],0.);
       }
     }
   }
