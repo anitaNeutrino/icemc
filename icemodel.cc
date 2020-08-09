@@ -1487,7 +1487,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
     double phi=0;
     int volume_found=0;
     char horizon_file[80];
-    FILE *bedmap_horizons = new FILE();
+    FILE *bedmap_horizons = 0;
     char line[200];
     int e_coord = 0;
     int n_coord = 0;
