@@ -128,6 +128,7 @@ double eventsfound_weightgt01=0; // summing weights > 0.1
 double eventsfound_belowhorizon=0; // how many are below horizon
 double eventsfound=0;   // how many events found
 double eventsfound_prob=0;   // how many events found,  probabilities
+double eventsfound_divided_by_lint = 0; 
 double sum[3]; // sum of weight for events found for 3 flavors
 double sum_prob[3]; // sum of weight for events found for 3 flavors
 // These numbers are from Feldman and Cousins wonderful paper:  physics/9711021
@@ -146,6 +147,7 @@ double km3sr = 0;                      // total km3sr
 double km3sr_e=0;                       // to calculate km3sr for electrons
 double km3sr_mu=0;                       // to calculate km3sr for muons
 double km3sr_tau=0;                       // to calculate km3sr for taus
+double km2sr = 0;                        // aperture km**2-sr
 double error_plus=0;          // keeping track of asymmetric error bars
 double error_e_plus=0;
 double error_mu_plus=0;
@@ -1455,7 +1457,7 @@ int main(int argc,  char **argv) {
   // summaryAnitaTree->Branch("rho_h20",        &(sig1->RHOH20),          "rho_water/D");
   
   summaryAnitaTree->Branch("effVol_nu",    &km3sr,                  "effVol_nu/D" );
-//  summaryAnitaTree->Branch("effArea_nu",   &km2sr,                  "effArea_nu/D");
+  summaryAnitaTree->Branch("effArea_nu",   &km2sr,                  "effArea_nu/D");
   
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
@@ -3608,6 +3610,7 @@ int main(int argc,  char **argv) {
 
               eventsfound+=weight; // counting events that pass,  weighted.
               eventsfound_prob+=weight_prob; // counting events that pass,  probabilities.
+              eventsfound_divided_by_lint+=weight/len_int; 
 
               if (NNU_per_source.size())
               {
@@ -3865,6 +3868,7 @@ int main(int argc,  char **argv) {
             truthEvPtr->phaseWeight       = 1./interaction1->dnutries;
             truthEvPtr->timeWeight       = time_weight;
             truthEvPtr->sourceTimeWeight       = src_time_weight;
+            truthEvPtr->l_int = len_int; 
 	    truthEvPtr->tuffIndex = (short)anita1->tuffIndex;
 	    
             // for passed neutrinos:
@@ -4419,7 +4423,6 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   fthresholds->Close();
 
   //  double ses;                          // single-event sensitivity
-  double km2sr;                        // aperture km**2-sr
 
   foutput << "\n";
 
@@ -4428,6 +4431,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   foutput << "Number of unweighted direct,  reflected that pass is: " << count1->npass[0] << "\t" << count1->npass[1] << "\n";
   foutput << "Number of (weighted) neutrinos that pass is: " << eventsfound << "\n";
   foutput << "Number of (weighted) neutrinos that pass,  multiplied by prob. of interacting in the ice,  is: " << eventsfound_prob << "\n";
+  foutput << "Number of (weighted) neutrinos that pass,  divided by lint  is: " << eventsfound_divided_by_lint << "\n";
   foutput << "Number of weighted direct,  reflected that pass is: " << allcuts_weighted[0] << "\t" << allcuts_weighted[1] << "\n";
   foutput << "Number of (weighted) neutrinos that pass (with weight>0.001) is: " << eventsfound_weightgt01 << "\n";
   foutput << "Number of (weighted) neutrinos that only traverse the crust is " << eventsfound_crust << " -> " << eventsfound_crust/eventsfound*100 << "%\n\n";
@@ -4437,6 +4441,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   
   cout << "Number of (weighted) neutrinos that pass (with weight>0.001) is: " << eventsfound_weightgt01 << "\n";
   cout << "Number of (weighted) neutrinos that pass,  multiplied by prob. of interacting in the ice,  is: " << eventsfound_prob << "\n";
+  cout << "Number of (weighted) neutrinos that pass,  divided by lint  is: " << eventsfound_divided_by_lint << "\n";
   cout << "Number of (weighted) neutrinos that only traverse the crust is " << eventsfound_crust << " -> " << eventsfound_crust/eventsfound*100 << "%\n\n";
   cout << "Number of (weighted) neutrinos that pass only VPOL trigger is: " << allcuts_weighted_polarization[0] << "\n";
   cout << "Number of (weighted) neutrinos that pass only HPOL trigger is: " << allcuts_weighted_polarization[1] << "\n";
@@ -4549,6 +4554,8 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   if (NNU != 0 && nevents!=0) {
     km3sr=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr*nevents/(double)NNU/settings1->SIGMA_FACTOR;
 
+    km2sr = volume*pow(1.e-3,3)*eventsfound_divided_by_lint*sr/double(NNU)/settings1->SIGMA_FACTOR; 
+
     cout << nevents << " events passed out of " << NNU << "\n";
 
     error_plus=volume*pow(1.E-3, 3)*sig1->RHOMEDIUM/sig1->RHOH20*sr*error_plus/(double)NNU/settings1->SIGMA_FACTOR;
@@ -4609,11 +4616,12 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
       double len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000);
       cout << "Interaction length is " << len_int << " km\n\n";
       foutput << "Interaction length is " << len_int << "\n";
-      km2sr=km3sr/len_int;
-      foutput << "Total area x steradians using km3sr/len_int is \t\t\t\t" << km2sr << " km^2 str\n\n";
+      double mean_km2sr=km3sr/len_int;
+      foutput << "Total area x steradians using km3sr/ CClen_int is \t\t\t\t" << mean_km2sr << " km^2 str\n\n";
+      foutput << "Total area x steradians using sum(dkm3sr/lint) is \t\t\t\t" <<km2sr << " km^2 str\n\n";
       cout << "Total area x steradians is \t\t" << km2sr << " km^2 str\n\n";
-      km2sr=ice_area/(1.E6)*PI*eventsfound_prob/(double)NNU;
-      foutput << "Total area x steradians using 4*PI*R_EARTH^2*eff. is \t" << km2sr << " km^2 str\n\n";
+      double alt_km2sr=ice_area/(1.E6)*PI*eventsfound_prob/(double)NNU;
+      foutput << "Total area x steradians using 4*PI*R_EARTH^2*eff. is \t" << alt_km2sr << " km^2 str\n\n";
       foutput << "These are not the same because we are not throwing all directions on all points of the surface.  Believe the first one as an approximation,  we are working on this for high cross sections.\n";
       // ses=(pnu/1.E9)/(km2sr*3.16E7);
     }//end if IsMonoenergetic
