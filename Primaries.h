@@ -166,6 +166,7 @@ public:
 
     static constexpr int kcc=0;
     static constexpr int knc=1;
+    static constexpr int ktotal=2;
 
     double banana_phi_obs;
     Vector banana_obs; //!<Vector from the neutrino interaction to the observation point

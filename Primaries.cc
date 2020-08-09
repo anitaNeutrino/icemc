@@ -169,9 +169,9 @@ int Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *
       cout<<"nu_nubar is not defined correctly!\n";
       return 0;
     }
-    if (currentint!=Interaction::kcc && currentint!=Interaction::knc){//default "cc"
+    if (currentint!=Interaction::kcc && currentint!=Interaction::knc && currentint!=Interaction::ktotal){//default "cc"
       cout<<"Current is not cc or nc!\n";
-      return Interaction::kcc;
+      return 0; 
     }
     
     if(settings1->SIGMAPARAM==0){ // Reno
@@ -182,7 +182,15 @@ int Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *
     else if (settings1->SIGMAPARAM==1) {//Connolly et al.
       double pnuGeV=pnu/1.E9;//Convert eV to GeV.
       double epsilon=log10(pnuGeV);
-      sigma=settings1->SIGMA_FACTOR*(m_fsigma[nu_nubar][currentint]->Eval(epsilon))/1.E4;//convert cm to meters. multiply by (1m^2/10^4 cm^2).
+      if (currentint!= Interaction::ktotal) 
+      {
+        sigma=settings1->SIGMA_FACTOR*(m_fsigma[nu_nubar][currentint]->Eval(epsilon))/1.E4;//convert cm to meters. multiply by (1m^2/10^4 cm^2).
+      }
+      else
+      {
+        sigma=settings1->SIGMA_FACTOR*( m_fsigma[nu_nubar][Interaction::knc]->Eval(epsilon) + m_fsigma[nu_nubar][Interaction::kcc]->Eval(epsilon))/1.E4; //cm-> meter
+
+      }
       
       if(m_hsigma->GetEntries()<2000){
         m_hsigma->Fill(epsilon, log10(sigma));
