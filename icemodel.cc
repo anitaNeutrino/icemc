@@ -1709,7 +1709,6 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 		fprintf(bedmap_horizons,"%f\n",volume);
 	    } //if
 	    
-            fclose(bedmap_horizons); 
 
 	} //end if (ice_model==1) && settings1->WRITE_FILE
 	
@@ -1720,6 +1719,7 @@ void IceModel::CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,d
 
     } //end loop over balloon positions
     
+    fclose(bedmap_horizons); 
     // finding average volume in horizon over all balloon positions.
     volume_inhorizon_average=0;
     
