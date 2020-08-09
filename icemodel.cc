@@ -372,50 +372,137 @@ Position IceModel::PickInteractionLocation(int ibnposition, Settings *settings1,
 
 
 
+static int inu = 0; 
 
+const int PICK_RANDOM_SEGMENT = 1; 
 static void sampleLocation( double len_int_kgm2, 
                            std::vector<std::pair<double,double> > & ice_intersections, 
-                           Interaction *  interaction1, const Vector & x,  TRandom * rng ) 
+                           Interaction *  interaction1, const Vector & x,  TRandom * rng, IceModel * model ) 
 
 {
-    std::vector<double> cumulative_dists(ice_intersections.size()); 
+
+  //bah, this is dumb. But we don't want to have to call Getchord twice for the segments. 
+    std::vector<double> interaction_weights(ice_intersections.size()); 
+    std::vector<double> absorption_weights(ice_intersections.size()); 
+    double cumulative_prob = 0; 
+    std::vector<double> lengths(ice_intersections.size()); 
+    std::vector<double> cumulative_probs(ice_intersections.size()); 
+    std::vector<double> chords(ice_intersections.size()); 
+    std::vector<double> nearthlayers(ice_intersections.size()); 
+    std::vector<double> total_kgm2(ice_intersections.size()); 
+    std::vector<int> crust_entered(ice_intersections.size()); 
+    std::vector<int> mantle_entered(ice_intersections.size()); 
+    std::vector<int> core_entered(ice_intersections.size()); 
+    std::vector<Vector> enterices; 
+    std::vector<Vector> exitices; 
+
+
+    //we need a point on the trajectory for this (doesn't have to be the final location!) Use halfway within the first ice intersection as trial point. 
+   
+    interaction1->r_in = model->WhereDoesItEnter(x + 0.5 * (ice_intersections[0].second + ice_intersections[0].first) * interaction1->nnu,  interaction1->nnu);
+
+	  double L_ice=len_int_kgm2/Signal::RHOICE;
     interaction1->pathlength_inice = 0;
+
+    // we need to find the relative probability of having an interaction in each ice segment. 
+    // use the probability of interacting in the ice segment (interaction weight) multiplied by the probability of not having absorbed prior to do this 
+    // since these are calculated by Getchord, call Getchord once for each ice segment, using the ice entrance point. 
+    // Save all the values so that they can be set when the ice interaction point is selected. 
     for (unsigned i = 0; i < ice_intersections.size(); i++) 
     {
-      double this_distance = ice_intersections[i].second - ice_intersections[i].first; 
-      interaction1->pathlength_inice += this_distance;
-      cumulative_dists[i] = interaction1->pathlength_inice; 
+      double this_length = ice_intersections[i].second - ice_intersections[i].first; 
+      lengths[i] = this_length; 
+
+      //get absorption weight to enter point
+      enterices.push_back(x +  ice_intersections[i].first * interaction1->nnu);
+      exitices.push_back( x +  ice_intersections[i].second * interaction1->nnu);
+ 
+
+  
+      model->Getchord(true, 
+                      len_int_kgm2, 
+                      interaction1->r_in, 
+                      this_length, true, //include absorption from OTHER ice. This ice shouldn't be included since using entrance point
+                      enterices[i], 
+                      inu, //may not be perfecly synchronized... for debug only 
+                      chords[i], 
+                      interaction_weights[i], 
+                      absorption_weights[i], 
+                      nearthlayers[i], 
+                      0, //TODO myair, not supported for point sources right now
+                      total_kgm2[i], crust_entered[i], mantle_entered[i], core_entered[i]); 
+
+
+      interaction1->pathlength_inice += this_length;
+
+      cumulative_prob += interaction_weights[i]; 
+      cumulative_probs[i] = cumulative_prob; 
     }
 
-    //let's exponentially attenuate within the ice (ignoring any gaps in ice... those will be covered in principle by the attenuation weight)
-
-    double distance = -1; 
-	  double L_ice=len_int_kgm2/Signal::RHOICE;
-    //If we have a very short path length in ice, it's ok to just assume it's uniform
-    if (interaction1->pathlength_inice / L_ice < 1e-3) 
+    int which = -1; 
+    if (PICK_RANDOM_SEGMENT)
     {
-       distance = rng->Rndm() * interaction1->pathlength_inice; 
+      which = rng->Integer(ice_intersections.size()); 
+    }
+    else 
+    {
+      //now select the ice we interact in 
+      double p = rng->Uniform(0, cumulative_prob); 
+      which = std::upper_bound(cumulative_probs.begin(), cumulative_probs.end(), p) - cumulative_probs.begin(); 
+    }
+
+    interaction1->r_enterice = enterices[which]; 
+    interaction1->nuexitice = exitices[which]; 
+    interaction1->total_kgm2 = total_kgm2[which];
+    interaction1->nearthlayers = nearthlayers[which];
+    interaction1->crust_entered = crust_entered[which];
+    interaction1->mantle_entered = mantle_entered[which];
+    interaction1->core_entered = core_entered[which];
+    interaction1->weight_nu = absorption_weights[which];
+    if (PICK_RANDOM_SEGMENT ) 
+    {
+      interaction1->weight_nu_prob = interaction_weights[which] * ice_intersections.size(); 
+
     }
     else
     {
-       distance = -log(rng->Uniform(exp(-interaction1->pathlength_inice/L_ice),1))*L_ice; 
+      interaction1->weight_nu_prob = cumulative_prob;
     }
     
 
-    //now figure out where that distance is 
+    //let's exponentially attenuate within the ice (ignoring any gaps in ice... those will be covered in principle by the attenuation weight)
+    double this_length = lengths[which]; 
+    double distance = 0; 
 
-    unsigned which = 0; 
-    for (which= 0; which < cumulative_dists.size(); which++) 
+    //If we have a very short path length in ice, it's ok to just assume it's uniform
+    if (this_length/ L_ice < 1e-3) 
     {
-      if (distance < cumulative_dists[which]) 
-        break;
+       distance = rng->Rndm() * this_length; 
     }
+    else
+    {
+       distance = -log(rng->Uniform(exp(-this_length/L_ice),1))*L_ice; 
+    }
+    
 
-    Vector enterice = x +  ice_intersections[which].first * interaction1->nnu;
-    Vector exitice = x +  ice_intersections[which].second * interaction1->nnu;
-    interaction1->posnu = enterice + (which == 0 ? distance : distance-cumulative_dists[which-1]) * interaction1->nnu; 
-    interaction1->nuexitice =  exitice;  // do we need to flip these? 
-    interaction1->r_enterice =  enterice; 
+
+
+    //finally assign the position
+   interaction1->posnu = enterices[which] + distance * interaction1->nnu; 
+   inu++; 
+
+
+#ifdef ICEMODEL_DEBUG_TREE
+   dbg->sum_weight_probs = cumulative_prob; 
+   for (unsigned i = 0; i < enterices.size(); i++) 
+   {
+     dbg->abs_weights.push_back(absorption_weights[i]); 
+     dbg->weight_probs.push_back(interaction_weights[i]); 
+     dbg->lengths.push_back(lengths[i]); 
+   }
+
+
+#endif
 }
 
 int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, const Position * balloon_position, 
@@ -512,13 +599,13 @@ int IceModel::PickUnbiasedPointSourceNearBalloon(Interaction * interaction1, con
     }
 //    printf("Hits the ice %d times!\n", n_intersections); 
 
-    sampleLocation(len_int_kgm2, ice_intersections, interaction1,int1, rng);
+    sampleLocation(len_int_kgm2, ice_intersections, interaction1,int1, rng, this);
 
 
 
 #ifdef ICEMODEL_DEBUG_TREE
-    dbg->exitice.SetXYZ(exitice.X(),exitice.Y(),exitice.Z()); 
-    dbg->enterice.SetXYZ(enterice.X(),enterice.Y(),enterice.Z()); 
+    dbg->exitice.SetXYZ(interaction1->nuexitice.X(),interaction1->nuexitice.Y(),interaction1->nuexitice.Z()); 
+    dbg->enterice.SetXYZ(interaction1->r_enterice.X(),interaction1->r_enterice.Y(),interaction1->r_enterice.Z()); 
     dbg->nupos.SetXYZ(interaction1->posnu.X(),interaction1->posnu.Y(),interaction1->posnu.Z()); 
 #endif
 
@@ -599,7 +686,7 @@ int IceModel::PickUnbiased(Interaction *interaction1, double len_int_kgm2, doubl
       return 0; 
     }
 
-    sampleLocation(len_int_kgm2, ice_intersections, interaction1,p0, rng);
+    sampleLocation(len_int_kgm2, ice_intersections, interaction1,p0, rng,this);
     
     
     if (interaction1->posnu.Mag()-Surface(interaction1->posnu)>0) {

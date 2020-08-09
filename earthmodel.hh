@@ -68,7 +68,7 @@ public:
   virtual double RockSurface(double lon,double lat) ;
   virtual double RockSurface(const Position& pos) ;
   double GetDensity(double altitude, const Position earth_in, int& crust_entered, bool * inice = 0);
-  int Getchord(Settings *settings1,
+  int Getchord(          bool unbiased_selection, 
 			 double len_int_kgm2,
 			 const Position &earth_in, // place where neutrino entered the earth
                          double distance_in_ice,

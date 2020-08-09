@@ -39,7 +39,6 @@ const double bedmap_c_bar = 7*pow(eccentricity,6)/120 + 81*pow(eccentricity,8)/1
 const double bedmap_d_bar = 4279*pow(eccentricity,8)/161280;
 const double bedmap_c_0 = (2*EarthModel::R_EARTH / sqrt(1-pow(eccentricity,2))) * pow(( (1-eccentricity) / (1+eccentricity) ),eccentricity/2);
 
-#ifdef ICEMODEL_DEBUG_TREE
 struct icemodel_debug
 {
   TVector3 balloon;
@@ -57,6 +56,10 @@ struct icemodel_debug
   TVector3 enterice; 
   TVector3 exitice; 
   TVector3 exitearth; 
+  std::vector<double> abs_weights; 
+  std::vector<double> weight_probs; 
+  std::vector<double> lengths; 
+  double sum_weight_probs; 
   double x,y; 
 
   void reset() 
@@ -71,6 +74,9 @@ struct icemodel_debug
     enterice.SetXYZ(0,0,0);
     exitice.SetXYZ(0,0,0);
     exitearth.SetXYZ(0,0,0);
+    abs_weights.clear(); 
+    weight_probs.clear(); 
+    lengths.clear(); 
     nintersect = 0;
     rightdir1 = false;
     rightdir2 = false;
@@ -78,9 +84,18 @@ struct icemodel_debug
     x = 0;
     y = 0; 
     leave_err = false; 
+    sum_weight_probs = 0; 
   }
+
+  icemodel_debug() 
+  {
+    reset(); 
+  }
+  virtual ~icemodel_debug() 
+  {; } 
+
+  ClassDef(icemodel_debug,1); 
 }; 
-#endif
 
 
 

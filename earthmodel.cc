@@ -277,7 +277,7 @@ double EarthModel::GetDensity(double altitude, const Position earth_in,
 
 
 
-int EarthModel::Getchord(Settings *settings1,
+int EarthModel::Getchord(bool unbiased_selection,
 			 double len_int_kgm2,
 			 const Position &earth_in, // place where neutrino entered the earth
              double distance_in_ice, 
@@ -436,8 +436,10 @@ int EarthModel::Getchord(Settings *settings1,
 	
 	double L_ice=len_int_kgm2/Signal::RHOICE;
 	
-	if (settings1->UNBIASED_SELECTION)
+	if (unbiased_selection)
+        {
 	    probability_tmp*=1-exp(-1.*(distance_in_ice/L_ice)); // probability it interacts somewhere along its path (at all). We have already sampled exponentially along the chord, so want to multiply by chance of interacting at all! 
+        }
 	
 	double L=0;
 	
