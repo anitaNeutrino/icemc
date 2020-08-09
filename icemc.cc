@@ -1840,7 +1840,7 @@ int main(int argc,  char **argv) {
       interaction1->weight_nu_prob=0;
       taus1->weight_tau_prob=0;
       
-      if (taumodes==1 && interaction1->nuflavor=="nutau" && interaction1->current=="cc")
+      if (taumodes==1 && interaction1->nuflavor()=="nutau" && interaction1->current()=="cc")
         tautrigger=1;//!< tau trigger sets the chance to create tau particle
       else
         tautrigger=0;
@@ -1982,28 +1982,28 @@ int main(int argc,  char **argv) {
       // intermediate counter
       count1->nraypointsup1[whichray]++;
 
-      sec1->GetTauDecay(interaction1->nuflavor, interaction1->current, taudecay,  emfrac_db,  hadfrac_db);
+      sec1->GetTauDecay(interaction1->nuflavor(), interaction1->current(), taudecay,  emfrac_db,  hadfrac_db);
 
       // pick elasticity (for now is done for neutrinos only)
-      elast_y=primary1->pickY(settings1, pnu, xsecParam_nutype, interaction1->currentint);
+      elast_y=primary1->pickY(settings1, pnu, thisNuType, interaction1->currentint);
       if (settings1->CONSTANTY==1) { // if we ask to make y a constant=0.2
         elast_y=0.2;
-        interaction1->nuflavor="nue";
-        interaction1->current="cc";
+        interaction1->nuflavorint=1; 
+        interaction1->currentint=Interaction::kcc; 
       }
       else if (settings1->CONSTANTY==2) 
       {
         if (settings1->SHOWERTYPE == 0) 
         {
           elast_y = 1; 
-          interaction1->nuflavor="nue";
-          interaction1->current="cc";  
+          interaction1->nuflavorint=1;
+          interaction1->currentint=Interaction::kcc;
         }
         else
         {
           elast_y = 0; 
-          interaction1->nuflavor="nue";
-          interaction1->current="cc";  
+          interaction1->nuflavorint=1;
+          interaction1->currentint=Interaction::kcc; 
         }
       }
       if (bn1->WHICHPATH==3)
@@ -2094,7 +2094,7 @@ int main(int argc,  char **argv) {
 
       // get fraction of shower that is electromagnetic.
       // pi^0's are counted as hadronic.
-      sec1->GetEMFrac(settings1, interaction1->nuflavor, interaction1->current, taudecay, elast_y, hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
+      sec1->GetEMFrac(settings1, interaction1->nuflavor(), interaction1->current(), taudecay, elast_y, hy, pnu, inu,emfrac, hadfrac, n_interactions, tauweighttrigger);
       havent_set_frac = false; 
 
 #ifdef ANITA3_EVENTREADER
@@ -2114,12 +2114,12 @@ int main(int argc,  char **argv) {
       vmmhz1m_visible = (emfrac+hadfrac)*vmmhz1m_max; //Stephen - Record actual V/m/Mhz for display
 
       // plots for debugging.
-      if (interaction1->nuflavor=="numu" && bn1->WHICHPATH != 3 && !settings1->ONLYFINAL && settings1->HIST==1 && fraction_sec_muons->GetEntries()<settings1->HIST_MAX_ENTRIES) {
+      if (interaction1->nuflavor()=="numu" && bn1->WHICHPATH != 3 && !settings1->ONLYFINAL && settings1->HIST==1 && fraction_sec_muons->GetEntries()<settings1->HIST_MAX_ENTRIES) {
         fraction_sec_muons->Fill(emfrac+hadfrac, weight);
         n_sec_muons->Fill((double)n_interactions);
       }
 
-      if (interaction1->nuflavor=="nutau" && bn1->WHICHPATH != 3 && !settings1->ONLYFINAL && settings1->HIST==1 && fraction_sec_taus->GetEntries()<settings1->HIST_MAX_ENTRIES) {
+      if (interaction1->nuflavor()=="nutau" && bn1->WHICHPATH != 3 && !settings1->ONLYFINAL && settings1->HIST==1 && fraction_sec_taus->GetEntries()<settings1->HIST_MAX_ENTRIES) {
         fraction_sec_taus->Fill(emfrac+hadfrac, weight);
         n_sec_taus->Fill((double)n_interactions);
       }
@@ -3021,9 +3021,9 @@ int main(int argc,  char **argv) {
           if (sig1->logscalefactor_taper>maxtaper)
             maxtaper=sig1->logscalefactor_taper;
 
-          if (interaction1->nuflavor=="nue")        pdgcode = 12;
-          else if (interaction1->nuflavor=="numu")  pdgcode = 14;
-          else if (interaction1->nuflavor=="nutau") pdgcode = 16;
+          if (interaction1->nuflavor()=="nue")        pdgcode = 12;
+          else if (interaction1->nuflavor()=="numu")  pdgcode = 14;
+          else if (interaction1->nuflavor()=="nutau") pdgcode = 16;
 
           if (settings1->HIST==1 && !settings1->ONLYFINAL && bn1->WHICHPATH != 3 && k==Anita::NFREQ/2 && tree18->GetEntries()<settings1->HIST_MAX_ENTRIES) {
 
@@ -3995,7 +3995,7 @@ int main(int argc,  char **argv) {
             times_core_entered_det+=core_entered;
 
             if (settings1->WRITEPOSFILE==1)
-              WriteNeutrinoInfo(interaction1->posnu, interaction1->nnu, bn1->r_bn, interaction1->altitude_int, interaction1->nuflavor, interaction1->current, elast_y, nu_out);
+              WriteNeutrinoInfo(interaction1->posnu, interaction1->nnu, bn1->r_bn, interaction1->altitude_int, interaction1->nuflavor(), interaction1->current(), elast_y, nu_out);
 
             // sample first 1000 events that pass to see the distribution of weights
             if (settings1->HIST && !settings1->ONLYFINAL && sampleweights->GetEntries()<settings1->HIST_MAX_ENTRIES) {
@@ -4033,18 +4033,18 @@ int main(int argc,  char **argv) {
             forbrian << interaction1->costheta_nutraject << " " << n_nutraject_ontheground.Phi() << " " << bn1->phi_bn << " " << logweight << "\n";
             // incrementing by flavor
             // also bin in weight for error calculation.
-            if (interaction1->nuflavor=="nue") {
+            if (interaction1->nuflavor()=="nue") {
               sum[0]+=weight;
               sum_prob[0]+=weight_prob;
               eventsfound_binned_e[index_weights]++;
             } //if
-            if (interaction1->nuflavor=="numu") {
+            if (interaction1->nuflavor()=="numu") {
               sum[1]+=weight;
               sum_prob[1]+=weight_prob;
               eventsfound_binned_mu[index_weights]++;
             } //if
             if(!sec1->secondbang || !sec1->interestedintaus) {
-              if (interaction1->nuflavor=="nutau") {
+              if (interaction1->nuflavor()=="nutau") {
                 sum[2]+=weight;
                 sum_prob[2]+=weight_prob;
                 eventsfound_binned_tau[index_weights]++;

@@ -122,6 +122,7 @@ public:
     
 //! Neutrino-nucleon cross-sections using model chosen
     int GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *settings1,int nu_nubar,int currentint);
+    int GetCurrent (double pnu, Settings * settings, int n_nubar); 
 
 
 
@@ -218,15 +219,15 @@ public:
     
     
     void  setNuFlavor(Primaries *primary1,Settings *settings1,int whichray,Counting *count1);
-    string GetCurrent();
-    void setCurrent();
     Position posnu;
     Position posnu_down;
-    string  nuflavor;                   //!< neutrino flavor
-    string  current;                    //!<  CC or NC?
     int nuflavorint;                //!< Added by Stephen for output purposes
     int currentint;                 //!< Ditto - Stephen
     
+    string current() { return currentint == kcc ? "cc" : "nc"; }
+    string nuflavor() { return nuflavorint == 1 ? "nue" : 
+                               nuflavorint == 2 ? "numu" :
+                               "nutau"; } 
     
     double surface_over_banana_nu;
     

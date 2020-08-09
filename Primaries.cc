@@ -156,6 +156,17 @@ Primaries::~Primaries(){//default deconstructor
 }//deconstructor
 
 
+
+int Primaries::GetCurrent(double pnu, Settings * settings, int nu_nubar) 
+{
+  double dummy; 
+  double total, cc; 
+  GetSigma(pnu,total,dummy, settings, nu_nubar, Interaction::ktotal );
+  GetSigma(pnu,cc,dummy, settings, nu_nubar, Interaction::kcc );
+  return getRNG(RNG_INTERACTION)->Uniform(0,1) < cc/total ? Interaction::kcc : Interaction::knc; 
+}
+
+
 int Primaries::GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *settings1,int nu_nubar,int currentint){
   // calculate cross section
   if (pnu<mine[settings1->SIGMAPARAM] || pnu>maxe[settings1->SIGMAPARAM]) {
@@ -253,16 +264,12 @@ Interaction::Interaction(string inttype,Primaries *primary1,Settings *settings1,
     nnu_banana = Vector(nu_banana_theta_angle + PI,nu_banana_phi_angle);
     nnu_banana = nnu_banana.ChangeCoord(nu_banana);
          
-    current = banana_current;
-
-    nuflavor = banana_flavor;
 
 
   }
   else {
-  setNuFlavor(primary1,settings1,whichray,count1);
-  setCurrent();
-  //    setnu_nubar(primary1);//same function for inttype "banna" or otherwise.
+    setNuFlavor(primary1,settings1,whichray,count1);
+    currentint=kcc; 
   }
 }
 
@@ -292,7 +299,7 @@ void Interaction::PickAnyDirection() {
 void  Interaction::setNuFlavor(Primaries *primary1,Settings *settings1,int whichray,Counting *counting1) {
   // pick the neutrino flavor,  type of tau decay when relevant,
   //  lpm energy.
-  nuflavor=primary1->GetNuFlavor();
+  string nuflavor=primary1->GetNuFlavor();
 
   if (settings1->MINRAY==whichray) {
     // only increment neutrino flavor on first ray so you don't count twice
@@ -306,6 +313,7 @@ void  Interaction::setNuFlavor(Primaries *primary1,Settings *settings1,int which
       
   if (settings1->FORSECKEL==1) // For making array of signal vs. freq, viewangle, just use muon neutrinos
     nuflavor="nue";
+
   if (nuflavor=="nue")  //For outputting to file
     nuflavorint=1;
   else if (nuflavor=="numu")
@@ -316,28 +324,6 @@ void  Interaction::setNuFlavor(Primaries *primary1,Settings *settings1,int which
     cout<<"nuflavor is "<<nuflavor<<"\n";
 }
 
-
-//! choose CC or NC: get from ratios in Ghandi etal paper, updated for the CTEQ6-DIS parton distribution functions (M.H. Reno, personal communication).  Need to add capability of using ratios from Connolly et al.
-string Interaction::GetCurrent() {
-  string current;
-  double rnd=getRNG(RNG_INTERACTION)->Rndm();
-  if (rnd<=0.6865254) // 10^18 eV - 10^21 eV (use this one for ANITA)
-//if (rnd<=0.6893498) // 10^17 eV - 10^20 eV (use this one for SalSA)
-    current="cc";
-  else
-    current="nc";  
-  return current;
-} //GetCurrent
-
-void  Interaction::setCurrent() {
-  // pick whether it is neutral current
-  // or charged current
-  current=this->GetCurrent();
-  if (current=="cc")   //For outputting to file
-    currentint=kcc;
-  else if(current=="nc")
-    currentint=knc;   
-}//setCurrent
 
 
 ///////////////// Y //////////////
