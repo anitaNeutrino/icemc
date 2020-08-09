@@ -303,6 +303,8 @@ void Settings::Initialize() {
   CUSTOM_RA = 0; // in decimal degrees
   CUSTOM_DEC = 0; // in decimal degrees
   CUSTOM_GAMMA = 2;
+
+  WRITE_WAVEFORMS=1; 
   
 }
 
@@ -329,6 +331,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Neutrino Point Source Max Distance", UNBIASED_PS_MAX_DISTANCE_KM,true);
   getSetting("Neutrino Point Source Ice Chord Step", UNBIASED_CHORD_STEP_M,true);
   getSetting("Write hists and trees", HIST);
+  getSetting("Write waveforms", WRITE_WAVEFORMS,1);
   getSetting("Write ray", FILLRAYTREES);
 
   getSetting("Only final tree", ONLYFINAL);

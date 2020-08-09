@@ -262,6 +262,7 @@ class Settings : public TObject {
   double CUTONWEIGHTPROBS;
   double DEC_CUT;
   int ALL_SKY_MAP;
+  int WRITE_WAVEFORMS; 
   
   // custom sources
   std::string CUSTOM_NAME;
