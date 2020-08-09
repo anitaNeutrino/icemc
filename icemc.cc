@@ -392,9 +392,6 @@ double rfexit_db_array[5][3];
 int times_crust_entered_det=0;  //Counter for total times each Earth layer is entered for detected neutrinos only
 int times_mantle_entered_det=0;
 int times_core_entered_det=0;
-int crust_entered=0;
-int mantle_entered=0;
-int core_entered=0;
 int neutrinos_passing_all_cuts=0;
 double sum_weights=0;
 //End verification plot block
@@ -2069,11 +2066,19 @@ int main(int argc,  char **argv) {
           DO_SKIP//bad stuff has happened.
         }
 
-        interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
+        if (!settings1->UNBIASED_SELECTION) 
+        {
+          interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
 
-        taus1->GetTauWeight(primary1,  settings1,  antarctica,  interaction1,  pnu,  1,  ptauf, crust_entered);
+        }
 
-        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in,  interaction1->pathlength_inice, settings1->UNBIASED_SELECTION == 0, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
+        taus1->GetTauWeight(primary1,  settings1,  antarctica,  interaction1,  pnu,  1,  ptauf, interaction1->crust_entered);
+
+        //the weight has already been calculated for unbiased selection
+        if (!settings1->UNBIASED_SELECTION) 
+        {
+          antarctica->Getchord(false, len_int_kgm2, interaction1->r_in,  interaction1->pathlength_inice, settings1->UNBIASED_SELECTION == 0, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, interaction1->nearthlayers, myair, interaction1->total_kgm2, interaction1->crust_entered,  interaction1->mantle_entered, interaction1->core_entered);
+        }
 
         nutauweight = interaction1->weight_nu_prob;
         tauweight = taus1->weight_tau_prob;
@@ -2294,10 +2299,10 @@ int main(int argc,  char **argv) {
       index_distance=(int)(bn1->r_bn.SurfaceDistance(interaction1->posnu, bn1->surface_under_balloon) / (700000./(double)NBINS_DISTANCE));
 
       // where the neutrino enters the earth
-      if (tautrigger==0){//did for cc-taus already,  do for all other particles
+      if (tautrigger==0 && !settings1->UNBIASED_SELECTION){//did for cc-taus and unbaised selection already,  do for all other particles
         interaction1->r_in = antarctica->WhereDoesItEnter(interaction1->posnu, interaction1->nnu);
-        antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->pathlength_inice, settings1->UNBIASED_SELECTION  ==0,  interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, 
-            interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered);
+        antarctica->Getchord(false, len_int_kgm2, interaction1->r_in, interaction1->pathlength_inice, settings1->UNBIASED_SELECTION  ==0,  interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, 
+            interaction1->weight_nu, interaction1->nearthlayers, myair, interaction1->total_kgm2, interaction1->crust_entered,  interaction1->mantle_entered, interaction1->core_entered);
         //cout << "interaction1->chord is " << interaction1->chord << "\n"; 
       }
 
@@ -2327,10 +2332,8 @@ int main(int argc,  char **argv) {
       theta_in=interaction1->r_in.Theta();
       lat_in=-90+theta_in*DEGRAD;
 
-      // find quantities relevent for studying impact of atmosphere
-      // for black hole studies
-      // costheta and mytheta: theta of neutrino wrt surface normal where neutrino enters earth
-      // cosbeta0, mybeta: theta of neutrino wrt surface normal for a person standing above the interaction point
+
+      // For studies which require the atmosphere
       myair=GetThisAirColumn(settings1,  interaction1->r_in, interaction1->nnu, interaction1->posnu, col1, cosalpha, mytheta, cosbeta0, mybeta);
 
       // where the neutrino enters the ice
@@ -3445,15 +3448,20 @@ int main(int argc,  char **argv) {
       dist_int_bn_2d_chord = ray1->rfexit[0].Distance(bn1->r_bn_shadow)/1000; // for sensitivity vs. distance plot
       //distance across the surface - Stephen
       dist_int_bn_2d = ray1->rfexit[0].SurfaceDistance(bn1->r_bn_shadow, bn1->surface_under_balloon) / 1000;
-      //---------------------
-      //just added this temporarily - will make it run slower
-      //this gets the weight due to stopping in earth
-      //returns 0 if chord<1m
 
-      if (!antarctica->Getchord(settings1, len_int_kgm2, interaction1->r_in, interaction1->pathlength_inice, settings1->UNBIASED_SELECTION ==0,  
-                               interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, nearthlayers, myair, total_kgm2, crust_entered,  mantle_entered, core_entered)){
-        interaction1->weight_nu_prob = -1.;
+
+      //redundant? 
+      
+      /*
+      if (!settings1->UNBIASED_SELECTION) 
+      {
+        if (!antarctica->Getchord(false, len_int_kgm2, interaction1->r_in,  interaction1->pathlength_inice, settings1->UNBIASED_SELECTION == 0, interaction1->posnu, inu, interaction1->chord, interaction1->weight_nu_prob, interaction1->weight_nu, interaction1->nearthlayers, myair, interaction1->total_kgm2, interaction1->crust_entered,  interaction1->mantle_entered, interaction1->core_entered))
+        {
+            interaction1->weight_nu_prob=-1; 
+        }
       }
+      */ 
+
 
       if(tauweighttrigger==1) {
         weight1=interaction1->weight_nu_prob; //?????? this is probably not right... 
@@ -4002,9 +4010,9 @@ int main(int argc,  char **argv) {
 
             sum_weights+=weight;
             neutrinos_passing_all_cuts++;
-            times_crust_entered_det+=crust_entered;  //Increment counter for neutrino numbers in each earth layer - passing neutrinos
-            times_mantle_entered_det+=mantle_entered;
-            times_core_entered_det+=core_entered;
+            times_crust_entered_det+=interaction1->crust_entered;  //Increment counter for neutrino numbers in each earth layer - passing neutrinos
+            times_mantle_entered_det+=interaction1->mantle_entered;
+            times_core_entered_det+=interaction1->core_entered;
 
             if (settings1->WRITEPOSFILE==1)
               WriteNeutrinoInfo(interaction1->posnu, interaction1->nnu, bn1->r_bn, interaction1->altitude_int, interaction1->nuflavor(), interaction1->current(), elast_y, nu_out);
