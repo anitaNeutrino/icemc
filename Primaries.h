@@ -200,6 +200,11 @@ public:
     double chord_kgm2_ice; //!< from ice entrance to interaction point
     double d1;  //!<same as chord in m (earth entrance to rock-ice boundary)
     double d2;  //!< ice-rock boundary to interaction point in m
+    double nearthlayers; //! number of earth layers traversed
+    double total_kgm2; // the total kgm2 traversed
+    int crust_entered; 
+    int mantle_entered; 
+    int core_entered;
     
     
     static constexpr double pnu_banana=2.00E19;

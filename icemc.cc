@@ -367,7 +367,6 @@ Vector ant_max_normal1; //Vector normal to the face of the antenna with the maxi
 Vector ant_max_normal2; //Vector normal to the face of the antenna with the maximum signal for a single neutrino,  bottom layer
 double vmmhz1m_visible = 0; //Actual V/m/Mhz at 1m
 int freq_bins = Anita::NFREQ; //Because the compiler objected to using the const directly
-double total_kgm2 = 0; // output of Getchord
 double nnu_array[3];
 double r_in_array[3];
 double nsurf_rfexit_array[3];
@@ -1038,11 +1037,11 @@ int main(int argc,  char **argv) {
 
   //Filled just after Getchord,  where we find the neutrino's path through the Earth
   TTree *nupathtree=new TTree("nupathtree", "nupathtree");
-  nupathtree->Branch("total_kgm2", &total_kgm2, "total_kgm2/D");
+  nupathtree->Branch("total_kgm2", &interaction1->total_kgm2, "total_kgm2/D");
   nupathtree->Branch("chord", &interaction1->chord, "chord/D");
-  nupathtree->Branch("crust_entered", &crust_entered, "crust_entered/I");
-  nupathtree->Branch("mantle_entered", &mantle_entered, "mantle_entered/I");
-  nupathtree->Branch("core_entered", &core_entered, "core_entered/I");
+  nupathtree->Branch("crust_entered", &interaction1->crust_entered, "crust_entered/I");
+  nupathtree->Branch("mantle_entered", &interaction1->mantle_entered, "mantle_entered/I");
+  nupathtree->Branch("core_entered", &interaction1->core_entered, "core_entered/I");
   nupathtree->Branch("mybeta", &mybeta, "mybeta/D");
   nupathtree->Branch("costheta_nutraject", &interaction1->costheta_nutraject, "costheta_nutraject/D");
 
@@ -1193,11 +1192,11 @@ int main(int argc,  char **argv) {
 
   finaltree->Branch("dviewangle_deg", &dviewangle_deg, "dviewangle_deg/D");
   finaltree->Branch("theta_threshold_deg", &theta_threshold_deg, "theta_threshold_deg/D");
-  finaltree->Branch("total_kgm2", &total_kgm2, "total_kgm2/D");
+  finaltree->Branch("total_kgm2", &interaction1->total_kgm2, "total_kgm2/D");
   finaltree->Branch("chord", &interaction1->chord, "chord/D");
-  finaltree->Branch("crust_entered", &crust_entered, "crust_entered/I");
-  finaltree->Branch("mantle_entered", &mantle_entered, "mantle_entered/I");
-  finaltree->Branch("core_entered", &core_entered, "core_entered/I");
+  finaltree->Branch("crust_entered", &interaction1->crust_entered, "crust_entered/I");
+  finaltree->Branch("mantle_entered", &interaction1->mantle_entered, "mantle_entered/I");
+  finaltree->Branch("core_entered", &interaction1->core_entered, "core_entered/I");
   finaltree->Branch("n_pol", &n_pol_array, "n_pol_array[3]/D");
   finaltree->Branch("vmmhz_min_thatpasses", &vmmhz_min_thatpasses, "vmmhz_min_thatpasses/D");
 
@@ -3548,9 +3547,9 @@ int main(int argc,  char **argv) {
         if(sec1->secondbang && sec1->interestedintaus)
           count_passestrigger_nfb++;
 
-        crust_entered=0; //These are switches that let us tell how far a given neutrino penetrated.  Clear them before entering Getchord.
-        mantle_entered=0;
-        core_entered=0;
+        interaction1->crust_entered=0; //These are switches that let us tell how far a given neutrino penetrated.  Clear them before entering Getchord.
+        interaction1->mantle_entered=0;
+        interaction1->core_entered=0;
 
         // this gets the weight due to stopping in earth
         // returns 0 if chord<1m
