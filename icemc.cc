@@ -397,6 +397,7 @@ double sum_weights=0;
 //End verification plot block
 
 int xsecParam_nutype = 0; // neutrino = 0, antineutrino = 1;
+int thisNuType = xsecParam_nutype; 
 int xsecParam_nuint  = 1; // NC = 0, CC = 1;
 
 
@@ -1007,6 +1008,7 @@ int main(int argc,  char **argv) {
   tree7->Branch("hadfrac", &hadfrac, "hadfrac/D");
   tree7->Branch("current", &interaction1->currentint, "currentint/I");
   tree7->Branch("nuflavor", &interaction1->nuflavorint, "nuflavorint/I");
+  tree7->Branch("nunubar", &thisNuType, "nunubar/I");
   tree7->Branch("sumfrac", &sumfrac, "sumfrac/D");
   tree7->Branch("slopeyangle", &slopeyangle, "slopeyangle/D");
 
@@ -1540,8 +1542,8 @@ int main(int argc,  char **argv) {
   // sets neutrino energy
   if (! src_model &&  spectra1->IsMonoenergetic() ){
     pnu=pow(10., settings1->EXPONENT);
-    primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);    // get cross section and interaction length.
-    cout << "pnu,  sigma and len_int_kgm2 (for nu CC) are " << pnu << " " << sigma << " " << len_int_kgm2 << "\n";
+    primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, Interaction::ktotal);    // get cross section and interaction length.
+    cout << "pnu,  sigma and len_int_kgm2 " << pnu << " " << sigma << " " << len_int_kgm2 << "\n";
   }
 
   if (settings1->WRITEPOSFILE==1) {
@@ -1705,10 +1707,18 @@ int main(int argc,  char **argv) {
 
       } // end IsSpectrum
 
-      ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, interaction1->currentint);  // given neutrino momentum,  cross section and interaction length of neutrino.
+
+      //Use placement new instead of deleting and recreating so that branch pointers don't go away
+      interaction1 = new (interaction1) Interaction("nu",  primary1,  settings1,  whichray,  count1);
+
+      thisNuType = getRNG(RNG_INTERACTION)->Integer(2); 
+
+      ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, thisNuType, Interaction::ktotal);  // given neutrino momentum,  cross section and interaction length of neutrino.
+      if (!src_model)  interaction1->currentint = primary1->GetCurrent(pnu,settings1,thisNuType); 
+
       // ierr=0 if the energy is too low for the parameterization
       // ierr=1 otherwise
-      len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (interaction length is in water equivalent)
+      len_int=1.0/(sigma*sig1->RHOICE*(1./M_NUCL)*1000); // in km (interaction length is in water equivalent)
 
       n_interactions=1;
       count_pass=0;
@@ -1725,7 +1735,8 @@ int main(int argc,  char **argv) {
       } //Zero the vmmhz array - helpful for banana plots,  shouldn't affect anything else - Stephen
 
       int got_a_good_position = 0;
-      
+
+     
       do  // loop for forcing a good position with sources if that option is enabled
       {
         // Picks the balloon position and at the same time sets the masks and thresholds
@@ -1772,8 +1783,9 @@ int main(int argc,  char **argv) {
             }
 
             pnu*=1e9; //GeV -> eV
-            ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, interaction1->currentint);  // given neutrino momentum,  cross section and interaction length of neutrino.
-            len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
+            ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, thisNuType, Interaction::ktotal);  // given neutrino momentum,  cross section and interaction length of neutrino.
+            interaction1->currentint = primary1->GetCurrent(pnu,settings1,thisNuType); 
+            len_int=1.0/(sigma*sig1->RHOICE*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
           }
 
           
@@ -1833,9 +1845,6 @@ int main(int argc,  char **argv) {
       //-------------------------------------------------------
       beyondhorizon = 0;
 
-
-      //Use placement new instead of deleting and recreating so that branch pointers don't go away
-      interaction1 = new (interaction1) Interaction("nu",  primary1,  settings1,  whichray,  count1);
 
       if(taus1)
         delete taus1;
@@ -4237,7 +4246,7 @@ int main(int argc,  char **argv) {
 
 
   // Recalculate the cross section because for the final volume approximation we just use the neutrino CC cross section
-  primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);
+  primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, Interaction::ktotal);
   len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); 
   
   // makes the output file
@@ -4849,7 +4858,7 @@ void Summarize(Settings *settings1,  Anita* anita1,  Counting *count1, Spectra *
   
     for (int i=0;i<N_even_E;i++) {
       thisenergy=pow(10., (min_energy+((double)i)*even_E));
-      primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, xsecParam_nutype, xsecParam_nuint);
+      primary1->GetSigma(thisenergy, sigma, thislen_int_kgm2, settings1, xsecParam_nutype, Interaction::ktotal);
     
       // are the units of this in log (eV) ???!????!??
       double EdNdEdAdt = src_model ? 1e9*src_flux->Interpolate(thisenergy*1e-9) : spectra1->GetEdNdEdAdt(log10(thisenergy));
