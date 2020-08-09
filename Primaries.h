@@ -83,8 +83,6 @@ public:
 class Primaries {
     
 private:
-    TRandom3 Rand3;
-    
     TH2D *m_hsigma; //!< plot of cross section vs. log(E/GeV)
     TCanvas *m_csigma;//!< canvas
     Y *m_myY; 
