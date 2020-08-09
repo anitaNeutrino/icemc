@@ -167,6 +167,7 @@ double RANDOMISEPOL=0.;
 
 
 std::vector<int> NNU_per_source; 
+std::vector<std::string> source_names; 
 std::vector<double> eventsfound_per_source; 
 std::vector<double> eventsfound_prob_per_source; 
 
@@ -1430,6 +1431,7 @@ int main(int argc,  char **argv) {
   summaryAnitaTree->Branch("EXPONENT", &settings1->EXPONENT, "EXPONENT/D" );
   summaryAnitaTree->Branch("SELECTION_MODE", &settings1->UNBIASED_SELECTION, "SELECTION_MODE/I" );
   summaryAnitaTree->Branch("totalnu_per_source", &NNU_per_source);
+  summaryAnitaTree->Branch("source_names", &source_names);
   summaryAnitaTree->Branch("weighted_nu_per_source", &eventsfound_per_source);
   summaryAnitaTree->Branch("weighted_prob_nu_per_source", &eventsfound_prob_per_source);
   summaryAnitaTree->Branch("total_nu",      &NNU,                 "total_nu/I" );
@@ -1753,9 +1755,10 @@ int main(int argc,  char **argv) {
             got_a_good_position = 1;
             src_time_weight = src_model->getPerSourceTimeWeight(realtime_this, which_source); 
 
-            if (NNU_per_source.size() < which_source+1) 
+            if (int(NNU_per_source.size()) < which_source+1) 
             {
               NNU_per_source.resize(which_source+1); 
+              source_names.resize(which_source+1); 
               eventsfound_per_source.resize(which_source+1); 
               eventsfound_prob_per_source.resize(which_source+1); 
             }
@@ -1766,6 +1769,11 @@ int main(int argc,  char **argv) {
             RA = src->getRA();
             dec= src->getDec()* TMath::RadToDeg(); // Get it make in deg
             objName = src->getName(); 
+            if (!source_names[which_source].size())
+            {
+              source_names[which_source] = objName.Data(); 
+            }
+
             pnu*=1e9; //GeV -> eV
             ierr=primary1->GetSigma(pnu, sigma, len_int_kgm2, settings1, xsecParam_nutype, interaction1->currentint);  // given neutrino momentum,  cross section and interaction length of neutrino.
             len_int=1.0/(sigma*sig1->RHOH20*(1./M_NUCL)*1000); // in km (why interaction length in water?) //EH
