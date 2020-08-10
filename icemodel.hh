@@ -194,7 +194,7 @@ int NODATA;
   bool CartesianIsInIce(double x, double y, double z); 
   
   int GetIceIntersectionsCartesian(const Position &posnu,  const Vector &nnu, 
-      std::vector<std::pair<double,double> > & intersections, double initial_step_size = 50, int map_resolution=1000); 
+      std::vector<std::pair<double,double> > & intersections, double initial_step_size = 50, int map_resolution=2000); 
 
 
   void CreateHorizons(Settings *settings1,Balloon *bn1,double theta_bn,double phi_bn,double altitude_bn,ofstream &foutput);
