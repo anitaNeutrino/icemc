@@ -13,7 +13,9 @@
 
 // from RVersion.h
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
 #include "TClingRuntime.h"
+#endif
 #else
 #include "TCint.h"
 #endif
