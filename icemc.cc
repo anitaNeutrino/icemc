@@ -526,8 +526,13 @@ int main(int argc,  char **argv) {
   int startNu=0;
   TString outputdir;
   char clswitch; // command line switch
+
+  bool useEventList=false;
+  ifstream eventListFile;
+  string eventListName;
+  
   if (argc>1) {
-    while ((clswitch = getopt(argc, argv, "t:i:o:r:n:e:x:")) != EOF) {
+    while ((clswitch = getopt(argc, argv, "t:i:o:r:n:e:x:l:")) != EOF) {
       switch(clswitch) {
       case 'n':
         nnu_tmp=atoi(optarg);
@@ -554,6 +559,16 @@ int main(int argc,  char **argv) {
         startNu=atoi(optarg);
         cout << "Running icemc for just 1 event with eventNumber : " << startNu << endl;
         break;
+      case 'l':
+	useEventList=true;
+	eventListName=optarg;
+	cout << "Using event list from " << eventListName << endl;
+	eventListFile.open(eventListName.c_str());
+	if (!eventListFile.is_open()) {
+	  cout << "This is not a valid filename " << endl;
+	  return -1;
+	}
+	break;  
       case 'r':
         run_num=optarg;
         stringstream convert(run_num);
@@ -1660,7 +1675,8 @@ int main(int argc,  char **argv) {
     gps_offset=45;
   } else gps_offset=0;
 
-  int antNum;
+  int antNum;    
+  
 
   // begin looping over NNU neutrinos doing the things
   for (inu = startNu; inu < NNU; inu++) {
@@ -1673,10 +1689,20 @@ int main(int argc,  char **argv) {
       cout << inu << " neutrinos.  " << (double(inu) / double(NNU)) * 100 << "% complete.\n";
 
     eventNumber=(ULong_t)(run_no)*NNU+inu;
-//cerr<<inu<<endl;
-//if( !((inu==246) || (inu==2579) || (inu==5522) || (inu==11235) || (inu==11815) || (inu==19723) || (inu==21264) || (inu==28442) || (inu==36789) || (inu==36894) || (inu==38424) || (inu==45829) || (inu==45880) || (inu==52929) || (inu==56821) || (inu==64933) || (inu==73569) || (inu==73707) || (inu==78717) || (inu==92717) || (inu==99750))  ) continue;
-//
-    // Set seed of all random number generators to be dependent on eventNumber
+
+    if (useEventList){
+      
+      if (!eventListFile.eof()){
+	eventListFile >> eventNumber;
+	cout << "Looking at event number " << eventNumber << endl;
+      } else {
+	break;
+      }
+      
+    }else{
+      eventNumber=(ULong_t)(run_no)*NNU+inu;
+    }
+
     setSeed(eventNumber);
 
     //reset screen parameters (even for no roughness) for the new event
