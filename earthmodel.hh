@@ -67,13 +67,12 @@ public:
   virtual double WaterDepth(const Position& pos) ;
   virtual double RockSurface(double lon,double lat) ;
   virtual double RockSurface(const Position& pos) ;
-  double GetDensity(double altitude, const Position earth_in, int& crust_entered);
-  int Getchord(Settings *settings1,
+  double GetDensity(double altitude, const Position earth_in, int& crust_entered, bool * inice = 0);
+  int Getchord(          bool unbiased_selection, 
 			 double len_int_kgm2,
 			 const Position &earth_in, // place where neutrino entered the earth
-			 const Position &r_enterice,
-			 const Position &nuexitice,
-
+                         double distance_in_ice,
+                         bool include_ice_absorption, 
 			 const Position &posnu, // position of the interaction
 			 int inu,
 			 double& chord, // chord length
@@ -91,6 +90,9 @@ public:
   static double LongtoPhi_0is180thMeridian(double longitude); // convert longitude to phi with 0 longitude being at the 180th meridian
   void EarthCurvature(double *array,double depth_temp); // adjusts coordinates within the mine to account for the curvature of the earth.
   Position WhereDoesItEnter(const Position &posnu,const Vector &nnu);
+
+  /*Finds where we intersect the Geoid */ 
+  int GeoidIntersection(Vector x0,Vector p0, Position * int1, Position * int2, double extra_height = 5500, double * ds =0) const; 
 
  
 private:

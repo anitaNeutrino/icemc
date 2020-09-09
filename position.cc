@@ -45,11 +45,11 @@
 } //Position::SurfaceDistance
 
  double Position::Lat() const {
-  return theta*DEGRAD;
+  return Theta()*DEGRAD;
 } //Position::Lat
 
  double Position::Lon() const {
-  double phi_deg = phi*DEGRAD;
+  double phi_deg = Phi()*DEGRAD;
 
   if (phi_deg > 270.)
     phi_deg = phi_deg-360.;

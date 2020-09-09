@@ -83,8 +83,6 @@ public:
 class Primaries {
     
 private:
-    TRandom3 Rand3;
-    
     TH2D *m_hsigma; //!< plot of cross section vs. log(E/GeV)
     TCanvas *m_csigma;//!< canvas
     Y *m_myY; 
@@ -124,6 +122,7 @@ public:
     
 //! Neutrino-nucleon cross-sections using model chosen
     int GetSigma(double pnu,double& sigma,double &len_int_kgm2,Settings *settings1,int nu_nubar,int currentint);
+    int GetCurrent (double pnu, Settings * settings, int n_nubar); 
 
 
 
@@ -168,6 +167,7 @@ public:
 
     static constexpr int kcc=0;
     static constexpr int knc=1;
+    static constexpr int ktotal=2;
 
     double banana_phi_obs;
     Vector banana_obs; //!<Vector from the neutrino interaction to the observation point
@@ -202,6 +202,11 @@ public:
     double chord_kgm2_ice; //!< from ice entrance to interaction point
     double d1;  //!<same as chord in m (earth entrance to rock-ice boundary)
     double d2;  //!< ice-rock boundary to interaction point in m
+    double nearthlayers; //! number of earth layers traversed
+    double total_kgm2; // the total kgm2 traversed
+    int crust_entered; 
+    int mantle_entered; 
+    int core_entered;
     
     
     static constexpr double pnu_banana=2.00E19;
@@ -214,15 +219,15 @@ public:
     
     
     void  setNuFlavor(Primaries *primary1,Settings *settings1,int whichray,Counting *count1);
-    string GetCurrent();
-    void setCurrent();
     Position posnu;
     Position posnu_down;
-    string  nuflavor;                   //!< neutrino flavor
-    string  current;                    //!<  CC or NC?
     int nuflavorint;                //!< Added by Stephen for output purposes
     int currentint;                 //!< Ditto - Stephen
     
+    string current() { return currentint == kcc ? "cc" : "nc"; }
+    string nuflavor() { return nuflavorint == 1 ? "nue" : 
+                               nuflavorint == 2 ? "numu" :
+                               "nutau"; } 
     
     double surface_over_banana_nu;
     

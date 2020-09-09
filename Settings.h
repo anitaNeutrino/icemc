@@ -25,7 +25,9 @@ using std::vector;
 
 // from RVersion.h
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,0,0)
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
 #include "TClingRuntime.h"
+#endif
 #else
 #include "TCint.h"
 #endif
@@ -60,7 +62,8 @@ class Settings : public TObject {
 
 
   int UNBIASED_SELECTION;
-  double UNBIASED_SELECTION_MAX_ANGLE; 
+  double UNBIASED_PS_MAX_DISTANCE_KM; 
+  double UNBIASED_CHORD_STEP_M; 
   int WHICH; // which payload to use 0=Anita-lite,1=Ross,2=Smex,3=make your own
   int ANITAVERSION;
   int CYLINDRICALSYMMETRY; // is it cylindrically symmetric =1 if which=1,2, =0 if which=0
@@ -157,6 +160,7 @@ class Settings : public TObject {
   std::string WHICH_START_TIME; // which start time? 0, or an anita flight option
   std::string WHICH_END_TIME; // which end time? 0 or an anita flight option
   
+  int SOURCE_USE_EXPONENT; //Use the exponent for a source (if exponent <= 21) 
   double SOURCE_MIN_E;  // log10 of minimum energy for sources 
   double SOURCE_MAX_E;   // log10 of maximinum energy for sources 
 
@@ -257,13 +261,15 @@ class Settings : public TObject {
   int IGNORE_CROSSPOL; //Ignore the crosspol polarization component
   int POL_SIGN_HACK; // patch up the sign of e/h 
   double CUTONWEIGHTS;
+  double CUTONWEIGHTPROBS;
   double DEC_CUT;
   int ALL_SKY_MAP;
+  int WRITE_WAVEFORMS; 
   
   // custom sources
   std::string CUSTOM_NAME;
-  double CUSTOM_RA;
-  double CUSTOM_DEC;
+  double CUSTOM_RA; // in decimal degrees
+  double CUSTOM_DEC; // in decimal degrees
   double CUSTOM_GAMMA;
   
   double HORIZON_OFFSET; 
@@ -273,10 +279,11 @@ class Settings : public TObject {
   double jamieFactor;// = 0;
   int medium;// = 0;
   int askaryanParameterization;// = 0;
+  int SAVE_TRUTH_NU_TREE; 
     
   //  TString outputdir; // directory where outputs go
 
-  ClassDef(Settings,1);
+  ClassDef(Settings,2);
   
  private:
   typedef std::map<TString, TString> kvpMap;

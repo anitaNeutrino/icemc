@@ -233,7 +233,8 @@ void Settings::Initialize() {
   SIGMAPARAM=1;  // Connolly et al. 2011 default cross section parametrization
   YPARAM=1;  // Connolly et al. 2011 default y parametrization
   UNBIASED_SELECTION=1.; // (0) pick neutrino interaction in the ice and neutrino from any direction or (1) choose neutrino interaction point in the horizon on the balloon in the ice and neutrino direction on the cerenkov cone
-  UNBIASED_SELECTION_MAX_ANGLE =10; 
+  UNBIASED_PS_MAX_DISTANCE_KM =1e3; 
+  UNBIASED_CHORD_STEP_M =50; 
   SIGMA_FACTOR=1;
   USEDARTBOARD=0;
   EXPONENT=18.; // Initialize energy exponent
@@ -275,9 +276,11 @@ void Settings::Initialize() {
   SPECIFIC_NU_POSITION_ALTITUDE = 0; 
   SPECIFIC_NU_POSITION_DISTANCE = 100e3; 
   HORIZON_OFFSET = -999; 
+  SAVE_TRUTH_NU_TREE = 0; 
 
   // Source options
   SOURCE = "None"; 
+  SOURCE_USE_EXPONENT = 0; 
   SOURCE_MIN_E = 18; 
   SOURCE_MAX_E = 21;
   WHICH_SOURCES = "All";
@@ -290,15 +293,18 @@ void Settings::Initialize() {
   IGNORE_CROSSPOL = 0; 
   POL_SIGN_HACK = 1; 
   CUTONWEIGHTS = 0.;
+  CUTONWEIGHTPROBS = 0.;
   DEC_CUT = 30; // Declination cut 999 is default: no declination cut
                                    //  If you specify a value, then only use sources within from declination = -DEC_CUT to DEC_CUT
   ALL_SKY_MAP = 0; // Draw all-sky map?
 
   // Custom source options
   CUSTOM_NAME = "customObject";
-  CUSTOM_RA = 0;
-  CUSTOM_DEC = 0;
+  CUSTOM_RA = 0; // in decimal degrees
+  CUSTOM_DEC = 0; // in decimal degrees
   CUSTOM_GAMMA = 2;
+
+  WRITE_WAVEFORMS=1; 
   
 }
 
@@ -322,8 +328,10 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Energy CDF or dartboard", USEDARTBOARD);
 
   getSetting("Neutrino position", UNBIASED_SELECTION);
-  getSetting("Neutrino position max angle", UNBIASED_SELECTION_MAX_ANGLE,true);
+  getSetting("Neutrino Point Source Max Distance", UNBIASED_PS_MAX_DISTANCE_KM,true);
+  getSetting("Neutrino Point Source Ice Chord Step", UNBIASED_CHORD_STEP_M,true);
   getSetting("Write hists and trees", HIST);
+  getSetting("Write waveforms", WRITE_WAVEFORMS,1);
   getSetting("Write ray", FILLRAYTREES);
 
   getSetting("Only final tree", ONLYFINAL);
@@ -619,6 +627,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Which attenuation length", MOOREBAY);
 
   getSetting("Source Option", SOURCE,true); 
+  getSetting("Source Use Exponent", SOURCE_USE_EXPONENT,true); 
   getSetting("Source Max Energy", SOURCE_MAX_E,true); 
   getSetting("Source Min Energy", SOURCE_MIN_E,true); 
   getSetting("Which Sources", WHICH_SOURCES,true);
@@ -631,6 +640,8 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   {
     std::cout << "Non-default setting:  settings->SOURCE_SKIP_WHEN_NONE= " << SOURCE_SKIP_WHEN_NONE << std::endl;
   }
+
+  getSetting("Save Truth Nu Tree",SAVE_TRUTH_NU_TREE,true); 
 
   getSetting("Cross-section factor", SIGMA_FACTOR);
   if (SIGMA_FACTOR!=1){
@@ -736,8 +747,8 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
     foutput << "SLOPEY=0" << std::endl;
     BORESIGHTS=1; // loop over boresights
     foutput << "BORESIGHTS=1" << std::endl;
-    BN_ALTITUDE=4.22/0.3; // balloon altitude in ft.!!
-    foutput << "BN_ALTITUDE=4.22/0.3" << std::endl;
+    BN_ALTITUDE=(4.22/0.3)*12.*CMINCH/100.; // balloon altitude in ft. converted to meters
+    foutput << "BN_ALTITUDE=4.22/0.3 ft" << std::endl;
     RANDOMIZE_BN_ORIENTATION=0; // don't randomize the balloon orientation
     foutput << "RANDOMIZE_BN_ORIENTATION=0" << std::endl;
     SKIPCUTS=1; // don't make chance in hell cuts
@@ -865,6 +876,7 @@ void Settings::ReadInputs(const char* inputFileName, std::ofstream &foutput,
   getSetting("Ignore Cross-Pol", IGNORE_CROSSPOL); 
   getSetting("Polarization Sign Hack", POL_SIGN_HACK); 
   getSetting("Minimum weight", CUTONWEIGHTS);
+  getSetting("Minimum probability weight", CUTONWEIGHTPROBS,1);
   getSetting("Absolute declination cut", DEC_CUT);
   getSetting("Draw all-sky map", ALL_SKY_MAP);
 

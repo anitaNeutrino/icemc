@@ -232,6 +232,12 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
           case 112:
               GetFlux("yuksel_sfh.dat");
               break;
+	  case 113:
+		GetFlux("Oikonomou2019_TXS_0506+056_Model_A.dat");
+		break;
+	  case 114:
+		GetFlux("Oikonomou2019_TXS_0506+056_Model_B.dat");
+		break;
 //          case 100:
 //              GetFlux("berezinsky_saturate.dat");
 //              break;
@@ -337,50 +343,51 @@ Spectra::Spectra(int EXPONENT_fromsettings) {
 
   if(EXPONENT <6 || EXPONENT >29){//is spectrum
     GetCDF();
-  }
     //
     // End of selecting the Model!!!
     //
 
-/*
-  if (EXPONENT<=10. || EXPONENT>=100.) {
-    gspectrum[(int)EXPONENT]=new TGraph(12,energy,EdNdEdAdt);
-    //    maxflux=gspectrum[(int)EXPONENT]->GetMaximum();
-    maxflux=Tools::dMax(EdNdEdAdt,12);
-
-    for (int i=0;i<12;i++) {
-      E2dNdEdAdt[i]=log10(EdNdEdAdt[i])+energy[i]-9.;
-    }
-    
-    spectrum=new TSpline5("spectrum",energy,EdNdEdAdt,12);
-    
-  }
-  else
-    // find the max so we can normalise it
-    maxflux=Tools::dMax(EdNdEdAdt,12);
-*/
-
-  // From log to linear!!  
-  for (int i=0;i<E_bin;i++) {
-      EdNdEdAdt[i] = pow(10, EdNdEdAdt[i]);     //to linear 
-      E2dNdEdAdt[i] = pow(10, E2dNdEdAdt[i]);   //to linear
-//      E2dNdEdAdt[i]=log10(EdNdEdAdt[i])+energy[i]-9.;
-  }
-
-  gEdNdEdAdt = new TGraph(E_bin, energy, EdNdEdAdt);
-  gE2dNdEdAdt = new TGraph(E_bin, energy, E2dNdEdAdt);
-
   /*
-  TCanvas *EnergyGraphC = new TCanvas("EnergyGraphC", "EnergyGraphC", 1000, 500);
-  EnergyGraphC->cd(1);
-  gEdNdEdAdt->Draw();
-  string outputGraph = string("outputGraph.png");
-  EnergyGraphC->SaveAs(outputGraph.c_str());
-  */
-  sEdNdEdAdt = new TSpline3("sEdNdEdAdt", gEdNdEdAdt);
-  sE2dNdEdAdt = new TSpline3("sE2dNdEdAdt", gE2dNdEdAdt);
+    if (EXPONENT<=10. || EXPONENT>=100.) {
+      gspectrum[(int)EXPONENT]=new TGraph(12,energy,EdNdEdAdt);
+      //    maxflux=gspectrum[(int)EXPONENT]->GetMaximum();
+      maxflux=Tools::dMax(EdNdEdAdt,12);
 
-  maxflux=Tools::dMax(EdNdEdAdt,E_bin);
+      for (int i=0;i<12;i++) {
+        E2dNdEdAdt[i]=log10(EdNdEdAdt[i])+energy[i]-9.;
+      }
+      
+      spectrum=new TSpline5("spectrum",energy,EdNdEdAdt,12);
+      
+    }
+    else
+      // find the max so we can normalise it
+      maxflux=Tools::dMax(EdNdEdAdt,12);
+  */
+
+
+    // From log to linear!!  
+    for (int i=0;i<E_bin;i++) {
+        EdNdEdAdt[i] = pow(10, EdNdEdAdt[i]);     //to linear 
+        E2dNdEdAdt[i] = pow(10, E2dNdEdAdt[i]);   //to linear
+  //      E2dNdEdAdt[i]=log10(EdNdEdAdt[i])+energy[i]-9.;
+    }
+
+    gEdNdEdAdt = new TGraph(E_bin, energy, EdNdEdAdt);
+    gE2dNdEdAdt = new TGraph(E_bin, energy, E2dNdEdAdt);
+
+    /*
+    TCanvas *EnergyGraphC = new TCanvas("EnergyGraphC", "EnergyGraphC", 1000, 500);
+    EnergyGraphC->cd(1);
+    gEdNdEdAdt->Draw();
+    string outputGraph = string("outputGraph.png");
+    EnergyGraphC->SaveAs(outputGraph.c_str());
+    */
+    sEdNdEdAdt = new TSpline3("sEdNdEdAdt", gEdNdEdAdt);
+    sE2dNdEdAdt = new TSpline3("sE2dNdEdAdt", gE2dNdEdAdt);
+
+    maxflux=Tools::dMax(EdNdEdAdt,E_bin);
+  }
 }
 
 

@@ -29,7 +29,7 @@ class SourceModel
 
 public: 
 
-  SourceModel(const char * model_name, unsigned seed  = 0); 
+  SourceModel(const char * model_name); 
 
   /** We will label our source models by a string so they're easy to pick. 
    *  
@@ -54,7 +54,7 @@ public:
       : whichSubtype(subtype), whichSources(sources), whichStartTime(startTime), whichEndTime(endTime), maxDec(max_dec) {; }
   };
 
-  static SourceModel * getSourceModel(const char * key, unsigned seed = 0, Restriction r = Restriction()); 
+  static SourceModel * getSourceModel(const char * key, Restriction r = Restriction()); 
 
   /** this must be called before asking for a time weight */ 
   void setUpWeights(double t0, double t1, double minE = 1e9, double maxE=1e12, int N = 1e6); 
@@ -64,7 +64,8 @@ public:
    **/ 
   void addSource(Source * source) { sources.push_back(source) ; }
   //this is the flux at this time divided by the average flux (computed by setUpWeights). 
-  double getTimeWeight(double t) const; 
+  double getTimeWeight(double t, bool use_average_nonzero_flux = true) const; 
+  double getPerSourceTimeWeight(double t, int i,  bool use_average_nonzero_flux = true) const; 
     
   const char * getName() const { return name; } 
   /** Returns the index of the source used ! */ 
@@ -83,6 +84,9 @@ private:
   double weight_Emin;
   double weight_Emax;
   double average_flux; 
+  double average_nonzero_flux; 
+  std::vector<double> per_source_average_flux; 
+  std::vector<double> per_source_average_nonzero_flux; 
   const char * name;
 }; 
 
@@ -109,6 +113,7 @@ class Source
 
 public: 
   /* The source will own the flux */ 
+  // !!! The source function takes RA in decimal hours, and dec in decimal degrees. !!!
   Source (const char * name, double RA, double dec, SourceFlux * flux);
   const char * getName() const { return name.c_str(); }
   double getRA() const { return RA; }

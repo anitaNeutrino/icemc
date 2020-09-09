@@ -1,6 +1,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+
 #include "TMath.h" 
 #include "TObjString.h" 
 #include "TTimeStamp.h" 
@@ -8,6 +9,9 @@
 #include "TFile.h" 
 #include "TTree.h"
 #include "EnvironmentVariable.h" 
+#include "Math/WrappedTF1.h"
+#include "Math/GaussIntegrator.h"
+
 #include "blazars/fava.h"
 #include "source.hh"
 #include "icemc_random.h" 
@@ -15,12 +19,13 @@
 // SourceModel 
 
 
-SourceModel::SourceModel(const char * n, unsigned seed)
+SourceModel::SourceModel(const char * n)
   : name(n)
 {
   weight_Emin = 0;
   weight_Emax = 0;
   average_flux = -1; 
+  average_nonzero_flux= -1; 
 }
 
 SourceModel::~SourceModel() 
@@ -51,6 +56,12 @@ const double txs_E0 = 100e3;
 const double txs_flux = 3.8;
 const double txs_z = 0.3365;
 const double txs_D = luminosity_distance(txs_z); 
+
+
+// M77 
+const double m77_index = 3.16; 
+
+
 
 // SNe
 const double gamma_index = 2;
@@ -85,12 +96,12 @@ double SourceModel::Restriction::fromString(const char * the_time)
  
 
 
-SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, SourceModel::Restriction r) 
+SourceModel * SourceModel::getSourceModel(const char * key, SourceModel::Restriction r) 
 {
 
   if (!key || !strcasecmp(key,"NONE")) return NULL; 
 
-  SourceModel * m = new SourceModel(key,seed);
+  SourceModel * m = new SourceModel(key);
 
   TString str(key); 
   TObjArray * tokens = str.Tokenize("+"); 
@@ -106,11 +117,59 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
      if (stripped == "TXS")
      {
 
-       m->addSource(new Source("TXS 0506+056", 5 + 9/60. +  25.9637 / 3600, 5 + 41/60. + 35.3279/3600,
+       double txs_ra = 77.3582; // decimal degrees
+       double txs_dec = 5.69314; // decimal degrees
+
+       m->addSource(new Source("TXS 0506+056", txs_ra/15., txs_dec,
           new ConstantExponentialSourceFlux(txs_index,txs_flux,txs_E0) //from IceCube paper, assume it's constant over flight for now
           )) ; 
      }
-    
+
+     else if (stripped.BeginsWith("M77")) 
+     {
+
+       double index = m77_index; 
+       const char * index_string = strcasestr(stripped.Data(),"INDEX="); 
+       if (index_string)
+       {
+         sscanf(index_string,"HOURS=%lf%*s", &index); 
+
+
+       }
+       m->addSource(new Source("M77", 2 + 42./60 + 40.771/3600, -47.84/3600, new ConstantExponentialSourceFlux(index, txs_flux, txs_E0))); //flux and E0 don't matter 
+     }
+
+    //A3 SN
+    else if(stripped=="A3SN")
+    {
+      TFile f("./supernovae/data/supernovaA3.root"); 
+      TTree *tree = (TTree*) f.Get("sn");
+      std::string *objName = new std::string;
+      std::string *objType = new std::string;
+      int tdiscovery;
+      int texplode; 
+      double ra, dec; 
+
+      tree->SetBranchAddress("ra",&ra); 
+      tree->SetBranchAddress("dec",&dec); 
+      tree->SetBranchAddress("tdiscovery",&tdiscovery); 
+      tree->SetBranchAddress("texplode",&texplode); 
+      tree->SetBranchAddress("name",&objName); 
+      tree->SetBranchAddress("type",&objType); 
+      int two_weeks = 24*3600*14; 
+
+      for (int i = 0; i < tree->GetEntries(); i++) 
+      {
+        tree->GetEntry(i); 
+        if( abs(dec)>r.maxDec){continue;}
+        m->addSource(new Source(objName->c_str(), ra, dec,
+         new TimeWindowedExponentialSourceFlux(texplode, texplode+two_weeks, 2,txs_flux,txs_E0) // Just use these params as the first step
+       )) ; 
+      }
+
+      delete objName; 
+      delete objType; 
+    }
     // Supernovae
     else if(stripped=="SN")
     {        
@@ -130,16 +189,19 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       tree->SetBranchAddress("fullObjType",&fullObjType);
       tree->SetBranchAddress("objSubtype",&objSubtype);
       tree->SetBranchAddress("discoveryUnixTime",&discoveryUnixTime);
-         
+      
       int two_weeks = 24*3600*14; 
-      int two_days = 24*3600*2; 
+      //int two_days = 24*3600*2; 
       for (unsigned int i = 0; i < tree->GetEntries(); i++) 
       {
          tree->GetEntry(i);
               
          //////////// Cuts
          // Time cut for finding sources within a certain time period
-         if( (discoveryUnixTime < r.whichStartTime - two_weeks) || (discoveryUnixTime > r.whichEndTime) ){continue;}
+	 // NOTE we are working with _neutrinos_ instead of photons. Neutrinos reach Earth before photons because they escape the star before the shockwaves of the supernova explosion.
+	 // assume photons arrive, at max, 2 weeks after the neutrinos
+	 // discoveryUnixTime is the discovery time of the supernova using photons, not neutrinos, thus:
+         if( (discoveryUnixTime < r.whichStartTime) || (discoveryUnixTime > r.whichEndTime + two_weeks) ){continue;}
              // Declination cut (ANITA won't see neutrinos from these sources)
              if( abs(dec)>r.maxDec){continue;}
              // Search for specific subtype
@@ -163,8 +225,8 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
                else{continue;}
              }
             
-             m->addSource(new Source(objName->c_str(), ra, dec,
-                          new TimeWindowedExponentialSourceFlux(discoveryUnixTime-two_days, discoveryUnixTime + two_weeks - two_days, 2,txs_flux,txs_E0) // Just use these params as the first step
+             m->addSource(new Source(objName->c_str(), ra/=15., dec,
+                          new TimeWindowedExponentialSourceFlux(discoveryUnixTime - two_weeks, discoveryUnixTime, 2,txs_flux,txs_E0) // Just use these params as the first step
                          )) ; 
        }
      
@@ -179,7 +241,7 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       float RA, dec;
       std::string *objName = new std::string;
       int unixTriggerTime = 0;
-      float t90,  fluence; 
+      float t90, fluence, redshift; 
       
       tree->SetBranchAddress("RA",&RA); 
       tree->SetBranchAddress("dec",&dec); 
@@ -187,7 +249,8 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
       tree->SetBranchAddress("unixTriggerTime",&unixTriggerTime);
       tree->SetBranchAddress("T90",&t90);
       tree->SetBranchAddress("fluence",&fluence);
-      
+      tree->SetBranchAddress("redshift",&redshift);
+
       for (unsigned int i = 0; i < tree->GetEntries(); i++) 
       {
         tree->GetEntry(i);
@@ -213,20 +276,144 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
             else{continue;}
         }
 
+	// Calculate the explicit maximum neutrino energy via fireball model
+	bool modelCalculation = true;
+	double energyCutoff = 1e10;
+	if(modelCalculation==true)
+	  {
 
+	    // Cosmology
+	    double omegaRad = 9.236e-5;
+	    double omegaM = 0.315;
+	    double omegaLambda = 0.679;
+	    double H0 = 67.4 * pow(10,3); // We want this in ms^-1/Mpc, not the standard kms^-1/Mpc
+	    double c = 299792458; // ms^-1, as we we calculate c/H0
+	    double EGammaIso = 0.;
+	    double dL = 0.; // we will calculate in Mpc
+	    double MpcToCm = 3.08e+24;
 
+	    // GRB model vars
+	    double r = 0.;
+  
+	    // Model assumptions
+	    double lorentzFactor = 300.;
+	    double eB = 0.1;
+	    double eE = 0.1;
+	    /// Afterglow
+	    double nEx = 1.; // cm^-3
+	    double EKinIso = 0.;
+	    double shockLorentzFactor = 0.;
+	    double energyCGamma = 0.;
+	    double fPiAG = 0.;
+	    double energyBreakNeutrinoAG = 0.;
+	    double shockRadius = 0.;
+	    double massProton = 0.0015; // erg/c^2
+	    double magFieldShock = 0.;
+	    double maxShockNuE = 0.;
+
+	    // GRB spectra calculation starts
+	    // Some T90s are not recorded, set to 20s.
+	    if(t90==-999){t90 = 20;}
+	    // Some redshifts are not calculated, set to 2.
+	    if(redshift==-999){redshift = 2;}
+	    // Just set the fluence to this for now
+	    if(fluence==-999){fluence=1e-6;}
+            
+	    // Cosmology stuff
+	    // Assume flat Universe
+	    // Curvature is k = 0, omegaK = 0      
+	    TF1 Ez("E(z)", "1/(pow([0] * pow((1+x),3) + [1] + [2] * pow((1+x),4),0.5))", 0, redshift);
+	    //TF1 Ez("E(z)", "1/(pow([0] * pow((1+x),3) + [1],0.5))", 0, redshift);
+	    Ez.SetParameter(0,omegaM); Ez.SetParName(0,"omegaM");
+	    Ez.SetParameter(1,omegaLambda); Ez.SetParName(1,"omegaLambda");
+	    Ez.SetParameter(2,omegaRad); Ez.SetParName(2,"omegaRad");
+	    ROOT::Math::WrappedTF1 wEz(Ez);
+	    ROOT::Math::GaussIntegrator ig;
+	    ig.SetFunction(wEz);
+	    ig.SetRelTolerance(0.001);
+	    double integral =  ig.Integral(0, redshift);
+      
+	    // Now calc lum dist
+	    dL = (1+redshift) * c/H0 * integral; // Mpc
+      
+	    // Calc gamma-ray bolometric energy
+	    EGammaIso = 4 * TMath::Pi() * dL*dL * fluence * 1/(1+redshift); // Mpc^2 * erg cm^-2
+	    EGammaIso*=pow(MpcToCm,2); // erg
+      
+	    //////////////////////////////
+	    // Afterglow specific calcs
+	    /////////////////////////////
+
+	    // Calculate total jet kinetic energy and bulk Lorentz factor of GRB afterglow
+	    EKinIso = EGammaIso/eE; //erg
+      
+	    // Radii, depths
+	    shockRadius = pow(((3*EKinIso)/(4*TMath::Pi() * nEx * massProton * c*c * lorentzFactor*lorentzFactor)),(1./3.)); // in cm
+	    shockRadius*=100; // in meters, to compare with internal rad
+	    if(shockRadius < r)
+	      {
+		std::cout << "Afterglow shock radius < burst radius. Something might be wrong." << std::endl;
+	      }
+
+	    shockRadius/=100;
+	    magFieldShock = pow(8 * TMath::Pi() * eB * nEx * massProton,0.5);
+      
+	    shockLorentzFactor = 195 * pow(((EKinIso)/(pow(10,54))),0.125) * pow(t90/10,-0.375) * pow(nEx/1.,-0.125);
+
+	    // Peak sync gamma energy radiated by electrons in B field:
+	    energyCGamma = 0.4 * pow(((EKinIso)/(pow(10,54))),(-25./24.)) * pow(((lorentzFactor)/(300)),(4./3.)) * pow(((t90)/(10)),(9./8.)) * pow(((nEx)/(1)),(-11./24.));
+      
+	    // Calculate proton-to-pion conversion factor
+	    fPiAG = 0.2;
+	    //fPiAG = 0.2 * pow(((EKinIso)/(pow(10,54))),(33./24.)) * pow(t90/10,(-9./8.)) * pow(nEx/1,(9./8.));
+
+	    // convert to GeV
+	    energyCGamma/=1e+9;
+	    // break energies
+	    energyBreakNeutrinoAG = 0.015 * shockLorentzFactor * 1/(1+redshift) * pow(energyCGamma,-1); // GeV
+	    // max shock neutrino energy
+	    maxShockNuE = fPiAG/(4*(1+redshift)) * eE * shockLorentzFactor * magFieldShock * shockRadius;
+      
+	    // normal case
+	    if(maxShockNuE > energyBreakNeutrinoAG)
+	      {
+		// All good
+	      }
+	    else if(maxShockNuE < 1e9) // account for minimum possible energy
+	      {
+		maxShockNuE = 1e9;
+	      }
+	    else
+	      {
+		maxShockNuE = energyBreakNeutrinoAG+energyBreakNeutrinoAG*0.01;
+	      }
+	    
+	    energyCutoff = maxShockNuE;
+
+	  }
+
+        double afterglow_hrs = 1; 
+
+        const char * hours_string = strcasestr(stripped.Data(),"HOURS="); 
+        if (hours_string)
+        {
+          sscanf(hours_string, "HOURS=%lf%*s", &afterglow_hrs); 
+          printf("AFTERGLOW HOURS is %f\n", afterglow_hrs); 
+        }
+
+      
         if (strcasestr(stripped.Data(),"AFTERGLOW") )
         {
-          m->addSource(new Source(objName->c_str(), RA, dec,
+          m->addSource(new Source(objName->c_str(), RA/=15., dec,
                   new TimeWindowedExponentialSourceFlux(unixTriggerTime,
-                                                                      unixTriggerTime + 3600,1.5,
-                                                                      fluence,1e9, 1e10) 
+                                                                      unixTriggerTime + 3600*afterglow_hrs,1.5,
+                                                                      fluence,1e9, energyCutoff) 
                 ));
          
         }
         else if (strcasestr(stripped.Data(),"PROMPT") )
         {
-          m->addSource(new Source(objName->c_str(), RA, dec,
+          m->addSource(new Source(objName->c_str(), RA/=15., dec,
               //fireball model for E > 1e18 eV, I think
                                 new TimeWindowedExponentialSourceFlux(unixTriggerTime,
                                                                       unixTriggerTime + t90,4,
@@ -235,13 +422,13 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
 
         }
 
-        // conservative case... 5 minutes before, one hour after, use afterglow flux. 
+        // conservative case... 5 minutes before, one hour after, use afterglow flux up to 1e10 GeV. 
         else
         {
-          m->addSource(new Source(objName->c_str(), RA, dec,
+          m->addSource(new Source(objName->c_str(), RA/=15., dec,
               //fireball model for E > 1e18 eV, I think
                                 new TimeWindowedExponentialSourceFlux(unixTriggerTime-300,
-                                                                      unixTriggerTime + 3600,1.5,
+                                                                      unixTriggerTime + 3600*afterglow_hrs,1.5,
                                                                       fluence,1e9, 1e10) 
                                 )) ; 
 
@@ -267,16 +454,20 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
        
       for (int i = 0; i < fava_tree->GetEntries(); i++) 
       {
-        fava_tree->GetEntry(i);
-
-         
+        fava_tree->GetEntry(i);       
          
         // time cut
         if( (fava->unix_tmax < r.whichStartTime) || (fava->unix_tmin > r.whichEndTime) ){continue;}
 
         const char * fava_name = fava->association.GetString().Data();
 
-                  // If we didn't specific all sources
+	// Skip flares that are not associated with a source
+	if(strcasestr(fava_name,"None"))
+	  {
+	    continue;
+	  }
+
+	// If we didn't specific all sources
             
         if(strcasecmp(r.whichSources,"All"))
         {
@@ -290,18 +481,18 @@ SourceModel * SourceModel::getSourceModel(const char * key, unsigned seed, Sourc
             
             
         //say no to |dec| >30 
-        if (fabs(fava->dec) > r.maxDec) continue; 
+        //if (fabs(fava->dec) > r.maxDec) continue; 
               
         //say no to low HE flux 
              
-        if (fava->he_sigma < 4 && fava->he_flux < 0) continue;
+        //if (fava->he_sigma < 4 && fava->he_flux < 0) continue;
         //printf("passed flux cut \n");
 
         //only blazars
         if (fava->source_class.GetString() ==  "bcu" || fava->source_class.GetString() == "fsrq" || fava->source_class.GetString() == "bll")
         {
        
-           m->addSource(new Source(fava_name, fava->ra, fava->dec, 
+	  m->addSource(new Source(fava_name, (fava->ra)/15., fava->dec, 
                          new TimeWindowedExponentialSourceFlux( fava->unix_tmin, fava->unix_tmax, txs_index, 
                           txs_norm * (flux_weighted ? fava->he_flux / txs_flux : z_weighted ?  txs_flux * pow(txs_D/luminosity_distance(fava->z),2): 1), txs_E0))
                        ); 
@@ -373,8 +564,6 @@ void SourceModel::computeFluxTimeChanges(std::vector<double> * changes) const
   std::vector<double>::iterator it = std::unique(changes->begin(),changes->end()); 
   changes->resize(std::distance(changes->begin(),it));
 }
-
-
 
 int SourceModel::getDirectionAndEnergy( Vector * nudir, double t, double  & nuE, double minE, double maxE)
 {
@@ -457,6 +646,7 @@ double ConstantExponentialSourceFlux::pickEnergy(double Emin, double Emax, doubl
   (void) t; 
   TRandom * old = gRandom; 
   gRandom = rng; 
+  if (Emin == Emax) return Emin; 
 
   //I'm too bad at math to figure out the proper quantile function here. It's probably trivial, but this works and isn't THAT slow. 
   if (f.GetXmin() != Emin || f.GetXmax() !=Emax) f.SetRange(Emin,Emax); 
@@ -465,7 +655,6 @@ double ConstantExponentialSourceFlux::pickEnergy(double Emin, double Emax, doubl
   gRandom = old; 
   return E; 
 }
-
 
 
 TimeWindowedExponentialSourceFlux::TimeWindowedExponentialSourceFlux(double t0, double t1, double e, double norm, double normE, double cutoff)
@@ -496,6 +685,15 @@ void SourceModel::setUpWeights(double t0, double t1, double minE, double maxE, i
 {
 
   average_flux = 0; 
+  average_nonzero_flux = 0;
+
+  per_source_average_flux.clear();
+  per_source_average_nonzero_flux.clear();
+  per_source_average_flux.resize(sources.size());
+  per_source_average_nonzero_flux.resize(sources.size());
+  std::vector<int> Nnonzero_per_source(sources.size());
+  int Nnonzero = 0; 
+
   weight_Emin = minE; 
   weight_Emax = maxE; 
 
@@ -503,16 +701,46 @@ void SourceModel::setUpWeights(double t0, double t1, double minE, double maxE, i
   for (int i =0; i < N; i++) 
   {
     double t = rng->Uniform(t0,t1); 
+    double sumFlux = 0;
     for (unsigned j = 0; j < sources.size(); j++) 
     {
-      average_flux += sources[j]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t)/N; 
+      double dFlux =  minE == maxE ? sources[j]->getFlux()->getFlux(minE, t) : sources[j]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t); 
+      sumFlux += dFlux; 
+
+      average_flux += dFlux/N; 
+      per_source_average_flux[j]+=dFlux/N; 
+      average_nonzero_flux += dFlux; 
+
+      if (dFlux!=0)
+      {
+        Nnonzero_per_source[j]++; 
+        per_source_average_nonzero_flux[j]+= dFlux; 
+      }
+    }
+    if (sumFlux != 0) 
+    {
+      Nnonzero++;
     }
   }
-  printf("Set up weights: average flux is %g\n", average_flux); 
+
+  for (unsigned j = 0; j < sources.size(); j++) 
+  {
+   if (per_source_average_nonzero_flux[j])  per_source_average_nonzero_flux[j] /= Nnonzero_per_source[j]; 
+  }
+
+  if (average_nonzero_flux) average_nonzero_flux /= Nnonzero; 
+  printf("Set up weights: average flux is %g (average non-zero flux: %g)\n", average_flux, average_nonzero_flux); 
 }
 
+double SourceModel::getPerSourceTimeWeight(double t, int i, bool use_average_nonzero_flux) const
+{
+  double weight = weight_Emin == weight_Emax ? sources[i]->getFlux()->getFlux(weight_Emin,t)
+                                             : sources[i]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t); 
 
-double SourceModel::getTimeWeight(double t) const
+  return weight / (use_average_nonzero_flux ? per_source_average_nonzero_flux[i] : per_source_average_flux[i]); 
+}
+
+double SourceModel::getTimeWeight(double t, bool use_average_nonzero_flux) const
 {
   static int nnag = 0; 
   if (average_flux < 0) 
@@ -522,8 +750,8 @@ double SourceModel::getTimeWeight(double t) const
   double weight = 0;
   for (unsigned i = 0; i < sources.size(); i++) 
   {
-    weight += sources[i]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t); 
+    weight += weight_Emin == weight_Emax ? sources[i]->getFlux()->getFlux(weight_Emin,t) : sources[i]->getFlux()->getFluxBetween(weight_Emin,weight_Emax,t); 
   }
-  return weight/average_flux; 
+  return weight / (use_average_nonzero_flux ? average_nonzero_flux : average_flux); 
 }
 

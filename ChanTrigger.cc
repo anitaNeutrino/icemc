@@ -1627,7 +1627,7 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTDIGITIZER) { 
     for (int i=0;i<nPoints;i++){
-      justSig_digPath[ipol][i] = surfSignalDown->Eval(x[i]);
+      justSig_digPath[ipol][i] = FFTtools::evalEvenGraph(surfSignalDown, x[i]); 
       if(settings1->ADDCW){
         y[i] += justSig_digPath[ipol][i];
         y[i] += justNoise_digPath[ipol][i];
@@ -1637,7 +1637,7 @@ void ChanTrigger::applyImpulseResponseDigitizer(Settings *settings1, Anita *anit
       }
     }
   } else {
-    for (int i=0;i<nPoints;i++)  justSig_digPath[ipol][i] = y[i] = surfSignalDown->Eval(x[i]);
+    for (int i=0;i<nPoints;i++)  justSig_digPath[ipol][i] = y[i] = FFTtools::evalEvenGraph(surfSignalDown, x[i]);
   }
   
 
@@ -1721,12 +1721,12 @@ void ChanTrigger::applyImpulseResponseTrigger(Settings *settings1, Anita *anita1
   // add thermal noise for anita-3 flight
   if (settings1->SIGNAL_FLUCT && settings1->NOISEFROMFLIGHTTRIGGER) { 
     for (int i=0;i<nPoints;i++){
-      justSig_trigPath[ipol][i] = surfSignalDown->Eval(x[i]);
+      justSig_trigPath[ipol][i] = FFTtools::evalEvenGraph(surfSignalDown,x[i]);
       y[i] = voltsArray[i] = justSig_trigPath[ipol][i] + justNoise_trigPath[ipol][i];
       //  std::cout << i << " " << justNoise_trigPath[ipol][i] << std::endl;
     }
   } else {
-    for (int i=0;i<nPoints;i++)  justSig_trigPath[ipol][i] = y[i] = voltsArray[i] = surfSignalDown->Eval(x[i]);
+    for (int i=0;i<nPoints;i++)  justSig_trigPath[ipol][i] = y[i] = voltsArray[i] = FFTtools::evalEvenGraph(surfSignalDown,x[i]);
   }
   
   // find back the frequency domain
