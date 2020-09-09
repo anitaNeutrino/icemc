@@ -1,0 +1,32 @@
+### DESCRIPTION
+The scripts here use CRPropa3 to generate theoretical neutrino (and nucleon) fluxes. When run, the program generates neutrino flux output files (in ../fluxes) which can be used directly by icemc plotting macros (in ../limits).
+
+The output files take the format:
+
+simFlux_EZ_AY_NX_cW_sV_zU.dat
+
+Z = energy exponent
+Y = power law index
+X = number of cosmic rays propagated
+W = boolean for exponential cut-off
+V = boolean for source evolution
+U = source evolution redshift cap
+
+***These flux generation scripts will _not_ work out of the box.***
+
+***You will need a fully installed and running version of CRPropa3 (and all of its prerequisites). Confirm your installation is working before running these scripts.***
+
+### PREREQUISITES
+CRPropa3 (and its prerequisites)
+python
+>numpy
+>pylab
+swig
+ROOT (to run macros) 6+ recommended (and its prerequisites)
+
+### USAGE
+The macros should be run from within your CRPropa3 build directory (not this directory) with python (not pyROOT).
+
+For options and explanations of parameters: python simulatedNeutrinoFlux.py -h
+
+To run: python simulatedNeutrinoFlux.py
