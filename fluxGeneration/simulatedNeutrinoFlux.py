@@ -42,8 +42,10 @@ parser.add_argument('-e', '--emax', default=21, help='desc: Maximum energy (eV) 
 parser.add_argument('-a', '--alpha', default=2.0, help='desc: Source power law index value <float> Default = 2.0')
 parser.add_argument('-n', '--number', default=1000000, help='desc: Number of cosmic rays to propagate <int> Default = 1000000')
 parser.add_argument('-d', '--draw', default=1, help='desc: Draw spectra <int> Default = 1 <conditions> Off = 0, On = 1, Show all spectra = 2')
-parser.add_argument('-c', '--cutOffOption', default=0, help='desc: Add exponential cuf-off factor to injection spectrum <int> Default = 0 <conditions> Off = 0, On = 1')
-parser.add_argument('-s', '--sourceEvolutionParam', default=3, help='desc: Source evolution param (sometimes called m) <int> Default = 3 <conditions> Off = 0, otherwise use that exponent')
+parser.add_argument('-c', '--cutOffOption', default=0., help='desc: Add exponential cuf-off factor to injection spectrum <int> Default = 0 <conditions> Off = 0, On = 1')
+parser.add_argument('-s', '--sourceEvolutionParam', default=3, help='desc: Source evolution param (sometimes called m) <int> Default = 3 <float> Off = 0, otherwise use that exponent')
+parser.add_argument('-S', '--scratchDir', default='.', help='desc: Scratch directory (for writing temporary outputs) <int> Default = .)')
+parser.add_argument('-k', '--keep', default=False, help='desc Keep text output files (these can be massive and will likely get overwritten anyway) <bool> Default = False)')
 parser.add_argument('-b', '--batchMode', default=0, help='desc: Enable batch mode to run on clusters <int> Default = 1 <conditions> Off = 0, On = 1')
 parser.add_argument('-z', '--sourceEvolutionRedshiftCap', default=1.5, help='desc: Source evolution scales with (1+z)^m until this redshift value. NOTE: This is the not maximum redshift, just until source evolution plateaus! <float> Default = 1.5')
 parser.add_argument('-m', '--minRedShift', default=0, help='desc: the minimum redshift! <float> Default = 0')
@@ -109,8 +111,8 @@ m.add(ElectronPairProduction(CMB))
 m.add(ElectronPairProduction(IRB))
 m.add(MinimumEnergy(energyMin * eV))
 
-nucleonOutputFile = 'out_nucleons_E' + str(emax) + '_A' + str(alpha) + '_N' + str(number) + '_c' + str(cutOffOption) + '_s' + str(sourceEvolution) + '_z' + str(sourceEvolutionRedshiftCap) + '.txt'
-neutrinoOutputFile = 'out_neutrinos_E' + str(emax) + '_A' + str(alpha) + '_N' + str(number) + '_c' + str(cutOffOption) + '_s' + str(sourceEvolution) + '_z' + str(sourceEvolutionRedshiftCap) + '.txt'
+nucleonOutputFile = args.scratchDir + '/out_nucleons_E' + str(emax) + '_A' + str(alpha) + '_N' + str(number) + '_c' + str(cutOffOption) + '_s' + str(sourceEvolution) + '_z' + str(sourceEvolutionRedshiftCap) + '.txt'
+neutrinoOutputFile = args.scratchDir + '/out_neutrinos_E' + str(emax) + '_A' + str(alpha) + '_N' + str(number) + '_c' + str(cutOffOption) + '_s' + str(sourceEvolution) + '_z' + str(sourceEvolutionRedshiftCap) + '.txt'
 
 # Observer for nucleons
 obs1 = Observer()
@@ -155,8 +157,9 @@ nucleons = np.genfromtxt(nucleonOutputFile, names=True)
 neutrinos = np.genfromtxt(neutrinoOutputFile, names=True)
 
 # Don't need input files from here on, we re-generate them every time program is used
-os.remove(nucleonOutputFile)
-os.remove(neutrinoOutputFile)
+if not args.keep: 
+  os.remove(nucleonOutputFile)
+  os.remove(neutrinoOutputFile)
 
 ####
 print('Normalizing, generating flux spectra...')
