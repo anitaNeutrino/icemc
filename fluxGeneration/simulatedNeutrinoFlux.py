@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 ############################################################################
 # Desc:
 # 1D simulation for producing neutrino flux spectra at ultra-high energies
@@ -35,23 +36,27 @@ np.set_printoptions(threshold=np.inf)
 pl.rcParams.update({'font.size': 22})
 
 ### Input options
-print '_____INPUT OPTIONS_____'
+print ('_____INPUT OPTIONS_____')
 parser = argparse.ArgumentParser('InputParams')
-parser.add_argument('-e', '--emax', default=23.1, help='desc: Maximum energy (eV) exponent of cosmic rays from the source <float> Default = 23.1 (10^23.1) <conditions> High energy (~ZeV scale)')
+parser.add_argument('-e', '--emax', default=21, help='desc: Maximum energy (eV) exponent of cosmic rays from the source <float> Default = 23.1 (10^23.1) <conditions> High energy (~ZeV scale)')
 parser.add_argument('-a', '--alpha', default=2.0, help='desc: Source power law index value <float> Default = 2.0')
 parser.add_argument('-n', '--number', default=1000000, help='desc: Number of cosmic rays to propagate <int> Default = 1000000')
 parser.add_argument('-d', '--draw', default=1, help='desc: Draw spectra <int> Default = 1 <conditions> Off = 0, On = 1, Show all spectra = 2')
 parser.add_argument('-c', '--cutOffOption', default=0, help='desc: Add exponential cuf-off factor to injection spectrum <int> Default = 0 <conditions> Off = 0, On = 1')
-parser.add_argument('-s', '--sourceEvolution', default=1, help='desc: Include source evolution <int> Default = 1 <conditions> Off = 0, On = 1')
+parser.add_argument('-s', '--sourceEvolutionParam', default=3, help='desc: Source evolution param (sometimes called m) <int> Default = 3 <conditions> Off = 0, otherwise use that exponent')
 parser.add_argument('-b', '--batchMode', default=0, help='desc: Enable batch mode to run on clusters <int> Default = 1 <conditions> Off = 0, On = 1')
 parser.add_argument('-z', '--sourceEvolutionRedshiftCap', default=1.5, help='desc: Source evolution scales with (1+z)^m until this redshift value. NOTE: This is the not maximum redshift, just until source evolution plateaus! <float> Default = 1.5')
+parser.add_argument('-m', '--minRedShift', default=0, help='desc: the minimum redshift! <float> Default = 0')
+parser.add_argument('-M', '--maxRedShift', default=4, help='desc: the maximum redshift! <float> Default = 4')
+parser.add_argument('-o', '--output', default='', help='desc: output file name (otherwise auto-generated from optionss)')
+parser.add_argument('-D', '--outputDir', default='', help='desc: output dir (otherwise ICEMC_SRC_DIR or cwd)')
 args = parser.parse_args()
 emax = float(args.emax)
 alpha = float(args.alpha)
 number = int(args.number)
 draw = int(args.draw)
 cutOffOption = int(args.cutOffOption)
-sourceEvolution = int(args.sourceEvolution)
+sourceEvolution = int(args.sourceEvolutionParam)!=0
 batchMode = int(args.batchMode)
 sourceEvolutionRedshiftCap = float(args.sourceEvolutionRedshiftCap)
 
@@ -65,7 +70,7 @@ if(draw == 1 or draw == 2):
     print('Plotting spectra')
 if(cutOffOption==1):
     print('Applying cut-off to injection spectrum')
-if(sourceEvolution==1):
+if(sourceEvolution):
     print('Applying source evolution')
 if(batchMode==1):
     print('Running in batch mode')
@@ -73,7 +78,7 @@ if(batchMode==1):
     pl.switch_backend('agg') # required output for batch farm (none)
 else:
     print('Running in normal mode')
-print '_______________________'
+print ('_______________________')
 ### End input options
 
 ######## Start CRPROPA assumptions and settings
@@ -89,9 +94,9 @@ energyMin = 10.**16.9
 energyMax = 10.**emax # range: 100 EeV -> 10^5 EeV
 logEmin = np.log10(energyMin) # log of min energy
 logEmax = np.log10(energyMax) # log of max energy
-redshiftMin = 0.
-redshiftMax = 4.
-mParam = 3. # source evolution parameter
+redshiftMin = float(args.minRedShift);
+redshiftMax = float(args.maxRedShift); 
+mParam = float(args.sourceEvolutionParam); 
 
 # Set up modules
 m = ModuleList()
@@ -126,10 +131,10 @@ m.add(obs2)
 # Source: protons with power-law spectrum from uniformly distributed sources with redshift z = 0-3
 source = Source()
 #if(sourceEvolution==0):
-source.add(SourceUniform1D(0, redshift2ComovingDistance(redshiftMax)))
+source.add(SourceUniform1D(redshift2ComovingDistance(redshiftMin), redshift2ComovingDistance(redshiftMax)))
 source.add(SourceRedshift1D())
 
-if(sourceEvolution==1):
+if sourceEvolution:
     source.add(SourceRedshiftEvolution(mParam, 0, sourceEvolutionRedshiftCap)) #Source evolution
 # E^alpha spec (can't handle exponential cut off, so this is accounted for later)
 source.add(SourcePowerLawSpectrum(energyMin * eV, energyMax * eV, -1 * alpha))
@@ -389,28 +394,28 @@ JEEvScaledFormatLog =  np.log10(JEEvScaledFormat) # no zeros, we can take the lo
     
 #print(JEEvScaledFormatLog)
 format=np.c_[lEcens, JEEvScaledFormatLog]
-fileName='simFlux_E' + str(emax) + '_A' + str(alpha) + '_N' + str(number) + '_c' + str(cutOffOption) + '_s' + str(sourceEvolution) + '_z' + str(sourceEvolutionRedshiftCap) + '.dat'
-subDir='/fluxes/'
-errorMsg=' doesn\'t exist! Saved here instead.'
+fileName = args.output; 
+if fileName == '':
+  fileName='simFlux_E' + str(emax) + '_A' + str(alpha) + '_N' + str(number) + '_c' + str(cutOffOption) + '_s' + str(mParam) + '_z' + str(sourceEvolutionRedshiftCap) + '_m' + str(redshiftMin) + '_M' + str(redshiftMax) + '.dat'
 decimalPrecision='%-7.3f'
 
-envName='ICEMC_SRC_DIR'
-if envName in os.environ:
-    sourceDir = os.environ.get(envName)
-    if sourceDir:
-        print('Saving spectra to ' + sourceDir + subDir)
-        np.savetxt(sourceDir + subDir + fileName, format, delimiter=' ', header=str(normIndex), comments='', fmt=decimalPrecision)
-    else:
-        print(sourceDir + errorMsg)
-        np.savetxt(fileName, format, delimiter=' ', header=str(normIndex), comments='', fmt=decimalPrecision)
-else:
-    print(envName +errorMsg)
-    np.savetxt(fileName, format, delimiter=' ', header=str(normIndex), comments='', fmt=decimalPrecision)
+outdir = args.outputDir
+
+if outdir == '':
+  if "ICEMC_SRC_DIR" in os.environ:
+    outdir = os.environ.get("ICEMC_SRC_DIR")+'/fluxes'
+  else:
+    outdir ='.' 
+
+
+print('Saving spectra to ' + outdir + "/" + fileName) 
+
+np.savetxt(outdir + '/' + fileName, format, delimiter=' ', header=str(normIndex), comments='', fmt=decimalPrecision)
 
     # Show all plots
 if(draw==1):
     print('Sim done, displaying output.')
-    pl.show(2)
+    pl.show()
 
 if(draw==2):
     print('Sim done, displaying output.')
