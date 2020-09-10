@@ -393,27 +393,23 @@ if JEEvSList.count(0) > 0: # if occurences of zeroes, cut spectrum
     JEEvScaledFormat = JEEvScaledFormat[0:normIndex] # cut fluxes
     lEcens = lEcens[0:normIndex] # cut energies
     
-JEEvScaledFormatLog =  np.log10(JEEvScaledFormat) # no zeros, we can take the log
     
-#print(JEEvScaledFormatLog)
-format=np.c_[lEcens, JEEvScaledFormatLog]
+format=np.c_[10**lEcens, JEEvScaledFormat]
 fileName = args.output; 
 if fileName == '':
   fileName='simFlux_E' + str(emax) + '_A' + str(alpha) + '_N' + str(number) + '_c' + str(cutOffOption) + '_s' + str(mParam) + '_z' + str(sourceEvolutionRedshiftCap) + '_m' + str(redshiftMin) + '_M' + str(redshiftMax) + '.dat'
-decimalPrecision='%-7.3f'
+
+decimalPrecision='%g'
 
 outdir = args.outputDir
 
 if outdir == '':
-  if "ICEMC_SRC_DIR" in os.environ:
-    outdir = os.environ.get("ICEMC_SRC_DIR")+'/fluxes'
-  else:
     outdir ='.' 
 
 
 print('Saving spectra to ' + outdir + "/" + fileName) 
 
-np.savetxt(outdir + '/' + fileName, format, delimiter=' ', header=str(normIndex), comments='', fmt=decimalPrecision)
+np.savetxt(outdir + '/' + fileName, format, delimiter=' ', fmt=decimalPrecision)
 
     # Show all plots
 if(draw==1):
