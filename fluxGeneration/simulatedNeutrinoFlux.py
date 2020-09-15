@@ -45,7 +45,8 @@ parser.add_argument('-d', '--draw', default=1, help='desc: Draw spectra <int> De
 parser.add_argument('-c', '--cutOffOption', default=0., help='desc: Add exponential cuf-off factor to injection spectrum <int> Default = 0 <conditions> Off = 0, On = 1')
 parser.add_argument('-s', '--sourceEvolutionParam', default=3, help='desc: Source evolution param (sometimes called m) <int> Default = 3 <float> Off = 0, otherwise use that exponent')
 parser.add_argument('-S', '--scratchDir', default='.', help='desc: Scratch directory (for writing temporary outputs) <int> Default = .)')
-parser.add_argument('-k', '--keep', default=False, help='desc Keep text output files (these can be massive and will likely get overwritten anyway) <bool> Default = False)')
+parser.add_argument('-k', '--keep', action="store_true", help='desc Keep text output files (these can be massive and will likely get overwritten anyway) <bool> Default = False)')
+parser.add_argument('-R', '--ROOT', action="store_true", help='desc  Use ROOT output (that doesn\'t get deleted) instead of text file <bool> Default = False)')
 parser.add_argument('-b', '--batchMode', default=0, help='desc: Enable batch mode to run on clusters <int> Default = 1 <conditions> Off = 0, On = 1')
 parser.add_argument('-z', '--sourceEvolutionRedshiftCap', default=1.5, help='desc: Source evolution scales with (1+z)^m until this redshift value. NOTE: This is the not maximum redshift, just until source evolution plateaus! <float> Default = 1.5')
 parser.add_argument('-m', '--minRedShift', default=0, help='desc: the minimum redshift! <float> Default = 0')
@@ -89,6 +90,12 @@ neutrinos = True
 photons = False
 electrons = False
 
+useROOT = args.ROOT; 
+
+if useROOT: 
+    import ROOT 
+    from CRPropaROOTOutput.CRPropaROOTOutput import * 
+
 # Set up variables
 ### NOTE, these are the inner and outer BIN EDGES, respectively
 ### The actual energies used are the bin CENTERS, i.e. 16.95, 21.05
@@ -111,14 +118,21 @@ m.add(ElectronPairProduction(CMB))
 m.add(ElectronPairProduction(IRB))
 m.add(MinimumEnergy(energyMin * eV))
 
-nucleonOutputFile = args.scratchDir + '/out_nucleons_E' + str(emax) + '_A' + str(alpha) + '_N' + str(number) + '_c' + str(cutOffOption) + '_s' + str(sourceEvolution) + '_z' + str(sourceEvolutionRedshiftCap) + '.txt'
-neutrinoOutputFile = args.scratchDir + '/out_neutrinos_E' + str(emax) + '_A' + str(alpha) + '_N' + str(number) + '_c' + str(cutOffOption) + '_s' + str(sourceEvolution) + '_z' + str(sourceEvolutionRedshiftCap) + '.txt'
+suffix = ".txt"; 
+if useROOT: 
+    suffix = ".root" 
+nucleonOutputFile = args.scratchDir + '/out_nucleons_E' + str(emax) + '_A' + str(alpha) + '_N' + str(number) + '_c' + str(cutOffOption) + '_s' + str(mParam) + '_z' + str(sourceEvolutionRedshiftCap) + suffix
+neutrinoOutputFile = args.scratchDir + '/out_neutrinos_E' + str(emax) + '_A' + str(alpha) + '_N' + str(number) + '_c' + str(cutOffOption) + '_s' + str(mParam) + '_z' + str(sourceEvolutionRedshiftCap) + suffix 
 
 # Observer for nucleons
 obs1 = Observer()
 obs1.add(ObserverPoint())
 obs1.add(ObserverNeutrinoVeto())  # we don't want neutrinos here
-output1 = TextOutput(nucleonOutputFile, Output.Event1D)
+output1 = None
+if useROOT: 
+    output1 = ROOTEventOutput1D(nucleonOutputFile) 
+else:
+    output1 = TextOutput(nucleonOutputFile, Output.Event1D)
 obs1.onDetection(output1)
 m.add(obs1)
 
@@ -126,7 +140,11 @@ m.add(obs1)
 obs2 = Observer()
 obs2.add(ObserverPoint())
 obs2.add(ObserverNucleusVeto())  # we don't want nucleons here
-output2 = TextOutput(neutrinoOutputFile, Output.Event1D)
+output2= None 
+if useROOT: 
+    output2 = ROOTEventOutput1D(neutrinoOutputFile) 
+else:
+    output2 = TextOutput(neutrinoOutputFile, Output.Event1D)
 obs2.onDetection(output2)
 m.add(obs2)
 
@@ -152,9 +170,22 @@ print('Finished running CRPropa')
 output1.close()
 output2.close()
 
+nucleons = None 
+neutrinos = None 
+Evar  = 'E' 
+E0var  = 'E0' 
+
+if useROOT: 
+    df_nuc = ROOT.RDataFrame("events",nucleonOutputFile); 
+    nucleons = df_nuc.AsNumpy() 
+    df_nu = ROOT.RDataFrame("events",neutrinoOutputFile); 
+    neutrinos = df_nu.AsNumpy() 
+    Evar = 'Energy_EeV' 
+    E0var = 'Initial_Energy_EeV' 
+else: 
 # Energies in EeV
-nucleons = np.genfromtxt(nucleonOutputFile, names=True) 
-neutrinos = np.genfromtxt(neutrinoOutputFile, names=True)
+    nucleons = np.genfromtxt(nucleonOutputFile, names=True) 
+    neutrinos = np.genfromtxt(neutrinoOutputFile, names=True)
 
 # Don't need input files from here on, we re-generate them every time program is used
 if not args.keep: 
@@ -165,23 +196,23 @@ if not args.keep:
 print('Normalizing, generating flux spectra...')
 ####### Overall figure
 fig = pl.figure(1)
-countNorm = float(len(nucleons['E']))
-countNormNeutrino = float(len(neutrinos['E']))
+countNorm = float(len(nucleons[Evar]))
+countNormNeutrino = float(len(neutrinos[Evar]))
 #### Nucleons
 ### Hist setup
 energyStep = 0.10 # how spaced our log
-lE = pl.log10(nucleons['E']) + 18.  # energy in log10(E/eV))
+lE = pl.log10(nucleons[Evar]) + 18.  # energy in log10(E/eV))
 lEbins = pl.arange(logEmin, logEmax, energyStep)  # logarithmic bins
 lEcens = (lEbins[1:] + lEbins[:-1]) / 2  # logarithmic bin centers
 
 ## We apply a posteriori weight binning when filling the histograms
 ## as have the original energy E0 available from the output files
 if (cutOffOption==1):
-    exponentialCutoffN = np.exp(- 1 * (nucleons['E0'] * 10**18)/(energyMax))
-    exponentialCutoffV = np.exp(- 1 * (neutrinos['E0'] * 10**18)/(energyMax))
+    exponentialCutoffN = np.exp(- 1 * (nucleons[E0var] * 10**18)/(energyMax))
+    exponentialCutoffV = np.exp(- 1 * (neutrinos[E0var] * 10**18)/(energyMax))
 else:
-    exponentialCutoffN = nucleons['E0']/nucleons['E0'] # just so we have array of 1 same length as data for weights
-    exponentialCutoffV = neutrinos['E0']/neutrinos['E0'] # see above
+    exponentialCutoffN = nucleons[E0var]/nucleons[E0var] # just so we have array of 1 same length as data for weights
+    exponentialCutoffV = neutrinos[E0var]/neutrinos[E0var] # see above
 dE = 10**lEbins[1:] - 10**lEbins[:-1]  # bin widths
 JEE = pl.histogram(lE, weights=exponentialCutoffN, bins=lEbins)[0] / dE * 10**lEcens * 10**lEcens
 
@@ -303,7 +334,7 @@ jEENucScBoth.set_ylim([1e13, None])
 countNormFactor = 1
 
 ### Setup
-lEv = pl.log10(neutrinos['E']) + 18  # energy in log10(E/eV))
+lEv = pl.log10(neutrinos[Evar]) + 18  # energy in log10(E/eV))
 # Binning 
 JEEv = pl.histogram(lEv,weights=exponentialCutoffV, bins=lEbins)[0] / dE * 10**lEcens * 10**lEcens
 JEv = pl.histogram(lEv,weights=exponentialCutoffV, bins=lEbins)[0] / dE * 10**lEcens # different scaling
