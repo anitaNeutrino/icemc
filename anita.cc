@@ -4232,7 +4232,8 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 
   // Additional norm constant?
   //  double norm = TMath::Power(10., +6./20.);
-  double norm = 100.; // LC: 2019 Dec 11 From John Russels studies, additional factor of 54.4. 54.4*TMath::Power(10., +6./20.)~100
+//  double norm = 100.; // LC: 2019 Dec 11 From John Russell's studies, additional factor of 54.4. 54.4*TMath::Power(10., +6./20.)~100
+  double norms[108] = { 19.895342, 15.170847, 15.272928, 18.312058, 10.349995, 11.070576, 12.423734, 12.423052, 1.0000000, 20.126341, 18.584684, 11.397569, 17.580086, 10.382412, 12.503080, 11.308859, 12.800930, 1.0000000, 18.539481, 14.789692, 12.983963, 16.836420, 10.150812, 9.6634608, 10.542310, 11.362989, 1.0000000, 19.278443, 15.546440, 13.721649, 15.473861, 9.6682675, 10.193298, 9.9956105, 10.973754, 1.0000000, 16.940199, 11.992808, 14.215437, 15.955597, 11.626031, 17.826968, 11.684708, 11.162954, 1.0000000, 17.901819, 16.557247, 16.248726, 16.382974, 10.864416, 11.524713, 11.178142, 11.164146, 1.0000000, 18.673595, 18.583760, 16.127938, 18.838488, 10.435702, 12.960790, 12.248195, 13.074833, 1.0000000, 16.748999, 17.228931, 14.742709, 17.045816, 12.185667, 12.032732, 10.788462, 12.707458, 1.0000000, 14.801887, 16.292506, 14.245756, 17.712843, 10.384129, 10.714031, 10.439368, 11.615564, 1.0000000, 20.204804, 15.181232, 14.557532, 16.020576, 11.695764, 11.531092, 10.335692, 11.945248, 1.0000000, 17.357559, 14.523550, 13.920417, 15.900693, 10.623531, 10.459091, 10.941807, 12.866898, 1.0000000, 22.025135, 17.643719, 15.644986, 16.085104, 11.280228, 11.939367, 10.791903, 11.542283, 1.0000000 };  //  JR: From 2020 Sep results from John Russell's studies, changing from a global normalization to a per-channel array. As clock channels aren't filled, I decided to set their normalization to 1 to indicate no change.
 
   for(int ipol=0; ipol<=1; ipol++) {
     for(int iring = 0; iring<=2; iring++){
@@ -4254,11 +4255,14 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
           Double_t *newx = gint->GetX();
           Double_t *newy = gint->GetY();
 	  
-	  // Normalise
+	  // Sep 2020, JR: Determine channel index based on ipol, iring, iphi for norms[108].
+	  int chanIndex = AnitaGeomTool::getChanIndexFromRingPhiPol(AnitaRing::AnitaRing_t(iring), iphi, AnitaPol::AnitaPol_t(ipol));
+
+	  // Normalize
           for (int i=0;i<nPoints;i++){
 	    // change time axis from ns to s
 	    newx[i]=newx[i]*1E-9;
-	    newy[i]=newy[i]*norm;
+	    newy[i]=newy[i]*norms[chanIndex];
           }
           *gint = TGraph(nPoints,newx,newy);
 // end edits for debugging volumes
