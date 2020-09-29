@@ -47,7 +47,7 @@
 
 #include "icemc_random.h" 
 const std::string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
-const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
+const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data";
 
 
 using std::cout;
@@ -734,7 +734,7 @@ void Anita::getDiodeDataAndAttenuation(Settings *settings1, TString outputdir){
   if (BANDING==0)
     sdiode=ICEMC_DATA_DIR+"/diode_anita1.root";
   else if (BANDING==1) 
-    sdiode=ICEMC_DATA_DIR+"diode_nobanding.root";
+    sdiode=ICEMC_DATA_DIR+"/diode_nobanding.root";
   else if (BANDING==2)
     sdiode=ICEMC_DATA_DIR+"/diode_anita2.root";
   else if (BANDING==4 || BANDING==5) // Linda
@@ -4235,7 +4235,7 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
 //  double norm = 100.; // LC: 2019 Dec 11 From John Russell's studies, additional factor of 54.4. 54.4*TMath::Power(10., +6./20.)~100
 
  //  JR: From 2020 Sep results from John Russell's studies, changing from a global normalization to a per-channel array. As clock channels aren't filled, I decided to set their normalization to 1 to indicate no change.
-  std::ifstream channelNormScaleFile(TString::Format("channelNormScale-Anita%d.txt", settings1 -> ANITAVERSION).Data());  //  Read in file where channel normalization scales stored. Currently for ANITA-4 only.
+  std::ifstream channelNormScaleFile(TString::Format("%s/channelNormScale-Anita%d.dat", ICEMC_DATA_DIR.data(), settings1 -> ANITAVERSION).Data());  //  Read in file where channel normalization scales stored. Currently for ANITA-4 only.
   int chanIdx = 0;
   double scale;
   double norms[108];
