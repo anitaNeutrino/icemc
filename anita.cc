@@ -47,7 +47,7 @@
 
 #include "icemc_random.h" 
 const std::string ICEMC_SRC_DIR=EnvironmentVariable::ICEMC_SRC_DIR();
-const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data";
+const std::string ICEMC_DATA_DIR=ICEMC_SRC_DIR+"/data/";
 
 
 using std::cout;
