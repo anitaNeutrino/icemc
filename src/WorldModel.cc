@@ -209,7 +209,10 @@ void icemc::Mesh::build() {
 
 bool icemc::Mesh::Hemisphere::build(){
 
+  //@todo remove these redeclarations from WorldModel.h, needed these to get it to compile
   const int minPoints = 2;
+  static const int nDim=3;
+  static const UInt_t kdTreeBinSize = 1e6;
   if(fPoints.v.size() > minPoints){
 
     fKDTree = std::make_shared<TKDTreeID>(fPoints.v.size(), nDim, kdTreeBinSize);

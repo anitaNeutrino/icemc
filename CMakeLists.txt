@@ -49,19 +49,18 @@ endif()
 if(DEFINED ENV{ANITA_UTIL_INSTALL_DIR})
     message("ANITA_UTIL_INSTALL_DIR is found and set to $ENV{ANITA_UTIL_INSTALL_DIR}")
     add_definitions(-DANITA_UTIL_EXISTS)
-    set (LIBS ${LIBS} RootFftwWrapper ) 
+    set (LIBS ${LIBS} RootFftwWrapper )
+    set (LIBS ${LIBS} AntarcticaRoot )
     set(ANITA_UTIL_LIB_DIR $ENV{ANITA_UTIL_INSTALL_DIR}/lib)
     set(ANITA_UTIL_INC_DIR $ENV{ANITA_UTIL_INSTALL_DIR}/include)
-    set(LD_ANITA_UTIL $ENV{ANITA_UTIL_INSTALL_DIR}/lib)
-    set(INC_ANITA_UTIL $ENV{ANITA_UTIL_INSTALL_DIR}/include)
     set(ANITA_UTIL_ETC_DIR $ENV{ANITA_UTIL_INSTALL_DIR}/etc)
     link_directories(${ANITA_UTIL_LIB_DIR})
-    include_directories(${ANITA_UTIL_LIB_DIR})
- endif()
+    include_directories(${ANITA_UTIL_INC_DIR})
+endif()
 
 
 set(CMAKE_CXX_FLAGS_DEFAULT 
-  "-O2 -g -pipe -m64 -pthread -W -Wall -Wextra -Woverloaded-virtual" 
+  "-O0 -g -pipe -m64 -pthread -W -Wall -Wextra -Woverloaded-virtual" 
   CACHE STRING "c++ Flags used during default icemc builds" 
   FORCE ) 
 
@@ -119,9 +118,9 @@ endif()
 ROOT_GENERATE_DICTIONARY(${DICTNAME} ${INCLUDE_FILES} LINKDEF LinkDef.h)
 
 
-#---Create a shared library with geneated dictionary
+#---Create a shared library with generated dictionary
 add_library(${libname} SHARED ${SOURCE_FILES} ${DICTNAME}.cxx)
-target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper AnitaEvent ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
+target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper AnitaEvent AntarcticaRoot ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
 
 if(DEFINED ENV{ANITA_UTIL_INSTALL_DIR})
   set(UTIL_LIB_DIR $ENV{ANITA_UTIL_INSTALL_DIR}/lib)
@@ -149,7 +148,7 @@ macro(add_binary bin)
   target_link_libraries(${bin} ${LIBS} ${libname})
 endmacro() 
 
-# add_binary(icemc)
+#add_binary(icemc)
 #add_binary(nicemc)
 add_binary(testY)
 add_binary(testSettings)
