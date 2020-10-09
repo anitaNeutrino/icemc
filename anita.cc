@@ -4233,20 +4233,17 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
   // Additional norm constant?
   //  double norm = TMath::Power(10., +6./20.);
 //  double norm = 100.; // LC: 2019 Dec 11 From John Russell's studies, additional factor of 54.4. 54.4*TMath::Power(10., +6./20.)~100
+  double norm = 10.;  //  Let's see if this factor needed to be updated from John Russell's Sep 2020 studies.
 
  //  JR: From 2020 Sep results from John Russell's studies, changing from a global normalization to a per-channel array. As clock channels aren't filled, I decided to set their normalization to 1 to indicate no change.
-  std::ifstream channelNormScaleFile(TString::Format("%s/channelNormScale-Anita%d.dat", ICEMC_DATA_DIR.data(), settings1 -> ANITAVERSION).Data());  //  Read in file where channel normalization scales stored. Currently for ANITA-4 only.
-  int chanIdx = 0;
-  double scale;
-  double norms[108];
+//  std::ifstream channelNormScaleFile(TString::Format("%s/channelNormScale-Anita%d.dat", ICEMC_DATA_DIR.data(), settings1 -> ANITAVERSION).Data());  //  Read in file where channel normalization scales stored. Currently for ANITA-4 only.
+//  int chanIdx = 0;
+ // double scale;
+//  double norms[108][6];
 
-  while (channelNormScaleFile >> scale) {
-
-    norms[chanIdx] = scale;
-    ++chanIdx;
-  }
-
-  channelNormScaleFile.close();
+//  for (int chanIdx = 0; chanIdx < 108; ++chanIdx) channelNormScaleFile >> norms[chanIdx][0] >> norms[chanIdx][1] >> norms[chanIdx][2] >> norms[chanIdx][3] >> norms[chanIdx][4] >> norms[chanIdx][5];
+//
+//  channelNormScaleFile.close();
 
   for(int ipol=0; ipol<=1; ipol++) {
     for(int iring = 0; iring<=2; iring++){
@@ -4269,13 +4266,14 @@ void Anita::readTuffResponseDigitizer(Settings *settings1){
           Double_t *newy = gint->GetY();
 	  
 	  // Sep 2020, JR: Determine channel index based on ipol, iring, iphi for norms[108].
-	  int chanIndex = AnitaGeomTool::getChanIndexFromRingPhiPol(AnitaRing::AnitaRing_t(iring), iphi, AnitaPol::AnitaPol_t(ipol));
+//	  int chanIndex = AnitaGeomTool::getChanIndexFromRingPhiPol(AnitaRing::AnitaRing_t(iring), iphi, AnitaPol::AnitaPol_t(ipol));
 
 	  // Normalize
           for (int i=0;i<nPoints;i++){
 	    // change time axis from ns to s
 	    newx[i]=newx[i]*1E-9;
-	    newy[i]=newy[i]*norms[chanIndex];
+	    newy[i]=newy[i]*norm;
+//	    newy[i]=newy[i]*norms[chanIndex][ituff];
           }
           *gint = TGraph(nPoints,newx,newy);
 // end edits for debugging volumes
