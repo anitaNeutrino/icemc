@@ -6,14 +6,19 @@ int main(){
 
   const icemc::Crust2 c;
 
+  std::cout << c.GetTotalIceVolume() << " m^3 of Antarctic ice" << std::endl;
+  std::cout << c.GetTotalIceArea() << " m^s of Antarctic is covered by ice" << std::endl;
+  
+  int nx, ny;
+  nx = ny = 1000;
   TFile* fOut = new TFile("testCrust.root", "recreate");
-  TH2DAntarctica*  h = new TH2DAntarctica();
+  TH2DAntarctica*  h = new TH2DAntarctica(nx, ny);
   h->SetName("hSurfaceAboveGeoid");
 
-  TH2DAntarctica*  h1 = new TH2DAntarctica();  
+  TH2DAntarctica*  h1 = new TH2DAntarctica(nx, ny);  
   h1->SetName("hWaterDepth");
 
-  TH2DAntarctica*  h2 = new TH2DAntarctica();  
+  TH2DAntarctica*  h2 = new TH2DAntarctica(nx, ny);  
   h2->SetName("hIceThickness");
 
   TH2D* hBoundary = new TH2D("hBoundary", "hBoundary", 128, -46, -44, 128, 44, 46);
@@ -27,11 +32,17 @@ int main(){
       hBoundary->SetBinContent(bx, by, s);
     }
   }
+
+  double max[3] = {0};
+
+  double totalvolume = 0;
   
   for(int by=1; by <= h->GetNbinsY(); by++){
     const double northing = h->GetYaxis()->GetBinCenter(by);
+    const double ywidth = h->GetYaxis()->GetBinWidth(by);
     for(int bx=1; bx <= h->GetNbinsX(); bx++){
       const double easting = h->GetXaxis()->GetBinCenter(bx);      
+      const double xwidth = h->GetXaxis()->GetBinWidth(bx);
       Geoid::Position p;
       double lon, lat;
       Geoid::EastingNorthingToLonLat(easting, northing, lon, lat);
@@ -44,9 +55,22 @@ int main(){
       
       double th = c.IceThickness(p);
       h2->SetBinContent(bx,  by, th);
-      // std::cout << easting << "\t" << northing << "\t" << r << "\t" << p.Surface() - p.Mag() << std::endl;
+
+      if(th >= 0){
+	totalvolume += xwidth*ywidth*th;
+	//std::cout << lon << ", " << lat << ":   " << xwidth << " X " << ywidth << ", thickness=" << th << std::endl;
+	if(th > max[0]){
+	  max[0] = th;
+	  max[1] = lon;
+	  max[2] = lat;
+	}
+      }
     }
   }
+
+    std::cout << "Max thickness = " << max[0] << " at " << max[1] << ", " << max[2] << std::endl;
+    std::cout << "Total volume = " << totalvolume << std::endl;
+  
   h->Write();  
   delete h;  
   h = nullptr;

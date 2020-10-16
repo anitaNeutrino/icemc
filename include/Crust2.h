@@ -38,7 +38,7 @@ namespace icemc{
   //SurfaceAboveGeoid : Returns the distance in meters from the local geoid to the start of air.
   //Geoid  : Returns the height in meters of the geoid at a given Geoid::Position or lon/lat.
   //RockSurface  : Returns the distance in meters from the center of the Earth to the end of rock
-  //               (the begninning of the ice/water/air)
+  //               (the beginning of the ice/water/air)
   //Getchord
   //
   ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,6 +87,12 @@ namespace icemc{
 
     virtual double GetMaxIceThickness() const {
       return fMaxIceThickness;
+    }
+    virtual double GetTotalIceVolume() const {
+      return totalIceVolume;
+    }
+    virtual double GetTotalIceArea() const {
+      return totalIceArea;
     }
     virtual double IceThickness(const Geoid::Position& pos) const override;
     virtual bool   InsideIce(const Geoid::Position& pos) const override;    
@@ -137,6 +143,8 @@ namespace icemc{
  
   protected:
     double fMaxIceThickness;
+    double totalIceVolume; // Volume of Antarctic ice
+    double totalIceArea;
     
     int EARTH_MODEL;
     int CONSTANTICETHICKNESS;
@@ -145,16 +153,19 @@ namespace icemc{
     int FLATSURFACE;
     int weightabsorption;
 
+    double DLON = 2; // Bin width in longitude in degrees -- will be 1 degree if we change to Crust1 
+    double DLAT = 2; // Bin width in latitude in degrees
+
     // pick method to step neutrino through the earth and get attenuation length
     static constexpr int getchord_method=2;	///< 1=core,mantle,crust; 2=crust 2.0 model
 
-    static const double COASTLINE;		///< if the rf leaves from beyond this "coastline" (in degrees of latitude relative to south pole) it's not in antarctica.  Real coastline is always closer than this.						///< parameters of the Crust 2.0 earth model
+    static const double COASTLINE;		///< if the rf leaves from beyond this "coastline" (in degrees of latitude relative to south pole) it's not in antarctica.  Real coastline is always closer than this.						///< parameters of the Crust 2.0 earth model	
     static constexpr int NLON=180;		///< number of bins in longitude for crust 2.0
     static constexpr int NLAT=90;		///< number of bins in latitude
     static constexpr int NPHI=180;		///< bins in longitude for visible ice in horizon
     double MIN_ALTITUDE_CRUST;			///< maximum depth of crust- determines when to start stepping
     double average_iceth;			///< average ice thickness over the continent-calculated once
-
+    
     /////////////////////////////////////
     //methods
     void ReadCrust(const std::string&);

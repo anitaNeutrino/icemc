@@ -58,6 +58,9 @@ icemc::Crust2::Crust2(int model,int WEIGHTABSORPTION_SETTING) :
 
   EARTH_MODEL = model;
 
+  totalIceVolume = 0;
+  totalIceArea = 0;
+  
   const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
   const std::string crust20_in=ICEMC_SRC_DIR+"/data/outcr"; // Crust 2.0 data file
 
@@ -121,7 +124,6 @@ icemc::Crust2::Layer icemc::Crust2::layerBelow(Layer layer) {
   }
   return layer;
 }
-
 
 double icemc::Crust2::IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const {
 
@@ -770,13 +772,25 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
       double density=(double)atof(sdensity.c_str());
       const double kilometersToMeters = 1e3;      
       double depthMeters = kilometersToMeters*(double)atof(sdepth.c_str());;
-
+      
       // region where Ross Ice Shelf was not accounted for in Crust 2.0 add it in by hand
       if (layer==Layer::Ice && indexlat==5 && (indexlon<=5 || indexlon>=176)){ // Ross Ice Shelf
 	depthMeters = kilometersToMeters*0.5;
       }
 
+      // Sum up ice volume
+      if(layer==Layer::Ice && ellipsoidPos.Latitude() <= COASTLINE){
+	//Ice within the continent
 
+	double areaOnGeoid = Geoid::getAreaOnGeoid(ellipsoidPos.Longitude(), ellipsoidPos.Latitude(), DLAT, DLON);
+	totalIceVolume += depthMeters*areaOnGeoid;
+	
+	if (depthMeters > 0){
+	  totalIceArea += areaOnGeoid;
+	}
+
+      }
+      
       auto find_or_make_mesh = [&](std::map<Crust2::Layer, Mesh>& m, Crust2::Layer l, const std::string& n) -> Mesh& {
 				 auto it = m.find(l);
 				 if(it==m.end()){
@@ -808,9 +822,7 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
       }
       
       icemc::Mesh& densityMesh = find_or_make_mesh(fDensities, layer,  "density"); ////fDensities[layer];
-      densityMesh.addPoint(ellipsoidPos, density);
-
-      
+      densityMesh.addPoint(ellipsoidPos, density);      
     } // for each data point in the crust file
 
 
