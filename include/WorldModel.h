@@ -46,6 +46,8 @@ namespace icemc {
       return p.EllipsoidSurface() + SurfaceAboveGeoid(p);
     };
 
+    virtual double areaLonLat(const Geoid::Position& p, double d);
+
     virtual double IceVolumeWithinHorizon(const Geoid::Position& p,  double horizonDistance) const = 0;
   private:
     

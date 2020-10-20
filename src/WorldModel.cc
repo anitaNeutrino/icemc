@@ -36,6 +36,15 @@ inline double area(const Geoid::Position& p1, const Geoid::Position& p2, const G
   return 0.5*normal.Mag();
 }
 
+double icemc::WorldModel::areaLonLat(const Geoid::Position& p, double d){
+
+  // Simple conversion of lat into theta for use in math
+  double minTheta = TMath::DegToRad()*(90 - (p.Latitude()+d/2));
+  double maxTheta = minTheta + d*TMath::DegToRad();
+  
+  double geoidRadius = Geoid::getGeoidRadiusAtLatitude(p.Latitude());
+  return  geoidRadius*geoidRadius*d*TMath::DegToRad()*(TMath::Cos(minTheta)-TMath::Cos(maxTheta));
+}
 
 TVector3 icemc::WorldModel::GetSurfaceNormal(const Geoid::Position& p) const {
   const double d = 1; // delta meters
