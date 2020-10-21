@@ -68,11 +68,12 @@ namespace icemc{
     ClassDef(ChordInfo, 1);
   };
 
+  //@todo Fix naming scheme -- Crust2 should become Crust so that CrustTwo --> Crust2 and CrustOne --> Crust1 
   //! Shape of the earth, ice thicknesses, profiles of earth layers, densities, neutrino absorption
   class Crust2 : public WorldModel {
 
   public:
-    Crust2(int model = 0,int WEIGHTABSORPTION_SETTING=1);
+    Crust2(int WEIGHTABSORPTION_SETTING=1);
     virtual ~Crust2(){;}
 
     double radii[3];
@@ -145,16 +146,13 @@ namespace icemc{
     double fMaxIceThickness;
     double totalIceVolume; // Volume of Antarctic ice
     double totalIceArea;
-    
-    int EARTH_MODEL;
+
+    int BIN_WIDTH; // in degrees, 1 for Crust1.0, 2 for Crust2.0
     int CONSTANTICETHICKNESS;
     int CONSTANTCRUST;
     int FIXEDELEVATION;
     int FLATSURFACE;
     int weightabsorption;
-
-    double DLON = 2; // Bin width in longitude in degrees -- will be 1 degree if we change to Crust1 
-    double DLAT = 2; // Bin width in latitude in degrees
 
     // pick method to step neutrino through the earth and get attenuation length
     static constexpr int getchord_method=2;	///< 1=core,mantle,crust; 2=crust 2.0 model
@@ -168,14 +166,18 @@ namespace icemc{
     
     /////////////////////////////////////
     //methods
-    void ReadCrust(const std::string&);
-
-    static const int numLayers = 11;
+    //virtual void ReadCrust(const std::string&) {};
+ 
+    //const int numLayers;
+    // All possible layers, in either Crust2.0 or Crust1.0
     enum class Layer {Air, ///@todo think about this one
 		      Water,
 		      Ice,
 		      SoftSediment,
 		      HardSediment,
+		      UpperSediment,
+		      MiddleSediment,
+		      LowerSediment,
 		      UpperCrust,
 		      MiddleCrust,
 		      LowerCrust,
@@ -192,8 +194,44 @@ namespace icemc{
      * }
      * @return const reference to a static array.
      */
-    const std::array<Crust2::Layer, numLayers>& Layers() const {
 
+    // Dummy Layers(), will be defined for each crust model
+    const std::array<Crust2::Layer, 1>& Layers() const{
+      static std::array<Crust2::Layer, 1> allLayers {Crust2::Layer::Air
+      };
+      return allLayers;
+    }
+
+    virtual Layer layerAbove(Layer layer) const { return layer; }
+    virtual Layer layerBelow(Layer layer) const { return layer; }
+    Layer getLayer(const Geoid::Position& pos, Layer startLayer=Layer::Air) const;
+    double getLayerSurfaceAtPosition(const Geoid::Position& pos, Layer l) const;    
+    
+    //private:
+    const std::string& getLayerName(Layer layer) const;
+    Layer getLayerFromString(const std::string& layerType) const;
+    std::map<Layer, std::string> fLayerNames;
+
+    std::map<Layer, icemc::Mesh> fThicknesses;
+    std::map<Layer, icemc::Mesh> fSurfaceMag; ///< Here mag means Mag() of the Position, not elevation
+    std::map<Layer, icemc::Mesh> fDensities;
+    icemc::Mesh fSurfaceAboveGeoid;
+    
+
+  }; //class Crust2
+
+  class CrustTwo : public Crust2 {
+  public:
+    CrustTwo(int WEIGHTABSORPTION_SETTING=1);
+    virtual ~CrustTwo(){;}
+
+  protected:
+
+    void ReadCrust(const std::string&);
+
+    // The layers in Crust2
+    static const int numLayers = 11;
+    const std::array<Crust2::Layer, numLayers>& Layers() const {
       static std::array<Crust2::Layer, numLayers> allLayers {Crust2::Layer::Air,
 							     Crust2::Layer::Water,
 							     Crust2::Layer::Ice,
@@ -208,25 +246,43 @@ namespace icemc{
       };
       return allLayers;
     }
-    
-    static Layer layerAbove(Layer);
-    static Layer layerBelow(Layer);
-    Layer getLayer(const Geoid::Position& pos, Layer startLayer=Layer::Air) const;
-    double getLayerSurfaceAtPosition(const Geoid::Position& pos, Layer l) const;    
-    
-  private:
 
-    const std::string& getLayerName(Layer layer) const;
-    Layer getLayerFromString(const std::string& layerType) const;
-    std::map<Layer, std::string> fLayerNames;
+    virtual Layer layerAbove(Layer layer) const override;
+    virtual Layer layerBelow(Layer layer) const override;    
+  }; //class CrustTwo
 
-    std::map<Layer, icemc::Mesh> fThicknesses;
-    std::map<Layer, icemc::Mesh> fSurfaceMag; ///< Here mag means Mag() of the Position, not elevation
-    std::map<Layer, icemc::Mesh> fDensities;
-    icemc::Mesh fSurfaceAboveGeoid;
+  class CrustOne : public Crust2 {
+  public:
+    CrustOne(int WEIGHTABSORPTION_SETTING=1);
+    virtual ~CrustOne(){;}
     
+  protected:
 
-  }; //class Earth
+    void ReadCrust(const std::string&);
+ 
+    // The layers in Crust1
+    static const int numLayers = 12;
+    const std::array<Crust2::Layer, numLayers>& Layers() const {
+      static std::array<Crust2::Layer, numLayers> allLayers {Crust2::Layer::Air,
+							     Crust2::Layer::Water,
+							     Crust2::Layer::Ice,
+							     Crust2::Layer::UpperSediment,
+							     Crust2::Layer::MiddleSediment,
+							     Crust2::Layer::LowerSediment,
+							     Crust2::Layer::UpperCrust,
+							     Crust2::Layer::MiddleCrust,
+							     Crust2::Layer::LowerCrust,
+							     Crust2::Layer::Mantle,
+							     Crust2::Layer::OuterCore,
+							     Crust2::Layer::InnerCore
+      };
+      return allLayers;
+    }
+
+    virtual Layer layerAbove(Layer layer) const override;
+    virtual Layer layerBelow(Layer layer) const override;
+    
+  }; //class CrustOne
 
   /**
    * @todo put this somewhere in a function so it gets accessed by a descriptive name

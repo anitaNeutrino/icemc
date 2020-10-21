@@ -25,7 +25,7 @@ const std::string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
 icemc::Antarctica::Antarctica(int model,
 			      int earth_model,
 			      int WEIGHTABSORPTION_SETTING)
-  : Crust2(earth_model,WEIGHTABSORPTION_SETTING)
+  : Crust2(WEIGHTABSORPTION_SETTING)
 {
 
   // double bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(71*constants::RADDEG)) / (1 - eccentricity*sin(71*constants::RADDEG)) ),eccentricity/2) * tan((constants::PI/4) - (71*constants::RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude

@@ -23,10 +23,40 @@
 
 const double icemc::Crust2::COASTLINE(-60); //30.);
 
-icemc::Crust2::Crust2(int model,int WEIGHTABSORPTION_SETTING) :
+icemc::Crust2::Crust2(int WEIGHTABSORPTION_SETTING) :
   fSurfaceAboveGeoid("fSurfaceAboveGeoid", "Surface above geoid")
-{
+{  
+  namespace G=Geoid;
+  radii[0]=1.2e13;
+  radii[1]=(G::R_EARTH-4.0E4)*(G::R_EARTH-4.0E4);
+  radii[2]=(G::R_EARTH*G::R_EARTH); // average radii of boundaries between earth layers
 
+  weightabsorption= WEIGHTABSORPTION_SETTING;
+
+  //CONSTANTICETHICKNESS = (int) (model / 1000);
+  //model -= CONSTANTICETHICKNESS * 1000;
+
+  //CONSTANTCRUST = (int) (model / 100);
+  //model -= CONSTANTCRUST * 100;
+
+  //FIXEDELEVATION = (int) (model / 10);
+  //model -= FIXEDELEVATION * 10;
+
+  CONSTANTICETHICKNESS = 0;
+  CONSTANTCRUST = 0;
+  FIXEDELEVATION = 0;
+      
+  totalIceVolume = 0;
+  totalIceArea = 0;  
+
+} //Crust2 constructor
+
+icemc::CrustTwo::CrustTwo(int WEIGHTABSORPTION_SETTING) :
+  Crust2(WEIGHTABSORPTION_SETTING)
+{
+  // Do Crust2.0 specific things
+  BIN_WIDTH = 2;
+    
   fLayerNames.emplace(Layer::Air,          std::string("air"));
   fLayerNames.emplace(Layer::Water,        std::string("water"));
   fLayerNames.emplace(Layer::Ice,          std::string("ice"));
@@ -39,40 +69,43 @@ icemc::Crust2::Crust2(int model,int WEIGHTABSORPTION_SETTING) :
   fLayerNames.emplace(Layer::OuterCore,    std::string("outer core"));
   fLayerNames.emplace(Layer::InnerCore,    std::string("inner core"));
   
-  namespace G=Geoid;
-  radii[0]=1.2e13;
-  radii[1]=(G::R_EARTH-4.0E4)*(G::R_EARTH-4.0E4);
-  radii[2]=(G::R_EARTH*G::R_EARTH); // average radii of boundaries between earth layers
+  const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
+  const std::string crust_in=ICEMC_SRC_DIR+"/data/outcr2"; // Crust 2.0
 
-  //  cout << "In Earth, model is " << model << "\n";
-  weightabsorption= WEIGHTABSORPTION_SETTING;
+  std::cout << "Loading CRUST2.0 file " << crust_in << std::endl;
+  
+  ReadCrust(crust_in);
+  
+} //CrustTwo constructor
 
-  CONSTANTICETHICKNESS = (int) (model / 1000);
-  model -= CONSTANTICETHICKNESS * 1000;
 
-  CONSTANTCRUST = (int) (model / 100);
-  model -= CONSTANTCRUST * 100;
-
-  FIXEDELEVATION = (int) (model / 10);
-  model -= FIXEDELEVATION * 10;
-
-  EARTH_MODEL = model;
-
-  totalIceVolume = 0;
-  totalIceArea = 0;
+icemc::CrustOne::CrustOne(int WEIGHTABSORPTION_SETTING) :
+  Crust2(WEIGHTABSORPTION_SETTING)
+{
+  // Do Crust1.0 specific things
+  BIN_WIDTH = 1;
+    
+  fLayerNames.emplace(Layer::Air,             std::string("air"));
+  fLayerNames.emplace(Layer::Water,           std::string("water"));
+  fLayerNames.emplace(Layer::Ice,             std::string("ice"));
+  fLayerNames.emplace(Layer::UpperSediment,   std::string("upper sed"));
+  fLayerNames.emplace(Layer::MiddleSediment,  std::string("middle sed"));
+  fLayerNames.emplace(Layer::LowerSediment,   std::string("lower sed"));
+  fLayerNames.emplace(Layer::UpperCrust,      std::string("upper crust"));
+  fLayerNames.emplace(Layer::MiddleCrust,     std::string("middle crust"));
+  fLayerNames.emplace(Layer::LowerCrust,      std::string("lower crust"));
+  fLayerNames.emplace(Layer::Mantle,          std::string("mantle"));
+  fLayerNames.emplace(Layer::OuterCore,       std::string("outer core"));
+  fLayerNames.emplace(Layer::InnerCore,       std::string("inner core"));
   
   const std::string ICEMC_SRC_DIR=icemc::EnvironmentVariable::ICEMC_SRC_DIR();
-  const std::string crust20_in=ICEMC_SRC_DIR+"/data/outcr"; // Crust 2.0 data file
+  const std::string crust_in=ICEMC_SRC_DIR+"/data/outcr1"; // Crust 1.0
 
-  if (EARTH_MODEL == 0){
-    ReadCrust(crust20_in);
-  }
-  else {
-    std::cout<<"Error!  Unknown Earth model requested!  Defaulting to Crust 2.0 model.\n";
-    ReadCrust(crust20_in);
-  } //else
-} //Earth constructor (int mode)
-
+  std::cout << "Loading CRUST1.0 file " << crust_in << std::endl;
+  
+  ReadCrust(crust_in);
+  
+} //CrustOne constructor
 
 
 icemc::Crust2::Layer icemc::Crust2::getLayerFromString(const std::string& layerType) const {  
@@ -90,37 +123,71 @@ icemc::Crust2::Layer icemc::Crust2::getLayerFromString(const std::string& layerT
 
 
 ///@todo handle out of layer bounds somehow
-icemc::Crust2::Layer icemc::Crust2::layerAbove(Layer layer) {
+icemc::Crust2::Layer icemc::CrustTwo::layerAbove(Layer layer) const {
   switch (layer){
-  case Layer::Air:          return Layer::Air;
-  case Layer::Water:        return Layer::Air;
-  case Layer::Ice:          return Layer::Water;
-  case Layer::SoftSediment: return Layer::Ice;
-  case Layer::HardSediment: return Layer::SoftSediment;
-  case Layer::UpperCrust:   return Layer::HardSediment;
-  case Layer::MiddleCrust:  return Layer::UpperCrust;
-  case Layer::LowerCrust:   return Layer::MiddleCrust;
-  case Layer::Mantle:       return Layer::LowerCrust;
-  case Layer::OuterCore:    return Layer::Mantle;
-  case Layer::InnerCore:    return Layer::OuterCore;
+  case Layer::Air:             return Layer::Air;
+  case Layer::Water:           return Layer::Air;
+  case Layer::Ice:             return Layer::Water;
+  case Layer::SoftSediment:    return Layer::Ice;
+  case Layer::HardSediment:    return Layer::SoftSediment;
+  case Layer::UpperCrust:      return Layer::HardSediment;
+  case Layer::MiddleCrust:     return Layer::UpperCrust;
+  case Layer::LowerCrust:      return Layer::MiddleCrust;
+  case Layer::Mantle:          return Layer::LowerCrust;
+  case Layer::OuterCore:       return Layer::Mantle;
+  case Layer::InnerCore:       return Layer::OuterCore;
   }
   return layer;
 }
 
-///@todo handle out of layer bounds somehow
-icemc::Crust2::Layer icemc::Crust2::layerBelow(Layer layer) {
+icemc::Crust2::Layer icemc::CrustTwo::layerBelow(Layer layer) const {
   switch (layer){
-  case Layer::Air:          return Layer::Water;    
-  case Layer::Water:        return Layer::Ice;
-  case Layer::Ice:          return Layer::SoftSediment;
-  case Layer::SoftSediment: return Layer::HardSediment;
-  case Layer::HardSediment: return Layer::UpperCrust;
-  case Layer::UpperCrust:   return Layer::MiddleCrust;
-  case Layer::MiddleCrust:  return Layer::LowerCrust;
-  case Layer::LowerCrust:   return Layer::Mantle;
-  case Layer::Mantle:       return Layer::OuterCore;
-  case Layer::OuterCore:    return Layer::InnerCore;
-  case Layer::InnerCore:    return Layer::InnerCore;
+  case Layer::Air:             return Layer::Water;    
+  case Layer::Water:           return Layer::Ice;
+  case Layer::Ice:             return Layer::SoftSediment;
+  case Layer::SoftSediment:    return Layer::HardSediment;
+  case Layer::HardSediment:    return Layer::UpperCrust;
+  case Layer::UpperCrust:      return Layer::MiddleCrust;
+  case Layer::MiddleCrust:     return Layer::LowerCrust;
+  case Layer::LowerCrust:      return Layer::Mantle;
+  case Layer::Mantle:          return Layer::OuterCore;
+  case Layer::OuterCore:       return Layer::InnerCore;
+  case Layer::InnerCore:       return Layer::InnerCore;
+  }
+  return layer;
+}
+icemc::Crust2::Layer icemc::CrustOne::layerAbove(Layer layer) const {
+  switch (layer){
+  case Layer::Air:             return Layer::Air;
+  case Layer::Water:           return Layer::Air;
+  case Layer::Ice:             return Layer::Water;
+  case Layer::UpperSediment:   return Layer::Ice;
+  case Layer::MiddleSediment:  return Layer::UpperSediment;
+  case Layer::LowerSediment:   return Layer::MiddleSediment;
+  case Layer::UpperCrust:      return Layer::LowerSediment;
+  case Layer::MiddleCrust:     return Layer::UpperCrust;
+  case Layer::LowerCrust:      return Layer::MiddleCrust;
+  case Layer::Mantle:          return Layer::LowerCrust;
+  case Layer::OuterCore:       return Layer::Mantle;
+  case Layer::InnerCore:       return Layer::OuterCore;
+  }
+  return layer;
+}
+
+icemc::Crust2::Layer icemc::CrustOne::layerBelow(Layer layer) const {
+  switch (layer){
+  case Layer::Air:             return Layer::Water;    
+  case Layer::Water:           return Layer::Ice;
+  case Layer::Ice:             return Layer::UpperSediment;
+  case Layer::UpperSediment:   return Layer::MiddleSediment;
+  case Layer::MiddleSediment:  return Layer::LowerSediment;
+  case Layer::LowerSediment:   return Layer::UpperCrust;
+  case Layer::UpperCrust:      return Layer::MiddleCrust;
+  case Layer::MiddleCrust:     return Layer::LowerCrust;
+  case Layer::LowerCrust:      return Layer::Mantle;
+  case Layer::Mantle:          return Layer::OuterCore;
+  case Layer::OuterCore:       return Layer::InnerCore;
+  case Layer::InnerCore:       return Layer::InnerCore;
   }
   return layer;
 }
@@ -370,11 +437,6 @@ double icemc::Crust2::Density(const Geoid::Position& pos,
   // return ddensity;
 
 }//Get Density
-
-
-
-
-
 
 
 int icemc::Crust2::Getchord(const Settings *settings1,
@@ -697,164 +759,355 @@ int icemc::Crust2::Getchord(const Settings *settings1,
 
 
 
+void icemc::CrustTwo::ReadCrust(const std::string& fName) {
 
+    // reads in altitudes of 7 layers of crust, ice and water
 
-void icemc::Crust2::ReadCrust(const std::string& fName) {
+    std::fstream infile(fName.c_str(),std::ios::in);
+    std::string thisline; // for reading in file
+    while(!infile.eof()) {
+      getline(infile,thisline,'\n');
 
-  // reads in altitudes of 7 layers of crust, ice and water
-
-  std::fstream infile(fName.c_str(),std::ios::in);
-  std::string thisline; // for reading in file
-  while(!infile.eof()) {
-    getline(infile,thisline,'\n');
-
-    Geoid::Position ellipsoidPos;
-    Geoid::Position surfacePos;    
-    int indexlon = 0;
-    int indexlat = 0;
-    double elevation = 0;
+      Geoid::Position ellipsoidPos;
+      Geoid::Position surfacePos;    
+      int indexlon = 0;
+      int indexlat = 0;
+      double elevation = 0;
     
-    if (thisline.find("type, latitude, longitude,")!=(int)(std::string::npos)){
-      // a new point in the model  
-      int beginindex=thisline.find_first_not_of(" ",57);
-      int endindex=thisline.find_first_of(" ",61);
+      if (thisline.find("type, latitude, longitude,")!=(int)(std::string::npos)){
+	// a new point in the model  
+	int beginindex=thisline.find_first_not_of(" ",57);
+	int endindex=thisline.find_first_of(" ",61);
       
-      std::string slat=thisline.substr(beginindex,endindex-beginindex);
-      double latitude = (double)atof(slat.c_str());
+	std::string slat=thisline.substr(beginindex,endindex-beginindex);
+	double latitude = (double)atof(slat.c_str());
 
-      beginindex=thisline.find_first_not_of(" ",68);
-      endindex=thisline.find_first_of(" ",72);
+	beginindex=thisline.find_first_not_of(" ",68);
+	endindex=thisline.find_first_of(" ",72);
 
-      std::string slon=thisline.substr(beginindex,endindex-beginindex);
-      double longitude =(double)atof(slon.c_str());
+	std::string slon=thisline.substr(beginindex,endindex-beginindex);
+	double longitude =(double)atof(slon.c_str());
 
-      indexlon=(int)((longitude+180)/2);
-      indexlat=(int)((90+latitude)/2);
+	indexlon=(int)((longitude+180)/2);
+	indexlat=(int)((90+latitude)/2);
 
-      beginindex=thisline.find_first_not_of(" ",78);
-      endindex=thisline.find_first_of(" ",83);
+	beginindex=thisline.find_first_not_of(" ",78);
+	endindex=thisline.find_first_of(" ",83);
 
+	std::string selev=thisline.substr(beginindex,endindex-beginindex);
+	elevation = (double)atof(selev.c_str());
+	
+	ellipsoidPos.SetLonLatAlt(longitude, latitude, 0);
+	fSurfaceAboveGeoid.addPoint(ellipsoidPos, elevation);
+	surfacePos.SetLonLatAlt(longitude, latitude, elevation);
+      } // new data point
+
+      // skip next 4 lines of file
+      for (int i=0;i<4;i++) {
+	getline(infile,thisline,'\n');
+      }
+
+      // read crust values at this point
+      double depthBelowSurfaceMeters = 0;
+    
+      for (int i=0;i<7;i++) {
+	getline(infile,thisline,'\n');
+
+	int endindex = thisline.length()-1;
+	int beginindex = thisline.find_last_of("0123456789",1000);
+	std::string layertype = thisline.substr(beginindex+3,endindex-beginindex);
+	Layer layer = getLayerFromString(layertype);
+
+	beginindex = thisline.find_first_not_of(" ",0);
+	endindex = thisline.find_first_of(" ",beginindex);
+
+	std::string sdepth = thisline.substr(beginindex, endindex-beginindex-1);
+      
+	for(int i=0; i < 3;  i++){ // skip the next three data numbers
+	  beginindex = thisline.find_first_not_of(" ",endindex);
+	  endindex = thisline.find_first_of(" ",beginindex);
+	}
+
+	std::string sdensity=thisline.substr(beginindex,endindex-beginindex);
+	double density=(double)atof(sdensity.c_str());
+	const double kilometersToMeters = 1e3;      
+	double depthMeters = kilometersToMeters*(double)atof(sdepth.c_str());;
+      
+	// region where Ross Ice Shelf was not accounted for in Crust 2.0 add it in by hand
+	if (layer==Layer::Ice && indexlat==5 && (indexlon<=5 || indexlon>=176)){ // Ross Ice Shelf
+	  depthMeters = kilometersToMeters*0.5;
+	}
+
+	// Sum up ice volume
+	if(layer==Layer::Ice && ellipsoidPos.Latitude() <= COASTLINE){
+	  //Ice within the continent
+
+	  double binArea = areaLonLat(ellipsoidPos, BIN_WIDTH);
+		
+	  if (depthMeters > 0){
+	    totalIceVolume += depthMeters*binArea;
+	    totalIceArea += binArea;
+	  }
+
+	}
+      
+	auto find_or_make_mesh = [&](std::map<Crust2::Layer, Mesh>& m, Crust2::Layer l, const std::string& n) -> Mesh& {
+	  auto it = m.find(l);
+	  if(it==m.end()){
+	    auto& newMesh = m[l];
+	    const std::string& name = fLayerNames.find(l)->second;
+	    const std::string title = name + n;
+	    newMesh.SetName(name.c_str());
+	    newMesh.SetTitle(title.c_str());
+	    return newMesh;
+	  }
+	  return it->second;
+	};
+
+	icemc::Mesh& thicknessMesh = find_or_make_mesh(fThicknesses, layer,  "thickness"); //fThicknesses[layer];
+	thicknessMesh.addPoint(ellipsoidPos, depthMeters);
+	icemc::Mesh& surfaceMesh = find_or_make_mesh(fSurfaceMag, layer, "surface magnitude");
+      
+	// don't add water to cumulative depth, as it is ABOVE surface!
+	if(layer==Layer::Water){
+	  surfaceMesh.addPoint(ellipsoidPos, surfacePos.Mag() + depthMeters);
+	}
+	else {
+	  surfaceMesh.addPoint(ellipsoidPos, surfacePos.Mag() - depthBelowSurfaceMeters);
+	  depthBelowSurfaceMeters += depthMeters;
+	  if(layer==Layer::LowerCrust){
+	    icemc::Mesh& mantleMesh = find_or_make_mesh(fSurfaceMag, Layer::Mantle, "surface magnitude");
+	    mantleMesh.addPoint(ellipsoidPos, surfacePos.Mag() - depthBelowSurfaceMeters);
+	  }
+	}
+      
+	icemc::Mesh& densityMesh = find_or_make_mesh(fDensities, layer,  "density"); ////fDensities[layer];
+	densityMesh.addPoint(ellipsoidPos, density);      
+      } // for each data point in the crust file
+
+
+      ///@todo restore constant crust values
+      // if (CONSTANTCRUST) {
+      //   softsedthkarray[indexlon][indexlat]=40.;
+      //   hardsedthkarray[indexlon][indexlat]=0;
+      //   uppercrustthkarray[indexlon][indexlat]=0;
+      //   middlecrustthkarray[indexlon][indexlat]=0;
+      //   lowercrustthkarray[indexlon][indexlat]=0;
+      //   crustthkarray[indexlon][indexlat]=0;
+      //   softseddensityarray[indexlon][indexlat]=2.9;
+      // } //if (set crust thickness to constant everywhere)
+      // if (CONSTANTICETHICKNESS) {
+      //   icethkarray[indexlon][indexlat]=3.;
+      //   waterthkarray[indexlon][indexlat]=0.;
+      // } //if (set ice thickness to constant everywhere)
+
+      // adds up total thickness of crust
+    
+    
+      // crustthkarray[indexlon][indexlat] = (softsedthkarray[indexlon][indexlat]+
+      // 					 hardsedthkarray[indexlon][indexlat]+
+      // 					 uppercrustthkarray[indexlon][indexlat]+
+      // 					 middlecrustthkarray[indexlon][indexlat]+
+      // 					 lowercrustthkarray[indexlon][indexlat]);
+
+      if (indexlon==179 && indexlat==0){
+	break;
+      }
+    }  // done reading file
+
+
+
+  
+  // find the place where the crust is the deepest.
+  // for finding where to start stepping in Getchord
+  MIN_ALTITUDE_CRUST = DBL_MAX;
+  
+  radii[1]=(Geoid::GEOID_MIN+MIN_ALTITUDE_CRUST)*(Geoid::GEOID_MIN+MIN_ALTITUDE_CRUST);
+  
+  auto build_all_meshes = [&](std::map<Crust2::Layer, Mesh>& m){
+			    for(auto it = m.begin(); it != m.end(); ++it){
+			      it->second.build();
+			    }
+			  };
+  build_all_meshes(fThicknesses);
+  build_all_meshes(fSurfaceMag);
+  build_all_meshes(fDensities);
+  fSurfaceAboveGeoid.build();
+}//CrustTwo::ReadCrust
+
+void icemc::CrustOne::ReadCrust(const std::string& fName) {
+
+    //List of layer names
+    std::vector<std::string> layerNames;
+    layerNames.push_back("water");
+    layerNames.push_back("ice");
+    layerNames.push_back("upper sed");
+    layerNames.push_back("middle sed");
+    layerNames.push_back("lower sed");
+    layerNames.push_back("upper crust");
+    layerNames.push_back("middle crust");
+    layerNames.push_back("lower crust");
+      
+    // reads in altitudes of 8 layers of crust, ice and water
+
+    std::fstream infile(fName.c_str(),std::ios::in);
+    std::string thisline; // for reading in file
+    while(!infile.eof()) {
+      getline(infile,thisline,'\n');
+
+      Geoid::Position ellipsoidPos;
+      Geoid::Position surfacePos;    
+      int indexlon = 0;
+      int indexlat = 0;
+      double longitude = 0;
+      double latitude = 0;
+
+      if (thisline.find("ilat,ilon,crustal")!=(int)(std::string::npos)){
+	// a new point in the model  
+	int beginindex=thisline.find_first_not_of(" ",24);
+	int endindex=thisline.find_first_of(" ",beginindex+1);
+      
+	std::string slat=thisline.substr(beginindex,endindex-beginindex);
+	indexlat = 180-(int)atoi(slat.c_str());
+	latitude = indexlat-89.5;
+	
+	beginindex=thisline.find_first_not_of(" ",endindex);
+	endindex=thisline.find_first_of(" ",beginindex+1);
+
+	std::string slon=thisline.substr(beginindex,endindex-beginindex);
+	indexlon =(int)atoi(slon.c_str()) - 1;
+	longitude = 179.5 - indexlon;
+	
+	ellipsoidPos.SetLonLatAlt(longitude, latitude, 0);
+      } // new data point
+
+      getline(infile,thisline,'\n');
+      // This line contains the elevation of the point
+      int beginindex=thisline.find_first_not_of(" ",13);
+      int endindex=thisline.find_first_of(" ",20);      
       std::string selev=thisline.substr(beginindex,endindex-beginindex);
-      elevation = (double)atof(selev.c_str());
-
-      ellipsoidPos.SetLonLatAlt(longitude, latitude, 0);
+      const double kilometersToMeters = 1e3;      
+      double elevation = (double)atof(selev.c_str())*kilometersToMeters; //convert to meters
+      
       fSurfaceAboveGeoid.addPoint(ellipsoidPos, elevation);
       surfacePos.SetLonLatAlt(longitude, latitude, elevation);
-    } // new data point
 
-    // skip next 4 lines of file
-    for (int i=0;i<4;i++) {
+      //skip next line
       getline(infile,thisline,'\n');
-    }
+            
+      // read crust values at this point
+      double depthBelowSurfaceMeters = 0;
 
-    // read crust values at this point
-    double depthBelowSurfaceMeters = 0;
-    
-    for (int i=0;i<7;i++) {
-      getline(infile,thisline,'\n');
-
-      int endindex = thisline.length()-1;
-      int beginindex = thisline.find_last_of("0123456789",1000);
-      std::string layertype = thisline.substr(beginindex+3,endindex-beginindex);
-      Layer layer = getLayerFromString(layertype);
-
-      beginindex = thisline.find_first_not_of(" ",0);
-      endindex = thisline.find_first_of(" ",beginindex);
-
-      std::string sdepth = thisline.substr(beginindex, endindex-beginindex-1);
+      double top = elevation;
       
-      for(int i=0; i < 3;  i++){ // skip the next three data numbers
-	beginindex = thisline.find_first_not_of(" ",endindex);
-	endindex = thisline.find_first_of(" ",beginindex);
-      }
+      for (int i=0;i<8;i++) {
+	getline(infile,thisline,'\n');
 
-      std::string sdensity=thisline.substr(beginindex,endindex-beginindex);
-      double density=(double)atof(sdensity.c_str());
-      const double kilometersToMeters = 1e3;      
-      double depthMeters = kilometersToMeters*(double)atof(sdepth.c_str());;
-      
-      // region where Ross Ice Shelf was not accounted for in Crust 2.0 add it in by hand
-      if (layer==Layer::Ice && indexlat==5 && (indexlon<=5 || indexlon>=176)){ // Ross Ice Shelf
-	depthMeters = kilometersToMeters*0.5;
-      }
+	Layer layer = getLayerFromString(layerNames[i]);
 
-      // Sum up ice volume
-      if(layer==Layer::Ice && ellipsoidPos.Latitude() <= COASTLINE){
-	//Ice within the continent
+	endindex = 0;
+	for(int i=0; i < 3;  i++){ // skip the first two data numbers and get the position of the third, which is density
+	  beginindex = thisline.find_first_not_of(" ",endindex);
+	  endindex = thisline.find_first_of(" ",beginindex);
+	}
+	std::string sdensity=thisline.substr(beginindex,endindex-beginindex);
+	double density=(double)atof(sdensity.c_str());
 
-	double areaOnGeoid = Geoid::getAreaOnGeoid(ellipsoidPos.Longitude(), ellipsoidPos.Latitude(), DLAT, DLON);
-	totalIceVolume += depthMeters*areaOnGeoid;
+	// Get the fourth number -- the bottom of this layer
+	beginindex = thisline.find_first_not_of(" ", endindex);
+	std::string sbottom = thisline.substr(beginindex, endindex-beginindex-1);
+	double bottom = (double)atof(sbottom.c_str())*kilometersToMeters;
 	
-	if (depthMeters > 0){
-	  totalIceArea += areaOnGeoid;
+	double depthMeters = top - bottom;
+	top = bottom;
+
+	// @todo is this true of Crust 1.0 too?
+	// region where Ross Ice Shelf was not accounted for in Crust 2.0 add it in by hand
+	if (layer==Layer::Ice && indexlat==10 && (indexlon<=10 || indexlon>=352)){ // Ross Ice Shelf
+	  depthMeters = kilometersToMeters*0.5;
 	}
 
-      }
-      
-      auto find_or_make_mesh = [&](std::map<Crust2::Layer, Mesh>& m, Crust2::Layer l, const std::string& n) -> Mesh& {
-				 auto it = m.find(l);
-				 if(it==m.end()){
-				   auto& newMesh = m[l];
-				   const std::string& name = fLayerNames.find(l)->second;
-				   const std::string title = name + n;
-				   newMesh.SetName(name.c_str());
-				   newMesh.SetTitle(title.c_str());
-				   return newMesh;
-				 }
-				 return it->second;
-			       };
+	// Sum up ice volume
+	if(layer==Layer::Ice && latitude <= COASTLINE){
+	  //Ice within the continent
 
-      icemc::Mesh& thicknessMesh = find_or_make_mesh(fThicknesses, layer,  "thickness"); //fThicknesses[layer];
-      thicknessMesh.addPoint(ellipsoidPos, depthMeters);
-      icemc::Mesh& surfaceMesh = find_or_make_mesh(fSurfaceMag, layer, "surface magnitude");
-      
-      // don't add water to cumulative depth, as it is ABOVE surface!
-      if(layer==Layer::Water){
-	surfaceMesh.addPoint(ellipsoidPos, surfacePos.Mag() + depthMeters);
-      }
-      else {
-	surfaceMesh.addPoint(ellipsoidPos, surfacePos.Mag() - depthBelowSurfaceMeters);
-	depthBelowSurfaceMeters += depthMeters;
-	if(layer==Layer::LowerCrust){
-	  icemc::Mesh& mantleMesh = find_or_make_mesh(fSurfaceMag, Layer::Mantle, "surface magnitude");
-	  mantleMesh.addPoint(ellipsoidPos, surfacePos.Mag() - depthBelowSurfaceMeters);
+	  double binArea = areaLonLat(ellipsoidPos, BIN_WIDTH);
+		
+	  if (depthMeters > 0){
+	    totalIceVolume += depthMeters*binArea;
+	    totalIceArea += binArea;
+	  }
+
 	}
-      }
       
-      icemc::Mesh& densityMesh = find_or_make_mesh(fDensities, layer,  "density"); ////fDensities[layer];
-      densityMesh.addPoint(ellipsoidPos, density);      
-    } // for each data point in the crust file
+	auto find_or_make_mesh = [&](std::map<Crust2::Layer, Mesh>& m, Crust2::Layer l, const std::string& n) -> Mesh& {
+	  auto it = m.find(l);
+	  if(it==m.end()){
+	    auto& newMesh = m[l];
+	    const std::string& name = fLayerNames.find(l)->second;
+	    const std::string title = name + n;
+	    newMesh.SetName(name.c_str());
+	    newMesh.SetTitle(title.c_str());
+	    return newMesh;
+	  }
+	  return it->second;
+	};
 
+	icemc::Mesh& thicknessMesh = find_or_make_mesh(fThicknesses, layer,  "thickness"); //fThicknesses[layer];
+	thicknessMesh.addPoint(ellipsoidPos, depthMeters);
+	icemc::Mesh& surfaceMesh = find_or_make_mesh(fSurfaceMag, layer, "surface magnitude");
+      
+	// don't add water to cumulative depth, as it is ABOVE surface!
+	if(layer==Layer::Water){
+	  surfaceMesh.addPoint(ellipsoidPos, surfacePos.Mag() + depthMeters);
+	}
+	else {
+	  surfaceMesh.addPoint(ellipsoidPos, surfacePos.Mag() - depthBelowSurfaceMeters);
+	  depthBelowSurfaceMeters += depthMeters;
+	  if(layer==Layer::LowerCrust){
+	    icemc::Mesh& mantleMesh = find_or_make_mesh(fSurfaceMag, Layer::Mantle, "surface magnitude");
+	    mantleMesh.addPoint(ellipsoidPos, surfacePos.Mag() - depthBelowSurfaceMeters);
+	  }
+	}
+      
+	icemc::Mesh& densityMesh = find_or_make_mesh(fDensities, layer,  "density"); ////fDensities[layer];
+	densityMesh.addPoint(ellipsoidPos, density);      
+      } // for each data point in the crust file
+      
+      //skip final line
+      getline(infile,thisline,'\n');
+      
+      ///@todo restore constant crust values
+      // if (CONSTANTCRUST) {
+      //   softsedthkarray[indexlon][indexlat]=40.;
+      //   hardsedthkarray[indexlon][indexlat]=0;
+      //   uppercrustthkarray[indexlon][indexlat]=0;
+      //   middlecrustthkarray[indexlon][indexlat]=0;
+      //   lowercrustthkarray[indexlon][indexlat]=0;
+      //   crustthkarray[indexlon][indexlat]=0;
+      //   softseddensityarray[indexlon][indexlat]=2.9;
+      // } //if (set crust thickness to constant everywhere)
+      // if (CONSTANTICETHICKNESS) {
+      //   icethkarray[indexlon][indexlat]=3.;
+      //   waterthkarray[indexlon][indexlat]=0.;
+      // } //if (set ice thickness to constant everywhere)
 
-    ///@todo restore constant crust values
-    // if (CONSTANTCRUST) {
-    //   softsedthkarray[indexlon][indexlat]=40.;
-    //   hardsedthkarray[indexlon][indexlat]=0;
-    //   uppercrustthkarray[indexlon][indexlat]=0;
-    //   middlecrustthkarray[indexlon][indexlat]=0;
-    //   lowercrustthkarray[indexlon][indexlat]=0;
-    //   crustthkarray[indexlon][indexlat]=0;
-    //   softseddensityarray[indexlon][indexlat]=2.9;
-    // } //if (set crust thickness to constant everywhere)
-    // if (CONSTANTICETHICKNESS) {
-    //   icethkarray[indexlon][indexlat]=3.;
-    //   waterthkarray[indexlon][indexlat]=0.;
-    // } //if (set ice thickness to constant everywhere)
-
-    // adds up total thickness of crust
+      // adds up total thickness of crust
     
     
-    // crustthkarray[indexlon][indexlat] = (softsedthkarray[indexlon][indexlat]+
-    // 					 hardsedthkarray[indexlon][indexlat]+
-    // 					 uppercrustthkarray[indexlon][indexlat]+
-    // 					 middlecrustthkarray[indexlon][indexlat]+
-    // 					 lowercrustthkarray[indexlon][indexlat]);
+      // crustthkarray[indexlon][indexlat] = (softsedthkarray[indexlon][indexlat]+
+      // 					 hardsedthkarray[indexlon][indexlat]+
+      // 					 uppercrustthkarray[indexlon][indexlat]+
+      // 					 middlecrustthkarray[indexlon][indexlat]+
+      // 					 lowercrustthkarray[indexlon][indexlat]);
 
-    if (indexlon==179 && indexlat==0){
-      break;
-    }
-  }  // done reading file
+      if (indexlon==359 && indexlat==0){
+	break;
+      }
+    }  // done reading file
 
+
+  
   // find the place where the crust is the deepest.
   // for finding where to start stepping in Getchord
   MIN_ALTITUDE_CRUST = DBL_MAX;
@@ -871,7 +1124,6 @@ void icemc::Crust2::ReadCrust(const std::string& fName) {
   build_all_meshes(fDensities);
   fSurfaceAboveGeoid.build();
 }//ReadCrust
-
 
 
 Geoid::Position icemc::Crust2::WhereDoesItEnter(const Geoid::Position &posnu,const TVector3 &nnu) const {

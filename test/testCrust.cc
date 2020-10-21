@@ -4,7 +4,8 @@
 
 int main(){
 
-  const icemc::Crust2 c;
+  //const icemc::CrustTwo c;
+  const icemc::CrustOne c;
 
   std::cout << c.GetTotalIceVolume() << " m^3 of Antarctic ice" << std::endl;
   std::cout << c.GetTotalIceArea() << " m^s of Antarctic is covered by ice" << std::endl;
