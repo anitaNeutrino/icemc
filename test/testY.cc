@@ -3,17 +3,15 @@
 #include "Settings.h"
 
 #include <fstream>
-#include "TRandom3.h"
 int main(){
   using namespace icemc;
 
   Settings s;
   std::ofstream os;
-  s.ReadInputs("inputs.anita3.conf", os);
+  s.ReadInputs("../src/config/anita3.conf", os);
 
   ConnollyEtAl2011::YGenerator yGen(&s);
 
-  TRandom3 randy;
   double epsMin = 7;
   double epsMax = 12;
   const int n = 1000;

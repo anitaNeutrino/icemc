@@ -27,7 +27,7 @@ int main(){
   icemc::Settings s;
 
   std::ofstream outputsFile("/tmp/outputs.txt");
-  s.ReadInputs("inputs.anita3.conf",  outputsFile);
+  s.ReadInputs("../src/config/anita3.conf",  outputsFile);
   
   icemc::ShowerModel *sec1 = new icemc::ShowerModel(&s);
   icemc::AskaryanRadiationModel *sig1 = new icemc::AskaryanRadiationModel(&s, 1024, 1e-9/2.6);
