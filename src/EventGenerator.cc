@@ -10,7 +10,7 @@
 #include "RootOutput.h"
 #include "Constants.h"
 #include "Settings.h"
-#include "Crust2.h"
+#include "Crust.h"
 #include "Antarctica.h"
 #include "Spectra.h"
 #include "RayTracer.h"

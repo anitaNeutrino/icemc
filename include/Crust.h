@@ -1,5 +1,5 @@
-#ifndef CRUST2_H
-#define CRUST2_H
+#ifndef CRUST_H
+#define CRUST_H
 
 #include <string>
 #include <cstdlib>
@@ -25,7 +25,7 @@ namespace icemc{
   class Settings;
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
-  //class Crust2.0
+  //class Crust
   //This class contains a model of the physical structure of the Earth, with information on shape,
   //density at all points inside, and depth of water and ice on the surface.
   //
@@ -68,13 +68,12 @@ namespace icemc{
     ClassDef(ChordInfo, 1);
   };
 
-  //@todo Fix naming scheme -- Crust2 should become Crust so that CrustTwo --> Crust2 and CrustOne --> Crust1 
   //! Shape of the earth, ice thicknesses, profiles of earth layers, densities, neutrino absorption
-  class Crust2 : public WorldModel {
+  class Crust : public WorldModel {
 
   public:
-    Crust2(int WEIGHTABSORPTION_SETTING=1);
-    virtual ~Crust2(){;}
+    Crust(int WEIGHTABSORPTION_SETTING=1);
+    virtual ~Crust(){;}
 
     double radii[3];
     // = {1.2e3,(Earth::EarthRadiusMeters-4.0E4)*(Earth::EarthRadiusMeters-4.0E4),Earth::EarthRadiusMeters*Earth::EarthRadiusMeters}; // average radii of boundaries between earth layers
@@ -196,8 +195,8 @@ namespace icemc{
      */
 
     // Dummy Layers(), will be defined for each crust model
-    const std::array<Crust2::Layer, 1>& Layers() const{
-      static std::array<Crust2::Layer, 1> allLayers {Crust2::Layer::Air
+    const std::array<Crust::Layer, 1>& Layers() const{
+      static std::array<Crust::Layer, 1> allLayers {Crust::Layer::Air
       };
       return allLayers;
     }
@@ -218,12 +217,12 @@ namespace icemc{
     icemc::Mesh fSurfaceAboveGeoid;
     
 
-  }; //class Crust2
+  }; //class Crust
 
-  class CrustTwo : public Crust2 {
+  class Crust2 : public Crust {
   public:
-    CrustTwo(int WEIGHTABSORPTION_SETTING=1);
-    virtual ~CrustTwo(){;}
+    Crust2(int WEIGHTABSORPTION_SETTING=1);
+    virtual ~Crust2(){;}
 
   protected:
 
@@ -231,30 +230,30 @@ namespace icemc{
 
     // The layers in Crust2
     static const int numLayers = 11;
-    const std::array<Crust2::Layer, numLayers>& Layers() const {
-      static std::array<Crust2::Layer, numLayers> allLayers {Crust2::Layer::Air,
-							     Crust2::Layer::Water,
-							     Crust2::Layer::Ice,
-							     Crust2::Layer::SoftSediment,
-							     Crust2::Layer::HardSediment,
-							     Crust2::Layer::UpperCrust,
-							     Crust2::Layer::MiddleCrust,
-							     Crust2::Layer::LowerCrust,
-							     Crust2::Layer::Mantle,
-							     Crust2::Layer::OuterCore,
-							     Crust2::Layer::InnerCore
+    const std::array<Crust::Layer, numLayers>& Layers() const {
+      static std::array<Crust::Layer, numLayers> allLayers {Crust::Layer::Air,
+							     Crust::Layer::Water,
+							     Crust::Layer::Ice,
+							     Crust::Layer::SoftSediment,
+							     Crust::Layer::HardSediment,
+							     Crust::Layer::UpperCrust,
+							     Crust::Layer::MiddleCrust,
+							     Crust::Layer::LowerCrust,
+							     Crust::Layer::Mantle,
+							     Crust::Layer::OuterCore,
+							     Crust::Layer::InnerCore
       };
       return allLayers;
     }
 
     virtual Layer layerAbove(Layer layer) const override;
     virtual Layer layerBelow(Layer layer) const override;    
-  }; //class CrustTwo
+  }; //class Crust2
 
-  class CrustOne : public Crust2 {
+  class Crust1 : public Crust {
   public:
-    CrustOne(int WEIGHTABSORPTION_SETTING=1);
-    virtual ~CrustOne(){;}
+    Crust1(int WEIGHTABSORPTION_SETTING=1);
+    virtual ~Crust1(){;}
     
   protected:
 
@@ -262,19 +261,19 @@ namespace icemc{
  
     // The layers in Crust1
     static const int numLayers = 12;
-    const std::array<Crust2::Layer, numLayers>& Layers() const {
-      static std::array<Crust2::Layer, numLayers> allLayers {Crust2::Layer::Air,
-							     Crust2::Layer::Water,
-							     Crust2::Layer::Ice,
-							     Crust2::Layer::UpperSediment,
-							     Crust2::Layer::MiddleSediment,
-							     Crust2::Layer::LowerSediment,
-							     Crust2::Layer::UpperCrust,
-							     Crust2::Layer::MiddleCrust,
-							     Crust2::Layer::LowerCrust,
-							     Crust2::Layer::Mantle,
-							     Crust2::Layer::OuterCore,
-							     Crust2::Layer::InnerCore
+    const std::array<Crust::Layer, numLayers>& Layers() const {
+      static std::array<Crust::Layer, numLayers> allLayers {Crust::Layer::Air,
+							     Crust::Layer::Water,
+							     Crust::Layer::Ice,
+							     Crust::Layer::UpperSediment,
+							     Crust::Layer::MiddleSediment,
+							     Crust::Layer::LowerSediment,
+							     Crust::Layer::UpperCrust,
+							     Crust::Layer::MiddleCrust,
+							     Crust::Layer::LowerCrust,
+							     Crust::Layer::Mantle,
+							     Crust::Layer::OuterCore,
+							     Crust::Layer::InnerCore
       };
       return allLayers;
     }
@@ -282,7 +281,7 @@ namespace icemc{
     virtual Layer layerAbove(Layer layer) const override;
     virtual Layer layerBelow(Layer layer) const override;
     
-  }; //class CrustOne
+  }; //class Crust1
 
   /**
    * @todo put this somewhere in a function so it gets accessed by a descriptive name

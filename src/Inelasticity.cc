@@ -5,7 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include "Settings.h"
-#include "Crust2.h"
+#include "Crust.h"
 #include "Antarctica.h"
 #include "ConnollyEtAl2011.h"
 #include "Report.h"

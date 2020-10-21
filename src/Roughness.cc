@@ -18,7 +18,7 @@
 #include "ConnollyEtAl2011.h"
 // #include "anita.hh"
 // #include "balloon.hh"
-#include "Crust2.h"
+#include "Crust.h"
 #include "Antarctica.h"
 #include "spline.h"
 #include "RayTracer.h"

@@ -1,4 +1,4 @@
-#include "Crust2.h"
+#include "Crust.h"
 #include "Constants.h"
 #include "TRandom3.h"
 #include "Settings.h"
@@ -21,9 +21,9 @@
 #include "LocalCoordinateSystem.h"
 
 
-const double icemc::Crust2::COASTLINE(-60); //30.);
+const double icemc::Crust::COASTLINE(-60); //30.);
 
-icemc::Crust2::Crust2(int WEIGHTABSORPTION_SETTING) :
+icemc::Crust::Crust(int WEIGHTABSORPTION_SETTING) :
   fSurfaceAboveGeoid("fSurfaceAboveGeoid", "Surface above geoid")
 {  
   namespace G=Geoid;
@@ -49,10 +49,10 @@ icemc::Crust2::Crust2(int WEIGHTABSORPTION_SETTING) :
   totalIceVolume = 0;
   totalIceArea = 0;  
 
-} //Crust2 constructor
+} //Crust constructor
 
-icemc::CrustTwo::CrustTwo(int WEIGHTABSORPTION_SETTING) :
-  Crust2(WEIGHTABSORPTION_SETTING)
+icemc::Crust2::Crust2(int WEIGHTABSORPTION_SETTING) :
+  Crust(WEIGHTABSORPTION_SETTING)
 {
   // Do Crust2.0 specific things
   BIN_WIDTH = 2;
@@ -76,11 +76,11 @@ icemc::CrustTwo::CrustTwo(int WEIGHTABSORPTION_SETTING) :
   
   ReadCrust(crust_in);
   
-} //CrustTwo constructor
+} //Crust2 constructor
 
 
-icemc::CrustOne::CrustOne(int WEIGHTABSORPTION_SETTING) :
-  Crust2(WEIGHTABSORPTION_SETTING)
+icemc::Crust1::Crust1(int WEIGHTABSORPTION_SETTING) :
+  Crust(WEIGHTABSORPTION_SETTING)
 {
   // Do Crust1.0 specific things
   BIN_WIDTH = 1;
@@ -105,10 +105,10 @@ icemc::CrustOne::CrustOne(int WEIGHTABSORPTION_SETTING) :
   
   ReadCrust(crust_in);
   
-} //CrustOne constructor
+} //Crust1 constructor
 
 
-icemc::Crust2::Layer icemc::Crust2::getLayerFromString(const std::string& layerType) const {  
+icemc::Crust::Layer icemc::Crust::getLayerFromString(const std::string& layerType) const {  
   for(auto& it : fLayerNames){
     const std::string& name = it.second;
     // std::cout << "trying... " << name << " for " <<  layerType << std::endl;
@@ -123,7 +123,7 @@ icemc::Crust2::Layer icemc::Crust2::getLayerFromString(const std::string& layerT
 
 
 ///@todo handle out of layer bounds somehow
-icemc::Crust2::Layer icemc::CrustTwo::layerAbove(Layer layer) const {
+icemc::Crust::Layer icemc::Crust2::layerAbove(Layer layer) const {
   switch (layer){
   case Layer::Air:             return Layer::Air;
   case Layer::Water:           return Layer::Air;
@@ -140,7 +140,7 @@ icemc::Crust2::Layer icemc::CrustTwo::layerAbove(Layer layer) const {
   return layer;
 }
 
-icemc::Crust2::Layer icemc::CrustTwo::layerBelow(Layer layer) const {
+icemc::Crust::Layer icemc::Crust2::layerBelow(Layer layer) const {
   switch (layer){
   case Layer::Air:             return Layer::Water;    
   case Layer::Water:           return Layer::Ice;
@@ -156,7 +156,7 @@ icemc::Crust2::Layer icemc::CrustTwo::layerBelow(Layer layer) const {
   }
   return layer;
 }
-icemc::Crust2::Layer icemc::CrustOne::layerAbove(Layer layer) const {
+icemc::Crust::Layer icemc::Crust1::layerAbove(Layer layer) const {
   switch (layer){
   case Layer::Air:             return Layer::Air;
   case Layer::Water:           return Layer::Air;
@@ -174,7 +174,7 @@ icemc::Crust2::Layer icemc::CrustOne::layerAbove(Layer layer) const {
   return layer;
 }
 
-icemc::Crust2::Layer icemc::CrustOne::layerBelow(Layer layer) const {
+icemc::Crust::Layer icemc::Crust1::layerBelow(Layer layer) const {
   switch (layer){
   case Layer::Air:             return Layer::Water;    
   case Layer::Water:           return Layer::Ice;
@@ -192,7 +192,7 @@ icemc::Crust2::Layer icemc::CrustOne::layerBelow(Layer layer) const {
   return layer;
 }
 
-double icemc::Crust2::IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const {
+double icemc::Crust::IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const {
 
   const double maxDeltaRSq = horizonDistanceMeters*horizonDistanceMeters;
   const double delta = 5e3;
@@ -212,16 +212,16 @@ double icemc::Crust2::IceVolumeWithinHorizon(const Geoid::Position& p, double ho
   return v;
 }
 
-double icemc::Crust2::IceThickness(const Geoid::Position& p) const {
+double icemc::Crust::IceThickness(const Geoid::Position& p) const {
   return fThicknesses.at(Layer::Ice).eval(p);
 }
 
-double icemc::Crust2::maxIceThicknessWithinDistance(const Geoid::Position& p, double distanceMeters) const {
+double icemc::Crust::maxIceThicknessWithinDistance(const Geoid::Position& p, double distanceMeters) const {
   return fThicknesses.at(Layer::Ice).findMaxWithinDistance(p,  distanceMeters);
 }
 
 
-int icemc::Crust2::InFirn(const Geoid::Position&pos) const {
+int icemc::Crust::InFirn(const Geoid::Position&pos) const {
   if (pos.Mag()-Surface(pos)<constants::FIRNDEPTH){
     return 0;
   }
@@ -229,23 +229,23 @@ int icemc::Crust2::InFirn(const Geoid::Position&pos) const {
 }
 
 
-double icemc::Crust2::SurfaceDeepIce(const Geoid::Position&pos) const { // surface of the deep ice (where you reach the firn)
+double icemc::Crust::SurfaceDeepIce(const Geoid::Position&pos) const { // surface of the deep ice (where you reach the firn)
   return  Surface(pos) + constants::FIRNDEPTH;
 }
 
 
-double icemc::Crust2::SurfaceAboveGeoid(const Geoid::Position&pos) const {
+double icemc::Crust::SurfaceAboveGeoid(const Geoid::Position&pos) const {
   return fSurfaceAboveGeoid.eval(pos);
 } //SurfaceAboveGeoid(Position)
 
-double icemc::Crust2::WaterDepth(const Geoid::Position&pos) const {
+double icemc::Crust::WaterDepth(const Geoid::Position&pos) const {
   return fThicknesses.at(Layer::Water).eval(pos);  
 } //WaterDepth(Position)
 
 
 
 
-std::pair<Geoid::Position, double> icemc::Crust2::integratePath(const Geoid::Position& start, const TVector3& direction) const {
+std::pair<Geoid::Position, double> icemc::Crust::integratePath(const Geoid::Position& start, const TVector3& direction) const {
 
   double cumulativeColumnDepth = 0;
   Geoid::Position posNow = start;
@@ -324,7 +324,7 @@ std::pair<Geoid::Position, double> icemc::Crust2::integratePath(const Geoid::Pos
 
 
 
-double icemc::Crust2::getLayerSurfaceAtPosition(const Geoid::Position& pos, Layer layer) const {  
+double icemc::Crust::getLayerSurfaceAtPosition(const Geoid::Position& pos, Layer layer) const {  
 
   switch(layer){
   case Layer::InnerCore: return 1220e3;
@@ -335,7 +335,7 @@ double icemc::Crust2::getLayerSurfaceAtPosition(const Geoid::Position& pos, Laye
 
 
 
-icemc::Crust2::Layer icemc::Crust2::getLayer(const Geoid::Position& pos, Layer startLayer) const {
+icemc::Crust::Layer icemc::Crust::getLayer(const Geoid::Position& pos, Layer startLayer) const {
 
   Layer inLayer = startLayer;
   double posMag = pos.Mag();
@@ -361,13 +361,13 @@ icemc::Crust2::Layer icemc::Crust2::getLayer(const Geoid::Position& pos, Layer s
 }
 
 
-bool icemc::Crust2::InsideIce(const Geoid::Position& pos) const {
+bool icemc::Crust::InsideIce(const Geoid::Position& pos) const {
   Layer l = getLayer(pos);
   // std::cout << fLayerNames.at(l) << std::endl;
-  return l == Crust2::Layer::Ice;
+  return l == Crust::Layer::Ice;
 }
 
-double icemc::Crust2::Density(const Geoid::Position& pos,
+double icemc::Crust::Density(const Geoid::Position& pos,
 				int& crust_entered /* 1 or 0 */) const{
 
   Layer l = getLayer(pos);
@@ -439,7 +439,7 @@ double icemc::Crust2::Density(const Geoid::Position& pos,
 }//Get Density
 
 
-int icemc::Crust2::Getchord(const Settings *settings1,
+int icemc::Crust::Getchord(const Settings *settings1,
 			    double len_int_kgm2,
 			    const Geoid::Position &earth_in, // place where neutrino entered the earth
 			    const Geoid::Position &r_enterice,
@@ -759,7 +759,7 @@ int icemc::Crust2::Getchord(const Settings *settings1,
 
 
 
-void icemc::CrustTwo::ReadCrust(const std::string& fName) {
+void icemc::Crust2::ReadCrust(const std::string& fName) {
 
     // reads in altitudes of 7 layers of crust, ice and water
 
@@ -851,7 +851,7 @@ void icemc::CrustTwo::ReadCrust(const std::string& fName) {
 
 	}
       
-	auto find_or_make_mesh = [&](std::map<Crust2::Layer, Mesh>& m, Crust2::Layer l, const std::string& n) -> Mesh& {
+	auto find_or_make_mesh = [&](std::map<Crust::Layer, Mesh>& m, Crust::Layer l, const std::string& n) -> Mesh& {
 	  auto it = m.find(l);
 	  if(it==m.end()){
 	    auto& newMesh = m[l];
@@ -924,7 +924,7 @@ void icemc::CrustTwo::ReadCrust(const std::string& fName) {
   
   radii[1]=(Geoid::GEOID_MIN+MIN_ALTITUDE_CRUST)*(Geoid::GEOID_MIN+MIN_ALTITUDE_CRUST);
   
-  auto build_all_meshes = [&](std::map<Crust2::Layer, Mesh>& m){
+  auto build_all_meshes = [&](std::map<Crust::Layer, Mesh>& m){
 			    for(auto it = m.begin(); it != m.end(); ++it){
 			      it->second.build();
 			    }
@@ -933,9 +933,9 @@ void icemc::CrustTwo::ReadCrust(const std::string& fName) {
   build_all_meshes(fSurfaceMag);
   build_all_meshes(fDensities);
   fSurfaceAboveGeoid.build();
-}//CrustTwo::ReadCrust
+}//Crust2::ReadCrust
 
-void icemc::CrustOne::ReadCrust(const std::string& fName) {
+void icemc::Crust1::ReadCrust(const std::string& fName) {
 
     //List of layer names
     std::vector<std::string> layerNames;
@@ -1040,7 +1040,7 @@ void icemc::CrustOne::ReadCrust(const std::string& fName) {
 
 	}
       
-	auto find_or_make_mesh = [&](std::map<Crust2::Layer, Mesh>& m, Crust2::Layer l, const std::string& n) -> Mesh& {
+	auto find_or_make_mesh = [&](std::map<Crust::Layer, Mesh>& m, Crust::Layer l, const std::string& n) -> Mesh& {
 	  auto it = m.find(l);
 	  if(it==m.end()){
 	    auto& newMesh = m[l];
@@ -1114,7 +1114,7 @@ void icemc::CrustOne::ReadCrust(const std::string& fName) {
   
   radii[1]=(Geoid::GEOID_MIN+MIN_ALTITUDE_CRUST)*(Geoid::GEOID_MIN+MIN_ALTITUDE_CRUST);
   
-  auto build_all_meshes = [&](std::map<Crust2::Layer, Mesh>& m){
+  auto build_all_meshes = [&](std::map<Crust::Layer, Mesh>& m){
 			    for(auto it = m.begin(); it != m.end(); ++it){
 			      it->second.build();
 			    }
@@ -1126,7 +1126,7 @@ void icemc::CrustOne::ReadCrust(const std::string& fName) {
 }//ReadCrust
 
 
-Geoid::Position icemc::Crust2::WhereDoesItEnter(const Geoid::Position &posnu,const TVector3 &nnu) const {
+Geoid::Position icemc::Crust::WhereDoesItEnter(const Geoid::Position &posnu,const TVector3 &nnu) const {
   // now get neutrino entry point...
   double p = posnu.Mag(); // radius of interaction
   double costheta = (nnu.Dot(posnu)) / p; // theta of neutrino at interaction position

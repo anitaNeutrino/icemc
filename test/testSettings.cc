@@ -11,7 +11,7 @@
 #include "Constants.h"
 #include "Settings.h"
 
-#include "Crust2.h"
+#include "Crust.h"
 #include "Tools.h"
 #include "RayTracer.h"
 #include "Antarctica.h"
