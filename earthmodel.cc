@@ -915,7 +915,9 @@ void EarthModel::ReadCrust(string test) {
 	    sumarea+=area[j];
 	} //for
     } //for
-    average_iceth=average_iceth/sumarea; 
+    average_iceth=average_iceth/sumarea;
+
+    cout << "Total ice volume=" << volume << endl;
     
     // find the place where the crust is the deepest.
     // for finding where to start stepping in Getchord
@@ -970,7 +972,7 @@ Vector EarthModel::PickPosnuForaLonLat(double lon,double lat,double theta,double
 }
 
 double EarthModel::dGetTheta(int ilat) {
-    return (((double)ilat+0.5)/(double)NLAT*MAXTHETA)*RADDEG;
+  return theta = RADDEG*ilat*MAXTHETA/NLAT;
 } //dGetTheta(int)
 
 double EarthModel::dGetPhi(int ilon) {
