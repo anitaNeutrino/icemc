@@ -16,7 +16,7 @@ namespace icemc {
   class Earth;
 
   //! Ice thicknesses and water depth
-  class Antarctica : public Crust2 {
+  class Antarctica : public Crust {
 
 
   public:

@@ -72,7 +72,7 @@ namespace icemc{
   class Crust : public WorldModel {
 
   public:
-    Crust(int WEIGHTABSORPTION_SETTING=1);
+    Crust(int WEIGHTABSORPTION_SETTING=1, int model=2);
     virtual ~Crust(){;}
 
     double radii[3];
@@ -85,6 +85,10 @@ namespace icemc{
     // virtual double Geoid(double latitude) const;
     // virtual double Geoid(const Geoid::Position &pos) const;
 
+    
+    int getModel() const {
+      return MODEL;
+    }
     virtual double GetMaxIceThickness() const {
       return fMaxIceThickness;
     }
@@ -146,7 +150,7 @@ namespace icemc{
     double totalIceVolume; // Volume of Antarctic ice
     double totalIceArea;
 
-    int BIN_WIDTH; // in degrees, 1 for Crust1.0, 2 for Crust2.0
+    int MODEL; // 0 for Bedmap1, 1 for Crust1.0, 2 for Crust2.0 -- for CRUST also gives bin width
     int CONSTANTICETHICKNESS;
     int CONSTANTCRUST;
     int FIXEDELEVATION;
@@ -157,15 +161,17 @@ namespace icemc{
     static constexpr int getchord_method=2;	///< 1=core,mantle,crust; 2=crust 2.0 model
 
     static const double COASTLINE;		///< if the rf leaves from beyond this "coastline" (in degrees of latitude relative to south pole) it's not in antarctica.  Real coastline is always closer than this.						///< parameters of the Crust 2.0 earth model	
-    static constexpr int NLON=180;		///< number of bins in longitude for crust 2.0
-    static constexpr int NLAT=90;		///< number of bins in latitude
-    static constexpr int NPHI=180;		///< bins in longitude for visible ice in horizon
+    //static constexpr int NLON=180;		///< number of bins in longitude for crust 2.0
+    //static constexpr int NLAT=90;		///< number of bins in latitude
+    //static constexpr int NPHI=180;		///< bins in longitude for visible ice in horizon
     double MIN_ALTITUDE_CRUST;			///< maximum depth of crust- determines when to start stepping
     double average_iceth;			///< average ice thickness over the continent-calculated once
     
     /////////////////////////////////////
     //methods
-    //virtual void ReadCrust(const std::string&) {};
+    void ReadCrust1();
+    void ReadCrust2();
+    //void ReadBedmap();
  
     //const int numLayers;
     // All possible layers, in either Crust2.0 or Crust1.0
@@ -201,8 +207,8 @@ namespace icemc{
       return allLayers;
     }
 
-    virtual Layer layerAbove(Layer layer) const { return layer; }
-    virtual Layer layerBelow(Layer layer) const { return layer; }
+    Layer layerAbove(Layer layer) const;
+    Layer layerBelow(Layer layer) const;
     Layer getLayer(const Geoid::Position& pos, Layer startLayer=Layer::Air) const;
     double getLayerSurfaceAtPosition(const Geoid::Position& pos, Layer l) const;    
     
@@ -218,70 +224,6 @@ namespace icemc{
     
 
   }; //class Crust
-
-  class Crust2 : public Crust {
-  public:
-    Crust2(int WEIGHTABSORPTION_SETTING=1);
-    virtual ~Crust2(){;}
-
-  protected:
-
-    void ReadCrust(const std::string&);
-
-    // The layers in Crust2
-    static const int numLayers = 11;
-    const std::array<Crust::Layer, numLayers>& Layers() const {
-      static std::array<Crust::Layer, numLayers> allLayers {Crust::Layer::Air,
-							     Crust::Layer::Water,
-							     Crust::Layer::Ice,
-							     Crust::Layer::SoftSediment,
-							     Crust::Layer::HardSediment,
-							     Crust::Layer::UpperCrust,
-							     Crust::Layer::MiddleCrust,
-							     Crust::Layer::LowerCrust,
-							     Crust::Layer::Mantle,
-							     Crust::Layer::OuterCore,
-							     Crust::Layer::InnerCore
-      };
-      return allLayers;
-    }
-
-    virtual Layer layerAbove(Layer layer) const override;
-    virtual Layer layerBelow(Layer layer) const override;    
-  }; //class Crust2
-
-  class Crust1 : public Crust {
-  public:
-    Crust1(int WEIGHTABSORPTION_SETTING=1);
-    virtual ~Crust1(){;}
-    
-  protected:
-
-    void ReadCrust(const std::string&);
- 
-    // The layers in Crust1
-    static const int numLayers = 12;
-    const std::array<Crust::Layer, numLayers>& Layers() const {
-      static std::array<Crust::Layer, numLayers> allLayers {Crust::Layer::Air,
-							     Crust::Layer::Water,
-							     Crust::Layer::Ice,
-							     Crust::Layer::UpperSediment,
-							     Crust::Layer::MiddleSediment,
-							     Crust::Layer::LowerSediment,
-							     Crust::Layer::UpperCrust,
-							     Crust::Layer::MiddleCrust,
-							     Crust::Layer::LowerCrust,
-							     Crust::Layer::Mantle,
-							     Crust::Layer::OuterCore,
-							     Crust::Layer::InnerCore
-      };
-      return allLayers;
-    }
-
-    virtual Layer layerAbove(Layer layer) const override;
-    virtual Layer layerBelow(Layer layer) const override;
-    
-  }; //class Crust1
 
   /**
    * @todo put this somewhere in a function so it gets accessed by a descriptive name

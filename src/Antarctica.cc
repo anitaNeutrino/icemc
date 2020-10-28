@@ -25,7 +25,7 @@ const std::string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
 icemc::Antarctica::Antarctica(int model,
 			      int earth_model,
 			      int WEIGHTABSORPTION_SETTING)
-  : Crust2(WEIGHTABSORPTION_SETTING)
+  : Crust(WEIGHTABSORPTION_SETTING)
 {
 
   // double bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(71*constants::RADDEG)) / (1 - eccentricity*sin(71*constants::RADDEG)) ),eccentricity/2) * tan((constants::PI/4) - (71*constants::RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
@@ -438,11 +438,11 @@ double icemc::Antarctica::IceThickness(double lon, double lat) const {
       ice_thickness = ice_thickness_array[e_coord][n_coord]; //if this region has BEDMAP data, use it.
     }
     else{
-      ice_thickness = Crust2::IceThickness(p);
+      ice_thickness = Crust::IceThickness(p);
     }
   } //BEDMAP ice thickness
   else if (ice_model==0) {
-    ice_thickness = Crust2::IceThickness(p);
+    ice_thickness = Crust::IceThickness(p);
     //std::cout << "ilon, ilat are " << (int)(lon/2) << " " << (int)(lat/2) << "\n";
   } //Crust 2.0 ice thickness
     
@@ -453,7 +453,7 @@ double icemc::Antarctica::IceThickness(const Geoid::Position &pos) const {
   //This method returns the thickness of the ice in meters at a location under a given position vector.  Code by Stephen Hoover.
     
   // return IceThickness(pos.Longitude(),pos.Latitude());
-  return Crust2::IceThickness(pos);
+  return Crust::IceThickness(pos);
 } //method IceThickness(position)
 
 double icemc::Antarctica::SurfaceAboveGeoid(double lon, double lat) const {
@@ -475,11 +475,11 @@ double icemc::Antarctica::SurfaceAboveGeoid(double lon, double lat) const {
       surface = ground_elevation[e_coord_ground][n_coord_ground] + ice_thickness_array[e_coord_ice][n_coord_ice] + water_depth[e_coord_ice][n_coord_ice];
     }
     else{
-      surface = Crust2::SurfaceAboveGeoid(p);
+      surface = Crust::SurfaceAboveGeoid(p);
     }
   } //Elevation of surface above geoid according to BEDMAP
   else if (ice_model==0) {
-      surface = Crust2::SurfaceAboveGeoid(p);
+      surface = Crust::SurfaceAboveGeoid(p);
   } //Elevation of surface above geoid according to Crust 2.0
     
   return surface;
@@ -507,7 +507,7 @@ double icemc::Antarctica::WaterDepth(double lon, double lat) const {
   Geoid::Position p;
   p.SetLonLatAlt(lon, lat, 0);
   if (ice_model==0) {
-    water_depth_value = Crust2::WaterDepth(p);
+    water_depth_value = Crust::WaterDepth(p);
   } //if(Crust 2.0)
   else if (ice_model==1) {
     int e_coord=0;
@@ -516,7 +516,7 @@ double icemc::Antarctica::WaterDepth(double lon, double lat) const {
     if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord >= 0)
       water_depth_value = water_depth[e_coord][n_coord];
     else
-      water_depth_value = Crust2::WaterDepth(p);
+      water_depth_value = Crust::WaterDepth(p);
   } //else if(BEDMAP)
     
   return water_depth_value;
