@@ -76,9 +76,9 @@ namespace icemc {
 
 
 
-    double weight() const {
-      return 0; ///@todo product of all weights;
-    };
+    //double weight() const {
+    //  return 0; ///@todo product of all weights;
+    //};
 
   private:
     // void setInteractionPosition(const Geoid::Position& p){

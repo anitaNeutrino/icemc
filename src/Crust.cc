@@ -87,13 +87,6 @@ icemc::Crust::Crust(int WEIGHTABSORPTION_SETTING, int model) :
     fLayerNames.emplace(Layer::InnerCore,       std::string("inner core"));
     ReadCrust1();
     break;
-    
-  case 0:
-    fLayerNames.emplace(Layer::Air,             std::string("air"));
-    fLayerNames.emplace(Layer::Water,           std::string("water"));
-    fLayerNames.emplace(Layer::Ice,             std::string("ice"));
-    //ReadBedmap();
-    break;
   }
 
 } //Crust constructor
@@ -145,15 +138,7 @@ icemc::Crust::Layer icemc::Crust::layerAbove(Layer layer) const {
     case Layer::InnerCore:       return Layer::OuterCore;
     }
   }
-  else if (thisModel==0){
-    switch (layer){
-    case Layer::Air:             return Layer::Air;
-    case Layer::Water:           return Layer::Air;
-    case Layer::Ice:             return Layer::Water;
-    }
-  }
-  return layer;
-  
+  return layer;  
 }
 
 icemc::Crust::Layer icemc::Crust::layerBelow(Layer layer) const {
@@ -189,19 +174,14 @@ icemc::Crust::Layer icemc::Crust::layerBelow(Layer layer) const {
     case Layer::InnerCore:       return Layer::InnerCore;
     }
   }
-  else if (thisModel==0){
-    switch (layer){
-    case Layer::Air:             return Layer::Water;    
-    case Layer::Water:           return Layer::Ice;
-    case Layer::Ice:             return Layer::Ice;
-    }
-  }
-   
   return layer;
 }
 
-double icemc::Crust::IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const {
-
+//double icemc::Crust::IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const {
+double icemc::Crust::IceVolumeWithinHorizon(const Geoid::Position& p) const {
+  //@todo better way to calculate horizon distance?
+  const double altitude = p.Altitude();
+  const double horizonDistanceMeters = sqrt(altitude*altitude+2*altitude+Geoid::R_EARTH);
   const double maxDeltaRSq = horizonDistanceMeters*horizonDistanceMeters;
   const double delta = 5e3;
   const LocalCoordinateSystem lc(p); // local coordate system tangential to geoid centered at p
@@ -952,6 +932,7 @@ void icemc::Crust::ReadCrust2(){
   build_all_meshes(fSurfaceMag);
   build_all_meshes(fDensities);
   fSurfaceAboveGeoid.build();
+  std::cout << "End of ReadCrust2" << std::endl;
 }//ReadCrust2
 
 void icemc::Crust::ReadCrust1() {

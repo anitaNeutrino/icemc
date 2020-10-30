@@ -48,7 +48,8 @@ namespace icemc {
 
     virtual double areaLonLat(const Geoid::Position& p, double d);
 
-    virtual double IceVolumeWithinHorizon(const Geoid::Position& p,  double horizonDistance) const = 0;
+    //virtual double IceVolumeWithinHorizon(const Geoid::Position& p,  double horizonDistance) const = 0;
+    virtual double IceVolumeWithinHorizon(const Geoid::Position& p) const = 0;
   private:
     
     

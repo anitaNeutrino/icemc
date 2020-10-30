@@ -112,8 +112,8 @@ namespace icemc{
     }
     virtual double Density(const Geoid::Position& pos, int& crust_entered) const;
 
-    // virtual double fractionalIceVolumeWithinHorizon(const Geoid::Position& centeredOn, double horizonDistance) const;
-    virtual double IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const override;
+    //virtual double IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const override;
+    virtual double IceVolumeWithinHorizon(const Geoid::Position& p) const override;
 
     /** 
      * Figures out whether a neutrino will make it through the a Earth along a chord
@@ -150,7 +150,7 @@ namespace icemc{
     double totalIceVolume; // Volume of Antarctic ice
     double totalIceArea;
 
-    int MODEL; // 0 for Bedmap1, 1 for Crust1.0, 2 for Crust2.0 -- for CRUST also gives bin width
+    int MODEL; // 1 for Crust1.0, 2 for Crust2.0 -- also gives bin width
     int CONSTANTICETHICKNESS;
     int CONSTANTCRUST;
     int FIXEDELEVATION;
@@ -171,7 +171,6 @@ namespace icemc{
     //methods
     void ReadCrust1();
     void ReadCrust2();
-    //void ReadBedmap();
  
     //const int numLayers;
     // All possible layers, in either Crust2.0 or Crust1.0

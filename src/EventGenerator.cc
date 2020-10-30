@@ -174,7 +174,8 @@ void icemc::EventGenerator::generate(Detector& detector){
   // interactionGenerator = waisModel;
   // fRadioModel = waisModel;
 
-  icemc::report() << "Area of the earth's surface covered by antarctic ice is " << antarctica->ice_area << std::endl;
+  icemc::report() << "Volume of antarctic ice is " << antarctica->GetTotalIceVolume() << " m^3" << std::endl;
+  icemc::report() << "Area of the earth's surface covered by antarctic ice is " << antarctica->GetTotalIceArea() << " m^2" << std::endl;
 
   icemc::RootOutput output(this, fSettings, fSettings->getOutputDir(), fSettings->getRun());
 
@@ -210,7 +211,10 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary = EventSummary(run, eventNumber,  eventTimes.at(entry));
     fEventSummary.neutrino = nuGenerator.generate();
     fEventSummary.detector = detector.getPosition(fEventSummary.loop.eventTime);
-
+    fEventSummary.positionWeight = antarctica->GetTotalIceVolume()/antarctica->IceVolumeWithinHorizon(fEventSummary.detector);
+    std::cout << "Position weight=" << fEventSummary.positionWeight << std::endl;
+    //fEvenSummary.directionWeight = // cherenkov cone solid area/unit sphere
+    
     fEventSummary.interaction = interactionGenerator->generateInteraction(fEventSummary.neutrino, fEventSummary.detector);
     
     OpticalPath opticalPath = rayTracer.findPath(fEventSummary.interaction.position, fEventSummary.detector);
@@ -233,7 +237,6 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath);
     fEventSummary.shower = showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction);
     PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEventSummary.neutrino, fEventSummary.shower);
-
     
     fEvent.signalAt1m = signal.waveform.getTimeDomain();
     fEventSummary.signalSummaryAt1m = signal.summarize();

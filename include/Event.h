@@ -31,6 +31,11 @@ namespace icemc {
     SignalSummary signalSummaryAt1m;
     SignalSummary signalSummaryAtDetector;
 
+    // Phase weights
+    double positionWeight;
+    double directionWeight;
+    double weight() { return positionWeight*directionWeight; };
+
     ClassDef(EventSummary, 3)
   };
 
