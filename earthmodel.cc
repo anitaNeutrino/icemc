@@ -972,7 +972,7 @@ Vector EarthModel::PickPosnuForaLonLat(double lon,double lat,double theta,double
 }
 
 double EarthModel::dGetTheta(int ilat) {
-  return theta = RADDEG*ilat*MAXTHETA/NLAT;
+  return RADDEG*ilat*MAXTHETA/NLAT;
 } //dGetTheta(int)
 
 double EarthModel::dGetPhi(int ilon) {
