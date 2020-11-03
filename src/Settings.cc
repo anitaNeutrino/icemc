@@ -459,15 +459,18 @@ void icemc::Settings::ReadInputs(const char* inputFileName, std::ofstream &foutp
   }
   
   getSetting("Antarctic ice model", ICE_MODEL);
-  if ((CONSTANTICETHICKNESS || FIXEDELEVATION) && ICE_MODEL != 0) {
-    ICE_MODEL=0;
+  if ((CONSTANTICETHICKNESS || FIXEDELEVATION) && ICE_MODEL != 2) {
+    ICE_MODEL=2;
     std::cout << "Constant ice thickness and/or fixed elevation requested.  Using Crust 2.0 ice model." << std::endl;
   } //use the Crust 2.0 data if set to constant icethickness or ground elevation
 
-  if (ICE_MODEL==0){
+  if (ICE_MODEL==2){
     std::cout << "Using Crust 2.0 ice model." << std::endl;
   }
-  else if (ICE_MODEL==1){
+  if (ICE_MODEL==1){
+    std::cout << "Using Crust 1.0 ice model." << std::endl;
+  }
+  else if (ICE_MODEL==0){
     std::cout << "Using BEDMAP ice model." << std::endl;
   }
 

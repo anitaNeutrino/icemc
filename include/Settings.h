@@ -120,7 +120,7 @@ namespace icemc {
     double SCREENEDGELENGTH;        // edge length of screen used if there is roughness
     double SCREENSTEPSIZE;        // step size of screen grid if there is roughness
 
-    int ICE_MODEL; //Select ice model to be used.  0 = Crust 2.0 , 1 = BEDMAP.
+    int ICE_MODEL; //Select ice model to be used.  0=Bedmap, 1=CRUST1.0, 2=CRUST2.0
     int NOFZ; // 1=depth dependent index of refraction,0=off
     int CONSTANTCRUST; // set crust density and thickness to constant values.
     int CONSTANTICETHICKNESS; // set ice thickness to constant value

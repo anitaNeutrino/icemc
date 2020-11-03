@@ -212,8 +212,8 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary.neutrino = nuGenerator.generate();
     fEventSummary.detector = detector.getPosition(fEventSummary.loop.eventTime);
     fEventSummary.positionWeight = antarctica->GetTotalIceVolume()/antarctica->IceVolumeWithinHorizon(fEventSummary.detector);
-    std::cout << "Position weight=" << fEventSummary.positionWeight << std::endl;
-    //fEvenSummary.directionWeight = // cherenkov cone solid area/unit sphere
+    std::cout << "Position weight=" << fEventSummary.positionWeight << std::endl; //@todo verify this produces good numbers
+    fEventSummary.directionWeight = 1; // @todo cherenkov cone solid area/unit sphere
     
     fEventSummary.interaction = interactionGenerator->generateInteraction(fEventSummary.neutrino, fEventSummary.detector);
     

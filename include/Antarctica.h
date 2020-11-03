@@ -26,30 +26,29 @@ namespace icemc {
     double ground_elevation[1068][869]; //elevation above geoid at which ice starts
     double water_depth[1200][1000]; //depth of water under ice
 
-
     // double bedmap_R; //varies with latitude, defined here for 71 deg S latitude
     // double bedmap_nu;
 
 
     //Parameters of the BEDMAP ice model. (See http://www.antarctica.ac.uk/aedc/bedmap/download/)
-    int nCols_ice; //number of columns in data, set by header file (should be 1200)
-    int nRows_ice; //number of rows in data, set by header file (should be 1000)
+    // int nCols_ice; //number of columns in data, set by header file (should be 1200)
+    // int nRows_ice; //number of rows in data, set by header file (should be 1000)
     int cellSize; //in meters, set by header file (should be 5000) - same for both files
-    int xLowerLeft_ice; 
-    int yLowerLeft_ice;
-    int nCols_ground;
-    int nRows_ground;
-    int xLowerLeft_ground;
-    int yLowerLeft_ground;
-    int nCols_water;
-    int nRows_water;
-    int xLowerLeft_water;
-    int yLowerLeft_water;
-    int NODATA;
+    // int xLowerLeft_ice; 
+    // int yLowerLeft_ice;
+    // int nCols_ground;
+    // int nRows_ground;
+    // int xLowerLeft_ground;
+    // int yLowerLeft_ground;
+    // int nCols_water;
+    // int nRows_water;
+    // int xLowerLeft_water;
+    // int yLowerLeft_water;
+    // int NODATA;
 
-
-    void IceENtoLonLat(int e, int n, double& lon, double& lat) const;  
-    void GroundENtoLonLat(int e, int n,	double& lon, double& lat) const;
+    
+    //void IceENtoLonLat(int e, int n, double& lon, double& lat) const;  
+    //void GroundENtoLonLat(int e, int n,	double& lon, double& lat) const;
 
     const static int NBNPOSITIONS_MAX=26000;
     // double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
@@ -92,9 +91,10 @@ namespace icemc {
     double GetN(const Geoid::Position &pos) const;
     double EffectiveAttenuationLength(const Settings *settings1,const Geoid::Position &pos, const int &whichray) const;
   
-    void IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const;
+    //void IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const;
 
     int PickUnbiased(InteractionGenerator *interaction1) const;
+    
 
 
   protected:
@@ -118,11 +118,11 @@ namespace icemc {
 
 
 
-    void WaterENtoLonLat(int e,
-			 int n,
+    // void WaterENtoLonLat(int e,
+    // 			 int n,
 		       
-			 double& lon,
-			 double& lat) const;
+    // 			 double& lon,
+    // 			 double& lat) const;
     void LonLattoEN(double lon, 
 		    double lat,
 		    double xLowerLeft,
@@ -131,21 +131,20 @@ namespace icemc {
 		    int& e_coord, 
 		    int& n_coord) const;
  
-    void GroundLonLattoEN(double lon, 
-			  double lat,
+    // void GroundLonLattoEN(double lon, 
+    // 			  double lat,
 			
-			  int& e_coord, 
-			  int& n_coord) const;
-    void WaterLonLattoEN(double lon,
-			 double lat,
+    // 			  int& e_coord, 
+    // 			  int& n_coord) const;
+    // void WaterLonLattoEN(double lon,
+    // 			 double lat,
 		       
-			 int& e_coord,
-			 int& n_coord) const;
+    // 			 int& e_coord,
+    // 			 int& n_coord) const;
 
     //BEDMAP data input methods
-    void ReadIceThickness();
-    void ReadGroundBed();
-    void ReadWaterDepth();
+    void ReadBedmap(); // One fuction to read in all Bedmap data and create mesh based on Crust method
+  
 
   private:
 

@@ -33,8 +33,7 @@ icemc::Crust::Crust(int WEIGHTABSORPTION_SETTING, int model) :
 
   weightabsorption= WEIGHTABSORPTION_SETTING;
   
-  //if(model!=0 && model!=1 && model!=2){
-  if(model!=1 && model!=2){
+  if(model!=0 && model!=1 && model!=2){
     icemc::report() << severity::error << "Unrecognized model, defaulting to CRUST2.0" << std::endl;
     model = 2;
   }
@@ -56,8 +55,7 @@ icemc::Crust::Crust(int WEIGHTABSORPTION_SETTING, int model) :
   totalIceVolume = 0;
   totalIceArea = 0;
   
-  switch (model) {
-  case 2:
+  if (model==2){
     fLayerNames.emplace(Layer::Air,          std::string("air"));
     fLayerNames.emplace(Layer::Water,        std::string("water"));
     fLayerNames.emplace(Layer::Ice,          std::string("ice"));
@@ -70,9 +68,8 @@ icemc::Crust::Crust(int WEIGHTABSORPTION_SETTING, int model) :
     fLayerNames.emplace(Layer::OuterCore,    std::string("outer core"));
     fLayerNames.emplace(Layer::InnerCore,    std::string("inner core"));
     ReadCrust2();
-    break;
-
-  case 1:
+  }
+  else if (model==1){
     fLayerNames.emplace(Layer::Air,             std::string("air"));
     fLayerNames.emplace(Layer::Water,           std::string("water"));
     fLayerNames.emplace(Layer::Ice,             std::string("ice"));
@@ -86,7 +83,6 @@ icemc::Crust::Crust(int WEIGHTABSORPTION_SETTING, int model) :
     fLayerNames.emplace(Layer::OuterCore,       std::string("outer core"));
     fLayerNames.emplace(Layer::InnerCore,       std::string("inner core"));
     ReadCrust1();
-    break;
   }
 
 } //Crust constructor
@@ -754,8 +750,7 @@ void icemc::Crust::ReadCrust2(){
   std::cout << "Loading CRUST2.0 file " << fName << std::endl;
 
    // reads in altitudes of 7 layers of crust, ice and water
-  double rossvolume = 0;
-
+  
   std::fstream infile(fName.c_str(),std::ios::in);
   std::string thisline; // for reading in file
   while(!infile.eof()) {
@@ -826,9 +821,9 @@ void icemc::Crust::ReadCrust2(){
       const double kilometersToMeters = 1e3;      
       double depthMeters = kilometersToMeters*(double)atof(sdepth.c_str());;
 
-      if (layer==Layer::Water && (indexlat>=3 && indexlat<=9) && (indexlon<=12 || indexlon>=173)){ // Ross Ice Shelf
-	std::cout << depthMeters << " m of water at lat=" << 2*indexlat-89 << ", lon=" << 2*indexlon-179 << std::endl;
-      }
+      //if (layer==Layer::Water && (indexlat>=3 && indexlat<=9) && (indexlon<=12 || indexlon>=173)){ // Ross Ice Shelf
+      //std::cout << depthMeters << " m of water at lat=" << 2*indexlat-89 << ", lon=" << 2*indexlon-179 << std::endl;
+      //}
 	
       // region where Ross Ice Shelf was not accounted for in Crust 2.0 add it in by hand
       if (layer==Layer::Ice && indexlat==5 && (indexlon<=5 || indexlon>=176)){ // Ross Ice Shelf
@@ -913,9 +908,6 @@ void icemc::Crust::ReadCrust2(){
     }
   }  // done reading file
 
-  std::cout << "In Ross Ice Shelf: " << rossvolume << " m^3 of ice" << std::endl;
-
-
   
   // find the place where the crust is the deepest.
   // for finding where to start stepping in Getchord
@@ -932,7 +924,6 @@ void icemc::Crust::ReadCrust2(){
   build_all_meshes(fSurfaceMag);
   build_all_meshes(fDensities);
   fSurfaceAboveGeoid.build();
-  std::cout << "End of ReadCrust2" << std::endl;
 }//ReadCrust2
 
 void icemc::Crust::ReadCrust1() {
@@ -941,8 +932,6 @@ void icemc::Crust::ReadCrust1() {
    const std::string fName=ICEMC_SRC_DIR+"/data/outcr1"; // Crust 1.0
 
    std::cout << "Loading CRUST1.0 file " << fName << std::endl;
-
-  double rossvolume = 0;
 
   //List of layer names
   std::vector<std::string> layerNames;
@@ -1027,14 +1016,7 @@ void icemc::Crust::ReadCrust1() {
 	
       double depthMeters = top - bottom;
 
-
-      
-      if (layer==Layer::Water && (indexlat>=6 && indexlat<=18) && (indexlon<=24 || indexlon>=346)){ // Ross Ice Shelf
-	std::cout << depthMeters << " m of water  at lat=" << latitude << ", lon=" << longitude << std::endl;
-      }
-
       top = bottom;
-
       // @todo is this true of Crust 1.0 too?
       // region where Ross Ice Shelf was not accounted for in Crust 2.0 add it in by hand
       if (layer==Layer::Ice && indexlat==10 && (indexlon<=10 || indexlon>=352)){ // Ross Ice Shelf

@@ -12,7 +12,7 @@ int main(int argc, char **argv){
   const icemc::Crust c(1,model); 
  
   std::cout << c.GetTotalIceVolume() << " m^3 of Antarctic ice" << std::endl;
-  std::cout << c.GetTotalIceArea() << " m^s of Antarctic is covered by ice" << std::endl;
+  std::cout << c.GetTotalIceArea() << " m^2 of Antarctic is covered by ice" << std::endl;
   
   int nx, ny;
   nx = ny = 500;

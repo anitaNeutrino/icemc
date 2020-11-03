@@ -34,7 +34,7 @@ namespace icemc {
     // Phase weights
     double positionWeight;
     double directionWeight;
-    double weight() { return positionWeight*directionWeight; };
+    double weight() const { return positionWeight*directionWeight; };
 
     ClassDef(EventSummary, 3)
   };

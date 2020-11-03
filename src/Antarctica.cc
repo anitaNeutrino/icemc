@@ -25,45 +25,47 @@ const std::string ICEMC_DATA_DIR = ICEMC_SRC_DIR+"/data/";
 icemc::Antarctica::Antarctica(int model,
 			      int earth_model,
 			      int WEIGHTABSORPTION_SETTING)
-  : Crust(WEIGHTABSORPTION_SETTING)
+  : Crust(WEIGHTABSORPTION_SETTING, model)
 {
-
   // double bedmap_R = scale_factor*bedmap_c_0 * pow(( (1 + eccentricity*sin(71*constants::RADDEG)) / (1 - eccentricity*sin(71*constants::RADDEG)) ),eccentricity/2) * tan((constants::PI/4) - (71*constants::RADDEG)/2); //varies with latitude, defined here for 71 deg S latitude
   
   // bedmap_nu = bedmap_R / cos(71*constants::RADDEG);
     
   //Parameters of the BEDMAP ice model. (See http://www.antarctica.ac.uk/aedc/bedmap/download/)
-  nCols_ice         = 1200; //number of columns in data, set by header file (should be 1200)
-  nRows_ice         = 1000; //number of rows in data, set by header file (should be 1000)
-  cellSize          = 5000; //in meters, set by header file (should be 5000) - same for both files
-  xLowerLeft_ice    = -3000000;
-  yLowerLeft_ice    = -2500000;
-  nCols_ground      = 1068;
-  nRows_ground      = 869;
-  xLowerLeft_ground = -2661600;
-  yLowerLeft_ground = -2149967;
-  nCols_water       = 1200;
-  nRows_water       = 1000;
-  xLowerLeft_water  = -3000000;
-  yLowerLeft_water  = -2500000;
-  NODATA            = -9999;
+  // nCols_ice         = 1200; //number of columns in data, set by header file (should be 1200)
+  // nRows_ice         = 1000; //number of rows in data, set by header file (should be 1000)
+  // cellSize          = 5000; //in meters, set by header file (should be 5000) - same for both files
+  // xLowerLeft_ice    = -3000000;
+  // yLowerLeft_ice    = -2500000;
+  // nCols_ground      = 1068;
+  // nRows_ground      = 869;
+  // xLowerLeft_ground = -2661600;
+  // yLowerLeft_ground = -2149967;
+  // nCols_water       = 1200;
+  // nRows_water       = 1000;
+  // xLowerLeft_water  = -3000000;
+  // yLowerLeft_water  = -2500000;
+  // NODATA            = -9999;
 
   ice_model=model;
   DEPTH_DEPENDENT_N = (int) (model / 10);
   ice_model -= DEPTH_DEPENDENT_N * 10;
 
-  if (ice_model != 0 && ice_model != 1) {
+  if (ice_model != 0 && ice_model != 1 && ice_model !=2) {
     icemc::report() << severity::error << "Unknown ice model requested!  Defaulting to Crust 2.0." << std::endl;
-    ice_model = 0;
-  } //if
-  else if (ice_model==1) {
-    ReadIceThickness();
-    ReadWaterDepth();
-    ReadGroundBed();
-  } //else if (BEDMAP)
-    //read in attenuation length data for direct signals
+    ice_model = 2;
+  }
+  else if (ice_model==0) {
+    // Set up layer names
+    fLayerNames.emplace(Layer::Air,          std::string("air"));
+    fLayerNames.emplace(Layer::Ice,          std::string("ice"));
+    fLayerNames.emplace(Layer::Water,        std::string("water")); // Water only below ice in Bedmap
+    fLayerNames.emplace(Layer::Bed,          std::string("bed"));
+    ReadBedmap();
+  }
+
+  //read in attenuation length data for direct signals
   int i=0;
-    
   std::ifstream sheetup((ICEMC_DATA_DIR+"/icesheet_attenlength_up.txt").c_str());
   if(sheetup.fail())
     {
@@ -203,7 +205,7 @@ int icemc::Antarctica::WhereDoesItEnterIce(const Geoid::Position &posnu,
       rock2=pow((local_surface - IceThickness(lon,lat) - WaterDepth(lon,lat)),2);
       surface2=pow(local_surface,2);    
 	    
-      if (ice_model==0) {
+      if (ice_model==2) {
 	if ((int)(lat)==COASTLINE && rock_previous2 < x2 && surface2 > x2)
 	  left_edge=1;
       } //if (Crust 2.0)
@@ -296,7 +298,7 @@ int icemc::Antarctica::WhereDoesItExitIce(const Geoid::Position &posnu,
       rock2=pow((local_surface - IceThickness(lon,lat) - WaterDepth(lon,lat)),2);
       surface2=pow(local_surface,2);    
 	    
-      if (ice_model==0) {
+      if (ice_model==2) {
 	if ((int)(lat)==COASTLINE && rock_previous2 < x2 && surface2 > x2)
 	  left_edge=1;
       } //if (Crust 2.0)
@@ -384,7 +386,7 @@ int icemc::Antarctica::WhereDoesItExitIceForward(const Geoid::Position &posnu,
       rock2=pow((local_surface - IceThickness(lon,lat) - WaterDepth(lon,lat)),2);
       surface2=pow(local_surface,2);    
 	    
-      if (ice_model==0) {
+      if (ice_model==2) {
 	if ((int)(lat)==COASTLINE && rock_previous2 < x2 && surface2 > x2)
 	  left_edge=1;
       } //if (Crust 2.0)
@@ -429,10 +431,11 @@ double icemc::Antarctica::IceThickness(double lon, double lat) const {
   Geoid::Position p;
   p.SetLonLatAlt(lon, lat, 0);
 
-  if (ice_model==1) {
+  //@todo Restore using new Bedmap mesh
+  if (ice_model==0) {
     int e_coord=0;
     int n_coord=0;
-    IceLonLattoEN(lon,lat,e_coord,n_coord);
+    //IceLonLattoEN(lon,lat,e_coord,n_coord);
     std::cout << lon << "\t" << e_coord << "\t" << n_coord << std::endl;
     if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord > 0){      
       ice_thickness = ice_thickness_array[e_coord][n_coord]; //if this region has BEDMAP data, use it.
@@ -441,7 +444,7 @@ double icemc::Antarctica::IceThickness(double lon, double lat) const {
       ice_thickness = Crust::IceThickness(p);
     }
   } //BEDMAP ice thickness
-  else if (ice_model==0) {
+  else if (ice_model==2) {
     ice_thickness = Crust::IceThickness(p);
     //std::cout << "ilon, ilat are " << (int)(lon/2) << " " << (int)(lat/2) << "\n";
   } //Crust 2.0 ice thickness
@@ -463,14 +466,15 @@ double icemc::Antarctica::SurfaceAboveGeoid(double lon, double lat) const {
 
   Geoid::Position p;
   p.SetLonLatAlt(lon, lat, 0);
-  
-  if (ice_model==1) {
+
+  //@todo Restore using Bedmap mesh
+  if (ice_model==0) {
     int e_coord_ice=0;
     int n_coord_ice=0;
     int e_coord_ground=0;
     int n_coord_ground=0;
-    IceLonLattoEN(lon,lat,e_coord_ice,n_coord_ice);
-    GroundLonLattoEN(lon,lat,e_coord_ground,n_coord_ground);
+    //IceLonLattoEN(lon,lat,e_coord_ice,n_coord_ice);
+    //GroundLonLattoEN(lon,lat,e_coord_ground,n_coord_ground);
     if (e_coord_ground <= 1068 && e_coord_ground >= 0 && n_coord_ground <= 869 && n_coord_ground >= 0 && e_coord_ice <= 1200 && e_coord_ice >= 0 && n_coord_ice <= 1000 && n_coord_ice >= 0){
       surface = ground_elevation[e_coord_ground][n_coord_ground] + ice_thickness_array[e_coord_ice][n_coord_ice] + water_depth[e_coord_ice][n_coord_ice];
     }
@@ -478,7 +482,7 @@ double icemc::Antarctica::SurfaceAboveGeoid(double lon, double lat) const {
       surface = Crust::SurfaceAboveGeoid(p);
     }
   } //Elevation of surface above geoid according to BEDMAP
-  else if (ice_model==0) {
+  else if (ice_model==2) {
       surface = Crust::SurfaceAboveGeoid(p);
   } //Elevation of surface above geoid according to Crust 2.0
     
@@ -506,13 +510,14 @@ double icemc::Antarctica::WaterDepth(double lon, double lat) const {
 
   Geoid::Position p;
   p.SetLonLatAlt(lon, lat, 0);
-  if (ice_model==0) {
+  if (ice_model==2) {
     water_depth_value = Crust::WaterDepth(p);
   } //if(Crust 2.0)
-  else if (ice_model==1) {
+  else if (ice_model==0) {
     int e_coord=0;
     int n_coord=0;
-    WaterLonLattoEN(lon,lat,e_coord,n_coord);
+    //@todo Restore with Bedmap mesh
+    //WaterLonLattoEN(lon,lat,e_coord,n_coord);
     if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord >= 0)
       water_depth_value = water_depth[e_coord][n_coord];
     else
@@ -752,18 +757,18 @@ void icemc::Antarctica::LonLattoEN(double lon, double lat, double xLowerLeft, do
   return;
 } //method LonLattoEN
 
-void icemc::Antarctica::IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const {
-  //Converts a latitude and longitude (in degrees) to indicies for BEDMAP ice thickness data.  Code by Stephen Hoover.
-  LonLattoEN(lon, lat, xLowerLeft_ice, yLowerLeft_ice, e_coord, n_coord);
-}//IceLonLattoEN
-void icemc::Antarctica::GroundLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const {
-  //Converts a latitude and longitude (in degrees) to indicies for BEDMAP ground elevation data.  Code by Stephen Hoover.
-  LonLattoEN(lon, lat, xLowerLeft_ground, yLowerLeft_ground, e_coord, n_coord);
-}//GroundLonLattoEN
-void icemc::Antarctica::WaterLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const {
-  //Converts a latitude and longitude (in degrees) to indicies for BEDMAP water depth data.  Code by Stephen Hoover.
-  LonLattoEN(lon, lat, xLowerLeft_water, yLowerLeft_water, e_coord, n_coord);
-}//WaterLonLattoEN
+// void icemc::Antarctica::IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const {
+//   //Converts a latitude and longitude (in degrees) to indicies for BEDMAP ice thickness data.  Code by Stephen Hoover.
+//   LonLattoEN(lon, lat, xLowerLeft_ice, yLowerLeft_ice, e_coord, n_coord);
+// }//IceLonLattoEN
+// void icemc::Antarctica::GroundLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const {
+//   //Converts a latitude and longitude (in degrees) to indicies for BEDMAP ground elevation data.  Code by Stephen Hoover.
+//   LonLattoEN(lon, lat, xLowerLeft_ground, yLowerLeft_ground, e_coord, n_coord);
+// }//GroundLonLattoEN
+// void icemc::Antarctica::WaterLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const {
+//   //Converts a latitude and longitude (in degrees) to indicies for BEDMAP water depth data.  Code by Stephen Hoover.
+//   LonLattoEN(lon, lat, xLowerLeft_water, yLowerLeft_water, e_coord, n_coord);
+// }//WaterLonLattoEN
 
 void icemc::Antarctica::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, double yLowerLeft, double& lon, double& lat) const {
   //Takes as input the indicies from a BEDMAP data set, and turns them into latitude and longitude coordinates.  Information on which data set (surface data, ice depth, water depth) is necessary, in the form of coordinates of a corner of the map.  Code by Stephen Hoover.
@@ -820,19 +825,19 @@ void icemc::Antarctica::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, 
     
 } //method ENtoLonLat
 
-void icemc::Antarctica::IceENtoLonLat(int e, int n, double& lon, double& lat) const {
-  //Converts indicies of the BEDMAP ice thickness matrix into longitude and latitude.  Code by Stephen Hoover.
-  // std::cout << "I'm inside IceENtoLonLat.\n";
-  ENtoLonLat(e,n,xLowerLeft_ice,yLowerLeft_ice,lon,lat);
-}//IceENtoLonLat
-void icemc::Antarctica::GroundENtoLonLat(int e, int n, double& lon, double& lat) const {
-  //Converts indicies of the BEDMAP ground elevation matrix into longitude and latitude.  Code by Stephen Hoover.
-  ENtoLonLat(e,n,xLowerLeft_ground,yLowerLeft_ground,lon,lat);
-}//GroundENtoLonLat
-void icemc::Antarctica::WaterENtoLonLat(int e, int n, double& lon, double& lat) const {
-  //Converts indicies of the BEDMAP water depth matrix into longitude and latitude.  Code by Stephen Hoover.
-  ENtoLonLat(e,n,xLowerLeft_water,yLowerLeft_water,lon,lat);
-}//WaterENtoLonLat
+// void icemc::Antarctica::IceENtoLonLat(int e, int n, double& lon, double& lat) const {
+//   //Converts indicies of the BEDMAP ice thickness matrix into longitude and latitude.  Code by Stephen Hoover.
+//   // std::cout << "I'm inside IceENtoLonLat.\n";
+//   ENtoLonLat(e,n,xLowerLeft_ice,yLowerLeft_ice,lon,lat);
+// }//IceENtoLonLat
+// void icemc::Antarctica::GroundENtoLonLat(int e, int n, double& lon, double& lat) const {
+//   //Converts indicies of the BEDMAP ground elevation matrix into longitude and latitude.  Code by Stephen Hoover.
+//   ENtoLonLat(e,n,xLowerLeft_ground,yLowerLeft_ground,lon,lat);
+// }//GroundENtoLonLat
+// void icemc::Antarctica::WaterENtoLonLat(int e, int n, double& lon, double& lat) const {
+//   //Converts indicies of the BEDMAP water depth matrix into longitude and latitude.  Code by Stephen Hoover.
+//   ENtoLonLat(e,n,xLowerLeft_water,yLowerLeft_water,lon,lat);
+// }//WaterENtoLonLat
 
 
 
@@ -1129,10 +1134,204 @@ void icemc::Antarctica::CreateHorizons(const Settings *settings1, const Balloon 
   // icemc::report() << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
     
   // icemc::report() << "Average thickness of ice within horizon, averages over balloon positions " << volume_inhorizon_average/constants::PI/pow(bn1->MAXHORIZON,2) << "\n";
-} //method CreateHorizons 
+} //method CreateHorizons
+
+void icemc::Antarctica::ReadBedmap() {
+
+  Geoid::Position ellipsoidPos;
+  Geoid::Position surfacePos;
+  double lon = 0;
+  double lat = 0;
+  double elevation = 0;
+  double readValue;
+
+  auto find_or_make_mesh = [&](std::map<Crust::Layer, Mesh>& m, Crust::Layer l, const std::string& n) -> Mesh& {
+    auto it = m.find(l);
+    if(it==m.end()){
+      auto& newMesh = m[l];
+      const std::string& name = fLayerNames.find(l)->second;
+      const std::string title = name + n;
+      newMesh.SetName(name.c_str());
+      newMesh.SetTitle(title.c_str());
+      return newMesh;
+    }
+    return it->second;
+  };
+  auto build_mesh = [&](std::map<Crust::Layer, Mesh>& m, Crust::Layer l){
+    auto it = m.find(l);
+    if(it==m.end()){
+      std::cout << "Couldn't find mesh to build" << std::endl;
+    }
+    else{
+      it->second.build();
+    }
+  };
+  auto build_all_meshes = [&](std::map<Crust::Layer, Mesh>& m){
+    for(auto it = m.begin(); it != m.end(); ++it){
+      it->second.build();
+    }
+  };
+  
+  //===================== Groundbed ==================//
+   //Reads the BEDMAP data on the elevation of the ground beneath the ice.  If there is water beneath the ice, the ground elevation is given the value 0.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
+  std::ifstream GroundBedFile((ICEMC_DATA_DIR+"/groundbed.asc").c_str());
+  if(!GroundBedFile) {
+    std::cerr << "Couldn't open: ICEMC_DATA_DIR/groundbed.asc" << std::endl;
+    exit(1);
+  }
+
+  std::string thisline;
+  int nCols, nRows, xLowerLeft, yLowerLeft, NODATA;
+  Layer layer = Layer::Bed;
+  std::cout<<"Reading in BEDMAP data on elevation of ground.\n";
+  //Read in header lines
+  //@todo make function to read this header?
+  for (int i=0; i<6; i++){
+    getline(GroundBedFile, thisline, '\n');
+    std::cout << "Reading in " << thisline << std::endl;
+
+    if(thisline.find("ncols")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string snCols = thisline.substr(beginindex, endindex-beginindex);
+      nCols = (int)atoi(snCols.c_str());
+    }
+    else if(thisline.find("nrows")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string snRows = thisline.substr(beginindex, endindex-beginindex);
+      nRows = (int)atoi(snRows.c_str());
+    }
+    else if(thisline.find("xllcorner")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string sxll = thisline.substr(beginindex, endindex-beginindex);
+      xLowerLeft = (int)atoi(sxll.c_str());
+    }
+    else if(thisline.find("yllcorner")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string syll = thisline.substr(beginindex, endindex-beginindex);
+      yLowerLeft = (int)atoi(syll.c_str());
+    }
+    else if(thisline.find("cellsize")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string ssize = thisline.substr(beginindex, endindex-beginindex);
+      cellSize = (int)atoi(ssize.c_str());
+    }
+    else if(thisline.find("NODATA_value")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string sNoData = thisline.substr(beginindex, endindex-beginindex);
+      NODATA = (int)atoi(sNoData.c_str());
+    }    
+  }
+  //std::cout << "-----Ground-----" << std::endl <<"  nCols=" << nCols << " nRows= " << nRows << std::endl;
+  //std::cout << "  xLowerLeft=" << xLowerLeft << " yLowerLeft=" << yLowerLeft << " cellSize=" << cellSize << " NODATA=" << NODATA << std::endl;
+    
+  for(int rowNum=0;rowNum<nRows;rowNum++) {
+    for(int colNum=0;colNum<nCols;colNum++) {
+      ENtoLonLat(colNum, rowNum, xLowerLeft, yLowerLeft, lon,lat);
+      ellipsoidPos.SetLonLatAlt(lon, lat, 0);
+
+      GroundBedFile >> readValue;	    
+      if(readValue==NODATA)
+	readValue=0; //Set elevation to 0 where we have no data.
+
+      icemc::Mesh& surfaceMesh = find_or_make_mesh(fSurfaceMag, layer, "surface magnitude");
+      surfaceMesh.addPoint(ellipsoidPos, readValue);
+      //ground_elevation[colNum][rowNum] = double(readValue);
+      //if (readValue != -96 && readValue != 0)
+      //cout<<"ground_elevation: "<<readValue<<std::endl;
+    }
+  }
+    
+  GroundBedFile.close();
+
+  //Build groundbed surface mesh so it can be called
+  //build_mesh(fSurfaceMag, layer);
+  //@todo build mesh throws errors for upper hemisphere where there are no points -- add dummies?
+  build_all_meshes(fSurfaceMag);
+  
+  //===================== Water Depth ==================//
+  //Reads BEDMAP data on the depth of water beneath the ice.  Where no water is present, the value 0 is entered.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
+  std::ifstream WaterDepthFile((ICEMC_DATA_DIR+"/water.asc").c_str());
+  if(!WaterDepthFile) {
+    std::cerr << "Couldn't open: ICEMC_DATA_DIR/water.asc" << std::endl;
+    exit(1);
+  }
+
+  layer = Layer::Water;
+  std::cout<<"Reading in BEDMAP data on water depth.\n";
+  for (int i=0; i<6; i++){
+    getline(WaterDepthFile, thisline, '\n');
+
+    if(thisline.find("ncols")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string snCols = thisline.substr(beginindex, endindex-beginindex);
+      nCols = (int)atoi(snCols.c_str());
+    }
+    else if(thisline.find("nrows")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string snRows = thisline.substr(beginindex, endindex-beginindex);
+      nRows = (int)atoi(snRows.c_str());
+    }
+    else if(thisline.find("xllcorner")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string sxll = thisline.substr(beginindex, endindex-beginindex);
+      xLowerLeft = (int)atoi(sxll.c_str());
+    }
+    else if(thisline.find("yllcorner")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string syll = thisline.substr(beginindex, endindex-beginindex);
+      yLowerLeft = (int)atoi(syll.c_str());
+    }
+    else if(thisline.find("cellsize")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string ssize = thisline.substr(beginindex, endindex-beginindex);
+      cellSize = (int)atoi(ssize.c_str());
+    }
+    else if(thisline.find("NODATA_value")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string sNoData = thisline.substr(beginindex, endindex-beginindex);
+      NODATA = (int)atoi(sNoData.c_str());
+    } 
+  }
+  //std::cout << "-----Water-----" << std::endl <<"  nCols=" << nCols << " nRows= " << nRows << std::endl;
+  //std::cout << "  xLowerLeft=" << xLowerLeft << " yLowerLeft=" << yLowerLeft << " cellSize=" << cellSize << " NODATA=" << NODATA << std::endl;
+    
+  for(int rowNum=0;rowNum<nRows;rowNum++) {
+    for(int colNum=0;colNum<nCols;colNum++) {
+      ENtoLonLat(colNum, rowNum, xLowerLeft, yLowerLeft, lon, lat);
+      ellipsoidPos.SetLonLatAlt(lon, lat, 0);
+
+      WaterDepthFile >> readValue;
+      if(readValue==NODATA)
+	readValue=0; //Set depth to 0 where we have no data.
+
+      icemc::Mesh& thicknessMesh = find_or_make_mesh(fThicknesses, layer,  "thickness"); //fThicknesses[layer];
+      thicknessMesh.addPoint(ellipsoidPos, readValue);
+      icemc::Mesh& surfaceMesh = find_or_make_mesh(fSurfaceMag, layer, "surface magnitude");
+      surfaceMesh.addPoint(ellipsoidPos, fSurfaceMag.at(Layer::Bed).eval(ellipsoidPos)+readValue);
+      //water_depth[colNum][rowNum] = double(readValue);
+    }
+  }
+    
+  WaterDepthFile.close();
+
+  build_mesh(fThicknesses, layer);
+  build_mesh(fSurfaceMag, layer);
+  
 
 
-void icemc::Antarctica::ReadIceThickness() {
+  //===================== Ice Thickness ==================//
   //Reads the BEDMAP ice thickness data.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
     
   std::ifstream IceThicknessFile((ICEMC_DATA_DIR+"/icethic.asc").c_str());
@@ -1140,191 +1339,97 @@ void icemc::Antarctica::ReadIceThickness() {
     std::cerr << "Couldn't open: $ICEMC_DATA_DIR/icethic.asc" << std::endl;
     exit(1);
   }
-    
-  std::cout<<"Reading in BEDMAP data on ice thickness.\n";
-  std::string tempBuf1;
-  std::string tempBuf2;
-  std::string tempBuf3;
-  std::string tempBuf4;
-  std::string tempBuf5;
-  std::string tempBuf6;
-  int temp1,temp2,temp3,temp4,temp5,temp6;
-    
-  IceThicknessFile >> tempBuf1 >> temp1 >> tempBuf2 >> temp2 
-		   >> tempBuf3 >> temp3 >> tempBuf4 >> temp4 
-		   >> tempBuf5 >> temp5 >> tempBuf6 >> temp6;
-    
-  if(tempBuf1 == std::string("ncols")) {
-    nCols_ice=temp1;
+
+  layer = Layer::Ice;
+  for (int i=0; i<6; i++){
+    getline(IceThicknessFile, thisline, '\n');
+
+    if(thisline.find("ncols")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string snCols = thisline.substr(beginindex, endindex-beginindex);
+      nCols = (int)atoi(snCols.c_str());
+    }
+    else if(thisline.find("nRows")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string snRows = thisline.substr(beginindex, endindex-beginindex);
+      nRows = (int)atoi(snRows.c_str());
+    }
+    else if(thisline.find("xllcorner")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string sxll = thisline.substr(beginindex, endindex-beginindex);
+      xLowerLeft = (int)atoi(sxll.c_str());
+    }
+    else if(thisline.find("yllcorner")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string syll = thisline.substr(beginindex, endindex-beginindex);
+      yLowerLeft = (int)atoi(syll.c_str());
+    }
+    else if(thisline.find("cellsize")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string ssize = thisline.substr(beginindex, endindex-beginindex);
+      cellSize = (int)atoi(ssize.c_str());
+    }
+    else if(thisline.find("NODATA_value")!=(int)(std::string::npos)){
+      int beginindex = thisline.find_first_not_of(" ", 13);
+      int endindex = thisline.find_first_of(" ", beginindex+1);
+      std::string sNoData = thisline.substr(beginindex, endindex-beginindex);
+      NODATA = (int)atoi(sNoData.c_str());
+    }
   }
-  if(tempBuf2 == std::string("nrows")) {
-    nRows_ice=temp2;
-  }
-  if(tempBuf3 == std::string("xllcorner")) {
-    xLowerLeft_ice=temp3;
-  }
-  if(tempBuf4 == std::string("yllcorner")) {
-    yLowerLeft_ice=temp4;
-  }
-  if(tempBuf5 == std::string("cellsize")) {
-    cellSize=temp5;
-  }
-  if(tempBuf6 == std::string("NODATA_value")) {
-    NODATA=temp6;
-  }
-  //cout<<"nCols_ice, nRows_ice "<<nCols_ice<<" , "<<nRows_ice<<std::endl;
-  //cout<<"xLL_ice, yLL_ice, cellsize "<<xLowerLeft_ice<<" , "<<yLowerLeft_ice<<" , "<<cellSize<<endl<<std::endl;
-    
-  double theValue;
+  //std::cout << "-----Ice-----" << std::endl <<"  nCols=" << nCols << " nRows= " << nRows << std::endl;
+  //std::cout << "  xLowerLeft=" << xLowerLeft << " yLowerLeft=" << yLowerLeft << " cellSize=" << cellSize << " NODATA=" << NODATA << std::endl;
+  
+  layer = Layer::Ice;
   volume=0.;
   ice_area=0.;
   // max_icevol_perbin=0.;
   // max_icethk_perbin=0.;
-  double lon_tmp,lat_tmp;
-  for(int rowNum=0;rowNum<nRows_ice;rowNum++) {
-    for(int colNum=0;colNum<nCols_ice;colNum++) {
-      IceENtoLonLat(colNum,rowNum,lon_tmp,lat_tmp);
-      IceThicknessFile >> theValue;
-      if(theValue==NODATA){
-	theValue=0; //Set ice depth to 0 where we have no data.
+  for(int rowNum=0;rowNum<nRows;rowNum++) {
+    for(int colNum=0;colNum<nCols;colNum++) {
+      ENtoLonLat(colNum, rowNum, xLowerLeft, yLowerLeft, lon, lat);
+      ellipsoidPos.SetLonLatAlt(lon, lat, 0);
+
+      IceThicknessFile >> readValue;
+      if(readValue==NODATA){
+	readValue=0; //Set ice depth to 0 where we have no data.
       }
-      ice_thickness_array[colNum][rowNum] = double(theValue); //This stores data as ice_thickness_array[easting][northing]
-      volume+=ice_thickness_array[colNum][rowNum]*Area(lat_tmp);
-      if (ice_thickness_array[colNum][rowNum]>0){
-	ice_area+=Area(lat_tmp);
-      }
+
+      icemc::Mesh& thicknessMesh = find_or_make_mesh(fThicknesses, layer,  "thickness"); //fThicknesses[layer];
+      thicknessMesh.addPoint(ellipsoidPos, readValue);
+      icemc::Mesh& surfaceMesh = find_or_make_mesh(fSurfaceMag, layer, "surface magnitude");
+      surfaceMesh.addPoint(ellipsoidPos, fSurfaceMag.at(Layer::Water).eval(ellipsoidPos)+readValue);
+      fSurfaceAboveGeoid.addPoint(ellipsoidPos, fSurfaceMag.at(Layer::Water).eval(ellipsoidPos)+readValue);
+      totalIceVolume += readValue*cellSize*cellSize; // 5 km^2 cells
+      if(readValue>0)
+	totalIceArea += cellSize*cellSize;
+      
+      //ice_thickness_array[colNum][rowNum] = double(readValue); //This stores data as ice_thickness_array[easting][northing]
+      //volume+=ice_thickness_array[colNum][rowNum]*Area(lat_tmp);
+      //if (ice_thickness_array[colNum][rowNum]>0){
+      //ice_area+=Area(lat_tmp);
+      //}
       // if (ice_thickness_array[colNum][rowNum]*Area(lat_tmp)>max_icevol_perbin){
       // 	max_icevol_perbin=ice_thickness_array[colNum][rowNum]*Area(lat_tmp);
       // }
       // if (ice_thickness_array[colNum][rowNum]>max_icethk_perbin){
       // 	max_icethk_perbin=ice_thickness_array[colNum][rowNum];
       // }
-      if(theValue > fMaxIceThickness ){
-	fMaxIceThickness = theValue;
-      }
-    }//for
-  }//for
+      //if(readValue > fMaxIceThickness ){
+      //  fMaxIceThickness = readValue;
+      //}
+    }
+  }
     
   IceThicknessFile.close();
-  return;
-} //method ReadIceThickness
 
-void icemc::Antarctica::ReadGroundBed() {
-  //Reads the BEDMAP data on the elevation of the ground beneath the ice.  If there is water beneath the ice, the ground elevation is given the value 0.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
-  std::ifstream GroundBedFile((ICEMC_DATA_DIR+"/groundbed.asc").c_str());
-  if(!GroundBedFile) {
-    std::cerr << "Couldn't open: ICEMC_DATA_DIR/groundbed.asc" << std::endl;
-    exit(1);
-  }
-    
-  std::cout<<"Reading in BEDMAP data on elevation of ground.\n";
-    
-  std::string tempBuf1;
-  std::string tempBuf2;
-  std::string tempBuf3;
-  std::string tempBuf4;
-  std::string tempBuf5;
-  std::string tempBuf6;
-  int temp1,temp2,temp3,temp4,temp5,temp6;
-    
-  GroundBedFile >> tempBuf1 >> temp1 >> tempBuf2 >> temp2 
-		>> tempBuf3 >> temp3 >> tempBuf4 >> temp4 
-		>> tempBuf5 >> temp5 >> tempBuf6 >> temp6;
-    
-  if(tempBuf1 == std::string("ncols")) {
-    nCols_ground=temp1;
-  }
-  if(tempBuf2 == std::string("nrows")) {
-    nRows_ground=temp2;
-  }
-  if(tempBuf3 == std::string("xllcorner")) {
-    xLowerLeft_ground=temp3;
-  }
-  if(tempBuf4 == std::string("yllcorner")) {
-    yLowerLeft_ground=temp4;
-  }
-  if(tempBuf5 == std::string("cellsize")) {
-    cellSize=temp5;
-  }
-  if(tempBuf6 == std::string("NODATA_value")) {
-    NODATA=temp6;
-  }
-    
-  //cout<<"nCols_ground, nRows_ground "<<nCols_ground<<" , "<<nRows_ground<<std::endl;
-  //cout<<"xLL_ground, yLL_ground, cellsize "<<xLowerLeft_ground<<" , "<<yLowerLeft_ground<<" , "<<cellSize<<endl<<std::endl;
-    
-  double theValue;
-  for(int rowNum=0;rowNum<nRows_ground;rowNum++) {
-    for(int colNum=0;colNum<nCols_ground;colNum++) {
-      GroundBedFile >> theValue;
-	    
-      if(theValue==NODATA)
-	theValue=0; //Set elevation to 0 where we have no data.
-      ground_elevation[colNum][rowNum] = double(theValue);
-      //if (theValue != -96 && theValue != 0)
-      //cout<<"ground_elevation: "<<theValue<<std::endl;
-    }//for
-  }//for
-    
-  GroundBedFile.close();
-  return;
-} //method ReadGroundBed
+  build_mesh(fThicknesses, layer);
+  build_mesh(fSurfaceMag, layer);
+  fSurfaceAboveGeoid.build();
+  
 
-void icemc::Antarctica::ReadWaterDepth() {
-  //Reads BEDMAP data on the depth of water beneath the ice.  Where no water is present, the value 0 is entered.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
-  std::ifstream WaterDepthFile((ICEMC_DATA_DIR+"/water.asc").c_str());
-  if(!WaterDepthFile) {
-    std::cerr << "Couldn't open: ICEMC_DATA_DIR/water.asc" << std::endl;
-    exit(1);
-  }
-    
-  std::cout<<"Reading in BEDMAP data on water depth.\n";
-    
-  std::string tempBuf1;
-  std::string tempBuf2;
-  std::string tempBuf3;
-  std::string tempBuf4;
-  std::string tempBuf5;
-  std::string tempBuf6;
-  int temp1,temp2,temp3,temp4,temp5,temp6;
-    
-  WaterDepthFile >> tempBuf1 >> temp1 >> tempBuf2 >> temp2 
-		 >> tempBuf3 >> temp3 >> tempBuf4 >> temp4 
-		 >> tempBuf5 >> temp5 >> tempBuf6 >> temp6;
-    
-  if(tempBuf1 == std::string("ncols")) {
-    nCols_water=temp1;
-  }
-  if(tempBuf2 == std::string("nrows")) {
-    nRows_water=temp2;
-  }
-  if(tempBuf3 == std::string("xllcorner")) {
-    xLowerLeft_water=temp3;
-  }
-  if(tempBuf4 == std::string("yllcorner")) {
-    yLowerLeft_water=temp4;
-  }
-  if(tempBuf5 == std::string("cellsize")) {
-    cellSize=temp5;
-  }
-  if(tempBuf6 == std::string("NODATA_value")) {
-    NODATA=temp6;
-  }
-    
-  //cout<<"nCols_water, nRows_water "<<nCols_water<<" , "<<nRows_water<<std::endl;
-  //cout<<"xLL_water, yLL_water, cellsize "<<xLowerLeft_water<<" , "<<yLowerLeft_water<<" , "<<cellSize<<endl<<std::endl;
-    
-  double theValue;
-  for(int rowNum=0;rowNum<nRows_water;rowNum++) {
-    for(int colNum=0;colNum<nCols_water;colNum++) {
-      WaterDepthFile >> theValue;
-	    
-      if(theValue==NODATA)
-	theValue=0; //Set depth to 0 where we have no data.
-      water_depth[colNum][rowNum] = double(theValue);
-    }//for
-  }//for
-    
-  WaterDepthFile.close();
-  return;
-} //method ReadWaterDepth
+}// ReadBedmap

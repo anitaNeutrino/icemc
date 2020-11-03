@@ -173,10 +173,11 @@ namespace icemc{
     void ReadCrust2();
  
     //const int numLayers;
-    // All possible layers, in either Crust2.0 or Crust1.0
+    // All possible layers, in either Crust2.0, Crust1.0, or Bedmap 
     enum class Layer {Air, ///@todo think about this one
 		      Water,
 		      Ice,
+		      Bed, // Only used by Bedmap, which has no information about the crust
 		      SoftSediment,
 		      HardSediment,
 		      UpperSediment,
