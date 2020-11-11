@@ -430,33 +430,13 @@ double icemc::Antarctica::IceThickness(double lon, double lat) const {
   double ice_thickness=0;
   Geoid::Position p;
   p.SetLonLatAlt(lon, lat, 0);
-
-  //@todo Restore using new Bedmap mesh
-  if (ice_model==0) {
-    int e_coord=0;
-    int n_coord=0;
-    //IceLonLattoEN(lon,lat,e_coord,n_coord);
-    std::cout << lon << "\t" << e_coord << "\t" << n_coord << std::endl;
-    if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord > 0){      
-      ice_thickness = ice_thickness_array[e_coord][n_coord]; //if this region has BEDMAP data, use it.
-    }
-    else{
-      ice_thickness = Crust::IceThickness(p);
-    }
-  } //BEDMAP ice thickness
-  else if (ice_model==2) {
-    ice_thickness = Crust::IceThickness(p);
-    //std::cout << "ilon, ilat are " << (int)(lon/2) << " " << (int)(lat/2) << "\n";
-  } //Crust 2.0 ice thickness
-    
-  return ice_thickness;
+  
+  return Crust::IceThickness(p);
 } //method IceThickness
 
 double icemc::Antarctica::IceThickness(const Geoid::Position &pos) const {
   //This method returns the thickness of the ice in meters at a location under a given position vector.  Code by Stephen Hoover.
-    
-  // return IceThickness(pos.Longitude(),pos.Latitude());
-  return Crust::IceThickness(pos);
+  return IceThickness(pos.Longitude(),pos.Latitude());
 } //method IceThickness(position)
 
 double icemc::Antarctica::SurfaceAboveGeoid(double lon, double lat) const {
@@ -467,26 +447,7 @@ double icemc::Antarctica::SurfaceAboveGeoid(double lon, double lat) const {
   Geoid::Position p;
   p.SetLonLatAlt(lon, lat, 0);
 
-  //@todo Restore using Bedmap mesh
-  if (ice_model==0) {
-    int e_coord_ice=0;
-    int n_coord_ice=0;
-    int e_coord_ground=0;
-    int n_coord_ground=0;
-    //IceLonLattoEN(lon,lat,e_coord_ice,n_coord_ice);
-    //GroundLonLattoEN(lon,lat,e_coord_ground,n_coord_ground);
-    if (e_coord_ground <= 1068 && e_coord_ground >= 0 && n_coord_ground <= 869 && n_coord_ground >= 0 && e_coord_ice <= 1200 && e_coord_ice >= 0 && n_coord_ice <= 1000 && n_coord_ice >= 0){
-      surface = ground_elevation[e_coord_ground][n_coord_ground] + ice_thickness_array[e_coord_ice][n_coord_ice] + water_depth[e_coord_ice][n_coord_ice];
-    }
-    else{
-      surface = Crust::SurfaceAboveGeoid(p);
-    }
-  } //Elevation of surface above geoid according to BEDMAP
-  else if (ice_model==2) {
-      surface = Crust::SurfaceAboveGeoid(p);
-  } //Elevation of surface above geoid according to Crust 2.0
-    
-  return surface;
+  return Crust::SurfaceAboveGeoid(p);
 } //method SurfaceAboveGeoid
 
 double icemc::Antarctica::SurfaceAboveGeoid(const Geoid::Position &pos) const {
@@ -510,21 +471,8 @@ double icemc::Antarctica::WaterDepth(double lon, double lat) const {
 
   Geoid::Position p;
   p.SetLonLatAlt(lon, lat, 0);
-  if (ice_model==2) {
-    water_depth_value = Crust::WaterDepth(p);
-  } //if(Crust 2.0)
-  else if (ice_model==0) {
-    int e_coord=0;
-    int n_coord=0;
-    //@todo Restore with Bedmap mesh
-    //WaterLonLattoEN(lon,lat,e_coord,n_coord);
-    if (e_coord <= 1200 && e_coord >= 0 && n_coord <= 1000 && n_coord >= 0)
-      water_depth_value = water_depth[e_coord][n_coord];
-    else
-      water_depth_value = Crust::WaterDepth(p);
-  } //else if(BEDMAP)
-    
-  return water_depth_value;
+ 
+  return Crust::WaterDepth(p);
 } //method WaterDepth(longitude, latitude)
 double icemc::Antarctica::WaterDepth(const Geoid::Position &pos) const {
   //This method returns the depth of water beneath ice shelves in meters, at a location specified by a position vector.  Code by Stephen Hoover.
@@ -815,9 +763,10 @@ void icemc::Antarctica::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, 
   isometric_lat = (constants::PI/2) - 2*atan(bedmap_R/(Geoid::scale_factor*Geoid::c_0));
     
   lat = isometric_lat + Geoid::a_bar*sin(2*isometric_lat) + Geoid::b_bar*sin(4*isometric_lat) + Geoid::c_bar*sin(6*isometric_lat) + Geoid::d_bar*sin(8*isometric_lat);
-    
+
+  // Make both negative for coordinate flip -- south pole at +90, East longtitudes positive
   lon = lon * constants::DEGRAD;  //convert to degrees, shift 0 to line up with bin 0 of Crust 2.0
-  lat = lat * constants::DEGRAD; //convert to degrees, with 0 degrees at the south pole
+  lat = -lat * constants::DEGRAD; //convert to degrees, with 0 degrees at the south pole
     
   //  if (lon>160 && lon<165)
   //std::cout << "e_coord, n_coord, easting, northing, lon are " << e_coord << " " << n_coord << " " << easting << " " << northing << " " << lon << "\n";
@@ -838,303 +787,6 @@ void icemc::Antarctica::ENtoLonLat(int e_coord, int n_coord, double xLowerLeft, 
 //   //Converts indicies of the BEDMAP water depth matrix into longitude and latitude.  Code by Stephen Hoover.
 //   ENtoLonLat(e,n,xLowerLeft_water,yLowerLeft_water,lon,lat);
 // }//WaterENtoLonLat
-
-
-
-void icemc::Antarctica::CreateHorizons(const Settings *settings1, const Balloon *bn1) {
-
-  // add up volume of ice within horizon of payload
-  // goes a little beyond horizon.
-
-  // when we select a path in a circle at 80deg S latitude,
-  // vectors are binned in phi (longitude).
-
-  // when we select the Anita-lite path,
-  // vectors are binned in time.
-
-  //for (int i=0; i<60;i++)
-  //cout<<"area at lat "<<(double)i/2<<" is "<<Area((double)i/2)<<std::endl;
-
-  volume = 0.; // initialize volume to zero
-
-
-  icemc::report() << severity::warning << "Temporarily disabled " << __PRETTY_FUNCTION__ << " during refactor! Volume = 2.3e8!" << std::endl;
-  volume = 2.3e8;
-
-  // double total_area=0; // initialize total area to zero
-  // int NBALLOONPOSITIONS; // number of balloon positions considered here
-  // if (bn1->whichPath()==FlightPath::AnitaLite){ // if anita-lite
-  //   NBALLOONPOSITIONS=(int)((double)bn1->NPOINTS/(double)bn1->REDUCEBALLOONPOSITIONS); //only take 1/100 of the total balloon positions that we have because otherwise it's overkill.
-  // }
-  // else if (bn1->whichPath()==FlightPath::Anita1 ||
-  // 	   bn1->whichPath()==FlightPath::Anita2 ||
-  // 	   bn1->whichPath()==FlightPath::Anita3 ||
-  // 	   bn1->whichPath()==FlightPath::Anita4) {
-
-  //   NBALLOONPOSITIONS=(int)((double)bn1->fChain->GetEntries()/(double)bn1->REDUCEBALLOONPOSITIONS)+1;
-  // }
-
-  // else if (bn1->whichPath()==FlightPath::Circle80DegreesSouth){ // for picking random point along 80 deg south
-
-  //   NBALLOONPOSITIONS=NPHI; // NPHI is the number of bins in phi for the visible ice in the horizon.  This is not the same as NLON, the number of bins in longitude for crust 2.0
-  // }
-  // else{ // includes fixed position (bn1->whichPath()=0)
-  //   NBALLOONPOSITIONS = 1;
-  // }
-
-  // if (NBALLOONPOSITIONS>NBNPOSITIONS_MAX) {
-  //   icemc::report() << severity::error << "Number of balloon positions is greater than max allowed.\n";
-  //   exit(1);
-  // }
-
-  // double phi_bn_temp=0; //phi of balloon, temporary variable
-  // Geoid::Position r_bn_temp; //position of balloon
-  // Geoid::Position r_bin; // position of each bin
-    
-  // double surface_elevation=0;
-  // double local_ice_thickness=0;
-  // double lat=0;
-  // double lon=0;
-  // //double r=0; // r,theta and phi are temporary variables
-  // double theta=0;
-  // double phi=0;
-  // int volume_found=0;
-  // char horizon_file[80];
-  // FILE *bedmap_horizons = new FILE();
-  // char line[200];
-  // int e_coord = 0;
-  // int n_coord = 0;
-    
-  // sprintf(horizon_file,
-  // 	  "bedmap_horizons_whichpath%i_weights%i.dat",
-  // 	  bn1->whichPath(),
-  // 	  settings1->USEPOSITIONWEIGHTS);
-
-  // bool writeFile = settings1->WRITE_FILE > 0;
-
-  // if (ice_model==1 && !writeFile) { // for bedmap model, need to be able to read file
-  //   if(!(bedmap_horizons = fopen(horizon_file, "r"))) {
-  //     printf("Error: unable to open %s.  Creating new file.\n", horizon_file);
-  //     writeFile=1;
-  //   }//if
-  // } //if
-  // if (ice_model==1 && writeFile) { // for bedmap model, need to be able to write to file
-  //   if(!(bedmap_horizons = fopen(horizon_file, "w"))) {
-  //     printf("Error: unable to open %s\n", horizon_file);
-  //     exit(1);
-  //   }//if
-  // } //if
-
-  // //@todo does this if statement make sense?
-  // if (bn1->whichPath()!=FlightPath::AnitaLite && bn1->whichPath()!=FlightPath::Anita1){ // not anita and not anita-lite
-  //   lat = GetLat(theta_bn); //get index of latitude, same for all balloon positions
-  // }    
-
-  // for (int i=0;i<NBALLOONPOSITIONS;i++) { // loop over balloon positions
-	
-  //   maxvol_inhorizon[i]=-1.; // volume of bin with the most ice in the horizon
-	
-  //   if (bn1->whichPath()==FlightPath::AnitaLite) { // anita or anita-lite path
-  //     theta_bn=(90+bn1->latitude_bn_anitalite.at(i*100))*constants::RADDEG; //theta of the balloon wrt north pole
-  //     lat = GetLat(theta_bn); // latitude  
-  //     phi_bn_temp =  (-1*bn1->longitude_bn_anitalite.at(i*100)+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
-  //     if (phi_bn_temp<0){ //correct phi_bn if it's negative
-  // 	phi_bn_temp+=360.;
-  //     }
-  //     phi_bn_temp*=constants::RADDEG;// turn it into radians
-
-  //     altitude_bn=bn1->altitude_bn_anitalite.at(i*100)*12.*constants::CMINCH/100.; // get the altitude for this balloon posistion
-  //     //altitude_bn=altitude_bn_anitalite[i*100]*12.*CMINCH/100.; // for anita, altitude in is meters
-	    
-  //   } // end if anita-lite
-
-  //   else if (bn1->whichPath()==FlightPath::Anita1 || 
-  // 	     bn1->whichPath()==FlightPath::Anita2 || 
-  // 	     bn1->whichPath()==FlightPath::Anita3 || 
-  // 	     bn1->whichPath()==FlightPath::Anita4) {
-
-  //     bn1->fChain->GetEvent(i*100);
-
-  //     theta_bn = (90+(double)bn1->flatitude)*constants::RADDEG; //theta of the balloon wrt north pole
-
-  //     lat=GetLat(theta_bn); // latitude  
-  //     phi_bn_temp=(-1*(double)bn1->flongitude+90.); //phi of the balloon, with 0 at +x and going counter clockwise looking down from the south pole
-  //     if (phi_bn_temp<0){ //correct phi_bn if it's negative
-  // 	phi_bn_temp+=360.;
-  //     }
-  //     phi_bn_temp*=constants::RADDEG;// turn it into radians
-
-  //     altitude_bn = (double) bn1->faltitude; // for anita, altitude in is meters
-
-  //   } // end if anita or anita-lite
-  //   else if (bn1->whichPath()==FlightPath::Circle80DegreesSouth){ // for picking random position along 80 deg south
-  //     phi_bn_temp=dGetPhi(i); //get phi of the balloon just based on the balloon positions.  Remember nballoonpositions runs from 0 to 179 here.
-  //   // the output of dGetPhi is in radians and runs from -pi/2 to 3*pi/2 relative to 
-  //   }
-  //   else{ // includes bn1->whichPath()=0 
-  //     phi_bn_temp=phi_bn;
-  //   }
-  //   // altitude_bn has already been set in SetDefaultBalloonPosition
-  //   // same for theta_bn
-  //   // lat set above
-  //   lon = GetLon(phi_bn_temp); //get longitude for this phi position
-  //   // lon goes from 0 (at -180 longitude) to 360 (at 180 longitude)
-
-  //   // position of balloon
-  //   surface_elevation = this->Surface(lon,lat); // distance from center of the earth to surface at this lon and lat
-    
-  //   r_bn_temp = TVector3(sin(theta_bn)*cos(phi_bn_temp)*(surface_elevation+altitude_bn),
-  // 			 sin(theta_bn)*sin(phi_bn_temp)*(surface_elevation+altitude_bn),
-  // 			 cos(theta_bn)*(surface_elevation+altitude_bn)); // vector from center of the earth to balloon
-	
-  //   if (ice_model==0) { // Crust 2.0
-  //     for (int j=0;j<NLON;j++) { // loop over bins in longitude
-  // 	for (int k=0;k<ILAT_COASTLINE;k++) { // loop over bins in latitude
-
-  // 	  // get position of each bin
-  // 	  r_bin.SetLonLatAlt();
-  // 	  r_bin = TVector3(sin(dGetTheta(k))*cos(dGetPhi(j))*(geoid[k]+surfacer[j][k]),
-  // 			   sin(dGetTheta(k))*sin(dGetPhi(j))*(geoid[k]+surfacer[j][k]),
-  // 			   cos(dGetTheta(k))*(geoid[k]+surfacer[j][k])); // vector from center of the earth to the surface of this bin
-
-  // 	  if (!volume_found){ 
-  // 	    volume += icethkarray[j][k]*1000*area[k]; // add this to the total volume of ice in antarctica
-  // 	  }
-  // 	  if (!volume_found && icethkarray[j][k] > 0){
-  // 	    total_area += area[k]; // add this to the total area of ice in antarctica
-  // 	  }
-  // 	  // if the bin is within the maximum horizon of the balloon or if we don't care
-  // 	  //r=(geoid[k]+surfacer[j][k]);
-  // 	  //phi=dGetPhi(j);
-  // 	  //theta=dGetTheta(k);
-  // 	  //	  cout << "USEWEIGHTS is " << USEWEIGHTS << "\n";
-  // 	  if ((settings1->USEPOSITIONWEIGHTS && r_bin.Distance(r_bn_temp) < bn1->MAXHORIZON)
-  // 	      || !settings1->USEPOSITIONWEIGHTS) {
-  // 	    // then put this latitude and longitude in vector
-
-  // 	    ilat_inhorizon[i].push_back(k); 
-  // 	    ilon_inhorizon[i].push_back(j);
-  // 	    // add up volume in horizon
-			
-  // 	    volume_inhorizon[i]+=icethkarray[j][k]*1000*area[k];
-
-  // 	    // finding which bin in horizon has maximum volume
-  // 	    if (icethkarray[j][k]*1000*area[k]>maxvol_inhorizon[i]) {
-  // 	      maxvol_inhorizon[i]=icethkarray[j][k]*1000.*area[k];
-  // 	    }
-  // 	  } //end if (distance < 800 km)
-  // 	} //end for (k loop)
-  //     } //end for (j loop)
-  //     //      cout << "i, volume_inhorizon are " << i << " " << volume_inhorizon[i] << "\n";
-
-  //     // ifi the balloon is too close to the ice, it will think there aren't any
-  //     // bins in the horizon, so force it the include the ones just below the balloon
-  //     int ilat_bn,ilon_bn;
-  //     GetILonILat(r_bn_temp,ilon_bn,ilat_bn); // find which longitude and latitude the balloon is above
-
-  //     if (ilat_inhorizon[i].size()==0 || ilon_inhorizon[i].size()==0) {
-  // 	maxvol_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // need to give it a maximum volume for a bin in horizon 
-  // 	volume_inhorizon[i]=icethkarray[ilon_bn][ilat_bn]*1000.*area[ilat_bn]; // and a total volume for the horizon
-  //     }
-
-  //     if (ilat_inhorizon[i].size()==0){ // for the ith balloon position, if it didn't find a latitude bin in horizon
-  // 	ilat_inhorizon[i].push_back(ilat_bn); // force it to be the one below the balloon       
-  //     }	    
-  //     if (ilon_inhorizon[i].size()==0){ // for the ith balloon position, if it didn't find a longitude bin in horizon
-  // 	ilon_inhorizon[i].push_back(ilon_bn); // force it to be the one below the balloon
-  //     }
-  //   } //end if (ice_model==0) Crust 2.0
-
-  //   else if (ice_model==1 && !writeFile) { // for bedmap model
-  //     fgets(line,200,bedmap_horizons);
-  //     while(line[0] != 'X') {
-  // 	e_coord = atoi(strtok(line,","));
-  // 	n_coord = atoi(strtok(NULL,","));
-  // 	easting_inhorizon[i].push_back(e_coord);
-  // 	northing_inhorizon[i].push_back(n_coord);
-  // 	fgets(line,200,bedmap_horizons);
-  //     } //while there are more eastings and northings
-  //     strtok(line,",");
-  //     volume_inhorizon[i] = atof(strtok(NULL,",")); // volume in the horizon
-  //     maxvol_inhorizon[i] = atof(strtok(NULL,","));
-
-  //     if (!volume_found) {
-  // 	total_area = atof(fgets(line,200,bedmap_horizons)); // total area on the continent
-  // 	volume = atof(fgets(line,200,bedmap_horizons)); // total volume on the continent
-  //     } //if
-  //   } //end if (ice_model==1) && !writeFile
-
-  //   else if (ice_model==1 && writeFile) { //for BEDMAP model, look through all easting and northing coordinates in the groundbed map (our smallest).  Output what we find to a file for later use.
-  //     for (int n_coord=0;n_coord<nRows_ground;n_coord++) {
-  // 	for (int e_coord=0;e_coord<nCols_ground;e_coord++) {
-
-  // 	  GroundENtoLonLat(e_coord,n_coord,lon,lat);
-
-  // 	  theta = lat * constants::RADDEG;
-  // 	  phi=LongtoPhi_0is180thMeridian(lon);
-
-  // 	  surface_elevation = this->Surface(lon,lat);
-  // 	  local_ice_thickness = this->IceThickness(lon,lat);
-		    
-  // 	  // get position of each bin
-  // 	  r_bin = TVector3(sin(theta)*cos(phi)*surface_elevation,
-  // 			   sin(theta)*sin(phi)*surface_elevation,
-  // 			   cos(theta)*surface_elevation);
-		    
-  // 	  if (!volume_found){
-  // 	    volume += local_ice_thickness*Area(lat);
-  // 	  }
-  // 	  if (!volume_found && local_ice_thickness > 5){
-  // 	    total_area += Area(lat);
-  // 	  }
-  // 	  if ((settings1->USEPOSITIONWEIGHTS && r_bn_temp.Distance(r_bin)<bn1->MAXHORIZON) || !settings1->USEPOSITIONWEIGHTS) {
-  // 	    fprintf(bedmap_horizons,"%i,%i,\n",e_coord,n_coord);
-  // 	    // then put this latitude and longitude in vector
-  // 	    easting_inhorizon[i].push_back(e_coord);
-  // 	    northing_inhorizon[i].push_back(n_coord);
-  // 	    // add up volume in horizon
-
-  // 	    GroundENtoLonLat(e_coord,n_coord,lon,lat);
-
-  // 	    volume_inhorizon[i]+=local_ice_thickness*Area(lat);
-
-  // 	    // finding which bin in horizon has maximum volumey
-  // 	    if (local_ice_thickness*Area(lat)>maxvol_inhorizon[i]) {
-  // 	      maxvol_inhorizon[i]=local_ice_thickness*Area(lat);
-  // 	    }
-  // 	  } //end if (distance < 800 km & ice present)
-  // 	} //end for (e_coord loop)
-  //     } //end for (n_coord loop)
-
-  //     fprintf(bedmap_horizons,"X,%f,%f,\n",volume_inhorizon[i],maxvol_inhorizon[i]);
-  //     if (!volume_found) {
-  // 	fprintf(bedmap_horizons,"%f\n",total_area);
-  // 	fprintf(bedmap_horizons,"%f\n",volume);
-  //     } //if
-  //   } //end if (ice_model==1) && writeFile
-
-  //   if (!volume_found) {
-  //     std::cout << "Total surface area covered with ice (in m^2) is : "<<total_area<<std::endl;
-  //     volume_found=1;
-  //   } //if
-  // } //end loop over balloon positions
-    
-  //   // finding average volume in horizon over all balloon positions.
-  // volume_inhorizon_average=0;
-    
-  // for (int i=0;i<NPHI;i++) {
-  //   volume_inhorizon_average+=volume_inhorizon[i];
-	
-  // } //for
-  // volume_inhorizon_average/=(double)NBALLOONPOSITIONS;
-    
-  // //cout << "Total volume of ice in Antarctica with this ice model (m^3): " << volume << "\n";
-  // //cout << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
-    
-  // icemc::report() << "Average volume of ice within a horizon is " << volume_inhorizon_average << "\n";
-    
-  // icemc::report() << "Average thickness of ice within horizon, averages over balloon positions " << volume_inhorizon_average/constants::PI/pow(bn1->MAXHORIZON,2) << "\n";
-} //method CreateHorizons
 
 void icemc::Antarctica::ReadBedmap() {
 
@@ -1171,6 +823,27 @@ void icemc::Antarctica::ReadBedmap() {
       it->second.build();
     }
   };
+
+  //Fill the earth not covered by Bedmap with zeros on 2 degree grid
+  for (int lat=-60.5; lat<90; lat++){
+    for (int lon=-179.5; lon<180; lon++){
+      ellipsoidPos.SetLonLatAlt(lon, lat, 0);
+
+      icemc::Mesh& bedSurfaceMesh = find_or_make_mesh(fSurfaceMag, Layer::Bed, "surface magnitude");
+      bedSurfaceMesh.addPoint(ellipsoidPos, 0);
+      
+      icemc::Mesh& waterThicknessMesh = find_or_make_mesh(fThicknesses, Layer::Water,  "thickness");
+      waterThicknessMesh.addPoint(ellipsoidPos, 0);
+      icemc::Mesh& waterSurfaceMesh = find_or_make_mesh(fSurfaceMag, Layer::Water, "surface magnitude");
+      waterSurfaceMesh.addPoint(ellipsoidPos, 0);
+
+      icemc::Mesh& iceThicknessMesh = find_or_make_mesh(fThicknesses, Layer::Ice,  "thickness"); //fThicknesses[layer];
+      iceThicknessMesh.addPoint(ellipsoidPos, 0);
+      icemc::Mesh& iceSurfaceMesh = find_or_make_mesh(fSurfaceMag, Layer::Ice, "surface magnitude");
+      iceSurfaceMesh.addPoint(ellipsoidPos, 0);
+      fSurfaceAboveGeoid.addPoint(ellipsoidPos, 0);
+    }
+  }
   
   //===================== Groundbed ==================//
    //Reads the BEDMAP data on the elevation of the ground beneath the ice.  If there is water beneath the ice, the ground elevation is given the value 0.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
@@ -1183,13 +856,11 @@ void icemc::Antarctica::ReadBedmap() {
   std::string thisline;
   int nCols, nRows, xLowerLeft, yLowerLeft, NODATA;
   Layer layer = Layer::Bed;
-  std::cout<<"Reading in BEDMAP data on elevation of ground.\n";
+  std::cout<<"Reading in BEDMAP data on elevation of ground" << std::flush;
   //Read in header lines
   //@todo make function to read this header?
   for (int i=0; i<6; i++){
     getline(GroundBedFile, thisline, '\n');
-    std::cout << "Reading in " << thisline << std::endl;
-
     if(thisline.find("ncols")!=(int)(std::string::npos)){
       int beginindex = thisline.find_first_not_of(" ", 13);
       int endindex = thisline.find_first_of(" ", beginindex+1);
@@ -1231,6 +902,8 @@ void icemc::Antarctica::ReadBedmap() {
   //std::cout << "  xLowerLeft=" << xLowerLeft << " yLowerLeft=" << yLowerLeft << " cellSize=" << cellSize << " NODATA=" << NODATA << std::endl;
     
   for(int rowNum=0;rowNum<nRows;rowNum++) {
+    if( rowNum%(nRows/10)==0)
+      std::cout << "...." << (int)100*rowNum/nRows << "%" << std::flush;
     for(int colNum=0;colNum<nCols;colNum++) {
       ENtoLonLat(colNum, rowNum, xLowerLeft, yLowerLeft, lon,lat);
       ellipsoidPos.SetLonLatAlt(lon, lat, 0);
@@ -1241,18 +914,13 @@ void icemc::Antarctica::ReadBedmap() {
 
       icemc::Mesh& surfaceMesh = find_or_make_mesh(fSurfaceMag, layer, "surface magnitude");
       surfaceMesh.addPoint(ellipsoidPos, readValue);
-      //ground_elevation[colNum][rowNum] = double(readValue);
-      //if (readValue != -96 && readValue != 0)
-      //cout<<"ground_elevation: "<<readValue<<std::endl;
     }
   }
-    
+  std::cout << std::endl;
   GroundBedFile.close();
-
+  
   //Build groundbed surface mesh so it can be called
-  //build_mesh(fSurfaceMag, layer);
-  //@todo build mesh throws errors for upper hemisphere where there are no points -- add dummies?
-  build_all_meshes(fSurfaceMag);
+  build_mesh(fSurfaceMag, layer);
   
   //===================== Water Depth ==================//
   //Reads BEDMAP data on the depth of water beneath the ice.  Where no water is present, the value 0 is entered.  Assumes the file is in directory "data".  Code by Ryan Nichol, added to Monte Carlo by Stephen Hoover
@@ -1263,7 +931,7 @@ void icemc::Antarctica::ReadBedmap() {
   }
 
   layer = Layer::Water;
-  std::cout<<"Reading in BEDMAP data on water depth.\n";
+  std::cout<<"Reading in BEDMAP data on water depth" << std::flush;
   for (int i=0; i<6; i++){
     getline(WaterDepthFile, thisline, '\n');
 
@@ -1306,8 +974,10 @@ void icemc::Antarctica::ReadBedmap() {
   }
   //std::cout << "-----Water-----" << std::endl <<"  nCols=" << nCols << " nRows= " << nRows << std::endl;
   //std::cout << "  xLowerLeft=" << xLowerLeft << " yLowerLeft=" << yLowerLeft << " cellSize=" << cellSize << " NODATA=" << NODATA << std::endl;
-    
+  
   for(int rowNum=0;rowNum<nRows;rowNum++) {
+    if( rowNum%(int)(nRows/10)==0)
+      std::cout << "...." << (int)100*rowNum/nRows << "%" << std::flush;
     for(int colNum=0;colNum<nCols;colNum++) {
       ENtoLonLat(colNum, rowNum, xLowerLeft, yLowerLeft, lon, lat);
       ellipsoidPos.SetLonLatAlt(lon, lat, 0);
@@ -1320,10 +990,9 @@ void icemc::Antarctica::ReadBedmap() {
       thicknessMesh.addPoint(ellipsoidPos, readValue);
       icemc::Mesh& surfaceMesh = find_or_make_mesh(fSurfaceMag, layer, "surface magnitude");
       surfaceMesh.addPoint(ellipsoidPos, fSurfaceMag.at(Layer::Bed).eval(ellipsoidPos)+readValue);
-      //water_depth[colNum][rowNum] = double(readValue);
     }
   }
-    
+  std::cout << std::endl;
   WaterDepthFile.close();
 
   build_mesh(fThicknesses, layer);
@@ -1341,6 +1010,7 @@ void icemc::Antarctica::ReadBedmap() {
   }
 
   layer = Layer::Ice;
+  std::cout<<"Reading in BEDMAP data on ice thickness" << std::flush;
   for (int i=0; i<6; i++){
     getline(IceThicknessFile, thisline, '\n');
 
@@ -1390,10 +1060,13 @@ void icemc::Antarctica::ReadBedmap() {
   // max_icevol_perbin=0.;
   // max_icethk_perbin=0.;
   for(int rowNum=0;rowNum<nRows;rowNum++) {
+    if( rowNum%(nRows/10)==0)
+      std::cout << "...." << (int)100*rowNum/nRows << "%" << std::flush;
     for(int colNum=0;colNum<nCols;colNum++) {
       ENtoLonLat(colNum, rowNum, xLowerLeft, yLowerLeft, lon, lat);
       ellipsoidPos.SetLonLatAlt(lon, lat, 0);
 
+     
       IceThicknessFile >> readValue;
       if(readValue==NODATA){
 	readValue=0; //Set ice depth to 0 where we have no data.
@@ -1407,24 +1080,9 @@ void icemc::Antarctica::ReadBedmap() {
       totalIceVolume += readValue*cellSize*cellSize; // 5 km^2 cells
       if(readValue>0)
 	totalIceArea += cellSize*cellSize;
-      
-      //ice_thickness_array[colNum][rowNum] = double(readValue); //This stores data as ice_thickness_array[easting][northing]
-      //volume+=ice_thickness_array[colNum][rowNum]*Area(lat_tmp);
-      //if (ice_thickness_array[colNum][rowNum]>0){
-      //ice_area+=Area(lat_tmp);
-      //}
-      // if (ice_thickness_array[colNum][rowNum]*Area(lat_tmp)>max_icevol_perbin){
-      // 	max_icevol_perbin=ice_thickness_array[colNum][rowNum]*Area(lat_tmp);
-      // }
-      // if (ice_thickness_array[colNum][rowNum]>max_icethk_perbin){
-      // 	max_icethk_perbin=ice_thickness_array[colNum][rowNum];
-      // }
-      //if(readValue > fMaxIceThickness ){
-      //  fMaxIceThickness = readValue;
-      //}
     }
   }
-    
+  std::cout << std::endl;
   IceThicknessFile.close();
 
   build_mesh(fThicknesses, layer);

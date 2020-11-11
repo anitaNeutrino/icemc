@@ -165,7 +165,7 @@ void icemc::EventGenerator::generate(Detector& detector){
 
   ShowerModel showerModel(fSettings);
 
-  auto antarctica = std::make_shared<Antarctica>();
+  auto antarctica = std::make_shared<Antarctica>(fSettings->ICE_MODEL);
   std::shared_ptr<InteractionGenerator> interactionGenerator = std::make_shared<NeutrinoInteractionGenerator>(fSettings,
 													      antarctica,
 													      fCrossSectionModel,
@@ -211,9 +211,9 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary = EventSummary(run, eventNumber,  eventTimes.at(entry));
     fEventSummary.neutrino = nuGenerator.generate();
     fEventSummary.detector = detector.getPosition(fEventSummary.loop.eventTime);
-    fEventSummary.positionWeight = antarctica->GetTotalIceVolume()/antarctica->IceVolumeWithinHorizon(fEventSummary.detector);
-    std::cout << "Position weight=" << fEventSummary.positionWeight << std::endl; //@todo verify this produces good numbers
-    fEventSummary.directionWeight = 1; // @todo cherenkov cone solid area/unit sphere
+    const double posWeight = antarctica->GetTotalIceVolume()/antarctica->IceVolumeWithinHorizon(fEventSummary.detector);
+    fEventSummary.positionWeight = posWeight;
+    fEventSummary.directionWeight = fRadioModel->getDirectionWeight();
     
     fEventSummary.interaction = interactionGenerator->generateInteraction(fEventSummary.neutrino, fEventSummary.detector);
     

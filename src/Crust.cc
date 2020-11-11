@@ -177,7 +177,7 @@ icemc::Crust::Layer icemc::Crust::layerBelow(Layer layer) const {
 double icemc::Crust::IceVolumeWithinHorizon(const Geoid::Position& p) const {
   //@todo better way to calculate horizon distance?
   const double altitude = p.Altitude();
-  const double horizonDistanceMeters = sqrt(altitude*altitude+2*altitude+Geoid::R_EARTH);
+  const double horizonDistanceMeters = sqrt(altitude*altitude+2*altitude*Geoid::R_EARTH);
   const double maxDeltaRSq = horizonDistanceMeters*horizonDistanceMeters;
   const double delta = 5e3;
   const LocalCoordinateSystem lc(p); // local coordate system tangential to geoid centered at p
@@ -309,7 +309,6 @@ std::pair<Geoid::Position, double> icemc::Crust::integratePath(const Geoid::Posi
 
 
 double icemc::Crust::getLayerSurfaceAtPosition(const Geoid::Position& pos, Layer layer) const {  
-
   switch(layer){
   case Layer::InnerCore: return 1220e3;
   case Layer::OuterCore: return 3400e3;
@@ -353,7 +352,6 @@ bool icemc::Crust::InsideIce(const Geoid::Position& pos) const {
 
 double icemc::Crust::Density(const Geoid::Position& pos,
 				int& crust_entered /* 1 or 0 */) const{
-
   Layer l = getLayer(pos);
 
   switch(l){
@@ -623,6 +621,7 @@ int icemc::Crust::Getchord(const Settings *settings1,
       lon = where.Longitude();
       lat = where.Latitude();
       altitude=where.Altitude(); //Mag()-Geoid(lat); //what is the altitude
+      
       surface_elevation = this->SurfaceAboveGeoid(where); // altitude of surface relative to geoid at earth entrance point
       // local_icethickness = this->IceThickness(lon,lat);
       // local_waterdepth = WaterDepth(lon,lat);
@@ -687,6 +686,7 @@ int icemc::Crust::Getchord(const Settings *settings1,
     // ilon = (int)(lon/2);
     // ilat = (int)(lat/2);
     altitude=where.Altitude(); //.Mag()-Geoid(lat); //what is the altitude
+
     surface_elevation = this->SurfaceAboveGeoid(where); // altitude of surface relative to geoid at earth entrance point
     // local_icethickness = this->IceThickness(lon,lat);
     // local_waterdepth = WaterDepth(lon,lat);
@@ -715,6 +715,7 @@ int icemc::Crust::Getchord(const Settings *settings1,
       // ilon = (int)(lon/2);
       // ilat = (int)(lat/2);
       altitude=where.Altitude(); //where.Mag()-Geoid(lat); //what is the altitude
+      
       surface_elevation = this->SurfaceAboveGeoid(where); // altitude of surface relative to geoid at earth entrance point
       // local_icethickness = this->IceThickness(lon,lat);
       // local_waterdepth = WaterDepth(lon,lat);
@@ -775,7 +776,7 @@ void icemc::Crust::ReadCrust2(){
 
       std::string slon=thisline.substr(beginindex,endindex-beginindex);
       double longitude =(double)atof(slon.c_str());
-
+      
       indexlon=(int)((longitude+180)/2);
       indexlat=(int)((90+latitude)/2);
 
@@ -972,7 +973,7 @@ void icemc::Crust::ReadCrust1() {
 
       std::string slon=thisline.substr(beginindex,endindex-beginindex);
       indexlon =(int)atoi(slon.c_str()) - 1;
-      longitude = 179.5 - indexlon;
+      longitude = indexlon - 179.5;
 	
       ellipsoidPos.SetLonLatAlt(longitude, latitude, 0);
     } // new data point

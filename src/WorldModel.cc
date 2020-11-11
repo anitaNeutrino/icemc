@@ -187,7 +187,7 @@ double icemc::Mesh::eval(const Geoid::Position& p2) const {
     }
   }
   else{
-    icemc::report() << severity::error << "Outside interpolation bounds!" << std::endl;
+    icemc::report() << severity::error << "lon=" << p.Longitude() << " lat=" << p.Latitude() << "  outside interpolation bounds!" << std::endl;
     exit(1);
   }
 

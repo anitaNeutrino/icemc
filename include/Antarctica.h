@@ -54,7 +54,7 @@ namespace icemc {
     // double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
     // const static int NBNPOSITIONS_MAX=26000;
     // double volume_inhorizon[NBNPOSITIONS_MAX]; // volume of ice within horizon for each balloon phi position 
-    Antarctica(int model=0,int earth_mode=0,int WEIGHTABSORPTION_SETTING=1);
+    Antarctica(int model=2,int earth_mode=0,int WEIGHTABSORPTION_SETTING=1);
     double IceThickness(double lon,double lat) const;
     double IceThickness(const Geoid::Position& pos) const;
     double Surface(double lon,double lat) const;
@@ -86,7 +86,6 @@ namespace icemc {
 				  const TVector3 &nnu,
 				  double stepsize,
 				  Geoid::Position &r_enterice) const;
-    void CreateHorizons(const Settings *settings1,const Balloon *bn1);
     double GetN(double depth) const;
     double GetN(const Geoid::Position &pos) const;
     double EffectiveAttenuationLength(const Settings *settings1,const Geoid::Position &pos, const int &whichray) const;
