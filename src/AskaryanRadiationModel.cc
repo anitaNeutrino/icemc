@@ -372,7 +372,7 @@ void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
   //  Phys.Lett.B434,396 (1998)  (astro-ph/9806098)
   //  The lengths are different hence the angular thickness of 
   //  the shower is different.  Get the angular thickness for
-  //  both the EM and hadroic parts.
+  //  both the EM and hadronic parts.
 
   Energy elpm = GetELPM();
 
@@ -574,6 +574,58 @@ void icemc::AskaryanRadiationModel::SetParameterization(int whichparameterizatio
   WHICHPARAMETERIZATION=whichparameterization;
 }
 
+
+double icemc::AskaryanRadiationModel::getThetaRange(const Detector& detector, const Neutrino& nu, const Shower& dummyShower, const OpticalPath& opticalPath) const{
+
+  double dtheta = 0;
+  double strength = 100; //undetectable
+  double dThetaEm, dThetaHad;
+  const double referenceFreqHz = fFreqs_Hz.back();
+  GetSpread(nu.energy, dummyShower, referenceFreqHz, dThetaEm, dThetaHad);
+
+  if ( dummyShower.emFrac <= 1.E-10 && dThetaHad > 1.E-10) {
+    // Hadronic dominant
+    strength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.hadFrac*GetVmMHz1m(nu.energy, referenceFreqHz));
+    dtheta = dThetaHad;
+  }
+  else if ( dummyShower.emFrac > 1.E-10 && dThetaHad <= 1.E-10) {
+    // EM dominant
+    strength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*GetVmMHz1m(nu.energy, referenceFreqHz));
+    dtheta = dThetaEm;
+  }
+  else if ( dummyShower.emFrac > 1.E-10 && dThetaHad > 1.E-10) {
+    // Neither component non-negligible
+    strength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*GetVmMHz1m(nu.energy, referenceFreqHz));
+    double dtheta = dThetaEm;
+    double nextStrength = strength;
+    double taperedVmMHz = taperSingleFreq(referenceFreqHz, dtheta, dThetaEm, dThetaHad, dummyShower.emFrac, dummyShower.hadFrac);
+    while (nextStrength <= 1) {
+      strength = nextStrength;
+      dtheta += 0.5*dThetaEm;
+      taperedVmMHz = taperSingleFreq(referenceFreqHz, dtheta, dThetaEm, dThetaHad, dummyShower.emFrac, dummyShower.hadFrac);
+      nextStrength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*taperedVmMHz);
+
+      if (dtheta > 3*dThetaEm){
+	// Only consider the hadronic component
+	dtheta = dThetaHad;
+	break;
+      }
+    }
+  }
+
+  std::cout << "strength=" << strength << "  dtheta=" << dtheta << std::endl;
+  if (strength <=1){
+      dtheta = sqrt(dtheta*dtheta*strength/log(2));
+  }
+  else {
+    dtheta = 0;
+  }
+
+  //dtheta *= fSettings->THETA_TH_FACTOR; // scale factor for testing
+
+  return dtheta;
+  
+}
 
 
 

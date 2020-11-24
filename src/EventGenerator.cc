@@ -211,10 +211,9 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary = EventSummary(run, eventNumber,  eventTimes.at(entry));
     fEventSummary.neutrino = nuGenerator.generate();
     fEventSummary.detector = detector.getPosition(fEventSummary.loop.eventTime);
-    const double posWeight = antarctica->GetTotalIceVolume()/antarctica->IceVolumeWithinHorizon(fEventSummary.detector);
-    fEventSummary.positionWeight = posWeight;
-    fEventSummary.directionWeight = fRadioModel->getDirectionWeight();
-    
+    //@todo write function in antarctica to do this that checks for divide by zero error
+    fEventSummary.positionWeight = antarctica->GetTotalIceVolume()/antarctica->IceVolumeWithinHorizon(fEventSummary.detector);
+        
     fEventSummary.interaction = interactionGenerator->generateInteraction(fEventSummary.neutrino, fEventSummary.detector);
     
     OpticalPath opticalPath = rayTracer.findPath(fEventSummary.interaction.position, fEventSummary.detector);
@@ -224,6 +223,7 @@ void icemc::EventGenerator::generate(Detector& detector){
       std::cout << fEventSummary.interaction.position << "\n";
       std::cout << fEventSummary.detector << "\n";
       std::cout << "Separation = " << fEventSummary.interaction.position.Distance(fEventSummary.detector) << "\n" << std::endl;
+      std::cout << "Optical path distance = " << opticalPath.distance() << std::endl;
       std::cout << opticalPath.residual << std::endl;
     }
 
@@ -234,15 +234,17 @@ void icemc::EventGenerator::generate(Detector& detector){
       continue;
     }
 
-    fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath);
+    fEventSummary.directionWeight = fRadioModel->getThetaRange(detector, fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath);
+    std::cout << "Direction weight = " << fEventSummary.directionWeight << std::endl;
+    fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath, fEventSummary.directionWeight);
     fEventSummary.shower = showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction);
     PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEventSummary.neutrino, fEventSummary.shower);
     
     fEvent.signalAt1m = signal.waveform.getTimeDomain();
     fEventSummary.signalSummaryAt1m = signal.summarize();
 
-    signal.propagate(opticalPath);
-    
+    signal.propagate(opticalPath); 
+   
     fEvent.signalAtDetector = signal.waveform.getTimeDomain();
     fEventSummary.signalSummaryAtDetector = signal.summarize();
 

@@ -7,6 +7,7 @@
 #include "Report.h"
 #include "FTPair.h"
 #include "Detector.h"
+#include "Neutrino.h"
 #include "ImpulsiveRadioGenerator.h"
 
 namespace icemc {
@@ -33,11 +34,24 @@ namespace icemc {
      * 
      * @param nu is the neutrino which triggered the interaction
      * @param shower contains details of the simulated shower
-     * @param opticalPath is the contains direction the RF signal travels way from the interaction
+     * @param opticalPath contains direction the RF signal travels way from the interaction
      * 
      * @return the component of the Askaryan signal pointing along outgoingRfDirection
      */
     PropagatingSignal generateImpulse(const OpticalPath& opticalPath, const Neutrino& nu, const Shower& shower) const;
+
+
+    
+    /** 
+     * Gets maximum deviation in radians from the axis of the Cherenkov cone that the signal can be detected 
+     * 
+     * @param detector is the instrument doing the detecting
+     * @param interaction is the interaction generating the Askaryan radiation
+     * @param opticalPath contains direction the RF signal travels way from the interaction
+     * 
+     * @return the component of the Askaryan signal pointing along outgoingRfDirection
+     */
+    double getThetaRange(const Detector& detector, const Neutrino& nu, const Shower& dummyShower, const OpticalPath& opticalPath) const;
 
   private:
     const Settings* fSettings;

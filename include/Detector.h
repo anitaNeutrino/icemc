@@ -3,6 +3,7 @@
 
 #include "Geoid.h"
 #include "PropagatingSignal.h"
+#include "ShowerModel.h"
 #include "Event.h"
 
 namespace icemc {
@@ -65,8 +66,15 @@ namespace icemc {
       (void) signal;
       return true;
     }
-    
 
+    //@todo How does this differ from chanceInHell? Seems like they could be quite similar
+    /** 
+     * This is used to get detectability of the signal from a shower based on
+     * the detector properties.
+     *  
+     * @return threshold for detectability of signal
+     */
+    virtual double signalThreshold() const = 0;
 
     /** 
      * @brief Add a time domain signal to a receiver

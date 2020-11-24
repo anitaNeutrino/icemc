@@ -13,7 +13,7 @@ namespace icemc {
      */
     class DirectionModel {
     public:
-      virtual TVector3 pickNeutrinoDirection(const OpticalPath& opticalPath) = 0;
+      virtual TVector3 pickNeutrinoDirection(const OpticalPath& opticalPath, double dtheta) = 0;
     };
 
 

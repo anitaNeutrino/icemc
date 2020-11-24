@@ -13,7 +13,7 @@ namespace icemc {
      */
     class DiffuseFlux : public DirectionModel, public RNG {
     public:
-      virtual TVector3 pickNeutrinoDirection(const OpticalPath& opticalPath) override;
+      virtual TVector3 pickNeutrinoDirection(const OpticalPath& opticalPath, double dtheta) override;
     };
 
     
