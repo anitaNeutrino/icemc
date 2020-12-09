@@ -8,6 +8,21 @@ icemc::EventSummary::EventSummary(Int_t run, UInt_t eventNumber, double eventTim
   loop.next(eventNumber, eventTime);
 }
 
+void icemc::EventSummary::setWeights(double volumeFraction, double dtheta){
+
+  positionWeight = volumeFraction > 0 ? 1/volumeFraction : DBL_MAX; //@reasonable if no ice visible?
+  
+  if (dtheta > TMath::Pi()/2)
+    dtheta = TMath::Pi()/2;
+
+  if (dtheta == -1 || dtheta == 0) //@todo is this reasonable?
+    directionWeight = 0;
+  else
+    directionWeight = 2/(1-cos(dtheta));
+
+  std::cout << "Direction weight=" << directionWeight << "  dtheta=" << dtheta << std::endl;
+}
+
 
 void icemc::Event::copy(const EventSummary& summary){
   loop                       = summary.loop;

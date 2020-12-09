@@ -43,14 +43,6 @@ icemc::RayTracer::~RayTracer()
 
 
 
-
-
-
-
-
-
-
-
 TVector3 icemc::RayTracer::refractiveBoundary(const TVector3& incoming, const TVector3& surfaceNormal, double n_incoming, double n_outgoing, bool debug){
 
   // The conventions for the inputs are:

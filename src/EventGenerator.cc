@@ -210,10 +210,7 @@ void icemc::EventGenerator::generate(Detector& detector){
 
     fEventSummary = EventSummary(run, eventNumber,  eventTimes.at(entry));
     fEventSummary.neutrino = nuGenerator.generate();
-    fEventSummary.detector = detector.getPosition(fEventSummary.loop.eventTime);
-    //@todo write function in antarctica to do this that checks for divide by zero error
-    fEventSummary.positionWeight = antarctica->GetTotalIceVolume()/antarctica->IceVolumeWithinHorizon(fEventSummary.detector);
-        
+    fEventSummary.detector = detector.getPosition(fEventSummary.loop.eventTime);        
     fEventSummary.interaction = interactionGenerator->generateInteraction(fEventSummary.neutrino, fEventSummary.detector);
     
     OpticalPath opticalPath = rayTracer.findPath(fEventSummary.interaction.position, fEventSummary.detector);
@@ -234,9 +231,8 @@ void icemc::EventGenerator::generate(Detector& detector){
       continue;
     }
 
-    fEventSummary.directionWeight = fRadioModel->getThetaRange(detector, fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath);
-    std::cout << "Direction weight = " << fEventSummary.directionWeight << std::endl;
-    fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath, fEventSummary.directionWeight);
+    double dtheta = fRadioModel->getThetaRange(detector, fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath);
+    fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath, dtheta);
     fEventSummary.shower = showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction);
     PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEventSummary.neutrino, fEventSummary.shower);
     
@@ -256,6 +252,9 @@ void icemc::EventGenerator::generate(Detector& detector){
       output.allTree().Fill();
       continue;
     }
+
+    fEventSummary.setWeights(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume(), dtheta);
+    
     delayAndAddSignalToEachRX(signal, opticalPath, detector);
 
     fEventSummary.loop.passesTrigger = detector.applyTrigger();

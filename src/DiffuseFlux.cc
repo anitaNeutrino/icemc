@@ -3,7 +3,7 @@
 #include "AskaryanRadiationModel.h"
 #include "Geoid.h"
 
-TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& opticalPath, double dtheta){
+TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& opticalPath, const double dtheta){
 
   const Geoid::Position& start = opticalPath.steps.at(0).start;
   const Geoid::Position pointLocalXTowards(Geoid::Pole::South);

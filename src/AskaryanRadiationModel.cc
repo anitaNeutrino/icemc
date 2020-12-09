@@ -353,7 +353,6 @@ void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
 					      double freq,
 					      double& coneWidthEm,
 					      double& coneWidthHad) const {
-
   /**
    * Ultimately, it seems this follows a some_constant/freq dependence
    * and so diverges if freq = 0. Not quite sure how to handle this...
@@ -494,10 +493,6 @@ void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
     }      
   } // if more recent parameterization
 
-
-    
-
-
 } //GetSpread
 
 
@@ -577,54 +572,47 @@ void icemc::AskaryanRadiationModel::SetParameterization(int whichparameterizatio
 
 double icemc::AskaryanRadiationModel::getThetaRange(const Detector& detector, const Neutrino& nu, const Shower& dummyShower, const OpticalPath& opticalPath) const{
 
-  double dtheta = 0;
+  double dtheta = -1;
+  double dtheta_tmp;
   double strength = 100; //undetectable
   double dThetaEm, dThetaHad;
-  const double referenceFreqHz = fFreqs_Hz.back();
+  const double referenceFreqHz = 200.0E6; //@todo should this come from detector instead?
+  //const double kilometersToMeters = 1e3;
   GetSpread(nu.energy, dummyShower, referenceFreqHz, dThetaEm, dThetaHad);
 
   if ( dummyShower.emFrac <= 1.E-10 && dThetaHad > 1.E-10) {
     // Hadronic dominant
-    strength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.hadFrac*GetVmMHz1m(nu.energy, referenceFreqHz));
-    dtheta = dThetaHad;
+    strength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.hadFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
+    dtheta_tmp = dThetaHad;
   }
   else if ( dummyShower.emFrac > 1.E-10 && dThetaHad <= 1.E-10) {
     // EM dominant
-    strength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*GetVmMHz1m(nu.energy, referenceFreqHz));
-    dtheta = dThetaEm;
+    strength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
+    dtheta_tmp = dThetaEm;
   }
   else if ( dummyShower.emFrac > 1.E-10 && dThetaHad > 1.E-10) {
-    // Neither component non-negligible
-    strength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*GetVmMHz1m(nu.energy, referenceFreqHz));
-    double dtheta = dThetaEm;
+    // Both components non-negligible
+    strength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
+    dtheta_tmp = dThetaEm;
     double nextStrength = strength;
-    double taperedVmMHz = taperSingleFreq(referenceFreqHz, dtheta, dThetaEm, dThetaHad, dummyShower.emFrac, dummyShower.hadFrac);
     while (nextStrength <= 1) {
       strength = nextStrength;
-      dtheta += 0.5*dThetaEm;
-      taperedVmMHz = taperSingleFreq(referenceFreqHz, dtheta, dThetaEm, dThetaHad, dummyShower.emFrac, dummyShower.hadFrac);
-      nextStrength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*taperedVmMHz);
-
-      if (dtheta > 3*dThetaEm){
+      dtheta_tmp += 0.5*dThetaEm;
+      double taperedVmMHz = taperSingleFreq(referenceFreqHz, dtheta_tmp, dThetaEm, dThetaHad, dummyShower.emFrac, dummyShower.hadFrac);
+      nextStrength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*opticalPath.attenuation()*taperedVmMHz);
+      
+      if (dtheta_tmp > 3*dThetaEm){
 	// Only consider the hadronic component
-	dtheta = dThetaHad;
+	dtheta_tmp = dThetaHad;
 	break;
       }
     }
   }
 
-  std::cout << "strength=" << strength << "  dtheta=" << dtheta << std::endl;
-  if (strength <=1){
-      dtheta = sqrt(dtheta*dtheta*strength/log(2));
-  }
-  else {
-    dtheta = 0;
-  }
-
-  //dtheta *= fSettings->THETA_TH_FACTOR; // scale factor for testing
-
-  return dtheta;
+  dtheta = strength > 1 ? -1 : sqrt(-1*dtheta_tmp*dtheta_tmp*log(strength)/log(2));
   
+  dtheta *= fSettings->THETA_TH_FACTOR; // scale factor for testing
+  return dtheta;
 }
 
 
