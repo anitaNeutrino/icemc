@@ -19,8 +19,6 @@ void icemc::EventSummary::setWeights(double volumeFraction, double dtheta){
     directionWeight = 0;
   else
     directionWeight = 2/(1-cos(dtheta));
-
-  std::cout << "Direction weight=" << directionWeight << "  dtheta=" << dtheta << std::endl;
 }
 
 
@@ -32,5 +30,6 @@ void icemc::Event::copy(const EventSummary& summary){
   detector                   = summary.detector;
   signalSummaryAt1m          = summary.signalSummaryAt1m;
   signalSummaryAtDetector    = summary.signalSummaryAtDetector;
-
+  positionWeight             = summary.positionWeight;
+  directionWeight             = summary.directionWeight;
 }
