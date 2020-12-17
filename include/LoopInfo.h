@@ -2,13 +2,14 @@
 #define ICEMC_LOOP_INFO_H
 
 #include "TObject.h"
+#include "TMath.h"
 
 namespace icemc {
 
   
   /**
    * @class LoopInfo
-   * @brief Data to track how the neutrino faired in the main neutrino generation loop
+   * @brief Data to track how the neutrino faired in the main neutrino generation loop, including weights
    */
   class LoopInfo {
   public:    
@@ -39,6 +40,12 @@ namespace icemc {
     Step chanceInHell;
     Step passesTrigger;
 
+    void setWeights(double volumeFraction, double dtheta);
+    double dTheta() const;
+    double positionWeight;
+    double directionWeight;
+    double weight() const { return directionWeight*positionWeight; };
+    
     void next(UInt_t nextEventNumber, double nextEventTime){
       eventNumber = nextEventNumber;
       eventTime = nextEventTime;

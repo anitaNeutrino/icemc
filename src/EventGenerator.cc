@@ -231,8 +231,8 @@ void icemc::EventGenerator::generate(Detector& detector){
       continue;
     }
 
-    double dtheta = fRadioModel->getThetaRange(detector, fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath);
-    fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath, dtheta);
+    fEventSummary.loop.setWeights(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume(), fRadioModel->getThetaRange(detector, fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath));
+    fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath, fEventSummary.loop.dTheta());
     fEventSummary.shower = showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction);
     PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEventSummary.neutrino, fEventSummary.shower);
     
@@ -252,8 +252,6 @@ void icemc::EventGenerator::generate(Detector& detector){
       output.allTree().Fill();
       continue;
     }
-
-    fEventSummary.setWeights(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume(), dtheta);
     
     delayAndAddSignalToEachRX(signal, opticalPath, detector);
 
