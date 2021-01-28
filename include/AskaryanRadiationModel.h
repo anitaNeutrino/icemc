@@ -6,7 +6,7 @@
 #include "ShowerModel.h"
 #include "Report.h"
 #include "FTPair.h"
-#include "Detector.h"
+//#include "Detector.h"
 #include "Neutrino.h"
 #include "ImpulsiveRadioGenerator.h"
 
@@ -51,7 +51,7 @@ namespace icemc {
      * 
      * @return the component of the Askaryan signal pointing along outgoingRfDirection
      */
-    double getThetaRange(const Detector& detector, const Neutrino& nu, const Shower& dummyShower, const OpticalPath& opticalPath) const;
+    double getThetaRange(const double signalThreshold, const Neutrino& nu, const Shower& dummyShower, const OpticalPath& opticalPath) const;
 
   private:
     const Settings* fSettings;

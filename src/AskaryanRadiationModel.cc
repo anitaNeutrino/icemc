@@ -570,7 +570,7 @@ void icemc::AskaryanRadiationModel::SetParameterization(int whichparameterizatio
 }
 
 
-double icemc::AskaryanRadiationModel::getThetaRange(const Detector& detector, const Neutrino& nu, const Shower& dummyShower, const OpticalPath& opticalPath) const{
+double icemc::AskaryanRadiationModel::getThetaRange(const double signalThreshold, const Neutrino& nu, const Shower& dummyShower, const OpticalPath& opticalPath) const{
 
   double dtheta = -1;
   double dtheta_tmp;
@@ -582,24 +582,24 @@ double icemc::AskaryanRadiationModel::getThetaRange(const Detector& detector, co
 
   if ( dummyShower.emFrac <= 1.E-10 && dThetaHad > 1.E-10) {
     // Hadronic dominant
-    strength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.hadFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
+    strength = signalThreshold*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.hadFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
     dtheta_tmp = dThetaHad;
   }
   else if ( dummyShower.emFrac > 1.E-10 && dThetaHad <= 1.E-10) {
     // EM dominant
-    strength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
+    strength = signalThreshold*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
     dtheta_tmp = dThetaEm;
   }
   else if ( dummyShower.emFrac > 1.E-10 && dThetaHad > 1.E-10) {
     // Both components non-negligible
-    strength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
+    strength = signalThreshold*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
     dtheta_tmp = dThetaEm;
     double nextStrength = strength;
     while (nextStrength <= 1) {
       strength = nextStrength;
       dtheta_tmp += 0.5*dThetaEm;
       double taperedVmMHz = taperSingleFreq(referenceFreqHz, dtheta_tmp, dThetaEm, dThetaHad, dummyShower.emFrac, dummyShower.hadFrac);
-      nextStrength = detector.signalThreshold()*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*opticalPath.attenuation()*taperedVmMHz);
+      nextStrength = signalThreshold*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*opticalPath.attenuation()*taperedVmMHz);
       
       if (dtheta_tmp > 3*dThetaEm){
 	// Only consider the hadronic component

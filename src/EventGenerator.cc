@@ -212,7 +212,6 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary.neutrino = nuGenerator.generate();
     fEventSummary.detector = detector.getPosition(fEventSummary.loop.eventTime);        
     fEventSummary.interaction = interactionGenerator->generateInteraction(fEventSummary.neutrino, fEventSummary.detector);
-    
     OpticalPath opticalPath = rayTracer.findPath(fEventSummary.interaction.position, fEventSummary.detector);
     fEventSummary.loop.rayTracingSolution = opticalPath.residual < 1; // meters
 
@@ -231,7 +230,7 @@ void icemc::EventGenerator::generate(Detector& detector){
       continue;
     }
 
-    fEventSummary.loop.setWeights(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume(), fRadioModel->getThetaRange(detector, fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath));
+    fEventSummary.loop.setWeights(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume(), fRadioModel->getThetaRange(detector.signalThreshold(), fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath));
     fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath, fEventSummary.loop.dTheta());
     fEventSummary.shower = showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction);
     PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEventSummary.neutrino, fEventSummary.shower);
@@ -245,7 +244,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary.signalSummaryAtDetector = signal.summarize();
 
     fEventSummary.loop.chanceInHell = true;
-    // fEventSummary.loop.chanceInHell = detector.chanceInHell(signal);    
+    //fEventSummary.loop.chanceInHell = detector.chanceInHell(signal);    
 
     if(fEventSummary.loop.chanceInHell==false){
       std::cout << "No chance in hell\t" << fEventSummary.interaction.position << std::endl;
@@ -256,7 +255,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     delayAndAddSignalToEachRX(signal, opticalPath, detector);
 
     fEventSummary.loop.passesTrigger = detector.applyTrigger();
-
+    
     if(fEventSummary.loop.passesTrigger==true){
       fEventSummary.neutrino.path.integrate(fEventSummary.interaction.position, antarctica);
       // std::cout << "PASSED\t" << fEventSummary.interaction.position << std::endl;

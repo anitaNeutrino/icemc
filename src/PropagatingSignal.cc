@@ -27,7 +27,7 @@ void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
 
   // propagation through dielectric
   const double attenuationFactor = opticalPath.attenuation();
-
+   
   polarization = opticalPath.polarization(polarization);
   // std::cout << polarization << std::endl;
 

@@ -14,15 +14,15 @@ TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& op
   LocalCoordinateSystem lc(start, pointLocalXTowards, rfDir);
   
   //@todo return WEIGHT this with the 1./cos_theta_range factor
-  //const double thetaCherenkov = AskaryanRadiationModel::CHANGLE_ICE;
-  
+  const double thetaCherenkov = AskaryanRadiationModel::CHANGLE_ICE;
+
   const double theta = pickUniform(AskaryanRadiationModel::CHANGLE_ICE-dtheta, AskaryanRadiationModel::CHANGLE_ICE+dtheta);
   const double phi = pickUniform(0, TMath::TwoPi());
   //const double phi = 0; ///@attention test condition, remove me!
 
   TVector3 nuDir;
-  //nuDir.SetMagThetaPhi(1.0, thetaCherenkov, phi);
-  nuDir.SetMagThetaPhi(1.0, theta, phi);
+  nuDir.SetMagThetaPhi(1.0, thetaCherenkov, phi);
+  //nuDir.SetMagThetaPhi(1.0, theta, phi);
 
   nuDir = lc.localTranslationToGlobal(nuDir);
 
