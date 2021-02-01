@@ -157,7 +157,6 @@ void icemc::EventGenerator::generate(Detector& detector){
 
   icemc::report() << severity::info << "Seed is " << fSettings->SEED << std::endl;
 
-
   int n;
   double dt;
   detector.getDesiredNDt(n, dt);
@@ -243,8 +242,8 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEvent.signalAtDetector = signal.waveform.getTimeDomain();
     fEventSummary.signalSummaryAtDetector = signal.summarize();
 
-    fEventSummary.loop.chanceInHell = true;
-    //fEventSummary.loop.chanceInHell = detector.chanceInHell(signal);    
+    //fEventSummary.loop.chanceInHell = true;
+    fEventSummary.loop.chanceInHell = detector.chanceInHell(signal);    
 
     if(fEventSummary.loop.chanceInHell==false){
       std::cout << "No chance in hell\t" << fEventSummary.interaction.position << std::endl;
