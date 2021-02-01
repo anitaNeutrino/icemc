@@ -85,13 +85,6 @@ TVector3 icemc::WorldModel::GetSurfaceNormal(const Geoid::Position& p) const {
 }
 
 
-
-
-
-
-
-
-
 size_t icemc::Mesh::addPoint(const Geoid::Position& p2, double val){
   
   if(fDoneBuild){

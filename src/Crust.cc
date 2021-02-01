@@ -312,7 +312,7 @@ double icemc::Crust::getLayerSurfaceAtPosition(const Geoid::Position& pos, Layer
   switch(layer){
   case Layer::InnerCore: return 1220e3;
   case Layer::OuterCore: return 3400e3;
-  default:               return fSurfaceMag.at(layer).eval(pos);
+  default:               return fSurfaceMag.at(layer).eval(pos);  
   }  
 }
 
@@ -368,7 +368,7 @@ double icemc::Crust::Density(const Geoid::Position& pos,
   case Layer::InnerCore:
     return 1280;
   default:
-    return fDensities.at(l).eval(pos);
+    return fDensities.at(l).eval(pos);  
   }
   
   // if(posMag > surfaceHere){
@@ -621,7 +621,7 @@ int icemc::Crust::Getchord(const Settings *settings1,
       lon = where.Longitude();
       lat = where.Latitude();
       altitude=where.Altitude(); //Mag()-Geoid(lat); //what is the altitude
-      
+
       surface_elevation = this->SurfaceAboveGeoid(where); // altitude of surface relative to geoid at earth entrance point
       // local_icethickness = this->IceThickness(lon,lat);
       // local_waterdepth = WaterDepth(lon,lat);
@@ -715,7 +715,7 @@ int icemc::Crust::Getchord(const Settings *settings1,
       // ilon = (int)(lon/2);
       // ilat = (int)(lat/2);
       altitude=where.Altitude(); //where.Mag()-Geoid(lat); //what is the altitude
-      
+
       surface_elevation = this->SurfaceAboveGeoid(where); // altitude of surface relative to geoid at earth entrance point
       // local_icethickness = this->IceThickness(lon,lat);
       // local_waterdepth = WaterDepth(lon,lat);

@@ -139,6 +139,12 @@ Geoid::Position icemc::RayTracer::getSurfacePosition(const double* params) const
 double icemc::RayTracer::evalPath(const double* params) const {
 
   // position we're aiming for from the detector...
+
+  if(isnan(params[0]) || isnan(params[1])){
+    icemc::report() << severity::warning << "RayTracer::evalPath passed bad parameters {" << params[0] << " ," << params[1] << "}" << std::endl;
+    return DBL_MAX; // If evalPath is passed bogus parameters, just call the fit bad
+  }
+  
   const Geoid::Position surfacePos = getSurfacePosition(params);
 
   // Gives us this initial RF direction...
@@ -227,7 +233,6 @@ icemc::OpticalPath icemc::RayTracer::findPath(const Geoid::Position&rfStart, con
   fLocalCoords = std::make_shared<LocalCoordinateSystem>(fDetectorPos);
   fInteractionPos = rfStart;
   fOpticalPath.reset();
-  
   
   // here we setup a new local coordinate system for the fitter to do translations in
   // The idea is to fit along the surface in terms of dx and dy
