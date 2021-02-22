@@ -55,6 +55,7 @@ void icemc::EventGenerator::interrupt_signal_handler(int sig){
 
 
 
+
 /**
  * Constructor
  */
@@ -129,7 +130,7 @@ void icemc::EventGenerator::printProgress(int entry, size_t n){
   const int maxPrints = 100;
   const int printEvery = n/maxPrints > 0 ? n/maxPrints : 1;
   if((entry%printEvery)==0){
-    std::cout << entry << " of " << n << std::endl;
+    std::cout << "~~~~~~~~~~~~~~~" << (int)(100*entry/n) << "% done:  " << entry << " of " << n << " neutrinos ~~~~~~~~~~~~~~~" << std::endl;
   }
 }
 
@@ -214,23 +215,27 @@ void icemc::EventGenerator::generate(Detector& detector){
     OpticalPath opticalPath = rayTracer.findPath(fEventSummary.interaction.position, fEventSummary.detector);
     fEventSummary.loop.rayTracingSolution = opticalPath.residual < 1; // meters
 
-    {
+    if(false){
       std::cout << fEventSummary.interaction.position << "\n";
       std::cout << fEventSummary.detector << "\n";
-      std::cout << "Separation = " << fEventSummary.interaction.position.Distance(fEventSummary.detector) << "\n" << std::endl;
+      std::cout << "Separation = " << fEventSummary.interaction.position.Distance(fEventSummary.detector) << std::endl;
       std::cout << "Optical path distance = " << opticalPath.distance() << std::endl;
       std::cout << opticalPath.residual << std::endl;
     }
 
     if(fEventSummary.loop.rayTracingSolution==false){
-      std::cout << "No ray tracing solution between source " << fEventSummary.interaction.position << " and detector " << fEventSummary.detector << std::endl;
-      std::cout << (fEventSummary.interaction.position - fEventSummary.detector).Mag() << std::endl;
+      //std::cout << "No ray tracing solution between source " << fEventSummary.interaction.position << " and detector " << fEventSummary.detector << ": " << (fEventSummary.interaction.position - fEventSummary.detector).Mag() << std::endl;
       output.allTree().Fill();
       continue;
     }
 
-    fEventSummary.loop.setWeights(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume(), fRadioModel->getThetaRange(detector.signalThreshold(), fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath));
-    fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath, fEventSummary.loop.dTheta());
+    // position weight
+    fEventSummary.loop.setPositionWeight(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume());
+    // direction weight
+    fEventSummary.loop.dTheta = fRadioModel->getThetaRange(detector.signalThreshold(), fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath);    
+    fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath, fEventSummary.loop.dTheta);
+    fEventSummary.loop.directionWeight = fSourceDirectionModel->getDirectionWeight();
+    
     fEventSummary.shower = showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction);
     PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEventSummary.neutrino, fEventSummary.shower);
     
@@ -246,7 +251,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary.loop.chanceInHell = detector.chanceInHell(signal);    
 
     if(fEventSummary.loop.chanceInHell==false){
-      std::cout << "No chance in hell\t" << fEventSummary.interaction.position << std::endl;
+      //std::cout << "No chance in hell\t" << fEventSummary.interaction.position << std::endl;
       output.allTree().Fill();
       continue;
     }
@@ -257,7 +262,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     
     if(fEventSummary.loop.passesTrigger==true){
       fEventSummary.neutrino.path.integrate(fEventSummary.interaction.position, antarctica);
-      // std::cout << "PASSED\t" << fEventSummary.interaction.position << std::endl;
+      std::cout << "Passed trigger!\t" << fEventSummary.interaction.position << std::endl;
       fEvent.copy(fEventSummary);
       detector.write(fEvent);
       output.passTree().Fill();

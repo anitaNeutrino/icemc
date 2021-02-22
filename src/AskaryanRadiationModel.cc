@@ -288,9 +288,10 @@ icemc::PropagatingSignal icemc::AskaryanRadiationModel::generateImpulse(const Op
 
   TVector3 polarizationVector = getPolarizationVector(rfDirection, shower.axis);
 
-  std::cout << "rfDir = " << rfDirection << "\n";
-  std::cout << "shower.axis = " << shower.axis << "\n";
-  std::cout << "polarizationVector = " << polarizationVector << "\n" << std::endl;
+  //@todo add verbose setting to print these things?
+  //std::cout << "rfDir = " << rfDirection << "\n";
+  //std::cout << "shower.axis = " << shower.axis << "\n";
+  //std::cout << "polarizationVector = " << polarizationVector << "\n" << std::endl;
   
   PropagatingSignal signal(waveform, rfDirection, polarizationVector);
 

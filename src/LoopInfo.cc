@@ -50,22 +50,8 @@ bool icemc::LoopInfo::Step::getResult() const {
   return result;
 }
 
-void icemc::LoopInfo::setWeights(double volumeFraction, double dtheta){
+void icemc::LoopInfo::setPositionWeight(double volumeFraction){
 
   positionWeight = volumeFraction > 0 ? 1/volumeFraction : DBL_MAX; //@reasonable if no ice visible?
-  
-  if (dtheta > TMath::Pi()/2)
-    dtheta = TMath::Pi()/2;
 
-  if (dtheta == -1 || dtheta == 0) //@todo is this reasonable?
-    directionWeight = 0;
-  else
-    directionWeight = 2/(1-cos(dtheta));
-}
-
-double icemc::LoopInfo::dTheta() const {
-  if(directionWeight == 0)
-    return 0;
-  else
-    return acos(1-2/directionWeight);
 }

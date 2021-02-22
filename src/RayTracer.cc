@@ -257,6 +257,7 @@ icemc::OpticalPath icemc::RayTracer::findPath(const Geoid::Position&rfStart, con
     gErrorIgnoreLevel = 1001;
   }
 
+  //@todo Minimize apparently gives NaN sometimes, can we prevent this?
   fDoingMinimization = true;
   fMinimizer->Minimize();
   fDoingMinimization = false;

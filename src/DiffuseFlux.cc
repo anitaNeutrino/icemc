@@ -14,14 +14,24 @@ TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& op
   LocalCoordinateSystem lc(start, pointLocalXTowards, rfDir);
   
   //@todo return WEIGHT this with the 1./cos_theta_range factor
-  const double thetaCherenkov = AskaryanRadiationModel::CHANGLE_ICE;
+  //const double thetaCherenkov = AskaryanRadiationModel::CHANGLE_ICE;
+
+  if (dtheta <= 0){
+    directionWeight = 0;
+  }
+  else{
+    double theta2 = AskaryanRadiationModel::CHANGLE_ICE + dtheta > 0 ? AskaryanRadiationModel::CHANGLE_ICE - dtheta : 0;
+    double theta1 = AskaryanRadiationModel::CHANGLE_ICE + dtheta < TMath::Pi() ? AskaryanRadiationModel::CHANGLE_ICE + dtheta : TMath::Pi();
+
+    directionWeight = 2/(cos(theta2)-cos(theta1));
+  }  
 
   const double theta = pickUniform(AskaryanRadiationModel::CHANGLE_ICE-dtheta, AskaryanRadiationModel::CHANGLE_ICE+dtheta);
   const double phi = pickUniform(0, TMath::TwoPi());
   //const double phi = 0; ///@attention test condition, remove me!
 
   TVector3 nuDir;
-  nuDir.SetMagThetaPhi(1.0, thetaCherenkov, phi);
+  nuDir.SetMagThetaPhi(1.0, AskaryanRadiationModel::CHANGLE_ICE, phi);
   //nuDir.SetMagThetaPhi(1.0, theta, phi);
 
   nuDir = lc.localTranslationToGlobal(nuDir);
@@ -30,4 +40,8 @@ TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& op
   
   return nuDir.Unit();
 
+}
+
+double icemc::Source::DiffuseFlux::getDirectionWeight(){
+  return directionWeight;
 }

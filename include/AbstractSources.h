@@ -12,8 +12,11 @@ namespace icemc {
      * @brief Abstract base class for chosing directions neutrinos can come from.
      */
     class DirectionModel {
+    protected:
+      double directionWeight;
     public:
       virtual TVector3 pickNeutrinoDirection(const OpticalPath& opticalPath, double dtheta) = 0;
+      virtual double getDirectionWeight() = 0;
     };
 
 

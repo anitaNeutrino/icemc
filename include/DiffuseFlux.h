@@ -14,6 +14,7 @@ namespace icemc {
     class DiffuseFlux : public DirectionModel, public RNG {
     public:
       virtual TVector3 pickNeutrinoDirection(const OpticalPath& opticalPath, double dtheta) override;
+      virtual double getDirectionWeight() override;
     };
 
     

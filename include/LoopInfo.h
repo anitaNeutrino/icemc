@@ -40,10 +40,10 @@ namespace icemc {
     Step chanceInHell;
     Step passesTrigger;
 
-    void setWeights(double volumeFraction, double dtheta);
-    double dTheta() const;
+    void setPositionWeight(double volumeFraction);
     double positionWeight;
     double directionWeight;
+    double dTheta;
     double weight() const { return directionWeight*positionWeight; };
     
     void next(UInt_t nextEventNumber, double nextEventTime){
