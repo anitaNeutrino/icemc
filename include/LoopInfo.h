@@ -41,8 +41,8 @@ namespace icemc {
     Step passesTrigger;
 
     void setPositionWeight(double volumeFraction);
-    double positionWeight;
-    double directionWeight;
+    double positionWeight = 0;
+    double directionWeight = 0;
     double dTheta;
     double weight() const { return directionWeight*positionWeight; };
     
