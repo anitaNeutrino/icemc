@@ -229,13 +229,9 @@ void icemc::EventGenerator::generate(Detector& detector){
       continue;
     }
 
-    // position weight
-    fEventSummary.loop.setPositionWeight(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume());
-    // direction weight
     fEventSummary.loop.dTheta = fRadioModel->getThetaRange(detector.signalThreshold(), fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath);    
     fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath, fEventSummary.loop.dTheta);
-    fEventSummary.loop.directionWeight = fSourceDirectionModel->getDirectionWeight();
-    
+     
     fEventSummary.shower = showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction);
     PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEventSummary.neutrino, fEventSummary.shower);
     
@@ -252,15 +248,24 @@ void icemc::EventGenerator::generate(Detector& detector){
 
     if(fEventSummary.loop.chanceInHell==false){
       //std::cout << "No chance in hell\t" << fEventSummary.interaction.position << std::endl;
+      if(false){
+	//@todo do if debugging
+	fEventSummary.loop.setPositionWeight(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume());
+	fEventSummary.loop.directionWeight = fSourceDirectionModel->getDirectionWeight();
+      }	
       output.allTree().Fill();
       continue;
     }
     
+    // Set weights now that is passes Chance In Hell
+    fEventSummary.loop.setPositionWeight(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume());
+    fEventSummary.loop.directionWeight = fSourceDirectionModel->getDirectionWeight();
+    
     delayAndAddSignalToEachRX(signal, opticalPath, detector);
-
     fEventSummary.loop.passesTrigger = detector.applyTrigger();
     
     if(fEventSummary.loop.passesTrigger==true){
+
       fEventSummary.neutrino.path.integrate(fEventSummary.interaction.position, antarctica);
       std::cout << "Passed trigger!\t" << fEventSummary.interaction.position << std::endl;
       fEvent.copy(fEventSummary);
