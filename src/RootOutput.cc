@@ -43,6 +43,7 @@ void icemc::RootOutput::readIceFinal(){
   
   fAllTree = (TTree*) fIceFinal->Get("allTree");
   fPassTree = (TTree*) fIceFinal->Get("passTree");
+  fSummaryTree = (TTree*) fIceFinal->Get("summaryTree");
 
   fAllTree->SetBranchAddress("eventSummary", &fEventSummary);
   fPassTree->SetBranchAddress("event", &fEvent);

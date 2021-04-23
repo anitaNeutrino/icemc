@@ -17,6 +17,8 @@
 #pragma link C++ class icemc::Event+;
 #pragma link C++ class icemc::EventSummary+;
 
+#pragma link C++ class icemc::Summary+;
+
 #pragma link C++ class icemc::SignalSummary+;
 
 #pragma link C++ class icemc::Neutrino+;

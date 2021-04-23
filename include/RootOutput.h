@@ -46,6 +46,7 @@ namespace icemc {
      */
     TTree& allTree(){return  *fAllTree;}  ///< For every neutrino generated,  not too detailed.
     TTree& passTree(){return *fPassTree;} ///< For every neutrino that passes the detector trigger, very detailed.
+    //TTree& summaryTree(){return *fSummaryTree;} ///< For the entire run, summarize the results -- # of weighted events passing, effective volume, etc 
 
     static void initHist(TH1* h, const char* name, const char* title, int nx, double xMin, double xMax, TFile* f);
     static void initHist(TH2* h, const char* name, const char* title, int nx, double xMin, double xMax, int ny, double yMin, double yMax, TFile* f);
@@ -67,8 +68,10 @@ namespace icemc {
     TFile* fIceFinal = nullptr;
     TTree* fAllTree = nullptr;
     TTree* fPassTree = nullptr;
+    TTree* fSummaryTree = nullptr;
     EventSummary* fEventSummary = nullptr;
     Event* fEvent = nullptr;
+    //Summary* fSummary = nullptr;
 
     
 

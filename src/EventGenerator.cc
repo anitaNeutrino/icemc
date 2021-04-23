@@ -24,6 +24,8 @@
 #include "MonoEnergetic.h"
 #include "InteractionGenerator.h"
 
+#include "Summary.h"
+
 #include "ImpulsiveRadioGenerator.h"
 #include "AskaryanRadiationModel.h"
 #include "ShowerModel.h"
@@ -155,7 +157,7 @@ void icemc::EventGenerator::delayAndAddSignalToEachRX(const PropagatingSignal& s
 
 
 void icemc::EventGenerator::generate(Detector& detector){
-
+ 
   icemc::report() << severity::info << "Seed is " << fSettings->SEED << std::endl;
 
   int n;
@@ -174,11 +176,12 @@ void icemc::EventGenerator::generate(Detector& detector){
   // interactionGenerator = waisModel;
   // fRadioModel = waisModel;
 
-  icemc::report() << "Volume of antarctic ice is " << antarctica->GetTotalIceVolume() << " m^3" << std::endl;
-  icemc::report() << "Area of the earth's surface covered by antarctic ice is " << antarctica->GetTotalIceArea() << " m^2" << std::endl;
+  //icemc::report() << "Volume of antarctic ice is " << antarctica->GetTotalIceVolume() << " m^3" << std::endl;
+  //icemc::report() << "Area of the earth's surface covered by antarctic ice is " << antarctica->GetTotalIceArea() << " m^2" << std::endl;
 
   icemc::RootOutput output(this, fSettings, fSettings->getOutputDir(), fSettings->getRun());
 
+  Summary summary(fSettings->EXPONENT, antarctica->GetTotalIceVolume());
 
   NeutrinoGenerator nuGenerator(fSettings, fSourceEnergyModel, fSourceDirectionModel, antarctica);
   RayTracer rayTracer(antarctica);
@@ -217,6 +220,7 @@ void icemc::EventGenerator::generate(Detector& detector){
 
     if(false){
       std::cout << fEventSummary.interaction.position << "\n";
+      std::cout << fEventSummary.interaction.position.Altitude() << "\n";
       std::cout << fEventSummary.detector << "\n";
       std::cout << "Separation = " << fEventSummary.interaction.position.Distance(fEventSummary.detector) << std::endl;
       std::cout << "Optical path distance = " << opticalPath.distance() << std::endl;
@@ -242,33 +246,29 @@ void icemc::EventGenerator::generate(Detector& detector){
    
     fEvent.signalAtDetector = signal.waveform.getTimeDomain();
     fEventSummary.signalSummaryAtDetector = signal.summarize();
-
+  
     //fEventSummary.loop.chanceInHell = true;
     fEventSummary.loop.chanceInHell = detector.chanceInHell(signal);    
 
     if(fEventSummary.loop.chanceInHell==false){
       //std::cout << "No chance in hell\t" << fEventSummary.interaction.position << std::endl;
-      if(false){
-	//@todo do if debugging
-	fEventSummary.loop.setPositionWeight(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume());
-	fEventSummary.loop.directionWeight = fSourceDirectionModel->getDirectionWeight();
-      }	
+
       output.allTree().Fill();
       continue;
     }
     
-    // Set weights now that is passes Chance In Hell
-    fEventSummary.loop.setPositionWeight(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume());
-    fEventSummary.loop.directionWeight = fSourceDirectionModel->getDirectionWeight();
+    fEventSummary.neutrino.path.integrate(fEventSummary.interaction, antarctica);
     
     delayAndAddSignalToEachRX(signal, opticalPath, detector);
     fEventSummary.loop.passesTrigger = detector.applyTrigger();
     
     if(fEventSummary.loop.passesTrigger==true){
 
-      fEventSummary.neutrino.path.integrate(fEventSummary.interaction.position, antarctica);
-      std::cout << "Passed trigger!\t" << fEventSummary.interaction.position << std::endl;
+      fEventSummary.loop.setPositionWeight(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume());
+      fEventSummary.loop.directionWeight = fSourceDirectionModel->getDirectionWeight();
       fEvent.copy(fEventSummary);
+
+      summary.addEvent(fEvent);
       detector.write(fEvent);
       output.passTree().Fill();
     }
@@ -276,4 +276,7 @@ void icemc::EventGenerator::generate(Detector& detector){
     output.allTree().Fill();
   }
   signal(SIGINT, SIG_DFL); /// unset signal handler
+
+  //@todo summarize results and add to root output
+  summary.summarize(fSettings->NNU/3, fSettings->NNU/3, fSettings->NNU/3);
 }
