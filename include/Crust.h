@@ -172,7 +172,8 @@ namespace icemc{
     void ReadCrust1();
     void ReadCrust2();
  
-    //const int numLayers;
+    static const int numLayers2 = 11; //Crust 2
+    static const int numLayers1 = 12; //Crust 1
     // All possible layers, in either Crust2.0, Crust1.0, or Bedmap 
     enum class Layer {Air, ///@todo think about this one
 		      Water,
@@ -199,12 +200,42 @@ namespace icemc{
      * }
      * @return const reference to a static array.
      */
-
     // Dummy Layers(), will be defined for each crust model
-    const std::array<Crust::Layer, 1>& Layers() const{
-      static std::array<Crust::Layer, 1> allLayers {Crust::Layer::Air
+    const std::array<Crust::Layer, numLayers2>& Layers() const{
+      static std::array<Crust::Layer, numLayers2> allLayers2 {Crust::Layer::Air,
+	                                            Crust::Layer::Water,
+						    Crust::Layer::Ice,
+						    Crust::Layer::SoftSediment,
+						    Crust::Layer::HardSediment,
+						    Crust::Layer::UpperCrust,
+						    Crust::Layer::MiddleCrust,
+						    Crust::Layer::LowerCrust,
+						    Crust::Layer::Mantle,
+						    Crust::Layer::OuterCore,
+						    Crust::Layer::InnerCore
+	
       };
-      return allLayers;
+
+      //@todo get this working with Crust1, maybe with a template
+      // static std::array<Crust::Layer, numLayers1> allLayers1 {Crust::Layer::Air,
+      // 	                                            Crust::Layer::Water,
+      // 						    Crust::Layer::Ice,
+      // 						    Crust::Layer::UpperSediment,
+      // 						    Crust::Layer::MiddleSediment,
+      // 						    Crust::Layer::LowerSediment,
+      // 						    Crust::Layer::UpperCrust,
+      // 						    Crust::Layer::MiddleCrust,
+      // 						    Crust::Layer::LowerCrust,
+      // 						    Crust::Layer::Mantle,
+      // 						    Crust::Layer::OuterCore,
+      // 						    Crust::Layer::InnerCore
+	
+      // };
+
+      // if(MODEL==1) //Crust 1
+      // 	return allLayers1;
+      // else //Crust 2
+	return allLayers2;
     }
 
     Layer layerAbove(Layer layer) const;
