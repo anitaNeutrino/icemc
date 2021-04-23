@@ -44,7 +44,7 @@ namespace icemc {
     double positionWeight = 0;
     double directionWeight = 0;
     double dTheta;
-    double weight() const { return directionWeight*positionWeight; };
+    double phaseWeight() const;
     
     void next(UInt_t nextEventNumber, double nextEventTime){
       eventNumber = nextEventNumber;

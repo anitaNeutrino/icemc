@@ -44,7 +44,7 @@ std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::L& l){
 }
 
 
-void icemc::Neutrino::Path::integrate(const Geoid::Position& interactionPosition, const std::shared_ptr<WorldModel> world){
+void icemc::Neutrino::Path::integrate(const Interaction& interaction, const std::shared_ptr<WorldModel> world){
 
   if(weight >= 0){
     std::cerr << "Already performed integral." << std::endl;
@@ -62,8 +62,8 @@ void icemc::Neutrino::Path::integrate(const Geoid::Position& interactionPosition
    */
 
   // structural bindings would be nice here...
-  std::pair<Geoid::Position, double> entry_columnDepth = world->integratePath(interactionPosition, -direction);
-  std::pair<Geoid::Position, double> exit_columnDepth  = world->integratePath(interactionPosition,  direction);
+  std::pair<Geoid::Position, double> entry_columnDepth = world->integratePath(interaction.position, -direction);
+  std::pair<Geoid::Position, double> exit_columnDepth  = world->integratePath(interaction.position,  direction);
 
   entry = entry_columnDepth.first;
   columnDepth = entry_columnDepth.second;
@@ -72,5 +72,5 @@ void icemc::Neutrino::Path::integrate(const Geoid::Position& interactionPosition
   columnDepthInteractionToExit = exit_columnDepth.second;
 
   ///@todo figure out the weight...
-  weight = 0;  
+  weight = exp(-columnDepth/interaction.length);
 }

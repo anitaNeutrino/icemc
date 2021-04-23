@@ -55,3 +55,8 @@ void icemc::LoopInfo::setPositionWeight(double volumeFraction){
   positionWeight = volumeFraction > 0 ? 1/volumeFraction : DBL_MAX; //@reasonable if no ice visible?
 
 }
+
+double icemc::LoopInfo::phaseWeight() const {
+  double weight = positionWeight*directionWeight;
+  return weight;
+}

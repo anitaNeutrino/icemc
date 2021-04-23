@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include "Geoid.h"
+#include "Interaction.h"
 #include "Energy.h"
 #include "TObject.h"
 
@@ -48,12 +49,13 @@ namespace icemc {
     class Path {
     public:
       TVector3 direction; ///< unit vector direction of neutrino travel
-      void integrate(const Geoid::Position& interactionPosition, const std::shared_ptr<WorldModel> world = nullptr);
+      void integrate(const Interaction& interaction, const std::shared_ptr<WorldModel> world = nullptr);
       double length(bool includeDistanceToExit = false) const {
 	const Geoid::Position& end = includeDistanceToExit ? exit : interaction;
 	const TVector3 d = end - entry;
 	return d.Mag();
       }
+      double getWeight() const { return weight; }
 
     private:
       Geoid::Position interaction; ///< Same as interaction.position ///@todo deduplicate?
@@ -61,7 +63,7 @@ namespace icemc {
       Geoid::Position exit; ///< Where it would have left the Earth if it didn't interact
       double columnDepth = -1; ///< Line integral of Earth density from entry to interaction
       double columnDepthInteractionToExit = -1; ///< Line integral of Earth density from interaction to exit
-      double weight = -1; ///@todo
+      double weight = -1; ///< Probability of traveling through Earth and reaching interaction point
 
 
       ClassDef(Path, 3);
@@ -71,14 +73,15 @@ namespace icemc {
     Flavor flavor = Flavor::e; ///< Neutrino flavor
     L leptonNumber = L::Matter;
     Path path;
+    
     ClassDef(Neutrino, 1);
 
 
 
 
-    //double weight() const {
-    //  return 0; ///@todo product of all weights;
-    //};
+    double weight() const {
+      return path.getWeight();
+    };
 
   private:
     // void setInteractionPosition(const Geoid::Position& p){
