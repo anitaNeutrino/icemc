@@ -137,7 +137,7 @@ namespace icemc {
   };
 }
 
-
+//@todo issue with multiplying Energy on the right, gives 0
 /** 
  * For scaling with left multiplication
  * 
@@ -148,8 +148,6 @@ namespace icemc {
  */
 icemc::Energy operator* (double lhs, icemc::Energy rhs);
 
-
-
 /** 
  * A sneaky way to make a nice constructor for Energy
  * 
@@ -159,8 +157,6 @@ icemc::Energy operator* (double lhs, icemc::Energy rhs);
  * @return an constructed Energy(lhs, rhs)
  */
 icemc::Energy operator* (double lhs, icemc::Energy::Unit rhs);
-
-
 
 /** 
  * For a nice cout/cerr/logging experience

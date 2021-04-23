@@ -338,7 +338,7 @@ icemc::Energy icemc::AskaryanRadiationModel::GetELPM() const {
   //double elpm=7.7E12*(X0ICE*100.);
 
   // Energy elpm = Energy(2.E15, Energy::Unit::eV)*(X0MEDIUM/x0ice);  // this is what Jaime uses.  see caption under figure 4 of 0003315.
-  Energy elpm = 2*Energy::Unit::PeV*(X0MEDIUM/x0ice);  // this is what Jaime uses.  see caption under figure 4 of 0003315.  
+  Energy elpm = (X0MEDIUM/x0ice)*2*Energy::Unit::PeV;  // this is what Jaime uses.  see caption under figure 4 of 0003315.
   return elpm;
   
 } //GetELPM
@@ -376,10 +376,6 @@ void icemc::AskaryanRadiationModel::GetSpread(Energy pnu,
 
   Energy elpm = GetELPM();
 
-  //  std::cout << "elpm is " << elpm << "\n";
-
-
-  //  std::cout << "elpm is " << elpm << "\n";
   freq = freq/1.E6;  // frequency in MHz
   double showerlength=3.1;  //shower length in meters-gets a modification
                             //for em showers due to lpm effect.
