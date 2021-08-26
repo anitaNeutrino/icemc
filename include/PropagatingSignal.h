@@ -20,6 +20,7 @@ namespace icemc {
     void set(const PropagatingSignal* s = nullptr);
 
     double maxEField;
+    double maxVmMHz;
     double energy; ///@todo make an instance of the Energy class
   };
 
@@ -46,15 +47,24 @@ namespace icemc {
      * @param opticalPath
      */
     void propagate(const icemc::OpticalPath& opticalPath);
-
+    
+    /**
+     *  Print the FTPair to TFile, useful for debugging
+     *
+     * @param fileName to save to
+     */
+    void dump(const char* fileName) const { waveform.dump(fileName);}
 
     /** 
      * Create a summary object, to describe the signal so we don't have to store the whole thing.
      */
     SignalSummary summarize() const {return SignalSummary(this);}
 
+
     double energy() const;
     double maxEField() const;
+    double maxVmMHz() const;
+
   };
 
 

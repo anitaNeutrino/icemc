@@ -19,6 +19,19 @@ double icemc::PropagatingSignal::maxEField() const {
   return *std::max_element(gr.GetY(), gr.GetY()+gr.GetN());  
 }
 
+double icemc::PropagatingSignal::maxVmMHz() const {
+  const std::vector<std::complex<double> >& freqs = waveform.getFreqDomain();
+  
+  double max = 0;
+
+  for( auto f : freqs){
+    if(std::abs(f) > max)
+      max = std::abs(f); 
+  }
+  
+  return max;
+}
+
 
 void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
   
@@ -42,8 +55,6 @@ void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
 
   const double totalFieldReduction = distanceFactor*attenuationFactor*fresnelFactor;
 
-  // std::cout << totalFieldReduction << ":\t" << distanceFactor << "\t" << attenuationFactor << "\t" << fresnelFactor << std::endl;
-
   // apply the losses
   auto& amps = waveform.changeFreqDomain();
   for(auto& amp : amps){
@@ -51,13 +62,11 @@ void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
   }  
 }
 
-
-
-
 void icemc::SignalSummary::set(const PropagatingSignal* s){
   if(s){
     maxEField = s->maxEField();
-    energy = s->energy();	
+    energy = s->energy();
+    maxVmMHz = s->maxVmMHz();
   }
 }
 
