@@ -6,7 +6,7 @@
 TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& opticalPath, const double dtheta){
 
   const Geoid::Position& start = opticalPath.steps.at(0).start;
-  const Geoid::Position pointLocalXTowards(Geoid::Pole::South);
+  const Geoid::Position pointLocalXTowards(Geoid::Pole::North);
   const TVector3& rfDir = opticalPath.steps.at(0).direction().Unit(); ///@todo better interface
 
   // here we construct a local coordinate system to pick the neutrino direction
