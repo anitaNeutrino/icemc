@@ -31,7 +31,7 @@ namespace icemc{
      *
      * @param event -- simulated event that passed trigger
      */    
-    void addEvent(const Event& event);
+    void addEvent(const EventSummary& event, bool passed=false);
 
     /**
      * After the simulation is done, do the final calculations 
@@ -39,15 +39,15 @@ namespace icemc{
      * @param n -- number of neutrinos that were simulated of this flavor
      * @param iceVolume -- volume of ice in Antarctica, in km^3
      */    
-    void summarize(int n, double iceVolume);
+    void summarize(double iceVolume);
     void reportSummary();
     
     
     //private:
 
     Flavor flavor;
-    double nTotal = 0; // number of simulated neutrinos
-    double nPass = 0; // number of passing neutrinos
+    int nTotal = 0; // number of simulated neutrinos
+    int nPass = 0; // number of passing neutrinos
     double nWeighted = 0; // weighted number of passing neutrinos
     double length = 0; // interaction length for neutrinos, averaged
     double effectiveVolume = -1; // km^3 str
@@ -79,11 +79,11 @@ namespace icemc{
 	iceVolume = vol;
       }
 
-      void addEvent(const Event& event);
-      void summarize( int nE, int nMu, int nTau); // how many of each we ended up simulating
+      void addEvent(const EventSummary& event, bool passed=false);
+      void summarize(); // how many of each we ended up simulating
 
       double exponent; // simulated energy exponent, 0 if not monoenergetic
-      double iceVolume; // in all of antarctica    
+      double iceVolume; // m^3 in all of antarctica    
 
       //private:
     

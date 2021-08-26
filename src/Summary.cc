@@ -3,79 +3,86 @@
 
 ClassImp(icemc::Summary)
 
-void icemc::FlavorSummary::addEvent(const Event& event){
- 
-  nPass++;
-  std::cout << "Adding event, phaseWeight = " << event.loop.phaseWeight() << "  survival weight = " << event.neutrino.weight() << std::endl;
-  nWeighted += event.loop.phaseWeight()*event.neutrino.weight(); // direction*position*survival weights
-  length += event.interaction.length;
+void icemc::FlavorSummary::addEvent(const EventSummary& event, bool passed){
+
+  nTotal++;
+
+  if(passed){
+    nPass++;
+    //std::cout << "survival weight=" << event.neutrino.weight() << "  phase weight=" << event.loop.phaseWeight() << std::endl;
+    nWeighted += event.neutrino.weight()/event.loop.phaseWeight(); // survival weight / (direction weight * position weight)
+    length += event.interaction.length/(1e3); // divide by density of ice 1000 kg/m^3 to get length in meters
+  }
   
 }
 
-void icemc::FlavorSummary::summarize(int n, double iceVolume){
-  nTotal = n;
+void icemc::FlavorSummary::summarize(double iceVolume){
 
-  calculateEffectiveVolume(iceVolume);
-  length = length/nPass; // average now that we're done simulating
-  calculateEffectiveArea();
-
+  if(nPass>0){
+    calculateEffectiveVolume(iceVolume);
+    length = length/nPass; // average now that we're done simulating
+    calculateEffectiveArea();
+  }
   reportSummary();
 }
 
 void icemc::FlavorSummary::reportSummary(){
   
-  std::cout << "\n~~~~~ Summary for ";  
+  icemc::report() << "\n~~~~~ Summary for ";  
   switch(flavor){
   case Flavor::e:
-    std::cout << "electron"; break;
+    icemc::report() << "electron"; break;
   case Flavor::mu:
-    std::cout << "mu"; break;
+    icemc::report() << "mu"; break;
   case Flavor::tau:
-    std::cout << "tau"; break;
+    icemc::report() << "tau"; break;
   case Flavor::all:
-    std::cout << "all";
+    icemc::report() << "all";
   }
     
-  std::cout << " neutrinos  ~~~~~~~~~~~~~~~ " << std::endl;
-  std::cout << "\tNumber simulated: " << nTotal << std::endl;
-  std::cout << "\tNumber passed (unweighted): " << nPass << std::endl;
-  std::cout << "\tNumber passed (weighted): " << nWeighted << std::endl;
-  std::cout << "\tEffective volume: " << effectiveVolume << " km^3 sr" << std::endl;
-  std::cout << "\tEffectiv area: " << effectiveArea << " km^2 sr" << std::endl;
-  std::cout << "\n";
+  icemc::report() << " neutrinos  ~~~~~~~~~~~~~~~ " << std::endl;
+  icemc::report() << "\tNumber simulated: " << nTotal << std::endl;
+  icemc::report() << "\tNumber passed (unweighted): " << nPass << std::endl;
+  icemc::report() << "\tNumber passed (weighted): " << nWeighted << std::endl;
+  icemc::report() << "\tEffective volume: " << effectiveVolume << " km^3 sr" << std::endl;
+  icemc::report() << "\tEffective area: " << effectiveArea << " km^2 sr" << std::endl;
+  icemc::report() << "\n";
 }
 
-
 void icemc::FlavorSummary::calculateEffectiveVolume(double iceVolume){
-  effectiveVolume = (nPass * iceVolume * 4 * TMath::Pi()) / nTotal; // Eq. 8.1 in Linda's paper
+  effectiveVolume = (nWeighted * (iceVolume/1e9) * 4 * TMath::Pi()) / nTotal; // Eq. 8.1 in Cremonesi 2019, convert iceVolume in m^3 to km^3
 }
 
 void icemc::FlavorSummary::calculateEffectiveArea(){
   effectiveArea = effectiveVolume / length;
 }
 
-void icemc::Summary::addEvent(const Event& event){
+void icemc::Summary::addEvent(const EventSummary& event, bool passed){
   // Add relevant event properties into summary
   switch(event.neutrino.flavor){
   case icemc::Neutrino::Flavor::e:
-    eSummary.addEvent(event); break;
+    eSummary.addEvent(event, passed); break;
   case icemc::Neutrino::Flavor::mu:
-    muSummary.addEvent(event); break;
+    muSummary.addEvent(event, passed); break;
   case icemc::Neutrino::Flavor::tau:
-    tauSummary.addEvent(event); break;
+    tauSummary.addEvent(event, passed); break;
   default:
     icemc::report() << severity::error << "Attempting to add unknown neutrino flavor to summary!" << std::endl;
   }
 }
 
+void icemc::Summary::summarize(){
 
-void icemc::Summary::summarize(int nE, int nMu, int nTau){
+  icemc::report() << "Volume of antarctic ice is " << (iceVolume/1e9) << " km^3" << std::endl;
 
-  eSummary.summarize(nE, iceVolume);
-  muSummary.summarize(nMu, iceVolume);
-  tauSummary.summarize(nTau, iceVolume);
+  eSummary.summarize(iceVolume);
+  muSummary.summarize(iceVolume);
+  tauSummary.summarize(iceVolume);
 
-  nTotal = nE + nMu + nTau;
+  nTotal = eSummary.nTotal + muSummary.nTotal + tauSummary.nTotal;
+  nPass = eSummary.nPass + muSummary.nPass + tauSummary.nPass;
+  nWeighted = eSummary.nWeighted + muSummary.nWeighted + tauSummary.nWeighted;
+  length = eSummary.length + muSummary.length + tauSummary.length;
     
   calculateEffectiveVolume(iceVolume);
   length = length/nPass; // average now that we're done simulating
