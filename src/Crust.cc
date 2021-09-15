@@ -243,10 +243,10 @@ std::pair<Geoid::Position, double> icemc::Crust::integratePath(const Geoid::Posi
     layerNow = getLayer(posNow);
     // const std::string& ln = fLayerNames.find(l)->second;
 
-    double density = Density(posNow);
+    double density = 1000*Density(posNow); // factor of 1000 to convert g/cm^3 density into kg/m^3 to match interaction length units
 
     double cosTheta = posNow.Dot(direction)/posNow.Mag();
-    const double minStepSize = 1.0;    
+    const double minStepSize = 1.0;   // in meters 
     const double maxStepSize = 1000e3;
     double distGuess = maxStepSize;
     double dr = 1;
