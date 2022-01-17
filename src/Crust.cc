@@ -230,21 +230,20 @@ double icemc::Crust::WaterDepth(const Geoid::Position&pos) const {
 
 
 std::pair<Geoid::Position, double> icemc::Crust::integratePath(const Geoid::Position& start, const TVector3& direction) const {
-
+  
   double cumulativeColumnDepth = 0;
   Geoid::Position posNow = start;
   Geoid::Position posEnd = posNow;
   double fractionalStep = 1.0;
   Layer layerNow = getLayer(posNow);
   // int nSteps = 0, nSteps2 = 0;
-  // std::cout << fLayerNames.at(layerNow) << "\n";
-
+  
   while(layerNow > Layer::Air){
     layerNow = getLayer(posNow);
-    // const std::string& ln = fLayerNames.find(l)->second;
-
+    // const std::string& ln = fLayerNames.find(layerNow)->second;
+        
     double density = 1000*Density(posNow); // factor of 1000 to convert g/cm^3 density into kg/m^3 to match interaction length units
-
+    
     double cosTheta = posNow.Dot(direction)/posNow.Mag();
     const double minStepSize = 1.0;   // in meters 
     const double maxStepSize = 1000e3;
@@ -290,7 +289,7 @@ std::pair<Geoid::Position, double> icemc::Crust::integratePath(const Geoid::Posi
       posNow = posEnd;
       layerNow = l; // this allows us to break out of the loop on this iteration
       fractionalStep = 1;
-      cumulativeColumnDepth += density*stepSize;
+      cumulativeColumnDepth += density*stepSize; // kg/m^2
       // nSteps++;
     }
     else{
@@ -326,14 +325,7 @@ icemc::Crust::Layer icemc::Crust::getLayer(const Geoid::Position& pos, Layer sta
     if(layer <= startLayer) continue;
 
     double layerSurface = getLayerSurfaceAtPosition(pos, layer);
-
-    // std::cout << "layer name = " << fLayerNames.at(layer) << "\n";
-    // std::cout << "layer surface = " << layerSurface << "\n";
-    // std::cout << "pos = " << posMag << "\n";    
-    // std::cout << "delta (km) " << 1e-3*(posMag - layerSurface)  << "\n";
-    // std::cout << "surface radius " << pos.EllipsoidSurface() + fSurfaceAboveGeoid.eval(pos) <<"\n";
-    // std::cout << std::endl;
-    
+  
     if(posMag > layerSurface){
       // then we're in the layer from the previous loop!
       return inLayer;
@@ -358,8 +350,8 @@ double icemc::Crust::Density(const Geoid::Position& pos,
   case Layer::Air:
     return 0; ///@todo Air model...
   case Layer::Mantle:
-    return 3400; //densities[1]; ///@todo check this!
-
+    return 3.35; // kg/m^3, from Crust 2.0
+    
     // these values were just copied from hyperphysics...
     // it looks like the mantle density was too...
     // http://hyperphysics.phy-astr.gsu.edu/hbase/Geophys/earthstruct.html
