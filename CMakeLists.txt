@@ -5,7 +5,6 @@ set(libname "AnitaIceMC")
 ### Site-specific options
 
 SET(BOOST_INCLUDE_DIR "" CACHE String "BOOST include path (if different from system path)")  
-#option(USE_CPP11  "Use the C++11 standard" ON)
 option(ANITA3_EVENTREADER "Load ANITA3 EventReader" ON) 
 
 
@@ -19,7 +18,7 @@ include(${ROOT_USE_FILE})
 
 include_directories(${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include)
 
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 17)
 
 FILE (GLOB SOURCE_FILES "src/*.cc")
 FILE (GLOB INCLUDE_FILES "include/*.h") 
