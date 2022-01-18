@@ -45,7 +45,7 @@ std::ostream& operator<<(std::ostream& os, const icemc::Neutrino::L& l){
 
 
 void icemc::Neutrino::Path::integrate(const Interaction& interaction, const std::shared_ptr<WorldModel> world){
-
+  
   if(weight >= 0){
     std::cerr << "Already performed integral." << std::endl;
     return;
@@ -58,19 +58,18 @@ void icemc::Neutrino::Path::integrate(const Interaction& interaction, const std:
   /**
    * Here we need to do two integrations:
    * From the interaction position, to the entrance i.e. opposite to the neutrino direction
-   * From the interaction position, to the exit i.e. along the neutrino direction
+   * From the interaction position, to the exit i.e. along the neutrino direction @todo why do we need path to exit
    */
 
   // structural bindings would be nice here...
   std::pair<Geoid::Position, double> entry_columnDepth = world->integratePath(interaction.position, -direction);
-  std::pair<Geoid::Position, double> exit_columnDepth  = world->integratePath(interaction.position,  direction);
-
   entry = entry_columnDepth.first;
   columnDepth = entry_columnDepth.second;
 
-  exit = exit_columnDepth.first;
-  columnDepthInteractionToExit = exit_columnDepth.second;
-
-  ///@todo figure out the weight...
-  weight = exp(-columnDepth/interaction.length);
+  chord = (interaction.position - entry).Mag();
+  //std::pair<Geoid::Position, double> exit_columnDepth  = world->integratePath(interaction.position,  direction);
+  //exit = exit_columnDepth.first;
+  //columnDepthInteractionToExit = exit_columnDepth.second;
+  
+  weight = exp(-columnDepth/interaction.length_kgm2); // change interaction length back into kg/m^2 to cancel out column depth units
 }

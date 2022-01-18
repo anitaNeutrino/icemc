@@ -56,7 +56,9 @@ namespace icemc {
 	return d.Mag();
       }
       double getWeight() const { return weight; }
-
+      double getColumnDepth() const { return columnDepth; }
+      double getChord() const { return chord; }
+      
     private:
       Geoid::Position interaction; ///< Same as interaction.position ///@todo deduplicate?
       Geoid::Position entry; ///< Where the neutrino entered the Earth.
@@ -64,6 +66,7 @@ namespace icemc {
       double columnDepth = -1; ///< Line integral of Earth density from entry to interaction
       double columnDepthInteractionToExit = -1; ///< Line integral of Earth density from interaction to exit
       double weight = -1; ///< Probability of traveling through Earth and reaching interaction point
+      double chord = 0; // Chord length, from entry to interaction
 
 
       ClassDef(Path, 3);
