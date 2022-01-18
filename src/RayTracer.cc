@@ -142,6 +142,7 @@ double icemc::RayTracer::evalPath(const double* params) const {
 
   if(isnan(params[0]) || isnan(params[1])){
     icemc::report() << severity::warning << "RayTracer::evalPath passed bad parameters {" << params[0] << ", " << params[1] << "}" << std::endl;
+    return DBL_MAX; // Unsuccessful ray tracing
   }
   
   const Geoid::Position surfacePos = getSurfacePosition(params);
