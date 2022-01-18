@@ -155,9 +155,12 @@ double icemc::RayTracer::evalPath(const double* params) const {
   // now need the option to be able to stop in air as well.
   // What about: step the distance to the source or the surface, whichever is smaller?
   // then you should be able to just jump to the answer.
-
+  // @todo Re-implement this -- Ben Strutt's way didn't work!!
+  
   const double distanceToInteraction = (fInteractionPos - fDetectorPos).Mag();
-  bool stepToSurface = (surfacePos - fDetectorPos).Mag() < distanceToInteraction;
+  //const double distanceToSurface = (surfacePos - fDetectorPos).Mag();
+  //bool stepToSurface =  distanceToSurface < distanceToInteraction;
+  bool stepToSurface = true;
   
   TVector3 endPoint;
   
@@ -202,7 +205,7 @@ double icemc::RayTracer::evalPath(const double* params) const {
   	      << ", dx (km) = " << 1e-3*params[0]
   	      << ", dy (km) = " << 1e-3*params[1]
   	      << ", residual (m) = " << residual
-  	      // <<  ", endPoint.Mag() = " << endPoint.Mag()
+      // <<  ", endPoint.Mag() = " << endPoint.Mag()
   	      << "\n";
   }
 
