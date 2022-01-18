@@ -23,7 +23,8 @@ namespace icemc {
     virtual double getSigma(Energy energy, Neutrino::L leptonNumber, Interaction::Current current) const = 0;
 
     inline static double getInteractionLength(double sigma){
-      return constants::M_NUCL/sigma; // kg/m^2
+      //@todo use density of ice instead?
+      return constants::M_NUCL/(sigma*constants::RHOH2O); // in meters
     }
     
     TCanvas* plotSigma(Neutrino::L l, Interaction::Current c, int nSamples = 2000) const;

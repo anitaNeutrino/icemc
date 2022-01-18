@@ -21,6 +21,7 @@ namespace icemc {
     Geoid::Position position;
     double crossSection = -1;
     double length = -1;
+    double length_kgm2 = -1; // from icemc, useful for calculating weight -- but needs a better name
     Current current = Current::Charged;
     double y = -1;
     ClassDef(Interaction, 1);

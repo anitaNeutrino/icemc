@@ -47,16 +47,16 @@ namespace icemc {
 
     // properties of water
     const double X0H20=0.361;          // radiation length of water (meters)
-
+    const double RHOH2O = 1000;        // density of water (kg/m^3)
 
     // properties of air
     const double Z_AIR=377;            // resistance of air = sqrt(epsilon/mu)
     const double RHOAIR=1.25;          // density of air (kg/m**3)
+
     // // properties of ice
-
-
     const double NFIRN=1.3250;                   // index of refraction at the very surface - Peter
     const double NICE=1.79;                      // index of refraction of ice 
+
     //Constants relating to all ice models
     const double FIRNDEPTH=-150.;                // depth of the firn, in meters: currently a constant over all ice
    

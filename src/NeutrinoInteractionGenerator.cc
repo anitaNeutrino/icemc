@@ -139,10 +139,12 @@ icemc::Interaction icemc::NeutrinoInteractionGenerator::generateInteraction(cons
   Interaction interaction;
   interaction.current = pickCurrent();
   interaction.crossSection = fCrossSectionModel->getSigma(n.energy, n.leptonNumber, interaction.current);
+  //@todo icemc always uses sum of both; is this correct?
+  interaction.crossSection = fCrossSectionModel->getSigma(n.energy, n.leptonNumber, Interaction::Current::Neutral) + fCrossSectionModel->getSigma(n.energy, n.leptonNumber, Interaction::Current::Charged);
   interaction.length = CrossSectionModel::getInteractionLength(interaction.crossSection);
+  interaction.length_kgm2 = CrossSectionModel::getInteractionLength(interaction.crossSection)*constants::RHOH2O;
   interaction.y = fYGenerator->pickY(n.energy, n.leptonNumber, interaction.current);
   interaction.position = pickInteractionPosition(detector);
-  // std::cout << interaction.position << std::endl;
   return interaction;
 }
 
