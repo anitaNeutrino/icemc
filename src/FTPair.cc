@@ -462,7 +462,7 @@ void icemc::FTPair::maybeUpdateFreqDomain() const {
     // ... so it could be any length, let's sort that out
     zeroPadTimeDomainLengthToPowerOf2();
 
-    
+
     std::vector<double> temp(fTimeDomainGraph.GetY(), fTimeDomainGraph.GetY() + fTimeDomainGraph.GetN());
     // temp.reserve(fTimeDomainGraph.GetN());
 
@@ -543,31 +543,6 @@ void icemc::FTPair::maybeUpdateTimeDomain() const {
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /** 
