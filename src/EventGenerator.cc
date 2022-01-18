@@ -149,8 +149,7 @@ void icemc::EventGenerator::delayAndAddSignalToEachRX(const PropagatingSignal& s
   for(int rx=0; rx < detector.getNumRX(); rx++){
     PropagatingSignal signalRX = signal;
     signalRX.waveform.applyConstantGroupDelay(delays.at(rx) - minDelay, false);
-    // std::cout << "EventGenerator::delayAndAdd: rx " << rx << ", " << signalRX.energy() << std::endl;
-    
+
     detector.addSignalToRX(signalRX, rx);
   }
 }
@@ -181,7 +180,7 @@ void icemc::EventGenerator::generate(Detector& detector){
 
   icemc::RootOutput output(this, fSettings, fSettings->getOutputDir(), fSettings->getRun());
 
-  Summary summary(fSettings->EXPONENT, antarctica->GetTotalIceVolume());
+  Summary summary(fSettings->EXPONENT, antarctica->GetTotalIceVolume(), CrossSectionModel::getInteractionLength(fCrossSectionModel->getSigma(fSourceEnergyModel->pickNeutrinoEnergy(), Neutrino::L::Matter, Interaction::Current::Charged)));
 
   NeutrinoGenerator nuGenerator(fSettings, fSourceEnergyModel, fSourceDirectionModel, antarctica);
   RayTracer rayTracer(antarctica);
@@ -213,36 +212,37 @@ void icemc::EventGenerator::generate(Detector& detector){
 
     fEventSummary = EventSummary(run, eventNumber,  eventTimes.at(entry));
     fEventSummary.neutrino = nuGenerator.generate();
-    fEventSummary.detector = detector.getPosition(fEventSummary.loop.eventTime);        
+    fEventSummary.detector = detector.getPosition(fEventSummary.loop.eventTime);
     fEventSummary.interaction = interactionGenerator->generateInteraction(fEventSummary.neutrino, fEventSummary.detector);
     OpticalPath opticalPath = rayTracer.findPath(fEventSummary.interaction.position, fEventSummary.detector);
     fEventSummary.loop.rayTracingSolution = opticalPath.residual < 1; // meters
 
     if(false){
-      std::cout << fEventSummary.interaction.position << "\n";
-      std::cout << fEventSummary.interaction.position.Altitude() << "\n";
-      std::cout << fEventSummary.detector << "\n";
+      std::cout << "Interaction position: " << fEventSummary.interaction.position << "\n";
+      std::cout << "Interaction altitude: " << fEventSummary.interaction.position.Altitude() << "\n";
+      std::cout << "Detector: " << fEventSummary.detector << "\n";
+      std::cout << "Direction from interaction to balloon:" << (fEventSummary.detector - fEventSummary.interaction.position).Unit() << std::endl;
       std::cout << "Separation = " << fEventSummary.interaction.position.Distance(fEventSummary.detector) << std::endl;
-      std::cout << "Optical path distance = " << opticalPath.distance() << std::endl;
-      std::cout << opticalPath.residual << std::endl;
+      std::cout << "Optical path distance = " << opticalPath.distance() << ", residual = " << opticalPath.residual << std::endl;
     }
 
     if(fEventSummary.loop.rayTracingSolution==false){
       //std::cout << "No ray tracing solution between source " << fEventSummary.interaction.position << " and detector " << fEventSummary.detector << ": " << (fEventSummary.interaction.position - fEventSummary.detector).Mag() << std::endl;
       output.allTree().Fill();
+      summary.addEvent(fEventSummary);
       continue;
     }
 
-    fEventSummary.loop.dTheta = fRadioModel->getThetaRange(detector.signalThreshold(), fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath);    
+    fEventSummary.loop.dTheta = fSettings->USEDIRECTIONWEIGHTS ? fRadioModel->getThetaRange(detector.signalThreshold(), fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath) : TMath::Pi();
     fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath, fEventSummary.loop.dTheta);
-     
+
     fEventSummary.shower = showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction);
     PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEventSummary.neutrino, fEventSummary.shower);
-    
+
     fEvent.signalAt1m = signal.waveform.getTimeDomain();
     fEventSummary.signalSummaryAt1m = signal.summarize();
 
-    signal.propagate(opticalPath); 
+    signal.propagate(opticalPath);
    
     fEvent.signalAtDetector = signal.waveform.getTimeDomain();
     fEventSummary.signalSummaryAtDetector = signal.summarize();
@@ -252,31 +252,30 @@ void icemc::EventGenerator::generate(Detector& detector){
 
     if(fEventSummary.loop.chanceInHell==false){
       //std::cout << "No chance in hell\t" << fEventSummary.interaction.position << std::endl;
-
-      output.allTree().Fill();
+      output.allTree().Fill();      
+      summary.addEvent(fEventSummary);
       continue;
     }
     
-    fEventSummary.neutrino.path.integrate(fEventSummary.interaction, antarctica);
-    
     delayAndAddSignalToEachRX(signal, opticalPath, detector);
     fEventSummary.loop.passesTrigger = detector.applyTrigger();
-    
-    if(fEventSummary.loop.passesTrigger==true){
 
+    if(fEventSummary.loop.passesTrigger==true){
+      std::cout << "Passed trigger!\t" << fEventSummary.interaction.position << std::endl;
+      fEventSummary.neutrino.path.integrate(fEventSummary.interaction, antarctica);
       fEventSummary.loop.setPositionWeight(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume());
       fEventSummary.loop.directionWeight = fSourceDirectionModel->getDirectionWeight();
-      fEvent.copy(fEventSummary);
 
-      summary.addEvent(fEvent);
+      fEvent.copy(fEventSummary);
       detector.write(fEvent);
       output.passTree().Fill();
     }
-    // std::cout << std::endl;
+    // Add event to summary, with whether or not it passes trigger
+    summary.addEvent(fEventSummary, fEventSummary.loop.passesTrigger.getResult());
     output.allTree().Fill();
   }
   signal(SIGINT, SIG_DFL); /// unset signal handler
 
-  //@todo summarize results and add to root output
-  summary.summarize(fSettings->NNU/3, fSettings->NNU/3, fSettings->NNU/3);
+  //@todo only works for monoenergetic energy
+  summary.summarize();
 }
