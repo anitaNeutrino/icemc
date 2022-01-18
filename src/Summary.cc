@@ -11,17 +11,16 @@ void icemc::FlavorSummary::addEvent(const EventSummary& event, bool passed){
     nPass++;
     //std::cout << "survival weight=" << event.neutrino.weight() << "  phase weight=" << event.loop.phaseWeight() << std::endl;
     nWeighted += event.neutrino.weight()/event.loop.phaseWeight(); // survival weight / (direction weight * position weight)
-    length += event.interaction.length/(1e3); // divide by density of ice 1000 kg/m^3 to get length in meters
+    
   }
   
 }
 
-void icemc::FlavorSummary::summarize(double iceVolume){
+void icemc::FlavorSummary::summarize(double iceVolume, double interactionLength){
 
   if(nPass>0){
     calculateEffectiveVolume(iceVolume);
-    length = length/nPass; // average now that we're done simulating
-    calculateEffectiveArea();
+    calculateEffectiveArea(interactionLength);
   }
   reportSummary();
 }
@@ -53,8 +52,8 @@ void icemc::FlavorSummary::calculateEffectiveVolume(double iceVolume){
   effectiveVolume = (nWeighted * (iceVolume/1e9) * 4 * TMath::Pi()) / nTotal; // Eq. 8.1 in Cremonesi 2019, convert iceVolume in m^3 to km^3
 }
 
-void icemc::FlavorSummary::calculateEffectiveArea(){
-  effectiveArea = effectiveVolume / length;
+void icemc::FlavorSummary::calculateEffectiveArea(double length){
+  effectiveArea = effectiveVolume / (length/1e3); // Eq. 8.2 in Cremonesi 2019, convert interactionLength from m to km
 }
 
 void icemc::Summary::addEvent(const EventSummary& event, bool passed){
@@ -74,19 +73,17 @@ void icemc::Summary::addEvent(const EventSummary& event, bool passed){
 void icemc::Summary::summarize(){
 
   icemc::report() << "Volume of antarctic ice is " << (iceVolume/1e9) << " km^3" << std::endl;
-
-  eSummary.summarize(iceVolume);
-  muSummary.summarize(iceVolume);
-  tauSummary.summarize(iceVolume);
+  
+  eSummary.summarize(iceVolume, interactionLength);
+  muSummary.summarize(iceVolume, interactionLength);
+  tauSummary.summarize(iceVolume, interactionLength);
 
   nTotal = eSummary.nTotal + muSummary.nTotal + tauSummary.nTotal;
   nPass = eSummary.nPass + muSummary.nPass + tauSummary.nPass;
   nWeighted = eSummary.nWeighted + muSummary.nWeighted + tauSummary.nWeighted;
-  length = eSummary.length + muSummary.length + tauSummary.length;
     
   calculateEffectiveVolume(iceVolume);
-  length = length/nPass; // average now that we're done simulating
-  calculateEffectiveArea();
+  calculateEffectiveArea(interactionLength);
 
   reportSummary();
 }

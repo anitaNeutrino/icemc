@@ -39,7 +39,7 @@ namespace icemc{
      * @param n -- number of neutrinos that were simulated of this flavor
      * @param iceVolume -- volume of ice in Antarctica, in km^3
      */    
-    void summarize(double iceVolume);
+    void summarize(double iceVolume, double interactionLength);
     void reportSummary();
     
     
@@ -49,7 +49,6 @@ namespace icemc{
     int nTotal = 0; // number of simulated neutrinos
     int nPass = 0; // number of passing neutrinos
     double nWeighted = 0; // weighted number of passing neutrinos
-    double length = 0; // interaction length for neutrinos, averaged
     double effectiveVolume = -1; // km^3 str
     double effectiveArea = -1; // km^2 str
 
@@ -63,7 +62,7 @@ namespace icemc{
     /**
      * Calculates the effective area of the 'detector' at the given energy, stores it in effectiveArea
      */    
-    void calculateEffectiveArea();
+    void calculateEffectiveArea(double length);
 
   };
 
@@ -74,9 +73,10 @@ namespace icemc{
     class Summary : public FlavorSummary {
 
     public:
-      Summary(double e, double vol) : FlavorSummary(FlavorSummary::Flavor::all) {
+      Summary(double e, double vol, double length) : FlavorSummary(FlavorSummary::Flavor::all) {
 	exponent = e;
 	iceVolume = vol;
+	interactionLength = length;
       }
 
       void addEvent(const EventSummary& event, bool passed=false);
@@ -84,7 +84,8 @@ namespace icemc{
 
       double exponent; // simulated energy exponent, 0 if not monoenergetic
       double iceVolume; // m^3 in all of antarctica    
-
+      double interactionLength; // 8.3 in Cremonesi 2019, in km
+      
       //private:
     
       FlavorSummary eSummary = FlavorSummary(FlavorSummary::Flavor::e); // electon neutrinos summary
