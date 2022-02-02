@@ -709,6 +709,7 @@ int main(int argc,  char **argv) {
  
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
+  
 #endif
 
   AnitaGeomTool *AnitaGeom1 = AnitaGeomTool::Instance();
@@ -932,39 +933,110 @@ int main(int argc,  char **argv) {
       truthEvPtr->realTime         = bn1->realTime_flightdata;
       truthEvPtr->run              = run_no;
       truthEvPtr->nuMom            = pnu;
+      truthEvPtr->showerE =       0; 
       truthEvPtr->nu_pdg           = pdgcode;
-      memcpy(truthEvPtr->e_component, e_component, sizeof(e_component));
-      memcpy(truthEvPtr->h_component, h_component, sizeof(h_component));
-      memcpy(truthEvPtr->n_component, n_component, sizeof(n_component));
-      memcpy(truthEvPtr->e_component_k ,e_component_kvector, sizeof(e_component_kvector));
-      memcpy(truthEvPtr->h_component_k ,h_component_kvector, sizeof(h_component_kvector));
-      memcpy(truthEvPtr->n_component_k ,n_component_kvector, sizeof(n_component_kvector));
+      memcpy(truthEvPtr->e_component, e_component, sizeof(truthEvPtr->e_component));
+      memcpy(truthEvPtr->h_component, h_component, sizeof(truthEvPtr->h_component));
+      memcpy(truthEvPtr->n_component, n_component, sizeof(truthEvPtr->n_component));
+      memcpy(truthEvPtr->e_component_k ,e_component_kvector, sizeof(truthEvPtr->e_component_k));
+      memcpy(truthEvPtr->h_component_k ,h_component_kvector, sizeof(truthEvPtr->h_component_k));
+      memcpy(truthEvPtr->n_component_k ,n_component_kvector, sizeof(truthEvPtr->n_component_k));
       truthEvPtr->sourceLon        = sourceLon;
       truthEvPtr->sourceLat        = sourceLat;
       truthEvPtr->sourceAlt        = sourceAlt;
+            
       truthEvPtr->weight           = weight;
+      truthEvPtr->weight1           = weight1;
+      truthEvPtr->weight_prob           = weight_prob;
+      truthEvPtr->l_int = len_int; 
+      truthEvPtr->tuffIndex = (short)anita1->tuffIndex;
+
+      //
+            
       for (int i=0;i<3;i++){
-	truthEvPtr->balloonPos[i]  = -999;
-	truthEvPtr->balloonDir[i]  = -999;
-	truthEvPtr->nuPos[i]       = -999;
-	truthEvPtr->nuDir[i]       = -999;
+	truthEvPtr->balloonPos[i]  = bn1->r_bn[i];
+	truthEvPtr->balloonDir[i]  = bn1->n_bn[i];
+	truthEvPtr->nuPos[i]       = 0;
+	truthEvPtr->nuDir[i]       = 0;
       }
-      // for (int i=0;i<5;i++){
-      // 	for (int j=0;j<3;j++){
-      // 	  truthEvPtr->rfExitNor[i][j] = ray1->n_exit2bn[i][j];
-      // 	  truthEvPtr->rfExitPos[i][j] = ray1->rfexit[i][j];
-      // 	}
-      // }
+      for (int i=0;i<5;i++){
+	for (int j=0;j<3;j++){
+	  truthEvPtr->rfExitNor[i][j] = ray1->n_exit2bn[i][j];
+	  truthEvPtr->rfExitPos[i][j] = ray1->rfexit[i][j];
+	}
+      }
       for (int i=0;i<48;i++){
 	truthEvPtr->hitangle_e[i]  = hitangle_e_all[i];
 	truthEvPtr->hitangle_h[i]  = hitangle_h_all[i];
       }
-      if(settings1->ROUGHNESS){
+      if(!settings1->ROUGHNESS){
 	for (int i=0;i<Anita::NFREQ;i++)
-	  truthEvPtr->vmmhz[i]       = -999;
+	  truthEvPtr->vmmhz[i]       = 0;
       }
+
+            
+      memset(truthEvPtr->SNRAtTrigger,       0, sizeof(truthEvPtr->SNRAtTrigger)       );
+      memset(truthEvPtr->fSignalAtTrigger,   0, sizeof(truthEvPtr->fSignalAtTrigger)   );
+      memset(truthEvPtr->fNoiseAtTrigger,    0, sizeof(truthEvPtr->fNoiseAtTrigger)    );
+      memset(truthEvPtr->SNRAtDigitizer,     0, sizeof(truthEvPtr->SNRAtDigitizer)     );
+      memset(truthEvPtr->thresholds,         0, sizeof(truthEvPtr->thresholds)         );
+      memset(truthEvPtr->fDiodeOutput,       0, sizeof(truthEvPtr->fDiodeOutput)       );
+            
+      truthEvPtr->maxSNRAtTriggerV=0;
+      truthEvPtr->maxSNRAtTriggerH=0;
+      truthEvPtr->maxSNRAtDigitizerV=0;
+      truthEvPtr->maxSNRAtDigitizerH=0;
+
+      for (int iant = 0; iant < settings1->NANTENNAS; iant++){
+	int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
+	int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
+
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexV] = Tools::calculateSNR(justSignal_trig[0][iant], justNoise_trig[0][iant]);
+	truthEvPtr->SNRAtTrigger[UsefulChanIndexH] = Tools::calculateSNR(justSignal_trig[1][iant], justNoise_trig[1][iant]);
+              
+	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexV]>truthEvPtr->maxSNRAtTriggerV) truthEvPtr->maxSNRAtTriggerV=truthEvPtr->SNRAtTrigger[UsefulChanIndexV];
+	if (truthEvPtr->SNRAtTrigger[UsefulChanIndexH]>truthEvPtr->maxSNRAtTriggerH) truthEvPtr->maxSNRAtTriggerH=truthEvPtr->SNRAtTrigger[UsefulChanIndexH];
+
+	truthEvPtr->SNRAtDigitizer[UsefulChanIndexV] = Tools::calculateSNR(justSignal_dig[0][iant], justNoise_dig[0][iant]);
+	truthEvPtr->SNRAtDigitizer[UsefulChanIndexH] = Tools::calculateSNR(justSignal_dig[1][iant], justNoise_dig[1][iant]);
+              
+	if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexV]>truthEvPtr->maxSNRAtDigitizerV) truthEvPtr->maxSNRAtDigitizerV=truthEvPtr->SNRAtDigitizer[UsefulChanIndexV];
+	if (truthEvPtr->SNRAtDigitizer[UsefulChanIndexH]>truthEvPtr->maxSNRAtDigitizerH) truthEvPtr->maxSNRAtDigitizerH=truthEvPtr->SNRAtDigitizer[UsefulChanIndexH];
+
+              
+	truthEvPtr->thresholds[UsefulChanIndexV] = thresholdsAnt[iant][0][4];
+	truthEvPtr->thresholds[UsefulChanIndexH] = thresholdsAnt[iant][1][4];
+	int irx = iant;
+	if (iant<16){
+	  if (iant%2) irx = iant/2;
+	  else        irx = iant/2 + 1;
+	}
+              
+	if (settings1->WRITE_WAVEFORMS) 
+	  {
+	    for (int j = 0; j < fNumPoints; j++) {
+	      truthEvPtr->fTimes[UsefulChanIndexV][j]             = j * anita1->TIMESTEP * 1.0E9;
+	      truthEvPtr->fTimes[UsefulChanIndexH][j]             = j * anita1->TIMESTEP * 1.0E9;
+                  
+	      truthEvPtr->fSignalAtTrigger[UsefulChanIndexV][j]   = justSignal_trig[0][iant][j+128]*1000;
+	      truthEvPtr->fSignalAtTrigger[UsefulChanIndexH][j]   = justSignal_trig[1][iant][j+128]*1000;
+	      truthEvPtr->fNoiseAtTrigger[UsefulChanIndexV][j]    = justNoise_trig[0][iant][j+128]*1000;
+	      truthEvPtr->fNoiseAtTrigger[UsefulChanIndexH][j]    = justNoise_trig[1][iant][j+128]*1000;
+	      truthEvPtr->fSignalAtDigitizer[UsefulChanIndexV][j] = justSignal_dig[0][iant][j+128]*1000;
+	      truthEvPtr->fSignalAtDigitizer[UsefulChanIndexH][j] = justSignal_dig[1][iant][j+128]*1000;
+	      truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexV][j]  = justNoise_dig[0][iant][j+128]*1000;
+	      truthEvPtr->fNoiseAtDigitizer[UsefulChanIndexH][j]  = justNoise_dig[1][iant][j+128]*1000;
+                  
+	      truthEvPtr->fDiodeOutput[UsefulChanIndexV][j]       = anita1->timedomain_output_allantennas[0][irx][j];
+	      truthEvPtr->fDiodeOutput[UsefulChanIndexH][j]       = anita1->timedomain_output_allantennas[1][irx][j];
+	    }//end int j
+	  }
+              
+      }// end int iant
+            
       truthAnitaTree->Fill();
       delete truthEvPtr;
+    
 #endif
 
       headTree->Fill();
