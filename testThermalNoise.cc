@@ -150,7 +150,7 @@ double RANDOMISEPOL=0.;
 
 
 double volume_thishorizon; // for plotting volume within the horizon of the balloon
-int realtime_this;  // for plotting real unix time
+double realtime_this;  // for plotting real unix time
 double longitude_this; // for plotting longitude
 double latitude_this; // for plotting latitude
 double altitude_this; // for plotting altitude
@@ -602,13 +602,13 @@ int main(int argc,  char **argv) {
   double volts_rx_rfcm_lab_h_all[48][512];
 
   // variable declarations for functions GetEcompHcompEvector and GetEcompHcompkvector - oindree
-  double e_component[Anita::NANTENNAS_MAX]={0}; // E comp along polarization
-  double h_component[Anita::NANTENNAS_MAX]={0}; // H comp along polarization
-  double n_component[Anita::NANTENNAS_MAX]={0}; // normal comp along polarization
+  static double e_component[Anita::NANTENNAS_MAX]={0}; // E comp along polarization
+  static double h_component[Anita::NANTENNAS_MAX]={0}; // H comp along polarization
+  static double n_component[Anita::NANTENNAS_MAX]={0}; // normal comp along polarization
 
-  double e_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of e-field along the rx e-plane
-  double h_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the rx h-plane
-  double n_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the normal
+  static double e_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of e-field along the rx e-plane
+  static double h_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the rx h-plane
+  static double n_component_kvector[Anita::NANTENNAS_MAX]={0}; // component of the e-field along the normal
 
 
   // Vector n_eplane = const_z;
@@ -697,18 +697,45 @@ int main(int argc,  char **argv) {
   outputAnitaFile =string(outputdir.Data())+"/SimulatedAnitaTruthFile"+run_num+".root";
   TFile *anitafileTruth = new TFile(outputAnitaFile.c_str(), "RECREATE");
 
-  TString icemcgitversion = TString::Format("%s", EnvironmentVariable::ICEMC_VERSION(outputdir));  
+
+  TString icemcgitversion( EnvironmentVariable::ICEMC_VERSION(outputdir));
   printf("ICEMC GIT Repository Version: %s\n", icemcgitversion.Data());
   unsigned int timenow = time(NULL);
 
   TTree *configAnitaTree = new TTree("configIcemcTree", "Config file and settings information");
-  configAnitaTree->Branch("gitversion",   &icemcgitversion  );
-  configAnitaTree->Branch("startTime",    &timenow          );
-  // configAnitaTree->Branch("settings",  &settings1                    );
+  configAnitaTree->Branch("gitversion",        &icemcgitversion  );
+  configAnitaTree->Branch("nnu",               &NNU              );
+  configAnitaTree->Branch("startTime",         &timenow          );
+  // configAnitaTree->Branch("icemcSettings",     &settings1        );
   configAnitaTree->Fill();
- 
+
+
+  TTree *triggerSettingsTree = new TTree("triggerSettingsTree", "Trigger settings");
+  triggerSettingsTree->Branch("dioderms",  anita1->bwslice_dioderms_fullband_allchan,  "dioderms[2][48][7]/D" );
+  triggerSettingsTree->Branch("diodemean", anita1->bwslice_diodemean_fullband_allchan, "diodemean[2][48][7]/D");
+  triggerSettingsTree->Fill();
+
+  
+  TTree *summaryAnitaTree = new TTree("summaryAnitaTree", "summaryAnitaTree"); // finaltree filled for all events that pass
+  summaryAnitaTree->Branch("EXPONENT", &settings1->EXPONENT, "EXPONENT/D" );
+  summaryAnitaTree->Branch("SELECTION_MODE", &settings1->UNBIASED_SELECTION, "SELECTION_MODE/I" );
+  summaryAnitaTree->Branch("total_nu",      &NNU,                 "total_nu/I" );
+  summaryAnitaTree->Branch("total_nue",     &count1->nnu_e,       "total_nue/I" );
+  summaryAnitaTree->Branch("total_numu",    &count1->nnu_mu,      "total_numu/I" );
+  summaryAnitaTree->Branch("total_nutau",   &count1->nnu_tau,     "total_nutau/I" );
+  summaryAnitaTree->Branch("pass_nu",       &count1->npass[0],     "pass_nu/I"    );
+
+
   TTree *truthAnitaTree = new TTree("truthAnitaTree", "Truth Anita Tree");
   truthAnitaTree->Branch("truth",     &truthEvPtr                   );
+
+  TruthAnitaNeutrino * truthNuPtr = settings1->SAVE_TRUTH_NU_TREE ? new TruthAnitaNeutrino : 0; 
+  TTree* truthAnitaNuTree = settings1->SAVE_TRUTH_NU_TREE ? new TTree("truthAnitaNuTree","Truth ANITA Neutrino Tree (all nus)") : 0; 
+  if (settings1->SAVE_TRUTH_NU_TREE) 
+  {
+    truthAnitaNuTree->SetAutoFlush(10000); 
+    truthAnitaNuTree->Branch("truth_neutrino",     &truthNuPtr );
+  }
   
 #endif
 
