@@ -774,6 +774,7 @@ int main(int argc,  char **argv) {
 
   signal(SIGINT,  interrupt_signal_handler);     // This function call allows icemc to gracefully abort and write files as usual rather than stopping abruptly.
 
+  TString objName = "noObject";
 
   int antNum;
 
@@ -791,6 +792,10 @@ int main(int argc,  char **argv) {
     
     // Set seed of all random number generators to be dependent on eventNumber
     setSeed(eventNumber); 
+
+    double RA = 0; 
+    double dec = 0;
+    int which_source = -1;
     
     anita1->passglobtrig[0]=0;
     anita1->passglobtrig[1]=0;
@@ -890,24 +895,33 @@ int main(int argc,  char **argv) {
       
       int fNumPoints = 260;
 
+      for (int ichan=0; ichan<108; ichan++){
+	realEvPtr->fNumPoints[ichan] = fNumPoints;
+
+	for (int j = 0; j < fNumPoints; j++) {
+	  // convert seconds to nanoseconds
+	  realEvPtr->fTimes[ichan][j] = j * anita1->TIMESTEP * 1.0E9;
+	}
+      }
+      realEvPtr->fRFSpike = 0;// glitch does not likely happen in mc data.
       for (int iant = 0; iant < settings1->NANTENNAS; iant++){
 	//int IceMCAnt = GetIceMCAntfromUsefulEventAnt(anita1,  AnitaGeom1,  iant);
 	int IceMCAnt = GetIceMCAntfromUsefulEventAnt(settings1,  iant);
 	int UsefulChanIndexH = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kHorizontal);
 	int UsefulChanIndexV = AnitaGeom1->getChanIndexFromAntPol(iant,  AnitaPol::kVertical);
-	realEvPtr->fNumPoints[UsefulChanIndexV] = fNumPoints;
-	realEvPtr->fNumPoints[UsefulChanIndexH] = fNumPoints;
+	//              realEvPtr->fNumPoints[UsefulChanIndexV] = fNumPoints;
+	//              realEvPtr->fNumPoints[UsefulChanIndexH] = fNumPoints;
 	realEvPtr->chanId[UsefulChanIndexV] = UsefulChanIndexV;
 	realEvPtr->chanId[UsefulChanIndexH] = UsefulChanIndexH;
 
 	for (int j = 0; j < fNumPoints; j++) {
 	  // convert seconds to nanoseconds
-	  realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
-	  realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
+	  //                realEvPtr->fTimes[UsefulChanIndexV][j] = j * anita1->TIMESTEP * 1.0E9;
+	  //                realEvPtr->fTimes[UsefulChanIndexH][j] = j * anita1->TIMESTEP * 1.0E9;
 	  // convert volts to millivolts
-	  realEvPtr->fVolts[UsefulChanIndexH][j] =  volts_rx_rfcm_lab_h_all[IceMCAnt][j+64]*1000;
-	  realEvPtr->fVolts[UsefulChanIndexV][j] =  volts_rx_rfcm_lab_e_all[IceMCAnt][j+64]*1000;
+	  realEvPtr->fVolts[UsefulChanIndexH][j] =  volts_rx_rfcm_lab_h_all[IceMCAnt][j+128]*1000;
 	  realEvPtr->fCapacitorNum[UsefulChanIndexH][j] = 0;
+	  realEvPtr->fVolts[UsefulChanIndexV][j] =  volts_rx_rfcm_lab_e_all[IceMCAnt][j+128]*1000;
 	  realEvPtr->fCapacitorNum[UsefulChanIndexV][j] = 0;
 	}//end int j
       }// end int iant
@@ -975,10 +989,18 @@ int main(int argc,  char **argv) {
       truthEvPtr->weight           = weight;
       truthEvPtr->weight1           = weight1;
       truthEvPtr->weight_prob           = weight_prob;
+      truthEvPtr->phaseWeight       = 0; // 1./interaction1->dnutries;
+      truthEvPtr->timeWeight       =  0; // time_weight;
+      truthEvPtr->sourceTimeWeight       = 0; //src_time_weight;
       truthEvPtr->l_int = len_int; 
       truthEvPtr->tuffIndex = (short)anita1->tuffIndex;
 
-      //
+      truthEvPtr->source_index = which_source;
+      truthEvPtr->RA = RA;
+      truthEvPtr->dec = dec;
+      
+      truthEvPtr->objName =objName;
+            //
             
       for (int i=0;i<3;i++){
 	truthEvPtr->balloonPos[i]  = bn1->r_bn[i];
@@ -988,8 +1010,8 @@ int main(int argc,  char **argv) {
       }
       for (int i=0;i<5;i++){
 	for (int j=0;j<3;j++){
-	  truthEvPtr->rfExitNor[i][j] = ray1->n_exit2bn[i][j];
-	  truthEvPtr->rfExitPos[i][j] = ray1->rfexit[i][j];
+	  truthEvPtr->rfExitNor[i][j] = 0;//ray1->n_exit2bn[i][j];
+	  truthEvPtr->rfExitPos[i][j] = 0;//ray1->rfexit[i][j];
 	}
       }
       for (int i=0;i<48;i++){
@@ -1060,7 +1082,11 @@ int main(int argc,  char **argv) {
 	  }
               
       }// end int iant
-            
+
+      if (truthNuPtr) truthNuPtr->setSkipped(false); 
+      
+      //            printf("objname: 0x%p %s\n", &truthEvPtr->objName, truthEvPtr->objName.Data()); 
+      if (truthAnitaNuTree) truthAnitaNuTree->Fill();            
       truthAnitaTree->Fill();
       delete truthEvPtr;
     
@@ -1122,7 +1148,12 @@ int main(int argc,  char **argv) {
 
 #ifdef ANITA3_EVENTREADER
   anitafileTruth->cd();
+  configAnitaTree->Write("configAnitaTree");
   truthAnitaTree->Write("truthAnitaTree");
+  if (truthAnitaNuTree) truthAnitaNuTree->Write();
+  triggerSettingsTree->Write("triggerSettingsTree");
+  summaryAnitaTree->Fill();
+  summaryAnitaTree->Write("summaryAnitaTree");
   anitafileTruth->Close();
   delete anitafileTruth;
 #endif
