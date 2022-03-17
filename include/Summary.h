@@ -36,8 +36,8 @@ namespace icemc{
     /**
      * After the simulation is done, do the final calculations 
      *
-     * @param n -- number of neutrinos that were simulated of this flavor
      * @param iceVolume -- volume of ice in Antarctica, in km^3
+     * @param interactionLength -- for charged-current interaction
      */    
     void summarize(double iceVolume, double interactionLength);
     void reportSummary();
