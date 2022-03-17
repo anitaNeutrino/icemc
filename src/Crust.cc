@@ -175,9 +175,10 @@ icemc::Crust::Layer icemc::Crust::layerBelow(Layer layer) const {
 
 //double icemc::Crust::IceVolumeWithinHorizon(const Geoid::Position& p, double horizonDistanceMeters) const {
 double icemc::Crust::IceVolumeWithinHorizon(const Geoid::Position& p) const {
-  //@todo better way to calculate horizon distance?
+  //@todo Dynamic horizon distance? Would have to change NeutrinoInteractionGenerator::pickInteractionPosition too
   const double altitude = p.Altitude();
-  const double horizonDistanceMeters = sqrt(altitude*altitude+2*altitude*Geoid::R_EARTH);
+  //const double horizonDistanceMeters = sqrt(altitude*altitude+2*altitude*Geoid::R_EARTH);
+  const double horizonDistanceMeters = fSettings->MAX_HORIZON_DISTANCE; // MAXHORIZON from icemc
   const double maxDeltaRSq = horizonDistanceMeters*horizonDistanceMeters;
   const double delta = 5e3;
   const LocalCoordinateSystem lc(p); // local coordate system tangential to geoid centered at p
