@@ -544,20 +544,6 @@ int icemc::Antarctica::WestLand(const Geoid::Position &pos) const {
     
 }//WestLand
 
-
-double icemc::Antarctica::GetBalloonPositionWeight(int ibnpos) const {
-  //  std::cout << "ibnpos, volume_inhorizon, volume are " << ibnpos << " " << volume_inhorizon[ibnpos] << " " << volume << "\n";
-  ///@todo The functionality here needs to be restored somehow...
-  
-  // if (volume_inhorizon[ibnpos]==0) {
-  //   icemc::report() << severity::error << "Volume in horizon is zero!\n";
-  //   exit(1);
-  // }
-  return 1;
-  // return volume/volume_inhorizon[ibnpos];
-} //GetBalloonPositionWeight
-
-
 int icemc::Antarctica::OutsideAntarctica(const Geoid::Position &pos) const {
   return (pos.Latitude() >= COASTLINE);
 } //OutsideAntarctica(Position)
