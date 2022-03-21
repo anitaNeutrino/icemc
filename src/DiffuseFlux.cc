@@ -14,7 +14,7 @@ TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& op
   LocalCoordinateSystem lc(start, pointLocalXTowards, rfDir);
 
   if (dtheta <= 0){
-    directionWeight = 0;
+    directionWeight = DBL_MAX; // Since we divide by weight this weight out this neutrino
   }
   else{
     double theta2 = AskaryanRadiationModel::CHANGLE_ICE - dtheta > 0 ? AskaryanRadiationModel::CHANGLE_ICE - dtheta : 0;
