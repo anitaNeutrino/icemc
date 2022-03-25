@@ -20,6 +20,7 @@ namespace icemc {
 
     double distance() const;
     double attenuation() const;
+    double magnification() const;
     // propagate the polarization through all the boundaries and return the result
     TVector3 polarization(const TVector3& initialPolarization) const;
 
@@ -28,7 +29,6 @@ namespace icemc {
     public:
       double distance() const {return direction().Mag();}
       double attenuation() const {return exp(-distance()/attenuationLength);}
-
       TVector3 direction() const {return end - start;}
 
       Geoid::Position start;

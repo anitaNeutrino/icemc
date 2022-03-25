@@ -37,14 +37,15 @@ void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
   
   // 1/r loss from power intensity on spherical wavefront
   const double distanceFactor = 1./opticalPath.distance();
-
+  
   // propagation through dielectric
   const double attenuationFactor = opticalPath.attenuation();
    
   polarization = opticalPath.polarization(polarization);
-  // std::cout << polarization << std::endl;
-
   double fresnelFactor = polarization.Mag();
+
+  // Magnification at ice-air barrier
+  double magnificationFactor = opticalPath.magnification();
 
   const double tolerance = 1e-10;
   if(fresnelFactor > 1 + tolerance || fresnelFactor<=0){
@@ -53,7 +54,7 @@ void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
   
   polarization *= (1./fresnelFactor); // make unit length
 
-  const double totalFieldReduction = distanceFactor*attenuationFactor*fresnelFactor;
+  const double totalFieldReduction = distanceFactor*attenuationFactor*fresnelFactor*magnificationFactor;
 
   // apply the losses
   auto& amps = waveform.changeFreqDomain();

@@ -17,6 +17,15 @@ double icemc::OpticalPath::attenuation() const {
   return totalAttenuation;
 }
 
+double icemc::OpticalPath::magnification() const {
+  const auto incident_step = steps.at(0);    
+  double incidentAngle =  incident_step.direction().Angle(incident_step.boundaryNormal);
+  const auto transmitted_step = steps.at(1);    
+  double transmittedAngle =  transmitted_step.direction().Angle(incident_step.boundaryNormal);
+
+  return sqrt( tan(incidentAngle)/tan(transmittedAngle) );
+}
+
 
 ///@todo make a unified fresnel namespace set of functions
 ///@todo test me properly
