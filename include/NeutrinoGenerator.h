@@ -26,6 +26,7 @@ namespace icemc {
   public:
 
     Neutrino::Flavor pickFlavor();
+    Neutrino::L pickMatterType();
     
     NeutrinoGenerator(const Settings* settings,
 		    std::shared_ptr<Source::EnergyModel> sourceEnergyModel,

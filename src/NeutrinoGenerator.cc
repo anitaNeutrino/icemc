@@ -31,15 +31,29 @@ icemc::Neutrino::Flavor icemc::NeutrinoGenerator::pickFlavor() {
   }
 }
 
+icemc::Neutrino::L icemc::NeutrinoGenerator::pickMatterType() {
+  // pick matter or antimatter, 1:1 ratio
+  double r = pickUniform(0, 2);
+  if (r < 1){
+    return Neutrino::L::Matter;
+  }
+  else {
+    return Neutrino::L::AntiMatter;
+  }
+}
+
 
 icemc::Neutrino icemc::NeutrinoGenerator::generate(){
 
   // neutrino properties
   Neutrino n;
   n.flavor = pickFlavor();
+  //n.flavor = Neutrino::Flavor::e; // force electron @MIMIC 10^21, 10^20 eV
+  //n.flavor = Neutrino::Flavor::mu; // 10^19 eV
+  //n.flavor = Neutrino::Flavor::tau;
   n.energy = fSourceEnergyModel->pickNeutrinoEnergy();
-  n.leptonNumber = Neutrino::L::Matter; ///@todo check
-
+  n.leptonNumber = pickMatterType(); ///@todo check
+  
   // interaction properties
   // n.path.interaction = interaction.position;
 
