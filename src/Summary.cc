@@ -49,7 +49,9 @@ void icemc::FlavorSummary::reportSummary(){
 }
 
 void icemc::FlavorSummary::calculateEffectiveVolume(double iceVolume){
-  effectiveVolume = (nWeighted * (iceVolume/1e9) * 4 * TMath::Pi()) / nTotal; // Eq. 8.1 in Cremonesi 2019, convert iceVolume in m^3 to km^3
+  //@todo add error calculation
+  const double rho_factor = 917.0/1000.0; // @todo why is this included? Get values from constants instead
+  effectiveVolume = (nWeighted * (iceVolume/1e9) * 4 * TMath::Pi() * rho_factor) / nTotal; // Eq. 8.1 in Cremonesi 2019, convert iceVolume in m^3 to km^3
 }
 
 void icemc::FlavorSummary::calculateEffectiveArea(double length){
