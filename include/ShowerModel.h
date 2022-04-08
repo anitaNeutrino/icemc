@@ -44,6 +44,7 @@ namespace icemc{
     // double hadDeltaThetaMax;
     double emFrac;
     double hadFrac;
+    bool secondary = false; // was signal from secondary particles larger
     int nInteractions;
     Energy pnu;
     TVector3 axis;
@@ -64,8 +65,8 @@ namespace icemc{
     static const int nE = 7;
     int NPROB; // this counts how many of those array elements are actually used
     // Energy plepton;  // energy of charged lepton after interaction(s)
-    // Energy em_secondaries_max;  // em energy due to secondary interactions
-    // Energy had_secondaries_max; // had energy due to secondary interactions
+    //Energy em_secondaries_max;  // em energy due to secondary interactions
+    //Energy had_secondaries_max; // had energy due to secondary interactions
     // first index=energy from 10^18 to 10^21 in half-decades
     // second index=y (100 bins)
     std::array<std::array<double, nP>, nE> dsdy_muon_brems; // probability distribution vs. y for brem
@@ -205,8 +206,7 @@ namespace icemc{
 
 
   private:
-    void doShower(Neutrino::Flavor ,Energy, Energy&, Energy&, int&);
-    
+    Shower doShower(const Shower& shower, const Neutrino::Flavor nuflavor, const double y);
 
   public:
     ShowerModel(const Settings* settings);

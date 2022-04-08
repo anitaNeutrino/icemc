@@ -169,6 +169,27 @@ void icemc::ShowerModel::readData(Neutrino::Flavor flavor, Secondary secondary){
       icemc::report() << severity::warning << "Unexpected file length!"  << std::endl;
     }
 
+
+    //@todo tried switching y (on Y-axis) and probability (content of bin) so that we could interpolate between X=Energy and Y=Probability to get a y-value, but didn't get it to work
+    // double total=0;
+    // for(int i=0; i < gr.GetN(); i++){
+    //   int bin = h.Fill(energy, gr.GetX()[i], gr.GetY()[i]);
+    //   h.SetBinError(bin, 0);
+
+    //   total += gr.GetY()[i];      
+    // }
+    // int bin2 = hInt.Fill(energy, total);
+    // hInt.SetBinError(bin2, 0);
+
+    // double sum=0;
+        // for(int i=0; i < gr.GetN(); i++){
+    //   sum += gr.GetY()[i];      
+
+    //   int bin = hC.GetBin(energy, sum/total);
+    //   hC.Fill(bin, gr.GetX()[i]);
+    //   hC.SetBinError(bin, 0);
+    // }
+    
     double sum=0;
     for(int i=0; i < gr.GetN(); i++){
       int bin = h.Fill(energy, gr.GetX()[i], gr.GetY()[i]);
@@ -220,6 +241,8 @@ void icemc::ShowerModel::Draw(Option_t* opt){
     cans.back()->cd(3);    
     fE_dsdy[p.first].Draw();
     // gPad->SetLogz(1);
+
+    cans.back()->SaveAs(".pdf");
   }
 }
 
@@ -242,19 +265,26 @@ void icemc::ShowerModel::ReadSecondaries() {
   readData(Neutrino::Flavor::tau, Secondary::mudecay);
 
   // }
-  std::cout<<"Finished reading secondary interaction data.\n"; 
+  std::cout<<"Finished reading secondary interaction data.\n";
 } //end method ReadSecondaries
 
 
-void icemc::ShowerModel::doShower(Neutrino::Flavor nuflavor, Energy plepton, Energy &em_secondaries_max, Energy &had_secondaries_max,int &n_interactions) {
-  // @todo currently disabled as it's not totally necessary and I don't understand what it used to do because it was written so fucking badly
-  return;
+// Finds a shower that conserved energy
+icemc::Shower icemc::ShowerModel::doShower(const Shower& s, const Neutrino::Flavor nuflavor, const double y) {
+  //return;
 
-  em_secondaries_max.setZero();
-  had_secondaries_max.setZero();
+  Shower shower = s;
   
-  Energy energy = plepton;
-  if (nuflavor==Neutrino::Flavor::mu || nuflavor==Neutrino::Flavor::tau){
+  double em_secondaries_max = 0;
+  double had_secondaries_max = 0;
+
+  Energy plepton = (1-y)*shower.pnu;
+
+  // Create a secondary shower for this interaction
+  do {
+    em_secondaries_max = s.emFrac;
+    had_secondaries_max = s.hadFrac;
+  
     /**
      * Pick poisson distribution for each, uses i.
      */
@@ -263,30 +293,80 @@ void icemc::ShowerModel::doShower(Neutrino::Flavor nuflavor, Energy plepton, Ene
     for(auto sec : {Secondary::brems, Secondary::epair, Secondary::pn}){
       DataKey key(nuflavor, sec);
       TH1F& h_E_dsdy = fE_dsdy[key];
-      
-      int nPoisson = pickPoisson(h_E_dsdy.Interpolate(energy.in(Energy::Unit::eV)));
+
+      int nPoisson = pickPoisson(h_E_dsdy.Interpolate(log10(plepton.in(Energy::Unit::eV))));
       for(int k=0; k < nPoisson; k++){
-      	secondaries.emplace_back(sec);
+	secondaries.emplace_back(sec);
       }
     }
     std::random_shuffle(secondaries.begin(), secondaries.end(),
 			[&](int z){ return int(pickUniform(z))%z; } );
 
+    shower.nInteractions = secondaries.size();
+    // Go over each of these secondary particles and check if it creates a bigger interaction than anything before
     for(auto secondary : secondaries){
       // double rnd1 = pickUniform(secondaries.size());
 
       DataKey key(nuflavor, secondary);
-      fE_YCumulative_dsdy[key];
+      TH2F& h_E_YCumulative_dsdy = fE_YCumulative_dsdy[key];
+      double rn = pickUniform();
+
+      //double newY = h_E_YCumulative_dsdy.Interpolate(log10(plepton.in(Energy::Unit::eV)), rn);
+      
+      int index = 2*log10(plepton.in(Energy::Unit::EeV))+1;
+      double newY = 0;
+      //@todo better way to seek through this TH2?
+      for(int by=0;  by <= h_E_YCumulative_dsdy.GetNbinsY(); by++){
+	if (h_E_YCumulative_dsdy.GetBinContent(index, by+1)<=rn && h_E_YCumulative_dsdy.GetBinContent(index, by+2)>rn){
+	  newY = (double)by/h_E_YCumulative_dsdy.GetNbinsY();
+	  break;
+	}
+      }
+      
+      // If this secondary particle has the largest interaction so far
+      if (newY*plepton.in(Energy::Unit::eV) > std::max(em_secondaries_max, had_secondaries_max)){
+	if (secondary==Secondary::brems || secondary==Secondary::epair){
+	  em_secondaries_max = newY*plepton.in(Energy::Unit::eV);
+	}
+	if (secondary==Secondary::pn){
+	  had_secondaries_max = newY*plepton.in(Energy::Unit::eV);
+	}
+      }
     }
-  }    
-} //GetShowerModel
+
+    // @todo add tau decay secondaries
+    //if (nuflavor==Nuetrino::Flavor::tau && TAUDECAY){
+    //    }
+  } while(em_secondaries_max+had_secondaries_max > plepton.in(Energy::Unit::eV)*(1.+1.E-5)); // Until we get one that conserves energy
+
+
+  
+  // if maximum signal from secondaries is larger than signal from primary interaction
+  if ((em_secondaries_max+had_secondaries_max)>(shower.sumFrac())*shower.pnu.in(Energy::Unit::eV)) {
+    shower.secondary = true;
+
+    const double negligible = 1e-10; ///@todo add to constants?
+    shower.emFrac=em_secondaries_max/shower.pnu.in(Energy::Unit::eV);
+    if (shower.emFrac < negligible){
+      shower.emFrac=negligible;
+    }
+    
+    shower.hadFrac=had_secondaries_max/shower.pnu.in(Energy::Unit::eV);
+    if (shower.hadFrac < negligible){
+      shower.hadFrac=negligible;
+    }
+  }
+
+  return shower;
+}
 
 
 
 icemc::Shower icemc::ShowerModel::generate(const Neutrino& nu, const Interaction& i) {
   Shower s = GetEMFrac(nu.flavor, i.current, i.y,  nu.energy);
-  s.axis = nu.path.direction.Unit();
-  // doShower(nu.flavor,nu.energy,em_secondaries_max,had_secondaries_max,s.nInteractions);   
+  if (s.secondary)
+    std::cout << "Generated shower using secondary signal\n";
+  s.axis = nu.path.direction.Unit();  
   return s;
 }
 
@@ -324,45 +404,21 @@ icemc::Shower icemc::ShowerModel::GetEMFrac(Neutrino::Flavor nuflavor,
     s.hadFrac = y;
   }
 
-  // std::cout << "y = " << y << std::endl;
+  //@Askaryan parameterization
+  //s.hadFrac = y;
+  //s.emFrac = negligible;
+  
+  //@todo Restructure this -- needs to actually change values stored in shower
+  if (SECONDARIES==1 && current==Interaction::Current::Charged && (nuflavor==Neutrino::Flavor::mu || nuflavor==Neutrino::Flavor::tau)) {
+    
+    // find how much em and hadronic energies comes from secondary interactions.
+    s = doShower(s, nuflavor, y); 
+    
+  } //if (charged current, secondaries on)
 
-  // em_secondaries_max.setZero(); // initialize search for maximum signal among primary, secondary interactions.
-  // had_secondaries_max.setZero();
-
-  ///@todo restore a better version of this
-  // if (SECONDARIES==1 && current==Interaction::Current::Charged) {
-
-  //   while (1) {
-
-  //     // find how much em and hadronic energies comes from secondary interactions.
-  //     // keep picking until you get a bunch of secondary interactions that conserve energy
-  //     doShower(nuflavor,plepton,em_secondaries_max,had_secondaries_max,s.nInteractions); 
-
-  //     if (em_secondaries_max+had_secondaries_max<=plepton*(1.+1.E-5)) // if conserves energy, break.
-  // 	break;
-  //     else {
-  // 	secondary_e_noncons++; //Record how many times we come up with something that doesn't conserve energy
-  // 	em_secondaries_max.setZero();
-  // 	had_secondaries_max.setZero();
-  //     } //else
-  //   } //while(1)
-
-  //   if ((em_secondaries_max+had_secondaries_max)>(s.sumFrac())*pnu) { // if maximum signal from secondaries is larger than
-  //                                                                        // signal from primary interaction
-  //     s.emFrac=em_secondaries_max/pnu; // then use that one.
-  //     s.hadFrac=had_secondaries_max/pnu;
-  //     if (s.emFrac <= negligible){
-  // 	s.emFrac=negligible;
-  //     }
-  //     if (s.hadFrac<= negligible){
-  // 	s.hadFrac=negligible;
-  //     }
-  //   } //if
-  // } //if (charged current, secondaries on)
-
-  // if (nuflavor==Neutrino::Flavor::mu && current==Interaction::Current::Charged && s.nInteractions==0){
-  //   icemc::report() << severity::warning << "Look at this one.  inu is " << inu << "\n";
-  // }  
+  if (nuflavor==Neutrino::Flavor::mu && current==Interaction::Current::Charged && s.nInteractions==0){
+    icemc::report() << severity::warning << "Look at this one, mu neutrino with CC interaction and zero interactions\n";
+  }  
   
   if (s.sumFrac()>1.00001) {
     icemc::report() << severity::error << "emFrac,hadfrac=" << s.emFrac << "," << s.hadFrac << ": sum = " << s.sumFrac() << "\n";
@@ -496,12 +552,12 @@ double icemc::ShowerModel::NFBWeight(double ptau, double taulength) {
 
 }
 
-void icemc::ShowerModel::Picky(const double *y_cumulative,int NPROB,double rnd,double& y) const {
-  for (int i=0;i<NPROB;i++) {
-    if (y_cumulative[i] <= rnd && y_cumulative[i+1] > rnd) {
-      y=(double)i/(double)NPROB;
-      continue; // once you found the right bin, stop looping.
-    } //if
-  } //for
-} //Picky
+// void icemc::ShowerModel::Picky(const double *y_cumulative,int NPROB,double rnd,double& y) const {
+//   for (int i=0;i<NPROB;i++) {
+//     if (y_cumulative[i] <= rnd && y_cumulative[i+1] > rnd) {
+//       y=(double)i/(double)NPROB;
+//       continue; // once you found the right bin, stop looping.
+//     } //if
+//   } //for
+// } //Picky
 
