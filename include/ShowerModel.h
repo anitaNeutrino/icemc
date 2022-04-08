@@ -207,7 +207,8 @@ namespace icemc{
 
   private:
     Shower doShower(const Shower& shower, const Neutrino::Flavor nuflavor, const double y);
-
+    Secondary pickTauDecayType();
+    
   public:
     ShowerModel(const Settings* settings);
     virtual ~ShowerModel();

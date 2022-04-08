@@ -299,27 +299,34 @@ icemc::Shower icemc::ShowerModel::doShower(const Shower& s, const Neutrino::Flav
 	secondaries.emplace_back(sec);
       }
     }
+    
     std::random_shuffle(secondaries.begin(), secondaries.end(),
 			[&](int z){ return int(pickUniform(z))%z; } );
 
-    shower.nInteractions = secondaries.size();
+    if (nuflavor==Neutrino::Flavor::tau && TAUDECAY){
+      // If we're interested in tau decay, add one to the end of the secondary interactions
+      for (int n=0; n<10; n++)
+	secondaries.emplace_back(pickTauDecayType());
+    }
+
+    shower.nInteractions += secondaries.size();
     // Go over each of these secondary particles and check if it creates a bigger interaction than anything before
     for(auto secondary : secondaries){
-      // double rnd1 = pickUniform(secondaries.size());
-
+      
       DataKey key(nuflavor, secondary);
       TH2F& h_E_YCumulative_dsdy = fE_YCumulative_dsdy[key];
-      double rn = pickUniform();
-
-      //double newY = h_E_YCumulative_dsdy.Interpolate(log10(plepton.in(Energy::Unit::eV)), rn);
       
+      double rn = pickUniform();
+      //double newY = h_E_YCumulative_dsdy.Interpolate(log10(plepton.in(Energy::Unit::eV)), rn);
       int index = 2*log10(plepton.in(Energy::Unit::EeV))+1;
       double newY = 0;
       //@todo better way to seek through this TH2?
-      for(int by=0;  by <= h_E_YCumulative_dsdy.GetNbinsY(); by++){
-	if (h_E_YCumulative_dsdy.GetBinContent(index, by+1)<=rn && h_E_YCumulative_dsdy.GetBinContent(index, by+2)>rn){
-	  newY = (double)by/h_E_YCumulative_dsdy.GetNbinsY();
-	  break;
+      if(h_E_YCumulative_dsdy.GetBinContent(index, 1)<=rn){ // If first bin is already larger than random probability, y is 0
+	for(int by=0;  by <= h_E_YCumulative_dsdy.GetNbinsY(); by++){
+	  if (h_E_YCumulative_dsdy.GetBinContent(index, by+1)<=rn && h_E_YCumulative_dsdy.GetBinContent(index, by+2)>rn){
+	    newY = (double)by/(double)h_E_YCumulative_dsdy.GetNbinsY();
+	    break;
+	  }
 	}
       }
       
@@ -333,10 +340,6 @@ icemc::Shower icemc::ShowerModel::doShower(const Shower& s, const Neutrino::Flav
 	}
       }
     }
-
-    // @todo add tau decay secondaries
-    //if (nuflavor==Nuetrino::Flavor::tau && TAUDECAY){
-    //    }
   } while(em_secondaries_max+had_secondaries_max > plepton.in(Energy::Unit::eV)*(1.+1.E-5)); // Until we get one that conserves energy
 
 
@@ -561,3 +564,18 @@ double icemc::ShowerModel::NFBWeight(double ptau, double taulength) {
 //   } //for
 // } //Picky
 
+
+
+icemc::ShowerModel::Secondary icemc::ShowerModel::pickTauDecayType(){
+  //@todo verify these, maybe there are better values now
+  double rn = pickUniform();
+  if (rn<0.65011){
+    return Secondary::hadrdecay;
+  }
+  else if (rn>0.8219){
+    return Secondary::edecay;
+  }
+  else{
+    return Secondary::mudecay;
+  }
+}
