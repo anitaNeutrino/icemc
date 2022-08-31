@@ -57,6 +57,5 @@ void icemc::LoopInfo::setPositionWeight(double volumeFraction){
 }
 
 double icemc::LoopInfo::phaseWeight() const {
-  double weight = positionWeight*directionWeight;
-  return weight;
+  return positionWeight*directionWeight;
 }

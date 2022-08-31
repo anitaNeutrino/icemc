@@ -9,7 +9,8 @@ namespace icemc {
   
   /**
    * @class LoopInfo
-   * @brief Data to track how the neutrino faired in the main neutrino generation loop, including weights
+   * @brief Data to track how the neutrino fared in the main neutrino generation loop,
+   *        including weights and various other quantities which don't neatly fit elsewhere 
    */
   class LoopInfo {
   public:    
@@ -39,12 +40,23 @@ namespace icemc {
     Step rayTracingSolution;
     Step chanceInHell;
     Step passesTrigger;
-
+    
     void setPositionWeight(double volumeFraction);
     double positionWeight = 0;
     double directionWeight = 0;
-    double dTheta;
     double phaseWeight() const;
+
+    double dTheta;
+    double viewAngle;
+    
+    double separation;
+    
+    bool inFirn = false;
+
+    double refractive_index;
+    double magnification;
+    double attenuation;
+    double fresnel;
     
     void next(UInt_t nextEventNumber, double nextEventTime){
       eventNumber = nextEventNumber;

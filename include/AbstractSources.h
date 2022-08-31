@@ -3,6 +3,7 @@
 
 #include "OpticalPath.h"
 #include "Neutrino.h"
+#include "LoopInfo.h"
 
 namespace icemc {
   namespace Source {
@@ -15,7 +16,7 @@ namespace icemc {
     protected:
       double directionWeight;
     public:
-      virtual TVector3 pickNeutrinoDirection(const OpticalPath& opticalPath, double dtheta) = 0;
+      virtual TVector3 pickNeutrinoDirection(const OpticalPath& opticalPath, const LoopInfo& loop) = 0;
       virtual double getDirectionWeight() = 0;
     };
 
