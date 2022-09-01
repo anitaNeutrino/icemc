@@ -127,12 +127,12 @@ icemc::EventGenerator::~EventGenerator()
 
 
 
-void icemc::EventGenerator::printProgress(int entry, size_t n){
+void icemc::EventGenerator::printProgress(int entry, size_t n, int nPass){
 
   const int maxPrints = 100;
   const int printEvery = n/maxPrints > 0 ? n/maxPrints : 1;
   if((entry%printEvery)==0){
-    std::cout << "~~~~~~~~~~~~~~~" << (int)(100*entry/n) << "% done:  " << entry << " of " << n << " neutrinos ~~~~~~~~~~~~~~~" << std::endl;
+    std::cout << "~~~~~~~~~~~~~~~" << (int)(100*entry/n) << "% done:  " << entry << " of " << n << " neutrinos; " << nPass << " have passed trigger ~~~~~~~~~~~~~~~" << std::endl;
   }
 }
 
@@ -203,10 +203,11 @@ void icemc::EventGenerator::generate(Detector& detector){
   int run = fSettings->getRun();
   for(int entry=0; entry < eventTimes.size() && ABORT_EARLY==false; entry++){
 
-    printProgress(entry, eventTimes.size());
+
+    printProgress(entry, eventTimes.size(), summary.number_passed());
 
     UInt_t eventNumber = (UInt_t)(fEvent.loop.run)*fSettings->NNU+entry; ///@todo fix me
-
+    
     RNG::newSeeds(run, eventNumber); // updates all RNG seeds
     gRandom->SetSeed(eventNumber+6e7); ///@todo kill me
 
@@ -220,7 +221,9 @@ void icemc::EventGenerator::generate(Detector& detector){
     if(false){
       std::cout << "Interaction position: " << fEventSummary.interaction.position << "\n";
       std::cout << "Interaction altitude: " << fEventSummary.interaction.position.Altitude() << "\n";
-      std::cout << "Detector: " << fEventSummary.detector << "\n";
+      Double_t lon, lat, alt;
+      fEventSummary.detector.GetLonLatAlt(lon, lat, alt);
+      std::cout << "Detector: " << fEventSummary.detector << "  lon=" << lon << " lat=" << lat << " alt=" << alt << "\n";
       std::cout << "Direction from interaction to balloon:" << (fEventSummary.detector - fEventSummary.interaction.position).Unit() << std::endl;
       std::cout << "Separation = " << fEventSummary.interaction.position.Distance(fEventSummary.detector) << std::endl;
       std::cout << "Optical path distance = " << opticalPath.distance() << ", residual = " << opticalPath.residual << std::endl;
@@ -267,11 +270,11 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary.loop.passesTrigger = detector.applyTrigger();
 
     if(fEventSummary.loop.passesTrigger==true){
-      std::cout << "Passed trigger!\t" << fEventSummary.interaction.position << std::endl;
+      //std::cout << "***** Event " << entry << " passed trigger!\t" << fEventSummary.interaction.position << std::endl;
       fEventSummary.neutrino.path.integrate(fEventSummary.interaction, antarctica);
       fEventSummary.loop.setPositionWeight(antarctica->IceVolumeWithinHorizon(fEventSummary.detector)/antarctica->GetTotalIceVolume());
       fEventSummary.loop.directionWeight = fSourceDirectionModel->getDirectionWeight();
-
+      
       fEvent.copy(fEventSummary);
       detector.write(fEvent);
       output.passTree().Fill();
