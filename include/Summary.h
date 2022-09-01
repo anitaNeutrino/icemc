@@ -82,6 +82,7 @@ namespace icemc{
       void addEvent(const EventSummary& event, bool passed=false);
       void summarize(); // how many of each we ended up simulating
 
+
       double exponent; // simulated energy exponent, 0 if not monoenergetic
       double iceVolume; // m^3 in all of antarctica    
       double interactionLength; // 8.3 in Cremonesi 2019, in km
@@ -91,6 +92,10 @@ namespace icemc{
       FlavorSummary eSummary = FlavorSummary(FlavorSummary::Flavor::e); // electon neutrinos summary
       FlavorSummary muSummary = FlavorSummary(FlavorSummary::Flavor::mu); // mu neutrinos summary
       FlavorSummary tauSummary = FlavorSummary(FlavorSummary::Flavor::tau); // tau neutrinos summary
+
+
+      int size(){ return (eSummary.nTotal + muSummary.nTotal + tauSummary.nTotal);};
+      int number_passed(){ return (eSummary.nPass + muSummary.nPass + tauSummary.nPass);};
     
       ClassDef(Summary, 0);
     };
