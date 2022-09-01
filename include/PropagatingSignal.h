@@ -25,9 +25,6 @@ namespace icemc {
   };
 
 
-
-
-
   /**
    * @class PropagatingSignal
    * @brief A waveform traveling along a particular direction with a particular polarization
@@ -45,8 +42,9 @@ namespace icemc {
      * Apply the effects of attenuation, fresnel, free-space path loss, from propagation along the optical path
      * 
      * @param opticalPath
+     * @returns fresnel factor, so it can be saved to output
      */
-    void propagate(const icemc::OpticalPath& opticalPath);
+    double propagate(const icemc::OpticalPath& opticalPath);
     
     /**
      *  Print the FTPair to TFile, useful for debugging

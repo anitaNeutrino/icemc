@@ -33,18 +33,19 @@ double icemc::PropagatingSignal::maxVmMHz() const {
 }
 
 
-void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
+// returns fresnel factor
+double icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
   
   // 1/r loss from power intensity on spherical wavefront
   const double distanceFactor = 1./opticalPath.distance();
   
   // propagation through dielectric
   const double attenuationFactor = opticalPath.attenuation();
-   
+  
   polarization = opticalPath.polarization(polarization);
   double fresnelFactor = polarization.Mag();
-
-  // Magnification at ice-air barrier
+  
+  // Magnification at firn-air and ice-firn boundaries
   double magnificationFactor = opticalPath.magnification();
 
   const double tolerance = 1e-10;
@@ -60,7 +61,9 @@ void icemc::PropagatingSignal::propagate(const OpticalPath& opticalPath){
   auto& amps = waveform.changeFreqDomain();
   for(auto& amp : amps){
     amp *= totalFieldReduction;
-  }  
+  }
+
+  return fresnelFactor;
 }
 
 void icemc::SignalSummary::set(const PropagatingSignal* s){

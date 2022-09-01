@@ -18,12 +18,65 @@ double icemc::OpticalPath::attenuation() const {
 }
 
 double icemc::OpticalPath::magnification() const {
-  const auto incident_step = steps.at(0);    
-  double incidentAngle =  incident_step.direction().Angle(incident_step.boundaryNormal);
-  const auto transmitted_step = steps.at(1);    
-  double transmittedAngle =  transmitted_step.direction().Angle(incident_step.boundaryNormal);
+  double mag = 1;
 
-  return sqrt( tan(incidentAngle)/tan(transmittedAngle) );
+  for (int i=1; i< steps.size(); i++){
+    auto incident_step = steps.at(i-1);    
+    double incidentAngle =  incident_step.direction().Angle(incident_step.boundaryNormal);
+    auto transmitted_step = steps.at(i);    
+    double transmittedAngle =  transmitted_step.direction().Angle(incident_step.boundaryNormal);
+
+    if (i == 1 && steps.size() == 3){ // 3 steps means it went through the firn
+      // firn-air interface
+      mag /= sqrt( tan(incidentAngle)/tan(transmittedAngle) );
+    }
+    else{
+      // (firn or ice)-air interface
+      mag *= sqrt( tan(incidentAngle)/tan(transmittedAngle) );
+    }
+  }
+  return mag;
+}
+
+// equivalent to icemc's mag1, for diagnostic purposes -- ice-firn interface
+double icemc::OpticalPath::magnification1() const {
+
+  double r = 1;
+
+  if (steps.size() == 3){ 
+
+    auto incident_step = steps.at(0);    
+    double incidentAngle =  incident_step.direction().Angle(incident_step.boundaryNormal);
+    auto transmitted_step = steps.at(1);    
+    double transmittedAngle =  transmitted_step.direction().Angle(incident_step.boundaryNormal);
+  
+    r = sqrt( tan(incidentAngle)/tan(transmittedAngle) );
+  }
+
+  return r;  
+}
+
+// equivalent to icemc's mag2, for diagnostic purposes -- firn-air interface
+double icemc::OpticalPath::magnification2() const {
+
+  double r = 1;
+  
+  if (steps.size() == 3){ // interaction in ice
+    auto incident_step = steps.at(1);    
+    double incidentAngle =  incident_step.direction().Angle(incident_step.boundaryNormal);
+    auto transmitted_step = steps.at(2);    
+    double transmittedAngle =  transmitted_step.direction().Angle(incident_step.boundaryNormal);
+    r = sqrt( tan(incidentAngle)/tan(transmittedAngle) );
+  }
+  else{ // interaction in firn
+    auto incident_step = steps.at(0);    
+    double incidentAngle =  incident_step.direction().Angle(incident_step.boundaryNormal);
+    auto transmitted_step = steps.at(1);    
+    double transmittedAngle =  transmitted_step.direction().Angle(incident_step.boundaryNormal);
+    r = sqrt( tan(incidentAngle)/tan(transmittedAngle) );    
+  }
+
+  return r;
 }
 
 

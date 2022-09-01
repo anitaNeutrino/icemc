@@ -239,11 +239,17 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary.shower = showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction);
     PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEventSummary.neutrino, fEventSummary.shower);
 
+    fEventSummary.loop.viewAngle =  (fEventSummary.shower.axis.Angle(opticalPath.steps.at(0).direction().Unit()));
+    
     fEvent.signalAt1m = signal.waveform.getTimeDomain();
     fEventSummary.signalSummaryAt1m = signal.summarize();
+    
+    fEvent.loop.fresnel = signal.propagate(opticalPath);
 
-    signal.propagate(opticalPath);
-   
+    fEvent.loop.magnification = opticalPath.magnification();
+    fEvent.loop.attenuation = opticalPath.attenuation();
+
+    
     fEvent.signalAtDetector = signal.waveform.getTimeDomain();
     fEventSummary.signalSummaryAtDetector = signal.summarize();
   
