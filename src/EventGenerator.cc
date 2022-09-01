@@ -184,7 +184,7 @@ void icemc::EventGenerator::generate(Detector& detector){
   Summary summary(fSettings->EXPONENT, antarctica->GetTotalIceVolume(), CrossSectionModel::getInteractionLength(fCrossSectionModel->getSigma(fSourceEnergyModel->pickNeutrinoEnergy(), Neutrino::L::Matter, Interaction::Current::Neutral) + fCrossSectionModel->getSigma(fSourceEnergyModel->pickNeutrinoEnergy(), Neutrino::L::Matter, Interaction::Current::Charged)));
 
   NeutrinoGenerator nuGenerator(fSettings, fSourceEnergyModel, fSourceDirectionModel, antarctica);
-  RayTracer rayTracer(antarctica);
+  RayTracer rayTracer(antarctica, fSettings->FIRN);
 
   int numEvents = fSettings->NNU - fSettings->getStartNu();
   std::vector<double> eventTimes;
@@ -212,10 +212,25 @@ void icemc::EventGenerator::generate(Detector& detector){
     RNG::newSeeds(run, eventNumber); // updates all RNG seeds
     gRandom->SetSeed(eventNumber+6e7); ///@todo kill me
 
+
     fEventSummary = EventSummary(run, eventNumber,  eventTimes.at(entry));
     fEventSummary.neutrino = nuGenerator.generate();
     fEventSummary.detector = detector.getPosition(fEventSummary.loop.eventTime);
+
     fEventSummary.interaction = interactionGenerator->generateInteraction(fEventSummary.neutrino, fEventSummary.detector);
+    
+    if (fSettings->FIRN){
+      fEventSummary.loop.inFirn = (antarctica->SurfaceAboveGeoid(fEventSummary.interaction.position) - fEventSummary.interaction.position.Altitude()) < icemc::constants::FIRNDEPTH;
+    }
+
+    // Set depth-dependent N
+    fEventSummary.loop.refractive_index = antarctica->GetN(fEventSummary.interaction.position);
+    //fEventSummary.loop.refractive_index = fEventSummary.loop.inFirn ? icemc::constants::NFIRN : icemc::constants::NICE;
+    fRadioModel->SetNDepth(fEventSummary.loop.refractive_index);
+
+    fEventSummary.loop.separation = fEventSummary.interaction.position.Distance(fEventSummary.detector);
+
+    
     OpticalPath opticalPath = rayTracer.findPath(fEventSummary.interaction.position, fEventSummary.detector);
     fEventSummary.loop.rayTracingSolution = opticalPath.residual < 1; // meters
 
