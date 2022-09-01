@@ -51,7 +51,7 @@ namespace icemc {
      * 
      * @return the component of the Askaryan signal pointing along outgoingRfDirection
      */
-    double getThetaRange(const double signalThreshold, const Neutrino& nu, const Shower& dummyShower, const OpticalPath& opticalPath) const;
+    double getThetaRange(const double signalThreshold, const Neutrino& nu, const Shower& dummyShower, const OpticalPath& opticalPath, const bool inFirn) const;
 
   private:
     const Settings* fSettings;
@@ -61,6 +61,8 @@ namespace icemc {
     void taperWaveform(FTPair& waveform/*modified*/, double viewAngleRadians, Energy energy, const Shower& shower) const;
     void GetSpread(Energy pnu, const Shower& sp, double freq, double& coneWidthEm, double& coneWidthHad) const;
     TVector3 getPolarizationVector(const TVector3& rfDir, const TVector3& showerAxis) const;
+
+    
     
   public:
     
@@ -172,8 +174,10 @@ namespace icemc {
     static const double RHOH20;       // density of water (kg/m**3) 
     static const double N_AIR;        // index of refr for air
     static const double NICE;         // index of refraction of ice
+    static const double NFIRN;
     static const double NSALT;        // index of refraction of salt
     static const double CHANGLE_ICE;  // cherenkov angle in ice
+    static const double CHANGLE_FIRN;
     static const double VIEWANGLE_CUT;
 
 
@@ -255,7 +259,6 @@ namespace icemc {
 		      double coneWidthHad,
 		      double emfrac,
 		      double hadfrac) const {
-
       auto taper_component = [&](double threshold, double coneWidth, double frac){
 			       // avoid infs/nan by setting special value for 0...
 			       double rtemp = coneWidth > 0 ? (viewangle-changle)*(viewangle-changle)/(coneWidth*coneWidth) : -1;

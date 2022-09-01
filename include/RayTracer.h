@@ -27,7 +27,7 @@ namespace icemc {
   class RayTracer {
 
   public:
-    RayTracer(std::shared_ptr<const WorldModel> world);
+    RayTracer(std::shared_ptr<const WorldModel> world, const bool inFirn);
     virtual ~RayTracer();
     OpticalPath findPath(const Geoid::Position &rfStart, const Geoid::Position& rfEnd, bool debug = false);
 
@@ -40,7 +40,8 @@ namespace icemc {
 
   private:
     std::shared_ptr<const WorldModel> fWorld;
-
+    const bool fFirn; // Should firn be included in ray-tracing
+    
     Geoid::Position fDetectorPos;
     std::shared_ptr<LocalCoordinateSystem> fLocalCoords = nullptr;
     
@@ -49,6 +50,8 @@ namespace icemc {
     mutable TVector3 fSurfaceNormal;
     mutable Geoid::Position fSurfacePos;
     mutable TVector3 fRefractedRfDir;
+    mutable Geoid::Position fFirnIceBoundaryPos;
+    mutable TVector3 fRefractedRfDirFirn;
     mutable Geoid::Position fEndPoint;
     mutable TGraph* fMinimizerPath = nullptr;
     mutable double fBestResidual = DBL_MAX;
@@ -60,6 +63,9 @@ namespace icemc {
     mutable bool fDebug = false;
     bool fDoingMinimization = false;
 
+    bool FIRN = false;
+    bool fInteractionInFirn = false;
+    
     Geoid::Position getSurfacePosition(const double* params) const;
     double evalPath(const double* params) const;
     void makeDebugPlots(const TString& fileName) const;

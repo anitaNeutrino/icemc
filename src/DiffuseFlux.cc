@@ -3,7 +3,11 @@
 #include "AskaryanRadiationModel.h"
 #include "Geoid.h"
 
-TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& opticalPath, const double dtheta){
+TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& opticalPath, const LoopInfo& loop){
+
+
+  const double dtheta = loop.dTheta;
+  double Ch_angle = loop.inFirn? AskaryanRadiationModel::CHANGLE_FIRN : AskaryanRadiationModel::CHANGLE_ICE;
 
   const Geoid::Position& start = opticalPath.steps.at(0).start;
   const Geoid::Position pointLocalXTowards(Geoid::Pole::North);
@@ -13,28 +17,23 @@ TVector3 icemc::Source::DiffuseFlux::pickNeutrinoDirection(const OpticalPath& op
   // the z-axis is along the RF direction.
   LocalCoordinateSystem lc(start, pointLocalXTowards, rfDir);
 
-  if (dtheta <= 0){
-    directionWeight = DBL_MAX; // Since we divide by weight this weight out this neutrino
-  }
-  else{
-    double theta2 = AskaryanRadiationModel::CHANGLE_ICE - dtheta > 0 ? AskaryanRadiationModel::CHANGLE_ICE - dtheta : 0;
-    double theta1 = AskaryanRadiationModel::CHANGLE_ICE + dtheta < TMath::Pi() ? AskaryanRadiationModel::CHANGLE_ICE + dtheta : TMath::Pi();
+  double theta2 = Ch_angle - dtheta > 0 ? Ch_angle - dtheta : 0;
+  double theta1 = Ch_angle + dtheta < TMath::Pi() ? Ch_angle + dtheta : TMath::Pi();
 
-    directionWeight = 2/(cos(theta2)-cos(theta1));
-  }  
+  // Since we divide by weight this weight out neutrino that can't be detected
+  directionWeight = dtheta > 0 ? 2/(cos(theta2)-cos(theta1)) : DBL_MAX; 
 
-  const double theta = pickUniform(AskaryanRadiationModel::CHANGLE_ICE-dtheta, AskaryanRadiationModel::CHANGLE_ICE+dtheta);
+  const double theta = pickUniform(theta2, theta1);
   const double phi = pickUniform(0, TMath::TwoPi());
-
+    
   TVector3 nuDir;
-  //nuDir.SetMagThetaPhi(1.0, AskaryanRadiationModel::CHANGLE_ICE, 0);
-  //nuDir.SetMagThetaPhi(1.0, AskaryanRadiationModel::CHANGLE_ICE, phi);
+  //nuDir.SetMagThetaPhi(1.0, Ch_angle-dtheta, 0);
+  //nuDir.SetMagThetaPhi(1.0, Ch_angle, phi); // Force signal to be on-cone
   nuDir.SetMagThetaPhi(1.0, theta, phi);
-
-  nuDir = lc.localTranslationToGlobal(nuDir);
-
-  // std::cout << nuDir.Angle(rfDir) << std::endl;
   
+  nuDir = lc.localTranslationToGlobal(nuDir);
+  //std::cout << "nudir=" << nuDir << std::endl;
+
   return nuDir.Unit();
 }
 

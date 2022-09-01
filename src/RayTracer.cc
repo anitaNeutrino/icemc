@@ -22,8 +22,9 @@
 #include "TH2D.h"
 
 
-icemc::RayTracer::RayTracer(std::shared_ptr<const WorldModel> world) :
-  fWorld(world)
+icemc::RayTracer::RayTracer(std::shared_ptr<const WorldModel> world, const bool FIRN) :
+  fWorld(world),
+  fFirn(FIRN)
 {
 }
 
@@ -118,7 +119,6 @@ TVector3 icemc::RayTracer::refractiveBoundary(const TVector3& incoming, const TV
 }
 
 
-
 Geoid::Position icemc::RayTracer::getSurfacePosition(const double* params) const {
 
   // so we pick a point shifted by deltaX, and deltaY from the start position
@@ -133,9 +133,6 @@ Geoid::Position icemc::RayTracer::getSurfacePosition(const double* params) const
 
 
 
-
-
-
 double icemc::RayTracer::evalPath(const double* params) const {
 
   // position we're aiming for from the detector...
@@ -146,10 +143,8 @@ double icemc::RayTracer::evalPath(const double* params) const {
   }
   
   const Geoid::Position surfacePos = getSurfacePosition(params);
-
   // Gives us this initial RF direction...
   const TVector3 rfDir = (surfacePos - fDetectorPos).Unit();
-
 
   // need a new method of search though this works well for the in ice case...
   // now need the option to be able to stop in air as well.
@@ -163,39 +158,73 @@ double icemc::RayTracer::evalPath(const double* params) const {
   bool stepToSurface = true;
   
   TVector3 endPoint;
-  
-  OpticalPath::Step s2; // from the surface to the balloon
+
+  OpticalPath::Step stepAir; // from the surface to the balloon
   if(stepToSurface){
-    s2.start = surfacePos;
+    stepAir.start = surfacePos;
   }
   else{
     const TVector3 translation = (surfacePos - fDetectorPos).Unit();
-    s2.start = fDetectorPos + distanceToInteraction*translation;
-    endPoint = s2.start;
+    stepAir.start = fDetectorPos + distanceToInteraction*translation;
+    endPoint = stepAir.start;
   }
 
-  s2.end = fDetectorPos;
-  s2.n = AskaryanRadiationModel::N_AIR; ///@todo someday get from fWorldModel
-  s2.attenuationLength = DBL_MAX; //@todo is this sensible?
-
-  OpticalPath::Step s1; // from the source (hopefully the end point) to the surface
-  if(stepToSurface){
-    s1.end = surfacePos;
-    s1.n = AskaryanRadiationModel::NICE;
-    const double attenLengthIceMeters = 700; ///@todo Someday get from fWorldModel
-    s1.attenuationLength = attenLengthIceMeters;
-    s1.boundaryNormal = fWorld->GetSurfaceNormal(surfacePos);
+  stepAir.end = fDetectorPos;
+  stepAir.n = AskaryanRadiationModel::N_AIR; ///@todo someday get from fWorldModel
+  stepAir.attenuationLength = DBL_MAX; //@todo is this sensible?
+  
+  
+  //@todo is this good yet?
+  OpticalPath::Step stepFirn; // Through firn from the boundary with the ice up to the surface
+  Geoid::Position firnIceBoundaryPos;
+  if (fFirn){
+    stepFirn.end = surfacePos;
+    stepFirn.n = icemc::constants::NFIRN;
+    const double attenLengthFirnMeters = 700; //@todo same as ice? Might not make much difference, since it's thin compared to ice -- icemc uses constant attenuation length
+    //const double attenLengthFirnMeters = fWorld->EffectiveAttenuationLength(fLocalCoords->localPositionToGlobal(stepFirn.start));  
+    stepFirn.attenuationLength = attenLengthFirnMeters;
+    stepFirn.boundaryNormal = fWorld->GetSurfaceNormal(surfacePos);
+    const TVector3 refractedRfDirFirn = refractiveBoundary(rfDir, stepFirn.boundaryNormal, stepAir.n, stepFirn.n, fDebug);
     
-    const TVector3 refractedRfDir = refractiveBoundary(rfDir, s1.boundaryNormal, s2.n, s1.n, fDebug);
-    const double distRemaining = (surfacePos - fInteractionPos).Mag();
+    double dist;
+    if (fInteractionInFirn){  // if interaction is in the firn, distance is from surface to interaction
+      dist = (surfacePos - fInteractionPos).Mag();
+      endPoint = stepFirn.end + refractedRfDirFirn*dist;
+      stepFirn.start = endPoint;
+    }
+    else{  // otherwise distance is enough to take it all the way through the firn
+      dist = abs(icemc::constants::FIRNDEPTH/refractedRfDirFirn.Z());
+      firnIceBoundaryPos = stepFirn.end + refractedRfDirFirn*dist;
+      stepFirn.start = firnIceBoundaryPos;
+    }
 
-    endPoint = surfacePos + refractedRfDir*distRemaining;
-    s1.start = endPoint;    
   }
 
+  
+  OpticalPath::Step stepIce; // from the source (hopefully the end point) to the firn
+  if(stepToSurface && !fInteractionInFirn){
+    stepIce.end = fFirn ? firnIceBoundaryPos : surfacePos;
+    stepIce.n = AskaryanRadiationModel::NICE;
+    const double attenLengthIceMeters = 700; ///@todo Someday get from fWorldModel
+    stepIce.attenuationLength = attenLengthIceMeters;
+    stepIce.boundaryNormal = fWorld->GetSurfaceNormal(surfacePos);
+
+    // refractedRfDir should be correct now whether or not we're including Firn
+    const TVector3 incoming = fFirn ? stepFirn.start-stepFirn.end : rfDir;
+    const double index = fFirn ? stepFirn.n : stepAir.n;
+    const TVector3 refractedRfDir = refractiveBoundary(incoming, stepIce.boundaryNormal, index, stepIce.n, fDebug);
+    //const TVector3 refractedRfDir = refractiveBoundary(stepFirn.start-stepFirn.end, stepIce.boundaryNormal, stepFirn.n, stepIce.n, fDebug); // if Firn
+    //const TVector3 refractedRfDir = refractiveBoundary(rfDir, stepIce.boundaryNormal, stepAir.n, stepIce.n, fDebug); // if not Firn
+    const double distRemaining = (stepIce.end - fInteractionPos).Mag();
+
+    endPoint = stepIce.end + refractedRfDir*distRemaining;
+    stepIce.start = endPoint;    
+  }
+
+  
   const TVector3 delta = (endPoint - fInteractionPos);
   double residual = delta.Mag();
-  
+
   if(fDebug && fDoingMinimization){
     if(!fMinimizerPath){
       fMinimizerPath = new TGraph();
@@ -205,23 +234,30 @@ double icemc::RayTracer::evalPath(const double* params) const {
   	      << ", dx (km) = " << 1e-3*params[0]
   	      << ", dy (km) = " << 1e-3*params[1]
   	      << ", residual (m) = " << residual
-      // <<  ", endPoint.Mag() = " << endPoint.Mag()
+	      <<  ", endPoint.Mag() = " << endPoint.Mag()
   	      << "\n";
   }
 
   if(fDoingMinimization && residual < fBestResidual){
     fBestResidual = residual;
-    fSurfaceNormal = s1.boundaryNormal;
+    fSurfaceNormal = stepIce.boundaryNormal;
     fSurfacePos = surfacePos;
     fEndPoint = endPoint;
-    fRefractedRfDir = s1.end - s1.start;
-
+    fRefractedRfDir = stepIce.end - stepIce.start;
+    if (fFirn){
+      fFirnIceBoundaryPos = firnIceBoundaryPos;
+      fRefractedRfDirFirn = stepFirn.end - stepFirn.start; //@todo flipped from when it's used earlier, is this right?
+    }
     fOpticalPath.clear();
 
-    if(stepToSurface){
-      fOpticalPath.steps.emplace_back(s1);
+    if(stepToSurface && !fInteractionInFirn){
+      //if(stepToSurface){
+      fOpticalPath.steps.emplace_back(stepIce);
     }
-    fOpticalPath.steps.emplace_back(s2);
+    if(fFirn){
+      fOpticalPath.steps.emplace_back(stepFirn);
+    }
+    fOpticalPath.steps.emplace_back(stepAir);
     fOpticalPath.residual = residual;    
   }
   return residual;
@@ -236,7 +272,8 @@ icemc::OpticalPath icemc::RayTracer::findPath(const Geoid::Position&rfStart, con
   fLocalCoords = std::make_shared<LocalCoordinateSystem>(fDetectorPos);
   fInteractionPos = rfStart;
   fOpticalPath.reset();
-  
+
+  fInteractionInFirn = fFirn && (fWorld->SurfaceAboveGeoid(fInteractionPos)-fInteractionPos.Altitude()) < icemc::constants::FIRNDEPTH;
   // here we setup a new local coordinate system for the fitter to do translations in
   // The idea is to fit along the surface in terms of dx and dy
 
@@ -272,6 +309,7 @@ icemc::OpticalPath icemc::RayTracer::findPath(const Geoid::Position&rfStart, con
     // exit(1);
   }
 
+
   TVector3 rfPath = (fSurfacePos - fInteractionPos).Unit();
 
   static int nGood = 0;
@@ -301,10 +339,11 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
   TFile* fTest = new TFile(fileName, "recreate");
  
   const TVector3 toInteraction = fLocalCoords->globalPositionToLocal(fInteractionPos);
+  const TVector3 toFirn = fLocalCoords->globalPositionToLocal(fFirnIceBoundaryPos);
   const TVector3 toSurface = fLocalCoords->globalPositionToLocal(fSurfacePos);
   const TVector3 surfPlusRef = fLocalCoords->globalTranslationToLocal(fRefractedRfDir) + toSurface;
   const TVector3 surfPlusNorm = 1000*fLocalCoords->globalTranslationToLocal(fSurfaceNormal) + toSurface;
-  std::cout << "The dot product is " << fSurfaceNormal.Unit().Dot((fSurfacePos - fDetectorPos).Unit()) << std::endl;
+  //std::cout << "The dot product is " << fSurfaceNormal.Unit().Dot((fSurfacePos - fDetectorPos).Unit()) << std::endl;
   // std::cout << toSurface.Unit() << "\t" << toLocal(fRefractedRfDir, false) << std::endl;    
   const TVector3 toEndPoint = fLocalCoords->globalPositionToLocal(fEndPoint);
 
@@ -319,11 +358,24 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
   grInteractionSide->SetName("grInteractionSide");
   grInteractionSide->Write();
   delete grInteractionSide;
+
+  TGraph* grFirnTop = new TGraph();
+  grFirnTop->SetPoint(grFirnTop->GetN(), toFirn.X(), toFirn.Y());
+  grFirnTop->SetName("grFirnTop");
+  grFirnTop->Write();
+  delete grFirnTop;
+
+  TGraph* grFirnSide = new TGraph();
+  grFirnSide->SetPoint(grFirnSide->GetN(), toFirn.X(), toFirn.Z());
+  grFirnSide->SetName("grFirnSide");
+  grFirnSide->Write();
+  delete grFirnSide;
     
   TGraph* grTopView = new TGraph();
   grTopView->SetPoint(0, 0, 0); // balloon at origin
   grTopView->SetPoint(1, toSurface.X(), toSurface.Y());
-  grTopView->SetPoint(2, surfPlusRef.X(), surfPlusRef.Y());
+  //grTopView->SetPoint(2, surfPlusRef.X(), surfPlusRef.Y());
+  grTopView->SetPoint(2, toFirn.X(), toFirn.Y());
   grTopView->SetPoint(3, toEndPoint.X(), toEndPoint.Y());
   grTopView->SetName("grTopView");
   grTopView->Write();
@@ -351,12 +403,40 @@ void icemc::RayTracer::makeDebugPlots(const TString& fileName) const {
   TGraph* grSideView = new TGraph();
   grSideView->SetPoint(0, 0, 0); // balloon at origin
   grSideView->SetPoint(1, toSurface.X(), toSurface.Z());
-  grSideView->SetPoint(2, surfPlusRef.X(), surfPlusRef.Z());    
-  grSideView->SetPoint(3, toEndPoint.X(), toEndPoint.Z());
+  //grSideView->SetPoint(2, surfPlusRef.X(), surfPlusRef.Z());    
+  //grSideView->SetPoint(2, toFirn.X(), toFirn.Z());
+  grSideView->SetPoint(2, toEndPoint.X(), toEndPoint.Z());
   grSideView->SetName("grSideView");
   grSideView->Write();
   delete grSideView;
 
+  TGraph* grSideViewIce = new TGraph();
+  grSideViewIce->SetPoint(0, toSurface.X(), toSurface.Z()); // position at surface
+  //grSideViewIce->SetPoint(1, toFirn.X(), toFirn.Z());
+  grSideViewIce->SetPoint(1, toEndPoint.X(), toEndPoint.Z());
+  grSideViewIce->SetName("grSideViewIce");
+  grSideViewIce->Write();
+  delete grSideViewIce;
+
+  TGraph* grSideView2 = new TGraph();
+  grSideView2->SetPoint(0, 0, 0); // balloon at origin
+  grSideView2->SetPoint(1, toSurface.Y(), toSurface.Z());
+  //grSideView2->SetPoint(2, surfPlusRef.Y(), surfPlusRef.Z());    
+  //grSideView2->SetPoint(2, toFirn.Y(), toFirn.Z());
+  grSideView2->SetPoint(2, toEndPoint.Y(), toEndPoint.Z());
+  grSideView2->SetName("grSideView2");
+  grSideView2->Write();
+  delete grSideView2;
+
+  TGraph* grSideView2Ice = new TGraph();
+  grSideView2Ice->SetPoint(0, toSurface.Y(), toSurface.Z()); // position at surface
+  //grSideView2Ice->SetPoint(1, toFirn.Y(), toFirn.Z());
+  grSideView2Ice->SetPoint(1, toEndPoint.Y(), toEndPoint.Z());
+  grSideView2Ice->SetName("grSideView2Ice");
+  grSideView2Ice->Write();
+  delete grSideView2Ice;
+
+  
   TGraph* grSurface = new TGraph();
   grSurface->SetName("grSurface");
   const int nPoints = 1000000;

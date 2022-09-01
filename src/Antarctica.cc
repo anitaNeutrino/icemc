@@ -571,21 +571,22 @@ int icemc::Antarctica::AcceptableRfexit(const TVector3 &nsurf_rfexit,const Geoid
   return 1;
 } //AcceptableRfexit
 
-double icemc::Antarctica::GetN(double altitude) const {
+double icemc::Antarctica::GetN(double depth) const {
+  //@todo make this work with settings for FIRN and DEPTH_DEPENDENT_N
   // these are Peter's fit parameters
   double a1=0.463251;
   double b1=0.0140157;
   double n=0;
 
-  if (altitude < constants::FIRNDEPTH) {
+  if (depth > constants::FIRNDEPTH) {
     n=AskaryanRadiationModel::NICE;
   }
-  else if (altitude >= constants::FIRNDEPTH && altitude <=0 && DEPTH_DEPENDENT_N) {
+  else if (depth <= constants::FIRNDEPTH && depth >0 && DEPTH_DEPENDENT_N) {
     //    N_DEPTH=NFIRN-(4.6198+13.62*(altitude_int/1000.))*
     //(altitude_int/1000.);   // Besson's equation for n(z)
-    n=constants::NFIRN+a1*(1.0-exp(b1*altitude));   // Peter's equation for n(z)
+    n=constants::NFIRN+a1*(1.0-exp(-b1*depth));   // Peter's equation for n(z)
   }
-  else if (altitude > 0){
+  else if (depth < 0){
     std::cout<<"Error!  N requested for position in air!\n";
   }
   else if (!DEPTH_DEPENDENT_N){
@@ -595,30 +596,25 @@ double icemc::Antarctica::GetN(double altitude) const {
 } //GetN(altitude)
 
 double icemc::Antarctica::GetN(const Geoid::Position &pos) const {
-  return GetN(pos.Mag() - Surface(pos.Longitude(),pos.Latitude()));
+  return GetN(SurfaceAboveGeoid(pos) - pos.Altitude());
 } //GetN(Position)
 
 
-
-double icemc::Antarctica::EffectiveAttenuationLength(const Settings *settings1,const Geoid::Position &pos,const int &whichray) const {
+//@todo restore full version of EffectiveAttenuationLength
+// right now doesn't work for reflected cases, though do we even need this?
+double icemc::Antarctica::EffectiveAttenuationLength(const Geoid::Position &pos) const {
   double localmaxdepth = IceThickness(pos);
   double depth = WorldModel::Surface(pos) - pos.Mag();
   //std::cout << "depth is " << depth << "\n";
   int depth_index=0;
   double attenuation_length=0.0;
     
-  if(WestLand(pos) && !CONSTANTICETHICKNESS) {
+  if(WestLand(pos)) {
     depth_index=int(depth*419.9/localmaxdepth);//use 420 m ice shelf attenuation length data as the standard, squeeze or stretch if localmaxdepth is longer or shorter than 420m.
     if(RossIceShelf(pos) || RonneIceShelf(pos)) {	  
-      if(whichray==0){
-	attenuation_length=l_shelfup[depth_index];
-      }
-      else if(whichray==1){
-	attenuation_length=l_shelfdown[depth_index];
-      }
-      else{
-	std::cerr << " wrong attenuation length " <<std::endl;
-      }	    
+
+      attenuation_length=l_shelfup[depth_index];
+ 
       //for sanity check
       if((depth_index+0.5)!=d_shelfup[depth_index])
 	{
@@ -627,37 +623,79 @@ double icemc::Antarctica::EffectiveAttenuationLength(const Settings *settings1,c
 	}
     }
     else{ //in ice sheet of westland
-      if(whichray==0){
-	attenuation_length=l_westlandup[depth_index]; 
-      }
-      else if(whichray==1){
-	attenuation_length=l_westlanddown[depth_index];
-      }
-      else{
-	std::cerr << " wrong attenuation length " <<std::endl;
-      }
-    }
-	
-    if(settings1->MOOREBAY)//if use Moore's Bay measured data for the west land
-      attenuation_length*=1.717557; //about 450 m (field attenuation length) for one whole way when assuming -3dB for the power loss at the bottom
+      
+      attenuation_length=l_westlandup[depth_index]; 
+      
+    }	
   }
   else{ //in east antarctica or constant ice thickness
 
     depth_index =int(depth*(2809.9/localmaxdepth));
 
-    if(whichray==0){
-      attenuation_length =l_sheetup[depth_index];
-    }
-    else if(whichray==1){
-      attenuation_length =l_sheetdown[depth_index];
-    }
-    else {
-      std::cerr << " wrong attenuation length " <<std::endl;
-    }
+    attenuation_length =l_sheetup[depth_index];
   }
     
   return attenuation_length;
-} //EffectiveAttenuationLengthUp
+} //EffectiveAttenuationLength
+
+// double icemc::Antarctica::EffectiveAttenuationLength(const Settings *settings1,const Geoid::Position &pos,const int &whichray) const {
+//   double localmaxdepth = IceThickness(pos);
+//   double depth = WorldModel::Surface(pos) - pos.Mag();
+//   //std::cout << "depth is " << depth << "\n";
+//   int depth_index=0;
+//   double attenuation_length=0.0;
+    
+//   if(WestLand(pos) && !CONSTANTICETHICKNESS) {
+//     depth_index=int(depth*419.9/localmaxdepth);//use 420 m ice shelf attenuation length data as the standard, squeeze or stretch if localmaxdepth is longer or shorter than 420m.
+//     if(RossIceShelf(pos) || RonneIceShelf(pos)) {	  
+//       if(whichray==0){
+// 	attenuation_length=l_shelfup[depth_index];
+//       }
+//       else if(whichray==1){
+// 	attenuation_length=l_shelfdown[depth_index];
+//       }
+//       else{
+// 	std::cerr << " wrong attenuation length " <<std::endl;
+//       }	    
+//       //for sanity check
+//       if((depth_index+0.5)!=d_shelfup[depth_index])
+// 	{
+// 	  std::cerr << "the index of the array l_iceshelfup is wrong!" << std::endl;
+// 	  exit(1);
+// 	}
+//     }
+//     else{ //in ice sheet of westland
+//       if(whichray==0){
+// 	attenuation_length=l_westlandup[depth_index]; 
+//       }
+//       else if(whichray==1){
+// 	attenuation_length=l_westlanddown[depth_index];
+//       }
+//       else{
+// 	std::cerr << " wrong attenuation length " <<std::endl;
+//       }
+//     }
+	
+//     if(settings1->MOOREBAY)//if use Moore's Bay measured data for the west land
+//       attenuation_length*=1.717557; //about 450 m (field attenuation length) for one whole way when assuming -3dB for the power loss at the bottom
+//   }
+//   else{ //in east antarctica or constant ice thickness
+
+//     depth_index =int(depth*(2809.9/localmaxdepth));
+
+//     if(whichray==0){
+//       attenuation_length =l_sheetup[depth_index];
+//     }
+//     else if(whichray==1){
+//       attenuation_length =l_sheetdown[depth_index];
+//     }
+//     else {
+//       std::cerr << " wrong attenuation length " <<std::endl;
+//     }
+//   }
+    
+//   return attenuation_length;
+// } //EffectiveAttenuationLengthUp
 
 double icemc::Antarctica::Area(double latitude) const {
   //Returns the area of one square of the BEDMAP data at a given latitude. 

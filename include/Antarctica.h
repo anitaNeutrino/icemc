@@ -88,7 +88,8 @@ namespace icemc {
 				  Geoid::Position &r_enterice) const;
     double GetN(double depth) const;
     double GetN(const Geoid::Position &pos) const;
-    double EffectiveAttenuationLength(const Settings *settings1,const Geoid::Position &pos, const int &whichray) const;
+    //double EffectiveAttenuationLength(const Settings *settings1,const Geoid::Position &pos, const int &whichray) const;
+    double EffectiveAttenuationLength(const Geoid::Position &pos) const;
   
     //void IceLonLattoEN(double lon, double lat, int& e_coord, int& n_coord) const;
 

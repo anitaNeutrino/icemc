@@ -58,7 +58,7 @@ namespace icemc {
     const double NICE=1.79;                      // index of refraction of ice 
 
     //Constants relating to all ice models
-    const double FIRNDEPTH=-150.;                // depth of the firn, in meters: currently a constant over all ice
+    const double FIRNDEPTH=150.0;                // depth of the firn, in meters: currently a constant over all ice
    
   
     // constant vectors used in balloon class - oindree 

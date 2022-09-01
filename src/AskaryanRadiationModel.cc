@@ -9,7 +9,10 @@
 
 const double icemc::AskaryanRadiationModel::N_AIR(1.);                 // index of refraction of air
 const double icemc::AskaryanRadiationModel::NICE(1.79);                // index of refraction of ice
-const double icemc::AskaryanRadiationModel::CHANGLE_ICE(acos(1/NICE)); // index of refraction of ice
+const double icemc::AskaryanRadiationModel::CHANGLE_ICE(acos(1/NICE)); // Cherenkov angle in ice
+const double icemc::AskaryanRadiationModel::NFIRN(1.3250);             // index of refraction at the top of ice
+const double icemc::AskaryanRadiationModel::CHANGLE_FIRN(acos(1/NFIRN)); //Cherenkov angle in firn
+
 const double icemc::AskaryanRadiationModel::NSALT(2.45);               // index of refraction for salt
 const double icemc::AskaryanRadiationModel::RHOSALT(2050.);            // density of salt (kg/m**3)
 const double icemc::AskaryanRadiationModel::RHOICE(917);               // density of ice (kg/m**3)
@@ -164,7 +167,7 @@ void icemc::AskaryanRadiationModel::InitializeMedium() {
       *pnu_reference/1.E6 // energy in MeV
       *1./sin(changle); 
     
-    std::cout << "multiplying by 1/changle which is " << 1./sin(changle) << "\n";
+    //std::cout << "multiplying by 1/changle which is " << 1./sin(changle) << "\n";
 
     //    vmmhz1m* = 1./(1.+pow(freq/NU_R,ALPHAMEDIUM));
     vmmhz1m_reference *= 1./(1.+pow(freq_reference/nu_r,ALPHAMEDIUM));
@@ -176,7 +179,7 @@ icemc::FTPair icemc::AskaryanRadiationModel::generateOnAxisAt1m(Energy energy) c
 
   // do the slow work of the full calculation for a single reference frequency
   double vmmhz1m_max = GetVmMHz1m(energy, fFreqs_Hz.back());
-
+  
   std::vector<std::complex<double> > amplitudes(fFreqs_Hz.size(), 0);
   amplitudes.back() = vmmhz1m_max;
 
@@ -219,12 +222,12 @@ void icemc::AskaryanRadiationModel::taperWaveform(FTPair& waveform /*modified*/,
     double coneWidthEm  = scale_factor*coneWidthEm_ref;
     double coneWidthHad = scale_factor*coneWidthHad_ref;
 
+    
     // if(TMath::IsNaN(vmmhz.at(k).real()) ||
     //    TMath::IsNaN(vmmhz.at(k).imag())){
     //   std::cout << "before\t" << k << "\t" << vmmhz.at(k) << std::endl;
     // }
 
-    // double before = vmmhz.at(k);
     vmmhz.at(k) = taperSingleFreq(vmmhz.at(k), viewAngleRadians, coneWidthEm, coneWidthHad, shower.emFrac, shower.hadFrac);
 
     // if(TMath::IsNaN(vmmhz.at(k).real()) ||
@@ -249,6 +252,9 @@ icemc::PropagatingSignal icemc::AskaryanRadiationModel::generateImpulse(const Op
 
   // first generate the signal you would see viewing on axis at 1m from the interaction
   FTPair waveform = generateOnAxisAt1m(nu.energy);
+ 
+  // Output waveform for debugging 
+  //waveform.dump("generateOnAxAt1m.root");
 
   // int numNan = std::count_if(waveform.getTimeDomain().GetY(),
   // 			     waveform.getTimeDomain().GetY()+waveform.getTimeDomain().GetN(),
@@ -558,8 +564,10 @@ void icemc::AskaryanRadiationModel::SetParameterization(int whichparameterizatio
 }
 
 
-double icemc::AskaryanRadiationModel::getThetaRange(const double signalThreshold, const Neutrino& nu, const Shower& dummyShower, const OpticalPath& opticalPath) const{
+double icemc::AskaryanRadiationModel::getThetaRange(const double signalThreshold, const Neutrino& nu, const Shower& dummyShower, const OpticalPath& opticalPath, const bool inFirn) const{
 
+  double Ch_angle = AskaryanRadiationModel::GetChangle();
+  
   double dtheta = -1;
   double dtheta_tmp;
   double strength = 100; //undetectable
@@ -568,26 +576,26 @@ double icemc::AskaryanRadiationModel::getThetaRange(const double signalThreshold
   //const double kilometersToMeters = 1e3;
   GetSpread(nu.energy, dummyShower, referenceFreqHz, dThetaEm, dThetaHad);
 
-  if ( dummyShower.emFrac <= 1.E-10 && dThetaHad > 1.E-10) {
+  if ( dummyShower.emFrac <= 1.E-10 && dummyShower.hadFrac > 1.E-10) {
     // Hadronic dominant
-    strength = signalThreshold*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.hadFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
+    strength = signalThreshold*opticalPath.distance()*sin(Ch_angle)/(dummyShower.hadFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
     dtheta_tmp = dThetaHad;
   }
-  else if ( dummyShower.emFrac > 1.E-10 && dThetaHad <= 1.E-10) {
+  else if ( dummyShower.emFrac > 1.E-10 && dummyShower.hadFrac <= 1.E-10) {
     // EM dominant
-    strength = signalThreshold*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
+    strength = signalThreshold*opticalPath.distance()*sin(Ch_angle)/(dummyShower.emFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
     dtheta_tmp = dThetaEm;
   }
-  else if ( dummyShower.emFrac > 1.E-10 && dThetaHad > 1.E-10) {
+  else if ( dummyShower.emFrac > 1.E-10 && dummyShower.hadFrac > 1.E-10) {
     // Both components non-negligible
-    strength = signalThreshold*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
+    strength = signalThreshold*opticalPath.distance()*sin(Ch_angle)/(dummyShower.emFrac*opticalPath.attenuation()*GetVmMHz1m(nu.energy, referenceFreqHz));
     dtheta_tmp = dThetaEm;
     double nextStrength = strength;
     while (nextStrength <= 1) {
       strength = nextStrength;
       dtheta_tmp += 0.5*dThetaEm;
       double taperedVmMHz = taperSingleFreq(referenceFreqHz, dtheta_tmp, dThetaEm, dThetaHad, dummyShower.emFrac, dummyShower.hadFrac);
-      nextStrength = signalThreshold*opticalPath.distance()*sin(CHANGLE_ICE)/(dummyShower.emFrac*opticalPath.attenuation()*taperedVmMHz);
+      nextStrength = signalThreshold*opticalPath.distance()*sin(Ch_angle)/(dummyShower.emFrac*opticalPath.attenuation()*taperedVmMHz);
       
       if (dtheta_tmp > 3*dThetaEm){
 	// Only consider the hadronic component
