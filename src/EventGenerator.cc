@@ -251,10 +251,11 @@ void icemc::EventGenerator::generate(Detector& detector){
       summary.addEvent(fEventSummary);
       continue;
     }
+    
+    fEventSummary.loop.dTheta = fSettings->USEDIRECTIONWEIGHTS ? fRadioModel->getThetaRange(detector.signalThreshold(), fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath, fEventSummary.loop.inFirn) : TMath::Pi();
 
-    fEventSummary.loop.dTheta = fSettings->USEDIRECTIONWEIGHTS ? fRadioModel->getThetaRange(detector.signalThreshold(), fEventSummary.neutrino, showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction), opticalPath) : TMath::Pi();
-    fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath, fEventSummary.loop.dTheta);
-
+    fEventSummary.neutrino.path.direction = fSourceDirectionModel->pickNeutrinoDirection(opticalPath, fEventSummary.loop);
+    
     fEventSummary.shower = showerModel.generate(fEventSummary.neutrino, fEventSummary.interaction);
     PropagatingSignal signal = fRadioModel->generateImpulse(opticalPath, fEventSummary.neutrino, fEventSummary.shower);
 
@@ -264,17 +265,18 @@ void icemc::EventGenerator::generate(Detector& detector){
     fEventSummary.signalSummaryAt1m = signal.summarize();
     
     fEvent.loop.fresnel = signal.propagate(opticalPath);
-
     fEvent.loop.magnification = opticalPath.magnification();
     fEvent.loop.attenuation = opticalPath.attenuation();
 
     
     fEvent.signalAtDetector = signal.waveform.getTimeDomain();
     fEventSummary.signalSummaryAtDetector = signal.summarize();
-  
+
+    
     //fEventSummary.loop.chanceInHell = true;
     fEventSummary.loop.chanceInHell = detector.chanceInHell(signal);    
-
+    //fEventSummary.loop.chanceInHell = (fEventSummary.loop.dTheta != -1);
+    
     if(fEventSummary.loop.chanceInHell==false){
       //std::cout << "No chance in hell\t" << fEventSummary.interaction.position << std::endl;
       output.allTree().Fill();      
