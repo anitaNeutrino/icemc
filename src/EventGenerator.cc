@@ -180,7 +180,8 @@ void icemc::EventGenerator::generate(Detector& detector){
 
   icemc::RootOutput output(this, fSettings, fSettings->getOutputDir(), fSettings->getRun());
 
-  Summary summary(fSettings->EXPONENT, antarctica->GetTotalIceVolume(), CrossSectionModel::getInteractionLength(fCrossSectionModel->getSigma(fSourceEnergyModel->pickNeutrinoEnergy(), Neutrino::L::Matter, Interaction::Current::Charged)));
+  //@todo should we be using total or just CC? icemc paper says just CC, icemc says total....
+  Summary summary(fSettings->EXPONENT, antarctica->GetTotalIceVolume(), CrossSectionModel::getInteractionLength(fCrossSectionModel->getSigma(fSourceEnergyModel->pickNeutrinoEnergy(), Neutrino::L::Matter, Interaction::Current::Neutral) + fCrossSectionModel->getSigma(fSourceEnergyModel->pickNeutrinoEnergy(), Neutrino::L::Matter, Interaction::Current::Charged)));
 
   NeutrinoGenerator nuGenerator(fSettings, fSourceEnergyModel, fSourceDirectionModel, antarctica);
   RayTracer rayTracer(antarctica);

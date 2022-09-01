@@ -29,7 +29,6 @@ icemc::NeutrinoInteractionGenerator::NeutrinoInteractionGenerator(const Settings
 
 
 Geoid::Position icemc::NeutrinoInteractionGenerator::pickInteractionPosition(const Geoid::Position &detector) {
-
   if(fSettings->SPECIFIC_NU_POSITION > 0){
     // if we need a specific place, then don't pick with reference to the detector, instead pick with reference to the specific place
     // std::cout << "Picking within " << fSettings->SPECIFIC_NU_POSITION_DISTANCE << "m of " << fSpecificInteractionCenter << std::endl;
@@ -115,7 +114,7 @@ Geoid::Position icemc::NeutrinoInteractionGenerator::pickInteractionPositionInIc
 
     numTries++;
 
-    if(iceThicknessHere >= randomThickness){
+    if(iceThicknessHere >= randomThickness && localMaxIceThickness>0){
       double surfaceElevation = fWorldModel->SurfaceAboveGeoid(interactionPosition);
       interactionPosition.SetAltitude(surfaceElevation - randomThickness);
       if(interactionPosition.Distance(center) < rangeMeters){ // check we're within the sphere...
@@ -137,8 +136,9 @@ Geoid::Position icemc::NeutrinoInteractionGenerator::pickInteractionPositionInIc
 icemc::Interaction icemc::NeutrinoInteractionGenerator::generateInteraction(const Neutrino& n, const Geoid::Position& detector){
 
   Interaction interaction;
+
   interaction.current = pickCurrent();
-  interaction.crossSection = fCrossSectionModel->getSigma(n.energy, n.leptonNumber, interaction.current);
+  //interaction.crossSection = fCrossSectionModel->getSigma(n.energy, n.leptonNumber, interaction.current);
   //@todo icemc always uses sum of both; is this correct?
   interaction.crossSection = fCrossSectionModel->getSigma(n.energy, n.leptonNumber, Interaction::Current::Neutral) + fCrossSectionModel->getSigma(n.energy, n.leptonNumber, Interaction::Current::Charged);
   interaction.length = CrossSectionModel::getInteractionLength(interaction.crossSection);
