@@ -24,6 +24,10 @@ namespace icemc {
     // propagate the polarization through all the boundaries and return the result
     TVector3 polarization(const TVector3& initialPolarization) const;
 
+    // Equivalent to icemc's mag1 and mag2, for debugging only
+    double magnification1() const;
+    double magnification2() const;
+    
     ///@todo make these private to hide implementation details
     class Step {
     public:
