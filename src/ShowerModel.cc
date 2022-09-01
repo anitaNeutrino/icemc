@@ -367,8 +367,6 @@ icemc::Shower icemc::ShowerModel::doShower(const Shower& s, const Neutrino::Flav
 
 icemc::Shower icemc::ShowerModel::generate(const Neutrino& nu, const Interaction& i) {
   Shower s = GetEMFrac(nu.flavor, i.current, i.y,  nu.energy);
-  if (s.secondary)
-    std::cout << "Generated shower using secondary signal\n";
   s.axis = nu.path.direction.Unit();  
   return s;
 }

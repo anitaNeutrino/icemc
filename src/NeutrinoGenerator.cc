@@ -48,9 +48,6 @@ icemc::Neutrino icemc::NeutrinoGenerator::generate(){
   // neutrino properties
   Neutrino n;
   n.flavor = pickFlavor();
-  //n.flavor = Neutrino::Flavor::e; // force electron @MIMIC 10^21, 10^20 eV
-  //n.flavor = Neutrino::Flavor::mu; // 10^19 eV
-  //n.flavor = Neutrino::Flavor::tau;
   n.energy = fSourceEnergyModel->pickNeutrinoEnergy();
   n.leptonNumber = pickMatterType(); ///@todo check
   
