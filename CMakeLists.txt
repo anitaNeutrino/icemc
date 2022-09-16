@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.10)
 project(icemc)
 
+set(libname "icemc")
+
 ### Site-specific options
 
 SET(BOOST_INCLUDE_DIR "" CACHE String "BOOST include path (if different from system path)")  
@@ -43,7 +45,7 @@ endif()
 #endif()
 
 
-
+set(DICTNAME G__${libname})
 
 set(DICT classdict)
 set(CLASS_HEADERS rx.hpp Taumodel.hh Settings.h blazars/fava.h icemc_random.h)
@@ -108,7 +110,6 @@ option (VECTORIZE "Enable manual vectorization, does nothing if ANITA_UTIL is
 not available." OFF)
 
 
-
 if (USE_HEALPIX)
   find_package(PkgConfig) 
   pkg_search_module(HEALPIX REQUIRED healpix_cxx) 
@@ -130,14 +131,15 @@ if (VECTORIZE)
       add_definitions(  -fabi-version=0 ) 
       include_directories(${INC_ANITA_UTIL}/vectorclass) 
   endif() 
-
-
 endif() 
 
+#---Create a shared library with generated dictionary
+add_library(${libname} SHARED ${SOURCE} ${DICT}.cxx)
+target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper AnitaEvent AnitaCorrelator AnitaAnalysis ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
 
-##We need to compile stuff into a library unless we want it to be compiled a
-##million times over 
-add_library(icemc_objs STATIC ${SOURCES} ${DICT}.cxx) 
+#We need to compile stuff into a library unless we want it to be compiled a
+#million times over 
+add_library(icemc_objs STATIC ${SOURCES} ${DICT}.cxx)
 
 macro(add_binary bin) 
   add_executable(${bin} ${bin}.cc)
