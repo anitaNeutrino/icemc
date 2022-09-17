@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.10)
 project(icemc)
 
-set(libname "icemc")
+set(libname "icemclib")
 
 ### Site-specific options
 
@@ -17,7 +17,9 @@ find_package(ROOT REQUIRED COMPONENTS MathMore MathCore RIO Hist Tree Net)
 message("ROOT_VERSION is set to ${ROOT_VERSION}")
 include(${ROOT_USE_FILE})
 
-include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS} ${FFTW_INCLUDES} ${ZLIB_INCLUDES} ${UTIL_INC_DIR})
+add_definitions(${ROOT_CXX_FLAGS})
+#include_directories(${PROJECT_SOURCE_DIR})
 
 message("cmake_cxx_flags = ${CMAKE_CXX_FLAGS}")
 
@@ -47,10 +49,11 @@ endif()
 
 set(DICTNAME G__${libname})
 
-set(DICT classdict)
+#set(DICT classdict)
 set(CLASS_HEADERS rx.hpp Taumodel.hh Settings.h blazars/fava.h icemc_random.h)
 
-ROOT_GENERATE_DICTIONARY(${DICT} ${CLASS_HEADERS} LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(${DICTNAME} ${CLASS_HEADERS} LINKDEF LinkDef.h)
+#ROOT_GENERATE_DICTIONARY(${DICT} ${CLASS_HEADERS} LINKDEF LinkDef.h)
 FILE (GLOB SOURCE_FILES "*.cc") 
 
 SET(SOURCES vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
@@ -62,8 +65,6 @@ SET(SOURCES vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
 if( ${ROOT_VERSION} VERSION_GREATER "5.99.99")
     add_custom_target(${DICT}.pcm DEPENDS ${DICT})
 endif()
-
-
 
 
 set(LIBS ${ROOT_LIBRARIES} MathMore ) 
@@ -134,16 +135,17 @@ if (VECTORIZE)
 endif() 
 
 #---Create a shared library with generated dictionary
-add_library(${libname} SHARED ${SOURCE} ${DICT}.cxx)
+add_library(${libname} SHARED ${SOURCE} ${DICTNAME}.cxx)
 target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper AnitaEvent AnitaCorrelator AnitaAnalysis ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
 
-#We need to compile stuff into a library unless we want it to be compiled a
-#million times over 
-add_library(icemc_objs STATIC ${SOURCES} ${DICT}.cxx)
+##We need to compile stuff into a library unless we want it to be compiled a
+##million times over 
+#add_library(icemc_objs STATIC ${SOURCES} ${DICT}.cxx)
 
 macro(add_binary bin) 
   add_executable(${bin} ${bin}.cc)
-  target_link_libraries(${bin} icemc_objs ${LIBS})
+  target_link_libraries(${bin} ${libname} ${LIBS})
+#  target_link_libraries(${bin} icemc_objs ${LIBS})
 endmacro() 
 
 add_binary(icemc) 
