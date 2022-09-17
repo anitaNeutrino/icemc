@@ -56,14 +56,20 @@ ROOT_GENERATE_DICTIONARY(${DICTNAME} ${CLASS_HEADERS} LINKDEF LinkDef.h)
 #ROOT_GENERATE_DICTIONARY(${DICT} ${CLASS_HEADERS} LINKDEF LinkDef.h)
 FILE (GLOB SOURCE_FILES "*.cc") 
 
-SET(SOURCES vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
+SET(SOURCE vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
   ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc
   counting.cc Settings.cc Taumodel.cc screen.cc GlobalTrigger.cc
   ChanTrigger.cc SimulatedSignal.cc EnvironmentVariable.cc source.cc random.cc)
 
+#SET(SOURCES vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
+#  ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc
+#  counting.cc Settings.cc Taumodel.cc screen.cc GlobalTrigger.cc
+#  ChanTrigger.cc SimulatedSignal.cc EnvironmentVariable.cc source.cc random.cc)
+
 
 if( ${ROOT_VERSION} VERSION_GREATER "5.99.99")
-    add_custom_target(${DICT}.pcm DEPENDS ${DICT})
+    add_custom_target(${DICTNAME}.pcm DEPENDS ${DICT})
+#    add_custom_target(${DICT}.pcm DEPENDS ${DICT})
 endif()
 
 
