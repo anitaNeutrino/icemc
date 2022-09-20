@@ -49,9 +49,12 @@ endif()
 
 set(DICTNAME G__${libname})
 
-file(GLOB_RECURSE HEADER_FILES *.h*)
+file(GLOB_RECURSE HEADER_FILES *.hh *.hpp Settings.h blazars/fava.h icemc_random.h)
 
-file(GLOB SOURCE_FILES "*.cc")
+set(SOURCE_FILES vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
+  ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc
+  counting.cc Settings.cc Taumodel.cc screen.cc GlobalTrigger.cc
+  ChanTrigger.cc SimulatedSignal.cc EnvironmentVariable.cc source.cc random.cc)
 
 ROOT_GENERATE_DICTIONARY(${DICTNAME} ${HEADER_FILES} LINKDEF LinkDef.h)
 
