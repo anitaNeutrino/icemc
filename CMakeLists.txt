@@ -49,9 +49,9 @@ endif()
 
 set(DICTNAME G__${libname})
 
-file(GLOB HEADER_FILES "*.hh")
+file(GLOB_RECURSE HEADER_FILES *.h*)
 
-file(GLOB_RECURSE SOURCE_FILES *.cc)
+file(GLOB SOURCE_FILES "*.cc")
 
 ROOT_GENERATE_DICTIONARY(${DICTNAME} ${HEADER_FILES} LINKDEF LinkDef.h)
 
