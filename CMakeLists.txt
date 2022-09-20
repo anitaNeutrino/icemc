@@ -49,17 +49,23 @@ endif()
 
 set(DICTNAME G__${libname})
 
+file(GLOB HEADER_FILES "*.hh")
+
+file(GLOB_RECURSE SOURCE_FILES *.cc)
+
+ROOT_GENERATE_DICTIONARY(${DICTNAME} ${HEADER_FILES} LINKDEF LinkDef.h)
+
 #set(DICT classdict)
-set(CLASS_HEADERS rx.hpp Taumodel.hh Settings.h blazars/fava.h icemc_random.h)
+#set(CLASS_HEADERS rx.hpp Taumodel.hh Settings.h blazars/fava.h icemc_random.h)
 
-ROOT_GENERATE_DICTIONARY(${DICTNAME} ${CLASS_HEADERS} LINKDEF LinkDef.h)
+#ROOT_GENERATE_DICTIONARY(${DICTNAME} ${CLASS_HEADERS} LINKDEF LinkDef.h)
 #ROOT_GENERATE_DICTIONARY(${DICT} ${CLASS_HEADERS} LINKDEF LinkDef.h)
-FILE (GLOB SOURCE_FILES "*.cc") 
 
-SET(SOURCE vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
-  ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc
-  counting.cc Settings.cc Taumodel.cc screen.cc GlobalTrigger.cc
-  ChanTrigger.cc SimulatedSignal.cc EnvironmentVariable.cc source.cc random.cc)
+
+#SET(SOURCE vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
+#  ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc
+#  counting.cc Settings.cc Taumodel.cc screen.cc GlobalTrigger.cc
+#  ChanTrigger.cc SimulatedSignal.cc EnvironmentVariable.cc source.cc random.cc)
 
 #SET(SOURCES vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
 #  ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc
@@ -68,7 +74,7 @@ SET(SOURCE vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
 
 
 if( ${ROOT_VERSION} VERSION_GREATER "5.99.99")
-    add_custom_target(${DICTNAME}.pcm DEPENDS ${DICT})
+    add_custom_target(${DICTNAME}.pcm DEPENDS ${DICTNAME})
 #    add_custom_target(${DICT}.pcm DEPENDS ${DICT})
 endif()
 
@@ -141,7 +147,8 @@ if (VECTORIZE)
 endif() 
 
 #---Create a shared library with generated dictionary
-add_library(${libname} SHARED ${SOURCE} ${DICTNAME}.cxx)
+add_library(${libname} SHARED ${SOURCE_FILES} ${DICTNAME}.cxx)
+#add_library(${libname} SHARED ${SOURCE} ${DICTNAME}.cxx)
 target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper AnitaEvent AnitaCorrelator AnitaAnalysis ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
 
 ##We need to compile stuff into a library unless we want it to be compiled a
