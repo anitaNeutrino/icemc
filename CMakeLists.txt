@@ -49,7 +49,9 @@ endif()
 
 set(DICTNAME G__${libname})
 
+
 file(GLOB_RECURSE HEADER_FILES *.hh *.hpp Settings.h blazars/fava.h icemc_random.h)
+
 
 set(SOURCE_FILES vector.cc position.cc earthmodel.cc balloon.cc icemodel.cc signal.cc
   ray.cc Spectra.cc anita.cc roughness.cc secondaries.cc Primaries.cc Tools.cc
@@ -102,8 +104,8 @@ if(DEFINED ENV{ANITA_UTIL_INSTALL_DIR})
     set(INC_ANITA_UTIL $ENV{ANITA_UTIL_INSTALL_DIR}/include)
     set(ANITA_UTIL_ETC_DIR $ENV{ANITA_UTIL_INSTALL_DIR}/etc)
     link_directories(${ANITA_UTIL_LIB_DIR})
-    include_directories(${INC_ANITA_UTIL})
- endif()
+    include_directories(${INC_ANITA_UTIL})    
+endif()
 
 
 set(CMAKE_CXX_FLAGS_DEFAULT 
@@ -111,7 +113,9 @@ set(CMAKE_CXX_FLAGS_DEFAULT
   CACHE STRING "c++ Flags used during default icemc builds" 
   FORCE ) 
 
+
 mark_as_advanced ( CMAKE_CXX_FLAGS_DEFAULT CMAKE_C_FLAGS_DEFAULT CMAKE_EXE_LINKER_FLAGS_DEFAULT CMAKE_SHARED_LINKER_FLAGS_DEFAULT) 
+
 
 if (NOT CMAKE_BUILD_TYPE) 
   set (CMAKE_BUILD_TYPE Default
@@ -119,12 +123,9 @@ if (NOT CMAKE_BUILD_TYPE)
     FORCE ) 
 endif()
 
+
 option (USE_HEALPIX "Enable Healpix Segmentation, requires healpix to be
 installed on your system in a place that can be found easily." OFF)
-
-option (VECTORIZE "Enable manual vectorization, does nothing if ANITA_UTIL is
-not available." OFF)
-
 
 if (USE_HEALPIX)
   find_package(PkgConfig) 
@@ -134,6 +135,10 @@ if (USE_HEALPIX)
   include_directories(${HEALPIX_INCLUDE_DIRS})
   link_directories(${HEALPIX_LIBRARY_DIRS})
 endif()
+
+
+option (VECTORIZE "Enable manual vectorization, does nothing if ANITA_UTIL is
+not available." OFF)
 
 if (VECTORIZE) 
   add_definitions(-DVECTORIZE) 
@@ -149,10 +154,25 @@ if (VECTORIZE)
   endif() 
 endif() 
 
+
 #---Create a shared library with generated dictionary
 add_library(${libname} SHARED ${SOURCE_FILES} ${DICTNAME}.cxx)
 #add_library(${libname} SHARED ${SOURCE} ${DICTNAME}.cxx)
 target_link_libraries(${libname} ${ZLIB_LIBRARIES} RootFftwWrapper AnitaEvent AnitaCorrelator AnitaAnalysis ${ROOT_LIBRARIES} ${FFTW_LIBRARIES})
+
+message("ANITA_UTIL_INC_DIR is set to ${ANITA_UTIL_INC_DIR}")
+message("DICTNAME is set to ${DICTNAME}")
+
+install (FILES ${HEADER_FILES} DESTINATION ${ANITA_UTIL_INC_DIR})
+install (TARGETS ${libname}
+	ARCHIVE DESTINATION ${ANITA_UTIL_LIB_DIR}
+	LIBRARY DESTINATION ${ANITA_UTIL_LIB_DIR}
+	RUNTIME DESTINATION ${ANITA_UTIL_BIN_DIR})
+      
+if(${ROOT_VERSION} VERSION_GREATER "5.99.99")
+  install (FILES ${PROJECT_BINARY_DIR}/${DICTNAME}_rdict.pcm DESTINATION ${ANITA_UTIL_LIB_DIR})
+endif() 
+
 
 ##We need to compile stuff into a library unless we want it to be compiled a
 ##million times over 
