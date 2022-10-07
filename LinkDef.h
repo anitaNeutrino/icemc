@@ -10,6 +10,8 @@
 #pragma link C++ class Settings+;
 #pragma link C++ struct FAVAEntry+; 
 #pragma link C++ class TRandomXoshiro256Plus+; 
-#pragma link C++ struct icemodel_debug;
 #pragma link C++ class EarthModel+;
+#pragma link C++ class IceModel+;
+#pragma link C++ struct icemodel_debug;
+
 #endif
