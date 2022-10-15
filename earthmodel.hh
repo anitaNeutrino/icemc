@@ -1,6 +1,18 @@
 #ifndef EARTHMODEL_H
 #define EARTHMODEL_H
 
+#ifdef R_EARTH
+  #undef R_EARTH
+#endif
+
+#ifdef GEOID_MIN
+  #undef GEOID_MIN
+#endif
+
+#ifdef GEOID_MAX
+  #undef GEOID_MAX
+#endif
+
 #include <string>
 #include <cstdlib>
 //#include "Primaries.h"
